@@ -46,8 +46,6 @@ struct TargetData
     xid = 0;
     button = 0;
     timestamp = 0;
-
-    ASSERT_TRUE(entry.empty());
   }
 
   std::string entry;
@@ -258,194 +256,308 @@ TEST(TestIndicators, IndicatorsHandling)
   EXPECT_EQ(removed_list.size(), 3);
 }
 
-TEST(TestIndicators, IndicatorEntriesEvents)
+void SetupTestIndicators(MockIndicators &indicators)
+{
+  // Adding an indicator filled with entries into the MockIndicators
+  Indicator::Entries sync_data;
+  Entry* entry;
+
+  Indicator::Ptr test_indicator_1 = indicators.AddIndicator("indicator-test-1");
+
+  entry = new Entry("indicator-test-1|entry-1", "name-hint-1", "label", true, true,
+                    0, "icon", true, true, -1);
+  sync_data.push_back(Entry::Ptr(entry));
+
+  entry = new Entry("indicator-test-1|entry-2", "name-hint-2", "label", true, true,
+                    0, "icon", true, true, -1);
+  sync_data.push_back(Entry::Ptr(entry));
+
+  entry = new Entry("indicator-test-1|entry-3", "name-hint-3", "label", true, true,
+                    0, "icon", true, true, -1);
+  sync_data.push_back(Entry::Ptr(entry));
+
+  // Sync the indicator, adding 3 entries
+  test_indicator_1->Sync(sync_data);
+  EXPECT_EQ(test_indicator_1->GetEntries().size(), 3);
+
+
+  // Adding another indicator filled with entries into the MockIndicators
+  Indicator::Ptr test_indicator_2 = indicators.AddIndicator("indicator-test-2");
+  sync_data.clear();
+
+  entry = new Entry("indicator-test-2|entry-1", "name-hint-1", "label", true, true,
+                    0, "icon", true, true, -1);
+  sync_data.push_back(Entry::Ptr(entry));
+
+  entry = new Entry("indicator-test-2|entry-2", "name-hint-2", "label", true, true,
+                    0, "icon", true, true, -1);
+  sync_data.push_back(Entry::Ptr(entry));
+
+  // Sync the indicator, adding 2 entries
+  test_indicator_2->Sync(sync_data);
+  EXPECT_EQ(test_indicator_2->GetEntries().size(), 2);
+}
+
+TEST(TestIndicators, ActivateEntry)
 {
   MockIndicators indicators;
 
-  {
-    // Adding an indicator filled with entries into the MockIndicators
-    Indicator::Entries sync_data;
-    Entry* entry;
-
-    Indicator::Ptr test_indicator_1 = indicators.AddIndicator("indicator-test-1");
-
-    entry = new Entry("indicator-test-1|entry-1", "name-hint-1", "label", true, true,
-                      0, "icon", true, true, -1);
-    sync_data.push_back(Entry::Ptr(entry));
-
-    entry = new Entry("indicator-test-1|entry-2", "name-hint-2", "label", true, true,
-                      0, "icon", true, true, -1);
-    sync_data.push_back(Entry::Ptr(entry));
-
-    entry = new Entry("indicator-test-1|entry-3", "name-hint-3", "label", true, true,
-                      0, "icon", true, true, -1);
-    sync_data.push_back(Entry::Ptr(entry));
-
-    // Sync the indicator, adding 3 entries
-    test_indicator_1->Sync(sync_data);
-    EXPECT_EQ(test_indicator_1->GetEntries().size(), 3);
-
-
-    // Adding another indicator filled with entries into the MockIndicators
-    Indicator::Ptr test_indicator_2 = indicators.AddIndicator("indicator-test-2");
-    sync_data.clear();
-
-    entry = new Entry("indicator-test-2|entry-1", "name-hint-1", "label", true, true,
-                      0, "icon", true, true, -1);
-    sync_data.push_back(Entry::Ptr(entry));
-
-    entry = new Entry("indicator-test-2|entry-2", "name-hint-2", "label", true, true,
-                      0, "icon", true, true, -1);
-    sync_data.push_back(Entry::Ptr(entry));
-
-    // Sync the indicator, adding 2 entries
-    test_indicator_2->Sync(sync_data);
-    EXPECT_EQ(test_indicator_2->GetEntries().size(), 2);
-  }
-
+  SetupTestIndicators(indicators);
   EXPECT_EQ(indicators.GetIndicators().size(), 2);
 
-  {
-    // Changing entries values from Indicators class to see if they get updated
-    TargetData target;
+  // Activating Entries from the Indicators class to see if they get updated
+  TargetData target;
 
-    sigc::connection activated_conn =
-    indicators.on_entry_activated.connect([&] (std::string const& e, nux::Rect const& g) {
-      target.entry = e;
-      target.geo = g;
-    });
+  sigc::connection activated_conn =
+  indicators.on_entry_activated.connect([&] (std::string const& e, nux::Rect const& g) {
+    target.entry = e;
+    target.geo = g;
+  });
 
-    ASSERT_THAT(indicators.GetIndicator("indicator-test-1"), NotNull());
+  ASSERT_THAT(indicators.GetIndicator("indicator-test-1"), NotNull());
 
-    Entry::Ptr entry12(indicators.GetIndicator("indicator-test-1")->GetEntry("indicator-test-1|entry-2"));
-    ASSERT_THAT(entry12, NotNull());
+  Entry::Ptr entry12(indicators.GetIndicator("indicator-test-1")->GetEntry("indicator-test-1|entry-2"));
+  ASSERT_THAT(entry12, NotNull());
 
-    ASSERT_THAT(entry12->active(), false);
-    ASSERT_THAT(entry12->geometry(), nux::Rect());
+  ASSERT_THAT(entry12->active(), false);
+  ASSERT_THAT(entry12->geometry(), nux::Rect());
 
-    target.Reset();
-    indicators.ActivateEntry("indicator-test-1|entry-2", nux::Rect(1, 2, 3, 4));
+  target.Reset();
+  indicators.ActivateEntry("indicator-test-1|entry-2", nux::Rect(1, 2, 3, 4));
 
-    EXPECT_EQ(entry12->active(), true);
-    EXPECT_EQ(entry12->geometry(), nux::Rect(1, 2, 3, 4));
-    EXPECT_EQ(target.entry, entry12->id());
-    EXPECT_EQ(target.geo, entry12->geometry());
+  EXPECT_EQ(entry12->active(), true);
+  EXPECT_EQ(entry12->geometry(), nux::Rect(1, 2, 3, 4));
+  EXPECT_EQ(target.entry, entry12->id());
+  EXPECT_EQ(target.geo, entry12->geometry());
 
-    Entry::Ptr entry21(indicators.GetIndicator("indicator-test-2")->GetEntry("indicator-test-2|entry-1"));
-    ASSERT_THAT(entry21, NotNull());
-
-    ASSERT_THAT(entry21->active(), false);
-    ASSERT_THAT(entry21->geometry(), nux::Rect());
-
-    target.Reset();
-    indicators.ActivateEntry("indicator-test-2|entry-1", nux::Rect(4, 3, 2, 1));
-
-    EXPECT_EQ(entry12->active(), false);
-    EXPECT_EQ(entry12->geometry(), nux::Rect());
-
-    EXPECT_EQ(entry21->active(), true);
-    EXPECT_EQ(entry21->geometry(), nux::Rect(4, 3, 2, 1));
-    EXPECT_EQ(target.entry, entry21->id());
-    EXPECT_EQ(target.geo, entry21->geometry());
-
-
-    target.Reset();
-    indicators.ActivateEntry("indicator-entry-invalid", nux::Rect(5, 5, 5, 5));
-    EXPECT_TRUE(target.entry.empty());
-    EXPECT_EQ(target.geo, nux::Rect());
-
-
-    ASSERT_THAT(entry12->show_now(), false);
-
-    indicators.SetEntryShowNow("indicator-test-1|entry-2", true);
-    EXPECT_EQ(entry12->show_now(), true);
-
-    indicators.SetEntryShowNow("indicator-test-1|entry-2", false);
-    EXPECT_EQ(entry12->show_now(), false);
-
-
-    ASSERT_THAT(entry21->show_now(), false);
-
-    indicators.SetEntryShowNow("indicator-test-2|entry-1", true);
-    EXPECT_EQ(entry21->show_now(), true);
-
-    indicators.SetEntryShowNow("indicator-test-2|entry-1", false);
-    EXPECT_EQ(entry21->show_now(), false);
-
-    activated_conn.disconnect();
-  }
-
-  {
-    // See if the indicators class get notified on entries actions
-    ASSERT_THAT(indicators.GetIndicator("indicator-test-1"), NotNull());
-
-    Entry::Ptr entry13(indicators.GetIndicator("indicator-test-1")->GetEntry("indicator-test-1|entry-3"));
-    ASSERT_THAT(entry13, NotNull());
-
-    TargetData show_menu_data;
-    sigc::connection on_entry_show_menu_conn =
-    indicators.on_entry_show_menu.connect([&] (std::string const& e, unsigned int w,
-                                               int x, int y, unsigned int b, unsigned int t) {
-      show_menu_data.entry = e;
-      show_menu_data.xid = w;
-      show_menu_data.x = x;
-      show_menu_data.y = y;
-      show_menu_data.button = b;
-      show_menu_data.timestamp = t;
-    });
-
-    entry13->ShowMenu(465789, 35, 53, 2, 1331773412);
-
-    EXPECT_EQ(indicators.target.entry, entry13->id());
-    EXPECT_EQ(indicators.target.xid, 465789);
-    EXPECT_EQ(indicators.target.x, 35);
-    EXPECT_EQ(indicators.target.y, 53);
-    EXPECT_EQ(indicators.target.button, 2);
-    EXPECT_EQ(indicators.target.timestamp, 1331773412);
-
-    EXPECT_EQ(show_menu_data.entry, entry13->id());
-    EXPECT_EQ(show_menu_data.xid, 465789);
-    EXPECT_EQ(show_menu_data.x, 35);
-    EXPECT_EQ(show_menu_data.y, 53);
-    EXPECT_EQ(show_menu_data.button, 2);
-    EXPECT_EQ(show_menu_data.timestamp, 1331773412);
-
-    show_menu_data.Reset();
-    indicators.target.Reset();
-
-    entry13->ShowMenu(55, 68, 3, 1331773883);
-
-    EXPECT_EQ(indicators.target.entry, entry13->id());
-    EXPECT_EQ(indicators.target.xid, 0);
-    EXPECT_EQ(indicators.target.x, 55);
-    EXPECT_EQ(indicators.target.y, 68);
-    EXPECT_EQ(indicators.target.button, 3);
-    EXPECT_EQ(indicators.target.timestamp, 1331773883);
-
-    EXPECT_EQ(show_menu_data.entry, entry13->id());
-    EXPECT_EQ(show_menu_data.xid, 0);
-    EXPECT_EQ(show_menu_data.x, 55);
-    EXPECT_EQ(show_menu_data.y, 68);
-    EXPECT_EQ(show_menu_data.button, 3);
-    EXPECT_EQ(show_menu_data.timestamp, 1331773883);
-
-    on_entry_show_menu_conn.disconnect();
-
-    indicators.target.Reset();
-
-    entry13->Scroll(80);
-    EXPECT_EQ(indicators.target.entry, entry13->id());
-    EXPECT_EQ(indicators.target.delta, 80);
-
-    indicators.target.Reset();
-
-    entry13->SecondaryActivate(1331774167);
-    EXPECT_EQ(indicators.target.entry, entry13->id());
-    EXPECT_EQ(indicators.target.timestamp, 1331774167);
-  }
+  activated_conn.disconnect();
 }
 
-TEST(TestIndicators, AppmenuEvents)
+TEST(TestIndicators, ActivateEntryShouldDisactivatePrevious)
+{
+  MockIndicators indicators;
+
+  SetupTestIndicators(indicators);
+  EXPECT_EQ(indicators.GetIndicators().size(), 2);
+
+  // Activating Entries from the Indicators class to see if they get updated
+  TargetData target;
+
+  sigc::connection activated_conn =
+  indicators.on_entry_activated.connect([&] (std::string const& e, nux::Rect const& g) {
+    target.entry = e;
+    target.geo = g;
+  });
+
+  ASSERT_THAT(indicators.GetIndicator("indicator-test-2"), NotNull());
+
+  Entry::Ptr entry22(indicators.GetIndicator("indicator-test-2")->GetEntry("indicator-test-2|entry-2"));
+  ASSERT_THAT(entry22, NotNull());
+
+  ASSERT_THAT(entry22->active(), false);
+  ASSERT_THAT(entry22->geometry(), nux::Rect());
+
+  indicators.ActivateEntry("indicator-test-2|entry-2", nux::Rect(1, 2, 3, 4));
+
+  ASSERT_THAT(entry22->active(), true);
+  ASSERT_THAT(entry22->geometry(), nux::Rect(1, 2, 3, 4));
+
+
+  // Activating another entry, the previously selected one should be disactivate
+  Entry::Ptr entry21(indicators.GetIndicator("indicator-test-2")->GetEntry("indicator-test-2|entry-1"));
+  ASSERT_THAT(entry21, NotNull());
+
+  ASSERT_THAT(entry21->active(), false);
+  ASSERT_THAT(entry21->geometry(), nux::Rect());
+
+  target.Reset();
+  indicators.ActivateEntry("indicator-test-2|entry-1", nux::Rect(4, 3, 2, 1));
+
+  EXPECT_EQ(entry22->active(), false);
+  EXPECT_EQ(entry22->geometry(), nux::Rect());
+
+  EXPECT_EQ(entry21->active(), true);
+  EXPECT_EQ(entry21->geometry(), nux::Rect(4, 3, 2, 1));
+  EXPECT_EQ(target.entry, entry21->id());
+  EXPECT_EQ(target.geo, entry21->geometry());
+
+  activated_conn.disconnect();
+}
+
+TEST(TestIndicators, ActivateEntryInvalidDoNothing)
+{
+  MockIndicators indicators;
+
+  SetupTestIndicators(indicators);
+  EXPECT_EQ(indicators.GetIndicators().size(), 2);
+
+  TargetData target;
+
+  sigc::connection activated_conn =
+  indicators.on_entry_activated.connect([&] (std::string const& e, nux::Rect const& g) {
+    target.entry = e;
+    target.geo = g;
+  });
+
+  ASSERT_THAT(indicators.GetIndicator("indicator-test-1"), NotNull());
+
+  Entry::Ptr entry13(indicators.GetIndicator("indicator-test-1")->GetEntry("indicator-test-1|entry-3"));
+  ASSERT_THAT(entry13, NotNull());
+
+  ASSERT_THAT(entry13->active(), false);
+  ASSERT_THAT(entry13->geometry(), nux::Rect());
+
+  indicators.ActivateEntry("indicator-test-1|entry-3", nux::Rect(4, 2, 3, 4));
+
+  ASSERT_THAT(entry13->active(), true);
+  ASSERT_THAT(entry13->geometry(), nux::Rect(4, 2, 3, 4));
+
+
+  // Activating invalid entry, the previously selected one should be disactivate
+  target.Reset();
+  indicators.ActivateEntry("indicator-entry-invalid", nux::Rect(5, 5, 5, 5));
+  EXPECT_TRUE(target.entry.empty());
+  EXPECT_EQ(target.geo, nux::Rect());
+
+  EXPECT_EQ(entry13->active(), false);
+  EXPECT_EQ(entry13->geometry(), nux::Rect());
+
+  activated_conn.disconnect();
+}
+
+TEST(TestIndicators, SetEntryShowNow)
+{
+  MockIndicators indicators;
+
+  SetupTestIndicators(indicators);
+  EXPECT_EQ(indicators.GetIndicators().size(), 2);
+
+  TargetData target;
+
+  sigc::connection activated_conn =
+  indicators.on_entry_activated.connect([&] (std::string const& e, nux::Rect const& g) {
+    target.entry = e;
+    target.geo = g;
+  });
+
+  ASSERT_THAT(indicators.GetIndicator("indicator-test-2"), NotNull());
+
+  Entry::Ptr entry22(indicators.GetIndicator("indicator-test-2")->GetEntry("indicator-test-2|entry-2"));
+
+  ASSERT_THAT(entry22, NotNull());
+  ASSERT_THAT(entry22->show_now(), false);
+
+  indicators.SetEntryShowNow("indicator-test-2|entry-2", true);
+  EXPECT_EQ(entry22->show_now(), true);
+
+  indicators.SetEntryShowNow("indicator-test-2|entry-2", false);
+  EXPECT_EQ(entry22->show_now(), false);
+}
+
+TEST(TestIndicators, EntryShowMenu)
+{
+  MockIndicators indicators;
+
+  SetupTestIndicators(indicators);
+  EXPECT_EQ(indicators.GetIndicators().size(), 2);
+
+  // See if the indicators class get notified on entries actions
+  ASSERT_THAT(indicators.GetIndicator("indicator-test-1"), NotNull());
+
+  Entry::Ptr entry13(indicators.GetIndicator("indicator-test-1")->GetEntry("indicator-test-1|entry-3"));
+  ASSERT_THAT(entry13, NotNull());
+
+  TargetData show_menu_data;
+  sigc::connection on_entry_show_menu_conn =
+  indicators.on_entry_show_menu.connect([&] (std::string const& e, unsigned int w,
+                                             int x, int y, unsigned int b, unsigned int t) {
+    show_menu_data.entry = e;
+    show_menu_data.xid = w;
+    show_menu_data.x = x;
+    show_menu_data.y = y;
+    show_menu_data.button = b;
+    show_menu_data.timestamp = t;
+  });
+
+  entry13->ShowMenu(465789, 35, 53, 2, 1331773412);
+
+  EXPECT_EQ(indicators.target.entry, entry13->id());
+  EXPECT_EQ(indicators.target.xid, 465789);
+  EXPECT_EQ(indicators.target.x, 35);
+  EXPECT_EQ(indicators.target.y, 53);
+  EXPECT_EQ(indicators.target.button, 2);
+  EXPECT_EQ(indicators.target.timestamp, 1331773412);
+
+  EXPECT_EQ(show_menu_data.entry, entry13->id());
+  EXPECT_EQ(show_menu_data.xid, 465789);
+  EXPECT_EQ(show_menu_data.x, 35);
+  EXPECT_EQ(show_menu_data.y, 53);
+  EXPECT_EQ(show_menu_data.button, 2);
+  EXPECT_EQ(show_menu_data.timestamp, 1331773412);
+
+  show_menu_data.Reset();
+  indicators.target.Reset();
+
+  entry13->ShowMenu(55, 68, 3, 1331773883);
+
+  EXPECT_EQ(indicators.target.entry, entry13->id());
+  EXPECT_EQ(indicators.target.xid, 0);
+  EXPECT_EQ(indicators.target.x, 55);
+  EXPECT_EQ(indicators.target.y, 68);
+  EXPECT_EQ(indicators.target.button, 3);
+  EXPECT_EQ(indicators.target.timestamp, 1331773883);
+
+  EXPECT_EQ(show_menu_data.entry, entry13->id());
+  EXPECT_EQ(show_menu_data.xid, 0);
+  EXPECT_EQ(show_menu_data.x, 55);
+  EXPECT_EQ(show_menu_data.y, 68);
+  EXPECT_EQ(show_menu_data.button, 3);
+  EXPECT_EQ(show_menu_data.timestamp, 1331773883);
+
+  on_entry_show_menu_conn.disconnect();
+}
+
+TEST(TestIndicators, EntryScroll)
+{
+  MockIndicators indicators;
+
+  SetupTestIndicators(indicators);
+  EXPECT_EQ(indicators.GetIndicators().size(), 2);
+
+  // See if the indicators class get notified on entries actions
+  ASSERT_THAT(indicators.GetIndicator("indicator-test-1"), NotNull());
+
+  Entry::Ptr entry11(indicators.GetIndicator("indicator-test-1")->GetEntry("indicator-test-1|entry-1"));
+  ASSERT_THAT(entry11, NotNull());
+
+  entry11->Scroll(80);
+  EXPECT_EQ(indicators.target.entry, entry11->id());
+  EXPECT_EQ(indicators.target.delta, 80);
+
+  entry11->SecondaryActivate(1331774167);
+  EXPECT_EQ(indicators.target.entry, entry11->id());
+  EXPECT_EQ(indicators.target.timestamp, 1331774167);
+}
+
+TEST(TestIndicators, EntrySecondaryActivate)
+{
+  MockIndicators indicators;
+
+  SetupTestIndicators(indicators);
+  EXPECT_EQ(indicators.GetIndicators().size(), 2);
+
+  // See if the indicators class get notified on entries actions
+  ASSERT_THAT(indicators.GetIndicator("indicator-test-2"), NotNull());
+
+  Entry::Ptr entry22(indicators.GetIndicator("indicator-test-2")->GetEntry("indicator-test-2|entry-1"));
+  ASSERT_THAT(entry22, NotNull());
+
+  entry22->SecondaryActivate(1331774167);
+  EXPECT_EQ(indicators.target.entry, entry22->id());
+  EXPECT_EQ(indicators.target.timestamp, 1331774167);
+}
+
+TEST(TestIndicators, ShowAppMenu)
 {
   MockIndicators indicators;
 
