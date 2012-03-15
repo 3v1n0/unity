@@ -385,15 +385,17 @@ TEST(TestIndicators, ActivateEntryShouldDisactivatePrevious)
   activated_conn.disconnect();
 }
 
-TEST(TestIndicators, ActivateEntryInvalidDoNothing)
+TEST(TestIndicators, ActivateEntryInvalidEmitsNullSignal)
 {
   MockIndicators indicators;
   indicators.SetupTestChildren();
 
   TargetData target;
+  bool signal_received = false;
 
   sigc::connection activated_conn =
   indicators.on_entry_activated.connect([&] (std::string const& e, nux::Rect const& g) {
+    signal_received = true;
     target.entry = e;
     target.geo = g;
   });
@@ -410,13 +412,16 @@ TEST(TestIndicators, ActivateEntryInvalidDoNothing)
 
   ASSERT_THAT(entry13->active(), true);
   ASSERT_THAT(entry13->geometry(), nux::Rect(4, 2, 3, 4));
+  ASSERT_TRUE(signal_received);
 
 
   // Activating invalid entry, the previously selected one should be disactivate
   target.Reset();
+  signal_received = false;
   indicators.ActivateEntry("indicator-entry-invalid", nux::Rect(5, 5, 5, 5));
   EXPECT_TRUE(target.entry.empty());
   EXPECT_EQ(target.geo, nux::Rect());
+  EXPECT_TRUE(signal_received);
 
   EXPECT_EQ(entry13->active(), false);
   EXPECT_EQ(entry13->geometry(), nux::Rect());

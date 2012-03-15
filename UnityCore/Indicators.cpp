@@ -109,6 +109,10 @@ void Indicators::Impl::ActivateEntry(std::string const& entry_id, nux::Rect cons
     active_entry_->set_active(true);
     owner_->on_entry_activated.emit(entry_id, geometry);
   }
+  else
+  {
+    owner_->on_entry_activated.emit(std::string(), nux::Rect());
+  }
 }
 
 void Indicators::Impl::SetEntryShowNow(std::string const& entry_id,
