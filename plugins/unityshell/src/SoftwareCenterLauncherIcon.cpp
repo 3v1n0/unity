@@ -28,10 +28,6 @@ namespace unity
 {
 namespace launcher
 {
-namespace
-{
-nux::logging::Logger logger("unity.launcher.SoftwareCenterLauncherIcon");
-}
 
 NUX_IMPLEMENT_OBJECT_TYPE(SoftwareCenterLauncherIcon);
 
@@ -62,12 +58,10 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
   SetIconType(TYPE_APPLICATION);
   icon_name = icon_path.c_str();
   tooltip_text = _("Waiting to install");
-  LOG_DEBUG(logger) << "Software center launcher icon created.";
 }
 
 SoftwareCenterLauncherIcon::~SoftwareCenterLauncherIcon()
 {
-  LOG_DEBUG(logger) << "Destroying SOftware center launcher icon!";
   if (_drag_window)
   {
     _drag_window->UnReference();
@@ -92,7 +86,6 @@ void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
     nux::BITFMT_R8G8B8A8);
 
   _drag_window = new LauncherDragWindow(_icon_texture);
-  LOG_DEBUG(logger) << "LauncherDragWindow created at:" << _drag_window;
 
   launcher->RenderIconToTexture(nux::GetWindowThread()->GetGraphicsEngine(),
                                 AbstractLauncherIcon::Ptr(this),
@@ -118,17 +111,14 @@ void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
 
   target_y = target_y + (launcher->GetIconSize() / 2);
   _drag_window->SetAnimationTarget(target_x, target_y);
-  LOG_DEBUG(logger) << "Target is: " << target_x << "," << target_y;
 
   _drag_window->on_anim_completed = _drag_window->anim_completed.connect(sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnDragAnimationFinished));
   _drag_window->StartAnimation();
-  LOG_DEBUG(logger) << "anim_completed signal connected, starting animation.";
 }
 
 void SoftwareCenterLauncherIcon::OnDragAnimationFinished()
 {
-  LOG_DEBUG(logger) << "OnDragAnimationFinished called!";
-   _drag_window->ShowWindow(false);
+  _drag_window->ShowWindow(false);
   _launcher->icon_animation_complete.emit(AbstractLauncherIcon::Ptr(this));
   _drag_window->UnReference();
   _drag_window = nullptr;
@@ -136,23 +126,21 @@ void SoftwareCenterLauncherIcon::OnDragAnimationFinished()
 
 void SoftwareCenterLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
-  LOG_DEBUG(logger) << "ActivateLauncherIcon called.";
-    if (_finished)
-    {
-        if (_finished_just_now)
-        {
-            SetQuirk(QUIRK_URGENT, false);
-            _finished_just_now = false;
-        }
-        BamfLauncherIcon::ActivateLauncherIcon(arg);
-    }
-    else
-        SetQuirk(QUIRK_STARTING, false);
+  if (_finished)
+  {
+      if (_finished_just_now)
+      {
+          SetQuirk(QUIRK_URGENT, false);
+          _finished_just_now = false;
+      }
+      BamfLauncherIcon::ActivateLauncherIcon(arg);
+  }
+  else
+      SetQuirk(QUIRK_STARTING, false);
 }
 
 void SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
 {
-  LOG_DEBUG(logger) << "OnPropertyChanged called.";
   gint32 progress;
   glib::String property_name;
   GVariant* property_value;
