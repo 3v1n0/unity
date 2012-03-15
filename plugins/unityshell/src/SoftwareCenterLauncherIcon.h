@@ -21,15 +21,16 @@
 #ifndef SOFTWARE_CENTER_LAUNCHERICON_H
 #define SOFTWARE_CENTER_LAUNCHERICON_H
 
-#include "BamfLauncherIcon.h"
-#include "LauncherDragWindow.h"
-#include "Launcher.h"
 #include <UnityCore/GLibDBusProxy.h>
+#include "BamfLauncherIcon.h"
+
+class LauncherDragWindow;
 
 namespace unity
 {
 namespace launcher
 {
+class Launcher;
 
 class SoftwareCenterLauncherIcon : public BamfLauncherIcon
 {

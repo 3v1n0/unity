@@ -19,9 +19,11 @@
  */
 
 #include <NuxCore/Logger.h>
+#include <UnityCore/GLibDBusProxy.h>
 #include <glib/gi18n-lib.h>
 #include "SoftwareCenterLauncherIcon.h"
 #include "Launcher.h"
+#include "LauncherDragWindow.h"
 #include "LauncherModel.h"
 
 namespace unity

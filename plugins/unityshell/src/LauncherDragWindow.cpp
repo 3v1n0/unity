@@ -21,7 +21,6 @@
 #include <Nux/BaseWindow.h>
 #include <NuxGraphics/GraphicsEngine.h>
 #include <Nux/TextureArea.h>
-#include <NuxCore/Logger.h>
 
 #include "LauncherDragWindow.h"
 
