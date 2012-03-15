@@ -54,13 +54,13 @@ private:
   void OnPropertyChanged(GVariant* params);
   void OnDragAnimationFinished();
 
-  glib::DBusProxy _aptdaemon_trans;
+  glib::DBusProxy aptdaemon_trans_;
 
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> _icon_texture;
-  LauncherDragWindow* _drag_window;
-  nux::ObjectPtr<Launcher> _launcher;
-  bool _finished;
-  bool _finished_just_now;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> icon_texture_;
+  LauncherDragWindow* drag_window_;
+  nux::ObjectPtr<Launcher> launcher_;
+  bool finished_;
+  bool needs_urgent_;
 };
 
 }
