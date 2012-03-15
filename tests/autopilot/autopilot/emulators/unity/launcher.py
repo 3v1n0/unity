@@ -52,6 +52,27 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         self._mouse = Mouse()
         self._screen = ScreenGeometry()
 
+    def _perform_key_nav_binding(self, keybinding):
+        if not self.in_keynav_mode:
+                raise RuntimeError("Cannot perform key navigation when not in kaynav mode.")
+        self.keybinding(keybinding)
+
+    def _perform_key_nav_exit_binding(self, keybinding):
+        self._perform_key_nav_binding(keybinding)
+        self.in_keynav_mode = False
+
+    def _perform_switcher_binding(self, keybinding):
+        if not self.in_switcher_mode:
+            raise RuntimeError("Cannot interact with launcher switcher when not in switcher mode.")
+        self.keybinding(keybinding)
+
+    def _perform_switcher_exit_binding(self, keybinding):
+        self._perform_switcher_binding(keybinding)
+        # if our exit binding was something besides just releasing, we need to release
+        if keybinding != "launcher/switcher":
+            self.keybinding_release("launcher/switcher")
+        self.in_switcher_mode = False
+
     def move_mouse_to_right_of_launcher(self):
         """Places the mouse to the right of this launcher."""
         self._screen.move_mouse_to_monitor(self.monitor)
@@ -73,7 +94,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         logger.debug("Moving mouse to center of launcher.")
         self._mouse.move(target_x, target_y)
 
-    def reveal_launcher(self):
+    def mouse_reveal_launcher(self):
         """Reveal this launcher with the mouse."""
         self._screen.move_mouse_to_monitor(self.monitor)
         (x, y, w, h) = self.geometry
@@ -103,109 +124,78 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         self.keybinding("launcher/keynav")
         self.in_keynav_mode = True
 
-    def key_nav_end(self, cancel):
-        """End the key navigation.
+    def key_nav_cancel(self):
+        """End the key navigation."""
+        logger.debug("Cancelling keyboard navigation mode.")
+        self._perform_key_nav_exit_binding("launcher/keynav/exit")
 
-        If cancel is True, the currently selected icon will not be activated.
-
-        """
-        if not self.in_keynav_mode:
-            raise RuntimeError("Cannot end the key navigation when not in kaynav mode.")
-        if cancel:
-            logger.debug("Cancelling keyboard navigation mode.")
-            self.keybinding("launcher/keynav/exit")
-        else:
-            logger.debug("Ending keyboard navigation mode, activating icon.")
-            self.keybinding("launcher/keynav/activate")
-
-        self.in_keynav_mode = False
+    def key_nav_activate(self):
+        """Activates the selected launcher icon. In the current implementation
+        this also exits key navigation"""
+        logger.debug("Ending keyboard navigation mode, activating icon.")
+        self._perform_key_nav_exit_binding("launcher/keynav/activate")
 
     def key_nav_next(self):
-        if not self.in_keynav_mode:
-            raise RuntimeError("Cannot use the key navigation commands when not in kaynav mode.")
+        """Moves the launcher keynav focus to the next launcher icon"""
         logger.debug("Selecting next item in keyboard navigation mode.")
-        self.keybinding("launcher/keynav/next")
+        self._perform_key_nav_binding("launcher/keynav/next")
 
     def key_nav_prev(self):
-        if not self.in_keynav_mode:
-          raise RuntimeError("Cannot use the key navigation commands when not in kaynav mode.")
+        """Moves the launcher keynav focus to the previous launcher icon"""
         logger.debug("Selecting previous item in keyboard navigation mode.")
-        self.keybinding("launcher/keynav/prev")
+        self._perform_key_nav_binding("launcher/keynav/prev")
 
     def key_nav_enter_quicklist(self):
-        if not self.in_keynav_mode:
-            raise RuntimeError("Cannot open switcher quicklist while not in keynav mode.")
         logger.debug("Opening quicklist for currently selected icon.")
-        self.keybinding("launcher/keynav/open-quicklist")
+        self._perform_key_nav_binding("launcher/keynav/open-quicklist")
 
     def key_nav_exit_quicklist(self):
-        if not self.in_keynav_mode:
-            raise RuntimeError("Cannot close switcher quicklist while not in keynav mode.")
         logger.debug("Closing quicklist for currently selected icon.")
-        self.keybinding("launcher/keynav/close-quicklist")
+        self._perform_key_nav_binding("launcher/keynav/close-quicklist")
 
     def switcher_start(self):
         """Start the super+Tab switcher on this launcher."""
         self._screen.move_mouse_to_monitor(self.monitor)
         logger.debug("Starting Super+Tab switcher.")
-        self.keybinding_hold("launcher/switcher")
-        self.keybinding_tap("launcher/switcher")
+        self.keybinding_hold_part_then_tap("launcher/switcher")
         self.in_switcher_mode = True
 
-    def switcher_end(self, cancel):
-        """End the super+tab swithcer.
+    def switcher_cancel(self):
+        """End the super+tab swithcer."""
+        logger.debug("Cancelling keyboard navigation mode.")
+        self._perform_switcher_exit_binding("launcher/switcher/exit")
 
-        If cancel is True, the currently selected icon will not be activated.
-
-        """
-        if not self.in_switcher_mode:
-            raise RuntimeError("Cannot end the launcher switcher when not in switcher mode.")
-            
-        if cancel:
-            logger.debug("Cancelling keyboard navigation mode.")
-            self.keybinding("launcher/switcher/exit")
-            self.keybinding_release("launcher/switcher")
-        else:
-            logger.debug("Ending keyboard navigation mode.")
-            self.keybinding_release("launcher/switcher")
-
-        self.in_switcher_mode = False
+    def switcher_activate(self):
+        """Activates the selected launcher icon. In the current implementation
+        this also exits the switcher"""
+        logger.debug("Ending keyboard navigation mode.")
+        self._perform_switcher_exit_binding("launcher/switcher")
 
     def switcher_next(self):
-        if not self.in_switcher_mode:
-            raise RuntimeError("Cannot use the launcher switcher commands when not in switcher mode.")
         logger.debug("Selecting next item in keyboard navigation mode.")
-        self.keybinding("launcher/switcher/next")
+        self._perform_switcher_binding("launcher/switcher/next")
 
     def switcher_prev(self):
-        if not self.in_switcher_mode:
-            raise RuntimeError("Cannot use the launcher switcher commands when not in switcher mode.")
         logger.debug("Selecting previous item in keyboard navigation mode.")
-        self.keybinding("launcher/switcher/prev")
+        self._perform_switcher_binding("launcher/switcher/prev")
 
     def switcher_up(self):
-        if not self.in_switcher_mode:
-            raise RuntimeError("Cannot use the launcher switcher commands when not in switcher mode.")
         logger.debug("Selecting next item in keyboard navigation mode.")
-        self.keybinding("launcher/switcher/up")
+        self._perform_switcher_binding("launcher/switcher/up")
 
     def switcher_down(self):
-        if not self.in_switcher_mode:
-            raise RuntimeError("Cannot use the launcher switcher commands when not in switcher mode.")
         logger.debug("Selecting previous item in keyboard navigation mode.")
-        self.keybinding("launcher/switcher/down")
+        self._perform_switcher_binding("launcher/switcher/down")
 
     def click_launcher_icon(self, icon, button=1):
         """Move the mouse over the launcher icon, and click it.
-
         `icon` must be an instance of SimpleLauncherIcon or it's descendants.
-
         """
         if not isinstance(icon, SimpleLauncherIcon):
             raise TypeError("icon must be a LauncherIcon")
         logger.debug("Clicking launcher icon %r on monitor %d with mouse button %d",
             icon, self.monitor, button)
-        self.reveal_launcher()
+        self.mouse_reveal_launcher()
         target_x = icon.x + self.x
         target_y = icon.y + (self.icon_size / 2)
         self._mouse.move(target_x, target_y )
@@ -214,9 +204,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
     def lock_to_launcher(self, icon):
         """lock 'icon' to the launcher, if it's not already.
-
         `icon` must be an instance of BamfLauncherIcon.
-
         """
         if not isinstance(icon, BamfLauncherIcon):
             raise TypeError("Can only lock instances of BamfLauncherIcon")
@@ -294,4 +282,3 @@ class LauncherModel(UnityIntrospectionObject):
     def num_launcher_icons(self):
         """Get the number of icons in the launcher model."""
         return len(self.get_launcher_icons())
-
