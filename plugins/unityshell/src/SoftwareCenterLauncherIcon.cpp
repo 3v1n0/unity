@@ -41,8 +41,8 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
                    "org.debian.apt.transaction",
                    G_BUS_TYPE_SYSTEM,
                    G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START)
-,finished_ (true)
-,needs_urgent_ (false)
+, finished_(true)
+, needs_urgent_(false)
 {
 
   aptdaemon_trans_.Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
