@@ -1720,7 +1720,7 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
   Resize();
 }
 
-int Launcher::GetIconSize()
+int Launcher::GetIconSize() const
 {
     return _icon_size;
 }
