@@ -35,6 +35,8 @@ class SoftwareCenterLauncherIcon : public BamfLauncherIcon
 {
   NUX_DECLARE_OBJECT_TYPE(SoftwareCenterLauncherIcon, BamfLauncherIcon);
 public:
+  typedef nux::ObjectPtr<SoftwareCenterLauncherIcon> Ptr;
+
   SoftwareCenterLauncherIcon(BamfApplication* app,
                              std::string const& aptdaemon_trans_id,
                              std::string const& icon_path);

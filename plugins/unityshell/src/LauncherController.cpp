@@ -120,7 +120,7 @@ public:
 
   AbstractLauncherIcon::Ptr CreateFavorite(const char* file_path);
 
-  AbstractLauncherIcon::Ptr CreateSCLauncherIcon(std::string const& file_path, std::string const& aptdaemon_trans_id, std::string const& icon_path);
+  SoftwareCenterLauncherIcon::Ptr CreateSCLauncherIcon(std::string const& file_path, std::string const& aptdaemon_trans_id, std::string const& icon_path);
 
   void SetupBamf();
 
@@ -410,14 +410,14 @@ Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
       return;
   }
 
-  AbstractLauncherIcon::Ptr result = CreateSCLauncherIcon(path, aptdaemon_trans_id, icon_path);
+  SoftwareCenterLauncherIcon::Ptr result = CreateSCLauncherIcon(path, aptdaemon_trans_id, icon_path);
 
   launcher_->ForceReveal(true);
 
   if (result)
   {
     result->SetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE, false);
-    static_cast<SoftwareCenterLauncherIcon*>(result.GetPointer())->Animate(launcher_, icon_x, icon_y, icon_size);
+    result->Animate(launcher_, icon_x, icon_y, icon_size);
     RegisterIcon(result);
     Save();
   }
@@ -712,13 +712,12 @@ AbstractLauncherIcon::Ptr Controller::Impl::CreateFavorite(const char* file_path
   return result;
 }
 
-AbstractLauncherIcon::Ptr
-Controller::Impl::CreateSCLauncherIcon(std::string const& file_path,
-                                       std::string const& aptdaemon_trans_id,
-                                       std::string const& icon_path)
+SoftwareCenterLauncherIcon::Ptr Controller::Impl::CreateSCLauncherIcon(std::string const& file_path,
+                                                                       std::string const& aptdaemon_trans_id,
+                                                                       std::string const& icon_path)
 {
   BamfApplication* app;
-  AbstractLauncherIcon::Ptr result;
+  SoftwareCenterLauncherIcon::Ptr result;
 
   app = bamf_matcher_get_application_for_desktop_file(matcher_, file_path.c_str(), true);
   if (!BAMF_IS_APPLICATION(app))
