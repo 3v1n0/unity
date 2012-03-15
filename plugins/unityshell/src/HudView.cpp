@@ -64,6 +64,7 @@ View::View()
   , current_height_(0)
   , timeline_need_more_draw_(false)
   , selected_button_(0)
+  , icon_state_(IconHideState::SHOW)
 {
   renderer_.SetOwner(this);
   renderer_.need_redraw.connect([this] () { 
@@ -185,7 +186,6 @@ void View::Relayout()
   layout_->SetMinimumWidth(content_geo_.width);
   layout_->SetMaximumWidth(content_geo_.width);
   layout_->SetMaximumHeight(content_geo_.height);
-  //layout_->SetMinMaxSize(content_geo_.width, content_geo_.height);
 
   QueueDraw();
 }
@@ -274,6 +274,22 @@ void View::SetIcon(std::string icon_name)
   QueueDraw();
 }
 
+void View::SetHideIcon(IconHideState hide_icon)
+{
+  LOG_DEBUG(logger) << "Hide icon called";
+  if (hide_icon == icon_state_)
+    return;
+
+  icon_state_ = hide_icon;
+
+  if (icon_state_ == IconHideState::HIDE)
+    layout_->RemoveChildObject(dynamic_cast<nux::Area*>(icon_layout_.GetPointer()));
+  else
+    layout_->AddLayout(icon_layout_.GetPointer(), 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT, 100.0f, nux::LayoutPosition::NUX_LAYOUT_BEGIN);
+
+  Relayout();
+}
+
 // Gives us the width and height of the contents that will give us the best "fit",
 // which means that the icons/views will not have uneccessary padding, everything will
 // look tight
@@ -284,7 +300,12 @@ nux::Geometry View::GetBestFitGeometry(nux::Geometry const& for_geo)
   int width, height = 0;
   width = 1024;
   height = 276;
-  
+
+  if (icon_state_ == IconHideState::HIDE)
+  {
+    width -= icon_layout_->GetGeometry().width;
+  }
+
   LOG_DEBUG (logger) << "best fit is, " << width << ", " << height;
 
   return nux::Geometry(0, 0, width, height);
@@ -324,11 +345,11 @@ void View::SetupViews()
   { 
     // fill icon layout with icon
     icon_ = new Icon("", icon_size, true);
-    nux::Layout* icon_layout = new nux::VLayout();
+    icon_layout_ = new nux::VLayout();
     {
-      icon_layout->SetVerticalExternalMargin(icon_vertical_margin);
-      icon_layout->AddView(icon_.GetPointer(), 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
-      layout_->AddLayout(icon_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT);
+      icon_layout_->SetVerticalExternalMargin(icon_vertical_margin);
+      icon_layout_->AddView(icon_.GetPointer(), 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
+      layout_->AddLayout(icon_layout_.GetPointer(), 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT);
     }
 
     // add padding to layout between icon and content

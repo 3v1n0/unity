@@ -1306,19 +1306,16 @@ void Launcher::OnOverlayShown(GVariant* data)
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
 
-  if (!g_strcmp0(overlay_identity, "dash"))
+  if (overlay_monitor == monitor)
   {
-    if (overlay_monitor == monitor)
-    {
-      LauncherModel::iterator it;
+    LauncherModel::iterator it;
 
-      _dash_is_open = true;
-      bg_effect_helper_.enabled = true;
-      _hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, true);
-      _hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, true);
+    _dash_is_open = true;
+    bg_effect_helper_.enabled = true;
+    _hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, true);
+    _hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, true);
 
-      DesaturateIcons();
-    }
+    DesaturateIcons();
   }
 }
 
@@ -1331,26 +1328,23 @@ void Launcher::OnOverlayHidden(GVariant* data)
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
-  if (!g_strcmp0(overlay_identity, "dash"))
-  {
-    if (!_dash_is_open)
-      return;
+  if (!_dash_is_open)
+    return;
 
-    LauncherModel::iterator it;
+  LauncherModel::iterator it;
 
-    _dash_is_open = false;
-    bg_effect_helper_.enabled = false;
-    _hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, false);
-    _hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, false);
+  _dash_is_open = false;
+  bg_effect_helper_.enabled = false;
+  _hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, false);
+  _hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, false);
 
-    // as the leave event is no more received when the place is opened
-    // FIXME: remove when we change the mouse grab strategy in nux
-    nux::Point pt = nux::GetWindowCompositor().GetMousePosition();
+  // as the leave event is no more received when the place is opened
+  // FIXME: remove when we change the mouse grab strategy in nux
+  nux::Point pt = nux::GetWindowCompositor().GetMousePosition();
 
-    SetStateMouseOverLauncher(GetAbsoluteGeometry().IsInside(pt));
+  SetStateMouseOverLauncher(GetAbsoluteGeometry().IsInside(pt));
 
-    SaturateIcons();
-  }
+  SaturateIcons();
 }
 
 void Launcher::OnActionDone(GVariant* data)

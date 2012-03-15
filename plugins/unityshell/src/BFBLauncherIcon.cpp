@@ -45,6 +45,25 @@ BFBLauncherIcon::BFBLauncherIcon()
   background_color_ = nux::color::White;
 
   mouse_enter.connect([&](int m) { ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL); });
+  ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::bind(sigc::mem_fun(this, &BFBLauncherIcon::OnOverlayShown), true));
+  ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::bind(sigc::mem_fun(this, &BFBLauncherIcon::OnOverlayShown), false));
+}
+
+void BFBLauncherIcon::OnOverlayShown(GVariant *data, bool visible)
+{
+  unity::glib::String overlay_identity;
+  gboolean can_maximise = FALSE;
+  gint32 overlay_monitor = 0;
+  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
+                &overlay_identity, &can_maximise, &overlay_monitor);
+
+
+  if (!g_strcmp0(overlay_identity, "hud"))
+  {
+    // if the hud is open, we hide the BFB
+    SetQuirk(QUIRK_VISIBLE, !visible);
+    EmitNeedsRedraw();
+  }
 }
 
 nux::Color BFBLauncherIcon::BackgroundColor()
