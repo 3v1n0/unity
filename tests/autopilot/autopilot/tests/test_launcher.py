@@ -256,59 +256,51 @@ class LauncherRevealTests(LauncherTestCase):
 
     def setUp(self):
         super(LauncherRevealTests, self).setUp()
+        # this automatically resets to the original value, as implemented in AutopilotTestCase
         self.set_unity_option('launcher_hide_mode', True)
         sleep(1)
 
     def test_launcher_keyboard_reveal_works(self):
         """Revealing launcher with keyboard must work."""
-        launcher_instance = self._get_launcher()
-        launcher_instance.keyboard_reveal_launcher()
-        self.addCleanup(launcher_instance.keyboard_unreveal_launcher)
+        self.addCleanup(self.launcher_instance.keyboard_unreveal_launcher)
+
+        self.launcher_instance.keyboard_reveal_launcher()
         sleep(0.5)
-        self.assertThat(launcher_instance.is_showing(), Equals(True))
+        self.assertThat(self.launcher_instance.is_showing(), Equals(True))
 
     def test_reveal_on_mouse_to_edge(self):
         """Tests reveal of launchers by mouse pressure."""
-        launcher_instance = self._get_launcher()
-        launcher_instance.move_mouse_to_right_of_launcher()
-        launcher_instance.mouse_reveal_launcher()
-        self.assertThat(launcher_instance.is_showing(), Equals(True))
+        self.launcher_instance.move_mouse_to_right_of_launcher()
+        self.launcher_instance.mouse_reveal_launcher()
+        self.assertThat(self.launcher_instance.is_showing(), Equals(True))
 
     def test_reveal_with_mouse_under_launcher(self):
         """Tests that the launcher hides properly if the
         mouse is under the launcher when it is revealed.
-
         """
-        launcher_instance = self._get_launcher()
-
-        launcher_instance.move_mouse_over_launcher()
+        self.launcher_instance.move_mouse_over_launcher()
         # we can't use "launcher_instance.keyboard_reveal_launcher()"
         # since it moves the mouse out of the way, invalidating the test.
         self.keybinding_hold("launcher/reveal")
         sleep(1)
         self.keybinding_release("launcher/reveal")
         sleep(2)
-        self.assertThat(launcher_instance.is_showing(), Equals(False))
+        self.assertThat(self.launcher_instance.is_showing(), Equals(False))
 
     def test_reveal_does_not_hide_again(self):
         """Tests reveal of launchers by mouse pressure to ensure it doesn't
         automatically hide again.
-
         """
-        launcher_instance = self._get_launcher()
-
-        launcher_instance.move_mouse_to_right_of_launcher()
-        launcher_instance.mouse_reveal_launcher()
+        self.launcher_instance.move_mouse_to_right_of_launcher()
+        self.launcher_instance.mouse_reveal_launcher()
         sleep(2)
-        self.assertThat(launcher_instance.is_showing(), Equals(True))
+        self.assertThat(self.launcher_instance.is_showing(), Equals(True))
 
     def test_launcher_does_not_reveal_with_mouse_down(self):
         """Launcher must not reveal if have mouse button 1 down."""
-        launcher_instance = self._get_launcher()
+        self.addCleanup(self.mouse.release, 1)
         screens = ScreenGeometry()
-
-        screens.move_mouse_to_monitor(launcher_instance.monitor)
+        screens.move_mouse_to_monitor(self.launcher_instance.monitor)
         self.mouse.press(1)
-        launcher_instance.mouse_reveal_launcher()
-        self.assertThat(launcher_instance.is_showing(), Equals(False))
-        self.mouse.release(1)
+        self.launcher_instance.mouse_reveal_launcher()
+        self.assertThat(self.launcher_instance.is_showing(), Equals(False))
