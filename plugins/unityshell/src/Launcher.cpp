@@ -2129,10 +2129,7 @@ void Launcher::EndIconDrag()
       _drag_window->StartAnimation();
 
       if (_drag_window->on_anim_completed.connected())
-      {
-        LOG_DEBUG(logger) << "Disconnecting on_anim_completed signal.";
         _drag_window->on_anim_completed.disconnect();
-      }
       _drag_window->on_anim_completed = _drag_window->anim_completed.connect(sigc::mem_fun(this, &Launcher::OnDragWindowAnimCompleted));
     }
   }
