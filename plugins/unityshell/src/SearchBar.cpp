@@ -133,7 +133,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   , show_filter_hint_(true)
   , expander_view_(nullptr)
   , show_filters_(nullptr)
-  , search_bar_width_(642)
+  , search_bar_width_(640)
   , live_search_timeout_(0)
   , start_spinner_timeout_(0)
 {
@@ -184,8 +184,7 @@ void SearchBar::Init()
   SetLayout(layout_);
 
   spinner_ = new SearchBarSpinner();
-  spinner_->SetMinimumHeight(SPINNER_HEIGHT);
-  spinner_->SetMaximumHeight(SPINNER_HEIGHT);
+  spinner_->SetMinMaxSize(icon->GetWidth(), SPINNER_HEIGHT);
   spinner_->mouse_click.connect(sigc::mem_fun(this, &SearchBar::OnClearClicked));
   layout_->AddView(spinner_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 

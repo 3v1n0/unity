@@ -28,8 +28,10 @@ PlacesVScrollBar::PlacesVScrollBar(NUX_FILE_LINE_DECL)
   : VScrollBar(NUX_FILE_LINE_PARAM),
     _slider_texture(NULL)
 {
-  _slider->SetMinimumSize(3, 3);
-  SetMinimumSize(3, 3);
+  _slider->SetMinimumWidth(3);
+  _slider->SetMaximumWidth(3);
+  SetMinimumWidth(3);
+  SetMaximumWidth(3);
 }
 
 PlacesVScrollBar::~PlacesVScrollBar()
