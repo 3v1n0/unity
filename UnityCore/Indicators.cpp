@@ -66,7 +66,6 @@ Indicators::~Indicators()
 void Indicators::ActivateEntry(std::string const& entry_id, nux::Rect const& geometry)
 {
   pimpl->ActivateEntry(entry_id, geometry);
-  on_entry_activated.emit(entry_id, geometry);
 }
 
 void Indicators::SetEntryShowNow(std::string const& entry_id, bool show_now)
@@ -108,6 +107,7 @@ void Indicators::Impl::ActivateEntry(std::string const& entry_id, nux::Rect cons
   {
     active_entry_->set_geometry(geometry);
     active_entry_->set_active(true);
+    owner_->on_entry_activated.emit(entry_id, geometry);
   }
 }
 
