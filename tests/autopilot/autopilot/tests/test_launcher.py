@@ -128,87 +128,63 @@ class LauncherSwitcherTests(LauncherTestCase):
         # FIXME We can't directly check for self.launcher.num_launcher_icons - 1
         self.assertThat(self.launcher.key_nav_selection, GreaterThan(1))
 
+    def test_launcher_switcher_using_shorcuts(self):
+        """Using some other shortcut while switcher is active must cancel switcher."""
+        self.keyboard.press_and_release("s")
+        sleep(.25)
+        self.keyboard.press_and_release("Escape")
+        sleep(.25)
+        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
+
+class LauncherShortcutTests(LauncherTestCase):
+    def setUp(self):
+        super(LauncherShortcutTests, self).setUp()
+        self.launcher_instance.keyboard_reveal_launcher()
+        sleep(2)
+
+    def tearDown(self):
+        super(LauncherShortcutTests, self).tearDown()
+        self.launcher_instance.keyboard_unreveal_launcher()
+
+    def test_launcher_keyboard_reveal_shows_shortcut_hints(self):
+        """Launcher icons must show shortcut hints after revealing with keyboard."""
+        self.assertThat(self.launcher_instance.are_shortcuts_showing(), Equals(True))
+
+    def test_launcher_switcher_keeps_shorcuts(self):
+        """Initiating launcher switcher after showing shortcuts must not hide shortcuts"""
+        self.addCleanup(self.launcher_instance.switcher_cancel)
+        self.launcher_instance.switcher_start()
+        sleep(.5)
+
+        self.assertThat(self.launcher.key_nav_is_active, Equals(True))
+        self.assertThat(self.launcher_instance.are_shortcuts_showing(), Equals(True))
+
+    def test_launcher_switcher_next_keeps_shortcuts(self):
+        """Launcher switcher next action must keep shortcuts after they've been shown."""
+        self.addCleanup(self.launcher_instance.switcher_cancel)
+        self.launcher_instance.switcher_start()
+        sleep(.5)
+
+        self.launcher_instance.switcher_next()
+        sleep(.5)
+        self.assertThat(self.launcher_instance.are_shortcuts_showing(), Equals(True))
+
+    def test_launcher_switcher_prev_keeps_shortcuts(self):
+        """Launcher switcher prev action must keep shortcuts after they've been shown."""
+        self.addCleanup(self.launcher_instance.switcher_cancel)
+        self.launcher_instance.switcher_start()
+        sleep(.5)
+
+        self.launcher_instance.switcher_prev()
+        sleep(.5)
+        self.assertThat(self.launcher_instance.are_shortcuts_showing(), Equals(True))
+
 class LauncherTests(LauncherTestCase):
     """Test the launcher."""
 
     def setUp(self):
         super(LauncherTests, self).setUp()
         sleep(1)
-
-    def test_launcher_keyboard_reveal_works(self):
-        """Revealing launcher with keyboard must work."""
-        launcher_instance = self._get_launcher()
-        launcher_instance.keyboard_reveal_launcher()
-        self.addCleanup(launcher_instance.keyboard_unreveal_launcher)
-        sleep(0.5)
-        self.assertThat(launcher_instance.is_showing(), Equals(True))
-
-    def test_launcher_keyboard_reveal_shows_shortcut_hints(self):
-        """Launcher icons must show shortcut hints after revealing with keyboard."""
-        launcher_instance = self._get_launcher()
-        launcher_instance.move_mouse_to_right_of_launcher()
-        launcher_instance.keyboard_reveal_launcher()
-        self.addCleanup(launcher_instance.keyboard_unreveal_launcher)
-        sleep(1)
-
-        self.assertThat(launcher_instance.are_shortcuts_showing(), Equals(True))
-
-    def test_launcher_switcher_keeps_shorcuts(self):
-        """Initiating launcher switcher after showing shortcuts must not hide shortcuts"""
-        sleep(.5)
-        launcher_instance = self._get_launcher()
-        launcher_instance.move_mouse_to_right_of_launcher()
-        launcher_instance.keyboard_reveal_launcher()
-        self.addCleanup(launcher_instance.keyboard_unreveal_launcher)
-        sleep(1)
-
-        launcher_instance.switcher_start()
-        self.addCleanup(launcher_instance.switcher_cancel)
-        sleep(.5)
-
-        self.assertThat(self.launcher.key_nav_is_active, Equals(True))
-        self.assertThat(launcher_instance.are_shortcuts_showing(), Equals(True))
-
-    def test_launcher_switcher_next_and_prev_keep_shortcuts(self):
-        """Launcher switcher next and prev actions must keep shortcuts after they've been shown."""
-        sleep(.5)
-        launcher_instance = self._get_launcher()
-        launcher_instance.move_mouse_to_right_of_launcher()
-        launcher_instance.keyboard_reveal_launcher()
-        self.addCleanup(launcher_instance.keyboard_unreveal_launcher)
-        sleep(1)
-
-        launcher_instance.switcher_start()
-        self.addCleanup(launcher_instance.switcher_cancel)
-        sleep(.5)
-
-        launcher_instance.switcher_next()
-        sleep(.5)
-        self.assertThat(launcher_instance.are_shortcuts_showing(), Equals(True))
-
-        launcher_instance.switcher_prev()
-        sleep(.5)
-        self.assertThat(launcher_instance.are_shortcuts_showing(), Equals(True))
-
-    def test_launcher_switcher_using_shorcuts(self):
-        """Using some other shortcut while switcher is active must cancel switcher."""
-        sleep(.5)
-
-        launcher_instance = self._get_launcher()
-        launcher_instance.move_mouse_to_right_of_launcher()
-        launcher_instance.keyboard_reveal_launcher()
-        self.addCleanup(launcher_instance.keyboard_unreveal_launcher)
-        sleep(1)
-        launcher_instance.switcher_start()
-        self.addCleanup(launcher_instance.switcher_cancel)
-        sleep(.5)
-
-        self.keyboard.press_and_release("s")
-        sleep(.25)
-        self.keyboard.press_and_release("Escape")
-        sleep(.25)
-
-        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
 
     def test_launcher_keynav_initiate_works(self):
         """Tests we can initiate keyboard navigation on the launcher."""
@@ -339,6 +315,14 @@ class LauncherRevealTests(LauncherTestCase):
         super(LauncherRevealTests, self).setUp()
         self.set_unity_option('launcher_hide_mode', True)
         sleep(1)
+
+    def test_launcher_keyboard_reveal_works(self):
+        """Revealing launcher with keyboard must work."""
+        launcher_instance = self._get_launcher()
+        launcher_instance.keyboard_reveal_launcher()
+        self.addCleanup(launcher_instance.keyboard_unreveal_launcher)
+        sleep(0.5)
+        self.assertThat(launcher_instance.is_showing(), Equals(True))
 
     def test_reveal_on_mouse_to_edge(self):
         """Tests reveal of launchers by mouse pressure."""
