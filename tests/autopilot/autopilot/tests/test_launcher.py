@@ -56,20 +56,20 @@ class LauncherTests(ScenariodLauncherTests):
         sleep(.5)
         launcher_instance = self.get_launcher()
         launcher_instance.switcher_start()
-        self.addCleanup(launcher_instance.switcher_end, True)
+        self.addCleanup(launcher_instance.switcher_cancel)
         sleep(.5)
 
         self.assertThat(self.launcher.key_nav_is_active, Equals(True))
         self.assertThat(self.launcher.key_nav_is_grabbed, Equals(False))
         self.assertThat(self.launcher.key_nav_selection, Equals(0))
 
-    def test_launcher_switcher_end_works(self):
+    def test_launcher_switcher_cancel_works(self):
         """Test that ending the launcher switcher actually works."""
         sleep(.5)
         launcher_instance = self.get_launcher()
         launcher_instance.switcher_start()
         sleep(.5)
-        launcher_instance.switcher_end(cancel=True)
+        launcher_instance.switcher_cancel()
         sleep(.5)
         self.assertThat(self.launcher.key_nav_is_active, Equals(False))
 
@@ -78,7 +78,7 @@ class LauncherTests(ScenariodLauncherTests):
         sleep(.5)
         launcher_instance = self.get_launcher()
         launcher_instance.switcher_start()
-        self.addCleanup(launcher_instance.switcher_end, True)
+        self.addCleanup(launcher_instance.switcher_cancel)
         sleep(.25)
         self.assertThat(self.launcher.key_nav_is_active, Equals(True))
         sleep(.25)
@@ -91,7 +91,7 @@ class LauncherTests(ScenariodLauncherTests):
         sleep(.5)
         launcher_instance = self.get_launcher()
         launcher_instance.switcher_start()
-        self.addCleanup(launcher_instance.switcher_end, True)
+        self.addCleanup(launcher_instance.switcher_cancel)
         sleep(.5)
 
         launcher_instance.switcher_next()
@@ -103,7 +103,7 @@ class LauncherTests(ScenariodLauncherTests):
         sleep(.5)
         launcher_instance = self.get_launcher()
         launcher_instance.switcher_start()
-        self.addCleanup(launcher_instance.switcher_end, True)
+        self.addCleanup(launcher_instance.switcher_cancel)
         sleep(.25)
         self.assertThat(self.launcher.key_nav_selection, Equals(0))
 
@@ -116,7 +116,7 @@ class LauncherTests(ScenariodLauncherTests):
         sleep(.5)
         launcher_instance = self.get_launcher()
         launcher_instance.switcher_start()
-        self.addCleanup(launcher_instance.switcher_end, True)
+        self.addCleanup(launcher_instance.switcher_cancel)
         sleep(.25)
         self.assertThat(self.launcher.key_nav_selection, Equals(0))
 
@@ -129,7 +129,7 @@ class LauncherTests(ScenariodLauncherTests):
         sleep(.5)
         launcher_instance = self.get_launcher()
         launcher_instance.switcher_start()
-        self.addCleanup(launcher_instance.switcher_end, True)
+        self.addCleanup(launcher_instance.switcher_cancel)
         sleep(.25)
         self.assertThat(self.launcher.key_nav_selection, Equals(0))
 
@@ -142,7 +142,7 @@ class LauncherTests(ScenariodLauncherTests):
         sleep(.5)
         launcher_instance = self.get_launcher()
         launcher_instance.switcher_start()
-        self.addCleanup(launcher_instance.switcher_end, True)
+        self.addCleanup(launcher_instance.switcher_cancel)
         sleep(.5)
         launcher_instance.switcher_next()
         sleep(2)
@@ -153,7 +153,7 @@ class LauncherTests(ScenariodLauncherTests):
         sleep(.5)
         launcher_instance = self.get_launcher()
         launcher_instance.switcher_start()
-        self.addCleanup(launcher_instance.switcher_end, True)
+        self.addCleanup(launcher_instance.switcher_cancel)
         sleep(.5)
         launcher_instance.switcher_next()
         sleep(2)
@@ -167,7 +167,7 @@ class LauncherTests(ScenariodLauncherTests):
         sleep(.5)
         launcher_instance = self.get_launcher()
         launcher_instance.switcher_start()
-        self.addCleanup(launcher_instance.switcher_end, True)
+        self.addCleanup(launcher_instance.switcher_cancel)
         sleep(.5)
 
         prev_icon = 0
@@ -191,7 +191,7 @@ class LauncherTests(ScenariodLauncherTests):
         sleep(.5)
         launcher_instance = self.get_launcher()
         launcher_instance.switcher_start()
-        self.addCleanup(launcher_instance.switcher_end, True)
+        self.addCleanup(launcher_instance.switcher_cancel)
         sleep(.5)
 
         launcher_instance.switcher_prev()
@@ -226,7 +226,7 @@ class LauncherTests(ScenariodLauncherTests):
         sleep(1)
 
         launcher_instance.switcher_start()
-        self.addCleanup(launcher_instance.switcher_end, True)
+        self.addCleanup(launcher_instance.switcher_cancel)
         sleep(.5)
 
         self.assertThat(self.launcher.key_nav_is_active, Equals(True))
@@ -242,7 +242,7 @@ class LauncherTests(ScenariodLauncherTests):
         sleep(1)
 
         launcher_instance.switcher_start()
-        self.addCleanup(launcher_instance.switcher_end, True)
+        self.addCleanup(launcher_instance.switcher_cancel)
         sleep(.5)
 
         launcher_instance.switcher_next()
@@ -263,7 +263,7 @@ class LauncherTests(ScenariodLauncherTests):
         self.addCleanup(launcher_instance.keyboard_unreveal_launcher)
         sleep(1)
         launcher_instance.switcher_start()
-        self.addCleanup(launcher_instance.switcher_end, True)
+        self.addCleanup(launcher_instance.switcher_cancel)
         sleep(.5)
 
         self.keyboard.press_and_release("s")
@@ -278,7 +278,7 @@ class LauncherTests(ScenariodLauncherTests):
         launcher_instance = self.get_launcher()
         sleep(.5)
         launcher_instance.key_nav_start()
-        self.addCleanup(launcher_instance.key_nav_end, True)
+        self.addCleanup(launcher_instance.key_nav_cancel)
         sleep(.5)
 
         self.assertThat(self.launcher.key_nav_is_active, Equals(True))
@@ -290,7 +290,7 @@ class LauncherTests(ScenariodLauncherTests):
         sleep(.5)
         launcher_instance.key_nav_start()
         sleep(.5)
-        launcher_instance.key_nav_end(cancel=True)
+        launcher_instance.key_nav_cancel()
         self.assertThat(self.launcher.key_nav_is_active, Equals(False))
         self.assertThat(self.launcher.key_nav_is_grabbed, Equals(False))
 
@@ -299,7 +299,7 @@ class LauncherTests(ScenariodLauncherTests):
         launcher_instance = self.get_launcher()
         sleep(.5)
         launcher_instance.key_nav_start()
-        self.addCleanup(launcher_instance.key_nav_end, True)
+        self.addCleanup(launcher_instance.key_nav_cancel)
         sleep(.5)
 
         self.assertThat(self.launcher.key_nav_selection, Equals(0))
@@ -309,7 +309,7 @@ class LauncherTests(ScenariodLauncherTests):
         launcher_instance = self.get_launcher()
         sleep(.5)
         launcher_instance.key_nav_start()
-        self.addCleanup(launcher_instance.key_nav_end, True)
+        self.addCleanup(launcher_instance.key_nav_cancel)
         sleep(.5)
         launcher_instance.key_nav_next()
         sleep(.5)
@@ -320,7 +320,7 @@ class LauncherTests(ScenariodLauncherTests):
         launcher_instance = self.get_launcher()
         sleep(.5)
         launcher_instance.key_nav_start()
-        self.addCleanup(launcher_instance.key_nav_end, True)
+        self.addCleanup(launcher_instance.key_nav_cancel)
         sleep(.5)
         launcher_instance.key_nav_next()
         sleep(.5)
@@ -333,7 +333,7 @@ class LauncherTests(ScenariodLauncherTests):
         launcher_instance = self.get_launcher()
         sleep(.5)
         launcher_instance.key_nav_start()
-        self.addCleanup(launcher_instance.key_nav_end, True)
+        self.addCleanup(launcher_instance.key_nav_cancel)
         sleep(.25)
 
         prev_icon = 0
@@ -355,7 +355,7 @@ class LauncherTests(ScenariodLauncherTests):
         launcher_instance = self.get_launcher()
         sleep(.5)
         launcher_instance.key_nav_start()
-        self.addCleanup(launcher_instance.key_nav_end, True)
+        self.addCleanup(launcher_instance.key_nav_cancel)
         sleep(.25)
 
         launcher_instance.key_nav_prev()
@@ -368,7 +368,7 @@ class LauncherTests(ScenariodLauncherTests):
         launcher_instance.move_mouse_to_right_of_launcher()
         sleep(.5)
         launcher_instance.key_nav_start()
-        self.addCleanup(launcher_instance.key_nav_end, True)
+        self.addCleanup(launcher_instance.key_nav_cancel)
         sleep(.5)
         launcher_instance.key_nav_next()
         sleep(.5)
@@ -383,7 +383,7 @@ class LauncherTests(ScenariodLauncherTests):
         launcher_instance.move_mouse_to_right_of_launcher()
         sleep(.5)
         launcher_instance.key_nav_start()
-        self.addCleanup(launcher_instance.key_nav_end, True)
+        self.addCleanup(launcher_instance.key_nav_cancel)
         sleep(.5)
         launcher_instance.key_nav_next()
         sleep(.5)
@@ -442,7 +442,7 @@ class LauncherRevealTests(ScenariodLauncherTests):
         """Tests reveal of launchers by mouse pressure."""
         launcher_instance = self.get_launcher()
         launcher_instance.move_mouse_to_right_of_launcher()
-        launcher_instance.reveal_launcher()
+        launcher_instance.mouse_reveal_launcher()
         self.assertThat(launcher_instance.is_showing(), Equals(True))
 
     def test_reveal_with_mouse_under_launcher(self):
@@ -469,7 +469,7 @@ class LauncherRevealTests(ScenariodLauncherTests):
         launcher_instance = self.get_launcher()
 
         launcher_instance.move_mouse_to_right_of_launcher()
-        launcher_instance.reveal_launcher()
+        launcher_instance.mouse_reveal_launcher()
         sleep(2)
         self.assertThat(launcher_instance.is_showing(), Equals(True))
 
@@ -480,6 +480,6 @@ class LauncherRevealTests(ScenariodLauncherTests):
 
         screens.move_mouse_to_monitor(launcher_instance.monitor)
         self.mouse.press(1)
-        launcher_instance.reveal_launcher()
+        launcher_instance.mouse_reveal_launcher()
         self.assertThat(launcher_instance.is_showing(), Equals(False))
         self.mouse.release(1)

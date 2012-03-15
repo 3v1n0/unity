@@ -133,7 +133,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   , show_filter_hint_(true)
   , expander_view_(nullptr)
   , show_filters_(nullptr)
-  , search_bar_width_(642)
+  , search_bar_width_(640)
   , live_search_timeout_(0)
   , start_spinner_timeout_(0)
 {

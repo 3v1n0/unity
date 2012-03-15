@@ -99,7 +99,7 @@ _keys = {
 
 
 def get(binding_name):
-    """Get a keyubinding, given it's well-known name.
+    """Get a keybinding, given its well-known name.
 
     binding_name must be a string, or a TypeError will be raised.
 
@@ -233,3 +233,6 @@ class KeybindingsHelper(object):
         """Tap the tap-part of a keybinding."""
         self._keyboard.press_and_release(get_tap_part(binding_name))
 
+    def keybinding_hold_part_then_tap(self, binding_name):
+        self.keybinding_hold(binding_name)
+        self.keybinding_tap(binding_name)
