@@ -64,6 +64,7 @@ public:
   MockIndicators()
   {}
 
+  // Implementing Indicators virtual functions
   virtual void OnEntryScroll(std::string const& entry_id, int delta)
   {
     target.entry = entry_id;
@@ -102,6 +103,7 @@ public:
     target.timestamp = timestamp;
   }
 
+  // Redirecting protected methods
   Indicator::Ptr GetIndicator(std::string const& name)
   {
     return Indicators::GetIndicator(name);
@@ -115,6 +117,51 @@ public:
   void RemoveIndicator(std::string const& name)
   {
     Indicators::RemoveIndicator(name);
+  }
+
+  // Utility function used to fill the class with test indicators with entries
+  void SetupTestChildren()
+  {
+    // Adding an indicator filled with entries into the MockIndicators
+    Indicator::Entries sync_data;
+    Entry* entry;
+
+    Indicator::Ptr test_indicator_1 = AddIndicator("indicator-test-1");
+
+    entry = new Entry("indicator-test-1|entry-1", "name-hint-1", "label", true, true,
+                      0, "icon", true, true, -1);
+    sync_data.push_back(Entry::Ptr(entry));
+
+    entry = new Entry("indicator-test-1|entry-2", "name-hint-2", "label", true, true,
+                      0, "icon", true, true, -1);
+    sync_data.push_back(Entry::Ptr(entry));
+
+    entry = new Entry("indicator-test-1|entry-3", "name-hint-3", "label", true, true,
+                      0, "icon", true, true, -1);
+    sync_data.push_back(Entry::Ptr(entry));
+
+    // Sync the indicator, adding 3 entries
+    test_indicator_1->Sync(sync_data);
+    EXPECT_EQ(test_indicator_1->GetEntries().size(), 3);
+
+
+    // Adding another indicator filled with entries into the MockIndicators
+    Indicator::Ptr test_indicator_2 = AddIndicator("indicator-test-2");
+    sync_data.clear();
+
+    entry = new Entry("indicator-test-2|entry-1", "name-hint-1", "label", true, true,
+                      0, "icon", true, true, -1);
+    sync_data.push_back(Entry::Ptr(entry));
+
+    entry = new Entry("indicator-test-2|entry-2", "name-hint-2", "label", true, true,
+                      0, "icon", true, true, -1);
+    sync_data.push_back(Entry::Ptr(entry));
+
+    // Sync the indicator, adding 2 entries
+    test_indicator_2->Sync(sync_data);
+    EXPECT_EQ(test_indicator_2->GetEntries().size(), 2);
+
+    ASSERT_THAT(GetIndicators().size(), 2);
   }
 
   TargetData target;
@@ -256,54 +303,10 @@ TEST(TestIndicators, IndicatorsHandling)
   EXPECT_EQ(removed_list.size(), 3);
 }
 
-void SetupTestIndicators(MockIndicators &indicators)
-{
-  // Adding an indicator filled with entries into the MockIndicators
-  Indicator::Entries sync_data;
-  Entry* entry;
-
-  Indicator::Ptr test_indicator_1 = indicators.AddIndicator("indicator-test-1");
-
-  entry = new Entry("indicator-test-1|entry-1", "name-hint-1", "label", true, true,
-                    0, "icon", true, true, -1);
-  sync_data.push_back(Entry::Ptr(entry));
-
-  entry = new Entry("indicator-test-1|entry-2", "name-hint-2", "label", true, true,
-                    0, "icon", true, true, -1);
-  sync_data.push_back(Entry::Ptr(entry));
-
-  entry = new Entry("indicator-test-1|entry-3", "name-hint-3", "label", true, true,
-                    0, "icon", true, true, -1);
-  sync_data.push_back(Entry::Ptr(entry));
-
-  // Sync the indicator, adding 3 entries
-  test_indicator_1->Sync(sync_data);
-  EXPECT_EQ(test_indicator_1->GetEntries().size(), 3);
-
-
-  // Adding another indicator filled with entries into the MockIndicators
-  Indicator::Ptr test_indicator_2 = indicators.AddIndicator("indicator-test-2");
-  sync_data.clear();
-
-  entry = new Entry("indicator-test-2|entry-1", "name-hint-1", "label", true, true,
-                    0, "icon", true, true, -1);
-  sync_data.push_back(Entry::Ptr(entry));
-
-  entry = new Entry("indicator-test-2|entry-2", "name-hint-2", "label", true, true,
-                    0, "icon", true, true, -1);
-  sync_data.push_back(Entry::Ptr(entry));
-
-  // Sync the indicator, adding 2 entries
-  test_indicator_2->Sync(sync_data);
-  EXPECT_EQ(test_indicator_2->GetEntries().size(), 2);
-}
-
 TEST(TestIndicators, ActivateEntry)
 {
   MockIndicators indicators;
-
-  SetupTestIndicators(indicators);
-  EXPECT_EQ(indicators.GetIndicators().size(), 2);
+  indicators.SetupTestChildren();
 
   // Activating Entries from the Indicators class to see if they get updated
   TargetData target;
@@ -336,9 +339,7 @@ TEST(TestIndicators, ActivateEntry)
 TEST(TestIndicators, ActivateEntryShouldDisactivatePrevious)
 {
   MockIndicators indicators;
-
-  SetupTestIndicators(indicators);
-  EXPECT_EQ(indicators.GetIndicators().size(), 2);
+  indicators.SetupTestChildren();
 
   // Activating Entries from the Indicators class to see if they get updated
   TargetData target;
@@ -387,9 +388,7 @@ TEST(TestIndicators, ActivateEntryShouldDisactivatePrevious)
 TEST(TestIndicators, ActivateEntryInvalidDoNothing)
 {
   MockIndicators indicators;
-
-  SetupTestIndicators(indicators);
-  EXPECT_EQ(indicators.GetIndicators().size(), 2);
+  indicators.SetupTestChildren();
 
   TargetData target;
 
@@ -428,9 +427,7 @@ TEST(TestIndicators, ActivateEntryInvalidDoNothing)
 TEST(TestIndicators, SetEntryShowNow)
 {
   MockIndicators indicators;
-
-  SetupTestIndicators(indicators);
-  EXPECT_EQ(indicators.GetIndicators().size(), 2);
+  indicators.SetupTestChildren();
 
   TargetData target;
 
@@ -457,9 +454,7 @@ TEST(TestIndicators, SetEntryShowNow)
 TEST(TestIndicators, EntryShowMenu)
 {
   MockIndicators indicators;
-
-  SetupTestIndicators(indicators);
-  EXPECT_EQ(indicators.GetIndicators().size(), 2);
+  indicators.SetupTestChildren();
 
   // See if the indicators class get notified on entries actions
   ASSERT_THAT(indicators.GetIndicator("indicator-test-1"), NotNull());
@@ -520,9 +515,7 @@ TEST(TestIndicators, EntryShowMenu)
 TEST(TestIndicators, EntryScroll)
 {
   MockIndicators indicators;
-
-  SetupTestIndicators(indicators);
-  EXPECT_EQ(indicators.GetIndicators().size(), 2);
+  indicators.SetupTestChildren();
 
   // See if the indicators class get notified on entries actions
   ASSERT_THAT(indicators.GetIndicator("indicator-test-1"), NotNull());
@@ -542,9 +535,7 @@ TEST(TestIndicators, EntryScroll)
 TEST(TestIndicators, EntrySecondaryActivate)
 {
   MockIndicators indicators;
-
-  SetupTestIndicators(indicators);
-  EXPECT_EQ(indicators.GetIndicators().size(), 2);
+  indicators.SetupTestChildren();
 
   // See if the indicators class get notified on entries actions
   ASSERT_THAT(indicators.GetIndicator("indicator-test-2"), NotNull());
