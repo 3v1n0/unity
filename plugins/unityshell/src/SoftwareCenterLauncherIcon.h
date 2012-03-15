@@ -38,6 +38,7 @@ public:
   SoftwareCenterLauncherIcon(BamfApplication* app,
                              std::string const& aptdaemon_trans_id,
                              std::string const& icon_path);
+  ~SoftwareCenterLauncherIcon();
 
   void Animate(nux::ObjectPtr<Launcher> launcher, int icon_x, int icon_y, int icon_size);
 

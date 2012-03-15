@@ -21,9 +21,14 @@
 #include <Nux/BaseWindow.h>
 #include <NuxGraphics/GraphicsEngine.h>
 #include <Nux/TextureArea.h>
+#include <NuxCore/Logger.h>
 
 #include "LauncherDragWindow.h"
 
+namespace
+{
+  nux::logging::Logger logger("unity.launcher.launcherdragwindow");
+}
 NUX_IMPLEMENT_OBJECT_TYPE(LauncherDragWindow);
 
 LauncherDragWindow::LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> icon)
@@ -39,6 +44,7 @@ LauncherDragWindow::~LauncherDragWindow()
   if (_anim_handle)
     g_source_remove(_anim_handle);
 
+  LOG_DEBUG(logger) << "In LauncherWindow dtor, disconnecting signal.";
   if (on_anim_completed.connected())
     on_anim_completed.disconnect();
 }
@@ -62,6 +68,8 @@ LauncherDragWindow::StartAnimation()
     return;
 
   _anim_handle = g_timeout_add(15, &LauncherDragWindow::OnAnimationTimeout, this);
+  LOG_DEBUG(logger) << "Starting animation, period is 15mS, timer id is " << _anim_handle << "this is " << this;
+  LOG_DEBUG(logger) << "When starting animation, signal is empty = " << anim_completed.empty();
 }
 
 gboolean
@@ -87,8 +95,11 @@ LauncherDragWindow::OnAnimationTimeout(gpointer data)
 
   geo = self->GetGeometry();
 
+  LOG_DEBUG(logger) << "Anim Tick, signal is empty = " << self->anim_completed.empty();
   if (geo.x == target_x && geo.y == target_y)
   {
+    LOG_DEBUG(logger) << "Reached target, stopping animation. this is " << self;
+    LOG_DEBUG(logger) << "Signal slots is empty: " << self->anim_completed.empty();
     self->anim_completed.emit();
     self->_anim_handle = 0;
     return false;

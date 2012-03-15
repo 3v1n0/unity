@@ -287,7 +287,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   bg_effect_helper_.enabled = false;
 
   TextureCache& cache = TextureCache::GetDefault();
-  TextureCache::CreateTextureCallback cb = [&](std::string const& name, int width, int height) -> nux::BaseTexture* { 
+  TextureCache::CreateTextureCallback cb = [&](std::string const& name, int width, int height) -> nux::BaseTexture* {
     return nux::CreateTexture2DFromFile((PKGDATADIR"/" + name + ".png").c_str(), -1, true);
   };
 
@@ -1054,7 +1054,7 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr icon,
   // FIXME: this is a hack, we should have a look why SetAnimationTarget is necessary in SetAnimationTarget
   // we should ideally just need it at start to set the target
   if (!_initial_drag_animation && icon == _drag_icon && _drag_window && _drag_window->Animating())
-    _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter(monitor).x), 
+    _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter(monitor).x),
                                      (int)(_drag_icon->GetCenter(monitor).y));
 
   center.y += (half_size * size_modifier) + spacing;   // move to end
@@ -1554,11 +1554,11 @@ void Launcher::ConfigureBarrier()
     float overcome_responsiveness_mult = ((options()->edge_responsiveness() - 1) * 1.0f) + 1;
     decaymulator_->rate_of_decay = options()->edge_decay_rate() * decay_responsiveness_mult;
     _edge_overcome_pressure = options()->edge_overcome_pressure() * overcome_responsiveness_mult;
-    
+
     _pointer_barrier->threshold = options()->edge_stop_velocity();
     _pointer_barrier->max_velocity_multiplier = options()->edge_responsiveness();
     _pointer_barrier->ConstructBarrier();
-    
+
     _hide_machine->reveal_pressure = options()->edge_reveal_pressure() * reveal_responsiveness_mult;
     _hide_machine->edge_decay_rate = options()->edge_decay_rate() * decay_responsiveness_mult;
   }
@@ -2048,7 +2048,7 @@ void Launcher::StartIconDragRequest(int x, int y)
 {
   nux::Geometry geo = GetAbsoluteGeometry();
   AbstractLauncherIcon::Ptr drag_icon = MouseIconIntersection((int)(GetGeometry().width / 2.0f), y);
-  
+
   x += geo.x;
   y += geo.y;
 
@@ -2124,12 +2124,15 @@ void Launcher::EndIconDrag()
     {
       _model->Save();
 
-      _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter(monitor).x), 
+      _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter(monitor).x),
                                        (int)(_drag_icon->GetCenter(monitor).y));
       _drag_window->StartAnimation();
 
       if (_drag_window->on_anim_completed.connected())
+      {
+        LOG_DEBUG(logger) << "Disconnecting on_anim_completed signal.";
         _drag_window->on_anim_completed.disconnect();
+      }
       _drag_window->on_anim_completed = _drag_window->anim_completed.connect(sigc::mem_fun(this, &Launcher::OnDragWindowAnimCompleted));
     }
   }
@@ -2338,7 +2341,7 @@ void Launcher::OnPointerBarrierEvent(ui::PointerBarrierWrapper* owner, ui::Barri
     Window root_return, child_return;
     Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
 
-    if (XQueryPointer (dpy, DefaultRootWindow(dpy), &root_return, &child_return, &root_x_return, 
+    if (XQueryPointer (dpy, DefaultRootWindow(dpy), &root_return, &child_return, &root_x_return,
                        &root_y_return, &win_x_return, &win_y_return, &mask_return))
     {
       if (mask_return & (Button1Mask | Button3Mask))

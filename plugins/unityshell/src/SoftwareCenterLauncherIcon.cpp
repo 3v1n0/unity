@@ -18,6 +18,7 @@
  *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
+#include <NuxCore/Logger.h>
 #include <glib/gi18n-lib.h>
 #include "SoftwareCenterLauncherIcon.h"
 #include "Launcher.h"
@@ -27,6 +28,10 @@ namespace unity
 {
 namespace launcher
 {
+namespace
+{
+nux::logging::Logger logger("unity.launcher.SoftwareCenterLauncherIcon");
+}
 
 NUX_IMPLEMENT_OBJECT_TYPE(SoftwareCenterLauncherIcon);
 
@@ -44,7 +49,8 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
 {
 
   _aptdaemon_trans.Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
-  _aptdaemon_trans.Connect("Finished", [&] (GVariant *) {
+  _aptdaemon_trans.Connect("Finished", [&] (GVariant *)
+  {
     tooltip_text = BamfName();
     SetQuirk(QUIRK_PROGRESS, false);
     SetQuirk(QUIRK_URGENT, true);
@@ -56,6 +62,17 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
   SetIconType(TYPE_APPLICATION);
   icon_name = icon_path.c_str();
   tooltip_text = _("Waiting to install");
+  LOG_DEBUG(logger) << "Software center launcher icon created.";
+}
+
+SoftwareCenterLauncherIcon::~SoftwareCenterLauncherIcon()
+{
+  LOG_DEBUG(logger) << "Destroying SOftware center launcher icon!";
+  if (_drag_window)
+  {
+    _drag_window->UnReference();
+    _drag_window = nullptr;
+  }
 }
 
 void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
@@ -75,6 +92,7 @@ void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
     nux::BITFMT_R8G8B8A8);
 
   _drag_window = new LauncherDragWindow(_icon_texture);
+  LOG_DEBUG(logger) << "LauncherDragWindow created at:" << _drag_window;
 
   launcher->RenderIconToTexture(nux::GetWindowThread()->GetGraphicsEngine(),
                                 AbstractLauncherIcon::Ptr(this),
@@ -87,11 +105,10 @@ void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
   // Find out the center of last BamfLauncherIcon with non-zero co-ordinates
   auto bamf_icons = launcher->GetModel()->GetSublist<BamfLauncherIcon>();
   //TODO: don't iterate through them and pick the last one, just use back() to get the last one.
-  // TODO: Don't static cast to ints - they're already an integer type!
   for (auto current_bamf_icon : bamf_icons)
   {
-    x = (int) current_bamf_icon->GetCenter(launcher->monitor).x;
-    y = (int) current_bamf_icon->GetCenter(launcher->monitor).y;
+    int x = (int) current_bamf_icon->GetCenter(launcher->monitor).x;
+    int y = (int) current_bamf_icon->GetCenter(launcher->monitor).y;
     if (x != 0 && y != 0)
     {
        target_x = x;
@@ -101,22 +118,25 @@ void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
 
   target_y = target_y + (launcher->GetIconSize() / 2);
   _drag_window->SetAnimationTarget(target_x, target_y);
+  LOG_DEBUG(logger) << "Target is: " << target_x << "," << target_y;
 
-  _drag_window->anim_completed.connect(sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnDragAnimationFinished));
+  _drag_window->on_anim_completed = _drag_window->anim_completed.connect(sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnDragAnimationFinished));
   _drag_window->StartAnimation();
+  LOG_DEBUG(logger) << "anim_completed signal connected, starting animation.";
 }
 
 void SoftwareCenterLauncherIcon::OnDragAnimationFinished()
 {
-  if (!_drag_window->Animating())
-  {
-      _drag_window->ShowWindow(false);
-      _launcher->icon_animation_complete.emit(AbstractLauncherIcon::Ptr(this));
-  }
+  LOG_DEBUG(logger) << "OnDragAnimationFinished called!";
+   _drag_window->ShowWindow(false);
+  _launcher->icon_animation_complete.emit(AbstractLauncherIcon::Ptr(this));
+  _drag_window->UnReference();
+  _drag_window = nullptr;
 }
 
 void SoftwareCenterLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
+  LOG_DEBUG(logger) << "ActivateLauncherIcon called.";
     if (_finished)
     {
         if (_finished_just_now)
@@ -132,6 +152,7 @@ void SoftwareCenterLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 
 void SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
 {
+  LOG_DEBUG(logger) << "OnPropertyChanged called.";
   gint32 progress;
   glib::String property_name;
   GVariant* property_value;

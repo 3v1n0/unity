@@ -240,7 +240,7 @@ Controller::Impl::Impl(Display* display, Controller* parent)
 
   uscreen->changed.connect(sigc::mem_fun(this, &Controller::Impl::OnScreenChanged));
 
-  WindowManager& plugin_adapter = *(WindowManager::Default()); 
+  WindowManager& plugin_adapter = *(WindowManager::Default());
   plugin_adapter.window_focus_changed.connect (sigc::mem_fun (this, &Controller::Impl::OnWindowFocusChanged));
 
   launcher_key_press_time_ = { 0, 0 };
@@ -313,7 +313,7 @@ void Controller::Impl::OnWindowFocusChanged (guint32 xid)
   else if (launcher_keynav)
   {
     keynav_first_focus = true;
-  } 
+  }
 }
 
 Launcher* Controller::Impl::CreateLauncher(int monitor)
@@ -403,32 +403,30 @@ Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
                                               int icon_y,
                                               int icon_size)
 {
-  auto launchers = model_->GetSublist<BamfLauncherIcon>();
-  for (auto icon : launchers)
+  auto bamf_icons = model_->GetSublist<BamfLauncherIcon>();
+  for (auto icon : bamf_icons)
   {
     if (icon->DesktopFile() == path)
       return;
   }
 
   AbstractLauncherIcon::Ptr result = CreateSCLauncherIcon(path, aptdaemon_trans_id, icon_path);
-  
+
   launcher_->ForceReveal(true);
 
   if (result)
+  {
+    //result->SetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE, false);
     static_cast<SoftwareCenterLauncherIcon*>(result.GetPointer())->Animate(launcher_, icon_x, icon_y, icon_size);
+    RegisterIcon(result);
+    Save();
+  }
 }
 
 void Controller::Impl::OnSCIconAnimationComplete(AbstractLauncherIcon::Ptr icon)
 {
-
-  if (icon)
-  {
-    RegisterIcon(icon);
-  }
-  Save();
-
+  //icon->SetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE, true);
   launcher_->ForceReveal(false);
-  
 }
 
 void Controller::Impl::SortAndUpdate()
@@ -632,7 +630,7 @@ void Controller::Impl::InsertExpoAction()
 
   on_expoicon_activate_connection_ = icon->activate.connect(sigc::mem_fun(this, &Impl::OnExpoActivated));
 
-  
+
   RegisterIcon(expo_icon_);
 }
 
@@ -733,10 +731,9 @@ Controller::Impl::CreateSCLauncherIcon(std::string const& file_path,
   }
 
   bamf_view_set_sticky(BAMF_VIEW(app), true);
-  AbstractLauncherIcon::Ptr icon(new SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path));
-  icon->SetSortPriority(sort_priority_++);
+  result = new SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path);
+  result->SetSortPriority(sort_priority_++);
 
-  result = icon;
   return result;
 }
 
