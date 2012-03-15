@@ -54,8 +54,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
     def _perform_key_nav_binding(self, keybinding):
         if not self.in_keynav_mode:
-                logger.warning("Cannot perform key navigation when not in kaynav mode.")
-                return
+                raise RuntimeError("Cannot perform key navigation when not in kaynav mode.")
         self.keybinding(keybinding)
 
     def _perform_key_nav_exit_binding(self, keybinding):
@@ -64,8 +63,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
     def _perform_switcher_binding(self, keybinding):
         if not self.in_switcher_mode:
-            logger.warning("Cannot interact with launcher switcher when not in switcher mode.")
-            return
+            raise RuntimeError("Cannot interact with launcher switcher when not in switcher mode.")
         self.keybinding(keybinding)
 
     def _perform_switcher_exit_binding(self, keybinding):
