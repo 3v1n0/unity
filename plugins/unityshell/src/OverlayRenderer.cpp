@@ -478,16 +478,25 @@ void OverlayRenderer::DisableBlur()
 void OverlayRenderer::DrawFull(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geo, bool force_edges)
 {
   pimpl_->Draw(gfx_context, content_geo, absolute_geo, geo, force_edges);
+  LOG_DEBUG(logger) << "OverlayRenderer::DrawFull(): content_geo:  " << content_geo.width << "/" << content_geo.height;
+  LOG_DEBUG(logger) << "OverlayRenderer::DrawFull(): absolute_geo: " << absolute_geo.width << "/" << absolute_geo.height;
+  LOG_DEBUG(logger) << "OverlayRenderer::DrawFull(): geo:          " << geo.width << "/" << geo.height;
 }
 
 void OverlayRenderer::DrawInner(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geo)
 {
   pimpl_->DrawContent(gfx_context, content_geo, absolute_geo, geo);
+  LOG_DEBUG(logger) << "OverlayRenderer::DrawInner(): content_geo:  " << content_geo.width << "/" << content_geo.height;
+  LOG_DEBUG(logger) << "OverlayRenderer::DrawInner(): absolute_geo: " << absolute_geo.width << "/" << absolute_geo.height;
+  LOG_DEBUG(logger) << "OverlayRenderer::DrawInner(): geo:          " << geo.width << "/" << geo.height;
 }
 
 void OverlayRenderer::DrawInnerCleanup(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geo)
 {
   pimpl_->DrawContentCleanup(gfx_context, content_geo, absolute_geo, geo);
+  LOG_DEBUG(logger) << "OverlayRenderer::DrawInnerCleanup(): content_geo:  " << content_geo.width << "/" << content_geo.height;
+  LOG_DEBUG(logger) << "OverlayRenderer::DrawInnerCleanup(): absolute_geo: " << absolute_geo.width << "/" << absolute_geo.height;
+  LOG_DEBUG(logger) << "OverlayRenderer::DrawInnerCleanup(): geo:          " << geo.width << "/" << geo.height;
 }
   
 }
