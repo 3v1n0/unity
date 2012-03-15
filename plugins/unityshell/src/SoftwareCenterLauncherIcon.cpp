@@ -38,9 +38,9 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
                    aptdaemon_trans_id,
                    "org.debian.apt.transaction",
                    G_BUS_TYPE_SYSTEM,
-                   G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START),
-  _finished (true),
-  _finished_just_now (false)
+                   G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START)
+,_finished (true)
+,_finished_just_now (false)
 {
 
   _aptdaemon_trans.Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
@@ -49,6 +49,8 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
     SetQuirk(QUIRK_PROGRESS, false);
     SetQuirk(QUIRK_URGENT, true);
     SetProgress(0.0f);
+    _finished = true;
+    _finished_just_now = true;
   });
 
   SetIconType(TYPE_APPLICATION);
@@ -56,37 +58,22 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
   tooltip_text = _("Waiting to install");
 }
 
-void SoftwareCenterLauncherIcon::AddSelfToLauncher()
-{
-    _launcher->icon_animation_complete.emit(AbstractLauncherIcon::Ptr(this));
-}
-
-gboolean SoftwareCenterLauncherIcon::OnDragWindowAnimComplete(gpointer data)
-{
-    SoftwareCenterLauncherIcon* self = (SoftwareCenterLauncherIcon*) data;
-    if (!self->_drag_window->Animating()) {
-        self->_drag_window->ShowWindow(false);
-
-        // I had to create a new function because for some reason, when trying to access
-        // self->_launcher from this function, I got segfaults.
-        self->AddSelfToLauncher();
-        return false;
-    }
-    return true;
-}
-
-void
-SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
-                                    int icon_x,
-                                    int icon_y,
-                                    int icon_size)
+void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
+                                        int icon_x,
+                                        int icon_y,
+                                        int icon_size)
 {
   int target_x = 0;
   int target_y = 0;
 
-  _launcher = launcher.GetPointer();
+  _launcher = launcher;
 
-  _icon_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(launcher->GetIconSize(), launcher->GetIconSize(), 1, nux::BITFMT_R8G8B8A8);
+  _icon_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(
+    launcher->GetIconSize(),
+    launcher->GetIconSize(),
+    1,
+    nux::BITFMT_R8G8B8A8);
+
   _drag_window = new LauncherDragWindow(_icon_texture);
 
   launcher->RenderIconToTexture(nux::GetWindowThread()->GetGraphicsEngine(),
@@ -98,8 +85,10 @@ SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
   _drag_window->SinkReference();
 
   // Find out the center of last BamfLauncherIcon with non-zero co-ordinates
-  auto launchers = launcher->GetModel()->GetSublist<BamfLauncherIcon>();
-  for (auto current_bamf_icon : launchers)
+  auto bamf_icons = launcher->GetModel()->GetSublist<BamfLauncherIcon>();
+  //TODO: don't iterate through them and pick the last one, just use back() to get the last one.
+  // TODO: Don't static cast to ints - they're already an integer type!
+  for (auto current_bamf_icon : bamf_icons)
   {
     if (static_cast<int>(current_bamf_icon->GetCenter(launcher->monitor).x) != 0 &&
         static_cast<int>(current_bamf_icon->GetCenter(launcher->monitor).y) != 0)
@@ -112,12 +101,17 @@ SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
   target_y = target_y + (launcher->GetIconSize() / 2);
   _drag_window->SetAnimationTarget(target_x, target_y);
 
+  _drag_window->anim_completed.connect(sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnDragAnimationFinished));
   _drag_window->StartAnimation();
+}
 
-  // This is to check if the animation has completed, since the anim_completed signal
-  // in the drag window doesn't work (mysteriously)
-  g_timeout_add(30, &SoftwareCenterLauncherIcon::OnDragWindowAnimComplete, this);
-
+void SoftwareCenterLauncherIcon::OnDragAnimationFinished()
+{
+  if (!_drag_window->Animating())
+  {
+      _drag_window->ShowWindow(false);
+      _launcher->icon_animation_complete.emit(AbstractLauncherIcon::Ptr(this));
+  }
 }
 
 void SoftwareCenterLauncherIcon::ActivateLauncherIcon(ActionArg arg)
@@ -135,9 +129,7 @@ void SoftwareCenterLauncherIcon::ActivateLauncherIcon(ActionArg arg)
         SetQuirk(QUIRK_STARTING, false);
 }
 
-
-void
-SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
+void SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
 {
   gint32 progress;
   glib::String property_name;

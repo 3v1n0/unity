@@ -39,8 +39,6 @@ public:
                              std::string const& aptdaemon_trans_id,
                              std::string const& icon_path);
 
-  void AddSelfToLauncher();
-
   void Animate(nux::ObjectPtr<Launcher> launcher, int icon_x, int icon_y, int icon_size);
 
   std::string GetName() const;
@@ -50,14 +48,13 @@ protected:
 
 private:
   void OnPropertyChanged(GVariant* params);
-
-  static gboolean OnDragWindowAnimComplete(gpointer data);
+  void OnDragAnimationFinished();
 
   glib::DBusProxy _aptdaemon_trans;
 
   nux::ObjectPtr<nux::IOpenGLBaseTexture> _icon_texture;
   LauncherDragWindow* _drag_window;
-  Launcher* _launcher;
+  nux::ObjectPtr<Launcher> _launcher;
   bool _finished;
   bool _finished_just_now;
 };
