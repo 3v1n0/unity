@@ -97,6 +97,8 @@ public:
   nux::Property<int> edge_stop_velocity;
   nux::Property<int> edge_reveal_pressure;
   nux::Property<float> edge_responsiveness;
+  nux::Property<bool> edge_resist;
+  nux::Property<bool> show_for_all;
 
   sigc::signal<void> option_changed;
 };

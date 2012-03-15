@@ -221,6 +221,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _autoscroll_handle      = 0;
   _start_dragicon_handle  = 0;
   _dnd_check_handle       = 0;
+  _strut_hack_handle      = 0;
   _last_reveal_progress   = 0;
 
   _shortcuts_shown        = false;
@@ -313,6 +314,8 @@ Launcher::~Launcher()
     g_source_remove(_start_dragicon_handle);
   if (_launcher_animation_timeout > 0)
     g_source_remove(_launcher_animation_timeout);
+  if (_strut_hack_handle)
+    g_source_remove(_strut_hack_handle);
 
   if (_on_data_collected_connection.connected())
       _on_data_collected_connection.disconnect();
@@ -881,7 +884,6 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
   arg.colorify            = nux::color::White;
   arg.running_arrow       = icon->GetQuirk(AbstractLauncherIcon::QUIRK_RUNNING);
   arg.running_colored     = icon->GetQuirk(AbstractLauncherIcon::QUIRK_URGENT);
-  arg.running_on_viewport = icon->WindowVisibleOnMonitor(monitor);
   arg.draw_edge_only      = IconDrawEdgeOnly(icon);
   arg.active_colored      = false;
   arg.x_rotation          = 0.0f;
@@ -900,10 +902,22 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
                             icon->GetIconType() == AbstractLauncherIcon::TYPE_DEVICE  ||
                             icon->GetIconType() == AbstractLauncherIcon::TYPE_EXPO;
 
+  // trying to protect against flickering when icon is dragged from dash LP: #863230
+  if (arg.alpha < 0.5)
+  {
+    arg.alpha = 0.5;
+    arg.saturation = 0.0;
+  }
+
   if (_dash_is_open)
     arg.active_arrow = icon->GetIconType() == AbstractLauncherIcon::TYPE_HOME;
   else
     arg.active_arrow = icon->GetQuirk(AbstractLauncherIcon::QUIRK_ACTIVE);
+
+  if (options()->show_for_all)
+    arg.running_on_viewport = icon->WindowVisibleOnViewport();
+  else
+    arg.running_on_viewport = icon->WindowVisibleOnMonitor(monitor);
 
   guint64 shortcut = icon->GetShortcut();
   if (shortcut > 32)
@@ -924,7 +938,10 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
   }
   else
   {
-    arg.window_indicators = std::max<int> (icon->WindowsForMonitor(monitor).size(), 1);
+    if (options()->show_for_all)
+      arg.window_indicators = std::max<int> (icon->Windows().size(), 1);
+    else
+      arg.window_indicators = std::max<int> (icon->WindowsForMonitor(monitor).size(), 1);
   }
 
   arg.backlight_intensity = IconBackgroundIntensity(icon, current);
@@ -978,6 +995,13 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr icon,
 
   if (drop_dim_value < 1.0f)
     arg.alpha *= drop_dim_value;
+
+  // trying to protect against flickering when icon is dragged from dash LP: #863230
+  if (arg.alpha < 0.5)
+  {
+    arg.alpha = 0.5;
+    arg.saturation = 0.0;
+  }
 
   if (icon == _drag_icon)
   {
@@ -1483,6 +1507,7 @@ gboolean Launcher::StrutHack(gpointer data)
   if (self->options()->hide_mode == LAUNCHER_HIDE_NEVER)
     self->_parent->InputWindowEnableStruts(true);
 
+  self->_strut_hack_handle = 0;
   return false;
 }
 
@@ -1506,24 +1531,37 @@ Launcher::UpdateOptions(Options::Ptr options)
   SetHideMode(options->hide_mode);
   SetIconSize(options->tile_size, options->icon_size);
 
-  // make the effect half as strong as specified as other values shouldn't scale
-  // as quickly as the max velocity multiplier
-  float decay_responsiveness_mult = ((options->edge_responsiveness() - 1) * .3f) + 1;
-  float reveal_responsiveness_mult = ((options->edge_responsiveness() - 1) * .025f) + 1;
-  float overcome_responsiveness_mult = ((options->edge_responsiveness() - 1) * 1.0f) + 1;
-
-  decaymulator_->rate_of_decay = options->edge_decay_rate() * decay_responsiveness_mult;
-  _edge_overcome_pressure = options->edge_overcome_pressure() * overcome_responsiveness_mult;
-
-  _pointer_barrier->threshold = options->edge_stop_velocity();
-  _pointer_barrier->max_velocity_multiplier = options->edge_responsiveness();
-  _pointer_barrier->DestroyBarrier();
-  _pointer_barrier->ConstructBarrier();
-
-  _hide_machine->reveal_pressure = options->edge_reveal_pressure() * reveal_responsiveness_mult;
-  _hide_machine->edge_decay_rate = options->edge_decay_rate() * decay_responsiveness_mult;
-
+  ConfigureBarrier();
   EnsureAnimation();
+}
+
+void Launcher::ConfigureBarrier()
+{
+  nux::Geometry geo = GetAbsoluteGeometry();
+  _pointer_barrier->DestroyBarrier();
+
+  if (options()->edge_resist || geo.x == 0)
+  {
+    unity::panel::Style &panel_style = panel::Style::Instance();
+
+    _pointer_barrier->x1 = geo.x;
+    _pointer_barrier->x2 = geo.x;
+    _pointer_barrier->y1 = geo.y - panel_style.panel_height;
+    _pointer_barrier->y2 = geo.y + geo.height;
+
+    float decay_responsiveness_mult = ((options()->edge_responsiveness() - 1) * .3f) + 1;
+    float reveal_responsiveness_mult = ((options()->edge_responsiveness() - 1) * .025f) + 1;
+    float overcome_responsiveness_mult = ((options()->edge_responsiveness() - 1) * 1.0f) + 1;
+    decaymulator_->rate_of_decay = options()->edge_decay_rate() * decay_responsiveness_mult;
+    _edge_overcome_pressure = options()->edge_overcome_pressure() * overcome_responsiveness_mult;
+    
+    _pointer_barrier->threshold = options()->edge_stop_velocity();
+    _pointer_barrier->max_velocity_multiplier = options()->edge_responsiveness();
+    _pointer_barrier->ConstructBarrier();
+    
+    _hide_machine->reveal_pressure = options()->edge_reveal_pressure() * reveal_responsiveness_mult;
+    _hide_machine->edge_decay_rate = options()->edge_decay_rate() * decay_responsiveness_mult;
+  }
 }
 
 void Launcher::SetHideMode(LauncherHideMode hidemode)
@@ -1535,7 +1573,8 @@ void Launcher::SetHideMode(LauncherHideMode hidemode)
   else
   {
     _parent->EnableInputWindow(true, "launcher", false, false);
-    g_timeout_add(1000, &Launcher::StrutHack, this);
+    if (!_strut_hack_handle)
+      _strut_hack_handle = g_timeout_add(1000, &Launcher::StrutHack, this);
     _parent->InputWindowEnableStruts(true);
   }
 
@@ -1690,18 +1729,9 @@ void Launcher::Resize()
   nux::Geometry new_geometry(geo.x, geo.y + panel_style.panel_height, width, geo.height - panel_style.panel_height);
   SetMaximumHeight(new_geometry.height);
   _parent->SetGeometry(new_geometry);
-  SetGeometry(new_geometry);
+  SetGeometry(nux::Geometry(0, 0, new_geometry.width, new_geometry.height));
 
-  _pointer_barrier->DestroyBarrier();
-
-  _pointer_barrier->x1 = new_geometry.x;
-  _pointer_barrier->x2 = new_geometry.x;
-  _pointer_barrier->y1 = new_geometry.y - panel_style.panel_height;
-  _pointer_barrier->y2 = new_geometry.y + new_geometry.height;
-  _pointer_barrier->threshold = options()->edge_stop_velocity();
-
-  _pointer_barrier->ConstructBarrier();
-
+  ConfigureBarrier();
 }
 
 void Launcher::OnIconAdded(AbstractLauncherIcon::Ptr icon)

@@ -1,0 +1,11 @@
+Alt + arrows key not passed to application
+----------------------------------------------------
+Setup:
+Having gnome-terminal installed
+
+Actions:  
+1. Open gnome-terminal
+2. While holding Alt, tap arrow keys: Up, Down, Right, Left
+
+Expected Result:
+-> the terminal should shows the keycodes were received as text "ABCD".

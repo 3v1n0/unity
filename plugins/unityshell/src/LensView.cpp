@@ -18,6 +18,7 @@
  */
 
 #include "LensView.h"
+#include "LensViewPrivate.h"
 
 #include <boost/lexical_cast.hpp>
 
@@ -29,6 +30,8 @@
 #include "UBusMessages.h"
 #include "UBusWrapper.h"
 #include "PlacesVScrollBar.h"
+
+#include <glib/gi18n-lib.h>
 
 namespace unity
 {
@@ -120,6 +123,7 @@ LensView::LensView()
   , search_string("")
   , filters_expanded(false)
   , can_refine_search(false)
+  , no_results_active_(false)
   , fix_renderering_id_(0)
 {}
 
@@ -130,6 +134,7 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   , can_refine_search(false)
   , lens_(lens)
   , initial_activation_(true)
+  , no_results_active_(false)
   , fix_renderering_id_(0)
 {
   SetupViews(show_filters);
@@ -193,6 +198,10 @@ void LensView::SetupViews(nux::Area* show_filters)
   scroll_layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
   scroll_view_->SetLayout(scroll_layout_);
   scroll_view_->SetRightArea(show_filters);
+
+  no_results_ = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
+  no_results_->SetTextColor(nux::color::White);
+  scroll_layout_->AddView(no_results_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
   fscroll_view_ = new LensScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION),
                                      NUX_TRACKER_LOCATION);
@@ -345,21 +354,67 @@ void LensView::QueueFixRenderering()
 gboolean LensView::FixRenderering(LensView* self)
 {
   std::list<Area*> children = self->scroll_layout_->GetChildren();
-  std::list<Area*>::reverse_iterator rit;
-  bool found_one = false;
+  std::list<AbstractPlacesGroup*>  groups;
 
-  for (rit = children.rbegin(); rit != children.rend(); ++rit)
+  for (auto child : children)
   {
-    PlacesGroup* group = static_cast<PlacesGroup*>(*rit);
-
-    if (group->IsVisible())
-      group->SetDrawSeparator(found_one);
-
-    found_one = group->IsVisible();
+    if (child == self->no_results_)
+      continue;
+    groups.push_back(static_cast<AbstractPlacesGroup*>(child));
   }
+
+  dash::impl::UpdateDrawSeparators(groups);
 
   self->fix_renderering_id_ = 0;
   return FALSE;
+}
+
+void LensView::CheckNoResults(Lens::Hints const& hints)
+{
+  gint count = lens_->results()->count();
+
+  if (!count && !no_results_active_)
+  {
+    std::stringstream markup;
+    Lens::Hints::const_iterator it;
+
+    it = hints.find("no-results-hint");
+    markup << "<span size='larger' weight='bold'>";
+
+    if (it != hints.end())
+    {
+      markup << it->second.GetString();
+    }
+    else
+    {
+      markup << _("Sorry, there is nothing that matches your search.");
+    }
+    markup << "</span>";
+
+    LOG_DEBUG(logger) << "The no-result-hint is: " << markup.str();
+
+    scroll_layout_->SetContentDistribution(nux::MAJOR_POSITION_CENTER); 
+
+    no_results_active_ = true;
+    no_results_->SetText(markup.str());
+  }
+  else if (count && no_results_active_)
+  {
+    scroll_layout_->SetContentDistribution(nux::MAJOR_POSITION_START);  
+
+    no_results_active_ = false;
+    no_results_->SetText("");
+  }
+}
+
+void LensView::HideResultsMessage()
+{
+  if (no_results_active_)
+  {
+    scroll_layout_->SetContentDistribution(nux::MAJOR_POSITION_START);  
+    no_results_active_ = false;
+    no_results_->SetText("");
+  }
 }
 
 void LensView::OnGroupExpanded(PlacesGroup* group)
@@ -402,7 +457,7 @@ void LensView::OnViewTypeChanged(ViewType view_type)
   if (view_type != HIDDEN && initial_activation_)
   {
     /* We reset the lens for ourselves, in case this is a restart or something */
-    lens_->Search("");
+    lens_->Search(search_string);
     initial_activation_ = false;
   }
 
@@ -503,7 +558,8 @@ void LensView::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper(builder)
     .add("name", lens_->id)
-    .add("lens-name", lens_->name);
+    .add("lens-name", lens_->name)
+    .add("no-results-active", no_results_active_);
 }
 
 

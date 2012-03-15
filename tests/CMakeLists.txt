@@ -138,7 +138,11 @@ if (GTEST_SRC_DIR AND
                  test_main_xless.cpp
                  test_grabhandle.cpp
                  test_unityshell_private.cpp
+                 test_lensview_impl.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.cpp
+                 ${UNITY_SRC}/AbstractPlacesGroup.cpp
+                 ${UNITY_SRC}/AbstractPlacesGroup.h
+                 ${UNITY_SRC}/AbstractShortcutHint.h
                  ${UNITY_SRC}/Animator.cpp
                  ${UNITY_SRC}/DebugDBusInterface.cpp
                  ${UNITY_SRC}/XPathQueryPart.cpp
@@ -146,16 +150,15 @@ if (GTEST_SRC_DIR AND
                  ${UNITY_SRC}/FavoriteStoreGSettings.cpp
                  ${UNITY_SRC}/IconTextureSource.cpp
                  ${UNITY_SRC}/LauncherModel.cpp
+                 ${UNITY_SRC}/LensViewPrivate.cpp
                  ${UNITY_SRC}/FavoriteStorePrivate.cpp
                  ${UNITY_SRC}/MockLauncherIcon.h
                  ${UNITY_SRC}/MockShortcutHint.h
                  ${UNITY_SRC}/ShortcutModel.cpp
                  ${UNITY_SRC}/ShortcutHintPrivate.cpp
-                 ${UNITY_SRC}/SwitcherModel.cpp
                  ${UNITY_SRC}/Introspectable.cpp
                  ${UNITY_SRC}/TextureCache.cpp
                  ${UNITY_SRC}/Timer.cpp
-                 ${UNITY_SRC}/Timer.h
                  ${UNITY_SRC}/UnityshellPrivate.cpp
                  ${UNITY_SRC}/WindowManager.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle.cpp
@@ -192,14 +195,27 @@ if (GTEST_SRC_DIR AND
                  test_texture_cache.cpp
                  test_main.cpp
                  test_icon_loader.cpp
+                 test_switcher_controller.cpp
+                 test_switcher_model.cpp
+                 ${UNITY_SRC}/AbstractLauncherIcon.cpp
+                 ${UNITY_SRC}/BackgroundEffectHelper.cpp
                  ${UNITY_SRC}/DashViewPrivate.cpp
-                 ${UNITY_SRC}/DashViewPrivate.h
                  ${UNITY_SRC}/TextureCache.cpp
-                 ${UNITY_SRC}/TextureCache.h
                  ${UNITY_SRC}/IconLoader.cpp
-                 ${UNITY_SRC}/IconLoader.h
+                 ${UNITY_SRC}/IconRenderer.cpp
+                 ${UNITY_SRC}/IconTextureSource.cpp
+                 ${UNITY_SRC}/Introspectable.cpp
+                 ${UNITY_SRC}/LayoutSystem.cpp
+                 ${UNITY_SRC}/StaticCairoText.cpp
+                 ${UNITY_SRC}/SwitcherController.cpp
+                 ${UNITY_SRC}/SwitcherModel.cpp
+                 ${UNITY_SRC}/SwitcherView.cpp
                  ${UNITY_SRC}/Timer.cpp
-                 ${UNITY_SRC}/Timer.h
+                 ${UNITY_SRC}/UBusWrapper.cpp
+                 ${UNITY_SRC}/UnityWindowStyle.cpp
+                 ${UNITY_SRC}/UnityWindowView.cpp
+                 ${UNITY_SRC}/ubus-server.cpp
+                 ${UNITY_SRC}/WindowManager.cpp
                 )
   target_link_libraries(test-gtest gtest)
   add_test(UnityGTest test-gtest)

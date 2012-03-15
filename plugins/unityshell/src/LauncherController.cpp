@@ -80,6 +80,8 @@ public:
   void Save();
   void SortAndUpdate();
 
+  nux::ObjectPtr<Launcher> CurrentLauncher();
+
   void OnIconAdded(AbstractLauncherIcon::Ptr icon);
   void OnIconRemoved(AbstractLauncherIcon::Ptr icon);
 
@@ -118,6 +120,8 @@ public:
   AbstractLauncherIcon::Ptr CreateSCLauncherIcon(std::string const& file_path, std::string const& aptdaemon_trans_id, std::string const& icon_path);
 
   void SetupBamf();
+
+  void EnsureLaunchers(std::vector<nux::Geometry> const& monitors);
 
   void OnExpoActivated();
 
@@ -194,13 +198,7 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   reactivate_keynav = false;
   keynav_restore_window_ = true;
 
-  int i = 0;
-  for (auto monitor : monitors)
-  {
-    Launcher* launcher = CreateLauncher(i);
-    launchers.push_back(nux::ObjectPtr<Launcher> (launcher));
-    i++;
-  }
+  EnsureLaunchers(monitors);
 
   launcher_ = launchers[0];
 
@@ -264,9 +262,17 @@ Controller::Impl::~Impl()
   delete device_section_;
 }
 
-void Controller::Impl::OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors)
+void Controller::Impl::EnsureLaunchers(std::vector<nux::Geometry> const& monitors)
 {
-  unsigned int num_monitors = monitors.size();
+  unsigned int num_monitors;
+  if (parent_->multiple_launchers)
+  {
+    num_monitors = monitors.size();
+  }
+  else
+  {
+    num_monitors = 1;
+  }
 
   unsigned int i;
   for (i = 0; i < num_monitors; i++)
@@ -284,6 +290,11 @@ void Controller::Impl::OnScreenChanged(int primary_monitor, std::vector<nux::Geo
       launcher->GetParent()->UnReference();
   }
   launchers.resize(num_monitors);
+}
+
+void Controller::Impl::OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors)
+{
+  EnsureLaunchers(monitors);
 }
 
 void Controller::Impl::OnWindowFocusChanged (guint32 xid)
@@ -326,6 +337,7 @@ Launcher* Controller::Impl::CreateLauncher(int monitor)
 
   launcher->SetModel(model_.get());
   launcher->launcher_addrequest.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequest));
+  launcher->launcher_addrequest_special.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequestSpecial));
   launcher->launcher_removerequest.connect(sigc::mem_fun(this, &Impl::OnLauncherRemoveRequest));
 
   parent_->AddChild(launcher);
@@ -780,10 +792,16 @@ void Controller::Impl::SendHomeActivationRequest()
 }
 
 Controller::Controller(Display* display)
+ : options(Options::Ptr(new Options()))
+ , multiple_launchers(true)
+ , pimpl(new Impl(display, this))
 {
-  options = Options::Ptr(new Options());
-  // options must be set before creating pimpl which loads launchers
-  pimpl = new Impl(display, this);
+  multiple_launchers.changed.connect([&](bool value) -> void {
+    UScreen* uscreen = UScreen::GetDefault();
+    auto monitors = uscreen->GetMonitors();
+    pimpl->EnsureLaunchers(monitors);
+    options()->show_for_all = !value;
+  });
 }
 
 Controller::~Controller()
@@ -834,6 +852,8 @@ std::vector<AbstractLauncherIcon::Ptr> Controller::GetAltTabIcons(bool current) 
 
 Window Controller::LauncherWindowId(int launcher) const
 {
+  if (launcher >= (int)pimpl->launchers.size())
+    return 0;
   return pimpl->launchers[launcher]->GetParent()->GetInputWindowId();
 }
 
@@ -868,6 +888,15 @@ int Controller::Impl::MonitorWithMouse()
   return uscreen->GetMonitorWithMouse();
 }
 
+nux::ObjectPtr<Launcher> Controller::Impl::CurrentLauncher()
+{
+  nux::ObjectPtr<Launcher> result;
+  int best = std::min<int> (launchers.size() - 1, MonitorWithMouse());
+  if (best >= 0)
+    result = launchers[best];
+  return result;
+}
+
 void Controller::HandleLauncherKeyPress()
 {
   unity::TimeUtil::SetTimeStruct(&pimpl->launcher_key_press_time_);
@@ -876,7 +905,7 @@ void Controller::HandleLauncherKeyPress()
   {
     Impl* self = static_cast<Impl*>(user_data);
     if (self->keyboard_launcher_.IsNull())
-      self->keyboard_launcher_ = self->launchers[self->MonitorWithMouse()];
+      self->keyboard_launcher_ = self->CurrentLauncher();
 
     if (self->launcher_hide_handler_id_ > 0)
     {
@@ -897,7 +926,7 @@ void Controller::HandleLauncherKeyPress()
     if (!self->launcher_keynav)
     {
       if (self->keyboard_launcher_.IsNull())
-        self->keyboard_launcher_ = self->launchers[self->MonitorWithMouse()];
+        self->keyboard_launcher_ = self->CurrentLauncher();
 
       self->keyboard_launcher_->ShowShortcuts(true);
       self->launcher_open = true;
@@ -1021,7 +1050,7 @@ void Controller::KeyNavActivate()
   pimpl->reactivate_keynav = false;
   pimpl->launcher_keynav = true;
   pimpl->keynav_restore_window_ = true;
-  pimpl->keyboard_launcher_ = pimpl->launchers[pimpl->MonitorWithMouse()];
+  pimpl->keyboard_launcher_ = pimpl->CurrentLauncher();
 
   pimpl->keyboard_launcher_->EnterKeyNavMode();
   pimpl->model_->SetSelection(0);
@@ -1087,7 +1116,7 @@ Controller::AddProperties(GVariantBuilder* builder)
   .add("key_nav_launcher_monitor", pimpl->keyboard_launcher_.IsValid() ?  pimpl->keyboard_launcher_->monitor : -1)
   .add("key_nav_selection", pimpl->model_->SelectionIndex())
   .add("key_nav_is_grabbed", pimpl->launcher_grabbed)
-  .add("keyboard_launcher", pimpl->launchers[pimpl->MonitorWithMouse()]->monitor);
+  .add("keyboard_launcher", pimpl->CurrentLauncher()->monitor);
 }
 
 void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
