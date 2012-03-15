@@ -416,7 +416,7 @@ Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
 
   if (result)
   {
-    //result->SetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE, false);
+    result->SetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE, false);
     static_cast<SoftwareCenterLauncherIcon*>(result.GetPointer())->Animate(launcher_, icon_x, icon_y, icon_size);
     RegisterIcon(result);
     Save();
@@ -425,7 +425,7 @@ Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
 
 void Controller::Impl::OnSCIconAnimationComplete(AbstractLauncherIcon::Ptr icon)
 {
-  //icon->SetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE, true);
+  icon->SetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE, true);
   launcher_->ForceReveal(false);
 }
 
