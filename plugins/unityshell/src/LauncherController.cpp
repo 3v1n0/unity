@@ -1146,11 +1146,10 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
       parent_->KeyNavNext();
       break;
 
-      // super/control/alt/esc/left (close quicklist or exit laucher key-focus)
+      // super/control/esc/left (close quicklist or exit laucher key-focus)
     case NUX_VK_LWIN:
     case NUX_VK_RWIN:
     case NUX_VK_CONTROL:
-    case NUX_VK_MENU:
     case NUX_VK_LEFT:
     case NUX_KP_LEFT:
     case NUX_VK_ESCAPE:
@@ -1187,6 +1186,11 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
     break;
 
     default:
+      // ALT + <Anykey>; treat it as a shortcut and exit keynav 
+      if (state & nux::NUX_STATE_ALT)
+      {
+        parent_->KeyNavTerminate(false);
+      }
       break;
   }
 }
