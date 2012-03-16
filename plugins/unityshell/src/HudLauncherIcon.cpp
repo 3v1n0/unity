@@ -49,7 +49,6 @@ HudLauncherIcon::HudLauncherIcon()
   SetIconType(TYPE_HOME);
 
   background_color_ = nux::color::White;
-  background_color_.alpha = 0;
 
   ubus_manager_.RegisterInterest(UBUS_HUD_ICON_CHANGED, [&](GVariant *data)
   {
