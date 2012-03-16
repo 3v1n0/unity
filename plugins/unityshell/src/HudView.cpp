@@ -78,11 +78,6 @@ View::View()
   SetupViews();
   search_bar_->key_down.connect (sigc::mem_fun (this, &View::OnKeyDown));
 
-  search_bar_->activated.connect ([&]() 
-  {
-    search_activated.emit(search_bar_->search_string);
-  });
-
   search_bar_->text_entry()->SetLoseKeyFocusOnKeyNavDirectionUp(false);
   search_bar_->text_entry()->SetLoseKeyFocusOnKeyNavDirectionDown(false);
 
