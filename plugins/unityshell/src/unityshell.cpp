@@ -126,7 +126,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , grab_index_ (0)
   , painting_tray_ (false)
   , last_scroll_event_(0)
-  , last_hud_show_time_(0)
+  , hud_keypress_time_(0)
 {
   Timer timer;
   gfloat version;
@@ -1531,7 +1531,8 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
     action->setState(action->state() | CompAction::StateTermKey);
 
   super_keypressed_ = true;
-  launcher_controller_->HandleLauncherKeyPress();
+  int when = options[7].value().i();  // XEvent time in millisec
+  launcher_controller_->HandleLauncherKeyPress(when);
   EnsureSuperKeybindings ();
 
   if (!shortcut_controller_->Visible() && shortcut_controller_->IsEnabled())
@@ -1574,9 +1575,11 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
     return false;
 
   bool was_tap = state & CompAction::StateTermTapped;
+  int when = options[7].value().i();  // XEvent time in millisec
+
   super_keypressed_ = false;
   launcher_controller_->KeyNavTerminate(true);
-  launcher_controller_->HandleLauncherKeyRelease(was_tap);
+  launcher_controller_->HandleLauncherKeyRelease(was_tap, when);
   EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
 
   shortcut_controller_->SetEnabled(enable_shortcut_overlay_);
@@ -1907,7 +1910,7 @@ bool UnityScreen::ShowHudInitiate(CompAction* action,
   // to receive the Terminate event
   if (state & CompAction::StateInitKey)
     action->setState(action->state() | CompAction::StateTermKey);
-  last_hud_show_time_ = g_get_monotonic_time();
+  hud_keypress_time_ = options[7].value().i();  // XEvent time in millisec
 
   // pass key through
   return false;
@@ -1928,8 +1931,9 @@ bool UnityScreen::ShowHudTerminate(CompAction* action,
   if (!(state & CompAction::StateTermTapped))
     return false;
 
-  gint64 current_time = g_get_monotonic_time();
-  if (current_time - last_hud_show_time_ > (local::ALT_TAP_DURATION * 1000))
+  int release_time = options[7].value().i();  // XEvent time in millisec
+  int tap_duration = release_time - hud_keypress_time_;
+  if (tap_duration > local::ALT_TAP_DURATION)
   {
     LOG_DEBUG(logger) << "Tap too long";
     return false;
