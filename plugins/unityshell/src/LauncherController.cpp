@@ -253,6 +253,15 @@ Controller::Impl::Impl(Display* display, Controller* parent)
 
 Controller::Impl::~Impl()
 {
+  // Since the launchers are in a window which adds a reference to the
+  // launcher, we need to make sure the base windows are unreferenced
+  // otherwise the launchers never die.
+  for (auto launcher_ptr : launchers)
+  {
+    if (launcher_ptr.IsValid())
+      launcher_ptr->GetParent()->UnReference();
+  }
+
   if (bamf_timer_handler_id_ != 0)
     g_source_remove(bamf_timer_handler_id_);
 
