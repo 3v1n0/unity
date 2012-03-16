@@ -41,7 +41,6 @@ public:
   SoftwareCenterLauncherIcon(BamfApplication* app,
                              std::string const& aptdaemon_trans_id,
                              std::string const& icon_path);
-  ~SoftwareCenterLauncherIcon();
 
   void Animate(nux::ObjectPtr<Launcher> launcher, int icon_x, int icon_y, int icon_size);
 
@@ -57,7 +56,7 @@ private:
   glib::DBusProxy aptdaemon_trans_;
 
   nux::ObjectPtr<nux::IOpenGLBaseTexture> icon_texture_;
-  LauncherDragWindow* drag_window_;
+  nux::ObjectPtr<LauncherDragWindow> drag_window_;
   nux::ObjectPtr<Launcher> launcher_;
   bool finished_;
   bool needs_urgent_;

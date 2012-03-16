@@ -61,15 +61,6 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
   tooltip_text = _("Waiting to install");
 }
 
-SoftwareCenterLauncherIcon::~SoftwareCenterLauncherIcon()
-{
-  if (drag_window_)
-  {
-    drag_window_->UnReference();
-    drag_window_ = nullptr;
-  }
-}
-
 void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
                                         int icon_x,
                                         int icon_y,
@@ -121,7 +112,6 @@ void SoftwareCenterLauncherIcon::OnDragAnimationFinished()
 {
   drag_window_->ShowWindow(false);
   launcher_->icon_animation_complete.emit(AbstractLauncherIcon::Ptr(this));
-  drag_window_->UnReference();
   drag_window_ = nullptr;
 }
 
