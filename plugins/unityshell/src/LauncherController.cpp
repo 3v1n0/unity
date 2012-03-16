@@ -237,7 +237,7 @@ Controller::Impl::Impl(Display* display, Controller* parent)
 
   uscreen->changed.connect(sigc::mem_fun(this, &Controller::Impl::OnScreenChanged));
 
-  WindowManager& plugin_adapter = *(WindowManager::Default()); 
+  WindowManager& plugin_adapter = *(WindowManager::Default());
   plugin_adapter.window_focus_changed.connect (sigc::mem_fun (this, &Controller::Impl::OnWindowFocusChanged));
 
   launcher_key_press_time_ = { 0, 0 };
@@ -310,7 +310,7 @@ void Controller::Impl::OnWindowFocusChanged (guint32 xid)
   else if (launcher_keynav)
   {
     keynav_first_focus = true;
-  } 
+  }
 }
 
 Launcher* Controller::Impl::CreateLauncher(int monitor)
@@ -383,7 +383,7 @@ void Controller::Impl::Save()
     std::string const& desktop_file = icon->DesktopFile();
 
     if (!desktop_file.empty())
-      desktop_paths.push_back(desktop_file.c_str());
+      desktop_paths.push_back(desktop_file);
   }
 
   unity::FavoriteStore::GetDefault().SetFavorites(desktop_paths);
@@ -614,7 +614,7 @@ void Controller::Impl::InsertExpoAction()
 
   on_expoicon_activate_connection_ = icon->activate.connect(sigc::mem_fun(this, &Impl::OnExpoActivated));
 
-  
+
   RegisterIcon(expo_icon_);
 }
 
