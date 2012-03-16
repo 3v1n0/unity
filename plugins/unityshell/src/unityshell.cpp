@@ -1947,6 +1947,11 @@ bool UnityScreen::ShowHudTerminate(CompAction* action,
   }
   else
   {
+    // Handles closing KeyNav (Alt+F1) if the hud is about to show
+    if (launcher_controller_->KeyNavIsActive())
+    {
+      launcher_controller_->KeyNavTerminate(false);
+    }
     hud_controller_->ShowHud();
   }
 

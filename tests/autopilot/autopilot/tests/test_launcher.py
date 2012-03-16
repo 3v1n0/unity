@@ -395,6 +395,38 @@ class LauncherTests(ScenariodLauncherTests):
         self.assertThat(self.launcher.key_nav_is_active, Equals(True))
         self.assertThat(self.launcher.key_nav_is_grabbed, Equals(True))
 
+    def test_launcher_keynav_mode_toggles(self):
+        """Tests that keynav mode toggles with Alt+F1."""
+        launcher_instance = self.get_launcher()
+
+        launcher_instance.key_nav_start()
+        launcher_instance.key_nav_start()
+                                                    
+        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
+
+    def test_launcher_keynav_alt_tab_quits(self):
+        """Tests that alt+tab exits keynav mode."""
+        launcher_instance = self.get_launcher()
+        launcher_instance.key_nav_start()
+
+        self.switcher.initiate()
+        sleep(1)
+        self.switcher.stop()
+
+        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
+
+    def test_launcher_keynav_alt_grave_quits(self):
+        """Tests that alt+` exits keynav mode."""
+        launcher_instance = self.get_launcher()
+        launcher_instance.key_nav_start()
+
+        self.switcher.initiate_detail_mode()
+        sleep(1)
+        self.switcher.stop()
+
+        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
+
+
 class LauncherRevealTests(ScenariodLauncherTests):
     """Test the launcher reveal bahavior when in autohide mode."""
 
