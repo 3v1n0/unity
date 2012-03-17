@@ -78,10 +78,7 @@ View::View()
   SetupViews();
   search_bar_->key_down.connect (sigc::mem_fun (this, &View::OnKeyDown));
 
-  search_bar_->activated.connect ([&]() 
-  {
-    search_activated.emit(search_bar_->search_string);
-  });
+  search_bar_->activated.connect (sigc::mem_fun (this, &View::OnSearchbarActivated));
 
   search_bar_->text_entry()->SetLoseKeyFocusOnKeyNavDirectionUp(false);
   search_bar_->text_entry()->SetLoseKeyFocusOnKeyNavDirectionDown(false);
@@ -488,6 +485,23 @@ bool View::InspectKeyEvent(unsigned int eventType,
   return false;
 }
 
+void View::OnSearchbarActivated()
+{
+  // The "Enter" key has been received and the text entry has the key focus.
+  // If one of the button has the fake_focus, we get it to emit the query_activated signal.
+  if (!buttons_.empty())
+  {
+    std::list<HudButton::Ptr>::iterator it;
+    for(it = buttons_.begin(); it != buttons_.end(); ++it)
+    {
+      if ((*it)->fake_focused)
+      {
+        query_activated.emit((*it)->GetQuery());
+      }
+    }
+  }
+}
+
 nux::Area* View::FindKeyFocusArea(unsigned int event_type,
       unsigned long x11_key_code,
       unsigned long special_keys_state)
@@ -544,7 +558,7 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
     return NULL;
   }
 
-  if (search_bar_->text_entry()->HasKeyFocus())
+  if (search_bar_->text_entry()->HasKeyFocus() && !search_bar_->im_preedit)
   {
     if (direction == nux::KEY_NAV_NONE ||
         direction == nux::KEY_NAV_UP ||
@@ -610,25 +624,11 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
 
     if (direction == nux::KEY_NAV_ENTER)
     {
-      // The "Enter" key has been received and the text entry has the key focus.
-      // If one of the button has the fake_focus, we get it to emit the query_activated signal.
-      if (!buttons_.empty())
-      {
-        std::list<HudButton::Ptr>::iterator it;
-        for(it = buttons_.begin(); it != buttons_.end(); ++it)
-        {
-          if ((*it)->fake_focused)
-          {
-            query_activated.emit((*it)->GetQuery());
-          }
-        }
-      }
-
       // We still choose the text_entry as the receiver of the key focus.
       return search_bar_->text_entry();
     }
   }
-  else if (direction == nux::KEY_NAV_NONE)
+  else if (direction == nux::KEY_NAV_NONE || search_bar_->im_preedit)
   {
     return search_bar_->text_entry();
   }

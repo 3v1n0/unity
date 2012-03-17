@@ -264,6 +264,7 @@ void SearchBar::Init()
   search_string.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_search_string));
   search_string.SetSetterFunction(sigc::mem_fun(this, &SearchBar::set_search_string));
   im_active.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_im_active));
+  im_preedit.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_im_preedit));
   showing_filters.changed.connect(sigc::mem_fun(this, &SearchBar::OnShowingFiltersChanged));
   can_refine_search.changed.connect([&] (bool can_refine)
   {
@@ -624,6 +625,11 @@ bool SearchBar::set_search_string(std::string const& string)
 bool SearchBar::get_im_active() const
 {
   return pango_entry_->im_active();
+}
+
+bool SearchBar::get_im_preedit() const
+{
+  return pango_entry_->im_preedit();
 }
 
 //
