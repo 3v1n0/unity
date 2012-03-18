@@ -636,7 +636,7 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
   {
     return next_object_to_key_focus_area_->FindKeyFocusArea(event_type, x11_key_code, special_keys_state);
   }
-  return NULL;
+  return search_bar_->text_entry();
 }
 
 }
