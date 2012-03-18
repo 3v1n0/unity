@@ -379,7 +379,8 @@ UnityScreen::~UnityScreen()
 
   ::unity::ui::IconRenderer::DestroyTextures();
   QuicklistManager::Destroy();
-
+  // We need to delete the launchers before the window thread.
+  launcher_controller_.reset();
   delete wt;
 }
 
