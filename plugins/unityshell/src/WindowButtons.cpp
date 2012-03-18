@@ -203,6 +203,8 @@ public:
       _prelight_dash_tex->UnReference();
     if (_pressed_dash_tex)
       _pressed_dash_tex->UnReference();
+    if (_disabled_dash_tex)
+      _disabled_dash_tex->UnReference();
 
     //!!FIXME!! - don't have disabled instances of the (un)maximize buttons
     // get (un)maximize buttons
