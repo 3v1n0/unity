@@ -239,7 +239,7 @@ void StartLogToFile(std::string const& file_path)
 {
   if (local::output_file.is_open())
     local::output_file.close();
-  local::output_file.open(file_path.c_str());
+  local::output_file.open(file_path);
   nux::logging::Writer::Instance().SetOutputStream(local::output_file);
 }
 
