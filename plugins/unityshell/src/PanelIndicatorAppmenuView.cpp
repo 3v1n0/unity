@@ -44,6 +44,14 @@ PanelIndicatorAppmenuView::PanelIndicatorAppmenuView(Entry::Ptr const& proxy)
   SetVisible(false);
 }
 
+void PanelIndicatorAppmenuView::GetGeometryForSync(EntryLocationMap& locations)
+{
+  if (!IsFocused())
+    return;
+
+  PanelIndicatorEntryView::GetGeometryForSync(locations);
+}
+
 void PanelIndicatorAppmenuView::Activate(int button)
 {
   /* If the button is 0, the entry is activated using a keyboard shortcut,

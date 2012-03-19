@@ -42,6 +42,8 @@ public:
   bool IsIconVisible() const;
   bool IsIconSensitive() const;
 
+  void GetGeometryForSync(EntryLocationMap& locations);
+
   void SetControlledWindow(Window xid);
 
   void Activate(int button = 1);

@@ -68,6 +68,8 @@ public:
   virtual void Activate(int button = 1);
   virtual void Unactivate();
 
+  virtual void GetGeometryForSync(EntryLocationMap& locations);
+
   bool GetShowNow() const;
   bool IsSensitive() const;
   bool IsActive() const;
@@ -81,8 +83,6 @@ public:
 
   void SetFocusedState(bool focused);
   bool IsFocused() const;
-
-  void GetGeometryForSync(EntryLocationMap& locations);
 
   void DashShown();
   void DashHidden();
