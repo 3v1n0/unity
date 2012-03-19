@@ -95,10 +95,9 @@ nux::LinearLayout* View::CreateSectionLayout(const char* section_name)
 {
   nux::VLayout* layout = new nux::VLayout(NUX_TRACKER_LOCATION);
   
-  std::string name = "<b>";
-  name += std::string(section_name);
+  std::string name("<b>");
+  name += glib::String(g_markup_escape_text(section_name, -1)).Str();
   name += "</b>";
-
 
   nux::StaticText* section_name_view = new nux::StaticText(name.c_str(), NUX_TRACKER_LOCATION);
   section_name_view->SetTextPointSize(SECTION_NAME_FONT_SIZE);

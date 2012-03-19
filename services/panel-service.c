@@ -28,7 +28,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <fcntl.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #include <gconf/gconf-client.h>
@@ -238,6 +237,7 @@ panel_service_class_init (PanelServiceClass *klass)
                   NULL, NULL,
                   g_cclosure_marshal_VOID__STRING,
                   G_TYPE_NONE, 1, G_TYPE_STRING);
+
  _service_signals[GEOMETRIES_CHANGED] =
     g_signal_new ("geometries-changed",
       G_OBJECT_CLASS_TYPE (obj_class),
@@ -325,43 +325,6 @@ get_indicator_entry_by_id (PanelService *self, const gchar *entry_id)
   IndicatorObjectEntry *entry;
 
   entry = g_hash_table_lookup (self->priv->id2entry_hash, entry_id);
-
-  if (!entry)
-    {
-      /* This is a workaround to avoid false negatives, FIXME
-       * there's an issue in indicator-appmenu that causes entry-removed to
-       * be not properly emitted */
-
-      IndicatorObjectEntry *invalid_entry;
-      if (sscanf (entry_id, "%p", &invalid_entry) == 1)
-        {
-          gboolean entry_found = FALSE;
-          GSList *sl;
-          for (sl = self->priv->indicators; sl; sl = sl->next)
-            {
-              IndicatorObject *object = INDICATOR_OBJECT (sl->data);
-              GList *entries, *l;
-
-              entries = indicator_object_get_entries (object);
-
-              for (l = entries; l; l = l->next)
-                {
-                  if (l->data == invalid_entry)
-                    {
-                      entry = invalid_entry;
-                      entry_found = TRUE;
-                      g_warning ("Entry %p has been wrongly removed!", entry);
-                      break;
-                    }
-                }
-
-              g_list_free (entries);
-
-              if (entry_found)
-                break;
-            }
-        }
-    }
 
   if (entry)
     {
@@ -1253,13 +1216,14 @@ indicator_object_to_variant (IndicatorObject *object, const gchar *indicator_id,
           indicator_entry_to_variant (entry, id, indicator_id, b, prio);
           g_free (id);
         }
+
+      g_list_free (entries);
     }
   else
     {
       /* Add a null entry to indicate that there is an indicator here, it's just empty */
       indicator_entry_null_to_variant (indicator_id, b);
     }
-  g_list_free (entries);
 }
 
 static void
@@ -1419,6 +1383,12 @@ panel_service_sync_geometry (PanelService *self,
                   g_hash_table_remove (priv->panel2entries_hash, panel_id);
                 }
             }
+
+          /* If the entry has been removed let's make sure that its menu is closed */
+          if (valid_entry && GTK_IS_MENU (priv->last_menu) && priv->last_menu == entry->menu)
+            {
+              gtk_menu_popdown (entry->menu);
+            }
         }
       else
         {
@@ -1473,26 +1443,50 @@ panel_service_sync_geometry (PanelService *self,
 }
 
 static gboolean
-should_skip_menu (IndicatorObjectEntry *entry)
+panel_service_entry_is_visible (PanelService *self, IndicatorObjectEntry *entry)
 {
-  gboolean label_ok = FALSE;
-  gboolean image_ok = FALSE;
+  GHashTableIter panel_iter;
+  gpointer key, value;
+  gboolean found_geo;
 
-  g_return_val_if_fail (entry != NULL, TRUE);
+  g_return_val_if_fail (PANEL_IS_SERVICE (self), FALSE);
+  g_return_val_if_fail (entry != NULL, FALSE);
+
+  found_geo = FALSE;
+  g_hash_table_iter_init (&panel_iter, self->priv->panel2entries_hash);
+
+  while (g_hash_table_iter_next (&panel_iter, &key, &value) && !found_geo)
+    {
+      GHashTable *entry2geometry_hash = value;
+
+      if (g_hash_table_lookup (entry2geometry_hash, entry))
+        {
+          found_geo = TRUE;
+        }
+    }
+
+  if (!found_geo)
+    return FALSE;
 
   if (GTK_IS_LABEL (entry->label))
     {
-      label_ok = gtk_widget_get_visible (GTK_WIDGET (entry->label))
-        && gtk_widget_is_sensitive (GTK_WIDGET (entry->label));
+      if (gtk_widget_get_visible (GTK_WIDGET (entry->label)) &&
+          gtk_widget_is_sensitive (GTK_WIDGET (entry->label)))
+        {
+          return TRUE;
+        }
     }
 
   if (GTK_IS_IMAGE (entry->image))
     {
-      image_ok = gtk_widget_get_visible (GTK_WIDGET (entry->image))
-        && gtk_widget_is_sensitive (GTK_WIDGET (entry->image));
+      if (gtk_widget_get_visible (GTK_WIDGET (entry->image)) &&
+          gtk_widget_is_sensitive (GTK_WIDGET (entry->image)))
+        {
+          return TRUE;
+        }
     }
 
-  return !label_ok && !image_ok;
+  return TRUE;
 }
 
 static int
@@ -1530,7 +1524,7 @@ activate_next_prev_menu (PanelService         *self,
               gint prio = -1;
               new_entry = ll->data;
 
-              if (should_skip_menu (new_entry))
+              if (!panel_service_entry_is_visible (self, new_entry))
                 continue;
 
               if (new_entry->name_hint)

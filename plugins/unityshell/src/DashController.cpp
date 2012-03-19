@@ -39,6 +39,7 @@ nux::logging::Logger logger("unity.dash.controller");
 
 Controller::Controller()
   : launcher_width(64)
+  , use_primary(false)
   , window_(0)
   , visible_(false)
   , need_show_(false)
@@ -95,6 +96,7 @@ void Controller::SetupDashView()
   layout->SetHorizontalExternalMargin(0);
 
   window_->SetLayout(layout);
+  ubus_manager_.UnregisterInterest(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST);
 }
 
 void Controller::SetupRelayoutCallbacks()
@@ -159,11 +161,22 @@ void Controller::OnWindowConfigure(int window_width, int window_height,
   geo = self->GetIdealWindowGeometry();
 }
 
+int Controller::GetIdealMonitor()
+{
+  UScreen *uscreen = UScreen::GetDefault();
+  int primary_monitor;
+  if (use_primary)
+    primary_monitor = uscreen->GetPrimaryMonitor();
+  else
+    primary_monitor = uscreen->GetMonitorWithMouse();
+
+  return primary_monitor;
+}
+
 nux::Geometry Controller::GetIdealWindowGeometry()
 {
   UScreen *uscreen = UScreen::GetDefault();
-  int primary_monitor = uscreen->GetMonitorWithMouse();
-  auto monitor_geo = uscreen->GetMonitorGeometry(primary_monitor);
+  auto monitor_geo = uscreen->GetMonitorGeometry(GetIdealMonitor());
 
   // We want to cover as much of the screen as possible to grab any mouse events outside
   // of our window
@@ -259,7 +272,7 @@ void Controller::ShowDash()
 
   StartShowHideTimeline();
 
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, UScreen::GetDefault()->GetMonitorWithMouse());
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, GetIdealMonitor());
   ubus_manager_.SendMessage(UBUS_OVERLAY_SHOWN, info);
 }
 
@@ -285,7 +298,7 @@ void Controller::HideDash(bool restore)
 
   StartShowHideTimeline();
 
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, g_variant_new_int32(UScreen::GetDefault()->GetMonitorWithMouse()));
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, GetIdealMonitor());
   ubus_manager_.SendMessage(UBUS_OVERLAY_HIDDEN, info);
 }
 
@@ -338,9 +351,7 @@ gboolean Controller::OnViewShowHideFrame(Controller* self)
 void Controller::OnActivateRequest(GVariant* variant)
 {
   EnsureDash();
-  ubus_manager_.UnregisterInterest(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST);
   view_->OnActivateRequest(variant);
-  ShowDash();
 }
 
 gboolean Controller::CheckShortcutActivation(const char* key_string)
@@ -349,7 +360,9 @@ gboolean Controller::CheckShortcutActivation(const char* key_string)
   std::string lens_id = view_->GetIdForShortcutActivation(std::string(key_string));
   if (lens_id != "")
   {
-    OnActivateRequest(g_variant_new("(sus)", lens_id.c_str(), 0, ""));
+    GVariant* args = g_variant_new("(sus)", lens_id.c_str(), 0, "");
+    OnActivateRequest(args);
+    g_variant_unref(args);
     return true;
   }
   return false;

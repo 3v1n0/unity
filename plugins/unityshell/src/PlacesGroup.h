@@ -27,6 +27,7 @@
 
 #include <sigc++/sigc++.h>
 
+#include "AbstractPlacesGroup.h"
 #include "IconTexture.h"
 #include "Introspectable.h"
 #include "StaticCairoText.h"
@@ -40,9 +41,9 @@ class AbstractPaintLayer;
 namespace unity
 {
 
-class PlacesGroup : public nux::View , public debug::Introspectable
+class PlacesGroup : public dash::AbstractPlacesGroup, public debug::Introspectable
 {
-  NUX_DECLARE_OBJECT_TYPE(PlacesGroup, nux::View);
+  NUX_DECLARE_OBJECT_TYPE(PlacesGroup, dash::AbstractPlacesGroup);
 public:
 
   PlacesGroup();
@@ -69,8 +70,6 @@ public:
   int  GetHeaderHeight() const;
   bool HeaderIsFocusable() const;
   nux::View* GetHeaderFocusableView() const;
-
-  void SetDrawSeparator(bool draw_it);
 
   sigc::signal<void, PlacesGroup*> expanded;
 
@@ -106,6 +105,7 @@ private:
   nux::View* _header_view;
   nux::HLayout* _header_layout;
   nux::HLayout* _text_layout;
+  nux::HLayout* _expand_label_layout;
   nux::HLayout* _expand_layout;
   nux::View*  _child_view;
   nux::AbstractPaintLayer* _focus_layer;

@@ -203,9 +203,6 @@ void PanelView::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
   .add("backend", "remote")
-  .add("service-name", _remote->name())
-  .add("service-unique-name", _remote->owner_name())
-  .add("using-local-service", _remote->using_local_service())
   .add(GetGeometry());
 }
 
