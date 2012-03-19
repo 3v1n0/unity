@@ -81,6 +81,7 @@ nux::logging::Logger logger("unity.shell");
 
 UnityScreen* uScreen = 0;
 
+void reset_glib_logging();
 void configure_logging();
 void capture_g_log_calls(const gchar* log_domain,
                          GLogLevelFlags log_level,
@@ -377,11 +378,15 @@ UnityScreen::~UnityScreen()
   if (relayoutSourceId != 0)
     g_source_remove(relayoutSourceId);
 
+  if (_redraw_handle)
+    g_source_remove(_redraw_handle);
+
   ::unity::ui::IconRenderer::DestroyTextures();
   QuicklistManager::Destroy();
   // We need to delete the launchers before the window thread.
   launcher_controller_.reset();
   delete wt;
+  reset_glib_logging();
 }
 
 void UnityScreen::initAltTabNextWindow()
@@ -2937,6 +2942,12 @@ bool UnityPluginVTable::init()
 
 namespace
 {
+
+void reset_glib_logging()
+{
+  // Reinstate the default glib logger.
+  g_log_set_default_handler(g_log_default_handler, NULL);
+}
 
 void configure_logging()
 {
