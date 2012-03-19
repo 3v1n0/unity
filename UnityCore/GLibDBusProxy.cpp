@@ -191,8 +191,13 @@ void DBusProxy::Impl::OnProxyConnectCallback(GObject* source,
   self->name_owner_signal_.Connect(self->proxy_, "notify::g-name-owner",
                                    sigc::mem_fun(self, &Impl::OnProxyNameOwnerChanged));
 
-  self->connected_ = true;
-  self->owner_->connected.emit();
+  // If a proxy cannot autostart a service, it doesn't throw an error, but
+  // sets name_owner to NULL
+  if (glib::String(g_dbus_proxy_get_name_owner(proxy)))
+  {
+    self->connected_ = true;
+    self->owner_->connected.emit();
+  }
 }
 
 void DBusProxy::Impl::OnProxyNameOwnerChanged(GDBusProxy* proxy, GParamSpec* param)
