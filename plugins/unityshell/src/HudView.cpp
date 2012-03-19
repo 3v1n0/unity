@@ -83,6 +83,7 @@ View::View()
   {
     if (!activated_signal_sent_)
       search_activated.emit(search_bar_->search_string);
+    activated_signal_sent_ = false;
   });
 
   search_bar_->text_entry()->SetLoseKeyFocusOnKeyNavDirectionUp(false);
