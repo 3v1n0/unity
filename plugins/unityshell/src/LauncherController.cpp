@@ -103,11 +103,7 @@ public:
   void InsertDesktopIcon();
   void RemoveDesktopIcon();
 
-  bool TapTimeUnderLimit();
-
   void SendHomeActivationRequest();
-
-  int TimeSinceLauncherKeyPress();
 
   int MonitorWithMouse();
 
@@ -171,7 +167,7 @@ public:
 
   UBusManager            ubus;
 
-  struct timespec        launcher_key_press_time_;
+  int                    launcher_key_press_time_;
 
   LauncherList launchers;
 
@@ -240,7 +236,7 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   WindowManager& plugin_adapter = *(WindowManager::Default());
   plugin_adapter.window_focus_changed.connect (sigc::mem_fun (this, &Controller::Impl::OnWindowFocusChanged));
 
-  launcher_key_press_time_ = { 0, 0 };
+  launcher_key_press_time_ = 0;
 
   ubus.RegisterInterest(UBUS_QUICKLIST_END_KEY_NAV, [&](GVariant * args) {
     if (reactivate_keynav)
@@ -782,19 +778,6 @@ void Controller::Impl::SetupBamf()
   bamf_timer_handler_id_ = 0;
 }
 
-int Controller::Impl::TimeSinceLauncherKeyPress()
-{
-  struct timespec current;
-  unity::TimeUtil::SetTimeStruct(&current);
-  return unity::TimeUtil::TimeDelta(&current, &launcher_key_press_time_);
-}
-
-bool Controller::Impl::TapTimeUnderLimit()
-{
-  int time_difference = TimeSinceLauncherKeyPress();
-  return time_difference < local::super_tap_duration;
-}
-
 void Controller::Impl::SendHomeActivationRequest()
 {
   ubus.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", "home.lens", 0, ""));
@@ -906,9 +889,9 @@ nux::ObjectPtr<Launcher> Controller::Impl::CurrentLauncher()
   return result;
 }
 
-void Controller::HandleLauncherKeyPress()
+void Controller::HandleLauncherKeyPress(int when)
 {
-  unity::TimeUtil::SetTimeStruct(&pimpl->launcher_key_press_time_);
+  pimpl->launcher_key_press_time_ = when;
 
   auto show_launcher = [](gpointer user_data) -> gboolean
   {
@@ -946,9 +929,10 @@ void Controller::HandleLauncherKeyPress()
   pimpl->launcher_label_show_handler_id_ = g_timeout_add(local::shortcuts_show_delay, show_shortcuts, pimpl);
 }
 
-void Controller::HandleLauncherKeyRelease(bool was_tap)
+void Controller::HandleLauncherKeyRelease(bool was_tap, int when)
 {
-  if (pimpl->TapTimeUnderLimit() && was_tap)
+  int tap_duration = when - pimpl->launcher_key_press_time_;
+  if (tap_duration < local::super_tap_duration && was_tap)
   {
     pimpl->SendHomeActivationRequest();
   }
@@ -969,7 +953,7 @@ void Controller::HandleLauncherKeyRelease(bool was_tap)
   {
     pimpl->keyboard_launcher_->ShowShortcuts(false);
 
-    int ms_since_show = pimpl->TimeSinceLauncherKeyPress();
+    int ms_since_show = tap_duration;
     if (ms_since_show > local::launcher_minimum_show_duration)
     {
       pimpl->keyboard_launcher_->ForceReveal(false);
@@ -1024,7 +1008,7 @@ bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, 
       }
 
       // disable the "tap on super" check
-      pimpl->launcher_key_press_time_ = { 0, 0 };
+      pimpl->launcher_key_press_time_ = 0;
       return true;
     }
   }
