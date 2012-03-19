@@ -50,15 +50,9 @@ public:
   virtual void OnShowAppMenu(unsigned int xid, int x, int y,
                              unsigned int timestamp);
 
-  std::string name() const;
-  std::string owner_name() const;
-  bool using_local_service() const;
-
-  // Due to the callback nature, the Impl class must be declared public, but
-  // it is not available to anyone except the internal implementation.
-  class Impl;
 private:
-  Impl* pimpl;
+  class Impl;
+  std::unique_ptr<Impl> pimpl;
 };
 
 }

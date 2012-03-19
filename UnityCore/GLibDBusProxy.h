@@ -62,9 +62,9 @@ public:
   static void NoReplyCallback(GVariant* v) {};
 
   // Public due to use in some callbacks
-  class Impl;
 private:
-  Impl* pimpl;
+  class Impl;
+  std::unique_ptr<Impl> pimpl;
 };
 
 }
