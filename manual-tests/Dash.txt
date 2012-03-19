@@ -58,7 +58,7 @@ Dash correct number of "see more" results with horizontal renderer
 This test ensures a correct number of "see more" results in the dash when using a horizontal renderer
 (see lp:934944)
 
-#. Open the dash, navigate to a lens that uses a horizontal renderer
+#. Open the dash, navigate to a lens that uses a horizontal renderer such as the gwibber lens or music lens
 #. Ensure that a category in the results has a "See x more results" label
 #. Expand category that has "See x more results" label
 
