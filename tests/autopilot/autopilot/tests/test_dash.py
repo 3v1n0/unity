@@ -18,6 +18,8 @@ class DashTestCase(AutopilotTestCase):
         self.dash.ensure_hidden()
 
     def tearDown(self):
+        # Wait for things to sync up (like results)
+        sleep(1)
         self.dash.ensure_hidden()
         super(DashTestCase, self).tearDown()
 
@@ -62,7 +64,7 @@ class DashRevealTests(DashTestCase):
 
 class DashSearchInputTests(DashTestCase):
     """Test features involving input to the dash search"""
-    
+
     def test_search_keyboard_focus(self):
         """Dash must put keyboard focus on the search bar at all times."""
         self.dash.ensure_visible()
@@ -73,7 +75,7 @@ class DashSearchInputTests(DashTestCase):
 
     def test_multi_key(self):
         """Pressing 'Multi_key' must not add any characters to the search."""
-        self.dash.reveal_application_lens()      
+        self.dash.reveal_application_lens()
         self.keyboard.press_and_release('Multi_key')
         self.keyboard.type("o")
 
@@ -108,6 +110,7 @@ class DashSearchInputTests(DashTestCase):
 
         searchbar = self.dash.get_searchbar()
         self.assertEqual("d", searchbar.search_string)
+
 
 class DashKeyNavTests(DashTestCase):
     """Test the unity Dash keyboard navigation."""
