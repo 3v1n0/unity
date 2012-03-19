@@ -1575,6 +1575,7 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
     return false;
 
   bool was_tap = state & CompAction::StateTermTapped;
+  LOG_DEBUG(logger) << "Super released: " << (was_tap ? "tapped" : "released");
   super_keypressed_ = false;
   launcher_controller_->KeyNavTerminate(true);
   launcher_controller_->HandleLauncherKeyRelease(was_tap);

@@ -950,6 +950,7 @@ void Controller::HandleLauncherKeyRelease(bool was_tap)
 {
   if (pimpl->TapTimeUnderLimit() && was_tap)
   {
+    LOG_DEBUG(logger) << "Quick tap, sending activation request.";
     pimpl->SendHomeActivationRequest();
   }
 
