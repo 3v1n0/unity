@@ -43,7 +43,7 @@ class Dash(KeybindingsHelper):
         Reveals the dash if it's currently hidden, hides it otherwise.
         """
         logger.debug("Toggling dash visibility with Super key.")
-        self.keybinding("dash/reveal", 0.1)
+        self.keybinding("dash/reveal")
         sleep(1)
 
     def ensure_visible(self, clear_search=True):
