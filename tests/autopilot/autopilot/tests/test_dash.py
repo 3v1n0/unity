@@ -6,15 +6,21 @@
 # under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
 
-from gtk import Clipboard
 from time import sleep
+
+from gtk import Clipboard
+from testtools.matchers import Equals
 
 from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.tests import AutopilotTestCase
 
+
 class DashTestCase(AutopilotTestCase):
     def setUp(self):
         super(DashTestCase, self).setUp()
+        self.set_unity_log_level("unity.shell", "DEBUG")
+        self.set_unity_log_level("unity.launcher", "DEBUG")
+        self.set_unity_log_level("unity.dash", "DEBUG")
         self.dash.ensure_hidden()
 
     def tearDown(self):
@@ -22,6 +28,7 @@ class DashTestCase(AutopilotTestCase):
         sleep(1)
         self.dash.ensure_hidden()
         super(DashTestCase, self).tearDown()
+
 
 class DashRevealTests(DashTestCase):
     """Test the Unity dash Reveal."""
@@ -62,43 +69,40 @@ class DashRevealTests(DashTestCase):
         sleep(0.5)
         self.assertFalse(self.dash.visible)
 
+
 class DashSearchInputTests(DashTestCase):
     """Test features involving input to the dash search"""
+
+    def assertSearchText(self, text):
+        sleep(0.5)
+        self.assertThat(self.dash.search_string, Equals(text))
 
     def test_search_keyboard_focus(self):
         """Dash must put keyboard focus on the search bar at all times."""
         self.dash.ensure_visible()
         self.keyboard.type("Hello")
-        sleep(1)
-        searchbar = self.dash.get_searchbar()
-        self.assertEqual(searchbar.search_string, u'Hello')
+        self.assertSearchText("Hello")
 
     def test_multi_key(self):
         """Pressing 'Multi_key' must not add any characters to the search."""
         self.dash.reveal_application_lens()
         self.keyboard.press_and_release('Multi_key')
         self.keyboard.type("o")
-
-        searchbar = self.dash.get_searchbar()
-        self.assertEqual("", searchbar.search_string)
+        self.assertSearchText("")
 
     def test_multi_key_o(self):
         """Pressing the sequences 'Multi_key' + '^' + 'o' must produce 'ô'."""
         self.dash.reveal_application_lens()
         self.keyboard.press_and_release('Multi_key')
         self.keyboard.type("^o")
-
-        searchbar = self.dash.get_searchbar()
-        self.assertEqual("ô", searchbar.search_string)
+        self.assertSearchText("ô")
 
     def test_multi_key_copyright(self):
         """Pressing the sequences 'Multi_key' + 'c' + 'o' must produce '©'."""
         self.dash.reveal_application_lens()
         self.keyboard.press_and_release('Multi_key')
         self.keyboard.type("oc")
-
-        searchbar = self.dash.get_searchbar()
-        self.assertEqual("©", searchbar.search_string)
+        self.assertSearchText("©")
 
     def test_multi_key_delete(self):
         """Pressing 'Multi_key' must not get stuck looking for a sequence."""
@@ -107,9 +111,7 @@ class DashSearchInputTests(DashTestCase):
         self.keyboard.press_and_release('Multi_key')
         self.keyboard.press_and_release('BackSpace')
         self.keyboard.press_and_release('BackSpace')
-
-        searchbar = self.dash.get_searchbar()
-        self.assertEqual("d", searchbar.search_string)
+        self.assertSearchText("d")
 
 
 class DashKeyNavTests(DashTestCase):
@@ -311,6 +313,7 @@ class DashKeyNavTests(DashTestCase):
         category = lens.get_focused_category()
         self.assertIsNot(category, None)
 
+
 class DashClipboardTests(DashTestCase):
     """Test the Unity clipboard"""
 
@@ -319,14 +322,12 @@ class DashClipboardTests(DashTestCase):
         self.dash.ensure_visible()
 
         self.keyboard.type("SelectAll")
-        
         sleep(1)
+        self.assertThat(self.dash.search_string, Equals('SelectAll'))
 
         self.keyboard.press_and_release("Ctrl+a")
         self.keyboard.press_and_release("Delete")
-
-        searchbar = self.dash.get_searchbar()
-        self.assertEqual(searchbar.search_string, u'')
+        self.assertThat(self.dash.search_string, Equals(''))
 
     def test_ctrl_c(self):
         """ This test if ctrl+c copies text into the clipboard """
