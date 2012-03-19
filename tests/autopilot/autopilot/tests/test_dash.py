@@ -18,19 +18,16 @@ class DashTestCase(AutopilotTestCase):
         self.dash.ensure_hidden()
 
     def tearDown(self):
-        super(DashTestCase, self).tearDown()
         self.dash.ensure_hidden()
+        super(DashTestCase, self).tearDown()
 
 class DashRevealTests(DashTestCase):
     """Test the Unity dash Reveal."""
 
     def test_dash_reveal(self):
         """Ensure we can show and hide the dash."""
-        self.assertFalse(self.dash.get_is_visible())
-        self.dash.toggle_reveal()
-        self.assertTrue(self.dash.get_is_visible())
-        self.dash.toggle_reveal()
-        self.assertFalse(self.dash.get_is_visible())
+        self.dash.ensure_visible()
+        self.dash.ensure_hidden()
 
     def test_application_lens_shortcut(self):
         """Application lense must reveal when Super+a is pressed."""
@@ -55,13 +52,13 @@ class DashRevealTests(DashTestCase):
         self.dash.reveal_command_lens()
         lensbar = self.dash.view.get_lensbar()
         self.assertEqual(lensbar.active_lens, u'commands.lens')
-    
+
     def test_alt_f4_close_dash(self):
         """Dash must close on alt+F4."""
         self.dash.ensure_visible()
         self.dash.close_with_alt_f4()
         sleep(0.5)
-        self.assertFalse(self.dash.get_is_visible())
+        self.assertFalse(self.dash.visible)
 
 class DashSearchInputTests(DashTestCase):
     """Test features involving input to the dash search"""
