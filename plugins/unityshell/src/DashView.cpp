@@ -723,7 +723,7 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
   // DashView::KeyNavIteration.
    nux::InputArea* focus_area = nux::GetWindowCompositor().GetKeyFocusArea();
 
-  if (key_symbol == nux::NUX_KEYDOWN)
+  if (key_symbol == nux::NUX_KEYDOWN && !search_bar_->im_active)
   {
     std::list<nux::Area*> tabs;
     for (auto category : active_lens_view_->categories())
