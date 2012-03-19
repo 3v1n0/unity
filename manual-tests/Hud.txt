@@ -56,3 +56,19 @@ Outcome
   After pressing escape in step three, the text "test" should be removed from the hud search
   After step four, the hud should dismiss itself and not be present.
 
+Hud Sending Undo
+----------------
+This test ensure that the undo action is properly handle in a text editor.
+
+#. Open GEdit and start a new document
+#. Type "0 1"
+#. Tap Alt
+#. Type "undo"
+#. Press and release the Enter Key
+
+Outcome
+  After pressing the Enter key the text in GEdit should be "0 "
+
+
+
+
