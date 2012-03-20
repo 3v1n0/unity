@@ -42,6 +42,7 @@ public:
   typedef std::vector<nux::ObjectPtr<Launcher> > LauncherList;
 
   nux::Property<Options::Ptr> options;
+  nux::Property<bool> multiple_launchers;
 
   Controller(Display* display);
   ~Controller();
@@ -59,8 +60,8 @@ public:
 
   void SetShowDesktopIcon(bool show_desktop_icon);
 
-  void HandleLauncherKeyPress();
-  void HandleLauncherKeyRelease(bool was_tap);
+  void HandleLauncherKeyPress(int when);
+  void HandleLauncherKeyRelease(bool was_tap, int when);
   bool HandleLauncherKeyEvent(Display *display, 
                               unsigned int key_sym, 
                               unsigned long key_code, 

@@ -57,8 +57,8 @@ TEST_F(TestHud, TestConstruction)
     return FALSE;
   };
   
-  g_timeout_add_seconds(1, timeout_check, this);
-  g_timeout_add_seconds(10, timeout_bailout, this);
+  g_timeout_add(1000, timeout_check, this);
+  g_timeout_add(10000, timeout_bailout, this);
 
   g_main_loop_run(loop_);
   
@@ -87,7 +87,7 @@ TEST_F(TestHud, TestQueryReturn)
    
   hud->queries_updated.connect(query_connection);
  
-  guint source_id = g_timeout_add_seconds(10, timeout_bailout, this);
+  guint source_id = g_timeout_add(10000, timeout_bailout, this);
  
   // next check we get 30 entries from this specific known callback
   hud->RequestQuery("Request30Queries");

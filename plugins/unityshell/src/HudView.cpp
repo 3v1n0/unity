@@ -231,7 +231,7 @@ void View::SetQueries(Hud::Queries queries)
   int found_items = 0;
   for (auto query = queries.begin(); query != queries.end(); query++)
   {
-    if (found_items > 5)
+    if (found_items >= 5)
       break;
 
     HudButton::Ptr button(new HudButton());

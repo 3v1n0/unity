@@ -78,6 +78,7 @@ class Keyboard(object):
         'Control' : 'Control_L',
         'Ctrl' : 'Control_L',
         'Alt' : 'Alt_L',
+        'AltR': 'Alt_R',
         'Super' : 'Super_L',
         'Shift' : 'Shift_L',
         'Enter' : 'Return',
@@ -322,6 +323,9 @@ class ScreenGeometry:
     def get_num_monitors(self):
         """Get the number of monitors attached to the PC."""
         return self._default_screen.get_n_monitors()
+
+    def get_primary_monitor(self):
+        return self._default_screen.get_primary_monitor()
 
     def get_screen_width(self):
         return self._default_screen.get_width()
