@@ -337,7 +337,7 @@ private:
   bool                   painting_tray_;
   unsigned int           tray_paint_mask_;
   unsigned int           last_scroll_event_;
-  gint64                 last_hud_show_time_;
+  int                    hud_keypress_time_;
 
   GLMatrix panel_shadow_matrix_;
 

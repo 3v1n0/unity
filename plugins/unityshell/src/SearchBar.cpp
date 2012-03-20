@@ -133,7 +133,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   , show_filter_hint_(true)
   , expander_view_(nullptr)
   , show_filters_(nullptr)
-  , search_bar_width_(642)
+  , search_bar_width_(640)
   , live_search_timeout_(0)
   , start_spinner_timeout_(0)
 {
@@ -218,7 +218,7 @@ void SearchBar::Init()
   if (show_filter_hint_)
   {
     std::string filter_str(_("Filter results"));
-    show_filters_ = new nux::StaticCairoText(filter_str.c_str());
+    show_filters_ = new nux::StaticCairoText(filter_str);
     show_filters_->SetVisible(false);
     show_filters_->SetFont(SHOW_FILTERS_LABEL_DEFAULT_FONT.c_str());
     show_filters_->SetTextColor(nux::color::White);
