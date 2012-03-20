@@ -610,7 +610,7 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
       return search_bar_->text_entry();
     }
 
-    if (direction == nux::KEY_NAV_ENTER)
+    if (event_type == nux::NUX_KEYDOWN && direction == nux::KEY_NAV_ENTER)
     {
       activated_signal_sent_ = false;
       // The "Enter" key has been received and the text entry has the key focus.
