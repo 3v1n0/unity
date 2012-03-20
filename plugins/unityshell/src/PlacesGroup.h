@@ -41,6 +41,9 @@ class AbstractPaintLayer;
 namespace unity
 {
 
+
+class HSeparator;
+
 class PlacesGroup : public dash::AbstractPlacesGroup, public debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(PlacesGroup, dash::AbstractPlacesGroup);
@@ -93,6 +96,7 @@ private:
   bool HeaderHasKeyFocus() const;
   bool ShouldBeHighlighted() const;
 
+  void DrawSeparatorChanged(bool draw);
   void RecvMouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -109,6 +113,8 @@ private:
   nux::HLayout* _expand_layout;
   nux::View*  _child_view;
   nux::AbstractPaintLayer* _focus_layer;
+  nux::HLayout* separator_layout_;
+  HSeparator* separator_;
 
   IconTexture*          _icon;
   nux::StaticCairoText* _name;
@@ -121,7 +127,6 @@ private:
   guint _n_visible_items_in_unexpand_mode;
   guint _n_total_items;
   char* _cached_name;
-  bool  _draw_sep;
   nux::Geometry _cached_geometry;
 
   UBusManager _ubus;

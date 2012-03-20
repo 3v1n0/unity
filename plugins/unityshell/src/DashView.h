@@ -120,6 +120,7 @@ private:
   // View related
   nux::VLayout* layout_;
   DashLayout* content_layout_;
+  nux::HLayout* search_bar_layout_;
   SearchBar* search_bar_;
   nux::VLayout* lenses_layout_;
   LensBar* lens_bar_;
