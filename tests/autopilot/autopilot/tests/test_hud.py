@@ -11,7 +11,7 @@ from time import sleep
 
 from autopilot.emulators.unity.hud import HudController
 from autopilot.tests import AutopilotTestCase
-
+from os import remove
 
 class HudTests(AutopilotTestCase):
 
@@ -171,4 +171,32 @@ class HudTests(AutopilotTestCase):
         sleep(1)
 
         self.assertEqual(calc.is_active, True)
+
+    def test_gedit_undo(self):
+        """Test undo in gedit"""
+        """Type "0 1" into gedit."""
+        """Activate the Hud, type "undo" then enter."""
+        """Save the file in gedit and close gedit."""
+        """Read the saved file. The content should be "0 "."""
+
+        self.addCleanup(remove, '/tmp/autopilot_gedit_undo_test_temp_file.txt')
+        self.start_app('Text Editor', files=['/tmp/autopilot_gedit_undo_test_temp_file.txt'])
+
+        sleep(1)
+        self.keyboard.type("0")
+        self.keyboard.type(" ")
+        self.keyboard.type("1")
+
+        self.hud.toggle_reveal()
+        sleep(1)
+
+        self.keyboard.type("undo")
+        self.keyboard.press_and_release('Return')
+        sleep(1)
+
+        self.keyboard.press_and_release("Ctrl+s")
+        sleep(1)
+
+        contents = open("/tmp/autopilot_gedit_undo_test_temp_file.txt").read().strip('\n')
+        self.assertEqual("0 ", contents)
 
