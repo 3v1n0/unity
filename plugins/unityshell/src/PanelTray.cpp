@@ -81,12 +81,14 @@ PanelTray::PanelTray()
 
 PanelTray::~PanelTray()
 {
+  if (gtk_widget_get_realized(window_))
+    gtk_widget_destroy(window_);
+
   g_idle_remove_by_data(this);
   g_strfreev(whitelist_);
 }
 
-unsigned int
-PanelTray::xid ()
+unsigned int PanelTray::xid()
 {
   if (!window_)
     return 0;
@@ -94,8 +96,7 @@ PanelTray::xid ()
   return gdk_x11_window_get_xid(gtk_widget_get_window(window_));
 }
 
-void
-PanelTray::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
+void PanelTray::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   nux::Geometry const& geo = GetAbsoluteGeometry();
 
@@ -110,8 +111,7 @@ PanelTray::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
   }
 }
 
-void
-PanelTray::Sync()
+void PanelTray::Sync()
 {
   if (tray_)
   {
@@ -126,8 +126,7 @@ PanelTray::Sync()
   }
 }
 
-gboolean
-PanelTray::FilterTrayCallback(NaTray* tray, NaTrayChild* icon, PanelTray* self)
+gboolean PanelTray::FilterTrayCallback(NaTray* tray, NaTrayChild* icon, PanelTray* self)
 {
   int i = 0;
   bool accept = false;
@@ -179,8 +178,7 @@ PanelTray::FilterTrayCallback(NaTray* tray, NaTrayChild* icon, PanelTray* self)
   return accept ? TRUE : FALSE;
 }
 
-void
-PanelTray::OnTrayIconRemoved(NaTrayManager* manager, NaTrayChild* removed)
+void PanelTray::OnTrayIconRemoved(NaTrayManager* manager, NaTrayChild* removed)
 {
   for (auto child : children_)
   {
@@ -193,8 +191,7 @@ PanelTray::OnTrayIconRemoved(NaTrayManager* manager, NaTrayChild* removed)
   }
 }
 
-gboolean
-PanelTray::IdleSync(PanelTray* self)
+gboolean PanelTray::IdleSync(PanelTray* self)
 {
   int width = self->WidthOfTray();
   gtk_window_resize(GTK_WINDOW(self->window_.RawPtr()), width, panel::Style::Instance().panel_height);
@@ -213,8 +210,7 @@ int PanelTray::WidthOfTray()
   return width;
 }
 
-gboolean
-PanelTray::OnTrayDraw(GtkWidget* widget, cairo_t* cr)
+gboolean PanelTray::OnTrayDraw(GtkWidget* widget, cairo_t* cr)
 {
   GtkAllocation alloc;
 
@@ -235,14 +231,12 @@ PanelTray::OnTrayDraw(GtkWidget* widget, cairo_t* cr)
   return FALSE;
 }
 
-std::string
-PanelTray::GetName() const
+std::string PanelTray::GetName() const
 {
   return "Tray";
 }
 
-void
-PanelTray::AddProperties(GVariantBuilder* builder)
+void PanelTray::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
   .add(GetGeometry())
