@@ -81,6 +81,7 @@ nux::logging::Logger logger("unity.shell");
 
 UnityScreen* uScreen = 0;
 
+void reset_glib_logging();
 void configure_logging();
 void capture_g_log_calls(const gchar* log_domain,
                          GLogLevelFlags log_level,
@@ -126,7 +127,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , grab_index_ (0)
   , painting_tray_ (false)
   , last_scroll_event_(0)
-  , last_hud_show_time_(0)
+  , hud_keypress_time_(0)
 {
   Timer timer;
   gfloat version;
@@ -382,10 +383,15 @@ UnityScreen::~UnityScreen()
   if (relayoutSourceId != 0)
     g_source_remove(relayoutSourceId);
 
+  if (_redraw_handle)
+    g_source_remove(_redraw_handle);
+
   ::unity::ui::IconRenderer::DestroyTextures();
   QuicklistManager::Destroy();
-
+  // We need to delete the launchers before the window thread.
+  launcher_controller_.reset();
   delete wt;
+  reset_glib_logging();
 }
 
 void UnityScreen::initAltTabNextWindow()
@@ -1536,7 +1542,8 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
     action->setState(action->state() | CompAction::StateTermKey);
 
   super_keypressed_ = true;
-  launcher_controller_->HandleLauncherKeyPress();
+  int when = options[7].value().i();  // XEvent time in millisec
+  launcher_controller_->HandleLauncherKeyPress(when);
   EnsureSuperKeybindings ();
 
   if (!shortcut_controller_->Visible() && shortcut_controller_->IsEnabled())
@@ -1579,9 +1586,12 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
     return false;
 
   bool was_tap = state & CompAction::StateTermTapped;
+  LOG_DEBUG(logger) << "Super released: " << (was_tap ? "tapped" : "released");
+  int when = options[7].value().i();  // XEvent time in millisec
+
   super_keypressed_ = false;
   launcher_controller_->KeyNavTerminate(true);
-  launcher_controller_->HandleLauncherKeyRelease(was_tap);
+  launcher_controller_->HandleLauncherKeyRelease(was_tap, when);
   EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
 
   shortcut_controller_->SetEnabled(enable_shortcut_overlay_);
@@ -1899,7 +1909,7 @@ bool UnityScreen::ShowHudInitiate(CompAction* action,
   // to receive the Terminate event
   if (state & CompAction::StateInitKey)
     action->setState(action->state() | CompAction::StateTermKey);
-  last_hud_show_time_ = g_get_monotonic_time();
+  hud_keypress_time_ = options[7].value().i();  // XEvent time in millisec
 
   // pass key through
   return false;
@@ -1920,8 +1930,9 @@ bool UnityScreen::ShowHudTerminate(CompAction* action,
   if (!(state & CompAction::StateTermTapped))
     return false;
 
-  gint64 current_time = g_get_monotonic_time();
-  if (current_time - last_hud_show_time_ > (local::ALT_TAP_DURATION * 1000))
+  int release_time = options[7].value().i();  // XEvent time in millisec
+  int tap_duration = release_time - hud_keypress_time_;
+  if (tap_duration > local::ALT_TAP_DURATION)
   {
     LOG_DEBUG(logger) << "Tap too long";
     return false;
@@ -1939,6 +1950,11 @@ bool UnityScreen::ShowHudTerminate(CompAction* action,
   }
   else
   {
+    // Handles closing KeyNav (Alt+F1) if the hud is about to show
+    if (launcher_controller_->KeyNavIsActive())
+    {
+      launcher_controller_->KeyNavTerminate(false);
+    }
     hud_controller_->ShowHud();
   }
 
@@ -2925,6 +2941,12 @@ bool UnityPluginVTable::init()
 
 namespace
 {
+
+void reset_glib_logging()
+{
+  // Reinstate the default glib logger.
+  g_log_set_default_handler(g_log_default_handler, NULL);
+}
 
 void configure_logging()
 {
