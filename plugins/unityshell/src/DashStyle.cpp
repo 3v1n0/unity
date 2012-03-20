@@ -2235,7 +2235,7 @@ int Style::GetFilterButtonHeight() const
 
 int Style::GetSpaceBetweenLensAndFilters() const
 {
-  return 10;
+  return 9;
 }
 
 int Style::GetFilterViewRightPadding() const
