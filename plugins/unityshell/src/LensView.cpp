@@ -188,7 +188,7 @@ LensView::~LensView()
 void LensView::SetupViews(nux::Area* show_filters)
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-
+  layout_->SetHorizontalInternalMargin(10);
   scroll_view_ = new LensScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION),
                                     NUX_TRACKER_LOCATION);
   scroll_view_->EnableVerticalScrollBar(true);
@@ -356,11 +356,12 @@ gboolean LensView::FixRenderering(LensView* self)
   std::list<Area*> children = self->scroll_layout_->GetChildren();
   std::list<AbstractPlacesGroup*>  groups;
 
-  std::transform(children.begin(), children.end(), std::back_inserter(groups),
-    [](Area* obj) -> AbstractPlacesGroup*
-    {
-      return static_cast<AbstractPlacesGroup*>(obj);
-    });
+  for (auto child : children)
+  {
+    if (child == self->no_results_)
+      continue;
+    groups.push_back(static_cast<AbstractPlacesGroup*>(child));
+  }
 
   dash::impl::UpdateDrawSeparators(groups);
 

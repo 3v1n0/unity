@@ -163,7 +163,7 @@ public:
                      unsigned int);
 #ifdef USE_GLES
   void glPaintCompositedOutput (const CompRegion    &region,
-                                GLFramebufferObject *fbo,
+                                ::GLFramebufferObject *fbo,
                                 unsigned int         mask);
 #endif
 
@@ -296,7 +296,6 @@ private:
   bool                                  _in_paint;
   guint32                               relayoutSourceId;
   guint32                               _redraw_handle;
-  guint32                               alt_tap_timeout_id_;
   typedef std::shared_ptr<CompAction> CompActionPtr;
   typedef std::vector<CompActionPtr> ShortcutActions;
   ShortcutActions _shortcut_actions;
@@ -322,7 +321,7 @@ private:
   unity::BGHash _bghash;
 
 #ifdef USE_GLES
-  GLFramebufferObject *oldFbo;
+  ::GLFramebufferObject *oldFbo;
 #else
   ScreenEffectFramebufferObject::Ptr _fbo;
   GLuint                             _active_fbo;
@@ -338,7 +337,7 @@ private:
   bool                   painting_tray_;
   unsigned int           tray_paint_mask_;
   unsigned int           last_scroll_event_;
-  gint64                 last_hud_show_time_;
+  int                    hud_keypress_time_;
 
   GLMatrix panel_shadow_matrix_;
 

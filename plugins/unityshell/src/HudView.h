@@ -107,7 +107,7 @@ private:
   nux::ObjectPtr<nux::Layout> content_layout_;
   nux::ObjectPtr<nux::VLayout> button_views_;
   std::list<HudButton::Ptr> buttons_;
-  
+
   //FIXME - replace with dash search bar once modifications to dash search bar land
   SearchBar::Ptr search_bar_;
   Icon::Ptr icon_;
@@ -127,6 +127,7 @@ private:
   bool timeline_need_more_draw_;
   int selected_button_;
   IconHideState icon_state_;
+  bool activated_signal_sent_;
 };
 
 

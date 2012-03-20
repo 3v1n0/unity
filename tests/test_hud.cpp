@@ -2,6 +2,7 @@
 #include <glib-object.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Hud.h>
+#include <sigc++/connection.h>
 
 using namespace std;
 
@@ -22,6 +23,7 @@ public:
   unity::hud::Hud::Queries queries;
   bool query_return_result;
   bool connected_result;
+  int number_signals_found;
 };
 
 TEST_F(TestHud, TestConstruction)
@@ -85,7 +87,7 @@ TEST_F(TestHud, TestQueryReturn)
     return FALSE;
   };
    
-  hud->queries_updated.connect(query_connection);
+  sigc::connection connection = hud->queries_updated.connect(query_connection);
  
   guint source_id = g_timeout_add(10000, timeout_bailout, this);
  
@@ -98,7 +100,43 @@ TEST_F(TestHud, TestQueryReturn)
 
   // finally close the connection - Nothing to check for here
   hud->CloseQuery();
+  connection.disconnect();
 }
 
+TEST_F(TestHud, TestSigEmission)
+{
+  // checks that the signal emission from Hud is working correctly
+  // the service is setup to emit the same signal every 1000ms
+  // using the same query key as its StarQuery method
+  // so calling StartQuery and listening we expect > 1 
+  // signal emission
+  number_signals_found = 0;
+
+  // make sure we receive the queries
+  auto query_connection = [this](unity::hud::Hud::Queries queries_) 
+  { 
+    number_signals_found += 1;
+  };
+
+  auto timeout_bailout = [] (gpointer data) -> gboolean
+  {
+    g_main_loop_quit(loop_);
+    return FALSE;
+  };
+   
+  sigc::connection connection = hud->queries_updated.connect(query_connection);
+ 
+  hud->RequestQuery("Request30Queries");
+  guint source_id = g_timeout_add(10000, timeout_bailout, this);
+ 
+  g_main_loop_run(loop_);
+  EXPECT_GT(number_signals_found, 1);
+  g_source_remove(source_id);
+
+  // finally close the connection - Nothing to check for here
+  hud->CloseQuery();
+  connection.disconnect();
+  
+}
 
 }

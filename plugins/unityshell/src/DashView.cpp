@@ -267,7 +267,7 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
     height = MIN(height, for_geo.height-24);
   }
 
-  return nux::Geometry(0, 0, width, height);
+  return nux::Geometry(0, 0, width-10, height);
 }
 
 void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)

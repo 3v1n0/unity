@@ -287,7 +287,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   bg_effect_helper_.enabled = false;
 
   TextureCache& cache = TextureCache::GetDefault();
-  TextureCache::CreateTextureCallback cb = [&](std::string const& name, int width, int height) -> nux::BaseTexture* { 
+  TextureCache::CreateTextureCallback cb = [&](std::string const& name, int width, int height) -> nux::BaseTexture* {
     return nux::CreateTexture2DFromFile((PKGDATADIR"/" + name + ".png").c_str(), -1, true);
   };
 
@@ -408,8 +408,8 @@ Launcher::AddProperties(GVariantBuilder* builder)
   .add("height", abs_geo.height)
   .add("monitor", monitor())
   .add("quicklist-open", _hide_machine->GetQuirk(LauncherHideMachine::QUICKLIST_OPEN))
-  .add("hide-quirks", _hide_machine->DebugHideQuirks().c_str())
-  .add("hover-quirks", _hover_machine->DebugHoverQuirks().c_str())
+  .add("hide-quirks", _hide_machine->DebugHideQuirks())
+  .add("hover-quirks", _hover_machine->DebugHoverQuirks())
   .add("icon-size", _icon_size)
   .add("shortcuts_shown", _shortcuts_shown);
 }
@@ -902,6 +902,13 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
                             icon->GetIconType() == AbstractLauncherIcon::TYPE_DEVICE  ||
                             icon->GetIconType() == AbstractLauncherIcon::TYPE_EXPO;
 
+  // trying to protect against flickering when icon is dragged from dash LP: #863230
+  if (arg.alpha < 0.5)
+  {
+    arg.alpha = 0.5;
+    arg.saturation = 0.0;
+  }
+
   if (_dash_is_open)
     arg.active_arrow = icon->GetIconType() == AbstractLauncherIcon::TYPE_HOME;
   else
@@ -989,6 +996,13 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr icon,
   if (drop_dim_value < 1.0f)
     arg.alpha *= drop_dim_value;
 
+  // trying to protect against flickering when icon is dragged from dash LP: #863230
+  if (arg.alpha < 0.5)
+  {
+    arg.alpha = 0.5;
+    arg.saturation = 0.0;
+  }
+
   if (icon == _drag_icon)
   {
     if (MouseBeyondDragThreshold())
@@ -1040,7 +1054,7 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr icon,
   // FIXME: this is a hack, we should have a look why SetAnimationTarget is necessary in SetAnimationTarget
   // we should ideally just need it at start to set the target
   if (!_initial_drag_animation && icon == _drag_icon && _drag_window && _drag_window->Animating())
-    _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter(monitor).x), 
+    _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter(monitor).x),
                                      (int)(_drag_icon->GetCenter(monitor).y));
 
   center.y += (half_size * size_modifier) + spacing;   // move to end
@@ -1534,11 +1548,11 @@ void Launcher::ConfigureBarrier()
     float overcome_responsiveness_mult = ((options()->edge_responsiveness() - 1) * 1.0f) + 1;
     decaymulator_->rate_of_decay = options()->edge_decay_rate() * decay_responsiveness_mult;
     _edge_overcome_pressure = options()->edge_overcome_pressure() * overcome_responsiveness_mult;
-    
+
     _pointer_barrier->threshold = options()->edge_stop_velocity();
     _pointer_barrier->max_velocity_multiplier = options()->edge_responsiveness();
     _pointer_barrier->ConstructBarrier();
-    
+
     _hide_machine->reveal_pressure = options()->edge_reveal_pressure() * reveal_responsiveness_mult;
     _hide_machine->edge_decay_rate = options()->edge_decay_rate() * decay_responsiveness_mult;
   }
@@ -1879,12 +1893,30 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
         texxform_blur_bg.voffset = ((float) base.y) / geo_absolute.height;
 
         GfxContext.PushClippingRectangle(bkg_box);
-        gPainter.PushDrawTextureLayer(GfxContext, base,
-                                      blur_texture,
-                                      texxform_blur_bg,
-                                      nux::color::White,
-                                      true,
-                                      ROP);
+
+#ifndef NUX_OPENGLES_20
+        if (GfxContext.UsingGLSLCodePath())
+          gPainter.PushDrawCompositionLayer(GfxContext, base,
+                                            blur_texture,
+                                            texxform_blur_bg,
+                                            nux::color::White,
+                                            _background_color, nux::LAYER_BLEND_MODE_OVERLAY,
+                                            true, ROP);
+        else
+          gPainter.PushDrawTextureLayer(GfxContext, base,
+                                        blur_texture,
+                                        texxform_blur_bg,
+                                        nux::color::White,
+                                        true,
+                                        ROP);
+#else
+          gPainter.PushDrawCompositionLayer(GfxContext, base,
+                                            blur_texture,
+                                            texxform_blur_bg,
+                                            nux::color::White,
+                                            _background_color, nux::LAYER_BLEND_MODE_OVERLAY,
+                                            true, ROP);
+#endif
         GfxContext.PopClippingRectangle();
 
         push_count++;
@@ -1896,11 +1928,14 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     // apply the darkening
     GfxContext.GetRenderStates().SetBlend(true, GL_ZERO, GL_SRC_COLOR);
-    gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0.7f, 0.7f, 0.7f, 1.0f));
+    gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0.9f, 0.9f, 0.9f, 1.0f));
     GfxContext.GetRenderStates().SetBlend (alpha, src, dest);
 
     // apply the bg colour
-    gPainter.Paint2DQuadColor(GfxContext, bkg_box, _background_color);
+#ifndef NUX_OPENGLES_20
+    if (GfxContext.UsingGLSLCodePath() == FALSE)
+      gPainter.Paint2DQuadColor(GfxContext, bkg_box, _background_color);
+#endif
 
     // apply the shine
     GfxContext.GetRenderStates().SetBlend(true, GL_DST_COLOR, GL_ONE);
@@ -2023,7 +2058,7 @@ void Launcher::StartIconDragRequest(int x, int y)
 {
   nux::Geometry geo = GetAbsoluteGeometry();
   AbstractLauncherIcon::Ptr drag_icon = MouseIconIntersection((int)(GetGeometry().width / 2.0f), y);
-  
+
   x += geo.x;
   y += geo.y;
 
@@ -2099,7 +2134,7 @@ void Launcher::EndIconDrag()
     {
       _model->Save();
 
-      _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter(monitor).x), 
+      _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter(monitor).x),
                                        (int)(_drag_icon->GetCenter(monitor).y));
       _drag_window->StartAnimation();
 
@@ -2313,7 +2348,7 @@ void Launcher::OnPointerBarrierEvent(ui::PointerBarrierWrapper* owner, ui::Barri
     Window root_return, child_return;
     Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
 
-    if (XQueryPointer (dpy, DefaultRootWindow(dpy), &root_return, &child_return, &root_x_return, 
+    if (XQueryPointer (dpy, DefaultRootWindow(dpy), &root_return, &child_return, &root_x_return,
                        &root_y_return, &win_x_return, &win_y_return, &mask_return))
     {
       if (mask_return & (Button1Mask | Button3Mask))

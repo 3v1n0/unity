@@ -36,7 +36,7 @@ BFBLauncherIcon::BFBLauncherIcon()
  : SimpleLauncherIcon()
  , reader_(dash::LensDirectoryReader::GetDefault())
 {
-  tooltip_text = _("Dash home");
+  tooltip_text = _("Dash Home");
   icon_name = PKGDATADIR"/launcher_bfb.png";
   SetQuirk(QUIRK_VISIBLE, true);
   SetQuirk(QUIRK_RUNNING, false);

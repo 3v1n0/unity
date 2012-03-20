@@ -104,11 +104,7 @@ public:
   void InsertDesktopIcon();
   void RemoveDesktopIcon();
 
-  bool TapTimeUnderLimit();
-
   void SendHomeActivationRequest();
-
-  int TimeSinceLauncherKeyPress();
 
   int MonitorWithMouse();
 
@@ -172,7 +168,7 @@ public:
 
   UBusManager            ubus;
 
-  struct timespec        launcher_key_press_time_;
+  int                    launcher_key_press_time_;
 
   LauncherList launchers;
 
@@ -239,10 +235,10 @@ Controller::Impl::Impl(Display* display, Controller* parent)
 
   uscreen->changed.connect(sigc::mem_fun(this, &Controller::Impl::OnScreenChanged));
 
-  WindowManager& plugin_adapter = *(WindowManager::Default()); 
+  WindowManager& plugin_adapter = *(WindowManager::Default());
   plugin_adapter.window_focus_changed.connect (sigc::mem_fun (this, &Controller::Impl::OnWindowFocusChanged));
 
-  launcher_key_press_time_ = { 0, 0 };
+  launcher_key_press_time_ = 0;
 
   ubus.RegisterInterest(UBUS_QUICKLIST_END_KEY_NAV, [&](GVariant * args) {
     if (reactivate_keynav)
@@ -255,6 +251,15 @@ Controller::Impl::Impl(Display* display, Controller* parent)
 
 Controller::Impl::~Impl()
 {
+  // Since the launchers are in a window which adds a reference to the
+  // launcher, we need to make sure the base windows are unreferenced
+  // otherwise the launchers never die.
+  for (auto launcher_ptr : launchers)
+  {
+    if (launcher_ptr.IsValid())
+      launcher_ptr->GetParent()->UnReference();
+  }
+
   if (bamf_timer_handler_id_ != 0)
     g_source_remove(bamf_timer_handler_id_);
 
@@ -312,7 +317,7 @@ void Controller::Impl::OnWindowFocusChanged (guint32 xid)
   else if (launcher_keynav)
   {
     keynav_first_focus = true;
-  } 
+  }
 }
 
 Launcher* Controller::Impl::CreateLauncher(int monitor)
@@ -339,6 +344,7 @@ Launcher* Controller::Impl::CreateLauncher(int monitor)
 
   launcher->SetModel(model_.get());
   launcher->launcher_addrequest.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequest));
+  launcher->launcher_addrequest_special.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequestSpecial));
   launcher->launcher_removerequest.connect(sigc::mem_fun(this, &Impl::OnLauncherRemoveRequest));
 
   parent_->AddChild(launcher);
@@ -384,7 +390,7 @@ void Controller::Impl::Save()
     std::string const& desktop_file = icon->DesktopFile();
 
     if (!desktop_file.empty())
-      desktop_paths.push_back(desktop_file.c_str());
+      desktop_paths.push_back(desktop_file);
   }
 
   unity::FavoriteStore::GetDefault().SetFavorites(desktop_paths);
@@ -615,7 +621,7 @@ void Controller::Impl::InsertExpoAction()
 
   on_expoicon_activate_connection_ = icon->activate.connect(sigc::mem_fun(this, &Impl::OnExpoActivated));
 
-  
+
   RegisterIcon(expo_icon_);
 }
 
@@ -774,19 +780,6 @@ void Controller::Impl::SetupBamf()
   bamf_timer_handler_id_ = 0;
 }
 
-int Controller::Impl::TimeSinceLauncherKeyPress()
-{
-  struct timespec current;
-  unity::TimeUtil::SetTimeStruct(&current);
-  return unity::TimeUtil::TimeDelta(&current, &launcher_key_press_time_);
-}
-
-bool Controller::Impl::TapTimeUnderLimit()
-{
-  int time_difference = TimeSinceLauncherKeyPress();
-  return time_difference < local::super_tap_duration;
-}
-
 void Controller::Impl::SendHomeActivationRequest()
 {
   ubus.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", "home.lens", 0, ""));
@@ -892,15 +885,15 @@ int Controller::Impl::MonitorWithMouse()
 nux::ObjectPtr<Launcher> Controller::Impl::CurrentLauncher()
 {
   nux::ObjectPtr<Launcher> result;
-  int best = std::max<int> (launchers.size() - 1, MonitorWithMouse());
+  int best = std::min<int> (launchers.size() - 1, MonitorWithMouse());
   if (best >= 0)
     result = launchers[best];
   return result;
 }
 
-void Controller::HandleLauncherKeyPress()
+void Controller::HandleLauncherKeyPress(int when)
 {
-  unity::TimeUtil::SetTimeStruct(&pimpl->launcher_key_press_time_);
+  pimpl->launcher_key_press_time_ = when;
 
   auto show_launcher = [](gpointer user_data) -> gboolean
   {
@@ -938,11 +931,17 @@ void Controller::HandleLauncherKeyPress()
   pimpl->launcher_label_show_handler_id_ = g_timeout_add(local::shortcuts_show_delay, show_shortcuts, pimpl);
 }
 
-void Controller::HandleLauncherKeyRelease(bool was_tap)
+void Controller::HandleLauncherKeyRelease(bool was_tap, int when)
 {
-  if (pimpl->TapTimeUnderLimit() && was_tap)
+  int tap_duration = when - pimpl->launcher_key_press_time_;
+  if (tap_duration < local::super_tap_duration && was_tap)
   {
+    LOG_DEBUG(logger) << "Quick tap, sending activation request.";
     pimpl->SendHomeActivationRequest();
+  }
+  else
+  {
+    LOG_DEBUG(logger) << "Tap too long: " << tap_duration;
   }
 
   if (pimpl->launcher_label_show_handler_id_)
@@ -961,7 +960,7 @@ void Controller::HandleLauncherKeyRelease(bool was_tap)
   {
     pimpl->keyboard_launcher_->ShowShortcuts(false);
 
-    int ms_since_show = pimpl->TimeSinceLauncherKeyPress();
+    int ms_since_show = tap_duration;
     if (ms_since_show > local::launcher_minimum_show_duration)
     {
       pimpl->keyboard_launcher_->ForceReveal(false);
@@ -1016,7 +1015,7 @@ bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, 
       }
 
       // disable the "tap on super" check
-      pimpl->launcher_key_press_time_ = { 0, 0 };
+      pimpl->launcher_key_press_time_ = 0;
       return true;
     }
   }
@@ -1147,11 +1146,10 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
       parent_->KeyNavNext();
       break;
 
-      // super/control/alt/esc/left (close quicklist or exit laucher key-focus)
+      // super/control/esc/left (close quicklist or exit laucher key-focus)
     case NUX_VK_LWIN:
     case NUX_VK_RWIN:
     case NUX_VK_CONTROL:
-    case NUX_VK_MENU:
     case NUX_VK_LEFT:
     case NUX_KP_LEFT:
     case NUX_VK_ESCAPE:
@@ -1188,6 +1186,11 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
     break;
 
     default:
+      // ALT + <Anykey>; treat it as a shortcut and exit keynav 
+      if (state & nux::NUX_STATE_ALT)
+      {
+        parent_->KeyNavTerminate(false);
+      }
       break;
   }
 }
