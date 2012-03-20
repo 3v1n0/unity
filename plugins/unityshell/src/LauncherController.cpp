@@ -939,7 +939,7 @@ void Controller::HandleLauncherKeyRelease(bool was_tap, int when)
   }
   else
   {
-    LOG_DEBUG(logger) << "Tap too long: " << pimpl->TimeSinceLauncherKeyPress();
+    LOG_DEBUG(logger) << "Tap too long: " << tap_duration;
   }
 
   if (pimpl->launcher_label_show_handler_id_)
