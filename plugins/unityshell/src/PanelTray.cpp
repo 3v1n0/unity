@@ -81,11 +81,11 @@ PanelTray::PanelTray()
 
 PanelTray::~PanelTray()
 {
-  if (gtk_widget_get_realized(window_))
-    gtk_widget_destroy(window_);
-
   g_idle_remove_by_data(this);
   g_strfreev(whitelist_);
+
+  if (gtk_widget_get_realized(window_))
+    gtk_widget_destroy(window_);
 }
 
 unsigned int PanelTray::xid()
