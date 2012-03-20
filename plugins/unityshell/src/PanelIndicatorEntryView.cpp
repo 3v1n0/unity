@@ -475,7 +475,7 @@ std::string PanelIndicatorEntryView::GetName() const
   if (proxy_->IsUnused())
     return "";
   else
-    return proxy_->id().c_str();
+    return proxy_->id();
 }
 
 void PanelIndicatorEntryView::AddProperties(GVariantBuilder* builder)
