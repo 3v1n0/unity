@@ -6,100 +6,95 @@
 # under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
 
-from gtk import Clipboard
 from time import sleep
+
+from gtk import Clipboard
+from testtools.matchers import Equals
 
 from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.tests import AutopilotTestCase
 
+
 class DashTestCase(AutopilotTestCase):
     def setUp(self):
         super(DashTestCase, self).setUp()
+        self.set_unity_log_level("unity.shell", "DEBUG")
+        self.set_unity_log_level("unity.launcher", "DEBUG")
         self.dash.ensure_hidden()
+        # On shutdown, ensure hidden too.  Also add a delay.  Cleanup is LIFO.
+        self.addCleanup(self.dash.ensure_hidden)
+        self.addCleanup(sleep, 1)
 
-    def tearDown(self):
-        super(DashTestCase, self).tearDown()
-        self.dash.ensure_hidden()
 
 class DashRevealTests(DashTestCase):
     """Test the Unity dash Reveal."""
 
     def test_dash_reveal(self):
         """Ensure we can show and hide the dash."""
-        self.assertFalse(self.dash.get_is_visible())
-        self.dash.toggle_reveal()
-        self.assertTrue(self.dash.get_is_visible())
-        self.dash.toggle_reveal()
-        self.assertFalse(self.dash.get_is_visible())
+        self.dash.ensure_visible()
+        self.dash.ensure_hidden()
 
     def test_application_lens_shortcut(self):
         """Application lense must reveal when Super+a is pressed."""
         self.dash.reveal_application_lens()
-        lensbar = self.dash.view.get_lensbar()
-        self.assertEqual(lensbar.active_lens, u'applications.lens')
+        self.assertThat(self.dash.active_lens, Equals('applications.lens'))
 
     def test_music_lens_shortcut(self):
         """Music lense must reveal when Super+w is pressed."""
         self.dash.reveal_music_lens()
-        lensbar = self.dash.view.get_lensbar()
-        self.assertEqual(lensbar.active_lens, u'music.lens')
+        self.assertThat(self.dash.active_lens, Equals('music.lens'))
 
     def test_file_lens_shortcut(self):
         """File lense must reveal when Super+f is pressed."""
         self.dash.reveal_file_lens()
-        lensbar = self.dash.view.get_lensbar()
-        self.assertEqual(lensbar.active_lens, u'files.lens')
+        self.assertThat(self.dash.active_lens, Equals('files.lens'))
 
     def test_command_lens_shortcut(self):
         """Run Command lens must reveat on alt+F2."""
         self.dash.reveal_command_lens()
-        lensbar = self.dash.view.get_lensbar()
-        self.assertEqual(lensbar.active_lens, u'commands.lens')
-    
+        self.assertThat(self.dash.active_lens, Equals('commands.lens'))
+
     def test_alt_f4_close_dash(self):
         """Dash must close on alt+F4."""
         self.dash.ensure_visible()
-        self.dash.close_with_alt_f4()
+        self.keyboard.press_and_release("Alt+F4")
         sleep(0.5)
-        self.assertFalse(self.dash.get_is_visible())
+        self.assertFalse(self.dash.visible)
+
 
 class DashSearchInputTests(DashTestCase):
     """Test features involving input to the dash search"""
-    
+
+    def assertSearchText(self, text):
+        sleep(0.5)
+        self.assertThat(self.dash.search_string, Equals(text))
+
     def test_search_keyboard_focus(self):
         """Dash must put keyboard focus on the search bar at all times."""
         self.dash.ensure_visible()
         self.keyboard.type("Hello")
-        sleep(1)
-        searchbar = self.dash.get_searchbar()
-        self.assertEqual(searchbar.search_string, u'Hello')
+        self.assertSearchText("Hello")
 
     def test_multi_key(self):
         """Pressing 'Multi_key' must not add any characters to the search."""
-        self.dash.reveal_application_lens()      
+        self.dash.reveal_application_lens()
         self.keyboard.press_and_release('Multi_key')
         self.keyboard.type("o")
-
-        searchbar = self.dash.get_searchbar()
-        self.assertEqual("", searchbar.search_string)
+        self.assertSearchText("")
 
     def test_multi_key_o(self):
         """Pressing the sequences 'Multi_key' + '^' + 'o' must produce 'ô'."""
         self.dash.reveal_application_lens()
         self.keyboard.press_and_release('Multi_key')
         self.keyboard.type("^o")
-
-        searchbar = self.dash.get_searchbar()
-        self.assertEqual("ô", searchbar.search_string)
+        self.assertSearchText("ô")
 
     def test_multi_key_copyright(self):
         """Pressing the sequences 'Multi_key' + 'c' + 'o' must produce '©'."""
         self.dash.reveal_application_lens()
         self.keyboard.press_and_release('Multi_key')
         self.keyboard.type("oc")
-
-        searchbar = self.dash.get_searchbar()
-        self.assertEqual("©", searchbar.search_string)
+        self.assertSearchText("©")
 
     def test_multi_key_delete(self):
         """Pressing 'Multi_key' must not get stuck looking for a sequence."""
@@ -108,9 +103,8 @@ class DashSearchInputTests(DashTestCase):
         self.keyboard.press_and_release('Multi_key')
         self.keyboard.press_and_release('BackSpace')
         self.keyboard.press_and_release('BackSpace')
+        self.assertSearchText("d")
 
-        searchbar = self.dash.get_searchbar()
-        self.assertEqual("d", searchbar.search_string)
 
 class DashKeyNavTests(DashTestCase):
     """Test the unity Dash keyboard navigation."""
@@ -143,7 +137,7 @@ class DashKeyNavTests(DashTestCase):
     def test_lensbar_enter_activation(self):
         """Must be able to activate LensBar icons that have focus with an Enter keypress."""
         self.dash.ensure_visible()
-        
+
         for i in range(self.dash.get_num_rows()):
             self.keyboard.press_and_release("Down")
         self.keyboard.press_and_release("Right");
@@ -165,7 +159,7 @@ class DashKeyNavTests(DashTestCase):
         Test for lp:919563
         """
 
-        reason = """ 
+        reason = """
         False assumptions. Expanding the first category will not necessarily expand enough
         to force the next category header off screen.
         """
@@ -213,12 +207,11 @@ class DashKeyNavTests(DashTestCase):
         """ Tests that a category header gets focus when 'down' is pressed after the
         dash is opened
 
-        OK important to note that this test only tests that A category is focused, not the first
-        and from doing this it seems that it's common for a header other than the first to get focus.
+        OK important to note that this test only tests that A category is
+        focused, not the first and from doing this it seems that it's common
+        for a header other than the first to get focus.
         """
-
         self.dash.ensure_visible()
-
         # Make sure that a category have the focus.
         self.keyboard.press_and_release("Down")
         lens = self.dash.get_current_lens()
@@ -250,11 +243,11 @@ class DashKeyNavTests(DashTestCase):
     def test_control_tab_lens_cycle(self):
         """ This test makes sure that Ctlr + Tab cycles lenses."""
         self.dash.ensure_visible()
-        
+
         self.keyboard.press('Control')
         self.keyboard.press_and_release('Tab')
         self.keyboard.release('Control')
-        
+
         lensbar = self.dash.view.get_lensbar()
         self.assertEqual(lensbar.active_lens, u'applications.lens')
 
@@ -287,20 +280,17 @@ class DashKeyNavTests(DashTestCase):
         # Tabs to last category
         for i in range(lens.get_num_visible_categories()):
             self.keyboard.press_and_release('Tab')
-            category = lens.get_focused_category()
 
         self.keyboard.press_and_release('Tab')
         searchbar = self.dash.get_searchbar()
         self.assertTrue(searchbar.expander_has_focus)
 
-
+        filter_bar = lens.get_filterbar()
         if not searchbar.showing_filters:
             self.keyboard.press_and_release('Enter')
-            searchbar.refresh_state()
-            # i'm not sure this really belongs in this test
             self.assertTrue(searchbar.showing_filters)
+            self.addCleanup(filter_bar.ensure_collapsed)
 
-        filter_bar = lens.get_filterbar()
         for i in range(filter_bar.get_num_filters()):
             self.keyboard.press_and_release('Tab')
             new_focused_filter = filter_bar.get_focused_filter()
@@ -311,6 +301,7 @@ class DashKeyNavTests(DashTestCase):
         category = lens.get_focused_category()
         self.assertIsNot(category, None)
 
+
 class DashClipboardTests(DashTestCase):
     """Test the Unity clipboard"""
 
@@ -319,14 +310,12 @@ class DashClipboardTests(DashTestCase):
         self.dash.ensure_visible()
 
         self.keyboard.type("SelectAll")
-        
         sleep(1)
+        self.assertThat(self.dash.search_string, Equals('SelectAll'))
 
         self.keyboard.press_and_release("Ctrl+a")
         self.keyboard.press_and_release("Delete")
-
-        searchbar = self.dash.get_searchbar()
-        self.assertEqual(searchbar.search_string, u'')
+        self.assertThat(self.dash.search_string, Equals(''))
 
     def test_ctrl_c(self):
         """ This test if ctrl+c copies text into the clipboard """
@@ -390,6 +379,7 @@ class DashClipboardTests(DashTestCase):
         searchbar = self.dash.get_searchbar()
         self.assertEqual(searchbar.search_string, u'CutPasteCutPaste')
 
+
 class DashKeyboardFocusTests(DashTestCase):
     """Tests that keyboard focus works."""
 
@@ -403,43 +393,36 @@ class DashKeyboardFocusTests(DashTestCase):
 
         self.keyboard.type("hello")
         filter_bar.ensure_expanded()
+        self.addCleanup(filter_bar.ensure_collapsed)
         self.keyboard.type(" world")
+        self.assertThat(self.dash.search_string, Equals("hello world"))
 
-        searchbar = self.dash.get_searchbar()
-        self.assertEqual("hello world", searchbar.search_string)
 
 class DashLensResultsTests(DashTestCase):
-    """ Tests results from the lens view """
-    
-    def test_results_message_empty_search(self): 
-        """ This tests a message is not shown when there is no text""" 
+    """Tests results from the lens view."""
+
+    def test_results_message_empty_search(self):
+        """This tests a message is not shown when there is no text."""
         self.dash.reveal_application_lens()
         lens = self.dash.get_current_lens()
-
-        lens.refresh_state() 
         self.assertFalse(lens.no_results_active)
 
-    def test_results_message(self): 
-        """ This test no mesage will be shown when results are there""" 
+    def test_results_message(self):
+        """This test no mesage will be shown when results are there."""
         self.dash.reveal_application_lens()
-        lens = self.dash.get_current_lens()
-
         self.keyboard.type("Terminal")
         sleep(1)
-      
-        lens.refresh_state() 
+        lens = self.dash.get_current_lens()
         self.assertFalse(lens.no_results_active)
 
-    def test_no_results_message(self): 
-        """ This test shows a message will appear in the lens""" 
+    def test_no_results_message(self):
+        """This test shows a message will appear in the lens."""
         self.dash.reveal_application_lens()
-        lens = self.dash.get_current_lens()
-        
         self.keyboard.type("qwerlkjzvxc")
         sleep(1)
-
-        lens.refresh_state() 
+        lens = self.dash.get_current_lens()
         self.assertTrue(lens.no_results_active)
+
 
 class DashVisualTests(DashTestCase):
     """Tests that the dash visual is correct."""
@@ -454,6 +437,7 @@ class DashVisualTests(DashTestCase):
         groups = lens.get_groups()
 
         for group in groups:
-            if (group.is_visible):
-                self.assertTrue(not group.expand_label_is_visible or
-                                (group.expand_label_y + group.expand_label_baseline == group.name_label_y + group.name_label_baseline))
+            if (group.is_visible and group.expand_label_is_visible):
+                expand_label_y = group.expand_label_y + group.expand_label_baseline
+                name_label_y = group.name_label_y + group.name_label_baseline
+                self.assertThat(expand_label_y, Equals(name_label_y))

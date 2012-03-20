@@ -43,14 +43,14 @@ class Dash(KeybindingsHelper):
         Reveals the dash if it's currently hidden, hides it otherwise.
         """
         logger.debug("Toggling dash visibility with Super key.")
-        self.keybinding("dash/reveal")
+        self.keybinding("dash/reveal", 0.1)
         sleep(1)
 
     def ensure_visible(self, clear_search=True):
         """
         Ensures the dash is visible.
         """
-        if not self.get_is_visible():
+        if not self.visible:
             self.toggle_reveal()
             self._wait_for_visibility(expect_visible=True)
             if clear_search:
@@ -60,24 +60,29 @@ class Dash(KeybindingsHelper):
         """
         Ensures the dash is hidden.
         """
-        if self.get_is_visible():
+        if self.visible:
             self.toggle_reveal()
             self._wait_for_visibility(expect_visible=False)
 
     def _wait_for_visibility(self, expect_visible):
         for i in range(11):
-            if self.get_is_visible() != expect_visible:
+            if self.visible != expect_visible:
                 sleep(1)
             else:
                 return
         raise RuntimeError("Dash not %s after waiting for 10 seconds." %
             ("Visible" if expect_visible else "Hidden"))
 
-    def get_is_visible(self):
+    @property
+    def visible(self):
         """
         Is the dash visible?
         """
         return self.controller.visible
+
+    @property
+    def search_string(self):
+        return self.get_searchbar().search_string
 
     def get_searchbar(self):
         """Returns the searchbar attached to the dash."""
@@ -99,42 +104,39 @@ class Dash(KeybindingsHelper):
     def reveal_application_lens(self, clear_search=True):
         """Reveal the application lense."""
         logger.debug("Revealing application lens with Super+a.")
-        self._reveal_lens("lens_reveal/apps")
-        if clear_search:
-            self.clear_search()
+        self._reveal_lens("lens_reveal/apps", clear_search)
 
     def reveal_music_lens(self, clear_search=True):
         """Reveal the music lense."""
         logger.debug("Revealing music lens with Super+m.")
-        self._reveal_lens("lens_reveal/music")
+        self._reveal_lens("lens_reveal/music", clear_search)
 
     def reveal_file_lens(self, clear_search=True):
         """Reveal the file lense."""
         logger.debug("Revealing file lens with Super+f.")
-        self._reveal_lens("lens_reveal/files")
-        if clear_search:
-            self.clear_search()
+        self._reveal_lens("lens_reveal/files", clear_search)
 
     def reveal_command_lens(self, clear_search=True):
         """Reveal the 'run command' lens."""
         logger.debug("Revealing command lens with Alt+F2.")
-        self._reveal_lens("lens_reveal/command")
-        if clear_search:
-            self.clear_search()
+        self._reveal_lens("lens_reveal/command", clear_search)
 
-    def _reveal_lens(self, binding_name):
+    def _reveal_lens(self, binding_name, clear_search):
         self.keybinding_hold(binding_name)
         self.keybinding_tap(binding_name)
         self.keybinding_release(binding_name)
+        self._wait_for_visibility(expect_visible=True)
+        if clear_search:
+            self.clear_search()
+
+    @property
+    def active_lens(self):
+        return self.view.get_lensbar().active_lens
 
     def get_current_lens(self):
         """Get the currently-active LensView object."""
         active_lens_name = self.view.get_lensbar().active_lens
         return self.view.get_lensview_by_name(active_lens_name)
-
-    def close_with_alt_f4(self):
-        """Send ALT+F4 in order to close the dash."""
-        self._keyboard.press_and_release("Alt+F4")
 
 
 class DashController(UnityIntrospectionObject):
@@ -260,6 +262,7 @@ class FilterBar(UnityIntrospectionObject):
             m = Mouse()
             m.move(tx, ty)
             m.click()
+            self._wait_for_expansion(True)
 
     def ensure_collapsed(self):
         """Collapse the filter bar, if it's not already."""
@@ -270,6 +273,16 @@ class FilterBar(UnityIntrospectionObject):
             m = Mouse()
             m.move(tx, ty)
             m.click()
+            self._wait_for_expansion(False)
+
+    def _wait_for_expansion(self, expect_expanded):
+        for i in range(11):
+            if self.is_expanded() != expect_expanded:
+                sleep(1)
+            else:
+                return
+        raise RuntimeError("Filters not %s after waiting for 10 seconds." %
+            ("expanded" if expect_expanded else "collapsed"))
 
     def _get_searchbar(self):
         """Get the searchbar.
