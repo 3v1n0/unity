@@ -483,7 +483,7 @@ void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
 {
   // Appmenu is treated differently as it needs to expand
   // We could do this in a more special way, but who has the time for special?
-  if (proxy->name().find("appmenu") != std::string::npos)
+  if (proxy->IsAppmenu())
   {
     _menu_view->AddIndicator(proxy);
   }
@@ -500,7 +500,7 @@ void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
 
 void PanelView::OnObjectRemoved(indicator::Indicator::Ptr const& proxy)
 {
-  if (proxy->name().find("appmenu") != std::string::npos)
+  if (proxy->IsAppmenu())
   {
     _menu_view->RemoveIndicator(proxy);
   }
@@ -569,7 +569,7 @@ static gboolean track_menu_pointer(PanelView *self)
   return TRUE;
 }
 
-void PanelView::OnEntryActivated(std::string const& entry_id)
+void PanelView::OnEntryActivated(std::string const& entry_id, nux::Rect const& geo)
 {
   bool active = (entry_id.size() > 0);
   if (active && !_track_menu_pointer_id)
@@ -605,8 +605,9 @@ void PanelView::OnSynced()
   _needs_geo_sync = true;
 }
 
-void PanelView::OnEntryShowMenu(std::string const& entry_id,
-                                int x, int y, int timestamp, int button)
+void PanelView::OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
+                                int x, int y, unsigned int button,
+                                unsigned int timestamp)
 {
   Display* d = nux::GetGraphicsDisplay()->GetX11Display();
   XUngrabPointer(d, CurrentTime);

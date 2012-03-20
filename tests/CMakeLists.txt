@@ -45,9 +45,18 @@ include_directories (${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src)
 # We can't have convenience libs so we need to rebuild with what we need
 # Please keep actual test files alphabetically at top and then files
 # from ../${UNITY_SRC} or ../../services in alphabetically after that
+find_program(GLIB_GENMARSHAL glib-genmarshal)
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
+  COMMAND ${GLIB_GENMARSHAL} ARGS ../services/panel-marshal.list --body --prefix=panel_marshal > ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
+  COMMAND ${GLIB_GENMARSHAL} ARGS ../services/panel-marshal.list --header --prefix=panel_marshal > ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.h
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  DEPENDS ../services/panel-marshal.list
+  COMMENT "Generating marshallers for panel-service")
+
 add_executable (test-unit
-                unit/TestQuicklistMenuitems.cpp
                 unit/TestMain.cpp
+                unit/TestQuicklistMenuitems.cpp
+                unit/TestPanelService.cpp
                 unit/TestUBus.cpp
                 unit/TestStaticCairoText.cpp
                 ${UNITY_SRC}/CairoBaseWindow.cpp
@@ -59,6 +68,8 @@ add_executable (test-unit
                 ${UNITY_SRC}/QuicklistMenuItemSeparator.cpp
                 ${UNITY_SRC}/QuicklistView.cpp
                 ${UNITY_SRC}/StaticCairoText.cpp
+                ../services/panel-service.c
+                ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
                 ${UNITY_SRC}/ubus-server.cpp
                 )
 add_dependencies (test-unit unity-core-${UNITY_API_VERSION})
@@ -114,6 +125,9 @@ if (GTEST_SRC_DIR AND
                  test_glib_signals_utils.h
                  test_glib_variant.cpp
                  ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
+                 test_indicator.cpp
+                 test_indicator_appmenu.cpp
+                 test_indicator_entry.cpp
                  test_favorite_store_gsettings.cpp
                  test_favorite_store_private.cpp
                  test_home_lens.cpp
@@ -180,7 +194,6 @@ if (GTEST_SRC_DIR AND
                  test_filter.cpp
                  test_gdbus_proxy.cpp
                  test_hud.cpp
-                 test_indicator_entry.cpp
                  test_lens.cpp
                  test_main_dbus.cpp
                  test_model.cpp

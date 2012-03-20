@@ -79,12 +79,13 @@ const char* const S_IFACE = "com.canonical.Unity.Panel.Service";
 
 struct ShowEntryData
 {
-  GDBusProxy* proxy;
+  glib::Object<GDBusProxy> proxy;
   std::string entry_id;
+  guint xid;
   int x;
   int y;
+  guint button;
   guint timestamp;
-  guint32 button;
 };
 
 bool run_local_panel_service();
@@ -95,6 +96,7 @@ void request_sync(GDBusProxy* proxy, const char* method, GVariant* name,
 void on_sync_ready_cb(GObject* source, GAsyncResult* res, gpointer data);
 
 bool send_show_entry(ShowEntryData* data);
+bool send_show_appmenu(ShowEntryData* data);
 
 } // anonymous namespace
 
@@ -105,7 +107,6 @@ class DBusIndicators::Impl
 {
 public:
   Impl(DBusIndicators* owner);
-  ~Impl();
 
   void OnRemoteProxyReady(GDBusProxy* proxy);
   void Reconnect();
@@ -121,17 +122,20 @@ public:
                              GVariant* parameters);
 
   virtual void OnEntryScroll(std::string const& entry_id, int delta);
-  virtual void OnEntryShowMenu(std::string const& entry_id,
-                               int x, int y, int timestamp, int button);
+  virtual void OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
+                               int x, int y, unsigned int button,
+                               unsigned int timestamp);
   virtual void OnEntrySecondaryActivate(std::string const& entry_id,
                                         unsigned int timestamp);
+  virtual void OnShowAppMenu(unsigned int xid, int x, int y,
+                             unsigned int timestamp);
 
   std::string name() const;
   std::string owner_name() const;
   bool using_local_service() const;
 
   DBusIndicators* owner_;
-  GDBusProxy* proxy_;
+  glib::Object<GDBusProxy> proxy_;
   typedef std::vector<SyncDataPtr> PendingSyncs;
   PendingSyncs pending_syncs_;
 
@@ -143,17 +147,8 @@ public:
 // Public Methods
 DBusIndicators::Impl::Impl(DBusIndicators* owner)
   : owner_(owner)
-  , proxy_(NULL)
 {
   Reconnect();
-}
-
-DBusIndicators::Impl::~Impl()
-{
-  if (G_IS_OBJECT(proxy_))
-  {
-    g_object_unref(proxy_);
-  }
 }
 
 void DBusIndicators::Impl::Reconnect()
@@ -212,22 +207,43 @@ void DBusIndicators::Impl::RequestSyncIndicator(std::string const& name)
 
 
 void DBusIndicators::Impl::OnEntryShowMenu(std::string const& entry_id,
-                                           int x, int y, int timestamp, int button)
+                                           unsigned int xid, int x, int y,
+                                           unsigned int button,
+                                           unsigned int timestamp)
 {
-  owner_->on_entry_show_menu.emit(entry_id, x, y, timestamp, button);
+  owner_->on_entry_show_menu.emit(entry_id, xid, x, y, button, timestamp);
 
   // We have to do this because on certain systems X won't have time to
   // respond to our request for XUngrabPointer and this will cause the
   // menu not to show
-  ShowEntryData* data = new ShowEntryData();
+  auto data = new ShowEntryData();
   data->proxy = proxy_;
   data->entry_id = entry_id;
+  data->xid = xid;
+  data->x = x;
+  data->y = y;
+  data->button = button;
+  data->timestamp = timestamp;
+
+  g_idle_add_full (G_PRIORITY_DEFAULT, (GSourceFunc) send_show_entry, data, NULL);
+}
+
+void DBusIndicators::Impl::OnShowAppMenu(unsigned int xid, int x, int y,
+                                         unsigned int timestamp)
+{
+  owner_->on_show_appmenu.emit(xid, x, y, timestamp);
+
+  // We have to do this because on certain systems X won't have time to
+  // respond to our request for XUngrabPointer and this will cause the
+  // menu not to show
+  auto data = new ShowEntryData();
+  data->proxy = proxy_;
+  data->xid = xid;
   data->x = x;
   data->y = y;
   data->timestamp = timestamp;
-  data->button = button;
 
-  g_idle_add_full (G_PRIORITY_DEFAULT, (GSourceFunc)send_show_entry, data, NULL);
+  g_idle_add_full (G_PRIORITY_DEFAULT, (GSourceFunc) send_show_appmenu, data, NULL);
 }
 
 void DBusIndicators::Impl::OnEntrySecondaryActivate(std::string const& entry_id,
@@ -457,10 +473,13 @@ void DBusIndicators::Impl::OnProxySignalReceived(GDBusProxy* proxy,
   std::string signal_name(signal_name_);
   if (signal_name == "EntryActivated")
   {
-    const char* entry_name = g_variant_get_string(g_variant_get_child_value(parameters, 0), NULL);
+    glib::String entry_name;
+    nux::Rect geo;
+    g_variant_get(parameters, "(s(iiuu))", &entry_name, &geo.x, &geo.y, &geo.width, &geo.height);
+
     if (entry_name)
     {
-      owner_->ActivateEntry(entry_name);
+      owner_->ActivateEntry(entry_name.Str(), geo);
     }
   }
   else if (signal_name == "EntryActivateRequest")
@@ -499,8 +518,7 @@ void DBusIndicators::Impl::OnProxySignalReceived(GDBusProxy* proxy,
 
 DBusIndicators::DBusIndicators()
   : pimpl(new Impl(this))
-{
-}
+{}
 
 DBusIndicators::~DBusIndicators()
 {
@@ -519,15 +537,22 @@ void DBusIndicators::OnEntryScroll(std::string const& entry_id, int delta)
 }
 
 void DBusIndicators::OnEntryShowMenu(std::string const& entry_id,
-                                     int x, int y, int timestamp, int button)
+                                     unsigned int xid, int x, int y,
+                                     unsigned int button, unsigned int timestamp)
 {
-  pimpl->OnEntryShowMenu(entry_id, x, y, timestamp, button);
+  pimpl->OnEntryShowMenu(entry_id, xid, x, y, button, timestamp);
 }
 
 void DBusIndicators::OnEntrySecondaryActivate(std::string const& entry_id,
                                               unsigned int timestamp)
 {
   pimpl->OnEntrySecondaryActivate(entry_id, timestamp);
+}
+
+void DBusIndicators::OnShowAppMenu(unsigned int xid, int x, int y,
+                                   unsigned int timestamp)
+{
+  pimpl->OnShowAppMenu(xid, x, y, timestamp);
 }
 
 std::string DBusIndicators::name() const
@@ -651,21 +676,45 @@ void on_sync_ready_cb(GObject* source, GAsyncResult* res, gpointer data)
 bool send_show_entry(ShowEntryData* data)
 {
   g_return_val_if_fail(data != NULL, FALSE);
-  g_return_val_if_fail(G_IS_DBUS_PROXY(data->proxy), FALSE);
+  g_return_val_if_fail(G_IS_DBUS_PROXY(data->proxy.RawPtr()), FALSE);
 
   g_dbus_proxy_call(data->proxy,
                     "ShowEntry",
-                    g_variant_new("(suiii)",
+                    g_variant_new("(suiiuu)",
                                   data->entry_id.c_str(),
-                                  0,
+                                  data->xid,
                                   data->x,
                                   data->y,
-                                  data->button),
+                                  data->button,
+                                  data->timestamp),
                     G_DBUS_CALL_FLAGS_NONE,
                     -1,
                     NULL,
                     NULL,
                     NULL);
+
+  delete data;
+  return FALSE;
+}
+
+bool send_show_appmenu(ShowEntryData* data)
+{
+  g_return_val_if_fail(data != NULL, FALSE);
+  g_return_val_if_fail(G_IS_DBUS_PROXY(data->proxy.RawPtr()), FALSE);
+
+  g_dbus_proxy_call(data->proxy,
+                    "ShowAppMenu",
+                    g_variant_new("(uiiu)",
+                                  data->xid,
+                                  data->x,
+                                  data->y,
+                                  data->timestamp),
+                    G_DBUS_CALL_FLAGS_NONE,
+                    -1,
+                    NULL,
+                    NULL,
+                    NULL);
+
   delete data;
   return FALSE;
 }
