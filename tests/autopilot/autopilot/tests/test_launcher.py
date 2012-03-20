@@ -432,8 +432,14 @@ class LauncherRevealTests(ScenariodLauncherTests):
 
     def setUp(self):
         super(LauncherRevealTests, self).setUp()
-        self.set_unity_option('launcher_hide_mode', True)
-        sleep(1)
+        self.set_unity_option('launcher_hide_mode', 1)
+        launcher = self.get_launcher()
+        for counter in range(10):
+            sleep(1)
+            if launcher.hidemode == 1:
+                break
+        self.assertThat(launcher.hidemode, Equals(1),
+                        "Launcher did not enter auto-hide mode.")
 
     def test_reveal_on_mouse_to_edge(self):
         """Tests reveal of launchers by mouse pressure."""

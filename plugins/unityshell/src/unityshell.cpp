@@ -1581,6 +1581,7 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
     return false;
 
   bool was_tap = state & CompAction::StateTermTapped;
+  LOG_DEBUG(logger) << "Super released: " << (was_tap ? "tapped" : "released");
   int when = options[7].value().i();  // XEvent time in millisec
 
   super_keypressed_ = false;
