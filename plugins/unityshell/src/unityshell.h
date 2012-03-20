@@ -163,7 +163,7 @@ public:
                      unsigned int);
 #ifdef USE_GLES
   void glPaintCompositedOutput (const CompRegion    &region,
-                                GLFramebufferObject *fbo,
+                                ::GLFramebufferObject *fbo,
                                 unsigned int         mask);
 #endif
 
@@ -321,7 +321,7 @@ private:
   unity::BGHash _bghash;
 
 #ifdef USE_GLES
-  GLFramebufferObject *oldFbo;
+  ::GLFramebufferObject *oldFbo;
 #else
   ScreenEffectFramebufferObject::Ptr _fbo;
   GLuint                             _active_fbo;
