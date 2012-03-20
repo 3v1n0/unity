@@ -138,7 +138,7 @@ class DashKeyNavTests(DashTestCase):
     def test_lensbar_enter_activation(self):
         """Must be able to activate LensBar icons that have focus with an Enter keypress."""
         self.dash.ensure_visible()
-        
+
         for i in range(self.dash.get_num_rows()):
             self.keyboard.press_and_release("Down")
         self.keyboard.press_and_release("Right");
@@ -160,7 +160,7 @@ class DashKeyNavTests(DashTestCase):
         Test for lp:919563
         """
 
-        reason = """ 
+        reason = """
         False assumptions. Expanding the first category will not necessarily expand enough
         to force the next category header off screen.
         """
@@ -244,11 +244,11 @@ class DashKeyNavTests(DashTestCase):
     def test_control_tab_lens_cycle(self):
         """ This test makes sure that Ctlr + Tab cycles lenses."""
         self.dash.ensure_visible()
-        
+
         self.keyboard.press('Control')
         self.keyboard.press_and_release('Tab')
         self.keyboard.release('Control')
-        
+
         lensbar = self.dash.view.get_lensbar()
         self.assertEqual(lensbar.active_lens, u'applications.lens')
 
