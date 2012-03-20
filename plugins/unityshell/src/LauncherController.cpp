@@ -953,6 +953,10 @@ void Controller::HandleLauncherKeyRelease(bool was_tap)
     LOG_DEBUG(logger) << "Quick tap, sending activation request.";
     pimpl->SendHomeActivationRequest();
   }
+  else
+  {
+    LOG_DEBUG(logger) << "Tap too long: " << pimpl->TimeSinceLauncherKeyPress();
+  }
 
   if (pimpl->launcher_label_show_handler_id_)
   {

@@ -22,12 +22,9 @@ class DashTestCase(AutopilotTestCase):
         self.set_unity_log_level("unity.launcher", "DEBUG")
         self.set_unity_log_level("unity.dash", "DEBUG")
         self.dash.ensure_hidden()
-
-    def tearDown(self):
-        # Wait for things to sync up (like results)
-        sleep(1)
-        self.dash.ensure_hidden()
-        super(DashTestCase, self).tearDown()
+        # On shutdown, ensure hidden too.  Also add a delay.  Cleanup is LIFO.
+        self.addCleanup(self.dash.ensure_hidden)
+        self.addCleanup(sleep, 1)
 
 
 class DashRevealTests(DashTestCase):
@@ -41,31 +38,27 @@ class DashRevealTests(DashTestCase):
     def test_application_lens_shortcut(self):
         """Application lense must reveal when Super+a is pressed."""
         self.dash.reveal_application_lens()
-        lensbar = self.dash.view.get_lensbar()
-        self.assertEqual(lensbar.active_lens, u'applications.lens')
+        self.assertThat(self.dash.active_lens, Equals('applications.lens'))
 
     def test_music_lens_shortcut(self):
         """Music lense must reveal when Super+w is pressed."""
         self.dash.reveal_music_lens()
-        lensbar = self.dash.view.get_lensbar()
-        self.assertEqual(lensbar.active_lens, u'music.lens')
+        self.assertThat(self.dash.active_lens, Equals('music.lens'))
 
     def test_file_lens_shortcut(self):
         """File lense must reveal when Super+f is pressed."""
         self.dash.reveal_file_lens()
-        lensbar = self.dash.view.get_lensbar()
-        self.assertEqual(lensbar.active_lens, u'files.lens')
+        self.assertThat(self.dash.active_lens, Equals('files.lens'))
 
     def test_command_lens_shortcut(self):
         """Run Command lens must reveat on alt+F2."""
         self.dash.reveal_command_lens()
-        lensbar = self.dash.view.get_lensbar()
-        self.assertEqual(lensbar.active_lens, u'commands.lens')
+        self.assertThat(self.dash.active_lens, Equals('commands.lens'))
 
     def test_alt_f4_close_dash(self):
         """Dash must close on alt+F4."""
         self.dash.ensure_visible()
-        self.dash.close_with_alt_f4()
+        self.keyboard.press_and_release("Alt+F4")
         sleep(0.5)
         self.assertFalse(self.dash.visible)
 
@@ -289,20 +282,17 @@ class DashKeyNavTests(DashTestCase):
         # Tabs to last category
         for i in range(lens.get_num_visible_categories()):
             self.keyboard.press_and_release('Tab')
-            category = lens.get_focused_category()
 
         self.keyboard.press_and_release('Tab')
         searchbar = self.dash.get_searchbar()
         self.assertTrue(searchbar.expander_has_focus)
 
-
+        filter_bar = lens.get_filterbar()
         if not searchbar.showing_filters:
             self.keyboard.press_and_release('Enter')
-            searchbar.refresh_state()
-            # i'm not sure this really belongs in this test
             self.assertTrue(searchbar.showing_filters)
+            self.addCleanup(filter_bar.ensure_collapsed)
 
-        filter_bar = lens.get_filterbar()
         for i in range(filter_bar.get_num_filters()):
             self.keyboard.press_and_release('Tab')
             new_focused_filter = filter_bar.get_focused_filter()

@@ -43,7 +43,7 @@ class Dash(KeybindingsHelper):
         Reveals the dash if it's currently hidden, hides it otherwise.
         """
         logger.debug("Toggling dash visibility with Super key.")
-        self.keybinding("dash/reveal")
+        self.keybinding("dash/reveal", 0.1)
         sleep(1)
 
     def ensure_visible(self, clear_search=True):
@@ -129,14 +129,14 @@ class Dash(KeybindingsHelper):
         if clear_search:
             self.clear_search()
 
+    @property
+    def active_lens(self):
+        return self.view.get_lensbar().active_lens
+
     def get_current_lens(self):
         """Get the currently-active LensView object."""
         active_lens_name = self.view.get_lensbar().active_lens
         return self.view.get_lensview_by_name(active_lens_name)
-
-    def close_with_alt_f4(self):
-        """Send ALT+F4 in order to close the dash."""
-        self._keyboard.press_and_release("Alt+F4")
 
 
 class DashController(UnityIntrospectionObject):
@@ -262,6 +262,7 @@ class FilterBar(UnityIntrospectionObject):
             m = Mouse()
             m.move(tx, ty)
             m.click()
+            self._wait_for_expansion(True)
 
     def ensure_collapsed(self):
         """Collapse the filter bar, if it's not already."""
@@ -272,6 +273,16 @@ class FilterBar(UnityIntrospectionObject):
             m = Mouse()
             m.move(tx, ty)
             m.click()
+            self._wait_for_expansion(False)
+
+    def _wait_for_expansion(self, expect_expanded):
+        for i in range(11):
+            if self.is_expanded() != expect_expanded:
+                sleep(1)
+            else:
+                return
+        raise RuntimeError("Filters not %s after waiting for 10 seconds." %
+            ("expanded" if expect_expanded else "collapsed"))
 
     def _get_searchbar(self):
         """Get the searchbar.
