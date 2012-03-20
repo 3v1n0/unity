@@ -66,7 +66,6 @@ Indicators::~Indicators()
 void Indicators::ActivateEntry(std::string const& entry_id, nux::Rect const& geometry)
 {
   pimpl->ActivateEntry(entry_id, geometry);
-  on_entry_activated.emit(entry_id, geometry);
 }
 
 void Indicators::SetEntryShowNow(std::string const& entry_id, bool show_now)
@@ -108,6 +107,11 @@ void Indicators::Impl::ActivateEntry(std::string const& entry_id, nux::Rect cons
   {
     active_entry_->set_geometry(geometry);
     active_entry_->set_active(true);
+    owner_->on_entry_activated.emit(entry_id, geometry);
+  }
+  else
+  {
+    owner_->on_entry_activated.emit(std::string(), nux::Rect());
   }
 }
 
@@ -135,20 +139,21 @@ Indicators::IndicatorsList Indicators::Impl::GetIndicators() const
 
 Indicator::Ptr Indicators::Impl::AddIndicator(std::string const& name)
 {
-  Indicator* indptr;
+  Indicator::Ptr indicator(GetIndicator(name));
+
+  if (indicator)
+    return indicator;
 
   if (name == "libappmenu.so")
   {
     AppmenuIndicator *appmenu = new AppmenuIndicator(name);
     appmenu->on_show_appmenu.connect(sigc::mem_fun(owner_, &Indicators::OnShowAppMenu));
-    indptr = appmenu;
+    indicator.reset(appmenu);
   }
   else
   {
-    indptr = new Indicator(name);
+    indicator.reset(new Indicator(name));
   }
-
-  Indicator::Ptr indicator(indptr);
 
   // The owner Indicators class is interested in the other events.
   indicator->on_show_menu.connect(sigc::mem_fun(owner_, &Indicators::OnEntryShowMenu));
@@ -183,16 +188,15 @@ void Indicators::Impl::RemoveIndicator(std::string const& name)
 
 Entry::Ptr Indicators::Impl::GetEntry(std::string const& entry_id)
 {
-  // Since we reuse Entry objects but change the value that they are keyed on,
-  // we need to traverse through the Indicators asking them if they have this
-  // entry_id.
-  Entry::Ptr result;
-  for (IndicatorMap::iterator i = indicators_.begin(), end = indicators_.end();
-       i != end && !result; ++i)
+  for (auto it = indicators_.begin(); it != indicators_.end(); ++it)
   {
-    result = i->second->GetEntry(entry_id);
+    Entry::Ptr entry = it->second->GetEntry(entry_id);
+
+    if (entry)
+      return entry;
   }
-  return result;
+
+  return Entry::Ptr();
 }
 
 
