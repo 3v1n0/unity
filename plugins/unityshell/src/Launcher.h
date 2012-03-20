@@ -290,6 +290,8 @@ private:
   void EndIconDrag();
   void UpdateDragWindowPosition(int x, int y);
 
+  void ResetMouseDragState();
+
   float GetAutohidePositionMin() const;
   float GetAutohidePositionMax() const;
 

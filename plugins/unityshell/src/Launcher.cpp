@@ -1473,19 +1473,7 @@ Launcher::OnWindowMapped(guint32 xid)
   //}
 
   if (GetActionState() != ACTION_NONE)
-  {
-    if (GetActionState() == ACTION_DRAG_ICON)
-      EndIconDrag();
-
-    if (GetActionState() == ACTION_DRAG_LAUNCHER)
-      _hide_machine->SetQuirk(LauncherHideMachine::VERTICAL_SLIDE_ACTIVE, false);
-
-    SetActionState(ACTION_NONE);
-    _dnd_delta_x = 0;
-    _dnd_delta_y = 0;
-    _last_button_press = 0;
-    EnsureAnimation();
-  }
+    ResetMouseDragState();
 }
 
 void
@@ -2177,6 +2165,21 @@ void Launcher::UpdateDragWindowPosition(int x, int y)
   }
 }
 
+void Launcher::ResetMouseDragState()
+{
+  if (GetActionState() == ACTION_DRAG_ICON)
+    EndIconDrag();
+
+  if (GetActionState() == ACTION_DRAG_LAUNCHER)
+    _hide_machine->SetQuirk(LauncherHideMachine::VERTICAL_SLIDE_ACTIVE, false);
+
+  SetActionState(ACTION_NONE);
+  _dnd_delta_x = 0;
+  _dnd_delta_y = 0;
+  _last_button_press = 0;
+  EnsureAnimation();
+}
+
 void Launcher::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   _last_button_press = nux::GetEventButton(button_flags);
@@ -2192,17 +2195,7 @@ void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned lo
   nux::Geometry geo = GetGeometry();
 
   MouseUpLogic(x, y, button_flags, key_flags);
-
-  if (GetActionState() == ACTION_DRAG_ICON)
-    EndIconDrag();
-
-  if (GetActionState() == ACTION_DRAG_LAUNCHER)
-    _hide_machine->SetQuirk(LauncherHideMachine::VERTICAL_SLIDE_ACTIVE, false);
-  SetActionState(ACTION_NONE);
-  _dnd_delta_x = 0;
-  _dnd_delta_y = 0;
-  _last_button_press = 0;
-  EnsureAnimation();
+  ResetMouseDragState();
 }
 
 void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
