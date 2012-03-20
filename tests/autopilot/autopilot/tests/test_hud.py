@@ -6,11 +6,9 @@
 # under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
 
+from testtools.matchers import Equals, LessThan
 from time import sleep
 
-from testtools.matchers import Equals, LessThan
-
-from autopilot.emulators.bamf import Bamf
 from autopilot.emulators.unity.hud import HudController
 from autopilot.tests import AutopilotTestCase
 
@@ -38,25 +36,29 @@ class HudTests(AutopilotTestCase):
         return num_active
 
     def test_initially_hidden(self):
-        self.assertFalse(self.hud.is_visible())
+        self.assertFalse(self.hud.visible)
 
-    def test_reveal_hud(self):
+    def reveal_hud(self):
         self.hud.toggle_reveal()
-        self.assertTrue(self.hud.is_visible())
+        for counter in range(10):
+            sleep(1)
+            if self.hud.visible:
+                break
+        self.assertTrue(self.hud.visible, "HUD did not appear.")
 
     def test_no_initial_values(self):
-        self.hud.toggle_reveal()
+        self.reveal_hud()
         self.assertThat(self.hud.num_buttons, Equals(0))
         self.assertThat(self.hud.selected_button, Equals(0))
 
     def test_check_a_values(self):
-        self.hud.toggle_reveal()
+        self.reveal_hud()
         self.keyboard.type('a')
         self.assertThat(self.hud.num_buttons, Equals(5))
         self.assertThat(self.hud.selected_button, Equals(1))
 
     def test_up_down_arrows(self):
-        self.hud.toggle_reveal()
+        self.reveal_hud()
         self.keyboard.type('a')
         self.keyboard.press_and_release('Down')
         self.assertThat(self.hud.selected_button, Equals(2))
@@ -83,14 +85,16 @@ class HudTests(AutopilotTestCase):
 
     def test_slow_tap_not_reveal_hud(self):
         self.hud.toggle_reveal(tap_delay=0.3)
-        self.assertFalse(self.hud.is_visible())
+        sleep(1)
+        self.assertFalse(self.hud.visible)
 
     def test_alt_f4_doesnt_show_hud(self):
         self.start_app('Calculator')
         sleep(1)
         # Do a very fast Alt+F4
         self.keyboard.press_and_release("Alt+F4", 0.05)
-        self.assertFalse(self.hud.is_visible())
+        sleep(1)
+        self.assertFalse(self.hud.visible)
 
     def test_reveal_hud_with_no_apps(self):
         """Hud must show even with no visible applications."""
@@ -100,11 +104,11 @@ class HudTests(AutopilotTestCase):
 
         self.hud.toggle_reveal()
         sleep(1)
-        self.assertTrue(self.hud.is_visible())
+        self.assertTrue(self.hud.visible)
 
         self.hud.toggle_reveal()
         sleep(1)
-        self.assertFalse(self.hud.is_visible())
+        self.assertFalse(self.hud.visible)
 
     def test_multiple_hud_reveal_does_not_break_launcher(self):
         """Multiple Hud reveals must not cause the launcher to set multiple
@@ -137,15 +141,16 @@ class HudTests(AutopilotTestCase):
         self.assertLessEqual(num_active, 1, "More than one launcher icon active after test has run!")
 
     def test_restore_focus(self):
-        """Ensures that once the hud is dismissed, the same application 
+        """Ensures that once the hud is dismissed, the same application
         that was focused before hud invocation is refocused
         """
-        b = Bamf();
-        app_desktop_file = 'gcalctool.desktop'
-        b.launch_application(app_desktop_file)
+        self.start_app("Calculator")
+        calc = self.get_app_instances("Calculator")
+        self.assertThat(len(calc), Equals(1))
+        calc = calc[0]
 
         # first ensure that the application has started and is focused
-        self.assertEqual(b.application_is_focused(app_desktop_file), True)
+        self.assertEqual(calc.is_active, True)
 
         self.hud.toggle_reveal()
         sleep(1)
@@ -153,5 +158,17 @@ class HudTests(AutopilotTestCase):
         sleep(1)
 
         # again ensure that the application we started is focused
-        self.assertEqual(b.application_is_focused(app_desktop_file), True)
+        self.assertEqual(calc.is_active, True)
+
+        #test return
+        self.hud.toggle_reveal()
+        sleep(1)
+
+        #test return
+        self.hud.toggle_reveal()
+        sleep(1)
+        self.keyboard.press_and_release('Return')
+        sleep(1)
+
+        self.assertEqual(calc.is_active, True)
 

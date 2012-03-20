@@ -30,7 +30,7 @@ class InvisibleWindowTests(TestCase):
         self.skipTest("This test needs to be rewritten. We don't support changing window states after they've been mapped.")
 
         b = Bamf()
-        self.assertFalse(b.application_is_running('Calculator'))
+        self.assertFalse(self.app_is_running('Calculator'))
         b.launch_application("gcalctool.desktop")
         self.addCleanup(call, ["killall", "gcalctool"])
         sleep(1)
@@ -68,7 +68,7 @@ class InvisibleWindowTests(TestCase):
         self.skipTest("This test needs to be rewritten. We don't support changing window states after they've been mapped.")
 
         b = Bamf()
-        self.assertFalse(b.application_is_running('Calculator'))
+        self.assertFalse(b.app_is_running('Calculator'))
         b.launch_application("gcalctool.desktop")
         self.addCleanup(call, ["killall", "gcalctool"])
         # need to pin the app to the launcher - this could be tricky.

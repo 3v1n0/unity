@@ -17,6 +17,7 @@
  */
 
 #include <NuxCore/Logger.h>
+#include "config.h"
 
 #include "CairoTexture.h"
 #include "DashStyle.h"

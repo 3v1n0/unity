@@ -69,6 +69,9 @@ public:
 
   sigc::signal<void, std::string const&> uri_activated;
 
+  void CheckNoResults(Lens::Hints const& hints);
+  void HideResultsMessage();
+
 private:
   void SetupViews(nux::Area* show_filters);
   void SetupCategories();
@@ -101,6 +104,7 @@ private:
   CategoryGroups categories_;
   ResultCounts counts_;
   bool initial_activation_;
+  bool no_results_active_;
 
   nux::HLayout* layout_;
   LensScrollView* scroll_view_;
@@ -108,6 +112,7 @@ private:
   LensScrollView* fscroll_view_;
   nux::VLayout* fscroll_layout_;
   FilterBar* filter_bar_;
+  nux::StaticCairoText* no_results_;
 
   guint fix_renderering_id_;
 

@@ -1,0 +1,6 @@
+- open Dash
+- go to Files-lens
+- select and drag a document-file (e.g. text or image) to the launcher
+- as you drag the document-file watch the drag-targets (drop-recepticals) saturate
+- this saturation-process should be smooth and without flicker
+- the tinting of the non-drag-targets should not change

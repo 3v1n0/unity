@@ -25,8 +25,10 @@
 #include <Nux/BaseWindow.h>
 #include <Nux/HLayout.h>
 #include <NuxCore/Color.h>
+#include <UnityCore/Variant.h>
 
 #include "Animator.h"
+#include "Introspectable.h"
 #include "ShortcutModel.h"
 #include "ShortcutView.h"
 #include "UBusWrapper.h"
@@ -36,7 +38,7 @@ namespace unity
 namespace shortcut
 {
 
-class Controller
+class Controller : public debug::Introspectable
 {
 public:
   typedef std::shared_ptr<Controller> Ptr;
@@ -54,6 +56,10 @@ public:
 
   void SetWorkspace(nux::Geometry const& geo);
   void SetEnabled(bool enabled);
+
+protected:
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
 
 private:
   // Private Methods

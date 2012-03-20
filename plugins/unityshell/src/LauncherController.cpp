@@ -80,6 +80,8 @@ public:
   void Save();
   void SortAndUpdate();
 
+  nux::ObjectPtr<Launcher> CurrentLauncher();
+
   void OnIconAdded(AbstractLauncherIcon::Ptr icon);
   void OnIconRemoved(AbstractLauncherIcon::Ptr icon);
 
@@ -101,11 +103,7 @@ public:
   void InsertDesktopIcon();
   void RemoveDesktopIcon();
 
-  bool TapTimeUnderLimit();
-
   void SendHomeActivationRequest();
-
-  int TimeSinceLauncherKeyPress();
 
   int MonitorWithMouse();
 
@@ -118,6 +116,8 @@ public:
   AbstractLauncherIcon::Ptr CreateSCLauncherIcon(std::string const& file_path, std::string const& aptdaemon_trans_id, std::string const& icon_path);
 
   void SetupBamf();
+
+  void EnsureLaunchers(std::vector<nux::Geometry> const& monitors);
 
   void OnExpoActivated();
 
@@ -167,7 +167,7 @@ public:
 
   UBusManager            ubus;
 
-  struct timespec        launcher_key_press_time_;
+  int                    launcher_key_press_time_;
 
   LauncherList launchers;
 
@@ -194,13 +194,7 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   reactivate_keynav = false;
   keynav_restore_window_ = true;
 
-  int i = 0;
-  for (auto monitor : monitors)
-  {
-    Launcher* launcher = CreateLauncher(i);
-    launchers.push_back(nux::ObjectPtr<Launcher> (launcher));
-    i++;
-  }
+  EnsureLaunchers(monitors);
 
   launcher_ = launchers[0];
 
@@ -239,10 +233,10 @@ Controller::Impl::Impl(Display* display, Controller* parent)
 
   uscreen->changed.connect(sigc::mem_fun(this, &Controller::Impl::OnScreenChanged));
 
-  WindowManager& plugin_adapter = *(WindowManager::Default()); 
+  WindowManager& plugin_adapter = *(WindowManager::Default());
   plugin_adapter.window_focus_changed.connect (sigc::mem_fun (this, &Controller::Impl::OnWindowFocusChanged));
 
-  launcher_key_press_time_ = { 0, 0 };
+  launcher_key_press_time_ = 0;
 
   ubus.RegisterInterest(UBUS_QUICKLIST_END_KEY_NAV, [&](GVariant * args) {
     if (reactivate_keynav)
@@ -255,6 +249,15 @@ Controller::Impl::Impl(Display* display, Controller* parent)
 
 Controller::Impl::~Impl()
 {
+  // Since the launchers are in a window which adds a reference to the
+  // launcher, we need to make sure the base windows are unreferenced
+  // otherwise the launchers never die.
+  for (auto launcher_ptr : launchers)
+  {
+    if (launcher_ptr.IsValid())
+      launcher_ptr->GetParent()->UnReference();
+  }
+
   if (bamf_timer_handler_id_ != 0)
     g_source_remove(bamf_timer_handler_id_);
 
@@ -264,9 +267,17 @@ Controller::Impl::~Impl()
   delete device_section_;
 }
 
-void Controller::Impl::OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors)
+void Controller::Impl::EnsureLaunchers(std::vector<nux::Geometry> const& monitors)
 {
-  unsigned int num_monitors = monitors.size();
+  unsigned int num_monitors;
+  if (parent_->multiple_launchers)
+  {
+    num_monitors = monitors.size();
+  }
+  else
+  {
+    num_monitors = 1;
+  }
 
   unsigned int i;
   for (i = 0; i < num_monitors; i++)
@@ -286,6 +297,11 @@ void Controller::Impl::OnScreenChanged(int primary_monitor, std::vector<nux::Geo
   launchers.resize(num_monitors);
 }
 
+void Controller::Impl::OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors)
+{
+  EnsureLaunchers(monitors);
+}
+
 void Controller::Impl::OnWindowFocusChanged (guint32 xid)
 {
   static bool keynav_first_focus = false;
@@ -299,7 +315,7 @@ void Controller::Impl::OnWindowFocusChanged (guint32 xid)
   else if (launcher_keynav)
   {
     keynav_first_focus = true;
-  } 
+  }
 }
 
 Launcher* Controller::Impl::CreateLauncher(int monitor)
@@ -326,6 +342,7 @@ Launcher* Controller::Impl::CreateLauncher(int monitor)
 
   launcher->SetModel(model_.get());
   launcher->launcher_addrequest.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequest));
+  launcher->launcher_addrequest_special.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequestSpecial));
   launcher->launcher_removerequest.connect(sigc::mem_fun(this, &Impl::OnLauncherRemoveRequest));
 
   parent_->AddChild(launcher);
@@ -371,7 +388,7 @@ void Controller::Impl::Save()
     std::string const& desktop_file = icon->DesktopFile();
 
     if (!desktop_file.empty())
-      desktop_paths.push_back(desktop_file.c_str());
+      desktop_paths.push_back(desktop_file);
   }
 
   unity::FavoriteStore::GetDefault().SetFavorites(desktop_paths);
@@ -602,7 +619,7 @@ void Controller::Impl::InsertExpoAction()
 
   on_expoicon_activate_connection_ = icon->activate.connect(sigc::mem_fun(this, &Impl::OnExpoActivated));
 
-  
+
   RegisterIcon(expo_icon_);
 }
 
@@ -761,29 +778,22 @@ void Controller::Impl::SetupBamf()
   bamf_timer_handler_id_ = 0;
 }
 
-int Controller::Impl::TimeSinceLauncherKeyPress()
-{
-  struct timespec current;
-  unity::TimeUtil::SetTimeStruct(&current);
-  return unity::TimeUtil::TimeDelta(&current, &launcher_key_press_time_);
-}
-
-bool Controller::Impl::TapTimeUnderLimit()
-{
-  int time_difference = TimeSinceLauncherKeyPress();
-  return time_difference < local::super_tap_duration;
-}
-
 void Controller::Impl::SendHomeActivationRequest()
 {
   ubus.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", "home.lens", 0, ""));
 }
 
 Controller::Controller(Display* display)
+ : options(Options::Ptr(new Options()))
+ , multiple_launchers(true)
+ , pimpl(new Impl(display, this))
 {
-  options = Options::Ptr(new Options());
-  // options must be set before creating pimpl which loads launchers
-  pimpl = new Impl(display, this);
+  multiple_launchers.changed.connect([&](bool value) -> void {
+    UScreen* uscreen = UScreen::GetDefault();
+    auto monitors = uscreen->GetMonitors();
+    pimpl->EnsureLaunchers(monitors);
+    options()->show_for_all = !value;
+  });
 }
 
 Controller::~Controller()
@@ -834,6 +844,8 @@ std::vector<AbstractLauncherIcon::Ptr> Controller::GetAltTabIcons(bool current) 
 
 Window Controller::LauncherWindowId(int launcher) const
 {
+  if (launcher >= (int)pimpl->launchers.size())
+    return 0;
   return pimpl->launchers[launcher]->GetParent()->GetInputWindowId();
 }
 
@@ -868,15 +880,24 @@ int Controller::Impl::MonitorWithMouse()
   return uscreen->GetMonitorWithMouse();
 }
 
-void Controller::HandleLauncherKeyPress()
+nux::ObjectPtr<Launcher> Controller::Impl::CurrentLauncher()
 {
-  unity::TimeUtil::SetTimeStruct(&pimpl->launcher_key_press_time_);
+  nux::ObjectPtr<Launcher> result;
+  int best = std::min<int> (launchers.size() - 1, MonitorWithMouse());
+  if (best >= 0)
+    result = launchers[best];
+  return result;
+}
+
+void Controller::HandleLauncherKeyPress(int when)
+{
+  pimpl->launcher_key_press_time_ = when;
 
   auto show_launcher = [](gpointer user_data) -> gboolean
   {
     Impl* self = static_cast<Impl*>(user_data);
     if (self->keyboard_launcher_.IsNull())
-      self->keyboard_launcher_ = self->launchers[self->MonitorWithMouse()];
+      self->keyboard_launcher_ = self->CurrentLauncher();
 
     if (self->launcher_hide_handler_id_ > 0)
     {
@@ -897,7 +918,7 @@ void Controller::HandleLauncherKeyPress()
     if (!self->launcher_keynav)
     {
       if (self->keyboard_launcher_.IsNull())
-        self->keyboard_launcher_ = self->launchers[self->MonitorWithMouse()];
+        self->keyboard_launcher_ = self->CurrentLauncher();
 
       self->keyboard_launcher_->ShowShortcuts(true);
       self->launcher_open = true;
@@ -908,11 +929,17 @@ void Controller::HandleLauncherKeyPress()
   pimpl->launcher_label_show_handler_id_ = g_timeout_add(local::shortcuts_show_delay, show_shortcuts, pimpl);
 }
 
-void Controller::HandleLauncherKeyRelease(bool was_tap)
+void Controller::HandleLauncherKeyRelease(bool was_tap, int when)
 {
-  if (pimpl->TapTimeUnderLimit() && was_tap)
+  int tap_duration = when - pimpl->launcher_key_press_time_;
+  if (tap_duration < local::super_tap_duration && was_tap)
   {
+    LOG_DEBUG(logger) << "Quick tap, sending activation request.";
     pimpl->SendHomeActivationRequest();
+  }
+  else
+  {
+    LOG_DEBUG(logger) << "Tap too long: " << tap_duration;
   }
 
   if (pimpl->launcher_label_show_handler_id_)
@@ -931,7 +958,7 @@ void Controller::HandleLauncherKeyRelease(bool was_tap)
   {
     pimpl->keyboard_launcher_->ShowShortcuts(false);
 
-    int ms_since_show = pimpl->TimeSinceLauncherKeyPress();
+    int ms_since_show = tap_duration;
     if (ms_since_show > local::launcher_minimum_show_duration)
     {
       pimpl->keyboard_launcher_->ForceReveal(false);
@@ -986,7 +1013,7 @@ bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, 
       }
 
       // disable the "tap on super" check
-      pimpl->launcher_key_press_time_ = { 0, 0 };
+      pimpl->launcher_key_press_time_ = 0;
       return true;
     }
   }
@@ -1021,7 +1048,7 @@ void Controller::KeyNavActivate()
   pimpl->reactivate_keynav = false;
   pimpl->launcher_keynav = true;
   pimpl->keynav_restore_window_ = true;
-  pimpl->keyboard_launcher_ = pimpl->launchers[pimpl->MonitorWithMouse()];
+  pimpl->keyboard_launcher_ = pimpl->CurrentLauncher();
 
   pimpl->keyboard_launcher_->EnterKeyNavMode();
   pimpl->model_->SetSelection(0);
@@ -1087,7 +1114,7 @@ Controller::AddProperties(GVariantBuilder* builder)
   .add("key_nav_launcher_monitor", pimpl->keyboard_launcher_.IsValid() ?  pimpl->keyboard_launcher_->monitor : -1)
   .add("key_nav_selection", pimpl->model_->SelectionIndex())
   .add("key_nav_is_grabbed", pimpl->launcher_grabbed)
-  .add("keyboard_launcher", pimpl->launchers[pimpl->MonitorWithMouse()]->monitor);
+  .add("keyboard_launcher", pimpl->CurrentLauncher()->monitor);
 }
 
 void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
@@ -1117,11 +1144,10 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
       parent_->KeyNavNext();
       break;
 
-      // super/control/alt/esc/left (close quicklist or exit laucher key-focus)
+      // super/control/esc/left (close quicklist or exit laucher key-focus)
     case NUX_VK_LWIN:
     case NUX_VK_RWIN:
     case NUX_VK_CONTROL:
-    case NUX_VK_MENU:
     case NUX_VK_LEFT:
     case NUX_KP_LEFT:
     case NUX_VK_ESCAPE:
@@ -1158,6 +1184,11 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
     break;
 
     default:
+      // ALT + <Anykey>; treat it as a shortcut and exit keynav 
+      if (state & nux::NUX_STATE_ALT)
+      {
+        parent_->KeyNavTerminate(false);
+      }
       break;
   }
 }
