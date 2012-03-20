@@ -209,11 +209,14 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         self.addCleanup(Keyboard.cleanup)
         self.addCleanup(Mouse.cleanup)
 
-    def start_app(self, app_name):
-        """Start one of the known apps, and kill it on tear down."""
+    def start_app(self, app_name, files=[]):
+        """Start one of the known apps, and kill it on tear down.
+
+        if files is specified, start the application with the specified files.
+        """
         logger.info("Starting application '%s'", app_name)
         app = self.KNOWN_APPS[app_name]
-        self.bamf.launch_application(app['desktop-file'])
+        self.bamf.launch_application(app['desktop-file'], files)
         self.addCleanup(call, ["killall", app['process-name']])
 
     def close_all_app(self, app_name):

@@ -72,7 +72,7 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   rop.Blend = true;
   rop.SrcBlend = GL_ZERO;
   rop.DstBlend = GL_SRC_COLOR;
-  _bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.7f, 0.7f, 0.7f, 1.0f), false, rop);
+  _bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.9f, 0.9f, 0.9f, 1.0f), false, rop);
 
   _layout = new nux::HLayout("", NUX_TRACKER_LOCATION);
 
@@ -215,9 +215,6 @@ void PanelView::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
   .add("backend", "remote")
-  .add("service-name", _remote->name())
-  .add("service-unique-name", _remote->owner_name())
-  .add("using-local-service", _remote->using_local_service())
   .add(GetGeometry());
 }
 
@@ -251,12 +248,31 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       nux::Geometry bg_clip = geo;
       GfxContext.PushClippingRectangle(bg_clip);
 
-      gPainter.PushDrawTextureLayer(GfxContext, geo,
-                                    bg_blur_texture_,
-                                    texxform_blur_bg,
-                                    nux::color::White,
-                                    true,
-                                    rop);
+#ifndef NUX_OPENGLES_20
+      if (GfxContext.UsingGLSLCodePath())
+        gPainter.PushDrawCompositionLayer(GfxContext, geo,
+                                          bg_blur_texture_,
+                                          texxform_blur_bg,
+                                          nux::color::White,
+                                          _bg_color,
+                                          nux::LAYER_BLEND_MODE_OVERLAY,
+                                          true, rop);
+      else
+        gPainter.PushDrawTextureLayer(GfxContext, geo,
+                                      bg_blur_texture_,
+                                      texxform_blur_bg,
+                                      nux::color::White,
+                                      true,
+                                      rop);
+#else
+        gPainter.PushDrawCompositionLayer(GfxContext, geo,
+                                          bg_blur_texture_,
+                                          texxform_blur_bg,
+                                          nux::color::White,
+                                          _bg_color,
+                                          nux::LAYER_BLEND_MODE_OVERLAY,
+                                          true, rop);
+#endif
 
       GfxContext.PopClippingRectangle();
     }
@@ -269,7 +285,8 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 
 
-  nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), _bg_layer);
+  if (_dash_is_open == false)
+    nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), _bg_layer);
 
   GfxContext.PopClippingRectangle();
 
@@ -305,21 +322,45 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-    gPainter.PushTextureLayer(GfxContext, geo,
-                              bg_blur_texture_,
-                              texxform_blur_bg,
-                              nux::color::White,
-                              true,
-                              rop);
+#ifndef NUX_OPENGLES_20
+    if (GfxContext.UsingGLSLCodePath())
+      gPainter.PushCompositionLayer(GfxContext, geo,
+                                    bg_blur_texture_,
+                                    texxform_blur_bg,
+                                    nux::color::White,
+                                    _bg_color,
+                                    nux::LAYER_BLEND_MODE_OVERLAY,
+                                    true,
+                                    rop);
+    else
+      gPainter.PushTextureLayer(GfxContext, geo,
+                                bg_blur_texture_,
+                                texxform_blur_bg,
+                                nux::color::White,
+                                true,
+                                rop);
+                                
+#else
+      gPainter.PushCompositionLayer(GfxContext, geo,
+                                    bg_blur_texture_,
+                                    texxform_blur_bg,
+                                    nux::color::White,
+                                    _bg_color,
+                                    nux::LAYER_BLEND_MODE_OVERLAY,
+                                    true,
+                                    rop);
+#endif
     bgs++;
 
     if (_dash_is_open)
     {
       nux::GetPainter().PushLayer(GfxContext, GetGeometry(), _bg_darken_layer_);
+      bgs++;
     }
   }
 
-  gPainter.PushLayer(GfxContext, GetGeometry(), _bg_layer);
+  if (_dash_is_open == FALSE)
+    gPainter.PushLayer(GfxContext, GetGeometry(), _bg_layer);
 
   if (_dash_is_open)
   {
@@ -439,7 +480,7 @@ void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
 {
   // Appmenu is treated differently as it needs to expand
   // We could do this in a more special way, but who has the time for special?
-  if (proxy->name().find("appmenu") != std::string::npos)
+  if (proxy->IsAppmenu())
   {
     _menu_view->AddIndicator(proxy);
   }
@@ -456,7 +497,7 @@ void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
 
 void PanelView::OnObjectRemoved(indicator::Indicator::Ptr const& proxy)
 {
-  if (proxy->name().find("appmenu") != std::string::npos)
+  if (proxy->IsAppmenu())
   {
     _menu_view->RemoveIndicator(proxy);
   }
@@ -525,7 +566,7 @@ static gboolean track_menu_pointer(PanelView *self)
   return TRUE;
 }
 
-void PanelView::OnEntryActivated(std::string const& entry_id)
+void PanelView::OnEntryActivated(std::string const& entry_id, nux::Rect const& geo)
 {
   bool active = (entry_id.size() > 0);
   if (active && !_track_menu_pointer_id)
@@ -561,8 +602,9 @@ void PanelView::OnSynced()
   _needs_geo_sync = true;
 }
 
-void PanelView::OnEntryShowMenu(std::string const& entry_id,
-                                int x, int y, int timestamp, int button)
+void PanelView::OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
+                                int x, int y, unsigned int button,
+                                unsigned int timestamp)
 {
   Display* d = nux::GetGraphicsDisplay()->GetX11Display();
   XUngrabPointer(d, CurrentTime);

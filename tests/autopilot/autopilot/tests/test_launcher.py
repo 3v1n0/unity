@@ -395,6 +395,38 @@ class LauncherTests(ScenariodLauncherTests):
         self.assertThat(self.launcher.key_nav_is_active, Equals(True))
         self.assertThat(self.launcher.key_nav_is_grabbed, Equals(True))
 
+    def test_launcher_keynav_mode_toggles(self):
+        """Tests that keynav mode toggles with Alt+F1."""
+        launcher_instance = self.get_launcher()
+
+        launcher_instance.key_nav_start()
+        launcher_instance.key_nav_start()
+                                                    
+        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
+
+    def test_launcher_keynav_alt_tab_quits(self):
+        """Tests that alt+tab exits keynav mode."""
+        launcher_instance = self.get_launcher()
+        launcher_instance.key_nav_start()
+
+        self.switcher.initiate()
+        sleep(1)
+        self.switcher.stop()
+
+        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
+
+    def test_launcher_keynav_alt_grave_quits(self):
+        """Tests that alt+` exits keynav mode."""
+        launcher_instance = self.get_launcher()
+        launcher_instance.key_nav_start()
+
+        self.switcher.initiate_detail_mode()
+        sleep(1)
+        self.switcher.stop()
+
+        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
+
+
     def test_software_center_add_icon(self):
         """ Test the ability to add a SoftwareCenterLauncherIcon """
         
@@ -435,8 +467,14 @@ class LauncherRevealTests(ScenariodLauncherTests):
 
     def setUp(self):
         super(LauncherRevealTests, self).setUp()
-        self.set_unity_option('launcher_hide_mode', True)
-        sleep(1)
+        self.set_unity_option('launcher_hide_mode', 1)
+        launcher = self.get_launcher()
+        for counter in range(10):
+            sleep(1)
+            if launcher.hidemode == 1:
+                break
+        self.assertThat(launcher.hidemode, Equals(1),
+                        "Launcher did not enter auto-hide mode.")
 
     def test_reveal_on_mouse_to_edge(self):
         """Tests reveal of launchers by mouse pressure."""

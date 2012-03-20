@@ -16,6 +16,7 @@ plugins/unityshell/src/FilterRatingsWidget.cpp
 plugins/unityshell/src/HudController.cpp
 plugins/unityshell/src/HudView.cpp
 plugins/unityshell/src/LauncherController.cpp
+plugins/unityshell/src/LensView.cpp
 plugins/unityshell/src/PanelMenuView.cpp
 plugins/unityshell/src/PlacesGroup.cpp
 plugins/unityshell/src/PreviewMusic.cpp
