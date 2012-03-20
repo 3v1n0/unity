@@ -58,13 +58,10 @@ private:
 
 Indicators::Indicators()
   : pimpl(new Impl(this))
-{
-}
+{}
 
 Indicators::~Indicators()
-{
-  delete pimpl;
-}
+{}
 
 void Indicators::ActivateEntry(std::string const& entry_id, nux::Rect const& geometry)
 {
