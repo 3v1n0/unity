@@ -208,12 +208,11 @@ class DashKeyNavTests(DashTestCase):
         """ Tests that a category header gets focus when 'down' is pressed after the
         dash is opened
 
-        OK important to note that this test only tests that A category is focused, not the first
-        and from doing this it seems that it's common for a header other than the first to get focus.
+        OK important to note that this test only tests that A category is
+        focused, not the first and from doing this it seems that it's common
+        for a header other than the first to get focus.
         """
-
         self.dash.ensure_visible()
-
         # Make sure that a category have the focus.
         self.keyboard.press_and_release("Down")
         lens = self.dash.get_current_lens()
@@ -381,6 +380,7 @@ class DashClipboardTests(DashTestCase):
         searchbar = self.dash.get_searchbar()
         self.assertEqual(searchbar.search_string, u'CutPasteCutPaste')
 
+
 class DashKeyboardFocusTests(DashTestCase):
     """Tests that keyboard focus works."""
 
@@ -394,43 +394,36 @@ class DashKeyboardFocusTests(DashTestCase):
 
         self.keyboard.type("hello")
         filter_bar.ensure_expanded()
+        self.addCleanup(filter_bar.ensure_collapsed)
         self.keyboard.type(" world")
+        self.assertThat(self.dash.search_string, Equals("hello world"))
 
-        searchbar = self.dash.get_searchbar()
-        self.assertEqual("hello world", searchbar.search_string)
 
 class DashLensResultsTests(DashTestCase):
-    """ Tests results from the lens view """
-    
-    def test_results_message_empty_search(self): 
-        """ This tests a message is not shown when there is no text""" 
+    """Tests results from the lens view."""
+
+    def test_results_message_empty_search(self):
+        """This tests a message is not shown when there is no text."""
         self.dash.reveal_application_lens()
         lens = self.dash.get_current_lens()
-
-        lens.refresh_state() 
         self.assertFalse(lens.no_results_active)
 
-    def test_results_message(self): 
-        """ This test no mesage will be shown when results are there""" 
+    def test_results_message(self):
+        """This test no mesage will be shown when results are there."""
         self.dash.reveal_application_lens()
-        lens = self.dash.get_current_lens()
-
         self.keyboard.type("Terminal")
         sleep(1)
-      
-        lens.refresh_state() 
+        lens = self.dash.get_current_lens()
         self.assertFalse(lens.no_results_active)
 
-    def test_no_results_message(self): 
-        """ This test shows a message will appear in the lens""" 
+    def test_no_results_message(self):
+        """This test shows a message will appear in the lens."""
         self.dash.reveal_application_lens()
-        lens = self.dash.get_current_lens()
-        
         self.keyboard.type("qwerlkjzvxc")
         sleep(1)
-
-        lens.refresh_state() 
+        lens = self.dash.get_current_lens()
         self.assertTrue(lens.no_results_active)
+
 
 class DashVisualTests(DashTestCase):
     """Tests that the dash visual is correct."""
@@ -445,6 +438,7 @@ class DashVisualTests(DashTestCase):
         groups = lens.get_groups()
 
         for group in groups:
-            if (group.is_visible):
-                self.assertTrue(not group.expand_label_is_visible or
-                                (group.expand_label_y + group.expand_label_baseline == group.name_label_y + group.name_label_baseline))
+            if (group.is_visible and group.expand_label_is_visible):
+                expand_label_y = group.expand_label_y + group.expand_label_baseline
+                name_label_y = group.name_label_y + group.name_label_baseline
+                self.assertThat(expand_label_y, Equals(name_label_y))
