@@ -486,7 +486,7 @@ panel_service_update_menu_keybinding (PanelService *self)
   KeySym keysym = NoSymbol;
   guint32 modifiers = 0;
 
-  gchar *keystart = (binding) ? strrchr(binding, '>') : NULL;
+  gchar *keystart = (binding) ? strrchr (binding, '>') : NULL;
 
   if (!keystart)
     keystart = binding;
@@ -503,6 +503,7 @@ panel_service_update_menu_keybinding (PanelService *self)
   {
     gchar *keystr = g_strndup (keystart, keyend-keystart);
     keysym = XStringToKeysym (keystr);
+    g_free (keystr);
   }
 
   if (keysym != NoSymbol)
