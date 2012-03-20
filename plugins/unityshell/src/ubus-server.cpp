@@ -195,6 +195,9 @@ ubus_server_get_default()
   UBusServer* server;
   static gsize singleton;
 
+  // Ensure GType has been initialized
+  g_type_init();
+
   if (g_once_init_enter(&singleton))
   {
     server = (UBusServer*)g_object_new(UBUS_TYPE_SERVER, NULL);
