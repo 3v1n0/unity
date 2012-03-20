@@ -178,8 +178,8 @@ void DashView::SetupViews()
 
   search_bar_ = new SearchBar();
   AddChild(search_bar_);
-  search_bar_->SetMinimumHeight(style.GetSearchBarHeight() + style.SEARCH_BAR_EXTRA_PADDING*2);
-  search_bar_->SetMaximumHeight(style.GetSearchBarHeight() + style.SEARCH_BAR_EXTRA_PADDING*2);
+  search_bar_->SetMinimumHeight(style.GetSearchBarHeight() + style.SEARCH_BAR_EXTRA_PADDING * 2);
+  search_bar_->SetMaximumHeight(style.GetSearchBarHeight() + style.SEARCH_BAR_EXTRA_PADDING * 2);
   search_bar_->activated.connect(sigc::mem_fun(this, &DashView::OnEntryActivated));
   search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
   search_bar_->live_search_reached.connect(sigc::mem_fun(this, &DashView::OnLiveSearchReached));

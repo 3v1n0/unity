@@ -321,6 +321,8 @@ namespace
 
 void View::SetupViews()
 {
+  dash::Style& style = dash::Style::Instance();
+
   nux::VLayout* super_layout = new nux::VLayout(); 
   layout_ = new nux::HLayout();
   { 
@@ -348,6 +350,8 @@ void View::SetupViews()
       // add the search bar to the composite
       search_bar_ = new unity::SearchBar(content_width, true);
       search_bar_->disable_glow = true;
+      search_bar_->SetMinimumHeight(style.GetSearchBarHeight() + style.SEARCH_BAR_EXTRA_PADDING * 2);
+      search_bar_->SetMaximumHeight(style.GetSearchBarHeight() + style.SEARCH_BAR_EXTRA_PADDING * 2);
       search_bar_->search_hint = default_text;
       search_bar_->search_changed.connect(sigc::mem_fun(this, &View::OnSearchChanged));
       AddChild(search_bar_.GetPointer());
