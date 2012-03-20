@@ -68,7 +68,3 @@ This test ensure that the undo action is properly handle in a text editor.
 
 Outcome
   After pressing the Enter key the text in GEdit should be "0 "
-
-
-
-
