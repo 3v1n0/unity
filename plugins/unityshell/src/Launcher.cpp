@@ -228,6 +228,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _hovered                = false;
   _hidden                 = false;
   _render_drag_window     = false;
+  _start_icon_drag        = false;
   _drag_edge_touching     = false;
   _steal_drag             = false;
   _last_button_press      = 0;
@@ -1471,6 +1472,8 @@ Launcher::OnWindowMapped(guint32 xid)
     if (!_dnd_check_handle)
       _dnd_check_handle = g_timeout_add(200, &Launcher::OnUpdateDragManagerTimeout, this);
   //}
+  if (_start_icon_drag)
+    EndIconDrag();
 }
 
 void
@@ -2095,6 +2098,7 @@ void Launcher::StartIconDrag(AbstractLauncherIcon::Ptr icon)
   _drag_window->SinkReference();
 
   _render_drag_window = true;
+  _start_icon_drag    = true;
 
   UBusServer* ubus = ubus_server_get_default();
   ubus_server_send_message(ubus, UBUS_LAUNCHER_ICON_START_DND, NULL);
@@ -2133,6 +2137,7 @@ void Launcher::EndIconDrag()
     TimeUtil::SetTimeStruct(&_times[TIME_DRAG_THRESHOLD], &_times[TIME_DRAG_THRESHOLD], ANIM_DURATION_SHORT);
 
   _render_drag_window = false;
+  _start_icon_drag    = false;
 
   _hide_machine->SetQuirk(LauncherHideMachine::INTERNAL_DND_ACTIVE, false);
   UBusServer* ubus = ubus_server_get_default();

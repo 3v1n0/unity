@@ -316,6 +316,7 @@ private:
   bool  _hovered;
   bool  _hidden;
   bool  _render_drag_window;
+  bool  _start_icon_drag;
 
   bool          _shortcuts_shown;
 
