@@ -73,13 +73,13 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   _bg_darken_layer = new nux::ColorLayer(nux::Color(0.9f, 0.9f, 0.9f, 1.0f), false, rop);
 
   _layout = new nux::HLayout("", NUX_TRACKER_LOCATION);
+  _layout->SetContentDistribution(nux::eStackLeft);
 
   _menu_view = new PanelMenuView();
   AddPanelView(_menu_view, 1);
 
   SetCompositionLayout(_layout);
 
-  // Pannel tray shouldn't be an indicator view
   _tray = new PanelTray();
   _layout->AddView(_tray, 0, nux::eCenter, nux::eFull);
   AddChild(_tray);
@@ -342,10 +342,11 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     if (_dash_is_open)
     {
       nux::GetPainter().PushLayer(GfxContext, GetGeometry(), _bg_darken_layer);
+      bgs++;
     }
   }
 
-  if (_dash_is_open == false)
+  if (!_dash_is_open)
     gPainter.PushLayer(GfxContext, GetGeometry(), _bg_layer);
 
   if (_dash_is_open)
@@ -476,8 +477,6 @@ void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
     _indicators->AddIndicator(proxy);
   }
 
-  _layout->SetContentDistribution(nux::eStackLeft);
-
   ComputeContentSize();
   NeedRedraw();
 }
@@ -492,8 +491,6 @@ void PanelView::OnObjectRemoved(indicator::Indicator::Ptr const& proxy)
   {
     _indicators->RemoveIndicator(proxy);
   }
-
-  _layout->SetContentDistribution(nux::eStackLeft);
 
   ComputeContentSize();
   NeedRedraw();
