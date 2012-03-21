@@ -48,7 +48,10 @@ class ScenariodLauncherTests(AutopilotTestCase):
 
         if (self.only_primary):
             self.set_unity_option('num_launchers', 1)
-            self.screen_geo.set_primary_monitor(self.launcher_num)
+            try:
+                self.screen_geo.set_primary_monitor(self.launcher_num)
+            except:
+                self.skipTest("Impossible to set the monitor %d as primary" % self.launcher_num)
         else:
             self.set_unity_option('num_launchers', 0)
 
