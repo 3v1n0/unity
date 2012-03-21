@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -21,6 +21,8 @@
 #define UNITYSHELL_HUDLAUNCHERICON_H
 
 #include "SimpleLauncherIcon.h"
+
+#include "LauncherOptions.h"
 #include "UBusWrapper.h"
 
 namespace unity
@@ -32,12 +34,13 @@ class HudLauncherIcon : public SimpleLauncherIcon
 {
 
 public:
-  HudLauncherIcon();
+  HudLauncherIcon(LauncherHideMode hide_mode);
 
   virtual nux::Color BackgroundColor();
   virtual nux::Color GlowColor();
 
   void ActivateLauncherIcon(ActionArg arg);
+  void SetHideMode(LauncherHideMode hide_mode);
 
 protected:
   std::list<DbusmenuMenuitem*> GetMenus();
@@ -48,6 +51,7 @@ private:
 
   static unity::UBusManager ubus_manager_;
   nux::Color background_color_;
+  LauncherHideMode launcher_hide_mode_;
 };
 
 }

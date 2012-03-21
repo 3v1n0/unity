@@ -295,6 +295,7 @@ void Controller::ShowHud()
   nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
   window_->SetEnterFocusInputArea(view_->default_focus());
 }
+
 void Controller::HideHud(bool restore)
 {
   LOG_DEBUG (logger) << "hiding the hud";

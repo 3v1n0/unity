@@ -32,9 +32,10 @@ namespace launcher
 
 UBusManager BFBLauncherIcon::ubus_manager_;
 
-BFBLauncherIcon::BFBLauncherIcon()
+BFBLauncherIcon::BFBLauncherIcon(LauncherHideMode hide_mode)
  : SimpleLauncherIcon()
  , reader_(dash::LensDirectoryReader::GetDefault())
+ , launcher_hide_mode_(hide_mode)
 {
   tooltip_text = _("Dash Home");
   icon_name = PKGDATADIR"/launcher_bfb.png";
@@ -49,6 +50,11 @@ BFBLauncherIcon::BFBLauncherIcon()
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::bind(sigc::mem_fun(this, &BFBLauncherIcon::OnOverlayShown), false));
 }
 
+void BFBLauncherIcon::SetHideMode(LauncherHideMode hide_mode)
+{
+  launcher_hide_mode_ = hide_mode;
+}
+
 void BFBLauncherIcon::OnOverlayShown(GVariant *data, bool visible)
 {
   unity::glib::String overlay_identity;
@@ -58,9 +64,10 @@ void BFBLauncherIcon::OnOverlayShown(GVariant *data, bool visible)
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
 
-  if (!g_strcmp0(overlay_identity, "hud"))
+  // If the hud is open, we hide the BFB iff we have a locked launcher
+  if (!g_strcmp0(overlay_identity, "hud") &&
+      launcher_hide_mode_ == LAUNCHER_HIDE_NEVER)
   {
-    // if the hud is open, we hide the BFB
     SetQuirk(QUIRK_VISIBLE, !visible);
     EmitNeedsRedraw();
   }

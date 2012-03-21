@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Gordon Allott <gord.allott@canonical.com> 
+ * Authored by: Gordon Allott <gord.allott@canonical.com>
  */
 
 #include "HudLauncherIcon.h"
@@ -38,8 +38,9 @@ nux::logging::Logger logger("unity.launcher.hudlaunchericon");
 
 UBusManager HudLauncherIcon::ubus_manager_;
 
-HudLauncherIcon::HudLauncherIcon()
+HudLauncherIcon::HudLauncherIcon(LauncherHideMode hide_mode)
  : SimpleLauncherIcon()
+ , launcher_hide_mode_(hide_mode)
 {
   tooltip_text = _("HUD");
   icon_name = PKGDATADIR"/launcher_bfb.png";
@@ -52,12 +53,15 @@ HudLauncherIcon::HudLauncherIcon()
 
   ubus_manager_.RegisterInterest(UBUS_HUD_ICON_CHANGED, [&](GVariant *data)
   {
-    LOG_DEBUG(logger) << "Hud icon change: " << g_variant_get_string(data, NULL);
-    glib::String hud_icon_name(g_strdup(g_variant_get_string(data, NULL)));
-    if (!hud_icon_name.Str().empty()
-        && hud_icon_name.Str() != icon_name())
+    std::string hud_icon_name;
+    const gchar* data_string = g_variant_get_string(data, NULL);
+    if (data_string)
+      hud_icon_name = data_string;
+    LOG_DEBUG(logger) << "Hud icon change: " << hud_icon_name;
+    if (!hud_icon_name.empty()
+        && hud_icon_name != icon_name())
     {
-      icon_name = hud_icon_name.Str();
+      icon_name = hud_icon_name;
       EmitNeedsRedraw();
     }
   });
@@ -68,7 +72,12 @@ HudLauncherIcon::HudLauncherIcon()
   mouse_enter.connect([&](int m) { ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL); });
 }
 
-void HudLauncherIcon::OnOverlayShown(GVariant *data, bool visible)
+void HudLauncherIcon::SetHideMode(LauncherHideMode hide_mode)
+{
+  launcher_hide_mode_ = hide_mode;
+}
+
+void HudLauncherIcon::OnOverlayShown(GVariant* data, bool visible)
 {
   unity::glib::String overlay_identity;
   gboolean can_maximise = FALSE;
@@ -76,8 +85,9 @@ void HudLauncherIcon::OnOverlayShown(GVariant *data, bool visible)
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
-
-  if (!g_strcmp0(overlay_identity, "hud"))
+  // If the hud is open, we show the HUD button iff we have a locked launcher
+  if (!g_strcmp0(overlay_identity, "hud") &&
+      launcher_hide_mode_ == LAUNCHER_HIDE_NEVER)
   {
     SetQuirk(QUIRK_VISIBLE, visible);
     EmitNeedsRedraw();
