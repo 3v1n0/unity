@@ -57,11 +57,11 @@ namespace unity {
     void PreviewMusicTrack::BuildLayout()
     {
       IconTexture *cover = new IconTexture (preview_->album_cover.c_str(), 400);
-      nux::StaticCairoText *title = new nux::StaticCairoText(preview_->title.c_str(), NUX_TRACKER_LOCATION);
+      nux::StaticCairoText *title = new nux::StaticCairoText(preview_->title, NUX_TRACKER_LOCATION);
       title->SetFont("Ubuntu 25");
 
       std::string artist_year = preview_->artist; // no year in model + ", " + preview_->year;
-      nux::StaticCairoText *artist = new nux::StaticCairoText(artist_year.c_str(), NUX_TRACKER_LOCATION);
+      nux::StaticCairoText *artist = new nux::StaticCairoText(artist_year, NUX_TRACKER_LOCATION);
       artist->SetFont("Ubuntu 15");
 
       std::ostringstream album_length_string;
@@ -69,7 +69,7 @@ namespace unity {
       album_length_string << preview_->length / 60 << ":" << preview_->length % 60
                           << " " << _("min");
 
-      nux::StaticCairoText *album_length = new nux::StaticCairoText(album_length_string.str().c_str(), NUX_TRACKER_LOCATION);
+      nux::StaticCairoText *album_length = new nux::StaticCairoText(album_length_string.str(), NUX_TRACKER_LOCATION);
 
       std::ostringstream genres_string;
       dash::AlbumPreview::Genres::iterator genre_it;
@@ -84,7 +84,7 @@ namespace unity {
         genres_string << (*genre_it);
       }
 
-      nux::StaticCairoText *genres = new nux::StaticCairoText(genres_string.str().c_str(), NUX_TRACKER_LOCATION);
+      nux::StaticCairoText *genres = new nux::StaticCairoText(genres_string.str(), NUX_TRACKER_LOCATION);
 
       nux::VLayout* tracks = new nux::VLayout(NUX_TRACKER_LOCATION);
 
@@ -104,7 +104,7 @@ namespace unity {
 
       tracks->AddView(track_widget, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
 
-      PreviewBasicButton* primary_button = new PreviewBasicButton(preview_->primary_action_name.c_str(), NUX_TRACKER_LOCATION);
+      PreviewBasicButton* primary_button = new PreviewBasicButton(preview_->primary_action_name, NUX_TRACKER_LOCATION);
       //FIXME - add secondary action when we have the backend for it
       primary_button->state_change.connect ([&] (nux::View *view) { UriActivated.emit (preview_->primary_action_uri); });
 

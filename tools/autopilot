@@ -21,6 +21,7 @@ DEPENDS = [
     ('junitxml', 'python-junitxml'),
     ('testscenarios', 'python-testscenarios'),
     ('testtools', 'python-testtools'),
+    ('xdg', 'python-xdg'),
     ('Xlib', 'python-xlib'),
 ]
 

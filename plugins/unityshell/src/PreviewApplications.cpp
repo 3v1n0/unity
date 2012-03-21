@@ -56,27 +56,27 @@ namespace unity {
     {
       IconTexture *screenshot = new IconTexture (preview_->screenshot_icon_hint.c_str(), 420);
       IconTexture *icon = new IconTexture (preview_->icon_hint.c_str(), 80);
-      nux::StaticCairoText *name = new nux::StaticCairoText (preview_->name.c_str(), NUX_TRACKER_LOCATION);
+      nux::StaticCairoText *name = new nux::StaticCairoText (preview_->name, NUX_TRACKER_LOCATION);
       name->SetFont("Ubuntu 25");
 
-      nux::StaticCairoText *version = new nux::StaticCairoText (preview_->version.c_str(), NUX_TRACKER_LOCATION);
+      nux::StaticCairoText *version = new nux::StaticCairoText (preview_->version, NUX_TRACKER_LOCATION);
       version->SetFont("Ubuntu 15");
 
-      nux::StaticCairoText *size = new nux::StaticCairoText (preview_->size.c_str(), NUX_TRACKER_LOCATION);
+      nux::StaticCairoText *size = new nux::StaticCairoText (preview_->size, NUX_TRACKER_LOCATION);
       size->SetFont("Ubuntu 15");
 
-      nux::StaticCairoText *licence = new nux::StaticCairoText (preview_->license.c_str(), NUX_TRACKER_LOCATION);
-      nux::StaticCairoText *last_updated = new nux::StaticCairoText (preview_->last_updated.c_str(), NUX_TRACKER_LOCATION);
+      nux::StaticCairoText *licence = new nux::StaticCairoText (preview_->license, NUX_TRACKER_LOCATION);
+      nux::StaticCairoText *last_updated = new nux::StaticCairoText (preview_->last_updated, NUX_TRACKER_LOCATION);
       description = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
 
       //description->SetBaseWidth(350);
       description->SetMaximumWidth(350);
       description->SetLines(99999999);
-      description->SetText(preview_->description.c_str());
+      description->SetText(preview_->description);
 
       std::ostringstream number_of_reviews;
       number_of_reviews << preview_->n_ratings << " Reviews";
-      nux::StaticCairoText *review_total = new nux::StaticCairoText (number_of_reviews.str().c_str(), NUX_TRACKER_LOCATION);
+      nux::StaticCairoText *review_total = new nux::StaticCairoText (number_of_reviews.str(), NUX_TRACKER_LOCATION);
 
       nux::HLayout *large_container = new nux::HLayout(NUX_TRACKER_LOCATION);
       nux::VLayout *screenshot_container = new nux::VLayout(NUX_TRACKER_LOCATION);
@@ -87,7 +87,7 @@ namespace unity {
       nux::HLayout *button_container = new nux::HLayout(NUX_TRACKER_LOCATION);
 
       // create the action buttons
-      PreviewBasicButton* primary_button = new PreviewBasicButton(preview_->primary_action_name.c_str(), NUX_TRACKER_LOCATION);
+      PreviewBasicButton* primary_button = new PreviewBasicButton(preview_->primary_action_name, NUX_TRACKER_LOCATION);
       //FIXME - add secondary action when we have the backend for it
       primary_button->state_change.connect ([&] (nux::View *view) { UriActivated.emit (preview_->primary_action_uri); });
       button_container->AddLayout (new nux::SpaceLayout(6,6,6,6), 0);
@@ -153,7 +153,7 @@ namespace unity {
     g_debug ("layout recomputing");
     description->SetBaseWidth((GetGeometry().width / 2) - 16 - 12 );
     description->SetMaximumWidth((GetGeometry().width / 2) - 16 - 12 );
-    description->SetText(preview_->description.c_str());
+    description->SetText(preview_->description);
   }
 
   void PreviewApplications::Draw (nux::GraphicsEngine &GfxContext, bool force_draw) {

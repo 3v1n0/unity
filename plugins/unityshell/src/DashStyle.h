@@ -178,6 +178,7 @@ public:
   nux::BaseTexture* GetDashShine();
 
   nux::BaseTexture* GetSearchMagnifyIcon();
+  nux::BaseTexture* GetSearchCircleIcon();
   nux::BaseTexture* GetSearchCloseIcon();
   nux::BaseTexture* GetSearchSpinIcon();
 

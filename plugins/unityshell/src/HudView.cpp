@@ -64,6 +64,7 @@ View::View()
   , current_height_(0)
   , timeline_need_more_draw_(false)
   , selected_button_(0)
+  , activated_signal_sent_(false)
 {
   renderer_.SetOwner(this);
   renderer_.need_redraw.connect([this] () { 
@@ -80,7 +81,8 @@ View::View()
 
   search_bar_->activated.connect ([&]() 
   {
-    search_activated.emit(search_bar_->search_string);
+    if (!activated_signal_sent_)
+      search_activated.emit(search_bar_->search_string);
   });
 
   search_bar_->text_entry()->SetLoseKeyFocusOnKeyNavDirectionUp(false);
@@ -231,7 +233,7 @@ void View::SetQueries(Hud::Queries queries)
   int found_items = 0;
   for (auto query = queries.begin(); query != queries.end(); query++)
   {
-    if (found_items > 5)
+    if (found_items >= 5)
       break;
 
     HudButton::Ptr button(new HudButton());
@@ -608,8 +610,9 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
       return search_bar_->text_entry();
     }
 
-    if (direction == nux::KEY_NAV_ENTER)
+    if (event_type == nux::NUX_KEYDOWN && direction == nux::KEY_NAV_ENTER)
     {
+      activated_signal_sent_ = false;
       // The "Enter" key has been received and the text entry has the key focus.
       // If one of the button has the fake_focus, we get it to emit the query_activated signal.
       if (!buttons_.empty())
@@ -620,6 +623,7 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
           if ((*it)->fake_focused)
           {
             query_activated.emit((*it)->GetQuery());
+            activated_signal_sent_ = true;
           }
         }
       }

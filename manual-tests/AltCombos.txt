@@ -1,0 +1,10 @@
+Alt+Arrow keys not passed to application
+----------------------------------------
+Tests that Alt+ArrowKey events are correctly passed to the active window
+when Unity is not responding to them.
+
+#. Open gnome-terminal
+#. While holding Alt, tap arrow keys: Up, Down, Right, Left
+
+Outcome
+  The terminal should show the keycodes were received as text "ABCD".

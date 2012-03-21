@@ -166,6 +166,8 @@ private:
     TIME_LAST
   } LauncherActionTimes;
 
+  void ConfigureBarrier();
+
   void OnOptionsChanged(Options::Ptr options);
   void OnOptionChanged();
   void UpdateOptions(Options::Ptr options);
@@ -288,6 +290,8 @@ private:
   void EndIconDrag();
   void UpdateDragWindowPosition(int x, int y);
 
+  void ResetMouseDragState();
+
   float GetAutohidePositionMin() const;
   float GetAutohidePositionMax() const;
 
@@ -355,6 +359,7 @@ private:
   guint _autoscroll_handle;
   guint _start_dragicon_handle;
   guint _dnd_check_handle;
+  guint _strut_hack_handle;
 
   nux::Point2   _mouse_position;
   nux::BaseWindow* _parent;
