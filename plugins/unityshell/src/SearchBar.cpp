@@ -543,7 +543,7 @@ void SearchBar::UpdateBackground(bool force)
   cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.57f);
   cairo_fill_preserve(cr);
   cairo_set_line_width(cr, 1);
-  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
+  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.8f);
   cairo_stroke(cr);
 
   cairo_destroy(cr);
