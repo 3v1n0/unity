@@ -201,8 +201,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _folded_angle           = 1.0f;
   _neg_folded_angle       = -1.0f;
   _space_between_icons    = 5;
-  _launcher_top_y         = 0;
-  _launcher_bottom_y      = 0;
+  _last_delta_y           = 0.0f;
   _folded_z_distance      = 10.0f;
   _launcher_action_state  = ACTION_NONE;
   _icon_under_mouse       = NULL;
@@ -227,6 +226,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _shortcuts_shown        = false;
   _hovered                = false;
   _hidden                 = false;
+  _scroll_limit_reached   = false;
   _render_drag_window     = false;
   _drag_edge_touching     = false;
   _steal_drag             = false;
@@ -1203,6 +1203,9 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
     delta_y *= hover_progress;
     center.y += delta_y;
     folding_threshold += delta_y;
+
+    _scroll_limit_reached = (delta_y == _last_delta_y);
+    _last_delta_y = delta_y;
   }
   else
   {
@@ -1685,12 +1688,18 @@ gboolean Launcher::OnScrollTimeout(gpointer data)
 {
   Launcher* self = (Launcher*) data;
   nux::Geometry geo = self->GetGeometry();
+  gboolean anim = TRUE;
 
+  //
+  // Always check _scroll_limit_reached to ensure we don't keep spinning
+  // this timer if the mouse happens to be left idle over one of the autoscroll
+  // hotspots on the launcher.
+  //
   if (self->IsInKeyNavMode() || !self->_hovered ||
+      self->_scroll_limit_reached ||
       self->GetActionState() == ACTION_DRAG_LAUNCHER)
-    return TRUE;
-
-  if (self->MouseOverTopScrollArea())
+    anim = FALSE;
+  else if (self->MouseOverTopScrollArea())
   {
     if (self->MouseOverTopScrollExtrema())
       self->_launcher_drag_delta += 6;
@@ -1704,9 +1713,18 @@ gboolean Launcher::OnScrollTimeout(gpointer data)
     else
       self->_launcher_drag_delta -= 3;
   }
+  else
+    anim = FALSE;
 
-  self->EnsureAnimation();
-  return TRUE;
+  if (anim)
+    self->EnsureAnimation();
+  else
+  {
+    self->_autoscroll_handle = 0;
+    self->_scroll_limit_reached = false;
+  }
+
+  return anim;
 }
 
 void Launcher::EnsureScrollTimer()
