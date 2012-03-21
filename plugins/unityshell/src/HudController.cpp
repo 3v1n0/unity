@@ -450,6 +450,7 @@ std::string Controller::GetName() const
 void Controller::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
+    .add(window_ ? window_->GetGeometry() : nux::Geometry())
     .add("visible", visible_);
 }
 
