@@ -8,13 +8,3 @@ when Unity is not responding to them.
 
 Outcome
   The terminal should show the keycodes were received as text "ABCD".
-
-
-Alt+Enter Crash
----------------
-Tests that Alt+Enter does not cause unity to crash (LP: #960957)
-
-#. Press Alt+Enter.
-
-Outcome
-  Unity/compiz should not crash.

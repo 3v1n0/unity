@@ -268,7 +268,6 @@ private:
 
   void OnOverlayHidden(GVariant* data);
   void OnOverlayShown(GVariant* data);
-  bool IsOverlayOpen() const;
 
   void DesaturateIcons();
   void SaturateIcons();
@@ -409,7 +408,6 @@ private:
   BaseTexturePtr launcher_sheen_;
   BaseTexturePtr launcher_pressure_effect_;
   bool _dash_is_open;
-  bool _hud_is_open;
 
   ui::AbstractIconRenderer::Ptr icon_renderer;
   BackgroundEffectHelper bg_effect_helper_;

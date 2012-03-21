@@ -145,8 +145,8 @@ Launcher::Launcher(nux::BaseWindow* parent,
   , _collection_window(NULL)
   , _background_color(nux::color::DimGray)
   , _dash_is_open(false)
-  , _hud_is_open(false)
 {
+
   _parent = parent;
   _active_quicklist = nullptr;
 
@@ -909,7 +909,7 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
     arg.saturation = 0.0;
   }
 
-  if (IsOverlayOpen())
+  if (_dash_is_open)
     arg.active_arrow = icon->GetIconType() == AbstractLauncherIcon::TYPE_HOME;
   else
     arg.active_arrow = icon->GetQuirk(AbstractLauncherIcon::QUIRK_ACTIVE);
@@ -1322,22 +1322,20 @@ void Launcher::OnOverlayShown(GVariant* data)
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
-  std::string identity = overlay_identity.Str();
-  if (overlay_monitor == monitor)
+
+  if (!g_strcmp0(overlay_identity, "dash"))
   {
-    if (identity == "dash")
+    if (overlay_monitor == monitor)
     {
+      LauncherModel::iterator it;
+
       _dash_is_open = true;
+      bg_effect_helper_.enabled = true;
       _hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, true);
       _hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, true);
-    }
-    if (identity == "hud")
-    {
-      _hud_is_open = true;
-    }
 
-    bg_effect_helper_.enabled = true;
-    DesaturateIcons();
+      DesaturateIcons();
+    }
   }
 }
 
@@ -1350,37 +1348,26 @@ void Launcher::OnOverlayHidden(GVariant* data)
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
-  std::string identity = overlay_identity.Str();
-  if (overlay_monitor == monitor)
+  if (!g_strcmp0(overlay_identity, "dash"))
   {
-    if (identity == "dash")
-    {
-      _hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, false);
-      _hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, false);
-      _dash_is_open = false;
-    }
-    else if (identity == "hud")
-    {
-      _hud_is_open = false;
-    }
+    if (!_dash_is_open)
+      return;
 
-    // If they are both now shut, then disable the effect helper and saturate the icons.
-    if (!_dash_is_open and !_hud_is_open)
-    {
-      bg_effect_helper_.enabled = false;
-      SaturateIcons();
-    }
+    LauncherModel::iterator it;
+
+    _dash_is_open = false;
+    bg_effect_helper_.enabled = false;
+    _hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, false);
+    _hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, false);
+
+    // as the leave event is no more received when the place is opened
+    // FIXME: remove when we change the mouse grab strategy in nux
+    nux::Point pt = nux::GetWindowCompositor().GetMousePosition();
+
+    SetStateMouseOverLauncher(GetAbsoluteGeometry().IsInside(pt));
+
+    SaturateIcons();
   }
-
-  // as the leave event is no more received when the place is opened
-  // FIXME: remove when we change the mouse grab strategy in nux
-  nux::Point pt = nux::GetWindowCompositor().GetMousePosition();
-  SetStateMouseOverLauncher(GetAbsoluteGeometry().IsInside(pt));
-}
-
-bool Launcher::IsOverlayOpen() const
-{
-  return _dash_is_open || _hud_is_open;
 }
 
 void Launcher::OnActionDone(GVariant* data)
@@ -1467,7 +1454,7 @@ Launcher::OnUpdateDragManagerTimeout(gpointer data)
   self->_collection_window->PushToBack();
   self->_collection_window->EnableInputWindow(false, "DNDCollectionWindow");
 
-  if (self->IsOverlayOpen() && !self->_hovered)
+  if (self->_dash_is_open && !self->_hovered)
     self->DesaturateIcons();
 
   self->DndReset();
@@ -1653,7 +1640,7 @@ void Launcher::SetHover(bool hovered)
     TimeUtil::SetTimeStruct(&_times[TIME_LEAVE], &_times[TIME_ENTER], ANIM_DURATION);
   }
 
-  if (IsOverlayOpen() && !_hide_machine->GetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE))
+  if (_dash_is_open && !_hide_machine->GetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE))
   {
     if (hovered && !_hover_machine->GetQuirk(LauncherHoverMachine::SHORTCUT_KEYS_VISIBLE))
       SaturateIcons();
@@ -1917,7 +1904,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                         pressure_color);
   }
 
-  if (IsOverlayOpen())
+  if (_dash_is_open)
   {
     if (BackgroundEffectHelper::blur_type != unity::BLUR_NONE && (bkg_box.x + bkg_box.width > 0))
     {
@@ -2018,7 +2005,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     icon_renderer->RenderIcon(GfxContext, *rev_it, bkg_box, base);
   }
 
-  if (!IsOverlayOpen())
+  if (!_dash_is_open)
   {
     const double right_line_opacity = 0.15f * launcher_alpha;
 
@@ -2643,7 +2630,7 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
 
   _hide_machine->SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, true);
 
-  if (IsOverlayOpen())
+  if (_dash_is_open)
     SaturateIcons();
 
   for (auto it : _dnd_data.Uris())
@@ -2769,7 +2756,7 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
 
   SetMousePosition(x - parent->GetGeometry().x, y - parent->GetGeometry().y);
 
-  if (!IsOverlayOpen() && _mouse_position.x == 0 && _mouse_position.y <= (_parent->GetGeometry().height - _icon_size - 2 * _space_between_icons) && !_drag_edge_touching)
+  if (!_dash_is_open && _mouse_position.x == 0 && _mouse_position.y <= (_parent->GetGeometry().height - _icon_size - 2 * _space_between_icons) && !_drag_edge_touching)
   {
     if (_dnd_hovered_icon)
         _dnd_hovered_icon->SendDndLeave();
