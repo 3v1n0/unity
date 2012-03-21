@@ -14,7 +14,6 @@ Outcome
   position, if the operation is repeated the text is inserted where
   the mouse pointer is.
 
-
 Dash correct number of "see more" results with horizontal renderer
 ---------------------------
 This test ensures a correct number of "see more" results in the dash when using a horizontal renderer
@@ -26,3 +25,14 @@ This test ensures a correct number of "see more" results in the dash when using 
 
 Outcome
   The category will expand to show all the results, user should ensure that the X in "See x more categories" was valid. 
+
+Dash Spinner
+------------
+This tests that the spinner is properly shown when searching with the Dash.
+
+#. Open the dash and type a string ("abc").
+
+Outcome
+  If the search is taking more than ~150ms, a spinner should be animating next
+  to the search bar, once the spinner stops spinning the results shouldn't
+  change.
