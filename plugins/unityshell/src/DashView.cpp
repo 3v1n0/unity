@@ -506,8 +506,8 @@ void DashView::OnSearchFinished(Lens::Hints const& hints)
   if (active_lens_view_ == NULL) return;
 
   active_lens_view_->CheckNoResults(hints);
-
   std::string const& search_string = search_bar_->search_string;
+
   if (active_lens_view_->search_string == search_string)
   {
     search_bar_->SearchFinished();
