@@ -24,6 +24,7 @@ from Xlib import XK
 from Xlib.display import Display
 from Xlib.ext.xtest import fake_input
 import gtk.gdk
+import os
 
 _PRESSED_KEYS = []
 _PRESSED_MOUSE_BUTTONS = []
@@ -326,6 +327,17 @@ class ScreenGeometry:
 
     def get_primary_monitor(self):
         return self._default_screen.get_primary_monitor()
+
+    def set_primary_monitor(self, monitor):
+        monitor_name = self._default_screen.get_monitor_plug_name(monitor)
+
+        if not monitor_name or len(monitor_name) == 0:
+            raise RuntimeError('Invalid monitor found')
+
+        ret = os.spawnlp(os.P_WAIT, "xrandr", "xrandr", "--output", monitor_name, "--primary")
+
+        if ret != 0:
+            raise RuntimeError('Xrandr can\'t set the primary monitor')
 
     def get_screen_width(self):
         return self._default_screen.get_width()
