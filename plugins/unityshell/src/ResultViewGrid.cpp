@@ -612,7 +612,6 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   gPainter.PaintBackground(GfxContext, GetGeometry());
 
   int items_per_row = GetItemsPerRow();
-  LOG_DEBUG(logger) << "results per row: " << items_per_row;
   uint total_rows = (!expanded) ? 0 : (results_.size() / items_per_row) + 1;
 
   ResultView::ResultList::iterator it;
