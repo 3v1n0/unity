@@ -23,17 +23,20 @@ def _make_scenarios():
     screen_geometry = ScreenGeometry()
     num_monitors = screen_geometry.get_num_monitors()
     if num_monitors == 1:
-        return [('Single Monitor', {'launcher_num': 0})]
+        return [('Single Monitor', {'launcher_num': 0, 'only_primary': True})]
     else:
-        return [('Monitor %d' % (i), {'launcher_num': i}) for i in range(num_monitors)]
+        scenarios = [('Monitor %d' % (i), {'launcher_num': i, 'only_primary': False}) for i in range(num_monitors)]
+        scenarios += [('Monitor %d' % (i), {'launcher_num': i, 'only_primary': True}) for i in range(num_monitors)]
+        return scenarios
 
 
 class ScenariodLauncherTests(AutopilotTestCase):
     """A base class for all launcher tests that want to use scenarios to run on
     each launcher (for multi-monitor setups).
     """
-
+    screen_geo = ScreenGeometry()
     scenarios = _make_scenarios()
+    old_primary_screen = screen_geo.get_primary_monitor()
 
     def get_launcher(self):
         """Get the launcher for the current scenario."""
@@ -43,6 +46,16 @@ class ScenariodLauncherTests(AutopilotTestCase):
         super(ScenariodLauncherTests, self).setUp()
         self.set_unity_log_level("unity.launcher", "DEBUG")
 
+        if (self.only_primary):
+            self.set_unity_option('num_launchers', 1)
+            self.screen_geo.set_primary_monitor(self.launcher_num)
+        else:
+            self.set_unity_option('num_launchers', 0)
+
+    def tearDown(self):
+        if (self.only_primary):
+            self.screen_geo.set_primary_monitor(self.old_primary_screen)
+        super(ScenariodLauncherTests, self).tearDown()
 
 class LauncherTests(ScenariodLauncherTests):
     """Test the launcher."""
