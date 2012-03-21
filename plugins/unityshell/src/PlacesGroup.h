@@ -32,6 +32,7 @@
 #include "Introspectable.h"
 #include "StaticCairoText.h"
 #include "UBusWrapper.h"
+#include "ResultView.h"
 
 namespace nux
 {
@@ -55,7 +56,7 @@ public:
   nux::StaticCairoText* GetLabel();
   nux::StaticCairoText* GetExpandLabel();
 
-  void SetChildView(nux::View* view);
+  void SetChildView(dash::ResultView* view);
   nux::View* GetChildView();
 
   void SetChildLayout(nux::Layout* layout);

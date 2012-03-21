@@ -22,6 +22,7 @@
 #include <sigc++/sigc++.h>
 
 #include <Nux/Nux.h>
+#include <NuxCore/Logger.h>
 #include <Nux/VLayout.h>
 #include <Nux/HLayout.h>
 #include <Nux/BaseWindow.h>
@@ -44,6 +45,12 @@
 #include "ubus-server.h"
 #include "UBusMessages.h"
  #include "Introspectable.h"
+
+
+namespace
+{
+nux::logging::Logger logger("unity.dash.placesgroup");
+}
 
 namespace unity
 {
@@ -259,13 +266,20 @@ PlacesGroup::SetIcon(const char* path_to_emblem)
 }
 
 void
-PlacesGroup::SetChildView(nux::View* view)
+PlacesGroup::SetChildView(dash::ResultView* view)
 {
   debug::Introspectable *i = dynamic_cast<debug::Introspectable*>(view);
   if (i)
     AddChild(i);
   _child_view = view;
   _group_layout->AddView(_child_view, 1);
+
+  view->results_per_row.changed.connect([&] (int results_per_row) 
+  {
+    _n_visible_items_in_unexpand_mode = results_per_row;  
+    RefreshLabel();
+  });
+
   QueueDraw();
 }
 
@@ -296,6 +310,7 @@ PlacesGroup::RefreshLabel()
   }
   else
   {
+    LOG_DEBUG(logger) << _n_total_items << " - " << _n_visible_items_in_unexpand_mode;
     result_string = g_strdup_printf(g_dngettext(GETTEXT_PACKAGE,
                                                 "See one more result",
                                                 "See %d more results",
@@ -440,7 +455,6 @@ void PlacesGroup::PostDraw(nux::GraphicsEngine& graphics_engine,
 void
 PlacesGroup::SetCounts(guint n_visible_items_in_unexpand_mode, guint n_total_items)
 {
-  _n_visible_items_in_unexpand_mode = n_visible_items_in_unexpand_mode;
   _n_total_items = n_total_items;
 
   Relayout();
