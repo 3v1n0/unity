@@ -54,6 +54,8 @@ public:
   void ShowHud();
   void HideHud(bool restore_focus = true);
   bool IsVisible();
+  void SetLauncherIsLockedOut(bool launcher_is_locked_out);
+
 protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
@@ -99,6 +101,8 @@ private:
   guint timeline_id_;
   float last_opacity_;
   gint64 start_time_;
+ 
+  bool launcher_is_locked_out_;
 
   View* view_;
   guint ensure_id_;
