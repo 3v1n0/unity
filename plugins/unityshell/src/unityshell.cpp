@@ -1577,6 +1577,11 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
                                            CompAction::State state,
                                            CompOption::Vector& options)
 {
+  // Remember StateCancel and StateCommit will be broadcast to all actions
+  // so we need to verify that we are actually being toggled...
+  if (!(state & CompAction::StateTermKey))
+    return false;
+
   if (state & CompAction::StateCancel)
     return false;
 
@@ -2521,8 +2526,11 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     }
     case UnityshellOptions::LauncherHideMode:
+    {
       launcher_options->hide_mode = (unity::launcher::LauncherHideMode) optionGetLauncherHideMode();
+      hud_controller_->SetLauncherIsLockedOut(launcher_options->hide_mode == unity::launcher::LauncherHideMode::LAUNCHER_HIDE_NEVER);
       break;
+    }
     case UnityshellOptions::BacklightMode:
       launcher_options->backlight_mode = (unity::launcher::BacklightMode) optionGetBacklightMode();
       break;
@@ -2754,6 +2762,8 @@ void UnityScreen::initLauncher()
 
   /* Setup Hud */
   hud_controller_.reset(new hud::Controller());
+  auto hide_mode = (unity::launcher::LauncherHideMode) optionGetLauncherHideMode();
+  hud_controller_->SetLauncherIsLockedOut(hide_mode == unity::launcher::LauncherHideMode::LAUNCHER_HIDE_NEVER);
   AddChild(hud_controller_.get());
   LOG_INFO(logger) << "initLauncher-hud " << timer.ElapsedSeconds() << "s";
   

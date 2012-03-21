@@ -39,7 +39,7 @@ nux::logging::Logger logger("unity.hud.controller");
 }
 
 Controller::Controller()
-  : launcher_width(66)
+  : launcher_width(65)
   , hud_service_("com.canonical.hud", "/com/canonical/hud")
   , window_(nullptr)
   , visible_(false)
@@ -47,6 +47,7 @@ Controller::Controller()
   , timeline_id_(0)
   , last_opacity_(0.0f)
   , start_time_(0)
+  , launcher_is_locked_out_(false)
   , view_(nullptr)
 {
   LOG_DEBUG(logger) << "hud startup";
@@ -68,6 +69,8 @@ Controller::Controller()
       HideHud(true);
     }
   });
+
+  launcher_width.changed.connect([this] (int new_width) { Relayout(); });
 
   PluginAdapter::Default()->compiz_screen_ungrabbed.connect(sigc::mem_fun(this, &Controller::OnScreenUngrabbed));
 
@@ -154,17 +157,23 @@ void Controller::OnWindowConfigure(int window_width, int window_height,
 
 nux::Geometry Controller::GetIdealWindowGeometry()
 {
-   UScreen *uscreen = UScreen::GetDefault();
-   int primary_monitor = uscreen->GetMonitorWithMouse();
-   auto monitor_geo = uscreen->GetMonitorGeometry(primary_monitor);
+  UScreen *uscreen = UScreen::GetDefault();
+  int primary_monitor = uscreen->GetMonitorWithMouse();
+  auto monitor_geo = uscreen->GetMonitorGeometry(primary_monitor);
 
-   // We want to cover as much of the screen as possible to grab any mouse events outside
-   // of our window
-   panel::Style &panel_style = panel::Style::Instance();
-   return nux::Geometry (monitor_geo.x,
-                         monitor_geo.y + panel_style.panel_height,
-                         monitor_geo.width,
-                         monitor_geo.height - panel_style.panel_height);
+  // We want to cover as much of the screen as possible to grab any mouse events outside
+  // of our window
+  panel::Style &panel_style = panel::Style::Instance();
+  nux::Geometry geo(monitor_geo.x,
+                       monitor_geo.y + panel_style.panel_height,
+                       monitor_geo.width,
+                       monitor_geo.height - panel_style.panel_height);
+  if (launcher_is_locked_out_)
+  {
+    geo.x += launcher_width;
+    geo.width -= launcher_width;
+  }
+  return geo;
 }
 
 void Controller::Relayout(GdkScreen*screen)
@@ -224,6 +233,16 @@ bool Controller::IsVisible()
   return visible_;
 }
 
+void Controller::SetLauncherIsLockedOut(bool launcher_is_locked_out)
+{
+  launcher_is_locked_out_ = launcher_is_locked_out;
+  if (launcher_is_locked_out_)
+    view_->SetHideIcon(IconHideState::HIDE);
+  else
+    view_->SetHideIcon(IconHideState::SHOW);
+  Relayout();
+}
+
 void Controller::ShowHud()
 {
   PluginAdapter* adaptor = PluginAdapter::Default();
@@ -248,6 +267,7 @@ void Controller::ShowHud()
   focused_app_icon_ = view_icon.Str();
 
   LOG_DEBUG(logger) << "Taking application icon: " << focused_app_icon_;
+  ubus.SendMessage(UBUS_HUD_ICON_CHANGED, g_variant_new_string(focused_app_icon_.c_str())); 
   view_->SetIcon(focused_app_icon_);
 
   window_->ShowWindow(true);
@@ -275,6 +295,7 @@ void Controller::ShowHud()
   nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
   window_->SetEnterFocusInputArea(view_->default_focus());
 }
+
 void Controller::HideHud(bool restore)
 {
   LOG_DEBUG (logger) << "hiding the hud";
@@ -385,6 +406,7 @@ void Controller::OnQuerySelected(Query::Ptr query)
 {
   LOG_DEBUG(logger) << "Selected query, " << query->formatted_text;
   view_->SetIcon(query->icon_name);
+  ubus.SendMessage(UBUS_HUD_ICON_CHANGED, g_variant_new_string(query->icon_name.c_str()));
 }
 
 
@@ -403,6 +425,7 @@ void Controller::OnQueriesFinished(Hud::Queries queries)
 
   LOG_DEBUG(logger) << "setting icon to - " << icon_name;
   view_->SetIcon(icon_name);
+  ubus.SendMessage(UBUS_HUD_ICON_CHANGED, g_variant_new_string(icon_name.c_str()));
 }
 
 // Introspectable
