@@ -343,6 +343,10 @@ class ScreenGeometry:
             raise ValueError('Specified monitor number is out of range.')
         return tuple(self._default_screen.get_monitor_geometry(monitor_number))
 
+    def is_rect_on_monitor(self, monitor_number, x, y, w, h):
+        (m_x, m_y, m_w, m_h) = self.get_monitor_geometry(monitor_number)
+        return (x >= m_x and x + w <= m_x + m_w and y >= m_y and y + h <= m_y + m_h)
+
     def move_mouse_to_monitor(self, monitor_number):
         """Move the mouse to the center of the specified monitor."""
         geo = self.get_monitor_geometry(monitor_number)

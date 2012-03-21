@@ -26,7 +26,7 @@ class HudTests(AutopilotTestCase):
             ]
     else:
         scenarios = []
-        for i in range(0, num_monitors):
+        for i in range(num_monitors):
             scenarios.append(('Monitor %d, Launcher never hide' % (i), {'hud_monitor': i, 'launcher_hide_mode': 0}))
             scenarios.append(('Monitor %d, Launcher autohide' % (i), {'hud_monitor': i, 'launcher_hide_mode': 1}))
 
@@ -62,7 +62,11 @@ class HudTests(AutopilotTestCase):
             sleep(1)
             if self.hud.visible:
                 break
+
         self.assertTrue(self.hud.visible, "HUD did not appear.")
+
+        (x, y, w, h) = self.hud.get_geometry()
+        self.assertTrue(self.screen_geometry.is_rect_on_monitor(self.hud_monitor, x, y, w, h))
 
     def test_no_initial_values(self):
         self.reveal_hud()
