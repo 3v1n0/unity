@@ -32,6 +32,7 @@
 #include "DeviceLauncherIcon.h"
 #include "DeviceLauncherSection.h"
 #include "FavoriteStore.h"
+#include "HudLauncherIcon.h"
 #include "Launcher.h"
 #include "LauncherController.h"
 #include "LauncherEntryRemote.h"
@@ -228,7 +229,18 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   FavoriteStore::GetDefault().favorite_removed.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteRemoved));
   FavoriteStore::GetDefault().reordered.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreReordered));
 
-  RegisterIcon(AbstractLauncherIcon::Ptr(new BFBLauncherIcon()));
+  LauncherHideMode hide_mode = parent_->options()->hide_mode;
+  BFBLauncherIcon* bfb = new BFBLauncherIcon(hide_mode);
+  parent_->options()->hide_mode.changed.connect([bfb](LauncherHideMode mode) {
+      bfb->SetHideMode(mode);
+    });
+  RegisterIcon(AbstractLauncherIcon::Ptr(bfb));
+
+  HudLauncherIcon* hud = new HudLauncherIcon(hide_mode);
+  parent_->options()->hide_mode.changed.connect([hud](LauncherHideMode mode) {
+      hud->SetHideMode(mode);
+    });
+  RegisterIcon(AbstractLauncherIcon::Ptr(hud));
   desktop_icon_ = AbstractLauncherIcon::Ptr(new DesktopLauncherIcon());
 
   uscreen->changed.connect(sigc::mem_fun(this, &Controller::Impl::OnScreenChanged));

@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,15 +14,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Jason Smith <jason.smith@canonical.com>
+ * Authored by: Gordon Allott <gord.allott@gmail.com>
  */
 
-#ifndef UNITYSHELL_BFBLAUNCHERICON_H
-#define UNITYSHELL_BFBLAUNCHERICON_H
+#ifndef UNITYSHELL_HUDLAUNCHERICON_H
+#define UNITYSHELL_HUDLAUNCHERICON_H
 
 #include "SimpleLauncherIcon.h"
-
-#include <UnityCore/FilesystemLenses.h>
 
 #include "LauncherOptions.h"
 #include "UBusWrapper.h"
@@ -32,11 +30,11 @@ namespace unity
 namespace launcher
 {
 
-class BFBLauncherIcon : public SimpleLauncherIcon
+class HudLauncherIcon : public SimpleLauncherIcon
 {
 
 public:
-  BFBLauncherIcon(LauncherHideMode hide_mode);
+  HudLauncherIcon(LauncherHideMode hide_mode);
 
   virtual nux::Color BackgroundColor();
   virtual nux::Color GlowColor();
@@ -50,15 +48,13 @@ protected:
 
 private:
   void OnOverlayShown(GVariant *data, bool visible);
-  static void OnMenuitemActivated(DbusmenuMenuitem* item, int time, gchar* lens);
 
   static unity::UBusManager ubus_manager_;
   nux::Color background_color_;
-  dash::LensDirectoryReader::Ptr reader_;
   LauncherHideMode launcher_hide_mode_;
 };
 
 }
 }
 
-#endif // UNITYSHELL_BFBLAUNCHERICON_H
+#endif // UNITYSHELL_HUDLAUNCHERICON_H

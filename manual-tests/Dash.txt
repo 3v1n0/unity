@@ -1,41 +1,3 @@
-Mouse down and search bar focus
--------------------------------
-This test makes sure that the search bar doesn't lose the focus clicking into
-am emtpy area (or into a filter button).
-
-#. Open the app lens
-#. Expand the filter bar
-#. Click between a filter expander and the All Button (for example between Type > and All)
-   or into a filter button.
-
-Outcome
-The cursor is still blinking.
-
-
-Category headers focus
-----------------------
-This test makes sure that clicking on a category headers doesn't focus it.
-
-#. Open the apps lens.
-#. Click on the dash search bar to make sure that the search bar has the focus.
-#. Click on a category header to expand/collapse a category
-
-Outcome
-  The category should expand/collaspe and the search bar still has the focus.
-
-
-Drag and drop dash icons
-----------------------------
-This test makes sure that.
-
-#. Open the apps lens.
-#. Drag a dash icon.
-#. Now drop it inside the dash but on another icon or on a blank space.
-
-Outcome
-  The dropped icon should not have the keyboard focus and should not remain
-  enlightened.
-
 Dash SearchBar middle-click
 ---------------------------
 This test shows how the middle click over the dash search bar should work
@@ -51,3 +13,16 @@ Outcome
   The text previously selected is pasted on the search bar at mouse pointer
   position, if the operation is repeated the text is inserted where
   the mouse pointer is.
+
+
+Dash correct number of "see more" results with horizontal renderer
+---------------------------
+This test ensures a correct number of "see more" results in the dash when using a horizontal renderer
+(see lp:934944)
+
+#. Open the dash, navigate to a lens that uses a horizontal renderer such as the gwibber lens or music lens
+#. Ensure that a category in the results has a "See x more results" label
+#. Expand category that has "See x more results" label
+
+Outcome
+  The category will expand to show all the results, user should ensure that the X in "See x more categories" was valid. 
