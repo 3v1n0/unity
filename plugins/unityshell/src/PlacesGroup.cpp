@@ -22,6 +22,7 @@
 #include <sigc++/sigc++.h>
 
 #include <Nux/Nux.h>
+#include <NuxCore/Logger.h>
 #include <Nux/VLayout.h>
 #include <Nux/HLayout.h>
 #include <Nux/BaseWindow.h>
@@ -44,6 +45,12 @@
 #include "ubus-server.h"
 #include "UBusMessages.h"
  #include "Introspectable.h"
+
+
+namespace
+{
+nux::logging::Logger logger("unity.dash.placesgroup");
+}
 
 namespace unity
 {
@@ -303,6 +310,7 @@ PlacesGroup::RefreshLabel()
   }
   else
   {
+    LOG_DEBUG(logger) << _n_total_items << " - " << _n_visible_items_in_unexpand_mode;
     result_string = g_strdup_printf(g_dngettext(GETTEXT_PACKAGE,
                                                 "See one more result",
                                                 "See %d more results",
@@ -447,7 +455,6 @@ void PlacesGroup::PostDraw(nux::GraphicsEngine& graphics_engine,
 void
 PlacesGroup::SetCounts(guint n_visible_items_in_unexpand_mode, guint n_total_items)
 {
-  _n_visible_items_in_unexpand_mode = n_visible_items_in_unexpand_mode;
   _n_total_items = n_total_items;
 
   Relayout();
