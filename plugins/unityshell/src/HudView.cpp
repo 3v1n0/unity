@@ -68,7 +68,7 @@ View::View()
   , activated_signal_sent_(false)
 {
   renderer_.SetOwner(this);
-  renderer_.need_redraw.connect([this] () { 
+  renderer_.need_redraw.connect([this] () {
     QueueDraw();
   });
 
@@ -80,7 +80,7 @@ View::View()
   SetupViews();
   search_bar_->key_down.connect (sigc::mem_fun (this, &View::OnKeyDown));
 
-  search_bar_->activated.connect ([&]() 
+  search_bar_->activated.connect ([&]()
   {
     if (!activated_signal_sent_)
       search_activated.emit(search_bar_->search_string);
@@ -116,12 +116,12 @@ View::View()
         {
           (*it)->fake_focused = false;
         }
-      }      
+      }
     }
   });
 
   mouse_down.connect(sigc::mem_fun(this, &View::OnMouseButtonDown));
-  
+
   Relayout();
 }
 
@@ -144,25 +144,25 @@ void View::ProcessGrowShrink()
    float progress = (diff - pause_before_grow_length) / grow_anim_length;
    int last_height = last_known_height_;
    int new_height = 0;
-   
+
    if (last_height < target_height)
    {
      // grow
      new_height = last_height + ((target_height - last_height) * progress);
    }
-   else 
+   else
    {
      //shrink
      new_height = last_height - ((last_height - target_height) * progress);
    }
-   
+
    LOG_DEBUG(logger) << "resizing to " << target_height << " (" << new_height << ")"
                      << "View height: " << GetGeometry().height;
    current_height_ = new_height;
   }
-  
-  QueueDraw();  
-  
+
+  QueueDraw();
+
   if (diff > grow_anim_length + pause_before_grow_length)
   {
     // ensure we are at our final location and update last known height
@@ -203,7 +203,7 @@ long View::PostLayoutManagement(long LayoutResult)
       // already started, just reset the last known height
       last_known_height_ = current_height_;
     }
-   
+
     timeline_need_more_draw_ = true;
     start_time_ = g_get_monotonic_time();
     QueueDraw();
@@ -297,7 +297,7 @@ void View::SetHideIcon(IconHideState hide_icon)
 // look tight
 nux::Geometry View::GetBestFitGeometry(nux::Geometry const& for_geo)
 {
-  //FIXME - remove magic values, replace with scalable text depending on DPI 
+  //FIXME - remove magic values, replace with scalable text depending on DPI
   // requires smarter font settings really...
   int width, height = 0;
   width = 1024;
@@ -342,9 +342,9 @@ namespace
 
 void View::SetupViews()
 {
-  nux::VLayout* super_layout = new nux::VLayout(); 
+  nux::VLayout* super_layout = new nux::VLayout();
   layout_ = new nux::HLayout();
-  { 
+  {
     // fill icon layout with icon
     icon_ = new Icon("", icon_size, true);
     icon_layout_ = new nux::VLayout();
@@ -359,11 +359,11 @@ void View::SetupViews()
                                             spacing_between_icon_and_content,
                                             spacing_between_icon_and_content,
                                             spacing_between_icon_and_content), 0);
-    
+
     // fill the content layout
     content_layout_ = new nux::VLayout();
     {
-      // add the top spacing 
+      // add the top spacing
       content_layout_->AddLayout(new nux::SpaceLayout(top_spacing,top_spacing,top_spacing,top_spacing), 0);
 
       // add the search bar to the composite
@@ -373,7 +373,7 @@ void View::SetupViews()
       search_bar_->search_changed.connect(sigc::mem_fun(this, &View::OnSearchChanged));
       AddChild(search_bar_.GetPointer());
       content_layout_->AddView(search_bar_.GetPointer(), 0, nux::MINOR_POSITION_LEFT);
-     
+
       button_views_ = new nux::VLayout();
       button_views_->SetMaximumWidth(content_width);
 
@@ -386,7 +386,7 @@ void View::SetupViews()
 
     layout_->AddLayout(content_layout_.GetPointer(), 1, nux::MINOR_POSITION_TOP);
   }
-  
+
   super_layout->AddLayout(layout_.GetPointer(), 0);
   SetLayout(super_layout);
 }
@@ -443,7 +443,7 @@ void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   draw_content_geo.height = current_height_;
 
   renderer_.DrawInner(gfx_context, draw_content_geo, absolute_window_geometry_, window_geometry_);
- 
+
   gfx_context.PushClippingRectangle(draw_content_geo);
   if (IsFullRedraw())
   {
@@ -461,7 +461,7 @@ void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 
   if (timeline_need_more_draw_ && !timeline_id_)
   {
-    timeline_id_ = g_timeout_add(0, [] (gpointer data) -> gboolean 
+    timeline_id_ = g_timeout_add(0, [] (gpointer data) -> gboolean
     {
       View *self = static_cast<View*>(data);
       self->QueueDraw();
