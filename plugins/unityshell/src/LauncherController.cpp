@@ -289,8 +289,14 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
 
   if (num_launchers == 1)
   {
-    if (launchers_size == 0 || !launchers[0].IsValid())
+    if (launchers_size == 0)
+    {
       launchers.push_back(nux::ObjectPtr<Launcher>(CreateLauncher(primary)));
+    }
+    else if (!launchers[0].IsValid())
+    {
+      launchers[0] = nux::ObjectPtr<Launcher>(CreateLauncher(primary));
+    }
 
     launchers[0]->monitor(primary);
     launchers[0]->Resize();
