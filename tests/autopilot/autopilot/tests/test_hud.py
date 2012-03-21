@@ -15,8 +15,14 @@ from os import remove
 
 class HudTests(AutopilotTestCase):
 
+    scenarios = [
+        ('Launcher never hide', {'launcher_hide_mode': 0}),
+        ('Launcher autohide', {'launcher_hide_mode': 1}),
+        ]
+
     def setUp(self):
         super(HudTests, self).setUp()
+        self.set_unity_option('launcher_hide_mode', self.launcher_hide_mode)
         self.hud = self.get_hud_controller()
 
     def tearDown(self):
