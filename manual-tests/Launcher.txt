@@ -169,3 +169,22 @@ getting dragged that the icon doesn't get frozen on the launcher.
 
 Outcome:
   * The icon should go back to its correct position in the launcher.
+
+
+Test launchers with multiple monitors
+-------------------------------------
+This test checks if the launchers are shown in the correct monitor when
+using a multimonitor setup.
+
+#. Open CCSM and and set the Experimental -> "Launcher Monitors" unity setting
+   to "All Desktops"
+
+Outcome:
+  * A launcher should be shown in each monitor.
+
+#. Open CCSM and and set the Experimental -> "Launcher Monitors" unity setting
+   to "Primary Desktop"
+
+Outcome:
+  * Only the primary monitor should show a launcher. Changing the primary monitor
+    from gnome-control-center -> Monitor should update the launcher position.
