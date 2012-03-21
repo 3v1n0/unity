@@ -1577,6 +1577,11 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
                                            CompAction::State state,
                                            CompOption::Vector& options)
 {
+  // Remember StateCancel and StateCommit will be broadcast to all actions
+  // so we need to verify that we are actually being toggled...
+  if (!(state & CompAction::StateTermKey))
+    return false;
+
   if (state & CompAction::StateCancel)
     return false;
 
