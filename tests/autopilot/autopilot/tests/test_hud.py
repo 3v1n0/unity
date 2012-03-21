@@ -15,15 +15,8 @@ from os import remove
 
 class HudTests(AutopilotTestCase):
 
-    scenarios = [
-        ('Launcher never hide', {'launcher_hide_mode': 0}),
-        ('Launcher autohide', {'launcher_hide_mode': 1}),
-        ]
-
     def setUp(self):
         super(HudTests, self).setUp()
-        self.set_unity_option('launcher_hide_mode', self.launcher_hide_mode)
-        sleep(0.5)
         self.hud = self.get_hud_controller()
 
     def tearDown(self):
@@ -61,16 +54,12 @@ class HudTests(AutopilotTestCase):
     def test_check_a_values(self):
         self.reveal_hud()
         self.keyboard.type('a')
-        # Give the HUD a second to get values.
-        sleep(1)
         self.assertThat(self.hud.num_buttons, Equals(5))
         self.assertThat(self.hud.selected_button, Equals(1))
 
     def test_up_down_arrows(self):
         self.reveal_hud()
         self.keyboard.type('a')
-        # Give the HUD a second to get values.
-        sleep(1)
         self.keyboard.press_and_release('Down')
         self.assertThat(self.hud.selected_button, Equals(2))
         self.keyboard.press_and_release('Down')

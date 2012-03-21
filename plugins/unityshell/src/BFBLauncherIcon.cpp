@@ -32,10 +32,9 @@ namespace launcher
 
 UBusManager BFBLauncherIcon::ubus_manager_;
 
-BFBLauncherIcon::BFBLauncherIcon(LauncherHideMode hide_mode)
+BFBLauncherIcon::BFBLauncherIcon()
  : SimpleLauncherIcon()
  , reader_(dash::LensDirectoryReader::GetDefault())
- , launcher_hide_mode_(hide_mode)
 {
   tooltip_text = _("Dash Home");
   icon_name = PKGDATADIR"/launcher_bfb.png";
@@ -46,31 +45,6 @@ BFBLauncherIcon::BFBLauncherIcon(LauncherHideMode hide_mode)
   background_color_ = nux::color::White;
 
   mouse_enter.connect([&](int m) { ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL); });
-  ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::bind(sigc::mem_fun(this, &BFBLauncherIcon::OnOverlayShown), true));
-  ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::bind(sigc::mem_fun(this, &BFBLauncherIcon::OnOverlayShown), false));
-}
-
-void BFBLauncherIcon::SetHideMode(LauncherHideMode hide_mode)
-{
-  launcher_hide_mode_ = hide_mode;
-}
-
-void BFBLauncherIcon::OnOverlayShown(GVariant *data, bool visible)
-{
-  unity::glib::String overlay_identity;
-  gboolean can_maximise = FALSE;
-  gint32 overlay_monitor = 0;
-  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
-                &overlay_identity, &can_maximise, &overlay_monitor);
-
-
-  // If the hud is open, we hide the BFB iff we have a locked launcher
-  if (!g_strcmp0(overlay_identity, "hud") &&
-      launcher_hide_mode_ == LAUNCHER_HIDE_NEVER)
-  {
-    SetQuirk(QUIRK_VISIBLE, !visible);
-    EmitNeedsRedraw();
-  }
 }
 
 nux::Color BFBLauncherIcon::BackgroundColor()

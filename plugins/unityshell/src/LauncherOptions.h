@@ -33,42 +33,42 @@ namespace unity
 namespace launcher
 {
 
-enum LauncherHideMode
+typedef enum
 {
   LAUNCHER_HIDE_NEVER,
   LAUNCHER_HIDE_AUTOHIDE,
-};
+} LauncherHideMode;
 
-enum LaunchAnimation
+typedef enum
 {
   LAUNCH_ANIMATION_NONE,
   LAUNCH_ANIMATION_PULSE,
   LAUNCH_ANIMATION_BLINK,
-};
+} LaunchAnimation;
 
-enum UrgentAnimation
+typedef enum
 {
   URGENT_ANIMATION_NONE,
   URGENT_ANIMATION_PULSE,
   URGENT_ANIMATION_WIGGLE,
-};
+} UrgentAnimation;
 
-enum AutoHideAnimation
+typedef enum
 {
   FADE_OR_SLIDE,
   SLIDE_ONLY,
   FADE_ONLY,
   FADE_AND_SLIDE,
-};
+} AutoHideAnimation;
 
-enum BacklightMode
+typedef enum
 {
   BACKLIGHT_ALWAYS_ON,
   BACKLIGHT_NORMAL,
   BACKLIGHT_ALWAYS_OFF,
   BACKLIGHT_EDGE_TOGGLE,
   BACKLIGHT_NORMAL_EDGE_TOGGLE
-};
+} BacklightMode;
 
 enum RevealTrigger
 {
