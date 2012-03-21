@@ -13,3 +13,14 @@ Outcome
   The text previously selected is pasted on the search bar at mouse pointer
   position, if the operation is repeated the text is inserted where
   the mouse pointer is.
+
+Dash Spinner
+------------
+This tests that the spinner is properly shown when searching with the Dash.
+
+#. Open the dash and type a string ("abc").
+
+Outcome
+  If the search is taking more than ~150ms, a spinner should be animating next
+  to the search bar, once the spinner stops spinning the results shouldn't
+  change.

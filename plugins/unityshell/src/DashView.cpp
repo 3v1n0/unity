@@ -100,6 +100,7 @@ DashView::DashView()
   Relayout();
 
   home_lens_->AddLenses(lenses_);
+  home_lens_->search_finished.connect(sigc::mem_fun(this, &DashView::OnGlobalSearchFinished));
   lens_bar_->Activate("home.lens");
 }
 
@@ -439,7 +440,7 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
 
   lens->activated.connect(sigc::mem_fun(this, &DashView::OnUriActivatedReply));
   lens->search_finished.connect(sigc::mem_fun(this, &DashView::OnSearchFinished));
-  lens->global_search_finished.connect(sigc::mem_fun(this, &DashView::OnGlobalSearchFinished));
+  // global search done is handled by the home lens, no need to connect to it
 }
 
 void DashView::OnLensBarActivated(std::string const& id)
@@ -493,10 +494,12 @@ void DashView::OnSearchFinished(Lens::Hints const& hints)
     hide_message_delay_id_ = 0;
   }
 
+  if (active_lens_view_ == NULL) return;
+
   active_lens_view_->CheckNoResults(hints);
 
   std::string search_string = search_bar_->search_string;
-  if (active_lens_view_ && active_lens_view_->search_string == search_string)
+  if (active_lens_view_->search_string == search_string)
   {
     search_bar_->SearchFinished();
     search_in_progress_ = false;
