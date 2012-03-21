@@ -64,7 +64,6 @@ This test ensures that the hud behaves correctly with a locked out launcher
 #. Tap Alt
 
 Outcome
-  The Launcher should stick be locked out.
   The Launcher icons should be desaturated.
   The top most Launcher icon should be an icon related the the focused window
   The BFB should not be present

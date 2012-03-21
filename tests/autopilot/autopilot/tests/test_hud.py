@@ -9,20 +9,31 @@
 from testtools.matchers import Equals, LessThan
 from time import sleep
 
+from autopilot.emulators.X11 import ScreenGeometry
 from autopilot.emulators.unity.hud import HudController
 from autopilot.tests import AutopilotTestCase
 from os import remove
 
 class HudTests(AutopilotTestCase):
 
-    scenarios = [
-        ('Launcher never hide', {'launcher_hide_mode': 0}),
-        ('Launcher autohide', {'launcher_hide_mode': 1}),
-        ]
+    screen_geometry = ScreenGeometry()
+    num_monitors = screen_geometry.get_num_monitors()
+
+    if num_monitors == 1:
+        scenarios = [
+            ('Single Monitor, Launcher never hide', {'hud_monitor': 0, 'launcher_hide_mode': 0}),
+            ('Single Monitor, Launcher autohide', {'hud_monitor': 0, 'launcher_hide_mode': 1}),
+            ]
+    else:
+        scenarios = []
+        for i in range(0, num_monitors):
+            scenarios.append(('Monitor %d, Launcher never hide' % (i), {'hud_monitor': i, 'launcher_hide_mode': 0}))
+            scenarios.append(('Monitor %d, Launcher autohide' % (i), {'hud_monitor': i, 'launcher_hide_mode': 1}))
 
     def setUp(self):
         super(HudTests, self).setUp()
         self.set_unity_option('launcher_hide_mode', self.launcher_hide_mode)
+        self.screen_geometry.move_mouse_to_monitor(self.hud_monitor)
         sleep(0.5)
         self.hud = self.get_hud_controller()
 
@@ -145,7 +156,7 @@ class HudTests(AutopilotTestCase):
 
         # click application icons for running apps in the launcher:
         icon = self.launcher.model.get_icon_by_tooltip_text("Character Map")
-        self.launcher.get_launcher_for_monitor(0).click_launcher_icon(icon)
+        self.launcher.get_launcher_for_monitor(self.hud_monitor).click_launcher_icon(icon)
 
         # see how many apps are marked as being active:
         num_active = self.get_num_active_launcher_icons()
@@ -210,4 +221,14 @@ class HudTests(AutopilotTestCase):
 
         contents = open("/tmp/autopilot_gedit_undo_test_temp_file.txt").read().strip('\n')
         self.assertEqual("0 ", contents)
+
+    def test_hud_dont_change_launcher_status(self):
+        launcher_shows_pre = self.launcher.get_launcher_for_monitor(self.hud_monitor).is_showing()
+        sleep(.25)
+
+        self.reveal_hud()
+        sleep(1)
+
+        launcher_shows_post = self.launcher.get_launcher_for_monitor(self.hud_monitor).is_showing()
+        self.assertEqual(launcher_shows_pre, launcher_shows_post)
 
