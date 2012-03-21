@@ -110,8 +110,8 @@ void PanelIndicatorEntryView::ShowMenu(int button)
 {
   proxy_->ShowMenu(GetAbsoluteX(),
                    GetAbsoluteY() + PANEL_HEIGHT,
-                   time(NULL),
-                   button);
+                   button,
+                   time(NULL));
 }
 
 void PanelIndicatorEntryView::OnMouseDown(int x, int y, long button_flags, long key_flags)
@@ -193,6 +193,14 @@ void PanelIndicatorEntryView::SetActiveState(bool active, int button)
 // 3. Paint something
 void PanelIndicatorEntryView::Refresh()
 {
+  if (!IsVisible())
+  {
+    SetVisible(false);
+    return;
+  }
+
+  SetVisible(true);
+
   PangoLayout*          layout = NULL;
   PangoFontDescription* desc = NULL;
   PangoAttrList*        attrs = NULL;
@@ -472,10 +480,7 @@ double PanelIndicatorEntryView::GetOpacity()
 
 std::string PanelIndicatorEntryView::GetName() const
 {
-  if (proxy_->IsUnused())
-    return "";
-  else
-    return proxy_->id().c_str();
+  return proxy_->id();
 }
 
 void PanelIndicatorEntryView::AddProperties(GVariantBuilder* builder)
@@ -498,7 +503,7 @@ bool PanelIndicatorEntryView::GetShowNow()
 
 void PanelIndicatorEntryView::GetGeometryForSync(indicator::EntryLocationMap& locations)
 {
-  if (proxy_->IsUnused())
+  if (!IsVisible())
     return;
 
   locations[proxy_->id()] = GetAbsoluteGeometry();
@@ -544,6 +549,15 @@ void PanelIndicatorEntryView::SetDisabled(bool disabled)
 bool PanelIndicatorEntryView::IsDisabled()
 {
   return (disabled_ || !proxy_.get() || !IsSensitive());
+}
+
+bool PanelIndicatorEntryView::IsVisible()
+{
+  if (proxy_.get())
+  {
+    return proxy_->visible();
+  }
+  return false;
 }
 
 void PanelIndicatorEntryView::OnFontChanged(GObject* gobject, GParamSpec* pspec,

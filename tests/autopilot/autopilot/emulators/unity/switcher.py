@@ -12,7 +12,7 @@ from time import sleep
 
 from autopilot.keybindings import KeybindingsHelper
 from autopilot.emulators.unity import get_state_by_path, make_introspection_object
-from autopilot.emulators.X11 import Keyboard
+from autopilot.emulators.X11 import Keyboard, Mouse
 
 # even though we don't use these directly, we need to make sure they've been
 # imported so the classes contained are registered with the introspection API.
@@ -29,6 +29,7 @@ class Switcher(KeybindingsHelper):
     def __init__(self):
         super(Switcher, self).__init__()
         self._keyboard = Keyboard()
+        self._mouse = Mouse()
 
     def initiate(self):
         """Start the switcher with alt+tab."""
@@ -67,20 +68,37 @@ class Switcher(KeybindingsHelper):
         self.keybinding("switcher/cancel")
         self.keybinding_release("switcher/reveal_normal")
 
+    def cancel(self):
+        """Stop switcher without activating the selected icon and releasing the keys."""
+        logger.debug("Cancelling switcher.")
+        self.keybinding("switcher/cancel")
+
     def stop(self):
         """Stop switcher and activate the selected icon."""
         logger.debug("Stopping switcher")
         self.keybinding_release("switcher/reveal_normal")
 
     def next_icon(self):
-        """Move to the next application."""
+        """Move to the next icon."""
         logger.debug("Selecting next item in switcher.")
         self.keybinding("switcher/next")
 
     def previous_icon(self):
-        """Move to the previous application."""
+        """Move to the previous icon."""
         logger.debug("Selecting previous item in switcher.")
         self.keybinding("switcher/prev")
+
+    def next_icon_mouse(self):
+        """Move to the next icon using the mouse scroll wheel"""
+        logger.debug("Selecting next item in switcher with mouse scroll wheel.")
+        self._mouse.press(6)
+        self._mouse.release(6)
+
+    def previous_icon_mouse(self):
+        """Move to the previous icon using the mouse scroll wheel"""
+        logger.debug("Selecting previous item in switcher with mouse scroll wheel.")
+        self._mouse.press(7)
+        self._mouse.release(7)
 
     def show_details(self):
         """Show detail mode."""

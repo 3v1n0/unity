@@ -221,6 +221,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _autoscroll_handle      = 0;
   _start_dragicon_handle  = 0;
   _dnd_check_handle       = 0;
+  _strut_hack_handle      = 0;
   _last_reveal_progress   = 0;
 
   _shortcuts_shown        = false;
@@ -286,7 +287,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   bg_effect_helper_.enabled = false;
 
   TextureCache& cache = TextureCache::GetDefault();
-  TextureCache::CreateTextureCallback cb = [&](std::string const& name, int width, int height) -> nux::BaseTexture* { 
+  TextureCache::CreateTextureCallback cb = [&](std::string const& name, int width, int height) -> nux::BaseTexture* {
     return nux::CreateTexture2DFromFile((PKGDATADIR"/" + name + ".png").c_str(), -1, true);
   };
 
@@ -313,6 +314,8 @@ Launcher::~Launcher()
     g_source_remove(_start_dragicon_handle);
   if (_launcher_animation_timeout > 0)
     g_source_remove(_launcher_animation_timeout);
+  if (_strut_hack_handle)
+    g_source_remove(_strut_hack_handle);
 
   if (_on_data_collected_connection.connected())
       _on_data_collected_connection.disconnect();
@@ -405,8 +408,8 @@ Launcher::AddProperties(GVariantBuilder* builder)
   .add("height", abs_geo.height)
   .add("monitor", monitor())
   .add("quicklist-open", _hide_machine->GetQuirk(LauncherHideMachine::QUICKLIST_OPEN))
-  .add("hide-quirks", _hide_machine->DebugHideQuirks().c_str())
-  .add("hover-quirks", _hover_machine->DebugHoverQuirks().c_str())
+  .add("hide-quirks", _hide_machine->DebugHideQuirks())
+  .add("hover-quirks", _hover_machine->DebugHoverQuirks())
   .add("icon-size", _icon_size)
   .add("shortcuts_shown", _shortcuts_shown);
 }
@@ -881,7 +884,6 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
   arg.colorify            = nux::color::White;
   arg.running_arrow       = icon->GetQuirk(AbstractLauncherIcon::QUIRK_RUNNING);
   arg.running_colored     = icon->GetQuirk(AbstractLauncherIcon::QUIRK_URGENT);
-  arg.running_on_viewport = icon->WindowVisibleOnMonitor(monitor);
   arg.draw_edge_only      = IconDrawEdgeOnly(icon);
   arg.active_colored      = false;
   arg.x_rotation          = 0.0f;
@@ -900,10 +902,22 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
                             icon->GetIconType() == AbstractLauncherIcon::TYPE_DEVICE  ||
                             icon->GetIconType() == AbstractLauncherIcon::TYPE_EXPO;
 
+  // trying to protect against flickering when icon is dragged from dash LP: #863230
+  if (arg.alpha < 0.5)
+  {
+    arg.alpha = 0.5;
+    arg.saturation = 0.0;
+  }
+
   if (_dash_is_open)
     arg.active_arrow = icon->GetIconType() == AbstractLauncherIcon::TYPE_HOME;
   else
     arg.active_arrow = icon->GetQuirk(AbstractLauncherIcon::QUIRK_ACTIVE);
+
+  if (options()->show_for_all)
+    arg.running_on_viewport = icon->WindowVisibleOnViewport();
+  else
+    arg.running_on_viewport = icon->WindowVisibleOnMonitor(monitor);
 
   guint64 shortcut = icon->GetShortcut();
   if (shortcut > 32)
@@ -924,7 +938,10 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
   }
   else
   {
-    arg.window_indicators = std::max<int> (icon->WindowsForMonitor(monitor).size(), 1);
+    if (options()->show_for_all)
+      arg.window_indicators = std::max<int> (icon->Windows().size(), 1);
+    else
+      arg.window_indicators = std::max<int> (icon->WindowsForMonitor(monitor).size(), 1);
   }
 
   arg.backlight_intensity = IconBackgroundIntensity(icon, current);
@@ -979,6 +996,13 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr icon,
   if (drop_dim_value < 1.0f)
     arg.alpha *= drop_dim_value;
 
+  // trying to protect against flickering when icon is dragged from dash LP: #863230
+  if (arg.alpha < 0.5)
+  {
+    arg.alpha = 0.5;
+    arg.saturation = 0.0;
+  }
+
   if (icon == _drag_icon)
   {
     if (MouseBeyondDragThreshold())
@@ -1030,7 +1054,7 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr icon,
   // FIXME: this is a hack, we should have a look why SetAnimationTarget is necessary in SetAnimationTarget
   // we should ideally just need it at start to set the target
   if (!_initial_drag_animation && icon == _drag_icon && _drag_window && _drag_window->Animating())
-    _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter(monitor).x), 
+    _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter(monitor).x),
                                      (int)(_drag_icon->GetCenter(monitor).y));
 
   center.y += (half_size * size_modifier) + spacing;   // move to end
@@ -1447,6 +1471,9 @@ Launcher::OnWindowMapped(guint32 xid)
     if (!_dnd_check_handle)
       _dnd_check_handle = g_timeout_add(200, &Launcher::OnUpdateDragManagerTimeout, this);
   //}
+
+  if (GetActionState() != ACTION_NONE)
+    ResetMouseDragState();
 }
 
 void
@@ -1483,6 +1510,7 @@ gboolean Launcher::StrutHack(gpointer data)
   if (self->options()->hide_mode == LAUNCHER_HIDE_NEVER)
     self->_parent->InputWindowEnableStruts(true);
 
+  self->_strut_hack_handle = 0;
   return false;
 }
 
@@ -1506,24 +1534,37 @@ Launcher::UpdateOptions(Options::Ptr options)
   SetHideMode(options->hide_mode);
   SetIconSize(options->tile_size, options->icon_size);
 
-  // make the effect half as strong as specified as other values shouldn't scale
-  // as quickly as the max velocity multiplier
-  float decay_responsiveness_mult = ((options->edge_responsiveness() - 1) * .3f) + 1;
-  float reveal_responsiveness_mult = ((options->edge_responsiveness() - 1) * .025f) + 1;
-  float overcome_responsiveness_mult = ((options->edge_responsiveness() - 1) * 1.0f) + 1;
-
-  decaymulator_->rate_of_decay = options->edge_decay_rate() * decay_responsiveness_mult;
-  _edge_overcome_pressure = options->edge_overcome_pressure() * overcome_responsiveness_mult;
-
-  _pointer_barrier->threshold = options->edge_stop_velocity();
-  _pointer_barrier->max_velocity_multiplier = options->edge_responsiveness();
-  _pointer_barrier->DestroyBarrier();
-  _pointer_barrier->ConstructBarrier();
-
-  _hide_machine->reveal_pressure = options->edge_reveal_pressure() * reveal_responsiveness_mult;
-  _hide_machine->edge_decay_rate = options->edge_decay_rate() * decay_responsiveness_mult;
-
+  ConfigureBarrier();
   EnsureAnimation();
+}
+
+void Launcher::ConfigureBarrier()
+{
+  nux::Geometry geo = GetAbsoluteGeometry();
+  _pointer_barrier->DestroyBarrier();
+
+  if (options()->edge_resist || geo.x == 0)
+  {
+    unity::panel::Style &panel_style = panel::Style::Instance();
+
+    _pointer_barrier->x1 = geo.x;
+    _pointer_barrier->x2 = geo.x;
+    _pointer_barrier->y1 = geo.y - panel_style.panel_height;
+    _pointer_barrier->y2 = geo.y + geo.height;
+
+    float decay_responsiveness_mult = ((options()->edge_responsiveness() - 1) * .3f) + 1;
+    float reveal_responsiveness_mult = ((options()->edge_responsiveness() - 1) * .025f) + 1;
+    float overcome_responsiveness_mult = ((options()->edge_responsiveness() - 1) * 1.0f) + 1;
+    decaymulator_->rate_of_decay = options()->edge_decay_rate() * decay_responsiveness_mult;
+    _edge_overcome_pressure = options()->edge_overcome_pressure() * overcome_responsiveness_mult;
+
+    _pointer_barrier->threshold = options()->edge_stop_velocity();
+    _pointer_barrier->max_velocity_multiplier = options()->edge_responsiveness();
+    _pointer_barrier->ConstructBarrier();
+
+    _hide_machine->reveal_pressure = options()->edge_reveal_pressure() * reveal_responsiveness_mult;
+    _hide_machine->edge_decay_rate = options()->edge_decay_rate() * decay_responsiveness_mult;
+  }
 }
 
 void Launcher::SetHideMode(LauncherHideMode hidemode)
@@ -1535,7 +1576,8 @@ void Launcher::SetHideMode(LauncherHideMode hidemode)
   else
   {
     _parent->EnableInputWindow(true, "launcher", false, false);
-    g_timeout_add(1000, &Launcher::StrutHack, this);
+    if (!_strut_hack_handle)
+      _strut_hack_handle = g_timeout_add(1000, &Launcher::StrutHack, this);
     _parent->InputWindowEnableStruts(true);
   }
 
@@ -1690,18 +1732,9 @@ void Launcher::Resize()
   nux::Geometry new_geometry(geo.x, geo.y + panel_style.panel_height, width, geo.height - panel_style.panel_height);
   SetMaximumHeight(new_geometry.height);
   _parent->SetGeometry(new_geometry);
-  SetGeometry(new_geometry);
+  SetGeometry(nux::Geometry(0, 0, new_geometry.width, new_geometry.height));
 
-  _pointer_barrier->DestroyBarrier();
-
-  _pointer_barrier->x1 = new_geometry.x;
-  _pointer_barrier->x2 = new_geometry.x;
-  _pointer_barrier->y1 = new_geometry.y - panel_style.panel_height;
-  _pointer_barrier->y2 = new_geometry.y + new_geometry.height;
-  _pointer_barrier->threshold = options()->edge_stop_velocity();
-
-  _pointer_barrier->ConstructBarrier();
-
+  ConfigureBarrier();
 }
 
 void Launcher::OnIconAdded(AbstractLauncherIcon::Ptr icon)
@@ -1869,12 +1902,30 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
         texxform_blur_bg.voffset = ((float) base.y) / geo_absolute.height;
 
         GfxContext.PushClippingRectangle(bkg_box);
-        gPainter.PushDrawTextureLayer(GfxContext, base,
-                                      blur_texture,
-                                      texxform_blur_bg,
-                                      nux::color::White,
-                                      true,
-                                      ROP);
+
+#ifndef NUX_OPENGLES_20
+        if (GfxContext.UsingGLSLCodePath())
+          gPainter.PushDrawCompositionLayer(GfxContext, base,
+                                            blur_texture,
+                                            texxform_blur_bg,
+                                            nux::color::White,
+                                            _background_color, nux::LAYER_BLEND_MODE_OVERLAY,
+                                            true, ROP);
+        else
+          gPainter.PushDrawTextureLayer(GfxContext, base,
+                                        blur_texture,
+                                        texxform_blur_bg,
+                                        nux::color::White,
+                                        true,
+                                        ROP);
+#else
+          gPainter.PushDrawCompositionLayer(GfxContext, base,
+                                            blur_texture,
+                                            texxform_blur_bg,
+                                            nux::color::White,
+                                            _background_color, nux::LAYER_BLEND_MODE_OVERLAY,
+                                            true, ROP);
+#endif
         GfxContext.PopClippingRectangle();
 
         push_count++;
@@ -1886,11 +1937,14 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     // apply the darkening
     GfxContext.GetRenderStates().SetBlend(true, GL_ZERO, GL_SRC_COLOR);
-    gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0.7f, 0.7f, 0.7f, 1.0f));
+    gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0.9f, 0.9f, 0.9f, 1.0f));
     GfxContext.GetRenderStates().SetBlend (alpha, src, dest);
 
     // apply the bg colour
-    gPainter.Paint2DQuadColor(GfxContext, bkg_box, _background_color);
+#ifndef NUX_OPENGLES_20
+    if (GfxContext.UsingGLSLCodePath() == FALSE)
+      gPainter.Paint2DQuadColor(GfxContext, bkg_box, _background_color);
+#endif
 
     // apply the shine
     GfxContext.GetRenderStates().SetBlend(true, GL_DST_COLOR, GL_ONE);
@@ -2013,7 +2067,7 @@ void Launcher::StartIconDragRequest(int x, int y)
 {
   nux::Geometry geo = GetAbsoluteGeometry();
   AbstractLauncherIcon::Ptr drag_icon = MouseIconIntersection((int)(GetGeometry().width / 2.0f), y);
-  
+
   x += geo.x;
   y += geo.y;
 
@@ -2089,7 +2143,7 @@ void Launcher::EndIconDrag()
     {
       _model->Save();
 
-      _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter(monitor).x), 
+      _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter(monitor).x),
                                        (int)(_drag_icon->GetCenter(monitor).y));
       _drag_window->StartAnimation();
 
@@ -2132,6 +2186,21 @@ void Launcher::UpdateDragWindowPosition(int x, int y)
   }
 }
 
+void Launcher::ResetMouseDragState()
+{
+  if (GetActionState() == ACTION_DRAG_ICON)
+    EndIconDrag();
+
+  if (GetActionState() == ACTION_DRAG_LAUNCHER)
+    _hide_machine->SetQuirk(LauncherHideMachine::VERTICAL_SLIDE_ACTIVE, false);
+
+  SetActionState(ACTION_NONE);
+  _dnd_delta_x = 0;
+  _dnd_delta_y = 0;
+  _last_button_press = 0;
+  EnsureAnimation();
+}
+
 void Launcher::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   _last_button_press = nux::GetEventButton(button_flags);
@@ -2147,17 +2216,7 @@ void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned lo
   nux::Geometry geo = GetGeometry();
 
   MouseUpLogic(x, y, button_flags, key_flags);
-
-  if (GetActionState() == ACTION_DRAG_ICON)
-    EndIconDrag();
-
-  if (GetActionState() == ACTION_DRAG_LAUNCHER)
-    _hide_machine->SetQuirk(LauncherHideMachine::VERTICAL_SLIDE_ACTIVE, false);
-  SetActionState(ACTION_NONE);
-  _dnd_delta_x = 0;
-  _dnd_delta_y = 0;
-  _last_button_press = 0;
-  EnsureAnimation();
+  ResetMouseDragState();
 }
 
 void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
@@ -2303,7 +2362,7 @@ void Launcher::OnPointerBarrierEvent(ui::PointerBarrierWrapper* owner, ui::Barri
     Window root_return, child_return;
     Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
 
-    if (XQueryPointer (dpy, DefaultRootWindow(dpy), &root_return, &child_return, &root_x_return, 
+    if (XQueryPointer (dpy, DefaultRootWindow(dpy), &root_return, &child_return, &root_x_return,
                        &root_y_return, &win_x_return, &win_y_return, &mask_return))
     {
       if (mask_return & (Button1Mask | Button3Mask))

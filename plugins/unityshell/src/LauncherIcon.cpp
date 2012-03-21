@@ -166,6 +166,15 @@ LauncherIcon::WindowVisibleOnMonitor(int monitor)
   return _has_visible_window[monitor];
 }
 
+const bool LauncherIcon::WindowVisibleOnViewport()
+{
+  for (int i = 0; i < max_num_monitors; ++i)
+    if (_has_visible_window[i])
+      return true;
+
+  return false;
+}
+
 std::string
 LauncherIcon::GetName() const
 {
@@ -181,7 +190,7 @@ LauncherIcon::AddProperties(GVariantBuilder* builder)
   .add("z", _center[0].z)
   .add("related-windows", (int)Windows().size())
   .add("icon-type", _icon_type)
-  .add("tooltip-text", tooltip_text().c_str())
+  .add("tooltip-text", tooltip_text())
   .add("sort-priority", _sort_priority)
   .add("quirk-active", GetQuirk(QUIRK_ACTIVE))
   .add("quirk-visible", GetQuirk(QUIRK_VISIBLE))

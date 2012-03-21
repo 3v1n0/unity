@@ -110,6 +110,8 @@ public:
 
   const bool WindowVisibleOnMonitor(int monitor);
 
+  const bool WindowVisibleOnViewport();
+
   virtual bool IsSpacer()
   {
     return false;
