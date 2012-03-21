@@ -106,6 +106,8 @@ private:
   int mouse_last_x_;
   int mouse_last_y_;
 
+  int extra_horizontal_spacing_;
+
   UBusManager ubus_;
 
 };
