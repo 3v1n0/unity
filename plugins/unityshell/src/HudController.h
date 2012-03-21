@@ -108,6 +108,7 @@ private:
   guint ensure_id_;
   std::string focused_app_icon_;
   nux::Layout* layout_;
+  uint monitor_index_;
 };
 
 

@@ -49,6 +49,7 @@ Controller::Controller()
   , start_time_(0)
   , launcher_is_locked_out_(false)
   , view_(nullptr)
+  , monitor_index_(0)
 {
   LOG_DEBUG(logger) << "hud startup";
   SetupRelayoutCallbacks();
@@ -288,8 +289,8 @@ void Controller::ShowHud()
   // hide the launcher
   GVariant* message_data = g_variant_new("(b)", TRUE);
   ubus.SendMessage(UBUS_LAUNCHER_LOCK_HIDE, message_data);
-
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, UScreen::GetDefault()->GetMonitorWithMouse());
+  monitor_index_ = UScreen::GetDefault()->GetMonitorWithMouse();
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, monitor_index_);
   ubus.SendMessage(UBUS_OVERLAY_SHOWN, info);
 
   nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
@@ -321,7 +322,7 @@ void Controller::HideHud(bool restore)
   GVariant* message_data = g_variant_new("(b)", FALSE);
   ubus.SendMessage(UBUS_LAUNCHER_LOCK_HIDE, message_data);
 
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, 0);
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, monitor_index_);
   ubus.SendMessage(UBUS_OVERLAY_HIDDEN, info);
 }
 
