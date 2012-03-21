@@ -287,8 +287,11 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
   unsigned int launchers_size = launchers.size();
   unsigned int last_monitor = 0;
 
-  if (num_launchers == 1 && launchers_size > 0 && launchers[0].IsValid())
+  if (num_launchers == 1)
   {
+    if (launchers_size == 0 || !launchers[0].IsValid())
+      launchers.push_back(nux::ObjectPtr<Launcher>(CreateLauncher(primary)));
+
     launchers[0]->monitor(primary);
     launchers[0]->Resize();
     last_monitor = 1;
