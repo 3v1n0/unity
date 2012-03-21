@@ -273,6 +273,7 @@ void ResultViewGrid::SizeReallocate()
   PositionPreview();
 
   mouse_over_index_ = GetIndexAtPosition(mouse_last_x_, mouse_last_y_);
+  results_per_row = items_per_row;
 }
 
 void ResultViewGrid::PositionPreview()
@@ -611,7 +612,6 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   gPainter.PaintBackground(GfxContext, GetGeometry());
 
   int items_per_row = GetItemsPerRow();
-
   uint total_rows = (!expanded) ? 0 : (results_.size() / items_per_row) + 1;
 
   ResultView::ResultList::iterator it;
