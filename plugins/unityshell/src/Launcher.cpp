@@ -939,7 +939,7 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
   else
   {
     if (options()->show_for_all)
-      arg.window_indicators = std::max<int> (icon->Windows().size(), 1);
+      arg.window_indicators = std::max<int> (icon->WindowsOnViewport().size(), 1);
     else
       arg.window_indicators = std::max<int> (icon->WindowsForMonitor(monitor).size(), 1);
   }

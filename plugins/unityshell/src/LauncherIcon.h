@@ -102,11 +102,13 @@ public:
 
   int SortPriority();
 
-  virtual std::vector<Window> Windows () { return std::vector<Window> (); }
+  virtual std::vector<Window> Windows() { return std::vector<Window> (); }
 
-  virtual std::vector<Window> WindowsForMonitor (int monitor) { return std::vector<Window> (); }
+  virtual std::vector<Window> WindowsOnViewport() { return std::vector<Window> (); }
 
-  virtual std::string NameForWindow (Window window) { return std::string(); }
+  virtual std::vector<Window> WindowsForMonitor(int monitor) { return std::vector<Window> (); }
+
+  virtual std::string NameForWindow(Window window) { return std::string(); }
 
   const bool WindowVisibleOnMonitor(int monitor);
 

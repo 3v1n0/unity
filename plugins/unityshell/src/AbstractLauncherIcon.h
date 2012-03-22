@@ -147,7 +147,9 @@ public:
 
   virtual std::vector<Window> WindowsForMonitor(int monitor) = 0;
 
-  virtual std::string NameForWindow (Window window) = 0;
+  virtual std::vector<Window> WindowsOnViewport() = 0;
+
+  virtual std::string NameForWindow(Window window) = 0;
 
   virtual const bool WindowVisibleOnMonitor(int monitor) = 0;
 
