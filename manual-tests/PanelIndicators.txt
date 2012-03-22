@@ -25,3 +25,24 @@ This test shows the interaction between the window buttons and open indicators.
 
 Outcome
   Window buttons should appear.
+
+
+Open Indicators from Keyboard
+-----------------------------
+This test shows how indicators can be opened via keyboard bindings.
+
+#. Start a clean screen
+#. Press Alt+F10
+
+Outcome
+  The menu of the first indicator visible (looking left to right)
+  should pop-up on keydown (once F10 has been pressed).
+  Pressing Alt+F10 again or clicking in an empty area of the screen should close it.
+
+#. Start an application window with menus
+#. Press Alt+F10
+
+Outcome
+  The first menu of the window (looking left to right) should pop-up on keydown
+  (once F10 has been pressed). Pressing Alt+F10 again or clicking in an empty area
+  of the screenshould pop down it.

@@ -66,8 +66,7 @@ public:
   bool GetPrimary();
   void SetMonitor(int monitor);
 
-  void StartFirstMenuShow();
-  void EndFirstMenuShow();
+  bool FirstMenuShow();
 
   void SetOpacity(float opacity);
   void SetOpacityMaximizedToggle(bool enabled);

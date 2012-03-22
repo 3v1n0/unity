@@ -338,6 +338,7 @@ private:
   unsigned int           tray_paint_mask_;
   unsigned int           last_scroll_event_;
   int                    hud_keypress_time_;
+  int                    first_menu_keypress_time_;
 
   GLMatrix panel_shadow_matrix_;
 
