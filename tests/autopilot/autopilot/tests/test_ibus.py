@@ -14,7 +14,7 @@ from autopilot.emulators.ibus import (
     )
 from autopilot.emulators.unity.dash import Dash
 from autopilot.emulators.X11 import Keyboard
-from autopilot.tests import AutopilotTestCase
+from autopilot.tests import AutopilotTestCase, multiply_scenarios
 
 from time import sleep
 
@@ -99,11 +99,17 @@ class IBusTestsHangul(IBusTests):
 class IBusTestsAnthy(IBusTests):
     """Tests for the Anthy(Japanese) input engine."""
 
-    scenarios = [
-        ('system', {'commit_key': 'Ctrl+j', 'input': 'shisutemu ', 'result': u'\u30b7\u30b9\u30c6\u30e0'}),
-        ('game', {'commit_key': 'Enter' ,'input': 'ge-mu ', 'result': u'\u30b2\u30fc\u30e0'}),
-        ('user', {'commit_key': 'Enter','input': 'yu-za- ', 'result': u'\u30e6\u30fc\u30b6\u30fc'}),
+    scenarios = multiply_scenarios(
+        [
+            ('system', {'input': 'shisutemu ', 'result': u'\u30b7\u30b9\u30c6\u30e0'}),
+            ('game', {'input': 'ge-mu ', 'result': u'\u30b2\u30fc\u30e0'}),
+            ('user', {'input': 'yu-za- ', 'result': u'\u30e6\u30fc\u30b6\u30fc'}),
+        ],
+        [
+            ('commit_j', {'commit_key': 'Ctrl+j'}),
+            ('commit_enter', {'commit_key': 'Enter'}),
         ]
+        )
 
     def test_simple_input(self):
         self.activate_input_engine_or_skip("anthy")
