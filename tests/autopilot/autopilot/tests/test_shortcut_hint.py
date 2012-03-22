@@ -192,8 +192,8 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
 
         launcher = self.get_launcher()
-        launcher.start_switcher()
-        self.addCleanup(launcher.end_switcher, True)
+        launcher.switcher_start()
+        self.addCleanup(launcher.switcher_cancel)
         sleep(.25)
         self.assertThat(self.launcher.key_nav_is_active, Equals(True))
 
@@ -218,8 +218,8 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
 
         launcher = self.get_launcher()
-        launcher.start_switcher()
-        self.addCleanup(launcher.end_switcher, True)
+        launcher.switcher_start()
+        self.addCleanup(launcher.switcher_cancel)
         sleep(.25)
         self.assertThat(self.launcher.key_nav_is_active, Equals(True))
 
@@ -244,8 +244,8 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
 
         launcher = self.get_launcher()
-        launcher.start_switcher()
-        self.addCleanup(launcher.end_switcher, True)
+        launcher.switcher_start()
+        self.addCleanup(launcher.switcher_cancel)
         sleep(.25)
         self.assertThat(self.launcher.key_nav_is_active, Equals(True))
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
@@ -275,8 +275,8 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
 
         launcher = self.get_launcher()
-        launcher.start_switcher()
-        self.addCleanup(launcher.end_switcher, True)
+        launcher.switcher_start()
+        self.addCleanup(launcher.switcher_cancel)
         sleep(.25)
         self.assertThat(self.launcher.key_nav_is_active, Equals(True))
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
