@@ -188,3 +188,56 @@ Outcome:
 Outcome:
   * Only the primary monitor should show a launcher. Changing the primary monitor
     from gnome-control-center -> Monitor should update the launcher position.
+
+
+Test Launcher Icon with Windows in multiple monitors
+----------------------------------------------------
+This test shows how the launcher should draw its iucons when there are
+application windows in multiple monitors.
+
+#. Start on a fresh login
+#. Run CCSM and ensure that the unity option in "Experimental" -> "Launcher Monitors"
+   is set to "All Desktops"
+#. Run an application
+#. Run another instance (window) of this application and keep it on the initial
+   monitor (that we'll call "monitor 1")
+#. Run another instance (window) of this application and move it to another
+   monitor (that we'll call "monitor 2")
+#. Select the one on the first monitor
+
+Outcome
+  The Launcher icon "pips" (indicators) should reflect the number of windows in the
+  current monitor, so when both the windows are in the "monitor 1" the Launcher
+  placed into the "monitor 1" will have a launcher application icon with 2 "pips",
+  while the launcher in "monitor 2" will show the same application icon with
+  an empty (not filled) arrow.
+  When moving a window to the secondary monitor (where now there's only 1 window
+  for the current application), the launcher application icon should have a
+  left filled arrow.
+  So basically, each launcher icon should show a number of left pips proportional
+  to the number of windows in that monitor (3 at maximum).
+
+  When switching workspace, the launchers icons should reflect what described
+  in the "Launcher"" manual test called "Test Launcher Spread with Windows in
+  multiple workspaces", considering that each launcher must be independent
+  from the others and should only reflects what is shown in its monitor.
+
+#. Start on a fresh login
+#. Run CCSM and ensure that the unity option in "Experimental" -> "Launcher Monitors"
+   is set to "Primary Desktop"
+#. Run an application
+#. Run another instance (window) of this application and keep it on the initial
+   monitor (that we'll call "monitor 1")
+#. Run another instance (window) of this application and move it to another
+   monitor (that we'll call "monitor 2")
+#. Select the one on the first monitor
+
+Outcome
+  The Launcher icon "pips" (indicators) should reflect the number of windows in all
+  the monitors, for the given workspace. So both when the two windows are in the same
+  monitor and after that one window has been moved to the "monitor 2", the launcher
+  should show an application icon with 2 "pips",
+
+  When switching workspace, the launcher icon should reflect what described
+  in the Launcher manual test called "Test Launcher Spread with Windows in
+  multiple workspaces".
