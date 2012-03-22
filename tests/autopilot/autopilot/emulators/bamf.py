@@ -131,15 +131,21 @@ class Bamf(object):
 
         return found_app[0]
 
-    def launch_application(self, desktop_file, wait=True):
+    def launch_application(self, desktop_file, files=[], wait=True):
         """Launch an application by specifying a desktop file.
+
+        `files` is a list of files to pass to the application. Not all apps support this.
+
+        If `wait` is True, this method will block until the application has launched.
 
         Returns the Gobject process object. if wait is True (the default),
         this method will not return until an instance of this application
         appears in the BAMF application list.
         """
+        if type(files) is not list:
+            raise TypeError("files must be a list.")
         proc = gio.unix.DesktopAppInfo(desktop_file)
-        proc.launch()
+        proc.launch_uris(files)
         if wait:
             self.wait_until_application_is_running(desktop_file, -1)
         return proc

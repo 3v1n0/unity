@@ -268,6 +268,7 @@ private:
 
   void OnOverlayHidden(GVariant* data);
   void OnOverlayShown(GVariant* data);
+  bool IsOverlayOpen() const;
 
   void DesaturateIcons();
   void SaturateIcons();
@@ -289,6 +290,8 @@ private:
   void StartIconDrag(AbstractLauncherIcon::Ptr icon);
   void EndIconDrag();
   void UpdateDragWindowPosition(int x, int y);
+
+  void ResetMouseDragState();
 
   float GetAutohidePositionMin() const;
   float GetAutohidePositionMax() const;
@@ -315,6 +318,7 @@ private:
 
   bool  _hovered;
   bool  _hidden;
+  bool  _scroll_limit_reached;
   bool  _render_drag_window;
 
   bool          _shortcuts_shown;
@@ -324,8 +328,7 @@ private:
   float _folded_angle;
   float _neg_folded_angle;
   float _folded_z_distance;
-  float _launcher_top_y;
-  float _launcher_bottom_y;
+  float _last_delta_y;
   float _edge_overcome_pressure;
 
   LauncherActionState _launcher_action_state;
@@ -406,6 +409,7 @@ private:
   BaseTexturePtr launcher_sheen_;
   BaseTexturePtr launcher_pressure_effect_;
   bool _dash_is_open;
+  bool _hud_is_open;
 
   ui::AbstractIconRenderer::Ptr icon_renderer;
   BackgroundEffectHelper bg_effect_helper_;

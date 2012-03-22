@@ -155,3 +155,36 @@ Outcome:
   icons.
   * When released, the icon "flies" back into the launcher, a spaces opens for
   it, and the any pips for running apps show again.
+
+
+Dragging icon while program is starting
+---------------------------------------
+This test that when a program is executed from the launcher and the icon is 
+getting dragged that the icon doesn't get frozen on the launcher.
+
+#. Click on Ubuntu Software Center from the launcher.
+#. While it's starting drag the Ubuntu Software Center icon.
+#. Drag the icon half over the launcher and desktop.
+#. Wait for the program to start.
+
+Outcome:
+  * The icon should go back to its correct position in the launcher.
+
+
+Test launchers with multiple monitors
+-------------------------------------
+This test checks if the launchers are shown in the correct monitor when
+using a multimonitor setup.
+
+#. Open CCSM and and set the Experimental -> "Launcher Monitors" unity setting
+   to "All Desktops"
+
+Outcome:
+  * A launcher should be shown in each monitor.
+
+#. Open CCSM and and set the Experimental -> "Launcher Monitors" unity setting
+   to "Primary Desktop"
+
+Outcome:
+  * Only the primary monitor should show a launcher. Changing the primary monitor
+    from gnome-control-center -> Monitor should update the launcher position.

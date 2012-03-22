@@ -12,15 +12,3 @@ header works well.
    category header.
 #. Click on it (again).
 #. The filter category should expand.
-
-
-Test no-over-state effect
-=========================
-This test show that filter buttons in the Dash do not have a mouse
-over state.
-
-#. Open the dash.
-#. Move the mouse on filter buttons.
-
-Outcome
-  The filter buttons have no mouseover state effect.

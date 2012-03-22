@@ -125,7 +125,7 @@ void SwitcherView::SetModel(SwitcherModel::Ptr model)
   model->detail_selection_index.changed.connect (sigc::mem_fun (this, &SwitcherView::OnDetailSelectionIndexChanged));
 
   if (model->Selection())
-    text_view_->SetText(model->Selection()->tooltip_text().c_str());
+    text_view_->SetText(model->Selection()->tooltip_text());
 }
 
 void SwitcherView::OnIconSizeChanged (int size)
@@ -151,7 +151,7 @@ void SwitcherView::OnDetailSelectionIndexChanged (unsigned int index)
   if (model_->detail_selection)
   {
     Window detail_window = model_->DetailSelectionWindow();
-    text_view_->SetText(model_->Selection()->NameForWindow (detail_window));
+    text_view_->SetText(model_->Selection()->NameForWindow(detail_window));
   }
   QueueDraw ();
 }
@@ -162,11 +162,11 @@ void SwitcherView::OnDetailSelectionChanged (bool detail)
   if (detail)
   {
     Window detail_window = model_->DetailSelectionWindow();
-    text_view_->SetText(model_->Selection()->NameForWindow (detail_window));
+    text_view_->SetText(model_->Selection()->NameForWindow(detail_window));
   }
   else
   {
-    text_view_->SetText(model_->Selection()->tooltip_text().c_str());
+    text_view_->SetText(model_->Selection()->tooltip_text());
   }
   SaveLast ();
   QueueDraw ();
@@ -175,7 +175,7 @@ void SwitcherView::OnDetailSelectionChanged (bool detail)
 void SwitcherView::OnSelectionChanged(AbstractLauncherIcon::Ptr selection)
 {
   if (selection)
-    text_view_->SetText(selection->tooltip_text().c_str());
+    text_view_->SetText(selection->tooltip_text());
   SaveLast ();
   QueueDraw();
 }
@@ -217,7 +217,7 @@ RenderArg SwitcherView::InterpolateRenderArgs(RenderArg const& start, RenderArg 
 {
   // easing
   progress = -pow(progress - 1.0f, 2) + 1;
-  
+
   RenderArg result = end;
 
   result.x_rotation = start.x_rotation + (end.x_rotation - start.x_rotation) * progress;
@@ -262,7 +262,7 @@ nux::Geometry SwitcherView::UpdateRenderTargets (nux::Point const& center, times
       layout_window->alpha = 1.0f * progress;
     else
       layout_window->alpha = 0.9f * progress;
-    
+
     render_targets_.push_back (layout_window);
   }
 
@@ -294,22 +294,22 @@ nux::Size SwitcherView::SpreadSize()
 {
   nux::Geometry base = GetGeometry();
   nux::Size result (base.width - border_size * 2, base.height - border_size * 2);
-  
+
   int width_padding = std::max(model_->Size() - 1, 0) * minimum_spacing + tile_size;
   int height_padding = text_size;
 
   result.width -= width_padding;
   result.height -= height_padding;
-  
+
   return result;
 }
 
-void SwitcherView::GetFlatIconPositions (int n_flat_icons, 
-                                         int size, 
-                                         int selection, 
-                                         int &first_flat, 
-                                         int &last_flat, 
-                                         int &half_fold_left, 
+void SwitcherView::GetFlatIconPositions (int n_flat_icons,
+                                         int size,
+                                         int selection,
+                                         int &first_flat,
+                                         int &last_flat,
+                                         int &half_fold_left,
                                          int &half_fold_right)
 {
   half_fold_left = -1;
@@ -388,7 +388,7 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
   bool detail_selection = model_->detail_selection;
 
   background_geo.y = base.y + base.height / 2 - (vertical_size / 2);
-  background_geo.height = vertical_size + text_size;  
+  background_geo.height = vertical_size + text_size;
 
 
   if (model_)
@@ -440,7 +440,7 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
     int half_fold_left;
     int half_fold_right;
 
-    GetFlatIconPositions (n_flat_icons, size, selection, first_flat, last_flat, half_fold_left, half_fold_right); 
+    GetFlatIconPositions (n_flat_icons, size, selection, first_flat, last_flat, half_fold_left, half_fold_right);
 
     SwitcherModel::iterator it;
     int i = 0;

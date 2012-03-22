@@ -34,6 +34,7 @@ public:
   ~HSeparator();
 
 protected:
+  virtual bool AcceptKeyNavFocus() { return false; }
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {};
 
