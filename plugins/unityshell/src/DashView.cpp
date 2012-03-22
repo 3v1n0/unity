@@ -139,6 +139,12 @@ void DashView::AboutToShow()
       LOG_DEBUG(logger) << "Setting ViewType " << ViewType::LENS_VIEW
                                 << " on '" << home_lens_->id() << "'";
   }
+  else if (active_lens_view_)
+  {
+    // careful here, the lens_view's view_type doesn't get reset when the dash
+    // hides, but lens' view_type does, so we need to update the lens directly
+    active_lens_view_->lens()->view_type = ViewType::LENS_VIEW;
+  }
 
   renderer_.AboutToShow();
 }
