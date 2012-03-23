@@ -37,6 +37,7 @@ public:
   nux::Property<int> value;
 
   Decaymulator();
+  ~Decaymulator();
 
 private:
   void OnValueChanged(int value);
