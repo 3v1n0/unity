@@ -83,7 +83,7 @@ protected:
   Entries entries_;
 
   std::string GetName() const;
-  void         AddProperties(GVariantBuilder* builder);
+  void        AddProperties(GVariantBuilder* builder);
 
 private:
   typedef std::vector<indicator::Indicator::Ptr> Indicators;

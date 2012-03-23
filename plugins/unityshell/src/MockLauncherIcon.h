@@ -81,6 +81,22 @@ public:
     return result;
   }
 
+  std::vector<Window> WindowsOnViewport ()
+  {
+    std::vector<Window> result;
+
+    result.push_back ((100 << 16) + 200);
+    result.push_back ((500 << 16) + 200);
+    result.push_back ((300 << 16) + 200);
+    result.push_back ((200 << 16) + 200);
+    result.push_back ((300 << 16) + 200);
+    result.push_back ((100 << 16) + 200);
+    result.push_back ((300 << 16) + 200);
+    result.push_back ((600 << 16) + 200);
+
+    return result;
+  }
+
   std::vector<Window> WindowsForMonitor (int monitor)
   {
     std::vector<Window> result;
@@ -135,6 +151,11 @@ public:
   int RelatedWindows()
   {
     return 7;
+  }
+
+  const bool WindowVisibleOnViewport()
+  {
+    return false;
   }
 
   const bool WindowVisibleOnMonitor(int monitor)

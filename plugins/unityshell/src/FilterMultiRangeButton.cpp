@@ -148,7 +148,7 @@ void FilterMultiRangeButton::InitTheme()
     }
   }
 
-  SetMinimumHeight(32);
+  SetMinimumHeight(dash::Style::Instance().GetFilterButtonHeight() + 3);
 }
 
 void FilterMultiRangeButton::RedrawTheme(nux::Geometry const& geom,
@@ -158,12 +158,10 @@ void FilterMultiRangeButton::RedrawTheme(nux::Geometry const& geom,
                                          MultiRangeSide faked_side)
 {
   std::string name("10");
-  std::stringstream final;
 
   if (filter_)
   {
     name = filter_->name;
-    final << "<small>" << name << "</small>";
   }
 
   Arrow arrow;
@@ -184,7 +182,7 @@ void FilterMultiRangeButton::RedrawTheme(nux::Geometry const& geom,
   else
     segment = Segment::RIGHT;
 
-  Style::Instance().MultiRangeSegment(cr, faked_state, final.str(), arrow, segment);
+  Style::Instance().MultiRangeSegment(cr, faked_state, name, arrow, segment);
   NeedRedraw();
 }
 
@@ -192,7 +190,7 @@ void FilterMultiRangeButton::RedrawFocusOverlay(nux::Geometry const& geom,
                                                 cairo_t* cr,
                                                 MultiRangeArrow faked_arrow,
                                                 MultiRangeSide faked_side)
-{  
+{
   Arrow arrow;
   if (faked_arrow == MultiRangeArrow::NONE)
     arrow = Arrow::NONE;
