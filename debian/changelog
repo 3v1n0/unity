@@ -1,8 +1,10 @@
 unity (5.8.0-0ubuntu1) UNRELEASED; urgency=low
 
+  * New upstream release.
   * debian/patches/series:
     - remove the distro patches in trunk right now
-  * New upstream release.
+  * debian/control:
+    - build-dep on latest nux,compiz and libcompizconfig for ABI breakage
 
  -- Didier Roche <didrocks@ubuntu.com>  Fri, 23 Mar 2012 12:55:51 +0100
 
