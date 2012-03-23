@@ -21,11 +21,17 @@
 
 namespace unity {
 namespace ui {
-  
+
 Decaymulator::Decaymulator()
 {
   on_decay_handle = 0;
   value.changed.connect(sigc::mem_fun(this, &Decaymulator::OnValueChanged));
+}
+
+Decaymulator::~Decaymulator()
+{
+  if (on_decay_handle)
+    g_source_remove(on_decay_handle);
 }
 
 void Decaymulator::OnValueChanged(int value)
@@ -48,7 +54,6 @@ gboolean Decaymulator::OnDecayTimeout(gpointer data)
     self->on_decay_handle = 0;
     return FALSE;
   }
-
 
   self->value = self->value - partial_decay;
   return TRUE;
