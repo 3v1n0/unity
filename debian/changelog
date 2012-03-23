@@ -1,6 +1,95 @@
 unity (5.8.0-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+    - New "push mouse offscreen" feature really difficult to get (LP: #923749)
+    - unity-2d-panel crashed with SIGSEGV in
+      unity::indicator::DBusIndicators::Impl::RequestSyncAll() (LP: #864737)
+    - Pressing "Alt+Enter" causes compiz to crash in CompOption::value() from
+      unity::UnityScreen::showLauncherKeyTerminate (LP: #960957)
+    - SEGSIGV after unplugging external monitor (LP: #962693)
+    - Background colorization should use a different heuristic (LP: #865239)
+    - compiz+unity3d generates > 50 wakeups a second on idle system
+      (LP: #917210)
+    - [FFe, UIFe] HUD - The HUD does not respect launcher autohide or icon
+      size settings (LP: #921506)
+    - clicking on folders in the file lens does not open nautilus
+      (LP: #921665)
+    - No text inside multirange filters (LP: #927710)
+    - can't alt-tab restore minimized uis which have an instance on another
+      workspace (LP: #933397)
+    - Ubuntu Software Center Unity launcher integration is not working
+      (LP: #932280)
+    - The line separator between the launcher and the dash is cleared when
+      selecting a category (LP: #941082)
+    - unity-panel-service crashed with SIGSEGV in g_hash_table_foreach()
+      (LP: #937119)
+    - Alt-F10 locks up Unity (LP: #948522)
+    - multimonitor, launcher: Provide an option to display either a single
+      launcher or a launcher on each display in a multi-monitor environment
+      (LP: #950136)
+    - multimonitor: Please give me a way to turn off sticky monitor edges
+      (LP: #946104)
+    - Unity 5.6: key bindings (such as Super) don't work on empty workspace or
+      on slow/loaded systems (LP: #953089)
+    - Alt+arrows keyboard shortcuts don't invoke Back and Forward navigation
+      (LP: #953783)
+    - HUD is sending 2 menu signals instead of 1 (LP: #956878)
+    - 6th item of HUD not fully visible (LP: #957229)
+    - HUD: seems to trigger operations more than once (LP: #960503)
+    - Launcher gets always desaturated when using HUD on secondary monitor
+      (LP: #961169)
+    - [5.8 pre staging] launcher is displayed on the left screen, not the
+      primary one (LP: #961281)
+    - launcher icons do not re-saturate after dash is closed (LP: #961844)
+    - Launcher shows arrows for applications on all workspaces (LP: #961977)
+    - Dash - Implement overlay scrollbars in Dash (LP: #608124)
+    - [UIFe] Dash - No message displayed when no results are returned in the
+      Dash (LP: #711199)
+    - Dash - "See more..." line should be base-aligned with section header
+      (LP: #748101)
+    - Dash - Missing category separator line in dash (LP: #850984)
+    - Dash and Launcher - As soon as a user starts dragging a file from the
+      Dash, there is a 'flicker' before the Launcher icons that are valid drop
+      receptacles re-saturate (LP: #863230)
+    - Dash - When multiple results have equal string match relevancy ranking,
+      those with equal ranking should be then sorted by frequency of use.
+      (LP: #871900)
+    - Keyboard shortcut - F10 shortcut is used to show menu and this is wrong
+      (LP: #878492)
+    - Frozen double icon after launching and dragging at once (LP: #918753)
+    - HUD is over gtk-menu (LP: #921305)
+    - Files missing from Unity's POTFILES.in (LP: #923762)
+    - Hidden menus are not really hidden (LP: #926330)
+    - Need to bring back a "reveal border" option (LP: #927523)
+    - Unity Panel lose shadow on changing the wallpaper (LP: #930271)
+    - Incorrect item count in "See x more results" (LP: #934944)
+    - Coverity PW.PARAMETER_HIDDEN - CID 10671 (LP: #938890)
+    - Coverity PW.CAST_TO_QUALIFIED_TYPE - CID 10670 (LP: #938895)
+    - [Shortcut overlay] Hardcoded value for switching ws (LP: #939517)
+    - Dash - Font metrics and colors are wrong (LP: #942508)
+    - Alt-tab switcher view should be pre-loaded to improve the startup time
+      (LP: #942634)
+    - Shortcut hint overlay should be hidden by Escape key (LP: #943422)
+    - Dash/HUD - Spinner off-centre, looks drunk (LP: #943656)
+    - Unable to restart lens which doesn't do global search (LP: #947301)
+    - Launcher Switcher (Super+Tab) selection could be changed by arrow keys
+      too (LP: #950404)
+    - you have to release alt for alt + F10 working (LP: #943223)
+    - magnifying glass is being overdrawn by text in searchbar  (LP: #955160)
+    - hud searches don't update properly (LP: #956480)
+    - Filters not working (LP: #961338)
+    - Panel goes solid if switching from hud to dash or vice versa
+      (LP: #962720)
+    - compiz configuration options for unity are "fixme" (LP: #877382)
+    - Launcher - When Launcher already has keyboard focus, Alt-F1 doesn't exit
+      focus (LP: #885304)
+    - Dash - dash is not closed with alt+f4 (LP: #891818)
+    - Dash Home tooltip should use header capitalization (LP: #924354)
+    - Typo in string 149: stoped (LP: #931382)
+    - unity should not use dconf to store the average background colour
+      (LP: #949277)
+    - [UIFE] No HUD keybinding in the shortcut overlay (LP: #942515)
+    - The hseparator is drawn also for the final dash category (LP: #955296)
   * debian/patches/series:
     - remove the distro patches in trunk right now
   * debian/control:
