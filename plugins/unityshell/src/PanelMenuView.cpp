@@ -306,16 +306,8 @@ long PanelMenuView::PostLayoutManagement(long LayoutResult)
 
   nux::Geometry geo = GetGeometry();
 
-  int h_padding = _padding;
-  int v_padding = 0;
-  if (_places_showing)
-  {
-    h_padding -= 2;
-    v_padding += 1;
-  }
-
   old_window_buttons_w = _window_buttons->GetContentWidth();
-  _window_buttons->SetGeometry(geo.x + h_padding, geo.y + v_padding, old_window_buttons_w, geo.height);
+  _window_buttons->SetGeometry(geo.x + _padding - 2, geo.y + 1, old_window_buttons_w, geo.height);
   _window_buttons->ComputeContentSize();
   new_window_buttons_w = _window_buttons->GetContentWidth();
 
