@@ -14,10 +14,11 @@ from autopilot.emulators.unity.hud import HudController
 from autopilot.tests import AutopilotTestCase
 from os import remove
 
-class HudTests(AutopilotTestCase):
-
+def _make_scenarios():
     screen_geometry = ScreenGeometry()
     num_monitors = screen_geometry.get_num_monitors()
+
+    scenarios = []
 
     if num_monitors == 1:
         scenarios = [
@@ -25,15 +26,21 @@ class HudTests(AutopilotTestCase):
             ('Single Monitor, Launcher autohide', {'hud_monitor': 0, 'launcher_hide_mode': 1}),
             ]
     else:
-        scenarios = []
         for i in range(num_monitors):
             scenarios.append(('Monitor %d, Launcher never hide' % (i), {'hud_monitor': i, 'launcher_hide_mode': 0}))
             scenarios.append(('Monitor %d, Launcher autohide' % (i), {'hud_monitor': i, 'launcher_hide_mode': 1}))
 
+    return scenarios
+
+class HudTests(AutopilotTestCase):
+
+    screen_geo = ScreenGeometry()
+    scenarios = _make_scenarios()
+
     def setUp(self):
         super(HudTests, self).setUp()
         self.set_unity_option('launcher_hide_mode', self.launcher_hide_mode)
-        self.screen_geometry.move_mouse_to_monitor(self.hud_monitor)
+        self.screen_geo.move_mouse_to_monitor(self.hud_monitor)
         sleep(0.5)
         self.hud = self.get_hud_controller()
 
@@ -64,9 +71,7 @@ class HudTests(AutopilotTestCase):
                 break
 
         self.assertTrue(self.hud.visible, "HUD did not appear.")
-
-        (x, y, w, h) = self.hud.get_geometry()
-        self.assertTrue(self.screen_geometry.is_rect_on_monitor(self.hud_monitor, x, y, w, h))
+        self.assertTrue(self.screen_geo.is_rect_on_monitor(self.hud_monitor, self.hud.geometry))
 
     def test_no_initial_values(self):
         self.reveal_hud()
@@ -226,7 +231,9 @@ class HudTests(AutopilotTestCase):
         contents = open("/tmp/autopilot_gedit_undo_test_temp_file.txt").read().strip('\n')
         self.assertEqual("0 ", contents)
 
-    def test_hud_dont_change_launcher_status(self):
+    def test_hud_does_not_change_launcher_status(self):
+        """Tests if the HUD reveal keeps the launcher in the status it was"""
+
         launcher_shows_pre = self.launcher.get_launcher_for_monitor(self.hud_monitor).is_showing()
         sleep(.25)
 
@@ -234,5 +241,4 @@ class HudTests(AutopilotTestCase):
         sleep(1)
 
         launcher_shows_post = self.launcher.get_launcher_for_monitor(self.hud_monitor).is_showing()
-        self.assertEqual(launcher_shows_pre, launcher_shows_post)
-
+        self.assertThat(launcher_shows_pre, Equals(launcher_shows_post))

@@ -43,6 +43,10 @@ class HudController(UnityIntrospectionObject, KeybindingsHelper):
         return views[0] if views else None
 
     @property
+    def geometry(self):
+        return (self.x, self.y, self.width, self.height)
+
+    @property
     def selected_button(self):
         view = self._get_view()
         if view:
