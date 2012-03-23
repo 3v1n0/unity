@@ -49,8 +49,7 @@ TEST(TestResults, TestFilterValid)
   glib::Object<DeeModel> filter_model(dee_filter_model_new(model.model(), &filter));
   
   unsigned int i = 0;
-  ResultIterator iter(filter_model);
-  for (; !iter.IsLast(); ++iter)
+  for (ResultIterator iter(filter_model);  !iter.IsLast(); ++iter)
   {
     EXPECT_EQ((*iter).category_index(), 1);
     i++;
