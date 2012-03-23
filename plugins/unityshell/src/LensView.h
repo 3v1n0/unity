@@ -59,6 +59,7 @@ public:
   nux::Area* fscroll_view() const;
 
   int GetNumRows();
+  void JumpToTop();
 
   virtual void ActivateFirst();
 
@@ -68,6 +69,9 @@ public:
   nux::Property<bool> can_refine_search;
 
   sigc::signal<void, std::string const&> uri_activated;
+
+  void CheckNoResults(Lens::Hints const& hints);
+  void HideResultsMessage();
 
 private:
   void SetupViews(nux::Area* show_filters);
@@ -101,6 +105,7 @@ private:
   CategoryGroups categories_;
   ResultCounts counts_;
   bool initial_activation_;
+  bool no_results_active_;
 
   nux::HLayout* layout_;
   LensScrollView* scroll_view_;
@@ -108,6 +113,7 @@ private:
   LensScrollView* fscroll_view_;
   nux::VLayout* fscroll_layout_;
   FilterBar* filter_bar_;
+  nux::StaticCairoText* no_results_;
 
   guint fix_renderering_id_;
 

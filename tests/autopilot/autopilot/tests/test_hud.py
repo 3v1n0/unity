@@ -11,12 +11,19 @@ from time import sleep
 
 from autopilot.emulators.unity.hud import HudController
 from autopilot.tests import AutopilotTestCase
-
+from os import remove
 
 class HudTests(AutopilotTestCase):
 
+    scenarios = [
+        ('Launcher never hide', {'launcher_hide_mode': 0}),
+        ('Launcher autohide', {'launcher_hide_mode': 1}),
+        ]
+
     def setUp(self):
         super(HudTests, self).setUp()
+        self.set_unity_option('launcher_hide_mode', self.launcher_hide_mode)
+        sleep(0.5)
         self.hud = self.get_hud_controller()
 
     def tearDown(self):
@@ -36,26 +43,34 @@ class HudTests(AutopilotTestCase):
         return num_active
 
     def test_initially_hidden(self):
-        self.assertFalse(self.hud.is_visible())
+        self.assertFalse(self.hud.visible)
 
-    def test_reveal_hud(self):
+    def reveal_hud(self):
         self.hud.toggle_reveal()
-        self.assertTrue(self.hud.is_visible())
+        for counter in range(10):
+            sleep(1)
+            if self.hud.visible:
+                break
+        self.assertTrue(self.hud.visible, "HUD did not appear.")
 
     def test_no_initial_values(self):
-        self.hud.toggle_reveal()
+        self.reveal_hud()
         self.assertThat(self.hud.num_buttons, Equals(0))
         self.assertThat(self.hud.selected_button, Equals(0))
 
     def test_check_a_values(self):
-        self.hud.toggle_reveal()
+        self.reveal_hud()
         self.keyboard.type('a')
+        # Give the HUD a second to get values.
+        sleep(1)
         self.assertThat(self.hud.num_buttons, Equals(5))
         self.assertThat(self.hud.selected_button, Equals(1))
 
     def test_up_down_arrows(self):
-        self.hud.toggle_reveal()
+        self.reveal_hud()
         self.keyboard.type('a')
+        # Give the HUD a second to get values.
+        sleep(1)
         self.keyboard.press_and_release('Down')
         self.assertThat(self.hud.selected_button, Equals(2))
         self.keyboard.press_and_release('Down')
@@ -81,14 +96,16 @@ class HudTests(AutopilotTestCase):
 
     def test_slow_tap_not_reveal_hud(self):
         self.hud.toggle_reveal(tap_delay=0.3)
-        self.assertFalse(self.hud.is_visible())
+        sleep(1)
+        self.assertFalse(self.hud.visible)
 
     def test_alt_f4_doesnt_show_hud(self):
         self.start_app('Calculator')
         sleep(1)
         # Do a very fast Alt+F4
         self.keyboard.press_and_release("Alt+F4", 0.05)
-        self.assertFalse(self.hud.is_visible())
+        sleep(1)
+        self.assertFalse(self.hud.visible)
 
     def test_reveal_hud_with_no_apps(self):
         """Hud must show even with no visible applications."""
@@ -98,11 +115,11 @@ class HudTests(AutopilotTestCase):
 
         self.hud.toggle_reveal()
         sleep(1)
-        self.assertTrue(self.hud.is_visible())
+        self.assertTrue(self.hud.visible)
 
         self.hud.toggle_reveal()
         sleep(1)
-        self.assertFalse(self.hud.is_visible())
+        self.assertFalse(self.hud.visible)
 
     def test_multiple_hud_reveal_does_not_break_launcher(self):
         """Multiple Hud reveals must not cause the launcher to set multiple
@@ -165,4 +182,32 @@ class HudTests(AutopilotTestCase):
         sleep(1)
 
         self.assertEqual(calc.is_active, True)
+
+    def test_gedit_undo(self):
+        """Test undo in gedit"""
+        """Type "0 1" into gedit."""
+        """Activate the Hud, type "undo" then enter."""
+        """Save the file in gedit and close gedit."""
+        """Read the saved file. The content should be "0 "."""
+
+        self.addCleanup(remove, '/tmp/autopilot_gedit_undo_test_temp_file.txt')
+        self.start_app('Text Editor', files=['/tmp/autopilot_gedit_undo_test_temp_file.txt'])
+
+        sleep(1)
+        self.keyboard.type("0")
+        self.keyboard.type(" ")
+        self.keyboard.type("1")
+
+        self.hud.toggle_reveal()
+        sleep(1)
+
+        self.keyboard.type("undo")
+        self.keyboard.press_and_release('Return')
+        sleep(1)
+
+        self.keyboard.press_and_release("Ctrl+s")
+        sleep(1)
+
+        contents = open("/tmp/autopilot_gedit_undo_test_temp_file.txt").read().strip('\n')
+        self.assertEqual("0 ", contents)
 

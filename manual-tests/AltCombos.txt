@@ -1,0 +1,20 @@
+Alt+Arrow keys not passed to application
+----------------------------------------
+Tests that Alt+ArrowKey events are correctly passed to the active window
+when Unity is not responding to them.
+
+#. Open gnome-terminal
+#. While holding Alt, tap arrow keys: Up, Down, Right, Left
+
+Outcome
+  The terminal should show the keycodes were received as text "ABCD".
+
+
+Alt+Enter Crash
+---------------
+Tests that Alt+Enter does not cause unity to crash (LP: #960957)
+
+#. Press Alt+Enter.
+
+Outcome
+  Unity/compiz should not crash.

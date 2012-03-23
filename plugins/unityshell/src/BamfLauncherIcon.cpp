@@ -287,23 +287,40 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     ubus_server_send_message(ubus_server_get_default(), UBUS_LAUNCHER_ACTION_DONE, nullptr);
 }
 
-std::vector<Window> BamfLauncherIcon::Windows()
+std::vector<Window> BamfLauncherIcon::GetWindows(WindowFilterMask filter, int monitor)
 {
   std::vector<Window> results;
   GList* children, *l;
   WindowManager *wm = WindowManager::Default();
+
+  monitor = (filter & WindowFilter::ON_ALL_MONITORS) ? -1 : monitor;
+  bool mapped = (filter & WindowFilter::MAPPED);
+  bool user_visible = (filter & WindowFilter::USER_VISIBLE);
+  bool current_desktop = (filter & WindowFilter::ON_CURRENT_DESKTOP);
 
   children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
   for (l = children; l; l = l->next)
   {
     if (!BAMF_IS_WINDOW(l->data))
       continue;
+  
+    auto window = static_cast<BamfWindow*>(l->data);
+    auto view = static_cast<BamfView*>(l->data);
 
-    Window xid = bamf_window_get_xid(static_cast<BamfWindow*>(l->data));
-
-    if (wm->IsWindowMapped(xid))
+    if ((monitor >= 0 && bamf_window_get_monitor(window) == monitor) || monitor < 0)
     {
-      results.push_back(xid);
+      if ((user_visible && bamf_view_user_visible(view)) || !user_visible)
+      {
+        guint32 xid = bamf_window_get_xid(window);
+
+        if ((mapped && wm->IsWindowMapped(xid)) || !mapped)
+        {
+          if ((current_desktop && wm->IsWindowOnCurrentDesktop(xid)) || !current_desktop)
+          {
+            results.push_back(xid);
+          }
+        }
+      }
     }
   }
 
@@ -311,31 +328,30 @@ std::vector<Window> BamfLauncherIcon::Windows()
   return results;
 }
 
+std::vector<Window> BamfLauncherIcon::Windows()
+{
+  return GetWindows(WindowFilter::MAPPED|WindowFilter::ON_ALL_MONITORS);
+}
+
+std::vector<Window> BamfLauncherIcon::WindowsOnViewport()
+{
+  WindowFilterMask filter;
+  filter |= WindowFilter::MAPPED;
+  filter |= WindowFilter::USER_VISIBLE;
+  filter |= WindowFilter::ON_CURRENT_DESKTOP;
+  filter |= WindowFilter::ON_ALL_MONITORS;
+
+  return GetWindows(filter);
+}
+
 std::vector<Window> BamfLauncherIcon::WindowsForMonitor(int monitor)
 {
-  std::vector<Window> results;
-  GList* children, *l;
-  WindowManager *wm = WindowManager::Default();
+  WindowFilterMask filter;
+  filter |= WindowFilter::MAPPED;
+  filter |= WindowFilter::USER_VISIBLE;
+  filter |= WindowFilter::ON_CURRENT_DESKTOP;
 
-  children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
-  for (l = children; l; l = l->next)
-  {
-    if (!BAMF_IS_WINDOW(l->data))
-      continue;
-
-    auto window = static_cast<BamfWindow*>(l->data);
-    if (bamf_window_get_monitor(window) == monitor)
-    {
-      guint32 xid = bamf_window_get_xid(window);
-      bool user_visible = bamf_view_user_visible(reinterpret_cast<BamfView*>(window));
-
-      if (user_visible && wm->IsWindowMapped(xid) && wm->IsWindowOnCurrentDesktop(xid))
-        results.push_back(xid);
-    }
-  }
-
-  g_list_free(children);
-  return results;
+  return GetWindows(filter, monitor);
 }
 
 std::string BamfLauncherIcon::NameForWindow(Window window)
@@ -684,8 +700,8 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
 
   int index = 0;
   while (nicks[index]) {
-  
-    // Build a dbusmenu item for each nick that is the desktop 
+
+    // Build a dbusmenu item for each nick that is the desktop
     // file that is built from it's name and includes a callback
     // to the desktop shortcuts object to execute the nick
     glib::String name(indicator_desktop_shortcuts_nick_get_name(_desktop_shortcuts,
@@ -781,7 +797,7 @@ void BamfLauncherIcon::Stick(bool save)
   bamf_view_set_sticky(BAMF_VIEW(_bamf_app.RawPtr()), true);
 
   if (save && !desktop_file.empty())
-    FavoriteStore::GetDefault().AddFavorite(desktop_file.c_str(), -1);
+    FavoriteStore::GetDefault().AddFavorite(desktop_file, -1);
 }
 
 void BamfLauncherIcon::UnStick()
@@ -797,7 +813,7 @@ void BamfLauncherIcon::UnStick()
     Remove();
 
   if (!desktop_file.empty())
-    FavoriteStore::GetDefault().RemoveFavorite(desktop_file.c_str());
+    FavoriteStore::GetDefault().RemoveFavorite(desktop_file);
 }
 
 void BamfLauncherIcon::ToggleSticky()

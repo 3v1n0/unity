@@ -80,6 +80,41 @@ def make_introspection_object(dbus_tuple):
     return class_type(state)
 
 
+def start_log_to_file(file_path):
+    """Instruct Unity to start logging to the given file."""
+    _introspection_iface.StartLogToFile(file_path)
+
+
+def reset_logging():
+    """Instruct Unity to stop logging to a file."""
+    _introspection_iface.ResetLogging()
+
+
+def set_log_severity(component, severity):
+    """Instruct Unity to set a log component's severity.
+
+    'component' is the unity logging component name.
+
+    'severity' is the severity name (like 'DEBUG', 'INFO' etc.)
+
+    """
+    _introspection_iface.SetLogSeverity(component, severity)
+
+
+def log_unity_message(severity, message):
+    """Instruct unity to log a message for us.
+
+    severity: one of ('TRACE', 'DEBUG', 'INFO', 'WARNING', 'ERROR').
+
+    message: The message to log.
+
+    For debugging purposes only! If you want to log a message during an autopilot
+    test, use the python logging framework instead.
+
+    """
+    _introspection_iface.LogMessage(severity, message)
+
+
 class UnityIntrospectionObject(object):
     """A class that can be created using a dictionary of state from Unity."""
     __metaclass__ = IntrospectableObjectMetaclass

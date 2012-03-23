@@ -39,6 +39,7 @@ SearchBarSpinner::SearchBarSpinner()
   dash::Style& style = dash::Style::Instance();
 
   _magnify = style.GetSearchMagnifyIcon();
+  _circle = style.GetSearchCircleIcon();
   _close = style.GetSearchCloseIcon();
   _spin = style.GetSearchSpinIcon();
 
@@ -86,8 +87,11 @@ SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                            geo.y + ((geo.height - _spin->GetHeight()) / 2),
                            _spin->GetWidth(),
                            _spin->GetHeight());
-    int spin_offset_w = (geo.width % 2) ? 0 : 1;
-    int spin_offset_h = (geo.height % 2) ? 0 : 1;
+    // Geometry (== Rect) uses integers which were rounded above,
+    // hence an extra 0.5 offset for odd sizes is needed
+    // because pure floating point is not being used.
+    int spin_offset_w = !(geo.width % 2) ? 0 : 1;
+    int spin_offset_h = !(geo.height % 2) ? 0 : 1;
 
     GfxContext.PushModelViewMatrix(nux::Matrix4::TRANSLATE(-spin_geo.x - (spin_geo.width + spin_offset_w) / 2.0f,
                                                            -spin_geo.y - (spin_geo.height + spin_offset_h) / 2.0f, 0));
@@ -109,24 +113,13 @@ SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   }
   else
   {
-    texxform.FlipVCoord(true);
-    GfxContext.QRP_1Tex(geo.x + ((geo.width - _spin->GetWidth()) / 2),
-                        geo.y + ((geo.height - _spin->GetHeight()) / 2),
-                        _spin->GetWidth(),
-                        _spin->GetHeight(),
-                        _spin->GetDeviceTexture(),
+    GfxContext.QRP_1Tex(geo.x + ((geo.width - _circle->GetWidth()) / 2),
+                        geo.y + ((geo.height - _circle->GetHeight()) / 2),
+                        _circle->GetWidth(),
+                        _circle->GetHeight(),
+                        _circle->GetDeviceTexture(),
                         texxform,
                         nux::color::White);
-    texxform.FlipVCoord(false);
-
-    GfxContext.QRP_1Tex(geo.x + ((geo.width - _spin->GetWidth()) / 2),
-                        geo.y + ((geo.height - _spin->GetHeight()) / 2),
-                        _spin->GetWidth(),
-                        _spin->GetHeight(),
-                        _spin->GetDeviceTexture(),
-                        texxform,
-                        nux::color::White);
-
 
     GfxContext.QRP_1Tex(geo.x + ((geo.width - _close->GetWidth()) / 2),
                         geo.y + ((geo.height - _close->GetHeight()) / 2),

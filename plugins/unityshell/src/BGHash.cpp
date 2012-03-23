@@ -35,8 +35,6 @@ namespace {
   int level_of_recursion;
   const int MAX_LEVEL_OF_RECURSION = 16;
   const int MIN_LEVEL_OF_RECURSION = 2;
-  std::string AVG_BG_COLOR = "average-bg-color";
-  std::string UNITY_SCHEMA = "com.canonical.Unity";
 }
 namespace unity {
 
@@ -343,23 +341,6 @@ namespace unity {
     _hires_time_start = g_get_monotonic_time();
     _hires_time_end = 500 * 1000; // 500 milliseconds
     _transition_handler = g_timeout_add (1000/60, (GSourceFunc)BGHash::OnTransitionCallback, this);
-
-    // export to gsettings
-    GSettings* settings = NULL;
-    GdkColor   color    = {0,
-                           (guint16) (_new_color.red * 65535.0 * 0.7f),
-                           (guint16) (_new_color.green * 65535.0 * 0.7f),
-                           (guint16) (_new_color.blue * 65535.0 * 0.7f)};
-
-    settings = g_settings_new (UNITY_SCHEMA.c_str());
-    if (settings)
-    {
-      unity::glib::String color_string(gdk_color_to_string(&color));
-      LOG_DEBUG(logger) << "Setting gsettings key to: " << color_string;
-      g_settings_set_string(settings, AVG_BG_COLOR.c_str(), color_string);
-      g_object_unref (settings);
-    }
-
   }
 
   gboolean BGHash::OnTransitionCallback(BGHash *self)
@@ -395,10 +376,10 @@ namespace unity {
     ubus_server_send_message(ubus_server_get_default(),
                              UBUS_BACKGROUND_COLOR_CHANGED,
                              g_variant_new ("(dddd)",
-                                            _current_color.red * 0.7f,
-                                            _current_color.green * 0.7f,
-                                            _current_color.blue * 0.7f,
-                                            0.5)
+                                            _current_color.red,
+                                            _current_color.green,
+                                            _current_color.blue,
+                                            _current_color.alpha)
                             );
   }
 
@@ -712,6 +693,7 @@ namespace unity {
       // grayscale image
       LOG_DEBUG (logger) << "got a grayscale image";
       chosen_color = nux::Color (46 , 52 , 54 );
+      chosen_color.alpha = 0.72f;
     }
     else
     {
@@ -731,13 +713,15 @@ namespace unity {
 
       nux::color::HueSaturationValue hsv_color (chosen_color);
 
-      hsv_color.saturation = std::min(base_hsv.saturation, hsv_color.saturation) * 1.36f;
-      hsv_color.value = std::min(std::min(base_hsv.value, hsv_color.value), 0.2f);
+      hsv_color.saturation = std::min(base_hsv.saturation, hsv_color.saturation) * 1.3f;
+      hsv_color.value = std::min(std::min(base_hsv.value, hsv_color.value), 0.26f);
       chosen_color = nux::Color (nux::color::RedGreenBlue(hsv_color));
+      
+      // Reduce alpha on really dark average colors
+      chosen_color.alpha = 0.72f - 2 * (0.26f - hsv_color.value);
     }
 
     // apply design to the colour
-    chosen_color.alpha = 0.5f;
 
     LOG_DEBUG(logger) << "eventually chose "
                       << chosen_color.red << ", "

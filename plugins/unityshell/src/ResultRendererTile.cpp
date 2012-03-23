@@ -51,6 +51,9 @@ namespace unity
 namespace
 {
 nux::logging::Logger logger("unity.dash.results");
+
+const int FONT_SIZE = 10;
+
 }
 
 namespace dash
@@ -114,7 +117,7 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
                         tile_icon_size + 10,
                         container->blurred_icon->GetDeviceTexture(),
                         texxform,
-                        nux::Color(0.5f, 0.5f, 0.5f, 0.5f));
+                        nux::Color(0.15f, 0.15f, 0.15f, 0.15f));
   }
 
   // render highlight if its needed
@@ -265,15 +268,15 @@ void ResultRendererTile::LoadIcon(Result& row)
 
   if (g_strrstr(icon_name.c_str(), "://"))
   {
-    container->slot_handle = IconLoader::GetDefault().LoadFromURI(icon_name.c_str(), style.GetTileIconSize(), slot);
+    container->slot_handle = IconLoader::GetDefault().LoadFromURI(icon_name, style.GetTileIconSize(), slot);
   }
   else if (G_IS_ICON(icon))
   {
-    container->slot_handle = IconLoader::GetDefault().LoadFromGIconString(icon_name.c_str(), style.GetTileIconSize(), slot);
+    container->slot_handle = IconLoader::GetDefault().LoadFromGIconString(icon_name, style.GetTileIconSize(), slot);
   }
   else
   {
-    container->slot_handle = IconLoader::GetDefault().LoadFromIconName(icon_name.c_str(), style.GetTileIconSize(), slot);
+    container->slot_handle = IconLoader::GetDefault().LoadFromIconName(icon_name, style.GetTileIconSize(), slot);
   }
 
   if (icon != NULL)
@@ -423,7 +426,7 @@ void ResultRendererTile::LoadText(Result& row)
   cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
   layout = pango_cairo_create_layout(cr);
   desc = pango_font_description_from_string(font.Value());
-  pango_font_description_set_size (desc, 9 * PANGO_SCALE);
+  pango_font_description_set_size (desc, FONT_SIZE * PANGO_SCALE);
 
   pango_layout_set_font_description(layout, desc);
   pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);
