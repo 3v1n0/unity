@@ -330,6 +330,12 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
+    nux::LayerBlendMode layer_blend_mode = nux::LAYER_BLEND_MODE_OVERLAY;
+    if (_menu_view->GetMaximizedWindow() != 0)
+    {
+      layer_blend_mode = nux::LAYER_BLEND_MODE_NORMAL;
+    }
+
 #ifndef NUX_OPENGLES_20
     if (GfxContext.UsingGLSLCodePath())
       gPainter.PushCompositionLayer(GfxContext, geo,
@@ -337,7 +343,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                     texxform_blur_bg,
                                     nux::color::White,
                                     _bg_color,
-                                    nux::LAYER_BLEND_MODE_OVERLAY,
+                                    layer_blend_mode,
                                     true,
                                     rop);
     else
@@ -354,7 +360,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                     texxform_blur_bg,
                                     nux::color::White,
                                     _bg_color,
-                                    nux::LAYER_BLEND_MODE_OVERLAY,
+                                    layer_blend_mode,
                                     true,
                                     rop);
 #endif
