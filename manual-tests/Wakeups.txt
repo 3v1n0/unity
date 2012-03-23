@@ -1,0 +1,23 @@
+Launcher autoscroll wake-ups
+----------------------------
+This test makes sure that the timer controlling autoscroll animations does
+not keep running (at 50Hz) when it's not required to animate anything. This
+is LP: #917210.
+
+#. Ensure the screen is idle, with very little changing.
+#. Open a terminal and start a tool that can measure process wakeups per
+   second. You can choose one of:
+     - gnome-power-statistics (click on Processor)
+     - powertop
+     - eventstat
+#. Hover the mouse pointer over the top end of the Launcher. That's just above
+   the Ubuntu icon.
+#. Hover the mouse pointer over the bottom end of the Launcher. That's over
+   the bottom of the trash icon.
+#. Move the mouse pointer back to the centre of the screen and leave it there.
+#. Wait 30-60 seconds, leaving the screen idle before verifying the Outcome.
+
+Outcome
+  The number of wakeups per second (events per second) reported for the
+  compiz process should be much lower than 50.
+

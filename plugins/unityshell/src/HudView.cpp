@@ -64,9 +64,10 @@ View::View()
   , current_height_(0)
   , timeline_need_more_draw_(false)
   , selected_button_(0)
+  , icon_state_(IconHideState::SHOW)
 {
   renderer_.SetOwner(this);
-  renderer_.need_redraw.connect([this] () { 
+  renderer_.need_redraw.connect([this] () {
     QueueDraw();
   });
 
@@ -110,12 +111,12 @@ View::View()
         {
           (*it)->fake_focused = false;
         }
-      }      
+      }
     }
   });
 
   mouse_down.connect(sigc::mem_fun(this, &View::OnMouseButtonDown));
-  
+
   Relayout();
 }
 
@@ -138,25 +139,25 @@ void View::ProcessGrowShrink()
    float progress = (diff - pause_before_grow_length) / grow_anim_length;
    int last_height = last_known_height_;
    int new_height = 0;
-   
+
    if (last_height < target_height)
    {
      // grow
      new_height = last_height + ((target_height - last_height) * progress);
    }
-   else 
+   else
    {
      //shrink
      new_height = last_height - ((last_height - target_height) * progress);
    }
-   
+
    LOG_DEBUG(logger) << "resizing to " << target_height << " (" << new_height << ")"
                      << "View height: " << GetGeometry().height;
    current_height_ = new_height;
   }
-  
-  QueueDraw();  
-  
+
+  QueueDraw();
+
   if (diff > grow_anim_length + pause_before_grow_length)
   {
     // ensure we are at our final location and update last known height
@@ -182,7 +183,6 @@ void View::Relayout()
   layout_->SetMinimumWidth(content_geo_.width);
   layout_->SetMaximumWidth(content_geo_.width);
   layout_->SetMaximumHeight(content_geo_.height);
-  //layout_->SetMinMaxSize(content_geo_.width, content_geo_.height);
 
   QueueDraw();
 }
@@ -198,7 +198,7 @@ long View::PostLayoutManagement(long LayoutResult)
       // already started, just reset the last known height
       last_known_height_ = current_height_;
     }
-   
+
     timeline_need_more_draw_ = true;
     start_time_ = g_get_monotonic_time();
     QueueDraw();
@@ -228,7 +228,7 @@ void View::SetQueries(Hud::Queries queries)
   int found_items = 0;
   for (auto query = queries.begin(); query != queries.end(); query++)
   {
-    if (found_items > 5)
+    if (found_items >= 5)
       break;
 
     HudButton::Ptr button(new HudButton());
@@ -271,17 +271,38 @@ void View::SetIcon(std::string icon_name)
   QueueDraw();
 }
 
+void View::SetHideIcon(IconHideState hide_icon)
+{
+  LOG_DEBUG(logger) << "Hide icon called";
+  if (hide_icon == icon_state_)
+    return;
+
+  icon_state_ = hide_icon;
+
+  if (icon_state_ == IconHideState::HIDE)
+    layout_->RemoveChildObject(dynamic_cast<nux::Area*>(icon_layout_.GetPointer()));
+  else
+    layout_->AddLayout(icon_layout_.GetPointer(), 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT, 100.0f, nux::LayoutPosition::NUX_LAYOUT_BEGIN);
+
+  Relayout();
+}
+
 // Gives us the width and height of the contents that will give us the best "fit",
 // which means that the icons/views will not have uneccessary padding, everything will
 // look tight
 nux::Geometry View::GetBestFitGeometry(nux::Geometry const& for_geo)
 {
-  //FIXME - remove magic values, replace with scalable text depending on DPI 
+  //FIXME - remove magic values, replace with scalable text depending on DPI
   // requires smarter font settings really...
   int width, height = 0;
   width = 1024;
   height = 276;
-  
+
+  if (icon_state_ == IconHideState::HIDE)
+  {
+    width -= icon_layout_->GetGeometry().width;
+  }
+
   LOG_DEBUG (logger) << "best fit is, " << width << ", " << height;
 
   return nux::Geometry(0, 0, width, height);
@@ -316,16 +337,18 @@ namespace
 
 void View::SetupViews()
 {
+  dash::Style& style = dash::Style::Instance();
+
   nux::VLayout* super_layout = new nux::VLayout(); 
   layout_ = new nux::HLayout();
-  { 
+  {
     // fill icon layout with icon
     icon_ = new Icon("", icon_size, true);
-    nux::Layout* icon_layout = new nux::VLayout();
+    icon_layout_ = new nux::VLayout();
     {
-      icon_layout->SetVerticalExternalMargin(icon_vertical_margin);
-      icon_layout->AddView(icon_.GetPointer(), 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
-      layout_->AddLayout(icon_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT);
+      icon_layout_->SetVerticalExternalMargin(icon_vertical_margin);
+      icon_layout_->AddView(icon_.GetPointer(), 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
+      layout_->AddLayout(icon_layout_.GetPointer(), 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT);
     }
 
     // add padding to layout between icon and content
@@ -333,21 +356,23 @@ void View::SetupViews()
                                             spacing_between_icon_and_content,
                                             spacing_between_icon_and_content,
                                             spacing_between_icon_and_content), 0);
-    
+
     // fill the content layout
     content_layout_ = new nux::VLayout();
     {
-      // add the top spacing 
+      // add the top spacing
       content_layout_->AddLayout(new nux::SpaceLayout(top_spacing,top_spacing,top_spacing,top_spacing), 0);
 
       // add the search bar to the composite
       search_bar_ = new unity::SearchBar(content_width, true);
       search_bar_->disable_glow = true;
+      search_bar_->SetMinimumHeight(style.GetSearchBarHeight() + style.SEARCH_BAR_EXTRA_PADDING * 2);
+      search_bar_->SetMaximumHeight(style.GetSearchBarHeight() + style.SEARCH_BAR_EXTRA_PADDING * 2);
       search_bar_->search_hint = default_text;
       search_bar_->search_changed.connect(sigc::mem_fun(this, &View::OnSearchChanged));
       AddChild(search_bar_.GetPointer());
       content_layout_->AddView(search_bar_.GetPointer(), 0, nux::MINOR_POSITION_LEFT);
-     
+
       button_views_ = new nux::VLayout();
       button_views_->SetMaximumWidth(content_width);
 
@@ -360,7 +385,7 @@ void View::SetupViews()
 
     layout_->AddLayout(content_layout_.GetPointer(), 1, nux::MINOR_POSITION_TOP);
   }
-  
+
   super_layout->AddLayout(layout_.GetPointer(), 0);
   SetLayout(super_layout);
 }
@@ -417,7 +442,7 @@ void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   draw_content_geo.height = current_height_;
 
   renderer_.DrawInner(gfx_context, draw_content_geo, absolute_window_geometry_, window_geometry_);
- 
+
   gfx_context.PushClippingRectangle(draw_content_geo);
   if (IsFullRedraw())
   {
@@ -435,7 +460,7 @@ void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 
   if (timeline_need_more_draw_ && !timeline_id_)
   {
-    timeline_id_ = g_timeout_add(0, [] (gpointer data) -> gboolean 
+    timeline_id_ = g_timeout_add(0, [] (gpointer data) -> gboolean
     {
       View *self = static_cast<View*>(data);
       self->QueueDraw();
@@ -497,9 +522,11 @@ void View::OnSearchbarActivated()
       if ((*it)->fake_focused)
       {
         query_activated.emit((*it)->GetQuery());
+        return;
       }
     }
   }
+  search_activated.emit(search_bar_->search_string);
 }
 
 nux::Area* View::FindKeyFocusArea(unsigned int event_type,
@@ -622,7 +649,7 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
       return search_bar_->text_entry();
     }
 
-    if (direction == nux::KEY_NAV_ENTER)
+    if (event_type == nux::NUX_KEYDOWN && direction == nux::KEY_NAV_ENTER)
     {
       // We still choose the text_entry as the receiver of the key focus.
       return search_bar_->text_entry();

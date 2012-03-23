@@ -95,10 +95,17 @@ void              panel_service_sync_geometry (PanelService *self,
 
 void              panel_service_show_entry    (PanelService *self,
 					       const gchar  *entry_id,
-					       guint32       timestamp,
+					       guint32       xid,
 					       gint32        x,
 					       gint32        y,
-					       gint32        button);
+					       guint32       button,
+					       guint32       timestamp);
+
+void              panel_service_show_app_menu (PanelService *self,
+					       guint32       xid,
+					       gint32        x,
+					       gint32        y,
+					       guint32       timestamp);
 
 void              panel_service_secondary_activate_entry (PanelService *self,
 					       const gchar  *entry_id,

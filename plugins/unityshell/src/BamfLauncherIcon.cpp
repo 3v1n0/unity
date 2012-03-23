@@ -684,8 +684,8 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
 
   int index = 0;
   while (nicks[index]) {
-  
-    // Build a dbusmenu item for each nick that is the desktop 
+
+    // Build a dbusmenu item for each nick that is the desktop
     // file that is built from it's name and includes a callback
     // to the desktop shortcuts object to execute the nick
     glib::String name(indicator_desktop_shortcuts_nick_get_name(_desktop_shortcuts,
@@ -781,7 +781,7 @@ void BamfLauncherIcon::Stick(bool save)
   bamf_view_set_sticky(BAMF_VIEW(_bamf_app.RawPtr()), true);
 
   if (save && !desktop_file.empty())
-    FavoriteStore::GetDefault().AddFavorite(desktop_file.c_str(), -1);
+    FavoriteStore::GetDefault().AddFavorite(desktop_file, -1);
 }
 
 void BamfLauncherIcon::UnStick()
@@ -797,7 +797,7 @@ void BamfLauncherIcon::UnStick()
     Remove();
 
   if (!desktop_file.empty())
-    FavoriteStore::GetDefault().RemoveFavorite(desktop_file.c_str());
+    FavoriteStore::GetDefault().RemoveFavorite(desktop_file);
 }
 
 void BamfLauncherIcon::ToggleSticky()

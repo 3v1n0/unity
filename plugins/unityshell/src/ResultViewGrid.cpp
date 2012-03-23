@@ -61,9 +61,10 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   , recorded_dash_height_(-1)
   , mouse_last_x_(-1)
   , mouse_last_y_(-1)
+  , extra_horizontal_spacing_(0)
 {
   SetAcceptKeyNavFocusOnMouseDown(false);
-  
+
   auto needredraw_lambda = [&](int value)
   {
     NeedRedraw();
@@ -268,11 +269,22 @@ void ResultViewGrid::SizeReallocate()
   {
     total_height = renderer_->height;
   }
+
+  int width = (items_per_row * renderer_->width) + (padding*2) + ((items_per_row - 1) * horizontal_spacing);
+  int geo_width = GetBaseWidth();
+  int extra_width = geo_width - (width + 25-3);
+
+  if (items_per_row != 1)
+    extra_horizontal_spacing_ = extra_width / (items_per_row - 1);
+  if (extra_horizontal_spacing_ < 0)
+    extra_horizontal_spacing_ = 0;
+
   SetMinimumHeight(total_height + (padding * 2));
   SetMaximumHeight(total_height + (padding * 2));
   PositionPreview();
 
   mouse_over_index_ = GetIndexAtPosition(mouse_last_x_, mouse_last_y_);
+  results_per_row = items_per_row;
 }
 
 void ResultViewGrid::PositionPreview()
@@ -477,7 +489,7 @@ void ResultViewGrid::OnKeyDown (unsigned long event_type, unsigned long event_ke
   selected_index_ = std::min(static_cast<int>(results_.size() - 1), selected_index_);
   focused_uri_ = results_[selected_index_].uri;
 
-  int focused_x = (renderer_->width + horizontal_spacing) * (selected_index_ % items_per_row);
+  int focused_x = (renderer_->width + horizontal_spacing + extra_horizontal_spacing_) * (selected_index_ % items_per_row);
   int focused_y = (renderer_->height + vertical_spacing) * (selected_index_ / items_per_row);
 
   ubus_.SendMessage(UBUS_RESULT_VIEW_KEYNAV_CHANGED,
@@ -510,19 +522,19 @@ void ResultViewGrid::OnKeyNavFocusChange(nux::Area *area, bool has_focus, nux::K
     if (direction == nux::KEY_NAV_UP && expanded)
     {
       // This View just got focused through keyboard navigation and the
-      // focus is comming from the bottom. We want to focus the 
+      // focus is comming from the bottom. We want to focus the
       // first item (on the left) of the last row in this grid.
 
       int total_rows = std::ceil(results_.size() / (double)items_per_row);
       selected_index_ = items_per_row * (total_rows-1);
 
-      focused_x = (renderer_->width + horizontal_spacing) * (selected_index_ % items_per_row);
+      focused_x = (renderer_->width + horizontal_spacing + extra_horizontal_spacing_) * (selected_index_ % items_per_row);
       focused_y = (renderer_->height + vertical_spacing) * (selected_index_ / items_per_row);
 
     }
     else
     {
-      focused_x = (renderer_->width + horizontal_spacing) * (selected_index_ % items_per_row);
+      focused_x = (renderer_->width + horizontal_spacing + extra_horizontal_spacing_) * (selected_index_ % items_per_row);
       focused_y = (renderer_->height + vertical_spacing) * (selected_index_ / items_per_row);
     }
 
@@ -611,7 +623,6 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   gPainter.PaintBackground(GfxContext, GetGeometry());
 
   int items_per_row = GetItemsPerRow();
-
   uint total_rows = (!expanded) ? 0 : (results_.size() / items_per_row) + 1;
 
   ResultView::ResultList::iterator it;
@@ -670,9 +681,10 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
           offset_y = 0;
         }
         nux::Geometry render_geo(x_position, y_position, renderer_->width, renderer_->height);
+//nux::GetPainter().Paint2DQuadColor(GfxContext, render_geo, nux::color::Blue*0.20);
         renderer_->Render(GfxContext, results_[index], state, render_geo, offset_x, offset_y);
 
-        x_position += renderer_->width + horizontal_spacing;
+        x_position += renderer_->width + horizontal_spacing + extra_horizontal_spacing_;
       }
     }
 
@@ -734,7 +746,7 @@ uint ResultViewGrid::GetIndexAtPosition(int x, int y)
 {
   uint items_per_row = GetItemsPerRow();
 
-  uint column_size = renderer_->width + horizontal_spacing;
+  uint column_size = renderer_->width + horizontal_spacing + extra_horizontal_spacing_;
   uint row_size = renderer_->height + vertical_spacing;
 
   if (preview_layout_ != NULL && (y - padding) / row_size > preview_row_)
@@ -908,11 +920,11 @@ ResultViewGrid::DndSourceDragFinished(nux::DndAction result)
   last_mouse_down_y_ = -1;
   current_drag_uri_.clear();
   current_drag_icon_name_.clear();
-  
+
   // We need this because the drag can start in a ResultViewGrid and can
   // end in another ResultViewGrid
   EmitMouseLeaveSignal(0, 0, 0, 0);
-  
+
   // We need an extra mouse motion to highlight the icon under the mouse
   // as soon as dnd finish
   Display* display = nux::GetGraphicsDisplay()->GetX11Display();

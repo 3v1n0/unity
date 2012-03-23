@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -43,7 +43,7 @@ public:
   /**
    * internal
    */
-  void ActivateEntry(std::string const& entry_id);
+  void ActivateEntry(std::string const& entry_id, nux::Rect const& geometry);
 
   /**
    * internal
@@ -58,10 +58,21 @@ public:
   /**
    * internal
    */
-  virtual void OnEntryShowMenu(std::string const& entry_id,
-                               int x, int y, int timestamp, int button) = 0;
+  virtual void OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
+                               int x, int y, unsigned int button,
+                               unsigned int timestamp) = 0;
+
+  /**
+   * internal
+   */
   virtual void OnEntrySecondaryActivate(std::string const& entry_id,
                                         unsigned int timestamp) = 0;
+
+  /**
+   * internal
+   */
+  virtual void OnShowAppMenu(unsigned int xid, int x, int y,
+                             unsigned int timestamp) = 0;
 
   // Signals
   sigc::signal<void, Indicator::Ptr const&> on_object_added;
@@ -79,7 +90,7 @@ public:
    * An entry just got activated. View needs to repaint it.
    * @param entry_id entry id
    */
-  sigc::signal<void, std::string const&> on_entry_activated;
+  sigc::signal<void, std::string const&, nux::Rect const&> on_entry_activated;
 
   /**
    * internal
@@ -89,12 +100,22 @@ public:
   /**
    * The service is about to show a menu.
    * @param entry_id entry id
-   * @param x x coordinate
-   * @param y y coordinate
-   * @param timestamp current time
+   * @param xid window xid
+   * @param x coordinate
+   * @param y coordinate
    * @param button pressed button
+   * @param timestamp current time
    */
-  sigc::signal<void, std::string const&, int, int, int, int> on_entry_show_menu;
+  sigc::signal<void, std::string const&, unsigned int, int, int, unsigned int, unsigned int> on_entry_show_menu;
+
+  /**
+   * The service is about to show an appmenu.
+   * @param xid window xid
+   * @param x coordinate
+   * @param y coordinate
+   * @param timestamp current time
+   */
+  sigc::signal<void, unsigned int, int, int, unsigned int> on_show_appmenu;
 
 protected:
   Indicator::Ptr GetIndicator(std::string const& name);
@@ -103,7 +124,7 @@ protected:
 
 private:
   class Impl;
-  Impl* pimpl;
+  std::unique_ptr<Impl> pimpl;
 };
 
 }

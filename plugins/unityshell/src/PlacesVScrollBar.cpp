@@ -28,8 +28,16 @@ PlacesVScrollBar::PlacesVScrollBar(NUX_FILE_LINE_DECL)
   : VScrollBar(NUX_FILE_LINE_PARAM),
     _slider_texture(NULL)
 {
-  _slider->SetMinimumSize(3, 3);
-  SetMinimumSize(3, 3);
+  _scroll_up_button->SetMaximumHeight(15);
+  _scroll_up_button->SetMinimumHeight(15);
+
+  _scroll_down_button->SetMaximumHeight(15);
+  _scroll_down_button->SetMinimumHeight(15);
+
+  _slider->SetMinimumWidth(3);
+  _slider->SetMaximumWidth(3);
+  SetMinimumWidth(3);
+  SetMaximumWidth(3);
 }
 
 PlacesVScrollBar::~PlacesVScrollBar()
@@ -56,8 +64,8 @@ PlacesVScrollBar::PostLayoutManagement(long LayoutResult)
 void
 PlacesVScrollBar::Draw(nux::GraphicsEngine& gfxContext, bool force_draw)
 {
-  nux::Color         color = nux::color::White;
-  nux::Geometry      base  = GetGeometry();
+  nux::Color color = nux::color::White;
+  nux::Geometry const& base  = GetGeometry();
   nux::TexCoordXForm texxform;
 
   gfxContext.PushClippingRectangle(base);
@@ -75,7 +83,8 @@ PlacesVScrollBar::Draw(nux::GraphicsEngine& gfxContext, bool force_draw)
 
   if (content_height_ > container_height_)
   {
-    nux::Geometry slider_geo = _slider->GetGeometry();
+    nux::Geometry const& slider_geo = _slider->GetGeometry();
+
     gfxContext.QRP_1Tex(slider_geo.x,
                         slider_geo.y,
                         slider_geo.width,

@@ -48,11 +48,14 @@ _keys = {
     "launcher/keynav/prev": "Up",
     "launcher/keynav/activate": "Enter",
     "launcher/keynav/exit": "Escape",
-    "launcher/switcher": ('unityshell', 'launcher_switcher_forward'),
-    "launcher/switcher/next": "Tab",
-    "launcher/switcher/prev": "Shift+Tab",
     "launcher/keynav/open-quicklist": "Right",
     "launcher/keynav/close-quicklist": "Left",
+    "launcher/switcher": ('unityshell', 'launcher_switcher_forward'),
+    "launcher/switcher/exit": "Escape",
+    "launcher/switcher/next": "Tab",
+    "launcher/switcher/prev": "Shift+Tab",
+    "launcher/switcher/down": "Down",
+    "launcher/switcher/up": "Up",
     # Dash:
     "dash/reveal": "Super",
     # Lenses
@@ -68,6 +71,9 @@ _keys = {
     "switcher/reveal_details": "Alt+`",
     "switcher/reveal_all": ("unityshell", "alt_tab_forward_all"),
     "switcher/cancel": "Escape",
+    # Shortcut Hint:
+    "shortcuthint/reveal": ('unityshell', 'show_launcher'),
+    "shortcuthint/cancel": "Escape",
     # These are in compiz as 'Alt+Right' and 'Alt+Left', but the fact that it
     # lists the Alt key won't work for us, so I'm defining them manually.
     "switcher/next": "Tab",
@@ -85,12 +91,15 @@ _keys = {
     "workspace/move_down": ("wall", "down_key"),
     # Window management
     "window/minimize": ("core", "minimize_window_key"),
+    # expo plugin:
+    "expo/start": ("expo", "expo_key"),
+    "expo/cancel": "Escape",
 }
 
 
 
 def get(binding_name):
-    """Get a keyubinding, given it's well-known name.
+    """Get a keybinding, given its well-known name.
 
     binding_name must be a string, or a TypeError will be raised.
 
@@ -224,3 +233,6 @@ class KeybindingsHelper(object):
         """Tap the tap-part of a keybinding."""
         self._keyboard.press_and_release(get_tap_part(binding_name))
 
+    def keybinding_hold_part_then_tap(self, binding_name):
+        self.keybinding_hold(binding_name)
+        self.keybinding_tap(binding_name)
