@@ -23,7 +23,7 @@
 
 namespace unity
 {
-  
+
 HSeparator::HSeparator()
 {
   SetMinimumHeight(1);
@@ -43,31 +43,28 @@ HSeparator::~HSeparator()
 
 void HSeparator::Draw(nux::GraphicsEngine &GfxContext, bool force_draw)
 {
-  nux::Geometry base = GetGeometry();
-  base.OffsetPosition(3, 0);
-  base.OffsetSize(-6, 0);
+  nux::Geometry const& base = GetGeometry();
   int y0 = base.y + base.GetHeight() / 2;
 
-  nux::GetGraphicsDisplay()->GetGraphicsEngine()->GetRenderStates().SetBlend(TRUE, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  unsigned int alpha = 0, src = 0, dest = 0;
+  GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
+  nux::GetGraphicsDisplay()->GetGraphicsEngine()->GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
   if (base.GetWidth() - 2 * border_size_ > 0)
   {
-    nux::Color color0 = color_;
-    nux::Color color1 = color_;
-    color0.alpha = alpha0_;
-    color1.alpha = alpha1_;
+    nux::Color color0 = color_ * alpha0_;
+    nux::Color color1 = color_ * alpha1_;
     nux::GetPainter().Draw2DLine(GfxContext, base.x, y0, base.x + border_size_, y0, color0, color1);
     nux::GetPainter().Draw2DLine(GfxContext, base.x + border_size_, y0, base.x + base.GetWidth() - border_size_, y0, color1, color1);
     nux::GetPainter().Draw2DLine(GfxContext, base.x + base.GetWidth() - border_size_, y0, base.x + base.GetWidth(), y0, color1, color0);
   }
   else
   {
-    nux::Color color1 = color_;
-    color1.alpha = alpha1_;
+    nux::Color color1 = color_ *  alpha1_;
     nux::GetPainter().Draw2DLine(GfxContext, base.x, y0, base.x + base.GetWidth(), y0, color1, color1);
   }
 
-  nux::GetGraphicsDisplay()->GetGraphicsEngine()->GetRenderStates().SetBlend(FALSE);
+  GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
 }
 
 } // namespace unity

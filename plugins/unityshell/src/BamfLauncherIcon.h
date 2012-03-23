@@ -61,6 +61,7 @@ public:
   virtual unsigned long long SwitcherPriority();
 
   std::vector<Window> Windows();
+  std::vector<Window> WindowsOnViewport();
   std::vector<Window> WindowsForMonitor(int monitor);
   std::string NameForWindow(Window window);
 
@@ -87,6 +88,15 @@ protected:
   std::string GetName() const;
 
 private:
+  typedef unsigned long int WindowFilterMask;
+  enum WindowFilter
+  {
+    MAPPED = (1 << 0),
+    USER_VISIBLE = (1 << 1),
+    ON_CURRENT_DESKTOP = (1 << 2),
+    ON_ALL_MONITORS = (1 << 3),
+  };
+
   void EnsureWindowState();
   void EnsureMenuItemsReady();
   void UpdateDesktopFile();
@@ -103,6 +113,7 @@ private:
 
   bool OwnsWindow(Window w) const;
 
+  std::vector<Window> GetWindows(WindowFilterMask filter, int monitor = -1);
   const std::set<std::string>& GetSupportedTypes();
 
 

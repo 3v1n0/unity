@@ -1577,6 +1577,11 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
                                            CompAction::State state,
                                            CompOption::Vector& options)
 {
+  // Remember StateCancel and StateCommit will be broadcast to all actions
+  // so we need to verify that we are actually being toggled...
+  if (!(state & CompAction::StateTermKey))
+    return false;
+
   if (state & CompAction::StateCancel)
     return false;
 
@@ -1601,10 +1606,24 @@ bool UnityScreen::showPanelFirstMenuKeyInitiate(CompAction* action,
                                                 CompAction::State state,
                                                 CompOption::Vector& options)
 {
-  grab_index_ = screen->pushGrab (None, "unityshell");
-  // to receive the Terminate event
+  /* In order to avoid too many events when keeping the keybinding pressed,
+   * that would make the unity-panel-service to go crazy (see bug #948522)
+   * we need to filter them, just considering an event every 750 ms */
+  int event_time = options[7].value().i();  // XEvent time in millisec
+
+  if (event_time - first_menu_keypress_time_ < 750)
+  {
+    first_menu_keypress_time_ = event_time;
+    return false;
+  }
+
+  first_menu_keypress_time_ = event_time;
+
+  /* Even if we do nothing on key terminate, we must enable it, not to to hide
+   * the menus entries after that a menu has been shown and hidden via the
+   * keyboard and the Alt key is still pressed */
   action->setState(action->state() | CompAction::StateTermKey);
-  panel_controller_->StartFirstMenuShow();
+  panel_controller_->FirstMenuShow();
   return true;
 }
 
@@ -1612,9 +1631,7 @@ bool UnityScreen::showPanelFirstMenuKeyTerminate(CompAction* action,
                                                  CompAction::State state,
                                                  CompOption::Vector& options)
 {
-  screen->removeGrab(grab_index_, NULL);
   action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
-  panel_controller_->EndFirstMenuShow();
   return true;
 }
 

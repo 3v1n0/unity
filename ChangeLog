@@ -1,3 +1,4917 @@
+2012-03-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: implement WindowsOnViewport to get only windows on visible VP
+	
+	This function doesn't take account of the monitors.
+	Rewritten also BamfLauncherIcon::Windows and ::WindowsForMonitor
+	to remove code duplication, using the new GetWindows function to perform
+	filtering via the WindowFilterMask.. Fixes: https://bugs.launchpad.net/bugs/961977. Approved by Thomi Richards, Jason Smith.
+
+2012-03-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-03-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	manual-tests, Launcher: improved the launcher multimonitor/workspace tests
+
+2012-03-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	manual-tests: added a Launcher manual test to check the "pips" changes
+
+2012-03-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: implement WindowsOnViewport to get only windows on visible VP
+	
+	This function doesn't take account of the monitors.
+	
+	Redesigned also BamfLauncherIcon::Windows and ::WindowsForMonitor
+	to remove code duplication, using the new GetWindows function to perform
+	filtering via the WindowFilterMask.
+
+2012-03-22  Tim Penhey  <tim.penhey@canonical.com>
+
+	Make the panel more aware of open overlays, and make sure that all launchers resaturate the icons when overlays (the dash or hud) are closed.. Fixes: https://bugs.launchpad.net/bugs/961844, https://bugs.launchpad.net/bugs/962720. Approved by Thomi Richards.
+
+2012-03-23  Tim Penhey  <tim.penhey@canonical.com>
+
+	Manual test for the launcher icon saturation.
+
+2012-03-23  Tim Penhey  <tim.penhey@canonical.com>
+
+	The panel was assuming that you would get a close before an open if switching from the dash to the hud, but they come in the other order.
+
+2012-03-23  Tim Penhey  <tim.penhey@canonical.com>
+
+	Purely a redraw issue with the resaturation.
+
+2012-03-22  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Added extra tests for the ibus Anthy engine: we now test both Ctrl+J and Enter as a commit key.. Fixes: . Approved by Brandon Schaefer.
+
+2012-03-23  Thomi Richards  <thomi.richards@canonical.com>
+
+	Use multiple_scenarios from testscenarios to generate a dot-product for scenarios that need it. If the version of testscenarios is too old, we provide our own implementation.
+
+2012-03-22  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Added to the ibus_anthy test using Enter to commit preedit
+
+2012-03-22  Tim Penhey  <tim.penhey@canonical.com>
+
+	Make sure the decay function callback is removed on object destruction.. Fixes: https://bugs.launchpad.net/bugs/962693. Approved by Marco Trevisan (Treviño).
+
+2012-03-23  Tim Penhey  <tim.penhey@canonical.com>
+
+	Add a destructor to the Decaymulator to remove the on timeout function call.
+
+2012-03-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Open the Menus Indicators on ButtonPress avoiding flickers
+	
+	Now the indicator menus shows once Alt+F10 keybinding has been pressed, and is not anymore needed to release the Alt key.
+	Also, fixed the panel issue reported in bug #948522 that could happen when using menus. To avoid it we use now a timeout to filter the events that we can ignore not to make unity-panel-service crazy.. Fixes: https://bugs.launchpad.net/bugs/943223, https://bugs.launchpad.net/bugs/948522. Approved by Tim Penhey.
+
+2012-03-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicators: added Alt+F10 manual test
+
+2012-03-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityShell: show First indicator menu on key-down, also remove the flickering issue
+
+2012-03-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed one manual test that was impossible to run, and another that existed in two separate places.
+	
+	UNBLOCK. Fixes: . Approved by Alex Launi.
+
+2012-03-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed the antialiasing text manual tests, as it's impossible to verify.
+
+2012-03-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed duplicate manual tests.
+
+2012-03-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix autopilot tests for launcher keynav mode and super+tab switcher.. Fixes: . Approved by Alex Launi.
+
+2012-03-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed launcher keynav tests.
+
+2012-03-22  Michal Hruby  <michal.mhr@gmail.com>
+
+	Set proper view_type on lenses when they're activated by shortcut. Fixes: https://bugs.launchpad.net/bugs/961338. Approved by Gord Allott, Mikkel Kamstrup Erlandsen.
+
+2012-03-22  Michal Hruby  <michal.mhr@gmail.com>
+
+	Make the test cleanup itself
+
+2012-03-22  Michal Hruby  <michal.mhr@gmail.com>
+
+	Add AP test
+
+2012-03-22  Michal Hruby  <michal.mhr@gmail.com>
+
+	Set proper view_type on lenses when they're activated by shortcut
+
+2012-03-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed the shortcut_hint autopilot tests. These were broken after the launcher emulator was changed.. Fixes: . Approved by Tim Penhey.
+
+2012-03-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed shortcut hint auitopilot tests.
+
+2012-03-21  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Reduces opacity of the blur effect in the dash icons from 50% to 15%, as requested by design. Fixes: . Approved by Andrea Azzarone.
+
+2012-03-21  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Less opacity for the blurred effect on icons in the dash
+
+2012-03-21  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Trunk uses 100% opacity for search bar border opacity, should be 80%. Fixes: . Approved by Andrea Azzarone.
+
+2012-03-21  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Fix regression of search bar border opacity
+
+2012-03-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: show a launcher in the primary monitor if set
+	
+	This ensures that the launcher is shown only on the primary one, not on the one at the left.. Fixes: https://bugs.launchpad.net/bugs/961281. Approved by Andrea Azzarone.
+
+2012-03-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: ensures we have a valid launchers[0]
+	
+	It shouldn't ever happen, btw.
+
+2012-03-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: ensure that the primary monitor is used when using only one launcher
+
+2012-03-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher manual test: added test to check the launcher monitors.
+
+2012-03-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: be aware of the primary monitor.
+	
+	Only show the launcher in the primary monitor if set.
+
+2012-03-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixing current dash layout which doesn't match the wanted design.
+	
+	Moreover the dash code is full of magic number.. Fixes: . Approved by Andrea Cimitan, Marco Trevisan (Treviño).
+
+2012-03-21  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Spacing
+
+2012-03-21  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Readd the const& to the variable
+
+2012-03-21  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Merge trunk
+
+2012-03-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Re-Remerge trunk
+
+2012-03-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Re-merging with trunk.
+
+2012-03-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-03-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Update paddin value.
+
+2012-03-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix search bar height in hud.
+
+2012-03-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes dash layout bugs. Moves padding values in dash::style.
+
+2012-03-21  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix incorrect signal connections for handling global search finished. Fixes: . Approved by .
+
+2012-03-21  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge trunk
+
+2012-03-21  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix incorrect signal connections for handling global search finished
+
+2012-03-21  Gord Allott  <gord.allott@canonical.com>
+
+	Hud wasn't sending its monitor with the OVERLAY_HIDDEN message, corrects that, fixes lp:961169. Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-03-21  Gord Allott  <gord.allott@canonical.com>
+
+	ensured that the hud hide method sends the correct monitor in its ubus signal
+
+2012-03-21  Didier Roche  <didier.roche@canonical.com>
+
+	gord has a fix, reverting the revert
+
+2012-03-21  Didier Roche  <didier.roche@canonical.com>
+
+	revert lp:~thumper/unity/lock-out-hud. Causing bug #961169
+
+2012-03-21  Gord Allott  <gord.allott@canonical.com>
+
+	Fixes the incorrect item count in See x more results. see lp:934944. Fixes: https://bugs.launchpad.net/bugs/934944. Approved by Mirco Müller.
+
+2012-03-21  Gord Allott  <gord.allott@canonical.com>
+
+	remove debug
+
+2012-03-21  Gord Allott  <gord.allott@canonical.com>
+
+	fix rare case when there are less items shown than they should
+
+2012-03-21  Gord Allott  <gord.allott@canonical.com>
+
+	merged trunk, resolved criss-cross merge
+
+2012-03-19  Gord Allott  <gord.allott@canonical.com>
+
+	clarified manual test
+
+2012-03-06  Gord Allott  <gord.allott@canonical.com>
+
+	Ensures PlacesGroup corrects the number of visible results depending on the result view it is using
+
+2012-03-06  Gord Allott  <gord.allott@canonical.com>
+
+	depend on standalone dash fix branch
+
+2012-03-21  Gord Allott  <gord.allott@canonical.com>
+
+	Removes the focus forcing hack in the HUD.. Fixes: . Approved by Gord Allott, Alex Launi, Marco Trevisan (Treviño), Michal Hruby.
+
+2012-03-21  Gord Allott  <gord.allott@canonical.com>
+
+	resolved conflict with trunk
+
+2012-03-07  Gord Allott  <gord.allott@canonical.com>
+
+	fix conflict with trunk
+
+2012-02-15  Gord Allott  <gord.allott@canonical.com>
+
+	remove the bad timeout
+
+2012-03-21  Daniel van Vugt  <vanvugt@gmail.com>
+
+	Fix the autoscroll timer waking up 50 times per sec when no scrolling needs to be done (LP: #917210). Fixes: https://bugs.launchpad.net/bugs/917210. Approved by Marco Trevisan (Treviño).
+
+2012-03-14  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	manual-tests/Wakeups.txt: Add test case for bug LP: #917210
+
+2012-03-14  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Merged latest lp:unity
+
+2012-01-24  Daniel van Vugt  <vanvugt@gmail.com>
+
+	Fix the autoscroll timer waking up 50 times per sec when no scrolling needs
+	to be done (LP: #917210)
+	
+	Also removed some unused variables.
+
+2012-03-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unity-panel-service: don't crash if the parsed a11y indicator entry is not valid
+	
+	Entries with invalid parent_object have been removed from the indicator
+	so we shouldn't really care about them.. Fixes: https://bugs.launchpad.net/bugs/937119. Approved by Didier Roche.
+
+2012-03-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Manual Test: Added Panel Service test
+
+2012-03-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelindicatorEntryAccessible: don't crash if the parsed entry is not valid
+	
+	Entries with invalid parent_object have been removed from the indicator
+	so we shouldn't really care about them.
+
+2012-03-21  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Don't respond to "Confirm" actions in showLauncherKeyTerminate, which come
+	from pressing Enter during any action (holding Alt). Those calls are spurious
+	(a long-standing design bug in compiz) and do not come with a valid options[]
+	vector. So accessing options[] would crash (LP: #960957)
+	. Fixes: https://bugs.launchpad.net/bugs/960957. Approved by Marco Trevisan (Treviño), Gord Allott.
+
+2012-03-21  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Don't respond to "Confirm" actions in showLauncherKeyTerminate, which come
+	from pressing Enter during any action (holding Alt). Those calls are spurious
+	(a long-standing design bug in compiz) and do not come with a valid options[]
+	vector. So accessing options[] would crash (LP: #960957)
+
+2012-03-21  Tim Penhey  <tim.penhey@canonical.com>
+
+	Adapt the HUD visuals to look nice with a locked out launcher.. Fixes: https://bugs.launchpad.net/bugs/921506. Approved by Gord Allott, Marco Trevisan (Treviño).
+
+2012-03-21  Tim Penhey  <tim.penhey@canonical.com>
+
+	Add some sleeps to allow unity time to work things out.
+
+2012-03-21  Tim Penhey  <tim.penhey@canonical.com>
+
+	Update the hud autopilot tests to run with both the launcher hide settings.
+
+2012-03-21  Tim Penhey  <tim.penhey@canonical.com>
+
+	Make the HUD and BFB launcher icons not switch visibility if the launcher is not locked out.
+
+2012-03-21  Tim Penhey  <tim.penhey@canonical.com>
+
+	Trim trailing whitespace.
+
+2012-03-21  Tim Penhey  <tim.penhey@canonical.com>
+
+	Make the launcher realise when the hud is open.
+
+2012-03-21  Tim Penhey  <tim.penhey@canonical.com>
+
+	Hook up the BFB and HUD launcher icons to the hide_mode changed signal.
+
+2012-03-21  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fix the enum declarations.
+
+2012-03-21  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk.
+
+2012-03-16  Gord Allott  <gord.allott@canonical.com>
+
+	added manual test for hud lock out behaviour as there is no AP mechanism for ensuring the launchers locked out state
+
+2012-03-16  Gord Allott  <gord.allott@canonical.com>
+
+	fixed wrong highlight
+
+2012-03-15  Gord Allott  <gord.allott@canonical.com>
+
+	update hud/launcher visuals for design change
+
+2012-03-21  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixes the icon getting frozen and producing a duplicate icon.. Fixes: https://bugs.launchpad.net/bugs/918753. Approved by Tim Penhey.
+
+2012-03-20  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* DRY - Dont Repeat Yourself
+
+2012-03-20  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Lose mouse control now
+
+2012-03-19  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixes the icon getting frozen and producing a duplicate icon.
+
+2012-03-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove obsolete manual tests.. Fixes: . Approved by Tim Penhey.
+
+2012-03-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Removes obsolete manual tests.
+
+2012-03-20  Alexandros Frantzis  <alexandros.frantzis@linaro.org>
+
+	ubus: Ensure the GType system has been initialized before using any GTypes.
+	
+	The unity plugin doesn't explicitly call g_type_init(), although it uses a
+	GObject for UBusServer. This currently works because the ccp plugin, which
+	gets loaded before the unity plugin, calls g_type_init(), but this is fragile.
+	If ccp is not used, g_type_init() is not called by the time UBusServer gets
+	initialized, leading to a crash. This patch ensures that the GType system
+	has been initialized before using UBusServer (it is safe to call g_type_init()
+	multiple times).. Fixes: . Approved by Marco Trevisan (Treviño), Jay Taoko.
+
+2012-03-16  Alexandros Frantzis  <alexandros.frantzis@linaro.org>
+
+	ubus: Ensure the GType system has been initialized before using any GTypes.
+	
+	The unity plugin doesn't explicitly call g_type_init(), although it uses a
+	GObject for UBusServer. This currently works because the ccp plugin, which
+	gets loaded before the unity plugin, calls g_type_init(), but this is fragile.
+	If ccp is not used, g_type_init() is not called by the time UBusServer gets
+	initialized, leading to a crash. This patch ensures that the GType system
+	has been initialized before using UBusServer (it is safe to call g_type_init()
+	multiple times).
+
+2012-03-20  Gord Allott  <gord.allott@canonical.com>
+
+	Fixes issue with hud not emitting a signal when results change. Fixes: https://bugs.launchpad.net/bugs/956480. Approved by Marco Trevisan (Treviño).
+
+2012-03-16  Gord Allott  <gord.allott@canonical.com>
+
+	emit signal (1 line) and tests (about a billion lines)
+
+2012-03-20  Ryan Lortie  <desrt@desrt.ca>
+
+	don't store average-bg-color in GSettings
+	
+	This is now exported by libgnome-desktop as an X property on the root window. Interested applications can pick it up from there.. Fixes: https://bugs.launchpad.net/bugs/949277. Approved by Ryan Lortie, Mirco Müller.
+
+2012-03-09  Ryan Lortie  <desrt@desrt.ca>
+
+	don't store average-bg-color in GSettings
+	
+	This is now exported by libgnome-desktop as an X property on the root
+	window.  Interested applications can pick it up from there.
+
+2012-03-20  Alexandros Frantzis  <alexandros.frantzis@linaro.org>
+
+	gles2: Reference compiz's GLFramebufferObject class using a global namespace.
+	
+	We need to do this to differentiate from the class of the same name provided
+	in the Nux namespace.. Fixes: . Approved by Jay Taoko.
+
+2012-02-23  Alexandros Frantzis  <alexandros.frantzis@linaro.org>
+
+	gles2: Reference compiz's GLFramebufferObject class using a global namespace.
+	
+	We need to do this to differentiate from the class of the same name provided
+	in the Nux namespace.
+
+2012-03-20  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fix for bug #956878:
+	The hud is designed such that the first valid option is always selected. When the activated signal is detected early in hud::View::FindKeyFocusArea, the selected button signal is emitted, and the text entry is still selected as the focus area. Therefore, the hud should not reacted to the search_bar_->activated signal since it alreacdy acted in hud::View::FindKeyFocusArea.. Fixes: . Approved by Gord Allott.
+
+2012-03-20  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Removed empty lines in manual test file.
+
+2012-03-20  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Make sure the the Enter key is processesd when it is down.
+	* Changed temporary file name for test. Added "autopilot_" prefix.
+
+2012-03-19  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Added test.
+
+2012-03-19  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Added a manual test.
+	* Reverted a previous change that breaks the functionality.
+
+2012-03-19  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Reset the state of activated_signal_sent_, following a test in search_bar_->activated.connect(). This let the SearchBar act on the activated signals again and requires the Enter key to be pressed for activated_signal_sent_ to be set by a button.
+
+2012-03-16  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Monitor the state of activated_signal_sent_ and use it to decide if the activated signal should be sent.
+
+2012-03-16  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fix for bug #956878:
+	The hud is designed such that if the first valid option is always selected. When the activated signal is detected early in hud::View::FindKeyFocusArea, the selected button is emitted, and the text entry is still selected as the focus area. Therefore, the hud should not reacted to the search_bar_->activated signal since it alreacdy acted in hud::View::FindKeyFocusArea.
+
+2012-03-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Unity panel service: fix a small memory leak, the duplicated keystr should be free'd. Fixes: . Approved by Michal Hruby.
+
+2012-03-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: fix keystr memory leak
+
+2012-03-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests: added gtests for the unity::indicator::Indicators class. Fixes: . Approved by Tim Penhey.
+
+2012-03-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/dbus-indicators-proxy
+
+2012-03-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Indicators: emit a null on_entry_activated signal if the entry is not valid.
+	
+	This fixes a regression, tests updated.
+
+2012-03-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityCore/Indicators: be simpler in GetEntry
+
+2012-03-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_indicators: Moving SetupTestIndicators to MockIndicators::SetupTestChildren
+	
+	Reducing some more code duplication
+
+2012-03-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_indicators: Splitted IndicatorEntriesEvents into smaller tests.
+	
+	Adding SetupTestIndicators to fill the indicators with values.
+
+2012-03-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-03-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests: added a test suite for the unity::indicator::Indicators class
+	
+	This class is an abstract class that redirects the events from the indicators to the
+	service and back, and was not tested at all.
+	
+	Added tests to check that is really doing what it was supposed to do.
+
+2012-03-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DBusIndicators: emit the on_entry_activated signal only if the entry has really been found.
+
+2012-03-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Indicators: don't re-add an indicator if already present. Just return the known one.
+
+2012-03-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DBusIndicators code rewritten to use glib::DBusProxy instead of raw gdbus calls. Fixes: . Approved by Michal Hruby.
+
+2012-03-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/indicators-p (and trunk)
+
+2012-03-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with Michal's branch
+	
+	lp:~mhr3/unity/connected-state-without-watch-name
+
+2012-03-19  Michal Hruby  <michal.mhr@gmail.com>
+
+	Make sure we keep correct connection state
+
+2012-03-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Indicators: move to std::unique_ptr based pimpl
+
+2012-03-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DBusIndicators: Use safer idle and move to glib::Variant in CallData
+
+2012-03-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DBusIndicators: avoid to run the reconnect timeout twice.
+
+2012-03-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/dbus-proxy-name-owner-watch changes
+
+2012-03-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DBusIndicators: sync against DBusProxy changes, add reconnection support here
+
+2012-03-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibDBusProxy: fix pimpl, and use "notify::g-name-owner" to check the connection status.
+	
+	This avoids that a disconnected signal is emitted when the proxy has not been fully disconnected yet.
+	
+	Also, remove the autoconnection support, this can be now done easily by clients.
+
+2012-03-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Reverting changes of the latest two revisions, putting them on a different branch.
+
+2012-03-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DBusIndicators: sync against DBusProxy changes, add reconnection support here
+	
+	Plus, when clearing the indicators, we also clear the cached entries locations.
+
+2012-03-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibDBusProxy: fix pimpl, and use "notify::g-name-owner" to check the connection status.
+	
+	This avoids that a disconnected signal is emitted when the proxy has not been fully disconnected yet.
+	
+	Also, remove the autoconnection support, this can be now done easily by clients.
+
+2012-03-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DBusIndicators: cleaning up
+
+2012-03-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DBusIndicators: code rewritten to make it use glib::DBusProxy
+	
+	Code cleanup and usage of the utilty gdbus proxy class that allows to improve the code
+	and reduce the usage of C-code.
+	Also, improved the pimpl idiom, using the std::unique_ptr and setting everything private
+
+2012-03-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibDBusProxy: add support for auto-reconnection
+	
+	If enabling the auto_reconnect value, the proxy tries to reconnect to the service when the
+	connection is lost.
+
+2012-03-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Updated unity-panel-service and libunity-core against the libindicator API changes. Fixes: https://bugs.launchpad.net/bugs/878492, https://bugs.launchpad.net/bugs/926330, https://bugs.launchpad.net/bugs/938890, https://bugs.launchpad.net/bugs/938895. Approved by Thomi Richards, Tim Penhey, Andrea Azzarone, Michal Hruby.
+
+2012-03-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-03-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Oops, resetting back the exec property to autopilot
+
+2012-03-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DBusIndicators: use glib::Object to handle the dbus proxy, so we have ref-counting for free
+
+2012-03-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DBusIndicators: ref/unref proxy when using idle...
+
+2012-03-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: remove unneeded include
+
+2012-03-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: make sure we don't try to show an entry that is not shown on the panel using the key navigation.
+	
+	Or at least, an entry with not synced geometries.
+
+2012-03-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Indicators: avoid to cast the AppmenuIndicator when not needed.
+
+2012-03-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: c_str() is not needed in GetName
+
+2012-03-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: close the menu if the related entry has been removed.
+
+2012-03-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorsView: don't activate invisible views on mouse movement.
+
+2012-03-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: removed the workaround to look for wrongly-removed entries
+
+2012-03-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AppmenuIndicator: removing the LIM-related code
+
+2012-03-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IndicatorEntry: add also the ShowMenu method with no Xid parameter as fallback
+
+2012-03-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-02-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: store a keycode instead of a keysym.
+
+2012-02-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Reverting changes wrongly pushed to lp:~3v1n0/unity/lim
+	
+	They come from the lim-panel branch... Sorry for that.
+
+2012-02-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelTitlebarGrabAreaView: increase the mouse-down timeout to 150ms
+
+2012-02-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: On opacity toggle redraw the panel on expo changes
+	
+	Fixes bug #940683
+
+2012-02-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: merging with lp:~3v1n0/lim fixes
+
+2012-02-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: don't hardcode F10 keybinding to hide the menus, use the gconf key value.
+	
+	Also hide them on KeyPress
+
+2012-02-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Panelservice: Fixed coverity warning
+
+2012-02-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorAppmenuView: add a workaround to disable the menus only on few cases
+	
+	Right now it's better to stop the false-negatives more than the false-positives
+
+2012-02-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: fix the evil red panel
+	
+	It happened with bluish backgrounds... Damned double/float conversion! ;)
+
+2012-02-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/lim
+
+2012-02-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with upstream
+
+2012-02-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: update the entry_activated callback signature to fix a crash
+
+2012-02-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk.
+
+2012-02-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorsView: don't activate an unfocused entry on keyboard Alt+F10
+
+2012-02-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unityshell: Alt+F10 should be triggeted on ButtonPress.
+
+2012-02-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: always set the monitor.
+
+2012-02-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging trunk
+
+2012-02-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: add monitor getter.
+
+2012-02-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: don't try to draw an invalid flair, and re-draw it
+	
+	Flair wasn't drawn anymore... Fixing it, and possible glitches.
+
+2012-02-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: removing unneeded includes
+
+2012-02-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-02-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView -> PanelIndicatorAppmenu: don't always open menus on keyboard shortcuts
+	
+	We need to check that the current appmenu is actually focused.
+
+2012-02-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: use geometry in DrawText
+
+2012-02-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: no need to register interest for dash status, let's use the parent
+
+2012-02-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: some more cleanup
+
+2012-02-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: move to UBusWrapper
+
+2012-02-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: no need to resync on remote synced signal, entries will notify the panel
+
+2012-02-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: cleanup the API
+
+2012-02-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: sync geometries also for unfocused items.
+	
+	It could gives wrong results when opening an unfocused menu.
+
+2012-02-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicators: don't activate them if unfocused or invisible on mouse-over
+
+2012-02-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowButton: no need to add an extra _enabled variable, ViewEnabled can be enough
+	
+	We need the nux branch lp:~3v1n0/nux/view-enable-logic-fix to be merged
+	as well.
+
+2012-02-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowButtons: if the managed window is not minimizable, disable the minimize button
+
+2012-02-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowManager: add getter to check if a window is minimizable.
+
+2012-02-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: make the WindowButtons handle their operation, just update their xid
+
+2012-02-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowButtons: add one more button for restore state, and swap it with the maximize one
+	
+	Also handle internally the maximization / restore of the dash.
+
+2012-02-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowButtons: improved a lot the code, using more the WindowButtons container
+
+2012-02-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: restore a grabbed window, handling it in a position relative to the panel size
+	
+	So this is shared between integrated and global modes.
+
+2012-02-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelStyle: fallback buttons, make them smaller, except for HighContrast themes
+
+2012-02-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: update the layout padding on sytle changes, according to buttons size
+
+2012-02-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelStyle: fallback-buttons, handle the case of an unfocused close button
+
+2012-02-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Unione con il tronco... [cit. Jason]
+
+2012-02-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Panel*.h classes, move introspection methods in protect field.
+
+2012-02-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: Make the grabbing of a maximized window from the panel better.
+	
+	- The window is be restored as soon as the mouse pointer drags content outside
+	the panel area.
+	- Once a window is restored it is not placed outside the desktop area,
+	unless it fits into it, also it is never below the launcher (when visible).
+	In the case that the window is bigger than the available space,
+	the top and left borders should be always visible anyway.
+	- The just restored window, is grabbed on a point of the top decoration
+	that is proportional to the x-offset grabbed on the panel, so if you start
+	dragging at the left of the panel, the window is handled by the top-left
+	corner, if you start dragging on the right of the panel, the window is
+	proportionally handled on the right; this applies only with LIM enabled.
+	When LIMs are disabled, we just prefer the decoration middle point.
+	
+	Added also misc improvements to the PanelMenuView code.
+
+2012-02-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowManager: add some utility functions to handle window geometries
+	
+	GetWindowSavedGeometry: returns the window saved geometry, that it doesn't
+	consider if the window is maximized or not.
+	MoveResizeWindow: the name should say what it does ;)
+	GetWorkAreaGeometry: returns the size of the work-area for the given
+	window of for the current output (if xid = 0),
+	It considers the struts geometries.
+	RestoreAt: restores a window and move it at the given x, y position
+	keeping the standard geometry.
+
+2012-02-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorAppmenuView: use the Cimi's cairo flair instead of the asset
+	
+	Thanks
+
+2012-02-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelTitlebarGrabAreaView: ignore the grabs if during the timeout we got a small movement
+	
+	Adding movement tolerance to the grab, if we have a grab of just few pixels
+	during the first timeout duration, let's just ignore them.
+	
+	As design wanted.
+
+2012-02-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelStyle: add myself as author.
+
+2012-02-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelStyle: make GetFallbackWindowButton public
+	
+	It was GetWindowButtonForTheme before.
+
+2012-02-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelStyle: implement unfocused/disabled state on GetWindowButtonForTheme
+
+2012-02-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: fixed compiler warning
+
+2012-02-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with LIM fixes from lp:~3v1n0/unity/lim
+
+2012-02-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	services/CMakeLists: fixed typo.
+
+2012-02-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService renamed the *_actually_show_entry* function to something better
+
+2012-02-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: fixed dbus parameter name
+
+2012-02-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Some code cleanup requested by andyrock
+
+2012-02-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: avoid to get an invalid maximized window
+
+2012-02-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: fix the items padding values according to the design specs
+	
+	Making the panel pixel-perfect as well! ;)
+
+2012-02-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorAppmenuView: setting the right padding value to 7 pixels
+	
+	The value has been computed using design mokups
+
+2012-02-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: add support for left/right padding protected parameters
+
+2012-02-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unityshell, resources: added the LIM flair assets from design
+
+2012-02-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorAppmenuView: Consider the entry with when drawing the flair
+	
+	When an entry is smaller than the opened menu, we have to draw a smaller flair.
+	
+	Also using cairo_translate to correctly draw without being dependent on the source geometry.
+
+2012-02-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: make sure that the window buttons are middle-aligned on the panel.
+
+2012-02-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorAppmenuView: including the has_menu property to the introspect.
+
+2012-02-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorAppmenuView: reduced the spacing to 2px
+
+2012-02-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: allow to define the spacing per each view.
+
+2012-02-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityCore, Variant: added wrappers for long long types as well.
+
+2012-02-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: remove the right layout padding
+	
+	Otherwise there would be a small area at the right of the menus that won't be grabbable.
+
+2012-02-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowButtons: don't leak memory when allocating the textures.
+	
+	We need to use the ObjectPtr's Adopt facility here.
+
+2012-02-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unityshell: always draw the destkop shadow when integrated menus are enabled.
+
+2012-02-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-02-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PluginAdapter: Consider window in showdesktop mode when checking for visibility or obscured
+
+2012-02-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorAppmenuView: check if the target window has a menu, when setting the window xid.
+	
+	If a window has not menus we don't need to draw the indicator entry icon.
+
+2012-02-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorAppmenuView: implement IsLabelSensitive and IsIconSensitive
+	
+	The they should be both sensitive unless there's a window that exports the ubuntu menus atoms.
+
+2012-02-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: add new getters (overridable) to define the label/icon status
+	
+	Also, draw an unfocused icon as insensitive
+
+2012-02-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: added some comments to explain how we manage the events of the integrated menus
+
+2012-02-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorAppmenuView: implement the Activate method.
+
+2012-02-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: use the new PanelTitlebarGrabArea features to handle the panel grabbing / signals
+	
+	Maximized windows are now handled using the new code, no more cursor change when not needed! :)
+
+2012-02-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelTitlebarGrabAreaView: keep track of the mouse-down button, to check it while dragging.
+	
+	Also add restore_request signal on double-click.
+
+2012-02-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelTitlebarGrabAreaView: redesigned, to getter grabbed event using a timeout
+	
+	If the grab area get a mouse-down event, if we get a mouse-up event before a defined timeout
+	(set to 120ms now) occurs, then we consider that a click. Otherwise we send the grab_started event
+	
+	This allows to improve the way we handle the grab event in the panel, and allow to avoid to
+	change the mouse cursor if not needed.
+
+2012-02-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorAppmenuView: implement the DrawEntryPrelight method to draw the menu flair
+	
+	When an appmenu is active, we draw this small shadow, using the design-provided assets.
+
+2012-02-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: don't draw the panel shadow over a window if the integrated menus are enabled.
+
+2012-02-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelStyle: Add a integrated_menus property to get the current panel status
+
+2012-02-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Indicators: Updating the geometry before than the active status!
+
+2012-02-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityCore, Indicators: set the geometry before than the active status.
+
+2012-02-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/lim changes
+
+2012-02-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityCore, IndicatorEntry: add support for entry geometry.
+
+2012-02-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityCore: add first basic support to the geometry on EntryActivated
+
+2012-02-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelSerivice: Emit EntryActivated signal including the opened menu geometries
+
+2012-02-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Use everywhere on the panel land the panel::Style's panel_height.
+
+2012-02-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with thomi's branch from trunk that adds the panel-height to panel::style
+
+2012-02-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with thomi's cleanup branch from trunk
+
+2012-02-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorAppmenuView: as first stage, activate the related window on click.
+
+2012-02-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/lim changes
+
+2012-02-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: avoid to do unneeded loops when looking for an entry
+
+2012-02-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Panel-Service: added workaround to check if a removed entry is really invalid
+	
+	This is needed due to an indicator-appmenu issue, I hope to remove this soon.
+
+2012-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: resetg the static service on finalize.
+
+2012-02-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Panel-service: Merging with changes from lp:~3v1n0/unity/lim-panel
+
+2012-02-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	panel-service: fixed a typo
+	
+	Eeekk! It caused menus not to swtich on keypress!
+
+2012-02-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	panel-service: don't use the "evil hack" to get the entry value... Going back to HashTable
+	
+	Using IO could lead to unexpected troubles and is slower, Hashtables
+	are better :)
+
+2012-02-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: don't activate during expo and scale and cut with fade long entries
+	
+	This will apply to both APPMENU entry and other entries, even if with
+	different values.
+
+2012-02-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: set the maximum space that the child entries can use
+	
+	So applications with a lot of menu entries can be drawn correctly.
+
+2012-02-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorsView: allow to define the maximum area to be used by entries
+
+2012-02-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: Add a setter and geter for the integrated mode
+	
+	Plus, add right padding to the layout to avoid drawing issues and
+	cleanup the methods types newlin
+
+2012-02-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: remove the extra layout, use the parent layout.
+	
+	Even if we need to remove it from the main view not to make it draw
+	using all its space.
+	Removed the post-layout computation, and added a small pre-layout computation
+	to adjust the grab area size.
+
+2012-02-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: avoid to do unnededed computation if the integrated menus are enabled
+
+2012-02-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: correctly handle unmapped windows, using Bamf
+	
+	Compiz doesn't give us the right xid when a window is closed, we need
+	to use compiz view-closed signal to get the xid, remove it from
+	our sets and redraw the panel (without this, when closing unfocused
+	windows, this was never happening).
+
+2012-02-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: on restored, immediately update _maximized_set
+	
+	Otherwise we get the wrong maximized window.
+
+2012-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: fill the decoration set on init, make the window to activate before being retsored
+
+2012-02-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: Make the menus / label show when they really are needed
+	
+	Never showing the menus on dash-open or when expo or scale are active
+	Plus, improve the code to avoid the title to be redrawn when not needed.
+	
+	Also, use BAMF again to get the application name.
+
+2012-02-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: Use the window title for maximized windows in integrated menus too
+	
+	Fallback to application name if it's not available.
+
+2012-02-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: neve draw appmenu entry as prelighted
+
+2012-02-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: update the integrated menu focused state according to the current status
+
+2012-02-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: add support for focused state.
+	
+	The entries marked as unfcoused will use the gtk style contex state
+	GTK_STATE_FLAG_BACKDROP
+
+2012-02-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: use new PanelStyle features, draw differently APPMENU entries
+
+2012-02-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: use PanelStyle to get the font settings, fix crash on distroy
+	
+	And other various fixes...
+
+2012-02-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelStyle: allow to get text for each panel entry type and monitor title changes
+	
+	PanelStyle now monitors also gconf changes to the title key and allow
+	to easily get the theme for each panel entry
+
+2012-02-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: First working stub of integrated menus
+	
+	The logic is all here, we need to improve the design.
+	However, now when integrated menus are enabled, when adding an entry to
+	the panel, we just consider it as the integrated-menu and we create a new
+	PanelIndicatorAppmenuView that will handle that.
+	The view is also updated everytime the panel title or the active window
+	changes.
+
+2012-02-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorAppmenuView: added indicator-entry subclass to store the Appmenu Entry
+	
+	This is a special entry used for locally integrated menu, it has a xid
+	window associated and a label to make sure we're showing a menu for
+	that given window.
+
+2012-02-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: Improve the class to make it usable as base for our Appmenu entry
+
+2012-02-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorsView: add more versatile functions for protected guests
+	
+	So it's possible to add an entry by its view, not only by indicator::Entry
+
+2012-02-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Variant: added more int wrappers
+
+2012-02-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: removing the evil define's
+
+2012-02-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/lim updates (and with trunk too)
+
+2012-02-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Panel-service: Fix dispose errors.
+
+2012-02-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-02-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: added preliminary code for LIM, support for integrated window buttons
+	
+	The panel title now reflects the currently maximized window (even if not
+	shown yet) or the desktop name.
+	The Window buttons code should be final instead, the buttons now reflects
+	the status of the most maximized window and are linked to that, so
+	when pressing them the changes are applied to the maximized window
+	in top of the stack. Also they are correctly draw as active or inactive.
+
+2012-02-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowButtons: addSupport for focused/unfocused buttons.
+
+2012-02-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelStyle: fix a typo to get unfocused button texture
+
+2012-02-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelStyle: add support for unfocused window buttons style
+
+2012-02-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowButtons: use more wrapper classes to be safer and cleaner
+
+2012-02-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-02-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: fill the maximized set once that the monitor has been set
+
+2012-02-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: override Add/Remove indicator methods to connect to Appmenu signals
+	
+	Used to update the _is_integrated value
+
+2012-02-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorsView: added IsAppmenu method.
+
+2012-02-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: added more private or protected members
+
+2012-02-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: using UBusManager for handling events
+
+2012-02-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelStyle: emit the changed singal also when the text dpi changed
+	
+	So, when the scaling factor value is changed the panel gets immediately
+	updated.
+
+2012-02-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: don't re-draw the panel text if it's not needed
+	
+	If the geometry, the text or the style have not changed, there's
+	no need re-draw the cairo text layout.
+
+2012-02-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: don't listen to font changes
+	
+	Also, no need to disconnect to signals connected with sigc::mem_fun
+
+2012-02-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelStyle: emit the changed signal also when the font has changed.
+
+2012-02-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: avoid to use unneeded memory to store a TextureLayer
+
+2012-02-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: don't use a TextureLayer, we can just use a BaseTexture
+
+2012-02-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: cleanup the DrawText code
+
+2012-02-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Panel-Service: Some indentation fixes.
+
+2012-02-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Panel-Service: If the gometries of the current opened entry have changed, we need to update the menu postion
+	
+	This fixes some issues with menu entries that changes the label while the menu is showing.
+
+2012-02-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: Move GetActiveViewName to std::string
+
+2012-02-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: first slot of code cleanup... Moving out pointers
+
+2012-02-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelStyle: Cleanup the code, and use the new wrappers
+
+2012-02-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	No commit message
+2012-02-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: the indicators aren't blurred anymore when dash is opened :(
+	
+	By design... I really loved them!
+
+2012-02-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: merging with some code refactoring I did few weeks ago.
+	
+	Coming from the "legendary" lp:~3v1n0/unity/dash-glow branch...
+
+2012-02-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DBusIndicators: Removing debug code
+
+2012-02-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: if an entry is not visible, don't draw it and set it as invisible.
+	
+	This fixes bug #926330
+
+2012-02-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IndicatorEntry: the image_type should be valid as well to make an entry visible
+
+2012-02-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	panel-service: check if we know the parent indicator and reduce writes...
+
+2012-02-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IndicatorEntry: remove the UNUSED_ID support, and add the visible property
+	
+	The Unused flag is deprecated since last cycle. No need to use it.
+	We can use the visible flag otherwise, also to notify when an entry is actually shown.
+	
+	An entry is visible when has valid label or valid image.
+
+2012-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityCore, AppmenuIndicator: don't emit a signal on ShowAppmenu if the indicator is not integrated
+
+2012-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-02-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: added a g_warning message if we try to parse an invalid IndicatorEntryObject
+
+2012-02-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests, IndicatorAppmenu, added one more construction test.
+
+2012-02-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests, TestAppmenuIndicator: added ShowAppmenu signal test.
+
+2012-02-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests, IndicatorAppmenu, testing gsettings changes.
+
+2012-02-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests: add preliminary test for IndicatorAppmenu
+
+2012-02-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests: Added a test for checking the Indicator class
+	
+	Plus, moving indicator-entry tests to xless, they don't need DBus.
+
+2012-02-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityCore, Indicator: disconnect from entry signals when they are removed from an indicator.
+	
+	Otherwise a removed entry was able to emit a signal through the old indicator.
+
+2012-01-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk fixes
+
+2012-01-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with upstream
+
+2012-01-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AppmenuIndicator: using the changed:: signal
+
+2012-01-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AppmenuIndicator: keys/values names updated to the final ones
+
+2012-01-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DBusIndicators, using unsigned int for button too.
+
+2012-01-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AppmenuIndicator: update to use the real key, not the supposed one.
+
+2012-01-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Indicators: Oops, inverted logic.
+
+2012-01-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AppmenuIndicator: correctly emit the integrated_changed signal
+
+2012-01-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with remote branch
+
+2012-01-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityCore: Implement OnShowAppMenu on DBusIndicators
+	
+	When the signal is emitted by an AppmenuIndicator, a dbus call is made to ShowAppMenu
+
+2012-01-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityCore: Implement OnShowAppMenu on DBusIndicators
+	
+	When the signal is emitted by an AppmenuIndicator, a dbus call is made to ShowAppMenu
+
+2012-01-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Indicators: add ShowAppMenu virtual function and call it when AppmenuIndicator is added.
+	
+	Only AppmenuIndicator's are connected to that function.
+
+2012-01-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AppmenuIndicator: Update ShowAppmenu to emit a signal when called.
+
+2012-01-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: use IsAppmenu to check the nature of the indicator.
+
+2012-01-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityCore: Added AppmenuIndicator class, subclass of Indicator to keep track of setting changes
+	
+	Modified also Indicator, to get the type of the indicator.
+
+2012-01-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView, PanelIndicatorEntry: update against the new Indicator API
+
+2012-01-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DBusIndicators: updated also the on_entry_show_menu signal.
+
+2012-01-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Tests, PanelService: re-enabled the test and fixed the compilation and execution.
+
+2012-01-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests: Updated IndicatorEntry test against new API
+
+2012-01-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityCore: update Entry ShowMenu related methods against the services changes.
+
+2012-01-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: reordering the ShowEntry parameters
+
+2012-01-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: using unsigned int for sending the button
+
+2012-01-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	panel-service: implemented the method ShowAppMenu
+	
+	Plus some code cleanup, factorizing the show-menu function in
+	panel_service_actually_show_entry
+
+2012-01-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: don't close the pipe's read fd, or also writing will fail.
+
+2012-01-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: add xid parameter to ShowEntry
+
+2012-01-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	panel-service: make sure we remove invalid entries when syncing the geometry hash.
+
+2012-01-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	panel-service: get_indicator_entry_by_id must be static, improving the comments.
+
+2012-01-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	panel-service: remove the entry2indicator_hash, moving using the entry parent_object field
+	
+	Also improved the get_indicator_entry_by_id function to make it really check if the entry we've found
+	is really a valid pointer to an IndicatorObjectEntry without crashing.
+	to do that, we use an hack that uses the low-level write function to read from the pointer to a valid
+	fds (we use a pipe for convenience). Write will fail if we try to read from an invalid pointer without
+	crashing, so we can finally be pretty sure if the pointed entry is an IndicatorObjectEntry if it has a
+	valid parent IndicatorObject
+
+2012-01-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Unity: Depends on newer indicator3-0.4 0.4.90
+
+2012-03-20  foxoman  <foxoman.u@gmail.com>
+
+	change Dash Home tooltip to use header capitalization from "Dash home" to "Dash Home" lp:924354. Fixes: https://bugs.launchpad.net/bugs/924354. Approved by Tim Penhey, Thomi Richards.
+
+2012-02-12  foxoman  <foxoman.u@gmail.com>
+
+	change Dash Home tooltip to use header capitalization from "Dash home" to "Dash Home"
+
+2012-03-20  Jay Taoko  <jay.taoko@canonical.com>
+
+	Implement new dash blending algorithm on cards with GLSL support.. Fixes: https://bugs.launchpad.net/bugs/865239. Approved by Robert Carr, Tim Penhey, Jay Taoko.
+
+2012-03-12  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Renamed nux::GraphicsEngine::BlendMode to nux::LayerBlendMode.
+
+2012-03-09  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Merged with Unity trunk.
+
+2012-02-25  Robert Carr  <racarr@canonical.com>
+
+
+	Update to use new Nux CompositionLayer API
+
+2012-02-23  Robert Carr  <racarr@canonical.com>
+
+
+	Remove questioning comment
+
+2012-02-23  Robert Carr  <racarr@canonical.com>
+
+
+	Fix some logic errors in new blending
+
+2012-02-23  Robert Carr  <racarr@canonical.com>
+
+
+	PanelView.cpp: When we have GLSL use the new blending heuristic
+
+2012-02-23  Robert Carr  <racarr@canonical.com>
+
+
+	OverlayRenderer.cpp: Use the new blending heuristic when we have GLSL
+
+2012-02-23  Robert Carr  <racarr@canonical.com>
+
+
+	Launcher.cpp: Implement the new blending heuristics when we have GLSL
+
+2012-02-23  Robert Carr  <racarr@canonical.com>
+
+
+	Some color tweaks courtesy of Cimi
+
+2012-02-23  Robert Carr  <racarr@canonical.com>
+
+
+	UnityWindowView.cpp: When GLSL is available use overlay blending for colorization
+
+2012-02-23  Robert Carr  <racarr@canonical.com>
+
+
+	BGHash.cpp: Drop the 0.7 multiplier on computed background color
+
+2012-03-20  Tim Penhey  <tim.penhey@canonical.com>
+
+	Refactor a number of autopilot tests to reduce the likelihood of timing based failures.. Fixes: . Approved by Thomi Richards, Marco Trevisan (Treviño).
+
+2012-03-20  Tim Penhey  <tim.penhey@canonical.com>
+
+	Use the new tap_duration local
+
+2012-03-20  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk
+
+2012-03-20  Tim Penhey  <tim.penhey@canonical.com>
+
+	Don't debug dash.
+
+2012-03-20  Tim Penhey  <tim.penhey@canonical.com>
+
+	More whitespace killed.
+
+2012-03-20  Tim Penhey  <tim.penhey@canonical.com>
+
+	PEP-257 comment tweaks, removing whitespace, and reformatting a test.
+
+2012-03-20  Tim Penhey  <tim.penhey@canonical.com>
+
+	More dash test tweaks.
+
+2012-03-20  Tim Penhey  <tim.penhey@canonical.com>
+
+	Clean up the dash tests.
+
+2012-03-20  Tim Penhey  <tim.penhey@canonical.com>
+
+	Add some logging for the tests to report on failure.
+
+2012-03-20  Tim Penhey  <tim.penhey@canonical.com>
+
+	Add simple property for the dash search string.
+
+2012-03-20  Tim Penhey  <tim.penhey@canonical.com>
+
+	Revert the dash reveal timeout.
+
+2012-03-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Sometimes incoming results stop the dash from hiding.
+
+2012-03-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	More timing issues with the dash
+
+2012-03-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fix the hud tests to wait for the hud a little more.
+
+2012-03-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Make sure to the best of our ability that the launcher does actually enter autohide mode.
+
+2012-03-19  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Use more accurate timing to detect key taps (for Super or Alt).. Fixes: https://bugs.launchpad.net/bugs/953089. Approved by Marco Trevisan (Treviño), Mirco Müller.
+
+2012-03-17  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Add test case for the Super tap timing problem (LP: #953089)
+
+2012-03-16  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Use more accurate timing to detect key taps (for Super or Alt). The previous
+	timing methods were failing on slow or busy systems, causing taps to be
+	misdetected and ignored. Instead use the timestamps that come with each
+	keypress/release event. (LP: #953089)
+
+2012-03-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fix shutdown crashes and memory leaks. Fixes: . Approved by Sam Spilsbury.
+
+2012-03-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fix the crash around the uninitialised pointer by making them all smartpointers.
+
+2012-03-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Make extra textures that were created be destroyed.
+
+2012-03-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Stop the panel menu from sinking the grab area causing it not to be deleted.
+
+2012-03-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	The disabled dash texture wasn't being unrefed if it existed before being overwritten
+
+2012-03-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	We need to remove the redraw request if there is one in progress, and we must reset the glib logging as we shutdown.
+
+2012-03-18  Didier Roche  <didier.roche@canonical.com>
+
+	Add xfixes dependency.. Fixes: . Approved by Tim Penhey.
+
+2012-03-13  Didier Roche  <didier.roche@canonical.com>
+
+	Xfixes.h is used by plugins/unityshell/src/PointerBarrier* but wasn't listed in the pc file configuration. It was picked by chance by another dep
+
+2012-03-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Remove calls to c_str() where they're not needed.. Fixes: . Approved by Tim Penhey.
+
+2012-03-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed lots of calls to std::string.c_str() where we didn't need to call it.
+
+2012-03-18  Tim Penhey  <tim.penhey@canonical.com>
+
+	Make sure the launchers are cleaned up appropriately on shutdown.. Fixes: . Approved by Mirco Müller.
+
+2012-03-16  Tim Penhey  <tim.penhey@canonical.com>
+
+	Clean up the launchers.
+
+2012-03-16  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixes the problem where Alt+F1 wouldn't quit key nav mode. Now it toggles. Fixes: https://bugs.launchpad.net/bugs/885304. Approved by Thomi Richards.
+
+2012-03-15  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* new line needed
+
+2012-03-15  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Added test for alt+tab and alt+`
+
+2012-03-15  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Added autopilot test for toggling alt+f1 mode
+
+2012-03-15  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Allows toggling of Alt+F1 mode
+	* Now Alt + <Anykey> will close the keynav mode
+
+2012-03-16  Gord Allott  <gord.allott@canonical.com>
+
+	Fixes the HUD AP keynav tests, tests were expecting 5 items but got 6. Fixes: . Approved by Michal Hruby.
+
+2012-03-16  Gord Allott  <gord.allott@canonical.com>
+
+	fixes issue with 6 items being displayed in hud instead of 5, covered by AP test
+
+2012-03-16  Paul Sladen  <sladen@canonical.com>
+
+	Remove internal UnityWindow shadow and use new 5px nux mask - requires new nux!. Fixes: https://bugs.launchpad.net/bugs/940493. Approved by Jay Taoko.
+
+2012-03-16  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Fixes 940493 with new assets and new nux corner mask
+
+2012-03-01  Paul Sladen  <sladen@canonical.com>
+
+	Switcher/Shortcut outline re-cut from fresh border: with shadow, without background
+
+2012-02-26  Paul Sladen  <sladen@canonical.com>
+
+	Switcher border: Remove external shadow (may need tweaking/reverting depending on review)
+
+2012-02-26  Paul Sladen  <sladen@canonical.com>
+
+	Switcher border: Remove internal dots per Cimi
+
+2012-02-24  Paul Sladen  <sladen@canonical.com>
+
+	No glow: Switcher border: Nuke inner aubergine to avoid double edge
+
+2012-02-24  Paul Sladen  <sladen@canonical.com>
+
+	No glow: Alt-tab switcher and Switcher border edge (LP: #940493)
+
+2012-03-16  Sebastien Bacher  <seb128@ubuntu.com>
+
+	list LensView.cpp to translate. Fixes: . Approved by Tim Penhey.
+
+2012-03-15  Sebastien Bacher  <seb128@ubuntu.com>
+
+	list LensView.cpp to translate
+
+2012-03-15  Alex Launi  <alex.launi@canonical.com>
+
+	Refactors the launcher emulator to clean up the API. Fixes: . Approved by Thomi Richards.
+
+2012-03-15  Alex Launi  <alex.launi@canonical.com>
+
+	Go back to raising a runtime error if trying to use keynav/switcher functions outside of keynav or switcher mode
+
+2012-03-15  Alex Launi  <alex.launi@canonical.com>
+
+	Refactor the launcher emulator
+	
+	Removes duplicated code, and cleans up some API.
+
+2012-03-15  Alex Launi  <alex.launi@canonical.com>
+
+	merge trunk
+
+2012-03-14  Alex Launi  <alex.launi@canonical.com>
+
+	add file
+
+2012-03-15  Mirco Müller  <mirco.mueller@canonical.com>
+
+	Fix alignment and padding of scrollbars. Fixes: https://bugs.launchpad.net/bugs/608124. Approved by Andrea Cimitan.
+
+2012-03-15  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	fixed bloody anjuta-induced spacing issues
+
+2012-03-14  Mirco Müller  <mirco.mueller@canonical.com>
+
+	Clean up and remove debug-rects
+
+2012-03-13  Mirco Müller  <mirco.mueller@canonical.com>
+
+	Added andyrock's suggestion regarding the Min/Max-size for the VScrollBar to fix the issue with the right scrollbar (when filters are expanded)
+
+2012-03-13  Mirco Müller  <mirco.mueller@canonical.com>
+
+	Fixed horizontal padding between scrollbar of results-view and expanded filters... also made sure the right edge of search-bar right-aligns with this
+
+2012-03-12  Mirco Müller  <mirco.mueller@canonical.com>
+
+	Still hunting for the right spot to tweak the padding for dash-scollbars... added debug-rects again
+
+2012-03-14  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	This is a one-line change to fix SC launcher integration (bug #761851).
+	
+	Since SC Launcher integration phase 1 landed before Unity 5.2.0, this change doesn't need a UIFe. This branch merely fixes the integration. Please ensure it lands before Unity 5.6.0.. Fixes: https://bugs.launchpad.net/bugs/932280. Approved by Alex Launi.
+
+2012-03-02  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Merge from trunk
+
+2012-02-20  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Fix software center launcher integration.
+
+2012-03-14  Alex Launi  <alex.launi@canonical.com>
+
+	Refactors the dash tests to remove duplicated setup/tear down code, and generally helps make the tests more correct.. Fixes: . Approved by Thomi Richards, Alex Launi.
+
+2012-03-14  Alex Launi  <alex.launi@canonical.com>
+
+	Change dash emulator view attribute to a property.
+	
+	Prevents the dash emulator from throwing an exception during construction
+	by not actually loading the dash view until requested by a test. By this
+	point the dash will have been opened, and the views created.
+
+2012-03-14  Alex Launi  <alex.launi@canonical.com>
+
+	fix python error in test from refactoring. all dash tests now pass
+
+2012-03-14  Alex Launi  <alex.launi@canonical.com>
+
+	Fix '..' typo
+
+2012-03-14  Alex Launi  <alex.launi@canonical.com>
+
+	fix conflicts with trunk
+
+2012-03-12  Alex Launi  <alex.launi@canonical.com>
+
+	Add AltR key translation
+
+2012-03-12  Alex Launi  <alex.launi@canonical.com>
+
+	Add a dash member to AutopilotTestCase
+
+2012-03-12  Alex Launi  <alex.launi@canonical.com>
+
+	merge trunk
+
+2012-03-12  Alex Launi  <alex.launi@canonical.com>
+
+	Refactor the dash tests
+
+2012-03-09  Alex Launi  <alex.launi@canonical.com>
+
+	do some work on fixing up the dash tests
+
+2012-03-14  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix AutoPilotTestCase class so launcher tests pass again.. Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-03-15  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix autopilot test case class, so launcher tests pass again.
+
+2012-03-14  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Don't add the hseparator for the final dash category. It's a kind of regression due to the new message displayed when there are no results.
+	
+	Test
+	====
+	Already in trunk.. Fixes: https://bugs.launchpad.net/bugs/955296. Approved by Marco Trevisan (Treviño).
+
+2012-03-14  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug #955296
+
+2012-03-14  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix a stupid regression. . Fixes: https://bugs.launchpad.net/bugs/955160. Approved by Mirco Müller.
+
+2012-03-14  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix stupid regression.
+
+2012-03-14  Jason Smith  <jason.smith@canonical.com>
+
+	== The Problem ==
+	Someone (me) made a simple coding error that slipped through review
+	
+	== The Solution ==
+	Fix minor coding error (use min instead of max)
+	
+	== Testing ==
+	Fixes existing tests that now fail. Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-03-14  Jason Smith  <jason.smith@canonical.com>
+
+	fix minor snafu with min/max
+
+2012-03-14  Didier Roche  <didier.roche@canonical.com>
+
+	remove workaround that is now properly fixed in compiz, as it resulted in bug #953783
+	Added a manual test as an autopilot one will require more pocking (firefox API)
+	
+	Please poke me before merging it, I need to revert this to the package (it's already
+	published as a distro-patch). Fixes: . Approved by Daniel van Vugt, Marco Trevisan (Treviño).
+
+2012-03-14  Didier Roche  <didier.roche@canonical.com>
+
+	better test case
+
+2012-03-13  Didier Roche  <didier.roche@canonical.com>
+
+	remove workaround that is now propery fixed in compiz resulting in bug #953783
+
+2012-03-13  Didier Roche  <didier.roche@canonical.com>
+
+	add a manual test
+
+2012-03-14  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Don't absorb Alt+ArrowKey (et al) events if you're not doing anything with
+	them. Ensures unused events get sent to the active window. (LP: #953783)
+	. Fixes: https://bugs.launchpad.net/bugs/953783. Approved by Didier Roche.
+
+2012-03-14  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Don't absorb Alt+ArrowKey (et al) events if you're not doing anything with
+	them. Ensures unused events get sent to the active window. (LP: #953783)
+
+2012-03-14  Thomi Richards  <thomi.richards@canonical.com>
+
+	Update the unity logging tests to use the updated autopilot API.. Fixes: . Approved by Michal Hruby.
+
+2012-03-14  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed new unity logging tests.
+
+2012-03-14  Thomi Richards  <thomi.richards@canonical.com>
+
+	Autopilot tests can now produce unity logs for a failing autopilot test.. Fixes: . Approved by Jason Smith, Tim Penhey.
+
+2012-03-14  Thomi Richards  <thomi.richards@canonical.com>
+
+	Trim trailing whitespace.
+
+2012-03-14  Thomi Richards  <thomi.richards@canonical.com>
+
+	Changed from review.
+
+2012-03-14  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-03-14  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-03-14  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed typo.
+
+2012-03-14  Thomi Richards  <thomi.richards@canonical.com>
+
+	Logging now reset after each test is complete.
+
+2012-03-14  Thomi Richards  <thomi.richards@canonical.com>
+
+	Launcher tests now make the launcher log debug-level log messages.
+
+2012-03-14  Thomi Richards  <thomi.richards@canonical.com>
+
+	Renamed StopLoggingToFile -> ResetLogging. Added infrastructure to test case class.
+
+2012-03-13  Thomi Richards  <thomi.richards@canonical.com>
+
+	Now attaches unity log to tests.
+
+2012-03-13  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added more tests to ensure the logging framework is running correctly.
+
+2012-03-13  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged Tim's branch that contains the log implementation.
+
+2012-03-13  Tim Penhey  <tim.penhey@canonical.com>
+
+	Implement the logging features.
+
+2012-03-13  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added the test file.
+
+2012-03-13  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added a failing test for unity's logging infrastructure.
+
+2012-03-13  Thomi Richards  <thomi.richards@canonical.com>
+
+	DBus methods in place.
+
+2012-03-13  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	. Fixes: . Approved by Thomi Richards.
+
+2012-03-13  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixed using ensure_dash in ALL test cases, now only in setUp and tearDown
+	* Fixed self.dash = Dash() being used everytime in setUp. Now in AutopilotTest
+
+2012-03-13  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Test for Multi_Key/Composition characters
+
+2012-03-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Added support for Up/Down arrow keys to change the selected launcher icon when using the Super+Tab
+	
+	This fixes the bug #950404
+	
+	On the test sides, I've used autopilot to test this particular fix, also I've made some changes to the launcher emulator, to make it handle in a better way the Launcher key navigation and the Launcher Switcher as two different kinds of key navigation. This should avoid any confusion and cleans the code.. Fixes: https://bugs.launchpad.net/bugs/950404. Approved by Andrea Azzarone, Thomi Richards.
+
+2012-03-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot: added the tests for the Up/Down arrow keys during launcher switcher
+	
+	Plus, redesigned the launcher emulator, underlining the differece between the Launcher Switcher
+	and the Launcher Key navigation.
+
+2012-03-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unityshell: make Launcher switcher to work also with arrow keys
+
+2012-03-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	The problems
+	-------------
+	Bug #927710: No text inside multirange filters
+	Bug #942508: Dash - Font metrics and colors are wrong
+	
+	The fix
+	-------
+	Update the dash fonts.
+	
+	Test
+	----
+	Not applicable.
+	
+	http://ubuntuone.com/1a4mdRPJ8tgFrg4bMuNiQE
+	
+	I've merged lp:~sladen/unity/unity-drunken-spinner-lp943656.. Fixes: https://bugs.launchpad.net/bugs/927710, https://bugs.launchpad.net/bugs/942508. Approved by John Lea, Andrea Cimitan, Mirco Müller.
+
+2012-03-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add SVGs.
+
+2012-03-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-03-06  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix the space between the search entry icon and the text.
+
+2012-03-06  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge needed branch.
+
+2012-03-05  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Move font description in const variables.
+
+2012-03-01  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Update the dash font settings.
+
+2012-03-13  Mirco Müller  <mirco.mueller@canonical.com>
+
+	Trying to understand how and where changes to an icons alpha- and saturation-value are taking place is material to get insane. By now I've spent many many many hours trying to get behind what's going on. I can't say I fully grasp
+	the intricate ways of icons opacity and saturation in class Launcher.
+	
+	As far as I can tell, there are four valid "cases" for the launcher icons in terms of alpha and saturation. To make it easier for you to follow, have a look at this table:
+	
+	alpha  |  saturation
+	-------------------------------------------------------------------
+	|  dash open                             |   0.5   |     0.0      |
+	|  dash closed                           |   1.0   |     1.0      |
+	|  drop-target (dragging & dash open)    |   1.0   |     1.0      |
+	|  no drop-target (dragging & dash open) |   0.5   |     0.0      |
+	-------------------------------------------------------------------
+	
+	So alpha should never be outside [0.5 .. 1.0] and saturation should never be outside [0.0 .. 1.0]. From my investigation it is sufficient to protect only against the lower threshold, where alpha needs to be 0.5 and saturation 0.0
+	
+	without fix:
+	http://people.canonical.com/~mmueller/863230-issue-1.ogv
+	
+	with fix:
+	http://people.canonical.com/~mmueller/after-fix-863230.ogv
+	
+	If anybody ever causes this to regress, I'll ... !. Fixes: https://bugs.launchpad.net/bugs/863230. Approved by Tim Penhey.
+
+2012-02-29  Mirco Müller  <mirco.mueller@canonical.com>
+
+	Added a manual-test for the bug
+
+2012-02-15  Mirco Müller  <mirco.mueller@canonical.com>
+
+	Best attempt yet, trying to fix LP: #863230
+
+2012-03-13  Gabor Kelemen  <kelemeng@ubuntu.com>
+
+	Added missing files to POTFILES.in. Fixes: https://bugs.launchpad.net/bugs/923762. Approved by Thomi Richards, Michal Hruby.
+
+2012-03-05  Gabor Kelemen  <kelemeng@ubuntu.com>
+
+	Update POTFILES.in/skip. LP: 923762
+
+2012-03-13  Alex Launi  <alex.launi@canonical.com>
+
+	Adds "x" and "y" properties to the quicklists and their menu items, so that autopilto can find and click them in tests.. Fixes: . Approved by Thomi Richards.
+
+2012-02-23  Alex Launi  <alex.launi@canonical.com>
+
+	add absolute (screen) x and y coordinated to quicklists
+
+2012-03-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	= The Problem =
+	
+	HUD shortcut is not in the overlay.
+	
+	= The Fix =
+	
+	Add it.
+	
+	= Testing =
+	
+	None.. Fixes: https://bugs.launchpad.net/bugs/942515. Approved by Marco Trevisan (Treviño).
+
+2012-03-05  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix.
+
+2012-02-28  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add the HUD shortcut to the overlay.
+
+2012-03-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	= The Problem =
+	
+	The shortcut overlay uses hardcoded value for switching ws.
+	
+	= The Fix =
+	
+	Add a new type of shortcut option COMPIZ_METAKEY_OPTION.
+	
+	= Testing =
+	
+	Added.. Fixes: https://bugs.launchpad.net/bugs/939517. Approved by Mirco Müller.
+
+2012-02-28  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug #939517.
+
+2012-03-13  Paul Sladen  <sladen@canonical.com>
+
+	Dash/HUD: logic inversion in spinner rotation offset (LP: #943656). Fixes: https://bugs.launchpad.net/bugs/943656. Approved by Andrea Azzarone, Andrea Cimitan.
+
+2012-03-01  Paul Sladen  <sladen@canonical.com>
+
+	Dash/HUD: logic inversion in spinner rotation offset
+
+2012-03-13  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	The glow in the alt-tab switcher is misaligned leading to a dark line at right and bottom edge. This commit fixes it. Fixes: . Approved by Andrea Cimitan.
+
+2012-02-29  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Fix misalignment of the glow in alt-tab switcher
+
+2012-03-13  Martin Mrazik  <mrazik@gmail.com>
+
+	I'll try to automate this in the next few days.. Fixes: . Approved by Thomi Richards.
+
+2012-02-28  Martin Mrazik  <mrazik@gmail.com>
+
+	manual test for lp:929506
+
+2012-03-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	= The Problem =
+	
+	See: https://bugs.launchpad.net/unity/+bug/748101.
+	
+	= The Fix =
+	
+	Keep in consideration the baseline to align the labels inside the category header.
+	
+	= Testing =
+	
+	AP test: ./tools/autopilot run autopilot.tests.test_dash.DashVisualTests.test_see_more_result_alignment. Fixes: https://bugs.launchpad.net/bugs/748101. Approved by Alex Launi, Marco Trevisan (Treviño), Thomi Richards, Andrea Cimitan.
+
+2012-03-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-02-29  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix.
+
+2012-02-29  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Complete the AP test.
+
+2012-02-29  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-02-29  Andrea Azzarone  <azzaronea@gmail.com>
+
+	First draft for the AP test.
+
+2012-02-29  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use something like a baseline alignment for the category header.
+
+2012-03-13  Thomi Richards  <thomi.richards@canonical.com>
+
+	Make autopilot test log lines much shorter by using the module name rather than the full path name.. Fixes: . Approved by Jason Smith.
+
+2012-03-13  Thomi Richards  <thomi.richards@canonical.com>
+
+	Use the module name rather than the full path name in the test log file.
+
+2012-03-12  Jason Smith  <jason.smith@canonical.com>
+
+	== The Problem ==
+	Design requested changes to multi-monitor to provide support for toggling barriers and multiple-launchers
+	
+	== The Solution ==
+	Implement the options
+	
+	== Testing ==
+	Interactions should be covered under existing tests. Fixes: . Approved by Tim Penhey.
+
+2012-03-12  Jason Smith  <jason.smith@canonical.com>
+
+	don't violate the rule of three
+
+2012-03-12  Jason Smith  <jason.smith@canonical.com>
+
+	change text to be a little clearer
+
+2012-03-12  Jason Smith  <jason.smith@canonical.com>
+
+	add manual test
+
+2012-03-12  Jason Smith  <jason.smith@canonical.com>
+
+	ensure that we have the launcher properly reflect the entire desktop rather than just the monitor when in single launcher mode
+
+2012-03-12  Jason Smith  <jason.smith@canonical.com>
+
+	implement mm options for multiple launchers
+
+2012-03-12  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	= Problem description =
+	
+	If no results are returned from a lens there is no message informing the user so.
+	
+	= The fix =
+	
+	In DashView::OnSearchFinished a check is made to see if a message should be
+	shown.
+	
+	A default message is used if the lens doesn't provide one.
+	
+	There is also a timer that waits for 150ms then hides the
+	message, if the search is taking a while.
+	
+	= Test coverage =
+	
+	There is an autopilot test for this now!. Fixes: https://bugs.launchpad.net/bugs/711199. Approved by Tim Penhey, Alex Launi, Michal Hruby, Marco Trevisan (Treviño), Brandon Schaefer.
+
+2012-03-08  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Removed comments added by me...
+
+2012-03-08  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	merge trunk
+
+2012-03-05  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	merged trunk
+
+2012-03-04  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	*Changed autopilot search string
+
+2012-03-02  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	Mixed names up
+
+2012-03-02  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	* Split the autopilot test
+
+2012-03-02  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	* Sleep added after kb.type()
+
+2012-03-02  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	* Added an autopilot test and removed the manual onew
+
+2012-03-02  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	trunk
+
+2012-03-01  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	Fixed the timer where it would go off when switching lenses
+
+2012-03-01  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	merged trunk
+
+2012-03-01  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	In LensView::HideResultsMessage, now checks if the message is active before hiding it
+
+2012-03-01  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	Added a signal so to hide the results message after 150ms
+
+2012-02-29  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	merged trunk
+
+2012-02-06  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Fixed style problems, along with some other clean ups.
+
+2012-02-06  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Changed to use std::sstream instead of std::string
+
+2012-02-06  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	markup now uses std::string instead of gchar* and g_strdup_printf()
+
+2012-02-03  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Cleaned up, and fixed conflicts
+
+2012-03-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Added tests for SwitcherController changes done in lp:~3v1n0/unity/alt+tab-background-load, enabled the SwitcherModel tests as well.. Fixes: https://bugs.launchpad.net/bugs/942634. Approved by Tim Penhey, Andrea Azzarone.
+
+2012-03-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_switcher_controller: make the construction test to really test something
+
+2012-03-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_switcher_controller: removing the redoundant Test prefix in functions
+
+2012-03-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_switcher_controller: reduce the time to use to perform the test
+
+2012-03-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/alt+tab-background-load changes
+
+2012-02-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests: added test_switcher_controller to check construction and lazy load
+
+2012-02-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Tests, enabling test_switcher_model
+
+2012-02-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-03-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Add some background operations to the SwitcherController to make the Alt+Tab to show-up quicker
+	
+	The switcher controller now when initialized setup a lazy timer (now set to 10s) that on timeout will construct the
+	switcher view, to make the first time usage quicker.
+	
+	Also, I've added an idle that will run as soon as the user presses the switcher key combination, that constructs the view in background (and shows an invisible window, since the the ShowWindow operation can take longer than just setting the view visible) to make sure that when the show-timeout occurs everything is already there and it just needs to be shown (setting its opacity).
+	
+	Tests included into the branch lp:~3v1n0/unity/alt+tab-background-load.tests. Fixes: https://bugs.launchpad.net/bugs/942634. Approved by Andrea Azzarone.
+
+2012-03-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherController: allow to define the load timeout on construction
+
+2012-03-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherController: use protected member to set the construct timeout
+	
+	So it will be possible to test it.
+
+2012-02-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherController: setting the load timeout to 20s
+
+2012-02-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherController: use SetOpacity instead of SetVisible
+
+2012-02-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherController: move to UBusManager
+
+2012-02-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherController: add an idle to construct the view when waiting for the show timeout
+
+2012-02-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherController: add a lazy loader to create the Alt+Tab window on background
+	
+	This should improve the startup time of the first Alt+Tab session.
+
+2012-03-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Partly fixes bug #824965 enabling scroll wheel on Alt+Tab to switch the active application.. Fixes: https://bugs.launchpad.net/bugs/824965. Approved by Alex Launi, Thomi Richards.
+
+2012-03-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk changes.
+
+2012-03-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: add / remove scroll actions in compiz screen
+	
+	This is not strictly needed here since compiz seems to grab them
+	already, but this should ensure that they're managed.
+
+2012-03-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-02-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Autopilot, switcher: split mouse-wheel tests
+
+2012-02-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unityshell: support both horizontal and vertical scroll events on AltTab
+
+2012-02-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unityshell: remove unneeded space.
+
+2012-02-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Added autopilot test for switcher mouse-wheel support.
+
+2012-02-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-02-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: igonore quick scroll events, use a limit of 150ms
+
+2012-02-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unityshell: inverting the scrolling direction to for the switcher
+
+2012-02-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unityshell: allow to change Switcher selected icon via mouse-wheel
+
+2012-03-12  Thomi Richards  <thomi.richards@canonical.com>
+
+	Problem: Several of the test_shortcut_hint autopilot tests fail.
+	Solution: Update tests. One issue was that the autopilot API had changed, another was a typo in the test.. Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-03-13  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed shortcut_hint tests.
+
+2012-03-13  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged branch that fixes unity crash in shortcut hint controller.
+
+2012-03-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Avoid autopilot to crash unity when the shortcut hint view has not been initialized.. Fixes: . Approved by Thomi Richards.
+
+2012-03-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ShortcutController: avoid to crash during autopilot if view_window_ has not been initialized.
+
+2012-03-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Add support to hide the shortcut hint view by Escape key.
+	
+	I've made some work to handle the Escape keypress events for both the Launcher
+	Switcher and the Shortcut hint view, using this policy:
+	- If the Launcher switcher is active, Escape terminates it
+	- If the Shortcut hint is active, Escape terminates it
+	- If both are active, the first Escape terminates the Super+Tab,
+	the second one will hide the shortcut hint.
+	
+	Added autopilot support for the Shortcut hint controller, and a first bunch of tests.. Fixes: https://bugs.launchpad.net/bugs/943422. Approved by Andrea Azzarone, Thomi Richards.
+
+2012-03-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_shortcut_hint.py: set the default size on constructor.
+
+2012-03-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot: test_shortcut_hint.py check if all the shortcut hints are showing together
+	
+	Shortcut hints view and the launcher icon hint should be shown at the same time
+
+2012-03-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging again with thomi's fixed tests
+
+2012-03-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed tests so they pass, and merged launcher emulator changes, so this should merge cleanly with trunk.
+
+2012-03-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed unneeded refresh_state calls, fixed test.
+
+2012-03-02  Thomi Richards  <thomi.richards@canonical.com>
+
+	Various test cleanups.
+
+2012-03-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_shortcut_hint: added ShortcutHints integration tests.
+	
+	They tests the interaction between the shortcut hints and other unity
+	parts, especially the LauncherSwitcher and the other Super keybindings
+
+2012-03-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot: test launcher switcher cancel by Escape key
+
+2012-03-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_shortcut_hint: added first basic shortcut hint tests
+
+2012-03-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot: ShortcutHint emulator, misc code fixes
+
+2012-03-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, X11 emulator: allow to get the primary monitor
+
+2012-03-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ShortcutController: add more introspection data.
+	
+	Setting it as visible when the view is really visible.
+	Also include the FADE duration into the timeout.
+
+2012-03-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unityshell: add the shortcut controller as an introspectable child.
+
+2012-03-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with autopilot fixes included into lp:~3v1n0/unity/super+tab-shortcut-fixes
+
+2012-03-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot: add first shortcut_hint.py emulator scheleton
+
+2012-03-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ShortcutController: added introspection support
+
+2012-02-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: EnableCancelAction, add support for multiple targets
+	
+	It allows to setup more cancel actions (one per target) and to remove them.
+	Thanks to this, we can handle the Escape keypress for both the Launcher
+	Switcher and the Shortcut hint view.
+	And we use this policy:
+	- If the Launcher switcher is active, Escape terminates it
+	- If the Shortcut hint is active, Escape terminates it
+	- If both are active, the first Escape terminates the Super+Tab,
+	the second one will hide the shortcut hint.
+
+2012-03-12  Gord Allott  <gord.allott@canonical.com>
+
+	adds an include that broke the standalone client build
+	
+	Build fix - tests not applicable. Fixes: . Approved by Michal Hruby.
+
+2012-03-01  Gord Allott  <gord.allott@canonical.com>
+
+	fixes the dash standalone client build
+
+2012-03-12  Andrea Azzarone  <azzaronea@gmail.com>
+
+	The problem
+	===
+	Dash - Missing category separator line in dash
+	
+	The fix
+	===
+	
+	17	-  bool found_one = false;
+	18	-
+	19	-  for (rit = children.rbegin(); rit != children.rend(); ++rit)
+	20	-  {
+	21	-    PlacesGroup* group = static_cast<PlacesGroup*>(*rit);
+	22	-
+	23	-    if (group->IsVisible())
+	24	-      group->SetDrawSeparator(found_one);
+	25	-
+	26	-    found_one = group->IsVisible();
+	27	-  }
+	
+	If the next group is not visibile the separator is not shown in the prev group.
+	This branch fixes it moving the logic side in another (testable) function. I'd love to
+	remove the static_cast too but I can't find an easy way right now.
+	
+	The test
+	===
+	Adds a unit test for the logic side.. Fixes: https://bugs.launchpad.net/bugs/850984. Approved by Marco Trevisan (Treviño).
+
+2012-03-09  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix include "issue".
+
+2012-03-09  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix.
+
+2012-03-09  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Adds tests.
+
+2012-03-09  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug #850984.
+
+2012-03-12  Michael Rawson  <michaelrawson76@gmail.com>
+
+	Fixes bug #877382 (no long description on hover for CCSM).. Fixes: https://bugs.launchpad.net/bugs/877382. Approved by Tim Penhey.
+
+2012-03-01  Michael Rawson  <michaelrawson76@gmail.com>
+
+	Fixed bug #877382
+
+2012-03-12  Tim Penhey  <tim.penhey@canonical.com>
+
+	Added some manual tests for the launcher reorder animations.. Fixes: . Approved by Mirco Müller.
+
+2012-03-05  Tim Penhey  <tim.penhey@canonical.com>
+
+	Added a few manual tests about the moving of launcher icons.
+
+2012-03-12  Lorenzo Mattei  <lore.mattei@gmail.com>
+
+	. Fixes: https://bugs.launchpad.net/bugs/891818. Approved by Marco Trevisan (Treviño), Mirco Müller.
+
+2012-03-07  Lorenzo Mattei  <lore.mattei@gmail.com>
+
+	Safer autopilot test
+
+2012-03-07  Lorenzo Mattei  <lore.mattei@gmail.com>
+
+	Added autopilot test for lp:891818
+
+2012-03-05  Lorenzo Mattei  <lore.mattei@gmail.com>
+
+	Fixex lp:891818
+
+2012-03-12  Michal Hruby  <michal.mhr@gmail.com>
+
+	Makes the tests less racy by using g_timeout_add instead of the add_seconds which tries to fire multiple timeouts at once at the cost of precision. Also fixes a possible crash in the tests caused by FilesystemLenses.. Fixes: . Approved by Gord Allott.
+
+2012-03-05  Michal Hruby  <michal.mhr@gmail.com>
+
+	Safer tests
+
+2012-03-12  Michal Hruby  <michal.mhr@gmail.com>
+
+	== The Problem ==
+	Crashed lens doesn't restart unless searching in home view.
+	
+	== The Solution ==
+	Make sure a Search call can restart a lens just as GlobalSearch can.
+	
+	== Testing ==
+	Added a manual test for the issue.. Fixes: https://bugs.launchpad.net/bugs/947301. Approved by Mirco Müller, Gord Allott.
+
+2012-03-06  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix the killall command in manual test
+
+2012-03-05  Michal Hruby  <michal.mhr@gmail.com>
+
+	Make sure Search method can restart a lens (not just GlobalSearch)
+
+2012-03-12  Paolo Rotolo  <paolorotolo@ubuntu-it.org>
+
+	Fix typo in plugins/unityshell/unityshell.xml.in: stoped → stopped. Fixes LP: #931382.. Fixes: https://bugs.launchpad.net/bugs/931382. Approved by Marco Trevisan (Treviño).
+
+2012-03-07  Paolo Rotolo  <paolorotolo@ubuntu-it.org>
+
+	Fix typo in plugins/unityshell/unityshell.xml.in: stoped → stopped. Fixes LP: #931382.
+
+2012-03-12  Martin Mrazik  <mrazik@gmail.com>
+
+	Test template to be used for all manual tests to ensure:
+	1. consistency acrross test-cases
+	2. quality of the manual tests
+	. Fixes: . Approved by Alex Launi.
+
+2012-03-07  Martin Mrazik  <mrazik@gmail.com>
+
+	Test template to be used for all manual tests to ensure:
+	1. consistency acrross test-cases
+	2. quality of the manual tests
+
+2012-03-12  Thomi Richards  <thomi.richards@canonical.com>
+
+	Adds the ability in autopilot to get a launcher icon with a specified desktop file.. Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-03-09  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added functionality to launcher model class - you can now retrieve icons by their desktop icon.
+
+2012-03-12  Thomas Voß  <thomas.voss@rub.de>
+
+	Introduces a cached variable to handle the Google Test source dir.. Fixes: . Approved by Didier Roche.
+
+2012-03-09  Thomas Voß  <thomas.voss@rub.de>
+
+	Introduced a cached variable for google-test source path.
+
+2012-03-12  Thomi Richards  <thomi.richards@canonical.com>
+
+	The Problem:
+	
+	Node properties in the unity introspection visualiser script were shown unordered. This made it hard to view node properties.
+	
+	The solution:
+	
+	Node properties are now sorted.
+	
+	Tests:
+	
+	ummm... no.. Fixes: . Approved by Tim Penhey.
+
+2012-03-12  Thomi Richards  <thomi.richards@canonical.com>
+
+	Unity introspection script now sorts node properties alphabetically.
+
+2012-03-12  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed an autopilot test so it actually tests something useful.. Fixes: . Approved by Tim Penhey.
+
+2012-03-12  Thomi Richards  <thomi.richards@canonical.com>
+
+	The test_reveal_with_mouse_under_launcher test no longer moves the mouse out of the way before revealing the launcher. Previously this test wasn't actually testing anything.
+
+2012-03-12  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed the CommandLensSearchTests.test_run_before_refresh test so it passes, and refactored the bamf emulator.. Fixes: . Approved by Tim Penhey.
+
+2012-03-12  Thomi Richards  <thomi.richards@canonical.com>
+
+	Cleaned up command lens, which required removing large quantities of code from the bamf emulator.
+
+2012-03-12  Thomi Richards  <thomi.richards@canonical.com>
+
+	Updated show desktop autopilot test to use new launcher API.. Fixes: . Approved by Tim Penhey.
+
+2012-03-12  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed show_desktop test.
+
+2012-03-11  Thomi Richards  <thomi.richards@canonical.com>
+
+	Poll for visibility to avoid system differences in tests.. Fixes: . Approved by Tim Penhey.
+
+2012-03-12  Thomi Richards  <thomi.richards@canonical.com>
+
+	Dash emulator ensure_hidden and ensure_visible now poll the dash visibility state to make sure that the dash is visible before they return. After 10 seconds an exception is raised.
+
+2012-03-11  Thomi Richards  <thomi.richards@canonical.com>
+
+	The problem:
+	
+	The Autopilot test case class didn't log anything when calling set_unity_option, which made it hard to diagnose certain failing autopilot tests.
+	
+	The solution:
+	
+	The log message is now produced both when a compiz option is set, and when it is unset (as part of cleanup).
+	
+	Tests:
+	
+	Log messages from set_unity_option and set_compiz_option will appear in jenkins test logs.
+	
+	UNBLOCK. Fixes: . Approved by Tim Penhey.
+
+2012-03-12  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed debugging code.
+
+2012-03-12  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed an issue with the autopilot logging infrastructure which meant we were missing some important log messages in certain AP tests.
+
+2012-03-11  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix the DashKeyboardFocusTests.test_filterbar_expansion_leaves_kb_focus autopilot test.. Fixes: . Approved by Tim Penhey.
+
+2012-03-12  Thomi Richards  <thomi.richards@canonical.com>
+
+	FilterBar class can now get the correct searchbar.
+
+2012-03-11  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed a timing issue with the dash reveal behavior.. Fixes: . Approved by Tim Penhey.
+
+2012-03-12  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed a timing issue with the dash reveal behavior. This was causing the dash to appear and dissapear quickly when hitting Super+a (or any other lens shortcut). Also fixed a memory leak in the DashController.
+
+2012-03-11  Thomi Richards  <thomi.richards@canonical.com>
+
+	Only attach video capture log to failing tests if the video capture process returned non-0. Video capture logs aren't useful unless the capture process failed for some reason.
+	
+	UNBLOCK. Fixes: . Approved by Tim Penhey.
+
+2012-03-12  Thomi Richards  <thomi.richards@canonical.com>
+
+	Only attach video capture log if the capture process returned non-0 exit code. Capture logs aren't that useful anyway.
+
+2012-03-11  Thomi Richards  <thomi.richards@canonical.com>
+
+	This branch slows down the show desktop tests. 
+	
+	As far as I can see, they're failing on the jenkins instance due to timing issues. This branch should help resolve that (or at least eliminate that possibility).
+	
+	UNBLOCK. Fixes: . Approved by Tim Penhey.
+
+2012-03-12  Thomi Richards  <thomi.richards@canonical.com>
+
+	Wait a bit longer after initiating show desktop mode. This should help these tests pass on the jenkins instance.
+
+2012-03-09  Gord Allott  <gord.allott@canonical.com>
+
+	Fixes the hud not returning focus on return
+	
+	UNBLOCK. Fixes: https://bugs.launchpad.net/bugs/934061. Approved by .
+
+2012-03-09  Gord Allott  <gord.allott@canonical.com>
+
+	fixes issue with focus on return not being returned to the application
+
+2012-03-09  Thomi Richards  <thomi.richards@canonical.com>
+
+	This branch adds autopilot tests to verify the fix for bug lp:942042.
+	
+	UNBLOCK. Fixes: https://bugs.launchpad.net/bugs/942042. Approved by Tim Penhey.
+
+2012-03-07  Thomi Richards  <thomi.richards@canonical.com>
+
+	Cleanups.
+
+2012-03-07  Thomi Richards  <thomi.richards@canonical.com>
+
+	added quicklist test file.
+
+2012-03-07  Thomi Richards  <thomi.richards@canonical.com>
+
+	added python-xdg to the dependancy list for autopilot.
+
+2012-03-07  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged branch with bugfix, test passes.
+
+2012-02-28  Ted Gould  <ted@gould.cx>
+
+	Removing a free'ing of the keyfile that was removed
+
+2012-02-27  Ted Gould  <ted@gould.cx>
+
+	Drop unused variables
+
+2012-02-27  Ted Gould  <ted@gould.cx>
+
+	Attaching Bug
+
+2012-02-27  Ted Gould  <ted@gould.cx>
+
+	Libindicator handles the case where we don't find shortcuts without warning now, don't need this if statement.  This brings Unity up to compliance with the name changes in the desktop spec
+
+2012-03-07  Thomi Richards  <thomi.richards@canonical.com>
+
+	Have a failing test.
+
+2012-03-09  Gord Allott  <gord.allott@canonical.com>
+
+	fixes issue with hud not returning focus correctly, hack was bad.
+	
+	UNBLOCK. Fixes: https://bugs.launchpad.net/bugs/934061. Approved by Gord Allott, Mirco Müller.
+
+2012-03-05  Gord Allott  <gord.allott@canonical.com>
+
+	resolved conflict
+
+2012-03-05  Gord Allott  <gord.allott@canonical.com>
+
+	remove debugs
+
+2012-03-02  Gord Allott  <gord.allott@canonical.com>
+
+	fixed up the bamf wrapper to use desktop files for matching rather than application names, should work on non english locales now
+
+2012-03-02  Gord Allott  <gord.allott@canonical.com>
+
+	merged trunk and added ap tests
+
+2012-02-23  Gord Allott  <gord.allott@canonical.com>
+
+	remove stupid po changes i hate that
+
+2012-02-23  Gord Allott  <gord.allott@canonical.com>
+
+	fixes the hud not giving focus back if you open close the hud fast, no tests
+
+2012-03-09  Gord Allott  <gord.allott@canonical.com>
+
+	UNBLOCK
+	
+	dummy merge to bump abi. Fixes: . Approved by Didier Roche, Gord Allott.
+
+2012-03-08  Gord Allott  <gord.allott@canonical.com>
+
+	corrected HACKING file
+
+2012-03-08  Jeremy Bicha  <jbicha@ubuntu.com>
+
+	UNBLOCK: set title case for Lock to Launcher/Unlock from Launcher. Fixes: https://bugs.launchpad.net/bugs/949636. Approved by Didier Roche.
+
+2012-03-07  Jeremy Bicha  <jbicha@ubuntu.com>
+
+	Use title case for "Lock to Launcher"/"Unlock from Launcher" (LP: #949636)
+
+2012-03-08  Gord Allott  <gord.allott@canonical.com>
+
+	Includes the google test library in our build system, could use some slimming down after some investigation
+	
+	UNBLOCK. Fixes: . Approved by .
+
+2012-03-08  Gord Allott  <gord.allott@canonical.com>
+
+	more graceful handling of no gtest
+
+2012-03-08  Gord Allott  <gord.allott@canonical.com>
+
+	builds cmake locally using distro supplied cmake - hardcoded to /usr/src/gtest right now
+
+2012-03-08  Gord Allott  <gord.allott@canonical.com>
+
+	adds the entire gtest library to our build system as per googles preference
+
+2012-03-07  Thomi Richards  <thomi.richards@canonical.com>
+
+	Autopilot now logs when it sets a compiz plugin option as part of a test run. Fixed a bug in a log message inside the Mouse class.
+	
+	UNBLOCK. Fixes: . Approved by Alex Launi.
+
+2012-03-08  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed a bug in the Mouse class log message.
+
+2012-03-08  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added logging to code that alters unity settings.
+
+2012-03-07  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Revert composition character support in Unity. It introduced a regression in Unity.
+	
+	UNBLOCK. Fixes: . Approved by Alex Launi.
+
+2012-03-07  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Revert composition character support in Unity. It introduced a regression in Unity.
+
+2012-03-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: don't ungrab the keyboard on Alt press if switcher is active
+	
+	When the Alt+Tab switcher is active is the keyboard must not be ungrabbed or the Alt+Tab cancel action won't work (i.e. escaping from switcher by Escape key).
+	This fixes a regression introduced recently. I've also included AP tests to check if the cancel action works.
+	
+	UNBLOCK. Fixes: https://bugs.launchpad.net/bugs/948227. Approved by Tim Penhey, Thomi Richards.
+
+2012-03-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_switcher.py: added tests for switcher escaping, and lazy invocation
+
+2012-03-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: don't ungrab the keyboard on Alt press if switcher is active
+	
+	When the Alt+Tab switcher is active is the keyboard must not be
+	ungrabbed or the Alt+Tab cancel action won't work (i.e. escaping
+	from switcher by Escape key).
+
+2012-03-06  Thomi Richards  <thomi.richards@canonical.com>
+
+	Adds an option to the autopilot script that allows users to pick which folder to store videos of failed tests. This is needed by the jenkins infrastructure.
+	
+	UNBLOCK. Fixes: . Approved by Alex Launi.
+
+2012-03-07  Thomi Richards  <thomi.richards@canonical.com>
+
+	Adds an option to the autopilot script so we can pick where to store videos of failed tests.
+
+2012-03-06  Thomi Richards  <thomi.richards@canonical.com>
+
+	Add the ability to video capture failing autopilot tests. This feature is enabled with the '-r' switch to the 'autopilot run' command.
+	
+	Videos are stored in /tmp/autopilot. This feature is intended for use on the jenkins slave machines.
+	
+	UNBLOCK. Fixes: . Approved by Marco Trevisan (Treviño), Tim Penhey.
+
+2012-03-07  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk, fixed conflicts.
+
+2012-03-06  Thomi Richards  <thomi.richards@canonical.com>
+
+	Whitespace fixes.
+
+2012-03-06  Thomi Richards  <thomi.richards@canonical.com>
+
+	Prevent passing tests from encoding the video file, so we don't suffer the encoding overhead. Removed the dummy test I was using to test this feature.
+
+2012-03-06  Thomi Richards  <thomi.richards@canonical.com>
+
+	Recording is disabled if the recording app is not present.
+
+2012-03-06  Thomi Richards  <thomi.richards@canonical.com>
+
+	Video capture works.
+
+2012-03-06  Jay Taoko  <jay.taoko@canonical.com>
+
+	UNBLOCK
+	
+	* Use Gtk im for composition characters.
+	
+	Fix bug #944674. Fixes: https://bugs.launchpad.net/bugs/944674. Approved by Neil J. Patel.
+
+2012-03-06  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Simulate 'ô' in a test.
+
+2012-03-05  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Merged with trunk.
+
+2012-03-05  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fixed errors in tests
+
+2012-03-05  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Adding Autopilot test for composition characters (â,ô,ĩ,î,ã) typing in the dash.
+
+2012-03-05  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fix
+
+2012-03-05  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Cleanup
+
+2012-03-05  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fix: removed bad conditional.
+
+2012-03-02  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Use Gtk im for composition characters.
+
+2012-03-02  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Adding support for dead keys.
+
+2012-03-06  Gord Allott  <gord.allott@canonical.com>
+
+	UNBLOCK resolves a silly glib issue, glib is C not C++ ;). Fixes: . Approved by Michał Sawicz.
+
+2012-03-06  Gord Allott  <gord.allott@canonical.com>
+
+	resolves a 2d build issue
+
+2012-03-04  Thomi Richards  <thomi.richards@canonical.com>
+
+	Refactor the autopilot launcher emulator to use the new UnityIntrospectableObject class. Launcher tests will now run once per configured monitor.. Fixes: . Approved by Tim Penhey.
+
+2012-03-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed typo, made show desktop tests even nicer to read.
+
+2012-03-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added a TODO comment before switcher emulator prompting me to refactor it in another branch.
+
+2012-03-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed filtering in get_children_by_type.
+
+2012-03-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Imports should be system first, then local, and in alphabetical order.
+
+2012-03-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed debug logging that was flooding the test logs, fixed showdesktop tests.
+
+2012-03-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed a breakage in the hud tests, and fixed a bug in the UnityIntrospectableObject class, where children would be filtered if no filter was applied.
+
+2012-03-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Launcher emulator is now split into separate classes: LauncherController, LauncherModel, and Launcher. Updated tests. Launcher tests are now scenario'd depending on the number of monitors configured on the machine. All new-style emulators automatically update their state when someone requests an attribute from unity.
+
+2012-03-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Renamed Launcher to LauncherHelper, added LauncherController and Launcher classes. Tests still pass.
+
+2012-03-04  Thomi Richards  <thomi.richards@canonical.com>
+
+	Modifies the tools/autopilot script to print the total number of tests found.
+	
+	UNBLOCK. Fixes: . Approved by Tim Penhey.
+
+2012-03-03  Thomi Richards  <thomi.richards@canonical.com>
+
+	autopilot script prints total number of tests after listing them.
+
+2012-03-04  Gord Allott  <gord.allott@canonical.com>
+
+	Check pixbuf before dereferencing.. Fixes: https://bugs.launchpad.net/bugs/937421. Approved by Tim Penhey.
+
+2012-02-28  Gord Allott  <gord.allott@canonical.com>
+
+	add safety check on gdk pixbuf
+
+2012-03-04  smspillaz  <sam.spilsbury@canonical.com>
+
+	Fix the Alt+F1 or Alt+F2 sending a ";3P" or ";3Q" to the active windows issue, and also fixes some alt holding showing menus.  Compiz-core fix needed for complete fix.. Fixes: https://bugs.launchpad.net/bugs/943194, https://bugs.launchpad.net/bugs/943239, https://bugs.launchpad.net/bugs/943456. Approved by Tim Penhey, Sam Spilsbury, Daniel van Vugt.
+
+2012-03-02  smspillaz  <sam.spilsbury@canonical.com>
+
+	Added a small work-a-round for bug 943194
+
+2012-03-02  smspillaz  <sam.spilsbury@canonical.com>
+
+	Always return true whenever an action was handled
+
+2012-03-04  Jason Smith  <jason.smith@canonical.com>
+
+	Don't show the switcher when alt+right is pressed. Fixes: https://bugs.launchpad.net/bugs/943902. Approved by Tim Penhey.
+
+2012-03-04  Jason Smith  <jason.smith@canonical.com>
+
+	add test
+
+2012-03-04  Jason Smith  <jason.smith@canonical.com>
+
+	Fix alt-arrow causing switcher to pop up
+
+2012-03-02  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	Fixes lp:942625
+	
+	GestureEngine::FindCompWindow() would enter in an infinite loop if the window passed to it is the root window since its break condition (parent == root) would never be reached as parent would be zero.
+	
+	Also includes some other safeguards around the same issue.
+	
+	UNBLOCK. Fixes: https://bugs.launchpad.net/bugs/942625. Approved by Marco Trevisan (Treviño).
+
+2012-03-01  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	Fixes infinite loop in GestureEngine. lp:942625
+	
+	GestureEngine::FindCompWindow() would enter in an infinite loop
+	if the window passed to it is the root window since its break condition
+	(parent == root) would never be reached as parent would be zero.
+
+2012-03-02  Tim Penhey  <tim.penhey@canonical.com>
+
+	* Fixes the key navigation in the hud. Implemented an "ok" behaviour when navigationg with the key. This will have to be refined with input from design.
+	
+	* This branch relies on this nux branch: https://code.launchpad.net/~unity-team/nux/nux.hud-fixes/+merge/95399
+	
+	UNBLOCK
+	. Fixes: . Approved by Tim Penhey, Gord Allott.
+
+2012-03-02  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk.
+
+2012-03-02  Tim Penhey  <tim.penhey@canonical.com>
+
+	Make the base autopilot test case use the glib runner, and add more hud tests.
+
+2012-03-02  Tim Penhey  <tim.penhey@canonical.com>
+
+	Expose the HudView through the controller.
+
+2012-03-02  Tim Penhey  <tim.penhey@canonical.com>
+
+	Remember the selected button, and expose over debug interface.
+
+2012-03-02  Tim Penhey  <tim.penhey@canonical.com>
+
+	Initialize the view member, and add the view as an introspectable child.
+
+2012-03-02  Tim Penhey  <tim.penhey@canonical.com>
+
+	Add an unsigned type to the variant wrapper.
+
+2012-03-01  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fix: properly updated the app icons when navigating through the Hud buttons
+	* Fix left and right navigation keys in the text entry
+	* Cleanup
+
+2012-03-01  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Cleanup and comments.
+
+2012-03-01  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fixes the key navigation in the hud. Implemented an "ok" behaviour when navigationg with the key. This will have to be refined with input from design.
+
+2012-03-02  Thomi Richards  <thomi.richards@canonical.com>
+
+	Two changes to the key the Keyboard emulator handles multi-key combos: We insert a delay between pressing and releasing individual keys, and always release keys in the reverse order they were pressed.
+	
+	UNBLOCK. Fixes: . Approved by Marco Trevisan (Treviño), Alex Launi.
+
+2012-03-02  Thomi Richards  <thomi.richards@canonical.com>
+
+	Keyboard emulator now inserts a delay between each key in a multi-key press or release action.
+
+2012-02-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	The launcher icons can be shown during the Super Tab Launcher switcher.
+	
+	For both the shortcut hints and the icons shortcut overlays we use the same policy:
+	- If they were shown before starting the Super+Tab session, we still show them
+	- If they were not shown before starting the Super+Tab session, they won't be ever shown
+	
+	Plus, if we're pressing a valid unity shortcut key when the Launcher Switcher is active, we should terminate the switcher without doing anything.
+	
+	UNBLOCK. Fixes: https://bugs.launchpad.net/bugs/943372, https://bugs.launchpad.net/bugs/943377. Approved by Thomi Richards.
+
+2012-03-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, more test_launcher.py fixes
+
+2012-03-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~thomir/unity/fix-ap-test-stability
+
+2012-03-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_launcher.py: fixed some errors in tests
+
+2012-02-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~thomir/unity/super+tab-shortcut-fixes-bettertests
+
+2012-03-01  Thomi Richards  <thomi.richards@canonical.com>
+
+	Split apart launcher tests into many smaller tests.
+
+2012-02-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_launcher.py: Added the switcher starts on zero test
+
+2012-02-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_launcher.py: Fixing the docstrings
+	
+	Plus use self.keyboard.
+
+2012-02-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk.
+
+2012-02-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	manual-tests: SuperTab, removed the tests now covered by autopilot
+
+2012-02-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_launcher: added Super+Tab cycling tests
+
+2012-02-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_launcher: added tests for bug #943372 and bug #943372
+	
+	We both check the interaction with the launcher icon shortcuts, both
+	from a visual and logical point of view.
+
+2012-02-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, launcher emulator: add getters for shortcuts status and keyboard target launcher
+
+2012-02-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: add introspection to get the keyboard target launcher
+
+2012-02-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: add introspect to check if the shortcuts overlays are showing
+
+2012-02-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	No need to terminate the Key navigation releasing super.
+
+2012-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	manual-tests: SuperTab, one more test to check the interaction with the unity shortcuts
+
+2012-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	manual-test: added missing manual test for SuperTab and launcher icons shortcuts interaction
+
+2012-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: if a valid shortcut key is pressed and the keynavigation is active, terminate it
+
+2012-02-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: don't hide the icon shortcuts on KeyNavigation
+	
+	They should be shown if they've been already there when starting the navigation.
+
+2012-02-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Two tests are now skipped. These need to be rewritten, but this is a non-trivial test to write. The current tests try and do something that's not supported by unity.
+	
+	UNBLOCK. Fixes: . Approved by Tim Penhey.
+
+2012-03-01  Thomi Richards  <thomi.richards@canonical.com>
+
+	Skipping tests that modify _NET_WM_STATE property after a window has been mapped, since unity doesn't support that.
+
+2012-02-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed several stability issues with autopilot tests.
+	
+	Specifically:
+	
+	* hud tests now make sure the hud is hidden after each test.
+	* Keyboard and mouse cleanup happens after test tearDown methods are called, so tests can do things like hide the dash and the keyboard cleanup will still work as expected.
+	* Keyboard cleanup now removes pressed keys from the global list after releasing them (oops!)
+	* Mouse cleanup now releases pressed mouse buttons as well as moving mouse to a safe position.
+	* Keyboard and mouse release methods will log a warning when asked to release a key that wasn't pressed, rather than crashing. This shouldn't normally happen, but crashing is never the right thing to do.
+	* Revealing the dash, or any lens will now clear the old search text by default.
+	
+	UNBLOCK. Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-03-01  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed typo.
+
+2012-03-01  Thomi Richards  <thomi.richards@canonical.com>
+
+	Remove mouse and keyboard cleanup methods from LoggedTestCase tearDown method.
+
+2012-03-01  Thomi Richards  <thomi.richards@canonical.com>
+
+	Mouse and keyboard clenup must happen after test tearDown, so add them as a cleanup method.
+
+2012-03-01  Thomi Richards  <thomi.richards@canonical.com>
+
+	Launcher can have 0 active icons.
+
+2012-03-01  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed type.
+
+2012-03-01  Thomi Richards  <thomi.richards@canonical.com>
+
+	Log when we start an application.
+
+2012-03-01  Thomi Richards  <thomi.richards@canonical.com>
+
+	Only count visible launcher icons as potentially active.
+
+2012-03-01  Thomi Richards  <thomi.richards@canonical.com>
+
+	Hud tests now  ensure hud is hidden after each test.
+
+2012-03-01  Thomi Richards  <thomi.richards@canonical.com>
+
+	Keyboard and Mouse emulators now warn if asked to generate a release even for a key/button that was not pressed, rather than throwing an exception.
+
+2012-03-01  Thomi Richards  <thomi.richards@canonical.com>
+
+	By default, revealing the dash (or any lens) clears the last search string.
+
+2012-03-01  Thomi Richards  <thomi.richards@canonical.com>
+
+	Keyboard cleanup method only releases keys once. Mouse cleanup method now releases buttons that were previously pushed. Keyboard and mouse cleanup happens AFTER test cleanup.
+
+2012-02-29  Tim Penhey  <tim.penhey@canonical.com>
+
+	Uses the new modifier-tap ability in compiz to only show the HUD if someone hasn't used another key with alt (or the associated key).. Fixes: https://bugs.launchpad.net/bugs/923410. Approved by Thomi Richards, Mirco Müller.
+
+2012-02-29  Tim Penhey  <tim.penhey@canonical.com>
+
+	Oops, an extra }
+
+2012-02-29  Tim Penhey  <tim.penhey@canonical.com>
+
+	More autopilot tests for the hud.
+
+2012-02-29  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk
+
+2012-02-29  Tim Penhey  <tim.penhey@canonical.com>
+
+	A few more tests.
+
+2012-02-29  Tim Penhey  <tim.penhey@canonical.com>
+
+	Make the dash only show on tap, and move the 250 into a constant.
+
+2012-02-29  Tim Penhey  <tim.penhey@canonical.com>
+
+	Bring back the timer.
+
+2012-02-29  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk
+
+2012-02-16  Tim Penhey  <tim.penhey@canonical.com>
+
+	Use the new tap behaviour in compiz to only respond to taps to show the hud.
+
+2012-02-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix the autopilot setup.py script, so jenkins will run again.
+	
+	The run_autopilot script is no longer managed by python distutils.
+	
+	UNBLOCK. Fixes: . Approved by .
+
+2012-02-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	remove scripts from setup.py since we don't need to install that anymore.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed a bug in the new autopilot keybindings API which would fail to hold down single-key keybindings.. Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-02-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed bug where single-key keybindings couldn't be held with the new keybindings system.
+
+2012-02-28  Jason Smith  <jason.smith@canonical.com>
+
+	Fix the details mode in alt-tab over multiple workspaces and monitors.. Fixes: https://bugs.launchpad.net/bugs/925484, https://bugs.launchpad.net/bugs/933406. Approved by Jason Smith, Thomi Richards.
+
+2012-02-29  Tim Penhey  <tim.penhey@canonical.com>
+
+	Clean up tests.
+
+2012-02-29  Tim Penhey  <tim.penhey@canonical.com>
+
+	Add test for  bug: 933406
+
+2012-02-29  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk.
+
+2012-02-22  Jason Smith  <jason.smith@canonical.com>
+
+	merge fix-alt-tab-progression branch
+
+2012-02-22  Jason Smith  <jason.smith@canonical.com>
+
+	dont leak implementation details in switcher controller from switcher model
+
+2012-02-22  Jason Smith  <jason.smith@canonical.com>
+
+	merge workspaces fix
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	run_autopilot script now warns sensibly about missing dependancies, allows users to list all tests, and run specific test(s) as well as run the entire suite. Script is now in /tools/autopilot
+	
+	UNBLOCK. Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-02-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Renamed run_autopilot to just 'autopilot'. This avoids the situation where we type 'run_autopilot run'.
+
+2012-02-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Can now run specific tests.
+
+2012-02-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	run_autopilot can now list tests as well as run the entire suite.
+
+2012-02-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Moved run_autopilot script, made it report missing dependancies, and made it patch sys.path if needed.
+
+2012-02-28  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fix logic determining icons for alt-tab.. Fixes: . Approved by Thomi Richards.
+
+2012-02-29  Tim Penhey  <tim.penhey@canonical.com>
+
+	Use the compiz keybinding to minimise.
+
+2012-02-29  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fix the AP test.
+
+2012-02-29  Tim Penhey  <tim.penhey@canonical.com>
+
+	The method for determining whether to show only current workspace had the logic wrong.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Adds autopilot tests for jason's branch that fixes a bug regarding switching to minimised apps.. Fixes: . Approved by Tim Penhey.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed print debugging statement.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged Jason's branch with the fix. Tests now pass.
+
+2012-02-22  Jason Smith  <jason.smith@canonical.com>
+
+	fix issue where windows wouldn't unminimize with alt-tab
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Failing test.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged multi-monitor alt+tab tests, as I need some of the infrastructure here.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Can now launch gedit easily from within tests, and can see if a BamfWindow is focused or not.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added autopilot tests for the switcher "show apps from all workspaces" mode.. Fixes: . Approved by Tim Penhey.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed typo in comment.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed an error in the swticher tests, and relaxed the keybindings module WRT getting hold and tap parts of a single-key binding.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Updated keybindings for switcher in 'all' mode.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged branch that stops trunk from crashing. This has been approved, but not merged yet.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged Jason's branch with the alt-tab-on-all-workspaces fix.
+
+2012-02-22  Jason Smith  <jason.smith@canonical.com>
+
+	merge trunk
+
+2012-02-07  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added small timeout to launcher tests to get them to pass.
+
+2012-02-06  Jason Smith  <jason.smith@canonical.com>
+
+	better scaling
+
+2012-02-06  Jason Smith  <jason.smith@canonical.com>
+
+	scale reveal pressure by screen size
+
+2012-02-06  Jason Smith  <jason.smith@canonical.com>
+
+	re-enable and fix launcher reveal tests
+
+2012-02-06  Jason Smith  <jason.smith@canonical.com>
+
+	merge trunk
+
+2012-02-01  Jason Smith  <jason.smith@canonical.com>
+
+	implement ctrl+alt+tab to show apps on all viewports
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Failing AP test - switcher does not show apps from all workspaces.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added test to ensure that switcher only shows icons from current workspace.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	We now have a basic workspace manager - we can switch between workspaces at will.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added keybindings from the wall plugin.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added file for workspace manager.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added a manual test to describe how to test bug lp:932365.
+	
+	The code has already been merged for this, but it's currently pretty hard to test with autopilot.. Fixes: . Approved by Tim Penhey.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Updated manual test - it works with a device icon too.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added manual test for dragging an icon over the trash in the launcher.
+
+2012-02-27  Tim Penhey  <tim.penhey@canonical.com>
+
+	Code correctness fix.
+	Fixes potential multi-monitor issue with alt-tab getting settings confused.
+	
+	= Problem description =
+	
+	We passed an int into a function expecting a bool. This caused the switcher to confuse its settings and act weirdly.
+	
+	= The fix =
+	
+	We pass a bool now.
+	
+	= Test coverage =
+	
+	Existing tests cover a degree of this behavior. Currently testing does not cover multi-monitor behavior however (which is where this bug showed up). The fix is obvious and the current code is clearly and demonstrably wrong, to the point of passing the wrong type into a function.
+	
+	A manual test was added for the multi-monitor work.. Fixes: . Approved by Thomi Richards.
+
+2012-02-28  Tim Penhey  <tim.penhey@canonical.com>
+
+	Tweak the test.
+
+2012-02-28  Tim Penhey  <tim.penhey@canonical.com>
+
+	Add a manual multi-monitor test.
+
+2012-02-22  Jason Smith  <jason.smith@canonical.com>
+
+	dont pass an int as a bool, this is obviously wrong (and buggy)
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Don't call std::list::remove while iterating over the list.
+	
+	This bug was found while running a soon-to-be-landed autopilot test.. Fixes: . Approved by Tim Penhey, Jason Smith.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Revert rev 2018, since it causes crashes in the switcher.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Re-added the switcher tests after they were accidentally lost in a recent merge.. Fixes: . Approved by Jason Smith.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Re-added switcher tests that got lost in a merge.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Launcher does not reveal if mouse button 1 is held down while pushing against screen edge. Fixes lp:928805.. Fixes: . Approved by Jason Smith.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed test name and docstring to match test contents.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged fix branch. Test passes.
+
+2012-02-21  Jason Smith  <jason.smith@canonical.com>
+
+	dont reveal when mouse is down
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Have a failing test.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Moved launcher reveal tests to separate test case class.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Change autopilot so instead of hardcoding keybindings, we get them from compiz.. Fixes: . Approved by Tim Penhey.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Improved error handling for optional paramter.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added an optional delay parameter to KeybindingsHelper.keybinding so the hud emulator can use it as well.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Dash emulator uses KeybindingsHelper class.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Launcher emulator uses keybindingsHelper class.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Switcher emulator uses KeybindingsHelper class.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Switcher emulator changed to use new keybindings system.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Hud emulator converted to new keybindings system.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Dash emulator converted to use new keybindings system.
+
+2012-02-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Finished switching launcher to new keybindings system. Refactored keybindings internals to use a single dictionary. Made it easier to get the hold part and the tap part of a multi-key keybindings (like Alt+Tab)
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Seems to work...
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added keybindings module. About to start adding it to the emulators.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Renamed function, changed test to use an import alias so this is easier in the future.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Moved to keybindings module.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed some whitespace and added one more test, for good luck.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	All tests pass.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Test passes.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Failing test: identical keys must not be duplicated in output.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	TEst Passes.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Failing test: <Control> -> Ctrl
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Test passes.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Failing test: must strip trailing whitespace from imput string.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Test now passes.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Failing test - single letter translation.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Refactored - translation function should take strings, and return strings.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Test now passes.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Failing test: only setting instances with type=Key should be allowed.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Test passes.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Failing test case: must raise TypeError if something other than a compizconfig.Setting is passed in.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added tests for the command lens.
+	
+	Specifically: 
+	* Empty string query should hide the results category.
+	* Non-empty string should show the results category.
+	* Non-empty string should show results within the results category.
+	* Hitting enter before the view has had time to refresh should run the correct result.
+	* Ensure that expanding or collapsing the filter bar does not remove keyboard focus from the searchbar.. Fixes: . Approved by Tim Penhey.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed whitespace
+
+2012-02-24  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed manual test specs that are now tested automatically.
+
+2012-02-24  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added test to ensure that keyboard focus is not lost when expanding or collapsing the filter bar.
+
+2012-02-24  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-02-24  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added x,y,widtha nd height properties to FilterBar.
+
+2012-02-23  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-02-23  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed unused import.
+
+2012-02-23  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added test that verifies correct app is run when Enter is pressed before the view can update.
+
+2012-02-23  Thomi Richards  <thomi.richards@canonical.com>
+
+	Forgot to add the file previously. Added test file with 3 new tests for the command lens.
+
+2012-02-23  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added ResultsView to introspection tree.
+
+2012-02-23  Thomi Richards  <thomi.richards@canonical.com>
+
+	Basic results test.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Re-enabled launcher reveal tests, and set launcher mode to "autohide" for these tests.
+	Made it significantly easier to set any compiz/unity option for a single test. These options get automatically un-set when the test finishes.. Fixes: . Approved by Jason Smith.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed stray pdb statement.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Re-enabled launcher tests. Made it easier to set any unity /compiz option for a single test.
+
+2012-02-26  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added autopilot tests to verify that the switcher moves to the next switcher icon when Tab is pressed while in details mode.
+	
+	Switcher tests for details mode are "scenario"'d so we cover details mode initiated by both '`' and 'Down' keys.. Fixes: . Approved by Tim Penhey.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged Jason's branch, verified that switcher tests passed.
+
+2012-02-21  Jason Smith  <jason.smith@canonical.com>
+
+	make pressing the down arrow not result in window looping
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Have a failing test case - pressing tab after initiating details mode with the 'Down' arrow does not select next item in the switcher model.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added tests to verify that the switcher starts in normal mode, and that pressing '`' starts details mode.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added test to ensure that hitting down arrow puts switcher into details mode.
+
+2012-02-26  Tim Penhey  <tim.penhey@canonical.com>
+
+	This branch just refactors some autopilot code.
+	
+	Extracts the log handling code for the test into a different base class.
+	
+	Also makes bamf and keyboard an attribute of all autopilot tests.
+	
+	Adds a helper method to start an app.. Fixes: . Approved by Thomi Richards.
+
+2012-02-27  Tim Penhey  <tim.penhey@canonical.com>
+
+	Make a Bamf instance a member of they base test case.
+
+2012-02-27  Tim Penhey  <tim.penhey@canonical.com>
+
+	Extract the logger setup into a base class.
+
+2012-02-26  Thomi Richards  <thomi.richards@canonical.com>
+
+	Autopilot ibus tests now use new autopilot API for getting dash searchbar object.. Fixes: . Approved by Tim Penhey.
+
+2012-02-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Updated ibus tests to match new autopilot API.
+
+2012-02-26  Thomi Richards  <thomi.richards@canonical.com>
+
+	IBus test suites that don't have the required engine installed will no longer fail with an error on tearDown. Instead, the test will be skipped with a helpful message (as originally intended).
+	
+	Also updated the scenario names for the Anthy engine tests.. Fixes: . Approved by Robert Carr.
+
+2012-02-26  Thomi Richards  <thomi.richards@canonical.com>
+
+	IBus tests suites no longer fail if the ibus engine is missing. The tests will be skipped instead.
+
+2012-02-26  Thomi Richards  <thomi.richards@canonical.com>
+
+	Forgot to change scenario names in Anthy tests.
+
+2012-02-25  Jeremy Bicha  <jbicha@ubuntu.com>
+
+	. Fixes: https://bugs.launchpad.net/bugs/926213. Approved by Marco Trevisan (Treviño), Matthew Paul Thomas, Sam Spilsbury.
+
+2012-02-03  Jeremy Bicha  <jbicha@ubuntu.com>
+
+	Overlay should say "Menu Bar" not "Top Bar" (LP: #926213)
+
+2012-02-25  Jason Smith  <jason.smith@canonical.com>
+
+	= The Problem =
+	Alt-Tab timeouts are too long
+	
+	= The Fix =
+	Make the timeout 75ms instead of 150ms
+	
+	= Testing =
+	The existing switcher autopilot tests cover the expected behaviour alt-tab behaviour.. Fixes: https://bugs.launchpad.net/bugs/888636. Approved by David Barth.
+
+2012-02-22  Jason Smith  <jason.smith@canonical.com>
+
+	update alt-tab timeout time to match design requirements
+
+2012-02-24  Paul Sladen  <sladen@canonical.com>
+
+	No glow updates and associate code/asset removal (LP: #933578). Fixes: https://bugs.launchpad.net/bugs/933578. Approved by Gord Allott, Andrea Cimitan.
+
+2012-02-24  Paul Sladen  <sladen@canonical.com>
+
+	Remove unused glow assets
+
+2012-02-24  Paul Sladen  <sladen@canonical.com>
+
+	ABI break: remove now unused Glow variables and helper functions
+
+2012-02-24  Paul Sladen  <sladen@canonical.com>
+
+	No glow: Dash search: remove Glow texture drawing
+	(leave functions themselves in order not to break ABI)
+
+2012-02-24  Alex Launi  <alex.launi@canonical.com>
+
+	Overrides the Add and RemoveChild methods of Introspectable for more readable code in the ResultView.. Fixes: . Approved by Gord Allott.
+
+2012-02-24  Alex Launi  <alex.launi@canonical.com>
+
+	Add IntrospectableWrapper to standalone dash CMakeList
+
+2012-02-24  Alex Launi  <alex.launi@canonical.com>
+
+	refactor dash result introspection to use standard introspection api
+
+2012-02-23  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	= Problem description =
+	
+	Fixes middle mouse button pasting, which was removed by me.
+	
+	= The fix =
+	
+	Restored the IMTextEntry::OnMouseButtonUp function but now it only handles paste with the middle mouse
+	
+	= Test coverage =
+	
+	There is a manual test for this. Fixes: https://bugs.launchpad.net/bugs/926793. Approved by Thomi Richards.
+
+2012-02-23  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	Changed indent
+	Also now using manual test for middle mouse paste
+
+2012-02-23  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	Test for clipboard added,
+	Still need to finish Primary Paste
+
+2012-02-23  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	Fixes the problem where you can't paste multiple times
+
+2012-02-23  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	Adds test for middle click pasting
+	Adds Test for copy/paste crash bug:926793
+
+2012-02-23  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	Re-fixes middle paste, which was removed by me
+
+2012-02-23  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added tests for ibus strings being entered into the dash. Engines tested include Pinyin (Chinese), Anthy (Japanese), and Hangul (Korean).. Fixes: . Approved by Alex Launi.
+
+2012-02-23  Thomi Richards  <thomi.richards@canonical.com>
+
+	Wait a bit after restarting the ibus bus.
+
+2012-02-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Restart ibus bus after setting a new input method engine.
+
+2012-02-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Get the engine name right.. again.
+
+2012-02-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Japanese engine doesn't put spaces in...
+
+2012-02-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Get the engine name right\!
+
+2012-02-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Now with tests for the anthi input engine.
+
+2012-02-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Hangul input strings append a space to the expected result. Updated tests.
+
+2012-02-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Better class docstrings, and encode all unicode in u'\uXXXX' format.
+
+2012-02-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added tests for hangul input engine.
+
+2012-02-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	I'm an idiot
+
+2012-02-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	AP tests now use testscenarios.
+
+2012-02-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	Now activate ibus after loading dash.
+
+2012-02-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	CLeaned up ibus dash tests.
+
+2012-02-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	No longer use the global ibus engine. Instead, install engines into the active engine list.
+
+2012-02-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Updated ibus tests from Martin's branch.
+
+2012-02-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed ibus tests.
+
+2012-02-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	Remember to add new files.
+
+2012-02-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added ibus tests.
+
+2012-02-23  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	New asses from design, looks nicer!. Fixes: . Approved by Marco Trevisan (Treviño), Andrea Cimitan.
+
+2012-02-23  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	New BFB shine
+
+2012-02-23  Lars Uebernickel  <lars.uebernickel@canonical.com>
+
+	= Problem description =
+	
+	In precise, print status is shown via an indicator instead of using system-config-printer's applet (which is whitelisted in Unity right now).
+	
+	= The fix =
+	
+	This patch makes sure the print indicator is shown at the correct position in the panel and removes the whitelist entry for 'scp-dbus-service'.
+	
+	= Test coverage =
+	
+	None, trivial change.
+	. Fixes: . Approved by Gord Allott.
+
+2012-02-22  Lars Uebernickel  <lars.uebernickel@canonical.com>
+
+	Add indicator-printers support and remove whitelist entry of old printer applet
+
+2012-02-23  Jason Smith  <jason.smith@canonical.com>
+
+	= The Problem =
+	
+	Slide animation wasn't smooth when dragging icons around ont he launcher
+	
+	= The Fix =
+	
+	Make the animation take into account the parents geometry offset when calculating the animation
+	
+	= Testing =
+	
+	None. Fixes: . Approved by Gord Allott.
+
+2012-02-22  Jason Smith  <jason.smith@canonical.com>
+
+	Fix calculation of slide animation to account for parent geometry
+
+2012-02-23  Didier Roche  <didier.roche@canonical.com>
+
+	Change F10 to open the first menu of top panel to Alt + F10 as per design (LP: #878492). Fixes: https://bugs.launchpad.net/bugs/878492. Approved by Tim Penhey.
+
+2012-02-23  Didier Roche  <didier.roche@canonical.com>
+
+	Change F10 to open the first menu of top panel to Alt + F10 as per design (LP: #878492)
+
+2012-02-23  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	IMTextEntry now only handles copy/cut and pasting, everything else is in nux::TextEntry. Fixes: https://bugs.launchpad.net/bugs/880876. Approved by Tim Penhey, Jay Taoko, Thomi Richards.
+
+2012-02-23  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	merged trunk, fixed conflicts
+
+2012-02-22  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	removed ibus dep check
+
+2012-02-22  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	TextEntry was replaced with TextEntryIM
+
+2012-02-22  Jay Taoko  <jay.taoko@canonical.com>
+
+	
+	* Using signal TextEntryIM::text_changed.
+
+2012-02-22  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	TextEntryIM now using NUX_TRACKER_LOCATION, instead of hard coding it in
+
+2012-02-22  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	Merged trunk
+
+2012-02-20  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	merged trunk
+
+2012-02-20  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	Fixes the preedit box disappearing because it never knew dash lost key focus
+
+2012-02-17  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	Fixed double pasting
+
+2012-02-17  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	merge
+
+2012-02-16  Brandon Schaefer  <brandontschaefer@gmail.com
+
+	Fixes crash in IMTextEntry
+	IMTextEntry now only handles copying/cuting/pasting
+	New nux TextEntryIM being used for now
+
+2012-02-23  Tim Penhey  <tim.penhey@canonical.com>
+
+	= Problem description =
+	
+	Failed to compile with the new nux as the signal for text_changed had changed.
+	
+	= The fix =
+	
+	Rename the signal
+	
+	= Test coverage =
+	
+	Clean compile.. Fixes: . Approved by Mirco Müller.
+
+2012-02-23  Tim Penhey  <tim.penhey@canonical.com>
+
+	New signals.
+
+2012-02-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Split the dash keynav test into several smaller tests that test one specific thing.
+	
+	Also removed an unused import from the dash emulator.. Fixes: . Approved by Tim Penhey.
+
+2012-02-23  Thomi Richards  <thomi.richards@canonical.com>
+
+	Split several dash tests into multiple, smaller tests.
+
+2012-02-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Refactored the autopilot dash emulator to use multiple classes instead of one massive one.
+	
+	Also removed several instances where XPath queries were being hard-coded. Updated tests to use new class structure.. Fixes: . Approved by .
+
+2012-02-23  Thomi Richards  <thomi.richards@canonical.com>
+
+	Refactoring finished.
+
+2012-02-23  Thomi Richards  <thomi.richards@canonical.com>
+
+	Refactor finished, all tests pass.
+
+2012-02-23  Thomi Richards  <thomi.richards@canonical.com>
+
+	Refactor half done. All tests pass.
+
+2012-02-22  Gord Allott  <gord.allott@canonical.com>
+
+	Makes bghash only change the gsettings key once per wallpaper change, instead of on every frame it transitions to the next wallpaper.
+	
+	No test as gsettings is not sandboxable and this change is *only* gsettings key change related.. Fixes: . Approved by Mirco Müller.
+
+2012-02-22  Gord Allott  <gord.allott@canonical.com>
+
+	makes bghash only change the gsettings setting where it makes sense instead of clobbering it every frame of animation
+
+2012-02-22  Gord Allott  <gord.allott@canonical.com>
+
+	Enables -Werror. Fixes: . Approved by Michal Hruby.
+
+2012-02-22  Gord Allott  <gord.allott@canonical.com>
+
+	re-enables -Werror - should never have been turned off
+
+2012-02-22  Michal Hruby  <michal.mhr@gmail.com>
+
+	Splits out the .lens file reading out of FilesystemLenses class and exposes it in LensDirectoryReader, this allows the BFB to directly check the lens files from the disk and we don't start up the lenses as soon as unity starts.
+	
+	Un-reverts the revert done in r2001.
+	
+	The extremely complex part for unity-2d is @ https://code.launchpad.net/~mhr3/unity-2d/default-filesystemlenses-constructor/+merge/94102
+	
+	Covered by existing tests.. Fixes: https://bugs.launchpad.net/bugs/929506. Approved by Gord Allott.
+
+2012-02-22  Michal Hruby  <michal.mhr@gmail.com>
+
+	Unrevert the revert of r2001
+
+2012-02-21  Jason Smith  <jason.smith@canonical.com>
+
+	Restores accidentally commented code. This should have been uncommented before merge previously, but was missed. Fixes bug where launcher didn't properly reflect window states on initial startup. Fixes: . Approved by Tim Penhey.
+
+2012-02-21  Jason Smith  <jason.smith@canonical.com>
+
+	Check launcher icon state on creation again. Was accidentally left commented when porting to AbstractLauncherIcon::Ptr in rev 1948.8.1
+
+2012-02-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	Clean up result wrappers when resultview exits.. Fixes: . Approved by Tim Penhey.
+
+2012-02-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Clean up wrappers on destruction of ResultsView.
+
+2012-02-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Clean up wrappers on destruction of ResultsView.
+
+2012-02-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	Make results from dash searches introspectable in autopilot.. Fixes: . Approved by Alex Launi.
+
+2012-02-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Don't take comment from Result.
+
+2012-02-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-02-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Don't need '.c_str()' when adding std::strings to the variant::BuilderWrapper class.
+
+2012-02-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-02-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	Committing before merging trunk to get NString removal code.
+
+2012-02-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-02-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	Unity now wraps dash results during introspection.
+
+2012-02-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	LensView now adds a couple of useful properties.
+
+2012-02-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	ResultView added to introspection tree.
+
+2012-02-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added ResultView class.
+
+2012-02-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	Revert revision 1999 since it breaks unity2d.. Fixes: . Approved by Jay Taoko.
+
+2012-02-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Revert revision 1999 since it breaks unity2d.
+
+2012-02-21  Gord Allott  <gord.allott@canonical.com>
+
+	Adds a gdbus proxy test suite. Fixes: . Approved by Michal Hruby.
+
+2012-02-21  Gord Allott  <gord.allott@canonical.com>
+
+	and the other sources
+
+2012-02-21  Gord Allott  <gord.allott@canonical.com>
+
+	remove the source, oops
+
+2012-02-21  Gord Allott  <gord.allott@canonical.com>
+
+	fix up the tests so they pass
+
+2012-02-21  Gord Allott  <gord.allott@canonical.com>
+
+	adds a gdbus test and service
+
+2012-02-21  Michal Hruby  <michal.mhr@gmail.com>
+
+	Splits out the .lens file reading out of FilesystemLenses class and exposes it in LensDirectoryReader, this allows the BFB to directly check the lens files from the disk and we don't start up the lenses as soon as unity starts.. Fixes: https://bugs.launchpad.net/bugs/929506. Approved by Gord Allott.
+
+2012-02-21  Michal Hruby  <michal.mhr@gmail.com>
+
+	Default setting for Visible key is true
+
+2012-02-21  Michal Hruby  <michal.mhr@gmail.com>
+
+	Move LensFileData struct into LensDirectoryReader
+
+2012-02-21  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge trunk
+
+2012-02-21  Michal Hruby  <michal.mhr@gmail.com>
+
+	Refactor FilesystemLenses class
+
+2012-02-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Depends on https://code.launchpad.net/~andyrock/nux/focus-on-enter
+	
+	Implements dash key navigation.
+	
+	known issues:
+	- shift + tab doesn't work well because of this: bug 931393. Fixes: https://bugs.launchpad.net/bugs/817436, https://bugs.launchpad.net/bugs/844033, https://bugs.launchpad.net/bugs/891648. Approved by John Lea, Tim Penhey.
+
+2012-02-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Focus on enter for rating filter too.
+
+2012-02-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-02-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Implement rating filter key navigation.
+
+2012-02-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix AP test.
+
+2012-02-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add an AP test for Tab.
+
+2012-02-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add a partial test for Tab. Need to commit to merge a branch.
+
+2012-02-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add an autopilot test for the ctlr + tab.
+
+2012-02-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-02-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk
+
+2012-02-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix focus on enter.
+
+2012-02-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-02-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Focus on mouse enter.
+
+2012-02-14  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Don't focus on mouse down.
+
+2012-02-14  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-02-14  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Ops.
+
+2012-02-14  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix backward key navigation.
+
+2012-02-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix.
+
+2012-02-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-02-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix.
+
+2012-02-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Cltr+tab and tab key navigation.
+
+2012-02-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-02-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Implements filters key navigation.
+
+2012-02-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-02-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk. Make "Filter results focusable". Fix ResultGridView key navigation.
+
+2012-02-21  Jason Smith  <jason.smith@canonical.com>
+
+	fix bug where icons would jump around when resorting over an icon not in their own group
+	
+	Launcher still lacks any significant method of being tested for these kinds of changes. Significant refactoring is still required.. Fixes: https://bugs.launchpad.net/bugs/932365. Approved by Thomi Richards.
+
+2012-02-21  Jason Smith  <jason.smith@canonical.com>
+
+	make sure we dont re-sort icons that are of different types as they wont be allowed to mingle anyhow
+
+2012-02-21  Jason Smith  <jason.smith@canonical.com>
+
+	Fixes an issue where the launcher icons would seem to "dance" back and forth when re-ordering by dragging. Fixes: . Approved by Sam Spilsbury.
+
+2012-02-21  Jason Smith  <jason.smith@canonical.com>
+
+	fix re-order thrashing
+
+2012-02-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed calls to g_variant_builder_add in favor of using the variant::BuilderWrapper class in UnityCore.. Fixes: . Approved by Jason Smith.
+
+2012-02-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	Forgot to add #include.
+
+2012-02-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk, fixed one place with g_variant calls.
+
+2012-02-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed a bunch of g_variant_builder_add calls.
+
+2012-02-20  Jason Smith  <jason.smith@canonical.com>
+
+	Ensures that icons start from the proper location when dragging. Fixes: . Approved by Tim Penhey.
+
+2012-02-20  Jason Smith  <jason.smith@canonical.com>
+
+	make drag icons start from the pointer location properly
+
+2012-02-20  Thomi Richards  <thomi.richards@canonical.com>
+
+	LauncherIcon, StaticCairoText and Tooltip classes now use std::string rather than nux::NString.. Fixes: . Approved by Tim Penhey, Jason Smith.
+
+2012-02-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	Const keyword reordering.
+
+2012-02-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	Cleanups.
+
+2012-02-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	SCT takes a std::string in it's ctor now.
+
+2012-02-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed NString from StaticCairoText, Tooltip and LauncherIcon classes.
+
+2012-02-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed NString from QuicklistView.
+
+2012-02-20  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed a warning about member variable order in initialiser list in PanelMenuView class.. Fixes: . Approved by Tim Penhey.
+
+2012-02-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix a warning about bad order in initialiser list in PanelMenuView class.
+
+2012-02-20  Gabor Kelemen  <kelemeng@ubuntu.com>
+
+	. Fixes: https://bugs.launchpad.net/bugs/930510. Approved by Tim Penhey.
+
+2012-02-18  Gabor Kelemen  <kelemeng@ubuntu.com>
+
+	Mark some forgotten strings for translation. LP: 930510
+
+2012-02-20  Thomi Richards  <thomi.richards@canonical.com>
+
+	Update the unity introspection tree debug script to use the new autopilot API.. Fixes: . Approved by Tim Penhey, Andrea Azzarone.
+
+2012-02-20  Thomi Richards  <thomi.richards@canonical.com>
+
+	Updated unity introspection tree display script to use new autopilot API.
+
+2012-02-20  Mirco Müller  <mirco.mueller@canonical.com>
+
+	Fixed artwork-assets to be correctly cropped to intended size. Replaced procedural vector drawing methods with newly added artwork-textures. Updated sizes and margins to adapt to new artwork. Added FIXME-hint for keyboard-navigation highlight implementation.
+	
+	Also see size/gap verification in gimp for screenshot of newly implemented rating-stars:
+	http://people.canonical.com/~mmueller/fix-924884.png. Fixes: https://bugs.launchpad.net/bugs/924884. Approved by Andrea Azzarone, Andrea Cimitan.
+
+2012-02-20  Mirco Müller  <mirco.mueller@canonical.com>
+
+	Added new artwork-assets for rating-stars. Replace old procedural vector-drawing with new textures. Adjusted sizes and gaps/margins. Added fixme-hint for later keyboard-navigation highlight implementation.
+
+2012-02-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Update the design for the lensbar focus highlight. 
+	
+	Mockup: https://chinstrap.canonical.com/~sabdfl/12_04/desktop_and_netbook/dash/tweaks_dash.png
+	Branch: http://ubuntuone.com/4Y6KetbWzMYcofmTbftCih. Fixes: . Approved by Andrea Cimitan, John Lea, Xi Zhu.
+
+2012-02-09  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes.
+
+2012-02-08  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Update AGAIN the design for the lensbar focus highlight.
+	Reintroduce the triangle that indicates the active lens too.
+
+2012-02-20  Michal Hruby  <michal.mhr@gmail.com>
+
+	Makes sure we properly emit the connected signal.. Fixes: . Approved by Gord Allott.
+
+2012-02-20  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix incorrect proxy state
+
+2012-02-20  alanbell@ubuntu.com
+
+	the dependency on the largedesktop feature which can be provided by wall or cube is a nice idea, but in practice this means that when changing from one to the other the unity plugin gets unloaded half way through which breaks peoples desktops. Without the dependency the transition works fine.. Fixes: . Approved by Didier Roche.
+
+2012-02-18  alanbell@ubuntu.com
+
+	dropped dependency on largedesktop feature, it doesn't need it except for the switcher and users changing to cube from wall end up deselecting unity, this makes it safer.
+
+2012-02-20  Thomi Richards  <thomi.richards@canonical.com>
+
+	Add an autopilot test to verify that multiple Hud reveals don't leave the launcher in a bad state.. Fixes: . Approved by Tim Penhey.
+
+2012-02-20  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed unused import.
+
+2012-02-20  Thomi Richards  <thomi.richards@canonical.com>
+
+	Wrote failing test for hud multiple-reveals.
+
+2012-02-19  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Triggers Unity build following Nux abi changes.. Fixes: . Approved by Jay Taoko.
+
+2012-02-19  Jay Taoko  <jay.taoko@canonical.com>
+
+	
+	* Triggers Unity build following Nux abi changes.
+
+2012-02-17  Didier Roche  <didier.roche@canonical.com>
+
+	Release\ 5.4.0
+
 2012-02-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
 
 	Fix crash on missing dash WindowButton files

@@ -117,7 +117,7 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
                         tile_icon_size + 10,
                         container->blurred_icon->GetDeviceTexture(),
                         texxform,
-                        nux::Color(0.5f, 0.5f, 0.5f, 0.5f));
+                        nux::Color(0.15f, 0.15f, 0.15f, 0.15f));
   }
 
   // render highlight if its needed

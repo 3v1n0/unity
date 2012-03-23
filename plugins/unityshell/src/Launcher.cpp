@@ -201,8 +201,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _folded_angle           = 1.0f;
   _neg_folded_angle       = -1.0f;
   _space_between_icons    = 5;
-  _launcher_top_y         = 0;
-  _launcher_bottom_y      = 0;
+  _last_delta_y           = 0.0f;
   _folded_z_distance      = 10.0f;
   _launcher_action_state  = ACTION_NONE;
   _icon_under_mouse       = NULL;
@@ -227,6 +226,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _shortcuts_shown        = false;
   _hovered                = false;
   _hidden                 = false;
+  _scroll_limit_reached   = false;
   _render_drag_window     = false;
   _drag_edge_touching     = false;
   _steal_drag             = false;
@@ -939,7 +939,7 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
   else
   {
     if (options()->show_for_all)
-      arg.window_indicators = std::max<int> (icon->Windows().size(), 1);
+      arg.window_indicators = std::max<int> (icon->WindowsOnViewport().size(), 1);
     else
       arg.window_indicators = std::max<int> (icon->WindowsForMonitor(monitor).size(), 1);
   }
@@ -1203,6 +1203,9 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
     delta_y *= hover_progress;
     center.y += delta_y;
     folding_threshold += delta_y;
+
+    _scroll_limit_reached = (delta_y == _last_delta_y);
+    _last_delta_y = delta_y;
   }
   else
   {
@@ -1318,9 +1321,14 @@ void Launcher::OnOverlayShown(GVariant* data)
   gint32 overlay_monitor = 0;
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
-
   std::string identity = overlay_identity.Str();
-  if (overlay_monitor == monitor)
+
+  LOG_DEBUG(logger) << "Overlay shown: " << identity
+                    << ", " << (can_maximise ? "can maximise" : "can't maximise")
+                    << ", on monitor " << overlay_monitor
+                    << " (for monitor " << monitor() << ")";
+
+  if (overlay_monitor == monitor())
   {
     if (identity == "dash")
     {
@@ -1334,8 +1342,10 @@ void Launcher::OnOverlayShown(GVariant* data)
     }
 
     bg_effect_helper_.enabled = true;
+    LOG_DEBUG(logger) << "Desaturate on monitor " << monitor();
     DesaturateIcons();
   }
+  EnsureAnimation();
 }
 
 void Launcher::OnOverlayHidden(GVariant* data)
@@ -1348,7 +1358,13 @@ void Launcher::OnOverlayHidden(GVariant* data)
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
   std::string identity = overlay_identity.Str();
-  if (overlay_monitor == monitor)
+
+  LOG_DEBUG(logger) << "Overlay hidden: " << identity
+                    << ", " << (can_maximise ? "can maximise" : "can't maximise")
+                    << ", on monitor " << overlay_monitor
+                    << " (for monitor" << monitor() << ")";
+
+  if (overlay_monitor == monitor())
   {
     if (identity == "dash")
     {
@@ -1362,12 +1378,14 @@ void Launcher::OnOverlayHidden(GVariant* data)
     }
 
     // If they are both now shut, then disable the effect helper and saturate the icons.
-    if (!_dash_is_open and !_hud_is_open)
+    if (!IsOverlayOpen())
     {
       bg_effect_helper_.enabled = false;
+      LOG_DEBUG(logger) << "Saturate on monitor " << monitor();
       SaturateIcons();
     }
   }
+  EnsureAnimation();
 
   // as the leave event is no more received when the place is opened
   // FIXME: remove when we change the mouse grab strategy in nux
@@ -1484,6 +1502,9 @@ Launcher::OnWindowMapped(guint32 xid)
     if (!_dnd_check_handle)
       _dnd_check_handle = g_timeout_add(200, &Launcher::OnUpdateDragManagerTimeout, this);
   //}
+
+  if (GetActionState() != ACTION_NONE)
+    ResetMouseDragState();
 }
 
 void
@@ -1682,12 +1703,18 @@ gboolean Launcher::OnScrollTimeout(gpointer data)
 {
   Launcher* self = (Launcher*) data;
   nux::Geometry geo = self->GetGeometry();
+  gboolean anim = TRUE;
 
+  //
+  // Always check _scroll_limit_reached to ensure we don't keep spinning
+  // this timer if the mouse happens to be left idle over one of the autoscroll
+  // hotspots on the launcher.
+  //
   if (self->IsInKeyNavMode() || !self->_hovered ||
+      self->_scroll_limit_reached ||
       self->GetActionState() == ACTION_DRAG_LAUNCHER)
-    return TRUE;
-
-  if (self->MouseOverTopScrollArea())
+    anim = FALSE;
+  else if (self->MouseOverTopScrollArea())
   {
     if (self->MouseOverTopScrollExtrema())
       self->_launcher_drag_delta += 6;
@@ -1701,9 +1728,18 @@ gboolean Launcher::OnScrollTimeout(gpointer data)
     else
       self->_launcher_drag_delta -= 3;
   }
+  else
+    anim = FALSE;
 
-  self->EnsureAnimation();
-  return TRUE;
+  if (anim)
+    self->EnsureAnimation();
+  else
+  {
+    self->_autoscroll_handle = 0;
+    self->_scroll_limit_reached = false;
+  }
+
+  return anim;
 }
 
 void Launcher::EnsureScrollTimer()
@@ -2196,6 +2232,21 @@ void Launcher::UpdateDragWindowPosition(int x, int y)
   }
 }
 
+void Launcher::ResetMouseDragState()
+{
+  if (GetActionState() == ACTION_DRAG_ICON)
+    EndIconDrag();
+
+  if (GetActionState() == ACTION_DRAG_LAUNCHER)
+    _hide_machine->SetQuirk(LauncherHideMachine::VERTICAL_SLIDE_ACTIVE, false);
+
+  SetActionState(ACTION_NONE);
+  _dnd_delta_x = 0;
+  _dnd_delta_y = 0;
+  _last_button_press = 0;
+  EnsureAnimation();
+}
+
 void Launcher::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   _last_button_press = nux::GetEventButton(button_flags);
@@ -2211,17 +2262,7 @@ void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned lo
   nux::Geometry geo = GetGeometry();
 
   MouseUpLogic(x, y, button_flags, key_flags);
-
-  if (GetActionState() == ACTION_DRAG_ICON)
-    EndIconDrag();
-
-  if (GetActionState() == ACTION_DRAG_LAUNCHER)
-    _hide_machine->SetQuirk(LauncherHideMachine::VERTICAL_SLIDE_ACTIVE, false);
-  SetActionState(ACTION_NONE);
-  _dnd_delta_x = 0;
-  _dnd_delta_y = 0;
-  _last_button_press = 0;
-  EnsureAnimation();
+  ResetMouseDragState();
 }
 
 void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)

@@ -86,10 +86,10 @@ DashView::DashView()
   , visible_(false)
 {
   renderer_.SetOwner(this);
-  renderer_.need_redraw.connect([this] () { 
+  renderer_.need_redraw.connect([this] () {
     QueueDraw();
   });
-  
+
   SetupViews();
   SetupUBusConnections();
 
@@ -100,6 +100,7 @@ DashView::DashView()
   Relayout();
 
   home_lens_->AddLenses(lenses_);
+  home_lens_->search_finished.connect(sigc::mem_fun(this, &DashView::OnGlobalSearchFinished));
   lens_bar_->Activate("home.lens");
 }
 
@@ -138,6 +139,12 @@ void DashView::AboutToShow()
       LOG_DEBUG(logger) << "Setting ViewType " << ViewType::LENS_VIEW
                                 << " on '" << home_lens_->id() << "'";
   }
+  else if (active_lens_view_)
+  {
+    // careful here, the lens_view's view_type doesn't get reset when the dash
+    // hides, but lens' view_type does, so we need to update the lens directly
+    active_lens_view_->lens()->view_type = ViewType::LENS_VIEW;
+  }
 
   renderer_.AboutToShow();
 }
@@ -161,21 +168,30 @@ void DashView::AboutToHide()
 
 void DashView::SetupViews()
 {
+  dash::Style& style = dash::Style::Instance();
+
   layout_ = new nux::VLayout();
+  layout_->SetLeftAndRightPadding(style.GetVSeparatorSize(), 0);
+  layout_->SetTopAndBottomPadding(style.GetHSeparatorSize(), 0);
   SetLayout(layout_);
 
   content_layout_ = new DashLayout(NUX_TRACKER_LOCATION);
-  content_layout_->SetHorizontalExternalMargin(0);
-  content_layout_->SetVerticalExternalMargin(0);
-
+  content_layout_->SetTopAndBottomPadding(style.GetDashViewTopPadding() - style.SEARCH_BAR_EXTRA_PADDING, 0);
   layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
+
+  search_bar_layout_ = new nux::HLayout();
+  search_bar_layout_->SetLeftAndRightPadding(style.GetSearchBarLeftPadding() - style.SEARCH_BAR_EXTRA_PADDING, style.GetSearchBarLeftPadding() - style.GetFilterResultsHighlightRightPadding() - style.SEARCH_BAR_EXTRA_PADDING);
+  content_layout_->AddLayout(search_bar_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+
   search_bar_ = new SearchBar();
   AddChild(search_bar_);
+  search_bar_->SetMinimumHeight(style.GetSearchBarHeight() + style.SEARCH_BAR_EXTRA_PADDING * 2);
+  search_bar_->SetMaximumHeight(style.GetSearchBarHeight() + style.SEARCH_BAR_EXTRA_PADDING * 2);
   search_bar_->activated.connect(sigc::mem_fun(this, &DashView::OnEntryActivated));
   search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
   search_bar_->live_search_reached.connect(sigc::mem_fun(this, &DashView::OnLiveSearchReached));
   search_bar_->showing_filters.changed.connect([&] (bool showing) { if (active_lens_view_) active_lens_view_->filters_expanded = showing; QueueDraw(); });
-  content_layout_->AddView(search_bar_, 0, nux::MINOR_POSITION_LEFT);
+  search_bar_layout_->AddView(search_bar_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   content_layout_->SetSpecialArea(search_bar_->show_filters());
 
   lenses_layout_ = new nux::VLayout();
@@ -207,7 +223,7 @@ long DashView::PostLayoutManagement (long LayoutResult)
 
 void DashView::Relayout()
 {
-  nux::Geometry geo = GetGeometry();
+  nux::Geometry const& geo = GetGeometry();
   content_geo_ = GetBestFitGeometry(geo);
 
   if (Settings::Instance().GetFormFactor() == FormFactor::NETBOOK)
@@ -216,15 +232,15 @@ void DashView::Relayout()
       content_geo_ = geo;
   }
 
+  dash::Style& style = dash::Style::Instance();
+
   // kinda hacky, but it makes sure the content isn't so big that it throws
   // the bottom of the dash off the screen
   // not hugely happy with this, so FIXME
-  lenses_layout_->SetMaximumHeight (content_geo_.height - search_bar_->GetGeometry().height - lens_bar_->GetGeometry().height);
-  lenses_layout_->SetMinimumHeight (content_geo_.height - search_bar_->GetGeometry().height - lens_bar_->GetGeometry().height);
+  lenses_layout_->SetMaximumHeight (content_geo_.height - search_bar_->GetGeometry().height - lens_bar_->GetGeometry().height - style.GetDashViewTopPadding());
+  lenses_layout_->SetMinimumHeight (content_geo_.height - search_bar_->GetGeometry().height - lens_bar_->GetGeometry().height - style.GetDashViewTopPadding());
 
   layout_->SetMinMaxSize(content_geo_.width, content_geo_.height);
-
-  dash::Style& style = dash::Style::Instance();
 
   // Minus the padding that gets added to the left
   float tile_width = style.GetTileWidth();
@@ -257,9 +273,8 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 
   height = search_bar_->GetGeometry().height;
   height += tile_height * 3;
-  height += (24 + 15) * 3; // adding three group headers
-  height += lens_bar_->GetGeometry().height;
-  height += 6; // account for padding in PlacesGroup
+  height += 46 * 3; // adding three group headers
+  //height += lens_bar_->GetGeometry().height;
 
   if (for_geo.width > 800 && for_geo.height > 550)
   {
@@ -267,7 +282,7 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
     height = MIN(height, for_geo.height-24);
   }
 
-  return nux::Geometry(0, 0, width-10, height);
+  return nux::Geometry(0, 0, width, height);
 }
 
 void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
@@ -278,7 +293,7 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   renderer_.DrawInner(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
-  
+
   if (IsFullRedraw())
   {
     nux::GetPainter().PushBackgroundStack();
@@ -289,7 +304,7 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   {
     layout_->ProcessDraw(gfx_context, force_draw);
   }
-  
+
   renderer_.DrawInnerCleanup(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
 }
 
@@ -403,8 +418,8 @@ void DashView::OnSearchChanged(std::string const& search_string)
 
     // 250ms for the Search method call, rest for the actual search
     searching_timeout_id_ = g_timeout_add (500, &DashView::ResetSearchStateCb, this);
-    
-    
+
+
     if (hide_message_delay_id_)
     {
       g_source_remove(hide_message_delay_id_);
@@ -439,7 +454,7 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
 
   lens->activated.connect(sigc::mem_fun(this, &DashView::OnUriActivatedReply));
   lens->search_finished.connect(sigc::mem_fun(this, &DashView::OnSearchFinished));
-  lens->global_search_finished.connect(sigc::mem_fun(this, &DashView::OnGlobalSearchFinished));
+  // global search done is handled by the home lens, no need to connect to it
 }
 
 void DashView::OnLensBarActivated(std::string const& id)
@@ -451,6 +466,7 @@ void DashView::OnLensBarActivated(std::string const& id)
   }
 
   LensView* view = active_lens_view_ = lens_views_[id];
+  view->JumpToTop();
 
   for (auto it: lens_views_)
   {
@@ -493,10 +509,12 @@ void DashView::OnSearchFinished(Lens::Hints const& hints)
     hide_message_delay_id_ = 0;
   }
 
-  active_lens_view_->CheckNoResults(hints);
+  if (active_lens_view_ == NULL) return;
 
-  std::string search_string = search_bar_->search_string;
-  if (active_lens_view_ && active_lens_view_->search_string == search_string)
+  active_lens_view_->CheckNoResults(hints);
+  std::string const& search_string = search_bar_->search_string;
+
+  if (active_lens_view_->search_string == search_string)
   {
     search_bar_->SearchFinished();
     search_in_progress_ = false;
@@ -690,14 +708,14 @@ nux::Area* DashView::KeyNavIteration(nux::KeyNavDirection direction)
   {
     auto show_filters = search_bar_->show_filters();
     auto fscroll_view = active_lens_view_->fscroll_view();
-    
+
     if (show_filters && show_filters->HasKeyFocus())
     {
       if (fscroll_view->IsVisible() && fscroll_view)
         return fscroll_view->KeyNavIteration(direction);
       else
         return active_lens_view_->KeyNavIteration(direction);
-    } 
+    }
   }
   return this;
 }
@@ -745,7 +763,7 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     direction = KEY_NAV_ENTER;
     break;
   case NUX_VK_F4:
-    // Maybe we should not do it here, but it needs to be checked where 
+    // Maybe we should not do it here, but it needs to be checked where
     // we are able to know if alt is pressed.
     if (special_keys_state & NUX_STATE_ALT)
     {
@@ -757,7 +775,7 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     break;
   }
 
-  // We should not do it here, but I really don't want to make DashView 
+  // We should not do it here, but I really don't want to make DashView
   // focusable and I'm not able to know if ctrl is pressed in
   // DashView::KeyNavIteration.
    nux::InputArea* focus_area = nux::GetWindowCompositor().GetKeyFocusArea();
@@ -801,10 +819,10 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
         for (auto tab = rbegin; tab != rend; ++tab)
         {
           const auto& tab_ptr = *tab;
-           
+
           if (use_the_prev)
             return tab_ptr;
-          
+
           if (focus_area)
             use_the_prev = focus_area->IsChildOf(tab_ptr);
         }
@@ -826,7 +844,7 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
         {
           if (use_the_next)
             return tab;
-          
+
           if (focus_area)
             use_the_next = focus_area->IsChildOf(tab);
         }
