@@ -1919,11 +1919,19 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (IsOverlayOpen())
   {
+    nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
+    nux::ObjectPtr<nux::IOpenGLBaseTexture> blur_texture;
+
     if (BackgroundEffectHelper::blur_type != unity::BLUR_NONE && (bkg_box.x + bkg_box.width > 0))
     {
-      nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
-      auto blur_texture = bg_effect_helper_.GetBlurRegion(blur_geo);
+      blur_texture = bg_effect_helper_.GetBlurRegion(blur_geo);
+    }
+    else
+    {
+      blur_texture = bg_effect_helper_.GetRegion(blur_geo); 
+    }
 
+    {
       if (blur_texture.IsValid())
       {
         nux::TexCoordXForm texxform_blur_bg;
