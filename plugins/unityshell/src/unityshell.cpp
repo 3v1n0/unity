@@ -726,6 +726,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 
 #ifndef USE_GLES
   bool was_bound = _fbo->bound ();
+
   _fbo->unbind ();
 
   /* Draw the bit of the relevant framebuffer for each output */
@@ -740,11 +741,11 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
     glPopMatrix ();
   }
 
-  nux::ObjectPtr<nux::IOpenGLTexture2D> device_texture =
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> device_texture =
       nux::GetGraphicsDisplay()->GetGpuDevice()->CreateTexture2DFromID(_fbo->texture(),
                                                                        screen->width (), screen->height(), 1, nux::BITFMT_R8G8B8A8);
 #else
-  nux::ObjectPtr<nux::IOpenGLTexture2D> device_texture = 
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> device_texture = 
     nux::GetGraphicsDisplay()->GetGpuDevice()->CreateTexture2DFromID(gScreen->fbo ()->tex ()->name (),
       output->width(), output->height(), 1, nux::BITFMT_R8G8B8A8);
 #endif
@@ -764,6 +765,34 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 
   nuxPrologue();
   _in_paint = true;
+
+  if (was_bound && dash_is_open_ && !fullscreen_windows_.empty ())
+  {
+    nux::NBitmapData* bitmap = panel::Style::Instance().GetBackground(screen->width (), screen->height(), 1.0f);
+    nux::BaseTexture* texture2D = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
+    if (bitmap && texture2D)
+    {
+      texture2D->Update(bitmap);
+      delete bitmap;
+    }
+
+    nux::ObjectPtr<nux::IOpenGLBaseTexture> src_device_texture;
+    if (texture2D)
+      src_device_texture = texture2D->GetDeviceTexture();
+
+    nux::TexCoordXForm texxform;
+    if (device_texture.IsValid() && src_device_texture.IsValid() && (device_texture->GetWidth() > 0) && (device_texture->GetHeight() > 0))
+    {
+      GetGraphicsDisplay()->GetGraphicsEngine()->QRP_CopyTextureToTexture(
+        0, 0, device_texture->GetWidth(), device_texture->GetHeight(),
+        device_texture,
+        src_device_texture, texxform, nux::color::White);
+    }
+
+    if (texture2D)
+    texture2D->UnReference();
+  }
+    
   wt->RenderInterfaceFromForeignCmd (&oGeo);
   _in_paint = false;
   nuxEpilogue();
