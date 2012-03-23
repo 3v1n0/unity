@@ -145,6 +145,7 @@ public:
 
   void preparePaint (int ms);
   void paintFboForOutput (CompOutput *output);
+  void donePaint ();
 
   void RaiseInputWindows();
 

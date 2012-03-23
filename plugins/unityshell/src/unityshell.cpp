@@ -986,8 +986,6 @@ void UnityWindow::leaveShowDesktop ()
   {
     mShowdesktopHandler->fadeIn ();
     window->setShowDesktopMode (false);
-    delete mShowdesktopHandler;
-    mShowdesktopHandler = NULL;
   }
 }
 
@@ -1080,7 +1078,7 @@ UnityShowdesktopHandler::~UnityShowdesktopHandler ()
 void UnityShowdesktopHandler::fadeOut ()
 {
   mState = UnityShowdesktopHandler::FadeOut;
-  mProgress = 1.0f;
+  mProgress = 0.0f;
 
   mWasHidden = mWindow->state () & CompWindowStateHiddenMask;
 
@@ -1091,8 +1089,6 @@ void UnityShowdesktopHandler::fadeOut ()
     mRemover->save ();
     mRemover->remove ();
   }
-
-  CompositeWindow::get (mWindow)->addDamage ();
 
   if (std::find (animating_windows.begin(),
                  animating_windows.end(),
@@ -1111,36 +1107,35 @@ void UnityShowdesktopHandler::fadeIn ()
     mRemover->restore ();
   }
 
-  CompositeWindow::get (mWindow)->addDamage ();
+  if (std::find (animating_windows.begin(),
+                 animating_windows.end(),
+                 mWindow) == animating_windows.end())
+    animating_windows.push_back(mWindow);
 }
 
 bool UnityShowdesktopHandler::animate (unsigned int ms)
 {
-  float inc = fade_time / (float) ms;
+  float inc = ms / static_cast <float> (fade_time);
 
   if (mState == UnityShowdesktopHandler::FadeOut)
-  {
-    mProgress -= inc;
-    if (mProgress <= 0.0f)
-    {
-      mProgress = 0.0f;
-      mState = Invisible;
-    }
-    else
-      CompositeWindow::get (mWindow)->addDamage ();
-  }
-  else if (mState == FadeIn)
   {
     mProgress += inc;
     if (mProgress >= 1.0f)
     {
       mProgress = 1.0f;
+      mState = Invisible;
+    }
+  }
+  else if (mState == FadeIn)
+  {
+    mProgress -= inc;
+    if (mProgress <= 0.0f)
+    {
+      mProgress = 0.0f;
       mState = Visible;
 
       return true;
     }
-    else
-      CompositeWindow::get (mWindow)->addDamage ();
   }
 
   return false;
@@ -1148,12 +1143,15 @@ bool UnityShowdesktopHandler::animate (unsigned int ms)
 
 void UnityShowdesktopHandler::paintAttrib (GLWindowPaintAttrib &attrib)
 {
-  attrib.opacity = static_cast <int> (static_cast <float> (attrib.opacity) * mProgress);
+  if (mProgress == 1.0f || mProgress == 0.0f)
+    attrib.opacity = OPAQUE;
+  else
+    attrib.opacity *= (1.0f - mProgress);
 }
 
 unsigned int UnityShowdesktopHandler::getPaintMask ()
 {
-    return 0;
+  return (mProgress == 1.0f) ? PAINT_WINDOW_NO_CORE_INSTANCE_MASK : 0;
 }
 
 void UnityShowdesktopHandler::handleEvent (XEvent *event)
@@ -1275,16 +1273,10 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
 
 void UnityScreen::preparePaint(int ms)
 {
-  CompWindowList remove_windows;
-
   cScreen->preparePaint(ms);
 
   for (CompWindow *w : UnityShowdesktopHandler::animating_windows)
-    if (UnityWindow::get (w)->handleAnimations (ms))
-      remove_windows.push_back(w);
-
-  for (CompWindow *w : remove_windows)
-    UnityShowdesktopHandler::animating_windows.remove (w);
+    UnityWindow::get (w)->handleAnimations (ms);
 
   if (damaged)
   {
@@ -1292,6 +1284,22 @@ void UnityScreen::preparePaint(int ms)
     damageNuxRegions();
   }
 
+}
+
+void UnityScreen::donePaint()
+{
+  CompWindowList remove_windows;
+
+  for (CompWindow *w : UnityShowdesktopHandler::animating_windows)
+    if (UnityWindow::get (w)->handleAnimations (0))
+      remove_windows.push_back(w);
+    else
+      CompositeWindow::get (w)->addDamage ();
+
+  for (CompWindow *w : remove_windows)
+    UnityShowdesktopHandler::animating_windows.remove (w);
+
+  cScreen->donePaint ();
 }
 
 /* Grab changed nux regions and add damage rects for them */
