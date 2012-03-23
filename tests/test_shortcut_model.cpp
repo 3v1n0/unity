@@ -33,14 +33,14 @@ TEST(TestShortcutModel, TestConstruction)
   hints.push_back(new MockHint("Launcher", "", "", "Description 1", COMPIZ_KEY_OPTION, "Plugin 1", "key_option_1"));
   hints.push_back(new MockHint("Launcher", "", "", "Description 2", HARDCODED_OPTION, "Value 2"));
   hints.push_back(new MockHint("Dash", "Prefix", "Postfix", "Description 3", COMPIZ_KEY_OPTION, "Plugin 3", "key_option_3"));
-  hints.push_back(new MockHint("Top Bar", "Prefix", "Postfix", "Description 4", HARDCODED_OPTION, "Value4"));
+  hints.push_back(new MockHint("Menu Bar", "Prefix", "Postfix", "Description 4", HARDCODED_OPTION, "Value4"));
   
   Model model(hints);
   
   EXPECT_EQ(model.categories().size(), 3);
   EXPECT_EQ(model.hints()["Launcher"].size(), 2);
   EXPECT_EQ(model.hints()["Dash"].size(), 1);
-  EXPECT_EQ(model.hints()["Top Bar"].size(), 1);
+  EXPECT_EQ(model.hints()["Menu Bar"].size(), 1);
   EXPECT_EQ(model.hints()["Unity"].size(), 0);
 }
 
@@ -51,7 +51,7 @@ TEST(TestShortcutModel, TestFill)
   hints.push_back(new MockHint("Launcher", "", "", "Description 1", COMPIZ_KEY_OPTION, "Plugin 1", "key_option_1"));
   hints.push_back(new MockHint("Launcher", "", "", "Description 2", HARDCODED_OPTION, "Value 2"));
   hints.push_back(new MockHint("Dash", "Prefix", "Postfix", "Description 3", COMPIZ_KEY_OPTION, "Plugin 3", "key_option_3"));
-  hints.push_back(new MockHint("Top Bar", "Prefix", "Postfix", "Description 4", HARDCODED_OPTION, "Value 4"));
+  hints.push_back(new MockHint("Menu Bar", "Prefix", "Postfix", "Description 4", HARDCODED_OPTION, "Value 4"));
   
   Model model(hints);
   
@@ -61,7 +61,7 @@ TEST(TestShortcutModel, TestFill)
   EXPECT_EQ(model.hints()["Launcher"].front()->value(), "Plugin 1-key_option_1");
   EXPECT_EQ(model.hints()["Launcher"].back()->value(), "Value 2");
   EXPECT_EQ(model.hints()["Dash"].front()->value(),"Plugin 3-key_option_3");
-  EXPECT_EQ(model.hints()["Top Bar"].front()->value(), "Value 4");
+  EXPECT_EQ(model.hints()["Menu Bar"].front()->value(), "Value 4");
 }
 
 TEST(TestShortcutModel, TestProperty)

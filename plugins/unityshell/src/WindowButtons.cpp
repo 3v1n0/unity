@@ -39,7 +39,8 @@
 
 #include <UnityCore/GLibWrapper.h>
 
-using namespace unity;
+namespace unity
+{
 
 class WindowButton : public nux::Button
 {
@@ -48,12 +49,6 @@ public:
   WindowButton(panel::WindowButtonType type)
     : nux::Button("", NUX_TRACKER_LOCATION),
       _type(type),
-      _normal_tex(NULL),
-      _prelight_tex(NULL),
-      _pressed_tex(NULL),
-      _normal_dash_tex(NULL),
-      _prelight_dash_tex(NULL),
-      _pressed_dash_tex(NULL),
       _overlay_is_open(false),
       _mouse_is_down(false),
       _place_shown_interest(0),
@@ -84,13 +79,6 @@ public:
 
   ~WindowButton()
   {
-    _normal_tex->UnReference();
-    _prelight_tex->UnReference();
-    _pressed_tex->UnReference();
-    _normal_dash_tex->UnReference();
-    _prelight_dash_tex->UnReference();
-    _pressed_dash_tex->UnReference();
-
     UBusServer* ubus = ubus_server_get_default();
     if (_place_shown_interest != 0)
       ubus_server_unregister_interest(ubus, _place_shown_interest);
@@ -101,7 +89,7 @@ public:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   {
     nux::Geometry      geo = GetGeometry();
-    nux::BaseTexture*  tex;
+    nux::BaseTexture*  tex = nullptr;
     nux::TexCoordXForm texxform;
 
     GfxContext.PushClippingRectangle(geo);
@@ -110,28 +98,28 @@ public:
     {
       if (_type == panel::WindowButtonType::UNMAXIMIZE && !_overlay_can_maximize)
       {
-        tex = _disabled_dash_tex;
+        tex = _disabled_dash_tex.GetPointer();
       }
       else
       {
         //FIXME should use HasMouseFocus()
         if (_mouse_is_down && IsMouseInside())
-          tex = _pressed_dash_tex;
+          tex = _pressed_dash_tex.GetPointer();
         else if (IsMouseInside())
-          tex = _prelight_dash_tex;
+          tex = _prelight_dash_tex.GetPointer();
         else
-          tex = _normal_dash_tex;
+          tex = _normal_dash_tex.GetPointer();
       }
     }
     else
     {
       //FIXME should use HasMouseFocus()
       if (_mouse_is_down && IsMouseInside())
-        tex = _pressed_tex;
+        tex = _pressed_tex.GetPointer();
       else if (IsMouseInside())
-        tex = _prelight_tex;
+        tex = _prelight_tex.GetPointer();
       else
-        tex = _normal_tex;
+        tex = _normal_tex.GetPointer();
     }
 
     if (tex)
@@ -150,25 +138,12 @@ public:
   {
     panel::Style& style = panel::Style::Instance();
 
-    if (_normal_tex)
-      _normal_tex->UnReference();
-    if (_prelight_tex)
-      _prelight_tex->UnReference();
-    if (_pressed_tex)
-      _pressed_tex->UnReference();
-    if (_normal_dash_tex)
-      _normal_dash_tex->UnReference();
-    if (_prelight_dash_tex)
-      _prelight_dash_tex->UnReference();
-    if (_pressed_dash_tex)
-      _pressed_dash_tex->UnReference();
-
-    _normal_tex = style.GetWindowButton(_type, panel::WindowState::NORMAL);
-    _prelight_tex = style.GetWindowButton(_type, panel::WindowState::PRELIGHT);
-    _pressed_tex = style.GetWindowButton(_type, panel::WindowState::PRESSED);
-    _normal_dash_tex = GetDashWindowButton(_type, panel::WindowState::NORMAL);
-    _prelight_dash_tex = GetDashWindowButton(_type, panel::WindowState::PRELIGHT);
-    _pressed_dash_tex = GetDashWindowButton(_type, panel::WindowState::PRESSED);
+    _normal_tex.Adopt(style.GetWindowButton(_type, panel::WindowState::NORMAL));
+    _prelight_tex.Adopt(style.GetWindowButton(_type, panel::WindowState::PRELIGHT));
+    _pressed_tex.Adopt(style.GetWindowButton(_type, panel::WindowState::PRESSED));
+    _normal_dash_tex.Adopt(GetDashWindowButton(_type, panel::WindowState::NORMAL));
+    _prelight_dash_tex.Adopt(GetDashWindowButton(_type, panel::WindowState::PRELIGHT));
+    _pressed_dash_tex.Adopt(GetDashWindowButton(_type, panel::WindowState::PRESSED));
 
     if (_overlay_is_open)
     {
@@ -197,19 +172,12 @@ public:
       real_type = panel::WindowButtonType::MAXIMIZE;
     }
 
-    if (_normal_dash_tex)
-      _normal_dash_tex->UnReference();
-    if (_prelight_dash_tex)
-      _prelight_dash_tex->UnReference();
-    if (_pressed_dash_tex)
-      _pressed_dash_tex->UnReference();
-
     //!!FIXME!! - don't have disabled instances of the (un)maximize buttons
     // get (un)maximize buttons
-    _normal_dash_tex = GetDashWindowButton(real_type, panel::WindowState::NORMAL);
-    _prelight_dash_tex = GetDashWindowButton(real_type, panel::WindowState::PRELIGHT);
-    _pressed_dash_tex = GetDashWindowButton(real_type, panel::WindowState::PRESSED);
-    _disabled_dash_tex = GetDashWindowButton(real_type, panel::WindowState::DISABLED);
+    _normal_dash_tex.Adopt(GetDashWindowButton(real_type, panel::WindowState::NORMAL));
+    _prelight_dash_tex.Adopt(GetDashWindowButton(real_type, panel::WindowState::PRELIGHT));
+    _pressed_dash_tex.Adopt(GetDashWindowButton(real_type, panel::WindowState::PRESSED));
+    _disabled_dash_tex.Adopt(GetDashWindowButton(real_type, panel::WindowState::DISABLED));
 
     // still check if the dash is really opened,
     // someone could change the form factor through dconf
@@ -239,14 +207,14 @@ public:
 
 private:
   panel::WindowButtonType _type;
-  // FIXME - replace with objectptr varients
-  nux::BaseTexture* _normal_tex;
-  nux::BaseTexture* _prelight_tex;
-  nux::BaseTexture* _pressed_tex;
-  nux::BaseTexture* _normal_dash_tex;
-  nux::BaseTexture* _prelight_dash_tex;
-  nux::BaseTexture* _pressed_dash_tex;
-  nux::BaseTexture* _disabled_dash_tex;
+  typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
+  BaseTexturePtr _normal_tex;
+  BaseTexturePtr _prelight_tex;
+  BaseTexturePtr _pressed_tex;
+  BaseTexturePtr _normal_dash_tex;
+  BaseTexturePtr _prelight_dash_tex;
+  BaseTexturePtr _pressed_dash_tex;
+  BaseTexturePtr _disabled_dash_tex;
 
   bool _overlay_is_open;
   bool _overlay_can_maximize;
@@ -260,7 +228,7 @@ private:
     unity::glib::String overlay_identity;
     gboolean can_maximise = FALSE;
     gint32 overlay_monitor = 0;
-    g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
+    g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                   &overlay_identity, &can_maximise, &overlay_monitor);
 
     WindowButton* self = (WindowButton*)val;
@@ -423,3 +391,6 @@ WindowButtons::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper(builder).add(GetGeometry());
 }
+
+
+} // namespace unity

@@ -55,11 +55,11 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   hints.push_back(new shortcut::MockHint(_("Dash"), "", "", _("Open currently focused item."), shortcut::HARDCODED_OPTION, _("Enter / Return")));
   hints.push_back(new shortcut::MockHint(_("Dash"), "", "", _("'Run Command' mode."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "execute_command"));
  
-  // Top Bar
+  // Menu Bar
   // Is it really hard coded?
-  hints.push_back(new shortcut::MockHint(_("Top Bar"), "", "", _("Reveals application menu."), shortcut::HARDCODED_OPTION, "Alt"));
-  hints.push_back(new shortcut::MockHint(_("Top Bar"), "", "", _("Opens the indicator menu."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "panel_first_menu"));
-  hints.push_back(new shortcut::MockHint(_("Top Bar"), "", "", _("Moves focus between indicators."), shortcut::HARDCODED_OPTION, _("Cursor Left & Right")));
+  hints.push_back(new shortcut::MockHint(_("Menu Bar"), "", "", _("Reveals application menu."), shortcut::HARDCODED_OPTION, "Alt"));
+  hints.push_back(new shortcut::MockHint(_("Menu Bar"), "", "", _("Opens the indicator menu."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "panel_first_menu"));
+  hints.push_back(new shortcut::MockHint(_("Menu Bar"), "", "", _("Moves focus between indicators."), shortcut::HARDCODED_OPTION, _("Cursor Left & Right")));
 
   // Switching
   hints.push_back(new shortcut::MockHint(_("Switching"), "", "", _("Switch between applications."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "alt_tab_forward"));

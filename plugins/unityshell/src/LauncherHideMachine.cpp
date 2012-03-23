@@ -134,16 +134,16 @@ LauncherHideMachine::EnsureHideState(bool skip_delay)
 {
   bool should_hide;
 
-  // early check to see if we are locking to hidden
-  if (GetQuirk(LOCK_HIDE))
-  {
-    SetShouldHide(true, true);
-    return;
-  }
-
   if (_mode == HIDE_NEVER)
   {
     SetShouldHide(false, skip_delay);
+    return;
+  }
+  
+  // early check to see if we are locking to hidden - but only if we are in non HIDE_NEVER
+  if (GetQuirk(LOCK_HIDE))
+  {
+    SetShouldHide(true, true);
     return;
   }
 

@@ -22,6 +22,7 @@
 #include <sigc++/sigc++.h>
 
 #include <Nux/Nux.h>
+#include <NuxCore/Logger.h>
 #include <Nux/VLayout.h>
 #include <Nux/HLayout.h>
 #include <Nux/BaseWindow.h>
@@ -41,27 +42,32 @@
 #include <Nux/Utils.h>
 #include <UnityCore/Variant.h>
 #include "DashStyle.h"
+#include "LineSeparator.h"
 #include "ubus-server.h"
 #include "UBusMessages.h"
+
+
+namespace
+{
+nux::logging::Logger logger("unity.dash.placesgroup");
+}
 
 namespace unity
 {
 namespace
 {
 
-const nux::Color kExpandDefaultTextColor(1.0f, 1.0f, 1.0f, 1.0f);
-const nux::Color kExpandHoverTextColor(1.0f, 1.0f, 1.0f, 1.0f);
-const float kExpandDefaultIconOpacity = 1.0f;
-const float kExpandHoverIconOpacity = 1.0f;
+const nux::Color kExpandDefaultTextColor(1.0f, 1.0f, 1.0f, 0.5f);
+const float kExpandDefaultIconOpacity = 0.5f;
 
 // Category  highlight
 const int kHighlightHeight = 24;
-const int kHighlightWidthSubtractor = 16;
-const int kHighlightLeftPadding = 11;
+const int kHighlightRightPadding = 10 - 3; // -3 because the scrollbar is not a real overlay scrollbar!
+const int kHighlightLeftPadding = 10;
 
-// Line Separator
-const int kSeparatorLeftPadding = 16;
-const int kSeparatorWidthSubtractor = 10;
+// Font
+const char* const NAME_LABEL_FONT = "Ubuntu 13"; // 17px = 13
+const char* const EXPANDER_LABEL_FONT = "Ubuntu 10"; // 13px = 10
 
 class HeaderView : public nux::View
 {
@@ -105,32 +111,34 @@ protected:
 NUX_IMPLEMENT_OBJECT_TYPE(PlacesGroup);
 
 PlacesGroup::PlacesGroup()
-  : View(NUX_TRACKER_LOCATION),
+  : AbstractPlacesGroup(),
     _child_view(nullptr),
     _focus_layer(nullptr),
     _idle_id(0),
     _is_expanded(true),
     _n_visible_items_in_unexpand_mode(0),
-    _n_total_items(0),
-    _draw_sep(true)
+    _n_total_items(0)
 {
+  dash::Style& style = dash::Style::Instance();
+
   SetAcceptKeyNavFocusOnMouseDown(false);
   SetAcceptKeyNavFocusOnMouseEnter(false);
 
-  nux::BaseTexture* arrow = dash::Style::Instance().GetGroupUnexpandIcon();
+  nux::BaseTexture* arrow = style.GetGroupUnexpandIcon();
 
   _cached_name = NULL;
   _group_layout = new nux::VLayout("", NUX_TRACKER_LOCATION);
-  _group_layout->SetHorizontalExternalMargin(20);
-  _group_layout->SetVerticalExternalMargin(1);
 
-  _group_layout->AddLayout(new nux::SpaceLayout(15,15,15,15), 0);
+  // -2 because the icons have an useless border.
+  int top_space = style.GetPlacesGroupTopSpace() - 2;
+  _group_layout->AddLayout(new nux::SpaceLayout(top_space, top_space, top_space, top_space), 0);
 
   _header_view = new HeaderView(NUX_TRACKER_LOCATION);
   _group_layout->AddView(_header_view, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FIX);
 
   _header_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
-  _header_layout->SetHorizontalInternalMargin(10);
+  _header_layout->SetLeftAndRightPadding(style.GetCategoryHeaderLeftPadding(), 0);
+  _header_layout->SetSpaceBetweenChildren(10);
   _header_view->SetLayout(_header_layout);
 
   _icon = new IconTexture("", 24);
@@ -142,6 +150,7 @@ PlacesGroup::PlacesGroup()
   _header_layout->AddLayout(_text_layout, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
   _name = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
+  _name->SetFont(NAME_LABEL_FONT);
   _name->SetTextEllipsize(nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _name->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
   _text_layout->AddView(_name, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
@@ -150,18 +159,31 @@ PlacesGroup::PlacesGroup()
   _expand_layout->SetHorizontalInternalMargin(8);
   _text_layout->AddLayout(_expand_layout, 0, nux::MINOR_POSITION_END, nux::MINOR_SIZE_MATCHCONTENT);
 
+  _expand_label_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
+  _expand_layout->AddLayout(_expand_label_layout, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
+
   _expand_label = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
+  _expand_label->SetFont(EXPANDER_LABEL_FONT);
   _expand_label->SetTextEllipsize(nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _expand_label->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
   _expand_label->SetTextColor(kExpandDefaultTextColor);
-
-  _expand_layout->AddView(_expand_label, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+  _expand_label_layout->AddView(_expand_label, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _expand_icon = new IconTexture(arrow, arrow->GetWidth(), arrow->GetHeight());
   _expand_icon->SetOpacity(kExpandDefaultIconOpacity);
   _expand_icon->SetMinimumSize(arrow->GetWidth(), arrow->GetHeight());
   _expand_icon->SetVisible(false);
   _expand_layout->AddView(_expand_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+
+  separator_layout_ = new nux::HLayout();
+  separator_layout_->SinkReference();
+  separator_layout_->SetLeftAndRightPadding(style.GetCategorySeparatorLeftPadding(),
+                                            style.GetCategorySeparatorRightPadding() - style.GetScrollbarWidth());
+
+  separator_ = new HSeparator;
+  separator_layout_->AddView(separator_, 1);
+
+  draw_separator.changed.connect(sigc::mem_fun(this, &PlacesGroup::DrawSeparatorChanged));
 
   SetLayout(_group_layout);
 
@@ -194,7 +216,19 @@ PlacesGroup::~PlacesGroup()
   if (_cached_name != NULL)
     g_free(_cached_name);
 
+  if (separator_layout_)
+    separator_layout_->UnReference();
+
   delete _focus_layer;
+}
+
+void PlacesGroup::DrawSeparatorChanged(bool draw)
+{
+  if (draw and !separator_layout_->IsChildOf(_group_layout))
+    _group_layout->AddView(separator_layout_, 0);
+  else if (!draw and separator_layout_->IsChildOf(_group_layout))
+    _group_layout->RemoveChildObject(separator_layout_);
+  QueueDraw();
 }
 
 void
@@ -253,10 +287,26 @@ PlacesGroup::SetIcon(const char* path_to_emblem)
 }
 
 void
-PlacesGroup::SetChildView(nux::View* view)
+PlacesGroup::SetChildView(dash::ResultView* view)
 {
+  debug::Introspectable *i = dynamic_cast<debug::Introspectable*>(view);
+  if (i)
+    AddChild(i);
   _child_view = view;
-  _group_layout->AddView(_child_view, 1);
+
+  nux::VLayout* layout = new nux::VLayout();
+  layout->AddView(_child_view, 0);
+
+  layout->SetLeftAndRightPadding(25, 0);
+  _group_layout->AddLayout(new nux::SpaceLayout(8,8,8,8), 0); // top padding
+  _group_layout->AddLayout(layout, 1);
+
+  view->results_per_row.changed.connect([&] (int results_per_row) 
+  {
+    _n_visible_items_in_unexpand_mode = results_per_row;  
+    RefreshLabel();
+  });
+
   QueueDraw();
 }
 
@@ -275,9 +325,7 @@ void PlacesGroup::SetChildLayout(nux::Layout* layout)
 void
 PlacesGroup::RefreshLabel()
 {
-  const char* temp = "<span size='small'>%s</span>";
   char*       result_string;
-  char*       final;
 
   if (_n_visible_items_in_unexpand_mode >= _n_total_items)
   {
@@ -289,6 +337,7 @@ PlacesGroup::RefreshLabel()
   }
   else
   {
+    LOG_DEBUG(logger) << _n_total_items << " - " << _n_visible_items_in_unexpand_mode;
     result_string = g_strdup_printf(g_dngettext(GETTEXT_PACKAGE,
                                                 "See one more result",
                                                 "See %d more results",
@@ -302,15 +351,22 @@ PlacesGroup::RefreshLabel()
   SetName(tmpname);
   g_free(tmpname);
 
-  final = g_strdup_printf(temp, result_string);
 
-  _expand_label->SetText(final);
+  _expand_label->SetText(result_string);
   _expand_label->SetVisible(_n_visible_items_in_unexpand_mode < _n_total_items);
+
+  // See bug #748101 ("Dash - "See more..." line should be base-aligned with section header")
+  // We're making two assumptions here:
+  // [a] The font size _name is bigger than the font size of _expand_label
+  // [b] The bottom sides have the same y coordinate
+  int bottom_padding = _name->GetBaseHeight() - _name->GetBaseline() -
+                       (_expand_label->GetBaseHeight() - _expand_label->GetBaseline());
+
+  _expand_label_layout->SetTopAndBottomPadding(0, bottom_padding);
 
   QueueDraw();
 
-  g_free((result_string));
-  g_free(final);
+  g_free(result_string);
 }
 
 void
@@ -356,7 +412,7 @@ long PlacesGroup::ComputeContentSize()
     if (_focus_layer)
       delete _focus_layer;
 
-    _focus_layer = dash::Style::Instance().FocusOverlay(geo.width - kHighlightWidthSubtractor, kHighlightHeight);
+    _focus_layer = dash::Style::Instance().FocusOverlay(geo.width - kHighlightLeftPadding - kHighlightRightPadding, kHighlightHeight);
 
     _cached_geometry = geo;
   }
@@ -372,27 +428,11 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
 
   nux::GetPainter().PaintBackground(graphics_engine, base);
 
-  graphics_engine.GetRenderStates().SetColorMask(true, true, true, false);
-  graphics_engine.GetRenderStates().SetBlend(true);
-  graphics_engine.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-
-  if (_draw_sep)
-  {
-    nux::Color col(0.15f, 0.15f, 0.15f, 0.15f);
-
-    nux::GetPainter().Draw2DLine(graphics_engine,
-                                 base.x + kSeparatorLeftPadding, base.y + base.height - 1,
-                                 base.x + base.width - kSeparatorWidthSubtractor, base.y + base.height - 1,
-                                 col);
-  }
-
-  graphics_engine.GetRenderStates().SetColorMask(true, true, true, true);
-
   if (ShouldBeHighlighted())
   {
     nux::Geometry geo(_header_layout->GetGeometry());
-    geo.x = base.x + kHighlightLeftPadding;
-    geo.width = base.width - kHighlightWidthSubtractor;
+    geo.width = base.width - kHighlightRightPadding - kHighlightLeftPadding;
+    geo.x += kHighlightLeftPadding;
 
     _focus_layer->SetGeometry(geo);
     _focus_layer->Renderlayer(graphics_engine);
@@ -426,7 +466,6 @@ void PlacesGroup::PostDraw(nux::GraphicsEngine& graphics_engine,
 void
 PlacesGroup::SetCounts(guint n_visible_items_in_unexpand_mode, guint n_total_items)
 {
-  _n_visible_items_in_unexpand_mode = n_visible_items_in_unexpand_mode;
   _n_total_items = n_total_items;
 
   Relayout();
@@ -484,14 +523,6 @@ PlacesGroup::GetHeaderHeight() const
   return _header_layout->GetGeometry().height;
 }
 
-void
-PlacesGroup::SetDrawSeparator(bool draw_it)
-{
-  _draw_sep = draw_it;
-
-  QueueDraw();
-}
-
 bool PlacesGroup::HeaderHasKeyFocus() const
 {
   return (_header_view && _header_view->HasKeyFocus());
@@ -541,6 +572,12 @@ void PlacesGroup::AddProperties(GVariantBuilder* builder)
   wrapper.add("header-is-highlighted", ShouldBeHighlighted());
   wrapper.add("name", _name->GetText());
   wrapper.add("is-visible", IsVisible());
+  wrapper.add("is-expanded", GetExpanded());
+  wrapper.add("expand-label-is-visible", _expand_label->IsVisible());
+  wrapper.add("expand-label-y", _expand_label->GetAbsoluteY());
+  wrapper.add("expand-label-baseline", _expand_label->GetBaseline());
+  wrapper.add("name-label-y", _name->GetAbsoluteY());
+  wrapper.add("name-label-baseline", _name->GetBaseline());
 }
 
 } // namespace unity

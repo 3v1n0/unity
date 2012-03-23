@@ -57,17 +57,16 @@ public:
   void OnIndicatorViewUpdated(PanelIndicatorEntryView* view);
   void OnMenuPointerMoved(int x, int y);
   void OnEntryActivateRequest(std::string const& entry_id);
-  void OnEntryActivated(std::string const& entry_id);
+  void OnEntryActivated(std::string const& entry_id, nux::Rect const& geo);
   void OnSynced();
-  void OnEntryShowMenu(std::string const& entry_id,
-                       int x, int y, int timestamp, int button);
+  void OnEntryShowMenu(std::string const& entry_id, unsigned int xid, int x, int y,
+                       unsigned int button, unsigned int timestamp);
 
   void SetPrimary(bool primary);
   bool GetPrimary();
   void SetMonitor(int monitor);
 
-  void StartFirstMenuShow();
-  void EndFirstMenuShow();
+  bool FirstMenuShow();
 
   void SetOpacity(float opacity);
   void SetOpacityMaximizedToggle(bool enabled);
@@ -117,7 +116,8 @@ private:
   bool        _is_primary;
   int         _monitor;
 
-  bool        _dash_is_open;
+  bool        _overlay_is_open;
+  std::string _active_overlay;
   guint       _handle_dash_hidden;
   guint       _handle_dash_shown;
   guint       _handle_bg_color_update;

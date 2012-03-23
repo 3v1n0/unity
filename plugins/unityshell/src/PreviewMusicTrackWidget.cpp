@@ -81,7 +81,7 @@ namespace unity {
   {
     nux::HLayout *track_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
     //FIXME - use a button subclass for absolute renderering
-    play_button_ = new nux::Button(number_.c_str());
+    play_button_ = new nux::Button(number_);
 
     play_button_->state_change.connect ([&] (nux::View *view) {
       if (track_is_active)
@@ -97,8 +97,8 @@ namespace unity {
     });
 
     //FIXME - hook up pressing button to activation URI
-    nux::StaticCairoText *track_title = new nux::StaticCairoText(name_.c_str(), NUX_TRACKER_LOCATION);
-    nux::StaticCairoText *track_length = new nux::StaticCairoText(time_.c_str(), NUX_TRACKER_LOCATION);
+    nux::StaticCairoText *track_title = new nux::StaticCairoText(name_, NUX_TRACKER_LOCATION);
+    nux::StaticCairoText *track_length = new nux::StaticCairoText(time_, NUX_TRACKER_LOCATION);
 
     track_layout->AddView(play_button_, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
     track_layout->AddLayout (new nux::SpaceLayout(6,6,6,6), 1);

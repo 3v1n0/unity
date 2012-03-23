@@ -7,60 +7,82 @@
 # by the Free Software Foundation.
 #
 
-from compizconfig import Setting, Plugin
 from time import sleep
 
-from autopilot.globals import global_context
-from autopilot.emulators.unity import UnityIntrospectionObject
-from autopilot.emulators.X11 import Keyboard
-
+from autopilot.emulators.unity import (
+    get_state_by_path,
+    make_introspection_object,
+    UnityIntrospectionObject,
+    )
+from autopilot.emulators.X11 import Keyboard, Mouse
+from autopilot.keybindings import KeybindingsHelper
 
 import logging
+
+
 logger = logging.getLogger(__name__)
 
 
-class Dash(object):
+class Dash(KeybindingsHelper):
     """
     An emulator class that makes it easier to interact with the unity dash.
     """
 
     def __init__(self):
         self.controller = DashController.get_all_instances()[0]
-        self.view = self.controller.get_dash_view()
 
-        self.plugin = Plugin(global_context, "unityshell")
-        self.setting = Setting(self.plugin, "show_launcher")
         self._keyboard = Keyboard()
         super(Dash, self).__init__()
+
+    @property
+    def view(self):
+        return self.controller.get_dash_view()
 
     def toggle_reveal(self):
         """
         Reveals the dash if it's currently hidden, hides it otherwise.
         """
         logger.debug("Toggling dash visibility with Super key.")
-        self._keyboard.press_and_release("Super")
+        self.keybinding("dash/reveal", 0.1)
         sleep(1)
 
-    def ensure_visible(self):
+    def ensure_visible(self, clear_search=True):
         """
         Ensures the dash is visible.
         """
-        if not self.get_is_visible():
+        if not self.visible:
             self.toggle_reveal()
+            self._wait_for_visibility(expect_visible=True)
+            if clear_search:
+                self.clear_search()
 
     def ensure_hidden(self):
         """
         Ensures the dash is hidden.
         """
-        if self.get_is_visible():
+        if self.visible:
             self.toggle_reveal()
+            self._wait_for_visibility(expect_visible=False)
 
-    def get_is_visible(self):
+    def _wait_for_visibility(self, expect_visible):
+        for i in range(11):
+            if self.visible != expect_visible:
+                sleep(1)
+            else:
+                return
+        raise RuntimeError("Dash not %s after waiting for 10 seconds." %
+            ("Visible" if expect_visible else "Hidden"))
+
+    @property
+    def visible(self):
         """
         Is the dash visible?
         """
-        self.controller.refresh_state()
         return self.controller.visible
+
+    @property
+    def search_string(self):
+        return self.get_searchbar().search_string
 
     def get_searchbar(self):
         """Returns the searchbar attached to the dash."""
@@ -68,34 +90,48 @@ class Dash(object):
 
     def get_num_rows(self):
         """Returns the number of displayed rows in the dash."""
-        self.view.refresh_state()
         return self.view.num_rows
 
-    def reveal_application_lens(self):
+    def clear_search(self):
+        """Clear the contents of the search bar.
+
+        Assumes dash is already visible, and search bar has keyboard focus.
+
+        """
+        self._keyboard.press_and_release("Ctrl+a")
+        self._keyboard.press_and_release("Delete")
+
+    def reveal_application_lens(self, clear_search=True):
         """Reveal the application lense."""
         logger.debug("Revealing application lens with Super+a.")
-        self._keyboard.press('Super')
-        self._keyboard.press_and_release("a")
-        self._keyboard.release('Super')
+        self._reveal_lens("lens_reveal/apps", clear_search)
 
-    def reveal_music_lens(self):
+    def reveal_music_lens(self, clear_search=True):
         """Reveal the music lense."""
         logger.debug("Revealing music lens with Super+m.")
-        self._keyboard.press('Super')
-        self._keyboard.press_and_release("m")
-        self._keyboard.release('Super')
+        self._reveal_lens("lens_reveal/music", clear_search)
 
-    def reveal_file_lens(self):
+    def reveal_file_lens(self, clear_search=True):
         """Reveal the file lense."""
         logger.debug("Revealing file lens with Super+f.")
-        self._keyboard.press('Super')
-        self._keyboard.press_and_release("f")
-        self._keyboard.release('Super')
+        self._reveal_lens("lens_reveal/files", clear_search)
 
-    def reveal_command_lens(self):
+    def reveal_command_lens(self, clear_search=True):
         """Reveal the 'run command' lens."""
         logger.debug("Revealing command lens with Alt+F2.")
-        self._keyboard.press_and_release('Alt+F2')
+        self._reveal_lens("lens_reveal/command", clear_search)
+
+    def _reveal_lens(self, binding_name, clear_search):
+        self.keybinding_hold(binding_name)
+        self.keybinding_tap(binding_name)
+        self.keybinding_release(binding_name)
+        self._wait_for_visibility(expect_visible=True)
+        if clear_search:
+            self.clear_search()
+
+    @property
+    def active_lens(self):
+        return self.view.get_lensbar().active_lens
 
     def get_current_lens(self):
         """Get the currently-active LensView object."""
@@ -141,6 +177,11 @@ class LensBar(UnityIntrospectionObject):
 class LensView(UnityIntrospectionObject):
     """A Lens View."""
 
+    def get_groups(self):
+        """Get a list of all groups within this lensview. May return an empty list."""
+        groups = self.get_children_by_type(PlacesGroup)
+        return groups
+
     def get_focused_category(self):
         """Return a PlacesGroup instance for the category whose header has keyboard focus.
 
@@ -149,6 +190,14 @@ class LensView(UnityIntrospectionObject):
         """
         categories = self.get_children_by_type(PlacesGroup)
         matches = [m for m in categories if m.header_has_keyfocus]
+        if matches:
+            return matches[0]
+        return None
+
+    def get_category_by_name(self, category_name):
+        """Return a PlacesGroup instance with the given name, or None."""
+        categories = self.get_children_by_type(PlacesGroup)
+        matches = [m for m in categories if m.name == category_name]
         if matches:
             return matches[0]
         return None
@@ -168,6 +217,19 @@ class LensView(UnityIntrospectionObject):
 class PlacesGroup(UnityIntrospectionObject):
     """A category in the lense view."""
 
+    def get_results(self):
+        """Get a list of all results within this category. May return an empty list."""
+        result_view = self.get_children_by_type(ResultView)[0]
+        return result_view.get_children_by_type(Result)
+
+
+class ResultView(UnityIntrospectionObject):
+    """Contains a list of Result objects."""
+
+
+class Result(UnityIntrospectionObject):
+    """A single result in the dash."""
+
 
 class FilterBar(UnityIntrospectionObject):
     """A filterbar, as shown inside a lens."""
@@ -184,6 +246,54 @@ class FilterBar(UnityIntrospectionObject):
             if filter_label.expander_has_focus:
                 return filter_label
         return None
+
+    def is_expanded(self):
+        """Return True if the filterbar on this lens is expanded, False otherwise.
+        """
+        searchbar = self._get_searchbar()
+        return searchbar.showing_filters
+
+    def ensure_expanded(self):
+        """Expand the filter bar, if it's not already."""
+        if not self.is_expanded():
+            searchbar = self._get_searchbar()
+            tx = searchbar.filter_label_x + (searchbar.filter_label_width / 2)
+            ty = searchbar.filter_label_y + (searchbar.filter_label_height / 2)
+            m = Mouse()
+            m.move(tx, ty)
+            m.click()
+            self._wait_for_expansion(True)
+
+    def ensure_collapsed(self):
+        """Collapse the filter bar, if it's not already."""
+        if self.is_expanded():
+            searchbar = self._get_searchbar()
+            tx = searchbar.filter_label_x + (searchbar.filter_label_width / 2)
+            ty = searchbar.filter_label_y + (searchbar.filter_label_height / 2)
+            m = Mouse()
+            m.move(tx, ty)
+            m.click()
+            self._wait_for_expansion(False)
+
+    def _wait_for_expansion(self, expect_expanded):
+        for i in range(11):
+            if self.is_expanded() != expect_expanded:
+                sleep(1)
+            else:
+                return
+        raise RuntimeError("Filters not %s after waiting for 10 seconds." %
+            ("expanded" if expect_expanded else "collapsed"))
+
+    def _get_searchbar(self):
+        """Get the searchbar.
+
+        This hack exists because there's now more than one SearchBar in Unity,
+        and for some reason the FilterBar stuff is bundled in the SearchBar.
+
+        """
+        state_info = get_state_by_path("//DashView/SearchBar")
+        assert(len(state_info) == 1)
+        return make_introspection_object(("SearchBar", state_info[0]))
 
 
 class FilterExpanderLabel(UnityIntrospectionObject):

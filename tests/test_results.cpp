@@ -9,6 +9,7 @@
 
 using namespace std;
 using namespace unity::dash;
+using namespace unity;
 
 namespace
 {
@@ -36,6 +37,28 @@ TEST(TestResults, TestSynchronization)
   EXPECT_EQ(model.count, n_rows);
 }
 
+TEST(TestResults, TestFilterValid)
+{
+  Results model;
+  DeeFilter filter;
+
+  model.swarm_name = swarm_name;
+  WaitForSynchronize(model);
+
+  dee_filter_new_for_any_column(2, g_variant_new_uint32(1), &filter);
+  glib::Object<DeeModel> filter_model(dee_filter_model_new(model.model(), &filter));
+  
+  unsigned int i = 0;
+  ResultIterator iter(filter_model);
+  for (; !iter.IsLast(); ++iter)
+  {
+    EXPECT_EQ((*iter).category_index(), 1);
+    i++;
+  }
+
+  EXPECT_EQ(i, 50);
+}
+
 TEST(TestResults, TestRowsValid)
 {
   Results model;
@@ -47,15 +70,12 @@ TEST(TestResults, TestRowsValid)
   unsigned int i = 0;
   for (Result result : model)
   {
-    if (i > n_rows)
-      break;
-
     //Result adaptor = *iter;
     unity::glib::String tmp(g_strdup_printf("Result%d", i));
     string value = tmp.Str();
     EXPECT_EQ(result.uri(), value);
     EXPECT_EQ(result.icon_hint(), value);
-    EXPECT_EQ(result.category_index(), i);
+    EXPECT_EQ(result.category_index(), (i / 50));
     EXPECT_EQ(result.mimetype(), value);
     EXPECT_EQ(result.name(), value);
     EXPECT_EQ(result.comment(), value);
@@ -67,9 +87,6 @@ TEST(TestResults, TestRowsValid)
   i = 20;
   for (auto iter = model.begin() + i; iter != model.end(); ++iter)
   {
-    if (i > 50)
-      break;
-
     Result result = (*iter);
     unity::glib::String tmp(g_strdup_printf("Result%d", i));
     string value = tmp.Str();
@@ -81,9 +98,6 @@ TEST(TestResults, TestRowsValid)
   i = 20;
   for (auto iter = model.begin() + i; iter != model.end(); iter++)
   {
-    if (i > 50)
-      break;
-
     Result result = (*iter);
     unity::glib::String tmp(g_strdup_printf("Result%d", i));
     string value = tmp.Str();

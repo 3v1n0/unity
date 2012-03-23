@@ -85,13 +85,18 @@ GestureEngine::FindCompWindow(Window window)
     Window parent, root;
     Window* children = NULL;
     unsigned int nchildren;
+    Status status;
 
-    XQueryTree(_screen->dpy(), window, &root, &parent, &children, &nchildren);
+    status = XQueryTree(_screen->dpy(), window, &root, &parent, &children, &nchildren);
+    if (status == 0)
+      break;
 
     if (children)
       XFree(children);
 
-    if (parent == root)
+    // parent will be zero when the window passed to this method is already the
+    // root one.
+    if (parent == root || parent == 0)
       break;
 
     window = parent;
@@ -215,7 +220,7 @@ GestureEngine::OnRotateFinish(GeisAdapter::GeisRotateData* data)
 void
 GestureEngine::OnTouchStart(GeisAdapter::GeisTouchData* data)
 {
-  if (data->touches == 3)
+  if (data->touches == 3 && data->window != 0)
   {
     CompWindow* result = FindCompWindow(data->window);
 
