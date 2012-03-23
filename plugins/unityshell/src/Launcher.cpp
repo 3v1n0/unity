@@ -1321,9 +1321,14 @@ void Launcher::OnOverlayShown(GVariant* data)
   gint32 overlay_monitor = 0;
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
-
   std::string identity = overlay_identity.Str();
-  if (overlay_monitor == monitor)
+
+  LOG_DEBUG(logger) << "Overlay shown: " << identity
+                    << ", " << (can_maximise ? "can maximise" : "can't maximise")
+                    << ", on monitor " << overlay_monitor
+                    << " (for monitor " << monitor() << ")";
+
+  if (overlay_monitor == monitor())
   {
     if (identity == "dash")
     {
@@ -1337,8 +1342,10 @@ void Launcher::OnOverlayShown(GVariant* data)
     }
 
     bg_effect_helper_.enabled = true;
+    LOG_DEBUG(logger) << "Desaturate on monitor " << monitor();
     DesaturateIcons();
   }
+  EnsureAnimation();
 }
 
 void Launcher::OnOverlayHidden(GVariant* data)
@@ -1351,7 +1358,13 @@ void Launcher::OnOverlayHidden(GVariant* data)
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
   std::string identity = overlay_identity.Str();
-  if (overlay_monitor == monitor)
+
+  LOG_DEBUG(logger) << "Overlay hidden: " << identity
+                    << ", " << (can_maximise ? "can maximise" : "can't maximise")
+                    << ", on monitor " << overlay_monitor
+                    << " (for monitor" << monitor() << ")";
+
+  if (overlay_monitor == monitor())
   {
     if (identity == "dash")
     {
@@ -1365,12 +1378,14 @@ void Launcher::OnOverlayHidden(GVariant* data)
     }
 
     // If they are both now shut, then disable the effect helper and saturate the icons.
-    if (!_dash_is_open and !_hud_is_open)
+    if (!IsOverlayOpen())
     {
       bg_effect_helper_.enabled = false;
+      LOG_DEBUG(logger) << "Saturate on monitor " << monitor();
       SaturateIcons();
     }
   }
+  EnsureAnimation();
 
   // as the leave event is no more received when the place is opened
   // FIXME: remove when we change the mouse grab strategy in nux
