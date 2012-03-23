@@ -240,8 +240,6 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       bg_blur_texture_ = bg_effect_helper_.GetRegion(blur_geo); 
     }
 
-    
-
     if (bg_blur_texture_.IsValid() && (_dash_is_open || _opacity != 1.0f))
     {
       nux::TexCoordXForm texxform_blur_bg;

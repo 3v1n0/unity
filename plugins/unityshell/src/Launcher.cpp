@@ -1931,44 +1931,42 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       blur_texture = bg_effect_helper_.GetRegion(blur_geo); 
     }
 
+    if (blur_texture.IsValid())
     {
-      if (blur_texture.IsValid())
-      {
-        nux::TexCoordXForm texxform_blur_bg;
-        texxform_blur_bg.flip_v_coord = true;
-        texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-        texxform_blur_bg.uoffset = ((float) base.x) / geo_absolute.width;
-        texxform_blur_bg.voffset = ((float) base.y) / geo_absolute.height;
+      nux::TexCoordXForm texxform_blur_bg;
+      texxform_blur_bg.flip_v_coord = true;
+      texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+      texxform_blur_bg.uoffset = ((float) base.x) / geo_absolute.width;
+      texxform_blur_bg.voffset = ((float) base.y) / geo_absolute.height;
 
-        GfxContext.PushClippingRectangle(bkg_box);
+      GfxContext.PushClippingRectangle(bkg_box);
 
 #ifndef NUX_OPENGLES_20
-        if (GfxContext.UsingGLSLCodePath())
-          gPainter.PushDrawCompositionLayer(GfxContext, base,
-                                            blur_texture,
-                                            texxform_blur_bg,
-                                            nux::color::White,
-                                            _background_color, nux::LAYER_BLEND_MODE_OVERLAY,
-                                            true, ROP);
-        else
-          gPainter.PushDrawTextureLayer(GfxContext, base,
-                                        blur_texture,
-                                        texxform_blur_bg,
-                                        nux::color::White,
-                                        true,
-                                        ROP);
+      if (GfxContext.UsingGLSLCodePath())
+        gPainter.PushDrawCompositionLayer(GfxContext, base,
+                                          blur_texture,
+                                          texxform_blur_bg,
+                                          nux::color::White,
+                                          _background_color, nux::LAYER_BLEND_MODE_OVERLAY,
+                                          true, ROP);
+      else
+        gPainter.PushDrawTextureLayer(GfxContext, base,
+                                      blur_texture,
+                                      texxform_blur_bg,
+                                      nux::color::White,
+                                      true,
+                                      ROP);
 #else
-          gPainter.PushDrawCompositionLayer(GfxContext, base,
-                                            blur_texture,
-                                            texxform_blur_bg,
-                                            nux::color::White,
-                                            _background_color, nux::LAYER_BLEND_MODE_OVERLAY,
-                                            true, ROP);
+        gPainter.PushDrawCompositionLayer(GfxContext, base,
+                                          blur_texture,
+                                          texxform_blur_bg,
+                                          nux::color::White,
+                                          _background_color, nux::LAYER_BLEND_MODE_OVERLAY,
+                                          true, ROP);
 #endif
-        GfxContext.PopClippingRectangle();
+      GfxContext.PopClippingRectangle();
 
-        push_count++;
-      }
+      push_count++;
     }
 
     unsigned int alpha = 0, src = 0, dest = 0;

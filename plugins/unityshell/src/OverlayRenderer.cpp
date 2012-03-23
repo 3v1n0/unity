@@ -261,34 +261,32 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
     bg_blur_texture_ = bg_effect_helper_.GetRegion(blur_geo); 
   }
 
+  if (bg_blur_texture_.IsValid())
   {
-    if (bg_blur_texture_.IsValid())
-    {
-      nux::Geometry bg_clip = geo;
-      gfx_context.PushClippingRectangle(bg_clip);
+    nux::Geometry bg_clip = geo;
+    gfx_context.PushClippingRectangle(bg_clip);
 
-      gfx_context.GetRenderStates().SetBlend(false);
+    gfx_context.GetRenderStates().SetBlend(false);
 #ifndef NUX_OPENGLES_20
-      if (gfx_context.UsingGLSLCodePath())
-        gfx_context.QRP_GLSL_ColorBlendOverTex (content_geo.x, content_geo.y,
-                                             content_geo.width, content_geo.height,
-                                             bg_blur_texture_, texxform_absolute_bg, nux::color::White,
-                                             bg_color_, nux::LAYER_BLEND_MODE_OVERLAY);
+    if (gfx_context.UsingGLSLCodePath())
+      gfx_context.QRP_GLSL_ColorBlendOverTex (content_geo.x, content_geo.y,
+                                           content_geo.width, content_geo.height,
+                                           bg_blur_texture_, texxform_absolute_bg, nux::color::White,
+                                           bg_color_, nux::LAYER_BLEND_MODE_OVERLAY);
 
-      else
-        gfx_context.QRP_1Tex (content_geo.x, content_geo.y,
-                              content_geo.width, content_geo.height,
-                              bg_blur_texture_, texxform_absolute_bg, nux::color::White);
+    else
+      gfx_context.QRP_1Tex (content_geo.x, content_geo.y,
+                            content_geo.width, content_geo.height,
+                            bg_blur_texture_, texxform_absolute_bg, nux::color::White);
 #else
-        gfx_context.QRP_GLSL_ColorBlendOverTex (content_geo.x, content_geo.y,
-                                        content_geo.width, content_geo.height,
-                                        bg_blur_texture_, texxform_absolute_bg, nux::color::White,
-                                        bg_color_, nux::LAYER_BLEND_MODE_OVERLAY);
+      gfx_context.QRP_GLSL_ColorBlendOverTex (content_geo.x, content_geo.y,
+                                      content_geo.width, content_geo.height,
+                                      bg_blur_texture_, texxform_absolute_bg, nux::color::White,
+                                      bg_color_, nux::LAYER_BLEND_MODE_OVERLAY);
 
 #endif
 
-      gfx_context.PopClippingRectangle();
-    }
+    gfx_context.PopClippingRectangle();
   }
 
   // Draw the left and top lines
