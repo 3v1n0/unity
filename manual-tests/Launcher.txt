@@ -190,54 +190,156 @@ Outcome:
     from gnome-control-center -> Monitor should update the launcher position.
 
 
-Test Launcher Icon with Windows in multiple monitors
-----------------------------------------------------
-This test shows how the launcher should draw its iucons when there are
+Test Multiple Launchers with Windows in Multiple Monitors
+---------------------------------------------------------
+This test shows how the launchers should draw their icons when there are
 application windows in multiple monitors.
 
-#. Start on a fresh login
-#. Run CCSM and ensure that the unity option in "Experimental" -> "Launcher Monitors"
-   is set to "All Desktops"
-#. Run an application
-#. Run another instance (window) of this application and keep it on the initial
-   monitor (that we'll call "monitor 1")
-#. Run another instance (window) of this application and move it to another
-   monitor (that we'll call "monitor 2")
-#. Select the one on the first monitor
+Setup:
+ * Run CCSM and ensure that the unity option in "Experimental" ->
+   "Launcher Monitors" is set to "All Desktops"
 
-Outcome
-  The Launcher icon "pips" (indicators) should reflect the number of windows in the
-  current monitor, so when both the windows are in the "monitor 1" the Launcher
-  placed into the "monitor 1" will have a launcher application icon with 2 "pips",
-  while the launcher in "monitor 2" will show the same application icon with
-  an empty (not filled) arrow.
-  When moving a window to the secondary monitor (where now there's only 1 window
-  for the current application), the launcher application icon should have a
-  left filled arrow.
-  So basically, each launcher icon should show a number of left pips proportional
-  to the number of windows in that monitor (3 at maximum).
+Actions:
+ * Open 2 Gedit windows on monitor 1, workspace 1.
+ * Open 1 Gedit window on monitor 2, workspace 1.
+ * Focus one of the two gedit windows on monitor 1.
 
-  When switching workspace, the launchers icons should reflect what described
-  in the "Launcher"" manual test called "Test Launcher Spread with Windows in
-  multiple workspaces", considering that each launcher must be independent
-  from the others and should only reflects what is shown in its monitor.
+Expected Results:
+ * Gedit launcher icon on monitor 1 must have:
+   * Two pips on the left of the icon.
+   * A filled-in arrow on the right of the icon.
+ * Gedit launcher icon on monitor 2 must have:
+   * One empty arrow on the left of the icon.
+   * Nothing on the right of the icon.
 
-#. Start on a fresh login
-#. Run CCSM and ensure that the unity option in "Experimental" -> "Launcher Monitors"
-   is set to "Primary Desktop"
-#. Run an application
-#. Run another instance (window) of this application and keep it on the initial
-   monitor (that we'll call "monitor 1")
-#. Run another instance (window) of this application and move it to another
-   monitor (that we'll call "monitor 2")
-#. Select the one on the first monitor
 
-Outcome
-  The Launcher icon "pips" (indicators) should reflect the number of windows in all
-  the monitors, for the given workspace. So both when the two windows are in the same
-  monitor and after that one window has been moved to the "monitor 2", the launcher
-  should show an application icon with 2 "pips",
+Test Multiple Launchers with Windows in Multiple Monitors and Workspaces
+------------------------------------------------------------------------
+This test shows how the launchers should draw their icons when there are
+application windows in multiple monitors spreaded in multiple workspaces.
 
-  When switching workspace, the launcher icon should reflect what described
-  in the Launcher manual test called "Test Launcher Spread with Windows in
-  multiple workspaces".
+Setup:
+ * Run CCSM and ensure that the unity option in "Experimental" ->
+   "Launcher Monitors" is set to "All Desktops"
+
+Actions:
+ * Open 1 Gedit window on monitor 1, workspace 1.
+ * Open 2 Gedit windows on monitor 2, workspace 1.
+ * Open 2 Gedit windows on monitor 1, workspace 2.
+ * Open 1 Gedit window on monitor 2, workspace 3.
+ * Move to workspace 1.
+ * Focus the gedit window on monitor 1.
+
+Expected Results:
+ * Gedit launcher icon on monitor 1 must have:
+   * A filled-in arrow on the left of the icon.
+   * A filled-in arrow on the right of the icon.
+ * Gedit launcher icon on monitor 2 must have:
+   * Two pips on the left of the icon.
+   * Nothing on the right of the icon.
+
+Actions:
+ * Move to workspace 2.
+ * Focus one of the two gedit windows on monitor 1.
+
+Expected Results:
+ * Gedit launcher icon on monitor 1 must have:
+   * Two pips on the left of the icon.
+   * A filled-in arrow on the right of the icon.
+ * Gedit launcher icon on monitor 2 must have:
+   * An empty arrow on the left of the icon.
+   * Nothing on the right of the icon.
+
+Actions:
+ * Move to workspace 3.
+ * Focus the gedit window on monitor 2.
+
+Expected Results:
+ * Gedit launcher icon on monitor 1 must have:
+   * An empty arrow on the left of the icon.
+   * Nothing on the right of the icon.
+ * Gedit launcher icon on monitor 2 must have:
+   * A filled-in arrow on the left of the icon.
+   * A filled-in arrow on the right of the icon.
+
+Actions:
+ * Move to workspace 4.
+
+Expected Results:
+ * Gedit launcher icon on monitor 1 must have:
+   * An empty arrow on the left of the icon.
+   * Nothing on the right of the icon.
+ * Gedit launcher icon on monitor 2 must have:
+   * An empty arrow on the left of the icon.
+   * Nothing on the right of the icon.
+
+Test Single Launcher with Windows in Multiple Monitors
+------------------------------------------------------
+This test shows how the launcher should draw its icons when there are
+application windows in multiple monitors.
+
+Setup:
+ * Run CCSM and ensure that the unity option in "Experimental" ->
+   "Launcher Monitors" is set to "Primary Desktop"
+
+Actions:
+ * Open 2 Gedit windows on monitor 1, workspace 1.
+ * Open 1 Gedit window on monitor 2, workspace 1.
+ * Focus one of the two gedit windows on monitor 1.
+
+Expected Results:
+ * The launcher is placed only on primary monitor
+ * Gedit launcher icon must have:
+   * Three pips on the left of the icon.
+   * A filled-in arrow on the right of the icon.
+
+
+Test Single Launcher with Windows in Multiple Monitors and Workspaces
+---------------------------------------------------------------------
+This test shows how the launcher should draw its icons when there are
+application windows in multiple monitors spreaded in multiple workspaces.
+
+Setup:
+ * Run CCSM and ensure that the unity option in "Experimental" ->
+   "Launcher Monitors" is set to "Primary Desktop"
+
+Actions:
+ * Open 1 Gedit window on monitor 1, workspace 1.
+ * Open 2 Gedit windows on monitor 2, workspace 1.
+ * Open 2 Gedit windows on monitor 1, workspace 2.
+ * Open 1 Gedit window on monitor 2, workspace 3.
+ * Move to workspace 1.
+ * Focus the gedit window on monitor 1.
+
+Expected Results:
+ * The launcher is shown only on primary monitor
+ * Gedit launcher icon must have:
+   * Three pips on the left of the icon.
+   * A filled-in arrow on the right of the icon.
+
+Actions:
+ * Move to workspace 2.
+ * Focus one of the two gedit windows on monitor 1.
+
+Expected Results:
+ * Gedit launcher icon on monitor 1 must have:
+   * Two pips on the left of the icon.
+   * A filled-in arrow on the right of the icon.
+
+Actions:
+ * Move to workspace 3.
+ * Focus the gedit window on monitor 2.
+
+Expected Results:
+ * Gedit launcher icon on monitor 2 must have:
+   * A filled-in arrow on the left of the icon.
+   * A filled-in arrow on the right of the icon.
+
+Actions:
+ * Move to workspace 4.
+
+Expected Results:
+ * Gedit launcher icon on monitor 1 must have:
+   * An empty arrow on the left of the icon.
+   * Nothing on the right of the icon.
+
