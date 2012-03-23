@@ -61,7 +61,7 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
       _opacity_maximized_toggle(false),
       _is_primary(false),
       _monitor(0),
-      _dash_is_open(false)
+      _overlay_is_open(false)
 {
   _needs_geo_sync = false;
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
@@ -173,11 +173,22 @@ void PanelView::OnBackgroundUpdate (GVariant *data, PanelView *self)
 
 void PanelView::OnDashHidden(GVariant* data, PanelView* self)
 {
-  if (self->_opacity >= 1.0f)
-    self->bg_effect_helper_.enabled = false;
-  self->_dash_is_open = false;
-  self->_indicators->DashHidden();
-  self->ForceUpdateBackground();
+  unity::glib::String overlay_identity;
+  gboolean can_maximise = FALSE;
+  gint32 overlay_monitor = 0;
+  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
+                &overlay_identity, &can_maximise, &overlay_monitor);
+
+  if (self->_monitor == overlay_monitor &&
+      overlay_identity.Str() == self->_active_overlay)
+  {
+    if (self->_opacity >= 1.0f)
+      self->bg_effect_helper_.enabled = false;
+    self->_overlay_is_open = false;
+    self->_active_overlay = "";
+    self->_indicators->DashHidden();
+    self->ForceUpdateBackground();
+  }
 }
 
 void PanelView::OnDashShown(GVariant* data, PanelView* self)
@@ -185,13 +196,14 @@ void PanelView::OnDashShown(GVariant* data, PanelView* self)
   unity::glib::String overlay_identity;
   gboolean can_maximise = FALSE;
   gint32 overlay_monitor = 0;
-  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
+  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
   if (self->_monitor == overlay_monitor)
   {
     self->bg_effect_helper_.enabled = true;
-    self->_dash_is_open = true;
+    self->_overlay_is_open = true;
+    self->_active_overlay = overlay_identity.Str();
     self->_indicators->DashShown();
     self->ForceUpdateBackground();
   }
@@ -227,12 +239,12 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle(GetGeometry());
 
-  if (BackgroundEffectHelper::blur_type != BLUR_NONE && (_dash_is_open || (_opacity != 1.0f && _opacity != 0.0f)))
+  if (BackgroundEffectHelper::blur_type != BLUR_NONE && (_overlay_is_open || (_opacity != 1.0f && _opacity != 0.0f)))
   {
     nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, geo.width, geo.height);
     bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo);
 
-    if (bg_blur_texture_.IsValid() && BackgroundEffectHelper::blur_type != BLUR_NONE && (_dash_is_open || _opacity != 1.0f))
+    if (bg_blur_texture_.IsValid() && BackgroundEffectHelper::blur_type != BLUR_NONE && (_overlay_is_open || _opacity != 1.0f))
     {
       nux::TexCoordXForm texxform_blur_bg;
       texxform_blur_bg.flip_v_coord = true;
@@ -277,7 +289,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       GfxContext.PopClippingRectangle();
     }
 
-    if (_dash_is_open)
+    if (_overlay_is_open)
     {
       nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), _bg_darken_layer_);
     }
@@ -285,7 +297,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 
 
-  if (_dash_is_open == false)
+  if (_overlay_is_open == false)
     nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), _bg_layer);
 
   GfxContext.PopClippingRectangle();
@@ -308,7 +320,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.GetRenderStates().SetBlend(true);
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
-  if (bg_blur_texture_.IsValid() && BackgroundEffectHelper::blur_type != BLUR_NONE && (_dash_is_open || (_opacity != 1.0f && _opacity != 0.0f)))
+  if (bg_blur_texture_.IsValid() && BackgroundEffectHelper::blur_type != BLUR_NONE && (_overlay_is_open || (_opacity != 1.0f && _opacity != 0.0f)))
   {
     nux::Geometry geo_absolute = GetAbsoluteGeometry ();
     nux::TexCoordXForm texxform_blur_bg;
@@ -352,17 +364,17 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 #endif
     bgs++;
 
-    if (_dash_is_open)
+    if (_overlay_is_open)
     {
       nux::GetPainter().PushLayer(GfxContext, GetGeometry(), _bg_darken_layer_);
       bgs++;
     }
   }
 
-  if (_dash_is_open == FALSE)
+  if (_overlay_is_open == FALSE)
     gPainter.PushLayer(GfxContext, GetGeometry(), _bg_layer);
 
-  if (_dash_is_open)
+  if (_overlay_is_open)
   {
     // apply the shine
     nux::TexCoordXForm texxform;
@@ -414,7 +426,7 @@ PanelView::UpdateBackground()
   
   guint32 maximized_win = _menu_view->GetMaximizedWindow();
 
-  if (_dash_is_open)
+  if (_overlay_is_open)
   {
     if (_bg_layer)
       delete _bg_layer;
@@ -658,7 +670,7 @@ PanelView::SetOpacity(float opacity)
 
   _opacity = opacity;
 
-  bg_effect_helper_.enabled = (_opacity < 1.0f || _dash_is_open);
+  bg_effect_helper_.enabled = (_opacity < 1.0f || _overlay_is_open);
 
   ForceUpdateBackground();
 }

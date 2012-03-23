@@ -188,3 +188,19 @@ Outcome:
 Outcome:
   * Only the primary monitor should show a launcher. Changing the primary monitor
     from gnome-control-center -> Monitor should update the launcher position.
+
+
+Panel appearance with overlays
+------------------------------
+Setup:
+  Have a secondary monitor plugged in and working.
+  Have the launchers on each monitor
+  Make sure the launcher setting is to never hide.
+
+Actions:
+#. Press <super> to bring up the dash
+#. Press <super> to close the dash
+
+Expected Result:
+  The launchers on each monitor have saturated icons (normal looking, not the
+  desaturated look that there is while the dash is open).

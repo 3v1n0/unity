@@ -116,7 +116,8 @@ private:
   bool        _is_primary;
   int         _monitor;
 
-  bool        _dash_is_open;
+  bool        _overlay_is_open;
+  std::string _active_overlay;
   guint       _handle_dash_hidden;
   guint       _handle_dash_shown;
   guint       _handle_bg_color_update;
