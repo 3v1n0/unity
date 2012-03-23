@@ -46,17 +46,56 @@ Outcome
   The maximized window should restore. If no maximized window is available on
   the current workspace, nothing should happen.
 
+Menu Color
+----------
+This test shows the color of the menus using the Ambiance theme:
 
-Panel on Alt+Tab
-----------------
-This test shows react on Alt+Tab
+#. Start with a clean screen
+#. Open an application window with menus
+#. Go on the top panel and open a menu
 
-#. Start with a clear screen
-#. Open some new applications
-#. Press Alt+Tab
+Outcome:
+  The menu should have a black background (i.e. #403f3a)
+
+Middle-clicking or Scrolling over active Indicators
+---------------------------------------------------
+This test shows how the indicators icons should react to events when active.
+
+#. Start on a clean screen
+#. Open an indicator Menu (i.e. indicator-sound, not a global menu item)
+#. Move the mouse pointer over the indicator-sound and middle-click or scroll
+   over it.
 
 Outcome
-  When you press Alt+Tab to switch window, the application title in the top left
-  of the panel should change inline with changes in alt-tab focus.
-  Also the menus shouldn't ever show. Even if the mouse has been left over
-  the panel when starting the Alt+Tab.
+  The indicator-sound should mute/unmute on middle-clicks, and change the system
+  volume on scroll.
+  Middle-clicking over global-menu items should work as before (causing the open
+  indicator menu to close).
+
+Menus and Active Indicators
+---------------------------
+This test shows the interaction between the global menu and open indicators.
+
+#. Start on a clean screen
+#. Open an application that has menus (i.e a gnome-terminal)
+#. Open an indicator Menu (i.e. indicator sound)
+#. Move the mouse pointer on the PanelMenuGrabArea (i.e the area between the
+   indicators and the global menu)
+
+Outcome
+  The menu should appear. This was happening only when going over the menus,
+  not over the empty panel area.
+
+
+Window Buttons and Active Indicators
+------------------------------------
+This test shows the interaction between the window buttons and open indicators.
+
+#. Start on a clean screen
+#. Open an application that has menus (i.e a gnome-terminal)
+#. Maximize it
+#. Open an indicator Menu (i.e. indicator sound)
+#. Move the mouse pointer on the top-left corner of the screen
+
+Outcome
+  Window buttons should appear.
