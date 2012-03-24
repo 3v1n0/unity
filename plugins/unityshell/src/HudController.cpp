@@ -40,6 +40,8 @@ nux::logging::Logger logger("unity.hud.controller");
 
 Controller::Controller()
   : launcher_width(65)
+  , launcher_locked_out(false)
+  , multiple_launchers(true)
   , hud_service_("com.canonical.hud", "/com/canonical/hud")
   , window_(nullptr)
   , visible_(false)
@@ -47,12 +49,11 @@ Controller::Controller()
   , timeline_id_(0)
   , last_opacity_(0.0f)
   , start_time_(0)
-  , launcher_is_locked_out_(false)
   , view_(nullptr)
   , monitor_index_(0)
 {
   LOG_DEBUG(logger) << "hud startup";
-  SetupRelayoutCallbacks();
+  UScreen::GetDefault()->changed.connect([&] (int, std::vector<nux::Geometry>&) { Relayout(); });
 
   ubus.RegisterInterest(UBUS_HUD_CLOSE_REQUEST, sigc::mem_fun(this, &Controller::OnExternalHideHud));
 
@@ -65,13 +66,13 @@ Controller::Controller()
     gint32 overlay_monitor = 0;
     g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, &overlay_identity, &can_maximise, &overlay_monitor);
 
-    if (g_strcmp0(overlay_identity, "hud"))
+    if (overlay_identity.Str() == "hud")
     {
       HideHud(true);
     }
   });
 
-  launcher_width.changed.connect([this] (int new_width) { Relayout(); });
+  launcher_width.changed.connect([&] (int new_width) { Relayout(); });
 
   PluginAdapter::Default()->compiz_screen_ungrabbed.connect(sigc::mem_fun(this, &Controller::OnScreenUngrabbed));
 
@@ -120,16 +121,6 @@ void Controller::SetupHudView()
   AddChild(view_);
 }
 
-void Controller::SetupRelayoutCallbacks()
-{
-  GdkScreen* screen = gdk_screen_get_default();
-
-  sig_manager_.Add(new glib::Signal<void, GdkScreen*>(screen,
-    "monitors-changed", sigc::mem_fun(this, &Controller::Relayout)));
-  sig_manager_.Add(new glib::Signal<void, GdkScreen*>(screen,
-    "size-changed", sigc::mem_fun(this, &Controller::Relayout)));
-}
-
 void Controller::EnsureHud()
 {
   if (window_)
@@ -159,25 +150,31 @@ void Controller::OnWindowConfigure(int window_width, int window_height,
 nux::Geometry Controller::GetIdealWindowGeometry()
 {
   UScreen *uscreen = UScreen::GetDefault();
-  int primary_monitor = uscreen->GetMonitorWithMouse();
-  auto monitor_geo = uscreen->GetMonitorGeometry(primary_monitor);
+  int primary_monitor = uscreen->GetPrimaryMonitor();
+  int target_monitor = uscreen->GetMonitorWithMouse();
+  auto monitor_geo = uscreen->GetMonitorGeometry(target_monitor);
 
-  // We want to cover as much of the screen as possible to grab any mouse events outside
+  // We want to cover as much of the screen as possible to grab any mouse events outside447
   // of our window
   panel::Style &panel_style = panel::Style::Instance();
   nux::Geometry geo(monitor_geo.x,
-                       monitor_geo.y + panel_style.panel_height,
-                       monitor_geo.width,
-                       monitor_geo.height - panel_style.panel_height);
-  if (launcher_is_locked_out_)
+                    monitor_geo.y + panel_style.panel_height,
+                    monitor_geo.width,
+                    monitor_geo.height - panel_style.panel_height);
+
+  if (launcher_locked_out)
   {
-    geo.x += launcher_width;
-    geo.width -= launcher_width;
+    if (multiple_launchers || (!multiple_launchers && primary_monitor == target_monitor))
+    {
+      geo.x += launcher_width;
+      geo.width -= launcher_width;
+    }
   }
+
   return geo;
 }
 
-void Controller::Relayout(GdkScreen*screen)
+void Controller::Relayout()
 {
   EnsureHud();
   nux::Geometry content_geo = view_->GetGeometry();
@@ -190,7 +187,7 @@ void Controller::Relayout(GdkScreen*screen)
 }
 
 void Controller::OnMouseDownOutsideWindow(int x, int y,
-                                              unsigned long bflags, unsigned long kflags)
+                                          unsigned long bflags, unsigned long kflags)
 {
   LOG_DEBUG(logger) << "OnMouseDownOutsideWindow called";
   HideHud();
@@ -234,16 +231,6 @@ bool Controller::IsVisible()
   return visible_;
 }
 
-void Controller::SetLauncherIsLockedOut(bool launcher_is_locked_out)
-{
-  launcher_is_locked_out_ = launcher_is_locked_out;
-  if (launcher_is_locked_out_)
-    view_->SetHideIcon(IconHideState::HIDE);
-  else
-    view_->SetHideIcon(IconHideState::SHOW);
-  Relayout();
-}
-
 void Controller::ShowHud()
 {
   PluginAdapter* adaptor = PluginAdapter::Default();
@@ -257,6 +244,19 @@ void Controller::ShowHud()
   {
     need_show_ = true;
     return;
+  }
+
+  UScreen *uscreen = UScreen::GetDefault();
+  int primary_monitor = uscreen->GetPrimaryMonitor();
+  int target_monitor = uscreen->GetMonitorWithMouse();
+
+  if (launcher_locked_out && (multiple_launchers || (primary_monitor == target_monitor)))
+  {
+    view_->SetHideIcon(IconHideState::HIDE);
+  }
+  else
+  {
+    view_->SetHideIcon(IconHideState::SHOW);
   }
 
   view_->AboutToShow();
