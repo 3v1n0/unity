@@ -237,7 +237,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
     else
     {
-      bg_blur_texture_ = bg_effect_helper_.GetRegion(blur_geo); 
+      bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo); 
     }
 
     if (bg_blur_texture_.IsValid() && (_dash_is_open || _opacity != 1.0f))
@@ -330,11 +330,11 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-    nux::LayerBlendMode layer_blend_mode = nux::LAYER_BLEND_MODE_OVERLAY;
-    if (_menu_view->GetMaximizedWindow() != 0)
-    {
-      layer_blend_mode = nux::LAYER_BLEND_MODE_NORMAL;
-    }
+    // nux::LayerBlendMode layer_blend_mode = nux::LAYER_BLEND_MODE_OVERLAY;
+    // if (_menu_view->GetMaximizedWindow() != 0)
+    // {
+    //   layer_blend_mode = nux::LAYER_BLEND_MODE_NORMAL;
+    // }
 
 #ifndef NUX_OPENGLES_20
     if (GfxContext.UsingGLSLCodePath())
@@ -343,7 +343,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                     texxform_blur_bg,
                                     nux::color::White,
                                     _bg_color,
-                                    layer_blend_mode,
+                                    nux::LAYER_BLEND_MODE_OVERLAY,
                                     true,
                                     rop);
     else
@@ -360,7 +360,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                     texxform_blur_bg,
                                     nux::color::White,
                                     _bg_color,
-                                    layer_blend_mode,
+                                    nux::LAYER_BLEND_MODE_OVERLAY,
                                     true,
                                     rop);
 #endif
