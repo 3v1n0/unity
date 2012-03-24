@@ -6,7 +6,7 @@
 # under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
 
-from testtools.matchers import Equals, LessThan
+from testtools.matchers import Equals, LessThan, GreaterThan
 from time import sleep
 
 from autopilot.emulators.X11 import ScreenGeometry
@@ -22,13 +22,22 @@ def _make_scenarios():
 
     if num_monitors == 1:
         scenarios = [
-            ('Single Monitor, Launcher never hide', {'hud_monitor': 0, 'launcher_hide_mode': 0}),
-            ('Single Monitor, Launcher autohide', {'hud_monitor': 0, 'launcher_hide_mode': 1}),
+            ('Single Monitor, Launcher never hide', {'hud_monitor': 0, 'launcher_hide_mode': 0, 'launcher_primary_only': False}),
+            ('Single Monitor, Launcher autohide', {'hud_monitor': 0, 'launcher_hide_mode': 1, 'launcher_primary_only': False}),
             ]
     else:
         for i in range(num_monitors):
-            scenarios.append(('Monitor %d, Launcher never hide' % (i), {'hud_monitor': i, 'launcher_hide_mode': 0}))
-            scenarios.append(('Monitor %d, Launcher autohide' % (i), {'hud_monitor': i, 'launcher_hide_mode': 1}))
+            scenario_setting = {'hud_monitor': i, 'launcher_hide_mode': 0, 'launcher_primary_only': False}
+            scenarios.append(('Monitor %d, Launcher never hide, on all monitors' % (i), scenario_setting))
+
+            scenario_setting = {'hud_monitor': i, 'launcher_hide_mode': 0, 'launcher_primary_only': True}
+            scenarios.append(('Monitor %d, Launcher never hide, only on primary monitor' % (i), scenario_setting))
+
+            scenario_setting = {'hud_monitor': i, 'launcher_hide_mode': 1, 'launcher_primary_only': True}
+            scenarios.append(('Monitor %d, Launcher autohide, on all monitors' % (i), scenario_setting))
+
+            scenario_setting = {'hud_monitor': i, 'launcher_hide_mode': 1, 'launcher_primary_only': True}
+            scenarios.append(('Monitor %d, Launcher autohide, only on primary monitor' % (i), scenario_setting))
 
     return scenarios
 
@@ -40,7 +49,11 @@ class HudTests(AutopilotTestCase):
     def setUp(self):
         super(HudTests, self).setUp()
         self.set_unity_option('launcher_hide_mode', self.launcher_hide_mode)
+        self.set_unity_option('num_launchers', int(self.launcher_primary_only))
+        self.hud_monitor_is_primary = (self.screen_geo.get_primary_monitor() == self.hud_monitor)
+        self.hud_locked = (self.launcher_hide_mode == 0 and (not self.launcher_primary_only or self.hud_monitor_is_primary))
         self.screen_geo.move_mouse_to_monitor(self.hud_monitor)
+
         sleep(0.5)
         self.hud = self.get_hud_controller()
 
@@ -71,7 +84,26 @@ class HudTests(AutopilotTestCase):
                 break
 
         self.assertTrue(self.hud.visible, "HUD did not appear.")
+
+    def test_hud_is_on_right_monitor(self):
+        self.reveal_hud()
         self.assertTrue(self.screen_geo.is_rect_on_monitor(self.hud_monitor, self.hud.geometry))
+
+    def test_hud_geometries(self):
+        self.reveal_hud()
+        monitor_geo = self.screen_geo.get_monitor_geometry(self.hud_monitor)
+        monitor_x = monitor_geo[0]
+        monitor_w = monitor_geo[2]
+        hud_x = self.hud.geometry[0]
+        hud_w = self.hud.geometry[2]
+
+        if self.hud_locked:
+            self.assertThat(hud_x, GreaterThan(monitor_x))
+            self.assertThat(hud_x, LessThan(monitor_x + monitor_w))
+            self.assertThat(hud_w, Equals(monitor_x + monitor_w - hud_x))
+        else:
+            self.assertThat(hud_x, Equals(monitor_x))
+            self.assertThat(hud_w, Equals(monitor_w))
 
     def test_no_initial_values(self):
         self.reveal_hud()
