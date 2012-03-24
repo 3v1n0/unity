@@ -89,8 +89,6 @@ UnityShowdesktopHandler::UnityShowdesktopHandler (UnityShowdesktopHandlerWindowI
 
 UnityShowdesktopHandler::~UnityShowdesktopHandler ()
 {
-  if (mRemover)
-    delete mRemover;
 }
 
 void UnityShowdesktopHandler::fadeOut ()

@@ -409,7 +409,7 @@ private:
 
   unsigned int getNoCoreInstanceMask ();
 
-  compiz::WindowInputRemoverInterface * getInputRemover ();
+  compiz::WindowInputRemoverInterface::Ptr getInputRemover ();
 };
 
 

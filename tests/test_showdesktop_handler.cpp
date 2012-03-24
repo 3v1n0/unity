@@ -7,6 +7,7 @@
 using namespace unity;
 using ::testing::_;
 using ::testing::Return;
+using ::testing::Invoke;
 using ::testing::InSequence;
 
 compiz::WindowInputRemoverInterface::~WindowInputRemoverInterface () {}
@@ -26,6 +27,20 @@ class MockWindowInputRemover :
     MOCK_METHOD0 (saveInput, bool ());
     MOCK_METHOD0 (removeInput, bool ());
     MOCK_METHOD0 (restoreInput, bool ());
+};
+
+class UnityShowdesktopHandlerTest :
+  public ::testing::Test
+{
+public:
+
+  ~UnityShowdesktopHandlerTest ()
+  {
+    UnityShowdesktopHandler::animating_windows.clear ();
+  }
+
+  template <class T, class U> static typename T::Ptr makeShared () { return typename T::Ptr (new U); }
+
 };
 
 
@@ -48,7 +63,7 @@ class MockUnityShowdesktopHandlerWindow :
 
       ON_CALL (*this, doHandleAnimations (_)).WillByDefault (Return (UnityShowdesktopHandlerWindowInterface::PostPaintAction::Damage));
       ON_CALL (*this, getNoCoreInstanceMask ()).WillByDefault (Return (1));
-      ON_CALL (*this, getInputRemover ()).WillByDefault (Return (new MockWindowInputRemover ()));
+      ON_CALL (*this, getInputRemover ()).WillByDefault (Invoke (UnityShowdesktopHandlerTest::makeShared<compiz::WindowInputRemoverInterface, MockWindowInputRemover>));
     }
 
     MOCK_METHOD0 (doEnableFocus, void ());
@@ -71,19 +86,8 @@ class MockUnityShowdesktopHandlerWindow :
     MOCK_METHOD1 (doHandleAnimations, UnityShowdesktopHandlerWindowInterface::PostPaintAction (unsigned int));
     MOCK_METHOD0 (doAddDamage, void ());
     MOCK_METHOD0 (getNoCoreInstanceMask, unsigned int ());
-    MOCK_METHOD0 (getInputRemover, compiz::WindowInputRemoverInterface * ());
+    MOCK_METHOD0 (getInputRemover, compiz::WindowInputRemoverInterface::Ptr ());
     MOCK_METHOD0 (doDeleteHandler, void ());
-};
-
-class UnityShowdesktopHandlerTest :
-  public ::testing::Test
-{
-public:
-
-  ~UnityShowdesktopHandlerTest ()
-  {
-    UnityShowdesktopHandler::animating_windows.clear ();
-  }
 };
 
 TEST_F(UnityShowdesktopHandlerTest, TestNoORWindowsSD)
@@ -236,7 +240,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestFadeOutHidesWindow)
 {
   MockUnityShowdesktopHandlerWindow mMockWindow;
 
-  EXPECT_CALL (mMockWindow, getInputRemover ()).WillOnce (Return (new MockWindowInputRemoverTestFadeOut ()));
+  EXPECT_CALL (mMockWindow, getInputRemover ()).WillOnce (Invoke (UnityShowdesktopHandlerTest::makeShared<compiz::WindowInputRemoverInterface, MockWindowInputRemoverTestFadeOut>));
 
   UnityShowdesktopHandler mMockHandler (static_cast <UnityShowdesktopHandlerWindowInterface *> (&mMockWindow));
 
@@ -270,7 +274,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestFadeOutOnHiddenDoesntHideWindow)
 {
   MockUnityShowdesktopHandlerWindow mMockWindow;
 
-  EXPECT_CALL (mMockWindow, getInputRemover ()).WillOnce (Return (new MockWindowInputRemoverTestFadeOutAlready ()));
+  EXPECT_CALL (mMockWindow, getInputRemover ()).WillOnce (Invoke (UnityShowdesktopHandlerTest::makeShared<compiz::WindowInputRemoverInterface, MockWindowInputRemoverTestFadeOutAlready>));
 
   UnityShowdesktopHandler mMockHandler (static_cast <UnityShowdesktopHandlerWindowInterface *> (&mMockWindow));
 
@@ -285,7 +289,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestFadeOutAlreadyFadedDoesntHideWindow)
 {
   MockUnityShowdesktopHandlerWindow mMockWindow;
 
-  EXPECT_CALL (mMockWindow, getInputRemover ()).WillOnce (Return (new MockWindowInputRemoverTestFadeOut ()));
+  EXPECT_CALL (mMockWindow, getInputRemover ()).WillOnce (Invoke (UnityShowdesktopHandlerTest::makeShared<compiz::WindowInputRemoverInterface, MockWindowInputRemoverTestFadeOut>));
 
   UnityShowdesktopHandler mMockHandler (static_cast <UnityShowdesktopHandlerWindowInterface *> (&mMockWindow));
 
@@ -303,7 +307,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestFadeInNonFadedDoesntShowWindow)
 {
   MockUnityShowdesktopHandlerWindow mMockWindow;
 
-  EXPECT_CALL (mMockWindow, getInputRemover ()).WillOnce (Return (new MockWindowInputRemoverTestFadeOutAlready ()));
+  EXPECT_CALL (mMockWindow, getInputRemover ()).WillOnce (Invoke (UnityShowdesktopHandlerTest::makeShared<compiz::WindowInputRemoverInterface, MockWindowInputRemoverTestFadeOutAlready>));
 
   UnityShowdesktopHandler mMockHandler (static_cast <UnityShowdesktopHandlerWindowInterface *> (&mMockWindow));
 
@@ -337,7 +341,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestFadeOutHidesWindowFadeInShowsWindow)
 {
   MockUnityShowdesktopHandlerWindow mMockWindow;
 
-  EXPECT_CALL (mMockWindow, getInputRemover ()).WillOnce (Return (new MockWindowInputRemoverTestFadeOutFadeIn ()));
+  EXPECT_CALL (mMockWindow, getInputRemover ()).WillOnce (Invoke (UnityShowdesktopHandlerTest::makeShared<compiz::WindowInputRemoverInterface, MockWindowInputRemoverTestFadeOutFadeIn>));
 
   UnityShowdesktopHandler mMockHandler (static_cast <UnityShowdesktopHandlerWindowInterface *> (&mMockWindow));
 
@@ -359,7 +363,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestAnimationPostPaintActions)
 {
   MockUnityShowdesktopHandlerWindow mMockWindow;
 
-  EXPECT_CALL (mMockWindow, getInputRemover ()).WillOnce (Return (new MockWindowInputRemoverTestFadeOutFadeIn ()));
+  EXPECT_CALL (mMockWindow, getInputRemover ()).WillOnce (Invoke (UnityShowdesktopHandlerTest::makeShared<compiz::WindowInputRemoverInterface, MockWindowInputRemoverTestFadeOutFadeIn>));
 
   UnityShowdesktopHandler mMockHandler (static_cast <UnityShowdesktopHandlerWindowInterface *> (&mMockWindow));
 
@@ -401,7 +405,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestAnimationOpacity)
 {
   MockUnityShowdesktopHandlerWindow mMockWindow;
 
-  EXPECT_CALL (mMockWindow, getInputRemover ()).WillOnce (Return (new MockWindowInputRemoverTestFadeOutFadeIn ()));
+  EXPECT_CALL (mMockWindow, getInputRemover ()).WillOnce (Invoke (UnityShowdesktopHandlerTest::makeShared<compiz::WindowInputRemoverInterface, MockWindowInputRemoverTestFadeOutFadeIn>));
 
   UnityShowdesktopHandler mMockHandler (static_cast <UnityShowdesktopHandlerWindowInterface *> (&mMockWindow));
 
@@ -458,7 +462,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestAnimationPaintMasks)
 {
   MockUnityShowdesktopHandlerWindow mMockWindow;
 
-  EXPECT_CALL (mMockWindow, getInputRemover ()).WillOnce (Return (new MockWindowInputRemoverTestFadeOutFadeIn ()));
+  EXPECT_CALL (mMockWindow, getInputRemover ()).WillOnce (Invoke (UnityShowdesktopHandlerTest::makeShared<compiz::WindowInputRemoverInterface, MockWindowInputRemoverTestFadeOutFadeIn>));
 
   UnityShowdesktopHandler mMockHandler (static_cast <UnityShowdesktopHandlerWindowInterface *> (&mMockWindow));
 
@@ -514,7 +518,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestShapeEvent)
 {
   MockUnityShowdesktopHandlerWindow mMockWindow;
 
-  EXPECT_CALL (mMockWindow, getInputRemover ()).WillOnce (Return (new MockWindowInputRemoverTestFadeOutFadeInWithShapeEvent ()));
+  EXPECT_CALL (mMockWindow, getInputRemover ()).WillOnce (Invoke (UnityShowdesktopHandlerTest::makeShared<compiz::WindowInputRemoverInterface, MockWindowInputRemoverTestFadeOutFadeInWithShapeEvent>));
 
   UnityShowdesktopHandler mMockHandler (static_cast <UnityShowdesktopHandlerWindowInterface *> (&mMockWindow));
 

@@ -1108,10 +1108,10 @@ void UnityWindow::doDeleteHandler ()
   mShowdesktopHandler = NULL;
 }
 
-compiz::WindowInputRemoverInterface *
+compiz::WindowInputRemoverInterface::Ptr
 UnityWindow::getInputRemover ()
 {
-  return new compiz::WindowInputRemover (screen->dpy (), window->id ());
+  return compiz::WindowInputRemoverInterface::Ptr (new compiz::WindowInputRemover (screen->dpy (), window->id ()));
 }
 
 unsigned int

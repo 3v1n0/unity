@@ -22,6 +22,8 @@
 #ifndef _COMPIZ_INPUTREMOVER_H
 #define _COMPIZ_INPUTREMOVER_H
 
+#include <memory>
+
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/extensions/shape.h>
@@ -32,6 +34,8 @@ namespace compiz {
 class WindowInputRemoverInterface
 {
   public:
+
+    typedef std::shared_ptr <WindowInputRemoverInterface> Ptr;
 
     bool save () { return saveInput (); }
     bool remove () { return removeInput (); }

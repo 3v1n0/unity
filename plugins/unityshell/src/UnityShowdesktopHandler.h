@@ -71,7 +71,7 @@ class UnityShowdesktopHandlerWindowInterface
 
     unsigned int noCoreInstanceMask () { return getNoCoreInstanceMask (); }
 
-    compiz::WindowInputRemoverInterface * inputRemover () { return getInputRemover (); }
+    compiz::WindowInputRemoverInterface::Ptr inputRemover () { return getInputRemover (); }
 
   protected:
 
@@ -105,7 +105,7 @@ class UnityShowdesktopHandlerWindowInterface
 
     virtual unsigned int getNoCoreInstanceMask () = 0;
 
-    virtual compiz::WindowInputRemoverInterface * getInputRemover () = 0;
+    virtual compiz::WindowInputRemoverInterface::Ptr getInputRemover () = 0;
 };
 
 class UnityShowdesktopHandler
@@ -145,7 +145,7 @@ public:
 private:
 
   UnityShowdesktopHandlerWindowInterface *mShowdesktopHandlerWindowInterface;
-  compiz::WindowInputRemoverInterface    *mRemover;
+  compiz::WindowInputRemoverInterface::Ptr mRemover;
   UnityShowdesktopHandler::State         mState;
   float                                  mProgress;
   bool                                   mWasHidden;
