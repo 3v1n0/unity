@@ -7,6 +7,7 @@
 using namespace unity;
 using ::testing::_;
 using ::testing::Return;
+using ::testing::InSequence;
 
 compiz::WindowInputRemoverInterface::~WindowInputRemoverInterface () {}
 
@@ -348,6 +349,185 @@ TEST_F(UnityShowdesktopHandlerTest, TestFadeOutHidesWindowFadeInShowsWindow)
 
   EXPECT_CALL (mMockWindow, doShow ());
   EXPECT_CALL (mMockWindow, doNotifyShown ());
+
+  mMockHandler.fadeIn ();
+
+  EXPECT_EQ (UnityShowdesktopHandler::animating_windows.size (), 1);
+}
+
+TEST_F(UnityShowdesktopHandlerTest, TestAnimationPostPaintActions)
+{
+  MockUnityShowdesktopHandlerWindow mMockWindow;
+
+  EXPECT_CALL (mMockWindow, getInputRemover ()).WillOnce (Return (new MockWindowInputRemoverTestFadeOutFadeIn ()));
+
+  UnityShowdesktopHandler mMockHandler (static_cast <UnityShowdesktopHandlerWindowInterface *> (&mMockWindow));
+
+  EXPECT_CALL (mMockWindow, isHidden ());
+  EXPECT_CALL (mMockWindow, doHide ());
+  EXPECT_CALL (mMockWindow, doNotifyHidden ());
+
+  mMockHandler.fadeOut ();
+
+  EXPECT_CALL (mMockWindow, doShow ());
+  EXPECT_CALL (mMockWindow, doNotifyShown ());
+
+  for (unsigned int i = 0; i < UnityShowdesktopHandler::fade_time; i++)
+  {
+    UnityShowdesktopHandlerWindowInterface::PostPaintAction action = mMockHandler.animate (1);
+
+    if (i == 300)
+      EXPECT_EQ (action, UnityShowdesktopHandlerWindowInterface::PostPaintAction::Wait);
+    else
+      EXPECT_EQ (action, UnityShowdesktopHandlerWindowInterface::PostPaintAction::Damage);
+  }
+
+  mMockHandler.fadeIn ();
+
+  for (unsigned int i = 0; i < UnityShowdesktopHandler::fade_time; i++)
+  {
+    UnityShowdesktopHandlerWindowInterface::PostPaintAction action = mMockHandler.animate (1);
+
+    if (i == 300)
+      EXPECT_EQ (action, UnityShowdesktopHandlerWindowInterface::PostPaintAction::Remove);
+    else
+      EXPECT_EQ (action, UnityShowdesktopHandlerWindowInterface::PostPaintAction::Damage);
+  }
+
+  EXPECT_EQ (UnityShowdesktopHandler::animating_windows.size (), 1);
+}
+
+TEST_F(UnityShowdesktopHandlerTest, TestAnimationOpacity)
+{
+  MockUnityShowdesktopHandlerWindow mMockWindow;
+
+  EXPECT_CALL (mMockWindow, getInputRemover ()).WillOnce (Return (new MockWindowInputRemoverTestFadeOutFadeIn ()));
+
+  UnityShowdesktopHandler mMockHandler (static_cast <UnityShowdesktopHandlerWindowInterface *> (&mMockWindow));
+
+  EXPECT_CALL (mMockWindow, isHidden ());
+  EXPECT_CALL (mMockWindow, doHide ());
+  EXPECT_CALL (mMockWindow, doNotifyHidden ());
+
+  mMockHandler.fadeOut ();
+
+  EXPECT_CALL (mMockWindow, doShow ());
+  EXPECT_CALL (mMockWindow, doNotifyShown ());
+
+  /* The funny expectations here are to account for rounding errors that would
+   * otherwise make testing the code painful */
+
+  for (unsigned int i = 0; i < UnityShowdesktopHandler::fade_time; i++)
+  {
+    unsigned short opacity = std::numeric_limits <unsigned short>::max ();
+    mMockHandler.paintOpacity (opacity);
+
+    mMockHandler.animate (1);
+
+    if (i == 300)
+      EXPECT_EQ (opacity, std::numeric_limits <unsigned short>::max ());
+    else
+    {
+      float rem = opacity - std::numeric_limits <unsigned short>::max () * (1.0f - i / static_cast <float> (UnityShowdesktopHandler::fade_time));
+      EXPECT_TRUE (rem <= 1.0f && rem >= -1.0f);
+    }
+  }
+
+  mMockHandler.fadeIn ();
+
+  for (unsigned int i = 0; i < UnityShowdesktopHandler::fade_time; i++)
+  {
+    unsigned short opacity = std::numeric_limits <unsigned short>::max ();
+    mMockHandler.paintOpacity (opacity);
+
+    mMockHandler.animate (1);
+
+    if (i == 300)
+      EXPECT_EQ (opacity, std::numeric_limits <unsigned short>::max ());
+    else
+    {
+      float rem = opacity - std::numeric_limits <unsigned short>::max () * (i / static_cast <float> (UnityShowdesktopHandler::fade_time));
+      EXPECT_TRUE (rem <= 1.0f && rem >= -1.0f);
+    }
+  }
+
+  EXPECT_EQ (UnityShowdesktopHandler::animating_windows.size (), 1);
+}
+
+TEST_F(UnityShowdesktopHandlerTest, TestAnimationPaintMasks)
+{
+  MockUnityShowdesktopHandlerWindow mMockWindow;
+
+  EXPECT_CALL (mMockWindow, getInputRemover ()).WillOnce (Return (new MockWindowInputRemoverTestFadeOutFadeIn ()));
+
+  UnityShowdesktopHandler mMockHandler (static_cast <UnityShowdesktopHandlerWindowInterface *> (&mMockWindow));
+
+  EXPECT_CALL (mMockWindow, isHidden ());
+  EXPECT_CALL (mMockWindow, doHide ());
+  EXPECT_CALL (mMockWindow, doNotifyHidden ());
+
+  mMockHandler.fadeOut ();
+
+  EXPECT_CALL (mMockWindow, doShow ());
+  EXPECT_CALL (mMockWindow, doNotifyShown ());
+  EXPECT_CALL (mMockWindow, getNoCoreInstanceMask ());
+
+  mMockHandler.animate (UnityShowdesktopHandler::fade_time);
+
+  EXPECT_EQ (mMockHandler.getPaintMask (), 1);
+
+  mMockHandler.fadeIn ();
+
+  mMockHandler.animate (UnityShowdesktopHandler::fade_time);
+
+  EXPECT_EQ (mMockHandler.getPaintMask (), 0);
+
+  EXPECT_EQ (UnityShowdesktopHandler::animating_windows.size (), 1);
+}
+
+class MockWindowInputRemoverTestFadeOutFadeInWithShapeEvent :
+  public compiz::WindowInputRemoverInterface
+{
+  public:
+
+    MockWindowInputRemoverTestFadeOutFadeInWithShapeEvent ()
+    {
+      ON_CALL (*this, saveInput ()).WillByDefault (Return (true));
+      ON_CALL (*this, removeInput ()).WillByDefault (Return (true));
+      ON_CALL (*this, restoreInput ()).WillByDefault (Return (true));
+
+      InSequence s;
+
+      EXPECT_CALL (*this, saveInput ()).WillOnce (Return (true));
+      EXPECT_CALL (*this, removeInput ()).WillOnce (Return (true));
+      EXPECT_CALL (*this, saveInput ()).WillOnce (Return (true));
+      EXPECT_CALL (*this, removeInput ()).WillOnce (Return (true));
+      EXPECT_CALL (*this, restoreInput ()).WillOnce (Return (true));
+    }
+
+    MOCK_METHOD0 (saveInput, bool ());
+    MOCK_METHOD0 (removeInput, bool ());
+    MOCK_METHOD0 (restoreInput, bool ());
+};
+
+TEST_F(UnityShowdesktopHandlerTest, TestShapeEvent)
+{
+  MockUnityShowdesktopHandlerWindow mMockWindow;
+
+  EXPECT_CALL (mMockWindow, getInputRemover ()).WillOnce (Return (new MockWindowInputRemoverTestFadeOutFadeInWithShapeEvent ()));
+
+  UnityShowdesktopHandler mMockHandler (static_cast <UnityShowdesktopHandlerWindowInterface *> (&mMockWindow));
+
+  EXPECT_CALL (mMockWindow, isHidden ());
+  EXPECT_CALL (mMockWindow, doHide ());
+  EXPECT_CALL (mMockWindow, doNotifyHidden ());
+
+  mMockHandler.fadeOut ();
+
+  EXPECT_CALL (mMockWindow, doShow ());
+  EXPECT_CALL (mMockWindow, doNotifyShown ());
+
+  mMockHandler.handleShapeEvent ();
 
   mMockHandler.fadeIn ();
 
