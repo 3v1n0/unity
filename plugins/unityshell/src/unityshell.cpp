@@ -128,6 +128,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , painting_tray_ (false)
   , last_scroll_event_(0)
   , hud_keypress_time_(0)
+  , panel_texture_has_changed_(true)
 {
   Timer timer;
   gfloat version;
@@ -367,6 +368,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
      ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, [&](GVariant * args) { dash_is_open_ = false; });
       LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";
   }
+
+  panel::Style::Instance().changed.connect(sigc::mem_fun(this, &UnityScreen::OnPanelStyleChanged));
 }
 
 UnityScreen::~UnityScreen()
@@ -715,6 +718,12 @@ UnityWindow::updateIconPos (int   &wx,
   wy = y + (last_bound.height - height) / 2;
 }
 
+void
+UnityScreen::OnPanelStyleChanged()
+{
+  panel_texture_has_changed_ = true;
+}
+
 #ifdef USE_GLES
 void UnityScreen::paintDisplay()
 #else
@@ -729,28 +738,32 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 
   if (was_bound && dash_is_open_)
   {
-    nux::NBitmapData* bitmap = panel::Style::Instance().GetBackground(screen->width (), screen->height(), 1.0f);
-    nux::BaseTexture* texture2D = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-    if (bitmap && texture2D)
+    if (panel_texture_has_changed_ || !panel_texture_.IsValid())
     {
-      texture2D->Update(bitmap);
-      delete bitmap;
+      panel_texture_.Release();
+
+      nux::NBitmapData* bitmap = panel::Style::Instance().GetBackground(screen->width (), screen->height(), 1.0f);
+      nux::BaseTexture* texture2D = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
+      if (bitmap && texture2D)
+      {
+        texture2D->Update(bitmap);
+        panel_texture_ = texture2D->GetDeviceTexture();
+        texture2D->UnReference();
+        delete bitmap;
+      }
+      panel_texture_has_changed_ = false;
     }
 
-    nux::ObjectPtr<nux::IOpenGLBaseTexture> src_device_texture;
-    if (texture2D)
-      src_device_texture = texture2D->GetDeviceTexture();
+    if (panel_texture_.IsValid())
+    {
+      nux::GetGraphicsDisplay()->GetGraphicsEngine()->ResetModelViewMatrixStack();
+      nux::GetGraphicsDisplay()->GetGraphicsEngine()->Push2DTranslationModelViewMatrix(0.0f, 0.0f, 0.0f);
+      nux::GetGraphicsDisplay()->GetGraphicsEngine()->ResetProjectionMatrix();
+      nux::GetGraphicsDisplay()->GetGraphicsEngine()->SetOrthographicProjectionMatrix(screen->width (), screen->height());
 
-    nux::GetGraphicsDisplay()->GetGraphicsEngine()->ResetModelViewMatrixStack();
-    nux::GetGraphicsDisplay()->GetGraphicsEngine()->Push2DTranslationModelViewMatrix(0.0f, 0.0f, 0.0f);
-    nux::GetGraphicsDisplay()->GetGraphicsEngine()->ResetProjectionMatrix();
-    nux::GetGraphicsDisplay()->GetGraphicsEngine()->SetOrthographicProjectionMatrix(screen->width (), screen->height());
-
-    nux::TexCoordXForm texxform;
-    nux::GetGraphicsDisplay()->GetGraphicsEngine()->QRP_GLSL_1Tex(0, 0, screen->width (), 24, src_device_texture, texxform, nux::color::White);
-
-    if (texture2D)
-    texture2D->UnReference();
+      nux::TexCoordXForm texxform;
+      nux::GetGraphicsDisplay()->GetGraphicsEngine()->QRP_GLSL_1Tex(0, 0, screen->width (), 24, panel_texture_, texxform, nux::color::White);
+    }
   }
 
   _fbo->unbind ();
