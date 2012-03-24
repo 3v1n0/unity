@@ -51,7 +51,7 @@ bool UnityShowdesktopHandler::shouldHide (UnityShowdesktopHandlerWindowInterface
     return false;
 
   if (wi->hidden ())
-    if (!(wi->showDesktopMode () || wi->shaded ()))
+    if ((wi->showDesktopMode () || wi->shaded ()))
       return false;
 
   return true;
