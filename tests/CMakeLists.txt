@@ -33,7 +33,7 @@ set (CFLAGS
      )
 add_definitions (${CFLAGS})
 
-set (LIBS ${TEST_UNIT_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION} -lm")
+set (LIBS ${TEST_UNIT_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION} -lcompiz_core -lm")
 link_libraries (${LIBS})
 
 set (LIB_PATHS ${TEST_UNIT_DEPS_LIBRARY_DIRS})
@@ -139,6 +139,7 @@ if (GTEST_SRC_DIR AND
                  test_grabhandle.cpp
                  test_unityshell_private.cpp
                  test_lensview_impl.cpp
+		 test_showdesktop_handler.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.cpp
                  ${UNITY_SRC}/AbstractPlacesGroup.cpp
                  ${UNITY_SRC}/AbstractPlacesGroup.h
@@ -161,6 +162,7 @@ if (GTEST_SRC_DIR AND
                  ${UNITY_SRC}/Timer.cpp
                  ${UNITY_SRC}/UnityshellPrivate.cpp
                  ${UNITY_SRC}/WindowManager.cpp
+		 ${UNITY_SRC}/UnityShowdesktopHandler.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-group.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-impl-factory.cpp

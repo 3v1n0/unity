@@ -25,6 +25,8 @@
 #include <algorithm>
 #include <core/region.h>
 
+#include <gio/gio.h>
+
 #include "inputremover.h"
 
 namespace unity
