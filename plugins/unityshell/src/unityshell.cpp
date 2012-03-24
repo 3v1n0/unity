@@ -904,7 +904,9 @@ void UnityScreen::enterShowDesktopMode ()
 {
   for (CompWindow *w : screen->windows ())
   {
-    if (UnityShowdesktopHandler::shouldHide (w))
+    UnityWindow *uw = UnityWindow::get (w);
+
+    if (UnityShowdesktopHandler::shouldHide (static_cast <UnityShowdesktopHandlerWindowInterface *> (uw)))
     {
       UnityWindow::get (w)->enterShowDesktop ();
       // the animation plugin does strange things here ...
@@ -947,10 +949,10 @@ void UnityScreen::leaveShowDesktopMode (CompWindow *w)
     {
       if (cw->inShowDesktopMode ())
       {
-	UnityWindow::get (cw)->leaveShowDesktop ();
-	// the animation plugin does strange things here ...
-	// if this notification is sent
-	//cw->windowNotify (CompWindowNotifyLeaveShowDesktopMode);
+        UnityWindow::get (cw)->leaveShowDesktop ();
+        // the animation plugin does strange things here ...
+        // if this notification is sent
+        //cw->windowNotify (CompWindowNotifyLeaveShowDesktopMode);
       }
     }
 
@@ -965,7 +967,7 @@ void UnityScreen::leaveShowDesktopMode (CompWindow *w)
     {
       if (cw->inShowDesktopMode ())
       {
-	UnityWindow::get (cw)->leaveShowDesktop ();
+        UnityWindow::get (cw)->leaveShowDesktop ();
       }
     }
   }
@@ -974,7 +976,7 @@ void UnityScreen::leaveShowDesktopMode (CompWindow *w)
 void UnityWindow::enterShowDesktop ()
 {
   if (!mShowdesktopHandler)
-    mShowdesktopHandler = new UnityShowdesktopHandler (window);
+    mShowdesktopHandler = new UnityShowdesktopHandler (static_cast <UnityShowdesktopHandlerWindowInterface *> (this));
 
   window->setShowDesktopMode (true);
   mShowdesktopHandler->fadeOut ();
@@ -996,203 +998,137 @@ void UnityWindow::activate ()
   UnityShowdesktopHandler::allowLeaveShowdesktopMode (window->id ());
 }
 
-bool UnityWindow::handleAnimations (unsigned int ms)
+void UnityWindow::doEnableFocus ()
 {
+  window->focusSetEnabled (this, true);
+}
+
+void UnityWindow::doDisableFocus ()
+{
+  window->focusSetEnabled (this, false);
+}
+
+bool UnityWindow::isOverrideRedirect ()
+{
+  return window->overrideRedirect ();
+}
+
+bool UnityWindow::isManaged ()
+{
+  return window->managed ();
+}
+
+bool UnityWindow::isGrabbed ()
+{
+  return window->grabbed ();
+}
+
+bool UnityWindow::isDesktopOrDock ()
+{
+  return (window->type () & (CompWindowTypeDesktopMask | CompWindowTypeDockMask));
+}
+
+bool UnityWindow::isSkipTaskbarOrPager ()
+{
+  return (window->state () & (CompWindowStateSkipTaskbarMask | CompWindowStateSkipPagerMask));
+}
+
+bool UnityWindow::isInShowdesktopMode ()
+{
+  return window->inShowDesktopMode ();
+}
+
+bool UnityWindow::isHidden ()
+{
+  return window->state () & CompWindowStateHiddenMask;
+}
+
+bool UnityWindow::isShaded ()
+{
+  return window->shaded ();
+}
+
+bool UnityWindow::isMinimized ()
+{
+  return window->minimized ();
+}
+
+void UnityWindow::doOverrideFrameRegion (CompRegion &region)
+{
+  unsigned int oldUpdateFrameRegionIndex = window->updateFrameRegionGetCurrentIndex ();
+
+  window->updateFrameRegionSetCurrentIndex (MAXSHORT);
+  window->updateFrameRegion (region);
+  window->updateFrameRegionSetCurrentIndex (oldUpdateFrameRegionIndex);
+}
+
+void UnityWindow::doHide ()
+{
+  window->changeState (window->state () | CompWindowStateHiddenMask);
+}
+
+void UnityWindow::doNotifyHidden ()
+{
+  window->windowNotify (CompWindowNotifyHide);
+}
+
+void UnityWindow::doShow ()
+{
+  window->changeState (window->state () & ~(CompWindowStateHiddenMask));
+}
+
+void UnityWindow::doNotifyShown ()
+{
+  window->windowNotify (CompWindowNotifyShow);
+}
+
+void UnityWindow::doMoveFocusAway ()
+{
+  window->moveInputFocusToOtherWindow ();
+}
+
+UnityShowdesktopHandlerWindowInterface::PostPaintAction UnityWindow::doHandleAnimations (unsigned int ms)
+{
+  UnityShowdesktopHandlerWindowInterface::PostPaintAction action = UnityShowdesktopHandlerWindowInterface::PostPaintAction::Wait;
+
   if (mShowdesktopHandler)
-    if (mShowdesktopHandler->animate (ms))
-    {
-      delete mShowdesktopHandler;
-      mShowdesktopHandler = NULL;
-      return true;
-    }
+    action = mShowdesktopHandler->animate (ms);
 
-  return false;
+  return action;
 }
 
-/* 300 ms */
-const unsigned int UnityShowdesktopHandler::fade_time = 300;
-CompWindowList UnityShowdesktopHandler::animating_windows (0);
-
-bool UnityShowdesktopHandler::shouldHide (CompWindow *w)
+void UnityWindow::doAddDamage ()
 {
-  if (w->overrideRedirect ())
-    return false;
-
-  if (!w->managed ())
-    return false;
-
-  if (w->grabbed ())
-    return false;
-
-  if (w->wmType () & (CompWindowTypeDesktopMask |
-                      CompWindowTypeDockMask))
-   return false;
-
-  if (w->state () & (CompWindowStateSkipPagerMask |
-         CompWindowStateSkipTaskbarMask))
-    return false;
-
-  if ((w->state () & CompWindowStateHiddenMask))
-    if (!(w->inShowDesktopMode () || w->shaded ()))
-      return false;
-
-  return true;
+  cWindow->addDamage ();
 }
 
-guint32 UnityShowdesktopHandler::mInhibitingXid = 0;
-
-void
-UnityShowdesktopHandler::inhibitLeaveShowdesktopMode (guint32 xid)
+void UnityWindow::doDeleteHandler ()
 {
-  if (!mInhibitingXid)
-    mInhibitingXid = xid;
+  delete mShowdesktopHandler;
+  mShowdesktopHandler = NULL;
 }
 
-void
-UnityShowdesktopHandler::allowLeaveShowdesktopMode (guint32 xid)
+compiz::WindowInputRemoverInterface *
+UnityWindow::getInputRemover ()
 {
-  if (mInhibitingXid == xid)
-    mInhibitingXid = 0;
+  return new compiz::WindowInputRemover (screen->dpy (), window->id ());
 }
 
-guint32
-UnityShowdesktopHandler::inhibitingXid ()
+unsigned int
+UnityWindow::getNoCoreInstanceMask ()
 {
-  return mInhibitingXid;
+  return PAINT_WINDOW_NO_CORE_INSTANCE_MASK;
 }
 
-UnityShowdesktopHandler::UnityShowdesktopHandler (CompWindow *w) :
-  mWindow (w),
-  mRemover (new compiz::WindowInputRemover (screen->dpy (), w->id ())),
-  mState (Visible),
-  mProgress (0.0f)
+void UnityWindow::handleEvent (XEvent *event)
 {
-}
-
-UnityShowdesktopHandler::~UnityShowdesktopHandler ()
-{
-  if (mRemover)
-    delete mRemover;
-}
-
-void UnityShowdesktopHandler::fadeOut ()
-{
-  mState = UnityShowdesktopHandler::FadeOut;
-  mProgress = 0.0f;
-
-  mWasHidden = mWindow->state () & CompWindowStateHiddenMask;
-
-  if (!mWasHidden)
-  {
-    mWindow->changeState (mWindow->state () | CompWindowStateHiddenMask);
-    mWindow->windowNotify (CompWindowNotifyHide);
-    mRemover->save ();
-    mRemover->remove ();
-  }
-
-  if (std::find (animating_windows.begin(),
-                 animating_windows.end(),
-                 mWindow) == animating_windows.end())
-    animating_windows.push_back(mWindow);
-}
-
-void UnityShowdesktopHandler::fadeIn ()
-{
-  mState = UnityShowdesktopHandler::FadeIn;
-
-  if (!mWasHidden)
-  {
-    mWindow->changeState (mWindow->state () & ~CompWindowStateHiddenMask);
-    mWindow->windowNotify (CompWindowNotifyShow);
-    mRemover->restore ();
-  }
-
-  if (std::find (animating_windows.begin(),
-                 animating_windows.end(),
-                 mWindow) == animating_windows.end())
-    animating_windows.push_back(mWindow);
-}
-
-bool UnityShowdesktopHandler::animate (unsigned int ms)
-{
-  float inc = ms / static_cast <float> (fade_time);
-
-  if (mState == UnityShowdesktopHandler::FadeOut)
-  {
-    mProgress += inc;
-    if (mProgress >= 1.0f)
-    {
-      mProgress = 1.0f;
-      mState = Invisible;
-    }
-  }
-  else if (mState == FadeIn)
-  {
-    mProgress -= inc;
-    if (mProgress <= 0.0f)
-    {
-      mProgress = 0.0f;
-      mState = Visible;
-
-      return true;
-    }
-  }
-
-  return false;
-}
-
-void UnityShowdesktopHandler::paintAttrib (GLWindowPaintAttrib &attrib)
-{
-  if (mProgress == 1.0f || mProgress == 0.0f)
-    attrib.opacity = OPAQUE;
-  else
-    attrib.opacity *= (1.0f - mProgress);
-}
-
-unsigned int UnityShowdesktopHandler::getPaintMask ()
-{
-  return (mProgress == 1.0f) ? PAINT_WINDOW_NO_CORE_INSTANCE_MASK : 0;
-}
-
-void UnityShowdesktopHandler::handleEvent (XEvent *event)
-{
-  /* Ignore sent events from the InputRemover */
-  if (screen->XShape () && event->type ==
-      screen->shapeEvent () + ShapeNotify &&
+  if (screen->XShape () &&
+      event->type == screen->shapeEvent () + ShapeNotify &&
       !event->xany.send_event)
   {
-    if (mRemover)
-    {
-      mRemover->save ();
-      mRemover->remove ();
-    }
+    if (mShowdesktopHandler)
+      mShowdesktopHandler->handleShapeEvent ();
   }
-}
-
-void UnityShowdesktopHandler::windowNotify (CompWindowNotify n)
-{
-  if (n == CompWindowNotifyFocusChange && mWindow->minimized ())
-  {
-    for (CompWindow *w : animating_windows)
-      w->focusSetEnabled (UnityWindow::get (w), false);
-
-    mWindow->moveInputFocusToOtherWindow ();
-
-    for (CompWindow *w : animating_windows)
-      w->focusSetEnabled (UnityWindow::get (w), true);
-  }
-}
-
-void UnityShowdesktopHandler::updateFrameRegion (CompRegion &r)
-{
-  unsigned int oldUpdateFrameRegionIndex;
-  r = CompRegion ();
-
-  /* Ensure no other plugins can touch this frame region */
-  oldUpdateFrameRegionIndex = mWindow->updateFrameRegionGetCurrentIndex ();
-  mWindow->updateFrameRegionSetCurrentIndex (MAXSHORT);
-  mWindow->updateFrameRegion (r);
-  mWindow->updateFrameRegionSetCurrentIndex (oldUpdateFrameRegionIndex);
 }
 
 /* called whenever we need to repaint parts of the screen */
@@ -1275,8 +1211,8 @@ void UnityScreen::preparePaint(int ms)
 {
   cScreen->preparePaint(ms);
 
-  for (CompWindow *w : UnityShowdesktopHandler::animating_windows)
-    UnityWindow::get (w)->handleAnimations (ms);
+  for (UnityShowdesktopHandlerWindowInterface *wi : UnityShowdesktopHandler::animating_windows)
+    wi->handleAnimations (ms);
 
   if (damaged)
   {
@@ -1288,16 +1224,22 @@ void UnityScreen::preparePaint(int ms)
 
 void UnityScreen::donePaint()
 {
-  CompWindowList remove_windows;
+  std::list <UnityShowdesktopHandlerWindowInterface *> remove_windows;
 
-  for (CompWindow *w : UnityShowdesktopHandler::animating_windows)
-    if (UnityWindow::get (w)->handleAnimations (0))
-      remove_windows.push_back(w);
-    else
-      CompositeWindow::get (w)->addDamage ();
+  for (UnityShowdesktopHandlerWindowInterface *wi : UnityShowdesktopHandler::animating_windows)
+  {
+    UnityShowdesktopHandlerWindowInterface::PostPaintAction action = wi->handleAnimations (0);
+    if (action == UnityShowdesktopHandlerWindowInterface::PostPaintAction::Remove)
+      remove_windows.push_back(wi);
+    else if (action == UnityShowdesktopHandlerWindowInterface::PostPaintAction::Damage)
+      wi->addDamage ();
+  }
 
-  for (CompWindow *w : remove_windows)
-    UnityShowdesktopHandler::animating_windows.remove (w);
+  for (UnityShowdesktopHandlerWindowInterface *wi : remove_windows)
+  {
+    wi->deleteHandler ();
+    UnityShowdesktopHandler::animating_windows.remove (wi);
+  }
 
   cScreen->donePaint ();
 }
@@ -1449,8 +1391,7 @@ void UnityScreen::handleEvent(XEvent* event)
           {
             UnityWindow *uw = UnityWindow::get (w);
 
-            if (uw->mShowdesktopHandler)
-              uw->mShowdesktopHandler->handleEvent(event);
+            uw->handleEvent(event);
           }
         }
       break;
@@ -2150,7 +2091,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
   }
   else if (mShowdesktopHandler)
   {
-    mShowdesktopHandler->paintAttrib (wAttrib);
+    mShowdesktopHandler->paintOpacity (wAttrib.opacity);
     mask |= mShowdesktopHandler->getPaintMask ();
   }
 
@@ -2355,7 +2296,8 @@ void UnityWindow::windowNotify(CompWindowNotify n)
   }
   else if (mShowdesktopHandler)
   {
-    mShowdesktopHandler->windowNotify (n);
+    if (n == CompWindowNotifyFocusChange)
+      mShowdesktopHandler->windowFocusChangeNotify ();
   }
 
   // We do this after the notify to ensure input focus has actually been moved.
@@ -2932,7 +2874,7 @@ UnityWindow::~UnityWindow()
       window->minimize ();
   }
 
-  UnityShowdesktopHandler::animating_windows.remove (window);
+  UnityShowdesktopHandler::animating_windows.remove (static_cast <UnityShowdesktopHandlerWindowInterface *> (this));
 
   if (mShowdesktopHandler)
     delete mShowdesktopHandler;

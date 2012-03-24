@@ -50,6 +50,7 @@
 #include "SwitcherController.h"
 #include "UBusWrapper.h"
 #include "UnityshellPrivate.h"
+#include "UnityShowdesktopHandler.h"
 #ifndef USE_GLES
 #include "ScreenEffectFramebufferObject.h"
 #endif
@@ -63,51 +64,6 @@
 
 namespace unity
 {
-
-class UnityShowdesktopHandler
-{
- public:
-
-  UnityShowdesktopHandler (CompWindow *w);
-  ~UnityShowdesktopHandler ();
-
-  typedef enum {
-    Visible = 0,
-    FadeOut = 1,
-    FadeIn = 2,
-    Invisible = 3
-  } State;
-
-public:
-
-  void fadeOut ();
-  void fadeIn ();
-  bool animate (unsigned int ms);
-  void paintAttrib (GLWindowPaintAttrib &attrib);
-  unsigned int getPaintMask ();
-  void handleEvent (XEvent *);
-  void windowNotify (CompWindowNotify n);
-  void updateFrameRegion (CompRegion &r);
-
-  UnityShowdesktopHandler::State state ();
-
-  static const unsigned int fade_time;
-  static CompWindowList     animating_windows;
-  static bool shouldHide (CompWindow *);
-  static void inhibitLeaveShowdesktopMode (guint32 xid);
-  static void allowLeaveShowdesktopMode (guint32 xid);
-  static guint32 inhibitingXid ();
-
-private:
-
-  CompWindow                     *mWindow;
-  compiz::WindowInputRemover     *mRemover;
-  UnityShowdesktopHandler::State mState;
-  float                          mProgress;
-  bool                           mWasHidden;
-  static guint32		 mInhibitingXid;
-};
-
 
 /* base screen class */
 class UnityScreen :
@@ -353,6 +309,7 @@ private:
 class UnityWindow :
   public WindowInterface,
   public GLWindowInterface,
+  public UnityShowdesktopHandlerWindowInterface,
   public BaseSwitchWindow,
   public PluginClassHandler <UnityWindow, CompWindow>
 {
@@ -411,6 +368,8 @@ public:
   void leaveShowDesktop ();
   bool handleAnimations (unsigned int ms);
 
+  void handleEvent (XEvent *event);
+
   typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>
           UnityMinimizedHandler;
   std::unique_ptr <UnityMinimizedHandler> mMinimizeHandler;
@@ -421,6 +380,36 @@ private:
 
   guint  focusdesktop_handle_;
   static gboolean FocusDesktopTimeout(gpointer data);
+
+  void doEnableFocus ();
+  void doDisableFocus ();
+
+  bool isOverrideRedirect ();
+  bool isManaged ();
+  bool isGrabbed ();
+  bool isDesktopOrDock ();
+  bool isSkipTaskbarOrPager ();
+  bool isHidden ();
+  bool isInShowdesktopMode ();
+  bool isShaded ();
+  bool isMinimized ();
+  void doOverrideFrameRegion (CompRegion &r);
+
+  void doHide ();
+  void doNotifyHidden ();
+  void doShow ();
+  void doNotifyShown ();
+
+  void doAddDamage ();
+  UnityShowdesktopHandlerWindowInterface::PostPaintAction doHandleAnimations (unsigned int ms);
+
+  void doMoveFocusAway ();
+
+  void doDeleteHandler ();
+
+  unsigned int getNoCoreInstanceMask ();
+
+  compiz::WindowInputRemoverInterface * getInputRemover ();
 };
 
 

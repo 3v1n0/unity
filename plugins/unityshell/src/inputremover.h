@@ -29,18 +29,36 @@
 // Will be merged back into compiz
 namespace compiz {
 
-class WindowInputRemover
+class WindowInputRemoverInterface
+{
+  public:
+
+    bool save () { return saveInput (); }
+    bool remove () { return removeInput (); }
+    bool restore () { return restoreInput (); }
+
+    virtual ~WindowInputRemoverInterface ();
+
+  protected:
+
+    virtual bool saveInput () = 0;
+    virtual bool removeInput () = 0;
+    virtual bool restoreInput () = 0;
+};
+
+class WindowInputRemover :
+  public WindowInputRemoverInterface
 {
 public:
 
   WindowInputRemover (Display *, Window xid);
   ~WindowInputRemover ();
 
-  bool save ();
-  bool remove ();
-  bool restore ();
-
 private:
+
+  bool saveInput ();
+  bool removeInput ();
+  bool restoreInput ();
 
   void sendShapeNotify ();
 
