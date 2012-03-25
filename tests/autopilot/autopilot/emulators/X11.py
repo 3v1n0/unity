@@ -338,8 +338,9 @@ class ScreenGeometry:
         if not monitor_name or len(monitor_name) == 0:
             raise ValueError('Invalid monitor found')
 
+        glxinfo_out = subprocess.check_output("glxinfo")
         for dri in self._blacklisted_drivers:
-            if dri in subprocess.check_output("glxinfo"):
+            if dri in glxinfo_out:
                 raise ScreenGeometry.BlacklistedDriverError('Impossible change the primary monitor for the given driver')
 
         ret = os.spawnlp(os.P_WAIT, "xrandr", "xrandr", "--output", monitor_name, "--primary")
