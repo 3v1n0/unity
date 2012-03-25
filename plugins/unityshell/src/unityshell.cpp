@@ -2777,6 +2777,7 @@ void UnityScreen::initLauncher()
   hud_controller_.reset(new hud::Controller());
   auto hide_mode = (unity::launcher::LauncherHideMode) optionGetLauncherHideMode();
   hud_controller_->launcher_locked_out = (hide_mode == unity::launcher::LauncherHideMode::LAUNCHER_HIDE_NEVER);
+  hud_controller_->multiple_launchers = (optionGetNumLaunchers() == 0);
   AddChild(hud_controller_.get());
   LOG_INFO(logger) << "initLauncher-hud " << timer.ElapsedSeconds() << "s";
   
