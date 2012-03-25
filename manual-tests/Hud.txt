@@ -64,8 +64,7 @@ This test ensures that the hud behaves correctly with a locked out launcher
 #. Tap Alt
 
 Outcome
-  The Launcher icons should be desaturated.
-  The top most Launcher icon should be an icon related the the focused window
+  The top most Launcher icon should be an icon related to the focused window
 
 
 Hud Sending Undo

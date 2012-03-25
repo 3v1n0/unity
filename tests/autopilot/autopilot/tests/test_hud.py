@@ -190,7 +190,7 @@ class HudTests(AutopilotTestCase):
         launcher = self.launcher.get_launcher_for_monitor(self.hud_monitor)
 
         if not launcher:
-            self.skipTest("The monitor %i has not a launcher" % self.hud_monitor)
+            self.skipTest("The monitor %d has not a launcher" % self.hud_monitor)
 
         # We need an app to switch to:
         self.start_app('Character Map')
@@ -283,7 +283,7 @@ class HudTests(AutopilotTestCase):
         launcher = self.launcher.get_launcher_for_monitor(self.hud_monitor)
 
         if not launcher:
-            self.skipTest("The monitor %i has not a launcher" % self.hud_monitor)
+            self.skipTest("The monitor %d has not a launcher" % self.hud_monitor)
 
         launcher_shows_pre = launcher.is_showing()
         sleep(.25)
@@ -341,3 +341,21 @@ class HudTests(AutopilotTestCase):
 
         self.assertTrue(hud_icon.visible)
         self.assertFalse(bfb_icon.visible)
+
+    def test_hud_desaturates_launcher_icons(self):
+        """Tests that the launcher icons are desaturates when HUD is open"""
+        if not self.hud.is_locked_to_launcher:
+            self.skipTest("This test needs a locked launcher")
+
+        self.reveal_hud()
+        sleep(.5)
+
+        hud_icon = self.get_hud_launcher_icon()
+        desaturated = True
+
+        for icon in self.launcher.model.get_launcher_icons():
+            if (not isinstance(icon, HudLauncherIcon) and not icon.desaturated):
+                desaturated = False
+                break
+
+        self.assertTrue(desaturated)
