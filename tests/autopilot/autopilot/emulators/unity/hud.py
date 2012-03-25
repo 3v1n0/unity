@@ -61,3 +61,19 @@ class HudController(UnityIntrospectionObject, KeybindingsHelper):
             return view.num_buttons
         else:
             return 0
+
+    @property
+    def is_locked_to_launcher(self):
+        return bool(self.locked_to_launcher)
+
+    @property
+    def monitor(self):
+        return int(self.hud_monitor)
+
+    @property
+    def show_embedded_icon(self):
+        view = self._get_view()
+        if view:
+            return bool(view.show_embedded_icon)
+        else:
+            return False

@@ -87,7 +87,8 @@ class HudTests(AutopilotTestCase):
 
     def test_hud_is_on_right_monitor(self):
         self.reveal_hud()
-        self.assertTrue(self.screen_geo.is_rect_on_monitor(self.hud_monitor, self.hud.geometry))
+        self.assertThat(self.hud_monitor, Equals(self.hud.monitor))
+        self.assertTrue(self.screen_geo.is_rect_on_monitor(self.hud.monitor, self.hud.geometry))
 
     def test_hud_geometries(self):
         self.reveal_hud()
