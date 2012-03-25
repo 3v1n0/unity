@@ -121,6 +121,26 @@ void Controller::SetupHudView()
   AddChild(view_);
 }
 
+int Controller::GetTargetMonitor()
+{
+  return UScreen::GetDefault()->GetMonitorWithMouse();
+}
+
+bool Controller::IsLockedToLauncher(int monitor)
+{
+  if (launcher_locked_out)
+  {
+    int primary_monitor = UScreen::GetDefault()->GetPrimaryMonitor();
+
+    if (multiple_launchers || (!multiple_launchers && primary_monitor == monitor))
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void Controller::EnsureHud()
 {
   if (window_)
@@ -149,10 +169,8 @@ void Controller::OnWindowConfigure(int window_width, int window_height,
 
 nux::Geometry Controller::GetIdealWindowGeometry()
 {
-  UScreen *uscreen = UScreen::GetDefault();
-  int primary_monitor = uscreen->GetPrimaryMonitor();
-  int target_monitor = uscreen->GetMonitorWithMouse();
-  auto monitor_geo = uscreen->GetMonitorGeometry(target_monitor);
+  int target_monitor = GetTargetMonitor();
+  auto monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(target_monitor);
 
   // We want to cover as much of the screen as possible to grab any mouse events outside447
   // of our window
@@ -162,13 +180,10 @@ nux::Geometry Controller::GetIdealWindowGeometry()
                     monitor_geo.width,
                     monitor_geo.height - panel_style.panel_height);
 
-  if (launcher_locked_out)
+  if (IsLockedToLauncher(target_monitor))
   {
-    if (multiple_launchers || (!multiple_launchers && primary_monitor == target_monitor))
-    {
-      geo.x += launcher_width;
-      geo.width -= launcher_width;
-    }
+    geo.x += launcher_width;
+    geo.width -= launcher_width;
   }
 
   return geo;
@@ -246,19 +261,8 @@ void Controller::ShowHud()
     return;
   }
 
-  UScreen *uscreen = UScreen::GetDefault();
-  int primary_monitor = uscreen->GetPrimaryMonitor();
-  int target_monitor = uscreen->GetMonitorWithMouse();
-
-  if (launcher_locked_out && (multiple_launchers || (primary_monitor == target_monitor)))
-  {
-    view_->SetHideIcon(IconHideState::HIDE);
-  }
-  else
-  {
-    view_->SetHideIcon(IconHideState::SHOW);
-  }
-
+  monitor_index_ = GetTargetMonitor();
+  view_->SetHideIcon(IsLockedToLauncher(monitor_index_) ? IconHideState::HIDE : IconHideState::SHOW);
   view_->AboutToShow();
 
   // we first want to grab the currently active window, luckly we can just ask the jason interface(bamf)
@@ -289,7 +293,6 @@ void Controller::ShowHud()
   // hide the launcher
   GVariant* message_data = g_variant_new("(b)", TRUE);
   ubus.SendMessage(UBUS_LAUNCHER_LOCK_HIDE, message_data);
-  monitor_index_ = UScreen::GetDefault()->GetMonitorWithMouse();
   GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, monitor_index_);
   ubus.SendMessage(UBUS_OVERLAY_SHOWN, info);
 
@@ -410,7 +413,6 @@ void Controller::OnQuerySelected(Query::Ptr query)
   ubus.SendMessage(UBUS_HUD_ICON_CHANGED, g_variant_new_string(query->icon_name.c_str()));
 }
 
-
 void Controller::OnQueriesFinished(Hud::Queries queries)
 {
   view_->SetQueries(queries);
@@ -439,7 +441,9 @@ void Controller::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
     .add(window_ ? window_->GetGeometry() : nux::Geometry())
-    .add("visible", visible_);
+    .add("visible", visible_)
+    .add("hud_monitor", monitor_index_)
+    .add("locked_to_launcher", IsLockedToLauncher(monitor_index_));
 }
 
 

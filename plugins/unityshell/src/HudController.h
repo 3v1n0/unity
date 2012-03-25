@@ -66,6 +66,9 @@ private:
   void SetupHudView();
   void RegisterUBusInterests();
 
+  int GetTargetMonitor();
+  bool IsLockedToLauncher(int monitor);
+
   nux::Geometry GetIdealWindowGeometry();
   void Relayout();
 
@@ -80,8 +83,6 @@ private:
   void OnQueryActivated(Query::Ptr query);
   void OnQuerySelected(Query::Ptr query);
 
-
-private:
   void StartShowHideTimeline();
   static gboolean OnViewShowHideFrame(Controller* self);
 
