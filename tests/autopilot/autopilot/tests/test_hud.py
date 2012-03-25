@@ -75,7 +75,7 @@ class HudTests(AutopilotTestCase):
     def get_num_active_launcher_icons(self):
         num_active = 0
         for icon in self.launcher.model.get_launcher_icons():
-            if icon.quirk_active and icon.quirk_visible:
+            if icon.active and icon.visible:
                 num_active += 1
         return num_active
 
@@ -187,6 +187,11 @@ class HudTests(AutopilotTestCase):
         apps as active.
 
         """
+        launcher = self.launcher.get_launcher_for_monitor(self.hud_monitor)
+
+        if not launcher:
+            self.skipTest("The monitor %i has not a launcher" % self.hud_monitor)
+
         # We need an app to switch to:
         self.start_app('Character Map')
         # We need an application to play with - I'll use the calculator.
@@ -206,7 +211,7 @@ class HudTests(AutopilotTestCase):
 
         # click application icons for running apps in the launcher:
         icon = self.launcher.model.get_icon_by_tooltip_text("Character Map")
-        self.launcher.get_launcher_for_monitor(self.hud_monitor).click_launcher_icon(icon)
+        launcher.click_launcher_icon(icon)
 
         # see how many apps are marked as being active:
         num_active = self.get_num_active_launcher_icons()
@@ -275,13 +280,18 @@ class HudTests(AutopilotTestCase):
     def test_hud_does_not_change_launcher_status(self):
         """Tests if the HUD reveal keeps the launcher in the status it was"""
 
-        launcher_shows_pre = self.launcher.get_launcher_for_monitor(self.hud_monitor).is_showing()
+        launcher = self.launcher.get_launcher_for_monitor(self.hud_monitor)
+
+        if not launcher:
+            self.skipTest("The monitor %i has not a launcher" % self.hud_monitor)
+
+        launcher_shows_pre = launcher.is_showing()
         sleep(.25)
 
         self.reveal_hud()
         sleep(1)
 
-        launcher_shows_post = self.launcher.get_launcher_for_monitor(self.hud_monitor).is_showing()
+        launcher_shows_post = launcher.is_showing()
         self.assertThat(launcher_shows_pre, Equals(launcher_shows_post))
 
     def test_hud_is_locked_to_launcher(self):
@@ -313,14 +323,14 @@ class HudTests(AutopilotTestCase):
 
     def test_hud_launcher_icon_hides_bfb(self):
         """Tests that the BFB icon is hidden when the HUD launcher icon is shown"""
+        if not self.hud.is_locked_to_launcher:
+            self.skipTest("This test needs a locked launcher")
+
         hud_icon = self.get_hud_launcher_icon()
 
         icons = BFBLauncherIcon.get_all_instances()
         self.assertEqual(1, len(icons))
         bfb_icon = icons[0]
-
-        if not self.hud.is_locked_to_launcher:
-            self.skipTest("This test needs a locked launcher")
 
         self.assertTrue(bfb_icon.visible)
         self.assertFalse(hud_icon.visible)

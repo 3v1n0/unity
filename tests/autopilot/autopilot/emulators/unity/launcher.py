@@ -257,7 +257,7 @@ class LauncherModel(UnityIntrospectionObject):
     def get_launcher_icons(self, visible_only=True):
         """Get a list of launcher icons in this launcher."""
         if visible_only:
-            return self.get_children_by_type(SimpleLauncherIcon, quirk_visible=True)
+            return self.get_children_by_type(SimpleLauncherIcon, visible=True)
         else:
             return self.get_children_by_type(SimpleLauncherIcon)
 
