@@ -315,9 +315,11 @@ class Mouse(object):
         sg = ScreenGeometry()
         sg.move_mouse_to_monitor(0)
 
-
 class ScreenGeometry:
     """Get details about screen geometry."""
+
+    class BlacklistedDriverError(RuntimeError):
+        """Cannot set primary monitor when running drivers listed in the driver blacklist."""
 
     def __init__(self):
         self._default_screen = gtk.gdk.screen_get_default()
@@ -334,11 +336,11 @@ class ScreenGeometry:
         monitor_name = self._default_screen.get_monitor_plug_name(monitor)
 
         if not monitor_name or len(monitor_name) == 0:
-            raise RuntimeError('Invalid monitor found')
+            raise ValueError('Invalid monitor found')
 
         for dri in self._blacklisted_drivers:
             if dri in subprocess.check_output("glxinfo"):
-                raise RuntimeError('Impossible change the primary monitor for the given driver')
+                raise ScreenGeometry.BlacklistedDriverError('Impossible change the primary monitor for the given driver')
 
         ret = os.spawnlp(os.P_WAIT, "xrandr", "xrandr", "--output", monitor_name, "--primary")
 
