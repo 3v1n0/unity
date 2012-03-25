@@ -26,7 +26,7 @@ def _make_scenarios():
         return [('Single Monitor', {'launcher_num': 0, 'only_primary': True})]
     else:
         scenarios = [('Monitor %d' % (i), {'launcher_num': i, 'only_primary': False}) for i in range(num_monitors)]
-        scenarios += [('Monitor %d' % (i), {'launcher_num': i, 'only_primary': True}) for i in range(num_monitors)]
+        scenarios += [('Monitor %d (primary only)' % (i), {'launcher_num': i, 'only_primary': True}) for i in range(num_monitors)]
         return scenarios
 
 
@@ -36,7 +36,6 @@ class ScenariodLauncherTests(AutopilotTestCase):
     """
     screen_geo = ScreenGeometry()
     scenarios = _make_scenarios()
-    old_primary_screen = screen_geo.get_primary_monitor()
 
     def get_launcher(self):
         """Get the launcher for the current scenario."""
@@ -44,23 +43,16 @@ class ScenariodLauncherTests(AutopilotTestCase):
 
     def setUp(self):
         super(ScenariodLauncherTests, self).setUp()
-        # 0 means launchers on all monitors.
-        self.set_unity_option('num_launchers', 0)
         self.set_unity_log_level("unity.launcher", "DEBUG")
+        self.set_unity_option('num_launchers', int(self.only_primary))
 
-        if (self.only_primary):
-            self.set_unity_option('num_launchers', 1)
+        if self.only_primary:
             try:
+                old_primary_screen = self.screen_geo.get_primary_monitor()
                 self.screen_geo.set_primary_monitor(self.launcher_num)
-            except:
+                self.addCleanup(self.screen_geo.set_primary_monitor, old_primary_screen)
+            except ScreenGeometry.BlacklistedDriverError:
                 self.skipTest("Impossible to set the monitor %d as primary" % self.launcher_num)
-        else:
-            self.set_unity_option('num_launchers', 0)
-
-    def tearDown(self):
-        if (self.only_primary):
-            self.screen_geo.set_primary_monitor(self.old_primary_screen)
-        super(ScenariodLauncherTests, self).tearDown()
 
 class LauncherTests(ScenariodLauncherTests):
     """Test the launcher."""
