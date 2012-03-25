@@ -312,6 +312,7 @@ class HudTests(AutopilotTestCase):
         # but the HUD icon is currently shared between launchers.
         if self.launcher_hide_mode == 0:
             self.assertTrue(hud_icon.visible)
+            self.assertTrue(hud_icon.active)
             self.assertFalse(hud_icon.desaturated)
 
             # FIXME remove this once the issue above has been resolved
@@ -320,6 +321,7 @@ class HudTests(AutopilotTestCase):
         else:
             self.assertTrue(self.hud.show_embedded_icon)
             self.assertFalse(hud_icon.visible)
+            self.assertFalse(hud_icon.active)
 
     def test_hud_launcher_icon_hides_bfb(self):
         """Tests that the BFB icon is hidden when the HUD launcher icon is shown"""
@@ -334,12 +336,14 @@ class HudTests(AutopilotTestCase):
 
         self.assertTrue(bfb_icon.visible)
         self.assertFalse(hud_icon.visible)
+        self.assertFalse(hud_icon.active)
         sleep(.25)
 
         self.reveal_hud()
         sleep(.5)
 
         self.assertTrue(hud_icon.visible)
+        self.assertTrue(hud_icon.active)
         self.assertFalse(bfb_icon.visible)
 
     def test_hud_desaturates_launcher_icons(self):
