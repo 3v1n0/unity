@@ -19,6 +19,10 @@ class SimpleLauncherIcon(UnityIntrospectionObject):
 
     """
 
+    @property
+    def center_geometry(self):
+        return (self.center_x, self.center_y, self.center_z)
+
     def get_quicklist(self):
         """Get the quicklist for this launcher icon.
 
@@ -32,6 +36,10 @@ class SimpleLauncherIcon(UnityIntrospectionObject):
 
 class BFBLauncherIcon(SimpleLauncherIcon):
     """Represents the BFB button in the launcher."""
+
+
+class HudLauncherIcon(SimpleLauncherIcon):
+    """Represents the HUD button in the launcher."""
 
 
 class BamfLauncherIcon(SimpleLauncherIcon):

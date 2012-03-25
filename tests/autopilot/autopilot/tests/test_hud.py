@@ -11,6 +11,7 @@ from time import sleep
 
 from autopilot.emulators.X11 import ScreenGeometry
 from autopilot.emulators.unity.hud import HudController
+from autopilot.emulators.unity.icons import BFBLauncherIcon, HudLauncherIcon
 from autopilot.tests import AutopilotTestCase
 from os import remove
 
@@ -66,6 +67,11 @@ class HudTests(AutopilotTestCase):
         self.assertEqual(1, len(controllers))
         return controllers[0]
 
+    def get_hud_launcher_icon(self):
+        icons = HudLauncherIcon.get_all_instances()
+        self.assertEqual(1, len(icons))
+        return icons[0]
+
     def get_num_active_launcher_icons(self):
         num_active = 0
         for icon in self.launcher.model.get_launcher_icons():
@@ -86,11 +92,13 @@ class HudTests(AutopilotTestCase):
         self.assertTrue(self.hud.visible, "HUD did not appear.")
 
     def test_hud_is_on_right_monitor(self):
+        """Tests if the hud is shown and fits the monitor where it should be"""
         self.reveal_hud()
         self.assertThat(self.hud_monitor, Equals(self.hud.monitor))
         self.assertTrue(self.screen_geo.is_rect_on_monitor(self.hud.monitor, self.hud.geometry))
 
     def test_hud_geometries(self):
+        """Tests the HUD geometries for the given monitor and status"""
         self.reveal_hud()
         monitor_geo = self.screen_geo.get_monitor_geometry(self.hud_monitor)
         monitor_x = monitor_geo[0]
@@ -275,3 +283,51 @@ class HudTests(AutopilotTestCase):
 
         launcher_shows_post = self.launcher.get_launcher_for_monitor(self.hud_monitor).is_showing()
         self.assertThat(launcher_shows_pre, Equals(launcher_shows_post))
+
+    def test_hud_is_locked_to_launcher(self):
+        """Tests if the HUD is locked to launcher as we expect or not"""
+        self.reveal_hud()
+        sleep(.25)
+
+        self.assertThat(self.hud.is_locked_to_launcher, Equals(self.hud_locked))
+
+    def test_hud_icon_is_shown(self):
+        """Tests that the correct HUD icon is shown"""
+        self.reveal_hud()
+        sleep(.5)
+
+        hud_icon = self.get_hud_launcher_icon()
+
+        # FIXME this should check self.hud.is_locked_to_launcher
+        # but the HUD icon is currently shared between launchers.
+        if self.launcher_hide_mode == 0:
+            self.assertTrue(hud_icon.visible)
+            self.assertFalse(hud_icon.desaturated)
+
+            # FIXME remove this once the issue above has been resolved
+            if self.hud.is_locked_to_launcher:
+                self.assertFalse(self.hud.show_embedded_icon)
+        else:
+            self.assertTrue(self.hud.show_embedded_icon)
+            self.assertFalse(hud_icon.visible)
+
+    def test_hud_launcher_icon_hides_bfb(self):
+        """Tests that the BFB icon is hidden when the HUD launcher icon is shown"""
+        hud_icon = self.get_hud_launcher_icon()
+
+        icons = BFBLauncherIcon.get_all_instances()
+        self.assertEqual(1, len(icons))
+        bfb_icon = icons[0]
+
+        if not self.hud.is_locked_to_launcher:
+            self.skipTest("This test needs a locked launcher")
+
+        self.assertTrue(bfb_icon.visible)
+        self.assertFalse(hud_icon.visible)
+        sleep(.25)
+
+        self.reveal_hud()
+        sleep(.5)
+
+        self.assertTrue(hud_icon.visible)
+        self.assertFalse(bfb_icon.visible)
