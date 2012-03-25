@@ -148,7 +148,7 @@ void FilterMultiRangeButton::InitTheme()
     }
   }
 
-  SetMinimumHeight(32);
+  SetMinimumHeight(dash::Style::Instance().GetFilterButtonHeight() + 3);
 }
 
 void FilterMultiRangeButton::RedrawTheme(nux::Geometry const& geom,
@@ -190,7 +190,7 @@ void FilterMultiRangeButton::RedrawFocusOverlay(nux::Geometry const& geom,
                                                 cairo_t* cr,
                                                 MultiRangeArrow faked_arrow,
                                                 MultiRangeSide faked_side)
-{  
+{
   Arrow arrow;
   if (faked_arrow == MultiRangeArrow::NONE)
     arrow = Arrow::NONE;

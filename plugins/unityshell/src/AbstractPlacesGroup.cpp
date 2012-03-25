@@ -28,7 +28,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(AbstractPlacesGroup);
 
 AbstractPlacesGroup::AbstractPlacesGroup()
   : nux::View(NUX_TRACKER_LOCATION)
-  , draw_separator(true)
+  , draw_separator(false)
 {
 }
 
@@ -40,5 +40,5 @@ void AbstractPlacesGroup::DrawContent(nux::GraphicsEngine&, bool)
 {
 }
 
-}
-}
+} // namespace dash
+} // namespace unity

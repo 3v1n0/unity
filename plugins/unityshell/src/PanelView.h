@@ -66,8 +66,7 @@ public:
   bool GetPrimary();
   void SetMonitor(int monitor);
 
-  void StartFirstMenuShow();
-  void EndFirstMenuShow();
+  bool FirstMenuShow();
 
   void SetOpacity(float opacity);
   void SetOpacityMaximizedToggle(bool enabled);
@@ -117,7 +116,8 @@ private:
   bool        _is_primary;
   int         _monitor;
 
-  bool        _dash_is_open;
+  bool        _overlay_is_open;
+  std::string _active_overlay;
   guint       _handle_dash_hidden;
   guint       _handle_dash_shown;
   guint       _handle_bg_color_update;
