@@ -63,13 +63,19 @@ void BFBLauncherIcon::OnOverlayShown(GVariant *data, bool visible)
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
-
-  // If the hud is open, we hide the BFB iff we have a locked launcher
-  if (!g_strcmp0(overlay_identity, "hud") &&
-      launcher_hide_mode_ == LAUNCHER_HIDE_NEVER)
+  if (overlay_identity.Str() == "dash")
   {
-    SetQuirk(QUIRK_VISIBLE, !visible);
+    SetQuirk(QUIRK_ACTIVE, visible);
     EmitNeedsRedraw();
+  }
+  // If the hud is open, we hide the BFB if we have a locked launcher
+  else if (overlay_identity.Str() == "hud")
+  {
+    if (launcher_hide_mode_ == LAUNCHER_HIDE_NEVER)
+    {
+      SetQuirk(QUIRK_VISIBLE, !visible);
+      EmitNeedsRedraw();
+    }
   }
 }
 

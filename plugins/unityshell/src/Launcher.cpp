@@ -895,8 +895,10 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
   arg.progress_bias       = IconProgressBias(icon, current);
   arg.progress            = CLAMP(icon->GetProgress(), 0.0f, 1.0f);
   arg.draw_shortcut       = _shortcuts_shown && !_hide_machine->GetQuirk(LauncherHideMachine::PLACES_VISIBLE);
-  arg.system_item         = icon->GetIconType() == AbstractLauncherIcon::TYPE_HOME;
+  arg.system_item         = icon->GetIconType() == AbstractLauncherIcon::TYPE_HOME    ||
+                            icon->GetIconType() == AbstractLauncherIcon::TYPE_HUD;
   arg.colorify_background = icon->GetIconType() == AbstractLauncherIcon::TYPE_HOME    ||
+                            icon->GetIconType() == AbstractLauncherIcon::TYPE_HUD     ||
                             icon->GetIconType() == AbstractLauncherIcon::TYPE_TRASH   ||
                             icon->GetIconType() == AbstractLauncherIcon::TYPE_DESKTOP ||
                             icon->GetIconType() == AbstractLauncherIcon::TYPE_DEVICE  ||
@@ -909,10 +911,16 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
     arg.saturation = 0.0;
   }
 
-  if (IsOverlayOpen())
-    arg.active_arrow = icon->GetIconType() == AbstractLauncherIcon::TYPE_HOME;
-  else
-    arg.active_arrow = icon->GetQuirk(AbstractLauncherIcon::QUIRK_ACTIVE);
+  arg.active_arrow = icon->GetQuirk(AbstractLauncherIcon::QUIRK_ACTIVE);
+
+  /* BFB or HUD icons don't need the active arrow if the overaly is opened
+   * in another monitor */
+  if (arg.active_arrow && !IsOverlayOpen() &&
+      (icon->GetIconType() == AbstractLauncherIcon::TYPE_HOME ||
+       icon->GetIconType() == AbstractLauncherIcon::TYPE_HUD))
+  {
+    arg.active_arrow = false;
+  }
 
   if (options()->show_for_all)
     arg.running_on_viewport = icon->WindowVisibleOnViewport();
@@ -1299,8 +1307,12 @@ void Launcher::DesaturateIcons()
 {
   for (auto icon : *_model)
   {
-    if (icon->GetIconType () != AbstractLauncherIcon::TYPE_HOME)
+    if (icon->GetIconType () != AbstractLauncherIcon::TYPE_HOME &&
+        icon->GetIconType () != AbstractLauncherIcon::TYPE_HUD)
+    {
       icon->SetQuirk(AbstractLauncherIcon::QUIRK_DESAT, true);
+    }
+
     icon->HideTooltip();
   }
 }

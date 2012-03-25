@@ -85,6 +85,7 @@ public:
     TYPE_NONE,
     TYPE_BEGIN,
     TYPE_HOME,
+    TYPE_HUD,
     TYPE_FAVORITE,
     TYPE_APPLICATION,
     TYPE_EXPO,
