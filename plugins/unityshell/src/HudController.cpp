@@ -262,7 +262,7 @@ void Controller::ShowHud()
   }
 
   monitor_index_ = GetTargetMonitor();
-  view_->SetHideIcon(IsLockedToLauncher(monitor_index_) ? IconHideState::HIDE : IconHideState::SHOW);
+  view_->ShowEmbeddedIcon(!IsLockedToLauncher(monitor_index_));
   view_->AboutToShow();
 
   // we first want to grab the currently active window, luckly we can just ask the jason interface(bamf)

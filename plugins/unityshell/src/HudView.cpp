@@ -64,7 +64,7 @@ View::View()
   , current_height_(0)
   , timeline_need_more_draw_(false)
   , selected_button_(0)
-  , icon_state_(IconHideState::SHOW)
+  , show_embedded_icon_(true)
   , activated_signal_sent_(false)
 {
   renderer_.SetOwner(this);
@@ -276,16 +276,16 @@ void View::SetIcon(std::string icon_name)
   QueueDraw();
 }
 
-void View::SetHideIcon(IconHideState hide_icon)
+void View::ShowEmbeddedIcon(bool show)
 {
   LOG_DEBUG(logger) << "Hide icon called";
-  if (hide_icon == icon_state_)
+  if (show == show_embedded_icon_)
     return;
 
-  icon_state_ = hide_icon;
+  show_embedded_icon_ = show;
 
-  if (icon_state_ == IconHideState::HIDE)
-    layout_->RemoveChildObject(dynamic_cast<nux::Area*>(icon_layout_.GetPointer()));
+  if (!show)
+    layout_->RemoveChildObject(static_cast<nux::Area*>(icon_layout_.GetPointer()));
   else
     layout_->AddLayout(icon_layout_.GetPointer(), 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT, 100.0f, nux::LayoutPosition::NUX_LAYOUT_BEGIN);
 
@@ -303,7 +303,7 @@ nux::Geometry View::GetBestFitGeometry(nux::Geometry const& for_geo)
   width = 1024;
   height = 276;
 
-  if (icon_state_ == IconHideState::HIDE)
+  if (!show_embedded_icon_)
   {
     width -= icon_layout_->GetGeometry().width;
   }
@@ -493,7 +493,8 @@ void View::AddProperties(GVariantBuilder* builder)
   variant::BuilderWrapper(builder)
     .add(GetGeometry())
     .add("selected_button", selected_button_)
-    .add("num_buttons", num_buttons);
+    .add("num_buttons", num_buttons)
+    .add("show_embedded_icon", show_embedded_icon_);
 }
 
 bool View::InspectKeyEvent(unsigned int eventType,

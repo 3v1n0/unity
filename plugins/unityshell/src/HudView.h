@@ -44,12 +44,6 @@ namespace unity
 namespace hud
 {
 
-enum IconHideState
-{
-  HIDE,
-  SHOW
-};
-
 class View : public nux::View, public unity::debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(HudView, nux::View);
@@ -65,7 +59,7 @@ public:
 
   void SetQueries(Hud::Queries queries);
   void SetIcon(std::string icon_name);
-  void SetHideIcon(IconHideState hide_icon);
+  void ShowEmbeddedIcon(bool show);
 
   void AboutToShow();
   void AboutToHide();
@@ -126,7 +120,7 @@ private:
   int current_height_;
   bool timeline_need_more_draw_;
   int selected_button_;
-  IconHideState icon_state_;
+  bool show_embedded_icon_;
   bool activated_signal_sent_;
 };
 
