@@ -46,7 +46,6 @@ using namespace unity;
 IconTexture::IconTexture(nux::BaseTexture* texture, guint width, guint height)
   : TextureArea(NUX_TRACKER_LOCATION),
     _accept_key_nav_focus(false),
-    _icon_name(NULL),
     _size(height),
     _texture_cached(texture),
     _texture_width(width),
@@ -57,64 +56,81 @@ IconTexture::IconTexture(nux::BaseTexture* texture, guint width, guint height)
   SetMinMaxSize(width, height);
 }
 
-IconTexture::IconTexture(const char* icon_name, unsigned int size, bool defer_icon_loading)
+IconTexture::IconTexture(std::string const& icon_name, unsigned int size, bool defer_icon_loading)
   : TextureArea(NUX_TRACKER_LOCATION),
     _accept_key_nav_focus(false),
-    _icon_name(NULL),
+    _icon_name(!icon_name.empty() ? icon_name : DEFAULT_ICON),
     _size(size),
     _texture_width(0),
     _texture_height(0),
     _loading(false),
     _opacity(1.0f)
 {
-  _icon_name = g_strdup(icon_name ? icon_name : DEFAULT_ICON);
+  if (!defer_icon_loading)
+    LoadIcon();
+}
 
-  if (g_strcmp0(_icon_name, "") != 0 && !defer_icon_loading)
+IconTexture::IconTexture(const char* icon_name, unsigned int size, bool defer_icon_loading)
+  : TextureArea(NUX_TRACKER_LOCATION),
+    _accept_key_nav_focus(false),
+    _icon_name(icon_name ? icon_name : DEFAULT_ICON),
+    _size(size),
+    _texture_width(0),
+    _texture_height(0),
+    _loading(false),
+    _opacity(1.0f)
+{
+  if (!_icon_name.empty() && !defer_icon_loading)
     LoadIcon();
 }
 
 IconTexture::~IconTexture()
+{}
+
+void IconTexture::SetByIconName(std::string const& icon_name, unsigned int size)
 {
-  g_free(_icon_name);
+  if (_icon_name == icon_name && _size == size)
+    return;
+
+  _icon_name = icon_name;
+  _size = size;
+
+  LoadIcon();
 }
 
 void IconTexture::SetByIconName(const char* icon_name, unsigned int size)
 {
-  g_free(_icon_name);
-  _icon_name = g_strdup(icon_name);
-  _size = size;
-  LoadIcon();
+  SetByIconName(std::string(icon_name ? icon_name : ""), size);
+}
+
+void IconTexture::SetByFilePath(std::string const& file_path, unsigned int size)
+{
+  SetByIconName(file_path, size);
 }
 
 void IconTexture::SetByFilePath(const char* file_path, unsigned int size)
 {
-  g_free(_icon_name);
-  _icon_name = g_strdup(file_path);
-  _size = size;
-
-  LoadIcon();
+  SetByFilePath(std::string(file_path ? file_path : ""), size);
 }
 
 void IconTexture::LoadIcon()
 {
   LOG_DEBUG(logger) << "LoadIcon called (" << _icon_name << ") - loading: " << _loading;
-static const char* const DEFAULT_GICON = ". GThemedIcon text-x-preview";
-  if (!g_strcmp0(_icon_name, ""))
-    return;
+  static const char* const DEFAULT_GICON = ". GThemedIcon text-x-preview";
  
   if (_loading)
     return;
   _loading = true;
 
-  glib::Object<GIcon> icon(::g_icon_new_for_string(_icon_name ? _icon_name : DEFAULT_GICON, NULL));
+  glib::Object<GIcon> icon(::g_icon_new_for_string(!_icon_name.empty() ? _icon_name.c_str() : DEFAULT_GICON, NULL));
 
   if (icon)
   {
-    IconLoader::GetDefault().LoadFromGIconString(_icon_name ? _icon_name : DEFAULT_GICON,
+    IconLoader::GetDefault().LoadFromGIconString(!_icon_name.empty() ? _icon_name.c_str() : DEFAULT_GICON,
                                                   _size,
                                                   sigc::mem_fun(this, &IconTexture::IconLoaded));
   }
-  else if (g_str_has_prefix(_icon_name, "http://"))
+  else if (g_str_has_prefix(_icon_name.c_str(), "http://"))
   {
     IconLoader::GetDefault().LoadFromURI(_icon_name,
                                           _size, sigc::mem_fun(this, &IconTexture::IconLoaded));
@@ -143,7 +159,7 @@ void IconTexture::Refresh(GdkPixbuf* pixbuf)
 
   // Try and get a texture from the texture cache
   std::string id("IconTexture.");
-  id += _icon_name ? _icon_name : DEFAULT_ICON;
+  id += !_icon_name.empty() ? _icon_name : DEFAULT_ICON;
   _texture_cached = cache.FindTexture(id,
                                       _texture_width,
                                       _texture_height,
@@ -240,7 +256,7 @@ void IconTexture::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper(builder)
   .add(GetGeometry())
-  .add("iconname", _icon_name);
+  .add("icon_name", _icon_name);
 }
 
 //
