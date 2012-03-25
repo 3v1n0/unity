@@ -473,7 +473,8 @@ void BamfLauncherIcon::AddProperties(GVariantBuilder* builder)
   g_list_free(children);
 
   variant::BuilderWrapper(builder)
-    .add("desktop-file", DesktopFile())
+    .add("desktop_file", DesktopFile())
+    .add("desktop_id", glib::String(g_path_get_basename(DesktopFile().c_str())).Str())
     .add("xids", g_variant_new_array(G_VARIANT_TYPE_UINT32, xids, i))
     .add("sticky", IsSticky());
 }

@@ -339,8 +339,7 @@ class ScreenGeometry:
         Returns a tuple containing (x,y,width,height).
 
         """
-        if type(monitor_number) is not int or monitor_number < 0 or \
-           monitor_number >= self.get_num_monitors():
+        if monitor_number < 0 or monitor_number >= self.get_num_monitors():
             raise ValueError('Specified monitor number is out of range.')
         return tuple(self._default_screen.get_monitor_geometry(monitor_number))
 
