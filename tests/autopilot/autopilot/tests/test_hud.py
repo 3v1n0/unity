@@ -7,7 +7,7 @@
 # under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
 
-from testtools.matchers import Equals, LessThan, GreaterThan
+from testtools.matchers import Equals, NotEquals, LessThan, GreaterThan
 from time import sleep
 
 from autopilot.emulators.X11 import ScreenGeometry
@@ -317,9 +317,9 @@ class HudTests(AutopilotTestCase):
 
             # FIXME remove this once the issue above has been resolved
             if self.hud.is_locked_to_launcher:
-                self.assertFalse(self.hud.show_embedded_icon)
+                self.assertThat(self.hud.get_embedded_icon(), Equals(None))
         else:
-            self.assertTrue(self.hud.show_embedded_icon)
+            self.assertThat(self.hud.get_embedded_icon(), NotEquals(None))
             self.assertFalse(hud_icon.visible)
 
     def test_hud_launcher_icon_hides_bfb(self):
