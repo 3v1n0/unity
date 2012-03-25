@@ -23,10 +23,10 @@ def _make_scenarios():
     screen_geometry = ScreenGeometry()
     num_monitors = screen_geometry.get_num_monitors()
     if num_monitors == 1:
-        return [('Single Monitor', {'launcher_num': 0, 'only_primary': True})]
+        return [('Single Monitor', {'launcher_monitor': 0, 'only_primary': True})]
     else:
-        scenarios = [('Monitor %d' % (i), {'launcher_num': i, 'only_primary': False}) for i in range(num_monitors)]
-        scenarios += [('Monitor %d (primary only)' % (i), {'launcher_num': i, 'only_primary': True}) for i in range(num_monitors)]
+        scenarios = [('Monitor %d' % (i), {'launcher_monitor': i, 'only_primary': False}) for i in range(num_monitors)]
+        scenarios += [('Monitor %d (primary only)' % (i), {'launcher_monitor': i, 'only_primary': True}) for i in range(num_monitors)]
         return scenarios
 
 
@@ -39,7 +39,7 @@ class ScenariodLauncherTests(AutopilotTestCase):
 
     def get_launcher(self):
         """Get the launcher for the current scenario."""
-        return self.launcher.get_launcher_for_monitor(self.launcher_num)
+        return self.launcher.get_launcher_for_monitor(self.launcher_monitor)
 
     def setUp(self):
         super(ScenariodLauncherTests, self).setUp()
@@ -49,10 +49,10 @@ class ScenariodLauncherTests(AutopilotTestCase):
         if self.only_primary:
             try:
                 old_primary_screen = self.screen_geo.get_primary_monitor()
-                self.screen_geo.set_primary_monitor(self.launcher_num)
+                self.screen_geo.set_primary_monitor(self.launcher_monitor)
                 self.addCleanup(self.screen_geo.set_primary_monitor, old_primary_screen)
             except ScreenGeometry.BlacklistedDriverError:
-                self.skipTest("Impossible to set the monitor %d as primary" % self.launcher_num)
+                self.skipTest("Impossible to set the monitor %d as primary" % self.launcher_monitor)
 
 class LauncherTests(ScenariodLauncherTests):
     """Test the launcher."""
@@ -60,6 +60,27 @@ class LauncherTests(ScenariodLauncherTests):
     def setUp(self):
         super(LauncherTests, self).setUp()
         sleep(1)
+
+    def test_number_of_launchers(self):
+        """Tests that the number of available launchers matches the current settings"""
+        launchers_number = len(self.launcher.get_launchers())
+
+        if self.only_primary:
+            self.assertThat(launchers_number, Equals(1))
+        else:
+            monitors_number = self.screen_geo.get_num_monitors()
+            self.assertThat(launchers_number, Equals(monitors_number))
+
+    def test_launcher_for_monitor(self):
+        """Tests that the launcher for monitor matches the current settings"""
+        launcher = self.get_launcher()
+        self.assertThat(launcher, NotEquals(None))
+
+        if self.only_primary:
+            for monitor in range(0, self.screen_geo.get_num_monitors()):
+                if (monitor != self.launcher_monitor):
+                    launcher = self.launcher.get_launcher_for_monitor(monitor)
+                    self.assertThat(launcher, Equals(None))
 
     def test_launcher_switcher_starts_at_index_zero(self):
         """Test that starting the Launcher switcher puts the keyboard focus on item 0."""
