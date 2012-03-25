@@ -35,9 +35,6 @@ class HudController(UnityIntrospectionObject, KeybindingsHelper):
         """Tap the 'Alt' key to toggle the hud visibility."""
         self.keybinding("hud/reveal", tap_delay)
 
-    def get_geometry(self):
-        return (self.x, self.y, self.width, self.height)
-
     def _get_view(self):
         views = self.get_children_by_type(HudView)
         return views[0] if views else None
