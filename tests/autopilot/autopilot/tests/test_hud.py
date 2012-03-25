@@ -1,6 +1,7 @@
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
-# Copyright 2010 Canonical
-# Author: Alex Launi
+# Copyright 2012 Canonical
+# Author: Alex Launi,
+#         Marco Trevisan
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3, as published
@@ -350,12 +351,6 @@ class HudTests(AutopilotTestCase):
         self.reveal_hud()
         sleep(.5)
 
-        hud_icon = self.get_hud_launcher_icon()
-        desaturated = True
-
         for icon in self.launcher.model.get_launcher_icons():
-            if (not isinstance(icon, HudLauncherIcon) and not icon.desaturated):
-                desaturated = False
-                break
-
-        self.assertTrue(desaturated)
+            if not isinstance(icon, HudLauncherIcon):
+                self.assertTrue(icon.desaturated)
