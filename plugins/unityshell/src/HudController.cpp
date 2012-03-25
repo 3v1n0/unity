@@ -66,7 +66,7 @@ Controller::Controller()
     gint32 overlay_monitor = 0;
     g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, &overlay_identity, &can_maximise, &overlay_monitor);
 
-    if (overlay_identity.Str() == "hud")
+    if (overlay_identity.Str() != "hud")
     {
       HideHud(true);
     }
