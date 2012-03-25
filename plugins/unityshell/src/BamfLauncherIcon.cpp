@@ -455,7 +455,7 @@ std::string BamfLauncherIcon::BamfName() const
 
 void BamfLauncherIcon::AddProperties(GVariantBuilder* builder)
 {
-  LauncherIcon::AddProperties(builder);
+  SimpleLauncherIcon::AddProperties(builder);
   auto windows = GetWindows();
   GVariant* xids[windows.size()];
   unsigned int i = 0;
