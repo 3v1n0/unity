@@ -37,14 +37,14 @@ namespace unity
 {
 NUX_IMPLEMENT_OBJECT_TYPE(PlacesSimpleTile);
 
-PlacesSimpleTile::PlacesSimpleTile(const char* icon_name,
+PlacesSimpleTile::PlacesSimpleTile(std::string const& icon_name,
                                    const char* label,
                                    int         icon_size,
                                    bool defer_icon_loading,
                                    const void* id)
   : PlacesTile(NUX_TRACKER_LOCATION, id),
     _label(NULL),
-    _icon(NULL),
+    _icon(icon_name),
     _uri(NULL),
     _idealiconsize(icon_size)
 {
@@ -52,7 +52,6 @@ PlacesSimpleTile::PlacesSimpleTile(const char* icon_name,
   nux::VLayout* layout = new nux::VLayout("", NUX_TRACKER_LOCATION);
 
   _label = g_strdup(label);
-  _icon = g_strdup(icon_name);
 
   _icontex = new IconTexture(_icon, icon_size, defer_icon_loading);
   _icontex->SetMinMaxSize(style.GetTileWidth(), icon_size);
@@ -80,7 +79,6 @@ PlacesSimpleTile::PlacesSimpleTile(const char* icon_name,
 PlacesSimpleTile::~PlacesSimpleTile()
 {
   g_free(_label);
-  g_free(_icon);
   g_free(_uri);
 }
 
@@ -104,14 +102,14 @@ PlacesSimpleTile::DndSourceGetDragImage()
   GError* error = NULL;
   GIcon* icon;
 
-  const char* icon_name = _icon;
+  std::string icon_name = _icon;
   int size = 64;
 
-  if (!icon_name)
+  if (icon_name.empty())
     icon_name = "application-default-icon";
 
   theme = gtk_icon_theme_get_default();
-  icon = g_icon_new_for_string(icon_name, NULL);
+  icon = g_icon_new_for_string(icon_name.c_str(), NULL);
 
   if (G_IS_ICON(icon))
   {
@@ -121,7 +119,7 @@ PlacesSimpleTile::DndSourceGetDragImage()
   else
   {
     info = gtk_icon_theme_lookup_icon(theme,
-                                      icon_name,
+                                      icon_name.c_str(),
                                       size,
                                       (GtkIconLookupFlags) 0);
   }
@@ -208,8 +206,7 @@ PlacesSimpleTile::GetLabel()
   return _label;
 }
 
-const char*
-PlacesSimpleTile::GetIcon()
+std::string PlacesSimpleTile::GetIcon()
 {
   return _icon;
 }
