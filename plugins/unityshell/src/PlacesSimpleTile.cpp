@@ -45,7 +45,6 @@ PlacesSimpleTile::PlacesSimpleTile(std::string const& icon_name,
   : PlacesTile(NUX_TRACKER_LOCATION, id),
     _label(label),
     _icon(icon_name),
-    _uri(NULL),
     _idealiconsize(icon_size)
 {
   dash::Style& style = dash::Style::Instance();
@@ -71,12 +70,6 @@ PlacesSimpleTile::PlacesSimpleTile(std::string const& icon_name,
   SetLayout(layout);
 
   SetDndEnabled(true, false);
-}
-
-
-PlacesSimpleTile::~PlacesSimpleTile()
-{
-  g_free(_uri);
 }
 
 bool
@@ -150,23 +143,21 @@ PlacesSimpleTile::DndSourceGetDragImage()
   return result;
 }
 
-std::list<const char*>
-PlacesSimpleTile::DndSourceGetDragTypes()
+std::list<const char*> PlacesSimpleTile::DndSourceGetDragTypes()
 {
   std::list<const char*> result;
   result.push_back("text/uri-list");
   return result;
 }
 
-const char*
-PlacesSimpleTile::DndSourceGetDataForType(const char* type, int* size, int* format)
+const char* PlacesSimpleTile::DndSourceGetDataForType(const char* type, int* size, int* format)
 {
   *format = 8;
 
-  if (_uri)
+  if (!_uri.empty())
   {
-    *size = strlen(_uri);
-    return _uri;
+    *size = _uri.size();
+    return _uri.c_str();
   }
   else
   {
@@ -175,14 +166,12 @@ PlacesSimpleTile::DndSourceGetDataForType(const char* type, int* size, int* form
   }
 }
 
-void
-PlacesSimpleTile::DndSourceDragFinished(nux::DndAction result)
+void PlacesSimpleTile::DndSourceDragFinished(nux::DndAction result)
 {
   UnReference();
 }
 
-nux::Geometry
-PlacesSimpleTile::GetHighlightGeometry()
+nux::Geometry PlacesSimpleTile::GetHighlightGeometry()
 {
   nux::Geometry base = GetGeometry();
   int width = 0, height = 0;
@@ -207,38 +196,27 @@ std::string PlacesSimpleTile::GetIcon() const
   return _icon;
 }
 
-const char*
-PlacesSimpleTile::GetURI()
+std::string PlacesSimpleTile::GetURI() const
 {
   return _uri;
 }
 
-void
-PlacesSimpleTile::SetURI(const char* uri)
+void PlacesSimpleTile::SetURI(std::string const& uri)
 {
-  if (_uri)
-    g_free(_uri);
-
-  _uri = NULL;
-
-  if (uri)
-    _uri = g_strdup(uri);
+  _uri = uri;
 }
 
-std::string
-PlacesSimpleTile::GetName() const
+std::string PlacesSimpleTile::GetName() const
 {
   return "PlacesTile";
 }
 
-void
-PlacesSimpleTile::AddProperties(GVariantBuilder* builder)
+void PlacesSimpleTile::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper(builder).add(GetGeometry());
 }
 
-void
-PlacesSimpleTile::LoadIcon()
+void PlacesSimpleTile::LoadIcon()
 {
   _icontex->LoadIcon();
 

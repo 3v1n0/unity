@@ -36,12 +36,11 @@ class PlacesSimpleTile : public unity::debug::Introspectable, public PlacesTile
 public:
 
   PlacesSimpleTile(std::string const& icon, std::string const& label, int icon_size = 64, bool defer_icon_loading = false, const void* id = NULL);
-  ~PlacesSimpleTile();
 
   std::string GetLabel() const;
   std::string GetIcon() const;
-  const char* GetURI();
-  void         SetURI(const char* uri);
+  std::string GetURI() const;
+  void SetURI(std::string const& uri);
 
   void LoadIcon();
 
@@ -61,7 +60,7 @@ private:
   nux::Geometry _highlight_geometry;
   std::string _label;
   std::string _icon;
-  char* _uri;
+  std::string _uri;
   int   _idealiconsize;
   IconTexture* _icontex;
   nux::StaticCairoText* _cairotext;
