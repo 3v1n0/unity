@@ -349,7 +349,7 @@ class ScreenGeometry:
         if type(rect) is not tuple or len(rect) != 4:
             raise TypeError("rect must be a tuple of 4 int elements.")
 
-        (x, y, w, h) = self.get_monitor_geometry(monitor_number)
+        (x, y, w, h) = rect
 
         (m_x, m_y, m_w, m_h) = self.get_monitor_geometry(monitor_number)
         return (x >= m_x and x + w <= m_x + m_w and y >= m_y and y + h <= m_y + m_h)
