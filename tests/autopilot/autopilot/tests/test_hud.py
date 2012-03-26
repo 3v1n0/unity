@@ -340,7 +340,6 @@ class HudTests(AutopilotTestCase):
         else:
             hud_embedded_icon = self.hud.get_embedded_icon()
             self.assertThat(hud_embedded_icon.icon_name, Equals(calc.icon))
-            print calc.icon;
 
     def test_hud_launcher_icon_hides_bfb(self):
         """Tests that the BFB icon is hidden when the HUD launcher icon is shown"""
