@@ -12,7 +12,7 @@ from time import sleep
 
 from autopilot.keybindings import KeybindingsHelper
 from autopilot.emulators.unity import UnityIntrospectionObject
-from autopilot.emulators.unity.icons import BamfLauncherIcon, SimpleLauncherIcon
+from autopilot.emulators.unity.icons import BFBLauncherIcon, BamfLauncherIcon, SimpleLauncherIcon
 from autopilot.emulators.X11 import Mouse, ScreenGeometry
 
 
@@ -253,6 +253,11 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
 class LauncherModel(UnityIntrospectionObject):
     """THe launcher model. Contains all launcher icons as children."""
+
+    def get_bfb_icon(self):
+        icons = BFBLauncherIcon.get_all_instances()
+        assert(len(icons) == 1)
+        return icons[0]
 
     def get_launcher_icons(self, visible_only=True):
         """Get a list of launcher icons in this launcher."""

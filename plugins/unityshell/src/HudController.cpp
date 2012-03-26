@@ -192,8 +192,8 @@ nux::Geometry Controller::GetIdealWindowGeometry()
 void Controller::Relayout()
 {
   EnsureHud();
-  nux::Geometry content_geo = view_->GetGeometry();
-  nux::Geometry geo = GetIdealWindowGeometry();
+  nux::Geometry const& content_geo = view_->GetGeometry();
+  nux::Geometry const& geo = GetIdealWindowGeometry();
 
   window_->SetGeometry(geo);
   layout_->SetMinMaxSize(content_geo.width, content_geo.height);
@@ -261,7 +261,14 @@ void Controller::ShowHud()
     return;
   }
 
-  monitor_index_ = GetTargetMonitor();
+  unsigned int target_monitor = GetTargetMonitor();
+
+  if (target_monitor != monitor_index_)
+  {
+    Relayout();
+    monitor_index_ = target_monitor;
+  }
+
   view_->ShowEmbeddedIcon(!IsLockedToLauncher(monitor_index_));
   view_->AboutToShow();
 
