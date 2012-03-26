@@ -12,7 +12,7 @@ from time import sleep
 
 from autopilot.emulators.X11 import ScreenGeometry
 from autopilot.emulators.unity.hud import HudController
-from autopilot.emulators.unity.icons import BFBLauncherIcon, HudLauncherIcon
+from autopilot.emulators.unity.icons import HudLauncherIcon
 from autopilot.tests import AutopilotTestCase
 from os import remove
 
@@ -350,10 +350,7 @@ class HudTests(AutopilotTestCase):
             self.skipTest("This test needs a locked launcher")
 
         hud_icon = self.get_hud_launcher_icon()
-
-        icons = BFBLauncherIcon.get_all_instances()
-        self.assertEqual(1, len(icons))
-        bfb_icon = icons[0]
+        bfb_icon = self.launcher.model.get_bfb_icon()
 
         self.assertTrue(bfb_icon.visible)
         self.assertFalse(hud_icon.visible)

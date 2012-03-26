@@ -84,9 +84,5 @@ class HudController(UnityIntrospectionObject, KeybindingsHelper):
         return int(self.hud_monitor)
 
     @property
-    def show_embedded_icon(self):
-        view = self._get_view()
-        if view:
-            return bool(view.show_embedded_icon)
-        else:
-            return False
+    def has_embedded_icon(self):
+        return (self.get_embedded_icon() != None)

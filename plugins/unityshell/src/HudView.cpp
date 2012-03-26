@@ -127,7 +127,6 @@ View::View()
 
 View::~View()
 {
-  RemoveChild(search_bar_.GetPointer());
   for (auto button = buttons_.begin(); button != buttons_.end(); button++)
   {
     RemoveChild((*button).GetPointer());
@@ -284,7 +283,7 @@ void View::ShowEmbeddedIcon(bool show)
 
   show_embedded_icon_ = show;
 
-  if (show)
+  if (show_embedded_icon_)
   {
     layout_->AddLayout(icon_layout_.GetPointer(), 0, nux::MINOR_POSITION_TOP,
                        nux::MINOR_SIZE_MATCHCONTENT, 100.0f, nux::LayoutPosition::NUX_LAYOUT_BEGIN);
