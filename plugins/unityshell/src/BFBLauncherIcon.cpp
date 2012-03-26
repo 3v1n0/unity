@@ -63,7 +63,7 @@ void BFBLauncherIcon::OnOverlayShown(GVariant *data, bool visible)
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
-  if (overlay_identity.Str() == "dash")
+  if (overlay_identity.Str() == "dash" && IsVisibleOnMonitor(overlay_monitor))
   {
     SetQuirk(QUIRK_ACTIVE, visible);
     EmitNeedsRedraw();
@@ -73,7 +73,7 @@ void BFBLauncherIcon::OnOverlayShown(GVariant *data, bool visible)
   {
     if (launcher_hide_mode_ == LAUNCHER_HIDE_NEVER)
     {
-      SetQuirk(QUIRK_VISIBLE, !visible);
+      SetVisibleOnMonitor(overlay_monitor, !visible);
       EmitNeedsRedraw();
     }
   }
