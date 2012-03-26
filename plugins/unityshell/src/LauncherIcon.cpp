@@ -94,6 +94,11 @@ LauncherIcon::LauncherIcon()
     _quirk_times[i].tv_nsec = 0;
   }
 
+  _is_visible_on_monitor.resize(max_num_monitors);
+
+  for (int i = 0; i < max_num_monitors; ++i)
+    _is_visible_on_monitor[i] = true;
+
   tooltip_text.SetSetterFunction(sigc::mem_fun(this, &LauncherIcon::SetTooltipText));
   tooltip_text = "blank";
 
@@ -717,6 +722,22 @@ LauncherIcon::SetWindowVisibleOnMonitor(bool val, int monitor)
 
   _has_visible_window[monitor] = val;
   EmitNeedsRedraw();
+}
+
+void
+LauncherIcon::SetVisibleOnMonitor(int monitor, bool visible)
+{
+  if (_is_visible_on_monitor[monitor] == visible)
+    return;
+
+  _is_visible_on_monitor[monitor] = visible;
+  EmitNeedsRedraw();
+}
+
+bool
+LauncherIcon::IsVisibleOnMonitor(int monitor) const
+{
+  return _is_visible_on_monitor[monitor];
 }
 
 gboolean
