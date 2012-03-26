@@ -625,6 +625,14 @@ float Launcher::GetAutohidePositionMax() const
 
 float Launcher::IconVisibleProgress(AbstractLauncherIcon::Ptr icon, struct timespec const& current) const
 {
+  if (!icon->IsVisibleOnMonitor(monitor))
+    return 0.0f;
+
+  if (icon->GetIconType() == AbstractLauncherIcon::TYPE_HUD)
+  {
+    return (icon->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE)) ? 1.0f : 0.0f;
+  }
+
   if (icon->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE))
   {
     struct timespec icon_visible_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_VISIBLE);
@@ -1844,7 +1852,7 @@ void Launcher::EnsureIconOnScreen(AbstractLauncherIcon::Ptr selection)
   int natural_y = 0;
   for (auto icon : *_model)
   {
-    if (!icon->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE))
+    if (!icon->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE) || !icon->IsVisibleOnMonitor(monitor))
       continue;
 
     if (icon == selection)
@@ -2581,7 +2589,7 @@ AbstractLauncherIcon::Ptr Launcher::MouseIconIntersection(int x, int y)
 
   for (it = _model->begin(); it != _model->end(); it++)
   {
-    if (!(*it)->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE))
+    if (!(*it)->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE) || !(*it)->IsVisibleOnMonitor(monitor))
       continue;
 
     nux::Point2 screen_coord [4];
