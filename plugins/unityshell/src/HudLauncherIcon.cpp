@@ -39,7 +39,7 @@ nux::logging::Logger logger("unity.launcher.hudlaunchericon");
 UBusManager HudLauncherIcon::ubus_manager_;
 
 HudLauncherIcon::HudLauncherIcon(LauncherHideMode hide_mode)
- : SimpleLauncherIcon()
+ : SingleMonitorLauncherIcon(0)
  , launcher_hide_mode_(hide_mode)
 {
   tooltip_text = _("HUD");
@@ -89,6 +89,7 @@ void HudLauncherIcon::OnOverlayShown(GVariant* data, bool visible)
   if (overlay_identity.Str() == "hud" &&
       launcher_hide_mode_ == LAUNCHER_HIDE_NEVER)
   {
+    SetMonitor(overlay_monitor);
     SetQuirk(QUIRK_VISIBLE, visible);
     SetQuirk(QUIRK_ACTIVE, visible);
     EmitNeedsRedraw();
