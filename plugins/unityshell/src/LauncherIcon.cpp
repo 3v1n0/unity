@@ -927,11 +927,8 @@ LauncherIcon::SetEmblemIconName(std::string const& name)
 }
 
 void
-LauncherIcon::SetEmblemText(const char* text)
+LauncherIcon::SetEmblemText(std::string const& text)
 {
-  if (text == NULL)
-    return;
-
   PangoLayout*          layout     = NULL;
 
   PangoContext*         pangoCtx   = NULL;
@@ -965,7 +962,7 @@ LauncherIcon::SetEmblemText(const char* text)
   pango_layout_set_width(layout, pango_units_from_double(width - 4.0f));
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_NONE);
-  pango_layout_set_markup_with_accel(layout, text, -1, '_', NULL);
+  pango_layout_set_markup_with_accel(layout, text.c_str(), -1, '_', NULL);
 
   pangoCtx = pango_layout_get_context(layout);  // is not ref'ed
   pango_cairo_context_set_font_options(pangoCtx,
@@ -1083,14 +1080,13 @@ LauncherIcon::OnRemoteCountChanged(LauncherEntryRemote* remote)
   if (!remote->CountVisible())
     return;
 
-  gchar* text;
+  std::string text;
   if (remote->Count() > 9999)
-    text = g_strdup_printf("****");
+    text = "****";
   else
-    text = g_strdup_printf("%i", (int) remote->Count());
+    text = std::to_string( (int) remote->Count());
 
   SetEmblemText(text);
-  g_free(text);
 }
 
 void
@@ -1122,9 +1118,7 @@ LauncherIcon::OnRemoteCountVisibleChanged(LauncherEntryRemote* remote)
 {
   if (remote->CountVisible())
   {
-    gchar* text = g_strdup_printf("%i", (int) remote->Count());
-    SetEmblemText(text);
-    g_free(text);
+    SetEmblemText(std::to_string( (int) remote->Count()));
   }
   else
   {

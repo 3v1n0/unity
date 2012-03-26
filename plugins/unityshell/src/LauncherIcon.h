@@ -125,7 +125,7 @@ public:
 
   void SetEmblemIconName(std::string const& name);
 
-  void SetEmblemText(const char* text);
+  void SetEmblemText(std::string const& text);
 
   void DeleteEmblem();
 
