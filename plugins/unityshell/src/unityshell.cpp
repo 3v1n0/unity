@@ -2206,7 +2206,19 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
 {
   if (uScreen->doShellRepaint)
   {
-    uScreen->paint_panel_ = WindowManager::Default()->IsWindowMaximized(window->id());
+    bool is_native_window = false;
+    std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
+    for (unsigned int i = 0; i < xwns.size(); ++i)
+    {
+      if (xwns[i] == window->id())
+      {
+        is_native_window = true;
+        break;
+      }
+    }
+
+    if (is_native_window == false && uScreen->paint_panel_ == false)
+      uScreen->paint_panel_ = WindowManager::Default()->IsWindowMaximized(window->id());
   }
 
   if (uScreen->doShellRepaint && !uScreen->forcePaintOnTop ())
