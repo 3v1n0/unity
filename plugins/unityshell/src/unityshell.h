@@ -344,6 +344,7 @@ private:
   GLMatrix panel_shadow_matrix_;
 
   bool panel_texture_has_changed_;
+  bool paint_panel_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> panel_texture_;
 
 #ifndef USE_GLES

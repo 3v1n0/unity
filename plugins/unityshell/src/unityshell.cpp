@@ -129,6 +129,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , last_scroll_event_(0)
   , hud_keypress_time_(0)
   , panel_texture_has_changed_(true)
+  , paint_panel_(false)
 {
   Timer timer;
   gfloat version;
@@ -736,7 +737,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 #ifndef USE_GLES
   bool was_bound = _fbo->bound ();
 
-  if (was_bound && dash_is_open_)
+  if (was_bound && dash_is_open_ && paint_panel_)
   {
     if (panel_texture_has_changed_ || !panel_texture_.IsValid())
     {
@@ -1249,6 +1250,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   doShellRepaint = true;
   allowWindowPaint = true;
   _last_output = output;
+  paint_panel_ = false;
 
 #ifndef USE_GLES
   /* bind the framebuffer here
@@ -2202,6 +2204,11 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
                          const CompRegion& region,
                          unsigned int mask)
 {
+  if (uScreen->doShellRepaint)
+  {
+    uScreen->paint_panel_ = WindowManager::Default()->IsWindowMaximized(window->id());
+  }
+
   if (uScreen->doShellRepaint && !uScreen->forcePaintOnTop ())
   {
     std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
@@ -2210,6 +2217,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     for (CompWindow* w = window; w && uScreen->doShellRepaint; w = w->prev)
     {
       auto id = w->id();
+
       for (unsigned int i = 0; i < size; ++i)
       {
         if (xwns[i] == id)
