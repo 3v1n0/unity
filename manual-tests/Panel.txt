@@ -99,3 +99,17 @@ This test shows the interaction between the window buttons and open indicators.
 
 Outcome
   Window buttons should appear.
+
+Panel appearance with overlays
+------------------------------
+Actions:
+#. Press <super> to bring up the dash
+
+Expected Result:
+  The panel should be translucent matching the dash background
+
+#. Press <alt> to bring up the hud without closing the dash
+
+Expected Result:
+  The panel should stay translucent
+

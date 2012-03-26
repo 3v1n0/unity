@@ -879,7 +879,7 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
 {
   float desat_value = IconDesatValue(icon, current);
   arg.icon                = icon.GetPointer();
-  arg.alpha               = 0.5f + 0.5f * desat_value;
+  arg.alpha               = 0.2f + 0.8f * desat_value;
   arg.saturation          = desat_value;
   arg.colorify            = nux::color::White;
   arg.running_arrow       = icon->GetQuirk(AbstractLauncherIcon::QUIRK_RUNNING);
@@ -903,9 +903,9 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
                             icon->GetIconType() == AbstractLauncherIcon::TYPE_EXPO;
 
   // trying to protect against flickering when icon is dragged from dash LP: #863230
-  if (arg.alpha < 0.5)
+  if (arg.alpha < 0.2)
   {
-    arg.alpha = 0.5;
+    arg.alpha = 0.2;
     arg.saturation = 0.0;
   }
 
@@ -939,7 +939,7 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
   else
   {
     if (options()->show_for_all)
-      arg.window_indicators = std::max<int> (icon->Windows().size(), 1);
+      arg.window_indicators = std::max<int> (icon->WindowsOnViewport().size(), 1);
     else
       arg.window_indicators = std::max<int> (icon->WindowsForMonitor(monitor).size(), 1);
   }
@@ -997,9 +997,9 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr icon,
     arg.alpha *= drop_dim_value;
 
   // trying to protect against flickering when icon is dragged from dash LP: #863230
-  if (arg.alpha < 0.5)
+  if (arg.alpha < 0.2)
   {
-    arg.alpha = 0.5;
+    arg.alpha = 0.2;
     arg.saturation = 0.0;
   }
 
@@ -1321,9 +1321,14 @@ void Launcher::OnOverlayShown(GVariant* data)
   gint32 overlay_monitor = 0;
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
-
   std::string identity = overlay_identity.Str();
-  if (overlay_monitor == monitor)
+
+  LOG_DEBUG(logger) << "Overlay shown: " << identity
+                    << ", " << (can_maximise ? "can maximise" : "can't maximise")
+                    << ", on monitor " << overlay_monitor
+                    << " (for monitor " << monitor() << ")";
+
+  if (overlay_monitor == monitor())
   {
     if (identity == "dash")
     {
@@ -1337,8 +1342,10 @@ void Launcher::OnOverlayShown(GVariant* data)
     }
 
     bg_effect_helper_.enabled = true;
+    LOG_DEBUG(logger) << "Desaturate on monitor " << monitor();
     DesaturateIcons();
   }
+  EnsureAnimation();
 }
 
 void Launcher::OnOverlayHidden(GVariant* data)
@@ -1351,7 +1358,13 @@ void Launcher::OnOverlayHidden(GVariant* data)
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
   std::string identity = overlay_identity.Str();
-  if (overlay_monitor == monitor)
+
+  LOG_DEBUG(logger) << "Overlay hidden: " << identity
+                    << ", " << (can_maximise ? "can maximise" : "can't maximise")
+                    << ", on monitor " << overlay_monitor
+                    << " (for monitor" << monitor() << ")";
+
+  if (overlay_monitor == monitor())
   {
     if (identity == "dash")
     {
@@ -1365,12 +1378,14 @@ void Launcher::OnOverlayHidden(GVariant* data)
     }
 
     // If they are both now shut, then disable the effect helper and saturate the icons.
-    if (!_dash_is_open and !_hud_is_open)
+    if (!IsOverlayOpen())
     {
       bg_effect_helper_.enabled = false;
+      LOG_DEBUG(logger) << "Saturate on monitor " << monitor();
       SaturateIcons();
     }
   }
+  EnsureAnimation();
 
   // as the leave event is no more received when the place is opened
   // FIXME: remove when we change the mouse grab strategy in nux

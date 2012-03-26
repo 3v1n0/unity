@@ -37,12 +37,9 @@ namespace unity
 {
 namespace dash
 {
-
 namespace
 {
 nux::logging::Logger logger("unity.dash.lensview");
-
-const int FSCROLL_VIEW_WIDTH_ADDER = 11;
 }
 
 // This is so we can access some protected members in scrollview.
@@ -84,7 +81,7 @@ public:
       ScrollDown (1, size);
     }
   }
-  
+
   void SetRightArea(nux::Area* area)
   {
     right_area_ = area;
@@ -94,7 +91,7 @@ public:
   {
     up_area_ = area;
   }
-  
+
 protected:
 
   // This is so we can break the natural key navigation path.
@@ -163,7 +160,7 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
         auto expand_label = category->GetHeaderFocusableView();
         auto child = category->GetChildView();
 
-        if ((child && child->HasKeyFocus()) || 
+        if ((child && child->HasKeyFocus()) ||
             (expand_label && expand_label->HasKeyFocus()))
         {
 
@@ -187,8 +184,11 @@ LensView::~LensView()
 
 void LensView::SetupViews(nux::Area* show_filters)
 {
+  dash::Style& style = dash::Style::Instance();
+
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout_->SetHorizontalInternalMargin(10);
+  layout_->SetSpaceBetweenChildren(style.GetSpaceBetweenLensAndFilters());
+
   scroll_view_ = new LensScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION),
                                     NUX_TRACKER_LOCATION);
   scroll_view_->EnableVerticalScrollBar(true);
@@ -203,8 +203,7 @@ void LensView::SetupViews(nux::Area* show_filters)
   no_results_->SetTextColor(nux::color::White);
   scroll_layout_->AddView(no_results_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
-  fscroll_view_ = new LensScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION),
-                                     NUX_TRACKER_LOCATION);
+  fscroll_view_ = new LensScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION), NUX_TRACKER_LOCATION);
   fscroll_view_->EnableVerticalScrollBar(true);
   fscroll_view_->EnableHorizontalScrollBar(false);
   fscroll_view_->SetVisible(false);
@@ -215,8 +214,16 @@ void LensView::SetupViews(nux::Area* show_filters)
   fscroll_view_->SetLayout(fscroll_layout_);
 
   filter_bar_ = new FilterBar();
+  int width = style.GetFilterBarWidth() +
+              style.GetFilterBarLeftPadding() +
+              style.GetFilterBarRightPadding();
+
+  fscroll_view_->SetMinimumWidth(width + style.GetFilterViewRightPadding());
+  fscroll_view_->SetMaximumWidth(width + style.GetFilterViewRightPadding());
+  filter_bar_->SetMinimumWidth(width);
+  filter_bar_->SetMaximumWidth(width);
   AddChild(filter_bar_);
-  fscroll_layout_->AddView(filter_bar_);
+  fscroll_layout_->AddView(filter_bar_, 0);
 
   SetLayout(layout_);
 }
@@ -393,14 +400,14 @@ void LensView::CheckNoResults(Lens::Hints const& hints)
 
     LOG_DEBUG(logger) << "The no-result-hint is: " << markup.str();
 
-    scroll_layout_->SetContentDistribution(nux::MAJOR_POSITION_CENTER); 
+    scroll_layout_->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
 
     no_results_active_ = true;
     no_results_->SetText(markup.str());
   }
   else if (count && no_results_active_)
   {
-    scroll_layout_->SetContentDistribution(nux::MAJOR_POSITION_START);  
+    scroll_layout_->SetContentDistribution(nux::MAJOR_POSITION_START);
 
     no_results_active_ = false;
     no_results_->SetText("");
@@ -411,7 +418,7 @@ void LensView::HideResultsMessage()
 {
   if (no_results_active_)
   {
-    scroll_layout_->SetContentDistribution(nux::MAJOR_POSITION_START);  
+    scroll_layout_->SetContentDistribution(nux::MAJOR_POSITION_START);
     no_results_active_ = false;
     no_results_->SetText("");
   }
@@ -437,13 +444,7 @@ void LensView::OnColumnsChanged()
 
 void LensView::OnFilterAdded(Filter::Ptr filter)
 {
-  std::string id = filter->id;
   filter_bar_->AddFilter(filter);
-
-  int width = dash::Style::Instance().GetTileWidth();
-  fscroll_view_->SetMinimumWidth(width * 2 + FSCROLL_VIEW_WIDTH_ADDER);
-  fscroll_view_->SetMaximumWidth(width * 2 + FSCROLL_VIEW_WIDTH_ADDER);
-
   can_refine_search = true;
 }
 
@@ -476,9 +477,7 @@ void LensView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 void LensView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   gfx_context.PushClippingRectangle(GetGeometry());
-
   layout_->ProcessDraw(gfx_context, force_draw);
-
   gfx_context.PopClippingRectangle();
 }
 
@@ -512,6 +511,11 @@ int LensView::GetNumRows()
   }
 
   return num_rows;
+}
+
+void LensView::JumpToTop()
+{
+  scroll_view_->ScrollToPosition(nux::Geometry(0, 0, 0, 0));
 }
 
 void LensView::ActivateFirst()
