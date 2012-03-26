@@ -715,6 +715,9 @@ float Launcher::IconDropDimValue(AbstractLauncherIcon::Ptr icon, struct timespec
 
 float Launcher::IconDesatValue(AbstractLauncherIcon::Ptr icon, struct timespec const& current) const
 {
+  if (!IsOverlayOpen())
+    return 1.0f;
+
   struct timespec dim_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_DESAT);
   int ms = unity::TimeUtil::TimeDelta(&current, &dim_time);
   float result = CLAMP((float) ms / (float) ANIM_DURATION_SHORT_SHORT, 0.0f, 1.0f);
