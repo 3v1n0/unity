@@ -1,3 +1,11 @@
+unity (5.8.0-0ubuntu2) UNRELEASED; urgency=low
+
+  * Cherry-picked upstream:
+    - fix a crash when software-center is installing an application
+      (LP: #963718)
+
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 26 Mar 2012 18:57:57 +0200
+
 unity (5.8.0-0ubuntu1) precise-proposed; urgency=low
 
   * New upstream release.
