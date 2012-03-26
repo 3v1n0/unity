@@ -36,14 +36,10 @@ Icon::Icon(nux::BaseTexture* texture, guint width, guint height)
   icon_renderer_.SetTargetSize(54, 46, 0);
 }
 
-Icon::Icon(const char* icon_name, unsigned int size, bool defer_icon_loading)
+Icon::Icon(std::string const& icon_name, unsigned int size, bool defer_icon_loading)
   : unity::IconTexture(icon_name, size, defer_icon_loading)
 {
   Init();
-}
-
-Icon::~Icon()
-{
 }
 
 void Icon::Init()
@@ -89,6 +85,10 @@ void Icon::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   icon_renderer_.RenderIcon(GfxContext, arg, toplevel->GetGeometry(), toplevel->GetGeometry());
 }
 
+std::string Icon::GetName() const
+{
+  return "EmbeddedIcon";
+}
 
 }
 }

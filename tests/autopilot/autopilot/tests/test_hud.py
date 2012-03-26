@@ -1,28 +1,61 @@
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
-# Copyright 2010 Canonical
-# Author: Alex Launi
+# Copyright 2012 Canonical
+# Author: Alex Launi,
+#         Marco Trevisan
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
 
-from testtools.matchers import Equals, LessThan
+from testtools.matchers import Equals, NotEquals, LessThan, GreaterThan
 from time import sleep
 
+from autopilot.emulators.X11 import ScreenGeometry
 from autopilot.emulators.unity.hud import HudController
+from autopilot.emulators.unity.icons import BFBLauncherIcon, HudLauncherIcon
 from autopilot.tests import AutopilotTestCase
 from os import remove
 
+def _make_scenarios():
+    screen_geometry = ScreenGeometry()
+    num_monitors = screen_geometry.get_num_monitors()
+
+    scenarios = []
+
+    if num_monitors == 1:
+        scenarios = [
+            ('Single Monitor, Launcher never hide', {'hud_monitor': 0, 'launcher_hide_mode': 0, 'launcher_primary_only': False}),
+            ('Single Monitor, Launcher autohide', {'hud_monitor': 0, 'launcher_hide_mode': 1, 'launcher_primary_only': False}),
+            ]
+    else:
+        for i in range(num_monitors):
+            scenario_setting = {'hud_monitor': i, 'launcher_hide_mode': 0, 'launcher_primary_only': False}
+            scenarios.append(('Monitor %d, Launcher never hide, on all monitors' % (i), scenario_setting))
+
+            scenario_setting = {'hud_monitor': i, 'launcher_hide_mode': 0, 'launcher_primary_only': True}
+            scenarios.append(('Monitor %d, Launcher never hide, only on primary monitor' % (i), scenario_setting))
+
+            scenario_setting = {'hud_monitor': i, 'launcher_hide_mode': 1, 'launcher_primary_only': True}
+            scenarios.append(('Monitor %d, Launcher autohide, on all monitors' % (i), scenario_setting))
+
+            scenario_setting = {'hud_monitor': i, 'launcher_hide_mode': 1, 'launcher_primary_only': True}
+            scenarios.append(('Monitor %d, Launcher autohide, only on primary monitor' % (i), scenario_setting))
+
+    return scenarios
+
 class HudTests(AutopilotTestCase):
 
-    scenarios = [
-        ('Launcher never hide', {'launcher_hide_mode': 0}),
-        ('Launcher autohide', {'launcher_hide_mode': 1}),
-        ]
+    screen_geo = ScreenGeometry()
+    scenarios = _make_scenarios()
 
     def setUp(self):
         super(HudTests, self).setUp()
         self.set_unity_option('launcher_hide_mode', self.launcher_hide_mode)
+        self.set_unity_option('num_launchers', int(self.launcher_primary_only))
+        self.hud_monitor_is_primary = (self.screen_geo.get_primary_monitor() == self.hud_monitor)
+        self.hud_locked = (self.launcher_hide_mode == 0 and (not self.launcher_primary_only or self.hud_monitor_is_primary))
+        self.screen_geo.move_mouse_to_monitor(self.hud_monitor)
+
         sleep(0.5)
         self.hud = self.get_hud_controller()
 
@@ -35,10 +68,15 @@ class HudTests(AutopilotTestCase):
         self.assertEqual(1, len(controllers))
         return controllers[0]
 
+    def get_hud_launcher_icon(self):
+        icons = HudLauncherIcon.get_all_instances()
+        self.assertEqual(1, len(icons))
+        return icons[0]
+
     def get_num_active_launcher_icons(self):
         num_active = 0
         for icon in self.launcher.model.get_launcher_icons():
-            if icon.quirk_active and icon.quirk_visible:
+            if icon.active and icon.visible:
                 num_active += 1
         return num_active
 
@@ -51,7 +89,31 @@ class HudTests(AutopilotTestCase):
             sleep(1)
             if self.hud.visible:
                 break
+
         self.assertTrue(self.hud.visible, "HUD did not appear.")
+
+    def test_hud_is_on_right_monitor(self):
+        """Tests if the hud is shown and fits the monitor where it should be"""
+        self.reveal_hud()
+        self.assertThat(self.hud_monitor, Equals(self.hud.monitor))
+        self.assertTrue(self.screen_geo.is_rect_on_monitor(self.hud.monitor, self.hud.geometry))
+
+    def test_hud_geometries(self):
+        """Tests the HUD geometries for the given monitor and status"""
+        self.reveal_hud()
+        monitor_geo = self.screen_geo.get_monitor_geometry(self.hud_monitor)
+        monitor_x = monitor_geo[0]
+        monitor_w = monitor_geo[2]
+        hud_x = self.hud.geometry[0]
+        hud_w = self.hud.geometry[2]
+
+        if self.hud_locked:
+            self.assertThat(hud_x, GreaterThan(monitor_x))
+            self.assertThat(hud_x, LessThan(monitor_x + monitor_w))
+            self.assertThat(hud_w, Equals(monitor_x + monitor_w - hud_x))
+        else:
+            self.assertThat(hud_x, Equals(monitor_x))
+            self.assertThat(hud_w, Equals(monitor_w))
 
     def test_no_initial_values(self):
         self.reveal_hud()
@@ -126,6 +188,11 @@ class HudTests(AutopilotTestCase):
         apps as active.
 
         """
+        launcher = self.launcher.get_launcher_for_monitor(self.hud_monitor)
+
+        if not launcher:
+            self.skipTest("The monitor %d has not a launcher" % self.hud_monitor)
+
         # We need an app to switch to:
         self.start_app('Character Map')
         # We need an application to play with - I'll use the calculator.
@@ -144,8 +211,8 @@ class HudTests(AutopilotTestCase):
             sleep(0.5)
 
         # click application icons for running apps in the launcher:
-        icon = self.launcher.model.get_icon_by_tooltip_text("Character Map")
-        self.launcher.get_launcher_for_monitor(0).click_launcher_icon(icon)
+        icon = self.launcher.model.get_icon_by_desktop_id("gucharmap.desktop")
+        launcher.click_launcher_icon(icon)
 
         # see how many apps are marked as being active:
         num_active = self.get_num_active_launcher_icons()
@@ -211,3 +278,103 @@ class HudTests(AutopilotTestCase):
         contents = open("/tmp/autopilot_gedit_undo_test_temp_file.txt").read().strip('\n')
         self.assertEqual("0 ", contents)
 
+    def test_hud_does_not_change_launcher_status(self):
+        """Tests if the HUD reveal keeps the launcher in the status it was"""
+
+        launcher = self.launcher.get_launcher_for_monitor(self.hud_monitor)
+
+        if not launcher:
+            self.skipTest("The monitor %d has not a launcher" % self.hud_monitor)
+
+        launcher_shows_pre = launcher.is_showing()
+        sleep(.25)
+
+        self.reveal_hud()
+        sleep(1)
+
+        launcher_shows_post = launcher.is_showing()
+        self.assertThat(launcher_shows_pre, Equals(launcher_shows_post))
+
+    def test_hud_is_locked_to_launcher(self):
+        """Tests if the HUD is locked to launcher as we expect or not"""
+        self.reveal_hud()
+        sleep(.25)
+
+        self.assertThat(self.hud.is_locked_to_launcher, Equals(self.hud_locked))
+
+    def test_hud_icon_is_shown(self):
+        """Tests that the correct HUD icon is shown"""
+        self.reveal_hud()
+        sleep(.5)
+
+        hud_launcher_icon = self.get_hud_launcher_icon()
+        hud_embedded_icon = self.hud.get_embedded_icon()
+
+        # FIXME this should check self.hud.is_locked_to_launcher
+        # but the HUD icon is currently shared between launchers.
+        if self.launcher_hide_mode == 0:
+            self.assertTrue(hud_launcher_icon.visible)
+            self.assertTrue(hud_launcher_icon.active)
+            self.assertFalse(hud_launcher_icon.desaturated)
+
+            # FIXME remove this once the issue above has been resolved
+            if self.hud.is_locked_to_launcher:
+                self.assertThat(hud_embedded_icon, Equals(None))
+        else:
+            self.assertThat(hud_embedded_icon, NotEquals(None))
+            self.assertFalse(hud_launcher_icon.visible)
+            self.assertFalse(hud_launcher_icon.active)
+
+    def test_hud_icon_show_the_focused_application_emblem(self):
+        """Tests that the correct HUD icon is shown"""
+        self.start_app("Calculator")
+        calctools = self.get_app_instances("Calculator")
+        self.assertThat(len(calctools), GreaterThan(0))
+        calc = calctools[0]
+        self.assertTrue(calc.is_active)
+
+        self.reveal_hud()
+        sleep(.5)
+
+        if self.hud.is_locked_to_launcher:
+            hud_launcher_icon = self.get_hud_launcher_icon()
+            self.assertThat(hud_launcher_icon.icon_name, Equals(calc.icon))
+        else:
+            hud_embedded_icon = self.hud.get_embedded_icon()
+            self.assertThat(hud_embedded_icon.icon_name, Equals(calc.icon))
+            print calc.icon;
+
+    def test_hud_launcher_icon_hides_bfb(self):
+        """Tests that the BFB icon is hidden when the HUD launcher icon is shown"""
+        if not self.hud.is_locked_to_launcher:
+            self.skipTest("This test needs a locked launcher")
+
+        hud_icon = self.get_hud_launcher_icon()
+
+        icons = BFBLauncherIcon.get_all_instances()
+        self.assertEqual(1, len(icons))
+        bfb_icon = icons[0]
+
+        self.assertTrue(bfb_icon.visible)
+        self.assertFalse(hud_icon.visible)
+        self.assertFalse(hud_icon.active)
+        sleep(.25)
+
+        self.reveal_hud()
+        sleep(.5)
+
+        self.assertTrue(hud_icon.visible)
+        self.assertTrue(hud_icon.active)
+        self.assertFalse(bfb_icon.visible)
+
+    def test_hud_desaturates_launcher_icons(self):
+        """Tests that the launcher icons are desaturates when HUD is open"""
+        if not self.hud.is_locked_to_launcher:
+            self.skipTest("This test needs a locked launcher")
+
+        self.reveal_hud()
+        sleep(.5)
+
+        for icon in self.launcher.model.get_launcher_icons():
+            if not isinstance(icon, HudLauncherIcon):
+                self.assertTrue(icon.desaturated)

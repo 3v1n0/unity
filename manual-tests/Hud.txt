@@ -56,19 +56,6 @@ Outcome
   After pressing escape in step three, the text "test" should be removed from the hud search
   After step four, the hud should dismiss itself and not be present.
 
-Hud Reveal Behaviour
----------
-This test ensures that the hud behaves correctly with a locked out launcher
-
-#. Ensure the launchers hide mode is set to "Never"
-#. Tap Alt
-
-Outcome
-  The Launcher should stick be locked out.
-  The Launcher icons should be desaturated.
-  The top most Launcher icon should be an icon related the the focused window
-  The BFB should not be present
-
 
 Hud Sending Undo
 ----------------

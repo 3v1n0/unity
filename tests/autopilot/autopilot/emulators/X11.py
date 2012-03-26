@@ -339,9 +339,20 @@ class ScreenGeometry:
         Returns a tuple containing (x,y,width,height).
 
         """
-        if monitor_number >= self.get_num_monitors():
+        if monitor_number < 0 or monitor_number >= self.get_num_monitors():
             raise ValueError('Specified monitor number is out of range.')
         return tuple(self._default_screen.get_monitor_geometry(monitor_number))
+
+    def is_rect_on_monitor(self, monitor_number, rect):
+        """Returns True if `rect` is _entirely_ on the specified monitor, with no overlap"""
+
+        if type(rect) is not tuple or len(rect) != 4:
+            raise TypeError("rect must be a tuple of 4 int elements.")
+
+        (x, y, w, h) = self.get_monitor_geometry(monitor_number)
+
+        (m_x, m_y, m_w, m_h) = self.get_monitor_geometry(monitor_number)
+        return (x >= m_x and x + w <= m_x + m_w and y >= m_y and y + h <= m_y + m_h)
 
     def move_mouse_to_monitor(self, monitor_number):
         """Move the mouse to the center of the specified monitor."""

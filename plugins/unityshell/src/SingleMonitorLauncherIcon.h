@@ -14,47 +14,39 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Gordon Allott <gord.allott@gmail.com>
+ * Authored by: Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
-#ifndef UNITYSHELL_HUDLAUNCHERICON_H
-#define UNITYSHELL_HUDLAUNCHERICON_H
+#ifndef UNITYSHELL_SINGLE_MONITOR_LAUNCHER_ICON_H
+#define UNITYSHELL_SINGLE_MONITOR_LAUNCHER_ICON_H
 
-#include "SingleMonitorLauncherIcon.h"
-
-#include "LauncherOptions.h"
-#include "UBusWrapper.h"
+#include "SimpleLauncherIcon.h"
 
 namespace unity
 {
 namespace launcher
 {
 
-class HudLauncherIcon : public SingleMonitorLauncherIcon
+class SingleMonitorLauncherIcon : public SimpleLauncherIcon
 {
 
 public:
-  HudLauncherIcon(LauncherHideMode hide_mode);
+  SingleMonitorLauncherIcon(int monitor);
 
-  virtual nux::Color BackgroundColor();
-  virtual nux::Color GlowColor();
-
-  void ActivateLauncherIcon(ActionArg arg);
-  void SetHideMode(LauncherHideMode hide_mode);
+void SetMonitor(int monitor);
+int GetMonitor();
 
 protected:
-  std::list<DbusmenuMenuitem*> GetMenus();
   std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
 
 private:
-  void OnOverlayShown(GVariant *data, bool visible);
+  void UpdateMonitor();
 
-  static unity::UBusManager ubus_manager_;
-  nux::Color background_color_;
-  LauncherHideMode launcher_hide_mode_;
+  int monitor_;
 };
 
 }
 }
 
-#endif // UNITYSHELL_HUDLAUNCHERICON_H
+#endif // UNITYSHELL_SINGLE_MONITOR_LAUNCHER_ICON_H
