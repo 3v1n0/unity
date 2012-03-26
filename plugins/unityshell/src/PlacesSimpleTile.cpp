@@ -38,20 +38,18 @@ namespace unity
 NUX_IMPLEMENT_OBJECT_TYPE(PlacesSimpleTile);
 
 PlacesSimpleTile::PlacesSimpleTile(std::string const& icon_name,
-                                   const char* label,
+                                   std::string const& label,
                                    int         icon_size,
                                    bool defer_icon_loading,
                                    const void* id)
   : PlacesTile(NUX_TRACKER_LOCATION, id),
-    _label(NULL),
+    _label(label),
     _icon(icon_name),
     _uri(NULL),
     _idealiconsize(icon_size)
 {
   dash::Style& style = dash::Style::Instance();
   nux::VLayout* layout = new nux::VLayout("", NUX_TRACKER_LOCATION);
-
-  _label = g_strdup(label);
 
   _icontex = new IconTexture(_icon, icon_size, defer_icon_loading);
   _icontex->SetMinMaxSize(style.GetTileWidth(), icon_size);
@@ -78,7 +76,6 @@ PlacesSimpleTile::PlacesSimpleTile(std::string const& icon_name,
 
 PlacesSimpleTile::~PlacesSimpleTile()
 {
-  g_free(_label);
   g_free(_uri);
 }
 
@@ -200,13 +197,12 @@ PlacesSimpleTile::GetHighlightGeometry()
   return _highlight_geometry;
 }
 
-const char*
-PlacesSimpleTile::GetLabel()
+std::string PlacesSimpleTile::GetLabel() const
 {
   return _label;
 }
 
-std::string PlacesSimpleTile::GetIcon()
+std::string PlacesSimpleTile::GetIcon() const
 {
   return _icon;
 }
