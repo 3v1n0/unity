@@ -52,12 +52,13 @@ class Icon : public unity::IconTexture
 public:
   typedef nux::ObjectPtr<IconTexture> Ptr;
   Icon(nux::BaseTexture* texture, guint width, guint height);
-  Icon(const char* icon_name, unsigned int size, bool defer_icon_loading = false);
-  ~Icon();
+  Icon(std::string const& icon_name, unsigned int size, bool defer_icon_loading = false);
 
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void Init();
+
+  std::string GetName() const;
 
   nux::ObjectPtr<nux::BaseTexture> background_;
   nux::ObjectPtr<nux::BaseTexture> gloss_;

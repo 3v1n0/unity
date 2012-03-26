@@ -272,7 +272,7 @@ void View::SetQueries(Hud::Queries queries)
 void View::SetIcon(std::string icon_name)
 {
   LOG_DEBUG(logger) << "Setting icon to " << icon_name;
-  icon_->SetByIconName(icon_name.c_str(), icon_size);
+  icon_->SetByIconName(icon_name, icon_size);
   QueueDraw();
 }
 
@@ -284,10 +284,18 @@ void View::ShowEmbeddedIcon(bool show)
 
   show_embedded_icon_ = show;
 
-  if (!show)
-    layout_->RemoveChildObject(static_cast<nux::Area*>(icon_layout_.GetPointer()));
+  if (show)
+  {
+    layout_->AddLayout(icon_layout_.GetPointer(), 0, nux::MINOR_POSITION_TOP,
+                       nux::MINOR_SIZE_MATCHCONTENT, 100.0f, nux::LayoutPosition::NUX_LAYOUT_BEGIN);
+
+    AddChild(icon_.GetPointer());
+  }
   else
-    layout_->AddLayout(icon_layout_.GetPointer(), 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT, 100.0f, nux::LayoutPosition::NUX_LAYOUT_BEGIN);
+  {
+    layout_->RemoveChildObject(static_cast<nux::Area*>(icon_layout_.GetPointer()));
+    RemoveChild(icon_.GetPointer());
+  }
 
   Relayout();
 }
@@ -351,6 +359,7 @@ void View::SetupViews()
     icon_ = new Icon("", icon_size, true);
     icon_layout_ = new nux::VLayout();
     {
+      AddChild(icon_.GetPointer());
       icon_layout_->SetVerticalExternalMargin(icon_vertical_margin);
       icon_layout_->AddView(icon_.GetPointer(), 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
       layout_->AddLayout(icon_layout_.GetPointer(), 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT);
@@ -493,8 +502,7 @@ void View::AddProperties(GVariantBuilder* builder)
   variant::BuilderWrapper(builder)
     .add(GetGeometry())
     .add("selected_button", selected_button_)
-    .add("num_buttons", num_buttons)
-    .add("show_embedded_icon", show_embedded_icon_);
+    .add("num_buttons", num_buttons);
 }
 
 bool View::InspectKeyEvent(unsigned int eventType,

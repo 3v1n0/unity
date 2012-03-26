@@ -172,8 +172,8 @@ nux::Geometry Controller::GetIdealWindowGeometry()
   int target_monitor = GetTargetMonitor();
   auto monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(target_monitor);
 
-  // We want to cover as much of the screen as possible to grab any mouse events outside447
-  // of our window
+  // We want to cover as much of the screen as possible to grab any mouse events
+  // outside of our window
   panel::Style &panel_style = panel::Style::Instance();
   nux::Geometry geo(monitor_geo.x,
                     monitor_geo.y + panel_style.panel_height,

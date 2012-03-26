@@ -1,12 +1,13 @@
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
-# Copyright 2010 Canonical
-# Author: Alex Launi
+# Copyright 2012 Canonical
+# Author: Alex Launi,
+#         Marco Trevisan
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
 
-from testtools.matchers import Equals, LessThan, GreaterThan
+from testtools.matchers import Equals, NotEquals, LessThan, GreaterThan
 from time import sleep
 
 from autopilot.emulators.X11 import ScreenGeometry
@@ -306,22 +307,42 @@ class HudTests(AutopilotTestCase):
         self.reveal_hud()
         sleep(.5)
 
-        hud_icon = self.get_hud_launcher_icon()
+        hud_launcher_icon = self.get_hud_launcher_icon()
+        hud_embedded_icon = self.hud.get_embedded_icon()
 
         # FIXME this should check self.hud.is_locked_to_launcher
         # but the HUD icon is currently shared between launchers.
         if self.launcher_hide_mode == 0:
-            self.assertTrue(hud_icon.visible)
-            self.assertTrue(hud_icon.active)
-            self.assertFalse(hud_icon.desaturated)
+            self.assertTrue(hud_launcher_icon.visible)
+            self.assertTrue(hud_launcher_icon.active)
+            self.assertFalse(hud_launcher_icon.desaturated)
 
             # FIXME remove this once the issue above has been resolved
             if self.hud.is_locked_to_launcher:
-                self.assertFalse(self.hud.show_embedded_icon)
+                self.assertThat(hud_embedded_icon, Equals(None))
         else:
-            self.assertTrue(self.hud.show_embedded_icon)
-            self.assertFalse(hud_icon.visible)
-            self.assertFalse(hud_icon.active)
+            self.assertThat(hud_embedded_icon, NotEquals(None))
+            self.assertFalse(hud_launcher_icon.visible)
+            self.assertFalse(hud_launcher_icon.active)
+
+    def test_hud_icon_show_the_focused_application_emblem(self):
+        """Tests that the correct HUD icon is shown"""
+        self.start_app("Calculator")
+        calctools = self.get_app_instances("Calculator")
+        self.assertThat(len(calctools), GreaterThan(0))
+        calc = calctools[0]
+        self.assertTrue(calc.is_active)
+
+        self.reveal_hud()
+        sleep(.5)
+
+        if self.hud.is_locked_to_launcher:
+            hud_launcher_icon = self.get_hud_launcher_icon()
+            self.assertThat(hud_launcher_icon.icon_name, Equals(calc.icon))
+        else:
+            hud_embedded_icon = self.hud.get_embedded_icon()
+            self.assertThat(hud_embedded_icon.icon_name, Equals(calc.icon))
+            print calc.icon;
 
     def test_hud_launcher_icon_hides_bfb(self):
         """Tests that the BFB icon is hidden when the HUD launcher icon is shown"""
@@ -354,12 +375,6 @@ class HudTests(AutopilotTestCase):
         self.reveal_hud()
         sleep(.5)
 
-        hud_icon = self.get_hud_launcher_icon()
-        desaturated = True
-
         for icon in self.launcher.model.get_launcher_icons():
-            if (not isinstance(icon, HudLauncherIcon) and not icon.desaturated):
-                desaturated = False
-                break
-
-        self.assertTrue(desaturated)
+            if not isinstance(icon, HudLauncherIcon):
+                self.assertTrue(icon.desaturated)
