@@ -333,7 +333,7 @@ void View::SetWindowGeometry(nux::Geometry const& absolute_geo, nux::Geometry co
 
 namespace
 {
-  const int top_spacing = 9;
+  const int top_spacing = 11;
   const int content_width = 941;
   const int icon_vertical_margin = 5;
   const int spacing_between_icon_and_content = 8;
@@ -369,10 +369,9 @@ void View::SetupViews()
       content_layout_->AddLayout(new nux::SpaceLayout(top_spacing,top_spacing,top_spacing,top_spacing), 0);
 
       // add the search bar to the composite
-      search_bar_ = new unity::SearchBar(content_width, true);
-      search_bar_->disable_glow = true;
-      search_bar_->SetMinimumHeight(style.GetSearchBarHeight() + style.SEARCH_BAR_EXTRA_PADDING * 2);
-      search_bar_->SetMaximumHeight(style.GetSearchBarHeight() + style.SEARCH_BAR_EXTRA_PADDING * 2);
+      search_bar_ = new unity::SearchBar(true);
+      search_bar_->SetMinimumHeight(style.GetSearchBarHeight());
+      search_bar_->SetMaximumHeight(style.GetSearchBarHeight());
       search_bar_->search_hint = default_text;
       search_bar_->search_changed.connect(sigc::mem_fun(this, &View::OnSearchChanged));
       AddChild(search_bar_.GetPointer());
