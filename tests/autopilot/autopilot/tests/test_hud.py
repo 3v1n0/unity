@@ -305,7 +305,9 @@ class HudLockedLauncherInteractionsTests(HudTestsBase):
         sleep(.5)
 
         for icon in self.launcher.model.get_launcher_icons():
-            if not isinstance(icon, HudLauncherIcon):
+            if isinstance(icon, HudLauncherIcon):
+                self.assertFalse(icon.desaturated)
+            else:
                 self.assertTrue(icon.desaturated)
 
 
