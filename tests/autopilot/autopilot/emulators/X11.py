@@ -344,7 +344,7 @@ class ScreenGeometry:
         return tuple(self._default_screen.get_monitor_geometry(monitor_number))
 
     def is_rect_on_monitor(self, monitor_number, rect):
-        """Returns True if `rect` is _entirely_ on the specified monitor, with no overlap"""
+        """Returns True if `rect` is _entirely_ on the specified monitor, with no overlap."""
 
         if type(rect) is not tuple or len(rect) != 4:
             raise TypeError("rect must be a tuple of 4 int elements.")

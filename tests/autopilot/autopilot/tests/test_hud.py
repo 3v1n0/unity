@@ -30,7 +30,6 @@ def _make_monitor_scenarios():
     return scenarios
 
 class HudTestsBase(AutopilotTestCase):
-    screen_geo = ScreenGeometry()
 
     def setUp(self):
         super(HudTestsBase, self).setUp()
@@ -70,6 +69,7 @@ class HudTestsBase(AutopilotTestCase):
 
 
 class HudBehaviorTests(HudTestsBase):
+
     def setUp(self):
         super(HudBehaviorTests, self).setUp()
 
@@ -184,7 +184,7 @@ class HudBehaviorTests(HudTestsBase):
         """Read the saved file. The content should be "0 "."""
 
         self.addCleanup(remove, '/tmp/autopilot_gedit_undo_test_temp_file.txt')
-        self.start_app('Text Editor', files=['/tmp/autopilot_gedit_undo_test_temp_file.txt'])
+        self.start_app('Text Editor', files=['/tmp/autopilot_gedit_undo_test_temp_file.txt'], locale='C')
 
         sleep(1)
         self.keyboard.type("0")
@@ -305,7 +305,9 @@ class HudLockedLauncherInteractionsTests(HudTestsBase):
         sleep(.5)
 
         for icon in self.launcher.model.get_launcher_icons():
-            if not isinstance(icon, HudLauncherIcon):
+            if isinstance(icon, HudLauncherIcon):
+                self.assertFalse(icon.desaturated)
+            else:
                 self.assertTrue(icon.desaturated)
 
 
