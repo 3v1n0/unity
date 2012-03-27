@@ -497,7 +497,7 @@ Controller::AddProperties(GVariantBuilder* builder)
   unity::variant::BuilderWrapper(builder)
   .add("timeout-length", timeout_length())
   .add("detail-on-timeout", detail_on_timeout())
-  .add("initial-detail-timeout-lenght", initial_detail_timeout_length())
+  .add("initial-detail-timeout-length", initial_detail_timeout_length())
   .add("detail-timeout-length", detail_timeout_length())
   .add("visible", visible_)
   .add("detail-mode", detail_mode_);
