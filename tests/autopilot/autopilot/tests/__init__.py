@@ -54,7 +54,7 @@ except ImportError:
         scenario_lists = map(list, scenarios)
         for combination in product(*scenario_lists):
             names, parameters = zip(*combination)
-            scenario_name = ','.join(names)
+            scenario_name = ', '.join(names)
             scenario_parameters = {}
             for parameter in parameters:
                 scenario_parameters.update(parameter)
