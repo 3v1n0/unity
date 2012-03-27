@@ -34,9 +34,17 @@ using ui::LayoutWindowList;
 
 namespace switcher
 {
+namespace
+{
+gboolean OnDetailTimerCb(gpointer data);
+}
 
 Controller::Controller(unsigned int load_timeout)
-  :  construct_timeout_(load_timeout)
+  :  timeout_length(75)
+  ,  detail_on_timeout(true)
+  ,  detail_timeout_length(500)
+  ,  initial_detail_timeout_length(1500)
+  ,  construct_timeout_(load_timeout)
   ,  view_window_(nullptr)
   ,  main_layout_(nullptr)
   ,  monitor_(0)
@@ -47,10 +55,6 @@ Controller::Controller(unsigned int load_timeout)
   ,  view_idle_timer_(0)
   ,  bg_color_(0, 0, 0, 0.5)
 {
-  timeout_length = 75;
-  detail_on_timeout = true;
-  detail_timeout_length = 1500;
-
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
 
   /* Construct the view after a prefixed timeout, to improve the startup time */
@@ -132,7 +136,7 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
   {
     if (detail_timer_)
       g_source_remove (detail_timer_);
-    detail_timer_ = g_timeout_add(detail_timeout_length, &Controller::OnDetailTimer, this);
+    detail_timer_ = g_timeout_add(initial_detail_timeout_length, OnDetailTimerCb, this);
   }
 
   ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
@@ -145,17 +149,15 @@ void Controller::Select(int index)
     model_->Select(index);
 }
 
-gboolean Controller::OnDetailTimer(gpointer data)
+gboolean Controller::OnDetailTimer()
 {
-  Controller* self = static_cast<Controller*>(data);
-
-  if (self->visible_ && !self->model_->detail_selection)
+  if (visible_ && !model_->detail_selection)
   {
-    self->SetDetail(true, 2);
-    self->detail_mode_ = TAB_NEXT_WINDOW;
+    SetDetail(true, 2);
+    detail_mode_ = TAB_NEXT_WINDOW;
   }
 
-  self->detail_timer_ = 0;
+  detail_timer_ = 0;
   return FALSE;
 }
 
@@ -166,11 +168,12 @@ void Controller::OnModelSelectionChanged(AbstractLauncherIcon::Ptr icon)
     if (detail_timer_)
       g_source_remove(detail_timer_);
 
-    detail_timer_ = g_timeout_add(detail_timeout_length, &Controller::OnDetailTimer, this);
+    detail_timer_ = g_timeout_add(detail_timeout_length, OnDetailTimerCb, this);
   }
 
-  ubus_manager_.SendMessage(UBUS_SWITCHER_SELECTION_CHANGED,
-                            g_variant_new_string(icon->tooltip_text().c_str()));
+  if (icon)
+    ubus_manager_.SendMessage(UBUS_SWITCHER_SELECTION_CHANGED,
+                              g_variant_new_string(icon->tooltip_text().c_str()));
 }
 
 void Controller::ShowView()
@@ -494,10 +497,21 @@ Controller::AddProperties(GVariantBuilder* builder)
   unity::variant::BuilderWrapper(builder)
   .add("timeout-length", timeout_length())
   .add("detail-on-timeout", detail_on_timeout())
+  .add("initial-detail-timeout-lenght", initial_detail_timeout_length())
   .add("detail-timeout-length", detail_timeout_length())
   .add("visible", visible_)
   .add("detail-mode", detail_mode_);
 }
 
+namespace
+{
+
+gboolean OnDetailTimerCb(gpointer data)
+{
+  Controller* controller = static_cast<Controller*>(data);
+  return controller->OnDetailTimer();
+}
+
+}
 }
 }
