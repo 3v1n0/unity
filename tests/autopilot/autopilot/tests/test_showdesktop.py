@@ -9,6 +9,7 @@
 from time import sleep
 
 from autopilot.emulators.unity.switcher import Switcher
+from autopilot.emulators.unity.icons import DesktopLauncherIcon
 from autopilot.tests import AutopilotTestCase
 
 
@@ -23,8 +24,8 @@ class ShowDesktopTests(AutopilotTestCase):
 
     def launch_test_apps(self):
         """Launch character map and calculator apps."""
-        self.start_app('Character Map')
-        self.start_app('Calculator')
+        self.start_app_c_locale('Character Map')
+        self.start_app_c_locale('Calculator')
         sleep(1)
 
     def test_showdesktop_hides_apps(self):
@@ -75,7 +76,7 @@ class ShowDesktopTests(AutopilotTestCase):
             self.assertTrue(win.is_hidden, "Window '%s' is not hidden after show desktop activated." % (win.title))
 
         # We'll un-minimise the character map - find it's launcherIcon in the launcher:
-        charmap_icon = self.launcher.model.get_icon_by_tooltip_text('Character Map')
+        charmap_icon = self.launcher.model.get_icon_by_desktop_id("gucharmap.desktop")
         if charmap_icon:
             self.launcher.get_launcher_for_monitor(0).click_launcher_icon(charmap_icon)
         else:
@@ -108,7 +109,7 @@ class ShowDesktopTests(AutopilotTestCase):
         for i in range(switcher.get_model_size()):
             current_icon = switcher.current_icon
             self.assertIsNotNone(current_icon)
-            if current_icon.tooltip_text == 'Show Desktop':
+            if isinstance(current_icon, DesktopLauncherIcon):
                 found = True
                 break
             switcher.previous_icon()
