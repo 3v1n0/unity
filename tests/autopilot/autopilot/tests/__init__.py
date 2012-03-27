@@ -241,9 +241,17 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         """
         logger.info("Starting application '%s'", app_name)
         app = self.KNOWN_APPS[app_name]
-        os.putenv("LC_ALL", "C")
         self.bamf.launch_application(app['desktop-file'], files)
         self.addCleanup(call, ["killall", app['process-name']])
+
+    def start_app_c_locale(self, app_name, files=[]):
+        """Start one of the known apps using the C locale, and kill it on tear down.
+
+        if files is specified, start the application with the specified files.
+        """
+        os.putenv("LC_ALL", "C")
+        self.start_app(app_name, files)
+        self.addCleanup(os.unsetenv, "LC_ALL")
 
     def close_all_app(self, app_name):
         """Close all instances of the app_name."""
