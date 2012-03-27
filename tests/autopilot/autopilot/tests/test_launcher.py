@@ -11,7 +11,7 @@ import logging
 from testtools.matchers import Equals, NotEquals, LessThan, GreaterThan
 from time import sleep
 
-from autopilot.tests import AutopilotTestCase
+from autopilot.tests import AutopilotTestCase, multiply_scenarios
 from autopilot.emulators.X11 import ScreenGeometry
 
 logger = logging.getLogger(__name__)
@@ -22,12 +22,15 @@ def _make_scenarios():
     """
     screen_geometry = ScreenGeometry()
     num_monitors = screen_geometry.get_num_monitors()
+
     if num_monitors == 1:
-        return [('Single Monitor', {'launcher_monitor': 0, 'only_primary': True})]
+        monitor_scenarios =  [('Single Monitor', {'launcher_monitor': 0, 'only_primary': True})]
     else:
-        scenarios = [('Monitor %d' % (i), {'launcher_monitor': i, 'only_primary': False}) for i in range(num_monitors)]
-        scenarios += [('Monitor %d (primary only)' % (i), {'launcher_monitor': i, 'only_primary': True}) for i in range(num_monitors)]
-        return scenarios
+        monitor_scenarios = [('Monitor %d' % (i), {'launcher_monitor': i}) for i in range(num_monitors)]
+
+    launcher_mode_scenarios = [('launcher_on_primary', {'only_primary': True}),
+                                ('launcher on all', {'only_primary': False})]
+    return multiply_scenarios(monitor_scenarios, launcher_mode_scenarios)
 
 
 class ScenariodLauncherTests(AutopilotTestCase):
