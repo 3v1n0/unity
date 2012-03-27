@@ -568,7 +568,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
     i++;
   }
 
-  if (!(launcher_controller_->launcher().IsOverlayOpen() && current_monitor == dash_monitor_) 
+  if (!(launcher_controller_->IsOverlayOpen() && current_monitor == dash_monitor_) 
       && panel_controller_->opacity() > 0.0f)
   {
     foreach(GLTexture * tex, _shadow_texture)
@@ -647,7 +647,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
     i++;
   }
 
-  if (!(launcher_controller_->launcher().IsOverlayOpen() && current_monitor == dash_monitor_) 
+  if (!(launcher_controller_->IsOverlayOpen() && current_monitor == dash_monitor_) 
       && panel_controller_->opacity() > 0.0f)
   {
     foreach(GLTexture * tex, _shadow_texture)
@@ -851,7 +851,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 bool UnityScreen::forcePaintOnTop ()
 {
     return !allowWindowPaint ||
-      ((switcher_controller_->Visible() || launcher_controller_->launcher().IsOverlayOpen())
+      ((switcher_controller_->Visible() || launcher_controller_->IsOverlayOpen())
        && !fullscreen_windows_.empty () && (!(screen->grabbed () && !screen->otherGrabExist (NULL))));
 }
 
@@ -1339,7 +1339,7 @@ void UnityScreen::handleEvent(XEvent* event)
 #ifndef USE_GLES
       cScreen->damageScreen();  // evil hack
 #endif
-      if (_key_nav_mode_requested && !launcher_controller_->launcher().IsOverlayOpen())
+      if (_key_nav_mode_requested && !launcher_controller_->IsOverlayOpen())
         launcher_controller_->KeyNavGrab();
       _key_nav_mode_requested = false;
       break;
@@ -1519,7 +1519,7 @@ void UnityScreen::handleCompizEvent(const char* plugin,
   PluginAdapter::Default()->NotifyCompizEvent(plugin, event, option);
   compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::handleCompizEvent (plugin, event, option);
 
-  if (launcher_controller_->launcher().IsOverlayOpen() && g_strcmp0(event, "start_viewport_switch") == 0)
+  if (launcher_controller_->IsOverlayOpen() && g_strcmp0(event, "start_viewport_switch") == 0)
   {
     ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
   }
@@ -2355,7 +2355,7 @@ void UnityWindow::windowNotify(CompWindowNotify n)
     UnityScreen* us = UnityScreen::get(screen);
     CompWindow *lw;
 
-    if (us->launcher_controller_->launcher().IsOverlayOpen())
+    if (us->launcher_controller_->IsOverlayOpen())
     {
       lw = screen->findWindow(us->launcher_controller_->LauncherWindowId(0));
       lw->moveInputFocusTo();
