@@ -458,7 +458,6 @@ void BamfLauncherIcon::AddProperties(GVariantBuilder* builder)
   SimpleLauncherIcon::AddProperties(builder);
   auto windows = GetWindows();
   GVariant* xids[windows.size()];
-  unsigned int i = 0;
 
   for (auto xid : windows)
     xids[i++] = g_variant_new_uint32(xid);
@@ -466,7 +465,7 @@ void BamfLauncherIcon::AddProperties(GVariantBuilder* builder)
   variant::BuilderWrapper(builder)
     .add("desktop_file", DesktopFile())
     .add("desktop_id", glib::String(g_path_get_basename(DesktopFile().c_str())).Str())
-    .add("xids", g_variant_new_array(G_VARIANT_TYPE_UINT32, xids, i))
+    .add("xids", g_variant_new_array(G_VARIANT_TYPE_UINT32, xids, 0))
     .add("sticky", IsSticky());
 }
 
