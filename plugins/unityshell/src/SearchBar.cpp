@@ -52,6 +52,7 @@ const int SPINNER_TIMEOUT = 100;
 const int SPACE_BETWEEN_SPINNER_AND_TEXT = 5;
 const int SPACE_BETWEEN_ENTRY_AND_HIGHLIGHT = 10;
 const int LEFT_INTERNAL_PADDING = 6;
+const int SEARCH_ENTRY_RIGHT_BORDER = 10;
 
 const int HIGHLIGHT_HEIGHT = 24;
 
@@ -153,11 +154,12 @@ void SearchBar::Init()
   bg_layer_ = new nux::ColorLayer(nux::Color(0xff595853), true);
 
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout_->SetLeftAndRightPadding(LEFT_INTERNAL_PADDING, 10);
+  layout_->SetLeftAndRightPadding(LEFT_INTERNAL_PADDING, SEARCH_ENTRY_RIGHT_BORDER);
   layout_->SetSpaceBetweenChildren(SPACE_BETWEEN_ENTRY_AND_HIGHLIGHT);
   SetLayout(layout_);
 
   entry_layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
+  entry_layout_->SetLeftAndRightPadding(0, 10);
   layout_->AddLayout(entry_layout_);
 
   spinner_ = new SearchBarSpinner();
@@ -489,7 +491,10 @@ void SearchBar::UpdateBackground(bool force)
 {
   int RADIUS = 5;
   nux::Geometry geo(GetGeometry());
-  geo.width = layered_layout_->GetAbsoluteX()+ layered_layout_->GetAbsoluteWidth() - GetAbsoluteX();
+  geo.width = layered_layout_->GetAbsoluteX() + 
+              layered_layout_->GetAbsoluteWidth() -
+              GetAbsoluteX() +
+              SEARCH_ENTRY_RIGHT_BORDER;
 
   LOG_DEBUG(logger) << "height: "
   << geo.height << " - "
