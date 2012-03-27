@@ -54,7 +54,7 @@ except ImportError:
         scenario_lists = map(list, scenarios)
         for combination in product(*scenario_lists):
             names, parameters = zip(*combination)
-            scenario_name = ','.join(names)
+            scenario_name = ', '.join(names)
             scenario_parameters = {}
             for parameter in parameters:
                 scenario_parameters.update(parameter)
@@ -241,6 +241,7 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         """
         logger.info("Starting application '%s'", app_name)
         app = self.KNOWN_APPS[app_name]
+        os.putenv("LC_ALL", "C")
         self.bamf.launch_application(app['desktop-file'], files)
         self.addCleanup(call, ["killall", app['process-name']])
 
