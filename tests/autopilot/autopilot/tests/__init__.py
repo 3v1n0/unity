@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 
 try:
-    from testscenarios.scenarios import multiple_scenarios
+    from testscenarios.scenarios import multiply_scenarios
 except ImportError:
     from itertools import product
     def multiply_scenarios(*scenarios):
