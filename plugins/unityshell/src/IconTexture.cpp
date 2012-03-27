@@ -57,15 +57,15 @@ IconTexture::IconTexture(nux::BaseTexture* texture, guint width, guint height)
 }
 
 IconTexture::IconTexture(std::string const& icon_name, unsigned int size, bool defer_icon_loading)
-  : TextureArea(NUX_TRACKER_LOCATION),
-    _accept_key_nav_focus(false),
-    _size(size),
-    _texture_width(0),
-    _texture_height(0),
-    _loading(false),
-    _opacity(1.0f)
+  : TextureArea(NUX_TRACKER_LOCATION)
+  , _accept_key_nav_focus(false)
+  , _icon_name(icon_name.empty() ? DEFAULT_ICON : icon_name)
+  , _size(size)
+  , _texture_width(0)
+  , _texture_height(0)
+  , _loading(false)
+  , _opacity(1.0f)
 {
-  _icon_name = icon_name.empty() ? DEFAULT_ICON : icon_name;
 
   if (_icon_name != "" && !defer_icon_loading)
     LoadIcon();
