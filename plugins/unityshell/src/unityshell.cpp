@@ -123,7 +123,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
 #ifndef USE_GLES
   , _active_fbo (0)
 #endif
-  , dash_is_open_ (false)
   , grab_index_ (0)
   , painting_tray_ (false)
   , last_scroll_event_(0)
@@ -360,11 +359,9 @@ UnityScreen::UnityScreen(CompScreen* screen)
      BackgroundEffectHelper::updates_enabled = true;
 
      ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [&](GVariant * args) { 
-       dash_is_open_ = true; 
        dash_monitor_ = g_variant_get_int32(args);
        RaiseInputWindows(); 
      });
-     ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, [&](GVariant * args) { dash_is_open_ = false; });
       LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";
   }
 }
@@ -571,7 +568,8 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
     i++;
   }
 
-  if (!(dash_is_open_ && current_monitor == dash_monitor_) && panel_controller_->opacity() > 0.0f)
+  if (!(launcher_controller_->launcher().IsOverlayOpen() && current_monitor == dash_monitor_) 
+      && panel_controller_->opacity() > 0.0f)
   {
     foreach(GLTexture * tex, _shadow_texture)
     {
@@ -649,7 +647,8 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
     i++;
   }
 
-  if (!(dash_is_open_ && current_monitor == dash_monitor_) && panel_controller_->opacity() > 0.0f)
+  if (!(launcher_controller_->launcher().IsOverlayOpen() && current_monitor == dash_monitor_) 
+      && panel_controller_->opacity() > 0.0f)
   {
     foreach(GLTexture * tex, _shadow_texture)
     {
@@ -852,8 +851,8 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 bool UnityScreen::forcePaintOnTop ()
 {
     return !allowWindowPaint ||
-      ((switcher_controller_->Visible() ||
-        dash_is_open_) && !fullscreen_windows_.empty () && (!(screen->grabbed () && !screen->otherGrabExist (NULL))));
+      ((switcher_controller_->Visible() || launcher_controller_->launcher().IsOverlayOpen())
+       && !fullscreen_windows_.empty () && (!(screen->grabbed () && !screen->otherGrabExist (NULL))));
 }
 
 void UnityWindow::paintThumbnail (nux::Geometry const& bounding, float alpha)
@@ -1340,7 +1339,7 @@ void UnityScreen::handleEvent(XEvent* event)
 #ifndef USE_GLES
       cScreen->damageScreen();  // evil hack
 #endif
-      if (_key_nav_mode_requested && !dash_is_open_)
+      if (_key_nav_mode_requested && !launcher_controller_->launcher().IsOverlayOpen())
         launcher_controller_->KeyNavGrab();
       _key_nav_mode_requested = false;
       break;
@@ -1520,7 +1519,7 @@ void UnityScreen::handleCompizEvent(const char* plugin,
   PluginAdapter::Default()->NotifyCompizEvent(plugin, event, option);
   compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::handleCompizEvent (plugin, event, option);
 
-  if (dash_is_open_ && g_strcmp0(event, "start_viewport_switch") == 0)
+  if (launcher_controller_->launcher().IsOverlayOpen() && g_strcmp0(event, "start_viewport_switch") == 0)
   {
     ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
   }
@@ -2356,7 +2355,7 @@ void UnityWindow::windowNotify(CompWindowNotify n)
     UnityScreen* us = UnityScreen::get(screen);
     CompWindow *lw;
 
-    if (us->dash_is_open_)
+    if (us->launcher_controller_->launcher().IsOverlayOpen())
     {
       lw = screen->findWindow(us->launcher_controller_->LauncherWindowId(0));
       lw->moveInputFocusTo();
