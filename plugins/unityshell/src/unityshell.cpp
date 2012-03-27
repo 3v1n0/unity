@@ -1636,6 +1636,10 @@ bool UnityScreen::showPanelFirstMenuKeyTerminate(CompAction* action,
 
 void UnityScreen::SendExecuteCommand()
 {
+  if (hud_controller_->IsVisible())
+  {
+    hud_controller_->HideHud();
+  } 
   ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
                             g_variant_new("(sus)", "commands.lens", 0, ""));
 }
@@ -1976,9 +1980,12 @@ bool UnityScreen::ShowHudTerminate(CompAction* action,
   {
     // Handles closing KeyNav (Alt+F1) if the hud is about to show
     if (launcher_controller_->KeyNavIsActive())
-    {
       launcher_controller_->KeyNavTerminate(false);
-    }
+  
+    // If an overlay is open, it must be the dash! Close it!
+    if (launcher_controller_->IsOverlayOpen())
+      dash_controller_->HideDash();
+
     hud_controller_->ShowHud();
   }
 
