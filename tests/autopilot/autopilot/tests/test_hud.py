@@ -30,7 +30,6 @@ def _make_monitor_scenarios():
     return scenarios
 
 class HudTestsBase(AutopilotTestCase):
-    screen_geo = ScreenGeometry()
 
     def setUp(self):
         super(HudTestsBase, self).setUp()
@@ -70,6 +69,7 @@ class HudTestsBase(AutopilotTestCase):
 
 
 class HudBehaviorTests(HudTestsBase):
+
     def setUp(self):
         super(HudBehaviorTests, self).setUp()
 

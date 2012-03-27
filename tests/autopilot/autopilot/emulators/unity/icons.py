@@ -20,7 +20,8 @@ class SimpleLauncherIcon(UnityIntrospectionObject):
     """
 
     @property
-    def center_geometry(self):
+    def center_position(self):
+        """Get the center point of an icon, returns a tuple with (x, y, z)"""
         return (self.center_x, self.center_y, self.center_z)
 
     def get_quicklist(self):

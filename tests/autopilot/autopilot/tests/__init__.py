@@ -25,7 +25,7 @@ from autopilot.emulators.unity.dash import Dash
 from autopilot.emulators.unity.launcher import LauncherController
 from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.unity.workspace import WorkspaceManager
-from autopilot.emulators.X11 import Keyboard, Mouse
+from autopilot.emulators.X11 import ScreenGeometry, Keyboard, Mouse
 from autopilot.glibrunner import GlibRunner
 from autopilot.globals import (global_context,
     video_recording_enabled,
@@ -54,7 +54,7 @@ except ImportError:
         scenario_lists = map(list, scenarios)
         for combination in product(*scenario_lists):
             names, parameters = zip(*combination)
-            scenario_name = ', '.join(names)
+            scenario_name = ','.join(names)
             scenario_parameters = {}
             for parameter in parameters:
                 scenario_parameters.update(parameter)
@@ -229,6 +229,7 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         self.dash = Dash()
         self.switcher = Switcher()
         self.workspace = WorkspaceManager()
+        self.screen_geo = ScreenGeometry()
         self.launcher = self._get_launcher_controller()
         self.addCleanup(self.workspace.switch_to, self.workspace.current_workspace)
         self.addCleanup(Keyboard.cleanup)
