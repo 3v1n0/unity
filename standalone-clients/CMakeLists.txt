@@ -43,6 +43,8 @@ include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_D
 #
 add_executable (dash
                 standalone_dash.cpp
+                ${UNITY_SRC}/AbstractPlacesGroup.cpp
+                ${UNITY_SRC}/AbstractPlacesGroup.h
                 ${UNITY_SRC}/BackgroundEffectHelper.cpp
                 ${UNITY_SRC}/BackgroundEffectHelper.h
                 ${UNITY_SRC}/BGHash.cpp
@@ -70,12 +72,11 @@ add_executable (dash
                 ${UNITY_SRC}/FilterGenreButton.cpp
                 ${UNITY_SRC}/FilterGenreWidget.cpp
                 ${UNITY_SRC}/FilterBar.cpp
-                ${UNITY_SRC}/FilterWidget.cpp
-                ${UNITY_SRC}/FilterWidget.h
                 ${UNITY_SRC}/FontSettings.cpp
                 ${UNITY_SRC}/FontSettings.h
                 ${UNITY_SRC}/IMTextEntry.cpp
                 ${UNITY_SRC}/IMTextEntry.h
+		${UNITY_SRC}/IntrospectableWrappers.cpp
                 ${UNITY_SRC}/PlacesGroup.cpp
                 ${UNITY_SRC}/PlacesGroup.h
                 ${UNITY_SRC}/PlacesTile.cpp
@@ -102,6 +103,8 @@ add_executable (dash
                 ${UNITY_SRC}/LensBarIcon.h
                 ${UNITY_SRC}/LensView.cpp
                 ${UNITY_SRC}/LensView.h
+                ${UNITY_SRC}/LensViewPrivate.cpp
+                ${UNITY_SRC}/LensViewPrivate.h
                 ${UNITY_SRC}/OverlayRenderer.cpp
                 ${UNITY_SRC}/PreviewApplications.cpp
                 ${UNITY_SRC}/PreviewBase.cpp
@@ -355,7 +358,6 @@ add_executable (filter-bar
                 ${UNITY_SRC}/FilterGenreWidget.cpp
                 ${UNITY_SRC}/FilterRatingsButton.cpp
                 ${UNITY_SRC}/FilterRatingsWidget.cpp
-                ${UNITY_SRC}/FilterWidget.cpp
                 ${UNITY_SRC}/DashStyle.cpp
                 ${UNITY_SRC}/JSONParser.cpp
                 )

@@ -54,9 +54,11 @@ void FilterMultiRangeButton::Init()
 {
   InitTheme();
   SetAcceptKeyNavFocusOnMouseDown(false);
+  SetAcceptKeyNavFocusOnMouseEnter(true);
 
   state_change.connect(sigc::mem_fun(this, &FilterMultiRangeButton::OnActivated));
   key_nav_focus_change.connect([&](nux::Area*, bool, nux::KeyNavDirection) { QueueDraw(); });
+  key_nav_focus_activate.connect([&](nux::Area* area) { Active() ? Deactivate() : Activate(); });
 }
 
 void FilterMultiRangeButton::OnActivated(nux::Area* area)
@@ -146,7 +148,7 @@ void FilterMultiRangeButton::InitTheme()
     }
   }
 
-  SetMinimumHeight(32);
+  SetMinimumHeight(dash::Style::Instance().GetFilterButtonHeight() + 3);
 }
 
 void FilterMultiRangeButton::RedrawTheme(nux::Geometry const& geom,
@@ -156,12 +158,10 @@ void FilterMultiRangeButton::RedrawTheme(nux::Geometry const& geom,
                                          MultiRangeSide faked_side)
 {
   std::string name("10");
-  std::stringstream final;
 
   if (filter_)
   {
     name = filter_->name;
-    final << "<small>" << name << "</small>";
   }
 
   Arrow arrow;
@@ -182,7 +182,7 @@ void FilterMultiRangeButton::RedrawTheme(nux::Geometry const& geom,
   else
     segment = Segment::RIGHT;
 
-  Style::Instance().MultiRangeSegment(cr, faked_state, final.str(), arrow, segment);
+  Style::Instance().MultiRangeSegment(cr, faked_state, name, arrow, segment);
   NeedRedraw();
 }
 
@@ -190,7 +190,7 @@ void FilterMultiRangeButton::RedrawFocusOverlay(nux::Geometry const& geom,
                                                 cairo_t* cr,
                                                 MultiRangeArrow faked_arrow,
                                                 MultiRangeSide faked_side)
-{  
+{
   Arrow arrow;
   if (faked_arrow == MultiRangeArrow::NONE)
     arrow = Arrow::NONE;
@@ -237,7 +237,6 @@ void FilterMultiRangeButton::Draw(nux::GraphicsEngine& GfxContext, bool force_dr
                        col);
 
   nux::BaseTexture* texture = normal_[MapKey(has_arrow_, side_)]->GetTexture();
-  //FIXME - dashstyle does not give us a focused state yet, so ignore
   if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
   {
     texture = prelight_[MapKey(has_arrow_, side_)]->GetTexture();

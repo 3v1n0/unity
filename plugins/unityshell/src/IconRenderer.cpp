@@ -219,7 +219,7 @@ void destroy_textures();
 IconRenderer::IconRenderer()
 {
   pip_style = OUTSIDE_TILE;
-  
+
   if (!local::textures_created)
     local::generate_textures();
 }
@@ -510,7 +510,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                 edge->GetDeviceTexture(),
                 edge_color,
                 edge_tile_colorify,
-                arg.alpha,
+                arg.alpha * arg.alpha, // Dim edges of semi-transparent tiles
                 force_filter,
                 tile_transform);
   // end tile draw
@@ -1257,7 +1257,15 @@ void destroy_textures()
   destroy_textures(icon_selected_background);
   destroy_textures(icon_edge);
   destroy_textures(icon_glow);
+  destroy_textures(icon_shadow);
   destroy_textures(icon_shine);
+
+  squircle_base->UnReference();
+  squircle_base_selected->UnReference();
+  squircle_edge->UnReference();
+  squircle_glow->UnReference();
+  squircle_shadow->UnReference();
+  squircle_shine->UnReference();
 
   for (auto it = label_map.begin(), end = label_map.end(); it != end; ++it)
     it->second->UnReference();

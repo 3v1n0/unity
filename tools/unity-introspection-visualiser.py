@@ -8,8 +8,8 @@ from os.path import splitext
 import dbus
 
 try:
-    from autopilot.emulators.unity import Unity
-except ImportError:
+    from autopilot.emulators.unity import get_state_by_path
+except ImportError, e:
     print "Error: could not import the autopilot python module."
     print "Make sure the autopilot module is in your $PYTHONPATH."
     exit(1)
@@ -22,14 +22,14 @@ except ImportError:
     exit(1)
 
 NEXT_NODE_ID=1
-
+NODE_BLACKLIST=["Result"]
 
 def string_rep(dbus_type):
     """Get a string representation of various dbus types."""
     if type(dbus_type) == dbus.Boolean:
         return repr(bool(dbus_type))
     if type(dbus_type) == dbus.String:
-        return str(dbus_type)
+        return dbus_type.encode('ascii', errors='ignore')
     if type(dbus_type) in (dbus.Int16, dbus.UInt16, dbus.Int32, dbus.UInt32, dbus.Int64, dbus.UInt64):
         return repr(int(dbus_type))
     if type(dbus_type) == dbus.Double:
@@ -42,7 +42,7 @@ def string_rep(dbus_type):
 
 def escape(s):
     """Escape a string so it can be use in a dot label."""
-    return pydot.quote_if_necessary(s).replace('<','\\<').replace('>', '\\>')
+    return pydot.quote_if_necessary(s).replace('<','\\<').replace('>', '\\>').replace("'", "\\'")
 
 
 def traverse_tree(state, parent, graph):
@@ -50,12 +50,14 @@ def traverse_tree(state, parent, graph):
     global NEXT_NODE_ID
     lbl = parent.get_comment() + "|"
     # first, set labels for this node:
-    bits = ["%s=%s" % (k, string_rep(state[k])) for k in state.keys() if k != 'Children']
+    bits = ["%s=%s" % (k, string_rep(state[k])) for k in sorted(state.keys()) if k != 'Children']
     lbl += "\l".join(bits)
     parent.set_label(escape('"{' + lbl + '}"'))
     if state.has_key('Children'):
         # Add all array nodes as children of this node.
         for child_name, child_state in state['Children']:
+            if child_name in NODE_BLACKLIST:
+                continue
             child = pydot.Node(str(NEXT_NODE_ID))
             NEXT_NODE_ID+=1
             child.set_comment(child_name)
@@ -75,8 +77,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    u = Unity()
-    introspection_tree = u.get_state()
+    introspection_tree = get_state_by_path('/')
     graph = pydot.Dot()
     graph.set_simplify(False)
     graph.set_node_defaults(shape='Mrecord')

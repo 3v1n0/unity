@@ -12,5 +12,4 @@ setup(
     url='https://launchpad.net/unity',
     license='GPLv3',
     packages=find_packages(),
-    scripts=['bin/run_autopilot'],
 )

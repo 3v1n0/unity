@@ -26,6 +26,10 @@
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
 
+namespace
+{
+  nux::logging::Logger logger("unity.hud.HudIconTextureSource");
+}
 
 namespace unity
 {
@@ -44,46 +48,54 @@ HudIconTextureSource::~HudIconTextureSource()
 
 void HudIconTextureSource::ColorForIcon(GdkPixbuf* pixbuf)
 {
-  unsigned int width = gdk_pixbuf_get_width(pixbuf);
-  unsigned int height = gdk_pixbuf_get_height(pixbuf);
-  unsigned int row_bytes = gdk_pixbuf_get_rowstride(pixbuf);
-  
-  long int rtotal = 0, gtotal = 0, btotal = 0;
-  float total = 0.0f;
-  
-  guchar* img = gdk_pixbuf_get_pixels(pixbuf);
-  
-  for (unsigned int i = 0; i < width; i++)
+  if (GDK_IS_PIXBUF(pixbuf))
   {
-    for (unsigned int j = 0; j < height; j++)
+    unsigned int width = gdk_pixbuf_get_width(pixbuf);
+    unsigned int height = gdk_pixbuf_get_height(pixbuf);
+    unsigned int row_bytes = gdk_pixbuf_get_rowstride(pixbuf);
+    
+    long int rtotal = 0, gtotal = 0, btotal = 0;
+    float total = 0.0f;
+    
+    guchar* img = gdk_pixbuf_get_pixels(pixbuf);
+    
+    for (unsigned int i = 0; i < width; i++)
     {
-      guchar* pixels = img + (j * row_bytes + i * 4);
-      guchar r = *(pixels + 0);
-      guchar g = *(pixels + 1);
-      guchar b = *(pixels + 2);
-      guchar a = *(pixels + 3);
-      
-      float saturation = (MAX(r, MAX(g, b)) - MIN(r, MIN(g, b))) / 255.0f;
-      float relevance = .1 + .9 * (a / 255.0f) * saturation;
-      
-      rtotal += (guchar)(r * relevance);
-      gtotal += (guchar)(g * relevance);
-      btotal += (guchar)(b * relevance);
-      
-      total += relevance * 255;
+      for (unsigned int j = 0; j < height; j++)
+      {
+        guchar* pixels = img + (j * row_bytes + i * 4);
+        guchar r = *(pixels + 0);
+        guchar g = *(pixels + 1);
+        guchar b = *(pixels + 2);
+        guchar a = *(pixels + 3);
+        
+        float saturation = (MAX(r, MAX(g, b)) - MIN(r, MIN(g, b))) / 255.0f;
+        float relevance = .1 + .9 * (a / 255.0f) * saturation;
+        
+        rtotal += (guchar)(r * relevance);
+        gtotal += (guchar)(g * relevance);
+        btotal += (guchar)(b * relevance);
+        
+        total += relevance * 255;
+      }
     }
+    
+    nux::color::RedGreenBlue rgb(rtotal / total,
+                                 gtotal / total,
+                                 btotal / total);
+    nux::color::HueSaturationValue hsv(rgb);
+    
+    if (hsv.saturation > 0.15f)
+      hsv.saturation = 0.65f;
+    
+    hsv.value = 0.90f;
+    bg_color = nux::Color(nux::color::RedGreenBlue(hsv));
   }
-  
-  nux::color::RedGreenBlue rgb(rtotal / total,
-                               gtotal / total,
-                               btotal / total);
-  nux::color::HueSaturationValue hsv(rgb);
-  
-  if (hsv.saturation > 0.15f)
-    hsv.saturation = 0.65f;
-  
-  hsv.value = 0.90f;
-  bg_color = nux::Color(nux::color::RedGreenBlue(hsv));
+  else
+  {
+    LOG_ERROR(logger) << "Pixbuf (" << pixbuf << ") passed is non valid";
+    bg_color = nux::Color(255,255,255,255);
+  }
 }
 
 nux::Color HudIconTextureSource::BackgroundColor()
@@ -108,3 +120,4 @@ nux::BaseTexture* HudIconTextureSource::Emblem()
 
 }
 }
+

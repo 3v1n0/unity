@@ -22,6 +22,7 @@
 
 #include <Nux/Nux.h>
 
+#include "DashStyle.h"
 #include "FilterMultiRangeWidget.h"
 #include "FilterMultiRangeButton.h"
 #include "FilterBasicButton.h"
@@ -33,15 +34,6 @@ namespace unity
 {
 namespace dash
 {
-namespace
-{
-
-const int TOP_PADDING = 9;
-const int RIGHT_PADDING = 8;
-const int BOTTOM_PADDING = 12;
-const int LEFT_PADDING = 0;
-
-}
 
 NUX_IMPLEMENT_OBJECT_TYPE(FilterMultiRange);
 
@@ -50,11 +42,17 @@ FilterMultiRange::FilterMultiRange(NUX_FILE_LINE_DECL)
 {
   InitTheme();
 
+  dash::Style& style = dash::Style::Instance();
+  const int left_padding = 0;
+  const int right_padding = 0;
+  const int top_padding = style.GetSpaceBetweenFilterWidgets() - style.GetFilterHighlightPadding() - 2;
+  const int bottom_padding = style.GetFilterHighlightPadding() - 1;
+
   all_button_ = new FilterAllButton(NUX_TRACKER_LOCATION);
 
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout_->SetLeftAndRightPadding(LEFT_PADDING, RIGHT_PADDING);
-  layout_->SetTopAndBottomPadding(TOP_PADDING, BOTTOM_PADDING);
+  layout_->SetLeftAndRightPadding(left_padding, right_padding);
+  layout_->SetTopAndBottomPadding(top_padding, bottom_padding);
 
   SetRightHandView(all_button_);
   SetContents(layout_);
@@ -113,7 +111,7 @@ void FilterMultiRange::OnActiveChanged(bool value)
       button->SetHasArrow(MultiRangeArrow::BOTH);
     else if (index == start)
       button->SetHasArrow(MultiRangeArrow::LEFT);
-    else if (index == end)
+    else if (index == end && index != 0)
       button->SetHasArrow(MultiRangeArrow::RIGHT);
     else
       button->SetHasArrow(MultiRangeArrow::NONE);

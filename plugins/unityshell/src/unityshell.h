@@ -163,7 +163,7 @@ public:
                      unsigned int);
 #ifdef USE_GLES
   void glPaintCompositedOutput (const CompRegion    &region,
-                                GLFramebufferObject *fbo,
+                                ::GLFramebufferObject *fbo,
                                 unsigned int         mask);
 #endif
 
@@ -192,15 +192,15 @@ public:
   bool executeCommand(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool setKeyboardFocusKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
-  bool altTabInitiateCommon(CompAction* action,
-                            CompAction::State state,
-                            CompOption::Vector& options);
+  bool altTabInitiateCommon(CompAction* action, switcher::ShowMode mode);
   bool altTabTerminateCommon(CompAction* action,
                              CompAction::State state,
                              CompOption::Vector& options);
 
   bool altTabForwardInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool altTabForwardAllInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool altTabPrevAllInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabDetailStartInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabDetailStopInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
@@ -236,13 +236,19 @@ protected:
   void AddProperties(GVariantBuilder* builder);
 
 private:
+  enum CancelActionTarget
+  {
+    LAUNCHER_SWITCHER,
+    SHORTCUT_HINT
+  };
+
   void initAltTabNextWindow ();
 
   void SendExecuteCommand();
 
   void EnsureSuperKeybindings();
   void CreateSuperNewAction(char shortcut, impl::ActionModifiers flag);
-  void EnableCancelAction(bool enabled, int modifiers = 0);
+  void EnableCancelAction(CancelActionTarget target, bool enabled, int modifiers = 0);
 
   static gboolean initPluginActions(gpointer data);
   void initLauncher();
@@ -294,7 +300,7 @@ private:
   typedef std::vector<CompActionPtr> ShortcutActions;
   ShortcutActions _shortcut_actions;
   bool            super_keypressed_;
-  CompActionPtr   _escape_action;
+  std::map<CancelActionTarget, CompActionPtr> _escape_actions;
 
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;
@@ -315,7 +321,7 @@ private:
   unity::BGHash _bghash;
 
 #ifdef USE_GLES
-  GLFramebufferObject *oldFbo;
+  ::GLFramebufferObject *oldFbo;
 #else
   ScreenEffectFramebufferObject::Ptr _fbo;
   GLuint                             _active_fbo;
@@ -330,7 +336,9 @@ private:
   CompWindowList         fullscreen_windows_;
   bool                   painting_tray_;
   unsigned int           tray_paint_mask_;
-  gint64                 last_hud_show_time_;
+  unsigned int           last_scroll_event_;
+  int                    hud_keypress_time_;
+  int                    first_menu_keypress_time_;
 
   GLMatrix panel_shadow_matrix_;
 

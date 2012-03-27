@@ -88,12 +88,13 @@ inline double _align(double val, bool odd=true)
 class LazyLoadTexture
 {
 public:
-  LazyLoadTexture(std::string const& filename);
+  LazyLoadTexture(std::string const& filename, int size = -1);
   nux::BaseTexture* texture();
 private:
   void LoadTexture();
 private:
   std::string filename_;
+  int size_;
   BaseTexturePtr texture_;
 };
 
@@ -110,8 +111,6 @@ public:
 
   void SetDefaultValues();
 
-  void Star(cairo_t* cr, double size);
-
   void GetTextExtents(int& width,
                       int& height,
                       int  maxWidth,
@@ -122,7 +121,7 @@ public:
             nux::Color const& color,
             std::string const& label,
             int font_size = -1,
-            double horizMargin = 10.0,
+            double horizMargin = 4.0,
             Alignment alignment = Alignment::CENTER);
 
   void ButtonOutlinePath(cairo_t* cr, bool align);
@@ -210,14 +209,16 @@ public:
   LazyLoadTexture dash_shine_;
 
   LazyLoadTexture search_magnify_texture_;
+  LazyLoadTexture search_circle_texture_;
   LazyLoadTexture search_close_texture_;
-  LazyLoadTexture search_close_glow_texture_;
   LazyLoadTexture search_spin_texture_;
-  LazyLoadTexture search_spin_glow_texture_;
 
   LazyLoadTexture group_unexpand_texture_;
   LazyLoadTexture group_expand_texture_;
 
+  LazyLoadTexture star_deselected_texture_;
+  LazyLoadTexture star_selected_texture_;
+  LazyLoadTexture star_highlight_texture_;
 };
 
 Style::Impl::Impl(Style* owner)
@@ -247,12 +248,14 @@ Style::Impl::Impl(Style* owner)
   , dash_top_tile_("/dash_top_tile.png")
   , dash_shine_("/dash_sheen.png")
   , search_magnify_texture_("/search_magnify.png")
-  , search_close_texture_("/search_close.png")
-  , search_close_glow_texture_("/search_close_glow.png")
-  , search_spin_texture_("/search_spin.png")
-  , search_spin_glow_texture_("/search_spin_glow.png")
+  , search_circle_texture_("/search_circle.svg", 32)
+  , search_close_texture_("/search_close.svg", 32)
+  , search_spin_texture_("/search_spin.svg", 32)
   , group_unexpand_texture_("/dash_group_unexpand.png")
   , group_expand_texture_("/dash_group_expand.png")
+  , star_deselected_texture_("/star_deselected.png")
+  , star_selected_texture_("/star_selected.png")
+  , star_highlight_texture_("/star_highlight.png")
 {
   signal_manager_.Add(new glib::Signal<void, GtkSettings*, GParamSpec*>
                       (gtk_settings_get_default(),
@@ -673,43 +676,6 @@ void Style::Impl::Blur(cairo_t* cr, int size)
 
   // inform cairo we altered the surfaces contents
   cairo_surface_mark_dirty(surface);
-}
-
-void Style::Impl::Star(cairo_t* cr, double size)
-{
-  double outter[5][2] = {{0.0, 0.0},
-                         {0.0, 0.0},
-                         {0.0, 0.0},
-                         {0.0, 0.0},
-                         {0.0, 0.0}};
-  double inner[5][2]  = {{0.0, 0.0},
-                         {0.0, 0.0},
-                         {0.0, 0.0},
-                         {0.0, 0.0},
-                         {0.0, 0.0}};
-  double angle[5]     = {-90.0, -18.0, 54.0, 126.0, 198.0};
-  double outterRadius = size;
-  double innerRadius  = size/1.75;
-
-  for (int i = 0; i < 5; i++)
-  {
-    outter[i][0] = outterRadius * cos(angle[i] * M_PI / 180.0);
-    outter[i][1] = outterRadius * sin(angle[i] * M_PI / 180.0);
-    inner[i][0]  = innerRadius * cos((angle[i] + 36.0) * M_PI / 180.0);
-    inner[i][1]  = innerRadius * sin((angle[i] + 36.0) * M_PI / 180.0);
-  }
-
-  cairo_move_to(cr, outter[0][0], outter[0][1]);
-  cairo_line_to(cr, inner[0][0], inner[0][1]);
-  cairo_line_to(cr, outter[1][0], outter[1][1]);
-  cairo_line_to(cr, inner[1][0], inner[1][1]);
-  cairo_line_to(cr, outter[2][0], outter[2][1]);
-  cairo_line_to(cr, inner[2][0], inner[2][1]);
-  cairo_line_to(cr, outter[3][0], outter[3][1]);
-  cairo_line_to(cr, inner[3][0], inner[3][1]);
-  cairo_line_to(cr, outter[4][0], outter[4][1]);
-  cairo_line_to(cr, inner[4][0], inner[4][1]);
-  cairo_close_path(cr);
 }
 
 void Style::Impl::SetDefaultValues()
@@ -1573,16 +1539,16 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
                 (double) (garnish) + 1.0,
                 (double) (garnish) + 1.0,
                 7.0,
-                w - (double) (2 * garnish) - 1.0,
-                h - (double) (2 * garnish) - 1.0);
+                w - (double) (2 * garnish) - 2.0,
+                h - (double) (2 * garnish) - 2.0);
   else
     RoundedRect(cr,
                 1.0,
-                (double) (garnish),
-                (double) (garnish),
+                (double) (garnish) + 0.5,
+                (double) (garnish) + 0.5,
                 7.0,
-                w - (double) (2 * garnish),
-                h - (double) (2 * garnish));
+                w - (double) (2 * garnish) - 1.0,
+                h - (double) (2 * garnish) - 1.0);
 
 
   if (pimpl->button_label_fill_color_[state].alpha != 0.0)
@@ -1602,7 +1568,7 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
               pimpl->button_label_text_color_[state],
               label,
               font_size,
-              10.0,
+              11.0, // 15px = 11pt
               alignment);
 
   return true;
@@ -1768,8 +1734,6 @@ bool Style::ButtonFocusOverlay(cairo_t* cr)
   if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
     return false;
 
-  unsigned int garnish = GetButtonGarnishSize();
-  
   double w = cairo_image_surface_get_width(cairo_get_target(cr));
   double h = cairo_image_surface_get_height(cairo_get_target(cr));
 
@@ -1779,99 +1743,15 @@ bool Style::ButtonFocusOverlay(cairo_t* cr)
 
   RoundedRect(cr,
               1.0,
-              (double) (garnish),
-              (double) (garnish),
+              (double) 0.5,
+              (double) 0.5,
               7.0,
-              w - (double) (2 * garnish),
-              h - (double) (2 * garnish));
-  
+              w - 1.0,
+              h - 1.0);
+
   cairo_set_source_rgba(cr, color);
   cairo_fill_preserve(cr);
   cairo_stroke(cr);
-
-  return true;
-}
-
-bool Style::StarEmpty(cairo_t* cr, nux::ButtonVisualState state)
-{
-  // sanity checks
-  if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
-    return false;
-
-  if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
-    return false;
-
-  double w = cairo_image_surface_get_width(cairo_get_target(cr));
-  double h = cairo_image_surface_get_height(cairo_get_target(cr));
-  double radius = .85 * h / 2.0;
-
-  cairo_save(cr);
-  cairo_translate(cr, w / 2.0, h / 2.0);
-  pimpl->Star(cr, radius);
-  cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.2);
-  cairo_fill_preserve(cr);
-  cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.5);
-	cairo_set_line_width(cr, 0.75);
-  cairo_stroke(cr);
-  cairo_restore(cr);
-
-  return true;
-}
-
-bool Style::StarHalf(cairo_t* cr, nux::ButtonVisualState state)
-{
-  // sanity checks
-  if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
-    return false;
-
-  if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
-    return false;
-
-  double w = cairo_image_surface_get_width(cairo_get_target(cr));
-  double h = cairo_image_surface_get_height(cairo_get_target(cr));
-  double radius = .85 * h / 2.0;
-
-  cairo_pattern_t* pattern = NULL;
-  pattern = cairo_pattern_create_linear(0.0, 0.0, w, 0.0);
-  cairo_pattern_add_color_stop_rgba(pattern, 0.0,        1.0, 1.0, 1.0, 1.0);
-  cairo_pattern_add_color_stop_rgba(pattern,  .5,        1.0, 1.0, 1.0, 1.0);
-  cairo_pattern_add_color_stop_rgba(pattern,  .5 + 0.01, 1.0, 1.0, 1.0, 0.2);
-  cairo_pattern_add_color_stop_rgba(pattern, 1.0,        1.0, 1.0, 1.0, 0.2);
-  cairo_set_source(cr, pattern);
-
-  cairo_save(cr);
-  cairo_translate(cr, w / 2.0, h / 2.0);
-  pimpl->Star(cr, radius);
-  cairo_fill_preserve(cr);
-  cairo_pattern_destroy(pattern);
-  cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.5);
-	cairo_set_line_width(cr, 0.75);
-  cairo_stroke(cr);
-  cairo_restore(cr);
-
-  return true;
-}
-
-bool Style::StarFull(cairo_t* cr, nux::ButtonVisualState state)
-{
-  // sanity checks
-  if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
-    return false;
-
-  if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
-    return false;
-
-  double w = cairo_image_surface_get_width(cairo_get_target(cr));
-  double h = cairo_image_surface_get_height(cairo_get_target(cr));
-  double radius = .85 * h / 2.0;
-
-  cairo_save(cr);
-  cairo_translate(cr, w / 2.0, h / 2.0);
-  pimpl->Star(cr, radius);
-  cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
-  cairo_fill_preserve(cr);
-  cairo_stroke(cr); // to make sure it's as "large" as the empty and half ones
-  cairo_restore(cr);
 
   return true;
 }
@@ -1941,7 +1821,7 @@ bool Style::MultiRangeSegment(cairo_t*    cr,
   pimpl->Text(cr,
               pimpl->button_label_text_color_[state],
               label,
-              1.0);
+              10); // 13px = 10pt
 
   return true;
 }
@@ -2246,24 +2126,19 @@ nux::BaseTexture* Style::GetSearchMagnifyIcon()
   return pimpl->search_magnify_texture_.texture();
 }
 
+nux::BaseTexture* Style::GetSearchCircleIcon()
+{
+  return pimpl->search_circle_texture_.texture();
+}
+
 nux::BaseTexture* Style::GetSearchCloseIcon()
 {
   return pimpl->search_close_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetSearchCloseGlowIcon()
-{
-  return pimpl->search_close_glow_texture_.texture();
-}
-
 nux::BaseTexture* Style::GetSearchSpinIcon()
 {
   return pimpl->search_spin_texture_.texture();
-}
-
-nux::BaseTexture* Style::GetSearchSpinGlowIcon()
-{
-  return pimpl->search_spin_glow_texture_.texture();
 }
 
 nux::BaseTexture* Style::GetGroupUnexpandIcon()
@@ -2276,17 +2151,154 @@ nux::BaseTexture* Style::GetGroupExpandIcon()
   return pimpl->group_expand_texture_.texture();
 }
 
+nux::BaseTexture* Style::GetStarDeselectedIcon()
+{
+  return pimpl->star_deselected_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetStarSelectedIcon()
+{
+  return pimpl->star_selected_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetStarHighlightIcon()
+{
+  return pimpl->star_highlight_texture_.texture();
+}
+
 nux::BaseTexture* Style::GetDashShine()
 {
   return pimpl->dash_shine_.texture();
 }
 
+int Style::GetVSeparatorSize() const
+{
+  return 1;
+}
+
+int Style::GetHSeparatorSize() const
+{
+  return 1;
+
+}
+
+int Style::GetFilterBarWidth() const
+{
+  return 300;
+}
+
+
+int Style::GetFilterBarLeftPadding() const
+{
+  return 5;
+}
+
+int Style::GetFilterBarRightPadding() const
+{
+  return 5;
+}
+
+int Style::GetDashViewTopPadding() const
+{
+  return 10;
+}
+
+int Style::GetSearchBarLeftPadding() const
+{
+  return 10;
+}
+
+int Style::GetSearchBarRightPadding() const
+{
+  return 10;
+}
+
+int Style::GetSearchBarHeight() const
+{
+  return 42;
+}
+
+int Style::GetFilterResultsHighlightRightPadding() const
+{
+  return 5;
+}
+
+int Style::GetFilterResultsHighlightLeftPadding() const
+{
+  return 5;
+}
+
+int Style::GetFilterBarTopPadding() const
+{
+  return 10;
+}
+
+int Style::GetFilterHighlightPadding() const
+{
+  return 2;
+}
+
+int Style::GetSpaceBetweenFilterWidgets() const
+{
+  return 12;
+}
+
+int Style::GetAllButtonHeight() const
+{
+  return 30;
+}
+
+int Style::GetFilterButtonHeight() const
+{
+  return 30;
+}
+
+int Style::GetSpaceBetweenLensAndFilters() const
+{
+  return 9;
+}
+
+int Style::GetFilterViewRightPadding() const
+{
+  return 10;
+}
+
+int Style::GetScrollbarWidth() const
+{
+  return 3;
+}
+
+int Style::GetCategoryHighlightHeight() const
+{
+  return 24;
+}
+
+int Style::GetPlacesGroupTopSpace() const
+{
+  return 15;
+}
+
+int Style::GetCategoryHeaderLeftPadding() const
+{
+  return 20;
+}
+
+int Style::GetCategorySeparatorLeftPadding() const
+{
+  return 15;
+}
+
+int Style::GetCategorySeparatorRightPadding() const
+{
+  return 15;
+}
 
 namespace
 {
 
-LazyLoadTexture::LazyLoadTexture(std::string const& filename)
+LazyLoadTexture::LazyLoadTexture(std::string const& filename, int size)
   : filename_(filename)
+  , size_(size)
 {
 }
 
@@ -2303,7 +2315,7 @@ void LazyLoadTexture::LoadTexture()
   glib::Object<GdkPixbuf> pixbuf;
   glib::Error error;
 
-  pixbuf = ::gdk_pixbuf_new_from_file(full_path.c_str(), &error);
+  pixbuf = ::gdk_pixbuf_new_from_file_at_size(full_path.c_str(), size_, size_, &error);
   if (error)
   {
     LOG_WARN(logger) << "Unable to texture " << full_path << ": " << error;

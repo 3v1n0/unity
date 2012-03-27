@@ -19,6 +19,7 @@
 
 #include "AggregateMonitor.h"
 #include "ElapsedTimeMonitor.h"
+#include <UnityCore/Variant.h>
 
 namespace unity {
 namespace performance {
@@ -49,11 +50,12 @@ void AggregateMonitor::StartMonitor()
 
 void AggregateMonitor::StopMonitor(GVariantBuilder* builder)
 {
+  variant::BuilderWrapper wrapper(builder);
   for (std::list<Monitor*>::iterator iter = _monitors.begin(), end = _monitors.end();
        iter != end; ++iter)
   {
     Monitor* monitor = *iter;
-    g_variant_builder_add(builder, "{sv}", monitor->GetName().c_str(), monitor->Stop());
+    wrapper.add(monitor->GetName().c_str(), monitor->Stop());
   }
 }
 

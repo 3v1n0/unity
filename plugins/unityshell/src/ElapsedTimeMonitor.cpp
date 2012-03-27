@@ -17,6 +17,8 @@
 * Authored by: Alex Launi <alex.launi@canonical.com>
 */
 
+#include <UnityCore/Variant.h>
+
 #include "ElapsedTimeMonitor.h"
 #include "TimeUtil.h"
 
@@ -39,7 +41,8 @@ void ElapsedTimeMonitor::StopMonitor(GVariantBuilder* builder)
   clock_gettime(CLOCK_MONOTONIC, &current);
   int diff = TimeUtil::TimeDelta(&current, &_start);
 
-  g_variant_builder_add(builder, "{sv}", "elapsed-time", g_variant_new_uint32(diff));
+  variant::BuilderWrapper(builder)
+    .add("elapsed-time", diff);
 }
 
 }

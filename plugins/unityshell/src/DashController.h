@@ -52,6 +52,7 @@ public:
   std::vector<char> GetAllShortcuts();
 
   nux::Property<int> launcher_width;
+  nux::Property<bool> use_primary;
 
   sigc::signal<void> on_realize;
 
@@ -67,6 +68,7 @@ private:
   void RegisterUBusInterests();
 
   nux::Geometry GetIdealWindowGeometry();
+  int GetIdealMonitor();
   void Relayout(GdkScreen*screen=NULL);
 
   void OnMouseDownOutsideWindow(int x, int y, unsigned long bflags, unsigned long kflags);

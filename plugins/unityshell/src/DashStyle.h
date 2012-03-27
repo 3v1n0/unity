@@ -106,12 +106,6 @@ public:
 
   virtual bool ButtonFocusOverlay(cairo_t* cr);
 
-  virtual bool StarEmpty(cairo_t* cr, nux::ButtonVisualState state);
-
-  virtual bool StarHalf(cairo_t* cr, nux::ButtonVisualState state);
-
-  virtual bool StarFull(cairo_t* cr, nux::ButtonVisualState state);
-
   virtual bool MultiRangeSegment(cairo_t*    cr,
                                  nux::ButtonVisualState  state,
                                  std::string const& label,
@@ -187,13 +181,57 @@ public:
   nux::BaseTexture* GetDashShine();
 
   nux::BaseTexture* GetSearchMagnifyIcon();
+  nux::BaseTexture* GetSearchCircleIcon();
   nux::BaseTexture* GetSearchCloseIcon();
-  nux::BaseTexture* GetSearchCloseGlowIcon();
   nux::BaseTexture* GetSearchSpinIcon();
-  nux::BaseTexture* GetSearchSpinGlowIcon();
 
   nux::BaseTexture* GetGroupUnexpandIcon();
   nux::BaseTexture* GetGroupExpandIcon();
+
+  nux::BaseTexture* GetStarDeselectedIcon();
+  nux::BaseTexture* GetStarSelectedIcon();
+  nux::BaseTexture* GetStarHighlightIcon();
+
+  // Returns the width of the separator between the dash and the launcher.
+  int GetVSeparatorSize() const;
+
+  // Returns the height of the separator between the dash and the top panel.
+  int GetHSeparatorSize() const;
+
+  // Practically it is the space between the top border of the dash and the searchbar.
+  int GetDashViewTopPadding() const;
+
+  // Search bar
+  int GetSearchBarLeftPadding() const;
+  int GetSearchBarRightPadding() const;
+  int GetSearchBarHeight() const;
+  int GetFilterResultsHighlightRightPadding() const;
+  int GetFilterResultsHighlightLeftPadding() const;
+
+  // Filter bar
+  int GetFilterBarTopPadding() const;
+  int GetFilterHighlightPadding() const;
+  int GetSpaceBetweenFilterWidgets() const;
+  int GetAllButtonHeight() const;
+  int GetFilterBarLeftPadding() const;
+  int GetFilterBarRightPadding() const;
+  int GetFilterBarWidth() const;
+  int GetFilterButtonHeight() const;
+  int GetFilterViewRightPadding() const;
+
+  int GetSpaceBetweenLensAndFilters() const;
+
+  // Scrollbars
+  int GetScrollbarWidth() const;
+
+  // Places Group
+  int GetCategoryHighlightHeight() const;
+  int GetPlacesGroupTopSpace() const;
+  int GetCategoryHeaderLeftPadding() const;
+  int GetCategorySeparatorLeftPadding() const;
+  int GetCategorySeparatorRightPadding() const;
+
+  const static int SEARCH_BAR_EXTRA_PADDING = 1;
 
   sigc::signal<void> changed;
 

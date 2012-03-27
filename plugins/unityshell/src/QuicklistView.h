@@ -45,7 +45,7 @@ public:
   QuicklistView();
   ~QuicklistView();
 
-  void SetText(nux::NString text);
+  void SetText(std::string const& text);
 
   void RemoveAllMenuItem();
 
@@ -135,7 +135,7 @@ private:
   //nux::CairoGraphics*   _cairo_graphics;
   int                   _anchorX;
   int                   _anchorY;
-  nux::NString          _labelText;
+  std::string           _labelText;
   int                   _top_size; // size of the segment from point 13 to 14. See figure in ql_compute_full_mask_path.
 
   bool                  _mouse_down;

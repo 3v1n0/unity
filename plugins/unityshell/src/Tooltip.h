@@ -42,7 +42,7 @@ public:
   void Draw(nux::GraphicsEngine& gfxContext, bool forceDraw);
   void DrawContent(nux::GraphicsEngine& gfxContext, bool forceDraw);
 
-  void SetText(nux::NString const& text);
+  void SetText(std::string const& text);
 
   void ShowTooltipWithTipAt(int anchor_tip_x, int anchor_tip_y);
 
@@ -69,7 +69,7 @@ private:
 
   int                   _anchorX;
   int                   _anchorY;
-  nux::NString          _labelText;
+  std::string           _labelText;
 
   nux::ObjectPtr<nux::StaticCairoText> _tooltip_text;
 

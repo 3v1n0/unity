@@ -39,18 +39,18 @@ namespace nux
 {
   NUX_IMPLEMENT_OBJECT_TYPE (StaticCairoText);
 
-StaticCairoText::StaticCairoText(const TCHAR* text,
+StaticCairoText::StaticCairoText(std::string const& text,
                                  NUX_FILE_LINE_DECL) :
   View(NUX_FILE_LINE_PARAM),
+  _baseline(0),
   _fontstring(NULL),
   _cairoGraphics(NULL),
   _texture2D(NULL),
   _lines(-2),
   _actual_lines(0)
-
 {
   _textColor  = Color(1.0f, 1.0f, 1.0f, 1.0f);
-  _text       = TEXT(text);
+  _text       = text;
   _texture2D  = 0;
   _need_new_extent_cache = true;
   _pre_layout_width = 0;
@@ -223,7 +223,7 @@ StaticCairoText::PostDraw(GraphicsEngine& gfxContext,
 }
 
 void
-StaticCairoText::SetText(NString const& text)
+StaticCairoText::SetText(std::string const& text)
 {
   if (_text != text)
   {
@@ -237,8 +237,8 @@ StaticCairoText::SetText(NString const& text)
   }
 }
 
-NString
-StaticCairoText::GetText()
+std::string
+StaticCairoText::GetText() const
 {
   return _text;
 }
@@ -276,6 +276,11 @@ StaticCairoText::GetLineCount()
   return _actual_lines;
 }
 
+int StaticCairoText::GetBaseline() const
+{
+  return _baseline;
+}
+
 void StaticCairoText::GetTextExtents(int& width, int& height)
 {
   GtkSettings* settings = gtk_settings_get_default();  // not ref'ed
@@ -303,6 +308,7 @@ void StaticCairoText::GetTextExtents(const TCHAR* font,
   PangoLayout*          layout   = NULL;
   PangoFontDescription* desc     = NULL;
   PangoContext*         pangoCtx = NULL;
+  PangoRectangle        inkRect  = {0, 0, 0, 0};
   PangoRectangle        logRect  = {0, 0, 0, 0};
   int                   dpi      = 0;
   GdkScreen*            screen   = gdk_screen_get_default();    // is not ref'ed
@@ -324,7 +330,7 @@ void StaticCairoText::GetTextExtents(const TCHAR* font,
   surface = cairo_image_surface_create(CAIRO_FORMAT_A1, 1, 1);
   cr = cairo_create(surface);
   cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
-  
+
   layout = pango_cairo_create_layout(cr);
   desc = pango_font_description_from_string(font);
   pango_layout_set_font_description(layout, desc);
@@ -346,7 +352,7 @@ void StaticCairoText::GetTextExtents(const TCHAR* font,
   else
     pango_layout_set_alignment(layout, PANGO_ALIGN_RIGHT);
 
-  pango_layout_set_markup(layout, _text.GetTCharPtr(), -1);
+  pango_layout_set_markup(layout, _text.c_str(), -1);
   pango_layout_set_height(layout, _lines);
   pango_layout_set_width(layout, maxwidth * PANGO_SCALE);
 
@@ -365,12 +371,18 @@ void StaticCairoText::GetTextExtents(const TCHAR* font,
                                        (float) dpi / (float) PANGO_SCALE);
   }
   pango_layout_context_changed(layout);
-  pango_layout_get_extents(layout, NULL, &logRect);
+  pango_layout_get_extents(layout, &inkRect, &logRect);
 
-  width  = logRect.width / PANGO_SCALE;
+  // logRect has some issues using italic style
+  if (inkRect.x + inkRect.width > logRect.x + logRect.width)
+    width = (inkRect.x + inkRect.width - logRect.x) /PANGO_SCALE;
+  else
+    width  = logRect.width / PANGO_SCALE;
+
   height = logRect.height / PANGO_SCALE;
   _cached_extent_height = height;
   _cached_extent_width = width;
+  _baseline = pango_layout_get_baseline(layout) / PANGO_SCALE;
 
   // clean up
   pango_font_description_free(desc);
@@ -420,7 +432,7 @@ void StaticCairoText::DrawText(cairo_t*   cr,
   else
     pango_layout_set_alignment(layout, PANGO_ALIGN_RIGHT);
 
-  pango_layout_set_markup(layout, _text.GetTCharPtr(), -1);
+  pango_layout_set_markup(layout, _text.c_str(), -1);
   pango_layout_set_width(layout, width * PANGO_SCALE);
   pango_layout_set_height(layout, height * PANGO_SCALE);
 

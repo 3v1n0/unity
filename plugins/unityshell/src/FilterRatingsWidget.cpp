@@ -24,11 +24,17 @@
 #include <glib.h>
 #include <glib/gi18n-lib.h>
 
+#include "DashStyle.h"
 #include "FilterGenreWidget.h"
 #include "FilterGenreButton.h"
 #include "FilterBasicButton.h"
 #include "FilterRatingsButton.h"
 #include "FilterRatingsWidget.h"
+
+namespace
+{
+const int star_size      = 28;
+}
 
 namespace unity
 {
@@ -42,9 +48,14 @@ FilterRatingsWidget::FilterRatingsWidget(NUX_FILE_LINE_DECL)
 {
   all_button_ = new FilterAllButton(NUX_TRACKER_LOCATION);
 
+  dash::Style& style = dash::Style::Instance();
+  const int top_padding    = style.GetSpaceBetweenFilterWidgets() - style.GetFilterHighlightPadding() - 1; // -1 (PNGs have an 1px top padding)
+  const int bottom_padding = style.GetFilterHighlightPadding();
+
   nux::VLayout* layout = new nux::VLayout(NUX_TRACKER_LOCATION);
-  layout->SetTopAndBottomPadding(11, 12);
+  layout->SetTopAndBottomPadding(top_padding, bottom_padding);
   ratings_ = new FilterRatingsButton(NUX_TRACKER_LOCATION);
+  ratings_->SetMinimumHeight(star_size);
 
   layout->AddView(ratings_);
 

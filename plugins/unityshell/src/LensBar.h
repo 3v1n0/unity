@@ -81,7 +81,6 @@ private:
   nux::HLayout* layout_;
   LayerPtr bg_layer_;
   LayerPtr focus_layer_;
-  LayerPtr over_layer_;
 };
 
 } // namespace dash

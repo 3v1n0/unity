@@ -3,6 +3,7 @@
 #include "test_service_lens.h"
 #include "test_service_model.h"
 #include "test_service_hud.h"
+#include "test_service_gdbus_wrapper.h"
 
 static void on_bus_aquired(GDBusConnection* conn, const gchar* name, gpointer null);
 static void handle_method_call(GDBusConnection       *connection,
@@ -36,7 +37,7 @@ static GMainLoop* loop_ = NULL;
 static ServiceLens* lens_ = NULL;
 static ServiceModel* model_ = NULL;
 static ServiceHud* hud_ = NULL;
-
+static ServiceGDBusWrapper* gdbus_wrapper_ = NULL;
 gint
 main(gint argc, gchar** argv)
 {
@@ -47,6 +48,7 @@ main(gint argc, gchar** argv)
   lens_ = service_lens_new();
   model_ = service_model_new();
   hud_ = service_hud_new();
+  gdbus_wrapper_ = service_gdbus_wrapper_new();
 
   g_bus_own_name(G_BUS_TYPE_SESSION,
                  "com.canonical.Unity.Test",

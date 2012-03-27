@@ -24,6 +24,7 @@
 
 #include <UnityCore/FilesystemLenses.h>
 
+#include "LauncherOptions.h"
 #include "UBusWrapper.h"
 
 namespace unity
@@ -35,23 +36,26 @@ class BFBLauncherIcon : public SimpleLauncherIcon
 {
 
 public:
-  BFBLauncherIcon();
+  BFBLauncherIcon(LauncherHideMode hide_mode);
 
   virtual nux::Color BackgroundColor();
   virtual nux::Color GlowColor();
 
   void ActivateLauncherIcon(ActionArg arg);
+  void SetHideMode(LauncherHideMode hide_mode);
 
 protected:
   std::list<DbusmenuMenuitem*> GetMenus();
   std::string GetName() const;
 
 private:
+  void OnOverlayShown(GVariant *data, bool visible);
   static void OnMenuitemActivated(DbusmenuMenuitem* item, int time, gchar* lens);
 
   static unity::UBusManager ubus_manager_;
   nux::Color background_color_;
-  dash::FilesystemLenses lenses_;
+  dash::LensDirectoryReader::Ptr reader_;
+  LauncherHideMode launcher_hide_mode_;
 };
 
 }

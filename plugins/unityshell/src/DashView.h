@@ -42,6 +42,8 @@ namespace unity
 namespace dash
 {
 
+class DashLayout;
+
 class DashView : public nux::View, public unity::debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(DashView, nux::View);
@@ -106,6 +108,7 @@ private:
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
 
   static gboolean ResetSearchStateCb(gpointer data);
+  static gboolean HideResultMessageCb(gpointer data);
 
 private:
   UBusManager ubus_manager_;
@@ -116,7 +119,8 @@ private:
 
   // View related
   nux::VLayout* layout_;
-  nux::VLayout* content_layout_;
+  DashLayout* content_layout_;
+  nux::HLayout* search_bar_layout_;
   SearchBar* search_bar_;
   nux::VLayout* lenses_layout_;
   LensBar* lens_bar_;
@@ -133,6 +137,8 @@ private:
   guint searching_timeout_id_;
   bool search_in_progress_;
   bool activate_on_finish_;
+
+  guint hide_message_delay_id_;
 
   bool visible_;
 };

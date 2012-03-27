@@ -28,8 +28,6 @@
 #include <Nux/View.h>
 #include <UnityCore/Preview.h>
 
-#include "FilterWidget.h"
-
 namespace unity {
 
   class PreviewBase : public nux::View

@@ -24,8 +24,8 @@
 
 #include <Nux/Nux.h>
 #include <Nux/ToggleButton.h>
+#include <UnityCore/Filter.h>
 
-#include "FilterWidget.h"
 #include "FilterBasicButton.h"
 
 namespace unity

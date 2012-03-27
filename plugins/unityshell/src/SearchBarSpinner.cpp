@@ -20,6 +20,7 @@
 #include "SearchBarSpinner.h"
 
 #include <Nux/VLayout.h>
+#include <UnityCore/Variant.h>
 
 #include "DashStyle.h"
 
@@ -38,10 +39,9 @@ SearchBarSpinner::SearchBarSpinner()
   dash::Style& style = dash::Style::Instance();
 
   _magnify = style.GetSearchMagnifyIcon();
+  _circle = style.GetSearchCircleIcon();
   _close = style.GetSearchCloseIcon();
-  _close_glow = style.GetSearchCloseGlowIcon();
   _spin = style.GetSearchSpinIcon();
-  _spin_glow = style.GetSearchSpinGlowIcon();
 
   _2d_rotate.Identity();
   _2d_rotate.Rotate_z(0.0);
@@ -71,14 +71,6 @@ SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   texxform.min_filter = nux::TEXFILTER_LINEAR;
   texxform.mag_filter = nux::TEXFILTER_LINEAR;
 
-  GfxContext.QRP_1Tex(geo.x + ((geo.width - _spin_glow->GetWidth()) / 2),
-                      geo.y + ((geo.height - _spin_glow->GetHeight()) / 2),
-                      _spin_glow->GetWidth(),
-                      _spin_glow->GetHeight(),
-                      _spin_glow->GetDeviceTexture(),
-                      texxform,
-                      nux::color::White);
-
   if (_state == STATE_READY)
   {
     GfxContext.QRP_1Tex(geo.x + ((geo.width - _magnify->GetWidth()) / 2),
@@ -95,8 +87,11 @@ SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                            geo.y + ((geo.height - _spin->GetHeight()) / 2),
                            _spin->GetWidth(),
                            _spin->GetHeight());
-    int spin_offset_w = (geo.width % 2) ? 0 : 1;
-    int spin_offset_h = (geo.height % 2) ? 0 : 1;
+    // Geometry (== Rect) uses integers which were rounded above,
+    // hence an extra 0.5 offset for odd sizes is needed
+    // because pure floating point is not being used.
+    int spin_offset_w = !(geo.width % 2) ? 0 : 1;
+    int spin_offset_h = !(geo.height % 2) ? 0 : 1;
 
     GfxContext.PushModelViewMatrix(nux::Matrix4::TRANSLATE(-spin_geo.x - (spin_geo.width + spin_offset_w) / 2.0f,
                                                            -spin_geo.y - (spin_geo.height + spin_offset_h) / 2.0f, 0));
@@ -118,30 +113,11 @@ SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   }
   else
   {
-    texxform.FlipVCoord(true);
-    GfxContext.QRP_1Tex(geo.x + ((geo.width - _spin->GetWidth()) / 2),
-                        geo.y + ((geo.height - _spin->GetHeight()) / 2),
-                        _spin->GetWidth(),
-                        _spin->GetHeight(),
-                        _spin->GetDeviceTexture(),
-                        texxform,
-                        nux::color::White);
-    texxform.FlipVCoord(false);
-
-    GfxContext.QRP_1Tex(geo.x + ((geo.width - _spin->GetWidth()) / 2),
-                        geo.y + ((geo.height - _spin->GetHeight()) / 2),
-                        _spin->GetWidth(),
-                        _spin->GetHeight(),
-                        _spin->GetDeviceTexture(),
-                        texxform,
-                        nux::color::White);
-
-
-    GfxContext.QRP_1Tex(geo.x + ((geo.width - _close_glow->GetWidth()) / 2),
-                        geo.y + ((geo.height - _close_glow->GetHeight()) / 2),
-                        _close_glow->GetWidth(),
-                        _close_glow->GetHeight(),
-                        _close_glow->GetDeviceTexture(),
+    GfxContext.QRP_1Tex(geo.x + ((geo.width - _circle->GetWidth()) / 2),
+                        geo.y + ((geo.height - _circle->GetHeight()) / 2),
+                        _circle->GetWidth(),
+                        _circle->GetHeight(),
+                        _circle->GetDeviceTexture(),
                         texxform,
                         nux::color::White);
 
@@ -196,7 +172,7 @@ SearchBarSpinner::SetState(SpinnerState state)
   if (_spinner_timeout)
     g_source_remove(_spinner_timeout);
   _spinner_timeout = 0;
-  
+
   _2d_rotate.Rotate_z(0.0f);
   _rotation = 0.0f;
 
@@ -218,10 +194,11 @@ void SearchBarSpinner::AddProperties(GVariantBuilder* builder)
 {
   nux::Geometry geo = GetGeometry();
 
-  g_variant_builder_add(builder, "{sv}", "x", g_variant_new_int32(geo.x));
-  g_variant_builder_add(builder, "{sv}", "y", g_variant_new_int32(geo.y));
-  g_variant_builder_add(builder, "{sv}", "width", g_variant_new_int32(geo.width));
-  g_variant_builder_add(builder, "{sv}", "height", g_variant_new_int32(geo.height));
+  variant::BuilderWrapper(builder)
+    .add("x", geo.x)
+    .add("y", geo.y)
+    .add("width", geo.width)
+    .add("height", geo.height);
 }
 
 //
