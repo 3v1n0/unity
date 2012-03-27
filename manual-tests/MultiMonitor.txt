@@ -23,12 +23,15 @@ Outcome
 
 
 Test Barrier Unplugging Monitor
------------
-This test is to ensure that PointerBarrier does not cause crash after the descrution.
+----------------------------------------------------
+Setup: 
+  #. Get a system with 2 (or more) monitors
+  #. Enable the "Capture Mouse" setting in CCSM
 
-#. Move mouse slowly over barrier to primary monitor
-#. Quickly unplug external monitor
+Actions:  
+  #. Move mouse slowly over barrier to primary monitor
+  #. Quickly unplug external monitor
 
-Outocome
+Expected Result:
   No crash.
 
