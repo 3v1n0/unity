@@ -20,3 +20,15 @@ This test is to ensure that the number of launchers created and positioned can b
 
 Outcome
   There should only be a launcher on the primary monitor.
+
+
+Test Barrier Unplugging Monitor
+-----------
+This test is to ensure that PointerBarrier does not cause crash after the descrution.
+
+#. Move mouse slowly over barrier to primary monitor
+#. Quickly unplug external monitor
+
+Outocome
+  No crash.
+
