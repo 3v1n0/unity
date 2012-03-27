@@ -189,6 +189,12 @@ LauncherIcon::GetName() const
 void
 LauncherIcon::AddProperties(GVariantBuilder* builder)
 {
+  GVariantBuilder monitors_builder;
+  g_variant_builder_init(&monitors_builder, G_VARIANT_TYPE ("ab"));
+
+  for (int i = 0; i < max_num_monitors; ++i)
+    g_variant_builder_add(&monitors_builder, "b", IsVisibleOnMonitor(i));
+
   unity::variant::BuilderWrapper(builder)
   .add("center_x", _center[0].x)
   .add("center_y", _center[0].y)
@@ -197,6 +203,7 @@ LauncherIcon::AddProperties(GVariantBuilder* builder)
   .add("icon_type", _icon_type)
   .add("tooltip_text", tooltip_text())
   .add("sort_priority", _sort_priority)
+  .add("monitors_visibility", g_variant_builder_end(&monitors_builder))
   .add("active", GetQuirk(QUIRK_ACTIVE))
   .add("visible", GetQuirk(QUIRK_VISIBLE))
   .add("urgent", GetQuirk(QUIRK_URGENT))
