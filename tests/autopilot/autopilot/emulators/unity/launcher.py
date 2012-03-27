@@ -27,6 +27,10 @@ class LauncherController(UnityIntrospectionObject):
         launchers = self.get_children_by_type(Launcher, monitor=monitor_num)
         return launchers[0] if launchers else None
 
+    def get_launchers(self):
+        """Return the available launchers, or None."""
+        return self.get_children_by_type(Launcher)
+
     @property
     def model(self):
         """Return the launcher model."""
