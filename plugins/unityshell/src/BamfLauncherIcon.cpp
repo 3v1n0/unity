@@ -456,16 +456,17 @@ std::string BamfLauncherIcon::BamfName() const
 void BamfLauncherIcon::AddProperties(GVariantBuilder* builder)
 {
   SimpleLauncherIcon::AddProperties(builder);
-  auto windows = GetWindows();
-  GVariant* xids[windows.size()];
 
-  for (auto xid : windows)
-    xids[i++] = g_variant_new_uint32(xid);
+  GVariantBuilder xids_builder;
+  g_variant_builder_init(&xids_builder, G_VARIANT_TYPE ("au"));
+
+  for (auto xid : GetWindows())
+    g_variant_builder_add(&xids_builder, "u", xid);
 
   variant::BuilderWrapper(builder)
     .add("desktop_file", DesktopFile())
     .add("desktop_id", glib::String(g_path_get_basename(DesktopFile().c_str())).Str())
-    .add("xids", g_variant_new_array(G_VARIANT_TYPE_UINT32, xids, 0))
+    .add("xids", g_variant_builder_end(&xids_builder))
     .add("sticky", IsSticky());
 }
 
