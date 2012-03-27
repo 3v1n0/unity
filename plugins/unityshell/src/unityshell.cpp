@@ -1340,7 +1340,7 @@ void UnityScreen::handleEvent(XEvent* event)
 #ifndef USE_GLES
       cScreen->damageScreen();  // evil hack
 #endif
-      if (_key_nav_mode_requested)
+      if (_key_nav_mode_requested && !dash_is_open_)
         launcher_controller_->KeyNavGrab();
       _key_nav_mode_requested = false;
       break;
