@@ -241,6 +241,7 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         """
         logger.info("Starting application '%s'", app_name)
         app = self.KNOWN_APPS[app_name]
+        os.putenv("LC_ALL", "C")
         self.bamf.launch_application(app['desktop-file'], files)
         self.addCleanup(call, ["killall", app['process-name']])
 
