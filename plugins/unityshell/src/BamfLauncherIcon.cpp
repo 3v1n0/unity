@@ -465,7 +465,7 @@ void BamfLauncherIcon::AddProperties(GVariantBuilder* builder)
 
   variant::BuilderWrapper(builder)
     .add("desktop_file", DesktopFile())
-    .add("desktop_id", glib::String(g_path_get_basename(DesktopFile().c_str())).Str())
+    .add("desktop_id", GetDesktopID())
     .add("xids", g_variant_builder_end(&xids_builder))
     .add("sticky", IsSticky());
 }
@@ -1023,16 +1023,35 @@ void BamfLauncherIcon::OnCenterStabilized(std::vector<nux::Point3> center)
   UpdateIconGeometries(center);
 }
 
+std::string BamfLauncherIcon::GetDesktopID()
+{
+  std::string const& desktop_file = DesktopFile();
+
+  if (!desktop_file.empty())
+  {
+    size_t id_pos = desktop_file.rfind('/');
+
+    if (id_pos != std::string::npos)
+    {
+      size_t id_start = id_pos + 1;
+
+      return (id_start < desktop_file.length()) ? desktop_file.substr(id_start) : "";
+    }
+  }
+
+  return desktop_file;
+}
+
 const gchar* BamfLauncherIcon::GetRemoteUri()
 {
   if (_remote_uri.empty())
   {
     const std::string prefix = "application://";
-    glib::String basename(g_path_get_basename(DesktopFile().c_str()));
+    std::string const& desktop_id = GetDesktopID();
 
-    if (!basename.Str().empty())
+    if (!desktop_id.empty())
     {
-      _remote_uri = prefix + basename.Str();
+      _remote_uri = prefix + desktop_id;
     }
   }
 
