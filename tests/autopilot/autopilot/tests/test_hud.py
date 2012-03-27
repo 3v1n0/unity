@@ -184,7 +184,7 @@ class HudBehaviorTests(HudTestsBase):
         """Read the saved file. The content should be "0 "."""
 
         self.addCleanup(remove, '/tmp/autopilot_gedit_undo_test_temp_file.txt')
-        self.start_app_c_locale('Text Editor', files=['/tmp/autopilot_gedit_undo_test_temp_file.txt'])
+        self.start_app('Text Editor', files=['/tmp/autopilot_gedit_undo_test_temp_file.txt'], locale='C')
 
         sleep(1)
         self.keyboard.type("0")

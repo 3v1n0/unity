@@ -24,8 +24,8 @@ class ShowDesktopTests(AutopilotTestCase):
 
     def launch_test_apps(self):
         """Launch character map and calculator apps."""
-        self.start_app_c_locale('Character Map')
-        self.start_app_c_locale('Calculator')
+        self.start_app('Character Map', locale='C')
+        self.start_app('Calculator', locale='C')
         sleep(1)
 
     def test_showdesktop_hides_apps(self):
