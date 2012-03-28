@@ -129,11 +129,17 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
   bool should_update = force_update || cache_dirty;
 
   /* Static blur: only update when the size changed */
-  if ((blur_type != BLUR_ACTIVE || !should_update)
+  if ((blur_type == BLUR_STATIC && !should_update)
       && blur_texture_.IsValid()
       && (geo == blur_geometry_))
   {
     return blur_texture_;
+  }
+
+  if (blur_type == BLUR_NONE)
+  {
+    // Call GetRegion instead
+    return nux::ObjectPtr<nux::IOpenGLBaseTexture>();
   }
 
   nux::GraphicsEngine* graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
