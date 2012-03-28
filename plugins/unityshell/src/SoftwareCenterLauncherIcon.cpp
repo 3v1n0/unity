@@ -54,7 +54,7 @@ SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
   gint32 progress;
   glib::String property_name;
 
-  g_variant_get_child(params, 0, "s", property_name.AsOutParam());
+  g_variant_get_child(params, 0, "s", &property_name);
 
   if (property_name.Str() == "Progress")
   {
