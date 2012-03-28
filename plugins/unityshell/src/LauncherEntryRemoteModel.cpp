@@ -104,8 +104,8 @@ unsigned int LauncherEntryRemoteModel::Size() const
 }
 
 /**
- * Return a pointer to a LauncherEntryRemote if there is one for app_uri,
- * otherwise NULL. The returned object should not be freed.
+ * Return a smart pointer to a LauncherEntryRemote if there is one for app_uri,
+ * otherwise NULL.
  *
  * App Uris look like application://$desktop_file_id, where desktop_file_id
  * is the base name of the .desktop file for the application including the
@@ -113,12 +113,14 @@ unsigned int LauncherEntryRemoteModel::Size() const
  */
 LauncherEntryRemote::Ptr LauncherEntryRemoteModel::LookupByUri(std::string const& app_uri)
 {
-  return _entries_by_uri[app_uri];
+  auto target_en = _entries_by_uri.find(app_uri);
+
+  return (target_en != _entries_by_uri.end()) ? target_en->second : nullptr;
 }
 
 /**
- * Return a pointer to a LauncherEntryRemote if there is one for desktop_id,
- * otherwise NULL. The returned object should not be freed.
+ * Return a smart pointer to a LauncherEntryRemote if there is one for desktop_id,
+ * otherwise NULL.
  *
  * The desktop id is the base name of the .desktop file for the application
  * including the .desktop extension. Eg. firefox.desktop.
@@ -130,8 +132,8 @@ LauncherEntryRemote::Ptr LauncherEntryRemoteModel::LookupByDesktopId(std::string
 }
 
 /**
- * Return a pointer to a LauncherEntryRemote if there is one for
- * desktop_file_path, otherwise NULL. The returned object should not be freed.
+ * Return a smart pointer to a LauncherEntryRemote if there is one for
+ * desktop_file_path, otherwise NULL.
  */
 LauncherEntryRemote::Ptr LauncherEntryRemoteModel::LookupByDesktopFile(std::string const& desktop_file_path)
 {
@@ -157,8 +159,7 @@ LauncherEntryRemote::Ptr LauncherEntryRemoteModel::LookupByDesktopFile(std::stri
 
 /**
  * Get a list of all application URIs which have registered with the launcher
- * API. The returned GList should be freed with g_list_free(), but the URIs
- * should not be changed or freed.
+ * API.
  */
 std::list<std::string> LauncherEntryRemoteModel::GetUris() const
 {
@@ -183,7 +184,7 @@ void LauncherEntryRemoteModel::AddEntry(LauncherEntryRemote::Ptr const& entry)
   else
   {
     _entries_by_uri[entry->AppUri()] = entry;
-    entry_added.emit(entry.get());
+    entry_added.emit(entry);
   }
 }
 
@@ -192,8 +193,8 @@ void LauncherEntryRemoteModel::AddEntry(LauncherEntryRemote::Ptr const& entry)
  */
 void LauncherEntryRemoteModel::RemoveEntry(LauncherEntryRemote::Ptr const& entry)
 {
-  entry_removed.emit(entry.get());
   _entries_by_uri.erase(entry->AppUri());
+  entry_removed.emit(entry);
 }
 
 /**
@@ -299,8 +300,8 @@ LauncherEntryRemoteModel::on_dbus_name_owner_changed_signal_received(GDBusConnec
     for (auto it = self->_entries_by_uri.begin(); it != self->_entries_by_uri.end(); ++it)
     {
       auto entry = it->second;
-//FIXME entry check!?
-      if (name && entry && entry->DBusName() == std::string(name))
+
+      if (name && entry->DBusName() == std::string(name))
       {
         to_rm.push_back(entry);
       }

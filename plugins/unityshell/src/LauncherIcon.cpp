@@ -1010,7 +1010,7 @@ LauncherIcon::DeleteEmblem()
 }
 
 void
-LauncherIcon::InsertEntryRemote(LauncherEntryRemote* remote)
+LauncherIcon::InsertEntryRemote(LauncherEntryRemote::Ptr const& remote)
 {
   if (std::find(_entry_list.begin(), _entry_list.end(), remote) != _entry_list.end())
     return;
@@ -1030,22 +1030,22 @@ LauncherIcon::InsertEntryRemote(LauncherEntryRemote* remote)
 
 
   if (remote->EmblemVisible())
-    OnRemoteEmblemVisibleChanged(remote);
+    OnRemoteEmblemVisibleChanged(remote.get());
 
   if (remote->CountVisible())
-    OnRemoteCountVisibleChanged(remote);
+    OnRemoteCountVisibleChanged(remote.get());
 
   if (remote->ProgressVisible())
-    OnRemoteProgressVisibleChanged(remote);
+    OnRemoteProgressVisibleChanged(remote.get());
 
   if (remote->Urgent())
-    OnRemoteUrgentChanged(remote);
+    OnRemoteUrgentChanged(remote.get());
 
-  OnRemoteQuicklistChanged(remote);
+  OnRemoteQuicklistChanged(remote.get());
 }
 
 void
-LauncherIcon::RemoveEntryRemote(LauncherEntryRemote* remote)
+LauncherIcon::RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote)
 {
   if (std::find(_entry_list.begin(), _entry_list.end(), remote) == _entry_list.end())
     return;

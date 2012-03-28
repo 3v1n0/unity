@@ -72,7 +72,6 @@ public:
   sigc::signal<void, LauncherEntryRemote*> emblem_visible_changed;
   sigc::signal<void, LauncherEntryRemote*> count_visible_changed;
   sigc::signal<void, LauncherEntryRemote*> progress_visible_changed;
-
   sigc::signal<void, LauncherEntryRemote*> urgent_changed;
 
 private:

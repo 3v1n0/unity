@@ -162,9 +162,9 @@ public:
 
   std::list<DbusmenuMenuitem*> Menus();
 
-  void InsertEntryRemote(LauncherEntryRemote* remote);
+  void InsertEntryRemote(LauncherEntryRemote::Ptr const& remote);
 
-  void RemoveEntryRemote(LauncherEntryRemote* remote);
+  void RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote);
 
   nux::DndAction QueryAcceptDrop(unity::DndData& dnd_data)
   {
@@ -337,7 +337,7 @@ private:
   bool             _quirks[QUIRK_LAST];
   struct timespec  _quirk_times[QUIRK_LAST];
 
-  std::list<LauncherEntryRemote*> _entry_list;
+  std::list<LauncherEntryRemote::Ptr> _entry_list;
 };
 
 }

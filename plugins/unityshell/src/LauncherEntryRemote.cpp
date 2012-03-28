@@ -300,11 +300,12 @@ void LauncherEntryRemote::SetUrgent(bool urgent)
  */
 void LauncherEntryRemote::Update(LauncherEntryRemote::Ptr const& other)
 {
+  /* It's important that we update the DBus name first since it might
+   * unset the quicklist if it changes */
+
   if (!other.get())
     return;
 
-  /* It's important that we update the DBus name first since it might
-   * unset the quicklist if it changes */
   SetDBusName(other->DBusName());
 
   SetEmblem(other->Emblem());

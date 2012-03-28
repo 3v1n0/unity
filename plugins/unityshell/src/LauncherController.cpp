@@ -90,8 +90,8 @@ public:
   void OnLauncherAddRequestSpecial(std::string const& path, AbstractLauncherIcon::Ptr before, std::string const& aptdaemon_trans_id, std::string const& icon_path);
   void OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr icon);
 
-  void OnLauncherEntryRemoteAdded(LauncherEntryRemote* entry);
-  void OnLauncherEntryRemoteRemoved(LauncherEntryRemote* entry);
+  void OnLauncherEntryRemoteAdded(LauncherEntryRemote::Ptr const& entry);
+  void OnLauncherEntryRemoteRemoved(LauncherEntryRemote::Ptr const& entry);
 
   void OnFavoriteStoreFavoriteAdded(std::string const& entry, std::string const& pos, bool before);
   void OnFavoriteStoreFavoriteRemoved(std::string const& entry);
@@ -512,7 +512,7 @@ void Controller::Impl::OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr icon)
   }
 }
 
-void Controller::Impl::OnLauncherEntryRemoteAdded(LauncherEntryRemote* entry)
+void Controller::Impl::OnLauncherEntryRemoteAdded(LauncherEntryRemote::Ptr const& entry)
 {
   for (auto icon : *model_)
   {
@@ -526,7 +526,7 @@ void Controller::Impl::OnLauncherEntryRemoteAdded(LauncherEntryRemote* entry)
   }
 }
 
-void Controller::Impl::OnLauncherEntryRemoteRemoved(LauncherEntryRemote* entry)
+void Controller::Impl::OnLauncherEntryRemoteRemoved(LauncherEntryRemote::Ptr const& entry)
 {
   for (auto icon : *model_)
   {
@@ -680,10 +680,10 @@ void Controller::Impl::RegisterIcon(AbstractLauncherIcon::Ptr icon)
 
   if (!path.empty())
   {
-    LauncherEntryRemote::Ptr entry = remote_model_.LookupByDesktopFile(path);
+    LauncherEntryRemote::Ptr const& entry = remote_model_.LookupByDesktopFile(path);
 
     if (entry)
-      icon->InsertEntryRemote(entry.get());
+      icon->InsertEntryRemote(entry);
   }
 }
 

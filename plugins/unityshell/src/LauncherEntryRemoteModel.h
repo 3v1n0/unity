@@ -41,8 +41,8 @@ public:
   LauncherEntryRemote::Ptr LookupByDesktopFile(std::string const& desktop_file_path);
   std::list<std::string> GetUris() const;
 
-  sigc::signal<void, LauncherEntryRemote*> entry_added;
-  sigc::signal<void, LauncherEntryRemote*> entry_removed;
+  sigc::signal<void, LauncherEntryRemote::Ptr const&> entry_added;
+  sigc::signal<void, LauncherEntryRemote::Ptr const&> entry_removed;
 
 private:
   void AddEntry(LauncherEntryRemote::Ptr const& entry);
