@@ -74,7 +74,13 @@ HudLauncherIcon::HudLauncherIcon(LauncherHideMode hide_mode)
 
 void HudLauncherIcon::SetHideMode(LauncherHideMode hide_mode)
 {
-  launcher_hide_mode_ = hide_mode;
+  if (launcher_hide_mode_ != hide_mode)
+  {
+    launcher_hide_mode_ = hide_mode;
+
+    if (launcher_hide_mode_ == LAUNCHER_HIDE_AUTOHIDE)
+      SetQuirk(QUIRK_VISIBLE, false);
+  }
 }
 
 void HudLauncherIcon::OnOverlayShown(GVariant* data, bool visible)
