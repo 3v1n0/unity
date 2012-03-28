@@ -35,21 +35,21 @@ public:
   LauncherEntryRemoteModel();
   ~LauncherEntryRemoteModel();
 
-  unsigned int Size();
-  LauncherEntryRemote* LookupByUri(std::string const& app_uri);
-  LauncherEntryRemote* LookupByDesktopId(std::string const& desktop_id);
-  LauncherEntryRemote* LookupByDesktopFile(std::string const& desktop_file_path);
-  std::list<std::string> GetUris();
-
-  void AddEntry(LauncherEntryRemote* entry);
-  void RemoveEntry(LauncherEntryRemote* entry);
-  void HandleUpdateRequest(const gchar* sender_name,
-                           GVariant*    paramaters);
+  unsigned int Size() const;
+  LauncherEntryRemote::Ptr LookupByUri(std::string const& app_uri);
+  LauncherEntryRemote::Ptr LookupByDesktopId(std::string const& desktop_id);
+  LauncherEntryRemote::Ptr LookupByDesktopFile(std::string const& desktop_file_path);
+  std::list<std::string> GetUris() const;
 
   sigc::signal<void, LauncherEntryRemote*> entry_added;
   sigc::signal<void, LauncherEntryRemote*> entry_removed;
 
 private:
+  void AddEntry(LauncherEntryRemote::Ptr const& entry);
+  void RemoveEntry(LauncherEntryRemote::Ptr const& entry);
+  void HandleUpdateRequest(const gchar* sender_name,
+                           GVariant*    paramaters);
+
   static void on_launcher_entry_signal_received(GDBusConnection* connection,
                                                 const gchar*     sender_name,
                                                 const gchar*     object_path,

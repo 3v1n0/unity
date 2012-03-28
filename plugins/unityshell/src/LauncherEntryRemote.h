@@ -57,7 +57,7 @@ public:
   bool Urgent() const;
 
   /// Update this instance using details from another:
-  void Update(LauncherEntryRemote* other);
+  void Update(LauncherEntryRemote::Ptr const& other);
   /// Update this instance from a GVariant property iterator.
   void Update(GVariantIter* prop_iter);
   /// Set a new DBus name. This destroys the current quicklist.

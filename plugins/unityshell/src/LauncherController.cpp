@@ -676,13 +676,15 @@ void Controller::Impl::RemoveDesktopIcon()
 void Controller::Impl::RegisterIcon(AbstractLauncherIcon::Ptr icon)
 {
   model_->AddIcon(icon);
-
-  LauncherEntryRemote* entry = NULL;
   std::string const& path = icon->DesktopFile();
+
   if (!path.empty())
-    entry = remote_model_.LookupByDesktopFile(path.c_str());
-  if (entry)
-    icon->InsertEntryRemote(entry);
+  {
+    LauncherEntryRemote::Ptr entry = remote_model_.LookupByDesktopFile(path);
+
+    if (entry)
+      icon->InsertEntryRemote(entry.get());
+  }
 }
 
 /* static private */

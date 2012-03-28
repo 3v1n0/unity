@@ -298,8 +298,11 @@ void LauncherEntryRemote::SetUrgent(bool urgent)
 /**
  * Set all properties from 'other' on 'this'.
  */
-void LauncherEntryRemote::Update(LauncherEntryRemote* other)
+void LauncherEntryRemote::Update(LauncherEntryRemote::Ptr const& other)
 {
+  if (!other.get())
+    return;
+
   /* It's important that we update the DBus name first since it might
    * unset the quicklist if it changes */
   SetDBusName(other->DBusName());
