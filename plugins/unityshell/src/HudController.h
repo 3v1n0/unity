@@ -109,6 +109,8 @@ private:
   std::string focused_app_icon_;
   nux::Layout* layout_;
   uint monitor_index_;
+  guint type_wait_handle_;
+  std::string last_search_;
 };
 
 

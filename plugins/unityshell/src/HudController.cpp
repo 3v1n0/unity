@@ -50,6 +50,7 @@ Controller::Controller()
   , launcher_is_locked_out_(false)
   , view_(nullptr)
   , monitor_index_(0)
+  , type_wait_handle_(0)
 {
   LOG_DEBUG(logger) << "hud startup";
   SetupRelayoutCallbacks();
@@ -87,6 +88,7 @@ Controller::~Controller()
 
   g_source_remove(timeline_id_);
   g_source_remove(ensure_id_);
+  g_source_remove(type_wait_handle_);
 }
 
 void Controller::SetupWindow()
@@ -385,7 +387,20 @@ void Controller::OnActivateRequest(GVariant* variant)
 void Controller::OnSearchChanged(std::string search_string)
 {
   LOG_DEBUG(logger) << "Search Changed";
-  hud_service_.RequestQuery(search_string);
+  auto on_search_changed_timeout_lambda = [] (gpointer data) -> gboolean {
+    Controller* self = static_cast<Controller*>(data);
+    self->hud_service_.RequestQuery(self->last_search_);
+    self->type_wait_handle_ = 0;
+    return FALSE;
+  };
+  
+  last_search_ = search_string;
+  
+  if (type_wait_handle_)
+  {
+    g_source_remove(type_wait_handle_);
+  }  
+  type_wait_handle_ = g_timeout_add(100, on_search_changed_timeout_lambda, this);
 }
 
 void Controller::OnSearchActivated(std::string search_string)
