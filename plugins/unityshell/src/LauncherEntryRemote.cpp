@@ -76,7 +76,7 @@ LauncherEntryRemote::LauncherEntryRemote(std::string const& dbus_name, GVariant*
  * file including the extension. Eg. gedit.desktop. Thus a full appuri could be
  * application://gedit.desktop.
  */
-std::string const& LauncherEntryRemote::AppUri()
+std::string const& LauncherEntryRemote::AppUri() const
 {
   return _app_uri;
 }
@@ -84,22 +84,22 @@ std::string const& LauncherEntryRemote::AppUri()
 /**
  * Return the unique DBus name for the remote party owning this launcher entry.
  */
-std::string const& LauncherEntryRemote::DBusName()
+std::string const& LauncherEntryRemote::DBusName() const
 {
   return _dbus_name;
 }
 
-std::string const& LauncherEntryRemote::Emblem()
+std::string const& LauncherEntryRemote::Emblem() const
 {
   return _emblem;
 }
 
-long long LauncherEntryRemote::Count()
+long long LauncherEntryRemote::Count() const
 {
   return _count;
 }
 
-double LauncherEntryRemote::Progress()
+double LauncherEntryRemote::Progress() const
 {
   return _progress;
 }
@@ -110,27 +110,27 @@ double LauncherEntryRemote::Progress()
  *
  * The returned object should not be freed.
  */
-DbusmenuClient* LauncherEntryRemote::Quicklist()
+DbusmenuClient* LauncherEntryRemote::Quicklist() const
 {
   return _quicklist.RawPtr();
 }
 
-bool LauncherEntryRemote::EmblemVisible()
+bool LauncherEntryRemote::EmblemVisible() const
 {
   return _emblem_visible;
 }
 
-bool LauncherEntryRemote::CountVisible()
+bool LauncherEntryRemote::CountVisible() const
 {
   return _count_visible;
 }
 
-bool LauncherEntryRemote::ProgressVisible()
+bool LauncherEntryRemote::ProgressVisible() const
 {
   return _progress_visible;
 }
 
-bool LauncherEntryRemote::Urgent()
+bool LauncherEntryRemote::Urgent() const
 {
   return _urgent;
 }

@@ -44,17 +44,17 @@ public:
 
   LauncherEntryRemote(std::string const& dbus_name, GVariant* val);
 
-  std::string const& AppUri();
-  std::string const& DBusName();
-  std::string const& Emblem();
-  long long          Count();
-  double             Progress();
-  DbusmenuClient*    Quicklist();
+  std::string const& AppUri() const;
+  std::string const& DBusName() const;
+  std::string const& Emblem() const;
+  long long          Count() const;
+  double             Progress() const;
+  DbusmenuClient*    Quicklist() const;
 
-  bool EmblemVisible();
-  bool CountVisible();
-  bool ProgressVisible();
-  bool Urgent();
+  bool EmblemVisible() const;
+  bool CountVisible() const;
+  bool ProgressVisible() const;
+  bool Urgent() const;
   /// Update this instance using details from another:
   void Update(LauncherEntryRemote* other);
   /// Update this instance from a GVariant property iterator.
