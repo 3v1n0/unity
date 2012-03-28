@@ -34,11 +34,11 @@ public:
   LauncherEntryRemoteModel();
   ~LauncherEntryRemoteModel();
 
-  guint                Size();
-  LauncherEntryRemote* LookupByUri(const gchar* app_uri);
-  LauncherEntryRemote* LookupByDesktopId(const gchar* desktop_id);
-  LauncherEntryRemote* LookupByDesktopFile(const gchar* desktop_file_path);
-  GList*               GetUris();
+  unsigned int Size();
+  LauncherEntryRemote* LookupByUri(std::string const& app_uri);
+  LauncherEntryRemote* LookupByDesktopId(std::string const& desktop_id);
+  LauncherEntryRemote* LookupByDesktopFile(std::string const& desktop_file_path);
+  std::list<std::string> GetUris();
 
   void AddEntry(LauncherEntryRemote* entry);
   void RemoveEntry(LauncherEntryRemote* entry);
@@ -65,10 +65,10 @@ private:
                                                          GVariant* parameters,
                                                          gpointer user_data);
 
-  GDBusConnection* _conn;
-  guint            _launcher_entry_dbus_signal_id;
-  guint            _dbus_name_owner_changed_signal_id;
-  GHashTable*      _entries_by_uri;
+  glib::Object<GDBusConnection> _conn;
+  unsigned int _launcher_entry_dbus_signal_id;
+  unsigned int _dbus_name_owner_changed_signal_id;
+  std::map<std::string, nux::ObjectPtr<LauncherEntryRemote>> _entries_by_uri;
 };
 
 } // namespace

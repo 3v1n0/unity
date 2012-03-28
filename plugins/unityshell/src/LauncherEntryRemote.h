@@ -55,6 +55,7 @@ public:
   bool CountVisible() const;
   bool ProgressVisible() const;
   bool Urgent() const;
+
   /// Update this instance using details from another:
   void Update(LauncherEntryRemote* other);
   /// Update this instance from a GVariant property iterator.
