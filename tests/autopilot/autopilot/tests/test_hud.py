@@ -241,8 +241,7 @@ class HudTests(AutopilotTestCase):
 
         self.keyboard.type('focus')
         
-        searchbar = self.hud.get_searchbar() 
-        self.assertEqual(searchbar.search_string, 'focus')
+        self.assertEqual(self.hud.searchbar.search_string, 'focus')
 
     def test_hud_closes_on_workspace_switch(self):
         """This test shows that when you switch to another workspace the hud closes."""

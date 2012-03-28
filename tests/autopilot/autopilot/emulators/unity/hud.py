@@ -7,21 +7,16 @@
 # by the Free Software Foundation.
 #
 
-from autopilot.emulators.unity import (
-    get_state_by_path,
-    make_introspection_object,
-    UnityIntrospectionObject,
-)
-
-
 from autopilot.keybindings import KeybindingsHelper
 from autopilot.emulators.unity import UnityIntrospectionObject
+from autopilot.emulators.unity.dash import SearchBar
 
 
 class HudView(UnityIntrospectionObject):
     """Proxy object for the hud view child of the controller."""
-
-    def get_searchbar(self):
+  
+    @property
+    def searchbar(self):
         """Get the search bar attached to this hud view."""
         return self.get_children_by_type(SearchBar)[0]
 
@@ -45,13 +40,15 @@ class HudController(UnityIntrospectionObject, KeybindingsHelper):
         """Tap the 'Alt' key to toggle the hud visibility."""
         self.keybinding("hud/reveal", tap_delay)
 
-    def get_searchbar(self):
-        """Returns the searchbar attached to the dash."""
-        return self._get_view().get_searchbar();
 
     def _get_view(self):
         views = self.get_children_by_type(HudView)
         return views[0] if views else None
+
+    @property
+    def searchbar(self):
+        """Returns the searchbar attached to the hud."""
+        return self._get_view().searchbar;
 
     @property
     def selected_button(self):
@@ -68,6 +65,3 @@ class HudController(UnityIntrospectionObject, KeybindingsHelper):
             return view.num_buttons
         else:
             return 0
-
-class SearchBar(UnityIntrospectionObject):
-    """The search bar for the dash view."""
