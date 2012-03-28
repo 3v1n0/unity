@@ -20,8 +20,9 @@
 #ifndef LAUNCHER_ENTRY_REMOTE_MODEL_H
 #define LAUNCHER_ENTRY_REMOTE_MODEL_H
 
-#include <glib.h>
+#include <gio/gio.h>
 #include <sigc++/sigc++.h>
+#include <map>
 
 #include "LauncherEntryRemote.h"
 
@@ -68,7 +69,7 @@ private:
   glib::Object<GDBusConnection> _conn;
   unsigned int _launcher_entry_dbus_signal_id;
   unsigned int _dbus_name_owner_changed_signal_id;
-  std::map<std::string, nux::ObjectPtr<LauncherEntryRemote>> _entries_by_uri;
+  std::map<std::string, LauncherEntryRemote::Ptr> _entries_by_uri;
 };
 
 } // namespace

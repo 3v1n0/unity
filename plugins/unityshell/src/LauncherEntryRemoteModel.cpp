@@ -115,7 +115,7 @@ LauncherEntryRemote* LauncherEntryRemoteModel::LookupByUri(std::string const& ap
 {
   auto entry = _entries_by_uri.find(app_uri);
 
-  return entry != _entries_by_uri.end() ? entry->second.GetPointer() : nullptr;
+  return entry != _entries_by_uri.end() ? entry->second.get() : nullptr;
 }
 
 /**
@@ -174,44 +174,34 @@ std::list<std::string> LauncherEntryRemoteModel::GetUris()
 
 /**
  * Add or update a remote launcher entry.
- *
- * If 'entry' has a floating reference it will be consumed.
  */
 void LauncherEntryRemoteModel::AddEntry(LauncherEntryRemote* entry)
 {
-  LauncherEntryRemote* existing_entry;
+  LauncherEntryRemote::Ptr entry_ptr(entry);
 
-  entry->SinkReference();
+  LauncherEntryRemote* existing_entry;
   existing_entry = LookupByUri(entry->AppUri());
 
   if (existing_entry != nullptr)
   {
     existing_entry->Update(entry);
-    entry->UnReference();
   }
   else
   {
-    nux::ObjectPtr<LauncherEntryRemote> enptr;
-    enptr.Adopt(entry);
-    _entries_by_uri[entry->AppUri()] = enptr;
+    _entries_by_uri[entry->AppUri()] = entry_ptr;
     entry_added.emit(entry);
   }
 }
 
 /**
  * Add or update a remote launcher entry.
- *
- * If 'entry' has a floating reference it will be consumed.
  */
 void
 LauncherEntryRemoteModel::RemoveEntry(LauncherEntryRemote* entry)
 {
-  g_return_if_fail(entry != NULL);
-
-  entry->Reference();
+  auto entry_ptr = _entries_by_uri[entry->AppUri()];
   entry_removed.emit(entry);
   _entries_by_uri.erase(entry->AppUri());
-  entry->UnReference();
 }
 
 /**
@@ -224,8 +214,8 @@ LauncherEntryRemoteModel::HandleUpdateRequest(const gchar* sender_name,
   LauncherEntryRemote* entry;
   GVariantIter* prop_iter;
 
-  g_return_if_fail(sender_name != NULL);
-  g_return_if_fail(parameters != NULL);
+  if (!sender_name || !parameters)
+    return;
 
   if (!g_variant_is_of_type(parameters, G_VARIANT_TYPE("(sa{sv})")))
   {
@@ -258,7 +248,7 @@ LauncherEntryRemoteModel::HandleUpdateRequest(const gchar* sender_name,
   else
   {
     entry = new LauncherEntryRemote(sender_name, parameters);
-    AddEntry(entry);  // consumes floating ref on entry
+    AddEntry(entry);
   }
 
   g_variant_iter_free(prop_iter);
@@ -319,11 +309,11 @@ LauncherEntryRemoteModel::on_dbus_name_owner_changed_signal_received(GDBusConnec
 
     for (auto it = self->_entries_by_uri.begin(); it != self->_entries_by_uri.end(); ++it)
     {
-      auto entry = it->second;
+      auto entry = it->second.get();
 
       if (name && entry->DBusName() == name)
       {
-        to_rm.push_back(entry.GetPointer());
+        to_rm.push_back(entry);
       }
     }
 

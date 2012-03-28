@@ -20,8 +20,8 @@
 #ifndef LAUNCHER_ENTRY_REMOTE_H
 #define LAUNCHER_ENTRY_REMOTE_H
 
-#include <Nux/Nux.h>
 #include <glib.h>
+#include <memory>
 #include <sigc++/sigc++.h>
 #include <libdbusmenu-glib/client.h>
 #include <libdbusmenu-glib/menuitem.h>
@@ -37,10 +37,10 @@ namespace unity
  * You do not create instances of LauncherEntryRemote yourself. Instead they
  * are created and managed dynamically by a LauncherEntryRemoteModel.
  */
-class LauncherEntryRemote : public nux::InitiallyUnownedObject
+class LauncherEntryRemote : public sigc::trackable
 {
-  NUX_DECLARE_OBJECT_TYPE(LauncherEntryRemote, nux::InitiallyUnownedObject);
 public:
+  typedef std::shared_ptr<LauncherEntryRemote> Ptr;
 
   LauncherEntryRemote(std::string const& dbus_name, GVariant* val);
 
