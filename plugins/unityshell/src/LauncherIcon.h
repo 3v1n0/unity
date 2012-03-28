@@ -151,7 +151,7 @@ public:
 
   virtual nux::Color GlowColor();
 
-  const gchar* RemoteUri()
+  std::string RemoteUri()
   {
     return GetRemoteUri();
   }
@@ -231,9 +231,9 @@ protected:
 
   virtual void OnCenterStabilized(std::vector<nux::Point3> center) {}
 
-  virtual const gchar* GetRemoteUri()
+  virtual std::string GetRemoteUri()
   {
-    return 0;
+    return "";
   }
 
   virtual nux::DndAction OnQueryAcceptDrop(unity::DndData& dnd_data)

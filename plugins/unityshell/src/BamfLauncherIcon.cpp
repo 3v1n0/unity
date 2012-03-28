@@ -1042,7 +1042,7 @@ std::string BamfLauncherIcon::GetDesktopID()
   return desktop_file;
 }
 
-const gchar* BamfLauncherIcon::GetRemoteUri()
+std::string BamfLauncherIcon::GetRemoteUri()
 {
   if (_remote_uri.empty())
   {
@@ -1055,7 +1055,7 @@ const gchar* BamfLauncherIcon::GetRemoteUri()
     }
   }
 
-  return _remote_uri.c_str();
+  return _remote_uri;
 }
 
 std::set<std::string> BamfLauncherIcon::ValidateUrisForLaunch(unity::DndData& uris)

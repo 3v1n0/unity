@@ -81,7 +81,7 @@ protected:
   std::list<DbusmenuMenuitem*> GetMenus();
   std::set<std::string> ValidateUrisForLaunch(unity::DndData& dnd_data);
 
-  const gchar* GetRemoteUri();
+  std::string GetRemoteUri();
   std::string BamfName() const;
 
   bool HandlesSpread() { return true; }

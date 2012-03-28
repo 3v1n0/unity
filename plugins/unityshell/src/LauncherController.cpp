@@ -516,10 +516,10 @@ void Controller::Impl::OnLauncherEntryRemoteAdded(LauncherEntryRemote* entry)
 {
   for (auto icon : *model_)
   {
-    if (!icon || !icon->RemoteUri())
+    if (!icon || icon->RemoteUri().empty())
       continue;
 
-    if (!g_strcmp0(entry->AppUri(), icon->RemoteUri()))
+    if (entry->AppUri() && entry->AppUri() == icon->RemoteUri())
     {
       icon->InsertEntryRemote(entry);
     }
