@@ -289,10 +289,10 @@ LauncherEntryRemoteModel::on_dbus_name_owner_changed_signal_received(GDBusConnec
   if (parameters == NULL || self->_entries_by_uri.empty())
     return;
 
-  gchar *name, *before, *after;
-  g_variant_get(parameters, "(&s&s&s)", &name, &before, &after);
+  glib::String name, before, after;
+  g_variant_get(parameters, "(sss)", &name, &before, &after);
 
-  if (!after[0])
+  if (!after || after.Str().empty())
   {
     // Name gone, find and destroy LauncherEntryRemote
     std::vector<LauncherEntryRemote::Ptr> to_rm;
@@ -301,7 +301,7 @@ LauncherEntryRemoteModel::on_dbus_name_owner_changed_signal_received(GDBusConnec
     {
       auto entry = it->second;
 
-      if (name && entry->DBusName() == std::string(name))
+      if (entry->DBusName() == name.Str())
       {
         to_rm.push_back(entry);
       }
