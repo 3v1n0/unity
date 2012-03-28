@@ -110,9 +110,9 @@ double LauncherEntryRemote::Progress() const
  *
  * The returned object should not be freed.
  */
-DbusmenuClient* LauncherEntryRemote::Quicklist() const
+glib::Object<DbusmenuClient> const& LauncherEntryRemote::Quicklist() const
 {
-  return _quicklist.RawPtr();
+  return _quicklist;
 }
 
 bool LauncherEntryRemote::EmblemVisible() const
@@ -331,11 +331,7 @@ void LauncherEntryRemote::Update(GVariantIter* prop_iter)
   while (g_variant_iter_loop(prop_iter, "{sv}", &prop_key, &prop_value))
   {
     if (g_str_equal("emblem", prop_key))
-    {
-      glib::String prop_value_s;
-      g_variant_get(prop_value, "s", &prop_value_s);
-      SetEmblem(prop_value_s.Str());
-    }
+      SetEmblem(glib::String(g_variant_dup_string(prop_value, 0)).Str());
     else if (g_str_equal("count", prop_key))
       SetCount(g_variant_get_int64(prop_value));
     else if (g_str_equal("progress", prop_key))
@@ -351,9 +347,7 @@ void LauncherEntryRemote::Update(GVariantIter* prop_iter)
     else if (g_str_equal("quicklist", prop_key))
     {
       /* The value is the object path of the dbusmenu */
-      glib::String prop_value_s;
-      g_variant_get(prop_value, "s", &prop_value_s);
-      SetQuicklistPath(prop_value_s.Str());
+      SetQuicklistPath(glib::String(g_variant_dup_string(prop_value, 0)).Str());
     }
   }
 }

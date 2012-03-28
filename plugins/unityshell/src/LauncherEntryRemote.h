@@ -47,9 +47,9 @@ public:
   std::string const& AppUri() const;
   std::string const& DBusName() const;
   std::string const& Emblem() const;
-  long long          Count() const;
-  double             Progress() const;
-  DbusmenuClient*    Quicklist() const;
+  long long Count() const;
+  double Progress() const;
+  glib::Object<DbusmenuClient> const& Quicklist() const;
 
   bool EmblemVisible() const;
   bool CountVisible() const;

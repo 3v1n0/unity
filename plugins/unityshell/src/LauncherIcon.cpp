@@ -69,8 +69,7 @@ int LauncherIcon::_current_theme_is_mono = -1;
 GtkIconTheme* LauncherIcon::_unity_theme = NULL;
 
 LauncherIcon::LauncherIcon()
-  : _menuclient_dynamic_quicklist(nullptr)
-  , _remote_urgent(false)
+  : _remote_urgent(false)
   , _present_urgency(0)
   , _progress(0)
   , _center_stabilize_handle(0)
@@ -1058,6 +1057,8 @@ LauncherIcon::RemoveEntryRemote(LauncherEntryRemote* remote)
 
   if (_remote_urgent)
     SetQuirk(QUIRK_URGENT, false);
+
+  _menuclient_dynamic_quicklist = nullptr;
 }
 
 void
@@ -1086,7 +1087,7 @@ LauncherIcon::OnRemoteCountChanged(LauncherEntryRemote* remote)
   if (remote->Count() > 9999)
     text = "****";
   else
-    text = std::to_string( (int) remote->Count());
+    text = std::to_string(remote->Count());
 
   SetEmblemText(text);
 }
@@ -1097,7 +1098,7 @@ LauncherIcon::OnRemoteProgressChanged(LauncherEntryRemote* remote)
   if (!remote->ProgressVisible())
     return;
 
-  SetProgress((float) remote->Progress());
+  SetProgress(remote->Progress());
 }
 
 void
@@ -1120,7 +1121,7 @@ LauncherIcon::OnRemoteCountVisibleChanged(LauncherEntryRemote* remote)
 {
   if (remote->CountVisible())
   {
-    SetEmblemText(std::to_string( (int) remote->Count()));
+    SetEmblemText(std::to_string(remote->Count()));
   }
   else
   {
@@ -1134,7 +1135,7 @@ LauncherIcon::OnRemoteProgressVisibleChanged(LauncherEntryRemote* remote)
   SetQuirk(QUIRK_PROGRESS, remote->ProgressVisible());
 
   if (remote->ProgressVisible())
-    SetProgress((float) remote->Progress());
+    SetProgress(remote->Progress());
 }
 
 void LauncherIcon::EmitNeedsRedraw()
