@@ -25,6 +25,9 @@
 
 #include "LauncherEntryRemote.h"
 
+namespace unity
+{
+
 class LauncherEntryRemoteModel : public sigc::trackable
 {
 public:
@@ -68,4 +71,5 @@ private:
   GHashTable*      _entries_by_uri;
 };
 
+} // namespace
 #endif // LAUNCHER_ENTRY_REMOTE_MODEL_H

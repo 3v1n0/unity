@@ -519,7 +519,7 @@ void Controller::Impl::OnLauncherEntryRemoteAdded(LauncherEntryRemote* entry)
     if (!icon || icon->RemoteUri().empty())
       continue;
 
-    if (entry->AppUri() && entry->AppUri() == icon->RemoteUri())
+    if (entry->AppUri() == icon->RemoteUri())
     {
       icon->InsertEntryRemote(entry);
     }

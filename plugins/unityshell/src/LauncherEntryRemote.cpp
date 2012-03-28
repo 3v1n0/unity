@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2011-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,9 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Mikkel Kamstrup Erlandsen <mikkel.kamstrup@canonical.com>
+ *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
 #include "LauncherEntryRemote.h"
+#include <UnityCore/Variant.h>
+#include <NuxCore/Logger.h>
+
+namespace unity
+{
+
+namespace
+{
+nux::logging::Logger logger("launcher.entry.remote");
+}
 
 NUX_IMPLEMENT_OBJECT_TYPE(LauncherEntryRemote);
 
@@ -30,63 +41,30 @@ NUX_IMPLEMENT_OBJECT_TYPE(LauncherEntryRemote);
  * You don't normally need to use this constructor yourself. The
  * LauncherEntryRemoteModel will do that for you when needed.
  */
-LauncherEntryRemote::LauncherEntryRemote(const gchar* dbus_name, GVariant* val)
+LauncherEntryRemote::LauncherEntryRemote(std::string const& dbus_name, GVariant* val)
+  : _dbus_name(dbus_name)
+  , _count(0)
+  , _progress(0.0f)
+  , _emblem_visible(false)
+  , _count_visible(false)
+  , _progress_visible(false)
+  , _urgent(false)
 {
-  gchar*        app_uri;
+  glib::String app_uri;
   GVariantIter* prop_iter;
 
-  g_return_if_fail(dbus_name != NULL);
-  g_return_if_fail(val != NULL);
+  if (!val || dbus_name.empty())
+  {
+    LOG_ERROR(logger) << "Invalid launcher entry remote construction";
+    return;
+  }
 
-  _dbus_name = g_strdup(dbus_name);
+  g_variant_get(glib::Variant(val), "(sa{sv})", &app_uri, &prop_iter);
 
-  _emblem = NULL;
-  _count = G_GINT64_CONSTANT(0);
-  _progress = 0.0;
-  _quicklist = NULL;
-
-  _emblem_visible = FALSE;
-  _count_visible = FALSE;
-  _progress_visible = FALSE;
-
-  _urgent = FALSE;
-
-  g_variant_ref_sink(val);
-  g_variant_get(val, "(sa{sv})", &app_uri, &prop_iter);
-
-  _app_uri = app_uri; // steal ref
+  _app_uri = app_uri.Str();
 
   Update(prop_iter);
-
   g_variant_iter_free(prop_iter);
-  g_variant_unref(val);
-}
-
-LauncherEntryRemote::~LauncherEntryRemote()
-{
-  if (_dbus_name)
-  {
-    g_free(_dbus_name);
-    _dbus_name = NULL;
-  }
-
-  if (_app_uri)
-  {
-    g_free(_app_uri);
-    _app_uri = NULL;
-  }
-
-  if (_emblem)
-  {
-    g_free(_emblem);
-    _emblem = NULL;
-  }
-
-  if (_quicklist)
-  {
-    g_object_unref(_quicklist);
-    _quicklist = NULL;
-  }
 }
 
 /**
@@ -98,8 +76,7 @@ LauncherEntryRemote::~LauncherEntryRemote()
  * file including the extension. Eg. gedit.desktop. Thus a full appuri could be
  * application://gedit.desktop.
  */
-const gchar*
-LauncherEntryRemote::AppUri()
+std::string const& LauncherEntryRemote::AppUri()
 {
   return _app_uri;
 }
@@ -107,26 +84,22 @@ LauncherEntryRemote::AppUri()
 /**
  * Return the unique DBus name for the remote party owning this launcher entry.
  */
-const gchar*
-LauncherEntryRemote::DBusName()
+std::string const& LauncherEntryRemote::DBusName()
 {
   return _dbus_name;
 }
 
-const gchar*
-LauncherEntryRemote::Emblem()
+std::string const& LauncherEntryRemote::Emblem()
 {
   return _emblem;
 }
 
-gint64
-LauncherEntryRemote::Count()
+long long LauncherEntryRemote::Count()
 {
   return _count;
 }
 
-gdouble
-LauncherEntryRemote::Progress()
+double LauncherEntryRemote::Progress()
 {
   return _progress;
 }
@@ -137,32 +110,27 @@ LauncherEntryRemote::Progress()
  *
  * The returned object should not be freed.
  */
-DbusmenuClient*
-LauncherEntryRemote::Quicklist()
+DbusmenuClient* LauncherEntryRemote::Quicklist()
 {
-  return _quicklist;
+  return _quicklist.RawPtr();
 }
 
-gboolean
-LauncherEntryRemote::EmblemVisible()
+bool LauncherEntryRemote::EmblemVisible()
 {
   return _emblem_visible;
 }
 
-gboolean
-LauncherEntryRemote::CountVisible()
+bool LauncherEntryRemote::CountVisible()
 {
   return _count_visible;
 }
 
-gboolean
-LauncherEntryRemote::ProgressVisible()
+bool LauncherEntryRemote::ProgressVisible()
 {
   return _progress_visible;
 }
 
-gboolean
-LauncherEntryRemote::Urgent()
+bool LauncherEntryRemote::Urgent()
 {
   return _urgent;
 }
@@ -172,41 +140,32 @@ LauncherEntryRemote::Urgent()
  *
  * If the entry has any exported quicklist it will be removed.
  */
-void
-LauncherEntryRemote::SetDBusName(const gchar* dbus_name)
+void LauncherEntryRemote::SetDBusName(std::string const& dbus_name)
 {
-  gchar* old_name;
-
-  if (g_strcmp0(_dbus_name, dbus_name) == 0)
+  if (_dbus_name == dbus_name)
     return;
 
-  old_name = _dbus_name;
-  _dbus_name = g_strdup(dbus_name);
+  std::string old_name(_dbus_name);
+  _dbus_name = dbus_name;
 
   /* Remove the quicklist since we can't know if it it'll be valid on the
    * new name, and we certainly don't want the quicklist to operate on a
    * different name than the rest of the launcher API */
-  SetQuicklist(NULL);
+  SetQuicklist(nullptr);
 
   dbus_name_changed.emit(this, old_name);
-  g_free(old_name);
 }
 
-void
-LauncherEntryRemote::SetEmblem(const gchar* emblem)
+void LauncherEntryRemote::SetEmblem(std::string const& emblem)
 {
-  if (g_strcmp0(_emblem, emblem) == 0)
+  if (_emblem == emblem)
     return;
 
-  if (_emblem)
-    g_free(_emblem);
-
-  _emblem = g_strdup(emblem);
+  _emblem = emblem;
   emblem_changed.emit(this);
 }
 
-void
-LauncherEntryRemote::SetCount(gint64 count)
+void LauncherEntryRemote::SetCount(long long count)
 {
   if (_count == count)
     return;
@@ -215,8 +174,7 @@ LauncherEntryRemote::SetCount(gint64 count)
   count_changed.emit(this);
 }
 
-void
-LauncherEntryRemote::SetProgress(gdouble progress)
+void LauncherEntryRemote::SetProgress(double progress)
 {
   if (_progress == progress)
     return;
@@ -231,38 +189,27 @@ LauncherEntryRemote::SetProgress(gdouble progress)
  *
  * To unset the quicklist pass in a NULL path or empty string.
  */
-void
-LauncherEntryRemote::SetQuicklistPath(const gchar* dbus_path)
+void LauncherEntryRemote::SetQuicklistPath(std::string const& dbus_path)
 {
-  /* Replace "" with NULL to simplify the logic below */
-  if (g_strcmp0("", dbus_path) == 0)
-  {
-    dbus_path = NULL;
-  }
-
   /* Check if existing quicklist have exact same path
    * and ignore the change in that case */
   if (_quicklist)
   {
-    gchar* ql_path;
+    glib::String ql_path;
     g_object_get(_quicklist, DBUSMENU_CLIENT_PROP_DBUS_OBJECT, &ql_path, NULL);
-    if (g_strcmp0(dbus_path, ql_path) == 0)
+
+    if (ql_path.Str() == dbus_path)
     {
-      g_free(ql_path);
       return;
     }
-
-    /* Prepare for a new quicklist */
-    g_free(ql_path);
-    g_object_unref(_quicklist);
   }
-  else if (_quicklist == NULL && dbus_path == NULL)
+  else if (!_quicklist && dbus_path.empty())
     return;
 
-  if (dbus_path != NULL)
-    _quicklist = dbusmenu_client_new(_dbus_name, dbus_path);
+  if (!dbus_path.empty())
+    _quicklist = dbusmenu_client_new(_dbus_name.c_str(), dbus_path.c_str());
   else
-    _quicklist = NULL;
+    _quicklist = nullptr;
 
   quicklist_changed.emit(this);
 }
@@ -281,57 +228,40 @@ LauncherEntryRemote::SetQuicklist(DbusmenuClient* quicklist)
    * uses the same name as the connection owning this launcher entry */
   if (_quicklist)
   {
-    gchar* ql_path, *new_ql_path, *new_ql_name;
+    glib::String ql_path, new_ql_path, new_ql_name;
+
     g_object_get(_quicklist, DBUSMENU_CLIENT_PROP_DBUS_OBJECT, &ql_path, NULL);
 
-    if (quicklist == NULL)
-    {
-      new_ql_path = NULL;
-      new_ql_name = NULL;
-    }
-    else
+    if (quicklist)
     {
       g_object_get(quicklist, DBUSMENU_CLIENT_PROP_DBUS_OBJECT, &new_ql_path, NULL);
       g_object_get(quicklist, DBUSMENU_CLIENT_PROP_DBUS_NAME, &new_ql_name, NULL);
     }
 
-    if (quicklist != NULL && g_strcmp0(new_ql_name, _dbus_name) != 0)
+    if (quicklist && new_ql_name.Str() != _dbus_name)
     {
-      g_critical("Mismatch between quicklist- and launcher entry owner:"
-                 "%s and %s respectively", new_ql_name, _dbus_name);
-      g_free(ql_path);
-      g_free(new_ql_path);
-      g_free(new_ql_name);
+      LOG_ERROR(logger) << "Mismatch between quicklist- and launcher entry owner:"
+                        << new_ql_name << " and " << _dbus_name << " respectively";
       return;
     }
 
-    if (g_strcmp0(new_ql_path, ql_path) == 0)
+    if (new_ql_path.Str() == ql_path.Str())
     {
-      g_free(ql_path);
-      g_free(new_ql_path);
-      g_free(new_ql_name);
       return;
     }
-
-    /* Prepare for a new quicklist */
-    g_free(ql_path);
-    g_free(new_ql_path);
-    g_free(new_ql_name);
-    g_object_unref(_quicklist);
   }
-  else if (_quicklist == NULL && quicklist == NULL)
+  else if (!_quicklist && !quicklist)
     return;
 
-  if (quicklist == NULL)
-    _quicklist = NULL;
+  if (!quicklist)
+    _quicklist = nullptr;
   else
-    _quicklist = (DbusmenuClient*) g_object_ref(quicklist);
+    _quicklist = glib::Object<DbusmenuClient>(quicklist, glib::AddRef());
 
   quicklist_changed.emit(this);
 }
 
-void
-LauncherEntryRemote::SetEmblemVisible(gboolean visible)
+void LauncherEntryRemote::SetEmblemVisible(bool visible)
 {
   if (_emblem_visible == visible)
     return;
@@ -340,8 +270,7 @@ LauncherEntryRemote::SetEmblemVisible(gboolean visible)
   emblem_visible_changed.emit(this);
 }
 
-void
-LauncherEntryRemote::SetCountVisible(gboolean visible)
+void LauncherEntryRemote::SetCountVisible(bool visible)
 {
   if (_count_visible == visible)
     return;
@@ -350,8 +279,7 @@ LauncherEntryRemote::SetCountVisible(gboolean visible)
   count_visible_changed.emit(this);
 }
 
-void
-LauncherEntryRemote::SetProgressVisible(gboolean visible)
+void LauncherEntryRemote::SetProgressVisible(bool visible)
 {
   if (_progress_visible == visible)
     return;
@@ -360,8 +288,7 @@ LauncherEntryRemote::SetProgressVisible(gboolean visible)
   progress_visible_changed.emit(this);
 }
 
-void
-LauncherEntryRemote::SetUrgent(gboolean urgent)
+void LauncherEntryRemote::SetUrgent(bool urgent)
 {
   if (_urgent == urgent)
     return;
@@ -373,8 +300,7 @@ LauncherEntryRemote::SetUrgent(gboolean urgent)
 /**
  * Set all properties from 'other' on 'this'.
  */
-void
-LauncherEntryRemote::Update(LauncherEntryRemote* other)
+void LauncherEntryRemote::Update(LauncherEntryRemote* other)
 {
   /* It's important that we update the DBus name first since it might
    * unset the quicklist if it changes */
@@ -395,12 +321,10 @@ LauncherEntryRemote::Update(LauncherEntryRemote* other)
  * Iterate over a GVariantIter containing elements of type '{sv}' and apply
  * any properties to 'this'.
  */
-void
-LauncherEntryRemote::Update(GVariantIter* prop_iter)
+void LauncherEntryRemote::Update(GVariantIter* prop_iter)
 {
-  gchar*       prop_key;
-  const gchar* prop_value_s;
-  GVariant*    prop_value;
+  gchar* prop_key;
+  GVariant* prop_value;
 
   g_return_if_fail(prop_iter != NULL);
 
@@ -408,8 +332,9 @@ LauncherEntryRemote::Update(GVariantIter* prop_iter)
   {
     if (g_str_equal("emblem", prop_key))
     {
-      prop_value_s = g_variant_get_string(prop_value, NULL);
-      SetEmblem(prop_value_s);
+      glib::String prop_value_s;
+      g_variant_get(prop_value, "s", &prop_value_s);
+      SetEmblem(prop_value_s.Str());
     }
     else if (g_str_equal("count", prop_key))
       SetCount(g_variant_get_int64(prop_value));
@@ -426,8 +351,11 @@ LauncherEntryRemote::Update(GVariantIter* prop_iter)
     else if (g_str_equal("quicklist", prop_key))
     {
       /* The value is the object path of the dbusmenu */
-      prop_value_s = g_variant_get_string(prop_value,  NULL);
-      SetQuicklistPath(prop_value_s);
+      glib::String prop_value_s;
+      g_variant_get(prop_value, "s", &prop_value_s);
+      SetQuicklistPath(prop_value_s.Str());
     }
   }
 }
+
+} // Namespace

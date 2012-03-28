@@ -22,7 +22,6 @@ def _make_monitor_scenarios():
 
     if num_monitors == 1:
         scenarios = [('Single Monitor', {'hud_monitor': 0})]
-
     else:
         for i in range(num_monitors):
             scenarios += [('Monitor %d' % (i), {'hud_monitor': i})]

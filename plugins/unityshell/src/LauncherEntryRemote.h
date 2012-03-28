@@ -25,6 +25,10 @@
 #include <sigc++/sigc++.h>
 #include <libdbusmenu-glib/client.h>
 #include <libdbusmenu-glib/menuitem.h>
+#include <UnityCore/GLibWrapper.h>
+
+namespace unity
+{
 
 /**
  * Instances of this class mirrors the remote metadata for a laucnher entry
@@ -38,28 +42,27 @@ class LauncherEntryRemote : public nux::InitiallyUnownedObject
   NUX_DECLARE_OBJECT_TYPE(LauncherEntryRemote, nux::InitiallyUnownedObject);
 public:
 
-  LauncherEntryRemote(const gchar* dbus_name, GVariant* val);
-  ~LauncherEntryRemote();
+  LauncherEntryRemote(std::string const& dbus_name, GVariant* val);
 
-  const gchar*    AppUri();
-  const gchar*    DBusName();
-  const gchar*    Emblem();
-  gint64          Count();
-  gdouble         Progress();
-  DbusmenuClient* Quicklist();
+  std::string const& AppUri();
+  std::string const& DBusName();
+  std::string const& Emblem();
+  long long          Count();
+  double             Progress();
+  DbusmenuClient*    Quicklist();
 
-  gboolean EmblemVisible();
-  gboolean CountVisible();
-  gboolean ProgressVisible();
-  gboolean Urgent();
+  bool EmblemVisible();
+  bool CountVisible();
+  bool ProgressVisible();
+  bool Urgent();
   /// Update this instance using details from another:
   void Update(LauncherEntryRemote* other);
   /// Update this instance from a GVariant property iterator.
   void Update(GVariantIter* prop_iter);
   /// Set a new DBus name. This destroys the current quicklist.
-  void SetDBusName(const gchar* dbus_name);
+  void SetDBusName(std::string const& dbus_name);
 
-  sigc::signal<void, LauncherEntryRemote*, const gchar* > dbus_name_changed;   // gives the old name as arg
+  sigc::signal<void, LauncherEntryRemote*, std::string> dbus_name_changed;   // gives the old name as arg
   sigc::signal<void, LauncherEntryRemote*> emblem_changed;
   sigc::signal<void, LauncherEntryRemote*> count_changed;
   sigc::signal<void, LauncherEntryRemote*> progress_changed;
@@ -72,30 +75,31 @@ public:
   sigc::signal<void, LauncherEntryRemote*> urgent_changed;
 
 private:
+  std::string _dbus_name;
 
-  gchar*  _app_uri;
-  gchar*  _emblem;
-  gint64  _count;
-  gdouble _progress;
+  std::string _app_uri;
+  std::string _emblem;
+  long long _count;
+  double _progress;
 
-  gchar* _dbus_name;
-  gchar* _quicklist_dbus_path;
-  DbusmenuClient* _quicklist;
+  std::string _quicklist_dbus_path;
+  glib::Object<DbusmenuClient> _quicklist;
 
-  gboolean _emblem_visible;
-  gboolean _count_visible;
-  gboolean _progress_visible;
-  gboolean _urgent;
+  bool _emblem_visible;
+  bool _count_visible;
+  bool _progress_visible;
+  bool _urgent;
 
-  void SetEmblem(const gchar* emblem);
-  void SetCount(gint64 count);
-  void SetProgress(gdouble progress);
-  void SetQuicklistPath(const gchar* dbus_path);
+  void SetEmblem(std::string const& emblem);
+  void SetCount(long long count);
+  void SetProgress(double progress);
+  void SetQuicklistPath(std::string const& dbus_path);
   void SetQuicklist(DbusmenuClient* quicklist);
-  void SetEmblemVisible(gboolean visible);
-  void SetCountVisible(gboolean visible);
-  void SetProgressVisible(gboolean visible);
-  void SetUrgent(gboolean urgent);
+  void SetEmblemVisible(bool visible);
+  void SetCountVisible(bool visible);
+  void SetProgressVisible(bool visible);
+  void SetUrgent(bool urgent);
 };
 
+} // namespace
 #endif // LAUNCHER_ENTRY_REMOTE_H
