@@ -134,12 +134,12 @@ void SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
 {
   gint32 progress;
   glib::String property_name;
-  GVariant* property_value;
 
-  g_variant_get_child(params, 0, "s", property_name.AsOutParam());
+  g_variant_get_child(params, 0, "s", &property_name);
 
   if (property_name.Str() == "Progress")
   {
+    GVariant* property_value = nullptr;
     g_variant_get_child(params, 1, "v", &property_value);
     g_variant_get(property_value, "i", &progress);
 
