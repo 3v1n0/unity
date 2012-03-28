@@ -288,15 +288,15 @@ class HudLockedLauncherInteractionsTests(HudTestsBase):
         hud_icon = self.get_hud_launcher_icon()
         bfb_icon = self.launcher.model.get_bfb_icon()
 
-        self.assertTrue(bfb_icon.visible)
-        self.assertFalse(hud_icon.visible)
+        self.assertTrue(bfb_icon.is_visible_on_monitor(self.hud_monitor))
+        self.assertFalse(hud_icon.is_visible_on_monitor(self.hud_monitor))
         sleep(.25)
 
         self.reveal_hud()
         sleep(.5)
 
-        self.assertTrue(hud_icon.visible)
-        self.assertFalse(bfb_icon.visible)
+        self.assertTrue(hud_icon.is_visible_on_monitor(self.hud_monitor))
+        self.assertFalse(bfb_icon.is_visible_on_monitor(self.hud_monitor))
 
     def test_hud_desaturates_launcher_icons(self):
         """Tests that the launcher icons are desaturates when HUD is open"""
@@ -304,7 +304,7 @@ class HudLockedLauncherInteractionsTests(HudTestsBase):
         self.reveal_hud()
         sleep(.5)
 
-        for icon in self.launcher.model.get_launcher_icons():
+        for icon in self.launcher.model.get_launcher_icons_for_monitor(self.hud_monitor):
             if isinstance(icon, HudLauncherIcon):
                 self.assertFalse(icon.desaturated)
             else:
@@ -371,18 +371,14 @@ class HudVisualTests(HudTestsBase):
         hud_launcher_icon = self.get_hud_launcher_icon()
         hud_embedded_icon = self.hud.get_embedded_icon()
 
-        # FIXME this should check self.hud.is_locked_to_launcher
-        # but the HUD icon is currently shared between launchers.
-        if not self.launcher_autohide:
-            self.assertTrue(hud_launcher_icon.visible)
+        if self.hud.is_locked_to_launcher:
+            self.assertTrue(hud_launcher_icon.is_visible_on_monitor(self.hud_monitor))
+            self.assertThat(hud_launcher_icon.monitor, Equals(self.hud_monitor))
             self.assertFalse(hud_launcher_icon.desaturated)
-
-            # FIXME remove this once the issue above has been resolved
-            if self.hud.is_locked_to_launcher:
-                self.assertThat(hud_embedded_icon, Equals(None))
+            self.assertThat(hud_embedded_icon, Equals(None))
         else:
+            self.assertFalse(hud_launcher_icon.is_visible_on_monitor(self.hud_monitor))
             self.assertThat(hud_embedded_icon, NotEquals(None))
-            self.assertFalse(hud_launcher_icon.visible)
 
     def test_hud_icon_show_the_focused_application_emblem(self):
         """Tests that the correct HUD icon is shown"""
