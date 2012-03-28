@@ -345,7 +345,7 @@ class ScreenGeometry:
         monitor_name = self._default_screen.get_monitor_plug_name(monitor)
 
         if not monitor_name:
-            raise ValueError('Could not get monitor name from monitor number.')
+            raise ValueError('Could not get monitor name from monitor number %d.' % (monitor))
 
         glxinfo_out = subprocess.check_output("glxinfo")
         for dri in self._blacklisted_drivers:
