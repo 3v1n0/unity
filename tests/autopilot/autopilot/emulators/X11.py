@@ -338,7 +338,14 @@ class ScreenGeometry:
         `monitor` must be an integer between 0 and the number of configured monitors.
         ValueError is raised if an invalid monitor is specified.
 
+        BlacklistedDriverError is raised if your video driver does not support this.
+
         """
+        glxinfo_out = subprocess.check_output("glxinfo")
+        for dri in self._blacklisted_drivers:
+            if dri in glxinfo_out:
+                raise ScreenGeometry.BlacklistedDriverError('Impossible change the primary monitor for the given driver')
+
         if monitor < 0 or monitor >= self.get_num_monitors():
             raise ValueError('Monitor %d is not in valid range of 0 <= monitor < %d.' % (self.get_num_monitors()))
 
@@ -347,15 +354,10 @@ class ScreenGeometry:
         if not monitor_name:
             raise ValueError('Could not get monitor name from monitor number %d.' % (monitor))
 
-        glxinfo_out = subprocess.check_output("glxinfo")
-        for dri in self._blacklisted_drivers:
-            if dri in glxinfo_out:
-                raise ScreenGeometry.BlacklistedDriverError('Impossible change the primary monitor for the given driver')
-
         ret = os.spawnlp(os.P_WAIT, "xrandr", "xrandr", "--output", monitor_name, "--primary")
 
         if ret != 0:
-            raise RuntimeError('Xrandr can\'t set the primary monitor')
+            raise RuntimeError('Xrandr can\'t set the primary monitor. error code: %d' % (ret))
 
     def get_screen_width(self):
         return self._default_screen.get_width()
