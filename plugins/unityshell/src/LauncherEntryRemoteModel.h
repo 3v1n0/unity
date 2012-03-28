@@ -47,8 +47,7 @@ public:
 private:
   void AddEntry(LauncherEntryRemote::Ptr const& entry);
   void RemoveEntry(LauncherEntryRemote::Ptr const& entry);
-  void HandleUpdateRequest(const gchar* sender_name,
-                           GVariant*    paramaters);
+  void HandleUpdateRequest(std::string const& sender_name, GVariant* paramaters);
 
   static void OnEntrySignalReceived(GDBusConnection* connection,
                                     const gchar* sender_name,

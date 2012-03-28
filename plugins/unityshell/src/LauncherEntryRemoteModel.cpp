@@ -182,6 +182,7 @@ std::list<std::string> LauncherEntryRemoteModel::GetUris() const
 void LauncherEntryRemoteModel::AddEntry(LauncherEntryRemote::Ptr const& entry)
 {
   auto existing_entry = LookupByUri(entry->AppUri());
+
   if (existing_entry)
   {
     existing_entry->Update(entry);
@@ -205,12 +206,10 @@ void LauncherEntryRemoteModel::RemoveEntry(LauncherEntryRemote::Ptr const& entry
 /**
  * Handle an incoming Update() signal from DBus
  */
-void LauncherEntryRemoteModel::HandleUpdateRequest(const gchar* sender_name,
-                                              GVariant*    parameters)
+void LauncherEntryRemoteModel::HandleUpdateRequest(std::string const& sender_name,
+                                                   GVariant* parameters)
 {
-  GVariantIter* prop_iter;
-
-  if (!sender_name || !parameters)
+  if (!parameters)
     return;
 
   if (!g_variant_is_of_type(parameters, G_VARIANT_TYPE("(sa{sv})")))
@@ -222,16 +221,10 @@ void LauncherEntryRemoteModel::HandleUpdateRequest(const gchar* sender_name,
     return;
   }
 
-  if (!sender_name)
-  {
-    LOG_ERROR(logger) << "Received 'com.canonical.Unity.LauncherEntry.Update' from"
-                         " an undefined sender. This may happen if you are trying "
-                         "to run Unity on a p2p DBus connection.";
-    return;
-  }
-
   glib::String app_uri;
+  GVariantIter* prop_iter;
   g_variant_get(parameters, "(sa{sv})", &app_uri, &prop_iter);
+
   auto entry = LookupByUri(app_uri.Str());
 
   if (entry)
@@ -269,6 +262,14 @@ void LauncherEntryRemoteModel::OnEntrySignalReceived(GDBusConnection* connection
 
   if (std::string(signal_name) == "Update")
   {
+    if (!sender_name)
+    {
+      LOG_ERROR(logger) << "Received 'com.canonical.Unity.LauncherEntry.Update' from"
+                           " an undefined sender. This may happen if you are trying "
+                           "to run Unity on a p2p DBus connection.";
+      return;
+    }
+
     self->HandleUpdateRequest(sender_name, parameters);
   }
   else
