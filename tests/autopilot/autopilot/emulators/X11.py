@@ -23,7 +23,9 @@ from Xlib import X
 from Xlib import XK
 from Xlib.display import Display
 from Xlib.ext.xtest import fake_input
+import subprocess
 import gtk.gdk
+import os
 
 _PRESSED_KEYS = []
 _PRESSED_MOUSE_BUTTONS = []
@@ -313,12 +315,15 @@ class Mouse(object):
         sg = ScreenGeometry()
         sg.move_mouse_to_monitor(0)
 
-
 class ScreenGeometry:
     """Get details about screen geometry."""
 
+    class BlacklistedDriverError(RuntimeError):
+        """Cannot set primary monitor when running drivers listed in the driver blacklist."""
+
     def __init__(self):
         self._default_screen = gtk.gdk.screen_get_default()
+        self._blacklisted_drivers = ["NVIDIA"]
 
     def get_num_monitors(self):
         """Get the number of monitors attached to the PC."""
@@ -326,6 +331,22 @@ class ScreenGeometry:
 
     def get_primary_monitor(self):
         return self._default_screen.get_primary_monitor()
+
+    def set_primary_monitor(self, monitor):
+        monitor_name = self._default_screen.get_monitor_plug_name(monitor)
+
+        if not monitor_name or len(monitor_name) == 0:
+            raise ValueError('Invalid monitor found')
+
+        glxinfo_out = subprocess.check_output("glxinfo")
+        for dri in self._blacklisted_drivers:
+            if dri in glxinfo_out:
+                raise ScreenGeometry.BlacklistedDriverError('Impossible change the primary monitor for the given driver')
+
+        ret = os.spawnlp(os.P_WAIT, "xrandr", "xrandr", "--output", monitor_name, "--primary")
+
+        if ret != 0:
+            raise RuntimeError('Xrandr can\'t set the primary monitor')
 
     def get_screen_width(self):
         return self._default_screen.get_width()

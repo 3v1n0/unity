@@ -123,9 +123,9 @@ public:
 
   float GetProgress();
 
-  void SetEmblemIconName(const char* name);
+  void SetEmblemIconName(std::string const& name);
 
-  void SetEmblemText(const char* text);
+  void SetEmblemText(std::string const& text);
 
   void DeleteEmblem();
 
@@ -195,9 +195,9 @@ public:
   virtual bool IsVisible() const { return false; }
 
   virtual void AboutToRemove() {}
-  
+
   virtual void Stick(bool save = true) {}
-  
+
   virtual void UnStick() {}
 
 protected:
@@ -253,11 +253,11 @@ protected:
 
   virtual bool HandlesSpread () { return false; }
 
-  nux::BaseTexture* TextureFromGtkTheme(const char* name, int size, bool update_glow_colors = true);
+  nux::BaseTexture* TextureFromGtkTheme(std::string name, int size, bool update_glow_colors = true);
 
-  nux::BaseTexture* TextureFromSpecificGtkTheme(GtkIconTheme* theme, const char* name, int size, bool update_glow_colors = true, bool is_default_theme = false);
+  nux::BaseTexture* TextureFromSpecificGtkTheme(GtkIconTheme* theme, std::string const& name, int size, bool update_glow_colors = true, bool is_default_theme = false);
 
-  nux::BaseTexture* TextureFromPath(const char* name, int size, bool update_glow_colors = true);
+  nux::BaseTexture* TextureFromPath(std::string const& name, int size, bool update_glow_colors = true);
 
   static bool        IsMonoDefaultTheme();
 
@@ -323,7 +323,7 @@ private:
   gint64            _shortcut;
 
   IconType                 _icon_type;
-  
+
   std::vector<nux::Point3> _center;
   std::vector<bool> _has_visible_window;
   std::vector<nux::Point3> _last_stable;

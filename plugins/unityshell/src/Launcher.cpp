@@ -879,7 +879,7 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
 {
   float desat_value = IconDesatValue(icon, current);
   arg.icon                = icon.GetPointer();
-  arg.alpha               = 0.5f + 0.5f * desat_value;
+  arg.alpha               = 0.2f + 0.8f * desat_value;
   arg.saturation          = desat_value;
   arg.colorify            = nux::color::White;
   arg.running_arrow       = icon->GetQuirk(AbstractLauncherIcon::QUIRK_RUNNING);
@@ -903,9 +903,9 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
                             icon->GetIconType() == AbstractLauncherIcon::TYPE_EXPO;
 
   // trying to protect against flickering when icon is dragged from dash LP: #863230
-  if (arg.alpha < 0.5)
+  if (arg.alpha < 0.2)
   {
-    arg.alpha = 0.5;
+    arg.alpha = 0.2;
     arg.saturation = 0.0;
   }
 
@@ -997,9 +997,9 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr icon,
     arg.alpha *= drop_dim_value;
 
   // trying to protect against flickering when icon is dragged from dash LP: #863230
-  if (arg.alpha < 0.5)
+  if (arg.alpha < 0.2)
   {
-    arg.alpha = 0.5;
+    arg.alpha = 0.2;
     arg.saturation = 0.0;
   }
 
@@ -1814,6 +1814,9 @@ void Launcher::SetModel(LauncherModel* model)
 {
   _model = model;
 
+  for (auto icon : *_model)
+    icon->needs_redraw.connect(sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
+
   _model->icon_added.connect(sigc::mem_fun(this, &Launcher::OnIconAdded));
   _model->icon_removed.connect(sigc::mem_fun(this, &Launcher::OnIconRemoved));
   _model->order_changed.connect(sigc::mem_fun(this, &Launcher::OnOrderChanged));
@@ -2048,11 +2051,11 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                               nux::Geometry(bkg_box.x,
                                             bkg_box.y,
                                             bkg_box.width,
-                                            20),
-                              nux::Color(0x60000000),
+                                            8),
+                              nux::Color(0x70000000),
                               nux::Color(0x00000000),
                               nux::Color(0x00000000),
-                              nux::Color(0x60000000));
+                              nux::Color(0x70000000));
   }
 
   // FIXME: can be removed for a bgk_box->SetAlpha once implemented

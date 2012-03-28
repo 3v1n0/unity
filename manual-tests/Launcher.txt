@@ -1,6 +1,3 @@
-Note, for simplification, one pip is defined as a single filled in arrow to the 
-      left of a launcher.
-
 Test Launcher Icon with Windows in multiple workspaces
 ------------------------------------------------------
 This test shows how the launcher should draw when there are application windows
@@ -170,6 +167,95 @@ getting dragged that the icon doesn't get frozen on the launcher.
 Outcome:
   * The icon should go back to its correct position in the launcher.
 
+Drag USB Device Launcher to Eject
+-------------------
+This test shows that the correct icon is shown in the OSD notification when a
+USB pen drive is ejected using drag and drop into the trash.
+
+Setup:
+#. Plug in a USB pen drive
+#. Wait for device icon to appear in the launcher
+
+Action:
+#. Drag and drop it into the trash icon
+
+Outcome:
+  The usb pen drive will be "ejected" and an OSD-notification will appear. The
+  icon in the notification is the same icon used for the launcher icon.
+  
+  
+  
+Drag CD Device Launcher to Eject
+-------------------
+This test shows that the correct icon is shown in the OSD notification when a
+CD is ejected using drag and drop into the trash.
+
+Setup:
+#. Insert a CD
+#. Wait for device icon to appear in the launcher
+
+Action:
+#. Drag and drop it into the trash icon
+
+Outcome:
+  The cd will be"ejected and an OSD-notification will appear. The
+  icon in the notification is the same icon used for the launcher icon.
+
+
+Launcher autoscroll wake-ups
+----------------------------
+This test makes sure that the timer controlling autoscroll animations does
+not keep running (at 50Hz) when it's not required to animate anything. This
+is LP: #917210.
+
+Setup:
+#. Ensure the screen is idle, with very little changing.
+#. Open a terminal and start a tool that can measure process wakeups per
+   second. You can choose one of:
+     - gnome-power-statistics (click on Processor)
+     - powertop
+     - eventstat
+
+Action:
+#. Hover the mouse pointer over the top end of the Launcher. That's just above
+   the Ubuntu icon.
+#. Hover the mouse pointer over the bottom end of the Launcher. That's over
+   the bottom of the trash icon.
+#. Move the mouse pointer back to the centre of the screen and leave it there.
+#. Wait 30-60 seconds, leaving the screen idle before verifying the Outcome.
+
+Outcome:
+  The number of wakeups per second (events per second) reported for the
+  compiz process should be much lower than 50.
+
+
+Test Quicklist while on Expo
+-----------------------------
+This test shows how the launcher quicklists work when the expo plugin is activated.
+
+Setup:
+#. Start with a clear screen
+#. Press Super+S or select the workspace switcher on the launcher
+
+Action:
+#. When the workspace switcher is running, right-click over a launcher icon
+
+Outcome:
+  The expo should terminate, and the quicklist should be shown once the
+  workspace switcher has been closed.
+
+Test highlight BFB
+-------------------
+This test shows that the BFB launcher icon highlights during key navigation.
+
+Setup:
+#. Start with a clear screen
+#. Press ALT+F1
+
+Outcome:
+  The launcher key navigation starts and the BFB launcher icon highlights.
+  It looks like `this`__:
+  __https://launchpadlibrarian.net/85700200/bfb85.png
 
 Test launchers with multiple monitors
 -------------------------------------

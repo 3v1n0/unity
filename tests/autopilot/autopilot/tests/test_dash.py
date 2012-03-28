@@ -301,6 +301,15 @@ class DashKeyNavTests(DashTestCase):
         category = lens.get_focused_category()
         self.assertIsNot(category, None)
 
+    def test_alt_f1_disabled(self):
+        """This test that Alt+F1 is disabled when the dash is opened."""
+        self.dash.ensure_visible()
+
+        launcher = self.launcher.get_launcher_for_monitor(0)
+        launcher.key_nav_start()
+        
+        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
+        
 
 class DashClipboardTests(DashTestCase):
     """Test the Unity clipboard"""
