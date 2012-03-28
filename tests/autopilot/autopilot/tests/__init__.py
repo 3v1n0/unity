@@ -37,6 +37,31 @@ from autopilot.keybindings import KeybindingsHelper
 logger = logging.getLogger(__name__)
 
 
+try:
+    from testscenarios.scenarios import multiply_scenarios
+except ImportError:
+    from itertools import product
+    def multiply_scenarios(*scenarios):
+        """Multiply two or more iterables of scenarios.
+
+        It is safe to pass scenario generators or iterators.
+
+        :returns: A list of compound scenarios: the cross-product of all
+            scenarios, with the names concatenated and the parameters
+            merged together.
+        """
+        result = []
+        scenario_lists = map(list, scenarios)
+        for combination in product(*scenario_lists):
+            names, parameters = zip(*combination)
+            scenario_name = ','.join(names)
+            scenario_parameters = {}
+            for parameter in parameters:
+                scenario_parameters.update(parameter)
+            result.append((scenario_name, scenario_parameters))
+        return result
+
+
 class LoggedTestCase(TestWithScenarios, TestCase):
     """Initialize the logging for the test case."""
 

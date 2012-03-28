@@ -32,6 +32,7 @@
 #include "DeviceLauncherIcon.h"
 #include "DeviceLauncherSection.h"
 #include "FavoriteStore.h"
+#include "HudLauncherIcon.h"
 #include "Launcher.h"
 #include "LauncherController.h"
 #include "LauncherEntryRemote.h"
@@ -120,7 +121,7 @@ public:
 
   void SetupBamf();
 
-  void EnsureLaunchers(std::vector<nux::Geometry> const& monitors);
+  void EnsureLaunchers(int primary, std::vector<nux::Geometry> const& monitors);
 
   void OnExpoActivated();
 
@@ -190,6 +191,7 @@ Controller::Impl::Impl(Display* display, Controller* parent)
 {
   UScreen* uscreen = UScreen::GetDefault();
   auto monitors = uscreen->GetMonitors();
+  int primary = uscreen->GetPrimaryMonitor();
 
   launcher_open = false;
   launcher_keynav = false;
@@ -197,7 +199,7 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   reactivate_keynav = false;
   keynav_restore_window_ = true;
 
-  EnsureLaunchers(monitors);
+  EnsureLaunchers(primary, monitors);
 
   launcher_ = launchers[0];
 
@@ -231,7 +233,18 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   FavoriteStore::GetDefault().favorite_removed.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteRemoved));
   FavoriteStore::GetDefault().reordered.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreReordered));
 
-  RegisterIcon(AbstractLauncherIcon::Ptr(new BFBLauncherIcon()));
+  LauncherHideMode hide_mode = parent_->options()->hide_mode;
+  BFBLauncherIcon* bfb = new BFBLauncherIcon(hide_mode);
+  parent_->options()->hide_mode.changed.connect([bfb](LauncherHideMode mode) {
+      bfb->SetHideMode(mode);
+    });
+  RegisterIcon(AbstractLauncherIcon::Ptr(bfb));
+
+  HudLauncherIcon* hud = new HudLauncherIcon(hide_mode);
+  parent_->options()->hide_mode.changed.connect([hud](LauncherHideMode mode) {
+      hud->SetHideMode(mode);
+    });
+  RegisterIcon(AbstractLauncherIcon::Ptr(hud));
   desktop_icon_ = AbstractLauncherIcon::Ptr(new DesktopLauncherIcon());
 
   uscreen->changed.connect(sigc::mem_fun(this, &Controller::Impl::OnScreenChanged));
@@ -270,39 +283,58 @@ Controller::Impl::~Impl()
   delete device_section_;
 }
 
-void Controller::Impl::EnsureLaunchers(std::vector<nux::Geometry> const& monitors)
+void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> const& monitors)
 {
-  unsigned int num_monitors;
-  if (parent_->multiple_launchers)
+  unsigned int num_monitors = monitors.size();
+  unsigned int num_launchers = parent_->multiple_launchers ? num_monitors : 1;
+  unsigned int launchers_size = launchers.size();
+  unsigned int last_monitor = 0;
+
+  if (num_launchers == 1)
   {
-    num_monitors = monitors.size();
+    if (launchers_size == 0)
+    {
+      launchers.push_back(nux::ObjectPtr<Launcher>(CreateLauncher(primary)));
+    }
+    else if (!launchers[0].IsValid())
+    {
+      launchers[0] = nux::ObjectPtr<Launcher>(CreateLauncher(primary));
+    }
+
+    launchers[0]->monitor(primary);
+    launchers[0]->Resize();
+    last_monitor = 1;
   }
   else
   {
-    num_monitors = 1;
+    for (unsigned int i = 0; i < num_monitors; i++, last_monitor++)
+    {
+      if (i >= launchers_size)
+      {
+        launchers.push_back(nux::ObjectPtr<Launcher>(CreateLauncher(i)));
+      }
+
+      launchers[i]->monitor(i);
+      launchers[i]->Resize();
+    }
   }
 
-  unsigned int i;
-  for (i = 0; i < num_monitors; i++)
-  {
-    if (i >= launchers.size())
-      launchers.push_back(nux::ObjectPtr<Launcher> (CreateLauncher(i)));
-
-    launchers[i]->Resize();
-  }
-
-  for (; i < launchers.size(); ++i)
+  for (unsigned int i = last_monitor; i < launchers_size; ++i)
   {
     auto launcher = launchers[i];
     if (launcher.IsValid())
+    {
+      parent_->RemoveChild(launcher.GetPointer());
       launcher->GetParent()->UnReference();
+    }
   }
-  launchers.resize(num_monitors);
+
+  launchers.resize(num_launchers);
 }
 
 void Controller::Impl::OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors)
 {
-  EnsureLaunchers(monitors);
+  EnsureLaunchers(primary_monitor, monitors);
 }
 
 void Controller::Impl::OnWindowFocusChanged (guint32 xid)
@@ -803,7 +835,8 @@ Controller::Controller(Display* display)
   multiple_launchers.changed.connect([&](bool value) -> void {
     UScreen* uscreen = UScreen::GetDefault();
     auto monitors = uscreen->GetMonitors();
-    pimpl->EnsureLaunchers(monitors);
+    int primary = uscreen->GetPrimaryMonitor();
+    pimpl->EnsureLaunchers(primary, monitors);
     options()->show_for_all = !value;
   });
 }

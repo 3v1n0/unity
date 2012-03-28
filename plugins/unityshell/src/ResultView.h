@@ -58,6 +58,8 @@ public:
   void SetPreview(PreviewBase* preview, Result& related_result);
 
   nux::Property<bool> expanded;
+  nux::Property<int> results_per_row;
+
   sigc::signal<void, std::string const&> UriActivated;
   sigc::signal<void, std::string const&> ChangePreview; // request a new preview, string is the uri
 

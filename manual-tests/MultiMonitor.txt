@@ -20,3 +20,18 @@ This test is to ensure that the number of launchers created and positioned can b
 
 Outcome
   There should only be a launcher on the primary monitor.
+
+
+Test Barrier Unplugging Monitor
+----------------------------------------------------
+Setup: 
+  #. Get a system with 2 (or more) monitors
+  #. Enable the "Capture Mouse" setting in CCSM
+
+Actions:  
+  #. Move mouse slowly over barrier to primary monitor
+  #. Quickly unplug external monitor
+
+Expected Result:
+  No crash.
+

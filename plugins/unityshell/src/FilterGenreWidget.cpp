@@ -39,6 +39,8 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterGenre);
 FilterGenre::FilterGenre(int columns, NUX_FILE_LINE_DECL)
  : FilterExpanderLabel(_("Categories"), NUX_FILE_LINE_PARAM)
 {
+  dash::Style& style = dash::Style::Instance();
+
   InitTheme();
 
   all_button_ = new FilterAllButton(NUX_TRACKER_LOCATION);
@@ -46,16 +48,18 @@ FilterGenre::FilterGenre(int columns, NUX_FILE_LINE_DECL)
   genre_layout_ = new nux::GridHLayout(NUX_TRACKER_LOCATION);
   genre_layout_->ForceChildrenSize(true);
   genre_layout_->MatchContentSize(true);
-  genre_layout_->SetSpaceBetweenChildren (9, 9);
-  genre_layout_->SetTopAndBottomPadding(9, 12);
+  genre_layout_->SetTopAndBottomPadding(style.GetSpaceBetweenFilterWidgets() - style.GetFilterHighlightPadding(), style.GetFilterHighlightPadding());
   genre_layout_->EnablePartialVisibility(false);
+
   if (columns == 3)
   {
-    genre_layout_->SetChildrenSize(92, 33);
+    genre_layout_->SetChildrenSize((style.GetFilterBarWidth() - 12 * 2) / 3, style.GetFilterButtonHeight());
+    genre_layout_->SetSpaceBetweenChildren (12, 12);
   }
   else
   {
-    genre_layout_->SetChildrenSize(Style::Instance().GetTileWidth() - 7, 33);
+    genre_layout_->SetChildrenSize((style.GetFilterBarWidth() - 10 ) / 2, style.GetFilterButtonHeight());
+    genre_layout_->SetSpaceBetweenChildren (10, 12);
   }
 
   SetRightHandView(all_button_);
@@ -72,7 +76,7 @@ void FilterGenre::SetFilter(Filter::Ptr const& filter)
 
   all_button_->SetFilter(filter_);
   expanded = !filter_->collapsed();
-  
+
   filter_->option_added.connect(sigc::mem_fun(this, &FilterGenre::OnOptionAdded));
   filter_->option_removed.connect(sigc::mem_fun(this, &FilterGenre::OnOptionRemoved));
 
