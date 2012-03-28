@@ -26,15 +26,16 @@
 
 #define G_SETTINGS_ENABLE_BACKEND
 #include <gio/gsettingsbackend.h>
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <glib.h>
 
 #include "FavoriteStore.h"
 #include "FavoriteStoreGSettings.h"
+#include "FavoriteStorePrivate.h"
 #include <UnityCore/GLibWrapper.h>
 
-
 using namespace unity;
+using testing::Eq;
 
 namespace {
   
@@ -487,6 +488,58 @@ TEST_F(TestFavoriteStoreGSettings, TestFavoriteSignalsMixed3)
   EXPECT_FALSE(added_received);
   EXPECT_TRUE(removed_received);
   EXPECT_TRUE(reordered_received);
+}
+
+TEST(TestFavoriteStorePathDetection, TestEmptyValues)
+{
+  using internal::impl::get_basename_or_path;
+  EXPECT_THAT(get_basename_or_path("/some/path/to.desktop", nullptr),
+              Eq("/some/path/to.desktop"));
+  EXPECT_THAT(get_basename_or_path("/some/path/to.desktop", { nullptr }),
+              Eq("/some/path/to.desktop"));
+  const char* const path[] = { "", nullptr };
+  EXPECT_THAT(get_basename_or_path("/some/path/to.desktop", path),
+              Eq("/some/path/to.desktop"));
+}
+
+TEST(TestFavoriteStorePathDetection, TestPathNeedsApplications)
+{
+  using internal::impl::get_basename_or_path;
+  const char* const path[] = { "/this/path",
+                               "/that/path/",
+                               nullptr };
+  EXPECT_THAT(get_basename_or_path("/this/path/to.desktop", path),
+              Eq("/this/path/to.desktop"));
+  EXPECT_THAT(get_basename_or_path("/that/path/to.desktop", path),
+              Eq("/that/path/to.desktop"));
+}
+
+TEST(TestFavoriteStorePathDetection, TestStripsPath)
+{
+  using internal::impl::get_basename_or_path;
+  const char* const path[] = { "/this/path",
+                               "/that/path/",
+                               nullptr };
+  EXPECT_THAT(get_basename_or_path("/this/path/applications/to.desktop", path),
+              Eq("to.desktop"));
+  EXPECT_THAT(get_basename_or_path("/that/path/applications/to.desktop", path),
+              Eq("to.desktop"));
+  EXPECT_THAT(get_basename_or_path("/some/path/applications/to.desktop", path),
+              Eq("/some/path/applications/to.desktop"));
+}
+
+TEST(TestFavoriteStorePathDetection, TestSubdirectory)
+{
+  using internal::impl::get_basename_or_path;
+  const char* const path[] = { "/this/path",
+                               "/that/path/",
+                               nullptr };
+  EXPECT_THAT(get_basename_or_path("/this/path/applications/subdir/to.desktop", path),
+              Eq("subdir-to.desktop"));
+  EXPECT_THAT(get_basename_or_path("/that/path/applications/subdir/to.desktop", path),
+              Eq("subdir-to.desktop"));
+  EXPECT_THAT(get_basename_or_path("/this/path/applications/subdir1/subdir2/to.desktop", path),
+              Eq("subdir1-subdir2-to.desktop"));
 }
 
 } // anonymous namespace
