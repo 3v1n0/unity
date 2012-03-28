@@ -333,10 +333,19 @@ class ScreenGeometry:
         return self._default_screen.get_primary_monitor()
 
     def set_primary_monitor(self, monitor):
+        """Set `monitor` to be the primary monitor.
+
+        `monitor` must be an integer between 0 and the number of configured monitors.
+        ValueError is raised if an invalid monitor is specified.
+
+        """
+        if monitor < 0 or monitor >= self.get_num_monitors():
+            raise ValueError('Monitor %d is not in valid range of 0 <= monitor < %d.' % (self.get_num_monitors()))
+
         monitor_name = self._default_screen.get_monitor_plug_name(monitor)
 
-        if not monitor_name or len(monitor_name) == 0:
-            raise ValueError('Invalid monitor found')
+        if not monitor_name:
+            raise ValueError('Could not get monitor name from monitor number %d.' % (monitor))
 
         glxinfo_out = subprocess.check_output("glxinfo")
         for dri in self._blacklisted_drivers:
