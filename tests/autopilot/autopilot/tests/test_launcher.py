@@ -24,7 +24,7 @@ def _make_scenarios():
     num_monitors = screen_geometry.get_num_monitors()
 
     if num_monitors == 1:
-        monitor_scenarios =  [('Single Monitor', {'launcher_monitor': 0, 'only_primary': True})]
+        monitor_scenarios =  [('Single Monitor', {'launcher_monitor': 0})]
     else:
         monitor_scenarios = [('Monitor %d' % (i), {'launcher_monitor': i}) for i in range(num_monitors)]
 
