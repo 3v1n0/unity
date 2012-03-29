@@ -47,7 +47,7 @@ HudLauncherIcon::HudLauncherIcon(LauncherHideMode hide_mode)
   SetQuirk(QUIRK_VISIBLE, false);
   SetQuirk(QUIRK_RUNNING, false);
   SetQuirk(QUIRK_ACTIVE, true);
-  SetIconType(TYPE_HOME);
+  SetIconType(TYPE_HUD);
 
   background_color_ = nux::color::White;
 
@@ -86,10 +86,11 @@ void HudLauncherIcon::OnOverlayShown(GVariant* data, bool visible)
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
   // If the hud is open, we show the HUD button iff we have a locked launcher
-  if (!g_strcmp0(overlay_identity, "hud") &&
+  if (overlay_identity.Str() == "hud" &&
       launcher_hide_mode_ == LAUNCHER_HIDE_NEVER)
   {
     SetQuirk(QUIRK_VISIBLE, visible);
+    SetQuirk(QUIRK_ACTIVE, visible);
     EmitNeedsRedraw();
   }
 }

@@ -375,6 +375,7 @@ class HudVisualTests(HudTestsBase):
         # but the HUD icon is currently shared between launchers.
         if not self.launcher_autohide:
             self.assertTrue(hud_launcher_icon.visible)
+            self.assertTrue(hud_launcher_icon.active)
             self.assertFalse(hud_launcher_icon.desaturated)
 
             # FIXME remove this once the issue above has been resolved
@@ -383,6 +384,7 @@ class HudVisualTests(HudTestsBase):
         else:
             self.assertThat(hud_embedded_icon, NotEquals(None))
             self.assertFalse(hud_launcher_icon.visible)
+            self.assertFalse(hud_launcher_icon.active)
 
     def test_hud_icon_show_the_focused_application_emblem(self):
         """Tests that the correct HUD icon is shown"""
@@ -401,3 +403,4 @@ class HudVisualTests(HudTestsBase):
         else:
             hud_embedded_icon = self.hud.get_embedded_icon()
             self.assertThat(hud_embedded_icon.icon_name, Equals(calc.icon))
+
