@@ -29,6 +29,7 @@ class Dash(KeybindingsHelper):
     """
 
     def __init__(self):
+        assert len(DashController.get_all_instances()) > 0
         self.controller = DashController.get_all_instances()[0]
 
         self._keyboard = Keyboard()

@@ -11,7 +11,6 @@ from testtools.matchers import Equals, NotEquals, LessThan, GreaterThan
 from time import sleep
 
 from autopilot.emulators.X11 import ScreenGeometry
-from autopilot.emulators.unity.hud import HudController
 from autopilot.emulators.unity.icons import HudLauncherIcon
 from autopilot.tests import AutopilotTestCase, multiply_scenarios
 from os import remove
@@ -35,16 +34,10 @@ class HudTestsBase(AutopilotTestCase):
         super(HudTestsBase, self).setUp()
 
         sleep(0.25)
-        self.hud = self.get_hud_controller()
 
     def tearDown(self):
         self.hud.ensure_hidden()
         super(HudTestsBase, self).tearDown()
-
-    def get_hud_controller(self):
-        controllers = HudController.get_all_instances()
-        self.assertEqual(1, len(controllers))
-        return controllers[0]
 
     def get_hud_launcher_icon(self):
         icons = HudLauncherIcon.get_all_instances()
