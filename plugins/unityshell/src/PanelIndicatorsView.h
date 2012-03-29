@@ -68,8 +68,6 @@ public:
   void SetOpacity(double opacity);
   double GetOpacity();
 
-  bool IsAppmenu();
-
   void SetMaximumEntriesWidth(int max_width);
   void GetGeometryForSync(EntryLocationMap& locations);
 

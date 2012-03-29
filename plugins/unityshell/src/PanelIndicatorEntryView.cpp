@@ -71,7 +71,7 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int pa
 
   InputArea::SetAcceptMouseWheelEvent(true);
 
-  if (type_ != MENU && type_ != APPMENU)
+  if (type_ != MENU)
     InputArea::mouse_wheel.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::OnMouseWheel));
 
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelIndicatorEntryView::Refresh));
@@ -274,7 +274,7 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
     {
       gtk_style_context_set_state(style_context, GTK_STATE_FLAG_BACKDROP);
     }
-    else if (IsActive() && type_ != APPMENU)
+    else if (IsActive())
     {
       gtk_style_context_set_state(style_context, GTK_STATE_FLAG_PRELIGHT);
     }
@@ -343,7 +343,7 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
     {
       gtk_style_context_set_state(style_context, GTK_STATE_FLAG_BACKDROP);
     }
-    else if (IsActive() && type_ != APPMENU)
+    else if (IsActive())
     {
       gtk_style_context_set_state(style_context, GTK_STATE_FLAG_PRELIGHT);
     }
@@ -357,10 +357,7 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
     {
       cairo_pattern_t* linpat;
       int out_pixels = text_width - text_space;
-      int fading_pixels = 20;
-
-      if (type_ == APPMENU)
-        fading_pixels = 35;
+      const int fading_pixels = 15;
 
       int fading_width = out_pixels < fading_pixels ? out_pixels : fading_pixels;
 
@@ -450,15 +447,6 @@ void PanelIndicatorEntryView::Refresh()
     PangoFontDescription* desc = nullptr;
     PanelItem panel_item = PanelItem::INDICATOR;
 
-    if (type_ == MENU)
-    {
-      panel_item = PanelItem::INDICATOR;
-    }
-    else if (type_ == APPMENU)
-    {
-      panel_item = PanelItem::TITLE;
-    }
-
     Style& panel_style = Style::Instance();
     std::string const& font_description = panel_style.GetFontDescription(panel_item);
     int dpi = panel_style.GetTextDPI();
@@ -486,15 +474,8 @@ void PanelIndicatorEntryView::Refresh()
 
     pango_layout_set_font_description(layout, desc);
 
-    if (type_ == APPMENU)
-    {
-      pango_layout_set_markup(layout, label.c_str(), -1);
-    }
-    else
-    {
-      boost::erase_all(label, "_");
-      pango_layout_set_text(layout, label.c_str(), -1);
-    }
+    boost::erase_all(label, "_");
+    pango_layout_set_text(layout, label.c_str(), -1);
 
     cxt = pango_layout_get_context(layout);
     pango_cairo_context_set_font_options(cxt, gdk_screen_get_font_options(screen));

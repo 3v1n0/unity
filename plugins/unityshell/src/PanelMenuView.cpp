@@ -29,7 +29,6 @@
 #include "UScreen.h"
 
 #include <UnityCore/Variant.h>
-#include <UnityCore/AppmenuIndicator.h>
 
 #include <glib/gi18n-lib.h>
 
@@ -47,12 +46,10 @@ namespace
 
 PanelMenuView::PanelMenuView()
   : _matcher(bamf_matcher_get_default()),
-    _is_integrated(false),
     _is_inside(false),
     _is_grabbed(false),
     _is_maximized(false),
     _is_own_window(false),
-    _integrated_menu(nullptr),
     _last_active_view(nullptr),
     _new_application(nullptr),
     _padding(MAIN_LEFT_PADDING),
@@ -184,7 +181,6 @@ PanelMenuView::~PanelMenuView()
   _titlebar_grab_area->UnReference();
 
   _style_changed_connection.disconnect();
-  _mode_changed_connection.disconnect();
 }
 
 void PanelMenuView::OveralyShown()
@@ -199,40 +195,6 @@ void PanelMenuView::OveralyHidden()
   QueueDraw();
 }
 
-void PanelMenuView::SetIntegrated(bool integrated)
-{
-  if (_is_integrated == integrated)
-    return;
-
-  _is_integrated = integrated;
-  panel::Style::Instance().integrated_menus = _is_integrated;
-
-  if (!_is_integrated)
-  {
-    auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-    _is_inside = GetAbsoluteGeometry().IsInside(mouse);
-
-    _window_buttons->SetFocusedState(true);
-    _window_buttons->SetControlledWindow(_is_maximized ? _active_xid : 0);
-
-    _integrated_menu = nullptr;
-  }
-  else
-  {
-    Window maximized = GetMaximizedWindow();
-    _window_buttons->SetFocusedState(maximized == _active_xid);
-    _window_buttons->SetControlledWindow(maximized);
-  }
-
-  Refresh(true);
-  FullRedraw();
-}
-
-bool PanelMenuView::IsIntegrated()
-{
-  return _is_integrated;
-}
-
 void PanelMenuView::AddIndicator(indicator::Indicator::Ptr const& indicator)
 {
   if (!GetIndicators().empty())
@@ -242,27 +204,6 @@ void PanelMenuView::AddIndicator(indicator::Indicator::Ptr const& indicator)
   }
 
   PanelIndicatorsView::AddIndicator(indicator);
-
-  if (indicator->IsAppmenu())
-  {
-    auto appmenuindicator = dynamic_cast<indicator::AppmenuIndicator*>(indicator.get());
-
-    if (appmenuindicator)
-    {
-      SetIntegrated(appmenuindicator->IsIntegrated());
-
-      _mode_changed_connection =
-        appmenuindicator->integrated_changed.connect(sigc::mem_fun(this, &PanelMenuView::SetIntegrated));
-    }
-  }
-}
-
-void PanelMenuView::RemoveIndicator(indicator::Indicator::Ptr const& indicator)
-{
-  PanelIndicatorsView::RemoveIndicator(indicator);
-
-  if (indicator->IsAppmenu())
-    _mode_changed_connection.disconnect();
 }
 
 void PanelMenuView::SetMenuShowTimings(int fadein, int fadeout, int discovery,
@@ -317,7 +258,7 @@ nux::Area* PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, n
       return _titlebar_grab_area;
   }
 
-  if (_is_maximized || _overlay_showing || (_is_integrated && GetMaximizedWindow()))
+  if (_is_maximized || _overlay_showing)
   {
     if (_window_buttons)
     {
@@ -330,18 +271,6 @@ nux::Area* PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, n
   {
     found_area = _titlebar_grab_area->FindAreaUnderMouse(mouse_position, event_type);
     NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
-
-    /* When the integrated menus are enabled, that area must act both like an
-     * indicator-entry view and like a panel-grab-area, so not to re-implement
-     * what we have done into PanelTitleGrabAreaView inside PanelIndicatorAppmenuView
-     * we can just redirect the input events directed to the integrated menus
-     * to the grab_area, then we just have to use few tricks when we get the
-     * signals back from the grab-area to check where they really were */
-    if (_is_integrated && _integrated_menu)
-    {
-      if (_integrated_menu->GetAbsoluteGeometry().IsInside(mouse_position))
-        return _titlebar_grab_area;
-    }
   }
 
   return PanelIndicatorsView::FindAreaUnderMouse(mouse_position, event_type);
@@ -398,16 +327,6 @@ bool PanelMenuView::DrawMenus()
   auto wm = WindowManager::Default();
   bool screen_grabbed = (wm->IsExpoActive() || wm->IsScaleActive());
 
-  if (_is_integrated && _integrated_menu)
-  {
-    if (!_overlay_showing && !screen_grabbed)
-    {
-      return (GetMaximizedWindow() != 0);
-    }
-
-    return false;
-  }
-
   if (!_is_own_window && !_overlay_showing && _we_control_active &&
       !_switcher_showing && !_launcher_keynav && !screen_grabbed)
   {
@@ -427,16 +346,6 @@ bool PanelMenuView::DrawWindowButtons()
 
   if (_overlay_showing)
     return true;
-
-  if (_is_integrated)
-  {
-    if (!screen_grabbed)
-    {
-      return (GetMaximizedWindow() != 0);
-    }
-
-    return false;
-  }
 
   if (!_is_own_window && _we_control_active && _is_maximized &&
       !_launcher_keynav && !_switcher_showing && !screen_grabbed)
@@ -608,8 +517,7 @@ void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     {
       double title_opacity = 0.0f;
 
-      if ((_we_control_active || (_is_integrated && !draw_menus)) &&
-          _window_buttons->GetOpacity() == 0.0 &&
+      if (_we_control_active && _window_buttons->GetOpacity() == 0.0 &&
           (!has_menu || (has_menu && GetOpacity() == 0.0)))
       {
         title_opacity = 1.0f;
@@ -691,7 +599,7 @@ void PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw
 
     _fade_in_animator.Stop();
 
-    if (_is_integrated || !_new_app_menu_shown)
+    if (!_new_app_menu_shown)
     {
       _fade_out_animator.Start(1.0f - GetOpacity());
     }
@@ -796,37 +704,7 @@ std::string PanelMenuView::GetActiveViewName(bool use_appname)
   return label;
 }
 
-std::string PanelMenuView::GetMaximizedViewName(bool use_appname)
-{
-  Window maximized = GetMaximizedWindow();
-  BamfWindow* window = nullptr;
-  std::string label;
-
-  window = GetBamfWindowForXid(maximized);
-
-  if (BAMF_IS_WINDOW(window) && IsWindowUnderOurControl(maximized))
-  {
-    BamfView* view = reinterpret_cast<BamfView*>(window);
-    label = glib::String(bamf_view_get_name(view)).Str();
-
-    if (use_appname || label.empty())
-    {
-      BamfApplication* app = bamf_matcher_get_application_for_window(_matcher, window);
-
-      if (BAMF_IS_APPLICATION(app))
-        view = reinterpret_cast<BamfView*>(app);
-
-      label = glib::String(bamf_view_get_name(view)).Str();
-    }
-  }
-
-  if (label.empty() && _is_integrated && !DrawMenus() && _integrated_menu)
-    label = DESKTOP_NAME;
-
-  return label;
-}
-
-void PanelMenuView::DrawText(cairo_t *cr_real, nux::Geometry const& geo, std::string const& label)
+void PanelMenuView::DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::string const& label)
 {
   using namespace panel;
   cairo_t* cr;
@@ -943,34 +821,13 @@ void PanelMenuView::Refresh(bool force)
   {
     new_title = DESKTOP_NAME;
   }
-  else if (_is_integrated)
-  {
-    Window maximized = GetMaximizedWindow();
-    new_title = GetMaximizedViewName();
-
-    _window_buttons->SetControlledWindow(maximized);
-    _window_buttons->SetFocusedState(_active_xid == maximized);
-
-    if (_integrated_menu)
-    {
-      _integrated_menu->SetControlledWindow(maximized);
-
-      if (DrawMenus())
-      {
-        _integrated_menu->SetLabel(new_title);
-        _integrated_menu->SetFocusedState(_active_xid == maximized);
-
-        return;
-      }
-    }
-  }
   else if (!_switcher_showing && !_launcher_keynav)
   {
     new_title = GetActiveViewName();
     _window_buttons->SetControlledWindow(_active_xid);
   }
 
-  if ((!_switcher_showing && !_launcher_keynav) || _is_integrated)
+  if (!_switcher_showing && !_launcher_keynav)
   {
     if (_panel_title != new_title)
     {
@@ -1000,7 +857,7 @@ void PanelMenuView::Refresh(bool force)
   std::ostringstream bold_label;
   bold_label << "<b>" << escaped.Str() << "</b>";
 
-  DrawText(cr, geo, bold_label.str());
+  DrawTitle(cr, geo, bold_label.str());
 
   cairo_destroy(cr);
 
@@ -1029,23 +886,9 @@ void PanelMenuView::OnEntryAdded(indicator::Entry::Ptr const& entry)
 {
   PanelIndicatorEntryView* view;
 
-  if (!_is_integrated)
-  {
-    view = new PanelIndicatorEntryView(entry, MENU_ENTRIES_PADDING, IndicatorEntryType::MENU);
-    view->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
-    view->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
-  }
-  else
-  {
-    if (_integrated_menu)
-    {
-      LOG_ERROR(logger) << "Another integrated menu has already been defined, this shouldn't happen!";
-    }
-
-    _integrated_menu = new PanelIndicatorAppmenuView(entry);
-    view = _integrated_menu;
-    Refresh();
-  }
+  view = new PanelIndicatorEntryView(entry, MENU_ENTRIES_PADDING, IndicatorEntryType::MENU);
+  view->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
+  view->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
 
   entry->show_now_changed.connect(sigc::mem_fun(this, &PanelMenuView::UpdateShowNow));
   view->active_changed.connect(sigc::mem_fun(this, &PanelMenuView::OnActiveChanged));
@@ -1054,24 +897,13 @@ void PanelMenuView::OnEntryAdded(indicator::Entry::Ptr const& entry)
   SetMaximumEntriesWidth(GetAbsoluteWidth() - _window_buttons->GetContentWidth());
 }
 
-void PanelMenuView::OnEntryRemoved(std::string const& entry_id)
-{
-  if (_integrated_menu && _integrated_menu->GetEntryID() == entry_id)
-    _integrated_menu = nullptr;
-
-  RemoveEntry(entry_id);
-}
-
 void PanelMenuView::AllMenusClosed()
 {
   _last_active_view = nullptr;
 
-  if (!_is_integrated)
-  {
-    auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-    _is_inside = GetAbsoluteGeometry().IsInside(mouse);
-    FullRedraw();
-  }
+  auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
+  _is_inside = GetAbsoluteGeometry().IsInside(mouse);
+  FullRedraw();
 }
 
 void PanelMenuView::OnNameChanged(BamfView* bamf_view, gchar* new_name, gchar* old_name)
@@ -1167,7 +999,7 @@ void PanelMenuView::OnActiveAppChanged(BamfMatcher *matcher,
                                        BamfApplication* old_app,
                                        BamfApplication* new_app)
 {
-  if (BAMF_IS_APPLICATION(new_app) && !_is_integrated)
+  if (BAMF_IS_APPLICATION(new_app))
   {
     if (std::find(_new_apps.begin(), _new_apps.end(), new_app) != _new_apps.end())
     {
@@ -1255,10 +1087,7 @@ void PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher,
     _view_name_changed_signal.Connect(new_view, "name-changed",
                                       sigc::mem_fun(this, &PanelMenuView::OnNameChanged));
 
-    if (!_is_integrated)
-    {
-      _window_buttons->SetControlledWindow(_is_maximized ? _active_xid : 0);
-    }
+    _window_buttons->SetControlledWindow(_is_maximized ? _active_xid : 0);
   }
 
   Refresh();
@@ -1374,12 +1203,9 @@ void PanelMenuView::OnWindowMaximized(guint xid)
 
   if (is_active)
   {
-    if (!_is_integrated)
-    {
-      // We need to update the _is_inside state in the case of maximization by grab
-      auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-      _is_inside = GetAbsoluteGeometry().IsInside(mouse);
-    }
+    // We need to update the _is_inside state in the case of maximization by grab
+    auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
+    _is_inside = GetAbsoluteGeometry().IsInside(mouse);
 
     _is_maximized = true;
     updated = true;
@@ -1393,7 +1219,7 @@ void PanelMenuView::OnWindowMaximized(guint xid)
 
   _maximized_set.insert(xid);
 
-  if (updated || _is_integrated)
+  if (updated)
   {
     Refresh();
     FullRedraw();
@@ -1574,23 +1400,6 @@ void PanelMenuView::OnMaximizedActivate(int x, int y)
   {
     WindowManager::Default()->Activate(maximized);
   }
-
-  /* If the user clicked over the integrated_menu we need to adjust
-   * the coordinates we got, because they're relative to the grab area,
-   * but due to the workaround we used, the point clicked could be
-   * also in the integrated-menu geometry, so we can easiliy set them
-   * correctly to check where we are and to eventually activate the
-   * integrated menu */
-  if (_is_integrated && _integrated_menu)
-  {
-    x += _titlebar_grab_area->GetAbsoluteX();
-    y += _titlebar_grab_area->GetAbsoluteY();
-
-    if (_integrated_menu->GetAbsoluteGeometry().IsPointInside(x, y))
-    {
-      _integrated_menu->Activate();
-    }
-  }
 }
 
 void PanelMenuView::OnMaximizedRestore(int x, int y)
@@ -1648,17 +1457,6 @@ void PanelMenuView::OnMaximizedGrabMove(int x, int y)
   /* Adjusting the x, y coordinates to get the absolute values */
   x += _titlebar_grab_area->GetAbsoluteX();
   y += _titlebar_grab_area->GetAbsoluteY();
-
-  /* If the user clicked over the integrated_menu we need to adjust
-   * the coordinates again, because they are still relative to the grab area */
-  if (_is_integrated && _integrated_menu)
-  {
-    if (_integrated_menu->GetAbsoluteGeometry().IsPointInside(x, y))
-    {
-      x += _integrated_menu->GetAbsoluteX();
-      y += _integrated_menu->GetAbsoluteY();
-    }
-  }
 
   Window maximized = GetMaximizedWindow();
 
@@ -1735,7 +1533,6 @@ void PanelMenuView::AddProperties(GVariantBuilder* builder)
   PanelIndicatorsView::AddProperties(builder);
 
   variant::BuilderWrapper(builder)
-  .add("integrated", _is_integrated)
   .add("mose_inside", _is_inside)
   .add("grabbed", _is_grabbed)
   .add("active_win_maximized", _is_maximized)
@@ -1755,7 +1552,7 @@ void PanelMenuView::OnSwitcherShown(GVariant* data)
 
   _switcher_showing = g_variant_get_boolean(data);
 
-  if (!_switcher_showing && !_is_integrated)
+  if (!_switcher_showing)
   {
     auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
     _is_inside = GetAbsoluteGeometry().IsInside(mouse);
@@ -1800,11 +1597,8 @@ void PanelMenuView::OnLauncherKeyNavEnded(GVariant* data)
 
   _launcher_keynav = false;
 
-  if (!_is_integrated)
-  {
-    auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-    _is_inside = GetAbsoluteGeometry().IsInside(mouse);
-  }
+  auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
+  _is_inside = GetAbsoluteGeometry().IsInside(mouse);
 
   Refresh();
   QueueDraw();
@@ -1853,9 +1647,6 @@ void PanelMenuView::UpdateShowNow(bool status)
    * Alt+Tab conflict) then we check if any menuitem has requested to show.
    * If the status is false, we just check that the menus entries are hidden
    * and we remove any eventual delayed request */
-
-  if (_is_integrated)
-    return;
 
   if (!status && _show_now_activated)
   {
@@ -1913,17 +1704,8 @@ void PanelMenuView::SetMonitor(int monitor)
   }
 
   Window maximized = GetMaximizedWindow();
-
-  if (_is_integrated)
-  {
-    _window_buttons->SetControlledWindow(maximized);
-    _window_buttons->SetFocusedState(maximized == _active_xid);
-  }
-  else
-  {
-    Window buttons_win = (maximized == _active_xid) ? maximized : 0;
-    _window_buttons->SetControlledWindow(buttons_win);
-  }
+  Window buttons_win = (maximized == _active_xid) ? maximized : 0;
+  _window_buttons->SetControlledWindow(buttons_win);
 
   g_list_free(windows);
 }

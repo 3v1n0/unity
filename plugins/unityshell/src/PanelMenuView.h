@@ -28,7 +28,6 @@
 #include "PanelIndicatorsView.h"
 #include "StaticCairoText.h"
 #include "WindowButtons.h"
-#include "PanelIndicatorAppmenuView.h"
 #include "PanelTitlebarGrabAreaView.h"
 #include "PluginAdapter.h"
 #include "Animator.h"
@@ -49,16 +48,13 @@ public:
   void SetMousePosition(int x, int y);
   void AllMenusClosed();
   void SetMonitor(int monitor);
-  void SetIntegrated(bool integrated);
 
   Window GetTopWindow();
   Window GetMaximizedWindow();
   bool GetControlsActive();
   bool HasOurWindowFocused();
-  bool IsIntegrated();
 
   virtual void AddIndicator(indicator::Indicator::Ptr const& indicator);
-  virtual void RemoveIndicator(indicator::Indicator::Ptr const& indicator);
 
   virtual void OveralyShown();
   virtual void OveralyHidden();
@@ -75,7 +71,6 @@ protected:
   virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position,
                                         nux::NuxEventType event_type);
   virtual void OnEntryAdded(indicator::Entry::Ptr const& entry);
-  virtual void OnEntryRemoved(std::string const& entry_id);
 
 private:
   void OnActiveChanged(PanelIndicatorEntryView* view, bool is_active);
@@ -109,7 +104,7 @@ private:
 
   void FullRedraw();
   void Refresh(bool force = false);
-  void DrawText(cairo_t *cr_real, nux::Geometry const& geo, std::string const& label);
+  void DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::string const& label);
 
   void OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
   void OnPanelViewMouseLeave(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
@@ -118,7 +113,6 @@ private:
   BamfWindow* GetBamfWindowForXid(Window xid);
 
   std::string GetActiveViewName(bool use_appname = false);
-  std::string GetMaximizedViewName(bool use_appname = false);
 
   void OnSwitcherShown(GVariant* data);
   void OnSwitcherSelectionChanged(GVariant* data);
@@ -149,13 +143,11 @@ private:
   nux::ObjectPtr<nux::BaseTexture> _title_texture;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> _gradient_texture;
 
-  bool _is_integrated;
   bool _is_inside;
   bool _is_grabbed;
   bool _is_maximized;
   bool _is_own_window;
 
-  PanelIndicatorAppmenuView* _integrated_menu;
   PanelIndicatorEntryView* _last_active_view;
   WindowButtons* _window_buttons;
   PanelTitlebarGrabArea* _titlebar_grab_area;
@@ -191,7 +183,6 @@ private:
   glib::Signal<void, BamfMatcher*, BamfApplication*, BamfApplication*> _active_app_changed_signal;
   glib::Signal<void, BamfView*, gchar*, gchar*> _view_name_changed_signal;
   sigc::connection _style_changed_connection;
-  sigc::connection _mode_changed_connection;
 
   UBusManager _ubus_manager;
 

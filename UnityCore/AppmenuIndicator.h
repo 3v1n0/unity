@@ -21,10 +21,6 @@
 #define UNITY_APPMENU_INDICATOR_H
 
 #include "Indicator.h"
-#include "GLibWrapper.h"
-#include "GLibSignal.h"
-
-#include <gio/gio.h>
 
 namespace unity
 {
@@ -37,21 +33,11 @@ public:
   AppmenuIndicator(std::string const& name);
 
   virtual bool IsAppmenu() const { return true; }
-  bool IsIntegrated() const;
 
-  bool ShowAppmenu(unsigned int xid, int x, int y, unsigned int timestamp) const;
+  void ShowAppmenu(unsigned int xid, int x, int y, unsigned int timestamp) const;
 
-  sigc::signal<void, bool> integrated_changed;
   sigc::signal<void, unsigned int, int, int, unsigned int> on_show_appmenu;
-
-private:
-  void CheckSettingValue();
-
-  glib::Object<GSettings> gsettings_;
-  glib::Signal<void, GSettings*, gchar*> setting_changed_;
-  bool integrated_;
 };
-
 
 }
 }

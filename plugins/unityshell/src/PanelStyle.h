@@ -77,7 +77,6 @@ public:
   int GetTextDPI();
 
   nux::Property<int> panel_height;
-  nux::Property<bool> integrated_menus;
 
   sigc::signal<void> changed;
 

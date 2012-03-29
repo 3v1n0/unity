@@ -61,7 +61,6 @@ nux::Color ColorFromGdkRGBA(GdkRGBA const& color)
 
 Style::Style()
   : panel_height(24)
-  , integrated_menus(false)
   , _style_context(gtk_style_context_new())
 {
   if (style_instance)

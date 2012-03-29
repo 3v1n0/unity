@@ -109,17 +109,6 @@ PanelIndicatorsView::GetIndicators()
   return indicators_;
 }
 
-bool
-PanelIndicatorsView::IsAppmenu()
-{
-  if (indicators_.size() == 1 && indicators_[0]->IsAppmenu())
-  {
-    return true;
-  }
-
-  return false;
-}
-
 void
 PanelIndicatorsView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {

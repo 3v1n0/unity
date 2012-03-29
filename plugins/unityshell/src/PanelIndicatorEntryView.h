@@ -45,7 +45,6 @@ public:
   enum IndicatorEntryType {
     INDICATOR,
     MENU,
-    APPMENU,
     OTHER
   };
 

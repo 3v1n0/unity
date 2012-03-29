@@ -2208,15 +2208,14 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     uScreen->setPanelShadowMatrix(matrix);
 
   Window active_window = screen->activeWindow();
-  bool integrated_menus = panel::Style::Instance().integrated_menus;
-  if (window->id() == active_window && window->type() != CompWindowTypeDesktopMask && !integrated_menus)
+  if (window->id() == active_window && window->type() != CompWindowTypeDesktopMask)
   {
     uScreen->paintPanelShadow(matrix);
   }
 
   bool ret = gWindow->glDraw(matrix, attrib, region, mask);
 
-  if ((active_window == 0 || active_window == window->id() || integrated_menus) &&
+  if ((active_window == 0 || active_window == window->id()) &&
       (window->type() == CompWindowTypeDesktopMask))
   {
     uScreen->paintPanelShadow(matrix);
