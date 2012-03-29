@@ -64,7 +64,7 @@ View::View()
   , current_height_(0)
   , timeline_need_more_draw_(false)
   , selected_button_(0)
-  , icon_state_(IconHideState::SHOW)
+  , show_embedded_icon_(true)
   , activated_signal_sent_(false)
 {
   renderer_.SetOwner(this);
@@ -127,7 +127,6 @@ View::View()
 
 View::~View()
 {
-  RemoveChild(search_bar_.GetPointer());
   for (auto button = buttons_.begin(); button != buttons_.end(); button++)
   {
     RemoveChild((*button).GetPointer());
@@ -272,22 +271,30 @@ void View::SetQueries(Hud::Queries queries)
 void View::SetIcon(std::string icon_name)
 {
   LOG_DEBUG(logger) << "Setting icon to " << icon_name;
-  icon_->SetByIconName(icon_name.c_str(), icon_size);
+  icon_->SetByIconName(icon_name, icon_size);
   QueueDraw();
 }
 
-void View::SetHideIcon(IconHideState hide_icon)
+void View::ShowEmbeddedIcon(bool show)
 {
   LOG_DEBUG(logger) << "Hide icon called";
-  if (hide_icon == icon_state_)
+  if (show == show_embedded_icon_)
     return;
 
-  icon_state_ = hide_icon;
+  show_embedded_icon_ = show;
 
-  if (icon_state_ == IconHideState::HIDE)
-    layout_->RemoveChildObject(dynamic_cast<nux::Area*>(icon_layout_.GetPointer()));
+  if (show_embedded_icon_)
+  {
+    layout_->AddLayout(icon_layout_.GetPointer(), 0, nux::MINOR_POSITION_TOP,
+                       nux::MINOR_SIZE_MATCHCONTENT, 100.0f, nux::LayoutPosition::NUX_LAYOUT_BEGIN);
+
+    AddChild(icon_.GetPointer());
+  }
   else
-    layout_->AddLayout(icon_layout_.GetPointer(), 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT, 100.0f, nux::LayoutPosition::NUX_LAYOUT_BEGIN);
+  {
+    layout_->RemoveChildObject(static_cast<nux::Area*>(icon_layout_.GetPointer()));
+    RemoveChild(icon_.GetPointer());
+  }
 
   Relayout();
 }
@@ -303,7 +310,7 @@ nux::Geometry View::GetBestFitGeometry(nux::Geometry const& for_geo)
   width = 1024;
   height = 276;
 
-  if (icon_state_ == IconHideState::HIDE)
+  if (!show_embedded_icon_)
   {
     width -= icon_layout_->GetGeometry().width;
   }
@@ -351,6 +358,7 @@ void View::SetupViews()
     icon_ = new Icon("", icon_size, true);
     icon_layout_ = new nux::VLayout();
     {
+      AddChild(icon_.GetPointer());
       icon_layout_->SetVerticalExternalMargin(icon_vertical_margin);
       icon_layout_->AddView(icon_.GetPointer(), 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
       layout_->AddLayout(icon_layout_.GetPointer(), 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT);
@@ -491,6 +499,7 @@ void View::AddProperties(GVariantBuilder* builder)
 {
   unsigned num_buttons = buttons_.size();
   variant::BuilderWrapper(builder)
+    .add(GetGeometry())
     .add("selected_button", selected_button_)
     .add("num_buttons", num_buttons);
 }

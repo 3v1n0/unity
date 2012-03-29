@@ -185,18 +185,20 @@ void
 LauncherIcon::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper(builder)
-  .add("x", _center[0].x)
-  .add("y", _center[0].y)
-  .add("z", _center[0].z)
-  .add("related-windows", (int)Windows().size())
-  .add("icon-type", _icon_type)
-  .add("tooltip-text", tooltip_text())
-  .add("sort-priority", _sort_priority)
-  .add("quirk-active", GetQuirk(QUIRK_ACTIVE))
-  .add("quirk-visible", GetQuirk(QUIRK_VISIBLE))
-  .add("quirk-urgent", GetQuirk(QUIRK_URGENT))
-  .add("quirk-running", GetQuirk(QUIRK_RUNNING))
-  .add("quirk-presented", GetQuirk(QUIRK_PRESENTED));
+  .add("center_x", _center[0].x)
+  .add("center_y", _center[0].y)
+  .add("center_z", _center[0].z)
+  .add("related_windows", static_cast<unsigned int>(Windows().size()))
+  .add("icon_type", _icon_type)
+  .add("tooltip_text", tooltip_text())
+  .add("sort_priority", _sort_priority)
+  .add("active", GetQuirk(QUIRK_ACTIVE))
+  .add("visible", GetQuirk(QUIRK_VISIBLE))
+  .add("urgent", GetQuirk(QUIRK_URGENT))
+  .add("running", GetQuirk(QUIRK_RUNNING))
+  .add("starting", GetQuirk(QUIRK_STARTING))
+  .add("desaturated", GetQuirk(QUIRK_DESAT))
+  .add("presented", GetQuirk(QUIRK_PRESENTED));
 }
 
 void

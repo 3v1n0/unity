@@ -2521,6 +2521,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
     case UnityshellOptions::NumLaunchers:
       launcher_controller_->multiple_launchers = optionGetNumLaunchers() == 0;
       dash_controller_->use_primary = !launcher_controller_->multiple_launchers();
+      hud_controller_->multiple_launchers = launcher_controller_->multiple_launchers();
       break;
     case UnityshellOptions::LauncherCaptureMouse:
       launcher_options->edge_resist = optionGetLauncherCaptureMouse();
@@ -2541,7 +2542,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
     case UnityshellOptions::LauncherHideMode:
     {
       launcher_options->hide_mode = (unity::launcher::LauncherHideMode) optionGetLauncherHideMode();
-      hud_controller_->SetLauncherIsLockedOut(launcher_options->hide_mode == unity::launcher::LauncherHideMode::LAUNCHER_HIDE_NEVER);
+      hud_controller_->launcher_locked_out = (launcher_options->hide_mode == unity::launcher::LauncherHideMode::LAUNCHER_HIDE_NEVER);
       break;
     }
     case UnityshellOptions::BacklightMode:
@@ -2776,7 +2777,8 @@ void UnityScreen::initLauncher()
   /* Setup Hud */
   hud_controller_.reset(new hud::Controller());
   auto hide_mode = (unity::launcher::LauncherHideMode) optionGetLauncherHideMode();
-  hud_controller_->SetLauncherIsLockedOut(hide_mode == unity::launcher::LauncherHideMode::LAUNCHER_HIDE_NEVER);
+  hud_controller_->launcher_locked_out = (hide_mode == unity::launcher::LauncherHideMode::LAUNCHER_HIDE_NEVER);
+  hud_controller_->multiple_launchers = (optionGetNumLaunchers() == 0);
   AddChild(hud_controller_.get());
   LOG_INFO(logger) << "initLauncher-hud " << timer.ElapsedSeconds() << "s";
 

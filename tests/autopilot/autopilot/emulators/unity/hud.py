@@ -14,6 +14,16 @@ from autopilot.emulators.unity import UnityIntrospectionObject
 class HudView(UnityIntrospectionObject):
     """Proxy object for the hud view child of the controller."""
 
+    @property
+    def geometry(self):
+        return (self.x, self.y, self.width, self.height)
+
+class EmbeddedIcon(UnityIntrospectionObject):
+    """Proxy object for the hud embedded icon child of the view."""
+
+    @property
+    def geometry(self):
+        return (self.x, self.y, self.width, self.height)
 
 class HudController(UnityIntrospectionObject, KeybindingsHelper):
     """Proxy object for the Unity Hud Controller."""
@@ -35,9 +45,22 @@ class HudController(UnityIntrospectionObject, KeybindingsHelper):
         """Tap the 'Alt' key to toggle the hud visibility."""
         self.keybinding("hud/reveal", tap_delay)
 
+    def get_embedded_icon(self):
+        """Returns the HUD view embedded icon or None if is not shown."""
+        view = self._get_view()
+        if (not view):
+            return None
+
+        icons = view.get_children_by_type(EmbeddedIcon)
+        return icons[0] if icons else None
+
     def _get_view(self):
         views = self.get_children_by_type(HudView)
         return views[0] if views else None
+
+    @property
+    def geometry(self):
+        return (self.x, self.y, self.width, self.height)
 
     @property
     def selected_button(self):
@@ -54,3 +77,15 @@ class HudController(UnityIntrospectionObject, KeybindingsHelper):
             return view.num_buttons
         else:
             return 0
+
+    @property
+    def is_locked_to_launcher(self):
+        return bool(self.locked_to_launcher)
+
+    @property
+    def monitor(self):
+        return int(self.hud_monitor)
+
+    @property
+    def has_embedded_icon(self):
+        return (self.get_embedded_icon() != None)
