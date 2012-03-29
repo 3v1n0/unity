@@ -161,8 +161,8 @@ private:
   PanelTitlebarGrabArea* _titlebar_grab_area;
   glib::Object<BamfApplication> _new_application;
 
-  std::map<guint32, bool> _decor_map;
-  std::set<guint32> _maximized_set;
+  std::map<Window, bool> _decor_map;
+  std::set<Window> _maximized_set;
   std::list<glib::Object<BamfApplication>> _new_apps;
   std::string _panel_title;
 

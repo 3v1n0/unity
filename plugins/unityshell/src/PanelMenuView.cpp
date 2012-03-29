@@ -321,6 +321,7 @@ nux::Area* PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, n
   Area* found_area = nullptr;
   if (!_we_control_active)
   {
+    /* When the current panel is not active, it all behaves like a grab-area */
     if (GetAbsoluteGeometry().IsInside(mouse_position))
       return _titlebar_grab_area;
   }
