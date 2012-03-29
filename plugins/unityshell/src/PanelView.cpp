@@ -386,18 +386,6 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 }
 
 void
-PanelView::PreLayoutManagement()
-{
-  nux::View::PreLayoutManagement();
-}
-
-long
-PanelView::PostLayoutManagement(long LayoutResult)
-{
-  return nux::View::PostLayoutManagement(LayoutResult);
-}
-
-void
 PanelView::UpdateBackground()
 {
   nux::Geometry const& geo = GetGeometry();

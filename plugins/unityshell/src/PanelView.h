@@ -67,9 +67,6 @@ protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-  void PreLayoutManagement();
-  long PostLayoutManagement(long LayoutResult);
-
   // Introspectable methods
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
