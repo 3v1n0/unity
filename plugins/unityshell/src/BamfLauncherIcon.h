@@ -43,7 +43,7 @@ public:
   BamfLauncherIcon(BamfApplication* app);
   virtual ~BamfLauncherIcon();
 
-  void ActivateLauncherIcon(ActionArg arg);
+  virtual void ActivateLauncherIcon(ActionArg arg);
 
   std::string DesktopFile();
 

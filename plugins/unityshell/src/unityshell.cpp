@@ -3058,7 +3058,7 @@ void capture_g_log_calls(const gchar* log_domain,
   }
   nux::logging::Logger logger(module);
   nux::logging::Level level = glog_level_to_nux(log_level);
-  if (logger.GetEffectiveLogLevel() >= level)
+  if (level >= logger.GetEffectiveLogLevel())
   {
     nux::logging::LogStream(level, logger.module(), "<unknown>", 0).stream()
         << message;

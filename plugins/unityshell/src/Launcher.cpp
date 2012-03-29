@@ -1769,6 +1769,11 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
   Resize();
 }
 
+int Launcher::GetIconSize() const
+{
+    return _icon_size;
+}
+
 void Launcher::Resize()
 {
   UScreen* uscreen = UScreen::GetDefault();
@@ -2051,11 +2056,11 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                               nux::Geometry(bkg_box.x,
                                             bkg_box.y,
                                             bkg_box.width,
-                                            20),
-                              nux::Color(0x60000000),
+                                            8),
+                              nux::Color(0x70000000),
                               nux::Color(0x00000000),
                               nux::Color(0x00000000),
-                              nux::Color(0x60000000));
+                              nux::Color(0x70000000));
   }
 
   // FIXME: can be removed for a bgk_box->SetAlpha once implemented
@@ -2955,7 +2960,8 @@ Launcher::handle_dbus_method_call(GDBusConnection*       connection,
     g_variant_get(parameters, "(ssiiiss)", &title, &icon, &icon_x, &icon_y, &icon_size, &desktop_file, &aptdaemon_task, NULL);
 
     Launcher* self = (Launcher*)user_data;
-    self->launcher_addrequest_special.emit(desktop_file, AbstractLauncherIcon::Ptr(), aptdaemon_task, icon);
+    self->launcher_addrequest_special.emit(desktop_file, AbstractLauncherIcon::Ptr(), aptdaemon_task, icon,
+                                            icon_x, icon_y, icon_size);
 
     g_dbus_method_invocation_return_value(invocation, nullptr);
     g_free(icon);
