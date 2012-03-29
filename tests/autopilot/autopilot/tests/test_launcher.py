@@ -8,7 +8,7 @@
 # by the Free Software Foundation.
 
 import logging
-from testtools.matchers import Equals, NotEquals, LessThan, GreaterThan
+from testtools.matchers import Equals, NotEquals, LessThan, GreaterThan, Not, Is
 from time import sleep
 
 from autopilot.tests import AutopilotTestCase, multiply_scenarios
@@ -480,6 +480,41 @@ class LauncherTests(ScenariodLauncherTests):
 
         self.assertThat(self.launcher.key_nav_is_active, Equals(False))
 
+
+    def test_software_center_add_icon(self):
+        """ Test the ability to add a SoftwareCenterLauncherIcon """
+        
+        launcher_instance = self.get_launcher()
+        sc_desktop_file = "/usr/share/applications/ubuntu-software-center.desktop"
+                
+        def cleanup():
+            if icon is not None:
+                launcher_instance.unlock_from_launcher(icon[0])
+
+        # Check if SC is pinned to the launcher already
+        icon = self.launcher.model.get_icon_by_desktop_file(sc_desktop_file)
+        if icon != None:
+            launcher_instance.unlock_from_launcher(icon[0])
+            sleep(2.0) # Animation of removing icon can take over a second
+        else:
+            self.addCleanup(cleanup)
+
+        self.launcher.add_launcher_item_from_position("Unity Test",
+                                                   "softwarecenter",
+                                                   100,
+                                                   100,
+                                                   32,
+                                                   sc_desktop_file,
+                                                   "")
+        
+        sleep(1.0)
+
+        icon = self.launcher.model.get_icon_by_desktop_file(sc_desktop_file)
+        self.assertThat(icon, Not(Is(None)))
+
+        # Check for whether:
+        # The new launcher icon has a 'Waiting to install' tooltip
+        self.assertThat(icon[0].tooltip_text, Equals("Waiting to install"))
 
 class LauncherRevealTests(ScenariodLauncherTests):
     """Test the launcher reveal bahavior when in autohide mode."""
