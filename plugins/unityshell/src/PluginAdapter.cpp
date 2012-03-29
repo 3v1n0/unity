@@ -66,6 +66,7 @@ PluginAdapter::PluginAdapter(CompScreen* screen) :
   _last_focused_window(nullptr)
 {
   _spread_state = false;
+  _spread_windows_state = false;
   _expo_state = false;
   _vp_switch_started = false;
 
@@ -105,6 +106,7 @@ PluginAdapter::OnScreenUngrabbed()
   if (_spread_state && !screen->grabExist("scale"))
   {
     _spread_state = false;
+    _spread_windows_state = false;
     terminate_spread.emit();
   }
 
@@ -367,6 +369,12 @@ bool
 PluginAdapter::IsScaleActive()
 {
   return m_Screen->grabExist("scale");
+}
+
+bool
+PluginAdapter::IsScaleActiveForGroup()
+{
+  return _spread_windows_state && m_Screen->grabExist("scale");
 }
 
 bool
@@ -718,6 +726,7 @@ PluginAdapter::ScaleWindowGroup(std::vector<Window> windows, int state, bool for
   {
     std::string match = MatchStringForXids(&windows);
     InitiateScale(match, state);
+    _spread_windows_state = true;
     return true;
   }
   return false;

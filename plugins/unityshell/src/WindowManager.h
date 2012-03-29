@@ -76,6 +76,7 @@ public:
 
   virtual void TerminateScale() = 0;
   virtual bool IsScaleActive() = 0;
+  virtual bool IsScaleActiveForGroup() = 0;
 
   virtual void InitiateExpo() = 0;
   virtual bool IsExpoActive() = 0;

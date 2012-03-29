@@ -173,6 +173,12 @@ class WindowManagerDummy : public WindowManager
     return false;
   }
 
+  bool IsScaleActiveForGroup()
+  {
+    g_debug("%s", G_STRFUNC);
+    return false;
+  }
+
   void InitiateExpo()
   {
     g_debug("%s", G_STRFUNC);

@@ -93,6 +93,7 @@ public:
 
   void TerminateScale();
   bool IsScaleActive();
+  bool IsScaleActiveForGroup();
 
   void InitiateExpo();
   bool IsExpoActive();
@@ -172,6 +173,7 @@ private:
   MultiActionList m_ScaleActionList;
 
   bool _spread_state;
+  bool _spread_windows_state;
   bool _expo_state;
   bool _vp_switch_started;
 
