@@ -386,6 +386,7 @@ void Controller::OnActivateRequest(GVariant* variant)
 
 void Controller::OnSearchChanged(std::string search_string)
 {
+  //FIXME!! - when the service is smart enough to not fall over if you send many requests, this should be removed
   LOG_DEBUG(logger) << "Search Changed";
   auto on_search_changed_timeout_lambda = [] (gpointer data) -> gboolean {
     Controller* self = static_cast<Controller*>(data);
