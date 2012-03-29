@@ -396,7 +396,7 @@ WindowButtons::WindowButtons()
 nux::Area* WindowButtons::FindAreaUnderMouse(const nux::Point& mouse, nux::NuxEventType event_type)
 {
   /* The first button should be clickable on the left space too, to
-   * make Fitts happy. See bug #839690 */
+   * make Fitts happy. All also on their top side. See bug #839690 */
   bool first_found = false;
 
   for (auto area : GetChildren())

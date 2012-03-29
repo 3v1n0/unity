@@ -198,7 +198,8 @@ PanelIndicatorsView::ActivateIfSensitive()
 
     if (view->IsSensitive() && view->IsVisible() && view->IsFocused())
     {
-      view->Activate();
+      /* Use the 0 button, it means it's a keyboard activation */
+      view->Activate(0);
       return true;
     }
   }

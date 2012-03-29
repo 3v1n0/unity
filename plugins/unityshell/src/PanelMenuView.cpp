@@ -321,8 +321,8 @@ nux::Area* PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, n
   Area* found_area = nullptr;
   if (!_we_control_active)
   {
-    found_area = _titlebar_grab_area->FindAreaUnderMouse(mouse_position, event_type);
-    NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
+    if (GetAbsoluteGeometry().IsPointInside(mouse_position.x, mouse_position.y))
+      return _titlebar_grab_area;
   }
 
   if (_is_maximized || _dash_showing || (_is_integrated && GetMaximizedWindow()))

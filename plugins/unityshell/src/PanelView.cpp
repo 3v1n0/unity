@@ -504,7 +504,7 @@ void PanelView::OnIndicatorViewUpdated(PanelIndicatorEntryView* view)
 
 void PanelView::OnMenuPointerMoved(int x, int y)
 {
-  nux::Geometry geo = GetAbsoluteGeometry();
+  nux::Geometry const& geo = GetAbsoluteGeometry();
 
   if (geo.IsPointInside(x, y))
   {
