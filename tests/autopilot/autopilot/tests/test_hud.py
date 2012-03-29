@@ -11,12 +11,19 @@ from time import sleep
 
 from autopilot.emulators.unity.hud import HudController
 from autopilot.tests import AutopilotTestCase
-
+from os import remove
 
 class HudTests(AutopilotTestCase):
 
+    scenarios = [
+        ('Launcher never hide', {'launcher_hide_mode': 0}),
+        ('Launcher autohide', {'launcher_hide_mode': 1}),
+        ]
+
     def setUp(self):
         super(HudTests, self).setUp()
+        self.set_unity_option('launcher_hide_mode', self.launcher_hide_mode)
+        sleep(0.5)
         self.hud = self.get_hud_controller()
 
     def tearDown(self):
@@ -54,12 +61,16 @@ class HudTests(AutopilotTestCase):
     def test_check_a_values(self):
         self.reveal_hud()
         self.keyboard.type('a')
+        # Give the HUD a second to get values.
+        sleep(1)
         self.assertThat(self.hud.num_buttons, Equals(5))
         self.assertThat(self.hud.selected_button, Equals(1))
 
     def test_up_down_arrows(self):
         self.reveal_hud()
         self.keyboard.type('a')
+        # Give the HUD a second to get values.
+        sleep(1)
         self.keyboard.press_and_release('Down')
         self.assertThat(self.hud.selected_button, Equals(2))
         self.keyboard.press_and_release('Down')
@@ -171,4 +182,32 @@ class HudTests(AutopilotTestCase):
         sleep(1)
 
         self.assertEqual(calc.is_active, True)
+
+    def test_gedit_undo(self):
+        """Test undo in gedit"""
+        """Type "0 1" into gedit."""
+        """Activate the Hud, type "undo" then enter."""
+        """Save the file in gedit and close gedit."""
+        """Read the saved file. The content should be "0 "."""
+
+        self.addCleanup(remove, '/tmp/autopilot_gedit_undo_test_temp_file.txt')
+        self.start_app('Text Editor', files=['/tmp/autopilot_gedit_undo_test_temp_file.txt'])
+
+        sleep(1)
+        self.keyboard.type("0")
+        self.keyboard.type(" ")
+        self.keyboard.type("1")
+
+        self.hud.toggle_reveal()
+        sleep(1)
+
+        self.keyboard.type("undo")
+        self.keyboard.press_and_release('Return')
+        sleep(1)
+
+        self.keyboard.press_and_release("Ctrl+s")
+        sleep(1)
+
+        contents = open("/tmp/autopilot_gedit_undo_test_temp_file.txt").read().strip('\n')
+        self.assertEqual("0 ", contents)
 

@@ -100,7 +100,7 @@ void FilterBasicButton::InitTheme()
 
 void FilterBasicButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
 {
-  Style::Instance().Button(cr, faked_state, label_);
+  Style::Instance().Button(cr, faked_state, label_, -1, Alignment::CENTER, true);
 }
 
 void FilterBasicButton::RedrawFocusOverlay(nux::Geometry const& geom, cairo_t* cr)
@@ -111,7 +111,7 @@ void FilterBasicButton::RedrawFocusOverlay(nux::Geometry const& geom, cairo_t* c
 long FilterBasicButton::ComputeContentSize()
 {
   long ret = nux::Button::ComputeContentSize();
-  
+
   nux::Geometry const& geo = GetGeometry();
 
   if (cached_geometry_ != geo)

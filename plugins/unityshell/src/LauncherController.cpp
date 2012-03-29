@@ -32,6 +32,7 @@
 #include "DeviceLauncherIcon.h"
 #include "DeviceLauncherSection.h"
 #include "FavoriteStore.h"
+#include "HudLauncherIcon.h"
 #include "Launcher.h"
 #include "LauncherController.h"
 #include "LauncherEntryRemote.h"
@@ -86,8 +87,11 @@ public:
   void OnIconRemoved(AbstractLauncherIcon::Ptr icon);
 
   void OnLauncherAddRequest(char* path, AbstractLauncherIcon::Ptr before);
-  void OnLauncherAddRequestSpecial(std::string const& path, AbstractLauncherIcon::Ptr before, std::string const& aptdaemon_trans_id, std::string const& icon_path);
+  void OnLauncherAddRequestSpecial(std::string const& path, AbstractLauncherIcon::Ptr before, std::string const& aptdaemon_trans_id, std::string const& icon_path,
+                                   int icon_x, int icon_y, int icon_size);
   void OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr icon);
+
+  void OnSCIconAnimationComplete(AbstractLauncherIcon::Ptr icon);
 
   void OnLauncherEntryRemoteAdded(LauncherEntryRemote* entry);
   void OnLauncherEntryRemoteRemoved(LauncherEntryRemote* entry);
@@ -113,11 +117,11 @@ public:
 
   AbstractLauncherIcon::Ptr CreateFavorite(const char* file_path);
 
-  AbstractLauncherIcon::Ptr CreateSCLauncherIcon(std::string const& file_path, std::string const& aptdaemon_trans_id, std::string const& icon_path);
+  SoftwareCenterLauncherIcon::Ptr CreateSCLauncherIcon(std::string const& file_path, std::string const& aptdaemon_trans_id, std::string const& icon_path);
 
   void SetupBamf();
 
-  void EnsureLaunchers(std::vector<nux::Geometry> const& monitors);
+  void EnsureLaunchers(int primary, std::vector<nux::Geometry> const& monitors);
 
   void OnExpoActivated();
 
@@ -187,6 +191,7 @@ Controller::Impl::Impl(Display* display, Controller* parent)
 {
   UScreen* uscreen = UScreen::GetDefault();
   auto monitors = uscreen->GetMonitors();
+  int primary = uscreen->GetPrimaryMonitor();
 
   launcher_open = false;
   launcher_keynav = false;
@@ -194,7 +199,7 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   reactivate_keynav = false;
   keynav_restore_window_ = true;
 
-  EnsureLaunchers(monitors);
+  EnsureLaunchers(primary, monitors);
 
   launcher_ = launchers[0];
 
@@ -228,7 +233,18 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   FavoriteStore::GetDefault().favorite_removed.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteRemoved));
   FavoriteStore::GetDefault().reordered.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreReordered));
 
-  RegisterIcon(AbstractLauncherIcon::Ptr(new BFBLauncherIcon()));
+  LauncherHideMode hide_mode = parent_->options()->hide_mode;
+  BFBLauncherIcon* bfb = new BFBLauncherIcon(hide_mode);
+  parent_->options()->hide_mode.changed.connect([bfb](LauncherHideMode mode) {
+      bfb->SetHideMode(mode);
+    });
+  RegisterIcon(AbstractLauncherIcon::Ptr(bfb));
+
+  HudLauncherIcon* hud = new HudLauncherIcon(hide_mode);
+  parent_->options()->hide_mode.changed.connect([hud](LauncherHideMode mode) {
+      hud->SetHideMode(mode);
+    });
+  RegisterIcon(AbstractLauncherIcon::Ptr(hud));
   desktop_icon_ = AbstractLauncherIcon::Ptr(new DesktopLauncherIcon());
 
   uscreen->changed.connect(sigc::mem_fun(this, &Controller::Impl::OnScreenChanged));
@@ -267,39 +283,58 @@ Controller::Impl::~Impl()
   delete device_section_;
 }
 
-void Controller::Impl::EnsureLaunchers(std::vector<nux::Geometry> const& monitors)
+void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> const& monitors)
 {
-  unsigned int num_monitors;
-  if (parent_->multiple_launchers)
+  unsigned int num_monitors = monitors.size();
+  unsigned int num_launchers = parent_->multiple_launchers ? num_monitors : 1;
+  unsigned int launchers_size = launchers.size();
+  unsigned int last_monitor = 0;
+
+  if (num_launchers == 1)
   {
-    num_monitors = monitors.size();
+    if (launchers_size == 0)
+    {
+      launchers.push_back(nux::ObjectPtr<Launcher>(CreateLauncher(primary)));
+    }
+    else if (!launchers[0].IsValid())
+    {
+      launchers[0] = nux::ObjectPtr<Launcher>(CreateLauncher(primary));
+    }
+
+    launchers[0]->monitor(primary);
+    launchers[0]->Resize();
+    last_monitor = 1;
   }
   else
   {
-    num_monitors = 1;
+    for (unsigned int i = 0; i < num_monitors; i++, last_monitor++)
+    {
+      if (i >= launchers_size)
+      {
+        launchers.push_back(nux::ObjectPtr<Launcher>(CreateLauncher(i)));
+      }
+
+      launchers[i]->monitor(i);
+      launchers[i]->Resize();
+    }
   }
 
-  unsigned int i;
-  for (i = 0; i < num_monitors; i++)
-  {
-    if (i >= launchers.size())
-      launchers.push_back(nux::ObjectPtr<Launcher> (CreateLauncher(i)));
-
-    launchers[i]->Resize();
-  }
-
-  for (; i < launchers.size(); ++i)
+  for (unsigned int i = last_monitor; i < launchers_size; ++i)
   {
     auto launcher = launchers[i];
     if (launcher.IsValid())
+    {
+      parent_->RemoveChild(launcher.GetPointer());
       launcher->GetParent()->UnReference();
+    }
   }
-  launchers.resize(num_monitors);
+
+  launchers.resize(num_launchers);
 }
 
 void Controller::Impl::OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors)
 {
-  EnsureLaunchers(monitors);
+  EnsureLaunchers(primary_monitor, monitors);
 }
 
 void Controller::Impl::OnWindowFocusChanged (guint32 xid)
@@ -344,6 +379,8 @@ Launcher* Controller::Impl::CreateLauncher(int monitor)
   launcher->launcher_addrequest.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequest));
   launcher->launcher_addrequest_special.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequestSpecial));
   launcher->launcher_removerequest.connect(sigc::mem_fun(this, &Impl::OnLauncherRemoveRequest));
+
+  launcher->icon_animation_complete.connect(sigc::mem_fun(this, &Impl::OnSCIconAnimationComplete));
 
   parent_->AddChild(launcher);
 
@@ -398,24 +435,35 @@ void
 Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
                                               AbstractLauncherIcon::Ptr before,
                                               std::string const& aptdaemon_trans_id,
-                                              std::string const& icon_path)
+                                              std::string const& icon_path,
+                                              int icon_x,
+                                              int icon_y,
+                                              int icon_size)
 {
-  auto launchers = model_->GetSublist<BamfLauncherIcon>();
-  for (auto icon : launchers)
+  auto bamf_icons = model_->GetSublist<BamfLauncherIcon>();
+  for (auto icon : bamf_icons)
   {
     if (icon->DesktopFile() == path)
       return;
   }
 
-  AbstractLauncherIcon::Ptr result = CreateSCLauncherIcon(path, aptdaemon_trans_id, icon_path);
+  SoftwareCenterLauncherIcon::Ptr result = CreateSCLauncherIcon(path, aptdaemon_trans_id, icon_path);
+
+  launcher_->ForceReveal(true);
+
   if (result)
   {
+    result->SetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE, false);
+    result->Animate(launcher_, icon_x, icon_y, icon_size);
     RegisterIcon(result);
-
-    if (before)
-      model_->ReorderBefore(result, before, false);
+    Save();
   }
-  Save();
+}
+
+void Controller::Impl::OnSCIconAnimationComplete(AbstractLauncherIcon::Ptr icon)
+{
+  icon->SetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE, true);
+  launcher_->ForceReveal(false);
 }
 
 void Controller::Impl::SortAndUpdate()
@@ -701,13 +749,12 @@ AbstractLauncherIcon::Ptr Controller::Impl::CreateFavorite(const char* file_path
   return result;
 }
 
-AbstractLauncherIcon::Ptr
-Controller::Impl::CreateSCLauncherIcon(std::string const& file_path,
-                                       std::string const& aptdaemon_trans_id,
-                                       std::string const& icon_path)
+SoftwareCenterLauncherIcon::Ptr Controller::Impl::CreateSCLauncherIcon(std::string const& file_path,
+                                                                       std::string const& aptdaemon_trans_id,
+                                                                       std::string const& icon_path)
 {
   BamfApplication* app;
-  AbstractLauncherIcon::Ptr result;
+  SoftwareCenterLauncherIcon::Ptr result;
 
   app = bamf_matcher_get_application_for_desktop_file(matcher_, file_path.c_str(), true);
   if (!BAMF_IS_APPLICATION(app))
@@ -719,13 +766,10 @@ Controller::Impl::CreateSCLauncherIcon(std::string const& file_path,
     return result;
   }
 
-  g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"), GINT_TO_POINTER(1));
-
   bamf_view_set_sticky(BAMF_VIEW(app), true);
-  AbstractLauncherIcon::Ptr icon(new SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path));
-  icon->SetSortPriority(sort_priority_++);
+  result = new SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path);
+  result->SetSortPriority(sort_priority_++);
 
-  result = icon;
   return result;
 }
 
@@ -791,7 +835,8 @@ Controller::Controller(Display* display)
   multiple_launchers.changed.connect([&](bool value) -> void {
     UScreen* uscreen = UScreen::GetDefault();
     auto monitors = uscreen->GetMonitors();
-    pimpl->EnsureLaunchers(monitors);
+    int primary = uscreen->GetPrimaryMonitor();
+    pimpl->EnsureLaunchers(primary, monitors);
     options()->show_for_all = !value;
   });
 }

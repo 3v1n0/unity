@@ -65,6 +65,9 @@
 // Signal to force the launcher into locked mode, (b)
 #define UBUS_LAUNCHER_LOCK_HIDE "LAUNCHER_LOCK_HIDE"
 
+// Signal to emit changes to the launcher hide mode behaviour (b), true = locked out, false = unlocked
+#define UBUS_LAUNCHER_HIDE_MODE_CHANGE "LAUNCHER_HIDE_MODE_CHANGE"
+
 // Signal sent when a quicklist is shown.
 #define UBUS_QUICKLIST_SHOWN "QUICKLIST_SHOWN"
 
@@ -79,6 +82,8 @@
 // FIXME - fix the nux focus api so we don't need this
 #define UBUS_RESULT_VIEW_KEYNAV_CHANGED "RESULT_VIEW_KEYNAV_CHANGED"
 
+// Sends a string datatype containing the new icon name
+#define UBUS_HUD_ICON_CHANGED "HUD_ICON_CHANGED"
 #define UBUS_HUD_CLOSE_REQUEST "HUD_CLOSE_REQUEST"
 
 // Signals sent when the switcher is shown, hidden or changes selection

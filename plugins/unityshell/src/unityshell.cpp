@@ -294,7 +294,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetKeyboardFocusInitiate(boost::bind(&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
      //optionSetKeyboardFocusTerminate (boost::bind (&UnityScreen::setKeyboardFocusKeyTerminate, this, _1, _2, _3));
      optionSetExecuteCommandInitiate(boost::bind(&UnityScreen::executeCommand, this, _1, _2, _3));
-     optionSetPanelFirstMenuInitiate(boost::bind(&UnityScreen::showPanelFirstMenuKey, this, _1, _2, _3));
+     optionSetPanelFirstMenuInitiate(boost::bind(&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
+     optionSetPanelFirstMenuTerminate(boost::bind(&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
      optionSetAutomaximizeValueNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAltTabTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAltTabBiasViewportNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -1242,7 +1243,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
 
 #ifdef USE_GLES
 void UnityScreen::glPaintCompositedOutput (const CompRegion &region,
-                                           GLFramebufferObject *fbo,
+                                           ::GLFramebufferObject *fbo,
                                            unsigned int        mask)
 {
   bool useFbo = false;
@@ -1253,11 +1254,11 @@ void UnityScreen::glPaintCompositedOutput (const CompRegion &region,
     useFbo = fbo->checkStatus () && fbo->tex ();
     if (!useFbo) {
 	printf ("bailing from UnityScreen::glPaintCompositedOutput");
-	GLFramebufferObject::rebind (oldFbo);
+	::GLFramebufferObject::rebind (oldFbo);
 	return;
     }
     paintDisplay();
-    GLFramebufferObject::rebind (oldFbo);
+    ::GLFramebufferObject::rebind (oldFbo);
   }
 
   gScreen->glPaintCompositedOutput(region, fbo, mask);
@@ -1345,7 +1346,7 @@ void UnityScreen::handleEvent(XEvent* event)
 #ifndef USE_GLES
       cScreen->damageScreen();  // evil hack
 #endif
-      if (_key_nav_mode_requested)
+      if (_key_nav_mode_requested && !dash_is_open_)
         launcher_controller_->KeyNavGrab();
       _key_nav_mode_requested = false;
       break;
@@ -1582,6 +1583,11 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
                                            CompAction::State state,
                                            CompOption::Vector& options)
 {
+  // Remember StateCancel and StateCommit will be broadcast to all actions
+  // so we need to verify that we are actually being toggled...
+  if (!(state & CompAction::StateTermKey))
+    return false;
+
   if (state & CompAction::StateCancel)
     return false;
 
@@ -1602,11 +1608,37 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
   return true;
 }
 
-bool UnityScreen::showPanelFirstMenuKey(CompAction* action,
-                                        CompAction::State state,
-                                        CompOption::Vector& options)
+bool UnityScreen::showPanelFirstMenuKeyInitiate(CompAction* action,
+                                                CompAction::State state,
+                                                CompOption::Vector& options)
 {
+  /* In order to avoid too many events when keeping the keybinding pressed,
+   * that would make the unity-panel-service to go crazy (see bug #948522)
+   * we need to filter them, just considering an event every 750 ms */
+  int event_time = options[7].value().i();  // XEvent time in millisec
+
+  if (event_time - first_menu_keypress_time_ < 750)
+  {
+    first_menu_keypress_time_ = event_time;
+    return false;
+  }
+
+  first_menu_keypress_time_ = event_time;
+
+  /* Even if we do nothing on key terminate, we must enable it, not to to hide
+   * the menus entries after that a menu has been shown and hidden via the
+   * keyboard and the Alt key is still pressed */
+  action->setState(action->state() | CompAction::StateTermKey);
   panel_controller_->FirstMenuShow();
+
+  return true;
+}
+
+bool UnityScreen::showPanelFirstMenuKeyTerminate(CompAction* action,
+                                                 CompAction::State state,
+                                                 CompOption::Vector& options)
+{
+  action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
   return true;
 }
 
@@ -2515,8 +2547,11 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     }
     case UnityshellOptions::LauncherHideMode:
+    {
       launcher_options->hide_mode = (unity::launcher::LauncherHideMode) optionGetLauncherHideMode();
+      hud_controller_->SetLauncherIsLockedOut(launcher_options->hide_mode == unity::launcher::LauncherHideMode::LAUNCHER_HIDE_NEVER);
       break;
+    }
     case UnityshellOptions::BacklightMode:
       launcher_options->backlight_mode = (unity::launcher::BacklightMode) optionGetBacklightMode();
       break;
@@ -2748,6 +2783,8 @@ void UnityScreen::initLauncher()
 
   /* Setup Hud */
   hud_controller_.reset(new hud::Controller());
+  auto hide_mode = (unity::launcher::LauncherHideMode) optionGetLauncherHideMode();
+  hud_controller_->SetLauncherIsLockedOut(hide_mode == unity::launcher::LauncherHideMode::LAUNCHER_HIDE_NEVER);
   AddChild(hud_controller_.get());
   LOG_INFO(logger) << "initLauncher-hud " << timer.ElapsedSeconds() << "s";
   
@@ -3028,7 +3065,7 @@ void capture_g_log_calls(const gchar* log_domain,
   }
   nux::logging::Logger logger(module);
   nux::logging::Level level = glog_level_to_nux(log_level);
-  if (logger.GetEffectiveLogLevel() >= level)
+  if (level >= logger.GetEffectiveLogLevel())
   {
     nux::logging::LogStream(level, logger.module(), "<unknown>", 0).stream()
         << message;

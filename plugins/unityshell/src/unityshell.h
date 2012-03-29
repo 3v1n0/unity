@@ -163,7 +163,7 @@ public:
                      unsigned int);
 #ifdef USE_GLES
   void glPaintCompositedOutput (const CompRegion    &region,
-                                GLFramebufferObject *fbo,
+                                ::GLFramebufferObject *fbo,
                                 unsigned int         mask);
 #endif
 
@@ -186,7 +186,8 @@ public:
 
   bool showLauncherKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool showLauncherKeyTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool showPanelFirstMenuKey(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool showPanelFirstMenuKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool showPanelFirstMenuKeyTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
   bool executeCommand(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool setKeyboardFocusKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
@@ -320,7 +321,7 @@ private:
   unity::BGHash _bghash;
 
 #ifdef USE_GLES
-  GLFramebufferObject *oldFbo;
+  ::GLFramebufferObject *oldFbo;
 #else
   ScreenEffectFramebufferObject::Ptr _fbo;
   GLuint                             _active_fbo;
@@ -337,6 +338,7 @@ private:
   unsigned int           tray_paint_mask_;
   unsigned int           last_scroll_event_;
   int                    hud_keypress_time_;
+  int                    first_menu_keypress_time_;
 
   GLMatrix panel_shadow_matrix_;
 

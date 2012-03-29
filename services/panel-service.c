@@ -390,7 +390,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
         }
 
       if (event->evtype == XI_ButtonRelease)
-        {       
+        {
           IndicatorObjectEntry *entry;
           gboolean event_is_a_click = FALSE;
           entry = get_entry_at (self, event->root_x, event->root_y);
@@ -486,7 +486,7 @@ panel_service_update_menu_keybinding (PanelService *self)
   KeySym keysym = NoSymbol;
   guint32 modifiers = 0;
 
-  gchar *keystart = (binding) ? strrchr(binding, '>') : NULL;
+  gchar *keystart = (binding) ? strrchr (binding, '>') : NULL;
 
   if (!keystart)
     keystart = binding;
@@ -503,6 +503,7 @@ panel_service_update_menu_keybinding (PanelService *self)
   {
     gchar *keystr = g_strndup (keystart, keyend-keystart);
     keysym = XStringToKeysym (keystr);
+    g_free (keystr);
   }
 
   if (keysym != NoSymbol)

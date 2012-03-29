@@ -129,7 +129,7 @@ unity_places_simple_tile_accessible_get_name(AtkObject* obj)
     tile = dynamic_cast<unity::PlacesSimpleTile*>(nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(obj)));
     if (tile != NULL)
     {
-      name = tile->GetLabel();
+      name = tile->GetLabel().c_str();
       pango_parse_markup(name, -1, 0, NULL,
                          &self->priv->stripped_name,
                          NULL, NULL);

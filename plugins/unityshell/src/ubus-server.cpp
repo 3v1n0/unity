@@ -195,6 +195,9 @@ ubus_server_get_default()
   UBusServer* server;
   static gsize singleton;
 
+  // Ensure GType has been initialized
+  g_type_init();
+
   if (g_once_init_enter(&singleton))
   {
     server = (UBusServer*)g_object_new(UBUS_TYPE_SERVER, NULL);
@@ -269,6 +272,7 @@ ubus_server_pump_message_queue(UBusServer* server)
 
     if (dispatch_list == NULL)
     {
+      ubus_message_info_free(info);
       continue; // no handlers for this message
     }
 

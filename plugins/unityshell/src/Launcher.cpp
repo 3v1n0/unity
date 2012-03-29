@@ -145,8 +145,8 @@ Launcher::Launcher(nux::BaseWindow* parent,
   , _collection_window(NULL)
   , _background_color(nux::color::DimGray)
   , _dash_is_open(false)
+  , _hud_is_open(false)
 {
-
   _parent = parent;
   _active_quicklist = nullptr;
 
@@ -201,8 +201,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _folded_angle           = 1.0f;
   _neg_folded_angle       = -1.0f;
   _space_between_icons    = 5;
-  _launcher_top_y         = 0;
-  _launcher_bottom_y      = 0;
+  _last_delta_y           = 0.0f;
   _folded_z_distance      = 10.0f;
   _launcher_action_state  = ACTION_NONE;
   _icon_under_mouse       = NULL;
@@ -227,6 +226,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _shortcuts_shown        = false;
   _hovered                = false;
   _hidden                 = false;
+  _scroll_limit_reached   = false;
   _render_drag_window     = false;
   _drag_edge_touching     = false;
   _steal_drag             = false;
@@ -879,7 +879,7 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
 {
   float desat_value = IconDesatValue(icon, current);
   arg.icon                = icon.GetPointer();
-  arg.alpha               = 0.5f + 0.5f * desat_value;
+  arg.alpha               = 0.2f + 0.8f * desat_value;
   arg.saturation          = desat_value;
   arg.colorify            = nux::color::White;
   arg.running_arrow       = icon->GetQuirk(AbstractLauncherIcon::QUIRK_RUNNING);
@@ -903,13 +903,13 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
                             icon->GetIconType() == AbstractLauncherIcon::TYPE_EXPO;
 
   // trying to protect against flickering when icon is dragged from dash LP: #863230
-  if (arg.alpha < 0.5)
+  if (arg.alpha < 0.2)
   {
-    arg.alpha = 0.5;
+    arg.alpha = 0.2;
     arg.saturation = 0.0;
   }
 
-  if (_dash_is_open)
+  if (IsOverlayOpen())
     arg.active_arrow = icon->GetIconType() == AbstractLauncherIcon::TYPE_HOME;
   else
     arg.active_arrow = icon->GetQuirk(AbstractLauncherIcon::QUIRK_ACTIVE);
@@ -939,7 +939,7 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
   else
   {
     if (options()->show_for_all)
-      arg.window_indicators = std::max<int> (icon->Windows().size(), 1);
+      arg.window_indicators = std::max<int> (icon->WindowsOnViewport().size(), 1);
     else
       arg.window_indicators = std::max<int> (icon->WindowsForMonitor(monitor).size(), 1);
   }
@@ -997,9 +997,9 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr icon,
     arg.alpha *= drop_dim_value;
 
   // trying to protect against flickering when icon is dragged from dash LP: #863230
-  if (arg.alpha < 0.5)
+  if (arg.alpha < 0.2)
   {
-    arg.alpha = 0.5;
+    arg.alpha = 0.2;
     arg.saturation = 0.0;
   }
 
@@ -1203,6 +1203,9 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
     delta_y *= hover_progress;
     center.y += delta_y;
     folding_threshold += delta_y;
+
+    _scroll_limit_reached = (delta_y == _last_delta_y);
+    _last_delta_y = delta_y;
   }
   else
   {
@@ -1318,22 +1321,31 @@ void Launcher::OnOverlayShown(GVariant* data)
   gint32 overlay_monitor = 0;
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
+  std::string identity = overlay_identity.Str();
 
+  LOG_DEBUG(logger) << "Overlay shown: " << identity
+                    << ", " << (can_maximise ? "can maximise" : "can't maximise")
+                    << ", on monitor " << overlay_monitor
+                    << " (for monitor " << monitor() << ")";
 
-  if (!g_strcmp0(overlay_identity, "dash"))
+  if (overlay_monitor == monitor())
   {
-    if (overlay_monitor == monitor)
+    if (identity == "dash")
     {
-      LauncherModel::iterator it;
-
       _dash_is_open = true;
-      bg_effect_helper_.enabled = true;
       _hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, true);
       _hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, true);
-
-      DesaturateIcons();
     }
+    if (identity == "hud")
+    {
+      _hud_is_open = true;
+    }
+
+    bg_effect_helper_.enabled = true;
+    LOG_DEBUG(logger) << "Desaturate on monitor " << monitor();
+    DesaturateIcons();
   }
+  EnsureAnimation();
 }
 
 void Launcher::OnOverlayHidden(GVariant* data)
@@ -1345,26 +1357,45 @@ void Launcher::OnOverlayHidden(GVariant* data)
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
-  if (!g_strcmp0(overlay_identity, "dash"))
+  std::string identity = overlay_identity.Str();
+
+  LOG_DEBUG(logger) << "Overlay hidden: " << identity
+                    << ", " << (can_maximise ? "can maximise" : "can't maximise")
+                    << ", on monitor " << overlay_monitor
+                    << " (for monitor" << monitor() << ")";
+
+  if (overlay_monitor == monitor())
   {
-    if (!_dash_is_open)
-      return;
+    if (identity == "dash")
+    {
+      _hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, false);
+      _hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, false);
+      _dash_is_open = false;
+    }
+    else if (identity == "hud")
+    {
+      _hud_is_open = false;
+    }
 
-    LauncherModel::iterator it;
-
-    _dash_is_open = false;
-    bg_effect_helper_.enabled = false;
-    _hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, false);
-    _hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, false);
-
-    // as the leave event is no more received when the place is opened
-    // FIXME: remove when we change the mouse grab strategy in nux
-    nux::Point pt = nux::GetWindowCompositor().GetMousePosition();
-
-    SetStateMouseOverLauncher(GetAbsoluteGeometry().IsInside(pt));
-
-    SaturateIcons();
+    // If they are both now shut, then disable the effect helper and saturate the icons.
+    if (!IsOverlayOpen())
+    {
+      bg_effect_helper_.enabled = false;
+      LOG_DEBUG(logger) << "Saturate on monitor " << monitor();
+      SaturateIcons();
+    }
   }
+  EnsureAnimation();
+
+  // as the leave event is no more received when the place is opened
+  // FIXME: remove when we change the mouse grab strategy in nux
+  nux::Point pt = nux::GetWindowCompositor().GetMousePosition();
+  SetStateMouseOverLauncher(GetAbsoluteGeometry().IsInside(pt));
+}
+
+bool Launcher::IsOverlayOpen() const
+{
+  return _dash_is_open || _hud_is_open;
 }
 
 void Launcher::OnActionDone(GVariant* data)
@@ -1451,7 +1482,7 @@ Launcher::OnUpdateDragManagerTimeout(gpointer data)
   self->_collection_window->PushToBack();
   self->_collection_window->EnableInputWindow(false, "DNDCollectionWindow");
 
-  if (self->_dash_is_open && !self->_hovered)
+  if (self->IsOverlayOpen() && !self->_hovered)
     self->DesaturateIcons();
 
   self->DndReset();
@@ -1471,6 +1502,9 @@ Launcher::OnWindowMapped(guint32 xid)
     if (!_dnd_check_handle)
       _dnd_check_handle = g_timeout_add(200, &Launcher::OnUpdateDragManagerTimeout, this);
   //}
+
+  if (GetActionState() != ACTION_NONE)
+    ResetMouseDragState();
 }
 
 void
@@ -1634,7 +1668,7 @@ void Launcher::SetHover(bool hovered)
     TimeUtil::SetTimeStruct(&_times[TIME_LEAVE], &_times[TIME_ENTER], ANIM_DURATION);
   }
 
-  if (_dash_is_open && !_hide_machine->GetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE))
+  if (IsOverlayOpen() && !_hide_machine->GetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE))
   {
     if (hovered && !_hover_machine->GetQuirk(LauncherHoverMachine::SHORTCUT_KEYS_VISIBLE))
       SaturateIcons();
@@ -1669,12 +1703,18 @@ gboolean Launcher::OnScrollTimeout(gpointer data)
 {
   Launcher* self = (Launcher*) data;
   nux::Geometry geo = self->GetGeometry();
+  gboolean anim = TRUE;
 
+  //
+  // Always check _scroll_limit_reached to ensure we don't keep spinning
+  // this timer if the mouse happens to be left idle over one of the autoscroll
+  // hotspots on the launcher.
+  //
   if (self->IsInKeyNavMode() || !self->_hovered ||
+      self->_scroll_limit_reached ||
       self->GetActionState() == ACTION_DRAG_LAUNCHER)
-    return TRUE;
-
-  if (self->MouseOverTopScrollArea())
+    anim = FALSE;
+  else if (self->MouseOverTopScrollArea())
   {
     if (self->MouseOverTopScrollExtrema())
       self->_launcher_drag_delta += 6;
@@ -1688,9 +1728,18 @@ gboolean Launcher::OnScrollTimeout(gpointer data)
     else
       self->_launcher_drag_delta -= 3;
   }
+  else
+    anim = FALSE;
 
-  self->EnsureAnimation();
-  return TRUE;
+  if (anim)
+    self->EnsureAnimation();
+  else
+  {
+    self->_autoscroll_handle = 0;
+    self->_scroll_limit_reached = false;
+  }
+
+  return anim;
 }
 
 void Launcher::EnsureScrollTimer()
@@ -1718,6 +1767,11 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
   icon_renderer->SetTargetSize(_icon_size, _icon_image_size, _space_between_icons);
 
   Resize();
+}
+
+int Launcher::GetIconSize() const
+{
+    return _icon_size;
 }
 
 void Launcher::Resize()
@@ -1764,6 +1818,9 @@ void Launcher::OnOrderChanged()
 void Launcher::SetModel(LauncherModel* model)
 {
   _model = model;
+
+  for (auto icon : *_model)
+    icon->needs_redraw.connect(sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
 
   _model->icon_added.connect(sigc::mem_fun(this, &Launcher::OnIconAdded));
   _model->icon_removed.connect(sigc::mem_fun(this, &Launcher::OnIconRemoved));
@@ -1883,7 +1940,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                         pressure_color);
   }
 
-  if (_dash_is_open)
+  if (IsOverlayOpen())
   {
     if (BackgroundEffectHelper::blur_type != unity::BLUR_NONE && (bkg_box.x + bkg_box.width > 0))
     {
@@ -1984,7 +2041,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     icon_renderer->RenderIcon(GfxContext, *rev_it, bkg_box, base);
   }
 
-  if (!_dash_is_open)
+  if (!IsOverlayOpen())
   {
     const double right_line_opacity = 0.15f * launcher_alpha;
 
@@ -1999,11 +2056,11 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                               nux::Geometry(bkg_box.x,
                                             bkg_box.y,
                                             bkg_box.width,
-                                            20),
-                              nux::Color(0x60000000),
+                                            8),
+                              nux::Color(0x70000000),
                               nux::Color(0x00000000),
                               nux::Color(0x00000000),
-                              nux::Color(0x60000000));
+                              nux::Color(0x70000000));
   }
 
   // FIXME: can be removed for a bgk_box->SetAlpha once implemented
@@ -2183,6 +2240,21 @@ void Launcher::UpdateDragWindowPosition(int x, int y)
   }
 }
 
+void Launcher::ResetMouseDragState()
+{
+  if (GetActionState() == ACTION_DRAG_ICON)
+    EndIconDrag();
+
+  if (GetActionState() == ACTION_DRAG_LAUNCHER)
+    _hide_machine->SetQuirk(LauncherHideMachine::VERTICAL_SLIDE_ACTIVE, false);
+
+  SetActionState(ACTION_NONE);
+  _dnd_delta_x = 0;
+  _dnd_delta_y = 0;
+  _last_button_press = 0;
+  EnsureAnimation();
+}
+
 void Launcher::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   _last_button_press = nux::GetEventButton(button_flags);
@@ -2198,17 +2270,7 @@ void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned lo
   nux::Geometry geo = GetGeometry();
 
   MouseUpLogic(x, y, button_flags, key_flags);
-
-  if (GetActionState() == ACTION_DRAG_ICON)
-    EndIconDrag();
-
-  if (GetActionState() == ACTION_DRAG_LAUNCHER)
-    _hide_machine->SetQuirk(LauncherHideMachine::VERTICAL_SLIDE_ACTIVE, false);
-  SetActionState(ACTION_NONE);
-  _dnd_delta_x = 0;
-  _dnd_delta_y = 0;
-  _last_button_press = 0;
-  EnsureAnimation();
+  ResetMouseDragState();
 }
 
 void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
@@ -2604,7 +2666,7 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
 
   _hide_machine->SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, true);
 
-  if (_dash_is_open)
+  if (IsOverlayOpen())
     SaturateIcons();
 
   for (auto it : _dnd_data.Uris())
@@ -2730,7 +2792,7 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
 
   SetMousePosition(x - parent->GetGeometry().x, y - parent->GetGeometry().y);
 
-  if (!_dash_is_open && _mouse_position.x == 0 && _mouse_position.y <= (_parent->GetGeometry().height - _icon_size - 2 * _space_between_icons) && !_drag_edge_touching)
+  if (!IsOverlayOpen() && _mouse_position.x == 0 && _mouse_position.y <= (_parent->GetGeometry().height - _icon_size - 2 * _space_between_icons) && !_drag_edge_touching)
   {
     if (_dnd_hovered_icon)
         _dnd_hovered_icon->SendDndLeave();
@@ -2898,7 +2960,8 @@ Launcher::handle_dbus_method_call(GDBusConnection*       connection,
     g_variant_get(parameters, "(ssiiiss)", &title, &icon, &icon_x, &icon_y, &icon_size, &desktop_file, &aptdaemon_task, NULL);
 
     Launcher* self = (Launcher*)user_data;
-    self->launcher_addrequest_special.emit(desktop_file, AbstractLauncherIcon::Ptr(), aptdaemon_task, icon);
+    self->launcher_addrequest_special.emit(desktop_file, AbstractLauncherIcon::Ptr(), aptdaemon_task, icon,
+                                            icon_x, icon_y, icon_size);
 
     g_dbus_method_invocation_return_value(invocation, nullptr);
     g_free(icon);

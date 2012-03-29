@@ -21,6 +21,7 @@
 #define PANEL_VIEW_H
 
 #include <vector>
+#include <memory>
 
 #include <Nux/View.h>
 #include <Nux/TextureArea.h>
@@ -84,8 +85,8 @@ protected:
 
 private:
   void OnBackgroundUpdate(GVariant *data);
-  void OnDashShown(GVariant *data);
-  void OnDashHidden(GVariant *data);
+  void OnOverlayShown(GVariant *data);
+  void OnOverlayHidden(GVariant *data);
 
   void UpdateBackground();
   void ForceUpdateBackground();
@@ -100,8 +101,9 @@ private:
   PanelTray* _tray;
   PanelIndicatorsView* _indicators;
 
-  nux::AbstractPaintLayer* _bg_layer;
-  nux::ColorLayer* _bg_darken_layer;
+  typedef std::unique_ptr<nux::AbstractPaintLayer> PaintLayerPtr;
+  PaintLayerPtr _bg_layer;
+  PaintLayerPtr _bg_darken_layer;
   nux::ObjectPtr<nux::BaseTexture> _panel_sheen;
   nux::HLayout* _layout;
 
@@ -112,9 +114,11 @@ private:
   bool        _opacity_maximized_toggle;
   bool        _needs_geo_sync;
   bool        _is_primary;
-  bool        _dash_is_open;
+  bool        _overlay_is_open;
   float       _opacity;
   int         _monitor;
+
+  std::string _active_overlay;
 
   guint       _track_menu_pointer_id;
   nux::Point  _tracked_pointer_pos;

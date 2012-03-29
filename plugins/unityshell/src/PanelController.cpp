@@ -72,7 +72,6 @@ private:
   std::vector<nux::BaseWindow*> windows_;
   float opacity_;
   bool opacity_maximized_toggle_;
-  bool open_menu_start_received_;
   int menus_fadein_;
   int menus_fadeout_;
   int menus_discovery_;
@@ -84,7 +83,6 @@ private:
 Controller::Impl::Impl()
   : opacity_(1.0f)
   , opacity_maximized_toggle_(false)
-  , open_menu_start_received_(false)
   , menus_fadein_(0)
   , menus_fadeout_(0)
   , menus_discovery_(0)

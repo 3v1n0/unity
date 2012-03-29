@@ -69,6 +69,7 @@ public:
   nux::Property<int> timeout_length;
   nux::Property<bool> detail_on_timeout;
   nux::Property<int>  detail_timeout_length;
+  nux::Property<int> initial_detail_timeout_length;
 
   void Show(ShowMode show, SortMode sort, bool reverse, std::vector<launcher::AbstractLauncherIcon::Ptr> results);
   void Hide(bool accept_state=true);
@@ -84,6 +85,7 @@ public:
   void Select (int index);
 
   void SetDetail(bool detail, unsigned int min_windows = 1);
+  virtual gboolean OnDetailTimer();
 
   void SelectFirstItem();
 
@@ -102,6 +104,8 @@ protected:
   virtual void ConstructView();
   virtual void ShowView();
 
+  void OnModelSelectionChanged(launcher::AbstractLauncherIcon::Ptr icon);
+
   unsigned int construct_timeout_;
 
 private:
@@ -112,7 +116,6 @@ private:
     TAB_NEXT_TILE,
   };
 
-  void OnModelSelectionChanged(launcher::AbstractLauncherIcon::Ptr icon);
   void OnBackgroundUpdate(GVariant* data);
 
   SwitcherModel::Ptr model_;
@@ -132,8 +135,6 @@ private:
   guint view_idle_timer_;
   nux::Color bg_color_;
   DetailMode detail_mode_;
-
-  static gboolean OnDetailTimer(gpointer data);
 
   static bool CompareSwitcherItemsPriority(launcher::AbstractLauncherIcon::Ptr first, launcher::AbstractLauncherIcon::Ptr second);
 };
