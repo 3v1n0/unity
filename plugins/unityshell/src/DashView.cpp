@@ -273,8 +273,10 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 
   height = search_bar_->GetGeometry().height;
   height += tile_height * 3;
-  height += 46 * 3; // adding three group headers
-  //height += lens_bar_->GetGeometry().height;
+  height += (style.GetPlacesGroupTopSpace() - 2 + 24 + 8) * 3; // adding three group headers
+  height += 1*2; // hseparator height
+  height += style.GetDashViewTopPadding();
+  height += lens_bar_->GetGeometry().height;
 
   if (for_geo.width > 800 && for_geo.height > 550)
   {
