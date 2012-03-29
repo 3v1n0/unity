@@ -72,6 +72,7 @@ private:
   double opacity_;
   bool focused_;
   Window window_xid_;
+  std::string active_overlay_;
 
   UBusManager ubus_manager_;
 };

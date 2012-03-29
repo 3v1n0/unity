@@ -499,11 +499,13 @@ void WindowButtons::OnOverlayShown(GVariant* data)
 {
   WindowButton* maximize_button = nullptr;
   WindowButton* restore_button = nullptr;
-  unity::glib::String overlay_identity;
+  glib::String overlay_identity;
   gboolean can_maximise = FALSE;
   gint32 overlay_monitor = 0;
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
                 &overlay_identity, &can_maximise, &overlay_monitor);
+
+  active_overlay_ = overlay_identity.Str();
 
   for (auto area : GetChildren())
   {
@@ -548,6 +550,15 @@ void WindowButtons::OnOverlayHidden(GVariant* data)
 {
   WindowButton* maximize_button = nullptr;
   WindowButton* restore_button = nullptr;
+
+  glib::String overlay_identity;
+  gboolean can_maximise = FALSE;
+  gint32 overlay_monitor = 0;
+  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
+                &overlay_identity, &can_maximise, &overlay_monitor);
+
+  if (active_overlay_ != overlay_identity.Str())
+    return;
 
   for (auto area : GetChildren())
   {
