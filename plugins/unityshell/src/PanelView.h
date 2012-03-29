@@ -102,8 +102,9 @@ private:
   PanelTray*               _tray;
   PanelIndicatorsView*     _indicators;
 
-  std::unique_ptr<nux::AbstractPaintLayer> bg_layer_;
-  std::unique_ptr<nux::ColorLayer> bg_darken_layer_;
+  typedef std::unique_ptr<nux::AbstractPaintLayer> PaintLayerPtr;
+  PaintLayerPtr bg_layer_;
+  PaintLayerPtr bg_darken_layer_;
   BaseTexturePtr           _panel_sheen;
   nux::HLayout*            _layout;
 
