@@ -33,6 +33,7 @@ namespace shortcut
 enum OptionType
 {
   COMPIZ_KEY_OPTION = 0,
+  COMPIZ_METAKEY_OPTION,
   COMPIZ_MOUSE_OPTION,
   HARDCODED_OPTION
   /* GSETTINGS_OPTION,
@@ -42,13 +43,14 @@ enum OptionType
 class AbstractHint
 {
 public:
+  typedef std::shared_ptr<AbstractHint> Ptr;
   // Ctor
-  AbstractHint(std::string const& category, 
+  AbstractHint(std::string const& category,
                std::string const& prefix,
                std::string const& postfix,
                std::string const& description,
                OptionType const type,
-               std::string const& arg1, 
+               std::string const& arg1,
                std::string const& arg2 = "",
                std::string const& arg3 = "")
     : category(category)
@@ -61,7 +63,7 @@ public:
     , arg3(arg3)
   {
   }
-  
+
   // Copy ctor
   AbstractHint(unity::shortcut::AbstractHint const& obj)
     : category(obj.category())
@@ -76,13 +78,13 @@ public:
     , shortkey(obj.shortkey())
   {
   }
-  
+
   // Dtor
   virtual ~AbstractHint(){};
-  
+
   // Public Methods
   virtual bool Fill() = 0;
-  
+
   // Properties
   nux::Property<std::string> category;
   nux::Property<std::string> prefix;

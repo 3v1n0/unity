@@ -33,6 +33,7 @@
 #include "DeviceLauncherIcon.h"
 #include "DeviceLauncherSection.h"
 #include "FavoriteStore.h"
+#include "HudLauncherIcon.h"
 #include "Launcher.h"
 #include "LauncherController.h"
 #include "LauncherEntryRemote.h"
@@ -81,12 +82,17 @@ public:
   void Save();
   void SortAndUpdate();
 
+  nux::ObjectPtr<Launcher> CurrentLauncher();
+
   void OnIconAdded(AbstractLauncherIcon::Ptr icon);
   void OnIconRemoved(AbstractLauncherIcon::Ptr icon);
 
   void OnLauncherAddRequest(char* path, AbstractLauncherIcon::Ptr before);
-  void OnLauncherAddRequestSpecial(std::string const& path, AbstractLauncherIcon::Ptr before, std::string const& aptdaemon_trans_id, std::string const& icon_path);
+  void OnLauncherAddRequestSpecial(std::string const& path, AbstractLauncherIcon::Ptr before, std::string const& aptdaemon_trans_id, std::string const& icon_path,
+                                   int icon_x, int icon_y, int icon_size);
   void OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr icon);
+
+  void OnSCIconAnimationComplete(AbstractLauncherIcon::Ptr icon);
 
   void OnLauncherEntryRemoteAdded(LauncherEntryRemote* entry);
   void OnLauncherEntryRemoteRemoved(LauncherEntryRemote* entry);
@@ -102,11 +108,7 @@ public:
   void InsertDesktopIcon();
   void RemoveDesktopIcon();
 
-  bool TapTimeUnderLimit();
-
   void SendHomeActivationRequest();
-
-  int TimeSinceLauncherKeyPress();
 
   int MonitorWithMouse();
 
@@ -116,9 +118,11 @@ public:
 
   AbstractLauncherIcon::Ptr CreateFavorite(const char* file_path);
 
-  AbstractLauncherIcon::Ptr CreateSCLauncherIcon(std::string const& file_path, std::string const& aptdaemon_trans_id, std::string const& icon_path);
+  SoftwareCenterLauncherIcon::Ptr CreateSCLauncherIcon(std::string const& file_path, std::string const& aptdaemon_trans_id, std::string const& icon_path);
 
   void SetupBamf();
+
+  void EnsureLaunchers(int primary, std::vector<nux::Geometry> const& monitors);
 
   void OnExpoActivated();
 
@@ -168,7 +172,7 @@ public:
 
   UBusManager            ubus;
 
-  struct timespec        launcher_key_press_time_;
+  int                    launcher_key_press_time_;
 
   LauncherList launchers;
 
@@ -191,6 +195,7 @@ Controller::Impl::Impl(Display* display, Controller* parent)
 {
   UScreen* uscreen = UScreen::GetDefault();
   auto monitors = uscreen->GetMonitors();
+  int primary = uscreen->GetPrimaryMonitor();
 
   launcher_open = false;
   launcher_keynav = false;
@@ -198,13 +203,7 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   reactivate_keynav = false;
   keynav_restore_window_ = true;
 
-  int i = 0;
-  for (auto monitor : monitors)
-  {
-    Launcher* launcher = CreateLauncher(i);
-    launchers.push_back(nux::ObjectPtr<Launcher> (launcher));
-    i++;
-  }
+  EnsureLaunchers(primary, monitors);
 
   launcher_ = launchers[0];
 
@@ -238,15 +237,26 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   FavoriteStore::GetDefault().favorite_removed.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteRemoved));
   FavoriteStore::GetDefault().reordered.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreReordered));
 
-  RegisterIcon(AbstractLauncherIcon::Ptr(new BFBLauncherIcon()));
+  LauncherHideMode hide_mode = parent_->options()->hide_mode;
+  BFBLauncherIcon* bfb = new BFBLauncherIcon(hide_mode);
+  parent_->options()->hide_mode.changed.connect([bfb](LauncherHideMode mode) {
+      bfb->SetHideMode(mode);
+    });
+  RegisterIcon(AbstractLauncherIcon::Ptr(bfb));
+
+  HudLauncherIcon* hud = new HudLauncherIcon(hide_mode);
+  parent_->options()->hide_mode.changed.connect([hud](LauncherHideMode mode) {
+      hud->SetHideMode(mode);
+    });
+  RegisterIcon(AbstractLauncherIcon::Ptr(hud));
   desktop_icon_ = AbstractLauncherIcon::Ptr(new DesktopLauncherIcon());
 
   uscreen->changed.connect(sigc::mem_fun(this, &Controller::Impl::OnScreenChanged));
 
-  WindowManager& plugin_adapter = *(WindowManager::Default()); 
+  WindowManager& plugin_adapter = *(WindowManager::Default());
   plugin_adapter.window_focus_changed.connect (sigc::mem_fun (this, &Controller::Impl::OnWindowFocusChanged));
 
-  launcher_key_press_time_ = { 0, 0 };
+  launcher_key_press_time_ = 0;
 
   ubus.RegisterInterest(UBUS_QUICKLIST_END_KEY_NAV, [&](GVariant * args) {
     if (reactivate_keynav)
@@ -285,6 +295,15 @@ Controller::Impl::Impl(Display* display, Controller* parent)
 
 Controller::Impl::~Impl()
 {
+  // Since the launchers are in a window which adds a reference to the
+  // launcher, we need to make sure the base windows are unreferenced
+  // otherwise the launchers never die.
+  for (auto launcher_ptr : launchers)
+  {
+    if (launcher_ptr.IsValid())
+      launcher_ptr->GetParent()->UnReference();
+  }
+
   if (bamf_timer_handler_id_ != 0)
     g_source_remove(bamf_timer_handler_id_);
 
@@ -304,26 +323,58 @@ Controller::Impl::~Impl()
   delete device_section_;
 }
 
-void Controller::Impl::OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors)
+void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> const& monitors)
 {
   unsigned int num_monitors = monitors.size();
+  unsigned int num_launchers = parent_->multiple_launchers ? num_monitors : 1;
+  unsigned int launchers_size = launchers.size();
+  unsigned int last_monitor = 0;
 
-  unsigned int i;
-  for (i = 0; i < num_monitors; i++)
+  if (num_launchers == 1)
   {
-    if (i >= launchers.size())
-      launchers.push_back(nux::ObjectPtr<Launcher> (CreateLauncher(i)));
+    if (launchers_size == 0)
+    {
+      launchers.push_back(nux::ObjectPtr<Launcher>(CreateLauncher(primary)));
+    }
+    else if (!launchers[0].IsValid())
+    {
+      launchers[0] = nux::ObjectPtr<Launcher>(CreateLauncher(primary));
+    }
 
-    launchers[i]->Resize();
+    launchers[0]->monitor(primary);
+    launchers[0]->Resize();
+    last_monitor = 1;
+  }
+  else
+  {
+    for (unsigned int i = 0; i < num_monitors; i++, last_monitor++)
+    {
+      if (i >= launchers_size)
+      {
+        launchers.push_back(nux::ObjectPtr<Launcher>(CreateLauncher(i)));
+      }
+
+      launchers[i]->monitor(i);
+      launchers[i]->Resize();
+    }
   }
 
-  for (; i < launchers.size(); ++i)
+  for (unsigned int i = last_monitor; i < launchers_size; ++i)
   {
     auto launcher = launchers[i];
     if (launcher.IsValid())
+    {
+      parent_->RemoveChild(launcher.GetPointer());
       launcher->GetParent()->UnReference();
+    }
   }
-  launchers.resize(num_monitors);
+
+  launchers.resize(num_launchers);
+}
+
+void Controller::Impl::OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors)
+{
+  EnsureLaunchers(primary_monitor, monitors);
 }
 
 void Controller::Impl::OnWindowFocusChanged (guint32 xid)
@@ -339,7 +390,7 @@ void Controller::Impl::OnWindowFocusChanged (guint32 xid)
   else if (launcher_keynav)
   {
     keynav_first_focus = true;
-  } 
+  }
 }
 
 Launcher* Controller::Impl::CreateLauncher(int monitor)
@@ -366,7 +417,10 @@ Launcher* Controller::Impl::CreateLauncher(int monitor)
 
   launcher->SetModel(model_.get());
   launcher->launcher_addrequest.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequest));
+  launcher->launcher_addrequest_special.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequestSpecial));
   launcher->launcher_removerequest.connect(sigc::mem_fun(this, &Impl::OnLauncherRemoveRequest));
+
+  launcher->icon_animation_complete.connect(sigc::mem_fun(this, &Impl::OnSCIconAnimationComplete));
 
   parent_->AddChild(launcher);
 
@@ -411,7 +465,7 @@ void Controller::Impl::Save()
     std::string const& desktop_file = icon->DesktopFile();
 
     if (!desktop_file.empty())
-      desktop_paths.push_back(desktop_file.c_str());
+      desktop_paths.push_back(desktop_file);
   }
 
   unity::FavoriteStore::GetDefault().SetFavorites(desktop_paths);
@@ -421,24 +475,35 @@ void
 Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
                                               AbstractLauncherIcon::Ptr before,
                                               std::string const& aptdaemon_trans_id,
-                                              std::string const& icon_path)
+                                              std::string const& icon_path,
+                                              int icon_x,
+                                              int icon_y,
+                                              int icon_size)
 {
-  auto launchers = model_->GetSublist<BamfLauncherIcon>();
-  for (auto icon : launchers)
+  auto bamf_icons = model_->GetSublist<BamfLauncherIcon>();
+  for (auto icon : bamf_icons)
   {
     if (icon->DesktopFile() == path)
       return;
   }
 
-  AbstractLauncherIcon::Ptr result = CreateSCLauncherIcon(path, aptdaemon_trans_id, icon_path);
+  SoftwareCenterLauncherIcon::Ptr result = CreateSCLauncherIcon(path, aptdaemon_trans_id, icon_path);
+
+  launcher_->ForceReveal(true);
+
   if (result)
   {
+    result->SetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE, false);
+    result->Animate(launcher_, icon_x, icon_y, icon_size);
     RegisterIcon(result);
-
-    if (before)
-      model_->ReorderBefore(result, before, false);
+    Save();
   }
-  Save();
+}
+
+void Controller::Impl::OnSCIconAnimationComplete(AbstractLauncherIcon::Ptr icon)
+{
+  icon->SetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE, true);
+  launcher_->ForceReveal(false);
 }
 
 void Controller::Impl::SortAndUpdate()
@@ -642,7 +707,7 @@ void Controller::Impl::InsertExpoAction()
 
   on_expoicon_activate_connection_ = icon->activate.connect(sigc::mem_fun(this, &Impl::OnExpoActivated));
 
-  
+
   RegisterIcon(expo_icon_);
 }
 
@@ -724,13 +789,12 @@ AbstractLauncherIcon::Ptr Controller::Impl::CreateFavorite(const char* file_path
   return result;
 }
 
-AbstractLauncherIcon::Ptr
-Controller::Impl::CreateSCLauncherIcon(std::string const& file_path,
-                                       std::string const& aptdaemon_trans_id,
-                                       std::string const& icon_path)
+SoftwareCenterLauncherIcon::Ptr Controller::Impl::CreateSCLauncherIcon(std::string const& file_path,
+                                                                       std::string const& aptdaemon_trans_id,
+                                                                       std::string const& icon_path)
 {
   BamfApplication* app;
-  AbstractLauncherIcon::Ptr result;
+  SoftwareCenterLauncherIcon::Ptr result;
 
   app = bamf_matcher_get_application_for_desktop_file(matcher_, file_path.c_str(), true);
   if (!BAMF_IS_APPLICATION(app))
@@ -742,13 +806,10 @@ Controller::Impl::CreateSCLauncherIcon(std::string const& file_path,
     return result;
   }
 
-  g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"), GINT_TO_POINTER(1));
-
   bamf_view_set_sticky(BAMF_VIEW(app), true);
-  AbstractLauncherIcon::Ptr icon(new SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path));
-  icon->SetSortPriority(sort_priority_++);
+  result = new SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path);
+  result->SetSortPriority(sort_priority_++);
 
-  result = icon;
   return result;
 }
 
@@ -801,29 +862,23 @@ void Controller::Impl::SetupBamf()
   bamf_timer_handler_id_ = 0;
 }
 
-int Controller::Impl::TimeSinceLauncherKeyPress()
-{
-  struct timespec current;
-  unity::TimeUtil::SetTimeStruct(&current);
-  return unity::TimeUtil::TimeDelta(&current, &launcher_key_press_time_);
-}
-
-bool Controller::Impl::TapTimeUnderLimit()
-{
-  int time_difference = TimeSinceLauncherKeyPress();
-  return time_difference < local::super_tap_duration;
-}
-
 void Controller::Impl::SendHomeActivationRequest()
 {
   ubus.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", "home.lens", 0, ""));
 }
 
 Controller::Controller(Display* display)
+ : options(Options::Ptr(new Options()))
+ , multiple_launchers(true)
+ , pimpl(new Impl(display, this))
 {
-  options = Options::Ptr(new Options());
-  // options must be set before creating pimpl which loads launchers
-  pimpl = new Impl(display, this);
+  multiple_launchers.changed.connect([&](bool value) -> void {
+    UScreen* uscreen = UScreen::GetDefault();
+    auto monitors = uscreen->GetMonitors();
+    int primary = uscreen->GetPrimaryMonitor();
+    pimpl->EnsureLaunchers(primary, monitors);
+    options()->show_for_all = !value;
+  });
 }
 
 Controller::~Controller()
@@ -874,6 +929,8 @@ std::vector<AbstractLauncherIcon::Ptr> Controller::GetAltTabIcons(bool current) 
 
 Window Controller::LauncherWindowId(int launcher) const
 {
+  if (launcher >= (int)pimpl->launchers.size())
+    return 0;
   return pimpl->launchers[launcher]->GetParent()->GetInputWindowId();
 }
 
@@ -908,15 +965,24 @@ int Controller::Impl::MonitorWithMouse()
   return uscreen->GetMonitorWithMouse();
 }
 
-void Controller::HandleLauncherKeyPress()
+nux::ObjectPtr<Launcher> Controller::Impl::CurrentLauncher()
 {
-  unity::TimeUtil::SetTimeStruct(&pimpl->launcher_key_press_time_);
+  nux::ObjectPtr<Launcher> result;
+  int best = std::min<int> (launchers.size() - 1, MonitorWithMouse());
+  if (best >= 0)
+    result = launchers[best];
+  return result;
+}
+
+void Controller::HandleLauncherKeyPress(int when)
+{
+  pimpl->launcher_key_press_time_ = when;
 
   auto show_launcher = [](gpointer user_data) -> gboolean
   {
     Impl* self = static_cast<Impl*>(user_data);
     if (self->keyboard_launcher_.IsNull())
-      self->keyboard_launcher_ = self->launchers[self->MonitorWithMouse()];
+      self->keyboard_launcher_ = self->CurrentLauncher();
 
     if (self->launcher_hide_handler_id_ > 0)
     {
@@ -937,7 +1003,7 @@ void Controller::HandleLauncherKeyPress()
     if (!self->launcher_keynav)
     {
       if (self->keyboard_launcher_.IsNull())
-        self->keyboard_launcher_ = self->launchers[self->MonitorWithMouse()];
+        self->keyboard_launcher_ = self->CurrentLauncher();
 
       self->keyboard_launcher_->ShowShortcuts(true);
       self->launcher_open = true;
@@ -948,11 +1014,17 @@ void Controller::HandleLauncherKeyPress()
   pimpl->launcher_label_show_handler_id_ = g_timeout_add(local::shortcuts_show_delay, show_shortcuts, pimpl);
 }
 
-void Controller::HandleLauncherKeyRelease(bool was_tap)
+void Controller::HandleLauncherKeyRelease(bool was_tap, int when)
 {
-  if (pimpl->TapTimeUnderLimit() && was_tap)
+  int tap_duration = when - pimpl->launcher_key_press_time_;
+  if (tap_duration < local::super_tap_duration && was_tap)
   {
+    LOG_DEBUG(logger) << "Quick tap, sending activation request.";
     pimpl->SendHomeActivationRequest();
+  }
+  else
+  {
+    LOG_DEBUG(logger) << "Tap too long: " << tap_duration;
   }
 
   if (pimpl->launcher_label_show_handler_id_)
@@ -971,7 +1043,7 @@ void Controller::HandleLauncherKeyRelease(bool was_tap)
   {
     pimpl->keyboard_launcher_->ShowShortcuts(false);
 
-    int ms_since_show = pimpl->TimeSinceLauncherKeyPress();
+    int ms_since_show = tap_duration;
     if (ms_since_show > local::launcher_minimum_show_duration)
     {
       pimpl->keyboard_launcher_->ForceReveal(false);
@@ -1026,7 +1098,7 @@ bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, 
       }
 
       // disable the "tap on super" check
-      pimpl->launcher_key_press_time_ = { 0, 0 };
+      pimpl->launcher_key_press_time_ = 0;
       return true;
     }
   }
@@ -1061,7 +1133,7 @@ void Controller::KeyNavActivate()
   pimpl->reactivate_keynav = false;
   pimpl->launcher_keynav = true;
   pimpl->keynav_restore_window_ = true;
-  pimpl->keyboard_launcher_ = pimpl->launchers[pimpl->MonitorWithMouse()];
+  pimpl->keyboard_launcher_ = pimpl->CurrentLauncher();
 
   pimpl->keyboard_launcher_->EnterKeyNavMode();
   pimpl->model_->SetSelection(0);
@@ -1127,7 +1199,7 @@ Controller::AddProperties(GVariantBuilder* builder)
   .add("key_nav_launcher_monitor", pimpl->keyboard_launcher_.IsValid() ?  pimpl->keyboard_launcher_->monitor : -1)
   .add("key_nav_selection", pimpl->model_->SelectionIndex())
   .add("key_nav_is_grabbed", pimpl->launcher_grabbed)
-  .add("keyboard_launcher", pimpl->launchers[pimpl->MonitorWithMouse()]->monitor);
+  .add("keyboard_launcher", pimpl->CurrentLauncher()->monitor);
 }
 
 void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
@@ -1157,11 +1229,10 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
       parent_->KeyNavNext();
       break;
 
-      // super/control/alt/esc/left (close quicklist or exit laucher key-focus)
+      // super/control/esc/left (close quicklist or exit laucher key-focus)
     case NUX_VK_LWIN:
     case NUX_VK_RWIN:
     case NUX_VK_CONTROL:
-    case NUX_VK_MENU:
     case NUX_VK_LEFT:
     case NUX_KP_LEFT:
     case NUX_VK_ESCAPE:
@@ -1198,6 +1269,11 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
     break;
 
     default:
+      // ALT + <Anykey>; treat it as a shortcut and exit keynav 
+      if (state & nux::NUX_STATE_ALT)
+      {
+        parent_->KeyNavTerminate(false);
+      }
       break;
   }
 }

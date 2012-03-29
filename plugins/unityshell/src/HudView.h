@@ -59,7 +59,8 @@ public:
 
   void SetQueries(Hud::Queries queries);
   void SetIcon(std::string icon_name);
-  
+  void ShowEmbeddedIcon(bool show);
+
   void AboutToShow();
   void AboutToHide();
 
@@ -100,10 +101,11 @@ private:
   nux::ObjectPtr<nux::Layout> content_layout_;
   nux::ObjectPtr<nux::VLayout> button_views_;
   std::list<HudButton::Ptr> buttons_;
-  
+
   //FIXME - replace with dash search bar once modifications to dash search bar land
   SearchBar::Ptr search_bar_;
   Icon::Ptr icon_;
+  nux::ObjectPtr<nux::Layout> icon_layout_;
   bool visible_;
 
   Hud::Queries queries_;
@@ -118,6 +120,8 @@ private:
   int current_height_;
   bool timeline_need_more_draw_;
   int selected_button_;
+  bool show_embedded_icon_;
+  bool activated_signal_sent_;
 };
 
 

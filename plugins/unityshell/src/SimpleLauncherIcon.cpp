@@ -23,6 +23,7 @@
 #include <NuxCore/Logger.h>
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
+#include <UnityCore/Variant.h>
 
 #include "SimpleLauncherIcon.h"
 #include "PluginAdapter.h"
@@ -146,6 +147,12 @@ void SimpleLauncherIcon::OnIconThemeChanged(GtkIconTheme* icon_theme, gpointer d
 std::string SimpleLauncherIcon::GetName() const
 {
   return "SimpleLauncherIcon";
+}
+
+void SimpleLauncherIcon::AddProperties(GVariantBuilder* builder)
+{
+  LauncherIcon::AddProperties(builder);
+  variant::BuilderWrapper(builder).add("icon_name", icon_name);
 }
 
 } // namespace launcher

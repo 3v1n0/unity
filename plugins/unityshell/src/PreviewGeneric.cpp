@@ -54,8 +54,8 @@ namespace unity {
 
     void PreviewGeneric::BuildLayout()
     {
-      IconTexture *icon = new IconTexture (preview_->icon_hint.c_str(), 300);
-      nux::StaticCairoText *name = new nux::StaticCairoText (preview_->name.c_str(), NUX_TRACKER_LOCATION);
+      IconTexture *icon = new IconTexture(preview_->icon_hint, 300);
+      nux::StaticCairoText *name = new nux::StaticCairoText (preview_->name, NUX_TRACKER_LOCATION);
       name->SetFont("Ubuntu 25");
 
       //get date
@@ -71,14 +71,14 @@ namespace unity {
       std::stringstream size_and_type_str;
       size_and_type_str << formatted_size << ", " << preview_->type;
 
-      nux::StaticCairoText *size_and_type = new nux::StaticCairoText(size_and_type_str.str().c_str(), NUX_TRACKER_LOCATION);
+      nux::StaticCairoText *size_and_type = new nux::StaticCairoText(size_and_type_str.str(), NUX_TRACKER_LOCATION);
       g_free (formatted_size);
 
       nux::StaticCairoText *description = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
       description->SetBaseWidth(400);
       description->SetMaximumWidth(400);
       description->SetLines(99999999);
-      description->SetText(preview_->description.c_str());
+      description->SetText(preview_->description);
 
       nux::HLayout *large_container = new nux::HLayout(NUX_TRACKER_LOCATION);
       nux::VLayout *screenshot_container = new nux::VLayout(NUX_TRACKER_LOCATION);
@@ -88,7 +88,7 @@ namespace unity {
       // create the action buttons
       if (preview_->tertiary_action_name.empty() == false)
       {
-        PreviewBasicButton* tertiary_button = new PreviewBasicButton(preview_->tertiary_action_name.c_str(), NUX_TRACKER_LOCATION);
+        PreviewBasicButton* tertiary_button = new PreviewBasicButton(preview_->tertiary_action_name, NUX_TRACKER_LOCATION);
         tertiary_button->state_change.connect ([&] (nux::View *view) { UriActivated.emit (preview_->tertiary_action_uri); });
         button_container->AddLayout (new nux::SpaceLayout(6,6,6,6), 0);
         button_container->AddView (tertiary_button, 1);
@@ -96,7 +96,7 @@ namespace unity {
 
       if (preview_->secondary_action_name.empty() == false)
       {
-        PreviewBasicButton* secondary_button = new PreviewBasicButton(preview_->secondary_action_name.c_str(), NUX_TRACKER_LOCATION);
+        PreviewBasicButton* secondary_button = new PreviewBasicButton(preview_->secondary_action_name, NUX_TRACKER_LOCATION);
         secondary_button->state_change.connect ([&] (nux::View *view) { UriActivated.emit (preview_->secondary_action_uri); });
         button_container->AddLayout (new nux::SpaceLayout(6,6,6,6), 0);
         button_container->AddView (secondary_button, 1);
@@ -104,7 +104,7 @@ namespace unity {
 
       if (preview_->primary_action_name.empty() == false)
       {
-        PreviewBasicButton* primary_button = new PreviewBasicButton(preview_->primary_action_name.c_str(), NUX_TRACKER_LOCATION);
+        PreviewBasicButton* primary_button = new PreviewBasicButton(preview_->primary_action_name, NUX_TRACKER_LOCATION);
         primary_button->state_change.connect ([&] (nux::View *view) { UriActivated.emit (preview_->primary_action_uri); });
         button_container->AddLayout (new nux::SpaceLayout(6,6,6,6), 0);
         button_container->AddView (primary_button, 1);

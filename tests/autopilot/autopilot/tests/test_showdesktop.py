@@ -7,11 +7,9 @@
 # by the Free Software Foundation.
 
 from time import sleep
-from subprocess import call
 
-from autopilot.emulators.unity.launcher import Launcher
 from autopilot.emulators.unity.switcher import Switcher
-from autopilot.emulators.X11 import Keyboard
+from autopilot.emulators.unity.icons import DesktopLauncherIcon
 from autopilot.tests import AutopilotTestCase
 
 
@@ -26,8 +24,8 @@ class ShowDesktopTests(AutopilotTestCase):
 
     def launch_test_apps(self):
         """Launch character map and calculator apps."""
-        self.start_app('Character Map')
-        self.start_app('Calculator')
+        self.start_app('Character Map', locale='C')
+        self.start_app('Calculator', locale='C')
         sleep(1)
 
     def test_showdesktop_hides_apps(self):
@@ -37,7 +35,7 @@ class ShowDesktopTests(AutopilotTestCase):
         # show desktop, verify all windows are hidden:
         self.keyboard.press_and_release('Control+Alt+d')
         self.addCleanup(self.keyboard.press_and_release, keys='Control+Alt+d')
-        sleep(1)
+        sleep(3)
         open_wins = self.bamf.get_open_windows()
         self.assertGreaterEqual(len(open_wins), 2)
         for win in open_wins:
@@ -50,7 +48,7 @@ class ShowDesktopTests(AutopilotTestCase):
 
         # show desktop, verify all windows are hidden:
         self.keyboard.press_and_release('Control+Alt+d')
-        sleep(1)
+        sleep(3)
         open_wins = self.bamf.get_open_windows()
         self.assertGreaterEqual(len(open_wins), 2)
         for win in open_wins:
@@ -59,7 +57,7 @@ class ShowDesktopTests(AutopilotTestCase):
 
         # un-show desktop, verify all windows are shown:
         self.keyboard.press_and_release('Control+Alt+d')
-        sleep(1)
+        sleep(3)
         for win in self.bamf.get_open_windows():
             self.assertTrue(win.is_valid)
             self.assertFalse(win.is_hidden, "Window '%s' is shown after show desktop deactivated." % (win.title))
@@ -70,7 +68,7 @@ class ShowDesktopTests(AutopilotTestCase):
 
         # show desktop, verify all windows are hidden:
         self.keyboard.press_and_release('Control+Alt+d')
-        sleep(1)
+        sleep(3)
         open_wins = self.bamf.get_open_windows()
         self.assertGreaterEqual(len(open_wins), 2)
         for win in open_wins:
@@ -78,17 +76,13 @@ class ShowDesktopTests(AutopilotTestCase):
             self.assertTrue(win.is_hidden, "Window '%s' is not hidden after show desktop activated." % (win.title))
 
         # We'll un-minimise the character map - find it's launcherIcon in the launcher:
-        l = Launcher()
+        charmap_icon = self.launcher.model.get_icon_by_desktop_id("gucharmap.desktop")
+        if charmap_icon:
+            self.launcher.get_launcher_for_monitor(0).click_launcher_icon(charmap_icon)
+        else:
+            self.fail("Could not find launcher icon in launcher.")
 
-        launcher_icons = l.get_launcher_icons()
-        found = False
-        for icon in launcher_icons:
-            if icon.tooltip_text == 'Character Map':
-                found = True
-                l.click_launcher_icon(icon)
-        self.assertTrue(found, "Could not find launcher icon in launcher.")
-
-        sleep(1)
+        sleep(3)
         for win in self.bamf.get_open_windows():
             if win.is_valid:
                 if win.title == 'Character Map':
@@ -98,7 +92,7 @@ class ShowDesktopTests(AutopilotTestCase):
 
         # hide desktop - now all windows should be visible:
         self.keyboard.press_and_release('Control+Alt+d')
-        sleep(1)
+        sleep(3)
         for win in self.bamf.get_open_windows():
             if win.is_valid:
                 self.assertFalse(win.is_hidden, "Window '%s' is not shown after show desktop deactivated." % (win.title))
@@ -115,7 +109,7 @@ class ShowDesktopTests(AutopilotTestCase):
         for i in range(switcher.get_model_size()):
             current_icon = switcher.current_icon
             self.assertIsNotNone(current_icon)
-            if current_icon.tooltip_text == 'Show Desktop':
+            if isinstance(current_icon, DesktopLauncherIcon):
                 found = True
                 break
             switcher.previous_icon()
@@ -124,7 +118,7 @@ class ShowDesktopTests(AutopilotTestCase):
         switcher.stop()
         self.addCleanup(self.keyboard.press_and_release, keys='Control+Alt+d')
 
-        sleep(1)
+        sleep(3)
         open_wins = self.bamf.get_open_windows()
         self.assertGreaterEqual(len(open_wins), 2)
         for win in open_wins:

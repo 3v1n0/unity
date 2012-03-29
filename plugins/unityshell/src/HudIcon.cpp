@@ -23,7 +23,7 @@ namespace
 {
   nux::logging::Logger logger("unity.hud.icon");
 }
-  
+
 namespace unity
 {
 namespace hud
@@ -36,14 +36,10 @@ Icon::Icon(nux::BaseTexture* texture, guint width, guint height)
   icon_renderer_.SetTargetSize(54, 46, 0);
 }
 
-Icon::Icon(const char* icon_name, unsigned int size, bool defer_icon_loading)
+Icon::Icon(std::string const& icon_name, unsigned int size, bool defer_icon_loading)
   : unity::IconTexture(icon_name, size, defer_icon_loading)
 {
   Init();
-}
-
-Icon::~Icon()
-{
 }
 
 void Icon::Init()
@@ -53,8 +49,8 @@ void Icon::Init()
   background_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_icon_back_54.png", -1, true));
   gloss_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_icon_shine_54.png", -1, true));
   edge_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_icon_edge_54.png", -1,  true));
-  
-  texture_updated.connect([&] (nux::BaseTexture* texture) 
+
+  texture_updated.connect([&] (nux::BaseTexture* texture)
   {
     icon_texture_source_ = new HudIconTextureSource(nux::ObjectPtr<nux::BaseTexture>(texture));
     icon_texture_source_->ColorForIcon(_pixbuf_cached);
@@ -78,17 +74,21 @@ void Icon::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   arg.window_indicators   = true;
   arg.backlight_intensity = 1.0f;
   arg.alpha               = 1.0f;
-  
+
   std::list<unity::ui::RenderArg> args;
   args.push_front(arg);
 
-  
-  auto toplevel = GetToplevel(); 
+
+  auto toplevel = GetToplevel();
   icon_renderer_.SetTargetSize(54, 46, 0);
   icon_renderer_.PreprocessIcons(args, toplevel->GetGeometry());
   icon_renderer_.RenderIcon(GfxContext, arg, toplevel->GetGeometry(), toplevel->GetGeometry());
 }
 
+std::string Icon::GetName() const
+{
+  return "EmbeddedIcon";
+}
 
 }
 }

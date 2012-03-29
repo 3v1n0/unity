@@ -40,6 +40,7 @@
 #include "LauncherHideMachine.h"
 #include "LauncherHoverMachine.h"
 #include "UBusWrapper.h"
+#include "SoftwareCenterLauncherIcon.h"
 
 
 namespace unity
@@ -68,6 +69,7 @@ public:
   AbstractLauncherIcon::Ptr GetSelectedMenuIcon() const;
 
   void SetIconSize(int tile_size, int icon_size);
+  int GetIconSize() const;
 
   LauncherHideMachine* HideMachine() { return _hide_machine; }
 
@@ -113,8 +115,10 @@ public:
   void Resize();
 
   sigc::signal<void, char*, AbstractLauncherIcon::Ptr> launcher_addrequest;
-  sigc::signal<void, std::string const&, AbstractLauncherIcon::Ptr, std::string const&, std::string const&> launcher_addrequest_special;
+  sigc::signal<void, std::string const&, AbstractLauncherIcon::Ptr, std::string const&, std::string const&,
+               int, int, int> launcher_addrequest_special;
   sigc::signal<void, AbstractLauncherIcon::Ptr> launcher_removerequest;
+  sigc::signal<void, AbstractLauncherIcon::Ptr> icon_animation_complete;
   sigc::signal<void> selection_change;
   sigc::signal<void> hidden_changed;
 
@@ -127,6 +131,8 @@ public:
   bool IsInKeyNavMode() const;
 
   static const int ANIM_DURATION_SHORT;
+
+  void RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherIcon::Ptr icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
 
 protected:
   // Introspectable methods
@@ -165,6 +171,8 @@ private:
 
     TIME_LAST
   } LauncherActionTimes;
+
+  void ConfigureBarrier();
 
   void OnOptionsChanged(Options::Ptr options);
   void OnOptionChanged();
@@ -266,6 +274,7 @@ private:
 
   void OnOverlayHidden(GVariant* data);
   void OnOverlayShown(GVariant* data);
+  bool IsOverlayOpen() const;
 
   void DesaturateIcons();
   void SaturateIcons();
@@ -276,8 +285,6 @@ private:
 
   void OnActionDone(GVariant* data);
 
-  void RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherIcon::Ptr icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
-
   AbstractLauncherIcon::Ptr MouseIconIntersection(int x, int y);
   void EventLogic();
   void MouseDownLogic(int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -287,6 +294,8 @@ private:
   void StartIconDrag(AbstractLauncherIcon::Ptr icon);
   void EndIconDrag();
   void UpdateDragWindowPosition(int x, int y);
+
+  void ResetMouseDragState();
 
   float GetAutohidePositionMin() const;
   float GetAutohidePositionMax() const;
@@ -313,6 +322,7 @@ private:
 
   bool  _hovered;
   bool  _hidden;
+  bool  _scroll_limit_reached;
   bool  _render_drag_window;
 
   bool          _shortcuts_shown;
@@ -322,8 +332,7 @@ private:
   float _folded_angle;
   float _neg_folded_angle;
   float _folded_z_distance;
-  float _launcher_top_y;
-  float _launcher_bottom_y;
+  float _last_delta_y;
   float _edge_overcome_pressure;
 
   LauncherActionState _launcher_action_state;
@@ -355,6 +364,7 @@ private:
   guint _autoscroll_handle;
   guint _start_dragicon_handle;
   guint _dnd_check_handle;
+  guint _strut_hack_handle;
 
   nux::Point2   _mouse_position;
   nux::BaseWindow* _parent;
@@ -403,6 +413,7 @@ private:
   BaseTexturePtr launcher_sheen_;
   BaseTexturePtr launcher_pressure_effect_;
   bool _dash_is_open;
+  bool _hud_is_open;
 
   ui::AbstractIconRenderer::Ptr icon_renderer;
   BackgroundEffectHelper bg_effect_helper_;

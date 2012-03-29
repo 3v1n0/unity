@@ -28,15 +28,16 @@ namespace shortcut
 namespace
 {
 const unsigned int SUPER_TAP_DURATION = 650;
+const unsigned int FADE_DURATION = 100;
 } // anonymouse namespace;
-  
-Controller::Controller(std::list<AbstractHint*>& hints)
+
+Controller::Controller(std::list<AbstractHint::Ptr>& hints)
   : view_window_(0)
   , visible_(false)
   , enabled_(true)
   , show_timer_(0)
-  , fade_in_animator_(100)
-  , fade_out_animator_(100)
+  , fade_in_animator_(FADE_DURATION)
+  , fade_out_animator_(FADE_DURATION)
 {
   bg_color_ = nux::Color(0.0, 0.0, 0.0, 0.5);
 
@@ -71,7 +72,7 @@ Controller::~Controller()
 {
   if (view_window_)
     view_window_->UnReference();
-    
+
   view_.Release();
 }
 
@@ -182,8 +183,14 @@ void Controller::Hide()
 {
   if (!visible_)
     return;
-    
+
   visible_ = false;
+
+  if (show_timer_)
+  {
+    g_source_remove(show_timer_);
+    show_timer_ = 0;
+  }
 
   if (view_window_)
   {
@@ -191,10 +198,6 @@ void Controller::Hide()
     fade_in_animator_.Stop();
     fade_out_animator_.Start(1.0 - view_window_->GetOpacity());
   }
-
-  if (show_timer_)
-    g_source_remove(show_timer_);
-  show_timer_ = 0;
 }
 
 bool Controller::Visible()
@@ -210,6 +213,22 @@ bool Controller::IsEnabled()
 void Controller::SetEnabled(bool enabled)
 {
   enabled_ = enabled;
+}
+
+std::string Controller::GetName() const
+{
+  return "ShortcutController";
+}
+
+void Controller::AddProperties(GVariantBuilder* builder)
+{
+  unity::variant::BuilderWrapper(builder)
+  .add(workarea_)
+  .add("timeout_duration", SUPER_TAP_DURATION + FADE_DURATION)
+  .add("enabled", IsEnabled())
+  .add("about_to_show", (Visible() && !fade_out_animator_.IsRunning() && view_window_ && view_window_->GetOpacity() != 1.0f))
+  .add("about_to_hide", (Visible() && !fade_in_animator_.IsRunning() && view_window_ && view_window_->GetOpacity() != 1.0f))
+  .add("visible", (Visible() && view_window_ && view_window_->GetOpacity() == 1.0f));
 }
 
 } // namespace shortcut

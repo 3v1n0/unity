@@ -124,7 +124,6 @@ PanelMenuView::PanelMenuView(int padding)
 
   _panel_titlebar_grab_area = new PanelTitlebarGrabArea();
   _panel_titlebar_grab_area->SetParentObject(this);
-  _panel_titlebar_grab_area->SinkReference();
   _panel_titlebar_grab_area->mouse_down.connect(sigc::mem_fun(this, &PanelMenuView::OnMouseClicked));
   _panel_titlebar_grab_area->mouse_down.connect(sigc::mem_fun(this, &PanelMenuView::OnMouseMiddleClicked));
   _panel_titlebar_grab_area->mouse_down.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabStart));
@@ -307,14 +306,17 @@ long PanelMenuView::PostLayoutManagement(long LayoutResult)
 
   nux::Geometry geo = GetGeometry();
 
+  int h_padding = _padding - 2;
+  int v_padding = 1;
+
   old_window_buttons_w = _window_buttons->GetContentWidth();
-  _window_buttons->SetGeometry(geo.x + _padding, geo.y, old_window_buttons_w, geo.height);
+  _window_buttons->SetGeometry(geo.x + h_padding, geo.y + v_padding, old_window_buttons_w, geo.height);
   _window_buttons->ComputeContentSize();
   new_window_buttons_w = _window_buttons->GetContentWidth();
 
   /* Explicitly set the size and position of the widgets */
-  geo.x += _padding + new_window_buttons_w + _padding;
-  geo.width -= _padding + new_window_buttons_w + _padding;
+  geo.x += h_padding + new_window_buttons_w + h_padding;
+  geo.width -= h_padding + new_window_buttons_w + h_padding;
 
   old_menu_area_w = _menu_layout->GetContentWidth();
   _menu_layout->SetGeometry(geo.x, geo.y, old_menu_area_w, geo.height);

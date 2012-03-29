@@ -65,8 +65,140 @@ class SwitcherTests(AutopilotTestCase):
 
         self.assertThat(start, NotEquals(0))
         self.assertThat(end, Equals(start - 1))
+
+    def test_switcher_scroll_next(self):
+        self.set_timeout_setting(False)
+        sleep(1)
+
+        self.switcher.initiate()
+        sleep(.2)
+
+        start = self.switcher.get_selection_index()
+        self.switcher.next_icon_mouse()
+        sleep(.2)
+
+        end = self.switcher.get_selection_index()
+        self.assertThat(start, NotEquals(0))
+        self.assertThat(end, Equals(start + 1))
+
+        self.switcher.terminate()
+
+    def test_switcher_scroll_prev(self):
+        self.set_timeout_setting(False)
+        sleep(1)
+
+        self.switcher.initiate()
+        sleep(.2)
+
+        start = self.switcher.get_selection_index()
+        self.switcher.previous_icon_mouse()
+        sleep(.2)
+
+        end = self.switcher.get_selection_index()
+        self.assertThat(start, NotEquals(0))
+        self.assertThat(end, Equals(start - 1))
+
+        self.switcher.terminate()
+
+    def test_switcher_scroll_next_ignores_fast_events(self):
+        self.set_timeout_setting(False)
+        sleep(1)
+
+        self.switcher.initiate()
+        sleep(.2)
+
+        # Quickly repeatead events should be ignored (except the first)
+        start = self.switcher.get_selection_index()
+        self.switcher.next_icon_mouse()
+        self.switcher.next_icon_mouse()
+        self.switcher.next_icon_mouse()
+        sleep(.2)
+
+        end = self.switcher.get_selection_index()
+        self.assertThat(start, NotEquals(0))
+        self.assertThat(end, Equals(start + 1))
+
+        self.switcher.terminate()
+
+    def test_switcher_scroll_prev_ignores_fast_events(self):
+        self.set_timeout_setting(False)
+        sleep(1)
+
+        self.switcher.initiate()
+        sleep(.2)
+
+        # Quickly repeatead events should be ignored (except the first)
+        start = self.switcher.get_selection_index()
+        self.switcher.previous_icon_mouse()
+        self.switcher.previous_icon_mouse()
+        self.switcher.previous_icon_mouse()
+        sleep(.2)
+
+        end = self.switcher.get_selection_index()
+        self.assertThat(end, Equals(start - 1))
+
+        self.switcher.terminate()
+
+    def test_switcher_arrow_key_does_not_init(self):
+        self.set_timeout_setting(False)
+        sleep(1)
+
+        self.switcher.initiate_right_arrow()
+        sleep(.2)
+
+        self.assertThat(self.switcher.get_is_visible(), Equals(False))
+        self.switcher.terminate()
         self.set_timeout_setting(True)
 
+    def test_lazy_switcher_initiate(self):
+        self.set_timeout_setting(False)
+        sleep(1)
+
+        self.keybinding_hold("switcher/reveal_normal")
+        self.addCleanup(self.keybinding_release, "switcher/reveal_normal")
+        sleep(1)
+        self.assertThat(self.switcher.get_is_visible(), Equals(False))
+
+        sleep(1)
+        self.keybinding_tap("switcher/reveal_normal")
+        self.addCleanup(self.keybinding, "switcher/cancel")
+        sleep(.5)
+        self.assertThat(self.switcher.get_is_visible(), Equals(True))
+
+    def test_switcher_cancel(self):
+        self.set_timeout_setting(False)
+        sleep(1)
+
+        self.switcher.initiate()
+        self.addCleanup(self.switcher.terminate)
+        sleep(.2)
+
+        self.assertThat(self.switcher.get_is_visible(), Equals(True))
+
+        self.switcher.cancel()
+        sleep(.2)
+
+        self.assertThat(self.switcher.get_is_visible(), Equals(False))
+
+    def test_lazy_switcher_cancel(self):
+        self.set_timeout_setting(False)
+        sleep(1)
+
+        self.keybinding_hold("switcher/reveal_normal")
+        self.addCleanup(self.keybinding_release, "switcher/reveal_normal")
+        sleep(1)
+        self.assertThat(self.switcher.get_is_visible(), Equals(False))
+
+        sleep(1)
+        self.keybinding_tap("switcher/reveal_normal")
+        self.addCleanup(self.keybinding, "switcher/cancel")
+        sleep(.5)
+        self.assertThat(self.switcher.get_is_visible(), Equals(True))
+
+        self.switcher.cancel()
+        sleep(.2)
+
+        self.assertThat(self.switcher.get_is_visible(), Equals(False))
 
 class SwitcherDetailsTests(AutopilotTestCase):
     """Test the details mode for the switcher."""
@@ -160,6 +292,11 @@ class SwitcherDetailsModeTests(AutopilotTestCase):
 class SwitcherWorkspaceTests(AutopilotTestCase):
     """Test Switcher behavior with respect to multiple workspaces."""
 
+    def get_bamf_application(self, name):
+        apps = self.get_app_instances(name)
+        self.assertThat(len(apps), Equals(1))
+        return apps[0]
+
     def test_switcher_shows_current_workspace_only(self):
         """Switcher must show apps from the current workspace only."""
         self.close_all_app('Calculator')
@@ -176,8 +313,8 @@ class SwitcherWorkspaceTests(AutopilotTestCase):
         sleep(1)
         icon_names = [i.tooltip_text for i in self.switcher.get_switcher_icons()]
         self.switcher.terminate()
-        self.assertThat(icon_names, Contains("Character Map"))
-        self.assertThat(icon_names, Not(Contains("Calculator")))
+        self.assertThat(icon_names, Contains(self.get_bamf_application("Character Map").name))
+        self.assertThat(icon_names, Not(Contains(self.get_bamf_application("Calculator").name)))
 
     def test_switcher_all_mode_shows_all_apps(self):
         """Test switcher 'show_all' mode shows apps from all workspaces."""
@@ -195,8 +332,8 @@ class SwitcherWorkspaceTests(AutopilotTestCase):
         sleep(1)
         icon_names = [i.tooltip_text for i in self.switcher.get_switcher_icons()]
         self.switcher.terminate()
-        self.assertThat(icon_names, Contains("Character Map"))
-        self.assertThat(icon_names, Contains("Calculator"))
+        self.assertThat(icon_names, Contains(self.get_bamf_application("Calculator").name))
+        self.assertThat(icon_names, Contains(self.get_bamf_application("Character Map").name))
 
     def test_switcher_can_switch_to_minimised_window(self):
         """Switcher must be able to switch to a minimised window when there's
@@ -221,16 +358,14 @@ class SwitcherWorkspaceTests(AutopilotTestCase):
 
         self.switcher.initiate()
         sleep(1)
-        while self.switcher.current_icon.tooltip_text != 'Mahjongg':
+        while self.switcher.current_icon.tooltip_text != self.get_bamf_application("Mahjongg").name:
             self.switcher.next_icon()
             sleep(1)
         self.switcher.stop()
         sleep(1)
 
-        #get calculator windows - there should be only one:
-        mahjongg_apps = self.bamf.get_running_applications_by_title("Mahjongg")
-        self.assertThat(len(mahjongg_apps), Equals(1))
-        wins = mahjongg_apps[0].get_windows()
+        #get mahjongg windows - there should be two:
+        wins = self.get_bamf_application("Mahjongg").get_windows()
         self.assertThat(len(wins), Equals(2))
         # Ideally we should be able to find the instance that is on the
         # current workspace and ask that one if it is hidden.

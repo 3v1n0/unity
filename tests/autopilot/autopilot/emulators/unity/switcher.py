@@ -12,7 +12,7 @@ from time import sleep
 
 from autopilot.keybindings import KeybindingsHelper
 from autopilot.emulators.unity import get_state_by_path, make_introspection_object
-from autopilot.emulators.X11 import Keyboard
+from autopilot.emulators.X11 import Keyboard, Mouse
 
 # even though we don't use these directly, we need to make sure they've been
 # imported so the classes contained are registered with the introspection API.
@@ -21,12 +21,15 @@ from autopilot.emulators.unity.icons import *
 logger = logging.getLogger(__name__)
 
 
+# TODO: THis class needs to be ported to the new-style emulator classes.
+# See launcher.py or dash.py for reference.
 class Switcher(KeybindingsHelper):
     """Interact with the Unity switcher."""
 
     def __init__(self):
         super(Switcher, self).__init__()
         self._keyboard = Keyboard()
+        self._mouse = Mouse()
 
     def initiate(self):
         """Start the switcher with alt+tab."""
@@ -52,11 +55,23 @@ class Switcher(KeybindingsHelper):
         self.keybinding_tap("switcher/reveal_all")
         sleep(1)
 
+    def initiate_right_arrow(self):
+        """Impropperly attempt to start switcher."""
+        logger.debug("Initiating switcher with Alt+Right (should not work)")
+        self.keybinding_hold("switcher/reveal_impropper")
+        self.keybinding_tap("switcher/right")
+        sleep(1)
+
     def terminate(self):
         """Stop switcher without activating the selected icon."""
         logger.debug("Terminating switcher.")
         self.keybinding("switcher/cancel")
         self.keybinding_release("switcher/reveal_normal")
+
+    def cancel(self):
+        """Stop switcher without activating the selected icon and releasing the keys."""
+        logger.debug("Cancelling switcher.")
+        self.keybinding("switcher/cancel")
 
     def stop(self):
         """Stop switcher and activate the selected icon."""
@@ -64,14 +79,26 @@ class Switcher(KeybindingsHelper):
         self.keybinding_release("switcher/reveal_normal")
 
     def next_icon(self):
-        """Move to the next application."""
+        """Move to the next icon."""
         logger.debug("Selecting next item in switcher.")
         self.keybinding("switcher/next")
 
     def previous_icon(self):
-        """Move to the previous application."""
+        """Move to the previous icon."""
         logger.debug("Selecting previous item in switcher.")
         self.keybinding("switcher/prev")
+
+    def next_icon_mouse(self):
+        """Move to the next icon using the mouse scroll wheel"""
+        logger.debug("Selecting next item in switcher with mouse scroll wheel.")
+        self._mouse.press(6)
+        self._mouse.release(6)
+
+    def previous_icon_mouse(self):
+        """Move to the previous icon using the mouse scroll wheel"""
+        logger.debug("Selecting previous item in switcher with mouse scroll wheel.")
+        self._mouse.press(7)
+        self._mouse.release(7)
 
     def show_details(self):
         """Show detail mode."""
@@ -109,11 +136,11 @@ class Switcher(KeybindingsHelper):
             return None
 
     def get_icon_name(self, index):
-        return self.__get_icon(index)['tooltip-text']
+        return self.__get_icon(index)['tooltip_text']
 
     def get_icon_desktop_file(self, index):
         try:
-            return self.__get_icon(index)['desktop-file']
+            return self.__get_icon(index)['desktop_file']
         except:
             return None
 
@@ -151,4 +178,4 @@ class Switcher(KeybindingsHelper):
         return get_state_by_path('/Unity/SwitcherController/SwitcherModel')[0]
 
     def __get_controller(self):
-        return get_state_by_path('/unity/SwitcherController')[0]
+        return get_state_by_path('/Unity/SwitcherController')[0]

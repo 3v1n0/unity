@@ -19,6 +19,11 @@ class SimpleLauncherIcon(UnityIntrospectionObject):
 
     """
 
+    @property
+    def center_position(self):
+        """Get the center point of an icon, returns a tuple with (x, y, z)"""
+        return (self.center_x, self.center_y, self.center_z)
+
     def get_quicklist(self):
         """Get the quicklist for this launcher icon.
 
@@ -26,14 +31,16 @@ class SimpleLauncherIcon(UnityIntrospectionObject):
         launcher icon.
 
         """
-        # quicklist is created dynamically, so refresh our state:
-        self.refresh_state()
         matches = self.get_children_by_type(Quicklist)
         return matches[0] if matches else None
 
 
 class BFBLauncherIcon(SimpleLauncherIcon):
     """Represents the BFB button in the launcher."""
+
+
+class HudLauncherIcon(SimpleLauncherIcon):
+    """Represents the HUD button in the launcher."""
 
 
 class BamfLauncherIcon(SimpleLauncherIcon):
@@ -50,3 +57,6 @@ class DeviceLauncherIcon(SimpleLauncherIcon):
 
 class DesktopLauncherIcon(SimpleLauncherIcon):
     """Represents an icon that may appear in the switcher."""
+
+class SoftwareCenterLauncherIcon(BamfLauncherIcon):
+    """Represents a launcher icon of a Software Center app."""

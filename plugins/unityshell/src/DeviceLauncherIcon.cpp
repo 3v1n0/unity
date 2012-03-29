@@ -87,13 +87,13 @@ std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
   DbusmenuMenuitem* menu_item;
   glib::Object<GDrive> drive(g_volume_get_drive(volume_));
 
-  // "Lock to launcher"/"Unlock from launcher" item
+  // "Lock to Launcher"/"Unlock from Launcher" item
   if (DevicesSettings::GetDefault().GetDevicesOption() == DevicesSettings::ONLY_MOUNTED
       && drive && !g_drive_is_media_removable (drive))
   {
     menu_item = dbusmenu_menuitem_new();
 
-    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, !keep_in_launcher_ ? _("Lock to launcher") : _("Unlock from launcher"));
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, !keep_in_launcher_ ? _("Lock to Launcher") : _("Unlock from Launcher"));
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 

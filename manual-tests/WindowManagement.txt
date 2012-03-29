@@ -1,0 +1,51 @@
+Running Application with both visible and invisible windows
+-----------------------------------------------------------
+This test shows how unity should manage applications with both user visible
+and invisible windows.
+
+Setup:
+#. Open gedit
+#. Open the 'open files' dialog
+
+Outcome:
+  The launcher icon should count with left icon indicators (pips) only the visible
+  window(s); 
+
+Action:
+#. Click the gedit launcher icon
+
+Outcome:
+  The main gedit window should come into focus
+
+Action:
+#. Click the gedit launcher icon again, gedit still focused
+	
+Outcome:
+  Spread with both visible and invisible windows should be activated.
+
+
+Auto-maximize window
+----------------------
+Thit test make sure that the auto-maximize window feature is disabled for
+resolution above the 1024x600.
+
+Setup:
+#. Open the display panel
+#. Set a resolution greater then 1024x600 (e.g 1366x768)
+
+Action:
+#. Open nautilus
+
+Outcome:
+  The window should not be in the maximized state.
+
+Setup:
+#. Open the display panel
+#. Set a resolution lower or equal to 1024x600.
+#. Open the ccsm and change the automaximize-threshold option to 20 (experimental-tab of unity-plugin).
+
+Action:
+#. Open nautilus, that usually doesn't start maximized
+
+Outcome:
+  The window should be in the maximized state.

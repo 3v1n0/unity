@@ -16,7 +16,7 @@
  *
  * Authored by: Andrea Azzarone <azzaronea@gmail.com>
  */
- 
+
 #ifndef UNITYSHELL_SHORTCUTHINT_H
 #define UNITYSHELL_SHORTCUTHINT_H
 
@@ -36,10 +36,10 @@ public:
        std::string const& postfix,
        std::string const& description,
        OptionType const type,
-       std::string const& arg1, 
+       std::string const& arg1,
        std::string const& arg2 = "",
        std::string const& arg3 = "");
-  
+
   // Dtor
   ~Hint();
 
