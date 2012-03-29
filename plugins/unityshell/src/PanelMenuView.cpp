@@ -113,7 +113,6 @@ PanelMenuView::PanelMenuView()
 
   _titlebar_grab_area = new PanelTitlebarGrabArea();
   _titlebar_grab_area->SetParentObject(this);
-  _titlebar_grab_area->SinkReference();
   _titlebar_grab_area->activate_request.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedActivate));
   _titlebar_grab_area->restore_request.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedRestore));
   _titlebar_grab_area->lower_request.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedLower));
@@ -143,8 +142,7 @@ PanelMenuView::PanelMenuView()
     _window_buttons->ComputeContentSize();
     layout_->SetLeftAndRightPadding(_window_buttons->GetContentWidth(), 0);
 
-    _title_texture = nullptr;
-    Refresh();
+    Refresh(true);
     FullRedraw();
   });
 
@@ -751,11 +749,11 @@ std::string PanelMenuView::GetActiveViewName(bool use_appname)
   _is_own_window = false;
   window = bamf_matcher_get_active_window(_matcher);
 
-  if (BAMF_IS_WINDOW(window))
+  if (BAMF_IS_WINDOW(window) && IsWindowUnderOurControl(bamf_window_get_xid(window)))
   {
     BamfView *view = reinterpret_cast<BamfView*>(window);
     std::vector<Window> const& our_xids = nux::XInputWindow::NativeHandleList();
-    guint32 window_xid = bamf_window_get_xid(window);
+    Window window_xid = bamf_window_get_xid(window);
 
     if (std::find(our_xids.begin(), our_xids.end(), window_xid) != our_xids.end())
     {
@@ -820,7 +818,7 @@ std::string PanelMenuView::GetMaximizedViewName(bool use_appname)
 
   window = GetBamfWindowForXid(maximized);
 
-  if (BAMF_IS_WINDOW(window))
+  if (BAMF_IS_WINDOW(window) && IsWindowUnderOurControl(maximized))
   {
     BamfView* view = reinterpret_cast<BamfView*>(window);
     label = glib::String(bamf_view_get_name(view)).Str();
@@ -941,6 +939,12 @@ void PanelMenuView::Refresh(bool force)
   // layout cycle before the first callback. This is to protect from that.
   if (geo.width > _monitor_geo.width)
     return;
+
+  if (!_we_control_active)
+  {
+    _title_texture = nullptr;
+    return;
+  }
 
   auto win_manager = WindowManager::Default();
   std::string new_title;
@@ -1238,12 +1242,11 @@ void PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher,
     guint32 xid = bamf_window_get_xid(window);
     _active_xid = xid;
     _is_maximized = wm->IsWindowMaximized(xid);
-    nux::Geometry const& geo = wm->GetWindowGeometry(xid);
 
     if (bamf_window_get_window_type(window) == BAMF_WINDOW_DESKTOP)
       _we_control_active = true;
     else
-      _we_control_active = _monitor_geo.IsPointInside(geo.x + (geo.width / 2), geo.y);
+      _we_control_active = IsWindowUnderOurControl(xid);
 
     if (_decor_map.find(xid) == _decor_map.end())
     {
@@ -1433,15 +1436,17 @@ void PanelMenuView::OnWindowRestored(guint xid)
 
 gboolean PanelMenuView::UpdateActiveWindowPosition(PanelMenuView* self)
 {
-  auto wm = WindowManager::Default();
-  nux::Geometry const& window_geo = wm->GetWindowGeometry(self->_active_xid);
-  nux::Geometry const& intersect = self->_monitor_geo.Intersect(window_geo);
+  bool we_control_window = self->IsWindowUnderOurControl(self->_active_xid);
 
-  self->_we_control_active = (intersect.width > window_geo.width/4 &&
-                              intersect.height > window_geo.height/4);
+  if (we_control_window != self->_we_control_active)
+  {
+    self->_we_control_active = we_control_window;
+
+    self->Refresh();
+    self->QueueDraw();
+  }
 
   self->_active_moved_id = 0;
-  self->QueueDraw();
 
   return FALSE;
 }
@@ -1450,14 +1455,44 @@ void PanelMenuView::OnWindowMoved(guint xid)
 {
   if (_active_xid == xid)
   {
-    if (_active_moved_id)
-      g_source_remove(_active_moved_id);
+    /* When moving the active window, if the current panel is controlling
+     * the active window, then we postpone the timeout function every movement
+     * that we have, setting a longer timeout.
+     * Otherwise, if the moved window is not controlled by the current panel
+     * every few millisecond we check the new window position */
 
-    if (!_we_control_active)
-      UpdateActiveWindowPosition(this);
+    unsigned int timeout = 250;
+
+    if (_we_control_active)
+    {
+      if (_active_moved_id)
+        g_source_remove(_active_moved_id);
+    }
     else
-      _active_moved_id = g_timeout_add(250, (GSourceFunc)PanelMenuView::UpdateActiveWindowPosition, this);
+    {
+      timeout = 60;
+
+      if (_active_moved_id)
+        return;
+    }
+
+    _active_moved_id = g_timeout_add(timeout, (GSourceFunc)UpdateActiveWindowPosition, this);
   }
+}
+
+bool PanelMenuView::IsWindowUnderOurControl(Window xid)
+{
+  if (UScreen::GetDefault()->GetMonitors().size() > 1)
+  {
+    auto wm = WindowManager::Default();
+    nux::Geometry const& window_geo = wm->GetWindowGeometry(xid);
+    nux::Geometry const& intersect = _monitor_geo.Intersect(window_geo);
+
+    /* We only care of the horizontal window portion */
+    return (intersect.width > window_geo.width/2 && intersect.height > 0);
+  }
+
+  return true;
 }
 
 bool PanelMenuView::IsValidWindow(Window xid)
@@ -1466,15 +1501,10 @@ bool PanelMenuView::IsValidWindow(Window xid)
   std::vector<Window> const& our_xids = nux::XInputWindow::NativeHandleList();
 
   if (wm->IsWindowOnCurrentDesktop(xid) && !wm->IsWindowObscured(xid) &&
-      wm->IsWindowVisible(xid) &&
+      wm->IsWindowVisible(xid) && IsWindowUnderOurControl(xid) &&
       std::find(our_xids.begin(), our_xids.end(), xid) == our_xids.end())
   {
-    nux::Geometry const& geo = wm->GetWindowGeometry(xid);
-
-    if (_monitor_geo.IsPointInside(geo.x + (geo.width / 2), geo.y))
-    {
-      return true;
-    }
+    return true;
   }
 
   return false;

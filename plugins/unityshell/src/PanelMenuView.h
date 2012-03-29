@@ -134,6 +134,7 @@ private:
   static gboolean OnNewAppHide(PanelMenuView* self);
 
   bool IsValidWindow(Window xid);
+  bool IsWindowUnderOurControl(Window xid);
 
   bool DrawMenus();
   bool DrawWindowButtons();
