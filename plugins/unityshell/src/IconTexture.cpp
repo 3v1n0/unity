@@ -70,20 +70,6 @@ IconTexture::IconTexture(std::string const& icon_name, unsigned int size, bool d
     LoadIcon();
 }
 
-IconTexture::IconTexture(const char* icon_name, unsigned int size, bool defer_icon_loading)
-  : TextureArea(NUX_TRACKER_LOCATION),
-    _accept_key_nav_focus(false),
-    _icon_name(icon_name ? icon_name : DEFAULT_ICON),
-    _size(size),
-    _texture_width(0),
-    _texture_height(0),
-    _loading(false),
-    _opacity(1.0f)
-{
-  if (!_icon_name.empty() && !defer_icon_loading)
-    LoadIcon();
-}
-
 IconTexture::~IconTexture()
 {}
 
@@ -98,39 +84,31 @@ void IconTexture::SetByIconName(std::string const& icon_name, unsigned int size)
   LoadIcon();
 }
 
-void IconTexture::SetByIconName(const char* icon_name, unsigned int size)
-{
-  SetByIconName(std::string(icon_name ? icon_name : ""), size);
-}
 
 void IconTexture::SetByFilePath(std::string const& file_path, unsigned int size)
 {
   SetByIconName(file_path, size);
 }
 
-void IconTexture::SetByFilePath(const char* file_path, unsigned int size)
-{
-  SetByFilePath(std::string(file_path ? file_path : ""), size);
-}
-
 void IconTexture::LoadIcon()
 {
   LOG_DEBUG(logger) << "LoadIcon called (" << _icon_name << ") - loading: " << _loading;
   static const char* const DEFAULT_GICON = ". GThemedIcon text-x-preview";
- 
+
   if (_loading)
     return;
+
   _loading = true;
 
-  glib::Object<GIcon> icon(::g_icon_new_for_string(!_icon_name.empty() ? _icon_name.c_str() : DEFAULT_GICON, NULL));
+  glib::Object<GIcon> icon(::g_icon_new_for_string(_icon_name.empty() ?  DEFAULT_GICON : _icon_name.c_str(), NULL));
 
   if (icon)
   {
-    IconLoader::GetDefault().LoadFromGIconString(!_icon_name.empty() ? _icon_name.c_str() : DEFAULT_GICON,
+    IconLoader::GetDefault().LoadFromGIconString(_icon_name.empty() ? DEFAULT_GICON : _icon_name.c_str(),
                                                   _size,
                                                   sigc::mem_fun(this, &IconTexture::IconLoaded));
   }
-  else if (g_str_has_prefix(_icon_name.c_str(), "http://"))
+  else if (_icon_name.find("http://") == 0)
   {
     IconLoader::GetDefault().LoadFromURI(_icon_name,
                                           _size, sigc::mem_fun(this, &IconTexture::IconLoaded));
@@ -159,7 +137,7 @@ void IconTexture::Refresh(GdkPixbuf* pixbuf)
 
   // Try and get a texture from the texture cache
   std::string id("IconTexture.");
-  id += !_icon_name.empty() ? _icon_name : DEFAULT_ICON;
+  id += _icon_name.empty() ? DEFAULT_ICON : _icon_name;
   _texture_cached = cache.FindTexture(id,
                                       _texture_width,
                                       _texture_height,

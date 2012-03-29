@@ -272,6 +272,7 @@ ubus_server_pump_message_queue(UBusServer* server)
 
     if (dispatch_list == NULL)
     {
+      ubus_message_info_free(info);
       continue; // no handlers for this message
     }
 

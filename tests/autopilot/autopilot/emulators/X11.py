@@ -23,7 +23,9 @@ from Xlib import X
 from Xlib import XK
 from Xlib.display import Display
 from Xlib.ext.xtest import fake_input
+import subprocess
 import gtk.gdk
+import os
 
 _PRESSED_KEYS = []
 _PRESSED_MOUSE_BUTTONS = []
@@ -313,12 +315,15 @@ class Mouse(object):
         sg = ScreenGeometry()
         sg.move_mouse_to_monitor(0)
 
-
 class ScreenGeometry:
     """Get details about screen geometry."""
 
+    class BlacklistedDriverError(RuntimeError):
+        """Cannot set primary monitor when running drivers listed in the driver blacklist."""
+
     def __init__(self):
         self._default_screen = gtk.gdk.screen_get_default()
+        self._blacklisted_drivers = ["NVIDIA"]
 
     def get_num_monitors(self):
         """Get the number of monitors attached to the PC."""
@@ -326,6 +331,33 @@ class ScreenGeometry:
 
     def get_primary_monitor(self):
         return self._default_screen.get_primary_monitor()
+
+    def set_primary_monitor(self, monitor):
+        """Set `monitor` to be the primary monitor.
+
+        `monitor` must be an integer between 0 and the number of configured monitors.
+        ValueError is raised if an invalid monitor is specified.
+
+        BlacklistedDriverError is raised if your video driver does not support this.
+
+        """
+        glxinfo_out = subprocess.check_output("glxinfo")
+        for dri in self._blacklisted_drivers:
+            if dri in glxinfo_out:
+                raise ScreenGeometry.BlacklistedDriverError('Impossible change the primary monitor for the given driver')
+
+        if monitor < 0 or monitor >= self.get_num_monitors():
+            raise ValueError('Monitor %d is not in valid range of 0 <= monitor < %d.' % (self.get_num_monitors()))
+
+        monitor_name = self._default_screen.get_monitor_plug_name(monitor)
+
+        if not monitor_name:
+            raise ValueError('Could not get monitor name from monitor number %d.' % (monitor))
+
+        ret = os.spawnlp(os.P_WAIT, "xrandr", "xrandr", "--output", monitor_name, "--primary")
+
+        if ret != 0:
+            raise RuntimeError('Xrandr can\'t set the primary monitor. error code: %d' % (ret))
 
     def get_screen_width(self):
         return self._default_screen.get_width()
@@ -344,13 +376,12 @@ class ScreenGeometry:
         return tuple(self._default_screen.get_monitor_geometry(monitor_number))
 
     def is_rect_on_monitor(self, monitor_number, rect):
-        """Returns True if `rect` is _entirely_ on the specified monitor, with no overlap"""
+        """Returns True if `rect` is _entirely_ on the specified monitor, with no overlap."""
 
         if type(rect) is not tuple or len(rect) != 4:
             raise TypeError("rect must be a tuple of 4 int elements.")
 
-        (x, y, w, h) = self.get_monitor_geometry(monitor_number)
-
+        (x, y, w, h) = rect
         (m_x, m_y, m_w, m_h) = self.get_monitor_geometry(monitor_number)
         return (x >= m_x and x + w <= m_x + m_w and y >= m_y and y + h <= m_y + m_h)
 

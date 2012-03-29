@@ -284,7 +284,7 @@ private:
   hud::Controller::Ptr      hud_controller_;
 
   shortcut::Controller::Ptr shortcut_controller_;
-  std::list<shortcut::AbstractHint*> hints_;
+  std::list<shortcut::AbstractHint::Ptr> hints_;
   bool enable_shortcut_overlay_;
 
   GestureEngine*                        gestureEngine;

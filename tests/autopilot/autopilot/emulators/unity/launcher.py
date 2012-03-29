@@ -7,14 +7,15 @@
 # by the Free Software Foundation.
 #
 
+import dbus
 import logging
 from time import sleep
 
 from autopilot.keybindings import KeybindingsHelper
 from autopilot.emulators.unity import UnityIntrospectionObject
-from autopilot.emulators.unity.icons import BamfLauncherIcon, SimpleLauncherIcon
+from autopilot.emulators.unity.icons import BFBLauncherIcon, BamfLauncherIcon, SimpleLauncherIcon
 from autopilot.emulators.X11 import Mouse, ScreenGeometry
-
+from autopilot.emulators.dbus_handler import session_bus
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +28,10 @@ class LauncherController(UnityIntrospectionObject):
         launchers = self.get_children_by_type(Launcher, monitor=monitor_num)
         return launchers[0] if launchers else None
 
+    def get_launchers(self):
+        """Return the available launchers, or None."""
+        return self.get_children_by_type(Launcher)
+
     @property
     def model(self):
         """Return the launcher model."""
@@ -37,6 +42,18 @@ class LauncherController(UnityIntrospectionObject):
     def key_nav_monitor(self):
         return self.key_nav_launcher_monitor
 
+    def add_launcher_item_from_position(self,name,icon,icon_x,icon_y,icon_size,desktop_file,aptdaemon_task):
+        """ Emulate a DBus call from Software Center to pin an icon to the launcher """
+        launcher_object = session_bus.get_object('com.canonical.Unity.Launcher',
+                                      '/com/canonical/Unity/Launcher')
+        launcher_iface = dbus.Interface(launcher_object, 'com.canonical.Unity.Launcher')
+        launcher_iface.AddLauncherItemFromPosition(name,
+                                                   icon,
+                                                   icon_x,
+                                                   icon_y,
+                                                   icon_size,
+                                                   desktop_file,
+                                                   aptdaemon_task)
 
 class Launcher(UnityIntrospectionObject, KeybindingsHelper):
     """An individual launcher for a monitor."""
@@ -253,6 +270,11 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
 class LauncherModel(UnityIntrospectionObject):
     """THe launcher model. Contains all launcher icons as children."""
+
+    def get_bfb_icon(self):
+        icons = BFBLauncherIcon.get_all_instances()
+        assert(len(icons) == 1)
+        return icons[0]
 
     def get_launcher_icons(self, visible_only=True):
         """Get a list of launcher icons in this launcher."""

@@ -334,23 +334,21 @@ GtkIconTheme* LauncherIcon::GetUnityTheme()
   return _unity_theme;
 }
 
-nux::BaseTexture* LauncherIcon::TextureFromGtkTheme(const char* icon_name, int size, bool update_glow_colors)
+nux::BaseTexture* LauncherIcon::TextureFromGtkTheme(std::string icon_name, int size, bool update_glow_colors)
 {
   GtkIconTheme* default_theme;
   nux::BaseTexture* result = NULL;
 
-  if (!icon_name)
+  if (icon_name.empty())
   {
-    // This leaks, so log if we do this.
-    LOG_WARN(logger) << "Leaking... no icon_name passed in.";
-    icon_name = g_strdup(DEFAULT_ICON.c_str());
+    icon_name = DEFAULT_ICON;
   }
 
   default_theme = gtk_icon_theme_get_default();
 
   // FIXME: we need to create some kind of -unity postfix to see if we are looking to the unity-icon-theme
   // for dedicated unity icons, then remove the postfix and degrade to other icon themes if not found
-  if ((g_strcmp0(icon_name, "workspace-switcher") == 0) && IsMonoDefaultTheme())
+  if (icon_name == "workspace-switcher" && IsMonoDefaultTheme())
     result = TextureFromSpecificGtkTheme(GetUnityTheme(), icon_name, size, update_glow_colors);
 
   if (!result)
@@ -358,7 +356,7 @@ nux::BaseTexture* LauncherIcon::TextureFromGtkTheme(const char* icon_name, int s
 
   if (!result)
   {
-    if (g_strcmp0(icon_name, "folder") == 0)
+    if (icon_name == "folder")
       result = NULL;
     else
       result = TextureFromSpecificGtkTheme(default_theme, "folder", size, update_glow_colors);
@@ -369,7 +367,7 @@ nux::BaseTexture* LauncherIcon::TextureFromGtkTheme(const char* icon_name, int s
 }
 
 nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
-                                                            const char* icon_name,
+                                                            std::string const& icon_name,
                                                             int size,
                                                             bool update_glow_colors,
                                                             bool is_default_theme)
@@ -379,7 +377,7 @@ nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
   GIcon* icon;
   GtkIconLookupFlags flags = (GtkIconLookupFlags) 0;
 
-  icon = g_icon_new_for_string(icon_name, NULL);
+  icon = g_icon_new_for_string(icon_name.c_str(), NULL);
 
   if (G_IS_ICON(icon))
   {
@@ -388,7 +386,7 @@ nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
   }
   else
   {
-    info = gtk_icon_theme_lookup_icon(theme,icon_name, size, flags);
+    info = gtk_icon_theme_lookup_icon(theme, icon_name.c_str(), size, flags);
   }
 
   if (!info && !is_default_theme)
@@ -425,15 +423,15 @@ nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
   return result;
 }
 
-nux::BaseTexture* LauncherIcon::TextureFromPath(const char* icon_name, int size, bool update_glow_colors)
+nux::BaseTexture* LauncherIcon::TextureFromPath(std::string const& icon_name, int size, bool update_glow_colors)
 {
   nux::BaseTexture* result;
 
-  if (!icon_name)
-    return TextureFromGtkTheme(DEFAULT_ICON.c_str(), size, update_glow_colors);
+  if (icon_name.empty())
+    return TextureFromGtkTheme(DEFAULT_ICON, size, update_glow_colors);
 
   glib::Error error;
-  glib::Object<GdkPixbuf> pbuf(gdk_pixbuf_new_from_file_at_size(icon_name, size, size, &error));
+  glib::Object<GdkPixbuf> pbuf(gdk_pixbuf_new_from_file_at_size(icon_name.c_str(), size, size, &error));
 
   if (GDK_IS_PIXBUF(pbuf.RawPtr()))
   {
@@ -447,7 +445,7 @@ nux::BaseTexture* LauncherIcon::TextureFromPath(const char* icon_name, int size,
     LOG_WARN(logger) << "Unable to load '" << icon_name
                      <<  "' icon: " << error;
 
-    result = TextureFromGtkTheme(DEFAULT_ICON.c_str(), size, update_glow_colors);
+    result = TextureFromGtkTheme(DEFAULT_ICON, size, update_glow_colors);
   }
 
   return result;
@@ -916,11 +914,11 @@ LauncherIcon::SetEmblem(LauncherIcon::BaseTexturePtr const& emblem)
 }
 
 void
-LauncherIcon::SetEmblemIconName(const char* name)
+LauncherIcon::SetEmblemIconName(std::string const& name)
 {
   BaseTexturePtr emblem;
 
-  if (g_str_has_prefix(name, "/"))
+  if (name.at(0) == '/')
     emblem = TextureFromPath(name, 22, false);
   else
     emblem = TextureFromGtkTheme(name, 22, false);
@@ -931,11 +929,8 @@ LauncherIcon::SetEmblemIconName(const char* name)
 }
 
 void
-LauncherIcon::SetEmblemText(const char* text)
+LauncherIcon::SetEmblemText(std::string const& text)
 {
-  if (text == NULL)
-    return;
-
   PangoLayout*          layout     = NULL;
 
   PangoContext*         pangoCtx   = NULL;
@@ -969,7 +964,7 @@ LauncherIcon::SetEmblemText(const char* text)
   pango_layout_set_width(layout, pango_units_from_double(width - 4.0f));
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_NONE);
-  pango_layout_set_markup_with_accel(layout, text, -1, '_', NULL);
+  pango_layout_set_markup_with_accel(layout, text.c_str(), -1, '_', NULL);
 
   pangoCtx = pango_layout_get_context(layout);  // is not ref'ed
   pango_cairo_context_set_font_options(pangoCtx,
@@ -1087,14 +1082,13 @@ LauncherIcon::OnRemoteCountChanged(LauncherEntryRemote* remote)
   if (!remote->CountVisible())
     return;
 
-  gchar* text;
+  std::string text;
   if (remote->Count() > 9999)
-    text = g_strdup_printf("****");
+    text = "****";
   else
-    text = g_strdup_printf("%i", (int) remote->Count());
+    text = std::to_string( (int) remote->Count());
 
   SetEmblemText(text);
-  g_free(text);
 }
 
 void
@@ -1126,9 +1120,7 @@ LauncherIcon::OnRemoteCountVisibleChanged(LauncherEntryRemote* remote)
 {
   if (remote->CountVisible())
   {
-    gchar* text = g_strdup_printf("%i", (int) remote->Count());
-    SetEmblemText(text);
-    g_free(text);
+    SetEmblemText(std::to_string( (int) remote->Count()));
   }
   else
   {

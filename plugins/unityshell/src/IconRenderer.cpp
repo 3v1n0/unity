@@ -510,7 +510,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                 edge->GetDeviceTexture(),
                 edge_color,
                 edge_tile_colorify,
-                arg.alpha,
+                arg.alpha * arg.alpha, // Dim edges of semi-transparent tiles
                 force_filter,
                 tile_transform);
   // end tile draw

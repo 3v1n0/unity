@@ -54,8 +54,8 @@ namespace unity {
 
     void PreviewApplications::BuildLayout()
     {
-      IconTexture *screenshot = new IconTexture (preview_->screenshot_icon_hint.c_str(), 420);
-      IconTexture *icon = new IconTexture (preview_->icon_hint.c_str(), 80);
+      IconTexture *screenshot = new IconTexture(preview_->screenshot_icon_hint, 420);
+      IconTexture *icon = new IconTexture(preview_->icon_hint, 80);
       nux::StaticCairoText *name = new nux::StaticCairoText (preview_->name, NUX_TRACKER_LOCATION);
       name->SetFont("Ubuntu 25");
 

@@ -456,17 +456,17 @@ std::string BamfLauncherIcon::BamfName() const
 void BamfLauncherIcon::AddProperties(GVariantBuilder* builder)
 {
   SimpleLauncherIcon::AddProperties(builder);
-  auto windows = GetWindows();
-  GVariant* xids[windows.size()];
-  unsigned int i = 0;
 
-  for (auto xid : windows)
-    xids[i++] = g_variant_new_uint32(xid);
+  GVariantBuilder xids_builder;
+  g_variant_builder_init(&xids_builder, G_VARIANT_TYPE ("au"));
+
+  for (auto xid : GetWindows())
+    g_variant_builder_add(&xids_builder, "u", xid);
 
   variant::BuilderWrapper(builder)
     .add("desktop_file", DesktopFile())
-    .add("desktop_id", glib::String(g_path_get_basename(DesktopFile().c_str())).Str())
-    .add("xids", g_variant_new_array(G_VARIANT_TYPE_UINT32, xids, i))
+    .add("desktop_id", GetDesktopID())
+    .add("xids", g_variant_builder_end(&xids_builder))
     .add("sticky", IsSticky());
 }
 
@@ -1023,16 +1023,35 @@ void BamfLauncherIcon::OnCenterStabilized(std::vector<nux::Point3> center)
   UpdateIconGeometries(center);
 }
 
+std::string BamfLauncherIcon::GetDesktopID()
+{
+  std::string const& desktop_file = DesktopFile();
+
+  if (!desktop_file.empty())
+  {
+    size_t id_pos = desktop_file.rfind('/');
+
+    if (id_pos != std::string::npos)
+    {
+      size_t id_start = id_pos + 1;
+
+      return (id_start < desktop_file.length()) ? desktop_file.substr(id_start) : "";
+    }
+  }
+
+  return desktop_file;
+}
+
 const gchar* BamfLauncherIcon::GetRemoteUri()
 {
   if (_remote_uri.empty())
   {
     const std::string prefix = "application://";
-    glib::String basename(g_path_get_basename(DesktopFile().c_str()));
+    std::string const& desktop_id = GetDesktopID();
 
-    if (!basename.Str().empty())
+    if (!desktop_id.empty())
     {
-      _remote_uri = prefix + basename.Str();
+      _remote_uri = prefix + desktop_id;
     }
   }
 

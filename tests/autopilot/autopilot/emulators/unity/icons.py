@@ -20,7 +20,8 @@ class SimpleLauncherIcon(UnityIntrospectionObject):
     """
 
     @property
-    def center_geometry(self):
+    def center_position(self):
+        """Get the center point of an icon, returns a tuple with (x, y, z)"""
         return (self.center_x, self.center_y, self.center_z)
 
     def get_quicklist(self):
@@ -56,3 +57,6 @@ class DeviceLauncherIcon(SimpleLauncherIcon):
 
 class DesktopLauncherIcon(SimpleLauncherIcon):
     """Represents an icon that may appear in the switcher."""
+
+class SoftwareCenterLauncherIcon(BamfLauncherIcon):
+    """Represents a launcher icon of a Software Center app."""

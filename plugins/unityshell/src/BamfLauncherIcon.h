@@ -43,7 +43,7 @@ public:
   BamfLauncherIcon(BamfApplication* app);
   virtual ~BamfLauncherIcon();
 
-  void ActivateLauncherIcon(ActionArg arg);
+  virtual void ActivateLauncherIcon(ActionArg arg);
 
   std::string DesktopFile();
 
@@ -115,6 +115,7 @@ private:
 
   std::vector<Window> GetWindows(WindowFilterMask filter = 0, int monitor = -1);
   const std::set<std::string>& GetSupportedTypes();
+  std::string GetDesktopID();
 
 
   glib::Object<BamfApplication> _bamf_app;

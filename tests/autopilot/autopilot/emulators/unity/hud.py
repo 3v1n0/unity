@@ -13,12 +13,14 @@ from autopilot.emulators.unity import UnityIntrospectionObject
 
 class HudView(UnityIntrospectionObject):
     """Proxy object for the hud view child of the controller."""
+
     @property
     def geometry(self):
         return (self.x, self.y, self.width, self.height)
 
 class EmbeddedIcon(UnityIntrospectionObject):
     """Proxy object for the hud embedded icon child of the view."""
+
     @property
     def geometry(self):
         return (self.x, self.y, self.width, self.height)
@@ -44,6 +46,7 @@ class HudController(UnityIntrospectionObject, KeybindingsHelper):
         self.keybinding("hud/reveal", tap_delay)
 
     def get_embedded_icon(self):
+        """Returns the HUD view embedded icon or None if is not shown."""
         view = self._get_view()
         if (not view):
             return None
@@ -84,9 +87,5 @@ class HudController(UnityIntrospectionObject, KeybindingsHelper):
         return int(self.hud_monitor)
 
     @property
-    def show_embedded_icon(self):
-        view = self._get_view()
-        if view:
-            return bool(view.show_embedded_icon)
-        else:
-            return False
+    def has_embedded_icon(self):
+        return (self.get_embedded_icon() != None)
