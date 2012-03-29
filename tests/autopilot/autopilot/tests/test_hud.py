@@ -404,37 +404,3 @@ class HudVisualTests(HudTestsBase):
             hud_embedded_icon = self.hud.get_embedded_icon()
             self.assertThat(hud_embedded_icon.icon_name, Equals(calc.icon))
 
-    def test_hud_launcher_icon_hides_bfb(self):
-        """Tests that the BFB icon is hidden when the HUD launcher icon is shown"""
-        if not self.hud.is_locked_to_launcher:
-            self.skipTest("This test needs a locked launcher")
-
-        hud_icon = self.get_hud_launcher_icon()
-
-        icons = BFBLauncherIcon.get_all_instances()
-        self.assertEqual(1, len(icons))
-        bfb_icon = icons[0]
-
-        self.assertTrue(bfb_icon.visible)
-        self.assertFalse(hud_icon.visible)
-        self.assertFalse(hud_icon.active)
-        sleep(.25)
-
-        self.reveal_hud()
-        sleep(.5)
-
-        self.assertTrue(hud_icon.visible)
-        self.assertTrue(hud_icon.active)
-        self.assertFalse(bfb_icon.visible)
-
-    def test_hud_desaturates_launcher_icons(self):
-        """Tests that the launcher icons are desaturates when HUD is open"""
-        if not self.hud.is_locked_to_launcher:
-            self.skipTest("This test needs a locked launcher")
-
-        self.reveal_hud()
-        sleep(.5)
-
-        for icon in self.launcher.model.get_launcher_icons():
-            if not isinstance(icon, HudLauncherIcon):
-                self.assertTrue(icon.desaturated)
