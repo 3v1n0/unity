@@ -304,7 +304,6 @@ PanelIndicatorsView::AddEntryView(PanelIndicatorEntryView* view,
   }
 
   layout_->AddView(view, 0, nux::eCenter, nux::eFull, 1.0, (nux::LayoutPosition) entry_pos);
-  layout_->QueueRelayout();
 
   entries_[view->GetEntryID()] = view;
 

@@ -78,11 +78,6 @@ PanelMenuView::PanelMenuView()
 {
   layout_->SetContentDistribution(nux::eStackLeft);
 
-  /* Removing the layout from the base view, otherwise it will take all the
-   * space it needs and we don't want this. */
-  layout_->Reference();
-  RemoveLayout();
-
   BamfWindow* active_win = bamf_matcher_get_active_window(_matcher);
   if (BAMF_IS_WINDOW(active_win))
     _active_xid = bamf_window_get_xid(active_win);
@@ -185,7 +180,6 @@ PanelMenuView::~PanelMenuView()
   if (_new_app_hide_id)
     g_source_remove(_new_app_hide_id);
 
-  layout_->UnReference();
   _window_buttons->UnReference();
   _titlebar_grab_area->UnReference();
 
@@ -299,15 +293,11 @@ void PanelMenuView::SetMenuShowTimings(int fadein, int fadeout, int discovery,
 void PanelMenuView::QueueDraw()
 {
   PanelIndicatorsView::QueueDraw();
-
-  layout_->QueueDraw();
 }
 
 void PanelMenuView::FullRedraw()
 {
   PanelIndicatorsView::QueueDraw();
-
-  layout_->QueueDraw();
   _window_buttons->QueueDraw();
 }
 
@@ -319,6 +309,7 @@ nux::Area* PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, n
     return nullptr;
 
   Area* found_area = nullptr;
+
   if (!_we_control_active)
   {
     /* When the current panel is not active, it all behaves like a grab-area */
@@ -353,13 +344,7 @@ nux::Area* PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, n
     }
   }
 
-  if (!_is_own_window)
-  {
-    found_area = layout_->FindAreaUnderMouse(mouse_position, event_type);
-    NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
-  }
-
-  return View::FindAreaUnderMouse(mouse_position, event_type);
+  return PanelIndicatorsView::FindAreaUnderMouse(mouse_position, event_type);
 }
 
 void PanelMenuView::PreLayoutManagement()
@@ -475,7 +460,7 @@ void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   if (geo != _last_geo)
   {
     _last_geo = geo;
-    layout_->QueueDraw();
+    QueueRelayout();
     Refresh(true);
   }
 
