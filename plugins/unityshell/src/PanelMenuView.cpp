@@ -808,7 +808,10 @@ void PanelMenuView::Refresh(bool force)
 
   if (win_manager->IsScaleActive())
   {
-    new_title = GetActiveViewName(true);
+    if (win_manager->IsScaleActiveForGroup())
+      new_title = GetActiveViewName(true);
+    else if (_we_control_active)
+      new_title = DESKTOP_NAME;
   }
   else if (win_manager->IsExpoActive())
   {
