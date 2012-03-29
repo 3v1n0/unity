@@ -138,9 +138,8 @@ if (GTEST_SRC_DIR AND
                  test_main_xless.cpp
                  test_grabhandle.cpp
                  test_unityshell_private.cpp
-                 test_lensview_impl.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.cpp
-                 ${UNITY_SRC}/AbstractPlacesGroup.cpp
+                 ${UNITY_SRC}/AbstractShortcutHint.h
                  ${UNITY_SRC}/Animator.cpp
                  ${UNITY_SRC}/DebugDBusInterface.cpp
                  ${UNITY_SRC}/XPathQueryPart.cpp
@@ -148,7 +147,6 @@ if (GTEST_SRC_DIR AND
                  ${UNITY_SRC}/FavoriteStoreGSettings.cpp
                  ${UNITY_SRC}/IconTextureSource.cpp
                  ${UNITY_SRC}/LauncherModel.cpp
-                 ${UNITY_SRC}/LensViewPrivate.cpp
                  ${UNITY_SRC}/FavoriteStorePrivate.cpp
                  ${UNITY_SRC}/MockLauncherIcon.h
                  ${UNITY_SRC}/MockShortcutHint.h
@@ -192,11 +190,13 @@ if (GTEST_SRC_DIR AND
                  test_dashview_impl.cpp
                  test_texture_cache.cpp
                  test_main.cpp
+                 test_lensview_impl.cpp
                  test_icon_loader.cpp
                  test_single_monitor_launcher_icon.cpp
                  test_switcher_controller.cpp
                  test_switcher_model.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.cpp
+                 ${UNITY_SRC}/AbstractPlacesGroup.cpp
                  ${UNITY_SRC}/BackgroundEffectHelper.cpp
                  ${UNITY_SRC}/CairoBaseWindow.cpp
                  ${UNITY_SRC}/DashViewPrivate.cpp
@@ -218,6 +218,7 @@ if (GTEST_SRC_DIR AND
                  ${UNITY_SRC}/LauncherModel.cpp
                  ${UNITY_SRC}/SimpleLauncherIcon.cpp
                  ${UNITY_SRC}/SingleMonitorLauncherIcon.cpp
+                 ${UNITY_SRC}/LensViewPrivate.cpp
                  ${UNITY_SRC}/StaticCairoText.cpp
                  ${UNITY_SRC}/SwitcherController.cpp
                  ${UNITY_SRC}/SwitcherModel.cpp

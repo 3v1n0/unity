@@ -16,7 +16,7 @@
  *
  * Authored by: Andrea Azzarone <azzaronea@gmail.com>
  */
- 
+
 #ifndef UNITYSHELL_SHORTCUSMODEL_H
 #define UNITYSHELL_SHORTCUSMODEL_H
 
@@ -39,23 +39,23 @@ class Model : boost::noncopyable
 public:
   typedef std::shared_ptr<Model> Ptr;
 
-  // Ctor and dtor  
-  Model(std::list<AbstractHint*>& hints);
+  // Ctor and dtor
+  Model(std::list<AbstractHint::Ptr>& hints);
   ~Model();
-               
+
   // Accessors
   std::vector<std::string>& categories() { return categories_; }
-  std::map<std::string, std::list<AbstractHint*>>& hints() { return hints_; }
-  
-  void Fill();       
-        
+  std::map<std::string, std::list<AbstractHint::Ptr>>& hints() { return hints_; }
+
+  void Fill();
+
 private:
   // Private functions
-  void AddHint(AbstractHint* hint);
+  void AddHint(AbstractHint::Ptr hint);
 
   // Private members
   std::vector<std::string> categories_;
-  std::map<std::string, std::list<AbstractHint*>> hints_;
+  std::map<std::string, std::list<AbstractHint::Ptr>> hints_;
 };
 
 } // shortcut

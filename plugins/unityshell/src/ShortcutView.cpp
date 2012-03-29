@@ -109,7 +109,7 @@ nux::LinearLayout* View::CreateSectionLayout(const char* section_name)
   return layout;
 }
 
-nux::LinearLayout* View::CreateShortKeyEntryLayout(AbstractHint* hint)
+nux::LinearLayout* View::CreateShortKeyEntryLayout(AbstractHint::Ptr const& hint)
 {
   nux::HLayout* layout = new nux::HLayout("EntryLayout", NUX_TRACKER_LOCATION);
   nux::HLayout* shortkey_layout = new nux::HLayout(NUX_TRACKER_LOCATION);

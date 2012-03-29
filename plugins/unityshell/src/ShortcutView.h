@@ -46,11 +46,11 @@ public:
   // Ctor and dtor
   View();
   ~View();
-  
+
   // Public methods
   void SetModel(Model::Ptr model);
   Model::Ptr GetModel();
-  
+
 protected:
   // Protected methods
   void DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry clip);
@@ -59,11 +59,11 @@ protected:
 private:
   // Private methods
   nux::LinearLayout* CreateSectionLayout(const char* section_name);
-  nux::LinearLayout* CreateShortKeyEntryLayout(AbstractHint* hint);
+  nux::LinearLayout* CreateShortKeyEntryLayout(AbstractHint::Ptr const& hint);
   nux::LinearLayout* CreateIntermediateLayout();
 
   void RenderColumns();
-    
+
   // Private members
   Model::Ptr model_;
 

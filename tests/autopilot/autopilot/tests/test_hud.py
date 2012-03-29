@@ -373,11 +373,13 @@ class HudVisualTests(HudTestsBase):
 
         if self.hud.is_locked_to_launcher:
             self.assertTrue(hud_launcher_icon.is_visible_on_monitor(self.hud_monitor))
+            self.assertTrue(hud_launcher_icon.active)
             self.assertThat(hud_launcher_icon.monitor, Equals(self.hud_monitor))
             self.assertFalse(hud_launcher_icon.desaturated)
             self.assertThat(hud_embedded_icon, Equals(None))
         else:
             self.assertFalse(hud_launcher_icon.is_visible_on_monitor(self.hud_monitor))
+            self.assertFalse(hud_launcher_icon.active)
             self.assertThat(hud_embedded_icon, NotEquals(None))
 
     def test_hud_icon_show_the_focused_application_emblem(self):

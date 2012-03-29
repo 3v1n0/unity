@@ -21,6 +21,7 @@
 #define PANEL_VIEW_H
 
 #include <vector>
+#include <memory>
 
 #include <Nux/View.h>
 #include <Nux/TextureArea.h>
@@ -100,8 +101,10 @@ private:
   PanelMenuView*           _menu_view;
   PanelTray*               _tray;
   PanelIndicatorsView*     _indicators;
-  nux::AbstractPaintLayer* _bg_layer;
-  nux::ColorLayer*         _bg_darken_layer_;
+
+  typedef std::unique_ptr<nux::AbstractPaintLayer> PaintLayerPtr;
+  PaintLayerPtr bg_layer_;
+  PaintLayerPtr bg_darken_layer_;
   BaseTexturePtr           _panel_sheen;
   nux::HLayout*            _layout;
 
