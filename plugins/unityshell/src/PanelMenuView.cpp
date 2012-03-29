@@ -38,7 +38,7 @@ namespace unity
 namespace
 {
   nux::logging::Logger logger("unity.panel.menu");
-  const int MAIN_LEFT_PADDING = 6;
+  const int MAIN_LEFT_PADDING = 4;
   const int MENUBAR_PADDING = 4;
   const int MENU_ENTRIES_PADDING = 6;
   const std::string DESKTOP_NAME(_("Ubuntu Desktop"));
@@ -285,7 +285,7 @@ void PanelMenuView::PreLayoutManagement()
 
   _window_buttons->ComputeContentSize();
   int buttons_diff = panel_height - _window_buttons->GetContentHeight();
-  _window_buttons->SetBaseY(buttons_diff > 0 ? buttons_diff/2 : 0);
+  _window_buttons->SetBaseY(buttons_diff > 0 ? std::ceil(buttons_diff/2.0f) : 0);
 
   layout_->ComputeContentSize();
   int layout_width = layout_->GetContentWidth();
