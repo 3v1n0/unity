@@ -216,7 +216,7 @@ void PanelMenuView::SetIntegrated(bool integrated)
   if (!_is_integrated)
   {
     auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-    _is_inside = GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
+    _is_inside = GetAbsoluteGeometry().IsInside(mouse);
 
     _window_buttons->SetFocusedState(true);
     _window_buttons->SetControlledWindow(_is_maximized ? _active_xid : 0);
@@ -321,7 +321,7 @@ nux::Area* PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, n
   Area* found_area = nullptr;
   if (!_we_control_active)
   {
-    if (GetAbsoluteGeometry().IsPointInside(mouse_position.x, mouse_position.y))
+    if (GetAbsoluteGeometry().IsInside(mouse_position))
       return _titlebar_grab_area;
   }
 
@@ -347,7 +347,7 @@ nux::Area* PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, n
      * signals back from the grab-area to check where they really were */
     if (_is_integrated && _integrated_menu)
     {
-      if (_integrated_menu->GetAbsoluteGeometry().IsPointInside(mouse_position.x, mouse_position.y))
+      if (_integrated_menu->GetAbsoluteGeometry().IsInside(mouse_position))
         return _titlebar_grab_area;
     }
   }
@@ -1083,7 +1083,7 @@ void PanelMenuView::AllMenusClosed()
   if (!_is_integrated)
   {
     auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-    _is_inside = GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
+    _is_inside = GetAbsoluteGeometry().IsInside(mouse);
     FullRedraw();
   }
 }
@@ -1392,7 +1392,7 @@ void PanelMenuView::OnWindowMaximized(guint xid)
     {
       // We need to update the _is_inside state in the case of maximization by grab
       auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-      _is_inside = GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
+      _is_inside = GetAbsoluteGeometry().IsInside(mouse);
     }
 
     _is_maximized = true;
@@ -1772,7 +1772,7 @@ void PanelMenuView::OnSwitcherShown(GVariant* data)
   if (!_switcher_showing && !_is_integrated)
   {
     auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-    _is_inside = GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
+    _is_inside = GetAbsoluteGeometry().IsInside(mouse);
     _panel_title = "";
   }
   else
@@ -1817,7 +1817,7 @@ void PanelMenuView::OnLauncherKeyNavEnded(GVariant* data)
   if (!_is_integrated)
   {
     auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-    _is_inside = GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y);
+    _is_inside = GetAbsoluteGeometry().IsInside(mouse);
   }
 
   Refresh();
