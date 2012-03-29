@@ -469,6 +469,7 @@ PluginAdapter::IsWindowObscured(guint32 xid)
       return true;
 
     CompPoint window_vp = window->defaultViewport();
+    nux::Geometry const& win_geo = GetWindowGeometry(window->id());
     // Check if any windows above this one are blocking it
     for (CompWindow* sibling = window->next; sibling != NULL; sibling = sibling->next)
     {
@@ -476,8 +477,11 @@ PluginAdapter::IsWindowObscured(guint32 xid)
           && !sibling->minimized()
           && sibling->isMapped()
           && sibling->isViewable()
-          && (sibling->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE)
+          && (sibling->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE
+          && !GetWindowGeometry(sibling->id()).Intersect(win_geo).IsNull())
+      {
         return true;
+      }
     }
   }
 
