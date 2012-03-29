@@ -643,7 +643,7 @@ std::string PanelMenuView::GetActiveViewName(bool use_appname)
   _is_own_window = false;
   window = bamf_matcher_get_active_window(_matcher);
 
-  if (BAMF_IS_WINDOW(window) && IsWindowUnderOurControl(bamf_window_get_xid(window)))
+  if (BAMF_IS_WINDOW(window))
   {
     BamfView *view = reinterpret_cast<BamfView*>(window);
     std::vector<Window> const& our_xids = nux::XInputWindow::NativeHandleList();
@@ -671,8 +671,7 @@ std::string PanelMenuView::GetActiveViewName(bool use_appname)
     {
       label = DESKTOP_NAME;
     }
-    else if (!WindowManager::Default()->IsWindowOnCurrentDesktop(window_xid) ||
-             WindowManager::Default()->IsWindowObscured(window_xid))
+    else if (!IsValidWindow(window_xid))
     {
        return "";
     }
@@ -804,12 +803,6 @@ void PanelMenuView::Refresh(bool force)
   if (geo.width > _monitor_geo.width)
     return;
 
-  if (!_we_control_active)
-  {
-    _title_texture = nullptr;
-    return;
-  }
-
   auto win_manager = WindowManager::Default();
   std::string new_title;
 
@@ -820,6 +813,10 @@ void PanelMenuView::Refresh(bool force)
   else if (win_manager->IsExpoActive())
   {
     new_title = DESKTOP_NAME;
+  }
+  else if (!_we_control_active)
+  {
+    new_title = "";
   }
   else if (!_switcher_showing && !_launcher_keynav)
   {
