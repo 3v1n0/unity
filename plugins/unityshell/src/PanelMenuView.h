@@ -60,8 +60,8 @@ public:
   virtual void AddIndicator(indicator::Indicator::Ptr const& indicator);
   virtual void RemoveIndicator(indicator::Indicator::Ptr const& indicator);
 
-  virtual void DashShown();
-  virtual void DashHidden();
+  virtual void OveralyShown();
+  virtual void OveralyHidden();
 
   virtual void QueueDraw();
 
@@ -169,7 +169,7 @@ private:
   int _padding;
   nux::Geometry _last_geo;
 
-  bool _dash_showing;
+  bool _overlay_showing;
   bool _switcher_showing;
   bool _launcher_keynav;
   bool _show_now_activated;

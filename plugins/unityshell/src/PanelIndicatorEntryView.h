@@ -84,8 +84,8 @@ public:
   void SetFocusedState(bool focused);
   bool IsFocused() const;
 
-  void DashShown();
-  void DashHidden();
+  void OveralyShown();
+  void OveralyHidden();
 
   sigc::signal<void, PanelIndicatorEntryView*, bool> active_changed;
   sigc::signal<void, PanelIndicatorEntryView*> refreshed;
@@ -122,7 +122,7 @@ private:
   nux::Geometry cached_geo_;
   double opacity_;
   bool draw_active_;
-  bool dash_showing_;
+  bool overlay_showing_;
   bool disabled_;
   bool focused_;
 };

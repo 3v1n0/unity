@@ -59,7 +59,7 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int pa
   , entry_texture_(nullptr)
   , opacity_(1.0f)
   , draw_active_(false)
-  , dash_showing_(false)
+  , overlay_showing_(false)
   , disabled_(false)
   , focused_(true)
 {
@@ -280,10 +280,10 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
     }
 
     int y = (int)((height - gdk_pixbuf_get_height(pixbuf)) / 2);
-    if (dash_showing_ && !IsActive())
+    if (overlay_showing_ && !IsActive())
     {
       /* Most of the images we get are straight pixbufs (annoyingly), so when
-       * the Dash opens, we use the pixbuf as a mask to punch out an icon from
+       * the Overlay opens, we use the pixbuf as a mask to punch out an icon from
        * a white square. It works surprisingly well for most symbolic-type
        * icon themes/icons.
        */
@@ -365,7 +365,7 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
       int fading_width = out_pixels < fading_pixels ? out_pixels : fading_pixels;
 
       cairo_push_group(cr);
-      if (dash_showing_)
+      if (overlay_showing_)
       {
         cairo_move_to(cr, x, y);
         cairo_set_source_rgb(cr, 1.0f, 1.0f, 1.0f);
@@ -386,7 +386,7 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
     }
     else
     {
-      if (dash_showing_)
+      if (overlay_showing_)
       {
         cairo_move_to(cr, x, y);
         cairo_set_source_rgb(cr, 1.0f, 1.0f, 1.0f);
@@ -567,15 +567,15 @@ void PanelIndicatorEntryView::Draw(nux::GraphicsEngine& GfxContext, bool force_d
   GfxContext.PopClippingRectangle();
 }
 
-void PanelIndicatorEntryView::DashShown()
+void PanelIndicatorEntryView::OveralyShown()
 {
-  dash_showing_ = true;
+  overlay_showing_ = true;
   Refresh();
 }
 
-void PanelIndicatorEntryView::DashHidden()
+void PanelIndicatorEntryView::OveralyHidden()
 {
-  dash_showing_ = false;
+  overlay_showing_ = false;
   Refresh();
 }
 

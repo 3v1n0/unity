@@ -56,7 +56,7 @@ PanelMenuView::PanelMenuView()
     _last_active_view(nullptr),
     _new_application(nullptr),
     _padding(MAIN_LEFT_PADDING),
-    _dash_showing(false),
+    _overlay_showing(false),
     _switcher_showing(false),
     _launcher_keynav(false),
     _show_now_activated(false),
@@ -193,15 +193,15 @@ PanelMenuView::~PanelMenuView()
   _mode_changed_connection.disconnect();
 }
 
-void PanelMenuView::DashShown()
+void PanelMenuView::OveralyShown()
 {
-  _dash_showing = true;
+  _overlay_showing = true;
   QueueDraw();
 }
 
-void PanelMenuView::DashHidden()
+void PanelMenuView::OveralyHidden()
 {
-  _dash_showing = false;
+  _overlay_showing = false;
   QueueDraw();
 }
 
@@ -326,7 +326,7 @@ nux::Area* PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, n
       return _titlebar_grab_area;
   }
 
-  if (_is_maximized || _dash_showing || (_is_integrated && GetMaximizedWindow()))
+  if (_is_maximized || _overlay_showing || (_is_integrated && GetMaximizedWindow()))
   {
     if (_window_buttons)
     {
@@ -335,7 +335,7 @@ nux::Area* PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, n
     }
   }
 
-  if (_titlebar_grab_area && !_dash_showing)
+  if (_titlebar_grab_area && !_overlay_showing)
   {
     found_area = _titlebar_grab_area->FindAreaUnderMouse(mouse_position, event_type);
     NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
@@ -415,7 +415,7 @@ bool PanelMenuView::DrawMenus()
 
   if (_is_integrated && _integrated_menu)
   {
-    if (!_dash_showing && !screen_grabbed)
+    if (!_overlay_showing && !screen_grabbed)
     {
       return (GetMaximizedWindow() != 0);
     }
@@ -423,7 +423,7 @@ bool PanelMenuView::DrawMenus()
     return false;
   }
 
-  if (!_is_own_window && !_dash_showing && _we_control_active &&
+  if (!_is_own_window && !_overlay_showing && _we_control_active &&
       !_switcher_showing && !_launcher_keynav && !screen_grabbed)
   {
     if (_is_inside || _last_active_view || _show_now_activated || _new_application)
@@ -440,7 +440,7 @@ bool PanelMenuView::DrawWindowButtons()
   auto wm = WindowManager::Default();
   bool screen_grabbed = (wm->IsExpoActive() || wm->IsScaleActive());
 
-  if (_dash_showing)
+  if (_overlay_showing)
     return true;
 
   if (_is_integrated)
@@ -619,7 +619,7 @@ void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                              texxform1,
                              nux::color::White);
     }
-    else if (!_dash_showing)
+    else if (!_overlay_showing)
     {
       double title_opacity = 0.0f;
 
@@ -700,7 +700,7 @@ void PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw
       entry.second->SetDisabled(true);
   }
 
-  if (GetOpacity() != 0.0f && !draw_menus && !_dash_showing)
+  if (GetOpacity() != 0.0f && !draw_menus && !_overlay_showing)
   {
     layout_->ProcessDraw(GfxContext, true);
 
@@ -1610,7 +1610,7 @@ void PanelMenuView::OnMaximizedActivate(int x, int y)
 
 void PanelMenuView::OnMaximizedRestore(int x, int y)
 {
-  if (_dash_showing)
+  if (_overlay_showing)
     return;
 
   Window maximized = GetMaximizedWindow();
@@ -1624,7 +1624,7 @@ void PanelMenuView::OnMaximizedRestore(int x, int y)
 
 void PanelMenuView::OnMaximizedLower(int x, int y)
 {
-  if (_dash_showing)
+  if (_overlay_showing)
     return;
 
   Window maximized = GetMaximizedWindow();

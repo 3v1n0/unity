@@ -62,8 +62,8 @@ public:
   PanelIndicatorEntryView* ActivateEntry(std::string const& entry_id, int button = 1);
   bool ActivateIfSensitive();
 
-  virtual void DashShown();
-  virtual void DashHidden();
+  virtual void OveralyShown();
+  virtual void OveralyHidden();
 
   void SetOpacity(double opacity);
   double GetOpacity();

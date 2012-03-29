@@ -369,17 +369,17 @@ PanelIndicatorsView::OnEntryRemoved(std::string const& entry_id)
 }
 
 void
-PanelIndicatorsView::DashShown()
+PanelIndicatorsView::OveralyShown()
 {
   for (auto entry: entries_)
-    entry.second->DashShown();
+    entry.second->OveralyShown();
 }
 
 void
-PanelIndicatorsView::DashHidden()
+PanelIndicatorsView::OveralyHidden()
 {
   for (auto entry: entries_)
-    entry.second->DashHidden();
+    entry.second->OveralyHidden();
 }
 
 double
