@@ -94,6 +94,11 @@ LauncherIcon::LauncherIcon()
     _quirk_times[i].tv_nsec = 0;
   }
 
+  _is_visible_on_monitor.resize(max_num_monitors);
+
+  for (int i = 0; i < max_num_monitors; ++i)
+    _is_visible_on_monitor[i] = true;
+
   tooltip_text.SetSetterFunction(sigc::mem_fun(this, &LauncherIcon::SetTooltipText));
   tooltip_text = "blank";
 
@@ -184,6 +189,12 @@ LauncherIcon::GetName() const
 void
 LauncherIcon::AddProperties(GVariantBuilder* builder)
 {
+  GVariantBuilder monitors_builder;
+  g_variant_builder_init(&monitors_builder, G_VARIANT_TYPE ("ab"));
+
+  for (int i = 0; i < max_num_monitors; ++i)
+    g_variant_builder_add(&monitors_builder, "b", IsVisibleOnMonitor(i));
+
   unity::variant::BuilderWrapper(builder)
   .add("center_x", _center[0].x)
   .add("center_y", _center[0].y)
@@ -192,6 +203,7 @@ LauncherIcon::AddProperties(GVariantBuilder* builder)
   .add("icon_type", _icon_type)
   .add("tooltip_text", tooltip_text())
   .add("sort_priority", _sort_priority)
+  .add("monitors_visibility", g_variant_builder_end(&monitors_builder))
   .add("active", GetQuirk(QUIRK_ACTIVE))
   .add("visible", GetQuirk(QUIRK_VISIBLE))
   .add("urgent", GetQuirk(QUIRK_URGENT))
@@ -715,6 +727,22 @@ LauncherIcon::SetWindowVisibleOnMonitor(bool val, int monitor)
 
   _has_visible_window[monitor] = val;
   EmitNeedsRedraw();
+}
+
+void
+LauncherIcon::SetVisibleOnMonitor(int monitor, bool visible)
+{
+  if (_is_visible_on_monitor[monitor] == visible)
+    return;
+
+  _is_visible_on_monitor[monitor] = visible;
+  EmitNeedsRedraw();
+}
+
+bool
+LauncherIcon::IsVisibleOnMonitor(int monitor) const
+{
+  return _is_visible_on_monitor[monitor];
 }
 
 gboolean

@@ -198,6 +198,10 @@ public:
 
   virtual bool IsVisible() const = 0;
 
+  virtual bool IsVisibleOnMonitor(int monitor) const = 0;
+
+  virtual void SetVisibleOnMonitor(int monitor, bool visible) = 0;
+
   virtual void AboutToRemove() = 0;
   
   virtual void Stick(bool save = true) = 0;

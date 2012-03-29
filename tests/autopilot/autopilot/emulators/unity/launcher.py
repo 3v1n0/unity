@@ -283,6 +283,15 @@ class LauncherModel(UnityIntrospectionObject):
         else:
             return self.get_children_by_type(SimpleLauncherIcon)
 
+    def get_launcher_icons_for_monitor(self, monitor, visible_only=True):
+        """Get a list of launcher icons for provided monitor."""
+        icons = []
+        for icon in self.get_launcher_icons(visible_only):
+            if icon.is_on_monitor(monitor):
+                icons.append(icon)
+
+        return icons
+
     def get_icon_by_tooltip_text(self, tooltip_text):
         """Get a launcher icon given it's tooltip text.
 
