@@ -66,13 +66,13 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   _needs_geo_sync = false;
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
 
-  _bg_layer = new nux::ColorLayer(nux::Color(0xff595853), true);
+  bg_layer_.reset(new nux::ColorLayer(nux::Color(0xff595853), true));
 
   nux::ROPConfig rop;
   rop.Blend = true;
   rop.SrcBlend = GL_ZERO;
   rop.DstBlend = GL_SRC_COLOR;
-  _bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.9f, 0.9f, 0.9f, 1.0f), false, rop);
+  bg_darken_layer_.reset(new nux::ColorLayer(nux::Color(0.9f, 0.9f, 0.9f, 1.0f), false, rop));
 
   _layout = new nux::HLayout("", NUX_TRACKER_LOCATION);
 
@@ -151,8 +151,6 @@ PanelView::~PanelView()
 
   indicator::EntryLocationMap locations;
   _remote->SyncGeometries(GetName() + boost::lexical_cast<std::string>(_monitor), locations);
-
-  delete _bg_layer;
 }
 
 unsigned int PanelView::GetTrayXid ()
@@ -291,14 +289,14 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     if (_overlay_is_open)
     {
-      nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), _bg_darken_layer_);
+      nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), bg_darken_layer_.get());
     }
   }
 
 
 
   if (_overlay_is_open == false)
-    nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), _bg_layer);
+    nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), bg_layer_.get());
 
   GfxContext.PopClippingRectangle();
 
@@ -351,7 +349,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                 nux::color::White,
                                 true,
                                 rop);
-                                
+
 #else
       gPainter.PushCompositionLayer(GfxContext, geo,
                                     bg_blur_texture_,
@@ -366,13 +364,13 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     if (_overlay_is_open)
     {
-      nux::GetPainter().PushLayer(GfxContext, GetGeometry(), _bg_darken_layer_);
+      nux::GetPainter().PushLayer(GfxContext, GetGeometry(), bg_darken_layer_.get());
       bgs++;
     }
   }
 
   if (_overlay_is_open == FALSE)
-    gPainter.PushLayer(GfxContext, GetGeometry(), _bg_layer);
+    gPainter.PushLayer(GfxContext, GetGeometry(), bg_layer_.get());
 
   if (_overlay_is_open)
   {
@@ -423,18 +421,16 @@ PanelView::UpdateBackground()
   _last_width = geo.width;
   _last_height = geo.height;
   _is_dirty = false;
-  
+
   guint32 maximized_win = _menu_view->GetMaximizedWindow();
 
   if (_overlay_is_open)
   {
-    if (_bg_layer)
-      delete _bg_layer;
     nux::ROPConfig rop;
     rop.Blend = true;
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-    _bg_layer = new nux::ColorLayer (_bg_color, true, rop);
+    bg_layer_.reset(new nux::ColorLayer (_bg_color, true, rop));
   }
   else
   {
@@ -454,8 +450,6 @@ PanelView::UpdateBackground()
     nux::TexCoordXForm texxform;
     texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
     texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-    if (_bg_layer)
-      delete _bg_layer;
 
     nux::ROPConfig rop;
     rop.Blend = true;
@@ -463,11 +457,11 @@ PanelView::UpdateBackground()
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
     nux::Color col = nux::color::White;
 
-    _bg_layer = new nux::TextureLayer(texture2D->GetDeviceTexture(),
+    bg_layer_.reset(new nux::TextureLayer(texture2D->GetDeviceTexture(),
                                       texxform,
                                       col,
                                       true,
-                                      rop);
+                                      rop));
     texture2D->UnReference();
   }
 
