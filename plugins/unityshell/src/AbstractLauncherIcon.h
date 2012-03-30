@@ -176,7 +176,7 @@ public:
 
   virtual IconType GetIconType() = 0;
 
-  virtual const gchar* RemoteUri() = 0;
+  virtual std::string RemoteUri() = 0;
 
   virtual std::list<DbusmenuMenuitem*> Menus() = 0;
 
