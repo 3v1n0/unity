@@ -1142,6 +1142,16 @@ bool Controller::KeyNavIsActive() const
   return pimpl->launcher_keynav;
 }
 
+bool Controller::IsOverlayOpen() const
+{
+  for (auto launcher_ptr : pimpl->launchers)
+  {
+    if (launcher_ptr->IsOverlayOpen())
+      return true;
+  } 
+  return false;
+}
+
 std::string
 Controller::GetName() const
 {
