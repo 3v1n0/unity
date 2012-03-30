@@ -33,57 +33,57 @@ UnityShowdesktopHandlerWindowInterface::~UnityShowdesktopHandlerWindowInterface 
 const unsigned int UnityShowdesktopHandler::fade_time = 300;
 std::list <UnityShowdesktopHandlerWindowInterface *> UnityShowdesktopHandler::animating_windows (0);
 
-bool UnityShowdesktopHandler::shouldHide (UnityShowdesktopHandlerWindowInterface *wi)
+bool UnityShowdesktopHandler::ShouldHide (UnityShowdesktopHandlerWindowInterface *wi)
 {
-  if (wi->overrideRedirect ())
+  if (wi->OverrideRedirect ())
     return false;
 
-  if (!wi->managed ())
+  if (!wi->Managed ())
     return false;
 
-  if (wi->grabbed ())
+  if (wi->Grabbed ())
     return false;
 
-  if (wi->desktopOrDock ())
+  if (wi->DesktopOrDock ())
    return false;
 
-  if (wi->skipTaskbarOrPager ())
+  if (wi->SkipTaskbarOrPager ())
     return false;
 
-  if (wi->hidden ())
-    if ((wi->showDesktopMode () || wi->shaded ()))
+  if (wi->Hidden ())
+    if ((wi->ShowDesktopMode () || wi->Shaded ()))
       return false;
 
   return true;
 }
 
-guint32 UnityShowdesktopHandler::mInhibitingXid = 0;
+guint32 UnityShowdesktopHandler::inhibiting_xid = 0;
 
 void
-UnityShowdesktopHandler::inhibitLeaveShowdesktopMode (guint32 xid)
+UnityShowdesktopHandler::InhibitLeaveShowdesktopMode (guint32 xid)
 {
-  if (!mInhibitingXid)
-    mInhibitingXid = xid;
+  if (!inhibiting_xid)
+    inhibiting_xid = xid;
 }
 
 void
-UnityShowdesktopHandler::allowLeaveShowdesktopMode (guint32 xid)
+UnityShowdesktopHandler::AllowLeaveShowdesktopMode (guint32 xid)
 {
-  if (mInhibitingXid == xid)
-    mInhibitingXid = 0;
+  if (inhibiting_xid == xid)
+    inhibiting_xid = 0;
 }
 
 guint32
-UnityShowdesktopHandler::inhibitingXid ()
+UnityShowdesktopHandler::InhibitingXid ()
 {
-  return mInhibitingXid;
+  return inhibiting_xid;
 }
 
 UnityShowdesktopHandler::UnityShowdesktopHandler (UnityShowdesktopHandlerWindowInterface *wi) :
-  mShowdesktopHandlerWindowInterface (wi),
-  mRemover (wi->inputRemover ()),
-  mState (Visible),
-  mProgress (0.0f)
+  showdesktop_handler_window_interface_ (wi),
+  remover_ (wi->InputRemover ()),
+  state_ (StateVisible),
+  progress_ (0.0f)
 {
 }
 
@@ -91,124 +91,124 @@ UnityShowdesktopHandler::~UnityShowdesktopHandler ()
 {
 }
 
-void UnityShowdesktopHandler::fadeOut ()
+void UnityShowdesktopHandler::FadeOut ()
 {
-  if (mState != Visible && mState != FadeIn)
+  if (state_ != StateVisible && state_ != StateFadeIn)
     return;
 
-  mState = UnityShowdesktopHandler::FadeOut;
-  mProgress = 0.0f;
+  state_ = UnityShowdesktopHandler::StateFadeOut;
+  progress_ = 0.0f;
 
-  mWasHidden = mShowdesktopHandlerWindowInterface->hidden ();
+  was_hidden_ = showdesktop_handler_window_interface_->Hidden ();
 
-  if (!mWasHidden)
+  if (!was_hidden_)
   {
-    mShowdesktopHandlerWindowInterface->hide ();
-    mShowdesktopHandlerWindowInterface->notifyHidden ();
-    mRemover->save ();
-    mRemover->remove ();
+    showdesktop_handler_window_interface_->Hide ();
+    showdesktop_handler_window_interface_->NotifyHidden ();
+    remover_->save ();
+    remover_->remove ();
 
     if (std::find (animating_windows.begin(),
                    animating_windows.end(),
-                   mShowdesktopHandlerWindowInterface) == animating_windows.end())
-      animating_windows.push_back (mShowdesktopHandlerWindowInterface);
+		   showdesktop_handler_window_interface_) == animating_windows.end())
+      animating_windows.push_back (showdesktop_handler_window_interface_);
 
   }
 }
 
-void UnityShowdesktopHandler::fadeIn ()
+void UnityShowdesktopHandler::FadeIn ()
 {
-  if (mState != Invisible && mState != FadeOut)
+  if (state_ != StateInvisible && state_ != StateFadeOut)
     return;
 
-  mState = UnityShowdesktopHandler::FadeIn;
+  state_ = UnityShowdesktopHandler::StateFadeIn;
 
-  if (!mWasHidden)
+  if (!was_hidden_)
   {
-    mShowdesktopHandlerWindowInterface->show ();
-    mShowdesktopHandlerWindowInterface->notifyShown ();
-    mRemover->restore ();
+    showdesktop_handler_window_interface_->Show ();
+    showdesktop_handler_window_interface_->NotifyShown ();
+    remover_->restore ();
 
     if (std::find (animating_windows.begin(),
                    animating_windows.end(),
-                   mShowdesktopHandlerWindowInterface) == animating_windows.end())
-      animating_windows.push_back(mShowdesktopHandlerWindowInterface);
+		   showdesktop_handler_window_interface_) == animating_windows.end())
+      animating_windows.push_back(showdesktop_handler_window_interface_);
   }
 }
 
-UnityShowdesktopHandlerWindowInterface::PostPaintAction UnityShowdesktopHandler::animate (unsigned int ms)
+UnityShowdesktopHandlerWindowInterface::PostPaintAction UnityShowdesktopHandler::Animate (unsigned int ms)
 {
   float inc = ms / static_cast <float> (fade_time);
 
-  if (mState == UnityShowdesktopHandler::FadeOut)
+  if (state_ == UnityShowdesktopHandler::StateFadeOut)
   {
-    mProgress += inc;
-    if (mProgress >= 1.0f)
+    progress_ += inc;
+    if (progress_ >= 1.0f)
     {
-      mProgress = 1.0f;
-      mState = Invisible;
+      progress_ = 1.0f;
+      state_ = StateInvisible;
     }
   }
-  else if (mState == FadeIn)
+  else if (state_ == StateFadeIn)
   {
-    mProgress -= inc;
-    if (mProgress <= 0.0f)
+    progress_ -= inc;
+    if (progress_ <= 0.0f)
     {
-      mProgress = 0.0f;
-      mState = Visible;
+      progress_ = 0.0f;
+      state_ = StateVisible;
     }
   }
-  else if (mState == Visible)
+  else if (state_ == StateVisible)
     return UnityShowdesktopHandlerWindowInterface::PostPaintAction::Remove;
-  else if (mState == Invisible)
+  else if (state_ == StateInvisible)
     return UnityShowdesktopHandlerWindowInterface::PostPaintAction::Wait;
 
   return UnityShowdesktopHandlerWindowInterface::PostPaintAction::Damage;
 }
 
-void UnityShowdesktopHandler::paintOpacity (unsigned short &opacity)
+void UnityShowdesktopHandler::PaintOpacity (unsigned short &opacity)
 {
-  if (mProgress == 1.0f || mProgress == 0.0f)
+  if (progress_ == 1.0f || progress_ == 0.0f)
     opacity = std::numeric_limits <unsigned short>::max ();
   else
-    opacity *= (1.0f - mProgress);
+    opacity *= (1.0f - progress_);
 }
 
-unsigned int UnityShowdesktopHandler::getPaintMask ()
+unsigned int UnityShowdesktopHandler::GetPaintMask ()
 {
-  return (mProgress == 1.0f) ? mShowdesktopHandlerWindowInterface->noCoreInstanceMask () : 0;
+  return (progress_ == 1.0f) ? showdesktop_handler_window_interface_->NoCoreInstanceMask () : 0;
 }
 
-void UnityShowdesktopHandler::handleShapeEvent ()
+void UnityShowdesktopHandler::HandleShapeEvent ()
 {
   /* Ignore sent events from the InputRemover */
-  if (mRemover)
+  if (remover_)
   {
-    mRemover->save ();
-    mRemover->remove ();
+    remover_->save ();
+    remover_->remove ();
   }
 }
 
-void UnityShowdesktopHandler::windowFocusChangeNotify ()
+void UnityShowdesktopHandler::WindowFocusChangeNotify ()
 {
-  if (mShowdesktopHandlerWindowInterface->minimized ())
+  if (showdesktop_handler_window_interface_->Minimized ())
   {
     for (UnityShowdesktopHandlerWindowInterface *w : animating_windows)
-      w->disableFocus ();
+      w->DisableFocus ();
 
-    mShowdesktopHandlerWindowInterface->moveFocusAway ();
+    showdesktop_handler_window_interface_->MoveFocusAway ();
 
     for (UnityShowdesktopHandlerWindowInterface *w : animating_windows)
-      w->enableFocus ();
+      w->EnableFocus ();
   }
 }
 
-void UnityShowdesktopHandler::updateFrameRegion (CompRegion &r)
+void UnityShowdesktopHandler::UpdateFrameRegion (CompRegion &r)
 {
   r = CompRegion ();
 
   /* Ensure no other plugins can touch this frame region */
-  mShowdesktopHandlerWindowInterface->overrideFrameRegion (r);
+  showdesktop_handler_window_interface_->OverrideFrameRegion (r);
 }
 
 }

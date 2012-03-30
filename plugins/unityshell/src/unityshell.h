@@ -324,7 +324,7 @@ public:
 
   void minimize ();
   void unminimize ();
-  bool minimized ();
+  bool Minimized ();
   bool focus ();
   void activate ();
 
@@ -366,7 +366,7 @@ public:
 
   void enterShowDesktop ();
   void leaveShowDesktop ();
-  bool handleAnimations (unsigned int ms);
+  bool HandleAnimations (unsigned int ms);
 
   void handleEvent (XEvent *event);
 
@@ -381,35 +381,35 @@ private:
   guint  focusdesktop_handle_;
   static gboolean FocusDesktopTimeout(gpointer data);
 
-  void doEnableFocus ();
-  void doDisableFocus ();
+  void DoEnableFocus ();
+  void DoDisableFocus ();
 
-  bool isOverrideRedirect ();
-  bool isManaged ();
-  bool isGrabbed ();
-  bool isDesktopOrDock ();
-  bool isSkipTaskbarOrPager ();
-  bool isHidden ();
-  bool isInShowdesktopMode ();
-  bool isShaded ();
-  bool isMinimized ();
-  void doOverrideFrameRegion (CompRegion &r);
+  bool IsOverrideRedirect ();
+  bool IsManaged ();
+  bool IsGrabbed ();
+  bool IsDesktopOrDock ();
+  bool IsSkipTaskbarOrPager ();
+  bool IsHidden ();
+  bool IsInShowdesktopMode ();
+  bool IsShaded ();
+  bool IsMinimized ();
+  void DoOverrideFrameRegion (CompRegion &r);
 
-  void doHide ();
-  void doNotifyHidden ();
-  void doShow ();
-  void doNotifyShown ();
+  void DoHide ();
+  void DoNotifyHidden ();
+  void DoShow ();
+  void DoNotifyShown ();
 
-  void doAddDamage ();
-  UnityShowdesktopHandlerWindowInterface::PostPaintAction doHandleAnimations (unsigned int ms);
+  void DoAddDamage ();
+  UnityShowdesktopHandlerWindowInterface::PostPaintAction DoHandleAnimations (unsigned int ms);
 
-  void doMoveFocusAway ();
+  void DoMoveFocusAway ();
 
-  void doDeleteHandler ();
+  void DoDeleteHandler ();
 
-  unsigned int getNoCoreInstanceMask ();
+  unsigned int GetNoCoreInstanceMask ();
 
-  compiz::WindowInputRemoverInterface::Ptr getInputRemover ();
+  compiz::WindowInputRemoverInterface::Ptr GetInputRemover ();
 };
 
 

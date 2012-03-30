@@ -44,68 +44,68 @@ class UnityShowdesktopHandlerWindowInterface
 
     virtual ~UnityShowdesktopHandlerWindowInterface ();
 
-    void enableFocus () { doEnableFocus (); }
-    void disableFocus () { doDisableFocus (); }
+    void EnableFocus () { DoEnableFocus (); }
+    void DisableFocus () { DoDisableFocus (); }
 
-    bool overrideRedirect () { return isOverrideRedirect (); }
-    bool managed () { return isManaged (); }
-    bool grabbed () { return isGrabbed (); }
-    bool desktopOrDock () { return isDesktopOrDock (); }
-    bool skipTaskbarOrPager () { return isSkipTaskbarOrPager (); }
-    bool hidden () { return isHidden (); }
-    bool shaded () { return isShaded (); }
-    bool minimized () { return isMinimized (); }
-    bool showDesktopMode () { return isInShowdesktopMode (); }
-    void overrideFrameRegion (CompRegion &r) { return doOverrideFrameRegion (r); }
+    bool OverrideRedirect () { return IsOverrideRedirect (); }
+    bool Managed () { return IsManaged (); }
+    bool Grabbed () { return IsGrabbed (); }
+    bool DesktopOrDock () { return IsDesktopOrDock (); }
+    bool SkipTaskbarOrPager () { return IsSkipTaskbarOrPager (); }
+    bool Hidden () { return IsHidden (); }
+    bool Shaded () { return IsShaded (); }
+    bool Minimized () { return IsMinimized (); }
+    bool ShowDesktopMode () { return IsInShowdesktopMode (); }
+    void OverrideFrameRegion (CompRegion &r) { return DoOverrideFrameRegion (r); }
 
-    void hide () { doHide (); }
-    void notifyHidden () { doNotifyHidden (); }
-    void show () { doShow (); }
-    void notifyShown () { doNotifyShown (); }
-    void moveFocusAway () { doMoveFocusAway (); }
+    void Hide () { DoHide (); }
+    void NotifyHidden () { DoNotifyHidden (); }
+    void Show () { DoShow (); }
+    void NotifyShown () { DoNotifyShown (); }
+    void MoveFocusAway () { DoMoveFocusAway (); }
 
-    PostPaintAction handleAnimations (unsigned int ms) { return doHandleAnimations (ms); }
-    void addDamage () { doAddDamage (); }
+    PostPaintAction HandleAnimations (unsigned int ms) { return DoHandleAnimations (ms); }
+    void AddDamage () { DoAddDamage (); }
 
-    void deleteHandler () { doDeleteHandler (); }
+    void DeleteHandler () { DoDeleteHandler (); }
 
-    unsigned int noCoreInstanceMask () { return getNoCoreInstanceMask (); }
+    unsigned int NoCoreInstanceMask () { return GetNoCoreInstanceMask (); }
 
-    compiz::WindowInputRemoverInterface::Ptr inputRemover () { return getInputRemover (); }
+    compiz::WindowInputRemoverInterface::Ptr InputRemover () { return GetInputRemover (); }
 
   protected:
 
-    virtual void doEnableFocus () = 0;
-    virtual void doDisableFocus () = 0;
+    virtual void DoEnableFocus () = 0;
+    virtual void DoDisableFocus () = 0;
 
-    virtual bool isOverrideRedirect () = 0;
-    virtual bool isManaged () = 0;
-    virtual bool isGrabbed () = 0;
-    virtual bool isDesktopOrDock () = 0;
+    virtual bool IsOverrideRedirect () = 0;
+    virtual bool IsManaged () = 0;
+    virtual bool IsGrabbed () = 0;
+    virtual bool IsDesktopOrDock () = 0;
 
-    virtual bool isSkipTaskbarOrPager () = 0;
-    virtual bool isHidden () = 0;
-    virtual bool isInShowdesktopMode () = 0;
-    virtual bool isShaded () = 0;
+    virtual bool IsSkipTaskbarOrPager () = 0;
+    virtual bool IsHidden () = 0;
+    virtual bool IsInShowdesktopMode () = 0;
+    virtual bool IsShaded () = 0;
 
-    virtual bool isMinimized () = 0;
+    virtual bool IsMinimized () = 0;
 
-    virtual void doOverrideFrameRegion (CompRegion &) = 0;
+    virtual void DoOverrideFrameRegion (CompRegion &) = 0;
 
-    virtual void doHide () = 0;
-    virtual void doNotifyHidden () = 0;
-    virtual void doShow () = 0;
-    virtual void doNotifyShown () = 0;
+    virtual void DoHide () = 0;
+    virtual void DoNotifyHidden () = 0;
+    virtual void DoShow () = 0;
+    virtual void DoNotifyShown () = 0;
 
-    virtual void doMoveFocusAway () = 0;
-    virtual PostPaintAction doHandleAnimations (unsigned int ms) = 0;
-    virtual void doAddDamage () = 0;
+    virtual void DoMoveFocusAway () = 0;
+    virtual PostPaintAction DoHandleAnimations (unsigned int ms) = 0;
+    virtual void DoAddDamage () = 0;
 
-    virtual void doDeleteHandler () = 0;
+    virtual void DoDeleteHandler () = 0;
 
-    virtual unsigned int getNoCoreInstanceMask () = 0;
+    virtual unsigned int GetNoCoreInstanceMask () = 0;
 
-    virtual compiz::WindowInputRemoverInterface::Ptr getInputRemover () = 0;
+    virtual compiz::WindowInputRemoverInterface::Ptr GetInputRemover () = 0;
 };
 
 class UnityShowdesktopHandler
@@ -116,40 +116,40 @@ class UnityShowdesktopHandler
   ~UnityShowdesktopHandler ();
 
   typedef enum {
-    Visible = 0,
-    FadeOut = 1,
-    FadeIn = 2,
-    Invisible = 3
+    StateVisible = 0,
+    StateFadeOut = 1,
+    StateFadeIn = 2,
+    StateInvisible = 3
   } State;
 
 public:
 
-  void fadeOut ();
-  void fadeIn ();
-  UnityShowdesktopHandlerWindowInterface::PostPaintAction animate (unsigned int ms);
-  void paintOpacity (unsigned short &opacity);
-  unsigned int getPaintMask ();
-  void handleShapeEvent ();
-  void windowFocusChangeNotify ();
-  void updateFrameRegion (CompRegion &r);
+  void FadeOut ();
+  void FadeIn ();
+  UnityShowdesktopHandlerWindowInterface::PostPaintAction Animate (unsigned int ms);
+  void PaintOpacity (unsigned short &opacity);
+  unsigned int GetPaintMask ();
+  void HandleShapeEvent ();
+  void WindowFocusChangeNotify ();
+  void UpdateFrameRegion (CompRegion &r);
 
-  UnityShowdesktopHandler::State state ();
+  UnityShowdesktopHandler::State GetState ();
 
   static const unsigned int fade_time;
   static std::list <UnityShowdesktopHandlerWindowInterface *> animating_windows;
-  static bool shouldHide (UnityShowdesktopHandlerWindowInterface *);
-  static void inhibitLeaveShowdesktopMode (guint32 xid);
-  static void allowLeaveShowdesktopMode (guint32 xid);
-  static guint32 inhibitingXid ();
+  static bool ShouldHide (UnityShowdesktopHandlerWindowInterface *);
+  static void InhibitLeaveShowdesktopMode (guint32 xid);
+  static void AllowLeaveShowdesktopMode (guint32 xid);
+  static guint32 InhibitingXid ();
 
 private:
 
-  UnityShowdesktopHandlerWindowInterface *mShowdesktopHandlerWindowInterface;
-  compiz::WindowInputRemoverInterface::Ptr mRemover;
-  UnityShowdesktopHandler::State         mState;
-  float                                  mProgress;
-  bool                                   mWasHidden;
-  static guint32		                     mInhibitingXid;
+  UnityShowdesktopHandlerWindowInterface *showdesktop_handler_window_interface_;
+  compiz::WindowInputRemoverInterface::Ptr remover_;
+  UnityShowdesktopHandler::State         state_;
+  float                                  progress_;
+  bool                                   was_hidden_;
+  static guint32		         inhibiting_xid;
 };
 
 }
