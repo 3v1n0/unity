@@ -480,6 +480,9 @@ void HomeLens::CategoryMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *i
 
 void HomeLens::FiltersMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *iter)
 {
+  /* Supporting filters on the home screen is possible, but *quite* tricky.
+   * So... Discard ALL the rows!
+   */
 }
 
 void HomeLens::CategoryMerger::OnSourceRowRemoved(DeeModel *model, DeeModelIter *iter)
@@ -519,6 +522,7 @@ void HomeLens::ResultsMerger::OnSourceRowRemoved(DeeModel *model, DeeModelIter *
 
 void HomeLens::FiltersMerger::OnSourceRowRemoved(DeeModel *model, DeeModelIter *iter)
 {
+  /* We aren't adding any rows to the merged model, so nothing to do here */
 }
 
 void HomeLens::ModelMerger::OnSourceRowChanged(DeeModel *model, DeeModelIter *iter)
@@ -547,6 +551,7 @@ void HomeLens::ResultsMerger::OnSourceRowChanged(DeeModel *model, DeeModelIter *
 
 void HomeLens::FiltersMerger::OnSourceRowChanged(DeeModel *model, DeeModelIter *iter)
 {
+  /* We aren't adding any rows to the merged model, so nothing to do here */
 }
 
 void HomeLens::ModelMerger::EnsureRowBuf(DeeModel *model)
