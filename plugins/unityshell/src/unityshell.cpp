@@ -343,7 +343,13 @@ UnityScreen::UnityScreen(CompScreen* screen)
      ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_NAV,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherStartKeyNav));
 
+     ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWTICHER,
+                   sigc::mem_fun(this, &UnityScreen::OnLauncherStartKeyNav));
+
      ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_NAV,
+                   sigc::mem_fun(this, &UnityScreen::OnLauncherEndKeyNav));
+
+     ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWTICHER,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherEndKeyNav));
 
      g_idle_add_full (G_PRIORITY_DEFAULT, &UnityScreen::initPluginActions, this, NULL);
@@ -539,7 +545,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   float vc[4];
   float h = 20.0f;
   float w = 1.0f;
-  float panel_h = 24.0f;
+  float panel_h = panel_style_.panel_height;
 
   float x1 = output->x();
   float y1 = output->y() + panel_h;
@@ -1551,7 +1557,7 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
     int width = 970;
     int height =  680;
     int launcher_width = optionGetIconSize() + 18;
-    int panel_height = 24;
+    int panel_height = panel_style_.panel_height;
     int x = monitor_geo.x + launcher_width + (monitor_geo.width - launcher_width- width) / 2;
     int y = monitor_geo.y + panel_height + (monitor_geo.height - panel_height - height) / 2;
 
@@ -1624,6 +1630,7 @@ bool UnityScreen::showPanelFirstMenuKeyInitiate(CompAction* action,
    * keyboard and the Alt key is still pressed */
   action->setState(action->state() | CompAction::StateTermKey);
   panel_controller_->FirstMenuShow();
+
   return true;
 }
 
@@ -2215,7 +2222,8 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
 
   bool ret = gWindow->glDraw(matrix, attrib, region, mask);
 
-  if ((active_window == 0 || active_window == window->id()) && (window->type() == CompWindowTypeDesktopMask))
+  if ((active_window == 0 || active_window == window->id()) &&
+      (window->type() == CompWindowTypeDesktopMask))
   {
     uScreen->paintPanelShadow(matrix);
   }
