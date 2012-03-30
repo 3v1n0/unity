@@ -2204,21 +2204,20 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
                          const CompRegion& region,
                          unsigned int mask)
 {
-  if (uScreen->doShellRepaint)
+  if (uScreen->doShellRepaint && !uScreen->paint_panel_ && window->type() == CompWindowTypeNormalMask)
   {
-    bool is_native_window = false;
-    std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
-    for (unsigned int i = 0; i < xwns.size(); ++i)
-    {
-      if (xwns[i] == window->id())
-      {
-        is_native_window = true;
-        break;
-      }
-    }
+    guint32 id = window->id();
+    bool maximized = WindowManager::Default()->IsWindowMaximized(id);
+    bool on_current = window->onCurrentDesktop();
+    bool override_redirect = window->overrideRedirect();
+    bool managed = window->managed();
+    CompPoint viewport = window->defaultViewport();
+    int output = window->outputDevice();
 
-    if (is_native_window == false && uScreen->paint_panel_ == false)
-      uScreen->paint_panel_ = WindowManager::Default()->IsWindowMaximized(window->id());
+    if (maximized && on_current && !override_redirect && managed && viewport == uScreen->screen->vp() && output == (int)uScreen->screen->currentOutputDev().id())
+    {
+      uScreen->paint_panel_ = true;
+    }
   }
 
   if (uScreen->doShellRepaint && !uScreen->forcePaintOnTop ())
