@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010-2011 Canonical Ltd
+ * Copyright (C) 2010-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -27,17 +27,41 @@
 #include <UnityCore/Variant.h>
 #include <X11/cursorfont.h>
 
+namespace unity
+{
+namespace
+{
+  unsigned int MOUSE_DOWN_TIMEOUT = 150;
+  unsigned int MOUSE_MOVEMENT_TOLERANCE = 4;
+}
+
 PanelTitlebarGrabArea::PanelTitlebarGrabArea()
   : InputArea(NUX_TRACKER_LOCATION)
-  , _grab_cursor(None)
+  , grab_cursor_(None)
+  , grab_started_(false)
+  , mouse_down_timer_(0)
+  , mouse_down_button_(0)
 {
   EnableDoubleClick(true);
+
+  mouse_down.connect(sigc::mem_fun(this, &PanelTitlebarGrabArea::OnMouseDown));
+  mouse_up.connect(sigc::mem_fun(this, &PanelTitlebarGrabArea::OnMouseUp));
+  mouse_drag.connect(sigc::mem_fun(this, &PanelTitlebarGrabArea::OnGrabMove));
+
+  mouse_double_click.connect([&] (int x, int y, unsigned long button_flags, unsigned long)
+  {
+    if (nux::GetEventButton(button_flags) == 1)
+      restore_request.emit(x, y);
+  });
 }
 
 PanelTitlebarGrabArea::~PanelTitlebarGrabArea()
 {
-  if (_grab_cursor)
-    XFreeCursor(nux::GetGraphicsDisplay()->GetX11Display(), _grab_cursor);
+  if (grab_cursor_)
+    XFreeCursor(nux::GetGraphicsDisplay()->GetX11Display(), grab_cursor_);
+
+  if (mouse_down_timer_)
+    g_source_remove(mouse_down_timer_);
 }
 
 void PanelTitlebarGrabArea::SetGrabbed(bool enabled)
@@ -48,32 +72,120 @@ void PanelTitlebarGrabArea::SetGrabbed(bool enabled)
   if (!panel_window || !display)
     return;
 
-  if (enabled && !_grab_cursor)
+  if (enabled && !grab_cursor_)
   {
-    _grab_cursor = XCreateFontCursor(display, XC_fleur);
-    XDefineCursor(display, panel_window->GetInputWindowId(), _grab_cursor);
+    grab_cursor_ = XCreateFontCursor(display, XC_fleur);
+    XDefineCursor(display, panel_window->GetInputWindowId(), grab_cursor_);
   }
-  else if (!enabled && _grab_cursor)
+  else if (!enabled && grab_cursor_)
   {
     XUndefineCursor(display, panel_window->GetInputWindowId());
-    XFreeCursor(display, _grab_cursor);
-    _grab_cursor = None;
+    XFreeCursor(display, grab_cursor_);
+    grab_cursor_ = None;
   }
 }
 
 bool PanelTitlebarGrabArea::IsGrabbed()
 {
-  return (_grab_cursor != None);
+  return (grab_cursor_ != None);
+}
+
+void PanelTitlebarGrabArea::OnMouseDown(int x, int y, unsigned long button_flags, unsigned long)
+{
+  mouse_down_button_ = nux::GetEventButton(button_flags);
+
+  if (mouse_down_button_ == 2)
+  {
+    lower_request.emit(x, y);
+  }
+  else if (mouse_down_button_ == 1)
+  {
+    mouse_down_point_.x = x;
+    mouse_down_point_.y = y;
+
+    mouse_down_timer_ =
+      g_timeout_add(MOUSE_DOWN_TIMEOUT, [] (gpointer data) -> gboolean {
+        auto self = static_cast<PanelTitlebarGrabArea*>(data);
+
+        if (!self->grab_started_)
+        {
+          nux::Point const& mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
+          self->grab_started.emit(mouse.x - self->GetAbsoluteX(), mouse.y - self->GetAbsoluteY());
+          self->grab_started_ = true;
+        }
+
+        self->mouse_down_timer_ = 0;
+        return FALSE;
+      }, this);
+  }
+}
+
+void PanelTitlebarGrabArea::OnMouseUp(int x, int y, unsigned long button_flags, unsigned long)
+{
+  int button = nux::GetEventButton(button_flags);
+
+  if (button == 1)
+  {
+    if (mouse_down_timer_)
+    {
+      g_source_remove(mouse_down_timer_);
+      mouse_down_timer_ = 0;
+
+      activate_request.emit(x, y);
+    }
+
+    if (grab_started_)
+    {
+      grab_end.emit(x, y);
+      grab_started_ = false;
+    }
+  }
+
+  mouse_down_button_ = 0;
+  mouse_down_point_.x = 0;
+  mouse_down_point_.y = 0;
+}
+
+void PanelTitlebarGrabArea::OnGrabMove(int x, int y, int, int, unsigned long button_flags, unsigned long)
+{
+  if (mouse_down_button_ != 1)
+    return;
+
+  if (mouse_down_timer_)
+  {
+    if (abs(mouse_down_point_.x - x) <= MOUSE_MOVEMENT_TOLERANCE &&
+        abs(mouse_down_point_.y - y) <= MOUSE_MOVEMENT_TOLERANCE)
+    {
+      return;
+    }
+
+    g_source_remove(mouse_down_timer_);
+    mouse_down_timer_ = 0;
+  }
+
+  if (!grab_started_)
+  {
+    grab_started.emit(x, y);
+    grab_started_ = true;
+  }
+  else
+  {
+    grab_move.emit(x, y);
+  }
 }
 
 std::string
 PanelTitlebarGrabArea::GetName() const
 {
-  return "panel-titlebar-grab-area";
+  return "GrabArea";
 }
 
 void
 PanelTitlebarGrabArea::AddProperties(GVariantBuilder* builder)
 {
-  unity::variant::BuilderWrapper(builder).add(GetGeometry());
+  unity::variant::BuilderWrapper(builder)
+  .add(GetGeometry())
+  .add("grabbed", IsGrabbed());
+}
+
 }
