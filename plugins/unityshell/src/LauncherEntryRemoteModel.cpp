@@ -19,6 +19,7 @@
  */
 
 #include <NuxCore/Logger.h>
+#include <UnityCore/DesktopUtilities.h>
 
 #include "LauncherEntryRemoteModel.h"
 
@@ -142,19 +143,7 @@ LauncherEntryRemote::Ptr LauncherEntryRemoteModel::LookupByDesktopId(std::string
  */
 LauncherEntryRemote::Ptr LauncherEntryRemoteModel::LookupByDesktopFile(std::string const& desktop_file_path)
 {
-  std::string desktop_id;
-
-  if (!desktop_file_path.empty())
-  {
-    size_t id_pos = desktop_file_path.rfind('/');
-
-    if (id_pos != std::string::npos)
-    {
-      size_t id_start = id_pos + 1;
-
-      desktop_id = (id_start < desktop_file_path.length()) ? desktop_file_path.substr(id_start) : "";
-    }
-  }
+  std::string const& desktop_id = DesktopUtilities::GetDesktopID(desktop_file_path);
 
   if (desktop_id.empty())
     return nullptr;
