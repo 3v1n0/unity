@@ -64,6 +64,5 @@ private:
   int _pinch_id;
   int _touch_id;
 
-  float _pinch_start_radius;
   Cursor _fleur_cursor;
 };

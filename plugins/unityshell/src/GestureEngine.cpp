@@ -244,7 +244,6 @@ GestureEngine::OnPinchStart(GeisAdapter::GeisPinchData* data)
       return;
 
     _pinch_id = data->id;
-    _pinch_start_radius = data->radius;
 
     if (_pinch_grab)
       _screen->removeGrab(_pinch_grab, NULL);
@@ -257,17 +256,14 @@ GestureEngine::OnPinchUpdate(GeisAdapter::GeisPinchData* data)
   if (data->id != _pinch_id)
     return;
 
-  float delta_radius = data->radius - _pinch_start_radius;
-  if (delta_radius > 110.0f)
+  if (data->radius > 1.25)
   {
     _pinch_window->maximize(MAXIMIZE_STATE);
-    _pinch_start_radius = data->radius;
     EndDrag();
   }
-  else if (delta_radius < -110.0f)
+  else if (data->radius < 0.8)
   {
     _pinch_window->maximize(0);
-    _pinch_start_radius = data->radius;
     EndDrag();
   }
 }
