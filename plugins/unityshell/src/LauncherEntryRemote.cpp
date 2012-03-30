@@ -60,7 +60,7 @@ LauncherEntryRemote::LauncherEntryRemote(std::string const& dbus_name, GVariant*
   }
 
   /* This will make sure that the values are properly ref_sink'ed and unreff'ed */
-  glib::Variant values(val)
+  glib::Variant values(val);
   g_variant_get(values, "(sa{sv})", &app_uri, &prop_iter);
 
   _app_uri = app_uri.Str();
