@@ -569,9 +569,8 @@ class LauncherRevealTests(ScenariodLauncherTests):
     def test_launcher_does_not_reveal_with_mouse_down(self):
         """Launcher must not reveal if have mouse button 1 down."""
         launcher_instance = self.get_launcher()
-        screens = ScreenGeometry()
 
-        screens.move_mouse_to_monitor(launcher_instance.monitor)
+        self.screen_geo.move_mouse_to_monitor(launcher_instance.monitor)
         self.mouse.press(1)
         launcher_instance.mouse_reveal_launcher()
         self.assertThat(launcher_instance.is_showing(), Equals(False))

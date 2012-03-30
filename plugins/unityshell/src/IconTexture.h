@@ -38,6 +38,7 @@ class IconTexture : public nux::TextureArea, public unity::debug::Introspectable
 public:
   IconTexture(nux::BaseTexture* texture, guint width, guint height);
   IconTexture(std::string const& icon_name, unsigned int size, bool defer_icon_loading = false);
+  virtual ~IconTexture();
 
   void SetByIconName(std::string const& icon_name, unsigned int size);
   void SetByFilePath(std::string const& file_path, unsigned int size);

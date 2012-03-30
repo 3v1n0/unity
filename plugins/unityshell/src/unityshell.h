@@ -284,7 +284,7 @@ private:
   hud::Controller::Ptr      hud_controller_;
 
   shortcut::Controller::Ptr shortcut_controller_;
-  std::list<shortcut::AbstractHint*> hints_;
+  std::list<shortcut::AbstractHint::Ptr> hints_;
   bool enable_shortcut_overlay_;
 
   GestureEngine*                        gestureEngine;
@@ -330,7 +330,6 @@ private:
   bool   queryForShader ();
 
   UBusManager ubus_manager_;
-  bool dash_is_open_;
   int dash_monitor_;
   CompScreen::GrabHandle grab_index_;
   CompWindowList         fullscreen_windows_;

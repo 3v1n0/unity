@@ -77,6 +77,7 @@ LauncherIcon::LauncherIcon()
   , _present_time_handle(0)
   , _time_delay_handle(0)
   , _sort_priority(0)
+  , _last_monitor(0)
   , _background_color(nux::color::White)
   , _glow_color(nux::color::White)
   , _shortcut(0)
@@ -93,6 +94,11 @@ LauncherIcon::LauncherIcon()
     _quirk_times[i].tv_sec = 0;
     _quirk_times[i].tv_nsec = 0;
   }
+
+  _is_visible_on_monitor.resize(max_num_monitors);
+
+  for (int i = 0; i < max_num_monitors; ++i)
+    _is_visible_on_monitor[i] = true;
 
   tooltip_text.SetSetterFunction(sigc::mem_fun(this, &LauncherIcon::SetTooltipText));
   tooltip_text = "blank";
@@ -184,19 +190,28 @@ LauncherIcon::GetName() const
 void
 LauncherIcon::AddProperties(GVariantBuilder* builder)
 {
+  GVariantBuilder monitors_builder;
+  g_variant_builder_init(&monitors_builder, G_VARIANT_TYPE ("ab"));
+
+  for (int i = 0; i < max_num_monitors; ++i)
+    g_variant_builder_add(&monitors_builder, "b", IsVisibleOnMonitor(i));
+
   unity::variant::BuilderWrapper(builder)
-  .add("x", _center[0].x)
-  .add("y", _center[0].y)
-  .add("z", _center[0].z)
-  .add("related-windows", (int)Windows().size())
-  .add("icon-type", _icon_type)
-  .add("tooltip-text", tooltip_text())
-  .add("sort-priority", _sort_priority)
-  .add("quirk-active", GetQuirk(QUIRK_ACTIVE))
-  .add("quirk-visible", GetQuirk(QUIRK_VISIBLE))
-  .add("quirk-urgent", GetQuirk(QUIRK_URGENT))
-  .add("quirk-running", GetQuirk(QUIRK_RUNNING))
-  .add("quirk-presented", GetQuirk(QUIRK_PRESENTED));
+  .add("center_x", _center[0].x)
+  .add("center_y", _center[0].y)
+  .add("center_z", _center[0].z)
+  .add("related_windows", static_cast<unsigned int>(Windows().size()))
+  .add("icon_type", _icon_type)
+  .add("tooltip_text", tooltip_text())
+  .add("sort_priority", _sort_priority)
+  .add("monitors_visibility", g_variant_builder_end(&monitors_builder))
+  .add("active", GetQuirk(QUIRK_ACTIVE))
+  .add("visible", GetQuirk(QUIRK_VISIBLE))
+  .add("urgent", GetQuirk(QUIRK_URGENT))
+  .add("running", GetQuirk(QUIRK_RUNNING))
+  .add("starting", GetQuirk(QUIRK_STARTING))
+  .add("desaturated", GetQuirk(QUIRK_DESAT))
+  .add("presented", GetQuirk(QUIRK_PRESENTED));
 }
 
 void
@@ -713,6 +728,22 @@ LauncherIcon::SetWindowVisibleOnMonitor(bool val, int monitor)
 
   _has_visible_window[monitor] = val;
   EmitNeedsRedraw();
+}
+
+void
+LauncherIcon::SetVisibleOnMonitor(int monitor, bool visible)
+{
+  if (_is_visible_on_monitor[monitor] == visible)
+    return;
+
+  _is_visible_on_monitor[monitor] = visible;
+  EmitNeedsRedraw();
+}
+
+bool
+LauncherIcon::IsVisibleOnMonitor(int monitor) const
+{
+  return _is_visible_on_monitor[monitor];
 }
 
 gboolean

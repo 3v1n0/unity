@@ -57,44 +57,47 @@ IconTexture::IconTexture(nux::BaseTexture* texture, guint width, guint height)
 }
 
 IconTexture::IconTexture(std::string const& icon_name, unsigned int size, bool defer_icon_loading)
-  : TextureArea(NUX_TRACKER_LOCATION)
-  , _accept_key_nav_focus(false)
-  , _icon_name(icon_name.empty() ? DEFAULT_ICON : icon_name)
-  , _size(size)
-  , _texture_width(0)
-  , _texture_height(0)
-  , _loading(false)
-  , _opacity(1.0f)
+  : TextureArea(NUX_TRACKER_LOCATION),
+    _accept_key_nav_focus(false),
+    _icon_name(!icon_name.empty() ? icon_name : DEFAULT_ICON),
+    _size(size),
+    _texture_width(0),
+    _texture_height(0),
+    _loading(false),
+    _opacity(1.0f)
 {
-
-  if (_icon_name != "" && !defer_icon_loading)
+  if (!defer_icon_loading)
     LoadIcon();
 }
 
+IconTexture::~IconTexture()
+{}
+
 void IconTexture::SetByIconName(std::string const& icon_name, unsigned int size)
 {
+  if (_icon_name == icon_name && _size == size)
+    return;
+
   _icon_name = icon_name;
   _size = size;
+
   LoadIcon();
 }
 
+
 void IconTexture::SetByFilePath(std::string const& file_path, unsigned int size)
 {
-  _icon_name = file_path;
-  _size = size;
-
-  LoadIcon();
+  SetByIconName(file_path, size);
 }
 
 void IconTexture::LoadIcon()
 {
   LOG_DEBUG(logger) << "LoadIcon called (" << _icon_name << ") - loading: " << _loading;
-static const char* const DEFAULT_GICON = ". GThemedIcon text-x-preview";
-  if (_icon_name.empty())
-    return;
+  static const char* const DEFAULT_GICON = ". GThemedIcon text-x-preview";
 
   if (_loading)
     return;
+
   _loading = true;
 
   glib::Object<GIcon> icon(::g_icon_new_for_string(_icon_name.empty() ?  DEFAULT_GICON : _icon_name.c_str(), NULL));
@@ -231,7 +234,7 @@ void IconTexture::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper(builder)
   .add(GetGeometry())
-  .add("iconname", _icon_name);
+  .add("icon_name", _icon_name);
 }
 
 //
