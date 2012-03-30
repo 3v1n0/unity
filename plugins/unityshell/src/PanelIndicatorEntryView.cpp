@@ -445,7 +445,7 @@ void PanelIndicatorEntryView::Refresh()
     PangoRectangle log_rect;
     GdkScreen* screen = gdk_screen_get_default();
     PangoFontDescription* desc = nullptr;
-    PanelItem panel_item = PanelItem::INDICATOR;
+    PanelItem panel_item = (type_ == MENU) ? PanelItem::MENU : PanelItem::INDICATOR;
 
     Style& panel_style = Style::Instance();
     std::string const& font_description = panel_style.GetFontDescription(panel_item);
