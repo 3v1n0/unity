@@ -229,7 +229,7 @@ public:
     return nux::Color(0xFFAAAAAA);
   }
 
-  const gchar* RemoteUri()
+  std::string RemoteUri()
   {
     return "fake";
   }

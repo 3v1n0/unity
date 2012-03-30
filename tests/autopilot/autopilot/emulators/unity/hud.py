@@ -74,6 +74,11 @@ class Hud(KeybindingsHelper):
         return self.controller.hud_monitor
 
     @property
+    def searchbar(self):
+        """Returns the searchbar attached to the hud."""
+        return self.controller.get_hud_view().searchbar;
+
+    @property
     def geometry(self):
         return (self.controller.x, self.controller.y, self.controller.width, self.controller.height)
 

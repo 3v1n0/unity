@@ -532,10 +532,10 @@ void Controller::Impl::OnLauncherEntryRemoteAdded(LauncherEntryRemote* entry)
 {
   for (auto icon : *model_)
   {
-    if (!icon || !icon->RemoteUri())
+    if (!icon || icon->RemoteUri().empty())
       continue;
 
-    if (!g_strcmp0(entry->AppUri(), icon->RemoteUri()))
+    if (entry->AppUri() == icon->RemoteUri())
     {
       icon->InsertEntryRemote(entry);
     }
@@ -1140,6 +1140,16 @@ void Controller::KeyNavTerminate(bool activate)
 bool Controller::KeyNavIsActive() const
 {
   return pimpl->launcher_keynav;
+}
+
+bool Controller::IsOverlayOpen() const
+{
+  for (auto launcher_ptr : pimpl->launchers)
+  {
+    if (launcher_ptr->IsOverlayOpen())
+      return true;
+  } 
+  return false;
 }
 
 std::string

@@ -21,7 +21,6 @@ def _make_monitor_scenarios():
 
     if num_monitors == 1:
         scenarios = [('Single Monitor', {'hud_monitor': 0})]
-
     else:
         for i in range(num_monitors):
             scenarios += [('Monitor %d' % (i), {'hud_monitor': i})]
@@ -198,6 +197,45 @@ class HudBehaviorTests(HudTestsBase):
         contents = open("/tmp/autopilot_gedit_undo_test_temp_file.txt").read().strip('\n')
         self.assertEqual("0 ", contents)
 
+    def test_disabled_alt_f1(self):
+        """This test shows that Alt+F1 mode is disabled for the hud."""
+        self.hud.toggle_reveal()
+
+        launcher = self.launcher.get_launcher_for_monitor(0)
+        launcher.key_nav_start()
+
+        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
+
+    def test_hud_to_dash_disabled_alt_f1(self):
+        """When switching from the hud to the dash alt+f1 is disabled."""
+        self.hud.toggle_reveal()
+        sleep(1)
+
+        self.dash.ensure_visible()
+
+        launcher = self.launcher.get_launcher_for_monitor(0)
+        launcher.key_nav_start()
+
+        self.dash.ensure_hidden()
+        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
+
+    def test_dash_to_hud_has_key_focus(self):
+        """When switching from the dash to the hud you don't lose key focus."""
+        self.dash.ensure_visible()
+        self.hud.toggle_reveal()
+        sleep(1)
+
+        self.keyboard.type('focus')
+        
+        self.assertEqual(self.hud.searchbar.search_string, 'focus')
+
+    def test_hud_closes_on_workspace_switch(self):
+        """This test shows that when you switch to another workspace the hud closes."""
+        self.hud.toggle_reveal()
+        sleep(1)
+
+        self.workspace.switch_to(1)
+        self.workspace.switch_to(2)
 
 class HudLauncherInteractionsTests(HudTestsBase):
 

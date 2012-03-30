@@ -130,6 +130,8 @@ public:
   void ExitKeyNavMode();
   bool IsInKeyNavMode() const;
 
+  bool IsOverlayOpen() const;
+
   static const int ANIM_DURATION_SHORT;
 
   void RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherIcon::Ptr icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
@@ -274,7 +276,6 @@ private:
 
   void OnOverlayHidden(GVariant* data);
   void OnOverlayShown(GVariant* data);
-  bool IsOverlayOpen() const;
 
   void DesaturateIcons();
   void SaturateIcons();

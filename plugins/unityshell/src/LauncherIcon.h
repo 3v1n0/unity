@@ -151,7 +151,7 @@ public:
 
   virtual nux::Color GlowColor();
 
-  const gchar* RemoteUri()
+  std::string RemoteUri()
   {
     return GetRemoteUri();
   }
@@ -235,9 +235,9 @@ protected:
 
   virtual void OnCenterStabilized(std::vector<nux::Point3> center) {}
 
-  virtual const gchar* GetRemoteUri()
+  virtual std::string GetRemoteUri()
   {
-    return 0;
+    return "";
   }
 
   virtual nux::DndAction OnQueryAcceptDrop(unity::DndData& dnd_data)
@@ -290,7 +290,7 @@ protected:
   // This looks like a case for boost::logical::tribool
   static int _current_theme_is_mono;
 
-  DbusmenuClient* _menuclient_dynamic_quicklist;
+  glib::Object<DbusmenuClient> _menuclient_dynamic_quicklist;
 
 private:
   typedef struct

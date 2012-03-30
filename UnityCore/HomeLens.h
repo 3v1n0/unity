@@ -69,6 +69,7 @@ private:
   class ModelMerger;
   class ResultsMerger;
   class CategoryMerger;
+  class FiltersMerger;
   class CategoryRegistry;
   Impl* pimpl;
 };
