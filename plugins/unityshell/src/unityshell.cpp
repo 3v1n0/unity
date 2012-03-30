@@ -1590,6 +1590,9 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
   LOG_DEBUG(logger) << "Super released: " << (was_tap ? "tapped" : "released");
   int when = options[7].value().i();  // XEvent time in millisec
 
+  if (hud_controller_->IsVisible() && launcher_controller_->AboutToShowDash(was_tap, when))
+    hud_controller_->HideHud();
+
   super_keypressed_ = false;
   launcher_controller_->KeyNavTerminate(true);
   launcher_controller_->HandleLauncherKeyRelease(was_tap, when);

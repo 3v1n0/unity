@@ -974,6 +974,13 @@ void Controller::HandleLauncherKeyPress(int when)
   pimpl->launcher_label_show_handler_id_ = g_timeout_add(local::shortcuts_show_delay, show_shortcuts, pimpl);
 }
 
+bool Controller::AboutToShowDash(int was_tap, int when) const
+{
+  if ((when - pimpl->launcher_key_press_time_) < local::super_tap_duration && was_tap)
+    return true;
+  return false;
+}
+
 void Controller::HandleLauncherKeyRelease(bool was_tap, int when)
 {
   int tap_duration = when - pimpl->launcher_key_press_time_;
