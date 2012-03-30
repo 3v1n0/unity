@@ -42,10 +42,6 @@ Icon::Icon(std::string const& icon_name, unsigned int size, bool defer_icon_load
   Init();
 }
 
-Icon::~Icon()
-{
-}
-
 void Icon::Init()
 {
   SetMinimumWidth(66);
@@ -89,6 +85,10 @@ void Icon::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   icon_renderer_.RenderIcon(GfxContext, arg, toplevel->GetGeometry(), toplevel->GetGeometry());
 }
 
+std::string Icon::GetName() const
+{
+  return "EmbeddedIcon";
+}
 
 }
 }

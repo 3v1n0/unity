@@ -19,9 +19,12 @@
  */
 
 #include <gtest/gtest.h>
+#include <time.h>
+
+#include "test_utils.h"
 
 #include "SwitcherController.h"
-#include "test_utils.h"
+#include "TimeUtil.h"
 
 
 using namespace unity::switcher;
@@ -39,6 +42,7 @@ public:
     , window_constructed_(false)
     , view_constructed_(false)
     , view_shown_(false)
+    , detail_timeout_reached_(false)
   {};
 
   MockSwitcherController(unsigned int load_timeout)
@@ -46,6 +50,7 @@ public:
     , window_constructed_(false)
     , view_constructed_(false)
     , view_shown_(false)
+    , detail_timeout_reached_(false)
   {};
 
   virtual void ConstructWindow()
@@ -63,14 +68,29 @@ public:
     view_shown_ = true;
   }
 
+  virtual gboolean OnDetailTimer()
+  {
+    detail_timeout_reached_ = true;
+    clock_gettime(CLOCK_MONOTONIC, &detail_timespec_);
+    return FALSE;
+  }
+
   unsigned int GetConstructTimeout() const
   {
     return construct_timeout_;
   }
 
+  void FakeSelectionChange()
+  {
+    unity::launcher::AbstractLauncherIcon::Ptr icon(nullptr);
+    OnModelSelectionChanged(icon);
+  }
+
   bool window_constructed_;
   bool view_constructed_;
   bool view_shown_;
+  bool detail_timeout_reached_;
+  struct timespec detail_timespec_;
 };
 
 TEST(TestSwitcherController, Construction)
@@ -101,6 +121,39 @@ TEST(TestSwitcherController, LazyWindowConstruction)
 
   Utils::WaitUntil(controller.window_constructed_, controller.GetConstructTimeout() + 1);
   EXPECT_TRUE(controller.window_constructed_);
+}
+
+TEST(TestSwitcherController, InitialDetailTimeout)
+{
+  MockSwitcherController controller;
+  std::vector<unity::launcher::AbstractLauncherIcon::Ptr> results;
+  struct timespec current;
+
+  controller.initial_detail_timeout_length = 2000;
+  controller.detail_timeout_length = 20000;
+  clock_gettime(CLOCK_MONOTONIC, &current);
+
+  controller.Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, false, results);
+
+  Utils::WaitUntil(controller.detail_timeout_reached_, 3);
+  ASSERT_TRUE(controller.detail_timeout_reached_);
+  EXPECT_TRUE(unity::TimeUtil::TimeDelta(&controller.detail_timespec_, &current) >= 2000);
+}
+
+TEST(TestSwitcherController, DetailTimeout)
+{
+  MockSwitcherController controller;
+  struct timespec current;
+
+  controller.detail_timeout_length = 1000;
+  controller.initial_detail_timeout_length = 10000;
+  clock_gettime(CLOCK_MONOTONIC, &current);
+
+  controller.FakeSelectionChange();
+
+  Utils::WaitUntil(controller.detail_timeout_reached_, 2);
+  ASSERT_TRUE(controller.detail_timeout_reached_);
+  EXPECT_TRUE(unity::TimeUtil::TimeDelta(&controller.detail_timespec_, &current) >= 1000);
 }
 
 }

@@ -184,6 +184,11 @@ class BamfApplication(object):
         return self._view_iface.Name()
 
     @property
+    def icon(self):
+        """Get the application icon."""
+        return self._view_iface.Icon()
+
+    @property
     def is_active(self):
         """Is the application active (i.e.- has keyboard focus)?"""
         return self._view_iface.IsActive()

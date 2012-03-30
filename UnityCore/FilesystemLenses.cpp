@@ -46,7 +46,7 @@ const char* GROUP = "Lens";
 }
 
 // Loads data from a Lens key-file in a usable form
-LensDirectoryReader::LensFileData::LensFileData(GKeyFile* file, 
+LensDirectoryReader::LensFileData::LensFileData(GKeyFile* file,
                                                 const gchar *lens_id)
   : id(g_strdup(lens_id))
   , domain(g_key_file_get_string(file, G_KEY_FILE_DESKTOP_GROUP, "X-Ubuntu-Gettext-Domain", NULL))
@@ -135,7 +135,7 @@ public:
   void GetLensDataFromKeyFile(GFile* path, const char* data, gsize length);
   DataList GetLensData() const;
   void SortLensList();
-  
+
   static void OnDirectoryEnumerated(GFile* source, GAsyncResult* res, Impl* self);
   static void LoadFileContentCallback(GObject* source, GAsyncResult* res, gpointer user_data);
 
@@ -249,7 +249,7 @@ void LensDirectoryReader::Impl::LoadFileContentCallback(GObject* source,
     if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
       return; // self is invalid now
   }
-  
+
   self->cancel_map_.erase(file);
 
   // If we're not waiting for any more children to load, signal that we're
@@ -275,7 +275,7 @@ void LensDirectoryReader::Impl::GetLensDataFromKeyFile(GFile* file,
     {
       glib::String id(g_path_get_basename(path.Value()));
 
-      lenses_data_.push_back(new LensFileData(key_file, id));
+      lenses_data_.push_back(LensFileDataPtr(new LensFileData(key_file, id)));
 
       LOG_DEBUG(logger) << "Sucessfully loaded lens file " << path;
     }
@@ -304,7 +304,7 @@ void LensDirectoryReader::Impl::SortLensList()
 {
   //FIXME: We don't have a strict order, but alphabetical serves us well.
   // When we have an order/policy, please replace this.
-  auto sort_cb = [] (LensFileData* a, LensFileData* b) -> bool
+  auto sort_cb = [] (LensFileDataPtr a, LensFileDataPtr b) -> bool
   {
     if (a->id.Str() == "applications.lens")
       return true;
