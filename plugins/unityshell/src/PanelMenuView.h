@@ -15,14 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Marco Trevisan <3v1n0@ubuntu.com>
  */
 
 #ifndef PANEL_MENU_VIEW_H
 #define PANEL_MENU_VIEW_H
 
-#include <Nux/View.h>
-#include <map>
-#include <set>
+#include <UnityCore/GLibWrapper.h>
+#include <UnityCore/GLibSignal.h>
+#include <libbamf/libbamf.h>
 
 #include "PanelIndicatorsView.h"
 #include "StaticCairoText.h"
@@ -30,10 +31,7 @@
 #include "PanelTitlebarGrabAreaView.h"
 #include "PluginAdapter.h"
 #include "Animator.h"
-
-#include <UnityCore/GLibWrapper.h>
-#include <UnityCore/GLibSignal.h>
-#include <libbamf/libbamf.h>
+#include "UBusWrapper.h"
 
 namespace unity
 {
@@ -41,41 +39,52 @@ namespace unity
 class PanelMenuView : public PanelIndicatorsView
 {
 public:
-  // This contains all the menubar logic for the Panel. Mainly it contains
-  // the following states:
-  // 1. Unmaximized window + no mouse hover
-  // 2. Unmaximized window + mouse hover
-  // 3. Unmaximized window + active menu (Alt+F/arrow key nav)
-  // 4. Maximized window + no mouse hover
-  // 5. Maximized window + mouse hover
-  // 6. Maximized window + active menu
-  //
-  // It also deals with undecorating maximized windows (and redecorating them
-  // on unmaximize)
-
-  PanelMenuView(int padding = 6);
+  PanelMenuView();
   ~PanelMenuView();
 
   void SetMenuShowTimings(int fadein, int fadeout, int discovery,
                           int discovery_fadein, int discovery_fadeout);
 
-  void FullRedraw();
+  void SetMousePosition(int x, int y);
+  void AllMenusClosed();
+  void SetMonitor(int monitor);
+
+  Window GetTopWindow();
+  Window GetMaximizedWindow();
+  bool GetControlsActive();
+  bool HasOurWindowFocused();
+
+  virtual void AddIndicator(indicator::Indicator::Ptr const& indicator);
+
+  virtual void OveralyShown();
+  virtual void OveralyHidden();
+
+  virtual void QueueDraw();
+
+protected:
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
 
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual long PostLayoutManagement(long LayoutResult);
+  virtual void PreLayoutManagement();
+  virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position,
+                                        nux::NuxEventType event_type);
+  virtual void OnEntryAdded(indicator::Entry::Ptr const& entry);
 
-  void SetMousePosition(int x, int y);
-
+private:
   void OnActiveChanged(PanelIndicatorEntryView* view, bool is_active);
   void OnViewOpened(BamfMatcher* matcher, BamfView* view);
   void OnViewClosed(BamfMatcher* matcher, BamfView* view);
+  void OnApplicationClosed(BamfApplication* app);
   void OnActiveWindowChanged(BamfMatcher* matcher, BamfView* old_view, BamfView* new_view);
   void OnActiveAppChanged(BamfMatcher* matcher, BamfApplication* old_app, BamfApplication* new_app);
   void OnNameChanged(BamfView* bamf_view, gchar* new_name, gchar* old_name);
 
   void OnSpreadInitiate();
   void OnSpreadTerminate();
+  void OnExpoInitiate();
+  void OnExpoTerminate();
   void OnWindowMinimized(guint32 xid);
   void OnWindowUnminimized(guint32 xid);
   void OnWindowUnmapped(guint32 xid);
@@ -86,42 +95,30 @@ public:
   void OnWindowDecorated(guint32 xid);
   void OnWindowUndecorated(guint32 xid);
 
-  guint32 GetMaximizedWindow();
+  void OnMaximizedActivate(int x, int y);
+  void OnMaximizedRestore(int x, int y);
+  void OnMaximizedLower(int x, int y);
+  void OnMaximizedGrabStart(int x, int y);
+  void OnMaximizedGrabMove(int x, int y);
+  void OnMaximizedGrabEnd(int x, int y);
 
-  void OnMaximizedGrabStart(int, int, unsigned long, unsigned long);
-  void OnMaximizedGrabMove(int, int, int, int, unsigned long, unsigned long);
-  void OnMaximizedGrabEnd(int, int, unsigned long, unsigned long);
-  void OnMouseDoubleClicked(int, int, unsigned long, unsigned long);
-  void OnMouseClicked(int, int, unsigned long, unsigned long);
-  void OnMouseMiddleClicked(int, int, unsigned long, unsigned long);
+  void FullRedraw();
+  void Refresh(bool force = false);
+  void DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::string const& label);
 
-  void Refresh();
-  void AllMenusClosed();
-
-  void OnCloseClicked();
-  void OnMinimizeClicked();
-  void OnRestoreClicked();
-  void SetMonitor(int monitor);
-  bool GetControlsActive();
-
-  bool HasOurWindowFocused();
-
-protected:
-  std::string GetName() const;
-  void          AddProperties(GVariantBuilder* builder);
-
-  virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
   void OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
   void OnPanelViewMouseLeave(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
   void OnPanelViewMouseMove(int x, int y, int dx, int dy, unsigned long mouse_button_state, unsigned long special_keys_state);
-  virtual void OnEntryAdded(unity::indicator::Entry::Ptr const& entry);
 
-private:
-  gchar* GetActiveViewName();
-  static void OnPlaceViewShown(GVariant* data, PanelMenuView* self);
-  static void OnPlaceViewHidden(GVariant* data, PanelMenuView* self);
-  static void OnSwitcherShown(GVariant* data, PanelMenuView* self);
-  static void OnSwitcherSelectionChanged(GVariant* data, PanelMenuView* self);
+  BamfWindow* GetBamfWindowForXid(Window xid);
+
+  std::string GetActiveViewName(bool use_appname = false);
+
+  void OnSwitcherShown(GVariant* data);
+  void OnSwitcherSelectionChanged(GVariant* data);
+  void OnLauncherKeyNavStarted(GVariant* data);
+  void OnLauncherKeyNavEnded(GVariant* data);
+  void OnLauncherSelectionChanged(GVariant* data);
 
   void UpdateShowNow(bool ignore);
 
@@ -130,12 +127,8 @@ private:
   static gboolean OnNewAppShow(PanelMenuView* self);
   static gboolean OnNewAppHide(PanelMenuView* self);
 
-  void DrawText(cairo_t *cr_real,
-                int &x, int y, int width, int height,
-                const char* font_desc,
-                const char* label,
-                int increase_size=0
-                );
+  bool IsValidWindow(Window xid);
+  bool IsWindowUnderOurControl(Window xid);
 
   bool DrawMenus();
   bool DrawWindowButtons();
@@ -143,40 +136,41 @@ private:
   void OnFadeInChanged(double);
   void OnFadeOutChanged(double);
 
-private:
   glib::Object<BamfMatcher> _matcher;
 
-  nux::TextureLayer*       _title_layer;
-  nux::HLayout*            _menu_layout;
-  nux::CairoGraphics       _util_cg;
+  nux::TextureLayer* _title_layer;
+  nux::HLayout* _menu_layout;
+  nux::ObjectPtr<nux::BaseTexture> _title_texture;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> _gradient_texture;
 
   bool _is_inside;
   bool _is_grabbed;
   bool _is_maximized;
   bool _is_own_window;
+
   PanelIndicatorEntryView* _last_active_view;
+  WindowButtons* _window_buttons;
+  PanelTitlebarGrabArea* _titlebar_grab_area;
   glib::Object<BamfApplication> _new_application;
 
-  WindowButtons* _window_buttons;
-  PanelTitlebarGrabArea* _panel_titlebar_grab_area;
-
-  std::map<guint32, bool> _decor_map;
-  std::set<guint32> _maximized_set;
+  std::map<Window, bool> _decor_map;
+  std::set<Window> _maximized_set;
   std::list<glib::Object<BamfApplication>> _new_apps;
+  std::string _panel_title;
 
   int _padding;
-  int _last_width;
-  int _last_height;
+  nux::Geometry _last_geo;
 
-  bool _places_showing;
+  bool _overlay_showing;
   bool _switcher_showing;
+  bool _launcher_keynav;
   bool _show_now_activated;
   bool _we_control_active;
   bool _new_app_menu_shown;
 
-  int  _monitor;
-  guint32 _active_xid;
+  int _monitor;
+  Window _active_xid;
+
   guint32 _active_moved_id;
   guint32 _update_show_now_id;
   guint32 _new_app_show_id;
@@ -188,8 +182,9 @@ private:
   glib::Signal<void, BamfMatcher*, BamfView*, BamfView*> _active_win_changed_signal;
   glib::Signal<void, BamfMatcher*, BamfApplication*, BamfApplication*> _active_app_changed_signal;
   glib::Signal<void, BamfView*, gchar*, gchar*> _view_name_changed_signal;
+  sigc::connection _style_changed_connection;
 
-  std::vector<unsigned int> _ubus_interests;
+  UBusManager _ubus_manager;
 
   int _menus_fadein;
   int _menus_fadeout;
@@ -197,10 +192,8 @@ private:
   int _menus_discovery_fadein;
   int _menus_discovery_fadeout;
 
-  gchar* _panel_title;
-
-  Animator* _fade_in_animator;
-  Animator* _fade_out_animator;
+  Animator _fade_in_animator;
+  Animator _fade_out_animator;
 };
 
 }
