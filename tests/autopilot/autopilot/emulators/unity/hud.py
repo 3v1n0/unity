@@ -9,10 +9,16 @@
 
 from autopilot.keybindings import KeybindingsHelper
 from autopilot.emulators.unity import UnityIntrospectionObject
+from autopilot.emulators.unity.dash import SearchBar
 
 
 class HudView(UnityIntrospectionObject):
     """Proxy object for the hud view child of the controller."""
+  
+    @property
+    def searchbar(self):
+        """Get the search bar attached to this hud view."""
+        return self.get_children_by_type(SearchBar)[0]
 
     @property
     def geometry(self):
@@ -59,6 +65,10 @@ class HudController(UnityIntrospectionObject, KeybindingsHelper):
         return views[0] if views else None
 
     @property
+    def searchbar(self):
+        """Returns the searchbar attached to the hud."""
+        return self._get_view().searchbar;
+
     def geometry(self):
         return (self.x, self.y, self.width, self.height)
 

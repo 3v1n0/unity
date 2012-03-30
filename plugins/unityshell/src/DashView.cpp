@@ -176,17 +176,17 @@ void DashView::SetupViews()
   SetLayout(layout_);
 
   content_layout_ = new DashLayout(NUX_TRACKER_LOCATION);
-  content_layout_->SetTopAndBottomPadding(style.GetDashViewTopPadding() - style.SEARCH_BAR_EXTRA_PADDING, 0);
+  content_layout_->SetTopAndBottomPadding(style.GetDashViewTopPadding(), 0);
   layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
 
   search_bar_layout_ = new nux::HLayout();
-  search_bar_layout_->SetLeftAndRightPadding(style.GetSearchBarLeftPadding() - style.SEARCH_BAR_EXTRA_PADDING, style.GetSearchBarLeftPadding() - style.GetFilterResultsHighlightRightPadding() - style.SEARCH_BAR_EXTRA_PADDING);
+  search_bar_layout_->SetLeftAndRightPadding(style.GetSearchBarLeftPadding(), 0);
   content_layout_->AddLayout(search_bar_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   search_bar_ = new SearchBar();
   AddChild(search_bar_);
-  search_bar_->SetMinimumHeight(style.GetSearchBarHeight() + style.SEARCH_BAR_EXTRA_PADDING * 2);
-  search_bar_->SetMaximumHeight(style.GetSearchBarHeight() + style.SEARCH_BAR_EXTRA_PADDING * 2);
+  search_bar_->SetMinimumHeight(style.GetSearchBarHeight());
+  search_bar_->SetMaximumHeight(style.GetSearchBarHeight());
   search_bar_->activated.connect(sigc::mem_fun(this, &DashView::OnEntryActivated));
   search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
   search_bar_->live_search_reached.connect(sigc::mem_fun(this, &DashView::OnLiveSearchReached));
@@ -269,12 +269,14 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 
   width = MAX(width, tile_width * 6);
 
-  width += 19 + 40; // add the left padding and the group plugin padding
+  width += 20 + 40; // add the left padding and the group plugin padding
 
   height = search_bar_->GetGeometry().height;
   height += tile_height * 3;
-  height += 46 * 3; // adding three group headers
-  //height += lens_bar_->GetGeometry().height;
+  height += (style.GetPlacesGroupTopSpace() - 2 + 24 + 8) * 3; // adding three group headers
+  height += 1*2; // hseparator height
+  height += style.GetDashViewTopPadding();
+  height += lens_bar_->GetGeometry().height;
 
   if (for_geo.width > 800 && for_geo.height > 550)
   {

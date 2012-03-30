@@ -20,7 +20,7 @@
 #ifndef UNITYSHELL_HUDLAUNCHERICON_H
 #define UNITYSHELL_HUDLAUNCHERICON_H
 
-#include "SimpleLauncherIcon.h"
+#include "SingleMonitorLauncherIcon.h"
 
 #include "LauncherOptions.h"
 #include "UBusWrapper.h"
@@ -30,7 +30,7 @@ namespace unity
 namespace launcher
 {
 
-class HudLauncherIcon : public SimpleLauncherIcon
+class HudLauncherIcon : public SingleMonitorLauncherIcon
 {
 
 public:

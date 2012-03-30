@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,40 +14,39 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Andrea Azzarone <azzaronea@gmail.com>
+ * Authored by: Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
-#ifndef UNITYSHELL_SHORTCUTHINT_H
-#define UNITYSHELL_SHORTCUTHINT_H
+#ifndef UNITYSHELL_SINGLE_MONITOR_LAUNCHER_ICON_H
+#define UNITYSHELL_SINGLE_MONITOR_LAUNCHER_ICON_H
 
-#include "AbstractShortcutHint.h"
+#include "SimpleLauncherIcon.h"
 
 namespace unity
 {
-namespace shortcut
+namespace launcher
 {
 
-class Hint : public AbstractHint
+class SingleMonitorLauncherIcon : public SimpleLauncherIcon
 {
+
 public:
-  // Ctor
-  Hint(std::string const& category,
-       std::string const& prefix,
-       std::string const& postfix,
-       std::string const& description,
-       OptionType const type,
-       std::string const& arg1,
-       std::string const& arg2 = "",
-       std::string const& arg3 = "");
+  SingleMonitorLauncherIcon(int monitor);
 
-  // Dtor
-  ~Hint();
+void SetMonitor(int monitor);
+int GetMonitor();
 
-  // Public methods
-  bool Fill();
+protected:
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
+
+private:
+  void UpdateMonitor();
+
+  int monitor_;
 };
 
-} // namespace shortcut
-} // namespace unity
+}
+}
 
- #endif // UNITYSHELL_SHORTCUTHINT_H
+#endif // UNITYSHELL_SINGLE_MONITOR_LAUNCHER_ICON_H

@@ -194,6 +194,10 @@ public:
 
   virtual bool IsVisible() const { return false; }
 
+  virtual bool IsVisibleOnMonitor(int monitor) const;
+
+  virtual void SetVisibleOnMonitor(int monitor, bool visible);
+
   virtual void AboutToRemove() {}
 
   virtual void Stick(bool save = true) {}
@@ -326,6 +330,7 @@ private:
 
   std::vector<nux::Point3> _center;
   std::vector<bool> _has_visible_window;
+  std::vector<bool> _is_visible_on_monitor;
   std::vector<nux::Point3> _last_stable;
   std::vector<nux::Geometry> _parent_geo;
   std::vector<nux::Point3> _saved_center;
