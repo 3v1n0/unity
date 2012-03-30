@@ -290,7 +290,7 @@ protected:
   // This looks like a case for boost::logical::tribool
   static int _current_theme_is_mono;
 
-  DbusmenuClient* _menuclient_dynamic_quicklist;
+  glib::Object<DbusmenuClient> _menuclient_dynamic_quicklist;
 
 private:
   typedef struct

@@ -724,11 +724,11 @@ void BamfLauncherIcon::UpdateMenus()
   g_list_free(children);
 
   // add dynamic quicklist
-  if (DBUSMENU_IS_CLIENT(_menuclient_dynamic_quicklist))
+  if (_menuclient_dynamic_quicklist && DBUSMENU_IS_CLIENT(_menuclient_dynamic_quicklist.RawPtr()))
   {
     if (_menu_clients["dynamicquicklist"] != _menuclient_dynamic_quicklist)
     {
-      _menu_clients["dynamicquicklist"] = glib::Object<DbusmenuClient>(_menuclient_dynamic_quicklist);
+      _menu_clients["dynamicquicklist"] = _menuclient_dynamic_quicklist;
     }
   }
   else if (_menu_clients["dynamicquicklist"])
