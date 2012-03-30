@@ -52,7 +52,7 @@ public:
 
   void EndDrag();
 private:
-  CompWindow* FindCompWindow(Window window);
+  CompWindow* FindCompWindowAtPos(float pos_x, float pos_y);
 
   CompScreen* _screen;
   CompWindow* _drag_window;
