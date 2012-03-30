@@ -10,15 +10,17 @@
 from autopilot.keybindings import KeybindingsHelper
 from autopilot.emulators.unity import UnityIntrospectionObject
 from autopilot.emulators.unity.dash import SearchBar
+from autopilot.emulators.unity.icons import EmbeddedIcon
 
 class Hud(KeybindingsHelper):
     """An emulator class that makes it easier to iteract with unity hud."""
     
     def __init__(self):
-      assert len(HudController.get_all_instances()) > 0
-      self.controller = HudController.get_all_instances()[0]
-
-      super (Hud, self).__init__()
+        super (Hud, self).__init__()
+        
+        controllers = HudController.get_all_instances()  
+        assert(len(controllers) == 1)
+        self.controller = controllers[0]
 
     def ensure_hidden(self):
         """Hides the hud if it's not already hidden."""
@@ -33,6 +35,15 @@ class Hud(KeybindingsHelper):
     def toggle_reveal(self, tap_delay=0.1):
         """Tap the 'Alt' key to toggle the hud visibility."""
         self.keybinding("hud/reveal", tap_delay)
+
+    def get_embedded_icon(self):
+        """Returns the HUD view embedded icon or None if is not shown."""
+        view = self.view
+        if (not view):
+          return None
+
+        icons = view.get_children_by_type(EmbeddedIcon)
+        return icons[0] if icons else None
 
     @property
     def view(self):
@@ -53,6 +64,18 @@ class Hud(KeybindingsHelper):
     def search_string(self):
         """Returns the searchbars' search string."""
         return self.searchbar.search_string
+
+    @property
+    def is_locked_launcher(self):
+        return self.controller.locked_to_launcher
+
+    @property
+    def monitor(self):
+        return self.controller.hud_monitor
+
+    @property
+    def geometry(self):
+        return (self.controller.x, self.controller.y, self.controller.width, self.controller.height)
 
     @property
     def selected_button(self):
@@ -77,6 +100,10 @@ class HudView(UnityIntrospectionObject):
     def searchbar(self):
         """Get the search bar attached to this hud view."""
         return self.get_children_by_type(SearchBar)[0]
+
+    @property
+    def geometry(self):
+        return (self.x, self.y, self.width, self.height)
 
 class HudController(UnityIntrospectionObject):
     """Proxy object for the Unity Hud Controller."""

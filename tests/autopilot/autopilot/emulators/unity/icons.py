@@ -71,3 +71,10 @@ class DesktopLauncherIcon(SimpleLauncherIcon):
 
 class SoftwareCenterLauncherIcon(BamfLauncherIcon):
     """Represents a launcher icon of a Software Center app."""
+
+class EmbeddedIcon(SimpleLauncherIcon):
+    """Proxy object for the hud embedded icon child of the view."""
+
+    @property
+    def geometry(self):
+        return (self.x, self.y, self.width, self.height)
