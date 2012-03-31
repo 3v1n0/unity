@@ -58,6 +58,7 @@ protected:
 
   std::string GetName() const;
 
+private:
   nux::ObjectPtr<nux::BaseTexture> background_;
   nux::ObjectPtr<nux::BaseTexture> gloss_;
   nux::ObjectPtr<nux::BaseTexture> edge_;
