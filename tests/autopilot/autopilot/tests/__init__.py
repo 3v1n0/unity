@@ -22,6 +22,7 @@ from autopilot.emulators.unity import (
     reset_logging,
     )
 from autopilot.emulators.unity.dash import Dash
+from autopilot.emulators.unity.hud import Hud
 from autopilot.emulators.unity.launcher import LauncherController
 from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.unity.workspace import WorkspaceManager
@@ -227,6 +228,7 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         self.keyboard = Keyboard()
         self.mouse = Mouse()
         self.dash = Dash()
+        self.hud = Hud()
         self.switcher = Switcher()
         self.workspace = WorkspaceManager()
         self.screen_geo = ScreenGeometry()
