@@ -51,7 +51,7 @@ class Icon : public unity::IconTexture
 {
 public:
   typedef nux::ObjectPtr<IconTexture> Ptr;
-  Icon(std::string const& icon_name, unsigned int size, bool defer_icon_loading = false);
+  Icon(std::string const& icon_name, unsigned int size);
 
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);

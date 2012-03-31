@@ -31,8 +31,8 @@ namespace unity
 namespace hud
 {
 
-Icon::Icon(std::string const& icon_name, unsigned int size, bool defer_icon_loading)
-  : unity::IconTexture(icon_name, size, defer_icon_loading)
+Icon::Icon(std::string const& icon_name, unsigned int size)
+  : IconTexture(icon_name, size, true)
 {
   int tile_size = size + tile_margin * 2;
   SetMinimumWidth(minimum_width);

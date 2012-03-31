@@ -47,7 +47,7 @@ namespace hud
 namespace
 {
 nux::logging::Logger logger("unity.hud.view");
-int icon_size = 46;
+const int icon_size = 46;
 const std::string default_text = _("Type your command");
 const int grow_anim_length = 90 * 1000;
 const int pause_before_grow_length = 32 * 1000;
@@ -352,7 +352,7 @@ void View::SetupViews()
   layout_ = new nux::HLayout();
   {
     // fill layout with icon
-    icon_ = new Icon("", icon_size, true);
+    icon_ = new Icon("", icon_size);
     {
       AddChild(icon_.GetPointer());
       layout_->AddView(icon_.GetPointer(), 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
