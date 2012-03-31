@@ -170,8 +170,8 @@ void PanelView::OnOverlayHidden(GVariant* data)
 
     _overlay_is_open = false;
     _active_overlay = "";
-    _menu_view->OveralyHidden();
-    _indicators->OveralyHidden();
+    _menu_view->OverlayHidden();
+    _indicators->OverlayHidden();
     ForceUpdateBackground();
   }
 }
@@ -189,8 +189,8 @@ void PanelView::OnOverlayShown(GVariant* data)
     _bg_effect_helper.enabled = true;
     _active_overlay = overlay_identity.Str();
     _overlay_is_open = true;
-    _indicators->OveralyShown();
-    _menu_view->OveralyShown();
+    _indicators->OverlayShown();
+    _menu_view->OverlayShown();
     ForceUpdateBackground();
   }
 }

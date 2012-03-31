@@ -548,13 +548,13 @@ void PanelIndicatorEntryView::Draw(nux::GraphicsEngine& GfxContext, bool force_d
   GfxContext.PopClippingRectangle();
 }
 
-void PanelIndicatorEntryView::OveralyShown()
+void PanelIndicatorEntryView::OverlayShown()
 {
   overlay_showing_ = true;
   Refresh();
 }
 
-void PanelIndicatorEntryView::OveralyHidden()
+void PanelIndicatorEntryView::OverlayHidden()
 {
   overlay_showing_ = false;
   Refresh();

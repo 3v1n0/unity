@@ -357,17 +357,17 @@ PanelIndicatorsView::OnEntryRemoved(std::string const& entry_id)
 }
 
 void
-PanelIndicatorsView::OveralyShown()
+PanelIndicatorsView::OverlayShown()
 {
   for (auto entry: entries_)
-    entry.second->OveralyShown();
+    entry.second->OverlayShown();
 }
 
 void
-PanelIndicatorsView::OveralyHidden()
+PanelIndicatorsView::OverlayHidden()
 {
   for (auto entry: entries_)
-    entry.second->OveralyHidden();
+    entry.second->OverlayHidden();
 }
 
 double
