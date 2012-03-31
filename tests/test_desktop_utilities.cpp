@@ -90,13 +90,13 @@ TEST(TestDesktopUtilitiesDesktopID, TestSubdirectory)
 TEST(TestDesktopUtilitiesDataDirectories, TestGetUserDataDirectory)
 {
   const gchar* old_home = g_getenv("XDG_DATA_HOME");
-  g_setenv("XDG_DATA_HOME", "MyUnityHome", TRUE);
+  g_setenv("XDG_DATA_HOME", "UnityUserConfig", TRUE);
 
   std::string const& user_data_dir = DesktopUtilities::GetUserDataDirectory();
 
   g_setenv("XDG_DATA_HOME", old_home, TRUE);
 
-  EXPECT_THAT(user_data_dir, Eq("MyUnityHome"));
+  EXPECT_THAT(user_data_dir, Eq("UnityUserConfig"));
 }
 
 TEST(TestDesktopUtilitiesDataDirectories, TestGetSystemDataDirectory)
@@ -113,6 +113,26 @@ TEST(TestDesktopUtilitiesDataDirectories, TestGetSystemDataDirectory)
   EXPECT_THAT(system_dirs[1], Eq("dir2"));
   EXPECT_THAT(system_dirs[2], Eq("dir3"));
   EXPECT_THAT(system_dirs[3], Eq("dir4"));
+}
+
+TEST(TestDesktopUtilitiesDataDirectories, TestGetDataDirectory)
+{
+  const gchar* old_dirs = g_getenv("XDG_DATA_DIRS");
+  g_setenv("XDG_DATA_DIRS", "dir1:dir2::dir3:dir4", TRUE);
+  const gchar* old_home = g_getenv("XDG_DATA_HOME");
+  g_setenv("XDG_DATA_HOME", "UnityUserConfig", TRUE);
+
+  std::vector<std::string> const& data_dirs = DesktopUtilities::GetDataDirectories();
+
+  g_setenv("XDG_DATA_DIRS", old_dirs, TRUE);
+  g_setenv("XDG_DATA_HOME", old_home, TRUE);
+
+  ASSERT_THAT(data_dirs.size(), Eq(5));
+  EXPECT_THAT(data_dirs[0], Eq("dir1"));
+  EXPECT_THAT(data_dirs[1], Eq("dir2"));
+  EXPECT_THAT(data_dirs[2], Eq("dir3"));
+  EXPECT_THAT(data_dirs[3], Eq("dir4"));
+  EXPECT_THAT(data_dirs[4], Eq("UnityUserConfig"));
 }
 
 } // anonymous namespace
