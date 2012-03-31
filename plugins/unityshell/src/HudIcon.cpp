@@ -22,8 +22,6 @@
 namespace
 {
   nux::logging::Logger logger("unity.hud.icon");
-  const unsigned int tile_margin = 4;
-  const unsigned int minimum_width = 64;
 }
 
 namespace unity
@@ -31,13 +29,9 @@ namespace unity
 namespace hud
 {
 
-Icon::Icon(std::string const& icon_name, unsigned int size, bool defer_icon_loading)
-  : unity::IconTexture(icon_name, size, defer_icon_loading)
+Icon::Icon()
+  : IconTexture("", 0, true)
 {
-  int tile_size = size + tile_margin * 2;
-  SetMinimumWidth(minimum_width);
-  SetMinimumHeight(tile_size);
-  icon_renderer_.SetTargetSize(tile_size, size, 0);
   background_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_icon_back_54.png", -1, true));
   gloss_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_icon_shine_54.png", -1, true));
   edge_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_icon_edge_54.png", -1,  true));
@@ -49,6 +43,14 @@ Icon::Icon(std::string const& icon_name, unsigned int size, bool defer_icon_load
     QueueDraw();
     LOG_DEBUG(logger) << "got our texture";
   });
+}
+
+void Icon::SetIcon(std::string const& icon_name, unsigned int icon_size, unsigned int tile_size)
+{
+  IconTexture::SetByIconName(icon_name, icon_size);
+  icon_renderer_.SetTargetSize(tile_size, icon_size, 0);
+  SetMinimumWidth(icon_size);
+  SetMinimumHeight(icon_size);
 }
 
 void Icon::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)

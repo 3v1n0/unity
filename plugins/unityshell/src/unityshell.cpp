@@ -2590,9 +2590,12 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       launcher_options->icon_size = optionGetIconSize();
       launcher_options->tile_size = optionGetIconSize() + 6;
 
-      hud_controller_->launcher_width = launcher_controller_->launcher().GetAbsoluteWidth() - 1;
+      hud_controller_->icon_size = launcher_options->icon_size();
+      hud_controller_->tile_size = launcher_options->tile_size();
+
       /* The launcher geometry includes 1px used to draw the right margin
-       * that must not be considered when drawing the dash                    */
+       * that must not be considered when drawing an overlay */
+      hud_controller_->launcher_width = launcher_controller_->launcher().GetAbsoluteWidth() - 1;
       dash_controller_->launcher_width = launcher_controller_->launcher().GetAbsoluteWidth() - 1;
 
       if (p)
@@ -2785,6 +2788,8 @@ void UnityScreen::initLauncher()
   auto hide_mode = (unity::launcher::LauncherHideMode) optionGetLauncherHideMode();
   hud_controller_->launcher_locked_out = (hide_mode == unity::launcher::LauncherHideMode::LAUNCHER_HIDE_NEVER);
   hud_controller_->multiple_launchers = (optionGetNumLaunchers() == 0);
+  hud_controller_->icon_size = launcher_controller_->options()->icon_size();
+  hud_controller_->tile_size = launcher_controller_->options()->tile_size();
   AddChild(hud_controller_.get());
   LOG_INFO(logger) << "initLauncher-hud " << timer.ElapsedSeconds() << "s";
 

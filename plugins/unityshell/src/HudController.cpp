@@ -316,7 +316,7 @@ void Controller::ShowHud()
 
   LOG_DEBUG(logger) << "Taking application icon: " << focused_app_icon_;
   ubus.SendMessage(UBUS_HUD_ICON_CHANGED, g_variant_new_string(focused_app_icon_.c_str())); 
-  view_->SetIcon(focused_app_icon_);
+  view_->SetIcon(focused_app_icon_, tile_size, icon_size, launcher_width - tile_size);
 
   window_->ShowWindow(true);
   window_->PushToFront();
@@ -452,7 +452,7 @@ void Controller::OnQueryActivated(Query::Ptr query)
 void Controller::OnQuerySelected(Query::Ptr query)
 {
   LOG_DEBUG(logger) << "Selected query, " << query->formatted_text;
-  view_->SetIcon(query->icon_name);
+  view_->SetIcon(query->icon_name, tile_size, icon_size, launcher_width - tile_size);
   ubus.SendMessage(UBUS_HUD_ICON_CHANGED, g_variant_new_string(query->icon_name.c_str()));
 }
 
@@ -470,7 +470,7 @@ void Controller::OnQueriesFinished(Hud::Queries queries)
   }
 
   LOG_DEBUG(logger) << "setting icon to - " << icon_name;
-  view_->SetIcon(icon_name);
+  view_->SetIcon(icon_name, tile_size, icon_size, launcher_width - tile_size);
   ubus.SendMessage(UBUS_HUD_ICON_CHANGED, g_variant_new_string(icon_name.c_str()));
 }
 

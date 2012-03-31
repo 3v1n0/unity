@@ -48,6 +48,8 @@ public:
   nux::BaseWindow* window() const;
 
   nux::Property<int> launcher_width;
+  nux::Property<int> icon_size;
+  nux::Property<int> tile_size;
   nux::Property<bool> launcher_locked_out;
   nux::Property<bool> multiple_launchers;
 
