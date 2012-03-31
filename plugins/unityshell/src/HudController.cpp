@@ -273,10 +273,22 @@ void Controller::ShowHud()
   view_->AboutToShow();
 
   // we first want to grab the currently active window, luckly we can just ask the jason interface(bamf)
-  BamfMatcher* matcher = bamf_matcher_get_default();
-  glib::Object<BamfView> bamf_app((BamfView*)(bamf_matcher_get_active_application(matcher)), glib::AddRef());
-  glib::String view_icon(bamf_view_get_icon(bamf_app));
-  focused_app_icon_ = view_icon.Str();
+  glib::Object<BamfMatcher> matcher(bamf_matcher_get_default());
+  BamfWindow* active_win = bamf_matcher_get_active_window(matcher);
+
+  Window active_xid = bamf_window_get_xid(active_win);
+  std::vector<Window> const& unity_xids = nux::XInputWindow::NativeHandleList();
+
+  if (active_xid && std::find(unity_xids.begin(), unity_xids.end(), active_xid) == unity_xids.end())
+  {
+    BamfApplication* active_app = bamf_matcher_get_application_for_window(matcher, active_win);
+
+    if (BAMF_IS_VIEW(active_app))
+    {
+      glib::String view_icon(bamf_view_get_icon(reinterpret_cast<BamfView*>(active_app)));
+      focused_app_icon_ = view_icon.Str();
+    }
+  }
 
   LOG_DEBUG(logger) << "Taking application icon: " << focused_app_icon_;
   ubus.SendMessage(UBUS_HUD_ICON_CHANGED, g_variant_new_string(focused_app_icon_.c_str())); 
