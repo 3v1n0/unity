@@ -272,16 +272,18 @@ void Controller::ShowHud()
   view_->ShowEmbeddedIcon(!IsLockedToLauncher(monitor_index_));
   view_->AboutToShow();
 
-  // we first want to grab the currently active window, luckly we can just ask the jason interface(bamf)
+  // We first want to grab the currently active window
   glib::Object<BamfMatcher> matcher(bamf_matcher_get_default());
   BamfWindow* active_win = bamf_matcher_get_active_window(matcher);
 
   Window active_xid = bamf_window_get_xid(active_win);
   std::vector<Window> const& unity_xids = nux::XInputWindow::NativeHandleList();
 
+  // If the active window is an unity window, we must get the top-most valid window
   if (std::find(unity_xids.begin(), unity_xids.end(), active_xid) != unity_xids.end())
   {
-    GList *windows = bamf_matcher_get_window_stack_for_monitor(matcher, monitor_index_);
+    // Windows list stack for all the monitors
+    GList *windows = bamf_matcher_get_window_stack_for_monitor(matcher, -1);
 
     for (GList *l = windows; l; l = l->next)
     {
