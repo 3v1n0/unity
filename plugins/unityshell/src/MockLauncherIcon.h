@@ -163,6 +163,13 @@ public:
     return false;
   }
 
+  void SetVisibleOnMonitor(int monitor, bool visible) {}
+
+  bool IsVisibleOnMonitor(int monitor) const
+  {
+    return true;
+  }
+
   bool IsSpacer()
   {
     return false;

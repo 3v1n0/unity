@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,33 +14,42 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Jason Smith <jason.smith@canonical.com>
+ * Authored by: Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
-#ifndef SPACERLAUNCHERICON_H
-#define SPACERLAUNCHERICON_H
+#include <gtest/gtest.h>
 
 #include "SingleMonitorLauncherIcon.h"
+#include "MultiMonitor.h"
 
-namespace unity
-{
-namespace launcher
+using namespace unity;
+using namespace launcher;
+
+namespace
 {
 
-class SpacerLauncherIcon : public SingleMonitorLauncherIcon
+TEST(TestSingleMonitorLauncherIcon, Construction)
 {
-public:
-  SpacerLauncherIcon(int monitor);
+  SingleMonitorLauncherIcon icon(1);
 
-  bool IsSpacer()
+  EXPECT_EQ(icon.GetMonitor(), 1);
+  EXPECT_TRUE(icon.IsVisibleOnMonitor(1));
+  EXPECT_FALSE(icon.IsVisibleOnMonitor(0));
+}
+
+TEST(TestSingleMonitorLauncherIcon, MonitorVisibility)
+{
+  SingleMonitorLauncherIcon icon(2);
+
+  for (int i = 0; i < max_num_monitors; ++i)
   {
-    return true;
+    bool icon_visible = icon.IsVisibleOnMonitor(i);
+
+    if (i == 2)
+      EXPECT_TRUE(icon_visible);
+    else
+      EXPECT_FALSE(icon_visible);
   }
-protected:
-    std::string GetName() const;
-};
-
-}
 }
 
-#endif // TRASHLAUNCHERICON_H
+}

@@ -39,6 +39,7 @@ std::vector<std::string> GetRemoved(std::list<std::string> const& old, std::list
 
 bool NeedToBeReordered(std::list<std::string> const& old, std::list<std::string> const& fresh);
 
+
 } // namespace impl
 } // namespace internal
 } // namespace unity

@@ -75,6 +75,8 @@ public:
   void KeyNavPrevious();
   bool KeyNavIsActive() const;
 
+  bool IsOverlayOpen() const;
+
 protected:
   // Introspectable methods
   std::string GetName() const;

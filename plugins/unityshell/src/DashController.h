@@ -56,6 +56,8 @@ public:
 
   sigc::signal<void> on_realize;
 
+  void HideDash(bool restore_focus = true);
+
 protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
@@ -78,7 +80,6 @@ private:
   void OnActivateRequest(GVariant* variant);
 
   void ShowDash();
-  void HideDash(bool restore_focus = true);
 
   void StartShowHideTimeline();
   static gboolean OnViewShowHideFrame(Controller* self);

@@ -85,6 +85,7 @@ public:
     TYPE_NONE,
     TYPE_BEGIN,
     TYPE_HOME,
+    TYPE_HUD,
     TYPE_FAVORITE,
     TYPE_APPLICATION,
     TYPE_EXPO,
@@ -195,6 +196,10 @@ public:
   virtual bool IsSticky() const = 0;
 
   virtual bool IsVisible() const = 0;
+
+  virtual bool IsVisibleOnMonitor(int monitor) const = 0;
+
+  virtual void SetVisibleOnMonitor(int monitor, bool visible) = 0;
 
   virtual void AboutToRemove() = 0;
   

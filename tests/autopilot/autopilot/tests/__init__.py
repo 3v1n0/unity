@@ -22,6 +22,7 @@ from autopilot.emulators.unity import (
     reset_logging,
     )
 from autopilot.emulators.unity.dash import Dash
+from autopilot.emulators.unity.hud import Hud
 from autopilot.emulators.unity.launcher import LauncherController
 from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.unity.workspace import WorkspaceManager
@@ -38,7 +39,7 @@ logger = logging.getLogger(__name__)
 
 
 try:
-    from testscenarios.scenarios import multiple_scenarios
+    from testscenarios.scenarios import multiply_scenarios
 except ImportError:
     from itertools import product
     def multiply_scenarios(*scenarios):
@@ -227,6 +228,7 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         self.keyboard = Keyboard()
         self.mouse = Mouse()
         self.dash = Dash()
+        self.hud = Hud()
         self.switcher = Switcher()
         self.workspace = WorkspaceManager()
         self.screen_geo = ScreenGeometry()

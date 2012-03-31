@@ -11,7 +11,6 @@ from testtools.matchers import Equals, NotEquals, LessThan, GreaterThan
 from time import sleep
 
 from autopilot.emulators.X11 import ScreenGeometry
-from autopilot.emulators.unity.hud import HudController
 from autopilot.emulators.unity.icons import HudLauncherIcon
 from autopilot.tests import AutopilotTestCase, multiply_scenarios
 from os import remove
@@ -34,16 +33,10 @@ class HudTestsBase(AutopilotTestCase):
         super(HudTestsBase, self).setUp()
 
         sleep(0.25)
-        self.hud = self.get_hud_controller()
 
     def tearDown(self):
         self.hud.ensure_hidden()
         super(HudTestsBase, self).tearDown()
-
-    def get_hud_controller(self):
-        controllers = HudController.get_all_instances()
-        self.assertEqual(1, len(controllers))
-        return controllers[0]
 
     def get_hud_launcher_icon(self):
         icons = HudLauncherIcon.get_all_instances()
@@ -204,6 +197,45 @@ class HudBehaviorTests(HudTestsBase):
         contents = open("/tmp/autopilot_gedit_undo_test_temp_file.txt").read().strip('\n')
         self.assertEqual("0 ", contents)
 
+    def test_disabled_alt_f1(self):
+        """This test shows that Alt+F1 mode is disabled for the hud."""
+        self.hud.toggle_reveal()
+
+        launcher = self.launcher.get_launcher_for_monitor(0)
+        launcher.key_nav_start()
+
+        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
+
+    def test_hud_to_dash_disabled_alt_f1(self):
+        """When switching from the hud to the dash alt+f1 is disabled."""
+        self.hud.toggle_reveal()
+        sleep(1)
+
+        self.dash.ensure_visible()
+
+        launcher = self.launcher.get_launcher_for_monitor(0)
+        launcher.key_nav_start()
+
+        self.dash.ensure_hidden()
+        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
+
+    def test_dash_to_hud_has_key_focus(self):
+        """When switching from the dash to the hud you don't lose key focus."""
+        self.dash.ensure_visible()
+        self.hud.toggle_reveal()
+        sleep(1)
+
+        self.keyboard.type('focus')
+        
+        self.assertEqual(self.hud.searchbar.search_string, 'focus')
+
+    def test_hud_closes_on_workspace_switch(self):
+        """This test shows that when you switch to another workspace the hud closes."""
+        self.hud.toggle_reveal()
+        sleep(1)
+
+        self.workspace.switch_to(1)
+        self.workspace.switch_to(2)
 
 class HudLauncherInteractionsTests(HudTestsBase):
 
@@ -287,15 +319,15 @@ class HudLockedLauncherInteractionsTests(HudTestsBase):
         hud_icon = self.get_hud_launcher_icon()
         bfb_icon = self.launcher.model.get_bfb_icon()
 
-        self.assertTrue(bfb_icon.visible)
-        self.assertFalse(hud_icon.visible)
+        self.assertTrue(bfb_icon.is_visible_on_monitor(self.hud_monitor))
+        self.assertFalse(hud_icon.is_visible_on_monitor(self.hud_monitor))
         sleep(.25)
 
         self.reveal_hud()
         sleep(.5)
 
-        self.assertTrue(hud_icon.visible)
-        self.assertFalse(bfb_icon.visible)
+        self.assertTrue(hud_icon.is_visible_on_monitor(self.hud_monitor))
+        self.assertFalse(bfb_icon.is_visible_on_monitor(self.hud_monitor))
 
     def test_hud_desaturates_launcher_icons(self):
         """Tests that the launcher icons are desaturates when HUD is open"""
@@ -303,7 +335,7 @@ class HudLockedLauncherInteractionsTests(HudTestsBase):
         self.reveal_hud()
         sleep(.5)
 
-        for icon in self.launcher.model.get_launcher_icons():
+        for icon in self.launcher.model.get_launcher_icons_for_monitor(self.hud_monitor):
             if isinstance(icon, HudLauncherIcon):
                 self.assertFalse(icon.desaturated)
             else:
@@ -360,28 +392,27 @@ class HudVisualTests(HudTestsBase):
         self.reveal_hud()
         sleep(.25)
 
-        self.assertThat(self.hud.is_locked_to_launcher, Equals(self.hud_locked))
+        self.assertThat(self.hud.is_locked_launcher, Equals(self.hud_locked))
 
     def test_hud_icon_is_shown(self):
         """Tests that the correct HUD icon is shown"""
         self.reveal_hud()
+        self.hud.visible
         sleep(.5)
 
         hud_launcher_icon = self.get_hud_launcher_icon()
         hud_embedded_icon = self.hud.get_embedded_icon()
 
-        # FIXME this should check self.hud.is_locked_to_launcher
-        # but the HUD icon is currently shared between launchers.
-        if not self.launcher_autohide:
-            self.assertTrue(hud_launcher_icon.visible)
+        if self.hud.is_locked_launcher:
+            self.assertTrue(hud_launcher_icon.is_visible_on_monitor(self.hud_monitor))
+            self.assertTrue(hud_launcher_icon.active)
+            self.assertThat(hud_launcher_icon.monitor, Equals(self.hud_monitor))
             self.assertFalse(hud_launcher_icon.desaturated)
-
-            # FIXME remove this once the issue above has been resolved
-            if self.hud.is_locked_to_launcher:
-                self.assertThat(hud_embedded_icon, Equals(None))
+            self.assertThat(hud_embedded_icon, Equals(None))
         else:
+            self.assertFalse(hud_launcher_icon.is_visible_on_monitor(self.hud_monitor))
+            self.assertFalse(hud_launcher_icon.active)
             self.assertThat(hud_embedded_icon, NotEquals(None))
-            self.assertFalse(hud_launcher_icon.visible)
 
     def test_hud_icon_show_the_focused_application_emblem(self):
         """Tests that the correct HUD icon is shown"""
@@ -394,7 +425,7 @@ class HudVisualTests(HudTestsBase):
         self.reveal_hud()
         sleep(.5)
 
-        if self.hud.is_locked_to_launcher:
+        if self.hud.is_locked_launcher:
             hud_launcher_icon = self.get_hud_launcher_icon()
             self.assertThat(hud_launcher_icon.icon_name, Equals(calc.icon))
         else:

@@ -57,7 +57,9 @@ LauncherEntryRemote::LauncherEntryRemote(std::string const& dbus_name, GVariant*
     return;
   }
 
-  g_variant_get(glib::Variant(val), "(sa{sv})", &app_uri, &prop_iter);
+  /* This will make sure that the values are properly ref_sink'ed and unreff'ed */
+  glib::Variant values(val);
+  g_variant_get(values, "(sa{sv})", &app_uri, &prop_iter);
 
   _app_uri = app_uri.Str();
 
@@ -303,7 +305,7 @@ void LauncherEntryRemote::Update(LauncherEntryRemote::Ptr const& other)
   /* It's important that we update the DBus name first since it might
    * unset the quicklist if it changes */
 
-  if (!other.get())
+  if (!other)
     return;
 
   SetDBusName(other->DBusName());

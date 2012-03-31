@@ -21,25 +21,45 @@
 #ifndef SOFTWARE_CENTER_LAUNCHERICON_H
 #define SOFTWARE_CENTER_LAUNCHERICON_H
 
-#include "BamfLauncherIcon.h"
 #include <UnityCore/GLibDBusProxy.h>
+#include "BamfLauncherIcon.h"
+
+class LauncherDragWindow;
 
 namespace unity
 {
 namespace launcher
 {
+class Launcher;
 
 class SoftwareCenterLauncherIcon : public BamfLauncherIcon
 {
+  NUX_DECLARE_OBJECT_TYPE(SoftwareCenterLauncherIcon, BamfLauncherIcon);
 public:
+  typedef nux::ObjectPtr<SoftwareCenterLauncherIcon> Ptr;
+
   SoftwareCenterLauncherIcon(BamfApplication* app,
                              std::string const& aptdaemon_trans_id,
                              std::string const& icon_path);
 
+  void Animate(nux::ObjectPtr<Launcher> launcher, int icon_x, int icon_y, int icon_size);
+
+  std::string GetName() const;
+
+protected:
+  void ActivateLauncherIcon(ActionArg arg);
+
 private:
   void OnPropertyChanged(GVariant* params);
+  void OnDragAnimationFinished();
 
-  glib::DBusProxy _aptdaemon_trans;
+  glib::DBusProxy aptdaemon_trans_;
+
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> icon_texture_;
+  nux::ObjectPtr<LauncherDragWindow> drag_window_;
+  nux::ObjectPtr<Launcher> launcher_;
+  bool finished_;
+  bool needs_urgent_;
 };
 
 }
