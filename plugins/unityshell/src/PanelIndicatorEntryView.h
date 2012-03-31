@@ -83,8 +83,8 @@ public:
   void SetFocusedState(bool focused);
   bool IsFocused() const;
 
-  void OveralyShown();
-  void OveralyHidden();
+  void OverlayShown();
+  void OverlayHidden();
 
   sigc::signal<void, PanelIndicatorEntryView*, bool> active_changed;
   sigc::signal<void, PanelIndicatorEntryView*> refreshed;

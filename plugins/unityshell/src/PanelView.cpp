@@ -184,7 +184,8 @@ void PanelView::OnDashHidden(GVariant* data, PanelView* self)
       self->bg_effect_helper_.enabled = false;
     self->_overlay_is_open = false;
     self->_active_overlay = "";
-    self->_indicators->DashHidden();
+    self->_menu_view->OverlayHidden();
+    self->_indicators->OverlayHidden();
     self->ForceUpdateBackground();
   }
 }
@@ -202,7 +203,8 @@ void PanelView::OnDashShown(GVariant* data, PanelView* self)
     self->bg_effect_helper_.enabled = true;
     self->_overlay_is_open = true;
     self->_active_overlay = overlay_identity.Str();
-    self->_indicators->DashShown();
+    self->_menu_view->OverlayShown();
+    self->_indicators->OverlayShown();
     self->ForceUpdateBackground();
   }
 }

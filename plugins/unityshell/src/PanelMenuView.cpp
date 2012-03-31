@@ -183,13 +183,13 @@ PanelMenuView::~PanelMenuView()
   _style_changed_connection.disconnect();
 }
 
-void PanelMenuView::OveralyShown()
+void PanelMenuView::OverlayShown()
 {
   _overlay_showing = true;
   QueueDraw();
 }
 
-void PanelMenuView::OveralyHidden()
+void PanelMenuView::OverlayHidden()
 {
   _overlay_showing = false;
   QueueDraw();

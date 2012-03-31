@@ -56,8 +56,8 @@ public:
 
   virtual void AddIndicator(indicator::Indicator::Ptr const& indicator);
 
-  virtual void OveralyShown();
-  virtual void OveralyHidden();
+  virtual void OverlayShown();
+  virtual void OverlayHidden();
 
   virtual void QueueDraw();
 
