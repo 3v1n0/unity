@@ -279,15 +279,37 @@ void Controller::ShowHud()
   Window active_xid = bamf_window_get_xid(active_win);
   std::vector<Window> const& unity_xids = nux::XInputWindow::NativeHandleList();
 
-  if (active_xid && std::find(unity_xids.begin(), unity_xids.end(), active_xid) == unity_xids.end())
+  if (std::find(unity_xids.begin(), unity_xids.end(), active_xid) != unity_xids.end())
   {
-    BamfApplication* active_app = bamf_matcher_get_application_for_window(matcher, active_win);
+    GList *windows = bamf_matcher_get_window_stack_for_monitor(matcher, monitor_index_);
 
-    if (BAMF_IS_VIEW(active_app))
+    for (GList *l = windows; l; l = l->next)
     {
-      glib::String view_icon(bamf_view_get_icon(reinterpret_cast<BamfView*>(active_app)));
-      focused_app_icon_ = view_icon.Str();
+      if (!BAMF_IS_WINDOW(l->data))
+        continue;
+
+      auto win = static_cast<BamfWindow*>(l->data);
+      auto view = static_cast<BamfView*>(l->data);
+      Window xid = bamf_window_get_xid(win);
+
+      if (bamf_view_user_visible(view) && bamf_window_get_window_type(win) != BAMF_WINDOW_DOCK &&
+          std::find(unity_xids.begin(), unity_xids.end(), xid) == unity_xids.end())
+      {
+        active_win = win;
+        active_xid = xid;
+      }
     }
+
+    g_list_free(windows);
+  }
+
+  BamfApplication* active_app = bamf_matcher_get_application_for_window(matcher, active_win);
+
+  if (BAMF_IS_VIEW(active_app))
+  {
+    auto active_view = reinterpret_cast<BamfView*>(active_app);
+    glib::String view_icon(bamf_view_get_icon(active_view));
+    focused_app_icon_ = view_icon.Str();
   }
 
   LOG_DEBUG(logger) << "Taking application icon: " << focused_app_icon_;
