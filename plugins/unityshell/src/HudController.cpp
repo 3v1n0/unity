@@ -315,7 +315,7 @@ void Controller::ShowHud()
   }
   else
   {
-    focused_app_icon_ = "";
+    focused_app_icon_ = focused_app_icon_ = PKGDATADIR "/launcher_bfb.png";
   }
 
   LOG_DEBUG(logger) << "Taking application icon: " << focused_app_icon_;
