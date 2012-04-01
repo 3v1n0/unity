@@ -431,3 +431,48 @@ class HudVisualTests(HudTestsBase):
         else:
             hud_embedded_icon = self.hud.get_embedded_icon()
             self.assertThat(hud_embedded_icon.icon_name, Equals(calc.icon))
+
+    def test_switch_dash_hud_does_not_break_the_focused_application_emblem(self):
+        """Tests that the correct HUD icon is shown when switching from Dash to HUD"""
+        self.start_app("Calculator")
+        calctools = self.get_app_instances("Calculator")
+        self.assertThat(len(calctools), GreaterThan(0))
+        calc = calctools[0]
+        self.assertTrue(calc.is_active)
+
+        self.keybinding("dash/reveal", 0.1)
+        sleep(1)
+
+        self.reveal_hud()
+        sleep(.5)
+
+        if self.hud.is_locked_launcher:
+            hud_launcher_icon = self.get_hud_launcher_icon()
+            self.assertThat(hud_launcher_icon.icon_name, Equals(calc.icon))
+        else:
+            hud_embedded_icon = self.hud.get_embedded_icon()
+            self.assertThat(hud_embedded_icon.icon_name, Equals(calc.icon))
+
+    def test_switch_hud_dash_does_not_break_the_focused_application_emblem(self):
+        """Tests that the correct HUD icon is shown when switching from HUD to Dash and back"""
+        self.start_app("Calculator")
+        calctools = self.get_app_instances("Calculator")
+        self.assertThat(len(calctools), GreaterThan(0))
+        calc = calctools[0]
+        self.assertTrue(calc.is_active)
+
+        self.reveal_hud()
+        sleep(.5)
+
+        self.keybinding("dash/reveal", 0.1)
+        sleep(1)
+
+        self.reveal_hud()
+        sleep(.5)
+
+        if self.hud.is_locked_launcher:
+            hud_launcher_icon = self.get_hud_launcher_icon()
+            self.assertThat(hud_launcher_icon.icon_name, Equals(calc.icon))
+        else:
+            hud_embedded_icon = self.hud.get_embedded_icon()
+            self.assertThat(hud_embedded_icon.icon_name, Equals(calc.icon))
