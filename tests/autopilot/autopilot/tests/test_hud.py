@@ -219,15 +219,29 @@ class HudBehaviorTests(HudTestsBase):
         self.dash.ensure_hidden()
         self.assertThat(self.launcher.key_nav_is_active, Equals(False))
 
+    def test_hud_to_dash_has_key_focus(self):
+        """When switching from the hud to the dash you don't lose key focus."""
+        self.hud.ensure_visible()
+        sleep(1)
+        self.dash.ensure_visible()
+
+        self.keyboard.type('focus')
+       
+        self.assertTrue(self.dash.visible)
+        self.assertEqual(self.dash.search_string, 'focus')
+        self.dash.ensure_hidden()
+
+
     def test_dash_to_hud_has_key_focus(self):
         """When switching from the dash to the hud you don't lose key focus."""
         self.dash.ensure_visible()
-        self.hud.toggle_reveal()
+        self.hud.ensure_visible()
         sleep(1)
 
         self.keyboard.type('focus')
-        
-        self.assertEqual(self.hud.searchbar.search_string, 'focus')
+       
+        self.assertTrue(self.hud.visible)
+        self.assertEqual(self.hud.search_string, 'focus')
 
     def test_hud_closes_on_workspace_switch(self):
         """This test shows that when you switch to another workspace the hud closes."""
