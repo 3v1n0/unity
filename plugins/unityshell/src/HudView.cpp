@@ -20,19 +20,11 @@
 
 #include <math.h>
 
-#include <gio/gdesktopappinfo.h>
 #include <glib/gi18n-lib.h>
-#include <gtk/gtk.h>
-#include <Nux/Button.h>
-#include <iostream>
-#include <sstream>
-
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
-#include <UnityCore/RadioOptionFilter.h>
 #include <UnityCore/Variant.h>
 #include <Nux/HLayout.h>
-#include <Nux/LayeredLayout.h>
 
 #include <NuxCore/Logger.h>
 #include "HudButton.h"
