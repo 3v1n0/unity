@@ -39,7 +39,7 @@ nux::logging::Logger logger("unity.hud.controller");
 }
 
 Controller::Controller()
-  : launcher_width(65)
+  : launcher_width(64)
   , launcher_locked_out(false)
   , multiple_launchers(true)
   , hud_service_("com.canonical.hud", "/com/canonical/hud")

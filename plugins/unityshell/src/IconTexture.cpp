@@ -81,6 +81,12 @@ void IconTexture::SetByIconName(std::string const& icon_name, unsigned int size)
   _icon_name = icon_name;
   _size = size;
 
+  if (_size == 0)
+  {
+    _texture_cached = nullptr;
+    return;
+  }
+
   LoadIcon();
 }
 
@@ -95,7 +101,7 @@ void IconTexture::LoadIcon()
   LOG_DEBUG(logger) << "LoadIcon called (" << _icon_name << ") - loading: " << _loading;
   static const char* const DEFAULT_GICON = ". GThemedIcon text-x-preview";
 
-  if (_loading)
+  if (_loading || _size == 0)
     return;
 
   _loading = true;
