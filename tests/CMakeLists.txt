@@ -124,6 +124,7 @@ if (GTEST_SRC_DIR AND
                  test_glib_signals_utils.cpp
                  test_glib_signals_utils.h
                  test_glib_variant.cpp
+                 test_desktop_utilities.cpp
                  ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
                  test_indicator.cpp
                  test_indicator_appmenu.cpp
