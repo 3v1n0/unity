@@ -2849,7 +2849,7 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
     _drag_action = nux::DNDACTION_COPY;
     if (!_dnd_hovered_icon && hovered_icon_is_appropriate)
     {
-      _dnd_hovered_icon = new SpacerLauncherIcon();
+      _dnd_hovered_icon = new SpacerLauncherIcon(monitor());
       _dnd_hovered_icon->SetSortPriority(G_MAXINT);
       _model->AddIcon(_dnd_hovered_icon);
       _model->ReorderBefore(_dnd_hovered_icon, hovered_icon, true);

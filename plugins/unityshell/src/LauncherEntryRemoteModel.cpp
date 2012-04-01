@@ -19,7 +19,13 @@
 
 #include "LauncherEntryRemoteModel.h"
 
+namespace unity
+{
+
+namespace
+{
 static void nux_object_destroy_notify(nux::Object* obj);
+}
 
 /**
  * Helper class implementing the remote API to control the icons in the
@@ -197,7 +203,7 @@ LauncherEntryRemoteModel::AddEntry(LauncherEntryRemote* entry)
 
   entry->SinkReference();
 
-  existing_entry = LookupByUri(entry->AppUri());
+  existing_entry = LookupByUri(entry->AppUri().c_str());
   if (existing_entry != NULL)
   {
     existing_entry->Update(entry);
@@ -206,7 +212,7 @@ LauncherEntryRemoteModel::AddEntry(LauncherEntryRemote* entry)
   else
   {
     /* The ref on entry will be removed by the hash table itself */
-    g_hash_table_insert(_entries_by_uri, g_strdup(entry->AppUri()), entry);
+    g_hash_table_insert(_entries_by_uri, g_strdup(entry->AppUri().c_str()), entry);
     entry_added.emit(entry);
   }
 }
@@ -223,7 +229,7 @@ LauncherEntryRemoteModel::RemoveEntry(LauncherEntryRemote* entry)
 
   entry->Reference();
 
-  if (g_hash_table_remove(_entries_by_uri, entry->AppUri()))
+  if (g_hash_table_remove(_entries_by_uri, entry->AppUri().c_str()))
     entry_removed.emit(entry);
 
   entry->UnReference();
@@ -341,7 +347,7 @@ LauncherEntryRemoteModel::on_dbus_name_owner_changed_signal_received(GDBusConnec
     {
       /* do something with key and value */
       LauncherEntryRemote* entry = static_cast<LauncherEntryRemote*>(value);
-      if (g_str_equal(entry->DBusName(), name))
+      if (g_str_equal(entry->DBusName().c_str(), name))
         remove = g_list_prepend(remove, entry);
     }
 
@@ -352,9 +358,14 @@ LauncherEntryRemoteModel::on_dbus_name_owner_changed_signal_received(GDBusConnec
   }
 }
 
+namespace
+{
 static void
 nux_object_destroy_notify(nux::Object* obj)
 {
   if (G_LIKELY(obj != NULL))
     obj->UnReference();
+}
+}
+
 }
