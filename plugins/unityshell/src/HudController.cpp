@@ -313,6 +313,10 @@ void Controller::ShowHud()
     glib::String view_icon(bamf_view_get_icon(active_view));
     focused_app_icon_ = view_icon.Str();
   }
+  else
+  {
+    focused_app_icon_ = "";
+  }
 
   LOG_DEBUG(logger) << "Taking application icon: " << focused_app_icon_;
   ubus.SendMessage(UBUS_HUD_ICON_CHANGED, g_variant_new_string(focused_app_icon_.c_str())); 
