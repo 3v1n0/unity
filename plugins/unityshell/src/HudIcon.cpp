@@ -19,6 +19,8 @@
 
 #include "HudIcon.h"
 #include "NuxCore/Logger.h"
+#include "config.h"
+
 namespace
 {
   nux::logging::Logger logger("unity.hud.icon");

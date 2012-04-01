@@ -21,22 +21,6 @@
 #ifndef HUDICON_H
 #define HUDICON_H
 
-#include <set>
-#include <string>
-
-#include "config.h"
-
-#include <Nux/Nux.h>
-#include <Nux/BaseWindow.h>
-#include <NuxCore/Math/MathInc.h>
-
-#include <sigc++/trackable.h>
-#include <sigc++/signal.h>
-#include <sigc++/functors/ptr_fun.h>
-#include <sigc++/functors/mem_fun.h>
-
-#include <gtk/gtk.h>
-
 #include "IconTexture.h"
 #include "HudIconTextureSource.h"
 #include "IconRenderer.h"
