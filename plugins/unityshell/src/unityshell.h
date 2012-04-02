@@ -272,6 +272,8 @@ private:
 
   void InitHints();
 
+  void OnPanelStyleChanged();
+
   dash::Settings dash_settings_;
   dash::Style    dash_style_;
   panel::Style   panel_style_;
@@ -341,10 +343,15 @@ private:
 
   GLMatrix panel_shadow_matrix_;
 
+  bool panel_texture_has_changed_;
+  bool paint_panel_;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> panel_texture_;
+
 #ifndef USE_GLES
   ScreenEffectFramebufferObject::GLXGetProcAddressProc glXGetProcAddressP;
 #endif
 
+  bool dash_is_open_;
   friend class UnityWindow;
 };
 
