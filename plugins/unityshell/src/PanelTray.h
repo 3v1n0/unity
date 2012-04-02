@@ -43,7 +43,7 @@ public:
   ~PanelTray();
 
   void Sync();
-  unsigned int xid();
+  Window xid();
 
 protected:
   void Draw(nux::GraphicsEngine& gfx_content, bool force_draw);
