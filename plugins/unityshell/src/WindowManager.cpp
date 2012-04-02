@@ -124,24 +124,24 @@ class WindowManagerDummy : public WindowManager
     return false;
   }
 
-  nux::Geometry GetWindowGeometry(guint xid)
+  nux::Geometry GetWindowGeometry(guint xid) const
   {
     int width = (guint32)xid >> 16;
     int height = (guint32)xid & 0x0000FFFF;
     return nux::Geometry(0, 0, width, height);
   }
 
-  nux::Geometry GetWindowSavedGeometry(guint xid)
+  nux::Geometry GetWindowSavedGeometry(guint xid) const
   {
     return nux::Geometry(0, 0, 1, 1);
   }
 
-  nux::Geometry GetScreenGeometry()
+  nux::Geometry GetScreenGeometry() const
   {
     return nux::Geometry(0, 0, 1, 1);
   }
 
-  nux::Geometry GetWorkAreaGeometry(guint32 xid)
+  nux::Geometry GetWorkAreaGeometry(guint32 xid) const
   {
     return nux::Geometry(0, 0, 1, 1);
   }
