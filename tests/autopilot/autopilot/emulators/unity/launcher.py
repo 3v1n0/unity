@@ -11,11 +11,12 @@ import dbus
 import logging
 from time import sleep
 
-from autopilot.keybindings import KeybindingsHelper
+from autopilot.emulators.dbus_handler import session_bus
 from autopilot.emulators.unity import UnityIntrospectionObject
 from autopilot.emulators.unity.icons import BFBLauncherIcon, BamfLauncherIcon, SimpleLauncherIcon
 from autopilot.emulators.X11 import Mouse, ScreenGeometry
-from autopilot.emulators.dbus_handler import session_bus
+from autopilot.keybindings import KeybindingsHelper
+
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +55,7 @@ class LauncherController(UnityIntrospectionObject):
                                                    icon_size,
                                                    desktop_file,
                                                    aptdaemon_task)
+
 
 class Launcher(UnityIntrospectionObject, KeybindingsHelper):
     """An individual launcher for a monitor."""

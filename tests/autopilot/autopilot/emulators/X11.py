@@ -16,16 +16,16 @@ In the future we may also need other devices.
 
 """
 
+import gtk.gdk
 import logging
+import os
+import subprocess
 from time import sleep
 
-from Xlib import X
-from Xlib import XK
+from Xlib import X, XK
 from Xlib.display import Display
 from Xlib.ext.xtest import fake_input
-import subprocess
-import gtk.gdk
-import os
+
 
 _PRESSED_KEYS = []
 _PRESSED_MOUSE_BUTTONS = []
@@ -314,6 +314,7 @@ class Mouse(object):
         _PRESSED_MOUSE_BUTTONS = []
         sg = ScreenGeometry()
         sg.move_mouse_to_monitor(0)
+
 
 class ScreenGeometry:
     """Get details about screen geometry."""

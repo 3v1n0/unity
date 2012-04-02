@@ -30,7 +30,6 @@ class Dash(KeybindingsHelper):
 
     def __init__(self):
         super(Dash, self).__init__()
-
         controllers = DashController.get_all_instances()
         assert(len(controllers) == 1)
         self.controller = controllers[0]

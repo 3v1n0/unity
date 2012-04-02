@@ -11,7 +11,6 @@ from time import sleep
 
 from autopilot.tests import AutopilotTestCase
 from autopilot.emulators.unity.shortcut_hint import ShortcutController
-from autopilot.emulators.X11 import ScreenGeometry
 
 
 class BaseShortcutHintTests(AutopilotTestCase):
