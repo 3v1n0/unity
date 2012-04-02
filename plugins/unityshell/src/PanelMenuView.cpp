@@ -49,7 +49,6 @@ PanelMenuView::PanelMenuView()
     _is_inside(false),
     _is_grabbed(false),
     _is_maximized(false),
-    _is_own_window(false),
     _last_active_view(nullptr),
     _new_application(nullptr),
     _padding(MAIN_LEFT_PADDING),
@@ -327,8 +326,8 @@ bool PanelMenuView::DrawMenus() const
   auto wm = WindowManager::Default();
   bool screen_grabbed = (wm->IsExpoActive() || wm->IsScaleActive());
 
-  if (!_is_own_window && !_overlay_showing && _we_control_active &&
-      !_switcher_showing && !_launcher_keynav && !screen_grabbed)
+  if (_we_control_active && !_overlay_showing && !screen_grabbed &&
+      !_switcher_showing && !_launcher_keynav)
   {
     if (_is_inside || _last_active_view || _show_now_activated || _new_application)
     {
@@ -347,8 +346,8 @@ bool PanelMenuView::DrawWindowButtons() const
   if (_overlay_showing)
     return true;
 
-  if (!_is_own_window && _we_control_active && _is_maximized &&
-      !_launcher_keynav && !_switcher_showing && !screen_grabbed)
+  if (_we_control_active && _is_maximized && !screen_grabbed &&
+      !_launcher_keynav && !_switcher_showing)
   {
     if (_is_inside || _show_now_activated || _new_application)
     {
@@ -635,12 +634,11 @@ void PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw
   GfxContext.PopClippingRectangle();
 }
 
-std::string PanelMenuView::GetActiveViewName(bool use_appname)
+std::string PanelMenuView::GetActiveViewName(bool use_appname) const
 {
   std::string label;
   BamfWindow* window;
 
-  _is_own_window = false;
   window = bamf_matcher_get_active_window(_matcher);
 
   if (BAMF_IS_WINDOW(window))
@@ -651,8 +649,6 @@ std::string PanelMenuView::GetActiveViewName(bool use_appname)
 
     if (std::find(our_xids.begin(), our_xids.end(), window_xid) != our_xids.end())
     {
-      _is_own_window = true;
-
       /* If the active window is an unity window, we need to fallback to the
        * top one, anyway we should always avoid to focus unity internal windows */
       BamfWindow* top_win = GetBamfWindowForXid(GetTopWindow());
@@ -1533,10 +1529,9 @@ void PanelMenuView::AddProperties(GVariantBuilder* builder)
   PanelIndicatorsView::AddProperties(builder);
 
   variant::BuilderWrapper(builder)
-  .add("mose_inside", _is_inside)
+  .add("mouse_inside", _is_inside)
   .add("grabbed", _is_grabbed)
   .add("active_win_maximized", _is_maximized)
-  .add("controlling_own_window", _is_own_window)
   .add("panel_title", _panel_title)
   .add("monitor", _monitor)
   .add("active_window", _active_xid)
@@ -1713,11 +1708,6 @@ void PanelMenuView::SetMonitor(int monitor)
 bool PanelMenuView::GetControlsActive() const
 {
   return _we_control_active;
-}
-
-bool PanelMenuView::HasOurWindowFocused() const
-{
-  return _is_own_window;
 }
 
 void PanelMenuView::OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state)

@@ -52,7 +52,6 @@ public:
   Window GetTopWindow() const;
   Window GetMaximizedWindow() const;
   bool GetControlsActive() const;
-  bool HasOurWindowFocused() const;
 
   virtual void AddIndicator(indicator::Indicator::Ptr const& indicator);
 
@@ -112,7 +111,7 @@ private:
 
   BamfWindow* GetBamfWindowForXid(Window xid) const;
 
-  std::string GetActiveViewName(bool use_appname = false);
+  std::string GetActiveViewName(bool use_appname = false) const;
 
   void OnSwitcherShown(GVariant* data);
   void OnSwitcherSelectionChanged(GVariant* data);
@@ -146,7 +145,6 @@ private:
   bool _is_inside;
   bool _is_grabbed;
   bool _is_maximized;
-  bool _is_own_window;
 
   PanelIndicatorEntryView* _last_active_view;
   WindowButtons* _window_buttons;
