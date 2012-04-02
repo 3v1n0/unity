@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
 #include <Nux/Nux.h>
@@ -46,7 +47,7 @@ namespace
 const int DEFAULT_SPACING = 3;
 }
 
-using indicator::Entry;
+using namespace indicator;
 
 PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int padding,
                                                  IndicatorEntryType type)
@@ -230,9 +231,9 @@ void PanelIndicatorEntryView::DrawEntryPrelight(cairo_t* cr, unsigned int width,
   gtk_style_context_save(style_context);
 
   GtkWidgetPath* widget_path = gtk_widget_path_new();
-  gtk_widget_path_iter_set_name(widget_path, -1 , "UnityPanelWidget");
   gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_BAR);
   gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_ITEM);
+  gtk_widget_path_iter_set_name(widget_path, -1 , "UnityPanelWidget");
 
   gtk_style_context_set_path(style_context, widget_path);
   gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUBAR);
@@ -322,7 +323,7 @@ void PanelIndicatorEntryView::DrawEntryContent(cairo_t *cr, unsigned int width, 
     PangoRectangle log_rect;
     pango_layout_get_extents(layout, nullptr, &log_rect);
     unsigned int text_height = log_rect.height / PANGO_SCALE;
-    unsigned int text_width =log_rect.width / PANGO_SCALE;
+    unsigned int text_width = log_rect.width / PANGO_SCALE;
 
     pango_cairo_update_layout(cr, layout);
 
@@ -548,13 +549,13 @@ void PanelIndicatorEntryView::Draw(nux::GraphicsEngine& GfxContext, bool force_d
   GfxContext.PopClippingRectangle();
 }
 
-void PanelIndicatorEntryView::OveralyShown()
+void PanelIndicatorEntryView::OverlayShown()
 {
   overlay_showing_ = true;
   Refresh();
 }
 
-void PanelIndicatorEntryView::OveralyHidden()
+void PanelIndicatorEntryView::OverlayHidden()
 {
   overlay_showing_ = false;
   Refresh();
@@ -659,7 +660,7 @@ bool PanelIndicatorEntryView::GetShowNow() const
   return proxy_.get() ? proxy_->show_now() : false;
 }
 
-void PanelIndicatorEntryView::GetGeometryForSync(indicator::EntryLocationMap& locations)
+void PanelIndicatorEntryView::GetGeometryForSync(EntryLocationMap& locations)
 {
   if (!IsVisible())
     return;
