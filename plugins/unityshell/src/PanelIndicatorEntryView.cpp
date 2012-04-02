@@ -582,7 +582,7 @@ PanelIndicatorEntryView::IndicatorEntryType PanelIndicatorEntryView::GetType() c
   return type_;
 }
 
-std::string PanelIndicatorEntryView::GetLabel()
+std::string PanelIndicatorEntryView::GetLabel() const
 {
   if (proxy_.get())
   {
