@@ -49,10 +49,9 @@ public:
   void AllMenusClosed();
   void SetMonitor(int monitor);
 
-  Window GetTopWindow();
-  Window GetMaximizedWindow();
-  bool GetControlsActive();
-  bool HasOurWindowFocused();
+  Window GetTopWindow() const;
+  Window GetMaximizedWindow() const;
+  bool GetControlsActive() const;
 
   virtual void AddIndicator(indicator::Indicator::Ptr const& indicator);
 
@@ -104,15 +103,15 @@ private:
 
   void FullRedraw();
   void Refresh(bool force = false);
-  void DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::string const& label);
+  void DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::string const& label) const;
 
   void OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
   void OnPanelViewMouseLeave(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
   void OnPanelViewMouseMove(int x, int y, int dx, int dy, unsigned long mouse_button_state, unsigned long special_keys_state);
 
-  BamfWindow* GetBamfWindowForXid(Window xid);
+  BamfWindow* GetBamfWindowForXid(Window xid) const;
 
-  std::string GetActiveViewName(bool use_appname = false);
+  std::string GetActiveViewName(bool use_appname = false) const;
 
   void OnSwitcherShown(GVariant* data);
   void OnSwitcherSelectionChanged(GVariant* data);
@@ -127,11 +126,11 @@ private:
   static gboolean OnNewAppShow(PanelMenuView* self);
   static gboolean OnNewAppHide(PanelMenuView* self);
 
-  bool IsValidWindow(Window xid);
-  bool IsWindowUnderOurControl(Window xid);
+  bool IsValidWindow(Window xid) const;
+  bool IsWindowUnderOurControl(Window xid) const;
 
-  bool DrawMenus();
-  bool DrawWindowButtons();
+  bool DrawMenus() const;
+  bool DrawWindowButtons() const;
 
   void OnFadeInChanged(double);
   void OnFadeOutChanged(double);
@@ -146,7 +145,6 @@ private:
   bool _is_inside;
   bool _is_grabbed;
   bool _is_maximized;
-  bool _is_own_window;
 
   PanelIndicatorEntryView* _last_active_view;
   WindowButtons* _window_buttons;
