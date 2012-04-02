@@ -277,7 +277,7 @@ nux::Area* PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, n
 
 void PanelMenuView::PreLayoutManagement()
 {
-  View::PreLayoutManagement();
+  PanelIndicatorsView::PreLayoutManagement();
 
   int panel_height = panel::Style::Instance().panel_height;
 
@@ -293,9 +293,13 @@ void PanelMenuView::PreLayoutManagement()
   _titlebar_grab_area->SetBaseHeight(geo.height);
   _titlebar_grab_area->SetMinimumWidth(geo.width - layout_width);
   _titlebar_grab_area->SetMaximumWidth(geo.width - layout_width);
+}
 
-  if (layout_width > 0 && geo.width - _window_buttons->GetContentWidth() > 0)
-    SetMaximumEntriesWidth(geo.width - _window_buttons->GetContentWidth());
+long PanelMenuView::PostLayoutManagement(long LayoutResult)
+{
+  SetMaximumEntriesWidth(GetAbsoluteWidth() - _window_buttons->GetContentWidth());
+
+  return PanelIndicatorsView::PostLayoutManagement(LayoutResult);;
 }
 
 void PanelMenuView::OnFadeInChanged(double opacity)
