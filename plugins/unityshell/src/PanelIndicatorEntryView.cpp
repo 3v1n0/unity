@@ -639,11 +639,26 @@ std::string PanelIndicatorEntryView::GetName() const
 
 void PanelIndicatorEntryView::AddProperties(GVariantBuilder* builder)
 {
+  std::string type_name;
+
+  switch (GetType())
+  {
+    case INDICATOR:
+      type_name = "indicator";
+      break;
+    case MENU:
+      type_name = "menu";
+      break;
+    default:
+      type_name = "other";
+  }
+
   variant::BuilderWrapper(builder)
   .add(GetGeometry())
   .add("id", GetEntryID())
   .add("name_hint", proxy_->name_hint())
-  .add("type", GetType())
+  .add("type", type_name)
+  .add("priority", proxy_->priority())
   .add("label", GetLabel())
   .add("label_sensitive", IsLabelSensitive())
   .add("label_visible", IsLabelVisible())
@@ -651,7 +666,10 @@ void PanelIndicatorEntryView::AddProperties(GVariantBuilder* builder)
   .add("icon_visible", IsIconVisible())
   .add("entry_visible", IsVisible())
   .add("active", proxy_->active())
-  .add("priority", proxy_->priority())
+  .add("menu_x", proxy_->geometry().x)
+  .add("menu_y", proxy_->geometry().y)
+  .add("menu_width", proxy_->geometry().width)
+  .add("menu_height", proxy_->geometry().height)
   .add("focused", IsFocused());
 }
 
