@@ -189,9 +189,8 @@ class IBusTestsPinyinIgnore(IBusTests):
         sleep(0.5)
         self.keyboard.type("riqi")
         old_selected = self.hud.selected_button
-        for i in range(5):
-            self.keyboard.press_and_release("Down")
-        new_selected = self.hud.selectedaaa_button
+        self.keyboard.press_and_release("Down")
+        new_selected = self.hud.selected_button
         self.deactivate_ibus()
         self.hud.ensure_hidden()
         
