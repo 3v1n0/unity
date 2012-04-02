@@ -22,6 +22,7 @@
 
 #include <glib/gi18n-lib.h>
 #include <Nux/WindowCompositor.h>
+#include <NuxCore/Logger.h>
 
 #include "Launcher.h"
 #include "QuicklistManager.h"
@@ -31,9 +32,14 @@ namespace unity
 {
 namespace launcher
 {
+namespace
+{
+  nux::logging::Logger logger("unity.launcher.TrashLauncherIcon");
+}
 
 TrashLauncherIcon::TrashLauncherIcon()
   : SimpleLauncherIcon()
+  , on_trash_changed_handler_id_(0)
   , proxy_("org.gnome.Nautilus", "/org/gnome/Nautilus", "org.gnome.Nautilus.FileOperations")
 {
   tooltip_text = _("Trash");
@@ -45,15 +51,24 @@ TrashLauncherIcon::TrashLauncherIcon()
 
   glib::Object<GFile> location(g_file_new_for_uri("trash:///"));
 
+  GError *err = NULL;
   trash_monitor_ = g_file_monitor_directory(location,
                                             G_FILE_MONITOR_NONE,
                                             NULL,
-                                            NULL);
+                                            &err);
 
-  on_trash_changed_handler_id_ = g_signal_connect(trash_monitor_,
+  if (err)
+  {
+    LOG_ERROR(logger) << "Could not create file monitor for trash uri: " << err->message;
+    g_error_free(err);
+  }
+  else
+  {
+    on_trash_changed_handler_id_ = g_signal_connect(trash_monitor_,
                                                   "changed",
                                                   G_CALLBACK(&TrashLauncherIcon::OnTrashChanged),
                                                   this);
+  }
 
   UpdateTrashIcon();
 }
