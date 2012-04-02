@@ -137,7 +137,7 @@ void Style::Refresh()
   bool updated = false;
   
   GtkSettings* settings = gtk_settings_get_default();
-  g_object_get(settings, "gtk-theme-name", theme_name.AsOutParam(), nullptr);
+  g_object_get(settings, "gtk-theme-name", &theme_name, nullptr);
 
   if (_theme_name != theme_name.Str())
   {
