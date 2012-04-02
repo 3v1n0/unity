@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
 #include <Nux/Nux.h>
@@ -46,7 +47,7 @@ namespace
 const int DEFAULT_SPACING = 3;
 }
 
-using indicator::Entry;
+using namespace indicator;
 
 PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int padding,
                                                  IndicatorEntryType type)
@@ -659,7 +660,7 @@ bool PanelIndicatorEntryView::GetShowNow() const
   return proxy_.get() ? proxy_->show_now() : false;
 }
 
-void PanelIndicatorEntryView::GetGeometryForSync(indicator::EntryLocationMap& locations)
+void PanelIndicatorEntryView::GetGeometryForSync(EntryLocationMap& locations)
 {
   if (!IsVisible())
     return;
