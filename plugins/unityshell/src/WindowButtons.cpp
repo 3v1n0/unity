@@ -428,7 +428,7 @@ void WindowButtons::OnCloseClicked(nux::Button *button)
 {
   auto win_button = dynamic_cast<WindowButton*>(button);
 
-  if (!win_button)
+  if (!win_button || !win_button->IsEnabled())
     return;
 
   if (win_button->IsOverlayOpen())
@@ -447,7 +447,7 @@ void WindowButtons::OnMinimizeClicked(nux::Button *button)
 {
   auto win_button = dynamic_cast<WindowButton*>(button);
 
-  if (!win_button)
+  if (!win_button || !win_button->IsEnabled())
     return;
 
   if (!win_button->IsOverlayOpen())
@@ -460,7 +460,7 @@ void WindowButtons::OnRestoreClicked(nux::Button *button)
 {
   auto win_button = dynamic_cast<WindowButton*>(button);
 
-  if (!win_button)
+  if (!win_button || !win_button->IsEnabled())
     return;
 
   if (win_button->IsOverlayOpen())
@@ -484,7 +484,7 @@ void WindowButtons::OnMaximizeClicked(nux::Button *button)
 {
   auto win_button = dynamic_cast<WindowButton*>(button);
 
-  if (!win_button)
+  if (!win_button || !win_button->IsEnabled())
     return;
 
   if (win_button->IsOverlayOpen())
