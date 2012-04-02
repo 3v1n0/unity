@@ -228,8 +228,6 @@ public:
   int GetCategorySeparatorLeftPadding() const;
   int GetCategorySeparatorRightPadding() const;
 
-  const static int SEARCH_BAR_EXTRA_PADDING = 1;
-
   sigc::signal<void> changed;
 
 private:

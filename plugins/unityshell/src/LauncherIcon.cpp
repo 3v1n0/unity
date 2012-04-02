@@ -69,14 +69,14 @@ int LauncherIcon::_current_theme_is_mono = -1;
 GtkIconTheme* LauncherIcon::_unity_theme = NULL;
 
 LauncherIcon::LauncherIcon()
-  : _menuclient_dynamic_quicklist(nullptr)
-  , _remote_urgent(false)
+  : _remote_urgent(false)
   , _present_urgency(0)
   , _progress(0)
   , _center_stabilize_handle(0)
   , _present_time_handle(0)
   , _time_delay_handle(0)
   , _sort_priority(0)
+  , _last_monitor(0)
   , _background_color(nux::color::White)
   , _glow_color(nux::color::White)
   , _shortcut(0)
@@ -93,6 +93,11 @@ LauncherIcon::LauncherIcon()
     _quirk_times[i].tv_sec = 0;
     _quirk_times[i].tv_nsec = 0;
   }
+
+  _is_visible_on_monitor.resize(max_num_monitors);
+
+  for (int i = 0; i < max_num_monitors; ++i)
+    _is_visible_on_monitor[i] = true;
 
   tooltip_text.SetSetterFunction(sigc::mem_fun(this, &LauncherIcon::SetTooltipText));
   tooltip_text = "blank";
@@ -184,6 +189,12 @@ LauncherIcon::GetName() const
 void
 LauncherIcon::AddProperties(GVariantBuilder* builder)
 {
+  GVariantBuilder monitors_builder;
+  g_variant_builder_init(&monitors_builder, G_VARIANT_TYPE ("ab"));
+
+  for (int i = 0; i < max_num_monitors; ++i)
+    g_variant_builder_add(&monitors_builder, "b", IsVisibleOnMonitor(i));
+
   unity::variant::BuilderWrapper(builder)
   .add("center_x", _center[0].x)
   .add("center_y", _center[0].y)
@@ -192,6 +203,7 @@ LauncherIcon::AddProperties(GVariantBuilder* builder)
   .add("icon_type", _icon_type)
   .add("tooltip_text", tooltip_text())
   .add("sort_priority", _sort_priority)
+  .add("monitors_visibility", g_variant_builder_end(&monitors_builder))
   .add("active", GetQuirk(QUIRK_ACTIVE))
   .add("visible", GetQuirk(QUIRK_VISIBLE))
   .add("urgent", GetQuirk(QUIRK_URGENT))
@@ -717,6 +729,22 @@ LauncherIcon::SetWindowVisibleOnMonitor(bool val, int monitor)
   EmitNeedsRedraw();
 }
 
+void
+LauncherIcon::SetVisibleOnMonitor(int monitor, bool visible)
+{
+  if (_is_visible_on_monitor[monitor] == visible)
+    return;
+
+  _is_visible_on_monitor[monitor] = visible;
+  EmitNeedsRedraw();
+}
+
+bool
+LauncherIcon::IsVisibleOnMonitor(int monitor) const
+{
+  return _is_visible_on_monitor[monitor];
+}
+
 gboolean
 LauncherIcon::OnPresentTimeout(gpointer data)
 {
@@ -1011,7 +1039,7 @@ LauncherIcon::DeleteEmblem()
 }
 
 void
-LauncherIcon::InsertEntryRemote(LauncherEntryRemote* remote)
+LauncherIcon::InsertEntryRemote(LauncherEntryRemote::Ptr const& remote)
 {
   if (std::find(_entry_list.begin(), _entry_list.end(), remote) != _entry_list.end())
     return;
@@ -1031,22 +1059,22 @@ LauncherIcon::InsertEntryRemote(LauncherEntryRemote* remote)
 
 
   if (remote->EmblemVisible())
-    OnRemoteEmblemVisibleChanged(remote);
+    OnRemoteEmblemVisibleChanged(remote.get());
 
   if (remote->CountVisible())
-    OnRemoteCountVisibleChanged(remote);
+    OnRemoteCountVisibleChanged(remote.get());
 
   if (remote->ProgressVisible())
-    OnRemoteProgressVisibleChanged(remote);
+    OnRemoteProgressVisibleChanged(remote.get());
 
   if (remote->Urgent())
-    OnRemoteUrgentChanged(remote);
+    OnRemoteUrgentChanged(remote.get());
 
-  OnRemoteQuicklistChanged(remote);
+  OnRemoteQuicklistChanged(remote.get());
 }
 
 void
-LauncherIcon::RemoveEntryRemote(LauncherEntryRemote* remote)
+LauncherIcon::RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote)
 {
   if (std::find(_entry_list.begin(), _entry_list.end(), remote) == _entry_list.end())
     return;
@@ -1058,6 +1086,8 @@ LauncherIcon::RemoveEntryRemote(LauncherEntryRemote* remote)
 
   if (_remote_urgent)
     SetQuirk(QUIRK_URGENT, false);
+
+  _menuclient_dynamic_quicklist = nullptr;
 }
 
 void
@@ -1086,7 +1116,7 @@ LauncherIcon::OnRemoteCountChanged(LauncherEntryRemote* remote)
   if (remote->Count() > 9999)
     text = "****";
   else
-    text = std::to_string( (int) remote->Count());
+    text = std::to_string(remote->Count());
 
   SetEmblemText(text);
 }
@@ -1097,7 +1127,7 @@ LauncherIcon::OnRemoteProgressChanged(LauncherEntryRemote* remote)
   if (!remote->ProgressVisible())
     return;
 
-  SetProgress((float) remote->Progress());
+  SetProgress(remote->Progress());
 }
 
 void
@@ -1120,7 +1150,7 @@ LauncherIcon::OnRemoteCountVisibleChanged(LauncherEntryRemote* remote)
 {
   if (remote->CountVisible())
   {
-    SetEmblemText(std::to_string( (int) remote->Count()));
+    SetEmblemText(std::to_string(remote->Count()));
   }
   else
   {
@@ -1134,7 +1164,7 @@ LauncherIcon::OnRemoteProgressVisibleChanged(LauncherEntryRemote* remote)
   SetQuirk(QUIRK_PROGRESS, remote->ProgressVisible());
 
   if (remote->ProgressVisible())
-    SetProgress((float) remote->Progress());
+    SetProgress(remote->Progress());
 }
 
 void LauncherIcon::EmitNeedsRedraw()

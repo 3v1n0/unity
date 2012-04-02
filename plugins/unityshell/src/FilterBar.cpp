@@ -60,7 +60,7 @@ void FilterBar::Init()
   dash::Style& style = dash::Style::Instance();
 
   nux::LinearLayout* layout = new nux::VLayout(NUX_TRACKER_LOCATION);
-  layout->SetTopAndBottomPadding(style.GetFilterBarTopPadding() - style.GetFilterHighlightPadding() - style.SEARCH_BAR_EXTRA_PADDING);
+  layout->SetTopAndBottomPadding(style.GetFilterBarTopPadding() - style.GetFilterHighlightPadding());
   layout->SetSpaceBetweenChildren(style.GetSpaceBetweenFilterWidgets() - style.GetFilterHighlightPadding());
   SetLayout(layout);
 }

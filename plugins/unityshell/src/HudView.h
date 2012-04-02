@@ -21,14 +21,9 @@
 
 #include <string>
 
-#include <NuxGraphics/GraphicsEngine.h>
 #include <Nux/Nux.h>
-#include <Nux/PaintLayer.h>
 #include <Nux/View.h>
 #include <Nux/VLayout.h>
-#include <StaticCairoText.h>
-
-#include <glib.h>
 
 #include <UnityCore/Hud.h>
 #include "Introspectable.h"
@@ -105,7 +100,6 @@ private:
   //FIXME - replace with dash search bar once modifications to dash search bar land
   SearchBar::Ptr search_bar_;
   Icon::Ptr icon_;
-  nux::ObjectPtr<nux::Layout> icon_layout_;
   bool visible_;
 
   Hud::Queries queries_;
