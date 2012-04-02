@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
- *              Marco Trevisan (Treviño) <mail@3v1n0.net>
+ *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
 #ifndef PANEL_INDICATOR_OBJECT_ENTRY_VIEW_H
@@ -37,8 +37,6 @@
 
 namespace unity
 {
-using namespace indicator;
-
 class PanelIndicatorEntryView : public nux::TextureArea, public debug::Introspectable
 {
 public:
@@ -48,7 +46,7 @@ public:
     OTHER
   };
 
-  PanelIndicatorEntryView(Entry::Ptr const& proxy, int padding = 5,
+  PanelIndicatorEntryView(indicator::Entry::Ptr const& proxy, int padding = 5,
                           IndicatorEntryType type = INDICATOR);
 
   virtual ~PanelIndicatorEntryView();
@@ -67,7 +65,7 @@ public:
   virtual void Activate(int button = 1);
   virtual void Unactivate();
 
-  virtual void GetGeometryForSync(EntryLocationMap& locations);
+  virtual void GetGeometryForSync(indicator::EntryLocationMap& locations);
 
   bool GetShowNow() const;
   bool IsSensitive() const;
@@ -83,8 +81,8 @@ public:
   void SetFocusedState(bool focused);
   bool IsFocused() const;
 
-  void OveralyShown();
-  void OveralyHidden();
+  void OverlayShown();
+  void OverlayHidden();
 
   sigc::signal<void, PanelIndicatorEntryView*, bool> active_changed;
   sigc::signal<void, PanelIndicatorEntryView*> refreshed;
@@ -103,7 +101,7 @@ protected:
   void SetActiveState(bool active, int button);
   virtual void ShowMenu(int button = 1);
 
-  Entry::Ptr proxy_;
+  indicator::Entry::Ptr proxy_;
   unsigned int spacing_;
   unsigned int left_padding_;
   unsigned int right_padding_;
