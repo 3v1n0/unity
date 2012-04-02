@@ -62,7 +62,7 @@ public:
   void SetMenuShowTimings(int fadein, int fadeout, int discovery,
                           int discovery_fadein, int discovery_fadeout);
 
-  unsigned int GetTrayXid() const;
+  Window GetTrayXid() const;
 
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);

@@ -134,7 +134,7 @@ PanelView::~PanelView()
   _remote->SyncGeometries(GetName() + boost::lexical_cast<std::string>(_monitor), locations);
 }
 
-unsigned int PanelView::GetTrayXid() const
+Window PanelView::GetTrayXid() const
 {
   if (!_tray)
     return 0;
