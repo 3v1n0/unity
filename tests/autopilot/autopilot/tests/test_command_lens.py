@@ -83,3 +83,10 @@ class CommandLensSearchTests(AutopilotTestCase):
         self.keybinding("dash/lens/next")
         sleep(1)
         self.assertThat(self.dash.active_lens, Equals("home.lens"))
+
+    def test_ctrl_shift_tab_switching(self):
+        """Pressing Ctrl+Shift+Tab after launching command lens must switch to Video lens."""
+        self.dash.reveal_command_lens()
+        self.keybinding("dash/lens/prev")
+        sleep(1)
+        self.assertThat(self.dash.active_lens, Equals("video.lens"))
