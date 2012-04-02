@@ -151,7 +151,7 @@ public:
 
   virtual nux::Color GlowColor();
 
-  const gchar* RemoteUri()
+  std::string RemoteUri()
   {
     return GetRemoteUri();
   }
@@ -162,9 +162,9 @@ public:
 
   std::list<DbusmenuMenuitem*> Menus();
 
-  void InsertEntryRemote(LauncherEntryRemote* remote);
+  void InsertEntryRemote(LauncherEntryRemote::Ptr const& remote);
 
-  void RemoveEntryRemote(LauncherEntryRemote* remote);
+  void RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote);
 
   nux::DndAction QueryAcceptDrop(unity::DndData& dnd_data)
   {
@@ -235,9 +235,9 @@ protected:
 
   virtual void OnCenterStabilized(std::vector<nux::Point3> center) {}
 
-  virtual const gchar* GetRemoteUri()
+  virtual std::string GetRemoteUri()
   {
-    return 0;
+    return "";
   }
 
   virtual nux::DndAction OnQueryAcceptDrop(unity::DndData& dnd_data)
@@ -290,7 +290,7 @@ protected:
   // This looks like a case for boost::logical::tribool
   static int _current_theme_is_mono;
 
-  DbusmenuClient* _menuclient_dynamic_quicklist;
+  glib::Object<DbusmenuClient> _menuclient_dynamic_quicklist;
 
 private:
   typedef struct
@@ -342,7 +342,7 @@ private:
   bool             _quirks[QUIRK_LAST];
   struct timespec  _quirk_times[QUIRK_LAST];
 
-  std::list<LauncherEntryRemote*> _entry_list;
+  std::list<LauncherEntryRemote::Ptr> _entry_list;
 };
 
 }

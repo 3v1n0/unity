@@ -11,7 +11,6 @@ from testtools.matchers import Equals, NotEquals, LessThan, GreaterThan
 from time import sleep
 
 from autopilot.emulators.X11 import ScreenGeometry
-from autopilot.emulators.unity.hud import HudController
 from autopilot.emulators.unity.icons import HudLauncherIcon
 from autopilot.tests import AutopilotTestCase, multiply_scenarios
 from os import remove
@@ -22,7 +21,6 @@ def _make_monitor_scenarios():
 
     if num_monitors == 1:
         scenarios = [('Single Monitor', {'hud_monitor': 0})]
-
     else:
         for i in range(num_monitors):
             scenarios += [('Monitor %d' % (i), {'hud_monitor': i})]
@@ -35,16 +33,10 @@ class HudTestsBase(AutopilotTestCase):
         super(HudTestsBase, self).setUp()
 
         sleep(0.25)
-        self.hud = self.get_hud_controller()
 
     def tearDown(self):
         self.hud.ensure_hidden()
         super(HudTestsBase, self).tearDown()
-
-    def get_hud_controller(self):
-        controllers = HudController.get_all_instances()
-        self.assertEqual(1, len(controllers))
-        return controllers[0]
 
     def get_hud_launcher_icon(self):
         icons = HudLauncherIcon.get_all_instances()
@@ -400,17 +392,18 @@ class HudVisualTests(HudTestsBase):
         self.reveal_hud()
         sleep(.25)
 
-        self.assertThat(self.hud.is_locked_to_launcher, Equals(self.hud_locked))
+        self.assertThat(self.hud.is_locked_launcher, Equals(self.hud_locked))
 
     def test_hud_icon_is_shown(self):
         """Tests that the correct HUD icon is shown"""
         self.reveal_hud()
+        self.hud.visible
         sleep(.5)
 
         hud_launcher_icon = self.get_hud_launcher_icon()
         hud_embedded_icon = self.hud.get_embedded_icon()
 
-        if self.hud.is_locked_to_launcher:
+        if self.hud.is_locked_launcher:
             self.assertTrue(hud_launcher_icon.is_visible_on_monitor(self.hud_monitor))
             self.assertTrue(hud_launcher_icon.active)
             self.assertThat(hud_launcher_icon.monitor, Equals(self.hud_monitor))
@@ -432,7 +425,7 @@ class HudVisualTests(HudTestsBase):
         self.reveal_hud()
         sleep(.5)
 
-        if self.hud.is_locked_to_launcher:
+        if self.hud.is_locked_launcher:
             hud_launcher_icon = self.get_hud_launcher_icon()
             self.assertThat(hud_launcher_icon.icon_name, Equals(calc.icon))
         else:

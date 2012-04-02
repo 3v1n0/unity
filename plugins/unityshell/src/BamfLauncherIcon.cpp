@@ -20,7 +20,10 @@
 
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
+
 #include <UnityCore/Variant.h>
+#include <UnityCore/GLibWrapper.h>
+#include <UnityCore/DesktopUtilities.h>
 
 #include "BamfLauncherIcon.h"
 #include "FavoriteStore.h"
@@ -32,8 +35,6 @@
 
 #include <glib/gi18n-lib.h>
 #include <gio/gdesktopappinfo.h>
-
-#include <UnityCore/GLibWrapper.h>
 
 namespace unity
 {
@@ -724,11 +725,11 @@ void BamfLauncherIcon::UpdateMenus()
   g_list_free(children);
 
   // add dynamic quicklist
-  if (DBUSMENU_IS_CLIENT(_menuclient_dynamic_quicklist))
+  if (_menuclient_dynamic_quicklist && DBUSMENU_IS_CLIENT(_menuclient_dynamic_quicklist.RawPtr()))
   {
     if (_menu_clients["dynamicquicklist"] != _menuclient_dynamic_quicklist)
     {
-      _menu_clients["dynamicquicklist"] = glib::Object<DbusmenuClient>(_menuclient_dynamic_quicklist);
+      _menu_clients["dynamicquicklist"] = _menuclient_dynamic_quicklist;
     }
   }
   else if (_menu_clients["dynamicquicklist"])
@@ -1027,22 +1028,10 @@ std::string BamfLauncherIcon::GetDesktopID()
 {
   std::string const& desktop_file = DesktopFile();
 
-  if (!desktop_file.empty())
-  {
-    size_t id_pos = desktop_file.rfind('/');
-
-    if (id_pos != std::string::npos)
-    {
-      size_t id_start = id_pos + 1;
-
-      return (id_start < desktop_file.length()) ? desktop_file.substr(id_start) : "";
-    }
-  }
-
-  return desktop_file;
+  return DesktopUtilities::GetDesktopID(desktop_file);
 }
 
-const gchar* BamfLauncherIcon::GetRemoteUri()
+std::string BamfLauncherIcon::GetRemoteUri()
 {
   if (_remote_uri.empty())
   {
@@ -1055,7 +1044,7 @@ const gchar* BamfLauncherIcon::GetRemoteUri()
     }
   }
 
-  return _remote_uri.c_str();
+  return _remote_uri;
 }
 
 std::set<std::string> BamfLauncherIcon::ValidateUrisForLaunch(unity::DndData& uris)

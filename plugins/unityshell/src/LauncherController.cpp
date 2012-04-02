@@ -18,6 +18,7 @@
  *              Tim Penhey <tim.penhey@canonical.com>
  */
 
+#include <gio/gio.h>
 #include <glib/gi18n-lib.h>
 #include <libbamf/libbamf.h>
 
@@ -90,11 +91,10 @@ public:
   void OnLauncherAddRequestSpecial(std::string const& path, AbstractLauncherIcon::Ptr before, std::string const& aptdaemon_trans_id, std::string const& icon_path,
                                    int icon_x, int icon_y, int icon_size);
   void OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr icon);
-
   void OnSCIconAnimationComplete(AbstractLauncherIcon::Ptr icon);
 
-  void OnLauncherEntryRemoteAdded(LauncherEntryRemote* entry);
-  void OnLauncherEntryRemoteRemoved(LauncherEntryRemote* entry);
+  void OnLauncherEntryRemoteAdded(LauncherEntryRemote::Ptr const& entry);
+  void OnLauncherEntryRemoteRemoved(LauncherEntryRemote::Ptr const& entry);
 
   void OnFavoriteStoreFavoriteAdded(std::string const& entry, std::string const& pos, bool before);
   void OnFavoriteStoreFavoriteRemoved(std::string const& entry);
@@ -261,6 +261,11 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   });
 
   parent_->AddChild(model_.get());
+
+  uscreen->resuming.connect([&]() -> void {
+    for (auto launcher : launchers)
+      launcher->QueueDraw();
+  });
 }
 
 Controller::Impl::~Impl()
@@ -528,21 +533,21 @@ void Controller::Impl::OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr icon)
   }
 }
 
-void Controller::Impl::OnLauncherEntryRemoteAdded(LauncherEntryRemote* entry)
+void Controller::Impl::OnLauncherEntryRemoteAdded(LauncherEntryRemote::Ptr const& entry)
 {
   for (auto icon : *model_)
   {
-    if (!icon || !icon->RemoteUri())
+    if (!icon || icon->RemoteUri().empty())
       continue;
 
-    if (!g_strcmp0(entry->AppUri(), icon->RemoteUri()))
+    if (entry->AppUri() == icon->RemoteUri())
     {
       icon->InsertEntryRemote(entry);
     }
   }
 }
 
-void Controller::Impl::OnLauncherEntryRemoteRemoved(LauncherEntryRemote* entry)
+void Controller::Impl::OnLauncherEntryRemoteRemoved(LauncherEntryRemote::Ptr const& entry)
 {
   for (auto icon : *model_)
   {
@@ -692,13 +697,15 @@ void Controller::Impl::RemoveDesktopIcon()
 void Controller::Impl::RegisterIcon(AbstractLauncherIcon::Ptr icon)
 {
   model_->AddIcon(icon);
-
-  LauncherEntryRemote* entry = NULL;
   std::string const& path = icon->DesktopFile();
+
   if (!path.empty())
-    entry = remote_model_.LookupByDesktopFile(path.c_str());
-  if (entry)
-    icon->InsertEntryRemote(entry);
+  {
+    LauncherEntryRemote::Ptr const& entry = remote_model_.LookupByDesktopFile(path);
+
+    if (entry)
+      icon->InsertEntryRemote(entry);
+  }
 }
 
 /* static private */

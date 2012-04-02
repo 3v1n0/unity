@@ -176,7 +176,7 @@ public:
 
   virtual IconType GetIconType() = 0;
 
-  virtual const gchar* RemoteUri() = 0;
+  virtual std::string RemoteUri() = 0;
 
   virtual std::list<DbusmenuMenuitem*> Menus() = 0;
 
@@ -188,9 +188,8 @@ public:
 
   virtual void SendDndLeave() = 0;
 
-  virtual void InsertEntryRemote(LauncherEntryRemote* remote) = 0;
-
-  virtual void RemoveEntryRemote(LauncherEntryRemote* remote) = 0;
+  virtual void InsertEntryRemote(LauncherEntryRemote::Ptr const& remote) = 0;
+  virtual void RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote) = 0;
 
   virtual std::string DesktopFile() = 0;
 
