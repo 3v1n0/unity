@@ -246,6 +246,7 @@ void LensBar::ActivateNext()
 
 void LensBar::ActivatePrevious()
 {
+  // Special case when switching from the command lens.
   if (GetActiveLensId() == "commands.lens")
   {
     SetActive(icons_.back());
