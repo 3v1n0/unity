@@ -20,9 +20,7 @@
 #ifndef _PANEL_CONTROLLER_H_
 #define _PANEL_CONTROLLER_H_
 
-#include <list>
 #include <memory>
-
 #include <Nux/Nux.h>
 
 #include "Introspectable.h"
@@ -42,8 +40,8 @@ public:
   void FirstMenuShow();
   void QueueRedraw();
 
-  unsigned int GetTrayXid ();
-  std::list<nux::Geometry> GetGeometries ();
+  std::vector<Window> GetTrayXids() const;
+  std::vector<nux::Geometry> GetGeometries() const;
 
   // NOTE: nux::Property maybe?
   void SetOpacity(float opacity);
