@@ -18,6 +18,7 @@
  *              Tim Penhey <tim.penhey@canonical.com>
  */
 
+#include <gio/gio.h>
 #include <glib/gi18n-lib.h>
 #include <libbamf/libbamf.h>
 
@@ -260,6 +261,11 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   });
 
   parent_->AddChild(model_.get());
+
+  uscreen->resuming.connect([&]() -> void {
+    for (auto launcher : launchers)
+      launcher->QueueDraw();
+  });
 }
 
 Controller::Impl::~Impl()
