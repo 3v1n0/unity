@@ -279,7 +279,6 @@ void PanelMenuView::PreLayoutManagement()
 {
   View::PreLayoutManagement();
 
-  nux::Geometry const& geo = GetGeometry();
   int panel_height = panel::Style::Instance().panel_height;
 
   _window_buttons->ComputeContentSize();
@@ -288,13 +287,15 @@ void PanelMenuView::PreLayoutManagement()
 
   layout_->ComputeContentSize();
   int layout_width = layout_->GetContentWidth();
+  nux::Geometry const& geo = GetGeometry();
 
   _titlebar_grab_area->SetBaseX(layout_width);
   _titlebar_grab_area->SetBaseHeight(geo.height);
   _titlebar_grab_area->SetMinimumWidth(geo.width - layout_width);
   _titlebar_grab_area->SetMaximumWidth(geo.width - layout_width);
 
-  SetMaximumEntriesWidth(geo.width - _window_buttons->GetContentWidth());
+  if (layout_width > 0 && geo.width - _window_buttons->GetContentWidth() > 0)
+    SetMaximumEntriesWidth(geo.width - _window_buttons->GetContentWidth());
 }
 
 void PanelMenuView::OnFadeInChanged(double opacity)
@@ -890,7 +891,6 @@ void PanelMenuView::OnEntryAdded(indicator::Entry::Ptr const& entry)
   view->active_changed.connect(sigc::mem_fun(this, &PanelMenuView::OnActiveChanged));
 
   AddEntryView(view, IndicatorEntryPosition::END);
-  SetMaximumEntriesWidth(GetAbsoluteWidth() - _window_buttons->GetContentWidth());
 }
 
 void PanelMenuView::AllMenusClosed()
