@@ -88,7 +88,7 @@ PanelTray::~PanelTray()
     gtk_widget_destroy(window_);
 }
 
-unsigned int PanelTray::xid()
+Window PanelTray::xid()
 {
   if (!window_)
     return 0;
