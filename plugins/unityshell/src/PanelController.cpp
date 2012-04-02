@@ -47,8 +47,8 @@ public:
   void FirstMenuShow();
   void QueueRedraw();
 
-  unsigned int GetTrayXid();
-  std::list <nux::Geometry> GetGeometries();
+  std::vector<Window> GetTrayXids() const;
+  std::vector<nux::Geometry> GetGeometries() const;
 
   // NOTE: nux::Property maybe?
   void SetOpacity(float opacity);
@@ -61,7 +61,7 @@ public:
 
   void OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors, Introspectable *iobj);
 private:
-  unity::PanelView* ViewForWindow(nux::BaseWindow* window);
+  unity::PanelView* ViewForWindow(nux::BaseWindow* window) const;
 
   static void WindowConfigureCallback(int            window_width,
                                       int            window_height,
@@ -99,17 +99,21 @@ Controller::Impl::~Impl()
   }
 }
 
-unsigned int Controller::Impl::GetTrayXid()
+std::vector<Window> Controller::Impl::GetTrayXids() const
 {
-  if (!windows_.empty())
-    return ViewForWindow(windows_.front())->GetTrayXid();
-  else
-    return 0;
+  std::vector<Window> xids;
+
+  for (auto window: windows_)
+  {
+    xids.push_back(ViewForWindow(window)->GetTrayXid());
+  }
+
+  return xids;
 }
 
-std::list<nux::Geometry> Controller::Impl::GetGeometries()
+std::vector<nux::Geometry> Controller::Impl::GetGeometries() const
 {
-  std::list<nux::Geometry> geometries;
+  std::vector<nux::Geometry> geometries;
 
   for (auto window : windows_)
   {
@@ -172,7 +176,7 @@ void Controller::Impl::QueueRedraw()
   }
 }
 
-PanelView* Controller::Impl::ViewForWindow(nux::BaseWindow* window)
+PanelView* Controller::Impl::ViewForWindow(nux::BaseWindow* window) const
 {
   nux::Layout* layout = window->GetLayout();
   std::list<nux::Area*>::iterator it = layout->GetChildren().begin();
@@ -328,12 +332,12 @@ void Controller::QueueRedraw()
   pimpl->QueueRedraw();
 }
 
-unsigned int Controller::GetTrayXid()
+std::vector<Window> Controller::GetTrayXids() const
 {
-  return pimpl->GetTrayXid();
+  return pimpl->GetTrayXids();
 }
 
-std::list<nux::Geometry> Controller::GetGeometries()
+std::vector<nux::Geometry> Controller::GetGeometries() const
 {
   return pimpl->GetGeometries();
 }
