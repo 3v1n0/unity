@@ -21,14 +21,9 @@
 
 #include <string>
 
-#include <NuxGraphics/GraphicsEngine.h>
 #include <Nux/Nux.h>
-#include <Nux/PaintLayer.h>
 #include <Nux/View.h>
 #include <Nux/VLayout.h>
-#include <StaticCairoText.h>
-
-#include <glib.h>
 
 #include <UnityCore/Hud.h>
 #include "Introspectable.h"
@@ -43,12 +38,6 @@ namespace unity
 {
 namespace hud
 {
-
-enum IconHideState
-{
-  HIDE,
-  SHOW
-};
 
 class View : public nux::View, public unity::debug::Introspectable
 {
@@ -65,7 +54,7 @@ public:
 
   void SetQueries(Hud::Queries queries);
   void SetIcon(std::string icon_name);
-  void SetHideIcon(IconHideState hide_icon);
+  void ShowEmbeddedIcon(bool show);
 
   void AboutToShow();
   void AboutToHide();
@@ -112,7 +101,6 @@ private:
   //FIXME - replace with dash search bar once modifications to dash search bar land
   SearchBar::Ptr search_bar_;
   Icon::Ptr icon_;
-  nux::ObjectPtr<nux::Layout> icon_layout_;
   bool visible_;
 
   Hud::Queries queries_;
@@ -127,7 +115,7 @@ private:
   int current_height_;
   bool timeline_need_more_draw_;
   int selected_button_;
-  IconHideState icon_state_;
+  bool show_embedded_icon_;
   bool activated_signal_sent_;
 };
 

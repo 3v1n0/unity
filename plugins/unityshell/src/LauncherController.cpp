@@ -18,6 +18,7 @@
  *              Tim Penhey <tim.penhey@canonical.com>
  */
 
+#include <gio/gio.h>
 #include <glib/gi18n-lib.h>
 #include <libbamf/libbamf.h>
 
@@ -87,11 +88,13 @@ public:
   void OnIconRemoved(AbstractLauncherIcon::Ptr icon);
 
   void OnLauncherAddRequest(char* path, AbstractLauncherIcon::Ptr before);
-  void OnLauncherAddRequestSpecial(std::string const& path, AbstractLauncherIcon::Ptr before, std::string const& aptdaemon_trans_id, std::string const& icon_path);
+  void OnLauncherAddRequestSpecial(std::string const& path, AbstractLauncherIcon::Ptr before, std::string const& aptdaemon_trans_id, std::string const& icon_path,
+                                   int icon_x, int icon_y, int icon_size);
   void OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr icon);
+  void OnSCIconAnimationComplete(AbstractLauncherIcon::Ptr icon);
 
-  void OnLauncherEntryRemoteAdded(LauncherEntryRemote* entry);
-  void OnLauncherEntryRemoteRemoved(LauncherEntryRemote* entry);
+  void OnLauncherEntryRemoteAdded(LauncherEntryRemote::Ptr const& entry);
+  void OnLauncherEntryRemoteRemoved(LauncherEntryRemote::Ptr const& entry);
 
   void OnFavoriteStoreFavoriteAdded(std::string const& entry, std::string const& pos, bool before);
   void OnFavoriteStoreFavoriteRemoved(std::string const& entry);
@@ -114,7 +117,7 @@ public:
 
   AbstractLauncherIcon::Ptr CreateFavorite(const char* file_path);
 
-  AbstractLauncherIcon::Ptr CreateSCLauncherIcon(std::string const& file_path, std::string const& aptdaemon_trans_id, std::string const& icon_path);
+  SoftwareCenterLauncherIcon::Ptr CreateSCLauncherIcon(std::string const& file_path, std::string const& aptdaemon_trans_id, std::string const& icon_path);
 
   void SetupBamf();
 
@@ -258,6 +261,11 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   });
 
   parent_->AddChild(model_.get());
+
+  uscreen->resuming.connect([&]() -> void {
+    for (auto launcher : launchers)
+      launcher->QueueDraw();
+  });
 }
 
 Controller::Impl::~Impl()
@@ -377,6 +385,8 @@ Launcher* Controller::Impl::CreateLauncher(int monitor)
   launcher->launcher_addrequest_special.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequestSpecial));
   launcher->launcher_removerequest.connect(sigc::mem_fun(this, &Impl::OnLauncherRemoveRequest));
 
+  launcher->icon_animation_complete.connect(sigc::mem_fun(this, &Impl::OnSCIconAnimationComplete));
+
   parent_->AddChild(launcher);
 
   return launcher;
@@ -430,24 +440,35 @@ void
 Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
                                               AbstractLauncherIcon::Ptr before,
                                               std::string const& aptdaemon_trans_id,
-                                              std::string const& icon_path)
+                                              std::string const& icon_path,
+                                              int icon_x,
+                                              int icon_y,
+                                              int icon_size)
 {
-  auto launchers = model_->GetSublist<BamfLauncherIcon>();
-  for (auto icon : launchers)
+  auto bamf_icons = model_->GetSublist<BamfLauncherIcon>();
+  for (auto icon : bamf_icons)
   {
     if (icon->DesktopFile() == path)
       return;
   }
 
-  AbstractLauncherIcon::Ptr result = CreateSCLauncherIcon(path, aptdaemon_trans_id, icon_path);
+  SoftwareCenterLauncherIcon::Ptr result = CreateSCLauncherIcon(path, aptdaemon_trans_id, icon_path);
+
+  launcher_->ForceReveal(true);
+
   if (result)
   {
+    result->SetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE, false);
+    result->Animate(launcher_, icon_x, icon_y, icon_size);
     RegisterIcon(result);
-
-    if (before)
-      model_->ReorderBefore(result, before, false);
+    Save();
   }
-  Save();
+}
+
+void Controller::Impl::OnSCIconAnimationComplete(AbstractLauncherIcon::Ptr icon)
+{
+  icon->SetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE, true);
+  launcher_->ForceReveal(false);
 }
 
 void Controller::Impl::SortAndUpdate()
@@ -512,21 +533,21 @@ void Controller::Impl::OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr icon)
   }
 }
 
-void Controller::Impl::OnLauncherEntryRemoteAdded(LauncherEntryRemote* entry)
+void Controller::Impl::OnLauncherEntryRemoteAdded(LauncherEntryRemote::Ptr const& entry)
 {
   for (auto icon : *model_)
   {
-    if (!icon || !icon->RemoteUri())
+    if (!icon || icon->RemoteUri().empty())
       continue;
 
-    if (!g_strcmp0(entry->AppUri(), icon->RemoteUri()))
+    if (entry->AppUri() == icon->RemoteUri())
     {
       icon->InsertEntryRemote(entry);
     }
   }
 }
 
-void Controller::Impl::OnLauncherEntryRemoteRemoved(LauncherEntryRemote* entry)
+void Controller::Impl::OnLauncherEntryRemoteRemoved(LauncherEntryRemote::Ptr const& entry)
 {
   for (auto icon : *model_)
   {
@@ -676,13 +697,15 @@ void Controller::Impl::RemoveDesktopIcon()
 void Controller::Impl::RegisterIcon(AbstractLauncherIcon::Ptr icon)
 {
   model_->AddIcon(icon);
-
-  LauncherEntryRemote* entry = NULL;
   std::string const& path = icon->DesktopFile();
+
   if (!path.empty())
-    entry = remote_model_.LookupByDesktopFile(path.c_str());
-  if (entry)
-    icon->InsertEntryRemote(entry);
+  {
+    LauncherEntryRemote::Ptr const& entry = remote_model_.LookupByDesktopFile(path);
+
+    if (entry)
+      icon->InsertEntryRemote(entry);
+  }
 }
 
 /* static private */
@@ -733,13 +756,12 @@ AbstractLauncherIcon::Ptr Controller::Impl::CreateFavorite(const char* file_path
   return result;
 }
 
-AbstractLauncherIcon::Ptr
-Controller::Impl::CreateSCLauncherIcon(std::string const& file_path,
-                                       std::string const& aptdaemon_trans_id,
-                                       std::string const& icon_path)
+SoftwareCenterLauncherIcon::Ptr Controller::Impl::CreateSCLauncherIcon(std::string const& file_path,
+                                                                       std::string const& aptdaemon_trans_id,
+                                                                       std::string const& icon_path)
 {
   BamfApplication* app;
-  AbstractLauncherIcon::Ptr result;
+  SoftwareCenterLauncherIcon::Ptr result;
 
   app = bamf_matcher_get_application_for_desktop_file(matcher_, file_path.c_str(), true);
   if (!BAMF_IS_APPLICATION(app))
@@ -751,13 +773,10 @@ Controller::Impl::CreateSCLauncherIcon(std::string const& file_path,
     return result;
   }
 
-  g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"), GINT_TO_POINTER(1));
-
   bamf_view_set_sticky(BAMF_VIEW(app), true);
-  AbstractLauncherIcon::Ptr icon(new SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path));
-  icon->SetSortPriority(sort_priority_++);
+  result = new SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path);
+  result->SetSortPriority(sort_priority_++);
 
-  result = icon;
   return result;
 }
 
@@ -1128,6 +1147,16 @@ void Controller::KeyNavTerminate(bool activate)
 bool Controller::KeyNavIsActive() const
 {
   return pimpl->launcher_keynav;
+}
+
+bool Controller::IsOverlayOpen() const
+{
+  for (auto launcher_ptr : pimpl->launchers)
+  {
+    if (launcher_ptr->IsOverlayOpen())
+      return true;
+  } 
+  return false;
 }
 
 std::string

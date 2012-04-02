@@ -201,6 +201,7 @@ void LensView::SetupViews(nux::Area* show_filters)
 
   no_results_ = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
   no_results_->SetTextColor(nux::color::White);
+  no_results_->SetVisible(false);
   scroll_layout_->AddView(no_results_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
   fscroll_view_ = new LensScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION), NUX_TRACKER_LOCATION);
@@ -404,6 +405,7 @@ void LensView::CheckNoResults(Lens::Hints const& hints)
 
     no_results_active_ = true;
     no_results_->SetText(markup.str());
+    no_results_->SetVisible(true);
   }
   else if (count && no_results_active_)
   {
@@ -411,6 +413,7 @@ void LensView::CheckNoResults(Lens::Hints const& hints)
 
     no_results_active_ = false;
     no_results_->SetText("");
+    no_results_->SetVisible(false);
   }
 }
 
@@ -421,6 +424,7 @@ void LensView::HideResultsMessage()
     scroll_layout_->SetContentDistribution(nux::MAJOR_POSITION_START);
     no_results_active_ = false;
     no_results_->SetText("");
+    no_results_->SetVisible(false);
   }
 }
 

@@ -20,17 +20,17 @@
 #ifndef SPACERLAUNCHERICON_H
 #define SPACERLAUNCHERICON_H
 
-#include "SimpleLauncherIcon.h"
+#include "SingleMonitorLauncherIcon.h"
 
 namespace unity
 {
 namespace launcher
 {
 
-class SpacerLauncherIcon : public SimpleLauncherIcon
+class SpacerLauncherIcon : public SingleMonitorLauncherIcon
 {
 public:
-  SpacerLauncherIcon();
+  SpacerLauncherIcon(int monitor);
 
   bool IsSpacer()
   {

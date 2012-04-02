@@ -292,6 +292,11 @@ class SwitcherDetailsModeTests(AutopilotTestCase):
 class SwitcherWorkspaceTests(AutopilotTestCase):
     """Test Switcher behavior with respect to multiple workspaces."""
 
+    def get_bamf_application(self, name):
+        apps = self.get_app_instances(name)
+        self.assertThat(len(apps), Equals(1))
+        return apps[0]
+
     def test_switcher_shows_current_workspace_only(self):
         """Switcher must show apps from the current workspace only."""
         self.close_all_app('Calculator')
@@ -308,8 +313,8 @@ class SwitcherWorkspaceTests(AutopilotTestCase):
         sleep(1)
         icon_names = [i.tooltip_text for i in self.switcher.get_switcher_icons()]
         self.switcher.terminate()
-        self.assertThat(icon_names, Contains("Character Map"))
-        self.assertThat(icon_names, Not(Contains("Calculator")))
+        self.assertThat(icon_names, Contains(self.get_bamf_application("Character Map").name))
+        self.assertThat(icon_names, Not(Contains(self.get_bamf_application("Calculator").name)))
 
     def test_switcher_all_mode_shows_all_apps(self):
         """Test switcher 'show_all' mode shows apps from all workspaces."""
@@ -327,8 +332,8 @@ class SwitcherWorkspaceTests(AutopilotTestCase):
         sleep(1)
         icon_names = [i.tooltip_text for i in self.switcher.get_switcher_icons()]
         self.switcher.terminate()
-        self.assertThat(icon_names, Contains("Character Map"))
-        self.assertThat(icon_names, Contains("Calculator"))
+        self.assertThat(icon_names, Contains(self.get_bamf_application("Calculator").name))
+        self.assertThat(icon_names, Contains(self.get_bamf_application("Character Map").name))
 
     def test_switcher_can_switch_to_minimised_window(self):
         """Switcher must be able to switch to a minimised window when there's
@@ -353,16 +358,14 @@ class SwitcherWorkspaceTests(AutopilotTestCase):
 
         self.switcher.initiate()
         sleep(1)
-        while self.switcher.current_icon.tooltip_text != 'Mahjongg':
+        while self.switcher.current_icon.tooltip_text != self.get_bamf_application("Mahjongg").name:
             self.switcher.next_icon()
             sleep(1)
         self.switcher.stop()
         sleep(1)
 
-        #get calculator windows - there should be only one:
-        mahjongg_apps = self.get_app_instances("Mahjongg")
-        self.assertThat(len(mahjongg_apps), Equals(1))
-        wins = mahjongg_apps[0].get_windows()
+        #get mahjongg windows - there should be two:
+        wins = self.get_bamf_application("Mahjongg").get_windows()
         self.assertThat(len(wins), Equals(2))
         # Ideally we should be able to find the instance that is on the
         # current workspace and ask that one if it is hidden.

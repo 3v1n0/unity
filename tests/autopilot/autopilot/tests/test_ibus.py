@@ -12,9 +12,6 @@ from autopilot.emulators.ibus import (
     set_active_engines,
     get_available_input_engines,
     )
-from autopilot.emulators.unity.dash import Dash
-from autopilot.emulators.unity.hud import HudController
-from autopilot.emulators.X11 import Keyboard
 from autopilot.tests import AutopilotTestCase, multiply_scenarios
 
 from time import sleep
@@ -24,20 +21,12 @@ class IBusTests(AutopilotTestCase):
 
     def setUp(self):
         super(IBusTests, self).setUp()
-        self.kb = Keyboard()
-        self.dash = Dash()
-        self.hud = self.get_hud_controller()
         self._old_engines = None
 
     def tearDown(self):
         if self._old_engines is not None:
             set_active_engines(self._old_engines)
         super(IBusTests, self).tearDown()
-
-    def get_hud_controller(self):
-        controllers = HudController.get_all_instances()
-        self.assertEqual(1, len(controllers))
-        return controllers[0]
 
     def activate_input_engine_or_skip(self, engine_name):
         available_engines = get_available_input_engines()
@@ -48,11 +37,11 @@ class IBusTests(AutopilotTestCase):
 
     def activate_ibus(self):
         # it would be nice to be able to tell if it's currently active or not.
-        self.kb.press_and_release('Ctrl+Space')
+        self.keyboard.press_and_release('Ctrl+Space')
 
     def deactivate_ibus(self):
         # it would be nice to be able to tell if it's currently active or not.
-        self.kb.press_and_release('Ctrl+Space')
+        self.keyboard.press_and_release('Ctrl+Space')
 
 
 class IBusTestsPinyin(IBusTests):
@@ -66,18 +55,31 @@ class IBusTestsPinyin(IBusTests):
         ('disk_management', {'input': 'cipan guanli ', 'result': u'\u78c1\u76d8\u7ba1\u7406'}),
     ]
 
-    def test_simple_input(self):
+    def test_simple_input_dash(self):
         self.activate_input_engine_or_skip("pinyin")
         self.dash.ensure_visible()
         sleep(0.5)
         self.activate_ibus()
         sleep(0.5)
-        self.kb.type(self.input)
-        dash_search_string = self.dash.get_searchbar().search_string
+        self.keyboard.type(self.input)
+        dash_search_string = self.dash.search_string
         self.deactivate_ibus()
         self.dash.ensure_hidden()
 
         self.assertEqual(self.result, dash_search_string)
+
+    def test_simple_input_hud(self):
+        self.activate_input_engine_or_skip("pinyin")
+        self.hud.ensure_visible()
+        sleep(0.5)
+        self.activate_ibus()
+        sleep(0.5)
+        self.keyboard.type(self.input)
+        hud_search_string = self.hud.search_string
+        self.deactivate_ibus()
+        self.hud.ensure_hidden()
+
+        self.assertEqual(self.result, hud_search_string)
 
 
 class IBusTestsHangul(IBusTests):
@@ -89,18 +91,31 @@ class IBusTestsHangul(IBusTests):
         ('document', {'input': 'anstj ', 'result': u'\ubb38\uc11c '}),
         ]
 
-    def test_simple_input(self):
+    def test_simple_input_dash(self):
         self.activate_input_engine_or_skip("hangul")
         self.dash.ensure_visible()
         sleep(0.5)
         self.activate_ibus()
         sleep(0.5)
-        self.kb.type(self.input)
-        dash_search_string = self.dash.get_searchbar().search_string
+        self.keyboard.type(self.input)
+        dash_search_string = self.dash.search_string
         self.deactivate_ibus()
         self.dash.ensure_hidden()
 
         self.assertEqual(self.result, dash_search_string)
+
+    def test_simple_input_hud(self):
+        self.activate_input_engine_or_skip("hangul")
+        self.hud.ensure_visible()
+        sleep(0.5)
+        self.activate_ibus()
+        sleep(0.5)
+        self.keyboard.type(self.input)
+        hud_search_string = self.hud.search_string
+        self.deactivate_ibus()
+        self.hud.ensure_hidden()
+
+        self.assertEqual(self.result, hud_search_string)
 
 
 class IBusTestsAnthy(IBusTests):
@@ -118,19 +133,33 @@ class IBusTestsAnthy(IBusTests):
         ]
         )
 
-    def test_simple_input(self):
+    def test_simple_input_dash(self):
         self.activate_input_engine_or_skip("anthy")
         self.dash.ensure_visible()
         sleep(0.5)
         self.activate_ibus()
         sleep(0.5)
-        self.kb.type(self.input)
-        self.kb.press_and_release(self.commit_key)
-        dash_search_string = self.dash.get_searchbar().search_string
+        self.keyboard.type(self.input)
+        self.keyboard.press_and_release(self.commit_key)
+        dash_search_string = self.dash.search_string
         self.deactivate_ibus()
         self.dash.ensure_hidden()
 
         self.assertEqual(self.result, dash_search_string)
+
+    def test_simple_input_hud(self):
+        self.activate_input_engine_or_skip("anthy")
+        self.hud.ensure_visible()
+        sleep(0.5)
+        self.activate_ibus()
+        sleep(0.5)
+        self.keyboard.type(self.input)
+        self.keyboard.press_and_release(self.commit_key)
+        hud_search_string = self.hud.search_string
+        self.deactivate_ibus()
+        self.hud.ensure_hidden()
+
+        self.assertEqual(self.result, hud_search_string)
 
 
 class IBusTestsPinyinIgnore(IBusTests):
@@ -142,9 +171,9 @@ class IBusTestsPinyinIgnore(IBusTests):
         sleep(0.5)
         self.activate_ibus()
         sleep(0.5)
-        self.kb.type("cipan")
-        self.kb.press_and_release("Tab")
-        self.kb.type("  ")
+        self.keyboard.type("cipan")
+        self.keyboard.press_and_release("Tab")
+        self.keyboard.type("  ")
         dash_search_string = self.dash.get_searchbar().search_string
         self.deactivate_ibus()
         self.dash.ensure_hidden()
@@ -153,18 +182,18 @@ class IBusTestsPinyinIgnore(IBusTests):
 
     def test_ignore_key_events_on_hud(self):
         self.activate_input_engine_or_skip("pinyin")
-        self.hud.toggle_reveal()
+        self.hud.ensure_visible()
         sleep(0.5)
-        self.kb.type("date")
+        self.keyboard.type("a")
         self.activate_ibus()
         sleep(0.5)
-        self.kb.type("riqi")
+        self.keyboard.type("riqi")
         old_selected = self.hud.selected_button
         for i in range(5):
             self.keyboard.press_and_release("Down")
-        new_selected = self.hud.selected_button
+        new_selected = self.hud.selectedaaa_button
         self.deactivate_ibus()
-        self.hud.toggle_reveal()
+        self.hud.ensure_hidden()
         
         self.assertEqual(old_selected, new_selected)
 
@@ -178,9 +207,9 @@ class IBusTestsAnthyIgnore(IBusTests):
         sleep(0.5)
         self.activate_ibus()
         sleep(0.5)
-        self.kb.type("shisutemu ")
-        self.kb.press_and_release("Tab")
-        self.kb.press_and_release("Ctrl+j")
+        self.keyboard.type("shisutemu ")
+        self.keyboard.press_and_release("Tab")
+        self.keyboard.press_and_release("Ctrl+j")
         dash_search_string = self.dash.get_searchbar().search_string
         self.deactivate_ibus()
         self.dash.ensure_hidden()
@@ -189,16 +218,16 @@ class IBusTestsAnthyIgnore(IBusTests):
 
     def test_ignore_key_events_on_hud(self):
         self.activate_input_engine_or_skip("anthy")
-        self.hud.toggle_reveal()
+        self.hud.ensure_visible()
         sleep(0.5)
-        self.kb.type("date")
+        self.keyboard.type("a")
         self.activate_ibus()
         sleep(0.5)
-        self.kb.type("hiduke")
+        self.keyboard.type("hiduke")
         old_selected = self.hud.selected_button
-        self.kb.press_and_release("Down")
+        self.keyboard.press_and_release("Down")
         new_selected = self.hud.selected_button
         self.deactivate_ibus()
-        self.hud.toggle_reveal()
+        self.hud.ensure_hidden()
 
         self.assertEqual(old_selected, new_selected)

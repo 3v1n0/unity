@@ -625,6 +625,14 @@ float Launcher::GetAutohidePositionMax() const
 
 float Launcher::IconVisibleProgress(AbstractLauncherIcon::Ptr icon, struct timespec const& current) const
 {
+  if (!icon->IsVisibleOnMonitor(monitor))
+    return 0.0f;
+
+  if (icon->GetIconType() == AbstractLauncherIcon::TYPE_HUD)
+  {
+    return (icon->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE)) ? 1.0f : 0.0f;
+  }
+
   if (icon->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE))
   {
     struct timespec icon_visible_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_VISIBLE);
@@ -707,6 +715,9 @@ float Launcher::IconDropDimValue(AbstractLauncherIcon::Ptr icon, struct timespec
 
 float Launcher::IconDesatValue(AbstractLauncherIcon::Ptr icon, struct timespec const& current) const
 {
+  if (!IsOverlayOpen())
+    return 1.0f;
+
   struct timespec dim_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_DESAT);
   int ms = unity::TimeUtil::TimeDelta(&current, &dim_time);
   float result = CLAMP((float) ms / (float) ANIM_DURATION_SHORT_SHORT, 0.0f, 1.0f);
@@ -879,7 +890,7 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
 {
   float desat_value = IconDesatValue(icon, current);
   arg.icon                = icon.GetPointer();
-  arg.alpha               = 0.5f + 0.5f * desat_value;
+  arg.alpha               = 0.2f + 0.8f * desat_value;
   arg.saturation          = desat_value;
   arg.colorify            = nux::color::White;
   arg.running_arrow       = icon->GetQuirk(AbstractLauncherIcon::QUIRK_RUNNING);
@@ -895,24 +906,32 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
   arg.progress_bias       = IconProgressBias(icon, current);
   arg.progress            = CLAMP(icon->GetProgress(), 0.0f, 1.0f);
   arg.draw_shortcut       = _shortcuts_shown && !_hide_machine->GetQuirk(LauncherHideMachine::PLACES_VISIBLE);
-  arg.system_item         = icon->GetIconType() == AbstractLauncherIcon::TYPE_HOME;
+  arg.system_item         = icon->GetIconType() == AbstractLauncherIcon::TYPE_HOME    ||
+                            icon->GetIconType() == AbstractLauncherIcon::TYPE_HUD;
   arg.colorify_background = icon->GetIconType() == AbstractLauncherIcon::TYPE_HOME    ||
+                            icon->GetIconType() == AbstractLauncherIcon::TYPE_HUD     ||
                             icon->GetIconType() == AbstractLauncherIcon::TYPE_TRASH   ||
                             icon->GetIconType() == AbstractLauncherIcon::TYPE_DESKTOP ||
                             icon->GetIconType() == AbstractLauncherIcon::TYPE_DEVICE  ||
                             icon->GetIconType() == AbstractLauncherIcon::TYPE_EXPO;
 
   // trying to protect against flickering when icon is dragged from dash LP: #863230
-  if (arg.alpha < 0.5)
+  if (arg.alpha < 0.2)
   {
-    arg.alpha = 0.5;
+    arg.alpha = 0.2;
     arg.saturation = 0.0;
   }
 
-  if (IsOverlayOpen())
-    arg.active_arrow = icon->GetIconType() == AbstractLauncherIcon::TYPE_HOME;
-  else
-    arg.active_arrow = icon->GetQuirk(AbstractLauncherIcon::QUIRK_ACTIVE);
+  arg.active_arrow = icon->GetQuirk(AbstractLauncherIcon::QUIRK_ACTIVE);
+
+  /* BFB or HUD icons don't need the active arrow if the overaly is opened
+   * in another monitor */
+  if (arg.active_arrow && !IsOverlayOpen() &&
+      (icon->GetIconType() == AbstractLauncherIcon::TYPE_HOME ||
+       icon->GetIconType() == AbstractLauncherIcon::TYPE_HUD))
+  {
+    arg.active_arrow = false;
+  }
 
   if (options()->show_for_all)
     arg.running_on_viewport = icon->WindowVisibleOnViewport();
@@ -939,7 +958,7 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
   else
   {
     if (options()->show_for_all)
-      arg.window_indicators = std::max<int> (icon->Windows().size(), 1);
+      arg.window_indicators = std::max<int> (icon->WindowsOnViewport().size(), 1);
     else
       arg.window_indicators = std::max<int> (icon->WindowsForMonitor(monitor).size(), 1);
   }
@@ -997,9 +1016,9 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr icon,
     arg.alpha *= drop_dim_value;
 
   // trying to protect against flickering when icon is dragged from dash LP: #863230
-  if (arg.alpha < 0.5)
+  if (arg.alpha < 0.2)
   {
-    arg.alpha = 0.5;
+    arg.alpha = 0.2;
     arg.saturation = 0.0;
   }
 
@@ -1299,8 +1318,12 @@ void Launcher::DesaturateIcons()
 {
   for (auto icon : *_model)
   {
-    if (icon->GetIconType () != AbstractLauncherIcon::TYPE_HOME)
+    if (icon->GetIconType () != AbstractLauncherIcon::TYPE_HOME &&
+        icon->GetIconType () != AbstractLauncherIcon::TYPE_HUD)
+    {
       icon->SetQuirk(AbstractLauncherIcon::QUIRK_DESAT, true);
+    }
+
     icon->HideTooltip();
   }
 }
@@ -1769,6 +1792,11 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
   Resize();
 }
 
+int Launcher::GetIconSize() const
+{
+    return _icon_size;
+}
+
 void Launcher::Resize()
 {
   UScreen* uscreen = UScreen::GetDefault();
@@ -1814,6 +1842,9 @@ void Launcher::SetModel(LauncherModel* model)
 {
   _model = model;
 
+  for (auto icon : *_model)
+    icon->needs_redraw.connect(sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
+
   _model->icon_added.connect(sigc::mem_fun(this, &Launcher::OnIconAdded));
   _model->icon_removed.connect(sigc::mem_fun(this, &Launcher::OnIconRemoved));
   _model->order_changed.connect(sigc::mem_fun(this, &Launcher::OnOrderChanged));
@@ -1832,7 +1863,7 @@ void Launcher::EnsureIconOnScreen(AbstractLauncherIcon::Ptr selection)
   int natural_y = 0;
   for (auto icon : *_model)
   {
-    if (!icon->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE))
+    if (!icon->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE) || !icon->IsVisibleOnMonitor(monitor))
       continue;
 
     if (icon == selection)
@@ -2048,11 +2079,11 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                               nux::Geometry(bkg_box.x,
                                             bkg_box.y,
                                             bkg_box.width,
-                                            20),
-                              nux::Color(0x60000000),
+                                            8),
+                              nux::Color(0x70000000),
                               nux::Color(0x00000000),
                               nux::Color(0x00000000),
-                              nux::Color(0x60000000));
+                              nux::Color(0x70000000));
   }
 
   // FIXME: can be removed for a bgk_box->SetAlpha once implemented
@@ -2569,7 +2600,7 @@ AbstractLauncherIcon::Ptr Launcher::MouseIconIntersection(int x, int y)
 
   for (it = _model->begin(); it != _model->end(); it++)
   {
-    if (!(*it)->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE))
+    if (!(*it)->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE) || !(*it)->IsVisibleOnMonitor(monitor))
       continue;
 
     nux::Point2 screen_coord [4];
@@ -2818,7 +2849,7 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
     _drag_action = nux::DNDACTION_COPY;
     if (!_dnd_hovered_icon && hovered_icon_is_appropriate)
     {
-      _dnd_hovered_icon = new SpacerLauncherIcon();
+      _dnd_hovered_icon = new SpacerLauncherIcon(monitor());
       _dnd_hovered_icon->SetSortPriority(G_MAXINT);
       _model->AddIcon(_dnd_hovered_icon);
       _model->ReorderBefore(_dnd_hovered_icon, hovered_icon, true);
@@ -2952,7 +2983,8 @@ Launcher::handle_dbus_method_call(GDBusConnection*       connection,
     g_variant_get(parameters, "(ssiiiss)", &title, &icon, &icon_x, &icon_y, &icon_size, &desktop_file, &aptdaemon_task, NULL);
 
     Launcher* self = (Launcher*)user_data;
-    self->launcher_addrequest_special.emit(desktop_file, AbstractLauncherIcon::Ptr(), aptdaemon_task, icon);
+    self->launcher_addrequest_special.emit(desktop_file, AbstractLauncherIcon::Ptr(), aptdaemon_task, icon,
+                                            icon_x, icon_y, icon_size);
 
     g_dbus_method_invocation_return_value(invocation, nullptr);
     g_free(icon);

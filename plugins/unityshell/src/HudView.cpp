@@ -20,19 +20,11 @@
 
 #include <math.h>
 
-#include <gio/gdesktopappinfo.h>
 #include <glib/gi18n-lib.h>
-#include <gtk/gtk.h>
-#include <Nux/Button.h>
-#include <iostream>
-#include <sstream>
-
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
-#include <UnityCore/RadioOptionFilter.h>
 #include <UnityCore/Variant.h>
 #include <Nux/HLayout.h>
-#include <Nux/LayeredLayout.h>
 
 #include <NuxCore/Logger.h>
 #include "HudButton.h"
@@ -47,10 +39,19 @@ namespace hud
 namespace
 {
 nux::logging::Logger logger("unity.hud.view");
-int icon_size = 42;
+const int icon_size = 46;
 const std::string default_text = _("Type your command");
 const int grow_anim_length = 90 * 1000;
 const int pause_before_grow_length = 32 * 1000;
+
+const int default_width = 1024;
+const int default_height = 276;
+const int content_width = 941;
+
+const int top_padding = 11;
+const int bottom_padding = 9;
+const int left_padding = 11;
+const int right_padding = 0;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(View);
@@ -64,7 +65,7 @@ View::View()
   , current_height_(0)
   , timeline_need_more_draw_(false)
   , selected_button_(0)
-  , icon_state_(IconHideState::SHOW)
+  , show_embedded_icon_(true)
 {
   renderer_.SetOwner(this);
   renderer_.need_redraw.connect([this] () {
@@ -122,7 +123,6 @@ View::View()
 
 View::~View()
 {
-  RemoveChild(search_bar_.GetPointer());
   for (auto button = buttons_.begin(); button != buttons_.end(); button++)
   {
     RemoveChild((*button).GetPointer());
@@ -181,8 +181,7 @@ void View::Relayout()
   LOG_DEBUG(logger) << "content_geo: " << content_geo_.width << "x" << content_geo_.height;
 
   layout_->SetMinimumWidth(content_geo_.width);
-  layout_->SetMaximumWidth(content_geo_.width);
-  layout_->SetMaximumHeight(content_geo_.height);
+  layout_->SetMaximumSize(content_geo_.width, content_geo_.height);
 
   QueueDraw();
 }
@@ -254,7 +253,7 @@ void View::SetQueries(Hud::Queries queries)
     button->is_rounded = (query == --(queries.end())) ? true : false;
     button->fake_focused = (query == (queries.begin())) ? true : false;
 
-    button->SetMinimumWidth(941);
+    button->SetMinimumWidth(content_width);
     found_items++;
   }
   if (found_items)
@@ -267,22 +266,29 @@ void View::SetQueries(Hud::Queries queries)
 void View::SetIcon(std::string icon_name)
 {
   LOG_DEBUG(logger) << "Setting icon to " << icon_name;
-  icon_->SetByIconName(icon_name.c_str(), icon_size);
+  icon_->SetByIconName(icon_name, icon_size);
   QueueDraw();
 }
 
-void View::SetHideIcon(IconHideState hide_icon)
+void View::ShowEmbeddedIcon(bool show)
 {
   LOG_DEBUG(logger) << "Hide icon called";
-  if (hide_icon == icon_state_)
+  if (show == show_embedded_icon_)
     return;
 
-  icon_state_ = hide_icon;
+  show_embedded_icon_ = show;
 
-  if (icon_state_ == IconHideState::HIDE)
-    layout_->RemoveChildObject(dynamic_cast<nux::Area*>(icon_layout_.GetPointer()));
+  if (show_embedded_icon_)
+  {
+    layout_->AddView(icon_.GetPointer(), 0, nux::MINOR_POSITION_LEFT,
+                     nux::MINOR_SIZE_FULL, 100.0f, nux::LayoutPosition::NUX_LAYOUT_BEGIN);
+    AddChild(icon_.GetPointer());
+  }
   else
-    layout_->AddLayout(icon_layout_.GetPointer(), 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT, 100.0f, nux::LayoutPosition::NUX_LAYOUT_BEGIN);
+  {
+    layout_->RemoveChildObject(icon_.GetPointer());
+    RemoveChild(icon_.GetPointer());
+  }
 
   Relayout();
 }
@@ -294,13 +300,12 @@ nux::Geometry View::GetBestFitGeometry(nux::Geometry const& for_geo)
 {
   //FIXME - remove magic values, replace with scalable text depending on DPI
   // requires smarter font settings really...
-  int width, height = 0;
-  width = 1024;
-  height = 276;
+  int width = default_width;
+  int height = default_height;
 
-  if (icon_state_ == IconHideState::HIDE)
+  if (!show_embedded_icon_)
   {
-    width -= icon_layout_->GetGeometry().width;
+    width -= icon_->GetGeometry().width;
   }
 
   LOG_DEBUG (logger) << "best fit is, " << width << ", " << height;
@@ -326,15 +331,6 @@ void View::SetWindowGeometry(nux::Geometry const& absolute_geo, nux::Geometry co
   absolute_window_geometry_ = absolute_geo;
 }
 
-namespace
-{
-  const int top_spacing = 9;
-  const int content_width = 941;
-  const int icon_vertical_margin = 5;
-  const int spacing_between_icon_and_content = 8;
-  const int bottom_padding = 10;
-}
-
 void View::SetupViews()
 {
   dash::Style& style = dash::Style::Instance();
@@ -342,32 +338,24 @@ void View::SetupViews()
   nux::VLayout* super_layout = new nux::VLayout(); 
   layout_ = new nux::HLayout();
   {
-    // fill icon layout with icon
-    icon_ = new Icon("", icon_size, true);
-    icon_layout_ = new nux::VLayout();
+    // fill layout with icon
+    icon_ = new Icon("", icon_size);
     {
-      icon_layout_->SetVerticalExternalMargin(icon_vertical_margin);
-      icon_layout_->AddView(icon_.GetPointer(), 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
-      layout_->AddLayout(icon_layout_.GetPointer(), 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT);
+      AddChild(icon_.GetPointer());
+      layout_->AddView(icon_.GetPointer(), 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
     }
-
-    // add padding to layout between icon and content
-    layout_->AddLayout(new nux::SpaceLayout(spacing_between_icon_and_content,
-                                            spacing_between_icon_and_content,
-                                            spacing_between_icon_and_content,
-                                            spacing_between_icon_and_content), 0);
 
     // fill the content layout
     content_layout_ = new nux::VLayout();
     {
-      // add the top spacing
-      content_layout_->AddLayout(new nux::SpaceLayout(top_spacing,top_spacing,top_spacing,top_spacing), 0);
+      // Set the layout paddings
+      content_layout_->SetLeftAndRightPadding(left_padding, right_padding);
+      content_layout_->SetTopAndBottomPadding(top_padding, bottom_padding);
 
       // add the search bar to the composite
-      search_bar_ = new unity::SearchBar(content_width, true);
-      search_bar_->disable_glow = true;
-      search_bar_->SetMinimumHeight(style.GetSearchBarHeight() + style.SEARCH_BAR_EXTRA_PADDING * 2);
-      search_bar_->SetMaximumHeight(style.GetSearchBarHeight() + style.SEARCH_BAR_EXTRA_PADDING * 2);
+      search_bar_ = new unity::SearchBar(true);
+      search_bar_->SetMinimumHeight(style.GetSearchBarHeight());
+      search_bar_->SetMaximumHeight(style.GetSearchBarHeight());
       search_bar_->search_hint = default_text;
       search_bar_->search_changed.connect(sigc::mem_fun(this, &View::OnSearchChanged));
       AddChild(search_bar_.GetPointer());
@@ -377,10 +365,6 @@ void View::SetupViews()
       button_views_->SetMaximumWidth(content_width);
 
       content_layout_->AddLayout(button_views_.GetPointer(), 1, nux::MINOR_POSITION_LEFT);
-      content_layout_->AddLayout(new nux::SpaceLayout(bottom_padding,
-                                                      bottom_padding,
-                                                      bottom_padding,
-                                                      bottom_padding), 0);
     }
 
     layout_->AddLayout(content_layout_.GetPointer(), 1, nux::MINOR_POSITION_TOP);
@@ -486,6 +470,7 @@ void View::AddProperties(GVariantBuilder* builder)
 {
   unsigned num_buttons = buttons_.size();
   variant::BuilderWrapper(builder)
+    .add(GetGeometry())
     .add("selected_button", selected_button_)
     .add("num_buttons", num_buttons);
 }

@@ -102,11 +102,13 @@ public:
 
   int SortPriority();
 
-  virtual std::vector<Window> Windows () { return std::vector<Window> (); }
+  virtual std::vector<Window> Windows() { return std::vector<Window> (); }
 
-  virtual std::vector<Window> WindowsForMonitor (int monitor) { return std::vector<Window> (); }
+  virtual std::vector<Window> WindowsOnViewport() { return std::vector<Window> (); }
 
-  virtual std::string NameForWindow (Window window) { return std::string(); }
+  virtual std::vector<Window> WindowsForMonitor(int monitor) { return std::vector<Window> (); }
+
+  virtual std::string NameForWindow(Window window) { return std::string(); }
 
   const bool WindowVisibleOnMonitor(int monitor);
 
@@ -121,9 +123,9 @@ public:
 
   float GetProgress();
 
-  void SetEmblemIconName(const char* name);
+  void SetEmblemIconName(std::string const& name);
 
-  void SetEmblemText(const char* text);
+  void SetEmblemText(std::string const& text);
 
   void DeleteEmblem();
 
@@ -149,7 +151,7 @@ public:
 
   virtual nux::Color GlowColor();
 
-  const gchar* RemoteUri()
+  std::string RemoteUri()
   {
     return GetRemoteUri();
   }
@@ -160,9 +162,9 @@ public:
 
   std::list<DbusmenuMenuitem*> Menus();
 
-  void InsertEntryRemote(LauncherEntryRemote* remote);
+  void InsertEntryRemote(LauncherEntryRemote::Ptr const& remote);
 
-  void RemoveEntryRemote(LauncherEntryRemote* remote);
+  void RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote);
 
   nux::DndAction QueryAcceptDrop(unity::DndData& dnd_data)
   {
@@ -192,10 +194,14 @@ public:
 
   virtual bool IsVisible() const { return false; }
 
+  virtual bool IsVisibleOnMonitor(int monitor) const;
+
+  virtual void SetVisibleOnMonitor(int monitor, bool visible);
+
   virtual void AboutToRemove() {}
-  
+
   virtual void Stick(bool save = true) {}
-  
+
   virtual void UnStick() {}
 
 protected:
@@ -229,9 +235,9 @@ protected:
 
   virtual void OnCenterStabilized(std::vector<nux::Point3> center) {}
 
-  virtual const gchar* GetRemoteUri()
+  virtual std::string GetRemoteUri()
   {
-    return 0;
+    return "";
   }
 
   virtual nux::DndAction OnQueryAcceptDrop(unity::DndData& dnd_data)
@@ -251,11 +257,11 @@ protected:
 
   virtual bool HandlesSpread () { return false; }
 
-  nux::BaseTexture* TextureFromGtkTheme(const char* name, int size, bool update_glow_colors = true);
+  nux::BaseTexture* TextureFromGtkTheme(std::string name, int size, bool update_glow_colors = true);
 
-  nux::BaseTexture* TextureFromSpecificGtkTheme(GtkIconTheme* theme, const char* name, int size, bool update_glow_colors = true, bool is_default_theme = false);
+  nux::BaseTexture* TextureFromSpecificGtkTheme(GtkIconTheme* theme, std::string const& name, int size, bool update_glow_colors = true, bool is_default_theme = false);
 
-  nux::BaseTexture* TextureFromPath(const char* name, int size, bool update_glow_colors = true);
+  nux::BaseTexture* TextureFromPath(std::string const& name, int size, bool update_glow_colors = true);
 
   static bool        IsMonoDefaultTheme();
 
@@ -284,7 +290,7 @@ protected:
   // This looks like a case for boost::logical::tribool
   static int _current_theme_is_mono;
 
-  DbusmenuClient* _menuclient_dynamic_quicklist;
+  glib::Object<DbusmenuClient> _menuclient_dynamic_quicklist;
 
 private:
   typedef struct
@@ -321,9 +327,10 @@ private:
   gint64            _shortcut;
 
   IconType                 _icon_type;
-  
+
   std::vector<nux::Point3> _center;
   std::vector<bool> _has_visible_window;
+  std::vector<bool> _is_visible_on_monitor;
   std::vector<nux::Point3> _last_stable;
   std::vector<nux::Geometry> _parent_geo;
   std::vector<nux::Point3> _saved_center;
@@ -335,7 +342,7 @@ private:
   bool             _quirks[QUIRK_LAST];
   struct timespec  _quirk_times[QUIRK_LAST];
 
-  std::list<LauncherEntryRemote*> _entry_list;
+  std::list<LauncherEntryRemote::Ptr> _entry_list;
 };
 
 }

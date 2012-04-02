@@ -176,17 +176,17 @@ void DashView::SetupViews()
   SetLayout(layout_);
 
   content_layout_ = new DashLayout(NUX_TRACKER_LOCATION);
-  content_layout_->SetTopAndBottomPadding(style.GetDashViewTopPadding() - style.SEARCH_BAR_EXTRA_PADDING, 0);
+  content_layout_->SetTopAndBottomPadding(style.GetDashViewTopPadding(), 0);
   layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
 
   search_bar_layout_ = new nux::HLayout();
-  search_bar_layout_->SetLeftAndRightPadding(style.GetSearchBarLeftPadding() - style.SEARCH_BAR_EXTRA_PADDING, style.GetSearchBarLeftPadding() - style.GetFilterResultsHighlightRightPadding() - style.SEARCH_BAR_EXTRA_PADDING);
+  search_bar_layout_->SetLeftAndRightPadding(style.GetSearchBarLeftPadding(), 0);
   content_layout_->AddLayout(search_bar_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   search_bar_ = new SearchBar();
   AddChild(search_bar_);
-  search_bar_->SetMinimumHeight(style.GetSearchBarHeight() + style.SEARCH_BAR_EXTRA_PADDING * 2);
-  search_bar_->SetMaximumHeight(style.GetSearchBarHeight() + style.SEARCH_BAR_EXTRA_PADDING * 2);
+  search_bar_->SetMinimumHeight(style.GetSearchBarHeight());
+  search_bar_->SetMaximumHeight(style.GetSearchBarHeight());
   search_bar_->activated.connect(sigc::mem_fun(this, &DashView::OnEntryActivated));
   search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
   search_bar_->live_search_reached.connect(sigc::mem_fun(this, &DashView::OnLiveSearchReached));
@@ -269,12 +269,14 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 
   width = MAX(width, tile_width * 6);
 
-  width += 19 + 40; // add the left padding and the group plugin padding
+  width += 20 + 40; // add the left padding and the group plugin padding
 
   height = search_bar_->GetGeometry().height;
   height += tile_height * 3;
-  height += 46 * 3; // adding three group headers
-  //height += lens_bar_->GetGeometry().height;
+  height += (style.GetPlacesGroupTopSpace() - 2 + 24 + 8) * 3; // adding three group headers
+  height += 1*2; // hseparator height
+  height += style.GetDashViewTopPadding();
+  height += lens_bar_->GetGeometry().height;
 
   if (for_geo.width > 800 && for_geo.height > 550)
   {
@@ -455,6 +457,14 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
   lens->activated.connect(sigc::mem_fun(this, &DashView::OnUriActivatedReply));
   lens->search_finished.connect(sigc::mem_fun(this, &DashView::OnSearchFinished));
   // global search done is handled by the home lens, no need to connect to it
+  // BUT, we will special case global search finished coming from 
+  // the applications lens, because we want to be able to launch applications
+  // immediately without waiting for the search finished signal which will
+  // be delayed by all the lenses we're searching
+  if (id == "applications.lens")
+  {
+    lens->global_search_finished.connect(sigc::mem_fun(this, &DashView::OnAppsGlobalSearchFinished));
+  }
 }
 
 void DashView::OnLensBarActivated(std::string const& id)
@@ -527,6 +537,22 @@ void DashView::OnGlobalSearchFinished(Lens::Hints const& hints)
 {
   if (active_lens_view_ == home_view_)
     OnSearchFinished(hints);
+}
+
+void DashView::OnAppsGlobalSearchFinished(Lens::Hints const& hints)
+{
+  if (active_lens_view_ == home_view_)
+  {
+    /* HACKITY HACK! We're resetting the state of search_in_progress when
+     * doing searches in the home lens and we get results from apps lens.
+     * This way typing a search query and pressing enter immediately will
+     * wait for the apps lens results and will run correct application.
+     * See lp:966417 and lp:856206 for more info about why we do this.
+     */
+    search_in_progress_ = false;
+    if (activate_on_finish_)
+      this->OnEntryActivated();
+  }
 }
 
 void DashView::OnUriActivated(std::string const& uri)

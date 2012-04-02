@@ -28,7 +28,7 @@ namespace dash
 NUX_IMPLEMENT_OBJECT_TYPE(LensBarIcon);
 
 LensBarIcon::LensBarIcon(std::string id_, std::string icon_hint)
-  : IconTexture(icon_hint.c_str(), 24)
+  : IconTexture(icon_hint, 24)
   , id(id_)
   , active(false)
   , inactive_opacity_(0.4f)

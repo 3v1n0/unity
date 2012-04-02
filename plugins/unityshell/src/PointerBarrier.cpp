@@ -51,6 +51,9 @@ PointerBarrierWrapper::PointerBarrierWrapper()
 PointerBarrierWrapper::~PointerBarrierWrapper()
 {
   DestroyBarrier();
+
+  if (smoothing_handle_)
+    g_source_remove(smoothing_handle_);
 }
 
 void PointerBarrierWrapper::ConstructBarrier()

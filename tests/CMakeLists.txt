@@ -124,6 +124,7 @@ if (GTEST_SRC_DIR AND
                  test_glib_signals_utils.cpp
                  test_glib_signals_utils.h
                  test_glib_variant.cpp
+                 test_desktop_utilities.cpp
                  ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
                  test_indicator.cpp
                  test_indicator_appmenu.cpp
@@ -132,16 +133,14 @@ if (GTEST_SRC_DIR AND
                  test_favorite_store_gsettings.cpp
                  test_favorite_store_private.cpp
                  test_home_lens.cpp
+                 test_launcher_entry_remote.cpp
                  test_shortcut_model.cpp
                  test_shortcut_private.cpp
                  test_introspection.cpp
                  test_main_xless.cpp
                  test_grabhandle.cpp
                  test_unityshell_private.cpp
-                 test_lensview_impl.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.cpp
-                 ${UNITY_SRC}/AbstractPlacesGroup.cpp
-                 ${UNITY_SRC}/AbstractPlacesGroup.h
                  ${UNITY_SRC}/AbstractShortcutHint.h
                  ${UNITY_SRC}/Animator.cpp
                  ${UNITY_SRC}/DebugDBusInterface.cpp
@@ -150,7 +149,7 @@ if (GTEST_SRC_DIR AND
                  ${UNITY_SRC}/FavoriteStoreGSettings.cpp
                  ${UNITY_SRC}/IconTextureSource.cpp
                  ${UNITY_SRC}/LauncherModel.cpp
-                 ${UNITY_SRC}/LensViewPrivate.cpp
+                 ${UNITY_SRC}/LauncherEntryRemote.cpp
                  ${UNITY_SRC}/FavoriteStorePrivate.cpp
                  ${UNITY_SRC}/MockLauncherIcon.h
                  ${UNITY_SRC}/MockShortcutHint.h
@@ -194,27 +193,57 @@ if (GTEST_SRC_DIR AND
                  test_dashview_impl.cpp
                  test_texture_cache.cpp
                  test_main.cpp
+                 test_lensview_impl.cpp
                  test_icon_loader.cpp
+                 test_single_monitor_launcher_icon.cpp
                  test_switcher_controller.cpp
                  test_switcher_model.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.cpp
+                 ${UNITY_SRC}/AbstractPlacesGroup.cpp
                  ${UNITY_SRC}/BackgroundEffectHelper.cpp
+                 ${UNITY_SRC}/CairoBaseWindow.cpp
                  ${UNITY_SRC}/DashViewPrivate.cpp
-                 ${UNITY_SRC}/TextureCache.cpp
+                 ${UNITY_SRC}/Decaymulator.cpp
+                 ${UNITY_SRC}/DNDCollectionWindow.cpp
+                 ${UNITY_SRC}/DndData.cpp
+                 ${UNITY_SRC}/GeisAdapter.cpp
                  ${UNITY_SRC}/IconLoader.cpp
                  ${UNITY_SRC}/IconRenderer.cpp
                  ${UNITY_SRC}/IconTextureSource.cpp
                  ${UNITY_SRC}/Introspectable.cpp
                  ${UNITY_SRC}/LayoutSystem.cpp
+                 ${UNITY_SRC}/Launcher.cpp
+                 ${UNITY_SRC}/LauncherDragWindow.cpp
+                 ${UNITY_SRC}/LauncherEntryRemote.cpp
+                 ${UNITY_SRC}/LauncherHideMachine.cpp
+                 ${UNITY_SRC}/LauncherHoverMachine.cpp
+                 ${UNITY_SRC}/LauncherIcon.cpp
+                 ${UNITY_SRC}/LauncherModel.cpp
+                 ${UNITY_SRC}/SimpleLauncherIcon.cpp
+                 ${UNITY_SRC}/SingleMonitorLauncherIcon.cpp
+                 ${UNITY_SRC}/LensViewPrivate.cpp
                  ${UNITY_SRC}/StaticCairoText.cpp
                  ${UNITY_SRC}/SwitcherController.cpp
                  ${UNITY_SRC}/SwitcherModel.cpp
                  ${UNITY_SRC}/SwitcherView.cpp
                  ${UNITY_SRC}/Timer.cpp
+                 ${UNITY_SRC}/Tooltip.cpp
+                 ${UNITY_SRC}/PanelStyle.cpp
+                 ${UNITY_SRC}/PointerBarrier.cpp
+                 ${UNITY_SRC}/QuicklistView.cpp
+                 ${UNITY_SRC}/QuicklistManager.cpp
+                 ${UNITY_SRC}/QuicklistMenuItem.cpp
+                 ${UNITY_SRC}/QuicklistMenuItemCheckmark.cpp
+                 ${UNITY_SRC}/QuicklistMenuItemLabel.cpp
+                 ${UNITY_SRC}/QuicklistMenuItemRadio.cpp
+                 ${UNITY_SRC}/QuicklistMenuItemSeparator.cpp
+                 ${UNITY_SRC}/SpacerLauncherIcon.cpp
+                 ${UNITY_SRC}/TextureCache.cpp
                  ${UNITY_SRC}/UBusWrapper.cpp
                  ${UNITY_SRC}/UnityWindowStyle.cpp
                  ${UNITY_SRC}/UnityWindowView.cpp
                  ${UNITY_SRC}/ubus-server.cpp
+                 ${UNITY_SRC}/UScreen.cpp
                  ${UNITY_SRC}/WindowManager.cpp
                 )
   target_link_libraries(test-gtest gtest)

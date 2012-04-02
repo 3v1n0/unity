@@ -136,11 +136,11 @@ class Switcher(KeybindingsHelper):
             return None
 
     def get_icon_name(self, index):
-        return self.__get_icon(index)['tooltip-text']
+        return self.__get_icon(index)['tooltip_text']
 
     def get_icon_desktop_file(self, index):
         try:
-            return self.__get_icon(index)['desktop-file']
+            return self.__get_icon(index)['desktop_file']
         except:
             return None
 
