@@ -36,6 +36,8 @@ nux::logging::Logger logger("unity.indicators");
 
 namespace unity
 {
+using namespace indicator;
+
 NUX_IMPLEMENT_OBJECT_TYPE(PanelIndicatorsView);
 
 PanelIndicatorsView::PanelIndicatorsView()
@@ -60,7 +62,7 @@ PanelIndicatorsView::~PanelIndicatorsView()
 }
 
 void
-PanelIndicatorsView::AddIndicator(indicator::Indicator::Ptr const& indicator)
+PanelIndicatorsView::AddIndicator(Indicator::Ptr const& indicator)
 {
   LOG_DEBUG(logger) << "IndicatorAdded: " << indicator->name();
   indicators_.push_back(indicator);
@@ -77,7 +79,7 @@ PanelIndicatorsView::AddIndicator(indicator::Indicator::Ptr const& indicator)
 }
 
 void
-PanelIndicatorsView::RemoveIndicator(indicator::Indicator::Ptr const& indicator)
+PanelIndicatorsView::RemoveIndicator(Indicator::Ptr const& indicator)
 {
   auto connections = indicators_connections_.find(indicator);
 
@@ -197,7 +199,7 @@ PanelIndicatorsView::ActivateIfSensitive()
 }
 
 void
-PanelIndicatorsView::GetGeometryForSync(indicator::EntryLocationMap& locations)
+PanelIndicatorsView::GetGeometryForSync(EntryLocationMap& locations)
 {
   for (auto entry : entries_)
     entry.second->GetGeometryForSync(locations);
@@ -304,7 +306,7 @@ PanelIndicatorsView::AddEntryView(PanelIndicatorEntryView* view,
 }
 
 PanelIndicatorEntryView *
-PanelIndicatorsView::AddEntry(indicator::Entry::Ptr const& entry, int padding,
+PanelIndicatorsView::AddEntry(Entry::Ptr const& entry, int padding,
                               IndicatorEntryPosition pos, IndicatorEntryType type)
 {
   auto view = new PanelIndicatorEntryView(entry, padding, type);
@@ -314,7 +316,7 @@ PanelIndicatorsView::AddEntry(indicator::Entry::Ptr const& entry, int padding,
 }
 
 void
-PanelIndicatorsView::OnEntryAdded(indicator::Entry::Ptr const& entry)
+PanelIndicatorsView::OnEntryAdded(Entry::Ptr const& entry)
 {
   AddEntry(entry);
 }
@@ -357,17 +359,17 @@ PanelIndicatorsView::OnEntryRemoved(std::string const& entry_id)
 }
 
 void
-PanelIndicatorsView::OveralyShown()
+PanelIndicatorsView::OverlayShown()
 {
   for (auto entry: entries_)
-    entry.second->OveralyShown();
+    entry.second->OverlayShown();
 }
 
 void
-PanelIndicatorsView::OveralyHidden()
+PanelIndicatorsView::OverlayHidden()
 {
   for (auto entry: entries_)
-    entry.second->OveralyHidden();
+    entry.second->OverlayHidden();
 }
 
 double
