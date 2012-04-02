@@ -55,7 +55,7 @@ public:
   std::string GetEntryID() const;
   int GetEntryPriority() const;
 
-  virtual std::string GetLabel();
+  virtual std::string GetLabel() const;
   virtual bool IsLabelVisible() const;
   virtual bool IsLabelSensitive() const;
 
