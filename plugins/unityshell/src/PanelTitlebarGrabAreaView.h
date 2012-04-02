@@ -33,7 +33,7 @@ namespace unity
 class PanelTitlebarGrabArea : public nux::InputArea, public unity::debug::Introspectable
 {
   /* This acts a bit like a decorator, it can be clicked or grabbed (such that
-   * we can pullthe window down) */
+   * we can pull the window down) */
 
 public:
   PanelTitlebarGrabArea();
