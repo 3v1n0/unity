@@ -170,7 +170,7 @@ def _get_compiz_keybinding(compiz_tuple):
             plugin.ShortDesc)
     if setting.Value == "Disabled":
         raise RuntimeError("Keybinding '%s' in compiz plugin '%s' has been disabled." %
-            setting.ShortDesc, plugin.ShortDesc)
+            (setting.ShortDesc, plugin.ShortDesc))
 
     return _translate_compiz_keystroke_string(setting.Value)
 
