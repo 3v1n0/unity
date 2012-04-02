@@ -6,12 +6,9 @@
 # under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
 
-from subprocess import call
 from testtools.matchers import Equals, NotEquals, Contains, Not
 from time import sleep
 
-from autopilot.emulators.bamf import Bamf
-from autopilot.emulators.unity.switcher import Switcher
 from autopilot.tests import AutopilotTestCase
 
 
@@ -199,6 +196,7 @@ class SwitcherTests(AutopilotTestCase):
         sleep(.2)
 
         self.assertThat(self.switcher.get_is_visible(), Equals(False))
+
 
 class SwitcherDetailsTests(AutopilotTestCase):
     """Test the details mode for the switcher."""

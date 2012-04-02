@@ -14,6 +14,7 @@ from time import sleep
 from autopilot.tests import AutopilotTestCase, multiply_scenarios
 from autopilot.emulators.X11 import ScreenGeometry
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -210,7 +211,6 @@ class LauncherTests(ScenariodLauncherTests):
         launcher_instance.switcher_prev()
         sleep(2)
         self.assertThat(launcher_instance.are_shortcuts_showing(), Equals(False))
-
 
     def test_launcher_switcher_cycling_forward(self):
         """Launcher Switcher must loop through icons when cycling forwards"""

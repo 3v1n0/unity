@@ -8,7 +8,6 @@
 
 from time import sleep
 
-from autopilot.emulators.unity.dash import Dash
 from autopilot.tests import AutopilotTestCase
 
 

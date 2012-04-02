@@ -6,7 +6,7 @@
 # under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
 
-"Functions to deal with ibus service."
+"""Functions to deal with ibus service."""
 
 # without this the 'import ibus' imports us, and import ibus.common fails. 0.O
 from __future__ import absolute_import
@@ -15,6 +15,7 @@ import ibus.common
 import os
 import logging
 from time import sleep
+
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +47,7 @@ def get_active_input_engines():
     bus = get_ibus_bus()
     return [e.name for e in bus.list_active_engines()]
 
+
 def set_active_engines(engine_list):
     """Installs the engines in 'engine_list' into the list of active iBus engines.
 
@@ -75,6 +77,7 @@ def set_active_engines(engine_list):
     bus.exit(restart=True)
     sleep(1)
     return old_engines
+
 
 def set_global_input_engine(engine_name):
     """Set the global iBus input engine by name.

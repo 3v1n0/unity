@@ -15,6 +15,7 @@ from autopilot.emulators.unity.icons import HudLauncherIcon
 from autopilot.tests import AutopilotTestCase, multiply_scenarios
 from os import remove
 
+
 def _make_monitor_scenarios():
     num_monitors = ScreenGeometry().get_num_monitors()
     scenarios = []
@@ -27,11 +28,11 @@ def _make_monitor_scenarios():
 
     return scenarios
 
+
 class HudTestsBase(AutopilotTestCase):
 
     def setUp(self):
         super(HudTestsBase, self).setUp()
-
         sleep(0.25)
 
     def tearDown(self):
@@ -56,7 +57,6 @@ class HudTestsBase(AutopilotTestCase):
             sleep(1)
             if self.hud.visible:
                 break
-
         self.assertTrue(self.hud.visible, "HUD did not appear.")
 
 
@@ -226,7 +226,6 @@ class HudBehaviorTests(HudTestsBase):
         sleep(1)
 
         self.keyboard.type('focus')
-        
         self.assertEqual(self.hud.searchbar.search_string, 'focus')
 
     def test_hud_closes_on_workspace_switch(self):
@@ -236,6 +235,7 @@ class HudBehaviorTests(HudTestsBase):
 
         self.workspace.switch_to(1)
         self.workspace.switch_to(2)
+
 
 class HudLauncherInteractionsTests(HudTestsBase):
 

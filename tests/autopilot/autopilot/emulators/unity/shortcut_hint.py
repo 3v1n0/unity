@@ -9,8 +9,8 @@
 
 import logging
 
-from autopilot.keybindings import KeybindingsHelper
 from autopilot.emulators.unity import UnityIntrospectionObject
+from autopilot.keybindings import KeybindingsHelper
 
 
 logger = logging.getLogger(__name__)
