@@ -213,6 +213,8 @@ void PanelView::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
   .add("backend", "remote")
+  .add("monitor", _monitor)
+  .add("active", IsActive())
   .add(GetGeometry());
 }
 
@@ -519,7 +521,7 @@ void PanelView::OnMenuPointerMoved(int x, int y)
 
 void PanelView::OnEntryActivateRequest(std::string const& entry_id)
 {
-  if (!_menu_view->GetControlsActive())
+  if (!IsActive())
     return;
 
   bool ret;
@@ -613,7 +615,7 @@ bool PanelView::FirstMenuShow()
 {
   bool ret = false;
 
-  if (!_menu_view->GetControlsActive())
+  if (!IsActive())
     return ret;
 
   ret = _menu_view->ActivateIfSensitive();
@@ -633,15 +635,13 @@ void PanelView::SetOpacity(float opacity)
   ForceUpdateBackground();
 }
 
-void
-PanelView::SetMenuShowTimings(int fadein, int fadeout, int discovery,
+void PanelView::SetMenuShowTimings(int fadein, int fadeout, int discovery,
                               int discovery_fadein, int discovery_fadeout)
 {
   _menu_view->SetMenuShowTimings(fadein, fadeout, discovery, discovery_fadein, discovery_fadeout);
 }
 
-void
-PanelView::SetOpacityMaximizedToggle(bool enabled)
+void PanelView::SetOpacityMaximizedToggle(bool enabled)
 {
   if (_opacity_maximized_toggle != enabled)
   {
@@ -677,20 +677,17 @@ PanelView::SetOpacityMaximizedToggle(bool enabled)
   }
 }
 
-bool
-PanelView::GetPrimary()
+bool PanelView::GetPrimary()
 {
   return _is_primary;
 }
 
-void
-PanelView::SetPrimary(bool primary)
+void PanelView::SetPrimary(bool primary)
 {
   _is_primary = primary;
 }
 
-void
-PanelView::SyncGeometries()
+void PanelView::SyncGeometries()
 {
   indicator::EntryLocationMap locations;
   std::string panel_id = GetName() + boost::lexical_cast<std::string>(_monitor);
@@ -702,17 +699,20 @@ PanelView::SyncGeometries()
   _remote->SyncGeometries(panel_id, locations);
 }
 
-void
-PanelView::SetMonitor(int monitor)
+void PanelView::SetMonitor(int monitor)
 {
   _monitor = monitor;
   _menu_view->SetMonitor(monitor);
 }
 
-int
-PanelView::GetMonitor()
+int PanelView::GetMonitor()
 {
   return _monitor;
+}
+
+bool PanelView::IsActive()
+{
+  return _menu_view->GetControlsActive();
 }
 
 } // namespace unity

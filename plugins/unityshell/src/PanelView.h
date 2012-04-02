@@ -54,6 +54,7 @@ public:
   void SetMonitor(int monitor);
   int GetMonitor();
 
+  bool IsActive();
   bool FirstMenuShow();
 
   void SetOpacity(float opacity);
