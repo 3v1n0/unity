@@ -322,7 +322,7 @@ void PanelMenuView::OnFadeOutChanged(double progress)
   QueueDraw();
 }
 
-bool PanelMenuView::DrawMenus()
+bool PanelMenuView::DrawMenus() const
 {
   auto wm = WindowManager::Default();
   bool screen_grabbed = (wm->IsExpoActive() || wm->IsScaleActive());
@@ -339,7 +339,7 @@ bool PanelMenuView::DrawMenus()
   return false;
 }
 
-bool PanelMenuView::DrawWindowButtons()
+bool PanelMenuView::DrawWindowButtons() const
 {
   auto wm = WindowManager::Default();
   bool screen_grabbed = (wm->IsExpoActive() || wm->IsScaleActive());
@@ -703,7 +703,7 @@ std::string PanelMenuView::GetActiveViewName(bool use_appname)
   return label;
 }
 
-void PanelMenuView::DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::string const& label)
+void PanelMenuView::DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::string const& label) const
 {
   using namespace panel;
   cairo_t* cr;
@@ -1292,7 +1292,7 @@ void PanelMenuView::OnWindowMoved(guint xid)
   }
 }
 
-bool PanelMenuView::IsWindowUnderOurControl(Window xid)
+bool PanelMenuView::IsWindowUnderOurControl(Window xid) const
 {
   if (UScreen::GetDefault()->GetMonitors().size() > 1)
   {
@@ -1307,7 +1307,7 @@ bool PanelMenuView::IsWindowUnderOurControl(Window xid)
   return true;
 }
 
-bool PanelMenuView::IsValidWindow(Window xid)
+bool PanelMenuView::IsValidWindow(Window xid) const
 {
   auto wm = WindowManager::Default();
   std::vector<Window> const& our_xids = nux::XInputWindow::NativeHandleList();
@@ -1322,7 +1322,7 @@ bool PanelMenuView::IsValidWindow(Window xid)
   return false;
 }
 
-Window PanelMenuView::GetMaximizedWindow()
+Window PanelMenuView::GetMaximizedWindow() const
 {
   Window window_xid = 0;
 
@@ -1340,7 +1340,7 @@ Window PanelMenuView::GetMaximizedWindow()
   return window_xid;
 }
 
-Window PanelMenuView::GetTopWindow()
+Window PanelMenuView::GetTopWindow() const
 {
   Window window_xid = 0;
   GList* windows = bamf_matcher_get_window_stack_for_monitor(_matcher, _monitor);
@@ -1364,7 +1364,7 @@ Window PanelMenuView::GetTopWindow()
   return window_xid;
 }
 
-BamfWindow* PanelMenuView::GetBamfWindowForXid(Window xid)
+BamfWindow* PanelMenuView::GetBamfWindowForXid(Window xid) const
 {
   BamfWindow* window = nullptr;
 
@@ -1710,12 +1710,12 @@ void PanelMenuView::SetMonitor(int monitor)
   g_list_free(windows);
 }
 
-bool PanelMenuView::GetControlsActive()
+bool PanelMenuView::GetControlsActive() const
 {
   return _we_control_active;
 }
 
-bool PanelMenuView::HasOurWindowFocused()
+bool PanelMenuView::HasOurWindowFocused() const
 {
   return _is_own_window;
 }
