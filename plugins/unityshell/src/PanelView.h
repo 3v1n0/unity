@@ -49,20 +49,20 @@ public:
   ~PanelView();
 
   void SetPrimary(bool primary);
-  bool GetPrimary();
+  bool GetPrimary() const;
 
   void SetMonitor(int monitor);
-  int GetMonitor();
+  int GetMonitor() const;
 
-  bool IsActive();
-  bool FirstMenuShow();
+  bool IsActive() const;
+  bool FirstMenuShow() const;
 
   void SetOpacity(float opacity);
   void SetOpacityMaximizedToggle(bool enabled);
   void SetMenuShowTimings(int fadein, int fadeout, int discovery,
                           int discovery_fadein, int discovery_fadeout);
 
-  unsigned int GetTrayXid();
+  unsigned int GetTrayXid() const;
 
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);

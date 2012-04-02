@@ -134,7 +134,7 @@ PanelView::~PanelView()
   _remote->SyncGeometries(GetName() + boost::lexical_cast<std::string>(_monitor), locations);
 }
 
-unsigned int PanelView::GetTrayXid()
+unsigned int PanelView::GetTrayXid() const
 {
   if (!_tray)
     return 0;
@@ -611,7 +611,7 @@ void PanelView::OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
 // Useful Public Methods
 //
 
-bool PanelView::FirstMenuShow()
+bool PanelView::FirstMenuShow() const
 {
   bool ret = false;
 
@@ -677,7 +677,7 @@ void PanelView::SetOpacityMaximizedToggle(bool enabled)
   }
 }
 
-bool PanelView::GetPrimary()
+bool PanelView::GetPrimary() const
 {
   return _is_primary;
 }
@@ -705,12 +705,12 @@ void PanelView::SetMonitor(int monitor)
   _menu_view->SetMonitor(monitor);
 }
 
-int PanelView::GetMonitor()
+int PanelView::GetMonitor() const
 {
   return _monitor;
 }
 
-bool PanelView::IsActive()
+bool PanelView::IsActive() const
 {
   return _menu_view->GetControlsActive();
 }
