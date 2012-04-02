@@ -636,7 +636,7 @@ void PanelView::SetOpacity(float opacity)
 }
 
 void PanelView::SetMenuShowTimings(int fadein, int fadeout, int discovery,
-                              int discovery_fadein, int discovery_fadeout)
+                                   int discovery_fadein, int discovery_fadeout)
 {
   _menu_view->SetMenuShowTimings(fadein, fadeout, discovery, discovery_fadein, discovery_fadeout);
 }
