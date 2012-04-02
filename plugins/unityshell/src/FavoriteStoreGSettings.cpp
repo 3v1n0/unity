@@ -17,10 +17,9 @@
 * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
 */
 
-#include <algorithm>
-
 #include <gio/gdesktopappinfo.h>
 #include <NuxCore/Logger.h>
+#include <UnityCore/DesktopUtilities.h>
 
 #include "FavoriteStoreGSettings.h"
 #include "FavoriteStorePrivate.h"
@@ -50,8 +49,6 @@ const char* LATEST_SETTINGS_MIGRATION = "3.2.10";
 void on_settings_updated(GSettings* settings,
                          const gchar* key,
                          FavoriteStoreGSettings* self);
-
-std::string get_basename_or_path(std::string const& desktop_path);
 
 }
 
@@ -234,6 +231,7 @@ void FavoriteStoreGSettings::SaveFavorites(FavoriteList const& favorites, bool i
   int index = 0;
   // Since we don't always save the full path, we store the values we are
   // actually going to save in a different list.
+  auto system_dirs = DesktopUtilities::GetDataDirectories();
   FavoriteList values;
   for (FavoriteList::const_iterator i = favorites.begin(), end = favorites.end();
        i != end; ++i, ++index)
@@ -243,7 +241,8 @@ void FavoriteStoreGSettings::SaveFavorites(FavoriteList const& favorites, bool i
     // the string that we are going to save.  This way we know that the pointer
     // is valid for the lifetime of the favs array usage in the method call to
     // set the settings, and that we aren't referencing a temporary.
-    FavoriteList::iterator iter = values.insert(values.end(), get_basename_or_path(*i));
+    std::string const& desktop_id = DesktopUtilities::GetDesktopID(system_dirs, *i);
+    FavoriteList::iterator iter = values.insert(values.end(), desktop_id);
     favs[index] = iter->c_str();
   }
 
@@ -299,35 +298,6 @@ void on_settings_updated(GSettings* settings,
     self->Changed(key);
   }
 }
-
-std::string get_basename_or_path(std::string const& desktop_path)
-{
-  const gchar* const* dirs = g_get_system_data_dirs();
-
-  /* We check to see if the desktop file belongs to one of the system data
-   * directories. If so, then we store it's desktop id, otherwise we store
-   * it's full path. We're clever like that.
-   */
-  for (int i = 0; dirs[i]; ++i)
-  {
-    std::string dir(dirs[i]);
-    if (dir.at(dir.length()-1) == G_DIR_SEPARATOR)
-      dir.append("applications/");
-    else
-      dir.append("/applications/");
-
-    if (desktop_path.find(dir) == 0)
-    {
-      // if we are in a subdirectory of system patch, the store name should
-      // be subdir-filename.desktop
-      std::string desktop_suffix = desktop_path.substr(dir.size());
-      std::replace(desktop_suffix.begin(), desktop_suffix.end(), G_DIR_SEPARATOR, '-');
-      return desktop_suffix;
-    }
-  }
-  return desktop_path;
-}
-
 
 } // anonymous namespace
 

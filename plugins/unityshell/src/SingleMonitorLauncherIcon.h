@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,44 +14,39 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Gord Allott <gord.allott@canonical.com>
- *
+ * Authored by: Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
-#ifndef HUDICON_H
-#define HUDICON_H
+#ifndef UNITYSHELL_SINGLE_MONITOR_LAUNCHER_ICON_H
+#define UNITYSHELL_SINGLE_MONITOR_LAUNCHER_ICON_H
 
-#include "IconTexture.h"
-#include "HudIconTextureSource.h"
-#include "IconRenderer.h"
-#include "Introspectable.h"
+#include "SimpleLauncherIcon.h"
 
 namespace unity
 {
-namespace hud
+namespace launcher
 {
 
-class Icon : public unity::IconTexture
+class SingleMonitorLauncherIcon : public SimpleLauncherIcon
 {
+
 public:
-  typedef nux::ObjectPtr<IconTexture> Ptr;
-  Icon(std::string const& icon_name, unsigned int size);
+  SingleMonitorLauncherIcon(int monitor);
+
+void SetMonitor(int monitor);
+int GetMonitor();
 
 protected:
-  void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-
   std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
 
 private:
-  nux::ObjectPtr<nux::BaseTexture> background_;
-  nux::ObjectPtr<nux::BaseTexture> gloss_;
-  nux::ObjectPtr<nux::BaseTexture> edge_;
-  nux::ObjectPtr<HudIconTextureSource> icon_texture_source_;
-  unity::ui::IconRenderer icon_renderer_;
+  void UpdateMonitor();
+
+  int monitor_;
 };
 
 }
-
 }
 
-#endif /* HUDICON_H */
+#endif // UNITYSHELL_SINGLE_MONITOR_LAUNCHER_ICON_H

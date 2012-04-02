@@ -22,10 +22,11 @@ from autopilot.emulators.unity import (
     reset_logging,
     )
 from autopilot.emulators.unity.dash import Dash
+from autopilot.emulators.unity.hud import Hud
 from autopilot.emulators.unity.launcher import LauncherController
 from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.unity.workspace import WorkspaceManager
-from autopilot.emulators.X11 import Keyboard, Mouse
+from autopilot.emulators.X11 import ScreenGeometry, Keyboard, Mouse
 from autopilot.glibrunner import GlibRunner
 from autopilot.globals import (global_context,
     video_recording_enabled,
@@ -38,7 +39,7 @@ logger = logging.getLogger(__name__)
 
 
 try:
-    from testscenarios.scenarios import multiple_scenarios
+    from testscenarios.scenarios import multiply_scenarios
 except ImportError:
     from itertools import product
     def multiply_scenarios(*scenarios):
@@ -227,19 +228,28 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         self.keyboard = Keyboard()
         self.mouse = Mouse()
         self.dash = Dash()
+        self.hud = Hud()
         self.switcher = Switcher()
         self.workspace = WorkspaceManager()
+        self.screen_geo = ScreenGeometry()
         self.launcher = self._get_launcher_controller()
         self.addCleanup(self.workspace.switch_to, self.workspace.current_workspace)
         self.addCleanup(Keyboard.cleanup)
         self.addCleanup(Mouse.cleanup)
 
-    def start_app(self, app_name, files=[]):
+    def start_app(self, app_name, files=[], locale=None):
         """Start one of the known apps, and kill it on tear down.
 
-        if files is specified, start the application with the specified files.
+        If files is specified, start the application with the specified files.
+        If locale is specified, the locale will be set when the application is launched.
         """
-        logger.info("Starting application '%s'", app_name)
+        if locale:
+            os.putenv("LC_ALL", locale)
+            self.addCleanup(os.unsetenv, "LC_ALL")
+            logger.info("Starting application '%s' with files %r in locale %s", app_name, files, locale)
+        else:
+            logger.info("Starting application '%s' with files %r", app_name, files)
+
         app = self.KNOWN_APPS[app_name]
         self.bamf.launch_application(app['desktop-file'], files)
         self.addCleanup(call, ["killall", app['process-name']])

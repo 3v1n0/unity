@@ -20,7 +20,10 @@
 
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
+
 #include <UnityCore/Variant.h>
+#include <UnityCore/GLibWrapper.h>
+#include <UnityCore/DesktopUtilities.h>
 
 #include "BamfLauncherIcon.h"
 #include "FavoriteStore.h"
@@ -32,8 +35,6 @@
 
 #include <glib/gi18n-lib.h>
 #include <gio/gdesktopappinfo.h>
-
-#include <UnityCore/GLibWrapper.h>
 
 namespace unity
 {
@@ -287,23 +288,40 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     ubus_server_send_message(ubus_server_get_default(), UBUS_LAUNCHER_ACTION_DONE, nullptr);
 }
 
-std::vector<Window> BamfLauncherIcon::Windows()
+std::vector<Window> BamfLauncherIcon::GetWindows(WindowFilterMask filter, int monitor)
 {
   std::vector<Window> results;
   GList* children, *l;
   WindowManager *wm = WindowManager::Default();
+
+  monitor = (filter & WindowFilter::ON_ALL_MONITORS) ? -1 : monitor;
+  bool mapped = (filter & WindowFilter::MAPPED);
+  bool user_visible = (filter & WindowFilter::USER_VISIBLE);
+  bool current_desktop = (filter & WindowFilter::ON_CURRENT_DESKTOP);
 
   children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
   for (l = children; l; l = l->next)
   {
     if (!BAMF_IS_WINDOW(l->data))
       continue;
+  
+    auto window = static_cast<BamfWindow*>(l->data);
+    auto view = static_cast<BamfView*>(l->data);
 
-    Window xid = bamf_window_get_xid(static_cast<BamfWindow*>(l->data));
-
-    if (wm->IsWindowMapped(xid))
+    if ((monitor >= 0 && bamf_window_get_monitor(window) == monitor) || monitor < 0)
     {
-      results.push_back(xid);
+      if ((user_visible && bamf_view_user_visible(view)) || !user_visible)
+      {
+        guint32 xid = bamf_window_get_xid(window);
+
+        if ((mapped && wm->IsWindowMapped(xid)) || !mapped)
+        {
+          if ((current_desktop && wm->IsWindowOnCurrentDesktop(xid)) || !current_desktop)
+          {
+            results.push_back(xid);
+          }
+        }
+      }
     }
   }
 
@@ -311,31 +329,30 @@ std::vector<Window> BamfLauncherIcon::Windows()
   return results;
 }
 
+std::vector<Window> BamfLauncherIcon::Windows()
+{
+  return GetWindows(WindowFilter::MAPPED|WindowFilter::ON_ALL_MONITORS);
+}
+
+std::vector<Window> BamfLauncherIcon::WindowsOnViewport()
+{
+  WindowFilterMask filter = 0;
+  filter |= WindowFilter::MAPPED;
+  filter |= WindowFilter::USER_VISIBLE;
+  filter |= WindowFilter::ON_CURRENT_DESKTOP;
+  filter |= WindowFilter::ON_ALL_MONITORS;
+
+  return GetWindows(filter);
+}
+
 std::vector<Window> BamfLauncherIcon::WindowsForMonitor(int monitor)
 {
-  std::vector<Window> results;
-  GList* children, *l;
-  WindowManager *wm = WindowManager::Default();
+  WindowFilterMask filter = 0;
+  filter |= WindowFilter::MAPPED;
+  filter |= WindowFilter::USER_VISIBLE;
+  filter |= WindowFilter::ON_CURRENT_DESKTOP;
 
-  children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
-  for (l = children; l; l = l->next)
-  {
-    if (!BAMF_IS_WINDOW(l->data))
-      continue;
-
-    auto window = static_cast<BamfWindow*>(l->data);
-    if (bamf_window_get_monitor(window) == monitor)
-    {
-      guint32 xid = bamf_window_get_xid(window);
-      bool user_visible = bamf_view_user_visible(reinterpret_cast<BamfView*>(window));
-
-      if (user_visible && wm->IsWindowMapped(xid) && wm->IsWindowOnCurrentDesktop(xid))
-        results.push_back(xid);
-    }
-  }
-
-  g_list_free(children);
-  return results;
+  return GetWindows(filter, monitor);
 }
 
 std::string BamfLauncherIcon::NameForWindow(Window window)
@@ -439,26 +456,18 @@ std::string BamfLauncherIcon::BamfName() const
 
 void BamfLauncherIcon::AddProperties(GVariantBuilder* builder)
 {
-  LauncherIcon::AddProperties(builder);
+  SimpleLauncherIcon::AddProperties(builder);
 
-  GList* children, *l;
-  children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
-  GVariant* xids[(int) g_list_length(children)];
+  GVariantBuilder xids_builder;
+  g_variant_builder_init(&xids_builder, G_VARIANT_TYPE ("au"));
 
-  int i = 0;
-  for (l = children; l; l = l->next)
-  {
-    if (!BAMF_IS_WINDOW(l->data))
-      continue;
-
-    Window xid = bamf_window_get_xid(static_cast<BamfWindow*>(l->data));
-    xids[i++] = g_variant_new_uint32(xid);
-  }
-  g_list_free(children);
+  for (auto xid : GetWindows())
+    g_variant_builder_add(&xids_builder, "u", xid);
 
   variant::BuilderWrapper(builder)
-    .add("desktop-file", DesktopFile())
-    .add("xids", g_variant_new_array(G_VARIANT_TYPE_UINT32, xids, i))
+    .add("desktop_file", DesktopFile())
+    .add("desktop_id", GetDesktopID())
+    .add("xids", g_variant_builder_end(&xids_builder))
     .add("sticky", IsSticky());
 }
 
@@ -611,26 +620,8 @@ void BamfLauncherIcon::Focus(ActionArg arg)
 
 bool BamfLauncherIcon::Spread(bool current_desktop, int state, bool force)
 {
-  GList* children, *l;
-  children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
-  WindowManager* wm = WindowManager::Default();
-
-  std::vector<Window> windowList;
-  for (l = children; l; l = l->next)
-  {
-    if (!BAMF_IS_WINDOW(l->data))
-      continue;
-
-    Window xid = bamf_window_get_xid(static_cast<BamfWindow*>(l->data));
-
-    if (!current_desktop || (current_desktop && wm->IsWindowOnCurrentDesktop(xid)))
-    {
-      windowList.push_back(xid);
-    }
-  }
-
-  g_list_free(children);
-  return WindowManager::Default()->ScaleWindowGroup(windowList, state, force);
+  auto windows = GetWindows(current_desktop ? WindowFilter::ON_CURRENT_DESKTOP : 0);
+  return WindowManager::Default()->ScaleWindowGroup(windows, state, force);
 }
 
 void BamfLauncherIcon::EnsureWindowState()
@@ -734,11 +725,11 @@ void BamfLauncherIcon::UpdateMenus()
   g_list_free(children);
 
   // add dynamic quicklist
-  if (DBUSMENU_IS_CLIENT(_menuclient_dynamic_quicklist))
+  if (_menuclient_dynamic_quicklist && DBUSMENU_IS_CLIENT(_menuclient_dynamic_quicklist.RawPtr()))
   {
     if (_menu_clients["dynamicquicklist"] != _menuclient_dynamic_quicklist)
     {
-      _menu_clients["dynamicquicklist"] = glib::Object<DbusmenuClient>(_menuclient_dynamic_quicklist);
+      _menu_clients["dynamicquicklist"] = _menuclient_dynamic_quicklist;
     }
   }
   else if (_menu_clients["dynamicquicklist"])
@@ -1033,20 +1024,27 @@ void BamfLauncherIcon::OnCenterStabilized(std::vector<nux::Point3> center)
   UpdateIconGeometries(center);
 }
 
-const gchar* BamfLauncherIcon::GetRemoteUri()
+std::string BamfLauncherIcon::GetDesktopID()
+{
+  std::string const& desktop_file = DesktopFile();
+
+  return DesktopUtilities::GetDesktopID(desktop_file);
+}
+
+std::string BamfLauncherIcon::GetRemoteUri()
 {
   if (_remote_uri.empty())
   {
     const std::string prefix = "application://";
-    glib::String basename(g_path_get_basename(DesktopFile().c_str()));
+    std::string const& desktop_id = GetDesktopID();
 
-    if (!basename.Str().empty())
+    if (!desktop_id.empty())
     {
-      _remote_uri = prefix + basename.Str();
+      _remote_uri = prefix + desktop_id;
     }
   }
 
-  return _remote_uri.c_str();
+  return _remote_uri;
 }
 
 std::set<std::string> BamfLauncherIcon::ValidateUrisForLaunch(unity::DndData& uris)
