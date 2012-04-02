@@ -298,7 +298,7 @@ MultiActionList::TerminateAll(CompOption::Vector& extraArgs)
 unsigned long long 
 PluginAdapter::GetWindowActiveNumber (guint32 xid)
 {
-  Window win = (Window)xid;
+  Window win = xid;
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
@@ -395,7 +395,7 @@ PluginAdapter::InitiateExpo()
 bool
 PluginAdapter::IsWindowMaximized(guint xid)
 {
-  Window win = (Window)xid;
+  Window win = xid;
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
@@ -450,7 +450,7 @@ PluginAdapter::IsWindowDecorated(guint32 xid)
 bool
 PluginAdapter::IsWindowOnCurrentDesktop(guint32 xid)
 {
-  Window win = (Window)xid;
+  Window win = xid;
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
@@ -466,7 +466,7 @@ PluginAdapter::IsWindowOnCurrentDesktop(guint32 xid)
 bool
 PluginAdapter::IsWindowObscured(guint32 xid)
 {
-  Window win = (Window)xid;
+  Window win = xid;
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
@@ -499,7 +499,7 @@ PluginAdapter::IsWindowObscured(guint32 xid)
 bool
 PluginAdapter::IsWindowMapped(guint32 xid)
 {
-  Window win = (Window) xid;
+  Window win = xid;
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
@@ -511,7 +511,7 @@ PluginAdapter::IsWindowMapped(guint32 xid)
 bool
 PluginAdapter::IsWindowVisible(guint32 xid)
 {
-  Window win = (Window) xid;
+  Window win = xid;
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
@@ -537,7 +537,7 @@ PluginAdapter::IsWindowMinimizable(guint32 xid)
 void
 PluginAdapter::Restore(guint32 xid)
 {
-  Window win = (Window)xid;
+  Window win = xid;
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
@@ -548,7 +548,7 @@ PluginAdapter::Restore(guint32 xid)
 void
 PluginAdapter::RestoreAt(guint32 xid, int x, int y)
 {
-  Window win = (Window)xid;
+  Window win = xid;
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
@@ -565,7 +565,7 @@ PluginAdapter::RestoreAt(guint32 xid, int x, int y)
 void
 PluginAdapter::Minimize(guint32 xid)
 {
-  Window win = (Window)xid;
+  Window win = xid;
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
@@ -576,7 +576,7 @@ PluginAdapter::Minimize(guint32 xid)
 void
 PluginAdapter::Close(guint32 xid)
 {
-  Window win = (Window)xid;
+  Window win = xid;
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
@@ -587,7 +587,7 @@ PluginAdapter::Close(guint32 xid)
 void
 PluginAdapter::Activate(guint32 xid)
 {
-  Window win = (Window)xid;
+  Window win = xid;
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
@@ -598,7 +598,7 @@ PluginAdapter::Activate(guint32 xid)
 void
 PluginAdapter::Raise(guint32 xid)
 {
-  Window win = (Window)xid;
+  Window win = xid;
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
@@ -609,7 +609,7 @@ PluginAdapter::Raise(guint32 xid)
 void
 PluginAdapter::Lower(guint32 xid)
 {
-  Window win = (Window)xid;
+  Window win = xid;
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
@@ -769,7 +769,7 @@ PluginAdapter::OnLeaveDesktop()
 }
 
 nux::Geometry
-PluginAdapter::GetWindowGeometry(guint32 xid)
+PluginAdapter::GetWindowGeometry(guint32 xid) const
 {
   Window win = xid;
   CompWindow* window;
@@ -787,7 +787,7 @@ PluginAdapter::GetWindowGeometry(guint32 xid)
 }
 
 nux::Geometry
-PluginAdapter::GetWindowSavedGeometry(guint32 xid)
+PluginAdapter::GetWindowSavedGeometry(guint32 xid) const
 {
   Window win = xid;
   nux::Geometry geo(0, 0, 1, 1);
@@ -807,7 +807,7 @@ PluginAdapter::GetWindowSavedGeometry(guint32 xid)
 }
 
 nux::Geometry 
-PluginAdapter::GetScreenGeometry()
+PluginAdapter::GetScreenGeometry() const
 {
   nux::Geometry geo;
   
@@ -820,7 +820,7 @@ PluginAdapter::GetScreenGeometry()
 }
 
 nux::Geometry 
-PluginAdapter::GetWorkAreaGeometry(guint32 xid)
+PluginAdapter::GetWorkAreaGeometry(guint32 xid) const
 {
   CompWindow* window = nullptr;
   unsigned int output = 0;

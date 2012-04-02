@@ -142,10 +142,10 @@ public:
 
   bool MaximizeIfBigEnough(CompWindow* window);
 
-  nux::Geometry GetWindowGeometry(guint32 xid);
-  nux::Geometry GetWindowSavedGeometry(guint32 xid);
-  nux::Geometry GetScreenGeometry();
-  nux::Geometry GetWorkAreaGeometry(guint32 xid = 0);
+  nux::Geometry GetWindowGeometry(guint32 xid) const;
+  nux::Geometry GetWindowSavedGeometry(guint32 xid) const;
+  nux::Geometry GetScreenGeometry() const;
+  nux::Geometry GetWorkAreaGeometry(guint32 xid = 0) const;
 
   void CheckWindowIntersections(nux::Geometry const& region, bool &active, bool &any);
 
