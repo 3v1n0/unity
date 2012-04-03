@@ -236,11 +236,6 @@ void PanelMenuView::SetMenuShowTimings(int fadein, int fadeout, int discovery,
     _menus_discovery_fadeout = discovery_fadeout;
 }
 
-void PanelMenuView::QueueDraw()
-{
-  PanelIndicatorsView::QueueDraw();
-}
-
 void PanelMenuView::FullRedraw()
 {
   QueueDraw();

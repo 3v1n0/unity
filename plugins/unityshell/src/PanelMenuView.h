@@ -59,8 +59,6 @@ public:
   virtual void OverlayShown();
   virtual void OverlayHidden();
 
-  virtual void QueueDraw();
-
 protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
