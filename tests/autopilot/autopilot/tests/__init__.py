@@ -24,6 +24,7 @@ from autopilot.emulators.unity import (
 from autopilot.emulators.unity.dash import Dash
 from autopilot.emulators.unity.hud import Hud
 from autopilot.emulators.unity.launcher import LauncherController
+from autopilot.emulators.unity.panel import PanelController
 from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.unity.workspace import WorkspaceManager
 from autopilot.emulators.X11 import ScreenGeometry, Keyboard, Mouse
@@ -229,10 +230,11 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         self.mouse = Mouse()
         self.dash = Dash()
         self.hud = Hud()
+        self.launcher = self._get_launcher_controller()
+        self.panel = self._get_panel_controller()
         self.switcher = Switcher()
         self.workspace = WorkspaceManager()
         self.screen_geo = ScreenGeometry()
-        self.launcher = self._get_launcher_controller()
         self.addCleanup(self.workspace.switch_to, self.workspace.current_workspace)
         self.addCleanup(Keyboard.cleanup)
         self.addCleanup(Mouse.cleanup)
@@ -297,5 +299,10 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
 
     def _get_launcher_controller(self):
         controllers = LauncherController.get_all_instances()
+        self.assertThat(len(controllers), Equals(1))
+        return controllers[0]
+
+    def _get_panel_controller(self):
+        controllers = PanelController.get_all_instances()
         self.assertThat(len(controllers), Equals(1))
         return controllers[0]
