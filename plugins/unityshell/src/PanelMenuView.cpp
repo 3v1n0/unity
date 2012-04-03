@@ -962,16 +962,14 @@ void PanelMenuView::OnApplicationClosed(BamfApplication* app)
     if (std::find(_new_apps.begin(), _new_apps.end(), app) != _new_apps.end())
     {
       _new_apps.remove(glib::Object<BamfApplication>(app, glib::AddRef()));
-
-      if (_new_application == app)
-        _new_application = nullptr;
     }
     else if (_new_apps.empty())
     {
       _new_application = nullptr;
     }
   }
-  else if (_new_application && app == _new_application)
+
+  if (app == _new_application)
   {
     _new_application = nullptr;
   }
@@ -983,7 +981,7 @@ void PanelMenuView::OnViewClosed(BamfMatcher *matcher, BamfView *view)
   {
     OnApplicationClosed(reinterpret_cast<BamfApplication*>(view));
   }
-  else if (reinterpret_cast<BamfApplication*>(view) == _new_application.RawPtr())
+  else if (reinterpret_cast<BamfApplication*>(view) == _new_application)
   {
     _new_application = nullptr;
   }
