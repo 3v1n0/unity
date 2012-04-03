@@ -40,6 +40,9 @@ namespace dash
 namespace
 {
 nux::logging::Logger logger("unity.dash.lensview");
+
+const int CARD_VIEW_GAP_VERT  = 24; // pixels
+const int CARD_VIEW_GAP_HORIZ = 25; // pixels
 }
 
 // This is so we can access some protected members in scrollview.
@@ -288,7 +291,11 @@ void LensView::OnCategoryAdded(Category const& category)
   ResultViewGrid* grid = new ResultViewGrid(NUX_TRACKER_LOCATION);
   grid->expanded = false;
   if (renderer_name == "tile-horizontal")
+  {
     grid->SetModelRenderer(new ResultRendererHorizontalTile(NUX_TRACKER_LOCATION));
+    grid->horizontal_spacing = CARD_VIEW_GAP_HORIZ;
+    grid->vertical_spacing = CARD_VIEW_GAP_VERT;
+  }    
   else
     grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
 
