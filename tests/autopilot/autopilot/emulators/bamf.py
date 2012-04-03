@@ -13,6 +13,7 @@ import gio
 import gobject
 import os
 from Xlib import display, X, protocol
+from gtk import gdk
 
 from autopilot.emulators.dbus_handler import session_bus
 
@@ -261,9 +262,9 @@ class BamfWindow(object):
         Returns a tuple containing (x, y, width, height).
 
         """
-
         geometry = self._x_win.get_geometry()
-        return (geometry.x, geometry.y, geometry.width, geometry.height)
+        origin = gdk.window_foreign_new(self._xid).get_origin()
+        return (origin[0], origin[1], geometry.width, geometry.height)
 
     @property
     def is_maximized(self):
