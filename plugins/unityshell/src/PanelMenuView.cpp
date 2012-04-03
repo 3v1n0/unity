@@ -897,7 +897,7 @@ void PanelMenuView::OnEntryAdded(indicator::Entry::Ptr const& entry)
   AddEntryView(view, IndicatorEntryPosition::END);
 }
 
-void PanelMenuView::AllMenusClosed()
+void PanelMenuView::OnMenusClosed()
 {
   _last_active_view = nullptr;
 
