@@ -59,8 +59,6 @@ public:
   virtual void OverlayShown();
   virtual void OverlayHidden();
 
-  virtual void QueueDraw();
-
 protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
@@ -157,8 +155,6 @@ private:
   std::set<Window> _maximized_set;
   std::list<glib::Object<BamfApplication>> _new_apps;
   std::string _panel_title;
-
-  int _padding;
   nux::Geometry _last_geo;
 
   bool _overlay_showing;
