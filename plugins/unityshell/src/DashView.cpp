@@ -457,6 +457,14 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
   lens->activated.connect(sigc::mem_fun(this, &DashView::OnUriActivatedReply));
   lens->search_finished.connect(sigc::mem_fun(this, &DashView::OnSearchFinished));
   // global search done is handled by the home lens, no need to connect to it
+  // BUT, we will special case global search finished coming from 
+  // the applications lens, because we want to be able to launch applications
+  // immediately without waiting for the search finished signal which will
+  // be delayed by all the lenses we're searching
+  if (id == "applications.lens")
+  {
+    lens->global_search_finished.connect(sigc::mem_fun(this, &DashView::OnAppsGlobalSearchFinished));
+  }
 }
 
 void DashView::OnLensBarActivated(std::string const& id)
@@ -529,6 +537,22 @@ void DashView::OnGlobalSearchFinished(Lens::Hints const& hints)
 {
   if (active_lens_view_ == home_view_)
     OnSearchFinished(hints);
+}
+
+void DashView::OnAppsGlobalSearchFinished(Lens::Hints const& hints)
+{
+  if (active_lens_view_ == home_view_)
+  {
+    /* HACKITY HACK! We're resetting the state of search_in_progress when
+     * doing searches in the home lens and we get results from apps lens.
+     * This way typing a search query and pressing enter immediately will
+     * wait for the apps lens results and will run correct application.
+     * See lp:966417 and lp:856206 for more info about why we do this.
+     */
+    search_in_progress_ = false;
+    if (activate_on_finish_)
+      this->OnEntryActivated();
+  }
 }
 
 void DashView::OnUriActivated(std::string const& uri)

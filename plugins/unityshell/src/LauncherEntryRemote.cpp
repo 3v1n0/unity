@@ -30,8 +30,6 @@ namespace
 nux::logging::Logger logger("launcher.entry.remote");
 }
 
-NUX_IMPLEMENT_OBJECT_TYPE(LauncherEntryRemote);
-
 /**
  * Create a new LauncherEntryRemote parsed from the raw DBus wire format
  * of the com.canonical.Unity.LauncherEntry.Update signal '(sa{sv})'. The
@@ -302,10 +300,14 @@ void LauncherEntryRemote::SetUrgent(bool urgent)
 /**
  * Set all properties from 'other' on 'this'.
  */
-void LauncherEntryRemote::Update(LauncherEntryRemote* other)
+void LauncherEntryRemote::Update(LauncherEntryRemote::Ptr const& other)
 {
   /* It's important that we update the DBus name first since it might
    * unset the quicklist if it changes */
+
+  if (!other)
+    return;
+
   SetDBusName(other->DBusName());
 
   SetEmblem(other->Emblem());

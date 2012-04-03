@@ -39,7 +39,7 @@ nux::logging::Logger logger("unity.hud.controller");
 }
 
 Controller::Controller()
-  : launcher_width(65)
+  : launcher_width(64)
   , launcher_locked_out(false)
   , multiple_launchers(true)
   , hud_service_("com.canonical.hud", "/com/canonical/hud")
@@ -51,6 +51,7 @@ Controller::Controller()
   , start_time_(0)
   , view_(nullptr)
   , monitor_index_(0)
+  , type_wait_handle_(0)
 {
   LOG_DEBUG(logger) << "hud startup";
   UScreen::GetDefault()->changed.connect([&] (int, std::vector<nux::Geometry>&) { Relayout(); });
@@ -88,6 +89,7 @@ Controller::~Controller()
 
   g_source_remove(timeline_id_);
   g_source_remove(ensure_id_);
+  g_source_remove(type_wait_handle_);
 }
 
 void Controller::SetupWindow()
@@ -396,8 +398,22 @@ void Controller::OnActivateRequest(GVariant* variant)
 
 void Controller::OnSearchChanged(std::string search_string)
 {
+  //FIXME!! - when the service is smart enough to not fall over if you send many requests, this should be removed
   LOG_DEBUG(logger) << "Search Changed";
-  hud_service_.RequestQuery(search_string);
+  auto on_search_changed_timeout_lambda = [] (gpointer data) -> gboolean {
+    Controller* self = static_cast<Controller*>(data);
+    self->hud_service_.RequestQuery(self->last_search_);
+    self->type_wait_handle_ = 0;
+    return FALSE;
+  };
+  
+  last_search_ = search_string;
+  
+  if (type_wait_handle_)
+  {
+    g_source_remove(type_wait_handle_);
+  }  
+  type_wait_handle_ = g_timeout_add(100, on_search_changed_timeout_lambda, this);
 }
 
 void Controller::OnSearchActivated(std::string search_string)

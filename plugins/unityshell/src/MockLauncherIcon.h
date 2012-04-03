@@ -190,9 +190,9 @@ public:
     return true;
   }
 
-  void InsertEntryRemote(LauncherEntryRemote* remote) {}
+  void InsertEntryRemote(LauncherEntryRemote::Ptr const& remote) {}
 
-  void RemoveEntryRemote(LauncherEntryRemote* remote) {}
+  void RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote) {}
 
   unsigned long long SwitcherPriority()
   {

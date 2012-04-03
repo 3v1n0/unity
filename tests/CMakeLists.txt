@@ -124,6 +124,7 @@ if (GTEST_SRC_DIR AND
                  test_glib_signals_utils.cpp
                  test_glib_signals_utils.h
                  test_glib_variant.cpp
+                 test_desktop_utilities.cpp
                  ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
                  test_indicator.cpp
                  test_indicator_appmenu.cpp
@@ -132,6 +133,7 @@ if (GTEST_SRC_DIR AND
                  test_favorite_store_gsettings.cpp
                  test_favorite_store_private.cpp
                  test_home_lens.cpp
+                 test_launcher_entry_remote.cpp
                  test_shortcut_model.cpp
                  test_shortcut_private.cpp
                  test_introspection.cpp
@@ -147,6 +149,7 @@ if (GTEST_SRC_DIR AND
                  ${UNITY_SRC}/FavoriteStoreGSettings.cpp
                  ${UNITY_SRC}/IconTextureSource.cpp
                  ${UNITY_SRC}/LauncherModel.cpp
+                 ${UNITY_SRC}/LauncherEntryRemote.cpp
                  ${UNITY_SRC}/FavoriteStorePrivate.cpp
                  ${UNITY_SRC}/MockLauncherIcon.h
                  ${UNITY_SRC}/MockShortcutHint.h

@@ -14,7 +14,9 @@ from time import sleep
 from autopilot.tests import AutopilotTestCase, multiply_scenarios
 from autopilot.emulators.X11 import ScreenGeometry
 
+
 logger = logging.getLogger(__name__)
+
 
 def _make_scenarios():
     """Make scenarios for launcher test cases based on the number of configured
@@ -56,6 +58,7 @@ class ScenariodLauncherTests(AutopilotTestCase):
                 self.addCleanup(self.screen_geo.set_primary_monitor, old_primary_screen)
             except ScreenGeometry.BlacklistedDriverError:
                 self.skipTest("Impossible to set the monitor %d as primary" % self.launcher_monitor)
+
 
 class LauncherTests(ScenariodLauncherTests):
     """Test the launcher."""
@@ -208,7 +211,6 @@ class LauncherTests(ScenariodLauncherTests):
         launcher_instance.switcher_prev()
         sleep(2)
         self.assertThat(launcher_instance.are_shortcuts_showing(), Equals(False))
-
 
     def test_launcher_switcher_cycling_forward(self):
         """Launcher Switcher must loop through icons when cycling forwards"""
@@ -483,10 +485,10 @@ class LauncherTests(ScenariodLauncherTests):
 
     def test_software_center_add_icon(self):
         """ Test the ability to add a SoftwareCenterLauncherIcon """
-        
+
         launcher_instance = self.get_launcher()
         sc_desktop_file = "/usr/share/applications/ubuntu-software-center.desktop"
-                
+
         def cleanup():
             if icon is not None:
                 launcher_instance.unlock_from_launcher(icon[0])
@@ -494,7 +496,7 @@ class LauncherTests(ScenariodLauncherTests):
         # Check if SC is pinned to the launcher already
         icon = self.launcher.model.get_icon_by_desktop_file(sc_desktop_file)
         if icon != None:
-            launcher_instance.unlock_from_launcher(icon[0])
+            launcher_instance.unlock_from_launcher(icon)
             sleep(2.0) # Animation of removing icon can take over a second
         else:
             self.addCleanup(cleanup)
@@ -506,7 +508,7 @@ class LauncherTests(ScenariodLauncherTests):
                                                    32,
                                                    sc_desktop_file,
                                                    "")
-        
+
         sleep(1.0)
 
         icon = self.launcher.model.get_icon_by_desktop_file(sc_desktop_file)
@@ -514,7 +516,8 @@ class LauncherTests(ScenariodLauncherTests):
 
         # Check for whether:
         # The new launcher icon has a 'Waiting to install' tooltip
-        self.assertThat(icon[0].tooltip_text, Equals("Waiting to install"))
+        self.assertThat(icon.tooltip_text, Equals("Waiting to install"))
+
 
 class LauncherRevealTests(ScenariodLauncherTests):
     """Test the launcher reveal bahavior when in autohide mode."""

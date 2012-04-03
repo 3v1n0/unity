@@ -39,9 +39,6 @@ std::vector<std::string> GetRemoved(std::list<std::string> const& old, std::list
 
 bool NeedToBeReordered(std::list<std::string> const& old, std::list<std::string> const& fresh);
 
-std::string get_basename_or_path(std::string const& desktop_path,
-                                 const char* const* system_dirs);
-
 
 } // namespace impl
 } // namespace internal
