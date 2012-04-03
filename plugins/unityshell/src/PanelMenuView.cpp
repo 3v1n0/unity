@@ -39,8 +39,15 @@ namespace
 {
   nux::logging::Logger logger("unity.panel.menu");
   const int MAIN_LEFT_PADDING = 4;
+  const int TITLE_PADDING = 2;
   const int MENUBAR_PADDING = 4;
   const int MENU_ENTRIES_PADDING = 6;
+  const int DEFAULT_MENUS_FADEIN = 100;
+  const int DEFAULT_MENUS_FADEOUT = 120;
+  const int DEFAULT_MENUS_DISCOVERY = 2;
+  const int DEFAULT_DISCOVERY_FADEIN = 200;
+  const int DEFAULT_DISCOVERY_FADEOUT = 300;
+
   const std::string DESKTOP_NAME(_("Ubuntu Desktop"));
 }
 
@@ -51,7 +58,6 @@ PanelMenuView::PanelMenuView()
     _is_maximized(false),
     _last_active_view(nullptr),
     _new_application(nullptr),
-    _padding(MAIN_LEFT_PADDING),
     _overlay_showing(false),
     _switcher_showing(false),
     _launcher_keynav(false),
@@ -64,11 +70,11 @@ PanelMenuView::PanelMenuView()
     _update_show_now_id(0),
     _new_app_show_id(0),
     _new_app_hide_id(0),
-    _menus_fadein(100),
-    _menus_fadeout(120),
-    _menus_discovery(2),
-    _menus_discovery_fadein(200),
-    _menus_discovery_fadeout(300),
+    _menus_fadein(DEFAULT_MENUS_FADEIN),
+    _menus_fadeout(DEFAULT_MENUS_FADEOUT),
+    _menus_discovery(DEFAULT_MENUS_DISCOVERY),
+    _menus_discovery_fadein(DEFAULT_DISCOVERY_FADEIN),
+    _menus_discovery_fadeout(DEFAULT_DISCOVERY_FADEOUT),
     _fade_in_animator(_menus_fadein),
     _fade_out_animator(_menus_fadeout)
 {
@@ -237,7 +243,7 @@ void PanelMenuView::QueueDraw()
 
 void PanelMenuView::FullRedraw()
 {
-  PanelIndicatorsView::QueueDraw();
+  QueueDraw();
   _window_buttons->QueueDraw();
 }
 
@@ -710,7 +716,7 @@ void PanelMenuView::DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::s
   cairo_t* cr;
   cairo_pattern_t* linpat;
   const int fading_pixels = 35;
-  int x = _padding + geo.x;
+  int x = MAIN_LEFT_PADDING + TITLE_PADDING + geo.x;
   int y = geo.y;
 
   int text_width = 0;

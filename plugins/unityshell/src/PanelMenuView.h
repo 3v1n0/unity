@@ -157,8 +157,6 @@ private:
   std::set<Window> _maximized_set;
   std::list<glib::Object<BamfApplication>> _new_apps;
   std::string _panel_title;
-
-  int _padding;
   nux::Geometry _last_geo;
 
   bool _overlay_showing;
