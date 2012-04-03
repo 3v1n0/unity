@@ -577,7 +577,8 @@ void draw_menu_bg(cairo_t* cr, int width, int height)
   gtk_style_context_save(style_context);
 
   GtkWidgetPath* widget_path = gtk_widget_path_new();
-  gtk_widget_path_iter_set_name(widget_path, -1 , "UnityPanelWidget");
+  gint pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_WINDOW);
+  gtk_widget_path_iter_set_name(widget_path, pos, "UnityPanelWidget");
   gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_BAR);
   gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_ITEM);
 
