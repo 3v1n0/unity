@@ -13,7 +13,7 @@ from time import sleep
 from autopilot.emulators.X11 import ScreenGeometry
 from autopilot.emulators.unity.icons import HudLauncherIcon
 from autopilot.tests import AutopilotTestCase, multiply_scenarios
-from os import remove
+from os import remove, path
 
 
 def _make_monitor_scenarios():
@@ -119,8 +119,8 @@ class HudBehaviorTests(HudTestsBase):
 
     def test_reveal_hud_with_no_apps(self):
         """Hud must show even with no visible applications."""
-        self.keyboard.press_and_release("Ctrl+Alt+d")
-        self.addCleanup(self.keyboard.press_and_release, "Ctrl+Alt+d")
+        self.keybinding("window/show_desktop")
+        self.addCleanup(self.keybinding, "window/show_desktop")
         sleep(1)
 
         self.hud.toggle_reveal()
@@ -409,7 +409,7 @@ class HudVisualTests(HudTestsBase):
             self.assertFalse(hud_launcher_icon.active)
             self.assertThat(hud_embedded_icon, NotEquals(None))
 
-    def test_hud_icon_show_the_focused_application_emblem(self):
+    def test_hud_icon_shows_the_focused_application_emblem(self):
         """Tests that the correct HUD icon is shown"""
         self.start_app("Calculator")
         calctools = self.get_app_instances("Calculator")
@@ -421,6 +421,16 @@ class HudVisualTests(HudTestsBase):
         sleep(.5)
 
         self.assertThat(self.hud.icon.icon_name, Equals(calc.icon))
+
+    def test_hud_icon_shows_the_ubuntu_emblem_on_empty_desktop(self):
+        self.keybinding("window/show_desktop")
+        self.addCleanup(self.keybinding, "window/show_desktop")
+        sleep(1)
+
+        self.reveal_hud()
+        sleep(.5)
+
+        self.assertThat(path.basename(self.hud.icon.icon_name), Equals("launcher_bfb.png"))
 
     def test_switch_dash_hud_does_not_break_the_focused_application_emblem(self):
         """Tests that the correct HUD icon is shown when switching from Dash to HUD"""
