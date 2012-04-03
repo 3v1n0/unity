@@ -339,7 +339,8 @@ GtkIconTheme* LauncherIcon::GetUnityTheme()
   // invalidate the cache then and rebuild the theme the first time after a icon theme update.
   if (!GTK_IS_ICON_THEME(_unity_theme))
   {
-    g_object_unref(_unity_theme);
+    if (_unity_theme)
+      g_object_unref(_unity_theme);
     _unity_theme =  gtk_icon_theme_new();
     gtk_icon_theme_set_custom_theme(_unity_theme, UNITY_THEME_NAME.c_str());
   }

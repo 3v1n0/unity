@@ -3077,6 +3077,10 @@ void capture_g_log_calls(const gchar* log_domain,
   {
     nux::logging::LogStream(level, logger.module(), "<unknown>", 0).stream()
         << message;
+    if (level >= nux::logging::Error)
+    {
+      nux::logging::Backtrace();
+    }
   }
 }
 
