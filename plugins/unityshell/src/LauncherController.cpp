@@ -1154,7 +1154,15 @@ void Controller::KeyNavTerminate(bool activate)
   if (!pimpl->launcher_keynav)
     return;
 
+  if (activate && pimpl->keynav_restore_window_)
+  {
+    /* If the selected icon is running, we must not restore the input to the old */
+    AbstractLauncherIcon::Ptr const& icon = pimpl->model_->Selection();
+    pimpl->keynav_restore_window_ = !icon->GetQuirk(AbstractLauncherIcon::QUIRK_RUNNING);
+  }
+
   pimpl->keyboard_launcher_->ExitKeyNavMode();
+
   if (pimpl->launcher_grabbed)
   {
     pimpl->keyboard_launcher_->UnGrabKeyboard();
@@ -1275,8 +1283,7 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
       // <RETURN> (start/activate currently selected icon)
     case NUX_VK_ENTER:
     case NUX_KP_ENTER:
-    model_->Selection()->Activate(ActionArg(ActionArg::LAUNCHER, 0));
-    parent_->KeyNavTerminate(false);
+    parent_->KeyNavTerminate(true);
     break;
 
     default:
