@@ -23,7 +23,6 @@
 #include <core/core.h>
 
 #include <sigc++/sigc++.h>
-#include <Nux/Nux.h>
 #include "GeisAdapter.h"
 
 class GestureEngine : public sigc::trackable
