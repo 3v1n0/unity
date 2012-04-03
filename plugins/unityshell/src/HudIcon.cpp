@@ -80,9 +80,8 @@ void Icon::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 std::string Icon::GetName() const
 {
-  return "EmbeddedIcon";
+  return "HudEmbeddedIcon";
 }
 
 }
 }
-

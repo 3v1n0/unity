@@ -33,8 +33,8 @@ class ShowDesktopTests(AutopilotTestCase):
         self.launch_test_apps()
 
         # show desktop, verify all windows are hidden:
-        self.keyboard.press_and_release('Control+Alt+d')
-        self.addCleanup(self.keyboard.press_and_release, keys='Control+Alt+d')
+        self.keybinding("window/show_desktop")
+        self.addCleanup(self.keybinding, "window/show_desktop")
         sleep(3)
         open_wins = self.bamf.get_open_windows()
         self.assertGreaterEqual(len(open_wins), 2)
@@ -47,7 +47,8 @@ class ShowDesktopTests(AutopilotTestCase):
         self.launch_test_apps()
 
         # show desktop, verify all windows are hidden:
-        self.keyboard.press_and_release('Control+Alt+d')
+        self.keybinding("window/show_desktop")
+        self.addCleanup(self.keybinding, "window/show_desktop")
         sleep(3)
         open_wins = self.bamf.get_open_windows()
         self.assertGreaterEqual(len(open_wins), 2)
@@ -56,7 +57,8 @@ class ShowDesktopTests(AutopilotTestCase):
             self.assertTrue(win.is_hidden, "Window '%s' is not hidden after show desktop activated." % (win.title))
 
         # un-show desktop, verify all windows are shown:
-        self.keyboard.press_and_release('Control+Alt+d')
+        self.keybinding("window/show_desktop")
+        self.addCleanup(self.keybinding, "window/show_desktop")
         sleep(3)
         for win in self.bamf.get_open_windows():
             self.assertTrue(win.is_valid)
@@ -67,7 +69,9 @@ class ShowDesktopTests(AutopilotTestCase):
         self.launch_test_apps()
 
         # show desktop, verify all windows are hidden:
-        self.keyboard.press_and_release('Control+Alt+d')
+        self.keybinding("window/show_desktop")
+        self.addCleanup(self.keybinding, "window/show_desktop")
+
         sleep(3)
         open_wins = self.bamf.get_open_windows()
         self.assertGreaterEqual(len(open_wins), 2)
@@ -91,7 +95,8 @@ class ShowDesktopTests(AutopilotTestCase):
                     self.assertTrue(win.is_hidden, "Window '%s' should still be hidden." % (win.title))
 
         # hide desktop - now all windows should be visible:
-        self.keyboard.press_and_release('Control+Alt+d')
+        self.keybinding("window/show_desktop")
+        self.addCleanup(self.keybinding, "window/show_desktop")
         sleep(3)
         for win in self.bamf.get_open_windows():
             if win.is_valid:
@@ -102,21 +107,20 @@ class ShowDesktopTests(AutopilotTestCase):
         self.launch_test_apps()
 
         # show desktop, verify all windows are hidden:
-        switcher = Switcher()
-        switcher.initiate()
+        self.switcher.initiate()
         sleep(0.5)
         found = False
-        for i in range(switcher.get_model_size()):
-            current_icon = switcher.current_icon
+        for i in range(self.switcher.get_model_size()):
+            current_icon = self.switcher.current_icon
             self.assertIsNotNone(current_icon)
             if isinstance(current_icon, DesktopLauncherIcon):
                 found = True
                 break
-            switcher.previous_icon()
-            sleep(0.5)
+            self.switcher.previous_icon()
+            sleep(0.25)
         self.assertTrue(found, "Could not find 'Show Desktop' entry in switcher.")
-        switcher.stop()
-        self.addCleanup(self.keyboard.press_and_release, keys='Control+Alt+d')
+        self.addCleanup(self.keybinding, "window/show_desktop")
+        self.switcher.stop()
 
         sleep(3)
         open_wins = self.bamf.get_open_windows()
