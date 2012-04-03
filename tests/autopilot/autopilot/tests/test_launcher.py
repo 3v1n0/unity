@@ -496,7 +496,7 @@ class LauncherTests(ScenariodLauncherTests):
         # Check if SC is pinned to the launcher already
         icon = self.launcher.model.get_icon_by_desktop_file(sc_desktop_file)
         if icon != None:
-            launcher_instance.unlock_from_launcher(icon[0])
+            launcher_instance.unlock_from_launcher(icon)
             sleep(2.0) # Animation of removing icon can take over a second
         else:
             self.addCleanup(cleanup)
