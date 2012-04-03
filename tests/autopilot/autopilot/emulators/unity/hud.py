@@ -9,7 +9,7 @@
 
 from autopilot.emulators.unity import UnityIntrospectionObject
 from autopilot.emulators.unity.dash import SearchBar
-from autopilot.emulators.unity.icons import EmbeddedIcon
+from autopilot.emulators.unity.icons import HudEmbeddedIcon, HudLauncherIcon
 from autopilot.keybindings import KeybindingsHelper
 
 
@@ -42,8 +42,21 @@ class Hud(KeybindingsHelper):
         if (not view):
           return None
 
-        icons = view.get_children_by_type(EmbeddedIcon)
+        icons = view.get_children_by_type(HudEmbeddedIcon)
         return icons[0] if icons else None
+
+    def get_launcher_icon(self):
+        """Returns the HUD launcher icon"""
+        icons = HudLauncherIcon.get_all_instances()
+        assert(len(icons) == 1)
+        return icons[0]
+
+    @property
+    def icon(self):
+        if self.is_locked_launcher:
+            return self.get_launcher_icon()
+        else:
+            return self.get_embedded_icon()
 
     @property
     def view(self):
