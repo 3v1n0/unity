@@ -51,7 +51,7 @@ TrashLauncherIcon::TrashLauncherIcon()
 
   glib::Object<GFile> location(g_file_new_for_uri("trash:///"));
 
-  GError *err = NULL;
+  glib::Error err;
   trash_monitor_ = g_file_monitor_directory(location,
                                             G_FILE_MONITOR_NONE,
                                             NULL,
@@ -59,8 +59,7 @@ TrashLauncherIcon::TrashLauncherIcon()
 
   if (err)
   {
-    LOG_ERROR(logger) << "Could not create file monitor for trash uri: " << err->message;
-    g_error_free(err);
+    LOG_ERROR(logger) << "Could not create file monitor for trash uri: " << err.Message();
   }
   else
   {
