@@ -325,6 +325,11 @@ class BamfWindow(object):
         """
         return not self._x_win is None
 
+    @property
+    def monitor(self):
+        """Returns the monitor to which the windows belongs to"""
+        return self._window_iface.Monitor()
+
     def close(self):
         """Close the window."""
 
