@@ -135,10 +135,7 @@ class HudBehaviorTests(HudTestsBase):
         """Ensures that once the hud is dismissed, the same application
         that was focused before hud invocation is refocused
         """
-        self.start_app("Calculator")
-        calc = self.get_app_instances("Calculator")
-        self.assertThat(len(calc), Equals(1))
-        calc = calc[0]
+        calc = self.start_app("Calculator")
 
         # first ensure that the application has started and is focused
         self.assertEqual(calc.is_active, True)
@@ -411,10 +408,8 @@ class HudVisualTests(HudTestsBase):
 
     def test_hud_icon_shows_the_focused_application_emblem(self):
         """Tests that the correct HUD icon is shown"""
-        self.start_app("Calculator")
-        calctools = self.get_app_instances("Calculator")
-        self.assertThat(len(calctools), GreaterThan(0))
-        calc = calctools[0]
+        self.close_all_app("Calculator")
+        calc = self.start_app("Calculator")
         self.assertTrue(calc.is_active)
 
         self.reveal_hud()
@@ -434,10 +429,8 @@ class HudVisualTests(HudTestsBase):
 
     def test_switch_dash_hud_does_not_break_the_focused_application_emblem(self):
         """Tests that the correct HUD icon is shown when switching from Dash to HUD"""
-        self.start_app("Calculator")
-        calctools = self.get_app_instances("Calculator")
-        self.assertThat(len(calctools), GreaterThan(0))
-        calc = calctools[0]
+        self.close_all_app("Calculator")
+        calc = self.start_app("Calculator")
         self.assertTrue(calc.is_active)
 
         self.dash.ensure_visible()
@@ -448,10 +441,8 @@ class HudVisualTests(HudTestsBase):
 
     def test_switch_hud_dash_does_not_break_the_focused_application_emblem(self):
         """Tests that the correct HUD icon is shown when switching from HUD to Dash and back"""
-        self.start_app("Calculator")
-        calctools = self.get_app_instances("Calculator")
-        self.assertThat(len(calctools), GreaterThan(0))
-        calc = calctools[0]
+        self.close_all_app("Calculator")
+        calc = self.start_app("Calculator")
         self.assertTrue(calc.is_active)
 
         self.reveal_hud()
