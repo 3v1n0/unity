@@ -64,11 +64,12 @@ private:
   static void OnUnmountReady(GObject* object, GAsyncResult* result, DeviceLauncherIcon* self);
   static void OnDriveStop(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
   void OnSettingsChanged();
-  void ShowNotification(std::string const& icon_name, unsigned size, GdkPixbuf* pixbuf);
+  void ShowNotification(std::string const&, unsigned, GdkPixbuf*, std::string const&);
 
 private:
   GVolume* volume_;
   glib::String device_file_;
+  std::string name_;
   glib::Object<GduDevice> gdu_device_;
   bool keep_in_launcher_;
 };
