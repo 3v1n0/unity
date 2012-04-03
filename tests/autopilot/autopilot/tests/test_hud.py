@@ -33,7 +33,6 @@ class HudTestsBase(AutopilotTestCase):
 
     def setUp(self):
         super(HudTestsBase, self).setUp()
-        sleep(0.25)
 
     def tearDown(self):
         self.hud.ensure_hidden()
