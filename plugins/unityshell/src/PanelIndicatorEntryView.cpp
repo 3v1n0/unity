@@ -568,7 +568,8 @@ void PanelIndicatorEntryView::SetOpacity(double opacity)
   if (opacity_ != opacity)
   {
     opacity_ = opacity;
-    NeedRedraw();
+    SetInputEventSensitivity(opacity_ != 0.0f);
+    QueueDraw();
   }
 }
 
@@ -664,7 +665,8 @@ void PanelIndicatorEntryView::AddProperties(GVariantBuilder* builder)
   .add("label_visible", IsLabelVisible())
   .add("icon_sensitive", IsIconSensitive())
   .add("icon_visible", IsIconVisible())
-  .add("entry_visible", IsVisible())
+  .add("visible", IsVisible() && GetOpacity() != 0.0f)
+  .add("opacity", GetOpacity())
   .add("active", proxy_->active())
   .add("menu_x", proxy_->geometry().x)
   .add("menu_y", proxy_->geometry().y)

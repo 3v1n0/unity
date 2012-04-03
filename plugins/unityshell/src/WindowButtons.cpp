@@ -173,6 +173,8 @@ public:
     if (_opacity != opacity)
     {
       _opacity = opacity;
+      SetInputEventSensitivity(_opacity != 0.0f);
+
       QueueDraw();
     }
   }
@@ -238,7 +240,7 @@ public:
 protected:
   std::string GetName() const
   {
-    return "Button";
+    return "WindowButton";
   }
 
   void AddProperties(GVariantBuilder* builder)
@@ -276,7 +278,8 @@ protected:
 
     variant::BuilderWrapper(builder).add(GetGeometry())
                                     .add("type", type_name)
-                                    .add("visible", IsVisible())
+                                    .add("visible", IsVisible() && _opacity != 0.0f)
+                                    .add("sensitive", GetInputEventSensitivity())
                                     .add("enabled", IsEnabled())
                                     .add("visual_state", state_name)
                                     .add("opacity", _opacity)
@@ -653,6 +656,7 @@ void WindowButtons::SetOpacity(double opacity)
   if (opacity_ != opacity)
   {
     opacity_ = opacity;
+    SetInputEventSensitivity(opacity_ != 0.0f);
     QueueDraw();
   }
 }
@@ -716,10 +720,12 @@ std::string WindowButtons::GetName() const
 
 void WindowButtons::AddProperties(GVariantBuilder* builder)
 {
-  unity::variant::BuilderWrapper(builder).add(GetGeometry())
-                                         .add("opacity", opacity_)
-                                         .add("focused", focused_)
-                                         .add("controlled_window", window_xid_);
+  variant::BuilderWrapper(builder).add(GetGeometry())
+                                  .add("opacity", opacity_)
+                                  .add("visible", opacity_ != 0.0f)
+                                  .add("sensitive", GetInputEventSensitivity())
+                                  .add("focused", focused_)
+                                  .add("controlled_window", window_xid_);
 }
 
 } // unity namespace
