@@ -149,6 +149,12 @@ void ResultRendererHorizontalTile::Render(nux::GraphicsEngine& GfxContext,
     int y = icon_top_side + CARD_VIEW_PADDING + CARD_VIEW_ICON_OUTLINE_WIDTH;
     int w = CARD_VIEW_ICON_SIZE;
     int h = CARD_VIEW_ICON_SIZE;
+    gPainter.Paint2DQuadColor(GfxContext,
+                              x - CARD_VIEW_ICON_OUTLINE_WIDTH,
+                              y - CARD_VIEW_ICON_OUTLINE_WIDTH,
+                              w + 2 * CARD_VIEW_ICON_OUTLINE_WIDTH,
+                              h + 2 * CARD_VIEW_ICON_OUTLINE_WIDTH,
+                              nux::color::Black);
     GfxContext.QRP_1Tex(x,
                         y,
                         w,
@@ -156,14 +162,6 @@ void ResultRendererHorizontalTile::Render(nux::GraphicsEngine& GfxContext,
                         container->icon->GetDeviceTexture(),
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
-    GfxContext.QRP_QuadWireframe(x,
-                                 y - CARD_VIEW_ICON_OUTLINE_WIDTH,
-                                 w + 2 * CARD_VIEW_ICON_OUTLINE_WIDTH,
-                                 h + 2 * CARD_VIEW_ICON_OUTLINE_WIDTH,
-                                 nux::color::Black,
-                                 nux::color::Black,
-                                 nux::color::Black,
-                                 nux::color::Black);
   }
 
   if (container->text)
