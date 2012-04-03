@@ -20,7 +20,10 @@
 
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
+
 #include <UnityCore/Variant.h>
+#include <UnityCore/GLibWrapper.h>
+#include <UnityCore/DesktopUtilities.h>
 
 #include "BamfLauncherIcon.h"
 #include "FavoriteStore.h"
@@ -32,8 +35,6 @@
 
 #include <glib/gi18n-lib.h>
 #include <gio/gdesktopappinfo.h>
-
-#include <UnityCore/GLibWrapper.h>
 
 namespace unity
 {
@@ -1027,19 +1028,7 @@ std::string BamfLauncherIcon::GetDesktopID()
 {
   std::string const& desktop_file = DesktopFile();
 
-  if (!desktop_file.empty())
-  {
-    size_t id_pos = desktop_file.rfind('/');
-
-    if (id_pos != std::string::npos)
-    {
-      size_t id_start = id_pos + 1;
-
-      return (id_start < desktop_file.length()) ? desktop_file.substr(id_start) : "";
-    }
-  }
-
-  return desktop_file;
+  return DesktopUtilities::GetDesktopID(desktop_file);
 }
 
 std::string BamfLauncherIcon::GetRemoteUri()

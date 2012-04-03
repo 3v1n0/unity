@@ -188,9 +188,8 @@ public:
 
   virtual void SendDndLeave() = 0;
 
-  virtual void InsertEntryRemote(LauncherEntryRemote* remote) = 0;
-
-  virtual void RemoveEntryRemote(LauncherEntryRemote* remote) = 0;
+  virtual void InsertEntryRemote(LauncherEntryRemote::Ptr const& remote) = 0;
+  virtual void RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote) = 0;
 
   virtual std::string DesktopFile() = 0;
 

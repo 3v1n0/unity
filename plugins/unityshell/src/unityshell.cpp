@@ -359,8 +359,16 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      BackgroundEffectHelper::updates_enabled = true;
 
-     ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [&](GVariant * args) { 
-       dash_monitor_ = g_variant_get_int32(args);
+     ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [&](GVariant * data) 
+     {
+       unity::glib::String overlay_identity;
+       gboolean can_maximise = FALSE;
+       gint32 overlay_monitor = 0;
+       g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
+                    &overlay_identity, &can_maximise, &overlay_monitor);
+       
+       dash_monitor_ = overlay_monitor;
+       
        RaiseInputWindows();
      });
       LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";

@@ -32,6 +32,9 @@ UScreen::UScreen()
                    (GCallback)UScreen::Changed, this);
 
   Refresh();
+
+  proxy_ = unity::glib::DBusProxy::Ptr(new unity::glib::DBusProxy("org.freedesktop.UPower", "/org/freedesktop/UPower", "org.freedesktop.UPower", G_BUS_TYPE_SYSTEM));
+  proxy_->Connect("Resuming", [&](GVariant* data) -> void { resuming.emit(); });
 }
 
 UScreen::~UScreen()

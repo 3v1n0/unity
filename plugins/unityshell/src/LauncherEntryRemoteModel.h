@@ -20,8 +20,9 @@
 #ifndef LAUNCHER_ENTRY_REMOTE_MODEL_H
 #define LAUNCHER_ENTRY_REMOTE_MODEL_H
 
-#include <glib.h>
+#include <gio/gio.h>
 #include <sigc++/sigc++.h>
+#include <map>
 
 #include "LauncherEntryRemote.h"
 
@@ -34,41 +35,40 @@ public:
   LauncherEntryRemoteModel();
   ~LauncherEntryRemoteModel();
 
-  guint                Size();
-  LauncherEntryRemote* LookupByUri(const gchar* app_uri);
-  LauncherEntryRemote* LookupByDesktopId(const gchar* desktop_id);
-  LauncherEntryRemote* LookupByDesktopFile(const gchar* desktop_file_path);
-  GList*               GetUris();
+  unsigned int Size() const;
+  LauncherEntryRemote::Ptr LookupByUri(std::string const& app_uri);
+  LauncherEntryRemote::Ptr LookupByDesktopId(std::string const& desktop_id);
+  LauncherEntryRemote::Ptr LookupByDesktopFile(std::string const& desktop_file_path);
+  std::list<std::string> GetUris() const;
 
-  void AddEntry(LauncherEntryRemote* entry);
-  void RemoveEntry(LauncherEntryRemote* entry);
-  void HandleUpdateRequest(const gchar* sender_name,
-                           GVariant*    paramaters);
-
-  sigc::signal<void, LauncherEntryRemote*> entry_added;
-  sigc::signal<void, LauncherEntryRemote*> entry_removed;
+  sigc::signal<void, LauncherEntryRemote::Ptr const&> entry_added;
+  sigc::signal<void, LauncherEntryRemote::Ptr const&> entry_removed;
 
 private:
-  static void on_launcher_entry_signal_received(GDBusConnection* connection,
-                                                const gchar*     sender_name,
-                                                const gchar*     object_path,
-                                                const gchar*     interface_name,
-                                                const gchar*     signal_name,
-                                                GVariant*        parameters,
-                                                gpointer         user_data);
+  void AddEntry(LauncherEntryRemote::Ptr const& entry);
+  void RemoveEntry(LauncherEntryRemote::Ptr const& entry);
+  void HandleUpdateRequest(std::string const& sender_name, GVariant* paramaters);
 
-  static void on_dbus_name_owner_changed_signal_received(GDBusConnection* connection,
-                                                         const gchar* sender_name,
-                                                         const gchar* object_path,
-                                                         const gchar* interface_name,
-                                                         const gchar* signal_name,
-                                                         GVariant* parameters,
-                                                         gpointer user_data);
+  static void OnEntrySignalReceived(GDBusConnection* connection,
+                                    const gchar* sender_name,
+                                    const gchar* object_path,
+                                    const gchar* interface_name,
+                                    const gchar* signal_name,
+                                    GVariant* parameters,
+                                    gpointer user_data);
 
-  GDBusConnection* _conn;
-  guint            _launcher_entry_dbus_signal_id;
-  guint            _dbus_name_owner_changed_signal_id;
-  GHashTable*      _entries_by_uri;
+  static void OnDBusNameOwnerChanged(GDBusConnection* connection,
+                                     const gchar* sender_name,
+                                     const gchar* object_path,
+                                     const gchar* interface_name,
+                                     const gchar* signal_name,
+                                     GVariant* parameters,
+                                     gpointer user_data);
+
+  glib::Object<GDBusConnection> _conn;
+  unsigned int _launcher_entry_dbus_signal_id;
+  unsigned int _dbus_name_owner_changed_signal_id;
+  std::map<std::string, LauncherEntryRemote::Ptr> _entries_by_uri;
 };
 
 } // namespace
