@@ -598,7 +598,7 @@ void PanelView::OnEntryActivated(std::string const& entry_id, nux::Rect const& g
       g_source_remove(_track_menu_pointer_id);
       _track_menu_pointer_id = 0;
     }
-    _menu_view->OnMenusClosed();
+    _menu_view->NotifyAllMenusClosed();
     _tracked_pointer_pos = {-1, -1};
   }
 

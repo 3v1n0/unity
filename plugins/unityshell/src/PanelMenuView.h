@@ -52,7 +52,7 @@ public:
   Window GetMaximizedWindow() const;
   bool GetControlsActive() const;
 
-  void OnMenusClosed();
+  void NotifyAllMenusClosed();
 
   virtual void AddIndicator(indicator::Indicator::Ptr const& indicator);
 
