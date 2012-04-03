@@ -39,11 +39,6 @@ class HudTestsBase(AutopilotTestCase):
         self.hud.ensure_hidden()
         super(HudTestsBase, self).tearDown()
 
-    def get_hud_launcher_icon(self):
-        icons = HudLauncherIcon.get_all_instances()
-        self.assertEqual(1, len(icons))
-        return icons[0]
-
     def get_num_active_launcher_icons(self):
         num_active = 0
         for icon in self.launcher.model.get_launcher_icons():
@@ -316,7 +311,7 @@ class HudLockedLauncherInteractionsTests(HudTestsBase):
     def test_hud_launcher_icon_hides_bfb(self):
         """Tests that the BFB icon is hidden when the HUD launcher icon is shown"""
 
-        hud_icon = self.get_hud_launcher_icon()
+        hud_icon = self.hud.get_launcher_icon()
         bfb_icon = self.launcher.model.get_bfb_icon()
 
         self.assertTrue(bfb_icon.is_visible_on_monitor(self.hud_monitor))
@@ -400,7 +395,7 @@ class HudVisualTests(HudTestsBase):
         self.hud.visible
         sleep(.5)
 
-        hud_launcher_icon = self.get_hud_launcher_icon()
+        hud_launcher_icon = self.hud.get_launcher_icon()
         hud_embedded_icon = self.hud.get_embedded_icon()
 
         if self.hud.is_locked_launcher:
@@ -425,12 +420,7 @@ class HudVisualTests(HudTestsBase):
         self.reveal_hud()
         sleep(.5)
 
-        if self.hud.is_locked_launcher:
-            hud_launcher_icon = self.get_hud_launcher_icon()
-            self.assertThat(hud_launcher_icon.icon_name, Equals(calc.icon))
-        else:
-            hud_embedded_icon = self.hud.get_embedded_icon()
-            self.assertThat(hud_embedded_icon.icon_name, Equals(calc.icon))
+        self.assertThat(self.hud.icon.icon_name, Equals(calc.icon))
 
     def test_switch_dash_hud_does_not_break_the_focused_application_emblem(self):
         """Tests that the correct HUD icon is shown when switching from Dash to HUD"""
@@ -446,12 +436,7 @@ class HudVisualTests(HudTestsBase):
         self.reveal_hud()
         sleep(.5)
 
-        if self.hud.is_locked_launcher:
-            hud_launcher_icon = self.get_hud_launcher_icon()
-            self.assertThat(hud_launcher_icon.icon_name, Equals(calc.icon))
-        else:
-            hud_embedded_icon = self.hud.get_embedded_icon()
-            self.assertThat(hud_embedded_icon.icon_name, Equals(calc.icon))
+        self.assertThat(self.hud.icon.icon_name, Equals(calc.icon))
 
     def test_switch_hud_dash_does_not_break_the_focused_application_emblem(self):
         """Tests that the correct HUD icon is shown when switching from HUD to Dash and back"""
@@ -470,9 +455,4 @@ class HudVisualTests(HudTestsBase):
         self.reveal_hud()
         sleep(.5)
 
-        if self.hud.is_locked_launcher:
-            hud_launcher_icon = self.get_hud_launcher_icon()
-            self.assertThat(hud_launcher_icon.icon_name, Equals(calc.icon))
-        else:
-            hud_embedded_icon = self.hud.get_embedded_icon()
-            self.assertThat(hud_embedded_icon.icon_name, Equals(calc.icon))
+        self.assertThat(self.hud.icon.icon_name, Equals(calc.icon))
