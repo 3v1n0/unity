@@ -178,8 +178,7 @@ nux::View* View::CreateShortKeyEntryView(AbstractHint::Ptr const& hint)
   layout->SetSpaceBetweenChildren(INTER_SPACE_SHORTKEY_DESCRIPTION);
   description_layout->SetContentDistribution(nux::MAJOR_POSITION_START);
 
-   auto on_shortkey_changed = [](std::string const& new_shortkey, nux::View*
- main_view, nux::StaticText* view) {
+   auto on_shortkey_changed = [](std::string const& new_shortkey, nux::View* main_view, nux::StaticText* view) {
       std::string skey("<b>");
       skey += new_shortkey;
       skey += "</b>";
