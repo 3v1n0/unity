@@ -59,7 +59,7 @@ TrashLauncherIcon::TrashLauncherIcon()
 
   if (err)
   {
-    LOG_ERROR(logger) << "Could not create file monitor for trash uri: " << err.Message();
+    LOG_ERROR(logger) << "Could not create file monitor for trash uri: " << err;
   }
   else
   {
