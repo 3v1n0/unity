@@ -46,12 +46,13 @@ public:
                           int discovery_fadein, int discovery_fadeout);
 
   void SetMousePosition(int x, int y);
-  void AllMenusClosed();
   void SetMonitor(int monitor);
 
   Window GetTopWindow() const;
   Window GetMaximizedWindow() const;
   bool GetControlsActive() const;
+
+  void OnMenusClosed();
 
   virtual void AddIndicator(indicator::Indicator::Ptr const& indicator);
 
