@@ -335,7 +335,7 @@ private:
   std::vector<nux::Geometry> _parent_geo;
   std::vector<nux::Point3> _saved_center;
 
-  static GtkIconTheme* _unity_theme;
+  static glib::Object<GtkIconTheme> _unity_theme;
 
   BaseTexturePtr _emblem;
 
