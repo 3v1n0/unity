@@ -440,9 +440,7 @@ class HudVisualTests(HudTestsBase):
         calc = calctools[0]
         self.assertTrue(calc.is_active)
 
-        self.keybinding("dash/reveal", 0.1)
-        sleep(1)
-
+        self.dash.ensure_visible()
         self.reveal_hud()
         sleep(.5)
 
@@ -457,11 +455,7 @@ class HudVisualTests(HudTestsBase):
         self.assertTrue(calc.is_active)
 
         self.reveal_hud()
-        sleep(.5)
-
-        self.keybinding("dash/reveal", 0.1)
-        sleep(1)
-
+        self.dash.ensure_visible()
         self.reveal_hud()
         sleep(.5)
 
