@@ -223,14 +223,14 @@ class HudBehaviorTests(HudTestsBase):
         """When switching from the hud to the dash you don't lose key focus."""
         self.hud.ensure_visible()
         sleep(1)
+
         self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
 
         self.keyboard.type('focus')
-       
+
         self.assertTrue(self.dash.visible)
         self.assertEqual(self.dash.search_string, 'focus')
-        self.dash.ensure_hidden()
-
 
     def test_dash_to_hud_has_key_focus(self):
         """When switching from the dash to the hud you don't lose key focus."""
