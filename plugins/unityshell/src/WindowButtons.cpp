@@ -276,7 +276,7 @@ protected:
         state_name = "normal";
     }
 
-    variant::BuilderWrapper(builder).add(GetGeometry())
+    variant::BuilderWrapper(builder).add(GetAbsoluteGeometry())
                                     .add("type", type_name)
                                     .add("visible", IsVisible() && _opacity != 0.0f)
                                     .add("sensitive", GetInputEventSensitivity())
@@ -720,7 +720,7 @@ std::string WindowButtons::GetName() const
 
 void WindowButtons::AddProperties(GVariantBuilder* builder)
 {
-  variant::BuilderWrapper(builder).add(GetGeometry())
+  variant::BuilderWrapper(builder).add(GetAbsoluteGeometry())
                                   .add("opacity", opacity_)
                                   .add("visible", opacity_ != 0.0f)
                                   .add("sensitive", GetInputEventSensitivity())

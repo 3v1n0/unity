@@ -239,7 +239,7 @@ std::string PanelTray::GetName() const
 void PanelTray::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
-  .add(GetGeometry())
+  .add(GetAbsoluteGeometry())
   .add("children_count", children_.size());
 }
 

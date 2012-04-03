@@ -655,7 +655,7 @@ void PanelIndicatorEntryView::AddProperties(GVariantBuilder* builder)
   }
 
   variant::BuilderWrapper(builder)
-  .add(GetGeometry())
+  .add(GetAbsoluteGeometry())
   .add("id", GetEntryID())
   .add("name_hint", proxy_->name_hint())
   .add("type", type_name)
