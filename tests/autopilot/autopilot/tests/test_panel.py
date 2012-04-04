@@ -35,6 +35,8 @@ class PanelTestsBase(AutopilotTestCase):
 
     def setUp(self):
         super(PanelTestsBase, self).setUp()
+        self.panel = self.panels.get_panel_for_monitor(self.panel_monitor)
+        self.panel.move_mouse_below_the_panel()
 
     def open_new_application_window(self, app_name, maximize=False):
         """Opens a new instance of the requested application, ensuring
@@ -80,11 +82,6 @@ class PanelTitleTests(PanelTestsBase):
 
     scenarios = _make_monitor_scenarios()
     #panel_monitor = 0
-
-    def setUp(self):
-        super(PanelTitleTests, self).setUp()
-        self.screen_geo.move_mouse_to_monitor(self.panel_monitor)
-        self.panel = self.panels.get_panel_for_monitor(self.panel_monitor)
 
     def test_panel_title_on_empty_desktop(self):
         sleep(1)
@@ -150,28 +147,27 @@ class PanelTitleTests(PanelTestsBase):
         text_win = self.open_new_application_window("Text Editor", maximize=True)
 
         self.assertThat(self.panel.title, Equals(text_win.title))
+        old_title = text_win.title
         sleep(.25)
 
         text_win.set_focus()
         self.keyboard.type("Unity rocks!")
+        self.addCleanup(os.remove, "/tmp/autopilot-awesome-test.txt")
         self.keyboard.press_and_release("Ctrl+S")
         sleep(.25)
         self.keyboard.type("/tmp/autopilot-awesome-test.txt")
         self.keyboard.press_and_release("Return")
-        sleep(.25)
+        sleep(1)
 
+        self.assertThat(old_title, NotEquals(text_win.title))
         self.assertThat(self.panel.title, Equals(text_win.title))
 
-class PanelTitleCrossMonitors(PanelTestsBase):
+
+class PanelTitleCrossMonitorsTests(PanelTestsBase):
 
     scenarios = []
     if ScreenGeometry().get_num_monitors() > 1:
         scenarios = [("Multimonitor", {})]
-
-    def setUp(self):
-        super(PanelTitleCrossMonitors, self).setUp()
-        self.screen_geo.move_mouse_to_monitor(self.panel_monitor)
-        self.panel = self.panels.get_panel_for_monitor(self.panel_monitor)
 
     def test_panel_title_updates_moving_window(self):
         """Tests the title shown in the panel, moving a restored window around them"""
