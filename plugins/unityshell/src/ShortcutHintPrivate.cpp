@@ -62,12 +62,12 @@ std::string GetTranslatableLabel(std::string const& scut)
                         &accelerator_key,
                         &accelerator_mods);
 
-  glib::String key(gtk_accelerator_get_label(accelerator_key, accelerator_mods));
+  std::string temp (glib::String(gtk_accelerator_get_label(accelerator_key, accelerator_mods)).Str());
 
-  std::string temp(key.Str());
   if (temp.empty())
     return "";
 
+  // gtk_accelerator_get_label adds an extra '+' at the end of the binding.
   std::string ret(temp.begin(), temp.end() - 1);
   
   boost::replace_all(ret, "+", " + ");
