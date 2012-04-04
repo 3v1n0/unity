@@ -384,7 +384,7 @@ void LensView::CheckNoResults(Lens::Hints const& hints)
 {
   gint count = lens_->results()->count();
 
-  if (count == 0 && !no_results_active_ && search_string_ != "")
+  if (count == 0 && !no_results_active_ && !search_string_.empty())
   {
     std::stringstream markup;
     Lens::Hints::const_iterator it;
