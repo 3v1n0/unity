@@ -335,6 +335,7 @@ private:
 
 WindowButtons::WindowButtons()
   : HLayout("", NUX_TRACKER_LOCATION)
+  , monitor_(0)
   , opacity_(1.0f)
   , focused_(true)
   , window_xid_(0)
@@ -508,6 +509,19 @@ void WindowButtons::OnOverlayShown(GVariant* data)
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
+  if (overlay_monitor != monitor_)
+  {
+    for (auto area : GetChildren())
+    {
+      auto button = dynamic_cast<WindowButton*>(area);
+
+      if (button)
+        button->SetEnabled(false);
+    }
+
+    return;
+  }
+
   active_overlay_ = overlay_identity.Str();
 
   for (auto area : GetChildren())
@@ -560,8 +574,21 @@ void WindowButtons::OnOverlayHidden(GVariant* data)
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
+  if (overlay_monitor != monitor_)
+  {
+    for (auto area : GetChildren())
+    {
+      auto button = dynamic_cast<WindowButton*>(area);
+
+      if (button)
+        button->SetEnabled(true);
+    }
+  }
+
   if (active_overlay_ != overlay_identity.Str())
     return;
+
+  active_overlay_ = "";
 
   for (auto area : GetChildren())
   {
@@ -713,6 +740,16 @@ Window WindowButtons::GetControlledWindow()
   return window_xid_;
 }
 
+void WindowButtons::SetMonitor(int monitor)
+{
+  monitor_ = monitor;
+}
+
+int WindowButtons::GetMonitor()
+{
+  return monitor_;
+}
+
 std::string WindowButtons::GetName() const
 {
   return "WindowButtons";
@@ -721,6 +758,7 @@ std::string WindowButtons::GetName() const
 void WindowButtons::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder).add(GetAbsoluteGeometry())
+                                  .add("monitor", monitor_)
                                   .add("opacity", opacity_)
                                   .add("visible", opacity_ != 0.0f)
                                   .add("sensitive", GetInputEventSensitivity())
