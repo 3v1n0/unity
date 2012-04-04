@@ -94,6 +94,7 @@ PanelMenuView::PanelMenuView()
                                      sigc::mem_fun(this, &PanelMenuView::OnActiveAppChanged));
 
   _window_buttons = new WindowButtons();
+  _window_buttons->SetMonitor(_monitor);
   _window_buttons->SetControlledWindow(_active_xid);
   _window_buttons->SetParentObject(this);
   _window_buttons->SetLeftAndRightPadding(MAIN_LEFT_PADDING, MENUBAR_PADDING);
@@ -284,28 +285,21 @@ nux::Area* PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, n
 void PanelMenuView::PreLayoutManagement()
 {
   PanelIndicatorsView::PreLayoutManagement();
-
-  int panel_height = panel::Style::Instance().panel_height;
+  nux::Geometry const& geo = GetGeometry();
 
   _window_buttons->ComputeContentSize();
-  int buttons_diff = panel_height - _window_buttons->GetContentHeight();
+  int buttons_diff = geo.height - _window_buttons->GetContentHeight();
   _window_buttons->SetBaseY(buttons_diff > 0 ? std::ceil(buttons_diff/2.0f) : 0);
 
   layout_->ComputeContentSize();
   int layout_width = layout_->GetContentWidth();
-  nux::Geometry const& geo = GetGeometry();
 
   _titlebar_grab_area->SetBaseX(layout_width);
   _titlebar_grab_area->SetBaseHeight(geo.height);
   _titlebar_grab_area->SetMinimumWidth(geo.width - layout_width);
   _titlebar_grab_area->SetMaximumWidth(geo.width - layout_width);
-}
 
-long PanelMenuView::PostLayoutManagement(long LayoutResult)
-{
-  SetMaximumEntriesWidth(GetAbsoluteWidth() - _window_buttons->GetContentWidth());
-
-  return PanelIndicatorsView::PostLayoutManagement(LayoutResult);;
+  SetMaximumEntriesWidth(geo.width - _window_buttons->GetContentWidth());
 }
 
 void PanelMenuView::OnFadeInChanged(double opacity)
@@ -1715,6 +1709,8 @@ void PanelMenuView::SetMonitor(int monitor)
 
   Window maximized = GetMaximizedWindow();
   Window buttons_win = (maximized == _active_xid) ? maximized : 0;
+
+  _window_buttons->SetMonitor(_monitor);
   _window_buttons->SetControlledWindow(buttons_win);
 
   g_list_free(windows);
