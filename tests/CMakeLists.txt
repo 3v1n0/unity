@@ -252,6 +252,8 @@ endif (GTEST_SRC_DIR AND
        GMOCK_LIB AND
        GMOCK_MAIN_LIB)
 
+add_subdirectory (test-gesture-engine)
+
 #
 # check target
 #
@@ -261,21 +263,25 @@ set (TEST_RESULT_HTML ${TEST_RESULT_DIR}/test-results.html)
 set (GTEST_TEST_COMMAND ./test-gtest)
 set (GTEST_TEST_COMMAND_XLESS ./test-gtest-xless)
 set (GTEST_TEST_COMMAND_DBUS dbus-test-runner --task ./test-gtest-service --task ./test-gtest-dbus)
+set (GTEST_TEST_COMMAND_GESTURE_ENGINE ./test-gesture-engine/test-gesture-engine)
 
 set (TEST_COMMAND
      gtester --verbose -k --g-fatal-warnings -o=${TEST_RESULT_XML} ./test-unit
   && ${GTEST_TEST_COMMAND}
   && ${GTEST_TEST_COMMAND_XLESS}
-  && ${GTEST_TEST_COMMAND_DBUS})
+  && ${GTEST_TEST_COMMAND_GESTURE_ENGINE}
+  && ${GTEST_TEST_COMMAND_DBUS}
+    )
 
 set (TEST_COMMAND_HEADLESS
      ${GTEST_TEST_COMMAND_XLESS}
+  && ${GTEST_TEST_COMMAND_GESTURE_ENGINE}
   #&& ${GTEST_TEST_COMMAND_DBUS}
   && echo "Warning, DBus test cases are disabled!!")
 
 if (GTEST_SRC_DIR)
-  add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest test-gtest-xless test-gtest-dbus)
-  add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless test-gtest-dbus)
+  add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest test-gtest-xless test-gtest-dbus test-gesture-engine)
+  add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless test-gtest-dbus test-gesture-engine)
   add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})
   add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest test-gtest-xless)
 else (GTEST_SRC_DIR)
