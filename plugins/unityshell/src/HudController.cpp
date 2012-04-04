@@ -362,6 +362,8 @@ void Controller::HideHud(bool restore)
   window_->EnableInputWindow(false, "Hud", true, false);
   visible_ = false;
 
+  nux::GetWindowCompositor().SetKeyFocusArea(NULL,nux::KEY_NAV_NONE);
+
   StartShowHideTimeline();
 
   restore = true;
