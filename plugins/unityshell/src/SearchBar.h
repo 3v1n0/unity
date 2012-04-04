@@ -60,6 +60,7 @@ public:
   SearchBar(bool show_filter_hint, NUX_FILE_LINE_PROTO);
   ~SearchBar();
 
+  void ForceSearchChanged();
   void SearchFinished();
   nux::TextEntry* text_entry() const;
   nux::View* show_filters() const;
