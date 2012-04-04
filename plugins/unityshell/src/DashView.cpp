@@ -146,6 +146,9 @@ void DashView::AboutToShow()
     active_lens_view_->lens()->view_type = ViewType::LENS_VIEW;
   }
 
+  // this will make sure the spinner animates if the search takes a while
+  search_bar_->ForceSearchChanged();
+
   renderer_.AboutToShow();
 }
 
@@ -438,7 +441,7 @@ void DashView::OnLiveSearchReached(std::string const& search_string)
   LOG_DEBUG(logger) << "Live search reached: " << search_string;
   if (active_lens_view_)
   {
-    active_lens_view_->search_string = search_string;
+    active_lens_view_->PerformSearch(search_string);
   }
 }
 
@@ -491,6 +494,10 @@ void DashView::OnLensBarActivated(std::string const& id)
 
   search_bar_->search_string = view->search_string;
   search_bar_->search_hint = view->lens()->search_hint;
+  // lenses typically return immediately from Search() if the search query
+  // doesn't change, so SearchFinished will be called in a few ms
+  // FIXME: if we're forcing a search here, why don't we get rid of view types?
+  search_bar_->ForceSearchChanged();
 
   bool expanded = view->filters_expanded;
   search_bar_->showing_filters = expanded;
