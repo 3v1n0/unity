@@ -1107,11 +1107,13 @@ void Controller::KeyNavActivate()
 
   if (pimpl->launcher_grabbed)
   {
-    pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_NAV);
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_NAV,
+                            g_variant_new_int32(pimpl->keyboard_launcher_->monitor));
   }
   else
   {
-    pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_SWTICHER);
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_SWTICHER,
+                            g_variant_new_int32(pimpl->keyboard_launcher_->monitor));
   }
 
   AbstractLauncherIcon::Ptr const& selected = pimpl->model_->Selection();
