@@ -26,7 +26,7 @@
 
 class CompWindowMock {
 public:
-  CompWindowMock() : _moved(false) {}
+  CompWindowMock() : _moved(false), _maximize_count(0), _maximize_state(0) {}
 
   int x() const {return _geometry.x();}
   int y() const {return _geometry.y();}
@@ -41,7 +41,7 @@ public:
 
   unsigned int actions () {return _actions;}
 
-  void maximize(int state) {}
+  void maximize(int state) {++_maximize_count; _maximize_state = state;}
 
   /* OBS: I wonder why it returns a reference */
   unsigned int &state() {return _state;}
@@ -61,6 +61,9 @@ public:
   bool _moved;
   int _movement_x;
   int _movement_y;
+
+  int _maximize_count;
+  int _maximize_state;
 };
 
 #endif
