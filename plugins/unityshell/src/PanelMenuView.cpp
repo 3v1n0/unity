@@ -1549,13 +1549,19 @@ void PanelMenuView::OnSwitcherShown(GVariant* data)
   if (!data)
     return;
 
-  _switcher_showing = g_variant_get_boolean(data);
+  bool switcher_shown;
+  int monitor;
+  g_variant_get(data, "(bi)", &switcher_shown, &monitor);
+
+  if (switcher_shown == _switcher_showing || monitor != _monitor)
+    return;
+
+  _switcher_showing = switcher_shown;
 
   if (!_switcher_showing)
   {
     auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
     _is_inside = GetAbsoluteGeometry().IsInside(mouse);
-    _panel_title = "";
   }
   else
   {
@@ -1568,11 +1574,8 @@ void PanelMenuView::OnSwitcherShown(GVariant* data)
 
 void PanelMenuView::OnSwitcherSelectionChanged(GVariant* data)
 {
-  if (!data)
+  if (!data || !_switcher_showing)
     return;
-
-  _show_now_activated = false;
-  _switcher_showing = true;
 
   const gchar *title = g_variant_get_string(data, 0);
   _panel_title = (title ? title : "");
@@ -1586,7 +1589,11 @@ void PanelMenuView::OnLauncherKeyNavStarted(GVariant* data)
   if (_launcher_keynav)
     return;
 
-  _launcher_keynav = true;
+
+  if (!data || (data && g_variant_get_int32(data) == _monitor))
+  {
+    _launcher_keynav = true;
+  }
 }
 
 void PanelMenuView::OnLauncherKeyNavEnded(GVariant* data)
