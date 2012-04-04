@@ -263,6 +263,38 @@ class LauncherTests(ScenariodLauncherTests):
         # FIXME We can't directly check for self.launcher.num_launcher_icons - 1
         self.assertThat(self.launcher.key_nav_selection, GreaterThan(1))
 
+    def test_launcher_switcher_activate_keep_focus(self):
+        """Activating a running launcher icon should focus it"""
+        calc = self.start_app("Calculator")
+        sleep(.5)
+
+        self.close_all_app("Mahjongg")
+        mahjongg = self.start_app("Mahjongg")
+        self.assertTrue(mahjongg.is_active)
+        self.assertFalse(calc.is_active)
+
+        launcher_instance = self.get_launcher()
+        launcher_instance.switcher_start()
+
+        found = False
+        for icon in self.launcher.model.get_launcher_icons_for_monitor(self.launcher_monitor):
+            if (icon.tooltip_text == calc.name):
+                found = True
+                # FIXME: When releasing the keybinding another "next" is done
+                launcher_instance.switcher_prev()
+                launcher_instance.switcher_activate()
+                break
+            else:
+                launcher_instance.switcher_next()
+
+        sleep(.5)
+        if not found:
+            self.addCleanup(launcher_instance.switcher_cancel)
+
+        self.assertTrue(found)
+        self.assertTrue(calc.is_active)
+        self.assertFalse(mahjongg.is_active)
+
     def test_launcher_keyboard_reveal_works(self):
         """Revealing launcher with keyboard must work."""
         launcher_instance = self.get_launcher()
@@ -512,6 +544,35 @@ class LauncherTests(ScenariodLauncherTests):
 
         self.assertThat(self.launcher.key_nav_is_active, Equals(False))
 
+    def test_launcher_keynav_activate_keep_focus(self):
+        """Activating a running launcher icon should focus it"""
+        calc = self.start_app("Calculator")
+        sleep(.5)
+
+        self.close_all_app("Mahjongg")
+        mahjongg = self.start_app("Mahjongg")
+        self.assertTrue(mahjongg.is_active)
+        self.assertFalse(calc.is_active)
+
+        launcher_instance = self.get_launcher()
+        launcher_instance.key_nav_start()
+
+        found = False
+        for icon in self.launcher.model.get_launcher_icons_for_monitor(self.launcher_monitor):
+            if (icon.tooltip_text == calc.name):
+                found = True
+                launcher_instance.key_nav_activate()
+                break
+            else:
+                launcher_instance.key_nav_next()
+
+        sleep(.5)
+        if not found:
+            self.addCleanup(launcher_instance.key_nav_cancel)
+
+        self.assertTrue(found)
+        self.assertTrue(calc.is_active)
+        self.assertFalse(mahjongg.is_active)
 
     def test_software_center_add_icon(self):
         """ Test the ability to add a SoftwareCenterLauncherIcon """
