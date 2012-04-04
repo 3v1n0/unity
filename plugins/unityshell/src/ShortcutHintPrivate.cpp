@@ -62,20 +62,20 @@ std::string GetTranslatableLabel(std::string const& scut)
                         &accelerator_key,
                         &accelerator_mods);
 
-  std::string temp (glib::String(gtk_accelerator_get_label(accelerator_key, accelerator_mods)).Str());
+  std::string temp(glib::String(gtk_accelerator_get_label(accelerator_key, accelerator_mods)).Str());
 
-  if (temp.empty())
-    return "";
+  // gtk_accelerator_get_label adds an extra '+' at the end of the label.
+  if (temp.length() > 0)
+  {
+    std::string::iterator it = temp.end() - 1;
+    if (*it == '+')
+      temp.erase(it);
+  }
 
-  // gtk_accelerator_get_label adds an extra '+' at the end of the binding.
-  std::string ret(temp.begin(), temp.end() - 1);
-  
-  boost::replace_all(ret, "+", " + ");
-  
-  if (scut[scut.size() - 1] != '+')
-    ret += scut[scut.size() - 1];
+  // Adds an extra space around the '+'.
+  boost::replace_all(temp, "+", " + ");
     
-  return ret;
+  return temp;
 }
 
 std::string FixMouseShortcut(std::string const& scut)
