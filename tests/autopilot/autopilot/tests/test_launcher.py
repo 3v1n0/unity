@@ -359,6 +359,21 @@ class LauncherTests(ScenariodLauncherTests):
         self.assertThat(self.launcher.key_nav_is_active, Equals(False))
         self.assertThat(self.launcher.key_nav_is_grabbed, Equals(False))
 
+    def test_launcher_keynav_end_resume_focus(self):
+        """Test that ending the launcher keynav resume the focus."""
+        launcher_instance = self.get_launcher()
+        self.close_all_app("Calculator")
+        calc = self.start_app("Calculator")
+        self.assertTrue(calc.is_active)
+
+        launcher_instance.key_nav_start()
+        sleep(.5)
+        self.assertFalse(calc.is_active)
+
+        launcher_instance.key_nav_cancel()
+        sleep(.5)
+        self.assertTrue(calc.is_active)
+
     def test_launcher_keynav_starts_at_index_zero(self):
         """Test keynav mode starts at index 0."""
         launcher_instance = self.get_launcher()
