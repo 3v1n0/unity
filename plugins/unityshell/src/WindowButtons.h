@@ -46,6 +46,9 @@ public:
   void SetControlledWindow(Window xid);
   Window GetControlledWindow();
 
+  void SetMonitor(int monitor);
+  int GetMonitor();
+
   virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_pos, nux::NuxEventType event_type);
 
   sigc::signal<void> close_clicked;
@@ -69,6 +72,7 @@ private:
   void OnOverlayHidden(GVariant* data);
   void OnDashSettingsUpdated();
 
+  int monitor_;
   double opacity_;
   bool focused_;
   Window window_xid_;
