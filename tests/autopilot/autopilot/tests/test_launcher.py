@@ -563,6 +563,18 @@ class LauncherVisualTests(ScenariodLauncherTests):
         for icon in self.launcher.model.get_launcher_icons():
             self.assertFalse(icon.desaturated)
 
+    def test_mouse_over_with_dash_open_desaturates_icons(self):
+        """Moving mouse over launcher with dash open must saturate icons."""
+        launcher_instance = self.get_launcher()
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
+        sleep(.5)
+        x,y,w,h = launcher_instance.geometry
+        self.mouse.move(x + w/2, y + h/2)
+        sleep(.5)
+        for icon in self.launcher.model.get_launcher_icons():
+            self.assertFalse(icon.desaturated)
+
 
 class LauncherRevealTests(ScenariodLauncherTests):
     """Test the launcher reveal bahavior when in autohide mode."""
