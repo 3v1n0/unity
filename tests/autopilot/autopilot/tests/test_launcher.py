@@ -13,7 +13,6 @@ from time import sleep
 
 from autopilot.tests import AutopilotTestCase, multiply_scenarios
 from autopilot.emulators.X11 import ScreenGeometry
-from autopilot.emulators.X11 import Mouse
 
 
 logger = logging.getLogger(__name__)
@@ -580,48 +579,63 @@ class LauncherRevealTests(ScenariodLauncherTests):
         self.assertThat(launcher_instance.is_showing(), Equals(False))
         self.mouse.release(1)
 
-class LauncherCaptureTests(ScenariodLauncherTests):
+class LauncherCaptureTests(AutopilotTestCase):
     """Test the launchers ability to capture/not capture the mouse."""
 
-    mouse = Mouse()
+    screen_geo = ScreenGeometry()
+
+    def setHideMode(self, mode):
+        launcher = self.launcher.get_launcher_for_monitor(0)
+        for counter in range(10):
+            sleep(1)
+            if launcher.hidemode == mode:
+                break
+        self.assertThat(launcher.hidemode, Equals(mode),
+                        "Launcher did not enter revealed mode.")
+
+    def leftMostMonitor(self):
+        x1, y1, width, height = self.screen_geo.get_monitor_geometry(0)
+        x2, y2, width, height = self.screen_geo.get_monitor_geometry(1)
+
+        if x1 < x2:
+            return 0
+        return 1
+
+    def rightMostMonitor(self):
+        return 1 - self.leftMostMonitor()
 
     def setUp(self):
         super(LauncherCaptureTests, self).setUp()
         self.set_unity_option('launcher_capture_mouse', True)
         self.set_unity_option('launcher_hide_mode', 0)
-        launcher = self.get_launcher()
-        for counter in range(10):
-            sleep(1)
-            if launcher.hidemode == 0:
-                break
-        self.assertThat(launcher.hidemode, Equals(0),
-                        "Launcher did not enter revealed mode.")
+        self.set_unity_option('num_launchers', 0)
+        self.setHideMode(0)
 
     def test_launcher_captures_while_sticky_and_revealed(self):
         """Tests that the launcher captures the mouse when moving between monitors
         while revealed.
         """
         if self.screen_geo.get_num_monitors() <= 1:
-            return
+            self.skipTest("Cannot run this test with a single monitor configured.")
 
-        x, y, width, height = self.screen_geo.get_monitor_geometry(1)
+        x, y, width, height = self.screen_geo.get_monitor_geometry(self.rightMostMonitor())
         self.mouse.move(x + width / 2, y + height / 2, False)
         self.mouse.move(x - width / 2, y + height / 2, True, 5, .002)
 
         x_fin, y_fin = self.mouse.position()
         # The launcher should have held the mouse a little bit
-        self.assertThat(x_fin, NotEquals(x - width / 2))
+        self.assertThat(x_fin, GreaterThan(x - width / 2))
 
     def test_launcher_not_capture_while_not_sticky_and_revealed(self):
         """Tests that the launcher doesn't captures the mouse when moving between monitors
         while revealed and stick is off.
         """
         if self.screen_geo.get_num_monitors() <= 1:
-            return
+            self.skipTest("Cannot run this test with a single monitor configured.")
 
         self.set_unity_option('launcher_capture_mouse', False)
 
-        x, y, width, height = self.screen_geo.get_monitor_geometry(1)
+        x, y, width, height = self.screen_geo.get_monitor_geometry(self.rightMostMonitor())
         self.mouse.move(x + width / 2, y + height / 2, False)
         self.mouse.move(x - width / 2, y + height / 2, True, 5, .002)
 
@@ -634,20 +648,14 @@ class LauncherCaptureTests(ScenariodLauncherTests):
         while hidden and sticky is off.
         """
         if self.screen_geo.get_num_monitors() <= 1:
-            return
+            self.skipTest("Cannot run this test with a single monitor configured.")
 
         self.set_unity_option('launcher_hide_mode', 1)
         self.set_unity_option('launcher_capture_mouse', False)
 
-        launcher = self.get_launcher()
-        for counter in range(10):
-            sleep(1)
-            if launcher.hidemode == 1:
-                break
-        self.assertThat(launcher.hidemode, Equals(1),
-                        "Launcher did not enter hidden mode.")
+        self.setHideMode(1)
 
-        x, y, width, height = self.screen_geo.get_monitor_geometry(0)
+        x, y, width, height = self.screen_geo.get_monitor_geometry(self.leftMostMonitor())
         self.mouse.move(x + width / 2, y + height / 2, False)
         sleep(1.5)
         self.mouse.move(x + width * 1.5, y + height / 2, True, 5, .002)
@@ -661,24 +669,18 @@ class LauncherCaptureTests(ScenariodLauncherTests):
         while hidden.
         """
         if self.screen_geo.get_num_monitors() <= 1:
-            return
+            self.skipTest("Cannot run this test with a single monitor configured.")
 
         self.set_unity_option('launcher_hide_mode', 1)
 
-        launcher = self.get_launcher()
-        for counter in range(10):
-            sleep(1)
-            if launcher.hidemode == 1:
-                break
-        self.assertThat(launcher.hidemode, Equals(1),
-                        "Launcher did not enter hidden mode.")
+        self.setHideMode(1)
 
-        x, y, width, height = self.screen_geo.get_monitor_geometry(0)
+        x, y, width, height = self.screen_geo.get_monitor_geometry(self.leftMostMonitor())
         self.mouse.move(x + width / 2, y + height / 2, False)
         sleep(1.5)
         self.mouse.move(x + width * 1.5, y + height / 2, True, 5, .002)
 
         x_fin, y_fin = self.mouse.position()
         # The launcher should have held the mouse a little bit
-        self.assertThat(x_fin, NotEquals(x + width * 1.5))
+        self.assertThat(x_fin, LessThan(x + width * 1.5))
                 

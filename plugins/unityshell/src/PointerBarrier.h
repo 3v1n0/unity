@@ -41,6 +41,8 @@ public:
   int event_id;
 };
 
+
+// values picked to match Xfixes values
 enum BarrierDirection
 {
   BOTH = 0,
