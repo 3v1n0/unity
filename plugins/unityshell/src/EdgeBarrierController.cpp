@@ -29,8 +29,8 @@ struct EdgeBarrierController::Impl
   Impl(EdgeBarrierController *parent);
   ~Impl();
 
-  void ResizeBarrierList(std::vector<nux::Geometry>& layout);
-  void SetupBarriers(std::vector<nux::Geometry>& layout);
+  void ResizeBarrierList(std::vector<nux::Geometry> const& layout);
+  void SetupBarriers(std::vector<nux::Geometry> const& layout);
 
   void OnPointerBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event);
 
@@ -73,7 +73,7 @@ EdgeBarrierController::Impl::~Impl()
 
 }
 
-void EdgeBarrierController::Impl::ResizeBarrierList(std::vector<nux::Geometry>& layout)
+void EdgeBarrierController::Impl::ResizeBarrierList(std::vector<nux::Geometry> const& layout)
 {
   size_t num_monitors = layout.size();
   if (barriers_.size() > num_monitors)
@@ -89,7 +89,7 @@ void EdgeBarrierController::Impl::ResizeBarrierList(std::vector<nux::Geometry>& 
   }
 }
 
-void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry>& layout)
+void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const& layout)
 {
   bool edge_resist = parent_->options()->edge_resist();
 
