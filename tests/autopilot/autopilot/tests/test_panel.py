@@ -109,7 +109,9 @@ class PanelTitleTests(PanelTestsBase):
         self.assertThat(self.panel.title, Equals(text_win.title))
 
     def test_panel_title_with_maximized_window_restored_child(self):
-        """Tests the title shown in the panel with a maximized application"""
+        """Tests the title shown in the panel when opening the restored child of
+        a maximized application
+        """
         text_win = self.open_new_application_window("Text Editor", maximize=True)
 
         self.assertTrue(text_win.is_maximized)
@@ -142,6 +144,23 @@ class PanelTitleTests(PanelTestsBase):
         self.assertTrue(text_win.is_focused)
         self.assertThat(self.panel.title, Equals(text_win.title))
 
+    def test_panel_title_updates_on_maximized_window_title_changes(self):
+        """Tests that the title of a maximized application updates with
+        window title changes"""
+        text_win = self.open_new_application_window("Text Editor", maximize=True)
+
+        self.assertThat(self.panel.title, Equals(text_win.title))
+        sleep(.25)
+
+        text_win.set_focus()
+        self.keyboard.type("Unity rocks!")
+        self.keyboard.press_and_release("Ctrl+S")
+        sleep(.25)
+        self.keyboard.type("/tmp/autopilot-awesome-test.txt")
+        self.keyboard.press_and_release("Return")
+        sleep(.25)
+
+        self.assertThat(self.panel.title, Equals(text_win.title))
 
 class PanelTitleCrossMonitors(PanelTestsBase):
 
