@@ -2471,6 +2471,7 @@ void Launcher::EnterKeyNavMode()
 {
   _hide_machine->SetQuirk(LauncherHideMachine::KEY_NAV_ACTIVE, true);
   _hover_machine->SetQuirk(LauncherHoverMachine::KEY_NAV_ACTIVE, true);
+  SaturateIcons();
 }
 
 void Launcher::ExitKeyNavMode()
