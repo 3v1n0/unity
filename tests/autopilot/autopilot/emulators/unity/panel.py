@@ -12,6 +12,7 @@ import logging
 from autopilot.emulators.unity import UnityIntrospectionObject
 from autopilot.emulators.X11 import Mouse, ScreenGeometry
 from autopilot.keybindings import KeybindingsHelper
+from time import sleep
 
 logger = logging.getLogger(__name__)
 
@@ -50,9 +51,15 @@ class UnityPanel(UnityIntrospectionObject, KeybindingsHelper):
         assert(len(menus) == 1)
         return menus[0]
 
+    def __get_window_buttons(self):
+        """Return the window buttons view."""
+        buttons = self.menus.get_children_by_type(WindowButtons)
+        assert(len(buttons) == 1)
+        return buttons[0]
+
     def __get_grab_area(self):
         """Return the panel grab area."""
-        grab_areas = self.get_children_by_type(GrabArea)
+        grab_areas = self.menus.get_children_by_type(GrabArea)
         assert(len(grab_areas) == 1)
         return grab_areas[0]
 
@@ -61,12 +68,6 @@ class UnityPanel(UnityIntrospectionObject, KeybindingsHelper):
         indicators = self.get_children_by_type(Indicators)
         assert(len(indicators) == 1)
         return indicators[0]
-
-    def __get_window_buttons(self):
-        """Return the window buttons view."""
-        buttons = self.get_children_by_type(WindowButtons)
-        assert(len(buttons) == 1)
-        return buttons[0]
 
     def move_mouse_below_the_panel(self):
         """Places the mouse to bottom of this panel."""
@@ -89,7 +90,7 @@ class UnityPanel(UnityIntrospectionObject, KeybindingsHelper):
             first_x = menu_entries[0].x
             last_x = menu_entries[-1].x + menu_entries[-1].width / 2
 
-            target_x = (last_x - first_x) / 2
+            target_x = first_x + (last_x - first_x) / 2
 
         logger.debug("Moving mouse to center of menu area.")
         self._mouse.move(target_x, target_y)
@@ -105,7 +106,7 @@ class UnityPanel(UnityIntrospectionObject, KeybindingsHelper):
 
     def get_indicator_entries(self, visible_only=True):
         """Returns a list of entries for this panel including both menus and indicators"""
-        entries = self.get_menu_entries(visible_only)
+        entries = self.menus.get_entries()
         entries += self.indicators.get_ordered_entries(visible_only)
         return entries
 
@@ -121,6 +122,14 @@ class UnityPanel(UnityIntrospectionObject, KeybindingsHelper):
     @property
     def desktop_is_active(self):
         return self.menus.desktop_active
+
+    @property
+    def menus_shown(self):
+        return self.active and self.draw_menus
+
+    @property
+    def window_buttons_shown(self):
+        return self.active and self.draw_window_buttons
 
     @property
     def window_buttons(self):
@@ -147,12 +156,9 @@ class UnityPanel(UnityIntrospectionObject, KeybindingsHelper):
 class MenuView(UnityIntrospectionObject):
     """The Menu View class."""
 
-    def get_entries(self, visible_only=True):
+    def get_entries(self):
         """Return a list of menu entries"""
-        if visible_only:
-            return self.get_children_by_type(IndicatorEntry, visible=True)
-        else:
-            return self.get_children_by_type(IndicatorEntry)
+        return self.get_children_by_type(IndicatorEntry)
 
     @property
     def geometry(self):
@@ -172,6 +178,10 @@ class WindowButtons(UnityIntrospectionObject):
 
     def get_button(self, type):
         return self.get_children_by_type(Button, type=type)
+
+    @property
+    def visible(self):
+        return len(self.get_buttons()) != 0
 
     @property
     def close(self):

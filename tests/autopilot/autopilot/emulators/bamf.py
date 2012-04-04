@@ -262,6 +262,7 @@ class BamfWindow(object):
         Returns a tuple containing (x, y, width, height).
 
         """
+        # FIXME: We need to use the gdk window here to get the real coordinates
         geometry = self._x_win.get_geometry()
         origin = gdk.window_foreign_new(self._xid).get_origin()
         return (origin[0], origin[1], geometry.width, geometry.height)
