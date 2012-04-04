@@ -613,8 +613,8 @@ class LauncherCaptureTests(ScenariodLauncherTests):
         self.assertThat(x_fin, NotEquals(x - width / 2))
 
     def test_launcher_not_capture_while_not_sticky_and_revealed(self):
-        """Tests that the launcher captures the mouse when moving between monitors
-        while revealed.
+        """Tests that the launcher doesn't captures the mouse when moving between monitors
+        while revealed and stick is off.
         """
         if self.screen_geo.get_num_monitors() <= 1:
             return
@@ -630,8 +630,8 @@ class LauncherCaptureTests(ScenariodLauncherTests):
         self.assertThat(x_fin, Equals(x - width / 2))
 
     def test_launcher_not_capture_while_not_sticky_and_hidden_moving_right(self):
-        """Tests that the launcher captures the mouse when moving between monitors
-        while revealed.
+        """Tests that the launcher doesn't capture the mouse when moving between monitors
+        while hidden and sticky is off.
         """
         if self.screen_geo.get_num_monitors() <= 1:
             return
@@ -658,7 +658,7 @@ class LauncherCaptureTests(ScenariodLauncherTests):
 
     def test_launcher_capture_while_sticky_and_hidden_moving_right(self):
         """Tests that the launcher captures the mouse when moving between monitors
-        while revealed.
+        while hidden.
         """
         if self.screen_geo.get_num_monitors() <= 1:
             return
