@@ -12,7 +12,6 @@ from testtools.matchers import Equals, NotEquals, LessThan, GreaterThan
 from time import sleep
 
 from autopilot.tests import AutopilotTestCase
-from autopilot.emulators.bamf import BamfWindow
 from autopilot.emulators.X11 import ScreenGeometry
 
 logger = logging.getLogger(__name__)
@@ -37,34 +36,11 @@ class PanelTestsBase(AutopilotTestCase):
     def setUp(self):
         super(PanelTestsBase, self).setUp()
 
-    def move_window_to_monitor(self, window, monitor):
-        if not isinstance(window, BamfWindow):
-            raise TypeError("Window must be a BamfWindow")
-        (win_x, win_y, win_w, win_h) = window.geometry
-        (t_x, t_y, t_w, t_h) = self.screen_geo.get_monitor_geometry(monitor)
-
-        if window.monitor == monitor:
-            logger.debug("Window %r is already on monitor %r." % (window.x_id, monitor))
-            return
-
-        logger.debug("Dragging window %r to monitor %r." % (window.x_id, monitor))
-
-        self.mouse.move(win_x + win_w/2, win_y + win_h/2)
-        self.keyboard.press("Alt")
-        self.mouse.press()
-        self.keyboard.release("Alt")
-
-        # We do the movements in two steps, to reduce the risk of being
-        # blocked by the pointer barrier
-        self.mouse.move(win_x, t_y + t_h/2, rate=20, time_between_events=0.005)
-        self.mouse.move(t_x + t_w/2, t_y + t_h/2, rate=20, time_between_events=0.005)
-        self.mouse.release()
-        sleep(.25)
-        self.assertThat(window.monitor, Equals(monitor))
-
     def open_new_application_window(self, app_name, maximize=False):
-        """Opens a new instance of the requested application
-        Returns the BamfWindow
+        """Opens a new instance of the requested application, ensuring
+        that only one window is opened.
+
+        Returns the opened BamfWindow
         
         """
         self.close_all_app(app_name)
@@ -85,8 +61,10 @@ class PanelTestsBase(AutopilotTestCase):
                 self.keybinding("window/restore")
                 sleep(.1)
 
-            self.addCleanup(self.move_window_to_monitor, app_win, app_win.monitor)
-            self.move_window_to_monitor(app_win, self.panel_monitor)
+            self.addCleanup(self.screen_geo.drag_window_to_monitor, app_win, app_win.monitor)
+            self.screen_geo.drag_window_to_monitor(app_win, self.panel_monitor)
+            sleep(.25)
+            self.assertThat(app_win.monitor, Equals(self.panel_monitor))
 
         if maximize:
             self.keybinding("window/maximize")
@@ -183,8 +161,8 @@ class PanelTitleCrossMonitors(PanelTestsBase):
         prev_monitor = -1
         for monitor in range(0, self.screen_geo.get_num_monitors()):
             if calc_win.monitor != monitor:
-                self.addCleanup(self.move_window_to_monitor, calc_win, calc_win.monitor)
-                self.move_window_to_monitor(calc_win, monitor)
+                self.addCleanup(self.screen_geo.drag_window_to_monitor, calc_win, calc_win.monitor)
+                self.screen_geo.drag_window_to_monitor(calc_win, monitor)
 
             if prev_monitor >= 0:
                 self.assertFalse(self.panels.get_panel_for_monitor(prev_monitor).active)
