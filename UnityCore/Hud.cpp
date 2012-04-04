@@ -16,7 +16,7 @@
  *
  * Authored by: Gordon Allott <gord.allott@canonical.com>
  */
-// 
+//
 #include "Hud.h"
 
 #include <gio/gio.h>
@@ -52,9 +52,9 @@ public:
   , parent_(parent)
   {
     LOG_DEBUG(logger) << "Hud init with name: " << dbus_name << "and path: " << dbus_path;
-    proxy_.connected.connect([&]() { 
-      LOG_DEBUG(logger) << "Hud Connected"; 
-      parent_->connected = true; 
+    proxy_.connected.connect([&]() {
+      LOG_DEBUG(logger) << "Hud Connected";
+      parent_->connected = true;
     });
 
     proxy_.Connect("UpdatedQuery", sigc::mem_fun(this, &HudImpl::UpdateQueryCallback));
@@ -76,12 +76,12 @@ public:
 void HudImpl::ExecuteByKey(GVariant* key, unsigned int timestamp)
 {
   LOG_DEBUG(logger) << "Executing by Key";
-  
+
   GVariantBuilder tuple;
   g_variant_builder_init(&tuple, G_VARIANT_TYPE_TUPLE);
   g_variant_builder_add_value(&tuple, g_variant_new_variant(key));
   g_variant_builder_add_value(&tuple, g_variant_new_uint32(timestamp));
-  
+
   proxy_.Call("ExecuteQuery", g_variant_builder_end(&tuple));
 }
 
@@ -92,16 +92,16 @@ void HudImpl::ExecuteQueryByStringCallback(GVariant* query, unsigned int timesta
     LOG_ERROR(logger) << "Received (" << g_variant_n_children(query) << ") children in a query, expected 3";
     return;
   }
-  
+
   queries_.clear();
-  
+
   GVariant* query_key = g_variant_get_child_value(query, 2);
-  query_key_ = query_key; 
- 
+  query_key_ = query_key;
+
   GVariant* queries = g_variant_get_child_value(query, 1);
   BuildQueries(queries);
   g_variant_unref(queries);
-  
+
   if (queries_.empty() == false)
   {
     // we now execute based off the first result
@@ -122,14 +122,14 @@ void HudImpl::QueryCallback(GVariant* query)
   // extract the information from the GVariants
   GVariant* target = g_variant_get_child_value(query, 0);
   g_variant_unref(target);
-  
+
   GVariant* query_key = g_variant_get_child_value(query, 2);
-  query_key_ = query_key; 
- 
+  query_key_ = query_key;
+
   GVariant* queries = g_variant_get_child_value(query, 1);
   BuildQueries(queries);
   g_variant_unref(queries);
-  
+
   parent_->queries_updated.emit(queries_);
 }
 
@@ -145,7 +145,7 @@ void HudImpl::UpdateQueryCallback(GVariant* query)
   // the signal
 
   GVariant* query_key = g_variant_get_child_value(query, 2);
-  if (g_variant_equal(query_key_, query_key))
+  if (query_key_ && g_variant_equal(query_key_, query_key))
   {
     queries_.clear();
     GVariant* queries = g_variant_get_child_value(query, 1);
@@ -165,13 +165,13 @@ void HudImpl::BuildQueries(GVariant* query_array)
   glib::String completion_text;
   glib::String shortcut;
   GVariant* key = NULL;
-  
-  while (g_variant_iter_loop(&iter, "(sssssv)", 
+
+  while (g_variant_iter_loop(&iter, "(sssssv)",
          &formatted_text, &icon, &item_icon, &completion_text, &shortcut, &key))
   {
-    queries_.push_back(Query::Ptr(new Query(formatted_text, 
+    queries_.push_back(Query::Ptr(new Query(formatted_text,
                                             icon,
-                                            item_icon, 
+                                            item_icon,
                                             completion_text,
                                             shortcut,
                                             key)));
@@ -179,7 +179,7 @@ void HudImpl::BuildQueries(GVariant* query_array)
 }
 
 void HudImpl::CloseQuery()
-{ 
+{
   if (query_key_ == NULL)
   {
     LOG_WARN(logger) << "Attempted to close the hud connection without starting it";
@@ -216,8 +216,8 @@ void Hud::RequestQuery(std::string const& search_string)
     CloseQuery();
   }
 
-  GVariant* paramaters = g_variant_new("(si)", 
-                                       search_string.c_str(), 
+  GVariant* paramaters = g_variant_new("(si)",
+                                       search_string.c_str(),
                                        request_number_of_results);
   pimpl_->proxy_.Call("StartQuery", paramaters, sigc::mem_fun(this->pimpl_, &HudImpl::QueryCallback));
 }
@@ -235,10 +235,10 @@ void Hud::ExecuteQueryBySearch(std::string execute_string, unsigned int timestam
   LOG_DEBUG(logger) << "Executing by string" << execute_string;
   if (pimpl_->query_key_ != NULL)
   {
-    CloseQuery(); 
+    CloseQuery();
   }
 
-  GVariant* paramaters = g_variant_new("(si)", 
+  GVariant* paramaters = g_variant_new("(si)",
                                        execute_string.c_str(),
                                        1);
 
