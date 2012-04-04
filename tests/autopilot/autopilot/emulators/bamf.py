@@ -337,6 +337,10 @@ class BamfWindow(object):
 
         self._setProperty('_NET_CLOSE_WINDOW', [0, 0])
 
+    def set_focus(self):
+        self._x_win.set_input_focus(X.RevertToParent, X.CurrentTime)
+        self._x_win.configure(stack_mode=X.Above)
+
     def __repr__(self):
         return "<BamfWindow '%s'>" % (self.title if self._x_win else str(self._xid))
 
