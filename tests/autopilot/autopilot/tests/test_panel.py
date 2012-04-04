@@ -7,6 +7,7 @@
 # by the Free Software Foundation.
 
 import logging
+import os
 from testtools.matchers import Equals, NotEquals, LessThan, GreaterThan
 from time import sleep
 
@@ -28,21 +29,13 @@ def _make_monitor_scenarios():
 
     return scenarios
 
-class PanelTitleTests(AutopilotTestCase):
 
-    scenarios = _make_monitor_scenarios()
+class PanelTestsBase(AutopilotTestCase):
+
+    panel_monitor = 0
 
     def setUp(self):
-        super(PanelTitleTests, self).setUp()
-        #self.active_panel = self.panel.get_active_panel()
-        self.screen_geo.move_mouse_to_monitor(self.panel_monitor)
-        self.target_panel = self.panel.get_panel_for_monitor(self.panel_monitor)
-
-    #FIXME, remove it as soon as the better implementation goes in trunk
-    def get_bamf_application(self, name):
-        apps = self.get_app_instances(name)
-        self.assertThat(len(apps), Equals(1))
-        return apps[0]
+        super(PanelTestsBase, self).setUp()
 
     def move_window_to_monitor(self, window, monitor):
         if not isinstance(window, BamfWindow):
@@ -57,11 +50,24 @@ class PanelTitleTests(AutopilotTestCase):
         self.mouse.press()
         self.keyboard.release("Alt")
 
-        self.mouse.move(win_x, t_y + t_h/2)
-        self.mouse.move(t_x + t_w/2, t_y + t_h/2)
+        # We do the movements in two steps, to reduce the risk of being
+        # blocked by the pointer barrier
+        self.mouse.move(win_x, t_y + t_h/2, rate=20, time_between_events=0.005)
+        self.mouse.move(t_x + t_w/2, t_y + t_h/2, rate=20, time_between_events=0.005)
         self.mouse.release()
         sleep(.25)
         self.assertThat(window.monitor, Equals(monitor))
+
+
+class PanelTitleTests(PanelTestsBase):
+
+    scenarios = _make_monitor_scenarios()
+    #panel_monitor = 1
+
+    def setUp(self):
+        super(PanelTitleTests, self).setUp()
+        self.screen_geo.move_mouse_to_monitor(self.panel_monitor)
+        self.panel = self.panels.get_panel_for_monitor(self.panel_monitor)
 
     def test_panel_title_on_empty_desktop(self):
         sleep(.5)
@@ -69,14 +75,12 @@ class PanelTitleTests(AutopilotTestCase):
         self.addCleanup(self.keybinding, "window/show_desktop")
         sleep(1)
 
-        self.assertTrue(self.target_panel.desktop_is_active)
+        self.assertTrue(self.panel.desktop_is_active)
 
     def test_panel_title_with_restored_application(self):
         """Tests the title shown in the panel with a restored application"""
         self.close_all_app("Calculator")
-        self.start_app("Calculator")
-        sleep(2)
-        calc = self.get_bamf_application("Calculator")
+        calc = self.start_app("Calculator")
         self.assertTrue(calc.is_active)
 
         wins = calc.get_windows()
@@ -84,12 +88,103 @@ class PanelTitleTests(AutopilotTestCase):
         calc_win = wins[0]
         self.assertTrue(calc_win.is_focused)
 
-        if calc_win.is_maximized:
-            self.keybinding("window/restore")
-            sleep(.1)
-
         if calc_win.monitor != self.panel_monitor:
+            self.addCleanup(self.move_window_to_monitor, calc_win, calc_win.monitor)
             self.move_window_to_monitor(calc_win, self.panel_monitor)
 
         self.assertFalse(calc_win.is_maximized)
-        self.assertThat(self.target_panel.title, Equals(calc.name))
+        self.assertThat(self.panel.title, Equals(calc.name))
+
+    def test_panel_title_with_maximized_application(self):
+        """Tests the title shown in the panel with a maximized application"""
+        self.close_all_app("Text Editor")
+        text = self.start_app("Text Editor")
+        self.assertTrue(text.is_active)
+
+        wins = text.get_windows()
+        self.assertThat(len(wins), Equals(1))
+        text_win = wins[0]
+        self.assertTrue(text_win.is_focused)
+
+        if text_win.monitor != self.panel_monitor:
+            if text_win.is_maximized:
+                self.keybinding("window/restore")
+                sleep(.1)
+
+            self.addCleanup(self.move_window_to_monitor, text_win, text_win.monitor)
+            self.move_window_to_monitor(text_win, self.panel_monitor)
+
+        self.keybinding("window/maximize")
+        self.addCleanup(self.keybinding, "window/restore")
+
+        self.assertTrue(text_win.is_maximized)
+        self.assertThat(self.panel.title, Equals(text_win.title))
+
+    def test_panel_title_with_maximized_window_restored_child(self):
+        """Tests the title shown in the panel with a maximized application"""
+        self.close_all_app("Text Editor")
+        text = self.start_app("Text Editor")
+        self.assertTrue(text.is_active)
+
+        wins = text.get_windows()
+        self.assertThat(len(wins), Equals(1))
+        text_win = wins[0]
+        self.assertTrue(text_win.is_focused)
+
+        if text_win.monitor != self.panel_monitor:
+            if text_win.is_maximized:
+                self.keybinding("window/restore")
+                sleep(.1)
+
+            self.addCleanup(self.move_window_to_monitor, text_win, text_win.monitor)
+            self.move_window_to_monitor(text_win, self.panel_monitor)
+
+        self.keybinding("window/maximize")
+        self.addCleanup(self.keybinding, "window/restore")
+
+        self.assertTrue(text_win.is_maximized)
+        self.assertThat(self.panel.title, Equals(text_win.title))
+
+        self.keyboard.press_and_release("Ctrl+S")
+        sleep(.25)
+        self.assertThat(self.panel.title, Equals(text.name))
+        self.keyboard.press_and_release("Escape")
+
+
+class PanelTitleCrossMonitors(PanelTestsBase):
+
+    scenarios = []
+    if ScreenGeometry().get_num_monitors() > 1:
+        scenarios = [("Multimonitor", {})]
+
+    def setUp(self):
+        super(PanelTitleCrossMonitors, self).setUp()
+        self.screen_geo.move_mouse_to_monitor(self.panel_monitor)
+        self.panel = self.panels.get_panel_for_monitor(self.panel_monitor)
+
+    def test_panel_title_updates_moving_window(self):
+        """Tests the title shown in the panel, moving a restored window around them"""
+        self.close_all_app("Calculator")
+        calc = self.start_app("Calculator")
+        self.assertTrue(calc.is_active)
+
+        wins = calc.get_windows()
+        self.assertThat(len(wins), Equals(1))
+        calc_win = wins[0]
+        self.assertTrue(calc_win.is_focused)
+
+        prev_monitor = -1
+        for monitor in range(0, self.screen_geo.get_num_monitors()):
+            if calc_win.monitor != monitor:
+                self.addCleanup(self.move_window_to_monitor, calc_win, calc_win.monitor)
+                self.move_window_to_monitor(calc_win, monitor)
+
+            if prev_monitor >= 0:
+                self.assertFalse(self.panels.get_panel_for_monitor(prev_monitor).active)
+
+            panel = self.panels.get_panel_for_monitor(monitor)
+            self.assertTrue(panel.active)
+            self.assertThat(panel.title, Equals(calc.name))
+
+            prev_monitor = monitor
+

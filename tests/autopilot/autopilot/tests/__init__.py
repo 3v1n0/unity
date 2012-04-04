@@ -231,7 +231,7 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         self.dash = Dash()
         self.hud = Hud()
         self.launcher = self._get_launcher_controller()
-        self.panel = self._get_panel_controller()
+        self.panels = self._get_panel_controller()
         self.switcher = Switcher()
         self.workspace = WorkspaceManager()
         self.screen_geo = ScreenGeometry()

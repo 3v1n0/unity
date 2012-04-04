@@ -106,7 +106,9 @@ class UnityPanel(UnityIntrospectionObject, KeybindingsHelper):
 
     def get_indicator_entries(self, visible_only=True):
         """Returns a list of entries for this panel including both menus and indicators"""
-        entries = self.menus.get_entries()
+        entries = []
+        if self.menus_shown:
+            entries = self.menus.get_entries()
         entries += self.indicators.get_ordered_entries(visible_only)
         return entries
 
