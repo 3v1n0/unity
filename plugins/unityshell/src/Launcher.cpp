@@ -1363,10 +1363,13 @@ void Launcher::OnOverlayShown(GVariant* data)
     {
       _hud_is_open = true;
     }
-
-    bg_effect_helper_.enabled = true;
-    LOG_DEBUG(logger) << "Desaturate on monitor " << monitor();
-    DesaturateIcons();
+    // Don't desaturate icons if the mouse is over the launcher:
+    if (!_hovered)
+    {
+      bg_effect_helper_.enabled = true;
+      LOG_DEBUG(logger) << "Desaturate on monitor " << monitor();
+      DesaturateIcons();
+    }
   }
   EnsureAnimation();
 }
