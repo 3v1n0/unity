@@ -110,6 +110,21 @@ class LauncherTests(ScenariodLauncherTests):
         sleep(.5)
         self.assertThat(self.launcher.key_nav_is_active, Equals(False))
 
+    def test_launcher_switcher_cancel_resume_focus(self):
+        """Test that ending the launcher switcher resume the focus."""
+        launcher_instance = self.get_launcher()
+        self.close_all_app("Calculator")
+        calc = self.start_app("Calculator")
+        self.assertTrue(calc.is_active)
+
+        launcher_instance.switcher_start()
+        sleep(.5)
+        self.assertFalse(calc.is_active)
+
+        launcher_instance.switcher_cancel()
+        sleep(.5)
+        self.assertTrue(calc.is_active)
+
     def test_launcher_switcher_escape_works(self):
         """Test that ending the launcher switcher actually works."""
         sleep(.5)
