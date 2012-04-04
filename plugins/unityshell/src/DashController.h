@@ -89,6 +89,7 @@ private:
 private:
   glib::SignalManager sig_manager_;
   UBusManager ubus_manager_;
+  int monitor_;
 
   nux::BaseWindow* window_;
   bool visible_;

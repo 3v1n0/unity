@@ -244,18 +244,18 @@ void Controller::Impl::OnScreenChanged(int primary_monitor,
       layout->SetHorizontalExternalMargin(0);
 
       nux::BaseWindow* window = new nux::BaseWindow("");
+      nux::Geometry geo = monitors[i];
+      geo.height = panel::Style::Instance().panel_height;
+
       window->SinkReference();
       window->SetConfigureNotifyCallback(&Impl::WindowConfigureCallback, window);
-      window->SetLayout(layout);
       window->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
       window->ShowWindow(true);
       window->EnableInputWindow(true, "panel", false, false);
       window->InputWindowEnableStruts(true);
-
-      nux::Geometry geo = monitors[i];
-      geo.height = panel::Style::Instance().panel_height;
       window->SetGeometry(geo);
       window->SetMinMaxSize(geo.width, geo.height);
+      window->SetLayout(layout);
 
       windows_.push_back(window);
 
