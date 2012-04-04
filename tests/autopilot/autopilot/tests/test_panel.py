@@ -108,6 +108,7 @@ class PanelTitleTests(PanelTestsBase):
 
         if text_win.monitor != self.panel_monitor:
             if text_win.is_maximized:
+                self.addCleanup(self.keybinding, "window/maximize")
                 self.keybinding("window/restore")
                 sleep(.1)
 
@@ -133,6 +134,7 @@ class PanelTitleTests(PanelTestsBase):
 
         if text_win.monitor != self.panel_monitor:
             if text_win.is_maximized:
+                self.addCleanup(self.keybinding, "window/maximize")
                 self.keybinding("window/restore")
                 sleep(.1)
 
@@ -149,6 +151,57 @@ class PanelTitleTests(PanelTestsBase):
         sleep(.25)
         self.assertThat(self.panel.title, Equals(text.name))
         self.keyboard.press_and_release("Escape")
+
+    def test_panel_title_switching_active_window(self):
+        """Tests the title shown in the panel with a maximized application"""
+        self.set_unity_option('num_launchers', 0)
+        self.close_all_app("Text Editor")
+        text = self.start_app("Text Editor")
+        self.assertTrue(text.is_active)
+
+        wins = text.get_windows()
+        self.assertThat(len(wins), Equals(1))
+        text_win = wins[0]
+        self.assertTrue(text_win.is_focused)
+
+        if text_win.monitor != self.panel_monitor:
+            if text_win.is_maximized:
+                self.addCleanup(self.keybinding, "window/maximize")
+                self.keybinding("window/restore")
+                sleep(.1)
+
+            self.addCleanup(self.move_window_to_monitor, text_win, text_win.monitor)
+            self.move_window_to_monitor(text_win, self.panel_monitor)
+
+        self.keybinding("window/maximize")
+        self.addCleanup(self.keybinding, "window/restore")
+
+        self.assertTrue(text_win.is_maximized)
+        self.assertThat(self.panel.title, Equals(text_win.title))
+        sleep(.25)
+
+        self.close_all_app("Calculator")
+        calc = self.start_app("Calculator")
+        self.assertTrue(calc.is_active)
+
+        wins = calc.get_windows()
+        self.assertThat(len(wins), Equals(1))
+        calc_win = wins[0]
+        self.assertTrue(calc_win.is_focused)
+
+        if calc_win.monitor != self.panel_monitor:
+            self.addCleanup(self.move_window_to_monitor, calc_win, calc_win.monitor)
+            self.move_window_to_monitor(calc_win, self.panel_monitor)
+
+        sleep(.25)
+        self.assertThat(self.panel.title, Equals(calc.name))
+
+        icon = self.launcher.model.get_icon_by_desktop_id(text.desktop_file)
+        launcher = self.launcher.get_launcher_for_monitor(self.panel_monitor)
+        launcher.click_launcher_icon(icon)
+
+        self.assertTrue(text_win.is_focused)
+        self.assertThat(self.panel.title, Equals(text_win.title))
 
 
 class PanelTitleCrossMonitors(PanelTestsBase):
