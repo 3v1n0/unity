@@ -12,6 +12,7 @@ from testtools.matchers import Equals, NotEquals, LessThan, GreaterThan, Not, Is
 from time import sleep
 
 from autopilot.tests import AutopilotTestCase, multiply_scenarios
+from autopilot.emulators.unity.icons import BFBLauncherIcon
 from autopilot.emulators.X11 import ScreenGeometry
 
 
@@ -518,6 +519,10 @@ class LauncherTests(ScenariodLauncherTests):
         # The new launcher icon has a 'Waiting to install' tooltip
         self.assertThat(icon.tooltip_text, Equals("Waiting to install"))
 
+
+class LauncherVisualTests(ScenariodLauncherTests):
+    """Tests for visual aspects of the launcher (icon saturation etc.)."""
+
     def test_keynav_from_dash_saturates_icons(self):
         """Starting super+tab switcher from the dash must resaturate launcher icons.
 
@@ -536,6 +541,27 @@ class LauncherTests(ScenariodLauncherTests):
         for icon in self.launcher.model.get_launcher_icons():
             self.assertFalse(icon.desaturated)
 
+    def test_opening_dash_desaturates_icons(self):
+        """Opening the dash must desaturate all the launcher icons."""
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
+
+        for icon in self.launcher.model.get_launcher_icons():
+            if isinstance(icon, BFBLauncherIcon):
+                self.assertFalse(icon.desaturated)
+            else:
+                self.assertTrue(icon.desaturated)
+
+    def test_opening_dash_with_mouse_over_launcher_keeps_icon_saturation(self):
+        """Opening dash with mouse over launcher must not desaturate icons."""
+        launcher_instance = self.get_launcher()
+        x,y,w,h = launcher_instance.geometry
+        self.mouse.move(x + w/2, y + h/2)
+        sleep(.5)
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
+        for icon in self.launcher.model.get_launcher_icons():
+            self.assertFalse(icon.desaturated)
 
 
 class LauncherRevealTests(ScenariodLauncherTests):
