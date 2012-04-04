@@ -101,7 +101,7 @@ void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry>& layo
 
     barrier->DestroyBarrier();
 
-    if (!edge_resist && subscribers_[i] == nullptr)
+    if (!edge_resist && (subscribers_[i] == nullptr || parent_->options()->hide_mode() == launcher::LauncherHideMode::LAUNCHER_HIDE_NEVER))
       continue;
 
     barrier->x1 = monitor.x;
