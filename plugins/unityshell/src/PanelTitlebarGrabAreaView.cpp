@@ -184,7 +184,7 @@ void
 PanelTitlebarGrabArea::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper(builder)
-  .add(GetGeometry())
+  .add(GetAbsoluteGeometry())
   .add("grabbed", IsGrabbed());
 }
 
