@@ -27,9 +27,132 @@ CompScreenMock *screen_mock = &concrete_screen_mock;
 int pointerX_mock = 0;
 int pointerY_mock = 0;
 
-TEST(GestureEngineTest, Foo)
+class GestureEngineTest : public ::testing::Test {
+ protected:
+  virtual void SetUp() {
+    screen_mock->_width = 1280;
+    screen_mock->_height = 1024;
+
+    GenerateWindows();
+  }
+
+ private:
+  void GenerateWindows() {
+    /* remove windows from previous test */
+    for (auto window : screen_mock->_client_list_stacking) {
+      delete window;
+    }
+    screen_mock->_client_list_stacking.clear();
+
+    /* and generate new ones */
+    CompWindowMock *window;
+
+    /* the root window */
+    window = new CompWindowMock;
+    /* x, y, width, height, border */
+    window->_geometry.set(0, 0, screen_mock->width(), screen_mock->height(), 0);
+    window->_serverGeometry = window->_geometry;
+    window->_actions = 0;
+    window->_state = 0;
+    screen_mock->_client_list_stacking.push_back(window);
+
+    /* middle window */
+    window = new CompWindowMock;
+    window->_geometry.set(10, 10, 400, 400, 0);
+    window->_serverGeometry = window->_geometry;
+    window->_actions = CompWindowActionMoveMask;
+    window->_state = 0;
+    screen_mock->_client_list_stacking.push_back(window);
+
+    /* top-level window */
+    window = new CompWindowMock;
+    window->_geometry.set(500, 500, 410, 410, 0);
+    window->_serverGeometry = window->_geometry;
+    window->_actions = CompWindowActionMoveMask;
+    window->_state = 0;
+    screen_mock->_client_list_stacking.push_back(window);
+
+    screen_mock->_client_list = screen_mock->_client_list_stacking;
+    std::reverse(screen_mock->_client_list.begin(),
+                 screen_mock->_client_list.end());
+  }
+};
+
+TEST_F(GestureEngineTest, ThreeFingersDragMovesWindow)
 {
   GestureEngine gestureEngine(screen_mock);
+  CompWindowMock *middle_window = screen_mock->_client_list_stacking[1];
+
+  GeisAdapterMock::GeisTouchData touch_data;
+  touch_data.id = 1;
+  touch_data.touches = 3;
+  touch_data.window = 123;
+  touch_data.focus_x = 100; /* hits the middle window */
+  touch_data.focus_y = 100;
+  gestureEngine.OnTouchStart(&touch_data);
+
+  GeisAdapterMock::GeisDragData drag_data;
+  drag_data.id = 1;
+  drag_data.touches = 3;
+  drag_data.window = 123;
+  drag_data.focus_x = 100; /* hits the middle window */
+  drag_data.focus_y = 100;
+  gestureEngine.OnDragStart(&drag_data);
+
+  ASSERT_FALSE(middle_window->_moved);
+
+  touch_data.focus_x += 10;
+  touch_data.focus_y += 20;
+  gestureEngine.OnTouchUpdate(&touch_data);
+
+  drag_data.delta_x = 10;
+  drag_data.delta_y = 20;
+  drag_data.focus_x += drag_data.delta_x;
+  drag_data.focus_y += drag_data.delta_x;
+  gestureEngine.OnDragUpdate(&drag_data);
+
+  ASSERT_TRUE(middle_window->_moved);
+  ASSERT_EQ(drag_data.delta_x, middle_window->_movement_x);
+  ASSERT_EQ(drag_data.delta_y, middle_window->_movement_y);
+}
+
+TEST_F(GestureEngineTest, ThreeFingersDragDoesntMoveStaticWindow)
+{
+  GestureEngine gestureEngine(screen_mock);
+  CompWindowMock *middle_window = screen_mock->_client_list_stacking[1];
+
+  /* can't be moved */
+  middle_window->_actions = 0;
+
+  GeisAdapterMock::GeisTouchData touch_data;
+  touch_data.id = 1;
+  touch_data.touches = 3;
+  touch_data.window = 123;
+  touch_data.focus_x = 100; /* hits the middle window */
+  touch_data.focus_y = 100;
+  gestureEngine.OnTouchStart(&touch_data);
+
+  GeisAdapterMock::GeisDragData drag_data;
+  drag_data.id = 1;
+  drag_data.touches = 3;
+  drag_data.window = 123;
+  drag_data.focus_x = 100; /* hits the middle window */
+  drag_data.focus_y = 100;
+  gestureEngine.OnDragStart(&drag_data);
+
+  ASSERT_FALSE(middle_window->_moved);
+
+  touch_data.focus_x += 10;
+  touch_data.focus_y += 20;
+  gestureEngine.OnTouchUpdate(&touch_data);
+
+  drag_data.delta_x = 10;
+  drag_data.delta_y = 20;
+  drag_data.focus_x += drag_data.delta_x;
+  drag_data.focus_y += drag_data.delta_x;
+  gestureEngine.OnDragUpdate(&drag_data);
+
+  ASSERT_FALSE(middle_window->_moved);
 }
 
 int main(int argc, char** argv)
