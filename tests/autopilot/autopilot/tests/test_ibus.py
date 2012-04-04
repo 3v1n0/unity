@@ -6,7 +6,9 @@
 # under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
 
-"Tests to ensure unity is compatible with ibus input method."
+"""Tests to ensure unity is compatible with ibus input method."""
+
+from time import sleep
 
 from autopilot.emulators.ibus import (
     set_active_engines,
@@ -14,7 +16,6 @@ from autopilot.emulators.ibus import (
     )
 from autopilot.tests import AutopilotTestCase, multiply_scenarios
 
-from time import sleep
 
 class IBusTests(AutopilotTestCase):
     """Base class for IBus tests."""

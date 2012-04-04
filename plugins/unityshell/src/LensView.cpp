@@ -314,6 +314,11 @@ void LensView::OnResultAdded(Result const& result)
     grid->AddResult(const_cast<Result&>(result));
     counts_[group]++;
     UpdateCounts(group);
+    // make sure we don't display the no-results-hint if we do have results
+    if (G_UNLIKELY (no_results_active_))
+    {
+      CheckNoResults(Lens::Hints());
+    }
   } catch (std::out_of_range& oor) {
     LOG_WARN(logger) << "Result does not have a valid category index: "
                      << boost::lexical_cast<unsigned int>(result.category_index)

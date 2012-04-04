@@ -90,6 +90,7 @@ _keys = {
     "workspace/move_up": ("wall", "up_key"),
     "workspace/move_down": ("wall", "down_key"),
     # Window management
+    "window/show_desktop" : ("core", "show_desktop_key"),
     "window/minimize": ("core", "minimize_window_key"),
     # expo plugin:
     "expo/start": ("expo", "expo_key"),

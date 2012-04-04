@@ -274,11 +274,51 @@ void Controller::ShowHud()
   view_->ShowEmbeddedIcon(!IsLockedToLauncher(monitor_index_));
   view_->AboutToShow();
 
-  // we first want to grab the currently active window, luckly we can just ask the jason interface(bamf)
-  BamfMatcher* matcher = bamf_matcher_get_default();
-  glib::Object<BamfView> bamf_app((BamfView*)(bamf_matcher_get_active_application(matcher)), glib::AddRef());
-  glib::String view_icon(bamf_view_get_icon(bamf_app));
-  focused_app_icon_ = view_icon.Str();
+  // We first want to grab the currently active window
+  glib::Object<BamfMatcher> matcher(bamf_matcher_get_default());
+  BamfWindow* active_win = bamf_matcher_get_active_window(matcher);
+
+  Window active_xid = bamf_window_get_xid(active_win);
+  std::vector<Window> const& unity_xids = nux::XInputWindow::NativeHandleList();
+
+  // If the active window is an unity window, we must get the top-most valid window
+  if (std::find(unity_xids.begin(), unity_xids.end(), active_xid) != unity_xids.end())
+  {
+    // Windows list stack for all the monitors
+    GList *windows = bamf_matcher_get_window_stack_for_monitor(matcher, -1);
+
+    for (GList *l = windows; l; l = l->next)
+    {
+      if (!BAMF_IS_WINDOW(l->data))
+        continue;
+
+      auto win = static_cast<BamfWindow*>(l->data);
+      auto view = static_cast<BamfView*>(l->data);
+      Window xid = bamf_window_get_xid(win);
+
+      if (bamf_view_user_visible(view) && bamf_window_get_window_type(win) != BAMF_WINDOW_DOCK &&
+          std::find(unity_xids.begin(), unity_xids.end(), xid) == unity_xids.end())
+      {
+        active_win = win;
+        active_xid = xid;
+      }
+    }
+
+    g_list_free(windows);
+  }
+
+  BamfApplication* active_app = bamf_matcher_get_application_for_window(matcher, active_win);
+
+  if (BAMF_IS_VIEW(active_app))
+  {
+    auto active_view = reinterpret_cast<BamfView*>(active_app);
+    glib::String view_icon(bamf_view_get_icon(active_view));
+    focused_app_icon_ = view_icon.Str();
+  }
+  else
+  {
+    focused_app_icon_ = focused_app_icon_ = PKGDATADIR "/launcher_bfb.png";
+  }
 
   LOG_DEBUG(logger) << "Taking application icon: " << focused_app_icon_;
   ubus.SendMessage(UBUS_HUD_ICON_CHANGED, g_variant_new_string(focused_app_icon_.c_str())); 
@@ -321,6 +361,8 @@ void Controller::HideHud(bool restore)
   window_->CaptureMouseDownAnyWhereElse(false);
   window_->EnableInputWindow(false, "Hud", true, false);
   visible_ = false;
+
+  nux::GetWindowCompositor().SetKeyFocusArea(NULL,nux::KEY_NAV_NONE);
 
   StartShowHideTimeline();
 

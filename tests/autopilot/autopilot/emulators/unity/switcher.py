@@ -10,13 +10,14 @@
 import logging
 from time import sleep
 
-from autopilot.keybindings import KeybindingsHelper
 from autopilot.emulators.unity import get_state_by_path, make_introspection_object
 from autopilot.emulators.X11 import Keyboard, Mouse
+from autopilot.keybindings import KeybindingsHelper
 
 # even though we don't use these directly, we need to make sure they've been
 # imported so the classes contained are registered with the introspection API.
 from autopilot.emulators.unity.icons import *
+
 
 logger = logging.getLogger(__name__)
 
