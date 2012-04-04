@@ -25,11 +25,11 @@ def _make_scenarios():
     screen_geometry = ScreenGeometry()
     num_monitors = screen_geometry.get_num_monitors()
 
+    # it doesn't make sense to set only_primary when we're running in a single-monitor setup.
     if num_monitors == 1:
-        monitor_scenarios =  [('Single Monitor', {'launcher_monitor': 0})]
-    else:
-        monitor_scenarios = [('Monitor %d' % (i), {'launcher_monitor': i}) for i in range(num_monitors)]
+        return [('Single Monitor', {'launcher_monitor': 0, 'only_primary': False})]
 
+    monitor_scenarios = [('Monitor %d' % (i), {'launcher_monitor': i}) for i in range(num_monitors)]
     launcher_mode_scenarios = [('launcher_on_primary', {'only_primary': True}),
                                 ('launcher on all', {'only_primary': False})]
     return multiply_scenarios(monitor_scenarios, launcher_mode_scenarios)
@@ -517,6 +517,25 @@ class LauncherTests(ScenariodLauncherTests):
         # Check for whether:
         # The new launcher icon has a 'Waiting to install' tooltip
         self.assertThat(icon.tooltip_text, Equals("Waiting to install"))
+
+    def test_keynav_from_dash_saturates_icons(self):
+        """Starting super+tab switcher from the dash must resaturate launcher icons.
+
+        Tests fix for bug #913569.
+        """
+        bfb = self.launcher.model.get_bfb_icon()
+        self.mouse.move(bfb.center_x, bfb.center_y)
+        self.dash.ensure_visible()
+        sleep(1)
+        # We can't use 'launcher_instance.switcher_start()' since it moves the mouse.
+        self.keybinding_hold_part_then_tap("launcher/switcher")
+        self.addCleanup(self.keybinding_release, "launcher/switcher")
+        self.addCleanup(self.keybinding, "launcher/switcher/exit")
+
+        self.keybinding_tap("launcher/switcher/next")
+        for icon in self.launcher.model.get_launcher_icons():
+            self.assertFalse(icon.desaturated)
+
 
 
 class LauncherRevealTests(ScenariodLauncherTests):
