@@ -244,6 +244,9 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
 
         If files is specified, start the application with the specified files.
         If locale is specified, the locale will be set when the application is launched.
+
+        The method returns the BamfApplication instance.
+
         """
         if locale:
             os.putenv("LC_ALL", locale)
@@ -254,7 +257,10 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
 
         app = self.KNOWN_APPS[app_name]
         self.bamf.launch_application(app['desktop-file'], files)
+        apps = self.bamf.get_running_applications_by_desktop_file(app['desktop-file'])
         self.addCleanup(call, ["killall", app['process-name']])
+        self.assertThat(len(apps), Equals(1))
+        return apps[0]
 
     def close_all_app(self, app_name):
         """Close all instances of the app_name."""

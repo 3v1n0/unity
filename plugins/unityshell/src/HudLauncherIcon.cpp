@@ -58,10 +58,13 @@ HudLauncherIcon::HudLauncherIcon(LauncherHideMode hide_mode)
     if (data_string)
       hud_icon_name = data_string;
     LOG_DEBUG(logger) << "Hud icon change: " << hud_icon_name;
-    if (!hud_icon_name.empty()
-        && hud_icon_name != icon_name())
+    if (hud_icon_name != icon_name)
     {
-      icon_name = hud_icon_name;
+      if (hud_icon_name.empty())
+        icon_name = PKGDATADIR"/launcher_bfb.png";
+      else
+        icon_name = hud_icon_name;
+
       EmitNeedsRedraw();
     }
   });
@@ -91,7 +94,7 @@ void HudLauncherIcon::OnOverlayShown(GVariant* data, bool visible)
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
-  // If the hud is open, we show the HUD button iff we have a locked launcher
+  // If the hud is open, we show the HUD button if we have a locked launcher
   if (overlay_identity.Str() == "hud" &&
       launcher_hide_mode_ == LAUNCHER_HIDE_NEVER)
   {

@@ -13,7 +13,8 @@ from time import sleep
 from autopilot.emulators.X11 import ScreenGeometry
 from autopilot.emulators.unity.icons import HudLauncherIcon
 from autopilot.tests import AutopilotTestCase, multiply_scenarios
-from os import remove
+from os import remove, path
+
 
 def _make_monitor_scenarios():
     num_monitors = ScreenGeometry().get_num_monitors()
@@ -27,21 +28,15 @@ def _make_monitor_scenarios():
 
     return scenarios
 
+
 class HudTestsBase(AutopilotTestCase):
 
     def setUp(self):
         super(HudTestsBase, self).setUp()
 
-        sleep(0.25)
-
     def tearDown(self):
         self.hud.ensure_hidden()
         super(HudTestsBase, self).tearDown()
-
-    def get_hud_launcher_icon(self):
-        icons = HudLauncherIcon.get_all_instances()
-        self.assertEqual(1, len(icons))
-        return icons[0]
 
     def get_num_active_launcher_icons(self):
         num_active = 0
@@ -56,7 +51,6 @@ class HudTestsBase(AutopilotTestCase):
             sleep(1)
             if self.hud.visible:
                 break
-
         self.assertTrue(self.hud.visible, "HUD did not appear.")
 
 
@@ -124,8 +118,8 @@ class HudBehaviorTests(HudTestsBase):
 
     def test_reveal_hud_with_no_apps(self):
         """Hud must show even with no visible applications."""
-        self.keyboard.press_and_release("Ctrl+Alt+d")
-        self.addCleanup(self.keyboard.press_and_release, "Ctrl+Alt+d")
+        self.keybinding("window/show_desktop")
+        self.addCleanup(self.keybinding, "window/show_desktop")
         sleep(1)
 
         self.hud.toggle_reveal()
@@ -140,10 +134,7 @@ class HudBehaviorTests(HudTestsBase):
         """Ensures that once the hud is dismissed, the same application
         that was focused before hud invocation is refocused
         """
-        self.start_app("Calculator")
-        calc = self.get_app_instances("Calculator")
-        self.assertThat(len(calc), Equals(1))
-        calc = calc[0]
+        calc = self.start_app("Calculator")
 
         # first ensure that the application has started and is focused
         self.assertEqual(calc.is_active, True)
@@ -226,7 +217,6 @@ class HudBehaviorTests(HudTestsBase):
         sleep(1)
 
         self.keyboard.type('focus')
-        
         self.assertEqual(self.hud.searchbar.search_string, 'focus')
 
     def test_hud_closes_on_workspace_switch(self):
@@ -236,6 +226,7 @@ class HudBehaviorTests(HudTestsBase):
 
         self.workspace.switch_to(1)
         self.workspace.switch_to(2)
+
 
 class HudLauncherInteractionsTests(HudTestsBase):
 
@@ -316,7 +307,7 @@ class HudLockedLauncherInteractionsTests(HudTestsBase):
     def test_hud_launcher_icon_hides_bfb(self):
         """Tests that the BFB icon is hidden when the HUD launcher icon is shown"""
 
-        hud_icon = self.get_hud_launcher_icon()
+        hud_icon = self.hud.get_launcher_icon()
         bfb_icon = self.launcher.model.get_bfb_icon()
 
         self.assertTrue(bfb_icon.is_visible_on_monitor(self.hud_monitor))
@@ -400,7 +391,7 @@ class HudVisualTests(HudTestsBase):
         self.hud.visible
         sleep(.5)
 
-        hud_launcher_icon = self.get_hud_launcher_icon()
+        hud_launcher_icon = self.hud.get_launcher_icon()
         hud_embedded_icon = self.hud.get_embedded_icon()
 
         if self.hud.is_locked_launcher:
@@ -414,20 +405,48 @@ class HudVisualTests(HudTestsBase):
             self.assertFalse(hud_launcher_icon.active)
             self.assertThat(hud_embedded_icon, NotEquals(None))
 
-    def test_hud_icon_show_the_focused_application_emblem(self):
+    def test_hud_icon_shows_the_focused_application_emblem(self):
         """Tests that the correct HUD icon is shown"""
-        self.start_app("Calculator")
-        calctools = self.get_app_instances("Calculator")
-        self.assertThat(len(calctools), GreaterThan(0))
-        calc = calctools[0]
+        self.close_all_app("Calculator")
+        calc = self.start_app("Calculator")
         self.assertTrue(calc.is_active)
 
         self.reveal_hud()
         sleep(.5)
 
-        if self.hud.is_locked_launcher:
-            hud_launcher_icon = self.get_hud_launcher_icon()
-            self.assertThat(hud_launcher_icon.icon_name, Equals(calc.icon))
-        else:
-            hud_embedded_icon = self.hud.get_embedded_icon()
-            self.assertThat(hud_embedded_icon.icon_name, Equals(calc.icon))
+        self.assertThat(self.hud.icon.icon_name, Equals(calc.icon))
+
+    def test_hud_icon_shows_the_ubuntu_emblem_on_empty_desktop(self):
+        self.keybinding("window/show_desktop")
+        self.addCleanup(self.keybinding, "window/show_desktop")
+        sleep(1)
+
+        self.reveal_hud()
+        sleep(.5)
+
+        self.assertThat(path.basename(self.hud.icon.icon_name), Equals("launcher_bfb.png"))
+
+    def test_switch_dash_hud_does_not_break_the_focused_application_emblem(self):
+        """Tests that the correct HUD icon is shown when switching from Dash to HUD"""
+        self.close_all_app("Calculator")
+        calc = self.start_app("Calculator")
+        self.assertTrue(calc.is_active)
+
+        self.dash.ensure_visible()
+        self.reveal_hud()
+        sleep(.5)
+
+        self.assertThat(self.hud.icon.icon_name, Equals(calc.icon))
+
+    def test_switch_hud_dash_does_not_break_the_focused_application_emblem(self):
+        """Tests that the correct HUD icon is shown when switching from HUD to Dash and back"""
+        self.close_all_app("Calculator")
+        calc = self.start_app("Calculator")
+        self.assertTrue(calc.is_active)
+
+        self.reveal_hud()
+        self.dash.ensure_visible()
+        self.reveal_hud()
+        sleep(.5)
+
+        self.assertThat(self.hud.icon.icon_name, Equals(calc.icon))

@@ -14,6 +14,7 @@ from time import sleep
 from autopilot.tests import AutopilotTestCase, multiply_scenarios
 from autopilot.emulators.X11 import ScreenGeometry
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -210,7 +211,6 @@ class LauncherTests(ScenariodLauncherTests):
         launcher_instance.switcher_prev()
         sleep(2)
         self.assertThat(launcher_instance.are_shortcuts_showing(), Equals(False))
-
 
     def test_launcher_switcher_cycling_forward(self):
         """Launcher Switcher must loop through icons when cycling forwards"""
@@ -496,7 +496,7 @@ class LauncherTests(ScenariodLauncherTests):
         # Check if SC is pinned to the launcher already
         icon = self.launcher.model.get_icon_by_desktop_file(sc_desktop_file)
         if icon != None:
-            launcher_instance.unlock_from_launcher(icon[0])
+            launcher_instance.unlock_from_launcher(icon)
             sleep(2.0) # Animation of removing icon can take over a second
         else:
             self.addCleanup(cleanup)

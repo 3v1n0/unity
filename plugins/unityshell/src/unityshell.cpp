@@ -365,8 +365,16 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      BackgroundEffectHelper::updates_enabled = true;
 
-     ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [&](GVariant * args) { 
-       dash_monitor_ = g_variant_get_int32(args);
+     ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [&](GVariant * data)
+     {
+       unity::glib::String overlay_identity;
+       gboolean can_maximise = FALSE;
+       gint32 overlay_monitor = 0;
+       g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
+                    &overlay_identity, &can_maximise, &overlay_monitor);
+
+       dash_monitor_ = overlay_monitor;
+
        RaiseInputWindows();
      });
       LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";
@@ -575,7 +583,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
     i++;
   }
 
-  if (!(launcher_controller_->IsOverlayOpen() && current_monitor == dash_monitor_) 
+  if (!(launcher_controller_->IsOverlayOpen() && current_monitor == dash_monitor_)
       && panel_controller_->opacity() > 0.0f)
   {
     foreach(GLTexture * tex, _shadow_texture)
@@ -654,7 +662,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
     i++;
   }
 
-  if (!(launcher_controller_->IsOverlayOpen() && current_monitor == dash_monitor_) 
+  if (!(launcher_controller_->IsOverlayOpen() && current_monitor == dash_monitor_)
       && panel_controller_->opacity() > 0.0f)
   {
     foreach(GLTexture * tex, _shadow_texture)
@@ -1649,7 +1657,7 @@ void UnityScreen::SendExecuteCommand()
   if (hud_controller_->IsVisible())
   {
     hud_controller_->HideHud();
-  } 
+  }
   ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
                             g_variant_new("(sus)", "commands.lens", 0, ""));
 }
@@ -1991,7 +1999,7 @@ bool UnityScreen::ShowHudTerminate(CompAction* action,
     // Handles closing KeyNav (Alt+F1) if the hud is about to show
     if (launcher_controller_->KeyNavIsActive())
       launcher_controller_->KeyNavTerminate(false);
-  
+
     // If an overlay is open, it must be the dash! Close it!
     if (launcher_controller_->IsOverlayOpen())
       dash_controller_->HideDash();
@@ -3081,6 +3089,10 @@ void capture_g_log_calls(const gchar* log_domain,
   {
     nux::logging::LogStream(level, logger.module(), "<unknown>", 0).stream()
         << message;
+    if (level >= nux::logging::Error)
+    {
+      nux::logging::Backtrace();
+    }
   }
 }
 
