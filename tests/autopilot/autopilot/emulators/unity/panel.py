@@ -9,9 +9,9 @@
 
 import logging
 
-from autopilot.keybindings import KeybindingsHelper
-from autopilot.emulators.X11 import Mouse, ScreenGeometry
 from autopilot.emulators.unity import UnityIntrospectionObject
+from autopilot.emulators.X11 import Mouse, ScreenGeometry
+from autopilot.keybindings import KeybindingsHelper
 
 logger = logging.getLogger(__name__)
 
@@ -22,17 +22,20 @@ class PanelController(UnityIntrospectionObject):
     def get_panel_for_monitor(self, monitor_num):
         """Return an instance of panel for the specified monitor, or None."""
         panels = self.get_children_by_type(UnityPanel, monitor=monitor_num)
-        return panels[0] if panels else None
+        assert(len(panels) == 1)
+        return panels[0]
 
     def get_active_panel(self):
         """Return the active panel, or None."""
         panels = self.get_children_by_type(UnityPanel, active=True)
         assert(len(panels) == 1)
-        return panels[0] if panels else None
+        return panels[0]
 
+    @property
     def get_panels(self):
         """Return the available panels, or None."""
         return self.get_children_by_type(UnityPanel)
+
 
 class UnityPanel(UnityIntrospectionObject, KeybindingsHelper):
     """An individual panel for a monitor."""
@@ -82,9 +85,9 @@ class UnityPanel(UnityIntrospectionObject, KeybindingsHelper):
 
         # The menu view has bigger geometry than the real layout
         menu_entries = self.menus.get_entries()
-        if menu_entries and len(menu_entries) > 0:
+        if len(menu_entries) > 0:
             first_x = menu_entries[0].x
-            last_x = menu_entries[len(menu_entries)-1].x + menu_entries[len(menu_entries)-1].width / 2
+            last_x = menu_entries[-1].x + menu_entries[-1].width / 2
 
             target_x = (last_x - first_x) / 2
 
@@ -106,13 +109,10 @@ class UnityPanel(UnityIntrospectionObject, KeybindingsHelper):
         entries += self.indicators.get_ordered_entries(visible_only)
         return entries
 
-    def get_indicator_entry(self, id):
+    def get_indicator_entry(self, entry_id):
         """Returns the indicator entry for the given ID or None"""
-        for en in self.get_indicator_entries():
-            if en.id == id:
-                return en
-
-        return None
+        entries = filter(lambda e: e.entry_id == entry_id, self.get_indicator_entries())
+        return entries[0] if entries else None
 
     @property
     def title(self):
@@ -232,14 +232,13 @@ class Indicators(UnityIntrospectionObject):
 
     def get_ordered_entries(self, visible_only=True):
         """Return a list of indicators, ordered by their priority"""
-        entries = []
 
         if visible_only:
             entries = self.get_children_by_type(IndicatorEntry, visible=True)
         else:
             entries = self.get_children_by_type(IndicatorEntry)
 
-        return sorted(entries, key=lambda entry: entry.priority) 
+        return sorted(entries, key=lambda entry: entry.priority)
 
     @property
     def geometry(self):
