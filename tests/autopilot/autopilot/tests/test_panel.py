@@ -353,6 +353,23 @@ class PanelWindowButtonsTests(PanelTestsBase):
         launcher = self.launcher.get_launcher_for_monitor(self.panel_monitor)
         launcher.click_launcher_icon(icon)
 
+    def test_window_buttons_minimize_follows_fitts_law(self):
+        text_win = self.open_new_application_window("Text Editor", maximized=True)
+
+        button = self.panel.window_buttons.minimize
+        button.mouse_move_to()
+        target_x = button.x + button.width / 2
+        target_y = self.screen_geo.get_monitor_geometry(self.panel_monitor)[1]
+        self.mouse.move(target_x, target_y, rate=20, time_between_events=0.005)
+        sleep(.5)
+        self.mouse.click(press_duration=.1)
+        sleep(1)
+
+        self.assertTrue(text_win.is_hidden)
+        icon = self.launcher.model.get_icon_by_desktop_id(text_win.application.desktop_file)
+        launcher = self.launcher.get_launcher_for_monitor(self.panel_monitor)
+        launcher.click_launcher_icon(icon)
+
     def test_window_buttons_unmaximize_button_works_for_window(self):
         """Tests that the window button 'Unmaximize' actually unmaximizes a window"""
         text_win = self.open_new_application_window("Text Editor", maximized=True)
@@ -364,6 +381,20 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.assertTrue(text_win.is_focused)
         sleep(self.panel.menus.fadeout_duration / 1000.0)
         self.assertFalse(self.panel.window_buttons_shown)
+
+    def test_window_buttons_unmaximize_follows_fitts_law(self):
+        text_win = self.open_new_application_window("Text Editor", maximized=True)
+
+        button = self.panel.window_buttons.unmaximize
+        button.mouse_move_to()
+        target_x = button.x + button.width / 2
+        target_y = self.screen_geo.get_monitor_geometry(self.panel_monitor)[1]
+        self.mouse.move(target_x, target_y, rate=20, time_between_events=0.005)
+        sleep(.5)
+        self.mouse.click(press_duration=.1)
+        sleep(1)
+
+        self.assertFalse(text_win.is_maximized)
 
     def test_window_buttons_close_button_works_for_hud(self):
         """Tests that the window 'Close' actually closes the HUD"""
