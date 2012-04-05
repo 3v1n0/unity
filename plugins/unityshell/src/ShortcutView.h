@@ -59,7 +59,7 @@ protected:
 private:
   // Private methods
   nux::LinearLayout* CreateSectionLayout(const char* section_name);
-  nux::LinearLayout* CreateShortKeyEntryLayout(AbstractHint::Ptr const& hint);
+  nux::View* CreateShortKeyEntryView(AbstractHint::Ptr const& hint);
   nux::LinearLayout* CreateIntermediateLayout();
 
   void RenderColumns();
