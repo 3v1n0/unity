@@ -40,7 +40,6 @@ namespace
 {
 nux::logging::Logger logger("unity.hud.view");
 const int icon_size = 46;
-const std::string default_text = _("Type your command");
 const int grow_anim_length = 90 * 1000;
 const int pause_before_grow_length = 32 * 1000;
 
@@ -176,7 +175,7 @@ void View::ProcessGrowShrink()
 void View::ResetToDefault()
 {
   search_bar_->search_string = "";
-  search_bar_->search_hint = default_text;
+  search_bar_->search_hint = _("Type your command");
 }
 
 void View::Relayout()
@@ -361,7 +360,7 @@ void View::SetupViews()
       search_bar_ = new unity::SearchBar(true);
       search_bar_->SetMinimumHeight(style.GetSearchBarHeight());
       search_bar_->SetMaximumHeight(style.GetSearchBarHeight());
-      search_bar_->search_hint = default_text;
+      search_bar_->search_hint = _("Type your command");
       search_bar_->search_changed.connect(sigc::mem_fun(this, &View::OnSearchChanged));
       AddChild(search_bar_.GetPointer());
       content_layout_->AddView(search_bar_.GetPointer(), 0, nux::MINOR_POSITION_LEFT);
@@ -385,7 +384,7 @@ void View::OnSearchChanged(std::string const& search_string)
   search_changed.emit(search_string);
   if (search_string.empty())
   {
-    search_bar_->search_hint = default_text;
+    search_bar_->search_hint = _("Type your command");
   }
   else
   {
@@ -493,7 +492,7 @@ bool View::InspectKeyEvent(unsigned int eventType,
     else
     {
       search_bar_->search_string = "";
-      search_bar_->search_hint = default_text;
+      search_bar_->search_hint = _("Type your command");
     }
     return true;
   }
@@ -544,13 +543,13 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
 
     if (search_bar_->search_string == "")
     {
-      search_bar_->search_hint = default_text;
+      search_bar_->search_hint = _("Type your command");
       ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
     }
     else
     {
       search_bar_->search_string = "";
-      search_bar_->search_hint = default_text;
+      search_bar_->search_hint = _("Type your command");
       return search_bar_->text_entry();
     }
     return NULL;
