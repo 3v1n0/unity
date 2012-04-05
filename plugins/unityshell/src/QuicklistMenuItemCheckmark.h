@@ -29,6 +29,9 @@
 
 #include <X11/Xlib.h>
 
+namespace unity
+{
+
 class QuicklistMenuItemCheckmark : public QuicklistMenuItem
 {
 public:
@@ -58,5 +61,7 @@ protected:
   virtual void UpdateTexture();
   virtual int CairoSurfaceWidth();
 };
+
+} // NAMESPACE
 
 #endif // QUICKLISTMENUITEMCHECKMARK_H

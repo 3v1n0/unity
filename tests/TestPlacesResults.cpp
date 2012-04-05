@@ -119,7 +119,7 @@ void TestRunner::Init()
 
   nux::GetGraphicsThread()->SetLayout(layout);
 #endif
-  g_timeout_add_seconds(2, (GSourceFunc)remove_timeout, NULL);
+  g_timeout_add(2000, (GSourceFunc)remove_timeout, NULL);
 }
 
 void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)
@@ -148,7 +148,7 @@ int main(int argc, char** argv)
   // for views
 
   g_type_init();
-  g_thread_init(NULL);
+  
   gtk_init(&argc, &argv);
 
   nux::NuxInitialize(0);

@@ -25,9 +25,10 @@
 #include "Nux/Nux.h"
 #include "Nux/WindowThread.h"
 
-//void TestPanelServiceCreateSuite (void);
-void TestUBusCreateSuite(void);
-void TestQuicklistMenuitemsCreateSuite(void);
+void TestPanelServiceCreateSuite();
+void TestUBusCreateSuite();
+void TestQuicklistMenuitemsCreateSuite();
+void TestStaticCairoTextCreateSuite();
 
 nux::WindowThread*
 createThread()
@@ -53,7 +54,7 @@ runThread(nux::WindowThread* thread)
 void
 stopThread(nux::WindowThread* thread)
 {
-  thread->TerminateThread();
+  thread->ExitMainLoop();
   delete thread;
 }
 
@@ -63,14 +64,15 @@ main(int argc, char** argv)
   g_setenv("GSETTINGS_SCHEMA_DIR", BUILDDIR"/settings/", TRUE);
 
   g_type_init();
-  g_thread_init(NULL);
+  
   gtk_init(&argc, &argv);
 
   g_test_init(&argc, &argv, NULL);
 
   //Keep alphabetical please
-  //TestPanelServiceCreateSuite ();
+  TestPanelServiceCreateSuite();
   TestQuicklistMenuitemsCreateSuite();
+  TestStaticCairoTextCreateSuite();
   TestUBusCreateSuite();
 
   nux::WindowThread* thread = createThread();

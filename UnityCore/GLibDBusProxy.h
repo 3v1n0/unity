@@ -54,6 +54,7 @@ public:
             int timeout_msec = -1);
 
   void Connect(std::string const& signal_name, ReplyCallback callback);
+  bool IsConnected();
 
   sigc::signal<void> connected;
   sigc::signal<void> disconnected;
@@ -61,9 +62,9 @@ public:
   static void NoReplyCallback(GVariant* v) {};
 
   // Public due to use in some callbacks
-  class Impl;
 private:
-  Impl* pimpl;
+  class Impl;
+  std::unique_ptr<Impl> pimpl;
 };
 
 }

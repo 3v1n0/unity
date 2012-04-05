@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2011-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,11 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Mikkel Kamstrup Erlandsen <mikkel.kamstrup@canonical.com>
+ *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
+
+#include <NuxCore/Logger.h>
+#include <UnityCore/DesktopUtilities.h>
 
 #include "LauncherEntryRemoteModel.h"
 
-static void nux_object_destroy_notify(nux::Object* obj);
+namespace unity
+{
+
+namespace
+{
+nux::logging::Logger logger("launcher.entry.remote.model");
+}
 
 /**
  * Helper class implementing the remote API to control the icons in the
@@ -33,70 +43,60 @@ static void nux_object_destroy_notify(nux::Object* obj);
  * with Unity.
  */
 LauncherEntryRemoteModel::LauncherEntryRemoteModel()
+  : _launcher_entry_dbus_signal_id(0)
+  , _dbus_name_owner_changed_signal_id(0)
 {
-  GError*          error;
+  glib::Error error;
 
-  _launcher_entry_dbus_signal_id = 0;
-
-  error = NULL;
-  _conn = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, &error);
+  _conn = g_bus_get_sync(G_BUS_TYPE_SESSION, nullptr, &error);
   if (error)
   {
-    g_warning("Unable to connect to session bus: %s", error->message);
-    g_error_free(error);
+    LOG_ERROR(logger) << "Unable to connect to session bus: " << error.Message();
     return;
   }
-
-  _entries_by_uri = g_hash_table_new_full(g_str_hash, g_str_equal, g_free,
-                                          (GDestroyNotify) nux_object_destroy_notify);
 
   /* Listen for *all* signals on the "com.canonical.Unity.LauncherEntry"
    * interface, no matter who the sender is */
   _launcher_entry_dbus_signal_id =
     g_dbus_connection_signal_subscribe(_conn,
-                                       NULL,                       // sender
-                                       "com.canonical.Unity.LauncherEntry",
-                                       NULL,                       // member
-                                       NULL,                       // path
-                                       NULL,                       // arg0
+                                       nullptr,                  // sender
+                                       "com.canonical.Unity.LauncherEntry", // iface
+                                       nullptr,                  // member
+                                       nullptr,                  // path
+                                       nullptr,                  // arg0
                                        G_DBUS_SIGNAL_FLAGS_NONE,
-                                       &on_launcher_entry_signal_received,
+                                       &OnEntrySignalReceived,
                                        this,
-                                       NULL);
+                                       nullptr);
 
   _dbus_name_owner_changed_signal_id =
     g_dbus_connection_signal_subscribe(_conn,
-                                       "org.freedesktop.DBus",     // sender
-                                       "org.freedesktop.DBus",     // interface
-                                       "NameOwnerChanged",         // member
-                                       "/org/freedesktop/DBus",    // path
-                                       NULL,                       // arg0
+                                       "org.freedesktop.DBus",   // sender
+                                       "org.freedesktop.DBus",   // interface
+                                       "NameOwnerChanged",       // member
+                                       "/org/freedesktop/DBus",  // path
+                                       nullptr,                  // arg0
                                        G_DBUS_SIGNAL_FLAGS_NONE,
-                                       &on_dbus_name_owner_changed_signal_received,
+                                       &OnDBusNameOwnerChanged,
                                        this,
-                                       NULL);
+                                       nullptr);
 }
 
 LauncherEntryRemoteModel::~LauncherEntryRemoteModel()
 {
-  g_hash_table_destroy(_entries_by_uri);
-  _entries_by_uri = NULL;
-
-  if (_launcher_entry_dbus_signal_id && _conn)
-  {
-    g_dbus_connection_signal_unsubscribe(_conn,
-                                         _launcher_entry_dbus_signal_id);
-  }
-  if (_dbus_name_owner_changed_signal_id && _conn)
-  {
-    g_dbus_connection_signal_unsubscribe(_conn,
-                                         _dbus_name_owner_changed_signal_id);
-  }
-
   if (_conn)
   {
-    g_object_unref(_conn);
-    _conn = NULL;
+    if (_launcher_entry_dbus_signal_id)
+    {
+      g_dbus_connection_signal_unsubscribe(_conn,
+                                           _launcher_entry_dbus_signal_id);
+    }
+
+    if (_dbus_name_owner_changed_signal_id)
+    {
+      g_dbus_connection_signal_unsubscribe(_conn,
+                                           _dbus_name_owner_changed_signal_id);
+    }
   }
 }
 
@@ -104,163 +104,117 @@ LauncherEntryRemoteModel::~LauncherEntryRemoteModel()
  * Return the number of unique LauncherEntryRemote objects managed by the model.
  * The entries are identified by their LauncherEntryRemote::AppUri property.
  */
-guint
-LauncherEntryRemoteModel::Size()
+unsigned int LauncherEntryRemoteModel::Size() const
 {
-  return g_hash_table_size(_entries_by_uri);
+  return _entries_by_uri.size();
 }
 
 /**
- * Return a pointer to a LauncherEntryRemote if there is one for app_uri,
- * otherwise NULL. The returned object should not be freed.
+ * Return a smart pointer to a LauncherEntryRemote if there is one for app_uri,
+ * otherwise nullptr.
  *
  * App Uris look like application://$desktop_file_id, where desktop_file_id
  * is the base name of the .desktop file for the application including the
  * .desktop extension. Eg. application://firefox.desktop.
  */
-LauncherEntryRemote*
-LauncherEntryRemoteModel::LookupByUri(const gchar* app_uri)
+LauncherEntryRemote::Ptr LauncherEntryRemoteModel::LookupByUri(std::string const& app_uri)
 {
-  gpointer entry;
+  auto target_en = _entries_by_uri.find(app_uri);
 
-  g_return_val_if_fail(app_uri != NULL, NULL);
-
-  entry = g_hash_table_lookup(_entries_by_uri,  app_uri);
-  return static_cast<LauncherEntryRemote*>(entry);
+  return (target_en != _entries_by_uri.end()) ? target_en->second : nullptr;
 }
 
 /**
- * Return a pointer to a LauncherEntryRemote if there is one for desktop_id,
- * otherwise NULL. The returned object should not be freed.
+ * Return a smart pointer to a LauncherEntryRemote if there is one for desktop_id,
+ * otherwise nullptr.
  *
  * The desktop id is the base name of the .desktop file for the application
  * including the .desktop extension. Eg. firefox.desktop.
  */
-LauncherEntryRemote*
-LauncherEntryRemoteModel::LookupByDesktopId(const gchar* desktop_id)
+LauncherEntryRemote::Ptr LauncherEntryRemoteModel::LookupByDesktopId(std::string const& desktop_id)
 {
-  LauncherEntryRemote* entry;
-  gchar*               app_uri;
-
-  g_return_val_if_fail(desktop_id != NULL, NULL);
-
-  app_uri = g_strconcat("application://", desktop_id, NULL);
-  entry = LookupByUri(app_uri);
-  g_free(app_uri);
-
-  return entry;
+  std::string prefix = "application://";
+  return LookupByUri(prefix + desktop_id);
 }
 
 /**
- * Return a pointer to a LauncherEntryRemote if there is one for
- * desktop_file_path, otherwise NULL. The returned object should not be freed.
+ * Return a smart pointer to a LauncherEntryRemote if there is one for
+ * desktop_file_path, otherwise nullptr.
  */
-LauncherEntryRemote*
-LauncherEntryRemoteModel::LookupByDesktopFile(const gchar* desktop_file_path)
+LauncherEntryRemote::Ptr LauncherEntryRemoteModel::LookupByDesktopFile(std::string const& desktop_file_path)
 {
-  LauncherEntryRemote* entry;
-  gchar*               desktop_id, *app_uri;
+  std::string const& desktop_id = DesktopUtilities::GetDesktopID(desktop_file_path);
 
-  g_return_val_if_fail(desktop_file_path != NULL, NULL);
+  if (desktop_id.empty())
+    return nullptr;
 
-  desktop_id = g_path_get_basename(desktop_file_path);
-  app_uri = g_strconcat("application://", desktop_id, NULL);
-  entry = LookupByUri(app_uri);
-  g_free(app_uri);
-  g_free(desktop_id);
-
-  return entry;
+  return LookupByDesktopId(desktop_id);
 }
 
 /**
  * Get a list of all application URIs which have registered with the launcher
- * API. The returned GList should be freed with g_list_free(), but the URIs
- * should not be changed or freed.
+ * API.
  */
-GList*
-LauncherEntryRemoteModel::GetUris()
+std::list<std::string> LauncherEntryRemoteModel::GetUris() const
 {
-  return (GList*) g_hash_table_get_keys(_entries_by_uri);
+  std::list<std::string> uris;
+
+  for (auto entry : _entries_by_uri)
+    uris.push_back(entry.first);
+
+  return uris;
 }
 
 /**
  * Add or update a remote launcher entry.
- *
- * If 'entry' has a floating reference it will be consumed.
  */
-void
-LauncherEntryRemoteModel::AddEntry(LauncherEntryRemote* entry)
+void LauncherEntryRemoteModel::AddEntry(LauncherEntryRemote::Ptr const& entry)
 {
-  LauncherEntryRemote* existing_entry;
+  auto existing_entry = LookupByUri(entry->AppUri());
 
-  g_return_if_fail(entry != NULL);
-
-  entry->SinkReference();
-
-  existing_entry = LookupByUri(entry->AppUri());
-  if (existing_entry != NULL)
+  if (existing_entry)
   {
     existing_entry->Update(entry);
-    entry->UnReference();
   }
   else
   {
-    /* The ref on entry will be removed by the hash table itself */
-    g_hash_table_insert(_entries_by_uri, g_strdup(entry->AppUri()), entry);
+    _entries_by_uri[entry->AppUri()] = entry;
     entry_added.emit(entry);
   }
 }
 
 /**
  * Add or update a remote launcher entry.
- *
- * If 'entry' has a floating reference it will be consumed.
  */
-void
-LauncherEntryRemoteModel::RemoveEntry(LauncherEntryRemote* entry)
+void LauncherEntryRemoteModel::RemoveEntry(LauncherEntryRemote::Ptr const& entry)
 {
-  g_return_if_fail(entry != NULL);
-
-  entry->Reference();
-
-  if (g_hash_table_remove(_entries_by_uri, entry->AppUri()))
-    entry_removed.emit(entry);
-
-  entry->UnReference();
+  _entries_by_uri.erase(entry->AppUri());
+  entry_removed.emit(entry);
 }
 
 /**
  * Handle an incoming Update() signal from DBus
  */
-void
-LauncherEntryRemoteModel::HandleUpdateRequest(const gchar* sender_name,
-                                              GVariant*    parameters)
+void LauncherEntryRemoteModel::HandleUpdateRequest(std::string const& sender_name,
+                                                   GVariant* parameters)
 {
-  LauncherEntryRemote*      entry;
-  gchar*                    app_uri;
-  GVariantIter*             prop_iter;
-
-  g_return_if_fail(sender_name != NULL);
-  g_return_if_fail(parameters != NULL);
+  if (!parameters)
+    return;
 
   if (!g_variant_is_of_type(parameters, G_VARIANT_TYPE("(sa{sv})")))
   {
-    g_warning("Received 'com.canonical.Unity.LauncherEntry.Update' with"
-              " illegal payload signature '%s'. Expected '(sa{sv})'.",
-              g_variant_get_type_string(parameters));
+    LOG_ERROR(logger) << "Received 'com.canonical.Unity.LauncherEntry.Update' with"
+                         " illegal payload signature '"
+                      << g_variant_get_type_string(parameters)
+                      << "'. Expected '(sa{sv})'.";
     return;
   }
 
-  if (sender_name == NULL)
-  {
-    g_critical("Received 'com.canonical.Unity.LauncherEntry.Update' from"
-               " an undefined sender. This may happen if you are trying "
-               "to run Unity on a p2p DBus connection.");
-    return;
-  }
-
+  glib::String app_uri;
+  GVariantIter* prop_iter;
   g_variant_get(parameters, "(sa{sv})", &app_uri, &prop_iter);
-  entry = LookupByUri(app_uri);
+
+  auto entry = LookupByUri(app_uri.Str());
 
   if (entry)
   {
@@ -271,90 +225,86 @@ LauncherEntryRemoteModel::HandleUpdateRequest(const gchar* sender_name,
   }
   else
   {
-    entry = new LauncherEntryRemote(sender_name, parameters);
-    AddEntry(entry);  // consumes floating ref on entry
+    LauncherEntryRemote::Ptr entry_ptr(new LauncherEntryRemote(sender_name, parameters));
+    AddEntry(entry_ptr);
   }
 
   g_variant_iter_free(prop_iter);
-  g_free(app_uri);
 }
 
-void
-LauncherEntryRemoteModel::on_launcher_entry_signal_received(GDBusConnection* connection,
-                                                            const gchar*     sender_name,
-                                                            const gchar*     object_path,
-                                                            const gchar*     interface_name,
-                                                            const gchar*     signal_name,
-                                                            GVariant*        parameters,
-                                                            gpointer         user_data)
+void LauncherEntryRemoteModel::OnEntrySignalReceived(GDBusConnection* connection,
+                                                     const gchar* sender_name,
+                                                     const gchar* object_path,
+                                                     const gchar* interface_name,
+                                                     const gchar* signal_name,
+                                                     GVariant* parameters,
+                                                     gpointer user_data)
 {
-  LauncherEntryRemoteModel* self;
+  auto self = static_cast<LauncherEntryRemoteModel*>(user_data);
 
-  self = static_cast<LauncherEntryRemoteModel*>(user_data);
-
-  if (parameters == NULL)
+  if (!parameters || !signal_name)
   {
-    g_warning("Received DBus signal '%s.%s' with empty payload from %s",
-              interface_name, signal_name, sender_name);
+    LOG_ERROR(logger) << "Received DBus signal '" << interface_name << "."
+                      << signal_name << "' with empty payload from " << sender_name;
     return;
   }
 
-  if (g_strcmp0(signal_name, "Update") == 0)
+  if (std::string(signal_name) == "Update")
   {
+    if (!sender_name)
+    {
+      LOG_ERROR(logger) << "Received 'com.canonical.Unity.LauncherEntry.Update' from"
+                           " an undefined sender. This may happen if you are trying "
+                           "to run Unity on a p2p DBus connection.";
+      return;
+    }
+
     self->HandleUpdateRequest(sender_name, parameters);
   }
   else
   {
-    g_warning("Unknown signal '%s.%s' from %s",
-              interface_name, signal_name, sender_name);
+    LOG_ERROR(logger) << "Unknown signal '" << interface_name << "."
+                      << signal_name << "' from " << sender_name;
   }
 }
 
 void
-LauncherEntryRemoteModel::on_dbus_name_owner_changed_signal_received(GDBusConnection* connection,
-                                                                     const gchar* sender_name,
-                                                                     const gchar* object_path,
-                                                                     const gchar* interface_name,
-                                                                     const gchar* signal_name,
-                                                                     GVariant* parameters,
-                                                                     gpointer user_data)
+LauncherEntryRemoteModel::OnDBusNameOwnerChanged(GDBusConnection* connection,
+                                                 const gchar* sender_name,
+                                                 const gchar* object_path,
+                                                 const gchar* interface_name,
+                                                 const gchar* signal_name,
+                                                 GVariant* parameters,
+                                                 gpointer user_data)
 {
-  LauncherEntryRemoteModel* self;
-  char* name, *before, *after;
+  auto self = static_cast<LauncherEntryRemoteModel*>(user_data);
 
-  self = static_cast<LauncherEntryRemoteModel*>(user_data);
-
-  if (parameters == NULL || self->_entries_by_uri == NULL)
+  if (!parameters || self->_entries_by_uri.empty())
     return;
 
+  glib::String name, before, after;
   g_variant_get(parameters, "(sss)", &name, &before, &after);
 
-  if (!after[0])
+  if (!after || after.Str().empty())
   {
     // Name gone, find and destroy LauncherEntryRemote
-    GHashTableIter iter;
-    GList* remove = NULL, *l;
-    gpointer key, value;
+    std::vector<LauncherEntryRemote::Ptr> to_rm;
 
-    g_hash_table_iter_init(&iter, self->_entries_by_uri);
-    while (g_hash_table_iter_next(&iter, &key, &value))
+    for (auto it = self->_entries_by_uri.begin(); it != self->_entries_by_uri.end(); ++it)
     {
-      /* do something with key and value */
-      LauncherEntryRemote* entry = static_cast<LauncherEntryRemote*>(value);
-      if (g_str_equal(entry->DBusName(), name))
-        remove = g_list_prepend(remove, entry);
+      auto entry = it->second;
+
+      if (entry->DBusName() == name.Str())
+      {
+        to_rm.push_back(entry);
+      }
     }
 
-    for (l = remove; l; l = l->next)
-      self->RemoveEntry(static_cast<LauncherEntryRemote*>(l->data));
-
-    g_list_free(remove);
+    for (auto entry : to_rm)
+    {
+      self->RemoveEntry(entry);
+    }
   }
 }
 
-static void
-nux_object_destroy_notify(nux::Object* obj)
-{
-  if (G_LIKELY(obj != NULL))
-    obj->UnReference();
 }

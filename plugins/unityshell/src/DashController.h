@@ -52,12 +52,14 @@ public:
   std::vector<char> GetAllShortcuts();
 
   nux::Property<int> launcher_width;
-  nux::Property<int> panel_height;
+  nux::Property<bool> use_primary;
 
   sigc::signal<void> on_realize;
 
+  void HideDash(bool restore_focus = true);
+
 protected:
-  const gchar* GetName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
 private:
@@ -68,6 +70,7 @@ private:
   void RegisterUBusInterests();
 
   nux::Geometry GetIdealWindowGeometry();
+  int GetIdealMonitor();
   void Relayout(GdkScreen*screen=NULL);
 
   void OnMouseDownOutsideWindow(int x, int y, unsigned long bflags, unsigned long kflags);
@@ -77,7 +80,6 @@ private:
   void OnActivateRequest(GVariant* variant);
 
   void ShowDash();
-  void HideDash(bool restore_focus = true);
 
   void StartShowHideTimeline();
   static gboolean OnViewShowHideFrame(Controller* self);
@@ -98,6 +100,7 @@ private:
 
   DashView* view_;
   guint ensure_id_;
+  sigc::connection screen_ungrabbed_slot_;
 };
 
 

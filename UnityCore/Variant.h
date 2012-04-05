@@ -22,11 +22,45 @@
 
 #include <string>
 #include <glib.h>
+#include <map>
 
 #include <NuxCore/Rect.h>
 
 namespace unity
 {
+namespace glib
+{
+
+class Variant;
+typedef std::map<std::string, Variant> HintsMap;
+
+struct StealRef {};
+
+class Variant
+{
+public:
+  Variant();
+  Variant(GVariant*);
+  Variant(GVariant*, StealRef const&);
+
+  Variant(Variant const&);
+  ~Variant();
+
+  std::string GetString() const;
+  int GetInt() const;
+  unsigned GetUInt() const;
+  bool GetBool() const;
+
+  bool ASVToHints(HintsMap& hints) const;
+
+  Variant& operator=(GVariant*);
+  operator GVariant*() const;
+private:
+  GVariant* variant_;
+};
+
+}
+
 namespace variant
 {
 
@@ -39,6 +73,7 @@ public:
   BuilderWrapper& add(char const* name, char const* value);
   BuilderWrapper& add(char const* name, std::string const& value);
   BuilderWrapper& add(char const* name, int value);
+  BuilderWrapper& add(char const* name, unsigned value);
   BuilderWrapper& add(char const* name, float value);
   BuilderWrapper& add(char const* name, GVariant* value);
   BuilderWrapper& add(nux::Rect const& value);

@@ -82,9 +82,8 @@ protected:
   typedef std::map<std::string, PanelIndicatorEntryView*> Entries;
   Entries entries_;
 
-  const gchar* GetName();
-  const gchar* GetChildsName();
-  void         AddProperties(GVariantBuilder* builder);
+  std::string GetName() const;
+  void        AddProperties(GVariantBuilder* builder);
 
 private:
   typedef std::vector<indicator::Indicator::Ptr> Indicators;

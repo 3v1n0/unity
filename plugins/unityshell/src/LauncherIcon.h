@@ -60,14 +60,9 @@ class LauncherIcon : public AbstractLauncherIcon
 public:
   typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
-  LauncherIcon(Launcher* launcher);
+  LauncherIcon();
 
   virtual ~LauncherIcon();
-
-  Launcher* GetLauncher()
-  {
-    return _launcher;
-  };
 
   bool SetTooltipText(std::string& target, std::string const& value);
 
@@ -77,23 +72,25 @@ public:
 
   void SetSortPriority(int priority);
 
-  void RecvMouseEnter();
+  void RecvMouseEnter(int monitor);
 
-  void RecvMouseLeave();
+  void RecvMouseLeave(int monitor);
 
-  void RecvMouseDown(int button);
+  void RecvMouseDown(int button, int monitor);
 
-  void RecvMouseUp(int button);
+  void RecvMouseUp(int button, int monitor);
 
-  void RecvMouseClick(int button);
+  void RecvMouseClick(int button, int monitor);
 
   void HideTooltip();
 
-  bool OpenQuicklist(bool default_to_first_item = false);
+  void ShowTooltip();
 
-  void        SetCenter(nux::Point3 center);
+  bool OpenQuicklist(bool default_to_first_item = false, int monitor = -1);
 
-  nux::Point3 GetCenter();
+  void        SetCenter(nux::Point3 center, int parent_monitor, nux::Geometry parent_geo);
+
+  nux::Point3 GetCenter(int monitor);
 
   virtual void Activate(ActionArg arg);
 
@@ -101,15 +98,21 @@ public:
 
   void SaveCenter();
 
+  nux::Point3 GetSavedCenter(int monitor);
+
   int SortPriority();
 
-  int RelatedWindows();
+  virtual std::vector<Window> Windows() { return std::vector<Window> (); }
 
-  virtual std::vector<Window> RelatedXids () { return std::vector<Window> (); }
+  virtual std::vector<Window> WindowsOnViewport() { return std::vector<Window> (); }
 
-  virtual std::string NameForWindow (Window window) { return std::string(); }
+  virtual std::vector<Window> WindowsForMonitor(int monitor) { return std::vector<Window> (); }
 
-  const bool HasWindowOnViewport();
+  virtual std::string NameForWindow(Window window) { return std::string(); }
+
+  const bool WindowVisibleOnMonitor(int monitor);
+
+  const bool WindowVisibleOnViewport();
 
   virtual bool IsSpacer()
   {
@@ -120,13 +123,13 @@ public:
 
   float GetProgress();
 
-  void SetEmblemIconName(const char* name);
+  void SetEmblemIconName(std::string const& name);
 
-  void SetEmblemText(const char* text);
+  void SetEmblemText(std::string const& text);
 
   void DeleteEmblem();
 
-  virtual bool ShowInSwitcher()
+  virtual bool ShowInSwitcher(bool current)
   {
     return false;
   };
@@ -136,19 +139,19 @@ public:
     return 0;
   }
 
-  bool GetQuirk(Quirk quirk);
+  bool GetQuirk(Quirk quirk) const;
 
   void SetQuirk(Quirk quirk, bool value);
 
   struct timespec GetQuirkTime(Quirk quirk);
 
-  IconType Type();
+  IconType GetIconType();
 
   virtual nux::Color BackgroundColor();
 
   virtual nux::Color GlowColor();
 
-  const gchar* RemoteUri()
+  std::string RemoteUri()
   {
     return GetRemoteUri();
   }
@@ -159,9 +162,9 @@ public:
 
   std::list<DbusmenuMenuitem*> Menus();
 
-  void InsertEntryRemote(LauncherEntryRemote* remote);
+  void InsertEntryRemote(LauncherEntryRemote::Ptr const& remote);
 
-  void RemoveEntryRemote(LauncherEntryRemote* remote);
+  void RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote);
 
   nux::DndAction QueryAcceptDrop(unity::DndData& dnd_data)
   {
@@ -185,20 +188,26 @@ public:
 
   void SetIconType(IconType type);
 
-  std::vector<nux::Vector4> & GetTransform(TransformIndex index);
+  virtual std::string DesktopFile() { return std::string(""); }
 
-  static void SetSkipTooltipDelay(gboolean skip_tooltip_delay);
+  virtual bool IsSticky() const { return false; }
 
-  sigc::signal<void, LauncherIcon*> remove;
+  virtual bool IsVisible() const { return false; }
 
-  sigc::connection needs_redraw_connection;
-  sigc::connection on_icon_added_connection;
-  sigc::connection on_icon_removed_connection;
-  sigc::connection on_order_changed_connection;
-  sigc::connection on_expo_terminated_connection;
+  virtual bool IsVisibleOnMonitor(int monitor) const;
+
+  virtual void SetVisibleOnMonitor(int monitor, bool visible);
+
+  virtual void AboutToRemove() {}
+
+  virtual void Stick(bool save = true) {}
+
+  virtual void UnStick() {}
 
 protected:
-  const gchar* GetName();
+  std::vector<nux::Point3> GetCenters();
+
+  std::string GetName() const;
 
   void AddProperties(GVariantBuilder* builder);
 
@@ -208,13 +217,11 @@ protected:
 
   void ResetQuirkTime(Quirk quirk);
 
-  void SetRelatedWindows(int windows);
-
   void Remove();
 
   void SetProgress(float progress);
 
-  void SetHasWindowOnViewport(bool val);
+  void SetWindowVisibleOnMonitor(bool val, int monitor);
 
   void Present(float urgency, int length);
 
@@ -226,11 +233,11 @@ protected:
 
   virtual nux::BaseTexture* GetTextureForSize(int size) = 0;
 
-  virtual void OnCenterStabilized(nux::Point3 center) {}
+  virtual void OnCenterStabilized(std::vector<nux::Point3> center) {}
 
-  virtual const gchar* GetRemoteUri()
+  virtual std::string GetRemoteUri()
   {
-    return 0;
+    return "";
   }
 
   virtual nux::DndAction OnQueryAcceptDrop(unity::DndData& dnd_data)
@@ -250,11 +257,11 @@ protected:
 
   virtual bool HandlesSpread () { return false; }
 
-  nux::BaseTexture* TextureFromGtkTheme(const char* name, int size, bool update_glow_colors = true);
+  nux::BaseTexture* TextureFromGtkTheme(std::string name, int size, bool update_glow_colors = true);
 
-  nux::BaseTexture* TextureFromSpecificGtkTheme(GtkIconTheme* theme, const char* name, int size, bool update_glow_colors = true, bool is_default_theme = false);
+  nux::BaseTexture* TextureFromSpecificGtkTheme(GtkIconTheme* theme, std::string const& name, int size, bool update_glow_colors = true, bool is_default_theme = false);
 
-  nux::BaseTexture* TextureFromPath(const char* name, int size, bool update_glow_colors = true);
+  nux::BaseTexture* TextureFromPath(std::string const& name, int size, bool update_glow_colors = true);
 
   static bool        IsMonoDefaultTheme();
 
@@ -276,21 +283,14 @@ protected:
 
   void OnRemoteProgressVisibleChanged(LauncherEntryRemote* remote);
 
-  Launcher* _launcher;
+  void EmitNeedsRedraw();
 
-  nux::Tooltip* _tooltip;
-  QuicklistView* _quicklist;
-
-  static nux::Tooltip* _current_tooltip;
-  static QuicklistView* _current_quicklist;
+  void EmitRemove();
 
   // This looks like a case for boost::logical::tribool
   static int _current_theme_is_mono;
 
-  DbusmenuClient* _menuclient_dynamic_quicklist;
-
-  friend class Launcher;
-  friend class LauncherModel;
+  glib::Object<DbusmenuClient> _menuclient_dynamic_quicklist;
 
 private:
   typedef struct
@@ -299,47 +299,50 @@ private:
     Quirk quirk;
   } DelayedUpdateArg;
 
+  nux::ObjectPtr<Tooltip> _tooltip;
+  nux::ObjectPtr<QuicklistView> _quicklist;
+
   static void ChildRealized(DbusmenuMenuitem* newitem, QuicklistView* quicklist);
   static void RootChanged(DbusmenuClient* client, DbusmenuMenuitem* newroot, QuicklistView* quicklist);
   static gboolean OnPresentTimeout(gpointer data);
   static gboolean OnCenterTimeout(gpointer data);
   static gboolean OnDelayedUpdateTimeout(gpointer data);
-  static gboolean OnTooltipTimeout(gpointer data);
 
   void ColorForIcon(GdkPixbuf* pixbuf, nux::Color& background, nux::Color& glow);
 
-  bool             _has_visible_window;
-  bool             _quicklist_is_initialized;
-  bool             _remote_urgent;
-  float            _present_urgency;
-  float            _progress;
-  guint            _center_stabilize_handle;
-  guint            _present_time_handle;
-  guint            _time_delay_handle;
-  guint            _tooltip_delay_handle;
-  int              _related_windows;
-  int              _sort_priority;
-  nux::Color       _background_color;
-  nux::Color       _glow_color;
-  static gboolean  _skip_tooltip_delay;
+  void LoadTooltip();
+  void LoadQuicklist();
 
-  gint64           _shortcut;
+  bool              _remote_urgent;
+  float             _present_urgency;
+  float             _progress;
+  guint             _center_stabilize_handle;
+  guint             _present_time_handle;
+  guint             _time_delay_handle;
+  int               _sort_priority;
+  int               _last_monitor;
+  nux::Color        _background_color;
+  nux::Color        _glow_color;
 
-  nux::Point3      _center;
-  nux::Point3      _last_stable;
-  nux::Point3      _saved_center;
-  IconType         _icon_type;
+  gint64            _shortcut;
 
-  static GtkIconTheme* _unity_theme;
+  IconType                 _icon_type;
+
+  std::vector<nux::Point3> _center;
+  std::vector<bool> _has_visible_window;
+  std::vector<bool> _is_visible_on_monitor;
+  std::vector<nux::Point3> _last_stable;
+  std::vector<nux::Geometry> _parent_geo;
+  std::vector<nux::Point3> _saved_center;
+
+  static glib::Object<GtkIconTheme> _unity_theme;
 
   BaseTexturePtr _emblem;
 
   bool             _quirks[QUIRK_LAST];
   struct timespec  _quirk_times[QUIRK_LAST];
 
-  std::list<LauncherEntryRemote*> _entry_list;
-  std::map<TransformIndex, std::vector<nux::Vector4> > transform_map;
-  
+  std::list<LauncherEntryRemote::Ptr> _entry_list;
 };
 
 }

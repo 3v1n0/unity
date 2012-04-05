@@ -104,6 +104,11 @@ String::operator char*()
   return string_;
 }
 
+String::operator std::string()
+{
+  return Str();
+}
+
 String::operator bool() const
 {
   return bool(string_);

@@ -29,21 +29,54 @@ namespace unity
 {
 namespace launcher
 {
-  
+
 UBusManager BFBLauncherIcon::ubus_manager_;
 
-BFBLauncherIcon::BFBLauncherIcon(Launcher* IconManager)
- : SimpleLauncherIcon(IconManager)
+BFBLauncherIcon::BFBLauncherIcon(LauncherHideMode hide_mode)
+ : SimpleLauncherIcon()
+ , reader_(dash::LensDirectoryReader::GetDefault())
+ , launcher_hide_mode_(hide_mode)
 {
-  tooltip_text = _("Dash home");
-  SetIconName(PKGDATADIR"/launcher_bfb.png");
+  tooltip_text = _("Dash Home");
+  icon_name = PKGDATADIR"/launcher_bfb.png";
   SetQuirk(QUIRK_VISIBLE, true);
   SetQuirk(QUIRK_RUNNING, false);
   SetIconType(TYPE_HOME);
-  
+
   background_color_ = nux::color::White;
-  
-  mouse_enter.connect([&]() { ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL); });
+
+  mouse_enter.connect([&](int m) { ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL); });
+  ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::bind(sigc::mem_fun(this, &BFBLauncherIcon::OnOverlayShown), true));
+  ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::bind(sigc::mem_fun(this, &BFBLauncherIcon::OnOverlayShown), false));
+}
+
+void BFBLauncherIcon::SetHideMode(LauncherHideMode hide_mode)
+{
+  launcher_hide_mode_ = hide_mode;
+}
+
+void BFBLauncherIcon::OnOverlayShown(GVariant *data, bool visible)
+{
+  unity::glib::String overlay_identity;
+  gboolean can_maximise = FALSE;
+  gint32 overlay_monitor = 0;
+  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
+                &overlay_identity, &can_maximise, &overlay_monitor);
+
+  if (overlay_identity.Str() == "dash" && IsVisibleOnMonitor(overlay_monitor))
+  {
+    SetQuirk(QUIRK_ACTIVE, visible);
+    EmitNeedsRedraw();
+  }
+  // If the hud is open, we hide the BFB if we have a locked launcher
+  else if (overlay_identity.Str() == "hud")
+  {
+    if (launcher_hide_mode_ == LAUNCHER_HIDE_NEVER)
+    {
+      SetVisibleOnMonitor(overlay_monitor, !visible);
+      EmitNeedsRedraw();
+    }
+  }
 }
 
 nux::Color BFBLauncherIcon::BackgroundColor()
@@ -75,45 +108,50 @@ void BFBLauncherIcon::OnMenuitemActivated(DbusmenuMenuitem* item,
 }
 
 std::list<DbusmenuMenuitem*> BFBLauncherIcon::GetMenus()
-{  
+{
   std::list<DbusmenuMenuitem*> result;
   DbusmenuMenuitem* menu_item;
-  
+
   // Home dash
   menu_item = dbusmenu_menuitem_new();
-  
+
   dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Dash Home"));
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
-  
+
   g_signal_connect(menu_item,
                    DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
                    (GCallback)&BFBLauncherIcon::OnMenuitemActivated,
                    g_strdup("home.lens"));
-  
+
   result.push_back(menu_item);
-  
+
   // Other lenses..
-  for (auto lens : lenses_.GetLenses())
+  for (auto lens : reader_->GetLensData())
   {
-    if (!lens->visible())
+    if (!lens->visible)
       continue;
-    
+
     menu_item = dbusmenu_menuitem_new();
 
-    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, lens->name().c_str());
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, lens->name);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
     g_signal_connect(menu_item,
                      DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
                      (GCallback)&BFBLauncherIcon::OnMenuitemActivated,
-                     g_strdup(lens->id().c_str()));
-                     
+                     g_strdup(lens->id));
+
     result.push_back(menu_item);
   }
-  
+
   return result;
+}
+
+std::string BFBLauncherIcon::GetName() const
+{
+  return "BFBLauncherIcon";
 }
 
 } // namespace launcher

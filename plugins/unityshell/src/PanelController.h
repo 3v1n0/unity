@@ -25,12 +25,13 @@
 
 #include <Nux/Nux.h>
 
+#include "Introspectable.h"
 namespace unity
 {
 namespace panel
 {
 
-class Controller
+class Controller : public sigc::trackable, public unity::debug::Introspectable
 {
 public:
   typedef std::shared_ptr<Controller> Ptr;
@@ -38,8 +39,7 @@ public:
   Controller();
   ~Controller();
 
-  void StartFirstMenuShow();
-  void EndFirstMenuShow();
+  void FirstMenuShow();
   void QueueRedraw();
 
   unsigned int GetTrayXid ();
@@ -48,9 +48,14 @@ public:
   // NOTE: nux::Property maybe?
   void SetOpacity(float opacity);
   void SetOpacityMaximizedToggle(bool enabled);
+  void SetMenuShowTimings(int fadein, int fadeout, int discovery, int discovery_fadein, int discovery_fadeout);
+
   float opacity() const;
 
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
 private:
+  void OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors);
   class Impl;
   Impl* pimpl;
 };

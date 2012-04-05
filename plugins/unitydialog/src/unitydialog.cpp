@@ -420,7 +420,12 @@ UnityDialogWindow::glAddGeometry(const GLTexture::MatrixList& matrices,
 /* Collect textures */
 void
 UnityDialogWindow::glDrawTexture(GLTexture*          texture,
+#ifdef USE_GLES
+                                 const GLMatrix            &transform,
+                                 const GLWindowPaintAttrib &attrib,
+#else
                                  GLFragment::Attrib& fa,
+#endif
                                  unsigned int       mask)
 {
   unity::PaintInfoCollector::Active ()->processTexture (texture);
@@ -448,7 +453,11 @@ unity::GeometryCollection::addGeometryForWindow (CompWindow *w, const CompRegion
 {
   /* We can reset the window geometry since it will be
    * re-added later */
+#ifdef USE_GLES
+  GLWindow::get (w)->vertexBuffer()->begin();
+#else
   GLWindow::get (w)->geometry().reset();
+#endif
 
   for (unsigned int i = 0; i < collectedMatrixLists.size (); i++)
   {
@@ -462,6 +471,10 @@ unity::GeometryCollection::addGeometryForWindow (CompWindow *w, const CompRegion
      * wobbly etc etc */
     GLWindow::get (w)->glAddGeometry(matl, reg, paintRegion, min, max);
   }
+
+#ifdef USE_GLES
+  GLWindow::get (w)->vertexBuffer()->end();
+#endif
 }
 
 void
@@ -497,7 +510,11 @@ unity::TexGeometryCollection::setTexture (GLTexture *tex)
 }
 
 void
-unity::TexGeometryCollection::addGeometriesAndDrawTextureForWindow(CompWindow *w, unsigned int mask)
+unity::TexGeometryCollection::addGeometriesAndDrawTextureForWindow(CompWindow *w,
+#ifdef USE_GLES
+                                                                   const GLMatrix &transform,
+#endif
+                                                                   unsigned int mask)
 {
   if (mTexture && mGeometries.status ())
   {
@@ -509,6 +526,25 @@ unity::TexGeometryCollection::addGeometriesAndDrawTextureForWindow(CompWindow *w
 
     mGeometries.addGeometryForWindow (w, paintRegion);
 
+#ifdef USE_GLES
+    UnityDialogScreen *uds = UnityDialogScreen::get (screen);
+    GLWindowPaintAttrib attrib (gWindow->lastPaintAttrib());
+    unsigned int glDrawTextureIndex = gWindow->glDrawTextureGetCurrentIndex();
+    /* Texture rendering set-up */
+//    uds->gScreen->setTexEnvMode(GL_MODULATE);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    /* Draw the dim texture with all of it's modified
+     * geometry glory */
+    gWindow->glDrawTextureSetCurrentIndex(MAXSHORT);
+    gWindow->glDrawTexture(mTexture, transform, attrib, mask
+					      | PAINT_WINDOW_BLEND_MASK
+					      | PAINT_WINDOW_TRANSLUCENT_MASK
+					      | PAINT_WINDOW_TRANSFORMED_MASK);
+    gWindow->glDrawTextureSetCurrentIndex(glDrawTextureIndex);
+    /* Texture rendering tear-down */
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    uds->gScreen->setTexEnvMode(GL_REPLACE);
+#else
     if (gWindow->geometry().vertices)
     {
 	UnityDialogScreen *uds = UnityDialogScreen::get (screen);
@@ -528,6 +564,7 @@ unity::TexGeometryCollection::addGeometriesAndDrawTextureForWindow(CompWindow *w
 	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 	uds->gScreen->setTexEnvMode(GL_REPLACE);
     }
+#endif
   }
 }
 
@@ -581,10 +618,18 @@ unity::PaintInfoCollector::processTexture (GLTexture *tex)
 }
 
 void
-unity::PaintInfoCollector::drawGeometriesForWindow(CompWindow *w, unsigned int pm)
+unity::PaintInfoCollector::drawGeometriesForWindow(CompWindow *w,
+#ifdef USE_GLES
+                                                   const GLMatrix &transform,
+#endif
+                                                   unsigned int pm)
 {
   for (unity::TexGeometryCollection &tcg : mCollection)
+#if USE_GLES
+    tcg.addGeometriesAndDrawTextureForWindow (w, transform, pm);
+#else
     tcg.addGeometriesAndDrawTextureForWindow (w, pm);
+#endif
 }
 
 unity::PaintInfoCollector * unity::PaintInfoCollector::active_collector = NULL;
@@ -599,7 +644,11 @@ unity::PaintInfoCollector::Active ()
 
 bool
 UnityDialogWindow::glDraw(const GLMatrix& transform,
+#ifdef USE_GLES
+                          const GLWindowPaintAttrib& attrib,
+#else
                           GLFragment::Attrib& fragment,
+#endif
                           const CompRegion& region,
                           unsigned int mask)
 {
@@ -610,7 +659,13 @@ UnityDialogWindow::glDraw(const GLMatrix& transform,
 
   /* Draw the window on the bottom, we will be drawing the
    * dim render on top */
-  bool status = gWindow->glDraw(transform, fragment, region, mask);
+  bool status = gWindow->glDraw(transform,
+#ifdef USE_GLES
+                                attrib,
+#else
+                                fragment,
+#endif
+                                region, mask);
 
   UNITY_DIALOG_SCREEN(screen);
 
@@ -618,10 +673,17 @@ UnityDialogWindow::glDraw(const GLMatrix& transform,
   {
     GLTexture::MatrixList matl;
     GLTexture::Matrix     mat = tex->matrix();
+#ifdef USE_GLES
+    GLWindowPaintAttrib   wAttrib(attrib);
+#endif
 
     /* We can reset the window geometry since it will be
      * re-added later */
+#ifdef USE_GLES
+    gWindow->vertexBuffer()->begin();
+#else
     gWindow->geometry().reset();
+#endif
 
     /* Scale the dim render by the ratio of dim size
      * to window size */
@@ -642,7 +704,28 @@ UnityDialogWindow::glDraw(const GLMatrix& transform,
      * dim (so we get a nice render for things like
      * wobbly etc etc */
     gWindow->glAddGeometry(matl, reg, paintRegion);
+#ifdef USE_GLES
+    gWindow->vertexBuffer()->end();
+#endif
 
+#ifdef USE_GLES
+    unsigned int glDrawTextureIndex = gWindow->glDrawTextureGetCurrentIndex();
+    wAttrib.opacity = mShadeProgress;
+    /* Texture rendering set-up */
+//    uds->gScreen->setTexEnvMode(GL_MODULATE);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    /* Draw the dim texture with all of it's modified
+     * geometry glory */
+    gWindow->glDrawTextureSetCurrentIndex(MAXSHORT);
+    gWindow->glDrawTexture(tex, transform, attrib, mask
+                                              | PAINT_WINDOW_BLEND_MASK
+                                              | PAINT_WINDOW_TRANSLUCENT_MASK
+                                              | PAINT_WINDOW_TRANSFORMED_MASK);
+    gWindow->glDrawTextureSetCurrentIndex(glDrawTextureIndex);
+    /* Texture rendering tear-down */
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    uds->gScreen->setTexEnvMode(GL_REPLACE);
+#else
     /* Did it succeed? */
     if (gWindow->geometry().vertices)
     {
@@ -662,6 +745,7 @@ UnityDialogWindow::glDraw(const GLMatrix& transform,
       glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
       uds->gScreen->setTexEnvMode(GL_REPLACE);
     }
+#endif
   }
 
   for (CompWindow* w : mTransients)
@@ -674,7 +758,11 @@ UnityDialogWindow::glDraw(const GLMatrix& transform,
       unity::PaintInfoCollector pc (w);
 
       pc.collect();
-      pc.drawGeometriesForWindow (window, mask);
+      pc.drawGeometriesForWindow (window,
+#ifdef USE_GLES
+                                  transform,
+#endif
+                                  mask);
     }
   }
 

@@ -49,7 +49,10 @@ struct _NuxAreaAccessibleClass
   NuxObjectAccessibleClass parent_class;
 
   /*
-   * Virtual method to check if there is any pending state change notification
+   * Usually objects shouldn emit events like focus or selection
+   * changes until the toplevel window is active. This method is
+   * called when the toplevel window became active. Redefine it if you
+   * need to check any pending state change notification.
    */
   gboolean(*check_pending_notification)(NuxAreaAccessible* self);
 

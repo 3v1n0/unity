@@ -103,7 +103,7 @@ class WindowManagerDummy : public WindowManager
     g_debug("%s", G_STRFUNC);
   }
 
-  void FocusWindowGroup(std::vector<Window> windows, FocusVisibility)
+  void FocusWindowGroup(std::vector<Window> windows, FocusVisibility, int monitor)
   {
     g_debug("%s", G_STRFUNC);
   }
@@ -217,7 +217,7 @@ WindowManager::StartMove(guint32 xid, int x, int y)
     True
   };
   XEvent* e = (XEvent*)&bev;
-  nux::GetGraphicsThread()->ProcessForeignEvent(e, NULL);
+  nux::GetWindowThread()->ProcessForeignEvent(e, NULL);
 
   ev.xclient.type    = ClientMessage;
   ev.xclient.display = d;

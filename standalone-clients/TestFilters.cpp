@@ -57,13 +57,13 @@ TestRunner::~TestRunner ()
 
 void TestRunner::Init ()
 {
-  unity::FilterBasicButton *button = new unity::FilterBasicButton ("hello world", NUX_TRACKER_LOCATION);
-  unity::FilterRatingsWidget *ratings = new unity::FilterRatingsWidget (NUX_TRACKER_LOCATION);
-  unity::FilterGenreButton *genre_button = new unity::FilterGenreButton ("genre button", NUX_TRACKER_LOCATION);
+  auto *button = new unity::dash::FilterBasicButton ("hello world", NUX_TRACKER_LOCATION);
+  auto *ratings = new unity::dash::FilterRatingsWidget (NUX_TRACKER_LOCATION);
+  auto *genre_button = new unity::dash::FilterGenreButton ("genre button", NUX_TRACKER_LOCATION);
 
-  unity::FilterGenre *genre = new unity::FilterGenre(NUX_TRACKER_LOCATION);
+  auto *genre = new unity::dash::FilterGenre(3, NUX_TRACKER_LOCATION);
 
-  unity::FilterMultiRange *multi_range = new unity::FilterMultiRange (NUX_TRACKER_LOCATION);
+  auto *multi_range = new unity::dash::FilterMultiRange (NUX_TRACKER_LOCATION);
 
   layout = new nux::VLayout(NUX_TRACKER_LOCATION);
 
@@ -73,7 +73,7 @@ void TestRunner::Init ()
   layout->AddView(genre, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
   layout->AddView(multi_range, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
 
-  nux::GetGraphicsThread()->SetLayout (layout);
+  nux::GetWindowThread()->SetLayout (layout);
 }
 
 void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)
@@ -102,7 +102,7 @@ int main(int argc, char **argv)
   // for views
 
   g_type_init ();
-  g_thread_init (NULL);
+  
   gtk_init (&argc, &argv);
 
   nux::NuxInitialize(0);

@@ -54,12 +54,12 @@ using unity::launcher::SimpleLauncherIcon;
 static gboolean
 a11y_unit_test_destroy_management(void)
 {
-  QuicklistView* quicklist = NULL;
+  unity::QuicklistView* quicklist = NULL;
   AtkObject* accessible = NULL;
   nux::Object* base_object = NULL;
   AtkStateSet* state_set = NULL;
 
-  quicklist = new QuicklistView();
+  quicklist = new unity::QuicklistView();
   quicklist->SinkReference();
   accessible = unity_a11y_get_accessible(quicklist);
 
@@ -108,7 +108,7 @@ a11y_unit_test_destroy_management(void)
 static gboolean
 a11y_unit_test_hash_table_destroy_management(void)
 {
-  QuicklistView* quicklist = NULL;
+  unity::QuicklistView* quicklist = NULL;
   nux::Layout* layout = NULL;
   AtkObject* accessible = NULL;
   guint prev_hash_size = 0;
@@ -157,7 +157,7 @@ a11y_unit_test_hash_table_destroy_management(void)
 
   prev_hash_size = g_hash_table_size(_unity_a11y_get_accessible_table());
 
-  quicklist = new QuicklistView();
+  quicklist = new unity::QuicklistView();
   quicklist->SinkReference();
   accessible = unity_a11y_get_accessible(quicklist);
 
@@ -224,7 +224,7 @@ a11y_unit_test_launcher_connection(void)
     g_debug("[a11y] Launcher accessible created correctly");
   }
 
-  launcher_icon = new SimpleLauncherIcon(launcher);
+  launcher_icon = new SimpleLauncherIcon();
   launcher_icon->SinkReference();
   launcher_icon_accessible = unity_a11y_get_accessible(launcher_icon);
 

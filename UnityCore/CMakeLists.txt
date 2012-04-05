@@ -8,10 +8,12 @@ execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} unity --variable lensesdir OUT
 #
 set (CORE_HEADERS
      ApplicationPreview.h
+     AppmenuIndicator.h
      Categories.h
      Category.h
      CheckOptionFilter.h
      DBusIndicators.h
+     DesktopUtilities.h
      FilesystemLenses.h
      Filter.h
      Filters.h
@@ -21,6 +23,8 @@ set (CORE_HEADERS
      GLibSignal-inl.h
      GLibWrapper.h
      GLibWrapper-inl.h
+     Hud.h
+     HomeLens.h
      IndicatorEntry.h
      Indicator.h
      Indicators.h
@@ -33,7 +37,6 @@ set (CORE_HEADERS
      ModelRowAdaptor.h
      ModelRowAdaptor-inl.h
      Preview.h
-     Utils.h
      RadioOptionFilter.h
      RatingsFilter.h
      Result.h
@@ -43,10 +46,12 @@ set (CORE_HEADERS
 
 set (CORE_SOURCES
      ApplicationPreview.cpp
+     AppmenuIndicator.cpp
      Categories.cpp
      Category.cpp
      CheckOptionFilter.cpp
      DBusIndicators.cpp
+     DesktopUtilities.cpp
      FilesystemLenses.cpp
      Filter.cpp
      Filters.cpp
@@ -54,6 +59,8 @@ set (CORE_SOURCES
      GLibDBusProxy.cpp
      GLibSignal.cpp
      GLibWrapper.cpp
+     Hud.cpp
+     HomeLens.cpp
      Indicator.cpp
      IndicatorEntry.cpp
      Indicators.cpp
@@ -127,5 +134,5 @@ set (EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
 set (LIBDIR "${CMAKE_INSTALL_PREFIX}/lib")
 set (INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include")
 
-configure_file (unity-core.pc.cmake ${CMAKE_CURRENT_BINARY_DIR}/${CORE_LIB_NAME}.pc)
+configure_file (unity-core.pc.cmake ${CMAKE_CURRENT_BINARY_DIR}/${CORE_LIB_NAME}.pc @ONLY)
 install (FILES ${CMAKE_CURRENT_BINARY_DIR}/${CORE_LIB_NAME}.pc DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig)

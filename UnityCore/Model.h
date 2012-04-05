@@ -35,6 +35,12 @@ namespace unity
 namespace dash
 {
 
+enum ModelType
+{
+  REMOTE,
+  LOCAL
+};
+
 /* This template class encapsulates the basics of talking to a DeeSharedModel,
  * however it is a template as you can choose your own RowAdaptor (see
  * ResultsRowAdaptor.h for an example) which then presents the data in the rows
@@ -47,28 +53,40 @@ public:
   typedef std::shared_ptr<Model> Ptr;
 
   Model();
+  Model (ModelType model_type);
   virtual ~Model();
 
   const RowAdaptor RowAtIndex(std::size_t index);
 
   nux::Property<std::string> swarm_name;
   nux::ROProperty<std::size_t> count;
+  nux::ROProperty<unsigned long long> seqnum;
+  nux::ROProperty<glib::Object<DeeModel>> model;
 
   sigc::signal<void, RowAdaptor&> row_added;
   sigc::signal<void, RowAdaptor&> row_changed;
   sigc::signal<void, RowAdaptor&> row_removed;
 
+  sigc::signal<void, unsigned long long, unsigned long long> begin_transaction;
+  sigc::signal<void, unsigned long long, unsigned long long> end_transaction;
+
 private:
+  void Init();
   void OnRowAdded(DeeModel* model, DeeModelIter* iter);
   void OnRowChanged(DeeModel* model, DeeModelIter* iter);
   void OnRowRemoved(DeeModel* model, DeeModelIter* iter);
+  void OnTransactionBegin(DeeModel* model, guint64 begin_seq, guint64 end_seq);
+  void OnTransactionEnd(DeeModel* model, guint64 begin_seq, guint64 end_seq);
   void OnSwarmNameChanged(std::string const& swarm_name);
   std::size_t get_count();
+  unsigned long long get_seqnum();
+  glib::Object<DeeModel> get_model();
 
 private:
   glib::Object<DeeModel> model_;
   glib::SignalManager sig_manager_;
   DeeModelTag* renderer_tag_;
+  ModelType model_type_;
 };
 
 }

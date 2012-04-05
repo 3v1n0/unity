@@ -1,0 +1,40 @@
+Multi-monitor Alt-Tab
+---------------------
+This test only applies for multiple monitor.
+App names here are an example, any apps will do.
+
+Setup:
+#. Start with no apps open (or at least remember what is open where)
+#. Start terminal on workspace 1
+#. Start firefox on workspace 2
+#. Move to workspace 2
+
+Scenario 1: Perform on workspace 1
+Scenario 2: Perform on workspace 2
+
+Action:
+#. Hold Alt, press tab
+#. Observe
+#. Release Alt
+
+Scenario 1 Outcome:
+  Terminal is shown in the alt-tab switcher, but firefox on workspace 2 is not.
+Scenario 2 Outcome:
+  Firefox is shown in the alt-tab switcher, but the terminal on workspace 1 is not.
+
+
+Panel on Alt+Tab
+----------------
+This tests that the panel title changes with Alt+Tab
+
+Setup:
+#. Open some new applications
+
+Action:
+#. Press Alt+Tab
+
+Outcome
+  When you press Alt+Tab to switch window, the application title in the top left
+  of the panel should change inline with changes in alt-tab focus.
+  Also the menus shouldn't ever show. Even if the mouse has been left over
+  the panel when starting the Alt+Tab.

@@ -17,14 +17,12 @@
 * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
 */
 
-#include "FavoriteStoreGSettings.h"
-
-#include <algorithm>
-#include <iostream>
-
 #include <gio/gdesktopappinfo.h>
-
 #include <NuxCore/Logger.h>
+#include <UnityCore/DesktopUtilities.h>
+
+#include "FavoriteStoreGSettings.h"
+#include "FavoriteStorePrivate.h"
 
 #include "config.h"
 
@@ -51,8 +49,6 @@ const char* LATEST_SETTINGS_MIGRATION = "3.2.10";
 void on_settings_updated(GSettings* settings,
                          const gchar* key,
                          FavoriteStoreGSettings* self);
-
-std::string get_basename_or_path(std::string const& desktop_path);
 
 }
 
@@ -103,7 +99,12 @@ void FavoriteStoreGSettings::Init()
 
 void FavoriteStoreGSettings::Refresh()
 {
-  favorites_.clear();
+  FillList(favorites_);
+}
+
+void FavoriteStoreGSettings::FillList(FavoriteList& list)
+{
+  list.clear();
 
   gchar** favs = g_settings_get_strv(settings_, "favorites");
 
@@ -114,7 +115,7 @@ void FavoriteStoreGSettings::Refresh()
     {
       if (g_file_test(favs[i], G_FILE_TEST_EXISTS))
       {
-        favorites_.push_back(favs[i]);
+        list.push_back(favs[i]);
       }
       else
       {
@@ -131,12 +132,11 @@ void FavoriteStoreGSettings::Refresh()
 
       if (filename)
       {
-        favorites_.push_back(filename);
+        list.push_back(filename);
       }
       else
       {
-        LOG_WARNING(logger) << "Unable to load GDesktopAppInfo for '"
-                         << favs[i] << "'";
+        LOG_WARNING(logger) << "Unable to load GDesktopAppInfo for '" << favs[i] << "'";
       }
     }
   }
@@ -222,7 +222,7 @@ void FavoriteStoreGSettings::SetFavorites(FavoriteList const& favorites)
   Refresh();
 }
 
-void FavoriteStoreGSettings::SaveFavorites(FavoriteList const& favorites)
+void FavoriteStoreGSettings::SaveFavorites(FavoriteList const& favorites, bool ignore)
 {
   const int size = favorites.size();
   const char* favs[size + 1];
@@ -231,6 +231,7 @@ void FavoriteStoreGSettings::SaveFavorites(FavoriteList const& favorites)
   int index = 0;
   // Since we don't always save the full path, we store the values we are
   // actually going to save in a different list.
+  auto system_dirs = DesktopUtilities::GetDataDirectories();
   FavoriteList values;
   for (FavoriteList::const_iterator i = favorites.begin(), end = favorites.end();
        i != end; ++i, ++index)
@@ -240,11 +241,12 @@ void FavoriteStoreGSettings::SaveFavorites(FavoriteList const& favorites)
     // the string that we are going to save.  This way we know that the pointer
     // is valid for the lifetime of the favs array usage in the method call to
     // set the settings, and that we aren't referencing a temporary.
-    FavoriteList::iterator iter = values.insert(values.end(), get_basename_or_path(*i));
+    std::string const& desktop_id = DesktopUtilities::GetDesktopID(system_dirs, *i);
+    FavoriteList::iterator iter = values.insert(values.end(), desktop_id);
     favs[index] = iter->c_str();
   }
 
-  ignore_signals_ = true;
+  ignore_signals_ = ignore;
   if (!g_settings_set_strv(settings_, "favorites", favs))
   {
     LOG_WARNING(logger) << "Saving favorites failed.";
@@ -254,10 +256,34 @@ void FavoriteStoreGSettings::SaveFavorites(FavoriteList const& favorites)
 
 void FavoriteStoreGSettings::Changed(std::string const& key)
 {
-  if (ignore_signals_)
+  if (ignore_signals_ or key != "favorites")
     return;
+    
+  FavoriteList old(favorites_);
+  FillList(favorites_);
 
-  LOG_DEBUG(logger) << "Changed: " << key;
+  auto newbies = impl::GetNewbies(old, favorites_);
+
+  for (auto it : favorites_)
+  {
+    if (std::find(newbies.begin(), newbies.end(), it) == newbies.end())
+      continue;
+    
+    std::string pos;
+    bool before;
+    
+    impl::GetSignalAddedInfo(favorites_, newbies , it, pos, before);
+    favorite_added.emit(it, pos, before);
+  }
+                     
+  for (auto it : impl::GetRemoved(old, favorites_))
+  {
+    favorite_removed.emit(it); 
+  }
+  
+  if (impl::NeedToBeReordered(old, favorites_))
+    reordered.emit();
+ 
 }
 
 namespace
@@ -272,35 +298,6 @@ void on_settings_updated(GSettings* settings,
     self->Changed(key);
   }
 }
-
-std::string get_basename_or_path(std::string const& desktop_path)
-{
-  const gchar* const* dirs = g_get_system_data_dirs();
-
-  /* We check to see if the desktop file belongs to one of the system data
-   * directories. If so, then we store it's desktop id, otherwise we store
-   * it's full path. We're clever like that.
-   */
-  for (int i = 0; dirs[i]; ++i)
-  {
-    std::string dir(dirs[i]);
-    if (dir.at(dir.length()-1) == G_DIR_SEPARATOR)
-      dir.append("applications/");
-    else
-      dir.append("/applications/");
-
-    if (desktop_path.find(dir) == 0)
-    {
-      // if we are in a subdirectory of system patch, the store name should
-      // be subdir-filename.desktop
-      std::string desktop_suffix = desktop_path.substr(dir.size());
-      std::replace(desktop_suffix.begin(), desktop_suffix.end(), G_DIR_SEPARATOR, '-');
-      return desktop_suffix;
-    }
-  }
-  return desktop_path;
-}
-
 
 } // anonymous namespace
 

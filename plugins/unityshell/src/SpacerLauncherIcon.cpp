@@ -27,8 +27,8 @@ namespace unity
 namespace launcher
 {
 
-SpacerLauncherIcon::SpacerLauncherIcon(Launcher* IconManager)
-  :   SimpleLauncherIcon(IconManager)
+SpacerLauncherIcon::SpacerLauncherIcon(int monitor)
+  : SingleMonitorLauncherIcon(monitor)
 {
   SetQuirk(QUIRK_VISIBLE, true);
   SetQuirk(QUIRK_RUNNING, false);
@@ -37,6 +37,10 @@ SpacerLauncherIcon::SpacerLauncherIcon(Launcher* IconManager)
   tooltip_text = _("Drop To Add Application");
 }
 
+std::string SpacerLauncherIcon::GetName() const
+{
+    return "SpacerLauncherIcon";
+}
 
 } // namespace launcher
 } // namespace unity

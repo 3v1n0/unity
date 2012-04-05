@@ -1,13 +1,245 @@
-Dash search
------------
-This test makes sure that the right command is run when you search
-using the dash. (see lp:856205)
+Dash Tests
+=============
 
-#. Press Alt+F2
-#. Press 'g'. Make sure you see some command name (like gcc)
-#. Quickly type 'edit<Enter>' - so you'd run 'gedit'.
+Super Tap Timing on Slow Systems
+Note: Should be automated
+--------------------------------
+This test verifies that tap duration thresholding (unique to Super and Alt)
+works on slow systems where previously it did not work reliably (LP: #953089).
+The problems with Super tap timing have only been observed on slow and/or
+heavily loaded systems, such as Atom-based netbooks.
 
-Outcome
-  The dash disappears, and gedit is run. If nothing happens or the first
-  command is run (in this case gcc), this test failed.
+Setup:
+#. Start with a clean login.
+#. Load the CPU(s) by running one or more instances of this command in
+   a terminal window(s):   while true; do true; done
 
+Action:
+#. Tap the Super key. Verify the Dash is shown.
+#. Tap the Super key again. Verify the Dash is hidden.
+#. Switch to a clear workspace (e.g. Super+Shift+Right).
+#. Tap the Super key again. Verify the Dash is shown again.
+#. Tap the Super key again. Verify the Dash is hidden again.
+
+Outcome:
+  The Dash should appear and disappear in response to each tap on the Super
+  key. Note that a tap is anything faster than 1/4 of a second. Any press
+  that lasts longer than that is not considered a tap.
+
+
+Dash SearchBar middle-click
+Note: Should be automated
+---------------------------
+This test shows how the middle click over the dash search bar should work
+(see lp:842462)
+
+Action:
+#. Select this text with you mouse.
+#. Press Super or Alt+F2 to open the Dash
+#. Move the mouse cursor over the dash search entry box.
+#. Middle click.
+
+Outcome:
+  The text previously selected is pasted on the search bar at mouse pointer
+  position, if the operation is repeated the text is inserted where
+  the mouse pointer is.
+
+
+Dash correct number of "see more" results with horizontal renderer
+---------------------------
+This test ensures a correct number of "see more" results in the dash when using a horizontal renderer
+(see lp:934944)
+
+Action:
+#. Open the dash, navigate to a lens that uses a horizontal renderer such as the gwibber lens or music lens
+#. Ensure that a category in the results has a "See X more results" label
+#. Expand category that has "See X more results" label
+#. Count the number of results
+
+Outcome:
+  The number of results counted and the value for X in "See X more results" are the same.
+
+
+Dash Spinner
+------------
+This tests that the spinner is properly shown when searching with the Dash.
+
+Action:
+#. Open the files lens (Super+A)
+#. Type an arbitrary search string
+
+Outcome:
+  If the search is taking more than ~150ms, a spinner should be animating next
+  to the search bar, once the spinner stops spinning the results shouldn't
+  change.
+
+
+Dash no-results-hint
+--------------------
+This tests that the text displaying "Sorry nothing matches your search" is hidden when results are present (even in hard-to-automatically-test scenarios).
+
+Action:
+#. Start guest session
+#. Open the Dash - there shouldn't be any results displayed, since this user
+   account didn't interact with anything yet
+#. Run an application not present in the launcher (for example gedit)
+#. Close previously opened application
+
+Outcome:
+  When Dash is opened 'gedit' (or application you launched) should be
+  displayed in the "Recent Apps" category. You shouldn't see
+  "Sorry nothing matches your search" text.
+
+
+Filter Results Tests
+========================
+These tests show that the dash "All" button works well.
+
+
+Test "All" Button 1
+Note: Should be automated
+-------------------
+
+Setup:
+#. Open app lens, and the "Filter results" sidebar
+
+Outcome:
+  "All" should be selected by default in every filter category.
+  
+Test "All" Button 2
+Note: Should be automated
+-------------------
+
+Setup:
+#. Open app lens, and the "Filter results" sidebar
+#. Make sure the "All" button is selected.
+
+Action:
+#. Try to activate it.
+
+Outcome:
+  Click on it should do nothing.
+  
+
+Test "All" Button 3
+Note: Should be automated
+-------------------
+
+Setup:
+#. Open app lens, and the "Filter results" sidebar
+#. Make sure the "All" button is selected.
+
+Action:
+#. Select another item in the filter category.
+
+Outcome:
+  The all button should automatically toggle to the un-selected state.
+
+Test "All" Button 4
+Note: Should be automated
+-------------------
+
+Setup:
+#. Open app lens, and the "Filter results" sidebar
+#. Make sure the one or more items is selected in a filter category.
+
+Action:
+#. Deselect all selected items.
+
+Outcome:
+  The all button should automatically toggle to the selected state.
+
+Test Expand/Collapse Filters
+-------------------------------
+This test shows that the expand/collapse arrow of a filter category
+header works well.
+
+Setup:
+#. Open the app lens.
+#. If necessary, show the results filter sidebar.
+#. Make sure that a collapse arrow is shown adjacent to every
+   filter category header.
+
+Action:
+#. Click on a category header arrow.
+
+Outcome:
+  The filter category should collapse.
+
+Action:
+#. Click on the arrow (again).
+
+Outcome:
+  The filter category should expand.
+
+
+Drag and drop tests
+====================
+
+Launcher drop target saturation test
+---------------------------------------
+
+Setup:
+# open the files lens
+
+Action:
+# select and drag a document-file (e.g. text or image) to the launcher
+
+Outcome:
+  As you drag the document-file watch the drag-targets (drop-recepticals) saturate.
+  this saturation-process should be smooth and without flicker.
+  The tinting of the non-drag-targets should not change.
+
+Lens Tests
+============
+
+Restarting of crashed lenses
+----------------------------
+This test makes sure that if a lens crashes, searching in the dash
+automatically restarts it.
+
+Setup:
+#. Open a terminal
+#. Make sure there are some results in the apps lens
+
+Action:
+#. Kill the applications lens daemon in the terminal
+   `killall /usr/lib/unity-lens-applications/unity-applications-daemon`
+#. Open the dash and search for something (for example "gedit")
+
+Outcome:
+  Applications lens should automatically restart and gedit should be visible
+  in the results.
+
+
+Lazy start lenses test
+Regression testcase for https://bugs.launchpad.net/unity/+bug/929506
+Note: Should be automated
+----------------------------------------------------
+
+Setup: 
+#. Restart your computer to get a clean unity instance
+
+Action:
+1. Login to your Unity-3D shell but don't start or do anything (e.g. don't
+press the super key and/or show the dash)
+2. Verify the lensees are not running using the following command:
+$ ps axf|grep [u]nity-lens
+Output of this command should be empty
+3. invoke dash (e.g. by pressing the Super key)
+4. Verify the lenses were started by using the following command:
+$ ps axf|grep [u]nity-lens
+
+Expected Outcome:
+  Step #2 should produce an empty output.
+  Step #4 should produce something like this:
+  $ ps axf|grep [u]nity-lens
+    2754 ?        Sl     0:00 /usr/lib/unity-lens-applications/unity-applications-daemon
+    2756 ?        Sl     0:00 /usr/lib/unity-lens-files/unity-files-daemon
+    2758 ?        Sl     0:00 /usr/lib/unity-lens-music/unity-music-daemon
+    2760 ?        Sl     0:00 /usr/bin/python /usr/lib/unity-lens-video/unity-lens-video
+    2816 ?        Sl     0:00 /usr/lib/unity-lens-music/unity-musicstore-daemon
+
+Wrong Outcome:
+  #2 and #4 both produce non-empty result which means the lenses were not
+  lazy-loaded but they were running before the first dash use.

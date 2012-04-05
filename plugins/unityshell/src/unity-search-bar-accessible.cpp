@@ -20,7 +20,7 @@
  * SECTION:unity-search_bar-accessible
  * @Title: UnitySearchBarAccessible
  * @short_description: Implementation of the ATK interfaces for #SearchBar
- * @see_also: SearchBar at DashSearchBar.h
+ * @see_also: SearchBar at SearchBar.h
  *
  * #UnitySearchBarAccessible implements the required ATK interfaces for
  * #SearchBar, ie: exposing the different SearchBarIcon on the model as
@@ -33,9 +33,9 @@
 #include "unity-search-bar-accessible.h"
 
 #include "unitya11y.h"
-#include "DashSearchBar.h"
+#include "SearchBar.h"
 
-using namespace unity::dash;
+using namespace unity;
 
 /* GObject */
 static void unity_search_bar_accessible_class_init(UnitySearchBarAccessibleClass* klass);

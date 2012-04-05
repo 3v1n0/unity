@@ -89,6 +89,8 @@ Filter::Ptr Filter::FilterFromIter(DeeModel* model, DeeModelIter* iter)
     return Filter::Ptr(new RadioOptionFilter(model, iter));
   else if (renderer == "filter-checkoption")
     return Filter::Ptr(new CheckOptionFilter(model, iter));
+  else if (renderer == "filter-checkoption-compact")
+    return Filter::Ptr(new CheckOptionFilter(model, iter));
   else if (renderer == "filter-multirange")
     return Filter::Ptr(new MultiRangeFilter(model, iter));
   else

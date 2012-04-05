@@ -83,6 +83,8 @@ static void         nux_area_accessible_focus_handler(AtkObject* accessible,
                                                       gboolean focus_in);
 /* private */
 static void          on_focus_changed_cb(nux::Area* area,
+                                         bool has_focus,
+                                         nux::KeyNavDirection direction,
                                          AtkObject* accessible);
 static void          on_parent_window_activate_cb(AtkObject* parent_window,
                                                   NuxAreaAccessible* self);
@@ -172,14 +174,15 @@ nux_area_accessible_initialize(AtkObject* accessible,
   area = dynamic_cast<nux::Area*>(nux_object);
 
   /* focus support based on Focusable, used on the Dash */
-  area->OnKeyNavFocusChange.connect(sigc::bind(sigc::ptr_fun(on_focus_changed_cb), accessible));
+  area->key_nav_focus_change.connect(sigc::bind(sigc::ptr_fun(on_focus_changed_cb), accessible));
 
   atk_component_add_focus_handler(ATK_COMPONENT(accessible),
                                   nux_area_accessible_focus_handler);
 
-  /* NOTE: we can't search for the parent window on initilization, or
-     we could enter on a infinite loop, as this is called on the
-     initalization */
+  /* NOTE: we can't search for the parent window on initilization as a
+     general rule, or we could enter on a infinite loop. At area this
+     is done on the focus event. On the Switcher this is done on their
+     initialize itself */
 }
 
 static AtkObject*
@@ -456,6 +459,8 @@ nux_area_accessible_parent_window_active(NuxAreaAccessible* self)
 
 static void
 on_focus_changed_cb(nux::Area* area,
+                    bool has_focus,
+                    nux::KeyNavDirection direction,
                     AtkObject* accessible)
 {
   check_focus(NUX_AREA_ACCESSIBLE(accessible));

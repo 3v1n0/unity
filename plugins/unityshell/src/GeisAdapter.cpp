@@ -32,13 +32,15 @@ GeisAdapter::Default()
   return _default;
 }
 
-GeisAdapter::GeisAdapter()
+GeisAdapter::GeisAdapter() : _root_instance(nullptr)
 {
   RegisterRootInstance();
 }
 
 GeisAdapter::~GeisAdapter()
 {
+  if (_root_instance != nullptr)
+    geis_finish(_root_instance);
 }
 
 void
@@ -467,7 +469,7 @@ GeisAdapter::RegisterRootInstance()
     GEIS_XCB_FULL_WINDOW,
     &xcb_win_info
   };
-  GeisInstance instance = nullptr;
+  GeisInstance instance;
 
   status = geis_init(&win_info, &instance);
   if (status != GEIS_STATUS_SUCCESS)
@@ -480,7 +482,8 @@ GeisAdapter::RegisterRootInstance()
   if (status != GEIS_STATUS_SUCCESS)
   {
     fprintf(stderr, "error subscribing to input devices\n");
-    return;;
+    geis_finish(instance);
+    return;
   }
 
   status = geis_subscribe(instance,
@@ -491,6 +494,7 @@ GeisAdapter::RegisterRootInstance()
   if (status != GEIS_STATUS_SUCCESS)
   {
     fprintf(stderr, "error subscribing to gestures\n");
+    geis_finish(instance);
     return;
   }
 

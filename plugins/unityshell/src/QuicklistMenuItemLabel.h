@@ -29,6 +29,9 @@
 
 #include <X11/Xlib.h>
 
+namespace unity
+{
+
 class QuicklistMenuItemLabel : public QuicklistMenuItem
 {
 public:
@@ -58,5 +61,7 @@ protected:
   virtual void UpdateTexture();
   virtual int CairoSurfaceWidth();
 };
+
+} // NAMESPACE
 
 #endif // QUICKLISTMENUITEMLABEL_H

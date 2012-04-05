@@ -20,41 +20,55 @@
  *
  */
 
-#ifndef FILTERBAR_H
-#define FILTERBAR_H
+#ifndef UNITYSHELL_FILTERBAR_H
+#define UNITYSHELL_FILTERBAR_H
 
 #include <Nux/View.h>
 
 #include <UnityCore/Filters.h>
 
 #include "FilterFactory.h"
+#include "Introspectable.h"
 
-namespace unity {
+namespace unity
+{
+namespace dash
+{
 
-  class FilterBar : public nux::View
-  {
-    NUX_DECLARE_OBJECT_TYPE(FilterBar, nux::View);
-  public:
-    FilterBar(NUX_FILE_LINE_PROTO);
-    ~FilterBar();
+class FilterExpanderLabel;
 
-    void SetFilters (dash::Filters::Ptr filters);
+class FilterBar : public nux::View, public debug::Introspectable
+{
+  NUX_DECLARE_OBJECT_TYPE(FilterBar, nux::View);
+public:
+  FilterBar(NUX_FILE_LINE_PROTO);
+  ~FilterBar();
 
-    void AddFilter (dash::Filter::Ptr filter);
-    void RemoveFilter (dash::Filter::Ptr filter);
+  void SetFilters(Filters::Ptr const& filters);
 
-  protected:
-    virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-    virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-    virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  void AddFilter(Filter::Ptr const& filter);
+  void RemoveFilter(Filter::Ptr const& filter);
 
-  private:
-    void Init ();
+protected:
+  virtual bool AcceptKeyNavFocus();
+  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-    FilterFactory factory_;
-    dash::Filters::Ptr filters_;
-    std::map <dash::Filter::Ptr, nux::View *> filter_map_;
-  };
-}
+  // Introspection
+  virtual std::string GetName() const;
+  virtual void AddProperties(GVariantBuilder* builder);
 
-#endif // FILTERBAR_H
+private:
+  void Init();
+  void UpdateDrawSeparators();
+
+  FilterFactory factory_;
+  Filters::Ptr filters_;
+  std::map<Filter::Ptr, FilterExpanderLabel*> filter_map_;
+};
+
+} // namespace dash
+} // namespace unity
+
+#endif // UNITYSHELL_FILTERBAR_H
+

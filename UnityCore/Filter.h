@@ -27,6 +27,7 @@
 #include <sigc++/trackable.h>
 
 #include "GLibSignal.h"
+#include "Variant.h"
 
 namespace unity
 {
@@ -66,7 +67,7 @@ class Filter : public sigc::trackable
 {
 public:
   typedef std::shared_ptr<Filter> Ptr;
-  typedef std::map<std::string, GVariant*> Hints;
+  typedef std::map<std::string, unity::glib::Variant> Hints;
 
   Filter(DeeModel* model, DeeModelIter* iter);
   virtual ~Filter();

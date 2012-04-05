@@ -53,7 +53,7 @@ TestRunner::~TestRunner ()
 
 void TestRunner::Init ()
 {
-  unity::FilterBar *filterbar = new unity::FilterBar(NUX_TRACKER_LOCATION);
+  auto *filterbar = new unity::dash::FilterBar(NUX_TRACKER_LOCATION);
 
   layout = new nux::VLayout(NUX_TRACKER_LOCATION);
 
@@ -63,7 +63,7 @@ void TestRunner::Init ()
   filterbar->AddFilter (NULL);
   filterbar->AddFilter (NULL);
 
-  nux::GetGraphicsThread()->SetLayout (layout);
+  nux::GetWindowThread()->SetLayout (layout);
 }
 
 void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)
@@ -92,7 +92,7 @@ int main(int argc, char **argv)
   // for views
 
   g_type_init ();
-  g_thread_init (NULL);
+  
   gtk_init (&argc, &argv);
 
   nux::NuxInitialize(0);

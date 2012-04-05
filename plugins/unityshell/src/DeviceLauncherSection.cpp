@@ -23,9 +23,8 @@ namespace unity
 namespace launcher
 {
 
-DeviceLauncherSection::DeviceLauncherSection(Launcher* launcher)
-  : launcher_(launcher)
-  , monitor_(g_volume_monitor_get())
+DeviceLauncherSection::DeviceLauncherSection()
+  : monitor_(g_volume_monitor_get())
 {  
   on_volume_added_handler_id_ = g_signal_connect(monitor_,
                                                  "volume-added",
@@ -79,10 +78,10 @@ bool DeviceLauncherSection::PopulateEntries(DeviceLauncherSection* self)
   for (GList* v = volumes; v; v = v->next)
   {
     glib::Object<GVolume> volume((GVolume* )v->data);
-    DeviceLauncherIcon* icon = new DeviceLauncherIcon(self->launcher_, volume);
+    DeviceLauncherIcon* icon = new DeviceLauncherIcon(volume);
 
     self->map_[volume] = icon;
-    self->IconAdded.emit(icon);
+    self->IconAdded.emit(AbstractLauncherIcon::Ptr(icon));
   }
 
   g_list_free(volumes);
@@ -100,10 +99,10 @@ void DeviceLauncherSection::OnVolumeAdded(GVolumeMonitor* monitor,
                                           GVolume* volume,
                                           DeviceLauncherSection* self)
 {
-  DeviceLauncherIcon* icon = new DeviceLauncherIcon(self->launcher_, volume);
+  DeviceLauncherIcon* icon = new DeviceLauncherIcon(volume);
   
   self->map_[volume] = icon;
-  self->IconAdded.emit(icon);
+  self->IconAdded.emit(AbstractLauncherIcon::Ptr(icon));
 }
 
 void DeviceLauncherSection::OnVolumeRemoved(GVolumeMonitor* monitor,

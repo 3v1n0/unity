@@ -28,6 +28,7 @@
 #include <sigc++/trackable.h>
 
 #include <glib.h>
+#include "Variant.h"
 
 namespace unity
 {
@@ -38,7 +39,7 @@ class Preview : public sigc::trackable
 {
 public:
   typedef std::shared_ptr<Preview> Ptr;
-  typedef std::map<std::string, GVariant*> Properties;
+  typedef std::map<std::string, unity::glib::Variant> Properties;
 
   virtual ~Preview();
 

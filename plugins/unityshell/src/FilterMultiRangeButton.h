@@ -19,69 +19,88 @@
  *
  */
 
+#ifndef UNITYSHELL_FILTERMULTIRANGEBUTTON_H
+#define UNITYSHELL_FILTERMULTIRANGEBUTTON_H
 
-
-#ifndef FILTERMULTIRANGEBUTTON_H
-#define FILTERMULTIRANGEBUTTON_H
+#include <memory>
 
 #include <Nux/Nux.h>
 #include <Nux/CairoWrapper.h>
 #include <Nux/ToggleButton.h>
 #include <Nux/View.h>
+#include <UnityCore/Filter.h>
 
-#include "FilterWidget.h"
+namespace unity
+{
+namespace dash
+{
 
-namespace unity {
+enum class MultiRangeSide : unsigned int
+{
+  LEFT = 0,
+  RIGHT,
+  CENTER
+};
 
-    typedef enum {
-      MULTI_RANGE_SIDE_LEFT,
-      MULTI_RANGE_SIDE_RIGHT,
-      MULTI_RANGE_CENTER
-    } MultiRangeSide;
+enum class MultiRangeArrow : unsigned int
+{
+  LEFT = 0,
+  RIGHT,
+  BOTH,
+  NONE
+};
 
-    typedef enum {
-      MULTI_RANGE_ARROW_LEFT,
-      MULTI_RANGE_ARROW_RIGHT,
-      MULTI_RANGE_ARROW_BOTH,
-      MULTI_RANGE_ARROW_NONE
-    } MultiRangeArrow;
+class FilterMultiRangeButton : public nux::ToggleButton
+{
+public:
+  FilterMultiRangeButton (std::string const& label, NUX_FILE_LINE_PROTO);
+  FilterMultiRangeButton (NUX_FILE_LINE_PROTO);
+  ~FilterMultiRangeButton();
 
-  class FilterMultiRangeButton : public nux::ToggleButton {
-  public:
+  void SetFilter(FilterOption::Ptr const& filter);
+  FilterOption::Ptr GetFilter();
 
-    FilterMultiRangeButton (const std::string label, NUX_FILE_LINE_PROTO);
-    FilterMultiRangeButton (NUX_FILE_LINE_PROTO);
-    virtual ~FilterMultiRangeButton();
+  void SetVisualSide(MultiRangeSide side); //0 = left, 1 = center, 2 = right - sucky api i know :(
+  void SetHasArrow(MultiRangeArrow arrow); //0 = left, 1 = both, 2 = right, -1 = none
 
-    void SetFilter (dash::FilterOption::Ptr filter);
-    dash::FilterOption::Ptr GetFilter();
+protected:
+  virtual long ComputeContentSize();
+  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-    void SetVisualSide(MultiRangeSide side); //0 = left, 1 = center, 2 = right - sucky api i know :(
-    void SetHasArrow (MultiRangeArrow arrow); //0 = left, 1 = both, 2 = right, -1 = none
+private:
+  void InitTheme();
+  void Init();
 
-  protected:
-    virtual long ComputeContentSize();
-    virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-    virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-    virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  void RedrawTheme(nux::Geometry const& geom,
+                   cairo_t* cr,
+                   nux::ButtonVisualState faked_state,
+                   MultiRangeArrow faked_arrow,
+                   MultiRangeSide faked_side);
 
-  private:
-    dash::FilterOption::Ptr filter_;
+  void RedrawFocusOverlay(nux::Geometry const& geom,
+                          cairo_t* cr,
+                          MultiRangeArrow faked_arrow,
+                          MultiRangeSide faked_side);
+ 
+  void OnActivated(nux::Area* area);
+  void OnActiveChanged(bool value);
 
-    void InitTheme ();
-    void RedrawTheme (nux::Geometry const& geom, cairo_t *cr, nux::ButtonVisualState faked_state);
-    void OnActivated (nux::Area *area);
-    void OnActiveChanged(bool value);
+  FilterOption::Ptr filter_;
 
-    nux::CairoWrapper *prelight_;
-    nux::CairoWrapper *active_;
-    nux::CairoWrapper *normal_;
-    nux::Geometry cached_geometry_;
-    MultiRangeArrow has_arrow_;
-    MultiRangeSide side_;
+  typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
+  typedef std::pair<MultiRangeArrow, MultiRangeSide> MapKey;
 
+  std::map<MapKey, NuxCairoPtr> active_;
+  std::map<MapKey, NuxCairoPtr> focus_;
+  std::map<MapKey, NuxCairoPtr> normal_;
+  std::map<MapKey, NuxCairoPtr> prelight_;
 
-  };
+  nux::Geometry cached_geometry_;
+  MultiRangeArrow has_arrow_;
+  MultiRangeSide side_;
+};
 
-}
-#endif // FILTERMULTIRANGEBUTTON_H
+} // namespace dash
+} // namespace unity
+
+#endif // UNITYSHELL_FILTERMULTIRANGEBUTTON_H

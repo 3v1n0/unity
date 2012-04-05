@@ -154,7 +154,7 @@ main(int argc, char** argv)
   TestApp* app;
 
   g_type_init();
-  g_thread_init(NULL);
+  
   gtk_init(&argc, &argv);
 
   app = new TestApp();

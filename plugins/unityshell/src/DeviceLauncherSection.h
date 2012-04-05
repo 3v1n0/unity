@@ -39,10 +39,10 @@ namespace launcher
 class DeviceLauncherSection : public sigc::trackable
 {
 public:
-  DeviceLauncherSection(Launcher* launcher);
+  DeviceLauncherSection();
   ~DeviceLauncherSection();
 
-  sigc::signal<void, LauncherIcon*> IconAdded;
+  sigc::signal<void, AbstractLauncherIcon::Ptr> IconAdded;
 
 private:
   static bool PopulateEntries(DeviceLauncherSection* self);
@@ -64,7 +64,6 @@ private:
                                 DeviceLauncherSection* self);
 
 private:
-  Launcher* launcher_;
   glib::Object<GVolumeMonitor> monitor_;
   std::map<GVolume*, DeviceLauncherIcon*> map_;
   gulong on_volume_added_handler_id_;

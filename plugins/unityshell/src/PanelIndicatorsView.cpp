@@ -180,7 +180,7 @@ PanelIndicatorsView::ActivateEntryAt(int x, int y)
   {
     PanelIndicatorEntryView* view = entry.second;
 
-    if (!target && view->GetAbsoluteGeometry().IsPointInside(x, y))
+    if (!target && view->IsVisible() && view->GetAbsoluteGeometry().IsPointInside(x, y))
     {
       view->Activate(0);
       target = view;
@@ -335,15 +335,9 @@ PanelIndicatorsView::SetOpacity(double opacity)
   }
 }
 
-const gchar* PanelIndicatorsView::GetName()
+std::string PanelIndicatorsView::GetName() const
 {
   return "IndicatorsView";
-}
-
-const gchar*
-PanelIndicatorsView::GetChildsName()
-{
-  return "entries";
 }
 
 void

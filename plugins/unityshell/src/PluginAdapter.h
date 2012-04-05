@@ -128,7 +128,7 @@ public:
 
   void SetWindowIconGeometry(Window window, nux::Geometry const& geo);
 
-  void FocusWindowGroup(std::vector<Window> windows, FocusVisibility);
+  void FocusWindowGroup(std::vector<Window> windows, FocusVisibility, int monitor = -1);
   bool ScaleWindowGroup(std::vector<Window> windows, int state, bool force);
 
   bool IsScreenGrabbed();

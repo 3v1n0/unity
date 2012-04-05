@@ -22,6 +22,7 @@
 #include <vector>
 #include <NuxCore/Logger.h>
 #include <Nux/BaseWindow.h>
+#include <UnityCore/Variant.h>
 
 #include "UScreen.h"
 #include "PanelView.h"
@@ -36,14 +37,13 @@ namespace
 nux::logging::Logger logger("unity.panel");
 }
 
-class Controller::Impl : public sigc::trackable
+class Controller::Impl
 {
 public:
   Impl();
   ~Impl();
 
-  void StartFirstMenuShow();
-  void EndFirstMenuShow();
+  void FirstMenuShow();
   void QueueRedraw();
 
   unsigned int GetTrayXid();
@@ -55,30 +55,39 @@ public:
 
   float opacity() const;
 
+  void SetMenuShowTimings(int fadein, int fadeout, int discovery,
+                          int discovery_fadein, int discovery_fadeout);
+
+  void OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors, Introspectable *iobj);
 private:
   unity::PanelView* ViewForWindow(nux::BaseWindow* window);
-  void OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors);
 
   static void WindowConfigureCallback(int            window_width,
                                       int            window_height,
                                       nux::Geometry& geo,
                                       void*          user_data);
+
 private:
   std::vector<nux::BaseWindow*> windows_;
   float opacity_;
   bool opacity_maximized_toggle_;
-  bool open_menu_start_received_;
+  int menus_fadein_;
+  int menus_fadeout_;
+  int menus_discovery_;
+  int menus_discovery_fadein_;
+  int menus_discovery_fadeout_;
 };
 
 
 Controller::Impl::Impl()
   : opacity_(1.0f)
   , opacity_maximized_toggle_(false)
-  , open_menu_start_received_(false)
+  , menus_fadein_(0)
+  , menus_fadeout_(0)
+  , menus_discovery_(0)
+  , menus_discovery_fadein_(0)
+  , menus_discovery_fadeout_(0)
 {
-  UScreen* screen = UScreen::GetDefault();
-  screen->changed.connect(sigc::mem_fun(this, &Impl::OnScreenChanged));
-  OnScreenChanged(screen->GetPrimaryMonitor(), screen->GetMonitors());
 }
 
 Controller::Impl::~Impl()
@@ -109,27 +118,12 @@ std::list<nux::Geometry> Controller::Impl::GetGeometries()
   return geometries;
 }
 
-void Controller::Impl::StartFirstMenuShow()
+void Controller::Impl::FirstMenuShow()
 {
   for (auto window: windows_)
   {
-    PanelView* view = ViewForWindow(window);
-    view->StartFirstMenuShow();
-  }
-
-  open_menu_start_received_ = true;
-}
-
-void Controller::Impl::EndFirstMenuShow()
-{
-  if (!open_menu_start_received_)
-    return;
-  open_menu_start_received_ = false;
-
-  for (auto window: windows_)
-  {
-    PanelView* view = ViewForWindow(window);
-    view->EndFirstMenuShow();
+    if (ViewForWindow(window)->FirstMenuShow())
+      break;
   }
 }
 
@@ -147,9 +141,25 @@ void Controller::Impl::SetOpacityMaximizedToggle(bool enabled)
 {
   opacity_maximized_toggle_ = enabled;
 
-  for (auto window : windows_)
+  for (auto window: windows_)
   {
     ViewForWindow(window)->SetOpacityMaximizedToggle(opacity_maximized_toggle_);
+  }
+}
+
+void Controller::Impl::SetMenuShowTimings(int fadein, int fadeout, int discovery,
+                                          int discovery_fadein, int discovery_fadeout)
+{
+  menus_fadein_ = fadein;
+  menus_fadeout_ = fadeout;
+  menus_discovery_ = discovery;
+  menus_discovery_fadein_ = discovery_fadein;
+  menus_discovery_fadeout_ = discovery_fadeout;
+
+  for (auto window: windows_)
+  {
+    ViewForWindow(window)->SetMenuShowTimings(fadein, fadeout, discovery,
+                                              discovery_fadein, discovery_fadeout);
   }
 }
 
@@ -171,7 +181,8 @@ PanelView* Controller::Impl::ViewForWindow(nux::BaseWindow* window)
 
 // We need to put a panel on every monitor, and try and re-use the panels we already have
 void Controller::Impl::OnScreenChanged(int primary_monitor,
-                                       std::vector<nux::Geometry>& monitors)
+                                       std::vector<nux::Geometry>& monitors,
+                                       Introspectable *iobj)
 {
   std::vector<nux::BaseWindow*>::iterator it, eit = windows_.end();
   int n_monitors = monitors.size();
@@ -216,6 +227,8 @@ void Controller::Impl::OnScreenChanged(int primary_monitor,
       view->SetMaximumHeight(24);
       view->SetOpacity(opacity_);
       view->SetOpacityMaximizedToggle(opacity_maximized_toggle_);
+      view->SetMenuShowTimings(menus_fadein_, menus_fadeout_, menus_discovery_,
+                               menus_discovery_fadein_, menus_discovery_fadeout_);
       view->SetPrimary(i == primary_monitor);
       view->SetMonitor(i);
 
@@ -238,6 +251,9 @@ void Controller::Impl::OnScreenChanged(int primary_monitor,
       window->SetGeometry(geo);
 
       windows_.push_back(window);
+
+      // add to introspectable tree:
+      iobj->AddChild(view);
 
       LOG_DEBUG(logger) << "Added Panel for Monitor " << i;
     }
@@ -270,10 +286,12 @@ float Controller::Impl::opacity() const
   return opacity_;
 }
 
-
 Controller::Controller()
   : pimpl(new Impl())
 {
+  UScreen* screen = UScreen::GetDefault();
+  screen->changed.connect(sigc::mem_fun(this, &Controller::OnScreenChanged));
+  OnScreenChanged(screen->GetPrimaryMonitor(), screen->GetMonitors());
 }
 
 Controller::~Controller()
@@ -281,14 +299,9 @@ Controller::~Controller()
   delete pimpl;
 }
 
-void Controller::StartFirstMenuShow()
+void Controller::FirstMenuShow()
 {
-  pimpl->StartFirstMenuShow();
-}
-
-void Controller::EndFirstMenuShow()
-{
-  pimpl->EndFirstMenuShow();
+  pimpl->FirstMenuShow();
 }
 
 void Controller::SetOpacity(float opacity)
@@ -299,6 +312,12 @@ void Controller::SetOpacity(float opacity)
 void Controller::SetOpacityMaximizedToggle(bool enabled)
 {
   pimpl->SetOpacityMaximizedToggle(enabled);
+}
+
+void Controller::SetMenuShowTimings(int fadein, int fadeout, int discovery,
+                                    int discovery_fadein, int discovery_fadeout)
+{
+  pimpl->SetMenuShowTimings(fadein, fadeout, discovery, discovery_fadein, discovery_fadeout);
 }
 
 void Controller::QueueRedraw()
@@ -321,6 +340,21 @@ float Controller::opacity() const
   return pimpl->opacity();
 }
 
+std::string Controller::GetName() const
+{
+  return "PanelController";
+}
+
+void Controller::AddProperties(GVariantBuilder* builder)
+{
+  variant::BuilderWrapper(builder)
+    .add("opacity", pimpl->opacity());
+}
+
+void Controller::OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors)
+{
+  pimpl->OnScreenChanged(primary_monitor, monitors, this);
+}
 
 } // namespace panel
 } // namespace unity

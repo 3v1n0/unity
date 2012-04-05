@@ -40,8 +40,8 @@ namespace switcher
 
 NUX_IMPLEMENT_OBJECT_TYPE(SwitcherView);
 
-SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
-  : View(NUX_FILE_LINE_PARAM)
+SwitcherView::SwitcherView()
+  : UnityWindowView()
   , target_sizes_set_(false)
   , redraw_handle_(0)
 {
@@ -57,6 +57,7 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
   vertical_size = tile_size + 80;
   text_size = 15;
   animation_length = 250;
+  monitor = -1;
   spread_size = 3.5f;
   render_boxes = false;
 
@@ -67,9 +68,6 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
 
   render_targets_.clear ();
 
-  background_top_ = nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_top.png", -1, true);
-  background_left_ = nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_left.png", -1, true);
-  background_corner_ = nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_corner.png", -1, true);
   rounding_texture_ = nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_round_rect.png", -1, true);
 
   text_view_ = new nux::StaticCairoText("Testing");
@@ -81,22 +79,17 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
 
   icon_size.changed.connect (sigc::mem_fun (this, &SwitcherView::OnIconSizeChanged));
   tile_size.changed.connect (sigc::mem_fun (this, &SwitcherView::OnTileSizeChanged));
-
-  bg_effect_helper_.owner = this;
 }
 
 SwitcherView::~SwitcherView()
 {
-  background_top_->UnReference();
-  background_left_->UnReference();
-  background_corner_->UnReference();
   rounding_texture_->UnReference();
   text_view_->UnReference();
   if (redraw_handle_ > 0)
     g_source_remove(redraw_handle_);
 }
 
-const gchar* SwitcherView::GetName()
+std::string SwitcherView::GetName() const
 {
   return "SwitcherView";
 }
@@ -116,11 +109,7 @@ void SwitcherView::AddProperties(GVariantBuilder* builder)
   .add("spread-size", (float)spread_size);
 }
 
-void
-SwitcherView::SetupBackground()
-{
-  bg_effect_helper_.enabled = true;
-}
+
 
 LayoutWindowList SwitcherView::ExternalTargets ()
 {
@@ -136,7 +125,7 @@ void SwitcherView::SetModel(SwitcherModel::Ptr model)
   model->detail_selection_index.changed.connect (sigc::mem_fun (this, &SwitcherView::OnDetailSelectionIndexChanged));
 
   if (model->Selection())
-    text_view_->SetText(model->Selection()->tooltip_text().c_str());
+    text_view_->SetText(model->Selection()->tooltip_text());
 }
 
 void SwitcherView::OnIconSizeChanged (int size)
@@ -162,7 +151,7 @@ void SwitcherView::OnDetailSelectionIndexChanged (unsigned int index)
   if (model_->detail_selection)
   {
     Window detail_window = model_->DetailSelectionWindow();
-    text_view_->SetText(model_->Selection()->NameForWindow (detail_window));
+    text_view_->SetText(model_->Selection()->NameForWindow(detail_window));
   }
   QueueDraw ();
 }
@@ -173,20 +162,20 @@ void SwitcherView::OnDetailSelectionChanged (bool detail)
   if (detail)
   {
     Window detail_window = model_->DetailSelectionWindow();
-    text_view_->SetText(model_->Selection()->NameForWindow (detail_window));
+    text_view_->SetText(model_->Selection()->NameForWindow(detail_window));
   }
   else
   {
-    text_view_->SetText(model_->Selection()->tooltip_text().c_str());
+    text_view_->SetText(model_->Selection()->tooltip_text());
   }
   SaveLast ();
   QueueDraw ();
 }
 
-void SwitcherView::OnSelectionChanged(AbstractLauncherIcon* selection)
+void SwitcherView::OnSelectionChanged(AbstractLauncherIcon::Ptr selection)
 {
   if (selection)
-    text_view_->SetText(selection->tooltip_text().c_str());
+    text_view_->SetText(selection->tooltip_text());
   SaveLast ();
   QueueDraw();
 }
@@ -196,21 +185,16 @@ SwitcherModel::Ptr SwitcherView::GetModel()
   return model_;
 }
 
-void SwitcherView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-  return;
-}
-
-RenderArg SwitcherView::CreateBaseArgForIcon(AbstractLauncherIcon* icon)
+RenderArg SwitcherView::CreateBaseArgForIcon(AbstractLauncherIcon::Ptr icon)
 {
   RenderArg arg;
-  arg.icon = icon;
+  arg.icon = icon.GetPointer();
   arg.alpha = 0.95f;
 
   // tells the renderer to render arrows by number
   arg.running_on_viewport = true;
 
-  arg.window_indicators = icon->RelatedWindows();
+  arg.window_indicators = icon->WindowsForMonitor(monitor).size();
   if (arg.window_indicators > 1)
     arg.running_arrow = true;
   else
@@ -233,7 +217,7 @@ RenderArg SwitcherView::InterpolateRenderArgs(RenderArg const& start, RenderArg 
 {
   // easing
   progress = -pow(progress - 1.0f, 2) + 1;
-  
+
   RenderArg result = end;
 
   result.x_rotation = start.x_rotation + (end.x_rotation - start.x_rotation) * progress;
@@ -278,7 +262,7 @@ nux::Geometry SwitcherView::UpdateRenderTargets (nux::Point const& center, times
       layout_window->alpha = 1.0f * progress;
     else
       layout_window->alpha = 0.9f * progress;
-    
+
     render_targets_.push_back (layout_window);
   }
 
@@ -310,22 +294,22 @@ nux::Size SwitcherView::SpreadSize()
 {
   nux::Geometry base = GetGeometry();
   nux::Size result (base.width - border_size * 2, base.height - border_size * 2);
-  
+
   int width_padding = std::max(model_->Size() - 1, 0) * minimum_spacing + tile_size;
   int height_padding = text_size;
 
   result.width -= width_padding;
   result.height -= height_padding;
-  
+
   return result;
 }
 
-void SwitcherView::GetFlatIconPositions (int n_flat_icons, 
-                                         int size, 
-                                         int selection, 
-                                         int &first_flat, 
-                                         int &last_flat, 
-                                         int &half_fold_left, 
+void SwitcherView::GetFlatIconPositions (int n_flat_icons,
+                                         int size,
+                                         int selection,
+                                         int &first_flat,
+                                         int &last_flat,
+                                         int &half_fold_left,
                                          int &half_fold_right)
 {
   half_fold_left = -1;
@@ -404,7 +388,7 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
   bool detail_selection = model_->detail_selection;
 
   background_geo.y = base.y + base.height / 2 - (vertical_size / 2);
-  background_geo.height = vertical_size + text_size;  
+  background_geo.height = vertical_size + text_size;
 
 
   if (model_)
@@ -456,7 +440,7 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
     int half_fold_left;
     int half_fold_right;
 
-    GetFlatIconPositions (n_flat_icons, size, selection, first_flat, last_flat, half_fold_left, half_fold_right); 
+    GetFlatIconPositions (n_flat_icons, size, selection, first_flat, last_flat, half_fold_left, half_fold_right);
 
     SwitcherModel::iterator it;
     int i = 0;
@@ -555,104 +539,9 @@ gboolean SwitcherView::OnDrawTimeout(gpointer data)
   return FALSE;
 }
 
-void SwitcherView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& geo)
+void SwitcherView::PreDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  int border = 30;
-
-  GfxContext.GetRenderStates().SetBlend (TRUE, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-  nux::TexCoordXForm texxform;
-  texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
-  texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-
-  // Draw TOP-LEFT CORNER
-  texxform.u0 = 0;
-  texxform.v0 = 0;
-  texxform.u1 = border;
-  texxform.v1 = border;
-  GfxContext.QRP_1Tex (geo.x, geo.y, 
-                       border, border, background_corner_->GetDeviceTexture(), texxform, nux::color::White);
-  
-  // Draw TOP-RIGHT CORNER
-  texxform.u0 = 0;
-  texxform.v0 = 0;
-  texxform.u1 = border;
-  texxform.v1 = border;
-  texxform.flip_u_coord = true;
-  texxform.flip_v_coord = false;
-  GfxContext.QRP_1Tex (geo.x + geo.width - border, geo.y, 
-                       border, border, background_corner_->GetDeviceTexture(), texxform, nux::color::White);
-  
-  // Draw BOTTOM-LEFT CORNER
-  texxform.u0 = 0;
-  texxform.v0 = 0;
-  texxform.u1 = border;
-  texxform.v1 = border;
-  texxform.flip_u_coord = false;
-  texxform.flip_v_coord = true;
-  GfxContext.QRP_1Tex (geo.x, geo.y + geo.height - border, 
-                       border, border, background_corner_->GetDeviceTexture(), texxform, nux::color::White);
-  
-  // Draw BOTTOM-RIGHT CORNER
-  texxform.u0 = 0;
-  texxform.v0 = 0;
-  texxform.u1 = border;
-  texxform.v1 = border;
-  texxform.flip_u_coord = true;
-  texxform.flip_v_coord = true;
-  GfxContext.QRP_1Tex (geo.x + geo.width - border, geo.y + geo.height - border, 
-                       border, border, background_corner_->GetDeviceTexture(), texxform, nux::color::White);
-  
-  int top_width = background_top_->GetWidth();
-  int top_height = background_top_->GetHeight();
-
-  // Draw TOP BORDER
-  texxform.u0 = 0;
-  texxform.v0 = 0;
-  texxform.u1 = top_width;
-  texxform.v1 = top_height;
-  texxform.flip_u_coord = false;
-  texxform.flip_v_coord = false;
-  GfxContext.QRP_1Tex (geo.x + border, geo.y, geo.width - border - border, border, background_top_->GetDeviceTexture(), texxform, nux::color::White);
-  
-  // Draw BOTTOM BORDER
-  texxform.u0 = 0;
-  texxform.v0 = 0;
-  texxform.u1 = top_width;
-  texxform.v1 = top_height;
-  texxform.flip_u_coord = false;
-  texxform.flip_v_coord = true;
-  GfxContext.QRP_1Tex (geo.x + border, geo.y + geo.height - border, geo.width - border - border, border, background_top_->GetDeviceTexture(), texxform, nux::color::White);
-  
-
-  int left_width = background_left_->GetWidth();
-  int left_height = background_left_->GetHeight();
-
-  // Draw LEFT BORDER
-  texxform.u0 = 0;
-  texxform.v0 = 0;
-  texxform.u1 = left_width;
-  texxform.v1 = left_height;
-  texxform.flip_u_coord = false;
-  texxform.flip_v_coord = false;
-  GfxContext.QRP_1Tex (geo.x, geo.y + border, border, geo.height - border - border, background_left_->GetDeviceTexture(), texxform, nux::color::White);
-  
-  // Draw RIGHT BORDER
-  texxform.u0 = 0;
-  texxform.v0 = 0;
-  texxform.u1 = left_width;
-  texxform.v1 = left_height;
-  texxform.flip_u_coord = true;
-  texxform.flip_v_coord = false;
-  GfxContext.QRP_1Tex (geo.x + geo.width - border, geo.y + border, border, geo.height - border - border, background_left_->GetDeviceTexture(), texxform, nux::color::White);
-
-  GfxContext.GetRenderStates().SetBlend (FALSE);
-}
-
-void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-  timespec current;
-  clock_gettime(CLOCK_MONOTONIC, &current);
+  clock_gettime(CLOCK_MONOTONIC, &current_);
 
   if (!target_sizes_set_)
   {
@@ -660,80 +549,27 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     target_sizes_set_ = true;
   }
 
-  nux::Geometry base = GetGeometry();
-  GfxContext.PushClippingRectangle(base);
-
-  // clear region
-  gPainter.PaintBackground(GfxContext, base);
-
   nux::Geometry background_geo;
-
-  last_args_ = RenderArgsFlat(background_geo, model_->SelectionIndex(), current);
+  last_args_ = RenderArgsFlat(background_geo, model_->SelectionIndex(), current_);
   last_background_ = background_geo;
 
-  // magic constant comes from texture contents (distance to cleared area)
-  const int internal_offset = 20;
-  nux::Geometry internal_clip(background_geo.x + internal_offset, 
-                              background_geo.y + internal_offset, 
-                              background_geo.width - internal_offset * 2, 
-                              background_geo.height - internal_offset * 2);
-  GfxContext.PushClippingRectangle(internal_clip);
+  icon_renderer_->PreprocessIcons(last_args_, GetGeometry());
+}
 
+nux::Geometry SwitcherView::GetBackgroundGeometry()
+{
+  return last_background_;
+}
 
-  nux::Geometry geo_absolute = GetAbsoluteGeometry ();
-  if (BackgroundEffectHelper::blur_type != BLUR_NONE)
-  {
-    nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
-    auto blur_texture = bg_effect_helper_.GetBlurRegion(blur_geo);
-
-    if (blur_texture.IsValid())
-    {
-      nux::TexCoordXForm texxform_blur_bg;
-      texxform_blur_bg.flip_v_coord = true;
-      texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-      texxform_blur_bg.uoffset = ((float) base.x) / geo_absolute.width;
-      texxform_blur_bg.voffset = ((float) base.y) / geo_absolute.height;
-
-      nux::ROPConfig rop;
-      rop.Blend = false;
-      rop.SrcBlend = GL_ONE;
-      rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-
-      gPainter.PushDrawTextureLayer(GfxContext, base,
-                                    blur_texture,
-                                    texxform_blur_bg,
-                                    nux::color::White,
-                                    true,
-                                    rop);
-    }
-  }
-
-  nux::ROPConfig rop;
-  rop.Blend = true;
-  rop.SrcBlend = GL_ONE;
-  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  gPainter.PushDrawColorLayer (GfxContext, internal_clip, background_color, false, rop);
-
-  // Make round corners
-  rop.Blend = true;
-  rop.SrcBlend = GL_ZERO;
-  rop.DstBlend = GL_SRC_ALPHA;
-  gPainter.PaintShapeCornerROP(GfxContext,
-                               internal_clip,
-                               nux::color::White,
-                               nux::eSHAPE_CORNER_ROUND4,
-                               nux::eCornerTopLeft | nux::eCornerTopRight |
-                               nux::eCornerBottomLeft | nux::eCornerBottomRight,
-                               true,
-                               rop);
-  
-  icon_renderer_->PreprocessIcons(last_args_, base);
+void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry internal_clip)
+{
+  nux::Geometry base = GetGeometry();
 
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
   std::list<RenderArg>::iterator it;
   for (it = last_args_.begin(); it != last_args_.end(); ++it)
   {
-    if (it->icon == model_->Selection())
+    if (model_->Selection() == it->icon)
     {
       int view_width = text_view_->GetBaseWidth();
       int start_x = it->render_center.x - view_width / 2;
@@ -779,6 +615,7 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   // render orange box that will encirlce active item(s)
   for (LayoutWindow::Ptr window : ExternalTargets())
   {
+    nux::Geometry geo_absolute = GetAbsoluteGeometry();
     if (window->alpha >= 1.0f)
     {
       nux::Geometry orange_box = window->result;
@@ -790,15 +627,10 @@ void SwitcherView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
   }
 
-  GfxContext.PopClippingRectangle();
-  GfxContext.PopClippingRectangle();
-
-  DrawBackground(GfxContext, background_geo);
-
-  text_view_->SetBaseY(background_geo.y + background_geo.height - 45);
+  text_view_->SetBaseY(last_background_.y + last_background_.height - 45);
   text_view_->Draw(GfxContext, force_draw);
 
-  int ms_since_change = TimeUtil::TimeDelta(&current, &save_time_);
+  int ms_since_change = TimeUtil::TimeDelta(&current_, &save_time_);
 
   if (ms_since_change < animation_length && redraw_handle_ == 0)
     redraw_handle_ = g_idle_add_full (G_PRIORITY_DEFAULT, &SwitcherView::OnDrawTimeout, this, NULL);

@@ -27,6 +27,7 @@
 #include <NuxCore/Logger.h>
 
 #include "DevicesSettings.h"
+#include "IconLoader.h"
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
@@ -42,12 +43,12 @@ GduDevice* get_device_for_device_file (const gchar *device_file);
 
 }
 
-DeviceLauncherIcon::DeviceLauncherIcon(Launcher* launcher, GVolume* volume)
-  : SimpleLauncherIcon(launcher)
+DeviceLauncherIcon::DeviceLauncherIcon(GVolume* volume)
+  : SimpleLauncherIcon()
   , volume_(volume)
   , device_file_(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_UNIX_DEVICE))
-  , gdu_device_(get_device_for_device_file(device_file_.Value()))
-{  
+  , gdu_device_(get_device_for_device_file(device_file_))
+{
   DevicesSettings::GetDefault().changed.connect(sigc::mem_fun(this, &DeviceLauncherIcon::OnSettingsChanged));
 
   // Checks if in favourites!
@@ -56,20 +57,21 @@ DeviceLauncherIcon::DeviceLauncherIcon(Launcher* launcher, GVolume* volume)
   DeviceList::iterator pos = std::find(favorites.begin(), favorites.end(), uuid.Str());
 
   keep_in_launcher_ = pos != favorites.end();
-  
+
   UpdateDeviceIcon();
   UpdateVisibility();
 }
 
 void DeviceLauncherIcon::UpdateDeviceIcon()
 {
-  glib::String name(g_volume_get_name(volume_));
+  name_ = glib::String(g_volume_get_name(volume_)).Str();
+
   glib::Object<GIcon> icon(g_volume_get_icon(volume_));
   glib::String icon_string(g_icon_to_string(icon));
 
-  tooltip_text = name.Value();
-  SetIconName(icon_string.Value());
-  
+  tooltip_text = name_;
+  icon_name = icon_string.Str();
+
   SetIconType(TYPE_DEVICE);
   SetQuirk(QUIRK_RUNNING, false);
 }
@@ -80,38 +82,28 @@ DeviceLauncherIcon::CanEject()
   return g_volume_can_eject(volume_);
 }
 
-nux::Color DeviceLauncherIcon::BackgroundColor()
-{
-  return nux::Color(0xFF333333);
-}
-
-nux::Color DeviceLauncherIcon::GlowColor()
-{
-  return nux::Color(0xFF333333);
-}
-
 std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
 {
   std::list<DbusmenuMenuitem*> result;
   DbusmenuMenuitem* menu_item;
   glib::Object<GDrive> drive(g_volume_get_drive(volume_));
 
-  // "Lock to launcher"/"Unlock from launcher" item
+  // "Lock to Launcher"/"Unlock from Launcher" item
   if (DevicesSettings::GetDefault().GetDevicesOption() == DevicesSettings::ONLY_MOUNTED
       && drive && !g_drive_is_media_removable (drive))
   {
     menu_item = dbusmenu_menuitem_new();
 
-    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, !keep_in_launcher_ ? _("Lock to launcher") : _("Unlock from launcher"));
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, !keep_in_launcher_ ? _("Lock to Launcher") : _("Unlock from Launcher"));
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
-    
+
     g_signal_connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
                      G_CALLBACK(&DeviceLauncherIcon::OnTogglePin), this);
 
     result.push_back(menu_item);
   }
-  
+
   // "Open" item
   menu_item = dbusmenu_menuitem_new();
 
@@ -121,29 +113,30 @@ std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
 
   g_signal_connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
                    G_CALLBACK(&DeviceLauncherIcon::OnOpen), this);
-                   
+
   result.push_back(menu_item);
-  
+
   // "Format" item
   if (gdu_device_ && !gdu_device_is_optical_disc(gdu_device_))
   {
     menu_item = dbusmenu_menuitem_new();
 
+    // TRANSLATORS: This refers to the action of formatting a device
     dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Format..."));
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
     g_signal_connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
                      G_CALLBACK(&DeviceLauncherIcon::OnFormat), this);
-                     
+
     result.push_back(menu_item);
   }
 
   // "Eject" item
   if (drive && g_drive_can_eject(drive))
-  {    
+  {
     menu_item = dbusmenu_menuitem_new();
-    
+
     GList *list = g_drive_get_volumes(drive);
     if (list != NULL)
     {
@@ -151,10 +144,10 @@ std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
         dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Eject"));
       else
         dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Eject parent drive"));
-        
+
       g_list_free_full(list, g_object_unref);
     }
-    
+
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
@@ -168,7 +161,7 @@ std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
   if (drive && g_drive_can_stop(drive))
   {
     menu_item = dbusmenu_menuitem_new();
-    
+
     GList *list = g_drive_get_volumes(drive);
     if (list != NULL)
     {
@@ -176,7 +169,7 @@ std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
         dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Safely remove"));
       else
         dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Safely remove parent drive"));
-        
+
       g_list_free_full(list, g_object_unref);
     }
 
@@ -185,7 +178,7 @@ std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
 
     g_signal_connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
                      G_CALLBACK(&DeviceLauncherIcon::OnDriveStop), this);
-                     
+
     result.push_back(menu_item);
   }
 
@@ -214,8 +207,6 @@ std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
 
 void DeviceLauncherIcon::ShowMount(GMount* mount)
 {
-  glib::String name(g_volume_get_name(volume_));
-
   if (G_IS_MOUNT(mount))
   {
     glib::Object<GFile> root(g_mount_get_root(mount));
@@ -229,20 +220,20 @@ void DeviceLauncherIcon::ShowMount(GMount* mount)
 
       if (error)
       {
-        LOG_WARNING(logger) << "Cannot open volume '" << name
+        LOG_WARNING(logger) << "Cannot open volume '" << name_
                             << "': Unable to show " << uri
                             << ": " << error;
       }
     }
     else
     {
-      LOG_WARNING(logger) << "Cannot open volume '" << name
+      LOG_WARNING(logger) << "Cannot open volume '" << name_
                           << "': Mount has no root";
     }
   }
   else
   {
-    LOG_WARNING(logger) << "Cannot open volume '" << name
+    LOG_WARNING(logger) << "Cannot open volume '" << name_
                         << "': Mount-point is invalid";
   }
 }
@@ -251,7 +242,7 @@ void DeviceLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   SimpleLauncherIcon::ActivateLauncherIcon(arg);
   SetQuirk(QUIRK_STARTING, true);
-  
+
   glib::Object<GMount> mount(g_volume_get_mount(volume_));
 
   if (G_IS_MOUNT(mount.RawPtr()))
@@ -278,11 +269,8 @@ void DeviceLauncherIcon::OnMountReady(GObject* object,
   }
   else
   {
-    glib::String name(g_volume_get_name(self->volume_));
-
-    g_warning("Cannot open volume '%s': %s",
-              name.Value(),
-              error ? error.Message().c_str() : "Mount operation failed");
+    LOG_WARNING(logger) << "Cannot open volume '" << self->name_ << "' : " <<
+                            (error ? error.Message() : "Mount operation failed");
   }
 }
 
@@ -292,15 +280,28 @@ void DeviceLauncherIcon::OnEjectReady(GObject* object,
 {
   if (g_volume_eject_with_operation_finish(self->volume_, result, NULL))
   {
-    NotifyNotification* notification;
-    glib::String name(g_volume_get_name(self->volume_));
-
-    notification = notify_notification_new(name.Value(),
-                                           _("The drive has been successfully ejected"),
-                                           "drive-removable-media-usb");
-
-    notify_notification_show(notification, NULL);
+    IconLoader::GetDefault().LoadFromGIconString(self->icon_name(), 48,
+                                                 sigc::bind(sigc::mem_fun(self, &DeviceLauncherIcon::ShowNotification), self->name_));
   }
+}
+
+void DeviceLauncherIcon::ShowNotification(std::string const& icon_name,
+                                          unsigned size,
+                                          GdkPixbuf* pixbuf,
+                                          std::string const& name)
+{
+  glib::Object<NotifyNotification> notification(notify_notification_new(name.c_str(),
+                                                                        _("The drive has been successfully ejected"),
+                                                                        NULL));
+
+  notify_notification_set_hint(notification,
+                               "x-canonical-private-synchronous",
+                               g_variant_new_boolean(TRUE));
+
+  if(GDK_IS_PIXBUF(pixbuf))
+    notify_notification_set_image_from_pixbuf(notification, pixbuf);
+
+  notify_notification_show(notification, NULL);
 }
 
 void DeviceLauncherIcon::Eject()
@@ -320,7 +321,7 @@ void DeviceLauncherIcon::OnTogglePin(DbusmenuMenuitem* item,
                                      DeviceLauncherIcon* self)
 {
   glib::String uuid(g_volume_get_identifier(self->volume_, G_VOLUME_IDENTIFIER_KIND_UUID));
-  
+
   self->keep_in_launcher_ = !self->keep_in_launcher_;
 
   if (!self->keep_in_launcher_)
@@ -329,7 +330,7 @@ void DeviceLauncherIcon::OnTogglePin(DbusmenuMenuitem* item,
     glib::Object<GMount> mount(g_volume_get_mount(self->volume_));
 
     if (!mount)
-      self->SetQuirk(QUIRK_VISIBLE, false); 
+      self->SetQuirk(QUIRK_VISIBLE, false);
 
     // Remove from favorites
     if (!uuid.Str().empty())
@@ -354,12 +355,12 @@ void DeviceLauncherIcon::OnFormat(DbusmenuMenuitem* item,
                                   DeviceLauncherIcon* self)
 {
   glib::Error error;
-  
+
   gchar const* args[] = { "/usr/lib/gnome-disk-utility/gdu-format-tool",
                           "--device-file",
                           self->device_file_.Value(),
                           NULL};
-                          
+
   g_spawn_async(NULL, // working dir
                 const_cast<gchar **>(args),
                 NULL, // envp
@@ -368,7 +369,7 @@ void DeviceLauncherIcon::OnFormat(DbusmenuMenuitem* item,
                 NULL, // user_data
                 NULL, // GPid *child_pid
                 &error);
-                
+
   if (error)
   {
     LOG_WARNING(logger) << "Error launching " << args[0] << ": " << error;
@@ -393,7 +394,7 @@ void DeviceLauncherIcon::OnUnmountReady(GObject* object,
 void DeviceLauncherIcon::Unmount()
 {
   glib::Object<GMount> mount(g_volume_get_mount(volume_));
-  
+
   if (mount)
   {
     glib::Object<GMountOperation> op(gtk_mount_operation_new(NULL));
@@ -454,11 +455,11 @@ void DeviceLauncherIcon::UpdateVisibility(int visibility)
       else if (visibility < 0)
       {
         glib::Object<GMount> mount(g_volume_get_mount(volume_));
-        SetQuirk(QUIRK_VISIBLE, mount.RawPtr() != NULL); 
+        SetQuirk(QUIRK_VISIBLE, mount.RawPtr() != NULL);
       }
       else
       {
-        SetQuirk(QUIRK_VISIBLE, visibility); 
+        SetQuirk(QUIRK_VISIBLE, visibility);
       }
       break;
     case DevicesSettings::ALWAYS:
@@ -477,6 +478,11 @@ void DeviceLauncherIcon::OnSettingsChanged()
   keep_in_launcher_ = pos != favorites.end();
 
   UpdateVisibility();
+}
+
+std::string DeviceLauncherIcon::GetName() const
+{
+  return "DeviceLauncherIcon";
 }
 
 namespace

@@ -36,6 +36,7 @@ public:
   typedef std::shared_ptr<Categories> Ptr;
 
   Categories();
+  Categories(ModelType model_type);
 
   sigc::signal<void, Category const&> category_added;
   sigc::signal<void, Category const&> category_changed;

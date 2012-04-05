@@ -78,6 +78,7 @@ struct _UnityQuicklistAccessiblePrivate
   AtkObject* menu_accessible;
 };
 
+using unity::QuicklistView;
 
 static void
 unity_quicklist_accessible_class_init(UnityQuicklistAccessibleClass* klass)
@@ -132,9 +133,6 @@ unity_quicklist_accessible_initialize(AtkObject* accessible,
 
   if (quicklist == NULL) /* status defunct */
     return;
-
-  atk_object_set_name(accessible, "Quicklist");
-
 }
 
 static gint

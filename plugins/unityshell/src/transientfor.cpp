@@ -51,9 +51,9 @@ compiz::X11TransientForReader::getAncestor ()
   {
     if (actualType == XA_WINDOW && actualFormat == 32 && nLeft == 0 && nItems == 1)
     {
-	    Window *data = (Window *) prop;
+      Window *data = static_cast <Window *> (prop);
 
-	    serverAncestor = *data;
+      serverAncestor = *data;
     }
 
     XFree (prop);
@@ -65,6 +65,10 @@ compiz::X11TransientForReader::getAncestor ()
 bool
 compiz::X11TransientForReader::isTransientFor (unsigned int ancestor)
 {
+  if (!ancestor ||
+      !priv->mXid)
+    return false;
+
   return ancestor == getAncestor ();
 }
 
@@ -80,14 +84,17 @@ compiz::X11TransientForReader::isGroupTransientFor (unsigned int clientLeader)
   std::vector<std::string> strings;
   std::list<Atom>   atoms;
 
+  if (!clientLeader ||
+      !priv->mXid)
+
   if (XGetWindowProperty (priv->mDpy, priv->mXid, wmClientLeader, 0L, 2L, false,
                           XA_WINDOW, &actualType, &actualFormat, &nItems, &nLeft, (unsigned char **)&prop) == Success)
   {
     if (actualType == XA_WINDOW && actualFormat == 32 && nLeft == 0 && nItems == 1)
     {
-	    Window *data = (Window *) prop;
+      Window *data = static_cast <Window *> (prop);
 
-	    serverClientLeader = *data;
+      serverClientLeader = *data;
     }
 
     XFree (prop);
@@ -123,7 +130,7 @@ compiz::X11TransientForReader::isGroupTransientFor (unsigned int clientLeader)
       {
         if (actualType == XA_ATOM && actualFormat == 32 && nLeft == 0 && nItems)
         {
-          Atom *data = (Atom *) prop;
+          Atom *data = static_cast <Atom *> (prop);
 
           while (nItems--)
           {
@@ -160,7 +167,7 @@ compiz::X11TransientForReader::getTransients ()
   {
     if (actualType == XA_WINDOW && actualFormat == 32 && nItems && !nLeft)
     {
-      Window *data = (Window *) prop;
+      Window *data = static_cast <Window *> (prop);
 
       while (nItems--)
       {

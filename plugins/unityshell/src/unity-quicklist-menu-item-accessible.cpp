@@ -67,6 +67,9 @@ struct _UnityQuicklistMenuItemAccessiblePrivate
   guint on_parent_change_id;
 };
 
+using unity::QuicklistMenuItem;
+using unity::QuicklistMenuItemLabel;
+using unity::QuicklistMenuItemSeparator;
 
 static void
 unity_quicklist_menu_item_accessible_class_init(UnityQuicklistMenuItemAccessibleClass* klass)
@@ -278,6 +281,9 @@ check_selected(UnityQuicklistMenuItemAccessible* self)
     gboolean return_val = FALSE;
 
     self->priv->selected = found;
+    atk_object_notify_state_change(ATK_OBJECT(self),
+                                   ATK_STATE_FOCUSED,
+                                   found);
     atk_object_notify_state_change(ATK_OBJECT(self),
                                    ATK_STATE_SELECTED,
                                    found);

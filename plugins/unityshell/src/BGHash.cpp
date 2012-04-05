@@ -51,7 +51,8 @@ namespace unity {
       _ubus_handle_request_colour(0)
   {
     _override_color.alpha= 0.0f;
-
+    UnSerializeCache();
+    
     background_monitor = gnome_bg_new ();
     client = g_settings_new ("org.gnome.desktop.background");
 
@@ -68,11 +69,20 @@ namespace unity {
     UBusServer *ubus = ubus_server_get_default ();
 
     gnome_bg_load_from_preferences (background_monitor, client);
+    
+    std::string filepath_hash = CreateFilepathHash(glib::String(g_strdup(gnome_bg_get_filename(background_monitor))));
+    if (G_LIKELY(cache_map_.count(filepath_hash)))
+    {
+      nux::Color color(cache_map_[filepath_hash]);
+      LOG_DEBUG(logger) << "cache hit: " << color.red << ", " << color.green << ", " << color.blue;
+      TransitionToNewColor(cache_map_[filepath_hash]);  
+    }
+    else
+    {
+      LOG_DEBUG(logger) << "cache miss: " << filepath_hash;
+      g_idle_add_full (G_PRIORITY_DEFAULT, (GSourceFunc)ForceUpdate, (gpointer)this, NULL);
+    }
 
-    glib::Object<GdkPixbuf> pixbuf(GetPixbufFromBG());
-    LoadPixbufToHash(pixbuf);
-
-    g_idle_add_full (G_PRIORITY_DEFAULT, (GSourceFunc)ForceUpdate, (gpointer)this, NULL);
 
     // avoids making a new object method when all we are doing is
     // calling a method with no logic
@@ -82,13 +92,12 @@ namespace unity {
     _ubus_handle_request_colour = ubus_server_register_interest (ubus, UBUS_BACKGROUND_REQUEST_COLOUR_EMIT,
                                                                  (UBusCallback)request_lambda,
                                                                   this);
-
-
-
   }
 
   BGHash::~BGHash ()
   {
+    // serialize our cache
+    SerializeCache();
     g_object_unref (client);
     g_object_unref (background_monitor);
     UBusServer *ubus = ubus_server_get_default ();
@@ -332,7 +341,6 @@ namespace unity {
     _hires_time_start = g_get_monotonic_time();
     _hires_time_end = 500 * 1000; // 500 milliseconds
     _transition_handler = g_timeout_add (1000/60, (GSourceFunc)BGHash::OnTransitionCallback, this);
-
   }
 
   gboolean BGHash::OnTransitionCallback(BGHash *self)
@@ -368,10 +376,10 @@ namespace unity {
     ubus_server_send_message(ubus_server_get_default(),
                              UBUS_BACKGROUND_COLOR_CHANGED,
                              g_variant_new ("(dddd)",
-                                            _current_color.red * 0.7f,
-                                            _current_color.green * 0.7f,
-                                            _current_color.blue * 0.7f,
-                                            0.5)
+                                            _current_color.red,
+                                            _current_color.green,
+                                            _current_color.blue,
+                                            _current_color.alpha)
                             );
   }
 
@@ -413,20 +421,165 @@ namespace unity {
 
   void BGHash::LoadFileToHash(const std::string path)
   {
-    glib::Error error;
-    glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file (path.c_str (), &error));
-
-    if (error)
+    std::string filepath_hash = CreateFilepathHash(path);
+    if (G_LIKELY(cache_map_.count(filepath_hash)))
     {
-      LOG_WARNING(logger) << "Could not load filename \"" << path << "\": " << error.Message();
-      _current_color = unity::colors::Aubergine;
-
-      // try and get a colour from gnome-bg, for various reasons, gnome bg might not
-      // return a correct image which sucks =\ but this is a fallback
-      pixbuf = GetPixbufFromBG();
+      TransitionToNewColor(cache_map_[filepath_hash]);  
     }
+    else
+    { 
+      glib::Error error;
+      glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file (path.c_str (), &error));
 
-    LoadPixbufToHash (pixbuf);
+      if (error)
+      {
+        LOG_WARNING(logger) << "Could not load filename \"" << path << "\": " << error.Message();
+        _current_color = unity::colors::Aubergine;
+
+        // try and get a colour from gnome-bg, for various reasons, gnome bg might not
+        // return a correct image which sucks =\ but this is a fallback
+        pixbuf = GetPixbufFromBG();
+      }
+
+      LoadPixbufToHash (pixbuf);
+    
+      cache_map_[filepath_hash] = _new_color;
+    }
+  }
+
+  std::string BGHash::CreateFilepathHash(std::string path)
+  {
+    glib::Error error;
+    glib::Object<GFile> file(g_file_new_for_path(path.c_str()));
+    glib::Object<GFileInfo> file_info(g_file_query_info(file, 
+                                                        G_FILE_ATTRIBUTE_TIME_MODIFIED,
+                                                        G_FILE_QUERY_INFO_NONE,
+                                                        NULL, &error));
+    if (G_UNLIKELY(error))
+    {
+      LOG_ERROR(logger) << "could not hash path (" << path << ")"
+                        << ": " << error.Message();
+      return std::string("");
+    }
+    else
+    {
+      glib::String modified_time(g_file_info_get_attribute_as_string(file_info, G_FILE_ATTRIBUTE_TIME_MODIFIED));
+      return path + modified_time.Str();
+    }
+  }
+
+  namespace
+  {
+    const std::string cachedirectory("/unity/");
+    const std::string cachefilename("bgcachefile");
+  }
+
+  void BGHash::SerializeCache()
+  {
+    glib::Error error;
+    glib::String cachedir(g_build_filename(g_get_user_cache_dir(), cachedirectory.c_str(), NULL));
+    glib::String fullpath(g_build_filename(cachedir, cachefilename.c_str(), NULL));
+    g_mkdir_with_parents(cachedir, 0744);
+    glib::Object<GFile> cachefile(g_file_new_for_path(fullpath));
+    glib::Object<GOutputStream> output_stream(G_OUTPUT_STREAM(g_file_replace(cachefile, 
+                                                                          NULL, FALSE, G_FILE_CREATE_NONE, 
+                                                                          NULL, &error)));
+    LOG_DEBUG(logger) << "serializing cache: " << fullpath;
+    if (G_UNLIKELY(error))
+    {
+      LOG_ERROR(logger) << "could not open file (" << fullpath << ")"
+                        << ": " << error.Message();
+    }
+    else
+    {  
+      glib::Error write_error;
+      std::ostringstream buffer;
+      for (auto ittr=cache_map_.begin(); ittr != cache_map_.end(); ittr++)
+      {
+        std::string key = (*ittr).first;
+        nux::Color value((*ittr).second);
+
+        buffer << key << ":"
+               << int(value.red * 255) << ":"
+               << int(value.green * 255) << ":" 
+               << int(value.blue * 255);
+        if (ittr != --cache_map_.end())
+        {
+          buffer << ",";
+        }
+      }
+      
+      const char* base_buffer = buffer.str().c_str();
+      gsize bytes_written = 0;
+      LOG_DEBUG(logger) << "writing to buffer (" << buffer.str() << ")";
+      g_output_stream_write_all(output_stream, base_buffer, strlen(base_buffer), &bytes_written, NULL, &write_error);
+      if (write_error)
+      {
+        LOG_ERROR(logger) << "could not write to file (" << fullpath << ")"
+                          << ": " << error.Message();
+      }
+
+      g_output_stream_close(output_stream, NULL, NULL);
+    }
+  }
+
+  void BGHash::UnSerializeCache()
+  {
+    glib::Error error;
+    glib::String cachedir(g_build_filename(g_get_user_cache_dir(), cachedirectory.c_str(), NULL));
+    glib::String fullpath(g_build_filename(cachedir, cachefilename.c_str(), NULL));
+    glib::Object<GFile> cachefile(g_file_new_for_path(fullpath));
+    glib::String contents;
+    gsize length;
+    g_file_get_contents(fullpath, &contents, &length, &error);
+
+    if (G_UNLIKELY(error))
+    {
+      LOG_ERROR(logger) << "could not open file (" << fullpath << ")"
+                        << ": " << error.Message();
+    }
+    else
+    {
+      LOG_DEBUG(logger) << "Loading from hash file (" << fullpath << " - " << length << "): " << contents;
+      // data is filenamehash:red:green:blue, 
+      // using glib instead of C++ stuff like boost because boost just corrupted everything, very weird.
+      gchar** super_tokens = NULL;
+      super_tokens = g_strsplit(contents, ",", -1);
+      if (super_tokens != NULL)
+      {
+        for (int superi = 0; super_tokens[superi]; superi++)
+        {
+          glib::String super_token(super_tokens[superi]);
+          char** sub_tokens = g_strsplit(super_token, ":", 4);
+          if (sub_tokens != NULL)
+          {
+            std::string name, red, green, blue;
+            for (int i = 0; sub_tokens[i]; i++)
+            {
+              glib::String token(sub_tokens[i]);
+              switch(i)
+              {
+                case 0: name = token.Str(); break;
+                case 1: red = token.Str(); break;
+                case 2: green = token.Str(); break;
+                case 3: blue = token.Str(); break;
+                default: break;
+              }
+            }
+            if (!name.empty())
+            {
+              LOG_DEBUG(logger) << "Unserialized cache value " << name;
+              cache_map_[name] = nux::Color(atof(red.c_str()) / 255.0f, 
+                                            atof(green.c_str()) / 255.0f, 
+                                            atof(blue.c_str()) / 255.0f, 1);
+            }
+            g_free(sub_tokens); // only g_free because glib:String will free the strings for us
+          }
+        }
+        g_free(super_tokens); // only g_free because glib::String will free the strings for us
+      } 
+
+    }
   }
 
   inline nux::Color GetPixbufSample (GdkPixbuf *pixbuf, int x, int y)
@@ -540,6 +693,7 @@ namespace unity {
       // grayscale image
       LOG_DEBUG (logger) << "got a grayscale image";
       chosen_color = nux::Color (46 , 52 , 54 );
+      chosen_color.alpha = 0.72f;
     }
     else
     {
@@ -559,13 +713,15 @@ namespace unity {
 
       nux::color::HueSaturationValue hsv_color (chosen_color);
 
-      hsv_color.saturation = std::min(base_hsv.saturation, hsv_color.saturation);
-      hsv_color.value = std::min(std::min(base_hsv.value, hsv_color.value), 0.2f);
+      hsv_color.saturation = std::min(base_hsv.saturation, hsv_color.saturation) * 1.3f;
+      hsv_color.value = std::min(std::min(base_hsv.value, hsv_color.value), 0.26f);
       chosen_color = nux::Color (nux::color::RedGreenBlue(hsv_color));
+      
+      // Reduce alpha on really dark average colors
+      chosen_color.alpha = 0.72f - 2 * (0.26f - hsv_color.value);
     }
 
     // apply design to the colour
-    chosen_color.alpha = 0.5f;
 
     LOG_DEBUG(logger) << "eventually chose "
                       << chosen_color.red << ", "

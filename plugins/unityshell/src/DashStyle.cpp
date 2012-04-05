@@ -33,10 +33,12 @@
 #include <NuxCore/Color.h>
 #include <NuxCore/Logger.h>
 #include <NuxImage/CairoGraphics.h>
+#include <Nux/PaintLayer.h>
 
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibWrapper.h>
 
+#include "CairoTexture.h"
 #include "JSONParser.h"
 #include "config.h"
 
@@ -61,32 +63,38 @@ void cairo_set_source_rgba(cairo_t* cr, nux::Color const& color)
   ::cairo_set_source_rgba(cr, color.red, color.green, color.blue, color.alpha);
 }
 
-inline double _align(double val)
+inline double _align(double val, bool odd=true)
 {
   double fract = val - (int) val;
 
-  // for strokes with an odd line-width
-  if (fract != 0.5f)
-    return (double) ((int) val + 0.5f);
+  if (odd)
+  {
+    // for strokes with an odd line-width
+    if (fract != 0.5f)
+      return (double) ((int) val + 0.5f);
+    else
+      return val;
+  }
   else
-    return val;
-
-  // for strokes with an even line-width
-  /*if (fract != 0.0f)
-    return (double) ((int) val);
-  else
-    return val;*/
+  {
+    // for strokes with an even line-width
+    if (fract != 0.0f)
+      return (double) ((int) val);
+    else
+      return val;
+  }
 }
 
 class LazyLoadTexture
 {
 public:
-  LazyLoadTexture(std::string const& filename);
+  LazyLoadTexture(std::string const& filename, int size = -1);
   nux::BaseTexture* texture();
 private:
   void LoadTexture();
 private:
   std::string filename_;
+  int size_;
   BaseTexturePtr texture_;
 };
 
@@ -103,8 +111,6 @@ public:
 
   void SetDefaultValues();
 
-  void Star(cairo_t* cr, double size);
-
   void GetTextExtents(int& width,
                       int& height,
                       int  maxWidth,
@@ -114,7 +120,9 @@ public:
   void Text(cairo_t* cr,
             nux::Color const& color,
             std::string const& label,
-            double horizMargin = 10.0);
+            int font_size = -1,
+            double horizMargin = 4.0,
+            Alignment alignment = Alignment::CENTER);
 
   void ButtonOutlinePath(cairo_t* cr, bool align);
 
@@ -198,14 +206,16 @@ public:
   LazyLoadTexture dash_shine_;
 
   LazyLoadTexture search_magnify_texture_;
+  LazyLoadTexture search_circle_texture_;
   LazyLoadTexture search_close_texture_;
-  LazyLoadTexture search_close_glow_texture_;
   LazyLoadTexture search_spin_texture_;
-  LazyLoadTexture search_spin_glow_texture_;
 
   LazyLoadTexture group_unexpand_texture_;
   LazyLoadTexture group_expand_texture_;
 
+  LazyLoadTexture star_deselected_texture_;
+  LazyLoadTexture star_selected_texture_;
+  LazyLoadTexture star_highlight_texture_;
 };
 
 Style::Impl::Impl(Style* owner)
@@ -232,12 +242,14 @@ Style::Impl::Impl(Style* owner)
   , dash_top_tile_("/dash_top_tile.png")
   , dash_shine_("/dash_sheen.png")
   , search_magnify_texture_("/search_magnify.png")
-  , search_close_texture_("/search_close.png")
-  , search_close_glow_texture_("/search_close_glow.png")
-  , search_spin_texture_("/search_spin.png")
-  , search_spin_glow_texture_("/search_spin_glow.png")
+  , search_circle_texture_("/search_circle.svg", 32)
+  , search_close_texture_("/search_close.svg", 32)
+  , search_spin_texture_("/search_spin.svg", 32)
   , group_unexpand_texture_("/dash_group_unexpand.png")
   , group_expand_texture_("/dash_group_expand.png")
+  , star_deselected_texture_("/star_deselected.png")
+  , star_selected_texture_("/star_selected.png")
+  , star_highlight_texture_("/star_highlight.png")
 {
   signal_manager_.Add(new glib::Signal<void, GtkSettings*, GParamSpec*>
                       (gtk_settings_get_default(),
@@ -412,108 +424,62 @@ void Style::RoundedRect(cairo_t* cr,
                             double   y,
                             double   cornerRadius,
                             double   width,
-                            double   height,
-                            bool     align)
+                            double   height)
 {
   // sanity check
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS &&
       cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
     return;
 
+  bool odd = true;
+
+  odd = cairo_get_line_width (cr) == 2.0 ? false : true;
+
   double radius = cornerRadius / aspect;
 
-  if (align)
-  {
-    // top-left, right of the corner
-    cairo_move_to(cr, _align (x + radius), _align (y));
+  // top-left, right of the corner
+  cairo_move_to(cr, _align (x + radius, odd), _align (y, odd));
 
-    // top-right, left of the corner
-    cairo_line_to(cr, _align(x + width - radius), _align(y));
+  // top-right, left of the corner
+  cairo_line_to(cr, _align(x + width - radius, odd), _align(y, odd));
 
-    // top-right, below the corner
-    cairo_arc(cr,
-              _align(x + width - radius),
-              _align(y + radius),
-              radius,
-              -90.0f * G_PI / 180.0f,
-              0.0f * G_PI / 180.0f);
+  // top-right, below the corner
+  cairo_arc(cr,
+            _align(x + width - radius, odd),
+            _align(y + radius, odd),
+            radius,
+            -90.0f * G_PI / 180.0f,
+            0.0f * G_PI / 180.0f);
 
-    // bottom-right, above the corner
-    cairo_line_to(cr, _align(x + width), _align(y + height - radius));
+  // bottom-right, above the corner
+  cairo_line_to(cr, _align(x + width, odd), _align(y + height - radius, odd));
 
-    // bottom-right, left of the corner
-    cairo_arc(cr,
-              _align(x + width - radius),
-              _align(y + height - radius),
-              radius,
-              0.0f * G_PI / 180.0f,
-              90.0f * G_PI / 180.0f);
+  // bottom-right, left of the corner
+  cairo_arc(cr,
+            _align(x + width - radius, odd),
+            _align(y + height - radius, odd),
+            radius,
+            0.0f * G_PI / 180.0f,
+            90.0f * G_PI / 180.0f);
 
-    // bottom-left, right of the corner
-    cairo_line_to(cr, _align(x + radius), _align(y + height));
+  // bottom-left, right of the corner
+  cairo_line_to(cr, _align(x + radius, odd), _align(y + height, odd));
 
-    // bottom-left, above the corner
-    cairo_arc(cr,
-              _align(x + radius),
-              _align(y + height - radius),
-              radius,
-              90.0f * G_PI / 180.0f,
-              180.0f * G_PI / 180.0f);
+  // bottom-left, above the corner
+  cairo_arc(cr,
+            _align(x + radius, odd),
+            _align(y + height - radius, odd),
+            radius,
+            90.0f * G_PI / 180.0f,
+            180.0f * G_PI / 180.0f);
 
-    // top-left, right of the corner
-    cairo_arc(cr,
-              _align(x + radius),
-              _align(y + radius),
-              radius,
-              180.0f * G_PI / 180.0f,
-              270.0f * G_PI / 180.0f);
-  }
-  else
-  {
-    // top-left, right of the corner
-    cairo_move_to(cr, x + radius, y);
-
-    // top-right, left of the corner
-    cairo_line_to(cr, x + width - radius, y);
-
-    // top-right, below the corner
-    cairo_arc(cr,
-              x + width - radius,
-              y + radius,
-              radius,
-              -90.0f * G_PI / 180.0f,
-              0.0f * G_PI / 180.0f);
-
-    // bottom-right, above the corner
-    cairo_line_to(cr, x + width, y + height - radius);
-
-    // bottom-right, left of the corner
-    cairo_arc(cr,
-              x + width - radius,
-              y + height - radius,
-              radius,
-              0.0f * G_PI / 180.0f,
-              90.0f * G_PI / 180.0f);
-
-    // bottom-left, right of the corner
-    cairo_line_to(cr, x + radius, y + height);
-
-    // bottom-left, above the corner
-    cairo_arc(cr,
-              x + radius,
-              y + height - radius,
-              radius,
-              90.0f * G_PI / 180.0f,
-              180.0f * G_PI / 180.0f);
-
-    // top-left, right of the corner
-    cairo_arc(cr,
-              x + radius,
-              y + radius,
-              radius,
-              180.0f * G_PI / 180.0f,
-              270.0f * G_PI / 180.0f);
-  }
+  // top-left, right of the corner
+  cairo_arc(cr,
+            _align(x + radius, odd),
+            _align(y + radius, odd),
+            radius,
+            180.0f * G_PI / 180.0f,
+            270.0f * G_PI / 180.0f);
 }
 
 static inline void _blurinner(guchar* pixel,
@@ -704,43 +670,6 @@ void Style::Impl::Blur(cairo_t* cr, int size)
 
   // inform cairo we altered the surfaces contents
   cairo_surface_mark_dirty(surface);
-}
-
-void Style::Impl::Star(cairo_t* cr, double size)
-{
-  double outter[5][2] = {{0.0, 0.0},
-                         {0.0, 0.0},
-                         {0.0, 0.0},
-                         {0.0, 0.0},
-                         {0.0, 0.0}};
-  double inner[5][2]  = {{0.0, 0.0},
-                         {0.0, 0.0},
-                         {0.0, 0.0},
-                         {0.0, 0.0},
-                         {0.0, 0.0}};
-  double angle[5]     = {-90.0, -18.0, 54.0, 126.0, 198.0};
-  double outterRadius = size;
-  double innerRadius  = size/1.75;
-
-  for (int i = 0; i < 5; i++)
-  {
-    outter[i][0] = outterRadius * cos(angle[i] * M_PI / 180.0);
-    outter[i][1] = outterRadius * sin(angle[i] * M_PI / 180.0);
-    inner[i][0]  = innerRadius * cos((angle[i] + 36.0) * M_PI / 180.0);
-    inner[i][1]  = innerRadius * sin((angle[i] + 36.0) * M_PI / 180.0);
-  }
-
-  cairo_move_to(cr, outter[0][0], outter[0][1]);
-  cairo_line_to(cr, inner[0][0], inner[0][1]);
-  cairo_line_to(cr, outter[1][0], outter[1][1]);
-  cairo_line_to(cr, inner[1][0], inner[1][1]);
-  cairo_line_to(cr, outter[2][0], outter[2][1]);
-  cairo_line_to(cr, inner[2][0], inner[2][1]);
-  cairo_line_to(cr, outter[3][0], outter[3][1]);
-  cairo_line_to(cr, inner[3][0], inner[3][1]);
-  cairo_line_to(cr, outter[4][0], outter[4][1]);
-  cairo_line_to(cr, inner[4][0], inner[4][1]);
-  cairo_close_path(cr);
 }
 
 void Style::Impl::SetDefaultValues()
@@ -1007,48 +936,51 @@ void Style::Impl::RoundedRectSegment(cairo_t*   cr,
                                          Arrow      arrow,
                                          nux::ButtonVisualState state)
 {
-  double radius = cornerRadius / aspect;
+  double radius  = cornerRadius / aspect;
   double arrow_w = radius / 1.5;
   double arrow_h = radius / 2.0;
+  bool odd = true;
+
+  odd = cairo_get_line_width (cr) == 2.0 ? false : true;
 
   switch (segment)
   {
   case Segment::LEFT:
     // top-left, right of the corner
-    cairo_move_to(cr, x + radius, y);
+    cairo_move_to(cr, _align(x + radius, odd), _align(y, odd));
 
     // top-right
-    cairo_line_to(cr, x + width, y);
+    cairo_line_to(cr, _align(x + width, odd), _align(y, odd));
 
     if (arrow == Arrow::RIGHT && state == nux::VISUAL_STATE_PRESSED)
 		{
-      cairo_line_to(cr, x + width,           y + height / 2.0 - arrow_h);
-      cairo_line_to(cr, x + width - arrow_w, y + height / 2.0);
-      cairo_line_to(cr, x + width,           y + height / 2.0 + arrow_h);
+      cairo_line_to(cr, _align(x + width, odd),           _align(y + height / 2.0 - arrow_h, odd));
+      cairo_line_to(cr, _align(x + width - arrow_w, odd), _align(y + height / 2.0, odd));
+      cairo_line_to(cr, _align(x + width, odd),           _align(y + height / 2.0 + arrow_h, odd));
 		}
 
     // bottom-right
-    cairo_line_to(cr, x + width, y + height);
+    cairo_line_to(cr, _align(x + width, odd), _align(y + height, odd));
 
     // bottom-left, right of the corner
-    cairo_line_to(cr, x + radius, y + height);
+    cairo_line_to(cr, _align(x + radius, odd), _align(y + height, odd));
 
     // bottom-left, above the corner
     cairo_arc(cr,
-              x + radius,
-              y + height - radius,
-              radius,
+              _align(x, odd) + _align(radius, odd),
+              _align(y + height, odd) - _align(radius, odd),
+              _align(radius, odd),
               90.0f * G_PI / 180.0f,
               180.0f * G_PI / 180.0f);
 
     // left, right of the corner
-    cairo_line_to(cr, x, y + radius);
+    cairo_line_to(cr, _align(x, odd), _align(y + radius, odd));
 
     // top-left, right of the corner
     cairo_arc(cr,
-              x + radius,
-              y + radius,
-              radius,
+              _align(x, odd) + _align(radius, odd),
+              _align(y, odd) + _align(radius, odd),
+              _align(radius, odd),
               180.0f * G_PI / 180.0f,
               270.0f * G_PI / 180.0f);
 
@@ -1056,29 +988,29 @@ void Style::Impl::RoundedRectSegment(cairo_t*   cr,
 
   case Segment::MIDDLE:
     // top-left
-    cairo_move_to(cr, x, y);
+    cairo_move_to(cr, _align(x, odd), _align(y, odd));
 
     // top-right
-    cairo_line_to(cr, x + width, y);
+    cairo_line_to(cr, _align(x + width, odd), _align(y, odd));
 
     if ((arrow == Arrow::RIGHT || arrow == Arrow::BOTH) && state == nux::VISUAL_STATE_PRESSED)
 		{
-      cairo_line_to(cr, x + width,           y + height / 2.0 - arrow_h);
-      cairo_line_to(cr, x + width - arrow_w, y + height / 2.0);
-      cairo_line_to(cr, x + width,           y + height / 2.0 + arrow_h);
+      cairo_line_to(cr, _align(x + width, odd),           _align(y + height / 2.0 - arrow_h, odd));
+      cairo_line_to(cr, _align(x + width - arrow_w, odd), _align(y + height / 2.0, odd));
+      cairo_line_to(cr, _align(x + width, odd),           _align(y + height / 2.0 + arrow_h, odd));
 		}
 
     // bottom-right
-    cairo_line_to(cr, x + width, y + height);
+    cairo_line_to(cr, _align(x + width, odd), _align(y + height, odd));
 
     // bottom-left
-    cairo_line_to(cr, x, y + height);
+    cairo_line_to(cr, _align(x, odd), _align(y + height, odd));
 
     if ((arrow == Arrow::LEFT || arrow == Arrow::BOTH) && state == nux::VISUAL_STATE_PRESSED)
 		{
-      cairo_line_to(cr, x,           y + height / 2.0 + arrow_h);
-      cairo_line_to(cr, x + arrow_w, y + height / 2.0);
-      cairo_line_to(cr, x,           y + height / 2.0 - arrow_h);
+      cairo_line_to(cr, _align(x, odd),           _align(y + height / 2.0 + arrow_h, odd));
+      cairo_line_to(cr, _align(x + arrow_w, odd), _align(y + height / 2.0, odd));
+      cairo_line_to(cr, _align(x, odd),           _align(y + height / 2.0 - arrow_h, odd));
 		}
 
     // back to top-left
@@ -1087,38 +1019,38 @@ void Style::Impl::RoundedRectSegment(cairo_t*   cr,
 
   case Segment::RIGHT:
     // top-left, right of the corner
-    cairo_move_to(cr, x, y);
+    cairo_move_to(cr, _align(x, odd), _align(y, odd));
 
     // top-right, left of the corner
-    cairo_line_to(cr, x + width - radius, y);
+    cairo_line_to(cr, _align(x + width - radius, odd), _align(y, odd));
 
     // top-right, below the corner
     cairo_arc(cr,
-              x + width - radius,
-              y + radius,
-              radius,
+              _align(x + width, odd) - _align(radius, odd),
+              _align(y, odd) + _align(radius, odd),
+              _align(radius, odd),
               -90.0f * G_PI / 180.0f,
               0.0f * G_PI / 180.0f);
 
     // bottom-right, above the corner
-    cairo_line_to(cr, x + width, y + height - radius);
+    cairo_line_to(cr, _align(x + width, odd), _align(y + height - radius, odd));
 
     // bottom-right, left of the corner
     cairo_arc(cr,
-              x + width - radius,
-              y + height - radius,
-              radius,
+              _align(x + width, odd) - _align(radius, odd),
+              _align(y + height, odd) - _align(radius, odd),
+              _align(radius, odd),
               0.0f * G_PI / 180.0f,
               90.0f * G_PI / 180.0f);
 
     // bottom-left
-    cairo_line_to(cr, x, y + height);
+    cairo_line_to(cr, _align(x, odd), _align(y + height, odd));
 
     if (arrow == Arrow::LEFT && state == nux::VISUAL_STATE_PRESSED)
 		{
-      cairo_line_to(cr, x,           y + height / 2.0 + arrow_h);
-      cairo_line_to(cr, x + arrow_w, y + height / 2.0);
-      cairo_line_to(cr, x,           y + height / 2.0 - arrow_h);
+      cairo_line_to(cr, _align(x, odd),           _align(y + height / 2.0 + arrow_h, odd));
+      cairo_line_to(cr, _align(x + arrow_w, odd), _align(y + height / 2.0, odd));
+      cairo_line_to(cr, _align(x, odd),           _align(y + height / 2.0 - arrow_h, odd));
 		}
 
     // back to top-left
@@ -1360,9 +1292,11 @@ void Style::Impl::GetTextExtents(int& width,
 }
 
 void Style::Impl::Text(cairo_t*    cr,
-                           nux::Color const&  color,
-                           std::string const& label,
-                           double horizMargin)
+                       nux::Color const&  color,
+                       std::string const& label,
+                       int text_size,
+                       double horizMargin,
+                       Alignment alignment)
 {
   double                x           = 0.0;
   double                y           = 0.0;
@@ -1394,6 +1328,11 @@ void Style::Impl::Text(cairo_t*    cr,
   else
     desc = pango_font_description_from_string(fontName);
 
+  if (text_size > 0)
+  {
+    pango_font_description_set_absolute_size(desc, text_size * PANGO_SCALE);
+  }
+
   PangoWeight weight;
   switch (regular_text_weight_)
   {
@@ -1414,6 +1353,23 @@ void Style::Impl::Text(cairo_t*    cr,
   pango_layout_set_font_description(layout, desc);
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
+
+  PangoAlignment pango_alignment = PANGO_ALIGN_LEFT;
+  switch (alignment)
+  {
+  case Alignment::LEFT:
+    pango_alignment = PANGO_ALIGN_LEFT;
+    break;
+
+  case Alignment::CENTER:
+    pango_alignment = PANGO_ALIGN_CENTER;
+    break;
+
+  case Alignment::RIGHT:
+    pango_alignment = PANGO_ALIGN_RIGHT;
+    break;
+  }
+  pango_layout_set_alignment(layout, pango_alignment);
 
   pango_layout_set_markup(layout, label.c_str(), -1);
   pango_layout_set_width(layout, w * PANGO_SCALE);
@@ -1445,8 +1401,9 @@ void Style::Impl::Text(cairo_t*    cr,
   PangoRectangle ink = {0, 0, 0, 0};
   PangoRectangle log = {0, 0, 0, 0};
   pango_layout_get_extents(layout, &ink, &log);
-  x = ((double) w - pango_units_to_double(ink.width)) / 2.0 + horizMargin;
+  x = horizMargin; // let pango alignment handle the x position
   y = ((double) h - pango_units_to_double(log.height)) / 2.0;
+
   cairo_move_to(cr, x, y);
   pango_cairo_show_layout(cr, layout);
 
@@ -1549,7 +1506,9 @@ void Style::Impl::DrawOverlay(cairo_t*  cr,
   cairo_set_operator(cr, old);
 }
 
-bool Style::Button(cairo_t* cr, nux::ButtonVisualState state, std::string const& label)
+bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
+                   std::string const& label, int font_size,
+                   Alignment alignment, bool zeromargin)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1558,19 +1517,33 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state, std::string const&
   if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
     return false;
 
-  unsigned int garnish = GetButtonGarnishSize();
+  unsigned int garnish = 0;
+  if (zeromargin == false)
+   garnish = GetButtonGarnishSize();
 
   //ButtonOutlinePath(cr, true);
   double w = cairo_image_surface_get_width(cairo_get_target(cr));
   double h = cairo_image_surface_get_height(cairo_get_target(cr));
-  RoundedRect(cr,
-              1.0,
-              (double) (garnish),
-              (double) (garnish),
-              7.0,
-              w - (double) (2 * garnish),
-              h - (double) (2 * garnish),
-              true);
+
+  cairo_set_line_width(cr, pimpl->button_label_border_size_[state]);
+
+  if (pimpl->button_label_border_size_[state] == 2.0)
+    RoundedRect(cr,
+                1.0,
+                (double) (garnish) + 1.0,
+                (double) (garnish) + 1.0,
+                7.0,
+                w - (double) (2 * garnish) - 2.0,
+                h - (double) (2 * garnish) - 2.0);
+  else
+    RoundedRect(cr,
+                1.0,
+                (double) (garnish) + 0.5,
+                (double) (garnish) + 0.5,
+                7.0,
+                w - (double) (2 * garnish) - 1.0,
+                h - (double) (2 * garnish) - 1.0);
+
 
   if (pimpl->button_label_fill_color_[state].alpha != 0.0)
   {
@@ -1578,7 +1551,6 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state, std::string const&
     cairo_fill_preserve(cr);
   }
   cairo_set_source_rgba(cr, pimpl->button_label_border_color_[state]);
-  cairo_set_line_width(cr, pimpl->button_label_border_size_[state]);
   cairo_stroke(cr);
 
   pimpl->DrawOverlay(cr,
@@ -1588,12 +1560,166 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state, std::string const&
 
   pimpl->Text(cr,
               pimpl->button_label_text_color_[state],
-              label);
+              label,
+              font_size,
+              11.0, // 15px = 11pt
+              alignment);
 
   return true;
 }
 
-bool Style::StarEmpty(cairo_t* cr, nux::ButtonVisualState state)
+nux::AbstractPaintLayer* Style::FocusOverlay(int width, int height)
+{
+  nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, width, height);
+  cairo_t* cr = cg.GetInternalContext();
+
+  RoundedRect(cr,
+              1.0f,
+              0.0f,
+              0.0f,
+              2.0f, // radius
+              width,
+              height);
+
+  cairo_set_source_rgba(cr, nux::Color(1.0f, 1.0f, 1.0f, 0.2f));
+  cairo_fill(cr);
+
+  // Create the texture layer
+  nux::TexCoordXForm texxform;
+
+  nux::ROPConfig rop;
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+  return (new nux::TextureLayer(texture_ptr_from_cairo_graphics(cg)->GetDeviceTexture(),
+                                texxform,
+                                nux::color::White,
+                                false,
+                                rop));
+}
+
+bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
+                         std::string const& label, bool curve_bottom,
+                         int font_size, Alignment alignment,
+                         bool zeromargin)
+{
+  // sanity checks
+  if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
+    return false;
+
+  if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
+    return false;
+
+  unsigned int garnish = 0;
+  if (zeromargin == false)
+    garnish = GetButtonGarnishSize();
+
+  double w = cairo_image_surface_get_width(cairo_get_target(cr));
+  double h = cairo_image_surface_get_height(cairo_get_target(cr));
+
+  double x = garnish;
+  double y = garnish;
+
+  double width = w - (2.0 * garnish) - 1.0;
+  double height = h - (2.0 * garnish) - 1.0;
+
+  bool odd = true;
+  double radius = 7.0;
+
+  // draw the grid background
+  {
+    cairo_set_line_width(cr, 1);
+    cairo_move_to(cr, _align(x + width, odd), _align(y, odd));
+    if (curve_bottom)
+    {
+      LOG_DEBUG(logger) << "curve: " << _align(x + width, odd) << " - " << _align(y + height - radius, odd);
+      // line to bottom-right corner
+      cairo_line_to(cr, _align(x + width, odd), _align(y + height - radius, odd));
+
+      // line to bottom-right, left of the corner
+      cairo_arc(cr,
+                _align(x + width - radius, odd),
+                _align(y + height - radius, odd),
+                radius,
+                0.0f * G_PI / 180.0f,
+                90.0f * G_PI / 180.0f);
+
+      // line to bottom-left, right of the corner
+      cairo_line_to(cr, _align(x + radius, odd), _align(y + height, odd));
+
+      // line to bottom-left, above the corner
+      cairo_arc(cr,
+                _align(x + radius, odd),
+                _align(y + height - radius, odd),
+                radius,
+                90.0f * G_PI / 180.0f,
+                180.0f * G_PI / 180.0f);
+
+      // line to top
+      cairo_line_to(cr, _align(x, odd), _align(y, odd));
+    }
+    else
+    {
+      cairo_line_to(cr, _align(x + width, odd), _align(y + height, odd));
+      cairo_line_to(cr, _align(x, odd), _align(x + height, odd));
+      cairo_line_to(cr, _align(x, odd), _align(y, odd));
+    }
+
+    cairo_set_source_rgba(cr, pimpl->button_label_border_color_[nux::ButtonVisualState::VISUAL_STATE_NORMAL]);
+    cairo_stroke(cr);
+  }
+
+  cairo_set_line_width(cr, pimpl->button_label_border_size_[state]);
+  odd = cairo_get_line_width(cr) == 2.0 ? false : true;
+
+
+  if (pimpl->button_label_border_size_[state] == 2.0)
+  {
+    x += 1;
+    y += 1;
+    width -= 1.0;
+    height -= 1.0;
+  }
+
+  if (state == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
+  {
+    RoundedRect(cr,
+                1.0,
+                _align(x, odd), _align(y, odd),
+                5.0,
+                _align(width, odd), _align(height, odd));
+
+    if (pimpl->button_label_fill_color_[state].alpha != 0.0)
+    {
+      cairo_set_source_rgba(cr, pimpl->button_label_fill_color_[state]);
+      cairo_fill_preserve(cr);
+    }
+    cairo_set_source_rgba(cr, pimpl->button_label_border_color_[state]);
+    cairo_stroke(cr);
+  }
+
+  pimpl->DrawOverlay(cr,
+                     pimpl->button_label_overlay_opacity_[state],
+                     pimpl->button_label_overlay_mode_[state],
+                     pimpl->button_label_blur_size_[state] * 0.75);
+
+  // FIXME - magic value of 42 here for the offset in the HUD,
+  // replace with a nicer style system that lets hud override
+  // default values when it needs to
+  pimpl->Text(cr,
+              pimpl->button_label_text_color_[state],
+              label,
+              font_size,
+              42.0 + 10.0,
+              alignment);
+
+  cairo_surface_write_to_png(cairo_get_target(cr), "/tmp/wut.png");
+
+  return true;
+}
+
+bool Style::ButtonFocusOverlay(cairo_t* cr)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1604,75 +1730,22 @@ bool Style::StarEmpty(cairo_t* cr, nux::ButtonVisualState state)
 
   double w = cairo_image_surface_get_width(cairo_get_target(cr));
   double h = cairo_image_surface_get_height(cairo_get_target(cr));
-  double radius = .85 * h / 2.0;
 
-  cairo_save(cr);
-  cairo_translate(cr, w / 2.0, h / 2.0);
-  pimpl->Star(cr, radius);
-  cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.2);
+  nux::Color color(nux::color::White);
+  color.alpha = 0.50f;
+  cairo_set_line_width(cr, pimpl->button_label_border_size_[nux::VISUAL_STATE_NORMAL]);
+
+  RoundedRect(cr,
+              1.0,
+              (double) 0.5,
+              (double) 0.5,
+              7.0,
+              w - 1.0,
+              h - 1.0);
+
+  cairo_set_source_rgba(cr, color);
   cairo_fill_preserve(cr);
-  cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.5);
-	cairo_set_line_width(cr, 0.75);
   cairo_stroke(cr);
-  cairo_restore(cr);
-
-  return true;
-}
-
-bool Style::StarHalf(cairo_t* cr, nux::ButtonVisualState state)
-{
-  // sanity checks
-  if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
-    return false;
-
-  if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
-    return false;
-
-  double w = cairo_image_surface_get_width(cairo_get_target(cr));
-  double h = cairo_image_surface_get_height(cairo_get_target(cr));
-  double radius = .85 * h / 2.0;
-
-  cairo_pattern_t* pattern = NULL;
-  pattern = cairo_pattern_create_linear(0.0, 0.0, w, 0.0);
-  cairo_pattern_add_color_stop_rgba(pattern, 0.0,        1.0, 1.0, 1.0, 1.0);
-  cairo_pattern_add_color_stop_rgba(pattern,  .5,        1.0, 1.0, 1.0, 1.0);
-  cairo_pattern_add_color_stop_rgba(pattern,  .5 + 0.01, 1.0, 1.0, 1.0, 0.2);
-  cairo_pattern_add_color_stop_rgba(pattern, 1.0,        1.0, 1.0, 1.0, 0.2);
-  cairo_set_source(cr, pattern);
-
-  cairo_save(cr);
-  cairo_translate(cr, w / 2.0, h / 2.0);
-  pimpl->Star(cr, radius);
-  cairo_fill_preserve(cr);
-  cairo_pattern_destroy(pattern);
-  cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.5);
-	cairo_set_line_width(cr, 0.75);
-  cairo_stroke(cr);
-  cairo_restore(cr);
-
-  return true;
-}
-
-bool Style::StarFull(cairo_t* cr, nux::ButtonVisualState state)
-{
-  // sanity checks
-  if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
-    return false;
-
-  if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
-    return false;
-
-  double w = cairo_image_surface_get_width(cairo_get_target(cr));
-  double h = cairo_image_surface_get_height(cairo_get_target(cr));
-  double radius = .85 * h / 2.0;
-
-  cairo_save(cr);
-  cairo_translate(cr, w / 2.0, h / 2.0);
-  pimpl->Star(cr, radius);
-  cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
-  cairo_fill_preserve(cr);
-  cairo_stroke(cr); // to make sure it's as "large" as the empty and half ones
-  cairo_restore(cr);
 
   return true;
 }
@@ -1707,6 +1780,75 @@ bool Style::MultiRangeSegment(cairo_t*    cr,
     w -= 2.0;
 	}
 
+  cairo_set_line_width(cr, pimpl->button_label_border_size_[state]);
+
+  if (pimpl->button_label_border_size_[state] == 2.0)
+    pimpl->RoundedRectSegment(cr,
+                              1.0,
+                              x+1.0,
+                              y+1.0,
+                              (h-1.0) / 4.0,
+                              w-1.0,
+                              h-1.0,
+                              segment,
+                              arrow,
+                              state);
+  else
+    pimpl->RoundedRectSegment(cr,
+                              1.0,
+                              x,
+                              y,
+                              h / 4.0,
+                              w,
+                              h,
+                              segment,
+                              arrow,
+                              state);
+
+  if (pimpl->button_label_fill_color_[state].alpha != 0.0)
+  {
+    cairo_set_source_rgba(cr, pimpl->button_label_fill_color_[state]);
+    cairo_fill_preserve(cr);
+  }
+  cairo_set_source_rgba(cr, pimpl->button_label_border_color_[state]);
+  cairo_stroke(cr);
+  pimpl->Text(cr,
+              pimpl->button_label_text_color_[state],
+              label,
+              10); // 13px = 10pt
+
+  return true;
+}
+
+bool Style::MultiRangeFocusOverlay(cairo_t* cr,
+                                   Arrow arrow,
+                                   Segment segment)
+{
+  // sanity checks
+  if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
+    return false;
+
+  if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
+    return false;
+
+  double   x  = 0.0;
+  double   y  = 2.0;
+  double   w  = cairo_image_surface_get_width(cairo_get_target(cr));
+  double   h  = cairo_image_surface_get_height(cairo_get_target(cr)) - 4.0;
+
+  if (segment == Segment::LEFT)
+  {
+    x = 2.0;
+    w -= 2.0;
+  }
+
+  if (segment == Segment::RIGHT)
+  {
+    w -= 2.0;
+  }
+
+  cairo_set_line_width(cr, pimpl->button_label_border_size_[nux::ButtonVisualState::VISUAL_STATE_NORMAL]);
+
   pimpl->RoundedRectSegment(cr,
                             1.0,
                             x,
@@ -1716,20 +1858,11 @@ bool Style::MultiRangeSegment(cairo_t*    cr,
                             h,
                             segment,
                             arrow,
-                            state);
+                            nux::ButtonVisualState::VISUAL_STATE_PRESSED);
 
-  if (pimpl->button_label_fill_color_[state].alpha != 0.0)
-  {
-    cairo_set_source_rgba(cr, pimpl->button_label_fill_color_[state]);
-    cairo_fill_preserve(cr);
-  }
-  cairo_set_source_rgba(cr, pimpl->button_label_border_color_[state]);
-  cairo_set_line_width(cr, pimpl->button_label_border_size_[state]);
+  cairo_set_source_rgba(cr, nux::Color(1.0f, 1.0f, 1.0f, 0.5f));
+  cairo_fill_preserve(cr);
   cairo_stroke(cr);
-  pimpl->Text(cr,
-              pimpl->button_label_text_color_[state],
-              label,
-              1.0);
 
   return true;
 }
@@ -1973,24 +2106,19 @@ nux::BaseTexture* Style::GetSearchMagnifyIcon()
   return pimpl->search_magnify_texture_.texture();
 }
 
+nux::BaseTexture* Style::GetSearchCircleIcon()
+{
+  return pimpl->search_circle_texture_.texture();
+}
+
 nux::BaseTexture* Style::GetSearchCloseIcon()
 {
   return pimpl->search_close_texture_.texture();
 }
 
-nux::BaseTexture* Style::GetSearchCloseGlowIcon()
-{
-  return pimpl->search_close_glow_texture_.texture();
-}
-
 nux::BaseTexture* Style::GetSearchSpinIcon()
 {
   return pimpl->search_spin_texture_.texture();
-}
-
-nux::BaseTexture* Style::GetSearchSpinGlowIcon()
-{
-  return pimpl->search_spin_glow_texture_.texture();
 }
 
 nux::BaseTexture* Style::GetGroupUnexpandIcon()
@@ -2003,17 +2131,154 @@ nux::BaseTexture* Style::GetGroupExpandIcon()
   return pimpl->group_expand_texture_.texture();
 }
 
+nux::BaseTexture* Style::GetStarDeselectedIcon()
+{
+  return pimpl->star_deselected_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetStarSelectedIcon()
+{
+  return pimpl->star_selected_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetStarHighlightIcon()
+{
+  return pimpl->star_highlight_texture_.texture();
+}
+
 nux::BaseTexture* Style::GetDashShine()
 {
   return pimpl->dash_shine_.texture();
 }
 
+int Style::GetVSeparatorSize() const
+{
+  return 1;
+}
+
+int Style::GetHSeparatorSize() const
+{
+  return 1;
+
+}
+
+int Style::GetFilterBarWidth() const
+{
+  return 300;
+}
+
+
+int Style::GetFilterBarLeftPadding() const
+{
+  return 5;
+}
+
+int Style::GetFilterBarRightPadding() const
+{
+  return 5;
+}
+
+int Style::GetDashViewTopPadding() const
+{
+  return 10;
+}
+
+int Style::GetSearchBarLeftPadding() const
+{
+  return 10;
+}
+
+int Style::GetSearchBarRightPadding() const
+{
+  return 10;
+}
+
+int Style::GetSearchBarHeight() const
+{
+  return 42;
+}
+
+int Style::GetFilterResultsHighlightRightPadding() const
+{
+  return 5;
+}
+
+int Style::GetFilterResultsHighlightLeftPadding() const
+{
+  return 5;
+}
+
+int Style::GetFilterBarTopPadding() const
+{
+  return 10;
+}
+
+int Style::GetFilterHighlightPadding() const
+{
+  return 2;
+}
+
+int Style::GetSpaceBetweenFilterWidgets() const
+{
+  return 12;
+}
+
+int Style::GetAllButtonHeight() const
+{
+  return 30;
+}
+
+int Style::GetFilterButtonHeight() const
+{
+  return 30;
+}
+
+int Style::GetSpaceBetweenLensAndFilters() const
+{
+  return 10;
+}
+
+int Style::GetFilterViewRightPadding() const
+{
+  return 10;
+}
+
+int Style::GetScrollbarWidth() const
+{
+  return 3;
+}
+
+int Style::GetCategoryHighlightHeight() const
+{
+  return 24;
+}
+
+int Style::GetPlacesGroupTopSpace() const
+{
+  return 15;
+}
+
+int Style::GetCategoryHeaderLeftPadding() const
+{
+  return 20;
+}
+
+int Style::GetCategorySeparatorLeftPadding() const
+{
+  return 15;
+}
+
+int Style::GetCategorySeparatorRightPadding() const
+{
+  return 15;
+}
 
 namespace
 {
 
-LazyLoadTexture::LazyLoadTexture(std::string const& filename)
+LazyLoadTexture::LazyLoadTexture(std::string const& filename, int size)
   : filename_(filename)
+  , size_(size)
 {
 }
 
@@ -2030,7 +2295,7 @@ void LazyLoadTexture::LoadTexture()
   glib::Object<GdkPixbuf> pixbuf;
   glib::Error error;
 
-  pixbuf = ::gdk_pixbuf_new_from_file(full_path.c_str(), &error);
+  pixbuf = ::gdk_pixbuf_new_from_file_at_size(full_path.c_str(), size_, size_, &error);
   if (error)
   {
     LOG_WARN(logger) << "Unable to texture " << full_path << ": " << error;

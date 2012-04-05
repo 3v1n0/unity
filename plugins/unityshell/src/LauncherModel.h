@@ -22,7 +22,8 @@
 
 #include <memory>
 
-#include "LauncherIcon.h"
+#include "AbstractLauncherIcon.h"
+#include "Introspectable.h"
 #include <sigc++/sigc++.h>
 
 namespace unity
@@ -30,30 +31,39 @@ namespace unity
 namespace launcher
 {
 
-class LauncherModel : public sigc::trackable
+class LauncherModel : public unity::debug::Introspectable, public sigc::trackable
 {
 public:
   typedef std::shared_ptr<LauncherModel> Ptr;
-  typedef std::list<LauncherIcon*> Base;
+  typedef std::vector<AbstractLauncherIcon::Ptr> Base;
   typedef Base::iterator iterator;
+  typedef Base::const_iterator const_iterator;
   typedef Base::reverse_iterator reverse_iterator;
+  typedef Base::reverse_iterator const_reverse_iterator;
 
   LauncherModel();
   ~LauncherModel();
 
-  void AddIcon(LauncherIcon* icon);
-  void RemoveIcon(LauncherIcon* icon);
+  void AddIcon(AbstractLauncherIcon::Ptr icon);
+  void RemoveIcon(AbstractLauncherIcon::Ptr icon);
   void Save();
   void Sort();
-  int  Size();
+  int  Size() const;
 
-  void OnIconRemove(LauncherIcon* icon);
+  void OnIconRemove(AbstractLauncherIcon::Ptr icon);
 
-  bool IconHasSister(LauncherIcon* icon);
+  bool IconHasSister(AbstractLauncherIcon::Ptr icon) const;
 
-  void ReorderBefore(LauncherIcon* icon, LauncherIcon* other, bool save);
+  void ReorderAfter(AbstractLauncherIcon::Ptr icon, AbstractLauncherIcon::Ptr other);
+  void ReorderBefore(AbstractLauncherIcon::Ptr icon, AbstractLauncherIcon::Ptr other, bool save);
 
-  void ReorderSmart(LauncherIcon* icon, LauncherIcon* other, bool save);
+  void ReorderSmart(AbstractLauncherIcon::Ptr icon, AbstractLauncherIcon::Ptr other, bool save);
+
+  AbstractLauncherIcon::Ptr Selection() const;
+  int SelectionIndex() const;
+  void SetSelection(int selection);
+  void SelectNext();
+  void SelectPrevious();
 
   iterator begin();
   iterator end();
@@ -71,43 +81,47 @@ public:
   reverse_iterator shelf_rbegin();
   reverse_iterator shelf_rend();
 
-  sigc::signal<void, LauncherIcon*> icon_added;
-  sigc::signal<void, LauncherIcon*> icon_removed;
+  sigc::signal<void, AbstractLauncherIcon::Ptr> icon_added;
+  sigc::signal<void, AbstractLauncherIcon::Ptr> icon_removed;
   sigc::signal<void> order_changed;
   sigc::signal<void> saved;
+  sigc::signal<void, AbstractLauncherIcon::Ptr> selection_changed;
 
-  // connected to from class Launcher
-  sigc::connection on_icon_added_connection;
-  sigc::connection on_icon_removed_connection;
-  sigc::connection on_order_changed_connection;
+  IntrospectableList const& GetIntrospectableChildren();
+protected:
+  // Introspectable methods
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
 
 private:
   Base             _inner;
   Base             _inner_shelf;
   Base             _inner_main;
+  int              selection_;
+  std::list<unity::debug::Introspectable*> introspection_results_;
 
   bool Populate();
 
-  bool IconShouldShelf(LauncherIcon* icon);
+  bool IconShouldShelf(AbstractLauncherIcon::Ptr icon) const;
 
   static gboolean RemoveCallback(gpointer data);
 
-  static bool CompareIcons(LauncherIcon* first, LauncherIcon* second);
+  static bool CompareIcons(AbstractLauncherIcon::Ptr first, AbstractLauncherIcon::Ptr second);
 
   /* Template Methods */
 public:
   template<class T>
-  std::list<T*> GetSublist()
+  std::list<AbstractLauncherIcon::Ptr> GetSublist()
   {
-    std::list<T*> result;
+    std::list<AbstractLauncherIcon::Ptr> result;
 
     iterator it;
     for (it = begin(); it != end(); it++)
     {
-      T* var = dynamic_cast<T*>(*it);
+      T* var = dynamic_cast<T*>((*it).GetPointer());
 
       if (var)
-        result.push_back(var);
+        result.push_back(*it);
     }
 
     return result;

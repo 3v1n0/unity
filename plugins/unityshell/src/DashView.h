@@ -27,19 +27,22 @@
 #include <Nux/View.h>
 #include <Nux/VLayout.h>
 #include <UnityCore/FilesystemLenses.h>
+#include <UnityCore/HomeLens.h>
 
 #include "BackgroundEffectHelper.h"
-#include "DashSearchBar.h"
-#include "HomeView.h"
+#include "SearchBar.h"
 #include "Introspectable.h"
 #include "LensBar.h"
 #include "LensView.h"
 #include "UBusWrapper.h"
+#include "OverlayRenderer.h"
 
 namespace unity
 {
 namespace dash
 {
+
+class DashLayout;
 
 class DashView : public nux::View, public unity::debug::Introspectable
 {
@@ -55,6 +58,7 @@ public:
   void Relayout();
   void DisableBlur();
   void OnActivateRequest(GVariant* args);
+  void SetMonitorOffset(int x, int y);
 
   std::string const GetIdForShortcutActivation(std::string const& shortcut) const;
   std::vector<char> GetAllShortcuts();
@@ -69,7 +73,6 @@ protected:
     unsigned long special_keys_state);
 
 private:
-  void SetupBackground();
   void SetupViews();
   void SetupUBusConnections();
 
@@ -87,6 +90,7 @@ private:
   void OnLensBarActivated(std::string const& id);
   void OnSearchFinished(Lens::Hints const& hints);
   void OnGlobalSearchFinished(Lens::Hints const& hints);
+  void OnAppsGlobalSearchFinished(Lens::Hints const& hints);
   void OnUriActivated(std::string const& uri);
   void OnUriActivatedReply(std::string const& uri, HandledType type, Lens::Hints const&);
   bool DoFallbackActivation(std::string const& uri);
@@ -95,47 +99,47 @@ private:
   std::string AnalyseLensURI(std::string const& uri);
   void UpdateLensFilter(std::string lens, std::string filter, std::string value);
   void UpdateLensFilterValue(Filter::Ptr filter, std::string value);
+  void EnsureLensesInitialized();
 
   bool AcceptKeyNavFocus();
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
-  const gchar* GetName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
 
   static gboolean ResetSearchStateCb(gpointer data);
+  static gboolean HideResultMessageCb(gpointer data);
 
 private:
   UBusManager ubus_manager_;
   FilesystemLenses lenses_;
-  BackgroundEffectHelper bg_effect_helper_;
+  HomeLens::Ptr home_lens_;
   LensViews lens_views_;
 
-  // Background related
-  nux::ColorLayer* bg_layer_;
-  nux::ColorLayer* bg_darken_layer_;
-  nux::Color bg_color_;
 
   // View related
   nux::VLayout* layout_;
-  nux::VLayout* content_layout_;
+  DashLayout* content_layout_;
+  nux::HLayout* search_bar_layout_;
   SearchBar* search_bar_;
   nux::VLayout* lenses_layout_;
   LensBar* lens_bar_;
 
-  HomeView* home_view_;
+  LensView* home_view_;
   LensView* active_lens_view_;
 
   // Drawing related
   nux::Geometry content_geo_;
-  nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
-  nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_shine_texture_;
+  OverlayRenderer renderer_;
 
   std::string last_activated_uri_;
   // we're passing this back to g_* functions, so we'll keep the g* type
   guint searching_timeout_id_;
   bool search_in_progress_;
   bool activate_on_finish_;
+
+  guint hide_message_delay_id_;
 
   bool visible_;
 };

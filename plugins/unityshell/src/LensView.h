@@ -50,22 +50,32 @@ class LensView : public nux::View, public unity::debug::Introspectable
 
 public:
   LensView();
-  LensView(Lens::Ptr lens);
-  virtual ~LensView();
+  LensView(Lens::Ptr lens, nux::Area* show_filters);
+  ~LensView();
 
+  CategoryGroups& categories() { return categories_; }
+  FilterBar* filter_bar() const { return filter_bar_; }
   Lens::Ptr lens() const;
+  nux::Area* fscroll_view() const;
+
+  int GetNumRows();
+  void JumpToTop();
 
   virtual void ActivateFirst();
 
-  nux::Property<std::string> search_string;
+  nux::ROProperty<std::string> search_string;
   nux::Property<bool> filters_expanded;
   nux::Property<ViewType> view_type;
   nux::Property<bool> can_refine_search;
 
   sigc::signal<void, std::string const&> uri_activated;
 
+  void PerformSearch(std::string const& search_query);
+  void CheckNoResults(Lens::Hints const& hints);
+  void HideResultsMessage();
+
 private:
-  void SetupViews();
+  void SetupViews(nux::Area* show_filters);
   void SetupCategories();
   void SetupResults();
   void SetupFilters();
@@ -87,8 +97,10 @@ private:
   virtual void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
 
   virtual bool AcceptKeyNavFocus();
-  virtual const gchar* GetName();
+  virtual std::string GetName() const;
   virtual void AddProperties(GVariantBuilder* builder);
+
+  std::string get_search_string() const;
 
 private:
   UBusManager ubus_manager_;
@@ -96,6 +108,8 @@ private:
   CategoryGroups categories_;
   ResultCounts counts_;
   bool initial_activation_;
+  bool no_results_active_;
+  std::string search_string_;
 
   nux::HLayout* layout_;
   LensScrollView* scroll_view_;
@@ -103,6 +117,7 @@ private:
   LensScrollView* fscroll_view_;
   nux::VLayout* fscroll_layout_;
   FilterBar* filter_bar_;
+  nux::StaticCairoText* no_results_;
 
   guint fix_renderering_id_;
 

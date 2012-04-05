@@ -34,9 +34,11 @@
 #define UBUS_PLACE_ENTRY_ACTIVATE_REQUEST "PLACE_ENTRY_ACTIVATE_REQUEST"
 #define UBUS_DASH_ABOUT_TO_SHOW "DASH_ABOUT_TO_SHOW"
 
-// Signal send when places are shown or hidden
-#define UBUS_PLACE_VIEW_HIDDEN "PLACE_VIEW_HIDDEN"
-#define UBUS_PLACE_VIEW_SHOWN "PLACE_VIEW_SHOWN"
+// Signal sent when an overlay interface is shown, includes a gvariant
+// gvariant format is (sb), (interface-name, can_maximize?) 
+#define UBUS_OVERLAY_FORMAT_STRING "(sbi)"
+#define UBUS_OVERLAY_HIDDEN "OVERLAY_HIDDEN"
+#define UBUS_OVERLAY_SHOWN "OVERLAY_SHOWN"
 
 #define UBUS_PLACE_VIEW_QUEUE_DRAW "PLACE_VIEW_QUEUE_DRAW"
 
@@ -44,6 +46,8 @@
 // get rid of keyboard-input-focus
 #define UBUS_LAUNCHER_START_KEY_NAV  "LAUNCHER_START_KEY_NAV"
 #define UBUS_LAUNCHER_END_KEY_NAV    "LAUNCHER_END_KEY_NAV"
+#define UBUS_LAUNCHER_START_KEY_SWTICHER "LAUNCHER_START_KEY_SWITCHER"
+#define UBUS_LAUNCHER_END_KEY_SWTICHER   "LAUNCHER_END_KEY_SWITCHER"
 #define UBUS_LAUNCHER_ICON_URGENT_CHANGED "LAUNCHER_ICON_URGENT_CHANGED"
 #define UBUS_QUICKLIST_START_KEY_NAV "QUICKLIST_START_KEY_NAV"
 #define UBUS_QUICKLIST_END_KEY_NAV   "QUICKLIST_END_KEY_NAV"
@@ -56,6 +60,12 @@
 
 // Signal to send on icon action and that you want to request hiding the launcher
 #define UBUS_LAUNCHER_ACTION_DONE "LAUNCHER_ACTION_DONE"
+
+// Signal to force the launcher into locked mode, (b)
+#define UBUS_LAUNCHER_LOCK_HIDE "LAUNCHER_LOCK_HIDE"
+
+// Signal to emit changes to the launcher hide mode behaviour (b), true = locked out, false = unlocked
+#define UBUS_LAUNCHER_HIDE_MODE_CHANGE "LAUNCHER_HIDE_MODE_CHANGE"
 
 // Signal sent when a quicklist is shown.
 #define UBUS_QUICKLIST_SHOWN "QUICKLIST_SHOWN"
@@ -70,5 +80,13 @@
 #define UBUS_DASH_SIZE_CHANGED "DASH_SIZE_CHANGED"
 // FIXME - fix the nux focus api so we don't need this
 #define UBUS_RESULT_VIEW_KEYNAV_CHANGED "RESULT_VIEW_KEYNAV_CHANGED"
+
+// Sends a string datatype containing the new icon name
+#define UBUS_HUD_ICON_CHANGED "HUD_ICON_CHANGED"
+#define UBUS_HUD_CLOSE_REQUEST "HUD_CLOSE_REQUEST"
+
+// Signals sent when the switcher is shown, hidden or changes selection
+#define UBUS_SWITCHER_SHOWN             "SWITCHER_SHOWN"
+#define UBUS_SWITCHER_SELECTION_CHANGED "SWITCHER_SELECTION_CHANGED"
 
 #endif // UBUS_MESSAGES_H

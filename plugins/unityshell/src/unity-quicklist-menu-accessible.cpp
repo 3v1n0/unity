@@ -102,6 +102,8 @@ struct _UnityQuicklistMenuAccessiblePrivate
   guint on_parent_activate_change_id;
 };
 
+using unity::QuicklistView;
+using unity::QuicklistMenuItem;
 
 static void
 unity_quicklist_menu_accessible_class_init(UnityQuicklistMenuAccessibleClass* klass)
@@ -174,7 +176,7 @@ unity_quicklist_menu_accessible_initialize(AtkObject* accessible,
     return;
 
   atk_object_set_role(accessible, ATK_ROLE_MENU);
-  atk_object_set_name(accessible, "QuicklistMenu");
+  atk_object_set_name(accessible, _("Quicklist"));
 
   self->priv->on_selection_change_connection =
     quicklist->selection_change.connect(sigc::bind(sigc::ptr_fun(on_selection_change_cb), self));

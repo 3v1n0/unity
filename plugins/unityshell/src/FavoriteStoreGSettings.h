@@ -42,6 +42,7 @@ public:
   virtual void AddFavorite(std::string const& desktop_path, int position);
   virtual void RemoveFavorite(std::string const& desktop_path);
   virtual void MoveFavorite(std::string const& desktop_path, int position);
+  void SaveFavorites(FavoriteList const& favorites, bool ignore = true);
   virtual void SetFavorites(FavoriteList const& desktop_paths);
 
   //Methods
@@ -50,7 +51,7 @@ public:
 private:
   void Init();
   void Refresh();
-  void SaveFavorites(FavoriteList const& favorites);
+  void FillList(FavoriteList& list);
 
   FavoriteList favorites_;
   glib::Object<GSettings> settings_;

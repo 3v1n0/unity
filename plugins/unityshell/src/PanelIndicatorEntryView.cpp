@@ -49,6 +49,8 @@ namespace
 {
 void draw_menu_bg(cairo_t* cr, int width, int height);
 GdkPixbuf* make_pixbuf(int image_type, std::string const& image_data, bool dash_showing);
+const int PANEL_HEIGHT = 24;
+const int SPACING = 3;
 }
 
 
@@ -108,8 +110,8 @@ void PanelIndicatorEntryView::ShowMenu(int button)
 {
   proxy_->ShowMenu(GetAbsoluteX(),
                    GetAbsoluteY() + PANEL_HEIGHT,
-                   time(NULL),
-                   button);
+                   button,
+                   time(NULL));
 }
 
 void PanelIndicatorEntryView::OnMouseDown(int x, int y, long button_flags, long key_flags)
@@ -191,6 +193,14 @@ void PanelIndicatorEntryView::SetActiveState(bool active, int button)
 // 3. Paint something
 void PanelIndicatorEntryView::Refresh()
 {
+  if (!IsVisible())
+  {
+    SetVisible(false);
+    return;
+  }
+
+  SetVisible(true);
+
   PangoLayout*          layout = NULL;
   PangoFontDescription* desc = NULL;
   PangoAttrList*        attrs = NULL;
@@ -468,12 +478,9 @@ double PanelIndicatorEntryView::GetOpacity()
   return opacity_;
 }
 
-const gchar* PanelIndicatorEntryView::GetName()
+std::string PanelIndicatorEntryView::GetName() const
 {
-  if (proxy_->IsUnused())
-    return NULL;
-  else
-    return proxy_->id().c_str();
+  return proxy_->id();
 }
 
 void PanelIndicatorEntryView::AddProperties(GVariantBuilder* builder)
@@ -496,7 +503,7 @@ bool PanelIndicatorEntryView::GetShowNow()
 
 void PanelIndicatorEntryView::GetGeometryForSync(indicator::EntryLocationMap& locations)
 {
-  if (proxy_->IsUnused())
+  if (!IsVisible())
     return;
 
   locations[proxy_->id()] = GetAbsoluteGeometry();
@@ -544,6 +551,15 @@ bool PanelIndicatorEntryView::IsDisabled()
   return (disabled_ || !proxy_.get() || !IsSensitive());
 }
 
+bool PanelIndicatorEntryView::IsVisible()
+{
+  if (proxy_.get())
+  {
+    return proxy_->visible();
+  }
+  return false;
+}
+
 void PanelIndicatorEntryView::OnFontChanged(GObject* gobject, GParamSpec* pspec,
                                             gpointer data)
 {
@@ -561,7 +577,8 @@ void draw_menu_bg(cairo_t* cr, int width, int height)
   gtk_style_context_save(style_context);
 
   GtkWidgetPath* widget_path = gtk_widget_path_new();
-  gtk_widget_path_iter_set_name(widget_path, -1 , "UnityPanelWidget");
+  gint pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_WINDOW);
+  gtk_widget_path_iter_set_name(widget_path, pos, "UnityPanelWidget");
   gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_BAR);
   gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_ITEM);
 

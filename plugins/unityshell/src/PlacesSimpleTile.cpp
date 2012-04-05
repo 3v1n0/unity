@@ -37,22 +37,18 @@ namespace unity
 {
 NUX_IMPLEMENT_OBJECT_TYPE(PlacesSimpleTile);
 
-PlacesSimpleTile::PlacesSimpleTile(const char* icon_name,
-                                   const char* label,
+PlacesSimpleTile::PlacesSimpleTile(std::string const& icon_name,
+                                   std::string const& label,
                                    int         icon_size,
                                    bool defer_icon_loading,
                                    const void* id)
   : PlacesTile(NUX_TRACKER_LOCATION, id),
-    _label(NULL),
-    _icon(NULL),
-    _uri(NULL),
+    _label(label),
+    _icon(icon_name),
     _idealiconsize(icon_size)
 {
   dash::Style& style = dash::Style::Instance();
   nux::VLayout* layout = new nux::VLayout("", NUX_TRACKER_LOCATION);
-
-  _label = g_strdup(label);
-  _icon = g_strdup(icon_name);
 
   _icontex = new IconTexture(_icon, icon_size, defer_icon_loading);
   _icontex->SetMinMaxSize(style.GetTileWidth(), icon_size);
@@ -76,14 +72,6 @@ PlacesSimpleTile::PlacesSimpleTile(const char* icon_name,
   SetDndEnabled(true, false);
 }
 
-
-PlacesSimpleTile::~PlacesSimpleTile()
-{
-  g_free(_label);
-  g_free(_icon);
-  g_free(_uri);
-}
-
 bool
 PlacesSimpleTile::DndSourceDragBegin()
 {
@@ -104,14 +92,14 @@ PlacesSimpleTile::DndSourceGetDragImage()
   GError* error = NULL;
   GIcon* icon;
 
-  const char* icon_name = _icon;
+  std::string icon_name = _icon;
   int size = 64;
 
-  if (!icon_name)
+  if (icon_name.empty())
     icon_name = "application-default-icon";
 
   theme = gtk_icon_theme_get_default();
-  icon = g_icon_new_for_string(icon_name, NULL);
+  icon = g_icon_new_for_string(icon_name.c_str(), NULL);
 
   if (G_IS_ICON(icon))
   {
@@ -121,7 +109,7 @@ PlacesSimpleTile::DndSourceGetDragImage()
   else
   {
     info = gtk_icon_theme_lookup_icon(theme,
-                                      icon_name,
+                                      icon_name.c_str(),
                                       size,
                                       (GtkIconLookupFlags) 0);
   }
@@ -155,23 +143,21 @@ PlacesSimpleTile::DndSourceGetDragImage()
   return result;
 }
 
-std::list<const char*>
-PlacesSimpleTile::DndSourceGetDragTypes()
+std::list<const char*> PlacesSimpleTile::DndSourceGetDragTypes()
 {
   std::list<const char*> result;
   result.push_back("text/uri-list");
   return result;
 }
 
-const char*
-PlacesSimpleTile::DndSourceGetDataForType(const char* type, int* size, int* format)
+const char* PlacesSimpleTile::DndSourceGetDataForType(const char* type, int* size, int* format)
 {
   *format = 8;
 
-  if (_uri)
+  if (!_uri.empty())
   {
-    *size = strlen(_uri);
-    return _uri;
+    *size = _uri.size();
+    return _uri.c_str();
   }
   else
   {
@@ -180,14 +166,12 @@ PlacesSimpleTile::DndSourceGetDataForType(const char* type, int* size, int* form
   }
 }
 
-void
-PlacesSimpleTile::DndSourceDragFinished(nux::DndAction result)
+void PlacesSimpleTile::DndSourceDragFinished(nux::DndAction result)
 {
   UnReference();
 }
 
-nux::Geometry
-PlacesSimpleTile::GetHighlightGeometry()
+nux::Geometry PlacesSimpleTile::GetHighlightGeometry()
 {
   nux::Geometry base = GetGeometry();
   int width = 0, height = 0;
@@ -202,56 +186,37 @@ PlacesSimpleTile::GetHighlightGeometry()
   return _highlight_geometry;
 }
 
-const char*
-PlacesSimpleTile::GetLabel()
+std::string PlacesSimpleTile::GetLabel() const
 {
   return _label;
 }
 
-const char*
-PlacesSimpleTile::GetIcon()
+std::string PlacesSimpleTile::GetIcon() const
 {
   return _icon;
 }
 
-const char*
-PlacesSimpleTile::GetURI()
+std::string PlacesSimpleTile::GetURI() const
 {
   return _uri;
 }
 
-void
-PlacesSimpleTile::SetURI(const char* uri)
+void PlacesSimpleTile::SetURI(std::string const& uri)
 {
-  if (_uri)
-    g_free(_uri);
-
-  _uri = NULL;
-
-  if (uri)
-    _uri = g_strdup(uri);
+  _uri = uri;
 }
 
-const gchar*
-PlacesSimpleTile::GetName()
+std::string PlacesSimpleTile::GetName() const
 {
   return "PlacesTile";
 }
 
-const gchar*
-PlacesSimpleTile::GetChildsName()
-{
-  return "PlacesTileContents";
-}
-
-void
-PlacesSimpleTile::AddProperties(GVariantBuilder* builder)
+void PlacesSimpleTile::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper(builder).add(GetGeometry());
 }
 
-void
-PlacesSimpleTile::LoadIcon()
+void PlacesSimpleTile::LoadIcon()
 {
   _icontex->LoadIcon();
 

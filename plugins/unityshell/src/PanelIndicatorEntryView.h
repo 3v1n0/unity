@@ -29,8 +29,6 @@
 
 #include "Introspectable.h"
 
-#define PANEL_HEIGHT 24
-#define SPACING 3
 
 namespace unity
 {
@@ -62,12 +60,13 @@ public:
   bool IsEntryValid() const;
   bool IsSensitive() const;
   bool IsActive() const;
+  bool IsVisible();
   int  GetEntryPriority() const;
 
   void DashShown();
   void DashHidden();
 
-  const gchar* GetName();
+  std::string GetName() const;
   void         AddProperties(GVariantBuilder* builder);
 
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);

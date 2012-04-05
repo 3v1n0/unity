@@ -17,12 +17,15 @@
  * Authored by: Jason Smith <jason.smith@canonical.com>
  */
 
+#ifndef UNITY_SIMPLELAUNCHERICON_H
+#define UNITY_SIMPLELAUNCHERICON_H
+
 #include <NuxCore/Logger.h>
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
+#include <UnityCore/Variant.h>
 
 #include "SimpleLauncherIcon.h"
-#include "Launcher.h"
 #include "PluginAdapter.h"
 
 #include "ubus-server.h"
@@ -38,8 +41,10 @@ namespace
   nux::logging::Logger logger("unity.dash.CategoryViewGrid");
 }
 
-SimpleLauncherIcon::SimpleLauncherIcon(Launcher* IconManager)
-  : LauncherIcon(IconManager)
+NUX_IMPLEMENT_OBJECT_TYPE(SimpleLauncherIcon);
+
+SimpleLauncherIcon::SimpleLauncherIcon()
+  : icon_name("", sigc::mem_fun(this, &SimpleLauncherIcon::SetIconName))
   , theme_changed_id_(0)
 {
   LauncherIcon::mouse_down.connect(sigc::mem_fun(this, &SimpleLauncherIcon::OnMouseDown));
@@ -64,23 +69,23 @@ SimpleLauncherIcon::~SimpleLauncherIcon()
     g_signal_handler_disconnect(gtk_icon_theme_get_default(), theme_changed_id_);
 }
 
-void SimpleLauncherIcon::OnMouseDown(int button)
+void SimpleLauncherIcon::OnMouseDown(int button, int monitor)
 {
 }
 
-void SimpleLauncherIcon::OnMouseUp(int button)
+void SimpleLauncherIcon::OnMouseUp(int button, int monitor)
 {
 }
 
-void SimpleLauncherIcon::OnMouseClick(int button)
+void SimpleLauncherIcon::OnMouseClick(int button, int monitor)
 {
 }
 
-void SimpleLauncherIcon::OnMouseEnter()
+void SimpleLauncherIcon::OnMouseEnter(int monitor)
 {
 }
 
-void SimpleLauncherIcon::OnMouseLeave()
+void SimpleLauncherIcon::OnMouseLeave(int monitor)
 {
 }
 
@@ -97,29 +102,27 @@ nux::BaseTexture* SimpleLauncherIcon::GetTextureForSize(int size)
   if (texture_map[size] != 0)
     return texture_map[size];
 
-  if (icon_name_.empty())
+  std::string icon_string(icon_name());
+
+  if (icon_string.empty())
     return 0;
 
-  if (icon_name_[0] == '/')
-    texture_map[size] = TextureFromPath(icon_name_.c_str(), size);
+  if (icon_string[0] == '/')
+    texture_map[size] = TextureFromPath(icon_string.c_str(), size);
   else
-    texture_map[size] = TextureFromGtkTheme(icon_name_.c_str(), size);
+    texture_map[size] = TextureFromGtkTheme(icon_string.c_str(), size);
   return texture_map[size];
 }
 
-void SimpleLauncherIcon::SetIconName(const char* name)
+bool SimpleLauncherIcon::SetIconName(std::string& target, std::string const& value)
 {
-  if (name == NULL)
-  {
-    LOG_WARNING(logger) << "attempted to set NULL as IconName";
-    icon_name_.clear();
-  }
-  else
-  {
-    icon_name_ = name;
-  }
+  if (target == value)
+    return false;
 
+  target = value;
   ReloadIcon();
+
+  return true;
 }
 
 void SimpleLauncherIcon::ReloadIcon()
@@ -129,7 +132,7 @@ void SimpleLauncherIcon::ReloadIcon()
       element.second->UnReference();
 
   texture_map.clear ();
-  needs_redraw.emit(this);
+  EmitNeedsRedraw();
 }
 
 void SimpleLauncherIcon::OnIconThemeChanged(GtkIconTheme* icon_theme, gpointer data)
@@ -141,5 +144,18 @@ void SimpleLauncherIcon::OnIconThemeChanged(GtkIconTheme* icon_theme, gpointer d
   self->ReloadIcon();
 }
 
+std::string SimpleLauncherIcon::GetName() const
+{
+  return "SimpleLauncherIcon";
+}
+
+void SimpleLauncherIcon::AddProperties(GVariantBuilder* builder)
+{
+  LauncherIcon::AddProperties(builder);
+  variant::BuilderWrapper(builder).add("icon_name", icon_name);
+}
+
 } // namespace launcher
 } // namespace unity
+
+#endif

@@ -37,11 +37,11 @@ class IconTexture : public nux::TextureArea, public unity::debug::Introspectable
 {
 public:
   IconTexture(nux::BaseTexture* texture, guint width, guint height);
-  IconTexture(const char* icon_name, unsigned int size, bool defer_icon_loading = false);
-  ~IconTexture();
+  IconTexture(std::string const& icon_name, unsigned int size, bool defer_icon_loading = false);
+  virtual ~IconTexture();
 
-  void SetByIconName(const char* icon_name, unsigned int size);
-  void SetByFilePath(const char* file_path, unsigned int size);
+  void SetByIconName(std::string const& icon_name, unsigned int size);
+  void SetByFilePath(std::string const& file_path, unsigned int size);
   void GetTextureSize(int* width, int* height);
 
   void LoadIcon();
@@ -53,14 +53,17 @@ public:
 
   nux::BaseTexture* texture();
 
+  sigc::signal<void, nux::BaseTexture*> texture_updated;
+
 protected:
   // Key navigation
   virtual bool AcceptKeyNavFocus();
   bool _accept_key_nav_focus;
 
-  const gchar* GetName();
+  std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
   virtual bool DoCanFocus();
+  GdkPixbuf*        _pixbuf_cached;
 
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -70,11 +73,9 @@ private:
   void Refresh(GdkPixbuf* pixbuf);
   void IconLoaded(std::string const& icon_name, unsigned size, GdkPixbuf* pixbuf);
 
-  // FIXME: make _icon_name a std::string.
-  char* _icon_name;
+  std::string _icon_name;
   unsigned int _size;
 
-  GdkPixbuf*        _pixbuf_cached;
   nux::ObjectPtr<nux::BaseTexture> _texture_cached;
   // FIXME: make these two a nux::Size.
   int               _texture_width;

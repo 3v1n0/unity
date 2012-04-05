@@ -23,7 +23,7 @@
  * @see_also: Launcher
  *
  * #UnityLauncherAccessible implements the required ATK interfaces for
- * #Launcher, ie: exposing the different LauncherIcon on the model as
+ * #Launcher, ie: exposing the different AbstractLauncherIcon on the model as
  * #child of the object.
  *
  */
@@ -36,10 +36,9 @@
 #include "unitya11y.h"
 #include "Launcher.h"
 #include "LauncherModel.h"
-#include "QuicklistView.h"
 
 using unity::launcher::Launcher;
-using unity::launcher::LauncherIcon;
+using unity::launcher::AbstractLauncherIcon;
 using unity::launcher::LauncherModel;
 
 /* GObject */
@@ -65,8 +64,8 @@ static gboolean   unity_launcher_accessible_is_child_selected(AtkSelection* sele
 
 /* private */
 static void on_selection_change_cb(UnityLauncherAccessible* launcher_accessible);
-static void on_icon_added_cb(LauncherIcon* icon, UnityLauncherAccessible* self);
-static void on_icon_removed_cb(LauncherIcon* icon, UnityLauncherAccessible* self);
+static void on_icon_added_cb(AbstractLauncherIcon::Ptr icon, UnityLauncherAccessible* self);
+static void on_icon_removed_cb(AbstractLauncherIcon::Ptr icon, UnityLauncherAccessible* self);
 static void on_order_change_cb(UnityLauncherAccessible* self);
 static void update_children_index(UnityLauncherAccessible* self);
 
@@ -211,6 +210,7 @@ unity_launcher_accessible_ref_child(AtkObject* obj,
   LauncherModel::iterator it;
   nux::Object* child = NULL;
   AtkObject* child_accessible = NULL;
+  AtkObject* parent = NULL;
 
   g_return_val_if_fail(UNITY_IS_LAUNCHER_ACCESSIBLE(obj), NULL);
   num = atk_object_get_n_accessible_children(obj);
@@ -227,8 +227,12 @@ unity_launcher_accessible_ref_child(AtkObject* obj,
   it = launcher_model->begin();
   std::advance(it, i);
 
-  child = dynamic_cast<nux::Object*>(*it);
+  child = dynamic_cast<nux::Object*>((*it).GetPointer());
   child_accessible = unity_a11y_get_accessible(child);
+
+  parent = atk_object_get_parent(child_accessible);
+  if (parent != obj)
+    atk_object_set_parent(child_accessible, obj);
 
   g_object_ref(child_accessible);
 
@@ -283,7 +287,7 @@ unity_launcher_accessible_ref_selection(AtkSelection* selection,
                                         gint i)
 {
   Launcher* launcher = NULL;
-  LauncherIcon* selected_icon = NULL;
+  AbstractLauncherIcon::Ptr selected_icon;
   nux::Object* nux_object = NULL;
   AtkObject* accessible_selected = NULL;
 
@@ -298,9 +302,9 @@ unity_launcher_accessible_ref_selection(AtkSelection* selection,
   launcher = dynamic_cast<Launcher*>(nux_object);
   selected_icon = launcher->GetSelectedMenuIcon();
 
-  if (selected_icon != 0)
+  if (selected_icon)
   {
-    accessible_selected = unity_a11y_get_accessible(selected_icon);
+    accessible_selected = unity_a11y_get_accessible(selected_icon.GetPointer());
     g_object_ref(accessible_selected);
   }
 
@@ -311,7 +315,7 @@ static gint
 unity_launcher_accessible_get_selection_count(AtkSelection* selection)
 {
   Launcher* launcher = NULL;
-  LauncherIcon* selected_icon = NULL;
+  AbstractLauncherIcon::Ptr selected_icon;
   nux::Object* nux_object = NULL;
 
   g_return_val_if_fail(UNITY_IS_LAUNCHER_ACCESSIBLE(selection), 0);
@@ -323,7 +327,7 @@ unity_launcher_accessible_get_selection_count(AtkSelection* selection)
   launcher = dynamic_cast<Launcher*>(nux_object);
   selected_icon = launcher->GetSelectedMenuIcon();
 
-  if (selected_icon == 0)
+  if (!selected_icon)
     return 0;
   else
     return 1;
@@ -334,8 +338,8 @@ unity_launcher_accessible_is_child_selected(AtkSelection* selection,
                                             gint i)
 {
   Launcher* launcher = NULL;
-  LauncherIcon* icon = NULL;
-  LauncherIcon* selected_icon = NULL;
+  AbstractLauncherIcon::Ptr icon;
+  AbstractLauncherIcon::Ptr selected_icon;
   LauncherModel* launcher_model = NULL;
   LauncherModel::iterator it;
   nux::Object* nux_object = NULL;
@@ -350,7 +354,7 @@ unity_launcher_accessible_is_child_selected(AtkSelection* selection,
   launcher_model = launcher->GetModel();
   it = launcher_model->begin();
   std::advance(it, i);
-  icon = dynamic_cast<LauncherIcon*>(*it);
+  icon = *it;
 
   selected_icon = launcher->GetSelectedMenuIcon();
 
@@ -368,7 +372,7 @@ static void on_selection_change_cb(UnityLauncherAccessible* launcher_accessible)
 
 
 static void
-on_icon_added_cb(LauncherIcon* icon,
+on_icon_added_cb(AbstractLauncherIcon::Ptr icon,
                  UnityLauncherAccessible* self)
 {
   AtkObject* icon_accessible = NULL;
@@ -381,7 +385,7 @@ on_icon_added_cb(LauncherIcon* icon,
   if (nux_object == NULL) /* state is defunct */
     return;
 
-  icon_accessible = unity_a11y_get_accessible(icon);
+  icon_accessible = unity_a11y_get_accessible(icon.GetPointer());
 
   update_children_index(self);
 
@@ -392,7 +396,7 @@ on_icon_added_cb(LauncherIcon* icon,
 }
 
 static void
-on_icon_removed_cb(LauncherIcon* icon,
+on_icon_removed_cb(AbstractLauncherIcon::Ptr icon,
                    UnityLauncherAccessible* self)
 {
   AtkObject* icon_accessible = NULL;
@@ -405,7 +409,7 @@ on_icon_removed_cb(LauncherIcon* icon,
   if (nux_object == NULL) /* state is defunct */
     return;
 
-  icon_accessible = unity_a11y_get_accessible(icon);
+  icon_accessible = unity_a11y_get_accessible(icon.GetPointer());
 
   index = atk_object_get_index_in_parent(icon_accessible);
 
@@ -438,7 +442,7 @@ update_children_index(UnityLauncherAccessible* self)
 
   for (it = launcher_model->begin(); it != launcher_model->end(); it++)
   {
-    child =  dynamic_cast<nux::Object*>(*it);
+    child =  dynamic_cast<nux::Object*>((*it).GetPointer());
     child_accessible = unity_a11y_get_accessible(child);
 
     unity_launcher_icon_accessible_set_index(UNITY_LAUNCHER_ICON_ACCESSIBLE(child_accessible),

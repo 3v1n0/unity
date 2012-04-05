@@ -17,8 +17,8 @@
  * Authored by: Jason Smith <jason.smith@canonical.com>
  */
 
-#ifndef SIMPLELAUNCHERICON_H
-#define SIMPLELAUNCHERICON_H
+#ifndef UNITYSHELL_SIMPLELAUNCHERICON_H
+#define UNITYSHELL_SIMPLELAUNCHERICON_H
 
 #include "LauncherIcon.h"
 
@@ -31,31 +31,37 @@ class Launcher;
 
 class SimpleLauncherIcon : public LauncherIcon
 {
+  NUX_DECLARE_OBJECT_TYPE(SimpleLauncherIcon, LauncherIcon);
 public:
-  SimpleLauncherIcon(Launcher* IconManager);
+  SimpleLauncherIcon();
   virtual ~SimpleLauncherIcon();
 
-  /* override */
+  // override
   nux::BaseTexture* GetTextureForSize(int size);
 
-  void SetIconName(const char* name);
+  // Properties
+  nux::Property<std::string> icon_name;
 
+  // Signals
   sigc::signal<void> activate;
 
 protected:
-  virtual void OnMouseDown(int button);
-  virtual void OnMouseUp(int button);
-  virtual void OnMouseClick(int button);
-  virtual void OnMouseEnter();
-  virtual void OnMouseLeave();
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
+
+  virtual void OnMouseDown(int button, int monitor);
+  virtual void OnMouseUp(int button, int monitor);
+  virtual void OnMouseClick(int button, int monitor);
+  virtual void OnMouseEnter(int monitor);
+  virtual void OnMouseLeave(int monitor);
   virtual void ActivateLauncherIcon(ActionArg arg);
 
 private:
   void ReloadIcon();
   static void OnIconThemeChanged(GtkIconTheme* icon_theme, gpointer data);
+  bool SetIconName(std::string& target, std::string const& value);
 
 private:
-  std::string icon_name_;
   guint32 theme_changed_id_;
 
   std::map<int, nux::BaseTexture*> texture_map;

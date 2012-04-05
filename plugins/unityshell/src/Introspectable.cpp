@@ -26,52 +26,51 @@ namespace debug
 
 Introspectable::Introspectable()
 {
+  static guint64 unique_id=0;
+  _id = unique_id++;
 }
 
 Introspectable::~Introspectable()
 {
   for (auto parent : _parents)
     parent->_children.remove(this);
+  for (auto child : _children)
+    child->_parents.remove(this);
+}
+
+Introspectable::IntrospectableList const& Introspectable::GetIntrospectableChildren()
+{
+  return _children;
 }
 
 GVariant*
-Introspectable::Introspect(bool wrap)
+Introspectable::Introspect()
 {
   GVariantBuilder  builder;
   GVariantBuilder  child_builder;
   gint             n_children = 0;
 
-  if (wrap)
-  {
-    g_variant_builder_init(&builder, G_VARIANT_TYPE("(a{sv})"));
-    g_variant_builder_open(&builder, G_VARIANT_TYPE("a{sv}"));
-  }
-  else
-  {
-    g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
-  }
+  g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
+  g_variant_builder_add(&builder, "{sv}", "id", g_variant_new_uint64(_id));
 
   AddProperties(&builder);
 
-  g_variant_builder_init(&child_builder, G_VARIANT_TYPE("a{sv}"));
+  g_variant_builder_init(&child_builder, G_VARIANT_TYPE("a(sv)"));
 
-  for (auto it = _children.begin(); it != _children.end(); it++)
+  auto children = GetIntrospectableChildren();
+  for (auto it = children.begin(); it != children.end(); it++)
   {
-    if ((*it)->GetName())
+    if ((*it)->GetName() != "")
     {
-      g_variant_builder_add(&child_builder, "{sv}", (*it)->GetName(), (*it)->Introspect());
+      g_variant_builder_add(&child_builder, "(sv)", (*it)->GetName().c_str(), (*it)->Introspect());
       n_children++;
     }
   }
 
   GVariant* child_results = g_variant_builder_end(&child_builder);
-  
-  if (n_children > 0)
-    g_variant_builder_add(&builder, "{sv}", GetChildsName(), child_results);
 
-  if (wrap)
-    g_variant_builder_close(&builder);
-  
+  if (n_children > 0)
+    g_variant_builder_add(&builder, "{sv}", GetChildsName().c_str(), child_results);
   return g_variant_builder_end(&builder);
 }
 
@@ -89,10 +88,17 @@ Introspectable::RemoveChild(Introspectable* child)
   child->_parents.remove(this);
 }
 
-const gchar*
-Introspectable::GetChildsName()
+std::string
+Introspectable::GetChildsName() const
 {
-  return GetName();
+  return "Children";
+}
+
+guint64 Introspectable::GetIntrospectionId() const
+{
+  return _id;
+}
+
 }
 }
-}
+

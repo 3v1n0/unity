@@ -28,6 +28,9 @@
 
 #include <X11/Xlib.h>
 
+namespace unity
+{
+
 class QuicklistMenuItemSeparator : public QuicklistMenuItem
 {
 public:
@@ -64,4 +67,5 @@ private:
   nux::Color _premultiplied_color;
 };
 
+}
 #endif // QUICKLISTMENUITEMSEPARATOR_H

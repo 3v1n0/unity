@@ -36,8 +36,6 @@ namespace unity
   class BGHash
   {
   public:
-
-
     BGHash ();
     ~BGHash ();
 
@@ -49,7 +47,7 @@ namespace unity
     void OnBackgroundChanged (GnomeBG *bg);
     void OnGSettingsChanged (GSettings *settings, gchar *key);
     void OverrideColor (nux::Color color);
-
+  
   private:
     static gboolean OnSlideshowTransition (BGHash *self);
     static gboolean OnTransitionCallback (BGHash *self);
@@ -59,6 +57,10 @@ namespace unity
     nux::Color InterpolateColor (nux::Color colora, nux::Color colorb, float value);
     nux::Color HashColor(GdkPixbuf *pixbuf);
     nux::Color MatchColor (nux::Color base_color);
+    std::string CreateFilepathHash(std::string path);
+    
+    void SerializeCache();
+    void UnSerializeCache();
 
   private:
     GnomeBG *background_monitor;
@@ -80,6 +82,8 @@ namespace unity
     guint64 _hires_time_end;
     glib::SignalManager signal_manager_;
     uint _ubus_handle_request_colour;
+
+    std::map<std::string, nux::Color> cache_map_; 
   };
 };
 
