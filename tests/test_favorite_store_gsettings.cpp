@@ -26,15 +26,16 @@
 
 #define G_SETTINGS_ENABLE_BACKEND
 #include <gio/gsettingsbackend.h>
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <glib.h>
 
 #include "FavoriteStore.h"
 #include "FavoriteStoreGSettings.h"
+#include "FavoriteStorePrivate.h"
 #include <UnityCore/GLibWrapper.h>
 
-
 using namespace unity;
+using testing::Eq;
 
 namespace {
   

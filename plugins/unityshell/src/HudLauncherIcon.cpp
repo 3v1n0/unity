@@ -39,7 +39,7 @@ nux::logging::Logger logger("unity.launcher.hudlaunchericon");
 UBusManager HudLauncherIcon::ubus_manager_;
 
 HudLauncherIcon::HudLauncherIcon(LauncherHideMode hide_mode)
- : SimpleLauncherIcon()
+ : SingleMonitorLauncherIcon(0)
  , launcher_hide_mode_(hide_mode)
 {
   tooltip_text = _("HUD");
@@ -47,7 +47,7 @@ HudLauncherIcon::HudLauncherIcon(LauncherHideMode hide_mode)
   SetQuirk(QUIRK_VISIBLE, false);
   SetQuirk(QUIRK_RUNNING, false);
   SetQuirk(QUIRK_ACTIVE, true);
-  SetIconType(TYPE_HOME);
+  SetIconType(TYPE_HUD);
 
   background_color_ = nux::color::White;
 
@@ -58,10 +58,13 @@ HudLauncherIcon::HudLauncherIcon(LauncherHideMode hide_mode)
     if (data_string)
       hud_icon_name = data_string;
     LOG_DEBUG(logger) << "Hud icon change: " << hud_icon_name;
-    if (!hud_icon_name.empty()
-        && hud_icon_name != icon_name())
+    if (hud_icon_name != icon_name)
     {
-      icon_name = hud_icon_name;
+      if (hud_icon_name.empty())
+        icon_name = PKGDATADIR"/launcher_bfb.png";
+      else
+        icon_name = hud_icon_name;
+
       EmitNeedsRedraw();
     }
   });
@@ -74,7 +77,13 @@ HudLauncherIcon::HudLauncherIcon(LauncherHideMode hide_mode)
 
 void HudLauncherIcon::SetHideMode(LauncherHideMode hide_mode)
 {
-  launcher_hide_mode_ = hide_mode;
+  if (launcher_hide_mode_ != hide_mode)
+  {
+    launcher_hide_mode_ = hide_mode;
+
+    if (launcher_hide_mode_ == LAUNCHER_HIDE_AUTOHIDE)
+      SetQuirk(QUIRK_VISIBLE, false);
+  }
 }
 
 void HudLauncherIcon::OnOverlayShown(GVariant* data, bool visible)
@@ -85,11 +94,13 @@ void HudLauncherIcon::OnOverlayShown(GVariant* data, bool visible)
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
-  // If the hud is open, we show the HUD button iff we have a locked launcher
-  if (!g_strcmp0(overlay_identity, "hud") &&
+  // If the hud is open, we show the HUD button if we have a locked launcher
+  if (overlay_identity.Str() == "hud" &&
       launcher_hide_mode_ == LAUNCHER_HIDE_NEVER)
   {
+    SetMonitor(overlay_monitor);
     SetQuirk(QUIRK_VISIBLE, visible);
+    SetQuirk(QUIRK_ACTIVE, visible);
     EmitNeedsRedraw();
   }
 }

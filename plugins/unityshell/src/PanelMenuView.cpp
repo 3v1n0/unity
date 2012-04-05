@@ -306,14 +306,17 @@ long PanelMenuView::PostLayoutManagement(long LayoutResult)
 
   nux::Geometry geo = GetGeometry();
 
+  int h_padding = _padding - 2;
+  int v_padding = 1;
+
   old_window_buttons_w = _window_buttons->GetContentWidth();
-  _window_buttons->SetGeometry(geo.x + _padding, geo.y, old_window_buttons_w, geo.height);
+  _window_buttons->SetGeometry(geo.x + h_padding, geo.y + v_padding, old_window_buttons_w, geo.height);
   _window_buttons->ComputeContentSize();
   new_window_buttons_w = _window_buttons->GetContentWidth();
 
   /* Explicitly set the size and position of the widgets */
-  geo.x += _padding + new_window_buttons_w + _padding;
-  geo.width -= _padding + new_window_buttons_w + _padding;
+  geo.x += h_padding + new_window_buttons_w + h_padding;
+  geo.width -= h_padding + new_window_buttons_w + h_padding;
 
   old_menu_area_w = _menu_layout->GetContentWidth();
   _menu_layout->SetGeometry(geo.x, geo.y, old_menu_area_w, geo.height);
@@ -821,7 +824,8 @@ void PanelMenuView::DrawText(cairo_t *cr_real,
     gtk_style_context_save(style_context);
 
     GtkWidgetPath* widget_path = gtk_widget_path_new();
-    gtk_widget_path_iter_set_name(widget_path, -1 , "UnityPanelWidget");
+    gint pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_WINDOW);
+    gtk_widget_path_iter_set_name(widget_path, pos, "UnityPanelWidget");
     gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_BAR);
     gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_ITEM);
 

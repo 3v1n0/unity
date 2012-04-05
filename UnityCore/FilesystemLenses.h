@@ -52,7 +52,8 @@ public:
   };
 
   typedef std::shared_ptr<LensDirectoryReader> Ptr;
-  typedef std::vector<LensFileData*> DataList;
+  typedef std::shared_ptr<LensFileData> LensFileDataPtr;
+  typedef std::vector<LensFileDataPtr> DataList;
 
   LensDirectoryReader(std::string const& directory);
   ~LensDirectoryReader();

@@ -251,39 +251,42 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
   texxform_absolute_bg.voffset = ((float) content_geo.y) / absolute_geo.height;
   texxform_absolute_bg.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
 
+  nux::Geometry blur_geo(absolute_geo.x, absolute_geo.y, content_geo.width, content_geo.height);
   if (paint_blur)
   {
-    nux::Geometry blur_geo(absolute_geo.x, absolute_geo.y, content_geo.width, content_geo.height);
     bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo);
+  }
+  else
+  {
+    bg_blur_texture_ = bg_effect_helper_.GetRegion(blur_geo); 
+  }
 
-    if (bg_blur_texture_.IsValid())
-    {
-      nux::Geometry bg_clip = geo;
-      gfx_context.PushClippingRectangle(bg_clip);
+  if (bg_blur_texture_.IsValid())
+  {
+    nux::Geometry bg_clip = geo;
+    gfx_context.PushClippingRectangle(bg_clip);
 
-      gfx_context.GetRenderStates().SetBlend(false);
+    gfx_context.GetRenderStates().SetBlend(false);
 #ifndef NUX_OPENGLES_20
-      if (gfx_context.UsingGLSLCodePath())
-        gfx_context.QRP_GLSL_ColorBlendOverTex (content_geo.x, content_geo.y,
-                                             content_geo.width, content_geo.height,
-                                             bg_blur_texture_, texxform_absolute_bg, nux::color::White,
-                                             bg_color_, nux::LAYER_BLEND_MODE_OVERLAY);
+    if (gfx_context.UsingGLSLCodePath())
+      gfx_context.QRP_GLSL_ColorBlendOverTex (content_geo.x, content_geo.y,
+                                           content_geo.width, content_geo.height,
+                                           bg_blur_texture_, texxform_absolute_bg, nux::color::White,
+                                           bg_color_, nux::LAYER_BLEND_MODE_OVERLAY);
 
-      else
-        gfx_context.QRP_1Tex (content_geo.x, content_geo.y,
-                              content_geo.width, content_geo.height,
-                              bg_blur_texture_, texxform_absolute_bg, nux::color::White);
+    else
+      gfx_context.QRP_1Tex (content_geo.x, content_geo.y,
+                            content_geo.width, content_geo.height,
+                            bg_blur_texture_, texxform_absolute_bg, nux::color::White);
 #else
-        gfx_context.QRP_GLSL_ColorBlendOverTex (content_geo.x, content_geo.y,
-                                        content_geo.width, content_geo.height,
-                                        bg_blur_texture_, texxform_absolute_bg, nux::color::White,
-                                        bg_color_, nux::LAYER_BLEND_MODE_OVERLAY);
+      gfx_context.QRP_GLSL_ColorBlendOverTex (content_geo.x, content_geo.y,
+                                      content_geo.width, content_geo.height,
+                                      bg_blur_texture_, texxform_absolute_bg, nux::color::White,
+                                      bg_color_, nux::LAYER_BLEND_MODE_OVERLAY);
 
 #endif
-      gPainter.PopBackground();
 
-      gfx_context.PopClippingRectangle();
-    }
+    gfx_context.PopClippingRectangle();
   }
 
   // Draw the left and top lines
@@ -376,7 +379,6 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
 
 void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geometry)
 {
-  bool paint_blur = BackgroundEffectHelper::blur_type != BLUR_NONE;
   nux::Geometry geo = geometry;
   bgs = 0;
 
@@ -397,7 +399,7 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-  if (bg_blur_texture_.IsValid() && paint_blur)
+  if (bg_blur_texture_.IsValid())
   {
 #ifndef NUX_OPENGLES_20
     if (gfx_context.UsingGLSLCodePath())

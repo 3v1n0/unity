@@ -22,7 +22,6 @@
 #include <memory>
 
 #include <gdk/gdk.h>
-#include <UnityCore/GLibSignal.h>
 #include <UnityCore/Hud.h>
 
 #include <NuxCore/Property.h>
@@ -49,12 +48,13 @@ public:
   nux::BaseWindow* window() const;
 
   nux::Property<int> launcher_width;
+  nux::Property<bool> launcher_locked_out;
+  nux::Property<bool> multiple_launchers;
 
   void ShowHideHud();
   void ShowHud();
   void HideHud(bool restore_focus = true);
   bool IsVisible();
-  void SetLauncherIsLockedOut(bool launcher_is_locked_out);
 
 protected:
   std::string GetName() const;
@@ -64,11 +64,13 @@ private:
   void EnsureHud();
   void SetupWindow();
   void SetupHudView();
-  void SetupRelayoutCallbacks();
   void RegisterUBusInterests();
 
+  int GetTargetMonitor();
+  bool IsLockedToLauncher(int monitor);
+
   nux::Geometry GetIdealWindowGeometry();
-  void Relayout(GdkScreen*screen=NULL);
+  void Relayout();
 
   void OnMouseDownOutsideWindow(int x, int y, unsigned long bflags, unsigned long kflags);
   void OnScreenUngrabbed();
@@ -81,8 +83,6 @@ private:
   void OnQueryActivated(Query::Ptr query);
   void OnQuerySelected(Query::Ptr query);
 
-
-private:
   void StartShowHideTimeline();
   static gboolean OnViewShowHideFrame(Controller* self);
 
@@ -93,7 +93,6 @@ private:
 private:
   UBusManager ubus;
   Hud hud_service_;
-  glib::SignalManager sig_manager_;
   nux::BaseWindow* window_;
   bool visible_;
   bool need_show_;
@@ -101,14 +100,14 @@ private:
   guint timeline_id_;
   float last_opacity_;
   gint64 start_time_;
- 
-  bool launcher_is_locked_out_;
 
   View* view_;
   guint ensure_id_;
   std::string focused_app_icon_;
   nux::Layout* layout_;
   uint monitor_index_;
+  guint type_wait_handle_;
+  std::string last_search_;
 };
 
 

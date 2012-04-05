@@ -50,6 +50,8 @@ public:
   // We could add more functions here to get different types of effects based on the background texture
   nux::ObjectPtr<nux::IOpenGLBaseTexture> GetPixelatedRegion(nux::Rect rect, int pixel_size, bool update);
 
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> GetRegion(nux::Geometry geo, bool force_update = false);
+
   void DirtyCache();
 
   static void ProcessDamage(nux::Geometry geo);

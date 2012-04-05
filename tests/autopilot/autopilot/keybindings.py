@@ -58,6 +58,8 @@ _keys = {
     "launcher/switcher/up": "Up",
     # Dash:
     "dash/reveal": "Super",
+    "dash/lens/next": "Ctrl+Tab",
+    "dash/lens/prev": "Ctrl+Shift+Tab",
     # Lenses
     "lens_reveal/command": ("unityshell", "execute_command"),
     "lens_reveal/apps": "Super+a",
@@ -90,6 +92,7 @@ _keys = {
     "workspace/move_up": ("wall", "up_key"),
     "workspace/move_down": ("wall", "down_key"),
     # Window management
+    "window/show_desktop" : ("core", "show_desktop_key"),
     "window/minimize": ("core", "minimize_window_key"),
     # expo plugin:
     "expo/start": ("expo", "expo_key"),
@@ -170,7 +173,7 @@ def _get_compiz_keybinding(compiz_tuple):
             plugin.ShortDesc)
     if setting.Value == "Disabled":
         raise RuntimeError("Keybinding '%s' in compiz plugin '%s' has been disabled." %
-            setting.ShortDesc, plugin.ShortDesc)
+            (setting.ShortDesc, plugin.ShortDesc))
 
     return _translate_compiz_keystroke_string(setting.Value)
 

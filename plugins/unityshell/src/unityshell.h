@@ -206,6 +206,7 @@ public:
   bool altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabPrevWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
+  bool ShowHud();
   /* handle hud key activations */
   bool ShowHudInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool ShowHudTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
@@ -272,6 +273,8 @@ private:
 
   void InitHints();
 
+  void OnPanelStyleChanged();
+
   dash::Settings dash_settings_;
   dash::Style    dash_style_;
   panel::Style   panel_style_;
@@ -284,7 +287,7 @@ private:
   hud::Controller::Ptr      hud_controller_;
 
   shortcut::Controller::Ptr shortcut_controller_;
-  std::list<shortcut::AbstractHint*> hints_;
+  std::list<shortcut::AbstractHint::Ptr> hints_;
   bool enable_shortcut_overlay_;
 
   GestureEngine*                        gestureEngine;
@@ -330,7 +333,6 @@ private:
   bool   queryForShader ();
 
   UBusManager ubus_manager_;
-  bool dash_is_open_;
   int dash_monitor_;
   CompScreen::GrabHandle grab_index_;
   CompWindowList         fullscreen_windows_;
@@ -338,8 +340,13 @@ private:
   unsigned int           tray_paint_mask_;
   unsigned int           last_scroll_event_;
   int                    hud_keypress_time_;
+  int                    first_menu_keypress_time_;
 
   GLMatrix panel_shadow_matrix_;
+
+  bool panel_texture_has_changed_;
+  bool paint_panel_;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> panel_texture_;
 
 #ifndef USE_GLES
   ScreenEffectFramebufferObject::GLXGetProcAddressProc glXGetProcAddressP;

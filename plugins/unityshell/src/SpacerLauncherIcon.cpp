@@ -27,8 +27,8 @@ namespace unity
 namespace launcher
 {
 
-SpacerLauncherIcon::SpacerLauncherIcon()
-  :   SimpleLauncherIcon()
+SpacerLauncherIcon::SpacerLauncherIcon(int monitor)
+  : SingleMonitorLauncherIcon(monitor)
 {
   SetQuirk(QUIRK_VISIBLE, true);
   SetQuirk(QUIRK_RUNNING, false);

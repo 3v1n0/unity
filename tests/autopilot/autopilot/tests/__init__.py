@@ -22,10 +22,11 @@ from autopilot.emulators.unity import (
     reset_logging,
     )
 from autopilot.emulators.unity.dash import Dash
+from autopilot.emulators.unity.hud import Hud
 from autopilot.emulators.unity.launcher import LauncherController
 from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.unity.workspace import WorkspaceManager
-from autopilot.emulators.X11 import Keyboard, Mouse
+from autopilot.emulators.X11 import ScreenGeometry, Keyboard, Mouse
 from autopilot.glibrunner import GlibRunner
 from autopilot.globals import (global_context,
     video_recording_enabled,
@@ -35,6 +36,31 @@ from autopilot.keybindings import KeybindingsHelper
 
 
 logger = logging.getLogger(__name__)
+
+
+try:
+    from testscenarios.scenarios import multiply_scenarios
+except ImportError:
+    from itertools import product
+    def multiply_scenarios(*scenarios):
+        """Multiply two or more iterables of scenarios.
+
+        It is safe to pass scenario generators or iterators.
+
+        :returns: A list of compound scenarios: the cross-product of all
+            scenarios, with the names concatenated and the parameters
+            merged together.
+        """
+        result = []
+        scenario_lists = map(list, scenarios)
+        for combination in product(*scenario_lists):
+            names, parameters = zip(*combination)
+            scenario_name = ','.join(names)
+            scenario_parameters = {}
+            for parameter in parameters:
+                scenario_parameters.update(parameter)
+            result.append((scenario_name, scenario_parameters))
+        return result
 
 
 class LoggedTestCase(TestWithScenarios, TestCase):
@@ -202,22 +228,37 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         self.keyboard = Keyboard()
         self.mouse = Mouse()
         self.dash = Dash()
+        self.hud = Hud()
         self.switcher = Switcher()
         self.workspace = WorkspaceManager()
+        self.screen_geo = ScreenGeometry()
         self.launcher = self._get_launcher_controller()
         self.addCleanup(self.workspace.switch_to, self.workspace.current_workspace)
         self.addCleanup(Keyboard.cleanup)
         self.addCleanup(Mouse.cleanup)
 
-    def start_app(self, app_name, files=[]):
+    def start_app(self, app_name, files=[], locale=None):
         """Start one of the known apps, and kill it on tear down.
 
-        if files is specified, start the application with the specified files.
+        If files is specified, start the application with the specified files.
+        If locale is specified, the locale will be set when the application is launched.
+
+        The method returns the BamfApplication instance.
+
         """
-        logger.info("Starting application '%s'", app_name)
+        if locale:
+            os.putenv("LC_ALL", locale)
+            self.addCleanup(os.unsetenv, "LC_ALL")
+            logger.info("Starting application '%s' with files %r in locale %s", app_name, files, locale)
+        else:
+            logger.info("Starting application '%s' with files %r", app_name, files)
+
         app = self.KNOWN_APPS[app_name]
         self.bamf.launch_application(app['desktop-file'], files)
+        apps = self.bamf.get_running_applications_by_desktop_file(app['desktop-file'])
         self.addCleanup(call, ["killall", app['process-name']])
+        self.assertThat(len(apps), Equals(1))
+        return apps[0]
 
     def close_all_app(self, app_name):
         """Close all instances of the app_name."""
@@ -249,6 +290,8 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         """
         old_value = self._set_compiz_option(plugin_name, setting_name, setting_value)
         self.addCleanup(self._set_compiz_option, plugin_name, setting_name, old_value)
+        # Allow unity time to respond to the new setting.
+        time.sleep(0.5)
 
     def _set_compiz_option(self, plugin_name, option_name, option_value):
         logger.info("Setting compiz option '%s' in plugin '%s' to %r",

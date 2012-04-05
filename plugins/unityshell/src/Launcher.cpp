@@ -74,7 +74,6 @@ typedef Functor functor_type;
 namespace unity
 {
 using ui::RenderArg;
-using ui::PointerBarrierWrapper;
 using ui::Decaymulator;
 
 namespace launcher
@@ -293,11 +292,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
 
   launcher_sheen_ = cache.FindTexture("dash_sheen", 0, 0, cb);
   launcher_pressure_effect_ = cache.FindTexture("launcher_pressure_effect", 0, 0, cb);
-
-  _pointer_barrier = PointerBarrierWrapper::Ptr(new PointerBarrierWrapper());
-  _pointer_barrier->barrier_event.connect(sigc::mem_fun(this, &Launcher::OnPointerBarrierEvent));
-
-  decaymulator_ = Decaymulator::Ptr(new Decaymulator());
 
   options.changed.connect (sigc::mem_fun (this, &Launcher::OnOptionsChanged));
 }
@@ -625,6 +619,14 @@ float Launcher::GetAutohidePositionMax() const
 
 float Launcher::IconVisibleProgress(AbstractLauncherIcon::Ptr icon, struct timespec const& current) const
 {
+  if (!icon->IsVisibleOnMonitor(monitor))
+    return 0.0f;
+
+  if (icon->GetIconType() == AbstractLauncherIcon::TYPE_HUD)
+  {
+    return (icon->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE)) ? 1.0f : 0.0f;
+  }
+
   if (icon->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE))
   {
     struct timespec icon_visible_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_VISIBLE);
@@ -707,6 +709,9 @@ float Launcher::IconDropDimValue(AbstractLauncherIcon::Ptr icon, struct timespec
 
 float Launcher::IconDesatValue(AbstractLauncherIcon::Ptr icon, struct timespec const& current) const
 {
+  if (!IsOverlayOpen())
+    return 1.0f;
+
   struct timespec dim_time = icon->GetQuirkTime(AbstractLauncherIcon::QUIRK_DESAT);
   int ms = unity::TimeUtil::TimeDelta(&current, &dim_time);
   float result = CLAMP((float) ms / (float) ANIM_DURATION_SHORT_SHORT, 0.0f, 1.0f);
@@ -879,7 +884,7 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
 {
   float desat_value = IconDesatValue(icon, current);
   arg.icon                = icon.GetPointer();
-  arg.alpha               = 0.5f + 0.5f * desat_value;
+  arg.alpha               = 0.2f + 0.8f * desat_value;
   arg.saturation          = desat_value;
   arg.colorify            = nux::color::White;
   arg.running_arrow       = icon->GetQuirk(AbstractLauncherIcon::QUIRK_RUNNING);
@@ -895,24 +900,32 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
   arg.progress_bias       = IconProgressBias(icon, current);
   arg.progress            = CLAMP(icon->GetProgress(), 0.0f, 1.0f);
   arg.draw_shortcut       = _shortcuts_shown && !_hide_machine->GetQuirk(LauncherHideMachine::PLACES_VISIBLE);
-  arg.system_item         = icon->GetIconType() == AbstractLauncherIcon::TYPE_HOME;
+  arg.system_item         = icon->GetIconType() == AbstractLauncherIcon::TYPE_HOME    ||
+                            icon->GetIconType() == AbstractLauncherIcon::TYPE_HUD;
   arg.colorify_background = icon->GetIconType() == AbstractLauncherIcon::TYPE_HOME    ||
+                            icon->GetIconType() == AbstractLauncherIcon::TYPE_HUD     ||
                             icon->GetIconType() == AbstractLauncherIcon::TYPE_TRASH   ||
                             icon->GetIconType() == AbstractLauncherIcon::TYPE_DESKTOP ||
                             icon->GetIconType() == AbstractLauncherIcon::TYPE_DEVICE  ||
                             icon->GetIconType() == AbstractLauncherIcon::TYPE_EXPO;
 
   // trying to protect against flickering when icon is dragged from dash LP: #863230
-  if (arg.alpha < 0.5)
+  if (arg.alpha < 0.2)
   {
-    arg.alpha = 0.5;
+    arg.alpha = 0.2;
     arg.saturation = 0.0;
   }
 
-  if (IsOverlayOpen())
-    arg.active_arrow = icon->GetIconType() == AbstractLauncherIcon::TYPE_HOME;
-  else
-    arg.active_arrow = icon->GetQuirk(AbstractLauncherIcon::QUIRK_ACTIVE);
+  arg.active_arrow = icon->GetQuirk(AbstractLauncherIcon::QUIRK_ACTIVE);
+
+  /* BFB or HUD icons don't need the active arrow if the overaly is opened
+   * in another monitor */
+  if (arg.active_arrow && !IsOverlayOpen() &&
+      (icon->GetIconType() == AbstractLauncherIcon::TYPE_HOME ||
+       icon->GetIconType() == AbstractLauncherIcon::TYPE_HUD))
+  {
+    arg.active_arrow = false;
+  }
 
   if (options()->show_for_all)
     arg.running_on_viewport = icon->WindowVisibleOnViewport();
@@ -939,7 +952,7 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
   else
   {
     if (options()->show_for_all)
-      arg.window_indicators = std::max<int> (icon->Windows().size(), 1);
+      arg.window_indicators = std::max<int> (icon->WindowsOnViewport().size(), 1);
     else
       arg.window_indicators = std::max<int> (icon->WindowsForMonitor(monitor).size(), 1);
   }
@@ -997,9 +1010,9 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr icon,
     arg.alpha *= drop_dim_value;
 
   // trying to protect against flickering when icon is dragged from dash LP: #863230
-  if (arg.alpha < 0.5)
+  if (arg.alpha < 0.2)
   {
-    arg.alpha = 0.5;
+    arg.alpha = 0.2;
     arg.saturation = 0.0;
   }
 
@@ -1299,8 +1312,12 @@ void Launcher::DesaturateIcons()
 {
   for (auto icon : *_model)
   {
-    if (icon->GetIconType () != AbstractLauncherIcon::TYPE_HOME)
+    if (icon->GetIconType () != AbstractLauncherIcon::TYPE_HOME &&
+        icon->GetIconType () != AbstractLauncherIcon::TYPE_HUD)
+    {
       icon->SetQuirk(AbstractLauncherIcon::QUIRK_DESAT, true);
+    }
+
     icon->HideTooltip();
   }
 }
@@ -1321,9 +1338,14 @@ void Launcher::OnOverlayShown(GVariant* data)
   gint32 overlay_monitor = 0;
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
-
   std::string identity = overlay_identity.Str();
-  if (overlay_monitor == monitor)
+
+  LOG_DEBUG(logger) << "Overlay shown: " << identity
+                    << ", " << (can_maximise ? "can maximise" : "can't maximise")
+                    << ", on monitor " << overlay_monitor
+                    << " (for monitor " << monitor() << ")";
+
+  if (overlay_monitor == monitor())
   {
     if (identity == "dash")
     {
@@ -1335,10 +1357,15 @@ void Launcher::OnOverlayShown(GVariant* data)
     {
       _hud_is_open = true;
     }
-
-    bg_effect_helper_.enabled = true;
-    DesaturateIcons();
+    // Don't desaturate icons if the mouse is over the launcher:
+    if (!_hovered)
+    {
+      bg_effect_helper_.enabled = true;
+      LOG_DEBUG(logger) << "Desaturate on monitor " << monitor();
+      DesaturateIcons();
+    }
   }
+  EnsureAnimation();
 }
 
 void Launcher::OnOverlayHidden(GVariant* data)
@@ -1351,7 +1378,13 @@ void Launcher::OnOverlayHidden(GVariant* data)
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
   std::string identity = overlay_identity.Str();
-  if (overlay_monitor == monitor)
+
+  LOG_DEBUG(logger) << "Overlay hidden: " << identity
+                    << ", " << (can_maximise ? "can maximise" : "can't maximise")
+                    << ", on monitor " << overlay_monitor
+                    << " (for monitor" << monitor() << ")";
+
+  if (overlay_monitor == monitor())
   {
     if (identity == "dash")
     {
@@ -1365,12 +1398,14 @@ void Launcher::OnOverlayHidden(GVariant* data)
     }
 
     // If they are both now shut, then disable the effect helper and saturate the icons.
-    if (!_dash_is_open and !_hud_is_open)
+    if (!IsOverlayOpen())
     {
       bg_effect_helper_.enabled = false;
+      LOG_DEBUG(logger) << "Saturate on monitor " << monitor();
       SaturateIcons();
     }
   }
+  EnsureAnimation();
 
   // as the leave event is no more received when the place is opened
   // FIXME: remove when we change the mouse grab strategy in nux
@@ -1557,30 +1592,12 @@ Launcher::UpdateOptions(Options::Ptr options)
 void Launcher::ConfigureBarrier()
 {
   nux::Geometry geo = GetAbsoluteGeometry();
-  _pointer_barrier->DestroyBarrier();
 
-  if (options()->edge_resist || geo.x == 0)
-  {
-    unity::panel::Style &panel_style = panel::Style::Instance();
-
-    _pointer_barrier->x1 = geo.x;
-    _pointer_barrier->x2 = geo.x;
-    _pointer_barrier->y1 = geo.y - panel_style.panel_height;
-    _pointer_barrier->y2 = geo.y + geo.height;
-
-    float decay_responsiveness_mult = ((options()->edge_responsiveness() - 1) * .3f) + 1;
-    float reveal_responsiveness_mult = ((options()->edge_responsiveness() - 1) * .025f) + 1;
-    float overcome_responsiveness_mult = ((options()->edge_responsiveness() - 1) * 1.0f) + 1;
-    decaymulator_->rate_of_decay = options()->edge_decay_rate() * decay_responsiveness_mult;
-    _edge_overcome_pressure = options()->edge_overcome_pressure() * overcome_responsiveness_mult;
-
-    _pointer_barrier->threshold = options()->edge_stop_velocity();
-    _pointer_barrier->max_velocity_multiplier = options()->edge_responsiveness();
-    _pointer_barrier->ConstructBarrier();
-
-    _hide_machine->reveal_pressure = options()->edge_reveal_pressure() * reveal_responsiveness_mult;
-    _hide_machine->edge_decay_rate = options()->edge_decay_rate() * decay_responsiveness_mult;
-  }
+  float decay_responsiveness_mult = ((options()->edge_responsiveness() - 1) * .3f) + 1;
+  float reveal_responsiveness_mult = ((options()->edge_responsiveness() - 1) * .025f) + 1;
+  
+  _hide_machine->reveal_pressure = options()->edge_reveal_pressure() * reveal_responsiveness_mult;
+  _hide_machine->edge_decay_rate = options()->edge_decay_rate() * decay_responsiveness_mult;
 }
 
 void Launcher::SetHideMode(LauncherHideMode hidemode)
@@ -1754,6 +1771,11 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
   Resize();
 }
 
+int Launcher::GetIconSize() const
+{
+    return _icon_size;
+}
+
 void Launcher::Resize()
 {
   UScreen* uscreen = UScreen::GetDefault();
@@ -1799,6 +1821,9 @@ void Launcher::SetModel(LauncherModel* model)
 {
   _model = model;
 
+  for (auto icon : *_model)
+    icon->needs_redraw.connect(sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
+
   _model->icon_added.connect(sigc::mem_fun(this, &Launcher::OnIconAdded));
   _model->icon_removed.connect(sigc::mem_fun(this, &Launcher::OnIconRemoved));
   _model->order_changed.connect(sigc::mem_fun(this, &Launcher::OnOrderChanged));
@@ -1817,7 +1842,7 @@ void Launcher::EnsureIconOnScreen(AbstractLauncherIcon::Ptr selection)
   int natural_y = 0;
   for (auto icon : *_model)
   {
-    if (!icon->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE))
+    if (!icon->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE) || !icon->IsVisibleOnMonitor(monitor))
       continue;
 
     if (icon == selection)
@@ -1919,48 +1944,54 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (IsOverlayOpen())
   {
+    nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
+    nux::ObjectPtr<nux::IOpenGLBaseTexture> blur_texture;
+
     if (BackgroundEffectHelper::blur_type != unity::BLUR_NONE && (bkg_box.x + bkg_box.width > 0))
     {
-      nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
-      auto blur_texture = bg_effect_helper_.GetBlurRegion(blur_geo);
+      blur_texture = bg_effect_helper_.GetBlurRegion(blur_geo);
+    }
+    else
+    {
+      blur_texture = bg_effect_helper_.GetRegion(blur_geo); 
+    }
 
-      if (blur_texture.IsValid())
-      {
-        nux::TexCoordXForm texxform_blur_bg;
-        texxform_blur_bg.flip_v_coord = true;
-        texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-        texxform_blur_bg.uoffset = ((float) base.x) / geo_absolute.width;
-        texxform_blur_bg.voffset = ((float) base.y) / geo_absolute.height;
+    if (blur_texture.IsValid())
+    {
+      nux::TexCoordXForm texxform_blur_bg;
+      texxform_blur_bg.flip_v_coord = true;
+      texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+      texxform_blur_bg.uoffset = ((float) base.x) / geo_absolute.width;
+      texxform_blur_bg.voffset = ((float) base.y) / geo_absolute.height;
 
-        GfxContext.PushClippingRectangle(bkg_box);
+      GfxContext.PushClippingRectangle(bkg_box);
 
 #ifndef NUX_OPENGLES_20
-        if (GfxContext.UsingGLSLCodePath())
-          gPainter.PushDrawCompositionLayer(GfxContext, base,
-                                            blur_texture,
-                                            texxform_blur_bg,
-                                            nux::color::White,
-                                            _background_color, nux::LAYER_BLEND_MODE_OVERLAY,
-                                            true, ROP);
-        else
-          gPainter.PushDrawTextureLayer(GfxContext, base,
-                                        blur_texture,
-                                        texxform_blur_bg,
-                                        nux::color::White,
-                                        true,
-                                        ROP);
+      if (GfxContext.UsingGLSLCodePath())
+        gPainter.PushDrawCompositionLayer(GfxContext, base,
+                                          blur_texture,
+                                          texxform_blur_bg,
+                                          nux::color::White,
+                                          _background_color, nux::LAYER_BLEND_MODE_OVERLAY,
+                                          true, ROP);
+      else
+        gPainter.PushDrawTextureLayer(GfxContext, base,
+                                      blur_texture,
+                                      texxform_blur_bg,
+                                      nux::color::White,
+                                      true,
+                                      ROP);
 #else
-          gPainter.PushDrawCompositionLayer(GfxContext, base,
-                                            blur_texture,
-                                            texxform_blur_bg,
-                                            nux::color::White,
-                                            _background_color, nux::LAYER_BLEND_MODE_OVERLAY,
-                                            true, ROP);
+        gPainter.PushDrawCompositionLayer(GfxContext, base,
+                                          blur_texture,
+                                          texxform_blur_bg,
+                                          nux::color::White,
+                                          _background_color, nux::LAYER_BLEND_MODE_OVERLAY,
+                                          true, ROP);
 #endif
-        GfxContext.PopClippingRectangle();
+      GfxContext.PopClippingRectangle();
 
-        push_count++;
-      }
+      push_count++;
     }
 
     unsigned int alpha = 0, src = 0, dest = 0;
@@ -2033,11 +2064,11 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                               nux::Geometry(bkg_box.x,
                                             bkg_box.y,
                                             bkg_box.width,
-                                            20),
-                              nux::Color(0x60000000),
+                                            8),
+                              nux::Color(0x70000000),
                               nux::Color(0x00000000),
                               nux::Color(0x00000000),
-                              nux::Color(0x60000000));
+                              nux::Color(0x70000000));
   }
 
   // FIXME: can be removed for a bgk_box->SetAlpha once implemented
@@ -2367,7 +2398,7 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
   EnsureAnimation();
 }
 
-void Launcher::OnPointerBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event)
+bool Launcher::HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event)
 {
   nux::Geometry abs_geo = GetAbsoluteGeometry();
 
@@ -2401,19 +2432,11 @@ void Launcher::OnPointerBarrierEvent(ui::PointerBarrierWrapper* owner, ui::Barri
     }
   }
 
-  if (apply_to_reveal)
-  {
-    _hide_machine->AddRevealPressure(event->velocity);
-    decaymulator_->value = 0;
-  }
-  else if (abs_geo.x > 0)
-  {
-    decaymulator_->value = decaymulator_->value + event->velocity;
-    if (decaymulator_->value > _edge_overcome_pressure)
-    {
-      _pointer_barrier->ReleaseBarrier(event->event_id);
-    }
-  }
+  if (!apply_to_reveal)
+    return false;
+
+  _hide_machine->AddRevealPressure(event->velocity);
+  return true;
 }
 
 bool Launcher::IsInKeyNavMode() const
@@ -2425,6 +2448,7 @@ void Launcher::EnterKeyNavMode()
 {
   _hide_machine->SetQuirk(LauncherHideMachine::KEY_NAV_ACTIVE, true);
   _hover_machine->SetQuirk(LauncherHoverMachine::KEY_NAV_ACTIVE, true);
+  SaturateIcons();
 }
 
 void Launcher::ExitKeyNavMode()
@@ -2554,7 +2578,7 @@ AbstractLauncherIcon::Ptr Launcher::MouseIconIntersection(int x, int y)
 
   for (it = _model->begin(); it != _model->end(); it++)
   {
-    if (!(*it)->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE))
+    if (!(*it)->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE) || !(*it)->IsVisibleOnMonitor(monitor))
       continue;
 
     nux::Point2 screen_coord [4];
@@ -2803,7 +2827,7 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
     _drag_action = nux::DNDACTION_COPY;
     if (!_dnd_hovered_icon && hovered_icon_is_appropriate)
     {
-      _dnd_hovered_icon = new SpacerLauncherIcon();
+      _dnd_hovered_icon = new SpacerLauncherIcon(monitor());
       _dnd_hovered_icon->SetSortPriority(G_MAXINT);
       _model->AddIcon(_dnd_hovered_icon);
       _model->ReorderBefore(_dnd_hovered_icon, hovered_icon, true);
@@ -2937,7 +2961,8 @@ Launcher::handle_dbus_method_call(GDBusConnection*       connection,
     g_variant_get(parameters, "(ssiiiss)", &title, &icon, &icon_x, &icon_y, &icon_size, &desktop_file, &aptdaemon_task, NULL);
 
     Launcher* self = (Launcher*)user_data;
-    self->launcher_addrequest_special.emit(desktop_file, AbstractLauncherIcon::Ptr(), aptdaemon_task, icon);
+    self->launcher_addrequest_special.emit(desktop_file, AbstractLauncherIcon::Ptr(), aptdaemon_task, icon,
+                                            icon_x, icon_y, icon_size);
 
     g_dbus_method_invocation_return_value(invocation, nullptr);
     g_free(icon);
