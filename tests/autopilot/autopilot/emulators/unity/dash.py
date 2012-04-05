@@ -82,6 +82,13 @@ class Dash(KeybindingsHelper):
         return self.controller.visible
 
     @property
+    def monitor(self):
+        """
+        The monitor where the dash is
+        """
+        return self.controller.monitor
+
+    @property
     def search_string(self):
         return self.get_searchbar().search_string
 

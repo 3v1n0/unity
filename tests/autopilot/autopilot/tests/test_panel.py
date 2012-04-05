@@ -410,7 +410,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
                 self.assertThat(self.dash.view.form_factor, Equals("desktop"))
 
 
-class PanelTitleCrossMonitorsTests(PanelTestsBase):
+class PanelCrossMonitorsTests(PanelTestsBase):
 
     scenarios = []
     if ScreenGeometry().get_num_monitors() > 1:
@@ -437,7 +437,8 @@ class PanelTitleCrossMonitorsTests(PanelTestsBase):
 
     def test_window_buttons_dont_show_for_maximized_window_on_mouse_in(self):
         """Test that window buttons are not showing when the mouse is hovering
-        the panel in other monitors"""
+        the panel in other monitors
+        """
         text_win = self.open_new_application_window("Text Editor", maximize=True)
 
         sleep(self.panel.menus.discovery_duration)
@@ -448,6 +449,36 @@ class PanelTitleCrossMonitorsTests(PanelTestsBase):
             sleep(self.panel.menus.fadein_duration / 1000.0)
 
             if self.panel_monitor == monitor:
+                self.assertTrue(panel.window_buttons_shown)
+            else:
+                self.assertFalse(panel.window_buttons_shown)
+
+    def test_window_buttons_dont_show_in_other_monitors_when_dash_is_open(self):
+        """Test that window buttons are not showing in the panels other than
+        the one where the dash is opened
+        """
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
+
+        for monitor in range(0, self.screen_geo.get_num_monitors()):
+            panel = self.panels.get_panel_for_monitor(monitor)
+
+            if self.dash.monitor == monitor:
+                self.assertTrue(panel.window_buttons_shown)
+            else:
+                self.assertFalse(panel.window_buttons_shown)
+
+    def test_window_buttons_dont_show_in_other_monitors_when_hud_is_open(self):
+        """Test that window buttons are not showing in the panels other than
+        the one where the dash is opened
+        """
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
+
+        for monitor in range(0, self.screen_geo.get_num_monitors()):
+            panel = self.panels.get_panel_for_monitor(monitor)
+
+            if self.hud.monitor == monitor:
                 self.assertTrue(panel.window_buttons_shown)
             else:
                 self.assertFalse(panel.window_buttons_shown)
