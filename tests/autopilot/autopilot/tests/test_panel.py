@@ -302,6 +302,22 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
         self.assertTrue(text_win.closed)
 
+    def test_window_buttons_close_follows_fitts_law(self):
+        text_win = self.open_new_application_window("Text Editor", maximize=True, move_to_monitor=False)
+        self.move_window_to_panel_monitor(text_win, restore_position=False)
+        self.keybinding("window/maximize")
+
+        self.panel.move_mouse_over_window_buttons()
+        screen = self.screen_geo.get_monitor_geometry(self.panel_monitor)
+        self.mouse.move(screen[0], screen[1], rate=20, time_between_events=0.005)
+        sleep(.5)
+        self.press()
+        sleep(0.1)
+        self.release()
+        sleep(1)
+
+        self.assertTrue(text_win.closed)
+
     def test_window_buttons_minimize_button_works_for_window(self):
         """Tests that the window button 'Minimize' actually minimizes a window"""
         text_win = self.open_new_application_window("Text Editor", maximize=True)
@@ -310,6 +326,10 @@ class PanelWindowButtonsTests(PanelTestsBase):
         sleep(.5)
 
         self.assertTrue(text_win.is_hidden)
+
+        icon = self.launcher.model.get_icon_by_desktop_id(text_win.application.desktop_file)
+        launcher = self.launcher.get_launcher_for_monitor(self.panel_monitor)
+        launcher.click_launcher_icon(icon)
 
     def test_window_buttons_unmaximize_button_works_for_window(self):
         """Tests that the window button 'Unmaximize' actually unmaximizes a window"""

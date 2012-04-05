@@ -237,12 +237,15 @@ class WindowButton(UnityIntrospectionObject):
     def mouse_move_to(self):
         target_x = self.x + self.width / 2
         target_y = self.y + self.height / 2
-        self._mouse.move(target_x, target_y)
+        self._mouse.move(target_x, target_y, rate=20, time_between_events=0.005)
 
     def mouse_click(self):
         self.mouse_move_to()
         sleep(.2)
-        self._mouse.click(1)
+        self._mouse.press()
+        sleep(.1)
+        self._mouse.release()
+        sleep(.01)
 
     @property
     def geometry(self):
@@ -288,13 +291,16 @@ class IndicatorEntry(UnityIntrospectionObject):
     def mouse_move_to(self):
         target_x = self.x + self.width / 2
         target_y = self.y + self.height / 2
-        self._mouse.move(target_x, target_y)
+        self._mouse.move(target_x, target_y, rate=20, time_between_events=0.005)
 
     def mouse_click(self, button=1):
         self.mouse_move_to()
         sleep(.2)
         assert(self.visible)
-        self._mouse.click(button)
+        self._mouse.press()
+        sleep(.1)
+        self._mouse.release()
+        sleep(.01)
 
     @property
     def geometry(self):
