@@ -304,7 +304,7 @@ std::vector<Window> BamfLauncherIcon::GetWindows(WindowFilterMask filter, int mo
   {
     if (!BAMF_IS_WINDOW(l->data))
       continue;
-  
+
     auto window = static_cast<BamfWindow*>(l->data);
     auto view = static_cast<BamfView*>(l->data);
 
@@ -659,8 +659,13 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
   if (desktop_file.empty())
     return;
 
-  for (GList *l = dbusmenu_menuitem_get_children(_menu_desktop_shortcuts); l; l = l->next)
-    _gsignals.Disconnect(l->data, "item-activated");
+  if (_menu_desktop_shortcuts)
+  {
+    for (GList *l = dbusmenu_menuitem_get_children(_menu_desktop_shortcuts); l; l = l->next)
+    {
+      _gsignals.Disconnect(l->data, "item-activated");
+    }
+  }
 
   _menu_desktop_shortcuts = dbusmenu_menuitem_new();
   dbusmenu_menuitem_set_root(_menu_desktop_shortcuts, TRUE);
@@ -857,6 +862,8 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
   {
     GList* child = nullptr;
     DbusmenuClient* client = it->second;
+    if (!client)
+      continue;
     DbusmenuMenuitem* root = dbusmenu_client_get_root(client);
 
     if (!root || !dbusmenu_menuitem_property_get_bool(root, DBUSMENU_MENUITEM_PROP_VISIBLE))

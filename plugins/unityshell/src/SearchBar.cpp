@@ -473,6 +473,30 @@ void SearchBar::OnEntryActivated()
   activated.emit();
 }
 
+void SearchBar::ForceSearchChanged()
+{
+  // this method will emit search_changed (and live_search_reached after
+  // returning to mainloop) and starts animating the spinner
+
+  if (live_search_timeout_)
+    g_source_remove(live_search_timeout_);
+
+  live_search_timeout_ = g_idle_add_full(G_PRIORITY_DEFAULT,
+                                         (GSourceFunc)&OnLiveSearchTimeout,
+                                         this, NULL);
+
+  // Don't animate the spinner immediately, the searches are fast and
+  // the spinner would just flicker
+  if (start_spinner_timeout_)
+    g_source_remove(start_spinner_timeout_);
+
+  start_spinner_timeout_ = g_timeout_add(SPINNER_TIMEOUT * 2,
+                                         (GSourceFunc)&OnSpinnerStartCb,
+                                         this);
+
+  search_changed.emit(pango_entry_->GetText());
+}
+
 void
 SearchBar::SearchFinished()
 {

@@ -361,8 +361,16 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      BackgroundEffectHelper::updates_enabled = true;
 
-     ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [&](GVariant * args) {
-       dash_monitor_ = g_variant_get_int32(args);
+     ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [&](GVariant * data)
+     {
+       unity::glib::String overlay_identity;
+       gboolean can_maximise = FALSE;
+       gint32 overlay_monitor = 0;
+       g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
+                    &overlay_identity, &can_maximise, &overlay_monitor);
+
+       dash_monitor_ = overlay_monitor;
+
        RaiseInputWindows();
      });
 
@@ -574,7 +582,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
     i++;
   }
 
-  if (!(launcher_controller_->IsOverlayOpen() && current_monitor == dash_monitor_) 
+  if (!(launcher_controller_->IsOverlayOpen() && current_monitor == dash_monitor_)
       && panel_controller_->opacity() > 0.0f)
   {
     foreach(GLTexture * tex, _shadow_texture)
@@ -653,7 +661,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
     i++;
   }
 
-  if (!(launcher_controller_->IsOverlayOpen() && current_monitor == dash_monitor_) 
+  if (!(launcher_controller_->IsOverlayOpen() && current_monitor == dash_monitor_)
       && panel_controller_->opacity() > 0.0f)
   {
     foreach(GLTexture * tex, _shadow_texture)
@@ -1632,6 +1640,9 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
   LOG_DEBUG(logger) << "Super released: " << (was_tap ? "tapped" : "released");
   int when = options[7].value().i();  // XEvent time in millisec
 
+  if (hud_controller_->IsVisible() && launcher_controller_->AboutToShowDash(was_tap, when))
+    hud_controller_->HideHud();
+
   super_keypressed_ = false;
   launcher_controller_->KeyNavTerminate(true);
   launcher_controller_->HandleLauncherKeyRelease(was_tap, when);
@@ -1683,7 +1694,7 @@ void UnityScreen::SendExecuteCommand()
   if (hud_controller_->IsVisible())
   {
     hud_controller_->HideHud();
-  } 
+  }
   ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
                             g_variant_new("(sus)", "commands.lens", 0, ""));
 }
@@ -1974,10 +1985,55 @@ void UnityScreen::OnLauncherEndKeyNav(GVariant* data)
     PluginAdapter::Default ()->restoreInputFocus ();
 }
 
+bool UnityScreen::ShowHud()
+{
+  if (switcher_controller_->Visible())
+  {
+    LOG_ERROR(logger) << "this should never happen";
+    return false; // early exit if the switcher is open
+  }
+
+  if (hud_controller_->IsVisible())
+  {
+    ubus_manager_.SendMessage(UBUS_HUD_CLOSE_REQUEST);
+  }
+  else
+  {
+    // Handles closing KeyNav (Alt+F1) if the hud is about to show
+    if (launcher_controller_->KeyNavIsActive())
+      launcher_controller_->KeyNavTerminate(false);
+
+    // If an overlay is open, it must be the dash! Close it!
+    if (launcher_controller_->IsOverlayOpen())
+      dash_controller_->HideDash();
+
+    hud_controller_->ShowHud();
+  }
+
+  // Consume the event.
+  return true;
+}
+
 bool UnityScreen::ShowHudInitiate(CompAction* action,
                                   CompAction::State state,
                                   CompOption::Vector& options)
 {
+  // Look to see if there is a keycode.  If there is, then this isn't a
+  // modifier only keybinding.
+  int key_code = 0;
+  if (options[6].type() != CompOption::TypeUnset)
+  {
+    key_code = options[6].value().i();
+    LOG_DEBUG(logger) << "HUD initiate key code: " << key_code;
+    // show it now, no timings or terminate needed.
+    return ShowHud();
+  }
+  else
+  {
+    LOG_DEBUG(logger) << "HUD initiate key code option not set, modifier only keypress.";
+  }
+
+
   // to receive the Terminate event
   if (state & CompAction::StateInitKey)
     action->setState(action->state() | CompAction::StateTermKey);
@@ -1998,7 +2054,7 @@ bool UnityScreen::ShowHudTerminate(CompAction* action,
 
   action->setState(action->state() & ~CompAction::StateTermKey);
 
-  // And only respond to key taps
+  // If we have a modifier only keypress, check for tap and timing.
   if (!(state & CompAction::StateTermTapped))
     return false;
 
@@ -2010,30 +2066,7 @@ bool UnityScreen::ShowHudTerminate(CompAction* action,
     return false;
   }
 
-  if (switcher_controller_->Visible())
-  {
-    LOG_ERROR(logger) << "this should never happen";
-    return false; // early exit if the switcher is open
-  }
-
-  if (hud_controller_->IsVisible())
-  {
-    ubus_manager_.SendMessage(UBUS_HUD_CLOSE_REQUEST);
-  }
-  else
-  {
-    // Handles closing KeyNav (Alt+F1) if the hud is about to show
-    if (launcher_controller_->KeyNavIsActive())
-      launcher_controller_->KeyNavTerminate(false);
-  
-    // If an overlay is open, it must be the dash! Close it!
-    if (launcher_controller_->IsOverlayOpen())
-      dash_controller_->HideDash();
-
-    hud_controller_->ShowHud();
-  }
-
-  return true;
+  return ShowHud();
 }
 
 gboolean UnityScreen::initPluginActions(gpointer data)
@@ -3129,6 +3162,10 @@ void capture_g_log_calls(const gchar* log_domain,
   {
     nux::logging::LogStream(level, logger.module(), "<unknown>", 0).stream()
         << message;
+    if (level >= nux::logging::Error)
+    {
+      nux::logging::Backtrace();
+    }
   }
 }
 

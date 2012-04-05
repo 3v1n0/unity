@@ -147,6 +147,7 @@ void HudImpl::UpdateQueryCallback(GVariant* query)
   GVariant* query_key = g_variant_get_child_value(query, 2);
   if (g_variant_equal(query_key_, query_key))
   {
+    queries_.clear();
     GVariant* queries = g_variant_get_child_value(query, 1);
     BuildQueries(queries);
     g_variant_unref(queries);

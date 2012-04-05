@@ -7,18 +7,18 @@
 # by the Free Software Foundation.
 #
 
-from autopilot.keybindings import KeybindingsHelper
 from autopilot.emulators.unity import UnityIntrospectionObject
 from autopilot.emulators.unity.dash import SearchBar
-from autopilot.emulators.unity.icons import EmbeddedIcon
+from autopilot.emulators.unity.icons import HudEmbeddedIcon, HudLauncherIcon
+from autopilot.keybindings import KeybindingsHelper
+
 
 class Hud(KeybindingsHelper):
     """An emulator class that makes it easier to iteract with unity hud."""
-    
+
     def __init__(self):
         super (Hud, self).__init__()
-        
-        controllers = HudController.get_all_instances()  
+        controllers = HudController.get_all_instances()
         assert(len(controllers) == 1)
         self.controller = controllers[0]
 
@@ -42,14 +42,27 @@ class Hud(KeybindingsHelper):
         if (not view):
           return None
 
-        icons = view.get_children_by_type(EmbeddedIcon)
+        icons = view.get_children_by_type(HudEmbeddedIcon)
         return icons[0] if icons else None
+
+    def get_launcher_icon(self):
+        """Returns the HUD launcher icon"""
+        icons = HudLauncherIcon.get_all_instances()
+        assert(len(icons) == 1)
+        return icons[0]
+
+    @property
+    def icon(self):
+        if self.is_locked_launcher:
+            return self.get_launcher_icon()
+        else:
+            return self.get_embedded_icon()
 
     @property
     def view(self):
         """Returns the HudView."""
         return self.controller.get_hud_view()
-    
+
     @property
     def visible(self):
         """Is the Hud visible?"""
@@ -74,11 +87,6 @@ class Hud(KeybindingsHelper):
         return self.controller.hud_monitor
 
     @property
-    def searchbar(self):
-        """Returns the searchbar attached to the hud."""
-        return self.controller.get_hud_view().searchbar;
-
-    @property
     def geometry(self):
         return (self.controller.x, self.controller.y, self.controller.width, self.controller.height)
 
@@ -98,9 +106,10 @@ class Hud(KeybindingsHelper):
         else:
             return 0
 
+
 class HudView(UnityIntrospectionObject):
     """Proxy object for the hud view child of the controller."""
-  
+
     @property
     def searchbar(self):
         """Get the search bar attached to this hud view."""
@@ -109,6 +118,7 @@ class HudView(UnityIntrospectionObject):
     @property
     def geometry(self):
         return (self.x, self.y, self.width, self.height)
+
 
 class HudController(UnityIntrospectionObject):
     """Proxy object for the Unity Hud Controller."""

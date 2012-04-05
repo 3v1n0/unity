@@ -6,10 +6,9 @@
 # under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
 
-from subprocess import call
+from testtools.matchers import Equals
 from time import sleep
 
-from autopilot.emulators.bamf import Bamf
 from autopilot.emulators.unity.dash import Dash
 from autopilot.emulators.X11 import Keyboard
 from autopilot.tests import AutopilotTestCase
@@ -77,3 +76,17 @@ class CommandLensSearchTests(AutopilotTestCase):
         self.addCleanup(self.close_all_app,  "Text Editor")
         app_found = self.bamf.wait_until_application_is_running("gedit.desktop", 5)
         self.assertTrue(app_found)
+
+    def test_ctrl_tab_switching(self):
+        """Pressing Ctrl+Tab after launching command lens must switch to Home lens."""
+        self.dash.reveal_command_lens()
+        self.keybinding("dash/lens/next")
+        sleep(1)
+        self.assertThat(self.dash.active_lens, Equals("home.lens"))
+
+    def test_ctrl_shift_tab_switching(self):
+        """Pressing Ctrl+Shift+Tab after launching command lens must switch to Video lens."""
+        self.dash.reveal_command_lens()
+        self.keybinding("dash/lens/prev")
+        sleep(1)
+        self.assertThat(self.dash.active_lens, Equals("video.lens"))

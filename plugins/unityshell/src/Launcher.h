@@ -33,6 +33,7 @@
 #include "BackgroundEffectHelper.h"
 #include "DNDCollectionWindow.h"
 #include "DndData.h"
+#include "EdgeBarrierController.h"
 #include "GeisAdapter.h"
 #include "Introspectable.h"
 #include "LauncherOptions.h"
@@ -50,7 +51,7 @@ namespace launcher
 class AbstractLauncherIcon;
 class LauncherModel;
 
-class Launcher : public unity::debug::Introspectable, public nux::View
+class Launcher : public unity::debug::Introspectable, public nux::View, public ui::EdgeBarrierSubscriber
 {
   NUX_DECLARE_OBJECT_TYPE(Launcher, nux::View);
 public:
@@ -187,7 +188,7 @@ private:
   void OnDragUpdate(GeisAdapter::GeisDragData* data);
   void OnDragFinish(GeisAdapter::GeisDragData* data);
 
-  void OnPointerBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event);
+  bool HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event);
 
   void OnPluginStateChanged();
 
@@ -341,9 +342,6 @@ private:
   UrgentAnimation _urgent_animation;
 
   nux::ObjectPtr<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
-
-  ui::PointerBarrierWrapper::Ptr _pointer_barrier;
-  ui::Decaymulator::Ptr decaymulator_;
 
   int _space_between_icons;
   int _icon_size;

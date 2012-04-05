@@ -117,7 +117,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(LensView);
 
 LensView::LensView()
   : nux::View(NUX_TRACKER_LOCATION)
-  , search_string("")
   , filters_expanded(false)
   , can_refine_search(false)
   , no_results_active_(false)
@@ -126,7 +125,6 @@ LensView::LensView()
 
 LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   : nux::View(NUX_TRACKER_LOCATION)
-  , search_string("")
   , filters_expanded(false)
   , can_refine_search(false)
   , lens_(lens)
@@ -142,7 +140,7 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   dash::Style::Instance().columns_changed.connect(sigc::mem_fun(this, &LensView::OnColumnsChanged));
 
   lens_->connected.changed.connect([&](bool is_connected) { if (is_connected) initial_activation_ = true; });
-  search_string.changed.connect([&](std::string const& search) { lens_->Search(search);  });
+  search_string.SetGetterFunction(sigc::mem_fun(this, &LensView::get_search_string));
   filters_expanded.changed.connect([&](bool expanded) { fscroll_view_->SetVisible(expanded); QueueRelayout(); OnColumnsChanged(); });
   view_type.changed.connect(sigc::mem_fun(this, &LensView::OnViewTypeChanged));
 
@@ -314,6 +312,11 @@ void LensView::OnResultAdded(Result const& result)
     grid->AddResult(const_cast<Result&>(result));
     counts_[group]++;
     UpdateCounts(group);
+    // make sure we don't display the no-results-hint if we do have results
+    if (G_UNLIKELY (no_results_active_))
+    {
+      CheckNoResults(Lens::Hints());
+    }
   } catch (std::out_of_range& oor) {
     LOG_WARN(logger) << "Result does not have a valid category index: "
                      << boost::lexical_cast<unsigned int>(result.category_index)
@@ -381,7 +384,7 @@ void LensView::CheckNoResults(Lens::Hints const& hints)
 {
   gint count = lens_->results()->count();
 
-  if (!count && !no_results_active_)
+  if (count == 0 && !no_results_active_ && !search_string_.empty())
   {
     std::stringstream markup;
     Lens::Hints::const_iterator it;
@@ -428,6 +431,17 @@ void LensView::HideResultsMessage()
   }
 }
 
+void LensView::PerformSearch(std::string const& search_query)
+{
+  search_string_ = search_query;
+  lens_->Search(search_query);
+}
+
+std::string LensView::get_search_string() const
+{
+  return search_string_;
+}
+
 void LensView::OnGroupExpanded(PlacesGroup* group)
 {
   ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
@@ -462,7 +476,7 @@ void LensView::OnViewTypeChanged(ViewType view_type)
   if (view_type != HIDDEN && initial_activation_)
   {
     /* We reset the lens for ourselves, in case this is a restart or something */
-    lens_->Search(search_string);
+    lens_->Search(search_string_);
     initial_activation_ = false;
   }
 
