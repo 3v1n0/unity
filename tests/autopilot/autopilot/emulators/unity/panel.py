@@ -180,6 +180,10 @@ class MenuView(UnityIntrospectionObject):
         """Return a list of menu entries"""
         return self.get_children_by_type(IndicatorEntry)
 
+    def get_menu_by_label(self, entry_label):
+        """Return the indicator entry with the given label"""
+        return self.get_children_by_type(IndicatorEntry, label=entry_label)
+
     @property
     def geometry(self):
         """Returns a tuple of (x,y,w,h) for the current menu view."""

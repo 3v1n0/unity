@@ -47,7 +47,7 @@ class PanelTestsBase(AutopilotTestCase):
         
         """
         self.close_all_app(app_name)
-        app = self.start_app(app_name)
+        app = self.start_app(app_name, locale="C")
 
         wins = app.get_windows()
         self.assertThat(len(wins), Equals(1))
@@ -227,7 +227,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
     def test_window_buttons_show_for_maximized_window_on_mouse_in(self):
         """Tests that the window buttons are shown when a maximized window
-        is focused and the mouse is over the whitelisted panel areas
+        is focused and the mouse is over the menu-view panel areas
         """
         text_win = self.open_new_application_window("Text Editor", maximized=True)
 
@@ -560,13 +560,116 @@ class PanelWindowButtonsTests(PanelTestsBase):
 class PanelMenuTests(PanelTestsBase):
 
     scenarios = _make_monitor_scenarios()
-    panel_monitor = 1
+
+    def test_menus_are_added_on_new_application(self):
+        """Tests that menus are added when a new application is opened"""
+        self.open_new_application_window("Calculator")
+        menu_entries = self.panel.menus.get_entries()
+        self.assertThat(len(menu_entries), Equals(3))
+
+        menu_view = self.panel.menus
+        self.assertThat(menu_view.get_menu_by_label("Calculator"), NotEquals(None))
+        self.assertThat(menu_view.get_menu_by_label("Mode"), NotEquals(None))
+        self.assertThat(menu_view.get_menu_by_label("Help"), NotEquals(None))
+
+    def test_menus_dont_show_for_restored_window_on_mouse_out(self):
+        """Tests that menus of a restored window are not shown when
+        the mouse pointer is outside the panel menu area.
+        """
+        self.open_new_application_window("Calculator")
+        sleep(self.panel.menus.fadein_duration / 1000.0)
+        sleep(self.panel.menus.discovery_duration)
+        sleep(self.panel.menus.fadeout_duration / 1000.0)
+
+        self.assertFalse(self.panel.menus_shown)
+
+    def test_menus_show_for_restored_window_on_mouse_in(self):
+        """Tests that menus of a restored window are shown only when
+        the mouse pointer is over the panel menu area.
+        """
+        self.open_new_application_window("Calculator")
+        sleep(self.panel.menus.fadein_duration / 1000.0)
+        sleep(self.panel.menus.discovery_duration)
+        sleep(self.panel.menus.fadeout_duration / 1000.0)
+
+        self.panel.move_mouse_over_menus()
+        sleep(self.panel.menus.fadein_duration / 1000.0)
+        self.assertTrue(self.panel.menus_shown)
+
+        self.panel.move_mouse_over_window_buttons()
+        sleep(self.panel.menus.fadeout_duration / 1000.0)
+        self.assertTrue(self.panel.menus_shown)
+
+        if self.panel.grab_area.width > 0:
+            self.panel.move_mouse_over_grab_area()
+            sleep(self.panel.menus.fadeout_duration / 1000.0)
+            self.assertTrue(self.panel.menus_shown)
+
+        self.panel.move_mouse_over_indicators()
+        sleep(self.panel.menus.fadeout_duration / 1000.0)
+        self.assertFalse(self.panel.menus_shown)
+
+    def test_menus_dont_show_for_maximized_window_on_mouse_out(self):
+        """Tests that menus of a maximized window are not shown when
+        the mouse pointer is outside the panel menu area.
+        """
+        self.open_new_application_window("Text Editor", maximized=True)
+        sleep(self.panel.menus.fadein_duration / 1000.0)
+        sleep(self.panel.menus.discovery_duration)
+        sleep(self.panel.menus.fadeout_duration / 1000.0)
+
+        self.assertFalse(self.panel.menus_shown)
+
+
+    def test_menus_show_for_maximized_window_on_mouse_in(self):
+        """Tests that menus of a maximized window are shown only when
+        the mouse pointer is over the panel menu area.
+        """
+        self.open_new_application_window("Text Editor", maximized=True)
+        sleep(self.panel.menus.fadein_duration / 1000.0)
+        sleep(self.panel.menus.discovery_duration)
+        sleep(self.panel.menus.fadeout_duration / 1000.0)
+
+        self.panel.move_mouse_over_menus()
+        sleep(self.panel.menus.fadein_duration / 1000.0)
+        self.assertTrue(self.panel.menus_shown)
+
+        self.panel.move_mouse_over_window_buttons()
+        sleep(self.panel.menus.fadeout_duration / 1000.0)
+        self.assertTrue(self.panel.menus_shown)
+
+        if self.panel.grab_area.width > 0:
+            self.panel.move_mouse_over_grab_area()
+            sleep(self.panel.menus.fadeout_duration / 1000.0)
+            self.assertTrue(self.panel.menus_shown)
+
+        self.panel.move_mouse_over_indicators()
+        sleep(self.panel.menus.fadeout_duration / 1000.0)
+        self.assertFalse(self.panel.menus_shown)
+
+    def test_menus_dont_show_with_dash(self):
+        """Tests that menus are not showing when opening the dash"""
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
+        sleep(1)
+
+        self.assertFalse(self.panel.menus_shown)
+
+    def test_menus_dont_show_with_hud(self):
+        """Tests that menus are not showing when opening the HUD"""
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
+        sleep(1)
+
+        self.assertFalse(self.panel.menus_shown)
 
 class PanelCrossMonitorsTests(PanelTestsBase):
+    """Multimonitor only tests"""
 
-    scenarios = []
-    if ScreenGeometry().get_num_monitors() > 1:
-        scenarios = [("Multimonitor only tests", {})]
+    def setUp(self):
+        super(PanelWindowButtonsTests, self).setUp()
+        if self.screen_geo.get_num_monitors() < 2:
+            self.skipTest("This test requires a multimonitor setup")
 
     def test_panel_title_updates_moving_window(self):
         """Tests the title shown in the panel, moving a restored window around them"""
