@@ -645,32 +645,32 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
         * not going to be accessible by either switcher
         * or scale, so unconditionally unminimize those
         * windows when the launcher icon is activated */
-       if ((focus_visibility == WindowManager::FocusVisibility::ForceUnminimizeOnCurrentDesktop &&
+        if ((focus_visibility == WindowManager::FocusVisibility::ForceUnminimizeOnCurrentDesktop &&
             target_vp == m_Screen->vp()) ||
             (focus_visibility == WindowManager::FocusVisibility::ForceUnminimizeInvisible &&
              win->mapNum () == 0))
-       {
-         bool is_mapped = win->mapNum () != 0;
-         top_window = win;
-         if (monitor >= 0 && win->outputDevice() == monitor)
-          top_window_on_monitor = win;
-         win->unminimize ();
+        {
+          bool is_mapped = win->mapNum () != 0;
+          top_window = win;
+          if (monitor >= 0 && win->outputDevice() == monitor)
+           top_window_on_monitor = win;
+          win->unminimize ();
 
-         forced_unminimize = true;
+          forced_unminimize = true;
 
-         /* Initially minimized windows dont get raised */
-         if (!is_mapped)
-           win->raise ();
-       }
-       else if ((any_mapped_on_current && !win->minimized()) || !any_mapped_on_current)
-       {
-         if (!forced_unminimize || target_vp == m_Screen->vp())
-         {
-           win->raise();
-           top_window = win;
-           if (monitor >= 0 && win->outputDevice() == monitor)
-            top_window_on_monitor = win;
-         }
+           /* Initially minimized windows dont get raised */
+          if (!is_mapped)
+            win->raise ();
+        }
+        else if ((any_mapped_on_current && !win->minimized()) || !any_mapped_on_current)
+        {
+          if (!forced_unminimize || target_vp == m_Screen->vp())
+          {
+            win->raise();
+            top_window = win;
+            if (monitor >= 0 && win->outputDevice() == monitor)
+              top_window_on_monitor = win;
+          }
         }
       }
     }
