@@ -104,6 +104,15 @@ class UnityPanel(UnityIntrospectionObject, KeybindingsHelper):
         logger.debug("Moving mouse to center of grab area.")
         self._mouse.move(target_x, target_y)
 
+    def move_mouse_over_window_buttons(self):
+        """Move the mouse over the center of the window buttons area for this panel."""
+        (x, y, w, h) = self.window_buttons.geometry
+        target_x = x + w / 2
+        target_y = y + h / 2
+
+        logger.debug("Moving mouse to center of the window buttons.")
+        self._mouse.move(target_x, target_y)
+
     def get_indicator_entries(self, visible_only=True):
         """Returns a list of entries for this panel including both menus and indicators"""
         entries = []
@@ -127,11 +136,11 @@ class UnityPanel(UnityIntrospectionObject, KeybindingsHelper):
 
     @property
     def menus_shown(self):
-        return self.active and self.draw_menus
+        return self.active and self.menus.draw_menus
 
     @property
     def window_buttons_shown(self):
-        return self.active and self.draw_window_buttons
+        return self.menus.draw_window_buttons
 
     @property
     def window_buttons(self):
@@ -174,12 +183,14 @@ class WindowButtons(UnityIntrospectionObject):
     def get_buttons(self, visible_only=True):
         """Return a list of window buttons"""
         if visible_only:
-            return self.get_children_by_type(Button, visible=True)
+            return self.get_children_by_type(WindowButton, visible=True)
         else:
-            return self.get_children_by_type(Button)
+            return self.get_children_by_type(WindowButton)
 
     def get_button(self, type):
-        return self.get_children_by_type(Button, type=type)
+        buttons = self.get_children_by_type(WindowButton, type=type)
+        assert(len(buttons) == 1)
+        return buttons[0]
 
     @property
     def visible(self):
@@ -208,10 +219,10 @@ class WindowButtons(UnityIntrospectionObject):
 
 
 class WindowButton(UnityIntrospectionObject):
-    """The Window Button class."""
+    """The Window WindowButton class."""
 
     def __init__(self, *args, **kwargs):
-        super(Button, self).__init__(*args, **kwargs)
+        super(WindowButton, self).__init__(*args, **kwargs)
         self._mouse = Mouse()
 
     def mouse_move_to(self):
