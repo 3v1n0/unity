@@ -109,12 +109,19 @@ void ResultRendererHorizontalTile::Render(nux::GraphicsEngine& GfxContext,
   int icon_left_hand_side = geometry.x + padding;
   int icon_top_side = geometry.y + ((geometry.height - CARD_VIEW_ICON_SIZE) / 2);
 
+  // render overall tile background "rectangle"
   if (state == ResultRendererState::RESULT_RENDERER_NORMAL)
   {
     int x = icon_left_hand_side;
     int y = icon_top_side;
     int w = CARD_VIEW_WIDTH;
     int h = CARD_VIEW_HEIGHT;
+
+    unsigned int alpha = 0;
+    unsigned int src   = 0;
+    unsigned int dest  = 0;
+    GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
+    GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
     GfxContext.QRP_1Tex(x,
                         y,
@@ -123,6 +130,8 @@ void ResultRendererHorizontalTile::Render(nux::GraphicsEngine& GfxContext,
                         normal_cache_->GetDeviceTexture(),
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
+
+    GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
   }
 
   // render highlight if its needed
@@ -223,7 +232,7 @@ nux::BaseTexture* ResultRendererHorizontalTile::DrawNormal(std::string const& te
 
   // draw the normal bg
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-  cairo_set_source_rgba(cr, 0.44f, 0.0f, 0.3f, 0.2f);
+  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.2f);
   cairo_graphics.DrawRoundedRectangle(cr,
                                       1.0f,
                                       0.0f,
