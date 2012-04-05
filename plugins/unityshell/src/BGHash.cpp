@@ -155,14 +155,8 @@ void BGHash::OnBackgroundChanged (GnomeBG *bg)
     TransitionToNewColor (_override_color);
     return;
   }
-  
-  // queue a refresh
-  g_timeout_add(1000, [] (gpointer data) -> gboolean 
-  { 
-    BGHash *self = static_cast<BGHash*>(data);
-    self->RefreshColor(); 
-    return FALSE; 
-  }, this);
+ 
+  RefreshColor();
 }
 
 nux::Color BGHash::InterpolateColor (nux::Color colora, nux::Color colorb, float value)

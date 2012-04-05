@@ -44,6 +44,7 @@ namespace unity
     void OnBackgroundChanged (GnomeBG *bg);
     void OnGSettingsChanged (GSettings *settings, gchar *key);
     void OverrideColor (nux::Color color);
+    void RefreshColor();
   
   private:
     gboolean DoTransitionCallback ();
@@ -52,8 +53,6 @@ namespace unity
     void TransitionToNewColor (nux::Color new_color);
     nux::Color InterpolateColor (nux::Color colora, nux::Color colorb, float value);
     nux::Color MatchColor (nux::Color base_color);
-    
-    void RefreshColor();
 
   private:
     GnomeBG *background_monitor;
