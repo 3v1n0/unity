@@ -81,7 +81,6 @@ class PanelTestsBase(AutopilotTestCase):
 class PanelTitleTests(PanelTestsBase):
 
     scenarios = _make_monitor_scenarios()
-    #panel_monitor = 0
 
     def test_panel_title_on_empty_desktop(self):
         sleep(1)
@@ -165,9 +164,17 @@ class PanelTitleTests(PanelTestsBase):
 
 class PanelWindowButtonsTests(PanelTestsBase):
 
-    panel_monitor = 1
+    scenarios = _make_monitor_scenarios()
+    #panel_monitor = 1
+
+    def setUp(self):
+        super(PanelWindowButtonsTests, self).setUp()
+        # Locked Launchers on all monitors
+        self.set_unity_option('num_launchers', 0)
+        self.set_unity_option('launcher_hide_mode', 0)
 
     def test_window_buttons_dont_show_on_empty_desktop(self):
+        """Tests that the window buttons are not shown on clean desktop"""
         sleep(1)
         self.keybinding("window/show_desktop")
         self.addCleanup(self.keybinding, "window/show_desktop")
@@ -179,6 +186,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.assertFalse(self.panel.window_buttons_shown)
 
     def test_window_buttons_dont_show_for_restored_window(self):
+        """Tests that the window buttons are not shown for a restored window"""
         calc_win = self.open_new_application_window("Calculator")
 
         self.assertFalse(self.panel.window_buttons_shown)
@@ -188,6 +196,9 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.assertFalse(self.panel.window_buttons_shown)
 
     def test_window_buttons_dont_show_for_maximized_window_on_mouse_out(self):
+        """Tests that the windows button arenot shown for a maximized window
+        when the mouse is outside the panel
+        """
         text_win = self.open_new_application_window("Text Editor", maximize=True)
 
         sleep(self.panel.menus.discovery_duration)
@@ -195,6 +206,9 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.assertFalse(self.panel.window_buttons_shown)
 
     def test_window_buttons_show_for_maximized_window_on_mouse_in(self):
+        """Tests that the window buttons are shown when a maximized window
+        is focused and the mouse is over the whitelisted panel areas
+        """
         text_win = self.open_new_application_window("Text Editor", maximize=True)
 
         sleep(self.panel.menus.discovery_duration)
@@ -203,22 +217,63 @@ class PanelWindowButtonsTests(PanelTestsBase):
         sleep(self.panel.menus.fadein_duration / 1000.0)
         self.assertTrue(self.panel.window_buttons_shown)
 
+        self.panel.move_mouse_over_menus()
+        sleep(self.panel.menus.fadeout_duration / 1000.0)
+        self.assertTrue(self.panel.window_buttons_shown)
+
+        if self.panel.grab_area.width > 0:
+            self.panel.move_mouse_over_grab_area()
+            sleep(self.panel.menus.fadeout_duration / 1000.0)
+            self.assertTrue(self.panel.window_buttons_shown)
+
+        self.panel.move_mouse_over_indicators()
+        sleep(self.panel.menus.fadeout_duration / 1000.0)
+        self.assertFalse(self.panel.window_buttons_shown)
+
     def test_window_buttons_show_with_dash(self):
+        """Tests that the window buttons are shown when opening the dash"""
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
         sleep(.5)
         self.assertTrue(self.panel.window_buttons_shown)
 
+    def test_window_buttons_show_with_hud(self):
+        """Tests that the window buttons are shown when opening the HUD"""
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
+        sleep(.5)
+        self.assertTrue(self.panel.window_buttons_shown)
+
+    def test_window_buttons_update_visual_state(self):
+        """Tests that the window button updates its visual state"""
+        text_win = self.open_new_application_window("Text Editor", maximize=True)
+        button = self.panel.window_buttons.close
+
+        self.assertThat(button.visual_state, Equals("normal"))
+
+        button.mouse_move_to()
+        self.assertTrue(button.visible)
+        self.assertTrue(button.enabled)
+        sleep(.25)
+        self.assertThat(button.visual_state, Equals("prelight"))
+
+        self.mouse.press()
+        self.addCleanup(self.mouse.release)
+        self.addCleanup(self.panel.move_mouse_below_the_panel)
+        sleep(.25)
+        self.assertThat(button.visual_state, Equals("pressed"))
+
     def test_window_buttons_close_button_works_for_window(self):
+        """Tests that the window button 'Close' actually closes a window"""
         text_win = self.open_new_application_window("Text Editor", maximize=True)
 
-        button = self.panel.window_buttons.close
         self.panel.window_buttons.close.mouse_click()
         sleep(.5)
 
         self.assertTrue(text_win.closed)
 
     def test_window_buttons_minimize_button_works_for_window(self):
+        """Tests that the window button 'Minimize' actually minimizes a window"""
         text_win = self.open_new_application_window("Text Editor", maximize=True)
 
         self.panel.window_buttons.minimize.mouse_click()
@@ -227,6 +282,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.assertTrue(text_win.is_hidden)
 
     def test_window_buttons_unmaximize_button_works_for_window(self):
+        """Tests that the window button 'Unmaximize' actually unmaximizes a window"""
         text_win = self.open_new_application_window("Text Editor", maximize=True)
 
         self.panel.window_buttons.unmaximize.mouse_click()
@@ -237,7 +293,121 @@ class PanelWindowButtonsTests(PanelTestsBase):
         sleep(self.panel.menus.fadeout_duration / 1000.0)
         self.assertFalse(self.panel.window_buttons_shown)
 
+    def test_window_buttons_close_button_works_for_hud(self):
+        """Tests that the window 'Close' actually closes the HUD"""
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
+        sleep(.5)
 
+        self.panel.window_buttons.close.mouse_click()
+        sleep(.75)
+
+        self.assertFalse(self.hud.visible)
+
+    def test_window_buttons_minimize_button_disabled_for_hud(self):
+        """Tests that the window 'Minimize' does nothing to the HUD"""
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
+        sleep(.5)
+
+        button = self.panel.window_buttons.minimize
+        button.mouse_click()
+        sleep(.5)
+
+        self.assertFalse(button.enabled)
+        self.assertTrue(self.hud.visible)
+
+    def test_window_buttons_maximize_button_disabled_for_hud(self):
+        """Tests that the window 'Maximize' does nothing to the HUD"""
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
+        sleep(.5)
+
+        button = self.panel.window_buttons.maximize
+        button.mouse_click()
+        sleep(.5)
+
+        self.assertFalse(button.enabled)
+        self.assertTrue(self.hud.visible)
+
+    def test_window_buttons_close_button_works_for_dash(self):
+        """Tests that the window 'Close' actually closes the Dash"""
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
+        sleep(.5)
+
+        self.panel.window_buttons.close.mouse_click()
+        sleep(.75)
+
+        self.assertFalse(self.dash.visible)
+
+    def test_window_buttons_minimize_button_disabled_for_dash(self):
+        """Tests that the 'Minimize' button is disabled for the dash"""
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
+        sleep(.5)
+
+        button = self.panel.window_buttons.minimize
+        button.mouse_click()
+        sleep(.5)
+
+        self.assertFalse(button.enabled)
+        self.assertTrue(self.dash.visible)
+
+    def test_window_buttons_maximization_buttons_works_for_dash(self):
+        """Tests that the 'Maximize' and 'Unmaximize' buttons (when
+        both enabled) work as expected"""
+        self.dash.ensure_visible()
+        self.addCleanup(self.panel.window_buttons.close.mouse_click)
+        sleep(.5)
+
+        unmaximize = self.panel.window_buttons.unmaximize
+        maximize = self.panel.window_buttons.maximize
+        netbook_dash = (self.dash.view.form_factor == "netbook")
+
+        if netbook_dash and not unmaximize.enabled:
+            unmaximize.mouse_click()
+            sleep(.5)
+            self.assertThat(self.dash.view.form_factor, Equals("netbook"))
+        else:
+            if maximize.visible:
+                active_button = maximize
+                unactive_button = unmaximize
+            else:
+                active_button = unmaximize
+                unactive_button = maximize
+
+            self.assertTrue(active_button.visible)
+            self.assertTrue(active_button.sensitive)
+            self.assertTrue(active_button.enabled)
+            self.assertFalse(unactive_button.visible)
+
+            self.addCleanup(unactive_button.mouse_click)
+            active_button.mouse_click()
+            sleep(.5)
+
+            self.assertTrue(unactive_button.visible)
+            self.assertTrue(unactive_button.sensitive)
+            self.assertTrue(unactive_button.enabled)
+            self.assertFalse(active_button.visible)
+            sleep(.5)
+
+            if netbook_dash:
+                self.assertThat(self.dash.view.form_factor, Equals("desktop"))
+            else:
+                self.assertThat(self.dash.view.form_factor, Equals("netbook"))
+
+            self.addCleanup(active_button.mouse_click)
+            unactive_button.mouse_click()
+            sleep(.5)
+
+            self.assertTrue(active_button.visible)
+            self.assertFalse(unactive_button.visible)
+
+            if netbook_dash:
+                self.assertThat(self.dash.view.form_factor, Equals("netbook"))
+            else:
+                self.assertThat(self.dash.view.form_factor, Equals("desktop"))
 
 
 class PanelTitleCrossMonitorsTests(PanelTestsBase):
@@ -266,6 +436,8 @@ class PanelTitleCrossMonitorsTests(PanelTestsBase):
             prev_monitor = monitor
 
     def test_window_buttons_dont_show_for_maximized_window_on_mouse_in(self):
+        """Test that window buttons are not showing when the mouse is hovering
+        the panel in other monitors"""
         text_win = self.open_new_application_window("Text Editor", maximize=True)
 
         sleep(self.panel.menus.discovery_duration)

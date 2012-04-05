@@ -113,6 +113,15 @@ class UnityPanel(UnityIntrospectionObject, KeybindingsHelper):
         logger.debug("Moving mouse to center of the window buttons.")
         self._mouse.move(target_x, target_y)
 
+    def move_mouse_over_indicators(self):
+        """Move the mouse over the center of the indicators area for this panel."""
+        (x, y, w, h) = self.indicators.geometry
+        target_x = x + w / 2
+        target_y = y + h / 2
+
+        logger.debug("Moving mouse to center of the indicators area.")
+        self._mouse.move(target_x, target_y)
+
     def get_indicator_entries(self, visible_only=True):
         """Returns a list of entries for this panel including both menus and indicators"""
         entries = []
