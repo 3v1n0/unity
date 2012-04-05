@@ -10,7 +10,6 @@
 from autopilot.emulators.unity import UnityIntrospectionObject
 from autopilot.emulators.unity.quicklist import Quicklist
 
-
 class SimpleLauncherIcon(UnityIntrospectionObject):
     """Holds information about a simple launcher icon.
 

@@ -640,7 +640,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   float vc[4];
   float h = 20.0f;
   float w = 1.0f;
-  float panel_h = 24.0f;
+  float panel_h = static_cast<float>(panel_style_.panel_height);
 
   float x1 = output->x();
   float y1 = output->y() + panel_h;
@@ -777,7 +777,8 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
       nux::GetGraphicsDisplay()->GetGraphicsEngine()->SetOrthographicProjectionMatrix(screen->width (), screen->height());
 
       nux::TexCoordXForm texxform;
-      nux::GetGraphicsDisplay()->GetGraphicsEngine()->QRP_GLSL_1Tex(0, 0, screen->width (), 24, panel_texture_, texxform, nux::color::White);
+      int panel_height = panel_style_.panel_height;
+      nux::GetGraphicsDisplay()->GetGraphicsEngine()->QRP_1Tex(0, 0, screen->width (), panel_height, panel_texture_, texxform, nux::color::White);
     }
   }
 
