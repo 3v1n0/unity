@@ -661,7 +661,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
 
         gfx_context.QRP_1Tex(geo.x - 10,
-                             geo.y + geo.height - offset,
+                             geo.y + geo.height,
                              left_tile->GetWidth(),
                              real_height + offset,
                              left_tile->GetDeviceTexture(),
