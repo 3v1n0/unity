@@ -237,12 +237,20 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle(GetGeometry());
 
-  if (BackgroundEffectHelper::blur_type != BLUR_NONE && (_overlay_is_open || (_opacity != 1.0f && _opacity != 0.0f)))
+  if ((_overlay_is_open || (_opacity != 1.0f && _opacity != 0.0f)))
   {
     nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, geo.width, geo.height);
-    bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo);
+    
+    if (BackgroundEffectHelper::blur_type != BLUR_NONE)
+    {
+      bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo);
+    }
+    else
+    {
+      bg_blur_texture_ = bg_effect_helper_.GetRegion(blur_geo); 
+    }
 
-    if (bg_blur_texture_.IsValid() && BackgroundEffectHelper::blur_type != BLUR_NONE && (_overlay_is_open || _opacity != 1.0f))
+    if (bg_blur_texture_.IsValid() && (_overlay_is_open || _opacity != 1.0f))
     {
       nux::TexCoordXForm texxform_blur_bg;
       texxform_blur_bg.flip_v_coord = true;
@@ -318,7 +326,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.GetRenderStates().SetBlend(true);
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
-  if (bg_blur_texture_.IsValid() && BackgroundEffectHelper::blur_type != BLUR_NONE && (_overlay_is_open || (_opacity != 1.0f && _opacity != 0.0f)))
+  if (bg_blur_texture_.IsValid() && (_overlay_is_open || (_opacity != 1.0f && _opacity != 0.0f)))
   {
     nux::Geometry geo_absolute = GetAbsoluteGeometry ();
     nux::TexCoordXForm texxform_blur_bg;

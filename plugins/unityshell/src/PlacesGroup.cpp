@@ -426,8 +426,6 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
   nux::Geometry const& base = GetGeometry();
   graphics_engine.PushClippingRectangle(base);
 
-  nux::GetPainter().PaintBackground(graphics_engine, base);
-
   if (ShouldBeHighlighted())
   {
     nux::Geometry geo(_header_layout->GetGeometry());

@@ -128,6 +128,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , painting_tray_ (false)
   , last_scroll_event_(0)
   , hud_keypress_time_(0)
+  , panel_texture_has_changed_(true)
+  , paint_panel_(false)
 {
   Timer timer;
   gfloat version;
@@ -371,8 +373,11 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
        RaiseInputWindows();
      });
-      LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";
+
+     LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";
   }
+
+  panel::Style::Instance().changed.connect(sigc::mem_fun(this, &UnityScreen::OnPanelStyleChanged));
 }
 
 UnityScreen::~UnityScreen()
@@ -723,6 +728,12 @@ UnityWindow::updateIconPos (int   &wx,
   wy = y + (last_bound.height - height) / 2;
 }
 
+void
+UnityScreen::OnPanelStyleChanged()
+{
+  panel_texture_has_changed_ = true;
+}
+
 #ifdef USE_GLES
 void UnityScreen::paintDisplay()
 #else
@@ -734,6 +745,37 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 
 #ifndef USE_GLES
   bool was_bound = _fbo->bound ();
+
+  if (was_bound && launcher_controller_->IsOverlayOpen() && paint_panel_)
+  {
+    if (panel_texture_has_changed_ || !panel_texture_.IsValid())
+    {
+      panel_texture_.Release();
+
+      nux::NBitmapData* bitmap = panel::Style::Instance().GetBackground(screen->width (), screen->height(), 1.0f);
+      nux::BaseTexture* texture2D = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
+      if (bitmap && texture2D)
+      {
+        texture2D->Update(bitmap);
+        panel_texture_ = texture2D->GetDeviceTexture();
+        texture2D->UnReference();
+        delete bitmap;
+      }
+      panel_texture_has_changed_ = false;
+    }
+
+    if (panel_texture_.IsValid())
+    {
+      nux::GetGraphicsDisplay()->GetGraphicsEngine()->ResetModelViewMatrixStack();
+      nux::GetGraphicsDisplay()->GetGraphicsEngine()->Push2DTranslationModelViewMatrix(0.0f, 0.0f, 0.0f);
+      nux::GetGraphicsDisplay()->GetGraphicsEngine()->ResetProjectionMatrix();
+      nux::GetGraphicsDisplay()->GetGraphicsEngine()->SetOrthographicProjectionMatrix(screen->width (), screen->height());
+
+      nux::TexCoordXForm texxform;
+      nux::GetGraphicsDisplay()->GetGraphicsEngine()->QRP_GLSL_1Tex(0, 0, screen->width (), 24, panel_texture_, texxform, nux::color::White);
+    }
+  }
+
   _fbo->unbind ();
 
   /* Draw the bit of the relevant framebuffer for each output */
@@ -748,7 +790,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
     glPopMatrix ();
   }
 
-  nux::ObjectPtr<nux::IOpenGLTexture2D> device_texture =
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> device_texture =
       nux::GetGraphicsDisplay()->GetGpuDevice()->CreateTexture2DFromID(_fbo->texture(),
                                                                        screen->width (), screen->height(), 1, nux::BITFMT_R8G8B8A8);
 #else
@@ -1217,6 +1259,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   doShellRepaint = true;
   allowWindowPaint = true;
   _last_output = output;
+  paint_panel_ = false;
 
 #ifndef USE_GLES
   /* bind the framebuffer here
@@ -2214,6 +2257,22 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
                          const CompRegion& region,
                          unsigned int mask)
 {
+  if (uScreen->doShellRepaint && !uScreen->paint_panel_ && window->type() == CompWindowTypeNormalMask)
+  {
+    guint32 id = window->id();
+    bool maximized = WindowManager::Default()->IsWindowMaximized(id);
+    bool on_current = window->onCurrentDesktop();
+    bool override_redirect = window->overrideRedirect();
+    bool managed = window->managed();
+    CompPoint viewport = window->defaultViewport();
+    int output = window->outputDevice();
+
+    if (maximized && on_current && !override_redirect && managed && viewport == uScreen->screen->vp() && output == (int)uScreen->screen->currentOutputDev().id())
+    {
+      uScreen->paint_panel_ = true;
+    }
+  }
+
   if (uScreen->doShellRepaint && !uScreen->forcePaintOnTop ())
   {
     std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
@@ -2222,6 +2281,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     for (CompWindow* w = window; w && uScreen->doShellRepaint; w = w->prev)
     {
       auto id = w->id();
+
       for (unsigned int i = 0; i < size; ++i)
       {
         if (xwns[i] == id)
