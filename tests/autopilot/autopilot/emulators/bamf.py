@@ -335,8 +335,9 @@ class BamfWindow(object):
     @property
     def closed(self):
         """Returns True if the window has been closed"""
+        # This will return False when the window is closed and then removed from BUS
         try:
-            return self._view_iface.Closed()
+            return (self._window_iface.GetXid() != self.x_id)
         except:
             return True
 
