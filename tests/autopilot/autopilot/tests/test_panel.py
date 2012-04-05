@@ -39,7 +39,7 @@ class PanelTestsBase(AutopilotTestCase):
         self.panel = self.panels.get_panel_for_monitor(self.panel_monitor)
         self.panel.move_mouse_below_the_panel()
 
-    def open_new_application_window(self, app_name, maximize=False, move_to_monitor=True):
+    def open_new_application_window(self, app_name, maximized=False, move_to_monitor=True):
         """Opens a new instance of the requested application, ensuring
         that only one window is opened.
 
@@ -61,15 +61,17 @@ class PanelTestsBase(AutopilotTestCase):
         if move_to_monitor:
             self.move_window_to_panel_monitor(app_win)
 
-        if maximize and not app_win.is_maximized:
+        if maximized and not app_win.is_maximized:
             self.keybinding("window/maximize")
             self.addCleanup(self.keybinding, "window/restore")
+        elif not maximized and app_win.is_maximized:
+            self.keybinding("window/restore")
+            self.addCleanup(self.keybinding, "window/maximize")
 
         app_win.set_focus()
         sleep(.25)
 
-        if maximize:
-            self.assertThat(app_win.is_maximized, Equals(maximize))
+        self.assertThat(app_win.is_maximized, Equals(maximized))
 
         return app_win
 
@@ -100,12 +102,12 @@ class PanelTitleTests(PanelTestsBase):
 
     def test_panel_title_on_empty_desktop(self):
         """Test that the title is set ot default when there are no windows shown"""
+        self.keybinding("window/show_desktop")
         # We need this sleep to give the time to showdesktop to properly resume
         # the initial status without getting a false-negative result
-        sleep(1)
-        self.keybinding("window/show_desktop")
+        self.addCleanup(sleep, 2)
         self.addCleanup(self.keybinding, "window/show_desktop")
-        sleep(1)
+        sleep(2)
 
         self.assertTrue(self.panel.desktop_is_active)
 
@@ -118,7 +120,7 @@ class PanelTitleTests(PanelTestsBase):
 
     def test_panel_title_with_maximized_application(self):
         """Tests the title shown in the panel with a maximized application"""
-        text_win = self.open_new_application_window("Text Editor", maximize=True)
+        text_win = self.open_new_application_window("Text Editor", maximized=True)
 
         self.assertTrue(text_win.is_maximized)
         self.assertThat(self.panel.title, Equals(text_win.title))
@@ -127,7 +129,7 @@ class PanelTitleTests(PanelTestsBase):
         """Tests the title shown in the panel when opening the restored child of
         a maximized application
         """
-        text_win = self.open_new_application_window("Text Editor", maximize=True)
+        text_win = self.open_new_application_window("Text Editor", maximized=True)
 
         self.assertTrue(text_win.is_maximized)
         self.assertThat(self.panel.title, Equals(text_win.title))
@@ -143,7 +145,7 @@ class PanelTitleTests(PanelTestsBase):
         self.set_unity_option('num_launchers', 0)
         self.set_unity_option('launcher_hide_mode', 0)
 
-        text_win = self.open_new_application_window("Text Editor", maximize=True)
+        text_win = self.open_new_application_window("Text Editor", maximized=True)
 
         self.assertTrue(text_win.is_maximized)
         self.assertThat(self.panel.title, Equals(text_win.title))
@@ -162,7 +164,7 @@ class PanelTitleTests(PanelTestsBase):
     def test_panel_title_updates_on_maximized_window_title_changes(self):
         """Tests that the title of a maximized application updates with
         window title changes"""
-        text_win = self.open_new_application_window("Text Editor", maximize=True)
+        text_win = self.open_new_application_window("Text Editor", maximized=True)
 
         self.assertThat(self.panel.title, Equals(text_win.title))
         old_title = text_win.title
@@ -193,10 +195,10 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
     def test_window_buttons_dont_show_on_empty_desktop(self):
         """Tests that the window buttons are not shown on clean desktop"""
-        sleep(1)
-        self.keybinding("window/show_desktop")
+        # We need this sleep to give the time to showdesktop to properly resume
+        # the initial status without getting a false-negative result
+        self.addCleanup(sleep, 2)
         self.addCleanup(self.keybinding, "window/show_desktop")
-        sleep(1)
 
         self.assertFalse(self.panel.window_buttons_shown)
         self.panel.move_mouse_over_window_buttons()
@@ -217,7 +219,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         """Tests that the windows button arenot shown for a maximized window
         when the mouse is outside the panel
         """
-        text_win = self.open_new_application_window("Text Editor", maximize=True)
+        text_win = self.open_new_application_window("Text Editor", maximized=True)
 
         sleep(self.panel.menus.discovery_duration)
         sleep(self.panel.menus.discovery_fadein_duration / 1000.0)
@@ -227,7 +229,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         """Tests that the window buttons are shown when a maximized window
         is focused and the mouse is over the whitelisted panel areas
         """
-        text_win = self.open_new_application_window("Text Editor", maximize=True)
+        text_win = self.open_new_application_window("Text Editor", maximized=True)
 
         sleep(self.panel.menus.discovery_duration)
 
@@ -269,7 +271,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         """Tests that the window buttons are shown when opening the HUD"""
         self.hud.ensure_visible()
         self.addCleanup(self.hud.ensure_hidden)
-        sleep(.5)
+        sleep(1)
         self.assertTrue(self.panel.window_buttons_shown)
 
         buttons = self.panel.window_buttons.get_buttons()
@@ -279,7 +281,8 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
     def test_window_buttons_update_visual_state(self):
         """Tests that the window button updates its visual state"""
-        text_win = self.open_new_application_window("Text Editor", maximize=True)
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
         button = self.panel.window_buttons.close
 
         self.assertThat(button.visual_state, Equals("normal"))
@@ -292,13 +295,28 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
         self.mouse.press()
         self.addCleanup(self.mouse.release)
-        self.addCleanup(self.panel.move_mouse_below_the_panel)
         sleep(.25)
         self.assertThat(button.visual_state, Equals("pressed"))
 
+    def test_window_buttons_cancel(self):
+        """Tests how the buttons ignore clicks when the mouse is pressed over
+        them and released outside their area
+        """
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
+        button = self.panel.window_buttons.close
+
+        button.mouse_move_to()
+        self.mouse.press()
+        self.addCleanup(self.mouse.release)
+        sleep(.25)
+        self.panel.move_mouse_below_the_panel()
+        sleep(.25)
+        self.assertTrue(self.hud.visible)
+
     def test_window_buttons_close_button_works_for_window(self):
         """Tests that the window button 'Close' actually closes a window"""
-        text_win = self.open_new_application_window("Text Editor", maximize=True, move_to_monitor=False)
+        text_win = self.open_new_application_window("Text Editor", maximized=True, move_to_monitor=False)
         self.move_window_to_panel_monitor(text_win, restore_position=False)
         self.keybinding("window/maximize")
 
@@ -309,7 +327,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.assertTrue(text_win.closed)
 
     def test_window_buttons_close_follows_fitts_law(self):
-        text_win = self.open_new_application_window("Text Editor", maximize=True, move_to_monitor=False)
+        text_win = self.open_new_application_window("Text Editor", maximized=True, move_to_monitor=False)
         self.move_window_to_panel_monitor(text_win, restore_position=False)
         self.keybinding("window/maximize")
 
@@ -324,7 +342,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
     def test_window_buttons_minimize_button_works_for_window(self):
         """Tests that the window button 'Minimize' actually minimizes a window"""
-        text_win = self.open_new_application_window("Text Editor", maximize=True)
+        text_win = self.open_new_application_window("Text Editor", maximized=True)
 
         self.panel.window_buttons.minimize.mouse_click()
         sleep(.5)
@@ -337,7 +355,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
     def test_window_buttons_unmaximize_button_works_for_window(self):
         """Tests that the window button 'Unmaximize' actually unmaximizes a window"""
-        text_win = self.open_new_application_window("Text Editor", maximize=True)
+        text_win = self.open_new_application_window("Text Editor", maximized=True)
 
         self.panel.window_buttons.unmaximize.mouse_click()
         sleep(.5)
@@ -528,6 +546,7 @@ class PanelCrossMonitorsTests(PanelTestsBase):
             if calc_win.monitor != monitor:
                 self.addCleanup(self.screen_geo.drag_window_to_monitor, calc_win, calc_win.monitor)
                 self.screen_geo.drag_window_to_monitor(calc_win, monitor)
+                sleep(.25)
 
             if prev_monitor >= 0:
                 self.assertFalse(self.panels.get_panel_for_monitor(prev_monitor).active)
@@ -542,7 +561,7 @@ class PanelCrossMonitorsTests(PanelTestsBase):
         """Test that window buttons are not showing when the mouse is hovering
         the panel in other monitors
         """
-        text_win = self.open_new_application_window("Text Editor", maximize=True)
+        text_win = self.open_new_application_window("Text Editor", maximized=True)
 
         sleep(self.panel.menus.discovery_duration)
 
@@ -591,7 +610,7 @@ class PanelCrossMonitorsTests(PanelTestsBase):
         are does not affect the active maximized window in another monitor.
         See bug #865701
         """
-        text_win = self.open_new_application_window("Text Editor", maximize=True)
+        text_win = self.open_new_application_window("Text Editor", maximized=True)
 
         for monitor in range(0, self.screen_geo.get_num_monitors()):
             panel = self.panels.get_panel_for_monitor(monitor)
@@ -606,7 +625,7 @@ class PanelCrossMonitorsTests(PanelTestsBase):
         are does not affect the active maximized window in another monitor.
         See bug #865701
         """
-        text_win = self.open_new_application_window("Text Editor", maximize=True)
+        text_win = self.open_new_application_window("Text Editor", maximized=True)
 
         for monitor in range(0, self.screen_geo.get_num_monitors()):
             panel = self.panels.get_panel_for_monitor(monitor)
@@ -621,7 +640,7 @@ class PanelCrossMonitorsTests(PanelTestsBase):
         are does not affect the active maximized window in another monitor.
         See bug #865701
         """
-        text_win = self.open_new_application_window("Text Editor", maximize=True)
+        text_win = self.open_new_application_window("Text Editor", maximized=True)
 
         for monitor in range(0, self.screen_geo.get_num_monitors()):
             panel = self.panels.get_panel_for_monitor(monitor)
