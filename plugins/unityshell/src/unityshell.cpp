@@ -1942,42 +1942,8 @@ void UnityScreen::OnLauncherEndKeyNav(GVariant* data)
     PluginAdapter::Default ()->restoreInputFocus ();
 }
 
-bool UnityScreen::ShowHudInitiate(CompAction* action,
-                                  CompAction::State state,
-                                  CompOption::Vector& options)
+bool UnityScreen::ShowHud()
 {
-  // to receive the Terminate event
-  if (state & CompAction::StateInitKey)
-    action->setState(action->state() | CompAction::StateTermKey);
-  hud_keypress_time_ = options[7].value().i();  // XEvent time in millisec
-
-  // pass key through
-  return false;
-}
-
-bool UnityScreen::ShowHudTerminate(CompAction* action,
-                                   CompAction::State state,
-                                   CompOption::Vector& options)
-{
-  // Remember StateCancel and StateCommit will be broadcast to all actions
-  // so we need to verify that we are actually being toggled...
-  if (!(state & CompAction::StateTermKey))
-    return false;
-
-  action->setState(action->state() & ~CompAction::StateTermKey);
-
-  // And only respond to key taps
-  if (!(state & CompAction::StateTermTapped))
-    return false;
-
-  int release_time = options[7].value().i();  // XEvent time in millisec
-  int tap_duration = release_time - hud_keypress_time_;
-  if (tap_duration > local::ALT_TAP_DURATION)
-  {
-    LOG_DEBUG(logger) << "Tap too long";
-    return false;
-  }
-
   if (switcher_controller_->Visible())
   {
     LOG_ERROR(logger) << "this should never happen";
@@ -2001,7 +1967,63 @@ bool UnityScreen::ShowHudTerminate(CompAction* action,
     hud_controller_->ShowHud();
   }
 
+  // Consume the event.
   return true;
+}
+
+bool UnityScreen::ShowHudInitiate(CompAction* action,
+                                  CompAction::State state,
+                                  CompOption::Vector& options)
+{
+  // Look to see if there is a keycode.  If there is, then this isn't a
+  // modifier only keybinding.
+  int key_code = 0;
+  if (options[6].type() != CompOption::TypeUnset)
+  {
+    key_code = options[6].value().i();
+    LOG_DEBUG(logger) << "HUD initiate key code: " << key_code;
+    // show it now, no timings or terminate needed.
+    return ShowHud();
+  }
+  else
+  {
+    LOG_DEBUG(logger) << "HUD initiate key code option not set, modifier only keypress.";
+  }
+
+
+  // to receive the Terminate event
+  if (state & CompAction::StateInitKey)
+    action->setState(action->state() | CompAction::StateTermKey);
+  hud_keypress_time_ = options[7].value().i();  // XEvent time in millisec
+
+  // pass key through
+  return false;
+}
+
+bool UnityScreen::ShowHudTerminate(CompAction* action,
+                                   CompAction::State state,
+                                   CompOption::Vector& options)
+{
+  // Remember StateCancel and StateCommit will be broadcast to all actions
+  // so we need to verify that we are actually being toggled...
+  if (!(state & CompAction::StateTermKey))
+    return false;
+
+  action->setState(action->state() & ~CompAction::StateTermKey);
+
+  // If we have a modifier only keypress, check for tap and timing.
+  if (!(state & CompAction::StateTermTapped))
+    return false;
+
+  int release_time = options[7].value().i();  // XEvent time in millisec
+  int tap_duration = release_time - hud_keypress_time_;
+  if (tap_duration > local::ALT_TAP_DURATION)
+  {
+    LOG_DEBUG(logger) << "Tap too long";
+    return false;
+  }
+
+  return ShowHud();
 }
 
 gboolean UnityScreen::initPluginActions(gpointer data)
