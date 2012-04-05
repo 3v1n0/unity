@@ -163,11 +163,88 @@ class PanelTitleTests(PanelTestsBase):
         self.assertThat(self.panel.title, Equals(text_win.title))
 
 
+class PanelWindowButtonsTests(PanelTestsBase):
+
+    panel_monitor = 1
+
+    def test_window_buttons_dont_show_on_empty_desktop(self):
+        sleep(1)
+        self.keybinding("window/show_desktop")
+        self.addCleanup(self.keybinding, "window/show_desktop")
+        sleep(1)
+
+        self.assertFalse(self.panel.window_buttons_shown)
+        self.panel.move_mouse_over_window_buttons()
+        sleep(self.panel.menus.fadein_duration / 1000.0)
+        self.assertFalse(self.panel.window_buttons_shown)
+
+    def test_window_buttons_dont_show_for_restored_window(self):
+        calc_win = self.open_new_application_window("Calculator")
+
+        self.assertFalse(self.panel.window_buttons_shown)
+
+        self.panel.move_mouse_over_window_buttons()
+        sleep(self.panel.menus.fadein_duration / 1000.0)
+        self.assertFalse(self.panel.window_buttons_shown)
+
+    def test_window_buttons_dont_show_for_maximized_window_on_mouse_out(self):
+        text_win = self.open_new_application_window("Text Editor", maximize=True)
+
+        sleep(self.panel.menus.discovery_duration)
+        sleep(self.panel.menus.discovery_fadein_duration / 1000.0)
+        self.assertFalse(self.panel.window_buttons_shown)
+
+    def test_window_buttons_show_for_maximized_window_on_mouse_in(self):
+        text_win = self.open_new_application_window("Text Editor", maximize=True)
+
+        sleep(self.panel.menus.discovery_duration)
+
+        self.panel.move_mouse_over_window_buttons()
+        sleep(self.panel.menus.fadein_duration / 1000.0)
+        self.assertTrue(self.panel.window_buttons_shown)
+
+    def test_window_buttons_show_with_dash(self):
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
+        sleep(.5)
+        self.assertTrue(self.panel.window_buttons_shown)
+
+    def test_window_buttons_close_button_works_for_window(self):
+        text_win = self.open_new_application_window("Text Editor", maximize=True)
+
+        button = self.panel.window_buttons.close
+        self.panel.window_buttons.close.mouse_click()
+        sleep(.5)
+
+        self.assertTrue(text_win.closed)
+
+    def test_window_buttons_minimize_button_works_for_window(self):
+        text_win = self.open_new_application_window("Text Editor", maximize=True)
+
+        self.panel.window_buttons.minimize.mouse_click()
+        sleep(.5)
+
+        self.assertTrue(text_win.is_hidden)
+
+    def test_window_buttons_unmaximize_button_works_for_window(self):
+        text_win = self.open_new_application_window("Text Editor", maximize=True)
+
+        self.panel.window_buttons.unmaximize.mouse_click()
+        sleep(.5)
+
+        self.assertFalse(text_win.is_maximized)
+        self.assertTrue(text_win.is_focused)
+        sleep(self.panel.menus.fadeout_duration / 1000.0)
+        self.assertFalse(self.panel.window_buttons_shown)
+
+
+
+
 class PanelTitleCrossMonitorsTests(PanelTestsBase):
 
     scenarios = []
     if ScreenGeometry().get_num_monitors() > 1:
-        scenarios = [("Multimonitor", {})]
+        scenarios = [("Multimonitor only tests", {})]
 
     def test_panel_title_updates_moving_window(self):
         """Tests the title shown in the panel, moving a restored window around them"""
@@ -188,3 +265,17 @@ class PanelTitleCrossMonitorsTests(PanelTestsBase):
 
             prev_monitor = monitor
 
+    def test_window_buttons_dont_show_for_maximized_window_on_mouse_in(self):
+        text_win = self.open_new_application_window("Text Editor", maximize=True)
+
+        sleep(self.panel.menus.discovery_duration)
+
+        for monitor in range(0, self.screen_geo.get_num_monitors()):
+            panel = self.panels.get_panel_for_monitor(monitor)
+            panel.move_mouse_over_window_buttons()
+            sleep(self.panel.menus.fadein_duration / 1000.0)
+
+            if self.panel_monitor == monitor:
+                self.assertTrue(panel.window_buttons_shown)
+            else:
+                self.assertFalse(panel.window_buttons_shown)
