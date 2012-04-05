@@ -546,3 +546,48 @@ class PanelCrossMonitorsTests(PanelTestsBase):
                 self.assertTrue(panel.window_buttons_shown)
             else:
                 self.assertFalse(panel.window_buttons_shown)
+
+    def test_window_buttons_close_inactive_when_clicked_in_another_monitor(self):
+        """Tests that clicking on the panel area where the window buttons
+        are does not affect the active maximized window in another monitor.
+        See bug #865701
+        """
+        text_win = self.open_new_application_window("Text Editor", maximize=True)
+
+        for monitor in range(0, self.screen_geo.get_num_monitors()):
+            panel = self.panels.get_panel_for_monitor(monitor)
+
+            if monitor != self.panel_monitor:
+                panel.window_buttons.close.mouse_click()
+                sleep(.25)
+                self.assertFalse(text_win.closed)
+
+    def test_window_buttons_minimize_inactive_when_clicked_in_another_monitor(self):
+        """Tests that clicking on the panel area where the window buttons
+        are does not affect the active maximized window in another monitor.
+        See bug #865701
+        """
+        text_win = self.open_new_application_window("Text Editor", maximize=True)
+
+        for monitor in range(0, self.screen_geo.get_num_monitors()):
+            panel = self.panels.get_panel_for_monitor(monitor)
+
+            if monitor != self.panel_monitor:
+                panel.window_buttons.minimize.mouse_click()
+                sleep(.25)
+                self.assertFalse(text_win.is_hidden)
+
+    def test_window_buttons_unmaximize_inactive_when_clicked_in_another_monitor(self):
+        """Tests that clicking on the panel area where the window buttons
+        are does not affect the active maximized window in another monitor.
+        See bug #865701
+        """
+        text_win = self.open_new_application_window("Text Editor", maximize=True)
+
+        for monitor in range(0, self.screen_geo.get_num_monitors()):
+            panel = self.panels.get_panel_for_monitor(monitor)
+
+            if monitor != self.panel_monitor:
+                panel.window_buttons.unmaximize.mouse_click()
+                sleep(.25)
+                self.assertTrue(text_win.is_maximized)
