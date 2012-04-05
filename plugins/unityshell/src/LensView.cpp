@@ -37,12 +37,9 @@ namespace unity
 {
 namespace dash
 {
-
 namespace
 {
 nux::logging::Logger logger("unity.dash.lensview");
-
-const int FSCROLL_VIEW_WIDTH_ADDER = 11;
 }
 
 // This is so we can access some protected members in scrollview.
@@ -84,7 +81,7 @@ public:
       ScrollDown (1, size);
     }
   }
-  
+
   void SetRightArea(nux::Area* area)
   {
     right_area_ = area;
@@ -94,7 +91,7 @@ public:
   {
     up_area_ = area;
   }
-  
+
 protected:
 
   // This is so we can break the natural key navigation path.
@@ -120,7 +117,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(LensView);
 
 LensView::LensView()
   : nux::View(NUX_TRACKER_LOCATION)
-  , search_string("")
   , filters_expanded(false)
   , can_refine_search(false)
   , no_results_active_(false)
@@ -129,7 +125,6 @@ LensView::LensView()
 
 LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   : nux::View(NUX_TRACKER_LOCATION)
-  , search_string("")
   , filters_expanded(false)
   , can_refine_search(false)
   , lens_(lens)
@@ -145,7 +140,7 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   dash::Style::Instance().columns_changed.connect(sigc::mem_fun(this, &LensView::OnColumnsChanged));
 
   lens_->connected.changed.connect([&](bool is_connected) { if (is_connected) initial_activation_ = true; });
-  search_string.changed.connect([&](std::string const& search) { lens_->Search(search);  });
+  search_string.SetGetterFunction(sigc::mem_fun(this, &LensView::get_search_string));
   filters_expanded.changed.connect([&](bool expanded) { fscroll_view_->SetVisible(expanded); QueueRelayout(); OnColumnsChanged(); });
   view_type.changed.connect(sigc::mem_fun(this, &LensView::OnViewTypeChanged));
 
@@ -163,7 +158,7 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
         auto expand_label = category->GetHeaderFocusableView();
         auto child = category->GetChildView();
 
-        if ((child && child->HasKeyFocus()) || 
+        if ((child && child->HasKeyFocus()) ||
             (expand_label && expand_label->HasKeyFocus()))
         {
 
@@ -187,8 +182,11 @@ LensView::~LensView()
 
 void LensView::SetupViews(nux::Area* show_filters)
 {
+  dash::Style& style = dash::Style::Instance();
+
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout_->SetHorizontalInternalMargin(10);
+  layout_->SetSpaceBetweenChildren(style.GetSpaceBetweenLensAndFilters());
+
   scroll_view_ = new LensScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION),
                                     NUX_TRACKER_LOCATION);
   scroll_view_->EnableVerticalScrollBar(true);
@@ -201,10 +199,10 @@ void LensView::SetupViews(nux::Area* show_filters)
 
   no_results_ = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
   no_results_->SetTextColor(nux::color::White);
+  no_results_->SetVisible(false);
   scroll_layout_->AddView(no_results_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
-  fscroll_view_ = new LensScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION),
-                                     NUX_TRACKER_LOCATION);
+  fscroll_view_ = new LensScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION), NUX_TRACKER_LOCATION);
   fscroll_view_->EnableVerticalScrollBar(true);
   fscroll_view_->EnableHorizontalScrollBar(false);
   fscroll_view_->SetVisible(false);
@@ -215,8 +213,16 @@ void LensView::SetupViews(nux::Area* show_filters)
   fscroll_view_->SetLayout(fscroll_layout_);
 
   filter_bar_ = new FilterBar();
+  int width = style.GetFilterBarWidth() +
+              style.GetFilterBarLeftPadding() +
+              style.GetFilterBarRightPadding();
+
+  fscroll_view_->SetMinimumWidth(width + style.GetFilterViewRightPadding());
+  fscroll_view_->SetMaximumWidth(width + style.GetFilterViewRightPadding());
+  filter_bar_->SetMinimumWidth(width);
+  filter_bar_->SetMaximumWidth(width);
   AddChild(filter_bar_);
-  fscroll_layout_->AddView(filter_bar_);
+  fscroll_layout_->AddView(filter_bar_, 0);
 
   SetLayout(layout_);
 }
@@ -306,6 +312,11 @@ void LensView::OnResultAdded(Result const& result)
     grid->AddResult(const_cast<Result&>(result));
     counts_[group]++;
     UpdateCounts(group);
+    // make sure we don't display the no-results-hint if we do have results
+    if (G_UNLIKELY (no_results_active_))
+    {
+      CheckNoResults(Lens::Hints());
+    }
   } catch (std::out_of_range& oor) {
     LOG_WARN(logger) << "Result does not have a valid category index: "
                      << boost::lexical_cast<unsigned int>(result.category_index)
@@ -373,7 +384,7 @@ void LensView::CheckNoResults(Lens::Hints const& hints)
 {
   gint count = lens_->results()->count();
 
-  if (!count && !no_results_active_)
+  if (count == 0 && !no_results_active_ && !search_string_.empty())
   {
     std::stringstream markup;
     Lens::Hints::const_iterator it;
@@ -393,17 +404,19 @@ void LensView::CheckNoResults(Lens::Hints const& hints)
 
     LOG_DEBUG(logger) << "The no-result-hint is: " << markup.str();
 
-    scroll_layout_->SetContentDistribution(nux::MAJOR_POSITION_CENTER); 
+    scroll_layout_->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
 
     no_results_active_ = true;
     no_results_->SetText(markup.str());
+    no_results_->SetVisible(true);
   }
   else if (count && no_results_active_)
   {
-    scroll_layout_->SetContentDistribution(nux::MAJOR_POSITION_START);  
+    scroll_layout_->SetContentDistribution(nux::MAJOR_POSITION_START);
 
     no_results_active_ = false;
     no_results_->SetText("");
+    no_results_->SetVisible(false);
   }
 }
 
@@ -411,10 +424,22 @@ void LensView::HideResultsMessage()
 {
   if (no_results_active_)
   {
-    scroll_layout_->SetContentDistribution(nux::MAJOR_POSITION_START);  
+    scroll_layout_->SetContentDistribution(nux::MAJOR_POSITION_START);
     no_results_active_ = false;
     no_results_->SetText("");
+    no_results_->SetVisible(false);
   }
+}
+
+void LensView::PerformSearch(std::string const& search_query)
+{
+  search_string_ = search_query;
+  lens_->Search(search_query);
+}
+
+std::string LensView::get_search_string() const
+{
+  return search_string_;
 }
 
 void LensView::OnGroupExpanded(PlacesGroup* group)
@@ -437,13 +462,7 @@ void LensView::OnColumnsChanged()
 
 void LensView::OnFilterAdded(Filter::Ptr filter)
 {
-  std::string id = filter->id;
   filter_bar_->AddFilter(filter);
-
-  int width = dash::Style::Instance().GetTileWidth();
-  fscroll_view_->SetMinimumWidth(width * 2 + FSCROLL_VIEW_WIDTH_ADDER);
-  fscroll_view_->SetMaximumWidth(width * 2 + FSCROLL_VIEW_WIDTH_ADDER);
-
   can_refine_search = true;
 }
 
@@ -457,7 +476,7 @@ void LensView::OnViewTypeChanged(ViewType view_type)
   if (view_type != HIDDEN && initial_activation_)
   {
     /* We reset the lens for ourselves, in case this is a restart or something */
-    lens_->Search(search_string);
+    lens_->Search(search_string_);
     initial_activation_ = false;
   }
 
@@ -476,9 +495,7 @@ void LensView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 void LensView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   gfx_context.PushClippingRectangle(GetGeometry());
-
   layout_->ProcessDraw(gfx_context, force_draw);
-
   gfx_context.PopClippingRectangle();
 }
 
@@ -512,6 +529,11 @@ int LensView::GetNumRows()
   }
 
   return num_rows;
+}
+
+void LensView::JumpToTop()
+{
+  scroll_view_->ScrollToPosition(nux::Geometry(0, 0, 0, 0));
 }
 
 void LensView::ActivateFirst()

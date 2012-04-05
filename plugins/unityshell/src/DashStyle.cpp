@@ -1533,16 +1533,16 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
                 (double) (garnish) + 1.0,
                 (double) (garnish) + 1.0,
                 7.0,
-                w - (double) (2 * garnish) - 1.0,
-                h - (double) (2 * garnish) - 1.0);
+                w - (double) (2 * garnish) - 2.0,
+                h - (double) (2 * garnish) - 2.0);
   else
     RoundedRect(cr,
                 1.0,
-                (double) (garnish),
-                (double) (garnish),
+                (double) (garnish) + 0.5,
+                (double) (garnish) + 0.5,
                 7.0,
-                w - (double) (2 * garnish),
-                h - (double) (2 * garnish));
+                w - (double) (2 * garnish) - 1.0,
+                h - (double) (2 * garnish) - 1.0);
 
 
   if (pimpl->button_label_fill_color_[state].alpha != 0.0)
@@ -1728,8 +1728,6 @@ bool Style::ButtonFocusOverlay(cairo_t* cr)
   if (cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
     return false;
 
-  unsigned int garnish = GetButtonGarnishSize();
-  
   double w = cairo_image_surface_get_width(cairo_get_target(cr));
   double h = cairo_image_surface_get_height(cairo_get_target(cr));
 
@@ -1739,12 +1737,12 @@ bool Style::ButtonFocusOverlay(cairo_t* cr)
 
   RoundedRect(cr,
               1.0,
-              (double) (garnish),
-              (double) (garnish),
+              (double) 0.5,
+              (double) 0.5,
               7.0,
-              w - (double) (2 * garnish),
-              h - (double) (2 * garnish));
-  
+              w - 1.0,
+              h - 1.0);
+
   cairo_set_source_rgba(cr, color);
   cairo_fill_preserve(cr);
   cairo_stroke(cr);
@@ -2153,6 +2151,127 @@ nux::BaseTexture* Style::GetDashShine()
   return pimpl->dash_shine_.texture();
 }
 
+int Style::GetVSeparatorSize() const
+{
+  return 1;
+}
+
+int Style::GetHSeparatorSize() const
+{
+  return 1;
+
+}
+
+int Style::GetFilterBarWidth() const
+{
+  return 300;
+}
+
+
+int Style::GetFilterBarLeftPadding() const
+{
+  return 5;
+}
+
+int Style::GetFilterBarRightPadding() const
+{
+  return 5;
+}
+
+int Style::GetDashViewTopPadding() const
+{
+  return 10;
+}
+
+int Style::GetSearchBarLeftPadding() const
+{
+  return 10;
+}
+
+int Style::GetSearchBarRightPadding() const
+{
+  return 10;
+}
+
+int Style::GetSearchBarHeight() const
+{
+  return 42;
+}
+
+int Style::GetFilterResultsHighlightRightPadding() const
+{
+  return 5;
+}
+
+int Style::GetFilterResultsHighlightLeftPadding() const
+{
+  return 5;
+}
+
+int Style::GetFilterBarTopPadding() const
+{
+  return 10;
+}
+
+int Style::GetFilterHighlightPadding() const
+{
+  return 2;
+}
+
+int Style::GetSpaceBetweenFilterWidgets() const
+{
+  return 12;
+}
+
+int Style::GetAllButtonHeight() const
+{
+  return 30;
+}
+
+int Style::GetFilterButtonHeight() const
+{
+  return 30;
+}
+
+int Style::GetSpaceBetweenLensAndFilters() const
+{
+  return 10;
+}
+
+int Style::GetFilterViewRightPadding() const
+{
+  return 10;
+}
+
+int Style::GetScrollbarWidth() const
+{
+  return 3;
+}
+
+int Style::GetCategoryHighlightHeight() const
+{
+  return 24;
+}
+
+int Style::GetPlacesGroupTopSpace() const
+{
+  return 15;
+}
+
+int Style::GetCategoryHeaderLeftPadding() const
+{
+  return 20;
+}
+
+int Style::GetCategorySeparatorLeftPadding() const
+{
+  return 15;
+}
+
+int Style::GetCategorySeparatorRightPadding() const
+{
+  return 15;
+}
 
 namespace
 {

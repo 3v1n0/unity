@@ -33,6 +33,7 @@
 #include "BackgroundEffectHelper.h"
 #include "DNDCollectionWindow.h"
 #include "DndData.h"
+#include "EdgeBarrierController.h"
 #include "GeisAdapter.h"
 #include "Introspectable.h"
 #include "LauncherOptions.h"
@@ -40,6 +41,7 @@
 #include "LauncherHideMachine.h"
 #include "LauncherHoverMachine.h"
 #include "UBusWrapper.h"
+#include "SoftwareCenterLauncherIcon.h"
 
 
 namespace unity
@@ -49,7 +51,7 @@ namespace launcher
 class AbstractLauncherIcon;
 class LauncherModel;
 
-class Launcher : public unity::debug::Introspectable, public nux::View
+class Launcher : public unity::debug::Introspectable, public nux::View, public ui::EdgeBarrierSubscriber
 {
   NUX_DECLARE_OBJECT_TYPE(Launcher, nux::View);
 public:
@@ -68,6 +70,7 @@ public:
   AbstractLauncherIcon::Ptr GetSelectedMenuIcon() const;
 
   void SetIconSize(int tile_size, int icon_size);
+  int GetIconSize() const;
 
   LauncherHideMachine* HideMachine() { return _hide_machine; }
 
@@ -113,8 +116,10 @@ public:
   void Resize();
 
   sigc::signal<void, char*, AbstractLauncherIcon::Ptr> launcher_addrequest;
-  sigc::signal<void, std::string const&, AbstractLauncherIcon::Ptr, std::string const&, std::string const&> launcher_addrequest_special;
+  sigc::signal<void, std::string const&, AbstractLauncherIcon::Ptr, std::string const&, std::string const&,
+               int, int, int> launcher_addrequest_special;
   sigc::signal<void, AbstractLauncherIcon::Ptr> launcher_removerequest;
+  sigc::signal<void, AbstractLauncherIcon::Ptr> icon_animation_complete;
   sigc::signal<void> selection_change;
   sigc::signal<void> hidden_changed;
 
@@ -126,7 +131,11 @@ public:
   void ExitKeyNavMode();
   bool IsInKeyNavMode() const;
 
+  bool IsOverlayOpen() const;
+
   static const int ANIM_DURATION_SHORT;
+
+  void RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherIcon::Ptr icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
 
 protected:
   // Introspectable methods
@@ -179,7 +188,7 @@ private:
   void OnDragUpdate(GeisAdapter::GeisDragData* data);
   void OnDragFinish(GeisAdapter::GeisDragData* data);
 
-  void OnPointerBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event);
+  bool HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event);
 
   void OnPluginStateChanged();
 
@@ -278,8 +287,6 @@ private:
 
   void OnActionDone(GVariant* data);
 
-  void RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherIcon::Ptr icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
-
   AbstractLauncherIcon::Ptr MouseIconIntersection(int x, int y);
   void EventLogic();
   void MouseDownLogic(int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -317,6 +324,7 @@ private:
 
   bool  _hovered;
   bool  _hidden;
+  bool  _scroll_limit_reached;
   bool  _render_drag_window;
 
   bool          _shortcuts_shown;
@@ -326,8 +334,7 @@ private:
   float _folded_angle;
   float _neg_folded_angle;
   float _folded_z_distance;
-  float _launcher_top_y;
-  float _launcher_bottom_y;
+  float _last_delta_y;
   float _edge_overcome_pressure;
 
   LauncherActionState _launcher_action_state;
@@ -335,9 +342,6 @@ private:
   UrgentAnimation _urgent_animation;
 
   nux::ObjectPtr<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
-
-  ui::PointerBarrierWrapper::Ptr _pointer_barrier;
-  ui::Decaymulator::Ptr decaymulator_;
 
   int _space_between_icons;
   int _icon_size;
@@ -408,6 +412,7 @@ private:
   BaseTexturePtr launcher_sheen_;
   BaseTexturePtr launcher_pressure_effect_;
   bool _dash_is_open;
+  bool _hud_is_open;
 
   ui::AbstractIconRenderer::Ptr icon_renderer;
   BackgroundEffectHelper bg_effect_helper_;

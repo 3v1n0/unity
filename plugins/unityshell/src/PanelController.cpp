@@ -43,8 +43,7 @@ public:
   Impl();
   ~Impl();
 
-  void StartFirstMenuShow();
-  void EndFirstMenuShow();
+  void FirstMenuShow();
   void QueueRedraw();
 
   unsigned int GetTrayXid();
@@ -72,7 +71,6 @@ private:
   std::vector<nux::BaseWindow*> windows_;
   float opacity_;
   bool opacity_maximized_toggle_;
-  bool open_menu_start_received_;
   int menus_fadein_;
   int menus_fadeout_;
   int menus_discovery_;
@@ -84,7 +82,6 @@ private:
 Controller::Impl::Impl()
   : opacity_(1.0f)
   , opacity_maximized_toggle_(false)
-  , open_menu_start_received_(false)
   , menus_fadein_(0)
   , menus_fadeout_(0)
   , menus_discovery_(0)
@@ -121,27 +118,12 @@ std::list<nux::Geometry> Controller::Impl::GetGeometries()
   return geometries;
 }
 
-void Controller::Impl::StartFirstMenuShow()
+void Controller::Impl::FirstMenuShow()
 {
   for (auto window: windows_)
   {
-    PanelView* view = ViewForWindow(window);
-    view->StartFirstMenuShow();
-  }
-
-  open_menu_start_received_ = true;
-}
-
-void Controller::Impl::EndFirstMenuShow()
-{
-  if (!open_menu_start_received_)
-    return;
-  open_menu_start_received_ = false;
-
-  for (auto window: windows_)
-  {
-    PanelView* view = ViewForWindow(window);
-    view->EndFirstMenuShow();
+    if (ViewForWindow(window)->FirstMenuShow())
+      break;
   }
 }
 
@@ -317,14 +299,9 @@ Controller::~Controller()
   delete pimpl;
 }
 
-void Controller::StartFirstMenuShow()
+void Controller::FirstMenuShow()
 {
-  pimpl->StartFirstMenuShow();
-}
-
-void Controller::EndFirstMenuShow()
-{
-  pimpl->EndFirstMenuShow();
+  pimpl->FirstMenuShow();
 }
 
 void Controller::SetOpacity(float opacity)

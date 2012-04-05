@@ -81,6 +81,22 @@ public:
     return result;
   }
 
+  std::vector<Window> WindowsOnViewport ()
+  {
+    std::vector<Window> result;
+
+    result.push_back ((100 << 16) + 200);
+    result.push_back ((500 << 16) + 200);
+    result.push_back ((300 << 16) + 200);
+    result.push_back ((200 << 16) + 200);
+    result.push_back ((300 << 16) + 200);
+    result.push_back ((100 << 16) + 200);
+    result.push_back ((300 << 16) + 200);
+    result.push_back ((600 << 16) + 200);
+
+    return result;
+  }
+
   std::vector<Window> WindowsForMonitor (int monitor)
   {
     std::vector<Window> result;
@@ -147,6 +163,13 @@ public:
     return false;
   }
 
+  void SetVisibleOnMonitor(int monitor, bool visible) {}
+
+  bool IsVisibleOnMonitor(int monitor) const
+  {
+    return true;
+  }
+
   bool IsSpacer()
   {
     return false;
@@ -167,9 +190,9 @@ public:
     return true;
   }
 
-  void InsertEntryRemote(LauncherEntryRemote* remote) {}
+  void InsertEntryRemote(LauncherEntryRemote::Ptr const& remote) {}
 
-  void RemoveEntryRemote(LauncherEntryRemote* remote) {}
+  void RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote) {}
 
   unsigned long long SwitcherPriority()
   {
@@ -206,7 +229,7 @@ public:
     return nux::Color(0xFFAAAAAA);
   }
 
-  const gchar* RemoteUri()
+  std::string RemoteUri()
   {
     return "fake";
   }

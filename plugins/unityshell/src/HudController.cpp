@@ -39,7 +39,9 @@ nux::logging::Logger logger("unity.hud.controller");
 }
 
 Controller::Controller()
-  : launcher_width(66)
+  : launcher_width(64)
+  , launcher_locked_out(false)
+  , multiple_launchers(true)
   , hud_service_("com.canonical.hud", "/com/canonical/hud")
   , window_(nullptr)
   , visible_(false)
@@ -48,9 +50,11 @@ Controller::Controller()
   , last_opacity_(0.0f)
   , start_time_(0)
   , view_(nullptr)
+  , monitor_index_(0)
+  , type_wait_handle_(0)
 {
   LOG_DEBUG(logger) << "hud startup";
-  SetupRelayoutCallbacks();
+  UScreen::GetDefault()->changed.connect([&] (int, std::vector<nux::Geometry>&) { Relayout(); });
 
   ubus.RegisterInterest(UBUS_HUD_CLOSE_REQUEST, sigc::mem_fun(this, &Controller::OnExternalHideHud));
 
@@ -63,11 +67,13 @@ Controller::Controller()
     gint32 overlay_monitor = 0;
     g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, &overlay_identity, &can_maximise, &overlay_monitor);
 
-    if (g_strcmp0(overlay_identity, "hud"))
+    if (overlay_identity.Str() != "hud")
     {
       HideHud(true);
     }
   });
+
+  launcher_width.changed.connect([&] (int new_width) { Relayout(); });
 
   PluginAdapter::Default()->compiz_screen_ungrabbed.connect(sigc::mem_fun(this, &Controller::OnScreenUngrabbed));
 
@@ -83,6 +89,7 @@ Controller::~Controller()
 
   g_source_remove(timeline_id_);
   g_source_remove(ensure_id_);
+  g_source_remove(type_wait_handle_);
 }
 
 void Controller::SetupWindow()
@@ -116,14 +123,24 @@ void Controller::SetupHudView()
   AddChild(view_);
 }
 
-void Controller::SetupRelayoutCallbacks()
+int Controller::GetTargetMonitor()
 {
-  GdkScreen* screen = gdk_screen_get_default();
+  return UScreen::GetDefault()->GetMonitorWithMouse();
+}
 
-  sig_manager_.Add(new glib::Signal<void, GdkScreen*>(screen,
-    "monitors-changed", sigc::mem_fun(this, &Controller::Relayout)));
-  sig_manager_.Add(new glib::Signal<void, GdkScreen*>(screen,
-    "size-changed", sigc::mem_fun(this, &Controller::Relayout)));
+bool Controller::IsLockedToLauncher(int monitor)
+{
+  if (launcher_locked_out)
+  {
+    int primary_monitor = UScreen::GetDefault()->GetPrimaryMonitor();
+
+    if (multiple_launchers || (!multiple_launchers && primary_monitor == monitor))
+    {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 void Controller::EnsureHud()
@@ -154,24 +171,31 @@ void Controller::OnWindowConfigure(int window_width, int window_height,
 
 nux::Geometry Controller::GetIdealWindowGeometry()
 {
-   UScreen *uscreen = UScreen::GetDefault();
-   int primary_monitor = uscreen->GetMonitorWithMouse();
-   auto monitor_geo = uscreen->GetMonitorGeometry(primary_monitor);
+  int target_monitor = GetTargetMonitor();
+  auto monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(target_monitor);
 
-   // We want to cover as much of the screen as possible to grab any mouse events outside
-   // of our window
-   panel::Style &panel_style = panel::Style::Instance();
-   return nux::Geometry (monitor_geo.x,
-                         monitor_geo.y + panel_style.panel_height,
-                         monitor_geo.width,
-                         monitor_geo.height - panel_style.panel_height);
+  // We want to cover as much of the screen as possible to grab any mouse events
+  // outside of our window
+  panel::Style &panel_style = panel::Style::Instance();
+  nux::Geometry geo(monitor_geo.x,
+                    monitor_geo.y + panel_style.panel_height,
+                    monitor_geo.width,
+                    monitor_geo.height - panel_style.panel_height);
+
+  if (IsLockedToLauncher(target_monitor))
+  {
+    geo.x += launcher_width;
+    geo.width -= launcher_width;
+  }
+
+  return geo;
 }
 
-void Controller::Relayout(GdkScreen*screen)
+void Controller::Relayout()
 {
   EnsureHud();
-  nux::Geometry content_geo = view_->GetGeometry();
-  nux::Geometry geo = GetIdealWindowGeometry();
+  nux::Geometry const& content_geo = view_->GetGeometry();
+  nux::Geometry const& geo = GetIdealWindowGeometry();
 
   window_->SetGeometry(geo);
   layout_->SetMinMaxSize(content_geo.width, content_geo.height);
@@ -180,7 +204,7 @@ void Controller::Relayout(GdkScreen*screen)
 }
 
 void Controller::OnMouseDownOutsideWindow(int x, int y,
-                                              unsigned long bflags, unsigned long kflags)
+                                          unsigned long bflags, unsigned long kflags)
 {
   LOG_DEBUG(logger) << "OnMouseDownOutsideWindow called";
   HideHud();
@@ -239,15 +263,65 @@ void Controller::ShowHud()
     return;
   }
 
+  unsigned int target_monitor = GetTargetMonitor();
+
+  if (target_monitor != monitor_index_)
+  {
+    Relayout();
+    monitor_index_ = target_monitor;
+  }
+
+  view_->ShowEmbeddedIcon(!IsLockedToLauncher(monitor_index_));
   view_->AboutToShow();
 
-  // we first want to grab the currently active window, luckly we can just ask the jason interface(bamf)
-  BamfMatcher* matcher = bamf_matcher_get_default();
-  glib::Object<BamfView> bamf_app((BamfView*)(bamf_matcher_get_active_application(matcher)), glib::AddRef());
-  glib::String view_icon(bamf_view_get_icon(bamf_app));
-  focused_app_icon_ = view_icon.Str();
+  // We first want to grab the currently active window
+  glib::Object<BamfMatcher> matcher(bamf_matcher_get_default());
+  BamfWindow* active_win = bamf_matcher_get_active_window(matcher);
+
+  Window active_xid = bamf_window_get_xid(active_win);
+  std::vector<Window> const& unity_xids = nux::XInputWindow::NativeHandleList();
+
+  // If the active window is an unity window, we must get the top-most valid window
+  if (std::find(unity_xids.begin(), unity_xids.end(), active_xid) != unity_xids.end())
+  {
+    // Windows list stack for all the monitors
+    GList *windows = bamf_matcher_get_window_stack_for_monitor(matcher, -1);
+
+    for (GList *l = windows; l; l = l->next)
+    {
+      if (!BAMF_IS_WINDOW(l->data))
+        continue;
+
+      auto win = static_cast<BamfWindow*>(l->data);
+      auto view = static_cast<BamfView*>(l->data);
+      Window xid = bamf_window_get_xid(win);
+
+      if (bamf_view_user_visible(view) && bamf_window_get_window_type(win) != BAMF_WINDOW_DOCK &&
+          std::find(unity_xids.begin(), unity_xids.end(), xid) == unity_xids.end())
+      {
+        active_win = win;
+        active_xid = xid;
+      }
+    }
+
+    g_list_free(windows);
+  }
+
+  BamfApplication* active_app = bamf_matcher_get_application_for_window(matcher, active_win);
+
+  if (BAMF_IS_VIEW(active_app))
+  {
+    auto active_view = reinterpret_cast<BamfView*>(active_app);
+    glib::String view_icon(bamf_view_get_icon(active_view));
+    focused_app_icon_ = view_icon.Str();
+  }
+  else
+  {
+    focused_app_icon_ = focused_app_icon_ = PKGDATADIR "/launcher_bfb.png";
+  }
 
   LOG_DEBUG(logger) << "Taking application icon: " << focused_app_icon_;
+  ubus.SendMessage(UBUS_HUD_ICON_CHANGED, g_variant_new_string(focused_app_icon_.c_str())); 
   view_->SetIcon(focused_app_icon_);
 
   window_->ShowWindow(true);
@@ -268,13 +342,13 @@ void Controller::ShowHud()
   // hide the launcher
   GVariant* message_data = g_variant_new("(b)", TRUE);
   ubus.SendMessage(UBUS_LAUNCHER_LOCK_HIDE, message_data);
-
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, UScreen::GetDefault()->GetMonitorWithMouse());
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, monitor_index_);
   ubus.SendMessage(UBUS_OVERLAY_SHOWN, info);
 
   nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
   window_->SetEnterFocusInputArea(view_->default_focus());
 }
+
 void Controller::HideHud(bool restore)
 {
   LOG_DEBUG (logger) << "hiding the hud";
@@ -288,6 +362,8 @@ void Controller::HideHud(bool restore)
   window_->EnableInputWindow(false, "Hud", true, false);
   visible_ = false;
 
+  nux::GetWindowCompositor().SetKeyFocusArea(NULL,nux::KEY_NAV_NONE);
+
   StartShowHideTimeline();
 
   restore = true;
@@ -300,7 +376,7 @@ void Controller::HideHud(bool restore)
   GVariant* message_data = g_variant_new("(b)", FALSE);
   ubus.SendMessage(UBUS_LAUNCHER_LOCK_HIDE, message_data);
 
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, 0);
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, monitor_index_);
   ubus.SendMessage(UBUS_OVERLAY_HIDDEN, info);
 }
 
@@ -346,20 +422,7 @@ gboolean Controller::OnViewShowHideFrame(Controller* self)
     else
     {
       // ensure the text entry is focused
-      g_timeout_add(500, [] (gpointer data) -> gboolean
-      {
-        //THIS IS BAD - VERY VERY BAD
-        LOG_DEBUG(logger) << "Last attempt, forcing window focus";
-        Controller* self = static_cast<Controller*>(data);
-        if (self->visible_)
-        {
-          nux::GetWindowCompositor().SetKeyFocusArea(self->view_->default_focus());
-
-          self->window_->PushToFront();
-          self->window_->SetInputFocus();
-        }
-        return FALSE;
-      }, self);
+      nux::GetWindowCompositor().SetKeyFocusArea(self->view_->default_focus());
     }
     return FALSE;
   }
@@ -375,8 +438,22 @@ void Controller::OnActivateRequest(GVariant* variant)
 
 void Controller::OnSearchChanged(std::string search_string)
 {
+  //FIXME!! - when the service is smart enough to not fall over if you send many requests, this should be removed
   LOG_DEBUG(logger) << "Search Changed";
-  hud_service_.RequestQuery(search_string);
+  auto on_search_changed_timeout_lambda = [] (gpointer data) -> gboolean {
+    Controller* self = static_cast<Controller*>(data);
+    self->hud_service_.RequestQuery(self->last_search_);
+    self->type_wait_handle_ = 0;
+    return FALSE;
+  };
+  
+  last_search_ = search_string;
+  
+  if (type_wait_handle_)
+  {
+    g_source_remove(type_wait_handle_);
+  }  
+  type_wait_handle_ = g_timeout_add(100, on_search_changed_timeout_lambda, this);
 }
 
 void Controller::OnSearchActivated(std::string search_string)
@@ -398,8 +475,8 @@ void Controller::OnQuerySelected(Query::Ptr query)
 {
   LOG_DEBUG(logger) << "Selected query, " << query->formatted_text;
   view_->SetIcon(query->icon_name);
+  ubus.SendMessage(UBUS_HUD_ICON_CHANGED, g_variant_new_string(query->icon_name.c_str()));
 }
-
 
 void Controller::OnQueriesFinished(Hud::Queries queries)
 {
@@ -416,6 +493,7 @@ void Controller::OnQueriesFinished(Hud::Queries queries)
 
   LOG_DEBUG(logger) << "setting icon to - " << icon_name;
   view_->SetIcon(icon_name);
+  ubus.SendMessage(UBUS_HUD_ICON_CHANGED, g_variant_new_string(icon_name.c_str()));
 }
 
 // Introspectable
@@ -427,7 +505,10 @@ std::string Controller::GetName() const
 void Controller::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
-    .add("visible", visible_);
+    .add(window_ ? window_->GetGeometry() : nux::Geometry())
+    .add("visible", visible_)
+    .add("hud_monitor", monitor_index_)
+    .add("locked_to_launcher", IsLockedToLauncher(monitor_index_));
 }
 
 

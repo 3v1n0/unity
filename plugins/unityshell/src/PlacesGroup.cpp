@@ -22,6 +22,7 @@
 #include <sigc++/sigc++.h>
 
 #include <Nux/Nux.h>
+#include <NuxCore/Logger.h>
 #include <Nux/VLayout.h>
 #include <Nux/HLayout.h>
 #include <Nux/BaseWindow.h>
@@ -41,9 +42,15 @@
 #include <Nux/Utils.h>
 #include <UnityCore/Variant.h>
 #include "DashStyle.h"
+#include "LineSeparator.h"
 #include "ubus-server.h"
 #include "UBusMessages.h"
- #include "Introspectable.h"
+
+
+namespace
+{
+nux::logging::Logger logger("unity.dash.placesgroup");
+}
 
 namespace unity
 {
@@ -55,12 +62,8 @@ const float kExpandDefaultIconOpacity = 0.5f;
 
 // Category  highlight
 const int kHighlightHeight = 24;
-const int kHighlightWidthSubtractor = 16;
-const int kHighlightLeftPadding = 11;
-
-// Line Separator
-const int kSeparatorLeftPadding = 16;
-const int kSeparatorWidthSubtractor = 10;
+const int kHighlightRightPadding = 10 - 3; // -3 because the scrollbar is not a real overlay scrollbar!
+const int kHighlightLeftPadding = 10;
 
 // Font
 const char* const NAME_LABEL_FONT = "Ubuntu 13"; // 17px = 13
@@ -116,23 +119,26 @@ PlacesGroup::PlacesGroup()
     _n_visible_items_in_unexpand_mode(0),
     _n_total_items(0)
 {
+  dash::Style& style = dash::Style::Instance();
+
   SetAcceptKeyNavFocusOnMouseDown(false);
   SetAcceptKeyNavFocusOnMouseEnter(false);
 
-  nux::BaseTexture* arrow = dash::Style::Instance().GetGroupUnexpandIcon();
+  nux::BaseTexture* arrow = style.GetGroupUnexpandIcon();
 
   _cached_name = NULL;
   _group_layout = new nux::VLayout("", NUX_TRACKER_LOCATION);
-  _group_layout->SetHorizontalExternalMargin(20);
-  _group_layout->SetVerticalExternalMargin(1);
 
-  _group_layout->AddLayout(new nux::SpaceLayout(15,15,15,15), 0);
+  // -2 because the icons have an useless border.
+  int top_space = style.GetPlacesGroupTopSpace() - 2;
+  _group_layout->AddLayout(new nux::SpaceLayout(top_space, top_space, top_space, top_space), 0);
 
   _header_view = new HeaderView(NUX_TRACKER_LOCATION);
   _group_layout->AddView(_header_view, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FIX);
 
   _header_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
-  _header_layout->SetHorizontalInternalMargin(10);
+  _header_layout->SetLeftAndRightPadding(style.GetCategoryHeaderLeftPadding(), 0);
+  _header_layout->SetSpaceBetweenChildren(10);
   _header_view->SetLayout(_header_layout);
 
   _icon = new IconTexture("", 24);
@@ -169,6 +175,16 @@ PlacesGroup::PlacesGroup()
   _expand_icon->SetVisible(false);
   _expand_layout->AddView(_expand_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
+  separator_layout_ = new nux::HLayout();
+  separator_layout_->SinkReference();
+  separator_layout_->SetLeftAndRightPadding(style.GetCategorySeparatorLeftPadding(),
+                                            style.GetCategorySeparatorRightPadding() - style.GetScrollbarWidth());
+
+  separator_ = new HSeparator;
+  separator_layout_->AddView(separator_, 1);
+
+  draw_separator.changed.connect(sigc::mem_fun(this, &PlacesGroup::DrawSeparatorChanged));
+
   SetLayout(_group_layout);
 
   // don't need to disconnect these signals as they are disconnected when this object destroys the contents
@@ -200,7 +216,19 @@ PlacesGroup::~PlacesGroup()
   if (_cached_name != NULL)
     g_free(_cached_name);
 
+  if (separator_layout_)
+    separator_layout_->UnReference();
+
   delete _focus_layer;
+}
+
+void PlacesGroup::DrawSeparatorChanged(bool draw)
+{
+  if (draw and !separator_layout_->IsChildOf(_group_layout))
+    _group_layout->AddView(separator_layout_, 0);
+  else if (!draw and separator_layout_->IsChildOf(_group_layout))
+    _group_layout->RemoveChildObject(separator_layout_);
+  QueueDraw();
 }
 
 void
@@ -259,13 +287,26 @@ PlacesGroup::SetIcon(const char* path_to_emblem)
 }
 
 void
-PlacesGroup::SetChildView(nux::View* view)
+PlacesGroup::SetChildView(dash::ResultView* view)
 {
   debug::Introspectable *i = dynamic_cast<debug::Introspectable*>(view);
   if (i)
     AddChild(i);
   _child_view = view;
-  _group_layout->AddView(_child_view, 1);
+
+  nux::VLayout* layout = new nux::VLayout();
+  layout->AddView(_child_view, 0);
+
+  layout->SetLeftAndRightPadding(25, 0);
+  _group_layout->AddLayout(new nux::SpaceLayout(8,8,8,8), 0); // top padding
+  _group_layout->AddLayout(layout, 1);
+
+  view->results_per_row.changed.connect([&] (int results_per_row) 
+  {
+    _n_visible_items_in_unexpand_mode = results_per_row;  
+    RefreshLabel();
+  });
+
   QueueDraw();
 }
 
@@ -296,6 +337,7 @@ PlacesGroup::RefreshLabel()
   }
   else
   {
+    LOG_DEBUG(logger) << _n_total_items << " - " << _n_visible_items_in_unexpand_mode;
     result_string = g_strdup_printf(g_dngettext(GETTEXT_PACKAGE,
                                                 "See one more result",
                                                 "See %d more results",
@@ -370,7 +412,7 @@ long PlacesGroup::ComputeContentSize()
     if (_focus_layer)
       delete _focus_layer;
 
-    _focus_layer = dash::Style::Instance().FocusOverlay(geo.width - kHighlightWidthSubtractor, kHighlightHeight);
+    _focus_layer = dash::Style::Instance().FocusOverlay(geo.width - kHighlightLeftPadding - kHighlightRightPadding, kHighlightHeight);
 
     _cached_geometry = geo;
   }
@@ -386,27 +428,11 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
 
   nux::GetPainter().PaintBackground(graphics_engine, base);
 
-  graphics_engine.GetRenderStates().SetColorMask(true, true, true, false);
-  graphics_engine.GetRenderStates().SetBlend(true);
-  graphics_engine.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-
-  if (draw_separator)
-  {
-    nux::Color col(0.15f, 0.15f, 0.15f, 0.15f);
-
-    nux::GetPainter().Draw2DLine(graphics_engine,
-                                 base.x + kSeparatorLeftPadding, base.y + base.height - 1,
-                                 base.x + base.width - kSeparatorWidthSubtractor, base.y + base.height - 1,
-                                 col);
-  }
-
-  graphics_engine.GetRenderStates().SetColorMask(true, true, true, true);
-
   if (ShouldBeHighlighted())
   {
     nux::Geometry geo(_header_layout->GetGeometry());
-    geo.x = base.x + kHighlightLeftPadding;
-    geo.width = base.width - kHighlightWidthSubtractor;
+    geo.width = base.width - kHighlightRightPadding - kHighlightLeftPadding;
+    geo.x += kHighlightLeftPadding;
 
     _focus_layer->SetGeometry(geo);
     _focus_layer->Renderlayer(graphics_engine);
@@ -440,7 +466,6 @@ void PlacesGroup::PostDraw(nux::GraphicsEngine& graphics_engine,
 void
 PlacesGroup::SetCounts(guint n_visible_items_in_unexpand_mode, guint n_total_items)
 {
-  _n_visible_items_in_unexpand_mode = n_visible_items_in_unexpand_mode;
   _n_total_items = n_total_items;
 
   Relayout();

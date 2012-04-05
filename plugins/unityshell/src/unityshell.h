@@ -206,6 +206,7 @@ public:
   bool altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabPrevWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
+  bool ShowHud();
   /* handle hud key activations */
   bool ShowHudInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool ShowHudTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
@@ -284,7 +285,7 @@ private:
   hud::Controller::Ptr      hud_controller_;
 
   shortcut::Controller::Ptr shortcut_controller_;
-  std::list<shortcut::AbstractHint*> hints_;
+  std::list<shortcut::AbstractHint::Ptr> hints_;
   bool enable_shortcut_overlay_;
 
   GestureEngine*                        gestureEngine;
@@ -330,7 +331,6 @@ private:
   bool   queryForShader ();
 
   UBusManager ubus_manager_;
-  bool dash_is_open_;
   int dash_monitor_;
   CompScreen::GrabHandle grab_index_;
   CompWindowList         fullscreen_windows_;
@@ -338,6 +338,7 @@ private:
   unsigned int           tray_paint_mask_;
   unsigned int           last_scroll_event_;
   int                    hud_keypress_time_;
+  int                    first_menu_keypress_time_;
 
   GLMatrix panel_shadow_matrix_;
 

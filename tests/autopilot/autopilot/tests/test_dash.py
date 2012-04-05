@@ -11,7 +11,6 @@ from time import sleep
 from gtk import Clipboard
 from testtools.matchers import Equals
 
-from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.tests import AutopilotTestCase
 
 
@@ -301,6 +300,15 @@ class DashKeyNavTests(DashTestCase):
         category = lens.get_focused_category()
         self.assertIsNot(category, None)
 
+    def test_alt_f1_disabled(self):
+        """This test that Alt+F1 is disabled when the dash is opened."""
+        self.dash.ensure_visible()
+
+        launcher = self.launcher.get_launcher_for_monitor(0)
+        launcher.key_nav_start()
+
+        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
+
 
 class DashClipboardTests(DashTestCase):
     """Test the Unity clipboard"""
@@ -422,6 +430,53 @@ class DashLensResultsTests(DashTestCase):
         sleep(1)
         lens = self.dash.get_current_lens()
         self.assertTrue(lens.no_results_active)
+
+    def test_results_update_on_filter_changed(self):
+        """This test makes sure the results change when filters change."""
+        self.dash.reveal_application_lens()
+        lens = self.dash.get_current_lens()
+        self.keyboard.type(" ")
+        sleep(1)
+        results_category = lens.get_category_by_name("Installed")
+        old_results = results_category.get_results()
+
+
+        def activate_filter(add_cleanup = False):
+            # Tabs to last category
+            for i in range(lens.get_num_visible_categories()):
+                self.keyboard.press_and_release('Tab')
+
+            self.keyboard.press_and_release('Tab')
+            searchbar = self.dash.get_searchbar()
+            self.assertTrue(searchbar.expander_has_focus)
+
+            filter_bar = lens.get_filterbar()
+            if not searchbar.showing_filters:
+                self.keyboard.press_and_release('Enter')
+                self.assertTrue(searchbar.showing_filters)
+                if add_cleanup: self.addCleanup(filter_bar.ensure_collapsed)
+
+            # Tab to the "Type" filter in apps lens
+            self.keyboard.press_and_release('Tab')
+            new_focused_filter = filter_bar.get_focused_filter()
+            self.assertIsNotNone(new_focused_filter)
+
+            self.keyboard.press_and_release("Down")
+            self.keyboard.press_and_release("Down")
+            self.keyboard.press_and_release("Down")
+            # We should be on the Education category
+            self.keyboard.press_and_release('Enter')
+
+        activate_filter(True)
+        self.addCleanup(activate_filter)
+
+        sleep(1)
+        results_category = lens.get_category_by_name("Installed")
+        results = results_category.get_results()
+        self.assertIsNot(results, old_results)
+
+        # so we can clean up properly
+        self.keyboard.press_and_release('BackSpace')
 
 
 class DashVisualTests(DashTestCase):

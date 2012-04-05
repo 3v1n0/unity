@@ -30,8 +30,8 @@ namespace
 const unsigned int SUPER_TAP_DURATION = 650;
 const unsigned int FADE_DURATION = 100;
 } // anonymouse namespace;
-  
-Controller::Controller(std::list<AbstractHint*>& hints)
+
+Controller::Controller(std::list<AbstractHint::Ptr>& hints)
   : view_window_(0)
   , visible_(false)
   , enabled_(true)
@@ -72,7 +72,7 @@ Controller::~Controller()
 {
   if (view_window_)
     view_window_->UnReference();
-    
+
   view_.Release();
 }
 
@@ -183,7 +183,7 @@ void Controller::Hide()
 {
   if (!visible_)
     return;
-    
+
   visible_ = false;
 
   if (show_timer_)

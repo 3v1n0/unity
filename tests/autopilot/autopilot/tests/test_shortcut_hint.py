@@ -11,7 +11,6 @@ from time import sleep
 
 from autopilot.tests import AutopilotTestCase
 from autopilot.emulators.unity.shortcut_hint import ShortcutController
-from autopilot.emulators.X11 import ScreenGeometry
 
 
 class BaseShortcutHintTests(AutopilotTestCase):
@@ -29,9 +28,8 @@ class BaseShortcutHintTests(AutopilotTestCase):
         sleep(1)
 
     def skip_if_monitor_too_small(self):
-        screen = ScreenGeometry();
-        monitor = screen.get_primary_monitor()
-        monitor_geo = screen.get_monitor_geometry(monitor);
+        monitor = self.screen_geo.get_primary_monitor()
+        monitor_geo = self.screen_geo.get_monitor_geometry(monitor);
         monitor_w = monitor_geo[2];
         monitor_h = monitor_geo[3];
         launcher_width = self.launcher.get_launcher_for_monitor(monitor).geometry[2];
@@ -49,8 +47,7 @@ class BaseShortcutHintTests(AutopilotTestCase):
     def get_launcher(self):
         # We could parameterise this so all tests run on both monitors (if MM is
         # set up), but I think it's fine to just always use monitor primary monitor:
-        screen = ScreenGeometry();
-        monitor = screen.get_primary_monitor()
+        monitor = self.screen_geo.get_primary_monitor()
         return self.launcher.get_launcher_for_monitor(monitor)
 
 
@@ -192,8 +189,8 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
 
         launcher = self.get_launcher()
-        launcher.start_switcher()
-        self.addCleanup(launcher.end_switcher, True)
+        launcher.switcher_start()
+        self.addCleanup(launcher.switcher_cancel)
         sleep(.25)
         self.assertThat(self.launcher.key_nav_is_active, Equals(True))
 
@@ -218,8 +215,8 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
 
         launcher = self.get_launcher()
-        launcher.start_switcher()
-        self.addCleanup(launcher.end_switcher, True)
+        launcher.switcher_start()
+        self.addCleanup(launcher.switcher_cancel)
         sleep(.25)
         self.assertThat(self.launcher.key_nav_is_active, Equals(True))
 
@@ -244,8 +241,8 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
 
         launcher = self.get_launcher()
-        launcher.start_switcher()
-        self.addCleanup(launcher.end_switcher, True)
+        launcher.switcher_start()
+        self.addCleanup(launcher.switcher_cancel)
         sleep(.25)
         self.assertThat(self.launcher.key_nav_is_active, Equals(True))
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
@@ -275,8 +272,8 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
 
         launcher = self.get_launcher()
-        launcher.start_switcher()
-        self.addCleanup(launcher.end_switcher, True)
+        launcher.switcher_start()
+        self.addCleanup(launcher.switcher_cancel)
         sleep(.25)
         self.assertThat(self.launcher.key_nav_is_active, Equals(True))
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))

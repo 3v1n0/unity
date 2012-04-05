@@ -90,6 +90,7 @@ private:
   void OnLensBarActivated(std::string const& id);
   void OnSearchFinished(Lens::Hints const& hints);
   void OnGlobalSearchFinished(Lens::Hints const& hints);
+  void OnAppsGlobalSearchFinished(Lens::Hints const& hints);
   void OnUriActivated(std::string const& uri);
   void OnUriActivatedReply(std::string const& uri, HandledType type, Lens::Hints const&);
   bool DoFallbackActivation(std::string const& uri);
@@ -120,6 +121,7 @@ private:
   // View related
   nux::VLayout* layout_;
   DashLayout* content_layout_;
+  nux::HLayout* search_bar_layout_;
   SearchBar* search_bar_;
   nux::VLayout* lenses_layout_;
   LensBar* lens_bar_;

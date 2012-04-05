@@ -85,6 +85,7 @@ public:
     TYPE_NONE,
     TYPE_BEGIN,
     TYPE_HOME,
+    TYPE_HUD,
     TYPE_FAVORITE,
     TYPE_APPLICATION,
     TYPE_EXPO,
@@ -147,7 +148,9 @@ public:
 
   virtual std::vector<Window> WindowsForMonitor(int monitor) = 0;
 
-  virtual std::string NameForWindow (Window window) = 0;
+  virtual std::vector<Window> WindowsOnViewport() = 0;
+
+  virtual std::string NameForWindow(Window window) = 0;
 
   virtual const bool WindowVisibleOnMonitor(int monitor) = 0;
 
@@ -173,7 +176,7 @@ public:
 
   virtual IconType GetIconType() = 0;
 
-  virtual const gchar* RemoteUri() = 0;
+  virtual std::string RemoteUri() = 0;
 
   virtual std::list<DbusmenuMenuitem*> Menus() = 0;
 
@@ -185,15 +188,18 @@ public:
 
   virtual void SendDndLeave() = 0;
 
-  virtual void InsertEntryRemote(LauncherEntryRemote* remote) = 0;
-
-  virtual void RemoveEntryRemote(LauncherEntryRemote* remote) = 0;
+  virtual void InsertEntryRemote(LauncherEntryRemote::Ptr const& remote) = 0;
+  virtual void RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote) = 0;
 
   virtual std::string DesktopFile() = 0;
 
   virtual bool IsSticky() const = 0;
 
   virtual bool IsVisible() const = 0;
+
+  virtual bool IsVisibleOnMonitor(int monitor) const = 0;
+
+  virtual void SetVisibleOnMonitor(int monitor, bool visible) = 0;
 
   virtual void AboutToRemove() = 0;
   

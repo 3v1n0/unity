@@ -390,7 +390,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
         }
 
       if (event->evtype == XI_ButtonRelease)
-        {       
+        {
           IndicatorObjectEntry *entry;
           gboolean event_is_a_click = FALSE;
           entry = get_entry_at (self, event->root_x, event->root_y);

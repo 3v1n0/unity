@@ -57,10 +57,10 @@ class SearchBar : public unity::debug::Introspectable, public nux::View
 public:
   typedef nux::ObjectPtr<SearchBar> Ptr;
   SearchBar(NUX_FILE_LINE_PROTO);
-  SearchBar(int search_width, bool show_filter_hint, NUX_FILE_LINE_PROTO);
-  SearchBar(int search_width, NUX_FILE_LINE_PROTO);
+  SearchBar(bool show_filter_hint, NUX_FILE_LINE_PROTO);
   ~SearchBar();
 
+  void ForceSearchChanged();
   void SearchFinished();
   nux::TextEntry* text_entry() const;
   nux::View* show_filters() const;
@@ -69,7 +69,6 @@ public:
   nux::Property<std::string> search_hint;
   nux::Property<bool> showing_filters;
   nux::Property<bool> can_refine_search;
-  nux::Property<bool> disable_glow;
   nux::ROProperty<bool> im_active;
 
   sigc::signal<void> activated;
@@ -115,6 +114,7 @@ private:
   nux::AbstractPaintLayer* bg_layer_;
   std::unique_ptr<nux::AbstractPaintLayer> highlight_layer_;
   nux::HLayout* layout_;
+  nux::HLayout* entry_layout_;
   nux::LayeredLayout* layered_layout_;
   nux::StaticCairoText* hint_;
   nux::LinearLayout* expander_layout_;
@@ -126,7 +126,6 @@ private:
   nux::SpaceLayout* arrow_top_space_;
   nux::SpaceLayout* arrow_bottom_space_;
   IconTexture* expand_icon_;
-  int search_bar_width_;
 
   int last_width_;
   int last_height_;

@@ -46,21 +46,15 @@
 namespace
 {
 const float kExpandDefaultIconOpacity = 1.0f;
-const int external_margin_vertical = 8;
-const int external_margin_horizontal = 7;
 const int LIVE_SEARCH_TIMEOUT = 40;
 const int SPINNER_TIMEOUT = 100;
 
-const int SPINNER_HEIGHT = 48; // To don't break the current layout, let's use a fixed height for the spinner.
-const int SPACE_BETWEEN_SPINNER_AND_TEXT = 4;
-const int LEFT_INTERNAL_PADDING = 9;
+const int SPACE_BETWEEN_SPINNER_AND_TEXT = 5;
+const int SPACE_BETWEEN_ENTRY_AND_HIGHLIGHT = 10;
+const int LEFT_INTERNAL_PADDING = 6;
+const int SEARCH_ENTRY_RIGHT_BORDER = 10;
 
-
-// Highlight
 const int HIGHLIGHT_HEIGHT = 24;
-const int HIGHLIGHT_WIDTH = 292;
-const int HIGHLIGHT_LEFT_PADDING = 5;
-const int HIGHLIGHT_RIGHT_PADDING = 4;
 
 // Fonts
 const std::string HINT_LABEL_FONT_SIZE = "20px";
@@ -129,42 +123,23 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   , search_hint("")
   , showing_filters(false)
   , can_refine_search(false)
-  , disable_glow(false)
   , show_filter_hint_(true)
   , expander_view_(nullptr)
   , show_filters_(nullptr)
-  , search_bar_width_(640)
   , live_search_timeout_(0)
   , start_spinner_timeout_(0)
 {
   Init();
 }
 
-SearchBar::SearchBar(int search_bar_width, bool show_filter_hint_, NUX_FILE_LINE_DECL)
+SearchBar::SearchBar(bool show_filter_hint_, NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , search_hint("")
   , showing_filters(false)
   , can_refine_search(false)
-  , disable_glow(false)
   , show_filter_hint_(show_filter_hint_)
   , expander_view_(nullptr)
   , show_filters_(nullptr)
-  , search_bar_width_(search_bar_width)
-  , live_search_timeout_(0)
-  , start_spinner_timeout_(0)
-{
-  Init();
-}
-
-SearchBar::SearchBar(int search_bar_width, NUX_FILE_LINE_DECL)
-  : View(NUX_FILE_LINE_PARAM)
-  , search_hint("")
-  , showing_filters(false)
-  , can_refine_search(false)
-  , disable_glow(false)
-  , show_filter_hint_(true)
-  , expander_view_(nullptr)
-  , search_bar_width_(search_bar_width)
   , live_search_timeout_(0)
   , start_spinner_timeout_(0)
 {
@@ -173,26 +148,30 @@ SearchBar::SearchBar(int search_bar_width, NUX_FILE_LINE_DECL)
 
 void SearchBar::Init()
 {
-  nux::BaseTexture* icon = dash::Style::Instance().GetSearchMagnifyIcon();
+  dash::Style& style = dash::Style::Instance();
+  nux::BaseTexture* icon = style.GetSearchMagnifyIcon();
 
   bg_layer_ = new nux::ColorLayer(nux::Color(0xff595853), true);
 
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout_->SetHorizontalInternalMargin(SPACE_BETWEEN_SPINNER_AND_TEXT);
-  layout_->SetTopAndBottomPadding(external_margin_vertical);
-  layout_->SetLeftAndRightPadding(external_margin_horizontal + LEFT_INTERNAL_PADDING, external_margin_horizontal);
+  layout_->SetLeftAndRightPadding(LEFT_INTERNAL_PADDING, SEARCH_ENTRY_RIGHT_BORDER);
+  layout_->SetSpaceBetweenChildren(SPACE_BETWEEN_ENTRY_AND_HIGHLIGHT);
   SetLayout(layout_);
 
+  entry_layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
+  entry_layout_->SetLeftAndRightPadding(0, 10);
+  layout_->AddLayout(entry_layout_);
+
   spinner_ = new SearchBarSpinner();
-  spinner_->SetMinMaxSize(icon->GetWidth(), SPINNER_HEIGHT);
+  spinner_->SetMinMaxSize(icon->GetWidth(), icon->GetHeight());
   spinner_->mouse_click.connect(sigc::mem_fun(this, &SearchBar::OnClearClicked));
-  layout_->AddView(spinner_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  entry_layout_->AddView(spinner_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  entry_layout_->SetSpaceBetweenChildren(SPACE_BETWEEN_SPINNER_AND_TEXT);
 
   nux::HLayout* hint_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
   hint_ = new nux::StaticCairoText(" ");
   hint_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 0.5f));
-  hint_->SetMaximumWidth(search_bar_width_ - icon->GetWidth());
   hint_->SetFont(HINT_LABEL_DEFAULT_FONT.c_str());
   hint_layout->AddView(hint_,  0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
@@ -204,16 +183,13 @@ void SearchBar::Init()
   pango_entry_->cursor_moved.connect([&](int i) { QueueDraw(); });
   pango_entry_->mouse_down.connect(sigc::mem_fun(this, &SearchBar::OnMouseButtonDown));
   pango_entry_->end_key_focus.connect(sigc::mem_fun(this, &SearchBar::OnEndKeyFocus));
-  pango_entry_->SetMaximumWidth(search_bar_width_ - 1.5 * icon->GetWidth());
 
   layered_layout_ = new nux::LayeredLayout();
   layered_layout_->AddLayout(hint_layout);
   layered_layout_->AddLayer(pango_entry_);
   layered_layout_->SetPaintAll(true);
   layered_layout_->SetActiveLayerN(1);
-  layered_layout_->SetMinimumWidth(search_bar_width_);
-  layered_layout_->SetMaximumWidth(search_bar_width_);
-  layout_->AddView(layered_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+  entry_layout_->AddView(layered_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   if (show_filter_hint_)
   {
@@ -222,10 +198,11 @@ void SearchBar::Init()
     show_filters_->SetVisible(false);
     show_filters_->SetFont(SHOW_FILTERS_LABEL_DEFAULT_FONT.c_str());
     show_filters_->SetTextColor(nux::color::White);
-    show_filters_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
+    show_filters_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_RIGHT);
+    show_filters_->SetLines(1);
 
     nux::BaseTexture* arrow;
-    arrow = dash::Style::Instance().GetGroupExpandIcon();
+    arrow = style.GetGroupExpandIcon();
     expand_icon_ = new IconTexture(arrow,
                                    arrow->GetWidth(),
                                    arrow->GetHeight());
@@ -235,7 +212,8 @@ void SearchBar::Init()
 
     filter_layout_ = new nux::HLayout();
     filter_layout_->SetHorizontalInternalMargin(8);
-    filter_layout_->SetHorizontalExternalMargin(6);
+    filter_layout_->SetLeftAndRightPadding(style.GetFilterResultsHighlightLeftPadding(), style.GetFilterResultsHighlightRightPadding());
+    filter_layout_->SetContentDistribution(nux::MAJOR_POSITION_END);
     filter_layout_->AddView(show_filters_, 0, nux::MINOR_POSITION_CENTER);
 
     arrow_layout_  = new nux::VLayout();
@@ -247,12 +225,18 @@ void SearchBar::Init()
 
     filter_layout_->AddView(arrow_layout_, 0, nux::MINOR_POSITION_CENTER);
 
-    layout_->AddLayout(new nux::SpaceLayout(1, 10000, 0, 1), 1);
-
     expander_view_ = new ExpanderView(NUX_TRACKER_LOCATION);
     expander_view_->SetVisible(false);
     expander_view_->SetLayout(filter_layout_);
     layout_->AddView(expander_view_, 0, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FULL);
+
+    int width = style.GetFilterBarWidth() +
+                style.GetFilterResultsHighlightLeftPadding() +
+                style.GetFilterResultsHighlightRightPadding();
+
+    expander_view_->SetMaximumWidth(width);
+    expander_view_->SetMinimumWidth(width);
+    show_filters_->SetMaximumWidth(style.GetFilterBarWidth() - arrow_layout_->GetBaseWidth() - 8);
 
     // Lambda functions
     auto mouse_expand = [&](int, int, unsigned long, unsigned long)
@@ -298,15 +282,6 @@ void SearchBar::Init()
       expand_icon_->SetVisible(can_refine);
     }
   });
-
-  disable_glow.changed.connect([&](bool disabled)
-  {
-    layout_->SetVerticalExternalMargin(0);
-    layout_->SetHorizontalExternalMargin(0);
-    UpdateBackground(true);
-    QueueDraw();
-  });
-
 }
 
 SearchBar::~SearchBar()
@@ -422,23 +397,22 @@ void SearchBar::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PushClippingRectangle(base);
   nux::GetPainter().PaintBackground(GfxContext, base);
 
-  bg_layer_->SetGeometry(nux::Geometry(base.x, base.y, last_width_, base.height));
+  bg_layer_->SetGeometry(nux::Geometry(base.x, base.y, last_width_, last_height_));
   nux::GetPainter().RenderSinglePaintLayer(GfxContext,
                                            bg_layer_->GetGeometry(),
                                            bg_layer_);
 
   if (ShouldBeHighlighted())
   {
-    nux::Geometry geo(show_filters_->GetGeometry());
-    nux::Geometry const& geo_arrow = arrow_layout_->GetGeometry();
+    dash::Style& style = dash::Style::Instance();
+
+    nux::Geometry geo(expander_view_->GetGeometry());
 
     geo.y -= (HIGHLIGHT_HEIGHT- geo.height) / 2;
     geo.height = HIGHLIGHT_HEIGHT;
-    geo.width = HIGHLIGHT_WIDTH + HIGHLIGHT_LEFT_PADDING + HIGHLIGHT_RIGHT_PADDING;
-    geo.x = geo_arrow.x + (geo_arrow.width - 1) - geo.width + HIGHLIGHT_RIGHT_PADDING;
 
     if (!highlight_layer_)
-      highlight_layer_.reset(dash::Style::Instance().FocusOverlay(geo.width, geo.height));
+      highlight_layer_.reset(style.FocusOverlay(geo.width, geo.height));
 
     highlight_layer_->SetGeometry(geo);
     highlight_layer_->Renderlayer(GfxContext);
@@ -499,6 +473,30 @@ void SearchBar::OnEntryActivated()
   activated.emit();
 }
 
+void SearchBar::ForceSearchChanged()
+{
+  // this method will emit search_changed (and live_search_reached after
+  // returning to mainloop) and starts animating the spinner
+
+  if (live_search_timeout_)
+    g_source_remove(live_search_timeout_);
+
+  live_search_timeout_ = g_idle_add_full(G_PRIORITY_DEFAULT,
+                                         (GSourceFunc)&OnLiveSearchTimeout,
+                                         this, NULL);
+
+  // Don't animate the spinner immediately, the searches are fast and
+  // the spinner would just flicker
+  if (start_spinner_timeout_)
+    g_source_remove(start_spinner_timeout_);
+
+  start_spinner_timeout_ = g_timeout_add(SPINNER_TIMEOUT * 2,
+                                         (GSourceFunc)&OnSpinnerStartCb,
+                                         this);
+
+  search_changed.emit(pango_entry_->GetText());
+}
+
 void
 SearchBar::SearchFinished()
 {
@@ -515,11 +513,12 @@ SearchBar::SearchFinished()
 
 void SearchBar::UpdateBackground(bool force)
 {
-  int PADDING = 12;
   int RADIUS = 5;
-  int x, y, width, height;
   nux::Geometry geo(GetGeometry());
-  geo.width = layered_layout_->GetGeometry().width;
+  geo.width = layered_layout_->GetAbsoluteX() + 
+              layered_layout_->GetAbsoluteWidth() -
+              GetAbsoluteX() +
+              SEARCH_ENTRY_RIGHT_BORDER;
 
   LOG_DEBUG(logger) << "height: "
   << geo.height << " - "
@@ -534,43 +533,21 @@ void SearchBar::UpdateBackground(bool force)
   last_width_ = geo.width;
   last_height_ = geo.height;
 
-  if (disable_glow)
-    PADDING = 2;
-
-  x = y = PADDING - 1;
-
-  width = last_width_ - (2 * PADDING);
-  height = last_height_ - (2 * PADDING) + 1;
-
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, last_width_, last_height_);
   cairo_t* cr = cairo_graphics.GetContext();
 
   cairo_graphics.DrawRoundedRectangle(cr,
                                       1.0f,
-                                      x,
-                                      y,
+                                      0.5, 0.5,
                                       RADIUS,
-                                      width,
-                                      height,
-                                      true);
+                                      last_width_ - 1, last_height_ - 1,
+                                      false);
 
-  // Disable glow effect #929183
-  //cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
-  //cairo_set_line_width(cr, 1.0);
-  //cairo_stroke_preserve(cr);
-  //cairo_graphics.BlurSurface (3, cairo_get_target (cr));
-
-  // XXX: Not sure this code is 100% correct.
-  cairo_operator_t op = CAIRO_OPERATOR_OVER;
-  op = cairo_get_operator (cr);
-  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.35f);
+  cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.57f);
   cairo_fill_preserve(cr);
-  cairo_set_operator (cr, op);
-  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.35f);
-  cairo_fill_preserve(cr);
+  cairo_set_line_width(cr, 1);
   cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.8f);
-  cairo_set_line_width(cr, 1.0);
   cairo_stroke(cr);
 
   cairo_destroy(cr);
@@ -579,6 +556,7 @@ void SearchBar::UpdateBackground(bool force)
   nux::TexCoordXForm texxform;
   texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
   texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+
   if (bg_layer_)
     delete bg_layer_;
 
