@@ -53,7 +53,6 @@ namespace
 nux::logging::Logger logger("unity.dash.results");
 
 const int FONT_SIZE = 10;
-
 }
 
 namespace dash
@@ -153,8 +152,6 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
                         container->text->GetDeviceTexture(),
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
-
-
   }
 }
 
