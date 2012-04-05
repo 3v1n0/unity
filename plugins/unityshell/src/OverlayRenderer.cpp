@@ -38,6 +38,7 @@ namespace
 nux::logging::Logger logger("unity.overlayrenderer");
 
 const int INNER_CORNER_RADIUS = 5;
+const int EXCESS_BORDER = 10;
 }
 
 // Impl class
@@ -70,6 +71,18 @@ public:
   UBusManager ubus_manager_;
 
   OverlayRenderer *parent;
+
+  void InitASMInverseTextureMaskShader();
+  void InitSlInverseTextureMaskShader();
+
+  nux::ObjectPtr<nux::IOpenGLAsmShaderProgram> inverse_texture_mask_asm_prog_;
+  nux::ObjectPtr<nux::IOpenGLAsmShaderProgram> inverse_texture_rect_mask_asm_prog_;
+  nux::ObjectPtr<nux::IOpenGLShaderProgram> inverse_texture_mask_prog_;
+
+  void RenderInverseMask_GLSL(nux::GraphicsEngine& gfx_context, int x, int y, int width, int height, nux::ObjectPtr<nux::IOpenGLBaseTexture> DeviceTexture, nux::TexCoordXForm &texxform0, const nux::Color &color0);
+  void RenderInverseMask_ASM(nux::GraphicsEngine& gfx_context, int x, int y, int width, int height, nux::ObjectPtr<nux::IOpenGLBaseTexture> DeviceTexture, nux::TexCoordXForm &texxform0, const nux::Color &color0);
+  void RenderInverseMask(nux::GraphicsEngine& gfx_context, int x, int y, int width, int height, nux::ObjectPtr<nux::IOpenGLBaseTexture> DeviceTexture, nux::TexCoordXForm &texxform0, const nux::Color &color0);
+
 };
 
 OverlayRendererImpl::OverlayRendererImpl(OverlayRenderer *parent_)
@@ -118,7 +131,247 @@ void OverlayRendererImpl::OnBackgroundColorChanged(GVariant* args)
   parent->need_redraw.emit();
 }
 
-int MARGIN = 10;
+void OverlayRendererImpl::InitASMInverseTextureMaskShader()
+{
+  nux::NString AsmVtx = 
+      "!!ARBvp1.0                                 \n\
+      ATTRIB iPos         = vertex.position;      \n\
+      ATTRIB iColor       = vertex.attrib[3];     \n\
+      PARAM  mvp[4]       = {state.matrix.mvp};   \n\
+      OUTPUT oPos         = result.position;      \n\
+      OUTPUT oColor       = result.color;         \n\
+      OUTPUT oTexCoord0   = result.texcoord[0];   \n\
+      # Transform the vertex to clip coordinates. \n\
+      DP4   oPos.x, mvp[0], iPos;                     \n\
+      DP4   oPos.y, mvp[1], iPos;                     \n\
+      DP4   oPos.z, mvp[2], iPos;                     \n\
+      DP4   oPos.w, mvp[3], iPos;                     \n\
+      MOV   oColor, iColor;                           \n\
+      MOV   oTexCoord0, vertex.attrib[8];             \n\
+      END";
+
+  nux::NString AsmFrg = 
+      "!!ARBfp1.0                                       \n\
+      TEMP tex0;                                        \n\
+      TEMP temp0;                                       \n\
+      TEX tex0, fragment.texcoord[0], texture[0], 2D;   \n\
+      MUL temp0, fragment.color, tex0;                  \n\
+      SUB result.color, {1.0, 1.0, 1.0, 1.0}, temp0.aaaa;\n\
+      END";
+
+  nux::NString AsmFrgRect = 
+    "!!ARBfp1.0                                         \n\
+    TEMP tex0;                                          \n\
+    TEMP temp0;                                         \n\
+    TEX tex0, fragment.texcoord[0], texture[0], RECT;   \n\
+    MUL temp0, fragment.color, tex0;                    \n\
+    SUB result.color, {1.0, 1.0, 1.0, 1.0}, temp0.aaaa;  \n\
+    END";
+
+  inverse_texture_mask_asm_prog_ = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateAsmShaderProgram();
+  inverse_texture_mask_asm_prog_->LoadVertexShader(AsmVtx.GetTCharPtr());
+  inverse_texture_mask_asm_prog_->LoadPixelShader(AsmFrg.GetTCharPtr());
+  inverse_texture_mask_asm_prog_->Link();
+
+  inverse_texture_rect_mask_asm_prog_ = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateAsmShaderProgram();
+  inverse_texture_rect_mask_asm_prog_->LoadVertexShader(AsmVtx.GetTCharPtr());
+  inverse_texture_rect_mask_asm_prog_->LoadPixelShader(AsmFrgRect.GetTCharPtr());
+  inverse_texture_rect_mask_asm_prog_->Link();
+}
+
+void OverlayRendererImpl::RenderInverseMask_ASM(nux::GraphicsEngine& gfx_context, int x, int y, int width, int height, nux::ObjectPtr<nux::IOpenGLBaseTexture> device_texture, nux::TexCoordXForm &texxform, const nux::Color &color)
+{
+  printf("RenderInverseMask_ASM\n");
+  if (!inverse_texture_mask_asm_prog_.IsValid() || !inverse_texture_rect_mask_asm_prog_.IsValid())
+  {
+    InitASMInverseTextureMaskShader();
+  }
+
+  QRP_Compute_Texture_Coord(width, height, device_texture, texxform);
+  float fx = x, fy = y;
+  float VtxBuffer[] =
+  {
+    fx,          fy,          0.0f, 1.0f, texxform.u0, texxform.v0, 0, 1.0f, color.red, color.green, color.blue, color.alpha,
+    fx,          fy + height, 0.0f, 1.0f, texxform.u0, texxform.v1, 0, 1.0f, color.red, color.green, color.blue, color.alpha,
+    fx + width,  fy + height, 0.0f, 1.0f, texxform.u1, texxform.v1, 0, 1.0f, color.red, color.green, color.blue, color.alpha,
+    fx + width,  fy,          0.0f, 1.0f, texxform.u1, texxform.v0, 0, 1.0f, color.red, color.green, color.blue, color.alpha,
+  };
+
+  CHECKGL(glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0));
+  CHECKGL(glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0));
+  
+  nux::ObjectPtr<nux::IOpenGLAsmShaderProgram> shader_program = inverse_texture_mask_asm_prog_;
+  if (device_texture->Type().IsDerivedFromType(nux::IOpenGLRectangleTexture::StaticObjectType))
+  {
+    shader_program = inverse_texture_rect_mask_asm_prog_;
+  }
+  shader_program->Begin();
+
+  gfx_context.SetTexture(GL_TEXTURE0, device_texture);
+
+  CHECKGL(glMatrixMode(GL_MODELVIEW));
+  CHECKGL(glLoadIdentity());
+  CHECKGL(glLoadMatrixf((FLOAT *) gfx_context.GetOpenGLModelViewMatrix().m));
+  CHECKGL(glMatrixMode(GL_PROJECTION));
+  CHECKGL(glLoadIdentity());
+  CHECKGL(glLoadMatrixf((FLOAT *) gfx_context.GetOpenGLProjectionMatrix().m));
+
+
+  int VertexLocation          = nux::VTXATTRIB_POSITION;
+  int TextureCoord0Location   = nux::VTXATTRIB_TEXCOORD0;
+  int VertexColorLocation     = nux::VTXATTRIB_COLOR;
+
+  CHECKGL(glEnableVertexAttribArrayARB(VertexLocation));
+  CHECKGL(glVertexAttribPointerARB((GLuint) VertexLocation, 4, GL_FLOAT, GL_FALSE, 48, VtxBuffer));
+
+  if (TextureCoord0Location != -1)
+  {
+    CHECKGL(glEnableVertexAttribArrayARB(TextureCoord0Location));
+    CHECKGL(glVertexAttribPointerARB((GLuint) TextureCoord0Location, 4, GL_FLOAT, GL_FALSE, 48, VtxBuffer + 4));
+  }
+
+  if (VertexColorLocation != -1)
+  {
+    CHECKGL(glEnableVertexAttribArrayARB(VertexColorLocation));
+    CHECKGL(glVertexAttribPointerARB((GLuint) VertexColorLocation, 4, GL_FLOAT, GL_FALSE, 48, VtxBuffer + 8));
+  }
+
+  CHECKGL(glDrawArrays(GL_TRIANGLE_FAN, 0, 4));
+
+  CHECKGL(glDisableVertexAttribArrayARB(VertexLocation));
+
+  if (TextureCoord0Location != -1)
+    CHECKGL(glDisableVertexAttribArrayARB(TextureCoord0Location));
+
+  if (VertexColorLocation != -1)
+    CHECKGL(glDisableVertexAttribArrayARB(VertexColorLocation));
+
+  shader_program->End();
+}
+
+void OverlayRendererImpl::InitSlInverseTextureMaskShader()
+{
+  nux::ObjectPtr<nux::IOpenGLVertexShader> VS = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateVertexShader();
+  nux::ObjectPtr<nux::IOpenGLPixelShader> PS = nux::GetGraphicsDisplay()->GetGpuDevice()->CreatePixelShader();
+  nux::NString VSString;
+  nux::NString PSString;
+
+  VSString =  
+             NUX_VERTEX_SHADER_HEADER
+             "attribute vec4 AVertex;                                \n\
+             attribute vec4 MyTextureCoord0;                         \n\
+             attribute vec4 VertexColor;                             \n\
+             uniform mat4 ViewProjectionMatrix;                      \n\
+             varying vec4 varyTexCoord0;                             \n\
+             varying vec4 varyVertexColor;                           \n\
+             void main()                                             \n\
+             {                                                       \n\
+               gl_Position =  ViewProjectionMatrix * (AVertex);      \n\
+               varyTexCoord0 = MyTextureCoord0;                      \n\
+               varyVertexColor = VertexColor;                        \n\
+             }";
+
+  PSString =  
+            NUX_FRAGMENT_SHADER_HEADER
+             "varying vec4 varyTexCoord0;                               \n\
+             varying vec4 varyVertexColor;                              \n\
+             uniform sampler2D TextureObject0;                          \n\
+             void main()                                                \n\
+             {                                                          \n\
+               vec4 v = varyVertexColor*texture2D(TextureObject0, varyTexCoord0);       \n\
+               gl_FragColor = vec4(1.0-v.a);                            \n\
+             }";
+
+  // Textured 2D Primitive Shader
+  inverse_texture_mask_prog_ = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateShaderProgram();
+  VS->SetShaderCode(TCHAR_TO_ANSI(*VSString));
+  PS->SetShaderCode(TCHAR_TO_ANSI(*PSString), "#define SAMPLERTEX2D");
+
+  inverse_texture_mask_prog_->ClearShaderObjects();
+  inverse_texture_mask_prog_->AddShaderObject(VS);
+  inverse_texture_mask_prog_->AddShaderObject(PS);
+  CHECKGL(glBindAttribLocation(inverse_texture_mask_prog_->GetOpenGLID(), 0, "AVertex"));
+  inverse_texture_mask_prog_->Link();
+}
+
+void OverlayRendererImpl::RenderInverseMask_GLSL(nux::GraphicsEngine& gfx_context, int x, int y, int width, int height, nux::ObjectPtr<nux::IOpenGLBaseTexture> DeviceTexture, nux::TexCoordXForm &texxform0, const nux::Color &color0)
+{
+  if (!inverse_texture_mask_prog_.IsValid())
+    InitSlInverseTextureMaskShader();
+
+  QRP_Compute_Texture_Coord(width, height, DeviceTexture, texxform0);
+  float fx = x, fy = y;
+  float VtxBuffer[] =
+  {
+    fx,          fy,          0.0f, 1.0f, texxform0.u0, texxform0.v0, 0, 0, color0.red, color0.green, color0.blue, color0.alpha,
+    fx,          fy + height, 0.0f, 1.0f, texxform0.u0, texxform0.v1, 0, 0, color0.red, color0.green, color0.blue, color0.alpha,
+    fx + width,  fy + height, 0.0f, 1.0f, texxform0.u1, texxform0.v1, 0, 0, color0.red, color0.green, color0.blue, color0.alpha,
+    fx + width,  fy,          0.0f, 1.0f, texxform0.u1, texxform0.v0, 0, 0, color0.red, color0.green, color0.blue, color0.alpha,
+  };
+
+  nux::ObjectPtr<nux::IOpenGLShaderProgram> ShaderProg;
+
+  if (DeviceTexture->Type().IsDerivedFromType(nux::IOpenGLTexture2D::StaticObjectType))
+  {
+    ShaderProg = inverse_texture_mask_prog_;
+  }
+
+  CHECKGL(glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0));
+  CHECKGL(glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0));
+  ShaderProg->Begin();
+
+  int TextureObjectLocation = ShaderProg->GetUniformLocationARB("TextureObject0");
+  int VertexLocation = ShaderProg->GetAttributeLocation("AVertex");
+  int TextureCoord0Location = ShaderProg->GetAttributeLocation("MyTextureCoord0");
+  int VertexColorLocation = ShaderProg->GetAttributeLocation("VertexColor");
+
+  gfx_context.SetTexture(GL_TEXTURE0, DeviceTexture);
+  CHECKGL(glUniform1iARB(TextureObjectLocation, 0));
+
+  int     VPMatrixLocation = ShaderProg->GetUniformLocationARB("ViewProjectionMatrix");
+  nux::Matrix4 MVPMatrix = gfx_context.GetOpenGLModelViewProjectionMatrix();
+  ShaderProg->SetUniformLocMatrix4fv((GLint) VPMatrixLocation, 1, false, (GLfloat *) & (MVPMatrix.m));
+
+  CHECKGL(glEnableVertexAttribArrayARB(VertexLocation));
+  CHECKGL(glVertexAttribPointerARB((GLuint) VertexLocation, 4, GL_FLOAT, GL_FALSE, 48, VtxBuffer));
+
+  if (TextureCoord0Location != -1)
+  {
+    CHECKGL(glEnableVertexAttribArrayARB(TextureCoord0Location));
+    CHECKGL(glVertexAttribPointerARB((GLuint) TextureCoord0Location, 4, GL_FLOAT, GL_FALSE, 48, VtxBuffer + 4));
+  }
+
+  if (VertexColorLocation != -1)
+  {
+    CHECKGL(glEnableVertexAttribArrayARB(VertexColorLocation));
+    CHECKGL(glVertexAttribPointerARB((GLuint) VertexColorLocation, 4, GL_FLOAT, GL_FALSE, 48, VtxBuffer + 8));
+  }
+
+  CHECKGL(glDrawArrays(GL_TRIANGLE_FAN, 0, 4));
+
+  CHECKGL(glDisableVertexAttribArrayARB(VertexLocation));
+
+  if (TextureCoord0Location != -1)
+    CHECKGL(glDisableVertexAttribArrayARB(TextureCoord0Location));
+
+  if (VertexColorLocation != -1)
+    CHECKGL(glDisableVertexAttribArrayARB(VertexColorLocation));
+
+  ShaderProg->End();
+}
+
+void OverlayRendererImpl::RenderInverseMask(nux::GraphicsEngine& gfx_context, int x, int y, int width, int height, nux::ObjectPtr<nux::IOpenGLBaseTexture> DeviceTexture, nux::TexCoordXForm &texxform0, const nux::Color &color0)
+{
+  if (nux::GetWindowThread()->GetGraphicsEngine().UsingGLSLCodePath())
+  {
+    RenderInverseMask_GLSL(gfx_context, x, y, width, height, DeviceTexture, texxform0, color0);
+  }
+  else
+  {
+    RenderInverseMask_ASM(gfx_context, x, y, width, height, DeviceTexture, texxform0, color0); 
+  }
+}
+
 void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geometry, bool force_edges)
 {
   bool paint_blur = BackgroundEffectHelper::blur_type != BLUR_NONE;
@@ -126,12 +379,12 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
 
   
   nux::Geometry larger_content_geo = content_geo;
-  larger_content_geo.OffsetSize(MARGIN, MARGIN);
+  larger_content_geo.OffsetSize(EXCESS_BORDER, EXCESS_BORDER);
 
   nux::Geometry larger_geo(larger_content_geo);
 
   nux::Geometry larger_absolute_geo = absolute_geo;
-  larger_absolute_geo.OffsetSize(MARGIN, MARGIN);
+  larger_absolute_geo.OffsetSize(EXCESS_BORDER, EXCESS_BORDER);
 
   nux::TexCoordXForm texxform_absolute_bg;
   texxform_absolute_bg.flip_v_coord = true;
@@ -239,20 +492,20 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
       dash::Style& style = dash::Style::Instance();
       nux::BaseTexture* bottom = style.GetDashBottomTile();
       nux::BaseTexture* bottom_mask = style.GetDashBottomTileMask();
-      nux::BaseTexture* bottom_mask_inv = style.GetDashBottomTileMaskInv();
+      //nux::BaseTexture* bottom_mask_inv = style.GetDashBottomTileMaskInv();
       nux::BaseTexture* right = style.GetDashRightTile();
       nux::BaseTexture* right_mask = style.GetDashRightTileMask();
-      nux::BaseTexture* right_mask_inv = style.GetDashRightTileMaskInv();
+      //nux::BaseTexture* right_mask_inv = style.GetDashRightTileMaskInv();
       nux::BaseTexture* corner = style.GetDashCorner();
       nux::BaseTexture* corner_mask = style.GetDashCornerMask();
-      nux::BaseTexture* corner_mask_inv = style.GetDashCornerMaskInv();
+      //nux::BaseTexture* corner_mask_inv = style.GetDashCornerMaskInv();
       nux::BaseTexture* left_corner = style.GetDashLeftCorner();
       nux::BaseTexture* left_corner_mask = style.GetDashLeftCornerMask();
-      nux::BaseTexture* left_corner_mask_inv = style.GetDashLeftCornerMaskInv();
+      //nux::BaseTexture* left_corner_mask_inv = style.GetDashLeftCornerMaskInv();
       nux::BaseTexture* left_tile = style.GetDashLeftTile();
       nux::BaseTexture* top_corner = style.GetDashTopCorner();
       nux::BaseTexture* top_corner_mask = style.GetDashTopCornerMask();
-      nux::BaseTexture* top_corner_mask_inv = style.GetDashTopCornerMaskInv();
+      //nux::BaseTexture* top_corner_mask_inv = style.GetDashTopCornerMaskInv();
       nux::BaseTexture* top_tile = style.GetDashTopTile();
       nux::TexCoordXForm texxform;
 
@@ -278,13 +531,13 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         // Write correct alpha
         gfx_context.GetRenderStates().SetBlend(false);
         gfx_context.GetRenderStates().SetColorMask(false, false, false, true);
-        gfx_context.QRP_1Tex(geo.x + (geo.width - corner->GetWidth()),
+        RenderInverseMask(gfx_context, geo.x + (geo.width - corner->GetWidth()),
                              geo.y + (geo.height - corner->GetHeight()),
                              corner->GetWidth(),
                              corner->GetHeight(),
-                             corner_mask_inv->GetDeviceTexture(),
+                             corner_mask->GetDeviceTexture(),
                              texxform,
-                             nux::color::Black);
+                             nux::color::White);
 
         gfx_context.GetRenderStates().SetBlend(true);
         gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
@@ -318,13 +571,13 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         // Write correct alpha
         gfx_context.GetRenderStates().SetBlend(false);
         gfx_context.GetRenderStates().SetColorMask(false, false, false, true);
-        gfx_context.QRP_1Tex(left_corner->GetWidth() - left_corner_offset - offset,
+        RenderInverseMask(gfx_context, left_corner->GetWidth() - left_corner_offset - offset,
                              geo.y + (geo.height - bottom->GetHeight()),
                              real_width + offset,
                              bottom->GetHeight(),
-                             bottom_mask_inv->GetDeviceTexture(),
+                             bottom_mask->GetDeviceTexture(),
                              texxform,
-                             nux::color::Black);
+                             nux::color::White);
 
         gfx_context.GetRenderStates().SetBlend(true);
         gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
@@ -355,13 +608,13 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         // Write correct alpha
         gfx_context.GetRenderStates().SetBlend(false);
         gfx_context.GetRenderStates().SetColorMask(false, false, false, true);
-        gfx_context.QRP_1Tex(geo.x - left_corner_offset,
+        RenderInverseMask(gfx_context, geo.x - left_corner_offset,
                              geo.y + (geo.height - left_corner->GetHeight()),
                              left_corner->GetWidth(),
                              left_corner->GetHeight(),
-                             left_corner_mask_inv->GetDeviceTexture(),
+                             left_corner_mask->GetDeviceTexture(),
                              texxform,
-                             nux::color::Black);
+                             nux::color::White);
 
         gfx_context.GetRenderStates().SetBlend(true);
         gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
@@ -409,13 +662,13 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         // Write correct alpha
         gfx_context.GetRenderStates().SetBlend(false);
         gfx_context.GetRenderStates().SetColorMask(false, false, false, true);
-        gfx_context.QRP_1Tex(geo.x + geo.width - right->GetWidth(),
+        RenderInverseMask(gfx_context, geo.x + geo.width - right->GetWidth(),
                              geo.y + top_corner->GetHeight() - top_corner_offset,
                              right->GetWidth(),
                              geo.height - corner->GetHeight() - (top_corner->GetHeight() - top_corner_offset),
-                             right_mask_inv->GetDeviceTexture(),
+                             right_mask->GetDeviceTexture(),
                              texxform,
-                             nux::color::Black);
+                             nux::color::White);
 
         gfx_context.GetRenderStates().SetBlend(true);
         gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
@@ -446,13 +699,13 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         // Write correct alpha
         gfx_context.GetRenderStates().SetBlend(false);
         gfx_context.GetRenderStates().SetColorMask(false, false, false, true);
-        gfx_context.QRP_1Tex(geo.x + geo.width - right->GetWidth(),
+        RenderInverseMask(gfx_context, geo.x + geo.width - right->GetWidth(),
                                         geo.y - top_corner_offset,
                                         top_corner->GetWidth(),
                                         top_corner->GetHeight(),
-                                        top_corner_mask_inv->GetDeviceTexture(),
+                                        top_corner_mask->GetDeviceTexture(),
                                         texxform,
-                                        nux::color::Black);
+                                        nux::color::White);
 
         gfx_context.GetRenderStates().SetBlend(true);
         gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
@@ -492,12 +745,12 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
   bgs = 0;
 
   nux::Geometry larger_content_geo = content_geo;
-  larger_content_geo.OffsetSize(MARGIN, MARGIN);
+  larger_content_geo.OffsetSize(EXCESS_BORDER, EXCESS_BORDER);
 
   nux::Geometry larger_geo(larger_content_geo);
 
   nux::Geometry larger_absolute_geo = absolute_geo;
-  larger_absolute_geo.OffsetSize(MARGIN, MARGIN);
+  larger_absolute_geo.OffsetSize(EXCESS_BORDER, EXCESS_BORDER);
   
 
   gfx_context.PushClippingRectangle(larger_geo);
