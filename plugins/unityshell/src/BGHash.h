@@ -40,37 +40,26 @@ namespace unity
     ~BGHash ();
 
     static gboolean ForceUpdate(BGHash *self);
-    void LoadFileToHash (const std::string path);
-    void LoadPixbufToHash (GdkPixbuf *pixbuf);
-    GdkPixbuf *GetPixbufFromBG ();
     nux::Color CurrentColor ();
     void OnBackgroundChanged (GnomeBG *bg);
     void OnGSettingsChanged (GSettings *settings, gchar *key);
     void OverrideColor (nux::Color color);
   
   private:
-    static gboolean OnSlideshowTransition (BGHash *self);
-    static gboolean OnTransitionCallback (BGHash *self);
     gboolean DoTransitionCallback ();
+    static gboolean OnTransitionCallback (BGHash *self);
     void DoUbusColorEmit ();
     void TransitionToNewColor (nux::Color new_color);
     nux::Color InterpolateColor (nux::Color colora, nux::Color colorb, float value);
-    nux::Color HashColor(GdkPixbuf *pixbuf);
     nux::Color MatchColor (nux::Color base_color);
-    std::string CreateFilepathHash(std::string path);
     
-    void SerializeCache();
-    void UnSerializeCache();
+    void RefreshColor();
 
   private:
     GnomeBG *background_monitor;
     GSettings *client;
 
     guint _transition_handler;
-
-    SlideShow *_bg_slideshow;
-    Slide     *_current_slide;
-    guint      _slideshow_handler;
 
     nux::Color _current_color; // the current colour, including steps in transitions
     nux::Color _new_color;     // in transitions, the next colour, otherwise the current colour
@@ -83,7 +72,6 @@ namespace unity
     glib::SignalManager signal_manager_;
     uint _ubus_handle_request_colour;
 
-    std::map<std::string, nux::Color> cache_map_; 
   };
 };
 
