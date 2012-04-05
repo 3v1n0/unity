@@ -61,13 +61,15 @@ class PanelTestsBase(AutopilotTestCase):
         if move_to_monitor:
             self.move_window_to_panel_monitor(app_win)
 
-        if maximize:
+        if maximize and not app_win.is_maximized:
             self.keybinding("window/maximize")
             self.addCleanup(self.keybinding, "window/restore")
 
         app_win.set_focus()
+        sleep(.25)
 
-        self.assertThat(app_win.is_maximized, Equals(maximize))
+        if maximize:
+            self.assertThat(app_win.is_maximized, Equals(maximize))
 
         return app_win
 
@@ -80,8 +82,8 @@ class PanelTestsBase(AutopilotTestCase):
             return
 
         if window.is_maximized:
-            self.addCleanup(self.keybinding, "window/maximize")
             self.keybinding("window/restore")
+            self.addCleanup(self.keybinding, "window/maximize")
             sleep(.1)
 
         if restore_position:
@@ -90,6 +92,7 @@ class PanelTestsBase(AutopilotTestCase):
         self.screen_geo.drag_window_to_monitor(window, self.panel_monitor)
         sleep(.25)
         self.assertThat(window.monitor, Equals(self.panel_monitor))
+
 
 class PanelTitleTests(PanelTestsBase):
 
@@ -129,7 +132,7 @@ class PanelTitleTests(PanelTestsBase):
         self.assertTrue(text_win.is_maximized)
         self.assertThat(self.panel.title, Equals(text_win.title))
 
-        self.keyboard.press_and_release("Ctrl+S")
+        self.keyboard.press_and_release("Ctrl+h")
         self.addCleanup(self.keyboard.press_and_release, "Escape")
         sleep(.25)
         self.assertThat(self.panel.title, Equals(text_win.application.name))
@@ -483,6 +486,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         text_win = self.open_new_application_window("Text Editor")
         sleep(.25)
         self.keyboard.press_and_release("Ctrl+S")
+        self.addCleanup(self.keyboard.press_and_release, "Escape")
 
         wins = text_win.application.get_windows()
         self.assertThat(len(wins), Equals(2))
@@ -493,10 +497,9 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
         target_win.set_focus()
         self.assertTrue(target_win.is_focused)
-        self.move_window_to_panel_monitor(target_win)
+        self.move_window_to_panel_monitor(target_win, restore_position=False)
 
         self.keybinding("window/maximize")
-        self.addCleanup(self.keybinding, "window/restore")
 
         self.assertThat(target_win.monitor, Equals(self.panel_monitor))
         self.assertTrue(target_win.is_maximized)
