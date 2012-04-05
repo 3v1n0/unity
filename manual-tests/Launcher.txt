@@ -444,3 +444,24 @@ Actions:
 Expected Result:
   The launchers on each monitor have saturated icons (normal looking, not the
   desaturated look that there is while the dash is open).
+
+Test number overlays while shortcut help is active
+------------------------------
+Setup:
+have a launcher with a few icons in it
+
+Actions:
+# Hold down Super until the "Keyboard Shortcuts" screen appears
+
+Expected Result:
+The numbers [1-9] should be displayed overlaid on the icons. 
+"Keyboard Shortcut" menu should appear as well.
+
+Actions:
+# Mouse over an icon in the launcher
+# Hold down Super until the "Keyboard Shortcuts" screen appears
+
+Expected Result:
+The numbers [1-9] should be displayed overlaid on the icons. 
+"Keyboard Shortcut" menu should appear as well.
+
