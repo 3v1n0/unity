@@ -204,7 +204,7 @@ nux::BaseTexture* ResultRendererHorizontalTile::DrawHighlight(std::string const&
 
   // draw the highlight
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.2f);
+  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.075f);
   cairo_graphics.DrawRoundedRectangle(cr,
                                       1.0f,
                                       0.0f,
