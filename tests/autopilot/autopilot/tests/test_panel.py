@@ -11,8 +11,9 @@ import os
 from testtools.matchers import Equals, NotEquals, LessThan, GreaterThan
 from time import sleep
 
-from autopilot.tests import AutopilotTestCase
 from autopilot.emulators.X11 import ScreenGeometry
+from autopilot.emulators.bamf import BamfWindow
+from autopilot.tests import AutopilotTestCase
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,7 @@ class PanelTestsBase(AutopilotTestCase):
         self.panel = self.panels.get_panel_for_monitor(self.panel_monitor)
         self.panel.move_mouse_below_the_panel()
 
-    def open_new_application_window(self, app_name, maximize=False):
+    def open_new_application_window(self, app_name, maximize=False, move_to_monitor=True):
         """Opens a new instance of the requested application, ensuring
         that only one window is opened.
 
@@ -57,16 +58,8 @@ class PanelTestsBase(AutopilotTestCase):
         self.assertTrue(app_win.is_focused)
         self.assertThat(app.desktop_file, Equals(app_win.application.desktop_file))
 
-        if app_win.monitor != self.panel_monitor:
-            if app_win.is_maximized:
-                self.addCleanup(self.keybinding, "window/maximize")
-                self.keybinding("window/restore")
-                sleep(.1)
-
-            self.addCleanup(self.screen_geo.drag_window_to_monitor, app_win, app_win.monitor)
-            self.screen_geo.drag_window_to_monitor(app_win, self.panel_monitor)
-            sleep(.25)
-            self.assertThat(app_win.monitor, Equals(self.panel_monitor))
+        if move_to_monitor:
+            self.move_window_to_panel_monitor(app_win)
 
         if maximize:
             self.keybinding("window/maximize")
@@ -77,6 +70,26 @@ class PanelTestsBase(AutopilotTestCase):
         self.assertThat(app_win.is_maximized, Equals(maximize))
 
         return app_win
+
+    def move_window_to_panel_monitor(self, window, restore_position=True):
+        """Drags a window to another monitor, eventually restoring it before"""
+        if not isinstance(window, BamfWindow):
+            raise TypeError("Window must be a BamfWindow")
+
+        if window.monitor == self.panel_monitor:
+            return
+
+        if window.is_maximized:
+            self.addCleanup(self.keybinding, "window/maximize")
+            self.keybinding("window/restore")
+            sleep(.1)
+
+        if restore_position:
+            self.addCleanup(self.screen_geo.drag_window_to_monitor, window, window.monitor)
+            
+        self.screen_geo.drag_window_to_monitor(window, self.panel_monitor)
+        sleep(.25)
+        self.assertThat(window.monitor, Equals(self.panel_monitor))
 
 class PanelTitleTests(PanelTestsBase):
 
@@ -164,8 +177,7 @@ class PanelTitleTests(PanelTestsBase):
 
 class PanelWindowButtonsTests(PanelTestsBase):
 
-    #scenarios = _make_monitor_scenarios()
-    panel_monitor = 1
+    scenarios = _make_monitor_scenarios()
 
     def setUp(self):
         super(PanelWindowButtonsTests, self).setUp()
@@ -280,10 +292,13 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
     def test_window_buttons_close_button_works_for_window(self):
         """Tests that the window button 'Close' actually closes a window"""
-        text_win = self.open_new_application_window("Text Editor", maximize=True)
+        text_win = self.open_new_application_window("Text Editor", maximize=True, move_to_monitor=False)
+        self.move_window_to_panel_monitor(text_win, restore_position=False)
+        self.keybinding("window/maximize")
 
+        self.panel.move_mouse_over_window_buttons()
         self.panel.window_buttons.close.mouse_click()
-        sleep(.5)
+        sleep(1)
 
         self.assertTrue(text_win.closed)
 
@@ -448,7 +463,6 @@ class PanelWindowButtonsTests(PanelTestsBase):
         sleep(.25)
         self.keyboard.press_and_release("Ctrl+S")
 
-
         wins = text_win.application.get_windows()
         self.assertThat(len(wins), Equals(2))
         for win in wins:
@@ -458,11 +472,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
         target_win.set_focus()
         self.assertTrue(target_win.is_focused)
-
-        if target_win.monitor != self.panel_monitor:
-            self.addCleanup(self.keybinding, "window/restore")
-            self.addCleanup(self.screen_geo.drag_window_to_monitor, target_win, target_win.monitor)
-            self.screen_geo.drag_window_to_monitor(target_win, self.panel_monitor)
+        self.move_window_to_panel_monitor(target_win)
 
         self.keybinding("window/maximize")
         self.addCleanup(self.keybinding, "window/restore")
@@ -473,6 +483,11 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.assertTrue(self.panel.window_buttons.close.enabled)
         self.assertFalse(self.panel.window_buttons.minimize.enabled)
 
+
+class PanelMenuTests(PanelTestsBase):
+
+    scenarios = _make_monitor_scenarios()
+    panel_monitor = 1
 
 class PanelCrossMonitorsTests(PanelTestsBase):
 

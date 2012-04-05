@@ -403,6 +403,7 @@ class ScreenGeometry:
             logger.debug("Window %r is already on monitor %d." % (window.x_id, monitor))
             return
 
+        assert(not window.is_maximized)
         (win_x, win_y, win_w, win_h) = window.geometry
         (m_x, m_y, m_w, m_h) = self.get_monitor_geometry(monitor)
 
