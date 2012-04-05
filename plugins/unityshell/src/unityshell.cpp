@@ -1967,6 +1967,7 @@ bool UnityScreen::ShowHud()
     hud_controller_->ShowHud();
   }
 
+  // Consume the event.
   return true;
 }
 
@@ -1982,8 +1983,7 @@ bool UnityScreen::ShowHudInitiate(CompAction* action,
     key_code = options[6].value().i();
     LOG_DEBUG(logger) << "HUD initiate key code: " << key_code;
     // show it now, no timings or terminate needed.
-    ShowHud();
-    return true; // consume the event.
+    return ShowHud();
   }
   else
   {
