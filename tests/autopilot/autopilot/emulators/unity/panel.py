@@ -181,8 +181,9 @@ class MenuView(UnityIntrospectionObject):
         return self.get_children_by_type(IndicatorEntry)
 
     def get_menu_by_label(self, entry_label):
-        """Return the indicator entry with the given label"""
-        return self.get_children_by_type(IndicatorEntry, label=entry_label)
+        """Return the first indicator entry found with the given label"""
+        indicators = self.get_children_by_type(IndicatorEntry, label=entry_label)
+        return indicators[0] if indicators else None
 
     @property
     def geometry(self):
@@ -276,6 +277,12 @@ class Indicators(UnityIntrospectionObject):
             entries = self.get_children_by_type(IndicatorEntry)
 
         return sorted(entries, key=lambda entry: entry.priority)
+
+    def get_indicator_by_name_hint(self, name_hint):
+        """Return the IndicatorEntry with the name_hint"""
+        indicators = self.get_children_by_type(IndicatorEntry, name_hint=name_hint)
+        assert(len(indicators) == 1)
+        return indicators[0]
 
     @property
     def geometry(self):
