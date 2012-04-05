@@ -290,6 +290,8 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         """
         old_value = self._set_compiz_option(plugin_name, setting_name, setting_value)
         self.addCleanup(self._set_compiz_option, plugin_name, setting_name, old_value)
+        # Allow unity time to respond to the new setting.
+        time.sleep(0.5)
 
     def _set_compiz_option(self, plugin_name, option_name, option_value):
         logger.info("Setting compiz option '%s' in plugin '%s' to %r",

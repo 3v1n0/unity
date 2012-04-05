@@ -12,6 +12,7 @@ from testtools.matchers import Equals, NotEquals, LessThan, GreaterThan, Not, Is
 from time import sleep
 
 from autopilot.tests import AutopilotTestCase, multiply_scenarios
+from autopilot.emulators.unity.icons import BFBLauncherIcon
 from autopilot.emulators.X11 import ScreenGeometry
 
 
@@ -25,11 +26,11 @@ def _make_scenarios():
     screen_geometry = ScreenGeometry()
     num_monitors = screen_geometry.get_num_monitors()
 
+    # it doesn't make sense to set only_primary when we're running in a single-monitor setup.
     if num_monitors == 1:
-        monitor_scenarios =  [('Single Monitor', {'launcher_monitor': 0})]
-    else:
-        monitor_scenarios = [('Monitor %d' % (i), {'launcher_monitor': i}) for i in range(num_monitors)]
+        return [('Single Monitor', {'launcher_monitor': 0, 'only_primary': False})]
 
+    monitor_scenarios = [('Monitor %d' % (i), {'launcher_monitor': i}) for i in range(num_monitors)]
     launcher_mode_scenarios = [('launcher_on_primary', {'only_primary': True}),
                                 ('launcher on all', {'only_primary': False})]
     return multiply_scenarios(monitor_scenarios, launcher_mode_scenarios)
@@ -519,6 +520,62 @@ class LauncherTests(ScenariodLauncherTests):
         self.assertThat(icon.tooltip_text, Equals("Waiting to install"))
 
 
+class LauncherVisualTests(ScenariodLauncherTests):
+    """Tests for visual aspects of the launcher (icon saturation etc.)."""
+
+    def test_keynav_from_dash_saturates_icons(self):
+        """Starting super+tab switcher from the dash must resaturate launcher icons.
+
+        Tests fix for bug #913569.
+        """
+        bfb = self.launcher.model.get_bfb_icon()
+        self.mouse.move(bfb.center_x, bfb.center_y)
+        self.dash.ensure_visible()
+        sleep(1)
+        # We can't use 'launcher_instance.switcher_start()' since it moves the mouse.
+        self.keybinding_hold_part_then_tap("launcher/switcher")
+        self.addCleanup(self.keybinding_release, "launcher/switcher")
+        self.addCleanup(self.keybinding, "launcher/switcher/exit")
+
+        self.keybinding_tap("launcher/switcher/next")
+        for icon in self.launcher.model.get_launcher_icons():
+            self.assertFalse(icon.desaturated)
+
+    def test_opening_dash_desaturates_icons(self):
+        """Opening the dash must desaturate all the launcher icons."""
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
+
+        for icon in self.launcher.model.get_launcher_icons():
+            if isinstance(icon, BFBLauncherIcon):
+                self.assertFalse(icon.desaturated)
+            else:
+                self.assertTrue(icon.desaturated)
+
+    def test_opening_dash_with_mouse_over_launcher_keeps_icon_saturation(self):
+        """Opening dash with mouse over launcher must not desaturate icons."""
+        launcher_instance = self.get_launcher()
+        x,y,w,h = launcher_instance.geometry
+        self.mouse.move(x + w/2, y + h/2)
+        sleep(.5)
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
+        for icon in self.launcher.model.get_launcher_icons():
+            self.assertFalse(icon.desaturated)
+
+    def test_mouse_over_with_dash_open_desaturates_icons(self):
+        """Moving mouse over launcher with dash open must saturate icons."""
+        launcher_instance = self.get_launcher()
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
+        sleep(.5)
+        x,y,w,h = launcher_instance.geometry
+        self.mouse.move(x + w/2, y + h/2)
+        sleep(.5)
+        for icon in self.launcher.model.get_launcher_icons():
+            self.assertFalse(icon.desaturated)
+
+
 class LauncherRevealTests(ScenariodLauncherTests):
     """Test the launcher reveal bahavior when in autohide mode."""
 
@@ -578,3 +635,109 @@ class LauncherRevealTests(ScenariodLauncherTests):
         launcher_instance.mouse_reveal_launcher()
         self.assertThat(launcher_instance.is_showing(), Equals(False))
         self.mouse.release(1)
+
+class LauncherCaptureTests(AutopilotTestCase):
+    """Test the launchers ability to capture/not capture the mouse."""
+
+    screen_geo = ScreenGeometry()
+
+    def setHideMode(self, mode):
+        launcher = self.launcher.get_launcher_for_monitor(0)
+        for counter in range(10):
+            sleep(1)
+            if launcher.hidemode == mode:
+                break
+        self.assertThat(launcher.hidemode, Equals(mode),
+                        "Launcher did not enter revealed mode.")
+
+    def leftMostMonitor(self):
+        x1, y1, width, height = self.screen_geo.get_monitor_geometry(0)
+        x2, y2, width, height = self.screen_geo.get_monitor_geometry(1)
+
+        if x1 < x2:
+            return 0
+        return 1
+
+    def rightMostMonitor(self):
+        return 1 - self.leftMostMonitor()
+
+    def setUp(self):
+        super(LauncherCaptureTests, self).setUp()
+        self.set_unity_option('launcher_capture_mouse', True)
+        self.set_unity_option('launcher_hide_mode', 0)
+        self.set_unity_option('num_launchers', 0)
+        self.setHideMode(0)
+
+    def test_launcher_captures_while_sticky_and_revealed(self):
+        """Tests that the launcher captures the mouse when moving between monitors
+        while revealed.
+        """
+        if self.screen_geo.get_num_monitors() <= 1:
+            self.skipTest("Cannot run this test with a single monitor configured.")
+
+        x, y, width, height = self.screen_geo.get_monitor_geometry(self.rightMostMonitor())
+        self.mouse.move(x + width / 2, y + height / 2, False)
+        self.mouse.move(x - width / 2, y + height / 2, True, 5, .002)
+
+        x_fin, y_fin = self.mouse.position()
+        # The launcher should have held the mouse a little bit
+        self.assertThat(x_fin, GreaterThan(x - width / 2))
+
+    def test_launcher_not_capture_while_not_sticky_and_revealed(self):
+        """Tests that the launcher doesn't captures the mouse when moving between monitors
+        while revealed and stick is off.
+        """
+        if self.screen_geo.get_num_monitors() <= 1:
+            self.skipTest("Cannot run this test with a single monitor configured.")
+
+        self.set_unity_option('launcher_capture_mouse', False)
+
+        x, y, width, height = self.screen_geo.get_monitor_geometry(self.rightMostMonitor())
+        self.mouse.move(x + width / 2, y + height / 2, False)
+        self.mouse.move(x - width / 2, y + height / 2, True, 5, .002)
+
+        x_fin, y_fin = self.mouse.position()
+        # The launcher should have held the mouse a little bit
+        self.assertThat(x_fin, Equals(x - width / 2))
+
+    def test_launcher_not_capture_while_not_sticky_and_hidden_moving_right(self):
+        """Tests that the launcher doesn't capture the mouse when moving between monitors
+        while hidden and sticky is off.
+        """
+        if self.screen_geo.get_num_monitors() <= 1:
+            self.skipTest("Cannot run this test with a single monitor configured.")
+
+        self.set_unity_option('launcher_hide_mode', 1)
+        self.set_unity_option('launcher_capture_mouse', False)
+
+        self.setHideMode(1)
+
+        x, y, width, height = self.screen_geo.get_monitor_geometry(self.leftMostMonitor())
+        self.mouse.move(x + width / 2, y + height / 2, False)
+        sleep(1.5)
+        self.mouse.move(x + width * 1.5, y + height / 2, True, 5, .002)
+
+        x_fin, y_fin = self.mouse.position()
+        # The launcher should have held the mouse a little bit
+        self.assertThat(x_fin, Equals(x + width * 1.5))
+
+    def test_launcher_capture_while_sticky_and_hidden_moving_right(self):
+        """Tests that the launcher captures the mouse when moving between monitors
+        while hidden.
+        """
+        if self.screen_geo.get_num_monitors() <= 1:
+            self.skipTest("Cannot run this test with a single monitor configured.")
+
+        self.set_unity_option('launcher_hide_mode', 1)
+
+        self.setHideMode(1)
+
+        x, y, width, height = self.screen_geo.get_monitor_geometry(self.leftMostMonitor())
+        self.mouse.move(x + width / 2, y + height / 2, False)
+        sleep(1.5)
+        self.mouse.move(x + width * 1.5, y + height / 2, True, 5, .002)
+
+        x_fin, y_fin = self.mouse.position()
+        # The launcher should have held the mouse a little bit
+        self.assertThat(x_fin, LessThan(x + width * 1.5))
+                

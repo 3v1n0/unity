@@ -32,6 +32,7 @@
 #include "DesktopLauncherIcon.h"
 #include "DeviceLauncherIcon.h"
 #include "DeviceLauncherSection.h"
+#include "EdgeBarrierController.h"
 #include "FavoriteStore.h"
 #include "HudLauncherIcon.h"
 #include "Launcher.h"
@@ -173,6 +174,8 @@ public:
 
   int                    launcher_key_press_time_;
 
+  ui::EdgeBarrierController::Ptr edge_barriers_;
+
   LauncherList launchers;
 
   sigc::connection on_expoicon_activate_connection_;
@@ -188,7 +191,10 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   , sort_priority_(0)
   , show_desktop_icon_(false)
   , display_(display)
+  , edge_barriers_(new ui::EdgeBarrierController())
 {
+  edge_barriers_->options = parent_->options();
+
   UScreen* uscreen = UScreen::GetDefault();
   auto monitors = uscreen->GetMonitors();
   int primary = uscreen->GetPrimaryMonitor();
@@ -331,10 +337,16 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
     {
       parent_->RemoveChild(launcher.GetPointer());
       launcher->GetParent()->UnReference();
+      edge_barriers_->Unsubscribe(launcher.GetPointer(), launcher->monitor);
     }
   }
 
   launchers.resize(num_launchers);
+
+  for (size_t i = 0; i < launchers.size(); ++i)
+  {
+    edge_barriers_->Subscribe(launchers[i].GetPointer(), launchers[i]->monitor);
+  }
 }
 
 void Controller::Impl::OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors)

@@ -39,6 +39,7 @@ class IMTextEntry : public nux::TextEntry
   NUX_DECLARE_OBJECT_TYPE(IMTextEntry, nux::TextEntry);
 public:
   IMTextEntry();
+  bool im_preedit();
 
 private:
   bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);

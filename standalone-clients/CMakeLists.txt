@@ -45,6 +45,8 @@ add_executable (dash
                 standalone_dash.cpp
                 ${UNITY_SRC}/AbstractPlacesGroup.cpp
                 ${UNITY_SRC}/AbstractPlacesGroup.h
+                ${UNITY_SRC}/AbstractSeparator.h
+                ${UNITY_SRC}/AbstractSeparator.cpp
                 ${UNITY_SRC}/BackgroundEffectHelper.cpp
                 ${UNITY_SRC}/BackgroundEffectHelper.h
                 ${UNITY_SRC}/BGHash.cpp
@@ -105,6 +107,8 @@ add_executable (dash
                 ${UNITY_SRC}/LensView.h
                 ${UNITY_SRC}/LensViewPrivate.cpp
                 ${UNITY_SRC}/LensViewPrivate.h
+                ${UNITY_SRC}/LineSeparator.cpp
+                ${UNITY_SRC}/LineSeparator.h
                 ${UNITY_SRC}/OverlayRenderer.cpp
                 ${UNITY_SRC}/PreviewApplications.cpp
                 ${UNITY_SRC}/PreviewBase.cpp
