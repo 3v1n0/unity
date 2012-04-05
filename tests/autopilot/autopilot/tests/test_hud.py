@@ -467,7 +467,7 @@ class HudVisualTests(HudTestsBase):
 class HudAlternativeKeybindingTests(HudTestsBase):
 
     def test_super_h(self):
-        """Test hud reveal on <super>+h."""
+        """Test hud reveal on <Super>h."""
         self.set_unity_option("show_hud", "<Super>h")
         # Don't use reveal_hud, but be explicit in the keybindings.
         self.keyboard.press_and_release("Super+h")
@@ -478,7 +478,7 @@ class HudAlternativeKeybindingTests(HudTestsBase):
         self.assertTrue(self.hud.visible, "HUD did not appear.")
 
     def test_ctrl_alt_h(self):
-        """Test hud reveal on <super>+h."""
+        """Test hud reveal on <Contrl><Alt>h."""
         self.set_unity_option("show_hud", "<Control><Alt>h")
         # Don't use reveal_hud, but be explicit in the keybindings.
         self.keyboard.press_and_release("Ctrl+Alt+h")
