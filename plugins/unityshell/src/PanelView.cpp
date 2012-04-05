@@ -233,11 +233,11 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     if (BackgroundEffectHelper::blur_type != BLUR_NONE)
     {
-      _bg_blur_texture = bg_effect_helper_.GetBlurRegion(blur_geo);
+      _bg_blur_texture = _bg_effect_helper.GetBlurRegion(blur_geo);
     }
     else
     {
-      _bg_blur_texture = bg_effect_helper_.GetRegion(blur_geo); 
+      _bg_blur_texture = _bg_effect_helper.GetRegion(blur_geo); 
     }
 
     if (_bg_blur_texture.IsValid() && (_overlay_is_open || _opacity != 1.0f))
