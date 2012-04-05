@@ -278,7 +278,7 @@ void OverlayRendererImpl::InitSlInverseTextureMaskShader()
              uniform sampler2D TextureObject0;                          \n\
              void main()                                                \n\
              {                                                          \n\
-               vec4 v = varyVertexColor*texture2D(TextureObject0, varyTexCoord0);       \n\
+               vec4 v = varyVertexColor*texture2D(TextureObject0, varyTexCoord0.xy);       \n\
                gl_FragColor = vec4(1.0-v.a);                            \n\
              }";
 
