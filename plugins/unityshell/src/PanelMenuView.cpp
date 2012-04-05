@@ -1542,11 +1542,11 @@ void PanelMenuView::AddProperties(GVariantBuilder* builder)
   .add("draw_menus", DrawMenus())
   .add("draw_window_buttons", DrawWindowButtons())
   .add("controls_active_window", _we_control_active)
-  .add("menus_fadein_duration", _menus_fadein)
-  .add("menus_fadeout_duration", _menus_fadeout)
-  .add("menus_discovery_duration", _menus_discovery)
-  .add("menus_discovery_fadein_duration", _menus_discovery_fadein)
-  .add("menus_discovery_fadein_duration", _menus_discovery_fadeout);
+  .add("fadein_duration", _menus_fadein)
+  .add("fadeout_duration", _menus_fadeout)
+  .add("discovery_duration", _menus_discovery)
+  .add("discovery_fadein_duration", _menus_discovery_fadein)
+  .add("discovery_fadein_duration", _menus_discovery_fadeout);
 }
 
 void PanelMenuView::OnSwitcherShown(GVariant* data)
