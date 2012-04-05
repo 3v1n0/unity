@@ -314,7 +314,7 @@ std::vector<Window> BamfLauncherIcon::GetWindows(WindowFilterMask filter, int mo
       {
         guint32 xid = bamf_window_get_xid(window);
 
-        if ((mapped && wm->IsWindowMapped(xid) && !bamf_window_get_transient(BAMF_WINDOW(view))) || !mapped)
+        if ((mapped && wm->IsWindowMapped(xid)) || !mapped)
         {
           if ((current_desktop && wm->IsWindowOnCurrentDesktop(xid)) || !current_desktop)
           {
@@ -602,8 +602,6 @@ void BamfLauncherIcon::Focus(ActionArg arg)
   {
     if (any_visible)
     {
-      //WindowManager::Default()->FocusWindowGroup(windows,
-      // WindowManager::FocusVisibility::ForceUnminimizeInvisible, arg.monitor);
       WindowManager::Default()->FocusWindowGroup(windows,
         WindowManager::FocusVisibility::OnlyVisibleOnTop, arg.monitor);
     }
