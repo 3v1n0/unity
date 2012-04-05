@@ -223,6 +223,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
         sleep(self.panel.menus.discovery_duration)
         sleep(self.panel.menus.discovery_fadein_duration / 1000.0)
+        sleep(self.panel.menus.discovery_fadeout_duration / 1000.0)
         self.assertFalse(self.panel.window_buttons_shown)
 
     def test_window_buttons_show_for_maximized_window_on_mouse_in(self):
@@ -241,19 +242,6 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.assertThat(len(buttons), Equals(3))
         for button in buttons:
             self.assertFalse(button.overlay_mode)
-
-        self.panel.move_mouse_over_menus()
-        sleep(self.panel.menus.fadeout_duration / 1000.0)
-        self.assertTrue(self.panel.window_buttons_shown)
-
-        if self.panel.grab_area.width > 0:
-            self.panel.move_mouse_over_grab_area()
-            sleep(self.panel.menus.fadeout_duration / 1000.0)
-            self.assertTrue(self.panel.window_buttons_shown)
-
-        self.panel.move_mouse_over_indicators()
-        sleep(self.panel.menus.fadeout_duration / 1000.0)
-        self.assertFalse(self.panel.window_buttons_shown)
 
     def test_window_buttons_show_with_dash(self):
         """Tests that the window buttons are shown when opening the dash"""
@@ -327,6 +315,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.assertTrue(text_win.closed)
 
     def test_window_buttons_close_follows_fitts_law(self):
+        """Tests that the 'Close' button is conform to Fitts's Law. See bug #839690"""
         text_win = self.open_new_application_window("Text Editor", maximized=True, move_to_monitor=False)
         self.move_window_to_panel_monitor(text_win, restore_position=False)
         self.keybinding("window/maximize")
@@ -354,6 +343,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         launcher.click_launcher_icon(icon)
 
     def test_window_buttons_minimize_follows_fitts_law(self):
+        """Tests that the 'Minimize' button is conform to Fitts's Law. See bug #839690"""
         text_win = self.open_new_application_window("Text Editor", maximized=True)
 
         button = self.panel.window_buttons.minimize
@@ -383,6 +373,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.assertFalse(self.panel.window_buttons_shown)
 
     def test_window_buttons_unmaximize_follows_fitts_law(self):
+        """Tests that the 'Unmaximize' button is conform to Fitts's Law. See bug #839690"""
         text_win = self.open_new_application_window("Text Editor", maximized=True)
 
         button = self.panel.window_buttons.unmaximize
@@ -557,6 +548,71 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.assertFalse(self.panel.window_buttons.minimize.enabled)
 
 
+class PanelHoveringTests(PanelTestsBase):
+    """Tests with the mouse pointer hovering the panel area"""
+
+    scenarios = _make_monitor_scenarios()
+
+    def test_only_menus_show_for_restored_window_on_mouse_in(self):
+        """Tests that only menus of a restored window are shown only when
+        the mouse pointer is over the panel menu area.
+        """
+        self.open_new_application_window("Calculator")
+        sleep(self.panel.menus.fadein_duration / 1000.0)
+        sleep(self.panel.menus.discovery_duration)
+        sleep(self.panel.menus.fadeout_duration / 1000.0)
+
+        self.panel.move_mouse_over_window_buttons()
+        sleep(self.panel.menus.fadeout_duration / 1000.0)
+        self.assertFalse(self.panel.window_buttons_shown)
+        self.assertTrue(self.panel.menus_shown)
+
+        self.panel.move_mouse_over_menus()
+        sleep(self.panel.menus.fadein_duration / 1000.0)
+        self.assertFalse(self.panel.window_buttons_shown)
+        self.assertTrue(self.panel.menus_shown)
+
+        if self.panel.grab_area.width > 0:
+            self.panel.move_mouse_over_grab_area()
+            sleep(self.panel.menus.fadeout_duration / 1000.0)
+            self.assertFalse(self.panel.window_buttons_shown)
+            self.assertTrue(self.panel.menus_shown)
+
+        self.panel.move_mouse_over_indicators()
+        sleep(self.panel.menus.fadeout_duration / 1000.0)
+        self.assertFalse(self.panel.menus_shown)
+
+    def test_menus_show_for_maximized_window_on_mouse_in(self):
+        """Tests that menus and window buttons of a maximized window are shown
+        only when the mouse pointer is over the panel menu area.
+        """
+        self.open_new_application_window("Text Editor", maximized=True)
+        sleep(self.panel.menus.fadein_duration / 1000.0)
+        sleep(self.panel.menus.discovery_duration)
+        sleep(self.panel.menus.fadeout_duration / 1000.0)
+
+        self.panel.move_mouse_over_window_buttons()
+        sleep(self.panel.menus.fadeout_duration / 1000.0)
+        self.assertTrue(self.panel.window_buttons_shown)
+        self.assertTrue(self.panel.menus_shown)
+
+        self.panel.move_mouse_over_menus()
+        sleep(self.panel.menus.fadein_duration / 1000.0)
+        self.assertTrue(self.panel.window_buttons_shown)
+        self.assertTrue(self.panel.menus_shown)
+
+        if self.panel.grab_area.width > 0:
+            self.panel.move_mouse_over_grab_area()
+            sleep(self.panel.menus.fadeout_duration / 1000.0)
+            self.assertTrue(self.panel.window_buttons_shown)
+            self.assertTrue(self.panel.menus_shown)
+
+        self.panel.move_mouse_over_indicators()
+        sleep(self.panel.menus.fadeout_duration / 1000.0)
+        self.assertFalse(self.panel.window_buttons_shown)
+        self.assertFalse(self.panel.menus_shown)
+
+
 class PanelMenuTests(PanelTestsBase):
 
     scenarios = _make_monitor_scenarios()
@@ -596,19 +652,6 @@ class PanelMenuTests(PanelTestsBase):
         sleep(self.panel.menus.fadein_duration / 1000.0)
         self.assertTrue(self.panel.menus_shown)
 
-        self.panel.move_mouse_over_window_buttons()
-        sleep(self.panel.menus.fadeout_duration / 1000.0)
-        self.assertTrue(self.panel.menus_shown)
-
-        if self.panel.grab_area.width > 0:
-            self.panel.move_mouse_over_grab_area()
-            sleep(self.panel.menus.fadeout_duration / 1000.0)
-            self.assertTrue(self.panel.menus_shown)
-
-        self.panel.move_mouse_over_indicators()
-        sleep(self.panel.menus.fadeout_duration / 1000.0)
-        self.assertFalse(self.panel.menus_shown)
-
     def test_menus_dont_show_for_maximized_window_on_mouse_out(self):
         """Tests that menus of a maximized window are not shown when
         the mouse pointer is outside the panel menu area.
@@ -619,7 +662,6 @@ class PanelMenuTests(PanelTestsBase):
         sleep(self.panel.menus.fadeout_duration / 1000.0)
 
         self.assertFalse(self.panel.menus_shown)
-
 
     def test_menus_show_for_maximized_window_on_mouse_in(self):
         """Tests that menus of a maximized window are shown only when
@@ -633,19 +675,6 @@ class PanelMenuTests(PanelTestsBase):
         self.panel.move_mouse_over_menus()
         sleep(self.panel.menus.fadein_duration / 1000.0)
         self.assertTrue(self.panel.menus_shown)
-
-        self.panel.move_mouse_over_window_buttons()
-        sleep(self.panel.menus.fadeout_duration / 1000.0)
-        self.assertTrue(self.panel.menus_shown)
-
-        if self.panel.grab_area.width > 0:
-            self.panel.move_mouse_over_grab_area()
-            sleep(self.panel.menus.fadeout_duration / 1000.0)
-            self.assertTrue(self.panel.menus_shown)
-
-        self.panel.move_mouse_over_indicators()
-        sleep(self.panel.menus.fadeout_duration / 1000.0)
-        self.assertFalse(self.panel.menus_shown)
 
     def test_menus_dont_show_with_dash(self):
         """Tests that menus are not showing when opening the dash"""
@@ -662,6 +691,7 @@ class PanelMenuTests(PanelTestsBase):
         sleep(1)
 
         self.assertFalse(self.panel.menus_shown)
+
 
 class PanelCrossMonitorsTests(PanelTestsBase):
     """Multimonitor only tests"""
