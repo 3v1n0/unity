@@ -351,7 +351,6 @@ private:
   ScreenEffectFramebufferObject::GLXGetProcAddressProc glXGetProcAddressP;
 #endif
 
-  bool dash_is_open_;
   friend class UnityWindow;
 };
 

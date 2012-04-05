@@ -130,7 +130,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , hud_keypress_time_(0)
   , panel_texture_has_changed_(true)
   , paint_panel_(false)
-  , dash_is_open_(false)
 {
   Timer timer;
   gfloat version;
@@ -363,12 +362,10 @@ UnityScreen::UnityScreen(CompScreen* screen)
      BackgroundEffectHelper::updates_enabled = true;
 
      ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [&](GVariant * args) {
-       dash_is_open_ = true;
        dash_monitor_ = g_variant_get_int32(args);
        RaiseInputWindows();
      });
-     ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, [&](GVariant * args) { dash_is_open_ = false; });
-     
+
      LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";
   }
 
@@ -741,7 +738,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 #ifndef USE_GLES
   bool was_bound = _fbo->bound ();
 
-  if (was_bound && dash_is_open_ && paint_panel_)
+  if (was_bound && launcher_controller_->IsOverlayOpen() && paint_panel_)
   {
     if (panel_texture_has_changed_ || !panel_texture_.IsValid())
     {
