@@ -401,7 +401,6 @@ class HudVisualTests(HudTestsBase):
     def test_hud_icon_is_shown(self):
         """Tests that the correct HUD icon is shown"""
         self.reveal_hud()
-        self.hud.visible
         sleep(.5)
 
         hud_launcher_icon = self.hud.get_launcher_icon()
@@ -463,3 +462,28 @@ class HudVisualTests(HudTestsBase):
         sleep(.5)
 
         self.assertThat(self.hud.icon.icon_name, Equals(calc.icon))
+
+
+class HudAlternativeKeybindingTests(HudTestsBase):
+
+    def test_super_h(self):
+        """Test hud reveal on <Super>h."""
+        self.set_unity_option("show_hud", "<Super>h")
+        # Don't use reveal_hud, but be explicit in the keybindings.
+        self.keyboard.press_and_release("Super+h")
+        for counter in range(10):
+            sleep(1)
+            if self.hud.visible:
+                break
+        self.assertTrue(self.hud.visible, "HUD did not appear.")
+
+    def test_ctrl_alt_h(self):
+        """Test hud reveal on <Contrl><Alt>h."""
+        self.set_unity_option("show_hud", "<Control><Alt>h")
+        # Don't use reveal_hud, but be explicit in the keybindings.
+        self.keyboard.press_and_release("Ctrl+Alt+h")
+        for counter in range(10):
+            sleep(1)
+            if self.hud.visible:
+                break
+        self.assertTrue(self.hud.visible, "HUD did not appear.")

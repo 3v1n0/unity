@@ -58,6 +58,8 @@ _keys = {
     "launcher/switcher/up": "Up",
     # Dash:
     "dash/reveal": "Super",
+    "dash/lens/next": "Ctrl+Tab",
+    "dash/lens/prev": "Ctrl+Shift+Tab",
     # Lenses
     "lens_reveal/command": ("unityshell", "execute_command"),
     "lens_reveal/apps": "Super+a",
