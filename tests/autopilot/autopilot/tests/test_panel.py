@@ -96,6 +96,9 @@ class PanelTitleTests(PanelTestsBase):
     scenarios = _make_monitor_scenarios()
 
     def test_panel_title_on_empty_desktop(self):
+        """Test that the title is set ot default when there are no windows shown"""
+        # We need this sleep to give the time to showdesktop to properly resume
+        # the initial status without getting a false-negative result
         sleep(1)
         self.keybinding("window/show_desktop")
         self.addCleanup(self.keybinding, "window/show_desktop")
@@ -311,9 +314,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         screen = self.screen_geo.get_monitor_geometry(self.panel_monitor)
         self.mouse.move(screen[0], screen[1], rate=20, time_between_events=0.005)
         sleep(.5)
-        self.press()
-        sleep(0.1)
-        self.release()
+        self.mouse.click(press_duration=.1)
         sleep(1)
 
         self.assertTrue(text_win.closed)

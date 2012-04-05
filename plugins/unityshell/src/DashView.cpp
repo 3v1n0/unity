@@ -724,7 +724,7 @@ void DashView::AddProperties(GVariantBuilder* builder)
   if (active_lens_view_)
     num_rows += active_lens_view_->GetNumRows();
 
-  std::string form_factor;
+  std::string form_factor("unknown");
 
   if (Settings::Instance().GetFormFactor() == FormFactor::NETBOOK)
     form_factor = "netbook";

@@ -258,10 +258,10 @@ class Mouse(object):
         fake_input(_DISPLAY, X.ButtonRelease, button)
         _DISPLAY.sync()
 
-    def click(self, button=1):
+    def click(self, button=1, press_duration=0.25):
         """Click mouse at current location."""
         self.press(button)
-        sleep(0.25)
+        sleep(press_duration)
         self.release(button)
 
     def move(self, x, y, animate=True, rate=100, time_between_events=0.001):

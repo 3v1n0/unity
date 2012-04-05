@@ -8,11 +8,11 @@
 #
 
 import logging
+from time import sleep
 
 from autopilot.emulators.unity import UnityIntrospectionObject
 from autopilot.emulators.X11 import Mouse, ScreenGeometry
 from autopilot.keybindings import KeybindingsHelper
-from time import sleep
 
 logger = logging.getLogger(__name__)
 
@@ -242,9 +242,7 @@ class WindowButton(UnityIntrospectionObject):
     def mouse_click(self):
         self.mouse_move_to()
         sleep(.2)
-        self._mouse.press()
-        sleep(.1)
-        self._mouse.release()
+        self._mouse.click(press_duration=.1)
         sleep(.01)
 
     @property
@@ -297,9 +295,7 @@ class IndicatorEntry(UnityIntrospectionObject):
         self.mouse_move_to()
         sleep(.2)
         assert(self.visible)
-        self._mouse.press()
-        sleep(.1)
-        self._mouse.release()
+        self._mouse.click(press_duration=.1)
         sleep(.01)
 
     @property

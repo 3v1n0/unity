@@ -76,16 +76,12 @@ class Dash(KeybindingsHelper):
 
     @property
     def visible(self):
-        """
-        Is the dash visible?
-        """
+        """Returns if the dash is currently visible"""
         return self.controller.visible
 
     @property
     def monitor(self):
-        """
-        The monitor where the dash is
-        """
+        """The monitor where the dash is"""
         return self.controller.monitor
 
     @property
