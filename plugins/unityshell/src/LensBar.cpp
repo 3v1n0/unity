@@ -163,7 +163,7 @@ void LensBar::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
     if (icon->HasKeyFocus() && !IsFullRedraw() && focus_layer_)
     {
       nux::AbstractPaintLayer* layer = focus_layer_.get();
-      
+
       nux::GetPainter().PushLayer(gfx_context, focus_layer_->GetGeometry(), layer);
     }
   }
@@ -218,6 +218,13 @@ void LensBar::SetActive(LensBarIcon* activated)
 
 void LensBar::ActivateNext()
 {
+  // Special case when switching from the command lens.
+  if (GetActiveLensId() == "commands.lens")
+  {
+    SetActive(icons_[0]);
+    return;
+  }
+
   bool activate_next = false;
   for (auto it = icons_.begin();
        it < icons_.end();
@@ -239,8 +246,14 @@ void LensBar::ActivateNext()
 
 void LensBar::ActivatePrevious()
 {
-  bool activate_previous = false;
+  // Special case when switching from the command lens.
+  if (GetActiveLensId() == "commands.lens")
+  {
+    SetActive(icons_.back());
+    return;
+  }
 
+  bool activate_previous = false;
   for (auto it = icons_.rbegin();
        it < icons_.rend();
        ++it)
@@ -285,6 +298,16 @@ void LensBar::AddProperties(GVariantBuilder* builder)
     if (icon->HasKeyFocus())
       wrapper.add("focused-lens-icon", icon->id.Get());
   }
+}
+
+std::string LensBar::GetActiveLensId() const
+{
+  for (auto icon : icons_)
+  {
+    if (icon->active)
+      return icon->id;
+  }
+  return "";
 }
 
 }
