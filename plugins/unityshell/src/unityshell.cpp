@@ -1939,10 +1939,53 @@ void UnityScreen::OnLauncherEndKeyNav(GVariant* data)
     PluginAdapter::Default ()->restoreInputFocus ();
 }
 
+void UnityScreen::ShowHud()
+{
+  if (switcher_controller_->Visible())
+  {
+    LOG_ERROR(logger) << "this should never happen";
+    return; // early exit if the switcher is open
+  }
+
+  if (hud_controller_->IsVisible())
+  {
+    ubus_manager_.SendMessage(UBUS_HUD_CLOSE_REQUEST);
+  }
+  else
+  {
+    // Handles closing KeyNav (Alt+F1) if the hud is about to show
+    if (launcher_controller_->KeyNavIsActive())
+      launcher_controller_->KeyNavTerminate(false);
+
+    // If an overlay is open, it must be the dash! Close it!
+    if (launcher_controller_->IsOverlayOpen())
+      dash_controller_->HideDash();
+
+    hud_controller_->ShowHud();
+  }
+}
+
 bool UnityScreen::ShowHudInitiate(CompAction* action,
                                   CompAction::State state,
                                   CompOption::Vector& options)
 {
+  // Look to see if there is a keycode.  If there is, then this isn't a
+  // modifier only keybinding.
+  int key_code = 0;
+  if (options[6].type() != CompOption::TypeUnset)
+  {
+    key_code = options[6].value().i();
+    LOG_DEBUG(logger) << "HUD initiate key code: " << key_code;
+    // show it now, no timings or terminate needed.
+    ShowHud();
+    return true; // consume the event.
+  }
+  else
+  {
+    LOG_DEBUG(logger) << "HUD initiate key code option not set, modifier only keypress.";
+  }
+
+
   // to receive the Terminate event
   if (state & CompAction::StateInitKey)
     action->setState(action->state() | CompAction::StateTermKey);
@@ -1963,7 +2006,7 @@ bool UnityScreen::ShowHudTerminate(CompAction* action,
 
   action->setState(action->state() & ~CompAction::StateTermKey);
 
-  // And only respond to key taps
+  // If we have a modifier only keypress, check for tap and timing.
   if (!(state & CompAction::StateTermTapped))
     return false;
 
@@ -1975,29 +2018,7 @@ bool UnityScreen::ShowHudTerminate(CompAction* action,
     return false;
   }
 
-  if (switcher_controller_->Visible())
-  {
-    LOG_ERROR(logger) << "this should never happen";
-    return false; // early exit if the switcher is open
-  }
-
-  if (hud_controller_->IsVisible())
-  {
-    ubus_manager_.SendMessage(UBUS_HUD_CLOSE_REQUEST);
-  }
-  else
-  {
-    // Handles closing KeyNav (Alt+F1) if the hud is about to show
-    if (launcher_controller_->KeyNavIsActive())
-      launcher_controller_->KeyNavTerminate(false);
-  
-    // If an overlay is open, it must be the dash! Close it!
-    if (launcher_controller_->IsOverlayOpen())
-      dash_controller_->HideDash();
-
-    hud_controller_->ShowHud();
-  }
-
+  ShowHud();
   return true;
 }
 

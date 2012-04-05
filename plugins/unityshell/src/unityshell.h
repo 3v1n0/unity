@@ -206,6 +206,7 @@ public:
   bool altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabPrevWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
+  void ShowHud();
   /* handle hud key activations */
   bool ShowHudInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool ShowHudTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
