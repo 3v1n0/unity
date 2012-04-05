@@ -272,6 +272,7 @@ void SearchBar::Init()
   search_string.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_search_string));
   search_string.SetSetterFunction(sigc::mem_fun(this, &SearchBar::set_search_string));
   im_active.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_im_active));
+  im_preedit.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_im_preedit));
   showing_filters.changed.connect(sigc::mem_fun(this, &SearchBar::OnShowingFiltersChanged));
   can_refine_search.changed.connect([&] (bool can_refine)
   {
@@ -544,10 +545,10 @@ void SearchBar::UpdateBackground(bool force)
                                       false);
 
   cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.57f);
+  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.35f);
   cairo_fill_preserve(cr);
   cairo_set_line_width(cr, 1);
-  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.8f);
+  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.7f);
   cairo_stroke(cr);
 
   cairo_destroy(cr);
@@ -618,6 +619,11 @@ bool SearchBar::set_search_string(std::string const& string)
 bool SearchBar::get_im_active() const
 {
   return pango_entry_->im_active();
+}
+
+bool SearchBar::get_im_preedit() const
+{
+  return pango_entry_->im_preedit();
 }
 
 //

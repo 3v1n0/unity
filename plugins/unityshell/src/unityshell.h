@@ -273,6 +273,8 @@ private:
 
   void InitHints();
 
+  void OnPanelStyleChanged();
+
   dash::Settings dash_settings_;
   dash::Style    dash_style_;
   panel::Style   panel_style_;
@@ -341,6 +343,10 @@ private:
   int                    first_menu_keypress_time_;
 
   GLMatrix panel_shadow_matrix_;
+
+  bool panel_texture_has_changed_;
+  bool paint_panel_;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> panel_texture_;
 
 #ifndef USE_GLES
   ScreenEffectFramebufferObject::GLXGetProcAddressProc glXGetProcAddressP;
