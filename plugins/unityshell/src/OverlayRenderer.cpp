@@ -118,324 +118,53 @@ void OverlayRendererImpl::OnBackgroundColorChanged(GVariant* args)
   parent->need_redraw.emit();
 }
 
+int MARGIN = 10;
 void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geometry, bool force_edges)
 {
   bool paint_blur = BackgroundEffectHelper::blur_type != BLUR_NONE;
   nux::Geometry geo(content_geo);
 
-  if (dash::Settings::Instance().GetFormFactor() != dash::FormFactor::NETBOOK || force_edges)
-  {
-    // Paint the edges
-    {
-      gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
-      gfx_context.GetRenderStates().SetBlend(true);
-      gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+  
+  nux::Geometry larger_content_geo = content_geo;
+  larger_content_geo.OffsetSize(MARGIN, MARGIN);
 
-      dash::Style& style = dash::Style::Instance();
-      nux::BaseTexture* bottom = style.GetDashBottomTile();
-      nux::BaseTexture* right = style.GetDashRightTile();
-      nux::BaseTexture* corner = style.GetDashCorner();
-      nux::BaseTexture* corner_mask = style.GetDashCornerMask();
-      nux::BaseTexture* left_corner = style.GetDashLeftCorner();
-      nux::BaseTexture* left_corner_mask = style.GetDashLeftCornerMask();
-      nux::BaseTexture* left_tile = style.GetDashLeftTile();
-      nux::BaseTexture* top_corner = style.GetDashTopCorner();
-      nux::BaseTexture* top_corner_mask = style.GetDashTopCornerMask();
-      nux::BaseTexture* top_tile = style.GetDashTopTile();
-      nux::TexCoordXForm texxform;
+  nux::Geometry larger_geo(larger_content_geo);
 
-      int left_corner_offset = 10;
-      int top_corner_offset = 10;
-
-      geo.width += corner->GetWidth() - 10;
-      geo.height += corner->GetHeight() - 10;
-      {
-        // Corner
-        texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-        texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
-
-        gfx_context.QRP_1Tex(geo.x + (geo.width - corner->GetWidth()),
-                             geo.y + (geo.height - corner->GetHeight()),
-                             corner->GetWidth(),
-                             corner->GetHeight(),
-                             corner->GetDeviceTexture(),
-                             texxform,
-                             nux::color::White);
-      }
-      {
-        // Bottom repeated texture
-        int real_width = geo.width - (left_corner->GetWidth() - left_corner_offset) - corner->GetWidth();
-        int offset = real_width % bottom->GetWidth();
-
-        texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-        texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-
-        gfx_context.QRP_1Tex(left_corner->GetWidth() - left_corner_offset - offset,
-                             geo.y + (geo.height - bottom->GetHeight()),
-                             real_width + offset,
-                             bottom->GetHeight(),
-                             bottom->GetDeviceTexture(),
-                             texxform,
-                             nux::color::White);
-      }
-      {
-        // Bottom left corner
-        texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-        texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
-
-        gfx_context.QRP_1Tex(geo.x - left_corner_offset,
-                             geo.y + (geo.height - left_corner->GetHeight()),
-                             left_corner->GetWidth(),
-                             left_corner->GetHeight(),
-                             left_corner->GetDeviceTexture(),
-                             texxform,
-                             nux::color::White);
-      }
-      {
-        // Left repeated texture
-        nux::Geometry real_geo = geometry;
-        int real_height = real_geo.height - geo.height;
-        int offset = real_height % left_tile->GetHeight();
-
-        texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-        texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-
-        gfx_context.QRP_1Tex(geo.x - 10,
-                             geo.y + geo.height - offset,
-                             left_tile->GetWidth(),
-                             real_height + offset,
-                             left_tile->GetDeviceTexture(),
-                             texxform,
-                             nux::color::White);
-      }
-      {
-        // Right edge
-        texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-        texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-
-        gfx_context.QRP_1Tex(geo.x + geo.width - right->GetWidth(),
-                             geo.y + top_corner->GetHeight() - top_corner_offset,
-                             right->GetWidth(),
-                             geo.height - corner->GetHeight() - (top_corner->GetHeight() - top_corner_offset),
-                             right->GetDeviceTexture(),
-                             texxform,
-                             nux::color::White);
-      }
-      {
-        // Top right corner
-        texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-        texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
-
-        gfx_context.QRP_1Tex(geo.x + geo.width - right->GetWidth(),
-                             geo.y - top_corner_offset,
-                             top_corner->GetWidth(),
-                             top_corner->GetHeight(),
-                             top_corner->GetDeviceTexture(),
-                             texxform,
-                             nux::color::White);
-      }
-      {
-        // Top edge
-        texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-        texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-
-        gfx_context.QRP_1Tex(geo.x + geo.width,
-                             geo.y - 10,
-                             geometry.width - (geo.x + geo.width),
-                             top_tile->GetHeight(),
-                             top_tile->GetDeviceTexture(),
-                             texxform,
-                             nux::color::White);
-      }
-      
-      gfx_context.GetRenderStates().SetBlend(false);
-
-      if (paint_blur)
-      {
-        nux::Geometry absolute_top_right_corner_geo = nux::Geometry(absolute_geo.x + geo.width - right->GetWidth(),
-                                                          absolute_geo.y - top_corner_offset,
-                                                          top_corner->GetWidth(),
-                                                          top_corner->GetHeight());
-
-        texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-        texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
-
-        // save current blending state
-        unsigned int alpha = 0;
-        unsigned int src   = 0;
-        unsigned int dest  = 0;
-
-        nux::Geometry blur_geo(absolute_top_right_corner_geo.x,
-                               absolute_top_right_corner_geo.y,
-                               absolute_top_right_corner_geo.width,
-                               absolute_top_right_corner_geo.height);
-
-        bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo);
-        if (bg_blur_texture_.IsValid())
-        {
-          nux::TexCoordXForm texxform0;
-          nux::TexCoordXForm texxform1;
-        
-          texxform0.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-          texxform0.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
-          texxform1.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-          texxform1.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
-
-          texxform0.flip_v_coord = true;
-
-          gfx_context.GetRenderStates().SetColorMask(true, true, true, false);
-          gfx_context.GetRenderStates().GetBlend(alpha, src, dest);
-          gfx_context.GetRenderStates().SetBlend(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-          gfx_context.QRP_TexMaskTexAlpha(geo.x + geo.width - right->GetWidth(),
-                                          geo.y - top_corner_offset,
-                                          top_corner->GetWidth(),
-                                          top_corner->GetHeight(),
-                                          bg_blur_texture_,
-                                          texxform0,
-                                          nux::color::White,
-                                          top_corner_mask->GetDeviceTexture(),
-                                          texxform1,
-                                          nux::color::White);
-
-          //texxform.flip_v_coord = true;
-          // gfx_context.QRP_1Tex(geo.x + geo.width - right->GetWidth(),
-          //                      geo.y - top_corner_offset,
-          //                      top_corner->GetWidth(),
-          //                      top_corner->GetHeight(),
-          //                      top_corner_mask->GetDeviceTexture(),
-          //                      texxform,
-          //                      nux::color::White);
-
-          gfx_context.GetRenderStates().SetBlend(alpha, src, dest);
-          gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
-        }
-
-        // bottom left corner
-
-        nux::Geometry absolute_bottom_left_corner_geo = nux::Geometry(
-                                            absolute_geo.x - left_corner_offset,
-                                            absolute_geo.y + geo.height - left_corner->GetHeight(),
-                                            left_corner->GetWidth(),
-                                            left_corner->GetHeight());
-                                                  
-        blur_geo = nux::Geometry(absolute_bottom_left_corner_geo.x,
-                               absolute_bottom_left_corner_geo.y,
-                               absolute_bottom_left_corner_geo.width,
-                               absolute_bottom_left_corner_geo.height);
-
-        bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo);
-        if (bg_blur_texture_.IsValid())
-        {
-          nux::TexCoordXForm texxform0;
-          nux::TexCoordXForm texxform1;
-        
-          texxform0.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-          texxform0.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
-          texxform1.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-          texxform1.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
-
-          texxform0.flip_v_coord = true;
-
-          gfx_context.GetRenderStates().SetColorMask(true, true, true, false);
-          gfx_context.GetRenderStates().GetBlend(alpha, src, dest);
-          gfx_context.GetRenderStates().SetBlend(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-          gfx_context.QRP_TexMaskTexAlpha(geo.x - left_corner_offset,
-                                          geo.y + (geo.height - left_corner->GetHeight()),
-                                          left_corner->GetWidth(),
-                                          left_corner->GetHeight(),
-                                          bg_blur_texture_,
-                                          texxform0,
-                                          nux::color::White,
-                                          left_corner_mask->GetDeviceTexture(),
-                                          texxform1,
-                                          nux::color::White);
-
-          gfx_context.GetRenderStates().SetBlend(alpha, src, dest);
-          gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
-        }
-
-        // bottom right corner
-        nux::Geometry absolute_bottom_right_corner_geo = nux::Geometry(
-                                            absolute_geo.x + geo.width - corner->GetWidth(),
-                                            absolute_geo.y + geo.height - corner->GetHeight(),
-                                            left_corner->GetWidth(),
-                                            left_corner->GetHeight());
-                                                  
-        blur_geo = nux::Geometry(absolute_bottom_right_corner_geo.x,
-                               absolute_bottom_right_corner_geo.y,
-                               absolute_bottom_right_corner_geo.width,
-                               absolute_bottom_right_corner_geo.height);
-
-        bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo);
-        if (bg_blur_texture_.IsValid())
-        {
-
-          nux::TexCoordXForm texxform0;
-          nux::TexCoordXForm texxform1;
-        
-          texxform0.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-          texxform0.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
-          texxform1.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-          texxform1.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
-
-          texxform0.flip_v_coord = true;
-
-          gfx_context.GetRenderStates().SetColorMask(true, true, true, false);
-          gfx_context.GetRenderStates().GetBlend(alpha, src, dest);
-          gfx_context.GetRenderStates().SetBlend(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-          gfx_context.QRP_TexMaskTexAlpha(geo.x + (geo.width - corner->GetWidth()),
-                                          geo.y + (geo.height - corner->GetHeight()),
-                                          corner->GetWidth(),
-                                          corner->GetHeight(),
-                                          bg_blur_texture_,
-                                          texxform0,
-                                          nux::color::White,
-                                          corner_mask->GetDeviceTexture(),
-                                          texxform1,
-                                          nux::color::White);
-
-          gfx_context.GetRenderStates().SetBlend(alpha, src, dest);
-          gfx_context.GetRenderStates().SetColorMask(true, true, true, true);                                          
-        }
-      }
-    }
-  }
+  nux::Geometry larger_absolute_geo = absolute_geo;
+  larger_absolute_geo.OffsetSize(MARGIN, MARGIN);
 
   nux::TexCoordXForm texxform_absolute_bg;
   texxform_absolute_bg.flip_v_coord = true;
   texxform_absolute_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-  texxform_absolute_bg.uoffset = ((float) content_geo.x) / absolute_geo.width;
-  texxform_absolute_bg.voffset = ((float) content_geo.y) / absolute_geo.height;
+  texxform_absolute_bg.uoffset = ((float) larger_content_geo.x) / larger_absolute_geo.width;
+  texxform_absolute_bg.voffset = ((float) larger_content_geo.y) / larger_absolute_geo.height;
   texxform_absolute_bg.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
 
   if (paint_blur)
   {
-    nux::Geometry blur_geo(absolute_geo.x, absolute_geo.y, content_geo.width, content_geo.height);
+    nux::Geometry blur_geo(larger_absolute_geo.x, larger_absolute_geo.y, larger_content_geo.width, larger_content_geo.height);
     bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo);
 
     if (bg_blur_texture_.IsValid())
     {
-      nux::Geometry bg_clip = geo;
+      nux::Geometry bg_clip = larger_geo;
       gfx_context.PushClippingRectangle(bg_clip);
 
       gfx_context.GetRenderStates().SetBlend(false);
 #ifndef NUX_OPENGLES_20
       if (gfx_context.UsingGLSLCodePath())
-        gfx_context.QRP_GLSL_ColorBlendOverTex (content_geo.x, content_geo.y,
-                                             content_geo.width, content_geo.height,
+        gfx_context.QRP_GLSL_ColorBlendOverTex (larger_content_geo.x, larger_content_geo.y,
+                                             larger_content_geo.width, larger_content_geo.height,
                                              bg_blur_texture_, texxform_absolute_bg, nux::color::White,
                                              bg_color_, nux::LAYER_BLEND_MODE_OVERLAY);
 
       else
-        gfx_context.QRP_1Tex (content_geo.x, content_geo.y,
-                              content_geo.width, content_geo.height,
+        gfx_context.QRP_1Tex (larger_content_geo.x, larger_content_geo.y,
+                              larger_content_geo.width, larger_content_geo.height,
                               bg_blur_texture_, texxform_absolute_bg, nux::color::White);
 #else
-        gfx_context.QRP_GLSL_ColorBlendOverTex (content_geo.x, content_geo.y,
-                                        content_geo.width, content_geo.height,
+        gfx_context.QRP_GLSL_ColorBlendOverTex (larger_content_geo.x, larger_content_geo.y,
+                                        larger_content_geo.width, larger_content_geo.height,
                                         bg_blur_texture_, texxform_absolute_bg, nux::color::White,
                                         bg_color_, nux::LAYER_BLEND_MODE_OVERLAY);
 
@@ -476,14 +205,14 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
                                      line_color);
 
   // Draw the background
-  bg_darken_layer_->SetGeometry(content_geo);
-  nux::GetPainter().RenderSinglePaintLayer(gfx_context, content_geo, bg_darken_layer_);
+  bg_darken_layer_->SetGeometry(larger_content_geo);
+  nux::GetPainter().RenderSinglePaintLayer(gfx_context, larger_content_geo, bg_darken_layer_);
 
 #ifndef NUX_OPENGLES_20
   if (gfx_context.UsingGLSLCodePath() == FALSE)
   {
-    bg_layer_->SetGeometry(content_geo);
-    nux::GetPainter().RenderSinglePaintLayer(gfx_context, content_geo, bg_layer_);
+    bg_layer_->SetGeometry(larger_content_geo);
+    nux::GetPainter().RenderSinglePaintLayer(gfx_context, larger_content_geo, bg_layer_);
   }
 #endif
 
@@ -495,41 +224,263 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
   gfx_context.GetRenderStates().SetColorMask(true, true, true, false);
   gfx_context.GetRenderStates().SetBlend(true, GL_DST_COLOR, GL_ONE);
 
-  gfx_context.QRP_1Tex (content_geo.x, content_geo.y,
-                        content_geo.width, content_geo.height,
+  gfx_context.QRP_1Tex (larger_content_geo.x, larger_content_geo.y,
+                        larger_content_geo.width, larger_content_geo.height,
                         bg_shine_texture_, texxform_absolute_bg, nux::color::White);
 
-  if (dash::Settings::Instance().GetFormFactor() != dash::FormFactor::NETBOOK)
+  if (dash::Settings::Instance().GetFormFactor() != dash::FormFactor::NETBOOK || force_edges)
   {
-    // Make bottom-right corner rounded
-    nux::ROPConfig rop;
-    rop.Blend = true;
-    rop.SrcBlend = GL_ZERO;
-    rop.DstBlend = GL_SRC_ALPHA;
-    nux::GetPainter().PaintShapeCornerROP(gfx_context,
-                                          content_geo,
-                                          nux::color::White,
-                                          nux::eSHAPE_CORNER_ROUND4,
-                                          nux::eCornerBottomRight,
-                                          true,
-                                          rop);
-
-    geo = content_geo;
-
-    gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
-    gfx_context.GetRenderStates().SetBlend(true);
-    gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-
-    // Fill in corners (meh)
-    for (int i = 0; i < INNER_CORNER_RADIUS; ++i)
+    // Paint the edges
     {
-      nux::Geometry fill_geo (geo.x + geo.width, geo.y + i, INNER_CORNER_RADIUS - i, 1);
-      nux::GetPainter().Paint2DQuadColor(gfx_context, fill_geo, bg_color_);
+      gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
+      gfx_context.GetRenderStates().SetBlend(true);
+      gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
-      nux::Color dark = bg_color_ * 0.8f;
-      dark.alpha = bg_color_.alpha;
-      fill_geo = nux::Geometry(geo.x + i, geo.y + geo.height, 1, INNER_CORNER_RADIUS - i);
-      nux::GetPainter().Paint2DQuadColor(gfx_context, fill_geo, dark);
+      dash::Style& style = dash::Style::Instance();
+      nux::BaseTexture* bottom = style.GetDashBottomTile();
+      nux::BaseTexture* bottom_mask = style.GetDashBottomTileMask();
+      nux::BaseTexture* bottom_mask_inv = style.GetDashBottomTileMaskInv();
+      nux::BaseTexture* right = style.GetDashRightTile();
+      nux::BaseTexture* right_mask = style.GetDashRightTileMask();
+      nux::BaseTexture* right_mask_inv = style.GetDashRightTileMaskInv();
+      nux::BaseTexture* corner = style.GetDashCorner();
+      nux::BaseTexture* corner_mask = style.GetDashCornerMask();
+      nux::BaseTexture* corner_mask_inv = style.GetDashCornerMaskInv();
+      nux::BaseTexture* left_corner = style.GetDashLeftCorner();
+      nux::BaseTexture* left_corner_mask = style.GetDashLeftCornerMask();
+      nux::BaseTexture* left_corner_mask_inv = style.GetDashLeftCornerMaskInv();
+      nux::BaseTexture* left_tile = style.GetDashLeftTile();
+      nux::BaseTexture* top_corner = style.GetDashTopCorner();
+      nux::BaseTexture* top_corner_mask = style.GetDashTopCornerMask();
+      nux::BaseTexture* top_corner_mask_inv = style.GetDashTopCornerMaskInv();
+      nux::BaseTexture* top_tile = style.GetDashTopTile();
+      nux::TexCoordXForm texxform;
+
+      int left_corner_offset = 10;
+      int top_corner_offset = 10;
+
+      geo.width += corner->GetWidth() - 10;
+      geo.height += corner->GetHeight() - 10;
+      {
+        // Corner
+        texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+        texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
+
+        // Selectively erase blur region in the curbe
+        gfx_context.QRP_ColorModTexAlpha(geo.x + (geo.width - corner->GetWidth()),
+                                         geo.y + (geo.height - corner->GetHeight()),
+                                         corner->GetWidth(),
+                                         corner->GetHeight(),                                         
+                                         corner_mask->GetDeviceTexture(),
+                                         texxform,
+                                         nux::color::Black);
+
+        // Write correct alpha
+        gfx_context.GetRenderStates().SetBlend(false);
+        gfx_context.GetRenderStates().SetColorMask(false, false, false, true);
+        gfx_context.QRP_1Tex(geo.x + (geo.width - corner->GetWidth()),
+                             geo.y + (geo.height - corner->GetHeight()),
+                             corner->GetWidth(),
+                             corner->GetHeight(),
+                             corner_mask_inv->GetDeviceTexture(),
+                             texxform,
+                             nux::color::Black);
+
+        gfx_context.GetRenderStates().SetBlend(true);
+        gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+        gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
+
+        gfx_context.QRP_1Tex(geo.x + (geo.width - corner->GetWidth()),
+                             geo.y + (geo.height - corner->GetHeight()),
+                             corner->GetWidth(),
+                             corner->GetHeight(),
+                             corner->GetDeviceTexture(),
+                             texxform,
+                             nux::color::White);
+      }
+      {
+        // Bottom repeated texture
+        int real_width = geo.width - (left_corner->GetWidth() - left_corner_offset) - corner->GetWidth();
+        int offset = real_width % bottom->GetWidth();
+
+        texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+        texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+
+        // Selectively erase blur region in the curbe
+        gfx_context.QRP_ColorModTexAlpha(left_corner->GetWidth() - left_corner_offset - offset,
+                                         geo.y + (geo.height - bottom->GetHeight()),
+                                         real_width + offset,
+                                         bottom->GetHeight(),                                         
+                                         bottom_mask->GetDeviceTexture(),
+                                         texxform,
+                                         nux::color::Black);
+
+        // Write correct alpha
+        gfx_context.GetRenderStates().SetBlend(false);
+        gfx_context.GetRenderStates().SetColorMask(false, false, false, true);
+        gfx_context.QRP_1Tex(left_corner->GetWidth() - left_corner_offset - offset,
+                             geo.y + (geo.height - bottom->GetHeight()),
+                             real_width + offset,
+                             bottom->GetHeight(),
+                             bottom_mask_inv->GetDeviceTexture(),
+                             texxform,
+                             nux::color::Black);
+
+        gfx_context.GetRenderStates().SetBlend(true);
+        gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+        gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
+
+        gfx_context.QRP_1Tex(left_corner->GetWidth() - left_corner_offset - offset,
+                             geo.y + (geo.height - bottom->GetHeight()),
+                             real_width + offset,
+                             bottom->GetHeight(),
+                             bottom->GetDeviceTexture(),
+                             texxform,
+                             nux::color::White);
+      }
+      {
+        // Bottom left corner
+        texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+        texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
+
+        // Selectively erase blur region in the curbe
+        gfx_context.QRP_ColorModTexAlpha(geo.x - left_corner_offset,
+                                         geo.y + (geo.height - left_corner->GetHeight()),
+                                         left_corner->GetWidth(),
+                                         left_corner->GetHeight(),                                         
+                                         left_corner_mask->GetDeviceTexture(),
+                                         texxform,
+                                         nux::color::Black);
+
+        // Write correct alpha
+        gfx_context.GetRenderStates().SetBlend(false);
+        gfx_context.GetRenderStates().SetColorMask(false, false, false, true);
+        gfx_context.QRP_1Tex(geo.x - left_corner_offset,
+                             geo.y + (geo.height - left_corner->GetHeight()),
+                             left_corner->GetWidth(),
+                             left_corner->GetHeight(),
+                             left_corner_mask_inv->GetDeviceTexture(),
+                             texxform,
+                             nux::color::Black);
+
+        gfx_context.GetRenderStates().SetBlend(true);
+        gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+        gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
+
+        gfx_context.QRP_1Tex(geo.x - left_corner_offset,
+                             geo.y + (geo.height - left_corner->GetHeight()),
+                             left_corner->GetWidth(),
+                             left_corner->GetHeight(),
+                             left_corner->GetDeviceTexture(),
+                             texxform,
+                             nux::color::White);
+      }
+      {
+        // Left repeated texture
+        nux::Geometry real_geo = geometry;
+        int real_height = real_geo.height - geo.height;
+        int offset = real_height % left_tile->GetHeight();
+
+        texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+        texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+
+        gfx_context.QRP_1Tex(geo.x - 10,
+                             geo.y + geo.height - offset,
+                             left_tile->GetWidth(),
+                             real_height + offset,
+                             left_tile->GetDeviceTexture(),
+                             texxform,
+                             nux::color::White);
+      }
+      {
+        // Right edge
+        texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+        texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+
+        // Selectively erase blur region in the curbe
+        gfx_context.QRP_ColorModTexAlpha(geo.x + geo.width - right->GetWidth(),
+                                         geo.y + top_corner->GetHeight() - top_corner_offset,
+                                         right->GetWidth(),
+                                         geo.height - corner->GetHeight() - (top_corner->GetHeight() - top_corner_offset),                                       
+                                         right_mask->GetDeviceTexture(),
+                                         texxform,
+                                         nux::color::Black);
+
+        // Write correct alpha
+        gfx_context.GetRenderStates().SetBlend(false);
+        gfx_context.GetRenderStates().SetColorMask(false, false, false, true);
+        gfx_context.QRP_1Tex(geo.x + geo.width - right->GetWidth(),
+                             geo.y + top_corner->GetHeight() - top_corner_offset,
+                             right->GetWidth(),
+                             geo.height - corner->GetHeight() - (top_corner->GetHeight() - top_corner_offset),
+                             right_mask_inv->GetDeviceTexture(),
+                             texxform,
+                             nux::color::Black);
+
+        gfx_context.GetRenderStates().SetBlend(true);
+        gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+        gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
+
+        gfx_context.QRP_1Tex(geo.x + geo.width - right->GetWidth(),
+                             geo.y + top_corner->GetHeight() - top_corner_offset,
+                             right->GetWidth(),
+                             geo.height - corner->GetHeight() - (top_corner->GetHeight() - top_corner_offset),
+                             right->GetDeviceTexture(),
+                             texxform,
+                             nux::color::White);
+      }
+      {
+        // Top right corner
+        texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+        texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
+
+        // Selectively erase blur region in the curbe
+        gfx_context.QRP_ColorModTexAlpha(geo.x + geo.width - right->GetWidth(),
+                                        geo.y - top_corner_offset,
+                                        top_corner->GetWidth(),
+                                        top_corner->GetHeight(),
+                                        top_corner_mask->GetDeviceTexture(),
+                                        texxform,
+                                        nux::color::Black);
+
+        // Write correct alpha
+        gfx_context.GetRenderStates().SetBlend(false);
+        gfx_context.GetRenderStates().SetColorMask(false, false, false, true);
+        gfx_context.QRP_1Tex(geo.x + geo.width - right->GetWidth(),
+                                        geo.y - top_corner_offset,
+                                        top_corner->GetWidth(),
+                                        top_corner->GetHeight(),
+                                        top_corner_mask_inv->GetDeviceTexture(),
+                                        texxform,
+                                        nux::color::Black);
+
+        gfx_context.GetRenderStates().SetBlend(true);
+        gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+        gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
+        gfx_context.QRP_1Tex(geo.x + geo.width - right->GetWidth(),
+                             geo.y - top_corner_offset,
+                             top_corner->GetWidth(),
+                             top_corner->GetHeight(),
+                             top_corner->GetDeviceTexture(),
+                             texxform,
+                             nux::color::White);
+      }
+      {
+        // Top edge
+        texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+        texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+
+        gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+        gfx_context.QRP_1Tex(geo.x + geo.width,
+                             geo.y - 10,
+                             geometry.width - (geo.x + geo.width),
+                             top_tile->GetHeight(),
+                             top_tile->GetDeviceTexture(),
+                             texxform,
+                             nux::color::White);
+      }
+      
+      gfx_context.GetRenderStates().SetBlend(false);
     }
   }
 }
@@ -540,7 +491,16 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
   nux::Geometry geo = geometry;
   bgs = 0;
 
-  gfx_context.PushClippingRectangle(geo);
+  nux::Geometry larger_content_geo = content_geo;
+  larger_content_geo.OffsetSize(MARGIN, MARGIN);
+
+  nux::Geometry larger_geo(larger_content_geo);
+
+  nux::Geometry larger_absolute_geo = absolute_geo;
+  larger_absolute_geo.OffsetSize(MARGIN, MARGIN);
+  
+
+  gfx_context.PushClippingRectangle(larger_geo);
 
   gfx_context.GetRenderStates().SetBlend(true);
   gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
@@ -548,8 +508,8 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
   nux::TexCoordXForm texxform_absolute_bg;
   texxform_absolute_bg.flip_v_coord = true;
   texxform_absolute_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-  texxform_absolute_bg.uoffset = ((float) content_geo.x) / absolute_geo.width;
-  texxform_absolute_bg.voffset = ((float) content_geo.y) / absolute_geo.height;
+  texxform_absolute_bg.uoffset = ((float) larger_content_geo.x) / absolute_geo.width;
+  texxform_absolute_bg.voffset = ((float) larger_content_geo.y) / absolute_geo.height;
   texxform_absolute_bg.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
 
   nux::ROPConfig rop;
@@ -561,21 +521,21 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
   {
 #ifndef NUX_OPENGLES_20
     if (gfx_context.UsingGLSLCodePath())
-      gPainter.PushCompositionLayer(gfx_context, content_geo,
+      gPainter.PushCompositionLayer(gfx_context, larger_content_geo,
                                     bg_blur_texture_,
                                     texxform_absolute_bg,
                                     nux::color::White,
                                     bg_color_, nux::LAYER_BLEND_MODE_OVERLAY,
                                     true, rop);
     else
-      gPainter.PushTextureLayer(gfx_context, content_geo,
+      gPainter.PushTextureLayer(gfx_context, larger_content_geo,
                                 bg_blur_texture_,
                                 texxform_absolute_bg,
                                 nux::color::White,
                                 true, // write alpha?
                                 rop);
 #else
-      gPainter.PushCompositionLayer(gfx_context, content_geo,
+      gPainter.PushCompositionLayer(gfx_context, larger_content_geo,
                                     bg_blur_texture_,
                                     texxform_absolute_bg,
                                     nux::color::White,
@@ -605,7 +565,7 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
   texxform_absolute_bg.uoffset = (1.0f / bg_shine_texture_->GetWidth()) * parent->x_offset;
   texxform_absolute_bg.voffset = (1.0f / bg_shine_texture_->GetHeight()) * parent->y_offset;
 
-  nux::GetPainter().PushTextureLayer(gfx_context, content_geo,
+  nux::GetPainter().PushTextureLayer(gfx_context, larger_content_geo,
                                      bg_shine_texture_,
                                      texxform_absolute_bg,
                                      nux::color::White,
@@ -621,7 +581,7 @@ void OverlayRendererImpl::DrawContentCleanup(nux::GraphicsEngine& gfx_context, n
   gfx_context.GetRenderStates().SetBlend(false);
   gfx_context.PopClippingRectangle();
 
-  if (dash::Settings::Instance().GetFormFactor() != dash::FormFactor::NETBOOK)
+  if (0 /*dash::Settings::Instance().GetFormFactor() != dash::FormFactor::NETBOOK*/)
   {
     // Make bottom-right corner rounded
     nux::ROPConfig rop;
