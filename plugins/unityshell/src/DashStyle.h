@@ -166,13 +166,18 @@ public:
   int GetTextLineHeight() const;
 
   nux::BaseTexture* GetDashBottomTile();
+  nux::BaseTexture* GetDashBottomTileMask();
   nux::BaseTexture* GetDashRightTile();
+  nux::BaseTexture* GetDashRightTileMask();
   nux::BaseTexture* GetDashCorner();
+  nux::BaseTexture* GetDashCornerMask();
   nux::BaseTexture* GetDashFullscreenIcon();
   nux::BaseTexture* GetDashLeftEdge();
   nux::BaseTexture* GetDashLeftCorner();
+  nux::BaseTexture* GetDashLeftCornerMask();
   nux::BaseTexture* GetDashLeftTile();
   nux::BaseTexture* GetDashTopCorner();
+  nux::BaseTexture* GetDashTopCornerMask();
   nux::BaseTexture* GetDashTopTile();
 
   nux::BaseTexture* GetDashShine();
