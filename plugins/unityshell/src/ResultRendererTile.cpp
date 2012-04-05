@@ -105,8 +105,7 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
   nux::TexCoordXForm texxform;
   
   int icon_left_hand_side = geometry.x + (geometry.width - container->icon->GetWidth()) / 2;
-  int icon_top_side = geometry.y + padding;
-
+  int icon_top_side = geometry.y + padding + ((tile_icon_size - container->icon->GetHeight()) / 2);
 
   if (container->blurred_icon && state == ResultRendererState::RESULT_RENDERER_NORMAL)
   {

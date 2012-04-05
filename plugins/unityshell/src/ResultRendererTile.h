@@ -89,7 +89,7 @@ protected:
   void LoadIcon(Result& row);
   nux::ObjectPtr<nux::BaseTexture> prelight_cache_;
   nux::ObjectPtr<nux::BaseTexture> normal_cache_;
-  int max_icon_width_;;
+  int max_icon_width_;
 private:
   //icon loading callbacks
   void IconLoaded(std::string const& texid,
