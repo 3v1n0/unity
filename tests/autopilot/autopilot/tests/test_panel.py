@@ -164,8 +164,8 @@ class PanelTitleTests(PanelTestsBase):
 
 class PanelWindowButtonsTests(PanelTestsBase):
 
-    scenarios = _make_monitor_scenarios()
-    #panel_monitor = 1
+    #scenarios = _make_monitor_scenarios()
+    panel_monitor = 1
 
     def setUp(self):
         super(PanelWindowButtonsTests, self).setUp()
@@ -217,6 +217,11 @@ class PanelWindowButtonsTests(PanelTestsBase):
         sleep(self.panel.menus.fadein_duration / 1000.0)
         self.assertTrue(self.panel.window_buttons_shown)
 
+        buttons = self.panel.window_buttons.get_buttons()
+        self.assertThat(len(buttons), Equals(3))
+        for button in buttons:
+            self.assertFalse(button.overlay_mode)
+
         self.panel.move_mouse_over_menus()
         sleep(self.panel.menus.fadeout_duration / 1000.0)
         self.assertTrue(self.panel.window_buttons_shown)
@@ -237,12 +242,22 @@ class PanelWindowButtonsTests(PanelTestsBase):
         sleep(.5)
         self.assertTrue(self.panel.window_buttons_shown)
 
+        buttons = self.panel.window_buttons.get_buttons()
+        self.assertThat(len(buttons), Equals(3))
+        for button in buttons:
+            self.assertTrue(button.overlay_mode)
+
     def test_window_buttons_show_with_hud(self):
         """Tests that the window buttons are shown when opening the HUD"""
         self.hud.ensure_visible()
         self.addCleanup(self.hud.ensure_hidden)
         sleep(.5)
         self.assertTrue(self.panel.window_buttons_shown)
+
+        buttons = self.panel.window_buttons.get_buttons()
+        self.assertThat(len(buttons), Equals(3))
+        for button in buttons:
+            self.assertTrue(button.overlay_mode)
 
     def test_window_buttons_update_visual_state(self):
         """Tests that the window button updates its visual state"""
@@ -330,6 +345,21 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.assertFalse(button.enabled)
         self.assertTrue(self.hud.visible)
 
+    def test_window_buttons_maximize_in_hud_does_not_change_dash_form_factor(self):
+        """Tests that clicking on the disabled 'Maximize' window button of the
+        HUD, really does nothing and don't touch the dash form factor.
+        See bug #939054
+        """
+        inital_form_factor = self.dash.view.form_factor
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
+        sleep(.5)
+
+        self.panel.window_buttons.maximize.mouse_click()
+        sleep(.5)
+
+        self.assertThat(self.dash.view.form_factor, Equals(inital_form_factor))
+
     def test_window_buttons_close_button_works_for_dash(self):
         """Tests that the window 'Close' actually closes the Dash"""
         self.dash.ensure_visible()
@@ -408,6 +438,40 @@ class PanelWindowButtonsTests(PanelTestsBase):
                 self.assertThat(self.dash.view.form_factor, Equals("netbook"))
             else:
                 self.assertThat(self.dash.view.form_factor, Equals("desktop"))
+
+
+    def test_window_buttons_minimize_button_disabled_for_non_minimizable_windows(self):
+        """Tests that if a maximized window doesn't support the minimization,
+        then the 'Minimize' window button should be disabled.
+        """
+        text_win = self.open_new_application_window("Text Editor")
+        sleep(.25)
+        self.keyboard.press_and_release("Ctrl+S")
+
+
+        wins = text_win.application.get_windows()
+        self.assertThat(len(wins), Equals(2))
+        for win in wins:
+            if win.x_id != text_win.x_id:
+                target_win = win
+                break
+
+        target_win.set_focus()
+        self.assertTrue(target_win.is_focused)
+
+        if target_win.monitor != self.panel_monitor:
+            self.addCleanup(self.keybinding, "window/restore")
+            self.addCleanup(self.screen_geo.drag_window_to_monitor, target_win, target_win.monitor)
+            self.screen_geo.drag_window_to_monitor(target_win, self.panel_monitor)
+
+        self.keybinding("window/maximize")
+        self.addCleanup(self.keybinding, "window/restore")
+
+        self.assertThat(target_win.monitor, Equals(self.panel_monitor))
+        self.assertTrue(target_win.is_maximized)
+
+        self.assertTrue(self.panel.window_buttons.close.enabled)
+        self.assertFalse(self.panel.window_buttons.minimize.enabled)
 
 
 class PanelCrossMonitorsTests(PanelTestsBase):
