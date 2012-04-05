@@ -13,6 +13,7 @@ from time import sleep
 
 from autopilot.emulators.X11 import ScreenGeometry
 from autopilot.emulators.bamf import BamfWindow
+from autopilot.emulators.unity.panel import IndicatorEntry
 from autopilot.tests import AutopilotTestCase
 
 logger = logging.getLogger(__name__)
@@ -94,6 +95,20 @@ class PanelTestsBase(AutopilotTestCase):
         self.screen_geo.drag_window_to_monitor(window, self.panel_monitor)
         sleep(.25)
         self.assertThat(window.monitor, Equals(self.panel_monitor))
+
+    def mouse_open_indicator(self, indicator):
+        """This is an utility function that safely opens an indicator,
+        ensuring that it is closed at the end of the test and that the pointer
+        is moved outside the panel area (to make the panel hide the menus)
+        """
+        if not isinstance(indicator, IndicatorEntry):
+            raise TypeError("Window must be a IndicatorEntry")
+
+        indicator.mouse_click()
+        self.addCleanup(self.panel.move_mouse_below_the_panel)
+        self.addCleanup(self.keyboard.press_and_release, "Escape")
+        sleep(.5)
+        self.assertTrue(indicator.active)
 
 
 class PanelTitleTests(PanelTestsBase):
@@ -518,7 +533,6 @@ class PanelWindowButtonsTests(PanelTestsBase):
             else:
                 self.assertThat(self.dash.view.form_factor, Equals("desktop"))
 
-
     def test_window_buttons_minimize_button_disabled_for_non_minimizable_windows(self):
         """Tests that if a maximized window doesn't support the minimization,
         then the 'Minimize' window button should be disabled.
@@ -546,6 +560,23 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
         self.assertTrue(self.panel.window_buttons.close.enabled)
         self.assertFalse(self.panel.window_buttons.minimize.enabled)
+
+    def test_window_buttons_show_when_indicator_active_and_mouse_over_panel(self):
+        """Tests that when an indicator is opened, and the mouse goes over the
+        panel view, then the window buttons are revealed
+        """
+        self.open_new_application_window("Text Editor", maximized=True)
+        indicator = self.panel.indicators.get_indicator_by_name_hint("indicator-session-devices")
+        self.mouse_open_indicator(indicator)
+
+        self.assertFalse(self.panel.window_buttons_shown)
+        self.panel.move_mouse_below_the_panel()
+        sleep(self.panel.menus.fadeout_duration / 1000.0)
+
+        self.assertFalse(self.panel.window_buttons_shown)
+        self.panel.move_mouse_over_grab_area()
+        sleep(self.panel.menus.fadein_duration / 1000.0)
+        self.assertTrue(self.panel.window_buttons_shown)
 
 
 class PanelHoveringTests(PanelTestsBase):
@@ -628,6 +659,48 @@ class PanelMenuTests(PanelTestsBase):
         self.assertThat(menu_view.get_menu_by_label("Mode"), NotEquals(None))
         self.assertThat(menu_view.get_menu_by_label("Help"), NotEquals(None))
 
+    def test_menus_are_not_shown_if_the_application_has_no_menus(self):
+        """Tests that if an application has no menus, then they are not
+        shown or added
+        """
+        old_env = os.environ["UBUNTU_MENUPROXY"]
+        os.putenv("UBUNTU_MENUPROXY", "")
+        self.addCleanup(os.putenv, "UBUNTU_MENUPROXY", old_env)
+        calc_win = self.open_new_application_window("Calculator")
+
+        self.assertThat(len(self.panel.menus.get_entries()), Equals(0))
+
+        self.panel.move_mouse_over_grab_area()
+        sleep(self.panel.menus.fadein_duration / 1000.0)
+        self.assertThat(self.panel.title, Equals(calc_win.application.name))
+
+    def test_menus_shows_when_new_application_is_opened(self):
+        """This tests the menu discovery feature on new application"""
+
+        self.open_new_application_window("Calculator")
+        sleep(self.panel.menus.fadein_duration / 1000.0)
+
+        self.assertTrue(self.panel.menus_shown)
+
+        sleep(self.panel.menus.discovery_duration)
+        sleep(self.panel.menus.fadeout_duration / 1000.0)
+
+        self.assertFalse(self.panel.menus_shown)
+
+    def test_menus_dont_show_if_a_new_application_window_is_opened(self):
+        """This tests the menu discovery feature on new window for a know application"""
+        self.open_new_application_window("Calculator")
+        sleep(self.panel.menus.fadein_duration / 1000.0)
+
+        self.assertTrue(self.panel.menus_shown)
+
+        sleep(self.panel.menus.discovery_duration)
+        sleep(self.panel.menus.fadeout_duration / 1000.0)
+
+        self.start_app("Calculator")
+        sleep(self.panel.menus.fadein_duration / 1000.0)
+        self.assertFalse(self.panel.menus_shown)
+
     def test_menus_dont_show_for_restored_window_on_mouse_out(self):
         """Tests that menus of a restored window are not shown when
         the mouse pointer is outside the panel menu area.
@@ -691,6 +764,71 @@ class PanelMenuTests(PanelTestsBase):
         sleep(1)
 
         self.assertFalse(self.panel.menus_shown)
+
+    def test_menus_show_when_indicator_active_and_mouse_over_panel(self):
+        """Tests that when an indicator is opened, and the mouse goes over the
+        panel view, then the menus are revealed
+        """
+        self.open_new_application_window("Calculator")
+        indicator = self.panel.indicators.get_indicator_by_name_hint("indicator-session-devices")
+        self.mouse_open_indicator(indicator)
+
+        self.assertFalse(self.panel.menus_shown)
+        self.panel.move_mouse_below_the_panel()
+        sleep(self.panel.menus.fadeout_duration / 1000.0)
+
+        self.assertFalse(self.panel.menus_shown)
+        self.panel.move_mouse_over_grab_area()
+        sleep(self.panel.menus.fadein_duration / 1000.0)
+        self.assertTrue(self.panel.menus_shown)
+
+
+class PanelIndicatorEntriesTests(PanelTestsBase):
+    """Tests for the indicator entries, including both menu and indicators"""
+
+    def test_menu_opens_on_click(self):
+        """Tests that clicking on a menu entry, opens a menu"""
+        self.open_new_application_window("Calculator")
+
+        menu_entry = self.panel.menus.get_entries()[0]
+        self.mouse_open_indicator(menu_entry)
+
+        self.assertTrue(menu_entry.active)
+        self.assertThat(menu_entry.menu_x, Equals(menu_entry.x))
+        self.assertThat(menu_entry.menu_y, Equals(self.panel.height))
+
+    def test_menu_opens_closes_on_click(self):
+        """Tests that clicking on a menu entry, opens a menu, reclicking
+        on it closes it
+        """
+        self.open_new_application_window("Calculator")
+
+        menu_entry = self.panel.menus.get_entries()[0]
+        self.mouse_open_indicator(menu_entry)
+
+        self.mouse.click()
+        sleep(.25)
+        self.assertFalse(menu_entry.active)
+        self.assertThat(menu_entry.menu_x, Equals(0))
+        self.assertThat(menu_entry.menu_y, Equals(0))
+
+    def test_menu_closes_on_click_outside(self):
+        """Tests that clicking outside the menu area, closes a menu"""
+        self.open_new_application_window("Calculator")
+
+        menu_entry = self.panel.menus.get_entries()[0]
+        self.mouse_open_indicator(menu_entry)
+
+        self.assertTrue(menu_entry.active)
+        target_x = menu_entry.menu_x + menu_entry.menu_width/2
+        target_y = menu_entry.menu_y + menu_entry.menu_height + 10
+        self.mouse.move(target_x, target_y)
+        self.mouse.click()
+        sleep(.5)
+
+        self.assertFalse(menu_entry.active)
+        self.assertThat(menu_entry.menu_x, Equals(0))
+        self.assertThat(menu_entry.menu_y, Equals(0))
 
 
 class PanelCrossMonitorsTests(PanelTestsBase):
