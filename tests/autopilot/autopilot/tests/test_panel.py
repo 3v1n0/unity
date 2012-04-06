@@ -685,9 +685,9 @@ class PanelMenuTests(PanelTestsBase):
         self.assertThat(len(menu_entries), Equals(3))
 
         menu_view = self.panel.menus
-        self.assertThat(menu_view.get_menu_by_label("Calculator"), NotEquals(None))
-        self.assertThat(menu_view.get_menu_by_label("Mode"), NotEquals(None))
-        self.assertThat(menu_view.get_menu_by_label("Help"), NotEquals(None))
+        self.assertThat(menu_view.get_menu_by_label("_Calculator"), NotEquals(None))
+        self.assertThat(menu_view.get_menu_by_label("_Mode"), NotEquals(None))
+        self.assertThat(menu_view.get_menu_by_label("_Help"), NotEquals(None))
 
     def test_menus_are_not_shown_if_the_application_has_no_menus(self):
         """Tests that if an application has no menus, then they are not
@@ -824,6 +824,9 @@ class PanelMenuTests(PanelTestsBase):
         self.open_new_application_window("Calculator")
         indicator = self.panel.indicators.get_indicator_by_name_hint("indicator-session-devices")
         self.mouse_open_indicator(indicator)
+        sleep(self.panel.menus.fadein_duration / 1000.0)
+        sleep(self.panel.menus.discovery_duration)
+        sleep(self.panel.menus.fadeout_duration / 1000.0)
 
         self.assertFalse(self.panel.menus_shown)
         self.panel.move_mouse_below_the_panel()
@@ -910,6 +913,7 @@ class PanelKeyNavigationTests(PanelTestsBase):
         is actually opened
         """
         self.open_new_application_window("Calculator")
+        sleep(.5)
         self.keybinding("panel/open_first_menu")
         self.addCleanup(self.keyboard.press_and_release, "Escape")
         sleep(.5)
@@ -1125,7 +1129,7 @@ class PanelCrossMonitorsTests(PanelTestsBase):
         for monitor in range(0, self.screen_geo.get_num_monitors()):
             panel = self.panels.get_panel_for_monitor(monitor)
 
-            if monitor != self.panel_monitor:
+            if monitor != text_win.monitor:
                 panel.window_buttons.close.mouse_click()
                 sleep(.25)
                 self.assertFalse(text_win.closed)
@@ -1140,7 +1144,7 @@ class PanelCrossMonitorsTests(PanelTestsBase):
         for monitor in range(0, self.screen_geo.get_num_monitors()):
             panel = self.panels.get_panel_for_monitor(monitor)
 
-            if monitor != self.panel_monitor:
+            if monitor != text_win.monitor:
                 panel.window_buttons.minimize.mouse_click()
                 sleep(.25)
                 self.assertFalse(text_win.is_hidden)
@@ -1155,7 +1159,7 @@ class PanelCrossMonitorsTests(PanelTestsBase):
         for monitor in range(0, self.screen_geo.get_num_monitors()):
             panel = self.panels.get_panel_for_monitor(monitor)
 
-            if monitor != self.panel_monitor:
+            if monitor != text_win.monitor:
                 panel.window_buttons.unmaximize.mouse_click()
                 sleep(.25)
                 self.assertTrue(text_win.is_maximized)
@@ -1163,17 +1167,16 @@ class PanelCrossMonitorsTests(PanelTestsBase):
     def test_hovering_indicators_on_multiple_monitors(self):
         """This test checks that opening an indicator entry, and then
         hovering on all the others, opens them"""
-        self.open_new_application_window("Text Editor")
+        text_win = self.open_new_application_window("Text Editor")
+        panel = self.panels.get_panel_for_monitor(text_win.monitor)
+        indicator = panel.indicators.get_indicator_by_name_hint("indicator-session-devices")
+        self.mouse_open_indicator(indicator)
 
         for monitor in range(0, self.screen_geo.get_num_monitors()):
             panel = self.panels.get_panel_for_monitor(monitor)
 
             entries = panel.get_indicator_entries(include_hidden_menus=True)
             self.assertThat(len(entries), GreaterThan(0))
-
-            if not self.panels.get_active_indicator():
-                indicator = panel.indicators.get_indicator_by_name_hint("indicator-session-devices")
-                self.mouse_open_indicator(entries[0])
 
             for entry in entries:
                 entry.mouse_move_to()
