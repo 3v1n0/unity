@@ -11,7 +11,7 @@ import logging
 from testtools.matchers import Equals, NotEquals, LessThan, GreaterThan
 from time import sleep
 
-from autopilot.tests import AutopilotTestCase
+from autopilot.tests import AutopilotTestCase, multiply_scenarios
 from autopilot.emulators.X11 import ScreenGeometry
 from autopilot.emulators.unity.icons import BFBLauncherIcon
 
