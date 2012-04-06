@@ -409,7 +409,7 @@ namespace unity {
     if (pixbuf == NULL)
     {
       LOG_WARNING(logger) << "Passed in a bad pixbuf, defaulting colour";
-      new_color = MatchColor (unity::colors::Aubergine);
+      new_color = unity::colors::Aubergine;
     }
     else
     {
