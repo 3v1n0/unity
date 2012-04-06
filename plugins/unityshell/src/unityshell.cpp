@@ -1222,7 +1222,6 @@ void UnityShowdesktopHandler::handleEvent (XEvent *event)
       mRemover->remove ();
     }
   }
-
 }
 
 void UnityShowdesktopHandler::windowNotify (CompWindowNotify n)
