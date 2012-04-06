@@ -567,6 +567,10 @@ class PanelWindowButtonsTests(PanelTestsBase):
         panel view, then the window buttons are revealed
         """
         self.open_new_application_window("Text Editor", maximized=True)
+        sleep(self.panel.menus.fadein_duration / 1000.0)
+        sleep(self.panel.menus.discovery_duration)
+        sleep(self.panel.menus.fadeout_duration / 1000.0)
+
         indicator = self.panel.indicators.get_indicator_by_name_hint("indicator-session-devices")
         self.mouse_open_indicator(indicator)
 
