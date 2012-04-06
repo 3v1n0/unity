@@ -22,6 +22,8 @@
 #include "CairoTexture.h"
 #include "DashStyle.h"
 #include "LensBar.h"
+#include "UBusMessages.h"
+#include "UBusWrapper.h"
 
 namespace unity
 {
@@ -147,6 +149,12 @@ void LensBar::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
   }
 
   gfx_context.PopClippingRectangle();
+
+  // trigger a redraw of the decoration, as the special masking of the
+  // decoration is usually destroyed by the clipping-rects/previous paints
+  ubus_server_send_message(ubus_server_get_default(),
+                           UBUS_DASH_DECORATION_DAMAGED,
+                           NULL);
 }
 
 void LensBar::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
