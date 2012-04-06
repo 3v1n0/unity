@@ -44,11 +44,13 @@ Controller::Controller(unsigned int load_timeout)
   ,  detail_on_timeout(true)
   ,  detail_timeout_length(500)
   ,  initial_detail_timeout_length(1500)
+  ,  quick_tab_timeout(200)
   ,  construct_timeout_(load_timeout)
   ,  view_window_(nullptr)
   ,  main_layout_(nullptr)
   ,  monitor_(0)
   ,  visible_(false)
+  ,  quick_tab_(false)
   ,  show_timer_(0)
   ,  detail_timer_(0)
   ,  lazy_timer_(0)
@@ -104,6 +106,7 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
   SelectFirstItem();
 
   visible_ = true;
+  quick_tab_ = true;
 
   if (timeout_length > 0)
   {
@@ -126,6 +129,20 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
       self->show_timer_ = 0;
       return FALSE;
     }, this);
+
+    if (quick_tab_timer_)
+    {
+      g_source_remove (quick_tab_timer_);
+      quick_tab_timer_ = 0;
+    }
+
+    quick_tab_timer_ = g_timeout_add(quick_tab_timeout, [] (gpointer data) -> gboolean {
+      auto self = static_cast<Controller*>(data);
+      self->quick_tab_ = false;
+      self->quick_tab_timer_ = 0;
+      return FALSE;
+    }, this);
+
   }
   else
   {
@@ -260,25 +277,20 @@ void Controller::Hide(bool accept_state)
     AbstractLauncherIcon::Ptr selection = model_->Selection();
     if (selection)
     {
-      /* Instead of defining a new type of ActionArg we only use the "button"
-       * ActionArg value to indicate to the view if we're performing a quick
-       * switch or not.                                                      */
-      unsigned int is_quick = (view_window_ && view_window_->IsVisible()) ? 0 : 1;
-
       if (model_->detail_selection)
       {
-        selection->Activate(ActionArg(ActionArg::SWITCHER, is_quick, model_->DetailSelectionWindow ()));
+        selection->Activate(ActionArg(ActionArg::SWITCHER, quick_tab_, model_->DetailSelectionWindow ()));
       }
       else
       {
         if (selection->GetQuirk (AbstractLauncherIcon::QUIRK_ACTIVE) &&
             !model_->DetailXids().empty ())
         {
-          selection->Activate(ActionArg (ActionArg::SWITCHER, is_quick, model_->DetailXids()[0]));
+          selection->Activate(ActionArg (ActionArg::SWITCHER, quick_tab_, model_->DetailXids()[0]));
         }
         else
         {
-          selection->Activate(ActionArg(ActionArg::SWITCHER, is_quick));
+          selection->Activate(ActionArg(ActionArg::SWITCHER, quick_tab_));
         }
       }
     }
@@ -309,6 +321,10 @@ void Controller::Hide(bool accept_state)
   if (detail_timer_)
     g_source_remove(detail_timer_);
   detail_timer_ = 0;
+
+  if (quick_tab_timer_)
+    g_source_remove (quick_tab_timer_);
+  quick_tab_timer_ = 0;
 
   ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN, g_variant_new("(bi)", false, monitor_));
 

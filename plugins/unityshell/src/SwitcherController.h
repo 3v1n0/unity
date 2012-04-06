@@ -70,6 +70,7 @@ public:
   nux::Property<bool> detail_on_timeout;
   nux::Property<int>  detail_timeout_length;
   nux::Property<int> initial_detail_timeout_length;
+  nux::Property<int> quick_tab_timeout;
 
   void Show(ShowMode show, SortMode sort, bool reverse, std::vector<launcher::AbstractLauncherIcon::Ptr> results);
   void Hide(bool accept_state=true);
@@ -129,10 +130,12 @@ private:
 
   int monitor_;
   bool visible_;
+  bool quick_tab_;
   guint show_timer_;
   guint detail_timer_;
   guint lazy_timer_;
   guint view_idle_timer_;
+  guint quick_tab_timer_;
   nux::Color bg_color_;
   DetailMode detail_mode_;
 
