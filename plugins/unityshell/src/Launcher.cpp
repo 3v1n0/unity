@@ -1282,6 +1282,7 @@ void Launcher::ShowShortcuts(bool show)
 {
   _shortcuts_shown = show;
   _hover_machine->SetQuirk(LauncherHoverMachine::SHORTCUT_KEYS_VISIBLE, show);
+  EnsureAnimation();
 }
 
 void Launcher::OnBGColorChanged(GVariant *data)
