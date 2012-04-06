@@ -345,7 +345,13 @@ UnityScreen::UnityScreen(CompScreen* screen)
      ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_NAV,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherStartKeyNav));
 
+     ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWTICHER,
+                   sigc::mem_fun(this, &UnityScreen::OnLauncherStartKeyNav));
+
      ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_NAV,
+                   sigc::mem_fun(this, &UnityScreen::OnLauncherEndKeyNav));
+
+     ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWTICHER,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherEndKeyNav));
 
      g_idle_add_full (G_PRIORITY_DEFAULT, &UnityScreen::initPluginActions, this, NULL);
@@ -552,7 +558,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   float vc[4];
   float h = 20.0f;
   float w = 1.0f;
-  float panel_h = 24.0f;
+  float panel_h = panel_style_.panel_height;
 
   float x1 = output->x();
   float y1 = output->y() + panel_h;
@@ -634,7 +640,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   float vc[4];
   float h = 20.0f;
   float w = 1.0f;
-  float panel_h = 24.0f;
+  float panel_h = static_cast<float>(panel_style_.panel_height);
 
   float x1 = output->x();
   float y1 = output->y() + panel_h;
@@ -741,7 +747,6 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 #endif
 {
   CompOutput *output = _last_output;
-  Window     tray_xid = panel_controller_->GetTrayXid ();
 
 #ifndef USE_GLES
   bool was_bound = _fbo->bound ();
@@ -772,7 +777,8 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
       nux::GetGraphicsDisplay()->GetGraphicsEngine()->SetOrthographicProjectionMatrix(screen->width (), screen->height());
 
       nux::TexCoordXForm texxform;
-      nux::GetGraphicsDisplay()->GetGraphicsEngine()->QRP_1Tex(0, 0, screen->width (), 24, panel_texture_, texxform, nux::color::White);
+      int panel_height = panel_style_.panel_height;
+      nux::GetGraphicsDisplay()->GetGraphicsEngine()->QRP_1Tex(0, 0, screen->width (), panel_height, panel_texture_, texxform, nux::color::White);
     }
   }
 
@@ -818,64 +824,67 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
   _in_paint = false;
   nuxEpilogue();
 
-  if (tray_xid && !allowWindowPaint)
+  for (Window tray_xid : panel_controller_->GetTrayXids())
   {
-    CompWindow *tray = screen->findWindow (tray_xid);
-
-    if (tray)
+    if (tray_xid && !allowWindowPaint)
     {
-      GLMatrix oTransform;
-      UnityWindow  *uTrayWindow = UnityWindow::get (tray);
+      CompWindow *tray = screen->findWindow (tray_xid);
+
+      if (tray)
+      {
+        GLMatrix oTransform;
+        UnityWindow  *uTrayWindow = UnityWindow::get (tray);
 #ifndef USE_GLES
-      GLFragment::Attrib attrib (uTrayWindow->gWindow->lastPaintAttrib());
+        GLFragment::Attrib attrib (uTrayWindow->gWindow->lastPaintAttrib());
 #else
-      GLWindowPaintAttrib attrib (uTrayWindow->gWindow->lastPaintAttrib());
+        GLWindowPaintAttrib attrib (uTrayWindow->gWindow->lastPaintAttrib());
 #endif
-      unsigned int oldGlAddGeometryIndex = uTrayWindow->gWindow->glAddGeometryGetCurrentIndex ();
-      unsigned int oldGlDrawIndex = uTrayWindow->gWindow->glDrawGetCurrentIndex ();
+        unsigned int oldGlAddGeometryIndex = uTrayWindow->gWindow->glAddGeometryGetCurrentIndex ();
+        unsigned int oldGlDrawIndex = uTrayWindow->gWindow->glDrawGetCurrentIndex ();
 #ifndef USE_GLES
-      unsigned int oldGlDrawGeometryIndex = uTrayWindow->gWindow->glDrawGeometryGetCurrentIndex ();
+        unsigned int oldGlDrawGeometryIndex = uTrayWindow->gWindow->glDrawGeometryGetCurrentIndex ();
 #endif
 
 #ifndef USE_GLES
-      attrib.setOpacity (OPAQUE);
-      attrib.setBrightness (BRIGHT);
-      attrib.setSaturation (COLOR);
+        attrib.setOpacity (OPAQUE);
+        attrib.setBrightness (BRIGHT);
+        attrib.setSaturation (COLOR);
 #else
-      attrib.opacity = OPAQUE;
-      attrib.brightness = BRIGHT;
-      attrib.saturation = COLOR;
+        attrib.opacity = OPAQUE;
+        attrib.brightness = BRIGHT;
+        attrib.saturation = COLOR;
 #endif
 
-      oTransform.toScreenSpace (output, -DEFAULT_Z_CAMERA);
-
-#ifndef USE_GLES
-      glPushMatrix ();
-      glLoadMatrixf (oTransform.getMatrix ());
-#endif
-
-      painting_tray_ = true;
-
-      /* force the use of the core functions */
-      uTrayWindow->gWindow->glDrawSetCurrentIndex (MAXSHORT);
-      uTrayWindow->gWindow->glAddGeometrySetCurrentIndex ( MAXSHORT);
-#ifndef USE_GLES
-      uTrayWindow->gWindow->glDrawGeometrySetCurrentIndex (MAXSHORT);
-#endif
-      uTrayWindow->gWindow->glDraw (oTransform, attrib, infiniteRegion,
-				     PAINT_WINDOW_TRANSFORMED_MASK |
-				     PAINT_WINDOW_BLEND_MASK |
-				     PAINT_WINDOW_ON_TRANSFORMED_SCREEN_MASK);
-#ifndef USE_GLES
-      uTrayWindow->gWindow->glDrawGeometrySetCurrentIndex (oldGlDrawGeometryIndex);
-#endif
-      uTrayWindow->gWindow->glAddGeometrySetCurrentIndex (oldGlAddGeometryIndex);
-      uTrayWindow->gWindow->glDrawSetCurrentIndex (oldGlDrawIndex);
-      painting_tray_ = false;
+        oTransform.toScreenSpace (output, -DEFAULT_Z_CAMERA);
 
 #ifndef USE_GLES
-      glPopMatrix ();
+        glPushMatrix ();
+        glLoadMatrixf (oTransform.getMatrix ());
 #endif
+
+        painting_tray_ = true;
+
+        /* force the use of the core functions */
+        uTrayWindow->gWindow->glDrawSetCurrentIndex (MAXSHORT);
+        uTrayWindow->gWindow->glAddGeometrySetCurrentIndex ( MAXSHORT);
+#ifndef USE_GLES
+        uTrayWindow->gWindow->glDrawGeometrySetCurrentIndex (MAXSHORT);
+#endif
+        uTrayWindow->gWindow->glDraw (oTransform, attrib, infiniteRegion,
+               PAINT_WINDOW_TRANSFORMED_MASK |
+               PAINT_WINDOW_BLEND_MASK |
+               PAINT_WINDOW_ON_TRANSFORMED_SCREEN_MASK);
+#ifndef USE_GLES
+        uTrayWindow->gWindow->glDrawGeometrySetCurrentIndex (oldGlDrawGeometryIndex);
+#endif
+        uTrayWindow->gWindow->glAddGeometrySetCurrentIndex (oldGlAddGeometryIndex);
+        uTrayWindow->gWindow->glDrawSetCurrentIndex (oldGlDrawIndex);
+        painting_tray_ = false;
+
+#ifndef USE_GLES
+        glPopMatrix ();
+#endif
+      }
     }
   }
 
@@ -1602,7 +1611,7 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
     int width = 970;
     int height =  680;
     int launcher_width = optionGetIconSize() + 18;
-    int panel_height = 24;
+    int panel_height = panel_style_.panel_height;
     int x = monitor_geo.x + launcher_width + (monitor_geo.width - launcher_width- width) / 2;
     int y = monitor_geo.y + panel_height + (monitor_geo.height - panel_height - height) / 2;
 
@@ -1678,6 +1687,7 @@ bool UnityScreen::showPanelFirstMenuKeyInitiate(CompAction* action,
    * keyboard and the Alt key is still pressed */
   action->setState(action->state() | CompAction::StateTermKey);
   panel_controller_->FirstMenuShow();
+
   return true;
 }
 
@@ -2229,7 +2239,9 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
     mask |= mShowdesktopHandler->getPaintMask ();
   }
 
-  if (uScreen->panel_controller_->GetTrayXid () == window->id () && !uScreen->allowWindowPaint)
+  std::vector<Window> const& tray_xids = uScreen->panel_controller_->GetTrayXids();
+  if (std::find(tray_xids.begin(), tray_xids.end(), window->id()) != tray_xids.end() &&
+      !uScreen->allowWindowPaint)
   {
     if (!uScreen->painting_tray_)
     {
@@ -2308,7 +2320,8 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
 
   bool ret = gWindow->glDraw(matrix, attrib, region, mask);
 
-  if ((active_window == 0 || active_window == window->id()) && (window->type() == CompWindowTypeDesktopMask))
+  if ((active_window == 0 || active_window == window->id()) &&
+      (window->type() == CompWindowTypeDesktopMask))
   {
     uScreen->paintPanelShadow(matrix);
   }
