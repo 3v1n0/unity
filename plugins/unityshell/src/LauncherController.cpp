@@ -1101,9 +1101,9 @@ void Controller::Impl::ReceiveMouseDownOutsideArea(int x, int y, unsigned long b
 void Controller::KeyNavGrab()
 {
   pimpl->ubus.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+  pimpl->launcher_grabbed = true;
   KeyNavActivate();
   pimpl->keyboard_launcher_->GrabKeyboard();
-  pimpl->launcher_grabbed = true;
 
   pimpl->launcher_key_press_connection_ =
     pimpl->keyboard_launcher_->key_down.connect(sigc::mem_fun(pimpl, &Controller::Impl::ReceiveLauncherKeyPress));
@@ -1124,18 +1124,50 @@ void Controller::KeyNavActivate()
   pimpl->keyboard_launcher_->EnterKeyNavMode();
   pimpl->model_->SetSelection(0);
 
-  pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_SWTICHER, g_variant_new_boolean(true));
-  pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_NAV, NULL);
+  if (pimpl->launcher_grabbed)
+  {
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_NAV,
+                            g_variant_new_int32(pimpl->keyboard_launcher_->monitor));
+  }
+  else
+  {
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_SWTICHER,
+                            g_variant_new_int32(pimpl->keyboard_launcher_->monitor));
+  }
+
+  AbstractLauncherIcon::Ptr const& selected = pimpl->model_->Selection();
+
+  if (selected)
+  {
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED,
+                            g_variant_new_string(selected->tooltip_text().c_str()));
+  }
 }
 
 void Controller::KeyNavNext()
 {
   pimpl->model_->SelectNext();
+
+  AbstractLauncherIcon::Ptr const& selected = pimpl->model_->Selection();
+
+  if (selected)
+  {
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED,
+                            g_variant_new_string(selected->tooltip_text().c_str()));
+  }
 }
 
 void Controller::KeyNavPrevious()
 {
   pimpl->model_->SelectPrevious();
+
+  AbstractLauncherIcon::Ptr const& selected = pimpl->model_->Selection();
+
+  if (selected)
+  {
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED,
+                            g_variant_new_string(selected->tooltip_text().c_str()));
+  }
 }
 
 void Controller::KeyNavTerminate(bool activate)
@@ -1143,13 +1175,28 @@ void Controller::KeyNavTerminate(bool activate)
   if (!pimpl->launcher_keynav)
     return;
 
+  if (activate && pimpl->keynav_restore_window_)
+  {
+    /* If the selected icon is running, we must not restore the input to the old */
+    AbstractLauncherIcon::Ptr const& icon = pimpl->model_->Selection();
+    pimpl->keynav_restore_window_ = !icon->GetQuirk(AbstractLauncherIcon::QUIRK_RUNNING);
+  }
+
   pimpl->keyboard_launcher_->ExitKeyNavMode();
+
   if (pimpl->launcher_grabbed)
   {
     pimpl->keyboard_launcher_->UnGrabKeyboard();
     pimpl->launcher_key_press_connection_.disconnect();
     pimpl->launcher_event_outside_connection_.disconnect();
     pimpl->launcher_grabbed = false;
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_NAV,
+                            g_variant_new_boolean(pimpl->keynav_restore_window_));
+  }
+  else
+  {
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_SWTICHER,
+                            g_variant_new_boolean(pimpl->keynav_restore_window_));
   }
 
   if (activate)
@@ -1158,9 +1205,6 @@ void Controller::KeyNavTerminate(bool activate)
   pimpl->launcher_keynav = false;
   if (!pimpl->launcher_open)
     pimpl->keyboard_launcher_.Release();
-
-  pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_SWTICHER, g_variant_new_boolean(true));
-  pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_NAV, g_variant_new_boolean(pimpl->keynav_restore_window_));
 }
 
 bool Controller::KeyNavIsActive() const
@@ -1260,8 +1304,7 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
       // <RETURN> (start/activate currently selected icon)
     case NUX_VK_ENTER:
     case NUX_KP_ENTER:
-    model_->Selection()->Activate(ActionArg(ActionArg::LAUNCHER, 0));
-    parent_->KeyNavTerminate(false);
+    parent_->KeyNavTerminate(true);
     break;
 
     default:

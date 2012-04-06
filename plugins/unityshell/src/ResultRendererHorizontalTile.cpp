@@ -54,7 +54,7 @@ const int   CARD_VIEW_HIGHLIGHT_CORNER_RADIUS = 2; // pixels
 //const char  CARD_VIEW_ICON_OUTLINE_COLOR   = "#000000";
 //const float CARD_VIEW_ICON_OUTLINE_OPACITY = 1.0; //float
 const int   CARD_VIEW_ICON_OUTLINE_WIDTH   = 1;   // pixels
-const int   CARD_VIEW_TEXT_LINE_SPACING    = 2; // points
+const int CARD_VIEW_TEXT_LINE_SPACING    = 0; // points
 //const char  CARD_VIEW_TEXT_TITLE_COLOR     = "#ffffff";
 //const float CARD_VIEW_TEXT_TITLE_OPACITY   = 1.0; // float
 //const float CARD_VIEW_TEXT_TITLE_SIZE      = 13.0; // points
@@ -204,7 +204,7 @@ nux::BaseTexture* ResultRendererHorizontalTile::DrawHighlight(std::string const&
 
   // draw the highlight
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.2f);
+  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.075f);
   cairo_graphics.DrawRoundedRectangle(cr,
                                       1.0f,
                                       0.0f,

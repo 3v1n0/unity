@@ -1282,6 +1282,7 @@ void Launcher::ShowShortcuts(bool show)
 {
   _shortcuts_shown = show;
   _hover_machine->SetQuirk(LauncherHoverMachine::SHORTCUT_KEYS_VISIBLE, show);
+  EnsureAnimation();
 }
 
 void Launcher::OnBGColorChanged(GVariant *data)
@@ -1357,10 +1358,10 @@ void Launcher::OnOverlayShown(GVariant* data)
     {
       _hud_is_open = true;
     }
+    bg_effect_helper_.enabled = true;
     // Don't desaturate icons if the mouse is over the launcher:
     if (!_hovered)
     {
-      bg_effect_helper_.enabled = true;
       LOG_DEBUG(logger) << "Desaturate on monitor " << monitor();
       DesaturateIcons();
     }

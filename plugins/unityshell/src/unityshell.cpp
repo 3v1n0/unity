@@ -346,7 +346,13 @@ UnityScreen::UnityScreen(CompScreen* screen)
      ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_NAV,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherStartKeyNav));
 
+     ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWTICHER,
+                   sigc::mem_fun(this, &UnityScreen::OnLauncherStartKeyNav));
+
      ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_NAV,
+                   sigc::mem_fun(this, &UnityScreen::OnLauncherEndKeyNav));
+
+     ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWTICHER,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherEndKeyNav));
 
      g_idle_add_full (G_PRIORITY_DEFAULT, &UnityScreen::initPluginActions, this, NULL);
@@ -555,7 +561,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   float vc[4];
   float h = 20.0f;
   float w = 1.0f;
-  float panel_h = 24.0f;
+  float panel_h = panel_style_.panel_height;
 
   float x1 = output->x();
   float y1 = output->y() + panel_h;
@@ -637,7 +643,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   float vc[4];
   float h = 20.0f;
   float w = 1.0f;
-  float panel_h = 24.0f;
+  float panel_h = static_cast<float>(panel_style_.panel_height);
 
   float x1 = output->x();
   float y1 = output->y() + panel_h;
@@ -744,7 +750,6 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 #endif
 {
   CompOutput *output = _last_output;
-  Window     tray_xid = panel_controller_->GetTrayXid ();
 
 #ifndef USE_GLES
   bool was_bound = _fbo->bound ();
@@ -775,7 +780,8 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
       nux::GetGraphicsDisplay()->GetGraphicsEngine()->SetOrthographicProjectionMatrix(screen->width (), screen->height());
 
       nux::TexCoordXForm texxform;
-      nux::GetGraphicsDisplay()->GetGraphicsEngine()->QRP_GLSL_1Tex(0, 0, screen->width (), 24, panel_texture_, texxform, nux::color::White);
+      int panel_height = panel_style_.panel_height;
+      nux::GetGraphicsDisplay()->GetGraphicsEngine()->QRP_GLSL_1Tex(0, 0, screen->width (), panel_height, panel_texture_, texxform, nux::color::White);
     }
   }
 
@@ -821,64 +827,67 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
   _in_paint = false;
   nuxEpilogue();
 
-  if (tray_xid && !allowWindowPaint)
+  for (Window tray_xid : panel_controller_->GetTrayXids())
   {
-    CompWindow *tray = screen->findWindow (tray_xid);
-
-    if (tray)
+    if (tray_xid && !allowWindowPaint)
     {
-      GLMatrix oTransform;
-      UnityWindow  *uTrayWindow = UnityWindow::get (tray);
+      CompWindow *tray = screen->findWindow (tray_xid);
+
+      if (tray)
+      {
+        GLMatrix oTransform;
+        UnityWindow  *uTrayWindow = UnityWindow::get (tray);
 #ifndef USE_GLES
-      GLFragment::Attrib attrib (uTrayWindow->gWindow->lastPaintAttrib());
+        GLFragment::Attrib attrib (uTrayWindow->gWindow->lastPaintAttrib());
 #else
-      GLWindowPaintAttrib attrib (uTrayWindow->gWindow->lastPaintAttrib());
+        GLWindowPaintAttrib attrib (uTrayWindow->gWindow->lastPaintAttrib());
 #endif
-      unsigned int oldGlAddGeometryIndex = uTrayWindow->gWindow->glAddGeometryGetCurrentIndex ();
-      unsigned int oldGlDrawIndex = uTrayWindow->gWindow->glDrawGetCurrentIndex ();
+        unsigned int oldGlAddGeometryIndex = uTrayWindow->gWindow->glAddGeometryGetCurrentIndex ();
+        unsigned int oldGlDrawIndex = uTrayWindow->gWindow->glDrawGetCurrentIndex ();
 #ifndef USE_GLES
-      unsigned int oldGlDrawGeometryIndex = uTrayWindow->gWindow->glDrawGeometryGetCurrentIndex ();
+        unsigned int oldGlDrawGeometryIndex = uTrayWindow->gWindow->glDrawGeometryGetCurrentIndex ();
 #endif
 
 #ifndef USE_GLES
-      attrib.setOpacity (OPAQUE);
-      attrib.setBrightness (BRIGHT);
-      attrib.setSaturation (COLOR);
+        attrib.setOpacity (OPAQUE);
+        attrib.setBrightness (BRIGHT);
+        attrib.setSaturation (COLOR);
 #else
-      attrib.opacity = OPAQUE;
-      attrib.brightness = BRIGHT;
-      attrib.saturation = COLOR;
+        attrib.opacity = OPAQUE;
+        attrib.brightness = BRIGHT;
+        attrib.saturation = COLOR;
 #endif
 
-      oTransform.toScreenSpace (output, -DEFAULT_Z_CAMERA);
-
-#ifndef USE_GLES
-      glPushMatrix ();
-      glLoadMatrixf (oTransform.getMatrix ());
-#endif
-
-      painting_tray_ = true;
-
-      /* force the use of the core functions */
-      uTrayWindow->gWindow->glDrawSetCurrentIndex (MAXSHORT);
-      uTrayWindow->gWindow->glAddGeometrySetCurrentIndex ( MAXSHORT);
-#ifndef USE_GLES
-      uTrayWindow->gWindow->glDrawGeometrySetCurrentIndex (MAXSHORT);
-#endif
-      uTrayWindow->gWindow->glDraw (oTransform, attrib, infiniteRegion,
-				     PAINT_WINDOW_TRANSFORMED_MASK |
-				     PAINT_WINDOW_BLEND_MASK |
-				     PAINT_WINDOW_ON_TRANSFORMED_SCREEN_MASK);
-#ifndef USE_GLES
-      uTrayWindow->gWindow->glDrawGeometrySetCurrentIndex (oldGlDrawGeometryIndex);
-#endif
-      uTrayWindow->gWindow->glAddGeometrySetCurrentIndex (oldGlAddGeometryIndex);
-      uTrayWindow->gWindow->glDrawSetCurrentIndex (oldGlDrawIndex);
-      painting_tray_ = false;
+        oTransform.toScreenSpace (output, -DEFAULT_Z_CAMERA);
 
 #ifndef USE_GLES
-      glPopMatrix ();
+        glPushMatrix ();
+        glLoadMatrixf (oTransform.getMatrix ());
 #endif
+
+        painting_tray_ = true;
+
+        /* force the use of the core functions */
+        uTrayWindow->gWindow->glDrawSetCurrentIndex (MAXSHORT);
+        uTrayWindow->gWindow->glAddGeometrySetCurrentIndex ( MAXSHORT);
+#ifndef USE_GLES
+        uTrayWindow->gWindow->glDrawGeometrySetCurrentIndex (MAXSHORT);
+#endif
+        uTrayWindow->gWindow->glDraw (oTransform, attrib, infiniteRegion,
+               PAINT_WINDOW_TRANSFORMED_MASK |
+               PAINT_WINDOW_BLEND_MASK |
+               PAINT_WINDOW_ON_TRANSFORMED_SCREEN_MASK);
+#ifndef USE_GLES
+        uTrayWindow->gWindow->glDrawGeometrySetCurrentIndex (oldGlDrawGeometryIndex);
+#endif
+        uTrayWindow->gWindow->glAddGeometrySetCurrentIndex (oldGlAddGeometryIndex);
+        uTrayWindow->gWindow->glDrawSetCurrentIndex (oldGlDrawIndex);
+        painting_tray_ = false;
+
+#ifndef USE_GLES
+        glPopMatrix ();
+#endif
+      }
     }
   }
 
@@ -957,7 +966,9 @@ void UnityScreen::enterShowDesktopMode ()
 {
   for (CompWindow *w : screen->windows ())
   {
-    if (UnityShowdesktopHandler::shouldHide (w))
+    UnityWindow *uw = UnityWindow::get (w);
+
+    if (ShowdesktopHandler::ShouldHide (static_cast <ShowdesktopHandlerWindowInterface *> (uw)))
     {
       UnityWindow::get (w)->enterShowDesktop ();
       // the animation plugin does strange things here ...
@@ -994,16 +1005,16 @@ void UnityScreen::leaveShowDesktopMode (CompWindow *w)
   /* Where a window is inhibiting, only allow the window
    * that is inhibiting the leave show desktop to actually
    * fade in again - all other windows should remain faded out */
-  if (!UnityShowdesktopHandler::inhibitingXid ())
+  if (!ShowdesktopHandler::InhibitingXid ())
   {
     for (CompWindow *cw : screen->windows ())
     {
       if (cw->inShowDesktopMode ())
       {
-	UnityWindow::get (cw)->leaveShowDesktop ();
-	// the animation plugin does strange things here ...
-	// if this notification is sent
-	//cw->windowNotify (CompWindowNotifyLeaveShowDesktopMode);
+        UnityWindow::get (cw)->leaveShowDesktop ();
+        // the animation plugin does strange things here ...
+        // if this notification is sent
+        //cw->windowNotify (CompWindowNotifyLeaveShowDesktopMode);
       }
     }
 
@@ -1013,12 +1024,12 @@ void UnityScreen::leaveShowDesktopMode (CompWindow *w)
   }
   else
   {
-    CompWindow *cw = screen->findWindow (UnityShowdesktopHandler::inhibitingXid ());
+    CompWindow *cw = screen->findWindow (ShowdesktopHandler::InhibitingXid ());
     if (cw)
     {
       if (cw->inShowDesktopMode ())
       {
-	UnityWindow::get (cw)->leaveShowDesktop ();
+        UnityWindow::get (cw)->leaveShowDesktop ();
       }
     }
   }
@@ -1027,227 +1038,161 @@ void UnityScreen::leaveShowDesktopMode (CompWindow *w)
 void UnityWindow::enterShowDesktop ()
 {
   if (!mShowdesktopHandler)
-    mShowdesktopHandler = new UnityShowdesktopHandler (window);
+    mShowdesktopHandler = new ShowdesktopHandler (static_cast <ShowdesktopHandlerWindowInterface *> (this));
 
   window->setShowDesktopMode (true);
-  mShowdesktopHandler->fadeOut ();
+  mShowdesktopHandler->FadeOut ();
 }
 
 void UnityWindow::leaveShowDesktop ()
 {
   if (mShowdesktopHandler)
   {
-    mShowdesktopHandler->fadeIn ();
+    mShowdesktopHandler->FadeIn ();
     window->setShowDesktopMode (false);
-    delete mShowdesktopHandler;
-    mShowdesktopHandler = NULL;
   }
 }
 
 void UnityWindow::activate ()
 {
-  UnityShowdesktopHandler::inhibitLeaveShowdesktopMode (window->id ());
+  ShowdesktopHandler::InhibitLeaveShowdesktopMode (window->id ());
   window->activate ();
-  UnityShowdesktopHandler::allowLeaveShowdesktopMode (window->id ());
+  ShowdesktopHandler::AllowLeaveShowdesktopMode (window->id ());
 }
 
-bool UnityWindow::handleAnimations (unsigned int ms)
+void UnityWindow::DoEnableFocus ()
 {
+  window->focusSetEnabled (this, true);
+}
+
+void UnityWindow::DoDisableFocus ()
+{
+  window->focusSetEnabled (this, false);
+}
+
+bool UnityWindow::IsOverrideRedirect ()
+{
+  return window->overrideRedirect ();
+}
+
+bool UnityWindow::IsManaged ()
+{
+  return window->managed ();
+}
+
+bool UnityWindow::IsGrabbed ()
+{
+  return window->grabbed ();
+}
+
+bool UnityWindow::IsDesktopOrDock ()
+{
+  return (window->type () & (CompWindowTypeDesktopMask | CompWindowTypeDockMask));
+}
+
+bool UnityWindow::IsSkipTaskbarOrPager ()
+{
+  return (window->state () & (CompWindowStateSkipTaskbarMask | CompWindowStateSkipPagerMask));
+}
+
+bool UnityWindow::IsInShowdesktopMode ()
+{
+  return window->inShowDesktopMode ();
+}
+
+bool UnityWindow::IsHidden ()
+{
+  return window->state () & CompWindowStateHiddenMask;
+}
+
+bool UnityWindow::IsShaded ()
+{
+  return window->shaded ();
+}
+
+bool UnityWindow::IsMinimized ()
+{
+  return window->minimized ();
+}
+
+void UnityWindow::DoOverrideFrameRegion (CompRegion &region)
+{
+  unsigned int oldUpdateFrameRegionIndex = window->updateFrameRegionGetCurrentIndex ();
+
+  window->updateFrameRegionSetCurrentIndex (MAXSHORT);
+  window->updateFrameRegion (region);
+  window->updateFrameRegionSetCurrentIndex (oldUpdateFrameRegionIndex);
+}
+
+void UnityWindow::DoHide ()
+{
+  window->changeState (window->state () | CompWindowStateHiddenMask);
+}
+
+void UnityWindow::DoNotifyHidden ()
+{
+  window->windowNotify (CompWindowNotifyHide);
+}
+
+void UnityWindow::DoShow ()
+{
+  window->changeState (window->state () & ~(CompWindowStateHiddenMask));
+}
+
+void UnityWindow::DoNotifyShown ()
+{
+  window->windowNotify (CompWindowNotifyShow);
+}
+
+void UnityWindow::DoMoveFocusAway ()
+{
+  window->moveInputFocusToOtherWindow ();
+}
+
+ShowdesktopHandlerWindowInterface::PostPaintAction UnityWindow::DoHandleAnimations (unsigned int ms)
+{
+  ShowdesktopHandlerWindowInterface::PostPaintAction action = ShowdesktopHandlerWindowInterface::PostPaintAction::Wait;
+
   if (mShowdesktopHandler)
-    if (mShowdesktopHandler->animate (ms))
-    {
-      delete mShowdesktopHandler;
-      mShowdesktopHandler = NULL;
-      return true;
-    }
+    action = mShowdesktopHandler->Animate (ms);
 
-  return false;
+  return action;
 }
 
-/* 300 ms */
-const unsigned int UnityShowdesktopHandler::fade_time = 300;
-CompWindowList UnityShowdesktopHandler::animating_windows (0);
-
-bool UnityShowdesktopHandler::shouldHide (CompWindow *w)
+void UnityWindow::DoAddDamage ()
 {
-  if (w->overrideRedirect ())
-    return false;
-
-  if (!w->managed ())
-    return false;
-
-  if (w->grabbed ())
-    return false;
-
-  if (w->wmType () & (CompWindowTypeDesktopMask |
-                      CompWindowTypeDockMask))
-   return false;
-
-  if (w->state () & (CompWindowStateSkipPagerMask |
-         CompWindowStateSkipTaskbarMask))
-    return false;
-
-  if ((w->state () & CompWindowStateHiddenMask))
-    if (!(w->inShowDesktopMode () || w->shaded ()))
-      return false;
-
-  return true;
+  cWindow->addDamage ();
 }
 
-guint32 UnityShowdesktopHandler::mInhibitingXid = 0;
-
-void
-UnityShowdesktopHandler::inhibitLeaveShowdesktopMode (guint32 xid)
+void UnityWindow::DoDeleteHandler ()
 {
-  if (!mInhibitingXid)
-    mInhibitingXid = xid;
+  delete mShowdesktopHandler;
+  mShowdesktopHandler = NULL;
+
+  window->updateFrameRegion ();
 }
 
-void
-UnityShowdesktopHandler::allowLeaveShowdesktopMode (guint32 xid)
+compiz::WindowInputRemoverInterface::Ptr
+UnityWindow::GetInputRemover ()
 {
-  if (mInhibitingXid == xid)
-    mInhibitingXid = 0;
+  return compiz::WindowInputRemoverInterface::Ptr (new compiz::WindowInputRemover (screen->dpy (), window->id ()));
 }
 
-guint32
-UnityShowdesktopHandler::inhibitingXid ()
+unsigned int
+UnityWindow::GetNoCoreInstanceMask ()
 {
-  return mInhibitingXid;
+  return PAINT_WINDOW_NO_CORE_INSTANCE_MASK;
 }
 
-UnityShowdesktopHandler::UnityShowdesktopHandler (CompWindow *w) :
-  mWindow (w),
-  mRemover (new compiz::WindowInputRemover (screen->dpy (), w->id ())),
-  mState (Visible),
-  mProgress (0.0f)
+void UnityWindow::handleEvent (XEvent *event)
 {
-}
-
-UnityShowdesktopHandler::~UnityShowdesktopHandler ()
-{
-  if (mRemover)
-    delete mRemover;
-}
-
-void UnityShowdesktopHandler::fadeOut ()
-{
-  mState = UnityShowdesktopHandler::FadeOut;
-  mProgress = 1.0f;
-
-  mWasHidden = mWindow->state () & CompWindowStateHiddenMask;
-
-  if (!mWasHidden)
-  {
-    mWindow->changeState (mWindow->state () | CompWindowStateHiddenMask);
-    mWindow->windowNotify (CompWindowNotifyHide);
-    mRemover->save ();
-    mRemover->remove ();
-  }
-
-  CompositeWindow::get (mWindow)->addDamage ();
-
-  if (std::find (animating_windows.begin(),
-                 animating_windows.end(),
-                 mWindow) == animating_windows.end())
-    animating_windows.push_back(mWindow);
-}
-
-void UnityShowdesktopHandler::fadeIn ()
-{
-  mState = UnityShowdesktopHandler::FadeIn;
-
-  if (!mWasHidden)
-  {
-    mWindow->changeState (mWindow->state () & ~CompWindowStateHiddenMask);
-    mWindow->windowNotify (CompWindowNotifyShow);
-    mRemover->restore ();
-  }
-
-  CompositeWindow::get (mWindow)->addDamage ();
-}
-
-bool UnityShowdesktopHandler::animate (unsigned int ms)
-{
-  float inc = fade_time / (float) ms;
-
-  if (mState == UnityShowdesktopHandler::FadeOut)
-  {
-    mProgress -= inc;
-    if (mProgress <= 0.0f)
-    {
-      mProgress = 0.0f;
-      mState = Invisible;
-    }
-    else
-      CompositeWindow::get (mWindow)->addDamage ();
-  }
-  else if (mState == FadeIn)
-  {
-    mProgress += inc;
-    if (mProgress >= 1.0f)
-    {
-      mProgress = 1.0f;
-      mState = Visible;
-
-      return true;
-    }
-    else
-      CompositeWindow::get (mWindow)->addDamage ();
-  }
-
-  return false;
-}
-
-void UnityShowdesktopHandler::paintAttrib (GLWindowPaintAttrib &attrib)
-{
-  attrib.opacity = static_cast <int> (static_cast <float> (attrib.opacity) * mProgress);
-}
-
-unsigned int UnityShowdesktopHandler::getPaintMask ()
-{
-    return 0;
-}
-
-void UnityShowdesktopHandler::handleEvent (XEvent *event)
-{
-  /* Ignore sent events from the InputRemover */
-  if (screen->XShape () && event->type ==
-      screen->shapeEvent () + ShapeNotify &&
+  if (screen->XShape () &&
+      event->type == screen->shapeEvent () + ShapeNotify &&
       !event->xany.send_event)
   {
-    if (mRemover)
-    {
-      mRemover->save ();
-      mRemover->remove ();
-    }
+    if (mShowdesktopHandler)
+      mShowdesktopHandler->HandleShapeEvent ();
   }
-}
-
-void UnityShowdesktopHandler::windowNotify (CompWindowNotify n)
-{
-  if (n == CompWindowNotifyFocusChange && mWindow->minimized ())
-  {
-    for (CompWindow *w : animating_windows)
-      w->focusSetEnabled (UnityWindow::get (w), false);
-
-    mWindow->moveInputFocusToOtherWindow ();
-
-    for (CompWindow *w : animating_windows)
-      w->focusSetEnabled (UnityWindow::get (w), true);
-  }
-}
-
-void UnityShowdesktopHandler::updateFrameRegion (CompRegion &r)
-{
-  unsigned int oldUpdateFrameRegionIndex;
-  r = CompRegion ();
-
-  /* Ensure no other plugins can touch this frame region */
-  oldUpdateFrameRegionIndex = mWindow->updateFrameRegionGetCurrentIndex ();
-  mWindow->updateFrameRegionSetCurrentIndex (MAXSHORT);
-  mWindow->updateFrameRegion (r);
-  mWindow->updateFrameRegionSetCurrentIndex (oldUpdateFrameRegionIndex);
 }
 
 /* called whenever we need to repaint parts of the screen */
@@ -1329,16 +1274,10 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
 
 void UnityScreen::preparePaint(int ms)
 {
-  CompWindowList remove_windows;
-
   cScreen->preparePaint(ms);
 
-  for (CompWindow *w : UnityShowdesktopHandler::animating_windows)
-    if (UnityWindow::get (w)->handleAnimations (ms))
-      remove_windows.push_back(w);
-
-  for (CompWindow *w : remove_windows)
-    UnityShowdesktopHandler::animating_windows.remove (w);
+  for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
+    wi->HandleAnimations (ms);
 
   if (damaged)
   {
@@ -1346,6 +1285,28 @@ void UnityScreen::preparePaint(int ms)
     damageNuxRegions();
   }
 
+}
+
+void UnityScreen::donePaint()
+{
+  std::list <ShowdesktopHandlerWindowInterface *> remove_windows;
+
+  for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
+  {
+    ShowdesktopHandlerWindowInterface::PostPaintAction action = wi->HandleAnimations (0);
+    if (action == ShowdesktopHandlerWindowInterface::PostPaintAction::Remove)
+      remove_windows.push_back(wi);
+    else if (action == ShowdesktopHandlerWindowInterface::PostPaintAction::Damage)
+      wi->AddDamage ();
+  }
+
+  for (ShowdesktopHandlerWindowInterface *wi : remove_windows)
+  {
+    wi->DeleteHandler ();
+    ShowdesktopHandler::animating_windows.remove (wi);
+  }
+
+  cScreen->donePaint ();
 }
 
 /* Grab changed nux regions and add damage rects for them */
@@ -1483,7 +1444,7 @@ void UnityScreen::handleEvent(XEvent* event)
       break;
     }
     case MapRequest:
-      UnityShowdesktopHandler::inhibitLeaveShowdesktopMode (event->xmaprequest.window);
+      ShowdesktopHandler::InhibitLeaveShowdesktopMode (event->xmaprequest.window);
       break;
     case PropertyNotify:
       if (event->xproperty.window == GDK_ROOT_WINDOW())
@@ -1499,8 +1460,7 @@ void UnityScreen::handleEvent(XEvent* event)
           {
             UnityWindow *uw = UnityWindow::get (w);
 
-            if (uw->mShowdesktopHandler)
-              uw->mShowdesktopHandler->handleEvent(event);
+            uw->handleEvent(event);
           }
         }
       break;
@@ -1521,7 +1481,7 @@ void UnityScreen::handleEvent(XEvent* event)
       }
       break;
     case MapRequest:
-      UnityShowdesktopHandler::allowLeaveShowdesktopMode (event->xmaprequest.window);
+      ShowdesktopHandler::AllowLeaveShowdesktopMode (event->xmaprequest.window);
       break;
   }
 
@@ -1609,7 +1569,7 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
     int width = 970;
     int height =  680;
     int launcher_width = optionGetIconSize() + 18;
-    int panel_height = 24;
+    int panel_height = panel_style_.panel_height;
     int x = monitor_geo.x + launcher_width + (monitor_geo.width - launcher_width- width) / 2;
     int y = monitor_geo.y + panel_height + (monitor_geo.height - panel_height - height) / 2;
 
@@ -1685,6 +1645,7 @@ bool UnityScreen::showPanelFirstMenuKeyInitiate(CompAction* action,
    * keyboard and the Alt key is still pressed */
   action->setState(action->state() | CompAction::StateTermKey);
   panel_controller_->FirstMenuShow();
+
   return true;
 }
 
@@ -2232,11 +2193,13 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
   }
   else if (mShowdesktopHandler)
   {
-    mShowdesktopHandler->paintAttrib (wAttrib);
-    mask |= mShowdesktopHandler->getPaintMask ();
+    mShowdesktopHandler->PaintOpacity (wAttrib.opacity);
+    mask |= mShowdesktopHandler->GetPaintMask ();
   }
 
-  if (uScreen->panel_controller_->GetTrayXid () == window->id () && !uScreen->allowWindowPaint)
+  std::vector<Window> const& tray_xids = uScreen->panel_controller_->GetTrayXids();
+  if (std::find(tray_xids.begin(), tray_xids.end(), window->id()) != tray_xids.end() &&
+      !uScreen->allowWindowPaint)
   {
     if (!uScreen->painting_tray_)
     {
@@ -2315,7 +2278,8 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
 
   bool ret = gWindow->glDraw(matrix, attrib, region, mask);
 
-  if ((active_window == 0 || active_window == window->id()) && (window->type() == CompWindowTypeDesktopMask))
+  if ((active_window == 0 || active_window == window->id()) &&
+      (window->type() == CompWindowTypeDesktopMask))
   {
     uScreen->paintPanelShadow(matrix);
   }
@@ -2454,7 +2418,8 @@ void UnityWindow::windowNotify(CompWindowNotify n)
   }
   else if (mShowdesktopHandler)
   {
-    mShowdesktopHandler->windowNotify (n);
+    if (n == CompWindowNotifyFocusChange)
+      mShowdesktopHandler->WindowFocusChangeNotify ();
   }
 
   // We do this after the notify to ensure input focus has actually been moved.
@@ -2493,7 +2458,7 @@ void UnityWindow::updateFrameRegion(CompRegion &region)
   if (mMinimizeHandler)
     mMinimizeHandler->updateFrameRegion (region);
   else if (mShowdesktopHandler)
-    mShowdesktopHandler->updateFrameRegion (region);
+    mShowdesktopHandler->UpdateFrameRegion (region);
   else
     window->updateFrameRegion (region);
 }
@@ -3033,7 +2998,7 @@ UnityWindow::~UnityWindow()
       window->minimize ();
   }
 
-  UnityShowdesktopHandler::animating_windows.remove (window);
+  ShowdesktopHandler::animating_windows.remove (static_cast <ShowdesktopHandlerWindowInterface *> (this));
 
   if (mShowdesktopHandler)
     delete mShowdesktopHandler;

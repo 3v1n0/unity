@@ -42,11 +42,11 @@ public:
   void AddIndicator(indicator::Indicator::Ptr const& indicator);
   void RemoveIndicator(indicator::Indicator::Ptr const& indicator);
 
-  typedef enum {
+  enum IndicatorEntryPosition {
     AUTO = -1,
     START = nux::NUX_LAYOUT_BEGIN,
     END = nux::NUX_LAYOUT_END,
-  } IndicatorEntryPosition;
+  };
 
   typedef PanelIndicatorEntryView::IndicatorEntryType IndicatorEntryType;
 
@@ -56,37 +56,46 @@ public:
                                     IndicatorEntryType type = IndicatorEntryType::INDICATOR);
   void RemoveEntry(std::string const& entry_id);
 
-  PanelIndicatorEntryView* ActivateEntryAt(int x, int y);
-  PanelIndicatorEntryView* ActivateEntry(std::string const& entry_id);
+  PanelIndicatorEntryView* ActivateEntryAt(int x, int y, int button = 1);
+  PanelIndicatorEntryView* ActivateEntry(std::string const& entry_id, int button = 1);
   bool ActivateIfSensitive();
+
+  virtual void OverlayShown();
+  virtual void OverlayHidden();
+
+  void SetOpacity(double opacity);
+  double GetOpacity();
+
+  void SetMaximumEntriesWidth(int max_width);
   void GetGeometryForSync(indicator::EntryLocationMap& locations);
+
+  virtual void QueueDraw();
+
+  sigc::signal<void, PanelIndicatorEntryView*> on_indicator_updated;
+
+protected:
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
+
+  typedef std::vector<indicator::Indicator::Ptr> Indicators;
+  Indicators GetIndicators();
 
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void QueueDraw();
 
   virtual void OnEntryAdded(indicator::Entry::Ptr const& entry);
   virtual void OnEntryRefreshed(PanelIndicatorEntryView* view);
   virtual void OnEntryRemoved(std::string const& entry_id);
 
-  void DashShown();
-  void DashHidden();
+  virtual void AddEntryView(PanelIndicatorEntryView* view,
+                            IndicatorEntryPosition pos = AUTO);
+  virtual void RemoveEntryView(PanelIndicatorEntryView* view);
 
-  void SetOpacity(double opacity);
-  double GetOpacity();
-
-  sigc::signal<void, PanelIndicatorEntryView*> on_indicator_updated;
-
-protected:
   nux::HLayout* layout_;
   typedef std::map<std::string, PanelIndicatorEntryView*> Entries;
   Entries entries_;
 
-  std::string GetName() const;
-  void        AddProperties(GVariantBuilder* builder);
-
 private:
-  typedef std::vector<indicator::Indicator::Ptr> Indicators;
   Indicators indicators_;
   double opacity_;
 

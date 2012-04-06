@@ -276,16 +276,13 @@ nux::Color BGHash::MatchColor (const nux::Color base_color)
     }
 
     nux::color::HueSaturationValue hsv_color (chosen_color);
-
-    hsv_color.saturation = std::min(base_hsv.saturation, hsv_color.saturation) * 1.3f;
+    hsv_color.saturation = std::min(base_hsv.saturation, hsv_color.saturation);
+    hsv_color.saturation *= (2.0f - hsv_color.saturation);
     hsv_color.value = std::min(std::min(base_hsv.value, hsv_color.value), 0.26f);
-    chosen_color = nux::Color (nux::color::RedGreenBlue(hsv_color));
-    
-    // Reduce alpha on really dark average colors
-    chosen_color.alpha = 0.72f - 2 * (0.26f - hsv_color.value);
-  }
 
-  // apply design to the colour
+    chosen_color = nux::Color (nux::color::RedGreenBlue(hsv_color));
+    chosen_color.alpha = 0.72f;
+  }
 
   LOG_DEBUG(logger) << "eventually chose "
                     << chosen_color.red << ", "
@@ -298,4 +295,5 @@ nux::Color BGHash::CurrentColor ()
 {
   return _current_color;
 }
+
 }
