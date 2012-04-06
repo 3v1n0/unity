@@ -1156,6 +1156,8 @@ void UnityWindow::DoDeleteHandler ()
 {
   delete mShowdesktopHandler;
   mShowdesktopHandler = NULL;
+
+  window->updateFrameRegion ();
 }
 
 compiz::WindowInputRemoverInterface::Ptr
