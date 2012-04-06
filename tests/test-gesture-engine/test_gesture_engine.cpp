@@ -36,6 +36,39 @@ class GestureEngineTest : public ::testing::Test {
     GenerateWindows();
   }
 
+  void PerformPinch(GestureEngine &gesture_engine, float peak_radius) {
+    CompWindowMock *middle_window = screen_mock->_client_list_stacking[1];
+
+    GeisAdapterMock::GeisTouchData touch_data;
+    touch_data.id = 1;
+    touch_data.touches = 3;
+    touch_data.window = 123;
+    touch_data.focus_x = 100; /* hits the middle window */
+    touch_data.focus_y = 100;
+    gesture_engine.OnTouchStart(&touch_data);
+
+    GeisAdapterMock::GeisPinchData pinch_data;
+    pinch_data.id = 1;
+    pinch_data.touches = 3;
+    pinch_data.window = 123;
+    pinch_data.focus_x = 100; /* hits the middle window */
+    pinch_data.focus_y = 100;
+    pinch_data.radius = 1.0;
+    gesture_engine.OnPinchStart(&pinch_data);
+
+    touch_data.focus_x += 10;
+    touch_data.focus_y += 20;
+    gesture_engine.OnTouchUpdate(&touch_data);
+
+    pinch_data.focus_x += 10;
+    pinch_data.focus_y += 20;
+    pinch_data.radius = peak_radius;
+    gesture_engine.OnPinchUpdate(&pinch_data);
+
+    gesture_engine.OnTouchFinish(&touch_data);
+    gesture_engine.OnPinchFinish(&pinch_data);
+  }
+
  private:
   void GenerateWindows() {
     /* remove windows from previous test */
@@ -153,6 +186,38 @@ TEST_F(GestureEngineTest, ThreeFingersDragDoesntMoveStaticWindow)
   gestureEngine.OnDragUpdate(&drag_data);
 
   ASSERT_FALSE(middle_window->_moved);
+}
+
+TEST_F(GestureEngineTest, ThreeFingersPinchMaximizesWindow)
+{
+  GestureEngine gesture_engine(screen_mock);
+  CompWindowMock *middle_window = screen_mock->_client_list_stacking[1];
+
+  PerformPinch(gesture_engine, 2.0);
+
+  ASSERT_EQ(1, middle_window->_maximize_count);
+  ASSERT_EQ(MAXIMIZE_STATE, middle_window->_maximize_state);
+}
+
+TEST_F(GestureEngineTest, ThreeFingersPinchRestoresWindow)
+{
+  GestureEngine gesture_engine(screen_mock);
+  CompWindowMock *middle_window = screen_mock->_client_list_stacking[1];
+
+  PerformPinch(gesture_engine, 0.3);
+
+  ASSERT_EQ(1, middle_window->_maximize_count);
+  ASSERT_EQ(0, middle_window->_maximize_state);
+}
+
+TEST_F(GestureEngineTest, MinimalThreeFingersPinchDoesNothing)
+{
+  GestureEngine gesture_engine(screen_mock);
+  CompWindowMock *middle_window = screen_mock->_client_list_stacking[1];
+
+  PerformPinch(gesture_engine, 1.1);
+
+  ASSERT_EQ(0, middle_window->_maximize_count);
 }
 
 int main(int argc, char** argv)
