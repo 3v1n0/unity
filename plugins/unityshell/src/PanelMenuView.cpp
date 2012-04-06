@@ -1546,7 +1546,7 @@ void PanelMenuView::AddProperties(GVariantBuilder* builder)
   .add("fadeout_duration", _menus_fadeout)
   .add("discovery_duration", _menus_discovery)
   .add("discovery_fadein_duration", _menus_discovery_fadein)
-  .add("discovery_fadein_duration", _menus_discovery_fadeout);
+  .add("discovery_fadeout_duration", _menus_discovery_fadeout);
 }
 
 void PanelMenuView::OnSwitcherShown(GVariant* data)
