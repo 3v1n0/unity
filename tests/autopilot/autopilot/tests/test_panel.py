@@ -578,6 +578,22 @@ class PanelWindowButtonsTests(PanelTestsBase):
         sleep(self.panel.menus.fadein_duration / 1000.0)
         self.assertTrue(self.panel.window_buttons_shown)
 
+    def test_window_buttons_show_when_holding_show_menu_key(self):
+        self.open_new_application_window("Text Editor", maximized=True)
+        sleep(self.panel.menus.fadein_duration / 1000.0)
+        sleep(self.panel.menus.discovery_duration)
+        sleep(self.panel.menus.fadeout_duration / 1000.0)
+
+        self.keybinding_hold("panel/show_menus")
+        self.addCleanup(self.keybinding_release, "panel/show_menus")
+        sleep(1)
+        self.assertTrue(self.panel.window_buttons_shown)
+
+        self.keybinding_release("panel/show_menus")
+        sleep(self.panel.menus.fadeout_duration / 1000.0)
+
+        self.assertFalse(self.panel.window_buttons_shown)
+
 
 class PanelHoveringTests(PanelTestsBase):
     """Tests with the mouse pointer hovering the panel area"""
@@ -643,6 +659,20 @@ class PanelHoveringTests(PanelTestsBase):
         self.assertFalse(self.panel.window_buttons_shown)
         self.assertFalse(self.panel.menus_shown)
 
+    def test_hovering_indicators_open_menus(self):
+        """This test checks that opening an indicator entry, and then
+        hovering on all the others, opens them"""
+        self.open_new_application_window("Text Editor")
+        entries = self.panel.get_indicator_entries(include_hidden_menus=True)
+
+        self.assertThat(len(entries), GreaterThan(0))
+        self.mouse_open_indicator(entries[0])
+
+        for entry in entries:
+            entry.mouse_move_to()
+            sleep(.25)
+            self.assertTrue(entry.active)
+            self.assertThat(entry.menu_y, NotEquals(0))
 
 class PanelMenuTests(PanelTestsBase):
 
@@ -765,6 +795,28 @@ class PanelMenuTests(PanelTestsBase):
 
         self.assertFalse(self.panel.menus_shown)
 
+    def test_menus_show_after_closing_an_entry(self):
+        """This test checks that opening a menu entry, and then
+        hovering on all the others, opens them, plus we check that
+        the menus are still drawn when closed"""
+        self.open_new_application_window("Calculator")
+        entries = self.panel.menus.get_entries()
+
+        self.assertThat(len(entries), GreaterThan(0))
+        self.mouse_open_indicator(entries[0])
+
+        for entry in entries:
+            entry.mouse_move_to()
+            sleep(.25)
+            self.assertTrue(entry.active)
+            self.assertThat(entry.menu_y, NotEquals(0))
+            last_entry = entry
+
+        last_entry.mouse_click()
+        sleep(.25)
+        self.assertFalse(last_entry.active)
+        self.assertThat(last_entry.menu_y, Equals(0))
+
     def test_menus_show_when_indicator_active_and_mouse_over_panel(self):
         """Tests that when an indicator is opened, and the mouse goes over the
         panel view, then the menus are revealed
@@ -782,9 +834,27 @@ class PanelMenuTests(PanelTestsBase):
         sleep(self.panel.menus.fadein_duration / 1000.0)
         self.assertTrue(self.panel.menus_shown)
 
+    def test_menus_show_when_holding_show_menu_key(self):
+        self.open_new_application_window("Calculator")
+        sleep(self.panel.menus.fadein_duration / 1000.0)
+        sleep(self.panel.menus.discovery_duration)
+        sleep(self.panel.menus.fadeout_duration / 1000.0)
+
+        self.keybinding_hold("panel/show_menus")
+        self.addCleanup(self.keybinding_release, "panel/show_menus")
+        sleep(1)
+        self.assertTrue(self.panel.menus_shown)
+
+        self.keybinding_release("panel/show_menus")
+        sleep(self.panel.menus.fadeout_duration / 1000.0)
+
+        self.assertFalse(self.panel.menus_shown)
+
 
 class PanelIndicatorEntriesTests(PanelTestsBase):
     """Tests for the indicator entries, including both menu and indicators"""
+
+    scenarios = _make_monitor_scenarios()
 
     def test_menu_opens_on_click(self):
         """Tests that clicking on a menu entry, opens a menu"""
@@ -830,12 +900,84 @@ class PanelIndicatorEntriesTests(PanelTestsBase):
         self.assertThat(menu_entry.menu_x, Equals(0))
         self.assertThat(menu_entry.menu_y, Equals(0))
 
+class PanelKeyNavigationTests(PanelTestsBase):
+
+    scenarios = _make_monitor_scenarios()
+
+    def test_panel_first_menu_show_works(self):
+        """Tests that pressing the open-menus keybinding, the first indicator
+        is actually opened
+        """
+        self.open_new_application_window("Calculator")
+        self.keybinding("panel/open_first_menu")
+        self.addCleanup(self.keyboard.press_and_release, "Escape")
+        sleep(.5)
+
+        open_indicator = self.panel.get_active_indicator()
+        expected_indicator = self.panel.get_indicator_entries(include_hidden_menus=True)[0]
+        self.assertThat(open_indicator, NotEquals(None))
+        self.assertThat(open_indicator.entry_id, Equals(expected_indicator.entry_id))
+
+        self.keybinding("panel/open_first_menu")
+        sleep(.5)
+        self.assertThat(self.panel.get_active_indicator(), Equals(None))
+
+    def test_panel_menu_accelerators_work(self):
+        self.open_new_application_window("Calculator")
+        sleep(.5)
+        self.keyboard.press_and_release("Alt+c")
+        self.addCleanup(self.keyboard.press_and_release, "Escape")
+        sleep(.5)
+
+        open_indicator = self.panel.get_active_indicator()
+        self.assertThat(open_indicator, NotEquals(None))
+        self.assertThat(open_indicator.label, Equals("_Calculator"))
+
+    def test_panel_indicators_key_navigation_next_works(self):
+        self.open_new_application_window("Calculator")
+        available_indicators = self.panel.get_indicator_entries(include_hidden_menus=True)
+
+        self.keybinding("panel/open_first_menu")
+        self.addCleanup(self.keyboard.press_and_release, "Escape")
+        sleep(.5)
+
+        open_indicator = self.panel.get_active_indicator()
+        expected_indicator = available_indicators[0]
+        self.assertThat(open_indicator.entry_id, Equals(expected_indicator.entry_id))
+        sleep(.5)
+
+        self.keybinding("panel/next_indicator")
+        open_indicator = self.panel.get_active_indicator()
+        expected_indicator = available_indicators[1]
+        sleep(.5)
+        self.assertThat(open_indicator.entry_id, Equals(expected_indicator.entry_id))
+
+    def test_panel_indicators_key_navigation_prev_works(self):
+        self.open_new_application_window("Calculator")
+        available_indicators = self.panel.get_indicator_entries(include_hidden_menus=True)
+
+        self.keybinding("panel/open_first_menu")
+        self.addCleanup(self.keyboard.press_and_release, "Escape")
+        sleep(.5)
+
+        open_indicator = self.panel.get_active_indicator()
+        expected_indicator = available_indicators[0]
+        self.assertThat(open_indicator.entry_id, Equals(expected_indicator.entry_id))
+        sleep(.5)
+
+        self.keybinding("panel/prev_indicator")
+        open_indicator = self.panel.get_active_indicator()
+        expected_indicator = available_indicators[-1]
+        sleep(.5)
+        self.assertThat(open_indicator.entry_id, Equals(expected_indicator.entry_id))
+
+
 
 class PanelCrossMonitorsTests(PanelTestsBase):
     """Multimonitor only tests"""
 
     def setUp(self):
-        super(PanelWindowButtonsTests, self).setUp()
+        super(PanelCrossMonitorsTests, self).setUp()
         if self.screen_geo.get_num_monitors() < 2:
             self.skipTest("This test requires a multimonitor setup")
 
@@ -951,3 +1093,32 @@ class PanelCrossMonitorsTests(PanelTestsBase):
                 panel.window_buttons.unmaximize.mouse_click()
                 sleep(.25)
                 self.assertTrue(text_win.is_maximized)
+
+    def test_hovering_indicators_on_multiple_monitors(self):
+        """This test checks that opening an indicator entry, and then
+        hovering on all the others, opens them"""
+        self.open_new_application_window("Text Editor")
+
+        for monitor in range(0, self.screen_geo.get_num_monitors()):
+            panel = self.panels.get_panel_for_monitor(monitor)
+
+            entries = panel.get_indicator_entries(include_hidden_menus=True)
+            self.assertThat(len(entries), GreaterThan(0))
+
+            if not self.panels.get_active_indicator():
+                indicator = panel.indicators.get_indicator_by_name_hint("indicator-session-devices")
+                self.mouse_open_indicator(entries[0])
+
+            for entry in entries:
+                entry.mouse_move_to()
+                sleep(.5)
+
+                if monitor != self.panel_monitor and entry.type == "menu":
+                    self.assertFalse(entry.active)
+                    self.assertFalse(entry.visible)
+                    self.assertThat(entry.menu_y, Equals(0))
+                else:
+                    self.assertTrue(entry.visible)
+                    self.assertTrue(entry.active)
+                    self.assertThat(entry.menu_y, NotEquals(0))
+        

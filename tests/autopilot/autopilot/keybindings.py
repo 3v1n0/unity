@@ -56,6 +56,11 @@ _keys = {
     "launcher/switcher/prev": "Shift+Tab",
     "launcher/switcher/down": "Down",
     "launcher/switcher/up": "Up",
+    # Panel
+    "panel/show_menus": "Alt",
+    "panel/open_first_menu": ('unityshell', 'panel_first_menu'),
+    "panel/next_indicator": "Right",
+    "panel/prev_indicator": "Left",
     # Dash:
     "dash/reveal": "Super",
     "dash/lens/next": "Ctrl+Tab",

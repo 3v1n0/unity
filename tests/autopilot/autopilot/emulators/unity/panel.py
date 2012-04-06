@@ -32,6 +32,14 @@ class PanelController(UnityIntrospectionObject):
         assert(len(panels) == 1)
         return panels[0]
 
+    def get_active_indicator(self):
+        for panel in self.get_panels:
+            active = panel.get_active_indicator()
+            if active:
+                return active
+
+        return None
+
     @property
     def get_panels(self):
         """Return the available panels, or None."""
@@ -122,17 +130,26 @@ class UnityPanel(UnityIntrospectionObject, KeybindingsHelper):
         logger.debug("Moving mouse to center of the indicators area.")
         self._mouse.move(target_x, target_y)
 
-    def get_indicator_entries(self, visible_only=True):
+    def get_indicator_entries(self, visible_only=True, include_hidden_menus=False):
         """Returns a list of entries for this panel including both menus and indicators"""
         entries = []
-        if self.menus_shown:
+        if include_hidden_menus or self.menus_shown:
             entries = self.menus.get_entries()
         entries += self.indicators.get_ordered_entries(visible_only)
         return entries
 
+    def get_active_indicator(self):
+        """Returns the indicator entry that is currently active"""
+        entries = self.get_indicator_entries(False, True)
+        entries = filter(lambda e: e.active == True, entries)
+        assert(len(entries) <= 1)
+        return entries[0] if entries else None
+
     def get_indicator_entry(self, entry_id):
         """Returns the indicator entry for the given ID or None"""
-        entries = filter(lambda e: e.entry_id == entry_id, self.get_indicator_entries())
+        entries = self.get_indicator_entries(False, True)
+        entries = filter(lambda e: e.entry_id == entry_id, entries)
+        assert(len(entries) <= 1)
         return entries[0] if entries else None
 
     @property
