@@ -215,7 +215,7 @@ void PanelView::AddProperties(GVariantBuilder* builder)
   .add("backend", "remote")
   .add("monitor", _monitor)
   .add("active", IsActive())
-  .add(GetGeometry());
+  .add(GetAbsoluteGeometry());
 }
 
 void

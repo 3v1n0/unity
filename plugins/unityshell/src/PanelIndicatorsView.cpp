@@ -402,7 +402,7 @@ void
 PanelIndicatorsView::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
-  .add(GetGeometry())
+  .add(GetAbsoluteGeometry())
   .add("entries", entries_.size())
   .add("opacity", opacity_);
 }

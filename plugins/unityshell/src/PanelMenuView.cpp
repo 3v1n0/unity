@@ -1536,11 +1536,17 @@ void PanelMenuView::AddProperties(GVariantBuilder* builder)
   .add("grabbed", _is_grabbed)
   .add("active_win_maximized", _is_maximized)
   .add("panel_title", _panel_title)
+  .add("desktop_active", (_panel_title == DESKTOP_NAME))
   .add("monitor", _monitor)
   .add("active_window", _active_xid)
   .add("draw_menus", DrawMenus())
   .add("draw_window_buttons", DrawWindowButtons())
-  .add("controls_active_window", _we_control_active);
+  .add("controls_active_window", _we_control_active)
+  .add("fadein_duration", _menus_fadein)
+  .add("fadeout_duration", _menus_fadeout)
+  .add("discovery_duration", _menus_discovery)
+  .add("discovery_fadein_duration", _menus_discovery_fadein)
+  .add("discovery_fadeout_duration", _menus_discovery_fadeout);
 }
 
 void PanelMenuView::OnSwitcherShown(GVariant* data)

@@ -384,7 +384,8 @@ std::string Controller::GetName() const
 
 void Controller::AddProperties(GVariantBuilder* builder)
 {
-  g_variant_builder_add (builder, "{sv}", "visible", g_variant_new_boolean (visible_) );
+  variant::BuilderWrapper(builder).add("visible", visible_)
+                                  .add("monitor", monitor_);
 }
 
 

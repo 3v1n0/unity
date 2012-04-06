@@ -731,8 +731,16 @@ void DashView::AddProperties(GVariantBuilder* builder)
   if (active_lens_view_)
     num_rows += active_lens_view_->GetNumRows();
 
+  std::string form_factor("unknown");
+
+  if (Settings::Instance().GetFormFactor() == FormFactor::NETBOOK)
+    form_factor = "netbook";
+  else if (Settings::Instance().GetFormFactor() == FormFactor::DESKTOP)
+    form_factor = "desktop";
+
   unity::variant::BuilderWrapper wrapper(builder);
-  wrapper.add("num-rows", num_rows);
+  wrapper.add("num_rows", num_rows);
+  wrapper.add("form_factor", form_factor);
 }
 
 nux::Area* DashView::KeyNavIteration(nux::KeyNavDirection direction)
