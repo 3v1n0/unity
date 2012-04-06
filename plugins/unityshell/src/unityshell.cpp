@@ -778,7 +778,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 
       nux::TexCoordXForm texxform;
       int panel_height = panel_style_.panel_height;
-      nux::GetGraphicsDisplay()->GetGraphicsEngine()->QRP_1Tex(0, 0, screen->width (), panel_height, panel_texture_, texxform, nux::color::White);
+      nux::GetGraphicsDisplay()->GetGraphicsEngine()->QRP_GLSL_1Tex(0, 0, screen->width (), panel_height, panel_texture_, texxform, nux::color::White);
     }
   }
 
