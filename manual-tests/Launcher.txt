@@ -448,6 +448,7 @@ Expected Result:
 
 Test number overlays while shortcut help is active
 ------------------------------
+-Setup:
 have a launcher with a few icons in it
 
 Actions:
