@@ -39,6 +39,7 @@ class PanelTestsBase(AutopilotTestCase):
         super(PanelTestsBase, self).setUp()
         self.panel = self.panels.get_panel_for_monitor(self.panel_monitor)
         self.panel.move_mouse_below_the_panel()
+        self.addCleanup(self.panel.move_mouse_below_the_panel)
 
     def open_new_application_window(self, app_name, maximized=False, move_to_monitor=True):
         """Opens a new instance of the requested application, ensuring
@@ -681,6 +682,7 @@ class PanelMenuTests(PanelTestsBase):
     def test_menus_are_added_on_new_application(self):
         """Tests that menus are added when a new application is opened"""
         self.open_new_application_window("Calculator")
+        sleep(.5)
         menu_entries = self.panel.menus.get_entries()
         self.assertThat(len(menu_entries), Equals(3))
 
@@ -697,6 +699,7 @@ class PanelMenuTests(PanelTestsBase):
         os.putenv("UBUNTU_MENUPROXY", "")
         self.addCleanup(os.putenv, "UBUNTU_MENUPROXY", old_env)
         calc_win = self.open_new_application_window("Calculator")
+        sleep(1)
 
         self.assertThat(len(self.panel.menus.get_entries()), Equals(0))
 
@@ -862,6 +865,7 @@ class PanelIndicatorEntriesTests(PanelTestsBase):
     def test_menu_opens_on_click(self):
         """Tests that clicking on a menu entry, opens a menu"""
         self.open_new_application_window("Calculator")
+        sleep(.5)
 
         menu_entry = self.panel.menus.get_entries()[0]
         self.mouse_open_indicator(menu_entry)
@@ -913,10 +917,10 @@ class PanelKeyNavigationTests(PanelTestsBase):
         is actually opened
         """
         self.open_new_application_window("Calculator")
-        sleep(.5)
+        sleep(1)
         self.keybinding("panel/open_first_menu")
         self.addCleanup(self.keyboard.press_and_release, "Escape")
-        sleep(.5)
+        sleep(1)
 
         open_indicator = self.panel.get_active_indicator()
         expected_indicator = self.panel.get_indicator_entries(include_hidden_menus=True)[0]
@@ -929,7 +933,7 @@ class PanelKeyNavigationTests(PanelTestsBase):
 
     def test_panel_menu_accelerators_work(self):
         self.open_new_application_window("Calculator")
-        sleep(.5)
+        sleep(1)
         self.keyboard.press_and_release("Alt+c")
         self.addCleanup(self.keyboard.press_and_release, "Escape")
         sleep(.5)
@@ -941,10 +945,11 @@ class PanelKeyNavigationTests(PanelTestsBase):
     def test_panel_indicators_key_navigation_next_works(self):
         self.open_new_application_window("Calculator")
         available_indicators = self.panel.get_indicator_entries(include_hidden_menus=True)
+        sleep(1)
 
         self.keybinding("panel/open_first_menu")
         self.addCleanup(self.keyboard.press_and_release, "Escape")
-        sleep(.5)
+        sleep(1)
 
         open_indicator = self.panel.get_active_indicator()
         expected_indicator = available_indicators[0]
@@ -960,10 +965,11 @@ class PanelKeyNavigationTests(PanelTestsBase):
     def test_panel_indicators_key_navigation_prev_works(self):
         self.open_new_application_window("Calculator")
         available_indicators = self.panel.get_indicator_entries(include_hidden_menus=True)
+        sleep(1)
 
         self.keybinding("panel/open_first_menu")
         self.addCleanup(self.keyboard.press_and_release, "Escape")
-        sleep(.5)
+        sleep(1)
 
         open_indicator = self.panel.get_active_indicator()
         expected_indicator = available_indicators[0]
@@ -979,10 +985,11 @@ class PanelKeyNavigationTests(PanelTestsBase):
     def test_mouse_does_not_break_key_navigation(self):
         self.open_new_application_window("Calculator")
         available_indicators = self.panel.get_indicator_entries(include_hidden_menus=True)
+        sleep(1)
 
         self.keybinding("panel/open_first_menu")
         self.addCleanup(self.keyboard.press_and_release, "Escape")
-        sleep(.5)
+        sleep(1)
 
         available_indicators[2].mouse_move_to()
         self.addCleanup(self.panel.move_mouse_below_the_panel)
