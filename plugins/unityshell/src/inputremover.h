@@ -22,6 +22,8 @@
 #ifndef _COMPIZ_INPUTREMOVER_H
 #define _COMPIZ_INPUTREMOVER_H
 
+#include <memory>
+
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/extensions/shape.h>
@@ -29,18 +31,38 @@
 // Will be merged back into compiz
 namespace compiz {
 
-class WindowInputRemover
+class WindowInputRemoverInterface
+{
+  public:
+
+    typedef std::shared_ptr <WindowInputRemoverInterface> Ptr;
+
+    bool save () { return saveInput (); }
+    bool remove () { return removeInput (); }
+    bool restore () { return restoreInput (); }
+
+    virtual ~WindowInputRemoverInterface ();
+
+  protected:
+
+    virtual bool saveInput () = 0;
+    virtual bool removeInput () = 0;
+    virtual bool restoreInput () = 0;
+};
+
+class WindowInputRemover :
+  public WindowInputRemoverInterface
 {
 public:
 
   WindowInputRemover (Display *, Window xid);
   ~WindowInputRemover ();
 
-  bool save ();
-  bool remove ();
-  bool restore ();
-
 private:
+
+  bool saveInput ();
+  bool removeInput ();
+  bool restoreInput ();
 
   void sendShapeNotify ();
 

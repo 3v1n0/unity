@@ -66,6 +66,7 @@ PluginAdapter::PluginAdapter(CompScreen* screen) :
   _last_focused_window(nullptr)
 {
   _spread_state = false;
+  _spread_windows_state = false;
   _expo_state = false;
   _vp_switch_started = false;
 
@@ -105,6 +106,7 @@ PluginAdapter::OnScreenUngrabbed()
   if (_spread_state && !screen->grabExist("scale"))
   {
     _spread_state = false;
+    _spread_windows_state = false;
     terminate_spread.emit();
   }
 
@@ -296,7 +298,7 @@ MultiActionList::TerminateAll(CompOption::Vector& extraArgs)
 unsigned long long 
 PluginAdapter::GetWindowActiveNumber (guint32 xid)
 {
-  Window win = (Window)xid;
+  Window win = xid;
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
@@ -370,6 +372,12 @@ PluginAdapter::IsScaleActive()
 }
 
 bool
+PluginAdapter::IsScaleActiveForGroup()
+{
+  return _spread_windows_state && m_Screen->grabExist("scale");
+}
+
+bool
 PluginAdapter::IsExpoActive()
 {
   return m_Screen->grabExist("expo");
@@ -387,7 +395,7 @@ PluginAdapter::InitiateExpo()
 bool
 PluginAdapter::IsWindowMaximized(guint xid)
 {
-  Window win = (Window)xid;
+  Window win = xid;
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
@@ -442,7 +450,7 @@ PluginAdapter::IsWindowDecorated(guint32 xid)
 bool
 PluginAdapter::IsWindowOnCurrentDesktop(guint32 xid)
 {
-  Window win = (Window)xid;
+  Window win = xid;
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
@@ -458,13 +466,18 @@ PluginAdapter::IsWindowOnCurrentDesktop(guint32 xid)
 bool
 PluginAdapter::IsWindowObscured(guint32 xid)
 {
-  Window win = (Window)xid;
+  Window win = xid;
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
+
   if (window)
   {
+    if (window->inShowDesktopMode())
+      return true;
+
     CompPoint window_vp = window->defaultViewport();
+    nux::Geometry const& win_geo = GetWindowGeometry(window->id());
     // Check if any windows above this one are blocking it
     for (CompWindow* sibling = window->next; sibling != NULL; sibling = sibling->next)
     {
@@ -472,8 +485,11 @@ PluginAdapter::IsWindowObscured(guint32 xid)
           && !sibling->minimized()
           && sibling->isMapped()
           && sibling->isViewable()
-          && (sibling->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE)
+          && (sibling->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE
+          && !GetWindowGeometry(sibling->id()).Intersect(win_geo).IsNull())
+      {
         return true;
+      }
     }
   }
 
@@ -483,7 +499,7 @@ PluginAdapter::IsWindowObscured(guint32 xid)
 bool
 PluginAdapter::IsWindowMapped(guint32 xid)
 {
-  Window win = (Window) xid;
+  Window win = xid;
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
@@ -495,20 +511,33 @@ PluginAdapter::IsWindowMapped(guint32 xid)
 bool
 PluginAdapter::IsWindowVisible(guint32 xid)
 {
-  Window win = (Window) xid;
+  Window win = xid;
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
   if (window)
-    return !(window->state () & CompWindowStateHiddenMask);
+    return !(window->state() & CompWindowStateHiddenMask) && !window->inShowDesktopMode();
 
-  return true;
+  return false;
+}
+
+bool
+PluginAdapter::IsWindowMinimizable(guint32 xid)
+{
+  Window win = xid;
+  CompWindow* window;
+
+  window = m_Screen->findWindow(win);
+  if (window)
+    return (window->actions() & CompWindowActionMinimizeMask);
+
+  return false;
 }
 
 void
 PluginAdapter::Restore(guint32 xid)
 {
-  Window win = (Window)xid;
+  Window win = xid;
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
@@ -517,20 +546,37 @@ PluginAdapter::Restore(guint32 xid)
 }
 
 void
-PluginAdapter::Minimize(guint32 xid)
+PluginAdapter::RestoreAt(guint32 xid, int x, int y)
 {
-  Window win = (Window)xid;
+  Window win = xid;
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
-  if (window)
+  if (window && (window->state() & MAXIMIZE_STATE))
+  {
+    nux::Geometry new_geo(GetWindowSavedGeometry(xid));
+    new_geo.x = x;
+    new_geo.y = y;
+    window->maximize(0);
+    MoveResizeWindow(xid, new_geo);
+  }
+}
+
+void
+PluginAdapter::Minimize(guint32 xid)
+{
+  Window win = xid;
+  CompWindow* window;
+
+  window = m_Screen->findWindow(win);
+  if (window && (window->actions() & CompWindowActionMinimizeMask))
     window->minimize();
 }
 
 void
 PluginAdapter::Close(guint32 xid)
 {
-  Window win = (Window)xid;
+  Window win = xid;
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
@@ -541,7 +587,7 @@ PluginAdapter::Close(guint32 xid)
 void
 PluginAdapter::Activate(guint32 xid)
 {
-  Window win = (Window)xid;
+  Window win = xid;
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
@@ -552,7 +598,7 @@ PluginAdapter::Activate(guint32 xid)
 void
 PluginAdapter::Raise(guint32 xid)
 {
-  Window win = (Window)xid;
+  Window win = xid;
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
@@ -563,7 +609,7 @@ PluginAdapter::Raise(guint32 xid)
 void
 PluginAdapter::Lower(guint32 xid)
 {
-  Window win = (Window)xid;
+  Window win = xid;
   CompWindow* window;
 
   window = m_Screen->findWindow(win);
@@ -677,9 +723,13 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
   }
 
   if (monitor > 0 && top_window_on_monitor)
+  {
     top_window_on_monitor->activate();
+  }
   else if (top_window)
+  {
     top_window->activate();
+  }
 }
 
 bool 
@@ -689,6 +739,7 @@ PluginAdapter::ScaleWindowGroup(std::vector<Window> windows, int state, bool for
   {
     std::string match = MatchStringForXids(&windows);
     InitiateScale(match, state);
+    _spread_windows_state = true;
     return true;
   }
   return false;
@@ -731,9 +782,9 @@ PluginAdapter::OnLeaveDesktop()
 }
 
 nux::Geometry
-PluginAdapter::GetWindowGeometry(guint32 xid)
+PluginAdapter::GetWindowGeometry(guint32 xid) const
 {
-  Window win = (Window)xid;
+  Window win = xid;
   CompWindow* window;
   nux::Geometry geo(0, 0, 1, 1);
 
@@ -748,8 +799,28 @@ PluginAdapter::GetWindowGeometry(guint32 xid)
   return geo;
 }
 
+nux::Geometry
+PluginAdapter::GetWindowSavedGeometry(guint32 xid) const
+{
+  Window win = xid;
+  nux::Geometry geo(0, 0, 1, 1);
+  CompWindow* window;
+
+  window = m_Screen->findWindow(win);
+  if (window)
+  {
+    XWindowChanges &wc = window->saveWc();
+    geo.x = wc.x;
+    geo.y = wc.y;
+    geo.width = wc.width;
+    geo.height = wc.height;
+  }
+
+  return geo;
+}
+
 nux::Geometry 
-PluginAdapter::GetScreenGeometry()
+PluginAdapter::GetScreenGeometry() const
 {
   nux::Geometry geo;
   
@@ -759,6 +830,33 @@ PluginAdapter::GetScreenGeometry()
   geo.height = m_Screen->height();
   
   return geo;  
+}
+
+nux::Geometry 
+PluginAdapter::GetWorkAreaGeometry(guint32 xid) const
+{
+  CompWindow* window = nullptr;
+  unsigned int output = 0;
+
+  if (xid != 0)
+  {
+    Window win = xid;
+
+    window = m_Screen->findWindow(win);
+    if (window)
+    {
+      output = window->outputDevice();
+    }
+  }
+
+  if (xid == 0 || !window)
+  {
+    output = m_Screen->currentOutputDev().id();
+  }
+
+  CompRect workarea = m_Screen->getWorkareaForOutput(output);
+
+  return nux::Geometry(workarea.x(), workarea.y(), workarea.width(), workarea.height());
 }
 
 bool
@@ -1066,6 +1164,42 @@ PluginAdapter::restoreInputFocus()
   }
 
   return false;
+}
+
+void
+PluginAdapter::MoveResizeWindow(guint32 xid, nux::Geometry geometry)
+{
+  int w, h;
+  CompWindow* window = m_Screen->findWindow(xid);
+
+  if (!window)
+    return;
+
+  if (window->constrainNewWindowSize(geometry.width, geometry.height, &w, &h))
+  {
+    CompRect workarea = m_Screen->getWorkareaForOutput(window->outputDevice());
+    int dx = geometry.x + w - workarea.right() + window->border().right;
+    int dy = geometry.y + h - workarea.bottom() + window->border().bottom;
+
+    if (dx > 0)
+      geometry.x -= dx;
+    if (dy > 0)
+      geometry.y -= dy;
+
+    geometry.SetWidth(w);
+    geometry.SetHeight(h);
+  }
+
+  XWindowChanges xwc;
+  xwc.x = geometry.x;
+  xwc.y = geometry.y;
+  xwc.width = geometry.width;
+  xwc.height = geometry.height;
+
+  if (window->mapNum())
+    window->sendSyncRequest();
+
+  window->configureXWindow(CWX | CWY | CWWidth | CWHeight, &xwc);
 }
 
 void

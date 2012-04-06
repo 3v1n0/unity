@@ -53,7 +53,6 @@ namespace
 nux::logging::Logger logger("unity.dash.results");
 
 const int FONT_SIZE = 10;
-
 }
 
 namespace dash
@@ -96,7 +95,7 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
                                 int x_offset, int y_offset)
 {
   TextureContainer* container = row.renderer<TextureContainer*>();
-  if (container == nullptr)
+  if (container == nullptr || container->icon == nullptr)
     return;
 
   dash::Style& style = dash::Style::Instance();
@@ -104,30 +103,29 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
 
   // set up our texture mode
   nux::TexCoordXForm texxform;
-
-  int icon_left_hand_side = geometry.x + (geometry.width - tile_icon_size) / 2;
-  int icon_top_side = geometry.y + padding;
-
+  
+  int icon_left_hand_side = geometry.x + (geometry.width - container->icon->GetWidth()) / 2;
+  int icon_top_side = geometry.y + padding + ((tile_icon_size - container->icon->GetHeight()) / 2);
 
   if (container->blurred_icon && state == ResultRendererState::RESULT_RENDERER_NORMAL)
   {
     GfxContext.QRP_1Tex(icon_left_hand_side - 5 - x_offset,
                         icon_top_side - 5 - y_offset,
-                        tile_icon_size + 10,
-                        tile_icon_size + 10,
+                        container->blurred_icon->GetWidth(),
+                        container->blurred_icon->GetHeight(),
                         container->blurred_icon->GetDeviceTexture(),
                         texxform,
                         nux::Color(0.15f, 0.15f, 0.15f, 0.15f));
   }
 
   // render highlight if its needed
-  if (state != ResultRendererState::RESULT_RENDERER_NORMAL)
+  if (container->prelight && state != ResultRendererState::RESULT_RENDERER_NORMAL)
   {
     GfxContext.QRP_1Tex(icon_left_hand_side - highlight_padding,
                         icon_top_side - highlight_padding,
-                        tile_icon_size + (highlight_padding * 2),
-                        tile_icon_size + (highlight_padding * 2),
-                        prelight_cache_->GetDeviceTexture(),
+                        container->prelight->GetWidth(),
+                        container->prelight->GetHeight(),
+                        container->prelight->GetDeviceTexture(),
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
   }
@@ -137,8 +135,8 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
   {
     GfxContext.QRP_1Tex(icon_left_hand_side,
                         icon_top_side,
-                        tile_icon_size,
-                        tile_icon_size,
+                        container->icon->GetWidth(),
+                        container->icon->GetHeight(),
                         container->icon->GetDeviceTexture(),
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
@@ -153,8 +151,6 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
                         container->text->GetDeviceTexture(),
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
-
-
   }
 }
 
@@ -244,7 +240,7 @@ void ResultRendererTile::LoadIcon(Result& row)
   std::string const& icon_hint = row.icon_hint;
 #define DEFAULT_GICON ". GThemedIcon text-x-preview"
   std::string icon_name;
-  if (neko)
+  if (G_UNLIKELY(neko))
   {
     int tmp1 = style.GetTileIconSize() + (rand() % 16) - 8;
     gsize tmp3;
@@ -291,6 +287,13 @@ nux::BaseTexture* ResultRendererTile::CreateTextureCallback(std::string const& t
   int pixbuf_width, pixbuf_height;
   pixbuf_width = gdk_pixbuf_get_width(pixbuf);
   pixbuf_height = gdk_pixbuf_get_height(pixbuf);
+  if (G_UNLIKELY(!pixbuf_height || !pixbuf_width))
+  {
+    LOG_ERROR(logger) << "Pixbuf: " << texid << " has a zero height/width: " 
+                      << width << "," << height;
+    pixbuf_width = (pixbuf_width) ? pixbuf_width : 1; // no zeros please
+    pixbuf_height = (pixbuf_height) ? pixbuf_height: 1; // no zeros please
+  }
 
   if (pixbuf_width == pixbuf_height)
   {
@@ -301,21 +304,40 @@ nux::BaseTexture* ResultRendererTile::CreateTextureCallback(std::string const& t
   {
     // slow path for non square icons that must be resized to fit in the square
     // texture
-    nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width, height);
+    
+    Style& style = Style::Instance();
+    float aspect = static_cast<float>(pixbuf_height) / pixbuf_width; // already sanitized width/height so can not be 0.0
+    if (aspect < 1.0f)
+    {
+      pixbuf_width = style.GetTileWidth() - (padding * 2);
+      pixbuf_width = (max_icon_width_ > 0) ? std::min(pixbuf_width, max_icon_width_) : pixbuf_width;
+      pixbuf_height = pixbuf_width * aspect;
+
+
+      if (pixbuf_height > height)
+      {
+        // scaled too big, scale down
+        pixbuf_height = height;
+        pixbuf_width = pixbuf_height / aspect;
+      }
+    }
+    else
+    {
+      pixbuf_height = height;
+      pixbuf_width = pixbuf_height / aspect;
+    }
+
+    nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, pixbuf_width, pixbuf_height);
     cairo_t* cr = cairo_graphics.GetInternalContext();
 
     cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
     cairo_paint(cr);
 
-    float scale;
-    if (pixbuf_width > pixbuf_height)
-      scale = pixbuf_height / static_cast<float>(pixbuf_width);
-    else
-      scale = pixbuf_width / static_cast<float>(pixbuf_height);
+    float scale = gdk_pixbuf_get_height(pixbuf) / float(pixbuf_height);
 
-    cairo_translate(cr,
-                    static_cast<int>((width - (pixbuf_width * scale)) * 0.5),
-                    static_cast<int>((height - (pixbuf_height * scale)) * 0.5));
+    //cairo_translate(cr,
+    //                static_cast<int>((width - (pixbuf_width * scale)) * 0.5),
+    //                static_cast<int>((height - (pixbuf_height * scale)) * 0.5));
 
     cairo_scale(cr, scale, scale);
 
@@ -386,8 +408,11 @@ void ResultRendererTile::IconLoaded(std::string const& texid,
     BaseTexturePtr texture_blurred(cache.FindTexture(blur_texid, style.GetTileIconSize(), style.GetTileIconSize(),
                                    sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateBlurredTextureCallback), pixbuf)));
 
+    BaseTexturePtr texture_prelight(cache.FindTexture("resultview_prelight", texture->GetWidth() + highlight_padding*2, texture->GetHeight() + highlight_padding*2,  sigc::mem_fun(this, &ResultRendererTile::DrawHighlight)));
+
     container->icon = texture;
     container->blurred_icon = texture_blurred;
+    container->prelight = texture_prelight; 
 
     NeedsRedraw.emit();
 

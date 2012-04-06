@@ -40,6 +40,7 @@ nux::logging::Logger logger("unity.dash.controller");
 Controller::Controller()
   : launcher_width(64)
   , use_primary(false)
+  , monitor_(0)
   , window_(0)
   , visible_(false)
   , need_show_(false)
@@ -126,7 +127,7 @@ void Controller::RegisterUBusInterests()
     g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, &overlay_identity, &can_maximise, &overlay_monitor);
 
     // hide if something else is coming up
-    if (g_strcmp0(overlay_identity, "dash"))
+    if (overlay_identity.Str() != "dash")
     {
       HideDash(true);
     }
@@ -272,7 +273,8 @@ void Controller::ShowDash()
 
   StartShowHideTimeline();
 
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, GetIdealMonitor());
+  monitor_ = GetIdealMonitor();
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, monitor_);
   ubus_manager_.SendMessage(UBUS_OVERLAY_SHOWN, info);
 }
 
@@ -298,7 +300,7 @@ void Controller::HideDash(bool restore)
 
   StartShowHideTimeline();
 
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, GetIdealMonitor());
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, monitor_);
   ubus_manager_.SendMessage(UBUS_OVERLAY_HIDDEN, info);
 }
 
@@ -382,7 +384,8 @@ std::string Controller::GetName() const
 
 void Controller::AddProperties(GVariantBuilder* builder)
 {
-  g_variant_builder_add (builder, "{sv}", "visible", g_variant_new_boolean (visible_) );
+  variant::BuilderWrapper(builder).add("visible", visible_)
+                                  .add("monitor", monitor_);
 }
 
 

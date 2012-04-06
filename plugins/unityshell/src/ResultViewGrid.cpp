@@ -620,8 +620,6 @@ ResultListBounds ResultViewGrid::GetVisableResults()
 
 void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  gPainter.PaintBackground(GfxContext, GetGeometry());
-
   int items_per_row = GetItemsPerRow();
   uint total_rows = (!expanded) ? 0 : (results_.size() / items_per_row) + 1;
 

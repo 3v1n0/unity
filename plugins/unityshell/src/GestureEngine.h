@@ -23,7 +23,6 @@
 #include <core/core.h>
 
 #include <sigc++/sigc++.h>
-#include <Nux/Nux.h>
 #include "GeisAdapter.h"
 
 class GestureEngine : public sigc::trackable
@@ -52,7 +51,7 @@ public:
 
   void EndDrag();
 private:
-  CompWindow* FindCompWindow(Window window);
+  CompWindow* FindCompWindowAtPos(float pos_x, float pos_y);
 
   CompScreen* _screen;
   CompWindow* _drag_window;
@@ -65,6 +64,5 @@ private:
   int _pinch_id;
   int _touch_id;
 
-  float _pinch_start_radius;
   Cursor _fleur_cursor;
 };

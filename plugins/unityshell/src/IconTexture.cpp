@@ -66,7 +66,7 @@ IconTexture::IconTexture(std::string const& icon_name, unsigned int size, bool d
     _loading(false),
     _opacity(1.0f)
 {
-  if (!defer_icon_loading)
+  if (!icon_name.empty () && !defer_icon_loading)
     LoadIcon();
 }
 
