@@ -1554,8 +1554,8 @@ void PanelMenuView::OnSwitcherShown(GVariant* data)
   if (!data)
     return;
 
-  bool switcher_shown;
-  int monitor;
+  gboolean switcher_shown;
+  gint monitor;
   g_variant_get(data, "(bi)", &switcher_shown, &monitor);
 
   if (switcher_shown == _switcher_showing || monitor != _monitor)
