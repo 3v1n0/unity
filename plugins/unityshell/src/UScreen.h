@@ -24,6 +24,8 @@
 #include <sigc++/sigc++.h>
 #include <vector>
 
+#include "UnityCore/GLibDBusProxy.h"
+
 class UScreen : public sigc::trackable
 {
 public:
@@ -41,6 +43,8 @@ public:
   // <void, primary_monitor, monitors>
   sigc::signal<void, int, std::vector<nux::Geometry>&> changed;
 
+  sigc::signal<void> resuming;
+
 private:
   static void     Changed(GdkScreen* screen, UScreen* self);
   static gboolean OnIdleChanged(UScreen* self);
@@ -50,6 +54,7 @@ private:
   std::vector<nux::Geometry> _monitors;
   guint32 _refresh_id;
   int primary_;
+  unity::glib::DBusProxy::Ptr proxy_;
 };
 
 #endif // _UNITY_SCREEN_H_

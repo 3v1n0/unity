@@ -10,7 +10,6 @@
 from autopilot.emulators.unity import UnityIntrospectionObject
 from autopilot.emulators.unity.quicklist import Quicklist
 
-
 class SimpleLauncherIcon(UnityIntrospectionObject):
     """Holds information about a simple launcher icon.
 
@@ -69,10 +68,12 @@ class DeviceLauncherIcon(SimpleLauncherIcon):
 class DesktopLauncherIcon(SimpleLauncherIcon):
     """Represents an icon that may appear in the switcher."""
 
+
 class SoftwareCenterLauncherIcon(BamfLauncherIcon):
     """Represents a launcher icon of a Software Center app."""
 
-class EmbeddedIcon(SimpleLauncherIcon):
+
+class HudEmbeddedIcon(SimpleLauncherIcon):
     """Proxy object for the hud embedded icon child of the view."""
 
     @property

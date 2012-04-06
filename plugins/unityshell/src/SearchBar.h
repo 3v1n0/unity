@@ -60,6 +60,7 @@ public:
   SearchBar(bool show_filter_hint, NUX_FILE_LINE_PROTO);
   ~SearchBar();
 
+  void ForceSearchChanged();
   void SearchFinished();
   nux::TextEntry* text_entry() const;
   nux::View* show_filters() const;
@@ -69,6 +70,7 @@ public:
   nux::Property<bool> showing_filters;
   nux::Property<bool> can_refine_search;
   nux::ROProperty<bool> im_active;
+  nux::ROProperty<bool> im_preedit;
 
   sigc::signal<void> activated;
   sigc::signal<void, std::string const&> search_changed;
@@ -96,6 +98,7 @@ private:
   std::string get_search_string() const;
   bool set_search_string(std::string const& string);
   bool get_im_active() const;
+  bool get_im_preedit() const;
   bool show_filter_hint_;
 
   static gboolean OnLiveSearchTimeout(SearchBar* self);

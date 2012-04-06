@@ -74,6 +74,7 @@ private:
   void AddProperties(GVariantBuilder* builder);
 
 private:
+  std::string GetActiveLensId() const;
   typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
 
   LensIcons icons_;

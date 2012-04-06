@@ -13,6 +13,7 @@ from xdg.DesktopEntry import DesktopEntry
 from autopilot.emulators.unity.quicklist import QuicklistMenuItemLabel
 from autopilot.tests import AutopilotTestCase
 
+
 class QuicklistActionTests(AutopilotTestCase):
     """Tests for quicklist actions."""
 

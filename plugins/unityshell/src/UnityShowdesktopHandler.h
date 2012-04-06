@@ -32,7 +32,7 @@
 namespace unity
 {
 
-class UnityShowdesktopHandlerWindowInterface
+class ShowdesktopHandlerWindowInterface
 {
   public:
 
@@ -42,7 +42,7 @@ class UnityShowdesktopHandlerWindowInterface
       Remove = 2
     };
 
-    virtual ~UnityShowdesktopHandlerWindowInterface ();
+    virtual ~ShowdesktopHandlerWindowInterface ();
 
     void EnableFocus () { DoEnableFocus (); }
     void DisableFocus () { DoDisableFocus (); }
@@ -108,12 +108,12 @@ class UnityShowdesktopHandlerWindowInterface
     virtual compiz::WindowInputRemoverInterface::Ptr GetInputRemover () = 0;
 };
 
-class UnityShowdesktopHandler
+class ShowdesktopHandler
 {
  public:
 
-  UnityShowdesktopHandler (UnityShowdesktopHandlerWindowInterface *uwi);
-  ~UnityShowdesktopHandler ();
+  ShowdesktopHandler (ShowdesktopHandlerWindowInterface *uwi);
+  ~ShowdesktopHandler ();
 
   typedef enum {
     StateVisible = 0,
@@ -126,27 +126,27 @@ public:
 
   void FadeOut ();
   void FadeIn ();
-  UnityShowdesktopHandlerWindowInterface::PostPaintAction Animate (unsigned int ms);
+  ShowdesktopHandlerWindowInterface::PostPaintAction Animate (unsigned int ms);
   void PaintOpacity (unsigned short &opacity);
   unsigned int GetPaintMask ();
   void HandleShapeEvent ();
   void WindowFocusChangeNotify ();
   void UpdateFrameRegion (CompRegion &r);
 
-  UnityShowdesktopHandler::State GetState ();
+  ShowdesktopHandler::State GetState ();
 
   static const unsigned int fade_time;
-  static std::list <UnityShowdesktopHandlerWindowInterface *> animating_windows;
-  static bool ShouldHide (UnityShowdesktopHandlerWindowInterface *);
+  static std::list <ShowdesktopHandlerWindowInterface *> animating_windows;
+  static bool ShouldHide (ShowdesktopHandlerWindowInterface *);
   static void InhibitLeaveShowdesktopMode (guint32 xid);
   static void AllowLeaveShowdesktopMode (guint32 xid);
   static guint32 InhibitingXid ();
 
 private:
 
-  UnityShowdesktopHandlerWindowInterface *showdesktop_handler_window_interface_;
+  ShowdesktopHandlerWindowInterface *showdesktop_handler_window_interface_;
   compiz::WindowInputRemoverInterface::Ptr remover_;
-  UnityShowdesktopHandler::State         state_;
+  ShowdesktopHandler::State         state_;
   float                                  progress_;
   bool                                   was_hidden_;
   static guint32		         inhibiting_xid;

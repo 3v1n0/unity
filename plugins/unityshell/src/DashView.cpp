@@ -146,6 +146,9 @@ void DashView::AboutToShow()
     active_lens_view_->lens()->view_type = ViewType::LENS_VIEW;
   }
 
+  // this will make sure the spinner animates if the search takes a while
+  search_bar_->ForceSearchChanged();
+
   renderer_.AboutToShow();
 }
 
@@ -438,7 +441,7 @@ void DashView::OnLiveSearchReached(std::string const& search_string)
   LOG_DEBUG(logger) << "Live search reached: " << search_string;
   if (active_lens_view_)
   {
-    active_lens_view_->search_string = search_string;
+    active_lens_view_->PerformSearch(search_string);
   }
 }
 
@@ -457,6 +460,14 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
   lens->activated.connect(sigc::mem_fun(this, &DashView::OnUriActivatedReply));
   lens->search_finished.connect(sigc::mem_fun(this, &DashView::OnSearchFinished));
   // global search done is handled by the home lens, no need to connect to it
+  // BUT, we will special case global search finished coming from 
+  // the applications lens, because we want to be able to launch applications
+  // immediately without waiting for the search finished signal which will
+  // be delayed by all the lenses we're searching
+  if (id == "applications.lens")
+  {
+    lens->global_search_finished.connect(sigc::mem_fun(this, &DashView::OnAppsGlobalSearchFinished));
+  }
 }
 
 void DashView::OnLensBarActivated(std::string const& id)
@@ -483,6 +494,10 @@ void DashView::OnLensBarActivated(std::string const& id)
 
   search_bar_->search_string = view->search_string;
   search_bar_->search_hint = view->lens()->search_hint;
+  // lenses typically return immediately from Search() if the search query
+  // doesn't change, so SearchFinished will be called in a few ms
+  // FIXME: if we're forcing a search here, why don't we get rid of view types?
+  search_bar_->ForceSearchChanged();
 
   bool expanded = view->filters_expanded;
   search_bar_->showing_filters = expanded;
@@ -529,6 +544,22 @@ void DashView::OnGlobalSearchFinished(Lens::Hints const& hints)
 {
   if (active_lens_view_ == home_view_)
     OnSearchFinished(hints);
+}
+
+void DashView::OnAppsGlobalSearchFinished(Lens::Hints const& hints)
+{
+  if (active_lens_view_ == home_view_)
+  {
+    /* HACKITY HACK! We're resetting the state of search_in_progress when
+     * doing searches in the home lens and we get results from apps lens.
+     * This way typing a search query and pressing enter immediately will
+     * wait for the apps lens results and will run correct application.
+     * See lp:966417 and lp:856206 for more info about why we do this.
+     */
+    search_in_progress_ = false;
+    if (activate_on_finish_)
+      this->OnEntryActivated();
+  }
 }
 
 void DashView::OnUriActivated(std::string const& uri)
@@ -782,7 +813,7 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
   // DashView::KeyNavIteration.
    nux::InputArea* focus_area = nux::GetWindowCompositor().GetKeyFocusArea();
 
-  if (key_symbol == nux::NUX_KEYDOWN)
+  if (key_symbol == nux::NUX_KEYDOWN && !search_bar_->im_preedit)
   {
     std::list<nux::Area*> tabs;
     for (auto category : active_lens_view_->categories())
@@ -857,7 +888,7 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     }
   }
 
-  if (direction == KEY_NAV_NONE || search_bar_->im_active)
+  if (direction == KEY_NAV_NONE || search_bar_->im_preedit)
   {
     // then send the event to the search entry
     return search_bar_->text_entry();

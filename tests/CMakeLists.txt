@@ -140,7 +140,6 @@ if (GTEST_SRC_DIR AND
                  test_main_xless.cpp
                  test_grabhandle.cpp
                  test_unityshell_private.cpp
-                 test_lensview_impl.cpp
 		 test_showdesktop_handler.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.cpp
                  ${UNITY_SRC}/AbstractShortcutHint.h

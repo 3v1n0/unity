@@ -242,6 +242,9 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
 
         If files is specified, start the application with the specified files.
         If locale is specified, the locale will be set when the application is launched.
+
+        The method returns the BamfApplication instance.
+
         """
         if locale:
             os.putenv("LC_ALL", locale)
@@ -252,7 +255,10 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
 
         app = self.KNOWN_APPS[app_name]
         self.bamf.launch_application(app['desktop-file'], files)
+        apps = self.bamf.get_running_applications_by_desktop_file(app['desktop-file'])
         self.addCleanup(call, ["killall", app['process-name']])
+        self.assertThat(len(apps), Equals(1))
+        return apps[0]
 
     def close_all_app(self, app_name):
         """Close all instances of the app_name."""
@@ -284,6 +290,8 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         """
         old_value = self._set_compiz_option(plugin_name, setting_name, setting_value)
         self.addCleanup(self._set_compiz_option, plugin_name, setting_name, old_value)
+        # Allow unity time to respond to the new setting.
+        time.sleep(0.5)
 
     def _set_compiz_option(self, plugin_name, option_name, option_value):
         logger.info("Setting compiz option '%s' in plugin '%s' to %r",

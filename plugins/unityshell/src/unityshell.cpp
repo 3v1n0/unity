@@ -128,6 +128,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , painting_tray_ (false)
   , last_scroll_event_(0)
   , hud_keypress_time_(0)
+  , panel_texture_has_changed_(true)
+  , paint_panel_(false)
 {
   Timer timer;
   gfloat version;
@@ -359,12 +361,23 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      BackgroundEffectHelper::updates_enabled = true;
 
-     ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [&](GVariant * args) { 
-       dash_monitor_ = g_variant_get_int32(args);
+     ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [&](GVariant * data)
+     {
+       unity::glib::String overlay_identity;
+       gboolean can_maximise = FALSE;
+       gint32 overlay_monitor = 0;
+       g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
+                    &overlay_identity, &can_maximise, &overlay_monitor);
+
+       dash_monitor_ = overlay_monitor;
+
        RaiseInputWindows();
      });
-      LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";
+
+     LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";
   }
+
+  panel::Style::Instance().changed.connect(sigc::mem_fun(this, &UnityScreen::OnPanelStyleChanged));
 }
 
 UnityScreen::~UnityScreen()
@@ -569,7 +582,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
     i++;
   }
 
-  if (!(launcher_controller_->IsOverlayOpen() && current_monitor == dash_monitor_) 
+  if (!(launcher_controller_->IsOverlayOpen() && current_monitor == dash_monitor_)
       && panel_controller_->opacity() > 0.0f)
   {
     foreach(GLTexture * tex, _shadow_texture)
@@ -648,7 +661,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
     i++;
   }
 
-  if (!(launcher_controller_->IsOverlayOpen() && current_monitor == dash_monitor_) 
+  if (!(launcher_controller_->IsOverlayOpen() && current_monitor == dash_monitor_)
       && panel_controller_->opacity() > 0.0f)
   {
     foreach(GLTexture * tex, _shadow_texture)
@@ -715,6 +728,12 @@ UnityWindow::updateIconPos (int   &wx,
   wy = y + (last_bound.height - height) / 2;
 }
 
+void
+UnityScreen::OnPanelStyleChanged()
+{
+  panel_texture_has_changed_ = true;
+}
+
 #ifdef USE_GLES
 void UnityScreen::paintDisplay()
 #else
@@ -726,6 +745,37 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 
 #ifndef USE_GLES
   bool was_bound = _fbo->bound ();
+
+  if (was_bound && launcher_controller_->IsOverlayOpen() && paint_panel_)
+  {
+    if (panel_texture_has_changed_ || !panel_texture_.IsValid())
+    {
+      panel_texture_.Release();
+
+      nux::NBitmapData* bitmap = panel::Style::Instance().GetBackground(screen->width (), screen->height(), 1.0f);
+      nux::BaseTexture* texture2D = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
+      if (bitmap && texture2D)
+      {
+        texture2D->Update(bitmap);
+        panel_texture_ = texture2D->GetDeviceTexture();
+        texture2D->UnReference();
+        delete bitmap;
+      }
+      panel_texture_has_changed_ = false;
+    }
+
+    if (panel_texture_.IsValid())
+    {
+      nux::GetGraphicsDisplay()->GetGraphicsEngine()->ResetModelViewMatrixStack();
+      nux::GetGraphicsDisplay()->GetGraphicsEngine()->Push2DTranslationModelViewMatrix(0.0f, 0.0f, 0.0f);
+      nux::GetGraphicsDisplay()->GetGraphicsEngine()->ResetProjectionMatrix();
+      nux::GetGraphicsDisplay()->GetGraphicsEngine()->SetOrthographicProjectionMatrix(screen->width (), screen->height());
+
+      nux::TexCoordXForm texxform;
+      nux::GetGraphicsDisplay()->GetGraphicsEngine()->QRP_1Tex(0, 0, screen->width (), 24, panel_texture_, texxform, nux::color::White);
+    }
+  }
+
   _fbo->unbind ();
 
   /* Draw the bit of the relevant framebuffer for each output */
@@ -740,7 +790,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
     glPopMatrix ();
   }
 
-  nux::ObjectPtr<nux::IOpenGLTexture2D> device_texture =
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> device_texture =
       nux::GetGraphicsDisplay()->GetGpuDevice()->CreateTexture2DFromID(_fbo->texture(),
                                                                        screen->width (), screen->height(), 1, nux::BITFMT_R8G8B8A8);
 #else
@@ -906,7 +956,7 @@ void UnityScreen::enterShowDesktopMode ()
   {
     UnityWindow *uw = UnityWindow::get (w);
 
-    if (UnityShowdesktopHandler::ShouldHide (static_cast <UnityShowdesktopHandlerWindowInterface *> (uw)))
+    if (ShowdesktopHandler::ShouldHide (static_cast <ShowdesktopHandlerWindowInterface *> (uw)))
     {
       UnityWindow::get (w)->enterShowDesktop ();
       // the animation plugin does strange things here ...
@@ -943,7 +993,7 @@ void UnityScreen::leaveShowDesktopMode (CompWindow *w)
   /* Where a window is inhibiting, only allow the window
    * that is inhibiting the leave show desktop to actually
    * fade in again - all other windows should remain faded out */
-  if (!UnityShowdesktopHandler::InhibitingXid ())
+  if (!ShowdesktopHandler::InhibitingXid ())
   {
     for (CompWindow *cw : screen->windows ())
     {
@@ -962,7 +1012,7 @@ void UnityScreen::leaveShowDesktopMode (CompWindow *w)
   }
   else
   {
-    CompWindow *cw = screen->findWindow (UnityShowdesktopHandler::InhibitingXid ());
+    CompWindow *cw = screen->findWindow (ShowdesktopHandler::InhibitingXid ());
     if (cw)
     {
       if (cw->inShowDesktopMode ())
@@ -976,7 +1026,7 @@ void UnityScreen::leaveShowDesktopMode (CompWindow *w)
 void UnityWindow::enterShowDesktop ()
 {
   if (!mShowdesktopHandler)
-    mShowdesktopHandler = new UnityShowdesktopHandler (static_cast <UnityShowdesktopHandlerWindowInterface *> (this));
+    mShowdesktopHandler = new ShowdesktopHandler (static_cast <ShowdesktopHandlerWindowInterface *> (this));
 
   window->setShowDesktopMode (true);
   mShowdesktopHandler->FadeOut ();
@@ -993,9 +1043,9 @@ void UnityWindow::leaveShowDesktop ()
 
 void UnityWindow::activate ()
 {
-  UnityShowdesktopHandler::InhibitLeaveShowdesktopMode (window->id ());
+  ShowdesktopHandler::InhibitLeaveShowdesktopMode (window->id ());
   window->activate ();
-  UnityShowdesktopHandler::AllowLeaveShowdesktopMode (window->id ());
+  ShowdesktopHandler::AllowLeaveShowdesktopMode (window->id ());
 }
 
 void UnityWindow::DoEnableFocus ()
@@ -1087,9 +1137,9 @@ void UnityWindow::DoMoveFocusAway ()
   window->moveInputFocusToOtherWindow ();
 }
 
-UnityShowdesktopHandlerWindowInterface::PostPaintAction UnityWindow::DoHandleAnimations (unsigned int ms)
+ShowdesktopHandlerWindowInterface::PostPaintAction UnityWindow::DoHandleAnimations (unsigned int ms)
 {
-  UnityShowdesktopHandlerWindowInterface::PostPaintAction action = UnityShowdesktopHandlerWindowInterface::PostPaintAction::Wait;
+  ShowdesktopHandlerWindowInterface::PostPaintAction action = ShowdesktopHandlerWindowInterface::PostPaintAction::Wait;
 
   if (mShowdesktopHandler)
     action = mShowdesktopHandler->Animate (ms);
@@ -1143,6 +1193,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   doShellRepaint = true;
   allowWindowPaint = true;
   _last_output = output;
+  paint_panel_ = false;
 
 #ifndef USE_GLES
   /* bind the framebuffer here
@@ -1211,7 +1262,7 @@ void UnityScreen::preparePaint(int ms)
 {
   cScreen->preparePaint(ms);
 
-  for (UnityShowdesktopHandlerWindowInterface *wi : UnityShowdesktopHandler::animating_windows)
+  for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
     wi->HandleAnimations (ms);
 
   if (damaged)
@@ -1224,21 +1275,21 @@ void UnityScreen::preparePaint(int ms)
 
 void UnityScreen::donePaint()
 {
-  std::list <UnityShowdesktopHandlerWindowInterface *> remove_windows;
+  std::list <ShowdesktopHandlerWindowInterface *> remove_windows;
 
-  for (UnityShowdesktopHandlerWindowInterface *wi : UnityShowdesktopHandler::animating_windows)
+  for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
   {
-    UnityShowdesktopHandlerWindowInterface::PostPaintAction action = wi->HandleAnimations (0);
-    if (action == UnityShowdesktopHandlerWindowInterface::PostPaintAction::Remove)
+    ShowdesktopHandlerWindowInterface::PostPaintAction action = wi->HandleAnimations (0);
+    if (action == ShowdesktopHandlerWindowInterface::PostPaintAction::Remove)
       remove_windows.push_back(wi);
-    else if (action == UnityShowdesktopHandlerWindowInterface::PostPaintAction::Damage)
+    else if (action == ShowdesktopHandlerWindowInterface::PostPaintAction::Damage)
       wi->AddDamage ();
   }
 
-  for (UnityShowdesktopHandlerWindowInterface *wi : remove_windows)
+  for (ShowdesktopHandlerWindowInterface *wi : remove_windows)
   {
     wi->DeleteHandler ();
-    UnityShowdesktopHandler::animating_windows.remove (wi);
+    ShowdesktopHandler::animating_windows.remove (wi);
   }
 
   cScreen->donePaint ();
@@ -1379,7 +1430,7 @@ void UnityScreen::handleEvent(XEvent* event)
       break;
     }
     case MapRequest:
-      UnityShowdesktopHandler::InhibitLeaveShowdesktopMode (event->xmaprequest.window);
+      ShowdesktopHandler::InhibitLeaveShowdesktopMode (event->xmaprequest.window);
       break;
     default:
         if (screen->shapeEvent () + ShapeNotify == event->type)
@@ -1412,7 +1463,7 @@ void UnityScreen::handleEvent(XEvent* event)
       }
       break;
     case MapRequest:
-      UnityShowdesktopHandler::AllowLeaveShowdesktopMode (event->xmaprequest.window);
+      ShowdesktopHandler::AllowLeaveShowdesktopMode (event->xmaprequest.window);
       break;
   }
 
@@ -1538,6 +1589,9 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
   LOG_DEBUG(logger) << "Super released: " << (was_tap ? "tapped" : "released");
   int when = options[7].value().i();  // XEvent time in millisec
 
+  if (hud_controller_->IsVisible() && launcher_controller_->AboutToShowDash(was_tap, when))
+    hud_controller_->HideHud();
+
   super_keypressed_ = false;
   launcher_controller_->KeyNavTerminate(true);
   launcher_controller_->HandleLauncherKeyRelease(was_tap, when);
@@ -1589,7 +1643,7 @@ void UnityScreen::SendExecuteCommand()
   if (hud_controller_->IsVisible())
   {
     hud_controller_->HideHud();
-  } 
+  }
   ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
                             g_variant_new("(sus)", "commands.lens", 0, ""));
 }
@@ -1880,10 +1934,55 @@ void UnityScreen::OnLauncherEndKeyNav(GVariant* data)
     PluginAdapter::Default ()->restoreInputFocus ();
 }
 
+bool UnityScreen::ShowHud()
+{
+  if (switcher_controller_->Visible())
+  {
+    LOG_ERROR(logger) << "this should never happen";
+    return false; // early exit if the switcher is open
+  }
+
+  if (hud_controller_->IsVisible())
+  {
+    ubus_manager_.SendMessage(UBUS_HUD_CLOSE_REQUEST);
+  }
+  else
+  {
+    // Handles closing KeyNav (Alt+F1) if the hud is about to show
+    if (launcher_controller_->KeyNavIsActive())
+      launcher_controller_->KeyNavTerminate(false);
+
+    // If an overlay is open, it must be the dash! Close it!
+    if (launcher_controller_->IsOverlayOpen())
+      dash_controller_->HideDash();
+
+    hud_controller_->ShowHud();
+  }
+
+  // Consume the event.
+  return true;
+}
+
 bool UnityScreen::ShowHudInitiate(CompAction* action,
                                   CompAction::State state,
                                   CompOption::Vector& options)
 {
+  // Look to see if there is a keycode.  If there is, then this isn't a
+  // modifier only keybinding.
+  int key_code = 0;
+  if (options[6].type() != CompOption::TypeUnset)
+  {
+    key_code = options[6].value().i();
+    LOG_DEBUG(logger) << "HUD initiate key code: " << key_code;
+    // show it now, no timings or terminate needed.
+    return ShowHud();
+  }
+  else
+  {
+    LOG_DEBUG(logger) << "HUD initiate key code option not set, modifier only keypress.";
+  }
+
+
   // to receive the Terminate event
   if (state & CompAction::StateInitKey)
     action->setState(action->state() | CompAction::StateTermKey);
@@ -1904,7 +2003,7 @@ bool UnityScreen::ShowHudTerminate(CompAction* action,
 
   action->setState(action->state() & ~CompAction::StateTermKey);
 
-  // And only respond to key taps
+  // If we have a modifier only keypress, check for tap and timing.
   if (!(state & CompAction::StateTermTapped))
     return false;
 
@@ -1916,30 +2015,7 @@ bool UnityScreen::ShowHudTerminate(CompAction* action,
     return false;
   }
 
-  if (switcher_controller_->Visible())
-  {
-    LOG_ERROR(logger) << "this should never happen";
-    return false; // early exit if the switcher is open
-  }
-
-  if (hud_controller_->IsVisible())
-  {
-    ubus_manager_.SendMessage(UBUS_HUD_CLOSE_REQUEST);
-  }
-  else
-  {
-    // Handles closing KeyNav (Alt+F1) if the hud is about to show
-    if (launcher_controller_->KeyNavIsActive())
-      launcher_controller_->KeyNavTerminate(false);
-  
-    // If an overlay is open, it must be the dash! Close it!
-    if (launcher_controller_->IsOverlayOpen())
-      dash_controller_->HideDash();
-
-    hud_controller_->ShowHud();
-  }
-
-  return true;
+  return ShowHud();
 }
 
 gboolean UnityScreen::initPluginActions(gpointer data)
@@ -2130,6 +2206,22 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
                          const CompRegion& region,
                          unsigned int mask)
 {
+  if (uScreen->doShellRepaint && !uScreen->paint_panel_ && window->type() == CompWindowTypeNormalMask)
+  {
+    guint32 id = window->id();
+    bool maximized = WindowManager::Default()->IsWindowMaximized(id);
+    bool on_current = window->onCurrentDesktop();
+    bool override_redirect = window->overrideRedirect();
+    bool managed = window->managed();
+    CompPoint viewport = window->defaultViewport();
+    int output = window->outputDevice();
+
+    if (maximized && on_current && !override_redirect && managed && viewport == uScreen->screen->vp() && output == (int)uScreen->screen->currentOutputDev().id())
+    {
+      uScreen->paint_panel_ = true;
+    }
+  }
+
   if (uScreen->doShellRepaint && !uScreen->forcePaintOnTop ())
   {
     std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
@@ -2138,6 +2230,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     for (CompWindow* w = window; w && uScreen->doShellRepaint; w = w->prev)
     {
       auto id = w->id();
+
       for (unsigned int i = 0; i < size; ++i)
       {
         if (xwns[i] == id)
@@ -2883,7 +2976,7 @@ UnityWindow::~UnityWindow()
       window->minimize ();
   }
 
-  UnityShowdesktopHandler::animating_windows.remove (static_cast <UnityShowdesktopHandlerWindowInterface *> (this));
+  ShowdesktopHandler::animating_windows.remove (static_cast <ShowdesktopHandlerWindowInterface *> (this));
 
   if (mShowdesktopHandler)
     delete mShowdesktopHandler;
@@ -3019,6 +3112,10 @@ void capture_g_log_calls(const gchar* log_domain,
   {
     nux::logging::LogStream(level, logger.module(), "<unknown>", 0).stream()
         << message;
+    if (level >= nux::logging::Error)
+    {
+      nux::logging::Backtrace();
+    }
   }
 }
 
