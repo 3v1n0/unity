@@ -330,7 +330,7 @@ public:
 
   void minimize ();
   void unminimize ();
-  bool Minimized ();
+  bool minimized ();
   bool focus ();
   void activate ();
 
