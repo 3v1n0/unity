@@ -41,8 +41,8 @@ public:
     Window window;
     int touches;
     int timestamp;
-    int focus_x;
-    int focus_y;
+    float focus_x;
+    float focus_y;
     int tap_length_ms;
     float position_x;
     float position_y;
@@ -59,8 +59,8 @@ public:
     Window window;
     int touches;
     int timestamp;
-    int focus_x;
-    int focus_y;
+    float focus_x;
+    float focus_y;
     float delta_x;
     float delta_y;
     float velocity_x;
@@ -80,8 +80,8 @@ public:
     Window window;
     int touches;
     int timestamp;
-    int focus_x;
-    int focus_y;
+    float focus_x;
+    float focus_y;
     float angle;
     float angle_delta;
     float angle_velocity;
@@ -98,8 +98,8 @@ public:
     Window window;
     int touches;
     int timestamp;
-    int focus_x;
-    int focus_y;
+    float focus_x;
+    float focus_y;
     float radius;
     float radius_delta;
     float radius_velocity;
@@ -116,8 +116,8 @@ public:
     Window window;
     int touches;
     int timestamp;
-    int focus_x;
-    int focus_y;
+    float focus_x;
+    float focus_y;
     float bound_x1;
     float bound_y1;
     float bound_x2;

@@ -237,9 +237,9 @@ GeisAdapter::GeisTapData* GeisAdapter::ProcessTapGesture(GeisSize count, GeisGes
     else if (g_str_equal(attr.name, GEIS_GESTURE_ATTRIBUTE_TIMESTAMP))
       result->timestamp = attr.integer_val;
     else if (g_str_equal(attr.name, GEIS_GESTURE_ATTRIBUTE_FOCUS_X))
-      result->focus_x = attr.integer_val;
+      result->focus_x = attr.float_val;
     else if (g_str_equal(attr.name, GEIS_GESTURE_ATTRIBUTE_FOCUS_Y))
-      result->focus_y = attr.integer_val;
+      result->focus_y = attr.float_val;
     else if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_TOUCHES))
       result->touches = attr.integer_val;
     else if (g_str_equal(attr.name, GEIS_GESTURE_ATTRIBUTE_GESTURE_NAME))
@@ -289,9 +289,9 @@ GeisAdapter::GeisTouchData* GeisAdapter::ProcessTouchGesture(GeisSize count, Gei
     else if (g_str_equal(attr.name, GEIS_GESTURE_ATTRIBUTE_TIMESTAMP))
       result->timestamp = attr.integer_val;
     else if (g_str_equal(attr.name, GEIS_GESTURE_ATTRIBUTE_FOCUS_X))
-      result->focus_x = attr.integer_val;
+      result->focus_x = attr.float_val;
     else if (g_str_equal(attr.name, GEIS_GESTURE_ATTRIBUTE_FOCUS_Y))
-      result->focus_y = attr.integer_val;
+      result->focus_y = attr.float_val;
     else if (g_str_equal(attr.name, GEIS_GESTURE_ATTRIBUTE_TOUCHES))
       result->touches = attr.integer_val;
     else if (g_str_equal(attr.name, GEIS_GESTURE_ATTRIBUTE_BOUNDINGBOX_X1))
@@ -322,9 +322,9 @@ GeisAdapter::GeisDragData* GeisAdapter::ProcessDragGesture(GeisSize count, GeisG
     else if (g_str_equal(attr.name, GEIS_GESTURE_ATTRIBUTE_TIMESTAMP))
       result->timestamp = attr.integer_val;
     else if (g_str_equal(attr.name, GEIS_GESTURE_ATTRIBUTE_FOCUS_X))
-      result->focus_x = attr.integer_val;
+      result->focus_x = attr.float_val;
     else if (g_str_equal(attr.name, GEIS_GESTURE_ATTRIBUTE_FOCUS_Y))
-      result->focus_y = attr.integer_val;
+      result->focus_y = attr.float_val;
     else if (g_str_equal(attr.name, GEIS_GESTURE_ATTRIBUTE_TOUCHES))
       result->touches = attr.integer_val;
     else if (g_str_equal(attr.name, GEIS_GESTURE_ATTRIBUTE_POSITION_X))
@@ -367,9 +367,9 @@ GeisAdapter::GeisPinchData* GeisAdapter::ProcessPinchGesture(GeisSize count, Gei
     else if (g_str_equal(attr.name, GEIS_GESTURE_ATTRIBUTE_TIMESTAMP))
       result->timestamp = attr.integer_val;
     else if (g_str_equal(attr.name, GEIS_GESTURE_ATTRIBUTE_FOCUS_X))
-      result->focus_x = attr.integer_val;
+      result->focus_x = attr.float_val;
     else if (g_str_equal(attr.name, GEIS_GESTURE_ATTRIBUTE_FOCUS_Y))
-      result->focus_y = attr.integer_val;
+      result->focus_y = attr.float_val;
     else if (g_str_equal(attr.name, GEIS_GESTURE_ATTRIBUTE_TOUCHES))
       result->touches = attr.integer_val;
     else if (g_str_equal(attr.name, GEIS_GESTURE_ATTRIBUTE_RADIUS))
@@ -406,9 +406,9 @@ GeisAdapter::GeisRotateData* GeisAdapter::ProcessRotateGesture(GeisSize count, G
     else if (g_str_equal(attr.name, GEIS_GESTURE_ATTRIBUTE_TIMESTAMP))
       result->timestamp = attr.integer_val;
     else if (g_str_equal(attr.name, GEIS_GESTURE_ATTRIBUTE_FOCUS_X))
-      result->focus_x = attr.integer_val;
+      result->focus_x = attr.float_val;
     else if (g_str_equal(attr.name, GEIS_GESTURE_ATTRIBUTE_FOCUS_Y))
-      result->focus_y = attr.integer_val;
+      result->focus_y = attr.float_val;
     else if (g_str_equal(attr.name, GEIS_GESTURE_ATTRIBUTE_TOUCHES))
       result->touches = attr.integer_val;
     else if (g_str_equal(attr.name, GEIS_GESTURE_ATTRIBUTE_ANGLE))

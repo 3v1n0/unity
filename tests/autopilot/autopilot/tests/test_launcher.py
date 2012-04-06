@@ -80,6 +80,20 @@ class LauncherSwitcherTests(LauncherTestCase):
         self.launcher_instance.switcher_cancel()
         self.assertThat(self.launcher.key_nav_is_active, Equals(False))
 
+    def test_launcher_switcher_cancel_resume_focus(self):
+        """Test that ending the launcher switcher resume the focus."""
+        self.close_all_app("Calculator")
+        calc = self.start_app("Calculator")
+        self.assertTrue(calc.is_active)
+
+        self.launcher_instance.switcher_start()
+        sleep(.5)
+        self.assertFalse(calc.is_active)
+
+        self.launcher_instance.switcher_cancel()
+        sleep(.5)
+        self.assertTrue(calc.is_active)
+
     def test_launcher_switcher_starts_at_index_zero(self):
         """Test that starting the Launcher switcher puts the keyboard focus on item 0."""
         self.assertThat(self.launcher.key_nav_is_active, Equals(True))
@@ -159,6 +173,37 @@ class LauncherSwitcherTests(LauncherTestCase):
         # FIXME We can't directly check for self.launcher.num_launcher_icons - 1
         self.assertThat(self.launcher.key_nav_selection, GreaterThan(1))
 
+    def test_launcher_switcher_activate_keep_focus(self):
+        """Activating a running launcher icon should focus it"""
+        calc = self.start_app("Calculator")
+        sleep(.5)
+
+        self.close_all_app("Mahjongg")
+        mahjongg = self.start_app("Mahjongg")
+        self.assertTrue(mahjongg.is_active)
+        self.assertFalse(calc.is_active)
+
+        self.launcher_instance.switcher_start()
+
+        found = False
+        for icon in self.launcher.model.get_launcher_icons_for_monitor(self.launcher_monitor):
+            if (icon.tooltip_text == calc.name):
+                found = True
+                # FIXME: When releasing the keybinding another "next" is done
+                self.launcher_instance.switcher_prev()
+                self.launcher_instance.switcher_activate()
+                break
+            else:
+                self.launcher_instance.switcher_next()
+
+        sleep(.5)
+        if not found:
+            self.addCleanup(self.launcher_instance.switcher_cancel)
+
+        self.assertTrue(found)
+        self.assertTrue(calc.is_active)
+        self.assertFalse(mahjongg.is_active)
+
     def test_launcher_switcher_using_shorcuts(self):
         """Using some other shortcut while switcher is active must cancel switcher."""
         self.keyboard.press_and_release("s")
@@ -232,6 +277,20 @@ class LauncherKeyNavTests(LauncherTestCase):
         self.assertThat(self.launcher.key_nav_is_active, Equals(False))
         self.assertThat(self.launcher.key_nav_is_grabbed, Equals(False))
 
+    def test_launcher_keynav_cancel_resume_focus(self):
+        """Test that ending the launcher keynav resume the focus."""
+        self.close_all_app("Calculator")
+        calc = self.start_app("Calculator")
+        self.assertTrue(calc.is_active)
+
+        self.launcher_instance.key_nav_start()
+        sleep(.5)
+        self.assertFalse(calc.is_active)
+
+        self.launcher_instance.key_nav_cancel()
+        sleep(.5)
+        self.assertTrue(calc.is_active)
+
     def test_launcher_keynav_starts_at_index_zero(self):
         """Test keynav mode starts at index 0."""
         self.assertThat(self.launcher.key_nav_selection, Equals(0))
@@ -295,6 +354,35 @@ class LauncherKeyNavTests(LauncherTestCase):
         self.launcher_instance.key_nav_start()
         sleep(0.25)
         self.assertThat(self.launcher.key_nav_is_active, Equals(False))
+
+    def test_launcher_keynav_activate_keep_focus(self):
+        """Activating a running launcher icon should focus it"""
+        calc = self.start_app("Calculator")
+        sleep(.5)
+
+        self.close_all_app("Mahjongg")
+        mahjongg = self.start_app("Mahjongg")
+        self.assertTrue(mahjongg.is_active)
+        self.assertFalse(calc.is_active)
+
+        self.launcher_instance.key_nav_start()
+
+        found = False
+        for icon in self.launcher.model.get_launcher_icons_for_monitor(self.launcher_monitor):
+            if (icon.tooltip_text == calc.name):
+                found = True
+                self.launcher_instance.key_nav_activate()
+                break
+            else:
+                self.launcher_instance.key_nav_next()
+
+        sleep(.5)
+        if not found:
+            self.addCleanup(self.launcher_instance.key_nav_cancel)
+
+        self.assertTrue(found)
+        self.assertTrue(calc.is_active)
+        self.assertFalse(mahjongg.is_active)
 
     def test_launcher_keynav_alt_tab_quits(self):
         """Tests that alt+tab exits keynav mode."""

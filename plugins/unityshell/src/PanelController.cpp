@@ -26,6 +26,7 @@
 
 #include "UScreen.h"
 #include "PanelView.h"
+#include "PanelStyle.h"
 
 namespace unity
 {
@@ -46,8 +47,8 @@ public:
   void FirstMenuShow();
   void QueueRedraw();
 
-  unsigned int GetTrayXid();
-  std::list <nux::Geometry> GetGeometries();
+  std::vector<Window> GetTrayXids() const;
+  std::vector<nux::Geometry> GetGeometries() const;
 
   // NOTE: nux::Property maybe?
   void SetOpacity(float opacity);
@@ -60,7 +61,7 @@ public:
 
   void OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors, Introspectable *iobj);
 private:
-  unity::PanelView* ViewForWindow(nux::BaseWindow* window);
+  unity::PanelView* ViewForWindow(nux::BaseWindow* window) const;
 
   static void WindowConfigureCallback(int            window_width,
                                       int            window_height,
@@ -98,17 +99,21 @@ Controller::Impl::~Impl()
   }
 }
 
-unsigned int Controller::Impl::GetTrayXid()
+std::vector<Window> Controller::Impl::GetTrayXids() const
 {
-  if (!windows_.empty())
-    return ViewForWindow(windows_.front())->GetTrayXid();
-  else
-    return 0;
+  std::vector<Window> xids;
+
+  for (auto window: windows_)
+  {
+    xids.push_back(ViewForWindow(window)->GetTrayXid());
+  }
+
+  return xids;
 }
 
-std::list<nux::Geometry> Controller::Impl::GetGeometries()
+std::vector<nux::Geometry> Controller::Impl::GetGeometries() const
 {
-  std::list<nux::Geometry> geometries;
+  std::vector<nux::Geometry> geometries;
 
   for (auto window : windows_)
   {
@@ -171,7 +176,7 @@ void Controller::Impl::QueueRedraw()
   }
 }
 
-PanelView* Controller::Impl::ViewForWindow(nux::BaseWindow* window)
+PanelView* Controller::Impl::ViewForWindow(nux::BaseWindow* window) const
 {
   nux::Layout* layout = window->GetLayout();
   std::list<nux::Area*>::iterator it = layout->GetChildren().begin();
@@ -198,8 +203,9 @@ void Controller::Impl::OnScreenChanged(int primary_monitor,
       (*it)->InputWindowEnableStruts(false);
 
       nux::Geometry geo = monitors[i];
-      geo.height = 24;
+      geo.height = panel::Style::Instance().panel_height;
       (*it)->SetGeometry(geo);
+      (*it)->SetMinMaxSize(geo.width, geo.height);
 
       view = ViewForWindow(*it);
       view->SetPrimary(i == primary_monitor);
@@ -224,7 +230,7 @@ void Controller::Impl::OnScreenChanged(int primary_monitor,
       nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
       PanelView* view = new PanelView();
-      view->SetMaximumHeight(24);
+      view->SetMaximumHeight(panel::Style::Instance().panel_height);
       view->SetOpacity(opacity_);
       view->SetOpacityMaximizedToggle(opacity_maximized_toggle_);
       view->SetMenuShowTimings(menus_fadein_, menus_fadeout_, menus_discovery_,
@@ -238,17 +244,18 @@ void Controller::Impl::OnScreenChanged(int primary_monitor,
       layout->SetHorizontalExternalMargin(0);
 
       nux::BaseWindow* window = new nux::BaseWindow("");
+      nux::Geometry geo = monitors[i];
+      geo.height = panel::Style::Instance().panel_height;
+
       window->SinkReference();
       window->SetConfigureNotifyCallback(&Impl::WindowConfigureCallback, window);
-      window->SetLayout(layout);
       window->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
       window->ShowWindow(true);
       window->EnableInputWindow(true, "panel", false, false);
       window->InputWindowEnableStruts(true);
-
-      nux::Geometry geo = monitors[i];
-      geo.height = 24;
       window->SetGeometry(geo);
+      window->SetMinMaxSize(geo.width, geo.height);
+      window->SetLayout(layout);
 
       windows_.push_back(window);
 
@@ -325,12 +332,12 @@ void Controller::QueueRedraw()
   pimpl->QueueRedraw();
 }
 
-unsigned int Controller::GetTrayXid()
+std::vector<Window> Controller::GetTrayXids() const
 {
-  return pimpl->GetTrayXid();
+  return pimpl->GetTrayXids();
 }
 
-std::list<nux::Geometry> Controller::GetGeometries()
+std::vector<nux::Geometry> Controller::GetGeometries() const
 {
   return pimpl->GetGeometries();
 }
