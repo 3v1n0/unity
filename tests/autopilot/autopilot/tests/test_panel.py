@@ -900,6 +900,7 @@ class PanelIndicatorEntriesTests(PanelTestsBase):
         self.assertThat(menu_entry.menu_x, Equals(0))
         self.assertThat(menu_entry.menu_y, Equals(0))
 
+
 class PanelKeyNavigationTests(PanelTestsBase):
 
     scenarios = _make_monitor_scenarios()
@@ -971,6 +972,71 @@ class PanelKeyNavigationTests(PanelTestsBase):
         sleep(.5)
         self.assertThat(open_indicator.entry_id, Equals(expected_indicator.entry_id))
 
+    def test_mouse_does_not_break_key_navigation(self):
+        self.open_new_application_window("Calculator")
+        available_indicators = self.panel.get_indicator_entries(include_hidden_menus=True)
+
+        self.keybinding("panel/open_first_menu")
+        self.addCleanup(self.keyboard.press_and_release, "Escape")
+        sleep(.5)
+
+        available_indicators[2].mouse_move_to()
+        self.addCleanup(self.panel.move_mouse_below_the_panel)
+        sleep(.25)
+        self.assertTrue(available_indicators[2].active)
+        sleep(1)
+
+        self.keybinding("panel/prev_indicator")
+        self.assertTrue(available_indicators[1].active)
+
+
+class PanelGrabAreaTests(PanelTestsBase):
+    """Panel grab area tests"""
+
+    scenarios = _make_monitor_scenarios()
+
+    def move_mouse_over_grab_area(self):
+        self.panel.move_mouse_over_grab_area()
+        self.addCleanup(self.panel.move_mouse_below_the_panel)
+        sleep(.1)
+
+    def test_unmaximize_from_grab_area_works(self):
+        """Tests that dragging a window down from the panel, unmaximize it"""
+        text_win = self.open_new_application_window("Text Editor", maximized=True)
+
+        self.move_mouse_over_grab_area()
+        self.mouse.press()
+        self.panel.move_mouse_below_the_panel()
+        self.mouse.release()
+        sleep(.5)
+
+        self.assertFalse(text_win.is_maximized)
+
+    def test_focus_the_maximized_window_works(self):
+        """Tests that clicking on the grab area, put the maximized window to focus"""
+        text_win = self.open_new_application_window("Text Editor", maximized=True)
+        sleep(.5)
+        self.open_new_application_window("Calculator")
+        self.assertFalse(text_win.is_focused)
+
+        self.move_mouse_over_grab_area()
+        self.mouse.click()
+        sleep(.5)
+
+        self.assertTrue(text_win.is_focused)
+
+    def test_lower_the_maximized_window_works(self):
+        """Tests that middle-clicking on the panel grab area, lower the maximized window"""
+        calc_win = self.open_new_application_window("Calculator")
+        sleep(.5)
+        self.open_new_application_window("Text Editor", maximized=True)
+        self.assertFalse(calc_win.is_focused)
+
+        self.move_mouse_over_grab_area()
+        self.mouse.click(2)
+        sleep(.5)
+
+        self.assertTrue(calc_win.is_focused)
 
 
 class PanelCrossMonitorsTests(PanelTestsBase):
@@ -1121,4 +1187,3 @@ class PanelCrossMonitorsTests(PanelTestsBase):
                     self.assertTrue(entry.visible)
                     self.assertTrue(entry.active)
                     self.assertThat(entry.menu_y, NotEquals(0))
-        
