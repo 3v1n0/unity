@@ -73,7 +73,7 @@ class ShowdesktopHandlerWindowInterface
 
     compiz::WindowInputRemoverInterface::Ptr InputRemover () { return GetInputRemover (); }
 
-  protected:
+  private:
 
     virtual void DoEnableFocus () = 0;
     virtual void DoDisableFocus () = 0;
