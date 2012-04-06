@@ -50,6 +50,7 @@
 #include "SwitcherController.h"
 #include "UBusWrapper.h"
 #include "UnityshellPrivate.h"
+#include "UnityShowdesktopHandler.h"
 #ifndef USE_GLES
 #include "ScreenEffectFramebufferObject.h"
 #endif
@@ -63,51 +64,6 @@
 
 namespace unity
 {
-
-class UnityShowdesktopHandler
-{
- public:
-
-  UnityShowdesktopHandler (CompWindow *w);
-  ~UnityShowdesktopHandler ();
-
-  typedef enum {
-    Visible = 0,
-    FadeOut = 1,
-    FadeIn = 2,
-    Invisible = 3
-  } State;
-
-public:
-
-  void fadeOut ();
-  void fadeIn ();
-  bool animate (unsigned int ms);
-  void paintAttrib (GLWindowPaintAttrib &attrib);
-  unsigned int getPaintMask ();
-  void handleEvent (XEvent *);
-  void windowNotify (CompWindowNotify n);
-  void updateFrameRegion (CompRegion &r);
-
-  UnityShowdesktopHandler::State state ();
-
-  static const unsigned int fade_time;
-  static CompWindowList     animating_windows;
-  static bool shouldHide (CompWindow *);
-  static void inhibitLeaveShowdesktopMode (guint32 xid);
-  static void allowLeaveShowdesktopMode (guint32 xid);
-  static guint32 inhibitingXid ();
-
-private:
-
-  CompWindow                     *mWindow;
-  compiz::WindowInputRemover     *mRemover;
-  UnityShowdesktopHandler::State mState;
-  float                          mProgress;
-  bool                           mWasHidden;
-  static guint32		 mInhibitingXid;
-};
-
 
 /* base screen class */
 class UnityScreen :
@@ -145,6 +101,7 @@ public:
 
   void preparePaint (int ms);
   void paintFboForOutput (CompOutput *output);
+  void donePaint ();
 
   void RaiseInputWindows();
 
@@ -358,6 +315,7 @@ private:
 class UnityWindow :
   public WindowInterface,
   public GLWindowInterface,
+  public ShowdesktopHandlerWindowInterface,
   public BaseSwitchWindow,
   public PluginClassHandler <UnityWindow, CompWindow>
 {
@@ -414,18 +372,50 @@ public:
 
   void enterShowDesktop ();
   void leaveShowDesktop ();
-  bool handleAnimations (unsigned int ms);
+  bool HandleAnimations (unsigned int ms);
+
+  void handleEvent (XEvent *event);
 
   typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>
           UnityMinimizedHandler;
   std::unique_ptr <UnityMinimizedHandler> mMinimizeHandler;
 
-  UnityShowdesktopHandler             *mShowdesktopHandler;
+  ShowdesktopHandler             *mShowdesktopHandler;
 
 private:
 
   guint  focusdesktop_handle_;
   static gboolean FocusDesktopTimeout(gpointer data);
+
+  void DoEnableFocus ();
+  void DoDisableFocus ();
+
+  bool IsOverrideRedirect ();
+  bool IsManaged ();
+  bool IsGrabbed ();
+  bool IsDesktopOrDock ();
+  bool IsSkipTaskbarOrPager ();
+  bool IsHidden ();
+  bool IsInShowdesktopMode ();
+  bool IsShaded ();
+  bool IsMinimized ();
+  void DoOverrideFrameRegion (CompRegion &r);
+
+  void DoHide ();
+  void DoNotifyHidden ();
+  void DoShow ();
+  void DoNotifyShown ();
+
+  void DoAddDamage ();
+  ShowdesktopHandlerWindowInterface::PostPaintAction DoHandleAnimations (unsigned int ms);
+
+  void DoMoveFocusAway ();
+
+  void DoDeleteHandler ();
+
+  unsigned int GetNoCoreInstanceMask ();
+
+  compiz::WindowInputRemoverInterface::Ptr GetInputRemover ();
 };
 
 

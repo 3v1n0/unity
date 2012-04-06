@@ -24,6 +24,10 @@
 #include <cstdio>
 #include <cstring>
 
+compiz::WindowInputRemoverInterface::~WindowInputRemoverInterface ()
+{
+}
+
 compiz::WindowInputRemover::WindowInputRemover (Display *dpy,
                                                 Window xid) :
   mDpy (dpy),
@@ -203,7 +207,7 @@ compiz::WindowInputRemover::sendShapeNotify ()
 }
 
 bool
-compiz::WindowInputRemover::save ()
+compiz::WindowInputRemover::saveInput ()
 {
   XRectangle   *rects;
   int          count = 0, ordering;
@@ -267,7 +271,7 @@ compiz::WindowInputRemover::save ()
 }
 
 bool
-compiz::WindowInputRemover::remove ()
+compiz::WindowInputRemover::removeInput ()
 {
   if (!mNInputRects)
     if (!save ())
@@ -290,7 +294,7 @@ compiz::WindowInputRemover::remove ()
 }
 
 bool
-compiz::WindowInputRemover::restore ()
+compiz::WindowInputRemover::restoreInput ()
 {
   XShapeSelectInput (mDpy, mShapeWindow, NoEventMask);
 
