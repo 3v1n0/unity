@@ -44,6 +44,7 @@
 #include <glib/gi18n-lib.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
+#include <gdk/gdkx.h>
 #include <libnotify/notify.h>
 
 #include <sstream>
@@ -379,8 +380,10 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
        RaiseInputWindows();
      });
-
-     LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";
+    
+    Display* display = gdk_x11_display_get_xdisplay(gdk_display_get_default());;
+    XSelectInput(display, GDK_ROOT_WINDOW(), PropertyChangeMask);
+    LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";
   }
 
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &UnityScreen::OnPanelStyleChanged));
@@ -1442,6 +1445,10 @@ void UnityScreen::handleEvent(XEvent* event)
     }
     case MapRequest:
       ShowdesktopHandler::InhibitLeaveShowdesktopMode (event->xmaprequest.window);
+      break;
+    case PropertyNotify:
+      if (event->xproperty.window == GDK_ROOT_WINDOW())
+        _bghash.RefreshColor();
       break;
     default:
         if (screen->shapeEvent () + ShapeNotify == event->type)
