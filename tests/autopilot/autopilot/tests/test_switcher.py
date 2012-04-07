@@ -197,6 +197,18 @@ class SwitcherTests(AutopilotTestCase):
 
         self.assertThat(self.switcher.get_is_visible(), Equals(False))
 
+    def test_quick_alt_tab_true(self):
+        """Test that when pressing alt+tab fast enough quick_tab is true."""
+        self.keybinding("switcher/reveal_normal", 0.1)
+
+        self.assertThat(self.switcher.quick_tab, Equals(True))
+
+    def test_quick_alt_tab_false(self):
+        """Test that when pressing alt+tab slow enough quick_tab is false."""
+        self.keybinding("switcher/reveal_normal", 0.4)
+
+        self.assertThat(self.switcher.quick_tab, Equals(False))
+
 
 class SwitcherDetailsTests(AutopilotTestCase):
     """Test the details mode for the switcher."""
