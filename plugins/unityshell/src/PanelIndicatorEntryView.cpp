@@ -410,8 +410,6 @@ void PanelIndicatorEntryView::Refresh()
   if (!proxy_->visible())
   {
     SetVisible(false);
-    delete entry_texture_;
-    entry_texture_ = nullptr;
     SetColor(nux::color::Transparent);
 
     QueueDraw();
@@ -510,6 +508,9 @@ void PanelIndicatorEntryView::Refresh()
   DrawEntryContent(cr, width, height, pixbuf, layout);
 
   entry_texture_ = texture_from_cairo_graphics(cg);
+  if (entry_texture_)
+    delete entry_texture_;
+
   SetTexture(entry_texture_);
   cairo_destroy(cr);
 
