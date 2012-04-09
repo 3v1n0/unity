@@ -410,7 +410,7 @@ void PanelIndicatorEntryView::Refresh()
   if (!proxy_->visible())
   {
     SetVisible(false);
-    // This will destroy the object texture. No need to manually delete the pointer
+    delete entry_texture_;
     entry_texture_ = nullptr;
     SetColor(nux::color::Transparent);
 
