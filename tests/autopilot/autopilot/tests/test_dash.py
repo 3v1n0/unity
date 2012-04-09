@@ -12,6 +12,7 @@ from gtk import Clipboard
 from testtools.matchers import Equals
 
 from autopilot.tests import AutopilotTestCase
+from autopilot.globals import gio, glib
 
 
 class DashTestCase(AutopilotTestCase):
@@ -74,6 +75,22 @@ class DashSearchInputTests(DashTestCase):
         self.keyboard.type("Hello")
         self.assertSearchText("Hello")
 
+class DashMultiKeyTests(DashSearchInputTests):
+    def setUp(self):
+        super(DashMultiKeyTests, self).setUp()
+        self.set_multi_key()
+
+    def set_multi_key(self):
+        """Set a desktop wide gsettings option
+
+        The value set will be set for the current test only
+        """
+        gsettings = gio.Settings.new('org.gnome.libgnomekbd.keyboard')
+        old_value = gsettings.get_value('options')
+        self.addCleanup(gsettings.set_value, 'options', old_value)
+        new_value = glib.Variant('as', ['Compose key\tcompose:ralt'])
+        gsettings.set_value('options', new_value)
+
     def test_multi_key(self):
         """Pressing 'Multi_key' must not add any characters to the search."""
         self.dash.reveal_application_lens()
@@ -103,6 +120,7 @@ class DashSearchInputTests(DashTestCase):
         self.keyboard.press_and_release('BackSpace')
         self.keyboard.press_and_release('BackSpace')
         self.assertSearchText("d")
+
 
 
 class DashKeyNavTests(DashTestCase):
