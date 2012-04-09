@@ -2891,8 +2891,8 @@ void UnityScreen::InitHints()
   // Menu Bar
   std::string const menubar(_("HUD & Menu Bar"));
 
-  hints_.push_back(std::make_shared<shortcut::Hint>(menubar, "", " (Tap)", _("Open the HUD."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_hud"));
-  hints_.push_back(std::make_shared<shortcut::Hint>(menubar, "", " (Press)", _("Reveals application menu."), shortcut::HARDCODED_OPTION, "Alt"));
+  hints_.push_back(std::make_shared<shortcut::Hint>(menubar, "", _(" (Tap)"), _("Open the HUD."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_hud"));
+  hints_.push_back(std::make_shared<shortcut::Hint>(menubar, "", _(" (Press)"), _("Reveals application menu."), shortcut::HARDCODED_OPTION, "Alt"));
   hints_.push_back(std::make_shared<shortcut::Hint>(menubar, "", "", _("Opens the indicator menu."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "panel_first_menu"));
   hints_.push_back(std::make_shared<shortcut::Hint>(menubar, "", "", _("Moves focus between indicators."), shortcut::HARDCODED_OPTION, _("Cursor Left or Right")));
 
