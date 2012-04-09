@@ -47,8 +47,6 @@ namespace
   const int DEFAULT_MENUS_DISCOVERY = 2;
   const int DEFAULT_DISCOVERY_FADEIN = 200;
   const int DEFAULT_DISCOVERY_FADEOUT = 300;
-
-  const std::string DESKTOP_NAME(_("Ubuntu Desktop"));
 }
 
 PanelMenuView::PanelMenuView()
@@ -76,7 +74,8 @@ PanelMenuView::PanelMenuView()
     _menus_discovery_fadein(DEFAULT_DISCOVERY_FADEIN),
     _menus_discovery_fadeout(DEFAULT_DISCOVERY_FADEOUT),
     _fade_in_animator(_menus_fadein),
-    _fade_out_animator(_menus_fadeout)
+    _fade_out_animator(_menus_fadeout),
+    _desktop_name(_("Ubuntu Desktop"))
 {
   layout_->SetContentDistribution(nux::eStackLeft);
 
@@ -671,7 +670,7 @@ std::string PanelMenuView::GetActiveViewName(bool use_appname) const
 
     if (bamf_window_get_window_type(window) == BAMF_WINDOW_DESKTOP)
     {
-      label = DESKTOP_NAME;
+      label = _desktop_name;
     }
     else if (!IsValidWindow(window_xid))
     {
@@ -813,11 +812,11 @@ void PanelMenuView::Refresh(bool force)
     if (win_manager->IsScaleActiveForGroup())
       new_title = GetActiveViewName(true);
     else if (_we_control_active)
-      new_title = DESKTOP_NAME;
+      new_title = _desktop_name;
   }
   else if (win_manager->IsExpoActive())
   {
-    new_title = DESKTOP_NAME;
+    new_title = _desktop_name;
   }
   else if (!_we_control_active)
   {
@@ -1536,7 +1535,7 @@ void PanelMenuView::AddProperties(GVariantBuilder* builder)
   .add("grabbed", _is_grabbed)
   .add("active_win_maximized", _is_maximized)
   .add("panel_title", _panel_title)
-  .add("desktop_active", (_panel_title == DESKTOP_NAME))
+  .add("desktop_active", (_panel_title == _desktop_name))
   .add("monitor", _monitor)
   .add("active_window", _active_xid)
   .add("draw_menus", DrawMenus())
