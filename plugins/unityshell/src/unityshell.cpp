@@ -754,34 +754,37 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 #ifndef USE_GLES
   bool was_bound = _fbo->bound ();
 
-  if (was_bound && launcher_controller_->IsOverlayOpen() && paint_panel_)
+  if (nux::GetGraphicsDisplay()->GetGraphicsEngine()->UsingGLSLCodePath())
   {
-    if (panel_texture_has_changed_ || !panel_texture_.IsValid())
+    if (was_bound && launcher_controller_->IsOverlayOpen() && paint_panel_)
     {
-      panel_texture_.Release();
-
-      nux::NBitmapData* bitmap = panel::Style::Instance().GetBackground(screen->width (), screen->height(), 1.0f);
-      nux::BaseTexture* texture2D = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-      if (bitmap && texture2D)
+      if (panel_texture_has_changed_ || !panel_texture_.IsValid())
       {
-        texture2D->Update(bitmap);
-        panel_texture_ = texture2D->GetDeviceTexture();
-        texture2D->UnReference();
-        delete bitmap;
+        panel_texture_.Release();
+
+        nux::NBitmapData* bitmap = panel::Style::Instance().GetBackground(screen->width (), screen->height(), 1.0f);
+        nux::BaseTexture* texture2D = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
+        if (bitmap && texture2D)
+        {
+          texture2D->Update(bitmap);
+          panel_texture_ = texture2D->GetDeviceTexture();
+          texture2D->UnReference();
+          delete bitmap;
+        }
+        panel_texture_has_changed_ = false;
       }
-      panel_texture_has_changed_ = false;
-    }
 
-    if (panel_texture_.IsValid())
-    {
-      nux::GetGraphicsDisplay()->GetGraphicsEngine()->ResetModelViewMatrixStack();
-      nux::GetGraphicsDisplay()->GetGraphicsEngine()->Push2DTranslationModelViewMatrix(0.0f, 0.0f, 0.0f);
-      nux::GetGraphicsDisplay()->GetGraphicsEngine()->ResetProjectionMatrix();
-      nux::GetGraphicsDisplay()->GetGraphicsEngine()->SetOrthographicProjectionMatrix(screen->width (), screen->height());
+      if (panel_texture_.IsValid())
+      {
+        nux::GetGraphicsDisplay()->GetGraphicsEngine()->ResetModelViewMatrixStack();
+        nux::GetGraphicsDisplay()->GetGraphicsEngine()->Push2DTranslationModelViewMatrix(0.0f, 0.0f, 0.0f);
+        nux::GetGraphicsDisplay()->GetGraphicsEngine()->ResetProjectionMatrix();
+        nux::GetGraphicsDisplay()->GetGraphicsEngine()->SetOrthographicProjectionMatrix(screen->width (), screen->height());
 
-      nux::TexCoordXForm texxform;
-      int panel_height = panel_style_.panel_height;
-      nux::GetGraphicsDisplay()->GetGraphicsEngine()->QRP_GLSL_1Tex(0, 0, screen->width (), panel_height, panel_texture_, texxform, nux::color::White);
+        nux::TexCoordXForm texxform;
+        int panel_height = panel_style_.panel_height;
+        nux::GetGraphicsDisplay()->GetGraphicsEngine()->QRP_GLSL_1Tex(0, 0, screen->width (), panel_height, panel_texture_, texxform, nux::color::White);
+      }
     }
   }
 
