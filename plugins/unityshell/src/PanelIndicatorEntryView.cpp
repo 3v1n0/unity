@@ -82,7 +82,7 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int pa
 
 PanelIndicatorEntryView::~PanelIndicatorEntryView()
 {
-  // Nothing to do...
+  delete entry_texture_;
 }
 
 void PanelIndicatorEntryView::OnActiveChanged(bool is_active)
