@@ -115,7 +115,7 @@ private:
   glib::Object<GdkPixbuf> MakePixbuf();
 
   IndicatorEntryType type_;
-  nux::BaseTexture* entry_texture_;
+  nux::ObjectPtr<nux::BaseTexture> entry_texture_;
   nux::Geometry cached_geo_;
   double opacity_;
   bool draw_active_;
