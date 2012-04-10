@@ -48,7 +48,10 @@ private:
   void OnActiveChanged(bool is_active);
 
 private:
+  typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
+
   const float inactive_opacity_;
+  LayerPtr focus_layer_;
 };
 
 }

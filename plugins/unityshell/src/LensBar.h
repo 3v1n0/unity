@@ -59,7 +59,6 @@ public:
   sigc::signal<void, std::string const&> lens_activated;
 
 private:
-  void InitTheme();
   void SetupBackground();
   void SetupLayout();
   void SetupHomeLens();
@@ -81,7 +80,6 @@ private:
 
   nux::HLayout* layout_;
   LayerPtr bg_layer_;
-  LayerPtr focus_layer_;
 };
 
 } // namespace dash

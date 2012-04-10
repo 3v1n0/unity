@@ -20,7 +20,6 @@
 #include "config.h"
 
 #include "CairoTexture.h"
-#include "DashStyle.h"
 #include "LensBar.h"
 #include "UBusMessages.h"
 #include "UBusWrapper.h"
@@ -34,8 +33,6 @@ namespace
 
 nux::logging::Logger logger("unity.dash.lensbar");
 
-const int FOCUS_OVERLAY_WIDTH = 60;
-const int FOCUS_OVERLAY_HEIGHT = 44;
 const int LENSBAR_HEIGHT = 44;
 
 }
@@ -45,18 +42,9 @@ NUX_IMPLEMENT_OBJECT_TYPE(LensBar);
 LensBar::LensBar()
   : nux::View(NUX_TRACKER_LOCATION)
 {
-  InitTheme();
   SetupBackground();
   SetupLayout();
   SetupHomeLens();
-}
-
-void LensBar::InitTheme()
-{
-  if (!focus_layer_)
-  {
-    focus_layer_.reset(Style::Instance().FocusOverlay(FOCUS_OVERLAY_WIDTH, FOCUS_OVERLAY_HEIGHT));
-  }
 }
 
 void LensBar::SetupBackground()
@@ -72,7 +60,6 @@ void LensBar::SetupLayout()
 {
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout_->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
-  layout_->SetSpaceBetweenChildren(40);
   SetLayout(layout_);
 
   SetMinimumHeight(LENSBAR_HEIGHT);
@@ -129,25 +116,6 @@ void LensBar::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
   bg_layer_->SetGeometry(base);
   nux::GetPainter().RenderSinglePaintLayer(gfx_context, base, bg_layer_.get());
 
-  for (auto icon : icons_)
-  {
-    if (icon->HasKeyFocus() && focus_layer_)
-    {
-      nux::Geometry geo(icon->GetGeometry());
-
-      // Center it
-      geo.x -= (FOCUS_OVERLAY_WIDTH - geo.width) / 2;
-      geo.y -= (FOCUS_OVERLAY_HEIGHT - geo.height) / 2;
-      geo.width = FOCUS_OVERLAY_WIDTH;
-      geo.height = FOCUS_OVERLAY_HEIGHT;
-
-      nux::AbstractPaintLayer* layer = focus_layer_.get();
-
-      layer->SetGeometry(geo);
-      layer->Renderlayer(gfx_context);
-    }
-  }
-
   gfx_context.PopClippingRectangle();
 
   // trigger a redraw of the decoration, as the special masking of the
@@ -165,16 +133,6 @@ void LensBar::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 
   if (!IsFullRedraw())
     nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_.get());
-
-  for (auto icon: icons_)
-  {
-    if (icon->HasKeyFocus() && !IsFullRedraw() && focus_layer_)
-    {
-      nux::AbstractPaintLayer* layer = focus_layer_.get();
-
-      nux::GetPainter().PushLayer(gfx_context, focus_layer_->GetGeometry(), layer);
-    }
-  }
 
   layout_->ProcessDraw(gfx_context, force_draw);
 
