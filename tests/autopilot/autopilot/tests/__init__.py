@@ -7,7 +7,7 @@ from compizconfig import Setting, Plugin
 import logging
 import os
 from StringIO import StringIO
-from subprocess import call, Popen, PIPE, STDOUT
+from subprocess import call, check_output, Popen, PIPE, STDOUT
 from tempfile import mktemp
 from testscenarios import TestWithScenarios
 from testtools import TestCase
@@ -277,6 +277,19 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         """Returns true if an instance of the application is running."""
         apps = self.get_app_instances(app_name)
         return len(apps) > 0
+
+    def call_gsettings_cmd(self, command, schema, *args):
+        """Set a desktop wide gsettings option
+
+        Using the gsettings command because there's a bug with importing
+        from gobject introspection and pygtk2 simultaneously, and the Xlib
+        keyboard layout bits are very unweildy. This seems like the best
+        solution, even a little bit brutish.
+        """
+        arg_str = ' '.join(args)
+        cmd = 'gsettings %s %s %s' % (command, schema, arg_str)
+        # strip to remove the trailing \n.
+        return check_output(cmd, shell=True).strip()
 
     def set_unity_option(self, option_name, option_value):
         """Set an option in the unity compiz plugin options.

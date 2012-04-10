@@ -12,7 +12,6 @@ from gtk import Clipboard
 from testtools.matchers import Equals
 
 from autopilot.tests import AutopilotTestCase
-from autopilot.globals import gio, glib
 
 
 class DashTestCase(AutopilotTestCase):
@@ -77,19 +76,15 @@ class DashSearchInputTests(DashTestCase):
 
 class DashMultiKeyTests(DashSearchInputTests):
     def setUp(self):
+        def set_multi_key():
+            """Binds Multi_key to caps lock"""
+            old_value = "\"%s\"" % self.call_gsettings_cmd('get', 'org.gnome.libgnomekbd.keyboard', '"options"')
+            self.addCleanup(self.call_gsettings_cmd, 'set', 'org.gnome.libgnomekbd.keyboard', '"options"', old_value)
+
+            self.call_gsettings_cmd('set', 'org.gnome.libgnomekbd.keyboard', '"options"', "\"['Compose key\tcompose:caps']\"")
+
         super(DashMultiKeyTests, self).setUp()
-        self.set_multi_key()
-
-    def set_multi_key(self):
-        """Set a desktop wide gsettings option
-
-        The value set will be set for the current test only
-        """
-        gsettings = gio.Settings.new('org.gnome.libgnomekbd.keyboard')
-        old_value = gsettings.get_value('options')
-        self.addCleanup(gsettings.set_value, 'options', old_value)
-        new_value = glib.Variant('as', ['Compose key\tcompose:ralt'])
-        gsettings.set_value('options', new_value)
+        set_multi_key()    
 
     def test_multi_key(self):
         """Pressing 'Multi_key' must not add any characters to the search."""
