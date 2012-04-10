@@ -173,6 +173,15 @@ PanelMenuView::PanelMenuView()
 
 PanelMenuView::~PanelMenuView()
 {
+  // Need to call this explicitly BEFORE we destroy the _window_buttons member variable.
+  // If we don't Stop is called from the Animator's destructor, which in turn calls
+  // PanelMenuView::FullRedraw, which in turn tries to access the _window_buttons.
+  // The Animator class is clever enough not to emit the animation_ended signal if it's
+  // already been stopped. Alternatively we could explicitly disconnect the signal (but that
+  // requires storing the connection).
+  _fade_in_animator.Stop();
+  _fade_out_animator.Stop();
+
   if (_active_moved_id)
     g_source_remove(_active_moved_id);
 
@@ -183,7 +192,9 @@ PanelMenuView::~PanelMenuView()
     g_source_remove(_new_app_hide_id);
 
   _window_buttons->UnReference();
+  _window_buttons = nullptr;
   _titlebar_grab_area->UnReference();
+  _titlebar_grab_area = nullptr;
 
   _style_changed_connection.disconnect();
 }
