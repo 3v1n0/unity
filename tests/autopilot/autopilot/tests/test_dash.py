@@ -497,7 +497,7 @@ class DashVisualTests(DashTestCase):
                 name_label_y = group.name_label_y + group.name_label_baseline
                 self.assertThat(expand_label_y, Equals(name_label_y))
 
-class DashLensBar(DashTestCase):
+class DashLensBarTests(DashTestCase):
     """Tests that the lensbar works well."""
 
     def test_click_inside_highlight(self):
