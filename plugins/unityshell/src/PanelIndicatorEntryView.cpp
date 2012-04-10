@@ -509,7 +509,7 @@ void PanelIndicatorEntryView::Refresh()
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
   DrawEntryContent(cr, width, height, pixbuf, layout);
 
-  entry_texture_ = texture_from_cairo_graphics(cg);
+  entry_texture_ = texture_ptr_from_cairo_graphics(cg);
   SetTexture(entry_texture_.GetPointer());
   cairo_destroy(cr);
 
