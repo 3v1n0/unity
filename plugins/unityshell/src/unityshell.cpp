@@ -358,8 +358,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
      g_idle_add_full (G_PRIORITY_DEFAULT, &UnityScreen::initPluginActions, this, NULL);
      super_keypressed_ = false;
 
-     GeisAdapter::Default()->Run();
-     gestureEngine = new GestureEngine(screen);
+     GeisAdapter::Default().Run();
+     gestureEngine.reset(new GestureEngine(screen));
 
      CompString name(PKGDATADIR"/panel-shadow.png");
      CompString pname("unityshell");
@@ -380,7 +380,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
        RaiseInputWindows();
      });
-    
+
     Display* display = gdk_x11_display_get_xdisplay(gdk_display_get_default());;
     XSelectInput(display, GDK_ROOT_WINDOW(), PropertyChangeMask);
     LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";

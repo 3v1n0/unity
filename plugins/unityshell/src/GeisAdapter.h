@@ -28,8 +28,9 @@
 class GeisAdapter : public sigc::trackable
 {
 public:
-  static GeisAdapter* Default();
+  static GeisAdapter& Default();
 
+  GeisAdapter();
   ~GeisAdapter();
 
   void Run();
@@ -142,8 +143,6 @@ public:
   sigc::signal<void, GeisTouchData*> touch_update;
   sigc::signal<void, GeisTouchData*> touch_finish;
 protected:
-  GeisAdapter();
-
   static gboolean OnWatchIn(GIOChannel* source, GIOCondition condition, gpointer data);
 
   static void InputDeviceAdded(void* cookie, GeisInputDeviceId device_id, void* attrs);
@@ -167,11 +166,7 @@ private:
   void RegisterRootInstance();
 
   GeisInstance _root_instance;
-
   guint _watch_id;
-
-  static GeisAdapter* _default;
-
 };
 
 #endif

@@ -38,25 +38,25 @@ GestureEngine::GestureEngine(CompScreen* screen)
   _pinch_grab = 0;
   _fleur_cursor = XCreateFontCursor (screen->dpy (), XC_fleur);
 
-  GeisAdapter* adapter = GeisAdapter::Default();
+  GeisAdapter& adapter = GeisAdapter::Default();
 
-  adapter->tap.connect(sigc::mem_fun(this, &GestureEngine::OnTap));
+  adapter.tap.connect(sigc::mem_fun(this, &GestureEngine::OnTap));
 
-  adapter->drag_start.connect(sigc::mem_fun(this, &GestureEngine::OnDragStart));
-  adapter->drag_update.connect(sigc::mem_fun(this, &GestureEngine::OnDragUpdate));
-  adapter->drag_finish.connect(sigc::mem_fun(this, &GestureEngine::OnDragFinish));
+  adapter.drag_start.connect(sigc::mem_fun(this, &GestureEngine::OnDragStart));
+  adapter.drag_update.connect(sigc::mem_fun(this, &GestureEngine::OnDragUpdate));
+  adapter.drag_finish.connect(sigc::mem_fun(this, &GestureEngine::OnDragFinish));
 
-  adapter->rotate_start.connect(sigc::mem_fun(this, &GestureEngine::OnRotateStart));
-  adapter->rotate_update.connect(sigc::mem_fun(this, &GestureEngine::OnRotateUpdate));
-  adapter->rotate_finish.connect(sigc::mem_fun(this, &GestureEngine::OnRotateFinish));
+  adapter.rotate_start.connect(sigc::mem_fun(this, &GestureEngine::OnRotateStart));
+  adapter.rotate_update.connect(sigc::mem_fun(this, &GestureEngine::OnRotateUpdate));
+  adapter.rotate_finish.connect(sigc::mem_fun(this, &GestureEngine::OnRotateFinish));
 
-  adapter->pinch_start.connect(sigc::mem_fun(this, &GestureEngine::OnPinchStart));
-  adapter->pinch_update.connect(sigc::mem_fun(this, &GestureEngine::OnPinchUpdate));
-  adapter->pinch_finish.connect(sigc::mem_fun(this, &GestureEngine::OnPinchFinish));
+  adapter.pinch_start.connect(sigc::mem_fun(this, &GestureEngine::OnPinchStart));
+  adapter.pinch_update.connect(sigc::mem_fun(this, &GestureEngine::OnPinchUpdate));
+  adapter.pinch_finish.connect(sigc::mem_fun(this, &GestureEngine::OnPinchFinish));
 
-  adapter->touch_start.connect(sigc::mem_fun(this, &GestureEngine::OnTouchStart));
-  adapter->touch_update.connect(sigc::mem_fun(this, &GestureEngine::OnTouchUpdate));
-  adapter->touch_finish.connect(sigc::mem_fun(this, &GestureEngine::OnTouchFinish));
+  adapter.touch_start.connect(sigc::mem_fun(this, &GestureEngine::OnTouchStart));
+  adapter.touch_update.connect(sigc::mem_fun(this, &GestureEngine::OnTouchUpdate));
+  adapter.touch_finish.connect(sigc::mem_fun(this, &GestureEngine::OnTouchFinish));
 }
 
 GestureEngine::~GestureEngine()

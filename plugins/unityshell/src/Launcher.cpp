@@ -188,7 +188,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   plugin_adapter.terminate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   plugin_adapter.compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &Launcher::EnsureAnimation));
 
-  GeisAdapter& adapter = *(GeisAdapter::Default());
+  GeisAdapter& adapter = GeisAdapter::Default();
   adapter.drag_start.connect(sigc::mem_fun(this, &Launcher::OnDragStart));
   adapter.drag_update.connect(sigc::mem_fun(this, &Launcher::OnDragUpdate));
   adapter.drag_finish.connect(sigc::mem_fun(this, &Launcher::OnDragFinish));
@@ -1596,7 +1596,7 @@ void Launcher::ConfigureBarrier()
 
   float decay_responsiveness_mult = ((options()->edge_responsiveness() - 1) * .3f) + 1;
   float reveal_responsiveness_mult = ((options()->edge_responsiveness() - 1) * .025f) + 1;
-  
+
   _hide_machine->reveal_pressure = options()->edge_reveal_pressure() * reveal_responsiveness_mult;
   _hide_machine->edge_decay_rate = options()->edge_decay_rate() * decay_responsiveness_mult;
 }
@@ -1954,7 +1954,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
     else
     {
-      blur_texture = bg_effect_helper_.GetRegion(blur_geo); 
+      blur_texture = bg_effect_helper_.GetRegion(blur_geo);
     }
 
     if (blur_texture.IsValid())

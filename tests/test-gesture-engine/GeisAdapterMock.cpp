@@ -20,11 +20,12 @@
 
 #include "GeisAdapterMock.h"
 
-GeisAdapterMock *GeisAdapterMock::_default = 0;
+GeisAdapterMock *GeisAdapterMock::_default = nullptr;
 
-GeisAdapterMock* GeisAdapterMock::Default() {
-  if (!_default) {
+GeisAdapterMock& GeisAdapterMock::Default() {
+  if (!_default)
+  {
     _default = new GeisAdapterMock;
   }
-  return _default;
+  return *_default;
 }
