@@ -1,4 +1,3 @@
-from gi.repository import GLib, Gio
 from compizconfig import Context
 
 # Importing gi.repository in the test was causing testtools to fail to run the tests.
