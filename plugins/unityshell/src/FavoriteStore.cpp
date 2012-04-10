@@ -17,20 +17,41 @@
 * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
 */
 
+#include <NuxCore/Logger.h>
 #include "FavoriteStoreGSettings.h"
 
 namespace unity
 {
+namespace
+{
+  nux::logging::Logger logger("unity.favouritestore");
+  FavoriteStore *favoritestore_instance = nullptr;
+}
+
+FavoriteStore::FavoriteStore()
+{
+  if (favoritestore_instance)
+  {
+    LOG_ERROR(logger) << "More than one FavoriteStore created!";
+  }
+  else
+  {
+    favoritestore_instance = this;
+  }
+}
 
 FavoriteStore::~FavoriteStore()
 {
 }
 
 
-FavoriteStore& FavoriteStore::GetDefault()
+FavoriteStore& FavoriteStore::Instance()
 {
-  static internal::FavoriteStoreGSettings instance;
-  return instance;
+  if (! favoritestore_instance)
+  {
+    LOG_ERROR(logger) << "No FavoriteStore instance created yet!";
+  }
+  return *favoritestore_instance;
 }
 
 }

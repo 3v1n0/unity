@@ -38,6 +38,7 @@
 #include "DashController.h"
 #include "DashSettings.h"
 #include "DashStyle.h"
+#include "FavoriteStoreGSettings.h"
 #include "FontSettings.h"
 #include "ShortcutController.h"
 #include "ShortcutHint.h"
@@ -236,6 +237,7 @@ private:
   dash::Style    dash_style_;
   panel::Style   panel_style_;
   FontSettings   font_settings_;
+  internal::FavoriteStoreGSettings favorite_store_;
 
   launcher::Controller::Ptr launcher_controller_;
   dash::Controller::Ptr     dash_controller_;

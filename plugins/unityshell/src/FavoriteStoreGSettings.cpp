@@ -258,7 +258,7 @@ void FavoriteStoreGSettings::Changed(std::string const& key)
 {
   if (ignore_signals_ or key != "favorites")
     return;
-    
+
   FavoriteList old(favorites_);
   FillList(favorites_);
 
@@ -268,22 +268,22 @@ void FavoriteStoreGSettings::Changed(std::string const& key)
   {
     if (std::find(newbies.begin(), newbies.end(), it) == newbies.end())
       continue;
-    
+
     std::string pos;
     bool before;
-    
+
     impl::GetSignalAddedInfo(favorites_, newbies , it, pos, before);
     favorite_added.emit(it, pos, before);
   }
-                     
+
   for (auto it : impl::GetRemoved(old, favorites_))
   {
-    favorite_removed.emit(it); 
+    favorite_removed.emit(it);
   }
-  
+
   if (impl::NeedToBeReordered(old, favorites_))
     reordered.emit();
- 
+
 }
 
 namespace
