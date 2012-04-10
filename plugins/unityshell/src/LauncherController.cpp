@@ -235,9 +235,9 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   remote_model_.entry_added.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteAdded));
   remote_model_.entry_removed.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteRemoved));
 
-  FavoriteStore::GetDefault().favorite_added.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteAdded));
-  FavoriteStore::GetDefault().favorite_removed.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteRemoved));
-  FavoriteStore::GetDefault().reordered.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreReordered));
+  FavoriteStore::Instance().favorite_added.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteAdded));
+  FavoriteStore::Instance().favorite_removed.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteRemoved));
+  FavoriteStore::Instance().reordered.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreReordered));
 
   LauncherHideMode hide_mode = parent_->options()->hide_mode;
   BFBLauncherIcon* bfb = new BFBLauncherIcon(hide_mode);
@@ -445,7 +445,7 @@ void Controller::Impl::Save()
       desktop_paths.push_back(desktop_file);
   }
 
-  unity::FavoriteStore::GetDefault().SetFavorites(desktop_paths);
+  unity::FavoriteStore::Instance().SetFavorites(desktop_paths);
 }
 
 void
@@ -621,7 +621,7 @@ void Controller::Impl::OnFavoriteStoreFavoriteRemoved(std::string const& entry)
 
 void Controller::Impl::OnFavoriteStoreReordered()
 {
-  FavoriteList const& favs = FavoriteStore::GetDefault().GetFavorites();
+  FavoriteList const& favs = FavoriteStore::Instance().GetFavorites();
   auto bamf_list = model_->GetSublist<BamfLauncherIcon>();
 
   int i = 0;
@@ -803,7 +803,7 @@ void Controller::Impl::SetupBamf()
 
   matcher_ = bamf_matcher_get_default();
 
-  FavoriteList const& favs = FavoriteStore::GetDefault().GetFavorites();
+  FavoriteList const& favs = FavoriteStore::Instance().GetFavorites();
 
   for (FavoriteList::const_iterator i = favs.begin(), end = favs.end();
        i != end; ++i)
