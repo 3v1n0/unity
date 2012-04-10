@@ -510,3 +510,8 @@ class DashLensBar(DashTestCase):
         app_icon = lensbar.get_icon_by_name(u'applications.lens')
 
         self.mouse.move(app_icon.x, app_icon.y)
+        self.mouse.click()
+
+        sleep(1)
+
+        self.assertEqual(lensbar.active_lens, u'applications.lens')        

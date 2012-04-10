@@ -183,6 +183,9 @@ class LensBar(UnityIntrospectionObject):
             if icon.name == name:
                 return icon
 
+class LensBarIcon(UnityIntrospectionObject):
+    """A lens icon at the bottom of the dash."""
+
 
 class LensView(UnityIntrospectionObject):
     """A Lens View."""
