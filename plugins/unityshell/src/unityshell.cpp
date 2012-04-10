@@ -358,7 +358,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      g_idle_add_full (G_PRIORITY_DEFAULT, &UnityScreen::initPluginActions, this, NULL);
      super_keypressed_ = false;
 
-     GeisAdapter::Default().Run();
+     geis_adapter_.Run();
      gestureEngine.reset(new GestureEngine(screen));
 
      CompString name(PKGDATADIR"/panel-shadow.png");

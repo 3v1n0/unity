@@ -22,7 +22,7 @@
 
 GeisAdapterMock *GeisAdapterMock::_default = nullptr;
 
-GeisAdapterMock& GeisAdapterMock::Default() {
+GeisAdapterMock& GeisAdapterMock::Instance() {
   if (!_default)
   {
     _default = new GeisAdapterMock;

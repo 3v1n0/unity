@@ -29,7 +29,7 @@ namespace
 }
 
 /* static */
-GeisAdapter& GeisAdapter::Default()
+GeisAdapter& GeisAdapter::Instance()
 {
   if (!adaptor_instance)
   {

@@ -28,7 +28,7 @@
 class GeisAdapter : public sigc::trackable
 {
 public:
-  static GeisAdapter& Default();
+  static GeisAdapter& Instance();
 
   GeisAdapter();
   ~GeisAdapter();

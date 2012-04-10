@@ -38,7 +38,7 @@ GestureEngine::GestureEngine(CompScreen* screen)
   _pinch_grab = 0;
   _fleur_cursor = XCreateFontCursor (screen->dpy (), XC_fleur);
 
-  GeisAdapter& adapter = GeisAdapter::Default();
+  GeisAdapter& adapter = GeisAdapter::Instance();
 
   adapter.tap.connect(sigc::mem_fun(this, &GestureEngine::OnTap));
 

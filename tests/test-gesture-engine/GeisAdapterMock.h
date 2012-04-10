@@ -27,7 +27,7 @@
 class GeisAdapterMock : public sigc::trackable
 {
 public:
-  static GeisAdapterMock& Default();
+  static GeisAdapterMock& Instance();
 
   ~GeisAdapterMock() {}
 

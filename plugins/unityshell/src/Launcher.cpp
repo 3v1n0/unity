@@ -188,7 +188,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   plugin_adapter.terminate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   plugin_adapter.compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &Launcher::EnsureAnimation));
 
-  GeisAdapter& adapter = GeisAdapter::Default();
+  GeisAdapter& adapter = GeisAdapter::Instance();
   adapter.drag_start.connect(sigc::mem_fun(this, &Launcher::OnDragStart));
   adapter.drag_update.connect(sigc::mem_fun(this, &Launcher::OnDragUpdate));
   adapter.drag_finish.connect(sigc::mem_fun(this, &Launcher::OnDragFinish));
