@@ -82,8 +82,9 @@ class DashMultiKeyTests(DashSearchInputTests):
             self.addCleanup(self.call_gsettings_cmd, 'set', 'org.gnome.libgnomekbd.keyboard', '"options"', old_value)
             self.call_gsettings_cmd('set', 'org.gnome.libgnomekbd.keyboard', '"options"', "\"['Compose key\tcompose:caps']\"")
 
-        super(DashMultiKeyTests, self).setUp()
-        set_multi_key()    
+        # set the multi key first so that we're not getting a new _DISPLAY while keys are held down.
+        set_multi_key()
+        super(DashMultiKeyTests, self).setUp()    
 
     def test_multi_key(self):
         """Pressing 'Multi_key' must not add any characters to the search."""

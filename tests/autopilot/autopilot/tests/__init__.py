@@ -27,7 +27,7 @@ from autopilot.emulators.unity.launcher import LauncherController
 from autopilot.emulators.unity.panel import PanelController
 from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.unity.workspace import WorkspaceManager
-from autopilot.emulators.X11 import ScreenGeometry, Keyboard, Mouse
+from autopilot.emulators.X11 import ScreenGeometry, Keyboard, Mouse, reset_display
 from autopilot.glibrunner import GlibRunner
 from autopilot.globals import (global_context,
     video_recording_enabled,
@@ -289,7 +289,10 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         arg_str = ' '.join(args)
         cmd = 'gsettings %s %s %s' % (command, schema, arg_str)
         # strip to remove the trailing \n.
-        return check_output(cmd, shell=True).strip()
+        ret = check_output(cmd, shell=True).strip()
+        time.sleep(1)
+        reset_display()
+        return ret
 
     def set_unity_option(self, option_name, option_value):
         """Set an option in the unity compiz plugin options.
