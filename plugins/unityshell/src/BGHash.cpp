@@ -35,7 +35,7 @@ namespace
   nux::logging::Logger logger("unity.BGHash");
 }
 
-namespace unity 
+namespace unity
 {
 
 BGHash::BGHash ()
@@ -48,24 +48,24 @@ BGHash::BGHash ()
     _ubus_handle_request_colour(0)
 {
   _override_color.alpha= 0.0f;
-  
-  background_monitor = gnome_bg_new ();
-  client = g_settings_new ("org.gnome.desktop.background");
+
+  background_monitor_ = gnome_bg_new ();
+  client_ = g_settings_new ("org.gnome.desktop.background");
 
   signal_manager_.Add(
-    new glib::Signal<void, GnomeBG*>(background_monitor,
+    new glib::Signal<void, GnomeBG*>(background_monitor_,
                                      "changed",
                                      sigc::mem_fun(this, &BGHash::OnBackgroundChanged)));
 
   signal_manager_.Add(
-    new glib::Signal<void, GSettings*, gchar*>(client,
+    new glib::Signal<void, GSettings*, gchar*>(client_,
                                                "changed",
                                                sigc::mem_fun(this, &BGHash::OnGSettingsChanged)));
 
   UBusServer *ubus = ubus_server_get_default ();
 
-  gnome_bg_load_from_preferences (background_monitor, client);
-  
+  gnome_bg_load_from_preferences (background_monitor_, client_);
+
 
   // avoids making a new object method when all we are doing is
   // calling a method with no logic
@@ -80,9 +80,13 @@ BGHash::BGHash ()
 
 BGHash::~BGHash ()
 {
+  // We need to disconnect the signals before we delete the objects they're connected to,
+  // otherwise the signal manager reads a pointer that's been deleted already.
+  signal_manager_.Disconnect(client_, "changed");
   // serialize our cache
-  g_object_unref (client);
-  g_object_unref (background_monitor);
+  g_object_unref (client_);
+  signal_manager_.Disconnect(background_monitor_, "changed");
+  g_object_unref (background_monitor_);
   UBusServer *ubus = ubus_server_get_default ();
   ubus_server_unregister_interest (ubus, _ubus_handle_request_colour);
 }
@@ -90,7 +94,7 @@ BGHash::~BGHash ()
 void BGHash::OverrideColor (nux::Color color)
 {
   _override_color = color;
-  OnBackgroundChanged(background_monitor);
+  OnBackgroundChanged(background_monitor_);
 }
 
 void BGHash::RefreshColor()
@@ -127,7 +131,7 @@ void BGHash::RefreshColor()
   if (result == Success && items_read)
   {
     gdk_rgba_parse(&color_gdk, colors);
-    nux::Color new_color(color_gdk.red, 
+    nux::Color new_color(color_gdk.red,
                          color_gdk.green,
                          color_gdk.blue,
                          1.0f);
@@ -139,13 +143,13 @@ void BGHash::RefreshColor()
 
 gboolean BGHash::ForceUpdate (BGHash *self)
 {
-  self->OnBackgroundChanged(self->background_monitor);
+  self->OnBackgroundChanged(self->background_monitor_);
   return FALSE;
 }
 
 void BGHash::OnGSettingsChanged (GSettings *settings, gchar *key)
 {
-  gnome_bg_load_from_preferences (background_monitor, settings);
+  gnome_bg_load_from_preferences (background_monitor_, settings);
 }
 
 void BGHash::OnBackgroundChanged (GnomeBG *bg)
@@ -155,7 +159,7 @@ void BGHash::OnBackgroundChanged (GnomeBG *bg)
     TransitionToNewColor (_override_color);
     return;
   }
- 
+
   RefreshColor();
 }
 
