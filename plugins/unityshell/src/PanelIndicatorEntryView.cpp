@@ -82,7 +82,7 @@ PanelIndicatorEntryView::PanelIndicatorEntryView(Entry::Ptr const& proxy, int pa
 
 PanelIndicatorEntryView::~PanelIndicatorEntryView()
 {
-  delete entry_texture_;
+  // Nothing to do...
 }
 
 void PanelIndicatorEntryView::OnActiveChanged(bool is_active)
@@ -410,6 +410,8 @@ void PanelIndicatorEntryView::Refresh()
   if (!proxy_->visible())
   {
     SetVisible(false);
+    // This will destroy the object texture. No need to manually delete the pointer
+    entry_texture_ = nullptr;
     SetColor(nux::color::Transparent);
 
     QueueDraw();
@@ -508,10 +510,7 @@ void PanelIndicatorEntryView::Refresh()
   DrawEntryContent(cr, width, height, pixbuf, layout);
 
   entry_texture_ = texture_from_cairo_graphics(cg);
-  if (entry_texture_)
-    delete entry_texture_;
-
-  SetTexture(entry_texture_);
+  SetTexture(entry_texture_.GetPointer());
   cairo_destroy(cr);
 
   SetVisible(true);
