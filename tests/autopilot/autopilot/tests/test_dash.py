@@ -117,7 +117,6 @@ class DashMultiKeyTests(DashSearchInputTests):
         self.assertSearchText("d")
 
 
-
 class DashKeyNavTests(DashTestCase):
     """Test the unity Dash keyboard navigation."""
 

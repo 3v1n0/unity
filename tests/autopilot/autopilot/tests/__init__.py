@@ -286,8 +286,7 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         keyboard layout bits are very unweildy. This seems like the best
         solution, even a little bit brutish.
         """
-        arg_str = ' '.join(args)
-        cmd = 'gsettings %s %s %s' % (command, schema, arg_str)
+        cmd = ['gsettings', command, schema] + args
         # strip to remove the trailing \n.
         ret = check_output(cmd, shell=True).strip()
         time.sleep(1)
