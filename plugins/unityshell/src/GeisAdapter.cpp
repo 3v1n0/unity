@@ -19,21 +19,36 @@
 
 #include <glib.h>
 #include <gdk/gdkx.h>
+#include <NuxCore/Logger.h>
 #include "GeisAdapter.h"
 
-GeisAdapter* GeisAdapter::_default = 0;
+namespace
+{
+  GeisAdapter* adaptor_instance = nullptr;
+  nux::logging::Logger logger("unity.geisadapter");
+}
 
 /* static */
-GeisAdapter*
-GeisAdapter::Default()
+GeisAdapter& GeisAdapter::Instance()
 {
-  if (!_default)
-    return _default = new GeisAdapter();  // should be using a dictionary
-  return _default;
+  if (!adaptor_instance)
+  {
+    LOG_ERROR(logger) << "No GeisAdapter created yet.";
+  }
+
+  return *adaptor_instance;
 }
 
 GeisAdapter::GeisAdapter() : _root_instance(nullptr)
 {
+  if (adaptor_instance)
+  {
+    LOG_ERROR(logger) << "More than one GeisAdapter created.";
+  }
+  else
+  {
+    adaptor_instance = this;
+  }
   RegisterRootInstance();
 }
 
@@ -41,6 +56,10 @@ GeisAdapter::~GeisAdapter()
 {
   if (_root_instance != nullptr)
     geis_finish(_root_instance);
+  if (adaptor_instance == this)
+  {
+    adaptor_instance = nullptr;
+  }
 }
 
 void
