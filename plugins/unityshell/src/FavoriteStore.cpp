@@ -25,7 +25,7 @@ namespace unity
 namespace
 {
   nux::logging::Logger logger("unity.favouritestore");
-  FavoriteStore *favoritestore_instance = nullptr;
+  FavoriteStore* favoritestore_instance = nullptr;
 }
 
 FavoriteStore::FavoriteStore()
