@@ -47,6 +47,10 @@ private:
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   void OnActiveChanged(bool is_active);
 
+  // Introspectable
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
+
 private:
   typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
 

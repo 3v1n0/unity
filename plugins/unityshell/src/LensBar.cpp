@@ -87,6 +87,7 @@ void LensBar::AddLens(Lens::Ptr& lens)
   lens->visible.changed.connect([icon](bool visible) { icon->SetVisible(visible); } );
   icons_.push_back(icon);
   layout_->AddView(icon, 0, nux::eCenter, nux::eFix);
+  AddChild(icon);
 
   icon->mouse_click.connect([&, icon] (int x, int y, unsigned long button, unsigned long keyboard) { SetActive(icon); QueueDraw(); });
   icon->mouse_down.connect([&] (int x, int y, unsigned long button, unsigned long keyboard) {  QueueDraw(); });

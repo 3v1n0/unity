@@ -496,3 +496,17 @@ class DashVisualTests(DashTestCase):
                 expand_label_y = group.expand_label_y + group.expand_label_baseline
                 name_label_y = group.name_label_y + group.name_label_baseline
                 self.assertThat(expand_label_y, Equals(name_label_y))
+
+class DashLensBar(DashTestCase):
+    """Tests that the lensbar works well."""
+
+    def test_click_inside_highlight(self):
+        """Lens selection should work when clicking in
+        the rectangle outside of the icon.
+        """
+        self.dash.ensure_visible()
+
+        lensbar = self.dash.view.get_lensbar()
+        app_icon = lensbar.get_icon_by_name(u'applications.lens')
+
+        self.mouse.move(app_icon.x, app_icon.y)

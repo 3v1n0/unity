@@ -16,6 +16,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
+#include <UnityCore/Variant.h>
+
 #include "DashStyle.h"
 #include "LensBarIcon.h"
 
@@ -105,6 +107,20 @@ void LensBarIcon::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 void LensBarIcon::OnActiveChanged(bool is_active)
 {
   QueueDraw();
+}
+
+// Introspectable
+std::string LensBarIcon::GetName() const
+{
+  return "LensBarIcon";
+}
+
+void LensBarIcon::AddProperties(GVariantBuilder* builder)
+{
+  unity::variant::BuilderWrapper wrapper(builder);
+
+  wrapper.add(GetAbsoluteGeometry());
+  wrapper.add("name", id);
 }
 
 }
