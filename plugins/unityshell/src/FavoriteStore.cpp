@@ -42,6 +42,8 @@ FavoriteStore::FavoriteStore()
 
 FavoriteStore::~FavoriteStore()
 {
+  if (favoritestore_instance == this)
+    favoritestore_instance = nullptr;
 }
 
 
