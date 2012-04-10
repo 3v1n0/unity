@@ -248,7 +248,7 @@ private:
   std::list<shortcut::AbstractHint::Ptr> hints_;
   bool enable_shortcut_overlay_;
 
-  std::unique_ptr<GestureEngine>        gestureEngine;
+  std::unique_ptr<GestureEngine>        gesture_engine_;
   nux::WindowThread*                    wt;
   nux::BaseWindow*                      panelWindow;
   nux::Geometry                         lastTooltipArea;

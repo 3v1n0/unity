@@ -108,7 +108,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , cScreen(CompositeScreen::get(screen))
   , gScreen(GLScreen::get(screen))
   , enable_shortcut_overlay_(true)
-  , gestureEngine(nullptr)
+  , gesture_engine_(nullptr)
   , wt(nullptr)
   , panelWindow(nullptr)
   , debugger(nullptr)
@@ -359,7 +359,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      super_keypressed_ = false;
 
      geis_adapter_.Run();
-     gestureEngine.reset(new GestureEngine(screen));
+     gesture_engine_.reset(new GestureEngine(screen));
 
      CompString name(PKGDATADIR"/panel-shadow.png");
      CompString pname("unityshell");
