@@ -189,6 +189,8 @@ private:
 
   Animator _fade_in_animator;
   Animator _fade_out_animator;
+
+  const std::string _desktop_name;
 };
 
 }
