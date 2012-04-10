@@ -833,6 +833,7 @@ void Controller::Impl::SetupBamf()
     icon->SetSortPriority(sort_priority_++);
     RegisterIcon(icon);
   }
+  g_list_free(apps);
   SortAndUpdate();
 
   model_->order_changed.connect(sigc::mem_fun(this, &Impl::SortAndUpdate));
@@ -1218,7 +1219,7 @@ bool Controller::IsOverlayOpen() const
   {
     if (launcher_ptr->IsOverlayOpen())
       return true;
-  } 
+  }
   return false;
 }
 
@@ -1308,7 +1309,7 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
     break;
 
     default:
-      // ALT + <Anykey>; treat it as a shortcut and exit keynav 
+      // ALT + <Anykey>; treat it as a shortcut and exit keynav
       if (state & nux::NUX_STATE_ALT)
       {
         parent_->KeyNavTerminate(false);
