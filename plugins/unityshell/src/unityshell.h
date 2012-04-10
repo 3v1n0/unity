@@ -237,6 +237,7 @@ private:
   dash::Style    dash_style_;
   panel::Style   panel_style_;
   FontSettings   font_settings_;
+  GeisAdapter    geis_adapter_;
   internal::FavoriteStoreGSettings favorite_store_;
 
   launcher::Controller::Ptr launcher_controller_;
@@ -249,7 +250,7 @@ private:
   std::list<shortcut::AbstractHint::Ptr> hints_;
   bool enable_shortcut_overlay_;
 
-  GestureEngine*                        gestureEngine;
+  std::unique_ptr<GestureEngine>        gesture_engine_;
   nux::WindowThread*                    wt;
   nux::BaseWindow*                      panelWindow;
   nux::Geometry                         lastTooltipArea;

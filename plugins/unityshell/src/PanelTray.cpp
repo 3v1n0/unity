@@ -85,7 +85,11 @@ PanelTray::~PanelTray()
   g_strfreev(whitelist_);
 
   if (gtk_widget_get_realized(window_))
-    gtk_widget_destroy(window_);
+  {
+    // We call Release since we're deleting the window here manually,
+    // and we don't want the smart pointer to try and delete it as well.
+    gtk_widget_destroy(window_.Release());
+  }
 }
 
 Window PanelTray::xid()

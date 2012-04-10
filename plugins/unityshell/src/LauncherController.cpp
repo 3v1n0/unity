@@ -833,6 +833,7 @@ void Controller::Impl::SetupBamf()
     icon->SetSortPriority(sort_priority_++);
     RegisterIcon(icon);
   }
+  g_list_free(apps);
   SortAndUpdate();
 
   model_->order_changed.connect(sigc::mem_fun(this, &Impl::SortAndUpdate));

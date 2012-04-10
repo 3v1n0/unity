@@ -103,7 +103,7 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
 
   // set up our texture mode
   nux::TexCoordXForm texxform;
-  
+
   int icon_left_hand_side = geometry.x + (geometry.width - container->icon->GetWidth()) / 2;
   int icon_top_side = geometry.y + padding + ((tile_icon_size - container->icon->GetHeight()) / 2);
 
@@ -289,7 +289,7 @@ nux::BaseTexture* ResultRendererTile::CreateTextureCallback(std::string const& t
   pixbuf_height = gdk_pixbuf_get_height(pixbuf);
   if (G_UNLIKELY(!pixbuf_height || !pixbuf_width))
   {
-    LOG_ERROR(logger) << "Pixbuf: " << texid << " has a zero height/width: " 
+    LOG_ERROR(logger) << "Pixbuf: " << texid << " has a zero height/width: "
                       << width << "," << height;
     pixbuf_width = (pixbuf_width) ? pixbuf_width : 1; // no zeros please
     pixbuf_height = (pixbuf_height) ? pixbuf_height: 1; // no zeros please
@@ -304,13 +304,12 @@ nux::BaseTexture* ResultRendererTile::CreateTextureCallback(std::string const& t
   {
     // slow path for non square icons that must be resized to fit in the square
     // texture
-    
+
     Style& style = Style::Instance();
     float aspect = static_cast<float>(pixbuf_height) / pixbuf_width; // already sanitized width/height so can not be 0.0
     if (aspect < 1.0f)
     {
       pixbuf_width = style.GetTileWidth() - (padding * 2);
-      pixbuf_width = (max_icon_width_ > 0) ? std::min(pixbuf_width, max_icon_width_) : pixbuf_width;
       pixbuf_height = pixbuf_width * aspect;
 
 
@@ -412,7 +411,7 @@ void ResultRendererTile::IconLoaded(std::string const& texid,
 
     container->icon = texture;
     container->blurred_icon = texture_blurred;
-    container->prelight = texture_prelight; 
+    container->prelight = texture_prelight;
 
     NeedsRedraw.emit();
 
