@@ -495,7 +495,7 @@ void QuicklistMenuItem::AddProperties(GVariantBuilder* builder)
   .add("enabled", GetEnabled())
   .add("active", GetActive())
   .add("visible", GetVisible())
-  .add("lit", _prelight);
+  .add("selected", _prelight);
 }
 
 } //NAMESPACE
