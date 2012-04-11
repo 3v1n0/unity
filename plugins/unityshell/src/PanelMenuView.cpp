@@ -192,9 +192,7 @@ PanelMenuView::~PanelMenuView()
     g_source_remove(_new_app_hide_id);
 
   _window_buttons->UnReference();
-  _window_buttons = nullptr;
   _titlebar_grab_area->UnReference();
-  _titlebar_grab_area = nullptr;
 }
 
 void PanelMenuView::OverlayShown()
