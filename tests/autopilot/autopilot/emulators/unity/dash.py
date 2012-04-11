@@ -176,6 +176,15 @@ class SearchBar(UnityIntrospectionObject):
 
 class LensBar(UnityIntrospectionObject):
     """The bar of lens icons at the bottom of the dash."""
+    def get_icon_by_name(self, name):
+        """Get a LensBarIcon child object by it's name. For example, 'home.lens'."""
+        icons = self.get_children_by_type(LensBarIcon)
+        for icon in icons:
+            if icon.name == name:
+                return icon
+
+class LensBarIcon(UnityIntrospectionObject):
+    """A lens icon at the bottom of the dash."""
 
 
 class LensView(UnityIntrospectionObject):
