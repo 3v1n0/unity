@@ -105,7 +105,7 @@ void IconTexture::LoadIcon()
   LOG_DEBUG(logger) << "LoadIcon called (" << _icon_name << ") - loading: " << _loading;
   static const char* const DEFAULT_GICON = ". GThemedIcon text-x-preview";
 
-  if (_loading || _size == 0)
+  if (_loading || _size == 0 || _handle)
     return;
 
   _loading = true;
