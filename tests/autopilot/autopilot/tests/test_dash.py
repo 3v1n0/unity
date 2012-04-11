@@ -78,7 +78,7 @@ class DashMultiKeyTests(DashSearchInputTests):
     def setUp(self):
         def set_multi_key():
             """Binds Multi_key to caps lock"""
-            old_value = "\"%s\"" % self.call_gsettings_cmd('get', 'org.gnome.libgnomekbd.keyboard', '"options"')
+            old_value = "\"%s\"" % self.call_gsettings_cmd(['get', 'org.gnome.libgnomekbd.keyboard', '"options"'])
             self.addCleanup(self.call_gsettings_cmd, 'set', 'org.gnome.libgnomekbd.keyboard', '"options"', old_value)
             self.call_gsettings_cmd('set', 'org.gnome.libgnomekbd.keyboard', '"options"', "\"['Compose key\tcompose:caps']\"")
 

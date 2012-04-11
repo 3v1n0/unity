@@ -278,7 +278,7 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         apps = self.get_app_instances(app_name)
         return len(apps) > 0
 
-    def call_gsettings_cmd(self, command, schema, *args):
+    def call_gsettings_cmd(self, command, schema, args=[]):
         """Set a desktop wide gsettings option
 
         Using the gsettings command because there's a bug with importing
