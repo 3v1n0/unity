@@ -645,44 +645,38 @@ void QuicklistView::CancelItemsPrelightStatus()
 void QuicklistView::RecvItemMouseDrag(QuicklistMenuItem* item, int x, int y)
 {
   nux::Geometry geo;
-  std::list<QuicklistMenuItem*>::iterator it;
-  for (it = _item_list.begin(); it != _item_list.end(); it++)
+
+  for (auto it : _item_list)
   {
-    if (!(*it)->GetVisible())
+    int item_index = GetItemIndex(it);
+
+    if (!IsMenuItemSelectable(item_index))
       continue;
 
-    geo = (*it)->GetGeometry();
+    geo = it->GetGeometry();
     geo.width = _item_layout->GetBaseWidth();
 
     if (geo.IsPointInside(x + item->GetBaseX(), y + item->GetBaseY()))
     {
-      (*it)->_prelight = true;
-    }
-    else
-    {
-      (*it)->_prelight = false;
+      SelectItem(item_index);
     }
   }
 
-  for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
+  for (auto it : _default_item_list)
   {
-    if (!(*it)->GetVisible())
+    int item_index = GetItemIndex(it);
+
+    if (!IsMenuItemSelectable(item_index))
       continue;
 
-    geo = (*it)->GetGeometry();
+    geo = it->GetGeometry();
     geo.width = _default_item_layout->GetBaseWidth();
 
     if (geo.IsPointInside(x + item->GetBaseX(), y + item->GetBaseY()))
     {
-      (*it)->_prelight = true;
-    }
-    else
-    {
-      (*it)->_prelight = false;
+      SelectItem(item_index);
     }
   }
-
-  NeedRedraw();
 }
 
 void QuicklistView::RecvItemMouseEnter(QuicklistMenuItem* item)
