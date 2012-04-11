@@ -173,6 +173,15 @@ PanelMenuView::PanelMenuView()
 
 PanelMenuView::~PanelMenuView()
 {
+  // We need to disconnect these signals explicitly before we destroy the window buttons
+  // and titlebar grab area objects, otherwise there's a risk the signals will fire as the
+  // animator objects are destroyed (which happens after the destructor finishes).
+  _fade_in_animator.animation_updated.clear();
+  _fade_in_animator.animation_ended.clear();
+  _fade_out_animator.animation_updated.clear();
+  _fade_out_animator.animation_ended.clear();
+  _style_changed_connection.disconnect();
+
   if (_active_moved_id)
     g_source_remove(_active_moved_id);
 
@@ -184,8 +193,6 @@ PanelMenuView::~PanelMenuView()
 
   _window_buttons->UnReference();
   _titlebar_grab_area->UnReference();
-
-  _style_changed_connection.disconnect();
 }
 
 void PanelMenuView::OverlayShown()
