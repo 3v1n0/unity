@@ -84,6 +84,7 @@ private:
   bool _loading;
 
   float _opacity;
+  int _handle;
 };
 
 }
