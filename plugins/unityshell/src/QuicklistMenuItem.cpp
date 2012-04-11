@@ -354,7 +354,7 @@ void QuicklistMenuItem::RecvMouseClick(int x, int y, unsigned long button_flags,
 
 void QuicklistMenuItem::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
-
+  sigMouseEnter.emit(this);
 }
 
 void QuicklistMenuItem::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
@@ -364,13 +364,11 @@ void QuicklistMenuItem::RecvMouseDrag(int x, int y, int dx, int dy, unsigned lon
 
 void QuicklistMenuItem::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  _prelight = true;
   sigMouseEnter.emit(this);
 }
 
 void QuicklistMenuItem::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  _prelight = false;
   sigMouseLeave.emit(this);
 }
 

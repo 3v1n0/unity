@@ -62,6 +62,7 @@ public:
   int GetNumItems();
   QuicklistMenuItem* GetNthItems(int index);
   QuicklistMenuItemType GetNthType(int index);
+  int GetItemIndex(QuicklistMenuItem* item);
   std::list<QuicklistMenuItem*> GetChildren();
   void DefaultToFirstItem();
 

@@ -660,11 +660,15 @@ void QuicklistView::RecvItemMouseDrag(QuicklistMenuItem* item, int x, int y)
 
 void QuicklistView::RecvItemMouseEnter(QuicklistMenuItem* item)
 {
+  CancelItemsPrelightStatus();
+  _current_item_index = GetItemIndex(item);
+  item->_prelight = true;
   NeedRedraw();
 }
 
 void QuicklistView::RecvItemMouseLeave(QuicklistMenuItem* item)
 {
+  item->_prelight = false;
   NeedRedraw();
 }
 
@@ -786,14 +790,37 @@ QuicklistMenuItem* QuicklistView::GetNthItems(int index)
     if (_item_list.size() > 0)
       i = _item_list.size() - 1;
     std::list<QuicklistMenuItem*>::iterator it;
-    for (it = _item_list.begin(); it != _item_list.end(); i++, it++)
+    for (it = _default_item_list.begin(); it != _default_item_list.end(); i++, it++)
     {
       if (i == index)
         return *it;
     }
   }
 
-  return 0;
+  return nullptr;
+}
+
+int QuicklistView::GetItemIndex(QuicklistMenuItem* item)
+{
+  int index = -1;
+
+  for (auto it : _item_list)
+  {
+    ++index;
+
+    if (it == item)
+      return index;
+  }
+
+  for (auto it : _default_item_list)
+  {
+    ++index;
+
+    if (it == item)
+      return index;
+  }
+
+  return index;
 }
 
 QuicklistMenuItemType QuicklistView::GetNthType(int index)
