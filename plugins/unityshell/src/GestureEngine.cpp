@@ -32,6 +32,7 @@ GestureEngine::GestureEngine(CompScreen* screen)
   _screen = screen;
 
   _drag_id = 0;
+  _drag_window = 0;
   _pinch_id = 0;
   _touch_id = 0;
   _drag_grab = 0;
@@ -174,7 +175,7 @@ GestureEngine::OnDragFinish(GeisAdapter::GeisDragData* data)
 void
 GestureEngine::EndDrag()
 {
-  if (_drag_id && _drag_window)
+  if (_drag_window)
   {
     _screen->removeGrab(_drag_grab, NULL);
     _drag_grab = 0;
