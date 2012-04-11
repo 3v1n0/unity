@@ -1481,15 +1481,10 @@ std::string QuicklistView::GetName() const
 
 void QuicklistView::AddProperties(GVariantBuilder* builder)
 {
-  nux::Geometry abs_geo = GetAbsoluteGeometry();
-
   variant::BuilderWrapper(builder)
-    .add("x", abs_geo.x)
-    .add("y", abs_geo.y)
+    .add(GetAbsoluteGeometry())
     .add("base_x", GetBaseX())
     .add("base_y", GetBaseY())
-    .add("width", GetBaseWidth())
-    .add("height", GetBaseHeight())
     .add("active", IsVisible());
 }
 
