@@ -9,6 +9,7 @@
 
 from dbus import Interface
 import logging
+from time import sleep
 
 from autopilot.emulators.dbus_handler import session_bus
 
@@ -146,17 +147,45 @@ class UnityIntrospectionObject(object):
 
             This works by refreshing the value using repeated dbus calls.
 
+            Raises RuntimeError if the attribute was not equal to the expected value
+            after 10 seconds.
+
             """
-            print self
-            print expected_value
-            print self.parent
+            # It's guaranteed that our value is up to date, since __getattr__ calls
+            # refresh_state. This if statement stops us waiting if the value is
+            # already what we expect:
+            if self == expected_value:
+                return
 
-        # I initially tried to do this with functools.partial, but it seems that
-        # as soon as you try and apply a partial function to an instance 'self'
-        # doesn't get passed in.
+            for i in range(11):
+                new_state = get_state_by_name_and_id(
+                    self.parent.__class__.__name__,
+                    self.parent.id)
+                if new_state[self.name] == expected_value:
+                    self.parent.set_properties(new_state)
+                    return
+                sleep(1)
 
+            raise RuntimeError("Error: %s.%s was not equal to %r after 10 seconds."
+                % (self.parent.__class__.__name__,
+                    self.name,
+                    expected_value))
+
+        # This looks like magic, but it's really not. We're creating a new type
+        # on the fly that derives from the type of 'value' with a couple of
+        # extra attributes: wait_for is the wait_for method above. 'parent' and
+        # 'name' are needed by the wait_for method.
+        #
+        # We can't use traditional meta-classes here, since the type we're
+        # deriving from is only known at call time, not at parse time (we could
+        # override __call__ in the meta class, but that doesn't buy us anything
+        # extra).
+        #
+        # A better way to do this would be with functools.partial, which I tried
+        # initially, but doesn't work well with bound methods.
         t = type(value)
-        return type(t.__name__, (t,), {'wait_for': wait_for, 'parent':self})(value)
+        attrs = {'wait_for': wait_for, 'parent':self, 'name':name}
+        return type(t.__name__, (t,), attrs)(value)
 
     def _get_child_tuples_by_type(self, desired_type):
         """Get a list of (name,dict) pairs from children of the specified type.

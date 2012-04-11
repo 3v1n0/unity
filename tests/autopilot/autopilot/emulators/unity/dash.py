@@ -66,13 +66,7 @@ class Dash(KeybindingsHelper):
             self._wait_for_visibility(expect_visible=False)
 
     def _wait_for_visibility(self, expect_visible):
-        for i in range(11):
-            if self.visible != expect_visible:
-                sleep(1)
-            else:
-                return
-        raise RuntimeError("Dash not %s after waiting for 10 seconds." %
-            ("Visible" if expect_visible else "Hidden"))
+        self.visible.wait_for(expect_visible)
 
     @property
     def visible(self):
