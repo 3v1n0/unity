@@ -51,7 +51,8 @@ IconTexture::IconTexture(nux::BaseTexture* texture, guint width, guint height)
     _texture_width(width),
     _texture_height(height),
     _loading(false),
-    _opacity(1.0f)
+    _opacity(1.0f),
+    _handle(0)
 {
   SetMinMaxSize(width, height);
 }
@@ -64,14 +65,17 @@ IconTexture::IconTexture(std::string const& icon_name, unsigned int size, bool d
     _texture_width(0),
     _texture_height(0),
     _loading(false),
-    _opacity(1.0f)
+    _opacity(1.0f),
+    _handle(0)
 {
   if (!icon_name.empty () && !defer_icon_loading)
     LoadIcon();
 }
 
 IconTexture::~IconTexture()
-{}
+{
+  IconLoader::GetDefault().DisconnectHandle(_handle);
+}
 
 void IconTexture::SetByIconName(std::string const& icon_name, unsigned int size)
 {
@@ -110,20 +114,20 @@ void IconTexture::LoadIcon()
 
   if (icon)
   {
-    IconLoader::GetDefault().LoadFromGIconString(_icon_name.empty() ? DEFAULT_GICON : _icon_name.c_str(),
-                                                  _size,
-                                                  sigc::mem_fun(this, &IconTexture::IconLoaded));
+    _handle = IconLoader::GetDefault().LoadFromGIconString(_icon_name.empty() ? DEFAULT_GICON : _icon_name.c_str(),
+                                                           _size,
+                                                           sigc::mem_fun(this, &IconTexture::IconLoaded));
   }
   else if (_icon_name.find("http://") == 0)
   {
-    IconLoader::GetDefault().LoadFromURI(_icon_name,
-                                          _size, sigc::mem_fun(this, &IconTexture::IconLoaded));
+    _handle = IconLoader::GetDefault().LoadFromURI(_icon_name,
+                                                   _size, sigc::mem_fun(this, &IconTexture::IconLoaded));
   }
   else
   {
-    IconLoader::GetDefault().LoadFromIconName(_icon_name,
-                                               _size,
-                                               sigc::mem_fun(this, &IconTexture::IconLoaded));
+    _handle = IconLoader::GetDefault().LoadFromIconName(_icon_name,
+                                                        _size,
+                                                        sigc::mem_fun(this, &IconTexture::IconLoaded));
   }
 }
 
@@ -155,6 +159,8 @@ void IconTexture::Refresh(GdkPixbuf* pixbuf)
 void IconTexture::IconLoaded(std::string const& icon_name, unsigned size,
                              GdkPixbuf* pixbuf)
 {
+  _handle = 0;
+
   if (GDK_IS_PIXBUF(pixbuf))
   {
     Refresh(pixbuf);
