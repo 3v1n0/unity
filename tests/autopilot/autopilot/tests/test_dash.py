@@ -74,6 +74,18 @@ class DashSearchInputTests(DashTestCase):
         self.keyboard.type("Hello")
         self.assertSearchText("Hello")
 
+class DashMultiKeyTests(DashSearchInputTests):
+    def setUp(self):
+        def set_multi_key():
+            """Binds Multi_key to caps lock"""
+            old_value = "\"%s\"" % self.call_gsettings_cmd('get', 'org.gnome.libgnomekbd.keyboard', '"options"')
+            self.addCleanup(self.call_gsettings_cmd, 'set', 'org.gnome.libgnomekbd.keyboard', '"options"', old_value)
+            self.call_gsettings_cmd('set', 'org.gnome.libgnomekbd.keyboard', '"options"', "\"['Compose key\tcompose:caps']\"")
+
+        # set the multi key first so that we're not getting a new _DISPLAY while keys are held down.
+        set_multi_key()
+        super(DashMultiKeyTests, self).setUp()    
+
     def test_multi_key(self):
         """Pressing 'Multi_key' must not add any characters to the search."""
         self.dash.reveal_application_lens()
