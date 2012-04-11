@@ -2533,7 +2533,7 @@ void Launcher::MouseDownLogic(int x, int y, unsigned long button_flags, unsigned
       g_source_remove(_start_dragicon_handle);
     _start_dragicon_handle = g_timeout_add(START_DRAGICON_DURATION, &Launcher::StartIconDragTimeout, this);
 
-    launcher_icon->mouse_down.emit(nux::GetEventButton(button_flags), monitor);
+    launcher_icon->mouse_down.emit(nux::GetEventButton(button_flags), monitor, key_flags);
   }
 }
 
@@ -2549,17 +2549,17 @@ void Launcher::MouseUpLogic(int x, int y, unsigned long button_flags, unsigned l
 
   if (_icon_mouse_down && (_icon_mouse_down == launcher_icon))
   {
-    _icon_mouse_down->mouse_up.emit(nux::GetEventButton(button_flags), monitor);
+    _icon_mouse_down->mouse_up.emit(nux::GetEventButton(button_flags), monitor, key_flags);
 
     if (GetActionState() == ACTION_NONE)
     {
-      _icon_mouse_down->mouse_click.emit(nux::GetEventButton(button_flags), monitor);
+      _icon_mouse_down->mouse_click.emit(nux::GetEventButton(button_flags), monitor, key_flags);
     }
   }
 
   if (launcher_icon && (_icon_mouse_down != launcher_icon))
   {
-    launcher_icon->mouse_up.emit(nux::GetEventButton(button_flags), monitor);
+    launcher_icon->mouse_up.emit(nux::GetEventButton(button_flags), monitor, key_flags);
   }
 
   if (GetActionState() == ACTION_DRAG_LAUNCHER)

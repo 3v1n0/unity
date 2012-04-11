@@ -207,9 +207,9 @@ public:
   
   virtual void UnStick() = 0;
 
-  sigc::signal<void, int, int> mouse_down;
-  sigc::signal<void, int, int> mouse_up;
-  sigc::signal<void, int, int> mouse_click;
+  sigc::signal<void, int, int, unsigned long> mouse_down;
+  sigc::signal<void, int, int, unsigned long> mouse_up;
+  sigc::signal<void, int, int, unsigned long> mouse_click;
   sigc::signal<void, int>      mouse_enter;
   sigc::signal<void, int>      mouse_leave;
 
