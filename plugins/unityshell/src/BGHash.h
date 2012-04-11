@@ -45,7 +45,7 @@ namespace unity
     void OnGSettingsChanged (GSettings *settings, gchar *key);
     void OverrideColor (nux::Color color);
     void RefreshColor();
-  
+
   private:
     gboolean DoTransitionCallback ();
     static gboolean OnTransitionCallback (BGHash *self);
@@ -55,8 +55,8 @@ namespace unity
     nux::Color MatchColor (nux::Color base_color);
 
   private:
-    GnomeBG *background_monitor;
-    GSettings *client;
+    GnomeBG *background_monitor_;
+    GSettings *client_;
 
     guint _transition_handler;
 
