@@ -1560,32 +1560,15 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
 
   if (!shortcut_controller_->Visible() && shortcut_controller_->IsEnabled())
   {
-    static nux::Geometry last_geo;
-    UScreen* uscreen = UScreen::GetDefault();
-    int primary_monitor = uscreen->GetMonitorWithMouse();
-    auto monitor_geo = uscreen->GetMonitorGeometry(primary_monitor);
-
-    int width = 970;
-    int height =  680;
     int launcher_width = optionGetIconSize() + 18;
     int panel_height = panel_style_.panel_height;
-    int x = monitor_geo.x + launcher_width + (monitor_geo.width - launcher_width- width) / 2;
-    int y = monitor_geo.y + panel_height + (monitor_geo.height - panel_height - height) / 2;
 
-    nux::Geometry geo (x, y, width, height);
-
-    if (last_geo != geo)
+    if (shortcut_controller_->Show())
     {
-      shortcut_controller_->SetWorkspace(geo);
-      last_geo = geo;
-    }
-
-    if (last_geo.x > monitor_geo.x and last_geo.y > monitor_geo.y)
-    {
+      shortcut_controller_->SetAdjustment(launcher_width, panel_height);
       EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, true, action->key().modifiers());
-      shortcut_controller_->Show();
     }
-   }
+  }
 
   return true;
 }
