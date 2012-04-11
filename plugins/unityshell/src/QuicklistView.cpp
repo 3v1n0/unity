@@ -688,12 +688,16 @@ void QuicklistView::RecvItemMouseDrag(QuicklistMenuItem* item, int x, int y)
 void QuicklistView::RecvItemMouseEnter(QuicklistMenuItem* item)
 {
   int item_index = GetItemIndex(item);
+
   SelectItem(item_index);
 }
 
 void QuicklistView::RecvItemMouseLeave(QuicklistMenuItem* item)
 {
-  SelectItem(-1);
+  int item_index = GetItemIndex(item);
+
+  if (item_index < 0 || item_index == _current_item_index)
+    SelectItem(-1);
 }
 
 void QuicklistView::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags)

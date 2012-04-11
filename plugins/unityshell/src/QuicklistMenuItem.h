@@ -116,10 +116,8 @@ protected:
 
   void RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
 
   sigc::signal<void, QuicklistMenuItem*> sigMouseEnter;
