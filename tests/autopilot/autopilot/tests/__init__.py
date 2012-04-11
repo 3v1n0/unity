@@ -4,10 +4,11 @@ Autopilot tests for Unity.
 
 
 from compizconfig import Setting, Plugin
+from dbus import DBusException
 import logging
 import os
 from StringIO import StringIO
-from subprocess import call, Popen, PIPE, STDOUT
+from subprocess import call, check_output, Popen, PIPE, STDOUT
 from tempfile import mktemp
 from testscenarios import TestWithScenarios
 from testtools import TestCase
@@ -27,7 +28,7 @@ from autopilot.emulators.unity.launcher import LauncherController
 from autopilot.emulators.unity.panel import PanelController
 from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.unity.workspace import WorkspaceManager
-from autopilot.emulators.X11 import ScreenGeometry, Keyboard, Mouse
+from autopilot.emulators.X11 import ScreenGeometry, Keyboard, Mouse, reset_display
 from autopilot.glibrunner import GlibRunner
 from autopilot.globals import (global_context,
     video_recording_enabled,
@@ -114,7 +115,12 @@ class LoggedTestCase(TestWithScenarios, TestCase):
         self.addCleanup(self._tearDownUnityLogging)
 
     def _tearDownUnityLogging(self):
-        reset_logging()
+        # If unity dies, our dbus interface has gone, and reset_logging will fail
+        # but we still want our log, so we ignore any errors.
+        try:
+            reset_logging()
+        except DBusException:
+            pass
         with open(self._unity_log_file_name) as unity_log:
             self.addDetail('unity-log', text_content(unity_log.read()))
         os.remove(self._unity_log_file_name)
@@ -277,6 +283,21 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         """Returns true if an instance of the application is running."""
         apps = self.get_app_instances(app_name)
         return len(apps) > 0
+
+    def call_gsettings_cmd(self, command, schema, *args):
+        """Set a desktop wide gsettings option
+
+        Using the gsettings command because there's a bug with importing
+        from gobject introspection and pygtk2 simultaneously, and the Xlib
+        keyboard layout bits are very unweildy. This seems like the best
+        solution, even a little bit brutish.
+        """
+        cmd = ['gsettings', command, schema] + args
+        # strip to remove the trailing \n.
+        ret = check_output(cmd, shell=True).strip()
+        time.sleep(1)
+        reset_display()
+        return ret
 
     def set_unity_option(self, option_name, option_value):
         """Set an option in the unity compiz plugin options.

@@ -103,17 +103,6 @@ class ShortcutHintTests(BaseShortcutHintTests):
         sleep(self.shortcut_hint.get_show_timeout())
         self.assertThat(self.shortcut_hint.is_visible(), Equals(False))
 
-    def test_shortcut_hint_geometries(self):
-        """Test that the shortcut hint has the wanted geometries."""
-        sleep(.5)
-        self.shortcut_hint.show()
-        self.addCleanup(self.shortcut_hint.hide)
-        sleep(self.shortcut_hint.get_show_timeout())
-
-        (x, y, w, h) = self.shortcut_hint.get_geometry()
-        self.assertThat(w, Equals(self.DEFAULT_WIDTH))
-        self.assertThat(h, Equals(self.DEFAULT_HEIGHT))
-
 
 class ShortcutHintInteractionsTests(BaseShortcutHintTests):
     """Test the shortcuthint interactions with other Unity parts."""

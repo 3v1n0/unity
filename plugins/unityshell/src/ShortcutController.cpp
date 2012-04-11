@@ -109,18 +109,22 @@ void Controller::OnBackgroundUpdate(GVariant* data)
     view_->background_color = bg_color_;
 }
 
-void Controller::Show()
+bool Controller::Show()
 {
   if (show_timer_)
-    g_source_remove (show_timer_);
+    g_source_remove(show_timer_);
+  show_timer_ = 0;
 
   if (enabled_)
   {
     show_timer_ = g_timeout_add(SUPER_TAP_DURATION, &Controller::OnShowTimer, this);
     model_->Fill();
     visible_ = true;
+
+    return true;
   }
 
+  return false;
 }
 
 gboolean Controller::OnShowTimer(gpointer data)
@@ -132,14 +136,15 @@ gboolean Controller::OnShowTimer(gpointer data)
     return FALSE;
   }
 
-  if (!self->view_window_)
-    self->ConstructView();
+  self->EnsureView();
 
-  self->ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+  nux::Geometry geo;
+  if (!self->view_->GetBaseGeometry(geo))
+    return FALSE;
+  self->view_window_->SetGeometry(geo);
 
   if (self->visible_)
   {
-    self->view_window_->SetGeometry(self->workarea_);
     self->view_->SetupBackground(true);
     self->fade_out_animator_.Stop();
     self->fade_in_animator_.Start(self->view_window_->GetOpacity());
@@ -167,17 +172,26 @@ void Controller::ConstructView()
     view_window_->SetBackgroundColor(nux::Color(0x00000000));
   }
 
-  main_layout_->AddView(view_.GetPointer(), 1);
+  main_layout_->AddView(view_.GetPointer());
 
   view_->SetupBackground(false);
   view_window_->SetOpacity(0.0);
   view_window_->ShowWindow(true);
 }
 
-void Controller::SetWorkspace(nux::Geometry const& geo)
+void Controller::EnsureView()
 {
-  workarea_ = geo;
+  if (!view_window_)
+    ConstructView();
 }
+
+void Controller::SetAdjustment(int x, int y)
+{
+  EnsureView();
+
+  view_->SetAdjustment(x, y);
+}
+
 
 void Controller::Hide()
 {
@@ -215,6 +229,9 @@ void Controller::SetEnabled(bool enabled)
   enabled_ = enabled;
 }
 
+//
+// Introspection
+//
 std::string Controller::GetName() const
 {
   return "ShortcutController";
@@ -223,7 +240,6 @@ std::string Controller::GetName() const
 void Controller::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper(builder)
-  .add(workarea_)
   .add("timeout_duration", SUPER_TAP_DURATION + FADE_DURATION)
   .add("enabled", IsEnabled())
   .add("about_to_show", (Visible() && !fade_out_animator_.IsRunning() && view_window_ && view_window_->GetOpacity() != 1.0f))

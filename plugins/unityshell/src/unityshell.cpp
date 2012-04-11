@@ -108,7 +108,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , cScreen(CompositeScreen::get(screen))
   , gScreen(GLScreen::get(screen))
   , enable_shortcut_overlay_(true)
-  , gestureEngine(nullptr)
   , wt(nullptr)
   , panelWindow(nullptr)
   , debugger(nullptr)
@@ -358,8 +357,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
      g_idle_add_full (G_PRIORITY_DEFAULT, &UnityScreen::initPluginActions, this, NULL);
      super_keypressed_ = false;
 
-     GeisAdapter::Default()->Run();
-     gestureEngine = new GestureEngine(screen);
+     geis_adapter_.Run();
+     gesture_engine_.reset(new GestureEngine(screen));
 
      CompString name(PKGDATADIR"/panel-shadow.png");
      CompString pname("unityshell");
@@ -380,7 +379,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
        RaiseInputWindows();
      });
-    
+
     Display* display = gdk_x11_display_get_xdisplay(gdk_display_get_default());;
     XSelectInput(display, GDK_ROOT_WINDOW(), PropertyChangeMask);
     LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";
@@ -754,34 +753,37 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 #ifndef USE_GLES
   bool was_bound = _fbo->bound ();
 
-  if (was_bound && launcher_controller_->IsOverlayOpen() && paint_panel_)
+  if (nux::GetGraphicsDisplay()->GetGraphicsEngine()->UsingGLSLCodePath())
   {
-    if (panel_texture_has_changed_ || !panel_texture_.IsValid())
+    if (was_bound && launcher_controller_->IsOverlayOpen() && paint_panel_)
     {
-      panel_texture_.Release();
-
-      nux::NBitmapData* bitmap = panel::Style::Instance().GetBackground(screen->width (), screen->height(), 1.0f);
-      nux::BaseTexture* texture2D = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-      if (bitmap && texture2D)
+      if (panel_texture_has_changed_ || !panel_texture_.IsValid())
       {
-        texture2D->Update(bitmap);
-        panel_texture_ = texture2D->GetDeviceTexture();
-        texture2D->UnReference();
-        delete bitmap;
+        panel_texture_.Release();
+
+        nux::NBitmapData* bitmap = panel::Style::Instance().GetBackground(screen->width (), screen->height(), 1.0f);
+        nux::BaseTexture* texture2D = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
+        if (bitmap && texture2D)
+        {
+          texture2D->Update(bitmap);
+          panel_texture_ = texture2D->GetDeviceTexture();
+          texture2D->UnReference();
+          delete bitmap;
+        }
+        panel_texture_has_changed_ = false;
       }
-      panel_texture_has_changed_ = false;
-    }
 
-    if (panel_texture_.IsValid())
-    {
-      nux::GetGraphicsDisplay()->GetGraphicsEngine()->ResetModelViewMatrixStack();
-      nux::GetGraphicsDisplay()->GetGraphicsEngine()->Push2DTranslationModelViewMatrix(0.0f, 0.0f, 0.0f);
-      nux::GetGraphicsDisplay()->GetGraphicsEngine()->ResetProjectionMatrix();
-      nux::GetGraphicsDisplay()->GetGraphicsEngine()->SetOrthographicProjectionMatrix(screen->width (), screen->height());
+      if (panel_texture_.IsValid())
+      {
+        nux::GetGraphicsDisplay()->GetGraphicsEngine()->ResetModelViewMatrixStack();
+        nux::GetGraphicsDisplay()->GetGraphicsEngine()->Push2DTranslationModelViewMatrix(0.0f, 0.0f, 0.0f);
+        nux::GetGraphicsDisplay()->GetGraphicsEngine()->ResetProjectionMatrix();
+        nux::GetGraphicsDisplay()->GetGraphicsEngine()->SetOrthographicProjectionMatrix(screen->width (), screen->height());
 
-      nux::TexCoordXForm texxform;
-      int panel_height = panel_style_.panel_height;
-      nux::GetGraphicsDisplay()->GetGraphicsEngine()->QRP_GLSL_1Tex(0, 0, screen->width (), panel_height, panel_texture_, texxform, nux::color::White);
+        nux::TexCoordXForm texxform;
+        int panel_height = panel_style_.panel_height;
+        nux::GetGraphicsDisplay()->GetGraphicsEngine()->QRP_GLSL_1Tex(0, 0, screen->width (), panel_height, panel_texture_, texxform, nux::color::White);
+      }
     }
   }
 
@@ -1561,32 +1563,15 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
 
   if (!shortcut_controller_->Visible() && shortcut_controller_->IsEnabled())
   {
-    static nux::Geometry last_geo;
-    UScreen* uscreen = UScreen::GetDefault();
-    int primary_monitor = uscreen->GetMonitorWithMouse();
-    auto monitor_geo = uscreen->GetMonitorGeometry(primary_monitor);
-
-    int width = 970;
-    int height =  680;
     int launcher_width = optionGetIconSize() + 18;
     int panel_height = panel_style_.panel_height;
-    int x = monitor_geo.x + launcher_width + (monitor_geo.width - launcher_width- width) / 2;
-    int y = monitor_geo.y + panel_height + (monitor_geo.height - panel_height - height) / 2;
 
-    nux::Geometry geo (x, y, width, height);
-
-    if (last_geo != geo)
+    if (shortcut_controller_->Show())
     {
-      shortcut_controller_->SetWorkspace(geo);
-      last_geo = geo;
-    }
-
-    if (last_geo.x > monitor_geo.x and last_geo.y > monitor_geo.y)
-    {
+      shortcut_controller_->SetAdjustment(launcher_width, panel_height);
       EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, true, action->key().modifiers());
-      shortcut_controller_->Show();
     }
-   }
+  }
 
   return true;
 }

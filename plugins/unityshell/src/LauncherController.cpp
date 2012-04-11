@@ -191,6 +191,9 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   , sort_priority_(0)
   , show_desktop_icon_(false)
   , display_(display)
+  , launcher_key_press_handler_id_(0)
+  , launcher_label_show_handler_id_(0)
+  , launcher_hide_handler_id_(0)
   , edge_barriers_(new ui::EdgeBarrierController())
 {
   edge_barriers_->options = parent_->options();
@@ -235,9 +238,9 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   remote_model_.entry_added.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteAdded));
   remote_model_.entry_removed.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteRemoved));
 
-  FavoriteStore::GetDefault().favorite_added.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteAdded));
-  FavoriteStore::GetDefault().favorite_removed.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteRemoved));
-  FavoriteStore::GetDefault().reordered.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreReordered));
+  FavoriteStore::Instance().favorite_added.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteAdded));
+  FavoriteStore::Instance().favorite_removed.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteRemoved));
+  FavoriteStore::Instance().reordered.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreReordered));
 
   LauncherHideMode hide_mode = parent_->options()->hide_mode;
   BFBLauncherIcon* bfb = new BFBLauncherIcon(hide_mode);
@@ -445,7 +448,7 @@ void Controller::Impl::Save()
       desktop_paths.push_back(desktop_file);
   }
 
-  unity::FavoriteStore::GetDefault().SetFavorites(desktop_paths);
+  unity::FavoriteStore::Instance().SetFavorites(desktop_paths);
 }
 
 void
@@ -621,7 +624,7 @@ void Controller::Impl::OnFavoriteStoreFavoriteRemoved(std::string const& entry)
 
 void Controller::Impl::OnFavoriteStoreReordered()
 {
-  FavoriteList const& favs = FavoriteStore::GetDefault().GetFavorites();
+  FavoriteList const& favs = FavoriteStore::Instance().GetFavorites();
   auto bamf_list = model_->GetSublist<BamfLauncherIcon>();
 
   int i = 0;
@@ -803,7 +806,7 @@ void Controller::Impl::SetupBamf()
 
   matcher_ = bamf_matcher_get_default();
 
-  FavoriteList const& favs = FavoriteStore::GetDefault().GetFavorites();
+  FavoriteList const& favs = FavoriteStore::Instance().GetFavorites();
 
   for (FavoriteList::const_iterator i = favs.begin(), end = favs.end();
        i != end; ++i)
@@ -833,6 +836,7 @@ void Controller::Impl::SetupBamf()
     icon->SetSortPriority(sort_priority_++);
     RegisterIcon(icon);
   }
+  g_list_free(apps);
   SortAndUpdate();
 
   model_->order_changed.connect(sigc::mem_fun(this, &Impl::SortAndUpdate));
@@ -1218,7 +1222,7 @@ bool Controller::IsOverlayOpen() const
   {
     if (launcher_ptr->IsOverlayOpen())
       return true;
-  } 
+  }
   return false;
 }
 
@@ -1308,7 +1312,7 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
     break;
 
     default:
-      // ALT + <Anykey>; treat it as a shortcut and exit keynav 
+      // ALT + <Anykey>; treat it as a shortcut and exit keynav
       if (state & nux::NUX_STATE_ALT)
       {
         parent_->KeyNavTerminate(false);

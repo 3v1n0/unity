@@ -33,7 +33,10 @@ _PRESSED_MOUSE_BUTTONS = []
 _DISPLAY = Display()
 logger = logging.getLogger(__name__)
 
-
+def reset_display():
+    global _DISPLAY
+    _DISPLAY = Display()
+    
 class Keyboard(object):
     """Wrapper around xlib to make faking keyboard input possible."""
 

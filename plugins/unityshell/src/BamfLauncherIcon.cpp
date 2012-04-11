@@ -785,7 +785,7 @@ void BamfLauncherIcon::Stick(bool save)
   bamf_view_set_sticky(BAMF_VIEW(_bamf_app.RawPtr()), true);
 
   if (save && !desktop_file.empty())
-    FavoriteStore::GetDefault().AddFavorite(desktop_file, -1);
+    FavoriteStore::Instance().AddFavorite(desktop_file, -1);
 }
 
 void BamfLauncherIcon::UnStick()
@@ -801,7 +801,7 @@ void BamfLauncherIcon::UnStick()
     Remove();
 
   if (!desktop_file.empty())
-    FavoriteStore::GetDefault().RemoveFavorite(desktop_file);
+    FavoriteStore::Instance().RemoveFavorite(desktop_file);
 }
 
 void BamfLauncherIcon::ToggleSticky()
