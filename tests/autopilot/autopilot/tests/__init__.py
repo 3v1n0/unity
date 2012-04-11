@@ -4,6 +4,7 @@ Autopilot tests for Unity.
 
 
 from compizconfig import Setting, Plugin
+from dbus import DBusException
 import logging
 import os
 from StringIO import StringIO
@@ -114,7 +115,12 @@ class LoggedTestCase(TestWithScenarios, TestCase):
         self.addCleanup(self._tearDownUnityLogging)
 
     def _tearDownUnityLogging(self):
-        reset_logging()
+        # If unity dies, our dbus interface has gone, and reset_logging will fail
+        # but we still want our log, so we ignore any errors.
+        try:
+            reset_logging()
+        except DBusException:
+            pass
         with open(self._unity_log_file_name) as unity_log:
             self.addDetail('unity-log', text_content(unity_log.read()))
         os.remove(self._unity_log_file_name)
