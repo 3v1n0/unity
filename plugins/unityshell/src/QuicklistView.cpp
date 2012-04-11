@@ -69,7 +69,7 @@ QuicklistView::QuicklistView()
   , _bottom_padding_correction_single_item(-4)
   , _offset_correction(-1)
   , _cairo_text_has_changed(true)
-  , _current_item_index(0)
+  , _current_item_index(-1)
 {
   SetGeometry(nux::Geometry(0, 0, 1, 1));
 
@@ -138,13 +138,36 @@ QuicklistView::RecvEndFocus()
 {
 }
 
-bool
-QuicklistView::IsMenuItemSeperator(int index)
+void
+QuicklistView::SelectItem(int index)
 {
-  QuicklistMenuItem* menu_item = NULL;
-  DbusmenuMenuitem*  item   = NULL;
-  const gchar*       label  = NULL;
-  bool               result = false;
+  CancelItemsPrelightStatus();
+  int target_item = -1;
+
+  if (IsMenuItemSelectable(index))
+  {
+    QuicklistMenuItem* menu_item = GetNthItems(index);
+
+    if (menu_item)
+    {
+      target_item = index;
+      menu_item->_prelight = true;
+    }
+  }
+
+  if (_current_item_index != target_item)
+  {
+    _current_item_index = target_item;
+    selection_change.emit();
+    QueueDraw();
+  }
+}
+
+bool
+QuicklistView::IsMenuItemSelectable(int index)
+{
+  QuicklistMenuItem* menu_item = nullptr;
+  QuicklistMenuItemType menu_type = MENUITEM_TYPE_UNKNOWN;
 
   if (index < 0)
     return false;
@@ -153,17 +176,12 @@ QuicklistView::IsMenuItemSeperator(int index)
   if (!menu_item)
     return false;
 
-  item = menu_item->_menuItem;
-  if (!item)
+  menu_type = menu_item->GetItemType();
+
+  if (menu_type == MENUITEM_TYPE_SEPARATOR || menu_type == MENUITEM_TYPE_UNKNOWN)
     return false;
 
-  label = dbusmenu_menuitem_property_get(item, DBUSMENU_MENUITEM_PROP_LABEL);
-  if (!label)
-    result = true;
-  else
-    result = false;
-
-  return result;
+  return (menu_item->GetEnabled() && menu_item->GetVisible());
 }
 
 void
@@ -178,53 +196,65 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
       // up (highlight previous menu-item)
     case NUX_VK_UP:
     case NUX_KP_UP:
-      // protect against edge-case of first item being a separator
-      if (_current_item_index == 1 && IsMenuItemSeperator(0))
-        break;
+    {
+      int target_index = _current_item_index;
+      bool loop_back = false;
 
-      if (_current_item_index > 0)
+      if (target_index <= 0)
+        target_index = GetNumItems();
+
+      do
       {
-        GetNthItems(_current_item_index)->_prelight = false;
-        _current_item_index--;
+        --target_index;
 
-        while (IsMenuItemSeperator(_current_item_index))
-          _current_item_index--;
-
-        selection_change.emit();
-
-        GetNthItems(_current_item_index)->_prelight = true;
-        QueueDraw();
+        // If the first item is not selectable, we must loop from the last one
+        if (!loop_back && target_index == 0 && !IsMenuItemSelectable(target_index))
+        {
+          loop_back = true;
+          target_index = GetNumItems() - 1;
+        }
       }
+      while (!IsMenuItemSelectable(target_index) && target_index >= 0);
+
+      if (target_index >= 0)
+        SelectItem(target_index);
+
       break;
+    }
 
       // down (highlight next menu-item)
     case NUX_VK_DOWN:
     case NUX_KP_DOWN:
-      // protect against edge-case of last item being a separator
-      if (_current_item_index == (GetNumItems() - 1) && IsMenuItemSeperator(GetNumItems()))
-        break;
+    {
+      int target_index = _current_item_index;
+      int num_items = GetNumItems();
+      bool loop_back = false;
 
-      if (_current_item_index < GetNumItems() - 1)
+      if (target_index >= num_items - 1)
+        target_index = -1;
+
+      do
       {
-        GetNthItems(_current_item_index)->_prelight = false;
-        _current_item_index++;
+        ++target_index;
 
-        while (IsMenuItemSeperator(_current_item_index))
-          _current_item_index++;
-
-        selection_change.emit();
-
-        GetNthItems(_current_item_index)->_prelight = true;
-        QueueDraw();
+        // If the last item is not selectable, we must loop from the first one
+        if (!loop_back && target_index == num_items - 1 && !IsMenuItemSelectable(target_index))
+        {
+          loop_back = true;
+          target_index = 0;
+        }
       }
+      while (!IsMenuItemSelectable(target_index) && target_index < num_items);
+
+      if (target_index < num_items)
+        SelectItem(target_index);
+
       break;
+    }
 
       // left (close quicklist, go back to laucher key-nav)
     case NUX_VK_LEFT:
     case NUX_KP_LEFT:
-      _current_item_index = 0;
-      selection_change.emit();
-      GetNthItems(_current_item_index)->_prelight = true;
       Hide();
       // inform Launcher we switch back to Launcher key-nav
       ubus_server_send_message(ubus_server_get_default(),
@@ -234,32 +264,23 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
 
       // esc (close quicklist, exit key-nav)
     case NUX_VK_ESCAPE:
-      _current_item_index = 0;
-      selection_change.emit();
-      GetNthItems(_current_item_index)->_prelight = true;
       Hide();
       // inform UnityScreen we leave key-nav completely
       ubus_server_send_message(ubus_server_get_default(),
                                UBUS_LAUNCHER_END_KEY_NAV,
                                NULL);
-      selection_change.emit();
       break;
 
       // <SPACE>, <RETURN> (activate selected menu-item)
     case NUX_VK_SPACE:
     case NUX_VK_ENTER:
     case NUX_KP_ENTER:
-      if (_current_item_index >= 0 && _current_item_index < GetNumItems() &&
-          GetNthItems(_current_item_index)->GetEnabled())
+      if (IsMenuItemSelectable(_current_item_index))
       {
-
         dbusmenu_menuitem_handle_event(GetNthItems(_current_item_index)->_menuItem,
                                        "clicked",
                                        NULL,
                                        0);
-        _current_item_index = 0;
-        selection_change.emit();
-        GetNthItems(_current_item_index)->_prelight = true;
         Hide();
       }
       break;
@@ -365,6 +386,12 @@ void QuicklistView::Hide()
     UnGrabKeyboard();
     //EnableInputWindow (false);
     ShowWindow(false);
+
+    if (_current_item_index != -1)
+    {
+      selection_change.emit();
+      _current_item_index = -1;
+    }
   }
 }
 
@@ -660,16 +687,13 @@ void QuicklistView::RecvItemMouseDrag(QuicklistMenuItem* item, int x, int y)
 
 void QuicklistView::RecvItemMouseEnter(QuicklistMenuItem* item)
 {
-  CancelItemsPrelightStatus();
-  _current_item_index = GetItemIndex(item);
-  item->_prelight = true;
-  NeedRedraw();
+  int item_index = GetItemIndex(item);
+  SelectItem(item_index);
 }
 
 void QuicklistView::RecvItemMouseLeave(QuicklistMenuItem* item)
 {
-  item->_prelight = false;
-  NeedRedraw();
+  SelectItem(-1);
 }
 
 void QuicklistView::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags)
@@ -828,6 +852,7 @@ QuicklistMenuItemType QuicklistView::GetNthType(int index)
   QuicklistMenuItem* item = GetNthItems(index);
   if (item)
     return item->GetItemType();
+
   return MENUITEM_TYPE_UNKNOWN;
 }
 
@@ -836,13 +861,9 @@ std::list<QuicklistMenuItem*> QuicklistView::GetChildren()
   return _item_list;
 }
 
-void QuicklistView::DefaultToFirstItem()
+void QuicklistView::SelectFirstItem()
 {
-  if (GetNumItems() >= 1)
-  {
-    GetNthItems(0)->_prelight = true;
-    QueueDraw();
-  }
+  SelectItem(0);
 }
 
 void ql_tint_dot_hl(cairo_t* cr,
