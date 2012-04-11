@@ -173,14 +173,14 @@ PanelMenuView::PanelMenuView()
 
 PanelMenuView::~PanelMenuView()
 {
-  // Need to call this explicitly BEFORE we destroy the _window_buttons member variable.
-  // If we don't Stop is called from the Animator's destructor, which in turn calls
-  // PanelMenuView::FullRedraw, which in turn tries to access the _window_buttons.
-  // The Animator class is clever enough not to emit the animation_ended signal if it's
-  // already been stopped. Alternatively we could explicitly disconnect the signal (but that
-  // requires storing the connection).
-  _fade_in_animator.Stop();
-  _fade_out_animator.Stop();
+  // We need to disconnect these signals explicitly before we destroy the window buttons
+  // and titlebar grab area objects, otherwise there's a risk the signals will fire as the
+  // animator objects are destroyed (which happens after the destructor finishes).
+  _fade_in_animator.animation_updated.clear();
+  _fade_in_animator.animation_ended.clear();
+  _fade_out_animator.animation_updated.clear();
+  _fade_out_animator.animation_ended.clear();
+  _style_changed_connection.disconnect();
 
   if (_active_moved_id)
     g_source_remove(_active_moved_id);
@@ -195,8 +195,6 @@ PanelMenuView::~PanelMenuView()
   _window_buttons = nullptr;
   _titlebar_grab_area->UnReference();
   _titlebar_grab_area = nullptr;
-
-  _style_changed_connection.disconnect();
 }
 
 void PanelMenuView::OverlayShown()
