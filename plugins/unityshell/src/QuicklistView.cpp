@@ -193,6 +193,41 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
 {
   switch (key_sym)
   {
+      // home or page up (highlight the first menu-hitem)
+    case NUX_VK_PAGE_UP:
+    case NUX_VK_HOME:
+    {
+      int num_items = GetNumItems();
+      int target_index = -1;
+
+      do
+      {
+        ++target_index;
+      }
+      while (!IsMenuItemSelectable(target_index) && target_index < num_items);
+
+      if (target_index < num_items)
+        SelectItem(target_index);
+
+      break;
+    }
+      // end or page down (highlight the last menu-hitem)
+    case NUX_VK_PAGE_DOWN:
+    case NUX_VK_END:
+    {
+      int target_index = GetNumItems();
+
+      do
+      {
+        --target_index;
+      }
+      while (!IsMenuItemSelectable(target_index) && target_index >= 0);
+
+      if (target_index >= 0)
+        SelectItem(target_index);
+
+      break;
+    }
       // up (highlight previous menu-item)
     case NUX_VK_UP:
     case NUX_KP_UP:
