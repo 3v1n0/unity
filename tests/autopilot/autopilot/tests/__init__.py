@@ -278,7 +278,7 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         apps = self.get_app_instances(app_name)
         return len(apps) > 0
 
-    def call_gsettings_cmd(self, command, schema, args=[]):
+    def call_gsettings_cmd(self, command, schema, *args):
         """Set a desktop wide gsettings option
 
         Using the gsettings command because there's a bug with importing
@@ -286,10 +286,11 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         keyboard layout bits are very unweildy. This seems like the best
         solution, even a little bit brutish.
         """
-        cmd = ['gsettings', command, schema] + args
+        arg_str = ' '.join(args)
+        cmd = 'gsettings %s %s %s' % (command, schema, arg_str)
         # strip to remove the trailing \n.
         ret = check_output(cmd, shell=True).strip()
-        time.sleep(1)
+        time.sleep(5)
         reset_display()
         return ret
 
