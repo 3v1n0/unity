@@ -28,8 +28,9 @@ class StateNotFoundError(RuntimeError):
 class IntrospectableObjectMetaclass(type):
     """Metaclass to insert appropriate classes into the object registry."""
 
-    def __new__(self, classname, bases, classdict):
-        class_object = type.__new__(self, classname, bases, classdict)
+    def __new__(cls, classname, bases, classdict):
+        """Add class name to type registry."""
+        class_object = type.__new__(cls, classname, bases, classdict)
         _object_registry[classname] = class_object
         return class_object
 
@@ -134,7 +135,28 @@ class UnityIntrospectionObject(object):
             # don't store id in state dictionary -make it a proper instance attribute
             if key == 'id':
                 self.id = value
-            self.__state[key.replace('-', '_')] = value
+            key = key.replace('-', '_')
+            self.__state[key] = self._make_attribute(key, value)
+
+    def _make_attribute(self, name, value):
+        """Make an attribute for 'value', patched with the wait_for function."""
+
+        def wait_for(self, expected_value):
+            """Wait up to 10 seconds for our value to change to 'expected_value'.
+
+            This works by refreshing the value using repeated dbus calls.
+
+            """
+            print self
+            print expected_value
+            print self.parent
+
+        # I initially tried to do this with functools.partial, but it seems that
+        # as soon as you try and apply a partial function to an instance 'self'
+        # doesn't get passed in.
+
+        t = type(value)
+        return type(t.__name__, (t,), {'wait_for': wait_for, 'parent':self})(value)
 
     def _get_child_tuples_by_type(self, desired_type):
         """Get a list of (name,dict) pairs from children of the specified type.
