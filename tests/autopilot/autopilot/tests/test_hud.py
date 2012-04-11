@@ -103,6 +103,16 @@ class HudBehaviorTests(HudTestsBase):
         self.keyboard.press_and_release('Up')
         self.assertThat(self.hud.selected_button, Equals(1))
 
+    def test_no_reset_selected_button(self):
+        self.reveal_hud()
+        self.keyboard.type('is')
+        sleep(1)
+        self.keyboard.press_and_release('Down')
+        self.assertThat(self.hud.selected_button, Equals(2))
+        # long sleep to let the service send updated results 
+        sleep(10)
+        self.assertThat(self.hud.selected_button, Equals(2))
+
     def test_slow_tap_not_reveal_hud(self):
         self.hud.toggle_reveal(tap_delay=0.3)
         sleep(1)
