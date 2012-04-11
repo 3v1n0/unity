@@ -42,6 +42,8 @@ namespace nux
 StaticCairoText::StaticCairoText(std::string const& text,
                                  NUX_FILE_LINE_DECL) :
   View(NUX_FILE_LINE_PARAM),
+  _cached_base_width(-1),
+  _cached_base_height(-1),
   _baseline(0),
   _fontstring(NULL),
   _cairoGraphics(NULL),
