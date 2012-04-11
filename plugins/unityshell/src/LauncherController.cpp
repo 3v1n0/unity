@@ -191,6 +191,9 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   , sort_priority_(0)
   , show_desktop_icon_(false)
   , display_(display)
+  , launcher_key_press_handler_id_(0)
+  , launcher_label_show_handler_id_(0)
+  , launcher_hide_handler_id_(0)
   , edge_barriers_(new ui::EdgeBarrierController())
 {
   edge_barriers_->options = parent_->options();
