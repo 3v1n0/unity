@@ -459,6 +459,17 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
 
   lens->activated.connect(sigc::mem_fun(this, &DashView::OnUriActivatedReply));
   lens->search_finished.connect(sigc::mem_fun(this, &DashView::OnSearchFinished));
+  lens->connected.changed.connect([&] (bool value)
+  {
+    std::string const& search_string = search_bar_->search_string;
+    if (value && lens->search_in_global && active_lens_view_ == home_view_
+        && !search_string.empty())
+    {
+      // force a (global!) search with the correct string
+      lens->GlobalSearch(search_bar_->search_string);
+    }
+  });
+
   // global search done is handled by the home lens, no need to connect to it
   // BUT, we will special case global search finished coming from 
   // the applications lens, because we want to be able to launch applications
