@@ -13,6 +13,7 @@ import gio
 import gobject
 import os
 from Xlib import display, X, protocol
+from gtk import gdk
 
 from autopilot.emulators.dbus_handler import session_bus
 
@@ -184,6 +185,11 @@ class BamfApplication(object):
         return self._view_iface.Name()
 
     @property
+    def icon(self):
+        """Get the application icon."""
+        return self._view_iface.Icon()
+
+    @property
     def is_active(self):
         """Is the application active (i.e.- has keyboard focus)?"""
         return self._view_iface.IsActive()
@@ -256,9 +262,10 @@ class BamfWindow(object):
         Returns a tuple containing (x, y, width, height).
 
         """
-
+        # FIXME: We need to use the gdk window here to get the real coordinates
         geometry = self._x_win.get_geometry()
-        return (geometry.x, geometry.y, geometry.width, geometry.height)
+        origin = gdk.window_foreign_new(self._xid).get_origin()
+        return (origin[0], origin[1], geometry.width, geometry.height)
 
     @property
     def is_maximized(self):
@@ -320,10 +327,28 @@ class BamfWindow(object):
         """
         return not self._x_win is None
 
+    @property
+    def monitor(self):
+        """Returns the monitor to which the windows belongs to"""
+        return self._window_iface.Monitor()
+
+    @property
+    def closed(self):
+        """Returns True if the window has been closed"""
+        # This will return False when the window is closed and then removed from BUS
+        try:
+            return (self._window_iface.GetXid() != self.x_id)
+        except:
+            return True
+
     def close(self):
         """Close the window."""
 
         self._setProperty('_NET_CLOSE_WINDOW', [0, 0])
+
+    def set_focus(self):
+        self._x_win.set_input_focus(X.RevertToParent, X.CurrentTime)
+        self._x_win.configure(stack_mode=X.Above)
 
     def __repr__(self):
         return "<BamfWindow '%s'>" % (self.title if self._x_win else str(self._xid))

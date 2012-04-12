@@ -37,6 +37,7 @@ namespace
 
 PointerBarrierWrapper::PointerBarrierWrapper()
 {
+  direction = BOTH;
   last_event_ = 0;
   last_y_ = 0;
   last_x_ = 0;
@@ -51,6 +52,9 @@ PointerBarrierWrapper::PointerBarrierWrapper()
 PointerBarrierWrapper::~PointerBarrierWrapper()
 {
   DestroyBarrier();
+
+  if (smoothing_handle_)
+    g_source_remove(smoothing_handle_);
 }
 
 void PointerBarrierWrapper::ConstructBarrier()
@@ -69,7 +73,7 @@ void PointerBarrierWrapper::ConstructBarrier()
                                                DefaultRootWindow(dpy),
                                                x1, y1,
                                                x2, y2,
-                                               0,
+                                               (int) direction,
                                                threshold,
                                                0,
                                                NULL);

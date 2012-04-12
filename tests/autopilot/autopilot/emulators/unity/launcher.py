@@ -7,13 +7,15 @@
 # by the Free Software Foundation.
 #
 
+import dbus
 import logging
 from time import sleep
 
-from autopilot.keybindings import KeybindingsHelper
+from autopilot.emulators.dbus_handler import session_bus
 from autopilot.emulators.unity import UnityIntrospectionObject
-from autopilot.emulators.unity.icons import BamfLauncherIcon, SimpleLauncherIcon
+from autopilot.emulators.unity.icons import BFBLauncherIcon, BamfLauncherIcon, SimpleLauncherIcon
 from autopilot.emulators.X11 import Mouse, ScreenGeometry
+from autopilot.keybindings import KeybindingsHelper
 
 
 logger = logging.getLogger(__name__)
@@ -27,6 +29,10 @@ class LauncherController(UnityIntrospectionObject):
         launchers = self.get_children_by_type(Launcher, monitor=monitor_num)
         return launchers[0] if launchers else None
 
+    def get_launchers(self):
+        """Return the available launchers, or None."""
+        return self.get_children_by_type(Launcher)
+
     @property
     def model(self):
         """Return the launcher model."""
@@ -36,6 +42,19 @@ class LauncherController(UnityIntrospectionObject):
 
     def key_nav_monitor(self):
         return self.key_nav_launcher_monitor
+
+    def add_launcher_item_from_position(self,name,icon,icon_x,icon_y,icon_size,desktop_file,aptdaemon_task):
+        """ Emulate a DBus call from Software Center to pin an icon to the launcher """
+        launcher_object = session_bus.get_object('com.canonical.Unity.Launcher',
+                                      '/com/canonical/Unity/Launcher')
+        launcher_iface = dbus.Interface(launcher_object, 'com.canonical.Unity.Launcher')
+        launcher_iface.AddLauncherItemFromPosition(name,
+                                                   icon,
+                                                   icon_x,
+                                                   icon_y,
+                                                   icon_size,
+                                                   desktop_file,
+                                                   aptdaemon_task)
 
 
 class Launcher(UnityIntrospectionObject, KeybindingsHelper):
@@ -196,8 +215,8 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         logger.debug("Clicking launcher icon %r on monitor %d with mouse button %d",
             icon, self.monitor, button)
         self.mouse_reveal_launcher()
-        target_x = icon.x + self.x
-        target_y = icon.y + (self.icon_size / 2)
+        target_x = icon.center_x + self.x
+        target_y = icon.center_y
         self._mouse.move(target_x, target_y )
         self._mouse.click(button)
         self.move_mouse_to_right_of_launcher()
@@ -254,12 +273,26 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 class LauncherModel(UnityIntrospectionObject):
     """THe launcher model. Contains all launcher icons as children."""
 
+    def get_bfb_icon(self):
+        icons = BFBLauncherIcon.get_all_instances()
+        assert(len(icons) == 1)
+        return icons[0]
+
     def get_launcher_icons(self, visible_only=True):
         """Get a list of launcher icons in this launcher."""
         if visible_only:
-            return self.get_children_by_type(SimpleLauncherIcon, quirk_visible=True)
+            return self.get_children_by_type(SimpleLauncherIcon, visible=True)
         else:
             return self.get_children_by_type(SimpleLauncherIcon)
+
+    def get_launcher_icons_for_monitor(self, monitor, visible_only=True):
+        """Get a list of launcher icons for provided monitor."""
+        icons = []
+        for icon in self.get_launcher_icons(visible_only):
+            if icon.is_on_monitor(monitor):
+                icons.append(icon)
+
+        return icons
 
     def get_icon_by_tooltip_text(self, tooltip_text):
         """Get a launcher icon given it's tooltip text.
@@ -277,7 +310,21 @@ class LauncherModel(UnityIntrospectionObject):
         Returns None if there is no such launcher icon.
         """
         icons = self.get_children_by_type(SimpleLauncherIcon, desktop_file=desktop_file)
-        return icons or None
+        if len(icons):
+            return icons[0]
+
+        return None
+
+    def get_icon_by_desktop_id(self, desktop_id):
+        """Gets a launcher icon with the specified desktop id.
+
+        Returns None if there is no such launcher icon.
+        """
+        icons = self.get_children_by_type(SimpleLauncherIcon, desktop_id=desktop_id)
+        if len(icons):
+            return icons[0]
+
+        return None
 
     def num_launcher_icons(self):
         """Get the number of icons in the launcher model."""

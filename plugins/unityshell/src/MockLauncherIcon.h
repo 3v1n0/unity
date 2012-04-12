@@ -163,6 +163,13 @@ public:
     return false;
   }
 
+  void SetVisibleOnMonitor(int monitor, bool visible) {}
+
+  bool IsVisibleOnMonitor(int monitor) const
+  {
+    return true;
+  }
+
   bool IsSpacer()
   {
     return false;
@@ -183,9 +190,9 @@ public:
     return true;
   }
 
-  void InsertEntryRemote(LauncherEntryRemote* remote) {}
+  void InsertEntryRemote(LauncherEntryRemote::Ptr const& remote) {}
 
-  void RemoveEntryRemote(LauncherEntryRemote* remote) {}
+  void RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote) {}
 
   unsigned long long SwitcherPriority()
   {
@@ -222,7 +229,7 @@ public:
     return nux::Color(0xFFAAAAAA);
   }
 
-  const gchar* RemoteUri()
+  std::string RemoteUri()
   {
     return "fake";
   }

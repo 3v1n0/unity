@@ -21,22 +21,6 @@
 #ifndef HUDICON_H
 #define HUDICON_H
 
-#include <set>
-#include <string>
-
-#include "config.h"
-
-#include <Nux/Nux.h>
-#include <Nux/BaseWindow.h>
-#include <NuxCore/Math/MathInc.h>
-
-#include <sigc++/trackable.h>
-#include <sigc++/signal.h>
-#include <sigc++/functors/ptr_fun.h>
-#include <sigc++/functors/mem_fun.h>
-
-#include <gtk/gtk.h>
-
 #include "IconTexture.h"
 #include "HudIconTextureSource.h"
 #include "IconRenderer.h"
@@ -51,14 +35,14 @@ class Icon : public unity::IconTexture
 {
 public:
   typedef nux::ObjectPtr<IconTexture> Ptr;
-  Icon(nux::BaseTexture* texture, guint width, guint height);
-  Icon(const char* icon_name, unsigned int size, bool defer_icon_loading = false);
-  ~Icon();
+  Icon(std::string const& icon_name, unsigned int size);
 
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-  void Init();
 
+  std::string GetName() const;
+
+private:
   nux::ObjectPtr<nux::BaseTexture> background_;
   nux::ObjectPtr<nux::BaseTexture> gloss_;
   nux::ObjectPtr<nux::BaseTexture> edge_;

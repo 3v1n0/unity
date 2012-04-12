@@ -47,6 +47,8 @@ public:
 
 protected:
   std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
+
   virtual void OnMouseDown(int button, int monitor);
   virtual void OnMouseUp(int button, int monitor);
   virtual void OnMouseClick(int button, int monitor);

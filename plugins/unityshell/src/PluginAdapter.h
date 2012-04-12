@@ -93,6 +93,7 @@ public:
 
   void TerminateScale();
   bool IsScaleActive();
+  bool IsScaleActiveForGroup();
 
   void InitiateExpo();
   bool IsExpoActive();
@@ -118,7 +119,10 @@ public:
   bool IsWindowObscured(guint xid);
   bool IsWindowMapped(guint xid);
   bool IsWindowVisible(guint32 xid);
+  bool IsWindowMinimizable(guint32 xid);
+
   void Restore(guint32 xid);
+  void RestoreAt(guint32 xid, int x, int y);
   void Minimize(guint32 xid);
   void Close(guint32 xid);
   void Activate(guint32 xid);
@@ -138,9 +142,11 @@ public:
 
   bool MaximizeIfBigEnough(CompWindow* window);
 
-  nux::Geometry GetWindowGeometry(guint32 xid);
-  nux::Geometry GetScreenGeometry();
-  
+  nux::Geometry GetWindowGeometry(guint32 xid) const;
+  nux::Geometry GetWindowSavedGeometry(guint32 xid) const;
+  nux::Geometry GetScreenGeometry() const;
+  nux::Geometry GetWorkAreaGeometry(guint32 xid = 0) const;
+
   void CheckWindowIntersections(nux::Geometry const& region, bool &active, bool &any);
 
   int WorkspaceCount();
@@ -149,6 +155,8 @@ public:
 
   bool saveInputFocus ();
   bool restoreInputFocus ();
+
+  void MoveResizeWindow(guint32 xid, nux::Geometry geometry);
 
 protected:
   PluginAdapter(CompScreen* screen);
@@ -165,6 +173,7 @@ private:
   MultiActionList m_ScaleActionList;
 
   bool _spread_state;
+  bool _spread_windows_state;
   bool _expo_state;
   bool _vp_switch_started;
 

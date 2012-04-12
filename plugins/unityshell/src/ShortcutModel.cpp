@@ -25,7 +25,7 @@ namespace shortcut
 {
 
 // Ctor
-Model::Model(std::list<AbstractHint*>& hints)
+Model::Model(std::list<AbstractHint::Ptr>& hints)
 {
   for (auto hint : hints)
     AddHint(hint);
@@ -37,14 +37,14 @@ Model::~Model()
 }
 
 
-void Model::AddHint(AbstractHint* hint)
+void Model::AddHint(AbstractHint::Ptr hint)
 {
   if (!hint)
     return;
-    
+
   if (hints_.find(hint->category()) == hints_.end())
     categories_.push_back(hint->category());
-    
+
   hints_[hint->category()].push_back(hint);
 }
 

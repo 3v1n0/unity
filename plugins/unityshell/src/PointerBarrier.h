@@ -41,6 +41,15 @@ public:
   int event_id;
 };
 
+
+// values picked to match Xfixes values
+enum BarrierDirection
+{
+  BOTH = 0,
+  LEFT = 1,
+  RIGHT = 4,
+};
+
 class PointerBarrierWrapper
 {
 public:
@@ -58,6 +67,10 @@ public:
   nux::Property<int> smoothing;
 
   nux::Property<float> max_velocity_multiplier;
+
+  nux::Property<int> index;
+
+  nux::Property<BarrierDirection> direction;
 
   PointerBarrierWrapper();
   ~PointerBarrierWrapper();

@@ -63,13 +63,14 @@ public:
 
   virtual void ActivateFirst();
 
-  nux::Property<std::string> search_string;
+  nux::ROProperty<std::string> search_string;
   nux::Property<bool> filters_expanded;
   nux::Property<ViewType> view_type;
   nux::Property<bool> can_refine_search;
 
   sigc::signal<void, std::string const&> uri_activated;
 
+  void PerformSearch(std::string const& search_query);
   void CheckNoResults(Lens::Hints const& hints);
   void HideResultsMessage();
 
@@ -99,6 +100,8 @@ private:
   virtual std::string GetName() const;
   virtual void AddProperties(GVariantBuilder* builder);
 
+  std::string get_search_string() const;
+
 private:
   UBusManager ubus_manager_;
   Lens::Ptr lens_;
@@ -106,6 +109,7 @@ private:
   ResultCounts counts_;
   bool initial_activation_;
   bool no_results_active_;
+  std::string search_string_;
 
   nux::HLayout* layout_;
   LensScrollView* scroll_view_;
