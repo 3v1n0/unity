@@ -2,6 +2,7 @@ unity (5.8.0-0ubuntu3) UNRELEASED; urgency=low
 
   * debian/control:
     - build-dep on latest libnux-2.0-dev for ABI break
+    - bump Standards-Version to latest
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 12 Apr 2012 11:00:38 +0200
 
