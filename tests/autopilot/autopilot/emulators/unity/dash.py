@@ -7,8 +7,6 @@
 # by the Free Software Foundation.
 #
 
-from time import sleep
-
 from autopilot.emulators.unity import (
     get_state_by_path,
     make_introspection_object,
@@ -43,9 +41,10 @@ class Dash(KeybindingsHelper):
         """
         Reveals the dash if it's currently hidden, hides it otherwise.
         """
+        old_state = self.visible
         logger.debug("Toggling dash visibility with Super key.")
         self.keybinding("dash/reveal", 0.1)
-        sleep(1)
+        self.visible.wait_for(not old_state)
 
     def ensure_visible(self, clear_search=True):
         """
@@ -53,7 +52,7 @@ class Dash(KeybindingsHelper):
         """
         if not self.visible:
             self.toggle_reveal()
-            self._wait_for_visibility(expect_visible=True)
+            self.visible.wait_for(True)
             if clear_search:
                 self.clear_search()
 
@@ -63,16 +62,7 @@ class Dash(KeybindingsHelper):
         """
         if self.visible:
             self.toggle_reveal()
-            self._wait_for_visibility(expect_visible=False)
-
-    def _wait_for_visibility(self, expect_visible):
-        for i in range(11):
-            if self.visible != expect_visible:
-                sleep(1)
-            else:
-                return
-        raise RuntimeError("Dash not %s after waiting for 10 seconds." %
-            ("Visible" if expect_visible else "Hidden"))
+            self.visible.wait_for(False)
 
     @property
     def visible(self):
