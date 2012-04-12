@@ -145,6 +145,7 @@ unity (5.10.0-0ubuntu1) UNRELEASED; urgency=low
     - Untranslatable strings in the hints screen (LP: #975815)
     - Dash text input does not get focus (LP: #774447)
     - dash ignore queries done just after session start (LP: #979799)
+  * Cherry-pick an additional commit for a crash
   * debian/control:
     - build-dep on latest libnux-2.0-dev for ABI break
     - bump Standards-Version to latest
