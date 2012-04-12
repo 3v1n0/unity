@@ -242,7 +242,8 @@ class FilterBar(UnityIntrospectionObject):
                 return filter_label
         return None
 
-    def is_expanded(self):
+    @property
+    def expanded(self):
         """Return True if the filterbar on this lens is expanded, False otherwise.
         """
         searchbar = self._get_searchbar()
@@ -250,34 +251,25 @@ class FilterBar(UnityIntrospectionObject):
 
     def ensure_expanded(self):
         """Expand the filter bar, if it's not already."""
-        if not self.is_expanded():
+        if not self.expanded:
             searchbar = self._get_searchbar()
             tx = searchbar.filter_label_x + (searchbar.filter_label_width / 2)
             ty = searchbar.filter_label_y + (searchbar.filter_label_height / 2)
             m = Mouse()
             m.move(tx, ty)
             m.click()
-            self._wait_for_expansion(True)
+            self.expanded.wait_for(True)
 
     def ensure_collapsed(self):
         """Collapse the filter bar, if it's not already."""
-        if self.is_expanded():
+        if self.expanded:
             searchbar = self._get_searchbar()
             tx = searchbar.filter_label_x + (searchbar.filter_label_width / 2)
             ty = searchbar.filter_label_y + (searchbar.filter_label_height / 2)
             m = Mouse()
             m.move(tx, ty)
             m.click()
-            self._wait_for_expansion(False)
-
-    def _wait_for_expansion(self, expect_expanded):
-        for i in range(11):
-            if self.is_expanded() != expect_expanded:
-                sleep(1)
-            else:
-                return
-        raise RuntimeError("Filters not %s after waiting for 10 seconds." %
-            ("expanded" if expect_expanded else "collapsed"))
+            self.expanded.wait_for(False)
 
     def _get_searchbar(self):
         """Get the searchbar.

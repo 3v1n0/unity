@@ -17,6 +17,7 @@ from autopilot.tests import AutopilotTestCase
 class DashTestCase(AutopilotTestCase):
     def setUp(self):
         super(DashTestCase, self).setUp()
+        self.set_unity_log_level("unity", "DEBUG")
         self.set_unity_log_level("unity.shell", "DEBUG")
         self.set_unity_log_level("unity.launcher", "DEBUG")
         self.dash.ensure_hidden()
