@@ -47,6 +47,7 @@ Controller::Controller()
   , timeline_id_(0)
   , last_opacity_(0.0f)
   , start_time_(0)
+  , view_(nullptr)
 {
   SetupRelayoutCallbacks();
   RegisterUBusInterests();
