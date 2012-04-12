@@ -376,4 +376,39 @@ class SwitcherWorkspaceTests(AutopilotTestCase):
         # current workspace and ask that one if it is hidden.
         self.assertFalse(wins[0].is_hidden)
         self.assertFalse(wins[1].is_hidden)
+      
+    def test_quick_alt_tab_one_window(self):
+        """Tests that when we do a quick alt+tab only one windows comes up."""
 
+        self.start_app('Calculator')
+        sleep(1)
+        mahj = self.start_app("Mahjongg")
+        sleep(1)
+        self.start_app('Calculator')
+        sleep(1)
+
+        self.keybinding("switcher/reveal_normal", 0.1)
+        sleep(1)
+        self.keybinding("switcher/reveal_normal", 0.1)
+        sleep(1)
+        self.keybinding("window/minimize")
+        sleep(1)
+        self.assertTrue(mahj.is_active)
+
+    def test_quick_alt_tab_all_windows(self):
+        """Tests that when we do a slower alt+tab it brings up all instances of that app."""
+
+        self.start_app('Calculator')
+        sleep(1)
+        mahj = self.start_app("Mahjongg")
+        sleep(1)
+        self.start_app('Calculator')
+        sleep(1)
+
+        self.keybinding("switcher/reveal_normal", 0.4)
+        sleep(1)
+        self.keybinding("switcher/reveal_normal", 0.4)
+        sleep(1)
+        self.keybinding("window/minimize")
+        sleep(1)
+        self.assertFalse(mahj.is_active)
