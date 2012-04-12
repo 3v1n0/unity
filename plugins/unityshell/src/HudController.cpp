@@ -54,6 +54,7 @@ Controller::Controller()
   , type_wait_handle_(0)
 {
   LOG_DEBUG(logger) << "hud startup";
+  SetupWindow();
   UScreen::GetDefault()->changed.connect([&] (int, std::vector<nux::Geometry>&) { Relayout(); });
 
   ubus.RegisterInterest(UBUS_HUD_CLOSE_REQUEST, sigc::mem_fun(this, &Controller::OnExternalHideHud));
@@ -101,6 +102,11 @@ void Controller::SetupWindow()
   window_->ShowWindow(false);
   window_->SetOpacity(0.0f);
   window_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &Controller::OnMouseDownOutsideWindow));
+  
+  PluginAdapter::Default()->saveInputFocus ();
+  window_->EnableInputWindow(true, "Hud", true, false);
+  window_->EnableInputWindow(false, "Hud", true, false);
+  PluginAdapter::Default()->restoreInputFocus ();
 }
 
 void Controller::SetupHudView()
@@ -145,15 +151,17 @@ bool Controller::IsLockedToLauncher(int monitor)
 
 void Controller::EnsureHud()
 {
-  if (window_)
-    return;
-
   LOG_DEBUG(logger) << "Initializing Hud";
 
-  SetupWindow();
-  SetupHudView();
-  Relayout();
-  ensure_id_ = 0;
+  if (!window_)
+    SetupWindow();
+  
+  if (!view_)
+  {
+    SetupHudView();
+    Relayout();
+    ensure_id_ = 0;
+  }
 }
 
 nux::BaseWindow* Controller::window() const
