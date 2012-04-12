@@ -59,6 +59,8 @@ protected:
 private:
   nux::BaseTexture* DrawHighlight(std::string const& texid,
                                   int width, int height);
+  nux::BaseTexture* DrawNormal(std::string const& texid,
+                                  int width, int height);
 };
 
 }

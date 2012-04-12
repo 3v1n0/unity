@@ -1,4 +1,4 @@
-unity (5.8.0-0ubuntu3) UNRELEASED; urgency=low
+unity (5.10.0-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release:
     - bamfdaemon crashed with SIGABRT in g_assertion_message() (LP: #926208)
@@ -144,11 +144,12 @@ unity (5.8.0-0ubuntu3) UNRELEASED; urgency=low
       (LP: #973063)
     - Untranslatable strings in the hints screen (LP: #975815)
     - Dash text input does not get focus (LP: #774447)
+    - dash ignore queries done just after session start (LP: #979799)
   * debian/control:
     - build-dep on latest libnux-2.0-dev for ABI break
     - bump Standards-Version to latest
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 12 Apr 2012 11:00:38 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 12 Apr 2012 15:22:36 +0200
 
 unity (5.8.0-0ubuntu2) precise; urgency=low
 

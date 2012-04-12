@@ -194,13 +194,18 @@ public:
   int number_of_columns_;
 
   LazyLoadTexture dash_bottom_texture_;
+  LazyLoadTexture dash_bottom_texture_mask_;
   LazyLoadTexture dash_right_texture_;
+  LazyLoadTexture dash_right_texture_mask_;
   LazyLoadTexture dash_corner_texture_;
+  LazyLoadTexture dash_corner_texture_mask_;
   LazyLoadTexture dash_fullscreen_icon_;
   LazyLoadTexture dash_left_edge_;
   LazyLoadTexture dash_left_corner_;
+  LazyLoadTexture dash_left_corner_mask_;
   LazyLoadTexture dash_left_tile_;
   LazyLoadTexture dash_top_corner_;
+  LazyLoadTexture dash_top_corner_mask_;
   LazyLoadTexture dash_top_tile_;
 
   LazyLoadTexture dash_shine_;
@@ -232,13 +237,18 @@ Style::Impl::Impl(Style* owner)
   , text_height_(0)
   , number_of_columns_(6)
   , dash_bottom_texture_("/dash_bottom_border_tile.png")
+  , dash_bottom_texture_mask_("/dash_bottom_border_tile_mask.png")
   , dash_right_texture_("/dash_right_border_tile.png")
+  , dash_right_texture_mask_("/dash_right_border_tile_mask.png")
   , dash_corner_texture_("/dash_bottom_right_corner.png")
+  , dash_corner_texture_mask_("/dash_bottom_right_corner_mask.png")
   , dash_fullscreen_icon_("/dash_fullscreen_icon.png")
   , dash_left_edge_("/dash_left_edge.png")
   , dash_left_corner_("/dash_bottom_left_corner.png")
+  , dash_left_corner_mask_("/dash_bottom_left_corner_mask.png")
   , dash_left_tile_("/dash_left_tile.png")
   , dash_top_corner_("/dash_top_right_corner.png")
+  , dash_top_corner_mask_("/dash_top_right_corner_mask.png")
   , dash_top_tile_("/dash_top_tile.png")
   , dash_shine_("/dash_sheen.png")
   , search_magnify_texture_("/search_magnify.png")
@@ -2060,9 +2070,19 @@ nux::BaseTexture* Style::GetDashBottomTile()
   return pimpl->dash_bottom_texture_.texture();
 }
 
+nux::BaseTexture* Style::GetDashBottomTileMask()
+{
+  return pimpl->dash_bottom_texture_mask_.texture();
+}
+
 nux::BaseTexture* Style::GetDashRightTile()
 {
   return pimpl->dash_right_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetDashRightTileMask()
+{
+  return pimpl->dash_right_texture_mask_.texture();
 }
 
 nux::BaseTexture* Style::GetDashCorner()
@@ -2070,6 +2090,10 @@ nux::BaseTexture* Style::GetDashCorner()
   return pimpl->dash_corner_texture_.texture();
 }
 
+nux::BaseTexture* Style::GetDashCornerMask()
+{
+  return pimpl->dash_corner_texture_mask_.texture();
+}
 
 nux::BaseTexture* Style::GetDashLeftEdge()
 {
@@ -2081,6 +2105,11 @@ nux::BaseTexture* Style::GetDashLeftCorner()
   return pimpl->dash_left_corner_.texture();
 }
 
+nux::BaseTexture* Style::GetDashLeftCornerMask()
+{
+  return pimpl->dash_left_corner_mask_.texture();
+}
+
 nux::BaseTexture* Style::GetDashLeftTile()
 {
   return pimpl->dash_left_tile_.texture();
@@ -2089,6 +2118,11 @@ nux::BaseTexture* Style::GetDashLeftTile()
 nux::BaseTexture* Style::GetDashTopCorner()
 {
   return pimpl->dash_top_corner_.texture();
+}
+
+nux::BaseTexture* Style::GetDashTopCornerMask()
+{
+  return pimpl->dash_top_corner_mask_.texture();
 }
 
 nux::BaseTexture* Style::GetDashTopTile()
@@ -2235,7 +2269,7 @@ int Style::GetFilterButtonHeight() const
 
 int Style::GetSpaceBetweenLensAndFilters() const
 {
-  return 9;
+  return 10;
 }
 
 int Style::GetFilterViewRightPadding() const

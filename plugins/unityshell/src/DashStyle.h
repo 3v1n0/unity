@@ -166,13 +166,18 @@ public:
   int GetTextLineHeight() const;
 
   nux::BaseTexture* GetDashBottomTile();
+  nux::BaseTexture* GetDashBottomTileMask();
   nux::BaseTexture* GetDashRightTile();
+  nux::BaseTexture* GetDashRightTileMask();
   nux::BaseTexture* GetDashCorner();
+  nux::BaseTexture* GetDashCornerMask();
   nux::BaseTexture* GetDashFullscreenIcon();
   nux::BaseTexture* GetDashLeftEdge();
   nux::BaseTexture* GetDashLeftCorner();
+  nux::BaseTexture* GetDashLeftCornerMask();
   nux::BaseTexture* GetDashLeftTile();
   nux::BaseTexture* GetDashTopCorner();
+  nux::BaseTexture* GetDashTopCornerMask();
   nux::BaseTexture* GetDashTopTile();
 
   nux::BaseTexture* GetDashShine();
@@ -227,8 +232,6 @@ public:
   int GetCategoryHeaderLeftPadding() const;
   int GetCategorySeparatorLeftPadding() const;
   int GetCategorySeparatorRightPadding() const;
-
-  const static int SEARCH_BAR_EXTRA_PADDING = 1;
 
   sigc::signal<void> changed;
 

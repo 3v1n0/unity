@@ -22,22 +22,24 @@
 #include <config.h>
 
 #include <algorithm>
+#include <memory>
 #include <string>
 
 #define G_SETTINGS_ENABLE_BACKEND
 #include <gio/gsettingsbackend.h>
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <glib.h>
 
 #include "FavoriteStore.h"
 #include "FavoriteStoreGSettings.h"
+#include "FavoriteStorePrivate.h"
 #include <UnityCore/GLibWrapper.h>
 
-
 using namespace unity;
+using testing::Eq;
 
 namespace {
-  
+
 // Constant
 const gchar* SCHEMA_DIRECTORY = BUILDDIR"/settings";
 const gchar* BASE_STORE_FILE = BUILDDIR"/settings/test-favorite-store-gsettings.store";
@@ -50,10 +52,10 @@ const char* base_store_favs[] = { BUILDDIR"/tests/data/ubuntuone-installer.deskt
                                   NULL
                                 };
 const int n_base_store_favs = G_N_ELEMENTS(base_store_favs) - 1; /* NULL */
-                              
+
 const std::string other_desktop = BUILDDIR"/tests/data/bzr-handle-patch.desktop";
 
-// Utilities                            
+// Utilities
 std::string const& at(FavoriteList const& favs, int index)
 {
   FavoriteList::const_iterator iter = favs.begin();
@@ -69,20 +71,21 @@ bool ends_with(std::string const& value, std::string const& suffix)
   else
     return (pos + suffix.size()) == value.size();
 }
-  
+
 // A new one of these is created for each test
 class TestFavoriteStoreGSettings : public testing::Test
 {
 public:
   glib::Object<GSettingsBackend> backend;
-  
+  std::unique_ptr<internal::FavoriteStoreGSettings> setting_singleton_instance;
+
   virtual void SetUp()
   {
-    // set the data directory so gsettings can find the schema 
+    // set the data directory so gsettings can find the schema
     g_setenv("GSETTINGS_SCHEMA_DIR", SCHEMA_DIRECTORY, false);
 
     glib::Error error;
-    glib::String contents(g_strdup_printf(BASE_STORE_CONTENTS, 
+    glib::String contents(g_strdup_printf(BASE_STORE_CONTENTS,
                                           base_store_favs[0],
                                           base_store_favs[1],
                                           base_store_favs[2]
@@ -92,16 +95,17 @@ public:
                         contents.Value(),
                         -1,
                         error.AsOutParam());
-    
+
     ASSERT_FALSE(error);
 
     backend = g_keyfile_settings_backend_new(BASE_STORE_FILE, "/", "root");
+    setting_singleton_instance.reset(new internal::FavoriteStoreGSettings(backend.RawPtr()));
   }
 
   virtual void TearDown()
   {
   }
-  
+
 };
 
 TEST_F(TestFavoriteStoreGSettings, TestAllocation)
@@ -111,7 +115,7 @@ TEST_F(TestFavoriteStoreGSettings, TestAllocation)
 
 TEST_F(TestFavoriteStoreGSettings, TestGetFavorites)
 {
-  internal::FavoriteStoreGSettings settings(backend.Release());
+  FavoriteStore &settings = FavoriteStore::Instance();
   FavoriteList const& favs = settings.GetFavorites();
 
   ASSERT_EQ(favs.size(), n_base_store_favs);
@@ -119,11 +123,11 @@ TEST_F(TestFavoriteStoreGSettings, TestGetFavorites)
   EXPECT_TRUE(ends_with(at(favs, 1), base_store_favs[1]));
   EXPECT_TRUE(at(favs, 2) == base_store_favs[2]);
 }
-  
+
 TEST_F(TestFavoriteStoreGSettings, TestAddFavorite)
 {
-  internal::FavoriteStoreGSettings settings(backend.Release());
-  
+  FavoriteStore &settings = FavoriteStore::Instance();
+
   settings.AddFavorite(other_desktop, 0);
   FavoriteList const& favs = settings.GetFavorites();
   ASSERT_EQ(favs.size(), n_base_store_favs + 1);
@@ -132,8 +136,8 @@ TEST_F(TestFavoriteStoreGSettings, TestAddFavorite)
 
 TEST_F(TestFavoriteStoreGSettings, TestAddFavoritePosition)
 {
-  internal::FavoriteStoreGSettings settings(backend.Release());
-  
+  FavoriteStore &settings = FavoriteStore::Instance();
+
   settings.AddFavorite(other_desktop, 2);
   FavoriteList const& favs = settings.GetFavorites();
   ASSERT_EQ(favs.size(), n_base_store_favs + 1);
@@ -142,8 +146,8 @@ TEST_F(TestFavoriteStoreGSettings, TestAddFavoritePosition)
 
 TEST_F(TestFavoriteStoreGSettings,TestAddFavoriteLast)
 {
-  internal::FavoriteStoreGSettings settings(backend.Release());
-  
+  FavoriteStore &settings = FavoriteStore::Instance();
+
   settings.AddFavorite(other_desktop, -1);
   FavoriteList const& favs = settings.GetFavorites();
   ASSERT_EQ(favs.size(), n_base_store_favs + 1);
@@ -152,7 +156,7 @@ TEST_F(TestFavoriteStoreGSettings,TestAddFavoriteLast)
 
 TEST_F(TestFavoriteStoreGSettings,TestAddFavoriteOutOfRange)
 {
-  internal::FavoriteStoreGSettings settings(backend.Release());
+  FavoriteStore &settings = FavoriteStore::Instance();
 
   FavoriteList const& favs = settings.GetFavorites();
   settings.AddFavorite(other_desktop, n_base_store_favs + 1);
@@ -165,7 +169,7 @@ TEST_F(TestFavoriteStoreGSettings,TestAddFavoriteOutOfRange)
 
 TEST_F(TestFavoriteStoreGSettings, TestRemoveFavorite)
 {
-  internal::FavoriteStoreGSettings settings(backend.Release());
+  FavoriteStore &settings = FavoriteStore::Instance();
 
   FavoriteList const& favs = settings.GetFavorites();
   settings.RemoveFavorite(at(favs, 0));
@@ -180,7 +184,7 @@ TEST_F(TestFavoriteStoreGSettings, TestRemoveFavorite)
 
 TEST_F(TestFavoriteStoreGSettings, TestRemoveFavoriteBad)
 {
-  internal::FavoriteStoreGSettings settings(backend.Release());
+  FavoriteStore &settings = FavoriteStore::Instance();
 
   FavoriteList const& favs = settings.GetFavorites();
   settings.RemoveFavorite("");
@@ -195,7 +199,7 @@ TEST_F(TestFavoriteStoreGSettings, TestRemoveFavoriteBad)
 
 TEST_F(TestFavoriteStoreGSettings, TestMoveFavorite)
 {
-  internal::FavoriteStoreGSettings settings(backend.Release());
+  FavoriteStore &settings = FavoriteStore::Instance();
 
   FavoriteList const& favs = settings.GetFavorites();
 
@@ -209,7 +213,7 @@ TEST_F(TestFavoriteStoreGSettings, TestMoveFavorite)
 
 TEST_F(TestFavoriteStoreGSettings, TestMoveFavoriteBad)
 {
-  internal::FavoriteStoreGSettings settings(backend.Release());
+  FavoriteStore &settings = FavoriteStore::Instance();
 
   FavoriteList const& favs = settings.GetFavorites();
 
@@ -224,27 +228,27 @@ TEST_F(TestFavoriteStoreGSettings, TestMoveFavoriteBad)
 
 TEST_F(TestFavoriteStoreGSettings, TestFavoriteAddedSignalFirst)
 {
-  internal::FavoriteStoreGSettings settings(backend.RawPtr());
+  FavoriteStore &settings = FavoriteStore::Instance();
   bool signal_received = false;
   std::string position;
   bool before = false;
-  
+
   settings.favorite_added.connect([&](std::string const& path, std::string const& pos, bool bef)
   {
     signal_received = true;
     position = pos;
     before = bef;
   });
-  
+
   FavoriteList favs;
   favs.push_back(other_desktop);
   favs.push_back(base_store_favs[0]);
   favs.push_back(base_store_favs[1]);
   favs.push_back(base_store_favs[2]);
-  settings.SaveFavorites(favs, false);
-                     
+  setting_singleton_instance->SaveFavorites(favs, false);
+
   sleep(1);
-  
+
   ASSERT_TRUE(signal_received);
   EXPECT_EQ(position, base_store_favs[0]);
   EXPECT_TRUE(before);
@@ -252,27 +256,27 @@ TEST_F(TestFavoriteStoreGSettings, TestFavoriteAddedSignalFirst)
 
 TEST_F(TestFavoriteStoreGSettings, TestFavoriteAddedSignalMiddle)
 {
-  internal::FavoriteStoreGSettings settings(backend.RawPtr());
+  FavoriteStore &settings = FavoriteStore::Instance();
   bool signal_received = false;
   std::string position;
   bool before = true;
-  
+
   settings.favorite_added.connect([&](std::string const& path, std::string const& pos, bool bef)
   {
     signal_received = true;
     position = pos;
     before = bef;
   });
-  
+
   FavoriteList favs;
   favs.push_back(base_store_favs[0]);
   favs.push_back(base_store_favs[1]);
   favs.push_back(other_desktop);
   favs.push_back(base_store_favs[2]);
-  settings.SaveFavorites(favs, false);
-                     
+  setting_singleton_instance->SaveFavorites(favs, false);
+
   sleep(1);
-  
+
   ASSERT_TRUE(signal_received);
   EXPECT_EQ(position, base_store_favs[1]);
   EXPECT_FALSE(before);
@@ -280,27 +284,27 @@ TEST_F(TestFavoriteStoreGSettings, TestFavoriteAddedSignalMiddle)
 
 TEST_F(TestFavoriteStoreGSettings, TestFavoriteAddedSignalEnd)
 {
-  internal::FavoriteStoreGSettings settings(backend.RawPtr());
+  FavoriteStore &settings = FavoriteStore::Instance();
   bool signal_received = false;
   std::string position;
   bool before = true;
-  
+
   settings.favorite_added.connect([&](std::string const& path, std::string const& pos, bool bef)
   {
     signal_received = true;
     position = pos;
     before = bef;
   });
-  
+
   FavoriteList favs;
   favs.push_back(base_store_favs[0]);
   favs.push_back(base_store_favs[1]);
   favs.push_back(base_store_favs[2]);
   favs.push_back(other_desktop);
-  settings.SaveFavorites(favs, false);
-                     
+  setting_singleton_instance->SaveFavorites(favs, false);
+
   sleep(1);
-  
+
   ASSERT_TRUE(signal_received);
   EXPECT_EQ(position, base_store_favs[2]);
   EXPECT_FALSE(before);
@@ -308,24 +312,24 @@ TEST_F(TestFavoriteStoreGSettings, TestFavoriteAddedSignalEnd)
 
 TEST_F(TestFavoriteStoreGSettings, TestFavoriteAddedSignalEmpty)
 {
-  internal::FavoriteStoreGSettings settings(backend.RawPtr());
+  FavoriteStore &settings = FavoriteStore::Instance();
   bool signal_received = false;
   std::string position;
   bool before = false;
-  
+
   settings.favorite_added.connect([&](std::string const& path, std::string const& pos, bool bef)
   {
     signal_received = true;
     position = pos;
     before = bef;
   });
-  
+
   FavoriteList favs;
   favs.push_back(other_desktop);
-  settings.SaveFavorites(favs, false);
-                     
+  setting_singleton_instance->SaveFavorites(favs, false);
+
   sleep(1);
-  
+
   ASSERT_TRUE(signal_received);
   EXPECT_EQ(position, "");
   EXPECT_TRUE(before);
@@ -333,88 +337,88 @@ TEST_F(TestFavoriteStoreGSettings, TestFavoriteAddedSignalEmpty)
 
 TEST_F(TestFavoriteStoreGSettings, TestFavoriteRemoved)
 {
-  internal::FavoriteStoreGSettings settings(backend.RawPtr());
+  FavoriteStore &settings = FavoriteStore::Instance();
   bool signal_received = false;
   std::string path_removed;
-  
+
   settings.favorite_removed.connect([&](std::string const& path)
   {
     signal_received = true;
     path_removed = path;
   });
-  
+
   FavoriteList favs;
   favs.push_back(base_store_favs[0]);
   favs.push_back(base_store_favs[2]);
-  settings.SaveFavorites(favs, false);
-                     
+  setting_singleton_instance->SaveFavorites(favs, false);
+
   sleep(1);
-  
+
   ASSERT_TRUE(signal_received);
   EXPECT_EQ(path_removed, base_store_favs[1]);
 }
 
 TEST_F(TestFavoriteStoreGSettings, TestFavoriteReordered)
 {
-  internal::FavoriteStoreGSettings settings(backend.RawPtr());
+  FavoriteStore &settings = FavoriteStore::Instance();
   bool signal_received = false;
-  
+
   settings.reordered.connect([&]()
   {
     signal_received = true;
   });
-  
+
   FavoriteList favs;
   favs.push_back(base_store_favs[0]);
   favs.push_back(base_store_favs[2]);
   favs.push_back(base_store_favs[1]);
-  settings.SaveFavorites(favs, false);
-                     
+  setting_singleton_instance->SaveFavorites(favs, false);
+
   sleep(1);
-  
+
   ASSERT_TRUE(signal_received);
-  
+
   signal_received = false;
   favs.push_back(base_store_favs[0]);
   favs.push_back(base_store_favs[2]);
   favs.push_back(base_store_favs[1]);
-  settings.SaveFavorites(favs, false);
-                     
+  setting_singleton_instance->SaveFavorites(favs, false);
+
   sleep(1);
-  
+
   ASSERT_FALSE(signal_received);
 }
 
 TEST_F(TestFavoriteStoreGSettings, TestFavoriteSignalsMixed1)
 {
-  internal::FavoriteStoreGSettings settings(backend.RawPtr());
+  FavoriteStore &settings = FavoriteStore::Instance();
   bool added_received = false;
   bool removed_received = false;
   bool reordered_received = false;
-  
+
   settings.favorite_added.connect([&](std::string const& path, std::string const& pos, bool bef)
   {
     added_received = true;
   });
-  
+
   settings.favorite_removed.connect([&](std::string const& path)
   {
     removed_received = true;
   });
-  
+
   settings.reordered.connect([&]()
   {
     reordered_received = true;
   });
-  
+
   FavoriteList favs;
   favs.push_back(base_store_favs[0]);
   favs.push_back(base_store_favs[1]);
   favs.push_back(other_desktop);
-  settings.SaveFavorites(favs, false);
-                     
+  setting_singleton_instance->SaveFavorites(favs, false);
+
   sleep(1);
-  
+
   EXPECT_TRUE(added_received);
   EXPECT_TRUE(removed_received);
   EXPECT_FALSE(reordered_received);
@@ -422,34 +426,34 @@ TEST_F(TestFavoriteStoreGSettings, TestFavoriteSignalsMixed1)
 
 TEST_F(TestFavoriteStoreGSettings, TestFavoriteSignalsMixed2)
 {
-  internal::FavoriteStoreGSettings settings(backend.RawPtr());
+  FavoriteStore &settings = FavoriteStore::Instance();
   bool added_received = false;
   bool removed_received = false;
   bool reordered_received = false;
-  
+
   settings.favorite_added.connect([&](std::string const& path, std::string const& pos, bool bef)
   {
     added_received = true;
   });
-  
+
   settings.favorite_removed.connect([&](std::string const& path)
   {
     removed_received = true;
   });
-  
+
   settings.reordered.connect([&]()
   {
     reordered_received = true;
   });
-  
+
   FavoriteList favs;
   favs.push_back(base_store_favs[1]);
   favs.push_back(other_desktop);
   favs.push_back(base_store_favs[0]);
-  settings.SaveFavorites(favs, false);
-                     
+  setting_singleton_instance->SaveFavorites(favs, false);
+
   sleep(1);
-  
+
   EXPECT_TRUE(added_received);
   EXPECT_TRUE(removed_received);
   EXPECT_TRUE(reordered_received);
@@ -457,33 +461,33 @@ TEST_F(TestFavoriteStoreGSettings, TestFavoriteSignalsMixed2)
 
 TEST_F(TestFavoriteStoreGSettings, TestFavoriteSignalsMixed3)
 {
-  internal::FavoriteStoreGSettings settings(backend.RawPtr());
+  FavoriteStore &settings = FavoriteStore::Instance();
   bool added_received = false;
   bool removed_received = false;
   bool reordered_received = false;
-  
+
   settings.favorite_added.connect([&](std::string const& path, std::string const& pos, bool bef)
   {
     added_received = true;
   });
-  
+
   settings.favorite_removed.connect([&](std::string const& path)
   {
     removed_received = true;
   });
-  
+
   settings.reordered.connect([&]()
   {
     reordered_received = true;
   });
-  
+
   FavoriteList favs;
   favs.push_back(base_store_favs[1]);
   favs.push_back(base_store_favs[0]);
-  settings.SaveFavorites(favs, false);
-                     
+  setting_singleton_instance->SaveFavorites(favs, false);
+
   sleep(1);
-  
+
   EXPECT_FALSE(added_received);
   EXPECT_TRUE(removed_received);
   EXPECT_TRUE(reordered_received);

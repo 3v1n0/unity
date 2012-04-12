@@ -45,6 +45,7 @@ namespace dash
     BaseTexturePtr text;
     BaseTexturePtr icon;
     BaseTexturePtr blurred_icon;
+    BaseTexturePtr prelight;
     int slot_handle;
 
     TextureContainer()
@@ -87,7 +88,7 @@ protected:
   virtual void LoadText(Result& row);
   void LoadIcon(Result& row);
   nux::ObjectPtr<nux::BaseTexture> prelight_cache_;
-
+  nux::ObjectPtr<nux::BaseTexture> normal_cache_;
 private:
   //icon loading callbacks
   void IconLoaded(std::string const& texid,

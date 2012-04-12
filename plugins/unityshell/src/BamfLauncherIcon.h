@@ -43,7 +43,7 @@ public:
   BamfLauncherIcon(BamfApplication* app);
   virtual ~BamfLauncherIcon();
 
-  void ActivateLauncherIcon(ActionArg arg);
+  virtual void ActivateLauncherIcon(ActionArg arg);
 
   std::string DesktopFile();
 
@@ -81,7 +81,7 @@ protected:
   std::list<DbusmenuMenuitem*> GetMenus();
   std::set<std::string> ValidateUrisForLaunch(unity::DndData& dnd_data);
 
-  const gchar* GetRemoteUri();
+  std::string GetRemoteUri();
   std::string BamfName() const;
 
   bool HandlesSpread() { return true; }
@@ -113,8 +113,9 @@ private:
 
   bool OwnsWindow(Window w) const;
 
-  std::vector<Window> GetWindows(WindowFilterMask filter, int monitor = -1);
+  std::vector<Window> GetWindows(WindowFilterMask filter = 0, int monitor = -1);
   const std::set<std::string>& GetSupportedTypes();
+  std::string GetDesktopID();
 
 
   glib::Object<BamfApplication> _bamf_app;

@@ -11,7 +11,6 @@ from time import sleep
 from gtk import Clipboard
 from testtools.matchers import Equals
 
-from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.tests import AutopilotTestCase
 
 
@@ -74,6 +73,18 @@ class DashSearchInputTests(DashTestCase):
         self.dash.ensure_visible()
         self.keyboard.type("Hello")
         self.assertSearchText("Hello")
+
+class DashMultiKeyTests(DashSearchInputTests):
+    def setUp(self):
+        def set_multi_key():
+            """Binds Multi_key to caps lock"""
+            old_value = "\"%s\"" % self.call_gsettings_cmd('get', 'org.gnome.libgnomekbd.keyboard', '"options"')
+            self.addCleanup(self.call_gsettings_cmd, 'set', 'org.gnome.libgnomekbd.keyboard', '"options"', old_value)
+            self.call_gsettings_cmd('set', 'org.gnome.libgnomekbd.keyboard', '"options"', "\"['Compose key\tcompose:caps']\"")
+
+        # set the multi key first so that we're not getting a new _DISPLAY while keys are held down.
+        set_multi_key()
+        super(DashMultiKeyTests, self).setUp()    
 
     def test_multi_key(self):
         """Pressing 'Multi_key' must not add any characters to the search."""
@@ -301,6 +312,15 @@ class DashKeyNavTests(DashTestCase):
         category = lens.get_focused_category()
         self.assertIsNot(category, None)
 
+    def test_alt_f1_disabled(self):
+        """This test that Alt+F1 is disabled when the dash is opened."""
+        self.dash.ensure_visible()
+
+        launcher = self.launcher.get_launcher_for_monitor(0)
+        launcher.key_nav_start()
+
+        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
+
 
 class DashClipboardTests(DashTestCase):
     """Test the Unity clipboard"""
@@ -432,7 +452,7 @@ class DashLensResultsTests(DashTestCase):
         results_category = lens.get_category_by_name("Installed")
         old_results = results_category.get_results()
 
-        
+
         def activate_filter(add_cleanup = False):
             # Tabs to last category
             for i in range(lens.get_num_visible_categories()):
@@ -488,3 +508,23 @@ class DashVisualTests(DashTestCase):
                 expand_label_y = group.expand_label_y + group.expand_label_baseline
                 name_label_y = group.name_label_y + group.name_label_baseline
                 self.assertThat(expand_label_y, Equals(name_label_y))
+
+class DashLensBarTests(DashTestCase):
+    """Tests that the lensbar works well."""
+    def setUp(self):
+        super(DashLensBarTests, self).setUp()
+        self.dash.ensure_visible()
+        self.lensbar = self.dash.view.get_lensbar()
+
+    def test_click_inside_highlight(self):
+        """Lens selection should work when clicking in
+        the rectangle outside of the icon.
+        """
+        app_icon = self.lensbar.get_icon_by_name(u'applications.lens')
+
+        self.mouse.move(app_icon.x, app_icon.y)
+        self.mouse.click()
+
+        sleep(1)
+
+        self.assertEqual(self.lensbar.active_lens, u'applications.lens')        

@@ -16,21 +16,27 @@ In the future we may also need other devices.
 
 """
 
+import gtk.gdk
 import logging
+import os
+import subprocess
 from time import sleep
 
-from Xlib import X
-from Xlib import XK
+from autopilot.emulators.bamf import BamfWindow
+from Xlib import X, XK
 from Xlib.display import Display
 from Xlib.ext.xtest import fake_input
-import gtk.gdk
+
 
 _PRESSED_KEYS = []
 _PRESSED_MOUSE_BUTTONS = []
 _DISPLAY = Display()
 logger = logging.getLogger(__name__)
 
-
+def reset_display():
+    global _DISPLAY
+    _DISPLAY = Display()
+    
 class Keyboard(object):
     """Wrapper around xlib to make faking keyboard input possible."""
 
@@ -255,10 +261,10 @@ class Mouse(object):
         fake_input(_DISPLAY, X.ButtonRelease, button)
         _DISPLAY.sync()
 
-    def click(self, button=1):
+    def click(self, button=1, press_duration=0.25):
         """Click mouse at current location."""
         self.press(button)
-        sleep(0.25)
+        sleep(press_duration)
         self.release(button)
 
     def move(self, x, y, animate=True, rate=100, time_between_events=0.001):
@@ -317,8 +323,12 @@ class Mouse(object):
 class ScreenGeometry:
     """Get details about screen geometry."""
 
+    class BlacklistedDriverError(RuntimeError):
+        """Cannot set primary monitor when running drivers listed in the driver blacklist."""
+
     def __init__(self):
         self._default_screen = gtk.gdk.screen_get_default()
+        self._blacklisted_drivers = ["NVIDIA"]
 
     def get_num_monitors(self):
         """Get the number of monitors attached to the PC."""
@@ -326,6 +336,33 @@ class ScreenGeometry:
 
     def get_primary_monitor(self):
         return self._default_screen.get_primary_monitor()
+
+    def set_primary_monitor(self, monitor):
+        """Set `monitor` to be the primary monitor.
+
+        `monitor` must be an integer between 0 and the number of configured monitors.
+        ValueError is raised if an invalid monitor is specified.
+
+        BlacklistedDriverError is raised if your video driver does not support this.
+
+        """
+        glxinfo_out = subprocess.check_output("glxinfo")
+        for dri in self._blacklisted_drivers:
+            if dri in glxinfo_out:
+                raise ScreenGeometry.BlacklistedDriverError('Impossible change the primary monitor for the given driver')
+
+        if monitor < 0 or monitor >= self.get_num_monitors():
+            raise ValueError('Monitor %d is not in valid range of 0 <= monitor < %d.' % (self.get_num_monitors()))
+
+        monitor_name = self._default_screen.get_monitor_plug_name(monitor)
+
+        if not monitor_name:
+            raise ValueError('Could not get monitor name from monitor number %d.' % (monitor))
+
+        ret = os.spawnlp(os.P_WAIT, "xrandr", "xrandr", "--output", monitor_name, "--primary")
+
+        if ret != 0:
+            raise RuntimeError('Xrandr can\'t set the primary monitor. error code: %d' % (ret))
 
     def get_screen_width(self):
         return self._default_screen.get_width()
@@ -339,9 +376,19 @@ class ScreenGeometry:
         Returns a tuple containing (x,y,width,height).
 
         """
-        if monitor_number >= self.get_num_monitors():
+        if monitor_number < 0 or monitor_number >= self.get_num_monitors():
             raise ValueError('Specified monitor number is out of range.')
         return tuple(self._default_screen.get_monitor_geometry(monitor_number))
+
+    def is_rect_on_monitor(self, monitor_number, rect):
+        """Returns True if `rect` is _entirely_ on the specified monitor, with no overlap."""
+
+        if type(rect) is not tuple or len(rect) != 4:
+            raise TypeError("rect must be a tuple of 4 int elements.")
+
+        (x, y, w, h) = rect
+        (m_x, m_y, m_w, m_h) = self.get_monitor_geometry(monitor_number)
+        return (x >= m_x and x + w <= m_x + m_w and y >= m_y and y + h <= m_y + m_h)
 
     def move_mouse_to_monitor(self, monitor_number):
         """Move the mouse to the center of the specified monitor."""
@@ -350,3 +397,32 @@ class ScreenGeometry:
         y = geo[1] + (geo[3] / 2)
         #dont animate this or it might not get there due to barriers
         Mouse().move(x, y, False)
+
+    def drag_window_to_monitor(self, window, monitor):
+        if not isinstance(window, BamfWindow):
+            raise TypeError("Window must be a BamfWindow")
+
+        if window.monitor == monitor:
+            logger.debug("Window %r is already on monitor %d." % (window.x_id, monitor))
+            return
+
+        assert(not window.is_maximized)
+        (win_x, win_y, win_w, win_h) = window.geometry
+        (m_x, m_y, m_w, m_h) = self.get_monitor_geometry(monitor)
+
+        logger.debug("Dragging window %r to monitor %d." % (window.x_id, monitor))
+
+        mouse = Mouse()
+        keyboard = Keyboard()
+        mouse.move(win_x + win_w/2, win_y + win_h/2)
+        keyboard.press("Alt")
+        mouse.press()
+        keyboard.release("Alt")
+
+        # We do the movements in two steps, to reduce the risk of being
+        # blocked by the pointer barrier
+        target_x = m_x + m_w/2
+        target_y = m_y + m_h/2
+        mouse.move(win_x, target_y, rate=20, time_between_events=0.005)
+        mouse.move(target_x, target_y, rate=20, time_between_events=0.005)
+        mouse.release()

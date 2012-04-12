@@ -11,7 +11,6 @@ from time import sleep
 
 from autopilot.tests import AutopilotTestCase
 from autopilot.emulators.unity.shortcut_hint import ShortcutController
-from autopilot.emulators.X11 import ScreenGeometry
 
 
 class BaseShortcutHintTests(AutopilotTestCase):
@@ -29,9 +28,8 @@ class BaseShortcutHintTests(AutopilotTestCase):
         sleep(1)
 
     def skip_if_monitor_too_small(self):
-        screen = ScreenGeometry();
-        monitor = screen.get_primary_monitor()
-        monitor_geo = screen.get_monitor_geometry(monitor);
+        monitor = self.screen_geo.get_primary_monitor()
+        monitor_geo = self.screen_geo.get_monitor_geometry(monitor);
         monitor_w = monitor_geo[2];
         monitor_h = monitor_geo[3];
         launcher_width = self.launcher.get_launcher_for_monitor(monitor).geometry[2];
@@ -49,8 +47,7 @@ class BaseShortcutHintTests(AutopilotTestCase):
     def get_launcher(self):
         # We could parameterise this so all tests run on both monitors (if MM is
         # set up), but I think it's fine to just always use monitor primary monitor:
-        screen = ScreenGeometry();
-        monitor = screen.get_primary_monitor()
+        monitor = self.screen_geo.get_primary_monitor()
         return self.launcher.get_launcher_for_monitor(monitor)
 
 
@@ -105,17 +102,6 @@ class ShortcutHintTests(BaseShortcutHintTests):
         self.assertThat(self.shortcut_hint.is_visible(), Equals(False))
         sleep(self.shortcut_hint.get_show_timeout())
         self.assertThat(self.shortcut_hint.is_visible(), Equals(False))
-
-    def test_shortcut_hint_geometries(self):
-        """Test that the shortcut hint has the wanted geometries."""
-        sleep(.5)
-        self.shortcut_hint.show()
-        self.addCleanup(self.shortcut_hint.hide)
-        sleep(self.shortcut_hint.get_show_timeout())
-
-        (x, y, w, h) = self.shortcut_hint.get_geometry()
-        self.assertThat(w, Equals(self.DEFAULT_WIDTH))
-        self.assertThat(h, Equals(self.DEFAULT_HEIGHT))
 
 
 class ShortcutHintInteractionsTests(BaseShortcutHintTests):

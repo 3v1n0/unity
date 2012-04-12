@@ -321,3 +321,89 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
   cache_dirty = false;
   return blur_texture_;
 }
+
+nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetRegion(nux::Geometry geo, bool force_update)
+{
+  bool should_update = force_update || cache_dirty;
+
+  /* Static blur: only update when the size changed */
+  if ((!should_update)
+      && blur_texture_.IsValid()
+      && (geo == blur_geometry_))
+  {
+    return blur_texture_;
+  }
+
+  nux::GraphicsEngine* graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
+  
+  int monitor_width = BackgroundEffectHelper::monitor_rect_.width;
+  int monitor_height = BackgroundEffectHelper::monitor_rect_.height;
+
+  nux::Geometry temp = geo;
+  temp.OffsetPosition(-monitor_rect_.x, -monitor_rect_.y);
+  blur_geometry_ =  nux::Geometry(0, 0, monitor_width, monitor_height).Intersect(temp);
+
+  nux::GpuDevice* gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
+  if (blur_geometry_.IsNull() || !gpu_device->backup_texture0_.IsValid())
+  {
+    return nux::ObjectPtr<nux::IOpenGLBaseTexture>();
+  }
+
+  // save the current fbo
+  nux::ObjectPtr<nux::IOpenGLFrameBufferObject> current_fbo = gpu_device->GetCurrentFrameBufferObject();
+  gpu_device->DeactivateFrameBuffer();
+
+  // Set a viewport to the requested size
+  // FIXME: We need to do multiple passes for the dirty region
+  // on the underlying backup texture so that we're only updating
+  // the bits that we need
+  graphics_engine->SetViewport(0, 0, blur_geometry_.width, blur_geometry_.height);
+  graphics_engine->SetScissor(0, 0, blur_geometry_.width, blur_geometry_.height);
+  // Disable nux scissoring
+  graphics_engine->GetRenderStates ().EnableScissor (false);
+
+  // The background texture is the same size as the monitor where we are rendering.
+  nux::TexCoordXForm texxform__bg;
+  texxform__bg.flip_v_coord = false;
+  texxform__bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+  texxform__bg.uoffset = ((float) blur_geometry_.x) / monitor_width;
+  texxform__bg.voffset = ((float) monitor_height - blur_geometry_.y - blur_geometry_.height) / monitor_height;
+
+  {
+    nux::ObjectPtr<nux::IOpenGLBaseTexture> device_texture = gpu_device->backup_texture0_;
+    nux::ObjectPtr<nux::CachedBaseTexture> noise_device_texture = graphics_engine->CacheResource(noise_texture_);
+
+    unsigned int offset = 0;
+    int quad_width = blur_geometry_.width;
+    int quad_height = blur_geometry_.height;
+
+    unsigned int buffer_width = quad_width + 2 * offset;
+    unsigned int buffer_height = quad_height + 2 * offset;
+
+    texxform__bg.SetFilter(nux::TEXFILTER_NEAREST, nux::TEXFILTER_NEAREST);
+    texxform__bg.flip_v_coord = true;
+
+    // Copy source texture
+    graphics_engine->QRP_GetCopyTexture(buffer_width, buffer_height,
+                                        blur_texture_, device_texture,
+                                        texxform__bg, nux::color::White);
+  }
+
+  if (current_fbo.IsValid())
+  {
+    current_fbo->Activate(true);
+    graphics_engine->Push2DWindow(current_fbo->GetWidth(), current_fbo->GetHeight());
+    graphics_engine->GetRenderStates ().EnableScissor (true);
+  }
+  else
+  {
+    graphics_engine->SetViewport(0, 0, monitor_width, monitor_height);
+    graphics_engine->Push2DWindow(monitor_width, monitor_height);
+
+    graphics_engine->ApplyClippingRectangle();
+  }
+
+  cache_dirty = false;
+  return blur_texture_;
+}
+

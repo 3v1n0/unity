@@ -37,9 +37,10 @@ typedef std::list<std::string> FavoriteList;
 class FavoriteStore : public sigc::trackable, boost::noncopyable
 {
 public:
+  FavoriteStore();
   virtual ~FavoriteStore();
 
-  static FavoriteStore& GetDefault();
+  static FavoriteStore& Instance();
 
   virtual FavoriteList const& GetFavorites() = 0;
 

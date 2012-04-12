@@ -116,7 +116,7 @@ FilterExpanderLabel::FilterExpanderLabel(std::string const& label, NUX_FILE_LINE
     }
     else if (!value and separator_->IsChildOf(layout_))
     {
-      layout_->AddLayout(space_, 0);
+      layout_->RemoveChildObject(space_);
       layout_->RemoveChildObject(separator_);
     }
     QueueDraw();
