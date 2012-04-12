@@ -103,6 +103,7 @@ void Controller::SetupWindow()
   window_->SetOpacity(0.0f);
   window_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &Controller::OnMouseDownOutsideWindow));
   
+  /* FIXME - first time we load our windows there is a race that causes the input window not to actually get input, this side steps that by causing an input window show and hide before we really need it. */
   PluginAdapter::Default()->saveInputFocus ();
   window_->EnableInputWindow(true, "Hud", true, false);
   window_->EnableInputWindow(false, "Hud", true, false);
