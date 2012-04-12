@@ -143,6 +143,7 @@ unity (5.8.0-0ubuntu3) UNRELEASED; urgency=low
     - Starting dash or hud with mouse over launcher desaturates all icons
       (LP: #973063)
     - Untranslatable strings in the hints screen (LP: #975815)
+    - Dash text input does not get focus (LP: #774447)
   * debian/control:
     - build-dep on latest libnux-2.0-dev for ABI break
     - bump Standards-Version to latest
