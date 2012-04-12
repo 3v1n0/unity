@@ -1,5 +1,148 @@
 unity (5.8.0-0ubuntu3) UNRELEASED; urgency=low
 
+  * New upstream release:
+    - bamfdaemon crashed with SIGABRT in g_assertion_message() (LP: #926208)
+    - We are using 1 bad hack for compiz hanging on startup (LP: #963264)
+    - GConf backend steals glib events from compiz (LP: #965220)
+    - when I closed QupZill brawser it crashed and then and then I sow
+      worrning that compiz crashed but fire fox and chrome is estle working.
+      gtk-window-decorator crashed with SIGSEGV in max_window_name_width()
+      (LP: #948580)
+    - compiz crashed with SIGSEGV in std::basic_string<...>::basic_string()
+      from unity::launcher::HudLauncherIcon::HudLauncherIcon()::{lambda} from
+      unity::UBusManager::OnCallback (LP: #964897)
+    - unity-panel-service crashed due to heap corruption in g_free() from
+      service_proxy_name_changed() [libindicator/indicator-service-
+      manager.c:574] (LP: #969360)
+    - Opening dash while an application is maximized makes unity completely
+      useless, have to relogin (LP: #975103)
+    - unity crash on alt-tab (LP: #975168)
+    - Top bar - Menus should be condensed to fit panel/overlay of appmenu
+      (LP: #655184)
+    - Topbar - window controls for maximised windows in the top bar should
+      conform to Fitts's law (LP: #839690)
+    - [FFe, UIFe] Dash - When the Dash is open and there is a maximised app in
+      the background, the top bar background should not disappear
+      (LP: #839480)
+    - Dash - The inner bottom left, bottom right and top right corners of the
+      desktop dash border are rendered incorrectly (LP: #839476)
+    - Showdesktoped window contents invisible in window spread (LP: #877778)
+    - Maximized windows can be accidentally closed from wrong monitor.
+      (LP: #865701)
+    - Unity launcher on-screen corruption on resume from suspend with nVidia
+      proprietary driver (LP: #915265)
+    - Launcher - Inserting items into launcher makes unnecessary animations on
+      other monitors (LP: #925021)
+    - Far left character in panel (and launcher popups) distorted
+      (LP: #927441)
+    - Jenkins build failure: SetAcceptKeyNavFocusOnMouseEnter not declared
+      (LP: #938037)
+    - super+<unbound key> and sometimes super+<number> keys now cause launch
+      to wedge with the key hints shown and retains focus instead of selecting
+      the requested window (LP: #934084)
+    - three-finger move does not move (Precise) (LP: #940612)
+    - compiz crashed with SIGSEGV in std::__detail::_List_node_base::_M_hook()
+      from unity::ui::PointerBarrierWrapper::EmitCurrentData (LP: #944217)
+    - indicators appear intertwined with global menu (LP: #953868)
+    - [5.8 pre staging] "sticky edge" option does nothing visible
+      (LP: #961285)
+    - HUD: The selection always returns to the first item whenever menus are
+      updated (LP: #962984)
+    - Multimonitor - Using single launcher, the HUD draws incorrectly on a
+      secondary monitor (LP: #963577)
+    - Type your command does not appear translated in the HUD (LP: #964074)
+    - HUD doesnt receive input after pressing Tab (LP: #964760)
+    - compiz crashed with SIGSEGV in g_variant_unref() from
+      unity::launcher::SoftwareCenterLauncherIcon::OnPropertyChanged
+      (LP: #963718)
+    - HUD denial of service (LP: #948820)
+    - Application launch time increased with type-to-search in unity 5.8
+      (LP: #966417)
+    - Weird translation on the shortcut overlay dialog (LP: #971332)
+    - compiz crashed with SIGSEV in g_type_check_instance_is_a from
+      unity::launcher::DeviceLauncherIcon::ShowNotification (LP: #971345)
+    - Launcher - launcher have a weird background if cursor is over it while
+      opening dash (LP: #974408)
+    - compiz crashed with SIGSEGV in
+      unity::hud::HudIconTextureSource::ColorForIcon() (LP: #935307)
+    - Compiz: Growing idle memory consumption with latest Nux/Unity (~60
+      MiB/h) in unity::PanelIndicatorEntryView::Refresh() (LP: #975801)
+    - [nvidia] minimized windows are white in the window spread (LP: #977189)
+    - compiz crashed with SIGSEGV in nux::Rect::Rect() from
+      unity::launcher::LauncherIcon::OpenQuicklist() from RecvMouseDown() from
+      unity::launcher::LauncherIcon::RecvMouseDown() (LP: #954736)
+    - Alt-tab - Reduce the spread delay for all items other than the initial
+      item the select lands on after alt-tab opens (LP: #838232)
+    - Dash - The Dash search box should expand horizontally when the Dash
+      switches to full screen mode  (LP: #841907)
+    - window selected via ALT+F1 doesn't get focus in unity (LP: #875932)
+    - Non square icons don't fill result tiles as much as they should
+      (LP: #878015)
+    - Dash - the spinner and the 'clear' button (the circle with the X) in the
+      Dash is blurry (LP: #891691)
+    - Dash - Update the Dash card view so that the implementation conforms to
+      the attached designs (LP: #901164)
+    - Launcher bar doesn't saturate when focused via keynav when dash opened
+      (LP: #913569)
+    - Global menu doesn't work with multiple monitors (twinview) (LP: #921918)
+    - Number shortcut overlay won't show if mouse hovers launcher bar area
+      (LP: #924636)
+    - Colour of launcher on second monitor is not restored after closing the
+      dash (LP: #925442)
+    - [autohide] app icons in HUD are poorly scaled (LP: #931406)
+    - Show default HUD icon for Desktop (nautilus) menus (LP: #931548)
+    - Hud shows wrong application icon when activated with the dash showing
+      (LP: #932371)
+    - Window management - Dragging down a maximized window from the panel has
+      not predictable results (LP: #934680)
+    - Launcher - Properly colorize icons (LP: #938620)
+    - lens bar clickable area needs to be expanded (LP: #937193)
+    - Multimonitor - hidden menu indicators are shown in the non active
+      monitor (LP: #951747)
+    - Wrong glib #include in Hud.h (LP: #952117)
+    - [FFe, UIFe] New animation for adding launchers for newly installed
+      applications (LP: #955147)
+    - HUD remembers icon of last used app (LP: #961161)
+    - Launcher - window buttons are not horizontally ad vertically aligned
+      (LP: #963019)
+    - Opening HUD after dash shows window title in the panel (LP: #963134)
+    - Dash picking a really odd color with default wallpaper (LP: #963140)
+    - HUD overlay has one pixel gap on left side (LP: #964061)
+    - Launcher icon indicators doesn't redraw when changing the launcher
+      settings (LP: #964851)
+    - Dash home results take too long to appear (LP: #965492)
+    - Multimonitor - Only the panel that controls the focused window should
+      draw its title (LP: #968261)
+    - Performing a pinch gesture over a window has no effect (LP: #969554)
+    - Dash section header icons are missing (LP: #971233)
+    - Unity displays "no search results" with results present (LP: #971430)
+    - Pressing Ctrl+Tab from the command lens switches to the wrong lens
+      (LP: #971850)
+    - PanelMenuView causes gtk assertion to fail (LP: #971947)
+    - [regression] The keyboard shortcuts overlay bottom is truncated.
+      (LP: #973386)
+    - Not minimizable windows have an enabled "minimize" button on the unity
+      panel (LP: #936425)
+    - HUD maximize button affects Dash (LP: #939054)
+    - Panel opacity toggle doesn't quite work  (LP: #940683)
+    - Dash is totally broken when disabling the blur effect (LP: #941066)
+    - Dash collapsed view has scrollbar (LP: #956500)
+    - HUD too many triangles with new transition effect (LP: #961230)
+    - Menu bar not transparent when invoking dash with super key whilst HUD
+      enabled and vice versa (LP: #962410)
+    - Windows controls lost if dash is opened after HUD (LP: #963118)
+    - HUD service returning more than 5 entries (LP: #965299)
+    - Dash - Search box text is clipped (LP: #966424)
+    - IBus Pinyin pup box disappears  in the hud (LP: #968777)
+    - Dash and HUD search fields appear in slightly different places
+      (LP: #969404)
+    - Super+Tab, super, loses focus (LP: #970420)
+    - Dash - reduce frosty effect (LP: #978785)
+    - HUD doesn't ignore key events while ibus is active (LP: #957927)
+    - "Show Dekstop icon" typo in Unity's translation template (LP: #934526)
+    - Starting dash or hud with mouse over launcher desaturates all icons
+      (LP: #973063)
+    - Untranslatable strings in the hints screen (LP: #975815)
   * debian/control:
     - build-dep on latest libnux-2.0-dev for ABI break
     - bump Standards-Version to latest
