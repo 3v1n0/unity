@@ -220,6 +220,8 @@ TEST_F(GestureEngineTest, MinimalThreeFingersPinchDoesNothing)
   ASSERT_EQ(0, middle_window->_maximize_count);
 }
 
+/* Regression test for lp:979418, where the grab is not removed if the gesture
+ * id is 0. */
 TEST_F(GestureEngineTest, DragGrabCheck)
 {
   screen_mock->_grab_count = 0;
