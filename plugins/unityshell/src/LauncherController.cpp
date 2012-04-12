@@ -32,6 +32,7 @@
 #include "DesktopLauncherIcon.h"
 #include "DeviceLauncherIcon.h"
 #include "DeviceLauncherSection.h"
+#include "EdgeBarrierController.h"
 #include "FavoriteStore.h"
 #include "HudLauncherIcon.h"
 #include "Launcher.h"
@@ -173,6 +174,8 @@ public:
 
   int                    launcher_key_press_time_;
 
+  ui::EdgeBarrierController::Ptr edge_barriers_;
+
   LauncherList launchers;
 
   sigc::connection on_expoicon_activate_connection_;
@@ -188,7 +191,13 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   , sort_priority_(0)
   , show_desktop_icon_(false)
   , display_(display)
+  , launcher_key_press_handler_id_(0)
+  , launcher_label_show_handler_id_(0)
+  , launcher_hide_handler_id_(0)
+  , edge_barriers_(new ui::EdgeBarrierController())
 {
+  edge_barriers_->options = parent_->options();
+
   UScreen* uscreen = UScreen::GetDefault();
   auto monitors = uscreen->GetMonitors();
   int primary = uscreen->GetPrimaryMonitor();
@@ -229,9 +238,9 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   remote_model_.entry_added.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteAdded));
   remote_model_.entry_removed.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteRemoved));
 
-  FavoriteStore::GetDefault().favorite_added.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteAdded));
-  FavoriteStore::GetDefault().favorite_removed.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteRemoved));
-  FavoriteStore::GetDefault().reordered.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreReordered));
+  FavoriteStore::Instance().favorite_added.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteAdded));
+  FavoriteStore::Instance().favorite_removed.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteRemoved));
+  FavoriteStore::Instance().reordered.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreReordered));
 
   LauncherHideMode hide_mode = parent_->options()->hide_mode;
   BFBLauncherIcon* bfb = new BFBLauncherIcon(hide_mode);
@@ -331,10 +340,16 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
     {
       parent_->RemoveChild(launcher.GetPointer());
       launcher->GetParent()->UnReference();
+      edge_barriers_->Unsubscribe(launcher.GetPointer(), launcher->monitor);
     }
   }
 
   launchers.resize(num_launchers);
+
+  for (size_t i = 0; i < launchers.size(); ++i)
+  {
+    edge_barriers_->Subscribe(launchers[i].GetPointer(), launchers[i]->monitor);
+  }
 }
 
 void Controller::Impl::OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors)
@@ -433,7 +448,7 @@ void Controller::Impl::Save()
       desktop_paths.push_back(desktop_file);
   }
 
-  unity::FavoriteStore::GetDefault().SetFavorites(desktop_paths);
+  unity::FavoriteStore::Instance().SetFavorites(desktop_paths);
 }
 
 void
@@ -609,7 +624,7 @@ void Controller::Impl::OnFavoriteStoreFavoriteRemoved(std::string const& entry)
 
 void Controller::Impl::OnFavoriteStoreReordered()
 {
-  FavoriteList const& favs = FavoriteStore::GetDefault().GetFavorites();
+  FavoriteList const& favs = FavoriteStore::Instance().GetFavorites();
   auto bamf_list = model_->GetSublist<BamfLauncherIcon>();
 
   int i = 0;
@@ -791,7 +806,7 @@ void Controller::Impl::SetupBamf()
 
   matcher_ = bamf_matcher_get_default();
 
-  FavoriteList const& favs = FavoriteStore::GetDefault().GetFavorites();
+  FavoriteList const& favs = FavoriteStore::Instance().GetFavorites();
 
   for (FavoriteList::const_iterator i = favs.begin(), end = favs.end();
        i != end; ++i)
@@ -821,6 +836,7 @@ void Controller::Impl::SetupBamf()
     icon->SetSortPriority(sort_priority_++);
     RegisterIcon(icon);
   }
+  g_list_free(apps);
   SortAndUpdate();
 
   model_->order_changed.connect(sigc::mem_fun(this, &Impl::SortAndUpdate));
@@ -1089,9 +1105,9 @@ void Controller::Impl::ReceiveMouseDownOutsideArea(int x, int y, unsigned long b
 void Controller::KeyNavGrab()
 {
   pimpl->ubus.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+  pimpl->launcher_grabbed = true;
   KeyNavActivate();
   pimpl->keyboard_launcher_->GrabKeyboard();
-  pimpl->launcher_grabbed = true;
 
   pimpl->launcher_key_press_connection_ =
     pimpl->keyboard_launcher_->key_down.connect(sigc::mem_fun(pimpl, &Controller::Impl::ReceiveLauncherKeyPress));
@@ -1112,18 +1128,50 @@ void Controller::KeyNavActivate()
   pimpl->keyboard_launcher_->EnterKeyNavMode();
   pimpl->model_->SetSelection(0);
 
-  pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_SWTICHER, g_variant_new_boolean(true));
-  pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_NAV, NULL);
+  if (pimpl->launcher_grabbed)
+  {
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_NAV,
+                            g_variant_new_int32(pimpl->keyboard_launcher_->monitor));
+  }
+  else
+  {
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_SWTICHER,
+                            g_variant_new_int32(pimpl->keyboard_launcher_->monitor));
+  }
+
+  AbstractLauncherIcon::Ptr const& selected = pimpl->model_->Selection();
+
+  if (selected)
+  {
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED,
+                            g_variant_new_string(selected->tooltip_text().c_str()));
+  }
 }
 
 void Controller::KeyNavNext()
 {
   pimpl->model_->SelectNext();
+
+  AbstractLauncherIcon::Ptr const& selected = pimpl->model_->Selection();
+
+  if (selected)
+  {
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED,
+                            g_variant_new_string(selected->tooltip_text().c_str()));
+  }
 }
 
 void Controller::KeyNavPrevious()
 {
   pimpl->model_->SelectPrevious();
+
+  AbstractLauncherIcon::Ptr const& selected = pimpl->model_->Selection();
+
+  if (selected)
+  {
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED,
+                            g_variant_new_string(selected->tooltip_text().c_str()));
+  }
 }
 
 void Controller::KeyNavTerminate(bool activate)
@@ -1131,13 +1179,28 @@ void Controller::KeyNavTerminate(bool activate)
   if (!pimpl->launcher_keynav)
     return;
 
+  if (activate && pimpl->keynav_restore_window_)
+  {
+    /* If the selected icon is running, we must not restore the input to the old */
+    AbstractLauncherIcon::Ptr const& icon = pimpl->model_->Selection();
+    pimpl->keynav_restore_window_ = !icon->GetQuirk(AbstractLauncherIcon::QUIRK_RUNNING);
+  }
+
   pimpl->keyboard_launcher_->ExitKeyNavMode();
+
   if (pimpl->launcher_grabbed)
   {
     pimpl->keyboard_launcher_->UnGrabKeyboard();
     pimpl->launcher_key_press_connection_.disconnect();
     pimpl->launcher_event_outside_connection_.disconnect();
     pimpl->launcher_grabbed = false;
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_NAV,
+                            g_variant_new_boolean(pimpl->keynav_restore_window_));
+  }
+  else
+  {
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_SWTICHER,
+                            g_variant_new_boolean(pimpl->keynav_restore_window_));
   }
 
   if (activate)
@@ -1146,9 +1209,6 @@ void Controller::KeyNavTerminate(bool activate)
   pimpl->launcher_keynav = false;
   if (!pimpl->launcher_open)
     pimpl->keyboard_launcher_.Release();
-
-  pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_SWTICHER, g_variant_new_boolean(true));
-  pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_NAV, g_variant_new_boolean(pimpl->keynav_restore_window_));
 }
 
 bool Controller::KeyNavIsActive() const
@@ -1162,7 +1222,7 @@ bool Controller::IsOverlayOpen() const
   {
     if (launcher_ptr->IsOverlayOpen())
       return true;
-  } 
+  }
   return false;
 }
 
@@ -1248,12 +1308,11 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
       // <RETURN> (start/activate currently selected icon)
     case NUX_VK_ENTER:
     case NUX_KP_ENTER:
-    model_->Selection()->Activate(ActionArg(ActionArg::LAUNCHER, 0));
-    parent_->KeyNavTerminate(false);
+    parent_->KeyNavTerminate(true);
     break;
 
     default:
-      // ALT + <Anykey>; treat it as a shortcut and exit keynav 
+      // ALT + <Anykey>; treat it as a shortcut and exit keynav
       if (state & nux::NUX_STATE_ALT)
       {
         parent_->KeyNavTerminate(false);

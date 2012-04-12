@@ -28,8 +28,9 @@
 class GeisAdapter : public sigc::trackable
 {
 public:
-  static GeisAdapter* Default();
+  static GeisAdapter& Instance();
 
+  GeisAdapter();
   ~GeisAdapter();
 
   void Run();
@@ -41,8 +42,8 @@ public:
     Window window;
     int touches;
     int timestamp;
-    int focus_x;
-    int focus_y;
+    float focus_x;
+    float focus_y;
     int tap_length_ms;
     float position_x;
     float position_y;
@@ -59,8 +60,8 @@ public:
     Window window;
     int touches;
     int timestamp;
-    int focus_x;
-    int focus_y;
+    float focus_x;
+    float focus_y;
     float delta_x;
     float delta_y;
     float velocity_x;
@@ -80,8 +81,8 @@ public:
     Window window;
     int touches;
     int timestamp;
-    int focus_x;
-    int focus_y;
+    float focus_x;
+    float focus_y;
     float angle;
     float angle_delta;
     float angle_velocity;
@@ -98,8 +99,8 @@ public:
     Window window;
     int touches;
     int timestamp;
-    int focus_x;
-    int focus_y;
+    float focus_x;
+    float focus_y;
     float radius;
     float radius_delta;
     float radius_velocity;
@@ -116,8 +117,8 @@ public:
     Window window;
     int touches;
     int timestamp;
-    int focus_x;
-    int focus_y;
+    float focus_x;
+    float focus_y;
     float bound_x1;
     float bound_y1;
     float bound_x2;
@@ -142,8 +143,6 @@ public:
   sigc::signal<void, GeisTouchData*> touch_update;
   sigc::signal<void, GeisTouchData*> touch_finish;
 protected:
-  GeisAdapter();
-
   static gboolean OnWatchIn(GIOChannel* source, GIOCondition condition, gpointer data);
 
   static void InputDeviceAdded(void* cookie, GeisInputDeviceId device_id, void* attrs);
@@ -167,11 +166,7 @@ private:
   void RegisterRootInstance();
 
   GeisInstance _root_instance;
-
   guint _watch_id;
-
-  static GeisAdapter* _default;
-
 };
 
 #endif

@@ -30,6 +30,7 @@ namespace impl
 
 std::string GetMetaKey(std::string const& scut);
 std::string FixShortcutFormat(std::string const& scut);
+std::string GetTranslatableLabel(std::string const& scut);
 std::string FixMouseShortcut(std::string const& scut);
 std::string ProperCase(std::string const& str);
 

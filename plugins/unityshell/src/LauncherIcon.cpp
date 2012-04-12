@@ -986,6 +986,7 @@ LauncherIcon::SetEmblemText(std::string const& text)
   pango_font_description_set_absolute_size(desc, pango_units_from_double(font_height));
 
   pango_layout_set_font_description(layout, desc);
+  pango_font_description_free(desc);
 
   pango_layout_set_width(layout, pango_units_from_double(width - 4.0f));
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);

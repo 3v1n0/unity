@@ -459,6 +459,17 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
 
   lens->activated.connect(sigc::mem_fun(this, &DashView::OnUriActivatedReply));
   lens->search_finished.connect(sigc::mem_fun(this, &DashView::OnSearchFinished));
+  lens->connected.changed.connect([&] (bool value)
+  {
+    std::string const& search_string = search_bar_->search_string;
+    if (value && lens->search_in_global && active_lens_view_ == home_view_
+        && !search_string.empty())
+    {
+      // force a (global!) search with the correct string
+      lens->GlobalSearch(search_bar_->search_string);
+    }
+  });
+
   // global search done is handled by the home lens, no need to connect to it
   // BUT, we will special case global search finished coming from 
   // the applications lens, because we want to be able to launch applications
@@ -731,8 +742,16 @@ void DashView::AddProperties(GVariantBuilder* builder)
   if (active_lens_view_)
     num_rows += active_lens_view_->GetNumRows();
 
+  std::string form_factor("unknown");
+
+  if (Settings::Instance().GetFormFactor() == FormFactor::NETBOOK)
+    form_factor = "netbook";
+  else if (Settings::Instance().GetFormFactor() == FormFactor::DESKTOP)
+    form_factor = "desktop";
+
   unity::variant::BuilderWrapper wrapper(builder);
-  wrapper.add("num-rows", num_rows);
+  wrapper.add("num_rows", num_rows);
+  wrapper.add("form_factor", form_factor);
 }
 
 nux::Area* DashView::KeyNavIteration(nux::KeyNavDirection direction)
@@ -813,7 +832,7 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
   // DashView::KeyNavIteration.
    nux::InputArea* focus_area = nux::GetWindowCompositor().GetKeyFocusArea();
 
-  if (key_symbol == nux::NUX_KEYDOWN)
+  if (key_symbol == nux::NUX_KEYDOWN && !search_bar_->im_preedit)
   {
     std::list<nux::Area*> tabs;
     for (auto category : active_lens_view_->categories())
@@ -888,7 +907,7 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     }
   }
 
-  if (direction == KEY_NAV_NONE || search_bar_->im_active)
+  if (direction == KEY_NAV_NONE || search_bar_->im_preedit)
   {
     // then send the event to the search entry
     return search_bar_->text_entry();

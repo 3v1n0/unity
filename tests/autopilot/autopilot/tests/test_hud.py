@@ -103,6 +103,16 @@ class HudBehaviorTests(HudTestsBase):
         self.keyboard.press_and_release('Up')
         self.assertThat(self.hud.selected_button, Equals(1))
 
+    def test_no_reset_selected_button(self):
+        self.reveal_hud()
+        self.keyboard.type('is')
+        sleep(1)
+        self.keyboard.press_and_release('Down')
+        self.assertThat(self.hud.selected_button, Equals(2))
+        # long sleep to let the service send updated results 
+        sleep(10)
+        self.assertThat(self.hud.selected_button, Equals(2))
+
     def test_slow_tap_not_reveal_hud(self):
         self.hud.toggle_reveal(tap_delay=0.3)
         sleep(1)
@@ -401,7 +411,6 @@ class HudVisualTests(HudTestsBase):
     def test_hud_icon_is_shown(self):
         """Tests that the correct HUD icon is shown"""
         self.reveal_hud()
-        self.hud.visible
         sleep(.5)
 
         hud_launcher_icon = self.hud.get_launcher_icon()
@@ -463,3 +472,28 @@ class HudVisualTests(HudTestsBase):
         sleep(.5)
 
         self.assertThat(self.hud.icon.icon_name, Equals(calc.icon))
+
+
+class HudAlternativeKeybindingTests(HudTestsBase):
+
+    def test_super_h(self):
+        """Test hud reveal on <Super>h."""
+        self.set_unity_option("show_hud", "<Super>h")
+        # Don't use reveal_hud, but be explicit in the keybindings.
+        self.keyboard.press_and_release("Super+h")
+        for counter in range(10):
+            sleep(1)
+            if self.hud.visible:
+                break
+        self.assertTrue(self.hud.visible, "HUD did not appear.")
+
+    def test_ctrl_alt_h(self):
+        """Test hud reveal on <Contrl><Alt>h."""
+        self.set_unity_option("show_hud", "<Control><Alt>h")
+        # Don't use reveal_hud, but be explicit in the keybindings.
+        self.keyboard.press_and_release("Ctrl+Alt+h")
+        for counter in range(10):
+            sleep(1)
+            if self.hud.visible:
+                break
+        self.assertTrue(self.hud.visible, "HUD did not appear.")

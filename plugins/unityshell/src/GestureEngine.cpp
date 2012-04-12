@@ -38,25 +38,25 @@ GestureEngine::GestureEngine(CompScreen* screen)
   _pinch_grab = 0;
   _fleur_cursor = XCreateFontCursor (screen->dpy (), XC_fleur);
 
-  GeisAdapter* adapter = GeisAdapter::Default();
+  GeisAdapter& adapter = GeisAdapter::Instance();
 
-  adapter->tap.connect(sigc::mem_fun(this, &GestureEngine::OnTap));
+  adapter.tap.connect(sigc::mem_fun(this, &GestureEngine::OnTap));
 
-  adapter->drag_start.connect(sigc::mem_fun(this, &GestureEngine::OnDragStart));
-  adapter->drag_update.connect(sigc::mem_fun(this, &GestureEngine::OnDragUpdate));
-  adapter->drag_finish.connect(sigc::mem_fun(this, &GestureEngine::OnDragFinish));
+  adapter.drag_start.connect(sigc::mem_fun(this, &GestureEngine::OnDragStart));
+  adapter.drag_update.connect(sigc::mem_fun(this, &GestureEngine::OnDragUpdate));
+  adapter.drag_finish.connect(sigc::mem_fun(this, &GestureEngine::OnDragFinish));
 
-  adapter->rotate_start.connect(sigc::mem_fun(this, &GestureEngine::OnRotateStart));
-  adapter->rotate_update.connect(sigc::mem_fun(this, &GestureEngine::OnRotateUpdate));
-  adapter->rotate_finish.connect(sigc::mem_fun(this, &GestureEngine::OnRotateFinish));
+  adapter.rotate_start.connect(sigc::mem_fun(this, &GestureEngine::OnRotateStart));
+  adapter.rotate_update.connect(sigc::mem_fun(this, &GestureEngine::OnRotateUpdate));
+  adapter.rotate_finish.connect(sigc::mem_fun(this, &GestureEngine::OnRotateFinish));
 
-  adapter->pinch_start.connect(sigc::mem_fun(this, &GestureEngine::OnPinchStart));
-  adapter->pinch_update.connect(sigc::mem_fun(this, &GestureEngine::OnPinchUpdate));
-  adapter->pinch_finish.connect(sigc::mem_fun(this, &GestureEngine::OnPinchFinish));
+  adapter.pinch_start.connect(sigc::mem_fun(this, &GestureEngine::OnPinchStart));
+  adapter.pinch_update.connect(sigc::mem_fun(this, &GestureEngine::OnPinchUpdate));
+  adapter.pinch_finish.connect(sigc::mem_fun(this, &GestureEngine::OnPinchFinish));
 
-  adapter->touch_start.connect(sigc::mem_fun(this, &GestureEngine::OnTouchStart));
-  adapter->touch_update.connect(sigc::mem_fun(this, &GestureEngine::OnTouchUpdate));
-  adapter->touch_finish.connect(sigc::mem_fun(this, &GestureEngine::OnTouchFinish));
+  adapter.touch_start.connect(sigc::mem_fun(this, &GestureEngine::OnTouchStart));
+  adapter.touch_update.connect(sigc::mem_fun(this, &GestureEngine::OnTouchUpdate));
+  adapter.touch_finish.connect(sigc::mem_fun(this, &GestureEngine::OnTouchFinish));
 }
 
 GestureEngine::~GestureEngine()
@@ -75,44 +75,26 @@ GestureEngine::OnTap(GeisAdapter::GeisTapData* data)
   }
 }
 
-CompWindow*
-GestureEngine::FindCompWindow(Window window)
+CompWindow* GestureEngine::FindCompWindowAtPos(float fpos_x, float fpos_y)
 {
-  CompWindow* result = _screen->findTopLevelWindow(window);
+  const CompWindowVector& client_list_stacking = _screen->clientList(true);
 
-  while (!result)
+  int pos_x = fpos_x;
+  int pos_y = fpos_y;
+
+  for (auto iter = client_list_stacking.rbegin(),
+       end = client_list_stacking.rend();
+       iter != end; ++iter)
   {
-    Window parent, root;
-    Window* children = NULL;
-    unsigned int nchildren;
-    Status status;
+    CompWindow* window = *iter;
 
-    status = XQueryTree(_screen->dpy(), window, &root, &parent, &children, &nchildren);
-    if (status == 0)
-      break;
-
-    if (children)
-      XFree(children);
-
-    // parent will be zero when the window passed to this method is already the
-    // root one.
-    if (parent == root || parent == 0)
-      break;
-
-    window = parent;
-    result = _screen->findTopLevelWindow(window);
+    if (pos_x >= window->x() && pos_x <= (window->width() + window->x())
+        &&
+        pos_y >= window->y() && pos_y <= (window->height() + window->y()))
+      return window;
   }
 
-  if (result)
-  {
-    if (!(result->type() & (CompWindowTypeUtilMask |
-                            CompWindowTypeNormalMask |
-                            CompWindowTypeDialogMask |
-                            CompWindowTypeModalDialogMask)))
-      result = 0;
-  }
-
-  return result;
+  return nullptr;
 }
 
 void
@@ -120,7 +102,7 @@ GestureEngine::OnDragStart(GeisAdapter::GeisDragData* data)
 {
   if (data->touches == 3)
   {
-    _drag_window = FindCompWindow(data->window);
+    _drag_window = FindCompWindowAtPos(data->focus_x, data->focus_y);
 
 
     if (!_drag_window)
@@ -222,7 +204,7 @@ GestureEngine::OnTouchStart(GeisAdapter::GeisTouchData* data)
 {
   if (data->touches == 3 && data->window != 0)
   {
-    CompWindow* result = FindCompWindow(data->window);
+    CompWindow* result = FindCompWindowAtPos(data->focus_x, data->focus_y);
 
     if (result)
     {
@@ -256,13 +238,12 @@ GestureEngine::OnPinchStart(GeisAdapter::GeisPinchData* data)
 {
   if (data->touches == 3)
   {
-    _pinch_window = FindCompWindow(data->window);
+    _pinch_window = FindCompWindowAtPos(data->focus_x, data->focus_y);
 
     if (!_pinch_window)
       return;
 
     _pinch_id = data->id;
-    _pinch_start_radius = data->radius;
 
     if (_pinch_grab)
       _screen->removeGrab(_pinch_grab, NULL);
@@ -275,17 +256,14 @@ GestureEngine::OnPinchUpdate(GeisAdapter::GeisPinchData* data)
   if (data->id != _pinch_id)
     return;
 
-  float delta_radius = data->radius - _pinch_start_radius;
-  if (delta_radius > 110.0f)
+  if (data->radius > 1.25)
   {
     _pinch_window->maximize(MAXIMIZE_STATE);
-    _pinch_start_radius = data->radius;
     EndDrag();
   }
-  else if (delta_radius < -110.0f)
+  else if (data->radius < 0.8)
   {
     _pinch_window->maximize(0);
-    _pinch_start_radius = data->radius;
     EndDrag();
   }
 }

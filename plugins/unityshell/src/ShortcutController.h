@@ -48,13 +48,13 @@ public:
   ~Controller();
 
   // Public Methods
-  void Show();
+  bool Show();
   void Hide();
 
   bool Visible();
   bool IsEnabled();
 
-  void SetWorkspace(nux::Geometry const& geo);
+  void SetAdjustment(int x, int y);
   void SetEnabled(bool enabled);
 
 protected:
@@ -64,6 +64,7 @@ protected:
 private:
   // Private Methods
   void ConstructView();
+  void EnsureView();
   void OnBackgroundUpdate(GVariant* data);
   void OnFadeInUpdated(double opacity);
   void OnFadeInEnded();

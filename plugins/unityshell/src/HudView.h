@@ -82,6 +82,7 @@ private:
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
+  void OnSearchbarActivated();
   bool AcceptKeyNavFocus();
   nux::Geometry GetBestFitGeometry(nux::Geometry const& for_geo);
 

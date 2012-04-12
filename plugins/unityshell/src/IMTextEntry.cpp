@@ -151,4 +151,9 @@ void IMTextEntry::OnMouseButtonUp(int x, int y, unsigned long bflags, unsigned l
     Paste(true);
   } 
 }
+
+bool IMTextEntry::im_preedit()
+{
+  return !preedit_.empty();
+}
 }

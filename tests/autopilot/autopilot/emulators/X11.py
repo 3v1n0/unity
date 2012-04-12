@@ -22,6 +22,7 @@ import os
 import subprocess
 from time import sleep
 
+from autopilot.emulators.bamf import BamfWindow
 from Xlib import X, XK
 from Xlib.display import Display
 from Xlib.ext.xtest import fake_input
@@ -32,7 +33,10 @@ _PRESSED_MOUSE_BUTTONS = []
 _DISPLAY = Display()
 logger = logging.getLogger(__name__)
 
-
+def reset_display():
+    global _DISPLAY
+    _DISPLAY = Display()
+    
 class Keyboard(object):
     """Wrapper around xlib to make faking keyboard input possible."""
 
@@ -257,10 +261,10 @@ class Mouse(object):
         fake_input(_DISPLAY, X.ButtonRelease, button)
         _DISPLAY.sync()
 
-    def click(self, button=1):
+    def click(self, button=1, press_duration=0.25):
         """Click mouse at current location."""
         self.press(button)
-        sleep(0.25)
+        sleep(press_duration)
         self.release(button)
 
     def move(self, x, y, animate=True, rate=100, time_between_events=0.001):
@@ -393,3 +397,32 @@ class ScreenGeometry:
         y = geo[1] + (geo[3] / 2)
         #dont animate this or it might not get there due to barriers
         Mouse().move(x, y, False)
+
+    def drag_window_to_monitor(self, window, monitor):
+        if not isinstance(window, BamfWindow):
+            raise TypeError("Window must be a BamfWindow")
+
+        if window.monitor == monitor:
+            logger.debug("Window %r is already on monitor %d." % (window.x_id, monitor))
+            return
+
+        assert(not window.is_maximized)
+        (win_x, win_y, win_w, win_h) = window.geometry
+        (m_x, m_y, m_w, m_h) = self.get_monitor_geometry(monitor)
+
+        logger.debug("Dragging window %r to monitor %d." % (window.x_id, monitor))
+
+        mouse = Mouse()
+        keyboard = Keyboard()
+        mouse.move(win_x + win_w/2, win_y + win_h/2)
+        keyboard.press("Alt")
+        mouse.press()
+        keyboard.release("Alt")
+
+        # We do the movements in two steps, to reduce the risk of being
+        # blocked by the pointer barrier
+        target_x = m_x + m_w/2
+        target_y = m_y + m_h/2
+        mouse.move(win_x, target_y, rate=20, time_between_events=0.005)
+        mouse.move(target_x, target_y, rate=20, time_between_events=0.005)
+        mouse.release()

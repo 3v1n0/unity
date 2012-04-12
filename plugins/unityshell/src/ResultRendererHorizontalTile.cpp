@@ -37,13 +37,34 @@
 #include "IconTexture.h"
 #include "TextureCache.h"
 
-//~ namespace
-//~ {
-//~ nux::logging::Logger logger("unity.dash.ResultRendererHorizontalTile");
-//~ }
 
 namespace unity
 {
+namespace
+{
+//~ nux::logging::Logger logger("unity.dash.ResultRendererHorizontalTile");
+const int   CARD_VIEW_PADDING              = 4;   // pixels
+const int   CARD_VIEW_ICON_SIZE            = 64;  // pixels
+const int   CARD_VIEW_ICON_TEXT_GAP        = 10;  // pixels
+//const int   CARD_VIEW_GAP_VERT             = 24;  // pixels
+//const int   CARD_VIEW_GAP_HORIZ            = 25;  // pixels
+const int   CARD_VIEW_WIDTH                = 277; // pixels
+const int   CARD_VIEW_HEIGHT               = 74;  // pixels
+const int   CARD_VIEW_HIGHLIGHT_CORNER_RADIUS = 2; // pixels
+//const char  CARD_VIEW_ICON_OUTLINE_COLOR   = "#000000";
+//const float CARD_VIEW_ICON_OUTLINE_OPACITY = 1.0; //float
+const int   CARD_VIEW_ICON_OUTLINE_WIDTH   = 1;   // pixels
+const int CARD_VIEW_TEXT_LINE_SPACING    = 0; // points
+//const char  CARD_VIEW_TEXT_TITLE_COLOR     = "#ffffff";
+//const float CARD_VIEW_TEXT_TITLE_OPACITY   = 1.0; // float
+//const float CARD_VIEW_TEXT_TITLE_SIZE      = 13.0; // points
+//const char  CARD_VIEW_TEXT_TITLE_WEIGHT    = "bold";
+//const char  CARD_VIEW_TEXT_BODY_COLOR      = "#ffffff";
+//const float CARD_VIEW_TEXT_BODY_OPACITY    = 1.0; // float
+//const float CARD_VIEW_TEXT_BODY_SIZE       = 13.0; // points
+//const int   CARD_VIEW_TEXT_BODY_WEIGHT     = "regular";
+}
+
 namespace dash
 {
 NUX_IMPLEMENT_OBJECT_TYPE(ResultRendererHorizontalTile);
@@ -51,17 +72,21 @@ NUX_IMPLEMENT_OBJECT_TYPE(ResultRendererHorizontalTile);
 ResultRendererHorizontalTile::ResultRendererHorizontalTile(NUX_FILE_LINE_DECL)
   : ResultRendererTile(NUX_FILE_LINE_PARAM)
 {
-  Style& style = Style::Instance();
-  width = style.GetTileWidth() * 2;
-  height = style.GetTileIconSize() + (padding * 2);
+  width = CARD_VIEW_WIDTH;
+  height = CARD_VIEW_HEIGHT;
 
   // pre-load the highlight texture
   // try and get a texture from the texture cache
   TextureCache& cache = TextureCache::GetDefault();
   prelight_cache_ = cache.FindTexture("ResultRendererHorizontalTile.PreLightTexture",
-                                      style.GetTileIconSize() + (highlight_padding * 2),
-                                      style.GetTileIconSize() + (highlight_padding * 2),
+                                      CARD_VIEW_WIDTH,
+                                      CARD_VIEW_HEIGHT,
                                       sigc::mem_fun(this, &ResultRendererHorizontalTile::DrawHighlight));
+  normal_cache_ = cache.FindTexture("ResultRendererHorizontalTile.NormalTexture",
+                                      CARD_VIEW_WIDTH,
+                                      CARD_VIEW_HEIGHT,
+                                      sigc::mem_fun(this, &ResultRendererHorizontalTile::DrawNormal));
+
 }
 
 ResultRendererHorizontalTile::~ResultRendererHorizontalTile()
@@ -78,33 +103,49 @@ void ResultRendererHorizontalTile::Render(nux::GraphicsEngine& GfxContext,
   if (container == nullptr)
     return;
 
-  Style& style = Style::Instance();
-
   // set up our texture mode
   nux::TexCoordXForm texxform;
 
   int icon_left_hand_side = geometry.x + padding;
-  int icon_top_side = geometry.y + ((geometry.height - style.GetTileIconSize()) / 2);
+  int icon_top_side = geometry.y + ((geometry.height - CARD_VIEW_ICON_SIZE) / 2);
 
-
-  if (container->blurred_icon && state == ResultRendererState::RESULT_RENDERER_NORMAL)
+  // render overall tile background "rectangle"
+  if (state == ResultRendererState::RESULT_RENDERER_NORMAL)
   {
-    GfxContext.QRP_1Tex(icon_left_hand_side - 5 - x_offset,
-                        icon_top_side - 5 - y_offset,
-                        style.GetTileIconSize() + 10,
-                        style.GetTileIconSize() + 10,
-                        container->blurred_icon->GetDeviceTexture(),
+    int x = icon_left_hand_side;
+    int y = icon_top_side;
+    int w = CARD_VIEW_WIDTH;
+    int h = CARD_VIEW_HEIGHT;
+
+    unsigned int alpha = 0;
+    unsigned int src   = 0;
+    unsigned int dest  = 0;
+    GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
+    GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+    GfxContext.QRP_1Tex(x,
+                        y,
+                        w,
+                        h,
+                        normal_cache_->GetDeviceTexture(),
                         texxform,
-                        nux::Color(0.15f, 0.15f, 0.15f, 0.15f));
+                        nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
+
+    GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
   }
 
   // render highlight if its needed
   if (state != ResultRendererState::RESULT_RENDERER_NORMAL)
   {
-    GfxContext.QRP_1Tex(icon_left_hand_side - highlight_padding,
-                        icon_top_side - highlight_padding,
-                        style.GetTileIconSize() + (highlight_padding * 2),
-                        style.GetTileIconSize() + (highlight_padding * 2),
+    int x = icon_left_hand_side;
+    int y = icon_top_side;
+    int w = CARD_VIEW_WIDTH;
+    int h = CARD_VIEW_HEIGHT;
+
+    GfxContext.QRP_1Tex(x,
+                        y,
+                        w,
+                        h,
                         prelight_cache_->GetDeviceTexture(),
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
@@ -113,10 +154,20 @@ void ResultRendererHorizontalTile::Render(nux::GraphicsEngine& GfxContext,
   // draw the icon
   if (container->icon)
   {
-    GfxContext.QRP_1Tex(icon_left_hand_side,
-                        icon_top_side,
-                        style.GetTileIconSize(),
-                        style.GetTileIconSize(),
+    int x = icon_left_hand_side + CARD_VIEW_PADDING + CARD_VIEW_ICON_OUTLINE_WIDTH;
+    int y = icon_top_side + CARD_VIEW_PADDING + CARD_VIEW_ICON_OUTLINE_WIDTH;
+    int w = CARD_VIEW_ICON_SIZE;
+    int h = CARD_VIEW_ICON_SIZE;
+    gPainter.Paint2DQuadColor(GfxContext,
+                              x - CARD_VIEW_ICON_OUTLINE_WIDTH,
+                              y - CARD_VIEW_ICON_OUTLINE_WIDTH,
+                              w + 2 * CARD_VIEW_ICON_OUTLINE_WIDTH,
+                              h + 2 * CARD_VIEW_ICON_OUTLINE_WIDTH,
+                              nux::color::Black);
+    GfxContext.QRP_1Tex(x,
+                        y,
+                        w,
+                        h,
                         container->icon->GetDeviceTexture(),
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
@@ -124,15 +175,19 @@ void ResultRendererHorizontalTile::Render(nux::GraphicsEngine& GfxContext,
 
   if (container->text)
   {
-    GfxContext.QRP_1Tex(icon_left_hand_side + style.GetTileIconSize() + spacing,
-                        icon_top_side,
-                        container->text->GetWidth(),
-                        container->text->GetHeight(),
+    int x = icon_left_hand_side + CARD_VIEW_PADDING + 2 * CARD_VIEW_ICON_OUTLINE_WIDTH + CARD_VIEW_ICON_SIZE + CARD_VIEW_ICON_TEXT_GAP;
+    int y = icon_top_side + CARD_VIEW_PADDING;
+    int w = container->text->GetWidth();
+    int h = container->text->GetHeight();
+
+    GfxContext.QRP_1Tex(x,
+                        y,
+                        w,
+                        h,
                         container->text->GetDeviceTexture(),
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
   }
-
 }
 
 nux::BaseTexture* ResultRendererHorizontalTile::DrawHighlight(std::string const& texid,
@@ -147,55 +202,46 @@ nux::BaseTexture* ResultRendererHorizontalTile::DrawHighlight(std::string const&
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
 
-  int PADDING = 4;
-  int BLUR_SIZE = 5;
-
-  int bg_width = width - PADDING - BLUR_SIZE;
-  int bg_height = height - PADDING - BLUR_SIZE;
-  int bg_x = BLUR_SIZE - 1;
-  int bg_y = BLUR_SIZE - 1;
-
-  // draw the glow
+  // draw the highlight
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-  cairo_set_line_width(cr, 1.0f);
-  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.75f);
+  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.2f);
   cairo_graphics.DrawRoundedRectangle(cr,
-                                       1.0f,
-                                       bg_x,
-                                       bg_y,
-                                       5.0,
-                                       bg_width,
-                                       bg_height,
-                                       true);
+                                      1.0f,
+                                      0.0f,
+                                      0.0f,
+                                      CARD_VIEW_HIGHLIGHT_CORNER_RADIUS,
+                                      width,
+                                      height,
+                                      false);
   cairo_fill(cr);
 
-  cairo_graphics.BlurSurface(BLUR_SIZE - 2);
+  return texture_from_cairo_graphics(cairo_graphics);
+}
 
-  cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-  cairo_graphics.DrawRoundedRectangle(cr,
-                                       1.0,
-                                       bg_x,
-                                       bg_y,
-                                       5.0,
-                                       bg_width,
-                                       bg_height,
-                                       true);
-  cairo_clip(cr);
+nux::BaseTexture* ResultRendererHorizontalTile::DrawNormal(std::string const& texid,
+                                                              int width, int height)
+{
+  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width, height);
+  cairo_t* cr = cairo_graphics.GetInternalContext();
+
+  cairo_scale(cr, 1.0f, 1.0f);
+
+  cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.0);
+  cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+  cairo_paint(cr);
+
+  // draw the normal bg
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-
+  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.075f);
   cairo_graphics.DrawRoundedRectangle(cr,
-                                       1.0,
-                                       bg_x,
-                                       bg_y,
-                                       5.0,
-                                       bg_width,
-                                       bg_height,
-                                       true);
-  cairo_set_source_rgba(cr, 240 / 255.0f, 240 / 255.0f, 240 / 255.0f, 1.0f);
-  cairo_fill_preserve(cr);
-
-  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0);
-  cairo_stroke(cr);
+                                      1.0f,
+                                      0.0f,
+                                      0.0f,
+                                      CARD_VIEW_HIGHLIGHT_CORNER_RADIUS,
+                                      width,
+                                      height,
+                                      false);
+  cairo_fill(cr);
 
   return texture_from_cairo_graphics(cairo_graphics);
 }
@@ -205,16 +251,18 @@ void ResultRendererHorizontalTile::LoadText(Result& row)
   std::stringstream final_text;
   char *name = g_markup_escape_text(row.name().c_str()  , -1);
   char *comment = g_markup_escape_text(row.comment().c_str()  , -1);
-  final_text << name << "\n<span size=\"small\">"
-             << comment << "</span>";
+
+  if(row.comment().empty())
+    final_text << "<b>" << name << "</b>";
+  else
+    final_text << "<b>" << name << "</b>" << "\n" << comment;
 
   g_free(name);
   g_free(comment);
 
-  Style& style = Style::Instance();
   nux::CairoGraphics _cairoGraphics(CAIRO_FORMAT_ARGB32,
-                                    width() - style.GetTileIconSize() + spacing - (padding * 2),
-                                    height() - (padding * 2));
+                                    CARD_VIEW_WIDTH - CARD_VIEW_ICON_SIZE - 2 * CARD_VIEW_ICON_OUTLINE_WIDTH - 2 * CARD_VIEW_PADDING - CARD_VIEW_ICON_TEXT_GAP,
+                                    CARD_VIEW_HEIGHT - 2 * CARD_VIEW_PADDING);
 
   cairo_t* cr = _cairoGraphics.GetContext();
 
@@ -222,23 +270,22 @@ void ResultRendererHorizontalTile::LoadText(Result& row)
   PangoFontDescription* desc       = NULL;
   PangoContext*         pango_context   = NULL;
   GdkScreen*            screen     = gdk_screen_get_default();    // not ref'ed
-  glib::String          font;
   int                   dpi = -1;
 
-  g_object_get(gtk_settings_get_default(), "gtk-font-name", &font, NULL);
   g_object_get(gtk_settings_get_default(), "gtk-xft-dpi", &dpi, NULL);
 
   cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
   layout = pango_cairo_create_layout(cr);
-  desc = pango_font_description_from_string(font.Value());
+  desc = pango_font_description_from_string("Ubuntu 10");
 
   pango_layout_set_font_description(layout, desc);
   pango_layout_set_alignment(layout, PANGO_ALIGN_LEFT);
 
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
-  pango_layout_set_width(layout, (width() - style.GetTileIconSize() - spacing)* PANGO_SCALE);
-  pango_layout_set_height(layout, (height() - (padding * 2)) * PANGO_SCALE);
+  pango_layout_set_spacing(layout, CARD_VIEW_TEXT_LINE_SPACING * PANGO_SCALE);
+  pango_layout_set_width(layout, (CARD_VIEW_WIDTH - CARD_VIEW_ICON_SIZE - 2 * CARD_VIEW_ICON_OUTLINE_WIDTH - 2 * CARD_VIEW_PADDING - CARD_VIEW_ICON_TEXT_GAP) * PANGO_SCALE);
+  pango_layout_set_height(layout, -4);
 
   pango_layout_set_markup(layout, final_text.str().c_str(), -1);
 
@@ -255,7 +302,12 @@ void ResultRendererHorizontalTile::LoadText(Result& row)
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
   cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
 
-  cairo_move_to(cr, 0.0f, 0.0f);
+  double offset = 0.0;
+  PangoRectangle logRect = {0, 0, 0, 0};
+  pango_layout_get_extents(layout, NULL, &logRect);
+  if (pango_layout_get_line_count(layout) < 4)
+    offset = ((CARD_VIEW_HEIGHT - 2 * CARD_VIEW_PADDING) - (logRect.height / PANGO_SCALE)) / 2.0;
+  cairo_move_to(cr, 0.0f, offset);
   pango_cairo_show_layout(cr, layout);
 
   // clean up

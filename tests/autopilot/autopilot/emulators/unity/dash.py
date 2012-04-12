@@ -70,10 +70,13 @@ class Dash(KeybindingsHelper):
 
     @property
     def visible(self):
-        """
-        Is the dash visible?
-        """
+        """Returns if the dash is currently visible"""
         return self.controller.visible
+
+    @property
+    def monitor(self):
+        """The monitor where the dash is"""
+        return self.controller.monitor
 
     @property
     def search_string(self):
@@ -167,6 +170,15 @@ class SearchBar(UnityIntrospectionObject):
 
 class LensBar(UnityIntrospectionObject):
     """The bar of lens icons at the bottom of the dash."""
+    def get_icon_by_name(self, name):
+        """Get a LensBarIcon child object by it's name. For example, 'home.lens'."""
+        icons = self.get_children_by_type(LensBarIcon)
+        for icon in icons:
+            if icon.name == name:
+                return icon
+
+class LensBarIcon(UnityIntrospectionObject):
+    """A lens icon at the bottom of the dash."""
 
 
 class LensView(UnityIntrospectionObject):

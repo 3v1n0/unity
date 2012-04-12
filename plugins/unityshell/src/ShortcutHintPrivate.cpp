@@ -17,8 +17,10 @@
  */
 
 #include <glib/gi18n-lib.h>
+#include <gtk/gtk.h>
 
 #include "ShortcutHintPrivate.h"
+#include "UnityCore/GLibWrapper.h"
 
 #include <boost/algorithm/string/replace.hpp>
 
@@ -49,6 +51,31 @@ std::string FixShortcutFormat(std::string const& scut)
     ret += scut[scut.size()-1];
     
   return ret;
+}
+
+std::string GetTranslatableLabel(std::string const& scut)
+{
+  guint accelerator_key;
+  GdkModifierType accelerator_mods;
+
+  gtk_accelerator_parse(scut.c_str(),
+                        &accelerator_key,
+                        &accelerator_mods);
+
+  std::string temp(glib::String(gtk_accelerator_get_label(accelerator_key, accelerator_mods)).Str());
+
+  // gtk_accelerator_get_label adds an extra '+' at the end of the label.
+  if (temp.length() > 0)
+  {
+    std::string::iterator it = temp.end() - 1;
+    if (*it == '+')
+      temp.erase(it);
+  }
+
+  // Adds an extra space around the '+'.
+  boost::replace_all(temp, "+", " + ");
+    
+  return temp;
 }
 
 std::string FixMouseShortcut(std::string const& scut)
