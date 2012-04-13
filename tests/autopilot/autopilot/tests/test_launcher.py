@@ -401,6 +401,54 @@ class LauncherKeyNavTests(LauncherTestCase):
         self.switcher.stop()
 
         self.assertThat(self.launcher.key_nav_is_active, Equals(False))
+  
+    def test_launcher_activate_last_focused_window(self):
+        """ 
+
+        This tests shows that when you activate a launcher icon only the last 
+        focused instance of that application is rasied.
+
+        This is tested by opening 2 Mahjongg and a Calculator. 
+        Then we activate the Calculator launcher icon.
+        Then we actiavte the Mahjongg launcher icon.
+        Then we minimize the focused applications.
+        This should give focus to the next window on the stack.
+        If only 1 instance is raised then the Calculator gets the focus.
+        If ALL the instances are raised then the second Mahjongg gets the focus.
+
+        """
+
+        self.start_app("Mahjongg")
+        sleep(.5)
+        calc = self.start_app("Calculator")
+        sleep(.5)
+        mahj = self.start_app("Mahjongg")
+        sleep(.5)
+
+        self.launcher_instance.key_nav_start()
+        self.launcher_instance.key_nav_start()
+
+        for icon in self.launcher.model.get_launcher_icons_for_monitor(self.launcher_monitor):
+            if (icon.tooltip_text == calc.name):
+                self.launcher_instance.key_nav_activate()
+                break
+            else:
+                self.launcher_instance.key_nav_next()
+      
+        self.launcher_instance.key_nav_start()
+
+        for icon in self.launcher.model.get_launcher_icons_for_monitor(self.launcher_monitor):
+            if (icon.tooltip_text == mahj.name):
+                self.launcher_instance.key_nav_activate()
+                break
+            else:
+                self.launcher_instance.key_nav_next()
+
+        sleep(.5)
+        self.keybinding("window/minimize")
+
+        self.assertTrue(calc.is_active)
+        self.assertFalse(mahj.is_active)
 
 
 class LauncherRevealTests(LauncherTestCase):

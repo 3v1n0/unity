@@ -376,9 +376,19 @@ class SwitcherWorkspaceTests(AutopilotTestCase):
         # current workspace and ask that one if it is hidden.
         self.assertFalse(wins[0].is_hidden)
         self.assertFalse(wins[1].is_hidden)
-      
+
     def test_quick_alt_tab_one_window(self):
-        """Tests that when we do a quick alt+tab only one windows comes up."""
+        """
+        
+        Tests that when we do a quick alt+tab only one windows comes up.
+        
+        This is tests by opening 2 Calculators and a Mahjongg.
+        Then we do a quick alt+tab twice.
+        Then we minmize the currently focused window.
+        If the alt+tab was quick then the Mahjongg should be focused.
+        If the alt+tab was not quick then the Calcualtor should be focused.
+        
+        """
 
         self.start_app('Calculator')
         sleep(1)

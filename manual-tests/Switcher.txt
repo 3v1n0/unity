@@ -38,3 +38,4 @@ Outcome
   of the panel should change inline with changes in alt-tab focus.
   Also the menus shouldn't ever show. Even if the mouse has been left over
   the panel when starting the Alt+Tab.
+

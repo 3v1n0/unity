@@ -465,20 +465,3 @@ Actions:
 Expected Result:
 The numbers [1-9] should be displayed overlaid on the icons. 
 "Keyboard Shortcut" menu should appear as well.
-
-
-Clicking on Launcher icon focuses only one instance of that application
------------------------------------------------------------------------
-This test shows when clicking on a launcher icon only the last focused
-application gets raised, not all of them.
-
-Setup:
-  #. Start on a clean screen
-  #. Open two windows of the same application (i.e. gnome-terminal)
-  #. Open another window of another application (i.e. gedit)
-  #. Focus the gedit window
-  #. Click on the gnome-terminal launcher icon
-
-Outcome:
-  Only one gnome-terminal gets raised above the gedit windo when your press the
-  launcher icon. The other gnome-terminal should be behind the gedit window.
