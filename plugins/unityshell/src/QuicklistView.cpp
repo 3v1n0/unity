@@ -167,7 +167,6 @@ bool
 QuicklistView::IsMenuItemSelectable(int index)
 {
   QuicklistMenuItem* menu_item = nullptr;
-  QuicklistMenuItemType menu_type = MENUITEM_TYPE_UNKNOWN;
 
   if (index < 0)
     return false;
@@ -176,12 +175,7 @@ QuicklistView::IsMenuItemSelectable(int index)
   if (!menu_item)
     return false;
 
-  menu_type = menu_item->GetItemType();
-
-  if (menu_type == MENUITEM_TYPE_SEPARATOR || menu_type == MENUITEM_TYPE_UNKNOWN)
-    return false;
-
-  return (menu_item->GetEnabled() && menu_item->GetVisible());
+  return menu_item->GetSelectable();
 }
 
 void

@@ -85,11 +85,13 @@ public:
   virtual bool GetEnabled();
   virtual bool GetActive();
   virtual bool GetVisible();
+  virtual bool GetSelectable();
 
+protected:
   // Introspection
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
-protected:
+
   static const int ITEM_INDENT_ABS = 16;
   static const int ITEM_CORNER_RADIUS_ABS = 3;
   static const int ITEM_MARGIN = 4;
@@ -131,7 +133,6 @@ protected:
 
   nux::Color        _color;   //!< Item rendering color factor.
   bool              _debug;
-
 
   bool _prelight;   //!< True when the mouse is over the item.
 

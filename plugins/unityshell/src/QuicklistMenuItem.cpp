@@ -213,6 +213,12 @@ QuicklistMenuItem::GetVisible()
                                              DBUSMENU_MENUITEM_PROP_VISIBLE);
 }
 
+bool
+QuicklistMenuItem::GetSelectable()
+{
+  return GetVisible() && GetEnabled();
+}
+
 void QuicklistMenuItem::ItemActivated()
 {
   if (_debug)
@@ -476,6 +482,7 @@ void QuicklistMenuItem::AddProperties(GVariantBuilder* builder)
   .add("enabled", GetEnabled())
   .add("active", GetActive())
   .add("visible", GetVisible())
+  .add("selectable", GetSelectable())
   .add("selected", _prelight);
 }
 
