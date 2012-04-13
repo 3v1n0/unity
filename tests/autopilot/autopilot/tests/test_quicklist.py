@@ -97,8 +97,10 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         items = self.quicklist.get_items()
         return filter(lambda it: it.is_selectable == True, items)
 
-    def test_keynav_selects_first_item(self):
-        """Tests that the quicklist Home key selects the first valid item"""
+    def test_keynav_selects_first_item_when_unselected(self):
+        """Tests that the quicklist Home key selects the first valid item when
+        no item is selected
+        """
         self.open_quicklist_with_mouse()
 
         self.keybinding("quicklist/keynav/first")
@@ -106,7 +108,21 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         expected_item = self.get_selectable_items()[0]
         self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
 
-    def test_keynav_next_selects_first_item(self):
+    def test_keynav_selects_first_item_when_selected(self):
+        """Tests that the quicklist Home key selects the first valid item when
+        an item is selected
+        """
+        self.open_quicklist_with_mouse()
+        mouse_item = self.get_selectable_items()[-1]
+        mouse_item.mouse_move_to()
+        self.assertTrue(mouse_item.selected)
+
+        self.keybinding("quicklist/keynav/first")
+
+        expected_item = self.get_selectable_items()[0]
+        self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
+
+    def test_keynav_next_selects_first_item_when_unselected(self):
         """Tests that the quicklist Down key selects the first valid item"""
         self.open_quicklist_with_mouse()
 
@@ -115,8 +131,10 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         expected_item = self.get_selectable_items()[0]
         self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
 
-    def test_keynav_selects_last_item(self):
-        """Tests that the quicklist End key selects the last valid item"""
+    def test_keynav_selects_last_item_when_unselected(self):
+        """Tests that the quicklist End key selects the last valid item when
+        no item is selected
+        """
         self.open_quicklist_with_mouse()
 
         self.keybinding("quicklist/keynav/last")
@@ -124,7 +142,21 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         expected_item = self.get_selectable_items()[-1]
         self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
 
-    def test_keynav_prev_selects_last_item(self):
+    def test_keynav_selects_last_item_when_selected(self):
+        """Tests that the quicklist End key selects the last valid item when an
+        item is selected
+        """
+        self.open_quicklist_with_mouse()
+        mouse_item = self.get_selectable_items()[0]
+        mouse_item.mouse_move_to()
+        self.assertTrue(mouse_item.selected)
+
+        self.keybinding("quicklist/keynav/last")
+
+        expected_item = self.get_selectable_items()[-1]
+        self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
+
+    def test_keynav_prev_selects_last_item_when_unselected(self):
         """Tests that the quicklist Up key selects the last valid item"""
         self.open_quicklist_with_mouse()
 
@@ -143,8 +175,9 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
 
     def test_keynav_mouse_interaction(self):
-        """Tests that . See bug #911561"""
-
+        """Tests that the interaction between key-navigation and mouse works as
+        expected. See bug #911561
+        """
         self.open_quicklist_with_mouse()
         mouse_item = self.get_selectable_items()[-1]
         mouse_item.mouse_move_to()
@@ -167,6 +200,7 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         self.mouse.move(mouse_item.x + mouse_item.width + 50, mouse_item.y + mouse_item.height / 2)
         self.assertThat(self.quicklist.selected_item.id, Equals(key_item.id))
 
+        # Moving the mouse to another entry, changes the selection
         mouse_item = self.get_selectable_items()[-2]
         mouse_item.mouse_move_to()
         self.assertTrue(mouse_item.selected)
