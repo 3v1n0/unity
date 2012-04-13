@@ -1,3 +1,11 @@
+unity (5.10.0-0ubuntu2) UNRELEASED; urgency=low
+
+  [ Ricardo Salveti de Araujo ]
+  *  Enabling build with OpenGL ES2.0 support for ARM and disable maintainer
+     mode on that arch to avoid -Werror failure (LP: #980544)
+
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 13 Apr 2012 09:13:07 +0200
+
 unity (5.10.0-0ubuntu1) precise-proposed; urgency=low
 
   * New upstream release:

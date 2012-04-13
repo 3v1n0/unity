@@ -3,6 +3,8 @@
 
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
+DEB_HOST_ARCH := $(shell dpkg-architecture -qDEB_HOST_ARCH)
+gles2_architectures := armel armhf
 
 DEB_VERSION := $(shell dpkg-parsechangelog | egrep '^Version:' | cut -f 2 -d ' ')
 
@@ -12,7 +14,11 @@ CORE_ABIVERSION := $(shell sed -rn 's/^\#define[[:space:]]+CORE_ABIVERSION[[:spa
 NUX_ABIVERSION := $(shell sed -rn 's/^\#define[[:space:]]+NUX_ABIVERSION[[:space:]]+//p' /usr/include/Nux-2.0/Nux/ABI.h )
 
 override_dh_auto_configure:
+ifeq ($(DEB_HOST_ARCH),$(findstring $(DEB_HOST_ARCH), $(gles2_architectures)))
+	dh_auto_configure -- -DCOMPIZ_BUILD_WITH_RPATH=FALSE -DCOMPIZ_PACKAGING_ENABLED=TRUE -DCOMPIZ_PLUGIN_INSTALL_TYPE=package -DBUILD_GLES=TRUE -DDISABLE_MAINTAINER_CFLAGS=ON
+else
 	dh_auto_configure -- -DCOMPIZ_BUILD_WITH_RPATH=FALSE -DCOMPIZ_PACKAGING_ENABLED=TRUE -DCOMPIZ_PLUGIN_INSTALL_TYPE=package
+endif
 
 override_dh_install:
 	find debian/tmp/usr/lib -name \*.*a -exec rm {} \;
