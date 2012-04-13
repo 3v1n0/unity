@@ -1,4 +1,4 @@
-unity (5.10.0-0ubuntu2) UNRELEASED; urgency=low
+unity (5.10.0-0ubuntu2) precise-proposed; urgency=low
 
   [ Ricardo Salveti de Araujo ]
   *  Enabling build with OpenGL ES2.0 support for ARM and disable maintainer
