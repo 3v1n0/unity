@@ -700,7 +700,9 @@ void Controller::Impl::RemoveExpoAction()
 
 void Controller::Impl::InsertDesktopIcon()
 {
-  desktop_launcher_icon_ = AbstractLauncherIcon::Ptr(new DesktopLauncherIcon());
+  DesktopLauncherIcon* temp_launcher_icon = new DesktopLauncherIcon();
+  temp_launcher_icon->SetIconType(LauncherIcon::TYPE_DESKTOP);		
+  desktop_launcher_icon_ = AbstractLauncherIcon::Ptr(temp_launcher_icon);
   RegisterIcon(desktop_launcher_icon_);
 }
 
