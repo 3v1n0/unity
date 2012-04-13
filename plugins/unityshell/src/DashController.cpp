@@ -47,13 +47,15 @@ Controller::Controller()
   , timeline_id_(0)
   , last_opacity_(0.0f)
   , start_time_(0)
+  , view_(nullptr)
 {
   SetupRelayoutCallbacks();
   RegisterUBusInterests();
 
-
   ensure_id_ = g_timeout_add_seconds(60, [] (gpointer data) -> gboolean { static_cast<Controller*>(data)->EnsureDash(); return FALSE; }, this);
 
+  SetupWindow();
+  
   Settings::Instance().changed.connect([&]()
   {
     if (window_)
@@ -83,6 +85,12 @@ void Controller::SetupWindow()
   window_->ShowWindow(false);
   window_->SetOpacity(0.0f);
   window_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &Controller::OnMouseDownOutsideWindow));
+  
+  /* FIXME - first time we load our windows there is a race that causes the input window not to actually get input, this side steps that by causing an input window show and hide before we really need it. */
+  PluginAdapter::Default()->saveInputFocus ();
+  window_->EnableInputWindow(true, "Dash", true, false);
+  window_->EnableInputWindow(false, "Dash", true, false);
+  PluginAdapter::Default()->restoreInputFocus ();
 }
 
 void Controller::SetupDashView()
@@ -136,17 +144,18 @@ void Controller::RegisterUBusInterests()
 
 void Controller::EnsureDash()
 {
-  if (window_)
-    return;
-
   LOG_DEBUG(logger) << "Initializing Dash";
+  if (!window_)
+    SetupWindow();
 
-  SetupWindow();
-  SetupDashView();
-  Relayout();
-  ensure_id_ = 0;
+  if (!view_)
+  {
+    SetupDashView();
+    Relayout();
+    ensure_id_ = 0;
 
-  on_realize.emit();
+    on_realize.emit();
+  }
 }
 
 nux::BaseWindow* Controller::window() const

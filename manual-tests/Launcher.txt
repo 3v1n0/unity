@@ -184,7 +184,6 @@ Outcome:
   icon in the notification is the same icon used for the launcher icon.
   
   
-  
 Drag CD Device Launcher to Eject
 -------------------
 This test shows that the correct icon is shown in the OSD notification when a
