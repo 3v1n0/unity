@@ -184,6 +184,7 @@ Outcome:
   icon in the notification is the same icon used for the launcher icon.
   
   
+  
 Drag CD Device Launcher to Eject
 -------------------
 This test shows that the correct icon is shown in the OSD notification when a
@@ -444,7 +445,6 @@ Expected Result:
   The launchers on each monitor have saturated icons (normal looking, not the
   desaturated look that there is while the dash is open).
 
-
 Test number overlays while shortcut help is active
 ------------------------------
 Setup:
@@ -464,3 +464,4 @@ Actions:
 Expected Result:
 The numbers [1-9] should be displayed overlaid on the icons. 
 "Keyboard Shortcut" menu should appear as well.
+
