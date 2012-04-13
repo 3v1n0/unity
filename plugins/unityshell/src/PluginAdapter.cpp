@@ -522,6 +522,19 @@ PluginAdapter::IsWindowVisible(guint32 xid)
 }
 
 bool
+PluginAdapter::IsWindowClosable(guint32 xid)
+{
+  Window win = xid;
+  CompWindow* window;
+
+  window = m_Screen->findWindow(win);
+  if (window)
+    return (window->actions() & CompWindowActionCloseMask);
+
+  return false;
+}
+
+bool
 PluginAdapter::IsWindowMinimizable(guint32 xid)
 {
   Window win = xid;
@@ -530,6 +543,19 @@ PluginAdapter::IsWindowMinimizable(guint32 xid)
   window = m_Screen->findWindow(win);
   if (window)
     return (window->actions() & CompWindowActionMinimizeMask);
+
+  return false;
+}
+
+bool
+PluginAdapter::IsWindowMaximizable(guint32 xid)
+{
+  Window win = xid;
+  CompWindow* window;
+
+  window = m_Screen->findWindow(win);
+  if (window)
+    return (window->actions() & MAXIMIZABLE);
 
   return false;
 }
