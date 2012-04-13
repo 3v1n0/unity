@@ -76,10 +76,6 @@ class QuicklistMenuItem(UnityIntrospectionObject):
         self._mouse = Mouse()
 
     @property
-    def is_selectable(self):
-        return self.enabled
-
-    @property
     def geometry(self):
         """Returns a tuple of (x,y,w,h) for the quicklist item."""
         return (self.x, self.y, self.width, self.height)
@@ -106,7 +102,3 @@ class QuicklistMenuItemLabel(QuicklistMenuItem):
 
 class QuicklistMenuItemSeparator(QuicklistMenuItem):
     """Represents a separator in a quicklist."""
-
-    @property
-    def is_selectable(self):
-        return False

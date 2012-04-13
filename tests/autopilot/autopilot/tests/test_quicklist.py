@@ -95,7 +95,7 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
     def get_selectable_items(self):
         """Returns a list of items that are selectable"""
         items = self.quicklist.get_items()
-        return filter(lambda it: it.is_selectable == True, items)
+        return filter(lambda it: it.selectable == True, items)
 
     def test_keynav_selects_first_item_when_unselected(self):
         """Tests that the quicklist Home key selects the first valid item when
