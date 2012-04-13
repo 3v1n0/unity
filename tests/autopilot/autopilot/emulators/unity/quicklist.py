@@ -32,6 +32,11 @@ class Quicklist(UnityIntrospectionObject):
         """Individual items in the quicklist."""
         return self.get_items()
 
+    @property
+    def selectable_items(self):
+        """Items that can be selected in the quicklist"""
+        return filter(lambda it: it.selectable == True, self.items)
+
     def get_quicklist_item_by_text(self, text):
         """Returns a QuicklistMenuItemLabel object with the given text, or None."""
         if not self.active:
