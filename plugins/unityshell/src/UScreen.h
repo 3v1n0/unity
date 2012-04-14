@@ -36,6 +36,7 @@ public:
 
   int             GetPrimaryMonitor();
   int             GetMonitorWithMouse();
+  int             GetMonitorAtPosition(int x, int y);
   nux::Geometry&  GetMonitorGeometry(int monitor);
 
   std::vector<nux::Geometry>& GetMonitors();

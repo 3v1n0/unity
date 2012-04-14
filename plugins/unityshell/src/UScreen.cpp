@@ -80,6 +80,14 @@ UScreen::GetPrimaryMonitor()
   return primary_;
 }
 
+int
+UScreen::GetMonitorAtPosition(int x, int y)
+{
+  GdkScreen* screen = gdk_screen_get_default();
+
+  return gdk_screen_get_monitor_at_point(screen, x, y);
+}
+
 nux::Geometry&
 UScreen::GetMonitorGeometry(int monitor)
 {
