@@ -1711,11 +1711,14 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
 
   // maybe check launcher position/hide state?
 
-  int device = screen->outputDeviceForPoint (pointerX, pointerY);
-  switcher_controller_->SetWorkspace(nux::Geometry(screen->outputDevs()[device].x1() + 100,
-                                                 screen->outputDevs()[device].y1() + 100,
-                                                 screen->outputDevs()[device].width() - 200,
-                                                 screen->outputDevs()[device].height() - 200), device);
+  UScreen* uscreen = UScreen::GetDefault();
+  int monitor = uscreen->GetMonitorWithMouse();
+  nux::Geometry monitor_geo = uscreen->GetMonitorGeometry(monitor);
+  monitor_geo.x += 100;
+  monitor_geo.y += 100;
+  monitor_geo.width -= 200;
+  monitor_geo.height -= 200;
+  switcher_controller_->SetWorkspace(monitor_geo, monitor);
 
   if (!optionGetAltTabBiasViewport())
   {
