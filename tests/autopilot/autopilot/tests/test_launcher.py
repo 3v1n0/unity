@@ -401,54 +401,62 @@ class LauncherKeyNavTests(LauncherTestCase):
         self.switcher.stop()
 
         self.assertThat(self.launcher.key_nav_is_active, Equals(False))
-  
-    def test_launcher_activate_last_focused_window(self):
-        """ 
 
-        This tests shows that when you activate a launcher icon only the last 
+
+class LauncherIconsBehaviorTests(LauncherTestCase):
+    """Test the launcher icons interactions"""
+
+    def test_launcher_activate_last_focused_window(self):
+        """This tests shows that when you activate a launcher icon only the last 
         focused instance of that application is rasied.
 
         This is tested by opening 2 Mahjongg and a Calculator. 
         Then we activate the Calculator launcher icon.
         Then we actiavte the Mahjongg launcher icon.
-        Then we minimize the focused applications.
+        Then we close the focused applications.
         This should give focus to the next window on the stack.
         If only 1 instance is raised then the Calculator gets the focus.
         If ALL the instances are raised then the second Mahjongg gets the focus.
 
         """
+        self.close_all_app("Mahjongg")
+        self.close_all_app("Calculator")
+
+        mahj = self.start_app("Mahjongg")
+        wins = mahj.get_windows()
+        self.assertThat(len(wins), Equals(1))
+        mah_win1 = wins[0]
+        self.assertTrue(mah_win1.is_focused)
+
+        calc = self.start_app("Calculator")
+        wins = calc.get_windows()
+        self.assertThat(len(wins), Equals(1))
+        calc_win = wins[0]
+        self.assertTrue(calc_win.is_focused)
 
         self.start_app("Mahjongg")
-        sleep(.5)
-        calc = self.start_app("Calculator")
-        sleep(.5)
-        mahj = self.start_app("Mahjongg")
-        sleep(.5)
+        sleep(1)
+        print mahj.get_windows()
+        wins = filter(lambda w: w.x_id != mah_win1.x_id, mahj.get_windows())
+        self.assertThat(len(wins), Equals(1))
+        mah_win2 = wins[0]
+        self.assertTrue(mah_win2.is_focused)
 
-        self.launcher_instance.key_nav_start()
-        self.launcher_instance.key_nav_start()
+        mahj_icon = self.launcher.model.get_icon_by_desktop_id(mahj.desktop_file)
+        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
 
-        for icon in self.launcher.model.get_launcher_icons_for_monitor(self.launcher_monitor):
-            if (icon.tooltip_text == calc.name):
-                self.launcher_instance.key_nav_activate()
-                break
-            else:
-                self.launcher_instance.key_nav_next()
-      
-        self.launcher_instance.key_nav_start()
+        self.launcher_instance.click_launcher_icon(calc_icon)
+        sleep(1)
+        self.assertTrue(calc_win.is_focused)
 
-        for icon in self.launcher.model.get_launcher_icons_for_monitor(self.launcher_monitor):
-            if (icon.tooltip_text == mahj.name):
-                self.launcher_instance.key_nav_activate()
-                break
-            else:
-                self.launcher_instance.key_nav_next()
+        self.launcher_instance.click_launcher_icon(mahj_icon)
+        sleep(1)
+        self.assertTrue(mah_win2.is_focused)
 
-        sleep(.5)
-        self.keybinding("window/minimize")
+        self.keybinding("window/close")
+        sleep(1)
 
-        self.assertTrue(calc.is_active)
-        self.assertFalse(mahj.is_active)
+        self.assertTrue(calc_win.is_focused)
 
 
 class LauncherRevealTests(LauncherTestCase):
