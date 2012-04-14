@@ -784,6 +784,7 @@ PluginAdapter::OnLeaveDesktop()
 int
 PluginAdapter::GetWindowMonitor(guint32 xid) const
 {
+  // FIXME, we should use window->outputDevice() but this is not UScreen friendly
   nux::Geometry const& geo = GetWindowGeometry(xid);
 
   if (!geo.IsNull())
