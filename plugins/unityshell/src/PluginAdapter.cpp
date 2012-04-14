@@ -618,7 +618,7 @@ PluginAdapter::Lower(guint32 xid)
 }
 
 void 
-PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility focus_visibility, int monitor)
+PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility focus_visibility, bool only_top_win, int monitor)
 {
   CompPoint target_vp = m_Screen->vp();
   CompWindow* top_window = NULL;
@@ -659,75 +659,73 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
       break;
   }
 
-  if (!any_on_current || focus_visibility == FocusVisibility::OnlyVisibleOnTop)
+  if (!any_on_current)
   {
     for (auto it = windows.rbegin(); it != windows.rend(); ++it)
     {
       CompWindow* win = *it;
       if ((any_mapped && !win->minimized()) || !any_mapped)
       {
-        if (focus_visibility == FocusVisibility::OnlyVisibleOnTop)
-        {
-          win->raise();
-          top_window = win;
-        }
-        else
-        {
-          target_vp = win->defaultViewport();
-        }
-
+        target_vp = win->defaultViewport();
         break;
       }
     }
   }
 
-  if (focus_visibility != FocusVisibility::OnlyVisibleOnTop)
+  for (CompWindow* &win : windows)
   {
-    for (CompWindow* &win : windows)
+    if (win->defaultViewport() == target_vp)
     {
-      if (win->defaultViewport() == target_vp)
+      /* Any window which is actually unmapped is
+      * not going to be accessible by either switcher
+      * or scale, so unconditionally unminimize those
+      * windows when the launcher icon is activated */
+      if ((focus_visibility == WindowManager::FocusVisibility::ForceUnminimizeOnCurrentDesktop &&
+          target_vp == m_Screen->vp()) ||
+          (focus_visibility == WindowManager::FocusVisibility::ForceUnminimizeInvisible &&
+           win->mapNum() == 0))
       {
-        /* Any window which is actually unmapped is
-        * not going to be accessible by either switcher
-        * or scale, so unconditionally unminimize those
-        * windows when the launcher icon is activated */
-        if ((focus_visibility == WindowManager::FocusVisibility::ForceUnminimizeOnCurrentDesktop &&
-            target_vp == m_Screen->vp()) ||
-            (focus_visibility == WindowManager::FocusVisibility::ForceUnminimizeInvisible &&
-             win->mapNum () == 0))
-        {
-          bool is_mapped = win->mapNum () != 0;
-          top_window = win;
-          if (monitor >= 0 && win->outputDevice() == monitor)
-           top_window_on_monitor = win;
-          win->unminimize ();
+        top_window = win;
+        forced_unminimize = true;
 
-          forced_unminimize = true;
+        if (monitor >= 0 && win->outputDevice() == monitor)
+          top_window_on_monitor = win;
+
+        if (!only_top_win)
+        {
+          bool is_mapped = (win->mapNum() != 0);
+          win->unminimize();
 
            /* Initially minimized windows dont get raised */
           if (!is_mapped)
-            win->raise ();
-        }
-        else if ((any_mapped_on_current && !win->minimized()) || !any_mapped_on_current)
-        {
-          if (!forced_unminimize || target_vp == m_Screen->vp())
-          {
             win->raise();
-            top_window = win;
-            if (monitor >= 0 && win->outputDevice() == monitor)
-              top_window_on_monitor = win;
-          }
+        }
+      }
+      else if ((any_mapped_on_current && !win->minimized()) || !any_mapped_on_current)
+      {
+        if (!forced_unminimize || target_vp == m_Screen->vp())
+        {
+          top_window = win;
+
+          if (monitor >= 0 && win->outputDevice() == monitor)
+            top_window_on_monitor = win;
+
+          if (!only_top_win)
+            win->raise();
         }
       }
     }
   }
 
-  if (monitor > 0 && top_window_on_monitor)
+  if (monitor >= 0 && top_window_on_monitor)
   {
-    top_window_on_monitor->activate();
+    top_window = top_window_on_monitor;
   }
-  else if (top_window)
+
+  if (top_window)
   {
+    top_window->unminimize();
+    top_window->raise();
     top_window->activate();
   }
 }
