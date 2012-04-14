@@ -121,11 +121,6 @@ class Switcher(KeybindingsHelper):
         logger.debug("Selecting previous item in details mode.")
         self.keybinding("switcher/detail_prev")
 
-    @property
-    def quick_tab(self):
-        """Returns true if a quick tab was used."""
-        return self.__get_controller()["quick-tab"]
-
     def __get_icon(self, index):
         return self.__get_model()['Children'][index][1][0]
 

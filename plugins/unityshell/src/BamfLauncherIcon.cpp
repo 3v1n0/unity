@@ -633,18 +633,8 @@ void BamfLauncherIcon::Focus(ActionArg arg)
   }
   else
   {
-    /* The button value indicates weather we should foucus only a window or an
-     * application window group (when 0) */
-    if (arg.button == 0)
-    {
-      WindowManager::Default()->FocusWindowGroup(windows,
-        WindowManager::FocusVisibility::OnlyVisible, false, arg.monitor);
-    }
-    else
-    {
-      WindowManager::Default()->FocusWindowGroup(windows,
-        WindowManager::FocusVisibility::OnlyVisible, true, arg.monitor);
-    }
+    WindowManager::Default()->FocusWindowGroup(windows,
+      WindowManager::FocusVisibility::OnlyVisible, true, arg.monitor);
   }
 }
 

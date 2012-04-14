@@ -44,13 +44,11 @@ Controller::Controller(unsigned int load_timeout)
   ,  detail_on_timeout(true)
   ,  detail_timeout_length(500)
   ,  initial_detail_timeout_length(1500)
-  ,  quick_tab_timeout(200)
   ,  construct_timeout_(load_timeout)
   ,  view_window_(nullptr)
   ,  main_layout_(nullptr)
   ,  monitor_(0)
   ,  visible_(false)
-  ,  quick_tab_(false)
   ,  show_timer_(0)
   ,  detail_timer_(0)
   ,  lazy_timer_(0)
@@ -106,7 +104,6 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
   SelectFirstItem();
 
   visible_ = true;
-  quick_tab_ = true;
 
   if (timeout_length > 0)
   {
@@ -129,20 +126,6 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
       self->show_timer_ = 0;
       return FALSE;
     }, this);
-
-    if (quick_tab_timer_)
-    {
-      g_source_remove (quick_tab_timer_);
-      quick_tab_timer_ = 0;
-    }
-
-    quick_tab_timer_ = g_timeout_add(quick_tab_timeout, [] (gpointer data) -> gboolean {
-      auto self = static_cast<Controller*>(data);
-      self->quick_tab_ = false;
-      self->quick_tab_timer_ = 0;
-      return FALSE;
-    }, this);
-
   }
   else
   {
@@ -279,18 +262,18 @@ void Controller::Hide(bool accept_state)
     {
       if (model_->detail_selection)
       {
-        selection->Activate(ActionArg(ActionArg::SWITCHER, quick_tab_, model_->DetailSelectionWindow ()));
+        selection->Activate(ActionArg(ActionArg::SWITCHER, 0, model_->DetailSelectionWindow ()));
       }
       else
       {
         if (selection->GetQuirk (AbstractLauncherIcon::QUIRK_ACTIVE) &&
             !model_->DetailXids().empty ())
         {
-          selection->Activate(ActionArg (ActionArg::SWITCHER, quick_tab_, model_->DetailXids()[0]));
+          selection->Activate(ActionArg (ActionArg::SWITCHER, 0, model_->DetailXids()[0]));
         }
         else
         {
-          selection->Activate(ActionArg(ActionArg::SWITCHER, quick_tab_, 0, monitor_));
+          selection->Activate(ActionArg(ActionArg::SWITCHER, 0));
         }
       }
     }
@@ -321,10 +304,6 @@ void Controller::Hide(bool accept_state)
   if (detail_timer_)
     g_source_remove(detail_timer_);
   detail_timer_ = 0;
-
-  if (quick_tab_timer_)
-    g_source_remove (quick_tab_timer_);
-  quick_tab_timer_ = 0;
 
   ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN, g_variant_new("(bi)", false, monitor_));
 
@@ -528,8 +507,7 @@ Controller::AddProperties(GVariantBuilder* builder)
   .add("initial-detail-timeout-length", initial_detail_timeout_length())
   .add("detail-timeout-length", detail_timeout_length())
   .add("visible", visible_)
-  .add("detail-mode", detail_mode_)
-  .add("quick-tab", quick_tab_);
+  .add("detail-mode", detail_mode_);
 }
 
 namespace
