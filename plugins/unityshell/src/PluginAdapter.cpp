@@ -630,8 +630,6 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
   bool any_mapped_on_current = false;
   bool forced_unminimize = false;
 
-g_print("Focusing window group in monitor %d, only top window: %d\n",monitor,only_top_win);
-
   /* sort the list */
   CompWindowList windows;
   for (auto win : m_Screen->clientList())
@@ -728,7 +726,6 @@ g_print("Focusing window group in monitor %d, only top window: %d\n",monitor,onl
 
   if (top_window)
   {
-    g_print("Raising window %lu, monitor %d\n",top_window->id(),GetWindowMonitor(top_window->id()));
     top_window->unminimize();
     top_window->raise();
     top_window->activate();
