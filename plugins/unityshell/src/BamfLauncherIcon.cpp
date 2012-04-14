@@ -204,6 +204,9 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     user_visible = bamf_view_user_visible(bamf_view);
 
     bool any_visible = false;
+    bool any_mapped = false;
+    bool any_on_monitor = (arg.monitor < 0);
+    int active_monitor = arg.monitor;
     GList *children = bamf_view_get_children(bamf_view);
 
     for (l = children; l; l = l->next)
@@ -211,22 +214,37 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
       if (!BAMF_IS_WINDOW(l->data))
         continue;
 
-      Window xid = bamf_window_get_xid(static_cast<BamfWindow*>(l->data));
+      auto view = static_cast<BamfView*>(l->data);
+      auto win = static_cast<BamfWindow*>(l->data);
+      Window xid = bamf_window_get_xid(win);
 
       if (!any_visible && WindowManager::Default()->IsWindowOnCurrentDesktop(xid))
       {
         any_visible = true;
       }
 
-      if (active && !WindowManager::Default()->IsWindowMapped(xid))
+      if (!any_mapped && WindowManager::Default()->IsWindowMapped(xid))
       {
-        active = false;
+        any_mapped = true;
+      }
+
+      if (!any_on_monitor && bamf_window_get_monitor(win) == arg.monitor)
+      {
+        any_on_monitor = true;
+      }
+
+      if (bamf_view_is_active(view))
+      {
+        active_monitor = bamf_window_get_monitor(win);
       }
     }
 
     g_list_free(children);
 
-    if (!any_visible)
+    if (!any_visible || !any_mapped)
+      active = false;
+
+    if (any_on_monitor && arg.monitor >=0 && active_monitor != arg.monitor)
       active = false;
   }
 
