@@ -229,7 +229,8 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
       }
 
       if (!any_on_monitor && bamf_window_get_monitor(win) == arg.monitor &&
-          WindowManager::Default()->IsWindowMapped(xid))
+          WindowManager::Default()->IsWindowMapped(xid) &&
+          WindowManager::Default()->IsWindowVisible(xid))
       {
         any_on_monitor = true;
       }
@@ -245,7 +246,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     if (!any_visible || !any_mapped)
       active = false;
 
-    if (any_on_monitor && arg.monitor >=0 && active_monitor != arg.monitor)
+    if (any_on_monitor && arg.monitor >= 0 && active_monitor != arg.monitor)
       active = false;
   }
 
