@@ -290,7 +290,7 @@ void Controller::Hide(bool accept_state)
         }
         else
         {
-          selection->Activate(ActionArg(ActionArg::SWITCHER, quick_tab_));
+          selection->Activate(ActionArg(ActionArg::SWITCHER, quick_tab_, 0, monitor_));
         }
       }
     }
