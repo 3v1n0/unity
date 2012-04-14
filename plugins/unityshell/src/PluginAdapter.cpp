@@ -20,6 +20,7 @@
 #include <glib.h>
 #include <sstream>
 #include "PluginAdapter.h"
+#include "UScreen.h"
 
 #include <NuxCore/Logger.h>
 
@@ -621,8 +622,9 @@ void
 PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility focus_visibility, bool only_top_win, int monitor)
 {
   CompPoint target_vp = m_Screen->vp();
-  CompWindow* top_window = NULL;
-  CompWindow* top_window_on_monitor = NULL;
+  CompWindow* top_window = nullptr;
+  CompWindow* top_monitor_win = nullptr;
+
   bool any_on_current = false;
   bool any_mapped = false;
   bool any_mapped_on_current = false;
@@ -676,6 +678,8 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
   {
     if (win->defaultViewport() == target_vp)
     {
+      int win_monitor = GetWindowMonitor(win->id());
+
       /* Any window which is actually unmapped is
       * not going to be accessible by either switcher
       * or scale, so unconditionally unminimize those
@@ -688,8 +692,8 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
         top_window = win;
         forced_unminimize = true;
 
-        if (monitor >= 0 && win->outputDevice() == monitor)
-          top_window_on_monitor = win;
+        if (monitor >= 0 && win_monitor == monitor)
+          top_monitor_win = win;
 
         if (!only_top_win)
         {
@@ -707,8 +711,8 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
         {
           top_window = win;
 
-          if (monitor >= 0 && win->outputDevice() == monitor)
-            top_window_on_monitor = win;
+          if (monitor >= 0 && win_monitor == monitor)
+            top_monitor_win = win;
 
           if (!only_top_win)
             win->raise();
@@ -717,10 +721,8 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
     }
   }
 
-  if (monitor >= 0 && top_window_on_monitor)
-  {
-    top_window = top_window_on_monitor;
-  }
+  if (monitor >= 0 && top_monitor_win)
+    top_window = top_monitor_win;
 
   if (top_window)
   {
@@ -779,12 +781,28 @@ PluginAdapter::OnLeaveDesktop()
   _in_show_desktop = false;
 }
 
+int
+PluginAdapter::GetWindowMonitor(guint32 xid) const
+{
+  nux::Geometry const& geo = GetWindowGeometry(xid);
+
+  if (!geo.IsNull())
+  {
+    int x = geo.x + geo.width/2;
+    int y = geo.y + geo.height/2;
+
+    return UScreen::GetDefault()->GetMonitorAtPosition(x, y);
+  }
+
+  return -1;
+}
+
 nux::Geometry
 PluginAdapter::GetWindowGeometry(guint32 xid) const
 {
   Window win = xid;
   CompWindow* window;
-  nux::Geometry geo(0, 0, 1, 1);
+  nux::Geometry geo;
 
   window = m_Screen->findWindow(win);
   if (window)

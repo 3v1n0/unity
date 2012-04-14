@@ -124,6 +124,11 @@ class WindowManagerDummy : public WindowManager
     return false;
   }
 
+  int GetWindowMonitor(guint32 xid) const
+  {
+    return -1;
+  }
+
   nux::Geometry GetWindowGeometry(guint xid) const
   {
     int width = (guint32)xid >> 16;

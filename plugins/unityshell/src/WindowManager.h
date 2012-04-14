@@ -93,6 +93,7 @@ public:
   virtual void MoveResizeWindow(guint32 xid, nux::Geometry geometry) = 0;
   void StartMove(guint32 xid, int, int);
 
+  virtual int GetWindowMonitor(guint32 xid) const = 0;
   virtual nux::Geometry GetWindowGeometry(guint32 xid) const = 0;
   virtual nux::Geometry GetWindowSavedGeometry(guint32 xid) const = 0;
   virtual nux::Geometry GetScreenGeometry() const = 0;

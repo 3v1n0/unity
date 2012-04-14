@@ -142,6 +142,7 @@ public:
 
   bool MaximizeIfBigEnough(CompWindow* window);
 
+  int GetWindowMonitor(guint32 xid) const;
   nux::Geometry GetWindowGeometry(guint32 xid) const;
   nux::Geometry GetWindowSavedGeometry(guint32 xid) const;
   nux::Geometry GetScreenGeometry() const;
