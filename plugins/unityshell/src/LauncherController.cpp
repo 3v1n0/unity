@@ -152,7 +152,6 @@ public:
   LauncherEntryRemoteModel remote_model_;
   AbstractLauncherIcon::Ptr expo_icon_;
   AbstractLauncherIcon::Ptr desktop_launcher_icon_;
-  AbstractLauncherIcon::Ptr desktop_icon_;
   int                    num_workspaces_;
   bool                   show_desktop_icon_;
   Display*               display_;
@@ -254,7 +253,6 @@ Controller::Impl::Impl(Display* display, Controller* parent)
       hud->SetHideMode(mode);
     });
   RegisterIcon(AbstractLauncherIcon::Ptr(hud));
-  desktop_icon_ = AbstractLauncherIcon::Ptr(new DesktopLauncherIcon());
 
   uscreen->changed.connect(sigc::mem_fun(this, &Controller::Impl::OnScreenChanged));
 
@@ -700,9 +698,7 @@ void Controller::Impl::RemoveExpoAction()
 
 void Controller::Impl::InsertDesktopIcon()
 {
-  DesktopLauncherIcon* temp_launcher_icon = new DesktopLauncherIcon();
-  temp_launcher_icon->SetIconType(LauncherIcon::TYPE_DESKTOP);		
-  desktop_launcher_icon_ = AbstractLauncherIcon::Ptr(temp_launcher_icon);
+  desktop_launcher_icon_ = AbstractLauncherIcon::Ptr(new DesktopLauncherIcon());
   RegisterIcon(desktop_launcher_icon_);
 }
 
@@ -902,8 +898,6 @@ std::vector<char> Controller::GetAllShortcuts() const
 std::vector<AbstractLauncherIcon::Ptr> Controller::GetAltTabIcons(bool current) const
 {
   std::vector<AbstractLauncherIcon::Ptr> results;
-
-  results.push_back(pimpl->desktop_icon_);
 
   for (auto icon : *(pimpl->model_))
     if (icon->ShowInSwitcher(current))

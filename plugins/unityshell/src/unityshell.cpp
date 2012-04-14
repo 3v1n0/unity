@@ -1729,7 +1729,7 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
 
   auto results = launcher_controller_->GetAltTabIcons(show_mode == switcher::ShowMode::CURRENT_VIEWPORT);
 
-  if (!(results.size() == 1 && results[0]->GetIconType() == AbstractLauncherIcon::IconType::TYPE_BEGIN))
+  if (!(results.size() == 1 && results[0]->GetIconType() == AbstractLauncherIcon::IconType::TYPE_DESKTOP))
     switcher_controller_->Show(show_mode, switcher::SortMode::FOCUS_ORDER, false, results);
 
   return true;

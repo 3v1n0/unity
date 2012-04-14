@@ -439,6 +439,12 @@ bool Controller::CompareSwitcherItemsPriority(AbstractLauncherIcon::Ptr first,
 {
   if (first->GetIconType() == second->GetIconType())
     return first->SwitcherPriority() > second->SwitcherPriority();
+    
+  if (first->GetIconType() == AbstractLauncherIcon::IconType::TYPE_DESKTOP)
+	return true;
+	
+  if (second->GetIconType() == AbstractLauncherIcon::IconType::TYPE_DESKTOP)
+	return false;
   return first->GetIconType() < second->GetIconType();
 }
 
