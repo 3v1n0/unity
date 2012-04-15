@@ -2553,7 +2553,7 @@ void Launcher::MouseUpLogic(int x, int y, unsigned long button_flags, unsigned l
 
     if (GetActionState() == ACTION_NONE)
     {
-      /* This will inform the icon that the action is valid for all the monitors */
+      /* This will inform the icon if the action is valid for all the monitors */
       int action_monitor = options()->show_for_all ? -1 : monitor;
       _icon_mouse_down->mouse_click.emit(nux::GetEventButton(button_flags), action_monitor);
     }
