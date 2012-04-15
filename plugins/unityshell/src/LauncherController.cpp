@@ -898,11 +898,17 @@ std::vector<char> Controller::GetAllShortcuts() const
 std::vector<AbstractLauncherIcon::Ptr> Controller::GetAltTabIcons(bool current) const
 {
   std::vector<AbstractLauncherIcon::Ptr> results;
+  
+  results.push_back(pimpl->desktop_icon_);
 
-  for (auto icon : *(pimpl->model_))
-    if (icon->ShowInSwitcher(current))
-      results.push_back(icon);
-
+  for (auto icon : *(pimpl->model_)) {
+    if (icon->ShowInSwitcher(current)) {
+	  //otherwise we get two desktop icons in the switcher.	
+      if(icon->GetName()!="DesktopLauncherIcon") {	
+		results.push_back(icon);
+	  }
+    }
+  }  
   return results;
 }
 
