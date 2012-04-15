@@ -1711,9 +1711,9 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
 
   // maybe check launcher position/hide state?
 
-  UScreen* uscreen = UScreen::GetDefault();
-  int monitor = uscreen->GetMonitorWithMouse();
-  nux::Geometry monitor_geo = uscreen->GetMonitorGeometry(monitor);
+  WindowManager *wm = WindowManager::Default();
+  int monitor = wm->GetWindowMonitor(wm->GetActiveWindow());
+  nux::Geometry monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(monitor);
   monitor_geo.x += 100;
   monitor_geo.y += 100;
   monitor_geo.width -= 200;
