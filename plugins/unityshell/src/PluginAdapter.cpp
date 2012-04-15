@@ -732,8 +732,16 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
 
   if (top_window)
   {
-    top_window->unminimize();
-    top_window->raise();
+    if (only_top_win)
+    {
+      if (forced_unminimize)
+        {
+          top_window->unminimize();
+        }
+
+      top_window->raise();
+    }
+
     top_window->activate();
   }
 }
