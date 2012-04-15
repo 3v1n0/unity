@@ -198,6 +198,51 @@ class SwitcherTests(AutopilotTestCase):
         self.assertThat(self.switcher.get_is_visible(), Equals(False))
 
 
+class SwitcherWindowsManagementTests(AutopilotTestCase):
+    """Test the switcher window management."""
+
+    def test_switcher_raises_only_last_focused_window(self):
+        """Tests that when we do an alt+tab only the previously focused window
+        is raised.
+        This is tests by opening 2 Calculators and a Mahjongg.
+        Then we do a quick alt+tab twice.
+        Then we close the currently focused window.
+        """
+        self.close_all_app("Mahjongg")
+        self.close_all_app("Calculator")
+
+        calc = self.start_app("Calculator")
+        wins = calc.get_windows()
+        self.assertThat(len(wins), Equals(1))
+        calc_win1 = wins[0]
+        self.assertTrue(calc_win1.is_focused)
+
+        mahj = self.start_app("Mahjongg")
+        wins = mahj.get_windows()
+        self.assertThat(len(wins), Equals(1))
+        mahj_win = wins[0]
+        self.assertTrue(mahj_win.is_focused)
+
+        self.start_app("Calculator")
+        sleep(1)
+        wins = filter(lambda w: w.x_id != calc_win1.x_id, calc.get_windows())
+        self.assertThat(len(wins), Equals(1))
+        calc_win2 = wins[0]
+        self.assertTrue(calc_win2.is_focused)
+
+        self.keybinding("switcher/reveal_normal")
+        sleep(1)
+        self.assertTrue(mahj_win.is_focused)
+
+        self.keybinding("switcher/reveal_normal")
+        sleep(1)
+        self.assertTrue(calc_win2.is_focused)
+
+        self.keybinding("window/close")
+        sleep(1)
+
+        self.assertTrue(mahj_win.is_focused)
+
 class SwitcherDetailsTests(AutopilotTestCase):
     """Test the details mode for the switcher."""
 
@@ -364,49 +409,3 @@ class SwitcherWorkspaceTests(AutopilotTestCase):
         # current workspace and ask that one if it is hidden.
         self.assertFalse(wins[0].is_hidden)
         self.assertFalse(wins[1].is_hidden)
-
-    def test_quick_alt_tab_one_window(self):
-        """
-        
-        Tests that when we do a quick alt+tab only one windows comes up.
-        
-        This is tests by opening 2 Calculators and a Mahjongg.
-        Then we do a quick alt+tab twice.
-        Then we minmize the currently focused window.
-        If the alt+tab was quick then the Mahjongg should be focused.
-        If the alt+tab was not quick then the Calcualtor should be focused.
-        
-        """
-
-        self.start_app('Calculator')
-        sleep(1)
-        mahj = self.start_app("Mahjongg")
-        sleep(1)
-        self.start_app('Calculator')
-        sleep(1)
-
-        self.keybinding("switcher/reveal_normal", 0.1)
-        sleep(1)
-        self.keybinding("switcher/reveal_normal", 0.1)
-        sleep(1)
-        self.keybinding("window/minimize")
-        sleep(1)
-        self.assertTrue(mahj.is_active)
-
-    def test_quick_alt_tab_all_windows(self):
-        """Tests that when we do a slower alt+tab it brings up all instances of that app."""
-
-        self.start_app('Calculator')
-        sleep(1)
-        mahj = self.start_app("Mahjongg")
-        sleep(1)
-        self.start_app('Calculator')
-        sleep(1)
-
-        self.keybinding("switcher/reveal_normal", 0.4)
-        sleep(1)
-        self.keybinding("switcher/reveal_normal", 0.4)
-        sleep(1)
-        self.keybinding("window/minimize")
-        sleep(1)
-        self.assertFalse(mahj.is_active)
