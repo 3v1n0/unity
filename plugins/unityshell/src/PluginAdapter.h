@@ -109,6 +109,8 @@ public:
   void NotifyCompizEvent(const char* plugin, const char* event, CompOption::Vector& option);
   void NotifyNewDecorationState(guint32 xid);
 
+  guint32 GetActiveWindow();
+
   void Decorate(guint32 xid);
   void Undecorate(guint32 xid);
 

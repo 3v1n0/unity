@@ -23,6 +23,11 @@ static WindowManager* window_manager = NULL;
 
 class WindowManagerDummy : public WindowManager
 {
+  guint32 GetActiveWindow()
+  {
+    return 0;
+  }
+
   unsigned long long GetWindowActiveNumber (guint32 xid)
   {
     return 0;

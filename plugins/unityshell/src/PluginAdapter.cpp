@@ -393,6 +393,12 @@ PluginAdapter::InitiateExpo()
 }
 
 // WindowManager implementation
+guint32
+PluginAdapter::GetActiveWindow()
+{
+  return m_Screen->activeWindow();
+}
+
 bool
 PluginAdapter::IsWindowMaximized(guint xid)
 {

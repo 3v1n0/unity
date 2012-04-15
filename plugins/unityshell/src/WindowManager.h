@@ -53,7 +53,9 @@ public:
   };
 
   static WindowManager* Default();
-  static void            SetDefault(WindowManager* manager);
+  static void           SetDefault(WindowManager* manager);
+
+  virtual guint32 GetActiveWindow() = 0;
 
   virtual bool IsWindowMaximized(guint32 xid) = 0;
   virtual bool IsWindowDecorated(guint32 xid) = 0;
