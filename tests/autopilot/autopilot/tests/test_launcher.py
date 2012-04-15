@@ -413,8 +413,10 @@ class LauncherIconsBehaviorTests(LauncherTestCase):
         This is tested by opening 2 Mahjongg and a Calculator. 
         Then we activate the Calculator launcher icon.
         Then we actiavte the Mahjongg launcher icon.
-        Then we close the focused applications.
+        Then we minimize the focused applications.
         This should give focus to the next window on the stack.
+        Then we activate the Mahjongg launcher icon
+        This should bring to focus the non-minimized window.
         If only 1 instance is raised then the Calculator gets the focus.
         If ALL the instances are raised then the second Mahjongg gets the focus.
 
@@ -436,7 +438,6 @@ class LauncherIconsBehaviorTests(LauncherTestCase):
 
         self.start_app("Mahjongg")
         sleep(1)
-        print mahj.get_windows()
         wins = filter(lambda w: w.x_id != mah_win1.x_id, mahj.get_windows())
         self.assertThat(len(wins), Equals(1))
         mah_win2 = wins[0]
@@ -453,10 +454,16 @@ class LauncherIconsBehaviorTests(LauncherTestCase):
         sleep(1)
         self.assertTrue(mah_win2.is_focused)
 
-        self.keybinding("window/close")
+        self.keybinding("window/minimize")
         sleep(1)
 
+        self.assertTrue(mah_win2.is_hidden)
         self.assertTrue(calc_win.is_focused)
+
+        self.launcher_instance.click_launcher_icon(mahj_icon)
+        sleep(1)
+        self.assertTrue(mah_win1.is_focused)
+        self.assertTrue(mah_win2.is_hidden)
 
 
 class LauncherRevealTests(LauncherTestCase):
