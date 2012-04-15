@@ -625,7 +625,7 @@ PluginAdapter::Lower(guint32 xid)
 }
 
 void 
-PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility focus_visibility, bool only_top_win, int monitor)
+PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility focus_visibility, int monitor, bool only_top_win)
 {
   CompPoint target_vp = m_Screen->vp();
   CompWindow* top_window = nullptr;

@@ -83,7 +83,7 @@ public:
   virtual void InitiateExpo() = 0;
   virtual bool IsExpoActive() = 0;
 
-  virtual void FocusWindowGroup(std::vector<Window> windows, FocusVisibility, bool only_top_win = true, int monitor = -1) = 0;
+  virtual void FocusWindowGroup(std::vector<Window> windows, FocusVisibility, int monitor = -1, bool only_top_win = true) = 0;
   virtual bool ScaleWindowGroup(std::vector<Window> windows, int state, bool force) = 0;
 
   virtual void Decorate(guint32 xid) {};
