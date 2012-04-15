@@ -425,22 +425,21 @@ class LauncherIconsBehaviorTests(LauncherTestCase):
         self.close_all_app("Calculator")
 
         mahj = self.start_app("Mahjongg")
-        wins = mahj.get_windows()
-        self.assertThat(len(wins), Equals(1))
-        mah_win1 = wins[0]
+        [mah_win1] = mahj.get_windows()
         self.assertTrue(mah_win1.is_focused)
 
         calc = self.start_app("Calculator")
-        wins = calc.get_windows()
-        self.assertThat(len(wins), Equals(1))
-        calc_win = wins[0]
+        [calc_win] = calc.get_windows()
         self.assertTrue(calc_win.is_focused)
 
         self.start_app("Mahjongg")
+        # Sleeping due to the start_app only waiting for the bamf model to be
+        # updated with the application.  Since the app has already started,
+        # and we are just waiting on a second window, however a defined sleep
+        # here is likely to be problematic.
+        # TODO: fix bamf emulator to enable waiting for new windows.
         sleep(1)
-        wins = filter(lambda w: w.x_id != mah_win1.x_id, mahj.get_windows())
-        self.assertThat(len(wins), Equals(1))
-        mah_win2 = wins[0]
+        [mah_win2] = [w for w in mahj.get_windows() if w.x_id != mah_win1.x_id]
         self.assertTrue(mah_win2.is_focused)
 
         mahj_icon = self.launcher.model.get_icon_by_desktop_id(mahj.desktop_file)
