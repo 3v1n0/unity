@@ -1,3 +1,16 @@
+unity (5.10.0-0ubuntu4) UNRELEASED; urgency=low
+
+  * Cherry-pick an additional fix from trunk fixing multiple bugs:
+    - alt-tab - quick alt + tab (before the switcher shows) not consistent
+      (LP: #861250)
+    - Launcher, Alt-Tab - clicking on launcher item or selecting a app in
+      Alt-Tab raises all app windows, not just most recently focused
+      (LP: #959339)
+    - Alt-Tab, multimonitor - The Alt-Tab overlay should appear on the display
+      which has focus. (LP: #981795)
+
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 16 Apr 2012 08:35:28 +0200
+
 unity (5.10.0-0ubuntu3) precise-proposed; urgency=low
 
   [ Oliver Grawert ]
