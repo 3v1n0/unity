@@ -1,4 +1,4 @@
-unity (5.10.0-0ubuntu4) UNRELEASED; urgency=low
+unity (5.10.0-0ubuntu4) precise-proposed; urgency=low
 
   * Cherry-pick an additional fix from trunk fixing multiple bugs:
     - alt-tab - quick alt + tab (before the switcher shows) not consistent
