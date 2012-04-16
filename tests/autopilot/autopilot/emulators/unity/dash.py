@@ -119,7 +119,7 @@ class Dash(KeybindingsHelper):
         self.keybinding_hold(binding_name)
         self.keybinding_tap(binding_name)
         self.keybinding_release(binding_name)
-        self._wait_for_visibility(expect_visible=True)
+        self.visible.wait_for(True)
         if clear_search:
             self.clear_search()
 
