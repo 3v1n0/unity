@@ -335,3 +335,15 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         controllers = PanelController.get_all_instances()
         self.assertThat(len(controllers), Equals(1))
         return controllers[0]
+
+    def assertVisibleWindowStack(self, stack_start):
+        """Check that the visible window stack starts with the windows passed in.
+
+        The start_stack is an iterable of BamfWindow objects.
+        Minimised windows are skipped.
+
+        """
+        stack = [win for win in self.bamf.get_open_windows() if not win.is_hidden]
+        for pos, win in enumerate(stack_start):
+            self.assertThat(stack[pos].x_id, Equals(win.x_id),
+                            "%r at %d does not equal %r" % (stack[pos], pos, win))

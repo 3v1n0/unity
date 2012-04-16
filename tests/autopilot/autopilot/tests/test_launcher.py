@@ -407,10 +407,10 @@ class LauncherIconsBehaviorTests(LauncherTestCase):
     """Test the launcher icons interactions"""
 
     def test_launcher_activate_last_focused_window(self):
-        """This tests shows that when you activate a launcher icon only the last 
+        """This tests shows that when you activate a launcher icon only the last
         focused instance of that application is rasied.
 
-        This is tested by opening 2 Mahjongg and a Calculator. 
+        This is tested by opening 2 Mahjongg and a Calculator.
         Then we activate the Calculator launcher icon.
         Then we actiavte the Mahjongg launcher icon.
         Then we minimize the focused applications.
@@ -421,9 +421,6 @@ class LauncherIconsBehaviorTests(LauncherTestCase):
         If ALL the instances are raised then the second Mahjongg gets the focus.
 
         """
-        self.close_all_app("Mahjongg")
-        self.close_all_app("Calculator")
-
         mahj = self.start_app("Mahjongg")
         [mah_win1] = mahj.get_windows()
         self.assertTrue(mah_win1.is_focused)
@@ -442,27 +439,33 @@ class LauncherIconsBehaviorTests(LauncherTestCase):
         [mah_win2] = [w for w in mahj.get_windows() if w.x_id != mah_win1.x_id]
         self.assertTrue(mah_win2.is_focused)
 
+        self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
+
         mahj_icon = self.launcher.model.get_icon_by_desktop_id(mahj.desktop_file)
         calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
 
         self.launcher_instance.click_launcher_icon(calc_icon)
         sleep(1)
         self.assertTrue(calc_win.is_focused)
+        self.assertVisibleWindowStack([calc_win, mah_win2, mah_win1])
 
         self.launcher_instance.click_launcher_icon(mahj_icon)
         sleep(1)
         self.assertTrue(mah_win2.is_focused)
+        self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
 
         self.keybinding("window/minimize")
         sleep(1)
 
         self.assertTrue(mah_win2.is_hidden)
         self.assertTrue(calc_win.is_focused)
+        self.assertVisibleWindowStack([calc_win, mah_win1])
 
         self.launcher_instance.click_launcher_icon(mahj_icon)
         sleep(1)
         self.assertTrue(mah_win1.is_focused)
         self.assertTrue(mah_win2.is_hidden)
+        self.assertVisibleWindowStack([mah_win1, calc_win])
 
 
 class LauncherRevealTests(LauncherTestCase):
