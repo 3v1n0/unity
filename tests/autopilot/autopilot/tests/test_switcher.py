@@ -229,18 +229,24 @@ class SwitcherWindowsManagementTests(AutopilotTestCase):
         [mah_win2] = [w for w in mahj.get_windows() if w.x_id != mah_win1.x_id]
         self.assertTrue(mah_win2.is_focused)
 
+        self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
+
         self.keybinding("switcher/reveal_normal")
         sleep(1)
         self.assertTrue(calc_win.is_focused)
+        self.assertVisibleWindowStack([calc_win, mah_win2, mah_win1])
 
         self.keybinding("switcher/reveal_normal")
         sleep(1)
         self.assertTrue(mah_win2.is_focused)
+        self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
 
         self.keybinding("window/close")
         sleep(1)
 
         self.assertTrue(calc_win.is_focused)
+        self.assertVisibleWindowStack([calc_win, mah_win1])
+
 
 class SwitcherDetailsTests(AutopilotTestCase):
     """Test the details mode for the switcher."""
