@@ -58,7 +58,7 @@ class DashRevealTests(DashTestCase):
         """Dash must close on alt+F4."""
         self.dash.ensure_visible()
         self.keyboard.press_and_release("Alt+F4")
-        sleep(0.5)
+        self.dash.visible.wait_for(False)
         self.assertFalse(self.dash.visible)
 
 
@@ -66,14 +66,14 @@ class DashSearchInputTests(DashTestCase):
     """Test features involving input to the dash search"""
 
     def assertSearchText(self, text):
-        sleep(0.5)
-        self.assertThat(self.dash.search_string, Equals(text))
+        self.dash.search_string.wait_for(text)
 
     def test_search_keyboard_focus(self):
         """Dash must put keyboard focus on the search bar at all times."""
         self.dash.ensure_visible()
         self.keyboard.type("Hello")
         self.assertSearchText("Hello")
+
 
 class DashMultiKeyTests(DashSearchInputTests):
     def setUp(self):
@@ -161,57 +161,6 @@ class DashKeyNavTests(DashTestCase):
         # returns to the correct place.
         self.assertEqual(lensbar.focused_lens_icon, "")
 
-    def test_category_header_keynav_autoscroll(self):
-        """Tests that the dash scrolls a category header into view when scrolling via
-        the keyboard.
-
-        Test for lp:919563
-        """
-
-        reason = """
-        False assumptions. Expanding the first category will not necessarily expand enough
-        to force the next category header off screen.
-        """
-        self.skipTest(reason)
-
-        self.dash.ensure_visible()
-        lens = self.dash.get_current_lens()
-
-        # Expand the first category
-        self.keyboard.press_and_release("Down")
-        self.keyboard.press_and_release("Enter")
-        category = app_lens.get_focused_category()
-
-        # Get the geometry of that category header.
-        x = category.header_x
-        y = category.header_y
-        w = category.header_width
-
-        # Manually scroll the dash.
-        mouse.move(x+w+10, y+w+10, True)
-        mouse.click(5)
-        mouse.click(5)
-        mouse.click(5)
-
-        cached_y = y
-
-        # Focus the search bar with the mouse
-        searchbar = self.dash.get_searchbar()
-        mouse.move(searchbar.x + 100,
-                searchbar.y + searchbar.height / 2,
-                True)
-        mouse.click()
-        sleep(2)
-
-        # Then focus again the first category header
-        self.keyboard.press_and_release("Down")
-        self.keyboard.press_and_release("Enter")
-        category = app_lens.get_focused_category()
-        y = category.header_y
-
-        # Make sure the dash autoscroll
-        self.assertTrue(abs(y - cached_y) < 30)
-
     def test_category_header_keynav(self):
         """ Tests that a category header gets focus when 'down' is pressed after the
         dash is opened
@@ -228,26 +177,6 @@ class DashKeyNavTests(DashTestCase):
         self.assertIsNot(category, None)
         # Make sure that the category is highlighted.
         self.assertTrue(category.header_is_highlighted)
-
-    def test_maintain_highlight(self):
-        # Get the geometry of that category header.
-        self.skipTest('Not implemented at all. Broken out of another test but not reworked')
-        mouse = Mouse()
-
-        x = category.header_x
-        y = category.header_y
-        w = category.header_width
-        h = category.header_height
-
-        # Move the mouse close the view, and press down.
-        mouse.move(x + w + 10,
-                    y + h / 2,
-                    True)
-        sleep(1)
-        self.keyboard.press_and_release("Down")
-        lens = self.dash.get_current_lens()
-        category = lens.get_focused_category()
-        self.assertEqual(category, None)
 
     def test_control_tab_lens_cycle(self):
         """ This test makes sure that Ctlr + Tab cycles lenses."""
@@ -328,7 +257,7 @@ class DashClipboardTests(DashTestCase):
         self.dash.ensure_visible()
 
         self.keyboard.type("SelectAll")
-        sleep(1)
+        self.dash.search_string.wait_for("SelectAll")
         self.assertThat(self.dash.search_string, Equals('SelectAll'))
 
         self.keyboard.press_and_release("Ctrl+a")
@@ -340,7 +269,7 @@ class DashClipboardTests(DashTestCase):
         self.dash.ensure_visible()
 
         self.keyboard.type("Copy")
-        sleep(1)
+        self.dash.search_string.wait_for("Copy")
 
         self.keyboard.press_and_release("Ctrl+a")
         self.keyboard.press_and_release("Ctrl+c")
@@ -355,14 +284,11 @@ class DashClipboardTests(DashTestCase):
         self.dash.ensure_visible()
 
         self.keyboard.type("Cut")
-        sleep(1)
+        self.dash.search_string.wait_for("Cut")
 
         self.keyboard.press_and_release("Ctrl+a")
         self.keyboard.press_and_release("Ctrl+x")
-        sleep(1)
-
-        searchbar = self.dash.get_searchbar()
-        self.assertEqual(searchbar.search_string, u'')
+        self.dash.search_string.wait_for("")
 
         cb = Clipboard(selection="CLIPBOARD")
         self.assertEqual(cb.wait_for_text(), u'Cut')
@@ -372,30 +298,28 @@ class DashClipboardTests(DashTestCase):
         self.dash.ensure_visible()
 
         self.keyboard.type("CopyPaste")
-        sleep(1)
+        self.dash.search_string.wait_for("CopyPaste")
 
         self.keyboard.press_and_release("Ctrl+a")
         self.keyboard.press_and_release("Ctrl+c")
         self.keyboard.press_and_release("Ctrl+v")
         self.keyboard.press_and_release("Ctrl+v")
 
-        searchbar = self.dash.get_searchbar()
-        self.assertEqual(searchbar.search_string, u'CopyPasteCopyPaste')
+        self.dash.search_string.wait_for('CopyPasteCopyPaste')
 
     def test_ctrl_x_v(self):
         """ This test if ctrl+x and ctrl+v cuts and pastes text"""
         self.dash.ensure_visible()
 
         self.keyboard.type("CutPaste")
-        sleep(1)
+        self.dash.search_string.wait_for("CutPaste")
 
         self.keyboard.press_and_release("Ctrl+a")
         self.keyboard.press_and_release("Ctrl+x")
         self.keyboard.press_and_release("Ctrl+v")
         self.keyboard.press_and_release("Ctrl+v")
 
-        searchbar = self.dash.get_searchbar()
-        self.assertEqual(searchbar.search_string, u'CutPasteCutPaste')
+        self.dash.search_string.wait_for('CutPasteCutPaste')
 
 
 class DashKeyboardFocusTests(DashTestCase):
@@ -413,7 +337,7 @@ class DashKeyboardFocusTests(DashTestCase):
         filter_bar.ensure_expanded()
         self.addCleanup(filter_bar.ensure_collapsed)
         self.keyboard.type(" world")
-        self.assertThat(self.dash.search_string, Equals("hello world"))
+        self.dash.search_string.wait_for("hello world")
 
 
 class DashLensResultsTests(DashTestCase):
@@ -429,7 +353,7 @@ class DashLensResultsTests(DashTestCase):
         """This test no mesage will be shown when results are there."""
         self.dash.reveal_application_lens()
         self.keyboard.type("Terminal")
-        sleep(1)
+        self.dash.search_string.wait_for("Terminal")
         lens = self.dash.get_current_lens()
         self.assertFalse(lens.no_results_active)
 
@@ -437,7 +361,7 @@ class DashLensResultsTests(DashTestCase):
         """This test shows a message will appear in the lens."""
         self.dash.reveal_application_lens()
         self.keyboard.type("qwerlkjzvxc")
-        sleep(1)
+        self.dash.search_string.wait_for("qwerlkjzvxc")
         lens = self.dash.get_current_lens()
         self.assertTrue(lens.no_results_active)
 
@@ -446,11 +370,13 @@ class DashLensResultsTests(DashTestCase):
         self.dash.reveal_application_lens()
         lens = self.dash.get_current_lens()
         self.keyboard.type(" ")
-        sleep(1)
+        self.dash.search_string.wait_for(" ")
         results_category = lens.get_category_by_name("Installed")
         old_results = results_category.get_results()
 
-
+        # FIXME: This should be a method on the dash emulator perhaps, or
+        # maybe a proper method of this class. It should NOT be an inline
+        # function that is only called once!
         def activate_filter(add_cleanup = False):
             # Tabs to last category
             for i in range(lens.get_num_visible_categories()):
@@ -463,8 +389,9 @@ class DashLensResultsTests(DashTestCase):
             filter_bar = lens.get_filterbar()
             if not searchbar.showing_filters:
                 self.keyboard.press_and_release('Enter')
-                self.assertTrue(searchbar.showing_filters)
-                if add_cleanup: self.addCleanup(filter_bar.ensure_collapsed)
+                searchbar.showing_filters.wait_for(True)
+                if add_cleanup:
+                    self.addCleanup(filter_bar.ensure_collapsed)
 
             # Tab to the "Type" filter in apps lens
             self.keyboard.press_and_release('Tab')
@@ -480,7 +407,6 @@ class DashLensResultsTests(DashTestCase):
         activate_filter(True)
         self.addCleanup(activate_filter)
 
-        sleep(1)
         results_category = lens.get_category_by_name("Installed")
         results = results_category.get_results()
         self.assertIsNot(results, old_results)
@@ -507,8 +433,10 @@ class DashVisualTests(DashTestCase):
                 name_label_y = group.name_label_y + group.name_label_baseline
                 self.assertThat(expand_label_y, Equals(name_label_y))
 
+
 class DashLensBarTests(DashTestCase):
     """Tests that the lensbar works well."""
+
     def setUp(self):
         super(DashLensBarTests, self).setUp()
         self.dash.ensure_visible()
@@ -520,9 +448,7 @@ class DashLensBarTests(DashTestCase):
         """
         app_icon = self.lensbar.get_icon_by_name(u'applications.lens')
 
-        self.mouse.move(app_icon.x, app_icon.y)
+        self.mouse.move(app_icon.x + (app_icon.width / 2),
+                        app_icon.y + (app_icon.height / 2))
         self.mouse.click()
-
-        sleep(1)
-
-        self.assertEqual(self.lensbar.active_lens, u'applications.lens')        
+        self.lensbar.active_lens.wait_for('applications.lens')
