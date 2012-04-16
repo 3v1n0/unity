@@ -9,7 +9,7 @@
 from time import sleep
 
 from gtk import Clipboard
-from testtools.matchers import Equals
+from testtools.matchers import Equals, NotEquals
 
 from autopilot.tests import AutopilotTestCase
 
@@ -17,7 +17,6 @@ from autopilot.tests import AutopilotTestCase
 class DashTestCase(AutopilotTestCase):
     def setUp(self):
         super(DashTestCase, self).setUp()
-        self.set_unity_log_level("unity", "DEBUG")
         self.set_unity_log_level("unity.shell", "DEBUG")
         self.set_unity_log_level("unity.launcher", "DEBUG")
         self.dash.ensure_hidden()
@@ -37,29 +36,28 @@ class DashRevealTests(DashTestCase):
     def test_application_lens_shortcut(self):
         """Application lense must reveal when Super+a is pressed."""
         self.dash.reveal_application_lens()
-        self.assertThat(self.dash.active_lens, Equals('applications.lens'))
+        self.dash.active_lens.wait_for('applications.lens')
 
     def test_music_lens_shortcut(self):
         """Music lense must reveal when Super+w is pressed."""
         self.dash.reveal_music_lens()
-        self.assertThat(self.dash.active_lens, Equals('music.lens'))
+        self.dash.active_lens.wait_for('music.lens')
 
     def test_file_lens_shortcut(self):
         """File lense must reveal when Super+f is pressed."""
         self.dash.reveal_file_lens()
-        self.assertThat(self.dash.active_lens, Equals('files.lens'))
+        self.dash.active_lens.wait_for('files.lens')
 
     def test_command_lens_shortcut(self):
         """Run Command lens must reveat on alt+F2."""
         self.dash.reveal_command_lens()
-        self.assertThat(self.dash.active_lens, Equals('commands.lens'))
+        self.dash.active_lens.wait_for('commands.lens')
 
     def test_alt_f4_close_dash(self):
         """Dash must close on alt+F4."""
         self.dash.ensure_visible()
         self.keyboard.press_and_release("Alt+F4")
         self.dash.visible.wait_for(False)
-        self.assertFalse(self.dash.visible)
 
 
 class DashSearchInputTests(DashTestCase):
@@ -126,7 +124,7 @@ class DashKeyNavTests(DashTestCase):
         for i in range(self.dash.get_num_rows()):
             self.keyboard.press_and_release("Down")
         lensbar = self.dash.view.get_lensbar()
-        self.assertIsNot(lensbar.focused_lens_icon, '')
+        lensbar.focused_lens_icon.wait_for(NotEquals(''))
 
     def test_lensbar_focus_changes(self):
         """Lensbar focused icon should change with Left and Right keypresses."""
@@ -135,13 +133,14 @@ class DashKeyNavTests(DashTestCase):
         for i in range(self.dash.get_num_rows()):
             self.keyboard.press_and_release("Down")
         lensbar = self.dash.view.get_lensbar()
+
         current_focused_icon = lensbar.focused_lens_icon
+
         self.keyboard.press_and_release("Right");
-        lensbar.refresh_state()
-        self.assertNotEqual(lensbar.focused_lens_icon, current_focused_icon)
+        lensbar.focused_lens_icon.wait_for(NotEquals(current_focused_icon))
+
         self.keyboard.press_and_release("Left")
-        lensbar.refresh_state()
-        self.assertEqual(lensbar.focused_lens_icon, current_focused_icon)
+        lensbar.focused_lens_icon.wait_for(current_focused_icon)
 
     def test_lensbar_enter_activation(self):
         """Must be able to activate LensBar icons that have focus with an Enter keypress."""
@@ -153,13 +152,13 @@ class DashKeyNavTests(DashTestCase):
         lensbar = self.dash.view.get_lensbar()
         focused_icon = lensbar.focused_lens_icon
         self.keyboard.press_and_release("Enter");
-        lensbar.refresh_state()
-        self.assertEqual(lensbar.active_lens, focused_icon)
+
+        lensbar.active_lens.wait_for(focused_icon)
 
         # lensbar should lose focus after activation.
         # TODO this should be a different test to make sure focus
         # returns to the correct place.
-        self.assertEqual(lensbar.focused_lens_icon, "")
+        lensbar.focused_lens_icon.wait_for("")
 
     def test_category_header_keynav(self):
         """ Tests that a category header gets focus when 'down' is pressed after the
@@ -179,7 +178,7 @@ class DashKeyNavTests(DashTestCase):
         self.assertTrue(category.header_is_highlighted)
 
     def test_control_tab_lens_cycle(self):
-        """ This test makes sure that Ctlr + Tab cycles lenses."""
+        """This test makes sure that Ctrl+Tab cycles lenses."""
         self.dash.ensure_visible()
 
         self.keyboard.press('Control')
@@ -195,8 +194,7 @@ class DashKeyNavTests(DashTestCase):
         self.keyboard.release('Control')
         self.keyboard.release('Shift')
 
-        lensbar.refresh_state()
-        self.assertEqual(lensbar.active_lens, u'home.lens')
+        lensbar.active_lens.wait_for('home.lens')
 
     def test_tab_cycle_category_headers(self):
         """ Makes sure that pressing tab cycles through the category headers"""
@@ -221,12 +219,12 @@ class DashKeyNavTests(DashTestCase):
 
         self.keyboard.press_and_release('Tab')
         searchbar = self.dash.get_searchbar()
-        self.assertTrue(searchbar.expander_has_focus)
+        searchbar.expander_has_focus.wait_for(True)
 
         filter_bar = lens.get_filterbar()
         if not searchbar.showing_filters:
             self.keyboard.press_and_release('Enter')
-            self.assertTrue(searchbar.showing_filters)
+            searchbar.showing_filters.wait_for(True)
             self.addCleanup(filter_bar.ensure_collapsed)
 
         for i in range(filter_bar.get_num_filters()):
@@ -258,11 +256,11 @@ class DashClipboardTests(DashTestCase):
 
         self.keyboard.type("SelectAll")
         self.dash.search_string.wait_for("SelectAll")
-        self.assertThat(self.dash.search_string, Equals('SelectAll'))
+        self.dash.search_string.wait_for('SelectAll')
 
         self.keyboard.press_and_release("Ctrl+a")
         self.keyboard.press_and_release("Delete")
-        self.assertThat(self.dash.search_string, Equals(''))
+        self.dash.search_string.wait_for('')
 
     def test_ctrl_c(self):
         """ This test if ctrl+c copies text into the clipboard """
@@ -275,9 +273,7 @@ class DashClipboardTests(DashTestCase):
         self.keyboard.press_and_release("Ctrl+c")
 
         cb = Clipboard(selection="CLIPBOARD")
-
-        searchbar = self.dash.get_searchbar()
-        self.assertEqual(searchbar.search_string, cb.wait_for_text())
+        self.dash.search_string.wait_for(cb.wait_for_text())
 
     def test_ctrl_x(self):
         """ This test if ctrl+x deletes all text and copys it """
@@ -347,7 +343,7 @@ class DashLensResultsTests(DashTestCase):
         """This tests a message is not shown when there is no text."""
         self.dash.reveal_application_lens()
         lens = self.dash.get_current_lens()
-        self.assertFalse(lens.no_results_active)
+        lens.no_results_active.wait_for(False)
 
     def test_results_message(self):
         """This test no mesage will be shown when results are there."""
@@ -355,7 +351,7 @@ class DashLensResultsTests(DashTestCase):
         self.keyboard.type("Terminal")
         self.dash.search_string.wait_for("Terminal")
         lens = self.dash.get_current_lens()
-        self.assertFalse(lens.no_results_active)
+        lens.no_results_active.wait_for(False)
 
     def test_no_results_message(self):
         """This test shows a message will appear in the lens."""
@@ -363,7 +359,7 @@ class DashLensResultsTests(DashTestCase):
         self.keyboard.type("qwerlkjzvxc")
         self.dash.search_string.wait_for("qwerlkjzvxc")
         lens = self.dash.get_current_lens()
-        self.assertTrue(lens.no_results_active)
+        lens.no_results_active.wait_for(True)
 
     def test_results_update_on_filter_changed(self):
         """This test makes sure the results change when filters change."""
@@ -384,7 +380,7 @@ class DashLensResultsTests(DashTestCase):
 
             self.keyboard.press_and_release('Tab')
             searchbar = self.dash.get_searchbar()
-            self.assertTrue(searchbar.expander_has_focus)
+            searchbar.expander_has_focus.wait_for(True)
 
             filter_bar = lens.get_filterbar()
             if not searchbar.showing_filters:
