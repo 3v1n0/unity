@@ -9,7 +9,7 @@
 
 from dbus import Interface
 import logging
-from testtools.matchers import Mismatch
+import testtools.matchers
 from time import sleep
 
 from autopilot.emulators.dbus_handler import session_bus
@@ -146,6 +146,9 @@ class UnityIntrospectionObject(object):
         def wait_for(self, expected_value):
             """Wait up to 10 seconds for our value to change to 'expected_value'.
 
+            expected_value can be a testtools.matcher.Matcher subclass (like
+            LessThan, for example), or an ordinary value.
+
             This works by refreshing the value using repeated dbus calls.
 
             Raises RuntimeError if the attribute was not equal to the expected value
@@ -158,20 +161,37 @@ class UnityIntrospectionObject(object):
             if self == expected_value:
                 return
 
+            # unfortunately not all testtools matchers derive from the Matcher
+            # class, so we can't use issubclass, isinstance for this:
+            is_matcher = type(expected_value).__name__ in testtools.matchers.__all__
+
             for i in range(11):
                 new_state = get_state_by_name_and_id(
                     self.parent.__class__.__name__,
                     self.parent.id)
-                if new_state[self.name] == expected_value:
-                    self.parent.set_properties(new_state)
-                    return
+                new_value = new_state[self.name]
+                # Support for testtools.matcher classes:
+                if is_matcher:
+                    mismatch = expected_value.match(new_value)
+                    if mismatch:
+                        failure_msg = mismatch.describe()
+                    else:
+                        self.parent.set_properties(new_state)
+                        return
+                else:
+                    if new_value == expected_value:
+                        self.parent.set_properties(new_state)
+                        return
+                    else:
+                        failure_msg = "Error: %s.%s was not equal to %r after 10 seconds (it was %r)." % \
+                            (self.parent.__class__.__name__,
+                            self.name,
+                            expected_value,
+                            self)
+
                 sleep(1)
 
-            raise AssertionError("Error: %s.%s was not equal to %r after 10 seconds (it was %r)."
-                % (self.parent.__class__.__name__,
-                    self.name,
-                    expected_value,
-                    self))
+            raise AssertionError(failure_msg)
 
         # This looks like magic, but it's really not. We're creating a new type
         # on the fly that derives from the type of 'value' with a couple of
