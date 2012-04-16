@@ -9,6 +9,7 @@
 
 from dbus import Interface
 import logging
+from testtools.matchers import Mismatch
 from time import sleep
 
 from autopilot.emulators.dbus_handler import session_bus
@@ -166,10 +167,11 @@ class UnityIntrospectionObject(object):
                     return
                 sleep(1)
 
-            raise RuntimeError("Error: %s.%s was not equal to %r after 10 seconds."
+            raise AssertionError("Error: %s.%s was not equal to %r after 10 seconds (it was %r)."
                 % (self.parent.__class__.__name__,
                     self.name,
-                    expected_value))
+                    expected_value,
+                    self))
 
         # This looks like magic, but it's really not. We're creating a new type
         # on the fly that derives from the type of 'value' with a couple of
