@@ -2083,6 +2083,12 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   gPainter.PopBackground(push_count);
   GfxContext.PopClippingRectangle();
   GfxContext.PopClippingRectangle();
+
+  if (sc_launcher_icon_animation_connection.connected())
+  {
+    sc_launcher_icon_animation.emit();
+    sc_launcher_icon_animation_connection.disconnect();
+  }
 }
 
 void Launcher::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
@@ -2950,9 +2956,9 @@ Launcher::handle_dbus_method_call(GDBusConnection*       connection,
                                   GDBusMethodInvocation* invocation,
                                   gpointer               user_data)
 {
-
   if (g_strcmp0(method_name, "AddLauncherItemFromPosition") == 0)
   {
+
     gchar*  icon;
     gchar*  title;
     gint32  icon_x;
@@ -2962,18 +2968,23 @@ Launcher::handle_dbus_method_call(GDBusConnection*       connection,
     gchar*  aptdaemon_task;
 
     g_variant_get(parameters, "(ssiiiss)", &title, &icon, &icon_x, &icon_y, &icon_size, &desktop_file, &aptdaemon_task, NULL);
-
+         
     Launcher* self = (Launcher*)user_data;
-    self->launcher_addrequest_special.emit(desktop_file, AbstractLauncherIcon::Ptr(), aptdaemon_task, icon,
+
+    self->sc_launcher_icon_animation_connection = self->sc_launcher_icon_animation.connect([&]() -> void {
+
+      self->launcher_addrequest_special.emit(desktop_file, AbstractLauncherIcon::Ptr(), aptdaemon_task, icon,
                                             icon_x, icon_y, icon_size);
 
-    g_dbus_method_invocation_return_value(invocation, nullptr);
-    g_free(icon);
-    g_free(title);
-    g_free(desktop_file);
-    g_free(aptdaemon_task);
-  }
+      g_free(icon);
+      g_free(title);
+      g_free(desktop_file);
+      g_free(aptdaemon_task);                                            
+    });         
 
+    g_dbus_method_invocation_return_value(invocation, nullptr);
+
+  }
 }
 
 void
