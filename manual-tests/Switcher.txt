@@ -38,3 +38,23 @@ Outcome
   of the panel should change inline with changes in alt-tab focus.
   Also the menus shouldn't ever show. Even if the mouse has been left over
   the panel when starting the Alt+Tab.
+
+
+Full app title in Chinese
+-------------------------
+This test ensures that the App Switcher (Alt+Tab) displays the full title
+of apps in Chinese.
+
+Setup:
+#. Install gnome-tweak-tool and run it.
+#. Make sure you have the default font scaling factor (1.0).
+
+Action:
+#. Run:
+   python -c 'from gi.repository import Gtk;win=Gtk.Window(title="显示桌面");win.connect("destroy", Gtk.main_quit);win.show_all();Gtk.main();'
+#. Press Alt+Tab.
+#. Continue to press Tab to select the newly created window.
+
+Outcome
+  The title of the newly created window should be "显示桌面" and *not* "显示桌...".
+
