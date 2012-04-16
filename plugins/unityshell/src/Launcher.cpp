@@ -1583,8 +1583,8 @@ Launcher::OnOptionChanged()
 void
 Launcher::UpdateOptions(Options::Ptr options)
 {
-  SetHideMode(options->hide_mode);
   SetIconSize(options->tile_size, options->icon_size);
+  SetHideMode(options->hide_mode);
 
   ConfigureBarrier();
   EnsureAnimation();
