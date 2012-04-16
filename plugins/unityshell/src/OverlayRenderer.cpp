@@ -190,6 +190,7 @@ void OverlayRendererImpl::InitASMInverseTextureMaskShader()
 
 void OverlayRendererImpl::RenderInverseMask_ASM(nux::GraphicsEngine& gfx_context, int x, int y, int width, int height, nux::ObjectPtr<nux::IOpenGLBaseTexture> device_texture, nux::TexCoordXForm &texxform, const nux::Color &color)
 {
+#ifndef NUX_OPENGLES_20
   if (!inverse_texture_mask_asm_prog_.IsValid() || !inverse_texture_rect_mask_asm_prog_.IsValid())
   {
     InitASMInverseTextureMaskShader();
@@ -255,6 +256,7 @@ void OverlayRendererImpl::RenderInverseMask_ASM(nux::GraphicsEngine& gfx_context
     CHECKGL(glDisableVertexAttribArrayARB(VertexColorLocation));
 
   shader_program->End();
+#endif
 }
 
 void OverlayRendererImpl::InitSlInverseTextureMaskShader()
