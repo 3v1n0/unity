@@ -21,9 +21,9 @@ class SwitcherTests(AutopilotTestCase):
     def setUp(self):
         super(SwitcherTests, self).setUp()
 
-        self.start_app('Character Map')
-        self.start_app('Calculator')
-        self.start_app('Mahjongg')
+        self.char_map = self.start_app('Character Map')
+        self.calc = self.start_app('Calculator')
+        self.mahjongg = self.start_app('Mahjongg')
 
     def tearDown(self):
         super(SwitcherTests, self).tearDown()
@@ -196,6 +196,19 @@ class SwitcherTests(AutopilotTestCase):
         sleep(.2)
 
         self.assertThat(self.switcher.get_is_visible(), Equals(False))
+
+    def test_switcher_appears_on_monitor_with_focused_window(self):
+        num_monitors = self.screen_geo.get_num_monitors()
+        if num_monitors == 1:
+            self.skip("No point testing this on one monitor")
+
+        [calc_win] = self.calc.get_windows()
+        for monitor in range(num_monitors):
+            self.screen_geo.drag_window_to_monitor(calc_win, monitor)
+            self.switcher.initiate()
+            sleep(1)
+            self.assertThat(self.switcher.get_monitor(), Equals(monitor))
+            self.switcher.terminate()
 
 
 class SwitcherWindowsManagementTests(AutopilotTestCase):
