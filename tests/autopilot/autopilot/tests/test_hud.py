@@ -45,14 +45,6 @@ class HudTestsBase(AutopilotTestCase):
                 num_active += 1
         return num_active
 
-    def reveal_hud(self):
-        self.hud.toggle_reveal()
-        for counter in range(10):
-            sleep(1)
-            if self.hud.visible:
-                break
-        self.assertTrue(self.hud.visible, "HUD did not appear.")
-
 
 class HudBehaviorTests(HudTestsBase):
 
@@ -63,60 +55,59 @@ class HudBehaviorTests(HudTestsBase):
         self.screen_geo.move_mouse_to_monitor(self.hud_monitor)
 
     def test_no_initial_values(self):
-        self.reveal_hud()
+        self.hud.ensure_visible()
         self.assertThat(self.hud.num_buttons, Equals(0))
         self.assertThat(self.hud.selected_button, Equals(0))
 
     def test_check_a_values(self):
-        self.reveal_hud()
+        self.hud.ensure_visible()
         self.keyboard.type('a')
-        # Give the HUD a second to get values.
-        sleep(1)
+        self.hud.search_string.wait_for('a')
         self.assertThat(self.hud.num_buttons, Equals(5))
         self.assertThat(self.hud.selected_button, Equals(1))
 
     def test_up_down_arrows(self):
-        self.reveal_hud()
+        self.hud.ensure_visible()
         self.keyboard.type('a')
-        # Give the HUD a second to get values.
-        sleep(1)
+        self.hud.search_string.wait_for('a')
         self.keyboard.press_and_release('Down')
-        self.assertThat(self.hud.selected_button, Equals(2))
+        self.hud.selected_button.wait_for(2)
         self.keyboard.press_and_release('Down')
-        self.assertThat(self.hud.selected_button, Equals(3))
+        self.hud.selected_button.wait_for(3)
         self.keyboard.press_and_release('Down')
-        self.assertThat(self.hud.selected_button, Equals(4))
+        self.hud.selected_button.wait_for(4)
         self.keyboard.press_and_release('Down')
-        self.assertThat(self.hud.selected_button, Equals(5))
+        self.hud.selected_button.wait_for(5)
         # Down again stays on 5.
         self.keyboard.press_and_release('Down')
-        self.assertThat(self.hud.selected_button, Equals(5))
+        self.hud.selected_button.wait_for(5)
         self.keyboard.press_and_release('Up')
-        self.assertThat(self.hud.selected_button, Equals(4))
+        self.hud.selected_button.wait_for(4)
         self.keyboard.press_and_release('Up')
-        self.assertThat(self.hud.selected_button, Equals(3))
+        self.hud.selected_button.wait_for(3)
         self.keyboard.press_and_release('Up')
-        self.assertThat(self.hud.selected_button, Equals(2))
+        self.hud.selected_button.wait_for(2)
         self.keyboard.press_and_release('Up')
-        self.assertThat(self.hud.selected_button, Equals(1))
+        self.hud.selected_button.wait_for(1)
         # Up again stays on 1.
         self.keyboard.press_and_release('Up')
-        self.assertThat(self.hud.selected_button, Equals(1))
+        self.hud.selected_button.wait_for(1)
 
     def test_no_reset_selected_button(self):
-        self.reveal_hud()
+        """Hud must not change selected button when results update over time."""
+        self.hud.ensure_visible()
         self.keyboard.type('is')
-        sleep(1)
+        self.hud.search_string.wait_for('is')
         self.keyboard.press_and_release('Down')
-        self.assertThat(self.hud.selected_button, Equals(2))
-        # long sleep to let the service send updated results 
+        self.hud.selected_button.wait_for(2)
+        # long sleep to let the service send updated results
         sleep(10)
         self.assertThat(self.hud.selected_button, Equals(2))
 
     def test_slow_tap_not_reveal_hud(self):
+        """A slow tap must not reveal the HUD."""
         self.hud.toggle_reveal(tap_delay=0.3)
-        sleep(1)
-        self.assertFalse(self.hud.visible)
+        self.hud.visible.wait_for(False)
 
     def test_alt_f4_doesnt_show_hud(self):
         self.start_app('Calculator')
@@ -132,13 +123,8 @@ class HudBehaviorTests(HudTestsBase):
         self.addCleanup(self.keybinding, "window/show_desktop")
         sleep(1)
 
-        self.hud.toggle_reveal()
-        sleep(1)
-        self.assertTrue(self.hud.visible)
-
-        self.hud.toggle_reveal()
-        sleep(1)
-        self.assertFalse(self.hud.visible)
+        self.hud.ensure_visible()
+        self.hud.ensure_hidden()
 
     def test_restore_focus(self):
         """Ensures that once the hud is dismissed, the same application
@@ -149,46 +135,33 @@ class HudBehaviorTests(HudTestsBase):
         # first ensure that the application has started and is focused
         self.assertEqual(calc.is_active, True)
 
-        self.hud.toggle_reveal()
-        sleep(1)
-        self.hud.toggle_reveal()
-        sleep(1)
+        self.hud.ensure_visible()
+        self.hud.ensure_hidden()
 
         # again ensure that the application we started is focused
         self.assertEqual(calc.is_active, True)
 
-        #test return
-        self.hud.toggle_reveal()
-        sleep(1)
-
-        #test return
-        self.hud.toggle_reveal()
-        sleep(1)
+        self.hud.ensure_visible()
+        self.hud.ensure_hidden()
         self.keyboard.press_and_release('Return')
         sleep(1)
 
         self.assertEqual(calc.is_active, True)
 
     def test_gedit_undo(self):
-        """Test undo in gedit"""
-        """Type "0 1" into gedit."""
-        """Activate the Hud, type "undo" then enter."""
-        """Save the file in gedit and close gedit."""
-        """Read the saved file. The content should be "0 "."""
+        """Test that the 'undo' action in the Hud works with GEdit."""
 
         self.addCleanup(remove, '/tmp/autopilot_gedit_undo_test_temp_file.txt')
         self.start_app('Text Editor', files=['/tmp/autopilot_gedit_undo_test_temp_file.txt'], locale='C')
 
-        sleep(1)
         self.keyboard.type("0")
         self.keyboard.type(" ")
         self.keyboard.type("1")
 
-        self.hud.toggle_reveal()
-        sleep(1)
+        self.hud.ensure_visible()
 
         self.keyboard.type("undo")
-        sleep(1)
+        self.hud.search_string.wait_for("undo")
         self.keyboard.press_and_release('Return')
         sleep(.5)
 
@@ -199,8 +172,8 @@ class HudBehaviorTests(HudTestsBase):
         self.assertEqual("0 ", contents)
 
     def test_disabled_alt_f1(self):
-        """This test shows that Alt+F1 mode is disabled for the hud."""
-        self.hud.toggle_reveal()
+        """Pressing Alt+F1 when the HUD is open must not start keyboard navigation mode."""
+        self.hud.ensure_visible()
 
         launcher = self.launcher.get_launcher_for_monitor(0)
         launcher.key_nav_start()
@@ -209,9 +182,7 @@ class HudBehaviorTests(HudTestsBase):
 
     def test_hud_to_dash_disabled_alt_f1(self):
         """When switching from the hud to the dash alt+f1 is disabled."""
-        self.hud.toggle_reveal()
-        sleep(1)
-
+        self.hud.ensure_visible()
         self.dash.ensure_visible()
 
         launcher = self.launcher.get_launcher_for_monitor(0)
@@ -223,32 +194,24 @@ class HudBehaviorTests(HudTestsBase):
     def test_hud_to_dash_has_key_focus(self):
         """When switching from the hud to the dash you don't lose key focus."""
         self.hud.ensure_visible()
-        sleep(1)
-
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
-
         self.keyboard.type('focus1')
-
-        self.assertEqual(self.dash.search_string, 'focus1')
+        self.dash.search_string.wait_for('focus1')
 
     def test_dash_to_hud_has_key_focus(self):
         """When switching from the dash to the hud you don't lose key focus."""
         self.dash.ensure_visible()
         self.hud.ensure_visible()
-        sleep(1)
-
         self.keyboard.type('focus2')
-       
-        self.assertEqual(self.hud.search_string, 'focus2')
+        self.hud.search_string.wait_for('focus2')
 
     def test_hud_closes_on_workspace_switch(self):
         """This test shows that when you switch to another workspace the hud closes."""
-        self.hud.toggle_reveal()
-        sleep(1)
-
+        self.hud.ensure_visible()
         self.workspace.switch_to(1)
         self.workspace.switch_to(2)
+        self.hud.visible.wait_for(False)
 
 
 class HudLauncherInteractionsTests(HudTestsBase):
@@ -287,9 +250,7 @@ class HudLauncherInteractionsTests(HudTestsBase):
         # reveal and hide hud several times over:
         for i in range(3):
             self.hud.ensure_visible()
-            sleep(0.5)
             self.hud.ensure_hidden()
-            sleep(0.5)
 
         # click application icons for running apps in the launcher:
         icon = self.launcher.model.get_icon_by_desktop_id("gucharmap.desktop")
@@ -305,11 +266,7 @@ class HudLauncherInteractionsTests(HudTestsBase):
         launcher = self.launcher.get_launcher_for_monitor(self.hud_monitor)
 
         launcher_shows_pre = launcher.is_showing()
-        sleep(.25)
-
-        self.reveal_hud()
-        sleep(1)
-
+        self.hud.ensure_visible()
         launcher_shows_post = launcher.is_showing()
         self.assertThat(launcher_shows_pre, Equals(launcher_shows_post))
 
@@ -335,9 +292,8 @@ class HudLockedLauncherInteractionsTests(HudTestsBase):
 
         self.assertTrue(bfb_icon.is_visible_on_monitor(self.hud_monitor))
         self.assertFalse(hud_icon.is_visible_on_monitor(self.hud_monitor))
-        sleep(.25)
 
-        self.reveal_hud()
+        self.hud.ensure_visible()
         sleep(.5)
 
         self.assertTrue(hud_icon.is_visible_on_monitor(self.hud_monitor))
@@ -346,7 +302,7 @@ class HudLockedLauncherInteractionsTests(HudTestsBase):
     def test_hud_desaturates_launcher_icons(self):
         """Tests that the launcher icons are desaturates when HUD is open"""
 
-        self.reveal_hud()
+        self.hud.ensure_visible()
         sleep(.5)
 
         for icon in self.launcher.model.get_launcher_icons_for_monitor(self.hud_monitor):
@@ -380,13 +336,13 @@ class HudVisualTests(HudTestsBase):
 
     def test_hud_is_on_right_monitor(self):
         """Tests if the hud is shown and fits the monitor where it should be"""
-        self.reveal_hud()
+        self.hud.ensure_visible()
         self.assertThat(self.hud_monitor, Equals(self.hud.monitor))
         self.assertTrue(self.screen_geo.is_rect_on_monitor(self.hud.monitor, self.hud.geometry))
 
     def test_hud_geometries(self):
         """Tests the HUD geometries for the given monitor and status"""
-        self.reveal_hud()
+        self.hud.ensure_visible()
         monitor_geo = self.screen_geo.get_monitor_geometry(self.hud_monitor)
         monitor_x = monitor_geo[0]
         monitor_w = monitor_geo[2]
@@ -403,16 +359,12 @@ class HudVisualTests(HudTestsBase):
 
     def test_hud_is_locked_to_launcher(self):
         """Tests if the HUD is locked to launcher as we expect or not"""
-        self.reveal_hud()
-        sleep(.25)
-
+        self.hud.ensure_visible()
         self.assertThat(self.hud.is_locked_launcher, Equals(self.hud_locked))
 
     def test_hud_icon_is_shown(self):
         """Tests that the correct HUD icon is shown"""
-        self.reveal_hud()
-        sleep(.5)
-
+        self.hud.ensure_visible()
         hud_launcher_icon = self.hud.get_launcher_icon()
         hud_embedded_icon = self.hud.get_embedded_icon()
 
@@ -432,9 +384,7 @@ class HudVisualTests(HudTestsBase):
         self.close_all_app("Calculator")
         calc = self.start_app("Calculator")
         self.assertTrue(calc.is_active)
-
-        self.reveal_hud()
-        sleep(.5)
+        self.hud.ensure_visible()
 
         self.assertThat(self.hud.icon.icon_name, Equals(calc.icon))
 
@@ -442,9 +392,7 @@ class HudVisualTests(HudTestsBase):
         self.keybinding("window/show_desktop")
         self.addCleanup(self.keybinding, "window/show_desktop")
         sleep(1)
-
-        self.reveal_hud()
-        sleep(.5)
+        self.hud.ensure_visible()
 
         self.assertThat(path.basename(self.hud.icon.icon_name), Equals("launcher_bfb.png"))
 
@@ -455,8 +403,7 @@ class HudVisualTests(HudTestsBase):
         self.assertTrue(calc.is_active)
 
         self.dash.ensure_visible()
-        self.reveal_hud()
-        sleep(.5)
+        self.hud.ensure_visible()
 
         self.assertThat(self.hud.icon.icon_name, Equals(calc.icon))
 
@@ -466,12 +413,10 @@ class HudVisualTests(HudTestsBase):
         calc = self.start_app("Calculator")
         self.assertTrue(calc.is_active)
 
-        self.reveal_hud()
+        self.hud.ensure_visible()
         self.dash.ensure_visible()
-        self.reveal_hud()
-        sleep(.5)
-
-        self.assertThat(self.hud.icon.icon_name, Equals(calc.icon))
+        self.hud.ensure_visible()
+        self.hud.icon.icon_name.wait_for(calc.icon)
 
 
 class HudAlternativeKeybindingTests(HudTestsBase):
@@ -481,19 +426,11 @@ class HudAlternativeKeybindingTests(HudTestsBase):
         self.set_unity_option("show_hud", "<Super>h")
         # Don't use reveal_hud, but be explicit in the keybindings.
         self.keyboard.press_and_release("Super+h")
-        for counter in range(10):
-            sleep(1)
-            if self.hud.visible:
-                break
-        self.assertTrue(self.hud.visible, "HUD did not appear.")
+        self.hud.visible.wait_for(True)
 
     def test_ctrl_alt_h(self):
         """Test hud reveal on <Contrl><Alt>h."""
         self.set_unity_option("show_hud", "<Control><Alt>h")
         # Don't use reveal_hud, but be explicit in the keybindings.
         self.keyboard.press_and_release("Ctrl+Alt+h")
-        for counter in range(10):
-            sleep(1)
-            if self.hud.visible:
-                break
-        self.assertTrue(self.hud.visible, "HUD did not appear.")
+        self.hud.visible.wait_for(True)
