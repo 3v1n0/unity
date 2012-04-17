@@ -33,6 +33,7 @@ def _make_scenarios():
                                 ('launcher on all', {'only_primary': False})]
     return multiply_scenarios(monitor_scenarios, launcher_mode_scenarios)
 
+
 class LauncherTestCase(AutopilotTestCase):
     """A base class for all launcher tests that uses scenarios to run on
     each launcher (for multi-monitor setups).
@@ -62,9 +63,10 @@ class LauncherTestCase(AutopilotTestCase):
         """Get the launcher for the current scenario."""
         return self.launcher.get_launcher_for_monitor(self.launcher_monitor)
 
+
 class LauncherSwitcherTests(LauncherTestCase):
     """ Tests the functionality of the launcher's switcher capability"""
-    
+
     def setUp(self):
         super(LauncherSwitcherTests, self).setUp()
         self.launcher_instance.switcher_start()
@@ -212,6 +214,7 @@ class LauncherSwitcherTests(LauncherTestCase):
         sleep(.25)
         self.assertThat(self.launcher.key_nav_is_active, Equals(False))
 
+
 class LauncherShortcutTests(LauncherTestCase):
     def setUp(self):
         super(LauncherShortcutTests, self).setUp()
@@ -254,6 +257,7 @@ class LauncherShortcutTests(LauncherTestCase):
         self.launcher_instance.switcher_prev()
         sleep(.5)
         self.assertThat(self.launcher_instance.are_shortcuts_showing(), Equals(True))
+
 
 class LauncherKeyNavTests(LauncherTestCase):
     """Test the launcher key navigation"""
@@ -335,7 +339,7 @@ class LauncherKeyNavTests(LauncherTestCase):
         self.launcher_instance.key_nav_prev()
         # FIXME We can't directly check for self.launcher.num_launcher_icons - 1
         self.assertThat(self.launcher.key_nav_selection, GreaterThan(1))
-        
+
     def test_launcher_keynav_can_open_and_close_quicklist(self):
         """Tests that we can open and close a quicklist from keynav mode."""
         self.launcher_instance.key_nav_next()
@@ -464,6 +468,7 @@ class LauncherRevealTests(LauncherTestCase):
         self.launcher_instance.mouse_reveal_launcher()
         self.assertThat(self.launcher_instance.is_showing(), Equals(False))
 
+
 class LauncherVisualTests(LauncherTestCase):
     """Tests for visual aspects of the launcher (icon saturation etc.)."""
 
@@ -518,6 +523,7 @@ class LauncherVisualTests(LauncherTestCase):
         sleep(.5)
         for icon in self.launcher.model.get_launcher_icons():
             self.assertFalse(icon.desaturated)
+
 
 class LauncherCaptureTests(AutopilotTestCase):
     """Test the launchers ability to capture/not capture the mouse."""
