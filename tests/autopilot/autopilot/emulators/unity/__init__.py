@@ -167,7 +167,8 @@ class UnityIntrospectionObject(object):
 
             # unfortunately not all testtools matchers derive from the Matcher
             # class, so we can't use issubclass, isinstance for this:
-            is_matcher = hasattr(expected_value, 'match') and callable(expected_value.match)
+            match_fun = getattr(expected_value, 'match', None)
+            is_matcher = match_fun and callable(match_fun)
             if not is_matcher:
                 expected_value = Equals(expected_value)
 
