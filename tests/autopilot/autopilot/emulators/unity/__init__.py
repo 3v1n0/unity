@@ -9,7 +9,7 @@
 
 from dbus import Interface
 import logging
-import testtools.matchers
+from testtools.matchers import Equals
 from time import sleep
 
 from autopilot.emulators.dbus_handler import session_bus
@@ -167,7 +167,9 @@ class UnityIntrospectionObject(object):
 
             # unfortunately not all testtools matchers derive from the Matcher
             # class, so we can't use issubclass, isinstance for this:
-            is_matcher = type(expected_value).__name__ in testtools.matchers.__all__
+            is_matcher = hasattr(expected_value, 'match') and callable(expected_value.match)
+            if not is_matcher:
+                expected_value = Equals(expected_value)
 
             for i in range(11):
                 new_state = translate_state_keys(get_state_by_name_and_id(
@@ -176,23 +178,12 @@ class UnityIntrospectionObject(object):
                                                 )
                 new_value = new_state[self.name]
                 # Support for testtools.matcher classes:
-                if is_matcher:
-                    mismatch = expected_value.match(new_value)
-                    if mismatch:
-                        failure_msg = mismatch.describe()
-                    else:
-                        self.parent.set_properties(new_state)
-                        return
+                mismatch = expected_value.match(new_value)
+                if mismatch:
+                    failure_msg = mismatch.describe()
                 else:
-                    if new_value == expected_value:
-                        self.parent.set_properties(new_state)
-                        return
-                    else:
-                        failure_msg = "Error: %s.%s was not equal to %r after 10 seconds (it was %r)." % \
-                            (self.parent.__class__.__name__,
-                            self.name,
-                            expected_value,
-                            self)
+                    self.parent.set_properties(new_state)
+                    return
 
                 sleep(1)
 
