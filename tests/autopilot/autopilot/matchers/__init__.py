@@ -25,7 +25,7 @@ class Eventually(Matcher):
         wait_fun = getattr(value, 'wait_for', None)
         if not wait_fun:
             raise TypeError("Eventually can only be used against autopilot attributes that have a wait_for funtion.")
-        value.wait_for(self.macher)
+        value.wait_for(self.matcher)
 
     def __str__(self):
         return "Eventually " + str(self.matcher)
