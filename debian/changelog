@@ -1,7 +1,10 @@
 unity (5.10.0-0ubuntu5) UNRELEASED; urgency=low
 
   * Cherry-pick two fixes from trunk:
-    - Shortcut keys in workspace section of the shortcut overlay aren't translated. (LP: #980828)
+    - Fix the software-center install animation making the display useless
+      on netbooks (LP: #981168)
+    - Shortcut keys in workspace section of the shortcut overlay aren't
+      translated. (LP: #980828)
 
  -- Didier Roche <didrocks@ubuntu.com>  Tue, 17 Apr 2012 08:09:15 +0200
 
