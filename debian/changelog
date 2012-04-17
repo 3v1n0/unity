@@ -1,4 +1,4 @@
-unity (5.10.0-0ubuntu5) UNRELEASED; urgency=low
+unity (5.10.0-0ubuntu5) precise-proposed; urgency=low
 
   * Cherry-pick two fixes from trunk:
     - Fix the software-center install animation making the display useless
