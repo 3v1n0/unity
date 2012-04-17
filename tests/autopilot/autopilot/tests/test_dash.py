@@ -256,7 +256,6 @@ class DashClipboardTests(DashTestCase):
 
         self.keyboard.type("SelectAll")
         self.dash.search_string.wait_for("SelectAll")
-        self.dash.search_string.wait_for('SelectAll')
 
         self.keyboard.press_and_release("Ctrl+a")
         self.keyboard.press_and_release("Delete")
