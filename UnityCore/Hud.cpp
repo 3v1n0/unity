@@ -159,11 +159,11 @@ void HudImpl::BuildQueries(GVariant* query_array)
 {
   GVariantIter iter;
   g_variant_iter_init(&iter, query_array);
-  glib::String formatted_text;
-  glib::String icon;
-  glib::String item_icon;
-  glib::String completion_text;
-  glib::String shortcut;
+  gchar* formatted_text;
+  gchar* icon;
+  gchar* item_icon;
+  gchar* completion_text;
+  gchar* shortcut;
   GVariant* key = NULL;
 
   while (g_variant_iter_loop(&iter, "(sssssv)",
