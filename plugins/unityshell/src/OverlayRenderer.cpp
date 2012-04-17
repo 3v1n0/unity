@@ -50,7 +50,6 @@ public:
 
   void Init();
   void OnBackgroundColorChanged(GVariant* args);
-  void OnDashDecorationDamanged(GVariant* args);
 
   void Draw(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geometry, bool force_draw);
   void DrawContent(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geometry);
@@ -117,9 +116,6 @@ void OverlayRendererImpl::Init()
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED,
                                  sigc::mem_fun(this, &OverlayRendererImpl::OnBackgroundColorChanged));
 
-  ubus_manager_.RegisterInterest(UBUS_DASH_DECORATION_DAMAGED,
-                                 sigc::mem_fun(this, &OverlayRendererImpl::OnDashDecorationDamanged));
-
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 }
 
@@ -132,11 +128,6 @@ void OverlayRendererImpl::OnBackgroundColorChanged(GVariant* args)
   bg_layer_->SetColor(color);
   bg_color_ = color;
 
-  parent->need_redraw.emit();
-}
-
-void OverlayRendererImpl::OnDashDecorationDamanged(GVariant* args)
-{
   parent->need_redraw.emit();
 }
 
