@@ -1,3 +1,11 @@
+unity (5.10.0-0ubuntu6) UNRELEASED; urgency=low
+
+  * Cherry-picked upstream:
+    - Panel is transparent when Dash is open on netbooks; no blur
+      no average BG color (LP: #965323)
+
+ -- Didier Roche <didrocks@ubuntu.com>  Tue, 17 Apr 2012 18:04:01 +0200
+
 unity (5.10.0-0ubuntu5) precise-proposed; urgency=low
 
   * Cherry-pick two fixes from trunk:

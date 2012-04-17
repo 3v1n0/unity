@@ -2015,7 +2015,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     // apply the bg colour
 #ifndef NUX_OPENGLES_20
-    if (GfxContext.UsingGLSLCodePath() == FALSE)
+    if (GfxContext.UsingGLSLCodePath() == false)
       gPainter.Paint2DQuadColor(GfxContext, bkg_box, _background_color);
 #endif
 
