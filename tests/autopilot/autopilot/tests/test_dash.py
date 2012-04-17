@@ -125,7 +125,7 @@ class DashKeyNavTests(DashTestCase):
         for i in range(self.dash.get_num_rows()):
             self.keyboard.press_and_release("Down")
         lensbar = self.dash.view.get_lensbar()
-        lensbar.focused_lens_icon.wait_for(NotEquals(''))
+        self.assertThat(lensbar.focused_lens_icon, Eventually(NotEquals('')))
 
     def test_lensbar_focus_changes(self):
         """Lensbar focused icon should change with Left and Right keypresses."""
