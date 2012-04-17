@@ -2190,7 +2190,7 @@ int Style::GetDashBottomTileHeight() const
   return 30;
 }
 
-int Style::GetDashLeftTileWidth() const
+int Style::GetDashRightTileWidth() const
 {
   return 30;
 }

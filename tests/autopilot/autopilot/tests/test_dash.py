@@ -527,4 +527,46 @@ class DashLensBarTests(DashTestCase):
 
         sleep(1)
 
-        self.assertEqual(self.lensbar.active_lens, u'applications.lens')        
+        self.assertEqual(self.lensbar.active_lens, u'applications.lens')
+
+class DashBorderTests(DashTestCase):
+    """Tests that the dash border works well.
+    """
+    def setUp(self):
+        super(DashBorderTests, self).setUp()
+        self.dash.ensure_visible()
+
+    def test_click_right_border(self):
+        """Clicking on the right dash border should do nothing,
+        *NOT* close the dash.
+        """
+        if (self.dash.view.form_factor != "desktop"):
+            return
+
+        x = self.dash.view.x + self.dash.view.width + self.dash.view.right_border_width / 2;
+        y = self.dash.view.y + self.dash.view.height / 2;
+
+        self.mouse.move(x, y)
+        self.mouse.click()
+
+        sleep(1);
+
+        self.assertTrue(self.dash.visible)
+
+    def test_click_bottom_border(self):
+        """Clicking on the bottom dash border should do nothing,
+        *NOT* close the dash.
+        """
+        if (self.dash.view.form_factor != "desktop"):
+            return
+
+        x = self.dash.view.x + self.dash.view.width / 2;
+        y = self.dash.view.y + self.dash.view.height + self.dash.view.bottom_border_height / 2;
+
+        self.mouse.move(x, y)
+        self.mouse.click()
+
+        sleep(1);
+
+        self.assertTrue(self.dash.visible)
+        

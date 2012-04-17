@@ -320,7 +320,7 @@ void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned lo
 
   if (Settings::Instance().GetFormFactor() == FormFactor::DESKTOP)
   {
-    geo.width += style.GetDashLeftTileWidth();
+    geo.width += style.GetDashRightTileWidth();
     geo.height += style.GetDashBottomTileHeight();
   }
 
@@ -746,6 +746,7 @@ std::string DashView::GetName() const
 
 void DashView::AddProperties(GVariantBuilder* builder)
 {
+  dash::Style& style = dash::Style::Instance();
   int num_rows = 1; // The search bar
 
   if (active_lens_view_)
@@ -759,8 +760,11 @@ void DashView::AddProperties(GVariantBuilder* builder)
     form_factor = "desktop";
 
   unity::variant::BuilderWrapper wrapper(builder);
+  wrapper.add(nux::Geometry(GetAbsoluteX(), GetAbsoluteY(), content_geo_.width, content_geo_.height));
   wrapper.add("num_rows", num_rows);
   wrapper.add("form_factor", form_factor);
+  wrapper.add("right-border-width", style.GetDashRightTileWidth());
+  wrapper.add("bottom-border-height", style.GetDashBottomTileHeight());
 }
 
 nux::Area* DashView::KeyNavIteration(nux::KeyNavDirection direction)

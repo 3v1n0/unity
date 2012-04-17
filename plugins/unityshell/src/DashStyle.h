@@ -181,7 +181,7 @@ public:
   nux::BaseTexture* GetDashTopTile();
 
   int GetDashBottomTileHeight() const;
-  int GetDashLeftTileWidth() const;
+  int GetDashRightTileWidth() const;
 
   nux::BaseTexture* GetDashShine();
 
