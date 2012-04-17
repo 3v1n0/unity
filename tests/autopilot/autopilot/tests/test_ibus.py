@@ -8,13 +8,14 @@
 
 """Tests to ensure unity is compatible with ibus input method."""
 
-from testtools.matchers import NotEquals
+from testtools.matchers import Equals, NotEquals
 from time import sleep
 
 from autopilot.emulators.ibus import (
     set_active_engines,
     get_available_input_engines,
     )
+from autopilot.matchers import Eventually
 from autopilot.tests import AutopilotTestCase, multiply_scenarios
 
 
@@ -57,7 +58,7 @@ class IBusTests(AutopilotTestCase):
         commit_key = getattr(self, 'commit_key', None)
         if commit_key:
             self.keyboard.press_and_release(commit_key)
-        self.dash.search_string.wait_for(self.result)
+        self.assertThat(self.dash.search_string, Eventually(Equals(self.result)))
 
     def do_hud_test_with_engine(self, engine_name):
         self.activate_input_engine_or_skip(engine_name)
@@ -71,7 +72,7 @@ class IBusTests(AutopilotTestCase):
         commit_key = getattr(self, 'commit_key', None)
         if commit_key:
             self.keyboard.press_and_release(commit_key)
-        self.hud.search_string.wait_for(self.result)
+        self.assertThat(self.hud.search_string, Eventually(Equals(self.result)))
 
 
 class IBusTestsPinyin(IBusTests):
@@ -144,7 +145,7 @@ class IBusTestsPinyinIgnore(IBusTests):
         self.keyboard.type("cipan")
         self.keyboard.press_and_release("Tab")
         self.keyboard.type("  ")
-        self.dash.search_string.wait_for(NotEquals("  "))
+        self.assertThat(self.dash.search_string, Eventually(NotEquals("  ")))
 
     def test_ignore_key_events_on_hud(self):
         self.activate_input_engine_or_skip("pinyin")
