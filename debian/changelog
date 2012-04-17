@@ -1,3 +1,10 @@
+unity (5.10.0-0ubuntu5) UNRELEASED; urgency=low
+
+  * Cherry-pick two fixes from trunk:
+    - Shortcut keys in workspace section of the shortcut overlay aren't translated. (LP: #980828)
+
+ -- Didier Roche <didrocks@ubuntu.com>  Tue, 17 Apr 2012 08:09:15 +0200
+
 unity (5.10.0-0ubuntu4) precise-proposed; urgency=low
 
   * Cherry-pick an additional fix from trunk fixing multiple bugs:
