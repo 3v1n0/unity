@@ -292,10 +292,10 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         keyboard layout bits are very unweildy. This seems like the best
         solution, even a little bit brutish.
         """
-        cmd = ['gsettings', command, schema] + args
+        cmd = ['gsettings', command, schema] + list(args)
         # strip to remove the trailing \n.
-        ret = check_output(cmd, shell=True).strip()
-        time.sleep(1)
+        ret = check_output(cmd).strip()
+        time.sleep(5)
         reset_display()
         return ret
 

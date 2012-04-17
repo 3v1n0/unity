@@ -17,6 +17,7 @@ from autopilot.tests import AutopilotTestCase
 class DashTestCase(AutopilotTestCase):
     def setUp(self):
         super(DashTestCase, self).setUp()
+        self.set_unity_log_level("unity", "DEBUG")
         self.set_unity_log_level("unity.shell", "DEBUG")
         self.set_unity_log_level("unity.launcher", "DEBUG")
         self.dash.ensure_hidden()
@@ -76,15 +77,12 @@ class DashSearchInputTests(DashTestCase):
 
 class DashMultiKeyTests(DashSearchInputTests):
     def setUp(self):
-        def set_multi_key():
-            """Binds Multi_key to caps lock"""
-            old_value = "\"%s\"" % self.call_gsettings_cmd('get', 'org.gnome.libgnomekbd.keyboard', '"options"')
-            self.addCleanup(self.call_gsettings_cmd, 'set', 'org.gnome.libgnomekbd.keyboard', '"options"', old_value)
-            self.call_gsettings_cmd('set', 'org.gnome.libgnomekbd.keyboard', '"options"', "\"['Compose key\tcompose:caps']\"")
-
         # set the multi key first so that we're not getting a new _DISPLAY while keys are held down.
-        set_multi_key()
-        super(DashMultiKeyTests, self).setUp()    
+        old_value = self.call_gsettings_cmd('get', 'org.gnome.libgnomekbd.keyboard', 'options')
+        self.addCleanup(self.call_gsettings_cmd, 'set', 'org.gnome.libgnomekbd.keyboard', 'options', old_value)
+        self.call_gsettings_cmd('set', 'org.gnome.libgnomekbd.keyboard', 'options', "['Compose key\tcompose:caps']")
+
+        super(DashMultiKeyTests, self).setUp()
 
     def test_multi_key(self):
         """Pressing 'Multi_key' must not add any characters to the search."""
