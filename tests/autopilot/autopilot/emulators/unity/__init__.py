@@ -9,6 +9,7 @@
 
 from dbus import Interface
 import logging
+from testtools.matchers import Equals
 from time import sleep
 
 from autopilot.emulators.dbus_handler import session_bus
@@ -117,6 +118,11 @@ def log_unity_message(severity, message):
     _introspection_iface.LogMessage(severity, message)
 
 
+def translate_state_keys(state_dict):
+    """Translates the state_dict passed in so the keys are usable as python attributes."""
+    return {k.replace('-','_'):v for k,v in state_dict.iteritems() }
+
+
 class UnityIntrospectionObject(object):
     """A class that can be created using a dictionary of state from Unity."""
     __metaclass__ = IntrospectableObjectMetaclass
@@ -132,11 +138,10 @@ class UnityIntrospectionObject(object):
 
         """
         self.__state = {}
-        for key, value in state_dict.iteritems():
+        for key, value in translate_state_keys(state_dict).iteritems():
             # don't store id in state dictionary -make it a proper instance attribute
             if key == 'id':
                 self.id = value
-            key = key.replace('-', '_')
             self.__state[key] = self._make_attribute(key, value)
 
     def _make_attribute(self, name, value):
@@ -144,6 +149,9 @@ class UnityIntrospectionObject(object):
 
         def wait_for(self, expected_value):
             """Wait up to 10 seconds for our value to change to 'expected_value'.
+
+            expected_value can be a testtools.matcher.Matcher subclass (like
+            LessThan, for example), or an ordinary value.
 
             This works by refreshing the value using repeated dbus calls.
 
@@ -157,19 +165,30 @@ class UnityIntrospectionObject(object):
             if self == expected_value:
                 return
 
+            # unfortunately not all testtools matchers derive from the Matcher
+            # class, so we can't use issubclass, isinstance for this:
+            match_fun = getattr(expected_value, 'match', None)
+            is_matcher = match_fun and callable(match_fun)
+            if not is_matcher:
+                expected_value = Equals(expected_value)
+
             for i in range(11):
-                new_state = get_state_by_name_and_id(
-                    self.parent.__class__.__name__,
-                    self.parent.id)
-                if new_state[self.name] == expected_value:
+                new_state = translate_state_keys(get_state_by_name_and_id(
+                                                self.parent.__class__.__name__,
+                                                self.parent.id)
+                                                )
+                new_value = new_state[self.name]
+                # Support for testtools.matcher classes:
+                mismatch = expected_value.match(new_value)
+                if mismatch:
+                    failure_msg = mismatch.describe()
+                else:
                     self.parent.set_properties(new_state)
                     return
+
                 sleep(1)
 
-            raise RuntimeError("Error: %s.%s was not equal to %r after 10 seconds."
-                % (self.parent.__class__.__name__,
-                    self.name,
-                    expected_value))
+            raise AssertionError(failure_msg)
 
         # This looks like magic, but it's really not. We're creating a new type
         # on the fly that derives from the type of 'value' with a couple of
