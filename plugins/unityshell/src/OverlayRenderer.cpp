@@ -387,14 +387,15 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
   bool paint_blur = BackgroundEffectHelper::blur_type != BLUR_NONE;
   nux::Geometry geo(content_geo);
 
-  
+  int excess_border = (dash::Settings::Instance().GetFormFactor() != dash::FormFactor::NETBOOK || force_edges) ? EXCESS_BORDER : 0;
+
   nux::Geometry larger_content_geo = content_geo;
-  larger_content_geo.OffsetSize(EXCESS_BORDER, EXCESS_BORDER);
+  larger_content_geo.OffsetSize(excess_border, excess_border);
 
   nux::Geometry larger_geo(larger_content_geo);
 
   nux::Geometry larger_absolute_geo = absolute_geo;
-  larger_absolute_geo.OffsetSize(EXCESS_BORDER, EXCESS_BORDER);
+  larger_absolute_geo.OffsetSize(excess_border, excess_border);
 
   nux::TexCoordXForm texxform_absolute_bg;
   texxform_absolute_bg.flip_v_coord = true;
@@ -506,6 +507,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
     nux::GetPainter().RenderSinglePaintLayer(gfx_context, larger_content_geo, bg_layer_);
   }
 #endif
+
 
   texxform_absolute_bg.flip_v_coord = false;
   texxform_absolute_bg.uoffset = (1.0f / bg_shine_texture_->GetWidth()) * parent->x_offset;
@@ -775,13 +777,15 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
   nux::Geometry geo = geometry;
   bgs = 0;
 
+  int excess_border = (dash::Settings::Instance().GetFormFactor() != dash::FormFactor::NETBOOK) ? EXCESS_BORDER : 0;
+
   nux::Geometry larger_content_geo = content_geo;
-  larger_content_geo.OffsetSize(EXCESS_BORDER, EXCESS_BORDER);
+  larger_content_geo.OffsetSize(excess_border, excess_border);
 
   nux::Geometry larger_geo(larger_content_geo);
 
   nux::Geometry larger_absolute_geo = absolute_geo;
-  larger_absolute_geo.OffsetSize(EXCESS_BORDER, EXCESS_BORDER);
+  larger_absolute_geo.OffsetSize(excess_border, excess_border);
   
 
   gfx_context.PushClippingRectangle(larger_geo);
