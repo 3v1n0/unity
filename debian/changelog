@@ -1,4 +1,4 @@
-unity (5.10.0-0ubuntu6) UNRELEASED; urgency=low
+unity (5.10.0-0ubuntu6) precise-proposed; urgency=low
 
   * Cherry-picked upstream:
     - Panel is transparent when Dash is open on netbooks; no blur
