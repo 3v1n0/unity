@@ -287,9 +287,9 @@ class HudLauncherInteractionsTests(HudTestsBase):
 
         launcher = self.launcher.get_launcher_for_monitor(self.hud_monitor)
 
-        launcher_shows_pre = launcher.is_showing()
+        launcher_shows_pre = launcher.is_showing
         self.hud.ensure_visible()
-        launcher_shows_post = launcher.is_showing()
+        launcher_shows_post = launcher.is_showing
         self.assertThat(launcher_shows_pre, Equals(launcher_shows_post))
 
 

@@ -11,9 +11,10 @@ import logging
 from testtools.matchers import Equals, NotEquals, LessThan, GreaterThan
 from time import sleep
 
-from autopilot.tests import AutopilotTestCase, multiply_scenarios
-from autopilot.emulators.X11 import ScreenGeometry
 from autopilot.emulators.unity.icons import BFBLauncherIcon
+from autopilot.emulators.X11 import ScreenGeometry
+from autopilot.matchers import Eventually
+from autopilot.tests import AutopilotTestCase, multiply_scenarios
 
 logger = logging.getLogger(__name__)
 
@@ -80,10 +81,12 @@ class LauncherSwitcherTests(LauncherTestCase):
     def test_launcher_switcher_cancel(self):
         """Test that ending the launcher switcher actually works."""
         self.launcher_instance.switcher_cancel()
-        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
+        self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
 
     def test_launcher_switcher_cancel_resume_focus(self):
         """Test that ending the launcher switcher resume the focus."""
+        # TODO either remove this test from the class or don't initiate the
+        # switcher in setup.
         self.close_all_app("Calculator")
         calc = self.start_app("Calculator")
         self.assertTrue(calc.is_active)
@@ -98,58 +101,55 @@ class LauncherSwitcherTests(LauncherTestCase):
 
     def test_launcher_switcher_starts_at_index_zero(self):
         """Test that starting the Launcher switcher puts the keyboard focus on item 0."""
-        self.assertThat(self.launcher.key_nav_is_active, Equals(True))
-        self.assertThat(self.launcher.key_nav_is_grabbed, Equals(False))
-        self.assertThat(self.launcher.key_nav_selection, Equals(0))
+        self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(True)))
+        self.assertThat(self.launcher.key_nav_is_grabbed, Eventually(Equals(False)))
+        self.assertThat(self.launcher.key_nav_selection, Eventually(Equals(0)))
 
     def test_launcher_switcher_next(self):
         """Moving to the next launcher item while switcher is activated must work."""
         self.launcher_instance.switcher_next()
-        sleep(0.5)
-        logger.info("After next, keynav selection is %d", self.launcher.key_nav_selection)
         # The launcher model has hidden items, so the keynav indexes do not
         # increase by 1 each time. This test was failing because the 2nd icon
         # had an index of 2, not 1 as expected. The best we can do here is to
         # make sure that the index has increased. This opens us to the
         # possibility that the launcher really is skipping forward more than one
         # icon at a time, but we can't do much about that.
-        self.assertThat(self.launcher.key_nav_selection, GreaterThan(0))
+        self.assertThat(self.launcher.key_nav_selection, Eventually(GreaterThan(0)))
 
     def test_launcher_switcher_prev(self):
         """Moving to the previous launcher item while switcher is activated must work."""
         self.launcher_instance.switcher_prev()
-        self.assertThat(self.launcher.key_nav_selection, NotEquals(0))
+        self.assertThat(self.launcher.key_nav_selection, Eventually(NotEquals(0)))
 
     def test_launcher_switcher_down(self):
         """Pressing the down arrow key while switcher is activated must work."""
         self.launcher_instance.switcher_down()
-        sleep(.25)
         # The launcher model has hidden items, so the keynav indexes do not
         # increase by 1 each time. This test was failing because the 2nd icon
         # had an index of 2, not 1 as expected. The best we can do here is to
         # make sure that the index has increased. This opens us to the
         # possibility that the launcher really is skipping forward more than one
         # icon at a time, but we can't do much about that.
-        self.assertThat(self.launcher.key_nav_selection, GreaterThan(0))
+        self.assertThat(self.launcher.key_nav_selection, Eventually(GreaterThan(0)))
 
     def test_launcher_switcher_up(self):
         """Pressing the up arrow key while switcher is activated must work."""
         self.launcher_instance.switcher_up()
-        self.assertThat(self.launcher.key_nav_selection, NotEquals(0))
+        self.assertThat(self.launcher.key_nav_selection, Eventually(NotEquals(0)))
 
     def test_launcher_switcher_next_doesnt_show_shortcuts(self):
         """Moving forward in launcher switcher must not show launcher shortcuts."""
         self.launcher_instance.switcher_next()
         # sleep so that the shortcut timeout could be triggered
         sleep(2)
-        self.assertThat(self.launcher_instance.are_shortcuts_showing(), Equals(False))
+        self.assertThat(self.launcher_instance.shortcuts_shown, Eventually(Equals(False)))
 
     def test_launcher_switcher_prev_doesnt_show_shortcuts(self):
         """Moving backward in launcher switcher must not show launcher shortcuts."""
         self.launcher_instance.switcher_prev()
         # sleep so that the shortcut timeout could be triggered
         sleep(2)
-        self.assertThat(self.launcher_instance.are_shortcuts_showing(), Equals(False))
+        self.assertThat(self.launcher_instance.shortcuts_shown, Eventually(Equals(False)))
 
     def test_launcher_switcher_cycling_forward(self):
         """Launcher Switcher must loop through icons when cycling forwards"""
@@ -158,29 +158,24 @@ class LauncherSwitcherTests(LauncherTestCase):
         logger.info("This launcher has %d icons", num_icons)
         for icon in range(1, num_icons):
             self.launcher_instance.switcher_next()
-            sleep(.25)
             # FIXME We can't directly check for selection/icon number equalty
             # since the launcher model also contains "hidden" icons that aren't
             # shown, so the selection index can increment by more than 1.
-            self.assertThat(prev_icon, LessThan(self.launcher.key_nav_selection))
+            self.assertThat(self.launcher.key_nav_selection, Eventually(GreaterThan(prev_icon)))
             prev_icon = self.launcher.key_nav_selection
 
-        sleep(.5)
         self.launcher_instance.switcher_next()
-        self.assertThat(self.launcher.key_nav_selection, Equals(0))
+        self.assertThat(self.launcher.key_nav_selection, Eventually(Equals(0)))
 
     def test_launcher_switcher_cycling_backward(self):
         """Launcher Switcher must loop through icons when cycling backwards"""
         self.launcher_instance.switcher_prev()
         # FIXME We can't directly check for self.launcher.num_launcher_icons - 1
-        self.assertThat(self.launcher.key_nav_selection, GreaterThan(1))
+        self.assertThat(self.launcher.key_nav_selection, Eventually(GreaterThan(1)))
 
     def test_launcher_switcher_activate_keep_focus(self):
-        """Activating a running launcher icon should focus it"""
+        """Activating a running launcher icon should focus the application."""
         calc = self.start_app("Calculator")
-        sleep(.5)
-
-        self.close_all_app("Mahjongg")
         mahjongg = self.start_app("Mahjongg")
         self.assertTrue(mahjongg.is_active)
         self.assertFalse(calc.is_active)
@@ -212,7 +207,7 @@ class LauncherSwitcherTests(LauncherTestCase):
         sleep(.25)
         self.keyboard.press_and_release("Escape")
         sleep(.25)
-        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
+        self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
 
 
 class LauncherShortcutTests(LauncherTestCase):
@@ -227,36 +222,29 @@ class LauncherShortcutTests(LauncherTestCase):
 
     def test_launcher_keyboard_reveal_shows_shortcut_hints(self):
         """Launcher icons must show shortcut hints after revealing with keyboard."""
-        self.assertThat(self.launcher_instance.are_shortcuts_showing(), Equals(True))
+        self.assertThat(self.launcher_instance.shortcuts_shown, Eventually(Equals(True)))
 
     def test_launcher_switcher_keeps_shorcuts(self):
         """Initiating launcher switcher after showing shortcuts must not hide shortcuts"""
-        self.addCleanup(self.launcher_instance.switcher_cancel)
         self.launcher_instance.switcher_start()
-        sleep(.5)
+        self.addCleanup(self.launcher_instance.switcher_cancel)
 
-        self.assertThat(self.launcher.key_nav_is_active, Equals(True))
-        self.assertThat(self.launcher_instance.are_shortcuts_showing(), Equals(True))
+        self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(True)))
+        self.assertThat(self.launcher_instance.shortcuts_shown, Eventually(Equals(True)))
 
     def test_launcher_switcher_next_keeps_shortcuts(self):
         """Launcher switcher next action must keep shortcuts after they've been shown."""
-        self.addCleanup(self.launcher_instance.switcher_cancel)
         self.launcher_instance.switcher_start()
-        sleep(.5)
-
+        self.addCleanup(self.launcher_instance.switcher_cancel)
         self.launcher_instance.switcher_next()
-        sleep(.5)
-        self.assertThat(self.launcher_instance.are_shortcuts_showing(), Equals(True))
+        self.assertThat(self.launcher_instance.shortcuts_shown, Eventually(Equals(True)))
 
     def test_launcher_switcher_prev_keeps_shortcuts(self):
         """Launcher switcher prev action must keep shortcuts after they've been shown."""
-        self.addCleanup(self.launcher_instance.switcher_cancel)
         self.launcher_instance.switcher_start()
-        sleep(.5)
-
+        self.addCleanup(self.launcher_instance.switcher_cancel)
         self.launcher_instance.switcher_prev()
-        sleep(.5)
-        self.assertThat(self.launcher_instance.are_shortcuts_showing(), Equals(True))
+        self.assertThat(self.launcher_instance.shortcuts_shown, Eventually(Equals(True)))
 
 
 class LauncherKeyNavTests(LauncherTestCase):
@@ -272,99 +260,87 @@ class LauncherKeyNavTests(LauncherTestCase):
 
     def test_launcher_keynav_initiate(self):
         """Tests we can initiate keyboard navigation on the launcher."""
-        self.assertThat(self.launcher.key_nav_is_active, Equals(True))
-        self.assertThat(self.launcher.key_nav_is_grabbed, Equals(True))
+        self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(True)))
+        self.assertThat(self.launcher.key_nav_is_grabbed, Eventually(Equals(True)))
 
     def test_launcher_keynav_cancel(self):
         """Test that we can exit keynav mode."""
         self.launcher_instance.key_nav_cancel()
-        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
-        self.assertThat(self.launcher.key_nav_is_grabbed, Equals(False))
+        self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
+        self.assertThat(self.launcher.key_nav_is_grabbed, Eventually(Equals(False)))
 
     def test_launcher_keynav_cancel_resume_focus(self):
         """Test that ending the launcher keynav resume the focus."""
-        self.close_all_app("Calculator")
         calc = self.start_app("Calculator")
         self.assertTrue(calc.is_active)
 
         self.launcher_instance.key_nav_start()
-        sleep(.5)
         self.assertFalse(calc.is_active)
 
         self.launcher_instance.key_nav_cancel()
-        sleep(.5)
         self.assertTrue(calc.is_active)
 
     def test_launcher_keynav_starts_at_index_zero(self):
         """Test keynav mode starts at index 0."""
-        self.assertThat(self.launcher.key_nav_selection, Equals(0))
+        self.assertThat(self.launcher.key_nav_selection, Eventually(Equals(0)))
 
     def test_launcher_keynav_forward(self):
         """Must be able to move forwards while in keynav mode."""
         self.launcher_instance.key_nav_next()
-        sleep(.5)
         # The launcher model has hidden items, so the keynav indexes do not
         # increase by 1 each time. This test was failing because the 2nd icon
         # had an index of 2, not 1 as expected. The best we can do here is to
         # make sure that the index has increased. This opens us to the
         # possibility that the launcher really is skipping forward more than one
         # icon at a time, but we can't do much about that.
-        self.assertThat(self.launcher.key_nav_selection, GreaterThan(0))
+        self.assertThat(self.launcher.key_nav_selection, Eventually(GreaterThan(0)))
 
     def test_launcher_keynav_prev_works(self):
         """Must be able to move backwards while in keynav mode."""
         self.launcher_instance.key_nav_next()
-        sleep(.5)
+        self.assertThat(self.launcher.key_nav_selection, Eventually(GreaterThan(0)))
         self.launcher_instance.key_nav_prev()
-        self.assertThat(self.launcher.key_nav_selection, Equals(0))
+        self.assertThat(self.launcher.key_nav_selection, Eventually(Equals(0)))
 
     def test_launcher_keynav_cycling_forward(self):
         """Launcher keynav must loop through icons when cycling forwards"""
         prev_icon = 0
         for icon in range(1, self.launcher.model.num_launcher_icons()):
             self.launcher_instance.key_nav_next()
-            sleep(.25)
             # FIXME We can't directly check for selection/icon number equalty
             # since the launcher model also contains "hidden" icons that aren't
             # shown, so the selection index can increment by more than 1.
-            self.assertThat(prev_icon, LessThan(self.launcher.key_nav_selection))
+            self.assertThat(self.launcher.key_nav_selection, Eventually(GreaterThan(prev_icon)))
             prev_icon = self.launcher.key_nav_selection
 
-        sleep(.5)
         self.launcher_instance.key_nav_next()
-        self.assertThat(self.launcher.key_nav_selection, Equals(0))
+        self.assertThat(self.launcher.key_nav_selection, Eventually(Equals(0)))
 
     def test_launcher_keynav_cycling_backward(self):
         """Launcher keynav must loop through icons when cycling backwards"""
         self.launcher_instance.key_nav_prev()
         # FIXME We can't directly check for self.launcher.num_launcher_icons - 1
-        self.assertThat(self.launcher.key_nav_selection, GreaterThan(1))
+        self.assertThat(self.launcher.key_nav_selection, Eventually(GreaterThan(1)))
 
     def test_launcher_keynav_can_open_and_close_quicklist(self):
         """Tests that we can open and close a quicklist from keynav mode."""
         self.launcher_instance.key_nav_next()
-        sleep(.5)
         self.launcher_instance.key_nav_enter_quicklist()
-        self.assertThat(self.launcher_instance.is_quicklist_open(), Equals(True))
-        sleep(.5)
+        self.assertThat(self.launcher_instance.quicklist_open, Eventually(Equals(True)))
         self.launcher_instance.key_nav_exit_quicklist()
-        self.assertThat(self.launcher_instance.is_quicklist_open(), Equals(False))
-        self.assertThat(self.launcher.key_nav_is_active, Equals(True))
-        self.assertThat(self.launcher.key_nav_is_grabbed, Equals(True))
+        self.assertThat(self.launcher_instance.quicklist_open, Eventually(Equals(False)))
+        self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(True)))
+        self.assertThat(self.launcher.key_nav_is_grabbed, Eventually(Equals(True)))
 
     def test_launcher_keynav_mode_toggles(self):
         """Tests that keynav mode toggles with Alt+F1."""
         # was initiated in setup.
         self.launcher_instance.key_nav_start()
-        sleep(0.25)
-        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
+        self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
 
     def test_launcher_keynav_activate_keep_focus(self):
         """Activating a running launcher icon should focus it"""
         calc = self.start_app("Calculator")
-        sleep(.5)
-
-        self.close_all_app("Mahjongg")
         mahjongg = self.start_app("Mahjongg")
         self.assertTrue(mahjongg.is_active)
         self.assertFalse(calc.is_active)
@@ -392,23 +368,19 @@ class LauncherKeyNavTests(LauncherTestCase):
         """Tests that alt+tab exits keynav mode."""
 
         self.switcher.initiate()
-        sleep(1)
-        self.switcher.stop()
-
-        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
+        self.addCleanup(self.switcher.terminate)
+        self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
 
     def test_launcher_keynav_alt_grave_quits(self):
         """Tests that alt+` exits keynav mode."""
 
         self.switcher.initiate_detail_mode()
-        sleep(1)
-        self.switcher.stop()
-
-        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
+        self.addCleanup(self.switcher.terminate)
+        self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
 
 
 class LauncherRevealTests(LauncherTestCase):
-    """Test the launcher reveal bahavior when in autohide mode."""
+    """Test the launcher reveal behavior when in autohide mode."""
 
     def setUp(self):
         super(LauncherRevealTests, self).setUp()
@@ -416,26 +388,19 @@ class LauncherRevealTests(LauncherTestCase):
         self.set_unity_option('launcher_capture_mouse', True)
         self.set_unity_option('launcher_hide_mode', 1)
         launcher = self.get_launcher()
-        for counter in range(10):
-            sleep(1)
-            if launcher.hidemode == 1:
-                break
-        self.assertThat(launcher.hidemode, Equals(1),
-                        "Launcher did not enter auto-hide mode.")
+        self.assertThat(launcher.hidemode, Eventually(Equals(1)))
 
     def test_launcher_keyboard_reveal_works(self):
         """Revealing launcher with keyboard must work."""
-        self.addCleanup(self.launcher_instance.keyboard_unreveal_launcher)
-
         self.launcher_instance.keyboard_reveal_launcher()
-        sleep(0.5)
-        self.assertThat(self.launcher_instance.is_showing(), Equals(True))
+        self.addCleanup(self.launcher_instance.keyboard_unreveal_launcher)
+        self.assertThat(self.launcher_instance.is_showing, Eventually(Equals(True)))
 
     def test_reveal_on_mouse_to_edge(self):
         """Tests reveal of launchers by mouse pressure."""
         self.launcher_instance.move_mouse_to_right_of_launcher()
         self.launcher_instance.mouse_reveal_launcher()
-        self.assertThat(self.launcher_instance.is_showing(), Equals(True))
+        self.assertThat(self.launcher_instance.is_showing, Eventually(Equals(True)))
 
     def test_reveal_with_mouse_under_launcher(self):
         """Tests that the launcher hides properly if the
@@ -447,8 +412,7 @@ class LauncherRevealTests(LauncherTestCase):
         self.keybinding_hold("launcher/reveal")
         sleep(1)
         self.keybinding_release("launcher/reveal")
-        sleep(2)
-        self.assertThat(self.launcher_instance.is_showing(), Equals(False))
+        self.assertThat(self.launcher_instance.is_showing, Eventually(Equals(False)))
 
     def test_reveal_does_not_hide_again(self):
         """Tests reveal of launchers by mouse pressure to ensure it doesn't
@@ -456,8 +420,7 @@ class LauncherRevealTests(LauncherTestCase):
         """
         self.launcher_instance.move_mouse_to_right_of_launcher()
         self.launcher_instance.mouse_reveal_launcher()
-        sleep(2)
-        self.assertThat(self.launcher_instance.is_showing(), Equals(True))
+        self.assertThat(self.launcher_instance.is_showing, Eventually(Equals(True)))
 
     def test_launcher_does_not_reveal_with_mouse_down(self):
         """Launcher must not reveal if have mouse button 1 down."""
@@ -466,6 +429,9 @@ class LauncherRevealTests(LauncherTestCase):
         self.addCleanup(self.mouse.release, 1)
         #FIXME: This is really bad API. it says reveal but it's expected to fail. bad bad bad!!
         self.launcher_instance.mouse_reveal_launcher()
+        # Need a sleep here otherwise this test would pass even if the code failed.
+        # THis test needs to be rewritten...
+        sleep(5)
         self.assertThat(self.launcher_instance.is_showing(), Equals(False))
 
 
@@ -488,7 +454,7 @@ class LauncherVisualTests(LauncherTestCase):
 
         self.keybinding_tap("launcher/switcher/next")
         for icon in self.launcher.model.get_launcher_icons():
-            self.assertFalse(icon.desaturated)
+            self.assertThat(icon.desaturated, Eventually(Equals(False)))
 
     def test_opening_dash_desaturates_icons(self):
         """Opening the dash must desaturate all the launcher icons."""
@@ -497,9 +463,9 @@ class LauncherVisualTests(LauncherTestCase):
 
         for icon in self.launcher.model.get_launcher_icons():
             if isinstance(icon, BFBLauncherIcon):
-                self.assertFalse(icon.desaturated)
+                self.assertThat(icon.desaturated, Eventually(Equals(False)))
             else:
-                self.assertTrue(icon.desaturated)
+                self.assertThat(icon.desaturated, Eventually(Equals(True)))
 
     def test_opening_dash_with_mouse_over_launcher_keeps_icon_saturation(self):
         """Opening dash with mouse over launcher must not desaturate icons."""
@@ -510,7 +476,7 @@ class LauncherVisualTests(LauncherTestCase):
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
         for icon in self.launcher.model.get_launcher_icons():
-            self.assertFalse(icon.desaturated)
+            self.assertThat(icon.desaturated, Eventually(Equals(False)))
 
     def test_mouse_over_with_dash_open_desaturates_icons(self):
         """Moving mouse over launcher with dash open must saturate icons."""
@@ -522,7 +488,7 @@ class LauncherVisualTests(LauncherTestCase):
         self.mouse.move(x + w/2, y + h/2)
         sleep(.5)
         for icon in self.launcher.model.get_launcher_icons():
-            self.assertFalse(icon.desaturated)
+            self.assertThat(icon.desaturated, Eventually(Equals(False)))
 
 
 class LauncherCaptureTests(AutopilotTestCase):
@@ -532,12 +498,7 @@ class LauncherCaptureTests(AutopilotTestCase):
 
     def setHideMode(self, mode):
         launcher = self.launcher.get_launcher_for_monitor(0)
-        for counter in range(10):
-            sleep(1)
-            if launcher.hidemode == mode:
-                break
-        self.assertThat(launcher.hidemode, Equals(mode),
-                        "Launcher did not enter revealed mode.")
+        self.assertThat(launcher.hidemode, Eventually(Equals(mode)))
 
     def leftMostMonitor(self):
         x1, y1, width, height = self.screen_geo.get_monitor_geometry(0)

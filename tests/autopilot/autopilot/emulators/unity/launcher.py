@@ -40,9 +40,6 @@ class LauncherController(UnityIntrospectionObject):
         assert(len(models) == 1)
         return models[0]
 
-    def key_nav_monitor(self):
-        return self.key_nav_launcher_monitor
-
     def add_launcher_item_from_position(self,name,icon,icon_x,icon_y,icon_size,desktop_file,aptdaemon_task):
         """ Emulate a DBus call from Software Center to pin an icon to the launcher """
         launcher_object = session_bus.get_object('com.canonical.Unity.Launcher',
@@ -254,15 +251,6 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         quicklist = icon.get_quicklist()
         pin_item = quicklist.get_quicklist_item_by_text('Unlock from Launcher')
         quicklist.click_item(pin_item)
-
-    def is_quicklist_open(self):
-        return self.quicklist_open
-
-    def is_showing(self):
-        return not self.hidden
-
-    def are_shortcuts_showing(self):
-        return self.shortcuts_shown
 
     @property
     def geometry(self):
