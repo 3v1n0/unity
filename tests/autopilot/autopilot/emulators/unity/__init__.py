@@ -118,6 +118,11 @@ def log_unity_message(severity, message):
     _introspection_iface.LogMessage(severity, message)
 
 
+def translate_state_keys(state_dict):
+    """Translates the state_dict passed in so the keys are usable as python attributes."""
+    return {k.replace('-','_'):v for k,v in state_dict.iteritems() }
+
+
 class UnityIntrospectionObject(object):
     """A class that can be created using a dictionary of state from Unity."""
     __metaclass__ = IntrospectableObjectMetaclass
@@ -133,11 +138,10 @@ class UnityIntrospectionObject(object):
 
         """
         self.__state = {}
-        for key, value in state_dict.iteritems():
+        for key, value in translate_state_keys(state_dict).iteritems():
             # don't store id in state dictionary -make it a proper instance attribute
             if key == 'id':
                 self.id = value
-            key = key.replace('-', '_')
             self.__state[key] = self._make_attribute(key, value)
 
     def _make_attribute(self, name, value):
@@ -166,9 +170,10 @@ class UnityIntrospectionObject(object):
             is_matcher = type(expected_value).__name__ in testtools.matchers.__all__
 
             for i in range(11):
-                new_state = get_state_by_name_and_id(
-                    self.parent.__class__.__name__,
-                    self.parent.id)
+                new_state = translate_state_keys(get_state_by_name_and_id(
+                                                self.parent.__class__.__name__,
+                                                self.parent.id)
+                                                )
                 new_value = new_state[self.name]
                 # Support for testtools.matcher classes:
                 if is_matcher:
