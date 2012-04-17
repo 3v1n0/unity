@@ -418,6 +418,15 @@ private:
 
   ui::AbstractIconRenderer::Ptr icon_renderer;
   BackgroundEffectHelper bg_effect_helper_;
+
+  gchar*  _sc_icon;
+  gchar*  _sc_icon_title;
+  gint32  _sc_icon_x;
+  gint32  _sc_icon_y;
+  gint32  _sc_icon_size;
+  gchar*  _sc_icon_desktop_file;
+  gchar*  _sc_icon_aptdaemon_task;
+  bool    _sc_anim_icon;
 };
 
 }

@@ -294,6 +294,16 @@ Launcher::Launcher(nux::BaseWindow* parent,
   launcher_pressure_effect_ = cache.FindTexture("launcher_pressure_effect", 0, 0, cb);
 
   options.changed.connect (sigc::mem_fun (this, &Launcher::OnOptionsChanged));
+
+  // icon information from software center
+  _sc_icon = NULL;
+  _sc_icon_title = NULL;
+  _sc_icon_x = 0;
+  _sc_icon_y = 0;
+  _sc_icon_size = 0;
+  _sc_icon_desktop_file = NULL;
+  _sc_icon_aptdaemon_task = NULL;
+  _sc_anim_icon = false;
 }
 
 Launcher::~Launcher()
@@ -2084,10 +2094,14 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PopClippingRectangle();
   GfxContext.PopClippingRectangle();
 
-  if (sc_launcher_icon_animation_connection.connected())
+  if (_sc_anim_icon)
   {
-    sc_launcher_icon_animation.emit();
-    sc_launcher_icon_animation_connection.disconnect();
+    launcher_addrequest_special.emit(_sc_icon_desktop_file, AbstractLauncherIcon::Ptr(), _sc_icon_aptdaemon_task, _sc_icon, _sc_icon_x, _sc_icon_y, _sc_icon_size);
+    g_free(_sc_icon);
+    g_free(_sc_icon_title);
+    g_free(_sc_icon_desktop_file);
+    g_free(_sc_icon_aptdaemon_task);
+    _sc_anim_icon = false;
   }
 }
 
@@ -2958,32 +2972,17 @@ Launcher::handle_dbus_method_call(GDBusConnection*       connection,
 {
   if (g_strcmp0(method_name, "AddLauncherItemFromPosition") == 0)
   {
-
-    gchar*  icon;
-    gchar*  title;
-    gint32  icon_x;
-    gint32  icon_y;
-    gint32  icon_size;
-    gchar*  desktop_file;
-    gchar*  aptdaemon_task;
-
-    g_variant_get(parameters, "(ssiiiss)", &title, &icon, &icon_x, &icon_y, &icon_size, &desktop_file, &aptdaemon_task, NULL);
-         
     Launcher* self = (Launcher*)user_data;
-
-    self->sc_launcher_icon_animation_connection = self->sc_launcher_icon_animation.connect([&]() -> void {
-
-      self->launcher_addrequest_special.emit(desktop_file, AbstractLauncherIcon::Ptr(), aptdaemon_task, icon,
-                                            icon_x, icon_y, icon_size);
-
-      g_free(icon);
-      g_free(title);
-      g_free(desktop_file);
-      g_free(aptdaemon_task);                                            
-    });         
+    self->_sc_anim_icon = true;
+    g_variant_get(parameters, "(ssiiiss)", &self->_sc_icon_title,
+      &self->_sc_icon,
+      &self->_sc_icon_x,
+      &self->_sc_icon_y,
+      &self->_sc_icon_size,
+      &self->_sc_icon_desktop_file,
+      &self->_sc_icon_aptdaemon_task, NULL);
 
     g_dbus_method_invocation_return_value(invocation, nullptr);
-
   }
 }
 
