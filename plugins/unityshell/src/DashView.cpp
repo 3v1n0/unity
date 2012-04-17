@@ -315,7 +315,16 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 
 void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
 {
-  if (!content_geo_.IsPointInside(x, y))
+  dash::Style& style = dash::Style::Instance();
+  nux::Geometry geo(content_geo_);
+
+  if (Settings::Instance().GetFormFactor() == FormFactor::DESKTOP)
+  {
+    geo.width += style.GetDashLeftTileWidth();
+    geo.height += style.GetDashBottomTileHeight();
+  }
+
+  if (!geo.IsPointInside(x, y))
   {
     ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
   }

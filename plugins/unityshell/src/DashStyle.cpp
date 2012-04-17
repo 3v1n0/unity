@@ -2185,6 +2185,16 @@ nux::BaseTexture* Style::GetDashShine()
   return pimpl->dash_shine_.texture();
 }
 
+int Style::GetDashBottomTileHeight() const
+{
+  return 30;
+}
+
+int Style::GetDashLeftTileWidth() const
+{
+  return 30;
+}
+
 int Style::GetVSeparatorSize() const
 {
   return 1;
