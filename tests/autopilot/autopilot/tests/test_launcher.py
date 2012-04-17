@@ -335,7 +335,7 @@ class LauncherKeyNavTests(LauncherTestCase):
     def test_launcher_keynav_mode_toggles(self):
         """Tests that keynav mode toggles with Alt+F1."""
         # was initiated in setup.
-        self.launcher_instance.key_nav_start()
+        self.keybinding("launcher/keynav")
         self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
 
     def test_launcher_keynav_activate_keep_focus(self):
@@ -432,7 +432,7 @@ class LauncherRevealTests(LauncherTestCase):
         # Need a sleep here otherwise this test would pass even if the code failed.
         # THis test needs to be rewritten...
         sleep(5)
-        self.assertThat(self.launcher_instance.is_showing(), Equals(False))
+        self.assertThat(self.launcher_instance.is_showing, Equals(False))
 
 
 class LauncherVisualTests(LauncherTestCase):
