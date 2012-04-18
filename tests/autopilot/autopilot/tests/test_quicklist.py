@@ -13,6 +13,7 @@ from xdg.DesktopEntry import DesktopEntry
 from time import sleep
 
 from autopilot.emulators.unity.quicklist import QuicklistMenuItemLabel
+from autopilot.matchers import Eventually
 from autopilot.tests import AutopilotTestCase
 
 
@@ -82,7 +83,7 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         self.addCleanup(self.ql_launcher.key_nav_cancel)
 
         for icon in self.launcher.model.get_launcher_icons():
-            if (icon.tooltip_text != self.ql_app.name):
+            if icon.tooltip_text != self.ql_app.name:
                 self.ql_launcher.key_nav_next()
             else:
                 self.keybinding("launcher/keynav/open-quicklist")
@@ -100,6 +101,7 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         self.keybinding("quicklist/keynav/first")
 
         expected_item = self.quicklist.selectable_items[0]
+        self.assertThat(expected_item.selected, Eventually(Equals(True)))
         self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
 
     def test_keynav_selects_first_item_when_selected(self):
@@ -109,11 +111,12 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         self.open_quicklist_with_mouse()
         mouse_item = self.quicklist.selectable_items[-1]
         mouse_item.mouse_move_to()
-        self.assertTrue(mouse_item.selected)
+        self.assertThat(mouse_item.selected, Eventually(Equals(True)))
 
         self.keybinding("quicklist/keynav/first")
 
         expected_item = self.quicklist.selectable_items[0]
+        self.assertThat(expected_item.selected, Eventually(Equals(True)))
         self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
 
     def test_keynav_next_selects_first_item_when_unselected(self):
@@ -123,6 +126,7 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         self.keybinding("quicklist/keynav/next")
 
         expected_item = self.quicklist.selectable_items[0]
+        self.assertThat(expected_item.selected, Eventually(Equals(True)))
         self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
 
     def test_keynav_selects_last_item_when_unselected(self):
@@ -132,6 +136,7 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         self.keybinding("quicklist/keynav/last")
 
         expected_item = self.quicklist.selectable_items[-1]
+        self.assertThat(expected_item.selected, Eventually(Equals(True)))
         self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
 
     def test_keynav_selects_last_item_when_selected(self):
@@ -141,11 +146,12 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         self.open_quicklist_with_mouse()
         mouse_item = self.quicklist.selectable_items[0]
         mouse_item.mouse_move_to()
-        self.assertTrue(mouse_item.selected)
+        self.assertThat(mouse_item.selected, Eventually(Equals(True)))
 
         self.keybinding("quicklist/keynav/last")
 
         expected_item = self.quicklist.selectable_items[-1]
+        self.assertThat(expected_item.selected, Eventually(Equals(True)))
         self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
 
     def test_keynav_prev_selects_last_item_when_unselected(self):
@@ -155,6 +161,7 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         self.keybinding("quicklist/keynav/prev")
 
         expected_item = self.quicklist.selectable_items[-1]
+        self.assertThat(expected_item.selected, Eventually(Equals(True)))
         self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
 
     def test_launcher_keynav_selects_first_item(self):
@@ -164,6 +171,7 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         self.open_quicklist_with_keyboard()
 
         expected_item = self.quicklist.selectable_items[0]
+        self.assertThat(expected_item.selected, Eventually(Equals(True)))
         self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
 
     def test_keynav_next_selection_works(self):
@@ -172,8 +180,7 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
 
         for item in self.quicklist.selectable_items:
             self.keybinding("quicklist/keynav/next")
-            sleep(.1)
-            self.assertTrue(item.selected)
+            self.assertThat(item.selected, Eventually(Equals(True)))
             self.assertThat(self.quicklist.selected_item.id, Equals(item.id))
 
     def test_keynav_prev_selection_works(self):
@@ -182,8 +189,7 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
 
         for item in reversed(self.quicklist.selectable_items):
             self.keybinding("quicklist/keynav/prev")
-            sleep(.1)
-            self.assertTrue(item.selected)
+            self.assertThat(item.selected, Eventually(Equals(True)))
             self.assertThat(self.quicklist.selected_item.id, Equals(item.id))
 
     def test_keynav_prev_is_cyclic(self):
@@ -194,12 +200,11 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
 
         mouse_item = self.quicklist.selectable_items[0]
         mouse_item.mouse_move_to()
-        self.assertTrue(mouse_item.selected)
-        sleep(.1)
+        self.assertThat(mouse_item.selected, Eventually(Equals(True)))
 
         self.keybinding("quicklist/keynav/prev")
         expected_item = self.quicklist.selectable_items[-1]
-        self.assertTrue(expected_item.selected)
+        self.assertThat(expected_item.selected, Eventually(Equals(True)))
         self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
 
     def test_keynav_next_is_cyclic(self):
@@ -210,12 +215,11 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
 
         mouse_item = self.quicklist.selectable_items[-1]
         mouse_item.mouse_move_to()
-        self.assertTrue(mouse_item.selected)
-        sleep(.1)
+        self.assertThat(mouse_item.selected, Eventually(Equals(True)))
 
         self.keybinding("quicklist/keynav/next")
         expected_item = self.quicklist.selectable_items[0]
-        self.assertTrue(expected_item.selected)
+        self.assertThat(expected_item.selected, Eventually(Equals(True)))
         self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
 
     def test_keynav_mouse_interaction(self):
@@ -225,16 +229,15 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         self.open_quicklist_with_mouse()
         mouse_item = self.quicklist.selectable_items[-1]
         mouse_item.mouse_move_to()
-        self.assertTrue(mouse_item.selected)
+        self.assertThat(mouse_item.selected, Eventually(Equals(True)))
 
         self.keybinding("quicklist/keynav/prev")
         sleep(.1)
         self.keybinding("quicklist/keynav/prev")
 
         key_item = self.quicklist.selectable_items[-3]
-        self.assertTrue(key_item.selected)
+        self.assertThat(key_item.selected, Eventually(Equals(True)))
         self.assertThat(self.quicklist.selected_item.id, Equals(key_item.id))
-        sleep(.5)
 
         # Moving the mouse horizontally doesn't change the selection
         self.mouse.move(mouse_item.x + mouse_item.width - 10, mouse_item.y + mouse_item.height / 2)
@@ -247,5 +250,5 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         # Moving the mouse to another entry, changes the selection
         mouse_item = self.quicklist.selectable_items[-2]
         mouse_item.mouse_move_to()
-        self.assertTrue(mouse_item.selected)
+        self.assertThat(mouse_item.selected, Eventually(Equals(True)))
         self.assertThat(self.quicklist.selected_item.id, Equals(mouse_item.id))
