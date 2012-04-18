@@ -983,6 +983,11 @@ void PanelMenuView::OnApplicationClosed(BamfApplication* app)
 
 void PanelMenuView::OnViewClosed(BamfMatcher *matcher, BamfView *view)
 {
+  if (reinterpret_cast<BamfView*>(_view_name_changed_signal.object()) == view)
+  {
+    _view_name_changed_signal.Disconnect();
+  }
+
   if (BAMF_IS_APPLICATION(view))
   {
     OnApplicationClosed(reinterpret_cast<BamfApplication*>(view));

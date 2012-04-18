@@ -157,6 +157,9 @@ class Switcher(KeybindingsHelper):
     def get_is_visible(self):
         return bool(self.__get_controller()['visible'])
 
+    def get_monitor(self):
+        return int(self.__get_controller()['monitor'])
+
     def get_is_in_details_mode(self):
         """Return True if the SwitcherView is in details mode."""
         return bool(self.__get_model()['detail-selection'])

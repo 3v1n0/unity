@@ -25,6 +25,7 @@
 #include <vector>
 #include <sigc++/sigc++.h>
 
+#include "LauncherOptions.h"
 #include "SoftwareCenterLauncherIcon.h"
 
 namespace unity

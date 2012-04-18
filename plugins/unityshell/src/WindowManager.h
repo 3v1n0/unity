@@ -53,7 +53,9 @@ public:
   };
 
   static WindowManager* Default();
-  static void            SetDefault(WindowManager* manager);
+  static void           SetDefault(WindowManager* manager);
+
+  virtual guint32 GetActiveWindow() = 0;
 
   virtual bool IsWindowMaximized(guint32 xid) = 0;
   virtual bool IsWindowDecorated(guint32 xid) = 0;
@@ -81,7 +83,7 @@ public:
   virtual void InitiateExpo() = 0;
   virtual bool IsExpoActive() = 0;
 
-  virtual void FocusWindowGroup(std::vector<Window> windows, FocusVisibility, int monitor = -1) = 0;
+  virtual void FocusWindowGroup(std::vector<Window> windows, FocusVisibility, int monitor = -1, bool only_top_win = true) = 0;
   virtual bool ScaleWindowGroup(std::vector<Window> windows, int state, bool force) = 0;
 
   virtual void Decorate(guint32 xid) {};
@@ -93,6 +95,7 @@ public:
   virtual void MoveResizeWindow(guint32 xid, nux::Geometry geometry) = 0;
   void StartMove(guint32 xid, int, int);
 
+  virtual int GetWindowMonitor(guint32 xid) const = 0;
   virtual nux::Geometry GetWindowGeometry(guint32 xid) const = 0;
   virtual nux::Geometry GetWindowSavedGeometry(guint32 xid) const = 0;
   virtual nux::Geometry GetScreenGeometry() const = 0;

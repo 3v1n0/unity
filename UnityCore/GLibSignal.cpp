@@ -36,7 +36,7 @@ SignalBase::~SignalBase()
 
 void SignalBase::Disconnect()
 {
-  if (G_IS_OBJECT(object_) && connection_id_)
+  if (connection_id_ && G_IS_OBJECT(object_))
     g_signal_handler_disconnect(object_, connection_id_);
 
   object_ = 0;

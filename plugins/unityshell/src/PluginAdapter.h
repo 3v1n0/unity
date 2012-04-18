@@ -109,6 +109,8 @@ public:
   void NotifyCompizEvent(const char* plugin, const char* event, CompOption::Vector& option);
   void NotifyNewDecorationState(guint32 xid);
 
+  guint32 GetActiveWindow();
+
   void Decorate(guint32 xid);
   void Undecorate(guint32 xid);
 
@@ -132,7 +134,7 @@ public:
 
   void SetWindowIconGeometry(Window window, nux::Geometry const& geo);
 
-  void FocusWindowGroup(std::vector<Window> windows, FocusVisibility, int monitor = -1);
+  void FocusWindowGroup(std::vector<Window> windows, FocusVisibility, int monitor = -1, bool only_top_win = true);
   bool ScaleWindowGroup(std::vector<Window> windows, int state, bool force);
 
   bool IsScreenGrabbed();
@@ -142,6 +144,7 @@ public:
 
   bool MaximizeIfBigEnough(CompWindow* window);
 
+  int GetWindowMonitor(guint32 xid) const;
   nux::Geometry GetWindowGeometry(guint32 xid) const;
   nux::Geometry GetWindowSavedGeometry(guint32 xid) const;
   nux::Geometry GetScreenGeometry() const;

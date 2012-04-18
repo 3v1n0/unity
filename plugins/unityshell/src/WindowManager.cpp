@@ -23,6 +23,11 @@ static WindowManager* window_manager = NULL;
 
 class WindowManagerDummy : public WindowManager
 {
+  guint32 GetActiveWindow()
+  {
+    return 0;
+  }
+
   unsigned long long GetWindowActiveNumber (guint32 xid)
   {
     return 0;
@@ -113,7 +118,7 @@ class WindowManagerDummy : public WindowManager
     g_debug("%s", G_STRFUNC);
   }
 
-  void FocusWindowGroup(std::vector<Window> windows, FocusVisibility, int monitor)
+  void FocusWindowGroup(std::vector<Window> windows, FocusVisibility, int monitor, bool only_top_win)
   {
     g_debug("%s", G_STRFUNC);
   }
@@ -122,6 +127,11 @@ class WindowManagerDummy : public WindowManager
   {
     g_debug("%s", G_STRFUNC);
     return false;
+  }
+
+  int GetWindowMonitor(guint32 xid) const
+  {
+    return -1;
   }
 
   nux::Geometry GetWindowGeometry(guint xid) const

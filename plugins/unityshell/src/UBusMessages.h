@@ -90,7 +90,4 @@
 #define UBUS_SWITCHER_SHOWN             "SWITCHER_SHOWN"
 #define UBUS_SWITCHER_SELECTION_CHANGED "SWITCHER_SELECTION_CHANGED"
 
-// Signal sent when someone thinks the decoration might got damanged by a paint
-#define UBUS_DASH_DECORATION_DAMAGED "DASH_DECORATION_DAMAGED"
-
 #endif // UBUS_MESSAGES_H
