@@ -8,7 +8,7 @@
 # by the Free Software Foundation.
 
 import os.path
-from testtools.matchers import Not, Is, Contains, Equals
+from testtools.matchers import Contains, Equals, NotEquals
 from xdg.DesktopEntry import DesktopEntry
 from time import sleep
 
@@ -28,22 +28,23 @@ class QuicklistActionTests(AutopilotTestCase):
         self.start_app(self.app_name)
 
         # load the desktop file from disk:
-        desktop_file = os.path.join('/usr/share/applications',
-            self.KNOWN_APPS[self.app_name]['desktop-file']
-            )
+        desktop_id = self.KNOWN_APPS[self.app_name]['desktop-file']
+        desktop_file = os.path.join('/usr/share/applications', desktop_id)
         de = DesktopEntry(desktop_file)
         # get the launcher icon from the launcher:
-        launcher_icon = self.launcher.model.get_icon_by_tooltip_text(de.getName())
-        self.assertThat(launcher_icon, Not(Is(None)))
+        launcher_icon = self.launcher.model.get_icon_by_desktop_id(desktop_id)
+        self.assertThat(launcher_icon, NotEquals(None))
 
         # open the icon quicklist, and get all the text labels:
         launcher = self.launcher.get_launcher_for_monitor(0)
         launcher.click_launcher_icon(launcher_icon, button=3)
+        self.addCleanup(self.keyboard.press_and_release, "Escape")
         ql = launcher_icon.get_quicklist()
         ql_item_texts = [i.text for i in ql.items if type(i) is QuicklistMenuItemLabel]
 
         # iterate over all the actions from the desktop file, make sure they're
         # present in the quicklist texts.
+        # FIXME, this doesn't work using a locale other than English.
         actions = de.getActions()
         for action in actions:
             key = 'Desktop Action ' + action
@@ -61,7 +62,7 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         self.ql_app = self.start_app("Text Editor")
 
         self.ql_launcher_icon = self.launcher.model.get_icon_by_desktop_id(self.ql_app.desktop_file)
-        self.assertThat(self.ql_launcher_icon, Not(Is(None)))
+        self.assertThat(self.ql_launcher_icon, NotEquals(None))
 
         self.ql_launcher = self.launcher.get_launcher_for_monitor(0)
 
@@ -70,9 +71,9 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         self.ql_launcher.click_launcher_icon(self.ql_launcher_icon, button=3)
         self.addCleanup(self.keyboard.press_and_release, "Escape")
         self.quicklist = self.ql_launcher_icon.get_quicklist()
-        self.assertThat(self.quicklist, Not(Is(None)))
+        self.assertThat(self.quicklist, NotEquals(None))
         self.quicklist.move_mouse_to_right()
-        self.assertThat(self.quicklist.selected_item, Is(None))
+        self.assertThat(self.quicklist.selected_item, Equals(None))
 
     def open_quicklist_with_keyboard(self):
         """Opens a quicklist using the keyboard"""
@@ -89,8 +90,8 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
                 break
 
         self.quicklist = self.ql_launcher_icon.get_quicklist()
-        self.assertThat(self.quicklist, Not(Is(None)))
-        self.assertThat(self.quicklist.selected_item, Not(Is(None)))
+        self.assertThat(self.quicklist, NotEquals(None))
+        self.assertThat(self.quicklist.selected_item, NotEquals(None))
 
     def test_keynav_selects_first_item_when_unselected(self):
         """Tests that the quicklist Home key selects the first valid item when

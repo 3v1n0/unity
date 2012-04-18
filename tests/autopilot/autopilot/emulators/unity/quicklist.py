@@ -20,22 +20,15 @@ logger = logging.getLogger(__name__)
 class Quicklist(UnityIntrospectionObject):
     """Represents a quicklist."""
 
-    def get_items(self, visible_only=True):
-        """Returns the quicklist items"""
-        if visible_only:
-            return self.get_children_by_type(QuicklistMenuItem, visible=True)
-        else:
-            return self.get_children_by_type(QuicklistMenuItem)
-
     @property
     def items(self):
         """Individual items in the quicklist."""
-        return self.get_items()
+        return self.get_children_by_type(QuicklistMenuItem, visible=True)
 
     @property
     def selectable_items(self):
         """Items that can be selected in the quicklist"""
-        return filter(lambda it: it.selectable == True, self.items)
+        return self.get_children_by_type(QuicklistMenuItem, visible=True, selectable=True)
 
     def get_quicklist_item_by_text(self, text):
         """Returns a QuicklistMenuItemLabel object with the given text, or None."""
