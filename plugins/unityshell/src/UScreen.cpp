@@ -17,47 +17,51 @@
  */
 
 #include "UScreen.h"
+#include <NuxCore/Logger.h>
 
-static UScreen* _default_screen = NULL;
+namespace unity
+{
+
+namespace
+{
+static UScreen* default_screen_ = nullptr;
+nux::logging::Logger logger("unity.screen");
+} 
 
 UScreen::UScreen()
-  : _refresh_id(0)
+  : screen_(gdk_screen_get_default())
+  , proxy_("org.freedesktop.UPower",
+           "/org/freedesktop/UPower",
+           "org.freedesktop.UPower",
+           G_BUS_TYPE_SYSTEM)
+  , refresh_id_(0)
+  , primary_(0)
 {
-  GdkScreen* screen;
-
-  screen = gdk_screen_get_default();
-  g_signal_connect(screen, "size-changed",
-                   (GCallback)UScreen::Changed, this);
-  g_signal_connect(screen, "monitors-changed",
-                   (GCallback)UScreen::Changed, this);
+  size_changed_signal_.Connect(screen_, "size-changed", sigc::mem_fun(this, &UScreen::Changed));
+  monitors_changed_signal_.Connect(screen_, "monitors-changed", sigc::mem_fun(this, &UScreen::Changed));
+  proxy_.Connect("Resuming", [&] (GVariant* data) { resuming.emit(); });
 
   Refresh();
-
-  proxy_.reset(new unity::glib::DBusProxy("org.freedesktop.UPower", "/org/freedesktop/UPower", "org.freedesktop.UPower", G_BUS_TYPE_SYSTEM));
-  proxy_->Connect("Resuming", [&](GVariant* data) -> void { resuming.emit(); });
 }
 
 UScreen::~UScreen()
 {
-  if (_default_screen == this)
-    _default_screen = NULL;
+  if (default_screen_ == this)
+    default_screen_ = nullptr;
 
-  g_signal_handlers_disconnect_by_func((gpointer)gdk_screen_get_default(),
-                                       (gpointer)UScreen::Changed,
-                                       (gpointer)this);
+  if (refresh_id_ != 0)
+    g_source_remove(refresh_id_);
 }
 
-UScreen*
-UScreen::GetDefault()
+UScreen* UScreen::GetDefault()
 {
-  if (G_UNLIKELY(!_default_screen))
-    _default_screen = new UScreen();
+  if (G_UNLIKELY(!default_screen_))
+    default_screen_ = new UScreen();
 
-  return _default_screen;
+  return default_screen_;
 }
 
-int
-UScreen::GetMonitorWithMouse()
+int UScreen::GetMonitorWithMouse()
 {
   GdkDevice* device;
   GdkDisplay *display;
@@ -67,87 +71,71 @@ UScreen::GetMonitorWithMouse()
   display = gdk_display_get_default();
   device = gdk_device_manager_get_client_pointer(gdk_display_get_device_manager(display));
 
-  gdk_device_get_position(device, NULL, &x, &y);
+  gdk_device_get_position(device, nullptr, &x, &y);
 
   return GetMonitorAtPosition(x, y);
 }
 
-int
-UScreen::GetPrimaryMonitor()
+int UScreen::GetPrimaryMonitor()
 {
   return primary_;
 }
 
-int
-UScreen::GetMonitorAtPosition(int x, int y)
+int UScreen::GetMonitorAtPosition(int x, int y)
 {
-  GdkScreen* screen = gdk_screen_get_default();
-
-  return gdk_screen_get_monitor_at_point(screen, x, y);
+  return gdk_screen_get_monitor_at_point(screen_, x, y);
 }
 
-nux::Geometry&
-UScreen::GetMonitorGeometry(int monitor)
+nux::Geometry& UScreen::GetMonitorGeometry(int monitor)
 {
-  return _monitors[monitor];
+  return monitors_[monitor];
 }
 
-std::vector<nux::Geometry>&
-UScreen::GetMonitors()
+std::vector<nux::Geometry>& UScreen::GetMonitors()
 {
-  return _monitors;
+  return monitors_;
 }
 
-void
-UScreen::Changed(GdkScreen* screen, UScreen* self)
+void UScreen::Changed(GdkScreen* screen)
 {
-  if (self->_refresh_id)
+  if (refresh_id_)
     return;
 
-  self->_refresh_id = g_idle_add((GSourceFunc)UScreen::OnIdleChanged, self);
+  refresh_id_ = g_idle_add([] (gpointer data) -> gboolean {
+    auto self = static_cast<UScreen*>(data);
+    self->refresh_id_ = 0;
+    self->Refresh();
+
+    return FALSE;
+  }, this);
 }
 
-gboolean
-UScreen::OnIdleChanged(UScreen* self)
+void UScreen::Refresh()
 {
-  self->_refresh_id = 0;
-  self->Refresh();
+  LOG_DEBUG(logger) << "Screen geometry changed";
 
-  return FALSE;
-}
+  nux::Geometry last_geo;
+  monitors_.clear();
+  primary_ = gdk_screen_get_primary_monitor(screen_);
 
-void
-UScreen::Refresh()
-{
-  GdkScreen*    screen;
-  nux::Geometry last_geo(0, 0, 1, 1);
-
-  screen = gdk_screen_get_default();
-
-  _monitors.erase(_monitors.begin(), _monitors.end());
-
-  g_print("\nScreen geometry changed:\n");
-
-  primary_ = gdk_screen_get_primary_monitor(screen);
-  for (int i = 0; i < gdk_screen_get_n_monitors(screen); i++)
+  for (int i = 0; i < gdk_screen_get_n_monitors(screen_); i++)
   {
     GdkRectangle rect = { 0 };
-
-    gdk_screen_get_monitor_geometry(screen, i, &rect);
-
+    gdk_screen_get_monitor_geometry(screen_, i, &rect);
     nux::Geometry geo(rect.x, rect.y, rect.width, rect.height);
 
     // Check for mirrored displays
     if (geo == last_geo)
       continue;
+
     last_geo = geo;
+    monitors_.push_back(geo);
 
-    _monitors.push_back(geo);
-
-    g_print("   %dx%dx%dx%d\n", geo.x, geo.y, geo.width, geo.height);
+    LOG_DEBUG(logger) << "Monitor " << i << " has geometry " << geo.x << "x"
+                      << geo.y << "x" << geo.width << "x" << geo.height;
   }
 
-  g_print("\n");
-
-  changed.emit(primary_, _monitors);
+  changed.emit(primary_, monitors_);
 }
+
+} // Namespace

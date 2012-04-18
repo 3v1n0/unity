@@ -806,7 +806,7 @@ PluginAdapter::GetWindowMonitor(guint32 xid) const
     int x = geo.x + geo.width/2;
     int y = geo.y + geo.height/2;
 
-    return UScreen::GetDefault()->GetMonitorAtPosition(x, y);
+    return unity::UScreen::GetDefault()->GetMonitorAtPosition(x, y);
   }
 
   return -1;
