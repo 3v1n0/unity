@@ -1174,10 +1174,15 @@ void UnityWindow::DoDeleteHandler ()
   window->updateFrameRegion ();
 }
 
-compiz::WindowInputRemoverInterface::Ptr
+compiz::WindowInputRemoverLock::Ptr
 UnityWindow::GetInputRemover ()
 {
-  return compiz::WindowInputRemoverInterface::Ptr (new compiz::WindowInputRemover (screen->dpy (), window->id ()));
+  if (!input_remover_.expired ())
+    return input_remover_.lock ();
+
+  compiz::WindowInputRemoverLock::Ptr ret (new compiz::WindowInputRemoverLock (new compiz::WindowInputRemover (screen->dpy (), window->id ())));
+  input_remover_ = ret;
+  return ret;
 }
 
 unsigned int

@@ -23,6 +23,8 @@
 #define _COMPIZ_INPUTREMOVER_H
 
 #include <memory>
+#include <boost/shared_ptr.hpp>
+#include <boost/weak_ptr.hpp>
 
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
@@ -83,6 +85,37 @@ private:
   int           mShapeError;
 
 };
+
+class WindowInputRemoverLock
+{
+  public:
+
+    typedef boost::shared_ptr <WindowInputRemoverLock> Ptr;
+    typedef boost::weak_ptr <WindowInputRemoverLock> Weak;
+
+    WindowInputRemoverLock (WindowInputRemoverInterface *remover) :
+        remover_ (remover)
+    {
+      remover->save ();
+      remover->remove ();
+    }
+
+    ~WindowInputRemoverLock ()
+    {
+      remover_->restore ();
+      delete remover_;
+    }
+
+    void refresh ()
+    {
+      remover_->save ();
+      remover_->remove ();
+    }
+
+  private:
+    WindowInputRemoverInterface *remover_;
+};
+
 }
 
 #endif

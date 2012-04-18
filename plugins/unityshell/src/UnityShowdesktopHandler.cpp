@@ -81,7 +81,7 @@ ShowdesktopHandler::InhibitingXid()
 
 ShowdesktopHandler::ShowdesktopHandler (ShowdesktopHandlerWindowInterface *wi) :
   showdesktop_handler_window_interface_ (wi),
-  remover_ (wi->InputRemover()),
+  remover_ (),
   state_ (StateVisible),
   progress_ (0.0f)
 {
@@ -105,8 +105,7 @@ void ShowdesktopHandler::FadeOut()
   {
     showdesktop_handler_window_interface_->Hide();
     showdesktop_handler_window_interface_->NotifyHidden();
-    remover_->save();
-    remover_->remove();
+    remover_ = showdesktop_handler_window_interface_->InputRemover ();
 
     if (std::find (animating_windows.begin(),
                    animating_windows.end(),
@@ -127,7 +126,7 @@ void ShowdesktopHandler::FadeIn()
   {
     showdesktop_handler_window_interface_->Show();
     showdesktop_handler_window_interface_->NotifyShown();
-    remover_->restore();
+    remover_.reset ();
 
     if (std::find (animating_windows.begin(),
                    animating_windows.end(),
@@ -184,8 +183,7 @@ void ShowdesktopHandler::HandleShapeEvent()
   /* Ignore sent events from the InputRemover */
   if (remover_)
   {
-    remover_->save();
-    remover_->remove();
+    remover_->refresh ();
   }
 }
 

@@ -418,7 +418,9 @@ private:
 
   unsigned int GetNoCoreInstanceMask ();
 
-  compiz::WindowInputRemoverInterface::Ptr GetInputRemover ();
+  compiz::WindowInputRemoverLock::Ptr GetInputRemover ();
+
+  compiz::WindowInputRemoverLock::Weak input_remover_;
 };
 
 
