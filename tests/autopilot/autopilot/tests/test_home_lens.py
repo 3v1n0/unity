@@ -30,7 +30,7 @@ class HomeLensSearchTests(AutopilotTestCase):
         kb = self.keyboard
         self.dash.ensure_visible()
         kb.type("g")
-        sleep(1)
+        self.dash.search_string.wait_for("g")
         kb.type("edit", 0.1)
         kb.press_and_release("Enter", 0.1)
         self.addCleanup(self.close_all_app,  "Text Editor")

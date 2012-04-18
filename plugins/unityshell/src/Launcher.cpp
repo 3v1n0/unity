@@ -396,6 +396,7 @@ Launcher::AddProperties(GVariantBuilder* builder)
   .add("hovered", _hovered)
   .add("hidemode", options()->hide_mode)
   .add("hidden", _hidden)
+  .add("is_showing", ! _hidden)
   .add("x", abs_geo.x)
   .add("y", abs_geo.y)
   .add("width", abs_geo.width)
@@ -2005,7 +2006,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     // apply the bg colour
 #ifndef NUX_OPENGLES_20
-    if (GfxContext.UsingGLSLCodePath() == FALSE)
+    if (GfxContext.UsingGLSLCodePath() == false)
       gPainter.Paint2DQuadColor(GfxContext, bkg_box, _background_color);
 #endif
 
