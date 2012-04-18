@@ -94,6 +94,7 @@ class Dash(KeybindingsHelper):
         """
         self._keyboard.press_and_release("Ctrl+a")
         self._keyboard.press_and_release("Delete")
+        self.search_string.wait_for("")
 
     def reveal_application_lens(self, clear_search=True):
         """Reveal the application lense."""
