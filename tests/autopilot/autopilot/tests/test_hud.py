@@ -117,11 +117,11 @@ class HudBehaviorTests(HudTestsBase):
 
     def test_slow_tap_not_reveal_hud(self):
         """A slow tap must not reveal the HUD."""
-        # This raises AssertionError since toggle_hud does a wait_for to check
-        # that the hud opened or closed. Since it won't open or close when the
-        # tap delay is too long, we expect that in our test:
-        fn = lambda: self.hud.toggle_reveal(tap_delay=0.3)
-        self.assertThat(fn, raises(AssertionError))
+        self.keybinding("hud/reveal", 0.3)
+        # need a long sleep to ensure that we test after the hud controller has
+        # seen the keypress.
+        sleep(5)
+        self.assertThat(self.hud.visible, Equals(False))
 
     def test_alt_f4_doesnt_show_hud(self):
         self.start_app('Calculator')
