@@ -79,8 +79,9 @@ ShowdesktopHandler::InhibitingXid()
   return inhibiting_xid;
 }
 
-ShowdesktopHandler::ShowdesktopHandler (ShowdesktopHandlerWindowInterface *wi) :
+ShowdesktopHandler::ShowdesktopHandler (ShowdesktopHandlerWindowInterface *wi, compiz::WindowInputRemoverLockAcquireInterface *lock_acquire_interface) :
   showdesktop_handler_window_interface_ (wi),
+  lock_acquire_interface_ (lock_acquire_interface),
   remover_ (),
   state_ (StateVisible),
   progress_ (0.0f)
@@ -105,7 +106,7 @@ void ShowdesktopHandler::FadeOut()
   {
     showdesktop_handler_window_interface_->Hide();
     showdesktop_handler_window_interface_->NotifyHidden();
-    remover_ = showdesktop_handler_window_interface_->InputRemover ();
+    remover_ = lock_acquire_interface_->InputRemover ();
 
     if (std::find (animating_windows.begin(),
                    animating_windows.end(),

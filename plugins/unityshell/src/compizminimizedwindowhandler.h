@@ -46,7 +46,7 @@ class CompizMinimizedWindowHandler:
 {
 public:
 
-  CompizMinimizedWindowHandler (CompWindow *w);
+  CompizMinimizedWindowHandler (CompWindow *w, compiz::WindowInputRemoverLockAcquireInterface *lock_acquire);
   ~CompizMinimizedWindowHandler ();
 
   void setVisibility (bool visible);
@@ -92,8 +92,8 @@ template <typename Screen, typename Window>
 bool compiz::CompizMinimizedWindowHandler<Screen, Window>::handleEvents = true;
 
 template <typename Screen, typename Window>
-compiz::CompizMinimizedWindowHandler<Screen, Window>::CompizMinimizedWindowHandler(CompWindow *w) :
-  MinimizedWindowHandler (screen->dpy (), w->id ())
+compiz::CompizMinimizedWindowHandler<Screen, Window>::CompizMinimizedWindowHandler(CompWindow *w, compiz::WindowInputRemoverLockAcquireInterface *lock_acquire) :
+  MinimizedWindowHandler (screen->dpy (), w->id (), lock_acquire)
 {
   priv = new PrivateCompizMinimizedWindowHandler ();
 
@@ -159,7 +159,7 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::minimize ()
     {
       Window *w = Window::get (win);
       if (!w->mMinimizeHandler)
-        w->mMinimizeHandler.reset (new Type (win));
+        w->mMinimizeHandler.reset (new Type (win, w));
       w->mMinimizeHandler->minimize ();
     }
   }

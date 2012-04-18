@@ -319,6 +319,7 @@ class UnityWindow :
   public WindowInterface,
   public GLWindowInterface,
   public ShowdesktopHandlerWindowInterface,
+  public compiz::WindowInputRemoverLockAcquireInterface,
   public BaseSwitchWindow,
   public PluginClassHandler <UnityWindow, CompWindow>
 {

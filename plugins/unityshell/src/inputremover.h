@@ -116,6 +116,19 @@ class WindowInputRemoverLock
     WindowInputRemoverInterface *remover_;
 };
 
+class WindowInputRemoverLockAcquireInterface
+{
+public:
+
+  virtual ~WindowInputRemoverLockAcquireInterface () {}
+
+  WindowInputRemoverLock::Ptr InputRemover () { return GetInputRemover (); }
+
+private:
+
+  virtual WindowInputRemoverLock::Ptr GetInputRemover () = 0;
+};
+
 }
 
 #endif

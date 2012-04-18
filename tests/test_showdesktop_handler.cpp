@@ -50,7 +50,8 @@ public:
 
 
 class MockUnityShowdesktopHandlerWindow :
-  public ShowdesktopHandlerWindowInterface
+  public ShowdesktopHandlerWindowInterface,
+  public compiz::WindowInputRemoverLockAcquireInterface
 {
   public:
 
@@ -99,7 +100,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestNoORWindowsSD)
 {
   MockUnityShowdesktopHandlerWindow mMockWindow;
 
-  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow));
+  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow), static_cast <compiz::WindowInputRemoverLockAcquireInterface *> (&mMockWindow));
 
   EXPECT_CALL (mMockWindow, IsOverrideRedirect ()).WillOnce (Return (true));
   EXPECT_FALSE (ShowdesktopHandler::ShouldHide (&mMockWindow));
@@ -109,7 +110,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestNoUnmanagedWindowsSD)
 {
   MockUnityShowdesktopHandlerWindow mMockWindow;
 
-  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow));
+  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow), static_cast <compiz::WindowInputRemoverLockAcquireInterface *> (&mMockWindow));
 
   EXPECT_CALL (mMockWindow, IsOverrideRedirect ());
   EXPECT_CALL (mMockWindow, IsManaged ()).WillOnce (Return (false));
@@ -120,7 +121,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestNoGrabbedWindowsSD)
 {
   MockUnityShowdesktopHandlerWindow mMockWindow;
 
-  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow));
+  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow), static_cast <compiz::WindowInputRemoverLockAcquireInterface *> (&mMockWindow));
 
   EXPECT_CALL (mMockWindow, IsOverrideRedirect ());
   EXPECT_CALL (mMockWindow, IsManaged ());
@@ -132,7 +133,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestNoDesktopOrDockWindowsSD)
 {
   MockUnityShowdesktopHandlerWindow mMockWindow;
 
-  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow));
+  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow), static_cast <compiz::WindowInputRemoverLockAcquireInterface *> (&mMockWindow));
 
   EXPECT_CALL (mMockWindow, IsOverrideRedirect ());
   EXPECT_CALL (mMockWindow, IsManaged ());
@@ -145,7 +146,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestNoSkipTaskbarOrPagerWindowsSD)
 {
   MockUnityShowdesktopHandlerWindow mMockWindow;
 
-  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow));
+  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow), static_cast <compiz::WindowInputRemoverLockAcquireInterface *> (&mMockWindow));
 
   EXPECT_CALL (mMockWindow, IsOverrideRedirect ());
   EXPECT_CALL (mMockWindow, IsManaged ());
@@ -159,7 +160,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestHiddenNotSDAndShadedWindowsNoSD)
 {
   MockUnityShowdesktopHandlerWindow mMockWindow;
 
-  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow));
+  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow), static_cast <compiz::WindowInputRemoverLockAcquireInterface *> (&mMockWindow));
 
   EXPECT_CALL (mMockWindow, IsOverrideRedirect ());
   EXPECT_CALL (mMockWindow, IsManaged ());
@@ -176,7 +177,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestHiddenSDAndShadedWindowsNoSD)
 {
   MockUnityShowdesktopHandlerWindow mMockWindow;
 
-  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow));
+  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow), static_cast <compiz::WindowInputRemoverLockAcquireInterface *> (&mMockWindow));
 
   EXPECT_CALL (mMockWindow, IsOverrideRedirect ());
   EXPECT_CALL (mMockWindow, IsManaged ());
@@ -192,7 +193,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestHiddenNotSDAndNotShadedWindowsSD)
 {
   MockUnityShowdesktopHandlerWindow mMockWindow;
 
-  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow));
+  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow), static_cast <compiz::WindowInputRemoverLockAcquireInterface *> (&mMockWindow));
 
   EXPECT_CALL (mMockWindow, IsOverrideRedirect ());
   EXPECT_CALL (mMockWindow, IsManaged ());
@@ -232,7 +233,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestFadeOutHidesWindow)
 
   EXPECT_CALL (mMockWindow, GetInputRemover ()).WillOnce (Invoke (UnityShowdesktopHandlerTest::getLock <MockWindowInputRemoverTestFadeOut>));
 
-  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow));
+  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow), static_cast <compiz::WindowInputRemoverLockAcquireInterface *> (&mMockWindow));
 
   EXPECT_CALL (mMockWindow, IsHidden ());
   EXPECT_CALL (mMockWindow, DoHide ());
@@ -264,7 +265,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestFadeOutOnHiddenDoesntHideWindow)
 {
   MockUnityShowdesktopHandlerWindow mMockWindow;
 
-  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow));
+  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow), static_cast <compiz::WindowInputRemoverLockAcquireInterface *> (&mMockWindow));
 
   EXPECT_CALL (mMockWindow, IsHidden ()).WillOnce (Return (true));
 
@@ -278,7 +279,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestFadeOutAlreadyFadedDoesntHideWindow)
   MockUnityShowdesktopHandlerWindow mMockWindow;
 
   EXPECT_CALL (mMockWindow, GetInputRemover ()).WillOnce (Invoke (UnityShowdesktopHandlerTest::getLock <MockWindowInputRemoverTestFadeOut>));
-  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow));
+  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow), static_cast <compiz::WindowInputRemoverLockAcquireInterface *> (&mMockWindow));
 
   EXPECT_CALL (mMockWindow, IsHidden ());
   EXPECT_CALL (mMockWindow, DoHide ());
@@ -294,7 +295,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestFadeInNonFadedDoesntShowWindow)
 {
   MockUnityShowdesktopHandlerWindow mMockWindow;
 
-  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow));
+  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow), static_cast <compiz::WindowInputRemoverLockAcquireInterface *> (&mMockWindow));
 
   mMockHandler.FadeIn ();
 
@@ -327,7 +328,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestFadeOutHidesWindowFadeInShowsWindow)
   MockUnityShowdesktopHandlerWindow mMockWindow;
 
   EXPECT_CALL (mMockWindow, GetInputRemover ()).WillOnce (Invoke (UnityShowdesktopHandlerTest::getLock <MockWindowInputRemoverTestFadeOutFadeIn>));
-  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow));
+  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow), static_cast <compiz::WindowInputRemoverLockAcquireInterface *> (&mMockWindow));
 
   EXPECT_CALL (mMockWindow, IsHidden ());
   EXPECT_CALL (mMockWindow, DoHide ());
@@ -348,7 +349,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestAnimationPostPaintActions)
   MockUnityShowdesktopHandlerWindow mMockWindow;
 
   EXPECT_CALL (mMockWindow, GetInputRemover ()).WillOnce (Invoke (UnityShowdesktopHandlerTest::getLock <MockWindowInputRemoverTestFadeOutFadeIn>));
-  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow));
+  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow), static_cast <compiz::WindowInputRemoverLockAcquireInterface *> (&mMockWindow));
 
   EXPECT_CALL (mMockWindow, IsHidden ());
   EXPECT_CALL (mMockWindow, DoHide ());
@@ -389,7 +390,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestAnimationOpacity)
   MockUnityShowdesktopHandlerWindow mMockWindow;
 
   EXPECT_CALL (mMockWindow, GetInputRemover ()).WillOnce (Invoke (UnityShowdesktopHandlerTest::getLock <MockWindowInputRemoverTestFadeOutFadeIn>));
-  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow));
+  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow), static_cast <compiz::WindowInputRemoverLockAcquireInterface *> (&mMockWindow));
 
   EXPECT_CALL (mMockWindow, IsHidden ());
   EXPECT_CALL (mMockWindow, DoHide ());
@@ -445,7 +446,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestAnimationPaintMasks)
   MockUnityShowdesktopHandlerWindow mMockWindow;
 
   EXPECT_CALL (mMockWindow, GetInputRemover ()).WillOnce (Invoke (UnityShowdesktopHandlerTest::getLock <MockWindowInputRemoverTestFadeOutFadeIn>));
-  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow));
+  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow), static_cast <compiz::WindowInputRemoverLockAcquireInterface *> (&mMockWindow));
 
   EXPECT_CALL (mMockWindow, IsHidden ());
   EXPECT_CALL (mMockWindow, DoHide ());
@@ -500,7 +501,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestShapeEvent)
   MockUnityShowdesktopHandlerWindow mMockWindow;
 
   EXPECT_CALL (mMockWindow, GetInputRemover ()).WillOnce (Invoke (UnityShowdesktopHandlerTest::getLock <MockWindowInputRemoverTestFadeOutFadeInWithShapeEvent>));
-  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow));
+  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow), static_cast <compiz::WindowInputRemoverLockAcquireInterface *> (&mMockWindow));
 
   EXPECT_CALL (mMockWindow, IsHidden ());
   EXPECT_CALL (mMockWindow, DoHide ());
