@@ -541,7 +541,7 @@ class DashBorderTests(DashTestCase):
         *NOT* close the dash.
         """
         if (self.dash.view.form_factor != "desktop"):
-            return
+            self.skip("Not in desktop form-factor.")
 
         x = self.dash.view.x + self.dash.view.width + self.dash.view.right_border_width / 2;
         y = self.dash.view.y + self.dash.view.height / 2;
@@ -549,16 +549,14 @@ class DashBorderTests(DashTestCase):
         self.mouse.move(x, y)
         self.mouse.click()
 
-        sleep(1);
-
-        self.assertTrue(self.dash.visible)
+        self.assertThat(self.dash.visible, Eventually(Equals(True)))
 
     def test_click_bottom_border(self):
         """Clicking on the bottom dash border should do nothing,
         *NOT* close the dash.
         """
         if (self.dash.view.form_factor != "desktop"):
-            return
+            self.skip("Not in desktop form-factor.")
 
         x = self.dash.view.x + self.dash.view.width / 2;
         y = self.dash.view.y + self.dash.view.height + self.dash.view.bottom_border_height / 2;
@@ -566,7 +564,5 @@ class DashBorderTests(DashTestCase):
         self.mouse.move(x, y)
         self.mouse.click()
 
-        sleep(1);
-
-        self.assertTrue(self.dash.visible)
+        self.assertThat(self.dash.visible, Eventually(Equals(True)))
         
