@@ -29,7 +29,7 @@ nux::logging::Logger logger("unity.screen");
 } 
 
 UScreen::UScreen()
-  : screen_(gdk_screen_get_default())
+  : screen_(gdk_screen_get_default(), glib::AddRef())
   , proxy_("org.freedesktop.UPower",
            "/org/freedesktop/UPower",
            "org.freedesktop.UPower",
