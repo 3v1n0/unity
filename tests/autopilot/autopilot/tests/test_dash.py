@@ -178,6 +178,26 @@ class DashKeyNavTests(DashTestCase):
         # Make sure that the category is highlighted.
         self.assertTrue(category.header_is_highlighted)
 
+    def test_maintain_highlight(self):
+        # Get the geometry of that category header.
+        self.skipTest('Not implemented at all. Broken out of another test but not reworked')
+        mouse = Mouse()
+
+        x = category.header_x
+        y = category.header_y
+        w = category.header_width
+        h = category.header_height
+
+        # Move the mouse close the view, and press down.
+        mouse.move(x + w + 10,
+                    y + h / 2,
+                    True)
+        sleep(1)
+        self.keyboard.press_and_release("Down")
+        lens = self.dash.get_current_lens()
+        category = lens.get_focused_category()
+        self.assertEqual(category, None)
+
     def test_control_tab_lens_cycle(self):
         """This test makes sure that Ctrl+Tab cycles lenses."""
         self.dash.ensure_visible()
@@ -403,6 +423,7 @@ class DashLensResultsTests(DashTestCase):
         activate_filter(True)
         self.addCleanup(activate_filter)
 
+        sleep(1)
         results_category = lens.get_category_by_name("Installed")
         results = results_category.get_results()
         self.assertIsNot(results, old_results)
@@ -447,7 +468,6 @@ class DashLensBarTests(DashTestCase):
         self.mouse.move(app_icon.x + (app_icon.width / 2),
                         app_icon.y + (app_icon.height / 2))
         self.mouse.click()
-
         self.assertThat(self.lensbar.active_lens, Eventually(Equals('applications.lens')))
 
 
