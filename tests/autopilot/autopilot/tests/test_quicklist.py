@@ -193,9 +193,7 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
             self.assertThat(self.quicklist.selected_item.id, Equals(item.id))
 
     def test_keynav_prev_is_cyclic(self):
-        """Tests that when the first item is selected, pressing the Down arrow
-        selects the last item.
-        """
+        """Up key MUST select the last item, when the first one is selected."""
         self.open_quicklist_with_mouse()
 
         mouse_item = self.quicklist.selectable_items[0]
@@ -208,9 +206,7 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
 
     def test_keynav_next_is_cyclic(self):
-        """Tests that when the last item is selected, pressing the Down arrow
-        selects the first item.
-        """
+        """Down key MUST select the first item, when the last one is selected."""
         self.open_quicklist_with_mouse()
 
         mouse_item = self.quicklist.selectable_items[-1]
