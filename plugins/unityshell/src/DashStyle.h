@@ -180,6 +180,9 @@ public:
   nux::BaseTexture* GetDashTopCornerMask();
   nux::BaseTexture* GetDashTopTile();
 
+  int GetDashBottomTileHeight() const;
+  int GetDashRightTileWidth() const;
+
   nux::BaseTexture* GetDashShine();
 
   nux::BaseTexture* GetSearchMagnifyIcon();

@@ -88,9 +88,14 @@ Controller::~Controller()
     window_->UnReference();
   window_ = 0;
 
-  g_source_remove(timeline_id_);
-  g_source_remove(ensure_id_);
-  g_source_remove(type_wait_handle_);
+  if (timeline_id_)
+    g_source_remove(timeline_id_);
+
+  if (ensure_id_)
+    g_source_remove(ensure_id_);
+
+  if (type_wait_handle_)
+    g_source_remove(type_wait_handle_);
 }
 
 void Controller::SetupWindow()

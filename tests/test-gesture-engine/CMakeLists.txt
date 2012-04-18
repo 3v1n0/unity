@@ -34,7 +34,7 @@ if (GTEST_SRC_DIR)
                 )
   target_link_libraries(test-gesture-engine gtest ${TEST_GESTURE_ENGINE_DEPS_LIBRARIES} -lcompiz_core)
   add_test(UnityGTestGestureEngine test-gesture-engine)
-  add_dependencies(test-gesture-engine gtest)
+  add_dependencies(test-gesture-engine gtest unity-core-${UNITY_API_VERSION})
 
   add_custom_target (check-gesture-engine COMMAND ./test-gesture-engine DEPENDS test-gesture-engine)
 endif (GTEST_SRC_DIR)

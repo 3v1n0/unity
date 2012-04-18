@@ -315,7 +315,16 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 
 void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
 {
-  if (!content_geo_.IsPointInside(x, y))
+  dash::Style& style = dash::Style::Instance();
+  nux::Geometry geo(content_geo_);
+
+  if (Settings::Instance().GetFormFactor() == FormFactor::DESKTOP)
+  {
+    geo.width += style.GetDashRightTileWidth();
+    geo.height += style.GetDashBottomTileHeight();
+  }
+
+  if (!geo.IsPointInside(x, y))
   {
     ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
   }
@@ -737,6 +746,7 @@ std::string DashView::GetName() const
 
 void DashView::AddProperties(GVariantBuilder* builder)
 {
+  dash::Style& style = dash::Style::Instance();
   int num_rows = 1; // The search bar
 
   if (active_lens_view_)
@@ -750,8 +760,11 @@ void DashView::AddProperties(GVariantBuilder* builder)
     form_factor = "desktop";
 
   unity::variant::BuilderWrapper wrapper(builder);
+  wrapper.add(nux::Geometry(GetAbsoluteX(), GetAbsoluteY(), content_geo_.width, content_geo_.height));
   wrapper.add("num_rows", num_rows);
   wrapper.add("form_factor", form_factor);
+  wrapper.add("right-border-width", style.GetDashRightTileWidth());
+  wrapper.add("bottom-border-height", style.GetDashBottomTileHeight());
 }
 
 nux::Area* DashView::KeyNavIteration(nux::KeyNavDirection direction)

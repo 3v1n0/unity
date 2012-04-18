@@ -81,12 +81,21 @@ class Bamf(object):
         If user_visible_only is True (the default), only applications
         visible to the user in the switcher will be returned.
 
+        The result is sorted to be in stacking order.
+
         """
+
+        # Get the stacking order from the root window.
+        root_win = _X_DISPLAY.screen().root
+        prop = root_win.get_full_property(
+            _X_DISPLAY.get_atom('_NET_CLIENT_LIST_STACKING'), X.AnyPropertyType)
+        stack = prop.value.tolist()
 
         windows = [BamfWindow(w) for w in self.matcher_interface.WindowPaths()]
         if user_visible_only:
-            return filter(_filter_user_visible, windows)
-        return windows
+            windows = filter(_filter_user_visible, windows)
+        # Now sort on stacking order.
+        return sorted(windows, key=lambda w: stack.index(w.x_id), reverse=True)
 
     def wait_until_application_is_running(self, desktop_file, timeout):
         """Wait until a given application is running.
