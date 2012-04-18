@@ -22,7 +22,6 @@ static UScreen* _default_screen = NULL;
 
 UScreen::UScreen()
   : _refresh_id(0)
-  , proxy_("org.freedesktop.UPower", "/org/freedesktop/UPower", "org.freedesktop.UPower", G_BUS_TYPE_SYSTEM)
 {
   GdkScreen* screen;
 
@@ -34,7 +33,8 @@ UScreen::UScreen()
 
   Refresh();
 
-  proxy_.Connect("Resuming", [&](GVariant* data) -> void { resuming.emit(); });
+  proxy_.reset(new unity::glib::DBusProxy("org.freedesktop.UPower", "/org/freedesktop/UPower", "org.freedesktop.UPower", G_BUS_TYPE_SYSTEM));
+  proxy_->Connect("Resuming", [&](GVariant* data) -> void { resuming.emit(); });
 }
 
 UScreen::~UScreen()

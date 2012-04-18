@@ -55,7 +55,7 @@ private:
   std::vector<nux::Geometry> _monitors;
   guint32 _refresh_id;
   int primary_;
-  unity::glib::DBusProxy proxy_;
+  unity::glib::DBusProxy::Ptr proxy_;
 };
 
 #endif // _UNITY_SCREEN_H_
