@@ -242,9 +242,7 @@ class DashKeyNavTests(DashTestCase):
         """This test that Alt+F1 is disabled when the dash is opened."""
         self.dash.ensure_visible()
 
-        launcher = self.launcher.get_launcher_for_monitor(0)
-        launcher.key_nav_start()
-
+        self.keybinding("launcher/keynav")
         self.assertThat(self.launcher.key_nav_is_active, Equals(False))
 
 
@@ -487,4 +485,33 @@ class DashBorderTests(DashTestCase):
         self.mouse.click()
 
         self.assertThat(self.dash.visible, Eventually(Equals(True)))
+
+class DashRestoreFocus(DashTestCase):
+    """Tests that the dash restores focus on exit."""
+    def setUp(self):
+        super(DashRestoreFocus,self).setUp()
+
+    def test_dash_restores_window_focus(self):
+        """Make sure the dash restores the last focused window."""
+        calc = self.start_app("Calculator")
+        [calc_win] = calc.get_windows()
+        self.assertTrue(calc_win.is_focused)
+
+        self.dash.ensure_visible()
+        sleep(1)
+        self.dash.ensure_hidden()
+
+        self.assertThat(calc_win.is_focused, Eventually(Equals(True)))
+
+    def test_hud_to_dash_restores_window_focus(self):
+        """Make sure the hud->dash restores the last focused window."""
+        calc = self.start_app("Calculator")
+        [calc_win] = calc.get_windows()
+        self.assertTrue(calc_win.is_focused)
+
+        self.keybinding("hud/reveal")
+        self.dash.ensure_visible()
+        self.dash.ensure_hidden()
+
+        self.assertThat(calc_win.is_focused, Eventually(Equals(True)))
 
