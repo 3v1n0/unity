@@ -213,6 +213,11 @@ nux::View* View::default_focus() const
 
 void View::SetQueries(Hud::Queries queries)
 {
+  // early exit, if the user is key navigating on the hud, we don't want to set new
+  // queries under them, that is just rude
+  if (!buttons_.empty() && buttons_.back()->fake_focused == false)
+    return;
+
   // remove the previous children
   for (auto button : buttons_)
   {
@@ -385,6 +390,15 @@ void View::OnSearchChanged(std::string const& search_string)
   {
     search_bar_->search_hint = "";
   }
+
+  std::list<HudButton::Ptr>::iterator it;
+  for(it = buttons_.begin(); it != buttons_.end(); ++it)
+  {
+    (*it)->fake_focused = false;
+  }
+  
+  if (!buttons_.empty())
+    buttons_.back()->fake_focused = true;
 }
 
 

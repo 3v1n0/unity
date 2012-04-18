@@ -206,6 +206,7 @@ add_executable (launcher
                 TestLauncher.cpp
                 ${UNITY_SRC}/CairoBaseWindow.cpp
                 ${UNITY_SRC}/AbstractLauncherIcon.h
+                ${UNITY_SRC}/AbstractLauncherIcon.cpp
                 ${UNITY_SRC}/AbstractIconRenderer.h
                 ${UNITY_SRC}/LauncherIcon.cpp
                 ${UNITY_SRC}/LauncherIcon.h
@@ -221,6 +222,8 @@ add_executable (launcher
                 ${UNITY_SRC}/DndData.h
                 ${UNITY_SRC}/TrashLauncherIcon.cpp
                 ${UNITY_SRC}/TrashLauncherIcon.h
+                ${UNITY_SRC}/Decaymulator.cpp
+                ${UNITY_SRC}/Decaymulator.h
                 ${UNITY_SRC}/DesktopLauncherIcon.cpp
                 ${UNITY_SRC}/DesktopLauncherIcon.h
                 ${UNITY_SRC}/DNDCollectionWindow.cpp
@@ -231,12 +234,22 @@ add_executable (launcher
                 ${UNITY_SRC}/DeviceLauncherSection.h
                 ${UNITY_SRC}/DevicesSettings.cpp
                 ${UNITY_SRC}/DevicesSettings.h
+                ${UNITY_SRC}/EdgeBarrierController.h
+                ${UNITY_SRC}/EdgeBarrierController.cpp
                 ${UNITY_SRC}/FavoriteStore.cpp
                 ${UNITY_SRC}/FavoriteStore.h
                 ${UNITY_SRC}/FavoriteStoreGSettings.cpp
                 ${UNITY_SRC}/FavoriteStoreGSettings.h
+                ${UNITY_SRC}/FavoriteStorePrivate.cpp
+                ${UNITY_SRC}/FavoriteStorePrivate.h
+                ${UNITY_SRC}/HudLauncherIcon.cpp
+                ${UNITY_SRC}/HudLauncherIcon.h
                 ${UNITY_SRC}/IconLoader.cpp
                 ${UNITY_SRC}/IconLoader.h
+                ${UNITY_SRC}/IconTextureSource.h
+                ${UNITY_SRC}/IconTextureSource.cpp
+                ${UNITY_SRC}/LauncherOptions.cpp
+                ${UNITY_SRC}/LauncherOptions.h
                 ${UNITY_SRC}/LauncherEntryRemoteModel.cpp
                 ${UNITY_SRC}/LauncherEntryRemoteModel.h
                 ${UNITY_SRC}/LauncherEntryRemote.cpp
@@ -265,10 +278,16 @@ add_executable (launcher
                 ${UNITY_SRC}/BackgroundEffectHelper.cpp
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/StaticCairoText.h
+                ${UNITY_SRC}/SingleMonitorLauncherIcon.cpp
+                ${UNITY_SRC}/SingleMonitorLauncherIcon.h
                 ${UNITY_SRC}/SoftwareCenterLauncherIcon.cpp
                 ${UNITY_SRC}/SoftwareCenterLauncherIcon.h
                 ${UNITY_SRC}/Introspectable.cpp
                 ${UNITY_SRC}/Introspectable.h
+                ${UNITY_SRC}/PanelStyle.cpp
+                ${UNITY_SRC}/PanelStyle.h
+                ${UNITY_SRC}/PointerBarrier.cpp
+                ${UNITY_SRC}/PointerBarrier.h
                 ${UNITY_SRC}/QuicklistMenuItem.cpp
                 ${UNITY_SRC}/QuicklistMenuItem.h
                 ${UNITY_SRC}/QuicklistMenuItemCheckmark.cpp
@@ -283,6 +302,8 @@ add_executable (launcher
                 ${UNITY_SRC}/QuicklistView.h
                 ${UNITY_SRC}/QuicklistManager.cpp
                 ${UNITY_SRC}/QuicklistManager.h
+                ${UNITY_SRC}/TextureCache.cpp
+                ${UNITY_SRC}/TextureCache.h
                 ${UNITY_SRC}/Timer.cpp
                 ${UNITY_SRC}/Timer.h
                 ${UNITY_SRC}/UBusMessages.h
@@ -290,6 +311,8 @@ add_executable (launcher
                 ${UNITY_SRC}/UBusWrapper.h
                 ${UNITY_SRC}/ubus-server.cpp
                 ${UNITY_SRC}/ubus-server.h
+                ${UNITY_SRC}/UScreen.cpp
+                ${UNITY_SRC}/UScreen.h
                 )
 add_dependencies (launcher unity-core-${UNITY_API_VERSION})
 

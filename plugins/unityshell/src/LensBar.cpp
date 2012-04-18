@@ -21,8 +21,6 @@
 
 #include "CairoTexture.h"
 #include "LensBar.h"
-#include "UBusMessages.h"
-#include "UBusWrapper.h"
 
 namespace unity
 {
@@ -75,9 +73,7 @@ void LensBar::SetupHomeLens()
   layout_->AddView(icon, 0, nux::eCenter, nux::MINOR_SIZE_FULL);
   AddChild(icon);
 
-  icon->mouse_click.connect([&, icon] (int x, int y, unsigned long button, unsigned long keyboard) { SetActive(icon); QueueDraw(); });
-  icon->mouse_down.connect([&] (int x, int y, unsigned long button, unsigned long keyboard) {  QueueDraw(); });
-  icon->key_nav_focus_change.connect([&](nux::Area*, bool, nux::KeyNavDirection){ QueueDraw(); });
+  icon->mouse_click.connect([&, icon] (int x, int y, unsigned long button, unsigned long keyboard) { SetActive(icon); });
   icon->key_nav_focus_activate.connect([&, icon](nux::Area*){ SetActive(icon); });
 }
 
@@ -90,9 +86,7 @@ void LensBar::AddLens(Lens::Ptr& lens)
   layout_->AddView(icon, 0, nux::eCenter, nux::eFix);
   AddChild(icon);
 
-  icon->mouse_click.connect([&, icon] (int x, int y, unsigned long button, unsigned long keyboard) { SetActive(icon); QueueDraw(); });
-  icon->mouse_down.connect([&] (int x, int y, unsigned long button, unsigned long keyboard) {  QueueDraw(); });
-  icon->key_nav_focus_change.connect([&](nux::Area*, bool, nux::KeyNavDirection){ QueueDraw(); });
+  icon->mouse_click.connect([&, icon] (int x, int y, unsigned long button, unsigned long keyboard) { SetActive(icon); });
   icon->key_nav_focus_activate.connect([&, icon](nux::Area*){ SetActive(icon); });
 }
 
@@ -119,12 +113,6 @@ void LensBar::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
   nux::GetPainter().RenderSinglePaintLayer(gfx_context, base, bg_layer_.get());
 
   gfx_context.PopClippingRectangle();
-
-  // trigger a redraw of the decoration, as the special masking of the
-  // decoration is usually destroyed by the clipping-rects/previous paints
-  ubus_server_send_message(ubus_server_get_default(),
-                           UBUS_DASH_DECORATION_DAMAGED,
-                           NULL);
 }
 
 void LensBar::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
