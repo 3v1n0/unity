@@ -21,9 +21,9 @@ class SwitcherTests(AutopilotTestCase):
     def setUp(self):
         super(SwitcherTests, self).setUp()
 
-        self.start_app('Character Map')
-        self.start_app('Calculator')
-        self.start_app('Mahjongg')
+        self.char_map = self.start_app('Character Map')
+        self.calc = self.start_app('Calculator')
+        self.mahjongg = self.start_app('Mahjongg')
 
     def tearDown(self):
         super(SwitcherTests, self).tearDown()
@@ -197,6 +197,69 @@ class SwitcherTests(AutopilotTestCase):
 
         self.assertThat(self.switcher.get_is_visible(), Equals(False))
 
+    def test_switcher_appears_on_monitor_with_focused_window(self):
+        num_monitors = self.screen_geo.get_num_monitors()
+        if num_monitors == 1:
+            self.skip("No point testing this on one monitor")
+
+        [calc_win] = self.calc.get_windows()
+        for monitor in range(num_monitors):
+            self.screen_geo.drag_window_to_monitor(calc_win, monitor)
+            self.switcher.initiate()
+            sleep(1)
+            self.assertThat(self.switcher.get_monitor(), Equals(monitor))
+            self.switcher.terminate()
+
+
+class SwitcherWindowsManagementTests(AutopilotTestCase):
+    """Test the switcher window management."""
+
+    def test_switcher_raises_only_last_focused_window(self):
+        """Tests that when we do an alt+tab only the previously focused window
+        is raised.
+        This is tests by opening 2 Calculators and a Mahjongg.
+        Then we do a quick alt+tab twice.
+        Then we close the currently focused window.
+        """
+        self.close_all_app("Mahjongg")
+        self.close_all_app("Calculator")
+
+        mahj = self.start_app("Mahjongg")
+        [mah_win1] = mahj.get_windows()
+        self.assertTrue(mah_win1.is_focused)
+
+        calc = self.start_app("Calculator")
+        [calc_win] = calc.get_windows()
+        self.assertTrue(calc_win.is_focused)
+
+        self.start_app("Mahjongg")
+        # Sleeping due to the start_app only waiting for the bamf model to be
+        # updated with the application.  Since the app has already started,
+        # and we are just waiting on a second window, however a defined sleep
+        # here is likely to be problematic.
+        # TODO: fix bamf emulator to enable waiting for new windows.
+        sleep(1)
+        [mah_win2] = [w for w in mahj.get_windows() if w.x_id != mah_win1.x_id]
+        self.assertTrue(mah_win2.is_focused)
+
+        self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
+
+        self.keybinding("switcher/reveal_normal")
+        sleep(1)
+        self.assertTrue(calc_win.is_focused)
+        self.assertVisibleWindowStack([calc_win, mah_win2, mah_win1])
+
+        self.keybinding("switcher/reveal_normal")
+        sleep(1)
+        self.assertTrue(mah_win2.is_focused)
+        self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
+
+        self.keybinding("window/close")
+        sleep(1)
+
+        self.assertTrue(calc_win.is_focused)
+        self.assertVisibleWindowStack([calc_win, mah_win1])
+
 
 class SwitcherDetailsTests(AutopilotTestCase):
     """Test the details mode for the switcher."""
@@ -364,4 +427,3 @@ class SwitcherWorkspaceTests(AutopilotTestCase):
         # current workspace and ask that one if it is hidden.
         self.assertFalse(wins[0].is_hidden)
         self.assertFalse(wins[1].is_hidden)
-

@@ -291,7 +291,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
   }
 
-  if (!_overlay_is_open)
+  if (!_overlay_is_open || GfxContext.UsingGLSLCodePath() == false)
     nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), _bg_layer.get());
 
   GfxContext.PopClippingRectangle();
@@ -366,7 +366,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
   }
 
-  if (!_overlay_is_open)
+  if (!_overlay_is_open || GfxContext.UsingGLSLCodePath() == false)
     gPainter.PushLayer(GfxContext, GetGeometry(), _bg_layer.get());
 
   if (_overlay_is_open)

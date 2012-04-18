@@ -177,8 +177,9 @@ DebugDBusInterface::HandleDBusMethodCall(GDBusConnection* connection,
     g_variant_get(parameters, "(&s)", &input);
 
     ret = GetState(input);
+    // GetState returns a floating variant and
+    // g_dbus_method_invocation_return_value ref sinks it
     g_dbus_method_invocation_return_value(invocation, ret);
-    g_variant_unref(ret);
   }
   else if (g_strcmp0(method_name, "StartLogToFile") == 0)
   {

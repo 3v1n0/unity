@@ -507,6 +507,7 @@ Controller::AddProperties(GVariantBuilder* builder)
   .add("initial-detail-timeout-length", initial_detail_timeout_length())
   .add("detail-timeout-length", detail_timeout_length())
   .add("visible", visible_)
+  .add("monitor", monitor_)
   .add("detail-mode", detail_mode_);
 }
 

@@ -132,7 +132,7 @@ bool Hint::Fill()
           if (opt.name() == arg2())
           {
             std::string temp(impl::GetMetaKey(opt.value().action().keyToString()));
-            temp = impl::FixShortcutFormat(temp);
+            temp = impl::GetTranslatableLabel(temp);
             temp = impl::ProperCase(temp);
             
             if (value() != temp)
