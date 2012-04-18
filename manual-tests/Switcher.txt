@@ -39,7 +39,6 @@ Outcome
   Also the menus shouldn't ever show. Even if the mouse has been left over
   the panel when starting the Alt+Tab.
 
-
 Full app title in Chinese
 -------------------------
 This test ensures that the App Switcher (Alt+Tab) displays the full title
@@ -57,4 +56,3 @@ Action:
 
 Outcome
   The title of the newly created window should be "显示桌面" and *not* "显示桌...".
-

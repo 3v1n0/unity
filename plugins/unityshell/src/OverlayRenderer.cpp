@@ -190,6 +190,7 @@ void OverlayRendererImpl::InitASMInverseTextureMaskShader()
 
 void OverlayRendererImpl::RenderInverseMask_ASM(nux::GraphicsEngine& gfx_context, int x, int y, int width, int height, nux::ObjectPtr<nux::IOpenGLBaseTexture> device_texture, nux::TexCoordXForm &texxform, const nux::Color &color)
 {
+#ifndef NUX_OPENGLES_20
   if (!inverse_texture_mask_asm_prog_.IsValid() || !inverse_texture_rect_mask_asm_prog_.IsValid())
   {
     InitASMInverseTextureMaskShader();
@@ -255,6 +256,7 @@ void OverlayRendererImpl::RenderInverseMask_ASM(nux::GraphicsEngine& gfx_context
     CHECKGL(glDisableVertexAttribArrayARB(VertexColorLocation));
 
   shader_program->End();
+#endif
 }
 
 void OverlayRendererImpl::InitSlInverseTextureMaskShader()
@@ -498,13 +500,12 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
   nux::GetPainter().RenderSinglePaintLayer(gfx_context, larger_content_geo, bg_darken_layer_);
 
 #ifndef NUX_OPENGLES_20
-  if (gfx_context.UsingGLSLCodePath() == FALSE)
+  if (gfx_context.UsingGLSLCodePath() == false)
   {
     bg_layer_->SetGeometry(larger_content_geo);
     nux::GetPainter().RenderSinglePaintLayer(gfx_context, larger_content_geo, bg_layer_);
   }
 #endif
-
 
   texxform_absolute_bg.flip_v_coord = false;
   texxform_absolute_bg.uoffset = (1.0f / bg_shine_texture_->GetWidth()) * parent->x_offset;
@@ -833,7 +834,7 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
   bgs++;
 
 #ifndef NUX_OPENGLES_20
-  if (gfx_context.UsingGLSLCodePath() == FALSE)
+  if (gfx_context.UsingGLSLCodePath() == false)
   {
     nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_);
     bgs++;

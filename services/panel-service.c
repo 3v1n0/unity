@@ -1720,8 +1720,9 @@ panel_service_show_entry_common (PanelService *self,
                                                         G_CALLBACK (on_active_menu_move_current), self);
 
       gtk_menu_popup (priv->last_menu, NULL, NULL, positon_menu, self, 0, CurrentTime);
-      GdkWindow *gdkwin = gtk_widget_get_window (GTK_WIDGET (priv->last_menu));
+      gtk_menu_reposition (priv->last_menu);
 
+      GdkWindow *gdkwin = gtk_widget_get_window (GTK_WIDGET (priv->last_menu));
       if (gdkwin != NULL)
         {
           gint left=0, top=0, width=0, height=0;

@@ -20,6 +20,7 @@
 #include <glib.h>
 #include <sstream>
 #include "PluginAdapter.h"
+#include "UScreen.h"
 
 #include <NuxCore/Logger.h>
 
@@ -392,6 +393,12 @@ PluginAdapter::InitiateExpo()
 }
 
 // WindowManager implementation
+guint32
+PluginAdapter::GetActiveWindow()
+{
+  return m_Screen->activeWindow();
+}
+
 bool
 PluginAdapter::IsWindowMaximized(guint xid)
 {
@@ -618,11 +625,12 @@ PluginAdapter::Lower(guint32 xid)
 }
 
 void 
-PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility focus_visibility, int monitor)
+PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility focus_visibility, int monitor, bool only_top_win)
 {
   CompPoint target_vp = m_Screen->vp();
-  CompWindow* top_window = NULL;
-  CompWindow* top_window_on_monitor = NULL;
+  CompWindow* top_window = nullptr;
+  CompWindow* top_monitor_win = nullptr;
+
   bool any_on_current = false;
   bool any_mapped = false;
   bool any_mapped_on_current = false;
@@ -661,11 +669,12 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
 
   if (!any_on_current)
   {
-    for (auto it = windows.rbegin(); it != windows.rend(); it++)
+    for (auto it = windows.rbegin(); it != windows.rend(); ++it)
     {
-      if ((any_mapped && !(*it)->minimized()) || !any_mapped)
+      CompWindow* win = *it;
+      if ((any_mapped && !win->minimized()) || !any_mapped)
       {
-        target_vp = (*it)->defaultViewport();
+        target_vp = win->defaultViewport();
         break;
       }
     }
@@ -675,46 +684,64 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
   {
     if (win->defaultViewport() == target_vp)
     {
-       /* Any window which is actually unmapped is
-        * not going to be accessible by either switcher
-        * or scale, so unconditionally unminimize those
-        * windows when the launcher icon is activated */
-       if ((focus_visibility == WindowManager::FocusVisibility::ForceUnminimizeOnCurrentDesktop &&
-            target_vp == m_Screen->vp()) ||
-            (focus_visibility == WindowManager::FocusVisibility::ForceUnminimizeInvisible &&
-             win->mapNum () == 0))
-       {
-         bool is_mapped = win->mapNum () != 0;
-         top_window = win;
-         if (monitor >= 0 && win->outputDevice() == monitor)
-          top_window_on_monitor = win;
-         win->unminimize ();
+      int win_monitor = GetWindowMonitor(win->id());
 
-         forced_unminimize = true;
+      /* Any window which is actually unmapped is
+      * not going to be accessible by either switcher
+      * or scale, so unconditionally unminimize those
+      * windows when the launcher icon is activated */
+      if ((focus_visibility == WindowManager::FocusVisibility::ForceUnminimizeOnCurrentDesktop &&
+          target_vp == m_Screen->vp()) ||
+          (focus_visibility == WindowManager::FocusVisibility::ForceUnminimizeInvisible &&
+           win->mapNum() == 0))
+      {
+        top_window = win;
+        forced_unminimize = true;
 
-         /* Initially minimized windows dont get raised */
-         if (!is_mapped)
-           win->raise ();
-       }
-       else if ((any_mapped_on_current && !win->minimized()) || !any_mapped_on_current)
-       {
-         if (!forced_unminimize || target_vp == m_Screen->vp())
-         {
-           win->raise();
-           top_window = win;
-           if (monitor >= 0 && win->outputDevice() == monitor)
-            top_window_on_monitor = win;
-         }
-       }
+        if (monitor >= 0 && win_monitor == monitor)
+          top_monitor_win = win;
+
+        if (!only_top_win)
+        {
+          bool is_mapped = (win->mapNum() != 0);
+          win->unminimize();
+
+           /* Initially minimized windows dont get raised */
+          if (!is_mapped)
+            win->raise();
+        }
+      }
+      else if ((any_mapped_on_current && !win->minimized()) || !any_mapped_on_current)
+      {
+        if (!forced_unminimize || target_vp == m_Screen->vp())
+        {
+          top_window = win;
+
+          if (monitor >= 0 && win_monitor == monitor)
+            top_monitor_win = win;
+
+          if (!only_top_win)
+            win->raise();
+        }
+      }
     }
   }
 
-  if (monitor > 0 && top_window_on_monitor)
+  if (monitor >= 0 && top_monitor_win)
+    top_window = top_monitor_win;
+
+  if (top_window)
   {
-    top_window_on_monitor->activate();
-  }
-  else if (top_window)
-  {
+    if (only_top_win)
+    {
+      if (forced_unminimize)
+        {
+          top_window->unminimize();
+        }
+
+      top_window->raise();
+    }
+
     top_window->activate();
   }
 }
@@ -768,12 +795,29 @@ PluginAdapter::OnLeaveDesktop()
   _in_show_desktop = false;
 }
 
+int
+PluginAdapter::GetWindowMonitor(guint32 xid) const
+{
+  // FIXME, we should use window->outputDevice() but this is not UScreen friendly
+  nux::Geometry const& geo = GetWindowGeometry(xid);
+
+  if (!geo.IsNull())
+  {
+    int x = geo.x + geo.width/2;
+    int y = geo.y + geo.height/2;
+
+    return UScreen::GetDefault()->GetMonitorAtPosition(x, y);
+  }
+
+  return -1;
+}
+
 nux::Geometry
 PluginAdapter::GetWindowGeometry(guint32 xid) const
 {
   Window win = xid;
   CompWindow* window;
-  nux::Geometry geo(0, 0, 1, 1);
+  nux::Geometry geo;
 
   window = m_Screen->findWindow(win);
   if (window)
