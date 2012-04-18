@@ -51,7 +51,7 @@ bool ShowdesktopHandler::ShouldHide (ShowdesktopHandlerWindowInterface *wi)
     return false;
 
   if (wi->Hidden())
-    if ((wi->ShowDesktopMode() || wi->Shaded()))
+    if ((wi->ShowDesktopMode() || wi->Shaded() || wi->Minimized()))
       return false;
 
   return true;

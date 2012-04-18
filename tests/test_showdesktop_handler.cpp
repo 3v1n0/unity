@@ -189,6 +189,24 @@ TEST_F(UnityShowdesktopHandlerTest, TestHiddenSDAndShadedWindowsNoSD)
   EXPECT_FALSE (ShowdesktopHandler::ShouldHide (&mMockWindow));
 }
 
+TEST_F(UnityShowdesktopHandlerTest, TestHiddenSDAndMinimizedWindowsNoSD)
+{
+  MockUnityShowdesktopHandlerWindow mMockWindow;
+
+  ShowdesktopHandler mMockHandler (static_cast <ShowdesktopHandlerWindowInterface *> (&mMockWindow), static_cast <compiz::WindowInputRemoverLockAcquireInterface *> (&mMockWindow));
+
+  EXPECT_CALL (mMockWindow, IsOverrideRedirect ());
+  EXPECT_CALL (mMockWindow, IsManaged ());
+  EXPECT_CALL (mMockWindow, IsGrabbed ());
+  EXPECT_CALL (mMockWindow, IsDesktopOrDock ());
+  EXPECT_CALL (mMockWindow, IsSkipTaskbarOrPager ());
+  EXPECT_CALL (mMockWindow, IsHidden ()).WillOnce (Return (true));
+  EXPECT_CALL (mMockWindow, IsInShowdesktopMode ()).WillOnce (Return (false));
+  EXPECT_CALL (mMockWindow, IsShaded ()).WillOnce (Return (false));
+  EXPECT_CALL (mMockWindow, IsMinimized ()).WillOnce (Return (true));
+  EXPECT_FALSE (ShowdesktopHandler::ShouldHide (&mMockWindow));
+}
+
 TEST_F(UnityShowdesktopHandlerTest, TestHiddenNotSDAndNotShadedWindowsSD)
 {
   MockUnityShowdesktopHandlerWindow mMockWindow;
@@ -203,6 +221,7 @@ TEST_F(UnityShowdesktopHandlerTest, TestHiddenNotSDAndNotShadedWindowsSD)
   EXPECT_CALL (mMockWindow, IsHidden ()).WillOnce (Return (true));
   EXPECT_CALL (mMockWindow, IsInShowdesktopMode ()).WillOnce (Return (false));
   EXPECT_CALL (mMockWindow, IsShaded ()).WillOnce (Return (false));
+  EXPECT_CALL (mMockWindow, IsMinimized ()).WillOnce (Return (false));
   EXPECT_TRUE (ShowdesktopHandler::ShouldHide (&mMockWindow));
 }
 
