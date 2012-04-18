@@ -456,14 +456,14 @@ class DashBorderTests(DashTestCase):
     """
     def setUp(self):
         super(DashBorderTests, self).setUp()
-       self.dash.ensure_visible()
+        self.dash.ensure_visible()
 
     def test_click_right_border(self):
         """Clicking on the right dash border should do nothing,
         *NOT* close the dash.
         """
         if (self.dash.view.form_factor != "desktop"):
-        self.skip("Not in desktop form-factor.")
+            self.skip("Not in desktop form-factor.")
 
         x = self.dash.view.x + self.dash.view.width + self.dash.view.right_border_width / 2;
         y = self.dash.view.y + self.dash.view.height / 2;
