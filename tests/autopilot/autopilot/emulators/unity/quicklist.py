@@ -27,7 +27,7 @@ class Quicklist(UnityIntrospectionObject):
 
     @property
     def selectable_items(self):
-        """Items that can be selected in the quicklist"""
+        """Items that can be selected in the quicklist."""
         return self.get_children_by_type(QuicklistMenuItem, visible=True, selectable=True)
 
     def get_quicklist_item_by_text(self, text):
@@ -79,19 +79,16 @@ class QuicklistMenuItem(UnityIntrospectionObject):
         return (self.x, self.y, self.width, self.height)
 
     def mouse_move_to(self):
+        assert(self.visible)
         logger.debug("Moving mouse over quicklist item %r", self)
         target_x = self.x + self.width / 2
         target_y = self.y + self.height / 2
         self._mouse.move(target_x, target_y, rate=20, time_between_events=0.005)
-        sleep(.25)
 
     def mouse_click(self, button=1):
         logger.debug("Clicking on quicklist item %r", self)
         self.mouse_move_to()
-        sleep(.25)
-        assert(self.visible)
-        self._mouse.click(press_duration=.1)
-        sleep(.25)
+        self._mouse.click()
 
 
 class QuicklistMenuItemLabel(QuicklistMenuItem):
