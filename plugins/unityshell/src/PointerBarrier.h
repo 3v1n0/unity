@@ -50,7 +50,7 @@ enum BarrierDirection
   RIGHT = 4,
 };
 
-class PointerBarrierWrapper
+class PointerBarrierWrapper : public sigc::trackable
 {
 public:
   typedef std::shared_ptr<PointerBarrierWrapper> Ptr;
