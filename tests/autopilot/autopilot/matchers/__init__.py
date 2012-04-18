@@ -23,7 +23,7 @@ class Eventually(Matcher):
 
     def match(self, value):
         wait_fun = getattr(value, 'wait_for', None)
-        if not wait_fun:
+        if wait_fun is None:
             raise TypeError("Eventually can only be used against autopilot attributes that have a wait_for funtion.")
         value.wait_for(self.matcher)
 

@@ -6,9 +6,11 @@
 # under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
 
+from testtools.matchers import Equals
 from time import sleep
 
 from autopilot.tests import AutopilotTestCase
+from autopilot.matchers import Eventually
 
 
 class CommandLensSearchTests(AutopilotTestCase):
@@ -29,9 +31,9 @@ class CommandLensSearchTests(AutopilotTestCase):
         if self.dash.search_string != "":
             self.keyboard.press_and_release("Delete")
 
-        self.dash.search_string.wait_for("")
+        self.assertThat(self.dash.search_string, Eventually(Equals("")))
         results_category = command_lens.get_category_by_name("Results")
-        results_category.is_visible.wait_for(True)
+        self.assertThat(results_category.is_visible, Eventually(Equals(True)))
 
     def test_results_category_appears(self):
         """Results category must appear when there are some results."""
@@ -39,9 +41,9 @@ class CommandLensSearchTests(AutopilotTestCase):
         command_lens = self.dash.get_current_lens()
         # lots of apps start with 'a'...
         self.keyboard.type("a")
-        self.dash.search_string.wait_for("a")
+        self.assertThat(self.dash.search_string, Eventually(Equals("a")))
         results_category = command_lens.get_category_by_name("Results")
-        results_category.is_visible.wait_for(True)
+        self.assertThat(results_category.is_visible, Eventually(Equals(True)))
 
     def test_result_category_actually_contains_results(self):
         """With a search string of 'a', the results category must contain some results."""
@@ -49,7 +51,7 @@ class CommandLensSearchTests(AutopilotTestCase):
         command_lens = self.dash.get_current_lens()
         # lots of apps start with 'a'...
         self.keyboard.type("a")
-        self.dash.search_string.wait_for("a")
+        self.assertThat(self.dash.search_string, Eventually(Equals("a")))
         results_category = command_lens.get_category_by_name("Results")
         results = results_category.get_results()
         self.assertTrue(results)
@@ -73,10 +75,10 @@ class CommandLensSearchTests(AutopilotTestCase):
         """Pressing Ctrl+Tab after launching command lens must switch to Home lens."""
         self.dash.reveal_command_lens()
         self.keybinding("dash/lens/next")
-        self.dash.active_lens.wait_for("home.lens")
+        self.assertThat(self.dash.active_lens, Eventually(Equals("home.lens")))
 
     def test_ctrl_shift_tab_switching(self):
         """Pressing Ctrl+Shift+Tab after launching command lens must switch to Video lens."""
         self.dash.reveal_command_lens()
         self.keybinding("dash/lens/prev")
-        self.dash.active_lens.wait_for("video.lens")
+        self.assertThat(self.dash.active_lens, Eventually(Equals("video.lens")))
