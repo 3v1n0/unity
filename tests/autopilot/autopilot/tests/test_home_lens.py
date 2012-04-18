@@ -6,8 +6,10 @@
 # under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
 
+from testtools.matchers import Equals
 from time import sleep
 
+from autopilot.matchers import Eventually
 from autopilot.tests import AutopilotTestCase
 
 
@@ -30,7 +32,7 @@ class HomeLensSearchTests(AutopilotTestCase):
         kb = self.keyboard
         self.dash.ensure_visible()
         kb.type("g")
-        self.dash.search_string.wait_for("g")
+        self.assertThat(self.dash.search_string, Eventually(Equals("g")))
         kb.type("edit", 0.1)
         kb.press_and_release("Enter", 0.1)
         self.addCleanup(self.close_all_app,  "Text Editor")
