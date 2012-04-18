@@ -268,8 +268,6 @@ void Controller::ShowDash()
     return;
   }
 
-  adaptor->saveInputFocus ();
-
   view_->AboutToShow();
 
   window_->ShowWindow(true);
