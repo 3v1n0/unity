@@ -498,7 +498,6 @@ class DashRestoreFocus(DashTestCase):
         self.assertTrue(calc_win.is_focused)
 
         self.dash.ensure_visible()
-        sleep(1)
         self.dash.ensure_hidden()
 
         self.assertThat(calc_win.is_focused, Eventually(Equals(True)))
