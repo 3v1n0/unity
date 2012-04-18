@@ -500,7 +500,7 @@ class DashRestoreFocus(DashTestCase):
         self.dash.ensure_visible()
         self.dash.ensure_hidden()
 
-        self.assertThat(calc_win.is_focused, Eventually(Equals(True)))
+        self.assertTrue(calc_win.is_focused)
 
     def test_hud_to_dash_restores_window_focus(self):
         """Make sure the hud->dash restores the last focused window."""
@@ -512,5 +512,5 @@ class DashRestoreFocus(DashTestCase):
         self.dash.ensure_visible()
         self.dash.ensure_hidden()
 
-        self.assertThat(calc_win.is_focused, Eventually(Equals(True)))
+        self.assertTrue(calc_win.is_focused)
 
