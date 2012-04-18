@@ -17,7 +17,7 @@ class Eventually(Matcher):
     def __init__(self, matcher):
         super(Eventually, self).__init__()
         match_fun = getattr(matcher, 'match', None)
-        if not match_fun:
+        if match_fun is None:
             raise TypeError("Eventually must be called with a testtools matcher argument.")
         self.matcher = matcher
 
