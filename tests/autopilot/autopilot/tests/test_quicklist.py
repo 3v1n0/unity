@@ -54,7 +54,7 @@ class QuicklistActionTests(AutopilotTestCase):
 
 
 class QuicklistKeyNavigationTests(AutopilotTestCase):
-    """Tests for the quicklist key navigation"""
+    """Tests for the quicklist key navigation."""
 
     def setUp(self):
         super(QuicklistKeyNavigationTests, self).setUp()
@@ -67,7 +67,7 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         self.ql_launcher = self.launcher.get_launcher_for_monitor(0)
 
     def open_quicklist_with_mouse(self):
-        """Opens a quicklist with the mouse"""
+        """Opens a quicklist with the mouse."""
         self.ql_launcher.click_launcher_icon(self.ql_launcher_icon, button=3)
         self.addCleanup(self.keyboard.press_and_release, "Escape")
         self.quicklist = self.ql_launcher_icon.get_quicklist()
@@ -76,7 +76,7 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         self.assertThat(self.quicklist.selected_item, Equals(None))
 
     def open_quicklist_with_keyboard(self):
-        """Opens a quicklist using the keyboard"""
+        """Opens a quicklist using the keyboard."""
         self.screen_geo.move_mouse_to_monitor(0)
         self.ql_launcher.key_nav_start()
         self.addCleanup(self.ql_launcher.key_nav_cancel)
@@ -94,9 +94,7 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         self.assertThat(self.quicklist.selected_item, NotEquals(None))
 
     def test_keynav_selects_first_item_when_unselected(self):
-        """Tests that the quicklist Home key selects the first valid item when
-        no item is selected
-        """
+        """Home key MUST select the first selectable item in a quicklist."""
         self.open_quicklist_with_mouse()
 
         self.keybinding("quicklist/keynav/first")
@@ -105,8 +103,8 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
 
     def test_keynav_selects_first_item_when_selected(self):
-        """Tests that the quicklist Home key selects the first valid item when
-        an item is selected
+        """Home key MUST select the first selectable item in a quicklist when
+        another item is selected.
         """
         self.open_quicklist_with_mouse()
         mouse_item = self.quicklist.selectable_items[-1]
@@ -119,7 +117,7 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
 
     def test_keynav_next_selects_first_item_when_unselected(self):
-        """Tests that the quicklist Down key selects the first valid item"""
+        """Down key MUST select the first valid item when nothing is selected."""
         self.open_quicklist_with_mouse()
 
         self.keybinding("quicklist/keynav/next")
@@ -128,9 +126,7 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
 
     def test_keynav_selects_last_item_when_unselected(self):
-        """Tests that the quicklist End key selects the last valid item when
-        no item is selected
-        """
+        """End key MUST select the last selectable item in a quicklist."""
         self.open_quicklist_with_mouse()
 
         self.keybinding("quicklist/keynav/last")
@@ -139,8 +135,8 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
 
     def test_keynav_selects_last_item_when_selected(self):
-        """Tests that the quicklist End key selects the last valid item when an
-        item is selected
+        """End key MUST select the last selectable item in a quicklist when
+        another item is selected.
         """
         self.open_quicklist_with_mouse()
         mouse_item = self.quicklist.selectable_items[0]
@@ -153,7 +149,7 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
 
     def test_keynav_prev_selects_last_item_when_unselected(self):
-        """Tests that the quicklist Up key selects the last valid item"""
+        """Up key MUST select the last valid item when nothing is selected."""
         self.open_quicklist_with_mouse()
 
         self.keybinding("quicklist/keynav/prev")
@@ -162,8 +158,8 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
 
     def test_launcher_keynav_selects_first_item(self):
-        """Tests that a quicklist opened using the launcher keybinding has
-        the first item selected
+        """The first selectable item of the quicklist must be selected when
+        opening the quicklist using the launcher key navigation.
         """
         self.open_quicklist_with_keyboard()
 
@@ -171,7 +167,7 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
         self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
 
     def test_keynav_next_selection_works(self):
-        """Tests that the selection using the keyboard Down arrow works"""
+        """Down key MUST select the next valid item."""
         self.open_quicklist_with_mouse()
 
         for item in self.quicklist.selectable_items:
@@ -181,7 +177,7 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
             self.assertThat(self.quicklist.selected_item.id, Equals(item.id))
 
     def test_keynav_prev_selection_works(self):
-        """Tests that the selection using the keyboard Up arrow works"""
+        """Up key MUST select the previous valid item."""
         self.open_quicklist_with_mouse()
 
         for item in reversed(self.quicklist.selectable_items):
@@ -192,7 +188,7 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
 
     def test_keynav_prev_is_cyclic(self):
         """Tests that when the first item is selected, pressing the Down arrow
-        selects the last item
+        selects the last item.
         """
         self.open_quicklist_with_mouse()
 
@@ -208,7 +204,7 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
 
     def test_keynav_next_is_cyclic(self):
         """Tests that when the last item is selected, pressing the Down arrow
-        selects the first item
+        selects the first item.
         """
         self.open_quicklist_with_mouse()
 
@@ -224,7 +220,7 @@ class QuicklistKeyNavigationTests(AutopilotTestCase):
 
     def test_keynav_mouse_interaction(self):
         """Tests that the interaction between key-navigation and mouse works as
-        expected. See bug #911561
+        expected. See bug #911561.
         """
         self.open_quicklist_with_mouse()
         mouse_item = self.quicklist.selectable_items[-1]
