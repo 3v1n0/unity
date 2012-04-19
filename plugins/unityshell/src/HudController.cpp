@@ -26,6 +26,7 @@
 #include "UBusMessages.h"
 #include "UScreen.h"
 
+#include <iostream>
 #include <libbamf/libbamf.h>
 
 namespace unity
@@ -300,6 +301,10 @@ void Controller::ShowHud()
   {
     // Windows list stack for all the monitors
     GList *windows = bamf_matcher_get_window_stack_for_monitor(matcher, -1);
+    
+    // Reset values, in case we can't find a window ie. empty current desktop
+    active_xid = 0;
+    active_win = 0;
 
     for (GList *l = windows; l; l = l->next)
     {
@@ -322,7 +327,6 @@ void Controller::ShowHud()
 
     g_list_free(windows);
   }
-
   BamfApplication* active_app = bamf_matcher_get_application_for_window(matcher, active_win);
 
   if (BAMF_IS_VIEW(active_app))
