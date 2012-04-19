@@ -292,7 +292,7 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
 
 
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
-        self.assertThat(launcher.are_shortcuts_showing(), Equals(True))
+        self.assertThat(launcher.shortcuts_shown, Equals(True))
 
     def test_shortcut_hint_shows_with_launcher_icons_hints(self):
         """When the launcher icons hints are shown also the shortcut hint should
@@ -304,5 +304,5 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
         self.addCleanup(launcher.keyboard_unreveal_launcher)
         sleep(1)
 
-        self.assertThat(launcher.are_shortcuts_showing(), Equals(True))
+        self.assertThat(launcher.shortcuts_shown, Equals(True))
         self.assertThat(self.shortcut_hint.is_visible(), Equals(True))
