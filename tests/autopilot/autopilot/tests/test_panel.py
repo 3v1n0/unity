@@ -212,11 +212,11 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
     def test_window_buttons_dont_show_on_empty_desktop(self):
         """Tests that the window buttons are not shown on clean desktop."""
-        # We need this sleep to give the time to showdesktop to properly resume
-        # the initial status without getting a false-negative result
-        self.addCleanup(sleep, 2)
-        self.addCleanup(self.keybinding, "window/show_desktop")
-
+        # THis initially used Show Desktop mode, but it's very buggy from within
+        # autopilot. We assume that workspace 2 is empty (which is safe for the
+        # jenkins runs at least.)
+        self.workspace.switch_to(2)
+        sleep(.5)
         self.assertFalse(self.panel.window_buttons_shown)
         self.panel.move_mouse_over_window_buttons()
         sleep(self.panel.menus.fadein_duration / 1000.0)
@@ -341,7 +341,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.keybinding("window/maximize")
 
         self.panel.move_mouse_over_window_buttons()
-        screen_x, screen_y = self.screen_geo.get_monitor_geometry(self.panel_monitor)
+        screen_x, screen_y, _, _ = self.screen_geo.get_monitor_geometry(self.panel_monitor)
         self.mouse.move(screen_x, screen_y, rate=20, time_between_events=0.005)
         sleep(.5)
         self.mouse.click(press_duration=.1)
@@ -710,6 +710,9 @@ class PanelMenuTests(PanelTestsBase):
         """Tests that if an application has no menus, then they are not
         shown or added.
         """
+        # TODO: This doesn't test what it says on the tin. Setting MENUPROXY to ''
+        # just makes the menu appear inside the app. That's fine, but it's not
+        # what is described in the docstring or test id.
         old_env = os.environ["UBUNTU_MENUPROXY"]
         os.putenv("UBUNTU_MENUPROXY", "")
         self.addCleanup(os.putenv, "UBUNTU_MENUPROXY", old_env)
