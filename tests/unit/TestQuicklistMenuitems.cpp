@@ -94,6 +94,7 @@ TestMenuItemCheckmark()
   g_assert_cmpstr(qlCheckmarkItem->GetLabel(), == , "Unchecked");
   g_assert_cmpint(qlCheckmarkItem->GetEnabled(), == , false);
   g_assert_cmpint(qlCheckmarkItem->GetActive(), == , false);
+  g_assert_cmpint(qlCheckmarkItem->GetSelectable(), == , false);
   g_assert_cmpint(qlCheckmarkItem->IsMarkupEnabled(), == , false);
 
   //qlCheckmarkItem->sigChanged.connect (sigc::mem_fun (pointerToCallerClass,
@@ -129,6 +130,7 @@ TestMenuItemLabel()
 
   g_assert_cmpstr(qlLabelItem->GetLabel(), == , "A Label");
   g_assert_cmpint(qlLabelItem->GetEnabled(), == , true);
+  g_assert_cmpint(qlLabelItem->GetSelectable(), == , true);
   g_assert_cmpint(qlLabelItem->IsMarkupEnabled(), == , true);
 
   //qlLabelItem->sigChanged.connect (sigc::mem_fun (pointerToCallerClass,
@@ -169,6 +171,7 @@ TestMenuItemRadio()
   g_assert_cmpstr(qlRadioItem->GetLabel(), == , "Radio Active");
   g_assert_cmpint(qlRadioItem->GetEnabled(), == , true);
   g_assert_cmpint(qlRadioItem->GetActive(), == , true);
+  g_assert_cmpint(qlRadioItem->GetSelectable(), == , true);
   g_assert_cmpint(qlRadioItem->IsMarkupEnabled(), == , true);
 
   //qlRadioItem->sigChanged.connect (sigc::mem_fun (pointerToCallerClass,
@@ -198,6 +201,7 @@ TestMenuItemSeparator()
   qlSeparatorItem = new QuicklistMenuItemSeparator(item, true);
 
   g_assert_cmpint(qlSeparatorItem->GetEnabled(), == , true);
+  g_assert_cmpint(qlSeparatorItem->GetSelectable(), == , false);
 
   qlSeparatorItem->Dispose();
   g_object_unref(item);

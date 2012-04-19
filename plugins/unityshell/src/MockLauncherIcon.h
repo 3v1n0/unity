@@ -120,7 +120,7 @@ public:
 
   void SetSortPriority(int priority) { sort_priority_ = priority; }
 
-  bool OpenQuicklist(bool default_to_first_item = false, int monitor = -1)
+  bool OpenQuicklist(bool select_first_item = false, int monitor = -1)
   {
     return false;
   }

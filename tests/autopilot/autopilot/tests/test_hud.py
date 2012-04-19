@@ -14,7 +14,6 @@ from testtools.matchers import (
     GreaterThan,
     LessThan,
     NotEquals,
-    raises,
     )
 from time import sleep
 

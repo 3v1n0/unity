@@ -43,6 +43,8 @@ public:
 
   ~QuicklistMenuItemSeparator();
 
+  virtual bool GetSelectable();
+
 protected:
 
   void PreLayoutManagement();
