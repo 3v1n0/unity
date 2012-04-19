@@ -9,7 +9,6 @@
 """Tests to ensure unity is compatible with ibus input method."""
 
 from testtools.matchers import Equals, NotEquals
-from time import sleep
 
 from autopilot.emulators.ibus import (
     set_active_engines,
@@ -138,10 +137,8 @@ class IBusTestsPinyinIgnore(IBusTests):
         self.activate_input_engine_or_skip("pinyin")
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
-        sleep(0.5)
-        self.activate_ibus()
-        self.addCleanup(self.deactivate_ibus)
-        sleep(0.5)
+        self.activate_ibus(self.dash.searchbar)
+        self.addCleanup(self.deactivate_ibus, self.dash.searchbar)
         self.keyboard.type("cipan")
         self.keyboard.press_and_release("Tab")
         self.keyboard.type("  ")
@@ -151,10 +148,10 @@ class IBusTestsPinyinIgnore(IBusTests):
         self.activate_input_engine_or_skip("pinyin")
         self.hud.ensure_visible()
         self.addCleanup(self.hud.ensure_hidden)
-        sleep(0.5)
+
         self.keyboard.type("a")
-        self.activate_ibus()
-        sleep(0.5)
+        self.activate_ibus(self.hud.searchbar)
+        self.addCleanup(self.deactivate_ibus, self.hud.searchbar)
         self.keyboard.type("riqi")
         old_selected = self.hud.selected_button
         self.keyboard.press_and_release("Down")
@@ -170,10 +167,8 @@ class IBusTestsAnthyIgnore(IBusTests):
         self.activate_input_engine_or_skip("anthy")
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
-        sleep(0.5)
-        self.activate_ibus()
-        self.addCleanup(self.deactivate_ibus)
-        sleep(0.5)
+        self.activate_ibus(self.dash.searchbar)
+        self.addCleanup(self.deactivate_ibus, self.dash.searchbar)
         self.keyboard.type("shisutemu ")
         self.keyboard.press_and_release("Tab")
         self.keyboard.press_and_release("Ctrl+j")
@@ -185,11 +180,9 @@ class IBusTestsAnthyIgnore(IBusTests):
         self.activate_input_engine_or_skip("anthy")
         self.hud.ensure_visible()
         self.addCleanup(self.hud.ensure_hidden)
-        sleep(0.5)
         self.keyboard.type("a")
-        self.activate_ibus()
-        self.addCleanup(self.deactivate_ibus)
-        sleep(0.5)
+        self.activate_ibus(self.hud.searchbar)
+        self.addCleanup(self.deactivate_ibus, self.hud.searchbar)
         self.keyboard.type("hiduke")
         old_selected = self.hud.selected_button
         self.keyboard.press_and_release("Down")
