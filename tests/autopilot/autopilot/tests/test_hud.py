@@ -444,6 +444,18 @@ class HudVisualTests(HudTestsBase):
         self.hud.ensure_visible()
         self.assertThat(self.hud.icon.icon_name, Eventually(Equals(calc.icon)))
 
+    def test_dash_hud_icon_shows_the_focused_application_on_current_desktop(self):
+        """Switching from the dash to hud gets the icon from the current desktop."""
+        self.workspace.switch_to(0)
+        calc = self.start_app("Calculator")
+        self.assertTrue(calc.is_active)
+        self.workspace.switch_to(2)
+        self.keybinding("dash/reveal")
+        sleep(1)
+        self.hud.ensure_visible()
+
+        self.assertThat(self.hud.icon.icon_name, Eventually(EndsWith("launcher_bfb.png")))
+
 
 class HudAlternativeKeybindingTests(HudTestsBase):
 
