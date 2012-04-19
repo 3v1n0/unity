@@ -95,7 +95,7 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
                                 int x_offset, int y_offset)
 {
   TextureContainer* container = row.renderer<TextureContainer*>();
-  if (container == nullptr || container->icon == nullptr)
+  if (container == nullptr)
     return;
 
   dash::Style& style = dash::Style::Instance();
@@ -104,8 +104,19 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
   // set up our texture mode
   nux::TexCoordXForm texxform;
 
-  int icon_left_hand_side = geometry.x + (geometry.width - container->icon->GetWidth()) / 2;
-  int icon_top_side = geometry.y + padding + ((tile_icon_size - container->icon->GetHeight()) / 2);
+  int icon_width, icon_height;
+  if (container->icon == nullptr)
+  {
+    icon_width = icon_height = tile_icon_size;
+  }
+  else
+  {
+    icon_width = container->icon->GetWidth();
+    icon_height = container->icon->GetHeight();
+  }
+
+  int icon_left_hand_side = geometry.x + (geometry.width - icon_width) / 2;
+  int icon_top_side = geometry.y + padding + (tile_icon_size - icon_height) / 2;
 
   if (container->blurred_icon && state == ResultRendererState::RESULT_RENDERER_NORMAL)
   {
