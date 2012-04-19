@@ -219,13 +219,12 @@ class DashKeyNavTests(DashTestCase):
             self.keyboard.press_and_release('Tab')
 
         self.keyboard.press_and_release('Tab')
-        searchbar = self.dash.get_searchbar()
-        self.assertThat(searchbar.expander_has_focus, Eventually(Equals(True)))
+        self.assertThat(self.dash.searchbar.expander_has_focus, Eventually(Equals(True)))
 
         filter_bar = lens.get_filterbar()
-        if not searchbar.showing_filters:
+        if not self.dash.searchbar.showing_filters:
             self.keyboard.press_and_release('Enter')
-            self.assertThat(searchbar.showing_filters, Eventually(Equals(True)))
+            self.assertThat(self.dash.searchbar.showing_filters, Eventually(Equals(True)))
             self.addCleanup(filter_bar.ensure_collapsed)
 
         for i in range(filter_bar.get_num_filters()):
@@ -241,10 +240,11 @@ class DashKeyNavTests(DashTestCase):
     def test_alt_f1_disabled(self):
         """This test that Alt+F1 is disabled when the dash is opened."""
         self.dash.ensure_visible()
-
-        launcher = self.launcher.get_launcher_for_monitor(0)
-        launcher.key_nav_start()
-
+        # can't use launcher emulator since we'll fail to start keynav:
+        self.keybinding("launcher/keynav")
+        # can't use Eventually here - sleep long enough for the launcher controller
+        # to react to the keypress (well, hopefully not)
+        sleep(5)
         self.assertThat(self.launcher.key_nav_is_active, Equals(False))
 
 
@@ -379,13 +379,12 @@ class DashLensResultsTests(DashTestCase):
                 self.keyboard.press_and_release('Tab')
 
             self.keyboard.press_and_release('Tab')
-            searchbar = self.dash.get_searchbar()
-            self.assertThat(searchbar.expander_has_focus, Eventually(Equals(True)))
+            self.assertThat(self.dash.searchbar.expander_has_focus, Eventually(Equals(True)))
 
             filter_bar = lens.get_filterbar()
-            if not searchbar.showing_filters:
+            if not self.dash.searchbar.showing_filters:
                 self.keyboard.press_and_release('Enter')
-                self.assertThat(searchbar.showing_filters, Eventually(Equals(True)))
+                self.assertThat(self.dash.searchbar.showing_filters, Eventually(Equals(True)))
                 if add_cleanup:
                     self.addCleanup(filter_bar.ensure_collapsed)
 
