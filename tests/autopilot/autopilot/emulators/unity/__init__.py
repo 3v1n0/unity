@@ -188,7 +188,8 @@ class UnityIntrospectionObject(object):
 
                 sleep(1)
 
-            raise AssertionError(failure_msg)
+            raise AssertionError("After 10 seconds test on %s.%s failed: %s"
+                % (self.parent.__class__.__name__, self.name, failure_msg))
 
         # This looks like magic, but it's really not. We're creating a new type
         # on the fly that derives from the type of 'value' with a couple of
