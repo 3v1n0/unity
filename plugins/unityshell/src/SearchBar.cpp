@@ -520,7 +520,7 @@ void SearchBar::UpdateBackground(bool force)
 {
   int RADIUS = 5;
   nux::Geometry geo(GetGeometry());
-  geo.width = layered_layout_->GetAbsoluteX() + 
+  geo.width = layered_layout_->GetAbsoluteX() +
               layered_layout_->GetAbsoluteWidth() -
               GetAbsoluteX() +
               SEARCH_ENTRY_RIGHT_BORDER;
@@ -665,7 +665,8 @@ void SearchBar::AddProperties(GVariantBuilder* builder)
   .add("filter-label-x", show_filters_->GetAbsoluteX())
   .add("filter-label-y", show_filters_->GetAbsoluteY())
   .add("filter-label-width", show_filters_->GetAbsoluteWidth())
-  .add("filter-label-height", show_filters_->GetAbsoluteHeight());
+  .add("filter-label-height", show_filters_->GetAbsoluteHeight())
+  .add("im_active", pango_entry_->im_active());
 }
 
 } // namespace unity

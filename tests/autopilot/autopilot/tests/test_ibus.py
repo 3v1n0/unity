@@ -38,21 +38,24 @@ class IBusTests(AutopilotTestCase):
         else:
             self.skipTest("This test requires the '%s' engine to be installed." % (engine_name))
 
-    def activate_ibus(self):
-        # it would be nice to be able to tell if it's currently active or not.
+    def activate_ibus(self, widget):
+        """Activate IBus, and wait till it's actived on 'widget'"""
+        self.assertThat(widget.im_active, Equals(False))
         self.keyboard.press_and_release('Ctrl+Space')
+        self.assertThat(widget.im_active, Eventually(Equals(True)))
 
-    def deactivate_ibus(self):
-        # it would be nice to be able to tell if it's currently active or not.
+    def deactivate_ibus(self, widget):
+        self.assertThat(widget.im_active, Equals(True))
         self.keyboard.press_and_release('Ctrl+Space')
+        self.assertThat(widget.im_active, Eventually(Equals(False)))
 
     def do_dash_test_with_engine(self, engine_name):
         self.activate_input_engine_or_skip(engine_name)
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
         sleep(0.5)
-        self.activate_ibus()
-        self.addCleanup(self.deactivate_ibus)
+        self.activate_ibus(self.dash.searchbar)
+        self.addCleanup(self.deactivate_ibus, self.dash.searchbar)
         sleep(0.5)
         self.keyboard.type(self.input)
         commit_key = getattr(self, 'commit_key', None)
@@ -65,8 +68,8 @@ class IBusTests(AutopilotTestCase):
         self.hud.ensure_visible()
         self.addCleanup(self.hud.ensure_hidden)
         sleep(0.5)
-        self.activate_ibus()
-        self.addCleanup(self.deactivate_ibus)
+        self.activate_ibus(self.hud.searchbar)
+        self.addCleanup(self.deactivate_ibus, self.hud.searchbar)
         sleep(0.5)
         self.keyboard.type(self.input)
         commit_key = getattr(self, 'commit_key', None)
