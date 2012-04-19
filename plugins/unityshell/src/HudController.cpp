@@ -26,7 +26,6 @@
 #include "UBusMessages.h"
 #include "UScreen.h"
 
-#include <iostream>
 #include <libbamf/libbamf.h>
 
 namespace unity
