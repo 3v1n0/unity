@@ -76,9 +76,10 @@ class Dash(KeybindingsHelper):
 
     @property
     def search_string(self):
-        return self.get_searchbar().search_string
+        return self.searchbar.search_string
 
-    def get_searchbar(self):
+    @property
+    def searchbar(self):
         """Returns the searchbar attached to the dash."""
         return self.view.get_searchbar()
 
