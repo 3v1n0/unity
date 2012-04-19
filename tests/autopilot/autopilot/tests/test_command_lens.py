@@ -33,7 +33,7 @@ class CommandLensSearchTests(AutopilotTestCase):
 
         self.assertThat(self.dash.search_string, Eventually(Equals("")))
         results_category = command_lens.get_category_by_name("Results")
-        self.assertThat(results_category.is_visible, Eventually(Equals(True)))
+        self.assertThat(results_category.is_visible, Eventually(Equals(False)))
 
     def test_results_category_appears(self):
         """Results category must appear when there are some results."""
