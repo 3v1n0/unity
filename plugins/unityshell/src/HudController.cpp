@@ -302,7 +302,7 @@ void Controller::ShowHud()
     GList *windows = bamf_matcher_get_window_stack_for_monitor(matcher, -1);
     
     // Reset values, in case we can't find a window ie. empty current desktop
-    active_xid = nullptr;
+    active_xid = 0;
     active_win = nullptr;
 
     for (GList *l = windows; l; l = l->next)
