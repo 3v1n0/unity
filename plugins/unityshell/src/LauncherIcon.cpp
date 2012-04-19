@@ -537,7 +537,7 @@ void LauncherIcon::RecvMouseLeave(int monitor)
     _tooltip->ShowWindow(false);
 }
 
-bool LauncherIcon::OpenQuicklist(bool default_to_first_item, int monitor)
+bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
 {
   std::list<DbusmenuMenuitem*> menus = Menus();
 
@@ -583,8 +583,8 @@ bool LauncherIcon::OpenQuicklist(bool default_to_first_item, int monitor)
     _quicklist->AddMenuItem(ql_item);
   }
 
-  if (default_to_first_item)
-    _quicklist->DefaultToFirstItem();
+  if (select_first_item)
+    _quicklist->SelectFirstItem();
 
   if (monitor < 0)
   {
