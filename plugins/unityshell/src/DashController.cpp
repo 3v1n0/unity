@@ -58,7 +58,7 @@ Controller::Controller()
   
   Settings::Instance().changed.connect([&]()
   {
-    if (window_)
+    if (window_ && view_)
     {
       window_->PushToFront();
       window_->SetInputFocus();
