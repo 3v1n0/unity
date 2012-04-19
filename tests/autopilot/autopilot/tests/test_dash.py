@@ -178,26 +178,6 @@ class DashKeyNavTests(DashTestCase):
         # Make sure that the category is highlighted.
         self.assertTrue(category.header_is_highlighted)
 
-    def test_maintain_highlight(self):
-        # Get the geometry of that category header.
-        self.skipTest('Not implemented at all. Broken out of another test but not reworked')
-        mouse = Mouse()
-
-        x = category.header_x
-        y = category.header_y
-        w = category.header_width
-        h = category.header_height
-
-        # Move the mouse close the view, and press down.
-        mouse.move(x + w + 10,
-                    y + h / 2,
-                    True)
-        sleep(1)
-        self.keyboard.press_and_release("Down")
-        lens = self.dash.get_current_lens()
-        category = lens.get_focused_category()
-        self.assertEqual(category, None)
-
     def test_control_tab_lens_cycle(self):
         """This test makes sure that Ctrl+Tab cycles lenses."""
         self.dash.ensure_visible()
@@ -262,7 +242,9 @@ class DashKeyNavTests(DashTestCase):
         """This test that Alt+F1 is disabled when the dash is opened."""
         self.dash.ensure_visible()
 
-        self.keybinding("launcher/keynav")
+        launcher = self.launcher.get_launcher_for_monitor(0)
+        launcher.key_nav_start()
+
         self.assertThat(self.launcher.key_nav_is_active, Equals(False))
 
 
@@ -421,7 +403,6 @@ class DashLensResultsTests(DashTestCase):
         activate_filter(True)
         self.addCleanup(activate_filter)
 
-        sleep(1)
         results_category = lens.get_category_by_name("Installed")
         results = results_category.get_results()
         self.assertIsNot(results, old_results)
@@ -466,6 +447,7 @@ class DashLensBarTests(DashTestCase):
         self.mouse.move(app_icon.x + (app_icon.width / 2),
                         app_icon.y + (app_icon.height / 2))
         self.mouse.click()
+
         self.assertThat(self.lensbar.active_lens, Eventually(Equals('applications.lens')))
 
 
@@ -505,32 +487,4 @@ class DashBorderTests(DashTestCase):
         self.mouse.click()
 
         self.assertThat(self.dash.visible, Eventually(Equals(True)))
-
-class DashRestoreFocus(DashTestCase):
-    """Tests that the dash restores focus on exit."""
-    def setUp(self):
-        super(DashRestoreFocus,self).setUp()
-
-    def test_dash_restores_window_focus(self):
-        """Make sure the dash restores the last focused window."""
-        calc = self.start_app("Calculator")
-        [calc_win] = calc.get_windows()
-        self.assertTrue(calc_win.is_focused)
-
-        self.dash.ensure_visible()
-        self.dash.ensure_hidden()
-
-        self.assertTrue(calc_win.is_focused)
-
-    def test_hud_to_dash_restores_window_focus(self):
-        """Make sure the hud->dash restores the last focused window."""
-        calc = self.start_app("Calculator")
-        [calc_win] = calc.get_windows()
-        self.assertTrue(calc_win.is_focused)
-
-        self.keybinding("hud/reveal")
-        self.dash.ensure_visible()
-        self.dash.ensure_hidden()
-
-        self.assertTrue(calc_win.is_focused)
 

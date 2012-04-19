@@ -192,8 +192,7 @@ class HudBehaviorTests(HudTestsBase):
         """Pressing Alt+F1 when the HUD is open must not start keyboard navigation mode."""
         self.hud.ensure_visible()
 
-        launcher = self.launcher.get_launcher_for_monitor(0)
-        launcher.key_nav_start()
+        self.keybinding("launcher/keynav")
         # we need a sleep here to ensure that the launcher has had time to start
         # keynav before we check the key_nav_is_active attribute.
         #
@@ -208,9 +207,8 @@ class HudBehaviorTests(HudTestsBase):
         self.hud.ensure_visible()
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
-
-        launcher = self.launcher.get_launcher_for_monitor(0)
-        launcher.key_nav_start()
+    
+        self.keybinding("launcher/keynav")
         self.assertThat(self.launcher.key_nav_is_active, Equals(False))
 
     def test_hud_to_dash_has_key_focus(self):
