@@ -300,6 +300,10 @@ void Controller::ShowHud()
   {
     // Windows list stack for all the monitors
     GList *windows = bamf_matcher_get_window_stack_for_monitor(matcher, -1);
+    
+    // Reset values, in case we can't find a window ie. empty current desktop
+    active_xid = 0;
+    active_win = nullptr;
 
     for (GList *l = windows; l; l = l->next)
     {
@@ -311,6 +315,8 @@ void Controller::ShowHud()
       Window xid = bamf_window_get_xid(win);
 
       if (bamf_view_user_visible(view) && bamf_window_get_window_type(win) != BAMF_WINDOW_DOCK &&
+          WindowManager::Default()->IsWindowOnCurrentDesktop(xid) &&
+          WindowManager::Default()->IsWindowVisible(xid) &&
           std::find(unity_xids.begin(), unity_xids.end(), xid) == unity_xids.end())
       {
         active_win = win;
@@ -320,7 +326,6 @@ void Controller::ShowHud()
 
     g_list_free(windows);
   }
-
   BamfApplication* active_app = bamf_matcher_get_application_for_window(matcher, active_win);
 
   if (BAMF_IS_VIEW(active_app))
