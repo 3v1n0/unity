@@ -45,6 +45,7 @@ class IBusTests(AutopilotTestCase):
         self.assertThat(widget.im_active, Eventually(Equals(True)))
 
     def deactivate_ibus(self, widget):
+        """Deactivate ibus, and wait till it's inactive on 'widget'"""
         self.assertThat(widget.im_active, Equals(True))
         self.keyboard.press_and_release('Ctrl+Space')
         self.assertThat(widget.im_active, Eventually(Equals(False)))
@@ -53,10 +54,8 @@ class IBusTests(AutopilotTestCase):
         self.activate_input_engine_or_skip(engine_name)
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
-        sleep(0.5)
         self.activate_ibus(self.dash.searchbar)
         self.addCleanup(self.deactivate_ibus, self.dash.searchbar)
-        sleep(0.5)
         self.keyboard.type(self.input)
         commit_key = getattr(self, 'commit_key', None)
         if commit_key:
@@ -67,10 +66,8 @@ class IBusTests(AutopilotTestCase):
         self.activate_input_engine_or_skip(engine_name)
         self.hud.ensure_visible()
         self.addCleanup(self.hud.ensure_hidden)
-        sleep(0.5)
         self.activate_ibus(self.hud.searchbar)
         self.addCleanup(self.deactivate_ibus, self.hud.searchbar)
-        sleep(0.5)
         self.keyboard.type(self.input)
         commit_key = getattr(self, 'commit_key', None)
         if commit_key:
