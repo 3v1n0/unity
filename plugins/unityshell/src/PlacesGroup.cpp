@@ -382,7 +382,8 @@ void
 PlacesGroup::Relayout()
 {
   if (_idle_id == 0)
-    _idle_id = g_idle_add((GSourceFunc)OnIdleRelayout, this);
+    _idle_id = g_idle_add_full(G_PRIORITY_HIGH,
+                               (GSourceFunc)OnIdleRelayout, this, NULL);
 }
 
 gboolean

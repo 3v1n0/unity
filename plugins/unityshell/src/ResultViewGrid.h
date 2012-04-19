@@ -78,8 +78,9 @@ private:
   typedef std::tuple <int, int> ResultListBounds;
   ResultListBounds GetVisableResults();
 
-  static gboolean OnLazyLoad (gpointer data);
+  static gboolean OnLazyLoad(gpointer data);
   void QueueLazyLoad();
+  void QueueViewChanged();
   void DoLazyLoad();
 
   int GetItemsPerRow();
@@ -94,7 +95,8 @@ private:
   std::string focused_uri_;
 
   int last_lazy_loaded_result_;
-  uint lazy_load_handle_;
+  unsigned lazy_load_handle_;
+  unsigned view_changed_handle_;
   int last_mouse_down_x_;
   int last_mouse_down_y_;
   std::string current_drag_uri_;
