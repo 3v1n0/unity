@@ -847,7 +847,7 @@ void Controller::Impl::SetupBamf()
 
 void Controller::Impl::SendHomeActivationRequest()
 {
-  ubus.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", "home.lens", 0, ""));
+  ubus.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", "home.lens", dash::NOT_HANDLED, ""));
 }
 
 Controller::Controller(Display* display)

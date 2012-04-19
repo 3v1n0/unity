@@ -338,12 +338,21 @@ void DashView::OnActivateRequest(GVariant* args)
 
   g_variant_get(args, "(sus)", &uri, &handled_type, &search_string);
 
-  std::string id = AnalyseLensURI(uri.Str());
+  std::string id(AnalyseLensURI(uri.Str()));
 
-  lens_bar_->Activate(id);
-
-  if ((id == "home.lens" && handled_type != GOTO_DASH_URI ) || !visible_)
+  if (!visible_)
+  {
+    lens_bar_->Activate(id);
     ubus_manager_.SendMessage(UBUS_DASH_EXTERNAL_ACTIVATION);
+  }
+  else if (/* visible_ && */ handled_type == NOT_HANDLED)
+  {
+    ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+  }
+  else if (/* visible_ && */ handled_type == GOTO_DASH_URI)
+  {
+    lens_bar_->Activate(id);
+  }
 }
 
 std::string DashView::AnalyseLensURI(std::string const& uri)
