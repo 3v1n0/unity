@@ -9,7 +9,6 @@
 """Tests to ensure unity is compatible with ibus input method."""
 
 from testtools.matchers import Equals, NotEquals
-from time import sleep
 
 from autopilot.emulators.ibus import (
     set_active_engines,
@@ -38,22 +37,24 @@ class IBusTests(AutopilotTestCase):
         else:
             self.skipTest("This test requires the '%s' engine to be installed." % (engine_name))
 
-    def activate_ibus(self):
-        # it would be nice to be able to tell if it's currently active or not.
+    def activate_ibus(self, widget):
+        """Activate IBus, and wait till it's actived on 'widget'"""
+        self.assertThat(widget.im_active, Equals(False))
         self.keyboard.press_and_release('Ctrl+Space')
+        self.assertThat(widget.im_active, Eventually(Equals(True)))
 
-    def deactivate_ibus(self):
-        # it would be nice to be able to tell if it's currently active or not.
+    def deactivate_ibus(self, widget):
+        """Deactivate ibus, and wait till it's inactive on 'widget'"""
+        self.assertThat(widget.im_active, Equals(True))
         self.keyboard.press_and_release('Ctrl+Space')
+        self.assertThat(widget.im_active, Eventually(Equals(False)))
 
     def do_dash_test_with_engine(self, engine_name):
         self.activate_input_engine_or_skip(engine_name)
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
-        sleep(0.5)
-        self.activate_ibus()
-        self.addCleanup(self.deactivate_ibus)
-        sleep(0.5)
+        self.activate_ibus(self.dash.searchbar)
+        self.addCleanup(self.deactivate_ibus, self.dash.searchbar)
         self.keyboard.type(self.input)
         commit_key = getattr(self, 'commit_key', None)
         if commit_key:
@@ -64,10 +65,8 @@ class IBusTests(AutopilotTestCase):
         self.activate_input_engine_or_skip(engine_name)
         self.hud.ensure_visible()
         self.addCleanup(self.hud.ensure_hidden)
-        sleep(0.5)
-        self.activate_ibus()
-        self.addCleanup(self.deactivate_ibus)
-        sleep(0.5)
+        self.activate_ibus(self.hud.searchbar)
+        self.addCleanup(self.deactivate_ibus, self.hud.searchbar)
         self.keyboard.type(self.input)
         commit_key = getattr(self, 'commit_key', None)
         if commit_key:
@@ -138,10 +137,8 @@ class IBusTestsPinyinIgnore(IBusTests):
         self.activate_input_engine_or_skip("pinyin")
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
-        sleep(0.5)
-        self.activate_ibus()
-        self.addCleanup(self.deactivate_ibus)
-        sleep(0.5)
+        self.activate_ibus(self.dash.searchbar)
+        self.addCleanup(self.deactivate_ibus, self.dash.searchbar)
         self.keyboard.type("cipan")
         self.keyboard.press_and_release("Tab")
         self.keyboard.type("  ")
@@ -151,10 +148,10 @@ class IBusTestsPinyinIgnore(IBusTests):
         self.activate_input_engine_or_skip("pinyin")
         self.hud.ensure_visible()
         self.addCleanup(self.hud.ensure_hidden)
-        sleep(0.5)
+
         self.keyboard.type("a")
-        self.activate_ibus()
-        sleep(0.5)
+        self.activate_ibus(self.hud.searchbar)
+        self.addCleanup(self.deactivate_ibus, self.hud.searchbar)
         self.keyboard.type("riqi")
         old_selected = self.hud.selected_button
         self.keyboard.press_and_release("Down")
@@ -170,10 +167,8 @@ class IBusTestsAnthyIgnore(IBusTests):
         self.activate_input_engine_or_skip("anthy")
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
-        sleep(0.5)
-        self.activate_ibus()
-        self.addCleanup(self.deactivate_ibus)
-        sleep(0.5)
+        self.activate_ibus(self.dash.searchbar)
+        self.addCleanup(self.deactivate_ibus, self.dash.searchbar)
         self.keyboard.type("shisutemu ")
         self.keyboard.press_and_release("Tab")
         self.keyboard.press_and_release("Ctrl+j")
@@ -185,11 +180,9 @@ class IBusTestsAnthyIgnore(IBusTests):
         self.activate_input_engine_or_skip("anthy")
         self.hud.ensure_visible()
         self.addCleanup(self.hud.ensure_hidden)
-        sleep(0.5)
         self.keyboard.type("a")
-        self.activate_ibus()
-        self.addCleanup(self.deactivate_ibus)
-        sleep(0.5)
+        self.activate_ibus(self.hud.searchbar)
+        self.addCleanup(self.deactivate_ibus, self.hud.searchbar)
         self.keyboard.type("hiduke")
         old_selected = self.hud.selected_button
         self.keyboard.press_and_release("Down")
