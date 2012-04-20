@@ -28,7 +28,7 @@ class IBusTests(AutopilotTestCase):
         super(IBusTests, self).tearDown()
 
     @classmethod
-    def tearDownClass(cls):
+    def setUpClass(cls):
         cls._old_engines = None
 
     @classmethod
