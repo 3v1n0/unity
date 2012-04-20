@@ -23,19 +23,26 @@ class IBusTests(AutopilotTestCase):
 
     def setUp(self):
         super(IBusTests, self).setUp()
-        self._old_engines = None
 
     def tearDown(self):
-        if self._old_engines is not None:
-            set_active_engines(self._old_engines)
         super(IBusTests, self).tearDown()
 
-    def activate_input_engine_or_skip(self, engine_name):
+    @classmethod
+    def tearDownClass(cls):
+        cls._old_engines = None
+
+    @classmethod
+    def tearDownClass(cls):
+        if cls._old_engines is not None:
+            set_active_engines(cls._old_engines)
+
+    @classmethod
+    def activate_input_engine_or_skip(cls, engine_name):
         available_engines = get_available_input_engines()
         if engine_name in available_engines:
-            self._old_engines = set_active_engines([engine_name])
+            cls._old_engines = set_active_engines([engine_name])
         else:
-            self.skipTest("This test requires the '%s' engine to be installed." % (engine_name))
+            raise AutopilotTestCase.skipException("This test requires the '%s' engine to be installed." % (engine_name))
 
     def activate_ibus(self, widget):
         """Activate IBus, and wait till it's actived on 'widget'"""
@@ -50,7 +57,6 @@ class IBusTests(AutopilotTestCase):
         self.assertThat(widget.im_active, Eventually(Equals(False)))
 
     def do_dash_test_with_engine(self, engine_name):
-        self.activate_input_engine_or_skip(engine_name)
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
         self.activate_ibus(self.dash.searchbar)
@@ -62,7 +68,6 @@ class IBusTests(AutopilotTestCase):
         self.assertThat(self.dash.search_string, Eventually(Equals(self.result)))
 
     def do_hud_test_with_engine(self, engine_name):
-        self.activate_input_engine_or_skip(engine_name)
         self.hud.ensure_visible()
         self.addCleanup(self.hud.ensure_hidden)
         self.activate_ibus(self.hud.searchbar)
@@ -76,6 +81,10 @@ class IBusTests(AutopilotTestCase):
 
 class IBusTestsPinyin(IBusTests):
     """Tests for the Pinyin(Chinese) input engine."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.activate_input_engine_or_skip("pinyin")
 
     scenarios = [
         ('basic', {'input': 'abc1', 'result': u'\u963f\u5e03\u4ece'}),
@@ -95,6 +104,10 @@ class IBusTestsPinyin(IBusTests):
 class IBusTestsHangul(IBusTests):
     """Tests for the Hangul(Korean) input engine."""
 
+    @classmethod
+    def setUpClass(cls):
+        cls.activate_input_engine_or_skip("hangul")
+
     scenarios = [
         ('transmission', {'input': 'xmfostmaltus ', 'result': u'\ud2b8\ub79c\uc2a4\ubbf8\uc158 '}),
         ('social', {'input': 'httuf ', 'result': u'\uc18c\uc15c '}),
@@ -110,6 +123,10 @@ class IBusTestsHangul(IBusTests):
 
 class IBusTestsAnthy(IBusTests):
     """Tests for the Anthy(Japanese) input engine."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.activate_input_engine_or_skip("anthy")
 
     scenarios = multiply_scenarios(
         [
@@ -133,8 +150,11 @@ class IBusTestsAnthy(IBusTests):
 class IBusTestsPinyinIgnore(IBusTests):
     """Tests for ignoring key events while the Pinyin input engine is active."""
 
+    @classmethod
+    def setUpClass(cls):
+        cls.activate_input_engine_or_skip("pinyin")
+
     def test_ignore_key_events_on_dash(self):
-        self.activate_input_engine_or_skip("pinyin")
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
         self.activate_ibus(self.dash.searchbar)
@@ -145,7 +165,6 @@ class IBusTestsPinyinIgnore(IBusTests):
         self.assertThat(self.dash.search_string, Eventually(NotEquals("  ")))
 
     def test_ignore_key_events_on_hud(self):
-        self.activate_input_engine_or_skip("pinyin")
         self.hud.ensure_visible()
         self.addCleanup(self.hud.ensure_hidden)
 
@@ -163,8 +182,11 @@ class IBusTestsPinyinIgnore(IBusTests):
 class IBusTestsAnthyIgnore(IBusTests):
     """Tests for ignoring key events while the Anthy input engine is active."""
 
+    @classmethod
+    def setUpClass(cls):
+        cls.activate_input_engine_or_skip("anthy")
+
     def test_ignore_key_events_on_dash(self):
-        self.activate_input_engine_or_skip("anthy")
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
         self.activate_ibus(self.dash.searchbar)
@@ -177,7 +199,6 @@ class IBusTestsAnthyIgnore(IBusTests):
         self.assertNotEqual("", dash_search_string)
 
     def test_ignore_key_events_on_hud(self):
-        self.activate_input_engine_or_skip("anthy")
         self.hud.ensure_visible()
         self.addCleanup(self.hud.ensure_hidden)
         self.keyboard.type("a")
