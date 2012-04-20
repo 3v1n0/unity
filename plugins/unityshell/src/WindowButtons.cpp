@@ -725,11 +725,16 @@ void WindowButtons::SetControlledWindow(Window xid)
     {
       auto button = dynamic_cast<WindowButton*>(area);
 
+      if (button->GetType() == panel::WindowButtonType::CLOSE)
+      {
+        bool closable = WindowManager::Default()->IsWindowClosable(xid);
+        button->SetEnabled(closable);
+      }
+
       if (button->GetType() == panel::WindowButtonType::MINIMIZE)
       {
         bool minimizable = WindowManager::Default()->IsWindowMinimizable(xid);
         button->SetEnabled(minimizable);
-        break;
       }
     }
   }

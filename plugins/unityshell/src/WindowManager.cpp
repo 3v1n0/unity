@@ -78,7 +78,17 @@ class WindowManagerDummy : public WindowManager
     return true;
   }
 
+  bool IsWindowClosable(guint32 xid)
+  {
+    return true;
+  }
+
   bool IsWindowMinimizable(guint32 xid)
+  {
+    return true;
+  }
+
+  bool IsWindowMaximizable(guint32 xid)
   {
     return true;
   }
