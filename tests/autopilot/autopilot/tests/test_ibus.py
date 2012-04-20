@@ -30,6 +30,7 @@ class IBusTests(AutopilotTestCase):
     @classmethod
     def setUpClass(cls):
         cls._old_engines = None
+        cls.activate_input_engine_or_skip(cls.engine_name)
 
     @classmethod
     def tearDownClass(cls):
@@ -82,9 +83,7 @@ class IBusTests(AutopilotTestCase):
 class IBusTestsPinyin(IBusTests):
     """Tests for the Pinyin(Chinese) input engine."""
 
-    @classmethod
-    def setUpClass(cls):
-        cls.activate_input_engine_or_skip("pinyin")
+    engine_name = "pinyin"
 
     scenarios = [
         ('basic', {'input': 'abc1', 'result': u'\u963f\u5e03\u4ece'}),
@@ -104,9 +103,7 @@ class IBusTestsPinyin(IBusTests):
 class IBusTestsHangul(IBusTests):
     """Tests for the Hangul(Korean) input engine."""
 
-    @classmethod
-    def setUpClass(cls):
-        cls.activate_input_engine_or_skip("hangul")
+    engine_name = "hangul"
 
     scenarios = [
         ('transmission', {'input': 'xmfostmaltus ', 'result': u'\ud2b8\ub79c\uc2a4\ubbf8\uc158 '}),
@@ -124,9 +121,7 @@ class IBusTestsHangul(IBusTests):
 class IBusTestsAnthy(IBusTests):
     """Tests for the Anthy(Japanese) input engine."""
 
-    @classmethod
-    def setUpClass(cls):
-        cls.activate_input_engine_or_skip("anthy")
+    engine_name = "anthy"
 
     scenarios = multiply_scenarios(
         [
@@ -150,9 +145,7 @@ class IBusTestsAnthy(IBusTests):
 class IBusTestsPinyinIgnore(IBusTests):
     """Tests for ignoring key events while the Pinyin input engine is active."""
 
-    @classmethod
-    def setUpClass(cls):
-        cls.activate_input_engine_or_skip("pinyin")
+    engine_name = "pinyin"
 
     def test_ignore_key_events_on_dash(self):
         self.dash.ensure_visible()
@@ -182,9 +175,7 @@ class IBusTestsPinyinIgnore(IBusTests):
 class IBusTestsAnthyIgnore(IBusTests):
     """Tests for ignoring key events while the Anthy input engine is active."""
 
-    @classmethod
-    def setUpClass(cls):
-        cls.activate_input_engine_or_skip("anthy")
+    engine_name = "anthy"
 
     def test_ignore_key_events_on_dash(self):
         self.dash.ensure_visible()
