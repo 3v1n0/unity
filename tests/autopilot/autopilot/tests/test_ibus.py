@@ -54,11 +54,11 @@ class IBusTests(AutopilotTestCase):
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
         self.activate_ibus(self.dash.searchbar)
-        self.addCleanup(self.deactivate_ibus, self.dash.searchbar)
         self.keyboard.type(self.input)
         commit_key = getattr(self, 'commit_key', None)
         if commit_key:
             self.keyboard.press_and_release(commit_key)
+        self.deactivate_ibus(self.dash.searchbar)
         self.assertThat(self.dash.search_string, Eventually(Equals(self.result)))
 
     def do_hud_test_with_engine(self, engine_name):
@@ -66,11 +66,11 @@ class IBusTests(AutopilotTestCase):
         self.hud.ensure_visible()
         self.addCleanup(self.hud.ensure_hidden)
         self.activate_ibus(self.hud.searchbar)
-        self.addCleanup(self.deactivate_ibus, self.hud.searchbar)
         self.keyboard.type(self.input)
         commit_key = getattr(self, 'commit_key', None)
         if commit_key:
             self.keyboard.press_and_release(commit_key)
+        self.deactivate_ibus(self.hud.searchbar)
         self.assertThat(self.hud.search_string, Eventually(Equals(self.result)))
 
 
@@ -138,10 +138,10 @@ class IBusTestsPinyinIgnore(IBusTests):
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
         self.activate_ibus(self.dash.searchbar)
-        self.addCleanup(self.deactivate_ibus, self.dash.searchbar)
         self.keyboard.type("cipan")
         self.keyboard.press_and_release("Tab")
         self.keyboard.type("  ")
+        self.deactivate_ibus(self.dash.searchbar)
         self.assertThat(self.dash.search_string, Eventually(NotEquals("  ")))
 
     def test_ignore_key_events_on_hud(self):
@@ -151,11 +151,11 @@ class IBusTestsPinyinIgnore(IBusTests):
 
         self.keyboard.type("a")
         self.activate_ibus(self.hud.searchbar)
-        self.addCleanup(self.deactivate_ibus, self.hud.searchbar)
         self.keyboard.type("riqi")
         old_selected = self.hud.selected_button
         self.keyboard.press_and_release("Down")
         new_selected = self.hud.selected_button
+        self.deactivate_ibus(self.hud.searchbar)
 
         self.assertEqual(old_selected, new_selected)
 
@@ -168,10 +168,10 @@ class IBusTestsAnthyIgnore(IBusTests):
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
         self.activate_ibus(self.dash.searchbar)
-        self.addCleanup(self.deactivate_ibus, self.dash.searchbar)
         self.keyboard.type("shisutemu ")
         self.keyboard.press_and_release("Tab")
         self.keyboard.press_and_release("Ctrl+j")
+        self.deactivate_ibus(self.dash.searchbar)
         dash_search_string = self.dash.search_string
 
         self.assertNotEqual("", dash_search_string)
@@ -182,10 +182,10 @@ class IBusTestsAnthyIgnore(IBusTests):
         self.addCleanup(self.hud.ensure_hidden)
         self.keyboard.type("a")
         self.activate_ibus(self.hud.searchbar)
-        self.addCleanup(self.deactivate_ibus, self.hud.searchbar)
         self.keyboard.type("hiduke")
         old_selected = self.hud.selected_button
         self.keyboard.press_and_release("Down")
         new_selected = self.hud.selected_button
+        self.deactivate_ibus(self.hud.searchbar)
 
         self.assertEqual(old_selected, new_selected)
