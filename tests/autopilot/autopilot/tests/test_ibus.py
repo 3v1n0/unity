@@ -56,7 +56,7 @@ class IBusTests(AutopilotTestCase):
         self.keyboard.press_and_release('Ctrl+Space')
         self.assertThat(widget.im_active, Eventually(Equals(False)))
 
-    def do_dash_test_with_engine(self, engine_name):
+    def do_dash_test_with_engine(self):
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
         self.activate_ibus(self.dash.searchbar)
@@ -67,7 +67,7 @@ class IBusTests(AutopilotTestCase):
         self.deactivate_ibus(self.dash.searchbar)
         self.assertThat(self.dash.search_string, Eventually(Equals(self.result)))
 
-    def do_hud_test_with_engine(self, engine_name):
+    def do_hud_test_with_engine(self):
         self.hud.ensure_visible()
         self.addCleanup(self.hud.ensure_hidden)
         self.activate_ibus(self.hud.searchbar)
@@ -95,10 +95,10 @@ class IBusTestsPinyin(IBusTests):
     ]
 
     def test_simple_input_dash(self):
-        self.do_dash_test_with_engine("pinyin")
+        self.do_dash_test_with_engine()
 
     def test_simple_input_hud(self):
-        self.do_hud_test_with_engine("pinyin")
+        self.do_hud_test_with_engine()
 
 
 class IBusTestsHangul(IBusTests):
@@ -115,10 +115,10 @@ class IBusTestsHangul(IBusTests):
         ]
 
     def test_simple_input_dash(self):
-        self.do_dash_test_with_engine("hangul")
+        self.do_dash_test_with_engine()
 
     def test_simple_input_hud(self):
-        self.do_hud_test_with_engine("hangul")
+        self.do_hud_test_with_engine()
 
 
 class IBusTestsAnthy(IBusTests):
@@ -141,10 +141,10 @@ class IBusTestsAnthy(IBusTests):
         )
 
     def test_simple_input_dash(self):
-        self.do_dash_test_with_engine("anthy")
+        self.do_dash_test_with_engine()
 
     def test_simple_input_hud(self):
-        self.do_hud_test_with_engine("anthy")
+        self.do_hud_test_with_engine()
 
 
 class IBusTestsPinyinIgnore(IBusTests):
