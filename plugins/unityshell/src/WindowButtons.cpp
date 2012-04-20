@@ -739,11 +739,14 @@ void WindowButtons::SetControlledWindow(Window xid)
   {
     window_xid_ = xid;
 
-    if (window_xid_ &&  active_overlay_.empty())
+    if (window_xid_ && active_overlay_.empty())
     {
       for (auto area : GetChildren())
       {
         auto button = dynamic_cast<WindowButton*>(area);
+
+        if (!button)
+          continue;
 
         if (button->GetType() == panel::WindowButtonType::CLOSE)
         {
