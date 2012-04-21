@@ -151,7 +151,6 @@ public:
   DeviceLauncherSection* device_section_;
   LauncherEntryRemoteModel remote_model_;
   AbstractLauncherIcon::Ptr expo_icon_;
-  AbstractLauncherIcon::Ptr desktop_launcher_icon_;
   AbstractLauncherIcon::Ptr desktop_icon_;
   int                    num_workspaces_;
   bool                   show_desktop_icon_;
@@ -700,13 +699,12 @@ void Controller::Impl::RemoveExpoAction()
 
 void Controller::Impl::InsertDesktopIcon()
 {
-  desktop_launcher_icon_ = AbstractLauncherIcon::Ptr(new DesktopLauncherIcon());
-  RegisterIcon(desktop_launcher_icon_);
+  RegisterIcon(desktop_icon_);
 }
 
 void Controller::Impl::RemoveDesktopIcon()
 {
-  model_->RemoveIcon(desktop_launcher_icon_);
+  model_->RemoveIcon(desktop_icon_);
 }
 
 void Controller::Impl::RegisterIcon(AbstractLauncherIcon::Ptr icon)
@@ -900,13 +898,20 @@ std::vector<char> Controller::GetAllShortcuts() const
 std::vector<AbstractLauncherIcon::Ptr> Controller::GetAltTabIcons(bool current) const
 {
   std::vector<AbstractLauncherIcon::Ptr> results;
-
+  
   results.push_back(pimpl->desktop_icon_);
 
   for (auto icon : *(pimpl->model_))
+  {
     if (icon->ShowInSwitcher(current))
-      results.push_back(icon);
-
+    {
+      //otherwise we get two desktop icons in the switcher.
+      if (icon->GetIconType() != AbstractLauncherIcon::IconType::TYPE_DESKTOP)
+      {
+        results.push_back(icon);
+      }
+    }
+  } 
   return results;
 }
 
