@@ -639,7 +639,8 @@ void BamfLauncherIcon::Focus(ActionArg arg)
     }
   }
 
-  wm->FocusWindowGroup(windows, visibility, arg.monitor);
+  bool only_top_win = !any_urgent;
+  wm->FocusWindowGroup(windows, visibility, arg.monitor, only_top_win);
 }
 
 bool BamfLauncherIcon::Spread(bool current_desktop, int state, bool force)
