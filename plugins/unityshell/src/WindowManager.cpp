@@ -78,6 +78,11 @@ class WindowManagerDummy : public WindowManager
     return true;
   }
 
+  bool IsWindowOnTop(guint32 xid)
+  {
+    return false;
+  }
+
   bool IsWindowClosable(guint32 xid)
   {
     return true;

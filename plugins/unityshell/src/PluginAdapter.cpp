@@ -529,6 +529,39 @@ PluginAdapter::IsWindowVisible(guint32 xid)
 }
 
 bool
+PluginAdapter::IsWindowOnTop(guint32 xid)
+{
+  Window win = xid;
+  CompWindow* window;
+
+  window = m_Screen->findWindow(win);
+
+  if (window)
+  {
+    if (window->inShowDesktopMode() || !window->isMapped() || !window->isViewable() || window->minimized())
+      return false;
+
+    CompPoint window_vp = window->defaultViewport();
+    std::vector<Window> const& our_xids = nux::XInputWindow::NativeHandleList();
+
+    for (CompWindow* sibling = window->next; sibling; sibling = sibling->next)
+    {
+      if (sibling->defaultViewport() == window_vp && !sibling->minimized() &&
+          sibling->isMapped() && sibling->isViewable() && !sibling->inShowDesktopMode() &&
+          !(sibling->state() & CompWindowStateAboveMask) &&
+          std::find(our_xids.begin(), our_xids.end(), sibling->id()) == our_xids.end())
+      {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
+bool
 PluginAdapter::IsWindowClosable(guint32 xid)
 {
   Window win = xid;
