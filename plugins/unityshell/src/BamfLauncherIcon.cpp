@@ -961,7 +961,13 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
 
     _gsignals.Add(new glib::Signal<void, DbusmenuMenuitem*, int>(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
                                     [&] (DbusmenuMenuitem*, int) {
-                                      ActivateLauncherIcon(ActionArg(ActionArg::OTHER, 0));
+                                      _quicklist_activated_id =
+                                        g_idle_add([] (gpointer data) -> gboolean {
+                                          auto self = static_cast<BamfLauncherIcon*>(data);
+                                          self->ActivateLauncherIcon(ActionArg());
+                                          self->_quicklist_activated_id = 0;
+                                          return FALSE;
+                                        }, this);
                                     }));
 
     _menu_items_extra["AppName"] = glib::Object<DbusmenuMenuitem>(item);

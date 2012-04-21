@@ -125,6 +125,7 @@ private:
   bool _supported_types_filled;
   guint _fill_supported_types_id;
   guint _window_moved_id;
+  guint _quicklist_activated_id;
 
   std::string _remote_uri;
   std::string _desktop_file;
