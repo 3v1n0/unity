@@ -74,6 +74,23 @@ Outcome:
   change.
 
 
+Dash no-results-hint
+--------------------
+This tests that the text displaying "Sorry nothing matches your search" is hidden when results are present (even in hard-to-automatically-test scenarios).
+
+Action:
+#. Start guest session
+#. Open the Dash - there shouldn't be any results displayed, since this user
+   account didn't interact with anything yet
+#. Run an application not present in the launcher (for example gedit)
+#. Close previously opened application
+
+Outcome:
+  When Dash is opened 'gedit' (or application you launched) should be
+  displayed in the "Recent Apps" category. You shouldn't see
+  "Sorry nothing matches your search" text.
+
+
 Filter Results Tests
 ========================
 These tests show that the dash "All" button works well.

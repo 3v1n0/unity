@@ -70,7 +70,6 @@ class WorkspaceManager(KeybindingsHelper):
         for i in range(downs):
             self.keybinding("workspace/move_down")
 
-
     def _coordinates_to_vp_number(self, vx, vy):
         """Translate viewport coordinates to a viewport number."""
         row,col = self._coordinates_to_row_col(vx, vy)

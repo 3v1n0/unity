@@ -51,8 +51,10 @@ Controller::Controller()
   , start_time_(0)
   , view_(nullptr)
   , monitor_index_(0)
+  , type_wait_handle_(0)
 {
   LOG_DEBUG(logger) << "hud startup";
+  SetupWindow();
   UScreen::GetDefault()->changed.connect([&] (int, std::vector<nux::Geometry>&) { Relayout(); });
 
   ubus.RegisterInterest(UBUS_HUD_CLOSE_REQUEST, sigc::mem_fun(this, &Controller::OnExternalHideHud));
@@ -86,8 +88,14 @@ Controller::~Controller()
     window_->UnReference();
   window_ = 0;
 
-  g_source_remove(timeline_id_);
-  g_source_remove(ensure_id_);
+  if (timeline_id_)
+    g_source_remove(timeline_id_);
+
+  if (ensure_id_)
+    g_source_remove(ensure_id_);
+
+  if (type_wait_handle_)
+    g_source_remove(type_wait_handle_);
 }
 
 void Controller::SetupWindow()
@@ -99,6 +107,12 @@ void Controller::SetupWindow()
   window_->ShowWindow(false);
   window_->SetOpacity(0.0f);
   window_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &Controller::OnMouseDownOutsideWindow));
+  
+  /* FIXME - first time we load our windows there is a race that causes the input window not to actually get input, this side steps that by causing an input window show and hide before we really need it. */
+  PluginAdapter::Default()->saveInputFocus ();
+  window_->EnableInputWindow(true, "Hud", true, false);
+  window_->EnableInputWindow(false, "Hud", true, false);
+  PluginAdapter::Default()->restoreInputFocus ();
 }
 
 void Controller::SetupHudView()
@@ -143,15 +157,17 @@ bool Controller::IsLockedToLauncher(int monitor)
 
 void Controller::EnsureHud()
 {
-  if (window_)
-    return;
-
   LOG_DEBUG(logger) << "Initializing Hud";
 
-  SetupWindow();
-  SetupHudView();
-  Relayout();
-  ensure_id_ = 0;
+  if (!window_)
+    SetupWindow();
+  
+  if (!view_)
+  {
+    SetupHudView();
+    Relayout();
+    ensure_id_ = 0;
+  }
 }
 
 nux::BaseWindow* Controller::window() const
@@ -285,6 +301,10 @@ void Controller::ShowHud()
     // Windows list stack for all the monitors
     GList *windows = bamf_matcher_get_window_stack_for_monitor(matcher, -1);
 
+    // Reset values, in case we can't find a window ie. empty current desktop
+    active_xid = 0;
+    active_win = nullptr;
+
     for (GList *l = windows; l; l = l->next)
     {
       if (!BAMF_IS_WINDOW(l->data))
@@ -295,6 +315,8 @@ void Controller::ShowHud()
       Window xid = bamf_window_get_xid(win);
 
       if (bamf_view_user_visible(view) && bamf_window_get_window_type(win) != BAMF_WINDOW_DOCK &&
+          WindowManager::Default()->IsWindowOnCurrentDesktop(xid) &&
+          WindowManager::Default()->IsWindowVisible(xid) &&
           std::find(unity_xids.begin(), unity_xids.end(), xid) == unity_xids.end())
       {
         active_win = win;
@@ -312,6 +334,10 @@ void Controller::ShowHud()
     auto active_view = reinterpret_cast<BamfView*>(active_app);
     glib::String view_icon(bamf_view_get_icon(active_view));
     focused_app_icon_ = view_icon.Str();
+  }
+  else
+  {
+    focused_app_icon_ = focused_app_icon_ = PKGDATADIR "/launcher_bfb.png";
   }
 
   LOG_DEBUG(logger) << "Taking application icon: " << focused_app_icon_;
@@ -355,6 +381,8 @@ void Controller::HideHud(bool restore)
   window_->CaptureMouseDownAnyWhereElse(false);
   window_->EnableInputWindow(false, "Hud", true, false);
   visible_ = false;
+
+  nux::GetWindowCompositor().SetKeyFocusArea(NULL,nux::KEY_NAV_NONE);
 
   StartShowHideTimeline();
 
@@ -430,8 +458,22 @@ void Controller::OnActivateRequest(GVariant* variant)
 
 void Controller::OnSearchChanged(std::string search_string)
 {
+  //FIXME!! - when the service is smart enough to not fall over if you send many requests, this should be removed
   LOG_DEBUG(logger) << "Search Changed";
-  hud_service_.RequestQuery(search_string);
+  auto on_search_changed_timeout_lambda = [] (gpointer data) -> gboolean {
+    Controller* self = static_cast<Controller*>(data);
+    self->hud_service_.RequestQuery(self->last_search_);
+    self->type_wait_handle_ = 0;
+    return FALSE;
+  };
+  
+  last_search_ = search_string;
+  
+  if (type_wait_handle_)
+  {
+    g_source_remove(type_wait_handle_);
+  }  
+  type_wait_handle_ = g_timeout_add(100, on_search_changed_timeout_lambda, this);
 }
 
 void Controller::OnSearchActivated(std::string search_string)

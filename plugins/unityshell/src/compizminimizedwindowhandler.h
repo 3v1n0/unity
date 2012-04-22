@@ -298,7 +298,12 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::handleCompizEvent (const c
         if (CompOption::getBoolOptionNamed (o, "active", false))
           minimizingWindows.push_back (w);
         else
+        {
+          /* Ugly hack for LP#977189 */
+          CompositeWindow::get (w)->release ();
+          GLWindow::get (w)->release ();
           minimizingWindows.remove (w);
+        }
       }
     }
   }

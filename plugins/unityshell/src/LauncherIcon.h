@@ -86,7 +86,7 @@ public:
 
   void ShowTooltip();
 
-  bool OpenQuicklist(bool default_to_first_item = false, int monitor = -1);
+  bool OpenQuicklist(bool select_first_item = false, int monitor = -1);
 
   void        SetCenter(nux::Point3 center, int parent_monitor, nux::Geometry parent_geo);
 
@@ -162,9 +162,9 @@ public:
 
   std::list<DbusmenuMenuitem*> Menus();
 
-  void InsertEntryRemote(LauncherEntryRemote* remote);
+  void InsertEntryRemote(LauncherEntryRemote::Ptr const& remote);
 
-  void RemoveEntryRemote(LauncherEntryRemote* remote);
+  void RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote);
 
   nux::DndAction QueryAcceptDrop(unity::DndData& dnd_data)
   {
@@ -335,14 +335,14 @@ private:
   std::vector<nux::Geometry> _parent_geo;
   std::vector<nux::Point3> _saved_center;
 
-  static GtkIconTheme* _unity_theme;
+  static glib::Object<GtkIconTheme> _unity_theme;
 
   BaseTexturePtr _emblem;
 
   bool             _quirks[QUIRK_LAST];
   struct timespec  _quirk_times[QUIRK_LAST];
 
-  std::list<LauncherEntryRemote*> _entry_list;
+  std::list<LauncherEntryRemote::Ptr> _entry_list;
 };
 
 }

@@ -1,3 +1,3609 @@
+2012-04-12  Michal Hruby  <michal.mhr@gmail.com>
+
+	Make sure the lenses search for things we want on startup. Fixes: https://bugs.launchpad.net/bugs/979799. Approved by Gord Allott.
+
+2012-04-12  Michal Hruby  <michal.mhr@gmail.com>
+
+	Make sure the lenses search for things we want on startup
+
+2012-04-12  Gord Allott  <gord.allott@canonical.com>
+
+	creates input windows and opens/closes them on startup for the HUD and Dash. Fixes: https://bugs.launchpad.net/bugs/774447. Approved by Didier Roche.
+
+2012-04-12  Gord Allott  <gord.allott@canonical.com>
+
+	added fixmes
+
+2012-04-12  Gord Allott  <gord.allott@canonical.com>
+
+	opens an input window for the dash and hud and closes them immediately on startup, to fix hud/dash passthrough
+
+2012-04-12  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix a mistake in FilterExpanderLabel.cpp.. Fixes: . Approved by Didier Roche.
+
+2012-04-12  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Replace AddLayout with RemoveChildObject in FilterExpanderLabel.cpp
+
+2012-04-11  Jay Taoko  <jay.taoko@canonical.com>
+
+	Deactivated panel blurring when a window is maximised and the dash is open on system without GLSL support.. Fixes: https://bugs.launchpad.net/bugs/975103. Approved by Tim Penhey.
+
+2012-04-09  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fix for bug #975103
+	* Deactivated panel blurring when a window is maximized and the dash is open on system without GLSL support.
+
+2012-04-11  Gord Allott  <gord.allott@canonical.com>
+
+	HUD: Ignores service updates if user is key navigating. Fixes: https://bugs.launchpad.net/bugs/962984. Approved by Michal Hruby.
+
+2012-04-11  Gord Allott  <gord.allott@canonical.com>
+
+	tests
+
+2012-04-11  Gord Allott  <gord.allott@canonical.com>
+
+	doesn't update results in hud if you start to keynav
+
+2012-04-11  smspillaz  <sam.spilsbury@canonical.com>
+
+	Hack around the nvidia driver losing window pixmaps when minimizing windows. See LP #977189. Fixes: https://bugs.launchpad.net/bugs/977189. Approved by Michal Hruby, Didier Roche.
+
+2012-04-11  smspillaz  <sam.spilsbury@canonical.com>
+
+	Added manual test
+
+2012-04-11  smspillaz  <sam.spilsbury@canonical.com>
+
+	Force a rebind when windows are minimized
+	
+	See LP#977189. The nvidia driver seems to lose pixmap contents when we
+	minimize windows ... for whatever reason. Force a rebind of those contents
+	when the minimize animation has completed. 
+
+2012-04-11  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Reduced frosty effect to 30% (was 100% before). Fixes: https://bugs.launchpad.net/bugs/978785. Approved by Didier Roche, Xi Zhu.
+
+2012-04-11  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Update dash_noise.png asset by making it more subtle
+
+2012-04-11  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Lens selection should work when clicking in the rectangle outside of the icon.. Fixes: https://bugs.launchpad.net/bugs/937193. Approved by .
+
+2012-04-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix test style.
+
+2012-04-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Rename DashLensBar to DashLensBarTests.
+
+2012-04-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix AP test.
+
+2012-04-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add introspection to LensBarIcon.
+
+2012-04-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug #977961.
+
+2012-04-11  Andrea Azzarone  <azzaronea@gmail.com>
+
+	The keyboard shortcuts overlay bottom is truncated. . Fixes: https://bugs.launchpad.net/bugs/973386. Approved by Tim Penhey.
+
+2012-04-11  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add manual-test.
+
+2012-04-11  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug #973386.
+
+2012-04-11  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Fixed uninitialized variables in LauncherController. Fixes: . Approved by Tim Penhey.
+
+2012-04-10  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixed uninitialized variables
+
+2012-04-11  Thomi Richards  <thomi.richards@canonical.com>
+
+	Ensure autopilot always attaches the unity log, even if unity crashes.. Fixes: . Approved by Tim Penhey.
+
+2012-04-11  Thomi Richards  <thomi.richards@canonical.com>
+
+	Make sure we still attach the unity log if unity has crashed.
+
+2012-04-11  Alex Launi  <alex.launi@canonical.com>
+
+	Set the compose key before running dash compose key tests. Fixes: . Approved by Thomi Richards, Alex Launi.
+
+2012-04-10  Alex Launi  <alex.launi@canonical.com>
+
+	remove Gio and Glib in globals.py
+
+2012-04-10  Alex Launi  <alex.launi@canonical.com>
+
+	Pass list to check_output and keep test_dash.py PEP8 compliant
+
+2012-04-10  Alex Launi  <alex.launi@canonical.com>
+
+	remove gi import
+
+2012-04-10  Alex Launi  <alex.launi@canonical.com>
+
+	reset _DISPLAY after changing the keyboard map
+
+2012-04-10  Alex Launi  <alex.launi@canonical.com>
+
+	remove line
+
+2012-04-10  Alex Launi  <alex.launi@canonical.com>
+
+	Use gsettings to set the multi key for cases where it's not already set
+
+2012-04-09  Alex Launi  <alex.launi@canonical.com>
+
+	Set the compose key before running multi key tests
+
+2012-04-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	PanelMenuView no longer tries to dereference a pointer that has already been deleted when it's destroyed.. Fixes: . Approved by Tim Penhey, Brandon Schaefer.
+
+2012-04-11  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed nullptr assigns.
+
+2012-04-11  Thomi Richards  <thomi.richards@canonical.com>
+
+	Found a better way.
+
+2012-04-11  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed an issue in PanelMenuView where we were dereferencing a pointer that had already been deleted.
+
+2012-04-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Disconnect IconLoader handle in IconTexture destructor. Fixes: https://bugs.launchpad.net/bugs/935307. Approved by Tim Penhey.
+
+2012-04-11  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix.
+
+2012-04-11  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Disconnect IconLoader in IconTexture dtor.
+
+2012-04-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix StaticCairoText so we're not reading uninitialised values in an if statement.. Fixes: . Approved by Sam Spilsbury.
+
+2012-04-11  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed valgrind error about using uninitialised valies in an if statement.
+
+2012-04-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	BGHash no longer causes an invalid read of a deleted pointer in it's destructor.. Fixes: . Approved by Alex Launi.
+
+2012-04-11  Thomi Richards  <thomi.richards@canonical.com>
+
+	BGHash no longer causes the glib::SignalManager to read a deleted pointer.
+
+2012-04-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	FavoriteStore is no longer a singleton. Fixes a memory leak in FavoriteStoreGSettings.. Fixes: . Approved by Gord Allott.
+
+2012-04-11  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-04-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed favoritestore unit tests.
+
+2012-04-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Keep the * next to the type.
+
+2012-04-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Convert FavoriteStore from a proper singleton into a quasi-singleton, thereby fixing a memory leak in FavoriteStoreGSettings.
+
+2012-04-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix valgrind error: "Invalid read of size 8" inside PanelTray.. Fixes: . Approved by .
+
+2012-04-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Don't delete the gtk window twice inside PanelTray.
+
+2012-04-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed a memory leak in the LauncherController.. Fixes: . Approved by Gord Allott.
+
+2012-04-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix memory leak in LauncherController.
+
+2012-04-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix memory leak in GeisAdaptor and GestureEngine.. Fixes: . Approved by Tim Penhey.
+
+2012-04-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Remove gesture_engine_ from initialiser list.
+
+2012-04-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Renamed to gesture_engine_
+
+2012-04-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed with feedback from review.
+
+2012-04-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	GeisAdaptor is no longer a singleton, and we don't leak the GestureEngine either.
+
+2012-04-09  Thomi Richards  <thomi.richards@canonical.com>
+
+	ResultRendererTile no longer uses an unitialised variable to determine correct tile scaling.. Fixes: . Approved by Tim Penhey.
+
+2012-04-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	ResultRenderTile no longer uses an uninitialised variable to scale icons.
+
+2012-04-09  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix memory leak in PanelIndicatorEntryView.. Fixes: . Approved by Tim Penhey.
+
+2012-04-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix from review feedback.
+
+2012-04-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix leak in a better way after code review. Use nux::ObjectPtr instead of deleting the texture manually.
+
+2012-04-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Move delete closer to the allocation.
+
+2012-04-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Delete texture when we die as well.
+
+2012-04-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Don't leak texture in Panel::Refresh method.
+
+2012-04-09  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix a memory leak in the LauncherIcon code.. Fixes: . Approved by Tim Penhey.
+
+2012-04-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Free the pango font description after we're done with it in the LauncherIcon.
+
+2012-04-09  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix a memory leak in LensDirectoryReader.. Fixes: . Approved by Tim Penhey.
+
+2012-04-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Don't leak the return value of g_keyfile_get_string.
+
+2012-04-09  Didier Roche  <didier.roche@canonical.com>
+
+	Make Ubuntu Desktop string translated again. We can't use a namespaced version as the gettext domain isn't setup yet.
+	Pick already translated Alt and Press string (LP: #975815). Fixes: https://bugs.launchpad.net/bugs/975815. Approved by Sam Spilsbury.
+
+2012-04-09  Didier Roche  <didier.roche@canonical.com>
+
+	make it a const as it doesn't change
+
+2012-04-09  Didier Roche  <didier.roche@canonical.com>
+
+	Pick already translated Alt and Press string (LP: #975815)
+
+2012-04-09  Didier Roche  <didier.roche@canonical.com>
+
+	make Ubuntu Desktop string translated again. We can't use a namespaced version as the gettext domain isn't setup yet
+
+2012-04-09  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Change hilight and card background color. Fixes: . Approved by .
+
+2012-04-07  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Correct card background values from design
+
+2012-04-06  Gord Allott  <gord.allott@canonical.com>
+
+	Modifies our BGHash codebase to read the average colour from the root XWindow property
+	lots of code removed.
+	
+	Tests will arrive on Monday. Gord committed to it ;). Fixes: . Approved by Andrea Cimitan.
+
+2012-04-06  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Merge el trunko
+
+2012-04-06  Didier Roche  <didier.roche@canonical.com>
+
+	sometimes you see a hundred lines of conflicts in a file… and then, you realize it's just because of a blank added line…
+
+2012-04-05  Gord Allott  <gord.allott@canonical.com>
+
+	resolve conflicts, merged with trunk
+
+2012-04-05  Gord Allott  <gord.allott@canonical.com>
+
+	Ensures we react to property changes on the root window
+
+2012-04-05  Gord Allott  <gord.allott@canonical.com>
+
+	make bghash use the root window method
+
+2012-04-06  Didier Roche  <didier.roche@canonical.com>
+
+	reverting rev 2237: caused bug #975103 and some side-effects on at least another machine making unity unusable (see comment #1). Fixes: . Approved by .
+
+2012-04-06  Didier Roche  <didier.roche@canonical.com>
+
+	reverting rev 2237: caused bug #975103 and some side-effects on at least another machine making unity unusable (see comment #1)
+
+2012-04-06  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix stack corruption. Fixes: . Approved by Didier Roche.
+
+2012-04-06  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix stack corruption
+
+2012-04-06  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Fix average colors tweaks. Fixes: . Approved by Andrea Cimitan, Mirco Müller.
+
+2012-04-06  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Don't call MatchColor on the aubergine
+
+2012-04-06  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Process canonical Aibergine too, to fix alpha value to 0.72f
+
+2012-04-06  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Remove useless computation and improves saturation tune
+
+2012-04-06  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Make sure the special masking of the dash's decoration is restored when a repaint of the lens-nav-bar destroyed it.. Fixes: . Approved by Andrea Cimitan.
+
+2012-04-06  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Make sure the special masking of the dash's decoration is restored when a repaint of the lens-nav-bar destroyed it
+
+2012-04-06  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Fix 974408 removing a regression introduced by revision 2221. Fixes: https://bugs.launchpad.net/bugs/974408. Approved by Michal Hruby.
+
+2012-04-06  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Fix 974408 by reverting a regression introduced by revision 2221
+
+2012-04-06  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fixes a regression that caused the category icons to use default icons. Fixes: . Approved by Mirco Müller.
+
+2012-04-06  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix missing category icons
+
+2012-04-06  smspillaz  <sam.spilsbury@canonical.com>
+
+	Fixes LP #877778 - Introduces tests for UnityShowdesktopHandler. Fixes: https://bugs.launchpad.net/bugs/877778. Approved by Tim Penhey.
+
+2012-04-06  smspillaz  <sam.spilsbury@canonical.com>
+
+	Merge trunk
+
+2012-04-06  smspillaz  <sam.spilsbury@canonical.com>
+
+	Fix typo
+
+2012-04-06  smspillaz  <sam.spilsbury@canonical.com>
+
+	Fix typo
+
+2012-04-06  smspillaz  <sam.spilsbury@canonical.com>
+
+	Also update frame region when the window is unshowdesktoped
+
+2012-04-06  smspillaz  <sam.spilsbury@canonical.com>
+
+	Make pure virtual methods private
+
+2012-04-06  smspillaz  <sam.spilsbury@canonical.com>
+
+	Merge lp:unity and style
+
+2012-04-02  smspillaz  <sam.spilsbury@canonical.com>
+
+	Merge lp:unity
+
+2012-03-30  smspillaz  <sam.spilsbury@canonical.com>
+
+	Coding style
+
+2012-03-24  smspillaz  <sam.spilsbury@canonical.com>
+
+	Use some template magic to ensure that input removers are not leaked
+
+2012-03-24  smspillaz  <sam.spilsbury@canonical.com>
+
+	Added tests for opacity, paint masks, etc
+
+2012-03-24  smspillaz  <sam.spilsbury@canonical.com>
+
+	Add tests for fading out and in
+
+2012-03-24  smspillaz  <sam.spilsbury@canonical.com>
+
+	Added tests to ensure that the right windows are showdesktoped
+
+2012-03-24  smspillaz  <sam.spilsbury@canonical.com>
+
+	Testing framework for the showdesktop handler
+
+2012-03-24  smspillaz  <sam.spilsbury@canonical.com>
+
+	Split out the show desktop handler into its own file, break the dependency on compiz
+
+2012-03-23  smspillaz  <sam.spilsbury@canonical.com>
+
+	Fixes the showdesktop behaviour LP #877778
+	
+	Animate from 0 to 1 instead of vice versa to prevent variable initializations
+	from breaking showdesktop, don't prematurely free the handler class and set the
+	window to opaque with PAINT_WINDOW_NO_CORE_INSTANCE_MASK when fully hidden
+	so it turns up in scale
+
+2012-04-06  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	fontconfig changed and broke the line-spacing for the horiz. tile-renderer, so the line-spacing was adjusted to avoid text being clipped in the card-view (e.g. gwibber-lens entries with three lines of body-text). Fixes: https://bugs.launchpad.net/bugs/974523. Approved by Sam Spilsbury.
+
+2012-04-06  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	After fontconfig changed, the line-spacing for the horiz. tile-renderer had to be adjusted, so text isn't clipped in the card-view... thus fixing LP: #974523
+
+2012-04-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Autopilot: added the testing support for the panel. Fixes: . Approved by Tim Penhey.
+
+2012-04-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_panel: added missing sleep time, waiting for app discovery
+
+2012-04-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_panel: add more sleeps...
+
+2012-04-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_panel: make some tests more robust
+
+2012-04-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: added missing introspection variable (fix typo)
+
+2012-04-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_panel: added grab area tests!
+
+2012-04-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_panel: more indicator tests, plus panel key navigation.
+
+2012-04-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-04-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_panel: added some indicators interaction tests
+
+2012-04-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, panel: allow to get an indicator entry by the name-hint
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot: removed some tests duplication, added the PanelHoveringTests class
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_panel: adding menu tests
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-cleanup into panel-p-tests.
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-cleanup into panel-p-tests.
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_panel: added more window buttons tests for fitts law check
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_panel: making the tests more solid
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot: test_panel, some improvements to the move / maximize code
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, panel tests: some optimizations following Tim's review.
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, panel: make the click tests less prone to false positive
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_panel: fix the "close button" test for other monitors
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_panel: even more tests for strange bugs
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, BAMF: closed is a signal... Let's use another trick
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_panel: add some bug related window buttons tests
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_panel: add test to check window buttons in multimonitor with overlays
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashController: use BuildWrapper and export the monitor into the introspection data
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: include fading timings into the introspection data
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-cleanup into panel-p-tests.
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_panel: added even more WindowButtons tests.
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashView: add introspection data about the form-factor
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_panel: added first tests for window buttons
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, bamf: get if a window has been closed
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot: panel, improved the window buttons related functions
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: add more introspection data
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_panel: do most of the initialization into the PanelTestsBase class
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_panel: added test to check that the window title has changed
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_panel: using self.screen_geo.drag_window_to_monitor instead of the self-provided function
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	X11: added ScreenGeometry().drag_window_to_monitor utility function
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_panel: added an utility function to launch application windows for a given monitor
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, bamf: add the set_focus method support
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-cleanup into panel-p-tests.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-cleanup into panel-p-tests.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with WindowButtons changes
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-cleanup into panel-p-tests.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_panel: use maximize in cleanups, added a new test switching focused window
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, panel: added other window title related tests.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelTitlebarGrabAreaView: use absolute geometry for introspection data
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, panel: fixed some math, and more properties
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, panel: applying the Thomi's fixes
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_launcher: add keynav / switcher tests for focus activation
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_launcher: check if key_nav resumes the focus on cancel
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_launcher: added tests for focus resume on launcher switcher
+	
+	Tests cover bug #970420
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-cleanup into panel-p-tests.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-cleanup into panel-p-tests.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-cleanup into panel-p-tests.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: introspection, use "entry_id", or Autopilot won't work with "id" parameters
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_panel: added first panel title tests
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, bamf: use the window geometry using gdk, xlib aren't working here.
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, bamf: add monitor property to window
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-cleanup into panel-p-tests.
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, keybindings: added some window management keybindings support
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, add first panel support.
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Panel: use GetAbsoluteGeometry for introspection...
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowButtons, PanelIndicatorEntryView: Set invisible items event insensitive
+	
+	Also, improve the introspection data
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-cleanup into panel-p-tests.
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-cleanup into panel-p-tests.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: introspection add human-readable type and menu geometries
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: introspection, add introspection property if the desktop is active.
+
+2012-04-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	A lot of panel fixes with code cleanup and improvements to the panel code.. Fixes: https://bugs.launchpad.net/bugs/655184, https://bugs.launchpad.net/bugs/839690, https://bugs.launchpad.net/bugs/865701, https://bugs.launchpad.net/bugs/875932, https://bugs.launchpad.net/bugs/921316, https://bugs.launchpad.net/bugs/921918, https://bugs.launchpad.net/bugs/934680, https://bugs.launchpad.net/bugs/936425, https://bugs.launchpad.net/bugs/939054, https://bugs.launchpad.net/bugs/940683, https://bugs.launchpad.net/bugs/951747, https://bugs.launchpad.net/bugs/953868, https://bugs.launchpad.net/bugs/962410, https://bugs.launchpad.net/bugs/963118, https://bugs.launchpad.net/bugs/963134, https://bugs.launchpad.net/bugs/968261, https://bugs.launchpad.net/bugs/970420, https://bugs.launchpad.net/bugs/971947. Approved by Tim Penhey.
+
+2012-04-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: Ops, fixing merge issue
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk, resolving conflicts
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-panel-view into panel-p-cleanup.
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-menu-view into panel-p-panel-view.
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: don't allow clicks in the grab-area when an overlay is opened
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-panel-view into panel-p-cleanup.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-menu-view into panel-p-panel-view.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: remove the PostLayoutManagement set window-buttons' monitor
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-panel-view into panel-p-cleanup.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-menu-view into panel-p-panel-view.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-core into panel-p-menu-view.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelController: Set the layout as the last thing, to avoid geometry changes (andyrock)
+	
+	And this finally fixes the "Cut" menus issue that happened on startup,
+	kudos to Andrea Azzarone for this fix.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashController: save the dash monitor value and emit that both when showing and hiding the dash
+	
+	This caused an issue when hiding the dash in a monitor and trying to close it from another.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-panel-view into panel-p-cleanup.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-menu-view into panel-p-panel-view.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-core into panel-p-menu-view.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-window-manager into panel-p-core.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-tray into panel-p-window-manager.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-grab-area into panel-p-tray.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-window-buttons into panel-p-grab-area.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowButtons: make the buttons multi-monitor aware.
+	
+	This is needed to ignore the overlay events for another monitor.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-panel-view into panel-p-cleanup.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-menu-view into panel-p-panel-view.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: don't ignore clicks on window buttons if the dash is opened on the given panel
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-panel-view into panel-p-cleanup.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-menu-view into panel-p-panel-view.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: only change the title on the target panel, when using the launcher switcher
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-panel-view into panel-p-cleanup.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-menu-view into panel-p-panel-view.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-core into panel-p-menu-view.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherController: include the monitor in the UBUS_SWITCHER_SHOWN message
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: be multi-monitor aware when informing about the launcher key nav/switcher start
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-panel-view into panel-p-cleanup.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-menu-view into panel-p-panel-view.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-core into panel-p-menu-view.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: don't restore the focus if the selected icon is currently running.
+
+2012-04-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: s/OnMenusClosed/NotifyAllMenusClosed/g
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-panel-view into panel-p-cleanup.
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-menu-view into panel-p-panel-view.
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: be safer, if the current _new_application has been closed, just reset it.
+	
+	This fixes the always-visible menu issue that can happen when quickly closing/opening applications
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-panel-view into panel-p-cleanup.
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-menu-view into panel-p-panel-view.
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: no need to overwrite QueueDraw
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: adding more constants, removed unneeded _padding variable
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-panel-view into panel-p-cleanup.
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-menu-view into panel-p-panel-view.
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: s/AllMenusClosed/OnMenusClosed/g
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-panel-view into panel-p-cleanup.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-menu-view into panel-p-panel-view.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: set the maximum entries width on the PostLayout
+	
+	This fixes the missing menus / compressed menus issue that could happen on fresh start...
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-panel-view into panel-p-cleanup.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: use Window type for tray Xid
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-panel-view into panel-p-cleanup.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-menu-view into panel-p-panel-view.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-core into panel-p-menu-view.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelController: the tray can have more than one XID, on multimonitor.
+	
+	Updating unityshell for it.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-panel-view into panel-p-cleanup.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-menu-view into panel-p-panel-view.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-core into panel-p-menu-view.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-window-manager into panel-p-core.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-tray into panel-p-window-manager.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelTray: use Window type for xid
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-panel-view into panel-p-cleanup.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-menu-view into panel-p-panel-view.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: reduce the risk of getting an empty panel menu on startup
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-panel-view into panel-p-cleanup.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: fixed some spacing issues
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-panel-view into panel-p-cleanup.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: set some methods const
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-panel-view into panel-p-cleanup.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: added the more generic IsActive method to get if a view is currently the active one
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-panel-view into panel-p-cleanup.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-menu-view into panel-p-panel-view.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-core into panel-p-menu-view.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-window-manager into panel-p-core.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-tray into panel-p-window-manager.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-grab-area into panel-p-tray.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-window-buttons into panel-p-grab-area.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowButtons: ignore the click events when the buttons are not enabled.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelTitlebarGrabAreaView: fixed typo in the comment
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-panel-view into panel-p-cleanup.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: main code cleanup, fixed dash/HUD switch.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-panel-view into panel-p-cleanup.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: fix console gtk_widget_path errors 
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with panel-p-menu-view changes
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: removed the useless (at this point) HasOurWindowFocused...
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: make the possible methods const.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-panel-view into panel-p-cleanup.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-core into panel-p-menu-view.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-window-manager into panel-p-core.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowManager: GetGeometry* related methods set to const
+	
+	Plus removed some unneeded casts.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-panel-view into panel-p-cleanup.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-core into panel-p-menu-view.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-window-manager into panel-p-core.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-tray into panel-p-window-manager.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-grab-area into panel-p-tray.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-window-buttons into panel-p-grab-area.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-indicators-view into panel-p-window-buttons.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorsView: «don't use "using namespace indicator;" in a header file.»
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-panel-view into panel-p-cleanup.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-core into panel-p-menu-view.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-window-manager into panel-p-core.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-tray into panel-p-window-manager.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-grab-area into panel-p-tray.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-window-buttons into panel-p-grab-area.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-indicators-view into panel-p-window-buttons.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-indicator-entry into panel-p-indicators-view.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: make GetLabel const
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-panel-view into panel-p-cleanup.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-core into panel-p-menu-view.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-window-manager into panel-p-core.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-tray into panel-p-window-manager.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-grab-area into panel-p-tray.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-window-buttons into panel-p-grab-area.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-indicators-view into panel-p-window-buttons.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-indicator-entry into panel-p-indicators-view.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: don't use "using namespace ..." into the Header
+	
+	Also fixed some typo and the widget path errors
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-panel-view into panel-p-cleanup.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-core into panel-p-menu-view.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-window-manager into panel-p-core.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-tray into panel-p-window-manager.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-grab-area into panel-p-tray.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-window-buttons into panel-p-grab-area.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-indicators-view into panel-p-window-buttons.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-indicator-entry into panel-p-indicators-view.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged panel-p-style into panel-p-indicator-entry.
+
+2012-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowButtons: ignore click events if not enabled.
+
+2012-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Panel: Fixing the overlay name...
+
+2012-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Ops... s/Overaly/Overlay/g ... 
+
+2012-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with upstream
+
+2012-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: code cleanup, multimonitor bug fixes and misc improvements
+	
+	The layout system has been rewritten and now it works
+	natively without the workarounds we were using before,
+	fixed the panel paddings to match design specs;
+	Optimized the drawing operations, now the title texture is cached and
+	rebuilt only if really needed.
+	Fixed the panel title on Expo and Scale.
+	Improved the detection of the panel used to draw the app title on
+	multi-monitor (disabled otherwise), and the alt+tab/alt conflict.
+	Maximized windows list is re-populated on startup or when adding a new
+	screen.
+
+2012-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Added misc changes needed to make the panel rock
+
+2012-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowManager: implemented some methods to handle the window position/size.
+
+2012-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelTray: code rewritten to use more C++ utilities
+
+2012-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelTitlebarGrabAreaView: addded to unity namespace, rewritten the event handling
+	
+	The grabbing handle has been greatly improved
+
+2012-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowButtons: code cleanup, more control to the buttons.
+	
+	rewritten using in a better way the subclass nux::Button
+	features, factorizing some code for each button into WindowButtons.
+	Also the handling of the controlled window is now done internally,
+	not by the PanelMenuView. 
+
+2012-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorsView: some API cleanup, added more protected virtual members
+
+2012-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView:
+	
+	code cleaned a lot to be more C++ conformant, and modified to be easily
+	extendible in the near future. Also fixed issues with the indicator entries
+	and Scale/Expo. Reduced some memory or CPU usage.
+
+2012-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView, PanelMenuView: set widget path types before name.
+	
+	This fixes a lot of warnings.
+
+2012-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: use the correct panel type to get the font
+
+2012-03-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: Set the WindowButtons padding as per design.
+
+2012-03-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: Only Scale is active for a window subset, show their app name.
+	
+	The desktop name otherwise. So on Super+S the desktop name is shown.
+
+2012-03-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PluginAdapter: added IsScaleActiveForGroup to get if scale is running for a window subset
+
+2012-03-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: make the desktop name to draw in all the panels
+
+2012-03-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Removing all the LIM stuff, it will be back soon!
+
+2012-03-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorsView: removed the "layout workaround", NUX likes us now!
+	
+	The menu/indicators layout can safely be kept and handled as the view's
+	layout, this saves us by doing unwanted workarounds and to just
+	manage its geometry.
+	
+	This also fixes an issue with multimonitor, that caused menus on
+	other monitors not to be clickable.
+
+2012-03-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: remove useless methods
+
+2012-03-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowButtons: don't be confused by different overlays
+	
+	Now switching from Dash to Hud and back works. See bug #963118
+
+2012-03-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unityshell: typo: s/showPanelFirstMenuKeyInitiate/showPanelFirstMenuKeyTerminate/
+
+2012-03-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Panel: s/Dash/Overlay/g
+
+2012-03-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-03-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: use Window type for windows.
+
+2012-03-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PluginAdapter: window's can't be obscured by window in different screens.
+	
+	Checking the geometry, though.
+
+2012-03-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: use nux::Rect.IsInside where possible
+
+2012-03-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: when we don't control the active window, all clicks are over the grab area
+
+2012-03-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: don't draw anything on the panel located into a monitor that doesn't control the active window
+
+2012-03-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelTray: remove the idle before destroying the window.
+	
+	Let's be paranoid! ;)
+
+2012-03-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelTray: don't crash when unplugging a monitor.
+
+2012-03-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: putting back some changes lost during merges
+
+2012-03-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with latest trunk.
+
+2012-03-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-03-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorAppmenuView: don't sync our geometry if not focused
+	
+	This will make the unity-panel-service correctly handle
+	the keyboard navigation.
+
+2012-03-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with newer lp:~3v1n0/unity/lim
+
+2012-03-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/indicators-tests
+
+2012-03-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/dbus-indicators-proxy
+
+2012-03-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging again with lp:~3v1n0/unity/indicators-p
+
+2012-03-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/indicators-p
+
+2012-03-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with changes in lp:~3v1n0/unity/lim
+
+2012-03-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unityshell: listen also the launcher switcher signals
+
+2012-03-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: emit the right keynav signal
+
+2012-03-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PluginAdapter: add some more spacing, to improve readability
+
+2012-03-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: put return types on the same line of the function name
+
+2012-03-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: add OnApplicationClosed function, to avoid casts
+	
+	Also added more controls to avoid un-hidden menus.
+
+2012-03-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: reset the _new_application if it points to an invalid application
+
+2012-03-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: add GetTopWindow method to get the top valid window, even if not in focus
+	
+	Added also utility functions such as GetBamfWindowForXid and IsValidWindow
+	to get a BamfView or to check if a window can be handled by us.
+	
+	We use the GetTopWindow to get the top view when an invalid one (an unity)
+	window is focused.
+
+2012-03-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: call the right function on launcher switcher end
+
+2012-03-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: also connect to the key-switcher ubus events
+
+2012-03-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: send the right ubus message depending on the key navigation type
+
+2012-03-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: show the selected icon name on the panel during key navigation
+	
+	Also, avoid to generate textures with empty labels, just nullify it
+
+2012-03-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: send UBus messages when the launcher selection has changed
+
+2012-03-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-03-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-03-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: don't allow to open menus in an inactive PanelMenuView
+
+2012-03-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: take care of the workarea x when dragging down a window.
+	
+	Fixes the restored position in a multimonitor setup.
+
+2012-03-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: improve debugging strings
+
+2012-03-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorAppmenuView: set invisible by default.
+
+2012-03-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: reduce the risk of getting an empty panel
+
+2012-03-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorAppmenuView: use area visibility as well.
+	
+	Disable the appmenu when not in use.
+
+2012-03-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: use PanelIndicatorsView as base for introspection data
+
+2012-03-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Panel: add more debug introspection informations
+
+2012-03-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorsView: make each menu entry to use the most space it really can
+	
+	When setting the maximium width for the entries, we shouold care of the
+	current sizes. So basically, if an entry doesn't need to be resized,
+	we can just take its width and remove it from the maximum space we have,
+	then the space that the other entries can use, is computed using the
+	remaining space.
+	
+	This improves a lot the entries collapsing, and make sure that we always
+	use all the horizontal space that we have.
+
+2012-03-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelIndicatorEntryView: improve the drawing of collapsed menus
+	
+	Consider the right_marging as well.
+
+2012-02-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-02-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelTray: update whitelist value on runtime.
+
+2012-02-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelTray: main code cleanup, hopefully fix crashes
+
+2012-02-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Pushing back removed changes
+
+2012-02-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/lim
+
+2012-02-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging trunk
+
+2012-02-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging trunk
+
+2012-02-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowButtons: manually manage the clicks on the buttons to be more Fitts conformant
+	
+	The window buttons are now put into the layout to manage their position
+	automatically, but we redirect the mouse events over them
+	to be more conformant to the Fitt's law.
+
+2012-02-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowButtons: make the buttons more Fitt's law conformant.
+
+2012-02-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowButton: add UpdateSize function to define the maximum button size
+
+2012-02-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowButtons: put win-buttons into the unity namespace.
+
+2012-02-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelTitlebarGrabAreaView: return gboolean FALSE instead of bool false on timeout
+
+2012-04-06  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	Fix pinch gesture.. Fixes: https://bugs.launchpad.net/bugs/969554. Approved by Thomi Richards.
+
+2012-04-04  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	Unit test for maximizing a window with a pinch gesture
+	
+	Tests fix for bug lp:969554
+
+2012-03-30  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	unityshell: Fix pinch gesture radius usage
+	
+	There was a change in the maning of a pinch radius.
+	Before it was expressed in device units, whose resolution
+	can vary wildly among different device types.
+	
+	Pinch radius is now expressed as a ratio between the initial radius
+	and the current radius.
+
+2012-04-05  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	Fix the three-finger move for unity.. Fixes: https://bugs.launchpad.net/bugs/940612. Approved by Tim Penhey.
+
+2012-04-04  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	Unit test for moving a window with a 3-finger's drag gesture.
+	
+	Tests fix for bug lp:940612
+
+2012-04-04  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	Adding infrastructure for testing plugins/unityshell/GestureEngine class
+	
+	Creates test-gesture-engine test along with necessary mocks
+
+2012-04-03  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	Remove unused include from GestureEngine.h
+
+2012-04-03  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	test/CmakeLists - link libraries against targets individually
+	
+	There may be targets that want to link against a different set of libraries
+	than the one offered by link_libraries().
+	Besides link_libraries() has been deprecated in favor of targe_link_libraries()
+
+2012-03-30  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	unityshell: gesture focus is a float, not an int
+
+2012-03-30  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	unityshell gestures: Use hit-test to find window affected by 3-touch drag
+	
+	Instead of climbing up the window hierarchy with XQueryTree. That will improve
+	performance.
+	
+	The root cause of lp:940612 is that after the re-architecture of the UTouch stack
+	the child_window_id event attribute is no longer being filled. Even though
+	UTouch stack should have it fixed, the change made by this patch is still
+	an improvement on its own right. Besides, in the new architecture, UTouch might
+	have trouble filling this attribute in the same way as before.
+
+2012-04-05  Kevin DuBois  <kevin.dubois@canonical.com>
+
+	Ensure that an animation always takes place after the Shortcut menu is shown
+	fixes: https://bugs.launchpad.net/unity/+bug/924636. Fixes: https://bugs.launchpad.net/bugs/924636. Approved by Marco Trevisan (Treviño).
+
+2012-04-05  Kevin DuBois  <kevin.dubois@canonical.com>
+
+	update manual tests to test for this incorrect rendering scenario
+
+2012-04-05  Kevin DuBois  <kevin.dubois@canonical.com>
+
+	Correct issue where shortcut animation was not taking place while mousing over launcher
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_launcher: fix error due to missing multiply_scenarios import. Fixes: . Approved by Tim Penhey.
+
+2012-04-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Fix multiply scenarios import
+
+2012-04-05  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fix a rendering call for systems with no GLSL support.. Fixes: . Approved by Jason Smith.
+
+2012-04-05  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Use proper rendering call for system with no GLSL support.
+	* Removed a printf.
+
+2012-04-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Panel style changes.. Fixes: . Approved by Tim Penhey.
+
+2012-04-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelStyle: use &glib::String instead of glib::String.AsOutParam.
+
+2012-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelStyle: general cleanup, move to UnityCore glib:: utilities
+	
+	It can be used now to check all the panel related settings, including
+	fonts and DPI. Emitting the changed signal when they get changed (so now
+	when changing the title font, it gets updated immediately).
+	Added better support for HighContrast themes and fallback buttons.
+
+2012-04-05  Alex Launi  <alex.launi@canonical.com>
+
+	Refactors the launcher tests. Adds a more logical organization, and removes duplicated code.. Fixes: . Approved by Alex Launi, Marco Trevisan (Treviño).
+
+2012-04-05  Alex Launi  <alex.launi@canonical.com>
+
+	Fix merge conflicts
+
+2012-03-22  Alex Launi  <alex.launi@canonical.com>
+
+	merge trunk
+
+2012-03-15  Alex Launi  <alex.launi@canonical.com>
+
+	remove 'file' that was added for no reason
+
+2012-03-15  Alex Launi  <alex.launi@canonical.com>
+
+	refactor launcher reveal tests
+
+2012-03-15  Alex Launi  <alex.launi@canonical.com>
+
+	refactor launcher keynav tests
+
+2012-03-15  Alex Launi  <alex.launi@canonical.com>
+
+	refactor launcher shortcut tests
+
+2012-03-15  Alex Launi  <alex.launi@canonical.com>
+
+	refactor switcher tests
+
+2012-04-05  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Very subtle card view background. Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-04-05  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Very subtle card view background
+
+2012-04-05  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Removes shadow from the decoration assets.. Fixes: . Approved by Andrea Azzarone, Marco Trevisan (Treviño).
+
+2012-04-05  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Fixes horizontal parity
+
+2012-04-05  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Should fix parity at topright
+
+2012-04-05  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	New dash decoration assets
+
+2012-04-05  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Less opacity on both line and background for search bar. Fixes: . Approved by Andrea Azzarone, Marco Trevisan (Treviño).
+
+2012-04-05  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Latest refinements on search bar from design: less opacity on both line and background
+
+2012-04-05  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fix: rendering of the Dash corners (top-right, bottom-left, bottom-right).. Fixes: https://bugs.launchpad.net/bugs/839476. Approved by Mirco Müller, Andrea Cimitan.
+
+2012-04-05  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fixed rendering offset error.
+
+2012-04-05  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Merge
+
+2012-04-05  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Draw nicer panel/dash launcher/dash separators, following mockups
+
+2012-04-05  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Merged with Unity trunk.
+
+2012-04-05  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fixed shader compilation.
+
+2012-04-05  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Rendering improvements.
+	* Removing the inverted textures as they are no longer necessary.
+
+2012-04-04  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fixed rendering of the Dash corners.
+
+2012-03-27  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Re-merged with trunk
+
+2012-02-24  Jay Taoko  <jay.taoko@canonical.com>
+
+	
+	* Fixed blending issues when using QRP_TexMaskTexAlpha.
+	* A weird problems remains on the bottom left corner.
+	* Shine and other effects remain to be applied on the corners.
+
+2012-02-24  Mirco Müller  <mirco.mueller@canonical.com>
+
+	Only use the alpha-channel in the mask-textures. Create the correct blurred texture-parts for the corners. Apply it all.
+
+2012-02-21  Mirco Müller  <mirco.mueller@canonical.com>
+
+	Added mask-textures for the three color-texture making up the corners of the dash/hud decoration
+
+2012-04-05  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use gtk_accelerator_get_label to get a translatable key binding.. Fixes: https://bugs.launchpad.net/bugs/971332. Approved by Gord Allott.
+
+2012-04-04  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix.
+
+2012-04-04  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix.
+
+2012-04-03  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix style issue.
+
+2012-04-03  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug #971332.
+
+2012-04-05  Koichi Akabe  <vbkaisetsu@gmail.com>
+
+	Ensures hud ignores key presses once ibus is active. Fixes: https://bugs.launchpad.net/bugs/957927, https://bugs.launchpad.net/bugs/964760, https://bugs.launchpad.net/bugs/973344. Approved by Brandon Schaefer, Gord Allott.
+
+2012-04-04  Koichi Akabe  <vbkaisetsu@gmail.com>
+
+	change to check im_preedit instead of im_active on dash (for lp:973344)
+
+2012-04-03  Koichi Akabe  <vbkaisetsu@gmail.com>
+
+	fix typo on autopilot test_ibus.py
+	remove for loop on test_ignore_key_events_on_hud
+
+2012-04-03  Koichi Akabe  <vbkaisetsu@gmail.com>
+
+	merge with trunk to solve conflicts
+
+2012-03-23  Koichi Akabe  <vbkaisetsu@gmail.com>
+
+	merge from trunk to solve conflicts
+
+2012-03-23  Koichi Akabe  <vbkaisetsu@gmail.com>
+
+	add autopilot test for ignoring key events while ibus is active
+
+2012-03-19  Koichi Akabe  <vbkaisetsu@gmail.com>
+
+	ignore tab key on dash when ibus is active
+
+2012-03-18  Koichi Akabe  <vbkaisetsu@gmail.com>
+
+	fix behaviour when unexpected key (left/right tab) is pressed on hud
+
+2012-03-17  Koichi Akabe  <vbkaisetsu@gmail.com>
+
+	add im_preedit property to get state of ibus
+	ignore up/down key while ibus is active
+	remove search_activated.emit() on HudView.cpp because it is te reason why HUD executes items twice
+	move query_activated.emit() to search_bar_->activated
+
+2012-04-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed failing assertion in the Hud.. Fixes: . Approved by Gord Allott.
+
+2012-04-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Don't call g_variant_equal in the Hud when there's a chance that one of the variants can be NULL.
+
+2012-04-05  Gord Allott  <gord.allott@canonical.com>
+
+	fixes widescreen icons being too small, makes them the correct aspect ratio and size. Fixes: https://bugs.launchpad.net/bugs/878015. Approved by Mirco Müller.
+
+2012-04-05  Gord Allott  <gord.allott@canonical.com>
+
+	fix wrongly aligned icons
+
+2012-04-05  Gord Allott  <gord.allott@canonical.com>
+
+	Fixes a long standing slight visual bug in the dash, widescreen icons now render correctly
+
+2012-04-05  Jason Smith  <jason.smith@canonical.com>
+
+	* Fix for bug #839480
+	* Fix rendering of the Dash, Launcher and Panel when "NO_BLUR" is selected in CCSM
+	* Added support to get a none blurred region of the display from BackgroundEffectHelper. Fixes: https://bugs.launchpad.net/bugs/839480, https://bugs.launchpad.net/bugs/941066. Approved by Gord Allott, Brandon Schaefer, Jason Smith.
+
+2012-04-04  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Merged trunk, fixed conflict
+
+2012-04-04  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Change dash_is_open_ to use the launcher_controller->IsOverlayOpen()
+	* Removed some commented out lines of code
+
+2012-04-02  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Merged with Unity Trunk.
+
+2012-03-30  Jason Smith  <jason.smith@canonical.com>
+
+	fix detection of when to paint panel background
+
+2012-03-28  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fix update of static blur case
+
+2012-03-26  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Check that the maximized window is not a native window.
+
+2012-03-26  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fixes
+
+2012-03-24  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Update Panel texture only when necessary.
+
+2012-03-23  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Added support for panel rendering.
+
+2012-03-23  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fixing Panel background
+
+2012-03-23  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fix for bug #839480
+
+2012-03-23  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Cleanup
+
+2012-03-23  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fixes the rendering of the dash when the "No Blur" option is selected in CCSM.
+
+2012-04-05  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Implement new card view design. Fixes: https://bugs.launchpad.net/bugs/901164. Approved by Andrea Cimitan.
+
+2012-04-05  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	New input from Design... tiles background tint-color is meant to be like the one used on the lens-nav-bar
+
+2012-04-03  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Work around a bug in QRP_QuadWireframe() not drawing the bottom-left-most pixel in the black outline around the icon
+
+2012-04-03  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	Fixing the horizontal tile renderer (aka card-view) to comply with the design-specs
+
+2012-04-05  Gord Allott  <gord.allott@canonical.com>
+
+	Fixes a hud translation issue, can't have const std::strings in an anonymous namespace.. Fixes: . Approved by Michal Hruby.
+
+2012-04-05  Gord Allott  <gord.allott@canonical.com>
+
+	merged with trunk fixed conflicts
+
+2012-04-05  Gord Allott  <gord.allott@canonical.com>
+
+	Fixed translation error in hud, "Type your command" is now properly translatable
+
+2012-04-05  Tim Penhey  <tim.penhey@canonical.com>
+
+	Allow Unity to correctly respond to a non-modifier key-binding for "show hud".. Fixes: https://bugs.launchpad.net/bugs/969256. Approved by Daniel van Vugt, Thomi Richards.
+
+2012-04-05  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fix the docstring duplication.
+
+2012-04-05  Tim Penhey  <tim.penhey@canonical.com>
+
+	Use the result of ShowHud.
+
+2012-04-05  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk.
+
+2012-04-05  Tim Penhey  <tim.penhey@canonical.com>
+
+	Autopilot tests.
+
+2012-04-05  Tim Penhey  <tim.penhey@canonical.com>
+
+	Allow hud initiate to be bound to a non-modifier key.
+
+2012-04-04  Jason Smith  <jason.smith@canonical.com>
+
+	Implement sticky edge behavior as requested by design. Add EdgeBarrierController class to handle complexity of edge barriers.. Fixes: . Approved by Thomi Richards.
+
+2012-04-04  Jason Smith  <jason.smith@canonical.com>
+
+	update edge barrier class to use sticter types
+
+2012-04-04  Jason Smith  <jason.smith@canonical.com>
+
+	fix review issues
+
+2012-04-04  Jason Smith  <jason.smith@canonical.com>
+
+	fix doc strings
+
+2012-04-04  Jason Smith  <jason.smith@canonical.com>
+
+	add autopilot tests to test new behaviors
+
+2012-04-04  Jason Smith  <jason.smith@canonical.com>
+
+	dont capture mouse when not hiding and sticky edges is off
+
+2012-04-03  Jason Smith  <jason.smith@canonical.com>
+
+	implement edge barrier behavior as updated in spec
+
+2012-04-04  Thomi Richards  <thomi.richards@canonical.com>
+
+	Only desaturate icons when an overlay is shown if the mouse is not over the launcher.. Fixes: https://bugs.launchpad.net/bugs/973063. Approved by Jason Smith.
+
+2012-04-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added a test for when you mose over after the dash is opened.
+
+2012-04-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed bug, test passes.
+
+2012-04-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Have failing test.
+
+2012-04-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-04-04  Thomi Richards  <thomi.richards@canonical.com>
+
+	Force launcher icons to saturate when keynav starts.. Fixes: https://bugs.launchpad.net/bugs/913569. Approved by Jason Smith.
+
+2012-04-04  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed bug, test passes.
+
+2012-04-04  Thomi Richards  <thomi.richards@canonical.com>
+
+	Have failing test. Also fixed scenario generation for launcher tests when we're running a single monitor only.
+
+2012-04-04  Michal Hruby  <michal.mhr@gmail.com>
+
+	Ensure that the spinner is shown even for empty searches. Fixes: https://bugs.launchpad.net/bugs/965492. Approved by Gord Allott.
+
+2012-04-04  Michal Hruby  <michal.mhr@gmail.com>
+
+	Use string::empty method
+
+2012-04-04  Michal Hruby  <michal.mhr@gmail.com>
+
+	Ensure that the spinner is shown even for empty searches
+
+2012-04-04  Albert Astals  <albert.astals@canonical.com>
+
+	Clear queries_ in HudImpl::UpdateQueryCallback
+	
+	As suggested by Ryan Lortie in https://bugs.launchpad.net/indicator-appmenu/+bug/965299
+	. Fixes: https://bugs.launchpad.net/bugs/965299. Approved by Gord Allott, Thomi Richards.
+
+2012-04-03  Albert Astals  <albert.astals@canonical.com>
+
+	Clear queries_ in HudImpl::UpdateQueryCallback
+	
+	As suggested by Ryan Lortie in https://bugs.launchpad.net/indicator-appmenu/+bug/965299
+
+2012-04-03  Thomi Richards  <thomi.richards@canonical.com>
+
+	Make Ctrl+Tab from commands lens work correctly.. Fixes: https://bugs.launchpad.net/bugs/971850. Approved by Tim Penhey.
+
+2012-04-03  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added comment.
+
+2012-04-03  Thomi Richards  <thomi.richards@canonical.com>
+
+	Have fix, tests pass.
+
+2012-04-03  Thomi Richards  <thomi.richards@canonical.com>
+
+	Have failing test.
+
+2012-04-03  Benjamin Kerensa  <bkerensa@ubuntu.com>
+
+	Update tooltip in ccsm for "Show Desktop Icon".. Fixes: https://bugs.launchpad.net/bugs/934526. Approved by Marco Biscaro, Fitoschido.
+
+2012-03-23  Benjamin Kerensa  <bkerensa@ubuntu.com>
+
+	Actually Fixed Now
+
+2012-03-22  Benjamin Kerensa  <bkerensa@ubuntu.com>
+
+	Fixed Typo LP: #934526
+
+2012-04-03  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Fixes the pinyin pop up box disappearing in the hud.. Fixes: https://bugs.launchpad.net/bugs/968777. Approved by Tim Penhey.
+
+2012-04-02  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* More fixes to the ap test
+
+2012-04-02  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Merged trunk, fixed conflict
+
+2012-04-02  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixed ap test
+
+2012-04-01  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Adds auotpilot test
+
+2012-04-01  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* merged trunk
+
+2012-03-29  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixes so when go from Hud to the Dash to make sure you close
+	the Hud BEFORE the dash opens
+
+2012-04-03  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix several failing assertions in gtk, glib, and dbusmenu.. Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-04-04  Thomi Richards  <thomi.richards@canonical.com>
+
+	LauncherIcon now stores unity icon theme inside a glib::Object wrapper.
+
+2012-04-03  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed two places in BamfLauncherIcon where we were sending null pointers into libdbusmenu, which would cause assertions to fail.
+
+2012-04-03  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed failing gtk assert in PanelIndicatorEntryView.
+
+2012-04-03  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed a failing gtk assert in PanelMenuView.
+
+2012-04-03  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed a glib assertion in the LauncherIcon - we were trying to unref a null ptr.
+
+2012-04-03  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix a crash in unity::launcher::DeviceLauncherIcon::ShowNotification.. Fixes: https://bugs.launchpad.net/bugs/971345. Approved by Tim Penhey.
+
+2012-04-03  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Should fix a crash bug #971345.
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudController: use the top-most valid window in the stack to fetch the icon, if an invalid window is focused. Fixes: https://bugs.launchpad.net/bugs/931548, https://bugs.launchpad.net/bugs/932371, https://bugs.launchpad.net/bugs/961161. Approved by Thomi Richards, John Lea.
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_hud: removed the unneeded sleep on tests base
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Autopilot: test_showdesktop, remove the hardcoded 'Control+Alt+d' keybinding
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot: test_hud, test_switcher: use the new start_app return value
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, make start_app to return the ran BamfApplication instance
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_hud: use self.dash.ensure_visible()
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_hud: Check if the BFB icon is shown on empty desktop
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, keybindings: added the window/show_desktop keybinding
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudLauncherIcon: fix typo
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_hud: Move to the new icon methods
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, hud: add icon property to get the current HUD icon
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudIcon: rename it as HudEmbeddedIcon for better AP integration
+
+2012-04-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autpilot, test_hud: added test for Dash/HUD interaction and icon changes
+
+2012-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudController: use the ubuntu icon as fallback if we don't have a valid window focused
+
+2012-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudLauncherIcon: fallback to the BFB icon if the name is empty.
+
+2012-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudController: reset the focused_app_icon_ value on invalid focused view
+
+2012-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudController: use the monitor index = -1 to get the windows of all monitors
+	
+	Added also some comments
+
+2012-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudController: Check the top window if the active one is an unity window
+	
+	If the top window is an unity window, we must check the last valid
+	window in the stack, otherwise switching from the Dash to the HUD won't
+	work.
+
+2012-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudController: don't change the Hud Icon if unity is the active application
+	
+	This fixes the bad icon isse that we have when switching from
+	HUD to Dash.
+
+2012-04-03  Michal Hruby  <michal.mhr@gmail.com>
+
+	Make sure we don't display the no-results-hint if we do have results. Fixes: https://bugs.launchpad.net/bugs/971430. Approved by Gord Allott, Brandon Schaefer.
+
+2012-04-02  Michal Hruby  <michal.mhr@gmail.com>
+
+	Add a manual test
+
+2012-04-02  Michal Hruby  <michal.mhr@gmail.com>
+
+	Make sure we don't display the no-results-hint if we do have results
+
+2012-04-03  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed a failing assert in the TrashLauncherIcon.. Fixes: . Approved by Tim Penhey.
+
+2012-04-03  Thomi Richards  <thomi.richards@canonical.com>
+
+	send glib::Error to logging framework directly.
+
+2012-04-03  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed after Tim's code review.
+
+2012-04-03  Thomi Richards  <thomi.richards@canonical.com>
+
+	The TrashLauncherIcon would cause glib to assert if the user is running a filesystem (such as gvfs) that does not support the Trash:/// uri. This commit makes it log an error message instead. Also fixed whitespace issues.
+
+2012-04-02  Thomi Richards  <thomi.richards@canonical.com>
+
+	Prevents launcher autopilot tests from crashing.. Fixes: . Approved by Tim Penhey.
+
+2012-04-03  Thomi Richards  <thomi.richards@canonical.com>
+
+	FIxed launcher autopilot tests.
+
+2012-04-02  Thomi Richards  <thomi.richards@canonical.com>
+
+	Made autopilot code mostly PEP8 compliant.. Fixes: . Approved by Tim Penhey.
+
+2012-04-03  Thomi Richards  <thomi.richards@canonical.com>
+
+	Various PEP8 fixes for autopilot code.
+
+2012-04-02  Gord Allott  <gord.allott@canonical.com>
+
+	Corrects a callback to use the established variant for UBUS_OVERLAY_SHOWN. Fixes: . Approved by Michal Hruby.
+
+2012-04-02  Gord Allott  <gord.allott@canonical.com>
+
+	fix build
+
+2012-04-02  Gord Allott  <gord.allott@canonical.com>
+
+	fixed conflict with trunk
+
+2012-03-29  Gord Allott  <gord.allott@canonical.com>
+
+	corrects a callback to use the establised varient for UBUS_OVERLAY_SHOWN
+
+2012-04-02  Michal Hruby  <michal.mhr@gmail.com>
+
+	Make sure applications can be started from the HomeLens as soon as we get results from apps lens. Fixes: https://bugs.launchpad.net/bugs/966417. Approved by Gord Allott.
+
+2012-04-02  Michal Hruby  <michal.mhr@gmail.com>
+
+	Act on review comments
+
+2012-03-30  Michal Hruby  <michal.mhr@gmail.com>
+
+	Add an AP test for HomeLens
+
+2012-03-30  Michal Hruby  <michal.mhr@gmail.com>
+
+	Make sure applications can be started as soon as we get results from apps lens
+
+2012-04-01  Jason Smith  <jason.smith@canonical.com>
+
+	Repaint the launcher on resume from suspend.. Fixes: https://bugs.launchpad.net/bugs/915265. Approved by Tim Penhey.
+
+2012-03-29  Jason Smith  <jason.smith@canonical.com>
+
+	migrate to more acceptable and generic way to access resuming signals
+
+2012-03-29  Jason Smith  <jason.smith@canonical.com>
+
+	merge trunk
+
+2012-03-04  Jason Smith  <jason.smith@canonical.com>
+
+	fix resume from suspend corruption on certain nvidia gpu's
+
+2012-04-01  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix autopilot tests that error (instead of passing or failing).. Fixes: . Approved by Tim Penhey.
+
+2012-04-02  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed an error in the autopilot keybindings module that was causing anumber of tests to error. Also fixed the software center launcher icon test.
+
+2012-04-01  Gord Allott  <gord.allott@canonical.com>
+
+	Reduce stress on hud service by waiting 100ms prior to sending request.. Fixes: https://bugs.launchpad.net/bugs/948820. Approved by Tim Penhey.
+
+2012-03-29  Gord Allott  <gord.allott@canonical.com>
+
+	added fixme
+
+2012-03-28  Gord Allott  <gord.allott@canonical.com>
+
+	waits 100ms before asking for another search
+
+2012-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Hud: fixed the paddings and geometries, remove the icon glitches
+	
+	I've fixed all the paddings and geometries to match design (and the dash, then), plus I've fixed a size mismatch that caused some drawing glitches of the icon.
+	
+	HUD before the fix: http://i.imgur.com/b7BO0.png | http://i.imgur.com/9vpmv.png
+	HUD after the fix: http://i.imgur.com/wDxPO.png | http://i.imgur.com/kSLch.png. Fixes: https://bugs.launchpad.net/bugs/931406, https://bugs.launchpad.net/bugs/964061. Approved by Andrea Cimitan, Tim Penhey.
+
+2012-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudView: remove unneeded includes
+
+2012-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudView, HudIcon: removing unneeded includes
+
+2012-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudIcon: add private members
+
+2012-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudIcon: simplify the constructor
+
+2012-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconTexture: don't try to load 0 sized icons.
+	
+	Otherwise the class won't work even changing the size value...
+
+2012-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudView: Fixed the HUD padding, removed some magic numbers.
+	
+	The Hud view padding didn't match the dash padding when the
+	launcher not in the auto-hide mode.
+	
+	So, fixed all the spaces, removed some spacelayouts and using pure padding.
+	Removed the icon layout, since it is not needed anymore.
+
+2012-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudIcon: Don't use a different icon renderer size, than the one provided.
+	
+	This fixes some icon drawing issues that we have with the embedded HUD.
+	Plus remove the unneeded constructor, and set the tile size relative
+	to the icon size.
+	
+	Reducing the minimum widh to the default launcher icon size.
+
+2012-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherEntryRemote: added tests for the entry remote class. Fixes: . Approved by Thomi Richards.
+
+2012-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged with latest lp:~3v1n0/unity/launcher-remote-model-c++
+
+2012-03-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests: added a test suite for LauncherEntryRemote
+
+2012-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherRemoteModel rewritten to be more C++ friendly. Fixes: . Approved by Michal Hruby, Thomi Richards.
+
+2012-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk.
+
+2012-03-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests: test_desktop_utilities added test for TestGetDataDirectory
+
+2012-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests, added test for DesktopUtilities functions
+
+2012-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FavoriteStoreGSettings, FavoriteStorePrivate: Move to DesktopUtilities::GetDesktopID
+	
+	And tests disabled
+
+2012-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon, LauncherEntryRemote: move to DesktopUtilities::GetDesktopID
+
+2012-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityCore, added the DesktopUtilities class
+	
+	Inside there are static members to get the User and System data directories
+	Plus an utility to get the desktop ID from a desktop path for the given
+	data directories.
+
+2012-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-03-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-03-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherEntryRemote: moving out the useless .get() from Ptr check...
+
+2012-03-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherEntryRemoteModel: more code cleanup...
+
+2012-03-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherEntryRemoteModel: use nullptr and move to more nice names for cb functions
+
+2012-03-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherEntryRemoteModel: use glib::String to parse the removed parameters
+
+2012-03-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherEntryRemoteModel:: use smart pointer for emitting signals
+	
+	Code updated against this.
+
+2012-03-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherEntryRemoteModel, more LauncherEntryRemote::Ptr usage
+
+2012-03-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherEntryRemote: move to shared_ptr
+	
+	Using the simpler std::shared_ptr ensures all the functionalities and more clean code.
+
+2012-03-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherEntryRemoteModel: rewritten to be more C++ friendly
+
+2012-03-30  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Adds CJK autopilot test for the Hud. Fixes: . Approved by Thomi Richards.
+
+2012-03-30  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Merged with trunk, and fixed an ap error I commited
+
+2012-03-29  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixed ap problems!
+
+2012-03-29  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Re-worked the hud emulator and added a Hud class
+	* Added CJK test for the Hud
+
+2012-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherRemoteEntry: code rewritten to be more C++ friendly, and moved into unity namespace. Fixes: . Approved by Thomi Richards.
+
+2012-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherEntryRemote: Added missing ';'... Ops!
+
+2012-03-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherEntryRemote: glib::Variant explained
+
+2012-03-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherEntryRemote: Quicklist returns the glib::Object
+	
+	Plus both accepts variant strings and objects paths for QL.
+
+2012-03-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherEntryRemote: making some methods const
+
+2012-03-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherEntryRemote: More C++ friendly and moved into unity namespace
+
+2012-03-30  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Inserting items into launcher makes unnecessary animations on other monitors. Fixes: https://bugs.launchpad.net/bugs/925021. Approved by Marco Trevisan (Treviño).
+
+2012-03-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug #925021
+
+2012-03-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Update prerequiste branch.
+
+2012-03-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge prerequiste branch.
+
+2012-03-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: use std::string for RemoteUri. Fixes: . Approved by Thomi Richards.
+
+2012-03-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: use std::string for RemoteUri
+
+2012-03-30  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix warnings coming from HomeLens' filters merger. Fixes: . Approved by Mikkel Kamstrup Erlandsen.
+
+2012-03-30  Michal Hruby  <michal.mhr@gmail.com>
+
+	Add a couple of comments
+
+2012-03-29  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix warnings coming from HomeLens' filters merger
+
+2012-03-30  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Fixes unityshell.cpp not taking into account of the hud overlay being active.. Fixes: . Approved by Thomi Richards.
+
+2012-03-29  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* merged trunk, conficts resolved
+
+2012-03-27  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* removed new line!
+
+2012-03-27  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Autopilot test fixes
+
+2012-03-27  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Added autopilot test
+
+2012-03-27  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Exposed HideDash(), so we can correctly exit from the dash, if the hud is about to show
+
+2012-03-26  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixed an uninitialized which could cause a crash. Though very unlikley.
+
+2012-03-26  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Added a new IsOverlayOpen, which checks if any overlay exist on any moniter
+
+2012-03-26  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Changed unityshell to use the launcher IsOverlayOpen() as the hud was getting
+	ignored when it shoudn't
+	* Autopilot test coming!
+
+2012-03-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon_ added MonitorVisibility property and subclass SingleMonitorLauncherIcon
+	
+	Thanks to that, and making HudLauncherIcon to subclass it, we have that in case of locked launcher:
+	- BFB should be shown in all the monitors where there is not an HUD icon opened.
+	- HUD icon should only be shown in the monitor where the HUD is actually opened.
+	
+	Plus, don't desaturate the icons placed in a launcher that has no an overalay attached.. Fixes: . Approved by Andrea Azzarone.
+
+2012-03-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-03-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_hud: updated against the new support for monitor-visible icons
+
+2012-03-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, launcher: added method to get the icons for each monitor
+
+2012-03-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, icons: add monitor visibility related methods
+
+2012-03-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudLauncherIcon: always set it invisible on autohide setting changed
+
+2012-03-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging again with: lp:~3v1n0/unity/hud-lock-out-monitors-tests
+
+2012-03-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: add monitor visibility informations to the debug introspection
+
+2012-03-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/hud-lock-out-monitors-tests
+
+2012-03-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test: added SingleMonitorLauncherIcon unit-test
+
+2012-03-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	MockLauncherIcon: implemented missing methods
+
+2012-03-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/hud-lock-out-monitors-tests
+
+2012-03-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: only desaturate icons on the monitor where there's an overlay opened
+
+2012-03-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: don't show icons invisible on the launcher's monitor
+
+2012-03-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudLauncherIcon: subclass SingleMonitorLauncherIcon, show only on target monitor
+
+2012-03-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BFBLauncherIcon: hide the BFB icon only on the monitor where there's an HUD open
+
+2012-03-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SingleMonitorLauncherIcon: new class to control icons visible only in one monitor
+
+2012-03-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AbstractLauncherIcon: add support for icons visible only on selected monitors
+
+2012-03-29  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Increase dash height.. Fixes: . Approved by Andrea Cimitan.
+
+2012-03-29  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Increse the dash height.
+
+2012-03-29  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge prerequiste branch.
+
+2012-03-29  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Makes the dash search entry horizontally extensible.. Fixes: https://bugs.launchpad.net/bugs/841907. Approved by Marco Trevisan (Treviño), Andrea Cimitan.
+
+2012-03-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add 10px border between the search entry text and the right border.
+
+2012-03-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug #841907.
+
+2012-03-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed a memory leak in the file-system lens - we were leaking LensFileData objects.. Fixes: . Approved by Jason Smith, Marco Trevisan (Treviño).
+
+2012-03-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Filesystem lens no longer leaks LensFileData objects.
+
+2012-03-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Added HUD_TYPE for Icons, this allow to draw the active triangle on that only (and not on BFB).. Fixes: https://bugs.launchpad.net/bugs/961230. Approved by Gord Allott.
+
+2012-03-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Fixing previous merge...
+
+2012-03-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-03-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/hud-lock-out-monitors-tests changes
+
+2012-03-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot: test_hudm, added active icon status check
+
+2012-03-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AbstractLauncherIcon: Add TYPE_HUD icon type
+	
+	This fixes the visual issue causing that both the BFB and HUD to draw
+	a right triangle.
+
+2012-03-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudController: Fixed geometries for single-launcher mode.
+	
+	And added tests for multimonitor in HUD, with lock-out support.. Fixes: https://bugs.launchpad.net/bugs/963577. Approved by Thomi Richards.
+
+2012-03-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, updated changes following thomi's review
+
+2012-03-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: add GetDesktopID function to perform the common operations
+
+2012-03-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopliot, test_hud: check that the HUD icon is not desaturated
+
+2012-03-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, use start_app with one more locale parameter, more than start_app_c_locale
+
+2012-03-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_showdesktop: be more locale friendly
+
+2012-03-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_switcher: use BAMF application names, to work with different locales
+
+2012-03-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, switcher: update against new introspection values
+
+2012-03-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot: allow to launch applications with C locale
+	
+	And use it for gedit HUD test
+
+2012-03-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: use GVariantBuilder to build the xids array
+
+2012-03-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: g_variant_new_array can compute the array size automatically
+
+2012-03-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-03-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_hud: test splitted in multiple parts, use multiply_scenarios
+
+2012-03-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot: default tests, use C locale to launch applications.
+
+2012-03-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, hud: Removed unneeded print
+
+2012-03-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot: test_hud some cleanups
+
+2012-03-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, launcher: allow to get the bfb launcher icon from LauncherModel
+
+2012-03-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, X11: fix typo... actually use rect when checking for monitor geo!
+
+2012-03-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudController: make the HUD relayout if the monitor has changed
+
+2012-03-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudView: no need to remove the introspection child on destruction
+
+2012-03-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, hud: add test to check if the hud icon shows the proper emblem
+
+2012-03-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_hud: updated the tests against the new embedded icon introspection
+
+2012-03-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudView: set the icon as introspectable child.
+	
+	And add and remove it when needed.
+
+2012-03-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudIcon: make it Introspectable, and use the new IconTexture API
+
+2012-03-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconTexture: move to std::string
+
+2012-03-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SimpleLauncherIcon: add the icon_name to the introspection properties
+
+2012-03-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: use the GetWindows function when we can
+
+2012-03-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_hud: simplify the desaturated test
+
+2012-03-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, hud emulator: removing deprecated get_geometry method
+
+2012-03-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudController: removed typo
+
+2012-03-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unityshell: make sure we initialize the HudController multiple_launchers property
+
+2012-03-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_hud: Check if the launcher icons (except the HUD one) are desaturated
+
+2012-03-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_hud: get icon by desktop id, not by tooltip_text
+	
+	It fixes internationalization issues.
+
+2012-03-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, launcher emulator: update against icon introspection changes
+	
+	Allow to get an icon by its desktop id
+
+2012-03-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot: update icon properties against new quirkless names
+
+2012-03-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test HUD: added checks for the HUDLauncherIcon
+
+2012-03-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: added autopilot introspection friendly properties
+
+2012-03-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudController: oops... g_strcmp != 0 => str1 != str2 ;)
+
+2012-03-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, hud: added new HudController / HudView properties
+	
+	They allow to check if the HUD is locked to the launcher, in which
+	monitor is shown and if the embedded icon is shown on the view.
+	
+	Added an extra assert to check if hud_monitor equals hud.monitor
+
+2012-03-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudView: simplify the embedded icon showing API, add some introspection
+
+2012-03-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudController: some code cleanup, use functions to reduce code duplication
+
+2012-03-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_hud: added checks for geometry for both locked and unlocked status
+
+2012-03-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudController: add support for the multiple launchers feature
+	
+	The HUD should show at the left edge of the screen when multiple
+	launchers are disabled and the mouse pointer is on a non-primary screen.
+
+2012-03-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-03-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, tests: updated against Thomi's suggestions
+
+2012-03-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot: test_hud, correctly check the window geometry on multimonitor
+
+2012-03-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Hud: add geometry introspection informations
+
+2012-03-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot: added hud monitor-aware tests
+
+2012-03-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Don't leak shortcut hints.. Fixes: . Approved by Andrea Azzarone, Marco Trevisan (Treviño).
+
+2012-03-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Don't play fast and loose with raw pointers to shortcuts.
+
+2012-03-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix memory leak in PanelView.. Fixes: . Approved by Tim Penhey.
+
+2012-03-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Used local typedef.
+
+2012-03-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	PanelView no longer leaks a nux::ColorLayer on exit.
+
+2012-03-28  Tim Penhey  <tim.penhey@canonical.com>
+
+	Make the favourite store a bit more robust around empty environments.. Fixes: . Approved by Thomi Richards, Tim Penhey.
+
+2012-03-29  Tim Penhey  <tim.penhey@canonical.com>
+
+	Make the method public for testing, and test it.
+
+2012-03-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Don't leak a UbusMessageInfo in ubus_server if there's no handlers defined for a message.. Fixes: . Approved by Tim Penhey.
+
+2012-03-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Don't leak in ubus_server when there's no handlers for a particular message,
+
+2012-03-28  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Add animation of icon moving to the launcher, and the wiggle when installation is complete.. Fixes: https://bugs.launchpad.net/bugs/955147. Approved by Tim Penhey.
+
+2012-03-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged branch that stops launcher tests from failing.
+
+2012-03-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-03-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged branch that had the fix for version 1 of this code, to make sure this still merges cleanly with trunk.
+
+2012-03-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-03-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-03-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	Store drag window in a nux::ObjectPtr.
+
+2012-03-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	Whitespace fixes.
+
+2012-03-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-03-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	Member variable rename.
+
+2012-03-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	Forward declare as much as we can in header files.
+
+2012-03-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed more debug logging.
+
+2012-03-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	GetIconSize should be const.
+
+2012-03-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	Don't call c_str() on a std::string when assigning to another std::string.
+
+2012-03-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed more debug logging.
+
+2012-03-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed some unneeded down-casts.
+
+2012-03-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed some debugging code that's no longer needed.
+
+2012-03-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	Icon now invisible while animation is running.
+
+2012-03-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	Works now, just need to make the icon invisible in the launcher while the animation runs.
+
+2012-03-15  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed some unnecessary casting.
+
+2012-03-15  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed some cruft, now it kind-of works, except that anim_complete signal doesn't fire correctly.
+
+2012-03-15  Thomi Richards  <thomi.richards@canonical.com>
+
+	Only unref property_value if we got it.
+
+2012-03-15  Thomi Richards  <thomi.richards@canonical.com>
+
+	Indentation fixes.
+
+2012-03-15  Thomi Richards  <thomi.richards@canonical.com>
+
+	Trying to remove ptr hacks, crashes.
+
+2012-03-15  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed indentation, removed un-needed initialisers.
+
+2012-03-14  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Merge from trunk
+
+2012-03-14  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Cleanup tests even further, follow Alex's recommendations, thanks a lot Alex
+
+2012-03-14  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Cleanup at the end, move function to the proper class
+
+2012-03-14  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Make changes in tests, merge function into LauncherTests, etc
+
+2012-03-13  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Cleanup tests, also first ensure Software Center is removed
+
+2012-03-13  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Merge from trunk, fix conflicts
+
+2012-03-13  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Fix crash on second install, THANKS THOMI
+
+2012-03-08  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Fix a line in tests
+
+2012-03-08  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Change C-style casts
+
+2012-03-08  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Use SC icon instead of iBus
+
+2012-03-08  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Get all tests working
+
+2012-03-08  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Thanks Thomi for the helper function on getting icon from desktop file
+
+2012-03-08  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Merge from trunk
+
+2012-03-08  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Try to get test working
+
+2012-03-07  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Merge from trunk
+
+2012-03-05  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Make changes in code as per Marco's review, thanks a lot!
+
+2012-03-04  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Cleanup code
+
+2012-03-03  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Get the launcher to hide/unhide as needed
+
+2012-03-03  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Get the DragWindow to disappear properly after the animation
+
+2012-03-03  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Get the Animation target right
+
+2012-03-02  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Everything's compete now, except the animation target
+
+2012-03-02  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Add test animation, get everything else working
+
+2012-03-02  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Code cleanup
+
+2012-03-02  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Get the dragwindow working, YAY
+
+2012-03-02  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Add GetIconSize function to Launcher
+
+2012-02-29  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	First steps towards getting a DragWindow working
+
+2012-02-27  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Merge from trunk and fix runtime failure
+
+2012-02-26  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Try to get baseWindow working
+
+2012-02-23  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Fix build failures
+
+2012-02-23  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Send icon_x, y and size to the SCLauncherIcon constructor
+
+2012-02-23  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Merge from trunk
+
+2012-03-28  Tim Penhey  <tim.penhey@canonical.com>
+
+	Move TestPlacesGroupImpl google test into the group that needs X.. Fixes: . Approved by Sam Spilsbury.
+
+2012-03-29  Tim Penhey  <tim.penhey@canonical.com>
+
+	The lensview_impl gtest needs X.
+
+2012-03-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Autopilot launcher tests now skip instead of fail when running the nvidia chipset.. Fixes: . Approved by Alex Launi.
+
+2012-03-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk, made docstring and error messages more explicit.
+
+2012-03-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Raise BlacklistedDriverError sooner, since nvidia chipsets can't even get the monitor name.
+
+2012-03-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix scenario generation.
+
+2012-03-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Made some autopilot exception messages more informative and explicit.. Fixes: . Approved by Tim Penhey.
+
+2012-03-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Even better.
+
+2012-03-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Made ValueExceptions more explicit in the ScreenGeometry class.
+
+2012-03-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix a crash in the launcher software center integration code.. Fixes: https://bugs.launchpad.net/bugs/963718. Approved by Tim Penhey.
+
+2012-03-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Don't need AsOutParam.
+
+2012-03-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Initialise ptr to nullptr to appease Tim.
+
+2012-03-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-03-26  Gord Allott  <gord.allott@canonical.com>
+
+	fixes a gvariant unref bug
+
+2012-03-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix inversion of logic in the glib logger. Fixes: . Approved by .
+
+2012-03-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix inversion of logic in the glib logger
+
+2012-03-28  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	1px subtle change: 1st pixel of shadow from (0, 0, 0, 0.58f) to (0, 0, 0, 0.60f). Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-03-28  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Super subtle refinement to the top pixel of the panel shadow
+
+2012-03-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Reduce the spread delay for all items other than the initial item the select lands on after alt-tab opens.. Fixes: https://bugs.launchpad.net/bugs/838232. Approved by Thomi Richards.
+
+2012-03-28  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix typo.
+
+2012-03-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use two different timeout lenghts for the alt-tab details mode. Fix Bug #838232.
+
+2012-03-27  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Smaller but sharper panel shadow, from design. Fixes: . Approved by Andrea Azzarone, Marco Trevisan (Treviño).
+
+2012-03-27  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	New panel shadow
+
+2012-03-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix crash on PointerBarrier.. Fixes: https://bugs.launchpad.net/bugs/944217. Approved by Thomi Richards.
+
+2012-03-28  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Update manual test.
+
+2012-03-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Adds a manual test.
+
+2012-03-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Disconnect smoothing_handle_ on PointerBarrierWrapper destruction.
+
+2012-03-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Autopilot: added tests for the primary-monitor aware LauncherController. Fixes: . Approved by Thomi Richards.
+
+2012-03-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with thomi's multiply_scenarios branch
+
+2012-03-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Launcher tests now use multiply_scenarios to generate test scenarios.
+
+2012-03-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, launcher: added tests to check the number of launchers
+
+2012-03-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, X11: get the glxinfo output only once.
+
+2012-03-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_launcher: code updated to follow the thomi's suggestions ;)
+
+2012-03-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, X11: add BlacklistedDriverError
+
+2012-03-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-03-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_launcher: skip the tests if we can't set the primary monitor.
+
+2012-03-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot: X11 emulator, add blacklist of drivers to skip the primary monitor set
+
+2012-03-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot: test launcher, added scenarios to test with more configurations
+
+2012-03-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autpilot, X11: allow to set the primary monitor via xrandr
+
+2012-03-26  Thomi Richards  <thomi.richards@canonical.com>
+
+	Converted several classes to use std::string instead of const char* or const gchar*.. Fixes: . Approved by Brandon Schaefer.
+
+2012-03-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Use initialiser list.
+
+2012-03-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Updated to coding standards.
+
+2012-03-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	LauncherIcon::SetEmblemText now takes a std::string.
+
+2012-03-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	LauncherIcon::emblem now uses std::string instead of const char*
+
+2012-03-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Made PlacesTileSimple::uri a std::string, and updated dependant code.
+
+2012-03-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Made PlacesSimpleTile::lable a std::string.
+
+2012-03-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed const char* from IconTexture class, and all places that call it.
+
+2012-03-26  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Disable Alt+F1 mode when the dash is open.. Fixes: . Approved by Thomi Richards.
+
+2012-03-26  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Added autopilot test
+
+2012-03-26  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Disable alt+f1 when the dash is open
+
+2012-03-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: Connect the already present icons to signals when setting the model.
+	
+	When a new launcher is added, we need to connect the icons that are already on the model to the needs_redraw signal, or the new launcher won't redraw when they ask that.. Fixes: https://bugs.launchpad.net/bugs/964851. Approved by Thomi Richards.
+
+2012-03-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: Connect the already present icons to signals when setting the model.
+	
+	This fixes the bug #964851
+
+2012-03-26  Alex Launi  <alex.launi@canonical.com>
+
+	Reorganize and refactor the manual tests. Fixes: . Approved by Alex Launi, Thomi Richards.
+
+2012-03-26  Alex Launi  <alex.launi@canonical.com>
+
+	add newline to end of Hud.txt
+
+2012-03-26  Alex Launi  <alex.launi@canonical.com>
+
+	merge trunk
+
+2012-03-23  Alex Launi  <alex.launi@canonical.com>
+
+	Reorganize and refactor the manual tests
+
+2012-03-26  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Set 0.2 as new alpha value for dimmed icons, apply tweaks to edges. Fixes: https://bugs.launchpad.net/bugs/938620. Approved by Marco Trevisan (Treviño).
+
+2012-03-22  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Dim icons in the launcher for 938620
+
+2012-03-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix the alignment of the dash window buttons.. Fixes: https://bugs.launchpad.net/bugs/963019. Approved by Marco Trevisan (Treviño), Andrea Cimitan.
+
+2012-03-23  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix.
+
+2012-03-23  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove the if.
+
+2012-03-23  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix dash window buttons alignment.
+
+2012-03-23  Didier Roche  <didier.roche@canonical.com>
+
+	Release\ 5.8.0
+
 2012-03-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
 
 	BamfLauncherIcon: implement WindowsOnViewport to get only windows on visible VP

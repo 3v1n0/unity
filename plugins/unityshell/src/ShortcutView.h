@@ -48,6 +48,8 @@ public:
   ~View();
 
   // Public methods
+  bool GetBaseGeometry(nux::Geometry&);
+  void SetAdjustment(int x, int y);
   void SetModel(Model::Ptr model);
   Model::Ptr GetModel();
 
@@ -59,7 +61,7 @@ protected:
 private:
   // Private methods
   nux::LinearLayout* CreateSectionLayout(const char* section_name);
-  nux::LinearLayout* CreateShortKeyEntryLayout(AbstractHint::Ptr const& hint);
+  nux::View* CreateShortKeyEntryView(AbstractHint::Ptr const& hint);
   nux::LinearLayout* CreateIntermediateLayout();
 
   void RenderColumns();
@@ -70,6 +72,9 @@ private:
   nux::VLayout* layout_;
   nux::HLayout* columns_layout_;
   std::vector<nux::VLayout*> columns_;
+
+  int x_adjustment_;
+  int y_adjustment_;
 };
 
 } // namespace shortcut

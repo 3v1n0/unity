@@ -40,22 +40,25 @@ nux::logging::Logger logger("unity.dash.controller");
 Controller::Controller()
   : launcher_width(64)
   , use_primary(false)
+  , monitor_(0)
   , window_(0)
   , visible_(false)
   , need_show_(false)
   , timeline_id_(0)
   , last_opacity_(0.0f)
   , start_time_(0)
+  , view_(nullptr)
 {
   SetupRelayoutCallbacks();
   RegisterUBusInterests();
 
-
   ensure_id_ = g_timeout_add_seconds(60, [] (gpointer data) -> gboolean { static_cast<Controller*>(data)->EnsureDash(); return FALSE; }, this);
 
+  SetupWindow();
+  
   Settings::Instance().changed.connect([&]()
   {
-    if (window_)
+    if (window_ && view_)
     {
       window_->PushToFront();
       window_->SetInputFocus();
@@ -69,8 +72,12 @@ Controller::~Controller()
   if (window_)
     window_->UnReference();
   window_ = 0;
-  g_source_remove(timeline_id_);
-  g_source_remove(ensure_id_);
+
+  if (timeline_id_)
+    g_source_remove(timeline_id_);
+
+  if (ensure_id_)
+    g_source_remove(ensure_id_);
 }
 
 void Controller::SetupWindow()
@@ -82,6 +89,12 @@ void Controller::SetupWindow()
   window_->ShowWindow(false);
   window_->SetOpacity(0.0f);
   window_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &Controller::OnMouseDownOutsideWindow));
+  
+  /* FIXME - first time we load our windows there is a race that causes the input window not to actually get input, this side steps that by causing an input window show and hide before we really need it. */
+  PluginAdapter::Default()->saveInputFocus ();
+  window_->EnableInputWindow(true, "Dash", true, false);
+  window_->EnableInputWindow(false, "Dash", true, false);
+  PluginAdapter::Default()->restoreInputFocus ();
 }
 
 void Controller::SetupDashView()
@@ -126,7 +139,7 @@ void Controller::RegisterUBusInterests()
     g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, &overlay_identity, &can_maximise, &overlay_monitor);
 
     // hide if something else is coming up
-    if (g_strcmp0(overlay_identity, "dash"))
+    if (overlay_identity.Str() != "dash")
     {
       HideDash(true);
     }
@@ -135,17 +148,18 @@ void Controller::RegisterUBusInterests()
 
 void Controller::EnsureDash()
 {
-  if (window_)
-    return;
-
   LOG_DEBUG(logger) << "Initializing Dash";
+  if (!window_)
+    SetupWindow();
 
-  SetupWindow();
-  SetupDashView();
-  Relayout();
-  ensure_id_ = 0;
+  if (!view_)
+  {
+    SetupDashView();
+    Relayout();
+    ensure_id_ = 0;
 
-  on_realize.emit();
+    on_realize.emit();
+  }
 }
 
 nux::BaseWindow* Controller::window() const
@@ -254,8 +268,6 @@ void Controller::ShowDash()
     return;
   }
 
-  adaptor->saveInputFocus ();
-
   view_->AboutToShow();
 
   window_->ShowWindow(true);
@@ -272,7 +284,8 @@ void Controller::ShowDash()
 
   StartShowHideTimeline();
 
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, GetIdealMonitor());
+  monitor_ = GetIdealMonitor();
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, monitor_);
   ubus_manager_.SendMessage(UBUS_OVERLAY_SHOWN, info);
 }
 
@@ -298,7 +311,7 @@ void Controller::HideDash(bool restore)
 
   StartShowHideTimeline();
 
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, GetIdealMonitor());
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, monitor_);
   ubus_manager_.SendMessage(UBUS_OVERLAY_HIDDEN, info);
 }
 
@@ -360,7 +373,7 @@ gboolean Controller::CheckShortcutActivation(const char* key_string)
   std::string lens_id = view_->GetIdForShortcutActivation(std::string(key_string));
   if (lens_id != "")
   {
-    GVariant* args = g_variant_new("(sus)", lens_id.c_str(), 0, "");
+    GVariant* args = g_variant_new("(sus)", lens_id.c_str(), dash::GOTO_DASH_URI, "");
     OnActivateRequest(args);
     g_variant_unref(args);
     return true;
@@ -382,7 +395,8 @@ std::string Controller::GetName() const
 
 void Controller::AddProperties(GVariantBuilder* builder)
 {
-  g_variant_builder_add (builder, "{sv}", "visible", g_variant_new_boolean (visible_) );
+  variant::BuilderWrapper(builder).add("visible", visible_)
+                                  .add("monitor", monitor_);
 }
 
 

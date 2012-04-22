@@ -25,6 +25,7 @@
 #include <vector>
 #include <sigc++/sigc++.h>
 
+#include "LauncherOptions.h"
 #include "SoftwareCenterLauncherIcon.h"
 
 namespace unity
@@ -59,6 +60,8 @@ public:
   void PushToFront();
 
   void SetShowDesktopIcon(bool show_desktop_icon);
+
+  bool AboutToShowDash(int was_tap, int when) const;
 
   void HandleLauncherKeyPress(int when);
   void HandleLauncherKeyRelease(bool was_tap, int when);

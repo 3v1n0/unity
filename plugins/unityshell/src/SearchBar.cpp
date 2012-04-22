@@ -126,6 +126,8 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   , show_filter_hint_(true)
   , expander_view_(nullptr)
   , show_filters_(nullptr)
+  , last_width_(-1)
+  , last_height_(-1)
   , live_search_timeout_(0)
   , start_spinner_timeout_(0)
 {
@@ -140,6 +142,8 @@ SearchBar::SearchBar(bool show_filter_hint_, NUX_FILE_LINE_DECL)
   , show_filter_hint_(show_filter_hint_)
   , expander_view_(nullptr)
   , show_filters_(nullptr)
+  , last_width_(-1)
+  , last_height_(-1)
   , live_search_timeout_(0)
   , start_spinner_timeout_(0)
 {
@@ -272,6 +276,7 @@ void SearchBar::Init()
   search_string.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_search_string));
   search_string.SetSetterFunction(sigc::mem_fun(this, &SearchBar::set_search_string));
   im_active.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_im_active));
+  im_preedit.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_im_preedit));
   showing_filters.changed.connect(sigc::mem_fun(this, &SearchBar::OnShowingFiltersChanged));
   can_refine_search.changed.connect([&] (bool can_refine)
   {
@@ -473,6 +478,30 @@ void SearchBar::OnEntryActivated()
   activated.emit();
 }
 
+void SearchBar::ForceSearchChanged()
+{
+  // this method will emit search_changed (and live_search_reached after
+  // returning to mainloop) and starts animating the spinner
+
+  if (live_search_timeout_)
+    g_source_remove(live_search_timeout_);
+
+  live_search_timeout_ = g_idle_add_full(G_PRIORITY_DEFAULT,
+                                         (GSourceFunc)&OnLiveSearchTimeout,
+                                         this, NULL);
+
+  // Don't animate the spinner immediately, the searches are fast and
+  // the spinner would just flicker
+  if (start_spinner_timeout_)
+    g_source_remove(start_spinner_timeout_);
+
+  start_spinner_timeout_ = g_timeout_add(SPINNER_TIMEOUT * 2,
+                                         (GSourceFunc)&OnSpinnerStartCb,
+                                         this);
+
+  search_changed.emit(pango_entry_->GetText());
+}
+
 void
 SearchBar::SearchFinished()
 {
@@ -491,7 +520,7 @@ void SearchBar::UpdateBackground(bool force)
 {
   int RADIUS = 5;
   nux::Geometry geo(GetGeometry());
-  geo.width = layered_layout_->GetAbsoluteX() + 
+  geo.width = layered_layout_->GetAbsoluteX() +
               layered_layout_->GetAbsoluteWidth() -
               GetAbsoluteX() +
               SEARCH_ENTRY_RIGHT_BORDER;
@@ -520,10 +549,10 @@ void SearchBar::UpdateBackground(bool force)
                                       false);
 
   cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.57f);
+  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.35f);
   cairo_fill_preserve(cr);
   cairo_set_line_width(cr, 1);
-  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.8f);
+  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.7f);
   cairo_stroke(cr);
 
   cairo_destroy(cr);
@@ -596,6 +625,11 @@ bool SearchBar::get_im_active() const
   return pango_entry_->im_active();
 }
 
+bool SearchBar::get_im_preedit() const
+{
+  return pango_entry_->im_preedit();
+}
+
 //
 // Highlight
 //
@@ -631,7 +665,8 @@ void SearchBar::AddProperties(GVariantBuilder* builder)
   .add("filter-label-x", show_filters_->GetAbsoluteX())
   .add("filter-label-y", show_filters_->GetAbsoluteY())
   .add("filter-label-width", show_filters_->GetAbsoluteWidth())
-  .add("filter-label-height", show_filters_->GetAbsoluteHeight());
+  .add("filter-label-height", show_filters_->GetAbsoluteHeight())
+  .add("im_active", pango_entry_->im_active());
 }
 
 } // namespace unity

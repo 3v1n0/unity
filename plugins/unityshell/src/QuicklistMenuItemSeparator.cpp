@@ -59,6 +59,12 @@ QuicklistMenuItemSeparator::~QuicklistMenuItemSeparator()
 {
 }
 
+bool
+QuicklistMenuItemSeparator::GetSelectable()
+{
+  return false;
+}
+
 void
 QuicklistMenuItemSeparator::PreLayoutManagement()
 {

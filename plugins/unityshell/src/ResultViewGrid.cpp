@@ -55,6 +55,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   , preview_row_(0)
   , last_lazy_loaded_result_ (0)
   , lazy_load_handle_(0)
+  , view_changed_handle_(0)
   , last_mouse_down_x_(-1)
   , last_mouse_down_y_(-1)
   , recorded_dash_width_(-1)
@@ -107,12 +108,17 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
 
 ResultViewGrid::~ResultViewGrid()
 {
-  g_source_remove(lazy_load_handle_);
+  if (lazy_load_handle_)
+    g_source_remove(lazy_load_handle_);
+
+  if (view_changed_handle_)
+    g_source_remove(view_changed_handle_);
 }
 
 gboolean ResultViewGrid::OnLazyLoad (gpointer data)
 {
   ResultViewGrid *self = (ResultViewGrid*)data;
+  self->lazy_load_handle_ = 0;
   self->DoLazyLoad();
   return FALSE;
 }
@@ -126,9 +132,26 @@ void ResultViewGrid::QueueLazyLoad()
   last_lazy_loaded_result_ = 0; // we always want to reset the lazy load index here
 }
 
+void ResultViewGrid::QueueViewChanged()
+{
+  if (view_changed_handle_ == 0)
+  {
+    // using G_PRIORITY_HIGH because this needs to happen *before* next draw
+    view_changed_handle_ = g_idle_add_full (G_PRIORITY_HIGH,
+                                            [](gpointer data) -> gboolean
+    {
+      ResultViewGrid *self = (ResultViewGrid*)data;
+      self->SizeReallocate();
+      self->last_lazy_loaded_result_ = 0; // reset the lazy load index
+      self->DoLazyLoad(); // also calls QueueDraw
+      self->view_changed_handle_ = 0;
+      return FALSE;
+    }, this, NULL);
+  }
+}
+
 void ResultViewGrid::DoLazyLoad()
 {
-  lazy_load_handle_ = 0;
   // FIXME - so this code was nice, it would only load the visible entries on the screen
   // however nux does not give us a good enough indicator right now that we are scrolling,
   // thus if you scroll more than a screen in one frame, you will end up with at least one frame where
@@ -235,17 +258,13 @@ void ResultViewGrid::SetModelRenderer(ResultRenderer* renderer)
 void ResultViewGrid::AddResult(Result& result)
 {
   results_.push_back(result);
-
-  SizeReallocate();
-  QueueLazyLoad();
-  NeedRedraw();
+  QueueViewChanged();
 }
 
 void ResultViewGrid::RemoveResult(Result& result)
 {
   ResultView::RemoveResult(result);
-  SizeReallocate();
-  QueueLazyLoad();
+  QueueViewChanged();
 }
 
 void ResultViewGrid::SizeReallocate()
@@ -564,7 +583,6 @@ long ResultViewGrid::ComputeContentSize()
   QueueLazyLoad();
   long ret = ResultView::ComputeContentSize();
   return ret;
-
 }
 
 
@@ -620,8 +638,6 @@ ResultListBounds ResultViewGrid::GetVisableResults()
 
 void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  gPainter.PaintBackground(GfxContext, GetGeometry());
-
   int items_per_row = GetItemsPerRow();
   uint total_rows = (!expanded) ? 0 : (results_.size() / items_per_row) + 1;
 

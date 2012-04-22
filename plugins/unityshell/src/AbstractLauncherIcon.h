@@ -128,7 +128,7 @@ public:
 
   virtual void SetSortPriority(int priority) = 0;
 
-  virtual bool OpenQuicklist(bool default_to_first_item = false, int monitor = -1) = 0;
+  virtual bool OpenQuicklist(bool select_first_item = false, int monitor = -1) = 0;
 
   virtual void        SetCenter(nux::Point3 center, int monitor, nux::Geometry parent_geo) = 0;
 
@@ -188,9 +188,8 @@ public:
 
   virtual void SendDndLeave() = 0;
 
-  virtual void InsertEntryRemote(LauncherEntryRemote* remote) = 0;
-
-  virtual void RemoveEntryRemote(LauncherEntryRemote* remote) = 0;
+  virtual void InsertEntryRemote(LauncherEntryRemote::Ptr const& remote) = 0;
+  virtual void RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote) = 0;
 
   virtual std::string DesktopFile() = 0;
 

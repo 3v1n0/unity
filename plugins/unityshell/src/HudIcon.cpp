@@ -19,9 +19,13 @@
 
 #include "HudIcon.h"
 #include "NuxCore/Logger.h"
+#include "config.h"
+
 namespace
 {
   nux::logging::Logger logger("unity.hud.icon");
+  const unsigned int tile_margin = 4;
+  const unsigned int minimum_width = 64;
 }
 
 namespace unity
@@ -80,9 +84,8 @@ void Icon::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 std::string Icon::GetName() const
 {
-  return "EmbeddedIcon";
+  return "HudEmbeddedIcon";
 }
 
 }
 }
-

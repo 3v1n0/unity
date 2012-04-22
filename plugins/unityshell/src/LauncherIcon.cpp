@@ -66,7 +66,7 @@ const std::string UNITY_THEME_NAME = "unity-icon-theme";
 NUX_IMPLEMENT_OBJECT_TYPE(LauncherIcon);
 
 int LauncherIcon::_current_theme_is_mono = -1;
-GtkIconTheme* LauncherIcon::_unity_theme = NULL;
+glib::Object<GtkIconTheme> LauncherIcon::_unity_theme;
 
 LauncherIcon::LauncherIcon()
   : _remote_urgent(false)
@@ -144,7 +144,6 @@ LauncherIcon::~LauncherIcon()
 
   if (_unity_theme)
   {
-    g_object_unref(_unity_theme);
     _unity_theme = NULL;
   }
 }
@@ -337,9 +336,8 @@ GtkIconTheme* LauncherIcon::GetUnityTheme()
 {
   // The theme object is invalid as soon as you add a new icon to change the theme.
   // invalidate the cache then and rebuild the theme the first time after a icon theme update.
-  if (!GTK_IS_ICON_THEME(_unity_theme))
+  if (!GTK_IS_ICON_THEME(_unity_theme.RawPtr()))
   {
-    g_object_unref(_unity_theme);
     _unity_theme =  gtk_icon_theme_new();
     gtk_icon_theme_set_custom_theme(_unity_theme, UNITY_THEME_NAME.c_str());
   }
@@ -539,7 +537,7 @@ void LauncherIcon::RecvMouseLeave(int monitor)
     _tooltip->ShowWindow(false);
 }
 
-bool LauncherIcon::OpenQuicklist(bool default_to_first_item, int monitor)
+bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
 {
   std::list<DbusmenuMenuitem*> menus = Menus();
 
@@ -585,8 +583,8 @@ bool LauncherIcon::OpenQuicklist(bool default_to_first_item, int monitor)
     _quicklist->AddMenuItem(ql_item);
   }
 
-  if (default_to_first_item)
-    _quicklist->DefaultToFirstItem();
+  if (select_first_item)
+    _quicklist->SelectFirstItem();
 
   if (monitor < 0)
   {
@@ -988,6 +986,7 @@ LauncherIcon::SetEmblemText(std::string const& text)
   pango_font_description_set_absolute_size(desc, pango_units_from_double(font_height));
 
   pango_layout_set_font_description(layout, desc);
+  pango_font_description_free(desc);
 
   pango_layout_set_width(layout, pango_units_from_double(width - 4.0f));
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
@@ -1039,7 +1038,7 @@ LauncherIcon::DeleteEmblem()
 }
 
 void
-LauncherIcon::InsertEntryRemote(LauncherEntryRemote* remote)
+LauncherIcon::InsertEntryRemote(LauncherEntryRemote::Ptr const& remote)
 {
   if (std::find(_entry_list.begin(), _entry_list.end(), remote) != _entry_list.end())
     return;
@@ -1059,22 +1058,22 @@ LauncherIcon::InsertEntryRemote(LauncherEntryRemote* remote)
 
 
   if (remote->EmblemVisible())
-    OnRemoteEmblemVisibleChanged(remote);
+    OnRemoteEmblemVisibleChanged(remote.get());
 
   if (remote->CountVisible())
-    OnRemoteCountVisibleChanged(remote);
+    OnRemoteCountVisibleChanged(remote.get());
 
   if (remote->ProgressVisible())
-    OnRemoteProgressVisibleChanged(remote);
+    OnRemoteProgressVisibleChanged(remote.get());
 
   if (remote->Urgent())
-    OnRemoteUrgentChanged(remote);
+    OnRemoteUrgentChanged(remote.get());
 
-  OnRemoteQuicklistChanged(remote);
+  OnRemoteQuicklistChanged(remote.get());
 }
 
 void
-LauncherIcon::RemoveEntryRemote(LauncherEntryRemote* remote)
+LauncherIcon::RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote)
 {
   if (std::find(_entry_list.begin(), _entry_list.end(), remote) == _entry_list.end())
     return;

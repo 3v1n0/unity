@@ -4,10 +4,11 @@ Autopilot tests for Unity.
 
 
 from compizconfig import Setting, Plugin
+from dbus import DBusException
 import logging
 import os
 from StringIO import StringIO
-from subprocess import call, Popen, PIPE, STDOUT
+from subprocess import call, check_output, Popen, PIPE, STDOUT
 from tempfile import mktemp
 from testscenarios import TestWithScenarios
 from testtools import TestCase
@@ -24,9 +25,10 @@ from autopilot.emulators.unity import (
 from autopilot.emulators.unity.dash import Dash
 from autopilot.emulators.unity.hud import Hud
 from autopilot.emulators.unity.launcher import LauncherController
+from autopilot.emulators.unity.panel import PanelController
 from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.unity.workspace import WorkspaceManager
-from autopilot.emulators.X11 import ScreenGeometry, Keyboard, Mouse
+from autopilot.emulators.X11 import ScreenGeometry, Keyboard, Mouse, reset_display
 from autopilot.glibrunner import GlibRunner
 from autopilot.globals import (global_context,
     video_recording_enabled,
@@ -113,7 +115,12 @@ class LoggedTestCase(TestWithScenarios, TestCase):
         self.addCleanup(self._tearDownUnityLogging)
 
     def _tearDownUnityLogging(self):
-        reset_logging()
+        # If unity dies, our dbus interface has gone, and reset_logging will fail
+        # but we still want our log, so we ignore any errors.
+        try:
+            reset_logging()
+        except DBusException:
+            pass
         with open(self._unity_log_file_name) as unity_log:
             self.addDetail('unity-log', text_content(unity_log.read()))
         os.remove(self._unity_log_file_name)
@@ -229,10 +236,11 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         self.mouse = Mouse()
         self.dash = Dash()
         self.hud = Hud()
+        self.launcher = self._get_launcher_controller()
+        self.panels = self._get_panel_controller()
         self.switcher = Switcher()
         self.workspace = WorkspaceManager()
         self.screen_geo = ScreenGeometry()
-        self.launcher = self._get_launcher_controller()
         self.addCleanup(self.workspace.switch_to, self.workspace.current_workspace)
         self.addCleanup(Keyboard.cleanup)
         self.addCleanup(Mouse.cleanup)
@@ -242,6 +250,9 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
 
         If files is specified, start the application with the specified files.
         If locale is specified, the locale will be set when the application is launched.
+
+        The method returns the BamfApplication instance.
+
         """
         if locale:
             os.putenv("LC_ALL", locale)
@@ -252,7 +263,10 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
 
         app = self.KNOWN_APPS[app_name]
         self.bamf.launch_application(app['desktop-file'], files)
+        apps = self.bamf.get_running_applications_by_desktop_file(app['desktop-file'])
         self.addCleanup(call, ["killall", app['process-name']])
+        self.assertThat(len(apps), Equals(1))
+        return apps[0]
 
     def close_all_app(self, app_name):
         """Close all instances of the app_name."""
@@ -270,6 +284,21 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         apps = self.get_app_instances(app_name)
         return len(apps) > 0
 
+    def call_gsettings_cmd(self, command, schema, *args):
+        """Set a desktop wide gsettings option
+
+        Using the gsettings command because there's a bug with importing
+        from gobject introspection and pygtk2 simultaneously, and the Xlib
+        keyboard layout bits are very unweildy. This seems like the best
+        solution, even a little bit brutish.
+        """
+        cmd = ['gsettings', command, schema] + list(args)
+        # strip to remove the trailing \n.
+        ret = check_output(cmd).strip()
+        time.sleep(5)
+        reset_display()
+        return ret
+
     def set_unity_option(self, option_name, option_value):
         """Set an option in the unity compiz plugin options.
 
@@ -284,6 +313,8 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         """
         old_value = self._set_compiz_option(plugin_name, setting_name, setting_value)
         self.addCleanup(self._set_compiz_option, plugin_name, setting_name, old_value)
+        # Allow unity time to respond to the new setting.
+        time.sleep(0.5)
 
     def _set_compiz_option(self, plugin_name, option_name, option_value):
         logger.info("Setting compiz option '%s' in plugin '%s' to %r",
@@ -299,3 +330,20 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         controllers = LauncherController.get_all_instances()
         self.assertThat(len(controllers), Equals(1))
         return controllers[0]
+
+    def _get_panel_controller(self):
+        controllers = PanelController.get_all_instances()
+        self.assertThat(len(controllers), Equals(1))
+        return controllers[0]
+
+    def assertVisibleWindowStack(self, stack_start):
+        """Check that the visible window stack starts with the windows passed in.
+
+        The start_stack is an iterable of BamfWindow objects.
+        Minimised windows are skipped.
+
+        """
+        stack = [win for win in self.bamf.get_open_windows() if not win.is_hidden]
+        for pos, win in enumerate(stack_start):
+            self.assertThat(stack[pos].x_id, Equals(win.x_id),
+                            "%r at %d does not equal %r" % (stack[pos], pos, win))

@@ -13,6 +13,7 @@ import gio
 import gobject
 import os
 from Xlib import display, X, protocol
+from gtk import gdk
 
 from autopilot.emulators.dbus_handler import session_bus
 
@@ -80,12 +81,21 @@ class Bamf(object):
         If user_visible_only is True (the default), only applications
         visible to the user in the switcher will be returned.
 
+        The result is sorted to be in stacking order.
+
         """
+
+        # Get the stacking order from the root window.
+        root_win = _X_DISPLAY.screen().root
+        prop = root_win.get_full_property(
+            _X_DISPLAY.get_atom('_NET_CLIENT_LIST_STACKING'), X.AnyPropertyType)
+        stack = prop.value.tolist()
 
         windows = [BamfWindow(w) for w in self.matcher_interface.WindowPaths()]
         if user_visible_only:
-            return filter(_filter_user_visible, windows)
-        return windows
+            windows = filter(_filter_user_visible, windows)
+        # Now sort on stacking order.
+        return sorted(windows, key=lambda w: stack.index(w.x_id), reverse=True)
 
     def wait_until_application_is_running(self, desktop_file, timeout):
         """Wait until a given application is running.
@@ -261,9 +271,10 @@ class BamfWindow(object):
         Returns a tuple containing (x, y, width, height).
 
         """
-
+        # FIXME: We need to use the gdk window here to get the real coordinates
         geometry = self._x_win.get_geometry()
-        return (geometry.x, geometry.y, geometry.width, geometry.height)
+        origin = gdk.window_foreign_new(self._xid).get_origin()
+        return (origin[0], origin[1], geometry.width, geometry.height)
 
     @property
     def is_maximized(self):
@@ -325,10 +336,28 @@ class BamfWindow(object):
         """
         return not self._x_win is None
 
+    @property
+    def monitor(self):
+        """Returns the monitor to which the windows belongs to"""
+        return self._window_iface.Monitor()
+
+    @property
+    def closed(self):
+        """Returns True if the window has been closed"""
+        # This will return False when the window is closed and then removed from BUS
+        try:
+            return (self._window_iface.GetXid() != self.x_id)
+        except:
+            return True
+
     def close(self):
         """Close the window."""
 
         self._setProperty('_NET_CLOSE_WINDOW', [0, 0])
+
+    def set_focus(self):
+        self._x_win.set_input_focus(X.RevertToParent, X.CurrentTime)
+        self._x_win.configure(stack_mode=X.Above)
 
     def __repr__(self):
         return "<BamfWindow '%s'>" % (self.title if self._x_win else str(self._xid))

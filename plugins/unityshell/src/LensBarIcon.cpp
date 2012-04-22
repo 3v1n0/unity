@@ -16,6 +16,9 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
+#include <UnityCore/Variant.h>
+
+#include "DashStyle.h"
 #include "LensBarIcon.h"
 
 #include "config.h"
@@ -24,6 +27,13 @@ namespace unity
 {
 namespace dash
 {
+namespace
+{
+
+const int FOCUS_OVERLAY_HEIGHT = 44;
+const int FOCUS_OVERLAY_WIDTH = 60;
+
+}
 
 NUX_IMPLEMENT_OBJECT_TYPE(LensBarIcon);
 
@@ -33,10 +43,13 @@ LensBarIcon::LensBarIcon(std::string id_, std::string icon_hint)
   , active(false)
   , inactive_opacity_(0.4f)
 {
-  SetMinimumWidth(24);
-  SetMaximumWidth(24);
-  SetMinimumHeight(24);
-  SetMaximumHeight(24);
+  SetMinimumWidth(FOCUS_OVERLAY_WIDTH);
+  SetMaximumWidth(FOCUS_OVERLAY_WIDTH);
+  SetMinimumHeight(FOCUS_OVERLAY_HEIGHT);
+  SetMaximumHeight(FOCUS_OVERLAY_HEIGHT);
+
+  focus_layer_.reset(Style::Instance().FocusOverlay(FOCUS_OVERLAY_WIDTH, FOCUS_OVERLAY_HEIGHT));
+  
   SetOpacity(inactive_opacity_);
 
   SetAcceptKeyNavFocus(true);
@@ -44,6 +57,7 @@ LensBarIcon::LensBarIcon(std::string id_, std::string icon_hint)
   SetAcceptKeyNavFocusOnMouseEnter(true);
 
   active.changed.connect(sigc::mem_fun(this, &LensBarIcon::OnActiveChanged));
+  key_nav_focus_change.connect([&](nux::Area*, bool, nux::KeyNavDirection){ QueueDraw(); });
 }
 
 LensBarIcon::~LensBarIcon()
@@ -54,13 +68,21 @@ void LensBarIcon::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
   nux::Geometry const& geo = GetGeometry();
 
   gfx_context.PushClippingRectangle(geo);
-
   nux::GetPainter().PaintBackground(gfx_context, geo);
 
   if (!texture())
   {
     gfx_context.PopClippingRectangle();
     return;
+  }
+
+  if (HasKeyFocus() && focus_layer_)
+  {
+    nux::Geometry geo(GetGeometry());
+    nux::AbstractPaintLayer* layer = focus_layer_.get();
+
+    layer->SetGeometry(geo);
+    layer->Renderlayer(gfx_context);
   }
 
   float opacity = active ? 1.0f : inactive_opacity_;
@@ -86,6 +108,20 @@ void LensBarIcon::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 void LensBarIcon::OnActiveChanged(bool is_active)
 {
   QueueDraw();
+}
+
+// Introspectable
+std::string LensBarIcon::GetName() const
+{
+  return "LensBarIcon";
+}
+
+void LensBarIcon::AddProperties(GVariantBuilder* builder)
+{
+  unity::variant::BuilderWrapper wrapper(builder);
+
+  wrapper.add(GetAbsoluteGeometry());
+  wrapper.add("name", id);
 }
 
 }

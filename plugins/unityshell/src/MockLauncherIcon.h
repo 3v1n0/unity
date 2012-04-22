@@ -120,7 +120,7 @@ public:
 
   void SetSortPriority(int priority) { sort_priority_ = priority; }
 
-  bool OpenQuicklist(bool default_to_first_item = false, int monitor = -1)
+  bool OpenQuicklist(bool select_first_item = false, int monitor = -1)
   {
     return false;
   }
@@ -190,9 +190,9 @@ public:
     return true;
   }
 
-  void InsertEntryRemote(LauncherEntryRemote* remote) {}
+  void InsertEntryRemote(LauncherEntryRemote::Ptr const& remote) {}
 
-  void RemoveEntryRemote(LauncherEntryRemote* remote) {}
+  void RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote) {}
 
   unsigned long long SwitcherPriority()
   {

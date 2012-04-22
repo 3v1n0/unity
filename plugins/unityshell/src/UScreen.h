@@ -24,6 +24,13 @@
 #include <sigc++/sigc++.h>
 #include <vector>
 
+#include <UnityCore/GLibSignal.h>
+#include <UnityCore/GLibWrapper.h>
+#include <UnityCore/GLibDBusProxy.h>
+
+namespace unity
+{
+
 class UScreen : public sigc::trackable
 {
 public:
@@ -34,22 +41,28 @@ public:
 
   int             GetPrimaryMonitor();
   int             GetMonitorWithMouse();
+  int             GetMonitorAtPosition(int x, int y);
   nux::Geometry&  GetMonitorGeometry(int monitor);
 
   std::vector<nux::Geometry>& GetMonitors();
 
   // <void, primary_monitor, monitors>
   sigc::signal<void, int, std::vector<nux::Geometry>&> changed;
+  sigc::signal<void> resuming;
 
 private:
-  static void     Changed(GdkScreen* screen, UScreen* self);
-  static gboolean OnIdleChanged(UScreen* self);
-  void            Refresh();
+  void Changed(GdkScreen* screen);
+  void Refresh();
 
 private:
-  std::vector<nux::Geometry> _monitors;
-  guint32 _refresh_id;
+  std::vector<nux::Geometry> monitors_;
+  glib::Object<GdkScreen> screen_;
+  glib::DBusProxy proxy_;
+  glib::Signal<void, GdkScreen*> size_changed_signal_;
+  glib::Signal<void, GdkScreen*> monitors_changed_signal_;
+  guint refresh_id_;
   int primary_;
 };
 
+} // Namespace
 #endif // _UNITY_SCREEN_H_

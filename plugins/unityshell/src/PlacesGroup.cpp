@@ -382,7 +382,8 @@ void
 PlacesGroup::Relayout()
 {
   if (_idle_id == 0)
-    _idle_id = g_idle_add((GSourceFunc)OnIdleRelayout, this);
+    _idle_id = g_idle_add_full(G_PRIORITY_HIGH,
+                               (GSourceFunc)OnIdleRelayout, this, NULL);
 }
 
 gboolean
@@ -425,8 +426,6 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
 {
   nux::Geometry const& base = GetGeometry();
   graphics_engine.PushClippingRectangle(base);
-
-  nux::GetPainter().PaintBackground(graphics_engine, base);
 
   if (ShouldBeHighlighted())
   {

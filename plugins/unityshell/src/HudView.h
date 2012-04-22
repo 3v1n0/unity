@@ -21,14 +21,9 @@
 
 #include <string>
 
-#include <NuxGraphics/GraphicsEngine.h>
 #include <Nux/Nux.h>
-#include <Nux/PaintLayer.h>
 #include <Nux/View.h>
 #include <Nux/VLayout.h>
-#include <StaticCairoText.h>
-
-#include <glib.h>
 
 #include <UnityCore/Hud.h>
 #include "Introspectable.h"
@@ -87,6 +82,7 @@ private:
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
+  void OnSearchbarActivated();
   bool AcceptKeyNavFocus();
   nux::Geometry GetBestFitGeometry(nux::Geometry const& for_geo);
 

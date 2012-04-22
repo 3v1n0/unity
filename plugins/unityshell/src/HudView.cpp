@@ -20,19 +20,11 @@
 
 #include <math.h>
 
-#include <gio/gdesktopappinfo.h>
 #include <glib/gi18n-lib.h>
-#include <gtk/gtk.h>
-#include <Nux/Button.h>
-#include <iostream>
-#include <sstream>
-
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
-#include <UnityCore/RadioOptionFilter.h>
 #include <UnityCore/Variant.h>
 #include <Nux/HLayout.h>
-#include <Nux/LayeredLayout.h>
 
 #include <NuxCore/Logger.h>
 #include "HudButton.h"
@@ -47,8 +39,6 @@ namespace hud
 namespace
 {
 nux::logging::Logger logger("unity.hud.view");
-
-const std::string default_text = _("Type your command");
 const int grow_anim_length = 90 * 1000;
 const int pause_before_grow_length = 32 * 1000;
 
@@ -74,7 +64,6 @@ View::View()
   , timeline_need_more_draw_(false)
   , selected_button_(0)
   , show_embedded_icon_(true)
-  , activated_signal_sent_(false)
 {
   renderer_.SetOwner(this);
   renderer_.need_redraw.connect([this] () {
@@ -89,11 +78,7 @@ View::View()
   SetupViews();
   search_bar_->key_down.connect (sigc::mem_fun (this, &View::OnKeyDown));
 
-  search_bar_->activated.connect ([&]()
-  {
-    if (!activated_signal_sent_)
-      search_activated.emit(search_bar_->search_string);
-  });
+  search_bar_->activated.connect (sigc::mem_fun (this, &View::OnSearchbarActivated));
 
   search_bar_->text_entry()->SetLoseKeyFocusOnKeyNavDirectionUp(false);
   search_bar_->text_entry()->SetLoseKeyFocusOnKeyNavDirectionDown(false);
@@ -184,7 +169,7 @@ void View::ProcessGrowShrink()
 void View::ResetToDefault()
 {
   search_bar_->search_string = "";
-  search_bar_->search_hint = default_text;
+  search_bar_->search_hint = _("Type your command");
 }
 
 void View::Relayout()
@@ -227,6 +212,11 @@ nux::View* View::default_focus() const
 
 void View::SetQueries(Hud::Queries queries)
 {
+  // early exit, if the user is key navigating on the hud, we don't want to set new
+  // queries under them, that is just rude
+  if (!buttons_.empty() && buttons_.back()->fake_focused == false)
+    return;
+
   // remove the previous children
   for (auto button : buttons_)
   {
@@ -372,7 +362,7 @@ void View::SetupViews()
       search_bar_ = new unity::SearchBar(true);
       search_bar_->SetMinimumHeight(style.GetSearchBarHeight());
       search_bar_->SetMaximumHeight(style.GetSearchBarHeight());
-      search_bar_->search_hint = default_text;
+      search_bar_->search_hint = _("Type your command");
       search_bar_->search_changed.connect(sigc::mem_fun(this, &View::OnSearchChanged));
       AddChild(search_bar_.GetPointer());
       content_layout_->AddView(search_bar_.GetPointer(), 0, nux::MINOR_POSITION_LEFT);
@@ -396,12 +386,21 @@ void View::OnSearchChanged(std::string const& search_string)
   search_changed.emit(search_string);
   if (search_string.empty())
   {
-    search_bar_->search_hint = default_text;
+    search_bar_->search_hint = _("Type your command");
   }
   else
   {
     search_bar_->search_hint = "";
   }
+
+  std::list<HudButton::Ptr>::iterator it;
+  for(it = buttons_.begin(); it != buttons_.end(); ++it)
+  {
+    (*it)->fake_focused = false;
+  }
+  
+  if (!buttons_.empty())
+    buttons_.back()->fake_focused = true;
 }
 
 
@@ -504,11 +503,30 @@ bool View::InspectKeyEvent(unsigned int eventType,
     else
     {
       search_bar_->search_string = "";
-      search_bar_->search_hint = default_text;
+      search_bar_->search_hint = _("Type your command");
     }
     return true;
   }
   return false;
+}
+
+void View::OnSearchbarActivated()
+{
+  // The "Enter" key has been received and the text entry has the key focus.
+  // If one of the button has the fake_focus, we get it to emit the query_activated signal.
+  if (!buttons_.empty())
+  {
+    std::list<HudButton::Ptr>::iterator it;
+    for(it = buttons_.begin(); it != buttons_.end(); ++it)
+    {
+      if ((*it)->fake_focused)
+      {
+        query_activated.emit((*it)->GetQuery());
+        return;
+      }
+    }
+  }
+  search_activated.emit(search_bar_->search_string);
 }
 
 nux::Area* View::FindKeyFocusArea(unsigned int event_type,
@@ -555,19 +573,19 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
 
     if (search_bar_->search_string == "")
     {
-      search_bar_->search_hint = default_text;
+      search_bar_->search_hint = _("Type your command");
       ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
     }
     else
     {
       search_bar_->search_string = "";
-      search_bar_->search_hint = default_text;
+      search_bar_->search_hint = _("Type your command");
       return search_bar_->text_entry();
     }
     return NULL;
   }
 
-  if (search_bar_->text_entry()->HasKeyFocus())
+  if (search_bar_->text_entry()->HasKeyFocus() && !search_bar_->im_preedit)
   {
     if (direction == nux::KEY_NAV_NONE ||
         direction == nux::KEY_NAV_UP ||
@@ -633,27 +651,11 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
 
     if (event_type == nux::NUX_KEYDOWN && direction == nux::KEY_NAV_ENTER)
     {
-      activated_signal_sent_ = false;
-      // The "Enter" key has been received and the text entry has the key focus.
-      // If one of the button has the fake_focus, we get it to emit the query_activated signal.
-      if (!buttons_.empty())
-      {
-        std::list<HudButton::Ptr>::iterator it;
-        for(it = buttons_.begin(); it != buttons_.end(); ++it)
-        {
-          if ((*it)->fake_focused)
-          {
-            query_activated.emit((*it)->GetQuery());
-            activated_signal_sent_ = true;
-          }
-        }
-      }
-
       // We still choose the text_entry as the receiver of the key focus.
       return search_bar_->text_entry();
     }
   }
-  else if (direction == nux::KEY_NAV_NONE)
+  else if (direction == nux::KEY_NAV_NONE || search_bar_->im_preedit)
   {
     return search_bar_->text_entry();
   }
@@ -661,7 +663,7 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
   {
     return next_object_to_key_focus_area_->FindKeyFocusArea(event_type, x11_key_code, special_keys_state);
   }
-  return NULL;
+  return search_bar_->text_entry();
 }
 
 }

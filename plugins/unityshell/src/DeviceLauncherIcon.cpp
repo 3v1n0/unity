@@ -64,11 +64,12 @@ DeviceLauncherIcon::DeviceLauncherIcon(GVolume* volume)
 
 void DeviceLauncherIcon::UpdateDeviceIcon()
 {
-  glib::String name(g_volume_get_name(volume_));
+  name_ = glib::String(g_volume_get_name(volume_)).Str();
+
   glib::Object<GIcon> icon(g_volume_get_icon(volume_));
   glib::String icon_string(g_icon_to_string(icon));
 
-  tooltip_text = name.Str();
+  tooltip_text = name_;
   icon_name = icon_string.Str();
 
   SetIconType(TYPE_DEVICE);
@@ -206,8 +207,6 @@ std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
 
 void DeviceLauncherIcon::ShowMount(GMount* mount)
 {
-  glib::String name(g_volume_get_name(volume_));
-
   if (G_IS_MOUNT(mount))
   {
     glib::Object<GFile> root(g_mount_get_root(mount));
@@ -221,20 +220,20 @@ void DeviceLauncherIcon::ShowMount(GMount* mount)
 
       if (error)
       {
-        LOG_WARNING(logger) << "Cannot open volume '" << name
+        LOG_WARNING(logger) << "Cannot open volume '" << name_
                             << "': Unable to show " << uri
                             << ": " << error;
       }
     }
     else
     {
-      LOG_WARNING(logger) << "Cannot open volume '" << name
+      LOG_WARNING(logger) << "Cannot open volume '" << name_
                           << "': Mount has no root";
     }
   }
   else
   {
-    LOG_WARNING(logger) << "Cannot open volume '" << name
+    LOG_WARNING(logger) << "Cannot open volume '" << name_
                         << "': Mount-point is invalid";
   }
 }
@@ -270,11 +269,8 @@ void DeviceLauncherIcon::OnMountReady(GObject* object,
   }
   else
   {
-    glib::String name(g_volume_get_name(self->volume_));
-
-    g_warning("Cannot open volume '%s': %s",
-              name.Value(),
-              error ? error.Message().c_str() : "Mount operation failed");
+    LOG_WARNING(logger) << "Cannot open volume '" << self->name_ << "' : " <<
+                            (error ? error.Message() : "Mount operation failed");
   }
 }
 
@@ -285,17 +281,16 @@ void DeviceLauncherIcon::OnEjectReady(GObject* object,
   if (g_volume_eject_with_operation_finish(self->volume_, result, NULL))
   {
     IconLoader::GetDefault().LoadFromGIconString(self->icon_name(), 48,
-                                                 sigc::mem_fun(self, &DeviceLauncherIcon::ShowNotification));
+                                                 sigc::bind(sigc::mem_fun(self, &DeviceLauncherIcon::ShowNotification), self->name_));
   }
 }
 
 void DeviceLauncherIcon::ShowNotification(std::string const& icon_name,
                                           unsigned size,
-                                          GdkPixbuf* pixbuf)
+                                          GdkPixbuf* pixbuf,
+                                          std::string const& name)
 {
-
-  glib::String name(g_volume_get_name(volume_));
-  glib::Object<NotifyNotification> notification(notify_notification_new(name,
+  glib::Object<NotifyNotification> notification(notify_notification_new(name.c_str(),
                                                                         _("The drive has been successfully ejected"),
                                                                         NULL));
 

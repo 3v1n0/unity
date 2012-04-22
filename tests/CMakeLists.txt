@@ -33,7 +33,7 @@ set (CFLAGS
      )
 add_definitions (${CFLAGS})
 
-set (LIBS ${TEST_UNIT_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION} -lm")
+set (LIBS ${TEST_UNIT_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION} -lcompiz_core -lm")
 link_libraries (${LIBS})
 
 set (LIB_PATHS ${TEST_UNIT_DEPS_LIBRARY_DIRS})
@@ -72,6 +72,7 @@ add_executable (test-unit
                 ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
                 ${UNITY_SRC}/ubus-server.cpp
                 )
+target_link_libraries (test-unit ${LIBS})
 add_dependencies (test-unit unity-core-${UNITY_API_VERSION})
 add_subdirectory (test-input-remover)
 add_subdirectory (test-minimize-window-handler)
@@ -110,6 +111,7 @@ if (GTEST_SRC_DIR AND
                  test_service_main.c
                  test_service_model.c
                  test_service_model.h)
+  target_link_libraries(test-gtest-service ${LIBS})
   add_dependencies (test-gtest-service unity-core-${UNITY_API_VERSION} gtest)
 
 
@@ -124,6 +126,7 @@ if (GTEST_SRC_DIR AND
                  test_glib_signals_utils.cpp
                  test_glib_signals_utils.h
                  test_glib_variant.cpp
+                 test_desktop_utilities.cpp
                  ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
                  test_indicator.cpp
                  test_indicator_appmenu.cpp
@@ -132,12 +135,14 @@ if (GTEST_SRC_DIR AND
                  test_favorite_store_gsettings.cpp
                  test_favorite_store_private.cpp
                  test_home_lens.cpp
+                 test_launcher_entry_remote.cpp
                  test_shortcut_model.cpp
                  test_shortcut_private.cpp
                  test_introspection.cpp
                  test_main_xless.cpp
                  test_grabhandle.cpp
                  test_unityshell_private.cpp
+		 test_showdesktop_handler.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.cpp
                  ${UNITY_SRC}/AbstractShortcutHint.h
                  ${UNITY_SRC}/Animator.cpp
@@ -147,6 +152,7 @@ if (GTEST_SRC_DIR AND
                  ${UNITY_SRC}/FavoriteStoreGSettings.cpp
                  ${UNITY_SRC}/IconTextureSource.cpp
                  ${UNITY_SRC}/LauncherModel.cpp
+                 ${UNITY_SRC}/LauncherEntryRemote.cpp
                  ${UNITY_SRC}/FavoriteStorePrivate.cpp
                  ${UNITY_SRC}/MockLauncherIcon.h
                  ${UNITY_SRC}/MockShortcutHint.h
@@ -157,13 +163,14 @@ if (GTEST_SRC_DIR AND
                  ${UNITY_SRC}/Timer.cpp
                  ${UNITY_SRC}/UnityshellPrivate.cpp
                  ${UNITY_SRC}/WindowManager.cpp
+		 ${UNITY_SRC}/UnityShowdesktopHandler.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-group.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-impl-factory.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-layout.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-texture.cpp
                  )
-  target_link_libraries(test-gtest-xless gtest ${GMOCK_LIB} ${GMOCK_MAIN_LIB})
+  target_link_libraries(test-gtest-xless gtest ${GMOCK_LIB} ${GMOCK_MAIN_LIB} ${LIBS})
   add_test(UnityGTestXless test-gtest-xless)
   add_dependencies(test-gtest-xless unity-core-${UNITY_API_VERSION} gtest)
 
@@ -181,7 +188,7 @@ if (GTEST_SRC_DIR AND
                  test_ratings_filter.cpp
                  test_results.cpp
                 )
-  target_link_libraries(test-gtest-dbus gtest)
+  target_link_libraries(test-gtest-dbus gtest ${LIBS})
   add_test(UnityGTestDBus test-gtest-dbus)
   add_dependencies(test-gtest-dbus unity-core-${UNITY_API_VERSION} test-gtest-service gtest)
 
@@ -243,13 +250,15 @@ if (GTEST_SRC_DIR AND
                  ${UNITY_SRC}/UScreen.cpp
                  ${UNITY_SRC}/WindowManager.cpp
                 )
-  target_link_libraries(test-gtest gtest)
+  target_link_libraries(test-gtest gtest ${LIBS})
   add_test(UnityGTest test-gtest)
   add_dependencies(test-gtest unity-core-${UNITY_API_VERSION} gtest)
 
 endif (GTEST_SRC_DIR AND
        GMOCK_LIB AND
        GMOCK_MAIN_LIB)
+
+add_subdirectory (test-gesture-engine)
 
 #
 # check target
@@ -260,21 +269,25 @@ set (TEST_RESULT_HTML ${TEST_RESULT_DIR}/test-results.html)
 set (GTEST_TEST_COMMAND ./test-gtest)
 set (GTEST_TEST_COMMAND_XLESS ./test-gtest-xless)
 set (GTEST_TEST_COMMAND_DBUS dbus-test-runner --task ./test-gtest-service --task ./test-gtest-dbus)
+set (GTEST_TEST_COMMAND_GESTURE_ENGINE ./test-gesture-engine/test-gesture-engine)
 
 set (TEST_COMMAND
      gtester --verbose -k --g-fatal-warnings -o=${TEST_RESULT_XML} ./test-unit
   && ${GTEST_TEST_COMMAND}
   && ${GTEST_TEST_COMMAND_XLESS}
-  && ${GTEST_TEST_COMMAND_DBUS})
+  && ${GTEST_TEST_COMMAND_GESTURE_ENGINE}
+  && ${GTEST_TEST_COMMAND_DBUS}
+    )
 
 set (TEST_COMMAND_HEADLESS
      ${GTEST_TEST_COMMAND_XLESS}
+  && ${GTEST_TEST_COMMAND_GESTURE_ENGINE}
   #&& ${GTEST_TEST_COMMAND_DBUS}
   && echo "Warning, DBus test cases are disabled!!")
 
 if (GTEST_SRC_DIR)
-  add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest test-gtest-xless test-gtest-dbus)
-  add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless test-gtest-dbus)
+  add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest test-gtest-xless test-gtest-dbus test-gesture-engine)
+  add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless test-gtest-dbus test-gesture-engine)
   add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})
   add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest test-gtest-xless)
 else (GTEST_SRC_DIR)
