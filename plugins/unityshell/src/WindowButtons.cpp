@@ -530,6 +530,9 @@ void WindowButtons::OnOverlayShown(GVariant* data)
 
     if (button)
     {
+      if (button->GetType() == panel::WindowButtonType::CLOSE)
+        button->SetEnabled(true);
+
       if (button->GetType() == panel::WindowButtonType::UNMAXIMIZE)
         restore_button = button;
 
@@ -596,6 +599,21 @@ void WindowButtons::OnOverlayHidden(GVariant* data)
 
     if (button)
     {
+      if (window_xid_)
+      {
+        if (button->GetType() == panel::WindowButtonType::CLOSE)
+        {
+          bool closable = WindowManager::Default()->IsWindowClosable(window_xid_);
+          button->SetEnabled(closable);
+        }
+
+        if (button->GetType() == panel::WindowButtonType::MINIMIZE)
+        {
+          bool minimizable = WindowManager::Default()->IsWindowMinimizable(window_xid_);
+          button->SetEnabled(minimizable);
+        }
+      }
+
       if (button->GetType() == panel::WindowButtonType::UNMAXIMIZE)
         restore_button = button;
 
@@ -721,20 +739,26 @@ void WindowButtons::SetControlledWindow(Window xid)
   {
     window_xid_ = xid;
 
-    for (auto area : GetChildren())
+    if (window_xid_ && active_overlay_.empty())
     {
-      auto button = dynamic_cast<WindowButton*>(area);
-
-      if (button->GetType() == panel::WindowButtonType::CLOSE)
+      for (auto area : GetChildren())
       {
-        bool closable = WindowManager::Default()->IsWindowClosable(xid);
-        button->SetEnabled(closable);
-      }
+        auto button = dynamic_cast<WindowButton*>(area);
 
-      if (button->GetType() == panel::WindowButtonType::MINIMIZE)
-      {
-        bool minimizable = WindowManager::Default()->IsWindowMinimizable(xid);
-        button->SetEnabled(minimizable);
+        if (!button)
+          continue;
+
+        if (button->GetType() == panel::WindowButtonType::CLOSE)
+        {
+          bool closable = WindowManager::Default()->IsWindowClosable(xid);
+          button->SetEnabled(closable);
+        }
+
+        if (button->GetType() == panel::WindowButtonType::MINIMIZE)
+        {
+          bool minimizable = WindowManager::Default()->IsWindowMinimizable(xid);
+          button->SetEnabled(minimizable);
+        }
       }
     }
   }
