@@ -147,6 +147,9 @@ BamfLauncherIcon::~BamfLauncherIcon()
   if (_fill_supported_types_id != 0)
     g_source_remove(_fill_supported_types_id);
 
+  if (_quicklist_activated_id != 0)
+    g_source_remove(_quicklist_activated_id);
+
   if (_window_moved_id != 0)
     g_source_remove(_window_moved_id);
 
