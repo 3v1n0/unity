@@ -14,6 +14,8 @@ service_model_dispose(GObject* object)
   g_object_unref(self->model_);
   g_object_unref(self->results_model_);
   g_object_unref(self->categories_model_);
+
+  G_OBJECT_CLASS (service_model_parent_class)->dispose (object);
 }
 
 static void

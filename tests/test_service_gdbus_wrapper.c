@@ -74,6 +74,7 @@ service_gdbus_wrapper_dispose(GObject* object)
     self->priv->bus = NULL;
   }
 
+  G_OBJECT_CLASS (service_gbus_wrapper_parent_class)->dispose (object);
 }
 
 static void
