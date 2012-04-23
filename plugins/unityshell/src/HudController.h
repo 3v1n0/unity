@@ -48,6 +48,8 @@ public:
   nux::BaseWindow* window() const;
 
   nux::Property<int> launcher_width;
+  nux::Property<int> icon_size;
+  nux::Property<int> tile_size;
   nux::Property<bool> launcher_locked_out;
   nux::Property<bool> multiple_launchers;
 
@@ -65,6 +67,7 @@ private:
   void SetupWindow();
   void SetupHudView();
   void RegisterUBusInterests();
+  void SetIcon(std::string const& icon_name);
 
   int GetTargetMonitor();
   bool IsLockedToLauncher(int monitor);

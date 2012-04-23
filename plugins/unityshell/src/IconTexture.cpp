@@ -46,6 +46,7 @@ using namespace unity;
 IconTexture::IconTexture(nux::BaseTexture* texture, guint width, guint height)
   : TextureArea(NUX_TRACKER_LOCATION),
     _accept_key_nav_focus(false),
+    _pixbuf_cached(nullptr),
     _size(height),
     _texture_cached(texture),
     _texture_width(width),
@@ -60,6 +61,7 @@ IconTexture::IconTexture(nux::BaseTexture* texture, guint width, guint height)
 IconTexture::IconTexture(std::string const& icon_name, unsigned int size, bool defer_icon_loading)
   : TextureArea(NUX_TRACKER_LOCATION),
     _accept_key_nav_focus(false),
+    _pixbuf_cached(nullptr),
     _icon_name(!icon_name.empty() ? icon_name : DEFAULT_ICON),
     _size(size),
     _texture_width(0),
@@ -167,6 +169,7 @@ void IconTexture::IconLoaded(std::string const& icon_name, unsigned size,
   }
   else
   {
+    _pixbuf_cached = nullptr;
     _loading = false;
 
     // Protects against a missing default icon, we only request it if icon_name
