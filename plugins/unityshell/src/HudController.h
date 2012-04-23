@@ -67,6 +67,7 @@ private:
   void SetupWindow();
   void SetupHudView();
   void RegisterUBusInterests();
+  void SetIcon(std::string const& icon_name);
 
   int GetTargetMonitor();
   bool IsLockedToLauncher(int monitor);
