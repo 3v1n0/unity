@@ -65,6 +65,8 @@ public:
   std::vector<Window> WindowsForMonitor(int monitor);
   std::string NameForWindow(Window window);
 
+  sigc::signal<void> user_visible_changed;
+
 protected:
   void UpdateIconGeometries(std::vector<nux::Point3> center);
   void OnCenterStabilized(std::vector<nux::Point3> center);

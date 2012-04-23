@@ -301,6 +301,13 @@ class LauncherModel(UnityIntrospectionObject):
         else:
             return self.get_children_by_type(SimpleLauncherIcon)
 
+    def get_bamf_launcher_icons(self, visible_only=True):
+        """Get a list of bamf launcher icons in this launcher."""
+        if visible_only:
+            return self.get_children_by_type(BamfLauncherIcon, visible=True)
+        else:
+            return self.get_children_by_type(BamfLauncherIcon)
+
     def get_launcher_icons_for_monitor(self, monitor, visible_only=True):
         """Get a list of launcher icons for provided monitor."""
         icons = []
@@ -345,3 +352,7 @@ class LauncherModel(UnityIntrospectionObject):
     def num_launcher_icons(self):
         """Get the number of icons in the launcher model."""
         return len(self.get_launcher_icons())
+
+    def num_bamf_launcher_icons(self, visible_only=True):
+        """Get the number of bamf icons in the launcher model."""
+        return len(self.get_bamf_launcher_icons(visible_only))

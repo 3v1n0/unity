@@ -499,6 +499,19 @@ class LauncherRevealTests(LauncherTestCase):
         sleep(5)
         self.assertThat(self.launcher_instance.is_showing, Equals(False))
 
+    def test_new_icon_has_the_shortcut(self):
+         """New icons should have an associated shortcut"""
+         if self.launcher.model.num_bamf_launcher_icons() >= 10:
+             self.skip("There are already more than 9 icons in the launcher")
+
+         desktop_file = self.KNOWN_APPS['Calculator']['desktop-file']
+         if self.launcher.model.get_icon_by_desktop_id(desktop_file) != None:
+             self.skip("Calculator icon is already on the launcher.")
+
+         self.start_app('Calculator')
+         icon = self.launcher.model.get_icon_by_desktop_id(desktop_file)
+         self.assertThat(icon.shortcut, GreaterThan(0))
+
 
 class LauncherVisualTests(LauncherTestCase):
     """Tests for visual aspects of the launcher (icon saturation etc.)."""
