@@ -32,29 +32,32 @@ namespace
 ResultIterator::ResultIterator(glib::Object<DeeModel> model)
   : model_(model, glib::AddRef())
   , iter_(dee_model_get_first_iter(model))
-  , iter_result_(model_, iter_, NULL)
+  , tag_(NULL)
+  , iter_result_(model_, iter_, tag_)
   , cache_invalidated_(false)
 {
 }
 
-ResultIterator::ResultIterator(glib::Object<DeeModel> model, DeeModelIter* iter_)
+ResultIterator::ResultIterator(glib::Object<DeeModel> model, DeeModelIter* iter, DeeModelTag* tag)
   : model_(model, glib::AddRef())
-  , iter_(iter_)
-  , iter_result_(model_, iter_, NULL)
+  , iter_(iter)
+  , tag_(tag)
+  , iter_result_(model_, iter_, tag_)
   , cache_invalidated_(false)
 {
 }
 
 ResultIterator ResultIterator::operator[](int value)
 {
-  return ResultIterator(model_, dee_model_get_iter_at_row(model_, value));
+  return ResultIterator(model_, dee_model_get_iter_at_row(model_, value), tag_);
 }
 
 ResultIterator& ResultIterator::operator=(ResultIterator const& rhs)
 {
   model_ = rhs.model_;
   iter_ = rhs.iter_;
-  iter_result_ = Result(model_, iter_, NULL);
+  tag_ = rhs.tag_;
+  iter_result_ = Result(model_, iter_, tag_);
   cache_invalidated_ = false;
 
   return *this;
@@ -129,7 +132,7 @@ ResultIterator ResultIterator::operator-(int count) const
 Result const& ResultIterator::operator*()
 {
   if (cache_invalidated_)
-    iter_result_ = Result(model_, iter_, NULL);
+    iter_result_ = Result(model_, iter_, tag_);
   return iter_result_;
 }
 

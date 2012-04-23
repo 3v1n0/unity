@@ -41,12 +41,12 @@ Results::Results(ModelType model_type)
 
 ResultIterator Results::begin()
 {
-  return ResultIterator(model(), dee_model_get_first_iter(model()));
+  return ResultIterator(model(), dee_model_get_first_iter(model()), GetTag());
 }
 
 ResultIterator Results::end()
 {
-  return ResultIterator(model(), dee_model_get_last_iter(model()));
+  return ResultIterator(model(), dee_model_get_last_iter(model()), GetTag());
 }
 
 void Results::OnRowAdded(Result& result)
