@@ -6,17 +6,21 @@
 # under the terms of the GNU General Public License version 3, as published
 # by the Free Software Foundation.
 
+import logging
 from testtools.matchers import Equals, NotEquals, Contains, Not
 from time import sleep
 
+from autopilot.emulators.unity.switcher import SwitcherMode
 from autopilot.tests import AutopilotTestCase
 
+logger = logging.getLogger(__name__)
 
 class SwitcherTests(AutopilotTestCase):
     """Test the switcher."""
 
     def set_timeout_setting(self, value):
         self.set_unity_option("alt_tab_timeout", value)
+        sleep(1)
 
     def setUp(self):
         super(SwitcherTests, self).setUp()
@@ -31,50 +35,41 @@ class SwitcherTests(AutopilotTestCase):
 
     def test_switcher_move_next(self):
         self.set_timeout_setting(False)
-        sleep(1)
 
         self.switcher.initiate()
-        sleep(.2)
+        self.addCleanup(self.switcher.terminate)
 
-        start = self.switcher.get_selection_index()
+        start = self.switcher.selection_index
         self.switcher.next_icon()
-        sleep(.2)
-
-        end = self.switcher.get_selection_index()
-        self.switcher.terminate()
+        end = self.switcher.selection_index
 
         self.assertThat(start, NotEquals(0))
         self.assertThat(end, Equals(start + 1))
 
     def test_switcher_move_prev(self):
         self.set_timeout_setting(False)
-        sleep(1)
 
         self.switcher.initiate()
-        sleep(.2)
+        self.addCleanup(self.switcher.terminate)
 
-        start = self.switcher.get_selection_index()
+        start = self.switcher.selection_index
         self.switcher.previous_icon()
-        sleep(.2)
 
-        end = self.switcher.get_selection_index()
-        self.switcher.terminate()
+        end = self.switcher.selection_index
 
         self.assertThat(start, NotEquals(0))
         self.assertThat(end, Equals(start - 1))
 
     def test_switcher_scroll_next(self):
         self.set_timeout_setting(False)
-        sleep(1)
 
         self.switcher.initiate()
-        sleep(.2)
+        self.addCleanup(self.switcher.terminate)
 
-        start = self.switcher.get_selection_index()
+        start = self.switcher.selection_index
         self.switcher.next_icon_mouse()
-        sleep(.2)
 
-        end = self.switcher.get_selection_index()
+        end = self.switcher.selection_index
         self.assertThat(start, NotEquals(0))
         self.assertThat(end, Equals(start + 1))
 
@@ -82,14 +77,12 @@ class SwitcherTests(AutopilotTestCase):
 
     def test_switcher_scroll_prev(self):
         self.set_timeout_setting(False)
-        sleep(1)
 
         self.switcher.initiate()
-        sleep(.2)
+        self.addCleanup(self.switcher.terminate)
 
-        start = self.switcher.get_selection_index()
+        start = self.switcher.selection_index
         self.switcher.previous_icon_mouse()
-        sleep(.2)
 
         end = self.switcher.get_selection_index()
         self.assertThat(start, NotEquals(0))
@@ -99,19 +92,17 @@ class SwitcherTests(AutopilotTestCase):
 
     def test_switcher_scroll_next_ignores_fast_events(self):
         self.set_timeout_setting(False)
-        sleep(1)
 
         self.switcher.initiate()
-        sleep(.2)
+        self.addCleanup(self.switcher.terminate)
 
         # Quickly repeatead events should be ignored (except the first)
-        start = self.switcher.get_selection_index()
+        start = self.switcher.selection_index
         self.switcher.next_icon_mouse()
         self.switcher.next_icon_mouse()
         self.switcher.next_icon_mouse()
-        sleep(.2)
 
-        end = self.switcher.get_selection_index()
+        end = self.switcher.model.get_selection_index
         self.assertThat(start, NotEquals(0))
         self.assertThat(end, Equals(start + 1))
 
@@ -119,83 +110,60 @@ class SwitcherTests(AutopilotTestCase):
 
     def test_switcher_scroll_prev_ignores_fast_events(self):
         self.set_timeout_setting(False)
-        sleep(1)
-
-        self.switcher.initiate()
-        sleep(.2)
-
-        # Quickly repeatead events should be ignored (except the first)
-        start = self.switcher.get_selection_index()
-        self.switcher.previous_icon_mouse()
-        self.switcher.previous_icon_mouse()
-        self.switcher.previous_icon_mouse()
-        sleep(.2)
-
-        end = self.switcher.get_selection_index()
-        self.assertThat(end, Equals(start - 1))
-
-        self.switcher.terminate()
-
-    def test_switcher_arrow_key_does_not_init(self):
-        self.set_timeout_setting(False)
-        sleep(1)
-
-        self.switcher.initiate_right_arrow()
-        sleep(.2)
-
-        self.assertThat(self.switcher.get_is_visible(), Equals(False))
-        self.switcher.terminate()
-        self.set_timeout_setting(True)
-
-    def test_lazy_switcher_initiate(self):
-        self.set_timeout_setting(False)
-        sleep(1)
-
-        self.keybinding_hold("switcher/reveal_normal")
-        self.addCleanup(self.keybinding_release, "switcher/reveal_normal")
-        sleep(1)
-        self.assertThat(self.switcher.get_is_visible(), Equals(False))
-
-        sleep(1)
-        self.keybinding_tap("switcher/reveal_normal")
-        self.addCleanup(self.keybinding, "switcher/cancel")
-        sleep(.5)
-        self.assertThat(self.switcher.get_is_visible(), Equals(True))
-
-    def test_switcher_cancel(self):
-        self.set_timeout_setting(False)
-        sleep(1)
 
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
-        sleep(.2)
 
-        self.assertThat(self.switcher.get_is_visible(), Equals(True))
+        # Quickly repeatead events should be ignored (except the first)
+        start = self.switcher.selection_index
+        self.switcher.previous_icon_mouse()
+        self.switcher.previous_icon_mouse()
+        self.switcher.previous_icon_mouse()
 
-        self.switcher.cancel()
-        sleep(.2)
+        end = self.switcher.selection_index
+        self.assertThat(end, Equals(start - 1))
 
-        self.assertThat(self.switcher.get_is_visible(), Equals(False))
-
-    def test_lazy_switcher_cancel(self):
+    def test_switcher_arrow_key_does_not_init(self):
         self.set_timeout_setting(False)
-        sleep(1)
+
+        # FIXME - this was removed because it's dumb.
+        self.switcher.initiate_right_arrow()
+        self.addCleanup(self.switcher.terminate)
+
+        self.assertThat(self.switcher.controller.visible, Equals(False))
+
+    def test_lazy_switcher_initiate(self):
+        self.set_timeout_setting(False)
 
         self.keybinding_hold("switcher/reveal_normal")
         self.addCleanup(self.keybinding_release, "switcher/reveal_normal")
-        sleep(1)
-        self.assertThat(self.switcher.get_is_visible(), Equals(False))
+        self.assertThat(self.switcher.controller.visible, Eventually(Equals(False)))
 
-        sleep(1)
         self.keybinding_tap("switcher/reveal_normal")
         self.addCleanup(self.keybinding, "switcher/cancel")
-        sleep(.5)
-        self.assertThat(self.switcher.get_is_visible(), Equals(True))
+        self.assertThat(self.switcher.controller.visible, Eventually(Equals(True)))
+
+    def test_switcher_cancel(self):
+        self.set_timeout_setting(False)
+
+        self.switcher.initiate()
+        self.addCleanup(self.switcher.terminate)
+
+        self.assertThat(self.switcher.controller.visible, Equals(True))
 
         self.switcher.cancel()
-        sleep(.2)
+        self.assertThat(self.switcher.controller.visible, Equals(False))
 
-        self.assertThat(self.switcher.get_is_visible(), Equals(False))
+    def test_lazy_switcher_cancel(self):
+        self.set_timeout_setting(False)
+
+        self.keybinding_hold("switcher/reveal_normal")
+        self.addCleanup(self.keybinding_release, "switcher/reveal_normal")
+        self.assertThat(self.switcher.controller.visible, Eventually(Equals(False)))
+        self.keybinding_tap("switcher/reveal_normal")
+        self.assertThat(self.switcher.controller.visible, Eventually(Equals(True)))
+        self.switcher.cancel()
+        self.assertThat(self.switcher.controller.visible, Eventually(Equals(False)))
 
     def test_switcher_appears_on_monitor_with_focused_window(self):
         num_monitors = self.screen_geo.get_num_monitors()
@@ -206,8 +174,7 @@ class SwitcherTests(AutopilotTestCase):
         for monitor in range(num_monitors):
             self.screen_geo.drag_window_to_monitor(calc_win, monitor)
             self.switcher.initiate()
-            sleep(1)
-            self.assertThat(self.switcher.get_monitor(), Equals(monitor))
+            self.assertThat(self.switcher.get_monitor(), Eventually(Equals(monitor)))
             self.switcher.terminate()
 
 
@@ -245,19 +212,15 @@ class SwitcherWindowsManagementTests(AutopilotTestCase):
         self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
 
         self.keybinding("switcher/reveal_normal")
-        sleep(1)
-        self.assertTrue(calc_win.is_focused)
+        self.assertThat(calc_win.is_focused, Eventually(Equals(True)))
         self.assertVisibleWindowStack([calc_win, mah_win2, mah_win1])
 
         self.keybinding("switcher/reveal_normal")
-        sleep(1)
-        self.assertTrue(mah_win2.is_focused)
+        self.assertThat(mah_win2.is_focused, Eventually(Equals(True)))
         self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
 
         self.keybinding("window/close")
-        sleep(1)
-
-        self.assertTrue(calc_win.is_focused)
+        self.assertThat(calc_win.is_focused, Eventually(Equals(True)))
         self.assertVisibleWindowStack([calc_win, mah_win1])
 
 
@@ -366,9 +329,9 @@ class SwitcherWorkspaceTests(AutopilotTestCase):
         sleep(1)
 
         self.switcher.initiate()
-        sleep(1)
+        self.addCleanup(self.switcher.terminate)
+
         icon_names = [i.tooltip_text for i in self.switcher.get_switcher_icons()]
-        self.switcher.terminate()
         self.assertThat(icon_names, Contains(char_map.name))
         self.assertThat(icon_names, Not(Contains(calc.name)))
 
@@ -385,9 +348,9 @@ class SwitcherWorkspaceTests(AutopilotTestCase):
         sleep(1)
 
         self.switcher.initiate_all_mode()
-        sleep(1)
+        self.addCleanup(self.switcher.terminate)
+
         icon_names = [i.tooltip_text for i in self.switcher.get_switcher_icons()]
-        self.switcher.terminate()
         self.assertThat(icon_names, Contains(calc.name))
         self.assertThat(icon_names, Contains(char_map.name))
 
@@ -413,12 +376,12 @@ class SwitcherWorkspaceTests(AutopilotTestCase):
         sleep(1)
 
         self.switcher.initiate()
-        sleep(1)
+        # infinite loop? why
         while self.switcher.current_icon.tooltip_text != mahjongg.name:
+            logger.debug("%s -> %s" % (self.switcher.current_icon.tooltip_text, mahjongg.name))
             self.switcher.next_icon()
             sleep(1)
-        self.switcher.stop()
-        sleep(1)
+        self.switcher.select()
 
         #get mahjongg windows - there should be two:
         wins = mahjongg.get_windows()
