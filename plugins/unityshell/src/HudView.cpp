@@ -42,7 +42,7 @@ nux::logging::Logger logger("unity.hud.view");
 const int grow_anim_length = 90 * 1000;
 const int pause_before_grow_length = 32 * 1000;
 
-const int default_width = 1024;
+const int default_width = 960;
 const int default_height = 276;
 const int content_width = 941;
 
@@ -125,6 +125,9 @@ View::~View()
   {
     RemoveChild((*button).GetPointer());
   }
+
+  if (timeline_id_)
+    g_source_remove (timeline_id_);
 }
 
 void View::ProcessGrowShrink()
@@ -174,7 +177,7 @@ void View::ResetToDefault()
 
 void View::Relayout()
 {
-  nux::Geometry geo = GetGeometry();
+  nux::Geometry const& geo = GetGeometry();
   content_geo_ = GetBestFitGeometry(geo);
   LOG_DEBUG(logger) << "content_geo: " << content_geo_.width << "x" << content_geo_.height;
 
@@ -268,7 +271,6 @@ void View::SetQueries(Hud::Queries queries)
 
 void View::SetIcon(std::string icon_name, unsigned int tile_size, unsigned int size, unsigned int padding)
 {
-  g_print("Set icon size at %d\n",size);
   LOG_DEBUG(logger) << "Setting icon to " << icon_name;
   icon_->SetIcon(icon_name, size, tile_size);
   icon_->SetMinimumWidth(tile_size + padding);
@@ -309,9 +311,9 @@ nux::Geometry View::GetBestFitGeometry(nux::Geometry const& for_geo)
   int width = default_width;
   int height = default_height;
 
-  if (!show_embedded_icon_)
+  if (show_embedded_icon_)
   {
-    width -= icon_->GetGeometry().width;
+    width += icon_->GetGeometry().width;
   }
 
   LOG_DEBUG (logger) << "best fit is, " << width << ", " << height;
@@ -459,7 +461,7 @@ void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 
   if (timeline_need_more_draw_ && !timeline_id_)
   {
-    timeline_id_ = g_timeout_add(0, [] (gpointer data) -> gboolean
+    timeline_id_ = g_idle_add([] (gpointer data) -> gboolean
     {
       View *self = static_cast<View*>(data);
       self->QueueDraw();
