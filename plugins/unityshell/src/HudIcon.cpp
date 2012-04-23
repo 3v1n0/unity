@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Gord Allott <gord.allott@canonical.com>
+ *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
 
@@ -24,8 +25,7 @@
 namespace
 {
   nux::logging::Logger logger("unity.hud.icon");
-  const unsigned int tile_margin = 4;
-  const unsigned int minimum_width = 64;
+  const int vertical_padding = 4;
 }
 
 namespace unity
@@ -53,8 +53,8 @@ void Icon::SetIcon(std::string const& icon_name, unsigned int icon_size, unsigne
 {
   IconTexture::SetByIconName(icon_name, icon_size);
   icon_renderer_.SetTargetSize(tile_size, icon_size, 0);
-  SetMinimumWidth(icon_size);
-  SetMinimumHeight(icon_size);
+  SetMinimumWidth(tile_size);
+  SetMinimumHeight(tile_size + vertical_padding * 2);
 }
 
 void Icon::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
@@ -67,8 +67,8 @@ void Icon::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   arg.colorify            = nux::color::White;
   arg.running_arrow       = true;
   arg.running_on_viewport = true;
-  arg.render_center       = nux::Point3(32, 32, 0);
-  arg.logical_center      = nux::Point3(52, 50, 0);
+  arg.render_center       = nux::Point3(GetMinimumWidth() / 2.0f, GetMinimumHeight() / 2.0f, 0.0f);
+  arg.logical_center      = arg.render_center;
   arg.window_indicators   = true;
   arg.backlight_intensity = 1.0f;
   arg.alpha               = 1.0f;

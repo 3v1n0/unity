@@ -312,9 +312,7 @@ nux::Geometry View::GetBestFitGeometry(nux::Geometry const& for_geo)
   int height = default_height;
 
   if (show_embedded_icon_)
-  {
     width += icon_->GetGeometry().width;
-  }
 
   LOG_DEBUG (logger) << "best fit is, " << width << ", " << height;
 
