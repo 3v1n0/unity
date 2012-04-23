@@ -497,7 +497,7 @@ void Controller::Impl::SortAndUpdate()
       std::stringstream shortcut_string;
       shortcut_string << (shortcut % 10);
       icon->SetShortcut(shortcut_string.str()[0]);
-      shortcut++;
+      ++shortcut;
     }
     // reset shortcut
     else
@@ -607,6 +607,8 @@ void Controller::Impl::OnFavoriteStoreFavoriteAdded(std::string const& entry, st
     else
       model_->ReorderBefore(result, other, false);
   }
+
+  SortAndUpdate();
 }
 
 void Controller::Impl::OnFavoriteStoreFavoriteRemoved(std::string const& entry)
@@ -742,6 +744,7 @@ void Controller::Impl::OnViewOpened(BamfMatcher* matcher, BamfView* view, gpoint
   icon->SetSortPriority(self->sort_priority_++);
 
   self->RegisterIcon(icon);
+  self->SortAndUpdate();
 }
 
 AbstractLauncherIcon::Ptr Controller::Impl::CreateFavorite(const char* file_path)
