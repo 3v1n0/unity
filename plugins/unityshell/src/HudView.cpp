@@ -127,7 +127,7 @@ View::~View()
   }
 
   if (timeline_id_)
-    g_source_remove (timeline_id_);
+    g_source_remove(timeline_id_);
 }
 
 void View::ProcessGrowShrink()
