@@ -89,10 +89,8 @@ QuicklistMenuItem::Initialize(DbusmenuMenuitem* item, bool debug)
                      this);
   }
 
-  mouse_down.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseDown));
   mouse_up.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseUp));
   mouse_click.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseClick));
-  mouse_move.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseMove));
   mouse_drag.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseDrag));
   mouse_enter.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseEnter));
   mouse_leave.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseLeave));
@@ -215,6 +213,12 @@ QuicklistMenuItem::GetVisible()
                                              DBUSMENU_MENUITEM_PROP_VISIBLE);
 }
 
+bool
+QuicklistMenuItem::GetSelectable()
+{
+  return GetVisible() && GetEnabled();
+}
+
 void QuicklistMenuItem::ItemActivated()
 {
   if (_debug)
@@ -333,11 +337,6 @@ OnItemActivated(guint              timestamp,
   //self->ItemActivated ();
 }
 
-void QuicklistMenuItem::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags)
-{
-
-}
-
 void QuicklistMenuItem::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   sigMouseReleased.emit(this, x, y);
@@ -352,11 +351,6 @@ void QuicklistMenuItem::RecvMouseClick(int x, int y, unsigned long button_flags,
   sigMouseClick.emit(this, x, y);
 }
 
-void QuicklistMenuItem::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
-{
-
-}
-
 void QuicklistMenuItem::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
   sigMouseDrag.emit(this, x, y);
@@ -364,13 +358,11 @@ void QuicklistMenuItem::RecvMouseDrag(int x, int y, int dx, int dy, unsigned lon
 
 void QuicklistMenuItem::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  _prelight = true;
   sigMouseEnter.emit(this);
 }
 
 void QuicklistMenuItem::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  _prelight = false;
   sigMouseLeave.emit(this);
 }
 
@@ -484,20 +476,14 @@ std::string QuicklistMenuItem::GetName() const
 
 void QuicklistMenuItem::AddProperties(GVariantBuilder* builder)
 {
-  nux::Geometry abs_geo = GetAbsoluteGeometry();
-  
   unity::variant::BuilderWrapper(builder)
-  .add("absolute_x", abs_geo.x)
-  .add("absolute_y", abs_geo.y)
+  .add(GetAbsoluteGeometry())
   .add("text", _text)
-  .add("x", GetBaseX())
-  .add("y", GetBaseY())
-  .add("width", GetBaseWidth())
-  .add("height", GetBaseHeight())
   .add("enabled", GetEnabled())
   .add("active", GetActive())
   .add("visible", GetVisible())
-  .add("lit", _prelight);
+  .add("selectable", GetSelectable())
+  .add("selected", _prelight);
 }
 
 } //NAMESPACE

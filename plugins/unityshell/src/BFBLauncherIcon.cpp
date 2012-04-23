@@ -63,13 +63,19 @@ void BFBLauncherIcon::OnOverlayShown(GVariant *data, bool visible)
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
-
-  // If the hud is open, we hide the BFB iff we have a locked launcher
-  if (!g_strcmp0(overlay_identity, "hud") &&
-      launcher_hide_mode_ == LAUNCHER_HIDE_NEVER)
+  if (overlay_identity.Str() == "dash" && IsVisibleOnMonitor(overlay_monitor))
   {
-    SetQuirk(QUIRK_VISIBLE, !visible);
+    SetQuirk(QUIRK_ACTIVE, visible);
     EmitNeedsRedraw();
+  }
+  // If the hud is open, we hide the BFB if we have a locked launcher
+  else if (overlay_identity.Str() == "hud")
+  {
+    if (launcher_hide_mode_ == LAUNCHER_HIDE_NEVER)
+    {
+      SetVisibleOnMonitor(overlay_monitor, !visible);
+      EmitNeedsRedraw();
+    }
   }
 }
 
@@ -85,7 +91,7 @@ nux::Color BFBLauncherIcon::GlowColor()
 
 void BFBLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
-  ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", "home.lens", 0, ""));
+  ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", "home.lens", dash::NOT_HANDLED, ""));
 
   // dont chain down to avoid random dash close events
 }

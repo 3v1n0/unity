@@ -57,7 +57,7 @@ namespace unity {
 
     void PreviewMusicAlbum::BuildLayout()
     {
-      IconTexture *cover = new IconTexture (preview_->album_cover.c_str(), 400);
+      IconTexture *cover = new IconTexture (preview_->album_cover, 400);
       nux::StaticCairoText *title = new nux::StaticCairoText(preview_->name, NUX_TRACKER_LOCATION);
       title->SetFont("Ubuntu 25");
 

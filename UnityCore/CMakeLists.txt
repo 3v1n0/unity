@@ -13,6 +13,7 @@ set (CORE_HEADERS
      Category.h
      CheckOptionFilter.h
      DBusIndicators.h
+     DesktopUtilities.h
      FilesystemLenses.h
      Filter.h
      Filters.h
@@ -51,6 +52,7 @@ set (CORE_SOURCES
      Category.cpp
      CheckOptionFilter.cpp
      DBusIndicators.cpp
+     DesktopUtilities.cpp
      FilesystemLenses.cpp
      Filter.cpp
      Filters.cpp

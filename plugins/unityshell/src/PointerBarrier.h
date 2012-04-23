@@ -41,7 +41,16 @@ public:
   int event_id;
 };
 
-class PointerBarrierWrapper
+
+// values picked to match Xfixes values
+enum BarrierDirection
+{
+  BOTH = 0,
+  LEFT = 1,
+  RIGHT = 4,
+};
+
+class PointerBarrierWrapper : public sigc::trackable
 {
 public:
   typedef std::shared_ptr<PointerBarrierWrapper> Ptr;
@@ -58,6 +67,10 @@ public:
   nux::Property<int> smoothing;
 
   nux::Property<float> max_velocity_multiplier;
+
+  nux::Property<int> index;
+
+  nux::Property<BarrierDirection> direction;
 
   PointerBarrierWrapper();
   ~PointerBarrierWrapper();

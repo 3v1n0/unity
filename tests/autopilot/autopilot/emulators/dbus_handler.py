@@ -17,8 +17,10 @@ import dbus.glib
 from dbus.mainloop.glib import DBusGMainLoop
 import gobject
 
+
 DBusGMainLoop(set_as_default=True)
 session_bus = dbus.SessionBus()
+
 
 gobject.threads_init()
 dbus.glib.init_threads()

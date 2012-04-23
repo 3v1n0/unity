@@ -10,13 +10,14 @@
 import logging
 from time import sleep
 
-from autopilot.keybindings import KeybindingsHelper
 from autopilot.emulators.unity import get_state_by_path, make_introspection_object
 from autopilot.emulators.X11 import Keyboard, Mouse
+from autopilot.keybindings import KeybindingsHelper
 
 # even though we don't use these directly, we need to make sure they've been
 # imported so the classes contained are registered with the introspection API.
 from autopilot.emulators.unity.icons import *
+
 
 logger = logging.getLogger(__name__)
 
@@ -136,11 +137,11 @@ class Switcher(KeybindingsHelper):
             return None
 
     def get_icon_name(self, index):
-        return self.__get_icon(index)['tooltip-text']
+        return self.__get_icon(index)['tooltip_text']
 
     def get_icon_desktop_file(self, index):
         try:
-            return self.__get_icon(index)['desktop-file']
+            return self.__get_icon(index)['desktop_file']
         except:
             return None
 
@@ -155,6 +156,9 @@ class Switcher(KeybindingsHelper):
 
     def get_is_visible(self):
         return bool(self.__get_controller()['visible'])
+
+    def get_monitor(self):
+        return int(self.__get_controller()['monitor'])
 
     def get_is_in_details_mode(self):
         """Return True if the SwitcherView is in details mode."""

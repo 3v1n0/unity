@@ -42,19 +42,19 @@ class Controller : public debug::Introspectable
 {
 public:
   typedef std::shared_ptr<Controller> Ptr;
-  
+
   // Ctor and dtor
-  Controller(std::list<AbstractHint*>& hints);
-  ~Controller();  
-  
+  Controller(std::list<AbstractHint::Ptr>& hints);
+  ~Controller();
+
   // Public Methods
-  void Show();
+  bool Show();
   void Hide();
-  
+
   bool Visible();
   bool IsEnabled();
 
-  void SetWorkspace(nux::Geometry const& geo);
+  void SetAdjustment(int x, int y);
   void SetEnabled(bool enabled);
 
 protected:
@@ -64,6 +64,7 @@ protected:
 private:
   // Private Methods
   void ConstructView();
+  void EnsureView();
   void OnBackgroundUpdate(GVariant* data);
   void OnFadeInUpdated(double opacity);
   void OnFadeInEnded();
@@ -71,20 +72,20 @@ private:
   void OnFadeOutEnded();
 
   static gboolean OnShowTimer(gpointer data);
-  
+
   // Private Members
   View::Ptr view_;
   Model::Ptr model_;
-   
+
   nux::Geometry workarea_;
   nux::BaseWindow* view_window_;
   nux::HLayout* main_layout_;
-  
+
   bool visible_;
   bool enabled_;
   nux::Color bg_color_;
   guint show_timer_;
-  
+
   Animator fade_in_animator_;
   Animator fade_out_animator_;
 

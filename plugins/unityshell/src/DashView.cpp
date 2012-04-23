@@ -146,6 +146,9 @@ void DashView::AboutToShow()
     active_lens_view_->lens()->view_type = ViewType::LENS_VIEW;
   }
 
+  // this will make sure the spinner animates if the search takes a while
+  search_bar_->ForceSearchChanged();
+
   renderer_.AboutToShow();
 }
 
@@ -176,17 +179,17 @@ void DashView::SetupViews()
   SetLayout(layout_);
 
   content_layout_ = new DashLayout(NUX_TRACKER_LOCATION);
-  content_layout_->SetTopAndBottomPadding(style.GetDashViewTopPadding() - style.SEARCH_BAR_EXTRA_PADDING, 0);
+  content_layout_->SetTopAndBottomPadding(style.GetDashViewTopPadding(), 0);
   layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
 
   search_bar_layout_ = new nux::HLayout();
-  search_bar_layout_->SetLeftAndRightPadding(style.GetSearchBarLeftPadding() - style.SEARCH_BAR_EXTRA_PADDING, style.GetSearchBarLeftPadding() - style.GetFilterResultsHighlightRightPadding() - style.SEARCH_BAR_EXTRA_PADDING);
+  search_bar_layout_->SetLeftAndRightPadding(style.GetSearchBarLeftPadding(), 0);
   content_layout_->AddLayout(search_bar_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   search_bar_ = new SearchBar();
   AddChild(search_bar_);
-  search_bar_->SetMinimumHeight(style.GetSearchBarHeight() + style.SEARCH_BAR_EXTRA_PADDING * 2);
-  search_bar_->SetMaximumHeight(style.GetSearchBarHeight() + style.SEARCH_BAR_EXTRA_PADDING * 2);
+  search_bar_->SetMinimumHeight(style.GetSearchBarHeight());
+  search_bar_->SetMaximumHeight(style.GetSearchBarHeight());
   search_bar_->activated.connect(sigc::mem_fun(this, &DashView::OnEntryActivated));
   search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
   search_bar_->live_search_reached.connect(sigc::mem_fun(this, &DashView::OnLiveSearchReached));
@@ -269,12 +272,14 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 
   width = MAX(width, tile_width * 6);
 
-  width += 19 + 40; // add the left padding and the group plugin padding
+  width += 20 + 40; // add the left padding and the group plugin padding
 
   height = search_bar_->GetGeometry().height;
   height += tile_height * 3;
-  height += 46 * 3; // adding three group headers
-  //height += lens_bar_->GetGeometry().height;
+  height += (style.GetPlacesGroupTopSpace() - 2 + 24 + 8) * 3; // adding three group headers
+  height += 1*2; // hseparator height
+  height += style.GetDashViewTopPadding();
+  height += lens_bar_->GetGeometry().height;
 
   if (for_geo.width > 800 && for_geo.height > 550)
   {
@@ -310,7 +315,16 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 
 void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
 {
-  if (!content_geo_.IsPointInside(x, y))
+  dash::Style& style = dash::Style::Instance();
+  nux::Geometry geo(content_geo_);
+
+  if (Settings::Instance().GetFormFactor() == FormFactor::DESKTOP)
+  {
+    geo.width += style.GetDashRightTileWidth();
+    geo.height += style.GetDashBottomTileHeight();
+  }
+
+  if (!geo.IsPointInside(x, y))
   {
     ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
   }
@@ -324,12 +338,21 @@ void DashView::OnActivateRequest(GVariant* args)
 
   g_variant_get(args, "(sus)", &uri, &handled_type, &search_string);
 
-  std::string id = AnalyseLensURI(uri.Str());
+  std::string id(AnalyseLensURI(uri.Str()));
 
-  lens_bar_->Activate(id);
-
-  if ((id == "home.lens" && handled_type != GOTO_DASH_URI ) || !visible_)
+  if (!visible_)
+  {
+    lens_bar_->Activate(id);
     ubus_manager_.SendMessage(UBUS_DASH_EXTERNAL_ACTIVATION);
+  }
+  else if (/* visible_ && */ handled_type == NOT_HANDLED)
+  {
+    ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+  }
+  else if (/* visible_ && */ handled_type == GOTO_DASH_URI)
+  {
+    lens_bar_->Activate(id);
+  }
 }
 
 std::string DashView::AnalyseLensURI(std::string const& uri)
@@ -436,7 +459,7 @@ void DashView::OnLiveSearchReached(std::string const& search_string)
   LOG_DEBUG(logger) << "Live search reached: " << search_string;
   if (active_lens_view_)
   {
-    active_lens_view_->search_string = search_string;
+    active_lens_view_->PerformSearch(search_string);
   }
 }
 
@@ -454,7 +477,26 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
 
   lens->activated.connect(sigc::mem_fun(this, &DashView::OnUriActivatedReply));
   lens->search_finished.connect(sigc::mem_fun(this, &DashView::OnSearchFinished));
+  lens->connected.changed.connect([&] (bool value)
+  {
+    std::string const& search_string = search_bar_->search_string;
+    if (value && lens->search_in_global && active_lens_view_ == home_view_
+        && !search_string.empty())
+    {
+      // force a (global!) search with the correct string
+      lens->GlobalSearch(search_bar_->search_string);
+    }
+  });
+
   // global search done is handled by the home lens, no need to connect to it
+  // BUT, we will special case global search finished coming from 
+  // the applications lens, because we want to be able to launch applications
+  // immediately without waiting for the search finished signal which will
+  // be delayed by all the lenses we're searching
+  if (id == "applications.lens")
+  {
+    lens->global_search_finished.connect(sigc::mem_fun(this, &DashView::OnAppsGlobalSearchFinished));
+  }
 }
 
 void DashView::OnLensBarActivated(std::string const& id)
@@ -481,6 +523,10 @@ void DashView::OnLensBarActivated(std::string const& id)
 
   search_bar_->search_string = view->search_string;
   search_bar_->search_hint = view->lens()->search_hint;
+  // lenses typically return immediately from Search() if the search query
+  // doesn't change, so SearchFinished will be called in a few ms
+  // FIXME: if we're forcing a search here, why don't we get rid of view types?
+  search_bar_->ForceSearchChanged();
 
   bool expanded = view->filters_expanded;
   search_bar_->showing_filters = expanded;
@@ -527,6 +573,22 @@ void DashView::OnGlobalSearchFinished(Lens::Hints const& hints)
 {
   if (active_lens_view_ == home_view_)
     OnSearchFinished(hints);
+}
+
+void DashView::OnAppsGlobalSearchFinished(Lens::Hints const& hints)
+{
+  if (active_lens_view_ == home_view_)
+  {
+    /* HACKITY HACK! We're resetting the state of search_in_progress when
+     * doing searches in the home lens and we get results from apps lens.
+     * This way typing a search query and pressing enter immediately will
+     * wait for the apps lens results and will run correct application.
+     * See lp:966417 and lp:856206 for more info about why we do this.
+     */
+    search_in_progress_ = false;
+    if (activate_on_finish_)
+      this->OnEntryActivated();
+  }
 }
 
 void DashView::OnUriActivated(std::string const& uri)
@@ -693,13 +755,25 @@ std::string DashView::GetName() const
 
 void DashView::AddProperties(GVariantBuilder* builder)
 {
+  dash::Style& style = dash::Style::Instance();
   int num_rows = 1; // The search bar
 
   if (active_lens_view_)
     num_rows += active_lens_view_->GetNumRows();
 
+  std::string form_factor("unknown");
+
+  if (Settings::Instance().GetFormFactor() == FormFactor::NETBOOK)
+    form_factor = "netbook";
+  else if (Settings::Instance().GetFormFactor() == FormFactor::DESKTOP)
+    form_factor = "desktop";
+
   unity::variant::BuilderWrapper wrapper(builder);
-  wrapper.add("num-rows", num_rows);
+  wrapper.add(nux::Geometry(GetAbsoluteX(), GetAbsoluteY(), content_geo_.width, content_geo_.height));
+  wrapper.add("num_rows", num_rows);
+  wrapper.add("form_factor", form_factor);
+  wrapper.add("right-border-width", style.GetDashRightTileWidth());
+  wrapper.add("bottom-border-height", style.GetDashBottomTileHeight());
 }
 
 nux::Area* DashView::KeyNavIteration(nux::KeyNavDirection direction)
@@ -780,7 +854,7 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
   // DashView::KeyNavIteration.
    nux::InputArea* focus_area = nux::GetWindowCompositor().GetKeyFocusArea();
 
-  if (key_symbol == nux::NUX_KEYDOWN)
+  if (key_symbol == nux::NUX_KEYDOWN && !search_bar_->im_preedit)
   {
     std::list<nux::Area*> tabs;
     for (auto category : active_lens_view_->categories())
@@ -855,7 +929,7 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     }
   }
 
-  if (direction == KEY_NAV_NONE || search_bar_->im_active)
+  if (direction == KEY_NAV_NONE || search_bar_->im_preedit)
   {
     // then send the event to the search entry
     return search_bar_->text_entry();

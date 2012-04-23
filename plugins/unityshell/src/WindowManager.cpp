@@ -23,6 +23,11 @@ static WindowManager* window_manager = NULL;
 
 class WindowManagerDummy : public WindowManager
 {
+  guint32 GetActiveWindow()
+  {
+    return 0;
+  }
+
   unsigned long long GetWindowActiveNumber (guint32 xid)
   {
     return 0;
@@ -73,7 +78,27 @@ class WindowManagerDummy : public WindowManager
     return true;
   }
 
+  bool IsWindowClosable(guint32 xid)
+  {
+    return true;
+  }
+
+  bool IsWindowMinimizable(guint32 xid)
+  {
+    return true;
+  }
+
+  bool IsWindowMaximizable(guint32 xid)
+  {
+    return true;
+  }
+
   void Restore(guint32 xid)
+  {
+    g_debug("%s", G_STRFUNC);
+  }
+
+  void RestoreAt(guint32 xid, int x, int y)
   {
     g_debug("%s", G_STRFUNC);
   }
@@ -103,7 +128,7 @@ class WindowManagerDummy : public WindowManager
     g_debug("%s", G_STRFUNC);
   }
 
-  void FocusWindowGroup(std::vector<Window> windows, FocusVisibility, int monitor)
+  void FocusWindowGroup(std::vector<Window> windows, FocusVisibility, int monitor, bool only_top_win)
   {
     g_debug("%s", G_STRFUNC);
   }
@@ -114,14 +139,29 @@ class WindowManagerDummy : public WindowManager
     return false;
   }
 
-  nux::Geometry GetWindowGeometry(guint xid)
+  int GetWindowMonitor(guint32 xid) const
+  {
+    return -1;
+  }
+
+  nux::Geometry GetWindowGeometry(guint xid) const
   {
     int width = (guint32)xid >> 16;
     int height = (guint32)xid & 0x0000FFFF;
     return nux::Geometry(0, 0, width, height);
   }
 
-  nux::Geometry GetScreenGeometry()
+  nux::Geometry GetWindowSavedGeometry(guint xid) const
+  {
+    return nux::Geometry(0, 0, 1, 1);
+  }
+
+  nux::Geometry GetScreenGeometry() const
+  {
+    return nux::Geometry(0, 0, 1, 1);
+  }
+
+  nux::Geometry GetWorkAreaGeometry(guint32 xid) const
   {
     return nux::Geometry(0, 0, 1, 1);
   }
@@ -153,6 +193,12 @@ class WindowManagerDummy : public WindowManager
     return false;
   }
 
+  bool IsScaleActiveForGroup()
+  {
+    g_debug("%s", G_STRFUNC);
+    return false;
+  }
+
   void InitiateExpo()
   {
     g_debug("%s", G_STRFUNC);
@@ -164,6 +210,10 @@ class WindowManagerDummy : public WindowManager
     return false;
   }
 
+  void MoveResizeWindow(guint32 xid, nux::Geometry geometry)
+  {
+    g_debug("%s", G_STRFUNC);
+  }
 };
 
 WindowManager*
@@ -183,9 +233,7 @@ WindowManager::SetDefault(WindowManager* manager)
 
 #define NET_WM_MOVERESIZE_MOVE 8
 
-
-void
-WindowManager::StartMove(guint32 xid, int x, int y)
+void WindowManager::StartMove(guint32 xid, int x, int y)
 {
   if (x < 0 || y < 0)
     return;
@@ -229,11 +277,11 @@ WindowManager::StartMove(guint32 xid, int x, int y)
   ev.xclient.message_type = m_MoveResizeAtom;
   ev.xclient.format     = 32;
 
-  ev.xclient.data.l[0] = x;
-  ev.xclient.data.l[1] = y;
-  ev.xclient.data.l[2] = NET_WM_MOVERESIZE_MOVE;
-  ev.xclient.data.l[3] = 1;
-  ev.xclient.data.l[4] = 1;
+  ev.xclient.data.l[0] = x; // x_root
+  ev.xclient.data.l[1] = y; // y_root
+  ev.xclient.data.l[2] = NET_WM_MOVERESIZE_MOVE; //direction
+  ev.xclient.data.l[3] = 1; // button
+  ev.xclient.data.l[4] = 2; // source
 
   XSendEvent(d, DefaultRootWindow(d), FALSE,
              SubstructureRedirectMask | SubstructureNotifyMask,

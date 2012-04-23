@@ -260,6 +260,20 @@ private:
 };
 
 /*
+ * Specialized ModelMerger that is reponsible for filters, currently ignores
+ * everything.
+ */
+class HomeLens::FiltersMerger : public ModelMerger
+{
+public:
+  FiltersMerger(glib::Object<DeeModel> target);
+
+  void OnSourceRowAdded(DeeModel *model, DeeModelIter *iter);
+  void OnSourceRowRemoved(DeeModel *model, DeeModelIter *iter);
+  void OnSourceRowChanged(DeeModel *model, DeeModelIter *iter);
+};
+
+/*
  * Pimpl for HomeLens
  */
 class HomeLens::Impl : public sigc::trackable
@@ -278,7 +292,7 @@ public:
   HomeLens::CategoryRegistry cat_registry_;
   HomeLens::ResultsMerger results_merger_;
   HomeLens::CategoryMerger categories_merger_;
-  HomeLens::ModelMerger filters_merger_;
+  HomeLens::FiltersMerger filters_merger_;
   int running_searches_;
   glib::Object<GSettings> settings_;
 };
@@ -306,10 +320,14 @@ HomeLens::CategoryMerger::CategoryMerger(glib::Object<DeeModel> target,
   , priority_tag_(dee_model_register_tag(target, NULL))
 {}
 
+HomeLens::FiltersMerger::FiltersMerger(glib::Object<DeeModel> target)
+  : HomeLens::ModelMerger::ModelMerger(target)
+{}
+
 HomeLens::ModelMerger::~ModelMerger()
 {
   if (row_buf_)
-    delete row_buf_;
+    g_free(row_buf_);
 }
 
 void HomeLens::ModelMerger::AddSource(glib::Object<DeeModel> source)
@@ -341,10 +359,6 @@ void HomeLens::ModelMerger::AddSource(glib::Object<DeeModel> source)
 void HomeLens::ModelMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *iter)
 {
   // Default impl. does nothing.
-  // Note that the filters_merger_ relies on this behavior. Supporting
-  // filters on the home screen is possible, but *quite* tricky.
-  // So...
-  //       Discard ALL the rows!
 }
 
 void HomeLens::ResultsMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *iter)
@@ -464,6 +478,13 @@ void HomeLens::CategoryMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *i
     for (unsigned int i = 0; i < n_cols_; i++) g_variant_unref(row_buf_[i]);
 }
 
+void HomeLens::FiltersMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *iter)
+{
+  /* Supporting filters on the home screen is possible, but *quite* tricky.
+   * So... Discard ALL the rows!
+   */
+}
+
 void HomeLens::CategoryMerger::OnSourceRowRemoved(DeeModel *model, DeeModelIter *iter)
 {
   /* We don't support removals of categories.
@@ -499,6 +520,11 @@ void HomeLens::ResultsMerger::OnSourceRowRemoved(DeeModel *model, DeeModelIter *
   ModelMerger::OnSourceRowRemoved(model, iter);
 }
 
+void HomeLens::FiltersMerger::OnSourceRowRemoved(DeeModel *model, DeeModelIter *iter)
+{
+  /* We aren't adding any rows to the merged model, so nothing to do here */
+}
+
 void HomeLens::ModelMerger::OnSourceRowChanged(DeeModel *model, DeeModelIter *iter)
 {
   DeeModelIter* target_iter;
@@ -521,6 +547,11 @@ void HomeLens::ResultsMerger::OnSourceRowChanged(DeeModel *model, DeeModelIter *
 {
   // FIXME: We can support this, but we need to re-calculate the category offset
   LOG_WARN(logger) << "In-line changing of results not supported in the home lens. Sorry.";
+}
+
+void HomeLens::FiltersMerger::OnSourceRowChanged(DeeModel *model, DeeModelIter *iter)
+{
+  /* We aren't adding any rows to the merged model, so nothing to do here */
 }
 
 void HomeLens::ModelMerger::EnsureRowBuf(DeeModel *model)
@@ -827,13 +858,16 @@ void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
    * FIXME: Do the same for results?
    */
   DeeModel* cats = categories_prop();
-  DeeModelIter* cats_iter;
-  DeeModelIter* cats_end;
-  for (cats_iter = dee_model_get_first_iter(cats), cats_end = dee_model_get_last_iter(cats);
-      cats_iter != cats_end;
-      cats_iter = dee_model_next(cats, cats_iter))
+  if (cats)
   {
-    categories_merger_.OnSourceRowAdded(cats, cats_iter);
+    DeeModelIter* cats_iter;
+    DeeModelIter* cats_end;
+    for (cats_iter = dee_model_get_first_iter(cats), cats_end = dee_model_get_last_iter(cats);
+        cats_iter != cats_end;
+        cats_iter = dee_model_next(cats, cats_iter))
+    {
+      categories_merger_.OnSourceRowAdded(cats, cats_iter);
+    }
   }
 }
 

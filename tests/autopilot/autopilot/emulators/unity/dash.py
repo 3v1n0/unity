@@ -7,8 +7,6 @@
 # by the Free Software Foundation.
 #
 
-from time import sleep
-
 from autopilot.emulators.unity import (
     get_state_by_path,
     make_introspection_object,
@@ -29,10 +27,11 @@ class Dash(KeybindingsHelper):
     """
 
     def __init__(self):
-        self.controller = DashController.get_all_instances()[0]
-
-        self._keyboard = Keyboard()
         super(Dash, self).__init__()
+        controllers = DashController.get_all_instances()
+        assert(len(controllers) == 1)
+        self.controller = controllers[0]
+        self._keyboard = Keyboard()
 
     @property
     def view(self):
@@ -42,9 +41,10 @@ class Dash(KeybindingsHelper):
         """
         Reveals the dash if it's currently hidden, hides it otherwise.
         """
+        old_state = self.visible
         logger.debug("Toggling dash visibility with Super key.")
         self.keybinding("dash/reveal", 0.1)
-        sleep(1)
+        self.visible.wait_for(not old_state)
 
     def ensure_visible(self, clear_search=True):
         """
@@ -52,7 +52,7 @@ class Dash(KeybindingsHelper):
         """
         if not self.visible:
             self.toggle_reveal()
-            self._wait_for_visibility(expect_visible=True)
+            self.visible.wait_for(True)
             if clear_search:
                 self.clear_search()
 
@@ -62,29 +62,24 @@ class Dash(KeybindingsHelper):
         """
         if self.visible:
             self.toggle_reveal()
-            self._wait_for_visibility(expect_visible=False)
-
-    def _wait_for_visibility(self, expect_visible):
-        for i in range(11):
-            if self.visible != expect_visible:
-                sleep(1)
-            else:
-                return
-        raise RuntimeError("Dash not %s after waiting for 10 seconds." %
-            ("Visible" if expect_visible else "Hidden"))
+            self.visible.wait_for(False)
 
     @property
     def visible(self):
-        """
-        Is the dash visible?
-        """
+        """Returns if the dash is currently visible"""
         return self.controller.visible
 
     @property
-    def search_string(self):
-        return self.get_searchbar().search_string
+    def monitor(self):
+        """The monitor where the dash is"""
+        return self.controller.monitor
 
-    def get_searchbar(self):
+    @property
+    def search_string(self):
+        return self.searchbar.search_string
+
+    @property
+    def searchbar(self):
         """Returns the searchbar attached to the dash."""
         return self.view.get_searchbar()
 
@@ -100,6 +95,7 @@ class Dash(KeybindingsHelper):
         """
         self._keyboard.press_and_release("Ctrl+a")
         self._keyboard.press_and_release("Delete")
+        self.search_string.wait_for("")
 
     def reveal_application_lens(self, clear_search=True):
         """Reveal the application lense."""
@@ -125,7 +121,7 @@ class Dash(KeybindingsHelper):
         self.keybinding_hold(binding_name)
         self.keybinding_tap(binding_name)
         self.keybinding_release(binding_name)
-        self._wait_for_visibility(expect_visible=True)
+        self.visible.wait_for(True)
         if clear_search:
             self.clear_search()
 
@@ -172,6 +168,15 @@ class SearchBar(UnityIntrospectionObject):
 
 class LensBar(UnityIntrospectionObject):
     """The bar of lens icons at the bottom of the dash."""
+    def get_icon_by_name(self, name):
+        """Get a LensBarIcon child object by it's name. For example, 'home.lens'."""
+        icons = self.get_children_by_type(LensBarIcon)
+        for icon in icons:
+            if icon.name == name:
+                return icon
+
+class LensBarIcon(UnityIntrospectionObject):
+    """A lens icon at the bottom of the dash."""
 
 
 class LensView(UnityIntrospectionObject):
@@ -247,7 +252,8 @@ class FilterBar(UnityIntrospectionObject):
                 return filter_label
         return None
 
-    def is_expanded(self):
+    @property
+    def expanded(self):
         """Return True if the filterbar on this lens is expanded, False otherwise.
         """
         searchbar = self._get_searchbar()
@@ -255,34 +261,25 @@ class FilterBar(UnityIntrospectionObject):
 
     def ensure_expanded(self):
         """Expand the filter bar, if it's not already."""
-        if not self.is_expanded():
+        if not self.expanded:
             searchbar = self._get_searchbar()
             tx = searchbar.filter_label_x + (searchbar.filter_label_width / 2)
             ty = searchbar.filter_label_y + (searchbar.filter_label_height / 2)
             m = Mouse()
             m.move(tx, ty)
             m.click()
-            self._wait_for_expansion(True)
+            self.expanded.wait_for(True)
 
     def ensure_collapsed(self):
         """Collapse the filter bar, if it's not already."""
-        if self.is_expanded():
+        if self.expanded:
             searchbar = self._get_searchbar()
             tx = searchbar.filter_label_x + (searchbar.filter_label_width / 2)
             ty = searchbar.filter_label_y + (searchbar.filter_label_height / 2)
             m = Mouse()
             m.move(tx, ty)
             m.click()
-            self._wait_for_expansion(False)
-
-    def _wait_for_expansion(self, expect_expanded):
-        for i in range(11):
-            if self.is_expanded() != expect_expanded:
-                sleep(1)
-            else:
-                return
-        raise RuntimeError("Filters not %s after waiting for 10 seconds." %
-            ("expanded" if expect_expanded else "collapsed"))
+            self.expanded.wait_for(False)
 
     def _get_searchbar(self):
         """Get the searchbar.

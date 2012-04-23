@@ -9,6 +9,8 @@
 
 from dbus import Interface
 import logging
+from testtools.matchers import Equals
+from time import sleep
 
 from autopilot.emulators.dbus_handler import session_bus
 
@@ -28,8 +30,9 @@ class StateNotFoundError(RuntimeError):
 class IntrospectableObjectMetaclass(type):
     """Metaclass to insert appropriate classes into the object registry."""
 
-    def __new__(self, classname, bases, classdict):
-        class_object = type.__new__(self, classname, bases, classdict)
+    def __new__(cls, classname, bases, classdict):
+        """Add class name to type registry."""
+        class_object = type.__new__(cls, classname, bases, classdict)
         _object_registry[classname] = class_object
         return class_object
 
@@ -115,6 +118,11 @@ def log_unity_message(severity, message):
     _introspection_iface.LogMessage(severity, message)
 
 
+def translate_state_keys(state_dict):
+    """Translates the state_dict passed in so the keys are usable as python attributes."""
+    return {k.replace('-','_'):v for k,v in state_dict.iteritems() }
+
+
 class UnityIntrospectionObject(object):
     """A class that can be created using a dictionary of state from Unity."""
     __metaclass__ = IntrospectableObjectMetaclass
@@ -130,11 +138,74 @@ class UnityIntrospectionObject(object):
 
         """
         self.__state = {}
-        for key, value in state_dict.iteritems():
+        for key, value in translate_state_keys(state_dict).iteritems():
             # don't store id in state dictionary -make it a proper instance attribute
             if key == 'id':
                 self.id = value
-            self.__state[key.replace('-', '_')] = value
+            self.__state[key] = self._make_attribute(key, value)
+
+    def _make_attribute(self, name, value):
+        """Make an attribute for 'value', patched with the wait_for function."""
+
+        def wait_for(self, expected_value):
+            """Wait up to 10 seconds for our value to change to 'expected_value'.
+
+            expected_value can be a testtools.matcher.Matcher subclass (like
+            LessThan, for example), or an ordinary value.
+
+            This works by refreshing the value using repeated dbus calls.
+
+            Raises RuntimeError if the attribute was not equal to the expected value
+            after 10 seconds.
+
+            """
+            # It's guaranteed that our value is up to date, since __getattr__ calls
+            # refresh_state. This if statement stops us waiting if the value is
+            # already what we expect:
+            if self == expected_value:
+                return
+
+            # unfortunately not all testtools matchers derive from the Matcher
+            # class, so we can't use issubclass, isinstance for this:
+            match_fun = getattr(expected_value, 'match', None)
+            is_matcher = match_fun and callable(match_fun)
+            if not is_matcher:
+                expected_value = Equals(expected_value)
+
+            for i in range(11):
+                new_state = translate_state_keys(get_state_by_name_and_id(
+                                                self.parent.__class__.__name__,
+                                                self.parent.id)
+                                                )
+                new_value = new_state[self.name]
+                # Support for testtools.matcher classes:
+                mismatch = expected_value.match(new_value)
+                if mismatch:
+                    failure_msg = mismatch.describe()
+                else:
+                    self.parent.set_properties(new_state)
+                    return
+
+                sleep(1)
+
+            raise AssertionError("After 10 seconds test on %s.%s failed: %s"
+                % (self.parent.__class__.__name__, self.name, failure_msg))
+
+        # This looks like magic, but it's really not. We're creating a new type
+        # on the fly that derives from the type of 'value' with a couple of
+        # extra attributes: wait_for is the wait_for method above. 'parent' and
+        # 'name' are needed by the wait_for method.
+        #
+        # We can't use traditional meta-classes here, since the type we're
+        # deriving from is only known at call time, not at parse time (we could
+        # override __call__ in the meta class, but that doesn't buy us anything
+        # extra).
+        #
+        # A better way to do this would be with functools.partial, which I tried
+        # initially, but doesn't work well with bound methods.
+        t = type(value)
+        attrs = {'wait_for': wait_for, 'parent':self, 'name':name}
+        return type(t.__name__, (t,), attrs)(value)
 
     def _get_child_tuples_by_type(self, desired_type):
         """Get a list of (name,dict) pairs from children of the specified type.

@@ -59,7 +59,6 @@ public:
   sigc::signal<void, std::string const&> lens_activated;
 
 private:
-  void InitTheme();
   void SetupBackground();
   void SetupLayout();
   void SetupHomeLens();
@@ -74,13 +73,13 @@ private:
   void AddProperties(GVariantBuilder* builder);
 
 private:
+  std::string GetActiveLensId() const;
   typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
 
   LensIcons icons_;
 
   nux::HLayout* layout_;
   LayerPtr bg_layer_;
-  LayerPtr focus_layer_;
 };
 
 } // namespace dash
