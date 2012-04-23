@@ -25,7 +25,7 @@
 namespace
 {
   nux::logging::Logger logger("unity.hud.icon");
-  const int vertical_padding = 4;
+  const unsigned int vertical_padding = 4;
 }
 
 namespace unity
