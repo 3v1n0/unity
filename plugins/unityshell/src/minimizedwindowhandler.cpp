@@ -58,13 +58,13 @@ compiz::MinimizedWindowHandler::setVisibility (bool visible, Window shapeWin)
 {
   if (!visible && !priv->mRemover)
   {
-    priv->mRemover = priv->mLockAcquire->InputRemover ();
+    priv->mRemover = priv->mLockAcquire->InputRemover();
     if (!priv->mRemover)
       return;
   }
   else if (visible && priv->mRemover)
   {
-    priv->mRemover.reset ();
+    priv->mRemover.reset();
   }
 }
 
@@ -74,7 +74,7 @@ compiz::MinimizedWindowHandler::getTransients ()
   std::vector<unsigned int> transients;
   compiz::X11TransientForReader *reader = new compiz::X11TransientForReader (priv->mDpy, priv->mXid);
 
-  transients = reader->getTransients ();
+  transients = reader->getTransients();
 
   delete reader;
 
@@ -97,7 +97,7 @@ compiz::MinimizedWindowHandler::minimize ()
   unsigned int  nchildren;
   compiz::MinimizedWindowHandler::Ptr holder = compiz::MinimizedWindowHandler::Ptr (new compiz::MinimizedWindowHandler (priv->mDpy, 0, priv->mLockAcquire));
   auto          predicate_this = boost::bind (&compiz::MinimizedWindowHandler::contains, this, _1);
-  auto          predicate_holder = !boost::bind (&compiz::MinimizedWindowHandler::contains, holder.get (), _1);
+  auto          predicate_holder = !boost::bind (&compiz::MinimizedWindowHandler::contains, holder.get(), _1);
 
   std::vector<unsigned int> transients = getTransients ();
 
@@ -114,7 +114,7 @@ compiz::MinimizedWindowHandler::minimize ()
     priv->mTransients.push_back (mw);
 
   for (MinimizedWindowHandler::Ptr &mw : priv->mTransients)
-    mw->minimize ();
+    mw->minimize();
 
   do
   {
@@ -178,9 +178,9 @@ compiz::MinimizedWindowHandler::unminimize ()
   unsigned int  nchildren;
   compiz::MinimizedWindowHandler::Ptr holder = compiz::MinimizedWindowHandler::Ptr (new compiz::MinimizedWindowHandler (priv->mDpy, 0, priv->mLockAcquire));
   auto          predicate_this = boost::bind (&compiz::MinimizedWindowHandler::contains, this, _1);
-  auto          predicate_holder = !boost::bind (&compiz::MinimizedWindowHandler::contains, holder.get (), _1);
+  auto          predicate_holder = !boost::bind (&compiz::MinimizedWindowHandler::contains, holder.get(), _1);
 
-  std::vector<unsigned int> transients = getTransients ();
+  std::vector<unsigned int> transients = getTransients();
 
   for (unsigned int &w : transients)
   {
@@ -195,7 +195,7 @@ compiz::MinimizedWindowHandler::unminimize ()
     priv->mTransients.push_back (mw);
 
   for (MinimizedWindowHandler::Ptr &mw : priv->mTransients)
-    mw->unminimize ();
+    mw->unminimize();
 
   do
   {
