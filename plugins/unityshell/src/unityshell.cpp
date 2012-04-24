@@ -107,8 +107,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , screen(screen)
   , cScreen(CompositeScreen::get(screen))
   , gScreen(GLScreen::get(screen))
+  , debugger_(this)
   , enable_shortcut_overlay_(true)
-  , debugger(this)
   , needsRelayout(false)
   , _in_paint(false)
   , relayoutSourceId(0)
@@ -224,7 +224,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
 #ifndef USE_GLES
      wt.reset(nux::CreateFromForeignWindow(cScreen->output(),
               glXGetCurrentContext(),
-				      &UnityScreen::initUnity,
+              &UnityScreen::initUnity,
               this));
 #else
      wt.reset(nux::CreateFromForeignWindow(cScreen->output(),
