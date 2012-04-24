@@ -217,6 +217,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      PluginAdapter::Initialize(screen);
      WindowManager::SetDefault(PluginAdapter::Default());
+     AddChild(PluginAdapter::Default());
 
      StartupNotifyService::Default()->SetSnDisplay(screen->snDisplay(), screen->screenNum());
 
@@ -243,7 +244,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      wt->Run(NULL);
      uScreen = this;
-
      _in_paint = false;
 
 #ifndef USE_GLES
