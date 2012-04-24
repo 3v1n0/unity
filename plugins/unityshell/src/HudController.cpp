@@ -170,6 +170,16 @@ void Controller::EnsureHud()
   }
 }
 
+void Controller::SetIcon(std::string const& icon_name)
+{
+  LOG_DEBUG(logger) << "setting icon to - " << icon_name;
+
+  if (view_)
+    view_->SetIcon(icon_name, tile_size, icon_size, launcher_width - tile_size);
+
+  ubus.SendMessage(UBUS_HUD_ICON_CHANGED, g_variant_new_string(icon_name.c_str()));
+}
+
 nux::BaseWindow* Controller::window() const
 {
   return window_;
@@ -300,7 +310,7 @@ void Controller::ShowHud()
   {
     // Windows list stack for all the monitors
     GList *windows = bamf_matcher_get_window_stack_for_monitor(matcher, -1);
-    
+
     // Reset values, in case we can't find a window ie. empty current desktop
     active_xid = 0;
     active_win = nullptr;
@@ -326,6 +336,7 @@ void Controller::ShowHud()
 
     g_list_free(windows);
   }
+
   BamfApplication* active_app = bamf_matcher_get_application_for_window(matcher, active_win);
 
   if (BAMF_IS_VIEW(active_app))
@@ -340,8 +351,7 @@ void Controller::ShowHud()
   }
 
   LOG_DEBUG(logger) << "Taking application icon: " << focused_app_icon_;
-  ubus.SendMessage(UBUS_HUD_ICON_CHANGED, g_variant_new_string(focused_app_icon_.c_str())); 
-  view_->SetIcon(focused_app_icon_);
+  SetIcon(focused_app_icon_);
 
   window_->ShowWindow(true);
   window_->PushToFront();
@@ -493,8 +503,7 @@ void Controller::OnQueryActivated(Query::Ptr query)
 void Controller::OnQuerySelected(Query::Ptr query)
 {
   LOG_DEBUG(logger) << "Selected query, " << query->formatted_text;
-  view_->SetIcon(query->icon_name);
-  ubus.SendMessage(UBUS_HUD_ICON_CHANGED, g_variant_new_string(query->icon_name.c_str()));
+  SetIcon(query->icon_name);
 }
 
 void Controller::OnQueriesFinished(Hud::Queries queries)
@@ -510,9 +519,7 @@ void Controller::OnQueriesFinished(Hud::Queries queries)
     }
   }
 
-  LOG_DEBUG(logger) << "setting icon to - " << icon_name;
-  view_->SetIcon(icon_name);
-  ubus.SendMessage(UBUS_HUD_ICON_CHANGED, g_variant_new_string(icon_name.c_str()));
+  SetIcon(icon_name);
 }
 
 // Introspectable
