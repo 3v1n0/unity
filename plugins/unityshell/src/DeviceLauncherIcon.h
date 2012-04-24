@@ -36,7 +36,7 @@ class DeviceLauncherIcon : public SimpleLauncherIcon
 {
 
 public:
-  DeviceLauncherIcon(GVolume* volume);
+  DeviceLauncherIcon(glib::Object<GVolume> const& volume);
 
   void UpdateVisibility(int visibility = -1);
   void OnRemoved();
@@ -67,7 +67,7 @@ private:
   void ShowNotification(std::string const&, unsigned, GdkPixbuf*, std::string const&);
 
 private:
-  GVolume* volume_;
+  glib::Object<GVolume> volume_;
   glib::String device_file_;
   std::string name_;
   glib::Object<GduDevice> gdu_device_;
