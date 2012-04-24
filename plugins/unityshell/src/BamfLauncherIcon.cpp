@@ -1110,7 +1110,8 @@ void BamfLauncherIcon::OnDndLeave()
 
 bool BamfLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
 {
-  bool is_home_launcher = boost::algorithm::ends_with(DesktopFile(), "nautilus-home.desktop");
+  bool is_home_launcher = boost::algorithm::ends_with(DesktopFile(), "nautilus-home.desktop") ||
+                          boost::algorithm::ends_with(DesktopFile(), "nautilus.desktop");
 
   if (is_home_launcher)
   {
