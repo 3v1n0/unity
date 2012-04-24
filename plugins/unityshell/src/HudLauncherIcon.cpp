@@ -43,7 +43,7 @@ HudLauncherIcon::HudLauncherIcon(LauncherHideMode hide_mode)
  , launcher_hide_mode_(hide_mode)
 {
   tooltip_text = _("HUD");
-  icon_name = PKGDATADIR"/launcher_bfb.png";
+  icon_name = PKGDATADIR "/launcher_bfb.png";
   SetQuirk(QUIRK_VISIBLE, false);
   SetQuirk(QUIRK_RUNNING, false);
   SetQuirk(QUIRK_ACTIVE, true);
@@ -72,7 +72,7 @@ HudLauncherIcon::HudLauncherIcon(LauncherHideMode hide_mode)
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::bind(sigc::mem_fun(this, &HudLauncherIcon::OnOverlayShown), true));
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::bind(sigc::mem_fun(this, &HudLauncherIcon::OnOverlayShown), false));
 
-  mouse_enter.connect([&](int m) { ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL); });
+  mouse_enter.connect([&](int m) { ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW); });
 }
 
 void HudLauncherIcon::SetHideMode(LauncherHideMode hide_mode)
@@ -117,7 +117,10 @@ nux::Color HudLauncherIcon::GlowColor()
 
 void HudLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
-  // wut? activate? noo we don't do that.
+  if (GetQuirk(QUIRK_VISIBLE))
+  {
+    ubus_manager_.SendMessage(UBUS_HUD_CLOSE_REQUEST);
+  }
 }
 
 std::list<DbusmenuMenuitem*> HudLauncherIcon::GetMenus()
