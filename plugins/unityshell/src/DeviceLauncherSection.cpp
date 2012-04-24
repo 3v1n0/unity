@@ -77,7 +77,12 @@ bool DeviceLauncherSection::PopulateEntries(DeviceLauncherSection* self)
 
   for (GList* v = volumes; v; v = v->next)
   {
-    glib::Object<GVolume> volume((GVolume* )v->data);
+    if (!G_IS_VOLUME(v->data))
+      continue;
+
+    // This will unref the volume, since the list entries needs that.
+    // We'll keep a reference in the icon.
+    glib::Object<GVolume> volume(G_VOLUME(v->data));
     DeviceLauncherIcon* icon = new DeviceLauncherIcon(volume);
 
     self->map_[volume] = icon;
@@ -85,7 +90,6 @@ bool DeviceLauncherSection::PopulateEntries(DeviceLauncherSection* self)
   }
 
   g_list_free(volumes);
-  
   self->on_device_populate_entry_id_ = 0;
   
   return false;
@@ -99,9 +103,12 @@ void DeviceLauncherSection::OnVolumeAdded(GVolumeMonitor* monitor,
                                           GVolume* volume,
                                           DeviceLauncherSection* self)
 {
-  DeviceLauncherIcon* icon = new DeviceLauncherIcon(volume);
-  
-  self->map_[volume] = icon;
+  // This just wraps the volume in a glib::Object, global ref_count is only
+  // temporary changed.
+  glib::Object<GVolume> gvolume(volume, glib::AddRef());
+  DeviceLauncherIcon* icon = new DeviceLauncherIcon(gvolume);
+
+  self->map_[gvolume] = icon;
   self->IconAdded.emit(AbstractLauncherIcon::Ptr(icon));
 }
 
@@ -110,10 +117,11 @@ void DeviceLauncherSection::OnVolumeRemoved(GVolumeMonitor* monitor,
                                             DeviceLauncherSection* self)
 {
   // It should not happen! Let me do the check anyway.
-  if (self->map_.find(volume) != self->map_.end())
-  {	
-    self->map_[volume]->OnRemoved();
-    self->map_.erase(volume);
+  auto volume_it = self->map_.find(volume);
+  if (volume_it != self->map_.end())
+  {
+    volume_it->second->OnRemoved();
+    self->map_.erase(volume_it);
   }
 }
 
@@ -124,13 +132,12 @@ void DeviceLauncherSection::OnMountAdded(GVolumeMonitor* monitor,
                                          GMount* mount,
                                          DeviceLauncherSection* self)
 {
-  std::map<GVolume* , DeviceLauncherIcon* >::iterator it;
   glib::Object<GVolume> volume(g_mount_get_volume(mount));
 
-  it = self->map_.find(volume);
+  auto volume_it = self->map_.find(volume);
 
-  if (it != self->map_.end())
-    it->second->UpdateVisibility(1);
+  if (volume_it != self->map_.end())
+    volume_it->second->UpdateVisibility(1);
 }
 
 /* We don't use "mount-removed" signal since it is received after "volume-removed"
@@ -140,13 +147,12 @@ void DeviceLauncherSection::OnMountPreUnmount(GVolumeMonitor* monitor,
                                               GMount* mount,
                                               DeviceLauncherSection* self)
 {
-  std::map<GVolume* , DeviceLauncherIcon* >::iterator it;
   glib::Object<GVolume> volume(g_mount_get_volume(mount));
 
-  it = self->map_.find(volume);
+  auto volume_it = self->map_.find(volume);
 
-  if (it != self->map_.end())
-    it->second->UpdateVisibility(0);
+  if (volume_it != self->map_.end())
+    volume_it->second->UpdateVisibility(0);
 }
 
 } // namespace launcher
