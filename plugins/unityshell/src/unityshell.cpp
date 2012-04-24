@@ -402,8 +402,14 @@ UnityScreen::~UnityScreen()
 
   ::unity::ui::IconRenderer::DestroyTextures();
   QuicklistManager::Destroy();
-  // We need to delete the launchers before the window thread.
+  // We need to delete the controllers before the window thread.
   launcher_controller_.reset();
+  hud_controller_.reset();
+  dash_controller_.reset();
+  panel_controller_.reset();
+  switcher_controller_.reset();
+  shortcut_controller_.reset();
+
   delete wt;
   reset_glib_logging();
 }
