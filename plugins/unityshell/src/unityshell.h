@@ -240,6 +240,8 @@ private:
   GeisAdapter    geis_adapter_;
   internal::FavoriteStoreGSettings favorite_store_;
 
+  std::unique_ptr<nux::WindowThread>    wt;
+
   launcher::Controller::Ptr launcher_controller_;
   dash::Controller::Ptr     dash_controller_;
   panel::Controller::Ptr    panel_controller_;
@@ -251,10 +253,8 @@ private:
   bool enable_shortcut_overlay_;
 
   std::unique_ptr<GestureEngine>        gesture_engine_;
-  nux::WindowThread*                    wt;
-  nux::BaseWindow*                      panelWindow;
   nux::Geometry                         lastTooltipArea;
-  unity::debug::DebugDBusInterface*     debugger;
+  unity::debug::DebugDBusInterface      debugger;
   bool                                  needsRelayout;
   bool                                  _in_paint;
   guint32                               relayoutSourceId;
