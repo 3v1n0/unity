@@ -16,69 +16,78 @@ from autopilot.tests import AutopilotTestCase
 
 logger = logging.getLogger(__name__)
 
-class SwitcherTests(AutopilotTestCase):
-    """Test the switcher."""
+class SwitcherTestCase(AutopilotTestCase):
+    def set_timeout_setting(self, value):
+        self.set_unity_option("alt_tab_timeout", value)
+        sleep(1)
 
+class SwitcherTests(SwitcherTestCase):
+    """Test the switcher.
+
+    """
     def set_timeout_setting(self, value):
         self.set_unity_option("alt_tab_timeout", value)
         sleep(1)
 
     def setUp(self):
         super(SwitcherTests, self).setUp()
-
+        self.set_timeout_setting(False)
         self.char_map = self.start_app('Character Map')
         self.calc = self.start_app('Calculator')
         self.mahjongg = self.start_app('Mahjongg')
 
     def tearDown(self):
         super(SwitcherTests, self).tearDown()
+
+    def test_witcher_starts_in_normal_mode(self):
+        """Switcher must start in normal (i.e.- not details) mode.
+
+        """
+        self.start_app("Character Map")
         sleep(1)
 
-    def test_switcher_move_next(self):
-        self.set_timeout_setting(False)
+        self.switcher.initiate()
+        self.addCleanup(self.switcher.terminate)
+        self.assertThat(self.switcher.mode, Equals(SwitcherMode.NORMAL))
 
+    def test_switcher_move_next(self):
+        """Test that pressing the next icon binding moves to the next icon
+
+        """
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
 
         start = self.switcher.selection_index
         self.switcher.next_icon()
-        end = self.switcher.selection_index
-
-        self.assertThat(start, NotEquals(0))
-        self.assertThat(end, Equals(start + 1))
+        self.assertThat(self.switcher.selection_index, Equals(start + 1))
 
     def test_switcher_move_prev(self):
-        self.set_timeout_setting(False)
+        """Test that pressing the previous icon binding moves to the previous icon
 
+        """
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
 
         start = self.switcher.selection_index
         self.switcher.previous_icon()
-
-        end = self.switcher.selection_index
-
-        self.assertThat(start, NotEquals(0))
-        self.assertThat(end, Equals(start - 1))
+        self.assertThat(self.switcher.selection_index, Equals(start - 1))
 
     def test_switcher_scroll_next(self):
-        self.set_timeout_setting(False)
+        """Test that scrolling the mouse wheel down moves to the next icon
 
+        """
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
 
         start = self.switcher.selection_index
         self.switcher.next_via_mouse()
 
-        end = self.switcher.selection_index
-        self.assertThat(start, NotEquals(0))
-        self.assertThat(end, Equals(start + 1))
-
-        self.switcher.terminate()
+        self.assertThat(self.switcher.selection_index, Equals(start + 1))
 
     def test_switcher_scroll_prev(self):
-        self.set_timeout_setting(False)
-
+        """Test that scrolling the mouse wheel up moves to the previous icon
+        
+        """
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
 
@@ -86,32 +95,33 @@ class SwitcherTests(AutopilotTestCase):
         self.switcher.previous_via_mouse()
 
         end = self.switcher.selection_index
-        self.assertThat(start, NotEquals(0))
         self.assertThat(end, Equals(start - 1))
 
         self.switcher.terminate()
 
     def test_switcher_scroll_next_ignores_fast_events(self):
-        self.set_timeout_setting(False)
-
+        """Ensures that smoothing is working correctly for next icon scrolling. 
+        Only the first event in a rapid fire string of events should be acted upon. 
+        The rest ignored.
+        
+        """
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
 
-        # Quickly repeatead events should be ignored (except the first)
+        # Quickly repeated events should be ignored (except the first)
         start = self.switcher.selection_index
         self.switcher.next_via_mouse()
         self.switcher.next_via_mouse()
         self.switcher.next_via_mouse()
 
-        end = self.switcher.selection_index
-        self.assertThat(start, NotEquals(0))
-        self.assertThat(end, Equals(start + 1))
-
-        self.switcher.terminate()
+        self.assertThat(self.switcher.selection_index, Equals(start + 1))
 
     def test_switcher_scroll_prev_ignores_fast_events(self):
-        self.set_timeout_setting(False)
-
+        """Ensures that smoothing is working correctly for previous icon scrolling. 
+        Only the first event in a rapid fire string of events should be acted upon. 
+        The rest ignored.
+        
+        """
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
 
@@ -121,22 +131,19 @@ class SwitcherTests(AutopilotTestCase):
         self.switcher.previous_via_mouse()
         self.switcher.previous_via_mouse()
 
-        end = self.switcher.selection_index
-        self.assertThat(end, Equals(start - 1))
+        self.assertThat(self.switcher.selection_index, Equals(start - 1))
 
     def test_switcher_arrow_key_does_not_init(self):
-        self.set_timeout_setting(False)
+        """Ensure that Alt+Right does not initiate switcher.
+        Regression test for LP:??????
 
-        # FIXME - this was removed because it's dumb.
-        #self.switcher.initiate_right_arrow()
+        """
         self.keyboard.press('Alt')
         self.addCleanup(self.keyboard.release, 'Alt')
         self.keyboard.press_and_release('Right')
         self.assertThat(self.switcher.visible, Equals(False))
 
     def test_lazy_switcher_initiate(self):
-        self.set_timeout_setting(False)
-
         self.keybinding_hold("switcher/reveal_normal")
         self.addCleanup(self.keybinding_release, "switcher/reveal_normal")
         self.assertThat(self.switcher.visible, Eventually(Equals(False)))
@@ -146,19 +153,14 @@ class SwitcherTests(AutopilotTestCase):
         self.assertThat(self.switcher.visible, Eventually(Equals(True)))
 
     def test_switcher_cancel(self):
-        self.set_timeout_setting(False)
-
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
 
-        self.assertThat(self.switcher.visible, Equals(True))
-
+        self.assertThat(self.switcher.visible, Eventually(Equals(True)))
         self.switcher.cancel()
-        self.assertThat(self.switcher.visible, Equals(False))
+        self.assertThat(self.switcher.visible, Eventually(Equals(False)))
 
     def test_lazy_switcher_cancel(self):
-        self.set_timeout_setting(False)
-
         self.keybinding_hold("switcher/reveal_normal")
         self.addCleanup(self.keybinding_release, "switcher/reveal_normal")
         self.assertThat(self.switcher.visible, Eventually(Equals(False)))
@@ -168,6 +170,10 @@ class SwitcherTests(AutopilotTestCase):
         self.assertThat(self.switcher.visible, Eventually(Equals(False)))
 
     def test_switcher_appears_on_monitor_with_focused_window(self):
+        """Tests that the switches appears on the correct monitor.
+        This is defined as the monitor with a focused window.
+
+        """
         num_monitors = self.screen_geo.get_num_monitors()
         if num_monitors == 1:
             self.skip("No point testing this on one monitor")
@@ -176,12 +182,14 @@ class SwitcherTests(AutopilotTestCase):
         for monitor in range(num_monitors):
             self.screen_geo.drag_window_to_monitor(calc_win, monitor)
             self.switcher.initiate()
-            self.assertThat(self.switcher.get_monitor(), Eventually(Equals(monitor)))
-            self.switcher.terminate()
+            self.addCleanup(self.switcher.terminate)
+            self.assertThat(self.switcher.controller.monitor, Eventually(Equals(monitor)))
 
 
-class SwitcherWindowsManagementTests(AutopilotTestCase):
-    """Test the switcher window management."""
+class SwitcherWindowsManagementTests(SwitcherTestCase):
+    """Test the switcher window management.
+
+    """
 
     def test_switcher_raises_only_last_focused_window(self):
         """Tests that when we do an alt+tab only the previously focused window
@@ -189,7 +197,11 @@ class SwitcherWindowsManagementTests(AutopilotTestCase):
         This is tests by opening 2 Calculators and a Mahjongg.
         Then we do a quick alt+tab twice.
         Then we close the currently focused window.
+        
         """
+        #FIXME: Setup
+        # There are a lot of asserts in this test that are just making sure the env. is properly
+        # initialized.
         self.close_all_app("Mahjongg")
         self.close_all_app("Calculator")
 
@@ -207,11 +219,12 @@ class SwitcherWindowsManagementTests(AutopilotTestCase):
         # and we are just waiting on a second window, however a defined sleep
         # here is likely to be problematic.
         # TODO: fix bamf emulator to enable waiting for new windows.
-        sleep(4)
+        sleep(1)
         [mah_win2] = [w for w in mahj.get_windows() if w.x_id != mah_win1.x_id]
         self.assertTrue(mah_win2.is_focused)
 
         self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
+        #end setup?
 
         self.keybinding("switcher/reveal_normal")
         sleep(1)
@@ -229,19 +242,19 @@ class SwitcherWindowsManagementTests(AutopilotTestCase):
         self.assertVisibleWindowStack([calc_win, mah_win1])
 
 
-class SwitcherDetailsTests(AutopilotTestCase):
-    """Test the details mode for the switcher."""
+class SwitcherDetailsTests(SwitcherTestCase):
+    """Test the details mode for the switcher.
 
-    def test_switcher_starts_in_normal_mode(self):
-        """Switcher must start in normal (i.e.- not details) mode."""
-        self.start_app("Character Map")
-        sleep(1)
-
-        self.switcher.initiate()
-        self.addCleanup(self.switcher.terminate)
-        self.assertThat(self.switcher.mode, Equals(SwitcherMode.NORMAL))
+    """
+    def setUp(self):
+        super(SwitcherDetailsTests, self).setUp()
+        self.set_timeout_setting(True)
 
     def test_details_mode_on_delay(self):
+        """Test that details mode activates on a timeout...
+
+        """
+        #FIXME: Setup
         self.close_all_app('Character Map')
         self.workspace.switch_to(1)
         self.start_app("Character Map")
@@ -253,6 +266,7 @@ class SwitcherDetailsTests(AutopilotTestCase):
         # the character map.
         self.start_app('Mahjongg')
         sleep(1)
+        # end setup
 
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
@@ -261,9 +275,13 @@ class SwitcherDetailsTests(AutopilotTestCase):
         self.assertThat(self.switcher.mode, Equals(SwitcherMode.DETAIL))
 
     def test_no_details_for_apps_on_different_workspace(self):
-        # Re bug: 933406
-        self.close_all_app('Character Map')
+        """Tests that details mode does not initiates when there are multiple windows
+        of an application spread across different workspaces.
+        Regression test for LP:933406.
 
+        """
+        #Fixme: setup
+        self.close_all_app('Character Map')
         self.workspace.switch_to(1)
         self.start_app("Character Map")
         sleep(1)
@@ -274,6 +292,7 @@ class SwitcherDetailsTests(AutopilotTestCase):
         # the character map.
         self.start_app('Mahjongg')
         sleep(1)
+        # end setup
 
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
@@ -282,9 +301,8 @@ class SwitcherDetailsTests(AutopilotTestCase):
         self.assertThat(self.switcher.mode, Equals(SwitcherMode.NORMAL))
 
 
-class SwitcherDetailsModeTests(AutopilotTestCase):
+class SwitcherDetailsModeTests(SwitcherTestCase):
     """Tests for the details mode of the switcher.
-
     Tests for initiation with both grave (`) and Down arrow.
 
     """
@@ -295,15 +313,17 @@ class SwitcherDetailsModeTests(AutopilotTestCase):
     ]
 
     def test_can_start_details_mode(self):
-        """Must be able to initiate details mode using selected scenario keycode."""
+        """Must be able to initiate details mode using selected scenario keycode.
+
+        """
         self.start_app("Character Map")
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
         self.keyboard.press_and_release(self.initiate_keycode)
         self.assertThat(self.switcher.mode, Equals(SwitcherMode.DETAIL))
 
-    def test_tab_from_last_detail_works(self):
-        """Pressing tab while showing last switcher item in details mode
+    def test_next_icon_from_last_detail_works(self):
+        """Pressing next while showing last switcher item in details mode
         must select first item in the model in non-details mode.
 
         """
@@ -318,11 +338,16 @@ class SwitcherDetailsModeTests(AutopilotTestCase):
         self.assertThat(self.switcher.selection_index, Equals(0))
 
 
-class SwitcherWorkspaceTests(AutopilotTestCase):
-    """Test Switcher behavior with respect to multiple workspaces."""
+class SwitcherWorkspaceTests(SwitcherTestCase):
+    """Test Switcher behavior with respect to multiple workspaces.
+
+    """
 
     def test_switcher_shows_current_workspace_only(self):
-        """Switcher must show apps from the current workspace only."""
+        """Switcher must show apps from the current workspace only.
+
+        """
+        #FIXME: SETUP
         self.close_all_app('Calculator')
         self.close_all_app('Character Map')
 
@@ -332,6 +357,7 @@ class SwitcherWorkspaceTests(AutopilotTestCase):
         self.workspace.switch_to(2)
         char_map = self.start_app("Character Map")
         sleep(1)
+        # END SETUP
 
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
@@ -341,16 +367,20 @@ class SwitcherWorkspaceTests(AutopilotTestCase):
         self.assertThat(icon_names, Not(Contains(calc.name)))
 
     def test_switcher_all_mode_shows_all_apps(self):
-        """Test switcher 'show_all' mode shows apps from all workspaces."""
+        """Test switcher 'show_all' mode shows apps from all workspaces.
+
+        """
         self.close_all_app('Calculator')
         self.close_all_app('Character Map')
 
+        #FIXME: this is setup
         self.workspace.switch_to(1)
         calc = self.start_app("Calculator")
         sleep(1)
         self.workspace.switch_to(2)
         char_map = self.start_app("Character Map")
         sleep(1)
+        # END SETUP
 
         self.switcher.initiate(SwitcherMode.ALL)
         self.addCleanup(self.switcher.terminate)
@@ -361,7 +391,10 @@ class SwitcherWorkspaceTests(AutopilotTestCase):
 
     def test_switcher_can_switch_to_minimised_window(self):
         """Switcher must be able to switch to a minimised window when there's
-        another instance of the same application on a different workspace."""
+        another instance of the same application on a different workspace.
+
+        """
+        #FIXME this is setup.
         # disable automatic gridding of the switcher after a timeout, since it makes
         # it harder to write the tests.
         self.set_unity_option("alt_tab_timeout", False)
@@ -379,9 +412,9 @@ class SwitcherWorkspaceTests(AutopilotTestCase):
 
         self.start_app("Calculator")
         sleep(1)
+        # END SETUP
 
         self.switcher.initiate()
-        # infinite loop? why
         while self.switcher.current_icon.tooltip_text != mahjongg.name:
             logger.debug("%s -> %s" % (self.switcher.current_icon.tooltip_text, mahjongg.name))
             self.switcher.next_icon()
