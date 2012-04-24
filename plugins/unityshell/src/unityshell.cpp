@@ -223,14 +223,14 @@ UnityScreen::UnityScreen(CompScreen* screen)
      nux::NuxInitialize(0);
 #ifndef USE_GLES
      wt.reset(nux::CreateFromForeignWindow(cScreen->output(),
-              glXGetCurrentContext(),
-              &UnityScreen::initUnity,
-              this));
+                                           glXGetCurrentContext(),
+                                           &UnityScreen::initUnity,
+                                           this));
 #else
      wt.reset(nux::CreateFromForeignWindow(cScreen->output(),
-              eglGetCurrentContext(),
-              &UnityScreen::initUnity,
-              this));
+                                           eglGetCurrentContext(),
+                                           &UnityScreen::initUnity,
+                                           this));
 #endif
 
      wt->RedrawRequested.connect(sigc::mem_fun(this, &UnityScreen::onRedrawRequested));
