@@ -165,6 +165,7 @@ public:
 
 protected:
   PluginAdapter(CompScreen* screen);
+  void AddProperties(GVariantBuilder* builder);
 
 private:
   std::string MatchStringForXids(std::vector<Window> *windows);
