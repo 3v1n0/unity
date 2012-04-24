@@ -56,7 +56,7 @@ class QuicklistActionTests(AutopilotTestCase):
             name = de.content[key]['Name']
             self.assertThat(ql_item_texts, Contains(name))
 
-    def test_quicklist_focus_last_active_window(self):
+    def test_quicklist_application_item_focus_last_active_window(self):
         """This tests shows that when you activate a quicklist application item
         only the last focused instance of that application is rasied.
 
@@ -100,6 +100,37 @@ class QuicklistActionTests(AutopilotTestCase):
         sleep(1)
         self.assertTrue(mah_win2.is_focused)
         self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
+
+    def test_quicklist_application_item_initiate_spread(self):
+        """This tests shows that when you activate a quicklist application item
+        when an application window is focused, the spread is initiated.
+        """
+        calc = self.start_app("Calculator")
+        [calc_win1] = calc.get_windows()
+        self.assertTrue(calc_win1.is_focused)
+
+        self.start_app("Calculator")
+        # Sleeping due to the start_app only waiting for the bamf model to be
+        # updated with the application.  Since the app has already started,
+        # and we are just waiting on a second window, however a defined sleep
+        # here is likely to be problematic.
+        # TODO: fix bamf emulator to enable waiting for new windows.
+        sleep(1)
+        [calc_win2] = [w for w in calc.get_windows() if w.x_id != calc_win1.x_id]
+
+        self.assertVisibleWindowStack([calc_win2, calc_win1])
+        self.assertTrue(calc_win2.is_focused)
+
+        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
+
+        self.open_quicklist_for_icon(calc_icon)
+        calc_ql = calc_icon.get_quicklist()
+        app_item = calc_ql.get_quicklist_application_item(calc.name)
+
+        self.addCleanup(self.keybinding, "spread/cancel")
+        app_item.mouse_click()
+        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
+        self.assertThat(self.window_manager.scale_active_for_group, Eventually(Equals(True)))
 
 
 class QuicklistKeyNavigationTests(AutopilotTestCase):
