@@ -108,10 +108,7 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view, "user-visible-changed",
                           [&] (BamfView*, gboolean visible) {
                             if (!IsSticky())
-                            {
                               SetQuirk(QUIRK_VISIBLE, visible);
-                              user_visible_changed.emit();
-                            }
                           });
   _gsignals.Add(sig);
 

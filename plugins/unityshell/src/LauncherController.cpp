@@ -740,10 +740,8 @@ void Controller::Impl::OnViewOpened(BamfMatcher* matcher, BamfView* view, gpoint
     return;
   }
 
-  BamfLauncherIcon* bamf_icon = new BamfLauncherIcon(app);
-  bamf_icon->user_visible_changed.connect([self] () { self->SortAndUpdate(); } );
-
-  AbstractLauncherIcon::Ptr icon (bamf_icon);
+  AbstractLauncherIcon::Ptr icon(new BamfLauncherIcon(app));
+  icon->visibility_changed.connect(sigc::mem_fun(self, &Impl::SortAndUpdate));
   icon->SetSortPriority(self->sort_priority_++);
   self->RegisterIcon(icon);
   self->SortAndUpdate();

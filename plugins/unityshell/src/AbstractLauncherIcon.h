@@ -215,6 +215,7 @@ public:
 
   sigc::signal<void, AbstractLauncherIcon::Ptr> needs_redraw;
   sigc::signal<void, AbstractLauncherIcon::Ptr> remove;
+  sigc::signal<void> visibility_changed;
 
   sigc::connection needs_redraw_connection;
   sigc::connection on_icon_added_connection;

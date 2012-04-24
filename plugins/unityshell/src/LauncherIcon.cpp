@@ -854,6 +854,11 @@ LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value)
     UBusServer* ubus = ubus_server_get_default();
     ubus_server_send_message(ubus, UBUS_LAUNCHER_ICON_URGENT_CHANGED, g_variant_new_boolean(value));
   }
+
+  if (quirk == QUIRK_VISIBLE)
+  {
+     visibility_changed.emit();
+  }
 }
 
 gboolean
