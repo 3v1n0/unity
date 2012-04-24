@@ -110,6 +110,8 @@ DashView::~DashView()
     g_source_remove (searching_timeout_id_);
   if (hide_message_delay_id_)
     g_source_remove(hide_message_delay_id_);
+
+  RemoveLayout ();
 }
 
 void DashView::SetMonitorOffset(int x, int y)
