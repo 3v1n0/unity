@@ -402,8 +402,14 @@ UnityScreen::~UnityScreen()
 
   ::unity::ui::IconRenderer::DestroyTextures();
   QuicklistManager::Destroy();
-  // We need to delete the launchers before the window thread.
+  // We need to delete the controllers before the window thread.
   launcher_controller_.reset();
+  hud_controller_.reset();
+  dash_controller_.reset();
+  panel_controller_.reset();
+  switcher_controller_.reset();
+  shortcut_controller_.reset();
+
   delete wt;
   reset_glib_logging();
 }
@@ -1040,7 +1046,8 @@ void UnityScreen::leaveShowDesktopMode (CompWindow *w)
 void UnityWindow::enterShowDesktop ()
 {
   if (!mShowdesktopHandler)
-    mShowdesktopHandler = new ShowdesktopHandler (static_cast <ShowdesktopHandlerWindowInterface *> (this));
+    mShowdesktopHandler = new ShowdesktopHandler (static_cast <ShowdesktopHandlerWindowInterface *> (this),
+                                                  static_cast <compiz::WindowInputRemoverLockAcquireInterface *> (this));
 
   window->setShowDesktopMode (true);
   mShowdesktopHandler->FadeOut ();
@@ -1174,10 +1181,15 @@ void UnityWindow::DoDeleteHandler ()
   window->updateFrameRegion ();
 }
 
-compiz::WindowInputRemoverInterface::Ptr
+compiz::WindowInputRemoverLock::Ptr
 UnityWindow::GetInputRemover ()
 {
-  return compiz::WindowInputRemoverInterface::Ptr (new compiz::WindowInputRemover (screen->dpy (), window->id ()));
+  if (!input_remover_.expired ())
+    return input_remover_.lock ();
+
+  compiz::WindowInputRemoverLock::Ptr ret (new compiz::WindowInputRemoverLock (new compiz::WindowInputRemover (screen->dpy (), window->id ())));
+  input_remover_ = ret;
+  return ret;
 }
 
 unsigned int
@@ -2284,7 +2296,7 @@ UnityWindow::minimize ()
 
   if (!mMinimizeHandler)
   {
-    mMinimizeHandler.reset (new UnityMinimizedHandler (window));
+    mMinimizeHandler.reset (new UnityMinimizedHandler (window, this));
     mMinimizeHandler->minimize ();
   }
 }
@@ -2643,9 +2655,12 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       launcher_options->icon_size = optionGetIconSize();
       launcher_options->tile_size = optionGetIconSize() + 6;
 
-      hud_controller_->launcher_width = launcher_controller_->launcher().GetAbsoluteWidth() - 1;
+      hud_controller_->icon_size = launcher_options->icon_size();
+      hud_controller_->tile_size = launcher_options->tile_size();
+
       /* The launcher geometry includes 1px used to draw the right margin
-       * that must not be considered when drawing the dash                    */
+       * that must not be considered when drawing an overlay */
+      hud_controller_->launcher_width = launcher_controller_->launcher().GetAbsoluteWidth() - 1;
       dash_controller_->launcher_width = launcher_controller_->launcher().GetAbsoluteWidth() - 1;
 
       if (p)
@@ -2838,6 +2853,8 @@ void UnityScreen::initLauncher()
   auto hide_mode = (unity::launcher::LauncherHideMode) optionGetLauncherHideMode();
   hud_controller_->launcher_locked_out = (hide_mode == unity::launcher::LauncherHideMode::LAUNCHER_HIDE_NEVER);
   hud_controller_->multiple_launchers = (optionGetNumLaunchers() == 0);
+  hud_controller_->icon_size = launcher_controller_->options()->icon_size();
+  hud_controller_->tile_size = launcher_controller_->options()->tile_size();
   AddChild(hud_controller_.get());
   LOG_INFO(logger) << "initLauncher-hud " << timer.ElapsedSeconds() << "s";
 

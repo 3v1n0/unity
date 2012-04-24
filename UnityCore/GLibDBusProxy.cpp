@@ -89,7 +89,6 @@ public:
 
   glib::Object<GDBusProxy> proxy_;
   glib::Object<GCancellable> cancellable_;
-  guint watcher_id_;
   guint reconnect_timeout_id_;
   bool connected_;
 
@@ -112,18 +111,15 @@ DBusProxy::Impl::Impl(DBusProxy* owner,
   , bus_type_(bus_type)
   , flags_(flags)
   , cancellable_(g_cancellable_new())
-  , watcher_id_(0)
   , reconnect_timeout_id_(0)
   , connected_(false)
 {
-  StartReconnectionTimeout();
+  Connect();
 }
 
 DBusProxy::Impl::~Impl()
 {
   g_cancellable_cancel(cancellable_);
-  if (watcher_id_)
-    g_bus_unwatch_name(watcher_id_);
   if (reconnect_timeout_id_)
     g_source_remove(reconnect_timeout_id_);
 }
@@ -177,6 +173,8 @@ void DBusProxy::Impl::OnProxyConnectCallback(GObject* source,
 
   // If the async operation was cancelled, this callback will still be called and
   // therefore we should deal with the error before touching the impl pointer
+  // FIXME: If autostarting of a service fails, error will be set, and this
+  // proxy instance will remain inert, call StartReconnectionTimeout() ?
   if (!proxy || error)
   {
     LOG_WARNING(logger) << "Unable to connect to proxy: " << error;

@@ -319,6 +319,7 @@ class UnityWindow :
   public WindowInterface,
   public GLWindowInterface,
   public ShowdesktopHandlerWindowInterface,
+  public compiz::WindowInputRemoverLockAcquireInterface,
   public BaseSwitchWindow,
   public PluginClassHandler <UnityWindow, CompWindow>
 {
@@ -418,7 +419,9 @@ private:
 
   unsigned int GetNoCoreInstanceMask ();
 
-  compiz::WindowInputRemoverInterface::Ptr GetInputRemover ();
+  compiz::WindowInputRemoverLock::Ptr GetInputRemover ();
+
+  compiz::WindowInputRemoverLock::Weak input_remover_;
 };
 
 
