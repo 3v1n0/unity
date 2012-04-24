@@ -111,6 +111,8 @@ DashView::~DashView()
   if (hide_message_delay_id_)
     g_source_remove(hide_message_delay_id_);
 
+  // Do this explicitely, otherwise dee will complain about invalid access
+  // to the lens models
   RemoveLayout ();
 }
 
