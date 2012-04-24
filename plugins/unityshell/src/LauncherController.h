@@ -65,10 +65,10 @@ public:
 
   void HandleLauncherKeyPress(int when);
   void HandleLauncherKeyRelease(bool was_tap, int when);
-  bool HandleLauncherKeyEvent(Display *display, 
-                              unsigned int key_sym, 
-                              unsigned long key_code, 
-                              unsigned long key_state, 
+  bool HandleLauncherKeyEvent(Display *display,
+                              unsigned int key_sym,
+                              unsigned long key_code,
+                              unsigned long key_state,
                               char* key_string);
 
   void KeyNavActivate();
