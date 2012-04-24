@@ -9,12 +9,8 @@
 
 import logging
 
-from autopilot.emulators.unity import (
-    get_state_by_path, 
-    make_introspection_object,
-    UnityIntrospectionObject
-    )
-from autopilot.emulators.X11 import Keyboard, Mouse
+from autopilot.emulators.unity import UnityIntrospectionObject
+from autopilot.emulators.X11 import Mouse
 from autopilot.keybindings import KeybindingsHelper
 
 # even though we don't use these directly, we need to make sure they've been
@@ -38,31 +34,44 @@ class Switcher(KeybindingsHelper):
         self.controller = controllers[0]
 
     @property
+    def visible(self):
+        return self.controller.visible
+
+    @property
     def icons(self):
         return self.controller.model.icons
 
     @property
     def current_icon(self):
-        for icon in self.icons:
-            logger.debug("ALL: %s" % ' '.join([i.tooltip_text for i in icons]))
-            if icon.active:
-                logger.debug("TEXXXT %s" % icon.tooltip_text)
-                return icon
-        return None
+        return self.icons[self.selection_index]
 
     @property
     def selection_index(self):
         return self.controller.model.selection_index
 
+    @property 
+    def mode(self):
+        """Returns the modes the switcher is currently in"""
+        if not self.visible:
+            return None
+        if self.controller.model.detail_selection and not self.controller.model.only_detail_on_viewport:
+            return SwitcherMode.DETAIL, SwitcherMode.ALL
+        elif self.controller.model.detail_selection:
+            return SwitcherMode.DETAIL
+        elif not self.controller.model.only_detail_on_viewport:
+            return SwitcherMode.ALL
+        else:
+            return SwitcherMode.NORMAL
+
     def initiate(self, mode=SwitcherMode.NORMAL):
         if mode == SwitcherMode.NORMAL:
             logger.debug("Initiating switcher with Alt+Tab")
             self.keybinding_hold_part_then_tap("switcher/reveal_normal")
-            self.controller.visible.wait_for(True)
+            self.visible.wait_for(True)
         elif mode == SwitcherMode.DETAIL:
             logger.debug("Initiating switcher detail mode with Alt+`")
             self.keybinding_hold_part_then_tap("switcher/reveal_details")
-            self.controller.detail_mode.wait_for(True)
+            self.controller.model.detail_selection.wait_for(True)
         elif mode == SwitcherMode.ALL:
             logger.debug("Initiating switcher in 'all workspaces' mode. Ctrl+Alt+Tab")
             self.keybinding_hold_part_then_tap("switcher/reveal_all")
@@ -116,13 +125,13 @@ class Switcher(KeybindingsHelper):
         """Show detail mode."""
         logger.debug("Showing details view.")
         self.keybinding("switcher/detail_start")
-        self.controller.detail_mode.wait_for(True)
+        self.controller.model.detail_selection.wait_for(True)
 
     def hide_details(self):
         """Hide detail mode."""
         logger.debug("Hiding details view.")
         self.keybinding("switcher/detail_stop")
-        self.controller.detail_mode.wait_for(False)
+        self.controller.model.detail_selection.wait_for(False)
 
     def next_detail(self):
         """Move to next detail in the switcher."""
@@ -160,4 +169,4 @@ class SwitcherModel(UnityIntrospectionObject):
 
     @property
     def icons(self):
-        return self.get_children()
+        return self.get_children_by_type(SimpleLauncherIcon)

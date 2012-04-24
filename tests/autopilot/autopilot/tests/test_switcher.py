@@ -10,6 +10,7 @@ import logging
 from testtools.matchers import Equals, NotEquals, Contains, Not
 from time import sleep
 
+from autopilot.matchers import Eventually
 from autopilot.emulators.unity.switcher import SwitcherMode
 from autopilot.tests import AutopilotTestCase
 
@@ -67,7 +68,7 @@ class SwitcherTests(AutopilotTestCase):
         self.addCleanup(self.switcher.terminate)
 
         start = self.switcher.selection_index
-        self.switcher.next_icon_mouse()
+        self.switcher.next_via_mouse()
 
         end = self.switcher.selection_index
         self.assertThat(start, NotEquals(0))
@@ -82,9 +83,9 @@ class SwitcherTests(AutopilotTestCase):
         self.addCleanup(self.switcher.terminate)
 
         start = self.switcher.selection_index
-        self.switcher.previous_icon_mouse()
+        self.switcher.previous_via_mouse()
 
-        end = self.switcher.get_selection_index()
+        end = self.switcher.selection_index
         self.assertThat(start, NotEquals(0))
         self.assertThat(end, Equals(start - 1))
 
@@ -98,11 +99,11 @@ class SwitcherTests(AutopilotTestCase):
 
         # Quickly repeatead events should be ignored (except the first)
         start = self.switcher.selection_index
-        self.switcher.next_icon_mouse()
-        self.switcher.next_icon_mouse()
-        self.switcher.next_icon_mouse()
+        self.switcher.next_via_mouse()
+        self.switcher.next_via_mouse()
+        self.switcher.next_via_mouse()
 
-        end = self.switcher.model.get_selection_index
+        end = self.switcher.selection_index
         self.assertThat(start, NotEquals(0))
         self.assertThat(end, Equals(start + 1))
 
@@ -116,9 +117,9 @@ class SwitcherTests(AutopilotTestCase):
 
         # Quickly repeatead events should be ignored (except the first)
         start = self.switcher.selection_index
-        self.switcher.previous_icon_mouse()
-        self.switcher.previous_icon_mouse()
-        self.switcher.previous_icon_mouse()
+        self.switcher.previous_via_mouse()
+        self.switcher.previous_via_mouse()
+        self.switcher.previous_via_mouse()
 
         end = self.switcher.selection_index
         self.assertThat(end, Equals(start - 1))
@@ -127,21 +128,22 @@ class SwitcherTests(AutopilotTestCase):
         self.set_timeout_setting(False)
 
         # FIXME - this was removed because it's dumb.
-        self.switcher.initiate_right_arrow()
-        self.addCleanup(self.switcher.terminate)
-
-        self.assertThat(self.switcher.controller.visible, Equals(False))
+        #self.switcher.initiate_right_arrow()
+        self.keyboard.press('Alt')
+        self.addCleanup(self.keyboard.release, 'Alt')
+        self.keyboard.press_and_release('Right')
+        self.assertThat(self.switcher.visible, Equals(False))
 
     def test_lazy_switcher_initiate(self):
         self.set_timeout_setting(False)
 
         self.keybinding_hold("switcher/reveal_normal")
         self.addCleanup(self.keybinding_release, "switcher/reveal_normal")
-        self.assertThat(self.switcher.controller.visible, Eventually(Equals(False)))
+        self.assertThat(self.switcher.visible, Eventually(Equals(False)))
 
         self.keybinding_tap("switcher/reveal_normal")
         self.addCleanup(self.keybinding, "switcher/cancel")
-        self.assertThat(self.switcher.controller.visible, Eventually(Equals(True)))
+        self.assertThat(self.switcher.visible, Eventually(Equals(True)))
 
     def test_switcher_cancel(self):
         self.set_timeout_setting(False)
@@ -149,21 +151,21 @@ class SwitcherTests(AutopilotTestCase):
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
 
-        self.assertThat(self.switcher.controller.visible, Equals(True))
+        self.assertThat(self.switcher.visible, Equals(True))
 
         self.switcher.cancel()
-        self.assertThat(self.switcher.controller.visible, Equals(False))
+        self.assertThat(self.switcher.visible, Equals(False))
 
     def test_lazy_switcher_cancel(self):
         self.set_timeout_setting(False)
 
         self.keybinding_hold("switcher/reveal_normal")
         self.addCleanup(self.keybinding_release, "switcher/reveal_normal")
-        self.assertThat(self.switcher.controller.visible, Eventually(Equals(False)))
+        self.assertThat(self.switcher.visible, Eventually(Equals(False)))
         self.keybinding_tap("switcher/reveal_normal")
-        self.assertThat(self.switcher.controller.visible, Eventually(Equals(True)))
+        self.assertThat(self.switcher.visible, Eventually(Equals(True)))
         self.switcher.cancel()
-        self.assertThat(self.switcher.controller.visible, Eventually(Equals(False)))
+        self.assertThat(self.switcher.visible, Eventually(Equals(False)))
 
     def test_switcher_appears_on_monitor_with_focused_window(self):
         num_monitors = self.screen_geo.get_num_monitors()
@@ -205,22 +207,25 @@ class SwitcherWindowsManagementTests(AutopilotTestCase):
         # and we are just waiting on a second window, however a defined sleep
         # here is likely to be problematic.
         # TODO: fix bamf emulator to enable waiting for new windows.
-        sleep(1)
+        sleep(4)
         [mah_win2] = [w for w in mahj.get_windows() if w.x_id != mah_win1.x_id]
         self.assertTrue(mah_win2.is_focused)
 
         self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
 
         self.keybinding("switcher/reveal_normal")
-        self.assertThat(calc_win.is_focused, Eventually(Equals(True)))
+        sleep(1)
+        self.assertThat(calc_win.is_focused, Equals(True))
         self.assertVisibleWindowStack([calc_win, mah_win2, mah_win1])
 
         self.keybinding("switcher/reveal_normal")
-        self.assertThat(mah_win2.is_focused, Eventually(Equals(True)))
+        sleep(1)
+        self.assertThat(mah_win2.is_focused, Equals(True))
         self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
 
         self.keybinding("window/close")
-        self.assertThat(calc_win.is_focused, Eventually(Equals(True)))
+        sleep(1)
+        self.assertThat(calc_win.is_focused, Equals(True))
         self.assertVisibleWindowStack([calc_win, mah_win1])
 
 
@@ -234,7 +239,7 @@ class SwitcherDetailsTests(AutopilotTestCase):
 
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
-        self.assertThat(self.switcher.get_is_in_details_mode(), Equals(False))
+        self.assertThat(self.switcher.mode, Equals(SwitcherMode.NORMAL))
 
     def test_details_mode_on_delay(self):
         self.close_all_app('Character Map')
@@ -253,7 +258,7 @@ class SwitcherDetailsTests(AutopilotTestCase):
         self.addCleanup(self.switcher.terminate)
         # Wait longer than details mode.
         sleep(3)
-        self.assertTrue(self.switcher.get_is_in_details_mode())
+        self.assertThat(self.switcher.mode, Equals(SwitcherMode.DETAIL))
 
     def test_no_details_for_apps_on_different_workspace(self):
         # Re bug: 933406
@@ -274,7 +279,7 @@ class SwitcherDetailsTests(AutopilotTestCase):
         self.addCleanup(self.switcher.terminate)
         # Wait longer than details mode.
         sleep(3)
-        self.assertFalse(self.switcher.get_is_in_details_mode())
+        self.assertThat(self.switcher.mode, Equals(SwitcherMode.NORMAL))
 
 
 class SwitcherDetailsModeTests(AutopilotTestCase):
@@ -295,7 +300,7 @@ class SwitcherDetailsModeTests(AutopilotTestCase):
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
         self.keyboard.press_and_release(self.initiate_keycode)
-        self.assertThat(self.switcher.get_is_in_details_mode(), Equals(True))
+        self.assertThat(self.switcher.mode, Equals(SwitcherMode.DETAIL))
 
     def test_tab_from_last_detail_works(self):
         """Pressing tab while showing last switcher item in details mode
@@ -305,12 +310,12 @@ class SwitcherDetailsModeTests(AutopilotTestCase):
         self.start_app("Character Map")
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
-        while self.switcher.get_selection_index() < self.switcher.get_model_size() -1:
+        while self.switcher.selection_index < len(self.switcher.icons) -1:
             self.switcher.next_icon()
         self.keyboard.press_and_release(self.initiate_keycode)
         sleep(0.5)
         self.switcher.next_icon()
-        self.assertThat(self.switcher.get_selection_index(), Equals(0))
+        self.assertThat(self.switcher.selection_index, Equals(0))
 
 
 class SwitcherWorkspaceTests(AutopilotTestCase):
@@ -331,7 +336,7 @@ class SwitcherWorkspaceTests(AutopilotTestCase):
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
 
-        icon_names = [i.tooltip_text for i in self.switcher.get_switcher_icons()]
+        icon_names = [i.tooltip_text for i in self.switcher.icons]
         self.assertThat(icon_names, Contains(char_map.name))
         self.assertThat(icon_names, Not(Contains(calc.name)))
 
@@ -347,10 +352,10 @@ class SwitcherWorkspaceTests(AutopilotTestCase):
         char_map = self.start_app("Character Map")
         sleep(1)
 
-        self.switcher.initiate_all_mode()
+        self.switcher.initiate(SwitcherMode.ALL)
         self.addCleanup(self.switcher.terminate)
 
-        icon_names = [i.tooltip_text for i in self.switcher.get_switcher_icons()]
+        icon_names = [i.tooltip_text for i in self.switcher.icons]
         self.assertThat(icon_names, Contains(calc.name))
         self.assertThat(icon_names, Contains(char_map.name))
 
