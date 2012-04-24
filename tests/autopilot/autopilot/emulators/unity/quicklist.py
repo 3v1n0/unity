@@ -40,6 +40,10 @@ class Quicklist(UnityIntrospectionObject):
 
         return matches[0] if matches else None
 
+    def get_quicklist_application_item(self, application_name):
+        """Returns the QuicklistMenuItemLabel for the given application_name"""
+        return self.get_quicklist_item_by_text("<b>"+application_name+"</b>")
+
     def click_item(self, item):
         """Click one of the quicklist items."""
         if not isinstance(item, QuicklistMenuItem):
