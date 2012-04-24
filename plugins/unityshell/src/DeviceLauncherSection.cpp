@@ -25,55 +25,32 @@ namespace launcher
 
 DeviceLauncherSection::DeviceLauncherSection()
   : monitor_(g_volume_monitor_get())
-{  
-  on_volume_added_handler_id_ = g_signal_connect(monitor_,
-                                                 "volume-added",
-                                                 G_CALLBACK(&DeviceLauncherSection::OnVolumeAdded),
-                                                 this);
+{
+  typedef glib::Signal<void, GVolumeMonitor*, GVolume*> VolumeSignal;
+  sig_manager_.Add(new VolumeSignal(monitor_, "volume-added", sigc::mem_fun(this, &DeviceLauncherSection::OnVolumeAdded)));
+  sig_manager_.Add(new VolumeSignal(monitor_, "volume-removed", sigc::mem_fun(this, &DeviceLauncherSection::OnVolumeRemoved)));
 
-  on_volume_removed_handler_id_ = g_signal_connect(monitor_,
-                                                   "volume-removed",
-                                                   G_CALLBACK(&DeviceLauncherSection::OnVolumeRemoved),
-                                                   this);
-    
-  on_mount_added_handler_id_ = g_signal_connect(monitor_,
-                                                "mount-added",
-                                                G_CALLBACK(&DeviceLauncherSection::OnMountAdded),
-                                                this);
-                                                
-  on_mount_pre_unmount_handler_id_ = g_signal_connect(monitor_,
-                                                      "mount-pre-unmount",
-                                                      G_CALLBACK(&DeviceLauncherSection::OnMountPreUnmount),
-                                                      this);
+  typedef glib::Signal<void, GVolumeMonitor*, GMount*> MountSignal;
+  sig_manager_.Add(new MountSignal(monitor_, "mount-added", sigc::mem_fun(this, &DeviceLauncherSection::OnMountAdded)));
+  sig_manager_.Add(new MountSignal(monitor_, "mount-pre-unmount", sigc::mem_fun(this, &DeviceLauncherSection::OnMountPreUnmount)));
 
-  on_device_populate_entry_id_ = g_idle_add((GSourceFunc)&DeviceLauncherSection::PopulateEntries, this);
+  on_device_populate_entry_id_ = g_idle_add([] (gpointer data) {
+    auto self = static_cast<DeviceLauncherSection*>(data);
+    self->PopulateEntries();
+    self->on_device_populate_entry_id_ = 0;
+    return FALSE;
+    }, this);
 }
 
 DeviceLauncherSection::~DeviceLauncherSection()
 {
-  if (on_volume_added_handler_id_)
-    g_signal_handler_disconnect((gpointer) monitor_,
-                                on_volume_added_handler_id_);
-
-  if (on_volume_removed_handler_id_)
-    g_signal_handler_disconnect((gpointer) monitor_,
-                                on_volume_removed_handler_id_);
-
-  if (on_mount_added_handler_id_)
-    g_signal_handler_disconnect((gpointer) monitor_,
-                                on_mount_added_handler_id_);
-
-  if (on_mount_pre_unmount_handler_id_)
-    g_signal_handler_disconnect((gpointer) monitor_,
-                                on_mount_pre_unmount_handler_id_);
-
   if (on_device_populate_entry_id_)
     g_source_remove(on_device_populate_entry_id_);
 }
 
-bool DeviceLauncherSection::PopulateEntries(DeviceLauncherSection* self)
+void DeviceLauncherSection::PopulateEntries()
 {
-  GList* volumes = g_volume_monitor_get_volumes(self->monitor_);
+  GList* volumes = g_volume_monitor_get_volumes(monitor_);
 
   for (GList* v = volumes; v; v = v->next)
   {
@@ -85,73 +62,63 @@ bool DeviceLauncherSection::PopulateEntries(DeviceLauncherSection* self)
     glib::Object<GVolume> volume(G_VOLUME(v->data));
     DeviceLauncherIcon* icon = new DeviceLauncherIcon(volume);
 
-    self->map_[volume] = icon;
-    self->IconAdded.emit(AbstractLauncherIcon::Ptr(icon));
+    map_[volume] = icon;
+    IconAdded.emit(AbstractLauncherIcon::Ptr(icon));
   }
 
   g_list_free(volumes);
-  self->on_device_populate_entry_id_ = 0;
-  
-  return false;
 }
 
 /* Uses a std::map to track all the volume icons shown and not shown.
  * Keep in mind: when "volume-removed" is recevied we should erase
  * the pair (GVolume - DeviceLauncherIcon) from the std::map to avoid leaks
  */
-void DeviceLauncherSection::OnVolumeAdded(GVolumeMonitor* monitor,
-                                          GVolume* volume,
-                                          DeviceLauncherSection* self)
+void DeviceLauncherSection::OnVolumeAdded(GVolumeMonitor* monitor, GVolume* volume)
 {
   // This just wraps the volume in a glib::Object, global ref_count is only
   // temporary changed.
   glib::Object<GVolume> gvolume(volume, glib::AddRef());
   DeviceLauncherIcon* icon = new DeviceLauncherIcon(gvolume);
 
-  self->map_[gvolume] = icon;
-  self->IconAdded.emit(AbstractLauncherIcon::Ptr(icon));
+  map_[gvolume] = icon;
+  IconAdded.emit(AbstractLauncherIcon::Ptr(icon));
 }
 
-void DeviceLauncherSection::OnVolumeRemoved(GVolumeMonitor* monitor,
-                                            GVolume* volume,
-                                            DeviceLauncherSection* self)
+void DeviceLauncherSection::OnVolumeRemoved(GVolumeMonitor* monitor, GVolume* volume)
 {
+  auto volume_it = map_.find(volume);
+
   // It should not happen! Let me do the check anyway.
-  auto volume_it = self->map_.find(volume);
-  if (volume_it != self->map_.end())
+  if (volume_it != map_.end())
   {
     volume_it->second->OnRemoved();
-    self->map_.erase(volume_it);
+    map_.erase(volume_it);
   }
 }
 
 /* Keep in mind: we could have a GMount without a related GVolume
  * so check everything to avoid unwanted behaviors.
  */
-void DeviceLauncherSection::OnMountAdded(GVolumeMonitor* monitor,
-                                         GMount* mount,
-                                         DeviceLauncherSection* self)
+void DeviceLauncherSection::OnMountAdded(GVolumeMonitor* monitor, GMount* mount)
 {
   glib::Object<GVolume> volume(g_mount_get_volume(mount));
 
-  auto volume_it = self->map_.find(volume);
+  auto volume_it = map_.find(volume);
 
-  if (volume_it != self->map_.end())
+  if (volume_it != map_.end())
     volume_it->second->UpdateVisibility(1);
 }
 
 /* We don't use "mount-removed" signal since it is received after "volume-removed"
  * signal. You should read also the comment above.
  */
-void DeviceLauncherSection::OnMountPreUnmount(GVolumeMonitor* monitor,
-                                              GMount* mount,
-                                              DeviceLauncherSection* self)
+void DeviceLauncherSection::OnMountPreUnmount(GVolumeMonitor* monitor, GMount* mount)
 {
   glib::Object<GVolume> volume(g_mount_get_volume(mount));
 
-  auto volume_it = self->map_.find(volume);
+  auto volume_it = map_.find(volume);
 
-  if (volume_it != self->map_.end())
+  if (volume_it != map_.end())
     volume_it->second->UpdateVisibility(0);
 }
 

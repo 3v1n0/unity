@@ -25,6 +25,7 @@
 #include <sigc++/sigc++.h>
 #include <sigc++/signal.h>
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/GLibSignal.h>
 
 #include "DeviceLauncherIcon.h"
 
@@ -45,31 +46,17 @@ public:
   sigc::signal<void, AbstractLauncherIcon::Ptr> IconAdded;
 
 private:
-  static bool PopulateEntries(DeviceLauncherSection* self);
-  
-  static void OnVolumeAdded(GVolumeMonitor* monitor,
-                            GVolume* volume,
-                            DeviceLauncherSection* self);
+  void PopulateEntries();
 
-  static void OnVolumeRemoved(GVolumeMonitor* monitor,
-                              GVolume* volume,
-                              DeviceLauncherSection* self);
-
-  static void OnMountAdded(GVolumeMonitor* monitor,
-                           GMount* mount,
-                           DeviceLauncherSection* self);
-
-  static void OnMountPreUnmount(GVolumeMonitor* monitor,
-                                GMount* mount,
-                                DeviceLauncherSection* self);
+  void OnVolumeAdded(GVolumeMonitor* monitor, GVolume* volume);
+  void OnVolumeRemoved(GVolumeMonitor* monitor, GVolume* volume);
+  void OnMountAdded(GVolumeMonitor* monitor, GMount* mount);
+  void OnMountPreUnmount(GVolumeMonitor* monitor, GMount* mount);
 
 private:
+  glib::SignalManager sig_manager_;
   glib::Object<GVolumeMonitor> monitor_;
   std::map<GVolume*, DeviceLauncherIcon*> map_;
-  gulong on_volume_added_handler_id_;
-  gulong on_volume_removed_handler_id_;
-  gulong on_mount_added_handler_id_;
-  gulong on_mount_pre_unmount_handler_id_;
   gulong on_device_populate_entry_id_;
 };
 
