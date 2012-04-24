@@ -1040,7 +1040,8 @@ void UnityScreen::leaveShowDesktopMode (CompWindow *w)
 void UnityWindow::enterShowDesktop ()
 {
   if (!mShowdesktopHandler)
-    mShowdesktopHandler = new ShowdesktopHandler (static_cast <ShowdesktopHandlerWindowInterface *> (this));
+    mShowdesktopHandler = new ShowdesktopHandler (static_cast <ShowdesktopHandlerWindowInterface *> (this),
+                                                  static_cast <compiz::WindowInputRemoverLockAcquireInterface *> (this));
 
   window->setShowDesktopMode (true);
   mShowdesktopHandler->FadeOut ();
@@ -1174,10 +1175,15 @@ void UnityWindow::DoDeleteHandler ()
   window->updateFrameRegion ();
 }
 
-compiz::WindowInputRemoverInterface::Ptr
+compiz::WindowInputRemoverLock::Ptr
 UnityWindow::GetInputRemover ()
 {
-  return compiz::WindowInputRemoverInterface::Ptr (new compiz::WindowInputRemover (screen->dpy (), window->id ()));
+  if (!input_remover_.expired ())
+    return input_remover_.lock ();
+
+  compiz::WindowInputRemoverLock::Ptr ret (new compiz::WindowInputRemoverLock (new compiz::WindowInputRemover (screen->dpy (), window->id ())));
+  input_remover_ = ret;
+  return ret;
 }
 
 unsigned int
@@ -2284,7 +2290,7 @@ UnityWindow::minimize ()
 
   if (!mMinimizeHandler)
   {
-    mMinimizeHandler.reset (new UnityMinimizedHandler (window));
+    mMinimizeHandler.reset (new UnityMinimizedHandler (window, this));
     mMinimizeHandler->minimize ();
   }
 }

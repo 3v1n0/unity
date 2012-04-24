@@ -71,8 +71,6 @@ class ShowdesktopHandlerWindowInterface
 
     unsigned int NoCoreInstanceMask () { return GetNoCoreInstanceMask (); }
 
-    compiz::WindowInputRemoverInterface::Ptr InputRemover () { return GetInputRemover (); }
-
   private:
 
     virtual void DoEnableFocus () = 0;
@@ -104,15 +102,13 @@ class ShowdesktopHandlerWindowInterface
     virtual void DoDeleteHandler () = 0;
 
     virtual unsigned int GetNoCoreInstanceMask () = 0;
-
-    virtual compiz::WindowInputRemoverInterface::Ptr GetInputRemover () = 0;
 };
 
 class ShowdesktopHandler
 {
  public:
 
-  ShowdesktopHandler (ShowdesktopHandlerWindowInterface *uwi);
+  ShowdesktopHandler (ShowdesktopHandlerWindowInterface *uwi, compiz::WindowInputRemoverLockAcquireInterface *lock_acquire_interface);
   ~ShowdesktopHandler ();
 
   typedef enum {
@@ -145,7 +141,8 @@ public:
 private:
 
   ShowdesktopHandlerWindowInterface *showdesktop_handler_window_interface_;
-  compiz::WindowInputRemoverInterface::Ptr remover_;
+  compiz::WindowInputRemoverLockAcquireInterface *lock_acquire_interface_;
+  compiz::WindowInputRemoverLock::Ptr remover_;
   ShowdesktopHandler::State         state_;
   float                                  progress_;
   bool                                   was_hidden_;
