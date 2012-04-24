@@ -470,7 +470,7 @@ Drag file to launcher icons
 ---------------------------
 Setup:
 #. Add the Firefox icon to the launcher.
-#. Create an html on the desktop.
+#. Create an html file on the desktop.
 #. Create an empty folder on the desktop.
 
 Actions:

@@ -1124,9 +1124,8 @@ bool BamfLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
     {
       if (g_content_type_is_a(type.c_str(), supported_type.c_str()))
       {
-        if (dnd_data.UrisByType(type).size() > 0)
+        if (!dnd_data.UrisByType(type).emtpy())
           return true;
-
       }
     }
   }
