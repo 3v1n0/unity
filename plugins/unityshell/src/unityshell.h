@@ -250,7 +250,7 @@ private:
   switcher::Controller::Ptr switcher_controller_;
   hud::Controller::Ptr      hud_controller_;
   shortcut::Controller::Ptr shortcut_controller_;
-  unity::debug::DebugDBusInterface      debugger_;
+  debug::DebugDBusInterface  debugger_;
 
   std::list<shortcut::AbstractHint::Ptr> hints_;
   bool enable_shortcut_overlay_;
@@ -283,7 +283,7 @@ private:
 
   nux::Property<nux::Geometry> primary_monitor_;
 
-  unity::BGHash _bghash;
+  BGHash _bghash;
 
 #ifdef USE_GLES
   ::GLFramebufferObject *oldFbo;
