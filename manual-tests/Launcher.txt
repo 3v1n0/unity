@@ -465,3 +465,24 @@ Expected Result:
 The numbers [1-9] should be displayed overlaid on the icons. 
 "Keyboard Shortcut" menu should appear as well.
 
+
+Test Launcher raises focused non-top windows
+--------------------------------------------
+This tests shows how the focused windows should be raised to the top of the
+stack, when another non-active window is over them.
+
+Actions:
+ * Open GIMP
+ * Open a terminal Window
+ * From the terminal window run the command "gimp foo-image.png"
+
+Expected Results:
+ * A gimp dialog will be raised (so the terminal window is below it), but not focused
+ * Terminal launcher icon must have a filled-in arrow on the right of the icon
+
+Actions:
+ * Click on the launcher terminal icon
+
+Expected Results:
+ * Terminal window will be raised to the top of the stack (over the GIMP window)
+ 
