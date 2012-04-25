@@ -467,22 +467,12 @@ void Controller::OnActivateRequest(GVariant* variant)
 
 void Controller::OnSearchChanged(std::string search_string)
 {
-  //FIXME!! - when the service is smart enough to not fall over if you send many requests, this should be removed
+  // we're using live_search_reached, so this is called 40ms after the text
+  // is input in the search bar
   LOG_DEBUG(logger) << "Search Changed";
-  auto on_search_changed_timeout_lambda = [] (gpointer data) -> gboolean {
-    Controller* self = static_cast<Controller*>(data);
-    self->hud_service_.RequestQuery(self->last_search_);
-    self->type_wait_handle_ = 0;
-    return FALSE;
-  };
-  
+
   last_search_ = search_string;
-  
-  if (type_wait_handle_)
-  {
-    g_source_remove(type_wait_handle_);
-  }  
-  type_wait_handle_ = g_timeout_add(100, on_search_changed_timeout_lambda, this);
+  hud_service_.RequestQuery(last_search_);
 }
 
 void Controller::OnSearchActivated(std::string search_string)
@@ -520,6 +510,7 @@ void Controller::OnQueriesFinished(Hud::Queries queries)
   }
 
   SetIcon(icon_name);
+  view_->SearchFinished();
 }
 
 // Introspectable

@@ -371,7 +371,7 @@ void View::SetupViews()
       search_bar_->SetMinimumHeight(style.GetSearchBarHeight());
       search_bar_->SetMaximumHeight(style.GetSearchBarHeight());
       search_bar_->search_hint = _("Type your command");
-      search_bar_->search_changed.connect(sigc::mem_fun(this, &View::OnSearchChanged));
+      search_bar_->live_search_reached.connect(sigc::mem_fun(this, &View::OnSearchChanged));
       AddChild(search_bar_.GetPointer());
       content_layout_->AddView(search_bar_.GetPointer(), 0, nux::MINOR_POSITION_LEFT);
 
@@ -392,14 +392,6 @@ void View::OnSearchChanged(std::string const& search_string)
 {
   LOG_DEBUG(logger) << "got search change";
   search_changed.emit(search_string);
-  if (search_string.empty())
-  {
-    search_bar_->search_hint = _("Type your command");
-  }
-  else
-  {
-    search_bar_->search_hint = "";
-  }
 
   std::list<HudButton::Ptr>::iterator it;
   for(it = buttons_.begin(); it != buttons_.end(); ++it)
@@ -511,11 +503,15 @@ bool View::InspectKeyEvent(unsigned int eventType,
     else
     {
       search_bar_->search_string = "";
-      search_bar_->search_hint = _("Type your command");
     }
     return true;
   }
   return false;
+}
+
+void View::SearchFinished()
+{
+  search_bar_->SearchFinished();
 }
 
 void View::OnSearchbarActivated()
@@ -581,13 +577,11 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
 
     if (search_bar_->search_string == "")
     {
-      search_bar_->search_hint = _("Type your command");
       ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
     }
     else
     {
       search_bar_->search_string = "";
-      search_bar_->search_hint = _("Type your command");
       return search_bar_->text_entry();
     }
     return NULL;
