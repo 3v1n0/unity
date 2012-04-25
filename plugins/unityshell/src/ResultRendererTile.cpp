@@ -323,7 +323,6 @@ nux::BaseTexture* ResultRendererTile::CreateTextureCallback(std::string const& t
       pixbuf_width = style.GetTileWidth() - (padding * 2);
       pixbuf_height = pixbuf_width * aspect;
 
-
       if (pixbuf_height > height)
       {
         // scaled too big, scale down
@@ -337,13 +336,19 @@ nux::BaseTexture* ResultRendererTile::CreateTextureCallback(std::string const& t
       pixbuf_width = pixbuf_height / aspect;
     }
 
+    if (gdk_pixbuf_get_height(pixbuf) == pixbuf_height)
+    {
+      // we changed our mind, fast path is good
+      return nux::CreateTexture2DFromPixbuf(pixbuf, true);
+    }
+
     nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, pixbuf_width, pixbuf_height);
     cairo_t* cr = cairo_graphics.GetInternalContext();
 
     cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
     cairo_paint(cr);
 
-    float scale = gdk_pixbuf_get_height(pixbuf) / float(pixbuf_height);
+    float scale = float(pixbuf_height) / gdk_pixbuf_get_height(pixbuf);
 
     //cairo_translate(cr,
     //                static_cast<int>((width - (pixbuf_width * scale)) * 0.5),
