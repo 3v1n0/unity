@@ -18,6 +18,8 @@
  *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
+#include <boost/algorithm/string.hpp>
+
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 
@@ -1069,31 +1071,12 @@ std::string BamfLauncherIcon::GetRemoteUri()
   return _remote_uri;
 }
 
-std::set<std::string> BamfLauncherIcon::ValidateUrisForLaunch(unity::DndData& uris)
+std::set<std::string> BamfLauncherIcon::ValidateUrisForLaunch(DndData const& uris)
 {
   std::set<std::string> result;
-  gboolean is_home_launcher = g_str_has_suffix(DesktopFile().c_str(), "nautilus-home.desktop");
 
-  if (is_home_launcher)
-  {
-    for (auto k : uris.Uris())
-      result.insert(k);
-    return result;
-  }
-
-  for (auto i : uris.Types())
-  {
-    for (auto j : GetSupportedTypes())
-    {
-      if (g_content_type_is_a(i.c_str(), j.c_str()))
-      {
-        for (auto k : uris.UrisByType(i))
-          result.insert(k);
-
-        break;
-      }
-    }
-  }
+  for (auto uri : uris.Uris())
+    result.insert(uri);
 
   return result;
 }
@@ -1125,12 +1108,37 @@ void BamfLauncherIcon::OnDndLeave()
   _dnd_hover_timer = 0;
 }
 
-nux::DndAction BamfLauncherIcon::OnQueryAcceptDrop(unity::DndData& dnd_data)
+bool BamfLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
+{
+  bool is_home_launcher = boost::algorithm::ends_with(DesktopFile(), "nautilus-home.desktop") ||
+                          boost::algorithm::ends_with(DesktopFile(), "nautilus.desktop");
+
+  if (is_home_launcher)
+  {
+    return true;
+  }
+
+  for (auto type : dnd_data.Types())
+  {
+    for (auto supported_type : GetSupportedTypes())
+    {
+      if (g_content_type_is_a(type.c_str(), supported_type.c_str()))
+      {
+        if (!dnd_data.UrisByType(type).empty())
+          return true;
+      }
+    }
+  }
+
+  return false; 
+}
+
+nux::DndAction BamfLauncherIcon::OnQueryAcceptDrop(DndData const& dnd_data)
 {
   return ValidateUrisForLaunch(dnd_data).empty() ? nux::DNDACTION_NONE : nux::DNDACTION_COPY;
 }
 
-void BamfLauncherIcon::OnAcceptDrop(unity::DndData& dnd_data)
+void BamfLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
 {
   OpenInstanceWithUris(ValidateUrisForLaunch(dnd_data));
 }

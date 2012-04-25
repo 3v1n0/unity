@@ -2666,9 +2666,6 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
     break;
   }
 
-  if (!_dnd_data.Uris().size())
-    return;
-
   _hide_machine->SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, true);
 
   if (IsOverlayOpen())
@@ -2687,7 +2684,7 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
   {
     for (auto it : *_model)
     {
-      if (it->QueryAcceptDrop(_dnd_data) != nux::DNDACTION_NONE)
+      if (it->ShouldHighlightOnDrag(_dnd_data))
         it->SetQuirk(AbstractLauncherIcon::QUIRK_DROP_PRELIGHT, true);
       else
         it->SetQuirk(AbstractLauncherIcon::QUIRK_DROP_DIM, true);

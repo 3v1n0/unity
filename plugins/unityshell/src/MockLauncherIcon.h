@@ -257,12 +257,17 @@ public:
     return std::list<DbusmenuMenuitem*> ();
   }
 
-  nux::DndAction QueryAcceptDrop(unity::DndData& dnd_data)
+  nux::DndAction QueryAcceptDrop(DndData const& dnd_data)
   {
     return nux::DNDACTION_NONE;
   }
 
-  void AcceptDrop(unity::DndData& dnd_data) {}
+  bool ShouldHighlightOnDrag(DndData const& dnd_data)
+  {
+    return false;
+  }
+
+  void AcceptDrop(DndData const& dnd_data) {}
 
   void SendDndEnter() {}
 
