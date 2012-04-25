@@ -286,7 +286,7 @@ void ResultViewGrid::SizeReallocate()
   }
   else
   {
-    total_height = renderer_->height;
+    total_height = renderer_->height + vertical_spacing;
   }
 
   int width = (items_per_row * renderer_->width) + (padding*2) + ((items_per_row - 1) * horizontal_spacing);
