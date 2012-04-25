@@ -217,7 +217,6 @@ class WindowManagerDummy : public WindowManager
 
   void AddProperties(GVariantBuilder* builder)
   {
-    g_debug("%s", G_STRFUNC);
   }
 };
 
