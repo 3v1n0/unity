@@ -69,7 +69,7 @@ class SoftwareCenterLauncherIcon(BamfLauncherIcon):
     """Represents a launcher icon of a Software Center app."""
 
 
-class HudEmbeddedIcon(SimpleLauncherIcon):
+class HudEmbeddedIcon(UnityIntrospectionObject):
     """Proxy object for the hud embedded icon child of the view."""
 
     @property

@@ -213,7 +213,7 @@ void ResultViewGrid::DoLazyLoad()
 
 int ResultViewGrid::GetItemsPerRow()
 {
-  int items_per_row = (GetGeometry().width - (padding * 2)) / (renderer_->width + horizontal_spacing);
+  int items_per_row = (GetGeometry().width - (padding * 2) + horizontal_spacing) / (renderer_->width + horizontal_spacing);
   return (items_per_row) ? items_per_row : 1; // always at least one item per row
 }
 
@@ -286,7 +286,7 @@ void ResultViewGrid::SizeReallocate()
   }
   else
   {
-    total_height = renderer_->height;
+    total_height = renderer_->height + vertical_spacing;
   }
 
   int width = (items_per_row * renderer_->width) + (padding*2) + ((items_per_row - 1) * horizontal_spacing);

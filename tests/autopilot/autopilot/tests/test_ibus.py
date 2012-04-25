@@ -48,13 +48,13 @@ class IBusTests(AutopilotTestCase):
     def activate_ibus(self, widget):
         """Activate IBus, and wait till it's actived on 'widget'"""
         self.assertThat(widget.im_active, Equals(False))
-        self.keyboard.press_and_release('Ctrl+Space')
+        self.keyboard.press_and_release('Ctrl+Space', 0.05)
         self.assertThat(widget.im_active, Eventually(Equals(True)))
 
     def deactivate_ibus(self, widget):
         """Deactivate ibus, and wait till it's inactive on 'widget'"""
         self.assertThat(widget.im_active, Equals(True))
-        self.keyboard.press_and_release('Ctrl+Space')
+        self.keyboard.press_and_release('Ctrl+Space', 0.05)
         self.assertThat(widget.im_active, Eventually(Equals(False)))
 
     def do_dash_test_with_engine(self):

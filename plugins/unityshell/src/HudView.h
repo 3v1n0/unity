@@ -53,8 +53,9 @@ public:
   nux::View* default_focus() const;
 
   void SetQueries(Hud::Queries queries);
-  void SetIcon(std::string icon_name);
+  void SetIcon(std::string icon_name, unsigned int tile_size, unsigned int size, unsigned int padding);
   void ShowEmbeddedIcon(bool show);
+  void SearchFinished();
 
   void AboutToShow();
   void AboutToHide();
@@ -123,4 +124,3 @@ private:
 }
 }
 #endif
-

@@ -107,10 +107,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , screen(screen)
   , cScreen(CompositeScreen::get(screen))
   , gScreen(GLScreen::get(screen))
+  , debugger_(this)
   , enable_shortcut_overlay_(true)
-  , wt(nullptr)
-  , panelWindow(nullptr)
-  , debugger(nullptr)
   , needsRelayout(false)
   , _in_paint(false)
   , relayoutSourceId(0)
@@ -224,20 +222,20 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      nux::NuxInitialize(0);
 #ifndef USE_GLES
-     wt = nux::CreateFromForeignWindow(cScreen->output(),
-				       glXGetCurrentContext(),
-				       &UnityScreen::initUnity,
-				       this);
+     wt.reset(nux::CreateFromForeignWindow(cScreen->output(),
+                                           glXGetCurrentContext(),
+                                           &UnityScreen::initUnity,
+                                           this));
 #else
-     wt = nux::CreateFromForeignWindow(cScreen->output(),
-				       eglGetCurrentContext(),
-				       &UnityScreen::initUnity,
-				       this);
+     wt.reset(nux::CreateFromForeignWindow(cScreen->output(),
+                                           eglGetCurrentContext(),
+                                           &UnityScreen::initUnity,
+                                           this));
 #endif
 
      wt->RedrawRequested.connect(sigc::mem_fun(this, &UnityScreen::onRedrawRequested));
 
-     unity_a11y_init(wt);
+     unity_a11y_init(wt.get());
 
      /* i18n init */
      bindtextdomain(GETTEXT_PACKAGE, LOCALE_DIR);
@@ -245,8 +243,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      wt->Run(NULL);
      uScreen = this;
-
-     debugger = new unity::debug::DebugDBusInterface(this, this->screen);
 
      _in_paint = false;
 
@@ -402,9 +398,7 @@ UnityScreen::~UnityScreen()
 
   ::unity::ui::IconRenderer::DestroyTextures();
   QuicklistManager::Destroy();
-  // We need to delete the launchers before the window thread.
-  launcher_controller_.reset();
-  delete wt;
+
   reset_glib_logging();
 }
 
@@ -1040,7 +1034,8 @@ void UnityScreen::leaveShowDesktopMode (CompWindow *w)
 void UnityWindow::enterShowDesktop ()
 {
   if (!mShowdesktopHandler)
-    mShowdesktopHandler = new ShowdesktopHandler (static_cast <ShowdesktopHandlerWindowInterface *> (this));
+    mShowdesktopHandler = new ShowdesktopHandler (static_cast <ShowdesktopHandlerWindowInterface *> (this),
+                                                  static_cast <compiz::WindowInputRemoverLockAcquireInterface *> (this));
 
   window->setShowDesktopMode (true);
   mShowdesktopHandler->FadeOut ();
@@ -1174,10 +1169,15 @@ void UnityWindow::DoDeleteHandler ()
   window->updateFrameRegion ();
 }
 
-compiz::WindowInputRemoverInterface::Ptr
+compiz::WindowInputRemoverLock::Ptr
 UnityWindow::GetInputRemover ()
 {
-  return compiz::WindowInputRemoverInterface::Ptr (new compiz::WindowInputRemover (screen->dpy (), window->id ()));
+  if (!input_remover_.expired ())
+    return input_remover_.lock ();
+
+  compiz::WindowInputRemoverLock::Ptr ret (new compiz::WindowInputRemoverLock (new compiz::WindowInputRemover (screen->dpy (), window->id ())));
+  input_remover_ = ret;
+  return ret;
 }
 
 unsigned int
@@ -1732,7 +1732,7 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
 
   auto results = launcher_controller_->GetAltTabIcons(show_mode == switcher::ShowMode::CURRENT_VIEWPORT);
 
-  if (!(results.size() == 1 && results[0]->GetIconType() == AbstractLauncherIcon::IconType::TYPE_BEGIN))
+  if (!(results.size() == 1 && results[0]->GetIconType() == AbstractLauncherIcon::IconType::TYPE_DESKTOP))
     switcher_controller_->Show(show_mode, switcher::SortMode::FOCUS_ORDER, false, results);
 
   return true;
@@ -2284,7 +2284,7 @@ UnityWindow::minimize ()
 
   if (!mMinimizeHandler)
   {
-    mMinimizeHandler.reset (new UnityMinimizedHandler (window));
+    mMinimizeHandler.reset (new UnityMinimizedHandler (window, this));
     mMinimizeHandler->minimize ();
   }
 }
@@ -2643,9 +2643,12 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       launcher_options->icon_size = optionGetIconSize();
       launcher_options->tile_size = optionGetIconSize() + 6;
 
-      hud_controller_->launcher_width = launcher_controller_->launcher().GetAbsoluteWidth() - 1;
+      hud_controller_->icon_size = launcher_options->icon_size();
+      hud_controller_->tile_size = launcher_options->tile_size();
+
       /* The launcher geometry includes 1px used to draw the right margin
-       * that must not be considered when drawing the dash                    */
+       * that must not be considered when drawing an overlay */
+      hud_controller_->launcher_width = launcher_controller_->launcher().GetAbsoluteWidth() - 1;
       dash_controller_->launcher_width = launcher_controller_->launcher().GetAbsoluteWidth() - 1;
 
       if (p)
@@ -2810,17 +2813,17 @@ void UnityScreen::OnDashRealized ()
 void UnityScreen::initLauncher()
 {
   Timer timer;
-  launcher_controller_.reset(new launcher::Controller(screen->dpy()));
+  launcher_controller_ = std::make_shared<launcher::Controller>(screen->dpy());
   AddChild(launcher_controller_.get());
 
-  switcher_controller_.reset(new switcher::Controller());
+  switcher_controller_ = std::make_shared<switcher::Controller>();
   AddChild(switcher_controller_.get());
 
   LOG_INFO(logger) << "initLauncher-Launcher " << timer.ElapsedSeconds() << "s";
 
   /* Setup panel */
   timer.Reset();
-  panel_controller_.reset(new panel::Controller());
+  panel_controller_ = std::make_shared<panel::Controller>();
   AddChild(panel_controller_.get());
   panel_controller_->SetMenuShowTimings(optionGetMenusFadein(),
                                         optionGetMenusFadeout(),
@@ -2830,20 +2833,22 @@ void UnityScreen::initLauncher()
   LOG_INFO(logger) << "initLauncher-Panel " << timer.ElapsedSeconds() << "s";
 
   /* Setup Places */
-  dash_controller_.reset(new dash::Controller());
+  dash_controller_ = std::make_shared<dash::Controller>();
   dash_controller_->on_realize.connect(sigc::mem_fun(this, &UnityScreen::OnDashRealized));
 
   /* Setup Hud */
-  hud_controller_.reset(new hud::Controller());
+  hud_controller_ = std::make_shared<hud::Controller>();
   auto hide_mode = (unity::launcher::LauncherHideMode) optionGetLauncherHideMode();
   hud_controller_->launcher_locked_out = (hide_mode == unity::launcher::LauncherHideMode::LAUNCHER_HIDE_NEVER);
   hud_controller_->multiple_launchers = (optionGetNumLaunchers() == 0);
+  hud_controller_->icon_size = launcher_controller_->options()->icon_size();
+  hud_controller_->tile_size = launcher_controller_->options()->tile_size();
   AddChild(hud_controller_.get());
   LOG_INFO(logger) << "initLauncher-hud " << timer.ElapsedSeconds() << "s";
 
   // Setup Shortcut Hint
   InitHints();
-  shortcut_controller_.reset(new shortcut::Controller(hints_));
+  shortcut_controller_ = std::make_shared<shortcut::Controller>(hints_);
   AddChild(shortcut_controller_.get());
 
   AddChild(dash_controller_.get());

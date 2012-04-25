@@ -466,6 +466,30 @@ The numbers [1-9] should be displayed overlaid on the icons.
 "Keyboard Shortcut" menu should appear as well.
 
 
+Drag file to launcher icons
+---------------------------
+Setup:
+#. Add the Firefox icon to the launcher.
+#. Create an html file on the desktop.
+#. Create an empty folder on the desktop.
+
+Actions:
+#. Drag the html file.
+#. Drop it into the Firefox icon.
+
+Expected Result:
+The Firefox icon should be highlighted during the drag&drop.
+Firefox should open the html file.
+
+Actions:
+#. Drag the new folder.
+#. Drop it into the Firefox icon.
+
+Expected Result:
+The Firefox icon should *not* be highlighted during the drag&drop.
+Firefox should open the folder in a new Firefox window.
+
+
 Test Launcher raises focused non-top windows
 --------------------------------------------
 This tests shows how the focused windows should be raised to the top of the
