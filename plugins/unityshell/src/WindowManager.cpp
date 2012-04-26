@@ -214,6 +214,10 @@ class WindowManagerDummy : public WindowManager
   {
     g_debug("%s", G_STRFUNC);
   }
+
+  void AddProperties(GVariantBuilder* builder)
+  {
+  }
 };
 
 WindowManager*
@@ -229,6 +233,11 @@ void
 WindowManager::SetDefault(WindowManager* manager)
 {
   window_manager = manager;
+}
+
+std::string WindowManager::GetName() const
+{
+  return "WindowManager";
 }
 
 #define NET_WM_MOVERESIZE_MOVE 8
