@@ -94,11 +94,11 @@ class SwitcherTests(SwitcherTestCase):
         self.switcher.terminate()
 
     def test_switcher_scroll_next_ignores_fast_events(self):
-        """Ensures that smoothing is working correctly for next icon scrolling. 
-        
-        Only the first event in a rapid fire string of events should be acted upon. 
+        """Ensures that smoothing is working correctly for next icon scrolling.
+
+        Only the first event in a rapid fire string of events should be acted upon.
         The rest ignored.
-        
+
         """
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
@@ -112,11 +112,11 @@ class SwitcherTests(SwitcherTestCase):
         self.assertThat(self.switcher.selection_index, Equals(start + 1))
 
     def test_switcher_scroll_prev_ignores_fast_events(self):
-        """Ensures that smoothing is working correctly for previous icon scrolling. 
-        
-        Only the first event in a rapid fire string of events should be acted upon. 
+        """Ensures that smoothing is working correctly for previous icon scrolling.
+
+        Only the first event in a rapid fire string of events should be acted upon.
         The rest ignored.
-        
+
         """
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
@@ -131,7 +131,7 @@ class SwitcherTests(SwitcherTestCase):
 
     def test_switcher_arrow_key_does_not_init(self):
         """Ensure that Alt+Right does not initiate switcher.
-        
+
         Regression test for LP:??????
 
         """
@@ -168,7 +168,7 @@ class SwitcherTests(SwitcherTestCase):
 
     def test_switcher_appears_on_monitor_with_focused_window(self):
         """Tests that the switches appears on the correct monitor.
-        
+
         This is defined as the monitor with a focused window.
 
         """
@@ -189,11 +189,11 @@ class SwitcherWindowsManagementTests(SwitcherTestCase):
 
     def test_switcher_raises_only_last_focused_window(self):
         """Tests that when we do an alt+tab only the previously focused window is raised.
-        
+
         This is tests by opening 2 Calculators and a Mahjongg.
         Then we do a quick alt+tab twice.
         Then we close the currently focused window.
-        
+
         """
         #FIXME: Setup
         # There are a lot of asserts in this test that are just making sure the env. is properly
@@ -268,7 +268,7 @@ class SwitcherDetailsTests(SwitcherTestCase):
 
     def test_no_details_for_apps_on_different_workspace(self):
         """Tests that details mode does not initiates when there are multiple windows
-        
+
         of an application spread across different workspaces.
         Regression test for LP:933406.
 
@@ -296,7 +296,7 @@ class SwitcherDetailsTests(SwitcherTestCase):
 
 class SwitcherDetailsModeTests(SwitcherTestCase):
     """Tests for the details mode of the switcher.
-    
+
     Tests for initiation with both grave (`) and Down arrow.
 
     """
@@ -318,7 +318,7 @@ class SwitcherDetailsModeTests(SwitcherTestCase):
 
     def test_next_icon_from_last_detail_works(self):
         """Pressing next while showing last switcher item in details mode
-        
+
         must select first item in the model in non-details mode.
 
         """
@@ -380,7 +380,7 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
 
     def test_switcher_can_switch_to_minimised_window(self):
         """Switcher must be able to switch to a minimised window when there's
-        
+
         another instance of the same application on a different workspace.
 
         """
