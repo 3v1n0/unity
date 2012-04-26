@@ -575,16 +575,9 @@ class BamfDaemonTests(LauncherTestCase):
     """Test interaction between the launcher and the BAMF Daemon."""
 
     def start_test_apps(self):
-        """Starts some test applications.
-
-        We start xclock since we want to test this with apps that don't have a
-        .desktop file.
-
-        """
+        """Starts some test applications."""
         self.start_app("Calculator")
         self.start_app("System Settings")
-        os.spawnlp(os.P_NOWAIT, "xclock", "xclock")
-        self.addCleanup(call, ["killall", "xclock"])
 
     def get_test_apps(self):
         """Return a tuple of test application instances.
@@ -595,10 +588,7 @@ class BamfDaemonTests(LauncherTestCase):
         """
         [calc] = self.get_app_instances("Calculator")
         [sys_settings] = self.get_app_instances("System Settings")
-        # can't match against desktop_id (which is what get_app_instances does)
-        # since xclock doesn't have one:
-        [xclock] =  [app for app in self.bamf.get_running_applications() if app.name == 'xclock']
-        return (calc, sys_settings, xclock)
+        return (calc, sys_settings)
 
     def assertOnlyOneLauncherIcon(self, **kwargs):
         """Asserts that there is only one launcher icon with the given filter."""
