@@ -610,8 +610,8 @@ class BamfDaemonTests(LauncherTestCase):
                 return
             sleep(1)
 
-    def test_kill_bamfdaemon_does_not_duplicate_launcher_icons(self):
-        """Killing bamfdaemon should not duplicate any launcher icon."""
+    def test_killing_bamfdaemon_does_not_duplicate_desktop_ids(self):
+        """Killing bamfdaemon should not duplicate any desktop ids in the model."""
         self.start_test_apps()
 
         call(["pkill", "bamfdaemon"])
