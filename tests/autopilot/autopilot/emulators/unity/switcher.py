@@ -28,8 +28,8 @@ class SwitcherMode():
 
 
 class Switcher(KeybindingsHelper):
-    """A class for interacting with the switcher. 
-    
+    """A class for interacting with the switcher.
+
     Abstracts out switcher implementation, and makes the necessary functionality available
     to consumer code.
 
@@ -66,7 +66,7 @@ class Switcher(KeybindingsHelper):
         """The index of the currently selected icon"""
         return self.controller.model.selection_index
 
-    @property 
+    @property
     def mode(self):
         """Returns the SwitcherMode that the switcher is currently in."""
         if not self.visible:
@@ -107,8 +107,9 @@ class Switcher(KeybindingsHelper):
 
     def cancel(self):
         """Stop switcher without activating the selected icon and releasing the keys.
+
         NOTE: Does not release Alt.
-        
+
         """
         logger.debug("Cancelling switcher.")
         self.keybinding("switcher/cancel")
