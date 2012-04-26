@@ -496,8 +496,9 @@ This tests shows how the focused windows should be raised to the top of the
 stack, when another non-active window is over them.
 
 Actions:
- * Open GIMP
  * Open a terminal Window
+ * Open The GIMP
+ * In GIMP load an image, say /usr/share/backgrounds/warty-final-ubuntu.png
  * From the terminal window run the command "gimp foo-image.png"
 
 Expected Results:
