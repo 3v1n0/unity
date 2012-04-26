@@ -8,9 +8,12 @@
 # by the Free Software Foundation.
 
 import logging
+import os
+from subprocess import call
 from testtools.matchers import Equals, NotEquals, LessThan, GreaterThan
 from time import sleep
 
+from autopilot.emulators.bamf import Bamf
 from autopilot.emulators.unity.icons import BFBLauncherIcon
 from autopilot.emulators.X11 import ScreenGeometry
 from autopilot.matchers import Eventually
@@ -567,6 +570,38 @@ class LauncherVisualTests(LauncherTestCase):
         sleep(.5)
         for icon in self.launcher.model.get_launcher_icons():
             self.assertThat(icon.desaturated, Eventually(Equals(False)))
+
+    def test_kill_bamfdaemon_does_not_duplicate_icons(self):
+        """Killing bamfdaemon should not duplicate any launcher icon."""
+        self.start_app("Calculator")
+        self.start_app("System Settings")
+        os.spawnlp(os.P_NOWAIT, "xterm", "xterm", "-title", "Autopilot XTerm", "-e", "sh")
+        self.addCleanup(call, ["killall", "xterm"])
+
+        # FIXME bamf emulator should wait until a window is open
+        sleep(1)
+        [xterm_win] = [w for w in self.bamf.get_open_windows() if w.name == "Autopilot XTerm"]
+        self.assertTrue(xterm_win.is_focused)
+
+        call(["pkill", "bamfdaemon"])
+        sleep(1)
+
+        # This should ensure that bamfdaemon is reloaded again
+        self.bamf = Bamf()
+        [calc] = self.get_app_instances("Calculator")
+        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
+        self.launcher_instance.click_launcher_icon(calc_icon)
+        sleep(1)
+        self.assertTrue(calc.is_active)
+
+        bamf_icons = self.launcher.model.get_bamf_launcher_icons()
+        for icon in bamf_icons:
+            if len(icon.desktop_file):
+                same_desktop = [i for i in bamf_icons if i.desktop_file == icon.desktop_file]
+                self.assertThat(len(same_desktop), Equals(1))
+
+            same_appid = [i for i in bamf_icons if i.application_id == icon.application_id]
+            self.assertThat(len(same_appid), Equals(1))
 
 
 class LauncherCaptureTests(AutopilotTestCase):
