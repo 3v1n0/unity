@@ -623,7 +623,6 @@ class BamfDaemonTests(LauncherTestCase):
 
         for test_app in self.get_test_apps():
             self.assertOnlyOneLauncherIcon(desktop_id=test_app.desktop_file)
-            self.assertOnlyOneLauncherIcon(application_id=test_app.application_id)
 
 
 class LauncherCaptureTests(AutopilotTestCase):
