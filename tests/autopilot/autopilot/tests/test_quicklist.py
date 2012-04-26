@@ -24,6 +24,11 @@ class QuicklistActionTests(AutopilotTestCase):
         ('remmina', {'app_name': 'Remmina'}),
     ]
 
+    def open_quicklist_for_icon(self, launcher_icon):
+        launcher = self.launcher.get_launcher_for_monitor(0)
+        launcher.click_launcher_icon(launcher_icon, button=3)
+        self.addCleanup(self.keyboard.press_and_release, "Escape")
+
     def test_quicklist_actions(self):
         """Test that all actions present in the destop file are shown in the quicklist."""
         self.start_app(self.app_name)
@@ -37,9 +42,7 @@ class QuicklistActionTests(AutopilotTestCase):
         self.assertThat(launcher_icon, NotEquals(None))
 
         # open the icon quicklist, and get all the text labels:
-        launcher = self.launcher.get_launcher_for_monitor(0)
-        launcher.click_launcher_icon(launcher_icon, button=3)
-        self.addCleanup(self.keyboard.press_and_release, "Escape")
+        self.open_quicklist_for_icon(launcher_icon)
         ql = launcher_icon.get_quicklist()
         ql_item_texts = [i.text for i in ql.items if type(i) is QuicklistMenuItemLabel]
 
@@ -52,6 +55,82 @@ class QuicklistActionTests(AutopilotTestCase):
             self.assertThat(de.content, Contains(key))
             name = de.content[key]['Name']
             self.assertThat(ql_item_texts, Contains(name))
+
+    def test_quicklist_application_item_focus_last_active_window(self):
+        """This tests shows that when you activate a quicklist application item
+        only the last focused instance of that application is rasied.
+
+        This is tested by opening 2 Mahjongg and a Calculator.
+        Then we activate the Calculator quicklist item.
+        Then we actiavte the Mahjongg launcher icon.
+        """
+        mahj = self.start_app("Mahjongg")
+        [mah_win1] = mahj.get_windows()
+        self.assertTrue(mah_win1.is_focused)
+
+        calc = self.start_app("Calculator")
+        [calc_win] = calc.get_windows()
+        self.assertTrue(calc_win.is_focused)
+
+        self.start_app("Mahjongg")
+        # Sleeping due to the start_app only waiting for the bamf model to be
+        # updated with the application.  Since the app has already started,
+        # and we are just waiting on a second window, however a defined sleep
+        # here is likely to be problematic.
+        # TODO: fix bamf emulator to enable waiting for new windows.
+        sleep(1)
+        [mah_win2] = [w for w in mahj.get_windows() if w.x_id != mah_win1.x_id]
+        self.assertTrue(mah_win2.is_focused)
+
+        self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
+
+        mahj_icon = self.launcher.model.get_icon_by_desktop_id(mahj.desktop_file)
+        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
+
+        self.open_quicklist_for_icon(calc_icon)
+        calc_ql = calc_icon.get_quicklist()
+        calc_ql.get_quicklist_application_item(calc.name).mouse_click()
+        sleep(1)
+        self.assertTrue(calc_win.is_focused)
+        self.assertVisibleWindowStack([calc_win, mah_win2, mah_win1])
+
+        self.open_quicklist_for_icon(mahj_icon)
+        mahj_ql = mahj_icon.get_quicklist()
+        mahj_ql.get_quicklist_application_item(mahj.name).mouse_click()
+        sleep(1)
+        self.assertTrue(mah_win2.is_focused)
+        self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
+
+    def test_quicklist_application_item_initiate_spread(self):
+        """This tests shows that when you activate a quicklist application item
+        when an application window is focused, the spread is initiated.
+        """
+        calc = self.start_app("Calculator")
+        [calc_win1] = calc.get_windows()
+        self.assertTrue(calc_win1.is_focused)
+
+        self.start_app("Calculator")
+        # Sleeping due to the start_app only waiting for the bamf model to be
+        # updated with the application.  Since the app has already started,
+        # and we are just waiting on a second window, however a defined sleep
+        # here is likely to be problematic.
+        # TODO: fix bamf emulator to enable waiting for new windows.
+        sleep(1)
+        [calc_win2] = [w for w in calc.get_windows() if w.x_id != calc_win1.x_id]
+
+        self.assertVisibleWindowStack([calc_win2, calc_win1])
+        self.assertTrue(calc_win2.is_focused)
+
+        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
+
+        self.open_quicklist_for_icon(calc_icon)
+        calc_ql = calc_icon.get_quicklist()
+        app_item = calc_ql.get_quicklist_application_item(calc.name)
+
+        self.addCleanup(self.keybinding, "spread/cancel")
+        app_item.mouse_click()
+        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
+        self.assertThat(self.window_manager.scale_active_for_group, Eventually(Equals(True)))
 
 
 class QuicklistKeyNavigationTests(AutopilotTestCase):

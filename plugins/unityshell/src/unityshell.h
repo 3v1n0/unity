@@ -241,7 +241,7 @@ private:
   internal::FavoriteStoreGSettings favorite_store_;
 
   /* The window thread should be the last thing removed, as c++ does it in reverse order */
-  std::unique_ptr<nux::WindowThread>    wt;
+  std::unique_ptr<nux::WindowThread> wt;
 
   /* These must stay below the window thread, please keep the order */
   launcher::Controller::Ptr launcher_controller_;
@@ -250,7 +250,7 @@ private:
   switcher::Controller::Ptr switcher_controller_;
   hud::Controller::Ptr      hud_controller_;
   shortcut::Controller::Ptr shortcut_controller_;
-  debug::DebugDBusInterface  debugger_;
+  debug::DebugDBusInterface debugger_;
 
   std::list<shortcut::AbstractHint::Ptr> hints_;
   bool enable_shortcut_overlay_;

@@ -27,6 +27,7 @@ from autopilot.emulators.unity.hud import Hud
 from autopilot.emulators.unity.launcher import LauncherController
 from autopilot.emulators.unity.panel import PanelController
 from autopilot.emulators.unity.switcher import Switcher
+from autopilot.emulators.unity.window_manager import WindowManager
 from autopilot.emulators.unity.workspace import WorkspaceManager
 from autopilot.emulators.X11 import ScreenGeometry, Keyboard, Mouse, reset_display
 from autopilot.glibrunner import GlibRunner
@@ -239,6 +240,7 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         self.launcher = self._get_launcher_controller()
         self.panels = self._get_panel_controller()
         self.switcher = Switcher()
+        self.window_manager = self._get_window_manager()
         self.workspace = WorkspaceManager()
         self.screen_geo = ScreenGeometry()
         self.addCleanup(self.workspace.switch_to, self.workspace.current_workspace)
@@ -335,6 +337,11 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         controllers = PanelController.get_all_instances()
         self.assertThat(len(controllers), Equals(1))
         return controllers[0]
+
+    def _get_window_manager(self):
+        managers = WindowManager.get_all_instances()
+        self.assertThat(len(managers), Equals(1))
+        return managers[0]
 
     def assertVisibleWindowStack(self, stack_start):
         """Check that the visible window stack starts with the windows passed in.
