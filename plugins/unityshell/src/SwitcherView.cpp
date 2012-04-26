@@ -124,8 +124,18 @@ void SwitcherView::SetModel(SwitcherModel::Ptr model)
   model->detail_selection.changed.connect (sigc::mem_fun (this, &SwitcherView::OnDetailSelectionChanged));
   model->detail_selection_index.changed.connect (sigc::mem_fun (this, &SwitcherView::OnDetailSelectionIndexChanged));
 
-  if (model->Selection())
+  if (!model->Selection())
+    return;
+
+  if (model->detail_selection)
+  {
+    Window detail_window = model->DetailSelectionWindow();
+    text_view_->SetText(model->Selection()->NameForWindow(detail_window));
+  }
+  else
+  {
     text_view_->SetText(model->Selection()->tooltip_text());
+  }
 }
 
 void SwitcherView::OnIconSizeChanged (int size)
