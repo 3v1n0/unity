@@ -57,6 +57,7 @@ public:
   virtual bool IsWindowObscured(guint32 xid) = 0;
   virtual bool IsWindowMapped(guint32 xid) = 0;
   virtual bool IsWindowVisible(guint32 xid) = 0;
+  virtual bool IsWindowOnTop(guint32 xid) = 0;
   virtual bool IsWindowClosable(guint32 xid) = 0;
   virtual bool IsWindowMinimizable(guint32 xid) = 0;
   virtual bool IsWindowMaximizable(guint32 xid) = 0;

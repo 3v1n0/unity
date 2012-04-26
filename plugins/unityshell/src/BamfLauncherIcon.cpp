@@ -208,50 +208,59 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     auto bamf_view = glib::object_cast<BamfView>(_bamf_app);
     user_visible = bamf_view_user_visible(bamf_view);
 
-    bool any_visible = false;
-    bool any_mapped = false;
-    bool any_on_monitor = (arg.monitor < 0);
-    int active_monitor = arg.monitor;
-    GList* children = bamf_view_get_children(bamf_view);
-
-    for (GList* l = children; l; l = l->next)
+    if (active)
     {
-      if (!BAMF_IS_WINDOW(l->data))
-        continue;
+      bool any_visible = false;
+      bool any_mapped = false;
+      bool any_on_top = false;
+      bool any_on_monitor = (arg.monitor < 0);
+      int active_monitor = arg.monitor;
+      GList* children = bamf_view_get_children(bamf_view);
 
-      auto view = static_cast<BamfView*>(l->data);
-      auto win = static_cast<BamfWindow*>(l->data);
-      Window xid = bamf_window_get_xid(win);
-
-      if (!any_visible && wm->IsWindowOnCurrentDesktop(xid))
+      for (GList* l = children; l; l = l->next)
       {
-        any_visible = true;
+        if (!BAMF_IS_WINDOW(l->data))
+          continue;
+
+        auto view = static_cast<BamfView*>(l->data);
+        auto win = static_cast<BamfWindow*>(l->data);
+        Window xid = bamf_window_get_xid(win);
+
+        if (!any_visible && wm->IsWindowOnCurrentDesktop(xid))
+        {
+          any_visible = true;
+        }
+
+        if (!any_mapped && wm->IsWindowMapped(xid))
+        {
+          any_mapped = true;
+        }
+
+        if (!any_on_top && wm->IsWindowOnTop(xid))
+        {
+          any_on_top = true;
+        }
+
+        if (!any_on_monitor && bamf_window_get_monitor(win) == arg.monitor &&
+            wm->IsWindowMapped(xid) && wm->IsWindowVisible(xid))
+        {
+          any_on_monitor = true;
+        }
+
+        if (bamf_view_is_active(view))
+        {
+          active_monitor = bamf_window_get_monitor(win);
+        }
       }
 
-      if (!any_mapped && wm->IsWindowMapped(xid))
-      {
-        any_mapped = true;
-      }
+      g_list_free(children);
 
-      if (!any_on_monitor && bamf_window_get_monitor(win) == arg.monitor &&
-          wm->IsWindowMapped(xid) && wm->IsWindowVisible(xid))
-      {
-        any_on_monitor = true;
-      }
+      if (!any_visible || !any_mapped || !any_on_top)
+        active = false;
 
-      if (bamf_view_is_active(view))
-      {
-        active_monitor = bamf_window_get_monitor(win);
-      }
+      if (any_on_monitor && arg.monitor >= 0 && active_monitor != arg.monitor)
+        active = false;
     }
-
-    g_list_free(children);
-
-    if (!any_visible || !any_mapped)
-      active = false;
-
-    if (any_on_monitor && arg.monitor >= 0 && active_monitor != arg.monitor)
-      active = false;
   }
 
   /* Behaviour:
@@ -635,7 +644,8 @@ void BamfLauncherIcon::Focus(ActionArg arg)
     }
   }
 
-  wm->FocusWindowGroup(windows, visibility, arg.monitor);
+  bool only_top_win = !any_urgent;
+  wm->FocusWindowGroup(windows, visibility, arg.monitor, only_top_win);
 }
 
 bool BamfLauncherIcon::Spread(bool current_desktop, int state, bool force)
