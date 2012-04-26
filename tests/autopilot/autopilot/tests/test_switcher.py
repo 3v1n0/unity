@@ -7,10 +7,11 @@
 # by the Free Software Foundation.
 
 import logging
-from testtools.matchers import Equals, NotEquals, Contains, Not
+from testtools.matchers import Equals, Contains, Not
 from time import sleep
 
 from autopilot.matchers import Eventually
+#from autopilot.emulators.window import Window
 from autopilot.emulators.unity.switcher import SwitcherMode
 from autopilot.tests import AutopilotTestCase
 
@@ -21,10 +22,9 @@ class SwitcherTestCase(AutopilotTestCase):
         self.set_unity_option("alt_tab_timeout", value)
         sleep(1)
 
-class SwitcherTests(SwitcherTestCase):
-    """Test the switcher.
 
-    """
+class SwitcherTests(SwitcherTestCase):
+    """Test the switcher."""
     def set_timeout_setting(self, value):
         self.set_unity_option("alt_tab_timeout", value)
         sleep(1)
@@ -39,10 +39,12 @@ class SwitcherTests(SwitcherTestCase):
     def tearDown(self):
         super(SwitcherTests, self).tearDown()
 
-    def test_witcher_starts_in_normal_mode(self):
-        """Switcher must start in normal (i.e.- not details) mode.
+    def test_nothing(self):
+        pass
+        #Window()
 
-        """
+    def test_witcher_starts_in_normal_mode(self):
+        """Switcher must start in normal (i.e.- not details) mode."""
         self.start_app("Character Map")
         sleep(1)
 
@@ -51,9 +53,7 @@ class SwitcherTests(SwitcherTestCase):
         self.assertThat(self.switcher.mode, Equals(SwitcherMode.NORMAL))
 
     def test_switcher_move_next(self):
-        """Test that pressing the next icon binding moves to the next icon
-
-        """
+        """Test that pressing the next icon binding moves to the next icon"""
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
 
@@ -62,9 +62,7 @@ class SwitcherTests(SwitcherTestCase):
         self.assertThat(self.switcher.selection_index, Equals(start + 1))
 
     def test_switcher_move_prev(self):
-        """Test that pressing the previous icon binding moves to the previous icon
-
-        """
+        """Test that pressing the previous icon binding moves to the previous icon"""
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
 
@@ -73,9 +71,7 @@ class SwitcherTests(SwitcherTestCase):
         self.assertThat(self.switcher.selection_index, Equals(start - 1))
 
     def test_switcher_scroll_next(self):
-        """Test that scrolling the mouse wheel down moves to the next icon
-
-        """
+        """Test that scrolling the mouse wheel down moves to the next icon"""
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
 
@@ -85,9 +81,7 @@ class SwitcherTests(SwitcherTestCase):
         self.assertThat(self.switcher.selection_index, Equals(start + 1))
 
     def test_switcher_scroll_prev(self):
-        """Test that scrolling the mouse wheel up moves to the previous icon
-        
-        """
+        """Test that scrolling the mouse wheel up moves to the previous icon"""
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
 
@@ -101,6 +95,7 @@ class SwitcherTests(SwitcherTestCase):
 
     def test_switcher_scroll_next_ignores_fast_events(self):
         """Ensures that smoothing is working correctly for next icon scrolling. 
+        
         Only the first event in a rapid fire string of events should be acted upon. 
         The rest ignored.
         
@@ -118,6 +113,7 @@ class SwitcherTests(SwitcherTestCase):
 
     def test_switcher_scroll_prev_ignores_fast_events(self):
         """Ensures that smoothing is working correctly for previous icon scrolling. 
+        
         Only the first event in a rapid fire string of events should be acted upon. 
         The rest ignored.
         
@@ -135,6 +131,7 @@ class SwitcherTests(SwitcherTestCase):
 
     def test_switcher_arrow_key_does_not_init(self):
         """Ensure that Alt+Right does not initiate switcher.
+        
         Regression test for LP:??????
 
         """
@@ -171,6 +168,7 @@ class SwitcherTests(SwitcherTestCase):
 
     def test_switcher_appears_on_monitor_with_focused_window(self):
         """Tests that the switches appears on the correct monitor.
+        
         This is defined as the monitor with a focused window.
 
         """
@@ -187,13 +185,11 @@ class SwitcherTests(SwitcherTestCase):
 
 
 class SwitcherWindowsManagementTests(SwitcherTestCase):
-    """Test the switcher window management.
-
-    """
+    """Test the switcher window management."""
 
     def test_switcher_raises_only_last_focused_window(self):
-        """Tests that when we do an alt+tab only the previously focused window
-        is raised.
+        """Tests that when we do an alt+tab only the previously focused window is raised.
+        
         This is tests by opening 2 Calculators and a Mahjongg.
         Then we do a quick alt+tab twice.
         Then we close the currently focused window.
@@ -243,17 +239,13 @@ class SwitcherWindowsManagementTests(SwitcherTestCase):
 
 
 class SwitcherDetailsTests(SwitcherTestCase):
-    """Test the details mode for the switcher.
-
-    """
+    """Test the details mode for the switcher."""
     def setUp(self):
         super(SwitcherDetailsTests, self).setUp()
         self.set_timeout_setting(True)
 
     def test_details_mode_on_delay(self):
-        """Test that details mode activates on a timeout...
-
-        """
+        """Test that details mode activates on a timeout."""
         #FIXME: Setup
         self.close_all_app('Character Map')
         self.workspace.switch_to(1)
@@ -276,6 +268,7 @@ class SwitcherDetailsTests(SwitcherTestCase):
 
     def test_no_details_for_apps_on_different_workspace(self):
         """Tests that details mode does not initiates when there are multiple windows
+        
         of an application spread across different workspaces.
         Regression test for LP:933406.
 
@@ -303,6 +296,7 @@ class SwitcherDetailsTests(SwitcherTestCase):
 
 class SwitcherDetailsModeTests(SwitcherTestCase):
     """Tests for the details mode of the switcher.
+    
     Tests for initiation with both grave (`) and Down arrow.
 
     """
@@ -324,6 +318,7 @@ class SwitcherDetailsModeTests(SwitcherTestCase):
 
     def test_next_icon_from_last_detail_works(self):
         """Pressing next while showing last switcher item in details mode
+        
         must select first item in the model in non-details mode.
 
         """
@@ -339,14 +334,10 @@ class SwitcherDetailsModeTests(SwitcherTestCase):
 
 
 class SwitcherWorkspaceTests(SwitcherTestCase):
-    """Test Switcher behavior with respect to multiple workspaces.
-
-    """
+    """Test Switcher behavior with respect to multiple workspaces."""
 
     def test_switcher_shows_current_workspace_only(self):
-        """Switcher must show apps from the current workspace only.
-
-        """
+        """Switcher must show apps from the current workspace only."""
         #FIXME: SETUP
         self.close_all_app('Calculator')
         self.close_all_app('Character Map')
@@ -367,9 +358,7 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
         self.assertThat(icon_names, Not(Contains(calc.name)))
 
     def test_switcher_all_mode_shows_all_apps(self):
-        """Test switcher 'show_all' mode shows apps from all workspaces.
-
-        """
+        """Test switcher 'show_all' mode shows apps from all workspaces."""
         self.close_all_app('Calculator')
         self.close_all_app('Character Map')
 
@@ -391,6 +380,7 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
 
     def test_switcher_can_switch_to_minimised_window(self):
         """Switcher must be able to switch to a minimised window when there's
+        
         another instance of the same application on a different workspace.
 
         """
