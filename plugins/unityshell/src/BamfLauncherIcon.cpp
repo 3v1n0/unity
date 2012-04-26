@@ -144,7 +144,7 @@ BamfLauncherIcon::~BamfLauncherIcon()
 {
   g_object_set_qdata(G_OBJECT(_bamf_app.RawPtr()),
                      g_quark_from_static_string("unity-seen"),
-                     GINT_TO_POINTER(0));
+                     GUINT_TO_POINTER(0));
 
   if (_fill_supported_types_id != 0)
     g_source_remove(_fill_supported_types_id);
