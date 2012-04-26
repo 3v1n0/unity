@@ -1340,7 +1340,7 @@ void Launcher::OnOverlayShown(GVariant* data)
   gint32 overlay_monitor = 0;
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
-  std::string identity = overlay_identity.Str();
+  std::string identity(overlay_identity.Str());
 
   LOG_DEBUG(logger) << "Overlay shown: " << identity
                     << ", " << (can_maximise ? "can maximise" : "can't maximise")
@@ -1366,6 +1366,9 @@ void Launcher::OnOverlayShown(GVariant* data)
       LOG_DEBUG(logger) << "Desaturate on monitor " << monitor();
       DesaturateIcons();
     }
+
+    if (_icon_under_mouse)
+      _icon_under_mouse->HideTooltip();
   }
   EnsureAnimation();
 }
