@@ -491,6 +491,7 @@ void BamfLauncherIcon::AddProperties(GVariantBuilder* builder)
   variant::BuilderWrapper(builder)
     .add("desktop_file", DesktopFile())
     .add("desktop_id", GetDesktopID())
+    .add("application_id", GPOINTER_TO_UINT(_bamf_app.RawPtr()))
     .add("xids", g_variant_builder_end(&xids_builder))
     .add("sticky", IsSticky());
 }
