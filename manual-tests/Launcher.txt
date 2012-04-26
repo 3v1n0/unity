@@ -488,3 +488,32 @@ Actions:
 Expected Result:
 The Firefox icon should *not* be highlighted during the drag&drop.
 Firefox should open the folder in a new Firefox window.
+
+Test Launcher with Chromium Web apps
+------------------------------------
+This tests shows the integration of unity with the Chromium Web Apps
+
+Setup:
+ * Open Chromium and go to a website, say ubuntu.com
+ * Go to the menu "File" -> "Create Application Shortcuts..."
+ * Select the checkbox "Applications Menu" (you can deselect the "Desktop" one)
+ * A new window is opened, and the launcher will continue matching it like a
+   chromium application.
+ * Close the chromium window.
+
+Actions:
+ * Open the dash and search for "chrom"
+ * An application called "Home | Ubuntu" should be shown
+ * Launch it
+
+Expected Results:
+ * The launcher will show an icon for the "Home | Ubuntu" application
+
+Actions:
+ * Open a standard chromium window
+
+Expected Results:
+ * The new chromium window will be associated to the standard chromium
+   application icon.
+ * Clicking the "Home | Ubuntu" will activate its window, while clicking
+   in the chromium icon will activate a chromium window.
