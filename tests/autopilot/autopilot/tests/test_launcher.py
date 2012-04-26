@@ -575,8 +575,10 @@ class LauncherVisualTests(LauncherTestCase):
         """Killing bamfdaemon should not duplicate any launcher icon."""
         self.start_app("Calculator")
         self.start_app("System Settings")
+        # We launch also xterm without using self.start_app since it's an application
+        # without .desktop file.
         os.spawnlp(os.P_NOWAIT, "xterm", "xterm", "-title", "Autopilot XTerm", "-e", "sh")
-        self.addCleanup(call, ["killall", "xterm"])
+        self.addCleanup(call, ["pkill", "xterm"])
 
         # FIXME bamf emulator should wait until a window is open
         sleep(1)
