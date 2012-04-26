@@ -8,9 +8,12 @@
 # by the Free Software Foundation.
 
 import logging
+import os
+from subprocess import call
 from testtools.matchers import Equals, NotEquals, LessThan, GreaterThan
 from time import sleep
 
+from autopilot.emulators.bamf import Bamf
 from autopilot.emulators.unity.icons import BFBLauncherIcon
 from autopilot.emulators.X11 import ScreenGeometry
 from autopilot.matchers import Eventually
@@ -567,6 +570,52 @@ class LauncherVisualTests(LauncherTestCase):
         sleep(.5)
         for icon in self.launcher.model.get_launcher_icons():
             self.assertThat(icon.desaturated, Eventually(Equals(False)))
+
+class BamfDaemonTests(LauncherTestCase):
+    """Test interaction between the launcher and the BAMF Daemon."""
+
+    def start_test_apps(self):
+        """Starts some test applications."""
+        self.start_app("Calculator")
+        self.start_app("System Settings")
+
+    def get_test_apps(self):
+        """Return a tuple of test application instances.
+
+        We don't store these since when we kill the bamf daemon all references
+        to the old apps will die.
+
+        """
+        [calc] = self.get_app_instances("Calculator")
+        [sys_settings] = self.get_app_instances("System Settings")
+        return (calc, sys_settings)
+
+    def assertOnlyOneLauncherIcon(self, **kwargs):
+        """Asserts that there is only one launcher icon with the given filter."""
+        icons = self.launcher.model.get_icons_by_filter(**kwargs)
+        self.assertThat(len(icons), Equals(1))
+
+    def wait_for_bamf_daemon(self):
+        """Wait until the bamf daemon has been started."""
+        for i in range(10):
+            #pgrep returns 0 if it matched something:
+            if call(["pgrep", "bamfdaemon"]) == 0:
+                return
+            sleep(1)
+
+    def test_killing_bamfdaemon_does_not_duplicate_desktop_ids(self):
+        """Killing bamfdaemon should not duplicate any desktop ids in the model."""
+        self.start_test_apps()
+
+        call(["pkill", "bamfdaemon"])
+        sleep(1)
+
+        # trigger the bamfdaemon to be reloaded again, and wait for it to appear:
+        self.bamf = Bamf()
+        self.wait_for_bamf_daemon()
+
+        for test_app in self.get_test_apps():
+            self.assertOnlyOneLauncherIcon(desktop_id=test_app.desktop_file)
 
 
 class LauncherCaptureTests(AutopilotTestCase):

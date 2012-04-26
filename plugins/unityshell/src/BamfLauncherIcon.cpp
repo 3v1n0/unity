@@ -144,7 +144,7 @@ BamfLauncherIcon::~BamfLauncherIcon()
 {
   g_object_set_qdata(G_OBJECT(_bamf_app.RawPtr()),
                      g_quark_from_static_string("unity-seen"),
-                     GINT_TO_POINTER(0));
+                     GUINT_TO_POINTER(0));
 
   if (_fill_supported_types_id != 0)
     g_source_remove(_fill_supported_types_id);
@@ -500,6 +500,7 @@ void BamfLauncherIcon::AddProperties(GVariantBuilder* builder)
   variant::BuilderWrapper(builder)
     .add("desktop_file", DesktopFile())
     .add("desktop_id", GetDesktopID())
+    .add("application_id", GPOINTER_TO_UINT(_bamf_app.RawPtr()))
     .add("xids", g_variant_builder_end(&xids_builder))
     .add("sticky", IsSticky());
 }

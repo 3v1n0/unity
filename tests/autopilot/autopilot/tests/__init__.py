@@ -224,6 +224,10 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
             'desktop-file': 'remmina.desktop',
             'process-name': 'remmina',
             },
+        'System Settings' : {
+            'desktop-file': 'gnome-control-center.desktop',
+            'process-name': 'gnome-control-center',
+            },
         'Text Editor' : {
             'desktop-file': 'gedit.desktop',
             'process-name': 'gedit',
@@ -266,14 +270,14 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         app = self.KNOWN_APPS[app_name]
         self.bamf.launch_application(app['desktop-file'], files)
         apps = self.bamf.get_running_applications_by_desktop_file(app['desktop-file'])
-        self.addCleanup(call, ["killall", app['process-name']])
+        self.addCleanup(call, "kill `pidof %s`" % (app['process-name']), shell=True)
         self.assertThat(len(apps), Equals(1))
         return apps[0]
 
     def close_all_app(self, app_name):
         """Close all instances of the app_name."""
         app = self.KNOWN_APPS[app_name]
-        call(["killall", app['process-name']])
+        self.addCleanup(call, "kill `pidof %s`" % (app['process-name']), shell=True)
         super(LoggedTestCase, self).tearDown()
 
     def get_app_instances(self, app_name):

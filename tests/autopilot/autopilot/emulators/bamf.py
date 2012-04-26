@@ -254,6 +254,16 @@ class BamfWindow(object):
         return self._x_win
 
     @property
+    def name(self):
+        """Get the window name.
+
+        Note: This may change according to the current locale. If you want a unique
+        string to match windows against, use the x_id instead.
+
+        """
+        return self._view_iface.Name()
+
+    @property
     def title(self):
         """Get the window title.
 
