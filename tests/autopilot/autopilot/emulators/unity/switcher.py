@@ -8,10 +8,9 @@
 #
 
 import logging
-from time import sleep
 
-from autopilot.emulators.unity import get_state_by_path, make_introspection_object
-from autopilot.emulators.X11 import Keyboard, Mouse
+from autopilot.emulators.unity import UnityIntrospectionObject
+from autopilot.emulators.X11 import Mouse
 from autopilot.keybindings import KeybindingsHelper
 
 # even though we don't use these directly, we need to make sure they've been
@@ -21,63 +20,80 @@ from autopilot.emulators.unity.icons import *
 
 logger = logging.getLogger(__name__)
 
+class SwitcherMode():
+    """Define the possible modes the switcher can be in"""
+    NORMAL = 0
+    ALL = 1
+    DETAIL = 2
 
-# TODO: THis class needs to be ported to the new-style emulator classes.
-# See launcher.py or dash.py for reference.
+
 class Switcher(KeybindingsHelper):
-    """Interact with the Unity switcher."""
+    """A class for interacting with the switcher.
+
+    Abstracts out switcher implementation, and makes the necessary functionality available
+    to consumer code.
+
+    """
 
     def __init__(self):
         super(Switcher, self).__init__()
-        self._keyboard = Keyboard()
         self._mouse = Mouse()
+        controllers = SwitcherController.get_all_instances()
+        assert(len(controllers) == 1)
+        self.controller = controllers[0]
 
-    def initiate(self):
-        """Start the switcher with alt+tab."""
-        logger.debug("Initiating switcher with Alt+Tab")
-        self.keybinding_hold("switcher/reveal_normal")
-        self.keybinding_tap("switcher/reveal_normal")
-        sleep(1)
+    @property
+    def visible(self):
+        """Is the switcher currently visible
 
-    def initiate_detail_mode(self):
-        """Start detail mode with alt+`"""
-        logger.debug("Initiating switcher detail mode with Alt+`")
-        self.keybinding_hold("switcher/reveal_details")
-        self.keybinding_tap("switcher/reveal_details")
-        sleep(1)
-
-    def initiate_all_mode(self):
-        """Start switcher in 'all workspaces' mode.
-
-        Shows apps from all workspaces, instead of just the current workspace.
         """
-        logger.debug("Initiating switcher in 'all workspaces' mode.")
-        self.keybinding_hold("switcher/reveal_all")
-        self.keybinding_tap("switcher/reveal_all")
-        sleep(1)
+        return self.controller.visible
 
-    def initiate_right_arrow(self):
-        """Impropperly attempt to start switcher."""
-        logger.debug("Initiating switcher with Alt+Right (should not work)")
-        self.keybinding_hold("switcher/reveal_impropper")
-        self.keybinding_tap("switcher/right")
-        sleep(1)
+    @property
+    def icons(self):
+        """The set of icons in the switcher model
 
-    def terminate(self):
-        """Stop switcher without activating the selected icon."""
-        logger.debug("Terminating switcher.")
-        self.keybinding("switcher/cancel")
-        self.keybinding_release("switcher/reveal_normal")
+        """
+        return self.controller.model.icons
 
-    def cancel(self):
-        """Stop switcher without activating the selected icon and releasing the keys."""
-        logger.debug("Cancelling switcher.")
-        self.keybinding("switcher/cancel")
+    @property
+    def current_icon(self):
+        """The currently selected switcher icon"""
+        return self.icons[self.selection_index]
 
-    def stop(self):
-        """Stop switcher and activate the selected icon."""
-        logger.debug("Stopping switcher")
-        self.keybinding_release("switcher/reveal_normal")
+    @property
+    def selection_index(self):
+        """The index of the currently selected icon"""
+        return self.controller.model.selection_index
+
+    @property
+    def mode(self):
+        """Returns the SwitcherMode that the switcher is currently in."""
+        if not self.visible:
+            return None
+        if self.controller.model.detail_selection and not self.controller.model.only_detail_on_viewport:
+            return SwitcherMode.DETAIL, SwitcherMode.ALL
+        elif self.controller.model.detail_selection:
+            return SwitcherMode.DETAIL
+        elif not self.controller.model.only_detail_on_viewport:
+            return SwitcherMode.ALL
+        else:
+            return SwitcherMode.NORMAL
+
+    def initiate(self, mode=SwitcherMode.NORMAL):
+        """Initiates the switcher in designated mode. Defaults to NORMAL"""
+        if mode == SwitcherMode.NORMAL:
+            logger.debug("Initiating switcher with Alt+Tab")
+            self.keybinding_hold_part_then_tap("switcher/reveal_normal")
+            self.visible.wait_for(True)
+        elif mode == SwitcherMode.DETAIL:
+            logger.debug("Initiating switcher detail mode with Alt+`")
+            self.keybinding_hold_part_then_tap("switcher/reveal_details")
+            self.controller.model.detail_selection.wait_for(True)
+        elif mode == SwitcherMode.ALL:
+            logger.debug("Initiating switcher in 'all workspaces' mode. Ctrl+Alt+Tab")
+            self.keybinding_hold_part_then_tap("switcher/reveal_all")
+            self.controller.model.only_detail_on_viewport.wait_for(False)
 
     def next_icon(self):
         """Move to the next icon."""
@@ -89,14 +105,37 @@ class Switcher(KeybindingsHelper):
         logger.debug("Selecting previous item in switcher.")
         self.keybinding("switcher/prev")
 
-    def next_icon_mouse(self):
-        """Move to the next icon using the mouse scroll wheel"""
+    def cancel(self):
+        """Stop switcher without activating the selected icon and releasing the keys.
+
+        NOTE: Does not release Alt.
+
+        """
+        logger.debug("Cancelling switcher.")
+        self.keybinding("switcher/cancel")
+        self.controller.visible.wait_for(False)
+
+    def terminate(self):
+        """Stop switcher without activating the selected icon."""
+        logger.debug("Terminating switcher.")
+        self.keybinding("switcher/cancel")
+        self.keybinding_release("switcher/reveal_normal")
+        self.controller.visible.wait_for(False)
+
+    def select(self):
+        """Stop switcher and activate the selected icon."""
+        logger.debug("Stopping switcher")
+        self.keybinding_release("switcher/reveal_normal")
+        self.controller.visible.wait_for(False)
+
+    def next_via_mouse(self):
+        """Move to the next icon using the mouse scroll wheel."""
         logger.debug("Selecting next item in switcher with mouse scroll wheel.")
         self._mouse.press(6)
         self._mouse.release(6)
 
-    def previous_icon_mouse(self):
-        """Move to the previous icon using the mouse scroll wheel"""
+    def previous_via_mouse(self):
+        """Move to the previous icon using the mouse scroll wheel."""
         logger.debug("Selecting previous item in switcher with mouse scroll wheel.")
         self._mouse.press(7)
         self._mouse.release(7)
@@ -105,11 +144,13 @@ class Switcher(KeybindingsHelper):
         """Show detail mode."""
         logger.debug("Showing details view.")
         self.keybinding("switcher/detail_start")
+        self.controller.model.detail_selection.wait_for(True)
 
     def hide_details(self):
         """Hide detail mode."""
         logger.debug("Hiding details view.")
         self.keybinding("switcher/detail_stop")
+        self.controller.model.detail_selection.wait_for(False)
 
     def next_detail(self):
         """Move to next detail in the switcher."""
@@ -121,65 +162,27 @@ class Switcher(KeybindingsHelper):
         logger.debug("Selecting previous item in details mode.")
         self.keybinding("switcher/detail_prev")
 
-    def __get_icon(self, index):
-        return self.__get_model()['Children'][index][1][0]
+
+class SwitcherController(UnityIntrospectionObject):
+    """An emulator class for interacting with the switcher controller."""
 
     @property
-    def current_icon(self):
-        """Get the currently-selected icon."""
-        if not self.get_is_visible:
-            return None
-        model = self.__get_model()
-        sel_idx = self.get_selection_index()
-        try:
-            return make_introspection_object(model['Children'][sel_idx])
-        except KeyError:
-            return None
+    def view(self):
+        return self.get_children_by_type(SwitcherView)[0]
 
-    def get_icon_name(self, index):
-        return self.__get_icon(index)['tooltip_text']
+    @property
+    def model(self):
+        return self.get_children_by_type(SwitcherModel)[0]
 
-    def get_icon_desktop_file(self, index):
-        try:
-            return self.__get_icon(index)['desktop_file']
-        except:
-            return None
 
-    def get_model_size(self):
-        return len(self.__get_model()['Children'])
+class SwitcherView(UnityIntrospectionObject):
+    """An emulator class for interacting with with SwitcherView."""
 
-    def get_selection_index(self):
-        return int(self.__get_model()['selection-index'])
 
-    def get_last_selection_index(self):
-        return bool(self.__get_model()['last-selection-index'])
+class SwitcherModel(UnityIntrospectionObject):
+    """An emulator class for interacting with the SwitcherModel."""
 
-    def get_is_visible(self):
-        return bool(self.__get_controller()['visible'])
+    @property
+    def icons(self):
+        return self.get_children_by_type(SimpleLauncherIcon)
 
-    def get_monitor(self):
-        return int(self.__get_controller()['monitor'])
-
-    def get_is_in_details_mode(self):
-        """Return True if the SwitcherView is in details mode."""
-        return bool(self.__get_model()['detail-selection'])
-
-    def get_switcher_icons(self):
-        """Get all icons in the switcher model.
-
-        The switcher needs to be initiated in order to get the model.
-
-        """
-        icons = []
-        model = get_state_by_path('//SwitcherModel')[0]
-        for child in model['Children']:
-            icon = make_introspection_object(child)
-            if icon:
-                icons.append(icon)
-        return icons
-
-    def __get_model(self):
-        return get_state_by_path('/Unity/SwitcherController/SwitcherModel')[0]
-
-    def __get_controller(self):
-        return get_state_by_path('/Unity/SwitcherController')[0]
