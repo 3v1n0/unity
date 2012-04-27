@@ -19,24 +19,18 @@
 #ifndef WINDOW_MANAGER_H
 #define WINDOW_MANAGER_H
 
-#include <glib.h>
-#include <sigc++/sigc++.h>
 #include <Nux/Nux.h>
-#include <Nux/WindowThread.h>
-#include <NuxGraphics/GLWindowManager.h>
 #include <gdk/gdkx.h>
 #include <core/core.h>
 
-class WindowManager
+#include "Introspectable.h"
+
+class WindowManager : public unity::debug::Introspectable
 {
   // This is a glue interface that breaks the dependancy of Unity with Compiz
   // Basically it has a default implementation that does nothing useful, but
   // the idea is that unity.cpp uses SetDefault() early enough in it's
   // initialization so the things that require it get a usable implementation
-  //
-  // Currently only the Panel uses it but hopefully we'll get more of
-  // PluginAdaptor features moved into here and also get the Launcher to use
-  // it.
 
 public:
   WindowManager() :
@@ -63,7 +57,10 @@ public:
   virtual bool IsWindowObscured(guint32 xid) = 0;
   virtual bool IsWindowMapped(guint32 xid) = 0;
   virtual bool IsWindowVisible(guint32 xid) = 0;
+  virtual bool IsWindowOnTop(guint32 xid) = 0;
+  virtual bool IsWindowClosable(guint32 xid) = 0;
   virtual bool IsWindowMinimizable(guint32 xid) = 0;
+  virtual bool IsWindowMaximizable(guint32 xid) = 0;
 
   virtual void ShowDesktop() = 0;
 
@@ -139,6 +136,10 @@ public:
   sigc::signal<void> compiz_screen_viewport_switch_ended;
 
   sigc::signal<void, const char*, const char*, CompOption::Vector&> compiz_event;
+
+protected:
+  std::string GetName() const;
+  virtual void AddProperties(GVariantBuilder* builder) = 0;
 
 private:
   Atom m_MoveResizeAtom;

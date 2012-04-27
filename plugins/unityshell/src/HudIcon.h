@@ -34,8 +34,10 @@ namespace hud
 class Icon : public unity::IconTexture
 {
 public:
-  typedef nux::ObjectPtr<IconTexture> Ptr;
-  Icon(std::string const& icon_name, unsigned int size);
+  typedef nux::ObjectPtr<Icon> Ptr;
+  Icon();
+
+  void SetIcon(std::string const& icon_name, unsigned int icon_size, unsigned int tile_size);
 
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);

@@ -27,6 +27,7 @@ from autopilot.emulators.unity.hud import Hud
 from autopilot.emulators.unity.launcher import LauncherController
 from autopilot.emulators.unity.panel import PanelController
 from autopilot.emulators.unity.switcher import Switcher
+from autopilot.emulators.unity.window_manager import WindowManager
 from autopilot.emulators.unity.workspace import WorkspaceManager
 from autopilot.emulators.X11 import ScreenGeometry, Keyboard, Mouse, reset_display
 from autopilot.glibrunner import GlibRunner
@@ -223,6 +224,10 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
             'desktop-file': 'remmina.desktop',
             'process-name': 'remmina',
             },
+        'System Settings' : {
+            'desktop-file': 'gnome-control-center.desktop',
+            'process-name': 'gnome-control-center',
+            },
         'Text Editor' : {
             'desktop-file': 'gedit.desktop',
             'process-name': 'gedit',
@@ -239,6 +244,7 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         self.launcher = self._get_launcher_controller()
         self.panels = self._get_panel_controller()
         self.switcher = Switcher()
+        self.window_manager = self._get_window_manager()
         self.workspace = WorkspaceManager()
         self.screen_geo = ScreenGeometry()
         self.addCleanup(self.workspace.switch_to, self.workspace.current_workspace)
@@ -264,14 +270,14 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         app = self.KNOWN_APPS[app_name]
         self.bamf.launch_application(app['desktop-file'], files)
         apps = self.bamf.get_running_applications_by_desktop_file(app['desktop-file'])
-        self.addCleanup(call, ["killall", app['process-name']])
+        self.addCleanup(call, "kill `pidof %s`" % (app['process-name']), shell=True)
         self.assertThat(len(apps), Equals(1))
         return apps[0]
 
     def close_all_app(self, app_name):
         """Close all instances of the app_name."""
         app = self.KNOWN_APPS[app_name]
-        call(["killall", app['process-name']])
+        self.addCleanup(call, "kill `pidof %s`" % (app['process-name']), shell=True)
         super(LoggedTestCase, self).tearDown()
 
     def get_app_instances(self, app_name):
@@ -292,10 +298,10 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         keyboard layout bits are very unweildy. This seems like the best
         solution, even a little bit brutish.
         """
-        cmd = ['gsettings', command, schema] + args
+        cmd = ['gsettings', command, schema] + list(args)
         # strip to remove the trailing \n.
-        ret = check_output(cmd, shell=True).strip()
-        time.sleep(1)
+        ret = check_output(cmd).strip()
+        time.sleep(5)
         reset_display()
         return ret
 
@@ -335,6 +341,11 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
         controllers = PanelController.get_all_instances()
         self.assertThat(len(controllers), Equals(1))
         return controllers[0]
+
+    def _get_window_manager(self):
+        managers = WindowManager.get_all_instances()
+        self.assertThat(len(managers), Equals(1))
+        return managers[0]
 
     def assertVisibleWindowStack(self, stack_start):
         """Check that the visible window stack starts with the windows passed in.

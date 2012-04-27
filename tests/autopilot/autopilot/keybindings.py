@@ -56,7 +56,14 @@ _keys = {
     "launcher/switcher/prev": "Shift+Tab",
     "launcher/switcher/down": "Down",
     "launcher/switcher/up": "Up",
-    # Panel
+    # Quicklist:
+    "quicklist/keynav/first": "Home",
+    "quicklist/keynav/last": "End",
+    "quicklist/keynav/next": "Down",
+    "quicklist/keynav/prev": "Up",
+    "quicklist/keynav/activate": "Enter",
+    "quicklist/keynav/exit": "Escape",
+    # Panel:
     "panel/show_menus": "Alt",
     "panel/open_first_menu": ('unityshell', 'panel_first_menu'),
     "panel/next_indicator": "Right",
@@ -65,12 +72,12 @@ _keys = {
     "dash/reveal": "Super",
     "dash/lens/next": "Ctrl+Tab",
     "dash/lens/prev": "Ctrl+Shift+Tab",
-    # Lenses
+    # Lenses:
     "lens_reveal/command": ("unityshell", "execute_command"),
     "lens_reveal/apps": "Super+a",
     "lens_reveal/files": "Super+f",
     "lens_reveal/music": "Super+m",
-    # Hud
+    # Hud:
     "hud/reveal": ("unityshell", "show_hud"),
     # Switcher:
     "switcher/reveal_normal": ("unityshell", "alt_tab_forward"),
@@ -96,7 +103,7 @@ _keys = {
     "workspace/move_right": ("wall", "right_key"),
     "workspace/move_up": ("wall", "up_key"),
     "workspace/move_down": ("wall", "down_key"),
-    # Window management
+    # Window management:
     "window/show_desktop" : ("core", "show_desktop_key"),
     "window/minimize": ("core", "minimize_window_key"),
     "window/maximize": ("core", "maximize_window_key"),
@@ -105,6 +112,9 @@ _keys = {
     # expo plugin:
     "expo/start": ("expo", "expo_key"),
     "expo/cancel": "Escape",
+    # spread (scale) plugin:
+    "spread/start": ("scale", "initiate_all_key"),
+    "spread/cancel": "Escape",
 }
 
 

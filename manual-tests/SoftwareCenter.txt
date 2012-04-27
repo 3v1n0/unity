@@ -1,0 +1,16 @@
+The SoftwareCenter Launcher Integration cancel
+----------------------------------------------
+
+Setup: 
+#. Open software-center
+
+Actions:  
+#. Click on install on a big application like wesnoth
+#. Verify that the icon "flies" into the launcher
+#. Wait until the "In Progress" appears in the toplevel toolbar of s-c
+#. Click on the "In Progress" button in the toolbar
+#. Click on the "cancel" button of the install of the application
+
+Expected Result:
+  The icon is removed from the launcher again after the download was
+  canceled.

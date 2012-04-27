@@ -202,6 +202,7 @@ LauncherIcon::AddProperties(GVariantBuilder* builder)
   .add("icon_type", _icon_type)
   .add("tooltip_text", tooltip_text())
   .add("sort_priority", _sort_priority)
+  .add("shortcut", _shortcut)
   .add("monitors_visibility", g_variant_builder_end(&monitors_builder))
   .add("active", GetQuirk(QUIRK_ACTIVE))
   .add("visible", GetQuirk(QUIRK_VISIBLE))
@@ -537,7 +538,7 @@ void LauncherIcon::RecvMouseLeave(int monitor)
     _tooltip->ShowWindow(false);
 }
 
-bool LauncherIcon::OpenQuicklist(bool default_to_first_item, int monitor)
+bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
 {
   std::list<DbusmenuMenuitem*> menus = Menus();
 
@@ -583,8 +584,8 @@ bool LauncherIcon::OpenQuicklist(bool default_to_first_item, int monitor)
     _quicklist->AddMenuItem(ql_item);
   }
 
-  if (default_to_first_item)
-    _quicklist->DefaultToFirstItem();
+  if (select_first_item)
+    _quicklist->SelectFirstItem();
 
   if (monitor < 0)
   {
@@ -852,6 +853,11 @@ LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value)
 
     UBusServer* ubus = ubus_server_get_default();
     ubus_server_send_message(ubus, UBUS_LAUNCHER_ICON_URGENT_CHANGED, g_variant_new_boolean(value));
+  }
+
+  if (quirk == QUIRK_VISIBLE)
+  {
+     visibility_changed.emit();
   }
 }
 

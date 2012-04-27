@@ -158,12 +158,18 @@ void TrashLauncherIcon::OnTrashChanged(GFileMonitor* monitor,
 }
 
 
-nux::DndAction TrashLauncherIcon::OnQueryAcceptDrop(unity::DndData& dnd_data)
+nux::DndAction TrashLauncherIcon::OnQueryAcceptDrop(DndData const& dnd_data)
 {
   return nux::DNDACTION_MOVE;
 }
 
-void TrashLauncherIcon::OnAcceptDrop(unity::DndData& dnd_data)
+bool TrashLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
+{
+  return true;
+}
+
+
+void TrashLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
 {
   for (auto it : dnd_data.Uris())
   {

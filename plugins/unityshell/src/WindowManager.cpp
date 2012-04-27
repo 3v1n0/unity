@@ -78,7 +78,22 @@ class WindowManagerDummy : public WindowManager
     return true;
   }
 
+  bool IsWindowOnTop(guint32 xid)
+  {
+    return false;
+  }
+
+  bool IsWindowClosable(guint32 xid)
+  {
+    return true;
+  }
+
   bool IsWindowMinimizable(guint32 xid)
+  {
+    return true;
+  }
+
+  bool IsWindowMaximizable(guint32 xid)
   {
     return true;
   }
@@ -204,6 +219,10 @@ class WindowManagerDummy : public WindowManager
   {
     g_debug("%s", G_STRFUNC);
   }
+
+  void AddProperties(GVariantBuilder* builder)
+  {
+  }
 };
 
 WindowManager*
@@ -219,6 +238,11 @@ void
 WindowManager::SetDefault(WindowManager* manager)
 {
   window_manager = manager;
+}
+
+std::string WindowManager::GetName() const
+{
+  return "WindowManager";
 }
 
 #define NET_WM_MOVERESIZE_MOVE 8

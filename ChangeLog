@@ -1,3 +1,1609 @@
+2012-04-26  Sebastien Bacher  <seb128@ubuntu.com>
+
+	Revert r2331, it's creating hang issues on start.. Fixes: . Approved by Didier Roche.
+
+2012-04-26  Sebastien Bacher  <seb128@ubuntu.com>
+
+	Revert r2331, it's creating hang issues on start. The commit is not fixing any
+	important issue and not needed in the SRU, it can come once the problems have
+	been resolved.
+
+2012-04-26  Michael Vogt  <michael.vogt@ubuntu.com>
+
+	Check for "exit_state" on the install-finished signal from aptdaemon (LP: #982921) and remove launcher icon again on failure.. Fixes: https://bugs.launchpad.net/bugs/982921. Approved by Tim Penhey.
+
+2012-04-26  Michael Vogt  <michael.vogt@ubuntu.com>
+
+	manual-tests/SoftwareCenter.txt: add manual test for the launcher integration cancel
+
+2012-04-17  Michael Vogt  <michael.vogt@ubuntu.com>
+
+	remove USC launcher again from unity on download/install failure or cancel
+
+2012-04-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	We need to flag a bamf view that we control using an icon using the "unity-seen" qdata, or unity will duplicate it on bamfdaemon respawn. (LP: #928912). Fixes: https://bugs.launchpad.net/bugs/928912. Approved by Michal Hruby, Tim Penhey.
+
+2012-04-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_launcher: removed the xclock test... We'll put it back soon.
+
+2012-04-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging thomi's fixes
+
+2012-04-26  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added xclock.
+
+2012-04-26  Thomi Richards  <thomi.richards@canonical.com>
+
+	Renamed test methods.
+
+2012-04-26  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed tautology from the test.
+
+2012-04-26  Thomi Richards  <thomi.richards@canonical.com>
+
+	CLeaned up test.
+
+2012-04-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, use kill instead of pkill to close applications
+
+2012-04-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: export the application ID for introspection
+
+2012-04-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_launcher: added test to check the launcher status after bamfdaemon killing
+
+2012-04-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: set the "unity-seen" qdata to all the BamfApplications we have
+	
+	This avoid that we create two icons for the same application instance.
+	Moving to the safer GUINT...
+
+2012-04-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: Focus an application if no child window is actually on top of the stack. Raises all urgent windows.
+	
+	This fixes bug #802816 that happens when an application raises a window on the top of the stack but the focus doesn't change.
+	
+	Plus, don't perform unneeded checks when focusing non-active applications.. Fixes: https://bugs.launchpad.net/bugs/802816, https://bugs.launchpad.net/bugs/986443. Approved by Tim Penhey.
+
+2012-04-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk.
+
+2012-04-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	manual test: updated.
+
+2012-04-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merge with trunk
+
+2012-04-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	manual-tests, Launcher: added a test for non top non-focused windows
+
+2012-04-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: raise all the urgent windows, if there are any
+
+2012-04-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: focus an application if no child window is actually on top of the stack.
+	
+	This fixes bug #802816 that happens when an application raises a window on the top of the stack but the
+	focus doesn't change.
+	
+	Plus, don't perform unneeded checks for non-active applications.
+
+2012-04-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowManager: add method to get if a window is on top.
+	
+	Top window is a window that is on top of the stack, excluding invisible, not mapped,
+	minimized, set "above" and unity windows.
+
+2012-04-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	manual-test, Launcher: added manual test for the Chromium web applications. Fixes: . Approved by Tim Penhey.
+
+2012-04-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	manual-test, Launcher: added manual test for the Chromium web applications
+
+2012-04-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: activate the icon using the quicklist item using an Idle.
+	
+	This fixes the bug #986461 that caused the spread not to initiate clicking on the quicklist application name.. Fixes: https://bugs.launchpad.net/bugs/986461. Approved by Thomi Richards.
+
+2012-04-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowManager: removed the g_debug("%s", G_STRFUNC); from AddProperties dummy implementation
+
+2012-04-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_quicklist: add a test to check that spread works when initiated by quicklist
+
+2012-04-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, keybindings: include spread keybindings
+
+2012-04-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, add WindowManager emulator
+
+2012-04-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_quicklist: added test to check if the application label works
+
+2012-04-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unityshell: set PluginAdapter as introspectable child
+
+2012-04-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowManager: make it introspectable, implementation in PluginAdapter.
+
+2012-04-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merge with trunk
+
+2012-04-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: remove the _quicklist_activated_id related source on destruction
+
+2012-04-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: activate the icon using the quicklist item using an Idle.
+	
+	This fixes the bug #986461 that caused the spread not to initiate clicking on the quicklist
+	application name.
+
+2012-04-25  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix scale inversion when processing non-rect tile textures. Fixes: https://bugs.launchpad.net/bugs/988338. Approved by Gord Allott.
+
+2012-04-25  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix scale inversion when processing non-rect tile textures
+
+2012-04-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Don't crop the bottom of results in card view when a category is not expanded.. Fixes: https://bugs.launchpad.net/bugs/975003. Approved by Marco Trevisan (Treviño).
+
+2012-04-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes LP bug #975003.
+
+2012-04-25  Michal Hruby  <michal.mhr@gmail.com>
+
+	Destroy lens views before destroying lens models. Fixes: . Approved by Gord Allott, Sam Spilsbury.
+
+2012-04-24  Michal Hruby  <michal.mhr@gmail.com>
+
+	Add a comment
+
+2012-04-24  Michal Hruby  <michal.mhr@gmail.com>
+
+	Destroy lens views before destroying lens models
+
+2012-04-25  Michal Hruby  <michal.mhr@gmail.com>
+
+	Make sure hud's spinner stops spinning after hud service returns reply. Fixes: https://bugs.launchpad.net/bugs/987781. Approved by Gord Allott, Marco Trevisan (Treviño).
+
+2012-04-24  Michal Hruby  <michal.mhr@gmail.com>
+
+	Make sure hud's spinner stops spinning after hud service returns reply
+
+2012-04-25  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Shorten the press/release time of the Ctrl+Space for the IBus AP tests.. Fixes: . Approved by Thomi Richards.
+
+2012-04-24  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Shortens the press/release time for Ctrl+Space as jenkins is a little slow
+
+2012-04-24  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Enable dnd for all launcher icons (and not just the ones matching the type).. Fixes: https://bugs.launchpad.net/bugs/880798. Approved by Marco Trevisan (Treviño).
+
+2012-04-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix typo.
+
+2012-04-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes.
+
+2012-04-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add a manual test.
+
+2012-04-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes bug #880798.
+
+2012-04-24  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Set a shortcut for the new apps on the launcher too.. Fixes: https://bugs.launchpad.net/bugs/778499. Approved by Marco Trevisan (Treviño).
+
+2012-04-24  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix.
+
+2012-04-24  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-04-23  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Adds AP test.
+
+2012-04-23  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes bug #778499.
+
+2012-04-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DeviceLauncherSection: updated to use glib::SignalManager and glib::Object
+	
+	This allow to be more safe; it fixes also some crashes caused by the fact that DeviceLauncherIcon didn't own the GVolume* object. Now it uses glib::Object completely, so we can automagically ref/unref the volume when the icon is created/removed.. Fixes: https://bugs.launchpad.net/bugs/918548, https://bugs.launchpad.net/bugs/977762. Approved by Andrea Azzarone.
+
+2012-04-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DeviceLauncherSection: use glib::SignalManager
+
+2012-04-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DeviceLauncherIcon: use a glib::Object to handle the volume.
+	
+	So we can be safe about reference. This will automagically add
+	and remove a reference when needed.
+
+2012-04-24  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	UnityScreen: use smart_pointers correctly, destruct items in correct order. Fixes: https://bugs.launchpad.net/bugs/987932. Approved by Marco Trevisan (Treviño).
+
+2012-04-24  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Remove useless namespace
+
+2012-04-24  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixed spacing issue
+
+2012-04-24  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Some fixes, also added some comments about the ordering (was causing the crashes)
+
+2012-04-24  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Changed WindowThread to use a unique ptr
+	* Also fixed a memory leak with the debugger
+	* Some cleaning up also
+	* Thanks Treviño for the information :)
+
+2012-04-24  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	UnityScreen: destroy the controllers before the window thread
+	
+	Fixes crashes enabling/disabling plugins in CCSM. Fixes: https://bugs.launchpad.net/bugs/931201, https://bugs.launchpad.net/bugs/942286, https://bugs.launchpad.net/bugs/947844, https://bugs.launchpad.net/bugs/952378. Approved by Marco Trevisan (Treviño).
+
+2012-04-23  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixes some crashes with the ccsm and plugins
+	* There still seems to be a crash, but it looks to be in bamf
+
+2012-04-24  Michal Hruby  <michal.mhr@gmail.com>
+
+	GLibDBusProxy: Remove 1 second timeout we used before connecting to dbus proxies. Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-04-24  Michal Hruby  <michal.mhr@gmail.com>
+
+	Remove 1 second timeout we used before connecting to dbus proxies
+
+2012-04-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudLauncherIcon: close the HUD when activating the icon
+	
+	As design requested in bug #963918. Fixes: https://bugs.launchpad.net/bugs/963918. Approved by Gord Allott.
+
+2012-04-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudLauncherIcon: removed unneeded space.
+
+2012-04-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_hud: add test to check if clicking over the HUD icon closes it.
+
+2012-04-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudLauncherIcon: close the HUD when activating the icon
+	
+	As design requested in bug #963918
+
+2012-04-24  smspillaz  <sam.spilsbury@canonical.com>
+
+	See Bug 880449 : Minimized windows were being considered for showdesktop and had their input shape removed twice.
+	
+	1) Never allow different entities to fight over the input shape of the window. Have one shared interface between them with RAII semantics
+	2) Don't allow minimized windows to enter showdesktop mode. Fixes: . Approved by Gord Allott.
+
+2012-04-23  smspillaz  <sam.spilsbury@canonical.com>
+
+	Fix style, use <memory>
+
+2012-04-18  smspillaz  <sam.spilsbury@canonical.com>
+
+	Don't showdesktop minimized windows
+
+2012-04-18  smspillaz  <sam.spilsbury@canonical.com>
+
+	Make the minimize handler use the same mechanism
+
+2012-04-18  smspillaz  <sam.spilsbury@canonical.com>
+
+	Acquire input shape removal through RAII semantics
+
+2012-04-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Hud: update the icon size to match the launcher icon size when in auto-hide mode
+	
+	Plus prevent a couple of crashes. Fixes: https://bugs.launchpad.net/bugs/921506, https://bugs.launchpad.net/bugs/983646. Approved by Tim Penhey.
+
+2012-04-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudView: Set the minimum icon height to match the content_layout
+	
+	So the icon is vertically centered to the hud search (minimal) layout if needed.
+
+2012-04-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudIcon: use unsigned integer for padding.
+
+2012-04-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudView: remove space
+
+2012-04-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudIcon: Fix the icon position to be relative to size, add a minimum vertical padding
+	
+	This makes the icon draw correctly when it's big, also it makes the view to increas its
+	vertical size slightly to use some padding if needed.
+
+2012-04-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudView: fix the geometry not to change when the icon size changes
+
+2012-04-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudController: add SetIcon function that removes some code duplication
+
+2012-04-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconTexture: be more safe when handling _pixbuf_cached
+	
+	Set it to null when invalid and during initialization
+
+2012-04-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk (window button fixes)
+
+2012-04-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Hud: update the icon size to match the launcher icon size.
+
+2012-04-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with icon fixes branch
+
+2012-04-23  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use 2 columns in the card view in desktop mode when filters are opened.. Fixes: https://bugs.launchpad.net/bugs/977817. Approved by Mirco Müller, Marco Trevisan (Treviño), Andrea Cimitan.
+
+2012-04-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug #977817.
+
+2012-04-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-04-21  Michael Rawson  <michaelrawson76@gmail.com>
+
+	Fixes position of "show desktop" icon-LP:964073. Fixes: https://bugs.launchpad.net/bugs/964073. Approved by Marco Trevisan (Treviño).
+
+2012-04-18  Michael Rawson  <michaelrawson76@gmail.com>
+
+	Fixed braces
+
+2012-04-17  Michael Rawson  <michaelrawson76@gmail.com>
+
+	Fixed indentation
+
+2012-04-15  Michael Rawson  <michaelrawson76@gmail.com>
+
+	Fixed ccsm problem
+
+2012-04-15  Michael Rawson  <michaelrawson76@gmail.com>
+
+	Removed excess DesktopLauncherIcons()
+
+2012-04-14  Michael Rawson  <michaelrawson76@gmail.com>
+
+	Re-added code
+
+2012-04-14  Michael Rawson  <michaelrawson76@gmail.com>
+
+	Made fix more explicit-thanks Marco
+
+2012-04-13  Michael Rawson  <michaelrawson76@gmail.com>
+
+	Moved show desktop icon to intended position
+
+2012-04-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowButtons: avoid to disable the Overlay close button.
+	
+	This fixes a regression I probabily introduced (sorry).. Fixes: https://bugs.launchpad.net/bugs/986264. Approved by Andrea Azzarone.
+
+2012-04-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowButtons: remove extra space, and be more crash-safe
+
+2012-04-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowButtons: avoid to disable the Overlay close button.
+	
+	This fixes a regression I probabily introduced (sorry).
+
+2012-04-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Don't activate "home.lens" during dash closing.. Fixes: https://bugs.launchpad.net/bugs/914785. Approved by Michal Hruby, Marco Trevisan (Treviño).
+
+2012-04-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-04-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Don't activate the home lens during the dash closing.
+
+2012-04-20  Thomi Richards  <thomi.richards@canonical.com>
+
+	Update IBus tests to only set the IME once per test case class.. Fixes: . Approved by Brandon Schaefer, Thomi Richards.
+
+2012-04-20  Thomi Richards  <thomi.richards@canonical.com>
+
+	Use a single setUpClass method.
+
+2012-04-20  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* setUpClass, not tearDownClass
+
+2012-04-20  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Removed param, as it is no longer needed
+
+2012-04-20  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Now the ibus only reset the context when it changes test engines
+
+2012-04-19  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Changed to deactivate to an explicit call
+
+2012-04-20  Chase Douglas  <chase.douglas@ubuntu.com>
+
+	Fix potential pointer lockup on initial drag gesture.. Fixes: https://bugs.launchpad.net/bugs/979418. Approved by Marco Trevisan (Treviño), Alex Launi.
+
+2012-04-12  Chase Douglas  <chase.douglas@ubuntu.com>
+
+	Add test comment
+
+2012-04-11  Chase Douglas  <chase.douglas@ubuntu.com>
+
+	Fix pointer locking up after three touch window drag
+	
+	GestureEngine::EndDrag() checks if a drag gesture was performed before
+	ungrabbing the pointer. Unfortunately, it checks if the gesture ID is
+	non-zero, but a zero ID is valid. We don't need to check the gesture ID
+	at all since the drag window is maintained properly.
+
+2012-04-11  Chase Douglas  <chase.douglas@ubuntu.com>
+
+	Add regression test for drag gesture pointer grabs not being removed
+
+2012-04-11  Chase Douglas  <chase.douglas@ubuntu.com>
+
+	Add grab counting in compiz screen mock
+
+2012-04-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowButtons: disable the close button if the controlled window is not closable
+	
+	Added support to WindowManager to get if a window is closable and maximizable, then used the IsWindowClosable method to enable or disable the close window button.. Fixes: https://bugs.launchpad.net/bugs/981196. Approved by Thomi Richards, Brandon Schaefer.
+
+2012-04-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	manual-tests: WindowButtons, added test case for disabled close button
+
+2012-04-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowButtons: disable the close button if the controlled window is not closable
+
+2012-04-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowManager: add functions to get if a window is maximizable and closable
+
+2012-04-19  Thomi Richards  <thomi.richards@canonical.com>
+
+	IBus autopilot tests now wait for input method context to be created before typing characters.. Fixes: . Approved by Brandon Schaefer.
+
+2012-04-20  Thomi Richards  <thomi.richards@canonical.com>
+
+	ibus tests now wait for ibus to be activated in the target widget. This removes the need for sleep statements alltogether.
+
+2012-04-20  Thomi Richards  <thomi.richards@canonical.com>
+
+	IBus tests now wait until the im_active property on the SearchBar is set to true.
+
+2012-04-20  Thomi Richards  <thomi.richards@canonical.com>
+
+	First pass at fixing the ibus tests.
+
+2012-04-20  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged launcher tests fix, needed by this branch.
+
+2012-04-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add a sanity check to avoid crashes.. Fixes: https://bugs.launchpad.net/bugs/982730. Approved by Marco Trevisan (Treviño).
+
+2012-04-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Adds a sanity check to avoid crashes.
+
+2012-04-19  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixes autopilot launcher test.. Fixes: . Approved by Alex Launi.
+
+2012-04-20  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed launcher emulator and tests.
+
+2012-04-19  Michal Hruby  <michal.mhr@gmail.com>
+
+	Finetune priorities when updating dash results, prevents flickering. Fixes: https://bugs.launchpad.net/bugs/961979. Approved by Gord Allott.
+
+2012-04-19  Michal Hruby  <michal.mhr@gmail.com>
+
+	Finetune priorities when updating dash results, prevents flickering
+
+2012-04-19  Thomi Richards  <thomi.richards@canonical.com>
+
+	Shortcut hint tests now all pass.. Fixes: . Approved by Alex Launi.
+
+2012-04-19  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed shortcut hint tests, cleaned up the shortcut hint controller, and made tests use the new Eventually() matcher, which eliminates the need for many sleep() statements.
+
+2012-04-19  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed two failing tests.
+
+2012-04-19  Thomi Richards  <thomi.richards@canonical.com>
+
+	Improve autopilot assertion messages inside the new wait_for method.. Fixes: . Approved by Alex Launi.
+
+2012-04-19  Thomi Richards  <thomi.richards@canonical.com>
+
+	Autopilot wait_for assertions have a slightly better error message.
+
+2012-04-19  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed failing panel autopilot tests.. Fixes: . Approved by Brandon Schaefer.
+
+2012-04-19  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed two failing panel tests.
+
+2012-04-19  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	HudIcon now filters out windows on different workspaces and windows that are hidden.. Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-04-18  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* changed xid back to a 0, not a pointer
+
+2012-04-18  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixed ap test
+	* Uses nullptr now
+
+2012-04-18  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* remove debug include
+
+2012-04-18  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixed the ? icon appearing.
+
+2012-04-18  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Added ap test
+
+2012-04-18  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Now the hud filters out windows on different workspaces for the HudIcon.
+
+2012-04-19  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed a failing test in the command_lens test suite.. Fixes: . Approved by Brandon Schaefer.
+
+2012-04-19  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed a failing command lens test. Somehow the assertion got inverted in the porting process.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Hud autopilot tests use the new Eventually autopilot matcher to reduce the number of test failures due to timing issues.. Fixes: . Approved by Thomi Richards.
+
+2012-04-19  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk, resolved conflicts.
+
+2012-04-18  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixed indent error
+
+2012-04-18  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixed the dash test that was removed
+
+2012-04-18  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* uses properties
+
+2012-04-18  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* merged trunk, fixed conflicts* merged trunk, fixed conflicts* merged trunk, fixed conflicts* merged trunk, fixed conflicts* merged trunk, fixed conflicts* merged trunk, fixed conflicts* merged trunk, fixed conflicts* merged trunk, fixed conflicts
+
+2012-04-17  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixed 2 ap fails
+
+2012-04-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	QuicklistView: fixed the quicklist key navigation, to make it consistent with Gtk menus navigation.
+	
+	The prelight of the items is now completely controlled by QuicklistView and never by QuicklistMenuItem, the children can define now when they are slectable.. Fixes: https://bugs.launchpad.net/bugs/911561, https://bugs.launchpad.net/bugs/978926, https://bugs.launchpad.net/bugs/979096. Approved by Thomi Richards.
+
+2012-04-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_quicklist: cyclic keynav docstring fixes
+
+2012-04-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_quicklist: use the Eventually matcher to avoid false-negatives
+
+2012-04-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-04-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot: quicklist emulator, applying Thomi's fixes.
+
+2012-04-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_quicklist: docstrings updated.
+
+2012-04-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot: quicklist, use only properties
+
+2012-04-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestQuicklistMenuitems: added GetSelectable tests
+
+2012-04-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, quicklist: added other tests to check the cyclic key-navigation
+	
+	Also the quicklist emulator now includes the selectable_items property
+
+2012-04-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, quicklist: use the new selectable item property instead of computing it
+
+2012-04-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	QuicklistMenuItem: add GetSelectable virtual method
+	
+	So each item can define when it's possible to select them, by default all
+	the items are selectable when visible and enabled, while the Separator
+	item can never be selected.
+
+2012-04-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, quicklist: add more last/first tests
+
+2012-04-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_quicklist: added first bunch of key navigation tests
+
+2012-04-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	QuicklistView, QuicklistMenuItem: export absolute geometries for introspection
+
+2012-04-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	QuicklistView: add support to Home/End Page up/down buttons to select items
+
+2012-04-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	QuicklistView: use the new SelectItem into RecvItemMouseDrag
+
+2012-04-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	QuicklistMenuItem: don't change the focus on move, only on enter/leave
+	
+	This to keep the consistency with GTK menus.
+	Also when leaving an unselected entry, we shouldn't unselect all.
+
+2012-04-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	QuicklistMenuItem: make the introspection prelight name more explicit
+
+2012-04-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	QuicklistView: enhance the key navigation to follow the same menus behavior
+	
+	1) When no item is selected pressing the Down arrow key should
+	select the first item (from top)
+	2) When no item is selected pressing the Up arrow key should
+	select the last item (from top)
+	3) When the last item is selected, pressing the Down arrow key
+	should select the first item
+	4) When the first item is selected, pressing the Up arrow key
+	should select the last item
+	
+	All these cases assume that the mouse pointer is outside the
+	quicklist or over an item and not moving, in the case that the
+	mouse pointer is moved over an unselected item, the focus should
+	be moved to that item.
+
+2012-04-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	QuicklistView: manage the prelight item status, avoid double-selected items
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Update HUD tests to use the new Eventually() matcher.. Fixes: . Approved by Brandon Schaefer.
+
+2012-04-19  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed unused import, fixed reference to property being treated as a function.
+
+2012-04-19  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Cleaned up code after review.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged home-lens-tests-to-wait_for-feature into hud-tests-to-wait_for-feature.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged home-lens-tests-to-wait_for-feature into hud-tests-to-wait_for-feature.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Hud tests now use Eventually() matcher object instead of wait_for.
+
+2012-04-18  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Fixed going from the Hud to the Dash forgetting window focus when exiting from the Dash.. Fixes: https://bugs.launchpad.net/bugs/984639. Approved by Andrea Azzarone, Thomi Richards.
+
+2012-04-18  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Use the correct assert
+
+2012-04-18  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* removed sleep
+
+2012-04-18  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixes Hud to Dash not restoring window focus
+	* Also fixes a Dash ap test failing
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Home lens tests use wait_for instead of explicit sleep statements.. Fixes: . Approved by Brandon Schaefer, Alex Launi, Thomi Richards.
+
+2012-04-19  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk, reso;lved conflicts.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged dash-tests-to-wait_for-feature into home-lens-tests-to-wait_for-feature.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged fix-command-lens-ap-tests-with-new-wait_for-featuer into dash-tests-to-wait_for-feature.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged wait_for-to-use-testtools-exception into fix-command-lens-ap-tests-with-new-wait_for-featuer.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged dash-tests-to-wait_for-feature into home-lens-tests-to-wait_for-feature.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged fix-command-lens-ap-tests-with-new-wait_for-featuer into dash-tests-to-wait_for-feature.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged wait_for-to-use-testtools-exception into fix-command-lens-ap-tests-with-new-wait_for-featuer.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Home lens tests now use the Eventually() syntax.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	IBus tests use new Eventually matcher.. Fixes: . Approved by Thomi Richards.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	IBus tests now use the Eventually() matcher instead of wait_for.
+
+2012-04-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Don't close the dash if the click is inside the desktop dash border.. Fixes: https://bugs.launchpad.net/bugs/839472. Approved by Tim Penhey.
+
+2012-04-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-04-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix AP test.
+
+2012-04-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes typo. Adds AP test.
+
+2012-04-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Clicking on the desktop dash border should do nothing, *NOT* close the dash.
+
+2012-04-18  Michal Hruby  <michal.mhr@gmail.com>
+
+	Make sure we don't try to remove sources that were already removed.. Fixes: . Approved by Marco Trevisan (Treviño), Andrea Azzarone.
+
+2012-04-18  Michal Hruby  <michal.mhr@gmail.com>
+
+	Don't remove invalid sources
+
+2012-04-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes bug #980924.. Fixes: https://bugs.launchpad.net/bugs/980924. Approved by Gord Allott, Marco Trevisan (Treviño).
+
+2012-04-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove unneeded code.
+
+2012-04-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes LP bug #980924.
+
+2012-04-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UScreen: code updated to be more C++ friendly.
+	
+	Also moved into the unity namespace.. Fixes: . Approved by Andrea Azzarone.
+
+2012-04-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UScreen: ref the GdkScreen object we own.
+
+2012-04-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UScreen: code updated to be more C++ friendly.
+	
+	Also moved into the unity namespace.
+
+2012-04-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix compilation of standalone launcher.. Fixes: https://bugs.launchpad.net/bugs/983989. Approved by Marco Trevisan (Treviño), Sam Spilsbury.
+
+2012-04-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix standalone launcher.
+
+2012-04-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use std::shared_ptr::reset instead of = some::Ptr(new...) for UScreen::proxy_. Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-04-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Revert prev commit. Use std::shared_ptr::reset.
+
+2012-04-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Makes UScreen::proxy_ a unity::glib::DBusProxy.
+
+2012-04-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug #977922.. Fixes: https://bugs.launchpad.net/bugs/977922. Approved by Tim Penhey.
+
+2012-04-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix.
+
+2012-04-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug #977922.
+
+2012-04-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix the switcher so it displays the full title of apps in Chinese. Fixes: https://bugs.launchpad.net/bugs/830801. Approved by Tim Penhey.
+
+2012-04-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk
+
+2012-04-16  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add a manual test.
+
+2012-04-14  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug #830801.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Launcher tests use Eventually() matcher.. Fixes: . Approved by Thomi Richards.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Launcher emulator now uses wait_for to block until the action has been performed. Reduces the need for sleep() statements inside tests.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Launcher tests now use Eventually() matcher. Also removed some cruft from the launcher emulators.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged ibus-test-to-wait_for-feature into launcher-tests-pep8-whitespace-fixes.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged hud-tests-to-wait_for-feature into ibus-test-to-wait_for-feature.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged home-lens-tests-to-wait_for-feature into hud-tests-to-wait_for-feature.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged dash-tests-to-wait_for-feature into home-lens-tests-to-wait_for-feature.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged ibus-test-to-wait_for-feature into launcher-tests-pep8-whitespace-fixes.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged hud-tests-to-wait_for-feature into ibus-test-to-wait_for-feature.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged home-lens-tests-to-wait_for-feature into hud-tests-to-wait_for-feature.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged dash-tests-to-wait_for-feature into home-lens-tests-to-wait_for-feature.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged ibus-test-to-wait_for-feature into launcher-tests-pep8-whitespace-fixes.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged hud-tests-to-wait_for-feature into ibus-test-to-wait_for-feature.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged home-lens-tests-to-wait_for-feature into hud-tests-to-wait_for-feature.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged dash-tests-to-wait_for-feature into home-lens-tests-to-wait_for-feature.
+
+2012-04-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixes PEP8 and whitespace issues.
+
+2012-04-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	IBUs tests now make use of the wait_for attribute feature. Also refactored the ibus tests so many of them are only a few lines long, and reduced the amount of duplicated code.
+
+2012-04-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged home-lens-tests-to-wait_for-feature into hud-tests-to-wait_for-feature.
+
+2012-04-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged dash-tests-to-wait_for-feature into home-lens-tests-to-wait_for-feature.
+
+2012-04-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixes several timing issues. Unity exports some properties in arrays, which makes it slightly tricky to use the wait_for feature.
+
+2012-04-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	More hud test changes.
+
+2012-04-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Hud test changes first pass merge.
+
+2012-04-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Home lens uses wait_for instead of explicit sleeps.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Dash autopilot tests use the new autopilot wait_for feature.. Fixes: . Approved by Brandon Schaefer, Tim Penhey.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Missed one spot.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Dash tests changed to use Eventually matcher.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged fix-command-lens-ap-tests-with-new-wait_for-featuer into dash-tests-to-wait_for-feature.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged fix-command-lens-ap-tests-with-new-wait_for-featuer into dash-tests-to-wait_for-feature.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged fix-command-lens-ap-tests-with-new-wait_for-featuer into dash-tests-to-wait_for-feature.
+
+2012-04-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged fix-command-lens-ap-tests-with-new-wait_for-featuer into dash-tests-to-wait_for-feature.
+
+2012-04-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	fixed code after code review.
+
+2012-04-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged fix-command-lens-ap-tests-with-new-wait_for-featuer into dash-tests-to-wait_for-feature.
+
+2012-04-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	More fixes.
+
+2012-04-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged fix-command-lens-ap-tests-with-new-wait_for-featuer into dash-tests-to-wait_for-feature.
+
+2012-04-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged in code to fix up the dash tests.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Command lens uses Eventually() autopilot matcher to eliminate the need for sleep() statements in autopilot tests.. Fixes: . Approved by Brandon Schaefer, Tim Penhey.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Updated to use the Eventually matcher.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged wait_for-to-use-testtools-exception into fix-command-lens-ap-tests-with-new-wait_for-featuer.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged wait_for-to-use-testtools-exception into fix-command-lens-ap-tests-with-new-wait_for-featuer.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged wait_for-to-use-testtools-exception into fix-command-lens-ap-tests-with-new-wait_for-featuer.
+
+2012-04-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged wait_for-to-use-testtools-exception into fix-command-lens-ap-tests-with-new-wait_for-featuer.
+
+2012-04-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged wait_for-to-use-testtools-exception into fix-command-lens-ap-tests-with-new-wait_for-featuer.
+
+2012-04-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed unused import
+
+2012-04-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Command lens tests updated to use the new wait_for feature, and various other API fixes.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Cleaned up docstrings and whitespace in autopilot panel tests.. Fixes: . Approved by Tim Penhey.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Whitespace, PEP8 and PEP257 fixes for the panel tests.
+
+2012-04-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Adds an Eventually() matcher that allows us to block a while until a unity attribute matches a testtools match object.. Fixes: . Approved by Tim Penhey, Thomi Richards.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Check match and wait_for attribute are callables.:
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed code from review.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed code from review.
+
+2012-04-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix some uninitialized variables.. Fixes: https://bugs.launchpad.net/bugs/983333. Approved by Tim Penhey.
+
+2012-04-16  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug #983333
+
+2012-04-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes bug #983268. Fixes: https://bugs.launchpad.net/bugs/983268. Approved by Thomi Richards.
+
+2012-04-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes bug #983268.
+
+2012-04-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Extend the autopilot wait_for feature to use testtools matcher instances as well as ordinary values. Also added an 'Eventually' matcher which makes tests more explicit.. Fixes: . Approved by Alex Launi.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed typo
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added 'Eventually' autopilot matcher.
+
+2012-04-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Extend the autopilot wait_for feature to use testtools matcher instances as well as ordinary values.. Fixes: . Approved by Alex Launi.
+
+2012-04-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Don't use hasattr,
+
+2012-04-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Cleaned up code after code review.
+
+2012-04-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	wait_for now deals with attributes that have a '-' in them correctly.
+
+2012-04-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	wait_for attribute now accept testtools matchers.
+
+2012-04-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Attribute wait_for feature now raises an AssertionError instead of a RuntimeError. THis will make unit tests FAIL instead of ERRORing when wa wait_for call fails.
+
+2012-04-17  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Fix transparent panel in non-GLSL hardware, and use bool 'false' instead 'FALSE'. Fixes: https://bugs.launchpad.net/bugs/965323. Approved by Robert Carr, Michal Hruby.
+
+2012-04-17  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Correct fix for 965323
+
+2012-04-17  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Use false as boolean instead FALSE, whitespaces
+
+2012-04-17  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Attempt to fix 965323
+
+2012-04-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added the autopilot wait_for attribute feature.. Fixes: . Approved by Marco Trevisan (Treviño), Brandon Schaefer.
+
+2012-04-13  Thomi Richards  <thomi.richards@canonical.com>
+
+	Dash and hud emulators use new wait_for attribute feature.
+
+2012-04-13  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged autopilot-attribute-feature into convert-to-use-wait_for.
+
+2012-04-13  Thomi Richards  <thomi.richards@canonical.com>
+
+	Don't change dash in this pipeline.
+
+2012-04-13  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged branch that fixes the multi key code.
+
+2012-04-12  Thomi Richards  <thomi.richards@canonical.com>
+
+	Cleaned up gsettings calling code. Don't want to run command through a shell, and removed extra quotes.
+
+2012-04-11  Alex Launi  <alex.launi@canonical.com>
+
+	Small fixes for compose key tests
+
+2012-04-11  Alex Launi  <alex.launi@canonical.com>
+
+	Args should be a list not a tuple
+
+2012-04-13  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-04-13  Thomi Richards  <thomi.richards@canonical.com>
+
+	Dash tests now use new autopilot wait_for mechanism.
+
+2012-04-13  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix unity logging reset.
+
+2012-04-11  Thomi Richards  <thomi.richards@canonical.com>
+
+	Feature seems to work. Trying it out on the dash tests.
+
+2012-04-11  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed old code, added special sauce.
+
+2012-04-17  Lars Uebernickel  <lars.uebernickel@canonical.com>
+
+	Force menu reposition on popup in case its contents have changed.
+	
+	Fixes bug 883317.. Fixes: https://bugs.launchpad.net/bugs/883317. Approved by Marco Trevisan (Treviño).
+
+2012-04-13  Lars Uebernickel  <lars.uebernickel@canonical.com>
+
+	Force menu reposition on popup in case its contents have changed
+
+2012-04-17  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix a couple of wrong reference/memory management issues. Fixes: https://bugs.launchpad.net/bugs/979429. Approved by Marco Trevisan (Treviño).
+
+2012-04-16  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix possible signal disconnection on already dead object
+
+2012-04-16  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix incorrect string freeing in Hud
+
+2012-04-16  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix wrong unref in DebugInterface
+
+2012-04-17  Gord Allott  <gord.allott@canonical.com>
+
+	Small fix for the unity cmake, depend on unity core was missing from a test. Fixes: . Approved by Michal Hruby.
+
+2012-04-17  Gord Allott  <gord.allott@canonical.com>
+
+	fixes small cmake depends issue
+
+2012-04-16  Andrea Azzarone  <azzaronea@gmail.com>
+
+	The shortcut keys in workspace section of the shortcut overlay aren't translated.. Fixes: https://bugs.launchpad.net/bugs/980828. Approved by Didier Roche.
+
+2012-04-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes bug #980828.
+
+2012-04-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Fix the behaviour of alt-tab and clicking on the launcher icon to just raise the most recently used window, not all for that app.
+	
+	
+	BamfLauncherIcon's activation related code has been updated to be more multimonitor aware (for free I've fixed also some bugs that caused the windows not to be put in spread mode in multi-monitor), and to support both the "Launcher only on Primary Monitor" and "Launcher on all monitors" options.
+	
+	PluginAdapter's FocusWindowGroup method has been updated to optionally only unminimize / raise and activate only the top window. This code would have been more optimized using a reverse iterator to fetch the top_window, but not to change the whole logic and to allow to keep the previous behavior (that initially we wanted for "long alt+tab") without duplicating code, I've just hacked that.
+	Implemented also GetWindowMonitor to workaround the mismatch we had with the compiz' window->outputDevice() and the UScreen values that now we use in the whole unity.
+	
+	Screencast of the fixed version: http://ubuntuone.com/7YaWciQnaZHfzr35asSz0N. Fixes: https://bugs.launchpad.net/bugs/861250, https://bugs.launchpad.net/bugs/959339, https://bugs.launchpad.net/bugs/981795. Approved by Thomi Richards, Tim Penhey.
+
+2012-04-16  Tim Penhey  <tim.penhey@canonical.com>
+
+	Test the alt-tab appears on the monitor that has window focus.
+
+2012-04-16  Tim Penhey  <tim.penhey@canonical.com>
+
+	Add window stack assertions to the switcher tests.
+
+2012-04-16  Tim Penhey  <tim.penhey@canonical.com>
+
+	Assert that the visible window stack is what we expect.
+
+2012-04-16  Tim Penhey  <tim.penhey@canonical.com>
+
+	More AP test tweaks.
+
+2012-04-16  Tim Penhey  <tim.penhey@canonical.com>
+
+	Tweaks to the test.
+
+2012-04-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PluginAdapter: avoid to raise and unminimize top_window if already done
+
+2012-04-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: be more clear in comment (yeah?)
+
+2012-04-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UScreen: use GetMonitorAtPosition in GetMonitorWithMouse
+
+2012-04-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowManager, BamfLauncherIcon: some code cleanup
+
+2012-04-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_launcher: updated click test to check minimized windows too
+	
+	Removed debug data
+
+2012-04-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_switcher: updated against new updates
+
+2012-04-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unityshell: show the Alt+Tab window in the monitor where is the active window
+	
+	As per design.
+
+2012-04-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowManager: add method to get the active window.
+
+2012-04-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PluginAdapter: removing debugging bits
+
+2012-04-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with branch changes
+
+2012-04-14  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* removed something that got added somehow
+
+2012-04-14  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Added an AP test for the new design changes.
+
+2012-04-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherController: Removing the code for the Quick Alt+Tab, it should behave always at the same way
+	
+	19:11:04 <JohnLea> so to summarize the above, when a app icon is selected
+	in Alt-Tab, the most recently focused window (on any monitor, but only in
+	the current workspace) of that application which is not minimised
+	should be focused
+
+2012-04-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot: fixed the AP test
+
+2012-04-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: Also invisible windows shouldn't be counted as available in monitor
+	
+	Now the spread works as expected, clicking on each monitor's panel! ;)
+
+2012-04-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: don't consider an unmapped window as one in monitor
+
+2012-04-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: focus a window if the application is not active on the current monitor
+
+2012-04-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: if the current launcher is used for all the monitors, don't filter windows per monitor
+
+2012-04-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherController: include the switcher monitor when activating a group
+
+2012-04-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowManager: add GetWindowMonitor method, and use UScreen to fetch it
+	
+	This now used in PluginAdapter not to have inconsistences.
+
+2012-04-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UScreen: allow to get the monitor for a given point
+
+2012-04-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unityshell: switcher, use UScreen to get the monitor value.
+	
+	Not using this can cause inconsistences, due to the fact that compiz
+	numbers the devices in a different way.
+
+2012-04-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PluginAdapter::FocusWindowGroup: add a parameter to define if focusing the on-top window only
+	
+	This allow to be more monitor/VP safe
+
+2012-04-12  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* remove extra line
+
+2012-04-12  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixed the No new line error diff was reporting
+
+2012-04-12  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* merged trunk
+
+2012-04-12  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* removed random dash '-'
+
+2012-04-12  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Add autopilot test for both bugs!
+
+2012-04-12  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Added more autopilot test for quick alt+tab
+
+2012-04-11  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* merged trunk
+
+2012-04-09  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* merged trunk
+
+2012-04-06  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Added 2 autopilot test showing quick tab is true when pressed fast enough
+
+2012-04-06  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* fixed manual test I messed up
+
+2012-04-06  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Added a timer for quick tab
+
+2012-04-06  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Merged trunk
+
+2012-04-05  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Added another manual test
+	* Fixes
+
+2012-04-04  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixed tabbing issues
+
+2012-04-04  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Merged with trunk, fixed conficts
+
+2011-12-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: don't include dialog windows on Alt+Tab.
+
+2011-12-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	manual-tests: Added test for QuickAltTab
+
+2011-12-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PluginAdapter: Add support for the FocusVisibility::OnlyVisibleOnTop on FocusWindowGroup
+	
+	When a group is asked to focus with OnlyVisibleOnTop, we look for the
+	first non-minimized window on top of the stack and we raise and activate it.
+	
+	Code indentation fixes included.
+
+2011-12-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: when we receive a "quick" activate, use the OnlyVisibleOnTop focus visbility
+	
+	Defined a new FocusVisibility called OnlyVisibleOnTop that is meant
+	to only focus the first application window on top of the stack.
+	That is used when we receive a Switcher activate with a button != 0.
+
+2011-12-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherController: use the button value of ActionArg to indicate the switch type
+	
+	Instead of defining another type of ActionArg, I've used the button value
+	of ActionArg to define if we're currently performing a quick-alt+tab or
+	a standard switch.
+	Basically: 
+
+2012-04-16  Alexandros Frantzis  <alexandros.frantzis@linaro.org>
+
+	Fix compilation with OpenGL ES 2.0.. Fixes: . Approved by Sam Spilsbury.
+
+2012-04-06  Alexandros Frantzis  <alexandros.frantzis@linaro.org>
+
+	Fix compilation with OpenGL ES 2.0.
+
+2012-04-12  Gord Allott  <gord.allott@canonical.com >
+
+	fixes an uninitalised variable in the dashview code
+
+2012-04-12  Gord Allott  <gord.allott@canonical.com>
+
+	fixed uninitalised value
+
+2012-04-12  Didier Roche  <didier.roche@canonical.com>
+
+	Release\ 5.10.0
+
 2012-04-12  Michal Hruby  <michal.mhr@gmail.com>
 
 	Make sure the lenses search for things we want on startup. Fixes: https://bugs.launchpad.net/bugs/979799. Approved by Gord Allott.

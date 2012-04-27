@@ -35,7 +35,8 @@
 #include <x11-window-read-transients.h>
 
 class X11WindowFakeMinimizable :
-  public X11WindowReadTransients
+  public X11WindowReadTransients,
+  public compiz::WindowInputRemoverLockAcquireInterface
 {
   public:
 
@@ -50,8 +51,22 @@ class X11WindowFakeMinimizable :
 
   private:
 
+    compiz::WindowInputRemoverLock::Ptr GetInputRemover ();
+
+    compiz::WindowInputRemoverLock::Weak input_remover_;
     compiz::MinimizedWindowHandler::Ptr mMinimizedHandler;
 };
+
+compiz::WindowInputRemoverLock::Ptr
+X11WindowFakeMinimizable::GetInputRemover ()
+{
+  if (!input_remover_.expired ())
+    return input_remover_.lock ();
+
+  compiz::WindowInputRemoverLock::Ptr ret (new compiz::WindowInputRemoverLock (new compiz::WindowInputRemover (mDpy, mXid)));
+  input_remover_ = ret;
+  return ret;
+}
 
 X11WindowFakeMinimizable::X11WindowFakeMinimizable (Display *d, Window id) :
   X11WindowReadTransients (d, id)
@@ -74,7 +89,7 @@ X11WindowFakeMinimizable::minimize ()
   if (!mMinimizedHandler)
   {
     printf ("Fake minimize window 0x%x\n", (unsigned int) mXid);
-    mMinimizedHandler = compiz::MinimizedWindowHandler::Ptr (new compiz::MinimizedWindowHandler (mDpy, mXid));
+    mMinimizedHandler = compiz::MinimizedWindowHandler::Ptr (new compiz::MinimizedWindowHandler (mDpy, mXid, this));
     mMinimizedHandler->minimize ();
   }
 }

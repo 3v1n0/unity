@@ -23,6 +23,7 @@
 #include "UScreen.h"
 
 #include <NuxCore/Logger.h>
+#include <UnityCore/Variant.h>
 
 namespace
 {
@@ -529,6 +530,52 @@ PluginAdapter::IsWindowVisible(guint32 xid)
 }
 
 bool
+PluginAdapter::IsWindowOnTop(guint32 xid)
+{
+  Window win = xid;
+  CompWindow* window;
+
+  window = m_Screen->findWindow(win);
+
+  if (window)
+  {
+    if (window->inShowDesktopMode() || !window->isMapped() || !window->isViewable() || window->minimized())
+      return false;
+
+    CompPoint window_vp = window->defaultViewport();
+    std::vector<Window> const& our_xids = nux::XInputWindow::NativeHandleList();
+
+    for (CompWindow* sibling = window->next; sibling; sibling = sibling->next)
+    {
+      if (sibling->defaultViewport() == window_vp && !sibling->minimized() &&
+          sibling->isMapped() && sibling->isViewable() && !sibling->inShowDesktopMode() &&
+          !(sibling->state() & CompWindowStateAboveMask) &&
+          std::find(our_xids.begin(), our_xids.end(), sibling->id()) == our_xids.end())
+      {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
+bool
+PluginAdapter::IsWindowClosable(guint32 xid)
+{
+  Window win = xid;
+  CompWindow* window;
+
+  window = m_Screen->findWindow(win);
+  if (window)
+    return (window->actions() & CompWindowActionCloseMask);
+
+  return false;
+}
+
+bool
 PluginAdapter::IsWindowMinimizable(guint32 xid)
 {
   Window win = xid;
@@ -537,6 +584,19 @@ PluginAdapter::IsWindowMinimizable(guint32 xid)
   window = m_Screen->findWindow(win);
   if (window)
     return (window->actions() & CompWindowActionMinimizeMask);
+
+  return false;
+}
+
+bool
+PluginAdapter::IsWindowMaximizable(guint32 xid)
+{
+  Window win = xid;
+  CompWindow* window;
+
+  window = m_Screen->findWindow(win);
+  if (window)
+    return (window->actions() & MAXIMIZABLE);
 
   return false;
 }
@@ -806,7 +866,7 @@ PluginAdapter::GetWindowMonitor(guint32 xid) const
     int x = geo.x + geo.width/2;
     int y = geo.y + geo.height/2;
 
-    return UScreen::GetDefault()->GetMonitorAtPosition(x, y);
+    return unity::UScreen::GetDefault()->GetMonitorAtPosition(x, y);
   }
 
   return -1;
@@ -1240,3 +1300,16 @@ PluginAdapter::OnWindowClosed(CompWindow *w)
     _last_focused_window = NULL;
 }
 
+void
+PluginAdapter::AddProperties(GVariantBuilder* builder)
+{
+  unity::variant::BuilderWrapper wrapper(builder);
+  wrapper.add(GetScreenGeometry())
+         .add("workspace_count", WorkspaceCount())
+         .add("active_window", GetActiveWindow())
+         .add("screen_grabbed", IsScreenGrabbed())
+         .add("scale_active", IsScaleActive())
+         .add("scale_active_for_group", IsScaleActiveForGroup())
+         .add("expo_active", IsExpoActive())
+         .add("viewport_switch_running", IsViewPortSwitchStarted());
+}

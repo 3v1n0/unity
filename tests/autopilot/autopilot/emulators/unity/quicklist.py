@@ -23,7 +23,12 @@ class Quicklist(UnityIntrospectionObject):
     @property
     def items(self):
         """Individual items in the quicklist."""
-        return self.get_children_by_type(QuicklistMenuItem)
+        return self.get_children_by_type(QuicklistMenuItem, visible=True)
+
+    @property
+    def selectable_items(self):
+        """Items that can be selected in the quicklist."""
+        return self.get_children_by_type(QuicklistMenuItem, visible=True, selectable=True)
 
     def get_quicklist_item_by_text(self, text):
         """Returns a QuicklistMenuItemLabel object with the given text, or None."""
@@ -35,21 +40,59 @@ class Quicklist(UnityIntrospectionObject):
 
         return matches[0] if matches else None
 
+    def get_quicklist_application_item(self, application_name):
+        """Returns the QuicklistMenuItemLabel for the given application_name"""
+        return self.get_quicklist_item_by_text("<b>"+application_name+"</b>")
+
     def click_item(self, item):
         """Click one of the quicklist items."""
         if not isinstance(item, QuicklistMenuItem):
             raise TypeError("Item must be a subclass of QuicklistMenuItem")
 
-        logger.debug("Clicking on quicklist item %r", item)
-        mouse = Mouse()
-        mouse.move(self.x + item.x + (item.width / 2),
-                    self.y + item.y + (item.height / 2))
-        sleep(0.25)
-        mouse.click()
+        item.mouse_click()
+
+    def move_mouse_to_right(self):
+        """Moves the mouse outside the quicklist"""
+        logger.debug("Moving mouse outside the quicklist %r", self)
+        target_x = self.x + self.width + 10
+        target_y = self.y + self.height / 2
+        Mouse().move(target_x, target_y, animate=False)
+
+    @property
+    def selected_item(self):
+        items = self.get_children_by_type(QuicklistMenuItem, selected=True)
+        assert(len(items) <= 1)
+        return items[0] if items else None
+
+    @property
+    def geometry(self):
+        """Returns a tuple of (x,y,w,h) for the quicklist."""
+        return (self.x, self.y, self.width, self.height)
 
 
 class QuicklistMenuItem(UnityIntrospectionObject):
     """Represents a single item in a quicklist."""
+
+    def __init__(self, *args, **kwargs):
+        super(QuicklistMenuItem, self).__init__(*args, **kwargs)
+        self._mouse = Mouse()
+
+    @property
+    def geometry(self):
+        """Returns a tuple of (x,y,w,h) for the quicklist item."""
+        return (self.x, self.y, self.width, self.height)
+
+    def mouse_move_to(self):
+        assert(self.visible)
+        logger.debug("Moving mouse over quicklist item %r", self)
+        target_x = self.x + self.width / 2
+        target_y = self.y + self.height / 2
+        self._mouse.move(target_x, target_y, rate=20, time_between_events=0.005)
+
+    def mouse_click(self, button=1):
+        logger.debug("Clicking on quicklist item %r", self)
+        self.mouse_move_to()
+        self._mouse.click()
 
 
 class QuicklistMenuItemLabel(QuicklistMenuItem):

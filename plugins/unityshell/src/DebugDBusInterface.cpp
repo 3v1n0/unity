@@ -94,13 +94,10 @@ GDBusInterfaceVTable DebugDBusInterface::interface_vtable =
   NULL
 };
 
-static CompScreen* _screen;
 static Introspectable* _parent_introspectable;
 
-DebugDBusInterface::DebugDBusInterface(Introspectable* parent,
-                                       CompScreen* screen)
+DebugDBusInterface::DebugDBusInterface(Introspectable* parent)
 {
-  _screen = screen;
   _parent_introspectable = parent;
   _owner_id = g_bus_own_name(G_BUS_TYPE_SESSION,
                              unity::DBUS_BUS_NAME.c_str(),
@@ -177,8 +174,9 @@ DebugDBusInterface::HandleDBusMethodCall(GDBusConnection* connection,
     g_variant_get(parameters, "(&s)", &input);
 
     ret = GetState(input);
+    // GetState returns a floating variant and
+    // g_dbus_method_invocation_return_value ref sinks it
     g_dbus_method_invocation_return_value(invocation, ret);
-    g_variant_unref(ret);
   }
   else if (g_strcmp0(method_name, "StartLogToFile") == 0)
   {

@@ -58,7 +58,7 @@ Controller::Controller()
   
   Settings::Instance().changed.connect([&]()
   {
-    if (window_)
+    if (window_ && view_)
     {
       window_->PushToFront();
       window_->SetInputFocus();
@@ -72,8 +72,12 @@ Controller::~Controller()
   if (window_)
     window_->UnReference();
   window_ = 0;
-  g_source_remove(timeline_id_);
-  g_source_remove(ensure_id_);
+
+  if (timeline_id_)
+    g_source_remove(timeline_id_);
+
+  if (ensure_id_)
+    g_source_remove(ensure_id_);
 }
 
 void Controller::SetupWindow()
@@ -264,8 +268,6 @@ void Controller::ShowDash()
     return;
   }
 
-  adaptor->saveInputFocus ();
-
   view_->AboutToShow();
 
   window_->ShowWindow(true);
@@ -371,7 +373,7 @@ gboolean Controller::CheckShortcutActivation(const char* key_string)
   std::string lens_id = view_->GetIdForShortcutActivation(std::string(key_string));
   if (lens_id != "")
   {
-    GVariant* args = g_variant_new("(sus)", lens_id.c_str(), 0, "");
+    GVariant* args = g_variant_new("(sus)", lens_id.c_str(), dash::GOTO_DASH_URI, "");
     OnActivateRequest(args);
     g_variant_unref(args);
     return true;

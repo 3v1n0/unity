@@ -121,7 +121,10 @@ public:
   bool IsWindowObscured(guint xid);
   bool IsWindowMapped(guint xid);
   bool IsWindowVisible(guint32 xid);
+  bool IsWindowOnTop(guint32 xid);
+  bool IsWindowClosable(guint32 xid);
   bool IsWindowMinimizable(guint32 xid);
+  bool IsWindowMaximizable(guint32 xid);
 
   void Restore(guint32 xid);
   void RestoreAt(guint32 xid, int x, int y);
@@ -163,6 +166,7 @@ public:
 
 protected:
   PluginAdapter(CompScreen* screen);
+  void AddProperties(GVariantBuilder* builder);
 
 private:
   std::string MatchStringForXids(std::vector<Window> *windows);

@@ -63,7 +63,7 @@ protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
   virtual bool DoCanFocus();
-  GdkPixbuf*        _pixbuf_cached;
+  GdkPixbuf* _pixbuf_cached;
 
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);

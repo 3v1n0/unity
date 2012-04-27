@@ -377,11 +377,11 @@ void StaticCairoText::GetTextExtents(const TCHAR* font,
 
   // logRect has some issues using italic style
   if (inkRect.x + inkRect.width > logRect.x + logRect.width)
-    width = (inkRect.x + inkRect.width - logRect.x) /PANGO_SCALE;
+    width = std::ceil(static_cast<float>(inkRect.x + inkRect.width - logRect.x) / PANGO_SCALE);
   else
-    width  = logRect.width / PANGO_SCALE;
+    width  = std::ceil(static_cast<float>(logRect.width) / PANGO_SCALE);
 
-  height = logRect.height / PANGO_SCALE;
+  height = std::ceil(static_cast<float>(logRect.height) / PANGO_SCALE);
   _cached_extent_height = height;
   _cached_extent_width = width;
   _baseline = pango_layout_get_baseline(layout) / PANGO_SCALE;

@@ -1,3 +1,9 @@
+unity (5.12-0ubuntu1) UNRELEASED; urgency=low
+
+  * New upstream release.
+
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 27 Apr 2012 08:33:25 +0200
+
 unity (5.10.0-0ubuntu6) precise-proposed; urgency=low
 
   * Cherry-picked upstream:

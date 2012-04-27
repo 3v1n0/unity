@@ -126,6 +126,8 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   , show_filter_hint_(true)
   , expander_view_(nullptr)
   , show_filters_(nullptr)
+  , last_width_(-1)
+  , last_height_(-1)
   , live_search_timeout_(0)
   , start_spinner_timeout_(0)
 {
@@ -140,6 +142,8 @@ SearchBar::SearchBar(bool show_filter_hint_, NUX_FILE_LINE_DECL)
   , show_filter_hint_(show_filter_hint_)
   , expander_view_(nullptr)
   , show_filters_(nullptr)
+  , last_width_(-1)
+  , last_height_(-1)
   , live_search_timeout_(0)
   , start_spinner_timeout_(0)
 {
@@ -516,7 +520,7 @@ void SearchBar::UpdateBackground(bool force)
 {
   int RADIUS = 5;
   nux::Geometry geo(GetGeometry());
-  geo.width = layered_layout_->GetAbsoluteX() + 
+  geo.width = layered_layout_->GetAbsoluteX() +
               layered_layout_->GetAbsoluteWidth() -
               GetAbsoluteX() +
               SEARCH_ENTRY_RIGHT_BORDER;
@@ -661,7 +665,8 @@ void SearchBar::AddProperties(GVariantBuilder* builder)
   .add("filter-label-x", show_filters_->GetAbsoluteX())
   .add("filter-label-y", show_filters_->GetAbsoluteY())
   .add("filter-label-width", show_filters_->GetAbsoluteWidth())
-  .add("filter-label-height", show_filters_->GetAbsoluteHeight());
+  .add("filter-label-height", show_filters_->GetAbsoluteHeight())
+  .add("im_active", pango_entry_->im_active());
 }
 
 } // namespace unity

@@ -18,6 +18,8 @@
  *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
+#include <boost/algorithm/string.hpp>
+
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 
@@ -142,10 +144,13 @@ BamfLauncherIcon::~BamfLauncherIcon()
 {
   g_object_set_qdata(G_OBJECT(_bamf_app.RawPtr()),
                      g_quark_from_static_string("unity-seen"),
-                     GINT_TO_POINTER(0));
+                     GUINT_TO_POINTER(0));
 
   if (_fill_supported_types_id != 0)
     g_source_remove(_fill_supported_types_id);
+
+  if (_quicklist_activated_id != 0)
+    g_source_remove(_quicklist_activated_id);
 
   if (_window_moved_id != 0)
     g_source_remove(_window_moved_id);
@@ -203,50 +208,59 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     auto bamf_view = glib::object_cast<BamfView>(_bamf_app);
     user_visible = bamf_view_user_visible(bamf_view);
 
-    bool any_visible = false;
-    bool any_mapped = false;
-    bool any_on_monitor = (arg.monitor < 0);
-    int active_monitor = arg.monitor;
-    GList* children = bamf_view_get_children(bamf_view);
-
-    for (GList* l = children; l; l = l->next)
+    if (active)
     {
-      if (!BAMF_IS_WINDOW(l->data))
-        continue;
+      bool any_visible = false;
+      bool any_mapped = false;
+      bool any_on_top = false;
+      bool any_on_monitor = (arg.monitor < 0);
+      int active_monitor = arg.monitor;
+      GList* children = bamf_view_get_children(bamf_view);
 
-      auto view = static_cast<BamfView*>(l->data);
-      auto win = static_cast<BamfWindow*>(l->data);
-      Window xid = bamf_window_get_xid(win);
-
-      if (!any_visible && wm->IsWindowOnCurrentDesktop(xid))
+      for (GList* l = children; l; l = l->next)
       {
-        any_visible = true;
+        if (!BAMF_IS_WINDOW(l->data))
+          continue;
+
+        auto view = static_cast<BamfView*>(l->data);
+        auto win = static_cast<BamfWindow*>(l->data);
+        Window xid = bamf_window_get_xid(win);
+
+        if (!any_visible && wm->IsWindowOnCurrentDesktop(xid))
+        {
+          any_visible = true;
+        }
+
+        if (!any_mapped && wm->IsWindowMapped(xid))
+        {
+          any_mapped = true;
+        }
+
+        if (!any_on_top && wm->IsWindowOnTop(xid))
+        {
+          any_on_top = true;
+        }
+
+        if (!any_on_monitor && bamf_window_get_monitor(win) == arg.monitor &&
+            wm->IsWindowMapped(xid) && wm->IsWindowVisible(xid))
+        {
+          any_on_monitor = true;
+        }
+
+        if (bamf_view_is_active(view))
+        {
+          active_monitor = bamf_window_get_monitor(win);
+        }
       }
 
-      if (!any_mapped && wm->IsWindowMapped(xid))
-      {
-        any_mapped = true;
-      }
+      g_list_free(children);
 
-      if (!any_on_monitor && bamf_window_get_monitor(win) == arg.monitor &&
-          wm->IsWindowMapped(xid) && wm->IsWindowVisible(xid))
-      {
-        any_on_monitor = true;
-      }
+      if (!any_visible || !any_mapped || !any_on_top)
+        active = false;
 
-      if (bamf_view_is_active(view))
-      {
-        active_monitor = bamf_window_get_monitor(win);
-      }
+      if (any_on_monitor && arg.monitor >= 0 && active_monitor != arg.monitor)
+        active = false;
     }
-
-    g_list_free(children);
-
-    if (!any_visible || !any_mapped)
-      active = false;
-
-    if (any_on_monitor && arg.monitor >= 0 && active_monitor != arg.monitor)
-      active = false;
   }
 
   /* Behaviour:
@@ -486,6 +500,7 @@ void BamfLauncherIcon::AddProperties(GVariantBuilder* builder)
   variant::BuilderWrapper(builder)
     .add("desktop_file", DesktopFile())
     .add("desktop_id", GetDesktopID())
+    .add("application_id", GPOINTER_TO_UINT(_bamf_app.RawPtr()))
     .add("xids", g_variant_builder_end(&xids_builder))
     .add("sticky", IsSticky());
 }
@@ -630,7 +645,8 @@ void BamfLauncherIcon::Focus(ActionArg arg)
     }
   }
 
-  wm->FocusWindowGroup(windows, visibility, arg.monitor);
+  bool only_top_win = !any_urgent;
+  wm->FocusWindowGroup(windows, visibility, arg.monitor, only_top_win);
 }
 
 bool BamfLauncherIcon::Spread(bool current_desktop, int state, bool force)
@@ -961,7 +977,13 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
 
     _gsignals.Add(new glib::Signal<void, DbusmenuMenuitem*, int>(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
                                     [&] (DbusmenuMenuitem*, int) {
-                                      ActivateLauncherIcon(ActionArg(ActionArg::OTHER, 0));
+                                      _quicklist_activated_id =
+                                        g_idle_add([] (gpointer data) -> gboolean {
+                                          auto self = static_cast<BamfLauncherIcon*>(data);
+                                          self->ActivateLauncherIcon(ActionArg());
+                                          self->_quicklist_activated_id = 0;
+                                          return FALSE;
+                                        }, this);
                                     }));
 
     _menu_items_extra["AppName"] = glib::Object<DbusmenuMenuitem>(item);
@@ -1069,31 +1091,12 @@ std::string BamfLauncherIcon::GetRemoteUri()
   return _remote_uri;
 }
 
-std::set<std::string> BamfLauncherIcon::ValidateUrisForLaunch(unity::DndData& uris)
+std::set<std::string> BamfLauncherIcon::ValidateUrisForLaunch(DndData const& uris)
 {
   std::set<std::string> result;
-  gboolean is_home_launcher = g_str_has_suffix(DesktopFile().c_str(), "nautilus-home.desktop");
 
-  if (is_home_launcher)
-  {
-    for (auto k : uris.Uris())
-      result.insert(k);
-    return result;
-  }
-
-  for (auto i : uris.Types())
-  {
-    for (auto j : GetSupportedTypes())
-    {
-      if (g_content_type_is_a(i.c_str(), j.c_str()))
-      {
-        for (auto k : uris.UrisByType(i))
-          result.insert(k);
-
-        break;
-      }
-    }
-  }
+  for (auto uri : uris.Uris())
+    result.insert(uri);
 
   return result;
 }
@@ -1125,12 +1128,37 @@ void BamfLauncherIcon::OnDndLeave()
   _dnd_hover_timer = 0;
 }
 
-nux::DndAction BamfLauncherIcon::OnQueryAcceptDrop(unity::DndData& dnd_data)
+bool BamfLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
+{
+  bool is_home_launcher = boost::algorithm::ends_with(DesktopFile(), "nautilus-home.desktop") ||
+                          boost::algorithm::ends_with(DesktopFile(), "nautilus.desktop");
+
+  if (is_home_launcher)
+  {
+    return true;
+  }
+
+  for (auto type : dnd_data.Types())
+  {
+    for (auto supported_type : GetSupportedTypes())
+    {
+      if (g_content_type_is_a(type.c_str(), supported_type.c_str()))
+      {
+        if (!dnd_data.UrisByType(type).empty())
+          return true;
+      }
+    }
+  }
+
+  return false; 
+}
+
+nux::DndAction BamfLauncherIcon::OnQueryAcceptDrop(DndData const& dnd_data)
 {
   return ValidateUrisForLaunch(dnd_data).empty() ? nux::DNDACTION_NONE : nux::DNDACTION_COPY;
 }
 
-void BamfLauncherIcon::OnAcceptDrop(unity::DndData& dnd_data)
+void BamfLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
 {
   OpenInstanceWithUris(ValidateUrisForLaunch(dnd_data));
 }
