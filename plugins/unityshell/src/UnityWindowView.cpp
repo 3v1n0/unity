@@ -56,7 +56,7 @@ void UnityWindowView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_dr
   // clear region
   gPainter.PaintBackground(GfxContext, base);
 
-  nux::Geometry background_geo = GetBackgroundGeometry();
+  nux::Geometry background_geo(GetBackgroundGeometry());
   int internal_offset = style()->GetInternalOffset();
 
   nux::Geometry internal_clip(background_geo.x + internal_offset,
@@ -65,12 +65,18 @@ void UnityWindowView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_dr
                               background_geo.height - internal_offset * 2);
   GfxContext.PushClippingRectangle(internal_clip);
 
-  nux::Geometry geo_absolute = GetAbsoluteGeometry ();
+  nux::ObjectPtr <nux::IOpenGLBaseTexture> blur_texture;
+  nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
+  nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
 
   if (BackgroundEffectHelper::blur_type != BLUR_NONE)
   {
-    nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
-    auto blur_texture = bg_helper_.GetBlurRegion(blur_geo);
+    blur_texture = bg_helper_.GetBlurRegion(blur_geo);
+  }
+  else
+  {
+    blur_texture = bg_helper_.GetRegion(blur_geo); 
+  }
 
     if (blur_texture.IsValid())
     {
@@ -109,7 +115,6 @@ void UnityWindowView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_dr
                                           true, rop);
 #endif
     }
-  }
 
   nux::ROPConfig rop;
   rop.Blend = true;
