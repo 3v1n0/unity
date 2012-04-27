@@ -14,10 +14,10 @@ Outcome:
   The keyboard shortcuts overlay bottom is not truncated.
 
 
-Shortcuts overlay backround disabling blur.
+Shortcuts overlay background disabling blur.
 -------------------------------------------
 This test ensures that shortcuts overlay is not *completely* transparent
-when the blur is diabled. See LP bug #989291.
+when the blur is disabled. See LP bug #989291.
 
 Setup:
 #. Make sure you have a monitor with a resoultion bigger than 1024x768.
