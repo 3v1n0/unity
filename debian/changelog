@@ -1,6 +1,108 @@
 unity (5.12-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+    - Launcher, Alt-Tab - clicking on launcher item or selecting a app in Alt-
+      Tab raises all app windows, not just most recently focused (LP: #959339)
+    - [heap corruption?] compiz crashed with SIGSEGV in _int_malloc() from
+      g_realloc() from ... from g_dbus_connection_send_message_with_reply()
+      from g_object_unref() from unity::dash::HomeLens::Impl::~Impl() from
+      unity::dash::HomeLens::~HomeLens() (LP: #931201)
+    - compiz crashed with SIGSEGV in _int_malloc() from __libc_calloc() from
+      XOpenDisplay() from nux::WindowThread::ThreadCtor() (LP: #947844)
+    - Regression: Installing apps causes a terrible visual glitch-- have to
+      restart X.org. (LP: #981168)
+    - Window management - unity doesn't realise when applications bring their
+      windows to the front (LP: #802816)
+    - Dash - Clicking on the desktop dash border should do nothing, *NOT*
+      close the dash (LP: #839472)
+    - [FFe, UIFe] HUD - The HUD does not respect launcher icon size settings
+      in autohide mode (LP: #921506)
+    - compiz crashed with SIGSEGV in g_volume_get_mount() (LP: #918548)
+    - multiple instances or double icons of application detected on bamfdaemon
+      respawn (LP: #928912)
+    - Panel is transparent when Dash is open; no blur no average BG color
+      (LP: #965323)
+    - Unity crashes with SIGSEGV when hitting debug DBus interface hard
+      (LP: #979429)
+    - compiz crashed with SIGSEGV in _int_malloc() from g_object_unref() from
+      unity::dash::Model<unity::dash::FilterAdaptor>::~Model() (LP: #941750)
+    - indicators menu are sometimes cut off at screen edge (LP: #883317)
+    - the shortcut keys in workspace section of the shortcut overlay aren't
+      translated (LP: #980828)
+    - [regression] Dash keeps repainting unnecessarily (LP: #980924)
+    - compiz crashed with SIGSEGV in nux::NTextureData::ClearData() from
+      nux::NTextureData::~NTextureData() from nux::Texture2D::~Texture2D()
+      (LP: #952378)
+    - compiz crashed with SIGSEGV in g_object_unref() from
+      unity::dash::Settings::~Settings() from
+      unity::UnityScreen::~UnityScreen() (LP: #981764)
+    - compiz crashed with SIGSEGV in unity::dash::ResultView::~ResultView()
+      from unity::dash::ResultViewGrid::~ResultViewGrid() from
+      nux::Object::Destroy() from nux::Object::UnReference() (LP: #942286)
+    - compiz crashed with SIGSEGV in
+      ends_with_iter_select<__gnu_cxx::__normal_iterator<char const*,
+      std::basic_string<char> >, char const*, boost::algorithm::is_iequal>()
+      from unity::ui::PointerBarrierWrapper::EmitCurrentData() (LP: #983268)
+    - Chinese can't be shown completely in dash filter (LP: #984583)
+    - [Unity 5.10] compiz crashed with SIGSEGV in
+      unity::hud::HudIconTextureSource::ColorForIcon() from
+      unity::hud::Icon::Icon() from emit from unity::IconTexture::IconLoaded
+      (LP: #983646)
+    - [regression] Close button does not close the dash/HUD (LP: #986264)
+    - compiz crashed with SIGSEGV in g_volume_eject_with_operation_finish()
+      from unity::launcher::DeviceLauncherIcon::OnEjectReady() from
+      (LP: #977762)
+    - Launcher - should allow to dnd on any icon (and not just the ones
+      matching the type) (LP: #880798)
+    - unity confused with chrome/chromium web apps (LP: #692462)
+    - App Switcher (Alt+Tab) doesn't display the full title of apps in Chinese
+      (LP: #830801)
+    - alt-tab - quick alt + tab (before the switcher shows) not consistent
+      (LP: #861250)
+    - run command (alt+F2): results do not contain the exact match
+      (LP: #842108)
+    - It's possible to highlight two different Quicklist menu items
+      simultaneously (LP: #911561)
+    - Hiding the dash from a lens view fades out home view (LP: #914785)
+    - Flickering in the dash (LP: #961979)
+    - Dash - Card view layout needs fixing (LP: #977817)
+    - [regression] Blurred view of the current workspace is shifted down when
+      unity dash is in fullscreen mode (LP: #977922)
+    - Quicklist key navigation is not consistent with menus (LP: #978926)
+    - Quicklist key navigation should skip the disabled items (LP: #979096)
+    - Pointer locks up after dragging windows with three touch gesture
+      (LP: #979418)
+    - Alt-Tab, multimonitor - The Alt-Tab overlay should appear on the display
+      which has focus. (LP: #981795)
+    - Hud to Dash forgets last focused window on exit (LP: #984639)
+    - Remote scopes are not restarted after crash (LP: #984760)
+    - compiz crashed with SIGSEGV in unity::dash::DashView::default_focus()
+      (LP: #982730)
+    - [regression] Launcher should raise all the urgent windows, not only the
+      top-most (LP: #986443)
+    - Clicking on the quicklist application title doesn't initiate the spread
+      when needed (LP: #986461)
+    - Hud: spinner keeps spinning long after the query returns (LP: #987781)
+    - Dash: Incorrectly scaled icons (LP: #988338)
+    - Music Lens doesn't work for albums in Precise with Rhythmbox
+      (LP: #970509)
+    - New apps on the launcher have no shortcut key until something is being
+      closed (LP: #778499)
+    - Lens search hint changes to "search" when the entry gets unfocused
+      (LP: #887036)
+    - don't show disabled shortcut in keyboard shortcut help (LP: #926418)
+    - HUD: Can not be closed by clicking on HUD icon (LP: #963918)
+    - Show desktop icon should be movable, definitely not on top of BFB
+      (LP: #964073)
+    - [card view] bottom of results cropped when a category is not expanded
+      (LP: #975003)
+    - Non closable maximized windows should show a disabled close button
+      (LP: #981196)
+    - make launcher fails (LP: #983989)
+    - Sources filter shouldn't be shown if there's just one item (LP: #940161)
+    - Conditional jump or move depends on uninitialised value(s)
+      unity::SearchBar::UpdateBackground(bool) (SearchBar.cpp:529)
+      (LP: #983333)
 
  -- Didier Roche <didrocks@ubuntu.com>  Fri, 27 Apr 2012 08:33:25 +0200
 
