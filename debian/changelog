@@ -1,4 +1,4 @@
-unity (5.12-0ubuntu1) UNRELEASED; urgency=low
+unity (5.12-0ubuntu1) precise-proposed; urgency=low
 
   * New upstream release.
     - Launcher, Alt-Tab - clicking on launcher item or selecting a app in Alt-
