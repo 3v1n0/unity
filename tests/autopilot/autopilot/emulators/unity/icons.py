@@ -40,10 +40,6 @@ class SimpleLauncherIcon(UnityIntrospectionObject):
 
         return False
 
-    def is_visible_on_monitor(self, monitor):
-        """Returns True if the icon is visible in the defined monitor"""
-        return self.visible and self.is_on_monitor(monitor)
-
 
 class BFBLauncherIcon(SimpleLauncherIcon):
     """Represents the BFB button in the launcher."""
@@ -73,7 +69,7 @@ class SoftwareCenterLauncherIcon(BamfLauncherIcon):
     """Represents a launcher icon of a Software Center app."""
 
 
-class HudEmbeddedIcon(SimpleLauncherIcon):
+class HudEmbeddedIcon(UnityIntrospectionObject):
     """Proxy object for the hud embedded icon child of the view."""
 
     @property

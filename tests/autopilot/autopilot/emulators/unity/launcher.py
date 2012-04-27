@@ -9,6 +9,7 @@
 
 import dbus
 import logging
+from testtools.matchers import NotEquals
 from time import sleep
 
 from autopilot.emulators.dbus_handler import session_bus
@@ -39,9 +40,6 @@ class LauncherController(UnityIntrospectionObject):
         models = LauncherModel.get_all_instances()
         assert(len(models) == 1)
         return models[0]
-
-    def key_nav_monitor(self):
-        return self.key_nav_launcher_monitor
 
     def add_launcher_item_from_position(self,name,icon,icon_x,icon_y,icon_size,desktop_file,aptdaemon_task):
         """ Emulate a DBus call from Software Center to pin an icon to the launcher """
@@ -92,6 +90,11 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
             self.keybinding_release("launcher/switcher")
         self.in_switcher_mode = False
 
+    def _get_controller(self):
+        """Get the launcher controller."""
+        [controller] = LauncherController.get_all_instances()
+        return controller
+
     def move_mouse_to_right_of_launcher(self):
         """Places the mouse to the right of this launcher."""
         self._screen.move_mouse_to_monitor(self.monitor)
@@ -127,84 +130,106 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         self._screen.move_mouse_to_monitor(self.monitor)
         logger.debug("Revealing launcher with keyboard.")
         self.keybinding_hold("launcher/reveal")
-        sleep(1)
+        self.is_showing.wait_for(True)
 
     def keyboard_unreveal_launcher(self):
         """Un-reveal this launcher using the keyboard."""
         self._screen.move_mouse_to_monitor(self.monitor)
         logger.debug("Un-revealing launcher with keyboard.")
         self.keybinding_release("launcher/reveal")
-        sleep(1)
+        # only wait if the launcher is set to autohide
+        if self.hidemode == 1:
+            self.is_showing.wait_for(False)
 
     def key_nav_start(self):
         """Start keyboard navigation mode by pressing Alt+F1."""
         self._screen.move_mouse_to_monitor(self.monitor)
         logger.debug("Initiating launcher keyboard navigation with Alt+F1.")
         self.keybinding("launcher/keynav")
+        self._get_controller().key_nav_is_active.wait_for(True)
         self.in_keynav_mode = True
 
     def key_nav_cancel(self):
         """End the key navigation."""
         logger.debug("Cancelling keyboard navigation mode.")
         self._perform_key_nav_exit_binding("launcher/keynav/exit")
+        self._get_controller().key_nav_is_active.wait_for(False)
 
     def key_nav_activate(self):
         """Activates the selected launcher icon. In the current implementation
         this also exits key navigation"""
         logger.debug("Ending keyboard navigation mode, activating icon.")
         self._perform_key_nav_exit_binding("launcher/keynav/activate")
+        self._get_controller().key_nav_is_active.wait_for(False)
 
     def key_nav_next(self):
         """Moves the launcher keynav focus to the next launcher icon"""
         logger.debug("Selecting next item in keyboard navigation mode.")
+        old_selection = self._get_controller().key_nav_selection
         self._perform_key_nav_binding("launcher/keynav/next")
+        self._get_controller().key_nav_selection.wait_for(NotEquals(old_selection))
 
     def key_nav_prev(self):
         """Moves the launcher keynav focus to the previous launcher icon"""
         logger.debug("Selecting previous item in keyboard navigation mode.")
+        old_selection = self._get_controller().key_nav_selection
         self._perform_key_nav_binding("launcher/keynav/prev")
+        self._get_controller().key_nav_selection.wait_for(NotEquals(old_selection))
 
     def key_nav_enter_quicklist(self):
         logger.debug("Opening quicklist for currently selected icon.")
         self._perform_key_nav_binding("launcher/keynav/open-quicklist")
+        self.quicklist_open.wait_for(True)
 
     def key_nav_exit_quicklist(self):
         logger.debug("Closing quicklist for currently selected icon.")
         self._perform_key_nav_binding("launcher/keynav/close-quicklist")
+        self.quicklist_open.wait_for(False)
 
     def switcher_start(self):
         """Start the super+Tab switcher on this launcher."""
         self._screen.move_mouse_to_monitor(self.monitor)
         logger.debug("Starting Super+Tab switcher.")
         self.keybinding_hold_part_then_tap("launcher/switcher")
+        self._get_controller().key_nav_is_active.wait_for(True)
         self.in_switcher_mode = True
 
     def switcher_cancel(self):
         """End the super+tab swithcer."""
         logger.debug("Cancelling keyboard navigation mode.")
         self._perform_switcher_exit_binding("launcher/switcher/exit")
+        self._get_controller().key_nav_is_active.wait_for(False)
 
     def switcher_activate(self):
         """Activates the selected launcher icon. In the current implementation
         this also exits the switcher"""
         logger.debug("Ending keyboard navigation mode.")
         self._perform_switcher_exit_binding("launcher/switcher")
+        self._get_controller().key_nav_is_active.wait_for(False)
 
     def switcher_next(self):
         logger.debug("Selecting next item in keyboard navigation mode.")
+        old_selection = self._get_controller().key_nav_selection
         self._perform_switcher_binding("launcher/switcher/next")
+        self._get_controller().key_nav_selection.wait_for(NotEquals(old_selection))
 
     def switcher_prev(self):
         logger.debug("Selecting previous item in keyboard navigation mode.")
+        old_selection = self._get_controller().key_nav_selection
         self._perform_switcher_binding("launcher/switcher/prev")
+        self._get_controller().key_nav_selection.wait_for(NotEquals(old_selection))
 
     def switcher_up(self):
         logger.debug("Selecting next item in keyboard navigation mode.")
+        old_selection = self._get_controller().key_nav_selection
         self._perform_switcher_binding("launcher/switcher/up")
+        self._get_controller().key_nav_selection.wait_for(NotEquals(old_selection))
 
     def switcher_down(self):
         logger.debug("Selecting previous item in keyboard navigation mode.")
+        old_selection = self._get_controller().key_nav_selection
         self._perform_switcher_binding("launcher/switcher/down")
+        self._get_controller().key_nav_selection.wait_for(NotEquals(old_selection))
 
     def click_launcher_icon(self, icon, button=1):
         """Move the mouse over the launcher icon, and click it.
@@ -255,15 +280,6 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         pin_item = quicklist.get_quicklist_item_by_text('Unlock from Launcher')
         quicklist.click_item(pin_item)
 
-    def is_quicklist_open(self):
-        return self.quicklist_open
-
-    def is_showing(self):
-        return not self.hidden
-
-    def are_shortcuts_showing(self):
-        return self.shortcuts_shown
-
     @property
     def geometry(self):
         """Returns a tuple of (x,y,w,h) for the current launcher."""
@@ -285,6 +301,13 @@ class LauncherModel(UnityIntrospectionObject):
         else:
             return self.get_children_by_type(SimpleLauncherIcon)
 
+    def get_bamf_launcher_icons(self, visible_only=True):
+        """Get a list of bamf launcher icons in this launcher."""
+        if visible_only:
+            return self.get_children_by_type(BamfLauncherIcon, visible=True)
+        else:
+            return self.get_children_by_type(BamfLauncherIcon)
+
     def get_launcher_icons_for_monitor(self, monitor, visible_only=True):
         """Get a list of launcher icons for provided monitor."""
         icons = []
@@ -304,17 +327,6 @@ class LauncherModel(UnityIntrospectionObject):
                 return icon
         return None
 
-    def get_icon_by_desktop_file(self, desktop_file):
-        """Gets a launcher icon with the specified desktop file.
-
-        Returns None if there is no such launcher icon.
-        """
-        icons = self.get_children_by_type(SimpleLauncherIcon, desktop_file=desktop_file)
-        if len(icons):
-            return icons[0]
-
-        return None
-
     def get_icon_by_desktop_id(self, desktop_id):
         """Gets a launcher icon with the specified desktop id.
 
@@ -326,6 +338,23 @@ class LauncherModel(UnityIntrospectionObject):
 
         return None
 
+    def get_icons_by_filter(self, **kwargs):
+        """Get a list of icons that satisfy the given filters.
+
+        For example:
+
+        >>> get_icons_by_filter(tooltip_text="My Application")
+        ... [...]
+
+        Returns an empty list if no icons matched the filter.
+
+        """
+        return self.get_children_by_type(SimpleLauncherIcon, **kwargs)
+
     def num_launcher_icons(self):
         """Get the number of icons in the launcher model."""
         return len(self.get_launcher_icons())
+
+    def num_bamf_launcher_icons(self, visible_only=True):
+        """Get the number of bamf icons in the launcher model."""
+        return len(self.get_bamf_launcher_icons(visible_only))

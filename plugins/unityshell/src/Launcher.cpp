@@ -396,6 +396,7 @@ Launcher::AddProperties(GVariantBuilder* builder)
   .add("hovered", _hovered)
   .add("hidemode", options()->hide_mode)
   .add("hidden", _hidden)
+  .add("is_showing", ! _hidden)
   .add("x", abs_geo.x)
   .add("y", abs_geo.y)
   .add("width", abs_geo.width)
@@ -2005,7 +2006,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     // apply the bg colour
 #ifndef NUX_OPENGLES_20
-    if (GfxContext.UsingGLSLCodePath() == FALSE)
+    if (GfxContext.UsingGLSLCodePath() == false)
       gPainter.Paint2DQuadColor(GfxContext, bkg_box, _background_color);
 #endif
 
@@ -2553,7 +2554,9 @@ void Launcher::MouseUpLogic(int x, int y, unsigned long button_flags, unsigned l
 
     if (GetActionState() == ACTION_NONE)
     {
-      _icon_mouse_down->mouse_click.emit(nux::GetEventButton(button_flags), monitor);
+      /* This will inform the icon if the action is valid for all the monitors */
+      int action_monitor = options()->show_for_all ? -1 : monitor;
+      _icon_mouse_down->mouse_click.emit(nux::GetEventButton(button_flags), action_monitor);
     }
   }
 
@@ -2663,9 +2666,6 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
     break;
   }
 
-  if (!_dnd_data.Uris().size())
-    return;
-
   _hide_machine->SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, true);
 
   if (IsOverlayOpen())
@@ -2684,7 +2684,7 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
   {
     for (auto it : *_model)
     {
-      if (it->QueryAcceptDrop(_dnd_data) != nux::DNDACTION_NONE)
+      if (it->ShouldHighlightOnDrag(_dnd_data))
         it->SetQuirk(AbstractLauncherIcon::QUIRK_DROP_PRELIGHT, true);
       else
         it->SetQuirk(AbstractLauncherIcon::QUIRK_DROP_DIM, true);

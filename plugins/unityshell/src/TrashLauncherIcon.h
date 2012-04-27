@@ -42,8 +42,10 @@ public:
 protected:
   void UpdateTrashIcon();
 
-  nux::DndAction OnQueryAcceptDrop(unity::DndData& dnd_data);
-  void OnAcceptDrop(unity::DndData& dnd_data);
+  nux::DndAction OnQueryAcceptDrop(DndData const& dnd_data);
+  bool OnShouldHighlightOnDrag(DndData const& dnd_data);
+  void OnAcceptDrop(DndData const& dnd_data);
+
   std::string GetName() const;
 
 private:

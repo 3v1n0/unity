@@ -439,6 +439,12 @@ bool Controller::CompareSwitcherItemsPriority(AbstractLauncherIcon::Ptr first,
 {
   if (first->GetIconType() == second->GetIconType())
     return first->SwitcherPriority() > second->SwitcherPriority();
+    
+  if (first->GetIconType() == AbstractLauncherIcon::IconType::TYPE_DESKTOP)
+	return true;
+	
+  if (second->GetIconType() == AbstractLauncherIcon::IconType::TYPE_DESKTOP)
+	return false;
   return first->GetIconType() < second->GetIconType();
 }
 
@@ -507,6 +513,7 @@ Controller::AddProperties(GVariantBuilder* builder)
   .add("initial-detail-timeout-length", initial_detail_timeout_length())
   .add("detail-timeout-length", detail_timeout_length())
   .add("visible", visible_)
+  .add("monitor", monitor_)
   .add("detail-mode", detail_mode_);
 }
 

@@ -220,6 +220,27 @@ TEST_F(GestureEngineTest, MinimalThreeFingersPinchDoesNothing)
   ASSERT_EQ(0, middle_window->_maximize_count);
 }
 
+/* Regression test for lp:979418, where the grab is not removed if the gesture
+ * id is 0. */
+TEST_F(GestureEngineTest, DragGrabCheck)
+{
+  screen_mock->_grab_count = 0;
+
+  GestureEngine gesture_engine(screen_mock);
+
+  GeisAdapterMock::GeisDragData drag_data;
+  drag_data.id = 0;
+  drag_data.touches = 3;
+  drag_data.window = 123;
+  drag_data.focus_x = 100; /* hits the middle window */
+  drag_data.focus_y = 100;
+  gesture_engine.OnDragStart(&drag_data);
+
+  gesture_engine.OnDragFinish(&drag_data);
+
+  ASSERT_EQ(0, screen_mock->_grab_count);
+}
+
 int main(int argc, char** argv)
 {
   ::testing::InitGoogleTest(&argc, argv);

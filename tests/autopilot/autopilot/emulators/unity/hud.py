@@ -26,15 +26,19 @@ class Hud(KeybindingsHelper):
         """Hides the hud if it's not already hidden."""
         if self.visible:
             self.toggle_reveal()
+            self.visible.wait_for(False)
 
     def ensure_visible(self):
         """Shows the hud if it's not already showing."""
         if not self.visible:
             self.toggle_reveal()
+            self.visible.wait_for(True)
 
     def toggle_reveal(self, tap_delay=0.1):
         """Tap the 'Alt' key to toggle the hud visibility."""
+        old_state = self.visible
         self.keybinding("hud/reveal", tap_delay)
+        self.visible.wait_for(not old_state)
 
     def get_embedded_icon(self):
         """Returns the HUD view embedded icon or None if is not shown."""

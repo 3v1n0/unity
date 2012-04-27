@@ -31,6 +31,8 @@ typedef std::vector<CompWindowMock*> CompWindowMockVector;
 
 class CompScreenMock {
 public:
+  CompScreenMock() : _grab_count(0) {}
+
   typedef int GrabHandle;
 
   int width() const {return _width;}
@@ -47,8 +49,13 @@ public:
 
   Window root() {return _root;}
 
-  GrabHandle pushGrab(Cursor cursor, const char *name) {return 0;}
-  void removeGrab(GrabHandle handle, CompPoint *restorePointer) {}
+  GrabHandle pushGrab(Cursor cursor, const char *name) {
+    _grab_count++;
+    return 0;
+  }
+  void removeGrab(GrabHandle handle, CompPoint *restorePointer) {
+    _grab_count--;
+  }
 
   Cursor invisibleCursor() {return 1;}
 
@@ -58,6 +65,7 @@ public:
   CompWindowMockVector _client_list;
   CompWindowMockVector _client_list_stacking;
   Window _root;
+  int _grab_count;
 };
 
 extern CompScreenMock *screen_mock;

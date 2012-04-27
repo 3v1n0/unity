@@ -69,17 +69,18 @@ protected:
   void UpdateIconGeometries(std::vector<nux::Point3> center);
   void OnCenterStabilized(std::vector<nux::Point3> center);
   void AddProperties(GVariantBuilder* builder);
-  void OnAcceptDrop(unity::DndData& dnd_data);
+  void OnAcceptDrop(DndData const& dnd_data);
   void OnDndEnter();
   void OnDndHovered();
   void OnDndLeave();
   void OpenInstanceLauncherIcon(ActionArg arg);
   void ToggleSticky();
 
-  nux::DndAction OnQueryAcceptDrop(unity::DndData& dnd_data);
+  bool OnShouldHighlightOnDrag(DndData const& dnd_data);
+  nux::DndAction OnQueryAcceptDrop(DndData const& dnd_data);
 
   std::list<DbusmenuMenuitem*> GetMenus();
-  std::set<std::string> ValidateUrisForLaunch(unity::DndData& dnd_data);
+  std::set<std::string> ValidateUrisForLaunch(DndData const& dnd_data);
 
   std::string GetRemoteUri();
   std::string BamfName() const;
@@ -125,6 +126,7 @@ private:
   bool _supported_types_filled;
   guint _fill_supported_types_id;
   guint _window_moved_id;
+  guint _quicklist_activated_id;
 
   std::string _remote_uri;
   std::string _desktop_file;

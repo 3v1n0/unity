@@ -240,21 +240,23 @@ private:
   GeisAdapter    geis_adapter_;
   internal::FavoriteStoreGSettings favorite_store_;
 
+  /* The window thread should be the last thing removed, as c++ does it in reverse order */
+  std::unique_ptr<nux::WindowThread> wt;
+
+  /* These must stay below the window thread, please keep the order */
   launcher::Controller::Ptr launcher_controller_;
   dash::Controller::Ptr     dash_controller_;
   panel::Controller::Ptr    panel_controller_;
   switcher::Controller::Ptr switcher_controller_;
   hud::Controller::Ptr      hud_controller_;
-
   shortcut::Controller::Ptr shortcut_controller_;
+  debug::DebugDBusInterface debugger_;
+
   std::list<shortcut::AbstractHint::Ptr> hints_;
   bool enable_shortcut_overlay_;
 
   std::unique_ptr<GestureEngine>        gesture_engine_;
-  nux::WindowThread*                    wt;
-  nux::BaseWindow*                      panelWindow;
   nux::Geometry                         lastTooltipArea;
-  unity::debug::DebugDBusInterface*     debugger;
   bool                                  needsRelayout;
   bool                                  _in_paint;
   guint32                               relayoutSourceId;
@@ -281,7 +283,7 @@ private:
 
   nux::Property<nux::Geometry> primary_monitor_;
 
-  unity::BGHash _bghash;
+  BGHash _bghash;
 
 #ifdef USE_GLES
   ::GLFramebufferObject *oldFbo;
@@ -319,6 +321,7 @@ class UnityWindow :
   public WindowInterface,
   public GLWindowInterface,
   public ShowdesktopHandlerWindowInterface,
+  public compiz::WindowInputRemoverLockAcquireInterface,
   public BaseSwitchWindow,
   public PluginClassHandler <UnityWindow, CompWindow>
 {
@@ -418,7 +421,9 @@ private:
 
   unsigned int GetNoCoreInstanceMask ();
 
-  compiz::WindowInputRemoverInterface::Ptr GetInputRemover ();
+  compiz::WindowInputRemoverLock::Ptr GetInputRemover ();
+
+  compiz::WindowInputRemoverLock::Weak input_remover_;
 };
 
 

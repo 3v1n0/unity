@@ -38,7 +38,7 @@ class MinimizedWindowHandler
 {
 public:
 
-  MinimizedWindowHandler (Display *dpy, unsigned int xid);
+  MinimizedWindowHandler (Display *dpy, unsigned int xid, compiz::WindowInputRemoverLockAcquireInterface *lock_acquire);
   virtual ~MinimizedWindowHandler ();
 
   virtual void minimize   ();

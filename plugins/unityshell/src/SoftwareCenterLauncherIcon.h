@@ -51,6 +51,7 @@ protected:
 
 private:
   void OnPropertyChanged(GVariant* params);
+  void OnFinished(GVariant *params);
   void OnDragAnimationFinished();
 
   glib::DBusProxy aptdaemon_trans_;
