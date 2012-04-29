@@ -101,8 +101,7 @@ class Bamf(object):
 
     def get_window_by_xid(self, xid):
         """Get the BamfWindow that matches the provided 'xid'."""
-        windows = [BamfWindow(w) for w in self.matcher_interface.WindowPaths()]
-        windows = [w for w in windows if w.x_id == xid]
+        windows = [BamfWindow(w) for w in self.matcher_interface.WindowPaths() if BamfWindow(w).x_id == xid]
         return windows[0] if windows else None
 
     def wait_until_application_is_running(self, desktop_file, timeout):
