@@ -625,7 +625,7 @@ class BamfDaemonTests(LauncherTestCase):
             sleep(1)
 
     def kill_and_restart_bamfdaemon(self):
-        """Kills and resumes bamfdaemon"""
+        """Kills and resumes bamfdaemon."""
         call(["pkill", "bamfdaemon"])
         self.wait_for_process_killed("bamfdaemon")
 
@@ -654,6 +654,16 @@ class BamfDaemonTests(LauncherTestCase):
             logger.info("Checking for duplicated launcher icon for application %s", test_app.name)
             test_windows = [w.x_id for w in test_app.get_windows()]
             self.assertOnlyOneLauncherIcon(xids=test_windows)
+
+    def test_killing_bamfdaemon_does_not_duplicate_any_icon_application_id(self):
+        """Killing bamfdaemon should not duplicate any application ids in the model."""
+        self.start_test_apps()
+        self.start_desktopless_test_apps()
+        self.kill_and_restart_bamfdaemon()
+
+        for icon in self.launcher.model.get_bamf_launcher_icons():
+            logger.info("Checking for duplicated launcher icon %s", icon.tooltip_text)
+            self.assertOnlyOneLauncherIcon(application_id=icon.application_id)
 
 
 class LauncherCaptureTests(AutopilotTestCase):
