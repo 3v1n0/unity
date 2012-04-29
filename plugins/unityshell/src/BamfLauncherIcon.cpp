@@ -54,6 +54,8 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   , _fill_supported_types_id(0)
   , _window_moved_id(0)
 {
+  g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"),
+                     GINT_TO_POINTER(1));
   auto bamf_view = glib::object_cast<BamfView>(_bamf_app);
 
   glib::String icon(bamf_view_get_icon(bamf_view));
@@ -143,8 +145,7 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
 BamfLauncherIcon::~BamfLauncherIcon()
 {
   g_object_set_qdata(G_OBJECT(_bamf_app.RawPtr()),
-                     g_quark_from_static_string("unity-seen"),
-                     GUINT_TO_POINTER(0));
+                     g_quark_from_static_string("unity-seen"), nullptr);
 
   if (_fill_supported_types_id != 0)
     g_source_remove(_fill_supported_types_id);
