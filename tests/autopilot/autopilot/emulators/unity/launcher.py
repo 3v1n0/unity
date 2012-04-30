@@ -338,6 +338,14 @@ class LauncherModel(UnityIntrospectionObject):
 
         return None
 
+    def get_icon_by_window_xid(self, xid):
+        """Gets a launcher icon that controls the specified window xid."""
+        icons = [i for i in self.get_children_by_type(SimpleLauncherIcon) if i.xids.contains(xid)]
+        if (len(icons)):
+            return icons[0]
+
+        return None
+
     def get_icons_by_filter(self, **kwargs):
         """Get a list of icons that satisfy the given filters.
 
