@@ -95,7 +95,7 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
                                 int x_offset, int y_offset)
 {
   TextureContainer* container = row.renderer<TextureContainer*>();
-  if (container == nullptr || container->icon == nullptr)
+  if (container == nullptr)
     return;
 
   dash::Style& style = dash::Style::Instance();
@@ -104,8 +104,19 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
   // set up our texture mode
   nux::TexCoordXForm texxform;
 
-  int icon_left_hand_side = geometry.x + (geometry.width - container->icon->GetWidth()) / 2;
-  int icon_top_side = geometry.y + padding + ((tile_icon_size - container->icon->GetHeight()) / 2);
+  int icon_width, icon_height;
+  if (container->icon == nullptr)
+  {
+    icon_width = icon_height = tile_icon_size;
+  }
+  else
+  {
+    icon_width = container->icon->GetWidth();
+    icon_height = container->icon->GetHeight();
+  }
+
+  int icon_left_hand_side = geometry.x + (geometry.width - icon_width) / 2;
+  int icon_top_side = geometry.y + padding + (tile_icon_size - icon_height) / 2;
 
   if (container->blurred_icon && state == ResultRendererState::RESULT_RENDERER_NORMAL)
   {
@@ -312,7 +323,6 @@ nux::BaseTexture* ResultRendererTile::CreateTextureCallback(std::string const& t
       pixbuf_width = style.GetTileWidth() - (padding * 2);
       pixbuf_height = pixbuf_width * aspect;
 
-
       if (pixbuf_height > height)
       {
         // scaled too big, scale down
@@ -326,13 +336,19 @@ nux::BaseTexture* ResultRendererTile::CreateTextureCallback(std::string const& t
       pixbuf_width = pixbuf_height / aspect;
     }
 
+    if (gdk_pixbuf_get_height(pixbuf) == pixbuf_height)
+    {
+      // we changed our mind, fast path is good
+      return nux::CreateTexture2DFromPixbuf(pixbuf, true);
+    }
+
     nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, pixbuf_width, pixbuf_height);
     cairo_t* cr = cairo_graphics.GetInternalContext();
 
     cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
     cairo_paint(cr);
 
-    float scale = gdk_pixbuf_get_height(pixbuf) / float(pixbuf_height);
+    float scale = float(pixbuf_height) / gdk_pixbuf_get_height(pixbuf);
 
     //cairo_translate(cr,
     //                static_cast<int>((width - (pixbuf_width * scale)) * 0.5),

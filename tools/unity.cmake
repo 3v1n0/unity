@@ -122,7 +122,7 @@ def process_and_start_unity (verbose, debug_mode, compiz_args, log_file):
             print("ERROR: you don't have gdb in your system. Please install it to run in advanced debug mode.")
             sys.exit(1)
         elif debug_mode == 1:
-            cli.extend(['gdb', '-ex', 'run', '-ex', 'bt', '--batch', '--args'])
+            cli.extend(['gdb', '-ex', 'run', '-ex', '"bt full"', '--batch', '--args'])
         elif 'DESKTOP_SESSION' in os.environ:
             print("ERROR: it seems you are under a graphical environment. That's incompatible with executing advanced-debug option. You should be in a tty.")
             sys.exit(1)

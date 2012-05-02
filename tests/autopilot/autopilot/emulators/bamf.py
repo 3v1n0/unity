@@ -75,18 +75,34 @@ class Bamf(object):
         """
         return [a for a in self.get_running_applications() if a.desktop_file == desktop_file]
 
+    def get_application_by_xid(self, xid):
+        """Return the application that has a child with the requested xid or None."""
+
+        app_path = self.matcher_interface.ApplicationForXid(xid)
+        if len(app_path):
+            return BamfApplication(app_path)
+        return None
+
     def get_open_windows(self, user_visible_only=True):
         """Get a list of currently open windows.
 
         If user_visible_only is True (the default), only applications
         visible to the user in the switcher will be returned.
 
+        The result is sorted to be in stacking order.
+
         """
 
-        windows = [BamfWindow(w) for w in self.matcher_interface.WindowPaths()]
+        windows = [BamfWindow(w) for w in self.matcher_interface.WindowStackForMonitor(-1)]
         if user_visible_only:
-            return filter(_filter_user_visible, windows)
-        return windows
+            windows = filter(_filter_user_visible, windows)
+        # Now sort on stacking order.
+        return reversed(windows)
+
+    def get_window_by_xid(self, xid):
+        """Get the BamfWindow that matches the provided 'xid'."""
+        windows = [BamfWindow(w) for w in self.matcher_interface.WindowPaths() if BamfWindow(w).x_id == xid]
+        return windows[0] if windows else None
 
     def wait_until_application_is_running(self, desktop_file, timeout):
         """Wait until a given application is running.
@@ -243,6 +259,16 @@ class BamfWindow(object):
     def x_win(self):
         """Get the X11 window object of the underlying window."""
         return self._x_win
+
+    @property
+    def name(self):
+        """Get the window name.
+
+        Note: This may change according to the current locale. If you want a unique
+        string to match windows against, use the x_id instead.
+
+        """
+        return self._view_iface.Name()
 
     @property
     def title(self):

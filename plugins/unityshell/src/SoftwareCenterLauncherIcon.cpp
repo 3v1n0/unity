@@ -46,15 +46,7 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
 {
 
   aptdaemon_trans_.Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
-  aptdaemon_trans_.Connect("Finished", [&] (GVariant *)
-  {
-    tooltip_text = BamfName();
-    SetQuirk(QUIRK_PROGRESS, false);
-    SetQuirk(QUIRK_URGENT, true);
-    SetProgress(0.0f);
-    finished_ = true;
-    needs_urgent_ = true;
-  });
+  aptdaemon_trans_.Connect("Finished", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnFinished));
 
   SetIconType(TYPE_APPLICATION);
   icon_name = icon_path;
@@ -129,6 +121,25 @@ void SoftwareCenterLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   else
       SetQuirk(QUIRK_STARTING, false);
 }
+
+void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
+{
+   glib::String exit_state;
+   g_variant_get_child(params, 0, "s", &exit_state);
+
+   if (exit_state.Str() == "exit-success")
+   {
+      tooltip_text = BamfName();
+      SetQuirk(QUIRK_PROGRESS, false);
+      SetQuirk(QUIRK_URGENT, true);
+      SetProgress(0.0f);
+      finished_ = true;
+      needs_urgent_ = true;
+   } else {
+      // failure condition, remove icon again
+      UnStick();
+   }
+};
 
 void SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
 {

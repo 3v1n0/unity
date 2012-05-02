@@ -31,9 +31,12 @@
 #include "NuxGraphics/GraphicsEngine.h"
 #include <gtk/gtk.h>
 
+#include "BackgroundEffectHelper.h"
+#include "FavoriteStoreGSettings.h"
 #include "LauncherController.h"
 #include "Launcher.h"
-#include "BackgroundEffectHelper.h"
+#include "PanelStyle.h"
+
 #include <dbus/dbus-glib.h>
 
 using namespace unity;
@@ -55,6 +58,10 @@ int main(int argc, char** argv)
   dbus_g_thread_init();
 
   nux::NuxInitialize(0);
+
+  GeisAdapter geis_adapter;
+  panel::Style panel_style;
+  internal::FavoriteStoreGSettings favorite_store;
 
   BackgroundEffectHelper::blur_type = BLUR_NONE;
   nux::WindowThread* wt = nux::CreateGUIThread(TEXT("Unity Switcher"), 300, 800, 0, &ThreadWidgetInit, 0);

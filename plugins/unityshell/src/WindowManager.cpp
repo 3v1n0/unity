@@ -23,6 +23,11 @@ static WindowManager* window_manager = NULL;
 
 class WindowManagerDummy : public WindowManager
 {
+  guint32 GetActiveWindow()
+  {
+    return 0;
+  }
+
   unsigned long long GetWindowActiveNumber (guint32 xid)
   {
     return 0;
@@ -73,7 +78,22 @@ class WindowManagerDummy : public WindowManager
     return true;
   }
 
+  bool IsWindowOnTop(guint32 xid)
+  {
+    return false;
+  }
+
+  bool IsWindowClosable(guint32 xid)
+  {
+    return true;
+  }
+
   bool IsWindowMinimizable(guint32 xid)
+  {
+    return true;
+  }
+
+  bool IsWindowMaximizable(guint32 xid)
   {
     return true;
   }
@@ -113,7 +133,7 @@ class WindowManagerDummy : public WindowManager
     g_debug("%s", G_STRFUNC);
   }
 
-  void FocusWindowGroup(std::vector<Window> windows, FocusVisibility, int monitor)
+  void FocusWindowGroup(std::vector<Window> windows, FocusVisibility, int monitor, bool only_top_win)
   {
     g_debug("%s", G_STRFUNC);
   }
@@ -122,6 +142,11 @@ class WindowManagerDummy : public WindowManager
   {
     g_debug("%s", G_STRFUNC);
     return false;
+  }
+
+  int GetWindowMonitor(guint32 xid) const
+  {
+    return -1;
   }
 
   nux::Geometry GetWindowGeometry(guint xid) const
@@ -194,6 +219,10 @@ class WindowManagerDummy : public WindowManager
   {
     g_debug("%s", G_STRFUNC);
   }
+
+  void AddProperties(GVariantBuilder* builder)
+  {
+  }
 };
 
 WindowManager*
@@ -209,6 +238,11 @@ void
 WindowManager::SetDefault(WindowManager* manager)
 {
   window_manager = manager;
+}
+
+std::string WindowManager::GetName() const
+{
+  return "WindowManager";
 }
 
 #define NET_WM_MOVERESIZE_MOVE 8

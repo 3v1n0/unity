@@ -86,7 +86,7 @@ public:
 
   void ShowTooltip();
 
-  bool OpenQuicklist(bool default_to_first_item = false, int monitor = -1);
+  bool OpenQuicklist(bool select_first_item = false, int monitor = -1);
 
   void        SetCenter(nux::Point3 center, int parent_monitor, nux::Geometry parent_geo);
 
@@ -166,12 +166,18 @@ public:
 
   void RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote);
 
-  nux::DndAction QueryAcceptDrop(unity::DndData& dnd_data)
+  nux::DndAction QueryAcceptDrop(DndData const& dnd_data)
   {
     return OnQueryAcceptDrop(dnd_data);
   }
 
-  void AcceptDrop(unity::DndData& dnd_data)
+
+  bool ShouldHighlightOnDrag(DndData const& dnd_data)
+  {
+    return OnShouldHighlightOnDrag(dnd_data);
+  }
+
+  void AcceptDrop(DndData const& dnd_data)
   {
     return OnAcceptDrop(dnd_data);
   }
@@ -240,12 +246,17 @@ protected:
     return "";
   }
 
-  virtual nux::DndAction OnQueryAcceptDrop(unity::DndData& dnd_data)
+  virtual nux::DndAction OnQueryAcceptDrop(DndData const& dnd_data)
   {
     return nux::DNDACTION_NONE;
   }
 
-  virtual void OnAcceptDrop(unity::DndData& dnd_data) {}
+  virtual bool OnShouldHighlightOnDrag(DndData const& dnd_data)
+  {
+    return false;
+  }
+
+  virtual void OnAcceptDrop(DndData const& dnd_data) {}
 
   virtual void OnDndEnter() {}
 

@@ -62,8 +62,9 @@ public:
   int GetNumItems();
   QuicklistMenuItem* GetNthItems(int index);
   QuicklistMenuItemType GetNthType(int index);
+  int GetItemIndex(QuicklistMenuItem* item);
   std::list<QuicklistMenuItem*> GetChildren();
-  void DefaultToFirstItem();
+  void SelectFirstItem();
 
   void TestMenuItems(DbusmenuMenuitem* root);
 
@@ -130,7 +131,8 @@ private:
   //! Check the mouse up event sent by an item. Detect the item where the mous is and emit the appropriate signal.
   void CheckAndEmitItemSignal(int x, int y);
 
-  bool IsMenuItemSeperator(int index);
+  void SelectItem(int index);
+  bool IsMenuItemSelectable(int index);
 
   //nux::CairoGraphics*   _cairo_graphics;
   int                   _anchorX;

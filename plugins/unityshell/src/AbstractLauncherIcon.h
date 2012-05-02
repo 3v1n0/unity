@@ -128,7 +128,7 @@ public:
 
   virtual void SetSortPriority(int priority) = 0;
 
-  virtual bool OpenQuicklist(bool default_to_first_item = false, int monitor = -1) = 0;
+  virtual bool OpenQuicklist(bool select_first_item = false, int monitor = -1) = 0;
 
   virtual void        SetCenter(nux::Point3 center, int monitor, nux::Geometry parent_geo) = 0;
 
@@ -180,9 +180,11 @@ public:
 
   virtual std::list<DbusmenuMenuitem*> Menus() = 0;
 
-  virtual nux::DndAction QueryAcceptDrop(unity::DndData& dnd_data) = 0;
+  virtual nux::DndAction QueryAcceptDrop(DndData const& dnd_data) = 0;
 
-  virtual void AcceptDrop(unity::DndData& dnd_data) = 0;
+  virtual bool ShouldHighlightOnDrag(DndData const& dnd_data) = 0;
+
+  virtual void AcceptDrop(DndData const& dnd_data) = 0;
 
   virtual void SendDndEnter() = 0;
 
@@ -215,6 +217,7 @@ public:
 
   sigc::signal<void, AbstractLauncherIcon::Ptr> needs_redraw;
   sigc::signal<void, AbstractLauncherIcon::Ptr> remove;
+  sigc::signal<void> visibility_changed;
 
   sigc::connection needs_redraw_connection;
   sigc::connection on_icon_added_connection;

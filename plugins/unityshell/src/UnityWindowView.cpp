@@ -65,9 +65,7 @@ void UnityWindowView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_dr
                               background_geo.height - internal_offset * 2);
   GfxContext.PushClippingRectangle(internal_clip);
 
-
   nux::Geometry geo_absolute = GetAbsoluteGeometry ();
-  
 
   if (BackgroundEffectHelper::blur_type != BLUR_NONE)
   {
@@ -110,7 +108,6 @@ void UnityWindowView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_dr
                                           background_color, nux::LAYER_BLEND_MODE_OVERLAY,
                                           true, rop);
 #endif
-                                     
     }
   }
 
@@ -118,7 +115,7 @@ void UnityWindowView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_dr
   rop.Blend = true;
 
 #ifndef NUX_OPENGLES_20
-  if (GfxContext.UsingGLSLCodePath() == FALSE)
+  if (GfxContext.UsingGLSLCodePath() == false)
   {
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
