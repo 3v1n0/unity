@@ -765,3 +765,22 @@ class LauncherCaptureTests(AutopilotTestCase):
         x_fin, y_fin = self.mouse.position()
         # The launcher should have held the mouse a little bit
         self.assertThat(x_fin, LessThan(x + width * 1.5))
+
+
+class LauncherIconTests(AutopilotTestCase):
+    """Tests for the launcher icons."""
+
+    def test_shift_click_opens_new_application_instance(self):
+        """Shift+Clicking MUST open a new instance of an already-running application."""
+        calc_app = self.start_app("Text Editor")
+        desktop_id = calc_app.desktop_file
+        calc_icon = self.launcher.model.get_icon_by_desktop_id(desktop_id)
+        logger.info("calc app = %r, desktop_file = %r, calc_icon = %r", calc_app, desktop_id, calc_icon)
+        launcher_instance = self.launcher.get_launcher_for_monitor(0)
+
+        self.keyboard.press("Shift")
+        self.addCleanup(self.keyboard.release, "Shift")
+        launcher_instance.click_launcher_icon(calc_icon)
+
+        wins = calc_app.get_windows()
+        self.assertThat(len(wins), Equals(2))
