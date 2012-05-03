@@ -1,7 +1,7 @@
 import sys
 from dbus.mainloop.glib import DBusGMainLoop
 import glib
-import testtools
+from testtools import runtest
 
 DBusGMainLoop(set_as_default=True)
 
@@ -24,6 +24,7 @@ def run_in_glib_loop(function, *args, **kwargs):
             raise
         finally:
             loop.quit()
+
     glib.idle_add(callback)
     loop.run()
     if errors:
@@ -31,10 +32,10 @@ def run_in_glib_loop(function, *args, **kwargs):
     return result[0]
 
 
-class GlibRunner(testtools.RunTest):
+class GlibRunner(runtest.RunTest):
 
     # This implementation runs setUp, the test and tearDown in one event
     # loop. Maybe not what's needed.
 
-    def _run_core(self):
-        run_in_glib_loop(super(GlibRunner, self)._run_core)
+    def _run_user(self, fn, *args, **kwargs):
+        return run_in_glib_loop(super(GlibRunner, self)._run_user, fn, *args, **kwargs)
