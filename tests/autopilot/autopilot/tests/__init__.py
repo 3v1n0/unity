@@ -30,7 +30,6 @@ from autopilot.emulators.unity.switcher import Switcher
 from autopilot.emulators.unity.window_manager import WindowManager
 from autopilot.emulators.unity.workspace import WorkspaceManager
 from autopilot.emulators.X11 import ScreenGeometry, Keyboard, Mouse, reset_display
-from autopilot.glibrunner import GlibRunner
 from autopilot.globals import (global_context,
     video_recording_enabled,
     video_record_directory,
