@@ -205,8 +205,6 @@ class VideoCapturedTestCase(LoggedTestCase):
 class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
     """Wrapper around testtools.TestCase that takes care of some cleaning."""
 
-    run_tests_with = GlibRunner
-
     KNOWN_APPS = {
         'Character Map' : {
             'desktop-file': 'gucharmap.desktop',
