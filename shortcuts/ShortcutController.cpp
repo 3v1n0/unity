@@ -18,8 +18,8 @@
 
 #include "ShortcutController.h"
 
-#include "UBusMessages.h"
-#include "WindowManager.h"
+#include "unity-shared/UBusMessages.h"
+#include "unity-shared/WindowManager.h"
 
 namespace unity
 {

@@ -6,9 +6,15 @@ set (CFLAGS
      ${CACHED_UNITY_DEPS_CFLAGS}
      ${CACHED_UNITY_DEPS_CFLAGS_OTHER}
      ${MAINTAINER_CFLAGS}
+     "-fPIC"
      "-DGETTEXT_PACKAGE=\"unity\""
      "-I${CMAKE_CURRENT_BINARY_DIR}"
      )
+
+if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+  set (CFLAGS ${CFLAGS} "-fPIC")
+endif (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+
 add_definitions (${CFLAGS})
 
 set (LIBS ${CACHED_UNITY_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION} -lm -lGL -lGLU")
@@ -74,8 +80,6 @@ set (SWITCHER_SOURCES
       SwitcherModel.cpp
       SwitcherView.cpp
       LayoutSystem.cpp
-      UnityWindowView.cpp
-      UnityWindowStyle.cpp
     )
 
 add_library (switcher-lib STATIC ${SWITCHER_SOURCES})
@@ -89,5 +93,5 @@ add_dependencies (launcher launcher-lib)
 target_link_libraries (launcher launcher-lib unity-shared)
 
 add_executable (switcher StandaloneSwitcher.cpp)
-add_dependencies (switcher switcher-lib)
-target_link_libraries (switcher switcher-lib unity-shared)
+add_dependencies (switcher switcher-lib launcher-lib)
+target_link_libraries (switcher switcher-lib launcher-lib unity-shared)

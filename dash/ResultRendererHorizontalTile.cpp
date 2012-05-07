@@ -31,7 +31,7 @@
 
 #include <UnityCore/GLibWrapper.h>
 
-#include "CairoTexture.h"
+#include "unity-shared/CairoTexture.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/IconLoader.h"
 #include "unity-shared/IconTexture.h"

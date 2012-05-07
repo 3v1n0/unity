@@ -19,7 +19,7 @@
 
 #include <Nux/Nux.h>
 
-#include "CairoTexture.h"
+#include "unity-shared/CairoTexture.h"
 #include "PlacesVScrollBar.h"
 
 using unity::texture_from_cairo_graphics;

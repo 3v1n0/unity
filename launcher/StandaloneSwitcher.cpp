@@ -101,9 +101,9 @@ void OnNumIconsChanged (nux::SpinBox *self)
 {
   view->Hide();
 
-  std::vector<AbstractLauncherIcon*> icons;
+  std::vector<nux::ObjectPtr<AbstractLauncherIcon>> icons;
   for (int i = 0; i < self->GetValue (); i++)
-    icons.push_back(new MockLauncherIcon());
+    icons.push_back(nux::ObjectPtr<AbstractLauncherIcon>(new MockLauncherIcon()));
 
   view->Show(ShowMode::ALL, SortMode::FOCUS_ORDER, false, icons);
 }
@@ -129,15 +129,15 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
 
   view = new Controller();
   view->timeout_length = 0;
-  view->SetWorkspace(nux::Geometry(0, 0, 900, 600));
+  view->SetWorkspace(nux::Geometry(0, 0, 900, 600), 0);
 
   layout->SetContentDistribution(nux::eStackCenter);
   layout->SetHorizontalExternalMargin (10);
   nux::GetWindowThread()->SetLayout(layout);
 
-  std::vector<AbstractLauncherIcon*> icons;
+  std::vector<nux::ObjectPtr<AbstractLauncherIcon>> icons;
   for (int i = 0; i < 9; i++)
-    icons.push_back(new MockLauncherIcon());
+    icons.push_back(nux::ObjectPtr<AbstractLauncherIcon>(new MockLauncherIcon()));
 
   view->Show(ShowMode::ALL, SortMode::FOCUS_ORDER, false, icons);
 
@@ -290,8 +290,6 @@ int main(int argc, char** argv)
   g_type_init();
   
   gtk_init(&argc, &argv);
-
-  dbus_g_thread_init();
 
   nux::NuxInitialize(0);
 

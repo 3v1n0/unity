@@ -23,7 +23,7 @@
 
 #include <Nux/Nux.h>
 
-#include "CairoTexture.h"
+#include "unity-shared/CairoTexture.h"
 #include "unity-shared/TextureCache.h"
 #include "PlacesTile.h"
 

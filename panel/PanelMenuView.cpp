@@ -21,7 +21,7 @@
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
 
-#include "CairoTexture.h"
+#include "unity-shared/CairoTexture.h"
 #include "PanelMenuView.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/DashSettings.h"

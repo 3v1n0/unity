@@ -27,11 +27,11 @@
 #include <NuxCore/Color.h>
 #include <UnityCore/Variant.h>
 
-#include "Animator.h"
-#include "Introspectable.h"
+#include "unity-shared/Animator.h"
+#include "unity-shared/Introspectable.h"
 #include "ShortcutModel.h"
 #include "ShortcutView.h"
-#include "UBusWrapper.h"
+#include "unity-shared/UBusWrapper.h"
 
 namespace unity
 {

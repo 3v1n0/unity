@@ -33,7 +33,7 @@
 #include <time.h>
 #include <boost/algorithm/string.hpp>
 
-#include "CairoTexture.h"
+#include "unity-shared/CairoTexture.h"
 #include "PanelIndicatorEntryView.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/WindowManager.h"

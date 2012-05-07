@@ -19,7 +19,7 @@
 #include <NuxCore/Logger.h>
 #include "config.h"
 
-#include "CairoTexture.h"
+#include "unity-shared/CairoTexture.h"
 #include "LensBar.h"
 
 namespace unity

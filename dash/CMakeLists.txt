@@ -9,6 +9,11 @@ set (CFLAGS
      "-DGETTEXT_PACKAGE=\"unity\""
      "-I${CMAKE_CURRENT_BINARY_DIR}"
      )
+
+if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+  set (CFLAGS ${CFLAGS} "-fPIC")
+endif (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+
 add_definitions (${CFLAGS})
 
 set (LIBS ${CACHED_UNITY_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION} -lm -lGL -lGLU")
@@ -24,7 +29,6 @@ include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_D
 #
 set (DASH_SOURCES
      AbstractPlacesGroup.cpp
-     AbstractSeparator.cpp
      DashView.cpp
      DashViewPrivate.cpp
      FilterAllButton.cpp
@@ -42,7 +46,6 @@ set (DASH_SOURCES
      LensBarIcon.cpp
      LensView.cpp
      LensViewPrivate.cpp
-     LineSeparator.cpp
      PlacesGroup.cpp
      PlacesSimpleTile.cpp
      PlacesTile.cpp

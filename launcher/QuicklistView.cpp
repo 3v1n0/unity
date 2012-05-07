@@ -30,7 +30,7 @@
 #include <NuxImage/CairoGraphics.h>
 #include <UnityCore/Variant.h>
 
-#include "CairoTexture.h"
+#include "unity-shared/CairoTexture.h"
 
 #include "QuicklistView.h"
 #include "QuicklistMenuItem.h"

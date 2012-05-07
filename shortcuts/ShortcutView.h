@@ -28,8 +28,8 @@
 #include <Nux/View.h>
 #include <Nux/VLayout.h>
 
-#include "UnityWindowView.h"
-#include "BackgroundEffectHelper.h"
+#include "unity-shared/UnityWindowView.h"
+#include "unity-shared/BackgroundEffectHelper.h"
 #include "ShortcutModel.h"
 
 namespace unity

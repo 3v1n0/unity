@@ -22,7 +22,7 @@
 
 #include "unity-shared/DashStyle.h"
 #include "FilterExpanderLabel.h"
-#include "LineSeparator.h"
+#include "unity-shared/LineSeparator.h"
 
 namespace
 {

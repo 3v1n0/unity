@@ -130,11 +130,12 @@ add_subdirectory(panel)
 add_subdirectory(dash)
 add_subdirectory(hud)
 add_subdirectory(launcher)
-#add_subdirectory(plugins/unityshell)
-#add_subdirectory(plugins/gtkloader)
-#add_subdirectory(plugins/networkarearegion)
-#add_subdirectory(plugins/unitydialog)
-#add_subdirectory(plugins/unity-mt-grab-handles)
+add_subdirectory(shortcuts)
+add_subdirectory(plugins/unityshell)
+add_subdirectory(plugins/gtkloader)
+add_subdirectory(plugins/networkarearegion)
+add_subdirectory(plugins/unitydialog)
+add_subdirectory(plugins/unity-mt-grab-handles)
 
 # subdirs
 add_subdirectory(doc)
@@ -158,12 +159,10 @@ if (GTEST_INCLUDE_DIR)
 endif(GTEST_INCLUDE_DIR)
 
 add_subdirectory(services)
-#add_subdirectory(tests)
+add_subdirectory(tests)
 add_subdirectory(tools)
 add_subdirectory(UnityCore)
 add_subdirectory(guides)
-#add_subdirectory(standalone-clients EXCLUDE_FROM_ALL)
-
 
 #
 # GSettings Schema

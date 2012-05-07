@@ -9,6 +9,11 @@ set (CFLAGS
      "-DGETTEXT_PACKAGE=\"unity\""
      "-I${CMAKE_CURRENT_BINARY_DIR}"
      )
+
+if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+  set (CFLAGS ${CFLAGS} "-fPIC")
+endif (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+
 add_definitions (${CFLAGS})
 
 set (LIBS ${CACHED_UNITY_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION} -lm -lGL -lGLU")

@@ -25,7 +25,7 @@
 #include "unity-shared/StaticCairoText.h"
 #include "LayoutSystem.h"
 #include "unity-shared/BackgroundEffectHelper.h"
-#include "UnityWindowView.h"
+#include "unity-shared/UnityWindowView.h"
 
 #include "unity-shared/Introspectable.h"
 

@@ -42,7 +42,7 @@
 #include <Nux/Utils.h>
 #include <UnityCore/Variant.h>
 #include "unity-shared/DashStyle.h"
-#include "LineSeparator.h"
+#include "unity-shared/LineSeparator.h"
 #include "unity-shared/ubus-server.h"
 #include "unity-shared/UBusMessages.h"
 

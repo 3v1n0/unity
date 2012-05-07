@@ -22,7 +22,7 @@
 
 #include <Nux/Nux.h>
 
-#include "CairoTexture.h"
+#include "unity-shared/CairoTexture.h"
 #include "QuicklistMenuItemRadio.h"
 
 namespace unity

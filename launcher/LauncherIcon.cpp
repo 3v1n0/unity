@@ -30,7 +30,7 @@
 #include <NuxCore/Color.h>
 #include <NuxCore/Logger.h>
 
-#include "CairoTexture.h"
+#include "unity-shared/CairoTexture.h"
 #include "LauncherIcon.h"
 #include "Launcher.h"
 #include "unity-shared/TimeUtil.h"

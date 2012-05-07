@@ -22,8 +22,8 @@
 #include <Nux/HLayout.h>
 
 #include "unity-shared/DashSettings.h"
-#include "PanelStyle.h"
-#include "PluginAdapter.h"
+#include "unity-shared/PanelStyle.h"
+#include "unity-shared/PluginAdapter.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UScreen.h"
 

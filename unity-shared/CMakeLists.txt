@@ -9,6 +9,11 @@ set (CFLAGS
      "-DGETTEXT_PACKAGE=\"unity\""
      "-I${CMAKE_CURRENT_BINARY_DIR}"
      )
+
+if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+  set (CFLAGS ${CFLAGS} "-fPIC")
+endif (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+
 add_definitions (${CFLAGS})
 
 set (LIBS ${CACHED_UNITY_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION} -lm -lGL -lGLU")
@@ -23,6 +28,7 @@ include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_D
 # Headers & Sources
 #
 set (UNITY_SHARED_SOURCES
+     AbstractSeparator.cpp
      Animator.cpp
      BGHash.cpp
      BackgroundEffectHelper.cpp
@@ -37,6 +43,7 @@ set (UNITY_SHARED_SOURCES
      Introspectable.cpp
      IntrospectableWrappers.cpp
      JSONParser.cpp
+     LineSeparator.cpp
      OverlayRenderer.cpp
      PanelStyle.cpp
      PluginAdapter.cpp
@@ -47,9 +54,11 @@ set (UNITY_SHARED_SOURCES
      Timer.cpp
      UBusWrapper.cpp
      UScreen.cpp
+     UnityWindowStyle.cpp
+     UnityWindowView.cpp
      WindowManager.cpp
      ubus-server.cpp
-     )
+)
 
 add_library (unity-shared STATIC ${UNITY_SHARED_SOURCES})
 add_dependencies (unity-shared unity-core-${UNITY_API_VERSION})

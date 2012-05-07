@@ -23,9 +23,9 @@
 #include <boost/algorithm/string.hpp>
 #include <UnityCore/GLibWrapper.h>
 
-#include "LineSeparator.h"
-#include "StaticCairoText.h"
-#include "UScreen.h"
+#include "unity-shared/LineSeparator.h"
+#include "unity-shared/StaticCairoText.h"
+#include "unity-shared/UScreen.h"
 
 namespace unity
 {

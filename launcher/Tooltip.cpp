@@ -23,7 +23,7 @@
 #include <Nux/Nux.h>
 #include <UnityCore/Variant.h>
 
-#include "CairoTexture.h"
+#include "unity-shared/CairoTexture.h"
 #include "unity-shared/ubus-server.h"
 #include "unity-shared/UBusMessages.h"
 
