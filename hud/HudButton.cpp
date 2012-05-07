@@ -32,7 +32,7 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
 
-#include "DashStyle.h"
+#include "unity-shared/DashStyle.h"
 
 #include "HudButton.h"
 

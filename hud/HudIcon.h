@@ -21,10 +21,10 @@
 #ifndef HUDICON_H
 #define HUDICON_H
 
-#include "IconTexture.h"
+#include "unity-shared/IconTexture.h"
 #include "HudIconTextureSource.h"
-#include "IconRenderer.h"
-#include "Introspectable.h"
+#include "unity-shared/IconRenderer.h"
+#include "unity-shared/Introspectable.h"
 
 namespace unity
 {

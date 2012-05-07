@@ -34,7 +34,7 @@
 
 #include <glib.h>
 
-#include "PanelStyle.h"
+#include "unity-shared/PanelStyle.h"
 #include "PanelIndicatorsView.h"
 #include <UnityCore/Variant.h>
 

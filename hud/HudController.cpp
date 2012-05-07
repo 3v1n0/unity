@@ -21,11 +21,12 @@
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 #include <UnityCore/Variant.h>
-#include "PluginAdapter.h"
-#include "PanelStyle.h"
-#include "UBusMessages.h"
-#include "UScreen.h"
+#include "unity-shared/PluginAdapter.h"
+#include "unity-shared/PanelStyle.h"
+#include "unity-shared/UBusMessages.h"
+#include "unity-shared/UScreen.h"
 
+#include "config.h"
 #include <libbamf/libbamf.h>
 
 namespace unity

@@ -31,16 +31,23 @@ set (UNITY_SHARED_SOURCES
      FontSettings.cpp
      IMTextEntry.cpp
      IconLoader.cpp
+     IconRenderer.cpp
      IconTexture.cpp
+     IconTextureSource.cpp
      Introspectable.cpp
      IntrospectableWrappers.cpp
      JSONParser.cpp
      OverlayRenderer.cpp
+     PanelStyle.cpp
+     PluginAdapter.cpp
+     SearchBar.cpp
+     SearchBarSpinner.cpp
      StaticCairoText.cpp
      TextureCache.cpp
      Timer.cpp
      UBusWrapper.cpp
      UScreen.cpp
+     WindowManager.cpp
      ubus-server.cpp
      )
 

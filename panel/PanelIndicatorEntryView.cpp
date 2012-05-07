@@ -35,8 +35,8 @@
 
 #include "CairoTexture.h"
 #include "PanelIndicatorEntryView.h"
-#include "PanelStyle.h"
-#include "WindowManager.h"
+#include "unity-shared/PanelStyle.h"
+#include "unity-shared/WindowManager.h"
 
 
 namespace unity

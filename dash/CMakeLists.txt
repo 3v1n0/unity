@@ -55,8 +55,6 @@ set (DASH_SOURCES
      ResultRendererTile.cpp
      ResultView.cpp
      ResultViewGrid.cpp
-     SearchBar.cpp
-     SearchBarSpinner.cpp
      )
 
 add_library (dash-lib STATIC ${DASH_SOURCES})

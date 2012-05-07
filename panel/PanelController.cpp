@@ -26,7 +26,7 @@
 
 #include "unity-shared/UScreen.h"
 #include "PanelView.h"
-#include "PanelStyle.h"
+#include "unity-shared/PanelStyle.h"
 
 namespace unity
 {

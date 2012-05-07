@@ -18,7 +18,7 @@
  */
 
 #include "PanelTray.h"
-#include "PanelStyle.h"
+#include "unity-shared/PanelStyle.h"
 
 #include <NuxCore/Logger.h>
 #include <UnityCore/Variant.h>

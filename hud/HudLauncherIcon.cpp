@@ -22,7 +22,7 @@
 #include "UnityCore/GLibWrapper.h"
 #include <NuxCore/Logger.h>
 
-#include "UBusMessages.h"
+#include "unity-shared/UBusMessages.h"
 
 #include <glib/gi18n-lib.h>
 

@@ -26,13 +26,13 @@
 #include <Nux/VLayout.h>
 
 #include <UnityCore/Hud.h>
-#include "Introspectable.h"
+#include "unity-shared/Introspectable.h"
 
-#include "UBusWrapper.h"
+#include "unity-shared/UBusWrapper.h"
 #include "HudIcon.h"
 #include "HudButton.h"
-#include "SearchBar.h"
-#include "OverlayRenderer.h"
+#include "unity-shared/SearchBar.h"
+#include "unity-shared/OverlayRenderer.h"
 
 namespace unity
 {

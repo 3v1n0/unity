@@ -29,7 +29,7 @@
 #include <Nux/Button.h>
 #include <Nux/TextureArea.h>
 #include <UnityCore/Hud.h>
-#include "Introspectable.h"
+#include "unity-shared/Introspectable.h"
 
 namespace unity {
 namespace hud {

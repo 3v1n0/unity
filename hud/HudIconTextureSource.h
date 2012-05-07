@@ -21,7 +21,7 @@
 #ifndef HUDICONTEXTURESOURCE_H
 #define HUDICONTEXTURESOURCE_H
 
-#include "IconTextureSource.h"
+#include "unity-shared/IconTextureSource.h"
 
 namespace unity
 {

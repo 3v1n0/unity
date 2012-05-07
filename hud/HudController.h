@@ -30,7 +30,7 @@
 #include <Nux/BaseWindow.h>
 
 #include "HudView.h"
-#include "UBusWrapper.h"
+#include "unity-shared/UBusWrapper.h"
 
 namespace unity
 {

@@ -23,7 +23,7 @@
 
 #include "CairoTexture.h"
 #include "PanelMenuView.h"
-#include "PanelStyle.h"
+#include "unity-shared/PanelStyle.h"
 #include "unity-shared/DashSettings.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UScreen.h"

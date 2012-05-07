@@ -23,7 +23,7 @@
 #include "SingleMonitorLauncherIcon.h"
 
 #include "LauncherOptions.h"
-#include "UBusWrapper.h"
+#include "unity-shared/UBusWrapper.h"
 
 namespace unity
 {

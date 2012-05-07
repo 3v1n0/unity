@@ -28,9 +28,9 @@
 #include "WindowButtons.h"
 
 #include "unity-shared/DashSettings.h"
-#include "PanelStyle.h"
+#include "unity-shared/PanelStyle.h"
 #include "unity-shared/UBusMessages.h"
-#include "WindowManager.h"
+#include "unity-shared/WindowManager.h"
 
 namespace unity
 {

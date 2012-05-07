@@ -22,23 +22,20 @@ include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_D
 #
 # Headers & Sources
 #
-set (PANEL_SOURCES
-     PanelController.cpp
-     PanelIndicatorEntryView.cpp
-     PanelIndicatorsView.cpp
-     PanelMenuView.cpp
-     PanelTitlebarGrabAreaView.cpp
-     PanelTray.cpp
-     PanelView.cpp
-     WindowButtons.cpp
-     )
+set (HUD_SOURCES
+     HudButton.cpp
+     HudController.cpp
+     HudIcon.cpp
+     HudIconTextureSource.cpp
+     HudView.cpp
+    ) 
 
-add_library (panel-lib STATIC ${PANEL_SOURCES})
-add_dependencies (panel-lib unity-core-${UNITY_API_VERSION} unity-shared)
+add_library (hud-lib STATIC ${HUD_SOURCES})
+add_dependencies (hud-lib unity-core-${UNITY_API_VERSION} unity-shared)
 
 # 
 # Standalone variant
 #
-add_executable (panel StandalonePanel.cpp)
-add_dependencies (panel panel-lib)
-target_link_libraries (panel panel-lib unity-shared)
+add_executable (hud StandaloneHud.cpp)
+add_dependencies (hud hud-lib)
+target_link_libraries (hud hud-lib unity-shared)

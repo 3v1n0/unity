@@ -28,8 +28,8 @@
 
 #include <NuxCore/Logger.h>
 #include "HudButton.h"
-#include "UBusMessages.h"
-#include "DashStyle.h"
+#include "unity-shared/UBusMessages.h"
+#include "unity-shared/DashStyle.h"
 
 namespace unity
 {

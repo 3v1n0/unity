@@ -26,7 +26,7 @@
 #include <gtk/gtk.h>
 
 #include "unity-shared/DashSettings.h"
-#include "PanelStyle.h"
+#include "unity-shared/PanelStyle.h"
 #include "PanelView.h"
 #include <dbus/dbus-glib.h>
 

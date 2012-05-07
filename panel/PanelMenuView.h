@@ -29,7 +29,7 @@
 #include "unity-shared/StaticCairoText.h"
 #include "WindowButtons.h"
 #include "PanelTitlebarGrabAreaView.h"
-#include "PluginAdapter.h"
+#include "unity-shared/PluginAdapter.h"
 #include "unity-shared/Animator.h"
 #include "unity-shared/UBusWrapper.h"
 
