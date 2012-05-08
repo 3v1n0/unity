@@ -2668,9 +2668,6 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
 
   _hide_machine->SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, true);
 
-  if (IsOverlayOpen())
-    SaturateIcons();
-
   for (auto it : _dnd_data.Uris())
   {
     if (g_str_has_suffix(it.c_str(), ".desktop"))
@@ -2685,10 +2682,20 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
     for (auto it : *_model)
     {
       if (it->ShouldHighlightOnDrag(_dnd_data))
+      {
+        it->SetQuirk(AbstractLauncherIcon::QUIRK_DESAT, false);
         it->SetQuirk(AbstractLauncherIcon::QUIRK_DROP_PRELIGHT, true);
+      }
       else
+      {
         it->SetQuirk(AbstractLauncherIcon::QUIRK_DROP_DIM, true);
+      }
     }
+  }
+  else
+  {
+    if (IsOverlayOpen())
+      SaturateIcons();
   }
 }
 
