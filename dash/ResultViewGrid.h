@@ -90,7 +90,7 @@ private:
 
   uint mouse_over_index_;
   int active_index_;
-  int selected_index_;
+  nux::Property<int> selected_index_;
   uint preview_row_;
   std::string focused_uri_;
 
