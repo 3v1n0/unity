@@ -29,6 +29,7 @@ include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_D
 #
 set (DASH_SOURCES
      AbstractPlacesGroup.cpp
+     DashController.cpp
      DashView.cpp
      DashViewPrivate.cpp
      FilterAllButton.cpp
