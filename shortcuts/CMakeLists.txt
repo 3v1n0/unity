@@ -32,6 +32,8 @@ set (SHORTCUTS_SOURCES
      MockShortcutHint.h
      ShortcutController.cpp
      ShortcutController.h
+     ShortcutHint.cpp
+     ShortcutHintPrivate.cpp
      ShortcutModel.cpp
      ShortcutModel.h
      ShortcutView.cpp
