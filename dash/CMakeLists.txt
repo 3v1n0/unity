@@ -48,8 +48,6 @@ set (DASH_SOURCES
      LensView.cpp
      LensViewPrivate.cpp
      PlacesGroup.cpp
-     PlacesSimpleTile.cpp
-     PlacesTile.cpp
      PlacesVScrollBar.cpp
      PreviewApplications.cpp
      PreviewBase.cpp
