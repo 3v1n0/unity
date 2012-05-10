@@ -99,6 +99,12 @@ void BGHash::OverrideColor (nux::Color color)
 
 void BGHash::RefreshColor()
 {
+  if (_override_color.alpha)
+  {
+    TransitionToNewColor (_override_color);
+    return;
+  }
+
   Atom         real_type;
   gint         result;
   gint         real_format;
@@ -154,12 +160,6 @@ void BGHash::OnGSettingsChanged (GSettings *settings, gchar *key)
 
 void BGHash::OnBackgroundChanged (GnomeBG *bg)
 {
-  if (_override_color.alpha)
-  {
-    TransitionToNewColor (_override_color);
-    return;
-  }
-
   RefreshColor();
 }
 
