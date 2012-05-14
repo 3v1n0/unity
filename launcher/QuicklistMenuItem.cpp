@@ -66,7 +66,7 @@ QuicklistMenuItem::QuicklistMenuItem(DbusmenuMenuitem* item,
 void
 QuicklistMenuItem::Initialize(DbusmenuMenuitem* item, bool debug)
 {
-  _text        = 0;
+  _text        = "";
   _color       = nux::Color(1.0f, 1.0f, 1.0f, 1.0f);
   _menuItem    = DBUSMENU_MENUITEM(g_object_ref(item));
   _debug       = debug;
@@ -100,9 +100,6 @@ QuicklistMenuItem::Initialize(DbusmenuMenuitem* item, bool debug)
 
 QuicklistMenuItem::~QuicklistMenuItem()
 {
-  if (_text)
-    g_free(_text);
-
   if (_normalTexture[0])
     _normalTexture[0]->UnReference();
 
@@ -131,7 +128,7 @@ QuicklistMenuItem::InitializeText()
   if (_menuItem)
     _text = GetText();
   else
-    _text = g_strdup(GetDefaultText());
+    _text = GetDefaultText();
 
   int textWidth = 1;
   int textHeight = 1;
@@ -280,7 +277,7 @@ void QuicklistMenuItem::GetTextExtents(const gchar* font,
   if (!font)
     return;
 
-  if (_text == NULL)
+  if (_text == "")
     return;
 
   surface = cairo_image_surface_create(CAIRO_FORMAT_A1, 1, 1);
@@ -292,7 +289,7 @@ void QuicklistMenuItem::GetTextExtents(const gchar* font,
   pango_layout_set_font_description(layout, desc);
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
-  pango_layout_set_markup_with_accel(layout, _text, -1, '_', NULL);
+  pango_layout_set_markup_with_accel(layout, _text.c_str(), -1, '_', NULL);
   pangoCtx = pango_layout_get_context(layout);  // is not ref'ed
   pango_cairo_context_set_font_options(pangoCtx,
                                        gdk_screen_get_font_options(screen));
@@ -368,7 +365,7 @@ void QuicklistMenuItem::RecvMouseLeave(int x, int y, unsigned long button_flags,
 
 void QuicklistMenuItem::DrawText(nux::CairoGraphics* cairo, int width, int height, nux::Color const& color)
 {
-  if (_text == nullptr || cairo == nullptr)
+  if (_text == "" || cairo == nullptr)
     return;
 
   cairo_t*              cr         = cairo->GetContext();
@@ -393,7 +390,7 @@ void QuicklistMenuItem::DrawText(nux::CairoGraphics* cairo, int width, int heigh
   pango_layout_set_font_description(layout, desc);
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
-  pango_layout_set_markup_with_accel(layout, _text, -1, '_', NULL);
+  pango_layout_set_markup_with_accel(layout, _text.c_str(), -1, '_', NULL);
   pangoCtx = pango_layout_get_context(layout);  // is not ref'ed
   pango_cairo_context_set_font_options(pangoCtx,
                                        gdk_screen_get_font_options(screen));
@@ -445,12 +442,7 @@ QuicklistMenuItem::EnableLabelMarkup(bool enabled)
   {
     dbusmenu_menuitem_property_set_bool(_menuItem, "unity-use-markup", enabled);
 
-    if (_text)
-    {
-      g_free(_text);
-      _text = NULL;
-    }
-
+    _text = "";
     InitializeText();
   }
 }
