@@ -38,13 +38,47 @@ class UnityTestCase(AutopilotTestCase):
     def __init__(self, *args):
         super(UnityTestCase, self).__init__(*args)
 
-        self.dash = Dash()
-        self.hud = Hud()
-        self.launcher = self._get_launcher_controller()
-        self.panels = self._get_panel_controller()
-        self.switcher = Switcher()
-        self.window_manager = self._get_window_manager()
-        self.workspace = WorkspaceManager()
+    @property
+    def dash(self):
+        if not getattr(self, '__dash', None):
+            self.__dash = Dash()
+        return self.__dash
+
+    @property
+    def hud(self):
+        if not getattr(self, '__hud', None):
+            self.__hud = Hud();
+        return self.__hud
+
+    @property
+    def launcher(self):
+        if not getattr(self, '__launcher', None):
+            self.__launcher = self._get_launcher_controller()
+        return self.__launcher
+
+    @property
+    def panels(self):
+        if not getattr(self, '__panels', None):
+            self.__panels = self._get_panel_controller()
+        return self.__panels
+
+    @property
+    def switcher(self):
+        if not getattr(self, '__switcher', None):
+            self.__switcher = Switcher()
+        return self.__switcher
+
+    @property
+    def window_manager(self):
+        if not getattr(self, '__window_manager', None):
+            self.__window_manager = self._get_window_manager()
+        return self.__window_manager
+
+    @property
+    def workspace(self):
+        if not getattr(self, '__workspace', None):
+            self.__workspace = WorkspaceManager()
+        return self.__workspace
 
     def _get_launcher_controller(self):
         controllers = LauncherController.get_all_instances()
