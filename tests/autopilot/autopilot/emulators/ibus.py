@@ -69,6 +69,11 @@ def set_active_engines(engine_list):
 
     bus = get_ibus_bus()
     config = bus.get_config()
+
+    config.set_value("general",
+                     "preload_engine_mode",
+                     ibus.common.PRELOAD_ENGINE_MODE_USER)
+
     old_engines = get_active_input_engines()
     config.set_list("general", "preload_engines", engine_list, "s")
     # need to restart the ibus bus before it'll pick up the new engine.
