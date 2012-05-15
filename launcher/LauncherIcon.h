@@ -324,6 +324,8 @@ private:
   void LoadTooltip();
   void LoadQuicklist();
 
+  void OnTooltipEnabledChanged(bool value);
+
   bool              _remote_urgent;
   float             _present_urgency;
   float             _progress;
