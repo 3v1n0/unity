@@ -201,6 +201,7 @@ if (GTEST_SRC_DIR AND
                  test_main.cpp
                  test_lensview_impl.cpp
                  test_icon_loader.cpp
+                 test_resultviewgrid.cpp
                  test_single_monitor_launcher_icon.cpp
                  test_switcher_controller.cpp
                  test_switcher_model.cpp
@@ -251,10 +252,14 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/unity-shared/ubus-server.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/UScreen.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/WindowManager.cpp
+                 ${CMAKE_SOURCE_DIR}/dash/ResultView.cpp
+                 ${CMAKE_SOURCE_DIR}/dash/ResultViewGrid.cpp
+                 ${CMAKE_SOURCE_DIR}/dash/ResultRenderer.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/IntrospectableWrappers.cpp
                 )
-  target_link_libraries(test-gtest gtest ${LIBS})
+  target_link_libraries(test-gtest gtest gmock ${LIBS})
   add_test(UnityGTest test-gtest)
-  add_dependencies(test-gtest unity-core-${UNITY_API_VERSION} gtest)
+  add_dependencies(test-gtest unity-core-${UNITY_API_VERSION} gtest gmock)
 
 endif (GTEST_SRC_DIR AND
        GMOCK_LIB AND

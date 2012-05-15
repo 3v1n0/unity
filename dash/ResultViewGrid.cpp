@@ -526,7 +526,7 @@ void ResultViewGrid::OnKeyNavFocusChange(nux::Area *area, bool has_focus, nux::K
 {
   if (HasKeyFocus())
   {
-    if (selected_index_ < 0)
+    if (selected_index_ < 0 and !results_.empty())
     {
         focused_uri_ = results_.front().uri;
         selected_index_ = 0;
@@ -733,6 +733,7 @@ void ResultViewGrid::MouseMove(int x, int y, int dx, int dy, unsigned long butto
   if (mouse_over_index_ != index)
   {
     selected_index_ = mouse_over_index_ = index;
+
     nux::GetWindowCompositor().SetKeyFocusArea(this);
   }
   mouse_last_x_ = x;
