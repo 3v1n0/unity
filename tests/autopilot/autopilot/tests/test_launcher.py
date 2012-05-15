@@ -445,6 +445,20 @@ class LauncherIconsBehaviorTests(LauncherTestCase):
         self.assertTrue(mah_win2.is_hidden)
         self.assertVisibleWindowStack([mah_win1, calc_win])
 
+    def test_icon_shows_on_quick_application_reopen(self):
+        """Icons should stay on launcher when an application is quickly closed/reopened."""
+        self.close_all_app("Calculator")
+        calc = self.start_app("Calculator")
+        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
+        self.assertThat(calc_icon.visible, Eventually(Equals(True)))
+
+        os.spawnlp(os.P_WAIT, "pkill", "pkill", self.KNOWN_APPS["Calculator"]['process-name'])
+        calc = self.start_app("Calculator")
+        sleep(2)
+
+        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
+        self.assertThat(calc_icon, NotEquals(None))
+        self.assertThat(calc_icon.visible, Eventually(Equals(True)))
 
 class LauncherRevealTests(LauncherTestCase):
     """Test the launcher reveal behavior when in autohide mode."""
