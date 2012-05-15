@@ -66,6 +66,7 @@ public:
   std::string NameForWindow(Window window);
 
 protected:
+  void Remove();
   void UpdateIconGeometries(std::vector<nux::Point3> center);
   void OnCenterStabilized(std::vector<nux::Point3> center);
   void AddProperties(GVariantBuilder* builder);
@@ -124,6 +125,7 @@ private:
   guint _dnd_hover_timer;
 
   bool _supported_types_filled;
+  guint _remove_timeout_id;
   guint _fill_supported_types_id;
   guint _window_moved_id;
   guint _quicklist_activated_id;
