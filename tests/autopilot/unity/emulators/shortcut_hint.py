@@ -11,7 +11,7 @@ from __future__ import absolute_import
 
 import logging
 
-from autopilot.emulators.unity import UnityIntrospectionObject
+from autopilot.introspection.unity import UnityIntrospectionObject
 from autopilot.keybindings import KeybindingsHelper
 
 

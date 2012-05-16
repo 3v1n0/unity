@@ -770,7 +770,7 @@ class LauncherCaptureTests(UnityTestCase):
         self.assertThat(x_fin, LessThan(x + width * 1.5))
 
 
-class LauncherTooltipTests(AutopilotTestCase):
+class LauncherTooltipTests(UnityTestCase):
     """Test the launcher tooltips"""
 
     def setUp(self):
