@@ -13,20 +13,3 @@ Action:
 Outcome:
   The keyboard shortcuts overlay bottom is not truncated.
 
-
-Shortcuts overlay background disabling blur.
--------------------------------------------
-This test ensures that shortcuts overlay is not *completely* transparent
-when the blur is disabled. See LP bug #989291.
-
-Setup:
-#. Make sure you have a monitor with a resoultion bigger than 1024x768.
-#. Disable active blur from ccsm.
-
-Action:
-#. Move your mouse in that monitor.
-#. Press "Super" key.
-
-Outcome:
-  The keyboard shortcuts is not *completely* transparent. It should have
-  the same background of the dash view.
