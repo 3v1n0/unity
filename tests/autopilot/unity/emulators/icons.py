@@ -11,6 +11,7 @@ from __future__ import absolute_import
 
 from autopilot.introspection.unity import UnityIntrospectionObject
 from unity.emulators.quicklist import Quicklist
+from unity.emulators.tooltip import ToolTip
 
 class SimpleLauncherIcon(UnityIntrospectionObject):
     """Holds information about a simple launcher icon.
@@ -33,6 +34,16 @@ class SimpleLauncherIcon(UnityIntrospectionObject):
 
         """
         matches = self.get_children_by_type(Quicklist)
+        return matches[0] if matches else None
+
+    def get_tooltip(self):
+        """Get the tooltip for this launcher icon.
+
+        This may return None, if there is no tooltip associated with this
+        launcher icon.
+
+        """
+        matches = self.get_children_by_type(ToolTip)
         return matches[0] if matches else None
 
     def is_on_monitor(self, monitor):

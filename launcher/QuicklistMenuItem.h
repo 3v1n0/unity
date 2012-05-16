@@ -96,7 +96,7 @@ protected:
   static const int ITEM_CORNER_RADIUS_ABS = 3;
   static const int ITEM_MARGIN = 4;
 
-  gchar*                _text;
+  std::string           _text;
   nux::Color            _textColor;
   int                   _pre_layout_width;
   int                   _pre_layout_height;

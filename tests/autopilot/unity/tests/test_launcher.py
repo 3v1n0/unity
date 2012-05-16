@@ -12,7 +12,7 @@ from __future__ import absolute_import
 from autopilot.emulators.bamf import Bamf
 from autopilot.emulators.X11 import ScreenGeometry
 from autopilot.matchers import Eventually
-from autopilot.tests import multiply_scenarios
+from autopilot.testcase import multiply_scenarios
 import logging
 import os
 from subprocess import call
@@ -768,3 +768,31 @@ class LauncherCaptureTests(UnityTestCase):
         x_fin, y_fin = self.mouse.position()
         # The launcher should have held the mouse a little bit
         self.assertThat(x_fin, LessThan(x + width * 1.5))
+
+
+class LauncherTooltipTests(AutopilotTestCase):
+    """Test the launcher tooltips"""
+
+    def setUp(self):
+        super(LauncherTooltipTests, self).setUp()
+        self.set_unity_option('launcher_hide_mode', 0)
+
+    def test_bfb_tooltip_disappear_when_dash_is_opened(self):
+         """Tests that the bfb tooltip disappear when the dash is opened."""
+         bfb = self.launcher.model.get_bfb_icon()
+         self.mouse.move(bfb.center_x, bfb.center_y)
+
+         self.dash.ensure_visible()
+         self.addCleanup(self.dash.ensure_hidden)
+
+         self.assertThat(bfb.get_tooltip().active, Eventually(Equals(False)))
+
+    def test_bfb_tooltip_is_disabled_when_dash_is_open(self):
+         """Tests the that bfb tooltip is disabled when the dash is open."""
+         self.dash.ensure_visible()
+         self.addCleanup(self.dash.ensure_hidden)
+
+         bfb = self.launcher.model.get_bfb_icon()
+         self.mouse.move(bfb.center_x, bfb.center_y)
+
+         self.assertThat(bfb.get_tooltip().active, Eventually(Equals(False)))

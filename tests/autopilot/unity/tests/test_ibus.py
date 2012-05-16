@@ -11,11 +11,12 @@
 from __future__ import absolute_import
 
 from autopilot.emulators.ibus import (
+    get_active_input_engines,
     set_active_engines,
     get_available_input_engines,
     )
 from autopilot.matchers import Eventually
-from autopilot.tests import multiply_scenarios
+from autopilot.testcase import multiply_scenarios
 from testtools.matchers import Equals, NotEquals
 
 from unity.tests import UnityTestCase
@@ -33,20 +34,19 @@ class IBusTests(UnityTestCase):
     @classmethod
     def setUpClass(cls):
         cls._old_engines = None
-        cls.activate_input_engine_or_skip(cls.engine_name)
 
     @classmethod
     def tearDownClass(cls):
         if cls._old_engines is not None:
             set_active_engines(cls._old_engines)
 
-    @classmethod
-    def activate_input_engine_or_skip(cls, engine_name):
+    def activate_input_engine_or_skip(self, engine_name):
         available_engines = get_available_input_engines()
         if engine_name in available_engines:
-            cls._old_engines = set_active_engines([engine_name])
+            if get_active_input_engines() != [engine_name]:
+                IBusTests._old_engines = set_active_engines([engine_name])
         else:
-            raise UnityTestCase.skipException("This test requires the '%s' engine to be installed." % (engine_name))
+            self.skip("This test requires the '%s' engine to be installed." % (engine_name))
 
     def activate_ibus(self, widget):
         """Activate IBus, and wait till it's actived on 'widget'"""
@@ -96,6 +96,10 @@ class IBusTestsPinyin(IBusTests):
         ('disk_management', {'input': 'cipan guanli ', 'result': u'\u78c1\u76d8\u7ba1\u7406'}),
     ]
 
+    def setUp(self):
+        super(IBusTestsPinyin, self).setUp()
+        self.activate_input_engine_or_skip(self.engine_name)
+
     def test_simple_input_dash(self):
         self.do_dash_test_with_engine()
 
@@ -113,6 +117,10 @@ class IBusTestsHangul(IBusTests):
         ('social', {'input': 'httuf ', 'result': u'\uc18c\uc15c '}),
         ('document', {'input': 'anstj ', 'result': u'\ubb38\uc11c '}),
         ]
+
+    def setUp(self):
+        super(IBusTestsHangul, self).setUp()
+        self.activate_input_engine_or_skip(self.engine_name)
 
     def test_simple_input_dash(self):
         self.do_dash_test_with_engine()
@@ -138,6 +146,10 @@ class IBusTestsAnthy(IBusTests):
         ]
         )
 
+    def setUp(self):
+        super(IBusTestsAnthy, self).setUp()
+        self.activate_input_engine_or_skip(self.engine_name)
+
     def test_simple_input_dash(self):
         self.do_dash_test_with_engine()
 
@@ -149,6 +161,10 @@ class IBusTestsPinyinIgnore(IBusTests):
     """Tests for ignoring key events while the Pinyin input engine is active."""
 
     engine_name = "pinyin"
+
+    def setUp(self):
+        super(IBusTestsPinyinIgnore, self).setUp()
+        self.activate_input_engine_or_skip(self.engine_name)
 
     def test_ignore_key_events_on_dash(self):
         self.dash.ensure_visible()
@@ -179,6 +195,10 @@ class IBusTestsAnthyIgnore(IBusTests):
     """Tests for ignoring key events while the Anthy input engine is active."""
 
     engine_name = "anthy"
+
+    def setUp(self):
+        super(IBusTestsAnthyIgnore, self).setUp()
+        self.activate_input_engine_or_skip(self.engine_name)
 
     def test_ignore_key_events_on_dash(self):
         self.dash.ensure_visible()
