@@ -380,6 +380,7 @@ Launcher* Controller::Impl::CreateLauncher(int monitor)
   launcher->display = display_;
   launcher->monitor = monitor;
   launcher->options = parent_->options();
+  launcher->SetModel(model_.get());
 
   nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout->AddView(launcher, 1);
@@ -394,7 +395,6 @@ Launcher* Controller::Impl::CreateLauncher(int monitor)
   launcher_window->InputWindowEnableStruts(false);
   launcher_window->SetEnterFocusInputArea(launcher);
 
-  launcher->SetModel(model_.get());
   launcher->launcher_addrequest.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequest));
   launcher->launcher_addrequest_special.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequestSpecial));
   launcher->launcher_removerequest.connect(sigc::mem_fun(this, &Impl::OnLauncherRemoveRequest));

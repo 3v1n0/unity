@@ -216,6 +216,9 @@ unity_a11y_init(nux::WindowThread* wt)
   {
     g_debug("Unity Oneiric accessibility started, using bridge on %s",
             bridge_path);
+
+    atk_get_root();
+
     a11y_initialized = TRUE;
   }
 
