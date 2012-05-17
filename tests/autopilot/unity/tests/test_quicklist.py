@@ -27,9 +27,19 @@ class QuicklistActionTests(UnityTestCase):
     ]
 
     def open_quicklist_for_icon(self, launcher_icon):
+        """Open the quicklist for the given launcher icon.
+
+        Returns the quicklist that was opened.
+
+        """
         launcher = self.launcher.get_launcher_for_monitor(0)
         launcher.click_launcher_icon(launcher_icon, button=3)
         self.addCleanup(self.keyboard.press_and_release, "Escape")
+        for i in range(10):
+            ql = launcher_icon.get_quicklist()
+            if ql:
+                return ql
+            sleep(1)
 
     def test_quicklist_actions(self):
         """Test that all actions present in the destop file are shown in the quicklist."""
@@ -44,8 +54,7 @@ class QuicklistActionTests(UnityTestCase):
         self.assertThat(launcher_icon, NotEquals(None))
 
         # open the icon quicklist, and get all the text labels:
-        self.open_quicklist_for_icon(launcher_icon)
-        ql = launcher_icon.get_quicklist()
+        ql = self.open_quicklist_for_icon(launcher_icon)
         ql_item_texts = [i.text for i in ql.items if type(i) is QuicklistMenuItemLabel]
 
         # iterate over all the actions from the desktop file, make sure they're
@@ -89,15 +98,13 @@ class QuicklistActionTests(UnityTestCase):
         mahj_icon = self.launcher.model.get_icon_by_desktop_id(mahj.desktop_file)
         calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
 
-        self.open_quicklist_for_icon(calc_icon)
-        calc_ql = calc_icon.get_quicklist()
+        calc_ql = self.open_quicklist_for_icon(calc_icon)
         calc_ql.get_quicklist_application_item(calc.name).mouse_click()
         sleep(1)
         self.assertTrue(calc_win.is_focused)
         self.assertVisibleWindowStack([calc_win, mah_win2, mah_win1])
 
-        self.open_quicklist_for_icon(mahj_icon)
-        mahj_ql = mahj_icon.get_quicklist()
+        mahj_ql = self.open_quicklist_for_icon(mahj_icon)
         mahj_ql.get_quicklist_application_item(mahj.name).mouse_click()
         sleep(1)
         self.assertTrue(mah_win2.is_focused)
@@ -125,8 +132,7 @@ class QuicklistActionTests(UnityTestCase):
 
         calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
 
-        self.open_quicklist_for_icon(calc_icon)
-        calc_ql = calc_icon.get_quicklist()
+        calc_ql = self.open_quicklist_for_icon(calc_icon)
         app_item = calc_ql.get_quicklist_application_item(calc.name)
 
         self.addCleanup(self.keybinding, "spread/cancel")
