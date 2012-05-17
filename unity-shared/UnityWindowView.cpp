@@ -17,6 +17,8 @@
  * Authored by: Jason Smith <jason.smith@canonical.com>
  */
 
+#include <UnityCore/Variant.h>
+
 #include "UnityWindowView.h"
 
 namespace unity {
@@ -56,7 +58,7 @@ void UnityWindowView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_dr
   // clear region
   gPainter.PaintBackground(GfxContext, base);
 
-  nux::Geometry background_geo = GetBackgroundGeometry();
+  nux::Geometry background_geo(GetBackgroundGeometry());
   int internal_offset = style()->GetInternalOffset();
 
   nux::Geometry internal_clip(background_geo.x + internal_offset,
@@ -65,50 +67,54 @@ void UnityWindowView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_dr
                               background_geo.height - internal_offset * 2);
   GfxContext.PushClippingRectangle(internal_clip);
 
-  nux::Geometry geo_absolute = GetAbsoluteGeometry ();
+  nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
+  nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
 
   if (BackgroundEffectHelper::blur_type != BLUR_NONE)
   {
-    nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
-    auto blur_texture = bg_helper_.GetBlurRegion(blur_geo);
+    bg_texture_ = bg_helper_.GetBlurRegion(blur_geo);
+  }
+  else
+  {
+    bg_texture_ = bg_helper_.GetRegion(blur_geo);
+  }
 
-    if (blur_texture.IsValid())
-    {
-      nux::TexCoordXForm texxform_blur_bg;
-      texxform_blur_bg.flip_v_coord = true;
-      texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-      texxform_blur_bg.uoffset = ((float) base.x) / geo_absolute.width;
-      texxform_blur_bg.voffset = ((float) base.y) / geo_absolute.height;
+  if (bg_texture_.IsValid())
+  {
+    nux::TexCoordXForm texxform_blur_bg;
+    texxform_blur_bg.flip_v_coord = true;
+    texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+    texxform_blur_bg.uoffset = ((float) base.x) / geo_absolute.width;
+    texxform_blur_bg.voffset = ((float) base.y) / geo_absolute.height;
 
-      nux::ROPConfig rop;
-      rop.Blend = false;
-      rop.SrcBlend = GL_ONE;
-      rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+    nux::ROPConfig rop;
+    rop.Blend = false;
+    rop.SrcBlend = GL_ONE;
+    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
 #ifndef NUX_OPENGLES_20
-      if (GfxContext.UsingGLSLCodePath())
-        gPainter.PushDrawCompositionLayer(GfxContext, base,
-                                          blur_texture,
-                                          texxform_blur_bg,
-                                          nux::color::White,
-                                          background_color, nux::LAYER_BLEND_MODE_OVERLAY,
-                                          true, rop);
-      else
-        gPainter.PushDrawTextureLayer(GfxContext, base,
-                                      blur_texture,
-                                      texxform_blur_bg,
-                                      nux::color::White,
-                                      true,
-                                      rop);
+    if (GfxContext.UsingGLSLCodePath())
+      gPainter.PushDrawCompositionLayer(GfxContext, base,
+                                        bg_texture_,
+                                        texxform_blur_bg,
+                                        nux::color::White,
+                                        background_color, nux::LAYER_BLEND_MODE_OVERLAY,
+                                        true, rop);
+    else
+      gPainter.PushDrawTextureLayer(GfxContext, base,
+                                    bg_texture_,
+                                    texxform_blur_bg,
+                                    nux::color::White,
+                                    true,
+                                    rop);
 #else
-        gPainter.PushDrawCompositionLayer(GfxContext, base,
-                                          blur_texture,
-                                          texxform_blur_bg,
-                                          nux::color::White,
-                                          background_color, nux::LAYER_BLEND_MODE_OVERLAY,
-                                          true, rop);
+      gPainter.PushDrawCompositionLayer(GfxContext, base,
+                                        bg_texture_,
+                                        texxform_blur_bg,
+                                        nux::color::White,
+                                        background_color, nux::LAYER_BLEND_MODE_OVERLAY,
+                                        true, rop);
 #endif
-    }
   }
 
   nux::ROPConfig rop;
@@ -238,6 +244,18 @@ void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geome
   GfxContext.QRP_1Tex (geo.x + geo.width - border, geo.y + border, border, geo.height - border - border, style()->GetBackgroundLeft()->GetDeviceTexture(), texxform, nux::color::White);
 
   GfxContext.GetRenderStates().SetBlend (FALSE);
+}
+
+// Introspectable methods
+std::string UnityWindowView::GetName() const
+{
+  return "UnityWindowView";
+}
+
+void UnityWindowView::AddProperties(GVariantBuilder* builder)
+{
+  unity::variant::BuilderWrapper(builder)
+    .add("bg-texture-is-valid", bg_texture_.IsValid());
 }
 
 
