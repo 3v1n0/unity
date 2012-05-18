@@ -118,12 +118,19 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         self._mouse.move(target_x, target_y)
 
     def mouse_reveal_launcher(self):
-        """Reveal this launcher with the mouse."""
+        """Reveal this launcher with the mouse.
+
+        If the launcher is already visible calling this method does nothing.
+        """
+        if self.is_showing:
+            return
         self._screen.move_mouse_to_monitor(self.monitor)
         (x, y, w, h) = self.geometry
 
+        target_x = x - 920 # this is the pressure we need to reveal the launcher.
+        target_y = y + h / 2
         logger.debug("Revealing launcher on monitor %d with mouse.", self.monitor)
-        self._mouse.move(x - 920, y + h / 2, True, 5, .002)
+        self._mouse.move(target_x, target_y, True, 5, .002)
         sleep(self.show_timeout)
 
     def keyboard_reveal_launcher(self):
@@ -238,12 +245,19 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         """
         if not isinstance(icon, SimpleLauncherIcon):
             raise TypeError("icon must be a LauncherIcon")
+
         logger.debug("Clicking launcher icon %r on monitor %d with mouse button %d",
             icon, self.monitor, button)
         self.mouse_reveal_launcher()
-        target_x = icon.center_x + self.x
-        target_y = icon.center_y
-        self._mouse.move(target_x, target_y )
+
+        # The icon may be off the screen, so we do this in a loop:
+        while 1:
+            target_x = icon.center_x + self.x
+            target_y = icon.center_y
+            if self._mouse.x == target_x and self._mouse.y == target_y:
+                break
+            self._mouse.move(target_x, target_y )
+            sleep(1)
         self._mouse.click(button)
         self.move_mouse_to_right_of_launcher()
 

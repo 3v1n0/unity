@@ -20,6 +20,7 @@ from testtools.matchers import Equals, NotEquals, LessThan, GreaterThan
 from time import sleep
 
 from unity.emulators.icons import BFBLauncherIcon
+from unity.emulators.switcher import SwitcherMode
 from unity.tests import UnityTestCase
 
 logger = logging.getLogger(__name__)
@@ -380,8 +381,8 @@ class LauncherKeyNavTests(LauncherTestCase):
     def test_launcher_keynav_alt_grave_quits(self):
         """Tests that alt+` exits keynav mode."""
 
-        self.switcher.initiate_detail_mode()
-        self.addCleanup(self.switcher.terminate)
+        # Can't use switcher emulat here since the switcher won't appear.
+        self.keybinding("switcher/reveal_details")
         self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
 
 
