@@ -111,7 +111,8 @@ class ShowDesktopTests(UnityTestCase):
         self.switcher.initiate()
         sleep(0.5)
         found = False
-        for i in range(self.switcher.get_model_size()):
+        switcher_model = self.switcher.controller.model
+        for i in switcher_model.icons:
             current_icon = self.switcher.current_icon
             self.assertIsNotNone(current_icon)
             if isinstance(current_icon, DesktopLauncherIcon):
@@ -121,7 +122,7 @@ class ShowDesktopTests(UnityTestCase):
             sleep(0.25)
         self.assertTrue(found, "Could not find 'Show Desktop' entry in switcher.")
         self.addCleanup(self.keybinding, "window/show_desktop")
-        self.switcher.stop()
+        self.switcher.select()
 
         sleep(3)
         open_wins = self.bamf.get_open_windows()
