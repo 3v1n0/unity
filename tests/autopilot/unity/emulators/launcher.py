@@ -120,9 +120,6 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
     def mouse_reveal_launcher(self):
         """Reveal this launcher with the mouse.
 
-        You may specify the y coordinate at which you want the mouse to enter the
-        launcher.
-
         If the launcher is already visible calling this method does nothing.
         """
         if self.is_showing:
