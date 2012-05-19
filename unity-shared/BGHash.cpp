@@ -39,12 +39,10 @@ namespace unity
 {
 
 BGHash::BGHash ()
-  : _transition_handler (0),
-    _current_color (unity::colors::Aubergine),
-    _new_color (unity::colors::Aubergine),
-    _old_color (unity::colors::Aubergine),
-    _hires_time_start(10),
-    _hires_time_end(20),
+  : _transition_animator(500),
+    _current_color(unity::colors::Aubergine),
+    _new_color(unity::colors::Aubergine),
+    _old_color(unity::colors::Aubergine),
     _ubus_handle_request_colour(0)
 {
   _override_color.alpha= 0.0f;
@@ -179,48 +177,20 @@ void BGHash::TransitionToNewColor(nux::color::Color new_color)
     return;
   }
 
-  if (_transition_handler)
-  {
-    // we are currently in a transition
-    g_source_remove (_transition_handler);
-  }
-
   LOG_DEBUG(logger) << "transitioning from: " << _current_color.red << " to " << new_color.red;
 
   _old_color = _current_color;
   _new_color = new_color;
 
-  _hires_time_start = g_get_monotonic_time();
-  _hires_time_end = 500 * 1000; // 500 milliseconds
-  _transition_handler = g_timeout_add (1000/60, (GSourceFunc)BGHash::OnTransitionCallback, this);
+  _transition_animator.Stop();
+  _transition_animator.Start();
+  _transition_animator.animation_updated.connect(sigc::mem_fun(this, &BGHash::OnTransitionUpdated));
 }
 
-gboolean BGHash::OnTransitionCallback(BGHash *self)
+void BGHash::OnTransitionUpdated(double progress)
 {
-  return self->DoTransitionCallback();
-}
-
-gboolean BGHash::DoTransitionCallback ()
-{
-  guint64 current_time = g_get_monotonic_time();
-  float timediff = ((float)current_time - _hires_time_start) / _hires_time_end;
-
-  timediff = std::max(std::min(timediff, 1.0f), 0.0f);
-
-  _current_color = InterpolateColor(_old_color,
-                                    _new_color,
-                                    timediff);
-  DoUbusColorEmit ();
-
-  if (current_time > _hires_time_start + _hires_time_end)
-  {
-    _transition_handler = 0;
-    return FALSE;
-  }
-  else
-  {
-    return TRUE;
-  }
+  _current_color = InterpolateColor(_old_color, _new_color, progress);
+  DoUbusColorEmit();
 }
 
 void BGHash::DoUbusColorEmit()

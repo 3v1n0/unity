@@ -24,6 +24,7 @@
 #include <libgnome-desktop/gnome-bg.h>
 #include <unity-misc/gnome-bg-slideshow.h>
 #include <UnityCore/GLibSignal.h>
+#include <Animator.h>
 
 namespace unity {
 namespace colors {
@@ -47,9 +48,8 @@ namespace unity
     void RefreshColor();
 
   private:
-    gboolean DoTransitionCallback ();
-    static gboolean OnTransitionCallback (BGHash *self);
-    void DoUbusColorEmit ();
+    void OnTransitionUpdated(double progress);
+    void DoUbusColorEmit();
     void TransitionToNewColor (nux::Color new_color);
     nux::Color InterpolateColor (nux::Color colora, nux::Color colorb, float value);
     nux::Color MatchColor (nux::Color base_color);
@@ -57,20 +57,15 @@ namespace unity
   private:
     GnomeBG *background_monitor_;
     GSettings *client_;
-
-    guint _transition_handler;
+    Animator _transition_animator;
 
     nux::Color _current_color; // the current colour, including steps in transitions
     nux::Color _new_color;     // in transitions, the next colour, otherwise the current colour
     nux::Color _old_color;     // the last colour chosen, used for transitions
-
     nux::Color _override_color;
 
-    guint64 _hires_time_start;
-    guint64 _hires_time_end;
     glib::SignalManager signal_manager_;
     uint _ubus_handle_request_colour;
-
   };
 };
 
