@@ -123,7 +123,6 @@ LensView::LensView()
   , filters_expanded(false)
   , can_refine_search(false)
   , no_results_active_(false)
-  , fix_renderering_id_(0)
 {}
 
 LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
@@ -133,7 +132,6 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   , lens_(lens)
   , initial_activation_(true)
   , no_results_active_(false)
-  , fix_renderering_id_(0)
 {
   SetupViews(show_filters);
   SetupCategories();
@@ -175,12 +173,6 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
     }
   });
 
-}
-
-LensView::~LensView()
-{
-  if (fix_renderering_id_)
-    g_source_remove(fix_renderering_id_);
 }
 
 void LensView::SetupViews(nux::Area* show_filters)
@@ -363,28 +355,29 @@ void LensView::UpdateCounts(PlacesGroup* group)
 
 void LensView::QueueFixRenderering()
 {
-  if (fix_renderering_id_)
+  if (fix_rendering_idle_)
     return;
 
-  fix_renderering_id_ = g_idle_add_full (G_PRIORITY_DEFAULT, (GSourceFunc)FixRenderering, this, NULL);
+  fix_rendering_idle_.reset(new glib::Idle(sigc::mem_fun(this, &LensView::FixRenderering),
+                                           glib::Source::Priority::DEFAULT));
 }
 
-gboolean LensView::FixRenderering(LensView* self)
+bool LensView::FixRenderering()
 {
-  std::list<Area*> children = self->scroll_layout_->GetChildren();
-  std::list<AbstractPlacesGroup*>  groups;
+  std::list<AbstractPlacesGroup*> groups;
 
-  for (auto child : children)
+  for (auto child : scroll_layout_->GetChildren())
   {
-    if (child == self->no_results_)
+    if (child == no_results_)
       continue;
+
     groups.push_back(static_cast<AbstractPlacesGroup*>(child));
   }
 
   dash::impl::UpdateDrawSeparators(groups);
 
-  self->fix_renderering_id_ = 0;
-  return FALSE;
+  fix_rendering_idle_ = nullptr;
+  return false;
 }
 
 void LensView::CheckNoResults(Lens::Hints const& hints)
