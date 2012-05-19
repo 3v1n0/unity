@@ -119,6 +119,29 @@ protected:
 } // glib namespace
 } // unity namespace
 
+
+/* This code is needed to make the lambda functions with a return value to work
+ * with the sigc::slot. We need that here to use lambdas as SourceCallback.
+ * This can safely removed once libsigc++ will include it.
+ * 
+ * Thanks to Chow Loong Jin <hyperair@gmail.com> for this code, see:
+ * http://mail.gnome.org/archives/libsigc-list/2012-January/msg00000.html */
+
+#if __cplusplus >= 201100L || defined (__GXX_EXPERIMENTAL_CXX0X__)
+#include <type_traits>
+
+namespace sigc
+{
+  template <typename Functor>
+  struct functor_trait<Functor, false>
+  {
+    typedef decltype (::sigc::mem_fun(std::declval<Functor&>(), &Functor::operator())) _intermediate;
+    typedef typename _intermediate::result_type result_type;
+    typedef Functor functor_type;
+  };
+}
+#endif
+
 #include "GLibSource-inl.h"
 
 #endif
