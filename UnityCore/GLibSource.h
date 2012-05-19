@@ -35,6 +35,7 @@ class Source : public boost::noncopyable
 {
 public:
   typedef std::shared_ptr<Source> Ptr;
+  typedef std::unique_ptr<Source> UniquePtr;
   typedef sigc::slot<bool> SourceCallback;
 
   enum Priority
