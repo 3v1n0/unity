@@ -40,19 +40,18 @@ nux::logging::Logger logger("unity.dash.controller");
 Controller::Controller()
   : launcher_width(64)
   , use_primary(false)
+  , timeline_animator_(90)
   , monitor_(0)
   , window_(0)
   , visible_(false)
   , need_show_(false)
-  , timeline_id_(0)
-  , last_opacity_(0.0f)
-  , start_time_(0)
   , view_(nullptr)
 {
   SetupRelayoutCallbacks();
   RegisterUBusInterests();
 
   ensure_id_ = g_timeout_add_seconds(60, [] (gpointer data) -> gboolean { static_cast<Controller*>(data)->EnsureDash(); return FALSE; }, this);
+  timeline_animator_.animation_updated.connect(sigc::mem_fun(this, &Controller::OnViewShowHideFrame));
 
   SetupWindow();
   
@@ -72,9 +71,6 @@ Controller::~Controller()
   if (window_)
     window_->UnReference();
   window_ = 0;
-
-  if (timeline_id_)
-    g_source_remove(timeline_id_);
 
   if (ensure_id_)
     g_source_remove(ensure_id_);
@@ -319,46 +315,25 @@ void Controller::StartShowHideTimeline()
 {
   EnsureDash();
 
-  if (timeline_id_)
-    g_source_remove(timeline_id_);
+  timeline_animator_.Stop();
 
-  timeline_id_ = g_timeout_add(15, (GSourceFunc)Controller::OnViewShowHideFrame, this);
-  last_opacity_ = window_->GetOpacity();
-  start_time_ = g_get_monotonic_time();
-
+  double current_opacity = window_->GetOpacity();
+  timeline_animator_.Start(visible_ ? current_opacity : 1.0f - current_opacity);
 }
 
-gboolean Controller::OnViewShowHideFrame(Controller* self)
+void Controller::OnViewShowHideFrame(double progress)
 {
-  const float LENGTH = 90000.0f;
-  float diff = g_get_monotonic_time() - self->start_time_;
-  float progress = diff / LENGTH;
-  float last_opacity = self->last_opacity_;
+  window_->SetOpacity(visible_ ? progress : 1.0f - progress);
 
-  if (self->visible_)
+  if (progress == 1.0f)
   {
-    self->window_->SetOpacity(last_opacity + ((1.0f - last_opacity) * progress));
-  }
-  else
-  {
-    self->window_->SetOpacity(last_opacity - (last_opacity * progress));
-  }
+    window_->SetOpacity(visible_ ? 1.0f : 0.0f);
 
-  if (diff > LENGTH)
-  {
-    self->timeline_id_ = 0;
-
-    // Make sure the state is right
-    self->window_->SetOpacity(self->visible_ ? 1.0f : 0.0f);
-    if (!self->visible_)
+    if (!visible_)
     {
-      self->window_->ShowWindow(false);
+      window_->ShowWindow(false);
     }
-
-    return FALSE;
   }
-
-  return TRUE;
 }
 
 void Controller::OnActivateRequest(GVariant* variant)
