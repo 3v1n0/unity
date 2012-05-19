@@ -35,18 +35,17 @@ namespace unity
   {
   public:
     BGHash();
-    ~BGHash();//remove
 
-    nux::Color CurrentColor();
+    nux::Color const& CurrentColor() const;
     void RefreshColor();
+    void OverrideColor(nux::Color const& color);
 
   private:
     void OnTransitionUpdated(double progress);
     void DoUbusColorEmit();
-    void TransitionToNewColor(nux::Color new_color);
-    void OverrideColor(nux::Color color);
-    nux::Color InterpolateColor(nux::Color colora, nux::Color colorb, float value);
-    nux::Color MatchColor(nux::Color base_color);
+    void TransitionToNewColor(nux::Color const& new_color);
+    nux::Color InterpolateColor(nux::Color const& colora, nux::Color const& colorb, float value) const;
+    nux::Color MatchColor(nux::Color const& base_color) const;
 
   private:
     Animator transition_animator_;

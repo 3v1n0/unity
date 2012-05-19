@@ -30,7 +30,7 @@ namespace
 namespace unity
 {
 
-BGHash::BGHash ()
+BGHash::BGHash()
   : transition_animator_(500),
     current_color_(unity::colors::Aubergine),
     new_color_(unity::colors::Aubergine),
@@ -44,10 +44,7 @@ BGHash::BGHash ()
   RefreshColor();
 }
 
-BGHash::~BGHash()
-{}
-
-void BGHash::OverrideColor(nux::Color color)
+void BGHash::OverrideColor(nux::Color const& color)
 {
   override_color_ = color;
 
@@ -73,11 +70,11 @@ void BGHash::RefreshColor()
   GdkRGBA      color_gdk;
 
   representative_colors_atom = gdk_x11_get_xatom_by_name("_GNOME_BACKGROUND_REPRESENTATIVE_COLORS");
-  display = gdk_x11_display_get_xdisplay (gdk_display_get_default ());
+  display = gdk_x11_display_get_xdisplay(gdk_display_get_default ());
 
-  gdk_error_trap_push ();
+  gdk_error_trap_push();
   result = XGetWindowProperty (display,
-             GDK_ROOT_WINDOW (),
+             GDK_ROOT_WINDOW(),
              representative_colors_atom,
              0L,
              G_MAXLONG,
@@ -103,7 +100,7 @@ void BGHash::RefreshColor()
   }
 }
 
-nux::Color BGHash::InterpolateColor (nux::Color colora, nux::Color colorb, float value)
+nux::Color BGHash::InterpolateColor(nux::Color const& colora, nux::Color const& colorb, float value) const
 {
   // takes two colours, transitions between them, we can do it linearly or whatever
   // i don't think it will matter that much
@@ -111,7 +108,7 @@ nux::Color BGHash::InterpolateColor (nux::Color colora, nux::Color colorb, float
   return colora + ((colorb - colora) * value);
 }
 
-void BGHash::TransitionToNewColor(nux::color::Color new_color)
+void BGHash::TransitionToNewColor(nux::color::Color const& new_color)
 {
   if (new_color == current_color_)
   {
@@ -144,7 +141,7 @@ void BGHash::DoUbusColorEmit()
                                            current_color_.alpha));
 }
 
-nux::Color BGHash::MatchColor (const nux::Color base_color)
+nux::Color BGHash::MatchColor(nux::Color const& base_color) const
 {
   nux::Color colors[12];
 
@@ -204,7 +201,7 @@ nux::Color BGHash::MatchColor (const nux::Color base_color)
   return chosen_color;
 }
 
-nux::Color BGHash::CurrentColor ()
+nux::Color const& BGHash::CurrentColor() const
 {
   return current_color_;
 }
