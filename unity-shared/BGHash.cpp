@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2011-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -20,8 +20,6 @@
 #include "BGHash.h"
 #include <gdk/gdkx.h>
 #include <NuxCore/Logger.h>
-#include <libgnome-desktop/gnome-bg.h>
-#include <unity-misc/gnome-bg-slideshow.h>
 #include "unity-shared/UBusMessages.h"
 
 namespace
@@ -33,26 +31,12 @@ namespace unity
 {
 
 BGHash::BGHash ()
-  : background_monitor_(gnome_bg_new()),
-    client_(g_settings_new("org.gnome.desktop.background")),
-    transition_animator_(500),
-    _current_color(unity::colors::Aubergine),
-    _new_color(unity::colors::Aubergine),
-    _old_color(unity::colors::Aubergine)
+  : transition_animator_(500),
+    current_color_(unity::colors::Aubergine),
+    new_color_(unity::colors::Aubergine),
+    old_color_(unity::colors::Aubergine)
 {
-  _override_color.alpha= 0.0f;
-
-  signal_manager_.Add(
-    new glib::Signal<void, GnomeBG*>(background_monitor_,
-                                     "changed",
-                                     sigc::mem_fun(this, &BGHash::OnBackgroundChanged)));
-
-  signal_manager_.Add(
-    new glib::Signal<void, GSettings*, gchar*>(client_,
-                                               "changed",
-                                               sigc::mem_fun(this, &BGHash::OnGSettingsChanged)));
-
-  gnome_bg_load_from_preferences(background_monitor_, client_);
+  override_color_.alpha = 0.0f;
 
   transition_animator_.animation_updated.connect(sigc::mem_fun(this, &BGHash::OnTransitionUpdated));
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, [&](GVariant *) { DoUbusColorEmit(); } );
@@ -63,10 +47,17 @@ BGHash::BGHash ()
 BGHash::~BGHash()
 {}
 
-void BGHash::OverrideColor (nux::Color color)
+void BGHash::OverrideColor(nux::Color color)
 {
-  _override_color = color;
-  OnBackgroundChanged(background_monitor_);
+  override_color_ = color;
+
+  if (override_color_.alpha)
+  {
+    TransitionToNewColor(override_color_);
+    return;
+  }
+
+  RefreshColor();
 }
 
 void BGHash::RefreshColor()
@@ -112,22 +103,6 @@ void BGHash::RefreshColor()
   }
 }
 
-void BGHash::OnGSettingsChanged (GSettings *settings, gchar *key)
-{
-  gnome_bg_load_from_preferences(background_monitor_, client_);
-}
-
-void BGHash::OnBackgroundChanged(GnomeBG *bg)
-{
-  if (_override_color.alpha)
-  {
-    TransitionToNewColor (_override_color);
-    return;
-  }
-
-  RefreshColor();
-}
-
 nux::Color BGHash::InterpolateColor (nux::Color colora, nux::Color colorb, float value)
 {
   // takes two colours, transitions between them, we can do it linearly or whatever
@@ -138,16 +113,16 @@ nux::Color BGHash::InterpolateColor (nux::Color colora, nux::Color colorb, float
 
 void BGHash::TransitionToNewColor(nux::color::Color new_color)
 {
-  if (new_color == _current_color)
+  if (new_color == current_color_)
   {
     LOG_DEBUG(logger) << "rejecting colour";
     return;
   }
 
-  LOG_DEBUG(logger) << "transitioning from: " << _current_color.red << " to " << new_color.red;
+  LOG_DEBUG(logger) << "transitioning from: " << current_color_.red << " to " << new_color.red;
 
-  _old_color = _current_color;
-  _new_color = new_color;
+  old_color_ = current_color_;
+  new_color_ = new_color;
 
   transition_animator_.Stop();
   transition_animator_.Start();
@@ -155,7 +130,7 @@ void BGHash::TransitionToNewColor(nux::color::Color new_color)
 
 void BGHash::OnTransitionUpdated(double progress)
 {
-  _current_color = InterpolateColor(_old_color, _new_color, progress);
+  current_color_ = InterpolateColor(old_color_, new_color_, progress);
   DoUbusColorEmit();
 }
 
@@ -163,10 +138,10 @@ void BGHash::DoUbusColorEmit()
 {
   ubus_manager_.SendMessage(UBUS_BACKGROUND_COLOR_CHANGED,
                             g_variant_new ("(dddd)",
-                                           _current_color.red,
-                                           _current_color.green,
-                                           _current_color.blue,
-                                           _current_color.alpha));
+                                           current_color_.red,
+                                           current_color_.green,
+                                           current_color_.blue,
+                                           current_color_.alpha));
 }
 
 nux::Color BGHash::MatchColor (const nux::Color base_color)
@@ -231,7 +206,7 @@ nux::Color BGHash::MatchColor (const nux::Color base_color)
 
 nux::Color BGHash::CurrentColor ()
 {
-  return _current_color;
+  return current_color_;
 }
 
 }

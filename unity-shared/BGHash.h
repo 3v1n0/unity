@@ -19,12 +19,7 @@
 #ifndef BGHASH_H
 #define BGHASH_H
 
-#include <sigc++/sigc++.h>
 #include <Nux/Nux.h>
-#include <libgnome-desktop/gnome-bg.h>
-#include <unity-misc/gnome-bg-slideshow.h>
-#include <UnityCore/GLibSignal.h>
-#include <UnityCore/GLibWrapper.h>
 #include "Animator.h"
 #include "UBusWrapper.h"
 
@@ -40,32 +35,27 @@ namespace unity
   {
   public:
     BGHash();
-    ~BGHash();
+    ~BGHash();//remove
 
     nux::Color CurrentColor();
-    void OnBackgroundChanged(GnomeBG *bg);
-    void OnGSettingsChanged(GSettings *settings, gchar *key);
-    void OverrideColor(nux::Color color);
     void RefreshColor();
 
   private:
     void OnTransitionUpdated(double progress);
     void DoUbusColorEmit();
     void TransitionToNewColor(nux::Color new_color);
+    void OverrideColor(nux::Color color);
     nux::Color InterpolateColor(nux::Color colora, nux::Color colorb, float value);
     nux::Color MatchColor(nux::Color base_color);
 
   private:
-    glib::Object<GnomeBG> background_monitor_;
-    glib::Object<GSettings> client_;
     Animator transition_animator_;
 
-    nux::Color _current_color; // the current colour, including steps in transitions
-    nux::Color _new_color;     // in transitions, the next colour, otherwise the current colour
-    nux::Color _old_color;     // the last colour chosen, used for transitions
-    nux::Color _override_color;
+    nux::Color current_color_; // the current colour, including steps in transitions
+    nux::Color new_color_;     // in transitions, the next colour, otherwise the current colour
+    nux::Color old_color_;     // the last colour chosen, used for transitions
+    nux::Color override_color_;
 
-    glib::SignalManager signal_manager_;
     UBusManager ubus_manager_;
   };
 };
