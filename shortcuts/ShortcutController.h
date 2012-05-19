@@ -26,6 +26,7 @@
 #include <Nux/HLayout.h>
 #include <NuxCore/Color.h>
 #include <UnityCore/Variant.h>
+#include <UnityCore/GLibSource.h>
 
 #include "unity-shared/Animator.h"
 #include "unity-shared/Introspectable.h"
@@ -70,8 +71,7 @@ private:
   void OnFadeInEnded();
   void OnFadeOutUpdated(double opacity);
   void OnFadeOutEnded();
-
-  static gboolean OnShowTimer(gpointer data);
+  bool OnShowTimer();
 
   // Private Members
   View::Ptr view_;
@@ -84,7 +84,7 @@ private:
   bool visible_;
   bool enabled_;
   nux::Color bg_color_;
-  guint show_timer_;
+  glib::Source::Ptr show_timer_;
 
   Animator fade_in_animator_;
   Animator fade_out_animator_;
