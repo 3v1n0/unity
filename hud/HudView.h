@@ -26,6 +26,7 @@
 #include <Nux/VLayout.h>
 
 #include <UnityCore/Hud.h>
+#include <UnityCore/GLibSource.h>
 #include "unity-shared/Introspectable.h"
 
 #include "unity-shared/UBusWrapper.h"
@@ -109,8 +110,8 @@ private:
   OverlayRenderer renderer_;
   nux::Geometry window_geometry_;
   nux::Geometry absolute_window_geometry_;
+  glib::Source::UniquePtr timeline_idle_;
 
-  guint timeline_id_;
   guint64 start_time_;
   int last_known_height_;
   int current_height_;

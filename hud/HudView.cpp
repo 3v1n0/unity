@@ -56,8 +56,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(View);
 
 View::View()
   : nux::View(NUX_TRACKER_LOCATION)
-  , button_views_(NULL)
-  , timeline_id_(0)
+  , button_views_(nullptr)
   , start_time_(0)
   , last_known_height_(0)
   , current_height_(0)
@@ -125,9 +124,6 @@ View::~View()
   {
     RemoveChild((*button).GetPointer());
   }
-
-  if (timeline_id_)
-    g_source_remove(timeline_id_);
 }
 
 void View::ProcessGrowShrink()
@@ -457,15 +453,13 @@ void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 
   renderer_.DrawInnerCleanup(gfx_context, draw_content_geo, absolute_window_geometry_, window_geometry_);
 
-  if (timeline_need_more_draw_ && !timeline_id_)
+  if (timeline_need_more_draw_ && !timeline_idle_)
   {
-    timeline_id_ = g_idle_add([] (gpointer data) -> gboolean
-    {
-      View *self = static_cast<View*>(data);
-      self->QueueDraw();
-      self->timeline_id_ = 0;
-      return FALSE;
-    }, this);
+    timeline_idle_.reset(new glib::Idle([&] () {
+      QueueDraw();
+      timeline_idle_ = nullptr;
+      return false;
+    }));
   }
 }
 
