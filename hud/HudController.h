@@ -44,7 +44,6 @@ public:
   typedef std::shared_ptr<Controller> Ptr;
 
   Controller();
-  ~Controller();
 
   nux::BaseWindow* window() const;
 
@@ -97,7 +96,7 @@ private:
 private:
   UBusManager ubus;
   Hud hud_service_;
-  nux::BaseWindow* window_;
+  nux::ObjectPtr<nux::BaseWindow> window_;
   bool visible_;
   bool need_show_;
 

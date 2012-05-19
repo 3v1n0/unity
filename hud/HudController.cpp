@@ -44,7 +44,6 @@ Controller::Controller()
   , launcher_locked_out(false)
   , multiple_launchers(true)
   , hud_service_("com.canonical.hud", "/com/canonical/hud")
-  , window_(nullptr)
   , visible_(false)
   , need_show_(false)
   , timeline_animator_(90)
@@ -81,13 +80,6 @@ Controller::Controller()
   timeline_animator_.animation_updated.connect(sigc::mem_fun(this, &Controller::OnViewShowHideFrame));
 
   EnsureHud();
-}
-
-Controller::~Controller()
-{
-  if (window_)
-    window_->UnReference();
-  window_ = 0;
 }
 
 void Controller::SetupWindow()
@@ -173,7 +165,7 @@ void Controller::SetIcon(std::string const& icon_name)
 
 nux::BaseWindow* Controller::window() const
 {
-  return window_;
+  return window_.GetPointer();
 }
 
 // We update the @geo that's sent in with our desired width and height
