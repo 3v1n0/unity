@@ -77,7 +77,7 @@ public:
   };
 
   DBusIndicators* owner_;
-  glib::Source::Ptr reconnect_timeout_;
+  glib::Source::UniquePtr reconnect_timeout_;
 
   guint show_entry_idle_id_;
   guint show_appmenu_idle_id_;
