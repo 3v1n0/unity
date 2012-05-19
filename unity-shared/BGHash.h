@@ -24,7 +24,9 @@
 #include <libgnome-desktop/gnome-bg.h>
 #include <unity-misc/gnome-bg-slideshow.h>
 #include <UnityCore/GLibSignal.h>
-#include <Animator.h>
+#include <UnityCore/GLibWrapper.h>
+#include "Animator.h"
+#include "UBusWrapper.h"
 
 namespace unity {
 namespace colors {
@@ -37,27 +39,26 @@ namespace unity
   class BGHash
   {
   public:
-    BGHash ();
-    ~BGHash ();
+    BGHash();
+    ~BGHash();
 
-    static gboolean ForceUpdate(BGHash *self);
-    nux::Color CurrentColor ();
-    void OnBackgroundChanged (GnomeBG *bg);
-    void OnGSettingsChanged (GSettings *settings, gchar *key);
-    void OverrideColor (nux::Color color);
+    nux::Color CurrentColor();
+    void OnBackgroundChanged(GnomeBG *bg);
+    void OnGSettingsChanged(GSettings *settings, gchar *key);
+    void OverrideColor(nux::Color color);
     void RefreshColor();
 
   private:
     void OnTransitionUpdated(double progress);
     void DoUbusColorEmit();
-    void TransitionToNewColor (nux::Color new_color);
-    nux::Color InterpolateColor (nux::Color colora, nux::Color colorb, float value);
-    nux::Color MatchColor (nux::Color base_color);
+    void TransitionToNewColor(nux::Color new_color);
+    nux::Color InterpolateColor(nux::Color colora, nux::Color colorb, float value);
+    nux::Color MatchColor(nux::Color base_color);
 
   private:
-    GnomeBG *background_monitor_;
-    GSettings *client_;
-    Animator _transition_animator;
+    glib::Object<GnomeBG> background_monitor_;
+    glib::Object<GSettings> client_;
+    Animator transition_animator_;
 
     nux::Color _current_color; // the current colour, including steps in transitions
     nux::Color _new_color;     // in transitions, the next colour, otherwise the current colour
@@ -65,7 +66,7 @@ namespace unity
     nux::Color _override_color;
 
     glib::SignalManager signal_manager_;
-    uint _ubus_handle_request_colour;
+    UBusManager ubus_manager_;
   };
 };
 

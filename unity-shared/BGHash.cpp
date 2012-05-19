@@ -18,17 +18,11 @@
 
 
 #include "BGHash.h"
-#include <X11/Xlib.h>
-#include <X11/Xatom.h>
 #include <gdk/gdkx.h>
-#include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
-#include <gdk-pixbuf/gdk-pixbuf.h>
 #include <libgnome-desktop/gnome-bg.h>
 #include <unity-misc/gnome-bg-slideshow.h>
-#include "unity-shared/ubus-server.h"
 #include "unity-shared/UBusMessages.h"
-#include "UnityCore/GLibWrapper.h"
 
 namespace
 {
@@ -39,16 +33,14 @@ namespace unity
 {
 
 BGHash::BGHash ()
-  : _transition_animator(500),
+  : background_monitor_(gnome_bg_new()),
+    client_(g_settings_new("org.gnome.desktop.background")),
+    transition_animator_(500),
     _current_color(unity::colors::Aubergine),
     _new_color(unity::colors::Aubergine),
-    _old_color(unity::colors::Aubergine),
-    _ubus_handle_request_colour(0)
+    _old_color(unity::colors::Aubergine)
 {
   _override_color.alpha= 0.0f;
-
-  background_monitor_ = gnome_bg_new ();
-  client_ = g_settings_new ("org.gnome.desktop.background");
 
   signal_manager_.Add(
     new glib::Signal<void, GnomeBG*>(background_monitor_,
@@ -60,35 +52,16 @@ BGHash::BGHash ()
                                                "changed",
                                                sigc::mem_fun(this, &BGHash::OnGSettingsChanged)));
 
-  UBusServer *ubus = ubus_server_get_default ();
+  gnome_bg_load_from_preferences(background_monitor_, client_);
 
-  gnome_bg_load_from_preferences (background_monitor_, client_);
+  transition_animator_.animation_updated.connect(sigc::mem_fun(this, &BGHash::OnTransitionUpdated));
+  ubus_manager_.RegisterInterest(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, [&](GVariant *) { DoUbusColorEmit(); } );
 
-  _transition_animator.animation_updated.connect(sigc::mem_fun(this, &BGHash::OnTransitionUpdated));
-
-  // avoids making a new object method when all we are doing is
-  // calling a method with no logic
-  auto request_lambda =  [](GVariant *data, gpointer self) {
-    reinterpret_cast<BGHash*>(self)->DoUbusColorEmit();
-  };
-  _ubus_handle_request_colour = ubus_server_register_interest (ubus, UBUS_BACKGROUND_REQUEST_COLOUR_EMIT,
-                                                               (UBusCallback)request_lambda,
-                                                                this);
   RefreshColor();
 }
 
-BGHash::~BGHash ()
-{
-  // We need to disconnect the signals before we delete the objects they're connected to,
-  // otherwise the signal manager reads a pointer that's been deleted already.
-  signal_manager_.Disconnect(client_, "changed");
-  // serialize our cache
-  g_object_unref (client_);
-  signal_manager_.Disconnect(background_monitor_, "changed");
-  g_object_unref (background_monitor_);
-  UBusServer *ubus = ubus_server_get_default ();
-  ubus_server_unregister_interest (ubus, _ubus_handle_request_colour);
-}
+BGHash::~BGHash()
+{}
 
 void BGHash::OverrideColor (nux::Color color)
 {
@@ -108,7 +81,7 @@ void BGHash::RefreshColor()
   Display*     display;
   GdkRGBA      color_gdk;
 
-  representative_colors_atom = gdk_x11_get_xatom_by_name ("_GNOME_BACKGROUND_REPRESENTATIVE_COLORS");
+  representative_colors_atom = gdk_x11_get_xatom_by_name("_GNOME_BACKGROUND_REPRESENTATIVE_COLORS");
   display = gdk_x11_display_get_xdisplay (gdk_display_get_default ());
 
   gdk_error_trap_push ();
@@ -137,21 +110,14 @@ void BGHash::RefreshColor()
     TransitionToNewColor(MatchColor(new_color));
     XFree (colors);
   }
-
-}
-
-gboolean BGHash::ForceUpdate (BGHash *self)
-{
-  self->OnBackgroundChanged(self->background_monitor_);
-  return FALSE;
 }
 
 void BGHash::OnGSettingsChanged (GSettings *settings, gchar *key)
 {
-  gnome_bg_load_from_preferences (background_monitor_, settings);
+  gnome_bg_load_from_preferences(background_monitor_, client_);
 }
 
-void BGHash::OnBackgroundChanged (GnomeBG *bg)
+void BGHash::OnBackgroundChanged(GnomeBG *bg)
 {
   if (_override_color.alpha)
   {
@@ -183,8 +149,8 @@ void BGHash::TransitionToNewColor(nux::color::Color new_color)
   _old_color = _current_color;
   _new_color = new_color;
 
-  _transition_animator.Stop();
-  _transition_animator.Start();
+  transition_animator_.Stop();
+  transition_animator_.Start();
 }
 
 void BGHash::OnTransitionUpdated(double progress)
@@ -195,14 +161,12 @@ void BGHash::OnTransitionUpdated(double progress)
 
 void BGHash::DoUbusColorEmit()
 {
-  ubus_server_send_message(ubus_server_get_default(),
-                           UBUS_BACKGROUND_COLOR_CHANGED,
-                           g_variant_new ("(dddd)",
-                                          _current_color.red,
-                                          _current_color.green,
-                                          _current_color.blue,
-                                          _current_color.alpha)
-                          );
+  ubus_manager_.SendMessage(UBUS_BACKGROUND_COLOR_CHANGED,
+                            g_variant_new ("(dddd)",
+                                           _current_color.red,
+                                           _current_color.green,
+                                           _current_color.blue,
+                                           _current_color.alpha));
 }
 
 nux::Color BGHash::MatchColor (const nux::Color base_color)
