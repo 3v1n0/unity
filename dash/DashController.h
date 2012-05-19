@@ -45,7 +45,6 @@ public:
   typedef std::shared_ptr<Controller> Ptr;
 
   Controller();
-  ~Controller();
 
   nux::BaseWindow* window() const;
 
@@ -89,6 +88,7 @@ private:
 
 private:
   glib::SignalManager sig_manager_;
+  glib::Timeout ensure_timeout_;
   UBusManager ubus_manager_;
   Animator timeline_animator_;
   int monitor_;
@@ -98,7 +98,6 @@ private:
   bool need_show_;
 
   DashView* view_;
-  guint ensure_id_;
   sigc::connection screen_ungrabbed_slot_;
 };
 

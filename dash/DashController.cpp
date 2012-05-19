@@ -40,6 +40,7 @@ nux::logging::Logger logger("unity.dash.controller");
 Controller::Controller()
   : launcher_width(64)
   , use_primary(false)
+  , ensure_timeout_(40 * 1000)
   , timeline_animator_(90)
   , monitor_(0)
   , visible_(false)
@@ -49,7 +50,7 @@ Controller::Controller()
   SetupRelayoutCallbacks();
   RegisterUBusInterests();
 
-  ensure_id_ = g_timeout_add_seconds(60, [] (gpointer data) -> gboolean { static_cast<Controller*>(data)->EnsureDash(); return FALSE; }, this);
+  ensure_timeout_.Run([&]() { EnsureDash(); return false; });
   timeline_animator_.animation_updated.connect(sigc::mem_fun(this, &Controller::OnViewShowHideFrame));
 
   SetupWindow();
@@ -63,12 +64,6 @@ Controller::Controller()
       nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
     }
   });
-}
-
-Controller::~Controller()
-{
-  if (ensure_id_)
-    g_source_remove(ensure_id_);
 }
 
 void Controller::SetupWindow()
@@ -146,7 +141,7 @@ void Controller::EnsureDash()
   {
     SetupDashView();
     Relayout();
-    ensure_id_ = 0;
+    ensure_timeout_.Remove();
 
     on_realize.emit();
   }
@@ -203,7 +198,7 @@ void Controller::Relayout(GdkScreen*screen)
 }
 
 void Controller::OnMouseDownOutsideWindow(int x, int y,
-                                              unsigned long bflags, unsigned long kflags)
+                                          unsigned long bflags, unsigned long kflags)
 {
   HideDash();
 }
