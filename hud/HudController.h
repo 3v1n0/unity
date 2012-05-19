@@ -31,6 +31,7 @@
 
 #include "HudView.h"
 #include "unity-shared/UBusWrapper.h"
+#include "unity-shared/Animator.h"
 
 namespace unity
 {
@@ -87,7 +88,7 @@ private:
   void OnQuerySelected(Query::Ptr query);
 
   void StartShowHideTimeline();
-  static gboolean OnViewShowHideFrame(Controller* self);
+  void OnViewShowHideFrame(double progress);
 
   static void OnWindowConfigure(int width, int height, nux::Geometry& geo, void* data);
 
@@ -100,16 +101,12 @@ private:
   bool visible_;
   bool need_show_;
 
-  guint timeline_id_;
-  float last_opacity_;
-  gint64 start_time_;
+  Animator timeline_animator_;
 
   View* view_;
-  guint ensure_id_;
   std::string focused_app_icon_;
   nux::Layout* layout_;
   uint monitor_index_;
-  guint type_wait_handle_;
   std::string last_search_;
 };
 

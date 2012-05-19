@@ -47,12 +47,9 @@ Controller::Controller()
   , window_(nullptr)
   , visible_(false)
   , need_show_(false)
-  , timeline_id_(0)
-  , last_opacity_(0.0f)
-  , start_time_(0)
+  , timeline_animator_(90)
   , view_(nullptr)
   , monitor_index_(0)
-  , type_wait_handle_(0)
 {
   LOG_DEBUG(logger) << "hud startup";
   SetupWindow();
@@ -80,6 +77,9 @@ Controller::Controller()
   PluginAdapter::Default()->compiz_screen_ungrabbed.connect(sigc::mem_fun(this, &Controller::OnScreenUngrabbed));
 
   hud_service_.queries_updated.connect(sigc::mem_fun(this, &Controller::OnQueriesFinished));
+
+  timeline_animator_.animation_updated.connect(sigc::mem_fun(this, &Controller::OnViewShowHideFrame));
+
   EnsureHud();
 }
 
@@ -88,15 +88,6 @@ Controller::~Controller()
   if (window_)
     window_->UnReference();
   window_ = 0;
-
-  if (timeline_id_)
-    g_source_remove(timeline_id_);
-
-  if (ensure_id_)
-    g_source_remove(ensure_id_);
-
-  if (type_wait_handle_)
-    g_source_remove(type_wait_handle_);
 }
 
 void Controller::SetupWindow()
@@ -167,7 +158,6 @@ void Controller::EnsureHud()
   {
     SetupHudView();
     Relayout();
-    ensure_id_ = 0;
   }
 }
 
@@ -414,50 +404,28 @@ void Controller::StartShowHideTimeline()
 {
   EnsureHud();
 
-  if (timeline_id_)
-    g_source_remove(timeline_id_);
-
-  timeline_id_ = g_timeout_add(15, (GSourceFunc)Controller::OnViewShowHideFrame, this);
-  last_opacity_ = window_->GetOpacity();
-  start_time_ = g_get_monotonic_time();
-
+  timeline_animator_.Stop();
+  timeline_animator_.Start(window_->GetOpacity());
 }
 
-gboolean Controller::OnViewShowHideFrame(Controller* self)
+void Controller::OnViewShowHideFrame(double progress)
 {
-  const float LENGTH = 90000.0f;
-  float diff = g_get_monotonic_time() - self->start_time_;
-  float progress = diff / LENGTH;
-  float last_opacity = self->last_opacity_;
+  window_->SetOpacity(visible_ ? progress : 1.0f - progress);
 
-  if (self->visible_)
+  if (progress == 1.0f)
   {
-    self->window_->SetOpacity(last_opacity + ((1.0f - last_opacity) * progress));
-  }
-  else
-  {
-    self->window_->SetOpacity(last_opacity - (last_opacity * progress));
-  }
+    window_->SetOpacity(visible_ ? 1.0f : 0.0f);
 
-  if (diff > LENGTH)
-  {
-    self->timeline_id_ = 0;
-
-    // Make sure the state is right
-    self->window_->SetOpacity(self->visible_ ? 1.0f : 0.0f);
-    if (!self->visible_)
+    if (!visible_)
     {
-      self->window_->ShowWindow(false);
+      window_->ShowWindow(false);
     }
     else
     {
       // ensure the text entry is focused
-      nux::GetWindowCompositor().SetKeyFocusArea(self->view_->default_focus());
+      nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
     }
-    return FALSE;
   }
-
-  return TRUE;
 }
 
 void Controller::OnActivateRequest(GVariant* variant)
