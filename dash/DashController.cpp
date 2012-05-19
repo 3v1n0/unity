@@ -42,7 +42,6 @@ Controller::Controller()
   , use_primary(false)
   , timeline_animator_(90)
   , monitor_(0)
-  , window_(0)
   , visible_(false)
   , need_show_(false)
   , view_(nullptr)
@@ -68,10 +67,6 @@ Controller::Controller()
 
 Controller::~Controller()
 {
-  if (window_)
-    window_->UnReference();
-  window_ = 0;
-
   if (ensure_id_)
     g_source_remove(ensure_id_);
 }
@@ -79,7 +74,6 @@ Controller::~Controller()
 void Controller::SetupWindow()
 {
   window_ = new nux::BaseWindow("Dash");
-  window_->SinkReference();
   window_->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
   window_->SetConfigureNotifyCallback(&Controller::OnWindowConfigure, this);
   window_->ShowWindow(false);
@@ -160,7 +154,7 @@ void Controller::EnsureDash()
 
 nux::BaseWindow* Controller::window() const
 {
-  return window_;
+  return window_.GetPointer();
 }
 
 // We update the @geo that's sent in with our desired width and height

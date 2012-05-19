@@ -93,7 +93,7 @@ private:
   Animator timeline_animator_;
   int monitor_;
 
-  nux::BaseWindow* window_;
+  nux::ObjectPtr<nux::BaseWindow> window_;
   bool visible_;
   bool need_show_;
 
