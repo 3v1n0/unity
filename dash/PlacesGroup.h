@@ -24,8 +24,7 @@
 #include <Nux/VLayout.h>
 #include <Nux/HLayout.h>
 #include <Nux/TextureArea.h>
-
-#include <sigc++/sigc++.h>
+#include <UnityCore/GLibSource.h>
 
 #include "AbstractPlacesGroup.h"
 #include "unity-shared/IconTexture.h"
@@ -92,7 +91,6 @@ protected:
 
 private:
   void Refresh();
-  static gboolean OnIdleRelayout(PlacesGroup* self);
 
   bool HeaderHasKeyFocus() const;
   bool ShouldBeHighlighted() const;
@@ -103,6 +101,7 @@ private:
   void RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void OnLabelActivated(nux::Area* label);
   void OnLabelFocusChanged(nux::Area* label, bool has_focus, nux::KeyNavDirection direction);
+  bool OnIdleRelayout();
   void RefreshLabel();
 
 private:
@@ -113,16 +112,15 @@ private:
   nux::HLayout* _expand_label_layout;
   nux::HLayout* _expand_layout;
   nux::View*  _child_view;
-  nux::AbstractPaintLayer* _focus_layer;
-  nux::HLayout* separator_layout_;
+  nux::ObjectPtr<nux::HLayout> separator_layout_;
   HSeparator* separator_;
+  std::unique_ptr<nux::AbstractPaintLayer> _focus_layer;
+  glib::Source::UniquePtr _relayout_idle;
 
   IconTexture*          _icon;
   nux::StaticCairoText* _name;
   nux::StaticCairoText* _expand_label;
   IconTexture*          _expand_icon;
-
-  guint32 _idle_id;
 
   bool  _is_expanded;
   guint _n_visible_items_in_unexpand_mode;
