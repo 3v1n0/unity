@@ -51,7 +51,7 @@ public:
   sigc::signal<void, double> animation_stopped;
 
 private:
-  glib::Source::Ptr timeout_;
+  glib::Source::UniquePtr timeout_;
   int64_t start_time_;
   unsigned int rate_;
   unsigned int duration_;

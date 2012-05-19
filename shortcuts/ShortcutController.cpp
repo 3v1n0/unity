@@ -35,7 +35,6 @@ Controller::Controller(std::list<AbstractHint::Ptr>& hints)
   : view_window_(0)
   , visible_(false)
   , enabled_(true)
-  , show_timer_(0)
   , fade_in_animator_(FADE_DURATION)
   , fade_out_animator_(FADE_DURATION)
 {
