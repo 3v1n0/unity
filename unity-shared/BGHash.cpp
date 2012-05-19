@@ -64,6 +64,7 @@ BGHash::BGHash ()
 
   gnome_bg_load_from_preferences (background_monitor_, client_);
 
+  _transition_animator.animation_updated.connect(sigc::mem_fun(this, &BGHash::OnTransitionUpdated));
 
   // avoids making a new object method when all we are doing is
   // calling a method with no logic
@@ -184,7 +185,6 @@ void BGHash::TransitionToNewColor(nux::color::Color new_color)
 
   _transition_animator.Stop();
   _transition_animator.Start();
-  _transition_animator.animation_updated.connect(sigc::mem_fun(this, &BGHash::OnTransitionUpdated));
 }
 
 void BGHash::OnTransitionUpdated(double progress)
