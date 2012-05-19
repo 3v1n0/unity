@@ -88,7 +88,7 @@ private:
 
   void UpdateBackground();
   void ForceUpdateBackground();
-  void TrackMenuPointer();
+  bool TrackMenuPointer();
   void SyncGeometries();
   void AddPanelView(PanelIndicatorsView* child, unsigned int stretchFactor);
 
@@ -118,7 +118,7 @@ private:
 
   std::string _active_overlay;
 
-  guint       _track_menu_pointer_id;
+  glib::Source::UniquePtr _track_menu_pointer_timeout;
   nux::Point  _tracked_pointer_pos;
 
   std::vector<sigc::connection> _on_indicator_updated_connections;
