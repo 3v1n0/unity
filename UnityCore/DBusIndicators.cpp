@@ -23,6 +23,7 @@
 
 #include "GLibWrapper.h"
 #include "GLibDBusProxy.h"
+#include "GLibSource.h"
 #include "Variant.h"
 
 namespace unity
@@ -76,7 +77,8 @@ public:
   };
 
   DBusIndicators* owner_;
-  guint reconnect_timeout_id_;
+  glib::Source::Ptr reconnect_timeout_;
+
   guint show_entry_idle_id_;
   guint show_appmenu_idle_id_;
   glib::DBusProxy gproxy_;
@@ -87,7 +89,6 @@ public:
 // Public Methods
 DBusIndicators::Impl::Impl(DBusIndicators* owner)
   : owner_(owner)
-  , reconnect_timeout_id_(0)
   , show_entry_idle_id_(0)
   , show_appmenu_idle_id_(0)
   , gproxy_(SERVICE_NAME, SERVICE_PATH, SERVICE_IFACE,
@@ -106,9 +107,6 @@ DBusIndicators::Impl::Impl(DBusIndicators* owner)
 
 DBusIndicators::Impl::~Impl()
 {
-  if (reconnect_timeout_id_)
-    g_source_remove(reconnect_timeout_id_);
-
   if (show_entry_idle_id_)
     g_source_remove(show_entry_idle_id_);
 
@@ -159,21 +157,15 @@ void DBusIndicators::Impl::OnDisconnected()
   CheckLocalService();
   RequestSyncAll();
 
-  if (reconnect_timeout_id_)
-    g_source_remove(reconnect_timeout_id_);
-
-  reconnect_timeout_id_ = g_timeout_add_seconds(1, [](gpointer data) -> gboolean {
-    auto self = static_cast<DBusIndicators::Impl*>(data);
-
-    if (!self->gproxy_.IsConnected())
+  reconnect_timeout_.reset(new glib::Timeout(1000, [&]() {
+    if (!gproxy_.IsConnected())
     {
-      self->RequestSyncAll();
-      return TRUE;
+      RequestSyncAll();
+      return true;
     }
 
-    self->reconnect_timeout_id_ = 0;
-    return FALSE;
-  }, this);
+    return false;
+  }));
 }
 
 void DBusIndicators::Impl::OnReSync(GVariant* parameters)
