@@ -265,8 +265,8 @@ void LensView::OnCategoryAdded(Category const& category)
 
   PlacesGroup* group = new PlacesGroup();
   AddChild(group);
-  group->SetName(name.c_str());
-  group->SetIcon(icon_hint.c_str());
+  group->SetName(name);
+  group->SetIcon(icon_hint);
   group->SetExpanded(false);
   group->SetVisible(false);
   group->expanded.connect(sigc::mem_fun(this, &LensView::OnGroupExpanded));

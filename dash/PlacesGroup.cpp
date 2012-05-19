@@ -19,28 +19,18 @@
  *
  */
 
-#include <sigc++/sigc++.h>
-
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
-#include <Nux/VLayout.h>
-#include <Nux/HLayout.h>
-#include <Nux/BaseWindow.h>
 #include <NuxCore/Math/MathInc.h>
-
-#include "unity-shared/StaticCairoText.h"
-
-#include <sigc++/trackable.h>
-#include <sigc++/signal.h>
-#include <sigc++/functors/ptr_fun.h>
-#include <sigc++/functors/mem_fun.h>
 
 #include "PlacesGroup.h"
 #include <glib.h>
 #include <glib/gi18n-lib.h>
 
-#include <Nux/Utils.h>
 #include <UnityCore/Variant.h>
+#include <UnityCore/GLibWrapper.h>
+
+#include "unity-shared/StaticCairoText.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/LineSeparator.h"
 #include "unity-shared/ubus-server.h"
@@ -124,7 +114,6 @@ PlacesGroup::PlacesGroup()
 
   nux::BaseTexture* arrow = style.GetGroupUnexpandIcon();
 
-  _cached_name = NULL;
   _group_layout = new nux::VLayout("", NUX_TRACKER_LOCATION);
 
   // -2 because the icons have an useless border.
@@ -205,12 +194,6 @@ PlacesGroup::PlacesGroup()
   });
 }
 
-PlacesGroup::~PlacesGroup()
-{
-  if (_cached_name != NULL)
-    g_free(_cached_name);
-}
-
 void PlacesGroup::DrawSeparatorChanged(bool draw)
 {
   if (draw and !separator_layout_->IsChildOf(_group_layout))
@@ -239,23 +222,13 @@ PlacesGroup::OnLabelFocusChanged(nux::Area* label, bool has_focus, nux::KeyNavDi
 }
 
 void
-PlacesGroup::SetName(const char* name)
+PlacesGroup::SetName(std::string const& name)
 {
-  g_print("Setting group name %s\n",name);
-  gchar* final = NULL;
-  if (_cached_name != NULL)
+  if (_cached_name != name)
   {
-    g_free(_cached_name);
-    _cached_name = NULL;
+    _cached_name = name;
+    _name->SetText(glib::String(g_markup_escape_text(name.c_str(), -1)).Str());
   }
-
-  _cached_name = g_strdup(name);
-
-  final = g_markup_escape_text(name, -1);
-
-  _name->SetText(final);
-
-  g_free(final);
 }
 
 nux::StaticCairoText*
@@ -271,7 +244,7 @@ PlacesGroup::GetExpandLabel()
 }
 
 void
-PlacesGroup::SetIcon(const char* path_to_emblem)
+PlacesGroup::SetIcon(std::string const& path_to_emblem)
 {
   _icon->SetByIconName(path_to_emblem, 24);
 }
@@ -315,32 +288,27 @@ void PlacesGroup::SetChildLayout(nux::Layout* layout)
 void
 PlacesGroup::RefreshLabel()
 {
-  char*       result_string;
+  std::string result_string;
 
-  if (_n_visible_items_in_unexpand_mode >= _n_total_items)
+  if (_n_visible_items_in_unexpand_mode < _n_total_items)
   {
-    result_string = g_strdup("");
-  }
-  else if (_is_expanded)
-  {
-    result_string = g_strdup(_("See fewer results"));
-  }
-  else
-  {
-    LOG_DEBUG(logger) << _n_total_items << " - " << _n_visible_items_in_unexpand_mode;
-    result_string = g_strdup_printf(g_dngettext(GETTEXT_PACKAGE,
-                                                "See one more result",
-                                                "See %d more results",
-                                                _n_total_items - _n_visible_items_in_unexpand_mode),
-                                    _n_total_items - _n_visible_items_in_unexpand_mode);
+    if (_is_expanded)
+    {
+      result_string = _("See fewer results");
+    }
+    else
+    {
+      LOG_DEBUG(logger) << _n_total_items << " - " << _n_visible_items_in_unexpand_mode;
+      result_string = glib::String(g_strdup_printf(g_dngettext(GETTEXT_PACKAGE,
+                                                  "See one more result",
+                                                  "See %d more results",
+                                                  _n_total_items - _n_visible_items_in_unexpand_mode),
+                                      _n_total_items - _n_visible_items_in_unexpand_mode)).Str();
+    }
   }
 
   _expand_icon->SetVisible(!(_n_visible_items_in_unexpand_mode >= _n_total_items && _n_total_items != 0));
-
-  char* tmpname = g_strdup(_cached_name);
-  SetName(tmpname);
-  g_free(tmpname);
-
+  SetName(_cached_name);
 
   _expand_label->SetText(result_string);
   _expand_label->SetVisible(_n_visible_items_in_unexpand_mode < _n_total_items);
@@ -355,8 +323,6 @@ PlacesGroup::RefreshLabel()
   _expand_label_layout->SetTopAndBottomPadding(0, bottom_padding);
 
   QueueDraw();
-
-  g_free(result_string);
 }
 
 void

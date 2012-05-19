@@ -50,10 +50,9 @@ class PlacesGroup : public dash::AbstractPlacesGroup, public debug::Introspectab
 public:
 
   PlacesGroup();
-  ~PlacesGroup();
 
-  void SetIcon(const char* icon);
-  void SetName(const char* name);
+  void SetIcon(std::string const& icon);
+  void SetName(std::string const& name);
 
   nux::StaticCairoText* GetLabel();
   nux::StaticCairoText* GetExpandLabel();
@@ -125,7 +124,7 @@ private:
   bool  _is_expanded;
   guint _n_visible_items_in_unexpand_mode;
   guint _n_total_items;
-  char* _cached_name;
+  std::string _cached_name;
   nux::Geometry _cached_geometry;
 
   UBusManager _ubus;
