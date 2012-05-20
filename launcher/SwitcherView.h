@@ -49,7 +49,6 @@ public:
   typedef nux::ObjectPtr<SwitcherView> Ptr;
 
   SwitcherView();
-  virtual ~SwitcherView();
 
   ui::LayoutWindowList ExternalTargets ();
 
@@ -112,9 +111,8 @@ private:
   bool target_sizes_set_;
   glib::Source::UniquePtr redraw_idle_;
 
-  nux::BaseTexture* rounding_texture_;
-
-  nux::StaticCairoText* text_view_;
+  nux::ObjectPtr<nux::BaseTexture> rounding_texture_;
+  nux::ObjectPtr<nux::StaticCairoText> text_view_;
 
   std::list<ui::RenderArg> last_args_;
   std::list<ui::RenderArg> saved_args_;

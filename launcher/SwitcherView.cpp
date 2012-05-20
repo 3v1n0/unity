@@ -67,10 +67,9 @@ SwitcherView::SwitcherView()
 
   render_targets_.clear ();
 
-  rounding_texture_ = nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_round_rect.png", -1, true);
+  rounding_texture_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_round_rect.png", -1, true));
 
   text_view_ = new nux::StaticCairoText("Testing");
-  text_view_->SinkReference();
   text_view_->SetMaximumWidth ((int) (tile_size * spread_size));
   text_view_->SetLines(1);
   text_view_->SetTextColor(nux::color::White);
@@ -78,12 +77,6 @@ SwitcherView::SwitcherView()
 
   icon_size.changed.connect (sigc::mem_fun (this, &SwitcherView::OnIconSizeChanged));
   tile_size.changed.connect (sigc::mem_fun (this, &SwitcherView::OnTileSizeChanged));
-}
-
-SwitcherView::~SwitcherView()
-{
-  rounding_texture_->UnReference();
-  text_view_->UnReference();
 }
 
 std::string SwitcherView::GetName() const
@@ -602,7 +595,7 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
   // render orange box that will encirlce active item(s)
   for (LayoutWindow::Ptr window : ExternalTargets())
   {
-    nux::Geometry geo_absolute = GetAbsoluteGeometry();
+    nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
     if (window->alpha >= 1.0f)
     {
       nux::Geometry orange_box = window->result;
@@ -610,7 +603,7 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
       orange_box.x -= geo_absolute.x;
       orange_box.y -= geo_absolute.y;
 
-      gPainter.PaintTextureShape(GfxContext, orange_box, rounding_texture_, 6, 6, 6, 6, false);
+      gPainter.PaintTextureShape(GfxContext, orange_box, rounding_texture_.GetPointer(), 6, 6, 6, 6, false);
     }
   }
 
