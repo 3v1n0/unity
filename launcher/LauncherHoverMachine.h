@@ -20,9 +20,10 @@
 #ifndef LAUNCHERHOVERMACHINE
 #define LAUNCHERHOVERMACHINE
 
-#include <sigc++/sigc++.h>
-#include <glib.h>
-#include <string>
+#include <UnityCore/GLibSource.h>
+
+namespace unity
+{
 
 class LauncherHoverMachine : public sigc::trackable
 {
@@ -42,7 +43,6 @@ public:
   } HoverQuirk;
 
   LauncherHoverMachine();
-  virtual ~LauncherHoverMachine();
 
   void SetQuirk(HoverQuirk quirk, bool active);
   bool GetQuirk(HoverQuirk quirk, bool allow_partial = true);
@@ -54,15 +54,15 @@ public:
 private:
   void EnsureHoverState();
   void SetShouldHover(bool value);
-
-  static gboolean EmitShouldHoverChanged(gpointer data);
+  bool EmitShouldHoverChanged();
 
   bool       _should_hover;
   bool       _latest_emit_should_hover;
   HoverQuirk _quirks;
 
-  guint _hover_changed_emit_handle;
-
+  glib::Source::UniquePtr _hover_changed_emit_idle;
 };
+
+} // unity namespace
 
 #endif
