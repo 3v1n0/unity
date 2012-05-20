@@ -90,12 +90,12 @@ public:
 
   glib::Object<GDBusProxy> proxy_;
   glib::Object<GCancellable> cancellable_;
-  glib::Source::UniquePtr reconnect_timeout_;
   guint watcher_id_;
   bool connected_;
 
   glib::Signal<void, GDBusProxy*, char*, char*, GVariant*> g_signal_connection_;
   glib::Signal<void, GDBusProxy*, GParamSpec*> name_owner_signal_;
+  glib::Source::UniquePtr reconnect_timeout_;
 
   SignalHandlers handlers_;
 };

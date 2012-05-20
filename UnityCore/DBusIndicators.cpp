@@ -77,11 +77,11 @@ public:
   };
 
   DBusIndicators* owner_;
-  glib::Source::UniquePtr reconnect_timeout_;
 
   guint show_entry_idle_id_;
   guint show_appmenu_idle_id_;
   glib::DBusProxy gproxy_;
+  glib::Source::UniquePtr reconnect_timeout_;
   std::map<std::string, EntryLocationMap> cached_locations_;
 };
 

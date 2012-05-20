@@ -109,7 +109,6 @@ private:
   ui::AbstractIconRenderer::Ptr icon_renderer_;
   SwitcherModel::Ptr model_;
   bool target_sizes_set_;
-  glib::Source::UniquePtr redraw_idle_;
 
   nux::ObjectPtr<nux::BaseTexture> rounding_texture_;
   nux::ObjectPtr<nux::StaticCairoText> text_view_;
@@ -126,6 +125,8 @@ private:
   timespec save_time_;
 
   bool animation_draw_;
+
+  glib::Source::UniquePtr redraw_idle_;
 };
 
 }

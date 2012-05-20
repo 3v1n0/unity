@@ -40,12 +40,12 @@ nux::logging::Logger logger("unity.dash.controller");
 Controller::Controller()
   : launcher_width(64)
   , use_primary(false)
-  , ensure_timeout_(40 * 1000)
-  , timeline_animator_(90)
   , monitor_(0)
   , visible_(false)
   , need_show_(false)
   , view_(nullptr)
+  , ensure_timeout_(40 * 1000)
+  , timeline_animator_(90)
 {
   SetupRelayoutCallbacks();
   RegisterUBusInterests();

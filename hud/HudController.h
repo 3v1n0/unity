@@ -94,9 +94,9 @@ private:
   void OnQueriesFinished(Hud::Queries queries);
 
 private:
+  nux::ObjectPtr<nux::BaseWindow> window_;
   UBusManager ubus;
   Hud hud_service_;
-  nux::ObjectPtr<nux::BaseWindow> window_;
   bool visible_;
   bool need_show_;
 

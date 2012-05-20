@@ -118,7 +118,6 @@ private:
 
   std::string _active_overlay;
 
-  glib::Source::UniquePtr _track_menu_pointer_timeout;
   nux::Point  _tracked_pointer_pos;
 
   std::vector<sigc::connection> _on_indicator_updated_connections;
@@ -126,6 +125,7 @@ private:
   BackgroundEffectHelper _bg_effect_helper;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> _bg_blur_texture;
   UBusManager _ubus_manager;
+  glib::Source::UniquePtr _track_menu_pointer_timeout;
 };
 
 }

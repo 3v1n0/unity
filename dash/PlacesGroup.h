@@ -114,7 +114,6 @@ private:
   nux::ObjectPtr<nux::HLayout> separator_layout_;
   HSeparator* separator_;
   std::unique_ptr<nux::AbstractPaintLayer> _focus_layer;
-  glib::Source::UniquePtr _relayout_idle;
 
   IconTexture*          _icon;
   nux::StaticCairoText* _name;
@@ -127,6 +126,7 @@ private:
   std::string _cached_name;
   nux::Geometry _cached_geometry;
 
+  glib::Source::UniquePtr _relayout_idle;
   UBusManager _ubus;
 };
 

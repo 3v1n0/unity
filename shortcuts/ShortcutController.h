@@ -84,11 +84,11 @@ private:
   bool visible_;
   bool enabled_;
   nux::Color bg_color_;
-  glib::Source::UniquePtr show_timer_;
 
   Animator fade_in_animator_;
   Animator fade_out_animator_;
 
+  glib::Source::UniquePtr show_timer_;
   UBusManager ubus_manager_;
 };
 

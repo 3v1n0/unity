@@ -145,7 +145,7 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   filters_expanded.changed.connect([&](bool expanded) { fscroll_view_->SetVisible(expanded); QueueRelayout(); OnColumnsChanged(); });
   view_type.changed.connect(sigc::mem_fun(this, &LensView::OnViewTypeChanged));
 
-  ubus_.RegisterInterest(UBUS_RESULT_VIEW_KEYNAV_CHANGED, [this] (GVariant* data) {
+  ubus_manager_.RegisterInterest(UBUS_RESULT_VIEW_KEYNAV_CHANGED, [&] (GVariant* data) {
     // we get this signal when a result view keynav changes,
     // its a bad way of doing this but nux ABI needs to be broken
     // to do it properly

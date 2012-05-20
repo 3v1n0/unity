@@ -87,18 +87,18 @@ private:
   static void OnWindowConfigure(int width, int height, nux::Geometry& geo, void* data);
 
 private:
-  glib::SignalManager sig_manager_;
-  glib::Timeout ensure_timeout_;
-  UBusManager ubus_manager_;
-  Animator timeline_animator_;
+  nux::ObjectPtr<nux::BaseWindow> window_;
   int monitor_;
 
-  nux::ObjectPtr<nux::BaseWindow> window_;
   bool visible_;
   bool need_show_;
-
   DashView* view_;
+
   sigc::connection screen_ungrabbed_slot_;
+  glib::SignalManager sig_manager_;
+  glib::Timeout ensure_timeout_;
+  Animator timeline_animator_;
+  UBusManager ubus_manager_;
 };
 
 

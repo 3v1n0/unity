@@ -102,14 +102,12 @@ private:
   std::string get_search_string() const;
 
 private:
-  UBusManager ubus_manager_;
   Lens::Ptr lens_;
   CategoryGroups categories_;
   ResultCounts counts_;
   bool initial_activation_;
   bool no_results_active_;
   std::string search_string_;
-  glib::Source::UniquePtr fix_rendering_idle_;
 
   nux::HLayout* layout_;
   LensScrollView* scroll_view_;
@@ -119,7 +117,8 @@ private:
   FilterBar* filter_bar_;
   nux::StaticCairoText* no_results_;
 
-  UBusManager ubus_;
+  UBusManager ubus_manager_;
+  glib::Source::UniquePtr fix_rendering_idle_;
 };
 
 

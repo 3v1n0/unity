@@ -99,10 +99,6 @@ private:
 
 private:
   bool ShouldBeHighlighted();
-
-  glib::SignalManager sig_manager_;
-  glib::Source::UniquePtr live_search_timeout_;
-  glib::Source::UniquePtr start_spinner_timeout_;
   
   std::unique_ptr<nux::AbstractPaintLayer> bg_layer_;
   std::unique_ptr<nux::AbstractPaintLayer> highlight_layer_;
@@ -122,6 +118,10 @@ private:
 
   int last_width_;
   int last_height_;
+
+  glib::SignalManager sig_manager_;
+  glib::Source::UniquePtr live_search_timeout_;
+  glib::Source::UniquePtr start_spinner_timeout_;
 
   SearchBarSpinner* spinner_;
 };
