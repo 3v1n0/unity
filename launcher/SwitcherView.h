@@ -27,14 +27,10 @@
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/UnityWindowView.h"
 
-#include <boost/shared_ptr.hpp>
-#include <sigc++/sigc++.h>
-
 #include <Nux/View.h>
-#include <NuxCore/ObjectPtr.h>
 #include <NuxCore/Property.h>
 
-
+#include <UnityCore/GLibSource.h>
 
 
 namespace unity
@@ -108,16 +104,13 @@ private:
                              int &half_fold_left, 
                              int &half_fold_right);
 
-  static gboolean OnDrawTimeout(gpointer data);
-
   void SaveLast ();
 
   ui::LayoutSystem::Ptr layout_system_;
   ui::AbstractIconRenderer::Ptr icon_renderer_;
   SwitcherModel::Ptr model_;
   bool target_sizes_set_;
-
-  guint redraw_handle_;
+  glib::Source::UniquePtr redraw_idle_;
 
   nux::BaseTexture* rounding_texture_;
 

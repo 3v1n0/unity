@@ -43,7 +43,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(SwitcherView);
 SwitcherView::SwitcherView()
   : UnityWindowView()
   , target_sizes_set_(false)
-  , redraw_handle_(0)
 {
   icon_renderer_ = AbstractIconRenderer::Ptr(new IconRenderer());
   icon_renderer_->pip_style = OVER_TILE;
@@ -85,8 +84,6 @@ SwitcherView::~SwitcherView()
 {
   rounding_texture_->UnReference();
   text_view_->UnReference();
-  if (redraw_handle_ > 0)
-    g_source_remove(redraw_handle_);
 }
 
 std::string SwitcherView::GetName() const
@@ -529,16 +526,6 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
   return results;
 }
 
-gboolean SwitcherView::OnDrawTimeout(gpointer data)
-{
-  SwitcherView* self = static_cast<SwitcherView*>(data);
-
-  self->QueueDraw();
-  self->animation_draw_ = true;
-  self->redraw_handle_ = 0;
-  return FALSE;
-}
-
 void SwitcherView::PreDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   clock_gettime(CLOCK_MONOTONIC, &current_);
@@ -632,13 +619,18 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
 
   int ms_since_change = TimeUtil::TimeDelta(&current_, &save_time_);
 
-  if (ms_since_change < animation_length && redraw_handle_ == 0)
-    redraw_handle_ = g_idle_add_full (G_PRIORITY_DEFAULT, &SwitcherView::OnDrawTimeout, this, NULL);
+  if (ms_since_change < animation_length && !redraw_idle_)
+  {
+    redraw_idle_.reset(new glib::Idle([&] () {
+      QueueDraw();
+      animation_draw_ = true;
+      redraw_idle_ = nullptr;
+      return false;
+    }, glib::Source::Priority::DEFAULT));
+  }
 
   animation_draw_ = false;
 }
-
-
 
 }
 }
