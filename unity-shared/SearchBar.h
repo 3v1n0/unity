@@ -20,19 +20,12 @@
 #ifndef SEARCH_BAR_H
 #define SEARCH_BAR_H
 
-#include <memory>
-
-#include <gtk/gtk.h>
 
 #include <NuxCore/Property.h>
 #include <Nux/LayeredLayout.h>
-#include <Nux/TextureArea.h>
-#include <Nux/View.h>
-#include <Nux/TextureArea.h>
-#include <NuxGraphics/GraphicsEngine.h>
-#include <Nux/EditTextBox.h>
 #include <Nux/TextEntry.h>
 #include <UnityCore/GLibSignal.h>
+#include <UnityCore/GLibSource.h>
 
 #include "SearchBarSpinner.h"
 #include "unity-shared/IconTexture.h"
@@ -49,8 +42,6 @@ class LinearLayout;
 namespace unity
 {
 
-using namespace unity::glib;
-
 class SearchBar : public unity::debug::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(SearchBar, nux::View);
@@ -58,7 +49,6 @@ public:
   typedef nux::ObjectPtr<SearchBar> Ptr;
   SearchBar(NUX_FILE_LINE_PROTO);
   SearchBar(bool show_filter_hint, NUX_FILE_LINE_PROTO);
-  ~SearchBar();
 
   void ForceSearchChanged();
   void SearchFinished();
@@ -94,15 +84,14 @@ private:
   void OnClearClicked(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void OnEntryActivated();
   void OnShowingFiltersChanged(bool is_showing);
+  bool OnLiveSearchTimeout();
+  bool OnSpinnerStartCb();
 
   std::string get_search_string() const;
   bool set_search_string(std::string const& string);
   bool get_im_active() const;
   bool get_im_preedit() const;
   bool show_filter_hint_;
-
-  static gboolean OnLiveSearchTimeout(SearchBar* self);
-  static gboolean OnSpinnerStartCb(SearchBar* self);
 
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
@@ -112,8 +101,10 @@ private:
   bool ShouldBeHighlighted();
 
   glib::SignalManager sig_manager_;
+  glib::Source::UniquePtr live_search_timeout_;
+  glib::Source::UniquePtr start_spinner_timeout_;
   
-  nux::AbstractPaintLayer* bg_layer_;
+  std::unique_ptr<nux::AbstractPaintLayer> bg_layer_;
   std::unique_ptr<nux::AbstractPaintLayer> highlight_layer_;
   nux::HLayout* layout_;
   nux::HLayout* entry_layout_;
@@ -131,9 +122,6 @@ private:
 
   int last_width_;
   int last_height_;
-  
-  guint live_search_timeout_;
-  guint start_spinner_timeout_;
 
   SearchBarSpinner* spinner_;
 };
