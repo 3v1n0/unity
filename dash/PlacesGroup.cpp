@@ -340,7 +340,8 @@ PlacesGroup::Relayout()
   if (_relayout_idle)
     return;
 
-  _relayout_idle.reset(new glib::Idle(sigc::mem_fun(this, &PlacesGroup::OnIdleRelayout)));
+  _relayout_idle.reset(new glib::Idle(glib::Source::Priority::HIGH));
+  _relayout_idle->Run(sigc::mem_fun(this, &PlacesGroup::OnIdleRelayout));
 }
 
 bool
