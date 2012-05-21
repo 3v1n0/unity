@@ -75,6 +75,14 @@ class Bamf(object):
         """
         return [a for a in self.get_running_applications() if a.desktop_file == desktop_file]
 
+    def get_application_by_xid(self, xid):
+        """Return the application that has a child with the requested xid or None."""
+
+        app_path = self.matcher_interface.ApplicationForXid(xid)
+        if len(app_path):
+            return BamfApplication(app_path)
+        return None
+
     def get_open_windows(self, user_visible_only=True):
         """Get a list of currently open windows.
 
@@ -85,17 +93,16 @@ class Bamf(object):
 
         """
 
-        # Get the stacking order from the root window.
-        root_win = _X_DISPLAY.screen().root
-        prop = root_win.get_full_property(
-            _X_DISPLAY.get_atom('_NET_CLIENT_LIST_STACKING'), X.AnyPropertyType)
-        stack = prop.value.tolist()
-
-        windows = [BamfWindow(w) for w in self.matcher_interface.WindowPaths()]
+        windows = [BamfWindow(w) for w in self.matcher_interface.WindowStackForMonitor(-1)]
         if user_visible_only:
             windows = filter(_filter_user_visible, windows)
         # Now sort on stacking order.
-        return sorted(windows, key=lambda w: stack.index(w.x_id), reverse=True)
+        return reversed(windows)
+
+    def get_window_by_xid(self, xid):
+        """Get the BamfWindow that matches the provided 'xid'."""
+        windows = [BamfWindow(w) for w in self.matcher_interface.WindowPaths() if BamfWindow(w).x_id == xid]
+        return windows[0] if windows else None
 
     def wait_until_application_is_running(self, desktop_file, timeout):
         """Wait until a given application is running.
