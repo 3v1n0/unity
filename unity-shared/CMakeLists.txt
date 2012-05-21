@@ -46,7 +46,6 @@ set (UNITY_SHARED_SOURCES
      LineSeparator.cpp
      OverlayRenderer.cpp
      PanelStyle.cpp
-     PluginAdapter.cpp
      SearchBar.cpp
      SearchBarSpinner.cpp
      StaticCairoText.cpp
@@ -62,4 +61,23 @@ set (UNITY_SHARED_SOURCES
 
 add_library (unity-shared STATIC ${UNITY_SHARED_SOURCES})
 add_dependencies (unity-shared unity-core-${UNITY_API_VERSION})
+
+#
+# We also need to build compiz specific parts and standalone variants of those parts
+#
+
+# compiz
+set (UNITY_SHARED_COMPIZ_SOURCES
+     PluginAdapterCompiz.cpp
+     )
+add_library (unity-shared-compiz STATIC ${UNITY_SHARED_COMPIZ_SOURCES})
+add_dependencies (unity-shared-compiz unity-shared)
+
+# standalone
+set (UNITY_SHARED_STANDALONE_SOURCES
+     PluginAdapterStandalone.cpp
+     )
+add_library (unity-shared-standalone STATIC ${UNITY_SHARED_STANDALONE_SOURCES})
+add_dependencies (unity-shared-standalone unity-shared)
+
 
