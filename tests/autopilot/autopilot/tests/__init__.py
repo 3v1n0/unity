@@ -277,8 +277,9 @@ class AutopilotTestCase(VideoCapturedTestCase, KeybindingsHelper):
     def close_all_app(self, app_name):
         """Close all instances of the app_name."""
         app = self.KNOWN_APPS[app_name]
-        self.addCleanup(call, "kill `pidof %s`" % (app['process-name']), shell=True)
-        super(LoggedTestCase, self).tearDown()
+        pids = check_output(["pidof", app['process-name']]).split()
+        if len(pids):
+            call(["kill"] + pids)
 
     def get_app_instances(self, app_name):
         """Get BamfApplication instances for app_name."""
