@@ -29,7 +29,7 @@
 #include "unity-shared/BGHash.h"
 #include "unity-shared/FontSettings.h"
 #include "DashView.h"
-#include "unity-shared/DashSettings.h"
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/DashStyle.h"
 
 #define WIDTH 1024
@@ -90,7 +90,7 @@ int main(int argc, char **argv)
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
   // The instances for the pseudo-singletons.
   unity::dash::Style dash_style;
-  unity::dash::Settings dash_settings;
+  unity::Settings settings;
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Unity Dash"),

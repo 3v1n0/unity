@@ -25,7 +25,7 @@
 #include "NuxGraphics/GraphicsEngine.h"
 #include <gtk/gtk.h>
 
-#include "unity-shared/DashSettings.h"
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/PanelStyle.h"
 #include "PanelView.h"
 #include <dbus/dbus-glib.h>
@@ -55,7 +55,7 @@ int main(int argc, char** argv)
 
   // The instances for the pseudo-singletons.
   unity::panel::Style panel_style;
-  unity::dash::Settings dash_settings;
+  unity::Settings dash_settings;
 
   nux::WindowThread* wt = nux::CreateGUIThread(TEXT("Unity Panel"), 1024, 24, 0, &ThreadWidgetInit, 0);
 

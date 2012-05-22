@@ -63,7 +63,6 @@ set (DASH_SOURCES
 
 add_library (dash-lib STATIC ${DASH_SOURCES})
 add_dependencies (dash-lib unity-core-${UNITY_API_VERSION} unity-shared)
-add_definitions(-DUNITY_STANDALONE)
 # 
 # Standalone variant
 #

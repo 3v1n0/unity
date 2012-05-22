@@ -90,14 +90,11 @@ void Controller::SetupWindow()
   window_->SetOpacity(0.0f);
   window_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &Controller::OnMouseDownOutsideWindow));
   
-//!!FIXME!! make plugin adapter nicer so we can use it without linking to compiz
-#ifndef UNITY_STANDALONE
   /* FIXME - first time we load our windows there is a race that causes the input window not to actually get input, this side steps that by causing an input window show and hide before we really need it. */
   PluginAdapter::Default()->saveInputFocus ();
   window_->EnableInputWindow(true, "Dash", true, false);
   window_->EnableInputWindow(false, "Dash", true, false);
   PluginAdapter::Default()->restoreInputFocus ();
-#endif
 }
 
 void Controller::SetupDashView()
@@ -254,8 +251,6 @@ void Controller::OnExternalHideDash(GVariant* variant)
 void Controller::ShowDash()
 {
   EnsureDash();
-//!!FIXME!! make plugin adapter nicer so we can use it without linking to compiz
-#ifndef UNITY_STANDALONE
   PluginAdapter* adaptor = PluginAdapter::Default();
   // Don't want to show at the wrong time
   if (visible_ || adaptor->IsExpoActive() || adaptor->IsScaleActive())
@@ -271,7 +266,6 @@ void Controller::ShowDash()
     need_show_ = true;
     return;
   }
-#endif
   view_->AboutToShow();
 
   window_->ShowWindow(true);
@@ -311,11 +305,8 @@ void Controller::HideDash(bool restore)
 
   nux::GetWindowCompositor().SetKeyFocusArea(NULL,nux::KEY_NAV_NONE);
 
-//!!FIXME!! make plugin adapter nicer so we can use it without linking to compiz
-#ifndef UNITY_STANDALONE
   if (restore)
     PluginAdapter::Default ()->restoreInputFocus ();
-#endif 
 
   StartShowHideTimeline();
 

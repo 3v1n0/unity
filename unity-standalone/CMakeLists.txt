@@ -36,9 +36,11 @@ add_dependencies (unity-standalone
                   dash-lib
                   launcher-lib
                   panel-lib
-                  unity-shared)
+                  unity-shared
+                  unity-shared-standalone)
 target_link_libraries (unity-standalone 
                        dash-lib
                        launcher-lib
                        panel-lib
-                       unity-shared)
+                       unity-shared
+                       unity-shared-standalone)

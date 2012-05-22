@@ -26,21 +26,22 @@
 #include "NuxGraphics/GraphicsEngine.h"
 #include <NuxCore/Logger.h>
 
-#include "unity-shared/BGHash.h"
-#include "unity-shared/FontSettings.h"
-#include "dash/DashView.h"
 #include "dash/DashController.h"
-#include "panel/PanelView.h"
-#include "panel/PanelController.h"
-#include "unity-shared/BackgroundEffectHelper.h"
+#include "dash/DashView.h"
 #include "launcher/FavoriteStoreGSettings.h"
-#include "launcher/LauncherController.h"
 #include "launcher/Launcher.h"
-#include "unity-shared/UnitySettings.h"
+#include "launcher/LauncherController.h"
+#include "panel/PanelController.h"
+#include "panel/PanelView.h"
+#include "unity-shared/BGHash.h"
+#include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/DashStyle.h"
+#include "unity-shared/FontSettings.h"
 #include "unity-shared/PanelStyle.h"
-#include "unity-shared/UBusWrapper.h"
+#include "unity-shared/PluginAdapter.h"
 #include "unity-shared/UBusMessages.h"
+#include "unity-shared/UBusWrapper.h"
+#include "unity-shared/UnitySettings.h"
 
 namespace
 {
@@ -159,6 +160,7 @@ int main(int argc, char **argv)
   settings.is_standalone = true;
   if (force_tv) Settings::Instance().SetFormFactor(FormFactor::TV);
   
+  PluginAdapter::Initialize(NULL);
   dash::Style dash_style;
   panel::Style panel_style;
 
