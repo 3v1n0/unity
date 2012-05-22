@@ -21,6 +21,7 @@
 #define UNITY_SETTINGS_H
 
 #include <sigc++/signal.h>
+#include <Nux/Nux.h>
 
 namespace unity
 {

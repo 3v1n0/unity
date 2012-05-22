@@ -47,12 +47,14 @@ namespace
   static int display_width = 1280;
   static int display_height = 720;
   static gboolean no_window_decorations = FALSE;
+  static gboolean force_tv = FALSE;
 
   static GOptionEntry entries[] =
   {
     {"width", 'w', 0, G_OPTION_ARG_INT, &display_width, "Display width", NULL},
     {"height", 'h', 0, G_OPTION_ARG_INT, &display_height, "Display height", NULL},
     {"no-window-decorations", 'd', 0, G_OPTION_ARG_NONE, &no_window_decorations, "Disables the window decorations", NULL},
+    {"force-tv", 't', 0, G_OPTION_ARG_NONE, &force_tv, "Forces the TV interface", NULL},
     {NULL}
   };
 }
@@ -70,6 +72,7 @@ public:
 
   launcher::Controller::Ptr launcher_controller;
   dash::Controller::Ptr dash_controller;
+  panel::Controller::Ptr panel_controller;
 };
 
 UnityStandalone::UnityStandalone ()
@@ -83,15 +86,46 @@ UnityStandalone::~UnityStandalone ()
 void UnityStandalone::Init ()
 {
   launcher_controller.reset(new launcher::Controller(0));
+  panel_controller.reset(new panel::Controller());
+  dash_controller.reset(new dash::Controller());
+  dash_controller->launcher_width = launcher_controller->launcher().GetAbsoluteWidth() - 1;
+}
+
+void UnityStandalone::InitWindowThread(nux::NThread* thread, void* InitData)
+{
+  UnityStandalone *self = static_cast<UnityStandalone*>(InitData);
+  self->Init();
+}
+
+
+class UnityStandaloneTV
+{
+public:
+  UnityStandaloneTV();
+  ~UnityStandaloneTV();
+
+  static void InitWindowThread (nux::NThread* thread, void* InitData);
+  void Init();
+
+  launcher::Controller::Ptr launcher_controller;
+  dash::Controller::Ptr dash_controller;
+};
+
+UnityStandaloneTV::UnityStandaloneTV() {};
+UnityStandaloneTV::~UnityStandaloneTV() {};
+
+void UnityStandaloneTV::Init()
+{
+  launcher_controller.reset(new launcher::Controller(0));
   dash_controller.reset(new dash::Controller());
   dash_controller->launcher_width = launcher_controller->launcher().GetAbsoluteWidth() - 1;
 
   UBusManager().SendMessage(UBUS_DASH_EXTERNAL_ACTIVATION, nullptr);
 }
 
-void UnityStandalone::InitWindowThread(nux::NThread* thread, void* InitData)
+void UnityStandaloneTV::InitWindowThread(nux::NThread* thread, void* InitData)
 {
-  UnityStandalone *self = static_cast<UnityStandalone*>(InitData);
+  UnityStandaloneTV *self = static_cast<UnityStandaloneTV*>(InitData);
   self->Init();
 }
 
@@ -122,9 +156,9 @@ int main(int argc, char **argv)
 
   // The instances for the pseudo-singletons.
   Settings settings;
-  settings.SetFormFactor(FormFactor::TV);
   settings.is_standalone = true;
-
+  if (force_tv) Settings::Instance().SetFormFactor(FormFactor::TV);
+  
   dash::Style dash_style;
   panel::Style panel_style;
 
@@ -132,15 +166,30 @@ int main(int argc, char **argv)
   internal::FavoriteStoreGSettings favorite_store;
   BackgroundEffectHelper::blur_type = BLUR_NONE;
 
-  UnityStandalone *standalone_runner = new UnityStandalone();
-  wt = nux::CreateNuxWindow("standalone-unity",
-                            display_width, display_height,
-                            (no_window_decorations) ? nux::WINDOWSTYLE_NOBORDER : nux::WINDOWSTYLE_NORMAL,
-                            0, /* no parent */
-                            false,
-                            &UnityStandalone::InitWindowThread,
-                            standalone_runner);
-
+  if (!force_tv)
+  {
+    UnityStandalone *standalone_runner = new UnityStandalone();
+    wt = nux::CreateNuxWindow("standalone-unity",
+                              display_width, display_height,
+                              (no_window_decorations) ? nux::WINDOWSTYLE_NOBORDER : nux::WINDOWSTYLE_NORMAL,
+                              0, /* no parent */
+                              false,
+                              &UnityStandalone::InitWindowThread,
+                              standalone_runner);
+  }
+  else
+  {
+    //TODO - we should be able to pass in a monitor so that we can make the window
+    //the size of the monitor and position the window on the monitor correctly.
+    UnityStandaloneTV *standalone_runner = new UnityStandaloneTV();
+    wt = nux::CreateNuxWindow("standalone-unity-tv",
+                              display_width, display_height,
+                              (no_window_decorations) ? nux::WINDOWSTYLE_NOBORDER : nux::WINDOWSTYLE_NORMAL,
+                              0, /* no parent */
+                              false,
+                              &UnityStandaloneTV::InitWindowThread,
+                              standalone_runner);
+  }
   wt->Run(NULL);
   delete wt;
   return 0;

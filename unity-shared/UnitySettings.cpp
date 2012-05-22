@@ -105,6 +105,7 @@ void Settings::Impl::SetFormFactor(FormFactor factor)
 {
   form_factor_ = factor;
   g_settings_set_enum(settings_, FORM_FACTOR, static_cast<int>(factor));
+  owner_->changed.emit();
 }
 
 Settings::Settings()
