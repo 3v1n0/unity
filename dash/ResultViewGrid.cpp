@@ -70,9 +70,11 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   {
     NeedRedraw();
   };
+
   horizontal_spacing.changed.connect(needredraw_lambda);
   vertical_spacing.changed.connect(needredraw_lambda);
   padding.changed.connect(needredraw_lambda);
+  selected_index_.changed.connect(needredraw_lambda);
 
   key_nav_focus_change.connect(sigc::mem_fun(this, &ResultViewGrid::OnKeyNavFocusChange));
   key_nav_focus_activate.connect([&] (nux::Area *area) { UriActivated.emit (focused_uri_); });
@@ -103,7 +105,6 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   });
 
   SetDndEnabled(true, false);
-  NeedRedraw();
 }
 
 ResultViewGrid::~ResultViewGrid()
@@ -482,30 +483,30 @@ void ResultViewGrid::OnKeyDown (unsigned long event_type, unsigned long event_ke
   {
     case (nux::KEY_NAV_LEFT):
     {
-      --selected_index_;
+      selected_index_ = selected_index_ - 1;
       break;
     }
     case (nux::KEY_NAV_RIGHT):
     {
-      ++selected_index_;
+     selected_index_ = selected_index_ + 1;
       break;
     }
     case (nux::KEY_NAV_UP):
     {
-      selected_index_ -= items_per_row;
+      selected_index_ = selected_index_ - items_per_row;
       break;
     }
     case (nux::KEY_NAV_DOWN):
     {
-      selected_index_ += items_per_row;
+      selected_index_ = selected_index_ + items_per_row;
       break;
     }
     default:
       break;
   }
 
-  selected_index_ = std::max(0, selected_index_);
-  selected_index_ = std::min(static_cast<int>(results_.size() - 1), selected_index_);
+  selected_index_ = std::max(0, selected_index_());
+  selected_index_ = std::min(static_cast<int>(results_.size() - 1), selected_index_());
   focused_uri_ = results_[selected_index_].uri;
 
   int focused_x = (renderer_->width + horizontal_spacing + extra_horizontal_spacing_) * (selected_index_ % items_per_row);
@@ -514,8 +515,6 @@ void ResultViewGrid::OnKeyDown (unsigned long event_type, unsigned long event_ke
   ubus_.SendMessage(UBUS_RESULT_VIEW_KEYNAV_CHANGED,
                     g_variant_new("(iiii)", focused_x, focused_y, renderer_->width(), renderer_->height()));
   selection_change.emit();
-
-  NeedRedraw();
 }
 
 nux::Area* ResultViewGrid::KeyNavIteration(nux::KeyNavDirection direction)
@@ -527,7 +526,7 @@ void ResultViewGrid::OnKeyNavFocusChange(nux::Area *area, bool has_focus, nux::K
 {
   if (HasKeyFocus())
   {
-    if (selected_index_ < 0)
+    if (selected_index_ < 0 and !results_.empty())
     {
         focused_uri_ = results_.front().uri;
         selected_index_ = 0;
@@ -573,8 +572,6 @@ void ResultViewGrid::OnKeyNavFocusChange(nux::Area *area, bool has_focus, nux::K
 
     selection_change.emit();
   }
-
-  NeedRedraw();
 }
 
 long ResultViewGrid::ComputeContentSize()
@@ -736,12 +733,11 @@ void ResultViewGrid::MouseMove(int x, int y, int dx, int dy, unsigned long butto
   if (mouse_over_index_ != index)
   {
     selected_index_ = mouse_over_index_ = index;
+
     nux::GetWindowCompositor().SetKeyFocusArea(this);
   }
   mouse_last_x_ = x;
   mouse_last_y_ = y;
-
-  NeedRedraw();
 }
 
 void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags)

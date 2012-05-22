@@ -63,7 +63,7 @@ static gboolean   unity_launcher_accessible_is_child_selected(AtkSelection* sele
                                                               gint i);
 
 /* private */
-static void on_selection_change_cb(UnityLauncherAccessible* launcher_accessible);
+static void on_selection_change_cb(AbstractLauncherIcon::Ptr selection, UnityLauncherAccessible* launcher_accessible);
 static void on_icon_added_cb(AbstractLauncherIcon::Ptr icon, UnityLauncherAccessible* self);
 static void on_icon_removed_cb(AbstractLauncherIcon::Ptr icon, UnityLauncherAccessible* self);
 static void on_order_change_cb(UnityLauncherAccessible* self);
@@ -158,13 +158,13 @@ unity_launcher_accessible_initialize(AtkObject* accessible,
 
   launcher = dynamic_cast<Launcher*>(nux_object);
 
-  self->priv->on_selection_change_connection  =
-    launcher->selection_change.connect(sigc::bind(sigc::ptr_fun(on_selection_change_cb), self));
-
   model = launcher->GetModel();
 
   if (model)
   {
+    self->priv->on_selection_change_connection  =
+      model->selection_changed.connect(sigc::bind(sigc::ptr_fun(on_selection_change_cb), self));
+
     self->priv->on_icon_added_connection =
       model->icon_added.connect(sigc::bind(sigc::ptr_fun(on_icon_added_cb), self));
 
@@ -365,7 +365,7 @@ unity_launcher_accessible_is_child_selected(AtkSelection* selection,
 }
 
 /* private */
-static void on_selection_change_cb(UnityLauncherAccessible* launcher_accessible)
+static void on_selection_change_cb(AbstractLauncherIcon::Ptr selection, UnityLauncherAccessible* launcher_accessible)
 {
   g_signal_emit_by_name(ATK_OBJECT(launcher_accessible), "selection-changed");
 }
@@ -386,6 +386,7 @@ on_icon_added_cb(AbstractLauncherIcon::Ptr icon,
     return;
 
   icon_accessible = unity_a11y_get_accessible(icon.GetPointer());
+  atk_object_set_parent(icon_accessible, ATK_OBJECT(self));
 
   update_children_index(self);
 

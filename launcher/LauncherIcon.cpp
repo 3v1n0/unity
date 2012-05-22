@@ -99,6 +99,9 @@ LauncherIcon::LauncherIcon()
   for (int i = 0; i < max_num_monitors; ++i)
     _is_visible_on_monitor[i] = true;
 
+  tooltip_enabled = true;
+  tooltip_enabled.changed.connect(sigc::mem_fun(this, &LauncherIcon::OnTooltipEnabledChanged));
+
   tooltip_text.SetSetterFunction(sigc::mem_fun(this, &LauncherIcon::SetTooltipText));
   tooltip_text = "blank";
 
@@ -481,6 +484,12 @@ bool LauncherIcon::SetTooltipText(std::string& target, std::string const& value)
   return result;
 }
 
+void LauncherIcon::OnTooltipEnabledChanged(bool value)
+{
+  if (!value)
+    HideTooltip();
+}
+
 void
 LauncherIcon::SetShortcut(guint64 shortcut)
 {
@@ -499,7 +508,7 @@ LauncherIcon::GetShortcut()
 void
 LauncherIcon::ShowTooltip()
 {
-  if (_quicklist && _quicklist->IsVisible())
+  if (!tooltip_enabled || (_quicklist && _quicklist->IsVisible()))
     return;
 
   int tip_x = 100;
