@@ -21,7 +21,7 @@
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 
-#include "unity-shared/DashSettings.h"
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/PluginAdapter.h"
 #include "unity-shared/UBusMessages.h"

@@ -36,7 +36,7 @@
 #include "launcher/FavoriteStoreGSettings.h"
 #include "launcher/LauncherController.h"
 #include "launcher/Launcher.h"
-#include "unity-shared/DashSettings.h"
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UBusWrapper.h"
@@ -70,7 +70,6 @@ public:
 
   launcher::Controller::Ptr launcher_controller;
   dash::Controller::Ptr dash_controller;
-  panel::Controller::Ptr panel_controller;
 };
 
 UnityStandalone::UnityStandalone ()
@@ -85,8 +84,6 @@ void UnityStandalone::Init ()
 {
   launcher_controller.reset(new launcher::Controller(0));
   dash_controller.reset(new dash::Controller());
-  panel_controller.reset(new panel::Controller());
-
   dash_controller->launcher_width = launcher_controller->launcher().GetAbsoluteWidth() - 1;
 
   UBusManager().SendMessage(UBUS_DASH_EXTERNAL_ACTIVATION, nullptr);
@@ -125,8 +122,8 @@ int main(int argc, char **argv)
 
   // The instances for the pseudo-singletons.
   dash::Style dash_style;
-  dash::Settings dash_settings;
-  dash_settings.SetFormFactor(dash::FormFactor::NETBOOK);
+  Settings dash_settings;
+  dash_settings.SetFormFactor(FormFactor::TV);
   panel::Style panel_style;
 
   GeisAdapter geis_adapter;

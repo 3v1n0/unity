@@ -17,20 +17,19 @@
 * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
 */
 
-#ifndef DASH_SETTINGS_H
-#define DASH_SETTINGS_H
+#ifndef UNITY_SETTINGS_H
+#define UNITY_SETTINGS_H
 
 #include <sigc++/signal.h>
 
 namespace unity
 {
-namespace dash
-{
 
 enum class FormFactor
 {
   DESKTOP = 1,
-  NETBOOK
+  NETBOOK = 2,
+  TV
 };
 
 class Settings
@@ -53,6 +52,5 @@ private:
 };
 
 }
-}
 
-#endif // DASH_SETTINGS_H
+#endif // UNITY_SETTINGS_H

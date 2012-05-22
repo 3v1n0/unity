@@ -32,7 +32,6 @@ set (UNITY_SHARED_SOURCES
      Animator.cpp
      BGHash.cpp
      BackgroundEffectHelper.cpp
-     DashSettings.cpp
      DashStyle.cpp
      FontSettings.cpp
      IMTextEntry.cpp
@@ -53,6 +52,7 @@ set (UNITY_SHARED_SOURCES
      Timer.cpp
      UBusWrapper.cpp
      UScreen.cpp
+     UnitySettings.cpp
      UnityWindowStyle.cpp
      UnityWindowView.cpp
      WindowManager.cpp

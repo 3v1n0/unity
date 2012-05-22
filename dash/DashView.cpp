@@ -30,7 +30,7 @@
 #include <UnityCore/RadioOptionFilter.h>
 
 #include "unity-shared/DashStyle.h"
-#include "unity-shared/DashSettings.h"
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/UBusMessages.h"
 
 namespace unity

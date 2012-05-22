@@ -34,6 +34,7 @@
 #include "PanelStyle.h"
 
 #include <UnityCore/GLibWrapper.h>
+#include "unity-shared/UnitySettings.h"
 
 namespace unity
 {
@@ -71,6 +72,9 @@ Style::Style()
   {
     style_instance = this;
   }
+
+  if (Settings::Instance().GetFormFactor() == FormFactor::TV)
+    panel_height = 0;
 
   GtkWidgetPath* widget_path = gtk_widget_path_new();
   gint pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_WINDOW);

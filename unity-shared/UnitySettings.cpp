@@ -22,16 +22,14 @@
 
 #include <NuxCore/Logger.h>
 
-#include "DashSettings.h"
+#include "UnitySettings.h"
 #include "UScreen.h"
 
 namespace unity
 {
-namespace dash
-{
 namespace
 {
-nux::logging::Logger logger("unity.dash");
+nux::logging::Logger logger("unity");
 
 Settings* settings_instance = nullptr;
 const char* const FORM_FACTOR = "form-factor";
@@ -114,7 +112,7 @@ Settings::Settings()
 {
   if (settings_instance)
   {
-    LOG_ERROR(logger) << "More than one dash::Settings created.";
+    LOG_ERROR(logger) << "More than one unity::Settings created.";
   }
   else
   {
@@ -133,7 +131,7 @@ Settings& Settings::Instance()
 {
   if (!settings_instance)
   {
-    LOG_ERROR(logger) << "No dash::Settings created yet.";
+    LOG_ERROR(logger) << "No unity::Settings created yet.";
   }
 
   return *settings_instance;
@@ -150,5 +148,4 @@ void Settings::SetFormFactor(FormFactor factor)
 }
 
 
-} // namespace dash
 } // namespace unity
