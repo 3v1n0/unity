@@ -108,7 +108,8 @@ void Settings::Impl::SetFormFactor(FormFactor factor)
 }
 
 Settings::Settings()
-  : pimpl(new Impl(this))
+  : is_standalone(false)
+  , pimpl(new Impl(this))
 {
   if (settings_instance)
   {

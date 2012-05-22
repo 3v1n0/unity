@@ -44,6 +44,7 @@ public:
   FormFactor GetFormFactor() const;
   void SetFormFactor(FormFactor factor);
 
+  nux::Property<bool> is_standalone;
   sigc::signal<void> changed;
 
 private:

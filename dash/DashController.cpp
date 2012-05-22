@@ -276,9 +276,8 @@ void Controller::ShowDash()
 
   window_->ShowWindow(true);
   window_->PushToFront();
-#ifndef UNITY_STANDALONE
-  window_->EnableInputWindow(true, "Dash", true, false);
-#endif  
+  if (!Settings::Instance().is_standalone) // in standalone mode, we do not need an input window. we are one.
+    window_->EnableInputWindow(true, "Dash", true, false);
   window_->SetInputFocus();
   window_->CaptureMouseDownAnyWhereElse(true);
   window_->QueueDraw();

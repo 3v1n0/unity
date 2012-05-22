@@ -232,14 +232,14 @@ void DashView::Relayout()
 {
   nux::Geometry const& geo = GetGeometry();
   content_geo_ = GetBestFitGeometry(geo);
-
-  if (Settings::Instance().GetFormFactor() == FormFactor::NETBOOK)
+  dash::Style& style = dash::Style::Instance();
+  
+  if (style.always_maximised)
   {
     if (geo.width >= content_geo_.width && geo.height > content_geo_.height)
       content_geo_ = geo;
   }
 
-  dash::Style& style = dash::Style::Instance();
 
   // kinda hacky, but it makes sure the content isn't so big that it throws
   // the bottom of the dash off the screen
@@ -771,6 +771,8 @@ void DashView::AddProperties(GVariantBuilder* builder)
     form_factor = "netbook";
   else if (Settings::Instance().GetFormFactor() == FormFactor::DESKTOP)
     form_factor = "desktop";
+  else if (Settings::Instance().GetFormFactor() == FormFactor::TV)
+    form_factor = "tv";
 
   unity::variant::BuilderWrapper wrapper(builder);
   wrapper.add(nux::Geometry(GetAbsoluteX(), GetAbsoluteY(), content_geo_.width, content_geo_.height));

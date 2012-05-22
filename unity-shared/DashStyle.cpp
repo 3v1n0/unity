@@ -40,6 +40,7 @@
 
 #include "CairoTexture.h"
 #include "JSONParser.h"
+#include "UnitySettings.h"
 #include "config.h"
 
 #define DASH_WIDGETS_FILE DATADIR"/unity/themes/dash-widgets.json"
@@ -399,7 +400,8 @@ void Style::Impl::OnFontChanged(GtkSettings* object, GParamSpec* pspec)
 
 
 Style::Style()
-  : pimpl(new Impl(this))
+  : always_maximised(false)
+  , pimpl(new Impl(this))
 {
   if (style_instance)
   {
@@ -409,6 +411,15 @@ Style::Style()
   {
     style_instance = this;
   }
+
+  auto formfactor_lambda = [this] () 
+  {
+    FormFactor formfactor = Settings::Instance().GetFormFactor();
+    always_maximised = (formfactor == FormFactor::NETBOOK || formfactor == FormFactor::TV); 
+  };
+
+  Settings::Instance().changed.connect(formfactor_lambda);
+  formfactor_lambda();
 }
 
 Style::~Style ()

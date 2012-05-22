@@ -121,9 +121,11 @@ int main(int argc, char **argv)
   FontSettings font_settings;
 
   // The instances for the pseudo-singletons.
+  Settings settings;
+  settings.SetFormFactor(FormFactor::TV);
+  settings.is_standalone = true;
+
   dash::Style dash_style;
-  Settings dash_settings;
-  dash_settings.SetFormFactor(FormFactor::TV);
   panel::Style panel_style;
 
   GeisAdapter geis_adapter;
