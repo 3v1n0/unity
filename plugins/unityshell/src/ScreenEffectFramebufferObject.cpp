@@ -101,6 +101,9 @@ bool unity::ScreenEffectFramebufferObject::status ()
 
 void unity::ScreenEffectFramebufferObject::bind (const nux::Geometry &output)
 {
+  if (!BackgroundEffectHelper::HasDirtyHelpers())
+    return;
+
   /* Clear the error bit */
   glGetError ();
 
