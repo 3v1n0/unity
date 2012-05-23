@@ -65,6 +65,7 @@ void BFBLauncherIcon::OnOverlayShown(GVariant *data, bool visible)
 
   if (overlay_identity.Str() == "dash" && IsVisibleOnMonitor(overlay_monitor))
   {
+    tooltip_enabled = !visible;
     SetQuirk(QUIRK_ACTIVE, visible);
     EmitNeedsRedraw();
   }

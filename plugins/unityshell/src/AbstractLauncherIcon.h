@@ -119,6 +119,7 @@ public:
   virtual ~AbstractLauncherIcon() {}
 
   nux::Property<std::string> tooltip_text;
+  nux::Property<bool> tooltip_enabled;
 
   virtual void HideTooltip() = 0;
 

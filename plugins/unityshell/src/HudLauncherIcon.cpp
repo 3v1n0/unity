@@ -101,6 +101,7 @@ void HudLauncherIcon::OnOverlayShown(GVariant* data, bool visible)
     SetMonitor(overlay_monitor);
     SetQuirk(QUIRK_VISIBLE, visible);
     SetQuirk(QUIRK_ACTIVE, visible);
+    tooltip_enabled = !visible;
     EmitNeedsRedraw();
   }
 }
