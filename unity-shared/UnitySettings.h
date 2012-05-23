@@ -17,20 +17,20 @@
 * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
 */
 
-#ifndef DASH_SETTINGS_H
-#define DASH_SETTINGS_H
+#ifndef UNITY_SETTINGS_H
+#define UNITY_SETTINGS_H
 
 #include <sigc++/signal.h>
+#include <Nux/Nux.h>
 
 namespace unity
-{
-namespace dash
 {
 
 enum class FormFactor
 {
   DESKTOP = 1,
-  NETBOOK
+  NETBOOK = 2,
+  TV
 };
 
 class Settings
@@ -45,6 +45,7 @@ public:
   FormFactor GetFormFactor() const;
   void SetFormFactor(FormFactor factor);
 
+  nux::Property<bool> is_standalone;
   sigc::signal<void> changed;
 
 private:
@@ -53,6 +54,5 @@ private:
 };
 
 }
-}
 
-#endif // DASH_SETTINGS_H
+#endif // UNITY_SETTINGS_H

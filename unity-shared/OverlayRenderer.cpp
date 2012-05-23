@@ -26,7 +26,7 @@
 
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "DashStyle.h"
-#include "unity-shared/DashSettings.h"
+#include "unity-shared/UnitySettings.h"
 
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UBusWrapper.h"
@@ -378,7 +378,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
   bool paint_blur = BackgroundEffectHelper::blur_type != BLUR_NONE;
   nux::Geometry geo(content_geo);
 
-  int excess_border = (dash::Settings::Instance().GetFormFactor() != dash::FormFactor::NETBOOK || force_edges) ? EXCESS_BORDER : 0;
+  int excess_border = (Settings::Instance().GetFormFactor() != FormFactor::NETBOOK || force_edges) ? EXCESS_BORDER : 0;
 
   nux::Geometry larger_content_geo = content_geo;
   larger_content_geo.OffsetSize(excess_border, excess_border);
@@ -510,7 +510,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
                         larger_content_geo.width, larger_content_geo.height,
                         bg_shine_texture_, texxform_absolute_bg, nux::color::White);
 
-  if (dash::Settings::Instance().GetFormFactor() != dash::FormFactor::NETBOOK || force_edges)
+  if (Settings::Instance().GetFormFactor() != FormFactor::NETBOOK || force_edges)
   {
     // Paint the edges
     {
@@ -767,7 +767,7 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
   nux::Geometry geo = geometry;
   bgs = 0;
 
-  int excess_border = (dash::Settings::Instance().GetFormFactor() != dash::FormFactor::NETBOOK) ? EXCESS_BORDER : 0;
+  int excess_border = (Settings::Instance().GetFormFactor() != FormFactor::NETBOOK) ? EXCESS_BORDER : 0;
 
   nux::Geometry larger_content_geo = content_geo;
   larger_content_geo.OffsetSize(excess_border, excess_border);
