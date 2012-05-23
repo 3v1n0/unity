@@ -188,16 +188,16 @@ BamfLauncherIcon::~BamfLauncherIcon()
 
 void BamfLauncherIcon::Remove()
 {
-  _gsignals.Disconnect(_bamf_app);
-
   /* Removing the unity-seen flag to the wrapped bamf application, on remove
    * request we make sure that if the bamf application is re-opened while
    * the removal process is still ongoing, the application will be shown
-   * on the launcher. */
+   * on the launcher. Disconnecting from signals and nullifying the _bamf_app
+   * we make sure that this icon won't be reused (no duplicated icon). */
+  _gsignals.Disconnect(_bamf_app);
   g_object_set_qdata(G_OBJECT(_bamf_app.RawPtr()),
                      g_quark_from_static_string("unity-seen"), nullptr);
-
   _bamf_app = nullptr;
+
   SimpleLauncherIcon::Remove();
 }
 
