@@ -58,6 +58,9 @@ protected:
   void DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry clip);
   nux::Geometry GetBackgroundGeometry();
 
+  // Introspectable methods
+  std::string GetName() const;
+
 private:
   // Private methods
   nux::LinearLayout* CreateSectionLayout(const char* section_name);

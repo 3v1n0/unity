@@ -85,6 +85,12 @@ class ShortcutHintTests(BaseShortcutHintTests):
         self.shortcut_hint.cancel()
         self.assertThat(self.shortcut_hint.visible, Eventually(Equals(False)))
 
+    def test_shortcut_hint_no_blur(self):
+        """"""
+        self.shortcut_hint.ensure_visible()
+        self.addCleanup(self.shortcut_hint.ensure_hidden)
+
+        self.assertThat(self.shortcut_hint.get_shortcut_view().bg_texture_is_valid, Eventually(Equals(True)))
 
 class ShortcutHintInteractionsTests(BaseShortcutHintTests):
     """Test the shortcuthint interactions with other Unity parts."""

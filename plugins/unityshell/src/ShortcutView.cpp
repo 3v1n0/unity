@@ -287,5 +287,13 @@ void View::RenderColumns()
   }
 }
 
+//
+// Introspectable methods
+//
+std::string View::GetName() const
+{
+  return "ShortcutView";
+}
+
 } // namespace shortcut
 } // namespace unity
