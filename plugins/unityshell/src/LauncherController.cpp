@@ -740,7 +740,6 @@ void Controller::Impl::OnViewOpened(BamfMatcher* matcher, BamfView* view, gpoint
     return;
   }
 
-  g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"), GUINT_TO_POINTER(1));
   AbstractLauncherIcon::Ptr icon(new BamfLauncherIcon(app));
   icon->visibility_changed.connect(sigc::mem_fun(self, &Impl::SortAndUpdate));
   icon->SetSortPriority(self->sort_priority_++);
@@ -764,7 +763,6 @@ AbstractLauncherIcon::Ptr Controller::Impl::CreateFavorite(const char* file_path
   }
 
   bamf_view_set_sticky(BAMF_VIEW(app), true);
-  g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"), GUINT_TO_POINTER(1));
   AbstractLauncherIcon::Ptr icon (new BamfLauncherIcon(app));
   icon->SetSortPriority(sort_priority_++);
   result = icon;
@@ -790,7 +788,6 @@ SoftwareCenterLauncherIcon::Ptr Controller::Impl::CreateSCLauncherIcon(std::stri
   }
 
   bamf_view_set_sticky(BAMF_VIEW(app), true);
-  g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"), GUINT_TO_POINTER(1));
   result = new SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path);
   result->SetSortPriority(sort_priority_++);
 
@@ -833,7 +830,6 @@ void Controller::Impl::SetupBamf()
     if (g_object_get_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen")))
       continue;
 
-    g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"), GUINT_TO_POINTER(1));
     AbstractLauncherIcon::Ptr icon(new BamfLauncherIcon(app));
     icon->SetSortPriority(sort_priority_++);
     RegisterIcon(icon);

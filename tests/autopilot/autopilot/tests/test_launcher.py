@@ -417,7 +417,6 @@ class LauncherIconsBehaviorTests(LauncherTestCase):
         sleep(1)
         [mah_win2] = [w for w in mahj.get_windows() if w.x_id != mah_win1.x_id]
         self.assertTrue(mah_win2.is_focused)
-
         self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
 
         mahj_icon = self.launcher.model.get_icon_by_desktop_id(mahj.desktop_file)
@@ -446,6 +445,20 @@ class LauncherIconsBehaviorTests(LauncherTestCase):
         self.assertTrue(mah_win2.is_hidden)
         self.assertVisibleWindowStack([mah_win1, calc_win])
 
+    def test_icon_shows_on_quick_application_reopen(self):
+        """Icons should stay on launcher when an application is quickly closed/reopened."""
+        calc = self.start_app("Calculator")
+        desktop_file = calc.desktop_file
+        calc_icon = self.launcher.model.get_icon_by_desktop_id(desktop_file)
+        self.assertThat(calc_icon.visible, Eventually(Equals(True)))
+
+        self.close_all_app("Calculator")
+        calc = self.start_app("Calculator")
+        sleep(2)
+
+        calc_icon = self.launcher.model.get_icon_by_desktop_id(desktop_file)
+        self.assertThat(calc_icon, NotEquals(None))
+        self.assertThat(calc_icon.visible, Eventually(Equals(True)))
 
 class LauncherRevealTests(LauncherTestCase):
     """Test the launcher reveal behavior when in autohide mode."""
@@ -579,6 +592,15 @@ class BamfDaemonTests(LauncherTestCase):
         self.start_app("Calculator")
         self.start_app("System Settings")
 
+    def start_desktopless_test_apps(self):
+        """Start test applications with no .desktop file associated."""
+        test_apps = ["xclock"]
+
+        for app in test_apps:
+            os.spawnlp(os.P_NOWAIT, app, app)
+            self.addCleanup(call, ["killall", app])
+            self.wait_for_process_started(app)
+
     def get_test_apps(self):
         """Return a tuple of test application instances.
 
@@ -588,34 +610,74 @@ class BamfDaemonTests(LauncherTestCase):
         """
         [calc] = self.get_app_instances("Calculator")
         [sys_settings] = self.get_app_instances("System Settings")
-        return (calc, sys_settings)
+        return [calc, sys_settings]
+
+    def get_desktopless_test_apps(self):
+        """Return a tuple of test application with no .desktop files instances."""
+        [xclock_win] = [w for w in self.bamf.get_open_windows() if w.name == "xclock"]
+        return [xclock_win.application]
 
     def assertOnlyOneLauncherIcon(self, **kwargs):
         """Asserts that there is only one launcher icon with the given filter."""
         icons = self.launcher.model.get_icons_by_filter(**kwargs)
         self.assertThat(len(icons), Equals(1))
 
-    def wait_for_bamf_daemon(self):
-        """Wait until the bamf daemon has been started."""
+    def wait_for_process_started(self, app):
+        """Wait until the application app has been started."""
+        for i in range(10):
+            sleep(1)
+            #pgrep returns 0 if it matched something:
+            if call(["pgrep", app]) == 0:
+                return
+
+    def wait_for_process_killed(self, app):
+        """Wait until the application app has been killed."""
         for i in range(10):
             #pgrep returns 0 if it matched something:
-            if call(["pgrep", "bamfdaemon"]) == 0:
+            if call(["pgrep", app]) != 0:
                 return
             sleep(1)
+
+    def kill_and_restart_bamfdaemon(self):
+        """Kills and resumes bamfdaemon."""
+        call(["pkill", "bamfdaemon"])
+        self.wait_for_process_killed("bamfdaemon")
+
+        # trigger the bamfdaemon to be reloaded again, and wait for it to appear:
+        self.bamf = Bamf()
+        self.wait_for_process_started("bamfdaemon")
 
     def test_killing_bamfdaemon_does_not_duplicate_desktop_ids(self):
         """Killing bamfdaemon should not duplicate any desktop ids in the model."""
         self.start_test_apps()
-
-        call(["pkill", "bamfdaemon"])
-        sleep(1)
-
-        # trigger the bamfdaemon to be reloaded again, and wait for it to appear:
-        self.bamf = Bamf()
-        self.wait_for_bamf_daemon()
+        self.kill_and_restart_bamfdaemon()
 
         for test_app in self.get_test_apps():
+            logger.info("Checking for duplicated launcher icon for application %s", test_app.name)
             self.assertOnlyOneLauncherIcon(desktop_id=test_app.desktop_file)
+
+    def test_killing_bamfdaemon_does_not_duplicate_application_xids(self):
+        """Killing bamfdaemon should not duplicate any xid in the model."""
+        self.start_test_apps()
+        self.start_desktopless_test_apps()
+        self.kill_and_restart_bamfdaemon()
+
+        test_apps = self.get_test_apps() + self.get_desktopless_test_apps()
+
+        for test_app in test_apps:
+            logger.info("Checking for duplicated launcher icon for application %s", test_app.name)
+            test_windows = [w.x_id for w in test_app.get_windows()]
+            self.assertOnlyOneLauncherIcon(xids=test_windows)
+
+    def test_killing_bamfdaemon_does_not_duplicate_any_icon_application_id(self):
+        """Killing bamfdaemon should not duplicate any application ids in the model."""
+        self.start_test_apps()
+        self.start_desktopless_test_apps()
+        self.kill_and_restart_bamfdaemon()
+
+        for icon in self.launcher.model.get_bamf_launcher_icons():
+            logger.info("Checking for duplicated launcher icon %s", icon.tooltip_text)
+            self.assertOnlyOneLauncherIcon(application_id=icon.application_id)
 
 
 class LauncherCaptureTests(AutopilotTestCase):

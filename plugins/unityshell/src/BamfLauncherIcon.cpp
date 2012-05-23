@@ -54,6 +54,8 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   , _fill_supported_types_id(0)
   , _window_moved_id(0)
 {
+  g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"),
+                     GUINT_TO_POINTER(1));
   auto bamf_view = glib::object_cast<BamfView>(_bamf_app);
 
   glib::String icon(bamf_view_get_icon(bamf_view));
@@ -99,10 +101,17 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view, "running-changed",
                           [&] (BamfView*, gboolean running) {
                             SetQuirk(QUIRK_RUNNING, running);
+
                             if (running)
                             {
                               EnsureWindowState();
                               UpdateIconGeometries(GetCenters());
+
+                              if (_remove_timeout_id)
+                              {
+                                g_source_remove(_remove_timeout_id);
+                                _remove_timeout_id = 0;
+                              }
                             }
                           });
   _gsignals.Add(sig);
@@ -117,7 +126,23 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   sig = new glib::Signal<void, BamfView*>(bamf_view, "closed",
                           [&] (BamfView*) {
                             if (!IsSticky())
-                              Remove();
+                            {
+                              /* Use a timeout to remove the icon, this avoids
+                               * that we remove an application that is going
+                               * to be reopened soon. So applications that
+                               * have a splash screen won't be removed from
+                               * the launcher while the splash is closed and
+                               * a new window is opened. */
+                              if (_remove_timeout_id)
+                                g_source_remove(_remove_timeout_id);
+
+                              _remove_timeout_id = g_timeout_add_seconds(1, [] (gpointer data) -> gboolean {
+                                auto self = static_cast<BamfLauncherIcon*>(data);
+                                self->Remove();
+                                self->_remove_timeout_id = 0;
+                                return false;
+                              }, this);
+                            }
                           });
   _gsignals.Add(sig);
 
@@ -143,8 +168,10 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
 BamfLauncherIcon::~BamfLauncherIcon()
 {
   g_object_set_qdata(G_OBJECT(_bamf_app.RawPtr()),
-                     g_quark_from_static_string("unity-seen"),
-                     GUINT_TO_POINTER(0));
+                     g_quark_from_static_string("unity-seen"), nullptr);
+
+  if (_remove_timeout_id != 0)
+    g_source_remove(_remove_timeout_id);
 
   if (_fill_supported_types_id != 0)
     g_source_remove(_fill_supported_types_id);
@@ -157,6 +184,18 @@ BamfLauncherIcon::~BamfLauncherIcon()
 
   if (_dnd_hover_timer != 0)
     g_source_remove(_dnd_hover_timer);
+}
+
+void BamfLauncherIcon::Remove()
+{
+  /* Removing the unity-seen flag to the wrapped bamf application, on remove
+   * request we make sure that if the bamf application is re-opened while
+   * the removal process is still ongoing, the application will be shown
+   * on the launcher. */
+  g_object_set_qdata(G_OBJECT(_bamf_app.RawPtr()),
+                     g_quark_from_static_string("unity-seen"), nullptr);
+
+  SimpleLauncherIcon::Remove();
 }
 
 bool BamfLauncherIcon::IsSticky() const
