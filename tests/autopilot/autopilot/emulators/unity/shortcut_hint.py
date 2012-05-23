@@ -15,9 +15,15 @@ from autopilot.keybindings import KeybindingsHelper
 
 logger = logging.getLogger(__name__)
 
+class ShortcutView(UnityIntrospectionObject):
+    """Proxy object for the shortcut view child of the controller."""
 
 class ShortcutController(UnityIntrospectionObject, KeybindingsHelper):
     """ShortcutController proxy class."""
+
+    def get_shortcut_view(self):
+        views = self.get_children_by_type(ShortcutView)
+        return views[0] if views else None
 
     def show(self):
         """Push the keys necessary to reveal the shortcut hint, but don't block."""
