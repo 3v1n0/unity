@@ -156,4 +156,12 @@ TEST(TestDesktopUtilitiesDataDirectories, TestGetBackgroundColorNoKey)
   ASSERT_FALSE(use_bg_color);
 }
 
+TEST(TestDesktopUtilitiesDataDirectories, TestGetBackgroundColorNoFile)
+{
+  nux::Color color;
+  bool use_bg_color = DesktopUtilities::GetBackgroundColor("hello-world.desktop", color);
+
+  ASSERT_FALSE(use_bg_color);
+}
+
 } // anonymous namespace
