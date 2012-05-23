@@ -27,8 +27,6 @@
 #include "BackgroundEffectHelper.h"
 #include "UnityWindowView.h"
 
-#include "Introspectable.h"
-
 #include <boost/shared_ptr.hpp>
 #include <sigc++/sigc++.h>
 
@@ -48,7 +46,7 @@ class AbstractLauncherIcon;
 namespace switcher
 {
 
-class SwitcherView : public debug::Introspectable, public ui::UnityWindowView
+class SwitcherView : public ui::UnityWindowView
 {
   NUX_DECLARE_OBJECT_TYPE(SwitcherView, ui::UnityWindowView);
 public:

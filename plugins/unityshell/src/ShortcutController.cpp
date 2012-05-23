@@ -157,6 +157,7 @@ gboolean Controller::OnShowTimer(gpointer data)
 void Controller::ConstructView()
 {
   view_ = View::Ptr(new View());
+  AddChild(view_.GetPointer());
   view_->SetModel(model_);
   view_->background_color = bg_color_;
 
