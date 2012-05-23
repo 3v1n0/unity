@@ -36,7 +36,7 @@
 
 #include "Introspectable.h"
 #include "DashController.h"
-#include "DashSettings.h"
+#include "UnitySettings.h"
 #include "DashStyle.h"
 #include "FavoriteStoreGSettings.h"
 #include "FontSettings.h"
@@ -233,7 +233,7 @@ private:
 
   void OnPanelStyleChanged();
 
-  dash::Settings dash_settings_;
+  Settings dash_settings_;
   dash::Style    dash_style_;
   panel::Style   panel_style_;
   FontSettings   font_settings_;
