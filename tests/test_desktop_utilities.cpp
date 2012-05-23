@@ -16,8 +16,12 @@
  *
  * Authored by: Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  *              Tim Penhey <tim.penhey@canonical.com>
+ *              Andrea Azzarone <azzarone@gmail.com>
  */
 
+#include <config.h>
+
+#include <NuxCore/Color.h>
 #include <UnityCore/DesktopUtilities.h>
 
 #include <glib.h>
@@ -133,6 +137,23 @@ TEST(TestDesktopUtilitiesDataDirectories, TestGetDataDirectory)
   EXPECT_THAT(data_dirs[2], Eq("dir3"));
   EXPECT_THAT(data_dirs[3], Eq("dir4"));
   EXPECT_THAT(data_dirs[4], Eq("UnityUserConfig"));
+}
+
+TEST(TestDesktopUtilitiesDataDirectories, TestGetBackgroundColor)
+{
+  nux::Color color;
+  bool use_bg_color = DesktopUtilities::GetBackgroundColor(BUILDDIR"/tests/data/ubuntu-software-center.desktop", color);
+
+  ASSERT_TRUE(use_bg_color);
+  EXPECT_TRUE(color == nux::Color(0xffaabbcc));
+}
+
+TEST(TestDesktopUtilitiesDataDirectories, TestGetBackgroundColorNoKey)
+{
+  nux::Color color;
+  bool use_bg_color = DesktopUtilities::GetBackgroundColor(BUILDDIR"/tests/data/update-manager.desktop", color);
+
+  ASSERT_FALSE(use_bg_color);
 }
 
 } // anonymous namespace

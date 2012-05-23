@@ -15,6 +15,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
 * Authored by: Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
+*              Andrea Azzarone <azzarone@gmail.com>
 */
 
 #include <algorithm>
@@ -119,10 +120,6 @@ std::string DesktopUtilities::GetDesktopID(std::string const& desktop_path)
   return GetDesktopID(data_dirs, desktop_path);
 }
 
-#define RGBA_GET_ALPHA(rgba)      ((rgba) >> 24)
-#define RGBA_GET_RED(rgba)        (((rgba) >> 16) & 0xff)
-#define RGBA_GET_GREEN(rgba)      (((rgba) >> 8) & 0xff)
-#define RGBA_GET_BLUE(rgba)       ((rgba) & 0xff)
 
 bool DesktopUtilities::GetBackgroundColor(std::string const& desktop_path, nux::Color& color)
 {
@@ -137,7 +134,7 @@ bool DesktopUtilities::GetBackgroundColor(std::string const& desktop_path, nux::
     return false;
   }
 
-  glib::String value(g_key_file_get_string(key_file, "Desktop Entry", "X-Unity-IconBackroundColor", &error));
+  glib::String value(g_key_file_get_string(key_file, "Desktop Entry", "X-Unity-IconBackgroundColor", &error));
 
   if (error or !value)
   {
@@ -147,7 +144,7 @@ bool DesktopUtilities::GetBackgroundColor(std::string const& desktop_path, nux::
 
   unsigned int rgb;   
   std::stringstream ss;
-  ss << std::hex << "FF" << value.Str();
+  ss << std::hex << "FF" << value;
   ss >> rgb;
 
   color = nux::Color(rgb);
