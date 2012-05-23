@@ -188,13 +188,7 @@ BamfLauncherIcon::~BamfLauncherIcon()
 
 void BamfLauncherIcon::Remove()
 {
-  _gsignals.Disconnect(_bamf_app, "child-added");
-  _gsignals.Disconnect(_bamf_app, "child-removed");
-  _gsignals.Disconnect(_bamf_app, "urgent-changed");
-  _gsignals.Disconnect(_bamf_app, "active-changed");
-  _gsignals.Disconnect(_bamf_app, "running-changed");
-  _gsignals.Disconnect(_bamf_app, "user-visible-changed");
-  _gsignals.Disconnect(_bamf_app, "closed");
+  _gsignals.Disconnect(_bamf_app);
 
   /* Removing the unity-seen flag to the wrapped bamf application, on remove
    * request we make sure that if the bamf application is re-opened while
