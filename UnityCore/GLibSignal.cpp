@@ -71,12 +71,10 @@ void SignalManager::Add(SignalBase* signal)
 // (it allows you to pass in a GObject without casting up).
 void SignalManager::Disconnect(void* object, std::string const& signal_name)
 {
-  for (ConnectionVector::iterator it = connections_.begin();
-       it != connections_.end();
-       ++it)
+  for (auto it = connections_.begin(); it != connections_.end(); ++it)
   {
-    if ((*it)->object() == object
-        && (*it)->name() == signal_name)
+    if ((*it)->object() == object &&
+        (signal_name.empty() || (*it)->name() == signal_name))
     {
       (*it)->Disconnect();
       connections_.erase(it, it);
