@@ -241,7 +241,7 @@ void FavoriteStoreGSettings::SaveFavorites(FavoriteList const& favorites, bool i
     // the string that we are going to save.  This way we know that the pointer
     // is valid for the lifetime of the favs array usage in the method call to
     // set the settings, and that we aren't referencing a temporary.
-    std::string const& desktop_id = DesktopUtilities::GetDesktopID(system_dirs, *i);
+    std::string const desktop_id(DesktopUtilities::GetDesktopID(system_dirs, *i));
     FavoriteList::iterator iter = values.insert(values.end(), desktop_id);
     favs[index] = iter->c_str();
   }

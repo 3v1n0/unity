@@ -143,7 +143,7 @@ LauncherEntryRemote::Ptr LauncherEntryRemoteModel::LookupByDesktopId(std::string
  */
 LauncherEntryRemote::Ptr LauncherEntryRemoteModel::LookupByDesktopFile(std::string const& desktop_file_path)
 {
-  std::string const& desktop_id = DesktopUtilities::GetDesktopID(desktop_file_path);
+  std::string const desktop_id(DesktopUtilities::GetDesktopID(desktop_file_path));
 
   if (desktop_id.empty())
     return nullptr;

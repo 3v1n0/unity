@@ -17,10 +17,13 @@
 * Authored by: Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
 */
 
-#include <glib.h>
 #include <algorithm>
+#include <sstream>
+
+#include <glib.h>
 
 #include "DesktopUtilities.h"
+#include "GLibWrapper.h"
 
 namespace unity
 {
@@ -63,8 +66,8 @@ std::vector<std::string> DesktopUtilities::GetSystemDataDirectories()
 
 std::vector<std::string> DesktopUtilities::GetDataDirectories()
 {
-  std::vector<std::string> dirs = GetSystemDataDirectories();
-  std::string const& user_directory = GetUserDataDirectory();  
+  std::vector<std::string> dirs(GetSystemDataDirectories());
+  std::string const user_directory(GetUserDataDirectory());
 
   dirs.push_back(user_directory);
 
@@ -112,8 +115,45 @@ std::string DesktopUtilities::GetDesktopID(std::vector<std::string> const& defau
 
 std::string DesktopUtilities::GetDesktopID(std::string const& desktop_path)
 {
-  std::vector<std::string> const& data_dirs = GetDataDirectories();
+  std::vector<std::string> const data_dirs = GetDataDirectories();
   return GetDesktopID(data_dirs, desktop_path);
+}
+
+#define RGBA_GET_ALPHA(rgba)      ((rgba) >> 24)
+#define RGBA_GET_RED(rgba)        (((rgba) >> 16) & 0xff)
+#define RGBA_GET_GREEN(rgba)      (((rgba) >> 8) & 0xff)
+#define RGBA_GET_BLUE(rgba)       ((rgba) & 0xff)
+
+bool DesktopUtilities::GetBackgroundColor(std::string const& desktop_path, nux::Color& color)
+{
+  GKeyFile* key_file = g_key_file_new();
+
+  glib::Error error;
+  g_key_file_load_from_file(key_file, desktop_path.c_str(), static_cast<GKeyFileFlags>(0), &error);
+
+  if (error)
+  {
+    g_key_file_free(key_file);
+    return false;
+  }
+
+  glib::String value(g_key_file_get_string(key_file, "Desktop Entry", "X-Unity-IconBackroundColor", &error));
+
+  if (error or !value)
+  {
+    g_key_file_free(key_file);
+    return false;
+  }
+
+  unsigned int rgb;   
+  std::stringstream ss;
+  ss << std::hex << "FF" << value.Str();
+  ss >> rgb;
+
+  color = nux::Color(rgb);
+
+  g_key_file_free(key_file);
+  return true;
 }
 
 } // namespace unity
