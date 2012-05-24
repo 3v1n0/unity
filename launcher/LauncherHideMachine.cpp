@@ -20,32 +20,28 @@
 #include "LauncherHideMachine.h"
 
 #include <boost/lexical_cast.hpp>
-
 #include <NuxCore/Logger.h>
+
+namespace unity
+{
+namespace launcher
+{
 
 namespace
 {
-
 nux::logging::Logger logger("unity.launcher");
-
+unsigned const int HIDE_DELAY_TIMEOUT_LENGTH = 750;
 }
 
 LauncherHideMachine::LauncherHideMachine()
+  : reveal_progress(0)
+  , decaymulator_(new ui::Decaymulator())
+  , _mode(HIDE_NEVER)
+  , _quirks(DEFAULT)
+  , _should_hide(false)
+  , _latest_emit_should_hide(false)
 {
-  _mode  = HIDE_NEVER;
-  _quirks = DEFAULT;
-  _should_hide = false;
-
-  _latest_emit_should_hide = false;
-  _hide_changed_emit_handle = 0;
-  reveal_progress = 0;
-
-  _hide_delay_handle = 0;
-  _hide_delay_timeout_length = 750;
-
-  decaymulator_ = unity::ui::Decaymulator::Ptr(new unity::ui::Decaymulator());
-  decaymulator_->value.changed.connect([&](int value) -> void { reveal_progress = (float)value / (float)reveal_pressure; });
-
+  decaymulator_->value.changed.connect([&](int value) { reveal_progress = value / static_cast<float>(reveal_pressure); });
   edge_decay_rate.changed.connect(sigc::mem_fun (this, &LauncherHideMachine::OnDecayRateChanged));
 }
 
@@ -54,22 +50,7 @@ void LauncherHideMachine::OnDecayRateChanged(int value)
   decaymulator_->rate_of_decay = value;  
 }
 
-LauncherHideMachine::~LauncherHideMachine()
-{
-  if (_hide_delay_handle)
-  {
-    g_source_remove(_hide_delay_handle);
-    _hide_delay_handle = 0;
-  }
-  if (_hide_changed_emit_handle)
-  {
-    g_source_remove(_hide_changed_emit_handle);
-    _hide_changed_emit_handle = 0;
-  }
-}
-
-void
-LauncherHideMachine::AddRevealPressure(int pressure)
+void LauncherHideMachine::AddRevealPressure(int pressure)
 {
   decaymulator_->value = decaymulator_->value + pressure;
 
@@ -81,26 +62,25 @@ LauncherHideMachine::AddRevealPressure(int pressure)
   }
 }
 
-void
-LauncherHideMachine::SetShouldHide(bool value, bool skip_delay)
+void LauncherHideMachine::SetShouldHide(bool value, bool skip_delay)
 {
   if (_should_hide == value)
     return;
 
   if (value && !skip_delay)
   {
-    if (_hide_delay_handle)
-      g_source_remove(_hide_delay_handle);
-
-    _hide_delay_handle = g_timeout_add(_hide_delay_timeout_length, &OnHideDelayTimeout, this);
+    _hide_delay_timeout.reset(new glib::Timeout(HIDE_DELAY_TIMEOUT_LENGTH));
+    _hide_delay_timeout->Run([&] () {
+      EnsureHideState(true);
+      return false;
+    });
   }
   else
   {
     _should_hide = value;
 
-    if (_hide_changed_emit_handle)
-      g_source_remove(_hide_changed_emit_handle);
-    _hide_changed_emit_handle = g_idle_add_full (G_PRIORITY_DEFAULT, &EmitShouldHideChanged, this, NULL);
+    _hide_changed_emit_idle.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
+    _hide_changed_emit_idle->Run(sigc::mem_fun(this, &LauncherHideMachine::EmitShouldHideChanged));
   }
 }
 
@@ -129,8 +109,7 @@ INTERNAL_DND_ACTIVE | TRIGGER_BUTTON_SHOW | VERTICAL_SLIDE_ACTIVE |\
 KEY_NAV_ACTIVE | PLACES_VISIBLE | SCALE_ACTIVE | EXPO_ACTIVE |\
 MT_DRAG_OUT | LAUNCHER_PULSE)
 
-void
-LauncherHideMachine::EnsureHideState(bool skip_delay)
+void LauncherHideMachine::EnsureHideState(bool skip_delay)
 {
   bool should_hide;
 
@@ -197,8 +176,7 @@ LauncherHideMachine::EnsureHideState(bool skip_delay)
   SetShouldHide(should_hide, skip_delay);
 }
 
-void
-LauncherHideMachine::SetMode(LauncherHideMachine::HideMode mode)
+void LauncherHideMachine::SetMode(LauncherHideMachine::HideMode mode)
 {
   if (_mode == mode)
     return;
@@ -215,8 +193,7 @@ LauncherHideMachine::GetMode() const
 
 #define SKIP_DELAY_QUIRK (EXTERNAL_DND_ACTIVE | DND_PUSHED_OFF | EXPO_ACTIVE | SCALE_ACTIVE | MT_DRAG_OUT | TRIGGER_BUTTON_SHOW)
 
-void
-LauncherHideMachine::SetQuirk(LauncherHideMachine::HideQuirk quirk, bool active)
+void LauncherHideMachine::SetQuirk(LauncherHideMachine::HideQuirk quirk, bool active)
 {
   if (GetQuirk(quirk) == active)
     return;
@@ -236,49 +213,35 @@ LauncherHideMachine::SetQuirk(LauncherHideMachine::HideQuirk quirk, bool active)
   EnsureHideState(skip);
 }
 
-bool
-LauncherHideMachine::GetQuirk(LauncherHideMachine::HideQuirk quirk, bool allow_partial) const
+bool LauncherHideMachine::GetQuirk(LauncherHideMachine::HideQuirk quirk, bool allow_partial) const
 {
   if (allow_partial)
     return _quirks & quirk;
   return (_quirks & quirk) == quirk;
 }
 
-bool
-LauncherHideMachine::ShouldHide() const
+bool LauncherHideMachine::ShouldHide() const
 {
   return _should_hide;
 }
 
-gboolean
-LauncherHideMachine::OnHideDelayTimeout(gpointer data)
+bool LauncherHideMachine::EmitShouldHideChanged()
 {
-  LauncherHideMachine* self = static_cast<LauncherHideMachine*>(data);
-  self->EnsureHideState(true);
-
-  self->_hide_delay_handle = 0;
-  return false;
-}
-
-gboolean
-LauncherHideMachine::EmitShouldHideChanged(gpointer data)
-{
-  LauncherHideMachine* self = static_cast<LauncherHideMachine*>(data);
-
-  self->_hide_changed_emit_handle = 0;
-  if (self->_should_hide == self->_latest_emit_should_hide)
+  if (_should_hide == _latest_emit_should_hide)
     return false;
 
-  self->_latest_emit_should_hide = self->_should_hide;
-  self->should_hide_changed.emit(self->_should_hide);
+  _latest_emit_should_hide = _should_hide;
+  should_hide_changed.emit(_should_hide);
 
   return false;
 }
 
-std::string
-LauncherHideMachine::DebugHideQuirks() const
+std::string LauncherHideMachine::DebugHideQuirks() const
 {
   // Although I do wonder why we are returning a string representation
   // of the enum value as an integer anyway.
   return boost::lexical_cast<std::string>(_quirks);
 }
+
+} // namespace launcher
+} // namespace unity
