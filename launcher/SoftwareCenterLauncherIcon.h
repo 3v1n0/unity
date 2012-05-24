@@ -23,8 +23,7 @@
 
 #include <UnityCore/GLibDBusProxy.h>
 #include "BamfLauncherIcon.h"
-
-class LauncherDragWindow;
+#include "LauncherDragWindow.h"
 
 namespace unity
 {

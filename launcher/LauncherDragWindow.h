@@ -23,8 +23,12 @@
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 #include <NuxGraphics/GraphicsEngine.h>
+#include <UnityCore/GLibSource.h>
 
 #include "LauncherIcon.h"
+
+namespace unity
+{
 
 class LauncherDragWindow : public nux::BaseWindow
 {
@@ -45,14 +49,13 @@ public:
   sigc::connection on_anim_completed;
 
 private:
-
-  static gboolean OnAnimationTimeout(gpointer data);
+  bool OnAnimationTimeout();
 
   nux::ObjectPtr<nux::IOpenGLBaseTexture> _icon;
   nux::Point2 _animation_target;
-  guint32 _anim_handle;
-
+  glib::Source::UniquePtr animation_timer_;
 };
 
-#endif // LAUNCHERDRAGWINDOW_H
+} // namespace unity
 
+#endif // LAUNCHERDRAGWINDOW_H
