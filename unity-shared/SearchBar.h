@@ -23,6 +23,7 @@
 
 #include <NuxCore/Property.h>
 #include <Nux/LayeredLayout.h>
+#include <Nux/VLayout.h>
 #include <Nux/TextEntry.h>
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibSource.h>

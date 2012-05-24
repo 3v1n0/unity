@@ -23,7 +23,7 @@
 #include <Nux/Nux.h>
 #include <X11/Xlib.h>
 #include <X11/extensions/Xfixes.h>
-#include <sigc++/sigc++.h>
+#include <UnityCore/GLibSource.h>
 
 namespace unity
 {
@@ -96,7 +96,7 @@ private:
   
   int smoothing_count_;
   int smoothing_accum_;
-  guint smoothing_handle_;
+  glib::Source::UniquePtr smoothing_timeout_;
 };
 
 }

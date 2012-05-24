@@ -36,25 +36,20 @@ namespace
 }
 
 PointerBarrierWrapper::PointerBarrierWrapper()
-{
-  direction = BOTH;
-  last_event_ = 0;
-  last_y_ = 0;
-  last_x_ = 0;
-  active = false;
-  smoothing = 75;
-  smoothing_count_ = 0;
-  smoothing_accum_ = 0;
-  smoothing_handle_ = 0;
-  max_velocity_multiplier = 1.0f;
-}
+  : active(false)
+  , smoothing(75)
+  , max_velocity_multiplier(1.0f)
+  , direction(BOTH)
+  , last_event_(0)
+  , last_x_(0)
+  , last_y_(0)
+  , smoothing_count_(0)
+  , smoothing_accum_(0)
+{}
 
 PointerBarrierWrapper::~PointerBarrierWrapper()
 {
   DestroyBarrier();
-
-  if (smoothing_handle_)
-    g_source_remove(smoothing_handle_);
 }
 
 void PointerBarrierWrapper::ConstructBarrier()
@@ -142,18 +137,17 @@ bool PointerBarrierWrapper::HandleEvent(XEvent xevent)
       smoothing_accum_ += notify_event->velocity;
       smoothing_count_++;
 
-      if (!smoothing_handle_)
+      if (!smoothing_timeout_)
       {
-        auto smoothing_cb = [](gpointer user_data) -> gboolean
+        auto smoothing_cb = [&] ()
         {
-          PointerBarrierWrapper* self = (PointerBarrierWrapper*)user_data;
-          self->EmitCurrentData();
+          EmitCurrentData();
 
-          self->smoothing_handle_ = 0;
-          return FALSE;
+          smoothing_timeout_ = nullptr;
+          return false;
         };
 
-        smoothing_handle_ = g_timeout_add(smoothing(), smoothing_cb, this);
+        smoothing_timeout_.reset(new glib::Timeout(smoothing(), smoothing_cb));
       }
 
     }
