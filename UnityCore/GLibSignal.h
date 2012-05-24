@@ -295,7 +295,7 @@ public:
 
   SignalManager();
   void Add(SignalBase* signal);
-  void Disconnect(void* object, std::string const& signal_name);
+  void Disconnect(void* object, std::string const& signal_name = "");
 
 private:
   ConnectionVector connections_;
