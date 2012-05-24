@@ -331,6 +331,11 @@ Launcher::~Launcher()
 
   delete _hover_machine;
   delete _hide_machine;
+
+  g_free(_sc_icon);
+  g_free(_sc_icon_title);
+  g_free(_sc_icon_desktop_file);
+  g_free(_sc_icon_aptdaemon_task);
 }
 
 /* Introspection */
@@ -2097,10 +2102,10 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   if (_sc_anim_icon)
   {
     launcher_addrequest_special.emit(_sc_icon_desktop_file, AbstractLauncherIcon::Ptr(), _sc_icon_aptdaemon_task, _sc_icon, _sc_icon_x, _sc_icon_y, _sc_icon_size);
-    g_free(_sc_icon);
-    g_free(_sc_icon_title);
-    g_free(_sc_icon_desktop_file);
-    g_free(_sc_icon_aptdaemon_task);
+    g_free(_sc_icon); _sc_icon = NULL;
+    g_free(_sc_icon_title); _sc_icon_title = NULL;
+    g_free(_sc_icon_desktop_file); _sc_icon_desktop_file = NULL;
+    g_free(_sc_icon_aptdaemon_task); _sc_icon_aptdaemon_task = NULL;
     _sc_anim_icon = false;
   }
 }
@@ -2974,6 +2979,9 @@ Launcher::handle_dbus_method_call(GDBusConnection*       connection,
   {
     Launcher* self = (Launcher*)user_data;
     self->_sc_anim_icon = true;
+    g_free(self->_sc_icon);
+    g_free(self->_sc_icon_desktop_file);
+    g_free(self->_sc_icon_aptdaemon_task);
     g_variant_get(parameters, "(ssiiiss)", &self->_sc_icon_title,
       &self->_sc_icon,
       &self->_sc_icon_x,
