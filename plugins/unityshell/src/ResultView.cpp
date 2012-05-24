@@ -74,6 +74,7 @@ ResultView::~ResultView()
   {
     renderer_->Unload(result);
   }
+
   renderer_->UnReference();
 }
 

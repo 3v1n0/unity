@@ -9,6 +9,7 @@
 
 from autopilot.emulators.unity import UnityIntrospectionObject
 from autopilot.emulators.unity.quicklist import Quicklist
+from autopilot.emulators.unity.tooltip import ToolTip
 
 class SimpleLauncherIcon(UnityIntrospectionObject):
     """Holds information about a simple launcher icon.
@@ -20,7 +21,7 @@ class SimpleLauncherIcon(UnityIntrospectionObject):
 
     @property
     def center_position(self):
-        """Get the center point of an icon, returns a tuple with (x, y, z)"""
+        """Get the center point of an icon, returns a tuple with (x, y, z)."""
         return (self.center_x, self.center_y, self.center_z)
 
     def get_quicklist(self):
@@ -33,12 +34,27 @@ class SimpleLauncherIcon(UnityIntrospectionObject):
         matches = self.get_children_by_type(Quicklist)
         return matches[0] if matches else None
 
+    def get_tooltip(self):
+        """Get the tooltip for this launcher icon.
+
+        This may return None, if there is no tooltip associated with this
+        launcher icon.
+
+        """
+        matches = self.get_children_by_type(ToolTip)
+        return matches[0] if matches else None
+
     def is_on_monitor(self, monitor):
-        """Returns True if the icon is available in the defined monitor"""
+        """Returns True if the icon is available in the defined monitor."""
         if monitor >= 0 and monitor < len(self.monitors_visibility):
             return self.monitors_visibility[monitor]
 
         return False
+
+    def controls_window(self, xid):
+        """Returns true if the icon controls the specified xid."""
+
+        return self.xids.contains(xid)
 
 
 class BFBLauncherIcon(SimpleLauncherIcon):

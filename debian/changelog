@@ -1,3 +1,20 @@
+unity (5.12-0ubuntu2) UNRELEASED; urgency=low
+
+  * Cherry pick upstream fixes.
+    - Fix UnityViewWindow background when blur is disabled (LP: #989291)
+    - App icon on the Unity Launcher lost track of running
+      instance (LP: #772063)
+    - No launcher icon or Alt+Tab entry for Gimp windows (LP: #995916)
+    - Locked smuxi launcher icon does not indicate smuxi running
+      status (LP: #999820)
+    - Fix dash search field hidden by tooltips (LP: #978030)
+    - Launcher is silent to screen reader users (LP: #949448)
+    - Fix 3D apps running much slower under Unity (LP: #987304)
+    - Reduced number of calls to ResultViewGrid::QueueDraw
+    - Reduced number of calls to BGHash::RefreshColor
+
+ -- Alan Pope <popey@ubuntu.com>  Wed, 23 May 2012 18:10:49 +0100
+
 unity (5.12-0ubuntu1) precise-proposed; urgency=low
 
   * New upstream release.

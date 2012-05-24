@@ -52,7 +52,9 @@ public:
   nux::Property<int> padding;
 
   sigc::signal<void> selection_change;
+
   int GetSelectedIndex();
+  virtual uint GetIndexAtPosition(int x, int y);
 
 protected:
   void MouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
@@ -86,11 +88,10 @@ private:
   int GetItemsPerRow();
   void SizeReallocate();
   void PositionPreview();
-  uint GetIndexAtPosition(int x, int y);
 
   uint mouse_over_index_;
   int active_index_;
-  int selected_index_;
+  nux::Property<int> selected_index_;
   uint preview_row_;
   std::string focused_uri_;
 

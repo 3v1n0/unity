@@ -199,6 +199,7 @@ if (GTEST_SRC_DIR AND
                  test_main.cpp
                  test_lensview_impl.cpp
                  test_icon_loader.cpp
+                 test_resultviewgrid.cpp
                  test_single_monitor_launcher_icon.cpp
                  test_switcher_controller.cpp
                  test_switcher_model.cpp
@@ -249,10 +250,14 @@ if (GTEST_SRC_DIR AND
                  ${UNITY_SRC}/ubus-server.cpp
                  ${UNITY_SRC}/UScreen.cpp
                  ${UNITY_SRC}/WindowManager.cpp
+                 ${UNITY_SRC}/ResultView.cpp
+                 ${UNITY_SRC}/ResultViewGrid.cpp
+                 ${UNITY_SRC}/ResultRenderer.cpp
+                 ${UNITY_SRC}/IntrospectableWrappers.cpp
                 )
-  target_link_libraries(test-gtest gtest ${LIBS})
+  target_link_libraries(test-gtest gtest gmock ${LIBS})
   add_test(UnityGTest test-gtest)
-  add_dependencies(test-gtest unity-core-${UNITY_API_VERSION} gtest)
+  add_dependencies(test-gtest unity-core-${UNITY_API_VERSION} gtest gmock)
 
 endif (GTEST_SRC_DIR AND
        GMOCK_LIB AND
