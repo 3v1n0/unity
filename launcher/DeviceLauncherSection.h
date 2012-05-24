@@ -26,6 +26,7 @@
 #include <sigc++/signal.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSignal.h>
+#include <UnityCore/GLibSource.h>
 
 #include "DeviceLauncherIcon.h"
 
@@ -41,7 +42,6 @@ class DeviceLauncherSection : public sigc::trackable
 {
 public:
   DeviceLauncherSection();
-  ~DeviceLauncherSection();
 
   sigc::signal<void, AbstractLauncherIcon::Ptr> IconAdded;
 
@@ -54,10 +54,10 @@ private:
   void OnMountPreUnmount(GVolumeMonitor* monitor, GMount* mount);
 
 private:
-  glib::SignalManager sig_manager_;
-  glib::Object<GVolumeMonitor> monitor_;
   std::map<GVolume*, DeviceLauncherIcon*> map_;
-  gulong on_device_populate_entry_id_;
+  glib::Object<GVolumeMonitor> monitor_;
+  glib::Idle device_populate_idle_;
+  glib::SignalManager sig_manager_;
 };
 
 }
