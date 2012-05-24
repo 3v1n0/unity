@@ -26,6 +26,8 @@
 
 namespace unity
 {
+namespace launcher
+{
 
 NUX_IMPLEMENT_OBJECT_TYPE(LauncherDragWindow);
 
@@ -116,4 +118,5 @@ LauncherDragWindow::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw
   GfxContext.PopClippingRectangle();
 }
 
+} // namespace launcher
 } // namespace unity

@@ -29,6 +29,8 @@
 
 namespace unity
 {
+namespace launcher
+{
 
 class LauncherDragWindow : public nux::BaseWindow
 {
@@ -56,6 +58,7 @@ private:
   glib::Source::UniquePtr animation_timer_;
 };
 
+} // namespace launcher
 } // namespace unity
 
 #endif // LAUNCHERDRAGWINDOW_H
