@@ -25,7 +25,7 @@
 #include <NuxGraphics/GpuDevice.h>
 #include <NuxGraphics/GLTextureResourceManager.h>
 
-#include <NuxImage/CairoGraphics.h>
+#include <NuxGraphics/CairoGraphics.h>
 
 #include <gtk/gtk.h>
 

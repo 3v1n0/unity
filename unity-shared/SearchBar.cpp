@@ -27,8 +27,8 @@
 #include <Nux/WindowCompositor.h>
 #include <NuxCore/Logger.h>
 
-#include <NuxImage/CairoGraphics.h>
-#include <NuxImage/ImageSurface.h>
+#include <NuxGraphics/CairoGraphics.h>
+#include <NuxGraphics/ImageSurface.h>
 #include <Nux/StaticText.h>
 
 #include <NuxGraphics/GLThread.h>

@@ -24,8 +24,8 @@
 #include <Nux/Layout.h>
 #include <Nux/WindowCompositor.h>
 
-#include <NuxImage/CairoGraphics.h>
-#include <NuxImage/ImageSurface.h>
+#include <NuxGraphics/CairoGraphics.h>
+#include <NuxGraphics/ImageSurface.h>
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
 

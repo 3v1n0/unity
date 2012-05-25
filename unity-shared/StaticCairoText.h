@@ -25,7 +25,7 @@
 #include <Nux/View.h>
 //#include <NuxGraphics/OpenGLEngine.h"
 #include <Nux/TextureArea.h>
-#include <NuxImage/CairoGraphics.h>
+#include <NuxGraphics/CairoGraphics.h>
 
 #include <pango/pango.h>
 #include <pango/pangocairo.h>

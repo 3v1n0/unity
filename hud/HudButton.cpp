@@ -27,7 +27,7 @@
 
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
-#include <NuxImage/CairoGraphics.h>
+#include <NuxGraphics/CairoGraphics.h>
 #include <NuxGraphics/NuxGraphics.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
