@@ -135,12 +135,6 @@ std::string DesktopUtilities::GetBackgroundColor(std::string const& desktop_path
 
   glib::String value(g_key_file_get_string(key_file, "Desktop Entry", "X-Unity-IconBackgroundColor", &error));
 
-  if (error or !value)
-  {
-    g_key_file_free(key_file);
-    return "";
-  }
-
   g_key_file_free(key_file);
   return value.Str();
 }
