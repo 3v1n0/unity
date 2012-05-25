@@ -23,8 +23,6 @@
 #include <string>
 #include <vector>
 
-#include <NuxCore/Colors.h>
-
 namespace unity
 {
 
@@ -39,8 +37,7 @@ public:
   static std::string GetDesktopID(std::vector<std::string> const& default_paths,
                                   std::string const& desktop_path);
 
-  static bool GetBackgroundColor(std::string const& desktop_path,
-                                 nux::Color& color);
+  static std::string GetBackgroundColor(std::string const& desktop_path);
 };
 
 } // namespace

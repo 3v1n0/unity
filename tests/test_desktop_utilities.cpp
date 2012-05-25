@@ -141,27 +141,23 @@ TEST(TestDesktopUtilitiesDataDirectories, TestGetDataDirectory)
 
 TEST(TestDesktopUtilitiesDataDirectories, TestGetBackgroundColor)
 {
-  nux::Color color;
-  bool use_bg_color = DesktopUtilities::GetBackgroundColor(BUILDDIR"/tests/data/ubuntu-software-center.desktop", color);
+  std::string color(DesktopUtilities::GetBackgroundColor(BUILDDIR"/tests/data/ubuntu-software-center.desktop"));
 
-  ASSERT_TRUE(use_bg_color);
-  EXPECT_TRUE(color == nux::Color(0xffaabbcc));
+  EXPECT_EQ(color, "#aabbcc");
 }
 
 TEST(TestDesktopUtilitiesDataDirectories, TestGetBackgroundColorNoKey)
 {
-  nux::Color color;
-  bool use_bg_color = DesktopUtilities::GetBackgroundColor(BUILDDIR"/tests/data/update-manager.desktop", color);
+  std::string color(DesktopUtilities::GetBackgroundColor(BUILDDIR"/tests/data/update-manager.desktop"));
 
-  ASSERT_FALSE(use_bg_color);
+  EXPECT_TRUE(color.empty());
 }
 
 TEST(TestDesktopUtilitiesDataDirectories, TestGetBackgroundColorNoFile)
 {
-  nux::Color color;
-  bool use_bg_color = DesktopUtilities::GetBackgroundColor("hello-world.desktop", color);
+  std::string color(DesktopUtilities::GetBackgroundColor("hello-world.desktop"));
 
-  ASSERT_FALSE(use_bg_color);
+  EXPECT_TRUE(color.empty());
 }
 
 } // anonymous namespace

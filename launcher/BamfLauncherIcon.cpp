@@ -781,7 +781,12 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
 
 void BamfLauncherIcon::UpdateBackgroundColor()
 {
-  use_custom_bg_color_ = DesktopUtilities::GetBackgroundColor(DesktopFile(), bg_color_);
+  std::string color(DesktopUtilities::GetBackgroundColor(DesktopFile()));
+
+  use_custom_bg_color_ = !color.empty();
+
+  if (use_custom_bg_color_)
+    bg_color_ = nux::Color(color);
 }
 
 void BamfLauncherIcon::UpdateMenus()

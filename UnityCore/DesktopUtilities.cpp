@@ -19,7 +19,6 @@
 */
 
 #include <algorithm>
-#include <sstream>
 
 #include <glib.h>
 
@@ -121,7 +120,7 @@ std::string DesktopUtilities::GetDesktopID(std::string const& desktop_path)
 }
 
 
-bool DesktopUtilities::GetBackgroundColor(std::string const& desktop_path, nux::Color& color)
+std::string DesktopUtilities::GetBackgroundColor(std::string const& desktop_path)
 {
   GKeyFile* key_file = g_key_file_new();
 
@@ -131,7 +130,7 @@ bool DesktopUtilities::GetBackgroundColor(std::string const& desktop_path, nux::
   if (error)
   {
     g_key_file_free(key_file);
-    return false;
+    return "";
   }
 
   glib::String value(g_key_file_get_string(key_file, "Desktop Entry", "X-Unity-IconBackgroundColor", &error));
@@ -139,18 +138,11 @@ bool DesktopUtilities::GetBackgroundColor(std::string const& desktop_path, nux::
   if (error or !value)
   {
     g_key_file_free(key_file);
-    return false;
+    return "";
   }
 
-  unsigned int rgb;   
-  std::stringstream ss;
-  ss << std::hex << "FF" << value;
-  ss >> rgb;
-
-  color = nux::Color(rgb);
-
   g_key_file_free(key_file);
-  return true;
+  return value.Str();
 }
 
 } // namespace unity
