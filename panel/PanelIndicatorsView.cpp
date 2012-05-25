@@ -222,6 +222,7 @@ PanelIndicatorsView::ActivateEntryAt(int x, int y, int button)
     PanelIndicatorEntryView* view = entry.second;
 
     if (!target && view->IsVisible() && view->IsFocused() &&
+        view->IsSensitive())
         view->GetAbsoluteGeometry().IsPointInside(x, y))
     {
       view->Activate(button);
