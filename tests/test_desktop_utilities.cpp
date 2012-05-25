@@ -21,7 +21,6 @@
 
 #include <config.h>
 
-#include <NuxCore/Color.h>
 #include <UnityCore/DesktopUtilities.h>
 
 #include <glib.h>
