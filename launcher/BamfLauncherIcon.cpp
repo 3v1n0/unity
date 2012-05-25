@@ -194,9 +194,12 @@ void BamfLauncherIcon::Remove()
   /* Removing the unity-seen flag to the wrapped bamf application, on remove
    * request we make sure that if the bamf application is re-opened while
    * the removal process is still ongoing, the application will be shown
-   * on the launcher. */
+   * on the launcher. Disconnecting from signals and nullifying the _bamf_app
+   * we make sure that this icon won't be reused (no duplicated icon). */
+  _gsignals.Disconnect(_bamf_app);
   g_object_set_qdata(G_OBJECT(_bamf_app.RawPtr()),
                      g_quark_from_static_string("unity-seen"), nullptr);
+  _bamf_app = nullptr;
 
   SimpleLauncherIcon::Remove();
 }
@@ -753,8 +756,8 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
   const gchar** nicks = indicator_desktop_shortcuts_get_nicks(_desktop_shortcuts);
 
   int index = 0;
-  while (nicks[index]) {
-
+  while (nicks[index])
+  {
     // Build a dbusmenu item for each nick that is the desktop
     // file that is built from it's name and includes a callback
     // to the desktop shortcuts object to execute the nick
