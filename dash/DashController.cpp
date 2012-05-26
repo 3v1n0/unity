@@ -21,7 +21,7 @@
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 
-#include "unity-shared/DashSettings.h"
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/PluginAdapter.h"
 #include "unity-shared/UBusMessages.h"
@@ -236,7 +236,6 @@ void Controller::OnExternalHideDash(GVariant* variant)
 void Controller::ShowDash()
 {
   EnsureDash();
-
   PluginAdapter* adaptor = PluginAdapter::Default();
   // Don't want to show at the wrong time
   if (visible_ || adaptor->IsExpoActive() || adaptor->IsScaleActive())
@@ -252,12 +251,12 @@ void Controller::ShowDash()
     need_show_ = true;
     return;
   }
-
   view_->AboutToShow();
 
   window_->ShowWindow(true);
   window_->PushToFront();
-  window_->EnableInputWindow(true, "Dash", true, false);
+  if (!Settings::Instance().is_standalone) // in standalone mode, we do not need an input window. we are one.
+    window_->EnableInputWindow(true, "Dash", true, false);
   window_->SetInputFocus();
   window_->CaptureMouseDownAnyWhereElse(true);
   window_->QueueDraw();
