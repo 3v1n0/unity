@@ -35,6 +35,7 @@ namespace dash
 namespace
 {
 nux::logging::Logger logger("unity.dash.controller");
+unsigned const int PRELOAD_TIMEOUT_LENGTH = 40 * 1000;
 }
 
 Controller::Controller()
@@ -44,7 +45,7 @@ Controller::Controller()
   , visible_(false)
   , need_show_(false)
   , view_(nullptr)
-  , ensure_timeout_(40 * 1000)
+  , ensure_timeout_(PRELOAD_TIMEOUT_LENGTH)
   , timeline_animator_(90)
 {
   SetupRelayoutCallbacks();
