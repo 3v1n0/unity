@@ -238,6 +238,8 @@ public:
 
   sigc::signal<void> changed;
 
+  nux::Property<bool> always_maximised;
+
 private:
   class Impl;
   Impl* pimpl;

@@ -101,6 +101,14 @@ bool unity::ScreenEffectFramebufferObject::status ()
 
 void unity::ScreenEffectFramebufferObject::bind (const nux::Geometry &output)
 {
+  /* Very important!
+   * Don't bind unless BackgroundEffectHelper says it's necessary.
+   * Because binding has a severe impact on graphics performance and we
+   * can't afford to do it every frame. (LP: #861061) (LP: #987304)
+   */
+  if (!BackgroundEffectHelper::HasDirtyHelpers())
+    return;
+
   /* Clear the error bit */
   glGetError ();
 

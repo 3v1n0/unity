@@ -29,7 +29,7 @@
 
 #include "HudView.h"
 #include "unity-shared/DashStyle.h"
-#include "unity-shared/DashSettings.h"
+#include "unity-shared/UnitySettings.h"
 #include <NuxCore/Logger.h>
 
 namespace
@@ -47,7 +47,7 @@ public:
   void Init ();
   nux::Layout *layout;
   unity::hud::View* hud_view_;
-  unity::dash::Settings dash_settings_;
+  unity::Settings dash_settings_;
 
 private:
   unity::hud::Hud hud_service_;
