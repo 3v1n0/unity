@@ -438,7 +438,7 @@ UnityMTGrabHandlesWindow::getOutputExtents(CompWindowExtents& output)
 
 bool
 UnityMTGrabHandlesWindow::glDraw(const GLMatrix&            transform,
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
                                  const GLWindowPaintAttrib& attrib,
 #else
                                  GLFragment::Attrib&      fragment,
@@ -448,7 +448,7 @@ UnityMTGrabHandlesWindow::glDraw(const GLMatrix&            transform,
 {
   /* Draw the window on the bottom, we will be drawing the
    * handles on top */
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
   bool status = gWindow->glDraw(transform, attrib, region, mask);
 #else
   bool status = gWindow->glDraw(transform, fragment, region, mask);
@@ -472,13 +472,13 @@ UnityMTGrabHandlesWindow::glDraw(const GLMatrix&            transform,
         GLTexture::MatrixList matl;
         GLTexture::Matrix     mat = tex->matrix();
         CompRegion        paintRegion(region);
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
         GLWindowPaintAttrib   wAttrib(attrib);
 #endif
 
         /* We can reset the window geometry since it will be
          * re-added later */
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
         gWindow->vertexBuffer()->begin();
 #else
         gWindow->geometry().reset();
@@ -498,7 +498,7 @@ UnityMTGrabHandlesWindow::glDraw(const GLMatrix&            transform,
          * dim (so we get a nice render for things like
          * wobbly etc etc */
         gWindow->glAddGeometry(matl, reg, paintRegion);
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
         gWindow->vertexBuffer()->end();
         wAttrib.opacity = mHandles->opacity();
 #else
@@ -513,7 +513,7 @@ UnityMTGrabHandlesWindow::glDraw(const GLMatrix&            transform,
           /* Draw the dim texture with all of it's modified
            * geometry glory */
           gWindow->glDrawTexture(tex,
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
                                  transform, wAttrib,
 #else
                                  fragment,
@@ -523,7 +523,7 @@ UnityMTGrabHandlesWindow::glDraw(const GLMatrix&            transform,
                                  PAINT_WINDOW_TRANSFORMED_MASK);
           /* Texture rendering tear-down */
           glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-#ifndef USE_GLES
+#ifndef USE_MODERN_COMPIZ_GL
           us->gScreen->setTexEnvMode(GL_REPLACE);
         }
 #endif
