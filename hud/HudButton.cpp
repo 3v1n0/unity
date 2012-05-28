@@ -184,7 +184,7 @@ void HudButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.QRP_1Tex(geo.x,
                       geo.y,
-                      texture->GetWidth() + 1, // FIXME !! - jay, nux has gone crazy, unless i specify +1 here, it won't render the entire texture
+                      texture->GetWidth(),
                       texture->GetHeight(),
                       texture->GetDeviceTexture(),
                       texxform,
@@ -200,7 +200,6 @@ void HudButton::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 void HudButton::SetQuery(Query::Ptr query)
 {
   query_ = query;
-  label_ = query->formatted_text;
   label = query->formatted_text;
 }
 
