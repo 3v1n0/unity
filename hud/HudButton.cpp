@@ -84,12 +84,12 @@ void HudButton::Init()
 {
   InitTheme();
 
-  key_nav_focus_change.connect([this](nux::Area*, bool, nux::KeyNavDirection)
+  key_nav_focus_change.connect([&](nux::Area*, bool, nux::KeyNavDirection)
   {
     QueueDraw();
   });
 
-  fake_focused.changed.connect([this](bool)
+  fake_focused.changed.connect([&](bool)
   {
     QueueDraw();
   });
@@ -119,7 +119,7 @@ void HudButton::InitTheme()
 
 void HudButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
 {
-  dash::Style::Instance().SquareButton(cr, faked_state, label(),
+  dash::Style::Instance().SquareButton(cr, faked_state, label,
                                        is_rounded, 17,
                                        dash::Alignment::LEFT, true);
 }
