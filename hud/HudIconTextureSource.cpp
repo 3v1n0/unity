@@ -98,7 +98,7 @@ void HudIconTextureSource::ColorForIcon(GdkPixbuf* pixbuf)
   }
 }
 
-nux::Color HudIconTextureSource::BackgroundColor()
+nux::Color HudIconTextureSource::BackgroundColor() const
 {
   return bg_color;
 }

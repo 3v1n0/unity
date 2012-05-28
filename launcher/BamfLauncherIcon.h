@@ -60,7 +60,7 @@ public:
   virtual bool ShowInSwitcher(bool current);
   virtual unsigned long long SwitcherPriority();
 
-  virtual nux::Color BackgroundColor();
+  virtual nux::Color BackgroundColor() const;
 
   std::vector<Window> Windows();
   std::vector<Window> WindowsOnViewport();

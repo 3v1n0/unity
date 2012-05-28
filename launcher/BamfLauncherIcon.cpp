@@ -1274,7 +1274,7 @@ unsigned long long BamfLauncherIcon::SwitcherPriority()
   return result;
 }
 
-nux::Color BamfLauncherIcon::BackgroundColor()
+nux::Color BamfLauncherIcon::BackgroundColor() const
 {
   if (use_custom_bg_color_)
     return bg_color_;
