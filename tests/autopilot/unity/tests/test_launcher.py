@@ -588,6 +588,28 @@ class LauncherVisualTests(LauncherTestCase):
         for icon in self.launcher.model.get_launcher_icons():
             self.assertThat(icon.desaturated, Eventually(Equals(False)))
 
+    def test_custom_background_color(self):
+       """Tests X-Unity-IconBackgroundColor."""
+       path = os.getenv("PYTHONPATH")
+       if path == None:
+           self.skipTest("Cannot run this test if PYTHONPATH has not been set.")
+
+       desktop_file = os.path.join(path, "unity/tests/unity-test.desktop")
+       desktop_file = os.path.realpath(desktop_file)
+
+       old_value = self.call_gsettings_cmd('get', 'com.canonical.Unity.Launcher', 'favorites')
+       value = eval(old_value)
+       value.append(desktop_file)
+       self.addCleanup(self.call_gsettings_cmd, 'set', 'com.canonical.Unity.Launcher', 'favorites', old_value)
+       self.call_gsettings_cmd('set', 'com.canonical.Unity.Launcher', 'favorites', str(value))
+
+       icon = self.launcher.model.get_icon_by_desktop_id(desktop_file)
+       self.assertThat(icon, NotEquals(None))
+       self.assertThat(icon.bg_color_red, Eventually(Equals(0xaa)))
+       self.assertThat(icon.bg_color_green, Eventually(Equals(0xbb)))
+       self.assertThat(icon.bg_color_blue, Eventually(Equals(0xcc)))
+       self.assertThat(icon.bg_color_alpha, Eventually(Equals(0xff)))
+
 class BamfDaemonTests(LauncherTestCase):
     """Test interaction between the launcher and the BAMF Daemon."""
 

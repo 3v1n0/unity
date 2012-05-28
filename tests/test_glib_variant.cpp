@@ -122,6 +122,7 @@ TEST(TestGLibVariant, HintsMap)
   bw.add ("int-key", 123);
   bw.add ("bool-key", true);
   bw.add ("last", "foo");
+  bw.add("color", nux::Color("#aabbcc"));
 
   GVariant *dict_variant = g_variant_builder_end (&b);
   Variant dict (g_variant_new_tuple (&dict_variant, 1));
@@ -136,6 +137,10 @@ TEST(TestGLibVariant, HintsMap)
   EXPECT_EQ(hints["int-key"].GetInt(), 123);
   EXPECT_EQ(hints["bool-key"].GetBool(), true);
   EXPECT_EQ(hints["last"].GetString(), "foo");
+  EXPECT_EQ(hints["color-red"].GetLongInt(), 0xaa);
+  EXPECT_EQ(hints["color-green"].GetLongInt(), 0xbb);
+  EXPECT_EQ(hints["color-blue"].GetLongInt(), 0xcc);
+  EXPECT_EQ(hints["color-alpha"].GetLongInt(), 0xff);
 
   // throw away all references to the original variant
   dict = g_variant_new_string ("bar");
@@ -148,6 +153,10 @@ TEST(TestGLibVariant, HintsMap)
   EXPECT_EQ(hints["int-key"].GetInt(), 123);
   EXPECT_EQ(hints["bool-key"].GetBool(), true);
   EXPECT_EQ(hints["last"].GetString(), "foo");
+  EXPECT_EQ(hints["color-red"].GetLongInt(), 0xaa);
+  EXPECT_EQ(hints["color-green"].GetLongInt(), 0xbb);
+  EXPECT_EQ(hints["color-blue"].GetLongInt(), 0xcc);
+  EXPECT_EQ(hints["color-alpha"].GetLongInt(), 0xff);
 }
 
 } // Namespace

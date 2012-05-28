@@ -213,7 +213,8 @@ LauncherIcon::AddProperties(GVariantBuilder* builder)
   .add("running", GetQuirk(QUIRK_RUNNING))
   .add("starting", GetQuirk(QUIRK_STARTING))
   .add("desaturated", GetQuirk(QUIRK_DESAT))
-  .add("presented", GetQuirk(QUIRK_PRESENTED));
+  .add("presented", GetQuirk(QUIRK_PRESENTED))
+  .add("bg-color", BackgroundColor());
 }
 
 void
