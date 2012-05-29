@@ -80,22 +80,22 @@ private:
 class Timeout : public Source
 {
 public:
-  inline Timeout(unsigned int milliseconds, Priority prio = Priority::DEFAULT);
-  inline Timeout(unsigned int milliseconds, SourceCallback cb, Priority prio = Priority::DEFAULT);
+  Timeout(unsigned int milliseconds, Priority prio = Priority::DEFAULT);
+  Timeout(unsigned int milliseconds, SourceCallback cb, Priority prio = Priority::DEFAULT);
 
 private:
-  inline void Init(unsigned int milliseconds, Priority prio);
+  void Init(unsigned int milliseconds, Priority prio);
 };
 
 
 class Idle : public Source
 {
 public:
-  inline Idle(Priority prio = Priority::DEFAULT_IDLE);
-  inline Idle(SourceCallback cb, Priority prio = Priority::DEFAULT_IDLE);
+  Idle(Priority prio = Priority::DEFAULT_IDLE);
+  Idle(SourceCallback cb, Priority prio = Priority::DEFAULT_IDLE);
 
 private:
-  inline void Init(Priority prio);
+  void Init(Priority prio);
 };
 
 
@@ -124,7 +124,7 @@ protected:
 /* This code is needed to make the lambda functions with a return value to work
  * with the sigc::slot. We need that here to use lambdas as SourceCallback.
  * This can safely removed once libsigc++ will include it.
- * 
+ *
  * Thanks to Chow Loong Jin <hyperair@gmail.com> for this code, see:
  * http://mail.gnome.org/archives/libsigc-list/2012-January/msg00000.html */
 
@@ -142,7 +142,5 @@ namespace sigc
   };
 }
 #endif
-
-#include "GLibSource-inl.h"
 
 #endif

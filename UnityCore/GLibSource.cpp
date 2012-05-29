@@ -128,6 +128,49 @@ void Source::DestroyCallback(gpointer data)
 }
 
 
+Timeout::Timeout(unsigned int milliseconds, SourceCallback cb, Priority prio)
+  : Source()
+{
+  Init(milliseconds, prio);
+  Run(cb);
+}
+
+Timeout::Timeout(unsigned int milliseconds, Priority prio)
+  : Source()
+{
+  Init(milliseconds, prio);
+}
+
+void Timeout::Init(unsigned int milliseconds, Priority prio)
+{
+  if (milliseconds % 1000 == 0)
+    source_ = g_timeout_source_new_seconds(milliseconds/1000);
+  else
+    source_ = g_timeout_source_new(milliseconds);
+
+  SetPriority(prio);
+}
+
+Idle::Idle(SourceCallback cb, Priority prio)
+  : Source()
+{
+  Init(prio);
+  Run(cb);
+}
+
+Idle::Idle(Priority prio)
+  : Source()
+{
+  Init(prio);
+}
+
+void Idle::Init(Priority prio)
+{
+  source_ = g_idle_source_new();
+  SetPriority(prio);
+}
+
+
 SourceManager::SourceManager()
 {}
 
