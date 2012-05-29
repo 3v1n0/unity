@@ -42,7 +42,10 @@ void Source::Remove()
     {
       g_source_destroy(source_);
     }
+  }
 
+  if (source_)
+  {
     g_source_unref(source_);
     source_ = nullptr;
   }
@@ -56,17 +59,29 @@ void Source::SetPriority(Priority prio)
   g_source_set_priority(source_, prio);
 }
 
-Source::Priority Source::GetPriority()
+Source::Priority Source::GetPriority() const
 {
   int prio = 0;
-
   if (source_)
     prio = g_source_get_priority(source_);
 
   return static_cast<Source::Priority>(prio);
 }
 
-bool Source::IsRunning()
+bool Source::Run(SourceCallback callback)
+{
+  if (!source_ || source_id_ || IsRunning())
+    return false;
+
+  callback_ = callback;
+
+  g_source_set_callback(source_, Callback, this, DestroyCallback);
+  source_id_ = g_source_attach(source_, nullptr);
+
+  return true;
+}
+
+bool Source::IsRunning() const
 {
   if (!source_)
     return false;
@@ -74,7 +89,7 @@ bool Source::IsRunning()
   return (!g_source_is_destroyed(source_) && g_source_get_context(source_));
 }
 
-unsigned int Source::Id()
+unsigned int Source::Id() const
 {
   return source_id_;
 }

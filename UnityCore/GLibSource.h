@@ -38,6 +38,8 @@ public:
   typedef std::unique_ptr<Source> UniquePtr;
   typedef sigc::slot<bool> SourceCallback;
 
+  /** This is an enum used for convenience, you can actually cast to this
+   *  any integer: the bigger it is, the lower priority we have. */
   enum Priority
   {
     HIGH = G_PRIORITY_HIGH,
@@ -48,31 +50,32 @@ public:
   };
 
   virtual ~Source();
-  unsigned int Id();
+  unsigned int Id() const;
 
   void Remove();
 
-  bool IsRunning();
-  virtual void Run(SourceCallback callback) = 0;
+  bool IsRunning() const;
+  bool Run(SourceCallback callback);
 
   void SetPriority(Priority prio);
-  Priority GetPriority();
+  Priority GetPriority() const;
 
   sigc::signal<void, unsigned int> removed;
 
 protected:
   Source();
 
-  static gboolean Callback(gpointer data);
-  static void DestroyCallback(gpointer data);
-
-  GSource *source_;
-  unsigned int source_id_;
-  SourceCallback callback_;
+  GSource* source_;
 
 private:
+  static gboolean Callback(gpointer data);
+  static void DestroyCallback(gpointer data);
   void EmitRemovedSignal();
+
+  unsigned int source_id_;
+  SourceCallback callback_;
 };
+
 
 class Timeout : public Source
 {
@@ -80,19 +83,16 @@ public:
   inline Timeout(unsigned int milliseconds, Priority prio = Priority::DEFAULT);
   inline Timeout(unsigned int milliseconds, SourceCallback cb, Priority prio = Priority::DEFAULT);
 
-  inline void Run(SourceCallback callback);
-
 private:
   inline void Init(unsigned int milliseconds, Priority prio);
 };
+
 
 class Idle : public Source
 {
 public:
   inline Idle(Priority prio = Priority::DEFAULT_IDLE);
   inline Idle(SourceCallback cb, Priority prio = Priority::DEFAULT_IDLE);
-
-  inline void Run(SourceCallback callback);
 
 private:
   inline void Init(Priority prio);

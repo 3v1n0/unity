@@ -45,17 +45,7 @@ void Timeout::Init(unsigned int milliseconds, Priority prio)
   else
     source_ = g_timeout_source_new(milliseconds);
 
-  g_source_set_priority(source_, prio);
-  g_source_set_callback(source_, Callback, this, DestroyCallback);
-}
-
-void Timeout::Run(SourceCallback callback)
-{
-  if (!source_ || source_id_ || IsRunning())
-    return;
-
-  callback_ = callback;
-  source_id_ = g_source_attach(source_, nullptr);
+  SetPriority(prio);
 }
 
 Idle::Idle(SourceCallback cb, Priority prio)
@@ -74,17 +64,7 @@ Idle::Idle(Priority prio)
 void Idle::Init(Priority prio)
 {
   source_ = g_idle_source_new();
-  g_source_set_priority(source_, prio);
-  g_source_set_callback(source_, Callback, this, DestroyCallback);
-}
-
-void Idle::Run(SourceCallback callback)
-{
-  if (!source_ || source_id_ || IsRunning())
-    return;
-
-  callback_ = callback;
-  source_id_ = g_source_attach(source_, nullptr);
+  SetPriority(prio);
 }
 
 }
