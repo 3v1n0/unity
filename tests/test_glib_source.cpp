@@ -312,7 +312,7 @@ TEST(TestGLibSourceManager, Construction)
   SourceManager manager;
 }
 
-TEST(TestGLibSourceManager, AddingSources)
+TEST(TestGLibSourceManager, AddingAnonymousSources)
 {
   MockSourceManager manager;
 
@@ -324,7 +324,30 @@ TEST(TestGLibSourceManager, AddingSources)
   EXPECT_EQ(manager.GetSources().size(), 4);
 }
 
-TEST(TestGLibSourceManager, RemovingSources)
+TEST(TestGLibSourceManager, AddingNamedSources)
+{
+  MockSourceManager manager;
+
+  Source *timeout_1 = new Timeout(1);
+  manager.Add(timeout_1, "timeout-1");
+  ASSERT_EQ(manager.GetSource("timeout-1").get(), timeout_1);
+
+  Source *timeout_2 = new Timeout(1, &OnSourceCallbackContinue);
+  manager.Add(timeout_2, "timeout-2");
+  ASSERT_EQ(manager.GetSource("timeout-2").get(), timeout_2);
+
+  Source *idle_1 = new Idle();
+  manager.Add(idle_1, "idle-1");
+  ASSERT_EQ(manager.GetSource("idle-1").get(), idle_1);
+
+  Source *idle_2 = new Idle(&OnSourceCallbackContinue);
+  manager.Add(idle_2, "idle-2");
+  ASSERT_EQ(manager.GetSource("idle-2").get(), idle_2);
+
+  EXPECT_EQ(manager.GetSources().size(), 4);
+}
+
+TEST(TestGLibSourceManager, RemovingSourcesById)
 {
   MockSourceManager manager;
 
@@ -351,6 +374,37 @@ TEST(TestGLibSourceManager, RemovingSources)
   EXPECT_EQ(manager.GetSources().size(), 1);
 
   manager.Remove(idle2->Id());
+  EXPECT_FALSE(idle2->IsRunning());
+  EXPECT_EQ(manager.GetSources().size(), 0);
+}
+
+TEST(TestGLibSourceManager, RemovingSourcesByNick)
+{
+  MockSourceManager manager;
+
+  Source::Ptr timeout1(new Timeout(1));
+  Source::Ptr timeout2(new Timeout(2, &OnSourceCallbackContinue));
+  Source::Ptr idle1(new Idle());
+  Source::Ptr idle2(new Idle(&OnSourceCallbackContinue));
+
+  manager.Add(timeout1, "timeout-1");
+  manager.Add(timeout2, "timeout-2");
+  manager.Add(idle1, "idle-1");
+  manager.Add(idle2, "idle-2");
+
+  manager.Remove("timeout-1");
+  EXPECT_FALSE(timeout1->IsRunning());
+  EXPECT_EQ(manager.GetSources().size(), 3);
+
+  manager.Remove("timeout-2");
+  EXPECT_FALSE(timeout2->IsRunning());
+  EXPECT_EQ(manager.GetSources().size(), 2);
+
+  manager.Remove("idle-1");
+  EXPECT_FALSE(idle1->IsRunning());
+  EXPECT_EQ(manager.GetSources().size(), 1);
+
+  manager.Remove("idle-2");
   EXPECT_FALSE(idle2->IsRunning());
   EXPECT_EQ(manager.GetSources().size(), 0);
 }
@@ -386,7 +440,7 @@ TEST(TestGLibSourceManager, DisconnectsOnRemoval)
   {
     MockSourceManager manager;
     manager.Add(timeout);
-    manager.Add(idle);
+    manager.Add(idle, "test-idle");
     ASSERT_TRUE(timeout->IsRunning());
     ASSERT_TRUE(idle->IsRunning());
   }
