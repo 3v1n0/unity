@@ -112,20 +112,17 @@ gboolean Source::Callback(gpointer data)
   }
 }
 
-void Source::EmitRemovedSignal()
-{
-  if (source_id_)
-  {
-    removed.emit(Id());
-  }
-}
-
 void Source::DestroyCallback(gpointer data)
 {
   if (!data)
     return;
 
-  static_cast<Source*>(data)->EmitRemovedSignal();
+  auto self = static_cast<Source*>(data);
+
+  if (self && self->Id())
+  {
+    self->removed.emit(self->Id());
+  }
 }
 
 
@@ -187,30 +184,52 @@ SourceManager::~SourceManager()
   }
 }
 
-void SourceManager::Add(Source* source, std::string const& nick)
+bool SourceManager::Add(Source* source, std::string const& nick)
 {
   Source::Ptr s(source);
-  Add(s, nick);
+  return Add(s, nick);
 }
 
-void SourceManager::Add(Source::Ptr const& source, std::string const& nick)
+bool SourceManager::Add(Source::Ptr const& source, std::string const& nick)
 {
   if (!source)
-    return;
+    return false;
 
-  if (!nick.empty())
+  /* If the manager controls another source equal to the one we're passing,
+   * we don't add it again */
+  for (auto it : sources_)
   {
-    sources_[nick] = source;
+    if (it.second == source)
+    {
+      return false;
+    }
   }
-  else
+
+  std::string source_nick(nick);
+
+  if (source_nick.empty())
   {
-    // If we don't have a nick, we use the source pointer string as nick.
+    /* If we don't have a nick, we use the source pointer string as nick. */
     std::stringstream ss;
     ss << GPOINTER_TO_UINT(source.get());
-    sources_[ss.str()] = source;
+    source_nick = ss.str();
   }
 
+  auto old_source_it = sources_.find(source_nick);
+  if (old_source_it != sources_.end())
+  {
+    /* If a source with the same nick has been found, we can safely replace it, since
+     * at this point we're sure that they refers to two different sources */
+    auto old_source = old_source_it->second;
+    old_source->removed.clear();
+    old_source->Remove();
+    sources_.erase(old_source_it);
+  }
+
+  sources_[source_nick] = source;
   source->removed.connect(sigc::mem_fun(this, &SourceManager::OnSourceRemoved));
+
+  return true;
 }
 
 void SourceManager::OnSourceRemoved(unsigned int id)

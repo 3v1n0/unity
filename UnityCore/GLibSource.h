@@ -70,7 +70,6 @@ protected:
 private:
   static gboolean Callback(gpointer data);
   static void DestroyCallback(gpointer data);
-  void EmitRemovedSignal();
 
   unsigned int source_id_;
   SourceCallback callback_;
@@ -105,8 +104,8 @@ public:
   SourceManager();
   ~SourceManager();
 
-  void Add(Source* source, std::string const& nick = "");
-  void Add(Source::Ptr const& source, std::string const& nick = "");
+  bool Add(Source* source, std::string const& nick = "");
+  bool Add(Source::Ptr const& source, std::string const& nick = "");
   void Remove(std::string const& nick);
   void Remove(unsigned int id);
 
