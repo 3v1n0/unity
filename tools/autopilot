@@ -9,7 +9,7 @@ Autopilot used to be part of the unity source tree. It's now it's own launchpad
 project. To install it, you need to execute the following: 
 
  sudo add-apt-repository ppa:thomir/autopilot 
- sudo apt-get update && sudo apt-get install autopilot 
+ sudo apt-get update && sudo apt-get install python-autopilot 
  
 Then, to list all the autopilot tests in the unity package, run:
 
