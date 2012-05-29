@@ -347,6 +347,42 @@ TEST(TestGLibSourceManager, AddingNamedSources)
   EXPECT_EQ(manager.GetSources().size(), 4);
 }
 
+TEST(TestGLibSourceManager, AddingDuplicatedSources)
+{
+  MockSourceManager manager;
+  bool ret = false;
+
+  Source::Ptr timeout(new Timeout(1));
+
+  ret = manager.Add(timeout);
+  EXPECT_EQ(ret, true);
+
+  ret = manager.Add(timeout);
+  EXPECT_EQ(ret, false);
+
+  EXPECT_EQ(manager.GetSources().size(), 1);
+}
+
+TEST(TestGLibSourceManager, AddingDuplicatedNamedSources)
+{
+  MockSourceManager manager;
+  bool ret = false;
+
+  Source::Ptr timeout_1(new Timeout(1, &OnSourceCallbackContinue));
+  Source::Ptr timeout_2(new Timeout(2));
+
+  ret = manager.Add(timeout_1, "timeout");
+  EXPECT_EQ(manager.GetSource("timeout"), timeout_1);
+  EXPECT_EQ(ret, true);
+
+  ret = manager.Add(timeout_2, "timeout");
+  EXPECT_EQ(manager.GetSource("timeout"), timeout_2);
+  EXPECT_EQ(ret, true);
+
+  EXPECT_FALSE(timeout_1->IsRunning());
+  EXPECT_EQ(manager.GetSources().size(), 1);
+}
+
 TEST(TestGLibSourceManager, RemovingSourcesById)
 {
   MockSourceManager manager;
