@@ -31,6 +31,25 @@ namespace unity
 namespace glib
 {
 
+/**
+ * glib::Source is a wrapper class used to handle GSource based events using
+ * at C++ level.
+ *
+ * The class is basically to be intended abstract and is currently implemented
+ * by glib::Timeout() and glib::Idle() that are the higher-level wrappers for
+ * g_timeout and g_idle respectively.
+ *
+ * As this is meant to be mostly a wrapper, I've mostly kept the same logic of
+ * the glib sources, and so, for example, a source can't be ran more than once.
+ *
+ * Sources should define a callback function that will be called every time that
+ * the source is dispatched. If the callback function returns false, then the
+ * source will be removed, otherwise it will continue.
+ *
+ * Pointer types have been defined and should be used to handle dynamically
+ * allocated sources. They also implicitly allow to remove running Sources
+ * by setting their value to nullptr.
+ */
 class Source : public boost::noncopyable
 {
 public:
@@ -38,24 +57,34 @@ public:
   typedef std::unique_ptr<Source> UniquePtr;
   typedef sigc::slot<bool> SourceCallback;
 
-  /** This is an enum used for convenience, you can actually cast to this
-   *  any integer: the bigger it is, the lower priority we have. */
+  /**
+   * This is an enum used for convenience, you can actually cast to this
+   * any integer: the bigger it is, the lower priority we have.
+   */
   enum Priority
   {
-    HIGH = G_PRIORITY_HIGH,
-    DEFAULT = G_PRIORITY_DEFAULT,
-    HIGH_IDLE = G_PRIORITY_HIGH_IDLE,
-    DEFAULT_IDLE = G_PRIORITY_DEFAULT_IDLE,
-    LOW = G_PRIORITY_LOW
+    HIGH = G_PRIORITY_HIGH,                 // -100
+    DEFAULT = G_PRIORITY_DEFAULT,           // 0
+    HIGH_IDLE = G_PRIORITY_HIGH_IDLE,       // 100
+    DEFAULT_IDLE = G_PRIORITY_DEFAULT_IDLE, // 200
+    LOW = G_PRIORITY_LOW                    // 300
   };
 
   virtual ~Source();
   unsigned int Id() const;
 
-  void Remove();
-
-  bool IsRunning() const;
+  /**
+   * This Run a source using the @callback function as Source's callback.
+   * The method will return false if the source is already running, true otherwise.
+   */
   bool Run(SourceCallback callback);
+  bool IsRunning() const;
+
+  /**
+   * This removes a source, and stop it from being executed.
+   * After that a source has been removed, it can't be ran again.
+   */
+  void Remove();
 
   void SetPriority(Priority prio);
   Priority GetPriority() const;
@@ -76,6 +105,15 @@ private:
 };
 
 
+/**
+ * glib::Timeout is a wrapper to g_timeout and must be used to initialize a
+ * timeout that will be executed every @milliseconds milliseconds, whenever
+ * there are no higher priority events pending to the default main loop.
+ *
+ * If the SourceCallback is defined on construction, then the Timeout is ran
+ * as soon as it is created, otherwise you must manually call the Run() method
+ * with the appropriate parameters.
+ */
 class Timeout : public Source
 {
 public:
@@ -87,6 +125,15 @@ private:
 };
 
 
+/**
+ * glib::Idle is a wrapper to g_idle and must be used to initialize an idle
+ * that will be executed whenever there are no higher priority events pending to
+ * the default main loop.
+ *
+ * If the SourceCallback is defined on construction, then the Timeout is ran
+ * as soon as it is created, otherwise you must manually call the Run() method
+ * with the appropriate parameters.
+ */
 class Idle : public Source
 {
 public:
@@ -98,14 +145,31 @@ private:
 };
 
 
+/**
+ * glib::SourceManager is a container for the glib::Source pointers.
+ * It can be used to store multiple Sources pointers, possibly defining a
+ * "nick" name to reference them.
+ *
+ * This is meant to be an utility class that ensures that all the Sources
+ * are removed and destructed when the container itself is destructed.
+ */
 class SourceManager : public boost::noncopyable
 {
 public:
   SourceManager();
   ~SourceManager();
 
+  /**
+   * Adds a new Source to the manager.
+   * Only new valid sources can be added to the manager.
+   *
+   * The developer may define a nickname for a Source, when adding a new Source
+   * with an already known nickname, the old Source will be removed, and the
+   * new one will replace it.
+   */
   bool Add(Source* source, std::string const& nick = "");
   bool Add(Source::Ptr const& source, std::string const& nick = "");
+
   void Remove(std::string const& nick);
   void Remove(unsigned int id);
 
