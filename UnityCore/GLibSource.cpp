@@ -18,6 +18,7 @@
 */
 
 #include "GLibSource.h"
+#include <sstream>
 
 namespace unity
 {
@@ -42,7 +43,10 @@ void Source::Remove()
     {
       g_source_destroy(source_);
     }
+  }
 
+  if (source_)
+  {
     g_source_unref(source_);
     source_ = nullptr;
   }
@@ -56,17 +60,29 @@ void Source::SetPriority(Priority prio)
   g_source_set_priority(source_, prio);
 }
 
-Source::Priority Source::GetPriority()
+Source::Priority Source::GetPriority() const
 {
   int prio = 0;
-
   if (source_)
     prio = g_source_get_priority(source_);
 
   return static_cast<Source::Priority>(prio);
 }
 
-bool Source::IsRunning()
+bool Source::Run(SourceCallback callback)
+{
+  if (!source_ || source_id_ || IsRunning())
+    return false;
+
+  callback_ = callback;
+
+  g_source_set_callback(source_, Callback, this, DestroyCallback);
+  source_id_ = g_source_attach(source_, nullptr);
+
+  return true;
+}
+
+bool Source::IsRunning() const
 {
   if (!source_)
     return false;
@@ -74,7 +90,7 @@ bool Source::IsRunning()
   return (!g_source_is_destroyed(source_) && g_source_get_context(source_));
 }
 
-unsigned int Source::Id()
+unsigned int Source::Id() const
 {
   return source_id_;
 }
@@ -96,20 +112,61 @@ gboolean Source::Callback(gpointer data)
   }
 }
 
-void Source::EmitRemovedSignal()
-{
-  if (source_id_)
-  {
-    removed.emit(Id());
-  }
-}
-
 void Source::DestroyCallback(gpointer data)
 {
   if (!data)
     return;
 
-  static_cast<Source*>(data)->EmitRemovedSignal();
+  auto self = static_cast<Source*>(data);
+
+  if (self && self->Id())
+  {
+    self->removed.emit(self->Id());
+  }
+}
+
+
+Timeout::Timeout(unsigned int milliseconds, SourceCallback cb, Priority prio)
+  : Source()
+{
+  Init(milliseconds, prio);
+  Run(cb);
+}
+
+Timeout::Timeout(unsigned int milliseconds, Priority prio)
+  : Source()
+{
+  Init(milliseconds, prio);
+}
+
+void Timeout::Init(unsigned int milliseconds, Priority prio)
+{
+  if (milliseconds % 1000 == 0)
+    source_ = g_timeout_source_new_seconds(milliseconds/1000);
+  else
+    source_ = g_timeout_source_new(milliseconds);
+
+  SetPriority(prio);
+}
+
+
+Idle::Idle(SourceCallback cb, Priority prio)
+  : Source()
+{
+  Init(prio);
+  Run(cb);
+}
+
+Idle::Idle(Priority prio)
+  : Source()
+{
+  Init(prio);
+}
+
+void Idle::Init(Priority prio)
+{
+  source_ = g_idle_source_new();
+  SetPriority(prio);
 }
 
 
@@ -120,35 +177,85 @@ SourceManager::~SourceManager()
 {
   for (auto it = sources_.begin(); it != sources_.end(); ++it)
   {
-    auto source = *it;
+    auto source = it->second;
     source->removed.clear();
     source->Remove();
+    sources_.erase(it, it);
   }
 }
 
-void SourceManager::Add(Source* source)
+bool SourceManager::Add(Source* source, std::string const& nick)
 {
   Source::Ptr s(source);
-  Add(s);
+  return Add(s, nick);
 }
 
-void SourceManager::Add(Source::Ptr const& source)
+bool SourceManager::Add(Source::Ptr const& source, std::string const& nick)
 {
   if (!source)
-    return;
+    return false;
 
-  sources_.push_back(source);
+  /* If the manager controls another source equal to the one we're passing,
+   * we don't add it again */
+  for (auto it : sources_)
+  {
+    if (it.second == source)
+    {
+      return false;
+    }
+  }
+
+  std::string source_nick(nick);
+
+  if (source_nick.empty())
+  {
+    /* If we don't have a nick, we use the source pointer string as nick. */
+    std::stringstream ss;
+    ss << GPOINTER_TO_UINT(source.get());
+    source_nick = ss.str();
+  }
+
+  auto old_source_it = sources_.find(source_nick);
+  if (old_source_it != sources_.end())
+  {
+    /* If a source with the same nick has been found, we can safely replace it, since
+     * at this point we're sure that they refers to two different sources */
+    auto old_source = old_source_it->second;
+    old_source->removed.clear();
+    old_source->Remove();
+    sources_.erase(old_source_it);
+  }
+
+  sources_[source_nick] = source;
   source->removed.connect(sigc::mem_fun(this, &SourceManager::OnSourceRemoved));
+
+  return true;
 }
 
 void SourceManager::OnSourceRemoved(unsigned int id)
 {
   for (auto it = sources_.begin(); it != sources_.end(); ++it)
   {
-    auto source = *it;
+    auto source = it->second;
 
     if (source->Id() == id)
     {
+      source->Remove();
+      sources_.erase(it);
+      break;
+    }
+  }
+}
+
+void SourceManager::Remove(std::string const& nick)
+{
+  for (auto it = sources_.begin(); it != sources_.end(); ++it)
+  {
+    auto source = it->second;
+
+    if (it->first == nick)
+    {
+      source->removed.clear();
       source->Remove();
       sources_.erase(it);
       break;
@@ -160,7 +267,7 @@ void SourceManager::Remove(unsigned int id)
 {
   for (auto it = sources_.begin(); it != sources_.end(); ++it)
   {
-    auto source = *it;
+    auto source = it->second;
 
     if (source->Id() == id)
     {
@@ -174,13 +281,23 @@ void SourceManager::Remove(unsigned int id)
 
 Source::Ptr SourceManager::GetSource(unsigned int id) const
 {
-  for (auto source : sources_)
+  for (auto it : sources_)
   {
-    if (source->Id() == id)
+    if (it.second->Id() == id)
     {
-      return source;
+      return it.second;
     }
   }
+
+  return Source::Ptr();
+}
+
+Source::Ptr SourceManager::GetSource(std::string const& nick) const
+{
+  auto it = sources_.find(nick);
+
+  if (it != sources_.end())
+    return it->second;
 
   return Source::Ptr();
 }

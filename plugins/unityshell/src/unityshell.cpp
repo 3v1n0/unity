@@ -119,7 +119,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , damaged(false)
   , _key_nav_mode_requested(false)
   , _last_output(nullptr)
-#ifndef USE_GLES
+#ifndef USE_MODERN_COMPIZ_GL
   , _active_fbo (0)
 #endif
   , grab_index_ (0)
@@ -211,7 +211,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      CompositeScreenInterface::setHandler(cScreen);
      GLScreenInterface::setHandler(gScreen);
 
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
      gScreen->glPaintCompositedOutputSetEnabled (this, true);
 #endif
 
@@ -246,7 +246,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      uScreen = this;
      _in_paint = false;
 
-#ifndef USE_GLES
+#ifndef USE_MODERN_COMPIZ_GL
     void *dlhand = dlopen ("libunityshell.so", RTLD_LAZY);
 
     if (dlhand)
@@ -481,7 +481,7 @@ void UnityScreen::CreateSuperNewAction(char shortcut, impl::ActionModifiers flag
 
 void UnityScreen::nuxPrologue()
 {
-#ifndef USE_GLES
+#ifndef USE_MODERN_COMPIZ_GL
   /* Vertex lighting isn't used in Unity, we disable that state as it could have
    * been leaked by another plugin. That should theoretically be switched off
    * right after PushAttrib since ENABLE_BIT is meant to restore the LIGHTING
@@ -505,7 +505,7 @@ void UnityScreen::nuxPrologue()
 
 void UnityScreen::nuxEpilogue()
 {
-#ifndef USE_GLES
+#ifndef USE_MODERN_COMPIZ_GL
   (*GL::bindFramebuffer)(GL_FRAMEBUFFER_EXT, _active_fbo);
 
   glMatrixMode(GL_PROJECTION);
@@ -528,7 +528,11 @@ void UnityScreen::nuxEpilogue()
 
   glPopAttrib();
 #else
+#ifdef USE_GLES
   glDepthRangef(0, 1);
+#else
+  glDepthRange(0, 1);
+#endif
   //glViewport(-1, -1, 2, 2);
   gScreen->resetRasterPos();
 #endif
@@ -543,7 +547,7 @@ void UnityScreen::setPanelShadowMatrix(const GLMatrix& matrix)
 
 void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
 {
-#ifndef USE_GLES
+#ifndef USE_MODERN_COMPIZ_GL
   if (relayoutSourceId > 0)
     return;
 
@@ -736,7 +740,7 @@ UnityScreen::OnPanelStyleChanged()
   panel_texture_has_changed_ = true;
 }
 
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
 void UnityScreen::paintDisplay()
 #else
 void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transform, unsigned int mask)
@@ -744,7 +748,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 {
   CompOutput *output = _last_output;
 
-#ifndef USE_GLES
+#ifndef USE_MODERN_COMPIZ_GL
   bool was_bound = _fbo->bound ();
 
   if (nux::GetGraphicsDisplay()->GetGraphicsEngine()->UsingGLSLCodePath())
@@ -810,7 +814,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
   nux::Geometry oGeo = nux::Geometry (output->x (), output->y (), output->width (), output->height ());
   BackgroundEffectHelper::monitor_rect_ = geo;
 
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
   GLint fboID;
   // Nux renders to the referenceFramebuffer when it's embedded.
   glGetIntegerv(GL_FRAMEBUFFER_BINDING, &fboID);
@@ -833,18 +837,18 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
       {
         GLMatrix oTransform;
         UnityWindow  *uTrayWindow = UnityWindow::get (tray);
-#ifndef USE_GLES
+#ifndef USE_MODERN_COMPIZ_GL
         GLFragment::Attrib attrib (uTrayWindow->gWindow->lastPaintAttrib());
 #else
         GLWindowPaintAttrib attrib (uTrayWindow->gWindow->lastPaintAttrib());
 #endif
         unsigned int oldGlAddGeometryIndex = uTrayWindow->gWindow->glAddGeometryGetCurrentIndex ();
         unsigned int oldGlDrawIndex = uTrayWindow->gWindow->glDrawGetCurrentIndex ();
-#ifndef USE_GLES
+#ifndef USE_MODERN_COMPIZ_GL
         unsigned int oldGlDrawGeometryIndex = uTrayWindow->gWindow->glDrawGeometryGetCurrentIndex ();
 #endif
 
-#ifndef USE_GLES
+#ifndef USE_MODERN_COMPIZ_GL
         attrib.setOpacity (OPAQUE);
         attrib.setBrightness (BRIGHT);
         attrib.setSaturation (COLOR);
@@ -856,7 +860,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 
         oTransform.toScreenSpace (output, -DEFAULT_Z_CAMERA);
 
-#ifndef USE_GLES
+#ifndef USE_MODERN_COMPIZ_GL
         glPushMatrix ();
         glLoadMatrixf (oTransform.getMatrix ());
 #endif
@@ -866,21 +870,21 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
         /* force the use of the core functions */
         uTrayWindow->gWindow->glDrawSetCurrentIndex (MAXSHORT);
         uTrayWindow->gWindow->glAddGeometrySetCurrentIndex ( MAXSHORT);
-#ifndef USE_GLES
+#ifndef USE_MODERN_COMPIZ_GL
         uTrayWindow->gWindow->glDrawGeometrySetCurrentIndex (MAXSHORT);
 #endif
         uTrayWindow->gWindow->glDraw (oTransform, attrib, infiniteRegion,
                PAINT_WINDOW_TRANSFORMED_MASK |
                PAINT_WINDOW_BLEND_MASK |
                PAINT_WINDOW_ON_TRANSFORMED_SCREEN_MASK);
-#ifndef USE_GLES
+#ifndef USE_MODERN_COMPIZ_GL
         uTrayWindow->gWindow->glDrawGeometrySetCurrentIndex (oldGlDrawGeometryIndex);
 #endif
         uTrayWindow->gWindow->glAddGeometrySetCurrentIndex (oldGlAddGeometryIndex);
         uTrayWindow->gWindow->glDrawSetCurrentIndex (oldGlDrawIndex);
         painting_tray_ = false;
 
-#ifndef USE_GLES
+#ifndef USE_MODERN_COMPIZ_GL
         glPopMatrix ();
 #endif
       }
@@ -1211,7 +1215,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   _last_output = output;
   paint_panel_ = false;
 
-#ifndef USE_GLES
+#ifndef USE_MODERN_COMPIZ_GL
   /* bind the framebuffer here
    * - it will be unbound and flushed
    *   to the backbuffer when some
@@ -1228,7 +1232,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
   ret = gScreen->glPaintOutput(attrib, transform, region, output, mask);
 
-#ifndef USE_GLES
+#ifndef USE_MODERN_COMPIZ_GL
   if (doShellRepaint)
     paintDisplay(region, transform, mask);
 #endif
@@ -1236,7 +1240,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   return ret;
 }
 
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
 void UnityScreen::glPaintCompositedOutput (const CompRegion &region,
                                            ::GLFramebufferObject *fbo,
                                            unsigned int        mask)
@@ -1354,7 +1358,7 @@ void UnityScreen::handleEvent(XEvent* event)
         PluginAdapter::Default()->OnScreenGrabbed();
       else if (event->xfocus.mode == NotifyUngrab)
         PluginAdapter::Default()->OnScreenUngrabbed();
-#ifndef USE_GLES
+#ifndef USE_MODERN_COMPIZ_GL
       cScreen->damageScreen();  // evil hack
 #endif
       if (_key_nav_mode_requested && !launcher_controller_->IsOverlayOpen())
@@ -2210,7 +2214,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
  * and if so paint nux and stop us from painting
  * other windows or on top of the whole screen */
 bool UnityWindow::glDraw(const GLMatrix& matrix,
-#ifndef USE_GLES
+#ifndef USE_MODERN_COMPIZ_GL
                          GLFragment::Attrib& attrib,
 #else
                          const GLWindowPaintAttrib& attrib,
@@ -2247,7 +2251,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
       {
         if (xwns[i] == id)
         {
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
           uScreen->paintDisplay();
 #else
           uScreen->paintDisplay(region, matrix, mask);
@@ -2738,7 +2742,7 @@ void UnityScreen::Relayout()
   if (!needsRelayout)
     return;
 
-#ifndef USE_GLES
+#ifndef USE_MODERN_COMPIZ_GL
   if (GL::fbo)
   {
     uScreen->_fbo = ScreenEffectFramebufferObject::Ptr (new ScreenEffectFramebufferObject (glXGetProcAddressP, geometry));

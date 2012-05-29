@@ -22,7 +22,6 @@ set (CORE_HEADERS
      GLibSignal.h
      GLibSignal-inl.h
      GLibSource.h
-     GLibSource-inl.h
      GLibWrapper.h
      GLibWrapper-inl.h
      Hud.h

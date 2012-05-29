@@ -22,9 +22,9 @@
 
 #include <boost/utility.hpp>
 #include <sigc++/sigc++.h>
-#include <memory>
-#include <vector>
 #include <glib.h>
+#include <memory>
+#include <map>
 
 namespace unity
 {
@@ -38,6 +38,8 @@ public:
   typedef std::unique_ptr<Source> UniquePtr;
   typedef sigc::slot<bool> SourceCallback;
 
+  /** This is an enum used for convenience, you can actually cast to this
+   *  any integer: the bigger it is, the lower priority we have. */
   enum Priority
   {
     HIGH = G_PRIORITY_HIGH,
@@ -48,54 +50,51 @@ public:
   };
 
   virtual ~Source();
-  unsigned int Id();
+  unsigned int Id() const;
 
   void Remove();
 
-  bool IsRunning();
-  virtual void Run(SourceCallback callback) = 0;
+  bool IsRunning() const;
+  bool Run(SourceCallback callback);
 
   void SetPriority(Priority prio);
-  Priority GetPriority();
+  Priority GetPriority() const;
 
   sigc::signal<void, unsigned int> removed;
 
 protected:
   Source();
 
+  GSource* source_;
+
+private:
   static gboolean Callback(gpointer data);
   static void DestroyCallback(gpointer data);
 
-  GSource *source_;
   unsigned int source_id_;
   SourceCallback callback_;
-
-private:
-  void EmitRemovedSignal();
 };
+
 
 class Timeout : public Source
 {
 public:
-  inline Timeout(unsigned int milliseconds, Priority prio = Priority::DEFAULT);
-  inline Timeout(unsigned int milliseconds, SourceCallback cb, Priority prio = Priority::DEFAULT);
-
-  inline void Run(SourceCallback callback);
+  Timeout(unsigned int milliseconds, Priority prio = Priority::DEFAULT);
+  Timeout(unsigned int milliseconds, SourceCallback cb, Priority prio = Priority::DEFAULT);
 
 private:
-  inline void Init(unsigned int milliseconds, Priority prio);
+  void Init(unsigned int milliseconds, Priority prio);
 };
+
 
 class Idle : public Source
 {
 public:
-  inline Idle(Priority prio = Priority::DEFAULT_IDLE);
-  inline Idle(SourceCallback cb, Priority prio = Priority::DEFAULT_IDLE);
-
-  inline void Run(SourceCallback callback);
+  Idle(Priority prio = Priority::DEFAULT_IDLE);
+  Idle(SourceCallback cb, Priority prio = Priority::DEFAULT_IDLE);
 
 private:
-  inline void Init(Priority prio);
+  void Init(Priority prio);
 };
 
 
@@ -105,16 +104,18 @@ public:
   SourceManager();
   ~SourceManager();
 
-  void Add(Source* source);
-  void Add(Source::Ptr const& source);
+  bool Add(Source* source, std::string const& nick = "");
+  bool Add(Source::Ptr const& source, std::string const& nick = "");
+  void Remove(std::string const& nick);
   void Remove(unsigned int id);
 
+  Source::Ptr GetSource(std::string const& nick) const;
   Source::Ptr GetSource(unsigned int id) const;
 
 protected:
   void OnSourceRemoved(unsigned int id);
 
-  std::vector<Source::Ptr> sources_;
+  std::map<std::string, Source::Ptr> sources_;
 };
 
 } // glib namespace
@@ -124,7 +125,7 @@ protected:
 /* This code is needed to make the lambda functions with a return value to work
  * with the sigc::slot. We need that here to use lambdas as SourceCallback.
  * This can safely removed once libsigc++ will include it.
- * 
+ *
  * Thanks to Chow Loong Jin <hyperair@gmail.com> for this code, see:
  * http://mail.gnome.org/archives/libsigc-list/2012-January/msg00000.html */
 
@@ -142,7 +143,5 @@ namespace sigc
   };
 }
 #endif
-
-#include "GLibSource-inl.h"
 
 #endif
