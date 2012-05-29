@@ -22,9 +22,9 @@
 
 #include <boost/utility.hpp>
 #include <sigc++/sigc++.h>
-#include <memory>
-#include <vector>
 #include <glib.h>
+#include <memory>
+#include <map>
 
 namespace unity
 {
@@ -105,16 +105,18 @@ public:
   SourceManager();
   ~SourceManager();
 
-  void Add(Source* source);
-  void Add(Source::Ptr const& source);
+  void Add(Source* source, std::string const& nick = "");
+  void Add(Source::Ptr const& source, std::string const& nick = "");
+  void Remove(std::string const& nick);
   void Remove(unsigned int id);
 
+  Source::Ptr GetSource(std::string const& nick) const;
   Source::Ptr GetSource(unsigned int id) const;
 
 protected:
   void OnSourceRemoved(unsigned int id);
 
-  std::vector<Source::Ptr> sources_;
+  std::map<std::string, Source::Ptr> sources_;
 };
 
 } // glib namespace

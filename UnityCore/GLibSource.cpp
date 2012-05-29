@@ -18,6 +18,7 @@
 */
 
 #include "GLibSource.h"
+#include <sstream>
 
 namespace unity
 {
@@ -151,6 +152,7 @@ void Timeout::Init(unsigned int milliseconds, Priority prio)
   SetPriority(prio);
 }
 
+
 Idle::Idle(SourceCallback cb, Priority prio)
   : Source()
 {
@@ -178,24 +180,36 @@ SourceManager::~SourceManager()
 {
   for (auto it = sources_.begin(); it != sources_.end(); ++it)
   {
-    auto source = *it;
+    auto source = it->second;
     source->removed.clear();
     source->Remove();
+    sources_.erase(it, it);
   }
 }
 
-void SourceManager::Add(Source* source)
+void SourceManager::Add(Source* source, std::string const& nick)
 {
   Source::Ptr s(source);
-  Add(s);
+  Add(s, nick);
 }
 
-void SourceManager::Add(Source::Ptr const& source)
+void SourceManager::Add(Source::Ptr const& source, std::string const& nick)
 {
   if (!source)
     return;
 
-  sources_.push_back(source);
+  if (!nick.empty())
+  {
+    sources_[nick] = source;
+  }
+  else
+  {
+    // If we don't have a nick, we use the source pointer string as nick.
+    std::stringstream ss;
+    ss << GPOINTER_TO_UINT(source.get());
+    sources_[ss.str()] = source;
+  }
+
   source->removed.connect(sigc::mem_fun(this, &SourceManager::OnSourceRemoved));
 }
 
@@ -203,10 +217,26 @@ void SourceManager::OnSourceRemoved(unsigned int id)
 {
   for (auto it = sources_.begin(); it != sources_.end(); ++it)
   {
-    auto source = *it;
+    auto source = it->second;
 
     if (source->Id() == id)
     {
+      source->Remove();
+      sources_.erase(it);
+      break;
+    }
+  }
+}
+
+void SourceManager::Remove(std::string const& nick)
+{
+  for (auto it = sources_.begin(); it != sources_.end(); ++it)
+  {
+    auto source = it->second;
+
+    if (it->first == nick)
+    {
+      source->removed.clear();
       source->Remove();
       sources_.erase(it);
       break;
@@ -218,7 +248,7 @@ void SourceManager::Remove(unsigned int id)
 {
   for (auto it = sources_.begin(); it != sources_.end(); ++it)
   {
-    auto source = *it;
+    auto source = it->second;
 
     if (source->Id() == id)
     {
@@ -232,13 +262,23 @@ void SourceManager::Remove(unsigned int id)
 
 Source::Ptr SourceManager::GetSource(unsigned int id) const
 {
-  for (auto source : sources_)
+  for (auto it : sources_)
   {
-    if (source->Id() == id)
+    if (it.second->Id() == id)
     {
-      return source;
+      return it.second;
     }
   }
+
+  return Source::Ptr();
+}
+
+Source::Ptr SourceManager::GetSource(std::string const& nick) const
+{
+  auto it = sources_.find(nick);
+
+  if (it != sources_.end())
+    return it->second;
 
   return Source::Ptr();
 }

@@ -301,7 +301,7 @@ TEST(TestGLibIdle, Running)
 class MockSourceManager : public SourceManager
 {
 public:
-  std::vector<Source::Ptr> GetSources()
+  std::map<std::string, Source::Ptr> GetSources()
   {
     return sources_;
   }
