@@ -42,6 +42,9 @@
 namespace
 {
 nux::logging::Logger logger("unity.hud.HudButton");
+
+const int hlayout_left_padding = 46;
+const char* const button_font = "Ubuntu 13"; // 17px = 13
 }
 
 namespace unity
@@ -55,7 +58,7 @@ HudButton::HudButton(NUX_FILE_LINE_DECL)
   , is_focused_(false)
 {
   hlayout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  hlayout_->SetLeftAndRightPadding(46, -1);
+  hlayout_->SetLeftAndRightPadding(hlayout_left_padding, -1);
   SetLayout(hlayout_);
 
   InitTheme();
@@ -187,7 +190,7 @@ void HudButton::SetQuery(Query::Ptr query)
   {
     nux::StaticCairoText* text = new nux::StaticCairoText(item.first.c_str());
     text->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, item.second ? 1.0f : 0.5f));
-    text->SetFont("Ubuntu 13"); // 17 px = 13
+    text->SetFont(button_font);
     hlayout_->AddView(text, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   }
 }
