@@ -389,10 +389,6 @@ public:
   ShowdesktopHandler             *mShowdesktopHandler;
 
 private:
-
-  guint  focusdesktop_handle_;
-  static gboolean FocusDesktopTimeout(gpointer data);
-
   void DoEnableFocus ();
   void DoDisableFocus ();
 
@@ -424,6 +420,7 @@ private:
   compiz::WindowInputRemoverLock::Ptr GetInputRemover ();
 
   compiz::WindowInputRemoverLock::Weak input_remover_;
+  glib::Source::UniquePtr focus_desktop_timeout_;
 };
 
 
