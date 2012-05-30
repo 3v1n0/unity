@@ -26,6 +26,7 @@
 #include <gtk/gtk.h>
 
 #include <Nux/Nux.h>
+#include <Nux/HLayout.h>
 #include <NuxCore/Logger.h>
 #include <NuxImage/CairoGraphics.h>
 #include <NuxGraphics/NuxGraphics.h>
@@ -33,8 +34,10 @@
 #include <UnityCore/Variant.h>
 
 #include "unity-shared/DashStyle.h"
+#include "unity-shared/StaticCairoText.h"
 
 #include "HudButton.h"
+#include "HudPrivate.h"
 
 namespace
 {
@@ -46,42 +49,15 @@ namespace unity
 namespace hud
 {
 
-HudButton::HudButton(nux::TextureArea *image, NUX_FILE_LINE_DECL)
-  : nux::Button(image, NUX_FILE_LINE_PARAM)
-  , is_rounded(false)
-  , is_focused_(false)
-{
-  Init();
-}
-
-HudButton::HudButton(std::string const& label_, NUX_FILE_LINE_DECL)
-  : nux::Button(NUX_FILE_LINE_PARAM)
-  , label(label_)
-  , is_rounded(false)
-  , is_focused_(false)
-{
-  Init();
-}
-
-HudButton::HudButton(std::string const& label_, nux::TextureArea *image, NUX_FILE_LINE_DECL)
-  : nux::Button(image, NUX_FILE_LINE_PARAM)
-  , label(label_)
-  , is_rounded(false)
-  , is_focused_(false)
-{
-  Init();
-}
-
 HudButton::HudButton(NUX_FILE_LINE_DECL)
   : nux::Button(NUX_FILE_LINE_PARAM)
   , is_rounded(false)
   , is_focused_(false)
 {
-  Init();
-}
+  hlayout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
+  hlayout_->SetLeftAndRightPadding(46, -1);
+  SetLayout(hlayout_);
 
-void HudButton::Init()
-{
   InitTheme();
 
   key_nav_focus_change.connect([&](nux::Area*, bool, nux::KeyNavDirection)
@@ -119,7 +95,7 @@ void HudButton::InitTheme()
 
 void HudButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
 {
-  dash::Style::Instance().SquareButton(cr, faked_state, label,
+  dash::Style::Instance().SquareButton(cr, faked_state, "",
                                        is_rounded, 17,
                                        dash::Alignment::LEFT, true);
 }
@@ -195,12 +171,25 @@ void HudButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 void HudButton::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
+  if (IsFullRedraw() && hlayout_)
+    hlayout_->ProcessDraw(GfxContext, force_draw);
 }
 
 void HudButton::SetQuery(Query::Ptr query)
 {
   query_ = query;
   label = query->formatted_text;
+
+  auto items(impl::RefactorText(label));
+
+  hlayout_->Clear();
+  for (auto item : items)
+  {
+    nux::StaticCairoText* text = new nux::StaticCairoText(item.first.c_str());
+    text->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, item.second ? 1.0f : 0.5f));
+    text->SetFont("Ubuntu 13"); // 17 px = 13
+    hlayout_->AddView(text, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  }
 }
 
 Query::Ptr HudButton::GetQuery()
@@ -220,5 +209,5 @@ void HudButton::AddProperties(GVariantBuilder* builder)
     .add("label", label());
 }
 
-}
-}
+} // namespace hud
+} // namespace unity
