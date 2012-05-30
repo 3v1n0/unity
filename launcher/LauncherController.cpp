@@ -18,7 +18,6 @@
  *              Tim Penhey <tim.penhey@canonical.com>
  */
 
-#include <gio/gio.h>
 #include <glib/gi18n-lib.h>
 #include <libbamf/libbamf.h>
 
@@ -141,8 +140,6 @@ public:
                                unsigned short keyCount);
 
   Controller* parent_;
-  glib::Object<BamfMatcher> matcher_;
-  glib::Signal<void, BamfMatcher*, BamfView*> view_opened_signal_;
   LauncherModel::Ptr     model_;
   nux::ObjectPtr<Launcher> launcher_;
   nux::ObjectPtr<Launcher> keyboard_launcher_;
@@ -166,14 +163,15 @@ public:
   bool                   reactivate_keynav;
   int                    reactivate_index;
   bool                   keynav_restore_window_;
-
-  UBusManager            ubus;
-
   int                    launcher_key_press_time_;
 
   ui::EdgeBarrierController::Ptr edge_barriers_;
 
   LauncherList launchers;
+
+  glib::Object<BamfMatcher> matcher_;
+  glib::Signal<void, BamfMatcher*, BamfView*> view_opened_signal_;
+  UBusManager ubus;
 
   sigc::connection on_expoicon_activate_connection_;
   sigc::connection launcher_key_press_connection_;
@@ -183,7 +181,6 @@ public:
 
 Controller::Impl::Impl(Display* display, Controller* parent)
   : parent_(parent)
-  , matcher_(nullptr)
   , model_(new LauncherModel())
   , sort_priority_(0)
   , show_desktop_icon_(false)
@@ -192,6 +189,7 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   , launcher_label_show_handler_id_(0)
   , launcher_hide_handler_id_(0)
   , edge_barriers_(new ui::EdgeBarrierController())
+  , matcher_(nullptr)
 {
   edge_barriers_->options = parent_->options();
 
@@ -239,16 +237,16 @@ Controller::Impl::Impl(Display* display, Controller* parent)
 
   LauncherHideMode hide_mode = parent_->options()->hide_mode;
   BFBLauncherIcon* bfb = new BFBLauncherIcon(hide_mode);
-  parent_->options()->hide_mode.changed.connect([bfb](LauncherHideMode mode) {
-      bfb->SetHideMode(mode);
-    });
   RegisterIcon(AbstractLauncherIcon::Ptr(bfb));
 
   HudLauncherIcon* hud = new HudLauncherIcon(hide_mode);
-  parent_->options()->hide_mode.changed.connect([hud](LauncherHideMode mode) {
-      hud->SetHideMode(mode);
-    });
   RegisterIcon(AbstractLauncherIcon::Ptr(hud));
+
+  parent_->options()->hide_mode.changed.connect([&](LauncherHideMode mode) {
+    bfb->SetHideMode(mode);
+    hud->SetHideMode(mode);
+  });
+
   desktop_icon_ = AbstractLauncherIcon::Ptr(new DesktopLauncherIcon());
 
   uscreen->changed.connect(sigc::mem_fun(this, &Controller::Impl::OnScreenChanged));
@@ -850,11 +848,6 @@ Controller::Controller(Display* display)
   });
 }
 
-Controller::~Controller()
-{
-  delete pimpl;
-}
-
 void Controller::UpdateNumWorkspaces(int workspaces)
 {
   pimpl->UpdateNumWorkspaces(workspaces);
@@ -971,7 +964,7 @@ void Controller::HandleLauncherKeyPress(int when)
     self->launcher_key_press_handler_id_ = 0;
     return FALSE;
   };
-  pimpl->launcher_key_press_handler_id_ = g_timeout_add(local::super_tap_duration, show_launcher, pimpl);
+  pimpl->launcher_key_press_handler_id_ = g_timeout_add(local::super_tap_duration, show_launcher, pimpl.get());
 
   auto show_shortcuts = [](gpointer user_data) -> gboolean
   {
@@ -987,7 +980,7 @@ void Controller::HandleLauncherKeyPress(int when)
     }
     return FALSE;
   };
-  pimpl->launcher_label_show_handler_id_ = g_timeout_add(local::shortcuts_show_delay, show_shortcuts, pimpl);
+  pimpl->launcher_label_show_handler_id_ = g_timeout_add(local::shortcuts_show_delay, show_shortcuts, pimpl.get());
 }
 
 bool Controller::AboutToShowDash(int was_tap, int when) const
@@ -1054,7 +1047,7 @@ void Controller::HandleLauncherKeyRelease(bool was_tap, int when)
         return FALSE;
       };
 
-      pimpl->launcher_hide_handler_id_ = g_timeout_add(time_left, hide_launcher, pimpl);
+      pimpl->launcher_hide_handler_id_ = g_timeout_add(time_left, hide_launcher, pimpl.get());
     }
   }
 }
@@ -1103,9 +1096,9 @@ void Controller::KeyNavGrab()
   pimpl->keyboard_launcher_->GrabKeyboard();
 
   pimpl->launcher_key_press_connection_ =
-    pimpl->keyboard_launcher_->key_down.connect(sigc::mem_fun(pimpl, &Controller::Impl::ReceiveLauncherKeyPress));
+    pimpl->keyboard_launcher_->key_down.connect(sigc::mem_fun(pimpl.get(), &Controller::Impl::ReceiveLauncherKeyPress));
   pimpl->launcher_event_outside_connection_ =
-    pimpl->keyboard_launcher_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(pimpl, &Controller::Impl::ReceiveMouseDownOutsideArea));
+    pimpl->keyboard_launcher_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(pimpl.get(), &Controller::Impl::ReceiveMouseDownOutsideArea));
 }
 
 void Controller::KeyNavActivate()

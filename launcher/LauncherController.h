@@ -46,7 +46,6 @@ public:
   nux::Property<bool> multiple_launchers;
 
   Controller(Display* display);
-  ~Controller();
 
   Launcher& launcher() const;
   LauncherList& launchers() const;
@@ -87,7 +86,7 @@ protected:
 
 private:
   class Impl;
-  Impl* pimpl;
+  std::unique_ptr<Impl> pimpl;
 };
 
 }

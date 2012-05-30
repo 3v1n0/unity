@@ -21,8 +21,6 @@
 #ifndef LAUNCHER_H
 #define LAUNCHER_H
 
-#include <sys/time.h>
-
 #include <Nux/View.h>
 #include <Nux/BaseWindow.h>
 #include <Nux/TimerProc.h>
