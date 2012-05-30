@@ -829,6 +829,9 @@ Controller::Controller(Display* display)
   });
 }
 
+Controller::~Controller()
+{}
+
 void Controller::UpdateNumWorkspaces(int workspaces)
 {
   pimpl->UpdateNumWorkspaces(workspaces);
