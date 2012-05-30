@@ -109,10 +109,10 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , gScreen(GLScreen::get(screen))
   , debugger_(this)
   , enable_shortcut_overlay_(true)
+  , gesture_engine_(screen)
   , needsRelayout(false)
   , _in_paint(false)
-  , relayoutSourceId(0)
-  , _redraw_handle(0)
+  , super_keypressed_(false)
   , newFocusedWindow(nullptr)
   , doShellRepaint(false)
   , allowWindowPaint(false)
@@ -350,11 +350,10 @@ UnityScreen::UnityScreen(CompScreen* screen)
      ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWTICHER,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherEndKeyNav));
 
-     g_idle_add_full (G_PRIORITY_DEFAULT, &UnityScreen::initPluginActions, this, NULL);
-     super_keypressed_ = false;
+     auto init_plugins_cb = sigc::mem_fun(this, &UnityScreen::initPluginActions);
+     sources_.Add(new glib::Idle(init_plugins_cb, glib::Source::Priority::DEFAULT));
 
      geis_adapter_.Run();
-     gesture_engine_.reset(new GestureEngine(screen));
 
      CompString name(PKGDATADIR"/panel-shadow.png");
      CompString pname("unityshell");
@@ -389,13 +388,6 @@ UnityScreen::~UnityScreen()
   notify_uninit();
 
   unity_a11y_finalize();
-
-  if (relayoutSourceId != 0)
-    g_source_remove(relayoutSourceId);
-
-  if (_redraw_handle)
-    g_source_remove(_redraw_handle);
-
   ::unity::ui::IconRenderer::DestroyTextures();
   QuicklistManager::Destroy();
 
@@ -548,7 +540,7 @@ void UnityScreen::setPanelShadowMatrix(const GLMatrix& matrix)
 void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
 {
 #ifndef USE_MODERN_COMPIZ_GL
-  if (relayoutSourceId > 0)
+  if (sources_.GetSource("relayout-timeout"))
     return;
 
   if (PluginAdapter::Default()->IsExpoActive())
@@ -628,7 +620,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
 #warning Panel shadow not properly implemented for GLES2
   return;
 
-  if (relayoutSourceId > 0)
+  if (sources_.GetSource("relayout-timeout"))
     return;
 
   if (PluginAdapter::Default()->IsExpoActive())
@@ -1424,16 +1416,15 @@ void UnityScreen::handleEvent(XEvent* event)
           {
             /* We need an idle to postpone this action, after the current event
              * has been processed */
-            g_idle_add([] (gpointer data) -> gboolean {
-              auto self = static_cast<UnityScreen*>(data);
-              if (!self->launcher_controller_->KeyNavIsActive())
+            sources_.Add(new glib::Idle([&]() {
+              if (!launcher_controller_->KeyNavIsActive())
               {
-                self->shortcut_controller_->SetEnabled(false);
-                self->shortcut_controller_->Hide();
-                self->EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, false);
+                shortcut_controller_->SetEnabled(false);
+                shortcut_controller_->Hide();
+                EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, false);
               }
-              return FALSE;
-            }, this);
+              return false;
+            }));
           }
 
           skip_other_plugins = launcher_controller_->HandleLauncherKeyEvent(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string);
@@ -2032,7 +2023,7 @@ bool UnityScreen::ShowHudTerminate(CompAction* action,
   return ShowHud();
 }
 
-gboolean UnityScreen::initPluginActions(gpointer data)
+bool UnityScreen::initPluginActions()
 {
   CompPlugin* p = CompPlugin::find("expo");
 
@@ -2103,7 +2094,7 @@ gboolean UnityScreen::initPluginActions(gpointer data)
     }
   }
 
-  return FALSE;
+  return false;
 }
 
 /* Set up expo and scale actions on the launcher */
@@ -2112,7 +2103,7 @@ bool UnityScreen::initPluginForScreen(CompPlugin* p)
   if (p->vTable->name() == "expo" ||
       p->vTable->name() == "scale")
   {
-    initPluginActions(this);
+    initPluginActions();
   }
 
   bool result = screen->initPluginForScreen(p);
@@ -2551,24 +2542,22 @@ void UnityScreen::initUnity(nux::NThread* thread, void* InitData)
   LOG_INFO(logger) << "UnityScreen::initUnity: " << timer.ElapsedSeconds() << "s";
 }
 
-gboolean UnityScreen::OnRedrawTimeout(gpointer data)
-{
-  UnityScreen *self = reinterpret_cast<UnityScreen*>(data);
-
-  self->_redraw_handle = 0;
-  self->onRedrawRequested();
-
-  return FALSE;
-}
-
 void UnityScreen::onRedrawRequested()
 {
   // disable blur updates so we dont waste perf. This can stall the blur during animations
   // but ensures a smooth animation.
   if (_in_paint)
   {
-    if (!_redraw_handle)
-      _redraw_handle = g_idle_add_full (G_PRIORITY_DEFAULT, &UnityScreen::OnRedrawTimeout, this, NULL);
+    if (!sources_.GetSource("redraw-idle"))
+    {
+      glib::Source::Ptr redraw_idle(new glib::Idle(glib::Source::Priority::DEFAULT));
+      sources_.Add(redraw_idle, "redraw-idle");
+
+      redraw_idle->Run([&]() {
+        onRedrawRequested();
+        return false;
+      });
+    }
   }
   else
   {
@@ -2730,8 +2719,20 @@ void UnityScreen::NeedsRelayout()
 
 void UnityScreen::ScheduleRelayout(guint timeout)
 {
-  if (relayoutSourceId == 0)
-    relayoutSourceId = g_timeout_add(timeout, &UnityScreen::RelayoutTimeout, this);
+  if (!sources_.GetSource("relayout-timeout"))
+  {
+    glib::Source::Ptr relayout_timeout(new glib::Timeout(timeout));
+    sources_.Add(relayout_timeout, "relayout-timeout");
+
+    relayout_timeout->Run([&]() {
+      NeedsRelayout();
+      Relayout();
+
+      cScreen->damageScreen();
+
+      return false;
+    });
+  }
 }
 
 void UnityScreen::Relayout()
@@ -2763,19 +2764,6 @@ void UnityScreen::Relayout()
                     << " h=" << primary_monitor_().height;
 
   needsRelayout = false;
-}
-
-gboolean UnityScreen::RelayoutTimeout(gpointer data)
-{
-  UnityScreen* uScr = reinterpret_cast<UnityScreen*>(data);
-
-  uScr->NeedsRelayout ();
-  uScr->Relayout();
-  uScr->relayoutSourceId = 0;
-
-  uScr->cScreen->damageScreen();
-
-  return FALSE;
 }
 
 /* Handle changes in the number of workspaces by showing the switcher
