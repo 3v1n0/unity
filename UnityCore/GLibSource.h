@@ -70,7 +70,7 @@ public:
     LOW = G_PRIORITY_LOW                    // 300
   };
 
-  virtual ~Source();
+  ~Source();
   unsigned int Id() const;
 
   /**
