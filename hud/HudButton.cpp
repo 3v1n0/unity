@@ -174,7 +174,7 @@ void HudButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 void HudButton::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  if (IsFullRedraw() && hlayout_)
+  if (IsFullRedraw())
     hlayout_->ProcessDraw(GfxContext, force_draw);
 }
 
