@@ -92,7 +92,7 @@ PanelMenuView::PanelMenuView()
   _active_app_changed_signal.Connect(_matcher, "active-application-changed",
                                      sigc::mem_fun(this, &PanelMenuView::OnActiveAppChanged));
 
-  _window_buttons.Adopt(new WindowButtons());
+  _window_buttons = new WindowButtons();
   _window_buttons->SetParentObject(this);
   _window_buttons->SetMonitor(_monitor);
   _window_buttons->SetControlledWindow(_active_xid);
@@ -108,7 +108,7 @@ PanelMenuView::PanelMenuView()
   layout_->SetLeftAndRightPadding(_window_buttons->GetContentWidth(), 0);
   layout_->SetBaseHeight(panel::Style::Instance().panel_height);
 
-  _titlebar_grab_area.Adopt(new PanelTitlebarGrabArea());
+  _titlebar_grab_area = new PanelTitlebarGrabArea();
   _titlebar_grab_area->SetParentObject(this);
   _titlebar_grab_area->activate_request.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedActivate));
   _titlebar_grab_area->restore_request.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedRestore));
