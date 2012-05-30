@@ -1311,5 +1311,6 @@ PluginAdapter::AddProperties(GVariantBuilder* builder)
          .add("scale_active", IsScaleActive())
          .add("scale_active_for_group", IsScaleActiveForGroup())
          .add("expo_active", IsExpoActive())
-         .add("viewport_switch_running", IsViewPortSwitchStarted());
+         .add("viewport_switch_running", IsViewPortSwitchStarted())
+         .add("showdesktop_active", _in_show_desktop);
 }
