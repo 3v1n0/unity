@@ -26,6 +26,7 @@
 #include <gtk/gtk.h>
 
 #include <Nux/Nux.h>
+#include <Nux/HLayout.h>
 #include <NuxCore/Logger.h>
 #include <NuxImage/CairoGraphics.h>
 #include <NuxGraphics/NuxGraphics.h>
@@ -33,12 +34,17 @@
 #include <UnityCore/Variant.h>
 
 #include "unity-shared/DashStyle.h"
+#include "unity-shared/StaticCairoText.h"
 
 #include "HudButton.h"
+#include "HudPrivate.h"
 
 namespace
 {
 nux::logging::Logger logger("unity.hud.HudButton");
+
+const int hlayout_left_padding = 46;
+const char* const button_font = "Ubuntu 13"; // 17px = 13
 }
 
 namespace unity
@@ -46,51 +52,23 @@ namespace unity
 namespace hud
 {
 
-
-HudButton::HudButton (nux::TextureArea *image, NUX_FILE_LINE_DECL)
-    : nux::Button (image, NUX_FILE_LINE_PARAM)
-    , is_rounded(false)
-    , is_focused_(false)
+HudButton::HudButton(NUX_FILE_LINE_DECL)
+  : nux::Button(NUX_FILE_LINE_PARAM)
+  , is_rounded(false)
+  , is_focused_(false)
 {
-  Init();
-}
+  hlayout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
+  hlayout_->SetLeftAndRightPadding(hlayout_left_padding, -1);
+  SetLayout(hlayout_);
 
-HudButton::HudButton (const std::string label_, NUX_FILE_LINE_DECL)
-    : nux::Button (NUX_FILE_LINE_PARAM)
-    , is_rounded(false)
-    , is_focused_(false)
-{
-  Init();
-}
-
-HudButton::HudButton (const std::string label_, nux::TextureArea *image, NUX_FILE_LINE_DECL)
-    : nux::Button (image, NUX_FILE_LINE_PARAM)
-    , is_rounded(false)
-    , is_focused_(false)
-{
-  Init();
-}
-
-HudButton::HudButton (NUX_FILE_LINE_DECL)
-    : nux::Button (NUX_FILE_LINE_PARAM)
-    , is_rounded(false)
-    , is_focused_(false)
-{
-  Init();
-}
-
-HudButton::~HudButton() {
-}
-
-void HudButton::Init()
-{
   InitTheme();
-  key_nav_focus_change.connect([this](nux::Area *area, bool recieving, nux::KeyNavDirection direction)
+
+  key_nav_focus_change.connect([&](nux::Area*, bool, nux::KeyNavDirection)
   {
     QueueDraw();
   });
 
-  fake_focused.changed.connect([this](bool change)
+  fake_focused.changed.connect([&](bool)
   {
     QueueDraw();
   });
@@ -98,15 +76,16 @@ void HudButton::Init()
 
 void HudButton::InitTheme()
 {
-  is_rounded.changed.connect([&] (bool rounded)
+  is_rounded.changed.connect([&](bool)
   {
-    nux::Geometry geo = GetGeometry();
+    nux::Geometry const& geo = GetGeometry();
     prelight_->Invalidate(geo);
     active_->Invalidate(geo);
     normal_->Invalidate(geo);
   });
 
   SetMinimumHeight(42);
+
   if (!active_)
   {
     nux::Geometry const& geo = GetGeometry();
@@ -119,9 +98,9 @@ void HudButton::InitTheme()
 
 void HudButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
 {
-  dash::Style::Instance().SquareButton(cr, faked_state, label_,
-                                           is_rounded, 17,
-                                           dash::Alignment::LEFT, true);
+  dash::Style::Instance().SquareButton(cr, faked_state, "",
+                                       is_rounded, 17,
+                                       dash::Alignment::LEFT, true);
 }
 
 bool HudButton::AcceptKeyNavFocus()
@@ -132,7 +111,7 @@ bool HudButton::AcceptKeyNavFocus()
 }
 
 
-long HudButton::ComputeContentSize ()
+long HudButton::ComputeContentSize()
 {
   long ret = nux::Button::ComputeContentSize();
   nux::Geometry const& geo = GetGeometry();
@@ -153,6 +132,7 @@ void HudButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry const& geo = GetGeometry();
   gPainter.PaintBackground(GfxContext, geo);
+
   // set up our texture mode
   nux::TexCoordXForm texxform;
   texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
@@ -164,7 +144,7 @@ void HudButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
   GfxContext.GetRenderStates().SetBlend(true);
 
-  nux::Color col = nux::color::Black;
+  nux::Color col(nux::color::Black);
   col.alpha = 0;
   GfxContext.QRP_Color(geo.x,
                        geo.y,
@@ -173,6 +153,7 @@ void HudButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                        col);
 
   nux::BaseTexture* texture = normal_->GetTexture();
+
   if (HasKeyFocus() || fake_focused())
     texture = active_->GetTexture();
   else if (HasKeyFocus())
@@ -182,27 +163,36 @@ void HudButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.QRP_1Tex(geo.x,
                       geo.y,
-                      texture->GetWidth() + 1, // FIXME !! - jay, nux has gone crazy, unless i specify +1 here, it won't render the entire texture
+                      texture->GetWidth(),
                       texture->GetHeight(),
                       texture->GetDeviceTexture(),
                       texxform,
-                      nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
+                      nux::color::White);
 
   GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
 }
 
-void HudButton::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {
-}
-
-void HudButton::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw) {
-  nux::Button::PostDraw(GfxContext, force_draw);
+void HudButton::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
+{
+  if (IsFullRedraw())
+    hlayout_->ProcessDraw(GfxContext, force_draw);
 }
 
 void HudButton::SetQuery(Query::Ptr query)
 {
   query_ = query;
-  label_ = query->formatted_text;
   label = query->formatted_text;
+
+  auto items(impl::RefactorText(label));
+
+  hlayout_->Clear();
+  for (auto item : items)
+  {
+    nux::StaticCairoText* text = new nux::StaticCairoText(item.first.c_str());
+    text->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, item.second ? 1.0f : 0.5f));
+    text->SetFont(button_font);
+    hlayout_->AddView(text, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  }
 }
 
 Query::Ptr HudButton::GetQuery()
@@ -219,8 +209,8 @@ std::string HudButton::GetName() const
 void HudButton::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
-    .add("label", label_);
+    .add("label", label());
 }
 
-}
-}
+} // namespace hud
+} // namespace unity

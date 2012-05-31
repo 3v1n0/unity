@@ -17,8 +17,13 @@ set (CMAKE_CXX_FLAGS "-DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissiv
 set (CMAKE_CXX_FLAGS_DEBUG "-g3")
 set (CMAKE_CXX_FLAGS_RELEASE "")
 
+option (USE_MODERN_COMPIZ_GL "Use Modern Compiz GL API" OFF)
+if (USE_MODERN_COMPIZ_GL)
+	SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_MODERN_COMPIZ_GL")
+endif (USE_MODERN_COMPIZ_GL)
+
 if (BUILD_GLES)
-	SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNUX_OPENGLES_20 -DUSE_GLES")
+	SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNUX_OPENGLES_20 -DUSE_GLES -DUSE_MODERN_COMPIZ_GL")
 endif (BUILD_GLES)
 
 #
@@ -131,6 +136,7 @@ add_subdirectory(dash)
 add_subdirectory(hud)
 add_subdirectory(launcher)
 add_subdirectory(shortcuts)
+add_subdirectory(unity-standalone)
 add_subdirectory(plugins/unityshell)
 add_subdirectory(plugins/gtkloader)
 add_subdirectory(plugins/networkarearegion)

@@ -21,6 +21,7 @@
 #define UNITYWINDOWVIEW_H
 
 #include "unity-shared/BackgroundEffectHelper.h"
+#include "Introspectable.h"
 #include "UnityWindowStyle.h"
 #include <sigc++/sigc++.h>
 
@@ -32,7 +33,7 @@
 namespace unity {
 namespace ui {
 
-class UnityWindowView : public nux::View
+class UnityWindowView : public debug::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(UnityWindowView, nux::View)  
 public:
@@ -53,10 +54,15 @@ protected:
   virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw) {};
   virtual nux::Geometry GetBackgroundGeometry() = 0;
 
+  // Introspectable methods
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
+
 private:
   void DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& geo);
 
   BackgroundEffectHelper bg_helper_;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> bg_texture_;
 };
 
 }

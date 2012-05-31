@@ -27,7 +27,7 @@
 
 #include "WindowButtons.h"
 
-#include "unity-shared/DashSettings.h"
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/WindowManager.h"
@@ -394,7 +394,7 @@ WindowButtons::WindowButtons()
 
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &WindowButtons::OnOverlayShown));
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &WindowButtons::OnOverlayHidden));
-  dash::Settings::Instance().changed.connect(sigc::mem_fun(this, &WindowButtons::OnDashSettingsUpdated));
+  Settings::Instance().changed.connect(sigc::mem_fun(this, &WindowButtons::OnDashSettingsUpdated));
 }
 
 nux::Area* WindowButtons::FindAreaUnderMouse(const nux::Point& mouse, nux::NuxEventType event_type)
@@ -469,7 +469,7 @@ void WindowButtons::OnRestoreClicked(nux::Button *button)
 
   if (win_button->IsOverlayOpen())
   {
-    dash::Settings::Instance().SetFormFactor(dash::FormFactor::DESKTOP);
+    Settings::Instance().SetFormFactor(FormFactor::DESKTOP);
   }
   else
   {
@@ -493,7 +493,7 @@ void WindowButtons::OnMaximizeClicked(nux::Button *button)
 
   if (win_button->IsOverlayOpen())
   {
-    dash::Settings::Instance().SetFormFactor(dash::FormFactor::NETBOOK);
+    Settings::Instance().SetFormFactor(FormFactor::NETBOOK);
   }
 
   maximize_clicked.emit();
@@ -545,8 +545,8 @@ void WindowButtons::OnOverlayShown(GVariant* data)
 
   if (restore_button && maximize_button)
   {
-    dash::Settings &dash_settings = dash::Settings::Instance();
-    bool maximizable = (dash_settings.GetFormFactor() == dash::FormFactor::DESKTOP);
+    Settings &dash_settings = Settings::Instance();
+    bool maximizable = (dash_settings.GetFormFactor() == FormFactor::DESKTOP);
 
     restore_button->SetEnabled(can_maximise);
     maximize_button->SetEnabled(can_maximise);
@@ -668,8 +668,8 @@ void WindowButtons::OnDashSettingsUpdated()
 
   if (restore_button && restore_button->IsOverlayOpen() && maximize_button)
   {
-    dash::Settings &dash_settings = dash::Settings::Instance();
-    bool maximizable = (dash_settings.GetFormFactor() == dash::FormFactor::DESKTOP);
+    Settings &dash_settings = Settings::Instance();
+    bool maximizable = (dash_settings.GetFormFactor() == FormFactor::DESKTOP);
 
     if (maximizable != maximize_button->IsVisible())
     {

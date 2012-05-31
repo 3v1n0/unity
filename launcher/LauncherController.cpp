@@ -130,6 +130,8 @@ public:
 
   void OnWindowFocusChanged (guint32 xid);
 
+  void OnViewOpened(BamfMatcher* matcher, BamfView* view);
+
   void ReceiveMouseDownOutsideArea(int x, int y, unsigned long button_flags, unsigned long key_flags);
 
   void ReceiveLauncherKeyPress(unsigned long eventType,
@@ -138,17 +140,14 @@ public:
                                const char* character,
                                unsigned short keyCount);
 
-  /* statics */
-
-  static void OnViewOpened(BamfMatcher* matcher, BamfView* view, gpointer data);
-
   Controller* parent_;
   glib::Object<BamfMatcher> matcher_;
+  glib::Signal<void, BamfMatcher*, BamfView*> view_opened_signal_;
   LauncherModel::Ptr     model_;
   nux::ObjectPtr<Launcher> launcher_;
   nux::ObjectPtr<Launcher> keyboard_launcher_;
   int                    sort_priority_;
-  DeviceLauncherSection* device_section_;
+  DeviceLauncherSection  device_section_;
   LauncherEntryRemoteModel remote_model_;
   AbstractLauncherIcon::Ptr expo_icon_;
   AbstractLauncherIcon::Ptr desktop_icon_;
@@ -157,7 +156,6 @@ public:
   Display*               display_;
 
   guint                  bamf_timer_handler_id_;
-  guint                  on_view_opened_id_;
   guint                  launcher_key_press_handler_id_;
   guint                  launcher_label_show_handler_id_;
   guint                  launcher_hide_handler_id_;
@@ -210,9 +208,7 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   EnsureLaunchers(primary, monitors);
 
   launcher_ = launchers[0];
-
-  device_section_ = new DeviceLauncherSection();
-  device_section_->IconAdded.connect(sigc::mem_fun(this, &Impl::OnIconAdded));
+  device_section_.IconAdded.connect(sigc::mem_fun(this, &Impl::OnIconAdded));
 
   num_workspaces_ = WindowManager::Default()->WorkspaceCount();
   if (num_workspaces_ > 1)
@@ -289,11 +285,6 @@ Controller::Impl::~Impl()
 
   if (bamf_timer_handler_id_ != 0)
     g_source_remove(bamf_timer_handler_id_);
-
-  if (matcher_ != nullptr && on_view_opened_id_ != 0)
-    g_signal_handler_disconnect((gpointer) matcher_, on_view_opened_id_);
-
-  delete device_section_;
 }
 
 void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> const& monitors)
@@ -380,6 +371,7 @@ Launcher* Controller::Impl::CreateLauncher(int monitor)
   launcher->display = display_;
   launcher->monitor = monitor;
   launcher->options = parent_->options();
+  launcher->SetModel(model_.get());
 
   nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout->AddView(launcher, 1);
@@ -394,7 +386,6 @@ Launcher* Controller::Impl::CreateLauncher(int monitor)
   launcher_window->InputWindowEnableStruts(false);
   launcher_window->SetEnterFocusInputArea(launcher);
 
-  launcher->SetModel(model_.get());
   launcher->launcher_addrequest.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequest));
   launcher->launcher_addrequest_special.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequestSpecial));
   launcher->launcher_removerequest.connect(sigc::mem_fun(this, &Impl::OnLauncherRemoveRequest));
@@ -724,15 +715,12 @@ void Controller::Impl::RegisterIcon(AbstractLauncherIcon::Ptr icon)
 }
 
 /* static private */
-void Controller::Impl::OnViewOpened(BamfMatcher* matcher, BamfView* view, gpointer data)
+void Controller::Impl::OnViewOpened(BamfMatcher* matcher, BamfView* view)
 {
-  Impl* self = static_cast<Impl*>(data);
-  BamfApplication* app;
-
   if (!BAMF_IS_APPLICATION(view))
     return;
 
-  app = BAMF_APPLICATION(view);
+  BamfApplication* app = BAMF_APPLICATION(view);
 
   if (bamf_view_is_sticky(view) ||
       g_object_get_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen")))
@@ -741,10 +729,10 @@ void Controller::Impl::OnViewOpened(BamfMatcher* matcher, BamfView* view, gpoint
   }
 
   AbstractLauncherIcon::Ptr icon(new BamfLauncherIcon(app));
-  icon->visibility_changed.connect(sigc::mem_fun(self, &Impl::SortAndUpdate));
-  icon->SetSortPriority(self->sort_priority_++);
-  self->RegisterIcon(icon);
-  self->SortAndUpdate();
+  icon->visibility_changed.connect(sigc::mem_fun(this, &Impl::SortAndUpdate));
+  icon->SetSortPriority(sort_priority_++);
+  RegisterIcon(icon);
+  SortAndUpdate();
 }
 
 AbstractLauncherIcon::Ptr Controller::Impl::CreateFavorite(const char* file_path)
@@ -821,7 +809,7 @@ void Controller::Impl::SetupBamf()
   }
 
   apps = bamf_matcher_get_applications(matcher_);
-  on_view_opened_id_ = g_signal_connect(matcher_, "view-opened", (GCallback) &Impl::OnViewOpened, this);
+  view_opened_signal_.Connect(matcher_, "view-opened", sigc::mem_fun(this, &Impl::OnViewOpened));
 
   for (l = apps; l; l = l->next)
   {
