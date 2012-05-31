@@ -53,7 +53,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   , active_index_(-1)
   , selected_index_(-1)
   , preview_row_(0)
-  , last_lazy_loaded_result_ (0)
+  , last_lazy_loaded_result_(0)
   , last_mouse_down_x_(-1)
   , last_mouse_down_y_(-1)
   , recorded_dash_width_(-1)
@@ -101,22 +101,10 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   SetDndEnabled(true, false);
 }
 
-bool ResultViewGrid::OnLazyLoad()
-{
-  DoLazyLoad();
-  lazy_load_idle_ = nullptr;
-
-  return false;
-}
-
 void ResultViewGrid::QueueLazyLoad()
 {
-  if (!lazy_load_idle_)
-  {
-    lazy_load_idle_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
-    lazy_load_idle_->Run(sigc::mem_fun(this, &ResultViewGrid::OnLazyLoad));
-  }
-
+  lazy_load_source_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
+  lazy_load_source_->Run(sigc::mem_fun(this, &ResultViewGrid::DoLazyLoad));
   last_lazy_loaded_result_ = 0; // we always want to reset the lazy load index here
 }
 
@@ -137,7 +125,7 @@ void ResultViewGrid::QueueViewChanged()
   }
 }
 
-void ResultViewGrid::DoLazyLoad()
+bool ResultViewGrid::DoLazyLoad()
 {
   // FIXME - so this code was nice, it would only load the visible entries on the screen
   // however nux does not give us a good enough indicator right now that we are scrolling,
@@ -188,14 +176,13 @@ void ResultViewGrid::DoLazyLoad()
   if (queue_additional_load)
   {
     //we didn't load all the results because we exceeded our time budget, so queue another lazy load
-    if (!lazy_load_idle_)
-    {
-      lazy_load_idle_.reset(new glib::Timeout(1000/60 - 8));
-      lazy_load_idle_->Run(sigc::mem_fun(this, &ResultViewGrid::OnLazyLoad));
-    }
+    lazy_load_source_.reset(new glib::Timeout(1000/60 - 8));
+    lazy_load_source_->Run(sigc::mem_fun(this, &ResultViewGrid::DoLazyLoad));
   }
 
   QueueDraw();
+
+  return false;
 }
 
 
@@ -565,8 +552,8 @@ long ResultViewGrid::ComputeContentSize()
 {
   SizeReallocate();
   QueueLazyLoad();
-  long ret = ResultView::ComputeContentSize();
-  return ret;
+
+  return ResultView::ComputeContentSize();
 }
 
 

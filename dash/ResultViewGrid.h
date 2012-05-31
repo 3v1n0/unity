@@ -81,10 +81,9 @@ private:
   typedef std::tuple <int, int> ResultListBounds;
   ResultListBounds GetVisableResults();
 
-  bool OnLazyLoad();
   void QueueLazyLoad();
   void QueueViewChanged();
-  void DoLazyLoad();
+  bool DoLazyLoad();
 
   int GetItemsPerRow();
   void SizeReallocate();
@@ -111,7 +110,7 @@ private:
   int extra_horizontal_spacing_;
 
   UBusManager ubus_;
-  glib::Source::UniquePtr lazy_load_idle_;
+  glib::Source::UniquePtr lazy_load_source_;
   glib::Source::UniquePtr view_changed_idle_;
 };
 
