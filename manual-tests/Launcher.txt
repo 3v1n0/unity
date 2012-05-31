@@ -488,3 +488,55 @@ Actions:
 Expected Result:
 The Firefox icon should *not* be highlighted during the drag&drop.
 Firefox should open the folder in a new Firefox window.
+
+
+Test Launcher with Chromium Web apps
+------------------------------------
+This tests shows the integration of unity with the Chromium Web Apps
+
+Setup:
+ * Open Chromium and go to a website, say ubuntu.com
+ * Go to the menu "File" -> "Create Application Shortcuts..."
+ * Select the checkbox "Applications Menu" (you can deselect the "Desktop" one)
+ * A new window is opened, and the launcher will continue matching it like a
+   chromium application.
+ * Close the chromium window.
+
+Actions:
+ * Open the dash and search for "chrom"
+ * An application called "Home | Ubuntu" should be shown
+ * Launch it
+
+Expected Results:
+ * The launcher will show an icon for the "Home | Ubuntu" application
+
+Actions:
+ * Open a standard chromium window
+
+Expected Results:
+ * The new chromium window will be associated to the standard chromium
+   application icon.
+ * Clicking the "Home | Ubuntu" will activate its window, while clicking
+   in the chromium icon will activate a chromium window.
+
+
+Test Launcher raises focused non-top windows
+--------------------------------------------
+This tests shows how the focused windows should be raised to the top of the
+stack, when another non-active window is over them.
+
+Actions:
+ * Open a terminal Window
+ * Open The GIMP
+ * In GIMP load an image, say /usr/share/backgrounds/warty-final-ubuntu.png
+ * From the terminal window run the command "gimp foo-image.png"
+
+Expected Results:
+ * A gimp dialog will be raised (so the terminal window is below it), but not focused
+ * Terminal launcher icon must have a filled-in arrow on the right of the icon
+
+Actions:
+ * Click on the launcher terminal icon
+
+Expected Results:
+ * Terminal window will be raised to the top of the stack (over the GIMP window)

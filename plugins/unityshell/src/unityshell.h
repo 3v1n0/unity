@@ -36,7 +36,7 @@
 
 #include "Introspectable.h"
 #include "DashController.h"
-#include "DashSettings.h"
+#include "UnitySettings.h"
 #include "DashStyle.h"
 #include "FavoriteStoreGSettings.h"
 #include "FontSettings.h"
@@ -52,7 +52,7 @@
 #include "UBusWrapper.h"
 #include "UnityshellPrivate.h"
 #include "UnityShowdesktopHandler.h"
-#ifndef USE_GLES
+#ifndef USE_MODERN_COMPIZ_GL
 #include "ScreenEffectFramebufferObject.h"
 #endif
 
@@ -92,7 +92,7 @@ public:
   void nuxEpilogue();
 
   /* nux draw wrapper */
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
   void paintDisplay();
 #else
   void paintDisplay(const CompRegion& region, const GLMatrix& transform, unsigned int mask);
@@ -119,7 +119,7 @@ public:
                      const CompRegion&,
                      CompOutput*,
                      unsigned int);
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
   void glPaintCompositedOutput (const CompRegion    &region,
                                 ::GLFramebufferObject *fbo,
                                 unsigned int         mask);
@@ -233,7 +233,7 @@ private:
 
   void OnPanelStyleChanged();
 
-  dash::Settings dash_settings_;
+  Settings dash_settings_;
   dash::Style    dash_style_;
   panel::Style   panel_style_;
   FontSettings   font_settings_;
@@ -241,7 +241,7 @@ private:
   internal::FavoriteStoreGSettings favorite_store_;
 
   /* The window thread should be the last thing removed, as c++ does it in reverse order */
-  std::unique_ptr<nux::WindowThread>    wt;
+  std::unique_ptr<nux::WindowThread> wt;
 
   /* These must stay below the window thread, please keep the order */
   launcher::Controller::Ptr launcher_controller_;
@@ -250,7 +250,7 @@ private:
   switcher::Controller::Ptr switcher_controller_;
   hud::Controller::Ptr      hud_controller_;
   shortcut::Controller::Ptr shortcut_controller_;
-  debug::DebugDBusInterface  debugger_;
+  debug::DebugDBusInterface debugger_;
 
   std::list<shortcut::AbstractHint::Ptr> hints_;
   bool enable_shortcut_overlay_;
@@ -285,7 +285,7 @@ private:
 
   BGHash _bghash;
 
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
   ::GLFramebufferObject *oldFbo;
 #else
   ScreenEffectFramebufferObject::Ptr _fbo;
@@ -310,7 +310,7 @@ private:
   bool paint_panel_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> panel_texture_;
 
-#ifndef USE_GLES
+#ifndef USE_MODERN_COMPIZ_GL
   ScreenEffectFramebufferObject::GLXGetProcAddressProc glXGetProcAddressP;
 #endif
 
@@ -351,7 +351,7 @@ public:
 
   /* basic window draw function */
   bool glDraw(const GLMatrix& matrix,
-#ifndef USE_GLES
+#ifndef USE_MODERN_COMPIZ_GL
               GLFragment::Attrib& attrib,
 #else
               const GLWindowPaintAttrib& attrib,

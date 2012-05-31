@@ -2,10 +2,10 @@ if (GTEST_SRC_DIR)
   set(UNITY_SRC ${CMAKE_SOURCE_DIR}/plugins/unityshell/src)
 
   add_custom_command(OUTPUT GestureEngine.cpp GestureEngine.h UBusMessages.h
-                     COMMAND cp ${UNITY_SRC}/GestureEngine.cpp ${UNITY_SRC}/GestureEngine.h ${UNITY_SRC}/UBusMessages.h ${CMAKE_CURRENT_BINARY_DIR}
+                     COMMAND cp ${UNITY_SRC}/GestureEngine.cpp ${UNITY_SRC}/GestureEngine.h ${CMAKE_SOURCE_DIR}/unity-shared//UBusMessages.h ${CMAKE_CURRENT_BINARY_DIR}
                      COMMAND sed -f ${CMAKE_CURRENT_SOURCE_DIR}/sed_script ${UNITY_SRC}/GestureEngine.cpp > ${CMAKE_CURRENT_BINARY_DIR}/GestureEngine.cpp
                      COMMAND sed -f ${CMAKE_CURRENT_SOURCE_DIR}/sed_script ${UNITY_SRC}/GestureEngine.h > ${CMAKE_CURRENT_BINARY_DIR}/GestureEngine.h
-                     DEPENDS ${UNITY_SRC}/GestureEngine.cpp ${UNITY_SRC}/GestureEngine.h ${UNITY_SRC}/UBusMessages.h
+                     DEPENDS ${UNITY_SRC}/GestureEngine.cpp ${UNITY_SRC}/GestureEngine.h ${CMAKE_SOURCE_DIR}/unity-shared/UBusMessages.h
                      COMMENT "Copying GestureEngine source.")
 
   # Clean-up includes and definitions made in ../CmakeLists.txt
