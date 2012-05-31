@@ -4,8 +4,8 @@ unity (5.12-0ubuntu3) UNRELEASED; urgency=low
     - build on unversionned version of boost (to transition to 1.49 in quantal)
   * debian/rules:
     - build in parallel
-  * Cherry-pick a fix for the newer g-c-c making previous upload FTBFS in
-    quantal
+  * Cherry-pick some upstream fixes for the newer g-c-c making previous upload
+    FTBFS in quantal
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 31 May 2012 10:21:46 +0200
 
