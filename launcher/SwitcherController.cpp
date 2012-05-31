@@ -34,10 +34,6 @@ using ui::LayoutWindowList;
 
 namespace switcher
 {
-namespace
-{
-gboolean OnDetailTimerCb(gpointer data);
-}
 
 Controller::Controller(unsigned int load_timeout)
   :  timeout_length(75)
@@ -48,30 +44,13 @@ Controller::Controller(unsigned int load_timeout)
   ,  main_layout_(nullptr)
   ,  monitor_(0)
   ,  visible_(false)
-  ,  show_timer_(0)
-  ,  detail_timer_(0)
-  ,  lazy_timer_(0)
-  ,  view_idle_timer_(0)
   ,  bg_color_(0, 0, 0, 0.5)
 {
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
 
-  /* Construct the view after a prefixed timeout, to improve the startup time */
-  lazy_timer_ = g_timeout_add_seconds_full(G_PRIORITY_LOW, construct_timeout_, [] (gpointer data) -> gboolean {
-    auto self = static_cast<Controller*>(data);
-    self->lazy_timer_ = 0;
-    self->ConstructWindow();
-    return FALSE;
-  }, this, nullptr);
-}
-
-Controller::~Controller()
-{
-  if (lazy_timer_)
-    g_source_remove(lazy_timer_);
-
-  if (view_idle_timer_)
-    g_source_remove(view_idle_timer_);
+  glib::Source::Ptr lazy_timeout(new glib::Timeout(construct_timeout_ * 1000, glib::Source::Priority::LOW));
+  lazy_timeout->Run([&]() { ConstructWindow(); return false; });
+  sources_.Add(lazy_timeout);
 }
 
 void Controller::OnBackgroundUpdate(GVariant* data)
@@ -103,25 +82,13 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
 
   if (timeout_length > 0)
   {
-    if (view_idle_timer_)
-      g_source_remove(view_idle_timer_);
+    glib::Source::Ptr view_idle_construct(new glib::Idle());
+    sources_.Add(view_idle_construct, "view-idle-construct");
+    view_idle_construct->Run([&] () { ConstructView(); return false; });
 
-    view_idle_timer_ = g_idle_add_full(G_PRIORITY_LOW, [] (gpointer data) -> gboolean {
-      auto self = static_cast<Controller*>(data);
-      self->ConstructView();
-      self->view_idle_timer_ = 0;
-      return FALSE;
-    }, this, NULL);
-
-    if (show_timer_)
-      g_source_remove (show_timer_);
-
-    show_timer_ = g_timeout_add(timeout_length, [] (gpointer data) -> gboolean {
-      auto self = static_cast<Controller*>(data);
-      self->ShowView();
-      self->show_timer_ = 0;
-      return FALSE;
-    }, this);
+    glib::Source::Ptr show_timeout(new glib::Timeout(timeout_length));
+    sources_.Add(show_timeout, "show-timeout");
+    show_timeout->Run([&] () { ShowView(); return false; });
   }
   else
   {
@@ -130,9 +97,9 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
 
   if (detail_on_timeout)
   {
-    if (detail_timer_)
-      g_source_remove (detail_timer_);
-    detail_timer_ = g_timeout_add(initial_detail_timeout_length, OnDetailTimerCb, this);
+    glib::Source::Ptr detail_timeout(new glib::Timeout(initial_detail_timeout_length));
+    sources_.Add(detail_timeout, "detail-timeout");
+    detail_timeout->Run(sigc::mem_fun(this, &Controller::OnDetailTimer));
   }
 
   ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
@@ -145,7 +112,7 @@ void Controller::Select(int index)
     model_->Select(index);
 }
 
-gboolean Controller::OnDetailTimer()
+bool Controller::OnDetailTimer()
 {
   if (visible_ && !model_->detail_selection)
   {
@@ -153,18 +120,16 @@ gboolean Controller::OnDetailTimer()
     detail_mode_ = TAB_NEXT_WINDOW;
   }
 
-  detail_timer_ = 0;
-  return FALSE;
+  return false;
 }
 
 void Controller::OnModelSelectionChanged(AbstractLauncherIcon::Ptr icon)
 {
   if (detail_on_timeout)
   {
-    if (detail_timer_)
-      g_source_remove(detail_timer_);
-
-    detail_timer_ = g_timeout_add(detail_timeout_length, OnDetailTimerCb, this);
+    glib::Source::Ptr detail_timeout(new glib::Timeout(detail_timeout_length));
+    sources_.Add(detail_timeout, "detail-timeout");
+    detail_timeout->Run(sigc::mem_fun(this, &Controller::OnDetailTimer));
   }
 
   if (icon)
@@ -192,12 +157,6 @@ void Controller::ShowView()
 
 void Controller::ConstructWindow()
 {
-  if (lazy_timer_)
-  {
-    g_source_remove(lazy_timer_);
-    lazy_timer_ = 0;
-  }
-
   if (!view_window_)
   {
     main_layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
@@ -215,12 +174,6 @@ void Controller::ConstructView()
 {
   if (view_ || !model_)
     return;
-
-  if (view_idle_timer_)
-  {
-    g_source_remove(view_idle_timer_);
-    view_idle_timer_ = 0;
-  }
 
   view_ = SwitcherView::Ptr(new SwitcherView());
   AddChild(view_.GetPointer());
@@ -274,11 +227,9 @@ void Controller::Hide(bool accept_state)
     }
   }
 
-  if (view_idle_timer_)
-  {
-    g_source_remove(view_idle_timer_);
-    view_idle_timer_ = 0;
-  }
+  sources_.Remove("view-idle-construct");
+  sources_.Remove("show-timeout");
+  sources_.Remove("detail-timeout");
 
   model_.reset();
   visible_ = false;
@@ -291,14 +242,6 @@ void Controller::Hide(bool accept_state)
     view_window_->SetOpacity(0.0f);
     view_window_->ShowWindow(false);
   }
-
-  if (show_timer_)
-    g_source_remove(show_timer_);
-  show_timer_ = 0;
-
-  if (detail_timer_)
-    g_source_remove(detail_timer_);
-  detail_timer_ = 0;
 
   ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN, g_variant_new("(bi)", false, monitor_));
 
@@ -512,15 +455,5 @@ Controller::AddProperties(GVariantBuilder* builder)
   .add("detail-mode", detail_mode_);
 }
 
-namespace
-{
-
-gboolean OnDetailTimerCb(gpointer data)
-{
-  Controller* controller = static_cast<Controller*>(data);
-  return controller->OnDetailTimer();
-}
-
-}
-}
-}
+} // switcher namespace
+} // unity namespace
