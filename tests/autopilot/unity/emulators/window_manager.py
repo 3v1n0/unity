@@ -10,12 +10,13 @@
 from __future__ import absolute_import
 
 import logging
+from autopilot.keybindings import KeybindingsHelper
 from autopilot.introspection.unity import UnityIntrospectionObject
 
 logger = logging.getLogger(__name__)
 
 
-class WindowManager(UnityIntrospectionObject):
+class WindowManager(UnityIntrospectionObject, KeybindingsHelper):
     """The WindowManager class."""
 
     @property
