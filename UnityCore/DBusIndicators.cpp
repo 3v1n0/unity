@@ -45,7 +45,6 @@ class DBusIndicators::Impl
 {
 public:
   Impl(DBusIndicators* owner);
-  ~Impl();
 
   void CheckLocalService();
   void RequestSyncAll();
@@ -70,18 +69,12 @@ public:
   virtual void OnShowAppMenu(unsigned int xid, int x, int y,
                              unsigned int timestamp);
 
-  struct CallData
-  {
-    Impl* self;
-    glib::Variant parameters;
-  };
-
   DBusIndicators* owner_;
 
-  guint show_entry_idle_id_;
-  guint show_appmenu_idle_id_;
   glib::DBusProxy gproxy_;
   glib::Source::UniquePtr reconnect_timeout_;
+  glib::Source::UniquePtr show_entry_idle_;
+  glib::Source::UniquePtr show_appmenu_idle_;
   std::map<std::string, EntryLocationMap> cached_locations_;
 };
 
@@ -89,8 +82,6 @@ public:
 // Public Methods
 DBusIndicators::Impl::Impl(DBusIndicators* owner)
   : owner_(owner)
-  , show_entry_idle_id_(0)
-  , show_appmenu_idle_id_(0)
   , gproxy_(SERVICE_NAME, SERVICE_PATH, SERVICE_IFACE,
             G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES)
 {
@@ -103,15 +94,6 @@ DBusIndicators::Impl::Impl(DBusIndicators* owner)
   gproxy_.disconnected.connect(sigc::mem_fun(this, &DBusIndicators::Impl::OnDisconnected));
 
   CheckLocalService();
-}
-
-DBusIndicators::Impl::~Impl()
-{
-  if (show_entry_idle_id_)
-    g_source_remove(show_entry_idle_id_);
-
-  if (show_appmenu_idle_id_)
-    g_source_remove(show_appmenu_idle_id_);
 }
 
 void DBusIndicators::Impl::CheckLocalService()
@@ -235,20 +217,13 @@ void DBusIndicators::Impl::OnEntryShowMenu(std::string const& entry_id,
   // We have to do this because on certain systems X won't have time to
   // respond to our request for XUngrabPointer and this will cause the
   // menu not to show
-  auto data = new CallData();
-  data->self = this;
-  data->parameters = g_variant_new("(suiiuu)", entry_id.c_str(), xid, x, y,
-                                   button, timestamp);
 
-  if (show_entry_idle_id_)
-    g_source_remove(show_entry_idle_id_);
-
-  show_entry_idle_id_ = g_idle_add_full (G_PRIORITY_DEFAULT, [] (gpointer data) -> gboolean {
-    auto call_data = static_cast<CallData*>(data);
-    call_data->self->gproxy_.Call("ShowEntry", call_data->parameters);
-
-    return FALSE;
-  }, data, [] (gpointer data) { delete static_cast<CallData*>(data); });
+  show_entry_idle_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
+  show_entry_idle_->Run([&, xid, x, y, button, timestamp] {
+    gproxy_.Call("ShowEntry", g_variant_new("(suiiuu)", entry_id.c_str(), xid,
+                                                        x, y, button, timestamp));
+    return false;
+  });
 }
 
 void DBusIndicators::Impl::OnShowAppMenu(unsigned int xid, int x, int y,
@@ -259,19 +234,12 @@ void DBusIndicators::Impl::OnShowAppMenu(unsigned int xid, int x, int y,
   // We have to do this because on certain systems X won't have time to
   // respond to our request for XUngrabPointer and this will cause the
   // menu not to show
-  auto data = new CallData();
-  data->self = this;
-  data->parameters = g_variant_new("(uiiu)", xid, x, y, timestamp);
 
-  if (show_appmenu_idle_id_)
-    g_source_remove(show_appmenu_idle_id_);
-
-  show_appmenu_idle_id_ = g_idle_add_full (G_PRIORITY_DEFAULT, [] (gpointer data) -> gboolean {
-    auto call_data = static_cast<CallData*>(data);
-    call_data->self->gproxy_.Call("ShowAppMenu", call_data->parameters);
-
-    return FALSE;
-  }, data, [] (gpointer data) { delete static_cast<CallData*>(data); });
+  show_entry_idle_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
+  show_entry_idle_->Run([&, xid, x, y, timestamp] {
+    gproxy_.Call("ShowEntry", g_variant_new("(uiiu)", xid, x, y, timestamp));
+    return false;
+  });
 }
 
 void DBusIndicators::Impl::OnEntrySecondaryActivate(std::string const& entry_id,
