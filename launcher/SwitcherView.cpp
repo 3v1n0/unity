@@ -106,7 +106,8 @@ void SwitcherView::AddProperties(GVariantBuilder* builder)
   .add("vertical-size", vertical_size)
   .add("text-size", text_size)
   .add("animation-length", animation_length)
-  .add("spread-size", (float)spread_size);
+  .add("spread-size", (float)spread_size)
+  .add("label", text_view_->GetText());
 }
 
 
