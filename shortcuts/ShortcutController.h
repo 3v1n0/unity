@@ -44,9 +44,8 @@ class Controller : public debug::Introspectable
 public:
   typedef std::shared_ptr<Controller> Ptr;
 
-  // Ctor and dtor
+  // Ctor
   Controller(std::list<AbstractHint::Ptr>& hints);
-  ~Controller();
 
   // Public Methods
   bool Show();

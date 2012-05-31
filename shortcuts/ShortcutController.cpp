@@ -66,12 +66,6 @@ Controller::Controller(std::list<AbstractHint::Ptr>& hints)
   fade_out_animator_.animation_ended.connect(sigc::mem_fun(this, &Controller::OnFadeOutEnded));
 }
 
-Controller::~Controller()
-{
-  view_.Release();
-}
-
-
 void Controller::OnFadeInUpdated(double opacity)
 {
   view_window_->SetOpacity(opacity);
