@@ -2,6 +2,8 @@ find_package (Compiz REQUIRED)
 
 include (CompizPlugin)
 
+set (COMPIZ_PLUGIN_INSTALL_TYPE "package")
+
 compiz_plugin (unityshell
                PKGDEPS ${UNITY_PLUGIN_DEPS}
                PLUGINDEPS composite opengl compiztoolbox
