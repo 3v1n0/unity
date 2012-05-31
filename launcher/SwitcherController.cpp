@@ -45,7 +45,6 @@ Controller::Controller(unsigned int load_timeout)
   ,  detail_timeout_length(500)
   ,  initial_detail_timeout_length(1500)
   ,  construct_timeout_(load_timeout)
-  ,  view_window_(nullptr)
   ,  main_layout_(nullptr)
   ,  monitor_(0)
   ,  visible_(false)
@@ -68,9 +67,6 @@ Controller::Controller(unsigned int load_timeout)
 
 Controller::~Controller()
 {
-  if (view_window_)
-    view_window_->UnReference();
-
   if (lazy_timer_)
     g_source_remove(lazy_timer_);
 
@@ -95,7 +91,7 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
   {
     std::sort(results.begin(), results.end(), CompareSwitcherItemsPriority);
   }
-  
+
   model_.reset(new SwitcherModel(results));
   AddChild(model_.get());
   model_->selection_changed.connect(sigc::mem_fun(this, &Controller::OnModelSelectionChanged));
@@ -187,7 +183,7 @@ void Controller::ShowView()
 {
   if (!visible_)
     return;
-  
+
   ConstructView();
 
   if (view_window_)
@@ -209,7 +205,6 @@ void Controller::ConstructWindow()
     main_layout_->SetHorizontalExternalMargin(0);
 
     view_window_ = new nux::BaseWindow("Switcher");
-    view_window_->SinkReference();
     view_window_->SetLayout(main_layout_);
     view_window_->SetBackgroundColor(nux::Color(0x00000000));
     view_window_->SetGeometry(workarea_);

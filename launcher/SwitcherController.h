@@ -124,7 +124,7 @@ private:
   UBusManager ubus_manager_;
   nux::Geometry workarea_;
 
-  nux::BaseWindow* view_window_;
+  nux::ObjectPtr<nux::BaseWindow> view_window_;
   nux::HLayout* main_layout_;
 
   int monitor_;
