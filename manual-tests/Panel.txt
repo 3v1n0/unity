@@ -69,3 +69,13 @@ Expected Result:
 Expected Result:
   The panel should stay translucent
 
+Disabled Top-level Menus
+------------------------
+Setup:
+#. Install the 'gnome-dictionary' package.
+#. Launch the 'gnome-dictionary' application.
+#. Open the 'View' menu.
+#. Move the mouse over the 'Go' menu.
+
+Expected Results:
+#. THe Go menu should NOT open.
