@@ -588,7 +588,6 @@ IconLoader::IconLoader()
 
 IconLoader::~IconLoader()
 {
-  delete pimpl;
 }
 
 IconLoader& IconLoader::GetDefault()

@@ -25,6 +25,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <memory>
 #include <sigc++/sigc++.h>
 #include <gtk/gtk.h>
 
@@ -66,8 +67,7 @@ public:
 
 private:
   class Impl;
-  Impl* pimpl;
-
+  std::unique_ptr<Impl> pimpl;
 };
 
 }
