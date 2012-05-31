@@ -19,15 +19,13 @@
 
 #include "IconLoader.h"
 
-#include <map>
 #include <queue>
 #include <sstream>
-
 #include <boost/algorithm/string.hpp>
 
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
-#include <string.h>
+#include <UnityCore/GLibSource.h>
 
 #include "unity-shared/Timer.h"
 
@@ -152,8 +150,7 @@ private:
   static gboolean LoadIconComplete(IconLoaderTask* task);
   static gboolean CoalesceTasksCb(IconLoader::Impl* self);
 
-  // Loop calls the iteration function.
-  static gboolean Loop(Impl* self);
+  // Looping idle callback function
   bool Iteration();
 
 private:
@@ -168,17 +165,16 @@ private:
   typedef std::vector<IconLoaderTask*> TaskArray;
   TaskArray finished_tasks_;
 
-  guint idle_id_;
   guint coalesce_id_;
   bool no_load_;
   GtkIconTheme* theme_; // Not owned.
   Handle handle_counter_;
+  glib::Source::UniquePtr idle_;
 };
 
 
 IconLoader::Impl::Impl()
-  : idle_id_(0)
-  , coalesce_id_(0)
+  : coalesce_id_(0)
   // Option to disable loading, if you're testing performance of other things
   , no_load_(::getenv("UNITY_ICON_LOADER_DISABLE"))
   , theme_(::gtk_icon_theme_get_default())
@@ -310,9 +306,9 @@ int IconLoader::Impl::QueueTask(std::string const& key,
   LOG_DEBUG(logger) << "Pushing task  " << data << " at size " << size
                     << ", queue size now at " << tasks_.size();
 
-  if (idle_id_ == 0)
+  if (!idle_)
   {
-    idle_id_ = g_idle_add_full(G_PRIORITY_LOW, (GSourceFunc)Loop, this, NULL);
+    idle_.reset(new glib::Idle(sigc::mem_fun(this, &Impl::Iteration), glib::Source::Priority::LOW));
   }
   return task->handle;
 }
@@ -580,18 +576,13 @@ bool IconLoader::Impl::Iteration()
 
   if (queue_empty)
   {
-    idle_id_ = 0;
     if (task_map_.empty())
       handle_counter_ = 0;
+
+    idle_ = nullptr;
   }
 
   return !queue_empty;
-}
-
-
-gboolean IconLoader::Impl::Loop(IconLoader::Impl* self)
-{
-  return self->Iteration() ? TRUE : FALSE;
 }
 
 IconLoader::IconLoader()
