@@ -78,7 +78,7 @@ private:
   Model::Ptr model_;
 
   nux::Geometry workarea_;
-  nux::BaseWindow* view_window_;
+  nux::ObjectPtr<nux::BaseWindow> view_window_;
   nux::HLayout* main_layout_;
 
   bool visible_;
