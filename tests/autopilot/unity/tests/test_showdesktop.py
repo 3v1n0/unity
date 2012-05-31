@@ -34,9 +34,9 @@ class ShowDesktopTests(UnityTestCase):
         self.launch_test_apps()
 
         # show desktop, verify all windows are hidden:
-        self.keybinding("window/show_desktop")
-        self.addCleanup(self.keybinding, "window/show_desktop")
-        sleep(3)
+        self.window_manager.enter_show_desktop()
+        self.addCleanup(self.window_manager.leave_show_desktop)
+
         open_wins = self.bamf.get_open_windows()
         self.assertGreaterEqual(len(open_wins), 2)
         for win in open_wins:
@@ -48,9 +48,9 @@ class ShowDesktopTests(UnityTestCase):
         self.launch_test_apps()
 
         # show desktop, verify all windows are hidden:
-        self.keybinding("window/show_desktop")
-        self.addCleanup(self.keybinding, "window/show_desktop")
-        sleep(3)
+        self.window_manager.enter_show_desktop()
+        self.addCleanup(self.window_manager.leave_show_desktop)
+
         open_wins = self.bamf.get_open_windows()
         self.assertGreaterEqual(len(open_wins), 2)
         for win in open_wins:
@@ -58,9 +58,8 @@ class ShowDesktopTests(UnityTestCase):
             self.assertTrue(win.is_hidden, "Window '%s' is not hidden after show desktop activated." % (win.title))
 
         # un-show desktop, verify all windows are shown:
-        self.keybinding("window/show_desktop")
-        self.addCleanup(self.keybinding, "window/show_desktop")
-        sleep(3)
+        self.window_manager.leave_show_desktop()
+
         for win in self.bamf.get_open_windows():
             self.assertTrue(win.is_valid)
             self.assertFalse(win.is_hidden, "Window '%s' is shown after show desktop deactivated." % (win.title))
@@ -70,10 +69,9 @@ class ShowDesktopTests(UnityTestCase):
         self.launch_test_apps()
 
         # show desktop, verify all windows are hidden:
-        self.keybinding("window/show_desktop")
-        self.addCleanup(self.keybinding, "window/show_desktop")
+        self.window_manager.enter_show_desktop()
+        self.addCleanup(self.window_manager.leave_show_desktop)
 
-        sleep(3)
         open_wins = self.bamf.get_open_windows()
         self.assertGreaterEqual(len(open_wins), 2)
         for win in open_wins:
@@ -96,9 +94,8 @@ class ShowDesktopTests(UnityTestCase):
                     self.assertTrue(win.is_hidden, "Window '%s' should still be hidden." % (win.title))
 
         # hide desktop - now all windows should be visible:
-        self.keybinding("window/show_desktop")
-        self.addCleanup(self.keybinding, "window/show_desktop")
-        sleep(3)
+        self.window_manager.leave_show_desktop()
+
         for win in self.bamf.get_open_windows():
             if win.is_valid:
                 self.assertFalse(win.is_hidden, "Window '%s' is not shown after show desktop deactivated." % (win.title))
@@ -121,7 +118,8 @@ class ShowDesktopTests(UnityTestCase):
             self.switcher.previous_icon()
             sleep(0.25)
         self.assertTrue(found, "Could not find 'Show Desktop' entry in switcher.")
-        self.addCleanup(self.keybinding, "window/show_desktop")
+        self.addCleanup(self.window_manager.leave_show_desktop)
+
         self.switcher.select()
 
         sleep(3)
