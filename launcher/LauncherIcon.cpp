@@ -72,9 +72,6 @@ LauncherIcon::LauncherIcon()
   : _remote_urgent(false)
   , _present_urgency(0)
   , _progress(0)
-  , _center_stabilize_handle(0)
-  , _present_time_handle(0)
-  , _time_delay_handle(0)
   , _sort_priority(0)
   , _last_monitor(0)
   , _background_color(nux::color::White)
@@ -119,18 +116,6 @@ LauncherIcon::LauncherIcon()
 LauncherIcon::~LauncherIcon()
 {
   SetQuirk(QUIRK_URGENT, false);
-
-  if (_present_time_handle)
-    g_source_remove(_present_time_handle);
-  _present_time_handle = 0;
-
-  if (_center_stabilize_handle)
-    g_source_remove(_center_stabilize_handle);
-  _center_stabilize_handle = 0;
-
-  if (_time_delay_handle)
-    g_source_remove(_time_delay_handle);
-  _time_delay_handle = 0;
 
   // clean up the whole signal-callback mess
   if (needs_redraw_connection.connected())
@@ -662,18 +647,15 @@ void LauncherIcon::HideTooltip()
     _tooltip->ShowWindow(false);
 }
 
-gboolean
-LauncherIcon::OnCenterTimeout(gpointer data)
+bool
+LauncherIcon::OnCenterStabilizeTimeout()
 {
-  LauncherIcon* self = (LauncherIcon*)data;
-
-  if (!std::equal(self->_center.begin(), self->_center.end(), self->_last_stable.begin()))
+  if (!std::equal(_center.begin(), _center.end(), _last_stable.begin()))
   {
-    self->OnCenterStabilized(self->_center);
-    self->_last_stable = self->_center;
+    OnCenterStabilized(_center);
+    _last_stable = _center;
   }
 
-  self->_center_stabilize_handle = 0;
   return false;
 }
 
@@ -697,10 +679,9 @@ LauncherIcon::SetCenter(nux::Point3 center, int monitor, nux::Geometry geo)
       _tooltip->ShowTooltipWithTipAt(tip_x, tip_y);
   }
 
-  if (_center_stabilize_handle)
-    g_source_remove(_center_stabilize_handle);
-
-  _center_stabilize_handle = g_timeout_add(500, &LauncherIcon::OnCenterTimeout, this);
+  glib::Source::Ptr timeout(new glib::Timeout(500));
+  _source_manager.Add(timeout, "center-stabilize-timeout");
+  timeout->Run(sigc::mem_fun(this, &LauncherIcon::OnCenterStabilizeTimeout));
 }
 
 nux::Point3
@@ -753,15 +734,13 @@ LauncherIcon::IsVisibleOnMonitor(int monitor) const
   return _is_visible_on_monitor[monitor];
 }
 
-gboolean
-LauncherIcon::OnPresentTimeout(gpointer data)
+bool
+LauncherIcon::OnPresentTimeout()
 {
-  LauncherIcon* self = (LauncherIcon*) data;
-  if (!self->GetQuirk(QUIRK_PRESENTED))
+  if (!GetQuirk(QUIRK_PRESENTED))
     return false;
 
-  self->_present_time_handle = 0;
-  self->Unpresent();
+  Unpresent();
 
   return false;
 }
@@ -778,7 +757,11 @@ LauncherIcon::Present(float present_urgency, int length)
     return;
 
   if (length >= 0)
-    _present_time_handle = g_timeout_add(length, &LauncherIcon::OnPresentTimeout, this);
+  {
+    glib::Source::Ptr timeout(new glib::Timeout(length));
+    _source_manager.Add(timeout, "present-timeout");
+    timeout->Run(sigc::mem_fun(this, &LauncherIcon::OnPresentTimeout));
+  }
 
   _present_urgency = CLAMP(present_urgency, 0.0f, 1.0f);
   SetQuirk(QUIRK_PRESENTED, true);
@@ -790,10 +773,7 @@ LauncherIcon::Unpresent()
   if (!GetQuirk(QUIRK_PRESENTED))
     return;
 
-  if (_present_time_handle > 0)
-    g_source_remove(_present_time_handle);
-  _present_time_handle = 0;
-
+  _source_manager.Remove("present-timeout");
   SetQuirk(QUIRK_PRESENTED, false);
 }
 
@@ -870,28 +850,15 @@ LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value)
   }
 }
 
-gboolean
-LauncherIcon::OnDelayedUpdateTimeout(gpointer data)
-{
-  DelayedUpdateArg* arg = (DelayedUpdateArg*) data;
-  LauncherIcon* self = arg->self;
-
-  clock_gettime(CLOCK_MONOTONIC, &(self->_quirk_times[arg->quirk]));
-  self->EmitNeedsRedraw();
-
-  self->_time_delay_handle = 0;
-
-  return false;
-}
-
 void
 LauncherIcon::UpdateQuirkTimeDelayed(guint ms, LauncherIcon::Quirk quirk)
 {
-  DelayedUpdateArg* arg = new DelayedUpdateArg();
-  arg->self = this;
-  arg->quirk = quirk;
-
-  _time_delay_handle = g_timeout_add(ms, &LauncherIcon::OnDelayedUpdateTimeout, arg);
+  glib::Source::Ptr timeout(new glib::Timeout(ms));
+  _source_manager.Add(timeout, "quirk-delay-timeout");
+  timeout->Run([&, quirk] {
+    UpdateQuirkTime(quirk);
+    return false;
+  });
 }
 
 void
