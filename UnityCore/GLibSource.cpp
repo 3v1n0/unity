@@ -249,17 +249,15 @@ void SourceManager::OnSourceRemoved(unsigned int id)
 
 void SourceManager::Remove(std::string const& nick)
 {
-  for (auto it = sources_.begin(); it != sources_.end(); ++it)
+  auto it = sources_.find(nick);
+
+  if (it != sources_.end())
   {
     auto source = it->second;
 
-    if (it->first == nick)
-    {
-      source->removed.clear();
-      source->Remove();
-      sources_.erase(it);
-      break;
-    }
+    source->removed.clear();
+    source->Remove();
+    sources_.erase(it);
   }
 }
 
