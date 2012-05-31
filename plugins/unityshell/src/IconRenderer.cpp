@@ -104,7 +104,7 @@ void main()                                         \n\
   tex.t = tex.t/varyTexCoord0.w;                    \n\
                                                     \n\
   vec4 texel = color0 * SampleTexture(TextureObject0, tex);  \n\
-  vec4 desat = vec4 ("LUMIN_RED"*texel.r + "LUMIN_GREEN"*texel.g + "LUMIN_BLUE"*texel.b);  \n\
+  vec4 desat = vec4 (" LUMIN_RED "*texel.r + " LUMIN_GREEN "*texel.g + " LUMIN_BLUE "*texel.b);  \n\
   vec4 final_color = (vec4 (1.0, 1.0, 1.0, 1.0) - desat_factor) * desat + desat_factor * texel; \n\
   final_color = colorify_color * final_color;       \n\
   final_color.a = texel.a;                          \n\
@@ -134,7 +134,7 @@ nux::NString PerspectiveCorrectTexFrg = TEXT(
 PARAM color0 = program.local[0];                              \n\
 PARAM factor = program.local[1];                              \n\
 PARAM colorify_color = program.local[2];                      \n\
-PARAM luma = {"LUMIN_RED", "LUMIN_GREEN", "LUMIN_BLUE", 0.0}; \n\
+PARAM luma = {" LUMIN_RED ", " LUMIN_GREEN ", " LUMIN_BLUE ", 0.0}; \n\
 TEMP temp;                                                    \n\
 TEMP pcoord;                                                  \n\
 TEMP tex0;                                                    \n\
@@ -156,7 +156,7 @@ nux::NString PerspectiveCorrectTexRectFrg = TEXT(
 PARAM color0 = program.local[0];                              \n\
 PARAM factor = program.local[1];                              \n\
 PARAM colorify_color = program.local[2];                      \n\
-PARAM luma = {"LUMIN_RED", "LUMIN_GREEN", "LUMIN_BLUE", 0.0}; \n\
+PARAM luma = {" LUMIN_RED ", " LUMIN_GREEN ", " LUMIN_BLUE ", 0.0}; \n\
 TEMP temp;                                                    \n\
 TEMP pcoord;                                                  \n\
 TEMP tex0;                                                    \n\
