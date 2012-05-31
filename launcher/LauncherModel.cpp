@@ -51,10 +51,10 @@ void LauncherModel::AddProperties(GVariantBuilder* builder)
 unity::debug::Introspectable::IntrospectableList const& LauncherModel::GetIntrospectableChildren()
 {
   introspection_results_.clear();
-  
+
   for (auto icon : _inner)
     introspection_results_.push_back(icon.GetPointer());
-  
+
   return introspection_results_;
 }
 
@@ -137,13 +137,10 @@ LauncherModel::RemoveIcon(AbstractLauncherIcon::Ptr icon)
 void
 LauncherModel::OnIconRemove(AbstractLauncherIcon::Ptr icon)
 {
-  removed_icons_.push(icon);
   glib::Source::Ptr timeout(new glib::Timeout(1000));
   timeouts_.Add(timeout);
 
-  timeout->Run([&] {
-    auto icon = removed_icons_.front();
-    removed_icons_.pop();
+  timeout->Run([&, icon] {
     RemoveIcon(icon);
     return false;
   });

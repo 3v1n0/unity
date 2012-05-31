@@ -97,7 +97,6 @@ private:
   Base             _inner_main;
   int              selection_;
   std::list<unity::debug::Introspectable*> introspection_results_;
-  std::queue<AbstractLauncherIcon::Ptr> removed_icons_;
   glib::SourceManager timeouts_;
 
   bool Populate();
