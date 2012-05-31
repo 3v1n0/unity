@@ -167,8 +167,9 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
 
 BamfLauncherIcon::~BamfLauncherIcon()
 {
-  g_object_set_qdata(G_OBJECT(_bamf_app.RawPtr()),
-                     g_quark_from_static_string("unity-seen"), nullptr);
+  if (_bamf_app)
+    g_object_set_qdata(G_OBJECT(_bamf_app.RawPtr()),
+                       g_quark_from_static_string("unity-seen"), nullptr);
 
   if (_remove_timeout_id != 0)
     g_source_remove(_remove_timeout_id);

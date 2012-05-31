@@ -349,7 +349,7 @@ void LauncherModel::SetSelection(int selection)
 
   if (new_selection == selection_)
     return;
-  
+
   selection_ = new_selection;
   selection_changed.emit(Selection());
 }
