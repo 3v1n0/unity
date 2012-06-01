@@ -229,7 +229,7 @@ public:
   void moveNotify(int dx, int dy, bool immediate);
 
   bool glDraw(const GLMatrix&,
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
               const GLWindowPaintAttrib&,
 #else
               GLFragment::Attrib&,

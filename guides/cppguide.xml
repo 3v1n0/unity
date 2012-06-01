@@ -16,7 +16,7 @@
 </ACKNOWLEDGEMENTS>
 -->
 <p align="right">
-Revision 4.0
+Revision 4.1
 </p>
 
 <address>
@@ -413,7 +413,7 @@ Neil J. Patel
       named namespaces, choose the name based on the
 
       project, and possibly its path.
-      Do not use a <SYNTAX>using-directive</SYNTAX>.
+      Do not use a <SYNTAX>using-directive</SYNTAX> in a header file.
     </SUMMARY>
     <BODY>
       <DEFINITION>
@@ -458,11 +458,11 @@ Neil J. Patel
                  <code>.cpp</code> files, to avoid runtime naming
                  conflicts:
                  <CODE_SNIPPET>
-                   namespace {                           // This is in a .cpp file.
-
+                   namespace                           // This is in a .cpp file.
+                   {
                    // The content of a namespace is not indented
-                   enum { kUnused, kEOF, kError };       // Commonly used tokens.
-                   bool AtEof() { return pos_ == kEOF; }  // Uses our namespace's EOF.
+                   enum { UNUSED, EOF, ERROR };       // Commonly used tokens.
+                   bool AtEof() { return pos_ == EOF; }  // Uses our namespace's EOF.
 
                    }  // namespace
                  </CODE_SNIPPET>
@@ -494,11 +494,13 @@ Neil J. Patel
             other namespaces:
                  <CODE_SNIPPET>
                    // In the .h file
-                   namespace mynamespace {
+                   namespace mynamespace
+                   {
 
                    // All declarations are within the namespace scope.
                    // Notice the lack of indentation.
-                   class MyClass {
+                   class MyClass
+                   {
                     public:
                      ...
                      void Foo();
@@ -508,10 +510,12 @@ Neil J. Patel
                  </CODE_SNIPPET>
                  <CODE_SNIPPET>
                    // In the .cpp file
-                   namespace mynamespace {
+                   namespace mynamespace
+                   {
 
                    // Definition of functions is within scope of the namespace.
-                   void MyClass::Foo() {
+                   void MyClass::Foo()
+                   {
                      ...
                    }
 
@@ -530,7 +534,8 @@ Neil J. Patel
                    class C;  // Forward declaration of class C in the global namespace.
                    namespace a { class A; }  // Forward declaration of a::A.
 
-                   namespace b {
+                   namespace b
+                   {
 
                    ...code for b...         // Code goes against the left margin.
 
@@ -549,13 +554,9 @@ Neil J. Patel
                  file.
                  </li>
 
-            <li> You may not use a <SYNTAX>using-directive</SYNTAX> to
-                 make all names from a namespace available.
-                 <BAD_CODE_SNIPPET>
-                   // Forbidden -- This pollutes the namespace.
-                   using namespace foo;
-                 </BAD_CODE_SNIPPET>
-                 </li>
+            <li> You may use a <SYNTAX>using-directive</SYNTAX> to
+                 make all names from a namespace available, but only in a source file.
+            </li>
 
             <li> You may use a <SYNTAX>using-declaration</SYNTAX>
                  anywhere in a <code>.cpp</code> file, and in functions,
@@ -576,14 +577,16 @@ Neil J. Patel
                    namespace fbz = ::foo::bar::baz;
 
                    // Shorten access to some commonly used names (in a .h file).
-                   namespace librarian {
+                   namespace librarian
+                   {
                    // The following alias is available to all files including
                    // this header (in namespace librarian):
                    // alias names should therefore be chosen consistently
                    // within a project.
                    namespace pd_s = ::pipeline_diagnostics::sidetable;
 
-                   inline void my_inline_function() {
+                   inline void my_inline_function()
+                   {
                      // namespace alias local to a function (or method).
                      namespace fbz = ::foo::bar::baz;
                      ...
@@ -621,11 +624,12 @@ Neil J. Patel
         A class can define another class within it; this is also
         called a <SYNTAX>member class</SYNTAX>.
         <CODE_SNIPPET>
-          class Foo {
-
+          class Foo
+          {
            private:
             // Bar is a member class, nested within Foo.
-            class Bar {
+            class Bar
+            {
               ...
             };
 
@@ -746,7 +750,8 @@ Neil J. Patel
       </p>
       <BAD_CODE_SNIPPET>
         // Inefficient implementation:
-        for (int i = 0; i &lt; 1000000; ++i) {
+        for (int i = 0; i &lt; 1000000; ++i)
+        {
           Foo f;  // My ctor and dtor get called 1000000 times each.
           f.DoSomething(i);
         }
@@ -757,7 +762,8 @@ Neil J. Patel
       </p>
       <CODE_SNIPPET>
         Foo f;  // My ctor and dtor get called once each.
-        for (int i = 0; i &lt; 1000000; ++i) {
+        for (int i = 0; i &lt; 1000000; ++i)
+        {
           f.DoSomething(i);
         }
       </CODE_SNIPPET>
@@ -1443,8 +1449,8 @@ Neil J. Patel
   <STYLEPOINT title="Smart Pointers">
 
     <SUMMARY>
-      If you actually need pointer semantics, <code>scoped_ptr</code>
-      is great.  You should only use <code>std::tr1::shared_ptr</code>
+      If you actually need pointer semantics, <code>std::unique_ptr</code>
+      is great.  You should only use <code>std::shared_ptr</code>
       with a non-const referent when it is truly necessary to share ownership
       of an object (e.g. inside an STL container). You should never use
       <code>auto_ptr</code>.
@@ -1471,7 +1477,7 @@ Neil J. Patel
       </CONS>
       <DECISION>
         <dl>
-          <dt><code>scoped_ptr</code></dt>
+          <dt><code>unique_ptr</code></dt>
           <dd>Straightforward and risk-free. Use wherever appropriate.</dd>
           <dt><code>auto_ptr</code></dt>
           <dd>Confusing and bug-prone ownership-transfer semantics. Do not use.
@@ -1518,7 +1524,7 @@ Neil J. Patel
 <CATEGORY title="Other C++ Features">
   <STYLEPOINT title="Reference Arguments">
     <SUMMARY>
-      All parameters passed by reference must be labeled
+      Most parameters passed by reference should be labeled
       <code>const</code>.
     </SUMMARY>
     <BODY>
@@ -1526,8 +1532,7 @@ Neil J. Patel
         In C, if a function needs to modify a variable, the
         parameter must use a pointer, eg <code>int foo(int
         *pval)</code>.  In C++, the function can alternatively
-        declare a reference parameter: <code>int foo(int
-        &amp;val)</code>.
+        declare a reference parameter: <code>int foo(int&amp; val)</code>.
       </DEFINITION>
       <PROS>
         Defining a parameter as reference avoids ugly code like
@@ -1549,10 +1554,11 @@ Neil J. Patel
         </CODE_SNIPPET>
         <p>
           In fact it is a very strong convention in Unity code that input
-          arguments are values or <code>const</code> references while
-          output arguments are pointers.  Input parameters may be
-          <code>const</code> pointers, but we never allow
-          non-<code>const</code> reference parameters.
+          arguments are values or <code>const</code> references while output
+          arguments are pointers.  Input parameters may be <code>const</code>
+          pointers. Non-<code>const</code> reference parameters are allowed
+          but there must be a valid reason for it, a strong preference is
+          given to <code>const</code> reference parameters.
         </p>
         <p>
           One case when you might want an input parameter to be a
@@ -1579,13 +1585,13 @@ Neil J. Patel
       <DEFINITION>
         <p>
           You may write a function that takes a
-          <code>const string&amp;</code> and overload it with another that
+          <code>string const&amp;</code> and overload it with another that
           takes <code>const char*</code>.
         </p>
         <CODE_SNIPPET>
           class MyClass {
            public:
-            void Analyze(const string &amp;text);
+            void Analyze(string const&amp; text);
             void Analyze(const char *text, size_t textlen);
           };
         </CODE_SNIPPET>
@@ -1647,10 +1653,10 @@ Neil J. Patel
         </p>
         <CODE_SNIPPET>
           // Support up to 4 params by using a default empty AlphaNum.
-          string StrCat(const AlphaNum &amp;a,
-                        const AlphaNum &amp;b = gEmptyAlphaNum,
-                        const AlphaNum &amp;c = gEmptyAlphaNum,
-                        const AlphaNum &amp;d = gEmptyAlphaNum);
+          string StrCat(AlphaNum const&amp; a,
+                        AlphaNum const&amp; b = gEmptyAlphaNum,
+                        AlphaNum const&amp; c = gEmptyAlphaNum,
+                        AlphaNum const&amp; d = gEmptyAlphaNum);
         </CODE_SNIPPET>
       </DECISION>
     </BODY>
@@ -1676,7 +1682,7 @@ Neil J. Patel
 
       <DECISION>
         Use a safe allocator instead, such as
-        <code>scoped_ptr</code>/<code>scoped_array</code>.
+        <code>unique_ptr</code>.
       </DECISION>
     </BODY>
   </STYLEPOINT>
@@ -1788,13 +1794,13 @@ Neil J. Patel
           the introduction of exceptions has implications on all dependent
           code.  If exceptions can be propagated beyond a new project, it
           also becomes problematic to integrate the new project into
-          existing exception-free code.  Because most existing C++ code at
-          Google is not prepared to deal with exceptions, it is
+          existing exception-free code.  Because most existing C++ code of
+          Unity is not prepared to deal with exceptions, it is
           comparatively difficult to adopt new code that generates
           exceptions.
         </p>
         <p>
-          Given that Google's existing code is not exception-tolerant, the
+          Given that Unity's existing code is not exception-tolerant, the
           costs of using exceptions are somewhat greater than the costs in
           a new project.  The conversion process would be slow and
           error-prone.  We don't believe that the available alternatives to
@@ -1806,16 +1812,8 @@ Neil J. Patel
           Our advice against using exceptions is not predicated on
           philosophical or moral grounds, but practical ones.
 
-          Because we'd like to use our open-source
-          projects at Google and it's difficult to do so if those projects
-          use exceptions, we need to advise against exceptions in Google
-          open-source projects as well.
           Things would probably be different if we had to do it all over
           again from scratch.
-        </p>
-        <p>
-          There is an <a HREF="#Windows_Code">exception</a> to this
-          rule (no pun intended) for Windows code.
         </p>
       </DECISION>
     </BODY>
@@ -2150,20 +2148,15 @@ Neil J. Patel
       </DECISION>
       <SUBSECTION title="Where to put the const">
         <p>
-          Some people favor the form <code>int const *foo</code> to
-          <code>const int* foo</code>.  They argue that this is more
-          readable because it's more consistent: it keeps the rule
-          that <code>const</code> always follows the object it's
-          describing.  However, this consistency argument doesn't
-          apply in this case, because the "don't go crazy" dictum
-          eliminates most of the uses you'd have to be consistent with.
-
-          Putting the <code>const</code> first is arguably more readable,
-          since it follows English in putting the "adjective"
-          (<code>const</code>) before the "noun" (<code>int</code>).
+          We favor the form <code>int const* foo</code> to
+          <code>const int* foo</code>.  This keeps the <code>const</code>
+          with the type modifier (&amp; or *).
+        </p>
+        <p>An exception to this is <code>const char*</code> due to existing
+        C convention.
         </p>
         <p>
-          That said, while we encourage putting <code>const</code> first,
+          That said, while we encourage putting <code>const</code> after the type,
           we do not require it.  But be consistent with the code around
           you!
         </p>
@@ -2469,7 +2462,7 @@ Neil J. Patel
   <STYLEPOINT title="0 and NULL">
   <SUMMARY>
     Use <code>0</code> for integers, <code>0.0</code> for reals,
-    <code>NULL</code> for pointers, and <code>'\0'</code> for chars.
+    <code>nullptr</code> for pointers, and <code>'\0'</code> for chars.
   </SUMMARY>
   <BODY>
     <p>
@@ -2477,13 +2470,9 @@ Neil J. Patel
       This is not controversial.
     </p>
     <p>
-      For pointers (address values), there is a choice between <code>0</code>
-      and <code>NULL</code>.  Bjarne Stroustrup prefers an unadorned
-      <code>0</code>.  We prefer <code>NULL</code> because it looks like a
-      pointer.  In fact, some C++ compilers, such as gcc 4.1.0, provide special
-      definitions of <code>NULL</code> which enable them to give useful
-      warnings, particularly in situations where <code>sizeof(NULL)</code>
-      is not equal to <code>sizeof(0)</code>.
+      For pointers (address values), C++11 added the <code>nullptr</code>
+      construct.  This allows the compiler to do additional checks, and is the
+      preferred NULL pointer value.
     </p>
     <p>
       Use <code>'\0'</code> for chars.
@@ -2587,48 +2576,42 @@ Neil J. Patel
   </BODY>
   </STYLEPOINT>
 
-  <STYLEPOINT title="C++0x">
+  <STYLEPOINT title="C++11">
   <SUMMARY>
-    Use only approved libraries and language extensions from C++0x.
-    Currently, none are approved.
+    Use only approved libraries and language extensions from C++11.
   </SUMMARY>
   <BODY>
     <DEFINITION>
-      C++0x is the next ISO C++ standard, currently in
-      <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2010/n3092.pdf">final
-      committee draft</a> form.  It contains
+      C++11 is the current ISO C++ standard.  It contains
       <a href="http://en.wikipedia.org/wiki/C%2B%2B0x">significant
-      changes</a> both to the language and libraries.
+      changes</a> both to the language and libraries from the older standard.
+      No compiler currently implements the entire new specification.
     </DEFINITION>
     <PROS>
-      We expect that C++0x will become the next standard, and eventually will
-      be supported by most C++ compilers.  It standardizes some common C++
-      extensions that we use already, allows shorthands for some operations,
-      and has some safety improvements.
+      C++11 standardizes some common C++ extensions that we use already,
+      allows shorthands for some operations, and has some safety improvements.
     </PROS>
     <CONS>
-      <p>
-        The C++0x standard is substantialy more complex than its predecessor
-        (1,300 pages versus 800 pages), and is
-        unfamilar to many developers.  The long-term effects of some
-        features on code readability and maintenance are unknown.  We cannot
-        predict when its various features will be implemented uniformly by
-        tools that may be of interest (gcc, icc, clang, Eclipse, etc.).
-      </p>
-      <p>
-        As with <a href="#Boost">Boost</a>, some C++0x extensions encourage
-        coding practices that hamper readability&#8212;for example by removing
-        checked redundancy (such as type names) that may be helpful to readers,
-        or by encouraging template metaprogramming.  Other extensions
-        duplicate functionality available through existing
-        mechanisms, which may lead to
-        confusion and conversion costs.
-      </p>
+      Care is needed with some C++11 features that may not be fully implemented.
     </CONS>
     <DECISION>
-      Use only C++0x libraries and language features that have been approved
-      for use.  Currently, no such features are approved.
-      Features will be approved individually as appropriate.
+      <p>
+        The range based <code>for</code> is the preferred way to iterate over containers
+        when simple iteration is needed.
+      </p>
+      <p>
+        The <code>auto</code> keyword is acceptable within reason.
+      </p>
+      <p>
+        Strong enums are preferred where the integer values are not explicitly needed.
+      </p>
+      <p>
+        Lambda functions are acceptable within reason.
+      </p>
+      <p>
+        Use <code>unique_ptr</code> and <code>shared_ptr</code> from
+        <code>&lt;memory&gt;</code>.
+      </p>
     </DECISION>
   </BODY>
   </STYLEPOINT>
@@ -2796,15 +2779,15 @@ Neil J. Patel
       </p>
       <CODE_SNIPPET>
         // classes and structs
-        class UrlTable { ...
-        class UrlTableTester { ...
-        struct UrlTableProperties { ...
+        class UrlTable  ...
+        class UrlTableTester  ...
+        struct UrlTableProperties  ...
 
         // typedefs
         typedef hash_map&lt;UrlTableProperties *, string&gt; PropertiesMap;
 
         // enums
-        enum UrlTableErrors { ...
+        enum UrlTableErrors ...
       </CODE_SNIPPET>
     </BODY>
   </STYLEPOINT>
@@ -2850,7 +2833,8 @@ Neil J. Patel
           in classes have.
         </p>
         <CODE_SNIPPET>
-          struct UrlTableProperties {
+          struct UrlTableProperties
+          {
             string name;
             int num_entries;
           }
@@ -2924,7 +2908,8 @@ Neil J. Patel
           <code>num_entries_</code>.
         </p>
         <CODE_SNIPPET>
-          class MyClass {
+          class MyClass
+          {
            public:
             ...
             int num_entries() const { return num_entries_; }
@@ -2973,7 +2958,8 @@ Neil J. Patel
         therefore mixed case.
       </p>
       <CODE_SNIPPET>
-        enum UrlTableErrors {
+        enum UrlTableErrors
+        {
           OK,
           OUT_OF_MEMORY,
           MALFORMED_INPUT,
@@ -3122,7 +3108,8 @@ Neil J. Patel
         //      process(iter-&gt;key(), iter-&gt;value());
         //    }
         //    delete iter;
-        class GargantuanTableIterator {
+        class GargantuanTableIterator
+        {
           ...
         };
       </CODE_SNIPPET>
@@ -3277,7 +3264,7 @@ Neil J. Patel
         </p>
         <CODE_SNIPPET>
           // The total number of tests cases that we run through in this regression test.
-          const int kNumTestCases = 6;
+          const int NUM_TEST_CASES = 6;
         </CODE_SNIPPET>
       </SUBSECTION>
     </BODY>
@@ -3297,7 +3284,8 @@ Neil J. Patel
         <CODE_SNIPPET>
           // Divide result by two, taking into account that x
           // contains the carry from the add.
-          for (int i = 0; i &lt; result-&gt;size(); i++) {
+          for (int i = 0; i &lt; result-&gt;size(); i++)
+          {
             x = (x &lt;&lt; 8) + (*result)[i];
             (*result)[i] = x &gt;&gt; 1;
             x &amp;= 1;
@@ -3504,11 +3492,6 @@ Neil J. Patel
     can all read and understand everyone's code easily.
   </p>
 
-  <p>
-    To help you format code correctly, we've created a <A HREF="http://google-styleguide.googlecode.com/svn/trunk/google-c-style.el">settings
-    file for emacs</A>.
-  </p>
-
   <STYLEPOINT title="Line Length">
     <SUMMARY>
       Each line of text in your code should be at most 80 characters
@@ -3615,7 +3598,8 @@ Neil J. Patel
         Functions look like this:
       </p>
       <CODE_SNIPPET>
-        ReturnType ClassName::FunctionName(Type par_name1, Type par_name2) {
+        ReturnType ClassName::FunctionName(Type par_name1, Type par_name2)
+        {
           DoSomething();
           ...
         }
@@ -3625,7 +3609,8 @@ Neil J. Patel
       </p>
       <CODE_SNIPPET>
         ReturnType ClassName::ReallyLongFunctionName(Type par_name1, Type par_name2,
-                                                     Type par_name3) {
+                                                     Type par_name3)
+        {
           DoSomething();
           ...
         }
@@ -3637,7 +3622,8 @@ Neil J. Patel
         ReturnType LongClassName::ReallyReallyReallyLongFunctionName(
             Type par_name1,  // 4 space indent
             Type par_name2,
-            Type par_name3) {
+            Type par_name3)
+        {
           DoSomething();  // 2 space indent
           ...
         }
@@ -3684,14 +3670,16 @@ Neil J. Patel
       </p>
       <CODE_SNIPPET>
         // Everything in this function signature fits on a single line
-        ReturnType FunctionName(Type par) const {
+        ReturnType FunctionName(Type par) const
+        {
           ...
         }
 
         // This function signature requires multiple lines, but
         // the const keyword is on the line with the last parameter.
         ReturnType ReallyLongFunctionName(Type par1,
-                                          Type par2) const {
+                                          Type par2) const
+        {
           ...
         }
       </CODE_SNIPPET>
@@ -3701,13 +3689,15 @@ Neil J. Patel
       </p>
       <CODE_SNIPPET>
         // Always have named parameters in interfaces.
-        class Shape {
+        class Shape
+        {
          public:
           virtual void Rotate(double radians) = 0;
         }
 
         // Always have named parameters in the declaration.
-        class Circle : public Shape {
+        class Circle : public Shape
+        {
          public:
           virtual void Rotate(double radians);
         }
@@ -3761,10 +3751,12 @@ Neil J. Patel
         place all arguments on subsequent lines:
       </p>
       <CODE_SNIPPET>
-        if (...) {
+        if (...)
+        {
           ...
           ...
-          if (...) {
+          if (...)
+          {
             DoSomethingThatRequiresALongFunctionName(
                 very_long_argument1,  // 4 space indent
                 argument2,
@@ -3781,50 +3773,25 @@ Neil J. Patel
       keyword belongs on a new line.
     </SUMMARY>
     <BODY>
-      <p>
-        There are two acceptable formats for a basic conditional
-        statement. One includes spaces between the parentheses and the
-        condition, and one does not.
-      </p>
-      <p>
-        The most common form is without spaces.  Either is fine, but
-        <em>be consistent</em>. If you are modifying a file, use the
-        format that is already present. If you are writing new code,
-        use the format that the other files in that directory or
-        project use. If in doubt and you have no personal preference,
-        do not add the spaces.
-      </p>
       <CODE_SNIPPET>
-        if (condition) {  // no spaces inside parentheses
+        if (condition)  // no spaces inside parentheses
+        {
           ...  // 2 space indent.
-        } else {  // The else goes on the same line as the closing brace.
-          ...
         }
-      </CODE_SNIPPET>
-      <p>
-        If you prefer you may add spaces inside the
-        parentheses:
-      </p>
-      <CODE_SNIPPET>
-        if ( condition ) {  // spaces inside parentheses - rare
-          ...  // 2 space indent.
-        } else {  // The else goes on the same line as the closing brace.
+        else  // The else goes on a new line.
+        {
           ...
         }
       </CODE_SNIPPET>
       <p>
         Note that in all cases you must have a space between the
-        <code>if</code> and the open parenthesis.  You must also have
-        a space between the close parenthesis and the curly brace, if
-        you're using one.
+        <code>if</code> and the open parenthesis.
       </p>
       <BAD_CODE_SNIPPET>
         if(condition)     // Bad - space missing after IF.
-        if (condition){   // Bad - space missing before {.
-        if(condition){    // Doubly bad.
       </BAD_CODE_SNIPPET>
       <CODE_SNIPPET>
-        if (condition) {  // Good - proper space after IF and before {.
+        if (condition)   // Good - proper space after IF.
       </CODE_SNIPPET>
       <p>
         Short conditional statements may be written on one line if
@@ -3859,7 +3826,8 @@ Neil J. Patel
         if (condition)
           DoSomething();  // 2 space indent.
 
-        if (condition) {
+        if (condition)
+        {
           DoSomething();  // 2 space indent.
         }
       </CODE_SNIPPET>
@@ -3869,24 +3837,30 @@ Neil J. Patel
       </p>
       <BAD_CODE_SNIPPET>
         // Not allowed - curly on IF but not ELSE
-        if (condition) {
+        if (condition)
+        {
           foo;
-        } else
+        }
+        else
           bar;
 
         // Not allowed - curly on ELSE but not IF
         if (condition)
           foo;
-        else {
+        else
+        {
           bar;
         }
       </BAD_CODE_SNIPPET>
       <CODE_SNIPPET>
         // Curly braces around both IF and ELSE required because
         // one of the clauses used braces.
-        if (condition) {
+        if (condition)
+        {
           foo;
-        } else {
+        }
+        else
+        {
           bar;
         }
       </CODE_SNIPPET>
@@ -3914,16 +3888,20 @@ Neil J. Patel
       </p>
 
       <CODE_SNIPPET>
-        switch (var) {
-          case 0: {  // 2 space indent
+        switch (var)
+        {
+          case 0: // 2 space indent
+          {
             ...      // 4 space indent
             break;
           }
-          case 1: {
+          case 1:
+          {
             ...
             break;
           }
-          default: {
+          default:
+          {
             assert(false);
           }
         }
@@ -3933,7 +3911,8 @@ Neil J. Patel
         <code>continue</code>, but not a single semicolon.
       </p>
       <CODE_SNIPPET>
-        while (condition) {
+        while (condition)
+        {
           // Repeat test until it returns false.
         }
         for (int i = 0; i &lt; kSomeNumber; ++i) {}  // Good - empty body.
@@ -3973,22 +3952,18 @@ Neil J. Patel
              </li>
       </ul>
       <p>
-        When declaring a pointer variable or argument, you may place
-        the asterisk adjacent to either the type or to the variable
-        name:
+        When declaring a pointer variable or argument, you should place
+        the asterisk adjacent to the type:
       </p>
       <CODE_SNIPPET>
-        // These are fine, space preceding.
-        char *c;
-        const string &amp;str;
-
-        // These are fine, space following.
-        char* c;    // but remember to do "char* c, *d, *e, ...;"!
-        const string&amp; str;
+        // These are fine
+        char* c;
+        string const&amp; str;
       </CODE_SNIPPET>
       <BAD_CODE_SNIPPET>
         char * c;  // Bad - spaces on both sides of *
-        const string &amp; str;  // Bad - spaces on both sides of &amp;
+        char *c ;  // Bad - * next to variable name
+        string const &amp; str;  // Bad - spaces on both sides of &amp;
       </BAD_CODE_SNIPPET>
       <p>
         You should do this consistently within a single
@@ -4012,7 +3987,8 @@ Neil J. Patel
       <CODE_SNIPPET>
         if (this_one_thing &gt; this_other_thing &amp;&amp;
             a_third_thing == a_fourth_thing &amp;&amp;
-            yet_another &amp;&amp; last_one) {
+            yet_another &amp;&amp; last_one)
+        {
           ...
         }
       </CODE_SNIPPET>
@@ -4109,7 +4085,7 @@ Neil J. Patel
   <STYLEPOINT title="Class Format">
     <SUMMARY>
       Sections in <code>public</code>, <code>protected</code> and
-      <code>private</code> order, each indented one space.
+      <code>private</code> order.
     </SUMMARY>
     <BODY>
       <p>
@@ -4118,15 +4094,15 @@ Neil J. Patel
         a discussion of what comments are needed) is:
       </p>
       <CODE_SNIPPET>
-        class MyClass : public OtherClass {
-         public:      // Note the 1 space indent!
+        class MyClass : public OtherClass
+        {
+        public:
           MyClass();  // Regular 2 space indent.
           explicit MyClass(int var);
           ~MyClass() {}
 
           void SomeFunction();
-          void SomeFunctionThatDoesNothing() {
-          }
+          void SomeFunctionThatDoesNothing() {}
 
           void set_some_var(int var) { some_var_ = var; }
           int some_var() const { return some_var_; }
@@ -4147,8 +4123,7 @@ Neil J. Patel
              subclass name, subject to the 80-column limit.
              </li>
         <li> The <code>public:</code>, <code>protected:</code>, and
-             <code>private:</code> keywords should be indented one
-             space.
+             <code>private:</code> keywords are not indented.
              </li>
         <li> Except for the first instance, these keywords should be preceded
              by a blank line. This rule is optional in small classes.
@@ -4184,10 +4159,11 @@ Neil J. Patel
       </p>
       <CODE_SNIPPET>
         // When it requires multiple lines, indent 4 spaces, putting the colon on
-        // the first initializer line:
+        // the first initializer line, and commas inline with the colon:
         MyClass::MyClass(int var)
-            : some_var_(var),             // 4 space indent
-              some_other_var_(var + 1) {  // lined up
+            : some_var_(var)             // 4 space indent
+            , some_other_var_(var + 1)   // lined up
+        {
           ...
           DoSomething();
           ...
@@ -4206,9 +4182,11 @@ Neil J. Patel
         indentation. For example, use:
       </p>
       <CODE_SNIPPET>
-        namespace {
+        namespace
+        {
 
-        void foo() {  // Correct.  No extra indentation within namespace.
+        void foo()  // Correct.  No extra indentation within namespace.
+        {
           ...
         }
 
@@ -4218,21 +4196,26 @@ Neil J. Patel
         Do not indent within a namespace:
       </p>
       <BAD_CODE_SNIPPET>
-        namespace {
+        namespace
+        {
 
           // Wrong.  Indented when it should not be.
-          void foo() {
+          void foo()
+          {
             ...
           }
 
         }  // namespace
       </BAD_CODE_SNIPPET>
       <p>
-        When declaring nested namespaces, put each namespace on its own line.
+        When declaring nested namespaces, put each namespace on its own line,
+        with the opening brace on the line following.
       </p>
       <CODE_SNIPPET>
-        namespace foo {
-        namespace bar {
+        namespace foo
+        {
+        namespace bar
+        {
       </CODE_SNIPPET>
     </BODY>
   </STYLEPOINT>
@@ -4245,14 +4228,13 @@ Neil J. Patel
     <BODY>
       <SUBSECTION title="General">
         <CODE_SNIPPET>
-        void f(bool b) {  // Open braces should always have a space before them.
-          ...
         int i = 0;  // Semicolons usually have no space before them.
         int x[] = { 0 };  // Spaces inside braces for array initialization are
         int x[] = {0};    // optional.  If you use them, put them on both sides!
         // Spaces around the colon in inheritance and initializer lists.
-        class Foo : public Bar {
-         public:
+        class Foo : public Bar
+        {
+        public:
           // For inline function implementations, put spaces between the braces
           // and the implementation itself.
           Foo(int b) : Bar(), baz_(b) {}  // No spaces inside empty braces.
@@ -4269,26 +4251,6 @@ Neil J. Patel
           operation (preferably when no-one else
           is working on the file).
         </p>
-      </SUBSECTION>
-      <SUBSECTION title="Loops and Conditionals">
-        <CODE_SNIPPET>
-        if (b) {          // Space after the keyword in conditions and loops.
-        } else {          // Spaces around else.
-        }
-        while (test) {}   // There is usually no space inside parentheses.
-        switch (i) {
-        for (int i = 0; i &lt; 5; ++i) {
-        switch ( i ) {    // Loops and conditions may have spaces inside
-        if ( test ) {     // parentheses, but this is rare.  Be consistent.
-        for ( int i = 0; i &lt; 5; ++i ) {
-        for ( ; i &lt; 5 ; ++i) {  // For loops always have a space after the
-          ...                   // semicolon, and may have a space before the
-                                // semicolon.
-        switch (i) {
-          case 1:         // No space before colon in a switch case.
-            ...
-          case 2: break;  // Use a space after a colon if there's code after it.
-        </CODE_SNIPPET>
       </SUBSECTION>
       <SUBSECTION title="Operators">
         <CODE_SNIPPET>
@@ -4310,9 +4272,8 @@ Neil J. Patel
                                     // &lt;, or between &gt;( in a cast.
         vector&lt;char *&gt; x;           // Spaces between type and pointer are
                                     // okay, but be consistent.
-        set&lt;list&lt;string&gt; &gt; x;       // C++ requires a space in &gt; &gt;.
-        set&lt; list&lt;string&gt; &gt; x;      // You may optionally use
-                                    // symmetric spacing in &lt; &lt;.
+        set&lt;list&lt;string&gt;&gt; x;       // C++11 now allows &gt;&gt; to close templates.
+        set&lt;list&lt;string&gt; &gt; x;       // Older C++ requiree a space in &gt; &gt;, and is allowed.
         </CODE_SNIPPET>
       </SUBSECTION>
     </BODY>

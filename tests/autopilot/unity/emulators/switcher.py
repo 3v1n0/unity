@@ -91,7 +91,7 @@ class Switcher(KeybindingsHelper):
         elif mode == SwitcherMode.DETAIL:
             logger.debug("Initiating switcher detail mode with Alt+`")
             self.keybinding_hold_part_then_tap("switcher/reveal_details")
-            self.controller.model.detail_selection.wait_for(True)
+            self.visible.wait_for(True)
         elif mode == SwitcherMode.ALL:
             logger.debug("Initiating switcher in 'all workspaces' mode. Ctrl+Alt+Tab")
             self.keybinding_hold_part_then_tap("switcher/reveal_all")

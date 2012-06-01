@@ -245,6 +245,12 @@ StaticCairoText::GetText() const
   return _text;
 }
 
+nux::Color StaticCairoText::GetTextColor() const
+{
+  return _textColor;
+}
+
+
 void
 StaticCairoText::SetTextColor(Color const& textColor)
 {
