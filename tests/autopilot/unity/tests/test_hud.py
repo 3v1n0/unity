@@ -138,9 +138,8 @@ class HudBehaviorTests(HudTestsBase):
         This used to cause unity to crash (hence the lack of assertion in this test).
 
         """
-        self.keybinding("window/show_desktop")
-        self.addCleanup(self.keybinding, "window/show_desktop")
-        sleep(1)
+        self.window_manager.enter_show_desktop()
+        self.addCleanup(self.window_manager.leave_show_desktop)
 
         self.hud.ensure_visible()
         self.hud.ensure_hidden()
@@ -427,9 +426,8 @@ class HudVisualTests(HudTestsBase):
 
     def test_hud_icon_shows_the_ubuntu_emblem_on_empty_desktop(self):
         """When in 'show desktop' mode the hud icon must be the BFB icon."""
-        self.keybinding("window/show_desktop")
-        self.addCleanup(self.keybinding, "window/show_desktop")
-        sleep(1)
+        self.window_manager.enter_show_desktop()
+        self.addCleanup(self.window_manager.leave_show_desktop)
         self.hud.ensure_visible()
 
         self.assertThat(self.hud.icon.icon_name, Eventually(EndsWith("launcher_bfb.png")))

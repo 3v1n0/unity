@@ -149,6 +149,7 @@ if (GTEST_SRC_DIR AND
                  test_grabhandle.cpp
                  test_unityshell_private.cpp
 		             test_showdesktop_handler.cpp
+                 test_hud_private.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/AbstractLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/Animator.cpp
                  ${UNITY_SRC}/DebugDBusInterface.cpp
@@ -172,6 +173,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-impl-factory.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-layout.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-texture.cpp
+                 ${CMAKE_SOURCE_DIR}/hud/HudPrivate.cpp
                  )
   target_link_libraries(test-gtest-xless gtest ${GMOCK_LIB} ${GMOCK_MAIN_LIB} ${LIBS})
   add_test(UnityGTestXless test-gtest-xless)
@@ -197,6 +199,7 @@ if (GTEST_SRC_DIR AND
 
 # Tests that require X
   add_executable(test-gtest
+                 test_hud_button.cpp
                  test_dashview_impl.cpp
                  test_texture_cache.cpp
                  test_main.cpp
@@ -212,6 +215,8 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/dash/ResultRenderer.cpp
                  ${CMAKE_SOURCE_DIR}/dash/ResultView.cpp
                  ${CMAKE_SOURCE_DIR}/dash/ResultViewGrid.cpp
+                 ${CMAKE_SOURCE_DIR}/hud/HudButton.cpp
+                 ${CMAKE_SOURCE_DIR}/hud/HudPrivate.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/AbstractLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/CairoBaseWindow.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/DNDCollectionWindow.cpp
@@ -242,11 +247,13 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/launcher/SwitcherView.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/Tooltip.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/BackgroundEffectHelper.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/DashStyle.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/IconLoader.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/IconRenderer.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/IconTextureSource.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/Introspectable.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/IntrospectableWrappers.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/JSONParser.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/PanelStyle.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/StaticCairoText.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/TextureCache.cpp

@@ -120,12 +120,8 @@ class PanelTitleTests(PanelTestsBase):
 
     def test_panel_title_on_empty_desktop(self):
         """With no windows shown, the panel must display the default title."""
-        self.keybinding("window/show_desktop")
-        # We need this sleep to give the time to showdesktop to properly resume
-        # the initial status without getting a false-negative result
-        self.addCleanup(sleep, 2)
-        self.addCleanup(self.keybinding, "window/show_desktop")
-        sleep(2)
+        self.window_manager.enter_show_desktop()
+        self.addCleanup(self.window_manager.leave_show_desktop)
 
         self.assertTrue(self.panel.desktop_is_active)
 

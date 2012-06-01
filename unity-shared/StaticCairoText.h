@@ -86,6 +86,7 @@ public:
   void SetLines(int maximum_lines);
 
   std::string GetText() const;
+  nux::Color GetTextColor() const;
 
   int  GetLineCount();
   int GetBaseline() const;
