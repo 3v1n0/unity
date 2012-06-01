@@ -816,17 +816,25 @@ class LauncherTooltipTests(UnityTestCase):
 class LauncherIconTests(UnityTestCase):
     """Tests for the launcher icons."""
 
+    def assertNumberWinsIsEventually(self, app, num):
+        """Asserts that 'app' eventually has 'num' wins. Waits up to 10 seconds."""
+        for i in range(10):
+            wins = app.get_windows()
+            if len(wins) == num:
+                return
+            sleep(1)
+
+        self.assertThat(len(app.get_windows()), Equals(num))
+
     def test_shift_click_opens_new_application_instance(self):
         """Shift+Clicking MUST open a new instance of an already-running application."""
-        calc_app = self.start_app("Text Editor")
-        desktop_id = calc_app.desktop_file
-        calc_icon = self.launcher.model.get_icon_by_desktop_id(desktop_id)
-        logger.info("calc app = %r, desktop_file = %r, calc_icon = %r", calc_app, desktop_id, calc_icon)
+        app = self.start_app("Text Editor")
+        desktop_id = app.desktop_file
+        icon = self.launcher.model.get_icon_by_desktop_id(desktop_id)
         launcher_instance = self.launcher.get_launcher_for_monitor(0)
 
         self.keyboard.press("Shift")
         self.addCleanup(self.keyboard.release, "Shift")
-        launcher_instance.click_launcher_icon(calc_icon)
+        launcher_instance.click_launcher_icon(icon)
 
-        wins = calc_app.get_windows()
-        self.assertThat(len(wins), Equals(2))
+        self.assertNumberWinsIsEventually(app, 2)
