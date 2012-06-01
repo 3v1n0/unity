@@ -81,7 +81,7 @@ public:
   void PrevDetail();
 
   void Select(launcher::AbstractLauncherIcon::Ptr selection);
-  void Select(int index);
+  void Select(unsigned int index);
 
   sigc::signal<void, launcher::AbstractLauncherIcon::Ptr> selection_changed;
 

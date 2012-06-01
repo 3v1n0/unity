@@ -617,7 +617,6 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   }
   glPopMatrix();
 #else
-#warning Panel shadow not properly implemented for GLES2
   return;
 
   if (sources_.GetSource("relayout-timeout"))
