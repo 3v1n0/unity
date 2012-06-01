@@ -48,11 +48,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(BamfLauncherIcon);
 BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   : SimpleLauncherIcon()
   , _bamf_app(app, glib::AddRef())
-  , _dnd_hovered(false)
-  , _dnd_hover_timer(0)
   , _supported_types_filled(false)
-  , _fill_supported_types_id(0)
-  , _window_moved_id(0)
 {
   g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"),
                      GUINT_TO_POINTER(1));
@@ -106,12 +102,7 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
                             {
                               EnsureWindowState();
                               UpdateIconGeometries(GetCenters());
-
-                              if (_remove_timeout_id)
-                              {
-                                g_source_remove(_remove_timeout_id);
-                                _remove_timeout_id = 0;
-                              }
+                              _source_manager.Remove("bamf-icon-remove");
                             }
                           });
   _gsignals.Add(sig);
@@ -133,15 +124,9 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
                                * have a splash screen won't be removed from
                                * the launcher while the splash is closed and
                                * a new window is opened. */
-                              if (_remove_timeout_id)
-                                g_source_remove(_remove_timeout_id);
-
-                              _remove_timeout_id = g_timeout_add_seconds(1, [] (gpointer data) -> gboolean {
-                                auto self = static_cast<BamfLauncherIcon*>(data);
-                                self->Remove();
-                                self->_remove_timeout_id = 0;
-                                return false;
-                              }, this);
+                              glib::Source::Ptr timeout(new glib::Timeout(1000));
+                              _source_manager.Add(timeout, "bamf-icon-remove");
+                              timeout->Run([&] { Remove(); return false; });
                             }
                           });
   _gsignals.Add(sig);
@@ -159,10 +144,8 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   SetProgress(0.0f);
 
   // Calls when there are no higher priority events pending to the default main loop.
-  _fill_supported_types_id = g_idle_add([] (gpointer data) -> gboolean {
-    static_cast<BamfLauncherIcon*>(data)->FillSupportedTypes();
-    return false;
-  }, this);
+  glib::Source::Ptr idle(new glib::Idle([&] { FillSupportedTypes(); return false; }));
+  _source_manager.Add(idle);
 }
 
 BamfLauncherIcon::~BamfLauncherIcon()
@@ -170,21 +153,6 @@ BamfLauncherIcon::~BamfLauncherIcon()
   if (_bamf_app)
     g_object_set_qdata(G_OBJECT(_bamf_app.RawPtr()),
                        g_quark_from_static_string("unity-seen"), nullptr);
-
-  if (_remove_timeout_id != 0)
-    g_source_remove(_remove_timeout_id);
-
-  if (_fill_supported_types_id != 0)
-    g_source_remove(_fill_supported_types_id);
-
-  if (_quicklist_activated_id != 0)
-    g_source_remove(_quicklist_activated_id);
-
-  if (_window_moved_id != 0)
-    g_source_remove(_window_moved_id);
-
-  if (_dnd_hover_timer != 0)
-    g_source_remove(_dnd_hover_timer);
 }
 
 void BamfLauncherIcon::Remove()
@@ -468,17 +436,15 @@ void BamfLauncherIcon::OnWindowMoved(guint32 moved_win)
   if (!OwnsWindow(moved_win))
     return;
 
-  if (_window_moved_id != 0)
-    g_source_remove(_window_moved_id);
+  glib::Source::Ptr timeout(new glib::Timeout(250));
+  _source_manager.Add(timeout, "bamf-window-move");
 
-  _window_moved_id = g_timeout_add(250, [] (gpointer data) -> gboolean
-  {
-    BamfLauncherIcon* self = static_cast<BamfLauncherIcon*>(data);
-    self->EnsureWindowState();
-    self->UpdateIconGeometries(self->GetCenters());
-    self->_window_moved_id = 0;
-    return FALSE;
-  }, this);
+  timeout->Run([&] {
+    EnsureWindowState();
+    UpdateIconGeometries(GetCenters());
+
+    return false;
+  });
 }
 
 void BamfLauncherIcon::UpdateDesktopFile()
@@ -1020,13 +986,12 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
 
     _gsignals.Add(new glib::Signal<void, DbusmenuMenuitem*, int>(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
                                     [&] (DbusmenuMenuitem*, int) {
-                                      _quicklist_activated_id =
-                                        g_idle_add([] (gpointer data) -> gboolean {
-                                          auto self = static_cast<BamfLauncherIcon*>(data);
-                                          self->ActivateLauncherIcon(ActionArg());
-                                          self->_quicklist_activated_id = 0;
-                                          return FALSE;
-                                        }, this);
+                                      glib::Source::Ptr idle(new glib::Idle());
+                                      _source_manager.Add(idle);
+                                      idle->Run([&] {
+                                        ActivateLauncherIcon(ActionArg());
+                                        return false;
+                                      });
                                     }));
 
     _menu_items_extra["AppName"] = glib::Object<DbusmenuMenuitem>(item);
@@ -1147,28 +1112,24 @@ std::set<std::string> BamfLauncherIcon::ValidateUrisForLaunch(DndData const& uri
 void BamfLauncherIcon::OnDndHovered()
 {
   // for now, let's not do this, it turns out to be quite buggy
-  //if (_dnd_hovered && IsRunning())
+  //if (IsRunning())
   //  Spread(CompAction::StateInitEdgeDnd, true);
 }
 
 void BamfLauncherIcon::OnDndEnter()
 {
-  _dnd_hovered = true;
-  _dnd_hover_timer = g_timeout_add(1000, [] (gpointer data) -> gboolean {
-    BamfLauncherIcon* self = static_cast<BamfLauncherIcon*>(data);
-    self->OnDndHovered();
-    self->_dnd_hover_timer = 0;
-    return false;
-  }, this);
+  /* Disabled, since the DND code is currently disabled as well.
+  glib::Source::Ptr timeout(new glib::Timeout(1000));
+  _source_manager.Add(timeout, "bamf-icon-dnd-over");
+  timeout->Run([&] { OnDndHovered(); return false; });
+  */
 }
 
 void BamfLauncherIcon::OnDndLeave()
 {
-  _dnd_hovered = false;
-
-  if (_dnd_hover_timer)
-    g_source_remove(_dnd_hover_timer);
-  _dnd_hover_timer = 0;
+  /* Disabled, since the DND code is currently disabled as well.
+  _source_manager.Remove("bamf-icon-dnd-over");
+  */
 }
 
 bool BamfLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
@@ -1264,12 +1225,6 @@ const std::set<std::string>& BamfLauncherIcon::GetSupportedTypes()
 
 void BamfLauncherIcon::FillSupportedTypes()
 {
-  if (_fill_supported_types_id)
-  {
-    g_source_remove(_fill_supported_types_id);
-    _fill_supported_types_id = 0;
-  }
-
   if (!_supported_types_filled)
   {
     _supported_types_filled = true;
