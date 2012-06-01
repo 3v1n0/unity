@@ -251,7 +251,7 @@ SwitcherModel::Select(AbstractLauncherIcon::Ptr selection)
 }
 
 void
-SwitcherModel::Select(int index)
+SwitcherModel::Select(unsigned int index)
 {
   unsigned int target = CLAMP(index, 0, _inner.size() - 1);
 

@@ -115,13 +115,11 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::getTransients ()
 
   for (CompWindow *w : screen->windows())
   {
-    compiz::CompTransientForReader *reader = new compiz::CompTransientForReader (w);
+    compiz::CompTransientForReader reader (w);
 
-    if (reader->isTransientFor (priv->mWindow->id()) ||
-	reader->isGroupTransientFor (priv->mWindow->id()))
+    if (reader.isTransientFor (priv->mWindow->id()) ||
+        reader.isGroupTransientFor (priv->mWindow->id()))
       transients.push_back (w->id());
-
-    delete reader;
   }
 
   return transients;
