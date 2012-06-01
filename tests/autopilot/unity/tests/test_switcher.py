@@ -325,7 +325,7 @@ class SwitcherDetailsModeTests(SwitcherTestCase):
         self.keyboard.press_and_release(self.initiate_keycode)
         sleep(0.5)
         # Make sure we're at the end of the details list for this icon
-        possible_details = self.switcher.current_detail_count - 1
+        possible_details = self.switcher.detail_current_count - 1
         while self.switcher.detail_selection_index < possible_details:
             self.switcher.next_detail()
 
