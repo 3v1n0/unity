@@ -787,7 +787,7 @@ void BamfLauncherIcon::UpdateBackgroundColor()
   bool last_use_custom_bg_color = use_custom_bg_color_;
   nux::Color last_bg_color(bg_color_);
 
-  std::string color(DesktopUtilities::GetBackgroundColor(DesktopFile()));
+  std::string const& color = DesktopUtilities::GetBackgroundColor(DesktopFile());
 
   use_custom_bg_color_ = !color.empty();
 

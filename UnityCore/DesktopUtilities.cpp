@@ -66,8 +66,8 @@ std::vector<std::string> DesktopUtilities::GetSystemDataDirectories()
 
 std::vector<std::string> DesktopUtilities::GetDataDirectories()
 {
-  std::vector<std::string> dirs(GetSystemDataDirectories());
-  std::string const user_directory(GetUserDataDirectory());
+  std::vector<std::string> dirs = GetSystemDataDirectories();
+  std::string const& user_directory = GetUserDataDirectory();
 
   dirs.push_back(user_directory);
 
@@ -115,7 +115,7 @@ std::string DesktopUtilities::GetDesktopID(std::vector<std::string> const& defau
 
 std::string DesktopUtilities::GetDesktopID(std::string const& desktop_path)
 {
-  std::vector<std::string> const data_dirs(GetDataDirectories());
+  std::vector<std::string> const& data_dirs = GetDataDirectories();
   return GetDesktopID(data_dirs, desktop_path);
 }
 

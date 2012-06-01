@@ -1,9 +1,3 @@
-
-
-
-
-
-
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd

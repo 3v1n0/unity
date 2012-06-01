@@ -95,7 +95,7 @@ TEST(TestDesktopUtilitiesDataDirectories, TestGetUserDataDirectory)
   const gchar* old_home = g_getenv("XDG_DATA_HOME");
   g_setenv("XDG_DATA_HOME", "UnityUserConfig", TRUE);
 
-  std::string const user_data_dir(DesktopUtilities::GetUserDataDirectory());
+  std::string const& user_data_dir = DesktopUtilities::GetUserDataDirectory();
 
   g_setenv("XDG_DATA_HOME", old_home, TRUE);
 
@@ -107,7 +107,7 @@ TEST(TestDesktopUtilitiesDataDirectories, TestGetSystemDataDirectory)
   const gchar* old_dirs = g_getenv("XDG_DATA_DIRS");
   g_setenv("XDG_DATA_DIRS", "dir1:dir2::dir3:dir4", TRUE);
 
-  std::vector<std::string> const system_dirs(DesktopUtilities::GetSystemDataDirectories());
+  std::vector<std::string> const& system_dirs = DesktopUtilities::GetSystemDataDirectories();
 
   g_setenv("XDG_DATA_DIRS", old_dirs, TRUE);
 
@@ -125,7 +125,7 @@ TEST(TestDesktopUtilitiesDataDirectories, TestGetDataDirectory)
   const gchar* old_home = g_getenv("XDG_DATA_HOME");
   g_setenv("XDG_DATA_HOME", "UnityUserConfig", TRUE);
 
-  std::vector<std::string> const data_dirs(DesktopUtilities::GetDataDirectories());
+  std::vector<std::string> const& data_dirs = DesktopUtilities::GetDataDirectories();
 
   g_setenv("XDG_DATA_DIRS", old_dirs, TRUE);
   g_setenv("XDG_DATA_HOME", old_home, TRUE);
@@ -140,21 +140,21 @@ TEST(TestDesktopUtilitiesDataDirectories, TestGetDataDirectory)
 
 TEST(TestDesktopUtilitiesDataDirectories, TestGetBackgroundColor)
 {
-  std::string color(DesktopUtilities::GetBackgroundColor(BUILDDIR"/tests/data/ubuntu-software-center.desktop"));
+  std::string const& color = DesktopUtilities::GetBackgroundColor(BUILDDIR"/tests/data/ubuntu-software-center.desktop");
 
   EXPECT_EQ(color, "#aabbcc");
 }
 
 TEST(TestDesktopUtilitiesDataDirectories, TestGetBackgroundColorNoKey)
 {
-  std::string color(DesktopUtilities::GetBackgroundColor(BUILDDIR"/tests/data/update-manager.desktop"));
+  std::string const& color = DesktopUtilities::GetBackgroundColor(BUILDDIR"/tests/data/update-manager.desktop");
 
   EXPECT_TRUE(color.empty());
 }
 
 TEST(TestDesktopUtilitiesDataDirectories, TestGetBackgroundColorNoFile)
 {
-  std::string color(DesktopUtilities::GetBackgroundColor("hello-world.desktop"));
+  std::string const& color = DesktopUtilities::GetBackgroundColor("hello-world.desktop");
 
   EXPECT_TRUE(color.empty());
 }
