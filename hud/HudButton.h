@@ -29,6 +29,8 @@
 #include <UnityCore/Hud.h>
 #include "unity-shared/Introspectable.h"
 
+namespace nux { class HLayout; }
+
 namespace unity
 {
 namespace hud
@@ -42,10 +44,7 @@ public:
   typedef nux::ObjectPtr<HudButton> Ptr;
 
   HudButton(NUX_FILE_LINE_PROTO);
-  HudButton(nux::TextureArea *image, NUX_FILE_LINE_PROTO);
-  HudButton(std::string const& label, NUX_FILE_LINE_PROTO);
-  HudButton(std::string const& label, nux::TextureArea* image, NUX_FILE_LINE_PROTO);
-  
+
   void SetQuery(Query::Ptr query);
   std::shared_ptr<Query> GetQuery();
 
@@ -62,7 +61,6 @@ protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
  
-  void Init();
   void InitTheme();
   void RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state);
 
@@ -70,9 +68,12 @@ private:
   Query::Ptr query_;
   nux::Geometry cached_geometry_;
   bool is_focused_;
+
   NuxCairoPtr prelight_;
   NuxCairoPtr active_;
   NuxCairoPtr normal_;
+
+  nux::HLayout* hlayout_;
 };
 
 } // namespace hud

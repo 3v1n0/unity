@@ -10,15 +10,26 @@
 from __future__ import absolute_import
 
 import logging
+from autopilot.keybindings import KeybindingsHelper
 from autopilot.introspection.unity import UnityIntrospectionObject
 
 logger = logging.getLogger(__name__)
 
 
-class WindowManager(UnityIntrospectionObject):
+class WindowManager(UnityIntrospectionObject, KeybindingsHelper):
     """The WindowManager class."""
 
     @property
     def screen_geometry(self):
         """Returns a tuple of (x,y,w,h) for the screen."""
         return (self.x, self.y, self.width, self.height)
+
+    def enter_show_desktop(self):
+        if not self.showdesktop_active:
+            self.keybinding("window/show_desktop")
+            self.showdesktop_active.wait_for(True)
+
+    def leave_show_desktop(self):
+        if self.showdesktop_active:
+            self.keybinding("window/show_desktop")
+            self.showdesktop_active.wait_for(False)
