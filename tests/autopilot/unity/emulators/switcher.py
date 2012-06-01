@@ -148,7 +148,7 @@ class Switcher(KeybindingsHelper):
         return self.controller.model.detail_selection_index
 
     @property
-    def current_detail_count(self):
+    def detail_current_count(self):
         """The number of shown details"""
         return self.controller.model.detail_current_count
 
