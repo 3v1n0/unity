@@ -26,9 +26,6 @@ class SwitcherTestCase(UnityTestCase):
 
 class SwitcherTests(SwitcherTestCase):
     """Test the switcher."""
-    def set_timeout_setting(self, value):
-        self.set_unity_option("alt_tab_timeout", value)
-        sleep(1)
 
     def setUp(self):
         super(SwitcherTests, self).setUp()
