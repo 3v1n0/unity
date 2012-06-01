@@ -50,7 +50,7 @@ Controller::Controller(unsigned int load_timeout)
 
   glib::Source::Ptr lazy_timeout(new glib::Timeout(construct_timeout_ * 1000, glib::Source::Priority::LOW));
   lazy_timeout->Run([&]() { ConstructWindow(); return false; });
-  sources_.Add(lazy_timeout);
+  sources_.Add(lazy_timeout, "lazy-timeout");
 }
 
 void Controller::OnBackgroundUpdate(GVariant* data)
@@ -157,6 +157,8 @@ void Controller::ShowView()
 
 void Controller::ConstructWindow()
 {
+  sources_.Remove("lazy-timeout");
+
   if (!view_window_)
   {
     main_layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
@@ -174,6 +176,8 @@ void Controller::ConstructView()
 {
   if (view_ || !model_)
     return;
+
+  sources_.Remove("view-idle-construct");
 
   view_ = SwitcherView::Ptr(new SwitcherView());
   AddChild(view_.GetPointer());

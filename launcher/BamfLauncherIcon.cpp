@@ -1154,7 +1154,7 @@ bool BamfLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
     }
   }
 
-  return false; 
+  return false;
 }
 
 nux::DndAction BamfLauncherIcon::OnQueryAcceptDrop(DndData const& dnd_data)
