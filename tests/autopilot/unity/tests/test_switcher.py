@@ -50,21 +50,15 @@ class SwitcherTests(SwitcherTestCase):
         self.assertThat(self.switcher.mode, Equals(SwitcherMode.NORMAL))
 
     def test_first_detail_mode_has_correct_label(self):
-        """Tests that details mode shows the correct label the first time.
-        """
+        """Starting switcher in details mode must show the focused window title."""
         app = self.start_app("Text Editor")
         sleep(1)
         self.switcher.initiate(SwitcherMode.DETAIL)
         self.addCleanup(self.switcher.terminate)
 
-        title = ""
-        for window in app.get_windows():
-            if (window.is_focused):
-                title = window.title
-                break
+        [title] = [w.title for w in app.get_windows() if w.is_focused]
 
         self.assertThat(self.switcher.controller.view.label, Eventually(Equals(title)))
-
 
     def test_switcher_move_next(self):
         """Test that pressing the next icon binding moves to the next icon"""
