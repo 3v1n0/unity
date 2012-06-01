@@ -19,7 +19,9 @@ from unity.tests import UnityTestCase
 logger = logging.getLogger(__name__)
 
 class SwitcherTestCase(UnityTestCase):
-    def set_timeout_setting(self, value):
+    def set_timeout_setting(self, state):
+        if type(state) is not bool:
+            raise TypeError("'state' must be boolean, not %r" % type(state))
         self.set_unity_option("alt_tab_timeout", value)
         sleep(1)
 
