@@ -17,8 +17,6 @@
  * Authored by: Tim Penhey <tim.penhey@canonical.com>
  */
 
-#include <cmath>
-
 #include "Variant.h"
 
 namespace unity
@@ -66,11 +64,6 @@ int Variant::GetInt() const
 unsigned Variant::GetUInt() const
 {
   return static_cast<unsigned>(g_variant_get_uint32 (variant_));
-}
-
-long Variant::GetLongInt() const
-{
-  return static_cast<unsigned>(g_variant_get_int64(variant_));
 }
 
 bool Variant::GetBool() const
@@ -207,26 +200,6 @@ BuilderWrapper& BuilderWrapper::add(nux::Rect const& value)
   add("y", value.y);
   add("width", value.width);
   add("height", value.height);
-  return *this;
-}
-
-BuilderWrapper& BuilderWrapper::add(char const* name, nux::Color const& value)
-{
-  std::string red(name);
-  std::string green(name);
-  std::string blue(name);
-  std::string alpha(name);
-
-  red += "-red";
-  green += "-green";
-  blue += "-blue";
-  alpha += "-alpha";
-
-  add(red.c_str(), std::lround(value.red * 255));
-  add(green.c_str(), std::lround(value.green * 255));
-  add(blue.c_str(), std::lround(value.blue * 255));
-  add(alpha.c_str(), std::lround(value.alpha * 255));
-
   return *this;
 }
 

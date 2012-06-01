@@ -25,7 +25,6 @@
 #include <map>
 
 #include <NuxCore/Rect.h>
-#include <NuxCore/Color.h>
 
 namespace unity
 {
@@ -50,7 +49,6 @@ public:
   std::string GetString() const;
   int GetInt() const;
   unsigned GetUInt() const;
-  long GetLongInt() const;
   bool GetBool() const;
 
   bool ASVToHints(HintsMap& hints) const;
@@ -84,7 +82,6 @@ public:
   BuilderWrapper& add(char const* name, double value);
   BuilderWrapper& add(char const* name, GVariant* value);
   BuilderWrapper& add(nux::Rect const& value);
-  BuilderWrapper& add(char const* name, nux::Color const& value);
 
 private:
   GVariantBuilder* builder_;
