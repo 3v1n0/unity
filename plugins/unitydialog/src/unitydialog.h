@@ -64,7 +64,7 @@ namespace unity
 			int                         max);
       void setTexture (GLTexture *);
 
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
       void addGeometriesAndDrawTextureForWindow (CompWindow     *w,
 						 const GLMatrix &transform,
                                                  unsigned int    mask);
@@ -84,7 +84,7 @@ namespace unity
       PaintInfoCollector (CompWindow *w);
 
       void collect ();
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
       void drawGeometriesForWindow (CompWindow     *w,
 				    const GLMatrix &transform,
 				    unsigned int    pm);
@@ -255,7 +255,7 @@ public:
 
   bool
   glDraw(const GLMatrix&,
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
          const GLWindowPaintAttrib&,
 #else
          GLFragment::Attrib&,
@@ -275,7 +275,7 @@ public:
 
   void
   glDrawTexture(GLTexture* texture,
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
                 const GLMatrix& transform,
                 const GLWindowPaintAttrib& attrib,
 #else

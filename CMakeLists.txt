@@ -17,8 +17,13 @@ set (CMAKE_CXX_FLAGS "-DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissiv
 set (CMAKE_CXX_FLAGS_DEBUG "-g3")
 set (CMAKE_CXX_FLAGS_RELEASE "")
 
+option (USE_MODERN_COMPIZ_GL "Use Modern Compiz GL API" OFF)
+if (USE_MODERN_COMPIZ_GL)
+	SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_MODERN_COMPIZ_GL")
+endif (USE_MODERN_COMPIZ_GL)
+
 if (BUILD_GLES)
-	SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNUX_OPENGLES_20 -DUSE_GLES")
+	SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNUX_OPENGLES_20 -DUSE_GLES -DUSE_MODERN_COMPIZ_GL")
 endif (BUILD_GLES)
 
 #
@@ -123,7 +128,15 @@ endif (DISABLE_MAINTAINER_CFLAGS)
 # Compiz Plugins
 #
 set (UNITY_PLUGIN_DEPS "compiz;nux-2.0>=2.0.0;libbamf3;dee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator3-0.4>=0.4.90;atk;unity-misc>=0.4.0;gconf-2.0;libutouch-geis;gtk+-3.0>=3.1;sigc++-2.0;json-glib-1.0;libnotify;gnome-desktop-3.0;gdu;xfixes")
-
+find_package (PkgConfig)
+pkg_check_modules (CACHED_UNITY_DEPS REQUIRED ${UNITY_PLUGIN_DEPS})
+add_subdirectory(unity-shared)
+add_subdirectory(panel)
+add_subdirectory(dash)
+add_subdirectory(hud)
+add_subdirectory(launcher)
+add_subdirectory(shortcuts)
+add_subdirectory(unity-standalone)
 add_subdirectory(plugins/unityshell)
 add_subdirectory(plugins/gtkloader)
 add_subdirectory(plugins/networkarearegion)
@@ -156,8 +169,6 @@ add_subdirectory(tests)
 add_subdirectory(tools)
 add_subdirectory(UnityCore)
 add_subdirectory(guides)
-add_subdirectory(standalone-clients EXCLUDE_FROM_ALL)
-
 
 #
 # GSettings Schema

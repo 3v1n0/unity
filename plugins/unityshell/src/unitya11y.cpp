@@ -37,7 +37,6 @@
 #include "SimpleLauncherIcon.h"
 #include "PanelView.h"
 #include "DashView.h"
-#include "PlacesSimpleTile.h"
 #include "PlacesGroup.h"
 #include "QuicklistView.h"
 #include "QuicklistMenuItem.h"
@@ -49,7 +48,6 @@
 #include "unity-search-bar-accessible.h"
 #include "unity-sctext-accessible.h"
 #include "unity-rvgrid-accessible.h"
-#include "unity-places-simple-tile-accessible.h"
 #include "unity-places-group-accessible.h"
 #include "unity-quicklist-accessible.h"
 #include "unity-quicklist-menu-item-accessible.h"
@@ -218,6 +216,9 @@ unity_a11y_init(nux::WindowThread* wt)
   {
     g_debug("Unity Oneiric accessibility started, using bridge on %s",
             bridge_path);
+
+    atk_get_root();
+
     a11y_initialized = TRUE;
   }
 
@@ -280,9 +281,6 @@ unity_a11y_create_accessible(nux::Object* object)
 
   if (object->Type().IsDerivedFromType(DashView::StaticObjectType))
     return unity_dash_view_accessible_new(object);
-
-  if (object->Type().IsDerivedFromType(PlacesSimpleTile::StaticObjectType))
-    return unity_places_simple_tile_accessible_new(object);
 
   if (object->Type().IsDerivedFromType(PlacesGroup::StaticObjectType))
     return unity_places_group_accessible_new(object);
