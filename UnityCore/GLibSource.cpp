@@ -43,10 +43,7 @@ void Source::Remove()
     {
       g_source_destroy(source_);
     }
-  }
 
-  if (source_)
-  {
     g_source_unref(source_);
     source_ = nullptr;
   }
@@ -229,14 +226,12 @@ bool SourceManager::Add(Source::Ptr const& source, std::string const& nick)
 
 void SourceManager::OnSourceRemoved(unsigned int id)
 {
-
   for (auto it = sources_.begin(); it != sources_.end(); ++it)
   {
     auto source = it->second;
 
     if (source->Id() == id)
     {
-      source->Remove();
       sources_.erase(it);
       break;
     }
