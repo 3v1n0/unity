@@ -175,8 +175,8 @@ public:
   bool Add(Source* source, std::string const& nick = "");
   bool Add(Source::Ptr const& source, std::string const& nick = "");
 
-  void Remove(std::string const& nick);
-  void Remove(unsigned int id);
+  bool Remove(std::string const& nick);
+  bool Remove(unsigned int id);
 
   Source::Ptr GetSource(std::string const& nick) const;
   Source::Ptr GetSource(unsigned int id) const;

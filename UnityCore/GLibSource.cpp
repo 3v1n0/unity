@@ -238,17 +238,19 @@ void SourceManager::OnSourceRemoved(unsigned int id)
   }
 }
 
-void SourceManager::Remove(std::string const& nick)
+bool SourceManager::Remove(std::string const& nick)
 {
   auto it = sources_.find(nick);
 
   if (it != sources_.end())
   {
-    RemoveItem(it);
+    return RemoveItem(it);
   }
+
+  return false;
 }
 
-void SourceManager::Remove(unsigned int id)
+bool SourceManager::Remove(unsigned int id)
 {
   for (auto it = sources_.begin(); it != sources_.end(); ++it)
   {
@@ -256,10 +258,11 @@ void SourceManager::Remove(unsigned int id)
 
     if (source->Id() == id)
     {
-      RemoveItem(it);
-      break;
+      return RemoveItem(it);
     }
   }
+
+  return false;
 }
 
 bool SourceManager::RemoveItem(SourcesMap::iterator it, bool force)
