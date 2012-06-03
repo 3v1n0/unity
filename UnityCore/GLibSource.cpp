@@ -175,10 +175,7 @@ SourceManager::~SourceManager()
 {
   for (auto it = sources_.begin(); it != sources_.end();)
   {
-    auto source = it->second;
-    source->removed.clear();
-    source->Remove();
-    sources_.erase(it++);
+    RemoveItem(it++, true);
   }
 }
 
@@ -214,12 +211,14 @@ bool SourceManager::Add(Source::Ptr const& source, std::string const& nick)
   auto old_source_it = sources_.find(source_nick);
   if (old_source_it != sources_.end())
   {
-    /* If a source with the same nick has been found, we can safely replace it, since
-     * at this point we're sure that they refers to two different sources */
-    auto old_source = old_source_it->second;
-    old_source->removed.clear();
-    old_source->Remove();
-    sources_.erase(old_source_it);
+    /* If a source with the same nick has been found, we can safely replace it,
+     * since at this point we're sure that they refers to two different sources.
+     * This should not happen when we're trying to re-add the same source from
+     * its callback. */
+    if (!RemoveItem(old_source_it))
+    {
+      return false;
+    }
   }
 
   sources_[source_nick] = source;
@@ -230,6 +229,7 @@ bool SourceManager::Add(Source::Ptr const& source, std::string const& nick)
 
 void SourceManager::OnSourceRemoved(unsigned int id)
 {
+
   for (auto it = sources_.begin(); it != sources_.end(); ++it)
   {
     auto source = it->second;
@@ -249,11 +249,7 @@ void SourceManager::Remove(std::string const& nick)
 
   if (it != sources_.end())
   {
-    auto source = it->second;
-
-    source->removed.clear();
-    source->Remove();
-    sources_.erase(it);
+    RemoveItem(it);
   }
 }
 
@@ -265,12 +261,30 @@ void SourceManager::Remove(unsigned int id)
 
     if (source->Id() == id)
     {
-      source->removed.clear();
-      source->Remove();
-      sources_.erase(it);
+      RemoveItem(it);
       break;
     }
   }
+}
+
+bool SourceManager::RemoveItem(SourcesMap::iterator it, bool force)
+{
+  GSource* src = g_main_current_source();
+  auto source = it->second;
+
+  /* A source will be removed from the manager only if we're not currently
+   * running the source's callback. Its return value should control this.
+   * In future we may allow this, but for now it's safer to add this limit. */
+  if (!src || g_source_get_id(src) != source->Id() || force)
+  {
+    source->removed.clear();
+    source->Remove();
+    sources_.erase(it);
+
+    return true;
+  }
+
+  return false;
 }
 
 Source::Ptr SourceManager::GetSource(unsigned int id) const
@@ -291,7 +305,9 @@ Source::Ptr SourceManager::GetSource(std::string const& nick) const
   auto it = sources_.find(nick);
 
   if (it != sources_.end())
+  {
     return it->second;
+  }
 
   return Source::Ptr();
 }

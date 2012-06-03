@@ -182,9 +182,12 @@ public:
   Source::Ptr GetSource(unsigned int id) const;
 
 protected:
-  void OnSourceRemoved(unsigned int id);
+  typedef std::map<std::string, Source::Ptr> SourcesMap;
+  SourcesMap sources_;
 
-  std::map<std::string, Source::Ptr> sources_;
+private:
+  void OnSourceRemoved(unsigned int id);
+  bool RemoveItem(SourcesMap::iterator it, bool force = false);
 };
 
 } // glib namespace
