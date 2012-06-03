@@ -181,7 +181,7 @@ public:
   Source::Ptr GetSource(std::string const& nick) const;
   Source::Ptr GetSource(unsigned int id) const;
 
-protected:
+protected: // For testing purposes
   typedef std::map<std::string, Source::Ptr> SourcesMap;
   SourcesMap sources_;
 

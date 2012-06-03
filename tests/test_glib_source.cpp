@@ -332,19 +332,19 @@ TEST(TestGLibSourceManager, AddingNamedSources)
 {
   MockSourceManager manager;
 
-  Source *timeout_1 = new Timeout(1);
+  Source* timeout_1 = new Timeout(1);
   manager.Add(timeout_1, "timeout-1");
   ASSERT_EQ(manager.GetSource("timeout-1").get(), timeout_1);
 
-  Source *timeout_2 = new Timeout(1, &OnSourceCallbackContinue);
+  Source* timeout_2 = new Timeout(1, &OnSourceCallbackContinue);
   manager.Add(timeout_2, "timeout-2");
   ASSERT_EQ(manager.GetSource("timeout-2").get(), timeout_2);
 
-  Source *idle_1 = new Idle();
+  Source* idle_1 = new Idle();
   manager.Add(idle_1, "idle-1");
   ASSERT_EQ(manager.GetSource("idle-1").get(), idle_1);
 
-  Source *idle_2 = new Idle(&OnSourceCallbackContinue);
+  Source* idle_2 = new Idle(&OnSourceCallbackContinue);
   manager.Add(idle_2, "idle-2");
   ASSERT_EQ(manager.GetSource("idle-2").get(), idle_2);
 
