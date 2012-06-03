@@ -130,6 +130,7 @@ TEST(TestGLibTimeout, OneShotRun)
   timeout.removed.connect([&] (unsigned int id) { clock_gettime(CLOCK_MONOTONIC, &post); });
 
   Utils::WaitForTimeoutMSec(500);
+  EXPECT_FALSE(timeout.IsRunning());
   EXPECT_TRUE(callback_called);
   EXPECT_EQ(callback_call_count, 1);
   int time_delta = unity::TimeUtil::TimeDelta(&post, &pre);
@@ -149,6 +150,7 @@ TEST(TestGLibTimeout, MultipleShotsRun)
   timeout.removed.connect([&] (unsigned int id) { clock_gettime(CLOCK_MONOTONIC, &post); });
 
   Utils::WaitForTimeoutMSec(650);
+  EXPECT_TRUE(timeout.IsRunning());
   }
 
   EXPECT_TRUE(callback_called);
@@ -233,6 +235,7 @@ TEST(TestGLibIdle, OneShotRun)
   idle.removed.connect([&] (unsigned int id) { post = g_get_monotonic_time(); });
 
   Utils::WaitForTimeoutMSec(100);
+  EXPECT_FALSE(idle.IsRunning());
   EXPECT_TRUE(callback_called);
   EXPECT_EQ(callback_call_count, 1);
   EXPECT_LT(pre, post);
@@ -250,6 +253,7 @@ TEST(TestGLibIdle, MultipleShotsRun)
   idle.removed.connect([&] (unsigned int id) { clock_gettime(CLOCK_MONOTONIC, &post); });
 
   Utils::WaitForTimeoutMSec(100);
+  EXPECT_TRUE(idle.IsRunning());
   }
 
   EXPECT_TRUE(callback_called);
@@ -301,7 +305,7 @@ TEST(TestGLibIdle, Running)
 class MockSourceManager : public SourceManager
 {
 public:
-  std::map<std::string, Source::Ptr> GetSources()
+  SourcesMap GetSources()
   {
     return sources_;
   }
@@ -328,19 +332,19 @@ TEST(TestGLibSourceManager, AddingNamedSources)
 {
   MockSourceManager manager;
 
-  Source *timeout_1 = new Timeout(1);
+  Source* timeout_1 = new Timeout(1);
   manager.Add(timeout_1, "timeout-1");
   ASSERT_EQ(manager.GetSource("timeout-1").get(), timeout_1);
 
-  Source *timeout_2 = new Timeout(1, &OnSourceCallbackContinue);
+  Source* timeout_2 = new Timeout(1, &OnSourceCallbackContinue);
   manager.Add(timeout_2, "timeout-2");
   ASSERT_EQ(manager.GetSource("timeout-2").get(), timeout_2);
 
-  Source *idle_1 = new Idle();
+  Source* idle_1 = new Idle();
   manager.Add(idle_1, "idle-1");
   ASSERT_EQ(manager.GetSource("idle-1").get(), idle_1);
 
-  Source *idle_2 = new Idle(&OnSourceCallbackContinue);
+  Source* idle_2 = new Idle(&OnSourceCallbackContinue);
   manager.Add(idle_2, "idle-2");
   ASSERT_EQ(manager.GetSource("idle-2").get(), idle_2);
 

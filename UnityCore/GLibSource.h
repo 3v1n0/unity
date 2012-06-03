@@ -70,7 +70,7 @@ public:
     LOW = G_PRIORITY_LOW                    // 300
   };
 
-  ~Source();
+  virtual ~Source();
   unsigned int Id() const;
 
   /**
@@ -89,6 +89,11 @@ public:
   void SetPriority(Priority prio);
   Priority GetPriority() const;
 
+  /**
+   * The removed signal is emitted when the Source has been removed and so it
+   * can happen both when the Remove() method is called and when the callback
+   * function returns false.
+   */
   sigc::signal<void, unsigned int> removed;
 
 protected:
@@ -170,16 +175,19 @@ public:
   bool Add(Source* source, std::string const& nick = "");
   bool Add(Source::Ptr const& source, std::string const& nick = "");
 
-  void Remove(std::string const& nick);
-  void Remove(unsigned int id);
+  bool Remove(std::string const& nick);
+  bool Remove(unsigned int id);
 
   Source::Ptr GetSource(std::string const& nick) const;
   Source::Ptr GetSource(unsigned int id) const;
 
-protected:
-  void OnSourceRemoved(unsigned int id);
+protected: // For testing purposes
+  typedef std::map<std::string, Source::Ptr> SourcesMap;
+  SourcesMap sources_;
 
-  std::map<std::string, Source::Ptr> sources_;
+private:
+  void OnSourceRemoved(unsigned int id);
+  bool RemoveItem(SourcesMap::iterator it, bool force = false);
 };
 
 } // glib namespace
