@@ -130,6 +130,7 @@ TEST(TestGLibTimeout, OneShotRun)
   timeout.removed.connect([&] (unsigned int id) { clock_gettime(CLOCK_MONOTONIC, &post); });
 
   Utils::WaitForTimeoutMSec(500);
+  EXPECT_FALSE(timeout.IsRunning());
   EXPECT_TRUE(callback_called);
   EXPECT_EQ(callback_call_count, 1);
   int time_delta = unity::TimeUtil::TimeDelta(&post, &pre);
@@ -149,6 +150,7 @@ TEST(TestGLibTimeout, MultipleShotsRun)
   timeout.removed.connect([&] (unsigned int id) { clock_gettime(CLOCK_MONOTONIC, &post); });
 
   Utils::WaitForTimeoutMSec(650);
+  EXPECT_TRUE(timeout.IsRunning());
   }
 
   EXPECT_TRUE(callback_called);
@@ -233,6 +235,7 @@ TEST(TestGLibIdle, OneShotRun)
   idle.removed.connect([&] (unsigned int id) { post = g_get_monotonic_time(); });
 
   Utils::WaitForTimeoutMSec(100);
+  EXPECT_FALSE(idle.IsRunning());
   EXPECT_TRUE(callback_called);
   EXPECT_EQ(callback_call_count, 1);
   EXPECT_LT(pre, post);
@@ -250,6 +253,7 @@ TEST(TestGLibIdle, MultipleShotsRun)
   idle.removed.connect([&] (unsigned int id) { clock_gettime(CLOCK_MONOTONIC, &post); });
 
   Utils::WaitForTimeoutMSec(100);
+  EXPECT_TRUE(idle.IsRunning());
   }
 
   EXPECT_TRUE(callback_called);
@@ -301,7 +305,7 @@ TEST(TestGLibIdle, Running)
 class MockSourceManager : public SourceManager
 {
 public:
-  std::map<std::string, Source::Ptr> GetSources()
+  SourcesMap GetSources()
   {
     return sources_;
   }
