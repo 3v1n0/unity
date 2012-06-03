@@ -18,7 +18,7 @@
 */
 
 #include "GLibSource.h"
-#include <sstream>
+#include <boost/lexical_cast.hpp>
 
 namespace unity
 {
@@ -119,7 +119,7 @@ void Source::DestroyCallback(gpointer data)
 
   auto self = static_cast<Source*>(data);
 
-  if (self && self->Id())
+  if (self->Id())
   {
     self->removed.emit(self->Id());
   }
@@ -127,14 +127,12 @@ void Source::DestroyCallback(gpointer data)
 
 
 Timeout::Timeout(unsigned int milliseconds, SourceCallback cb, Priority prio)
-  : Source()
 {
   Init(milliseconds, prio);
   Run(cb);
 }
 
 Timeout::Timeout(unsigned int milliseconds, Priority prio)
-  : Source()
 {
   Init(milliseconds, prio);
 }
@@ -175,12 +173,12 @@ SourceManager::SourceManager()
 
 SourceManager::~SourceManager()
 {
-  for (auto it = sources_.begin(); it != sources_.end(); ++it)
+  for (auto it = sources_.begin(); it != sources_.end();)
   {
     auto source = it->second;
     source->removed.clear();
     source->Remove();
-    sources_.erase(it, it);
+    sources_.erase(it++);
   }
 }
 
@@ -210,9 +208,7 @@ bool SourceManager::Add(Source::Ptr const& source, std::string const& nick)
   if (source_nick.empty())
   {
     /* If we don't have a nick, we use the source pointer string as nick. */
-    std::stringstream ss;
-    ss << GPOINTER_TO_UINT(source.get());
-    source_nick = ss.str();
+    source_nick = boost::lexical_cast<std::string>(source.get());
   }
 
   auto old_source_it = sources_.find(source_nick);

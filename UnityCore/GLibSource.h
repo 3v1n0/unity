@@ -70,7 +70,7 @@ public:
     LOW = G_PRIORITY_LOW                    // 300
   };
 
-  ~Source();
+  virtual ~Source();
   unsigned int Id() const;
 
   /**
@@ -89,6 +89,11 @@ public:
   void SetPriority(Priority prio);
   Priority GetPriority() const;
 
+  /**
+   * The removed signal is emitted when the Source has been removed and so it
+   * can happen both when the Remove() method is called and when the callback
+   * function returns false.
+   */
   sigc::signal<void, unsigned int> removed;
 
 protected:
