@@ -213,6 +213,12 @@ nux::View* View::default_focus() const
   return search_bar_->text_entry();
 }
 
+std::list<HudButton::Ptr> const& View::buttons() const
+{
+  return buttons_;
+}
+
+
 void View::SetQueries(Hud::Queries queries)
 {
   // early exit, if the user is key navigating on the hud, we don't want to set new
@@ -231,14 +237,14 @@ void View::SetQueries(Hud::Queries queries)
   buttons_.clear();
   button_views_->Clear();
   int found_items = 0;
-  for (auto query = queries.begin(); query != queries.end(); query++)
+  for (auto query : queries)
   {
     if (found_items >= 5)
       break;
 
     HudButton::Ptr button(new HudButton());
     buttons_.push_front(button);
-    button->SetQuery(*query);
+    button->SetQuery(query);
 
     button_views_->AddView(button.GetPointer(), 0, nux::MINOR_POSITION_LEFT);
 
@@ -246,24 +252,26 @@ void View::SetQueries(Hud::Queries queries)
       query_activated.emit(dynamic_cast<HudButton*>(view)->GetQuery());
     });
 
-    button->key_nav_focus_activate.connect([&](nux::Area *area) {
+    button->key_nav_focus_activate.connect([&](nux::Area* area) {
       query_activated.emit(dynamic_cast<HudButton*>(area)->GetQuery());
     });
 
-    button->key_nav_focus_change.connect([&](nux::Area *area, bool recieving, KeyNavDirection direction){
+    button->key_nav_focus_change.connect([&](nux::Area* area, bool recieving, KeyNavDirection direction){
       if (recieving)
         query_selected.emit(dynamic_cast<HudButton*>(area)->GetQuery());
     });
 
-    // You should never decrement end().  We should fix this loop.
-    button->is_rounded = (query == --(queries.end())) ? true : false;
-    button->fake_focused = (query == (queries.begin())) ? true : false;
-
     button->SetMinimumWidth(content_width);
-    found_items++;
+    ++found_items;
   }
+
   if (found_items)
+  {
+    buttons_.front()->is_rounded = true;
+    buttons_.back()->fake_focused = true;
     selected_button_ = 1;
+  }
+
 
   QueueRelayout();
   QueueDraw();
