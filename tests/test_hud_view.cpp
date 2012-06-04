@@ -54,13 +54,19 @@ TEST(TestHudView, TestSetQueries)
   auto it = view->buttons().begin();
   EXPECT_EQ((*it)->label, "4");
   EXPECT_TRUE((*it)->is_rounded);
-  EXPECT_FALSE((*it++)->fake_focused);
+  EXPECT_FALSE((*it)->fake_focused);
+
+  it++;
   EXPECT_EQ((*it)->label, "3");
   EXPECT_FALSE((*it)->is_rounded);
-  EXPECT_FALSE((*it++)->fake_focused);
+  EXPECT_FALSE((*it)->fake_focused);
+
+  it++;
   EXPECT_EQ((*it)->label, "2");
   EXPECT_FALSE((*it)->is_rounded);
-  EXPECT_FALSE((*it++)->fake_focused);
+  EXPECT_FALSE((*it)->fake_focused);
+
+  it++;
   EXPECT_EQ((*it)->label, "1");
   EXPECT_FALSE((*it)->is_rounded);
   EXPECT_TRUE((*it)->fake_focused);
