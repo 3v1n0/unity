@@ -213,6 +213,12 @@ nux::View* View::default_focus() const
   return search_bar_->text_entry();
 }
 
+std::list<HudButton::Ptr> const& View::buttons() const
+{
+  return buttons_;
+}
+
+
 void View::SetQueries(Hud::Queries queries)
 {
   // early exit, if the user is key navigating on the hud, we don't want to set new
