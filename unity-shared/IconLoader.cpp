@@ -106,14 +106,14 @@ private:
         gtk_icon_info_free(icon_info);
     }
 
-    void InvokeSlot(glib::Object<GdkPixbuf> const& pixbuf = glib::Object<GdkPixbuf>())
+    void InvokeSlot()
     {
-      slot(data, size, pixbuf);
+      slot(data, size, result);
 
       // notify shadow tasks
       for (auto shadow_task : shadow_tasks)
       {
-        shadow_task->slot(shadow_task->data, shadow_task->size, pixbuf);
+        shadow_task->slot(shadow_task->data, shadow_task->size, result);
         self->task_map_.erase(shadow_task->handle);
       }
 
@@ -513,7 +513,7 @@ bool IconLoader::Impl::CoalesceTasksCb()
                           << " at size " << task->size << ": " << task->error;
     }
 
-    task->InvokeSlot(task->result);
+    task->InvokeSlot();
 
     // this was all async, we need to erase the task from the task_map
     task_map_.erase(task->handle);
