@@ -125,7 +125,6 @@ const int Launcher::Launcher::ANIM_DURATION_SHORT = 125;
 Launcher::Launcher(nux::BaseWindow* parent,
                    NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
-  , _model(nullptr)
   , _background_color(nux::color::DimGray)
   , _dash_is_open(false)
   , _hud_is_open(false)
@@ -1775,7 +1774,7 @@ void Launcher::OnOrderChanged()
   EnsureAnimation();
 }
 
-void Launcher::SetModel(LauncherModel* model)
+void Launcher::SetModel(LauncherModel::Ptr model)
 {
   _model = model;
 
@@ -1788,7 +1787,7 @@ void Launcher::SetModel(LauncherModel* model)
   _model->selection_changed.connect(sigc::mem_fun(this, &Launcher::OnSelectionChanged));
 }
 
-LauncherModel* Launcher::GetModel() const
+LauncherModel::Ptr Launcher::GetModel() const
 {
   return _model;
 }

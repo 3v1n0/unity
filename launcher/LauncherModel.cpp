@@ -33,10 +33,6 @@ LauncherModel::LauncherModel()
 {
 }
 
-LauncherModel::~LauncherModel()
-{
-}
-
 std::string LauncherModel::GetName() const
 {
   return "LauncherModel";

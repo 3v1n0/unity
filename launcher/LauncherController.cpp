@@ -140,7 +140,7 @@ public:
                                unsigned short keyCount);
 
   Controller* parent_;
-  LauncherModel::Ptr     model_;
+  LauncherModel::Ptr model_;
   nux::ObjectPtr<Launcher> launcher_;
   nux::ObjectPtr<Launcher> keyboard_launcher_;
   int                    sort_priority_;
@@ -353,7 +353,7 @@ Launcher* Controller::Impl::CreateLauncher(int monitor)
   launcher->display = display_;
   launcher->monitor = monitor;
   launcher->options = parent_->options();
-  launcher->SetModel(model_.get());
+  launcher->SetModel(model_);
 
   nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout->AddView(launcher, 1);

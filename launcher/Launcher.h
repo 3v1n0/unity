@@ -34,6 +34,7 @@
 #include "EdgeBarrierController.h"
 #include "GeisAdapter.h"
 #include "unity-shared/Introspectable.h"
+#include "LauncherModel.h"
 #include "LauncherOptions.h"
 #include "LauncherDragWindow.h"
 #include "LauncherHideMachine.h"
@@ -47,7 +48,6 @@ namespace unity
 namespace launcher
 {
 class AbstractLauncherIcon;
-class LauncherModel;
 
 class Launcher : public unity::debug::Introspectable, public nux::View, public ui::EdgeBarrierSubscriber
 {
@@ -78,8 +78,8 @@ public:
   void ForceReveal(bool force);
   void ShowShortcuts(bool show);
 
-  void SetModel(LauncherModel* model);
-  LauncherModel* GetModel() const;
+  void SetModel(LauncherModel::Ptr model);
+  LauncherModel::Ptr GetModel() const;
 
   void StartKeyShowLauncher();
   void EndKeyShowLauncher();
@@ -357,7 +357,7 @@ private:
 
   nux::Point2   _mouse_position;
   nux::BaseWindow* _parent;
-  LauncherModel* _model;
+  LauncherModel::Ptr _model;
   nux::ObjectPtr<LauncherDragWindow> _drag_window;
   LauncherHideMachine _hide_machine;
   LauncherHoverMachine _hover_machine;
