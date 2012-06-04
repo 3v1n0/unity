@@ -325,17 +325,21 @@ class SwitcherDetailsModeTests(SwitcherTestCase):
 
     def test_next_icon_from_last_detail_works(self):
         """Pressing next while showing last switcher item in details mode
-
         must select first item in the model in non-details mode.
 
         """
         self.start_app("Character Map")
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
-        while self.switcher.selection_index < len(self.switcher.icons) -1:
+        while self.switcher.selection_index < len(self.switcher.icons) - 1:
             self.switcher.next_icon()
         self.keyboard.press_and_release(self.initiate_keycode)
         sleep(0.5)
+        # Make sure we're at the end of the details list for this icon
+        possible_details = self.switcher.detail_current_count - 1
+        while self.switcher.detail_selection_index < possible_details:
+            self.switcher.next_detail()
+
         self.switcher.next_icon()
         self.assertThat(self.switcher.selection_index, Equals(0))
 
