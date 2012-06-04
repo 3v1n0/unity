@@ -2,6 +2,7 @@ unity (5.12-0ubuntu3) UNRELEASED; urgency=low
 
   * debian/control:
     - build on unversionned version of boost (to transition to 1.49 in quantal)
+      (LP: #1008219)
   * debian/rules:
     - build in parallel
   * Cherry-pick some upstream fixes for the newer g-c-c making previous upload
