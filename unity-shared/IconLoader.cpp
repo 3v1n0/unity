@@ -24,7 +24,6 @@
 #include <boost/algorithm/string.hpp>
 
 #include <NuxCore/Logger.h>
-#include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSource.h>
 
 #include "unity-shared/Timer.h"
@@ -109,7 +108,7 @@ private:
         gtk_icon_info_free(icon_info);
     }
 
-    void InvokeSlot(GdkPixbuf* pixbuf = nullptr)
+    void InvokeSlot(glib::Object<GdkPixbuf> const& pixbuf = glib::Object<GdkPixbuf>())
     {
       slot(data, size, pixbuf);
 
@@ -332,11 +331,13 @@ bool IconLoader::Impl::CacheLookup(std::string const& key,
 {
   auto iter = cache_.find(key);
   bool found = iter != cache_.end();
+
   if (found)
   {
-    GdkPixbuf* pixbuf = iter->second;
+    glib::Object<GdkPixbuf> const& pixbuf = iter->second;
     slot(data, size, pixbuf);
   }
+
   return found;
 }
 

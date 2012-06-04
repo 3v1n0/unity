@@ -93,15 +93,15 @@ private:
   //icon loading callbacks
   void IconLoaded(std::string const& texid,
                   unsigned size,
-                  GdkPixbuf* pixbuf,
+                  glib::Object<GdkPixbuf> const& pixbuf,
                   std::string icon_name,
                   Result& row);
   nux::BaseTexture* CreateTextureCallback(std::string const& texid,
                                           int width, int height,
-                                          GdkPixbuf* pixbuf);
+                                          glib::Object<GdkPixbuf> const& pixbuf);
   nux::BaseTexture* CreateBlurredTextureCallback(std::string const& texid,
                                                  int width, int height,
-                                                 GdkPixbuf* pixbuf);
+                                                 glib::Object<GdkPixbuf> const& pixbuf);
   nux::BaseTexture* DrawHighlight(std::string const& texid,
                                   int width, int height);
 };

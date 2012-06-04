@@ -287,7 +287,7 @@ void DeviceLauncherIcon::OnEjectReady(GObject* object,
 
 void DeviceLauncherIcon::ShowNotification(std::string const& icon_name,
                                           unsigned size,
-                                          GdkPixbuf* pixbuf,
+                                          glib::Object<GdkPixbuf> const& pixbuf,
                                           std::string const& name)
 {
   glib::Object<NotifyNotification> notification(notify_notification_new(name.c_str(),
@@ -298,7 +298,7 @@ void DeviceLauncherIcon::ShowNotification(std::string const& icon_name,
                                "x-canonical-private-synchronous",
                                g_variant_new_boolean(TRUE));
 
-  if(GDK_IS_PIXBUF(pixbuf))
+  if (GDK_IS_PIXBUF(pixbuf.RawPtr()))
     notify_notification_set_image_from_pixbuf(notification, pixbuf);
 
   notify_notification_show(notification, NULL);
