@@ -125,20 +125,66 @@ const int Launcher::Launcher::ANIM_DURATION_SHORT = 125;
 Launcher::Launcher(nux::BaseWindow* parent,
                    NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
-  , _background_color(nux::color::DimGray)
+  , monitor(0)
+  , _parent(parent)
+  , _active_quicklist(nullptr)
+  , _hovered(false)
+  , _hidden(false)
+  , _scroll_limit_reached(false)
+  , _render_drag_window(false)
+  , _shortcuts_shown(false)
+  , _data_checked(false)
+  , _steal_drag(false)
+  , _drag_edge_touching(false)
   , _dash_is_open(false)
   , _hud_is_open(false)
+  , _folded_angle(1.0f)
+  , _neg_folded_angle(-1.0f)
+  , _folded_z_distance(10.0f)
+  , _last_delta_y(0.0f)
+  , _edge_overcome_pressure(0.0f)
+  , _launcher_action_state(ACTION_NONE)
+  , _space_between_icons(5)
+  , _icon_image_size(48)
+  , _icon_image_size_delta(6)
+  , _icon_glow_size(62)
+  , _icon_size(_icon_image_size + _icon_image_size_delta)
+  , _dnd_delta_y(0)
+  , _dnd_delta_x(0)
+  , _postreveal_mousemove_delta_x(0)
+  , _postreveal_mousemove_delta_y(0)
+  , _launcher_drag_delta(0)
+  , _enter_y(0)
+  , _last_button_press(0)
+  , _drag_out_id(0)
+  , _drag_out_delta_x(0.0f)
+  , _last_reveal_progress(0.0f)
+  , _selection_atom(0)
+  , _background_color(nux::color::DimGray)
+  , sc_icon_x_(0)
+  , sc_icon_y_(0)
+  , sc_icon_size_(0)
+  , sc_anim_icon_(false)
 {
-  _parent = parent;
-  _active_quicklist = nullptr;
+  m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  monitor = 0;
+  _collection_window = new unity::DNDCollectionWindow();
+  _collection_window->collected.connect(sigc::mem_fun(this, &Launcher::OnDNDDataCollected));
+
+  _offscreen_drag_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(2, 2, 1, nux::BITFMT_R8G8B8A8);
+
+  bg_effect_helper_.owner = this;
+  bg_effect_helper_.enabled = false;
+
+  SetCompositionLayout(m_Layout);
+  CaptureMouseDownAnyWhereElse(true);
+  SetAcceptKeyNavFocusOnMouseDown(false);
+  SetAcceptMouseWheelEvent(true);
+  SetDndEnabled(false, true);
 
   _hide_machine.should_hide_changed.connect(sigc::mem_fun(this, &Launcher::SetHidden));
   _hide_machine.reveal_progress.changed.connect([&](float value) { EnsureAnimation(); });
   _hover_machine.should_hover_changed.connect(sigc::mem_fun(this, &Launcher::SetHover));
-
-  m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
   mouse_down.connect(sigc::mem_fun(this, &Launcher::RecvMouseDown));
   mouse_up.connect(sigc::mem_fun(this, &Launcher::RecvMouseUp));
@@ -148,9 +194,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   mouse_move.connect(sigc::mem_fun(this, &Launcher::RecvMouseMove));
   mouse_wheel.connect(sigc::mem_fun(this, &Launcher::RecvMouseWheel));
   //OnEndFocus.connect   (sigc::mem_fun (this, &Launcher::exitKeyNavMode));
-
-  CaptureMouseDownAnyWhereElse(true);
-  SetAcceptKeyNavFocusOnMouseDown(false);
 
   QuicklistManager& ql_manager = *(QuicklistManager::Default());
   ql_manager.quicklist_opened.connect(sigc::mem_fun(this, &Launcher::RecvQuicklistOpened));
@@ -173,67 +216,22 @@ Launcher::Launcher(nux::BaseWindow* parent,
 
   display.changed.connect(sigc::mem_fun(this, &Launcher::OnDisplayChanged));
 
-  SetCompositionLayout(m_Layout);
-
-  _folded_angle           = 1.0f;
-  _neg_folded_angle       = -1.0f;
-  _space_between_icons    = 5;
-  _last_delta_y           = 0.0f;
-  _folded_z_distance      = 10.0f;
-  _launcher_action_state  = ACTION_NONE;
-  _icon_under_mouse       = NULL;
-  _icon_mouse_down        = NULL;
-  _drag_icon              = NULL;
-  _icon_image_size        = 48;
-  _icon_glow_size         = 62;
-  _icon_image_size_delta  = 6;
-  _icon_size              = _icon_image_size + _icon_image_size_delta;
-
-  _enter_y                = 0;
-  _launcher_drag_delta    = 0;
-  _dnd_delta_y            = 0;
-  _dnd_delta_x            = 0;
-  _last_reveal_progress   = 0;
-
-  _shortcuts_shown        = false;
-  _hovered                = false;
-  _hidden                 = false;
-  _scroll_limit_reached   = false;
-  _render_drag_window     = false;
-  _drag_edge_touching     = false;
-  _steal_drag             = false;
-  _last_button_press      = 0;
-  _selection_atom         = 0;
-  _drag_out_id            = 0;
-  _drag_out_delta_x       = 0.0f;
-  _edge_overcome_pressure = 0.0f;
-
-  // FIXME: remove
-  _initial_drag_animation = false;
-
-  _postreveal_mousemove_delta_x = 0;
-  _postreveal_mousemove_delta_y = 0;
-
-  _data_checked = false;
-  _collection_window = new unity::DNDCollectionWindow();
-  _collection_window->collected.connect(sigc::mem_fun(this, &Launcher::OnDNDDataCollected));
-
   // 0 out timers to avoid wonky startups
-  int i;
-  for (i = 0; i < TIME_LAST; ++i)
+  for (int i = 0; i < TIME_LAST; ++i)
   {
     _times[i].tv_sec = 0;
     _times[i].tv_nsec = 0;
   }
-
-  _dnd_hovered_icon = NULL;
-  _offscreen_drag_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(2, 2, 1, nux::BITFMT_R8G8B8A8);
 
   ubus_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &Launcher::OnOverlayShown));
   ubus_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &Launcher::OnOverlayHidden));
   ubus_.RegisterInterest(UBUS_LAUNCHER_ACTION_DONE, sigc::mem_fun(this, &Launcher::OnActionDone));
   ubus_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Launcher::OnBGColorChanged));
   ubus_.RegisterInterest(UBUS_LAUNCHER_LOCK_HIDE, sigc::mem_fun(this, &Launcher::OnLockHideChanged));
+
+  // request the latest colour from bghash
+  ubus_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, NULL);
+
   _dbus_owner = g_bus_own_name(G_BUS_TYPE_SESSION,
                                S_DBUS_NAME.c_str(),
                                (GBusNameOwnerFlags)(G_BUS_NAME_OWNER_FLAGS_REPLACE | G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT),
@@ -243,18 +241,8 @@ Launcher::Launcher(nux::BaseWindow* parent,
                                this,
                                nullptr);
 
-  SetDndEnabled(false, true);
-
   icon_renderer = ui::AbstractIconRenderer::Ptr(new ui::IconRenderer());
   icon_renderer->SetTargetSize(_icon_size, _icon_image_size, _space_between_icons);
-
-  // request the latest colour from bghash
-  ubus_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, NULL);
-
-  SetAcceptMouseWheelEvent(true);
-
-  bg_effect_helper_.owner = this;
-  bg_effect_helper_.enabled = false;
 
   TextureCache& cache = TextureCache::GetDefault();
   TextureCache::CreateTextureCallback cb = [&](std::string const& name, int width, int height) -> nux::BaseTexture* {
@@ -264,13 +252,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   launcher_sheen_ = cache.FindTexture("dash_sheen", 0, 0, cb);
   launcher_pressure_effect_ = cache.FindTexture("launcher_pressure_effect", 0, 0, cb);
 
-  options.changed.connect (sigc::mem_fun (this, &Launcher::OnOptionsChanged));
-
-  // icon information from software center
-  sc_icon_x_ = 0;
-  sc_icon_y_ = 0;
-  sc_icon_size_ = 0;
-  sc_anim_icon_ = false;
+  options.changed.connect(sigc::mem_fun (this, &Launcher::OnOptionsChanged));
 }
 
 Launcher::~Launcher()

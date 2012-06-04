@@ -309,20 +309,29 @@ private:
   void DndReset();
   void DndHoveredIconReset();
 
+  LauncherModel::Ptr _model;
+  nux::BaseWindow* _parent;
+  QuicklistView* _active_quicklist;
+
   nux::HLayout* m_Layout;
 
   // used by keyboard/a11y-navigation
   AbstractLauncherIcon::Ptr _icon_under_mouse;
   AbstractLauncherIcon::Ptr _icon_mouse_down;
   AbstractLauncherIcon::Ptr _drag_icon;
+  AbstractLauncherIcon::Ptr _dnd_hovered_icon;
 
-  QuicklistView* _active_quicklist;
-
-  bool  _hovered;
-  bool  _hidden;
-  bool  _scroll_limit_reached;
-  bool  _render_drag_window;
-  bool  _shortcuts_shown;
+  bool _hovered;
+  bool _hidden;
+  bool _scroll_limit_reached;
+  bool _render_drag_window;
+  bool _shortcuts_shown;
+  bool _data_checked;
+  bool _steal_drag;
+  bool _drag_edge_touching;
+  bool _initial_drag_animation;
+  bool _dash_is_open;
+  bool _hud_is_open;
 
   BacklightMode _backlight_mode;
 
@@ -336,13 +345,11 @@ private:
   LaunchAnimation _launch_animation;
   UrgentAnimation _urgent_animation;
 
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
-
   int _space_between_icons;
-  int _icon_size;
   int _icon_image_size;
   int _icon_image_size_delta;
   int _icon_glow_size;
+  int _icon_size;
   int _dnd_delta_y;
   int _dnd_delta_x;
   int _postreveal_mousemove_delta_x;
@@ -352,25 +359,18 @@ private:
   int _last_button_press;
   int _drag_out_id;
   float _drag_out_delta_x;
-  float _background_alpha;
   float _last_reveal_progress;
 
-  nux::Point2   _mouse_position;
-  nux::BaseWindow* _parent;
-  LauncherModel::Ptr _model;
+  nux::Point2 _mouse_position;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
   nux::ObjectPtr<LauncherDragWindow> _drag_window;
+  nux::ObjectPtr<unity::DNDCollectionWindow> _collection_window;
   LauncherHideMachine _hide_machine;
   LauncherHoverMachine _hover_machine;
 
   unity::DndData _dnd_data;
-  nux::DndAction    _drag_action;
-  bool              _data_checked;
-  bool              _steal_drag;
-  bool              _drag_edge_touching;
-  AbstractLauncherIcon::Ptr     _dnd_hovered_icon;
-  nux::ObjectPtr<unity::DNDCollectionWindow> _collection_window;
-
-  Atom              _selection_atom;
+  nux::DndAction _drag_action;
+  Atom _selection_atom;
 
   /* gdbus */
   guint                       _dbus_owner;
@@ -389,13 +389,9 @@ private:
 
   struct timespec  _times[TIME_LAST];
 
-  bool _initial_drag_animation;
-
   nux::Color _background_color;
   BaseTexturePtr launcher_sheen_;
   BaseTexturePtr launcher_pressure_effect_;
-  bool _dash_is_open;
-  bool _hud_is_open;
 
   ui::AbstractIconRenderer::Ptr icon_renderer;
   BackgroundEffectHelper bg_effect_helper_;
