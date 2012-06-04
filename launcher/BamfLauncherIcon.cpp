@@ -519,7 +519,7 @@ bool BamfLauncherIcon::OwnsWindow(Window xid) const
   GList* children, *l;
   bool owns = false;
 
-  if (!xid)
+  if (!xid || !_bamf_app)
     return owns;
 
   children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
