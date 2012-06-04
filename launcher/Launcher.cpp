@@ -88,37 +88,10 @@ const int START_DRAGICON_DURATION = 250;
 
 const int MOUSE_DEADZONE = 15;
 const float DRAG_OUT_PIXELS = 300.0f;
-
-const std::string S_DBUS_NAME = "com.canonical.Unity.Launcher";
-const std::string S_DBUS_PATH = "/com/canonical/Unity/Launcher";
 }
 
 
 NUX_IMPLEMENT_OBJECT_TYPE(Launcher);
-
-const gchar Launcher::introspection_xml[] =
-  "<node>"
-  "  <interface name='com.canonical.Unity.Launcher'>"
-  ""
-  "    <method name='AddLauncherItemFromPosition'>"
-  "      <arg type='s' name='title' direction='in'/>"
-  "      <arg type='s' name='icon' direction='in'/>"
-  "      <arg type='i' name='icon_x' direction='in'/>"
-  "      <arg type='i' name='icon_y' direction='in'/>"
-  "      <arg type='i' name='icon_size' direction='in'/>"
-  "      <arg type='s' name='desktop_file' direction='in'/>"
-  "      <arg type='s' name='aptdaemon_task' direction='in'/>"
-  "    </method>"
-  ""
-  "  </interface>"
-  "</node>";
-
-GDBusInterfaceVTable Launcher::interface_vtable =
-{
-  Launcher::handle_dbus_method_call,
-  NULL,
-  NULL
-};
 
 const int Launcher::Launcher::ANIM_DURATION_SHORT = 125;
 
@@ -161,10 +134,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   , _last_reveal_progress(0.0f)
   , _selection_atom(0)
   , _background_color(nux::color::DimGray)
-  , sc_icon_x_(0)
-  , sc_icon_y_(0)
-  , sc_icon_size_(0)
-  , sc_anim_icon_(false)
 {
   m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
@@ -232,15 +201,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   // request the latest colour from bghash
   ubus_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, NULL);
 
-  _dbus_owner = g_bus_own_name(G_BUS_TYPE_SESSION,
-                               S_DBUS_NAME.c_str(),
-                               (GBusNameOwnerFlags)(G_BUS_NAME_OWNER_FLAGS_REPLACE | G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT),
-                               OnBusAcquired,
-                               nullptr,
-                               nullptr,
-                               this,
-                               nullptr);
-
   icon_renderer = ui::AbstractIconRenderer::Ptr(new ui::IconRenderer());
   icon_renderer->SetTargetSize(_icon_size, _icon_image_size, _space_between_icons);
 
@@ -253,11 +213,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   launcher_pressure_effect_ = cache.FindTexture("launcher_pressure_effect", 0, 0, cb);
 
   options.changed.connect(sigc::mem_fun (this, &Launcher::OnOptionsChanged));
-}
-
-Launcher::~Launcher()
-{
-  g_bus_unown_name(_dbus_owner);
 }
 
 /* Introspection */
@@ -2028,14 +1983,6 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   gPainter.PopBackground(push_count);
   GfxContext.PopClippingRectangle();
   GfxContext.PopClippingRectangle();
-
-  if (sc_anim_icon_)
-  {
-    launcher_addrequest_special.emit(sc_icon_desktop_file_, AbstractLauncherIcon::Ptr(),
-                                     sc_icon_aptdaemon_task_, sc_icon_, sc_icon_x_,
-                                     sc_icon_y_, sc_icon_size_);
-    sc_anim_icon_ = false;
-  }
 }
 
 void Launcher::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
@@ -2871,71 +2818,6 @@ Launcher::GetSelectedMenuIcon() const
   if (!IsInKeyNavMode())
     return AbstractLauncherIcon::Ptr();
   return _model->Selection();
-}
-
-/* dbus handlers */
-
-void
-Launcher::handle_dbus_method_call(GDBusConnection*       connection,
-                                  const gchar*           sender,
-                                  const gchar*           object_path,
-                                  const gchar*           interface_name,
-                                  const gchar*           method_name,
-                                  GVariant*              parameters,
-                                  GDBusMethodInvocation* invocation,
-                                  gpointer               user_data)
-{
-  if (g_strcmp0(method_name, "AddLauncherItemFromPosition") == 0)
-  {
-    auto self = static_cast<Launcher*>(user_data);
-    glib::String icon, icon_title, desktop_file, aptdaemon_task;
-    gint icon_x, icon_y, icon_size;
-
-    g_variant_get(parameters, "(ssiiiss)", &icon_title, &icon, &icon_x, &icon_y,
-                                           &icon_size, &desktop_file, &aptdaemon_task);
-
-    self->sc_anim_icon_ = true;
-    self->sc_icon_ = icon.Str();
-    self->sc_icon_title_ = icon_title.Str();
-    self->sc_icon_desktop_file_ = desktop_file.Str();
-    self->sc_icon_aptdaemon_task_ = aptdaemon_task.Str();
-    self->sc_icon_x_ = icon_x;
-    self->sc_icon_y_ = icon_y;
-    self->sc_icon_size_ = icon_size;
-
-    g_dbus_method_invocation_return_value(invocation, nullptr);
-  }
-}
-
-void
-Launcher::OnBusAcquired(GDBusConnection* connection,
-                        const gchar*     name,
-                        gpointer         user_data)
-{
-  GDBusNodeInfo* introspection_data = g_dbus_node_info_new_for_xml(introspection_xml, NULL);
-  guint registration_id;
-
-  if (!introspection_data)
-  {
-    LOG_WARNING(logger) << "No introspection data loaded. Won't get dynamic launcher addition.";
-    return;
-  }
-
-
-
-  registration_id = g_dbus_connection_register_object(connection,
-                                                      S_DBUS_PATH.c_str(),
-                                                      introspection_data->interfaces[0],
-                                                      &interface_vtable,
-                                                      user_data,
-                                                      NULL,
-                                                      NULL);
-  if (!registration_id)
-  {
-    LOG_WARNING(logger) << "Object registration failed. Won't get dynamic launcher addition.";
-  }
-
-  g_dbus_node_info_unref(introspection_data);
 }
 
 //

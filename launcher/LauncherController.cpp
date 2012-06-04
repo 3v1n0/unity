@@ -56,6 +56,25 @@ namespace launcher
 namespace
 {
 nux::logging::Logger logger("unity.launcher");
+
+const std::string DBUS_NAME = "com.canonical.Unity.Launcher";
+const std::string DBUS_PATH = "/com/canonical/Unity/Launcher";
+const std::string DBUS_INTROSPECTION =
+  "<node>"
+  "  <interface name='com.canonical.Unity.Launcher'>"
+  ""
+  "    <method name='AddLauncherItemFromPosition'>"
+  "      <arg type='s' name='title' direction='in'/>"
+  "      <arg type='s' name='icon' direction='in'/>"
+  "      <arg type='i' name='icon_x' direction='in'/>"
+  "      <arg type='i' name='icon_y' direction='in'/>"
+  "      <arg type='i' name='icon_size' direction='in'/>"
+  "      <arg type='s' name='desktop_file' direction='in'/>"
+  "      <arg type='s' name='aptdaemon_task' direction='in'/>"
+  "    </method>"
+  ""
+  "  </interface>"
+  "</node>";
 }
 
 namespace local
@@ -88,8 +107,8 @@ public:
   void OnIconRemoved(AbstractLauncherIcon::Ptr icon);
 
   void OnLauncherAddRequest(char* path, AbstractLauncherIcon::Ptr before);
-  void OnLauncherAddRequestSpecial(std::string const& path, AbstractLauncherIcon::Ptr before, std::string const& aptdaemon_trans_id, std::string const& icon_path,
-                                   int icon_x, int icon_y, int icon_size);
+  void OnLauncherAddRequestSpecial(std::string const& path, std::string const& aptdaemon_trans_id,
+                                   std::string const& icon_path, int icon_x, int icon_y, int icon_size);
   void OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr icon);
   void OnSCIconAnimationComplete(AbstractLauncherIcon::Ptr icon);
 
@@ -139,6 +158,14 @@ public:
                                const char* character,
                                unsigned short keyCount);
 
+  static void OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer user_data);
+  static void OnDBusMethodCall(GDBusConnection* connection, const gchar* sender, const gchar* object_path,
+                               const gchar* interface_name, const gchar* method_name,
+                               GVariant* parameters, GDBusMethodInvocation* invocation,
+                               gpointer user_data);
+
+  static GDBusInterfaceVTable interface_vtable;
+
   Controller* parent_;
   LauncherModel::Ptr model_;
   nux::ObjectPtr<Launcher> launcher_;
@@ -159,6 +186,7 @@ public:
   int                    reactivate_index;
   bool                   keynav_restore_window_;
   int                    launcher_key_press_time_;
+  unsigned int           dbus_owner_;
 
   ui::EdgeBarrierController::Ptr edge_barriers_;
 
@@ -174,6 +202,8 @@ public:
   sigc::connection launcher_event_outside_connection_;
 };
 
+GDBusInterfaceVTable Controller::Impl::interface_vtable =
+  { Controller::Impl::OnDBusMethodCall, NULL, NULL};
 
 Controller::Impl::Impl(Display* display, Controller* parent)
   : parent_(parent)
@@ -255,6 +285,9 @@ Controller::Impl::Impl(Display* display, Controller* parent)
     for (auto launcher : launchers)
       launcher->QueueDraw();
   });
+
+  dbus_owner_ = g_bus_own_name(G_BUS_TYPE_SESSION, DBUS_NAME.c_str(), G_BUS_NAME_OWNER_FLAGS_NONE,
+                               OnBusAcquired, nullptr, nullptr, this, nullptr);
 }
 
 Controller::Impl::~Impl()
@@ -267,6 +300,8 @@ Controller::Impl::~Impl()
     if (launcher_ptr.IsValid())
       launcher_ptr->GetParent()->UnReference();
   }
+
+  g_bus_unown_name(dbus_owner_);
 }
 
 void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> const& monitors)
@@ -369,7 +404,6 @@ Launcher* Controller::Impl::CreateLauncher(int monitor)
   launcher_window->SetEnterFocusInputArea(launcher);
 
   launcher->launcher_addrequest.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequest));
-  launcher->launcher_addrequest_special.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequestSpecial));
   launcher->launcher_removerequest.connect(sigc::mem_fun(this, &Impl::OnLauncherRemoveRequest));
 
   launcher->icon_animation_complete.connect(sigc::mem_fun(this, &Impl::OnSCIconAnimationComplete));
@@ -425,7 +459,6 @@ void Controller::Impl::Save()
 
 void
 Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
-                                              AbstractLauncherIcon::Ptr before,
                                               std::string const& aptdaemon_trans_id,
                                               std::string const& icon_path,
                                               int icon_x,
@@ -1274,6 +1307,49 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
   }
 }
 
+void Controller::Impl::OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer user_data)
+{
+  GDBusNodeInfo* introspection_data = g_dbus_node_info_new_for_xml(DBUS_INTROSPECTION.c_str(), nullptr);
+  unsigned int reg_id;
+
+  if (!introspection_data)
+  {
+    LOG_WARNING(logger) << "No introspection data loaded. Won't get dynamic launcher addition.";
+    return;
+  }
+
+  reg_id = g_dbus_connection_register_object(connection, DBUS_PATH.c_str(),
+                                             introspection_data->interfaces[0],
+                                             &interface_vtable, user_data,
+                                             nullptr, nullptr);
+  if (!reg_id)
+  {
+    LOG_WARNING(logger) << "Object registration failed. Won't get dynamic launcher addition.";
+  }
+
+  g_dbus_node_info_unref(introspection_data);
+}
+
+void Controller::Impl::OnDBusMethodCall(GDBusConnection* connection, const gchar* sender,
+                                        const gchar* object_path, const gchar* interface_name,
+                                        const gchar* method_name, GVariant* parameters,
+                                        GDBusMethodInvocation* invocation, gpointer user_data)
+{
+  if (g_strcmp0(method_name, "AddLauncherItemFromPosition") == 0)
+  {
+    auto self = static_cast<Controller::Impl*>(user_data);
+    glib::String icon, icon_title, desktop_file, aptdaemon_task;
+    gint icon_x, icon_y, icon_size;
+
+    g_variant_get(parameters, "(ssiiiss)", &icon_title, &icon, &icon_x, &icon_y,
+                                           &icon_size, &desktop_file, &aptdaemon_task);
+
+    self->OnLauncherAddRequestSpecial(desktop_file.Str(), aptdaemon_task.Str(),
+                                      icon.Str(), icon_x, icon_y, icon_size);
+
+    g_dbus_method_invocation_return_value(invocation, nullptr);
+  }
+}
 
 } // namespace launcher
 } // namespace unity

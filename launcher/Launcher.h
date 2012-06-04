@@ -55,7 +55,6 @@ class Launcher : public unity::debug::Introspectable, public nux::View, public u
 public:
 
   Launcher(nux::BaseWindow* parent, NUX_FILE_LINE_PROTO);
-  ~Launcher();
 
   nux::Property<Display*> display;
   nux::Property<int> monitor;
@@ -112,8 +111,6 @@ public:
   void Resize();
 
   sigc::signal<void, char*, AbstractLauncherIcon::Ptr> launcher_addrequest;
-  sigc::signal<void, std::string const&, AbstractLauncherIcon::Ptr, std::string const&, std::string const&,
-               int, int, int> launcher_addrequest_special;
   sigc::signal<void, AbstractLauncherIcon::Ptr> launcher_removerequest;
   sigc::signal<void, AbstractLauncherIcon::Ptr> icon_animation_complete;
   sigc::signal<void> selection_change;
@@ -372,21 +369,6 @@ private:
   nux::DndAction _drag_action;
   Atom _selection_atom;
 
-  /* gdbus */
-  guint                       _dbus_owner;
-  static const gchar          introspection_xml[];
-  static GDBusInterfaceVTable interface_vtable;
-
-  static void OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer user_data);
-  static void handle_dbus_method_call(GDBusConnection*       connection,
-                                      const gchar*           sender,
-                                      const gchar*           object_path,
-                                      const gchar*           interface_name,
-                                      const gchar*           method_name,
-                                      GVariant*              parameters,
-                                      GDBusMethodInvocation* invocation,
-                                      gpointer               user_data);
-
   struct timespec  _times[TIME_LAST];
 
   nux::Color _background_color;
@@ -395,15 +377,6 @@ private:
 
   ui::AbstractIconRenderer::Ptr icon_renderer;
   BackgroundEffectHelper bg_effect_helper_;
-
-  std::string sc_icon_;
-  std::string sc_icon_title_;
-  std::string sc_icon_desktop_file_;
-  std::string sc_icon_aptdaemon_task_;
-  unsigned int sc_icon_x_;
-  unsigned int sc_icon_y_;
-  unsigned int sc_icon_size_;
-  bool sc_anim_icon_;
 
   UBusManager ubus_;
   glib::SourceManager sources_;
