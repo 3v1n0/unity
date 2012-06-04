@@ -44,7 +44,6 @@ public:
   typedef int Handle;
 
   Impl();
-  ~Impl();
 
   Handle LoadFromIconName(std::string const& icon_name,
                           unsigned size,
@@ -73,11 +72,10 @@ private:
     REQUEST_TYPE_URI,
   };
 
-  struct IconLoaderTask;
-  typedef std::list<IconLoaderTask*> TaskList;
-
   struct IconLoaderTask
   {
+    typedef std::shared_ptr<IconLoaderTask> Ptr;
+
     IconLoaderRequestType type;
     std::string data;
     unsigned int size;
@@ -88,7 +86,7 @@ private:
     GtkIconInfo* icon_info;
     glib::Object<GdkPixbuf> result;
     glib::Error error;
-    TaskList shadow_tasks;
+    std::list<IconLoaderTask::Ptr> shadow_tasks;
 
     IconLoaderTask(IconLoaderRequestType type_,
                    std::string const& data_,
@@ -116,9 +114,7 @@ private:
       for (auto shadow_task : shadow_tasks)
       {
         shadow_task->slot(shadow_task->data, shadow_task->size, pixbuf);
-
         self->task_map_.erase(shadow_task->handle);
-        delete shadow_task;
       }
 
       shadow_tasks.clear();
@@ -144,10 +140,10 @@ private:
                    IconLoaderCallback slot);
 
   // these methods might run asynchronously
-  bool ProcessTask(IconLoaderTask* task);
-  bool ProcessIconNameTask(IconLoaderTask* task);
-  bool ProcessGIconTask(IconLoaderTask* task);
-  bool ProcessURITask(IconLoaderTask* task);
+  bool ProcessTask(IconLoaderTask::Ptr const& task);
+  bool ProcessIconNameTask(IconLoaderTask::Ptr const& task);
+  bool ProcessGIconTask(IconLoaderTask::Ptr const& task);
+  bool ProcessURITask(IconLoaderTask::Ptr const& task);
 
   // Loading/rendering of pixbufs is done in a separate thread
   static gboolean LoaderJobFunc(GIOSchedulerJob* job, GCancellable *canc,
@@ -159,16 +155,11 @@ private:
   bool Iteration();
 
 private:
-  typedef std::map<std::string, glib::Object<GdkPixbuf>> ImageCache;
-  ImageCache cache_;
-  typedef std::map<std::string, IconLoaderTask*> CacheQueue;
-  CacheQueue queued_tasks_;
-  typedef std::queue<IconLoaderTask*> TaskQueue;
-  TaskQueue tasks_;
-  typedef std::map<Handle, IconLoaderTask*> TaskMap;
-  TaskMap task_map_;
-  typedef std::vector<IconLoaderTask*> TaskArray;
-  TaskArray finished_tasks_;
+  std::map<std::string, glib::Object<GdkPixbuf>> cache_;
+  std::map<std::string, IconLoaderTask::Ptr> queued_tasks_;
+  std::queue<IconLoaderTask::Ptr> tasks_;
+  std::map<Handle, IconLoaderTask::Ptr> task_map_;
+  std::vector<IconLoaderTask*> finished_tasks_;
 
   bool no_load_;
   GtkIconTheme* theme_; // Not owned.
@@ -184,15 +175,6 @@ IconLoader::Impl::Impl()
   , theme_(gtk_icon_theme_get_default())
   , handle_counter_(0)
 {
-}
-
-IconLoader::Impl::~Impl()
-{
-  while (!tasks_.empty())
-  {
-    delete tasks_.front();
-    tasks_.pop();
-  }
 }
 
 
@@ -247,7 +229,8 @@ int IconLoader::Impl::LoadFromURI(std::string const& uri,
 
 void IconLoader::Impl::DisconnectHandle(Handle handle)
 {
-  TaskMap::iterator iter = task_map_.find(handle);
+  auto iter = task_map_.find(handle);
+
   if (iter != task_map_.end())
   {
     iter->second->slot.disconnect();
@@ -280,14 +263,13 @@ int IconLoader::Impl::QueueTask(std::string const& key,
                                 IconLoaderCallback slot,
                                 IconLoaderRequestType type)
 {
-  IconLoaderTask* task = new IconLoaderTask(type, data, size, key,
-                                            slot, ++handle_counter_, this);
+  auto task = std::make_shared<IconLoaderTask>(type, data, size, key, slot, ++handle_counter_, this);
 
   auto iter = queued_tasks_.find(key);
   bool already_queued = iter != queued_tasks_.end();
-  IconLoaderTask* running_task = already_queued ? iter->second : nullptr;
+  IconLoaderTask::Ptr const& running_task = already_queued ? iter->second : nullptr;
 
-  if (running_task != nullptr)
+  if (running_task)
   {
     running_task->shadow_tasks.push_back(task);
     // do NOT push the task into the tasks queue,
@@ -341,7 +323,7 @@ bool IconLoader::Impl::CacheLookup(std::string const& key,
   return found;
 }
 
-bool IconLoader::Impl::ProcessTask(IconLoaderTask* task)
+bool IconLoader::Impl::ProcessTask(IconLoaderTask::Ptr const& task)
 {
   // Check the cache again, as previous tasks might have wanted the same
   if (CacheLookup(task->key, task->data, task->size, task->slot))
@@ -367,7 +349,7 @@ bool IconLoader::Impl::ProcessTask(IconLoaderTask* task)
   return true;
 }
 
-bool IconLoader::Impl::ProcessIconNameTask(IconLoaderTask* task)
+bool IconLoader::Impl::ProcessIconNameTask(IconLoaderTask::Ptr const& task)
 {
   GtkIconInfo* info = gtk_icon_theme_lookup_icon(theme_,
                                                  task->data.c_str(),
@@ -377,7 +359,7 @@ bool IconLoader::Impl::ProcessIconNameTask(IconLoaderTask* task)
   {
     task->icon_info = info;
     g_io_scheduler_push_job ((GIOSchedulerJobFunc) LoaderJobFunc,
-                             task, nullptr, G_PRIORITY_HIGH_IDLE, nullptr);
+                             task.get(), nullptr, G_PRIORITY_HIGH_IDLE, nullptr);
 
     return false;
   }
@@ -391,7 +373,7 @@ bool IconLoader::Impl::ProcessIconNameTask(IconLoaderTask* task)
   return true;
 }
 
-bool IconLoader::Impl::ProcessGIconTask(IconLoaderTask* task)
+bool IconLoader::Impl::ProcessGIconTask(IconLoaderTask::Ptr const& task)
 {
   glib::Error error;
   glib::Object<GIcon> icon(g_icon_new_for_string(task->data.c_str(), &error));
@@ -416,7 +398,7 @@ bool IconLoader::Impl::ProcessGIconTask(IconLoaderTask* task)
     {
       task->icon_info = info;
       g_io_scheduler_push_job ((GIOSchedulerJobFunc) LoaderJobFunc,
-                               task, nullptr, G_PRIORITY_HIGH_IDLE, nullptr);
+                               task.get(), nullptr, G_PRIORITY_HIGH_IDLE, nullptr);
 
       return false;
     }
@@ -452,10 +434,10 @@ bool IconLoader::Impl::ProcessGIconTask(IconLoaderTask* task)
   return true;
 }
 
-bool IconLoader::Impl::ProcessURITask(IconLoaderTask* task)
+bool IconLoader::Impl::ProcessURITask(IconLoaderTask::Ptr const& task)
 {
   g_io_scheduler_push_job ((GIOSchedulerJobFunc) LoaderJobFunc,
-                           task, nullptr, G_PRIORITY_HIGH_IDLE, nullptr);
+                           task.get(), nullptr, G_PRIORITY_HIGH_IDLE, nullptr);
 
   return false;
 }
@@ -491,10 +473,8 @@ gboolean IconLoader::Impl::LoaderJobFunc(GIOSchedulerJob* job,
     }
   }
 
-  g_io_scheduler_job_send_to_mainloop_async (job,
-                                             (GSourceFunc) LoadIconComplete,
-                                             task,
-                                             nullptr);
+  g_io_scheduler_job_send_to_mainloop_async (job, (GSourceFunc) LoadIconComplete,
+                                             task, nullptr);
 
   return FALSE;
 }
@@ -538,7 +518,6 @@ bool IconLoader::Impl::CoalesceTasksCb()
     // this was all async, we need to erase the task from the task_map
     task_map_.erase(task->handle);
     queued_tasks_.erase(task->key);
-    delete task;
   }
 
   finished_tasks_.clear();
@@ -557,13 +536,12 @@ bool IconLoader::Impl::Iteration()
   // always do at least one iteration if the queue isn't empty
   while (!queue_empty)
   {
-    IconLoaderTask* task = tasks_.front();
+    IconLoaderTask::Ptr const& task = tasks_.front();
 
     if (ProcessTask(task))
     {
       task_map_.erase(task->handle);
       queued_tasks_.erase(task->key);
-      delete task;
     }
 
     tasks_.pop();
