@@ -474,12 +474,12 @@ Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
 
   SoftwareCenterLauncherIcon::Ptr result = CreateSCLauncherIcon(path, aptdaemon_trans_id, icon_path);
 
-  launcher_->ForceReveal(true);
+  CurrentLauncher()->ForceReveal(true);
 
   if (result)
   {
     result->SetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE, false);
-    result->Animate(launcher_, icon_x, icon_y, icon_size);
+    result->Animate(CurrentLauncher(), icon_x, icon_y, icon_size);
     RegisterIcon(result);
     Save();
   }
