@@ -448,13 +448,15 @@ void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   {
     nux::GetPainter().PushBackgroundStack();
 
-    // See bug #1008603.
-    int height = 3;
-    int x = search_bar_->GetBaseX() + 1;
-    int y = search_bar_->GetBaseY() + search_bar_->GetBaseHeight() - height;
-    nux::GetPainter().Draw2DLine(gfx_context, x, y, x, y + height, nux::color::White * 0.13);
-    x += content_width - 1;
-    nux::GetPainter().Draw2DLine(gfx_context, x, y, x, y + height, nux::color::White * 0.13);
+    if (!buttons_.empty()) // See bug #1008603.
+    {
+      int height = 3;
+      int x = search_bar_->GetBaseX() + 1;
+      int y = search_bar_->GetBaseY() + search_bar_->GetBaseHeight() - height;
+      nux::GetPainter().Draw2DLine(gfx_context, x, y, x, y + height, nux::color::White * 0.13);
+      x += content_width - 1;
+      nux::GetPainter().Draw2DLine(gfx_context, x, y, x, y + height, nux::color::White * 0.13);
+    }
  
     GetLayout()->ProcessDraw(gfx_context, force_draw);
     nux::GetPainter().PopBackgroundStack();
