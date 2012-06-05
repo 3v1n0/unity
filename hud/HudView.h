@@ -47,7 +47,7 @@ public:
   View();
   ~View();
 
-  void ResetToDefault();
+  virtual void ResetToDefault();
 
   void Relayout();
   nux::View* default_focus() const;

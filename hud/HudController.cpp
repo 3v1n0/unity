@@ -387,6 +387,7 @@ void Controller::HideHud(bool restore)
 
   need_show_ = false;
   EnsureHud();
+  view_->ResetToDefault();
   view_->AboutToHide();
   window_->CaptureMouseDownAnyWhereElse(false);
   window_->EnableInputWindow(false, "Hud", true, false);
