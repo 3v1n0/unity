@@ -156,4 +156,15 @@ TEST(TestSwitcherController, DetailTimeout)
   EXPECT_TRUE(unity::TimeUtil::TimeDelta(&controller.detail_timespec_, &current) >= 1000);
 }
 
+TEST(TestSwitcherController, ShowSwitcher)
+{
+  MockSwitcherController controller;
+  std::vector<unity::launcher::AbstractLauncherIcon::Ptr> results;
+
+  controller.Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, false, results);
+
+  Utils::WaitUntil(controller.view_shown_, 2);
+  ASSERT_TRUE(controller.view_shown_);
+}
+
 }
