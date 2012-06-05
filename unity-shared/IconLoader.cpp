@@ -25,6 +25,7 @@
 
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibSource.h>
+#include <UnityCore/GLibSignal.h>
 
 #include "unity-shared/Timer.h"
 
@@ -332,6 +333,7 @@ private:
   Handle handle_counter_;
   glib::Source::UniquePtr idle_;
   glib::Source::UniquePtr coalesce_timeout_;
+  glib::Signal<void, GtkIconTheme*> theme_changed_signal_;
 };
 
 
@@ -340,7 +342,17 @@ IconLoader::Impl::Impl()
     no_load_(getenv("UNITY_ICON_LOADER_DISABLE"))
   , theme_(gtk_icon_theme_get_default())
   , handle_counter_(0)
-{}
+{
+  theme_changed_signal_.Connect(theme_, "changed", [&] (GtkIconTheme*) {
+    /* Since the theme has been changed we can clear the cache, however we
+     * could include two improvements here:
+     *  1) clear only the themed icons in cache
+     *  2) make the clients of this class to update their icons forcing them
+     *     to reload the pixbufs and erase the cached textures, to make this
+     *     apply immediately. */
+    cache_.clear();
+  });
+}
 
 int IconLoader::Impl::LoadFromIconName(std::string const& icon_name,
                                        unsigned size,

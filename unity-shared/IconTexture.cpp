@@ -107,9 +107,9 @@ void IconTexture::LoadIcon()
 
   _loading = true;
 
-  glib::Object<GIcon> icon(::g_icon_new_for_string(_icon_name.empty() ?  DEFAULT_GICON : _icon_name.c_str(), NULL));
+  glib::Object<GIcon> icon(g_icon_new_for_string(_icon_name.empty() ?  DEFAULT_GICON : _icon_name.c_str(), NULL));
 
-  if (icon)
+  if (G_IS_ICON(icon.RawPtr()))
   {
     _handle = IconLoader::GetDefault().LoadFromGIconString(_icon_name.empty() ? DEFAULT_GICON : _icon_name.c_str(),
                                                            _size,
