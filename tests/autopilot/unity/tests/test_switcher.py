@@ -22,7 +22,7 @@ class SwitcherTestCase(UnityTestCase):
     def set_timeout_setting(self, state):
         if type(state) is not bool:
             raise TypeError("'state' must be boolean, not %r" % type(state))
-        self.set_unity_option("alt_tab_timeout", value)
+        self.set_unity_option("alt_tab_timeout", state)
         sleep(1)
 
 
