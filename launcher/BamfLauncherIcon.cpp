@@ -118,6 +118,8 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
                           [&] (BamfView*) {
                             if (!IsSticky())
                             {
+                              SetQuirk(QUIRK_VISIBLE, false);
+
                               /* Use a timeout to remove the icon, this avoids
                                * that we remove an application that is going
                                * to be reopened soon. So applications that
