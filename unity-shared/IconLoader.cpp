@@ -120,7 +120,7 @@ private:
       shadow_tasks.clear();
     }
 
-    bool Process(GtkIconTheme *theme)
+    bool Process()
     {
       // Check the cache again, as previous tasks might have wanted the same
       if (impl->CacheLookup(key, data, size, slot))
@@ -132,9 +132,9 @@ private:
       switch (type)
       {
         case REQUEST_TYPE_ICON_NAME:
-          return ProcessIconNameTask(theme);
+          return ProcessIconNameTask();
         case REQUEST_TYPE_GICON_STRING:
-          return ProcessGIconTask(theme);
+          return ProcessGIconTask();
         case REQUEST_TYPE_URI:
           return ProcessURITask();
       }
@@ -148,9 +148,9 @@ private:
       return true;
     }
 
-    bool ProcessIconNameTask(GtkIconTheme* theme)
+    bool ProcessIconNameTask()
     {
-      GtkIconInfo* info = gtk_icon_theme_lookup_icon(theme, data.c_str(),
+      GtkIconInfo* info = gtk_icon_theme_lookup_icon(impl->theme_, data.c_str(),
                                                      size, static_cast<GtkIconLookupFlags>(0));
       if (info)
       {
@@ -171,7 +171,7 @@ private:
       return true;
     }
 
-    bool ProcessGIconTask(GtkIconTheme* theme)
+    bool ProcessGIconTask()
     {
       glib::Error error;
       glib::Object<GIcon> icon(g_icon_new_for_string(data.c_str(), &error));
@@ -189,7 +189,7 @@ private:
       }
       else if (G_IS_ICON(icon.RawPtr()))
       {
-        GtkIconInfo* info = gtk_icon_theme_lookup_by_gicon(theme, icon, size,
+        GtkIconInfo* info = gtk_icon_theme_lookup_by_gicon(impl->theme_, icon, size,
                                                            static_cast<GtkIconLookupFlags>(0));
         if (info)
         {
@@ -211,7 +211,7 @@ private:
               boost::iends_with(data, ".jpg"))
           {
             data = data.substr(0, data.size() - 4);
-            return ProcessIconNameTask(theme);
+            return ProcessIconNameTask();
           }
           else
           {
@@ -340,9 +340,7 @@ IconLoader::Impl::Impl()
     no_load_(getenv("UNITY_ICON_LOADER_DISABLE"))
   , theme_(gtk_icon_theme_get_default())
   , handle_counter_(0)
-{
-}
-
+{}
 
 int IconLoader::Impl::LoadFromIconName(std::string const& icon_name,
                                        unsigned size,
@@ -531,7 +529,7 @@ bool IconLoader::Impl::Iteration()
   {
     IconLoaderTask::Ptr const& task = tasks_.front();
 
-    if (task->Process(theme_))
+    if (task->Process())
     {
       task_map_.erase(task->handle);
       queued_tasks_.erase(task->key);
