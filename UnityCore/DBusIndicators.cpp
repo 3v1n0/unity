@@ -219,7 +219,7 @@ void DBusIndicators::Impl::OnEntryShowMenu(std::string const& entry_id,
   // menu not to show
 
   show_entry_idle_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
-  show_entry_idle_->Run([&, xid, x, y, button, timestamp] {
+  show_entry_idle_->Run([&, entry_id, xid, x, y, button, timestamp] {
     gproxy_.Call("ShowEntry", g_variant_new("(suiiuu)", entry_id.c_str(), xid,
                                                         x, y, button, timestamp));
     return false;
