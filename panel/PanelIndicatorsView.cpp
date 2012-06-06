@@ -122,15 +122,6 @@ PanelIndicatorsView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 }
 
 void
-PanelIndicatorsView::QueueDraw()
-{
-  nux::View::QueueDraw();
-
-  for (auto entry : entries_)
-    entry.second->QueueDraw();
-}
-
-void
 PanelIndicatorsView::SetMaximumEntriesWidth(int max_width)
 {
   unsigned int n_entries = 0;
