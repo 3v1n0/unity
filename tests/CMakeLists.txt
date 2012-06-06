@@ -205,6 +205,7 @@ if (GTEST_SRC_DIR AND
                  test_main.cpp
                  test_lensview_impl.cpp
                  test_icon_loader.cpp
+                 test_hud_view.cpp
                  test_resultviewgrid.cpp
                  test_single_monitor_launcher_icon.cpp
                  test_switcher_controller.cpp
@@ -216,7 +217,10 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/dash/ResultView.cpp
                  ${CMAKE_SOURCE_DIR}/dash/ResultViewGrid.cpp
                  ${CMAKE_SOURCE_DIR}/hud/HudButton.cpp
+                 ${CMAKE_SOURCE_DIR}/hud/HudIcon.cpp
+                 ${CMAKE_SOURCE_DIR}/hud/HudIconTextureSource.cpp
                  ${CMAKE_SOURCE_DIR}/hud/HudPrivate.cpp
+                 ${CMAKE_SOURCE_DIR}/hud/HudView.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/AbstractLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/BamfLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/CairoBaseWindow.cpp
@@ -254,11 +258,16 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/unity-shared/DashStyle.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/IconLoader.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/IconRenderer.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/IconTexture.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/IconTextureSource.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/IMTextEntry.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/Introspectable.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/IntrospectableWrappers.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/JSONParser.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/OverlayRenderer.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/PanelStyle.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/SearchBar.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/SearchBarSpinner.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/StaticCairoText.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/TextureCache.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/Timer.cpp

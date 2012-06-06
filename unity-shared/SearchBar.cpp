@@ -302,27 +302,29 @@ SearchBar::~SearchBar()
 
 void SearchBar::OnFontChanged(GtkSettings* settings, GParamSpec* pspec)
 {
-  gchar* font_name = NULL;
+  glib::String font_name;
   PangoFontDescription* desc;
   std::ostringstream font_desc;
 
   g_object_get(settings, "gtk-font-name", &font_name, NULL);
 
-  desc = pango_font_description_from_string(font_name);
-  pango_entry_->SetFontFamily(pango_font_description_get_family(desc));
-  pango_entry_->SetFontSize(PANGO_ENTRY_FONT_SIZE);
-  pango_entry_->SetFontOptions(gdk_screen_get_font_options(gdk_screen_get_default()));
+  desc = pango_font_description_from_string(font_name.Value());
+  if (desc)
+  {
+    pango_entry_->SetFontFamily(pango_font_description_get_family(desc));
+    pango_entry_->SetFontSize(PANGO_ENTRY_FONT_SIZE);
+    pango_entry_->SetFontOptions(gdk_screen_get_font_options(gdk_screen_get_default()));
 
-  font_desc << pango_font_description_get_family(desc) << " " << HINT_LABEL_FONT_STYLE << " " << HINT_LABEL_FONT_SIZE;
-  hint_->SetFont(font_desc.str().c_str());
+    font_desc << pango_font_description_get_family(desc) << " " << HINT_LABEL_FONT_STYLE << " " << HINT_LABEL_FONT_SIZE;
+    hint_->SetFont(font_desc.str().c_str());
 
-  font_desc.str("");
-  font_desc.clear();
-  font_desc << pango_font_description_get_family(desc) << " " << SHOW_FILTERS_LABEL_FONT_STYLE << " " << SHOW_FILTERS_LABEL_FONT_SIZE;
-  show_filters_->SetFont(font_desc.str().c_str());
+    font_desc.str("");
+    font_desc.clear();
+    font_desc << pango_font_description_get_family(desc) << " " << SHOW_FILTERS_LABEL_FONT_STYLE << " " << SHOW_FILTERS_LABEL_FONT_SIZE;
+    show_filters_->SetFont(font_desc.str().c_str());
 
-  pango_font_description_free(desc);
-  g_free(font_name);
+    pango_font_description_free(desc);
+  }
 }
 
 void SearchBar::OnSearchHintChanged()

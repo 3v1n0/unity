@@ -69,15 +69,15 @@ SimpleLauncherIcon::~SimpleLauncherIcon()
     g_signal_handler_disconnect(gtk_icon_theme_get_default(), theme_changed_id_);
 }
 
-void SimpleLauncherIcon::OnMouseDown(int button, int monitor)
+void SimpleLauncherIcon::OnMouseDown(int button, int monitor, unsigned long key_flags)
 {
 }
 
-void SimpleLauncherIcon::OnMouseUp(int button, int monitor)
+void SimpleLauncherIcon::OnMouseUp(int button, int monitor, unsigned long key_flags)
 {
 }
 
-void SimpleLauncherIcon::OnMouseClick(int button, int monitor)
+void SimpleLauncherIcon::OnMouseClick(int button, int monitor, unsigned long key_flags)
 {
 }
 

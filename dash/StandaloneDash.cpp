@@ -89,8 +89,8 @@ int main(int argc, char **argv)
   nux::NuxInitialize(0);
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
   // The instances for the pseudo-singletons.
-  unity::dash::Style dash_style;
   unity::Settings settings;
+  unity::dash::Style dash_style;
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Unity Dash"),
