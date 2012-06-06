@@ -198,6 +198,7 @@ if (GTEST_SRC_DIR AND
 
 # Tests that require X
   add_executable(test-gtest
+                 test_bamflaunchericon.cpp
                  test_hud_button.cpp
                  test_dashview_impl.cpp
                  test_texture_cache.cpp
@@ -221,10 +222,14 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/hud/HudPrivate.cpp
                  ${CMAKE_SOURCE_DIR}/hud/HudView.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/AbstractLauncherIcon.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/BamfLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/CairoBaseWindow.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/DNDCollectionWindow.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/Decaymulator.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/DndData.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/FavoriteStore.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/FavoriteStoreGSettings.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/FavoriteStorePrivate.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/GeisAdapter.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/Launcher.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/LauncherDragWindow.cpp

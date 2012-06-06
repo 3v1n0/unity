@@ -49,7 +49,7 @@ public:
 
   std::vector<nux::Vector4> & GetTransform(TransformIndex index, int monitor);
 
-  virtual nux::Color BackgroundColor() = 0;
+  virtual nux::Color BackgroundColor() const = 0;
 
   virtual nux::Color GlowColor() = 0;
 
