@@ -2420,7 +2420,7 @@ void Launcher::MouseDownLogic(int x, int y, unsigned long button_flags, unsigned
     sources_.Add(timeout, "start-dragicon-timeout");
     timeout->Run(sigc::mem_fun(this, &Launcher::StartIconDragTimeout));
 
-    launcher_icon->mouse_down.emit(nux::GetEventButton(button_flags), monitor);
+    launcher_icon->mouse_down.emit(nux::GetEventButton(button_flags), monitor, key_flags);
   }
 }
 
@@ -2434,19 +2434,17 @@ void Launcher::MouseUpLogic(int x, int y, unsigned long button_flags, unsigned l
 
   if (_icon_mouse_down && (_icon_mouse_down == launcher_icon))
   {
-    _icon_mouse_down->mouse_up.emit(nux::GetEventButton(button_flags), monitor);
+    _icon_mouse_down->mouse_up.emit(nux::GetEventButton(button_flags), monitor, key_flags);
 
     if (GetActionState() == ACTION_NONE)
     {
-      /* This will inform the icon if the action is valid for all the monitors */
-      int action_monitor = options()->show_for_all ? -1 : monitor;
-      _icon_mouse_down->mouse_click.emit(nux::GetEventButton(button_flags), action_monitor);
+      _icon_mouse_down->mouse_click.emit(nux::GetEventButton(button_flags), monitor, key_flags);
     }
   }
 
   if (launcher_icon && (_icon_mouse_down != launcher_icon))
   {
-    launcher_icon->mouse_up.emit(nux::GetEventButton(button_flags), monitor);
+    launcher_icon->mouse_up.emit(nux::GetEventButton(button_flags), monitor, key_flags);
   }
 
   if (GetActionState() == ACTION_DRAG_LAUNCHER)
@@ -2552,9 +2550,6 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
 
   _hide_machine.SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, true);
 
-  if (IsOverlayOpen())
-    SaturateIcons();
-
   for (auto it : _dnd_data.Uris())
   {
     if (g_str_has_suffix(it.c_str(), ".desktop"))
@@ -2569,10 +2564,20 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
     for (auto it : *_model)
     {
       if (it->ShouldHighlightOnDrag(_dnd_data))
+      {
+        it->SetQuirk(AbstractLauncherIcon::QUIRK_DESAT, false);
         it->SetQuirk(AbstractLauncherIcon::QUIRK_DROP_PRELIGHT, true);
+      }
       else
+      {
         it->SetQuirk(AbstractLauncherIcon::QUIRK_DROP_DIM, true);
+      }
     }
+  }
+  else
+  {
+    if (IsOverlayOpen())
+      SaturateIcons();
   }
 }
 
