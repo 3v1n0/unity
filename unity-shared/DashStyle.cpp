@@ -1651,7 +1651,7 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
   // draw the grid background
   {
     cairo_set_line_width(cr, 1);
-    cairo_move_to(cr, _align(x + width, odd), _align(y, odd));
+    cairo_move_to(cr, _align(x + width, odd), y);
     if (curve_bottom)
     {
       LOG_DEBUG(logger) << "curve: " << _align(x + width, odd) << " - " << _align(y + height - radius, odd);
@@ -1683,8 +1683,8 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
     else
     {
       cairo_line_to(cr, _align(x + width, odd), _align(y + height, odd));
-      cairo_line_to(cr, _align(x, odd), _align(x + height, odd));
-      cairo_line_to(cr, _align(x, odd), _align(y, odd));
+      cairo_line_to(cr, _align(x, odd), _align(y + height, odd));
+      cairo_line_to(cr, _align(x, odd), y);
     }
 
     cairo_set_source_rgba(cr, pimpl->button_label_border_color_[nux::ButtonVisualState::VISUAL_STATE_NORMAL]);

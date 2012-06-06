@@ -151,8 +151,10 @@ void Controller::ShowView()
 
   ConstructView();
 
-  if (view_window_)
+  if (view_window_) {
+    view_window_->ShowWindow(true);
     view_window_->SetOpacity(1.0f);
+  }
 }
 
 void Controller::ConstructWindow()
@@ -190,7 +192,6 @@ void Controller::ConstructView()
   main_layout_->AddView(view_.GetPointer(), 1);
   view_window_->SetGeometry(workarea_);
   view_window_->SetOpacity(0.0f);
-  view_window_->ShowWindow(true);
 }
 
 void Controller::SetWorkspace(nux::Geometry geo, int monitor)

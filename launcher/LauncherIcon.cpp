@@ -615,13 +615,13 @@ bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
   return true;
 }
 
-void LauncherIcon::RecvMouseDown(int button, int monitor)
+void LauncherIcon::RecvMouseDown(int button, int monitor, unsigned long key_flags)
 {
   if (button == 3)
     OpenQuicklist();
 }
 
-void LauncherIcon::RecvMouseUp(int button, int monitor)
+void LauncherIcon::RecvMouseUp(int button, int monitor, unsigned long key_flags)
 {
   if (button == 3)
   {
@@ -630,14 +630,18 @@ void LauncherIcon::RecvMouseUp(int button, int monitor)
   }
 }
 
-void LauncherIcon::RecvMouseClick(int button, int monitor)
+void LauncherIcon::RecvMouseClick(int button, int monitor, unsigned long key_flags)
 {
   ActionArg arg(ActionArg::LAUNCHER, button);
   arg.monitor = monitor;
 
-  if (button == 1)
+  bool shift_pressed = nux::GetKeyModifierState(key_flags, nux::NUX_STATE_SHIFT);
+
+  // Click without shift
+  if (button == 1 && !shift_pressed)
     Activate(arg);
-  else if (button == 2)
+  // Middle click or click with shift
+  else if ((button == 2) || (button == 1 && shift_pressed))
     OpenInstance(arg);
 }
 

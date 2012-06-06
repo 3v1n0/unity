@@ -96,7 +96,8 @@ void SwitcherView::AddProperties(GVariantBuilder* builder)
   .add("vertical-size", vertical_size)
   .add("text-size", text_size)
   .add("animation-length", animation_length)
-  .add("spread-size", (float)spread_size);
+  .add("spread-size", (float)spread_size)
+  .add("label", text_view_->GetText());
 }
 
 
@@ -114,8 +115,18 @@ void SwitcherView::SetModel(SwitcherModel::Ptr model)
   model->detail_selection.changed.connect (sigc::mem_fun (this, &SwitcherView::OnDetailSelectionChanged));
   model->detail_selection_index.changed.connect (sigc::mem_fun (this, &SwitcherView::OnDetailSelectionIndexChanged));
 
-  if (model->Selection())
+  if (!model->Selection())
+    return;
+
+  if (model->detail_selection)
+  {
+    Window detail_window = model->DetailSelectionWindow();
+    text_view_->SetText(model->Selection()->NameForWindow(detail_window));
+  }
+  else
+  {
     text_view_->SetText(model->Selection()->tooltip_text());
+  }
 }
 
 void SwitcherView::OnIconSizeChanged (int size)
