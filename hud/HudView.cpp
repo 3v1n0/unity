@@ -47,7 +47,7 @@ const int default_height = 276;
 const int content_width = 939;
 
 const int top_padding = 11;
-const int bottom_padding = 9;
+const int bottom_padding = 10;
 const int left_padding = 11;
 const int right_padding = 0;
 }
