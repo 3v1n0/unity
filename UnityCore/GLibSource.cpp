@@ -28,11 +28,15 @@ namespace glib
 Source::Source()
   : source_(nullptr)
   , source_id_(0)
+  , callback_data_(nullptr)
 {}
 
 Source::~Source()
 {
   Remove();
+
+  if (callback_data_)
+    callback_data_->self = nullptr;
 }
 
 void Source::Remove()
@@ -63,7 +67,7 @@ Source::Priority Source::GetPriority() const
   if (source_)
     prio = g_source_get_priority(source_);
 
-  return static_cast<Source::Priority>(prio);
+  return static_cast<Priority>(prio);
 }
 
 bool Source::Run(SourceCallback callback)
@@ -72,8 +76,9 @@ bool Source::Run(SourceCallback callback)
     return false;
 
   callback_ = callback;
+  callback_data_ = new CallBackData(this);
 
-  g_source_set_callback(source_, Callback, this, DestroyCallback);
+  g_source_set_callback(source_, Callback, callback_data_, DestroyCallback);
   source_id_ = g_source_attach(source_, nullptr);
 
   return true;
@@ -97,9 +102,9 @@ gboolean Source::Callback(gpointer data)
   if (!data)
     return G_SOURCE_REMOVE;
 
-  auto self = static_cast<Source*>(data);
+  auto self = static_cast<CallBackData*>(data)->self;
 
-  if (!self->callback_.empty() && self->callback_())
+  if (self && !self->callback_.empty() && self->callback_())
   {
     return G_SOURCE_CONTINUE;
   }
@@ -114,12 +119,18 @@ void Source::DestroyCallback(gpointer data)
   if (!data)
     return;
 
-  auto self = static_cast<Source*>(data);
+  auto cb_data = static_cast<CallBackData*>(data);
 
-  if (self->Id())
+  if (cb_data->self)
   {
-    self->removed.emit(self->Id());
+    auto self = cb_data->self;
+    self->callback_data_ = nullptr;
+
+    if (self->Id())
+      self->removed.emit(self->Id());
   }
+
+  delete cb_data;
 }
 
 
@@ -146,14 +157,12 @@ void Timeout::Init(unsigned int milliseconds, Priority prio)
 
 
 Idle::Idle(SourceCallback cb, Priority prio)
-  : Source()
 {
   Init(prio);
   Run(cb);
 }
 
 Idle::Idle(Priority prio)
-  : Source()
 {
   Init(prio);
 }
@@ -172,7 +181,7 @@ SourceManager::~SourceManager()
 {
   for (auto it = sources_.begin(); it != sources_.end();)
   {
-    RemoveItem(it++, true);
+    RemoveItem(it++);
   }
 }
 
@@ -212,10 +221,7 @@ bool SourceManager::Add(Source::Ptr const& source, std::string const& nick)
      * since at this point we're sure that they refers to two different sources.
      * This should not happen when we're trying to re-add the same source from
      * its callback. */
-    if (!RemoveItem(old_source_it))
-    {
-      return false;
-    }
+    RemoveItem(old_source_it);
   }
 
   sources_[source_nick] = source;
@@ -244,7 +250,8 @@ bool SourceManager::Remove(std::string const& nick)
 
   if (it != sources_.end())
   {
-    return RemoveItem(it);
+    RemoveItem(it);
+    return true;
   }
 
   return false;
@@ -258,31 +265,21 @@ bool SourceManager::Remove(unsigned int id)
 
     if (source->Id() == id)
     {
-      return RemoveItem(it);
+      RemoveItem(it);
+      return true;
     }
   }
 
   return false;
 }
 
-bool SourceManager::RemoveItem(SourcesMap::iterator it, bool force)
+void SourceManager::RemoveItem(SourcesMap::iterator it)
 {
-  GSource* src = g_main_current_source();
   auto source = it->second;
 
-  /* A source will be removed from the manager only if we're not currently
-   * running the source's callback. Its return value should control this.
-   * In future we may allow this, but for now it's safer to add this limit. */
-  if (!src || g_source_get_id(src) != source->Id() || force)
-  {
-    source->removed.clear();
-    source->Remove();
-    sources_.erase(it);
-
-    return true;
-  }
-
-  return false;
+  source->removed.clear();
+  source->Remove();
+  sources_.erase(it);
 }
 
 Source::Ptr SourceManager::GetSource(unsigned int id) const

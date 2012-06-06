@@ -52,6 +52,7 @@ public:
 
   void Relayout();
   nux::View* default_focus() const;
+  std::list<HudButton::Ptr> const& buttons() const;
 
   void SetQueries(Hud::Queries queries);
   void SetIcon(std::string icon_name, unsigned int tile_size, unsigned int size, unsigned int padding);

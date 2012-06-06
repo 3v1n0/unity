@@ -54,8 +54,8 @@ int main(int argc, char** argv)
   nux::NuxInitialize(0);
 
   // The instances for the pseudo-singletons.
+  unity::Settings settings;
   unity::panel::Style panel_style;
-  unity::Settings dash_settings;
 
   nux::WindowThread* wt = nux::CreateGUIThread(TEXT("Unity Panel"), 1024, 24, 0, &ThreadWidgetInit, 0);
 
