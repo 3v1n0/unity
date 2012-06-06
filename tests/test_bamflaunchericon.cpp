@@ -20,6 +20,8 @@
 #include <config.h>
 #include <gmock/gmock.h>
 
+#include <UnityCore/GLibWrapper.h>
+
 #include "BamfLauncherIcon.h"
 #include "unity-shared/WindowManager.h"
 using namespace unity;
@@ -47,7 +49,7 @@ public:
   {
   }
 
-  BamfMatcher* bamf_matcher;
+  glib::Object<BamfMatcher> bamf_matcher;
   BamfApplication* bamf_app;
   nux::ObjectPtr<launcher::BamfLauncherIcon> usc_icon;
 
