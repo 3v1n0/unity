@@ -102,10 +102,20 @@ protected:
   GSource* source_;
 
 private:
+  struct CallBackData
+  {
+    CallBackData(Source* src)
+      : self(src)
+    {}
+
+    Source* self;
+  };
+
   static gboolean Callback(gpointer data);
   static void DestroyCallback(gpointer data);
 
   unsigned int source_id_;
+  CallBackData* callback_data_;
   SourceCallback callback_;
 };
 
@@ -187,7 +197,7 @@ protected: // For testing purposes
 
 private:
   void OnSourceRemoved(unsigned int id);
-  bool RemoveItem(SourcesMap::iterator it, bool force = false);
+  void RemoveItem(SourcesMap::iterator it);
 };
 
 } // glib namespace
