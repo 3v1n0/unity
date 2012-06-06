@@ -69,8 +69,6 @@ public:
   void SetMaximumEntriesWidth(int max_width);
   void GetGeometryForSync(indicator::EntryLocationMap& locations);
 
-  virtual void QueueDraw();
-
   sigc::signal<void, PanelIndicatorEntryView*> on_indicator_updated;
 
 protected:
