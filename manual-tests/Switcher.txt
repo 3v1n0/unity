@@ -56,3 +56,42 @@ Action:
 
 Outcome
   The title of the newly created window should be "显示桌面" and *not* "显示桌...".
+
+
+Alt+keyabovetab switching
+------------------------------
+This test ensures that alt+keyabovetab switching windows of the application
+works as it should.
+
+Setup:
+#. Have a few windows of one application open (e.g. 3 terminal windows).
+
+Action:
+#. Focus one of the opened application windows.
+#. Press Alt+keyabovetab (the ~ key on the US and PL keyboard).
+#. Keep the Alt key pressed.
+
+Outcome
+  The switcher should appear with the detail view for the given application
+  (e.g. the terminal), with all terminal applications for the workspace 
+  visible. The switcher should look normally.
+
+
+Fast alt+keyabovetab switching
+------------------------------
+This test ensures that doing a fast tap does not result in any 'flickering' of
+the switcher window. The switcher should not appear during a quick tap, just
+during longer alt+keyabovetab presses.
+
+Setup:
+#. Have a few windows of one application open (e.g. 3 terminal windows)
+
+Action:
+#. Focus one of the opened application windows.
+#. Quickly tap Alt+keyabovetab (meaning only tap once, do not hold)
+#. Repeat at least a few times
+
+Outcome
+  On every quick tap, the focus should switch to the next same-application
+  type window. During that switch the switcher should not appear, not even
+  for a brief moment (if done fast enough). No 'flickering' of the switcher.

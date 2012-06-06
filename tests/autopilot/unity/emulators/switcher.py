@@ -91,7 +91,7 @@ class Switcher(KeybindingsHelper):
         elif mode == SwitcherMode.DETAIL:
             logger.debug("Initiating switcher detail mode with Alt+`")
             self.keybinding_hold_part_then_tap("switcher/reveal_details")
-            self.controller.model.detail_selection.wait_for(True)
+            self.visible.wait_for(True)
         elif mode == SwitcherMode.ALL:
             logger.debug("Initiating switcher in 'all workspaces' mode. Ctrl+Alt+Tab")
             self.keybinding_hold_part_then_tap("switcher/reveal_all")
@@ -141,6 +141,16 @@ class Switcher(KeybindingsHelper):
         logger.debug("Selecting previous item in switcher with mouse scroll wheel.")
         self._mouse.press(7)
         self._mouse.release(7)
+
+    @property
+    def detail_selection_index(self):
+        """The index of the currently selected detail"""
+        return self.controller.model.detail_selection_index
+
+    @property
+    def detail_current_count(self):
+        """The number of shown details"""
+        return self.controller.model.detail_current_count
 
     def show_details(self):
         """Show detail mode."""

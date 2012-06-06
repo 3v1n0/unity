@@ -19,16 +19,15 @@ from unity.tests import UnityTestCase
 logger = logging.getLogger(__name__)
 
 class SwitcherTestCase(UnityTestCase):
-    def set_timeout_setting(self, value):
-        self.set_unity_option("alt_tab_timeout", value)
+    def set_timeout_setting(self, state):
+        if type(state) is not bool:
+            raise TypeError("'state' must be boolean, not %r" % type(state))
+        self.set_unity_option("alt_tab_timeout", state)
         sleep(1)
 
 
 class SwitcherTests(SwitcherTestCase):
     """Test the switcher."""
-    def set_timeout_setting(self, value):
-        self.set_unity_option("alt_tab_timeout", value)
-        sleep(1)
 
     def setUp(self):
         super(SwitcherTests, self).setUp()
@@ -48,6 +47,17 @@ class SwitcherTests(SwitcherTestCase):
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
         self.assertThat(self.switcher.mode, Equals(SwitcherMode.NORMAL))
+
+    def test_first_detail_mode_has_correct_label(self):
+        """Starting switcher in details mode must show the focused window title."""
+        app = self.start_app("Text Editor")
+        sleep(1)
+        self.switcher.initiate(SwitcherMode.DETAIL)
+        self.addCleanup(self.switcher.terminate)
+
+        [title] = [w.title for w in app.get_windows() if w.is_focused]
+
+        self.assertThat(self.switcher.controller.view.label, Eventually(Equals(title)))
 
     def test_switcher_move_next(self):
         """Test that pressing the next icon binding moves to the next icon"""
@@ -315,17 +325,21 @@ class SwitcherDetailsModeTests(SwitcherTestCase):
 
     def test_next_icon_from_last_detail_works(self):
         """Pressing next while showing last switcher item in details mode
-
         must select first item in the model in non-details mode.
 
         """
         self.start_app("Character Map")
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
-        while self.switcher.selection_index < len(self.switcher.icons) -1:
+        while self.switcher.selection_index < len(self.switcher.icons) - 1:
             self.switcher.next_icon()
         self.keyboard.press_and_release(self.initiate_keycode)
         sleep(0.5)
+        # Make sure we're at the end of the details list for this icon
+        possible_details = self.switcher.detail_current_count - 1
+        while self.switcher.detail_selection_index < possible_details:
+            self.switcher.next_detail()
+
         self.switcher.next_icon()
         self.assertThat(self.switcher.selection_index, Equals(0))
 
