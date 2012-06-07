@@ -683,7 +683,7 @@ LauncherIcon::SetCenter(nux::Point3 center, int monitor, nux::Geometry geo)
       _tooltip->ShowTooltipWithTipAt(tip_x, tip_y);
   }
 
-  glib::Source::Ptr timeout(new glib::Timeout(500));
+  auto timeout = std::make_shared<glib::Timeout>(500);
   _source_manager.Add(timeout, "center-stabilize-timeout");
   timeout->Run(sigc::mem_fun(this, &LauncherIcon::OnCenterStabilizeTimeout));
 }
@@ -762,7 +762,7 @@ LauncherIcon::Present(float present_urgency, int length)
 
   if (length >= 0)
   {
-    glib::Source::Ptr timeout(new glib::Timeout(length));
+    auto timeout = std::make_shared<glib::Timeout>(length);
     _source_manager.Add(timeout, "present-timeout");
     timeout->Run(sigc::mem_fun(this, &LauncherIcon::OnPresentTimeout));
   }
@@ -857,7 +857,7 @@ LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value)
 void
 LauncherIcon::UpdateQuirkTimeDelayed(guint ms, LauncherIcon::Quirk quirk)
 {
-  glib::Source::Ptr timeout(new glib::Timeout(ms));
+  auto timeout = std::make_shared<glib::Timeout>(ms);
   _source_manager.Add(timeout, "quirk-delay-timeout");
   timeout->Run([&, quirk] {
     UpdateQuirkTime(quirk);

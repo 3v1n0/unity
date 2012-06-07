@@ -137,7 +137,7 @@ LauncherModel::RemoveIcon(AbstractLauncherIcon::Ptr icon)
 void
 LauncherModel::OnIconRemove(AbstractLauncherIcon::Ptr icon)
 {
-  glib::Source::Ptr timeout(new glib::Timeout(1000));
+  auto timeout = std::make_shared<glib::Timeout>(1000);
   timeouts_.Add(timeout);
 
   timeout->Run([&, icon] {

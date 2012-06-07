@@ -351,7 +351,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
                    sigc::mem_fun(this, &UnityScreen::OnLauncherEndKeyNav));
 
      auto init_plugins_cb = sigc::mem_fun(this, &UnityScreen::initPluginActions);
-     sources_.Add(new glib::Idle(init_plugins_cb, glib::Source::Priority::DEFAULT));
+     sources_.Add(std::make_shared<glib::Idle>(init_plugins_cb, glib::Source::Priority::DEFAULT));
 
      geis_adapter_.Run();
 
@@ -1415,7 +1415,7 @@ void UnityScreen::handleEvent(XEvent* event)
           {
             /* We need an idle to postpone this action, after the current event
              * has been processed */
-            sources_.Add(new glib::Idle([&]() {
+            sources_.Add(std::make_shared<glib::Idle>([&]() {
               if (!launcher_controller_->KeyNavIsActive())
               {
                 shortcut_controller_->SetEnabled(false);
@@ -2549,7 +2549,7 @@ void UnityScreen::onRedrawRequested()
   {
     if (!sources_.GetSource("redraw-idle"))
     {
-      glib::Source::Ptr redraw_idle(new glib::Idle(glib::Source::Priority::DEFAULT));
+      auto redraw_idle(std::make_shared<glib::Idle>(glib::Source::Priority::DEFAULT));
       sources_.Add(redraw_idle, "redraw-idle");
 
       redraw_idle->Run([&]() {
@@ -2720,7 +2720,7 @@ void UnityScreen::ScheduleRelayout(guint timeout)
 {
   if (!sources_.GetSource("relayout-timeout"))
   {
-    glib::Source::Ptr relayout_timeout(new glib::Timeout(timeout));
+    auto relayout_timeout(std::make_shared<glib::Timeout>(timeout));
     sources_.Add(relayout_timeout, "relayout-timeout");
 
     relayout_timeout->Run([&]() {

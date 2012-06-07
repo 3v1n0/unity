@@ -1466,7 +1466,7 @@ Launcher::OnWindowMapped(guint32 xid)
   //{
     if (!sources_.GetSource("dnd-check"))
     {
-      glib::Source::Ptr timeout(new glib::Timeout(200));
+      auto timeout = std::make_shared<glib::Timeout>(200);
       sources_.Add(timeout, "dnd-check");
       timeout->Run(sigc::mem_fun(this, &Launcher::OnUpdateDragManagerTimeout));
     }
@@ -1484,7 +1484,7 @@ Launcher::OnWindowUnmapped(guint32 xid)
   //{
     if (!sources_.GetSource("dnd-check"))
     {
-      glib::Source::Ptr timeout(new glib::Timeout(200));
+      auto timeout = std::make_shared<glib::Timeout>(200);
       sources_.Add(timeout, "dnd-check");
       timeout->Run(sigc::mem_fun(this, &Launcher::OnUpdateDragManagerTimeout));
     }
@@ -1563,7 +1563,7 @@ void Launcher::SetHideMode(LauncherHideMode hidemode)
 
     if (!sources_.GetSource("strut-hack-timeout"))
     {
-      glib::Source::Ptr timeout(new glib::Timeout(1000, sigc::mem_fun(this, &Launcher::StrutHack)));
+      auto timeout = std::make_shared<glib::Timeout>(1000, sigc::mem_fun(this, &Launcher::StrutHack));
       sources_.Add(timeout, "strut-hack-timeout");
     }
 
@@ -1708,7 +1708,7 @@ void Launcher::EnsureScrollTimer()
 
   if (needed && !sources_.GetSource("scroll-timeout"))
   {
-    glib::Source::Ptr timeout(new glib::Timeout(20, sigc::mem_fun(this, &Launcher::OnScrollTimeout)));
+    auto timeout = std::make_shared<glib::Timeout>(20, sigc::mem_fun(this, &Launcher::OnScrollTimeout));
     sources_.Add(timeout, "scroll-timeout");
   }
   else if (!needed)
@@ -1847,7 +1847,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   // rely on the compiz event loop to come back to us in a nice throttling
   if (AnimationInProgress())
   {
-    glib::Source::Ptr idle(new glib::Idle(glib::Source::Priority::DEFAULT));
+    auto idle = std::make_shared<glib::Idle>(glib::Source::Priority::DEFAULT);
     sources_.Add(idle, "animation-idle");
     idle->Run([&]() {
       EnsureAnimation();
@@ -2488,7 +2488,7 @@ void Launcher::MouseDownLogic(int x, int y, unsigned long button_flags, unsigned
   {
     _icon_mouse_down = launcher_icon;
     // if MouseUp after the time ended -> it's an icon drag, otherwise, it's starting an app
-    glib::Source::Ptr timeout(new glib::Timeout(START_DRAGICON_DURATION));
+    auto timeout = std::make_shared<glib::Timeout>(START_DRAGICON_DURATION);
     sources_.Add(timeout, "start-dragicon-timeout");
     timeout->Run(sigc::mem_fun(this, &Launcher::StartIconDragTimeout));
 
