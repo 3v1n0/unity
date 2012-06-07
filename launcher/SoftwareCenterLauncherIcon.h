@@ -21,8 +21,8 @@
 #ifndef SOFTWARE_CENTER_LAUNCHERICON_H
 #define SOFTWARE_CENTER_LAUNCHERICON_H
 
+#include <string>
 #include <UnityCore/GLibDBusProxy.h>
-#include <string.h>
 #include "BamfLauncherIcon.h"
 
 class LauncherDragWindow;

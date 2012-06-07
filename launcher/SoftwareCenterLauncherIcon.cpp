@@ -20,7 +20,6 @@
 
 #include <NuxCore/Logger.h>
 #include <glib/gi18n-lib.h>
-#include <string.h>
 #include "SoftwareCenterLauncherIcon.h"
 #include "Launcher.h"
 #include "LauncherDragWindow.h"
