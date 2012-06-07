@@ -21,6 +21,7 @@ set (CORE_HEADERS
      GLibDBusProxy.h
      GLibSignal.h
      GLibSignal-inl.h
+     GLibSource.h
      GLibWrapper.h
      GLibWrapper-inl.h
      Hud.h
@@ -58,6 +59,7 @@ set (CORE_SOURCES
      GenericPreview.cpp
      GLibDBusProxy.cpp
      GLibSignal.cpp
+     GLibSource.cpp
      GLibWrapper.cpp
      Hud.cpp
      HomeLens.cpp
