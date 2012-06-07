@@ -20,6 +20,7 @@
 
 #include "config.h"
 #include "DBusIndicators.h"
+#include <iostream>
 
 #include "GLibWrapper.h"
 #include "GLibDBusProxy.h"
@@ -219,7 +220,7 @@ void DBusIndicators::Impl::OnEntryShowMenu(std::string const& entry_id,
   // menu not to show
 
   show_entry_idle_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
-  show_entry_idle_->Run([&, xid, x, y, button, timestamp] {
+  show_entry_idle_->Run([&, entry_id, xid, x, y, button, timestamp] {
     gproxy_.Call("ShowEntry", g_variant_new("(suiiuu)", entry_id.c_str(), xid,
                                                         x, y, button, timestamp));
     return false;
@@ -306,16 +307,9 @@ void DBusIndicators::Impl::Sync(GVariant* args)
 
       if (!e)
       {
-        e = Entry::Ptr(new Entry(entry,
-                                 name_hint,
-                                 label,
-                                 label_sensitive,
-                                 label_visible,
-                                 image_type,
-                                 image_data,
-                                 image_sensitive,
-                                 image_visible,
-                                 priority));
+        e = std::make_shared<Entry>(entry, name_hint, label, label_sensitive,
+                                    label_visible, image_type, image_data,
+                                    image_sensitive, image_visible, priority);
       }
       else
       {
