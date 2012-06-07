@@ -20,6 +20,7 @@
 
 #include "config.h"
 #include "DBusIndicators.h"
+#include <iostream>
 
 #include "GLibWrapper.h"
 #include "GLibDBusProxy.h"
@@ -306,16 +307,9 @@ void DBusIndicators::Impl::Sync(GVariant* args)
 
       if (!e)
       {
-        e = Entry::Ptr(new Entry(entry,
-                                 name_hint,
-                                 label,
-                                 label_sensitive,
-                                 label_visible,
-                                 image_type,
-                                 image_data,
-                                 image_sensitive,
-                                 image_visible,
-                                 priority));
+        e = std::make_shared<Entry>(entry, name_hint, label, label_sensitive,
+                                    label_visible, image_type, image_data,
+                                    image_sensitive, image_visible, priority);
       }
       else
       {
