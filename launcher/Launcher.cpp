@@ -263,7 +263,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   icon_renderer->SetTargetSize(_icon_size, _icon_image_size, _space_between_icons);
 
   // request the latest colour from bghash
-  ubus_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, NULL);
+  ubus_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 
   SetAcceptMouseWheelEvent(true);
 

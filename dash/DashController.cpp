@@ -35,7 +35,7 @@ namespace dash
 namespace
 {
 nux::logging::Logger logger("unity.dash.controller");
-unsigned const int PRELOAD_TIMEOUT_LENGTH = 40 * 1000;
+const unsigned int PRELOAD_TIMEOUT_LENGTH = 40 * 1000;
 }
 
 Controller::Controller()
@@ -55,7 +55,7 @@ Controller::Controller()
   timeline_animator_.animation_updated.connect(sigc::mem_fun(this, &Controller::OnViewShowHideFrame));
 
   SetupWindow();
-  
+
   Settings::Instance().changed.connect([&]()
   {
     if (window_ && view_)

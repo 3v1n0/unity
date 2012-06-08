@@ -26,7 +26,7 @@ namespace
 {
 static UScreen* default_screen_ = nullptr;
 nux::logging::Logger logger("unity.screen");
-} 
+}
 
 UScreen::UScreen()
   : screen_(gdk_screen_get_default(), glib::AddRef())
@@ -114,7 +114,7 @@ void UScreen::Refresh()
   primary_ = gdk_screen_get_primary_monitor(screen_);
   int monitors = gdk_screen_get_n_monitors(screen_);
 
-  for (int i = 0; i < monitors; i++)
+  for (int i = 0; i < monitors; ++i)
   {
     GdkRectangle rect = { 0 };
     gdk_screen_get_monitor_geometry(screen_, i, &rect);

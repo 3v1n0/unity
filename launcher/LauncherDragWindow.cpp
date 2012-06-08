@@ -46,7 +46,7 @@ LauncherDragWindow::~LauncherDragWindow()
 
 bool LauncherDragWindow::Animating()
 {
-  return (animation_timer_ != nullptr);
+  return bool(animation_timer_);
 }
 
 void LauncherDragWindow::SetAnimationTarget(int x, int y)

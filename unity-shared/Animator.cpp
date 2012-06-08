@@ -65,7 +65,7 @@ unsigned int Animator::GetDuration() const
 
 bool Animator::IsRunning() const
 {
-  return (timeout_ != nullptr);
+  return bool(timeout_);
 }
 
 double Animator::GetProgress() const
