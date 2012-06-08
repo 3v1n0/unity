@@ -32,6 +32,8 @@ namespace unity
 namespace dash
 {
 
+const char window_title[] = "unity-dash";
+
 namespace
 {
 nux::logging::Logger logger("unity.dash.controller");
@@ -82,7 +84,7 @@ Controller::~Controller()
 
 void Controller::SetupWindow()
 {
-  window_ = new nux::BaseWindow("Dash");
+  window_ = new nux::BaseWindow(dash::window_title);
   window_->SinkReference();
   window_->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
   window_->SetConfigureNotifyCallback(&Controller::OnWindowConfigure, this);
@@ -92,8 +94,8 @@ void Controller::SetupWindow()
   
   /* FIXME - first time we load our windows there is a race that causes the input window not to actually get input, this side steps that by causing an input window show and hide before we really need it. */
   PluginAdapter::Default()->saveInputFocus ();
-  window_->EnableInputWindow(true, "Dash", true, false);
-  window_->EnableInputWindow(false, "Dash", true, false);
+  window_->EnableInputWindow(true, dash::window_title, true, false);
+  window_->EnableInputWindow(false, dash::window_title, true, false);
   PluginAdapter::Default()->restoreInputFocus ();
 }
 
@@ -271,7 +273,7 @@ void Controller::ShowDash()
   window_->ShowWindow(true);
   window_->PushToFront();
   if (!Settings::Instance().is_standalone) // in standalone mode, we do not need an input window. we are one.
-    window_->EnableInputWindow(true, "Dash", true, false);
+    window_->EnableInputWindow(true, dash::window_title, true, false);
   window_->SetInputFocus();
   window_->CaptureMouseDownAnyWhereElse(true);
   window_->QueueDraw();
@@ -300,7 +302,7 @@ void Controller::HideDash(bool restore)
   view_->AboutToHide();
 
   window_->CaptureMouseDownAnyWhereElse(false);
-  window_->EnableInputWindow(false, "Dash", true, false);
+  window_->EnableInputWindow(false, dash::window_title, true, false);
   visible_ = false;
 
   nux::GetWindowCompositor().SetKeyFocusArea(NULL,nux::KEY_NAV_NONE);

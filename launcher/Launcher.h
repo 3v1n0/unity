@@ -48,6 +48,8 @@ namespace unity
 {
 namespace launcher
 {
+extern const char window_title[];
+
 class AbstractLauncherIcon;
 class LauncherModel;
 
