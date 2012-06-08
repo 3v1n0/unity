@@ -98,6 +98,9 @@ namespace local
 const int ALT_TAP_DURATION = 250;
 const unsigned int SCROLL_DOWN_BUTTON = 6;
 const unsigned int SCROLL_UP_BUTTON = 7;
+
+const std::string RELAYOUT_TIMEOUT = "relayout-timeout";
+const std::string REDRAW_IDLE = "redraw-idle";
 } // namespace local
 } // anon namespace
 
@@ -540,7 +543,7 @@ void UnityScreen::setPanelShadowMatrix(const GLMatrix& matrix)
 void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
 {
 #ifndef USE_MODERN_COMPIZ_GL
-  if (sources_.GetSource("relayout-timeout"))
+  if (sources_.GetSource(local::RELAYOUT_TIMEOUT))
     return;
 
   if (PluginAdapter::Default()->IsExpoActive())
@@ -619,7 +622,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
 #else
   return;
 
-  if (sources_.GetSource("relayout-timeout"))
+  if (sources_.GetSource(local::RELAYOUT_TIMEOUT))
     return;
 
   if (PluginAdapter::Default()->IsExpoActive())
@@ -2547,10 +2550,10 @@ void UnityScreen::onRedrawRequested()
   // but ensures a smooth animation.
   if (_in_paint)
   {
-    if (!sources_.GetSource("redraw-idle"))
+    if (!sources_.GetSource(local::REDRAW_IDLE))
     {
       auto redraw_idle(std::make_shared<glib::Idle>(glib::Source::Priority::DEFAULT));
-      sources_.Add(redraw_idle, "redraw-idle");
+      sources_.Add(redraw_idle, local::REDRAW_IDLE);
 
       redraw_idle->Run([&]() {
         onRedrawRequested();
@@ -2718,10 +2721,10 @@ void UnityScreen::NeedsRelayout()
 
 void UnityScreen::ScheduleRelayout(guint timeout)
 {
-  if (!sources_.GetSource("relayout-timeout"))
+  if (!sources_.GetSource(local::RELAYOUT_TIMEOUT))
   {
     auto relayout_timeout(std::make_shared<glib::Timeout>(timeout));
-    sources_.Add(relayout_timeout, "relayout-timeout");
+    sources_.Add(relayout_timeout, local::RELAYOUT_TIMEOUT);
 
     relayout_timeout->Run([&]() {
       NeedsRelayout();

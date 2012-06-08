@@ -85,6 +85,10 @@ namespace
   const int launcher_minimum_show_duration = 1250;
   const int shortcuts_show_delay = 750;
   const int ignore_repeat_shortcut_duration = 250;
+
+  const std::string KEYPRESS_TIMEOUT = "keypress-timeout";
+  const std::string LABELS_TIMEOUT = "label-show-timeout";
+  const std::string HIDE_TIMEOUT = "hide-timeout";
 }
 }
 
@@ -969,14 +973,14 @@ void Controller::HandleLauncherKeyPress(int when)
     if (pimpl->keyboard_launcher_.IsNull())
       pimpl->keyboard_launcher_ = pimpl->CurrentLauncher();
 
-    pimpl->sources_.Remove("hide-timeout");
+    pimpl->sources_.Remove(local::HIDE_TIMEOUT);
     pimpl->keyboard_launcher_->ForceReveal(true);
     pimpl->launcher_open = true;
 
     return false;
   };
   auto key_timeout = std::make_shared<glib::Timeout>(local::super_tap_duration, show_launcher);
-  pimpl->sources_.Add(key_timeout, "keypress-timeout");
+  pimpl->sources_.Add(key_timeout, local::KEYPRESS_TIMEOUT);
 
   auto show_shortcuts = [&]()
   {
@@ -992,7 +996,7 @@ void Controller::HandleLauncherKeyPress(int when)
     return false;
   };
   auto labels_timeout = std::make_shared<glib::Timeout>(local::shortcuts_show_delay, show_shortcuts);
-  pimpl->sources_.Add(labels_timeout, "label-show-timeout");
+  pimpl->sources_.Add(labels_timeout, local::LABELS_TIMEOUT);
 }
 
 bool Controller::AboutToShowDash(int was_tap, int when) const
@@ -1015,8 +1019,8 @@ void Controller::HandleLauncherKeyRelease(bool was_tap, int when)
     LOG_DEBUG(logger) << "Tap too long: " << tap_duration;
   }
 
-  pimpl->sources_.Remove("label-show-timeout");
-  pimpl->sources_.Remove("keypress-timeout");
+  pimpl->sources_.Remove(local::LABELS_TIMEOUT);
+  pimpl->sources_.Remove(local::KEYPRESS_TIMEOUT);
 
   if (pimpl->keyboard_launcher_.IsValid())
   {
@@ -1050,7 +1054,7 @@ void Controller::HandleLauncherKeyRelease(bool was_tap, int when)
       };
 
       auto hide_timeout = std::make_shared<glib::Timeout>(time_left, hide_launcher);
-      pimpl->sources_.Add(hide_timeout, "hide-timeout");
+      pimpl->sources_.Add(hide_timeout, local::HIDE_TIMEOUT);
     }
   }
 }
