@@ -36,7 +36,7 @@ class HudLauncherIcon : public SingleMonitorLauncherIcon
 public:
   HudLauncherIcon(LauncherHideMode hide_mode);
 
-  virtual nux::Color BackgroundColor();
+  virtual nux::Color BackgroundColor() const;
   virtual nux::Color GlowColor();
 
   void ActivateLauncherIcon(ActionArg arg);

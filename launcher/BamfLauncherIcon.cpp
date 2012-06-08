@@ -56,6 +56,8 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   : SimpleLauncherIcon()
   , _bamf_app(app, glib::AddRef())
   , _supported_types_filled(false)
+  , use_custom_bg_color_(false)
+  , bg_color_(nux::color::White)
 {
   g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"),
                      GUINT_TO_POINTER(1));
@@ -148,6 +150,7 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   EnsureWindowState();
   UpdateMenus();
   UpdateDesktopFile();
+  UpdateBackgroundColor();
 
   // hack
   SetProgress(0.0f);
@@ -484,6 +487,7 @@ void BamfLauncherIcon::UpdateDesktopFile()
                                       break;
                                     case G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT:
                                       UpdateDesktopQuickList();
+                                      UpdateBackgroundColor();
                                       break;
                                     default:
                                       break;
@@ -752,6 +756,23 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
     dbusmenu_menuitem_child_append(_menu_desktop_shortcuts, item);
     index++;
   }
+}
+
+void BamfLauncherIcon::UpdateBackgroundColor()
+{
+  bool last_use_custom_bg_color = use_custom_bg_color_;
+  nux::Color last_bg_color(bg_color_);
+
+  std::string const& color = DesktopUtilities::GetBackgroundColor(DesktopFile());
+
+  use_custom_bg_color_ = !color.empty();
+
+  if (use_custom_bg_color_)
+    bg_color_ = nux::Color(color);
+
+  if (last_use_custom_bg_color != use_custom_bg_color_ ||
+      last_bg_color != bg_color_)
+    EmitNeedsRedraw();
 }
 
 void BamfLauncherIcon::UpdateMenus()
@@ -1222,6 +1243,14 @@ unsigned long long BamfLauncherIcon::SwitcherPriority()
 
   g_list_free(children);
   return result;
+}
+
+nux::Color BamfLauncherIcon::BackgroundColor() const
+{
+  if (use_custom_bg_color_)
+    return bg_color_;
+
+  return SimpleLauncherIcon::BackgroundColor();
 }
 
 const std::set<std::string>& BamfLauncherIcon::GetSupportedTypes()

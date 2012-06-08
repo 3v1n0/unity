@@ -9,11 +9,14 @@
 
 from __future__ import absolute_import
 
-from compizconfig import Plugin, Setting
 
 from autopilot.globals import global_context
 from autopilot.keybindings import KeybindingsHelper
-from autopilot.utilities import get_desktop_viewport, get_desktop_geometry
+from autopilot.utilities import (
+    get_compiz_option,
+    get_desktop_geometry,
+    get_desktop_viewport,
+    )
 
 
 class WorkspaceManager(KeybindingsHelper):
@@ -36,8 +39,8 @@ class WorkspaceManager(KeybindingsHelper):
 
     def refresh_workspace_information(self):
         """Re-read information about available workspaces from compiz and X11."""
-        self._workspaces_wide = self._get_compiz_option("core", "hsize")
-        self._workspaces_high = self._get_compiz_option("core", "vsize")
+        self._workspaces_wide = get_compiz_option("core", "hsize")
+        self._workspaces_high = get_compiz_option("core", "vsize")
         self._desktop_width, self.desktop_height = get_desktop_geometry()
         self._viewport_width = self._desktop_width / self._workspaces_wide
         self._viewport_height = self.desktop_height / self._workspaces_high
@@ -88,8 +91,3 @@ class WorkspaceManager(KeybindingsHelper):
         row = vp_number / self._workspaces_wide
         col = vp_number % self._workspaces_wide
         return (row,col)
-
-    def _get_compiz_option(self, plugin_name, setting_name):
-        plugin = Plugin(global_context, plugin_name)
-        setting = Setting(plugin, setting_name)
-        return setting.Value
