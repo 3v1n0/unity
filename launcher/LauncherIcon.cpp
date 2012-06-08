@@ -61,6 +61,10 @@ nux::logging::Logger logger("unity.launcher");
 const std::string DEFAULT_ICON = "application-default-icon";
 const std::string MONO_TEST_ICON = "gnome-home";
 const std::string UNITY_THEME_NAME = "unity-icon-theme";
+
+const std::string CENTER_STABILIZE_TIMEOUT = "center-stabilize-timeout";
+const std::string PRESENT_TIMEOUT = "present-timeout";
+const std::string QUIRK_DELAY_TIMEOUT = "quirk-delay-timeout";
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(LauncherIcon);
@@ -684,7 +688,7 @@ LauncherIcon::SetCenter(nux::Point3 center, int monitor, nux::Geometry geo)
   }
 
   auto timeout = std::make_shared<glib::Timeout>(500);
-  _source_manager.Add(timeout, "center-stabilize-timeout");
+  _source_manager.Add(timeout, CENTER_STABILIZE_TIMEOUT);
   timeout->Run(sigc::mem_fun(this, &LauncherIcon::OnCenterStabilizeTimeout));
 }
 
@@ -763,7 +767,7 @@ LauncherIcon::Present(float present_urgency, int length)
   if (length >= 0)
   {
     auto timeout = std::make_shared<glib::Timeout>(length);
-    _source_manager.Add(timeout, "present-timeout");
+    _source_manager.Add(timeout, PRESENT_TIMEOUT);
     timeout->Run(sigc::mem_fun(this, &LauncherIcon::OnPresentTimeout));
   }
 
@@ -777,7 +781,7 @@ LauncherIcon::Unpresent()
   if (!GetQuirk(QUIRK_PRESENTED))
     return;
 
-  _source_manager.Remove("present-timeout");
+  _source_manager.Remove(PRESENT_TIMEOUT);
   SetQuirk(QUIRK_PRESENTED, false);
 }
 
@@ -858,7 +862,7 @@ void
 LauncherIcon::UpdateQuirkTimeDelayed(guint ms, LauncherIcon::Quirk quirk)
 {
   auto timeout = std::make_shared<glib::Timeout>(ms);
-  _source_manager.Add(timeout, "quirk-delay-timeout");
+  _source_manager.Add(timeout, QUIRK_DELAY_TIMEOUT);
   timeout->Run([&, quirk] {
     UpdateQuirkTime(quirk);
     return false;

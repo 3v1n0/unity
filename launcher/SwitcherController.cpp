@@ -32,6 +32,14 @@ using launcher::AbstractLauncherIcon;
 using launcher::ActionArg;
 using ui::LayoutWindowList;
 
+namespace
+{
+  const std::string LAZY_TIMEOUT = "lazy-timeout";
+  const std::string SHOW_TIMEOUT = "show-timeout";
+  const std::string DETAIL_TIMEOUT = "detail-timeout";
+  const std::string VIEW_CONSTRUCT_IDLE = "view-construct-idle";
+}
+
 namespace switcher
 {
 
@@ -50,7 +58,7 @@ Controller::Controller(unsigned int load_timeout)
 
   glib::Source::Ptr lazy_timeout(new glib::Timeout(construct_timeout_ * 1000, glib::Source::Priority::LOW));
   lazy_timeout->Run([&]() { ConstructWindow(); return false; });
-  sources_.Add(lazy_timeout, "lazy-timeout");
+  sources_.Add(lazy_timeout, LAZY_TIMEOUT);
 }
 
 void Controller::OnBackgroundUpdate(GVariant* data)
@@ -83,11 +91,11 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
   if (timeout_length > 0)
   {
     glib::Source::Ptr view_idle_construct(new glib::Idle());
-    sources_.Add(view_idle_construct, "view-idle-construct");
+    sources_.Add(view_idle_construct, VIEW_CONSTRUCT_IDLE);
     view_idle_construct->Run([&] () { ConstructView(); return false; });
 
     glib::Source::Ptr show_timeout(new glib::Timeout(timeout_length));
-    sources_.Add(show_timeout, "show-timeout");
+    sources_.Add(show_timeout, SHOW_TIMEOUT);
     show_timeout->Run([&] () { ShowView(); return false; });
   }
   else
@@ -98,7 +106,7 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
   if (detail_on_timeout)
   {
     glib::Source::Ptr detail_timeout(new glib::Timeout(initial_detail_timeout_length));
-    sources_.Add(detail_timeout, "detail-timeout");
+    sources_.Add(detail_timeout, DETAIL_TIMEOUT);
     detail_timeout->Run(sigc::mem_fun(this, &Controller::OnDetailTimer));
   }
 
@@ -128,7 +136,7 @@ void Controller::OnModelSelectionChanged(AbstractLauncherIcon::Ptr icon)
   if (detail_on_timeout)
   {
     glib::Source::Ptr detail_timeout(new glib::Timeout(detail_timeout_length));
-    sources_.Add(detail_timeout, "detail-timeout");
+    sources_.Add(detail_timeout, DETAIL_TIMEOUT);
     detail_timeout->Run(sigc::mem_fun(this, &Controller::OnDetailTimer));
   }
 
@@ -159,7 +167,7 @@ void Controller::ShowView()
 
 void Controller::ConstructWindow()
 {
-  sources_.Remove("lazy-timeout");
+  sources_.Remove(LAZY_TIMEOUT);
 
   if (!view_window_)
   {
@@ -179,7 +187,7 @@ void Controller::ConstructView()
   if (view_ || !model_)
     return;
 
-  sources_.Remove("view-idle-construct");
+  sources_.Remove(VIEW_CONSTRUCT_IDLE);
 
   view_ = SwitcherView::Ptr(new SwitcherView());
   AddChild(view_.GetPointer());
@@ -232,9 +240,9 @@ void Controller::Hide(bool accept_state)
     }
   }
 
-  sources_.Remove("view-idle-construct");
-  sources_.Remove("show-timeout");
-  sources_.Remove("detail-timeout");
+  sources_.Remove(VIEW_CONSTRUCT_IDLE);
+  sources_.Remove(SHOW_TIMEOUT);
+  sources_.Remove(DETAIL_TIMEOUT);
 
   model_.reset();
   visible_ = false;
