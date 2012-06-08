@@ -1,12 +1,13 @@
 #include <gtest/gtest.h>
 #include <gio/gio.h>
+#include <gtk/gtk.h>
 #include <NuxCore/Logger.h>
 #include <Nux/Nux.h>
 
 int main(int argc, char** argv)
 {
   ::testing::InitGoogleTest(&argc, argv);
-  g_type_init();
+  gtk_init(&argc, &argv);
   
   nux::NuxInitialize (0);
   nux::WindowThread* wnd_thread = nux::CreateNuxWindow("Tests", 300, 200, nux::WINDOWSTYLE_NORMAL, NULL, false, NULL, NULL);

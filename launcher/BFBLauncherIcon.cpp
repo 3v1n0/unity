@@ -80,7 +80,7 @@ void BFBLauncherIcon::OnOverlayShown(GVariant *data, bool visible)
   }
 }
 
-nux::Color BFBLauncherIcon::BackgroundColor()
+nux::Color BFBLauncherIcon::BackgroundColor() const
 {
   return background_color_;
 }
