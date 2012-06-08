@@ -13,9 +13,9 @@ from __future__ import absolute_import
 from autopilot.globals import global_context
 from autopilot.keybindings import KeybindingsHelper
 from autopilot.utilities import (
-    get_desktop_viewport,
+    get_compiz_option,
     get_desktop_geometry,
-    get_compiz_option
+    get_desktop_viewport,
     )
 
 
