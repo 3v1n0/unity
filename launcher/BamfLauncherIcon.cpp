@@ -782,6 +782,35 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
   }
 }
 
+//
+// ParseColor:
+// Parses a color string in the form: #rrggbbaa, where # and aa are optional.
+//
+// In Nux 3.x, this function is superseded by:
+//   nux::color::Color(std::string const& hex)
+// (even though this function is much smaller and faster)
+//
+// I would really like to #if NUX_VERSION <= ... around this code, but
+// no such integer macro seems to exist in the Nux headers.
+//
+static unsigned int ParseColor(const char *str)
+{
+  unsigned int ret = 0;
+  if (str)
+  {
+    const char *hex = str[0] == '#' ? str + 1 : str;
+    int digits = 0, color = 0;
+    if (sscanf(hex, "%x%n", &color, &digits))
+    {
+      if (digits == 8)
+        ret = (unsigned int)color;
+      else if (digits == 6)
+        ret = (unsigned int)color << 8;
+    }
+  }
+  return ret;
+}
+
 void BamfLauncherIcon::UpdateBackgroundColor()
 {
   bool last_use_custom_bg_color = use_custom_bg_color_;
@@ -792,7 +821,7 @@ void BamfLauncherIcon::UpdateBackgroundColor()
   use_custom_bg_color_ = !color.empty();
 
   if (use_custom_bg_color_)
-    bg_color_ = nux::Color(color);
+    bg_color_ = nux::Color(ParseColor(color.c_str()));
 
   if (last_use_custom_bg_color != use_custom_bg_color_ ||
       last_bg_color != bg_color_)
