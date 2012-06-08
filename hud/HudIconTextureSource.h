@@ -34,7 +34,7 @@ public:
   HudIconTextureSource(nux::ObjectPtr<nux::BaseTexture> texture);
   ~HudIconTextureSource();
   
-  virtual nux::Color BackgroundColor();
+  virtual nux::Color BackgroundColor() const;
   virtual nux::BaseTexture* TextureForSize(int size);
   virtual nux::Color GlowColor();
   virtual nux::BaseTexture* Emblem();

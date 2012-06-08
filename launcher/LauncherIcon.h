@@ -141,7 +141,7 @@ public:
 
   IconType GetIconType();
 
-  virtual nux::Color BackgroundColor();
+  virtual nux::Color BackgroundColor() const;
 
   virtual nux::Color GlowColor();
 

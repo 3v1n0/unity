@@ -106,7 +106,7 @@ void HudLauncherIcon::OnOverlayShown(GVariant* data, bool visible)
   }
 }
 
-nux::Color HudLauncherIcon::BackgroundColor()
+nux::Color HudLauncherIcon::BackgroundColor() const
 {
   return background_color_;
 }
