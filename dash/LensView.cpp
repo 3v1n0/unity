@@ -376,7 +376,7 @@ bool LensView::FixRenderering()
 
   dash::impl::UpdateDrawSeparators(groups);
 
-  fix_rendering_idle_ = nullptr;
+  fix_rendering_idle_.reset();
   return false;
 }
 

@@ -99,7 +99,7 @@ void UScreen::Changed(GdkScreen* screen)
 
   refresh_idle_.reset(new glib::Idle([&] () {
     Refresh();
-    refresh_idle_ = nullptr;
+    refresh_idle_.reset();
 
     return false;
   }));

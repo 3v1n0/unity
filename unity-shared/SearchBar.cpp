@@ -428,7 +428,7 @@ void SearchBar::OnClearClicked(int x, int y, unsigned long button_fags,
                                      unsigned long key_fags)
 {
   pango_entry_->SetText("");
-  start_spinner_timeout_ = nullptr;
+  start_spinner_timeout_.reset();
   live_search_reached.emit("");
 }
 
@@ -455,7 +455,7 @@ void SearchBar::ForceSearchChanged()
 void
 SearchBar::SearchFinished()
 {
-  start_spinner_timeout_ = nullptr;
+  start_spinner_timeout_.reset();
 
   bool is_empty = pango_entry_->im_active() ?
     false : pango_entry_->GetText() == "";
@@ -554,7 +554,7 @@ bool SearchBar::set_search_string(std::string const& string)
   spinner_->SetState(string == "" ? STATE_READY : STATE_CLEAR);
 
   // we don't want the spinner animating in this case
-  start_spinner_timeout_ = nullptr;
+  start_spinner_timeout_.reset();
 
   return true;
 }
