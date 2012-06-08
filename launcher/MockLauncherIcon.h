@@ -219,7 +219,7 @@ public:
     return type_;
   }
 
-  nux::Color BackgroundColor()
+  nux::Color BackgroundColor() const
   {
     return nux::Color(0xFFAAAAAA);
   }

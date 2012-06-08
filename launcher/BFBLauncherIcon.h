@@ -38,7 +38,7 @@ class BFBLauncherIcon : public SimpleLauncherIcon
 public:
   BFBLauncherIcon(LauncherHideMode hide_mode);
 
-  virtual nux::Color BackgroundColor();
+  virtual nux::Color BackgroundColor() const;
   virtual nux::Color GlowColor();
 
   void ActivateLauncherIcon(ActionArg arg);
