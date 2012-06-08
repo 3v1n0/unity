@@ -1646,7 +1646,7 @@ void PanelMenuView::UpdateShowNow(bool status)
 
   if (status && !_show_now_activated)
   {
-    glib::Source::Ptr timeout(new glib::Timeout(180));
+    auto timeout = std::make_shared<glib::Timeout>(180);
     _sources.Add(timeout, UPDATE_SHOW_NOW_TIMEOUT);
     timeout->Run(sigc::mem_fun(this, &PanelMenuView::UpdateShowNowWithDelay));
   }
