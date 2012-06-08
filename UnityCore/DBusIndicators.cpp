@@ -18,14 +18,15 @@
  *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
+#include <NuxCore/Logger.h>
+
 #include "config.h"
-#include "DBusIndicators.h"
-#include <iostream>
 
 #include "GLibWrapper.h"
 #include "GLibDBusProxy.h"
 #include "GLibSource.h"
 #include "Variant.h"
+#include "DBusIndicators.h"
 
 namespace unity
 {
@@ -34,6 +35,8 @@ namespace indicator
 
 namespace
 {
+nux::logging::Logger logger("unity.indicator.DBusIndicators");
+
 const std::string SERVICE_NAME("com.canonical.Unity.Panel.Service");
 const std::string SERVICE_PATH("/com/canonical/Unity/Panel/Service");
 const std::string SERVICE_IFACE("com.canonical.Unity.Panel.Service");
@@ -109,16 +112,15 @@ void DBusIndicators::Impl::CheckLocalService()
     // This is obviously hackish, but this part of the code is mostly hackish...
     // Let's attempt to run it from where we expect it to be
     std::string cmd = PREFIXDIR + std::string("/lib/unity/unity-panel-service");
-    std::cerr << "\nWARNING: Couldn't load panel from installed services, "
-              << "so trying to load panel from known location: "
-              << cmd << "\n";
+    LOG_WARN(logger) << "Couldn't load panel from installed services, "
+                     << "so trying to load panel from known location: " << cmd;
 
     g_spawn_command_line_async(cmd.c_str(), &error);
 
     if (error)
     {
-      std::cerr << "\nWARNING: Unable to launch remote service manually: "
-                << error.Message() << "\n";
+      LOG_ERROR(logger) << "Unable to launch remote service manually: "
+                        << error.Message();
     }
   }
 }
