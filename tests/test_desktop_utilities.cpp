@@ -16,7 +16,10 @@
  *
  * Authored by: Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  *              Tim Penhey <tim.penhey@canonical.com>
+ *              Andrea Azzarone <azzarone@gmail.com>
  */
+
+#include <config.h>
 
 #include <UnityCore/DesktopUtilities.h>
 
@@ -133,6 +136,27 @@ TEST(TestDesktopUtilitiesDataDirectories, TestGetDataDirectory)
   EXPECT_THAT(data_dirs[2], Eq("dir3"));
   EXPECT_THAT(data_dirs[3], Eq("dir4"));
   EXPECT_THAT(data_dirs[4], Eq("UnityUserConfig"));
+}
+
+TEST(TestDesktopUtilitiesDataDirectories, TestGetBackgroundColor)
+{
+  std::string const& color = DesktopUtilities::GetBackgroundColor(BUILDDIR"/tests/data/ubuntu-software-center.desktop");
+
+  EXPECT_EQ(color, "#aabbcc");
+}
+
+TEST(TestDesktopUtilitiesDataDirectories, TestGetBackgroundColorNoKey)
+{
+  std::string const& color = DesktopUtilities::GetBackgroundColor(BUILDDIR"/tests/data/update-manager.desktop");
+
+  EXPECT_TRUE(color.empty());
+}
+
+TEST(TestDesktopUtilitiesDataDirectories, TestGetBackgroundColorNoFile)
+{
+  std::string const& color = DesktopUtilities::GetBackgroundColor("hello-world.desktop");
+
+  EXPECT_TRUE(color.empty());
 }
 
 } // anonymous namespace
