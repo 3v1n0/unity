@@ -91,11 +91,9 @@ protected:
   nux::ObjectPtr<nux::BaseTexture> normal_cache_;
 private:
   //icon loading callbacks
-  void IconLoaded(std::string const& texid,
-                  unsigned size,
+  void IconLoaded(std::string const& texid, unsigned size,
                   glib::Object<GdkPixbuf> const& pixbuf,
-                  std::string icon_name,
-                  Result& row);
+                  std::string icon_name, Result& row);
   nux::BaseTexture* CreateTextureCallback(std::string const& texid,
                                           int width, int height,
                                           glib::Object<GdkPixbuf> const& pixbuf);
