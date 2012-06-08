@@ -90,6 +90,14 @@ TEST(TestGLibSource, Priority)
 
 TEST(TestGLibTimeout, Construction)
 {
+  Timeout timeout(1000, &OnSourceCallbackContinue);
+  EXPECT_NE(timeout.Id(), 0);
+  EXPECT_TRUE(timeout.IsRunning());
+  EXPECT_EQ(timeout.GetPriority(), Source::Priority::DEFAULT);
+}
+
+TEST(TestGLibTimeout, ConstructionEmptyCallback)
+{
   Timeout timeout(1000, Source::SourceCallback());
   EXPECT_NE(timeout.Id(), 0);
   EXPECT_TRUE(timeout.IsRunning());
@@ -158,6 +166,20 @@ TEST(TestGLibTimeout, MultipleShotsRun)
   int time_delta = unity::TimeUtil::TimeDelta(&post, &pre);
   EXPECT_GE(time_delta, 600);
   EXPECT_LT(time_delta, 700);
+}
+
+TEST(TestGLibTimeout, OneShotRunWithEmptyCallback)
+{
+  struct timespec pre, post;
+  Timeout timeout(100, Source::SourceCallback());
+  clock_gettime(CLOCK_MONOTONIC, &pre);
+  timeout.removed.connect([&] (unsigned int id) { clock_gettime(CLOCK_MONOTONIC, &post); });
+
+  Utils::WaitForTimeoutMSec(500);
+  EXPECT_FALSE(timeout.IsRunning());
+  int time_delta = unity::TimeUtil::TimeDelta(&post, &pre);
+  EXPECT_GE(time_delta, 100);
+  EXPECT_LT(time_delta, 110);
 }
 
 TEST(TestGLibTimeout, Removal)

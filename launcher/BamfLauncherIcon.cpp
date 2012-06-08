@@ -42,6 +42,13 @@ namespace unity
 {
 namespace launcher
 {
+namespace
+{
+  // We use the "bamf-" prefix since the manager is protected, to avoid name clash
+  const std::string WINDOW_MOVE_TIMEOUT = "bamf-window-move";
+  const std::string ICON_REMOVE_TIMEOUT = "bamf-icon-remove";
+  //const std::string ICON_DND_OVER_TIMEOUT = "bamf-icon-dnd-over";
+}
 
 NUX_IMPLEMENT_OBJECT_TYPE(BamfLauncherIcon);
 
@@ -102,7 +109,7 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
                             {
                               EnsureWindowState();
                               UpdateIconGeometries(GetCenters());
-                              _source_manager.Remove("bamf-icon-remove");
+                              _source_manager.Remove(ICON_REMOVE_TIMEOUT);
                             }
                           });
   _gsignals.Add(sig);
@@ -127,7 +134,7 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
                                * the launcher while the splash is closed and
                                * a new window is opened. */
                               auto timeout = std::make_shared<glib::Timeout>(1000);
-                              _source_manager.Add(timeout, "bamf-icon-remove");
+                              _source_manager.Add(timeout, ICON_REMOVE_TIMEOUT);
                               timeout->Run([&] { Remove(); return false; });
                             }
                           });
@@ -439,7 +446,7 @@ void BamfLauncherIcon::OnWindowMoved(guint32 moved_win)
     return;
 
   auto timeout = std::make_shared<glib::Timeout>(250);
-  _source_manager.Add(timeout, "bamf-window-move");
+  _source_manager.Add(timeout, WINDOW_MOVE_TIMEOUT);
 
   timeout->Run([&] {
     EnsureWindowState();
@@ -1122,7 +1129,7 @@ void BamfLauncherIcon::OnDndEnter()
 {
   /* Disabled, since the DND code is currently disabled as well.
   auto timeout = std::make_shared<glib::Timeout>(1000);
-  _source_manager.Add(timeout, "bamf-icon-dnd-over");
+  _source_manager.Add(timeout, ICON_DND_OVER_TIMEOUT);
   timeout->Run([&] { OnDndHovered(); return false; });
   */
 }
@@ -1130,7 +1137,7 @@ void BamfLauncherIcon::OnDndEnter()
 void BamfLauncherIcon::OnDndLeave()
 {
   /* Disabled, since the DND code is currently disabled as well.
-  _source_manager.Remove("bamf-icon-dnd-over");
+  _source_manager.Remove(ICON_DND_OVER_TIMEOUT);
   */
 }
 

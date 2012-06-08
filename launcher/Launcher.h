@@ -305,6 +305,7 @@ private:
 
   void DndReset();
   void DndHoveredIconReset();
+  void DndTimeoutSetup();
 
   LauncherModel::Ptr _model;
   nux::BaseWindow* _parent;

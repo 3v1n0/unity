@@ -88,6 +88,12 @@ const int START_DRAGICON_DURATION = 250;
 
 const int MOUSE_DEADZONE = 15;
 const float DRAG_OUT_PIXELS = 300.0f;
+
+const std::string DND_CHECK_TIMEOUT = "dnd-check-timeout";
+const std::string STRUT_HACK_TIMEOUT = "strut-hack-timeout";
+const std::string START_DRAGICON_TIMEOUT = "start-dragicon-timeout";
+const std::string SCROLL_TIMEOUT = "scroll-timeout";
+const std::string ANIMATION_IDLE = "animation-idle";
 }
 
 
@@ -216,20 +222,17 @@ Launcher::Launcher(nux::BaseWindow* parent,
 }
 
 /* Introspection */
-std::string
-Launcher::GetName() const
+std::string Launcher::GetName() const
 {
   return "Launcher";
 }
 
-void
-Launcher::OnDisplayChanged(Display* display)
+void Launcher::OnDisplayChanged(Display* display)
 {
   _collection_window->display = display;
 }
 
-void
-Launcher::OnDragStart(GeisAdapter::GeisDragData* data)
+void Launcher::OnDragStart(GeisAdapter::GeisDragData* data)
 {
   if (_drag_out_id && _drag_out_id == data->id)
     return;
@@ -249,8 +252,7 @@ Launcher::OnDragStart(GeisAdapter::GeisDragData* data)
   }
 }
 
-void
-Launcher::OnDragUpdate(GeisAdapter::GeisDragData* data)
+void Launcher::OnDragUpdate(GeisAdapter::GeisDragData* data)
 {
   if (data->id == _drag_out_id)
   {
@@ -259,8 +261,7 @@ Launcher::OnDragUpdate(GeisAdapter::GeisDragData* data)
   }
 }
 
-void
-Launcher::OnDragFinish(GeisAdapter::GeisDragData* data)
+void Launcher::OnDragFinish(GeisAdapter::GeisDragData* data)
 {
   if (data->id == _drag_out_id)
   {
@@ -272,8 +273,7 @@ Launcher::OnDragFinish(GeisAdapter::GeisDragData* data)
   }
 }
 
-void
-Launcher::AddProperties(GVariantBuilder* builder)
+void Launcher::AddProperties(GVariantBuilder* builder)
 {
   timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
@@ -1340,20 +1340,17 @@ void Launcher::SetHidden(bool hidden)
   hidden_changed.emit();
 }
 
-int
-Launcher::GetMouseX() const
+int Launcher::GetMouseX() const
 {
   return _mouse_position.x;
 }
 
-int
-Launcher::GetMouseY() const
+int Launcher::GetMouseY() const
 {
   return _mouse_position.y;
 }
 
-bool
-Launcher::OnUpdateDragManagerTimeout()
+bool Launcher::OnUpdateDragManagerTimeout()
 {
   if (display() == 0)
     return false;
@@ -1394,41 +1391,38 @@ Launcher::OnUpdateDragManagerTimeout()
   return false;
 }
 
-void
-Launcher::OnWindowMapped(guint32 xid)
+void Launcher::DndTimeoutSetup()
+{
+  if (sources_.GetSource(DND_CHECK_TIMEOUT))
+    return;
+
+  auto timeout = std::make_shared<glib::Timeout>(200);
+  sources_.Add(timeout, DND_CHECK_TIMEOUT);
+  timeout->Run(sigc::mem_fun(this, &Launcher::OnUpdateDragManagerTimeout));
+}
+
+void Launcher::OnWindowMapped(guint32 xid)
 {
   //CompWindow* window = _screen->findWindow(xid);
   //if (window && window->type() | CompWindowTypeDndMask)
   //{
-    if (!sources_.GetSource("dnd-check"))
-    {
-      auto timeout = std::make_shared<glib::Timeout>(200);
-      sources_.Add(timeout, "dnd-check");
-      timeout->Run(sigc::mem_fun(this, &Launcher::OnUpdateDragManagerTimeout));
-    }
+    DndTimeoutSetup();
   //}
 
   if (GetActionState() != ACTION_NONE)
     ResetMouseDragState();
 }
 
-void
-Launcher::OnWindowUnmapped(guint32 xid)
+void Launcher::OnWindowUnmapped(guint32 xid)
 {
   //CompWindow* window = _screen->findWindow(xid);
   //if (window && window->type() | CompWindowTypeDndMask)
   //{
-    if (!sources_.GetSource("dnd-check"))
-    {
-      auto timeout = std::make_shared<glib::Timeout>(200);
-      sources_.Add(timeout, "dnd-check");
-      timeout->Run(sigc::mem_fun(this, &Launcher::OnUpdateDragManagerTimeout));
-    }
+    DndTimeoutSetup();
   //}
 }
 
-void
-Launcher::OnPluginStateChanged()
+void Launcher::OnPluginStateChanged()
 {
   _hide_machine.SetQuirk (LauncherHideMachine::EXPO_ACTIVE, WindowManager::Default ()->IsExpoActive ());
   _hide_machine.SetQuirk (LauncherHideMachine::SCALE_ACTIVE, WindowManager::Default ()->IsScaleActive ());
@@ -1452,22 +1446,19 @@ bool Launcher::StrutHack()
   return false;
 }
 
-void
-Launcher::OnOptionsChanged(Options::Ptr options)
+void Launcher::OnOptionsChanged(Options::Ptr options)
 {
    UpdateOptions(options);
 
    options->option_changed.connect(sigc::mem_fun(this, &Launcher::OnOptionChanged));
 }
 
-void
-Launcher::OnOptionChanged()
+void Launcher::OnOptionChanged()
 {
   UpdateOptions(options());
 }
 
-void
-Launcher::UpdateOptions(Options::Ptr options)
+void Launcher::UpdateOptions(Options::Ptr options)
 {
   SetHideMode(options->hide_mode);
   SetIconSize(options->tile_size, options->icon_size);
@@ -1497,10 +1488,10 @@ void Launcher::SetHideMode(LauncherHideMode hidemode)
   {
     _parent->EnableInputWindow(true, "launcher", false, false);
 
-    if (!sources_.GetSource("strut-hack-timeout"))
+    if (!sources_.GetSource(STRUT_HACK_TIMEOUT))
     {
       auto timeout = std::make_shared<glib::Timeout>(1000, sigc::mem_fun(this, &Launcher::StrutHack));
-      sources_.Add(timeout, "strut-hack-timeout");
+      sources_.Add(timeout, STRUT_HACK_TIMEOUT);
     }
 
     _parent->InputWindowEnableStruts(true);
@@ -1527,8 +1518,7 @@ bool Launcher::IsBackLightModeToggles() const
   }
 }
 
-void
-Launcher::SetActionState(LauncherActionState actionstate)
+void Launcher::SetActionState(LauncherActionState actionstate)
 {
   if (_launcher_action_state == actionstate)
     return;
@@ -1642,14 +1632,14 @@ void Launcher::EnsureScrollTimer()
 {
   bool needed = MouseOverTopScrollArea() || MouseOverBottomScrollArea();
 
-  if (needed && !sources_.GetSource("scroll-timeout"))
+  if (needed && !sources_.GetSource(SCROLL_TIMEOUT))
   {
     auto timeout = std::make_shared<glib::Timeout>(20, sigc::mem_fun(this, &Launcher::OnScrollTimeout));
-    sources_.Add(timeout, "scroll-timeout");
+    sources_.Add(timeout, SCROLL_TIMEOUT);
   }
   else if (!needed)
   {
-    sources_.Remove("scroll-timeout");
+    sources_.Remove(SCROLL_TIMEOUT);
   }
 }
 
@@ -1784,7 +1774,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   if (AnimationInProgress())
   {
     auto idle = std::make_shared<glib::Idle>(glib::Source::Priority::DEFAULT);
-    sources_.Add(idle, "animation-idle");
+    sources_.Add(idle, ANIMATION_IDLE);
     idle->Run([&]() {
       EnsureAnimation();
       return false;
@@ -2417,7 +2407,7 @@ void Launcher::MouseDownLogic(int x, int y, unsigned long button_flags, unsigned
     _icon_mouse_down = launcher_icon;
     // if MouseUp after the time ended -> it's an icon drag, otherwise, it's starting an app
     auto timeout = std::make_shared<glib::Timeout>(START_DRAGICON_DURATION);
-    sources_.Add(timeout, "start-dragicon-timeout");
+    sources_.Add(timeout, START_DRAGICON_TIMEOUT);
     timeout->Run(sigc::mem_fun(this, &Launcher::StartIconDragTimeout));
 
     launcher_icon->mouse_down.emit(nux::GetEventButton(button_flags), monitor, key_flags);
@@ -2430,7 +2420,7 @@ void Launcher::MouseUpLogic(int x, int y, unsigned long button_flags, unsigned l
 
   launcher_icon = MouseIconIntersection(_mouse_position.x, _mouse_position.y);
 
-  sources_.Remove("start-dragicon-timeout");
+  sources_.Remove(START_DRAGICON_TIMEOUT);
 
   if (_icon_mouse_down && (_icon_mouse_down == launcher_icon))
   {
@@ -2482,8 +2472,7 @@ AbstractLauncherIcon::Ptr Launcher::MouseIconIntersection(int x, int y)
   return AbstractLauncherIcon::Ptr();
 }
 
-void
-Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherIcon::Ptr icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
+void Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherIcon::Ptr icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
 {
   RenderArg arg;
   struct timespec current;
@@ -2508,8 +2497,7 @@ Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherI
   RestoreSystemRenderTarget();
 }
 
-void
-Launcher::SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
+void Launcher::SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
 {
   int width = texture->GetWidth();
   int height = texture->GetHeight();
@@ -2527,8 +2515,7 @@ Launcher::SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> textu
   graphics_engine->EmptyClippingRegion();
 }
 
-void
-Launcher::RestoreSystemRenderTarget()
+void Launcher::RestoreSystemRenderTarget()
 {
   nux::GetWindowCompositor().RestoreRenderingSurface();
 }
@@ -2581,8 +2568,7 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
   }
 }
 
-void
-Launcher::ProcessDndEnter()
+void Launcher::ProcessDndEnter()
 {
   SetStateMouseOverLauncher(true);
 
@@ -2594,8 +2580,7 @@ Launcher::ProcessDndEnter()
   _dnd_hovered_icon = nullptr;
 }
 
-void
-Launcher::DndReset()
+void Launcher::DndReset()
 {
   _dnd_data.Reset();
 
@@ -2626,16 +2611,14 @@ void Launcher::DndHoveredIconReset()
   _dnd_hovered_icon = nullptr;
 }
 
-void
-Launcher::ProcessDndLeave()
+void Launcher::ProcessDndLeave()
 {
   SetStateMouseOverLauncher(false);
 
   DndHoveredIconReset();
 }
 
-void
-Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
+void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
 {
   nux::Area* parent = GetToplevel();
   unity::glib::String uri_list_const(g_strdup("text/uri-list"));
@@ -2769,8 +2752,7 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
   SendDndStatus(accept, _drag_action, nux::Geometry(x, y, 1, 1));
 }
 
-void
-Launcher::ProcessDndDrop(int x, int y)
+void Launcher::ProcessDndDrop(int x, int y)
 {
   if (_steal_drag)
   {
@@ -2817,8 +2799,7 @@ Launcher::ProcessDndDrop(int x, int y)
  * Returns the current selected icon if it is in keynavmode
  * It will return NULL if it is not on keynavmode
  */
-AbstractLauncherIcon::Ptr
-Launcher::GetSelectedMenuIcon() const
+AbstractLauncherIcon::Ptr Launcher::GetSelectedMenuIcon() const
 {
   if (!IsInKeyNavMode())
     return AbstractLauncherIcon::Ptr();
@@ -2828,8 +2809,7 @@ Launcher::GetSelectedMenuIcon() const
 //
 // Key navigation
 //
-bool
-Launcher::InspectKeyEvent(unsigned int eventType,
+bool Launcher::InspectKeyEvent(unsigned int eventType,
                           unsigned int keysym,
                           const char* character)
 {
