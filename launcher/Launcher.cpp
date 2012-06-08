@@ -1464,18 +1464,23 @@ Launcher::OnUpdateDragManagerTimeout()
   return false;
 }
 
+void Launcher::DndTimeoutSetup()
+{
+  if (sources_.GetSource(DND_CHECK_TIMEOUT))
+    return;
+
+  auto timeout = std::make_shared<glib::Timeout>(200);
+  sources_.Add(timeout, DND_CHECK_TIMEOUT);
+  timeout->Run(sigc::mem_fun(this, &Launcher::OnUpdateDragManagerTimeout));
+}
+
 void
 Launcher::OnWindowMapped(guint32 xid)
 {
   //CompWindow* window = _screen->findWindow(xid);
   //if (window && window->type() | CompWindowTypeDndMask)
   //{
-    if (!sources_.GetSource(DND_CHECK_TIMEOUT))
-    {
-      auto timeout = std::make_shared<glib::Timeout>(200);
-      sources_.Add(timeout, DND_CHECK_TIMEOUT);
-      timeout->Run(sigc::mem_fun(this, &Launcher::OnUpdateDragManagerTimeout));
-    }
+    DndTimeoutSetup();
   //}
 
   if (GetActionState() != ACTION_NONE)
@@ -1488,12 +1493,7 @@ Launcher::OnWindowUnmapped(guint32 xid)
   //CompWindow* window = _screen->findWindow(xid);
   //if (window && window->type() | CompWindowTypeDndMask)
   //{
-    if (!sources_.GetSource(DND_CHECK_TIMEOUT))
-    {
-      auto timeout = std::make_shared<glib::Timeout>(200);
-      sources_.Add(timeout, DND_CHECK_TIMEOUT);
-      timeout->Run(sigc::mem_fun(this, &Launcher::OnUpdateDragManagerTimeout));
-    }
+    DndTimeoutSetup();
   //}
 }
 

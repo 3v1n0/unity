@@ -308,6 +308,7 @@ private:
 
   void DndReset();
   void DndHoveredIconReset();
+  void DndTimeoutSetup();
 
   nux::HLayout* m_Layout;
 
