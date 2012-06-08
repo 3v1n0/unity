@@ -914,7 +914,7 @@ bool PanelMenuView::OnNewAppShow()
     _new_app_menu_shown = false;
   }
 
-  auto timeout = std::make_shared<glib::Timeout>(_menus_discovery * 1000);
+  auto timeout = std::make_shared<glib::TimeoutSeconds>(_menus_discovery);
   _sources.Add(timeout, NEW_APP_HIDE_TIMEOUT);
   timeout->Run(sigc::mem_fun(this, &PanelMenuView::OnNewAppHide));
 

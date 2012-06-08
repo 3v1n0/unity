@@ -35,7 +35,7 @@ namespace dash
 namespace
 {
 nux::logging::Logger logger("unity.dash.controller");
-const unsigned int PRELOAD_TIMEOUT_LENGTH = 40 * 1000;
+const unsigned int PRELOAD_TIMEOUT_LENGTH = 40;
 }
 
 Controller::Controller()

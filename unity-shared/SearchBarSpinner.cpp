@@ -159,7 +159,7 @@ SearchBarSpinner::SetState(SpinnerState state)
 
   if (_state == STATE_SEARCHING)
   {
-    _spinner_timeout.reset(new glib::Timeout(5 * 1000, [&] () {
+    _spinner_timeout.reset(new glib::TimeoutSeconds(5, [&] {
       _state = STATE_READY;
       return false;
     }));
