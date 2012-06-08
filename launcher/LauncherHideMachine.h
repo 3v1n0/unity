@@ -20,6 +20,11 @@
 #ifndef LAUNCHERHIDEMACHINE
 #define LAUNCHERHIDEMACHINE
 
+#include <sigc++/sigc++.h>
+#include <glib.h>
+#include <string>
+#include <UnityCore/GLibSource.h>
+
 #include "Decaymulator.h"
 
 namespace unity

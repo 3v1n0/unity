@@ -65,7 +65,7 @@ unsigned int Animator::GetDuration() const
 
 bool Animator::IsRunning() const
 {
-  return (timeout_ != nullptr);
+  return bool(timeout_);
 }
 
 double Animator::GetProgress() const
@@ -98,7 +98,7 @@ void Animator::Stop()
 {
   if (timeout_)
   {
-    timeout_ = nullptr;
+    timeout_.reset();
     animation_updated.emit(progress_);
     animation_ended.emit();
     animation_stopped.emit(progress_);
@@ -126,7 +126,7 @@ bool Animator::DoStep()
     animation_updated.emit(1.0f);
     animation_ended.emit();
     one_time_duration_ = 0;
-    timeout_ = nullptr;
+    timeout_.reset();
 
     return false;
   }

@@ -31,10 +31,10 @@ namespace unity
 {
 
 BGHash::BGHash()
-  : transition_animator_(500),
-    current_color_(unity::colors::Aubergine),
-    new_color_(unity::colors::Aubergine),
-    old_color_(unity::colors::Aubergine)
+  : transition_animator_(500)
+  , current_color_(unity::colors::Aubergine)
+  , new_color_(unity::colors::Aubergine)
+  , old_color_(unity::colors::Aubergine)
 {
   override_color_.alpha = 0.0f;
 
@@ -111,10 +111,7 @@ nux::Color BGHash::InterpolateColor(nux::Color const& colora, nux::Color const& 
 void BGHash::TransitionToNewColor(nux::color::Color const& new_color)
 {
   if (new_color == current_color_)
-  {
-    LOG_DEBUG(logger) << "rejecting colour";
     return;
-  }
 
   LOG_DEBUG(logger) << "transitioning from: " << current_color_.red << " to " << new_color.red;
 

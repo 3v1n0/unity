@@ -505,7 +505,7 @@ void DashView::OnLensBarActivated(std::string const& id)
 
   search_bar_->text_entry()->SelectAll();
   search_bar_->can_refine_search = view->can_refine_search();
-  hide_message_delay_ = nullptr;
+  hide_message_delay_.reset();
 
   view->QueueDraw();
   QueueDraw();
@@ -513,7 +513,7 @@ void DashView::OnLensBarActivated(std::string const& id)
 
 void DashView::OnSearchFinished(Lens::Hints const& hints)
 {
-  hide_message_delay_ = nullptr;
+  hide_message_delay_.reset();
 
   if (active_lens_view_ == NULL) return;
 

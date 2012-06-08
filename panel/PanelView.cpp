@@ -566,7 +566,7 @@ void PanelView::OnEntryActivated(std::string const& entry_id, nux::Rect const& g
   }
   else if (!active)
   {
-    _track_menu_pointer_timeout = nullptr;
+    _track_menu_pointer_timeout.reset();
     _menu_view->NotifyAllMenusClosed();
     _tracked_pointer_pos = {-1, -1};
   }
