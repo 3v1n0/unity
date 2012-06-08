@@ -143,7 +143,7 @@ bool PointerBarrierWrapper::HandleEvent(XEvent xevent)
         {
           EmitCurrentData();
 
-          smoothing_timeout_ = nullptr;
+          smoothing_timeout_.reset();
           return false;
         };
 

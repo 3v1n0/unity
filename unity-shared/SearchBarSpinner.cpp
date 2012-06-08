@@ -142,7 +142,7 @@ SearchBarSpinner::OnFrameTimeout()
   _2d_rotate.Rotate_z(_rotation);
   QueueDraw();
 
-  _frame_timeout = nullptr;
+  _frame_timeout.reset();
   return false;
 }
 
@@ -153,7 +153,7 @@ SearchBarSpinner::SetState(SpinnerState state)
     return;
 
   _state = state;
-  _spinner_timeout = nullptr;
+  _spinner_timeout.reset();
   _2d_rotate.Rotate_z(0.0f);
   _rotation = 0.0f;
 

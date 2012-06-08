@@ -524,7 +524,7 @@ bool IconLoader::Impl::CoalesceTasksCb()
   }
 
   finished_tasks_.clear();
-  coalesce_timeout_ = nullptr;
+  coalesce_timeout_.reset();
 
   return false;
 }
@@ -560,7 +560,7 @@ bool IconLoader::Impl::Iteration()
     if (task_map_.empty())
       handle_counter_ = 0;
 
-    idle_ = nullptr;
+    idle_.reset();
   }
 
   return !queue_empty;

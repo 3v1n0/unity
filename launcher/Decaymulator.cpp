@@ -42,7 +42,7 @@ bool Decaymulator::OnDecayTimeout()
   if (value <= partial_decay)
   {
     value = 0;
-    decay_timer_ = nullptr;
+    decay_timer_.reset();
     return false;
   }
 

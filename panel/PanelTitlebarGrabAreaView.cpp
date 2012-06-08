@@ -109,7 +109,7 @@ void PanelTitlebarGrabArea::OnMouseDown(int x, int y, unsigned long button_flags
         grab_started_ = true;
       }
 
-      mouse_down_timer_ = nullptr;
+      mouse_down_timer_.reset();
       return false;
     });
   }
@@ -123,7 +123,7 @@ void PanelTitlebarGrabArea::OnMouseUp(int x, int y, unsigned long button_flags, 
   {
     if (mouse_down_timer_)
     {
-      mouse_down_timer_ = nullptr;
+      mouse_down_timer_.reset();
       activate_request.emit(x, y);
     }
 
@@ -152,7 +152,7 @@ void PanelTitlebarGrabArea::OnGrabMove(int x, int y, int, int, unsigned long but
       return;
     }
 
-    mouse_down_timer_ = nullptr;
+    mouse_down_timer_.reset();
   }
 
   if (!grab_started_)

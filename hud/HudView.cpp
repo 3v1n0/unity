@@ -477,7 +477,7 @@ void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   {
     timeline_idle_.reset(new glib::Idle([&] () {
       QueueDraw();
-      timeline_idle_ = nullptr;
+      timeline_idle_.reset();
       return false;
     }));
   }

@@ -46,7 +46,7 @@ LauncherDragWindow::~LauncherDragWindow()
 
 bool LauncherDragWindow::Animating()
 {
-  return (animation_timer_ != nullptr);
+  return bool(animation_timer_);
 }
 
 void LauncherDragWindow::SetAnimationTarget(int x, int y)
@@ -87,7 +87,7 @@ bool LauncherDragWindow::OnAnimationTimeout()
   if (new_geo.x == target_x && new_geo.y == target_y)
   {
     anim_completed.emit();
-    animation_timer_ = nullptr;
+    animation_timer_.reset();
 
     return false;
   }

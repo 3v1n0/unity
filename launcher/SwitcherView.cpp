@@ -628,7 +628,7 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
     redraw_idle_.reset(new glib::Idle([&] () {
       QueueDraw();
       animation_draw_ = true;
-      redraw_idle_ = nullptr;
+      redraw_idle_.reset();
       return false;
     }, glib::Source::Priority::DEFAULT));
   }

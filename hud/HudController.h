@@ -29,9 +29,9 @@
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 
-#include "HudView.h"
-#include "unity-shared/UBusWrapper.h"
 #include "unity-shared/Animator.h"
+#include "unity-shared/UBusWrapper.h"
+#include "HudView.h"
 
 namespace unity
 {
