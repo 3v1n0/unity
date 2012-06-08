@@ -222,20 +222,17 @@ Launcher::Launcher(nux::BaseWindow* parent,
 }
 
 /* Introspection */
-std::string
-Launcher::GetName() const
+std::string Launcher::GetName() const
 {
   return "Launcher";
 }
 
-void
-Launcher::OnDisplayChanged(Display* display)
+void Launcher::OnDisplayChanged(Display* display)
 {
   _collection_window->display = display;
 }
 
-void
-Launcher::OnDragStart(GeisAdapter::GeisDragData* data)
+void Launcher::OnDragStart(GeisAdapter::GeisDragData* data)
 {
   if (_drag_out_id && _drag_out_id == data->id)
     return;
@@ -255,8 +252,7 @@ Launcher::OnDragStart(GeisAdapter::GeisDragData* data)
   }
 }
 
-void
-Launcher::OnDragUpdate(GeisAdapter::GeisDragData* data)
+void Launcher::OnDragUpdate(GeisAdapter::GeisDragData* data)
 {
   if (data->id == _drag_out_id)
   {
@@ -265,8 +261,7 @@ Launcher::OnDragUpdate(GeisAdapter::GeisDragData* data)
   }
 }
 
-void
-Launcher::OnDragFinish(GeisAdapter::GeisDragData* data)
+void Launcher::OnDragFinish(GeisAdapter::GeisDragData* data)
 {
   if (data->id == _drag_out_id)
   {
@@ -278,8 +273,7 @@ Launcher::OnDragFinish(GeisAdapter::GeisDragData* data)
   }
 }
 
-void
-Launcher::AddProperties(GVariantBuilder* builder)
+void Launcher::AddProperties(GVariantBuilder* builder)
 {
   timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
@@ -1346,20 +1340,17 @@ void Launcher::SetHidden(bool hidden)
   hidden_changed.emit();
 }
 
-int
-Launcher::GetMouseX() const
+int Launcher::GetMouseX() const
 {
   return _mouse_position.x;
 }
 
-int
-Launcher::GetMouseY() const
+int Launcher::GetMouseY() const
 {
   return _mouse_position.y;
 }
 
-bool
-Launcher::OnUpdateDragManagerTimeout()
+bool Launcher::OnUpdateDragManagerTimeout()
 {
   if (display() == 0)
     return false;
@@ -1410,8 +1401,7 @@ void Launcher::DndTimeoutSetup()
   timeout->Run(sigc::mem_fun(this, &Launcher::OnUpdateDragManagerTimeout));
 }
 
-void
-Launcher::OnWindowMapped(guint32 xid)
+void Launcher::OnWindowMapped(guint32 xid)
 {
   //CompWindow* window = _screen->findWindow(xid);
   //if (window && window->type() | CompWindowTypeDndMask)
@@ -1423,8 +1413,7 @@ Launcher::OnWindowMapped(guint32 xid)
     ResetMouseDragState();
 }
 
-void
-Launcher::OnWindowUnmapped(guint32 xid)
+void Launcher::OnWindowUnmapped(guint32 xid)
 {
   //CompWindow* window = _screen->findWindow(xid);
   //if (window && window->type() | CompWindowTypeDndMask)
@@ -1433,8 +1422,7 @@ Launcher::OnWindowUnmapped(guint32 xid)
   //}
 }
 
-void
-Launcher::OnPluginStateChanged()
+void Launcher::OnPluginStateChanged()
 {
   _hide_machine.SetQuirk (LauncherHideMachine::EXPO_ACTIVE, WindowManager::Default ()->IsExpoActive ());
   _hide_machine.SetQuirk (LauncherHideMachine::SCALE_ACTIVE, WindowManager::Default ()->IsScaleActive ());
@@ -1458,22 +1446,19 @@ bool Launcher::StrutHack()
   return false;
 }
 
-void
-Launcher::OnOptionsChanged(Options::Ptr options)
+void Launcher::OnOptionsChanged(Options::Ptr options)
 {
    UpdateOptions(options);
 
    options->option_changed.connect(sigc::mem_fun(this, &Launcher::OnOptionChanged));
 }
 
-void
-Launcher::OnOptionChanged()
+void Launcher::OnOptionChanged()
 {
   UpdateOptions(options());
 }
 
-void
-Launcher::UpdateOptions(Options::Ptr options)
+void Launcher::UpdateOptions(Options::Ptr options)
 {
   SetHideMode(options->hide_mode);
   SetIconSize(options->tile_size, options->icon_size);
@@ -1533,8 +1518,7 @@ bool Launcher::IsBackLightModeToggles() const
   }
 }
 
-void
-Launcher::SetActionState(LauncherActionState actionstate)
+void Launcher::SetActionState(LauncherActionState actionstate)
 {
   if (_launcher_action_state == actionstate)
     return;
@@ -2488,8 +2472,7 @@ AbstractLauncherIcon::Ptr Launcher::MouseIconIntersection(int x, int y)
   return AbstractLauncherIcon::Ptr();
 }
 
-void
-Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherIcon::Ptr icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
+void Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherIcon::Ptr icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
 {
   RenderArg arg;
   struct timespec current;
@@ -2514,8 +2497,7 @@ Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherI
   RestoreSystemRenderTarget();
 }
 
-void
-Launcher::SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
+void Launcher::SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
 {
   int width = texture->GetWidth();
   int height = texture->GetHeight();
@@ -2533,8 +2515,7 @@ Launcher::SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> textu
   graphics_engine->EmptyClippingRegion();
 }
 
-void
-Launcher::RestoreSystemRenderTarget()
+void Launcher::RestoreSystemRenderTarget()
 {
   nux::GetWindowCompositor().RestoreRenderingSurface();
 }
@@ -2587,8 +2568,7 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
   }
 }
 
-void
-Launcher::ProcessDndEnter()
+void Launcher::ProcessDndEnter()
 {
   SetStateMouseOverLauncher(true);
 
@@ -2600,8 +2580,7 @@ Launcher::ProcessDndEnter()
   _dnd_hovered_icon = nullptr;
 }
 
-void
-Launcher::DndReset()
+void Launcher::DndReset()
 {
   _dnd_data.Reset();
 
@@ -2632,16 +2611,14 @@ void Launcher::DndHoveredIconReset()
   _dnd_hovered_icon = nullptr;
 }
 
-void
-Launcher::ProcessDndLeave()
+void Launcher::ProcessDndLeave()
 {
   SetStateMouseOverLauncher(false);
 
   DndHoveredIconReset();
 }
 
-void
-Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
+void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
 {
   nux::Area* parent = GetToplevel();
   unity::glib::String uri_list_const(g_strdup("text/uri-list"));
@@ -2775,8 +2752,7 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
   SendDndStatus(accept, _drag_action, nux::Geometry(x, y, 1, 1));
 }
 
-void
-Launcher::ProcessDndDrop(int x, int y)
+void Launcher::ProcessDndDrop(int x, int y)
 {
   if (_steal_drag)
   {
@@ -2823,8 +2799,7 @@ Launcher::ProcessDndDrop(int x, int y)
  * Returns the current selected icon if it is in keynavmode
  * It will return NULL if it is not on keynavmode
  */
-AbstractLauncherIcon::Ptr
-Launcher::GetSelectedMenuIcon() const
+AbstractLauncherIcon::Ptr Launcher::GetSelectedMenuIcon() const
 {
   if (!IsInKeyNavMode())
     return AbstractLauncherIcon::Ptr();
@@ -2834,8 +2809,7 @@ Launcher::GetSelectedMenuIcon() const
 //
 // Key navigation
 //
-bool
-Launcher::InspectKeyEvent(unsigned int eventType,
+bool Launcher::InspectKeyEvent(unsigned int eventType,
                           unsigned int keysym,
                           const char* character)
 {
