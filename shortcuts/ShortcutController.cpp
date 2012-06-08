@@ -180,7 +180,7 @@ void Controller::Hide()
     return;
 
   visible_ = false;
-  show_timer_ = nullptr;
+  show_timer_.reset();
 
   if (view_window_)
   {

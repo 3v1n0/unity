@@ -909,7 +909,7 @@ bool PanelMenuView::OnNewAppShow()
     _new_app_menu_shown = false;
   }
 
-  glib::Source::Ptr timeout(new glib::Timeout(_menus_discovery * 1000));
+  auto timeout = std::make_shared<glib::Timeout>(_menus_discovery * 1000);
   _sources.Add(timeout, "new-app-hide-timeout");
   timeout->Run(sigc::mem_fun(this, &PanelMenuView::OnNewAppHide));
 
@@ -995,7 +995,7 @@ void PanelMenuView::OnActiveAppChanged(BamfMatcher *matcher,
          * menus and to show the menus only when an application has been
          * kept active for some time */
 
-        glib::Source::Ptr timeout(new glib::Timeout(300));
+        auto timeout = std::make_shared<glib::Timeout>(300);
         _sources.Add(timeout, "new-app-show-timeout");
         timeout->Run(sigc::mem_fun(this, &PanelMenuView::OnNewAppShow));
       }
@@ -1258,7 +1258,7 @@ void PanelMenuView::OnWindowMoved(guint xid)
       timeout_length = 60;
     }
 
-    glib::Source::Ptr timeout(new glib::Timeout(timeout_length));
+    auto timeout = std::make_shared<glib::Timeout>(timeout_length);
     _sources.Add(timeout, "active-move-timeout");
     timeout->Run(sigc::mem_fun(this, &PanelMenuView::UpdateActiveWindowPosition));
   }

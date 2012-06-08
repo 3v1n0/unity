@@ -396,9 +396,8 @@ void Controller::StartShowHideTimeline()
 {
   EnsureHud();
 
-  timeline_animator_.Stop();
-
   double current_opacity = window_->GetOpacity();
+  timeline_animator_.Stop();
   timeline_animator_.Start(visible_ ? current_opacity : 1.0f - current_opacity);
 }
 
@@ -408,8 +407,6 @@ void Controller::OnViewShowHideFrame(double progress)
 
   if (progress == 1.0f)
   {
-    window_->SetOpacity(visible_ ? 1.0f : 0.0f);
-
     if (!visible_)
     {
       window_->ShowWindow(false);

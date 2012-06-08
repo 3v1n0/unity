@@ -119,7 +119,7 @@ void ResultViewGrid::QueueViewChanged()
       last_lazy_loaded_result_ = 0; // reset the lazy load index
       DoLazyLoad(); // also calls QueueDraw
 
-      view_changed_idle_ = nullptr;
+      view_changed_idle_.reset();
       return false;
     });
   }

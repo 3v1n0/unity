@@ -30,7 +30,7 @@ namespace launcher
 namespace
 {
 nux::logging::Logger logger("unity.launcher");
-unsigned const int HIDE_DELAY_TIMEOUT_LENGTH = 750;
+const unsigned int HIDE_DELAY_TIMEOUT_LENGTH = 750;
 }
 
 LauncherHideMachine::LauncherHideMachine()

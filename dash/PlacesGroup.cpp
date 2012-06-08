@@ -354,7 +354,7 @@ PlacesGroup::OnIdleRelayout()
     _group_layout->QueueDraw();
     GetChildView()->QueueDraw();
     ComputeContentSize();
-    _relayout_idle = nullptr;
+    _relayout_idle.reset();
   }
 
   return false;
