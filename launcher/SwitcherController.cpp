@@ -56,8 +56,8 @@ Controller::Controller(unsigned int load_timeout)
 {
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
 
-  glib::Source::Ptr lazy_timeout(new glib::Timeout(construct_timeout_ * 1000, glib::Source::Priority::LOW));
-  lazy_timeout->Run([&]() { ConstructWindow(); return false; });
+  auto lazy_timeout = std::make_shared<glib::Timeout>(construct_timeout_ * 1000, glib::Source::Priority::LOW);
+  lazy_timeout->Run([&] { ConstructWindow(); return false; });
   sources_.Add(lazy_timeout, LAZY_TIMEOUT);
 }
 
@@ -90,11 +90,11 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
 
   if (timeout_length > 0)
   {
-    glib::Source::Ptr view_idle_construct(new glib::Idle());
+    auto view_idle_construct = std::make_shared<glib::Idle>();
     sources_.Add(view_idle_construct, VIEW_CONSTRUCT_IDLE);
     view_idle_construct->Run([&] () { ConstructView(); return false; });
 
-    glib::Source::Ptr show_timeout(new glib::Timeout(timeout_length));
+    auto show_timeout = std::make_shared<glib::Timeout>(timeout_length);
     sources_.Add(show_timeout, SHOW_TIMEOUT);
     show_timeout->Run([&] () { ShowView(); return false; });
   }
@@ -105,7 +105,7 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
 
   if (detail_on_timeout)
   {
-    glib::Source::Ptr detail_timeout(new glib::Timeout(initial_detail_timeout_length));
+    auto detail_timeout = std::make_shared<glib::Timeout>(initial_detail_timeout_length);
     sources_.Add(detail_timeout, DETAIL_TIMEOUT);
     detail_timeout->Run(sigc::mem_fun(this, &Controller::OnDetailTimer));
   }
@@ -135,7 +135,7 @@ void Controller::OnModelSelectionChanged(AbstractLauncherIcon::Ptr icon)
 {
   if (detail_on_timeout)
   {
-    glib::Source::Ptr detail_timeout(new glib::Timeout(detail_timeout_length));
+    auto detail_timeout = std::make_shared<glib::Timeout>(detail_timeout_length);
     sources_.Add(detail_timeout, DETAIL_TIMEOUT);
     detail_timeout->Run(sigc::mem_fun(this, &Controller::OnDetailTimer));
   }
