@@ -70,7 +70,7 @@ Source::Priority Source::GetPriority() const
   return static_cast<Priority>(prio);
 }
 
-bool Source::Run(SourceCallback callback)
+bool Source::Run(Callback callback)
 {
   if (!source_ || source_id_ || IsRunning())
     return false;
@@ -78,7 +78,7 @@ bool Source::Run(SourceCallback callback)
   callback_ = callback;
   callback_data_ = new CallBackData(this);
 
-  g_source_set_callback(source_, Callback, callback_data_, DestroyCallback);
+  g_source_set_callback(source_, SourceCallback, callback_data_, DestroyCallback);
   source_id_ = g_source_attach(source_, nullptr);
 
   return true;
@@ -97,7 +97,7 @@ unsigned int Source::Id() const
   return source_id_;
 }
 
-gboolean Source::Callback(gpointer data)
+gboolean Source::SourceCallback(gpointer data)
 {
   if (!data)
     return G_SOURCE_REMOVE;
@@ -134,7 +134,7 @@ void Source::DestroyCallback(gpointer data)
 }
 
 
-Timeout::Timeout(unsigned int milliseconds, SourceCallback cb, Priority prio)
+Timeout::Timeout(unsigned int milliseconds, Callback cb, Priority prio)
 {
   Init(milliseconds, prio);
   Run(cb);
@@ -152,7 +152,7 @@ void Timeout::Init(unsigned int milliseconds, Priority prio)
 }
 
 
-TimeoutSeconds::TimeoutSeconds(unsigned int seconds, SourceCallback cb, Priority prio)
+TimeoutSeconds::TimeoutSeconds(unsigned int seconds, Callback cb, Priority prio)
 {
   Init(seconds, prio);
   Run(cb);
@@ -170,7 +170,7 @@ void TimeoutSeconds::Init(unsigned int seconds, Priority prio)
 }
 
 
-Idle::Idle(SourceCallback cb, Priority prio)
+Idle::Idle(Callback cb, Priority prio)
 {
   Init(prio);
   Run(cb);

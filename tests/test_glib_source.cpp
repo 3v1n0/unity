@@ -98,7 +98,7 @@ TEST(TestGLibTimeout, Construction)
 
 TEST(TestGLibTimeout, ConstructionEmptyCallback)
 {
-  Timeout timeout(1000, Source::SourceCallback());
+  Timeout timeout(1000, Source::Callback());
   EXPECT_NE(timeout.Id(), 0);
   EXPECT_TRUE(timeout.IsRunning());
   EXPECT_EQ(timeout.GetPriority(), Source::Priority::DEFAULT);
@@ -171,7 +171,7 @@ TEST(TestGLibTimeout, MultipleShotsRun)
 TEST(TestGLibTimeout, OneShotRunWithEmptyCallback)
 {
   struct timespec pre, post;
-  Timeout timeout(100, Source::SourceCallback());
+  Timeout timeout(100, Source::Callback());
   clock_gettime(CLOCK_MONOTONIC, &pre);
   timeout.removed.connect([&] (unsigned int id) { clock_gettime(CLOCK_MONOTONIC, &post); });
 
