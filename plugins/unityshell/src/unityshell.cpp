@@ -1418,7 +1418,7 @@ void UnityScreen::handleEvent(XEvent* event)
           {
             /* We need an idle to postpone this action, after the current event
              * has been processed */
-            sources_.Add(std::make_shared<glib::Idle>([&]() {
+            sources_.AddIdle([&] {
               if (!launcher_controller_->KeyNavIsActive())
               {
                 shortcut_controller_->SetEnabled(false);
@@ -1426,7 +1426,7 @@ void UnityScreen::handleEvent(XEvent* event)
                 EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, false);
               }
               return false;
-            }));
+            });
           }
 
           skip_other_plugins = launcher_controller_->HandleLauncherKeyEvent(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string);
@@ -2723,17 +2723,14 @@ void UnityScreen::ScheduleRelayout(guint timeout)
 {
   if (!sources_.GetSource(local::RELAYOUT_TIMEOUT))
   {
-    auto relayout_timeout(std::make_shared<glib::Timeout>(timeout));
-    sources_.Add(relayout_timeout, local::RELAYOUT_TIMEOUT);
-
-    relayout_timeout->Run([&]() {
+    sources_.AddTimeout(timeout, [&] {
       NeedsRelayout();
       Relayout();
 
       cScreen->damageScreen();
 
       return false;
-    });
+    }, local::RELAYOUT_TIMEOUT);
   }
 }
 
