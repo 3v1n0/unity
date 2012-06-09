@@ -106,6 +106,8 @@ public:
 
   virtual int WorkspaceCount() = 0;
 
+  virtual bool saveInputFocus() = 0;
+  virtual bool restoreInputFocus() = 0;
 
   // Signals
   sigc::signal<void, guint32> window_mapped;

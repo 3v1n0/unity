@@ -16,45 +16,43 @@
  * Authored by: Gordon Allott <gord.allott@canonical.com>
  */
 
-#ifndef UNITY_HUD_VIEW_H_
-#define UNITY_HUD_VIEW_H_
+#ifndef UNITYSHELL_HUD_VIEW_H
+#define UNITYSHELL_HUD_VIEW_H
 
 #include <string>
 
 #include <Nux/Nux.h>
-#include <Nux/View.h>
 #include <Nux/VLayout.h>
 
-#include <UnityCore/Hud.h>
-#include "unity-shared/Introspectable.h"
-
-#include "unity-shared/UBusWrapper.h"
 #include "HudIcon.h"
 #include "HudButton.h"
+#include "HudAbstractView.h"
 #include "unity-shared/SearchBar.h"
 #include "unity-shared/OverlayRenderer.h"
+#include "unity-shared/UBusWrapper.h"
 
 namespace unity
 {
 namespace hud
 {
 
-class View : public nux::View, public unity::debug::Introspectable
+class View : public AbstractView
 {
-  NUX_DECLARE_OBJECT_TYPE(HudView, nux::View);
-  typedef nux::ObjectPtr<View> Ptr;
+  NUX_DECLARE_OBJECT_TYPE(View, AbstractView);
 public:
+  typedef nux::ObjectPtr<View> Ptr;
+
   View();
   ~View();
 
-  virtual void ResetToDefault();
+  void ResetToDefault();
 
   void Relayout();
   nux::View* default_focus() const;
   std::list<HudButton::Ptr> const& buttons() const;
 
   void SetQueries(Hud::Queries queries);
-  void SetIcon(std::string icon_name, unsigned int tile_size, unsigned int size, unsigned int padding);
+  void SetIcon(std::string const& icon_name, unsigned int tile_size, unsigned int size, unsigned int padding);
   void ShowEmbeddedIcon(bool show);
   void SearchFinished();
 
@@ -62,11 +60,6 @@ public:
   void AboutToHide();
 
   void SetWindowGeometry(nux::Geometry const& absolute_geo, nux::Geometry const& geo);
-
-  sigc::signal<void, std::string> search_changed;
-  sigc::signal<void, std::string> search_activated;
-  sigc::signal<void, Query::Ptr> query_activated;
-  sigc::signal<void, Query::Ptr> query_selected;
   
 protected:
   virtual Area* FindKeyFocusArea(unsigned int event_type,
@@ -76,6 +69,7 @@ protected:
   void SetupViews();
   void OnSearchChanged(std::string const& search_string);
   virtual long PostLayoutManagement(long LayoutResult);
+
 private:
   void OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key);
   void OnKeyDown (unsigned long event_type, unsigned long event_keysym,
@@ -122,6 +116,7 @@ private:
 };
 
 
-}
-}
-#endif
+} // namespace hud
+} // namespace unity
+
+#endif // UNITYSHELL_HUD_VIEW_H

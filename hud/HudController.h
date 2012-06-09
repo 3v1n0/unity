@@ -16,9 +16,10 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_HUD_CONTROLLER_H_
-#define UNITY_HUD_CONTROLLER_H_
+#ifndef UNITYSHELL_HUD_CONTROLLER_H
+#define UNITYSHELL_HUD_CONTROLLER_H
 
+#include <functional>
 #include <memory>
 
 #include <gdk/gdk.h>
@@ -42,7 +43,7 @@ class Controller : public unity::debug::Introspectable
 public:
   typedef std::shared_ptr<Controller> Ptr;
 
-  Controller();
+  Controller(std::function<AbstractView*(void)> const& function = []() { return new View; });
   ~Controller();
 
   nux::BaseWindow* window() const;
@@ -59,6 +60,7 @@ public:
   bool IsVisible();
 
 protected:
+  // Introspectable
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
@@ -104,16 +106,18 @@ private:
   float last_opacity_;
   gint64 start_time_;
 
-  View* view_;
+  AbstractView* view_;
   guint ensure_id_;
   std::string focused_app_icon_;
   nux::Layout* layout_;
   uint monitor_index_;
   guint type_wait_handle_;
   std::string last_search_;
+
+  std::function<AbstractView*(void)> view_function_;
 };
 
+} // namespace hud
+} // namespace unity
 
-}
-}
-#endif
+#endif // UNITYSHELL_HUD_CONTROLLER_H
