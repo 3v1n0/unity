@@ -244,6 +244,81 @@ bool SourceManager::Add(Source::Ptr const& source, std::string const& nick)
   return true;
 }
 
+Source::Ptr SourceManager::AddTimeout(unsigned int milliseconds, std::string const& nick)
+{
+  auto timeout = std::make_shared<Timeout>(milliseconds);
+
+  if (Add(timeout, nick))
+  {
+    return timeout;
+  }
+
+  return nullptr;
+}
+
+Source::Ptr SourceManager::AddTimeout(unsigned int milliseconds, Source::Callback cb, std::string const& nick)
+{
+  auto timeout = std::make_shared<Timeout>(milliseconds);
+
+  if (Add(timeout, nick))
+  {
+    timeout->Run(cb);
+    return timeout;
+  }
+
+  return nullptr;
+}
+
+Source::Ptr SourceManager::AddTimeoutSeconds(unsigned int seconds, std::string const& nick)
+{
+  auto timeout = std::make_shared<Timeout>(seconds);
+
+  if (Add(timeout, nick))
+  {
+    return timeout;
+  }
+
+  return nullptr;
+}
+
+Source::Ptr SourceManager::AddTimeoutSeconds(unsigned int seconds, Source::Callback cb, std::string const& nick)
+{
+  auto timeout = std::make_shared<TimeoutSeconds>(seconds);
+
+  if (Add(timeout, nick))
+  {
+    timeout->Run(cb);
+    return timeout;
+  }
+
+  return nullptr;
+}
+
+Source::Ptr SourceManager::AddIdle(std::string const& nick)
+{
+  auto idle = std::make_shared<Idle>();
+
+  if (Add(idle, nick))
+  {
+    return idle;
+  }
+
+  return nullptr;
+}
+
+Source::Ptr SourceManager::AddIdle(Source::Callback cb, std::string const& nick)
+{
+  auto idle = std::make_shared<Idle>();
+
+  if (Add(idle, nick))
+  {
+    idle->Run(cb);
+    return idle;
+  }
+
+  return nullptr;
+}
+
 void SourceManager::OnSourceRemoved(unsigned int id)
 {
   for (auto it = sources_.begin(); it != sources_.end(); ++it)
@@ -318,7 +393,7 @@ Source::Ptr SourceManager::GetSource(std::string const& nick) const
     return it->second;
   }
 
-  return Source::Ptr();
+  return nullptr;
 }
 
 }

@@ -205,6 +205,15 @@ public:
   bool Add(Source* source, std::string const& nick = "");
   bool Add(Source::Ptr const& source, std::string const& nick = "");
 
+  Source::Ptr AddTimeout(unsigned int milliseconds, std::string const& nick = "");
+  Source::Ptr AddTimeout(unsigned int milliseconds, Source::Callback cb, std::string const& nick = "");
+
+  Source::Ptr AddTimeoutSeconds(unsigned int seconds, std::string const& nick = "");
+  Source::Ptr AddTimeoutSeconds(unsigned int seconds, Source::Callback cb, std::string const& nick = "");
+
+  Source::Ptr AddIdle(std::string const& nick = "");
+  Source::Ptr AddIdle(Source::Callback cb, std::string const& nick = "");
+
   bool Remove(std::string const& nick);
   bool Remove(unsigned int id);
 
