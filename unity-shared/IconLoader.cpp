@@ -440,13 +440,11 @@ int IconLoader::Impl::QueueTask(std::string const& key,
                                 IconLoaderRequestType type)
 {
   auto task = std::make_shared<IconLoaderTask>(type, data, size, key, slot, ++handle_counter_, this);
-
   auto iter = queued_tasks_.find(key);
-  bool already_queued = iter != queued_tasks_.end();
-  IconLoaderTask::Ptr const& running_task = already_queued ? iter->second : nullptr;
 
-  if (running_task)
+  if (iter != queued_tasks_.end())
   {
+    IconLoaderTask::Ptr const& running_task = iter->second;
     running_task->shadow_tasks.push_back(task);
     // do NOT push the task into the tasks queue,
     // the parent task (which is in the queue) will handle it
