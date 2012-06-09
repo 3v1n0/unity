@@ -567,6 +567,30 @@ TEST(TestGLibSourceManager, AddingDuplicatedNamedSources)
   EXPECT_EQ(manager.GetSources().size(), 1);
 }
 
+TEST(TestGLibSourceManager, AddingTimeouts)
+{
+  MockSourceManager manager;
+
+  auto timeout1 = manager.AddTimeout(1);
+  auto timeout2 = manager.AddTimeout(1, &OnSourceCallbackContinue);
+
+  EXPECT_EQ(manager.GetSources().size(), 2);
+  EXPECT_FALSE(timeout1->IsRunning());
+  EXPECT_TRUE(timeout2->IsRunning());
+}
+
+TEST(TestGLibSourceManager, AddingIdles)
+{
+  MockSourceManager manager;
+
+  auto idle1 = manager.AddIdle();
+  auto idle2 = manager.AddIdle(&OnSourceCallbackContinue);
+
+  EXPECT_EQ(manager.GetSources().size(), 2);
+  EXPECT_FALSE(idle1->IsRunning());
+  EXPECT_TRUE(idle2->IsRunning());
+}
+
 TEST(TestGLibSourceManager, RemovingSourcesById)
 {
   MockSourceManager manager;
