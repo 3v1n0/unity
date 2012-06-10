@@ -459,7 +459,11 @@ Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
 
   SoftwareCenterLauncherIcon::Ptr result = CreateSCLauncherIcon(path, aptdaemon_trans_id, icon_path);
 
-  launcher_->ForceReveal(true);
+  // Ensure desktop file path is NOT empty and not set to software center agent
+  // Otherwise, the launcher will get stuck un-hidden
+  // See https://bugs.launchpad.net/unity/+bug/1002440
+  if (!path.empty() && !path.compare("software-center-agent"))
+    launcher_->ForceReveal(true);
 
   if (result)
   {
