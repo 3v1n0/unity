@@ -44,10 +44,10 @@ const int pause_before_grow_length = 32 * 1000;
 
 const int default_width = 960;
 const int default_height = 276;
-const int content_width = 941;
+const int content_width = 939;
 
 const int top_padding = 11;
-const int bottom_padding = 9;
+const int bottom_padding = 10;
 const int left_padding = 11;
 const int right_padding = 0;
 
@@ -447,9 +447,21 @@ void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   renderer_.DrawInner(gfx_context, draw_content_geo, absolute_window_geometry_, window_geometry_);
 
   gfx_context.PushClippingRectangle(draw_content_geo);
+
   if (IsFullRedraw())
   {
     nux::GetPainter().PushBackgroundStack();
+
+    if (!buttons_.empty()) // See bug #1008603.
+    {
+      int height = 3;
+      int x = search_bar_->GetBaseX() + 1;
+      int y = search_bar_->GetBaseY() + search_bar_->GetBaseHeight() - height;
+      nux::GetPainter().Draw2DLine(gfx_context, x, y, x, y + height, nux::color::White * 0.13);
+      x += content_width - 1;
+      nux::GetPainter().Draw2DLine(gfx_context, x, y, x, y + height, nux::color::White * 0.13);
+    }
+ 
     GetLayout()->ProcessDraw(gfx_context, force_draw);
     nux::GetPainter().PopBackgroundStack();
   }

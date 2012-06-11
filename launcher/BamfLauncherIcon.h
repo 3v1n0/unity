@@ -60,6 +60,8 @@ public:
   virtual bool ShowInSwitcher(bool current);
   virtual unsigned long long SwitcherPriority();
 
+  virtual nux::Color BackgroundColor() const;
+
   std::vector<Window> Windows();
   std::vector<Window> WindowsOnViewport();
   std::vector<Window> WindowsForMonitor(int monitor);
@@ -101,6 +103,7 @@ private:
 
   void EnsureWindowState();
   void EnsureMenuItemsReady();
+  void UpdateBackgroundColor();
   void UpdateDesktopFile();
   void UpdateMenus();
   void UpdateDesktopQuickList();
@@ -140,6 +143,9 @@ private:
   glib::Object<DbusmenuMenuitem> _menu_desktop_shortcuts;
   glib::Object<GFileMonitor> _desktop_file_monitor;
   glib::SignalManager _gsignals;
+
+  bool use_custom_bg_color_;
+  nux::Color bg_color_;
 };
 
 }

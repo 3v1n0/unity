@@ -240,7 +240,7 @@ LauncherIcon::OpenInstance(ActionArg arg)
   UpdateQuirkTime(QUIRK_LAST_ACTION);
 }
 
-nux::Color LauncherIcon::BackgroundColor()
+nux::Color LauncherIcon::BackgroundColor() const
 {
   return _background_color;
 }
