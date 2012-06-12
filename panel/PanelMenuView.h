@@ -120,10 +120,10 @@ private:
 
   void UpdateShowNow(bool ignore);
 
-  static gboolean UpdateActiveWindowPosition(PanelMenuView* self);
-  static gboolean UpdateShowNowWithDelay(PanelMenuView* self);
-  static gboolean OnNewAppShow(PanelMenuView* self);
-  static gboolean OnNewAppHide(PanelMenuView* self);
+  bool UpdateActiveWindowPosition();
+  bool UpdateShowNowWithDelay();
+  bool OnNewAppShow();
+  bool OnNewAppHide();
 
   bool IsValidWindow(Window xid) const;
   bool IsWindowUnderOurControl(Window xid) const;
@@ -165,11 +165,6 @@ private:
 
   int _monitor;
   Window _active_xid;
-
-  guint32 _active_moved_id;
-  guint32 _update_show_now_id;
-  guint32 _new_app_show_id;
-  guint32 _new_app_hide_id;
   nux::Geometry _monitor_geo;
   const std::string _desktop_name;
 
@@ -187,6 +182,7 @@ private:
   sigc::connection _style_changed_connection;
 
   UBusManager _ubus_manager;
+  glib::SourceManager _sources;
 
   Animator _fade_in_animator;
   Animator _fade_out_animator;

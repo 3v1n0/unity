@@ -20,11 +20,9 @@
 #ifndef LAUNCHERMODEL_H
 #define LAUNCHERMODEL_H
 
-#include <memory>
-
+#include <UnityCore/GLibSource.h>
 #include "AbstractLauncherIcon.h"
 #include "unity-shared/Introspectable.h"
-#include <sigc++/sigc++.h>
 
 namespace unity
 {
@@ -99,12 +97,11 @@ private:
   Base             _inner_main;
   int              selection_;
   std::list<unity::debug::Introspectable*> introspection_results_;
+  glib::SourceManager timeouts_;
 
   bool Populate();
 
   bool IconShouldShelf(AbstractLauncherIcon::Ptr icon) const;
-
-  static gboolean RemoveCallback(gpointer data);
 
   static bool CompareIcons(AbstractLauncherIcon::Ptr first, AbstractLauncherIcon::Ptr second);
 

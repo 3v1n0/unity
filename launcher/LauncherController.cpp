@@ -18,7 +18,6 @@
  *              Tim Penhey <tim.penhey@canonical.com>
  */
 
-#include <gio/gio.h>
 #include <glib/gi18n-lib.h>
 #include <libbamf/libbamf.h>
 
@@ -67,6 +66,10 @@ namespace
   const int launcher_minimum_show_duration = 1250;
   const int shortcuts_show_delay = 750;
   const int ignore_repeat_shortcut_duration = 250;
+
+  const std::string KEYPRESS_TIMEOUT = "keypress-timeout";
+  const std::string LABELS_TIMEOUT = "label-show-timeout";
+  const std::string HIDE_TIMEOUT = "hide-timeout";
 }
 }
 
@@ -141,8 +144,6 @@ public:
                                unsigned short keyCount);
 
   Controller* parent_;
-  glib::Object<BamfMatcher> matcher_;
-  glib::Signal<void, BamfMatcher*, BamfView*> view_opened_signal_;
   LauncherModel::Ptr     model_;
   nux::ObjectPtr<Launcher> launcher_;
   nux::ObjectPtr<Launcher> keyboard_launcher_;
@@ -155,25 +156,22 @@ public:
   bool                   show_desktop_icon_;
   Display*               display_;
 
-  guint                  bamf_timer_handler_id_;
-  guint                  launcher_key_press_handler_id_;
-  guint                  launcher_label_show_handler_id_;
-  guint                  launcher_hide_handler_id_;
-
   bool                   launcher_open;
   bool                   launcher_keynav;
   bool                   launcher_grabbed;
   bool                   reactivate_keynav;
   int                    reactivate_index;
   bool                   keynav_restore_window_;
-
-  UBusManager            ubus;
-
   int                    launcher_key_press_time_;
 
   ui::EdgeBarrierController::Ptr edge_barriers_;
 
   LauncherList launchers;
+
+  glib::Object<BamfMatcher> matcher_;
+  glib::Signal<void, BamfMatcher*, BamfView*> view_opened_signal_;
+  glib::SourceManager sources_;
+  UBusManager ubus;
 
   sigc::connection on_expoicon_activate_connection_;
   sigc::connection launcher_key_press_connection_;
@@ -183,15 +181,12 @@ public:
 
 Controller::Impl::Impl(Display* display, Controller* parent)
   : parent_(parent)
-  , matcher_(nullptr)
   , model_(new LauncherModel())
   , sort_priority_(0)
   , show_desktop_icon_(false)
   , display_(display)
-  , launcher_key_press_handler_id_(0)
-  , launcher_label_show_handler_id_(0)
-  , launcher_hide_handler_id_(0)
   , edge_barriers_(new ui::EdgeBarrierController())
+  , matcher_(bamf_matcher_get_default())
 {
   edge_barriers_->options = parent_->options();
 
@@ -222,13 +217,7 @@ Controller::Impl::Impl(Display* display, Controller* parent)
 
   InsertTrash();
 
-  auto setup_bamf = [](gpointer user_data) -> gboolean
-  {
-    Impl* self = static_cast<Impl*>(user_data);
-    self->SetupBamf();
-    return FALSE;
-  };
-  bamf_timer_handler_id_ = g_timeout_add(500, setup_bamf, this);
+  sources_.Add(std::make_shared<glib::Timeout>(500, [&]() { SetupBamf(); return false; }));
 
   remote_model_.entry_added.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteAdded));
   remote_model_.entry_removed.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteRemoved));
@@ -239,16 +228,16 @@ Controller::Impl::Impl(Display* display, Controller* parent)
 
   LauncherHideMode hide_mode = parent_->options()->hide_mode;
   BFBLauncherIcon* bfb = new BFBLauncherIcon(hide_mode);
-  parent_->options()->hide_mode.changed.connect([bfb](LauncherHideMode mode) {
-      bfb->SetHideMode(mode);
-    });
   RegisterIcon(AbstractLauncherIcon::Ptr(bfb));
 
   HudLauncherIcon* hud = new HudLauncherIcon(hide_mode);
-  parent_->options()->hide_mode.changed.connect([hud](LauncherHideMode mode) {
-      hud->SetHideMode(mode);
-    });
   RegisterIcon(AbstractLauncherIcon::Ptr(hud));
+
+  parent_->options()->hide_mode.changed.connect([bfb,hud](LauncherHideMode mode) {
+    bfb->SetHideMode(mode);
+    hud->SetHideMode(mode);
+  });
+
   desktop_icon_ = AbstractLauncherIcon::Ptr(new DesktopLauncherIcon());
 
   uscreen->changed.connect(sigc::mem_fun(this, &Controller::Impl::OnScreenChanged));
@@ -282,9 +271,6 @@ Controller::Impl::~Impl()
     if (launcher_ptr.IsValid())
       launcher_ptr->GetParent()->UnReference();
   }
-
-  if (bamf_timer_handler_id_ != 0)
-    g_source_remove(bamf_timer_handler_id_);
 }
 
 void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> const& monitors)
@@ -791,8 +777,6 @@ void Controller::Impl::SetupBamf()
   // (avoids case where first item gets tacked onto end rather than start)
   int priority = 100;
 
-  matcher_ = bamf_matcher_get_default();
-
   FavoriteList const& favs = FavoriteStore::Instance().GetFavorites();
 
   for (FavoriteList::const_iterator i = favs.begin(), end = favs.end();
@@ -828,7 +812,6 @@ void Controller::Impl::SetupBamf()
   model_->order_changed.connect(sigc::mem_fun(this, &Impl::SortAndUpdate));
   model_->icon_removed.connect(sigc::mem_fun(this, &Impl::OnIconRemoved));
   model_->saved.connect(sigc::mem_fun(this, &Impl::Save));
-  bamf_timer_handler_id_ = 0;
 }
 
 void Controller::Impl::SendHomeActivationRequest()
@@ -851,9 +834,7 @@ Controller::Controller(Display* display)
 }
 
 Controller::~Controller()
-{
-  delete pimpl;
-}
+{}
 
 void Controller::UpdateNumWorkspaces(int workspaces)
 {
@@ -954,40 +935,35 @@ void Controller::HandleLauncherKeyPress(int when)
 {
   pimpl->launcher_key_press_time_ = when;
 
-  auto show_launcher = [](gpointer user_data) -> gboolean
+  auto show_launcher = [&]()
   {
-    Impl* self = static_cast<Impl*>(user_data);
-    if (self->keyboard_launcher_.IsNull())
-      self->keyboard_launcher_ = self->CurrentLauncher();
+    if (pimpl->keyboard_launcher_.IsNull())
+      pimpl->keyboard_launcher_ = pimpl->CurrentLauncher();
 
-    if (self->launcher_hide_handler_id_ > 0)
+    pimpl->sources_.Remove(local::HIDE_TIMEOUT);
+    pimpl->keyboard_launcher_->ForceReveal(true);
+    pimpl->launcher_open = true;
+
+    return false;
+  };
+  auto key_timeout = std::make_shared<glib::Timeout>(local::super_tap_duration, show_launcher);
+  pimpl->sources_.Add(key_timeout, local::KEYPRESS_TIMEOUT);
+
+  auto show_shortcuts = [&]()
+  {
+    if (!pimpl->launcher_keynav)
     {
-      g_source_remove(self->launcher_hide_handler_id_);
-      self->launcher_hide_handler_id_ = 0;
+      if (pimpl->keyboard_launcher_.IsNull())
+        pimpl->keyboard_launcher_ = pimpl->CurrentLauncher();
+
+      pimpl->keyboard_launcher_->ShowShortcuts(true);
+      pimpl->launcher_open = true;
     }
 
-    self->keyboard_launcher_->ForceReveal(true);
-    self->launcher_open = true;
-    self->launcher_key_press_handler_id_ = 0;
-    return FALSE;
+    return false;
   };
-  pimpl->launcher_key_press_handler_id_ = g_timeout_add(local::super_tap_duration, show_launcher, pimpl);
-
-  auto show_shortcuts = [](gpointer user_data) -> gboolean
-  {
-    Impl* self = static_cast<Impl*>(user_data);
-    if (!self->launcher_keynav)
-    {
-      if (self->keyboard_launcher_.IsNull())
-        self->keyboard_launcher_ = self->CurrentLauncher();
-
-      self->keyboard_launcher_->ShowShortcuts(true);
-      self->launcher_open = true;
-      self->launcher_label_show_handler_id_ = 0;
-    }
-    return FALSE;
-  };
-  pimpl->launcher_label_show_handler_id_ = g_timeout_add(local::shortcuts_show_delay, show_shortcuts, pimpl);
+  auto labels_timeout = std::make_shared<glib::Timeout>(local::shortcuts_show_delay, show_shortcuts);
+  pimpl->sources_.Add(labels_timeout, local::LABELS_TIMEOUT);
 }
 
 bool Controller::AboutToShowDash(int was_tap, int when) const
@@ -1010,17 +986,8 @@ void Controller::HandleLauncherKeyRelease(bool was_tap, int when)
     LOG_DEBUG(logger) << "Tap too long: " << tap_duration;
   }
 
-  if (pimpl->launcher_label_show_handler_id_)
-  {
-    g_source_remove(pimpl->launcher_label_show_handler_id_);
-    pimpl->launcher_label_show_handler_id_ = 0;
-  }
-
-  if (pimpl->launcher_key_press_handler_id_)
-  {
-    g_source_remove(pimpl->launcher_key_press_handler_id_);
-    pimpl->launcher_key_press_handler_id_ = 0;
-  }
+  pimpl->sources_.Remove(local::LABELS_TIMEOUT);
+  pimpl->sources_.Remove(local::KEYPRESS_TIMEOUT);
 
   if (pimpl->keyboard_launcher_.IsValid())
   {
@@ -1038,23 +1005,23 @@ void Controller::HandleLauncherKeyRelease(bool was_tap, int when)
     else
     {
       int time_left = local::launcher_minimum_show_duration - ms_since_show;
-      auto hide_launcher = [](gpointer user_data) -> gboolean
-      {
-        Impl *self = static_cast<Impl*>(user_data);
-        if (self->keyboard_launcher_.IsValid())
-        {
-          self->keyboard_launcher_->ForceReveal(false);
-          self->launcher_open = false;
 
-          if (!self->launcher_keynav)
-            self->keyboard_launcher_.Release();
+      auto hide_launcher = [&]()
+      {
+        if (pimpl->keyboard_launcher_.IsValid())
+        {
+          pimpl->keyboard_launcher_->ForceReveal(false);
+          pimpl->launcher_open = false;
+
+          if (!pimpl->launcher_keynav)
+            pimpl->keyboard_launcher_.Release();
         }
 
-        self->launcher_hide_handler_id_ = 0;
-        return FALSE;
+        return false;
       };
 
-      pimpl->launcher_hide_handler_id_ = g_timeout_add(time_left, hide_launcher, pimpl);
+      auto hide_timeout = std::make_shared<glib::Timeout>(time_left, hide_launcher);
+      pimpl->sources_.Add(hide_timeout, local::HIDE_TIMEOUT);
     }
   }
 }
@@ -1103,9 +1070,9 @@ void Controller::KeyNavGrab()
   pimpl->keyboard_launcher_->GrabKeyboard();
 
   pimpl->launcher_key_press_connection_ =
-    pimpl->keyboard_launcher_->key_down.connect(sigc::mem_fun(pimpl, &Controller::Impl::ReceiveLauncherKeyPress));
+    pimpl->keyboard_launcher_->key_down.connect(sigc::mem_fun(pimpl.get(), &Controller::Impl::ReceiveLauncherKeyPress));
   pimpl->launcher_event_outside_connection_ =
-    pimpl->keyboard_launcher_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(pimpl, &Controller::Impl::ReceiveMouseDownOutsideArea));
+    pimpl->keyboard_launcher_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(pimpl.get(), &Controller::Impl::ReceiveMouseDownOutsideArea));
 }
 
 void Controller::KeyNavActivate()
