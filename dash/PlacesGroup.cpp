@@ -19,28 +19,18 @@
  *
  */
 
-#include <sigc++/sigc++.h>
-
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
-#include <Nux/VLayout.h>
-#include <Nux/HLayout.h>
-#include <Nux/BaseWindow.h>
 #include <NuxCore/Math/MathInc.h>
-
-#include "unity-shared/StaticCairoText.h"
-
-#include <sigc++/trackable.h>
-#include <sigc++/signal.h>
-#include <sigc++/functors/ptr_fun.h>
-#include <sigc++/functors/mem_fun.h>
 
 #include "PlacesGroup.h"
 #include <glib.h>
 #include <glib/gi18n-lib.h>
 
-#include <Nux/Utils.h>
 #include <UnityCore/Variant.h>
+#include <UnityCore/GLibWrapper.h>
+
+#include "unity-shared/StaticCairoText.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/LineSeparator.h"
 #include "unity-shared/ubus-server.h"
@@ -113,8 +103,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(PlacesGroup);
 PlacesGroup::PlacesGroup()
   : AbstractPlacesGroup(),
     _child_view(nullptr),
-    _focus_layer(nullptr),
-    _idle_id(0),
     _is_expanded(true),
     _n_visible_items_in_unexpand_mode(0),
     _n_total_items(0)
@@ -126,7 +114,6 @@ PlacesGroup::PlacesGroup()
 
   nux::BaseTexture* arrow = style.GetGroupUnexpandIcon();
 
-  _cached_name = NULL;
   _group_layout = new nux::VLayout("", NUX_TRACKER_LOCATION);
 
   // -2 because the icons have an useless border.
@@ -176,7 +163,6 @@ PlacesGroup::PlacesGroup()
   _expand_layout->AddView(_expand_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   separator_layout_ = new nux::HLayout();
-  separator_layout_->SinkReference();
   separator_layout_->SetLeftAndRightPadding(style.GetCategorySeparatorLeftPadding(),
                                             style.GetCategorySeparatorRightPadding() - style.GetScrollbarWidth());
 
@@ -208,26 +194,12 @@ PlacesGroup::PlacesGroup()
   });
 }
 
-PlacesGroup::~PlacesGroup()
-{
-  if (_idle_id)
-    g_source_remove(_idle_id);
-
-  if (_cached_name != NULL)
-    g_free(_cached_name);
-
-  if (separator_layout_)
-    separator_layout_->UnReference();
-
-  delete _focus_layer;
-}
-
 void PlacesGroup::DrawSeparatorChanged(bool draw)
 {
   if (draw and !separator_layout_->IsChildOf(_group_layout))
-    _group_layout->AddView(separator_layout_, 0);
+    _group_layout->AddView(separator_layout_.GetPointer(), 0);
   else if (!draw and separator_layout_->IsChildOf(_group_layout))
-    _group_layout->RemoveChildObject(separator_layout_);
+    _group_layout->RemoveChildObject(separator_layout_.GetPointer());
   QueueDraw();
 }
 
@@ -250,22 +222,13 @@ PlacesGroup::OnLabelFocusChanged(nux::Area* label, bool has_focus, nux::KeyNavDi
 }
 
 void
-PlacesGroup::SetName(const char* name)
+PlacesGroup::SetName(std::string const& name)
 {
-  gchar* final = NULL;
-  if (_cached_name != NULL)
+  if (_cached_name != name)
   {
-    g_free(_cached_name);
-    _cached_name = NULL;
+    _cached_name = name;
+    _name->SetText(glib::String(g_markup_escape_text(name.c_str(), -1)).Str());
   }
-
-  _cached_name = g_strdup(name);
-
-  final = g_markup_escape_text(name, -1);
-
-  _name->SetText(final);
-
-  g_free(final);
 }
 
 nux::StaticCairoText*
@@ -281,7 +244,7 @@ PlacesGroup::GetExpandLabel()
 }
 
 void
-PlacesGroup::SetIcon(const char* path_to_emblem)
+PlacesGroup::SetIcon(std::string const& path_to_emblem)
 {
   _icon->SetByIconName(path_to_emblem, 24);
 }
@@ -325,32 +288,27 @@ void PlacesGroup::SetChildLayout(nux::Layout* layout)
 void
 PlacesGroup::RefreshLabel()
 {
-  char*       result_string;
+  std::string result_string;
 
-  if (_n_visible_items_in_unexpand_mode >= _n_total_items)
+  if (_n_visible_items_in_unexpand_mode < _n_total_items)
   {
-    result_string = g_strdup("");
-  }
-  else if (_is_expanded)
-  {
-    result_string = g_strdup(_("See fewer results"));
-  }
-  else
-  {
-    LOG_DEBUG(logger) << _n_total_items << " - " << _n_visible_items_in_unexpand_mode;
-    result_string = g_strdup_printf(g_dngettext(GETTEXT_PACKAGE,
-                                                "See one more result",
-                                                "See %d more results",
-                                                _n_total_items - _n_visible_items_in_unexpand_mode),
-                                    _n_total_items - _n_visible_items_in_unexpand_mode);
+    if (_is_expanded)
+    {
+      result_string = _("See fewer results");
+    }
+    else
+    {
+      LOG_DEBUG(logger) << _n_total_items << " - " << _n_visible_items_in_unexpand_mode;
+      result_string = glib::String(g_strdup_printf(g_dngettext(GETTEXT_PACKAGE,
+                                                  "See one more result",
+                                                  "See %d more results",
+                                                  _n_total_items - _n_visible_items_in_unexpand_mode),
+                                      _n_total_items - _n_visible_items_in_unexpand_mode)).Str();
+    }
   }
 
   _expand_icon->SetVisible(!(_n_visible_items_in_unexpand_mode >= _n_total_items && _n_total_items != 0));
-
-  char* tmpname = g_strdup(_cached_name);
-  SetName(tmpname);
-  g_free(tmpname);
-
+  SetName(_cached_name);
 
   _expand_label->SetText(result_string);
   _expand_label->SetVisible(_n_visible_items_in_unexpand_mode < _n_total_items);
@@ -365,8 +323,6 @@ PlacesGroup::RefreshLabel()
   _expand_label_layout->SetTopAndBottomPadding(0, bottom_padding);
 
   QueueDraw();
-
-  g_free(result_string);
 }
 
 void
@@ -381,25 +337,27 @@ PlacesGroup::Refresh()
 void
 PlacesGroup::Relayout()
 {
-  if (_idle_id == 0)
-    _idle_id = g_idle_add_full(G_PRIORITY_HIGH,
-                               (GSourceFunc)OnIdleRelayout, this, NULL);
+  if (_relayout_idle)
+    return;
+
+  _relayout_idle.reset(new glib::Idle(glib::Source::Priority::HIGH));
+  _relayout_idle->Run(sigc::mem_fun(this, &PlacesGroup::OnIdleRelayout));
 }
 
-gboolean
-PlacesGroup::OnIdleRelayout(PlacesGroup* self)
+bool
+PlacesGroup::OnIdleRelayout()
 {
-  if (self->GetChildView())
+  if (GetChildView())
   {
-    self->Refresh();
-    self->QueueDraw();
-    self->_group_layout->QueueDraw();
-    self->GetChildView()->QueueDraw();
-    self->ComputeContentSize();
-    self->_idle_id = 0;
+    Refresh();
+    QueueDraw();
+    _group_layout->QueueDraw();
+    GetChildView()->QueueDraw();
+    ComputeContentSize();
+    _relayout_idle.reset();
   }
 
-  return FALSE;
+  return false;
 }
 
 long PlacesGroup::ComputeContentSize()
@@ -410,10 +368,7 @@ long PlacesGroup::ComputeContentSize()
 
   if (_cached_geometry != geo)
   {
-    if (_focus_layer)
-      delete _focus_layer;
-
-    _focus_layer = dash::Style::Instance().FocusOverlay(geo.width - kHighlightLeftPadding - kHighlightRightPadding, kHighlightHeight);
+    _focus_layer.reset(dash::Style::Instance().FocusOverlay(geo.width - kHighlightLeftPadding - kHighlightRightPadding, kHighlightHeight));
 
     _cached_geometry = geo;
   }
@@ -447,9 +402,9 @@ PlacesGroup::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 
   graphics_engine.PushClippingRectangle(base);
 
-  if (ShouldBeHighlighted() && !IsFullRedraw())
+  if (ShouldBeHighlighted() && !IsFullRedraw() && _focus_layer)
   {
-    nux::GetPainter().PushLayer(graphics_engine, _focus_layer->GetGeometry(), _focus_layer);
+    nux::GetPainter().PushLayer(graphics_engine, _focus_layer->GetGeometry(), _focus_layer.get());
   }
 
   _group_layout->ProcessDraw(graphics_engine, force_draw);

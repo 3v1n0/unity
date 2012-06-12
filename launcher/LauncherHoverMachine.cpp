@@ -20,23 +20,14 @@
 
 #include "LauncherHoverMachine.h"
 
+namespace unity
+{
+
 LauncherHoverMachine::LauncherHoverMachine()
-{
-  _quirks = DEFAULT;
-  _should_hover = false;
-  _latest_emit_should_hover = false;
-  _hover_changed_emit_handle = 0;
-
-}
-
-LauncherHoverMachine::~LauncherHoverMachine()
-{
-  if (_hover_changed_emit_handle)
-  {
-    g_source_remove(_hover_changed_emit_handle);
-    _hover_changed_emit_handle = 0;
-  }
-}
+  : _should_hover(false)
+  , _latest_emit_should_hover(false)
+  , _quirks(DEFAULT)
+{}
 
 /* == Quick Quirk Reference : please keep up to date ==
     DEFAULT                = 0,
@@ -68,7 +59,6 @@ LauncherHoverMachine::EnsureHoverState()
   else
     should_hover = false;
 
-
   SetShouldHover(should_hover);
 }
 
@@ -77,22 +67,18 @@ LauncherHoverMachine::SetShouldHover(bool value)
 {
   _should_hover = value;
 
-  if (_hover_changed_emit_handle)
-    g_source_remove(_hover_changed_emit_handle);
-  _hover_changed_emit_handle = g_idle_add_full (G_PRIORITY_DEFAULT, &EmitShouldHoverChanged, this, NULL);
+  _hover_changed_emit_idle.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
+  _hover_changed_emit_idle->Run(sigc::mem_fun(this, &LauncherHoverMachine::EmitShouldHoverChanged));
 }
 
-gboolean
-LauncherHoverMachine::EmitShouldHoverChanged(gpointer data)
+bool
+LauncherHoverMachine::EmitShouldHoverChanged()
 {
-  LauncherHoverMachine* self = static_cast<LauncherHoverMachine*>(data);
-
-  self->_hover_changed_emit_handle = 0;
-  if (self->_should_hover == self->_latest_emit_should_hover)
+  if (_should_hover == _latest_emit_should_hover)
     return false;
 
-  self->_latest_emit_should_hover = self->_should_hover;
-  self->should_hover_changed.emit(self->_should_hover);
+  _latest_emit_should_hover = _should_hover;
+  should_hover_changed.emit(_should_hover);
 
   return false;
 }
@@ -126,3 +112,5 @@ LauncherHoverMachine::DebugHoverQuirks()
   // of the enum value as an integer anyway.
   return boost::lexical_cast<std::string>(_quirks);
 }
+
+} //unity namespace

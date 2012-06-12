@@ -1452,8 +1452,11 @@ void UnityScreen::handleEvent(XEvent* event)
       ShowdesktopHandler::InhibitLeaveShowdesktopMode (event->xmaprequest.window);
       break;
     case PropertyNotify:
-      if (event->xproperty.window == GDK_ROOT_WINDOW())
+      if (event->xproperty.window == GDK_ROOT_WINDOW() &&
+          event->xproperty.atom == gdk_x11_get_xatom_by_name("_GNOME_BACKGROUND_REPRESENTATIVE_COLORS"))
+      {
         _bghash.RefreshColor();
+      }
       break;
     default:
         if (screen->shapeEvent () + ShapeNotify == event->type)

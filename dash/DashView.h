@@ -19,15 +19,13 @@
 #ifndef UNITY_DASH_VIEW_H_
 #define UNITY_DASH_VIEW_H_
 
-#include <string>
-
-#include <NuxGraphics/GraphicsEngine.h>
 #include <Nux/Nux.h>
 #include <Nux/PaintLayer.h>
 #include <Nux/View.h>
 #include <Nux/VLayout.h>
 #include <UnityCore/FilesystemLenses.h>
 #include <UnityCore/HomeLens.h>
+#include <UnityCore/GLibSource.h>
 
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/SearchBar.h"
@@ -108,9 +106,6 @@ private:
 
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
 
-  static gboolean ResetSearchStateCb(gpointer data);
-  static gboolean HideResultMessageCb(gpointer data);
-
 private:
   UBusManager ubus_manager_;
   FilesystemLenses lenses_;
@@ -135,13 +130,13 @@ private:
 
   std::string last_activated_uri_;
   // we're passing this back to g_* functions, so we'll keep the g* type
-  guint searching_timeout_id_;
   bool search_in_progress_;
   bool activate_on_finish_;
 
-  guint hide_message_delay_id_;
-
   bool visible_;
+
+  glib::Source::UniquePtr searching_timeout_;
+  glib::Source::UniquePtr hide_message_delay_;
 };
 
 

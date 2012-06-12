@@ -102,7 +102,6 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   // request the latest colour from bghash
   _ubus_manager.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 
-  _track_menu_pointer_id = 0;
   _bg_effect_helper.owner = this;
 
   //FIXME (gord)- replace with async loading
@@ -121,9 +120,6 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
 
 PanelView::~PanelView()
 {
-  if (_track_menu_pointer_id)
-    g_source_remove(_track_menu_pointer_id);
-
   for (auto conn : _on_indicator_updated_connections)
     conn.disconnect();
 
@@ -538,7 +534,7 @@ void PanelView::OnEntryActivateRequest(std::string const& entry_id)
   if (!ret) _indicators->ActivateEntry(entry_id, 0);
 }
 
-void PanelView::TrackMenuPointer()
+bool PanelView::TrackMenuPointer()
 {
   auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
   if (_tracked_pointer_pos != mouse)
@@ -546,12 +542,14 @@ void PanelView::TrackMenuPointer()
     OnMenuPointerMoved(mouse.x, mouse.y);
     _tracked_pointer_pos = mouse;
   }
+
+  return true;
 }
 
 void PanelView::OnEntryActivated(std::string const& entry_id, nux::Rect const& geo)
 {
   bool active = (entry_id.size() > 0);
-  if (active && !_track_menu_pointer_id)
+  if (active && !_track_menu_pointer_timeout)
   {
     //
     // Track menus being scrubbed at 60Hz (about every 16 millisec)
@@ -563,19 +561,12 @@ void PanelView::OnEntryActivated(std::string const& entry_id, nux::Rect const& g
     // process. All the motion events will go to unity-panel-service while
     // scrubbing because the active panel menu has (needs) the pointer grab.
     //
-    _track_menu_pointer_id = g_timeout_add(16, [] (gpointer data) -> gboolean {
-                                            auto self = static_cast<PanelView*>(data);
-                                            self->TrackMenuPointer();
-                                            return TRUE;
-                                          }, this);
+    _track_menu_pointer_timeout.reset(new glib::Timeout(16));
+    _track_menu_pointer_timeout->Run(sigc::mem_fun(this, &PanelView::TrackMenuPointer));
   }
   else if (!active)
   {
-    if (_track_menu_pointer_id)
-    {
-      g_source_remove(_track_menu_pointer_id);
-      _track_menu_pointer_id = 0;
-    }
+    _track_menu_pointer_timeout.reset();
     _menu_view->NotifyAllMenusClosed();
     _tracked_pointer_pos = {-1, -1};
   }

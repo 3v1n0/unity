@@ -68,14 +68,14 @@ PanelMenuView::PanelMenuView()
     _update_show_now_id(0),
     _new_app_show_id(0),
     _new_app_hide_id(0),
+    _desktop_name(_("Ubuntu Desktop")),
     _menus_fadein(DEFAULT_MENUS_FADEIN),
     _menus_fadeout(DEFAULT_MENUS_FADEOUT),
     _menus_discovery(DEFAULT_MENUS_DISCOVERY),
     _menus_discovery_fadein(DEFAULT_DISCOVERY_FADEIN),
     _menus_discovery_fadeout(DEFAULT_DISCOVERY_FADEOUT),
     _fade_in_animator(_menus_fadein),
-    _fade_out_animator(_menus_fadeout),
-    _desktop_name(_("Ubuntu Desktop"))
+    _fade_out_animator(_menus_fadeout)
 {
   layout_->SetContentDistribution(nux::eStackLeft);
 
@@ -93,9 +93,9 @@ PanelMenuView::PanelMenuView()
                                      sigc::mem_fun(this, &PanelMenuView::OnActiveAppChanged));
 
   _window_buttons = new WindowButtons();
+  _window_buttons->SetParentObject(this);
   _window_buttons->SetMonitor(_monitor);
   _window_buttons->SetControlledWindow(_active_xid);
-  _window_buttons->SetParentObject(this);
   _window_buttons->SetLeftAndRightPadding(MAIN_LEFT_PADDING, MENUBAR_PADDING);
   _window_buttons->SetMaximumHeight(panel::Style::Instance().panel_height);
   _window_buttons->ComputeContentSize();
@@ -103,7 +103,7 @@ PanelMenuView::PanelMenuView()
   _window_buttons->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
   _window_buttons->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
   //_window_buttons->mouse_move.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseMove));
-  AddChild(_window_buttons);
+  AddChild(_window_buttons.GetPointer());
 
   layout_->SetLeftAndRightPadding(_window_buttons->GetContentWidth(), 0);
   layout_->SetBaseHeight(panel::Style::Instance().panel_height);
@@ -116,7 +116,7 @@ PanelMenuView::PanelMenuView()
   _titlebar_grab_area->grab_started.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabStart));
   _titlebar_grab_area->grab_move.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabMove));
   _titlebar_grab_area->grab_end.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabEnd));
-  AddChild(_titlebar_grab_area);
+  AddChild(_titlebar_grab_area.GetPointer());
 
   WindowManager* win_manager = WindowManager::Default();
   win_manager->window_minimized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMinimized));
@@ -173,13 +173,6 @@ PanelMenuView::PanelMenuView()
 
 PanelMenuView::~PanelMenuView()
 {
-  // We need to disconnect these signals explicitly before we destroy the window buttons
-  // and titlebar grab area objects, otherwise there's a risk the signals will fire as the
-  // animator objects are destroyed (which happens after the destructor finishes).
-  _fade_in_animator.animation_updated.clear();
-  _fade_in_animator.animation_ended.clear();
-  _fade_out_animator.animation_updated.clear();
-  _fade_out_animator.animation_ended.clear();
   _style_changed_connection.disconnect();
 
   if (_active_moved_id)
@@ -191,8 +184,8 @@ PanelMenuView::~PanelMenuView()
   if (_new_app_hide_id)
     g_source_remove(_new_app_hide_id);
 
-  _window_buttons->UnReference();
-  _titlebar_grab_area->UnReference();
+  _window_buttons->UnParentObject();
+  _titlebar_grab_area->UnParentObject();
 }
 
 void PanelMenuView::OverlayShown()
@@ -268,7 +261,7 @@ nux::Area* PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, n
   {
     /* When the current panel is not active, it all behaves like a grab-area */
     if (GetAbsoluteGeometry().IsInside(mouse_position))
-      return _titlebar_grab_area;
+      return _titlebar_grab_area.GetPointer();
   }
 
   if (_is_maximized)

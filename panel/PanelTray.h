@@ -28,6 +28,7 @@
 #include "unity-shared/Introspectable.h"
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSignal.h>
+#include <UnityCore/GLibSource.h>
 
 #include <unity-misc/na-tray.h>
 #include <unity-misc/na-tray-child.h>
@@ -51,8 +52,8 @@ protected:
   void AddProperties(GVariantBuilder* builder);
 
 private:
+  bool IdleSync();
   static gboolean FilterTrayCallback(NaTray* tray, NaTrayChild* child, PanelTray* self);
-  static gboolean IdleSync(PanelTray* tray);
   void OnTrayIconRemoved(NaTrayManager* manager, NaTrayChild* child);
   gboolean OnTrayDraw(GtkWidget* widget, cairo_t* cr);
 
@@ -66,6 +67,7 @@ private:
   glib::Signal<void, GSettings*, gchar*> whitelist_changed_;
   glib::Signal<gboolean, GtkWidget*, cairo_t*> draw_signal_;
   glib::Signal<void, NaTrayManager*, NaTrayChild*> icon_removed_signal_;
+  glib::Source::UniquePtr sync_idle_;
   std::list<NaTrayChild*> children_;
   nux::Geometry last_geo_;
 };

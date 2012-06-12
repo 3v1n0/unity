@@ -20,10 +20,8 @@
 #ifndef UNITY_ANIMATOR_H_
 #define UNITY_ANIMATOR_H_
 
-#include <glib.h>
 #include <cstdint>
-#include <sigc++/sigc++.h>
-#include <boost/utility.hpp>
+#include <UnityCore/GLibSource.h>
 
 namespace unity
 {
@@ -53,15 +51,13 @@ public:
   sigc::signal<void, double> animation_stopped;
 
 private:
+  glib::Source::UniquePtr timeout_;
   int64_t start_time_;
   unsigned int rate_;
   unsigned int duration_;
   unsigned int one_time_duration_;
-  unsigned int timeout_id_;
   double start_progress_;
   double progress_;
-
-  static gboolean TimerTimeOut(Animator *self);
 };
 
 }

@@ -28,6 +28,7 @@
 #include <Nux/View.h>
 #include <Nux/VLayout.h>
 #include <UnityCore/Lens.h>
+#include <UnityCore/GLibSource.h>
 
 #include "FilterBar.h"
 #include "unity-shared/Introspectable.h"
@@ -51,7 +52,6 @@ class LensView : public nux::View, public unity::debug::Introspectable
 public:
   LensView();
   LensView(Lens::Ptr lens, nux::Area* show_filters);
-  ~LensView();
 
   CategoryGroups& categories() { return categories_; }
   FilterBar* filter_bar() const { return filter_bar_; }
@@ -90,8 +90,7 @@ private:
   void OnFilterRemoved(Filter::Ptr filter);
   void OnViewTypeChanged(ViewType view_type);
   void QueueFixRenderering();
-
-  static gboolean FixRenderering(LensView* self);
+  bool FixRenderering();
 
   virtual void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
@@ -103,7 +102,6 @@ private:
   std::string get_search_string() const;
 
 private:
-  UBusManager ubus_manager_;
   Lens::Ptr lens_;
   CategoryGroups categories_;
   ResultCounts counts_;
@@ -119,9 +117,8 @@ private:
   FilterBar* filter_bar_;
   nux::StaticCairoText* no_results_;
 
-  guint fix_renderering_id_;
-
-  UBusManager ubus_;
+  UBusManager ubus_manager_;
+  glib::Source::UniquePtr fix_rendering_idle_;
 };
 
 
