@@ -266,8 +266,6 @@ void ResultRendererTile::LoadIcon(Result& row)
     icon_name = !icon_hint.empty() ? icon_hint : DEFAULT_GICON;
   }
 
-
-
   GIcon*  icon = g_icon_new_for_string(icon_name.c_str(), NULL);
   TextureContainer* container = row.renderer<TextureContainer*>();
 
@@ -293,7 +291,7 @@ void ResultRendererTile::LoadIcon(Result& row)
 nux::BaseTexture* ResultRendererTile::CreateTextureCallback(std::string const& texid,
                                                             int width,
                                                             int height,
-                                                            GdkPixbuf* pixbuf)
+                                                            glib::Object<GdkPixbuf> const& pixbuf)
 {
   int pixbuf_width, pixbuf_height;
   pixbuf_width = gdk_pixbuf_get_width(pixbuf);
@@ -368,7 +366,7 @@ nux::BaseTexture* ResultRendererTile::CreateTextureCallback(std::string const& t
 nux::BaseTexture* ResultRendererTile::CreateBlurredTextureCallback(std::string const& texid,
                                                                    int width,
                                                                    int height,
-                                                                   GdkPixbuf* pixbuf)
+                                                                   glib::Object<GdkPixbuf> const& pixbuf)
 {
   int pixbuf_width, pixbuf_height;
   pixbuf_width = gdk_pixbuf_get_width(pixbuf);
@@ -406,7 +404,7 @@ nux::BaseTexture* ResultRendererTile::CreateBlurredTextureCallback(std::string c
 
 void ResultRendererTile::IconLoaded(std::string const& texid,
                                     unsigned size,
-                                    GdkPixbuf* pixbuf,
+                                    glib::Object<GdkPixbuf> const& pixbuf,
                                     std::string icon_name,
                                     Result& row)
 {
