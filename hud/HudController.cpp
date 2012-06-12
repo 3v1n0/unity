@@ -21,7 +21,8 @@
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 #include <UnityCore/Variant.h>
-#include "unity-shared/PluginAdapter.h"
+
+#include "unity-shared/WindowManager.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UScreen.h"
@@ -39,7 +40,7 @@ namespace
 nux::logging::Logger logger("unity.hud.controller");
 }
 
-Controller::Controller()
+Controller::Controller(std::function<AbstractView*(void)> const& function)
   : launcher_width(64)
   , launcher_locked_out(false)
   , multiple_launchers(true)
@@ -49,6 +50,7 @@ Controller::Controller()
   , timeline_animator_(90)
   , view_(nullptr)
   , monitor_index_(0)
+  , view_function_(function)
 {
   LOG_DEBUG(logger) << "hud startup";
   SetupWindow();
@@ -73,10 +75,9 @@ Controller::Controller()
 
   launcher_width.changed.connect([&] (int new_width) { Relayout(); });
 
-  PluginAdapter::Default()->compiz_screen_ungrabbed.connect(sigc::mem_fun(this, &Controller::OnScreenUngrabbed));
+  WindowManager::Default()->compiz_screen_ungrabbed.connect(sigc::mem_fun(this, &Controller::OnScreenUngrabbed));
 
   hud_service_.queries_updated.connect(sigc::mem_fun(this, &Controller::OnQueriesFinished));
-
   timeline_animator_.animation_updated.connect(sigc::mem_fun(this, &Controller::OnViewShowHideFrame));
 
   EnsureHud();
@@ -93,16 +94,16 @@ void Controller::SetupWindow()
   window_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &Controller::OnMouseDownOutsideWindow));
   
   /* FIXME - first time we load our windows there is a race that causes the input window not to actually get input, this side steps that by causing an input window show and hide before we really need it. */
-  PluginAdapter::Default()->saveInputFocus ();
+  WindowManager::Default()->saveInputFocus ();
   window_->EnableInputWindow(true, "Hud", true, false);
   window_->EnableInputWindow(false, "Hud", true, false);
-  PluginAdapter::Default()->restoreInputFocus ();
+  WindowManager::Default()->restoreInputFocus ();
 }
 
 void Controller::SetupHudView()
 {
   LOG_DEBUG(logger) << "SetupHudView called";
-  view_ = new View();
+  view_ = view_function_();
 
   layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
   layout_->AddView(view_, 1, nux::MINOR_POSITION_TOP);
@@ -257,7 +258,7 @@ bool Controller::IsVisible()
 
 void Controller::ShowHud()
 {
-  PluginAdapter* adaptor = PluginAdapter::Default();
+  WindowManager* adaptor = WindowManager::Default();
   LOG_DEBUG(logger) << "Showing the hud";
   EnsureHud();
 
@@ -380,7 +381,7 @@ void Controller::HideHud(bool restore)
 
   restore = true;
   if (restore)
-    PluginAdapter::Default ()->restoreInputFocus ();
+    WindowManager::Default ()->restoreInputFocus ();
 
   hud_service_.CloseQuery();
 
@@ -410,6 +411,7 @@ void Controller::OnViewShowHideFrame(double progress)
     if (!visible_)
     {
       window_->ShowWindow(false);
+      view_->ResetToDefault();
     }
     else
     {
