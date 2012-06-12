@@ -284,15 +284,30 @@ private:
     static gboolean LoadIconComplete(gpointer data)
     {
       auto task = static_cast<IconLoaderTask*>(data);
-      task->impl->finished_tasks_.push_back(task);
+      auto impl = task->impl;
 
-      if (!task->impl->coalesce_timeout_)
+      if (GDK_IS_PIXBUF(task->result.RawPtr()))
+      {
+        impl->cache_[task->key] = task->result;
+      }
+      else
+      {
+        if (task->result)
+          task->result = nullptr;
+
+        LOG_WARNING(logger) << "Unable to load icon " << task->data
+                            << " at size " << task->size << ": " << task->error;
+      }
+
+      impl->finished_tasks_.push_back(task);
+
+      if (!impl->coalesce_timeout_)
       {
         // we're using lower priority than the GIOSchedulerJob uses to deliver
         // results to the mainloop
         auto prio = static_cast<glib::Source::Priority>(glib::Source::Priority::DEFAULT_IDLE + 40);
-        task->impl->coalesce_timeout_.reset(new glib::Timeout(40, prio));
-        task->impl->coalesce_timeout_->Run(sigc::mem_fun(task->impl, &Impl::CoalesceTasksCb));
+        impl->coalesce_timeout_.reset(new glib::Timeout(40, prio));
+        impl->coalesce_timeout_->Run(sigc::mem_fun(impl, &Impl::CoalesceTasksCb));
       }
 
       return FALSE;
@@ -501,19 +516,6 @@ bool IconLoader::Impl::CoalesceTasksCb()
 {
   for (auto task : finished_tasks_)
   {
-    // FIXME: we could update the cache sooner, but there are ref-counting
-    // issues on the pixbuf (and inside the slot callbacks) that prevent us
-    // from doing that.
-    if (GDK_IS_PIXBUF(task->result.RawPtr()))
-    {
-      cache_[task->key] = task->result;
-    }
-    else
-    {
-      LOG_WARNING(logger) << "Unable to load icon " << task->data
-                          << " at size " << task->size << ": " << task->error;
-    }
-
     task->InvokeSlot();
 
     // this was all async, we need to erase the task from the task_map
