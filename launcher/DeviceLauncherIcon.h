@@ -21,9 +21,6 @@
 #define _DEVICE_LAUNCHER_ICON_H__H
 
 #include <gio/gio.h>
-#define GDU_API_IS_SUBJECT_TO_CHANGE
-G_BEGIN_DECLS
-#include <gdu/gdu.h>
 #include <UnityCore/GLibWrapper.h>
 #include "SimpleLauncherIcon.h"
 
@@ -55,7 +52,6 @@ private:
   void StopDrive();
   static void OnTogglePin(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
   static void OnOpen(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
-  static void OnFormat(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
   static void OnEject(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
   static void OnUnmount(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
   static void OnChanged(GVolume* volume, DeviceLauncherIcon* self);
@@ -68,9 +64,7 @@ private:
 
 private:
   glib::Object<GVolume> volume_;
-  glib::String device_file_;
   std::string name_;
-  glib::Object<GduDevice> gdu_device_;
   bool keep_in_launcher_;
 };
 
