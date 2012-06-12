@@ -1212,6 +1212,11 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   if (mask & PAINT_SCREEN_REGION_MASK)
     compizDamageNux(region);
 
+  /*
+   * TODO: Figure out if we can ask compiz when:
+   *       output->containsFullscreenWindows();
+   *       and if true, then force doShellRepaint=false here.
+   */
   doShellRepaint = wt->GetDrawList().size() > 0 ||
                    BackgroundEffectHelper::HasDirtyHelpers() ||
                    switcher_controller_->Visible() ||
@@ -1221,8 +1226,8 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
                             PAINT_SCREEN_WITH_TRANSFORMED_WINDOWS_MASK));
 
   /* Warning: ^ checking for PAINT_SCREEN_FULL_MASK is necessary right now
-   *          to avoid flickering. However it will cause a performance
-   *          regression for people who have enabled "Force full screen
+   *          to avoid flickering. However it will nullify our performance
+   *          optimizations for people who have enabled "Force full screen
    *          redraws" in the Workarounds plugin.
    */
 
@@ -1336,7 +1341,6 @@ void UnityScreen::donePaint()
 void UnityScreen::compizDamageNux(const CompRegion &damage)
 {
   auto launchers = launcher_controller_->launchers();
-
   for (auto launcher : launchers)
   {
     if (!launcher->Hidden())
@@ -1366,9 +1370,11 @@ void UnityScreen::compizDamageNux(const CompRegion &damage)
     CompRegion tooltip_region(geo.x, geo.y, geo.width, geo.height);
     if (damage.intersects(tooltip_region))
     {
-      // FIXME - nux::WindowCompositor has no public API for requesting
-      //         redraw of a Tooltip. Until then, windows can redraw over
-      //         the top of the active tooltip.
+      /*
+       * FIXME - nux::WindowCompositor has no public API for requesting
+       *         redraw of a Tooltip. Until then, windows can redraw over
+       *         the top of the active tooltip.
+       */
     }
   }
 }
