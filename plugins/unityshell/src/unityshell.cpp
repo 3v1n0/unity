@@ -1348,13 +1348,27 @@ void UnityScreen::compizDamageNux(const CompRegion &damage)
     }
   }
 
-  for (nux::Geometry &geo : panel_controller_->GetGeometries())
+  std::vector<nux::Geometry> geos = panel_controller_->GetGeometries();
+  for (nux::Geometry &geo : geos)
   {
     CompRegion panel_region(geo.x, geo.y, geo.width, geo.height);
     if (damage.intersects(panel_region))
     {
       panel_controller_->QueueRedraw();
       break;
+    }
+  }
+
+  nux::WindowCompositor &compositor = wt->GetWindowCompositor();
+  if (compositor.IsTooltipActive())
+  {
+    nux::Geometry geo = compositor.GetTooltipMainWindowGeometry();
+    CompRegion tooltip_region(geo.x, geo.y, geo.width, geo.height);
+    if (damage.intersects(tooltip_region))
+    {
+      // FIXME - nux::WindowCompositor has no public API for requesting
+      //         redraw of a Tooltip. Until then, windows can redraw over
+      //         the top of the active tooltip.
     }
   }
 }
