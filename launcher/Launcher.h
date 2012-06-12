@@ -408,8 +408,6 @@ private:
 
   bool _initial_drag_animation;
 
-  UBusManager ubus;
-
   nux::Color _background_color;
   BaseTexturePtr launcher_sheen_;
   BaseTexturePtr launcher_pressure_effect_;
@@ -427,6 +425,8 @@ private:
   gchar*  _sc_icon_desktop_file;
   gchar*  _sc_icon_aptdaemon_task;
   bool    _sc_anim_icon;
+
+  UBusManager ubus_;
 };
 
 }

@@ -48,8 +48,6 @@
 #include "unity-shared/IconLoader.h"
 #include "unity-shared/WindowManager.h"
 #include "unity-shared/UScreen.h"
-
-#include "unity-shared/ubus-server.h"
 #include "unity-shared/UBusMessages.h"
 
 #include <UnityCore/GLibWrapper.h>
@@ -57,19 +55,6 @@
 
 #include <type_traits>
 #include <sigc++/sigc++.h>
-
-namespace sigc
-{
-template <typename Functor>
-struct functor_trait<Functor, false>
-{
-typedef decltype (::sigc::mem_fun (std::declval<Functor&> (),
-&Functor::operator())) _intermediate;
-
-typedef typename _intermediate::result_type result_type;
-typedef Functor functor_type;
-};
-}
 
 namespace unity
 {
@@ -258,11 +243,11 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _drag_window = NULL;
   _offscreen_drag_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(2, 2, 1, nux::BITFMT_R8G8B8A8);
 
-  ubus.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &Launcher::OnOverlayShown));
-  ubus.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &Launcher::OnOverlayHidden));
-  ubus.RegisterInterest(UBUS_LAUNCHER_ACTION_DONE, sigc::mem_fun(this, &Launcher::OnActionDone));
-  ubus.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Launcher::OnBGColorChanged));
-  ubus.RegisterInterest(UBUS_LAUNCHER_LOCK_HIDE, sigc::mem_fun(this, &Launcher::OnLockHideChanged));
+  ubus_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &Launcher::OnOverlayShown));
+  ubus_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &Launcher::OnOverlayHidden));
+  ubus_.RegisterInterest(UBUS_LAUNCHER_ACTION_DONE, sigc::mem_fun(this, &Launcher::OnActionDone));
+  ubus_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Launcher::OnBGColorChanged));
+  ubus_.RegisterInterest(UBUS_LAUNCHER_LOCK_HIDE, sigc::mem_fun(this, &Launcher::OnLockHideChanged));
   _dbus_owner = g_bus_own_name(G_BUS_TYPE_SESSION,
                                S_DBUS_NAME.c_str(),
                                (GBusNameOwnerFlags)(G_BUS_NAME_OWNER_FLAGS_REPLACE | G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT),
@@ -278,7 +263,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   icon_renderer->SetTargetSize(_icon_size, _icon_image_size, _space_between_icons);
 
   // request the latest colour from bghash
-  ubus.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, NULL);
+  ubus_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 
   SetAcceptMouseWheelEvent(true);
 
@@ -2212,8 +2197,7 @@ void Launcher::StartIconDrag(AbstractLauncherIcon::Ptr icon)
 
   _render_drag_window = true;
 
-  UBusServer* ubus = ubus_server_get_default();
-  ubus_server_send_message(ubus, UBUS_LAUNCHER_ICON_START_DND, NULL);
+  ubus_.SendMessage(UBUS_LAUNCHER_ICON_START_DND);
 }
 
 void Launcher::EndIconDrag()
@@ -2251,8 +2235,7 @@ void Launcher::EndIconDrag()
   _render_drag_window = false;
 
   _hide_machine->SetQuirk(LauncherHideMachine::INTERNAL_DND_ACTIVE, false);
-  UBusServer* ubus = ubus_server_get_default();
-  ubus_server_send_message(ubus, UBUS_LAUNCHER_ICON_END_DND, NULL);
+  ubus_.SendMessage(UBUS_LAUNCHER_ICON_END_DND);
 }
 
 void Launcher::UpdateDragWindowPosition(int x, int y)
@@ -2355,9 +2338,7 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
   else if (GetActionState() == ACTION_DRAG_LAUNCHER)
   {
     _launcher_drag_delta += dy;
-    ubus_server_send_message(ubus_server_get_default(),
-                             UBUS_LAUNCHER_END_DND,
-                             NULL);
+    ubus_.SendMessage(UBUS_LAUNCHER_END_DND);
   }
   else if (GetActionState() == ACTION_DRAG_ICON)
   {
