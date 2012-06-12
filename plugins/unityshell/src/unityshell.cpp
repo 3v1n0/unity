@@ -1209,7 +1209,20 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
 {
   bool ret;
 
-  doShellRepaint = true;
+  doShellRepaint = wt->GetDrawList().size() > 0 ||
+                   BackgroundEffectHelper::HasDirtyHelpers() ||
+                   switcher_controller_->Visible() ||
+                   launcher_controller_->IsOverlayOpen() ||
+                   (mask & (PAINT_SCREEN_TRANSFORMED_MASK |
+                            PAINT_SCREEN_FULL_MASK |
+                            PAINT_SCREEN_WITH_TRANSFORMED_WINDOWS_MASK));
+
+  /* Warning: ^ checking for PAINT_SCREEN_FULL_MASK is necessary right now
+   *          to avoid flickering. However it will cause a performance
+   *          regression for people who have enabled "Force full screen
+   *          redraws" in the Workarounds plugin.
+   */
+
   allowWindowPaint = true;
   _last_output = output;
   paint_panel_ = false;
@@ -1225,7 +1238,8 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
    *   attempts to bind it will only increment
    *   its bind reference so make sure that
    *   you always unbind as much as you bind */
-  _fbo->bind (nux::Geometry (output->x (), output->y (), output->width (), output->height ()));
+  if (doShellRepaint)
+    _fbo->bind (nux::Geometry (output->x (), output->y (), output->width (), output->height ()));
 #endif
 
   /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
@@ -1235,6 +1249,8 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   if (doShellRepaint)
     paintDisplay(region, transform, mask);
 #endif
+
+  wt->ClearDrawList();
 
   return ret;
 }
@@ -1339,8 +1355,6 @@ void UnityScreen::damageNuxRegions()
   nux_damage += CompRegion(lastTooltipArea.x, lastTooltipArea.y,
                          lastTooltipArea.width, lastTooltipArea.height);
   cScreen->damageRegion(nux_damage);
-
-  wt->ClearDrawList();
 
   lastTooltipArea = geo;
 }
@@ -2563,6 +2577,7 @@ gboolean UnityScreen::OnRedrawTimeout(gpointer data)
 
 void UnityScreen::onRedrawRequested()
 {
+#if 0
   // disable blur updates so we dont waste perf. This can stall the blur during animations
   // but ensures a smooth animation.
   if (_in_paint)
@@ -2571,6 +2586,7 @@ void UnityScreen::onRedrawRequested()
       _redraw_handle = g_idle_add_full (G_PRIORITY_DEFAULT, &UnityScreen::OnRedrawTimeout, this, NULL);
   }
   else
+#endif
   {
     damageNuxRegions();
   }
