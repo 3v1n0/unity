@@ -135,7 +135,7 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
                                * have a splash screen won't be removed from
                                * the launcher while the splash is closed and
                                * a new window is opened. */
-                              auto timeout = std::make_shared<glib::Timeout>(1000);
+                              auto timeout = std::make_shared<glib::TimeoutSeconds>(1);
                               _source_manager.Add(timeout, ICON_REMOVE_TIMEOUT);
                               timeout->Run([&] { Remove(); return false; });
                             }
