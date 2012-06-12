@@ -292,15 +292,23 @@ private:
       }
       else
       {
+        if (task->result)
+          task->result = nullptr;
+
         LOG_WARNING(logger) << "Unable to load icon " << task->data
                             << " at size " << task->size << ": " << task->error;
       }
 
-      task->InvokeSlot();
+      impl->finished_tasks_.push_back(task);
 
-      // this was all async, we need to erase the task from the task_map
-      impl->task_map_.erase(task->handle);
-      impl->queued_tasks_.erase(task->key);
+      if (!impl->coalesce_timeout_)
+      {
+        // we're using lower priority than the GIOSchedulerJob uses to deliver
+        // results to the mainloop
+        auto prio = static_cast<glib::Source::Priority>(glib::Source::Priority::DEFAULT_IDLE + 40);
+        impl->coalesce_timeout_.reset(new glib::Timeout(40, prio));
+        impl->coalesce_timeout_->Run(sigc::mem_fun(impl, &Impl::CoalesceTasksCb));
+      }
 
       return FALSE;
     }
@@ -326,17 +334,20 @@ private:
 
   // Looping idle callback function
   bool Iteration();
+  bool CoalesceTasksCb();
 
 private:
   std::map<std::string, glib::Object<GdkPixbuf>> cache_;
   std::map<std::string, IconLoaderTask::Ptr> queued_tasks_;
   std::queue<IconLoaderTask::Ptr> tasks_;
   std::map<Handle, IconLoaderTask::Ptr> task_map_;
+  std::vector<IconLoaderTask*> finished_tasks_;
 
   bool no_load_;
   GtkIconTheme* theme_; // Not owned.
   Handle handle_counter_;
   glib::Source::UniquePtr idle_;
+  glib::Source::UniquePtr coalesce_timeout_;
   glib::Signal<void, GtkIconTheme*> theme_changed_signal_;
 };
 
@@ -499,6 +510,23 @@ bool IconLoader::Impl::CacheLookup(std::string const& key,
   }
 
   return found;
+}
+
+bool IconLoader::Impl::CoalesceTasksCb()
+{
+  for (auto task : finished_tasks_)
+  {
+    task->InvokeSlot();
+
+    // this was all async, we need to erase the task from the task_map
+    task_map_.erase(task->handle);
+    queued_tasks_.erase(task->key);
+  }
+
+  finished_tasks_.clear();
+  coalesce_timeout_.reset();
+
+  return false;
 }
 
 bool IconLoader::Impl::Iteration()
