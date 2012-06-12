@@ -211,7 +211,8 @@ private:
 
   static gboolean initPluginActions(gpointer data);
   void initLauncher();
-  void damageNuxRegions();
+  void compizDamageNux(const CompRegion &region);
+  void nuxDamageCompiz();
   void onRedrawRequested();
   void Relayout();
 

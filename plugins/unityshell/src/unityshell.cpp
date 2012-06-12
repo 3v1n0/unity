@@ -1209,6 +1209,9 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
 {
   bool ret;
 
+  if (mask & PAINT_SCREEN_REGION_MASK)
+    compizDamageNux(region);
+
   doShellRepaint = wt->GetDrawList().size() > 0 ||
                    BackgroundEffectHelper::HasDirtyHelpers() ||
                    switcher_controller_->Visible() ||
@@ -1303,7 +1306,7 @@ void UnityScreen::preparePaint(int ms)
   if (damaged)
   {
     damaged = false;
-    damageNuxRegions();
+    nuxDamageCompiz();
   }
 
 }
@@ -1330,8 +1333,34 @@ void UnityScreen::donePaint()
   cScreen->donePaint ();
 }
 
+void UnityScreen::compizDamageNux(const CompRegion &damage)
+{
+  auto launchers = launcher_controller_->launchers();
+
+  for (auto launcher : launchers)
+  {
+    if (!launcher->Hidden())
+    {
+      nux::Geometry geo = launcher->GetAbsoluteGeometry();
+      CompRegion launcher_region(geo.x, geo.y, geo.width, geo.height);
+      if (damage.intersects(launcher_region))
+        launcher->QueueDraw();
+    }
+  }
+
+  for (nux::Geometry &geo : panel_controller_->GetGeometries())
+  {
+    CompRegion panel_region(geo.x, geo.y, geo.width, geo.height);
+    if (damage.intersects(panel_region))
+    {
+      panel_controller_->QueueRedraw();
+      break;
+    }
+  }
+}
+
 /* Grab changed nux regions and add damage rects for them */
-void UnityScreen::damageNuxRegions()
+void UnityScreen::nuxDamageCompiz()
 {
   CompRegion nux_damage;
 
@@ -2588,7 +2617,7 @@ void UnityScreen::onRedrawRequested()
   else
 #endif
   {
-    damageNuxRegions();
+    nuxDamageCompiz();
   }
 }
 
