@@ -34,6 +34,7 @@
 #include "EdgeBarrierController.h"
 #include "GeisAdapter.h"
 #include "unity-shared/Introspectable.h"
+#include "LauncherModel.h"
 #include "LauncherOptions.h"
 #include "LauncherDragWindow.h"
 #include "LauncherHideMachine.h"
@@ -47,7 +48,6 @@ namespace unity
 namespace launcher
 {
 class AbstractLauncherIcon;
-class LauncherModel;
 
 class Launcher : public unity::debug::Introspectable, public nux::View, public ui::EdgeBarrierSubscriber
 {
@@ -55,7 +55,6 @@ class Launcher : public unity::debug::Introspectable, public nux::View, public u
 public:
 
   Launcher(nux::BaseWindow* parent, NUX_FILE_LINE_PROTO);
-  ~Launcher();
 
   nux::Property<Display*> display;
   nux::Property<int> monitor;
@@ -78,8 +77,8 @@ public:
   void ForceReveal(bool force);
   void ShowShortcuts(bool show);
 
-  void SetModel(LauncherModel* model);
-  LauncherModel* GetModel() const;
+  void SetModel(LauncherModel::Ptr model);
+  LauncherModel::Ptr GetModel() const;
 
   void StartKeyShowLauncher();
   void EndKeyShowLauncher();
@@ -112,8 +111,6 @@ public:
   void Resize();
 
   sigc::signal<void, char*, AbstractLauncherIcon::Ptr> launcher_addrequest;
-  sigc::signal<void, std::string const&, AbstractLauncherIcon::Ptr, std::string const&, std::string const&,
-               int, int, int> launcher_addrequest_special;
   sigc::signal<void, AbstractLauncherIcon::Ptr> launcher_removerequest;
   sigc::signal<void, AbstractLauncherIcon::Ptr> icon_animation_complete;
   sigc::signal<void> selection_change;
@@ -310,20 +307,29 @@ private:
   void DndHoveredIconReset();
   void DndTimeoutSetup();
 
+  LauncherModel::Ptr _model;
+  nux::BaseWindow* _parent;
+  QuicklistView* _active_quicklist;
+
   nux::HLayout* m_Layout;
 
   // used by keyboard/a11y-navigation
   AbstractLauncherIcon::Ptr _icon_under_mouse;
   AbstractLauncherIcon::Ptr _icon_mouse_down;
   AbstractLauncherIcon::Ptr _drag_icon;
+  AbstractLauncherIcon::Ptr _dnd_hovered_icon;
 
-  QuicklistView* _active_quicklist;
-
-  bool  _hovered;
-  bool  _hidden;
-  bool  _scroll_limit_reached;
-  bool  _render_drag_window;
-  bool  _shortcuts_shown;
+  bool _hovered;
+  bool _hidden;
+  bool _scroll_limit_reached;
+  bool _render_drag_window;
+  bool _shortcuts_shown;
+  bool _data_checked;
+  bool _steal_drag;
+  bool _drag_edge_touching;
+  bool _initial_drag_animation;
+  bool _dash_is_open;
+  bool _hud_is_open;
 
   BacklightMode _backlight_mode;
 
@@ -337,13 +343,11 @@ private:
   LaunchAnimation _launch_animation;
   UrgentAnimation _urgent_animation;
 
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
-
   int _space_between_icons;
-  int _icon_size;
   int _icon_image_size;
   int _icon_image_size_delta;
   int _icon_glow_size;
+  int _icon_size;
   int _dnd_delta_y;
   int _dnd_delta_x;
   int _postreveal_mousemove_delta_x;
@@ -353,62 +357,27 @@ private:
   int _last_button_press;
   int _drag_out_id;
   float _drag_out_delta_x;
-  float _background_alpha;
   float _last_reveal_progress;
 
-  nux::Point2   _mouse_position;
-  nux::BaseWindow* _parent;
-  LauncherModel* _model;
+  nux::Point2 _mouse_position;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
   nux::ObjectPtr<LauncherDragWindow> _drag_window;
+  nux::ObjectPtr<unity::DNDCollectionWindow> _collection_window;
   LauncherHideMachine _hide_machine;
   LauncherHoverMachine _hover_machine;
 
   unity::DndData _dnd_data;
-  nux::DndAction    _drag_action;
-  bool              _data_checked;
-  bool              _steal_drag;
-  bool              _drag_edge_touching;
-  AbstractLauncherIcon::Ptr     _dnd_hovered_icon;
-  nux::ObjectPtr<unity::DNDCollectionWindow> _collection_window;
-
-  Atom              _selection_atom;
-
-  /* gdbus */
-  guint                       _dbus_owner;
-  static const gchar          introspection_xml[];
-  static GDBusInterfaceVTable interface_vtable;
-
-  static void OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer user_data);
-  static void handle_dbus_method_call(GDBusConnection*       connection,
-                                      const gchar*           sender,
-                                      const gchar*           object_path,
-                                      const gchar*           interface_name,
-                                      const gchar*           method_name,
-                                      GVariant*              parameters,
-                                      GDBusMethodInvocation* invocation,
-                                      gpointer               user_data);
+  nux::DndAction _drag_action;
+  Atom _selection_atom;
 
   struct timespec  _times[TIME_LAST];
-
-  bool _initial_drag_animation;
 
   nux::Color _background_color;
   BaseTexturePtr launcher_sheen_;
   BaseTexturePtr launcher_pressure_effect_;
-  bool _dash_is_open;
-  bool _hud_is_open;
 
   ui::AbstractIconRenderer::Ptr icon_renderer;
   BackgroundEffectHelper bg_effect_helper_;
-
-  std::string sc_icon_;
-  std::string sc_icon_title_;
-  std::string sc_icon_desktop_file_;
-  std::string sc_icon_aptdaemon_task_;
-  unsigned int sc_icon_x_;
-  unsigned int sc_icon_y_;
-  unsigned int sc_icon_size_;
-  bool sc_anim_icon_;
 
   UBusManager ubus_;
   glib::SourceManager sources_;

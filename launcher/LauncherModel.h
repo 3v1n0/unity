@@ -40,7 +40,6 @@ public:
   typedef Base::reverse_iterator const_reverse_iterator;
 
   LauncherModel();
-  ~LauncherModel();
 
   void AddIcon(AbstractLauncherIcon::Ptr icon);
   void RemoveIcon(AbstractLauncherIcon::Ptr icon);
