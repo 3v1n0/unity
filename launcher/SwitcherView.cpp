@@ -43,7 +43,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(SwitcherView);
 SwitcherView::SwitcherView()
   : UnityWindowView()
   , target_sizes_set_(false)
-  , redraw_handle_(0)
 {
   icon_renderer_ = AbstractIconRenderer::Ptr(new IconRenderer());
   icon_renderer_->pip_style = OVER_TILE;
@@ -68,10 +67,9 @@ SwitcherView::SwitcherView()
 
   render_targets_.clear ();
 
-  rounding_texture_ = nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_round_rect.png", -1, true);
+  rounding_texture_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_round_rect.png", -1, true));
 
   text_view_ = new nux::StaticCairoText("Testing");
-  text_view_->SinkReference();
   text_view_->SetMaximumWidth ((int) (tile_size * spread_size));
   text_view_->SetLines(1);
   text_view_->SetTextColor(nux::color::White);
@@ -79,14 +77,6 @@ SwitcherView::SwitcherView()
 
   icon_size.changed.connect (sigc::mem_fun (this, &SwitcherView::OnIconSizeChanged));
   tile_size.changed.connect (sigc::mem_fun (this, &SwitcherView::OnTileSizeChanged));
-}
-
-SwitcherView::~SwitcherView()
-{
-  rounding_texture_->UnReference();
-  text_view_->UnReference();
-  if (redraw_handle_ > 0)
-    g_source_remove(redraw_handle_);
 }
 
 std::string SwitcherView::GetName() const
@@ -540,16 +530,6 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
   return results;
 }
 
-gboolean SwitcherView::OnDrawTimeout(gpointer data)
-{
-  SwitcherView* self = static_cast<SwitcherView*>(data);
-
-  self->QueueDraw();
-  self->animation_draw_ = true;
-  self->redraw_handle_ = 0;
-  return FALSE;
-}
-
 void SwitcherView::PreDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   clock_gettime(CLOCK_MONOTONIC, &current_);
@@ -626,7 +606,7 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
   // render orange box that will encirlce active item(s)
   for (LayoutWindow::Ptr window : ExternalTargets())
   {
-    nux::Geometry geo_absolute = GetAbsoluteGeometry();
+    nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
     if (window->alpha >= 1.0f)
     {
       nux::Geometry orange_box = window->result;
@@ -634,7 +614,7 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
       orange_box.x -= geo_absolute.x;
       orange_box.y -= geo_absolute.y;
 
-      gPainter.PaintTextureShape(GfxContext, orange_box, rounding_texture_, 6, 6, 6, 6, false);
+      gPainter.PaintTextureShape(GfxContext, orange_box, rounding_texture_.GetPointer(), 6, 6, 6, 6, false);
     }
   }
 
@@ -643,13 +623,18 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
 
   int ms_since_change = TimeUtil::TimeDelta(&current_, &save_time_);
 
-  if (ms_since_change < animation_length && redraw_handle_ == 0)
-    redraw_handle_ = g_idle_add_full (G_PRIORITY_DEFAULT, &SwitcherView::OnDrawTimeout, this, NULL);
+  if (ms_since_change < animation_length && !redraw_idle_)
+  {
+    redraw_idle_.reset(new glib::Idle([&] () {
+      QueueDraw();
+      animation_draw_ = true;
+      redraw_idle_.reset();
+      return false;
+    }, glib::Source::Priority::DEFAULT));
+  }
 
   animation_draw_ = false;
 }
-
-
 
 }
 }

@@ -24,39 +24,30 @@ namespace ui {
 
 Decaymulator::Decaymulator()
 {
-  on_decay_handle = 0;
   value.changed.connect(sigc::mem_fun(this, &Decaymulator::OnValueChanged));
-}
-
-Decaymulator::~Decaymulator()
-{
-  if (on_decay_handle)
-    g_source_remove(on_decay_handle);
 }
 
 void Decaymulator::OnValueChanged(int value)
 {
-  if (!on_decay_handle && value > 0)
+  if (!decay_timer_ && value > 0)
   {
-    on_decay_handle = g_timeout_add(10, &Decaymulator::OnDecayTimeout, this);
+    decay_timer_.reset(new glib::Timeout(10, sigc::mem_fun(this, &Decaymulator::OnDecayTimeout)));
   }
 }
 
-gboolean Decaymulator::OnDecayTimeout(gpointer data)
+bool Decaymulator::OnDecayTimeout()
 {
-  Decaymulator* self = (Decaymulator*) data;
+  int partial_decay = rate_of_decay / 100;
 
-  int partial_decay = self->rate_of_decay / 100;
-
-  if (self->value <= partial_decay)
+  if (value <= partial_decay)
   {
-    self->value = 0;
-    self->on_decay_handle = 0;
-    return FALSE;
+    value = 0;
+    decay_timer_.reset();
+    return false;
   }
 
-  self->value = self->value - partial_decay;
-  return TRUE;
+  value = value - partial_decay;
+  return true;
 }
 
 }

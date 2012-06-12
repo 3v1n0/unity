@@ -53,9 +53,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   , active_index_(-1)
   , selected_index_(-1)
   , preview_row_(0)
-  , last_lazy_loaded_result_ (0)
-  , lazy_load_handle_(0)
-  , view_changed_handle_(0)
+  , last_lazy_loaded_result_(0)
   , last_mouse_down_x_(-1)
   , last_mouse_down_y_(-1)
   , recorded_dash_width_(-1)
@@ -66,11 +64,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
 {
   SetAcceptKeyNavFocusOnMouseDown(false);
 
-  auto needredraw_lambda = [&](int value)
-  {
-    NeedRedraw();
-  };
-
+  auto needredraw_lambda = [&](int value) { NeedRedraw(); };
   horizontal_spacing.changed.connect(needredraw_lambda);
   vertical_spacing.changed.connect(needredraw_lambda);
   padding.changed.connect(needredraw_lambda);
@@ -107,51 +101,31 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   SetDndEnabled(true, false);
 }
 
-ResultViewGrid::~ResultViewGrid()
-{
-  if (lazy_load_handle_)
-    g_source_remove(lazy_load_handle_);
-
-  if (view_changed_handle_)
-    g_source_remove(view_changed_handle_);
-}
-
-gboolean ResultViewGrid::OnLazyLoad (gpointer data)
-{
-  ResultViewGrid *self = (ResultViewGrid*)data;
-  self->lazy_load_handle_ = 0;
-  self->DoLazyLoad();
-  return FALSE;
-}
-
 void ResultViewGrid::QueueLazyLoad()
 {
-  if (lazy_load_handle_ == 0)
-  {
-    lazy_load_handle_ = g_idle_add_full (G_PRIORITY_DEFAULT, (GSourceFunc)(&ResultViewGrid::OnLazyLoad), this, NULL);
-  }
+  lazy_load_source_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
+  lazy_load_source_->Run(sigc::mem_fun(this, &ResultViewGrid::DoLazyLoad));
   last_lazy_loaded_result_ = 0; // we always want to reset the lazy load index here
 }
 
 void ResultViewGrid::QueueViewChanged()
 {
-  if (view_changed_handle_ == 0)
+  if (!view_changed_idle_)
   {
-    // using G_PRIORITY_HIGH because this needs to happen *before* next draw
-    view_changed_handle_ = g_idle_add_full (G_PRIORITY_HIGH,
-                                            [](gpointer data) -> gboolean
-    {
-      ResultViewGrid *self = (ResultViewGrid*)data;
-      self->SizeReallocate();
-      self->last_lazy_loaded_result_ = 0; // reset the lazy load index
-      self->DoLazyLoad(); // also calls QueueDraw
-      self->view_changed_handle_ = 0;
-      return FALSE;
-    }, this, NULL);
+    // using glib::Source::Priority::HIGH because this needs to happen *before* next draw
+    view_changed_idle_.reset(new glib::Idle(glib::Source::Priority::HIGH));
+    view_changed_idle_->Run([&] () {
+      SizeReallocate();
+      last_lazy_loaded_result_ = 0; // reset the lazy load index
+      DoLazyLoad(); // also calls QueueDraw
+
+      view_changed_idle_.reset();
+      return false;
+    });
   }
 }
 
-void ResultViewGrid::DoLazyLoad()
+bool ResultViewGrid::DoLazyLoad()
 {
   // FIXME - so this code was nice, it would only load the visible entries on the screen
   // however nux does not give us a good enough indicator right now that we are scrolling,
@@ -202,13 +176,13 @@ void ResultViewGrid::DoLazyLoad()
   if (queue_additional_load)
   {
     //we didn't load all the results because we exceeded our time budget, so queue another lazy load
-    if (lazy_load_handle_ == 0)
-    {
-      lazy_load_handle_ = g_timeout_add(1000/60 - 8, (GSourceFunc)(&ResultViewGrid::OnLazyLoad), this);
-    }
+    lazy_load_source_.reset(new glib::Timeout(1000/60 - 8));
+    lazy_load_source_->Run(sigc::mem_fun(this, &ResultViewGrid::DoLazyLoad));
   }
 
   QueueDraw();
+
+  return false;
 }
 
 
@@ -578,8 +552,8 @@ long ResultViewGrid::ComputeContentSize()
 {
   SizeReallocate();
   QueueLazyLoad();
-  long ret = ResultView::ComputeContentSize();
-  return ret;
+
+  return ResultView::ComputeContentSize();
 }
 
 

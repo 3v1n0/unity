@@ -19,15 +19,13 @@
 
 #include "IconLoader.h"
 
-#include <map>
 #include <queue>
 #include <sstream>
-
 #include <boost/algorithm/string.hpp>
 
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
-#include <string.h>
+#include <UnityCore/GLibSource.h>
 
 #include "unity-shared/Timer.h"
 
@@ -150,10 +148,9 @@ private:
   static gboolean LoaderJobFunc(GIOSchedulerJob* job, GCancellable *canc,
                                 IconLoaderTask *task);
   static gboolean LoadIconComplete(IconLoaderTask* task);
-  static gboolean CoalesceTasksCb(IconLoader::Impl* self);
+  bool CoalesceTasksCb();
 
-  // Loop calls the iteration function.
-  static gboolean Loop(Impl* self);
+  // Looping idle callback function
   bool Iteration();
 
 private:
@@ -168,19 +165,17 @@ private:
   typedef std::vector<IconLoaderTask*> TaskArray;
   TaskArray finished_tasks_;
 
-  guint idle_id_;
-  guint coalesce_id_;
   bool no_load_;
   GtkIconTheme* theme_; // Not owned.
   Handle handle_counter_;
+  glib::Source::UniquePtr idle_;
+  glib::Source::UniquePtr coalesce_timeout_;
 };
 
 
 IconLoader::Impl::Impl()
-  : idle_id_(0)
-  , coalesce_id_(0)
-  // Option to disable loading, if you're testing performance of other things
-  , no_load_(::getenv("UNITY_ICON_LOADER_DISABLE"))
+  : // Option to disable loading, if you're testing performance of other things
+    no_load_(::getenv("UNITY_ICON_LOADER_DISABLE"))
   , theme_(::gtk_icon_theme_get_default())
   , handle_counter_(0)
 {
@@ -310,9 +305,9 @@ int IconLoader::Impl::QueueTask(std::string const& key,
   LOG_DEBUG(logger) << "Pushing task  " << data << " at size " << size
                     << ", queue size now at " << tasks_.size();
 
-  if (idle_id_ == 0)
+  if (!idle_)
   {
-    idle_id_ = g_idle_add_full(G_PRIORITY_LOW, (GSourceFunc)Loop, this, NULL);
+    idle_.reset(new glib::Idle(sigc::mem_fun(this, &Impl::Iteration), glib::Source::Priority::LOW));
   }
   return task->handle;
 }
@@ -503,33 +498,30 @@ gboolean IconLoader::Impl::LoaderJobFunc(GIOSchedulerJob* job,
 // this will be invoked back in the thread from which push_job was called
 gboolean IconLoader::Impl::LoadIconComplete(IconLoaderTask* task)
 {
-  if (task->self->coalesce_id_ == 0)
+  task->self->finished_tasks_.push_back(task);
+
+  if (!task->self->coalesce_timeout_)
   {
     // we're using lower priority than the GIOSchedulerJob uses to deliver
     // results to the mainloop
-    task->self->coalesce_id_ =
-      g_timeout_add_full (G_PRIORITY_DEFAULT_IDLE + 10,
-                          40,
-                          (GSourceFunc) IconLoader::Impl::CoalesceTasksCb,
-                          task->self,
-                          NULL);
+    auto prio = static_cast<glib::Source::Priority>(glib::Source::Priority::DEFAULT_IDLE + 40);
+    task->self->coalesce_timeout_.reset(new glib::Timeout(40, prio));
+    task->self->coalesce_timeout_->Run(sigc::mem_fun(task->self, &Impl::CoalesceTasksCb));
   }
-
-  task->self->finished_tasks_.push_back (task);
 
   return FALSE;
 }
 
-gboolean IconLoader::Impl::CoalesceTasksCb(IconLoader::Impl* self)
+bool IconLoader::Impl::CoalesceTasksCb()
 {
-  for (auto task : self->finished_tasks_)
+  for (auto task : finished_tasks_)
   {
     // FIXME: we could update the cache sooner, but there are ref-counting
     // issues on the pixbuf (and inside the slot callbacks) that prevent us
     // from doing that.
     if (GDK_IS_PIXBUF(task->result))
     {
-      task->self->cache_[task->key] = task->result;
+      cache_[task->key] = task->result;
     }
     else
     {
@@ -540,15 +532,15 @@ gboolean IconLoader::Impl::CoalesceTasksCb(IconLoader::Impl* self)
     task->InvokeSlot(task->result);
 
     // this was all async, we need to erase the task from the task_map
-    self->task_map_.erase(task->handle);
-    self->queued_tasks_.erase(task->key);
+    task_map_.erase(task->handle);
+    queued_tasks_.erase(task->key);
     delete task;
   }
 
-  self->finished_tasks_.clear ();
-  self->coalesce_id_ = 0;
+  finished_tasks_.clear();
+  coalesce_timeout_.reset();
 
-  return FALSE;
+  return false;
 }
 
 bool IconLoader::Impl::Iteration()
@@ -580,18 +572,13 @@ bool IconLoader::Impl::Iteration()
 
   if (queue_empty)
   {
-    idle_id_ = 0;
     if (task_map_.empty())
       handle_counter_ = 0;
+
+    idle_.reset();
   }
 
   return !queue_empty;
-}
-
-
-gboolean IconLoader::Impl::Loop(IconLoader::Impl* self)
-{
-  return self->Iteration() ? TRUE : FALSE;
 }
 
 IconLoader::IconLoader()
@@ -601,7 +588,6 @@ IconLoader::IconLoader()
 
 IconLoader::~IconLoader()
 {
-  delete pimpl;
 }
 
 IconLoader& IconLoader::GetDefault()

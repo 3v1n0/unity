@@ -26,6 +26,7 @@
 #include <Nux/HLayout.h>
 #include <NuxCore/Color.h>
 #include <UnityCore/Variant.h>
+#include <UnityCore/GLibSource.h>
 
 #include "unity-shared/Animator.h"
 #include "unity-shared/Introspectable.h"
@@ -43,9 +44,8 @@ class Controller : public debug::Introspectable
 public:
   typedef std::shared_ptr<Controller> Ptr;
 
-  // Ctor and dtor
+  // Ctor
   Controller(std::list<AbstractHint::Ptr>& hints);
-  ~Controller();
 
   // Public Methods
   bool Show();
@@ -70,25 +70,24 @@ private:
   void OnFadeInEnded();
   void OnFadeOutUpdated(double opacity);
   void OnFadeOutEnded();
-
-  static gboolean OnShowTimer(gpointer data);
+  bool OnShowTimer();
 
   // Private Members
   View::Ptr view_;
   Model::Ptr model_;
 
   nux::Geometry workarea_;
-  nux::BaseWindow* view_window_;
+  nux::ObjectPtr<nux::BaseWindow> view_window_;
   nux::HLayout* main_layout_;
 
   bool visible_;
   bool enabled_;
   nux::Color bg_color_;
-  guint show_timer_;
 
   Animator fade_in_animator_;
   Animator fade_out_animator_;
 
+  glib::Source::UniquePtr show_timer_;
   UBusManager ubus_manager_;
 };
 

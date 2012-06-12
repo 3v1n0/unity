@@ -32,10 +32,8 @@ const unsigned int FADE_DURATION = 100;
 } // anonymouse namespace;
 
 Controller::Controller(std::list<AbstractHint::Ptr>& hints)
-  : view_window_(0)
-  , visible_(false)
+  : visible_(false)
   , enabled_(true)
-  , show_timer_(0)
   , fade_in_animator_(FADE_DURATION)
   , fade_out_animator_(FADE_DURATION)
 {
@@ -67,15 +65,6 @@ Controller::Controller(std::list<AbstractHint::Ptr>& hints)
   fade_out_animator_.animation_updated.connect(sigc::mem_fun(this, &Controller::OnFadeOutUpdated));
   fade_out_animator_.animation_ended.connect(sigc::mem_fun(this, &Controller::OnFadeOutEnded));
 }
-
-Controller::~Controller()
-{
-  if (view_window_)
-    view_window_->UnReference();
-
-  view_.Release();
-}
-
 
 void Controller::OnFadeInUpdated(double opacity)
 {
@@ -111,13 +100,9 @@ void Controller::OnBackgroundUpdate(GVariant* data)
 
 bool Controller::Show()
 {
-  if (show_timer_)
-    g_source_remove(show_timer_);
-  show_timer_ = 0;
-
   if (enabled_)
   {
-    show_timer_ = g_timeout_add(SUPER_TAP_DURATION, &Controller::OnShowTimer, this);
+    show_timer_.reset(new glib::Timeout(SUPER_TAP_DURATION, sigc::mem_fun(this, &Controller::OnShowTimer)));
     model_->Fill();
     visible_ = true;
 
@@ -127,31 +112,27 @@ bool Controller::Show()
   return false;
 }
 
-gboolean Controller::OnShowTimer(gpointer data)
+bool Controller::OnShowTimer()
 {
-  Controller* self = static_cast<Controller*>(data);
+  if (!enabled_)
+    return false;
 
-  if (!self->enabled_)
-  {
-    return FALSE;
-  }
-
-  self->EnsureView();
+  EnsureView();
 
   nux::Geometry geo;
-  if (!self->view_->GetBaseGeometry(geo))
-    return FALSE;
-  self->view_window_->SetGeometry(geo);
+  if (!view_->GetBaseGeometry(geo))
+    return false;
 
-  if (self->visible_)
+  view_window_->SetGeometry(geo);
+
+  if (visible_)
   {
-    self->view_->SetupBackground(true);
-    self->fade_out_animator_.Stop();
-    self->fade_in_animator_.Start(self->view_window_->GetOpacity());
+    view_->SetupBackground(true);
+    fade_out_animator_.Stop();
+    fade_in_animator_.Start(view_window_->GetOpacity());
   }
 
-  self->show_timer_ = 0;
-  return FALSE;
+  return false;
 }
 
 void Controller::ConstructView()
@@ -168,7 +149,6 @@ void Controller::ConstructView()
     main_layout_->SetHorizontalExternalMargin(0);
 
     view_window_ = new nux::BaseWindow("ShortcutHint");
-    view_window_->SinkReference();
     view_window_->SetLayout(main_layout_);
     view_window_->SetBackgroundColor(nux::Color(0x00000000));
   }
@@ -200,12 +180,7 @@ void Controller::Hide()
     return;
 
   visible_ = false;
-
-  if (show_timer_)
-  {
-    g_source_remove(show_timer_);
-    show_timer_ = 0;
-  }
+  show_timer_.reset();
 
   if (view_window_)
   {

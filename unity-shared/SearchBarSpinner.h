@@ -25,6 +25,7 @@
 #include <NuxGraphics/GraphicsEngine.h>
 #include <Nux/TextureArea.h>
 #include <NuxCore/Math/Matrix4.h>
+#include <UnityCore/GLibSource.h>
 #include "unity-shared/Introspectable.h"
 
 namespace unity
@@ -42,7 +43,6 @@ class SearchBarSpinner : public unity::debug::Introspectable, public nux::View
   NUX_DECLARE_OBJECT_TYPE(SearchBarSpinner, nux::View);
 public:
   SearchBarSpinner();
-  ~SearchBarSpinner();
 
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -53,27 +53,25 @@ protected:
   // Introspectable methods
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
-  static gboolean OnTimeout(SearchBarSpinner* self);
-  static gboolean OnFrame(SearchBarSpinner* self);
 
   // Key navigation
   virtual bool AcceptKeyNavFocus();
 
 private:
+  bool OnFrameTimeout();
 
-private:
-  SpinnerState      _state;
+  SpinnerState _state;
 
   nux::BaseTexture* _magnify;
   nux::BaseTexture* _circle;
   nux::BaseTexture* _close;
   nux::BaseTexture* _spin;
 
-  nux::Matrix4 _2d_rotate;
-  float        _rotation;
+  glib::Source::UniquePtr _spinner_timeout;
+  glib::Source::UniquePtr _frame_timeout;
 
-  guint32 _spinner_timeout;
-  guint32 _frame_timeout;
+  nux::Matrix4 _2d_rotate;
+  float _rotation;
 };
 
 }
