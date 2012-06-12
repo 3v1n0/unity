@@ -31,8 +31,10 @@ namespace unity
 {
 namespace
 {
-  unsigned int MOUSE_DOWN_TIMEOUT = 150;
-  unsigned int MOUSE_MOVEMENT_TOLERANCE = 4;
+
+const int MOUSE_DOWN_TIMEOUT = 150;
+const int MOUSE_MOVEMENT_TOLERANCE = 4;
+
 }
 
 PanelTitlebarGrabArea::PanelTitlebarGrabArea()
