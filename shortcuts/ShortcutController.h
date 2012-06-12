@@ -44,9 +44,8 @@ class Controller : public debug::Introspectable
 public:
   typedef std::shared_ptr<Controller> Ptr;
 
-  // Ctor and dtor
+  // Ctor
   Controller(std::list<AbstractHint::Ptr>& hints);
-  ~Controller();
 
   // Public Methods
   bool Show();
@@ -78,7 +77,7 @@ private:
   Model::Ptr model_;
 
   nux::Geometry workarea_;
-  nux::BaseWindow* view_window_;
+  nux::ObjectPtr<nux::BaseWindow> view_window_;
   nux::HLayout* main_layout_;
 
   bool visible_;

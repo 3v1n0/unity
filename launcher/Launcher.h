@@ -21,8 +21,6 @@
 #ifndef LAUNCHER_H
 #define LAUNCHER_H
 
-#include <sys/time.h>
-
 #include <Nux/View.h>
 #include <Nux/BaseWindow.h>
 #include <Nux/TimerProc.h>
@@ -71,8 +69,6 @@ public:
 
   void SetIconSize(int tile_size, int icon_size);
   int GetIconSize() const;
-
-  LauncherHideMachine* HideMachine() { return _hide_machine; }
 
   bool Hidden() const
   {
@@ -196,9 +192,10 @@ private:
 
   void OnSelectionChanged(AbstractLauncherIcon::Ptr selection);
 
-  static gboolean AnimationTimeout(gpointer data);
-  static gboolean StrutHack(gpointer data);
-  static gboolean StartIconDragTimeout(gpointer data);
+  bool StrutHack();
+  bool StartIconDragTimeout();
+  bool OnScrollTimeout();
+  bool OnUpdateDragManagerTimeout();
 
   void SetMousePosition(int x, int y);
 
@@ -223,9 +220,6 @@ private:
 
   bool MouseOverBottomScrollArea();
   bool MouseOverBottomScrollExtrema();
-
-  static gboolean OnScrollTimeout(gpointer data);
-  static gboolean OnUpdateDragManagerTimeout(gpointer data);
 
   float DnDStartProgress(struct timespec const& current) const;
   float DnDExitProgress(struct timespec const& current) const;
@@ -314,6 +308,7 @@ private:
 
   void DndReset();
   void DndHoveredIconReset();
+  void DndTimeoutSetup();
 
   nux::HLayout* m_Layout;
 
@@ -328,8 +323,7 @@ private:
   bool  _hidden;
   bool  _scroll_limit_reached;
   bool  _render_drag_window;
-
-  bool          _shortcuts_shown;
+  bool  _shortcuts_shown;
 
   BacklightMode _backlight_mode;
 
@@ -362,17 +356,12 @@ private:
   float _background_alpha;
   float _last_reveal_progress;
 
-  guint _autoscroll_handle;
-  guint _start_dragicon_handle;
-  guint _dnd_check_handle;
-  guint _strut_hack_handle;
-
   nux::Point2   _mouse_position;
   nux::BaseWindow* _parent;
   LauncherModel* _model;
-  LauncherDragWindow* _drag_window;
-  LauncherHideMachine* _hide_machine;
-  LauncherHoverMachine* _hover_machine;
+  nux::ObjectPtr<LauncherDragWindow> _drag_window;
+  LauncherHideMachine _hide_machine;
+  LauncherHoverMachine _hover_machine;
 
   unity::DndData _dnd_data;
   nux::DndAction    _drag_action;
@@ -380,12 +369,9 @@ private:
   bool              _steal_drag;
   bool              _drag_edge_touching;
   AbstractLauncherIcon::Ptr     _dnd_hovered_icon;
-  unity::DNDCollectionWindow* _collection_window;
-  sigc::connection _on_data_collected_connection;
+  nux::ObjectPtr<unity::DNDCollectionWindow> _collection_window;
 
   Atom              _selection_atom;
-
-  guint             _launcher_animation_timeout;
 
   /* gdbus */
   guint                       _dbus_owner;
@@ -393,8 +379,6 @@ private:
   static GDBusInterfaceVTable interface_vtable;
 
   static void OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer user_data);
-  static void OnNameAcquired(GDBusConnection* connection, const gchar* name, gpointer user_data);
-  static void OnNameLost(GDBusConnection* connection, const gchar* name, gpointer user_data);
   static void handle_dbus_method_call(GDBusConnection*       connection,
                                       const gchar*           sender,
                                       const gchar*           object_path,
@@ -417,16 +401,17 @@ private:
   ui::AbstractIconRenderer::Ptr icon_renderer;
   BackgroundEffectHelper bg_effect_helper_;
 
-  gchar*  _sc_icon;
-  gchar*  _sc_icon_title;
-  gint32  _sc_icon_x;
-  gint32  _sc_icon_y;
-  gint32  _sc_icon_size;
-  gchar*  _sc_icon_desktop_file;
-  gchar*  _sc_icon_aptdaemon_task;
-  bool    _sc_anim_icon;
+  std::string sc_icon_;
+  std::string sc_icon_title_;
+  std::string sc_icon_desktop_file_;
+  std::string sc_icon_aptdaemon_task_;
+  unsigned int sc_icon_x_;
+  unsigned int sc_icon_y_;
+  unsigned int sc_icon_size_;
+  bool sc_anim_icon_;
 
   UBusManager ubus_;
+  glib::SourceManager sources_;
 };
 
 }

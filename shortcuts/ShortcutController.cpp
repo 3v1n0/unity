@@ -32,8 +32,7 @@ const unsigned int FADE_DURATION = 100;
 } // anonymouse namespace;
 
 Controller::Controller(std::list<AbstractHint::Ptr>& hints)
-  : view_window_(0)
-  , visible_(false)
+  : visible_(false)
   , enabled_(true)
   , fade_in_animator_(FADE_DURATION)
   , fade_out_animator_(FADE_DURATION)
@@ -66,15 +65,6 @@ Controller::Controller(std::list<AbstractHint::Ptr>& hints)
   fade_out_animator_.animation_updated.connect(sigc::mem_fun(this, &Controller::OnFadeOutUpdated));
   fade_out_animator_.animation_ended.connect(sigc::mem_fun(this, &Controller::OnFadeOutEnded));
 }
-
-Controller::~Controller()
-{
-  if (view_window_)
-    view_window_->UnReference();
-
-  view_.Release();
-}
-
 
 void Controller::OnFadeInUpdated(double opacity)
 {
@@ -159,7 +149,6 @@ void Controller::ConstructView()
     main_layout_->SetHorizontalExternalMargin(0);
 
     view_window_ = new nux::BaseWindow("ShortcutHint");
-    view_window_->SinkReference();
     view_window_->SetLayout(main_layout_);
     view_window_->SetBackgroundColor(nux::Color(0x00000000));
   }
