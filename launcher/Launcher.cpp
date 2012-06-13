@@ -89,9 +89,6 @@ const int START_DRAGICON_DURATION = 250;
 const int MOUSE_DEADZONE = 15;
 const float DRAG_OUT_PIXELS = 300.0f;
 
-const std::string S_DBUS_NAME = "com.canonical.Unity.Launcher";
-const std::string S_DBUS_PATH = "/com/canonical/Unity/Launcher";
-
 const std::string DND_CHECK_TIMEOUT = "dnd-check-timeout";
 const std::string STRUT_HACK_TIMEOUT = "strut-hack-timeout";
 const std::string START_DRAGICON_TIMEOUT = "start-dragicon-timeout";
@@ -102,50 +99,67 @@ const std::string ANIMATION_IDLE = "animation-idle";
 
 NUX_IMPLEMENT_OBJECT_TYPE(Launcher);
 
-const gchar Launcher::introspection_xml[] =
-  "<node>"
-  "  <interface name='com.canonical.Unity.Launcher'>"
-  ""
-  "    <method name='AddLauncherItemFromPosition'>"
-  "      <arg type='s' name='title' direction='in'/>"
-  "      <arg type='s' name='icon' direction='in'/>"
-  "      <arg type='i' name='icon_x' direction='in'/>"
-  "      <arg type='i' name='icon_y' direction='in'/>"
-  "      <arg type='i' name='icon_size' direction='in'/>"
-  "      <arg type='s' name='desktop_file' direction='in'/>"
-  "      <arg type='s' name='aptdaemon_task' direction='in'/>"
-  "    </method>"
-  ""
-  "  </interface>"
-  "</node>";
-
-GDBusInterfaceVTable Launcher::interface_vtable =
-{
-  Launcher::handle_dbus_method_call,
-  NULL,
-  NULL
-};
-
 const int Launcher::Launcher::ANIM_DURATION_SHORT = 125;
 
 Launcher::Launcher(nux::BaseWindow* parent,
                    NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
-  , _model(nullptr)
-  , _background_color(nux::color::DimGray)
+  , monitor(0)
+  , _parent(parent)
+  , _active_quicklist(nullptr)
+  , _hovered(false)
+  , _hidden(false)
+  , _scroll_limit_reached(false)
+  , _render_drag_window(false)
+  , _shortcuts_shown(false)
+  , _data_checked(false)
+  , _steal_drag(false)
+  , _drag_edge_touching(false)
   , _dash_is_open(false)
   , _hud_is_open(false)
+  , _folded_angle(1.0f)
+  , _neg_folded_angle(-1.0f)
+  , _folded_z_distance(10.0f)
+  , _last_delta_y(0.0f)
+  , _edge_overcome_pressure(0.0f)
+  , _launcher_action_state(ACTION_NONE)
+  , _space_between_icons(5)
+  , _icon_image_size(48)
+  , _icon_image_size_delta(6)
+  , _icon_glow_size(62)
+  , _icon_size(_icon_image_size + _icon_image_size_delta)
+  , _dnd_delta_y(0)
+  , _dnd_delta_x(0)
+  , _postreveal_mousemove_delta_x(0)
+  , _postreveal_mousemove_delta_y(0)
+  , _launcher_drag_delta(0)
+  , _enter_y(0)
+  , _last_button_press(0)
+  , _drag_out_id(0)
+  , _drag_out_delta_x(0.0f)
+  , _last_reveal_progress(0.0f)
+  , _selection_atom(0)
+  , _background_color(nux::color::DimGray)
 {
-  _parent = parent;
-  _active_quicklist = nullptr;
+  m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  monitor = 0;
+  _collection_window = new unity::DNDCollectionWindow();
+  _collection_window->collected.connect(sigc::mem_fun(this, &Launcher::OnDNDDataCollected));
+
+  _offscreen_drag_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(2, 2, 1, nux::BITFMT_R8G8B8A8);
+
+  bg_effect_helper_.owner = this;
+  bg_effect_helper_.enabled = false;
+
+  SetCompositionLayout(m_Layout);
+  CaptureMouseDownAnyWhereElse(true);
+  SetAcceptKeyNavFocusOnMouseDown(false);
+  SetAcceptMouseWheelEvent(true);
+  SetDndEnabled(false, true);
 
   _hide_machine.should_hide_changed.connect(sigc::mem_fun(this, &Launcher::SetHidden));
   _hide_machine.reveal_progress.changed.connect([&](float value) { EnsureAnimation(); });
   _hover_machine.should_hover_changed.connect(sigc::mem_fun(this, &Launcher::SetHover));
-
-  m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
   mouse_down.connect(sigc::mem_fun(this, &Launcher::RecvMouseDown));
   mouse_up.connect(sigc::mem_fun(this, &Launcher::RecvMouseUp));
@@ -155,9 +169,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   mouse_move.connect(sigc::mem_fun(this, &Launcher::RecvMouseMove));
   mouse_wheel.connect(sigc::mem_fun(this, &Launcher::RecvMouseWheel));
   //OnEndFocus.connect   (sigc::mem_fun (this, &Launcher::exitKeyNavMode));
-
-  CaptureMouseDownAnyWhereElse(true);
-  SetAcceptKeyNavFocusOnMouseDown(false);
 
   QuicklistManager& ql_manager = *(QuicklistManager::Default());
   ql_manager.quicklist_opened.connect(sigc::mem_fun(this, &Launcher::RecvQuicklistOpened));
@@ -180,88 +191,24 @@ Launcher::Launcher(nux::BaseWindow* parent,
 
   display.changed.connect(sigc::mem_fun(this, &Launcher::OnDisplayChanged));
 
-  SetCompositionLayout(m_Layout);
-
-  _folded_angle           = 1.0f;
-  _neg_folded_angle       = -1.0f;
-  _space_between_icons    = 5;
-  _last_delta_y           = 0.0f;
-  _folded_z_distance      = 10.0f;
-  _launcher_action_state  = ACTION_NONE;
-  _icon_under_mouse       = NULL;
-  _icon_mouse_down        = NULL;
-  _drag_icon              = NULL;
-  _icon_image_size        = 48;
-  _icon_glow_size         = 62;
-  _icon_image_size_delta  = 6;
-  _icon_size              = _icon_image_size + _icon_image_size_delta;
-
-  _enter_y                = 0;
-  _launcher_drag_delta    = 0;
-  _dnd_delta_y            = 0;
-  _dnd_delta_x            = 0;
-  _last_reveal_progress   = 0;
-
-  _shortcuts_shown        = false;
-  _hovered                = false;
-  _hidden                 = false;
-  _scroll_limit_reached   = false;
-  _render_drag_window     = false;
-  _drag_edge_touching     = false;
-  _steal_drag             = false;
-  _last_button_press      = 0;
-  _selection_atom         = 0;
-  _drag_out_id            = 0;
-  _drag_out_delta_x       = 0.0f;
-  _edge_overcome_pressure = 0.0f;
-
-  // FIXME: remove
-  _initial_drag_animation = false;
-
-  _postreveal_mousemove_delta_x = 0;
-  _postreveal_mousemove_delta_y = 0;
-
-  _data_checked = false;
-  _collection_window = new unity::DNDCollectionWindow();
-  _collection_window->collected.connect(sigc::mem_fun(this, &Launcher::OnDNDDataCollected));
-
   // 0 out timers to avoid wonky startups
-  int i;
-  for (i = 0; i < TIME_LAST; ++i)
+  for (int i = 0; i < TIME_LAST; ++i)
   {
     _times[i].tv_sec = 0;
     _times[i].tv_nsec = 0;
   }
-
-  _dnd_hovered_icon = NULL;
-  _offscreen_drag_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(2, 2, 1, nux::BITFMT_R8G8B8A8);
 
   ubus_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &Launcher::OnOverlayShown));
   ubus_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &Launcher::OnOverlayHidden));
   ubus_.RegisterInterest(UBUS_LAUNCHER_ACTION_DONE, sigc::mem_fun(this, &Launcher::OnActionDone));
   ubus_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Launcher::OnBGColorChanged));
   ubus_.RegisterInterest(UBUS_LAUNCHER_LOCK_HIDE, sigc::mem_fun(this, &Launcher::OnLockHideChanged));
-  _dbus_owner = g_bus_own_name(G_BUS_TYPE_SESSION,
-                               S_DBUS_NAME.c_str(),
-                               (GBusNameOwnerFlags)(G_BUS_NAME_OWNER_FLAGS_REPLACE | G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT),
-                               OnBusAcquired,
-                               nullptr,
-                               nullptr,
-                               this,
-                               nullptr);
-
-  SetDndEnabled(false, true);
-
-  icon_renderer = ui::AbstractIconRenderer::Ptr(new ui::IconRenderer());
-  icon_renderer->SetTargetSize(_icon_size, _icon_image_size, _space_between_icons);
 
   // request the latest colour from bghash
   ubus_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 
-  SetAcceptMouseWheelEvent(true);
-
-  bg_effect_helper_.owner = this;
-  bg_effect_helper_.enabled = false;
+  icon_renderer = ui::AbstractIconRenderer::Ptr(new ui::IconRenderer());
+  icon_renderer->SetTargetSize(_icon_size, _icon_image_size, _space_between_icons);
 
   TextureCache& cache = TextureCache::GetDefault();
   TextureCache::CreateTextureCallback cb = [&](std::string const& name, int width, int height) -> nux::BaseTexture* {
@@ -271,35 +218,21 @@ Launcher::Launcher(nux::BaseWindow* parent,
   launcher_sheen_ = cache.FindTexture("dash_sheen", 0, 0, cb);
   launcher_pressure_effect_ = cache.FindTexture("launcher_pressure_effect", 0, 0, cb);
 
-  options.changed.connect (sigc::mem_fun (this, &Launcher::OnOptionsChanged));
-
-  // icon information from software center
-  sc_icon_x_ = 0;
-  sc_icon_y_ = 0;
-  sc_icon_size_ = 0;
-  sc_anim_icon_ = false;
-}
-
-Launcher::~Launcher()
-{
-  g_bus_unown_name(_dbus_owner);
+  options.changed.connect(sigc::mem_fun (this, &Launcher::OnOptionsChanged));
 }
 
 /* Introspection */
-std::string
-Launcher::GetName() const
+std::string Launcher::GetName() const
 {
   return "Launcher";
 }
 
-void
-Launcher::OnDisplayChanged(Display* display)
+void Launcher::OnDisplayChanged(Display* display)
 {
   _collection_window->display = display;
 }
 
-void
-Launcher::OnDragStart(GeisAdapter::GeisDragData* data)
+void Launcher::OnDragStart(GeisAdapter::GeisDragData* data)
 {
   if (_drag_out_id && _drag_out_id == data->id)
     return;
@@ -319,8 +252,7 @@ Launcher::OnDragStart(GeisAdapter::GeisDragData* data)
   }
 }
 
-void
-Launcher::OnDragUpdate(GeisAdapter::GeisDragData* data)
+void Launcher::OnDragUpdate(GeisAdapter::GeisDragData* data)
 {
   if (data->id == _drag_out_id)
   {
@@ -329,8 +261,7 @@ Launcher::OnDragUpdate(GeisAdapter::GeisDragData* data)
   }
 }
 
-void
-Launcher::OnDragFinish(GeisAdapter::GeisDragData* data)
+void Launcher::OnDragFinish(GeisAdapter::GeisDragData* data)
 {
   if (data->id == _drag_out_id)
   {
@@ -342,8 +273,7 @@ Launcher::OnDragFinish(GeisAdapter::GeisDragData* data)
   }
 }
 
-void
-Launcher::AddProperties(GVariantBuilder* builder)
+void Launcher::AddProperties(GVariantBuilder* builder)
 {
   timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
@@ -1410,20 +1340,17 @@ void Launcher::SetHidden(bool hidden)
   hidden_changed.emit();
 }
 
-int
-Launcher::GetMouseX() const
+int Launcher::GetMouseX() const
 {
   return _mouse_position.x;
 }
 
-int
-Launcher::GetMouseY() const
+int Launcher::GetMouseY() const
 {
   return _mouse_position.y;
 }
 
-bool
-Launcher::OnUpdateDragManagerTimeout()
+bool Launcher::OnUpdateDragManagerTimeout()
 {
   if (display() == 0)
     return false;
@@ -1474,8 +1401,7 @@ void Launcher::DndTimeoutSetup()
   timeout->Run(sigc::mem_fun(this, &Launcher::OnUpdateDragManagerTimeout));
 }
 
-void
-Launcher::OnWindowMapped(guint32 xid)
+void Launcher::OnWindowMapped(guint32 xid)
 {
   //CompWindow* window = _screen->findWindow(xid);
   //if (window && window->type() | CompWindowTypeDndMask)
@@ -1487,8 +1413,7 @@ Launcher::OnWindowMapped(guint32 xid)
     ResetMouseDragState();
 }
 
-void
-Launcher::OnWindowUnmapped(guint32 xid)
+void Launcher::OnWindowUnmapped(guint32 xid)
 {
   //CompWindow* window = _screen->findWindow(xid);
   //if (window && window->type() | CompWindowTypeDndMask)
@@ -1497,8 +1422,7 @@ Launcher::OnWindowUnmapped(guint32 xid)
   //}
 }
 
-void
-Launcher::OnPluginStateChanged()
+void Launcher::OnPluginStateChanged()
 {
   _hide_machine.SetQuirk (LauncherHideMachine::EXPO_ACTIVE, WindowManager::Default ()->IsExpoActive ());
   _hide_machine.SetQuirk (LauncherHideMachine::SCALE_ACTIVE, WindowManager::Default ()->IsScaleActive ());
@@ -1522,22 +1446,19 @@ bool Launcher::StrutHack()
   return false;
 }
 
-void
-Launcher::OnOptionsChanged(Options::Ptr options)
+void Launcher::OnOptionsChanged(Options::Ptr options)
 {
    UpdateOptions(options);
 
    options->option_changed.connect(sigc::mem_fun(this, &Launcher::OnOptionChanged));
 }
 
-void
-Launcher::OnOptionChanged()
+void Launcher::OnOptionChanged()
 {
   UpdateOptions(options());
 }
 
-void
-Launcher::UpdateOptions(Options::Ptr options)
+void Launcher::UpdateOptions(Options::Ptr options)
 {
   SetHideMode(options->hide_mode);
   SetIconSize(options->tile_size, options->icon_size);
@@ -1597,8 +1518,7 @@ bool Launcher::IsBackLightModeToggles() const
   }
 }
 
-void
-Launcher::SetActionState(LauncherActionState actionstate)
+void Launcher::SetActionState(LauncherActionState actionstate)
 {
   if (_launcher_action_state == actionstate)
     return;
@@ -1781,7 +1701,7 @@ void Launcher::OnOrderChanged()
   EnsureAnimation();
 }
 
-void Launcher::SetModel(LauncherModel* model)
+void Launcher::SetModel(LauncherModel::Ptr model)
 {
   _model = model;
 
@@ -1794,7 +1714,7 @@ void Launcher::SetModel(LauncherModel* model)
   _model->selection_changed.connect(sigc::mem_fun(this, &Launcher::OnSelectionChanged));
 }
 
-LauncherModel* Launcher::GetModel() const
+LauncherModel::Ptr Launcher::GetModel() const
 {
   return _model;
 }
@@ -2053,14 +1973,6 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   gPainter.PopBackground(push_count);
   GfxContext.PopClippingRectangle();
   GfxContext.PopClippingRectangle();
-
-  if (sc_anim_icon_)
-  {
-    launcher_addrequest_special.emit(sc_icon_desktop_file_, AbstractLauncherIcon::Ptr(),
-                                     sc_icon_aptdaemon_task_, sc_icon_, sc_icon_x_,
-                                     sc_icon_y_, sc_icon_size_);
-    sc_anim_icon_ = false;
-  }
 }
 
 void Launcher::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
@@ -2560,8 +2472,7 @@ AbstractLauncherIcon::Ptr Launcher::MouseIconIntersection(int x, int y)
   return AbstractLauncherIcon::Ptr();
 }
 
-void
-Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherIcon::Ptr icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
+void Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherIcon::Ptr icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
 {
   RenderArg arg;
   struct timespec current;
@@ -2586,8 +2497,7 @@ Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherI
   RestoreSystemRenderTarget();
 }
 
-void
-Launcher::SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
+void Launcher::SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
 {
   int width = texture->GetWidth();
   int height = texture->GetHeight();
@@ -2605,8 +2515,7 @@ Launcher::SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> textu
   graphics_engine->EmptyClippingRegion();
 }
 
-void
-Launcher::RestoreSystemRenderTarget()
+void Launcher::RestoreSystemRenderTarget()
 {
   nux::GetWindowCompositor().RestoreRenderingSurface();
 }
@@ -2659,8 +2568,7 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
   }
 }
 
-void
-Launcher::ProcessDndEnter()
+void Launcher::ProcessDndEnter()
 {
   SetStateMouseOverLauncher(true);
 
@@ -2672,8 +2580,7 @@ Launcher::ProcessDndEnter()
   _dnd_hovered_icon = nullptr;
 }
 
-void
-Launcher::DndReset()
+void Launcher::DndReset()
 {
   _dnd_data.Reset();
 
@@ -2704,16 +2611,14 @@ void Launcher::DndHoveredIconReset()
   _dnd_hovered_icon = nullptr;
 }
 
-void
-Launcher::ProcessDndLeave()
+void Launcher::ProcessDndLeave()
 {
   SetStateMouseOverLauncher(false);
 
   DndHoveredIconReset();
 }
 
-void
-Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
+void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
 {
   nux::Area* parent = GetToplevel();
   unity::glib::String uri_list_const(g_strdup("text/uri-list"));
@@ -2847,8 +2752,7 @@ Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
   SendDndStatus(accept, _drag_action, nux::Geometry(x, y, 1, 1));
 }
 
-void
-Launcher::ProcessDndDrop(int x, int y)
+void Launcher::ProcessDndDrop(int x, int y)
 {
   if (_steal_drag)
   {
@@ -2895,84 +2799,17 @@ Launcher::ProcessDndDrop(int x, int y)
  * Returns the current selected icon if it is in keynavmode
  * It will return NULL if it is not on keynavmode
  */
-AbstractLauncherIcon::Ptr
-Launcher::GetSelectedMenuIcon() const
+AbstractLauncherIcon::Ptr Launcher::GetSelectedMenuIcon() const
 {
   if (!IsInKeyNavMode())
     return AbstractLauncherIcon::Ptr();
   return _model->Selection();
 }
 
-/* dbus handlers */
-
-void
-Launcher::handle_dbus_method_call(GDBusConnection*       connection,
-                                  const gchar*           sender,
-                                  const gchar*           object_path,
-                                  const gchar*           interface_name,
-                                  const gchar*           method_name,
-                                  GVariant*              parameters,
-                                  GDBusMethodInvocation* invocation,
-                                  gpointer               user_data)
-{
-  if (g_strcmp0(method_name, "AddLauncherItemFromPosition") == 0)
-  {
-    auto self = static_cast<Launcher*>(user_data);
-    glib::String icon, icon_title, desktop_file, aptdaemon_task;
-    gint icon_x, icon_y, icon_size;
-
-    g_variant_get(parameters, "(ssiiiss)", &icon_title, &icon, &icon_x, &icon_y,
-                                           &icon_size, &desktop_file, &aptdaemon_task);
-
-    self->sc_anim_icon_ = true;
-    self->sc_icon_ = icon.Str();
-    self->sc_icon_title_ = icon_title.Str();
-    self->sc_icon_desktop_file_ = desktop_file.Str();
-    self->sc_icon_aptdaemon_task_ = aptdaemon_task.Str();
-    self->sc_icon_x_ = icon_x;
-    self->sc_icon_y_ = icon_y;
-    self->sc_icon_size_ = icon_size;
-
-    g_dbus_method_invocation_return_value(invocation, nullptr);
-  }
-}
-
-void
-Launcher::OnBusAcquired(GDBusConnection* connection,
-                        const gchar*     name,
-                        gpointer         user_data)
-{
-  GDBusNodeInfo* introspection_data = g_dbus_node_info_new_for_xml(introspection_xml, NULL);
-  guint registration_id;
-
-  if (!introspection_data)
-  {
-    LOG_WARNING(logger) << "No introspection data loaded. Won't get dynamic launcher addition.";
-    return;
-  }
-
-
-
-  registration_id = g_dbus_connection_register_object(connection,
-                                                      S_DBUS_PATH.c_str(),
-                                                      introspection_data->interfaces[0],
-                                                      &interface_vtable,
-                                                      user_data,
-                                                      NULL,
-                                                      NULL);
-  if (!registration_id)
-  {
-    LOG_WARNING(logger) << "Object registration failed. Won't get dynamic launcher addition.";
-  }
-
-  g_dbus_node_info_unref(introspection_data);
-}
-
 //
 // Key navigation
 //
-bool
-Launcher::InspectKeyEvent(unsigned int eventType,
+bool Launcher::InspectKeyEvent(unsigned int eventType,
                           unsigned int keysym,
                           const char* character)
 {

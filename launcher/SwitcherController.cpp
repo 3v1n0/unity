@@ -56,7 +56,7 @@ Controller::Controller(unsigned int load_timeout)
 {
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
 
-  auto lazy_timeout = std::make_shared<glib::Timeout>(construct_timeout_ * 1000, glib::Source::Priority::LOW);
+  auto lazy_timeout = std::make_shared<glib::TimeoutSeconds>(construct_timeout_, glib::Source::Priority::LOW);
   lazy_timeout->Run([&] { ConstructWindow(); return false; });
   sources_.Add(lazy_timeout, LAZY_TIMEOUT);
 }
