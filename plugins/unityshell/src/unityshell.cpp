@@ -1204,6 +1204,14 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
 {
   bool ret;
 
+  /* Figure out if anything behind a blur has changed */
+  CompRect::vector rects = region.rects();
+  for (CompRect &r : rects)
+  {
+    nux::Geometry geo(r.x(), r.y(), r.width(), r.height());
+    BackgroundEffectHelper::ProcessDamage(geo);
+  }
+
   doShellRepaint = true;
   allowWindowPaint = true;
   _last_output = output;
@@ -1492,44 +1500,6 @@ void UnityScreen::handleEvent(XEvent* event)
       !switcher_controller_->Visible())
   {
     wt->ProcessForeignEvent(event, NULL);
-  }
-
-  if (event->type == cScreen->damageEvent() + XDamageNotify)
-  {
-    XDamageNotifyEvent *de = (XDamageNotifyEvent *) event;
-    CompWindow* w = screen->findWindow (de->drawable);
-    std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
-    CompWindow* lastNWindow = screen->findWindow (xwns.back ());
-    bool        processDamage = true;
-
-    if (w)
-    {
-      if (!w->overrideRedirect () &&
-          w->isViewable () &&
-          !w->invisible ())
-      {
-
-        for (; lastNWindow != NULL; lastNWindow = lastNWindow->next)
-        {
-          if (lastNWindow == w)
-          {
-            processDamage = false;
-            break;
-          }
-        }
-
-        if (processDamage)
-        {
-          nux::Geometry damage (de->area.x, de->area.y, de->area.width, de->area.height);
-
-          const CompWindow::Geometry &geom = w->geometry ();
-          damage.x += geom.x () + geom.border ();
-          damage.y += geom.y () + geom.border ();
-
-          BackgroundEffectHelper::ProcessDamage(damage);
-        }
-      }
-    }
   }
 }
 
