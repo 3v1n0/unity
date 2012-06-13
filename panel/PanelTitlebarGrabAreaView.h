@@ -24,6 +24,7 @@
 #define PANEL_TITLEBAR_GRAB_AREA_H_H
 
 #include <Nux/View.h>
+#include <UnityCore/GLibSource.h>
 
 #include "unity-shared/Introspectable.h"
 
@@ -60,9 +61,9 @@ private:
 
   Cursor grab_cursor_;
   bool grab_started_;
-  guint mouse_down_timer_;
   nux::Point mouse_down_point_;
   unsigned int mouse_down_button_;
+  glib::Source::UniquePtr mouse_down_timer_;
 };
 
 } // NAMESPACE

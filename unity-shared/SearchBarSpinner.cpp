@@ -32,9 +32,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(SearchBarSpinner);
 SearchBarSpinner::SearchBarSpinner()
   : nux::View(NUX_TRACKER_LOCATION),
     _state(STATE_READY),
-    _rotation(0.0f),
-    _spinner_timeout(0),
-    _frame_timeout(0)
+    _rotation(0.0f)
 {
   dash::Style& style = dash::Style::Instance();
 
@@ -47,19 +45,10 @@ SearchBarSpinner::SearchBarSpinner()
   _2d_rotate.Rotate_z(0.0);
 }
 
-SearchBarSpinner::~SearchBarSpinner()
-{
-  if (_spinner_timeout)
-    g_source_remove(_spinner_timeout);
-
-  if (_frame_timeout)
-    g_source_remove(_frame_timeout);
-}
-
 void
 SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  nux::Geometry geo = GetGeometry();
+  nux::Geometry const& geo = GetGeometry();
   nux::TexCoordXForm texxform;
 
   GfxContext.PushClippingRectangle(geo);
@@ -132,7 +121,9 @@ SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PopClippingRectangle();
 
   if (_state == STATE_SEARCHING && !_frame_timeout)
-    _frame_timeout = g_timeout_add(22, (GSourceFunc)SearchBarSpinner::OnFrame, this);
+  {
+    _frame_timeout.reset(new glib::Timeout(22, sigc::mem_fun(this, &SearchBarSpinner::OnFrameTimeout)));
+  }
 }
 
 void
@@ -140,25 +131,19 @@ SearchBarSpinner::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
 }
 
-gboolean
-SearchBarSpinner::OnTimeout(SearchBarSpinner* self)
+bool
+SearchBarSpinner::OnFrameTimeout()
 {
-  self->_state = STATE_READY;
-  return FALSE;
-}
+  _rotation += 0.1f;
 
-gboolean
-SearchBarSpinner::OnFrame(SearchBarSpinner* self)
-{
-  self->_rotation += 0.1f;
-  if (self->_rotation >= 360.0f)
-    self->_rotation = 0.0f;
+  if (_rotation >= 360.0f)
+    _rotation = 0.0f;
 
-  self->_2d_rotate.Rotate_z(self->_rotation);
-  self->_frame_timeout = 0;
+  _2d_rotate.Rotate_z(_rotation);
+  QueueDraw();
 
-  self->QueueDraw();
-  return FALSE;
+  _frame_timeout.reset();
+  return false;
 }
 
 void
@@ -168,17 +153,16 @@ SearchBarSpinner::SetState(SpinnerState state)
     return;
 
   _state = state;
-
-  if (_spinner_timeout)
-    g_source_remove(_spinner_timeout);
-  _spinner_timeout = 0;
-
+  _spinner_timeout.reset();
   _2d_rotate.Rotate_z(0.0f);
   _rotation = 0.0f;
 
   if (_state == STATE_SEARCHING)
   {
-    _spinner_timeout = g_timeout_add_seconds(5, (GSourceFunc)SearchBarSpinner::OnTimeout, this);
+    _spinner_timeout.reset(new glib::TimeoutSeconds(5, [&] {
+      _state = STATE_READY;
+      return false;
+    }));
   }
 
   QueueDraw();

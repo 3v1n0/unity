@@ -32,8 +32,8 @@ namespace glib
 {
 
 /**
- * glib::Source is a wrapper class used to handle GSource based events using
- * at C++ level.
+ * glib::Source is a wrapper class made to handle GSource based events at C++
+ * level.
  *
  * The class is basically to be intended abstract and is currently implemented
  * by glib::Timeout() and glib::Idle() that are the higher-level wrappers for
@@ -141,13 +141,33 @@ private:
 
 
 /**
- * glib::Idle is a wrapper to g_idle and must be used to initialize an idle
- * that will be executed whenever there are no higher priority events pending to
- * the default main loop.
+ * glib::TimeoutSeconds is a wrapper to g_timeout and must be used to initialize
+ * a timeout that will be executed every @seconds seconds, whenever
+ * there are no higher priority events pending to the default main loop.
  *
  * If the SourceCallback is defined on construction, then the Timeout is ran
  * as soon as it is created, otherwise you must manually call the Run() method
  * with the appropriate parameters.
+ */
+class TimeoutSeconds : public Source
+{
+public:
+  TimeoutSeconds(unsigned int seconds, Priority prio = Priority::DEFAULT);
+  TimeoutSeconds(unsigned int seconds, SourceCallback cb, Priority prio = Priority::DEFAULT);
+
+private:
+  void Init(unsigned int seconds, Priority prio);
+};
+
+
+/**
+ * glib::Idle is a wrapper to g_idle and must be used to initialize an idle
+ * that will be executed whenever there are no higher priority events pending to
+ * the default main loop.
+ *
+ * If the SourceCallback is defined on construction, then the Idle is ran as
+ * soon as it is created, otherwise you must manually call the Run() method with
+ * the appropriate parameters.
  */
 class Idle : public Source
 {

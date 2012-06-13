@@ -23,8 +23,14 @@
 #include <sigc++/sigc++.h>
 #include <glib.h>
 #include <string>
+#include <UnityCore/GLibSource.h>
 
 #include "Decaymulator.h"
+
+namespace unity
+{
+namespace launcher
+{
 
 class LauncherHideMachine : public sigc::trackable
 {
@@ -62,11 +68,9 @@ public:
 
   nux::Property<int> reveal_pressure;
   nux::Property<int> edge_decay_rate;
-
   nux::Property<float> reveal_progress;
 
   LauncherHideMachine();
-  virtual ~LauncherHideMachine();
 
   void     SetMode(HideMode mode);
   HideMode GetMode() const;
@@ -85,22 +89,21 @@ public:
 private:
   void EnsureHideState(bool skip_delay);
   void SetShouldHide(bool value, bool skip_delay);
-
-  static gboolean OnHideDelayTimeout(gpointer data);
-  static gboolean EmitShouldHideChanged(gpointer data);
+  bool EmitShouldHideChanged();
 
   void OnDecayRateChanged (int value);
 
-  unity::ui::Decaymulator::Ptr decaymulator_;
-
+  ui::Decaymulator::Ptr decaymulator_;
+  HideMode  _mode;
+  HideQuirk _quirks;
   bool      _should_hide;
   bool      _latest_emit_should_hide;
-  HideQuirk _quirks;
-  HideMode  _mode;
-  unsigned int _hide_delay_timeout_length;
 
-  guint _hide_delay_handle;
-  guint _hide_changed_emit_handle;
+  glib::Source::UniquePtr _hide_delay_timeout;
+  glib::Source::UniquePtr _hide_changed_emit_idle;
 };
+
+} // namespace launcher
+} // namespace unity
 
 #endif

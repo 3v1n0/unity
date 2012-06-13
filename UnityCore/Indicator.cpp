@@ -21,6 +21,7 @@
 #include "Indicator.h"
 
 #include <iostream>
+#include <algorithm>
 
 
 namespace unity

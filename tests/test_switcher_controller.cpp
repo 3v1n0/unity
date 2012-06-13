@@ -68,11 +68,11 @@ public:
     view_shown_ = true;
   }
 
-  virtual gboolean OnDetailTimer()
+  virtual bool OnDetailTimer()
   {
     detail_timeout_reached_ = true;
     clock_gettime(CLOCK_MONOTONIC, &detail_timespec_);
-    return FALSE;
+    return false;
   }
 
   unsigned int GetConstructTimeout() const

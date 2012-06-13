@@ -33,7 +33,7 @@ namespace indicator
 class DBusIndicators : public Indicators
 {
 public:
-  typedef boost::shared_ptr<DBusIndicators> Ptr;
+  typedef std::shared_ptr<DBusIndicators> Ptr;
 
   DBusIndicators();
   ~DBusIndicators();

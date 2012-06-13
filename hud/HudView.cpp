@@ -25,9 +25,8 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
 #include <Nux/HLayout.h>
+#include <Nux/VLayout.h>
 
-#include <NuxCore/Logger.h>
-#include "HudButton.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/DashStyle.h"
 
@@ -35,10 +34,11 @@ namespace unity
 {
 namespace hud
 {
-
 namespace
 {
+
 nux::logging::Logger logger("unity.hud.view");
+
 const int grow_anim_length = 90 * 1000;
 const int pause_before_grow_length = 32 * 1000;
 
@@ -50,14 +50,14 @@ const int top_padding = 11;
 const int bottom_padding = 10;
 const int left_padding = 11;
 const int right_padding = 0;
+
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(View);
 
 View::View()
-  : nux::View(NUX_TRACKER_LOCATION)
-  , button_views_(NULL)
-  , timeline_id_(0)
+  : AbstractView()
+  , button_views_(nullptr)
   , start_time_(0)
   , last_known_height_(0)
   , current_height_(0)
@@ -69,11 +69,6 @@ View::View()
   renderer_.need_redraw.connect([this] () {
     QueueDraw();
   });
-
-  nux::ROPConfig rop;
-  rop.Blend = true;
-  rop.SrcBlend = GL_ONE;
-  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
   SetupViews();
   search_bar_->key_down.connect (sigc::mem_fun (this, &View::OnKeyDown));
@@ -125,9 +120,6 @@ View::~View()
   {
     RemoveChild((*button).GetPointer());
   }
-
-  if (timeline_id_)
-    g_source_remove(timeline_id_);
 }
 
 void View::ProcessGrowShrink()
@@ -171,6 +163,9 @@ void View::ProcessGrowShrink()
 
 void View::ResetToDefault()
 {
+  SetQueries(Hud::Queries());
+  current_height_ = content_layout_->GetBaseHeight();;
+
   search_bar_->search_string = "";
   search_bar_->search_hint = _("Type your command");
 }
@@ -217,7 +212,6 @@ std::list<HudButton::Ptr> const& View::buttons() const
 {
   return buttons_;
 }
-
 
 void View::SetQueries(Hud::Queries queries)
 {
@@ -272,12 +266,11 @@ void View::SetQueries(Hud::Queries queries)
     selected_button_ = 1;
   }
 
-
   QueueRelayout();
   QueueDraw();
 }
 
-void View::SetIcon(std::string icon_name, unsigned int tile_size, unsigned int size, unsigned int padding)
+void View::SetIcon(std::string const& icon_name, unsigned int tile_size, unsigned int size, unsigned int padding)
 {
   if (!icon_)
     return;
@@ -401,10 +394,9 @@ void View::OnSearchChanged(std::string const& search_string)
   LOG_DEBUG(logger) << "got search change";
   search_changed.emit(search_string);
 
-  std::list<HudButton::Ptr>::iterator it;
-  for(it = buttons_.begin(); it != buttons_.end(); ++it)
+  for(auto button : buttons_)
   {
-    (*it)->fake_focused = false;
+    button->fake_focused = false;
   }
   
   if (!buttons_.empty())
@@ -477,15 +469,13 @@ void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 
   renderer_.DrawInnerCleanup(gfx_context, draw_content_geo, absolute_window_geometry_, window_geometry_);
 
-  if (timeline_need_more_draw_ && !timeline_id_)
+  if (timeline_need_more_draw_ && !timeline_idle_)
   {
-    timeline_id_ = g_idle_add([] (gpointer data) -> gboolean
-    {
-      View *self = static_cast<View*>(data);
-      self->QueueDraw();
-      self->timeline_id_ = 0;
-      return FALSE;
-    }, this);
+    timeline_idle_.reset(new glib::Idle([&] () {
+      QueueDraw();
+      timeline_idle_.reset();
+      return false;
+    }));
   }
 }
 
@@ -690,3 +680,4 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
 
 }
 }
+

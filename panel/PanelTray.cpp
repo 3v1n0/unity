@@ -81,7 +81,6 @@ PanelTray::PanelTray()
 
 PanelTray::~PanelTray()
 {
-  g_idle_remove_by_data(this);
   g_strfreev(whitelist_);
 
   if (gtk_widget_get_realized(window_))
@@ -171,7 +170,7 @@ gboolean PanelTray::FilterTrayCallback(NaTray* tray, NaTrayChild* icon, PanelTra
       na_tray_child_set_composited(icon, TRUE);
 
     self->children_.push_back(icon);
-    g_idle_add((GSourceFunc)IdleSync, self);
+    self->sync_idle_.reset(new glib::Idle(sigc::mem_fun(self, &PanelTray::IdleSync)));
   }
 
   LOG_DEBUG(logger) << "TrayChild "
@@ -188,19 +187,20 @@ void PanelTray::OnTrayIconRemoved(NaTrayManager* manager, NaTrayChild* removed)
   {
     if (child == removed)
     {
-      g_idle_add((GSourceFunc)IdleSync, this);
+      sync_idle_.reset(new glib::Idle(sigc::mem_fun(this, &PanelTray::IdleSync)));
       children_.remove(child);
       break;
     }
   }
 }
 
-gboolean PanelTray::IdleSync(PanelTray* self)
+bool PanelTray::IdleSync()
 {
-  int width = self->WidthOfTray();
-  gtk_window_resize(GTK_WINDOW(self->window_.RawPtr()), width, panel::Style::Instance().panel_height);
-  self->Sync();
-  return FALSE;
+  int width = WidthOfTray();
+  gtk_window_resize(GTK_WINDOW(window_.RawPtr()), width, panel::Style::Instance().panel_height);
+  Sync();
+
+  return false;
 }
 
 int PanelTray::WidthOfTray()

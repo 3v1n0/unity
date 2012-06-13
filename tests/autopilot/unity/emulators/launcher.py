@@ -13,14 +13,22 @@ from autopilot.emulators.dbus_handler import session_bus
 from autopilot.emulators.X11 import Mouse, ScreenGeometry
 from autopilot.keybindings import KeybindingsHelper
 from autopilot.introspection.unity import UnityIntrospectionObject
+from autopilot.utilities import get_compiz_option
 import dbus
 import logging
+from math import floor
 from testtools.matchers import NotEquals
 from time import sleep
 
 from unity.emulators.icons import BFBLauncherIcon, BamfLauncherIcon, SimpleLauncherIcon
 
 logger = logging.getLogger(__name__)
+
+
+class IconDragType:
+    """Define possible positions to drag an icon onto another"""
+    INSIDE = 0
+    OUTSIDE = 1
 
 
 class LauncherController(UnityIntrospectionObject):
@@ -116,6 +124,16 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
         logger.debug("Moving mouse to center of launcher.")
         self._mouse.move(target_x, target_y)
+
+    def move_mouse_to_icon(self, icon):
+        # The icon may be off the bottom of screen, so we do this in a loop:
+        while 1:
+            target_x = icon.center_x + self.x
+            target_y = icon.center_y
+            if self._mouse.x == target_x and self._mouse.y == target_y:
+                break
+            self._mouse.move(target_x, target_y)
+            sleep(0.5)
 
     def mouse_reveal_launcher(self):
         """Reveal this launcher with the mouse.
@@ -259,6 +277,66 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
             self._mouse.move(target_x, target_y )
             sleep(1)
         self._mouse.click(button)
+        self.move_mouse_to_right_of_launcher()
+
+    def drag_icon_to_position(self, icon, pos, drag_type=IconDragType.INSIDE):
+        """Place the supplied icon above the icon in the position pos.
+
+        The icon is dragged inside or outside the launcher.
+
+        >>> drag_icon_to_position(calc_icon, 0, IconDragType.INSIDE)
+
+        This will drag the calculator icon above the bfb (but as you can't go
+        above the bfb it will move below it (to position 1))
+
+        """
+        if not isinstance(icon, BamfLauncherIcon):
+            raise TypeError("icon must be a LauncherIcon")
+
+        [launcher_model] = LauncherModel.get_all_instances()
+        all_icons = launcher_model.get_launcher_icons()
+        all_icon_len = len(all_icons)
+        if pos >= all_icon_len:
+            raise ValueError("pos is outside valid range (0-%d)" % all_icon_len)
+
+        logger.debug("Dragging launcher icon %r on monitor %d to position %s"
+                     % (icon, self.monitor, pos))
+        self.mouse_reveal_launcher()
+
+        icon_height = get_compiz_option("unityshell", "icon_size")
+
+        target_icon = all_icons[pos]
+        if target_icon.id == icon.id:
+            logger.warning("%s is already the icon in position %d. Nothing to do." % (icon, pos))
+            return
+
+        self.move_mouse_to_icon(icon)
+        self._mouse.press()
+        sleep(2)
+
+        if drag_type == IconDragType.OUTSIDE:
+            shift_over = self._mouse.x + (icon_height * 2)
+            self._mouse.move(shift_over, self._mouse.y)
+            sleep(0.5)
+
+        # find the target drop position, between the center & top of the target icon
+        target_y = target_icon.center_y - floor(icon_height / 4)
+
+        # Need to move the icons top (if moving up) or bottom (if moving
+        # downward) to the target position
+        moving_up = True if icon.center_y > target_icon.center_y else False
+        icon_half_height = floor(icon_height / 2)
+        fudge_factor = 5
+        if moving_up or drag_type == IconDragType.OUTSIDE:
+            target_y += icon_half_height + fudge_factor
+        else:
+            target_y -= icon_half_height - fudge_factor
+
+        self._mouse.move(self._mouse.x, target_y, rate=20,
+                         time_between_events=0.05)
+        sleep(1)
+
+        self._mouse.release()
         self.move_mouse_to_right_of_launcher()
 
     def lock_to_launcher(self, icon):

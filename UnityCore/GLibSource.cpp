@@ -147,11 +147,25 @@ Timeout::Timeout(unsigned int milliseconds, Priority prio)
 
 void Timeout::Init(unsigned int milliseconds, Priority prio)
 {
-  if (milliseconds % 1000 == 0)
-    source_ = g_timeout_source_new_seconds(milliseconds/1000);
-  else
-    source_ = g_timeout_source_new(milliseconds);
+  source_ = g_timeout_source_new(milliseconds);
+  SetPriority(prio);
+}
 
+
+TimeoutSeconds::TimeoutSeconds(unsigned int seconds, SourceCallback cb, Priority prio)
+{
+  Init(seconds, prio);
+  Run(cb);
+}
+
+TimeoutSeconds::TimeoutSeconds(unsigned int seconds, Priority prio)
+{
+  Init(seconds, prio);
+}
+
+void TimeoutSeconds::Init(unsigned int seconds, Priority prio)
+{
+  source_ = g_timeout_source_new_seconds(seconds);
   SetPriority(prio);
 }
 

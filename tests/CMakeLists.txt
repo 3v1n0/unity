@@ -148,7 +148,7 @@ if (GTEST_SRC_DIR AND
                  test_main_xless.cpp
                  test_grabhandle.cpp
                  test_unityshell_private.cpp
-		             test_showdesktop_handler.cpp
+                 test_showdesktop_handler.cpp
                  test_hud_private.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/AbstractLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/Animator.cpp
@@ -167,7 +167,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/unity-shared/Timer.cpp
                  ${UNITY_SRC}/UnityshellPrivate.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/WindowManager.cpp
-		             ${UNITY_SRC}/UnityShowdesktopHandler.cpp
+                 ${UNITY_SRC}/UnityShowdesktopHandler.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-group.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-impl-factory.cpp
@@ -201,6 +201,7 @@ if (GTEST_SRC_DIR AND
   add_executable(test-gtest
                  test_bamflaunchericon.cpp
                  test_hud_button.cpp
+                 test_hud_controller.cpp
                  test_dashview_impl.cpp
                  test_texture_cache.cpp
                  test_main.cpp
@@ -217,7 +218,9 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/dash/ResultRenderer.cpp
                  ${CMAKE_SOURCE_DIR}/dash/ResultView.cpp
                  ${CMAKE_SOURCE_DIR}/dash/ResultViewGrid.cpp
+                 ${CMAKE_SOURCE_DIR}/hud/HudAbstractView.cpp
                  ${CMAKE_SOURCE_DIR}/hud/HudButton.cpp
+                 ${CMAKE_SOURCE_DIR}/hud/HudController.cpp
                  ${CMAKE_SOURCE_DIR}/hud/HudIcon.cpp
                  ${CMAKE_SOURCE_DIR}/hud/HudIconTextureSource.cpp
                  ${CMAKE_SOURCE_DIR}/hud/HudPrivate.cpp
@@ -255,6 +258,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/launcher/SwitcherModel.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/SwitcherView.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/Tooltip.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/Animator.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/BackgroundEffectHelper.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/DashStyle.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/IconLoader.cpp

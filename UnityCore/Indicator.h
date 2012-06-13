@@ -36,7 +36,7 @@ namespace indicator
 class Indicator : public sigc::trackable, boost::noncopyable
 {
 public:
-  typedef boost::shared_ptr<Indicator> Ptr;
+  typedef std::shared_ptr<Indicator> Ptr;
   typedef std::list<Entry::Ptr> Entries;
 
   Indicator(std::string const& name);

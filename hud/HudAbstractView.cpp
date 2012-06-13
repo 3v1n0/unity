@@ -1,6 +1,5 @@
-// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,38 +13,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Jason Smith <jason.smith@canonical.com>
+ * Authored by: Andrea Azzarone <azzaronea@gmail.com>
  */
 
-#ifndef UNITY_DECAYMULATOR_H
-#define UNITY_DECAYMULATOR_H
-
-#include <Nux/Nux.h>
-#include <UnityCore/GLibSource.h>
+#include "HudAbstractView.h"
 
 namespace unity
 {
-namespace ui
+namespace hud
 {
 
-class Decaymulator
-{
-public:
-  typedef std::shared_ptr<Decaymulator> Ptr;
+NUX_IMPLEMENT_OBJECT_TYPE(AbstractView);
 
-  nux::Property<int> rate_of_decay;
-  nux::Property<int> value;
+AbstractView::AbstractView()
+  : nux::View(NUX_TRACKER_LOCATION)
+{}
 
-  Decaymulator();
-
-private:
-  void OnValueChanged(int value);
-  bool OnDecayTimeout();
-
-  glib::Source::UniquePtr decay_timer_;
-};
-
-}
-}
-
-#endif
+} // namespace hud
+} // namespace unity

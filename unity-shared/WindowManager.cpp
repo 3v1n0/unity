@@ -220,6 +220,17 @@ class WindowManagerDummy : public WindowManager
     g_debug("%s", G_STRFUNC);
   }
 
+  bool saveInputFocus()
+  {
+    return false;
+  }
+
+  bool restoreInputFocus()
+  {
+    return false;
+  }
+
+
   void AddProperties(GVariantBuilder* builder)
   {
   }
