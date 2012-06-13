@@ -1204,14 +1204,6 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
 {
   bool ret;
 
-  /* Figure out if anything behind a blur has changed */
-  CompRect::vector rects = region.rects();
-  for (CompRect &r : rects)
-  {
-    nux::Geometry geo(r.x(), r.y(), r.width(), r.height());
-    BackgroundEffectHelper::ProcessDamage(geo);
-  }
-
   doShellRepaint = true;
   allowWindowPaint = true;
   _last_output = output;
@@ -1501,6 +1493,18 @@ void UnityScreen::handleEvent(XEvent* event)
   {
     wt->ProcessForeignEvent(event, NULL);
   }
+}
+
+void UnityScreen::damageRegion(const CompRegion &region)
+{
+  CompRect::vector rects(region.rects());
+  for (CompRect &r : rects)
+  {
+    nux::Geometry geo(r.x(), r.y(), r.width(), r.height());
+    BackgroundEffectHelper::ProcessDamage(geo);
+  }
+
+  cScreen->damageRegion(region);
 }
 
 void UnityScreen::handleCompizEvent(const char* plugin,
