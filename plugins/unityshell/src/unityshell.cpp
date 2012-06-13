@@ -2796,6 +2796,7 @@ void UnityScreen::initLauncher()
                                         optionGetMenusDiscoveryDuration(),
                                         optionGetMenusDiscoveryFadein(),
                                         optionGetMenusDiscoveryFadeout());
+  panel_controller_->SetOpacity(optionGetPanelOpacity());
   LOG_INFO(logger) << "initLauncher-Panel " << timer.ElapsedSeconds() << "s";
 
   /* Setup Places */
