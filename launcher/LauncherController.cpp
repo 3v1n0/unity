@@ -460,7 +460,7 @@ Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
   // Check if desktop file was supplied, or if it's set to SC's agent
   // See https://bugs.launchpad.net/unity/+bug/1002440
   if (path.empty() || path.compare("software-center-agent"))
-    return
+    return;
 
   SoftwareCenterLauncherIcon::Ptr result = CreateSCLauncherIcon(path, aptdaemon_trans_id, icon_path);
 
