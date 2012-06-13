@@ -681,7 +681,7 @@ void WindowButtons::OnDashSettingsUpdated()
       restore_button->SetVisible(!maximizable);
       maximize_button->SetVisible(maximizable);
 
-      QueueDraw();
+      QueueRelayout();
     }
   }
 }
