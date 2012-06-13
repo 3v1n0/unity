@@ -29,6 +29,8 @@
  */
 
 #include <glib/gi18n.h>
+#include <pango/pango.h>
+#include <pango/pangocairo.h>
 
 #include "unity-sctext-accessible.h"
 
