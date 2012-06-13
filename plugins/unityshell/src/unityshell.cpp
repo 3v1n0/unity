@@ -1204,8 +1204,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
 {
   bool ret;
 
-  if (mask & PAINT_SCREEN_REGION_MASK)
-    compizDamageNux(region);
+  compizDamageNux(region);
 
   /*
    * TODO: Figure out if we can ask compiz when:
@@ -1217,14 +1216,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
                    switcher_controller_->Visible() ||
                    launcher_controller_->IsOverlayOpen() ||
                    (mask & (PAINT_SCREEN_TRANSFORMED_MASK |
-                            PAINT_SCREEN_FULL_MASK |
                             PAINT_SCREEN_WITH_TRANSFORMED_WINDOWS_MASK));
-
-  /* Warning: ^ checking for PAINT_SCREEN_FULL_MASK is necessary right now
-   *          to avoid flickering. However it will nullify our performance
-   *          optimizations for people who have enabled "Force full screen
-   *          redraws" in the Workarounds plugin.
-   */
 
   allowWindowPaint = true;
   _last_output = output;
