@@ -1338,9 +1338,9 @@ void UnityScreen::damageNuxRegions()
    * Avoid Nux damaging Nux as recommended by smspillaz. Though I don't
    * believe it would be harmful or significantly expensive right now.
    */
-  cScreen->damageRegionSetEnabled (this, false);
+  cScreen->damageRegionSetEnabled(this, false);
   cScreen->damageRegion(nux_damage);
-  cScreen->damageRegionSetEnabled (this, true);
+  cScreen->damageRegionSetEnabled(this, true);
 
   wt->ClearDrawList();
 
