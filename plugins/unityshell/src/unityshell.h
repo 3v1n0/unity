@@ -111,6 +111,7 @@ public:
                      const char         *eventName,
                      CompOption::Vector &o);
 
+  void damageRegion(const CompRegion &region);
 
   /* paint on top of all windows if we could not find a window
    * to paint underneath */
