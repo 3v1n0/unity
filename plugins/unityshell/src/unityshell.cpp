@@ -1333,7 +1333,14 @@ void UnityScreen::damageNuxRegions()
   geo = lastTooltipArea;
   nux_damage += CompRegion(lastTooltipArea.x, lastTooltipArea.y,
                          lastTooltipArea.width, lastTooltipArea.height);
+
+  /*
+   * Avoid Nux damaging Nux as recommended by smspillaz. Though I don't
+   * believe it would be harmful or significantly expensive right now.
+   */
+  cScreen->damageRegionSetEnabled(this, false);
   cScreen->damageRegion(nux_damage);
+  cScreen->damageRegionSetEnabled(this, true);
 
   wt->ClearDrawList();
 
@@ -1493,44 +1500,18 @@ void UnityScreen::handleEvent(XEvent* event)
   {
     wt->ProcessForeignEvent(event, NULL);
   }
+}
 
-  if (event->type == cScreen->damageEvent() + XDamageNotify)
+void UnityScreen::damageRegion(const CompRegion &region)
+{
+  const CompRect::vector &rects(region.rects());
+  for (const CompRect &r : rects)
   {
-    XDamageNotifyEvent *de = (XDamageNotifyEvent *) event;
-    CompWindow* w = screen->findWindow (de->drawable);
-    std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
-    CompWindow* lastNWindow = screen->findWindow (xwns.back ());
-    bool        processDamage = true;
-
-    if (w)
-    {
-      if (!w->overrideRedirect () &&
-          w->isViewable () &&
-          !w->invisible ())
-      {
-
-        for (; lastNWindow != NULL; lastNWindow = lastNWindow->next)
-        {
-          if (lastNWindow == w)
-          {
-            processDamage = false;
-            break;
-          }
-        }
-
-        if (processDamage)
-        {
-          nux::Geometry damage (de->area.x, de->area.y, de->area.width, de->area.height);
-
-          const CompWindow::Geometry &geom = w->geometry ();
-          damage.x += geom.x () + geom.border ();
-          damage.y += geom.y () + geom.border ();
-
-          BackgroundEffectHelper::ProcessDamage(damage);
-        }
-      }
-    }
+    nux::Geometry geo(r.x(), r.y(), r.width(), r.height());
+    BackgroundEffectHelper::ProcessDamage(geo);
   }
+
+  cScreen->damageRegion(region);
 }
 
 void UnityScreen::handleCompizEvent(const char* plugin,
