@@ -1342,8 +1342,8 @@ void UnityScreen::compizDamageNux(const CompRegion &damage)
       CompRegion launcher_region(geo.x, geo.y, geo.width, geo.height);
       if (damage.intersects(launcher_region))
         launcher->QueueDraw();
-      nux::View *tooltip = launcher->GetActiveTooltip();
-      if (tooltip)
+      nux::ObjectPtr<nux::View> tooltip = launcher->GetActiveTooltip();
+      if (!tooltip.IsNull())
       {
         nux::Geometry tip = tooltip->GetAbsoluteGeometry();
         CompRegion tip_region(tip.x, tip.y, tip.width, tip.height);
@@ -1399,6 +1399,7 @@ void UnityScreen::nuxDamageCompiz()
     nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
   }
 
+  // FIXME: This appears non-functional. Nux doesn't handle tooltips.
   nux::Geometry geo = wt->GetWindowCompositor().GetTooltipMainWindowGeometry();
   nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
 

@@ -106,7 +106,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   : View(NUX_FILE_LINE_PARAM)
   , monitor(0)
   , _parent(parent)
-  , _active_tooltip(nullptr)
   , _active_quicklist(nullptr)
   , _hovered(false)
   , _hidden(false)
@@ -1519,7 +1518,7 @@ bool Launcher::IsBackLightModeToggles() const
   }
 }
 
-nux::View *Launcher::GetActiveTooltip() const
+nux::ObjectPtr<nux::View> Launcher::GetActiveTooltip() const
 {
   return _active_tooltip;
 }
@@ -1762,7 +1761,7 @@ void Launcher::OnIconNeedsRedraw(AbstractLauncherIcon::Ptr icon)
   EnsureAnimation();
 }
 
-void Launcher::OnTooltipVisible(nux::View *view)
+void Launcher::OnTooltipVisible(nux::ObjectPtr<nux::View> view)
 {
   _active_tooltip = view;
 }
