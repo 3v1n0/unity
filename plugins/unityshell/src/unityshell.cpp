@@ -1399,11 +1399,25 @@ void UnityScreen::nuxDamageCompiz()
     nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
   }
 
-  // FIXME: This appears non-functional. Nux doesn't handle tooltips.
-  nux::Geometry geo = wt->GetWindowCompositor().GetTooltipMainWindowGeometry();
-  nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
+  // launcher_controller_ will still be null on startup
+  if (launcher_controller_.get())
+  {
+    auto launchers = launcher_controller_->launchers();
+    for (auto launcher : launchers)
+    {
+      if (!launcher->Hidden())
+      {
+        nux::ObjectPtr<nux::View> tooltip = launcher->GetActiveTooltip();
+        if (!tooltip.IsNull())
+        {
+          const nux::Geometry &g = tooltip->GetAbsoluteGeometry();
+          nux_damage += CompRegion(g.x, g.y, g.width, g.height);
+        }
+      }
+    }
+  }
 
-  geo = lastTooltipArea;
+  nux::Geometry geo = lastTooltipArea;
   nux_damage += CompRegion(lastTooltipArea.x, lastTooltipArea.y,
                          lastTooltipArea.width, lastTooltipArea.height);
 
