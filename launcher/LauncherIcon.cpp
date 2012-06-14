@@ -535,6 +535,7 @@ void LauncherIcon::RecvMouseLeave(int monitor)
 
   if (_tooltip)
     _tooltip->ShowWindow(false);
+  tooltip_visible.emit(nullptr);
 }
 
 bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
