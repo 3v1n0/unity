@@ -85,8 +85,7 @@ Controller::Controller(std::function<AbstractView*(void)> const& function)
 
 void Controller::SetupWindow()
 {
-  window_ = new nux::BaseWindow("Hud");
-  window_->SinkReference();
+  window_.Adopt(new nux::BaseWindow("Hud"));
   window_->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
   window_->SetConfigureNotifyCallback(&Controller::OnWindowConfigure, this);
   window_->ShowWindow(false);
