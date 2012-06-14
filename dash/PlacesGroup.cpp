@@ -76,8 +76,12 @@ protected:
 
   void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
   {
-    if (GetLayout())
+    if (IsFullRedraw() && GetLayout())
+    {
+      nux::GetPainter().PushPaintLayerStack();
       GetLayout()->ProcessDraw(graphics_engine, force_draw);
+      nux::GetPainter().PopPaintLayerStack();
+    }
   }
 
   bool AcceptKeyNavFocus()
@@ -87,12 +91,11 @@ protected:
 
   nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
   {
-    bool mouse_inside = TestMousePointerInclusionFilterMouseWheel(mouse_position, event_type);
-
-    if (mouse_inside == false)
+    if (event_type != nux::EVENT_MOUSE_WHEEL &&
+        TestMousePointerInclusion(mouse_position, event_type))
+      return this;
+    else
       return nullptr;
-
-    return this;
   }
 };
 
@@ -121,7 +124,7 @@ PlacesGroup::PlacesGroup()
   _group_layout->AddLayout(new nux::SpaceLayout(top_space, top_space, top_space, top_space), 0);
 
   _header_view = new HeaderView(NUX_TRACKER_LOCATION);
-  _group_layout->AddView(_header_view, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FIX);
+  _group_layout->AddView(_header_view, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
 
   _header_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   _header_layout->SetLeftAndRightPadding(style.GetCategoryHeaderLeftPadding(), 0);
