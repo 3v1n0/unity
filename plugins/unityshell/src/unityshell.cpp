@@ -1350,18 +1350,16 @@ void UnityScreen::compizDamageNux(const CompRegion &damage)
     }
   }
 
-  nux::WindowCompositor &compositor = wt->GetWindowCompositor();
-  if (compositor.IsTooltipActive())
+  QuicklistManager *qm = QuicklistManager::Default();
+  if (qm)
   {
-    nux::Geometry geo = compositor.GetTooltipMainWindowGeometry();
-    CompRegion tooltip_region(geo.x, geo.y, geo.width, geo.height);
-    if (damage.intersects(tooltip_region))
+    QuicklistView *view = qm->Current();
+    if (view)
     {
-      /*
-       * FIXME - nux::WindowCompositor has no public API for requesting
-       *         redraw of a Tooltip. Until then, windows can redraw over
-       *         the top of the active tooltip.
-       */
+      nux::Geometry geo = view->GetAbsoluteGeometry();
+      CompRegion quicklist_region(geo.x, geo.y, geo.width, geo.height);
+      if (damage.intersects(quicklist_region))
+        view->QueueDraw();
     }
   }
 }
