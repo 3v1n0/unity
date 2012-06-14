@@ -1356,8 +1356,8 @@ void UnityScreen::compizDamageNux(const CompRegion &damage)
     }
   }
 
-  std::vector<nux::Geometry> geos = panel_controller_->GetGeometries();
-  for (nux::Geometry &geo : geos)
+  const std::vector<nux::Geometry> &geos(panel_controller_->GetGeometries());
+  for (const nux::Geometry &geo : geos)
   {
     CompRegion panel_region(geo.x, geo.y, geo.width, geo.height);
     if (damage.intersects(panel_region))
