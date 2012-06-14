@@ -1333,7 +1333,14 @@ void UnityScreen::damageNuxRegions()
   geo = lastTooltipArea;
   nux_damage += CompRegion(lastTooltipArea.x, lastTooltipArea.y,
                          lastTooltipArea.width, lastTooltipArea.height);
+
+  /*
+   * Avoid Nux damaging Nux as recommended by smspillaz. Though I don't
+   * believe it would be harmful or significantly expensive right now.
+   */
+  cScreen->damageRegionSetEnabled (this, false);
   cScreen->damageRegion(nux_damage);
+  cScreen->damageRegionSetEnabled (this, true);
 
   wt->ClearDrawList();
 
@@ -1497,8 +1504,8 @@ void UnityScreen::handleEvent(XEvent* event)
 
 void UnityScreen::damageRegion(const CompRegion &region)
 {
-  CompRect::vector rects(region.rects());
-  for (CompRect &r : rects)
+  const CompRect::vector &rects(region.rects());
+  for (const CompRect &r : rects)
   {
     nux::Geometry geo(r.x(), r.y(), r.width(), r.height());
     BackgroundEffectHelper::ProcessDamage(geo);
