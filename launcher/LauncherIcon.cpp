@@ -513,6 +513,7 @@ LauncherIcon::ShowTooltip()
     LoadTooltip();
   _tooltip->ShowTooltipWithTipAt(tip_x, tip_y);
   _tooltip->ShowWindow(!tooltip_text().empty());
+  tooltip_visible.emit(_tooltip.GetPointer());
 }
 
 void
@@ -653,6 +654,7 @@ void LauncherIcon::HideTooltip()
 {
   if (_tooltip)
     _tooltip->ShowWindow(false);
+  tooltip_visible.emit(nullptr);
 }
 
 bool
