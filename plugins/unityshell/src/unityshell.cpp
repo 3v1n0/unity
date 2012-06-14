@@ -1342,10 +1342,7 @@ void UnityScreen::compizDamageNux(const CompRegion &damage)
         nux::Geometry tip = tooltip->GetAbsoluteGeometry();
         CompRegion tip_region(tip.x, tip.y, tip.width, tip.height);
         if (damage.intersects(tip_region))
-        {
-          launcher->QueueDraw();
           tooltip->QueueDraw();
-        }
       }
     }
   }
