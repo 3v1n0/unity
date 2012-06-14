@@ -48,7 +48,7 @@ unity::MT::getLayoutForMask (unsigned int state,
     {
       MaximizedVertMask,
       MaximizedHorzMask,
-      0, ~0,
+      0, static_cast<unsigned int>(~0),
       LeftHandle | RightHandle | MiddleHandle
     },
     /* Horizontally maximized, don't care
@@ -57,21 +57,21 @@ unity::MT::getLayoutForMask (unsigned int state,
     {
       MaximizedHorzMask,
       MaximizedVertMask,
-      0, ~0,
+      0, static_cast<unsigned int>(~0),
       TopHandle | BottomHandle | MiddleHandle
     },
     /* Maximized, don't care about the movement
     * handle */
     {
       MaximizedVertMask | MaximizedHorzMask,
-      0, 0, ~0,
+      0, 0, static_cast<unsigned int>(~0),
       MiddleHandle
     },
     /* Immovable, don't show move handle */
     {
       0,
-      ~0,
-      ~0, MoveMask,
+      static_cast<unsigned int>(~0),
+      static_cast<unsigned int>(~0), MoveMask,
       TopLeftHandle | TopHandle | TopRightHandle |
       LeftHandle | RightHandle |
       BottomLeftHandle | BottomHandle | BottomRightHandle
@@ -79,8 +79,8 @@ unity::MT::getLayoutForMask (unsigned int state,
     /* Not resizable, don't show resize handle */
     {
       0,
-      ~0,
-      ~0, ResizeMask,
+      static_cast<unsigned int>(~0),
+      static_cast<unsigned int>(~0), ResizeMask,
       MiddleHandle
     },
   };
