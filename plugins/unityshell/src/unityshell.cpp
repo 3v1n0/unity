@@ -1204,13 +1204,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
 {
   bool ret;
 
-  /*
-   * I believe hooking CompositeScreen::damageScreen is the preferred method
-   * but CompositeScreen::damageScreen is not wrapped (yet).
-   */
-  if (mask & PAINT_SCREEN_FULL_MASK)
-    compizDamageNux(region);
-  // else compizDamageNux is called from UnityScreen::damageRegion.
+  compizDamageNux(region);
 
   /*
    * TODO: Figure out if we can ask compiz when:
@@ -1589,8 +1583,6 @@ void UnityScreen::handleEvent(XEvent* event)
 
 void UnityScreen::damageRegion(const CompRegion &region)
 {
-  compizDamageNux(region);
-
   const CompRect::vector &rects(region.rects());
   for (const CompRect &r : rects)
   {
