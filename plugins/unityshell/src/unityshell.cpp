@@ -1204,7 +1204,13 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
 {
   bool ret;
 
-  compizDamageNux(region);
+  /*
+   * I believe hooking CompositeScreen::damageScreen is the preferred method
+   * but CompositeScreen::damageScreen is not wrapped (yet).
+   */
+  if (mask & PAINT_SCREEN_FULL_MASK)
+    compizDamageNux(region);
+  // else compizDamageNux is called from UnityScreen::damageRegion.
 
   /*
    * TODO: Figure out if we can ask compiz when:
@@ -1342,7 +1348,10 @@ void UnityScreen::compizDamageNux(const CompRegion &damage)
         nux::Geometry tip = tooltip->GetAbsoluteGeometry();
         CompRegion tip_region(tip.x, tip.y, tip.width, tip.height);
         if (damage.intersects(tip_region))
+        {
+          launcher->QueueDraw();
           tooltip->QueueDraw();
+        }
       }
     }
   }
@@ -1565,6 +1574,8 @@ void UnityScreen::handleEvent(XEvent* event)
 
 void UnityScreen::damageRegion(const CompRegion &region)
 {
+  compizDamageNux(region);
+
   const CompRect::vector &rects(region.rects());
   for (const CompRect &r : rects)
   {
