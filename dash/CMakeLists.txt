@@ -49,9 +49,6 @@ set (DASH_SOURCES
      LensViewPrivate.cpp
      PlacesGroup.cpp
      PlacesVScrollBar.cpp
-     PreviewApplications.cpp
-     PreviewBase.cpp
-     PreviewBasicButton.cpp
      ResultRenderer.cpp
      ResultRendererHorizontalTile.cpp
      ResultRendererTile.cpp

@@ -1051,7 +1051,7 @@ UnityDialogWindow::moveNotify(int dx, int dy, bool immediate)
   if (!mSkipNotify)
   {
     if (mParent && UnityDialogScreen::get(screen)->switchingVp() &&
-        !(mGrabMask && CompWindowGrabMoveMask))
+        !(mGrabMask & CompWindowGrabMoveMask))
     {
       moveParentToRect(window, window->serverBorderRect(), true);
     }

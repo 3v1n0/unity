@@ -20,6 +20,7 @@ from testtools.matchers import Equals, NotEquals, LessThan, GreaterThan
 from time import sleep
 
 from unity.emulators.icons import BFBLauncherIcon
+from unity.emulators.launcher import IconDragType
 from unity.emulators.switcher import SwitcherMode
 from unity.tests import UnityTestCase
 
@@ -464,6 +465,61 @@ class LauncherIconsBehaviorTests(LauncherTestCase):
         self.assertThat(calc_icon, NotEquals(None))
         self.assertThat(calc_icon.visible, Eventually(Equals(True)))
 
+class LauncherDragIconsBehavior(LauncherTestCase):
+    """Tests interation with dragging icons with the Launcher"""
+
+    scenarios = multiply_scenarios(_make_scenarios(),
+                                   [
+                                       ('inside', {'drag_type': IconDragType.INSIDE}),
+                                       ('outside', {'drag_type': IconDragType.OUTSIDE}),
+                                   ])
+
+    def ensure_calc_icon_not_in_launcher(self):
+        while 1:
+            icon = self.launcher.model.get_icon_by_desktop_id("gcalctool.desktop")
+            if not icon:
+                break
+            sleep(1)
+
+    def test_can_drag_icon_below_bfb(self):
+        """Application icons must be draggable to below the BFB."""
+
+        self.ensure_calc_icon_not_in_launcher()
+        calc = self.start_app("Calculator")
+        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
+
+        bfb_icon_position = 0
+        self.launcher_instance.drag_icon_to_position(calc_icon,
+                                                     bfb_icon_position,
+                                                     self.drag_type)
+        moved_icon = self.launcher.model.\
+                     get_launcher_icons_for_monitor(self.launcher_monitor)[1]
+        self.assertThat(moved_icon.id, Equals(calc_icon.id))
+
+    def test_can_drag_icon_above_window_switcher(self):
+        """Launcher icons must be dragable to above the workspace switcher icon."""
+
+        self.ensure_calc_icon_not_in_launcher()
+        calc = self.start_app("Calculator")
+        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
+
+        # Move a known icon to the top as it needs to be more than 2 icon
+        # spaces away for this test to actually do anything
+        bfb_icon_position = 0
+        self.launcher_instance.drag_icon_to_position(calc_icon,
+                                                     bfb_icon_position,
+                                                     self.drag_type)
+        sleep(1)
+        switcher_pos = -2
+        self.launcher_instance.drag_icon_to_position(calc_icon,
+                                                     switcher_pos,
+                                                     self.drag_type)
+
+        moved_icon = self.launcher.model.\
+                     get_launcher_icons_for_monitor(self.launcher_monitor)[-3]
+        self.assertThat(moved_icon.id, Equals(calc_icon.id))
+
+
 class LauncherRevealTests(LauncherTestCase):
     """Test the launcher reveal behavior when in autohide mode."""
 
@@ -587,101 +643,6 @@ class LauncherVisualTests(LauncherTestCase):
         sleep(.5)
         for icon in self.launcher.model.get_launcher_icons():
             self.assertThat(icon.desaturated, Eventually(Equals(False)))
-
-class BamfDaemonTests(LauncherTestCase):
-    """Test interaction between the launcher and the BAMF Daemon."""
-
-    def start_test_apps(self):
-        """Starts some test applications."""
-        self.start_app("Calculator")
-        self.start_app("System Settings")
-
-    def start_desktopless_test_apps(self):
-        """Start test applications with no .desktop file associated."""
-        test_apps = ["xclock"]
-
-        for app in test_apps:
-            os.spawnlp(os.P_NOWAIT, app, app)
-            self.addCleanup(call, ["killall", app])
-            self.wait_for_process_started(app)
-
-    def get_test_apps(self):
-        """Return a tuple of test application instances.
-
-        We don't store these since when we kill the bamf daemon all references
-        to the old apps will die.
-
-        """
-        [calc] = self.get_app_instances("Calculator")
-        [sys_settings] = self.get_app_instances("System Settings")
-        return [calc, sys_settings]
-
-    def get_desktopless_test_apps(self):
-        """Return a tuple of test application with no .desktop files instances."""
-        [xclock_win] = [w for w in self.bamf.get_open_windows() if w.name == "xclock"]
-        return [xclock_win.application]
-
-    def assertOnlyOneLauncherIcon(self, **kwargs):
-        """Asserts that there is only one launcher icon with the given filter."""
-        icons = self.launcher.model.get_icons_by_filter(**kwargs)
-        self.assertThat(len(icons), Equals(1))
-
-    def wait_for_process_started(self, app):
-        """Wait until the application app has been started."""
-        for i in range(10):
-            sleep(1)
-            #pgrep returns 0 if it matched something:
-            if call(["pgrep", app]) == 0:
-                return
-
-    def wait_for_process_killed(self, app):
-        """Wait until the application app has been killed."""
-        for i in range(10):
-            #pgrep returns 0 if it matched something:
-            if call(["pgrep", app]) != 0:
-                return
-            sleep(1)
-
-    def kill_and_restart_bamfdaemon(self):
-        """Kills and resumes bamfdaemon."""
-        call(["pkill", "bamfdaemon"])
-        self.wait_for_process_killed("bamfdaemon")
-
-        # trigger the bamfdaemon to be reloaded again, and wait for it to appear:
-        self.bamf = Bamf()
-        self.wait_for_process_started("bamfdaemon")
-
-    def test_killing_bamfdaemon_does_not_duplicate_desktop_ids(self):
-        """Killing bamfdaemon should not duplicate any desktop ids in the model."""
-        self.start_test_apps()
-        self.kill_and_restart_bamfdaemon()
-
-        for test_app in self.get_test_apps():
-            logger.info("Checking for duplicated launcher icon for application %s", test_app.name)
-            self.assertOnlyOneLauncherIcon(desktop_id=test_app.desktop_file)
-
-    def test_killing_bamfdaemon_does_not_duplicate_application_xids(self):
-        """Killing bamfdaemon should not duplicate any xid in the model."""
-        self.start_test_apps()
-        self.start_desktopless_test_apps()
-        self.kill_and_restart_bamfdaemon()
-
-        test_apps = self.get_test_apps() + self.get_desktopless_test_apps()
-
-        for test_app in test_apps:
-            logger.info("Checking for duplicated launcher icon for application %s", test_app.name)
-            test_windows = [w.x_id for w in test_app.get_windows()]
-            self.assertOnlyOneLauncherIcon(xids=test_windows)
-
-    def test_killing_bamfdaemon_does_not_duplicate_any_icon_application_id(self):
-        """Killing bamfdaemon should not duplicate any application ids in the model."""
-        self.start_test_apps()
-        self.start_desktopless_test_apps()
-        self.kill_and_restart_bamfdaemon()
-
-        for icon in self.launcher.model.get_bamf_launcher_icons():
-            logger.info("Checking for duplicated launcher icon %s", icon.tooltip_text)
-            self.assertOnlyOneLauncherIcon(application_id=icon.application_id)
 
 
 class LauncherCaptureTests(UnityTestCase):

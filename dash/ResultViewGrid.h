@@ -46,8 +46,6 @@ public:
   void AddResult(Result& result);
   void RemoveResult(Result& result);
 
-  void SetPreview(PreviewBase* preview, Result& related_result);
-
   nux::Property<int> horizontal_spacing;
   nux::Property<int> vertical_spacing;
   nux::Property<int> padding;
@@ -87,12 +85,10 @@ private:
 
   int GetItemsPerRow();
   void SizeReallocate();
-  void PositionPreview();
 
   uint mouse_over_index_;
   int active_index_;
   nux::Property<int> selected_index_;
-  uint preview_row_;
   std::string focused_uri_;
 
   int last_lazy_loaded_result_;

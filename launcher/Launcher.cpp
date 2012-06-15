@@ -64,6 +64,8 @@ using ui::Decaymulator;
 namespace launcher
 {
 
+const char window_title[] = "unity-launcher";
+
 namespace
 {
 
@@ -1330,7 +1332,7 @@ void Launcher::SetHidden(bool hidden)
 
   TimeUtil::SetTimeStruct(&_times[TIME_AUTOHIDE], &_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT);
 
-  _parent->EnableInputWindow(!hidden, "launcher", false, false);
+  _parent->EnableInputWindow(!hidden, launcher::window_title, false, false);
 
   if (!hidden && GetActionState() == ACTION_DRAG_EXTERNAL)
     DndReset();
@@ -1486,7 +1488,7 @@ void Launcher::SetHideMode(LauncherHideMode hidemode)
   }
   else
   {
-    _parent->EnableInputWindow(true, "launcher", false, false);
+    _parent->EnableInputWindow(true, launcher::window_title, false, false);
 
     if (!sources_.GetSource(STRUT_HACK_TIMEOUT))
     {
@@ -2123,8 +2125,36 @@ void Launcher::UpdateDragWindowPosition(int x, int y)
 
       if (progress >= 1.0f)
         _model->ReorderSmart(_drag_icon, hovered_icon, true);
-      else if (progress == 0.0f)
-        _model->ReorderBefore(_drag_icon, hovered_icon, false);
+      else if (progress == 0.0f) {
+        if (_drag_icon->GetIconType() == hovered_icon->GetIconType()) {
+          _model->ReorderBefore(_drag_icon, hovered_icon, false);
+        } else {
+          // LauncherModel::ReorderBefore does not work on different icon types
+          // so if hovered_icon is of a different type than _drag_icon
+          // try to use LauncherModel::ReorderAfter with the icon that is before hovered_icon
+          AbstractLauncherIcon::Ptr iconBeforeHover;
+          LauncherModel::iterator it;
+          LauncherModel::iterator prevIt = _model->end();
+          for (it = _model->begin(); it != _model->end(); it++)
+          {
+            if (!(*it)->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE) || !(*it)->IsVisibleOnMonitor(monitor))
+              continue;
+            
+            if ((*it) == hovered_icon) {
+              if (prevIt != _model->end()) {
+                iconBeforeHover = *prevIt;
+              }
+              break;
+            }
+            
+            prevIt = it;
+          }
+
+          if (iconBeforeHover && _drag_icon != iconBeforeHover) {
+            _model->ReorderAfter(_drag_icon, iconBeforeHover);
+          }
+        }
+      }
     }
   }
 }
