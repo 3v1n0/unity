@@ -17,8 +17,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_MUSIC_PREVIEWS_H
-#define UNITY_MUSIC_PREVIEWS_H
+#ifndef UNITY_MUSIC_PREVIEW_H
+#define UNITY_MUSIC_PREVIEW_H
 
 #include <memory>
 
@@ -31,33 +31,10 @@ namespace unity
 namespace dash
 {
 
-class TrackPreview : public Preview
+class MusicPreview : public Preview
 {
 public:
-  typedef std::shared_ptr<TrackPreview> Ptr;
-  typedef std::vector<std::string> Genres;
-
-  TrackPreview(Preview::Properties& properties);
-
-  unsigned int number;
-  std::string title;
-  std::string artist;
-  std::string album;
-  unsigned int length;
-  Genres genres;
-  std::string album_cover;
-  std::string primary_action_name;
-  std::string primary_action_icon_hint;
-  std::string primary_action_uri;
-  std::string play_action_uri;
-  std::string pause_action_uri;
-};
-
-class AlbumPreview : public Preview
-{
-public:
-  typedef std::shared_ptr<AlbumPreview> Ptr;
-  typedef std::vector<std::string> Genres;
+  typedef std::shared_ptr<MusicPreview> Ptr;
 
   struct Track
   {
@@ -81,21 +58,9 @@ public:
   
   typedef std::vector<Track> Tracks;
 
-  AlbumPreview(Preview::Properties& properties);
-
-  void LoadTracks(Properties& properties);
-
-  std::string name;
-  std::string artist;
-  std::string year;
-  unsigned int length;
-  Genres genres;
-  Tracks tracks;
-  std::string album_cover;
-  std::string primary_action_name;
-  std::string primary_action_icon_hint;
-  std::string primary_action_uri;
+  MusicPreview(unity::glib::Object<UnityProtocolPreview> const& proto_obj);
 };
+
 }
 }
 

@@ -36,23 +36,11 @@ class GenericPreview : public Preview
 public:
   typedef std::shared_ptr<GenericPreview> Ptr;
   
-  GenericPreview(Preview::Properties& properties);
+  GenericPreview(unity::glib::Object<UnityProtocolPreview> const& proto_obj);
 
-  std::string name;
-  unsigned int date_modified;
-  unsigned int size;
-  std::string type;
-  std::string description;
-  std::string icon_hint;
-  std::string primary_action_name;
-  std::string primary_action_icon_hint;
-  std::string primary_action_uri;
-  std::string secondary_action_name;
-  std::string secondary_action_icon_hint;
-  std::string secondary_action_uri;
-  std::string tertiary_action_name;
-  std::string tertiary_action_icon_hint;
-  std::string tertiary_action_uri;
+  //unsigned int date_modified;
+  //unsigned int size;
+  //std::string type;
 };
 
 }

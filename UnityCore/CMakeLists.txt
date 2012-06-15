@@ -31,8 +31,9 @@ set (CORE_HEADERS
      Indicators.h
      Lens.h
      Lenses.h
+     MoviePreview.h
      MultiRangeFilter.h
-     MusicPreviews.h
+     MusicPreview.h
      Model.h
      Model-inl.h
      ModelRowAdaptor.h
@@ -42,6 +43,7 @@ set (CORE_HEADERS
      RatingsFilter.h
      Result.h
      Results.h
+     SeriesPreview.h
      Variant.h
     )
 
@@ -67,14 +69,16 @@ set (CORE_SOURCES
      IndicatorEntry.cpp
      Indicators.cpp
      Lens.cpp
+     MoviePreview.cpp
      MultiRangeFilter.cpp
-     MusicPreviews.cpp
+     MusicPreview.cpp
      ModelRowAdaptor.cpp
      Preview.cpp
      RatingsFilter.cpp
      RadioOptionFilter.cpp
      Result.cpp
      Results.cpp
+     SeriesPreview.cpp
      Variant.cpp
     )
 

@@ -24,22 +24,9 @@ namespace unity
 namespace dash
 {
 
-ApplicationPreview::ApplicationPreview(Preview::Properties& properties)
-  : name(PropertyToString(properties, "name"))
-  , version(PropertyToString(properties, "version"))
-  , size(PropertyToString(properties, "size"))
-  , license(PropertyToString(properties, "license"))
-  , last_updated(PropertyToString(properties, "last-updated"))
-  , rating(PropertyToFloat(properties, "rating"))
-  , n_ratings(PropertyToUnsignedInt(properties, "n-ratings"))
-  , description(PropertyToString(properties, "string"))
-  , icon_hint(PropertyToString(properties, "icon-hint"))
-  , screenshot_icon_hint(PropertyToString(properties, "screenshot-icon-hint"))
-  , primary_action_name(PropertyToString(properties, "primary-action-name"))
-  , primary_action_icon_hint(PropertyToString(properties, "primary-action-icon-hint"))
-  , primary_action_uri(PropertyToString(properties, "primary-action-uri"))
+ApplicationPreview::ApplicationPreview(unity::glib::Object<UnityProtocolPreview> const& proto_obj)
+  : Preview(proto_obj)
 {
- renderer_name = "preview-application";
 }
 
 

@@ -539,10 +539,10 @@ void Lens::Impl::PreviewReply(GVariant* parameters)
   g_variant_get(parameters, "((ss@a{sv}))", &uri, &renderer_name, &hints_variant);
 
   glib::Variant dict (hints_variant, glib::StealRef());
-  dict.ASVToHints(hints);
+  //dict.ASVToHints(hints);
 
-  Preview::Ptr preview = Preview::PreviewForProperties(renderer_name.Str(), hints);
-  owner_->preview_ready.emit(uri.Str(), preview);
+  //Preview::Ptr preview = Preview::PreviewForProperties(renderer_name.Str(), hints);
+  //owner_->preview_ready.emit(uri.Str(), preview);
 }
 string const& Lens::Impl::id() const
 {

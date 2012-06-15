@@ -17,8 +17,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_APPLICATION_PREVIEW_H
-#define UNITY_APPLICATION_PREVIEW_H
+#ifndef UNITY_SERIES_PREVIEW_H
+#define UNITY_SERIES_PREVIEW_H
 
 #include <memory>
 
@@ -31,13 +31,12 @@ namespace unity
 namespace dash
 {
 
-class ApplicationPreview : public Preview
+class SeriesPreview : public Preview
 {
 public:
-  typedef std::shared_ptr<ApplicationPreview> Ptr;
+  typedef std::shared_ptr<SeriesPreview> Ptr;
   
-  ApplicationPreview(unity::glib::Object<UnityProtocolPreview> const& proto_obj);
-
+  SeriesPreview(unity::glib::Object<UnityProtocolPreview> const& proto_obj);
 };
 
 }

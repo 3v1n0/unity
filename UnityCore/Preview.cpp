@@ -17,88 +17,97 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
+#include <NuxCore/Logger.h>
+
 #include "Preview.h"
 
 #include "ApplicationPreview.h"
 #include "GenericPreview.h"
-#include "MusicPreviews.h"
+#include "MusicPreview.h"
+#include "MoviePreview.h"
+#include "SeriesPreview.h"
 
 namespace unity
 {
 namespace dash
 {
 
-Preview::Ptr Preview::PreviewForProperties(std::string const& renderer_name_,
-                                           Properties& properties)
+namespace
 {
-  if (renderer_name_ == "preview-application")
+  nux::logging::Logger logger("unity.dash.preview");
+}
+
+Preview::Ptr Preview::PreviewForVariant(unity::glib::Variant &properties)
+{
+  unity::glib::Variant renderer(g_variant_get_child_value(properties, 0));
+  std::string renderer_name(renderer.GetString());
+  unity::glib::Object<UnityProtocolPreview> proto_obj(unity_protocol_preview_parse(properties));
+
+  if (renderer_name == "preview-generic")
   {
-    return Preview::Ptr(new ApplicationPreview(properties));
+    return Preview::Ptr(new GenericPreview(proto_obj));
   }
-  else if (renderer_name_ == "preview-generic")
+  else if (renderer_name == "preview-application")
   {
-    return Preview::Ptr(new GenericPreview(properties));
+    return Preview::Ptr(new ApplicationPreview(proto_obj));
   }
-  else if (renderer_name_ == "preview-track")
+  else if (renderer_name == "preview-music")
   {
-    return Preview::Ptr(new TrackPreview(properties));
+    return Preview::Ptr(new MusicPreview(proto_obj));
   }
-  else if (renderer_name_ == "preview-album")
+  else if (renderer_name == "preview-movie")
   {
-    return Preview::Ptr(new AlbumPreview(properties));
+    return Preview::Ptr(new MoviePreview(proto_obj));
   }
+  else if (renderer_name == "preview-series")
+  {
+    return Preview::Ptr(new SeriesPreview(proto_obj));
+  }
+
+  return nullptr;
+}
+
+unity::glib::Object<GIcon> Preview::IconForString(std::string const& icon_hint)
+{
+  glib::Error error;
+  glib::Object<GIcon> icon(g_icon_new_for_string(icon_hint.c_str(), &error));
+
+  if (error)
+  {
+    LOG_WARN(logger) << "Unable to instantiate icon: " << icon_hint;
+  }
+
+  return icon;
+}
+
+Preview::Preview(glib::Object<UnityProtocolPreview> const& proto_obj)
+{
+  SetupGetters();
+
+  if (!proto_obj) LOG_WARN(logger) << "Passed nullptr to Preview constructor";
   else
   {
-    return Preview::Ptr(new NoPreview());
+    const gchar *s;
+    s = unity_protocol_preview_get_title (proto_obj);
+    if (s) title_ = s;
+    s = unity_protocol_preview_get_subtitle (proto_obj);
+    if (s) subtitle_ = s;
+    s = unity_protocol_preview_get_description (proto_obj);
+    if (s) description_ = s;
+    thumbnail_ = unity_protocol_preview_get_thumbnail (proto_obj);
   }
 }
 
 Preview::~Preview()
 {}
 
-unsigned int Preview::PropertyToUnsignedInt (Properties& properties, const char* key)
+void Preview::SetupGetters()
 {
-  return g_variant_get_uint32(properties[key]);
+  title.SetGetterFunction(sigc::mem_fun(this, &Preview::get_title));
+  subtitle.SetGetterFunction(sigc::mem_fun(this, &Preview::get_subtitle));
+  description.SetGetterFunction(sigc::mem_fun(this, &Preview::get_description));
+  thumbnail.SetGetterFunction(sigc::mem_fun(this, &Preview::get_thumbnail));
 }
 
-std::string Preview::PropertyToString(Properties& properties, const char *key)
-{
-  if (properties.find(key) == properties.end())
-   return "";
-  return g_variant_get_string(properties[key], NULL);
-}
-
-std::vector<std::string> Preview::PropertyToStringVector(Properties& properties, const char *key)
-{
-  GVariantIter* iter = NULL;
-  char* value = NULL;
-  std::vector<std::string> property;
-
-  if (properties.find(key) == properties.end())
-    return property;
-
-  g_variant_get(properties[key], "as", &iter);
-
-  while (g_variant_iter_loop(iter, "s", &value))
-    property.push_back(value);
-
-  g_variant_iter_free(iter);
-
-  return property;
-}
-
-float Preview::PropertyToFloat(Properties& properties, const char* key)
-{
-  if (properties.find(key) == properties.end())
-    return 0.0f;
-
-  return (float)g_variant_get_double(properties[key]);
-}
-
-NoPreview::NoPreview()
-{
-  renderer_name = "preview-none";
-}
-
-}
-}
+} // namespace dash
+} // namespace unity

@@ -17,30 +17,17 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_APPLICATION_PREVIEW_H
-#define UNITY_APPLICATION_PREVIEW_H
-
-#include <memory>
-
-#include <sigc++/trackable.h>
-
-#include "Preview.h"
+#include "MoviePreview.h"
 
 namespace unity
 {
 namespace dash
 {
 
-class ApplicationPreview : public Preview
+MoviePreview::MoviePreview(unity::glib::Object<UnityProtocolPreview> const& proto_obj)
+  : Preview(proto_obj)
 {
-public:
-  typedef std::shared_ptr<ApplicationPreview> Ptr;
-  
-  ApplicationPreview(unity::glib::Object<UnityProtocolPreview> const& proto_obj);
-
-};
+}
 
 }
 }
-
-#endif

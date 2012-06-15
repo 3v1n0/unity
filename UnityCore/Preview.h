@@ -25,9 +25,12 @@
 #include <string>
 #include <vector>
 
-#include <sigc++/trackable.h>
-
 #include <glib.h>
+#include <sigc++/trackable.h>
+#include <NuxCore/Property.h>
+#include <unity-protocol.h>
+
+#include "GLibWrapper.h"
 #include "Variant.h"
 
 namespace unity
@@ -39,25 +42,33 @@ class Preview : public sigc::trackable
 {
 public:
   typedef std::shared_ptr<Preview> Ptr;
-  typedef std::map<std::string, unity::glib::Variant> Properties;
 
   virtual ~Preview();
 
-  static Preview::Ptr PreviewForProperties(std::string const& renderer_name, Properties& properties);
+  static Preview::Ptr PreviewForVariant(unity::glib::Variant& properties);
 
-  std::string renderer_name;
+  nux::RWProperty<std::string> title;
+  nux::RWProperty<std::string> subtitle;
+  nux::RWProperty<std::string> description;
+  nux::RWProperty<unity::glib::Object<GIcon>> thumbnail;
 
+  // TODO: actions, info hints
 protected:
-  unsigned int PropertyToUnsignedInt (Properties& properties, const char* key);
-  std::string PropertyToString(Properties& properties, const char *key);
-  std::vector<std::string> PropertyToStringVector(Properties& properties, const char *key);
-  float PropertyToFloat(Properties& properties, const char* key);
-};
+  Preview(unity::glib::Object<UnityProtocolPreview> const& proto_obj);
 
-class NoPreview : public Preview
-{
-public:
-  NoPreview();
+  virtual void SetupGetters();
+  static unity::glib::Object<GIcon> IconForString(std::string const& icon_hint);
+
+private:
+  std::string get_title() const { return title_; };
+  std::string get_subtitle() const { return subtitle_; };
+  std::string get_description() const { return description_; };
+  unity::glib::Object<GIcon> get_thumbnail() const { return thumbnail_; };
+
+  std::string title_;
+  std::string subtitle_;
+  std::string description_;
+  unity::glib::Object<GIcon> thumbnail_;
 };
 
 }
