@@ -1195,6 +1195,43 @@ void UnityWindow::handleEvent (XEvent *event)
   }
 }
 
+bool UnityScreen::shellIsHidden(const CompOutput &output)
+{
+  bool hidden = false;
+  const std::vector<Window> &nuxwins(nux::XInputWindow::NativeHandleList());
+
+  // Loop through windows from back to front
+  for (CompWindow *w : screen->windows ())
+  {
+    /*
+     * The shell is hidden if there exists any window that fully covers
+     * the output and is in front of all Nux windows on that output.
+     * We could also check CompositeWindow::opacity() but that would be slower
+     * and almost always pointless.
+     */
+    if (w->isMapped() &&
+        w->isViewable() &&
+        !w->inShowDesktopMode() &&  // Why must this != isViewable?
+        w->geometry().contains(output))
+    {
+      hidden = true;
+    }
+    else if (hidden)
+    {
+      for (Window n : nuxwins)
+      {
+        if (w->id() == n && output.intersects(w->geometry()))
+        {
+          hidden = false;
+          break;
+        }
+      }
+    }
+  }
+
+  return hidden;
+}
+
 /* called whenever we need to repaint parts of the screen */
 bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
                                 const GLMatrix& transform,
@@ -1204,19 +1241,26 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
 {
   bool ret;
 
-  compizDamageNux(region);
-
-  /*
-   * TODO: Figure out if we can ask compiz when:
-   *       output->containsFullscreenWindows();
-   *       and if true, then force doShellRepaint=false here.
-   */
-  doShellRepaint = wt->GetDrawList().size() > 0 ||
-                   BackgroundEffectHelper::HasDirtyHelpers() ||
-                   switcher_controller_->Visible() ||
-                   launcher_controller_->IsOverlayOpen() ||
-                   (mask & (PAINT_SCREEN_TRANSFORMED_MASK |
-                            PAINT_SCREEN_WITH_TRANSFORMED_WINDOWS_MASK));
+  // A few cases where we want to force the shell to be painted
+  if (forcePaintOnTop() ||
+      PluginAdapter::Default()->IsExpoActive() ||
+      (mask & (PAINT_SCREEN_TRANSFORMED_MASK |
+               PAINT_SCREEN_WITH_TRANSFORMED_WINDOWS_MASK)))
+  {
+    compizDamageNux(region);
+    doShellRepaint = true;
+  }
+  else if (shellIsHidden(*output))
+  {
+    // Don't ever waste GPU and CPU rendering the shell in games/benchmarks!
+    doShellRepaint = false;
+  }
+  else
+  {
+    compizDamageNux(region);
+    doShellRepaint = wt->GetDrawList().size() > 0 ||
+                     BackgroundEffectHelper::HasDirtyHelpers();
+  }
 
   allowWindowPaint = true;
   _last_output = output;
