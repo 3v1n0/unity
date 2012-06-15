@@ -403,7 +403,7 @@ Launcher* Controller::Impl::CreateLauncher(int monitor)
   launcher_window->SetLayout(layout);
   launcher_window->SetBackgroundColor(nux::color::Transparent);
   launcher_window->ShowWindow(true);
-  launcher_window->EnableInputWindow(true, "launcher", false, false);
+  launcher_window->EnableInputWindow(true, launcher::window_title, false, false);
   launcher_window->InputWindowEnableStruts(false);
   launcher_window->SetEnterFocusInputArea(launcher);
 

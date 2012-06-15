@@ -64,6 +64,8 @@ using ui::Decaymulator;
 namespace launcher
 {
 
+const char window_title[] = "unity-launcher";
+
 namespace
 {
 
@@ -1333,7 +1335,7 @@ void Launcher::SetHidden(bool hidden)
 
   TimeUtil::SetTimeStruct(&_times[TIME_AUTOHIDE], &_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT);
 
-  _parent->EnableInputWindow(!hidden, "launcher", false, false);
+  _parent->EnableInputWindow(!hidden, launcher::window_title, false, false);
 
   if (!hidden && GetActionState() == ACTION_DRAG_EXTERNAL)
     DndReset();
@@ -1489,7 +1491,7 @@ void Launcher::SetHideMode(LauncherHideMode hidemode)
   }
   else
   {
-    _parent->EnableInputWindow(true, "launcher", false, false);
+    _parent->EnableInputWindow(true, launcher::window_title, false, false);
 
     if (!sources_.GetSource(STRUT_HACK_TIMEOUT))
     {
