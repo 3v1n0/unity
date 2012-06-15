@@ -30,6 +30,7 @@
 
 #include "config.h"
 #include "GLibWrapper.h"
+#include "GLibSource.h"
 
 
 namespace unity
@@ -351,7 +352,6 @@ public:
   Impl(FilesystemLenses* owner, LensDirectoryReader::Ptr const& reader);
   ~Impl()
   {
-    if (timeout_id != 0) g_source_remove (timeout_id);
     finished_slot_.disconnect();
   }
 
@@ -367,26 +367,21 @@ public:
   LensDirectoryReader::Ptr reader_;
   LensList lenses_;
   sigc::connection finished_slot_;
-  guint timeout_id;
+  glib::Source::UniquePtr load_idle_;
 };
 
 FilesystemLenses::Impl::Impl(FilesystemLenses* owner, LensDirectoryReader::Ptr const& reader)
   : owner_(owner)
   , reader_(reader)
-  , timeout_id(0)
 {
   finished_slot_ = reader_->load_finished.connect(sigc::mem_fun(this, &Impl::OnLoadingFinished));
   if (reader_->IsDataLoaded())
   {
     // we won't get any signal, so let's just emit our signals after construction
-    timeout_id = g_idle_add_full (G_PRIORITY_DEFAULT,
-                                  [] (gpointer data) -> gboolean {
-                                    Impl *self = (Impl*) data;
-                                    self->timeout_id = 0;
-                                    self->OnLoadingFinished();
-                                    return FALSE;
-                                  },
-                                  this, NULL);
+    load_idle_.reset(new glib::Idle([&] () {
+      OnLoadingFinished();
+      return false;
+    }, glib::Source::Priority::DEFAULT));
   }
 }
 

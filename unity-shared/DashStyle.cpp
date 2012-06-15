@@ -40,6 +40,7 @@
 
 #include "CairoTexture.h"
 #include "JSONParser.h"
+#include "UnitySettings.h"
 #include "config.h"
 
 #define DASH_WIDGETS_FILE DATADIR"/unity/themes/dash-widgets.json"
@@ -399,7 +400,8 @@ void Style::Impl::OnFontChanged(GtkSettings* object, GParamSpec* pspec)
 
 
 Style::Style()
-  : pimpl(new Impl(this))
+  : always_maximised(false)
+  , pimpl(new Impl(this))
 {
   if (style_instance)
   {
@@ -409,6 +411,15 @@ Style::Style()
   {
     style_instance = this;
   }
+
+  auto formfactor_lambda = [this] () 
+  {
+    FormFactor formfactor = Settings::Instance().GetFormFactor();
+    always_maximised = (formfactor == FormFactor::NETBOOK || formfactor == FormFactor::TV); 
+  };
+
+  Settings::Instance().changed.connect(formfactor_lambda);
+  formfactor_lambda();
 }
 
 Style::~Style ()
@@ -1640,7 +1651,7 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
   // draw the grid background
   {
     cairo_set_line_width(cr, 1);
-    cairo_move_to(cr, _align(x + width, odd), _align(y, odd));
+    cairo_move_to(cr, _align(x + width, odd), y);
     if (curve_bottom)
     {
       LOG_DEBUG(logger) << "curve: " << _align(x + width, odd) << " - " << _align(y + height - radius, odd);
@@ -1672,8 +1683,8 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
     else
     {
       cairo_line_to(cr, _align(x + width, odd), _align(y + height, odd));
-      cairo_line_to(cr, _align(x, odd), _align(x + height, odd));
-      cairo_line_to(cr, _align(x, odd), _align(y, odd));
+      cairo_line_to(cr, _align(x, odd), _align(y + height, odd));
+      cairo_line_to(cr, _align(x, odd), y);
     }
 
     cairo_set_source_rgba(cr, pimpl->button_label_border_color_[nux::ButtonVisualState::VISUAL_STATE_NORMAL]);

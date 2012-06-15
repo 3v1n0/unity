@@ -25,6 +25,7 @@
 #include <vector>
 
 #include <UnityCore/GLibSignal.h>
+#include <UnityCore/GLibSource.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibDBusProxy.h>
 
@@ -60,7 +61,7 @@ private:
   glib::DBusProxy proxy_;
   glib::Signal<void, GdkScreen*> size_changed_signal_;
   glib::Signal<void, GdkScreen*> monitors_changed_signal_;
-  guint refresh_id_;
+  glib::Source::UniquePtr refresh_idle_;
   int primary_;
 };
 

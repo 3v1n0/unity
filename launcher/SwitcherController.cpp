@@ -32,12 +32,16 @@ using launcher::AbstractLauncherIcon;
 using launcher::ActionArg;
 using ui::LayoutWindowList;
 
-namespace switcher
-{
 namespace
 {
-gboolean OnDetailTimerCb(gpointer data);
+  const std::string LAZY_TIMEOUT = "lazy-timeout";
+  const std::string SHOW_TIMEOUT = "show-timeout";
+  const std::string DETAIL_TIMEOUT = "detail-timeout";
+  const std::string VIEW_CONSTRUCT_IDLE = "view-construct-idle";
 }
+
+namespace switcher
+{
 
 Controller::Controller(unsigned int load_timeout)
   :  timeout_length(75)
@@ -45,37 +49,16 @@ Controller::Controller(unsigned int load_timeout)
   ,  detail_timeout_length(500)
   ,  initial_detail_timeout_length(1500)
   ,  construct_timeout_(load_timeout)
-  ,  view_window_(nullptr)
   ,  main_layout_(nullptr)
   ,  monitor_(0)
   ,  visible_(false)
-  ,  show_timer_(0)
-  ,  detail_timer_(0)
-  ,  lazy_timer_(0)
-  ,  view_idle_timer_(0)
   ,  bg_color_(0, 0, 0, 0.5)
 {
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
 
-  /* Construct the view after a prefixed timeout, to improve the startup time */
-  lazy_timer_ = g_timeout_add_seconds_full(G_PRIORITY_LOW, construct_timeout_, [] (gpointer data) -> gboolean {
-    auto self = static_cast<Controller*>(data);
-    self->lazy_timer_ = 0;
-    self->ConstructWindow();
-    return FALSE;
-  }, this, nullptr);
-}
-
-Controller::~Controller()
-{
-  if (view_window_)
-    view_window_->UnReference();
-
-  if (lazy_timer_)
-    g_source_remove(lazy_timer_);
-
-  if (view_idle_timer_)
-    g_source_remove(view_idle_timer_);
+  auto lazy_timeout = std::make_shared<glib::TimeoutSeconds>(construct_timeout_, glib::Source::Priority::LOW);
+  lazy_timeout->Run([&] { ConstructWindow(); return false; });
+  sources_.Add(lazy_timeout, LAZY_TIMEOUT);
 }
 
 void Controller::OnBackgroundUpdate(GVariant* data)
@@ -95,7 +78,7 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
   {
     std::sort(results.begin(), results.end(), CompareSwitcherItemsPriority);
   }
-  
+
   model_.reset(new SwitcherModel(results));
   AddChild(model_.get());
   model_->selection_changed.connect(sigc::mem_fun(this, &Controller::OnModelSelectionChanged));
@@ -107,25 +90,13 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
 
   if (timeout_length > 0)
   {
-    if (view_idle_timer_)
-      g_source_remove(view_idle_timer_);
+    auto view_idle_construct = std::make_shared<glib::Idle>();
+    sources_.Add(view_idle_construct, VIEW_CONSTRUCT_IDLE);
+    view_idle_construct->Run([&] () { ConstructView(); return false; });
 
-    view_idle_timer_ = g_idle_add_full(G_PRIORITY_LOW, [] (gpointer data) -> gboolean {
-      auto self = static_cast<Controller*>(data);
-      self->ConstructView();
-      self->view_idle_timer_ = 0;
-      return FALSE;
-    }, this, NULL);
-
-    if (show_timer_)
-      g_source_remove (show_timer_);
-
-    show_timer_ = g_timeout_add(timeout_length, [] (gpointer data) -> gboolean {
-      auto self = static_cast<Controller*>(data);
-      self->ShowView();
-      self->show_timer_ = 0;
-      return FALSE;
-    }, this);
+    auto show_timeout = std::make_shared<glib::Timeout>(timeout_length);
+    sources_.Add(show_timeout, SHOW_TIMEOUT);
+    show_timeout->Run([&] () { ShowView(); return false; });
   }
   else
   {
@@ -134,9 +105,9 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
 
   if (detail_on_timeout)
   {
-    if (detail_timer_)
-      g_source_remove (detail_timer_);
-    detail_timer_ = g_timeout_add(initial_detail_timeout_length, OnDetailTimerCb, this);
+    auto detail_timeout = std::make_shared<glib::Timeout>(initial_detail_timeout_length);
+    sources_.Add(detail_timeout, DETAIL_TIMEOUT);
+    detail_timeout->Run(sigc::mem_fun(this, &Controller::OnDetailTimer));
   }
 
   ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
@@ -149,7 +120,7 @@ void Controller::Select(int index)
     model_->Select(index);
 }
 
-gboolean Controller::OnDetailTimer()
+bool Controller::OnDetailTimer()
 {
   if (visible_ && !model_->detail_selection)
   {
@@ -157,18 +128,16 @@ gboolean Controller::OnDetailTimer()
     detail_mode_ = TAB_NEXT_WINDOW;
   }
 
-  detail_timer_ = 0;
-  return FALSE;
+  return false;
 }
 
 void Controller::OnModelSelectionChanged(AbstractLauncherIcon::Ptr icon)
 {
   if (detail_on_timeout)
   {
-    if (detail_timer_)
-      g_source_remove(detail_timer_);
-
-    detail_timer_ = g_timeout_add(detail_timeout_length, OnDetailTimerCb, this);
+    auto detail_timeout = std::make_shared<glib::Timeout>(detail_timeout_length);
+    sources_.Add(detail_timeout, DETAIL_TIMEOUT);
+    detail_timeout->Run(sigc::mem_fun(this, &Controller::OnDetailTimer));
   }
 
   if (icon)
@@ -187,20 +156,18 @@ void Controller::ShowView()
 {
   if (!visible_)
     return;
-  
+
   ConstructView();
 
-  if (view_window_)
+  if (view_window_) {
+    view_window_->ShowWindow(true);
     view_window_->SetOpacity(1.0f);
+  }
 }
 
 void Controller::ConstructWindow()
 {
-  if (lazy_timer_)
-  {
-    g_source_remove(lazy_timer_);
-    lazy_timer_ = 0;
-  }
+  sources_.Remove(LAZY_TIMEOUT);
 
   if (!view_window_)
   {
@@ -209,7 +176,6 @@ void Controller::ConstructWindow()
     main_layout_->SetHorizontalExternalMargin(0);
 
     view_window_ = new nux::BaseWindow("Switcher");
-    view_window_->SinkReference();
     view_window_->SetLayout(main_layout_);
     view_window_->SetBackgroundColor(nux::Color(0x00000000));
     view_window_->SetGeometry(workarea_);
@@ -221,11 +187,7 @@ void Controller::ConstructView()
   if (view_ || !model_)
     return;
 
-  if (view_idle_timer_)
-  {
-    g_source_remove(view_idle_timer_);
-    view_idle_timer_ = 0;
-  }
+  sources_.Remove(VIEW_CONSTRUCT_IDLE);
 
   view_ = SwitcherView::Ptr(new SwitcherView());
   AddChild(view_.GetPointer());
@@ -238,7 +200,6 @@ void Controller::ConstructView()
   main_layout_->AddView(view_.GetPointer(), 1);
   view_window_->SetGeometry(workarea_);
   view_window_->SetOpacity(0.0f);
-  view_window_->ShowWindow(true);
 }
 
 void Controller::SetWorkspace(nux::Geometry geo, int monitor)
@@ -279,11 +240,9 @@ void Controller::Hide(bool accept_state)
     }
   }
 
-  if (view_idle_timer_)
-  {
-    g_source_remove(view_idle_timer_);
-    view_idle_timer_ = 0;
-  }
+  sources_.Remove(VIEW_CONSTRUCT_IDLE);
+  sources_.Remove(SHOW_TIMEOUT);
+  sources_.Remove(DETAIL_TIMEOUT);
 
   model_.reset();
   visible_ = false;
@@ -296,14 +255,6 @@ void Controller::Hide(bool accept_state)
     view_window_->SetOpacity(0.0f);
     view_window_->ShowWindow(false);
   }
-
-  if (show_timer_)
-    g_source_remove(show_timer_);
-  show_timer_ = 0;
-
-  if (detail_timer_)
-    g_source_remove(detail_timer_);
-  detail_timer_ = 0;
 
   ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN, g_variant_new("(bi)", false, monitor_));
 
@@ -439,12 +390,13 @@ bool Controller::CompareSwitcherItemsPriority(AbstractLauncherIcon::Ptr first,
 {
   if (first->GetIconType() == second->GetIconType())
     return first->SwitcherPriority() > second->SwitcherPriority();
-    
+
   if (first->GetIconType() == AbstractLauncherIcon::IconType::TYPE_DESKTOP)
-	return true;
-	
+    return true;
+
   if (second->GetIconType() == AbstractLauncherIcon::IconType::TYPE_DESKTOP)
-	return false;
+    return false;
+
   return first->GetIconType() < second->GetIconType();
 }
 
@@ -517,15 +469,5 @@ Controller::AddProperties(GVariantBuilder* builder)
   .add("detail-mode", detail_mode_);
 }
 
-namespace
-{
-
-gboolean OnDetailTimerCb(gpointer data)
-{
-  Controller* controller = static_cast<Controller*>(data);
-  return controller->OnDetailTimer();
-}
-
-}
-}
-}
+} // switcher namespace
+} // unity namespace

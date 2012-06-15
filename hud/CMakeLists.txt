@@ -28,10 +28,12 @@ include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_D
 # Headers & Sources
 #
 set (HUD_SOURCES
+     HudAbstractView.cpp
      HudButton.cpp
      HudController.cpp
      HudIcon.cpp
      HudIconTextureSource.cpp
+     HudPrivate.cpp
      HudView.cpp
     ) 
 

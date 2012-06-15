@@ -22,23 +22,17 @@
 #define LAUNCHERICON_H
 
 #include <set>
-#include <string>
+#include <boost/unordered_map.hpp>
 
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 #include <NuxCore/Math/MathInc.h>
 
-#include <sigc++/trackable.h>
-#include <sigc++/signal.h>
-#include <sigc++/functors/ptr_fun.h>
-#include <sigc++/functors/mem_fun.h>
-
 #include <gtk/gtk.h>
 #include <libdbusmenu-glib/client.h>
 #include <libdbusmenu-glib/menuitem.h>
 
-#include <boost/unordered_map.hpp>
-
+#include <UnityCore/GLibSource.h>
 #include "AbstractLauncherIcon.h"
 #include "Tooltip.h"
 #include "QuicklistView.h"
@@ -76,11 +70,11 @@ public:
 
   void RecvMouseLeave(int monitor);
 
-  void RecvMouseDown(int button, int monitor);
+  void RecvMouseDown(int button, int monitor, unsigned long key_flags = 0);
 
-  void RecvMouseUp(int button, int monitor);
+  void RecvMouseUp(int button, int monitor, unsigned long key_flags = 0);
 
-  void RecvMouseClick(int button, int monitor);
+  void RecvMouseClick(int button, int monitor, unsigned long key_flags = 0);
 
   void HideTooltip();
 
@@ -147,7 +141,7 @@ public:
 
   IconType GetIconType();
 
-  virtual nux::Color BackgroundColor();
+  virtual nux::Color BackgroundColor() const;
 
   virtual nux::Color GlowColor();
 
@@ -304,32 +298,24 @@ protected:
   glib::Object<DbusmenuClient> _menuclient_dynamic_quicklist;
 
 private:
-  typedef struct
-  {
-    LauncherIcon* self;
-    Quirk quirk;
-  } DelayedUpdateArg;
-
   nux::ObjectPtr<Tooltip> _tooltip;
   nux::ObjectPtr<QuicklistView> _quicklist;
 
   static void ChildRealized(DbusmenuMenuitem* newitem, QuicklistView* quicklist);
   static void RootChanged(DbusmenuClient* client, DbusmenuMenuitem* newroot, QuicklistView* quicklist);
-  static gboolean OnPresentTimeout(gpointer data);
-  static gboolean OnCenterTimeout(gpointer data);
-  static gboolean OnDelayedUpdateTimeout(gpointer data);
+  bool OnPresentTimeout();
+  bool OnCenterStabilizeTimeout();
 
   void ColorForIcon(GdkPixbuf* pixbuf, nux::Color& background, nux::Color& glow);
 
   void LoadTooltip();
   void LoadQuicklist();
 
+  void OnTooltipEnabledChanged(bool value);
+
   bool              _remote_urgent;
   float             _present_urgency;
   float             _progress;
-  guint             _center_stabilize_handle;
-  guint             _present_time_handle;
-  guint             _time_delay_handle;
   int               _sort_priority;
   int               _last_monitor;
   nux::Color        _background_color;
@@ -354,6 +340,9 @@ private:
   struct timespec  _quirk_times[QUIRK_LAST];
 
   std::list<LauncherEntryRemote::Ptr> _entry_list;
+
+protected:
+  glib::SourceManager _source_manager;
 };
 
 }

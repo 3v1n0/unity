@@ -31,15 +31,16 @@ namespace unity
 {
 namespace
 {
-  unsigned int MOUSE_DOWN_TIMEOUT = 150;
-  unsigned int MOUSE_MOVEMENT_TOLERANCE = 4;
+
+const int MOUSE_DOWN_TIMEOUT = 150;
+const int MOUSE_MOVEMENT_TOLERANCE = 4;
+
 }
 
 PanelTitlebarGrabArea::PanelTitlebarGrabArea()
   : InputArea(NUX_TRACKER_LOCATION)
   , grab_cursor_(None)
   , grab_started_(false)
-  , mouse_down_timer_(0)
   , mouse_down_button_(0)
 {
   EnableDoubleClick(true);
@@ -59,9 +60,6 @@ PanelTitlebarGrabArea::~PanelTitlebarGrabArea()
 {
   if (grab_cursor_)
     XFreeCursor(nux::GetGraphicsDisplay()->GetX11Display(), grab_cursor_);
-
-  if (mouse_down_timer_)
-    g_source_remove(mouse_down_timer_);
 }
 
 void PanelTitlebarGrabArea::SetGrabbed(bool enabled)
@@ -103,20 +101,19 @@ void PanelTitlebarGrabArea::OnMouseDown(int x, int y, unsigned long button_flags
     mouse_down_point_.x = x;
     mouse_down_point_.y = y;
 
-    mouse_down_timer_ =
-      g_timeout_add(MOUSE_DOWN_TIMEOUT, [] (gpointer data) -> gboolean {
-        auto self = static_cast<PanelTitlebarGrabArea*>(data);
+    mouse_down_timer_.reset(new glib::Timeout(MOUSE_DOWN_TIMEOUT));
+    mouse_down_timer_->Run([&] () {
+      if (!grab_started_)
+      {
+        nux::Point const& mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
+        nux::Geometry const& geo = GetAbsoluteGeometry();
+        grab_started.emit(mouse.x - geo.x, mouse.y - geo.y);
+        grab_started_ = true;
+      }
 
-        if (!self->grab_started_)
-        {
-          nux::Point const& mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-          self->grab_started.emit(mouse.x - self->GetAbsoluteX(), mouse.y - self->GetAbsoluteY());
-          self->grab_started_ = true;
-        }
-
-        self->mouse_down_timer_ = 0;
-        return FALSE;
-      }, this);
+      mouse_down_timer_.reset();
+      return false;
+    });
   }
 }
 
@@ -128,9 +125,7 @@ void PanelTitlebarGrabArea::OnMouseUp(int x, int y, unsigned long button_flags, 
   {
     if (mouse_down_timer_)
     {
-      g_source_remove(mouse_down_timer_);
-      mouse_down_timer_ = 0;
-
+      mouse_down_timer_.reset();
       activate_request.emit(x, y);
     }
 
@@ -159,8 +154,7 @@ void PanelTitlebarGrabArea::OnGrabMove(int x, int y, int, int, unsigned long but
       return;
     }
 
-    g_source_remove(mouse_down_timer_);
-    mouse_down_timer_ = 0;
+    mouse_down_timer_.reset();
   }
 
   if (!grab_started_)

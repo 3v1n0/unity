@@ -48,8 +48,6 @@ set (DASH_SOURCES
      LensView.cpp
      LensViewPrivate.cpp
      PlacesGroup.cpp
-     PlacesSimpleTile.cpp
-     PlacesTile.cpp
      PlacesVScrollBar.cpp
      PreviewApplications.cpp
      PreviewBase.cpp
@@ -63,7 +61,6 @@ set (DASH_SOURCES
 
 add_library (dash-lib STATIC ${DASH_SOURCES})
 add_dependencies (dash-lib unity-core-${UNITY_API_VERSION} unity-shared)
-
 # 
 # Standalone variant
 #

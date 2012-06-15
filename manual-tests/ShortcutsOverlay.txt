@@ -12,3 +12,4 @@ Action:
 
 Outcome:
   The keyboard shortcuts overlay bottom is not truncated.
+

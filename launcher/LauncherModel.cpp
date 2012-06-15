@@ -28,22 +28,8 @@ namespace unity
 namespace launcher
 {
 
-struct RemoveArg
-{
-  RemoveArg(AbstractLauncherIcon::Ptr const& icon_, LauncherModel* model)
-    : icon(icon_), self(model)
-  {}
-
-  AbstractLauncherIcon::Ptr icon;
-  LauncherModel* self;
-};
-
 LauncherModel::LauncherModel()
-{
-  selection_ = 0;
-}
-
-LauncherModel::~LauncherModel()
+  : selection_(0)
 {
 }
 
@@ -61,10 +47,10 @@ void LauncherModel::AddProperties(GVariantBuilder* builder)
 unity::debug::Introspectable::IntrospectableList const& LauncherModel::GetIntrospectableChildren()
 {
   introspection_results_.clear();
-  
+
   for (auto icon : _inner)
     introspection_results_.push_back(icon.GetPointer());
-  
+
   return introspection_results_;
 }
 
@@ -144,25 +130,16 @@ LauncherModel::RemoveIcon(AbstractLauncherIcon::Ptr icon)
   }
 }
 
-gboolean
-LauncherModel::RemoveCallback(gpointer data)
-{
-  RemoveArg* arg = static_cast<RemoveArg*>(data);
-
-  if (arg)
-  {
-    arg->self->RemoveIcon(arg->icon);
-    delete arg;
-  }
-
-  return false;
-}
-
 void
 LauncherModel::OnIconRemove(AbstractLauncherIcon::Ptr icon)
 {
-  RemoveArg* arg = new RemoveArg(icon, this);
-  g_timeout_add(1000, &LauncherModel::RemoveCallback, arg);
+  auto timeout = std::make_shared<glib::Timeout>(1000);
+  timeouts_.Add(timeout);
+
+  timeout->Run([&, icon] {
+    RemoveIcon(icon);
+    return false;
+  });
 }
 
 void
@@ -368,7 +345,7 @@ void LauncherModel::SetSelection(int selection)
 
   if (new_selection == selection_)
     return;
-  
+
   selection_ = new_selection;
   selection_changed.emit(Selection());
 }

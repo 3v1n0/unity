@@ -42,20 +42,25 @@ namespace unity
 {
 namespace launcher
 {
+namespace
+{
+  // We use the "bamf-" prefix since the manager is protected, to avoid name clash
+  const std::string WINDOW_MOVE_TIMEOUT = "bamf-window-move";
+  const std::string ICON_REMOVE_TIMEOUT = "bamf-icon-remove";
+  //const std::string ICON_DND_OVER_TIMEOUT = "bamf-icon-dnd-over";
+}
 
 NUX_IMPLEMENT_OBJECT_TYPE(BamfLauncherIcon);
 
 BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   : SimpleLauncherIcon()
   , _bamf_app(app, glib::AddRef())
-  , _dnd_hovered(false)
-  , _dnd_hover_timer(0)
   , _supported_types_filled(false)
-  , _fill_supported_types_id(0)
-  , _window_moved_id(0)
+  , use_custom_bg_color_(false)
+  , bg_color_(nux::color::White)
 {
   g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"),
-                     GINT_TO_POINTER(1));
+                     GUINT_TO_POINTER(1));
   auto bamf_view = glib::object_cast<BamfView>(_bamf_app);
 
   glib::String icon(bamf_view_get_icon(bamf_view));
@@ -101,10 +106,12 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view, "running-changed",
                           [&] (BamfView*, gboolean running) {
                             SetQuirk(QUIRK_RUNNING, running);
+
                             if (running)
                             {
                               EnsureWindowState();
                               UpdateIconGeometries(GetCenters());
+                              _source_manager.Remove(ICON_REMOVE_TIMEOUT);
                             }
                           });
   _gsignals.Add(sig);
@@ -119,7 +126,19 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   sig = new glib::Signal<void, BamfView*>(bamf_view, "closed",
                           [&] (BamfView*) {
                             if (!IsSticky())
-                              Remove();
+                            {
+                              SetQuirk(QUIRK_VISIBLE, false);
+
+                              /* Use a timeout to remove the icon, this avoids
+                               * that we remove an application that is going
+                               * to be reopened soon. So applications that
+                               * have a splash screen won't be removed from
+                               * the launcher while the splash is closed and
+                               * a new window is opened. */
+                              auto timeout = std::make_shared<glib::TimeoutSeconds>(1);
+                              _source_manager.Add(timeout, ICON_REMOVE_TIMEOUT);
+                              timeout->Run([&] { Remove(); return false; });
+                            }
                           });
   _gsignals.Add(sig);
 
@@ -131,33 +150,36 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   EnsureWindowState();
   UpdateMenus();
   UpdateDesktopFile();
+  UpdateBackgroundColor();
 
   // hack
   SetProgress(0.0f);
 
   // Calls when there are no higher priority events pending to the default main loop.
-  _fill_supported_types_id = g_idle_add([] (gpointer data) -> gboolean {
-    static_cast<BamfLauncherIcon*>(data)->FillSupportedTypes();
-    return false;
-  }, this);
+  auto idle = std::make_shared<glib::Idle>([&] { FillSupportedTypes(); return false; });
+  _source_manager.Add(idle);
 }
 
 BamfLauncherIcon::~BamfLauncherIcon()
 {
+  if (_bamf_app)
+    g_object_set_qdata(G_OBJECT(_bamf_app.RawPtr()),
+                       g_quark_from_static_string("unity-seen"), nullptr);
+}
+
+void BamfLauncherIcon::Remove()
+{
+  /* Removing the unity-seen flag to the wrapped bamf application, on remove
+   * request we make sure that if the bamf application is re-opened while
+   * the removal process is still ongoing, the application will be shown
+   * on the launcher. Disconnecting from signals and nullifying the _bamf_app
+   * we make sure that this icon won't be reused (no duplicated icon). */
+  _gsignals.Disconnect(_bamf_app);
   g_object_set_qdata(G_OBJECT(_bamf_app.RawPtr()),
                      g_quark_from_static_string("unity-seen"), nullptr);
+  _bamf_app = nullptr;
 
-  if (_fill_supported_types_id != 0)
-    g_source_remove(_fill_supported_types_id);
-
-  if (_quicklist_activated_id != 0)
-    g_source_remove(_quicklist_activated_id);
-
-  if (_window_moved_id != 0)
-    g_source_remove(_window_moved_id);
-
-  if (_dnd_hover_timer != 0)
-    g_source_remove(_dnd_hover_timer);
+  SimpleLauncherIcon::Remove();
 }
 
 bool BamfLauncherIcon::IsSticky() const
@@ -426,17 +448,15 @@ void BamfLauncherIcon::OnWindowMoved(guint32 moved_win)
   if (!OwnsWindow(moved_win))
     return;
 
-  if (_window_moved_id != 0)
-    g_source_remove(_window_moved_id);
+  auto timeout = std::make_shared<glib::Timeout>(250);
+  _source_manager.Add(timeout, WINDOW_MOVE_TIMEOUT);
 
-  _window_moved_id = g_timeout_add(250, [] (gpointer data) -> gboolean
-  {
-    BamfLauncherIcon* self = static_cast<BamfLauncherIcon*>(data);
-    self->EnsureWindowState();
-    self->UpdateIconGeometries(self->GetCenters());
-    self->_window_moved_id = 0;
-    return FALSE;
-  }, this);
+  timeout->Run([&] {
+    EnsureWindowState();
+    UpdateIconGeometries(GetCenters());
+
+    return false;
+  });
 }
 
 void BamfLauncherIcon::UpdateDesktopFile()
@@ -467,6 +487,7 @@ void BamfLauncherIcon::UpdateDesktopFile()
                                       break;
                                     case G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT:
                                       UpdateDesktopQuickList();
+                                      UpdateBackgroundColor();
                                       break;
                                     default:
                                       break;
@@ -511,7 +532,7 @@ bool BamfLauncherIcon::OwnsWindow(Window xid) const
   GList* children, *l;
   bool owns = false;
 
-  if (!xid)
+  if (!xid || !_bamf_app)
     return owns;
 
   children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
@@ -711,8 +732,8 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
   const gchar** nicks = indicator_desktop_shortcuts_get_nicks(_desktop_shortcuts);
 
   int index = 0;
-  while (nicks[index]) {
-
+  while (nicks[index])
+  {
     // Build a dbusmenu item for each nick that is the desktop
     // file that is built from it's name and includes a callback
     // to the desktop shortcuts object to execute the nick
@@ -735,6 +756,55 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
     dbusmenu_menuitem_child_append(_menu_desktop_shortcuts, item);
     index++;
   }
+}
+
+//
+// ColorStrToARGB:
+// Parses a color string in the form: "#rrggbbaa", where # and aa are optional.
+// Returns the color in 32-bit ARGB format: 0xaarrggbb.
+//
+// In Nux 3.x, this function is superseded by:
+//   nux::color::Color(std::string const& hex)
+// (even though this function is much smaller and faster)
+//
+// I would really like to #if NUX_VERSION <= ... around this code, but
+// no such integer macro seems to exist in the Nux headers.
+//
+unsigned int ColorStrToARGB(const char *str)
+{
+  unsigned int ret = 0;
+  if (str)
+  {
+    const char *hex = str[0] == '#' ? str + 1 : str;
+    int digits = 0, color = 0;
+    if (sscanf(hex, "%x%n", &color, &digits))
+    {
+      if (hex[digits])  // extra characters after the hex
+        ret = 0;
+      else if (digits == 6)
+        ret = (unsigned int)color | 0xff000000;
+      else if (digits == 8)   // Convert RGBA to ARGB:
+        ret = ((unsigned int)color >> 8) | ((unsigned int)color << 24);
+    }
+  }
+  return ret;
+}
+
+void BamfLauncherIcon::UpdateBackgroundColor()
+{
+  bool last_use_custom_bg_color = use_custom_bg_color_;
+  nux::Color last_bg_color(bg_color_);
+
+  std::string const& color = DesktopUtilities::GetBackgroundColor(DesktopFile());
+
+  use_custom_bg_color_ = !color.empty();
+
+  if (use_custom_bg_color_)
+    bg_color_ = nux::Color(ColorStrToARGB(color.c_str()));
+
+  if (last_use_custom_bg_color != use_custom_bg_color_ ||
+      last_bg_color != bg_color_)
+    EmitNeedsRedraw();
 }
 
 void BamfLauncherIcon::UpdateMenus()
@@ -978,13 +1048,12 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
 
     _gsignals.Add(new glib::Signal<void, DbusmenuMenuitem*, int>(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
                                     [&] (DbusmenuMenuitem*, int) {
-                                      _quicklist_activated_id =
-                                        g_idle_add([] (gpointer data) -> gboolean {
-                                          auto self = static_cast<BamfLauncherIcon*>(data);
-                                          self->ActivateLauncherIcon(ActionArg());
-                                          self->_quicklist_activated_id = 0;
-                                          return FALSE;
-                                        }, this);
+                                      auto idle = std::make_shared<glib::Idle>();
+                                      _source_manager.Add(idle);
+                                      idle->Run([&] {
+                                        ActivateLauncherIcon(ActionArg());
+                                        return false;
+                                      });
                                     }));
 
     _menu_items_extra["AppName"] = glib::Object<DbusmenuMenuitem>(item);
@@ -1105,28 +1174,24 @@ std::set<std::string> BamfLauncherIcon::ValidateUrisForLaunch(DndData const& uri
 void BamfLauncherIcon::OnDndHovered()
 {
   // for now, let's not do this, it turns out to be quite buggy
-  //if (_dnd_hovered && IsRunning())
+  //if (IsRunning())
   //  Spread(CompAction::StateInitEdgeDnd, true);
 }
 
 void BamfLauncherIcon::OnDndEnter()
 {
-  _dnd_hovered = true;
-  _dnd_hover_timer = g_timeout_add(1000, [] (gpointer data) -> gboolean {
-    BamfLauncherIcon* self = static_cast<BamfLauncherIcon*>(data);
-    self->OnDndHovered();
-    self->_dnd_hover_timer = 0;
-    return false;
-  }, this);
+  /* Disabled, since the DND code is currently disabled as well.
+  auto timeout = std::make_shared<glib::Timeout>(1000);
+  _source_manager.Add(timeout, ICON_DND_OVER_TIMEOUT);
+  timeout->Run([&] { OnDndHovered(); return false; });
+  */
 }
 
 void BamfLauncherIcon::OnDndLeave()
 {
-  _dnd_hovered = false;
-
-  if (_dnd_hover_timer)
-    g_source_remove(_dnd_hover_timer);
-  _dnd_hover_timer = 0;
+  /* Disabled, since the DND code is currently disabled as well.
+  _source_manager.Remove(ICON_DND_OVER_TIMEOUT);
+  */
 }
 
 bool BamfLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
@@ -1151,7 +1216,7 @@ bool BamfLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
     }
   }
 
-  return false; 
+  return false;
 }
 
 nux::DndAction BamfLauncherIcon::OnQueryAcceptDrop(DndData const& dnd_data)
@@ -1212,6 +1277,14 @@ unsigned long long BamfLauncherIcon::SwitcherPriority()
   return result;
 }
 
+nux::Color BamfLauncherIcon::BackgroundColor() const
+{
+  if (use_custom_bg_color_)
+    return bg_color_;
+
+  return SimpleLauncherIcon::BackgroundColor();
+}
+
 const std::set<std::string>& BamfLauncherIcon::GetSupportedTypes()
 {
   if (!_supported_types_filled)
@@ -1222,12 +1295,6 @@ const std::set<std::string>& BamfLauncherIcon::GetSupportedTypes()
 
 void BamfLauncherIcon::FillSupportedTypes()
 {
-  if (_fill_supported_types_id)
-  {
-    g_source_remove(_fill_supported_types_id);
-    _fill_supported_types_id = 0;
-  }
-
   if (!_supported_types_filled)
   {
     _supported_types_filled = true;

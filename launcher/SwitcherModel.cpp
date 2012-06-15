@@ -63,6 +63,7 @@ void SwitcherModel::AddProperties(GVariantBuilder* builder)
   unity::variant::BuilderWrapper(builder)
   .add("detail-selection", detail_selection)
   .add("detail-selection-index", (int)detail_selection_index)
+  .add("detail-current-count", DetailXids().size())
   .add("only-detail-on-viewport", only_detail_on_viewport)
   .add("selection-index", SelectionIndex())
   .add("last-selection-index", LastSelectionIndex());
@@ -250,7 +251,7 @@ SwitcherModel::Select(AbstractLauncherIcon::Ptr selection)
 }
 
 void
-SwitcherModel::Select(int index)
+SwitcherModel::Select(unsigned int index)
 {
   unsigned int target = CLAMP(index, 0, _inner.size() - 1);
 

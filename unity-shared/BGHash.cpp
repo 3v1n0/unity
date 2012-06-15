@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2011-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -18,17 +18,9 @@
 
 
 #include "BGHash.h"
-#include <X11/Xlib.h>
-#include <X11/Xatom.h>
 #include <gdk/gdkx.h>
-#include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
-#include <gdk-pixbuf/gdk-pixbuf.h>
-#include <libgnome-desktop/gnome-bg.h>
-#include <unity-misc/gnome-bg-slideshow.h>
-#include "unity-shared/ubus-server.h"
 #include "unity-shared/UBusMessages.h"
-#include "UnityCore/GLibWrapper.h"
 
 namespace
 {
@@ -38,63 +30,31 @@ namespace
 namespace unity
 {
 
-BGHash::BGHash ()
-  : _transition_handler (0),
-    _current_color (unity::colors::Aubergine),
-    _new_color (unity::colors::Aubergine),
-    _old_color (unity::colors::Aubergine),
-    _hires_time_start(10),
-    _hires_time_end(20),
-    _ubus_handle_request_colour(0)
+BGHash::BGHash()
+  : transition_animator_(500)
+  , current_color_(unity::colors::Aubergine)
+  , new_color_(unity::colors::Aubergine)
+  , old_color_(unity::colors::Aubergine)
 {
-  _override_color.alpha= 0.0f;
+  override_color_.alpha = 0.0f;
 
-  background_monitor_ = gnome_bg_new ();
-  client_ = g_settings_new ("org.gnome.desktop.background");
+  transition_animator_.animation_updated.connect(sigc::mem_fun(this, &BGHash::OnTransitionUpdated));
+  ubus_manager_.RegisterInterest(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, [&](GVariant *) { DoUbusColorEmit(); } );
 
-  signal_manager_.Add(
-    new glib::Signal<void, GnomeBG*>(background_monitor_,
-                                     "changed",
-                                     sigc::mem_fun(this, &BGHash::OnBackgroundChanged)));
-
-  signal_manager_.Add(
-    new glib::Signal<void, GSettings*, gchar*>(client_,
-                                               "changed",
-                                               sigc::mem_fun(this, &BGHash::OnGSettingsChanged)));
-
-  UBusServer *ubus = ubus_server_get_default ();
-
-  gnome_bg_load_from_preferences (background_monitor_, client_);
-
-
-  // avoids making a new object method when all we are doing is
-  // calling a method with no logic
-  auto request_lambda =  [](GVariant *data, gpointer self) {
-    reinterpret_cast<BGHash*>(self)->DoUbusColorEmit();
-  };
-  _ubus_handle_request_colour = ubus_server_register_interest (ubus, UBUS_BACKGROUND_REQUEST_COLOUR_EMIT,
-                                                               (UBusCallback)request_lambda,
-                                                                this);
   RefreshColor();
 }
 
-BGHash::~BGHash ()
+void BGHash::OverrideColor(nux::Color const& color)
 {
-  // We need to disconnect the signals before we delete the objects they're connected to,
-  // otherwise the signal manager reads a pointer that's been deleted already.
-  signal_manager_.Disconnect(client_, "changed");
-  // serialize our cache
-  g_object_unref (client_);
-  signal_manager_.Disconnect(background_monitor_, "changed");
-  g_object_unref (background_monitor_);
-  UBusServer *ubus = ubus_server_get_default ();
-  ubus_server_unregister_interest (ubus, _ubus_handle_request_colour);
-}
+  override_color_ = color;
 
-void BGHash::OverrideColor (nux::Color color)
-{
-  _override_color = color;
-  OnBackgroundChanged(background_monitor_);
+  if (override_color_.alpha)
+  {
+    TransitionToNewColor(override_color_);
+    return;
+  }
+
+  RefreshColor();
 }
 
 void BGHash::RefreshColor()
@@ -115,12 +75,12 @@ void BGHash::RefreshColor()
   Display*     display;
   GdkRGBA      color_gdk;
 
-  representative_colors_atom = gdk_x11_get_xatom_by_name ("_GNOME_BACKGROUND_REPRESENTATIVE_COLORS");
-  display = gdk_x11_display_get_xdisplay (gdk_display_get_default ());
+  representative_colors_atom = gdk_x11_get_xatom_by_name("_GNOME_BACKGROUND_REPRESENTATIVE_COLORS");
+  display = gdk_x11_display_get_xdisplay(gdk_display_get_default ());
 
-  gdk_error_trap_push ();
+  gdk_error_trap_push();
   result = XGetWindowProperty (display,
-             GDK_ROOT_WINDOW (),
+             GDK_ROOT_WINDOW(),
              representative_colors_atom,
              0L,
              G_MAXLONG,
@@ -144,26 +104,9 @@ void BGHash::RefreshColor()
     TransitionToNewColor(MatchColor(new_color));
     XFree (colors);
   }
-
 }
 
-gboolean BGHash::ForceUpdate (BGHash *self)
-{
-  self->OnBackgroundChanged(self->background_monitor_);
-  return FALSE;
-}
-
-void BGHash::OnGSettingsChanged (GSettings *settings, gchar *key)
-{
-  gnome_bg_load_from_preferences (background_monitor_, settings);
-}
-
-void BGHash::OnBackgroundChanged (GnomeBG *bg)
-{
-  RefreshColor();
-}
-
-nux::Color BGHash::InterpolateColor (nux::Color colora, nux::Color colorb, float value)
+nux::Color BGHash::InterpolateColor(nux::Color const& colora, nux::Color const& colorb, float value) const
 {
   // takes two colours, transitions between them, we can do it linearly or whatever
   // i don't think it will matter that much
@@ -171,71 +114,37 @@ nux::Color BGHash::InterpolateColor (nux::Color colora, nux::Color colorb, float
   return colora + ((colorb - colora) * value);
 }
 
-void BGHash::TransitionToNewColor(nux::color::Color new_color)
+void BGHash::TransitionToNewColor(nux::color::Color const& new_color)
 {
-  if (new_color == _current_color)
-  {
-    LOG_DEBUG(logger) << "rejecting colour";
+  if (new_color == current_color_)
     return;
-  }
 
-  if (_transition_handler)
-  {
-    // we are currently in a transition
-    g_source_remove (_transition_handler);
-  }
+  LOG_DEBUG(logger) << "transitioning from: " << current_color_.red << " to " << new_color.red;
 
-  LOG_DEBUG(logger) << "transitioning from: " << _current_color.red << " to " << new_color.red;
+  old_color_ = current_color_;
+  new_color_ = new_color;
 
-  _old_color = _current_color;
-  _new_color = new_color;
-
-  _hires_time_start = g_get_monotonic_time();
-  _hires_time_end = 500 * 1000; // 500 milliseconds
-  _transition_handler = g_timeout_add (1000/60, (GSourceFunc)BGHash::OnTransitionCallback, this);
+  transition_animator_.Stop();
+  transition_animator_.Start();
 }
 
-gboolean BGHash::OnTransitionCallback(BGHash *self)
+void BGHash::OnTransitionUpdated(double progress)
 {
-  return self->DoTransitionCallback();
-}
-
-gboolean BGHash::DoTransitionCallback ()
-{
-  guint64 current_time = g_get_monotonic_time();
-  float timediff = ((float)current_time - _hires_time_start) / _hires_time_end;
-
-  timediff = std::max(std::min(timediff, 1.0f), 0.0f);
-
-  _current_color = InterpolateColor(_old_color,
-                                    _new_color,
-                                    timediff);
-  DoUbusColorEmit ();
-
-  if (current_time > _hires_time_start + _hires_time_end)
-  {
-    _transition_handler = 0;
-    return FALSE;
-  }
-  else
-  {
-    return TRUE;
-  }
+  current_color_ = InterpolateColor(old_color_, new_color_, progress);
+  DoUbusColorEmit();
 }
 
 void BGHash::DoUbusColorEmit()
 {
-  ubus_server_send_message(ubus_server_get_default(),
-                           UBUS_BACKGROUND_COLOR_CHANGED,
-                           g_variant_new ("(dddd)",
-                                          _current_color.red,
-                                          _current_color.green,
-                                          _current_color.blue,
-                                          _current_color.alpha)
-                          );
+  ubus_manager_.SendMessage(UBUS_BACKGROUND_COLOR_CHANGED,
+                            g_variant_new ("(dddd)",
+                                           current_color_.red,
+                                           current_color_.green,
+                                           current_color_.blue,
+                                           current_color_.alpha));
 }
 
-nux::Color BGHash::MatchColor (const nux::Color base_color)
+nux::Color BGHash::MatchColor(nux::Color const& base_color) const
 {
   nux::Color colors[12];
 
@@ -295,9 +204,9 @@ nux::Color BGHash::MatchColor (const nux::Color base_color)
   return chosen_color;
 }
 
-nux::Color BGHash::CurrentColor ()
+nux::Color const& BGHash::CurrentColor() const
 {
-  return _current_color;
+  return current_color_;
 }
 
 }

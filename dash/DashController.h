@@ -30,6 +30,7 @@
 #include <Nux/BaseWindow.h>
 
 #include "DashView.h"
+#include "unity-shared/Animator.h"
 #include "unity-shared/Introspectable.h"
 #include "unity-shared/UBusWrapper.h"
 
@@ -44,7 +45,6 @@ public:
   typedef std::shared_ptr<Controller> Ptr;
 
   Controller();
-  ~Controller();
 
   nux::BaseWindow* window() const;
 
@@ -82,26 +82,23 @@ private:
   void ShowDash();
 
   void StartShowHideTimeline();
-  static gboolean OnViewShowHideFrame(Controller* self);
+  void OnViewShowHideFrame(double progress);
 
   static void OnWindowConfigure(int width, int height, nux::Geometry& geo, void* data);
 
 private:
-  glib::SignalManager sig_manager_;
-  UBusManager ubus_manager_;
+  nux::ObjectPtr<nux::BaseWindow> window_;
   int monitor_;
 
-  nux::BaseWindow* window_;
   bool visible_;
   bool need_show_;
-
-  guint timeline_id_;
-  float last_opacity_;
-  gint64 start_time_;
-
   DashView* view_;
-  guint ensure_id_;
+
   sigc::connection screen_ungrabbed_slot_;
+  glib::SignalManager sig_manager_;
+  glib::TimeoutSeconds ensure_timeout_;
+  Animator timeline_animator_;
+  UBusManager ubus_manager_;
 };
 
 

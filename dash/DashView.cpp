@@ -30,7 +30,7 @@
 #include <UnityCore/RadioOptionFilter.h>
 
 #include "unity-shared/DashStyle.h"
-#include "unity-shared/DashSettings.h"
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/UBusMessages.h"
 
 namespace unity
@@ -79,10 +79,8 @@ DashView::DashView()
   , home_lens_(new HomeLens(_("Home"), _("Home screen"), _("Search")))
   , active_lens_view_(0)
   , last_activated_uri_("")
-  , searching_timeout_id_(0)
   , search_in_progress_(false)
   , activate_on_finish_(false)
-  , hide_message_delay_id_(0)
   , visible_(false)
 {
   renderer_.SetOwner(this);
@@ -106,14 +104,9 @@ DashView::DashView()
 
 DashView::~DashView()
 {
-  if (searching_timeout_id_)
-    g_source_remove (searching_timeout_id_);
-  if (hide_message_delay_id_)
-    g_source_remove(hide_message_delay_id_);
-
   // Do this explicitely, otherwise dee will complain about invalid access
   // to the lens models
-  RemoveLayout ();
+  RemoveLayout();
 }
 
 void DashView::SetMonitorOffset(int x, int y)
@@ -232,14 +225,14 @@ void DashView::Relayout()
 {
   nux::Geometry const& geo = GetGeometry();
   content_geo_ = GetBestFitGeometry(geo);
-
-  if (Settings::Instance().GetFormFactor() == FormFactor::NETBOOK)
+  dash::Style& style = dash::Style::Instance();
+  
+  if (style.always_maximised)
   {
     if (geo.width >= content_geo_.width && geo.height > content_geo_.height)
       content_geo_ = geo;
   }
 
-  dash::Style& style = dash::Style::Instance();
 
   // kinda hacky, but it makes sure the content isn't so big that it throws
   // the bottom of the dash off the screen
@@ -408,27 +401,6 @@ void DashView::UpdateLensFilterValue(Filter::Ptr filter, std::string value)
   }
 }
 
-gboolean DashView::ResetSearchStateCb(gpointer data)
-{
-  DashView *self = static_cast<DashView*>(data);
-
-  self->search_in_progress_ = false;
-  self->activate_on_finish_ = false;
-  self->searching_timeout_id_ = 0;
-
-  return FALSE;
-}
-
-gboolean DashView::HideResultMessageCb(gpointer data)
-{
-  DashView *self = static_cast<DashView*>(data);
-
-  self->active_lens_view_->HideResultsMessage();
-  self->hide_message_delay_id_ = 0;
-
-  return FALSE;
-}
-
 void DashView::OnSearchChanged(std::string const& search_string)
 {
   LOG_DEBUG(logger) << "Search changed: " << search_string;
@@ -437,24 +409,18 @@ void DashView::OnSearchChanged(std::string const& search_string)
     search_in_progress_ = true;
     // it isn't guaranteed that we get a SearchFinished signal, so we need
     // to make sure this isn't set even though we aren't doing any search
-    if (searching_timeout_id_)
-    {
-      g_source_remove (searching_timeout_id_);
-      searching_timeout_id_ = 0;
-    }
-
     // 250ms for the Search method call, rest for the actual search
-    searching_timeout_id_ = g_timeout_add (500, &DashView::ResetSearchStateCb, this);
-
-
-    if (hide_message_delay_id_)
-    {
-      g_source_remove(hide_message_delay_id_);
-      hide_message_delay_id_ = 0;
-    }
+    searching_timeout_.reset(new glib::Timeout(500, [&] () {
+      search_in_progress_ = false;
+      activate_on_finish_ = false;
+      return false;
+    }));
 
     // 150ms to hide the no reults message if its take a while to return results
-    hide_message_delay_id_ = g_timeout_add (150, &DashView::HideResultMessageCb, this);
+    hide_message_delay_.reset(new glib::Timeout(150, [&] () {
+      active_lens_view_->HideResultsMessage();
+      return false;
+    }));
   }
 }
 
@@ -538,14 +504,8 @@ void DashView::OnLensBarActivated(std::string const& id)
   nux::GetWindowCompositor().SetKeyFocusArea(default_focus());
 
   search_bar_->text_entry()->SelectAll();
-
   search_bar_->can_refine_search = view->can_refine_search();
-
-  if (hide_message_delay_id_)
-  {
-    g_source_remove(hide_message_delay_id_);
-    hide_message_delay_id_ = 0;
-  }
+  hide_message_delay_.reset();
 
   view->QueueDraw();
   QueueDraw();
@@ -553,11 +513,7 @@ void DashView::OnLensBarActivated(std::string const& id)
 
 void DashView::OnSearchFinished(Lens::Hints const& hints)
 {
-  if (hide_message_delay_id_)
-  {
-    g_source_remove(hide_message_delay_id_);
-    hide_message_delay_id_ = 0;
-  }
+  hide_message_delay_.reset();
 
   if (active_lens_view_ == NULL) return;
 
@@ -771,6 +727,8 @@ void DashView::AddProperties(GVariantBuilder* builder)
     form_factor = "netbook";
   else if (Settings::Instance().GetFormFactor() == FormFactor::DESKTOP)
     form_factor = "desktop";
+  else if (Settings::Instance().GetFormFactor() == FormFactor::TV)
+    form_factor = "tv";
 
   unity::variant::BuilderWrapper wrapper(builder);
   wrapper.add(nux::Geometry(GetAbsoluteX(), GetAbsoluteY(), content_geo_.width, content_geo_.height));

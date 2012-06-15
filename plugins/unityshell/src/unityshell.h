@@ -36,7 +36,7 @@
 
 #include "Introspectable.h"
 #include "DashController.h"
-#include "DashSettings.h"
+#include "UnitySettings.h"
 #include "DashStyle.h"
 #include "FavoriteStoreGSettings.h"
 #include "FontSettings.h"
@@ -52,7 +52,7 @@
 #include "UBusWrapper.h"
 #include "UnityshellPrivate.h"
 #include "UnityShowdesktopHandler.h"
-#ifndef USE_GLES
+#ifndef USE_MODERN_COMPIZ_GL
 #include "ScreenEffectFramebufferObject.h"
 #endif
 
@@ -92,7 +92,7 @@ public:
   void nuxEpilogue();
 
   /* nux draw wrapper */
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
   void paintDisplay();
 #else
   void paintDisplay(const CompRegion& region, const GLMatrix& transform, unsigned int mask);
@@ -111,6 +111,7 @@ public:
                      const char         *eventName,
                      CompOption::Vector &o);
 
+  void damageRegion(const CompRegion &region);
 
   /* paint on top of all windows if we could not find a window
    * to paint underneath */
@@ -119,7 +120,7 @@ public:
                      const CompRegion&,
                      CompOutput*,
                      unsigned int);
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
   void glPaintCompositedOutput (const CompRegion    &region,
                                 ::GLFramebufferObject *fbo,
                                 unsigned int         mask);
@@ -209,17 +210,15 @@ private:
   void CreateSuperNewAction(char shortcut, impl::ActionModifiers flag);
   void EnableCancelAction(CancelActionTarget target, bool enabled, int modifiers = 0);
 
-  static gboolean initPluginActions(gpointer data);
+  bool initPluginActions();
   void initLauncher();
   void damageNuxRegions();
   void onRedrawRequested();
   void Relayout();
 
-  static gboolean RelayoutTimeout(gpointer data);
   static void initUnity(nux::NThread* thread, void* InitData);
   static void OnStartKeyNav(GVariant* data, void* value);
   static void OnExitKeyNav(GVariant* data, void* value);
-  static gboolean OnRedrawTimeout(gpointer data);
 
   void startLauncherKeyNav();
   void restartLauncherKeyNav();
@@ -233,7 +232,7 @@ private:
 
   void OnPanelStyleChanged();
 
-  dash::Settings dash_settings_;
+  Settings dash_settings_;
   dash::Style    dash_style_;
   panel::Style   panel_style_;
   FontSettings   font_settings_;
@@ -255,16 +254,14 @@ private:
   std::list<shortcut::AbstractHint::Ptr> hints_;
   bool enable_shortcut_overlay_;
 
-  std::unique_ptr<GestureEngine>        gesture_engine_;
+  GestureEngine                         gesture_engine_;
   nux::Geometry                         lastTooltipArea;
   bool                                  needsRelayout;
   bool                                  _in_paint;
-  guint32                               relayoutSourceId;
-  guint32                               _redraw_handle;
+  bool                                  super_keypressed_;
   typedef std::shared_ptr<CompAction> CompActionPtr;
   typedef std::vector<CompActionPtr> ShortcutActions;
   ShortcutActions _shortcut_actions;
-  bool            super_keypressed_;
   std::map<CancelActionTarget, CompActionPtr> _escape_actions;
 
   /* keyboard-nav mode */
@@ -285,7 +282,7 @@ private:
 
   BGHash _bghash;
 
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
   ::GLFramebufferObject *oldFbo;
 #else
   ScreenEffectFramebufferObject::Ptr _fbo;
@@ -294,7 +291,6 @@ private:
 
   bool   queryForShader ();
 
-  UBusManager ubus_manager_;
   int dash_monitor_;
   CompScreen::GrabHandle grab_index_;
   CompWindowList         fullscreen_windows_;
@@ -310,9 +306,12 @@ private:
   bool paint_panel_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> panel_texture_;
 
-#ifndef USE_GLES
+#ifndef USE_MODERN_COMPIZ_GL
   ScreenEffectFramebufferObject::GLXGetProcAddressProc glXGetProcAddressP;
 #endif
+
+  UBusManager ubus_manager_;
+  glib::SourceManager sources_;
 
   friend class UnityWindow;
 };
@@ -351,7 +350,7 @@ public:
 
   /* basic window draw function */
   bool glDraw(const GLMatrix& matrix,
-#ifndef USE_GLES
+#ifndef USE_MODERN_COMPIZ_GL
               GLFragment::Attrib& attrib,
 #else
               const GLWindowPaintAttrib& attrib,
@@ -389,10 +388,6 @@ public:
   ShowdesktopHandler             *mShowdesktopHandler;
 
 private:
-
-  guint  focusdesktop_handle_;
-  static gboolean FocusDesktopTimeout(gpointer data);
-
   void DoEnableFocus ();
   void DoDisableFocus ();
 
@@ -424,6 +419,7 @@ private:
   compiz::WindowInputRemoverLock::Ptr GetInputRemover ();
 
   compiz::WindowInputRemoverLock::Weak input_remover_;
+  glib::Source::UniquePtr focus_desktop_timeout_;
 };
 
 

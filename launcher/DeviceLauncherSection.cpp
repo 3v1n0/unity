@@ -34,18 +34,10 @@ DeviceLauncherSection::DeviceLauncherSection()
   sig_manager_.Add(new MountSignal(monitor_, "mount-added", sigc::mem_fun(this, &DeviceLauncherSection::OnMountAdded)));
   sig_manager_.Add(new MountSignal(monitor_, "mount-pre-unmount", sigc::mem_fun(this, &DeviceLauncherSection::OnMountPreUnmount)));
 
-  on_device_populate_entry_id_ = g_idle_add([] (gpointer data) {
-    auto self = static_cast<DeviceLauncherSection*>(data);
-    self->PopulateEntries();
-    self->on_device_populate_entry_id_ = 0;
-    return FALSE;
-    }, this);
-}
-
-DeviceLauncherSection::~DeviceLauncherSection()
-{
-  if (on_device_populate_entry_id_)
-    g_source_remove(on_device_populate_entry_id_);
+  device_populate_idle_.Run([&] () {
+    PopulateEntries();
+    return false;
+  });
 }
 
 void DeviceLauncherSection::PopulateEntries()

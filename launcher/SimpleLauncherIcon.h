@@ -49,9 +49,9 @@ protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
-  virtual void OnMouseDown(int button, int monitor);
-  virtual void OnMouseUp(int button, int monitor);
-  virtual void OnMouseClick(int button, int monitor);
+  virtual void OnMouseDown(int button, int monitor, unsigned long key_flags = 0);
+  virtual void OnMouseUp(int button, int monitor, unsigned long key_flags = 0);
+  virtual void OnMouseClick(int button, int monitor, unsigned long key_flags = 0);
   virtual void OnMouseEnter(int monitor);
   virtual void OnMouseLeave(int monitor);
   virtual void ActivateLauncherIcon(ActionArg arg);

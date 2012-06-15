@@ -65,6 +65,7 @@ void BFBLauncherIcon::OnOverlayShown(GVariant *data, bool visible)
 
   if (overlay_identity.Str() == "dash" && IsVisibleOnMonitor(overlay_monitor))
   {
+    tooltip_enabled = !visible;
     SetQuirk(QUIRK_ACTIVE, visible);
     EmitNeedsRedraw();
   }
@@ -79,7 +80,7 @@ void BFBLauncherIcon::OnOverlayShown(GVariant *data, bool visible)
   }
 }
 
-nux::Color BFBLauncherIcon::BackgroundColor()
+nux::Color BFBLauncherIcon::BackgroundColor() const
 {
   return background_color_;
 }

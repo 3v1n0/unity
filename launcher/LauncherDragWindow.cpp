@@ -24,73 +24,71 @@
 
 #include "LauncherDragWindow.h"
 
+namespace unity
+{
+namespace launcher
+{
+
 NUX_IMPLEMENT_OBJECT_TYPE(LauncherDragWindow);
 
 LauncherDragWindow::LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> icon)
   : nux::BaseWindow("")
+  , _icon(icon)
 {
-  _icon = icon;
-  _anim_handle = 0;
   SetBaseSize(_icon->GetWidth(), _icon->GetHeight());
 }
 
 LauncherDragWindow::~LauncherDragWindow()
 {
-  if (_anim_handle)
-    g_source_remove(_anim_handle);
-
   if (on_anim_completed.connected())
     on_anim_completed.disconnect();
 }
 
-bool
-LauncherDragWindow::Animating()
+bool LauncherDragWindow::Animating()
 {
-  return _anim_handle != 0;
+  return bool(animation_timer_);
 }
 
-void
-LauncherDragWindow::SetAnimationTarget(int x, int y)
+void LauncherDragWindow::SetAnimationTarget(int x, int y)
 {
   _animation_target = nux::Point2(x, y);
 }
 
-void
-LauncherDragWindow::StartAnimation()
+void LauncherDragWindow::StartAnimation()
 {
-  if (_anim_handle)
+  if (animation_timer_)
     return;
 
-  _anim_handle = g_timeout_add(15, &LauncherDragWindow::OnAnimationTimeout, this);
+  animation_timer_.reset(new glib::Timeout(15));
+  animation_timer_->Run(sigc::mem_fun(this, &LauncherDragWindow::OnAnimationTimeout));
 }
 
-gboolean
-LauncherDragWindow::OnAnimationTimeout(gpointer data)
+bool LauncherDragWindow::OnAnimationTimeout()
 {
-  LauncherDragWindow* self = (LauncherDragWindow*) data;
-  nux::Geometry geo = self->GetGeometry();
+  nux::Geometry const& geo = GetGeometry();
 
   int half_size = geo.width / 2;
 
-  int target_x = (int)(self->_animation_target.x) - half_size;
-  int target_y = (int)(self->_animation_target.y) - half_size;
+  int target_x = static_cast<int>(_animation_target.x) - half_size;
+  int target_y = static_cast<int>(_animation_target.y) - half_size;
 
-  int x_delta = (int)((float)(target_x - geo.x) * .3f);
-  if (abs(x_delta) < 5)
-    x_delta = (x_delta >= 0) ? MIN(5, target_x - geo.x) : MAX(-5, target_x - geo.x);
+  int x_delta = static_cast<int>(static_cast<float>(target_x - geo.x) * .3f);
+  if (std::abs(x_delta) < 5)
+    x_delta = (x_delta >= 0) ? std::min(5, target_x - geo.x) : std::max(-5, target_x - geo.x);
 
-  int y_delta = (int)((float)(target_y - geo.y) * .3f);
-  if (abs(y_delta) < 5)
-    y_delta = (y_delta >= 0) ? MIN(5, target_y - geo.y) : MAX(-5, target_y - geo.y);
+  int y_delta = static_cast<int>(static_cast<float>(target_y - geo.y) * .3f);
+  if (std::abs(y_delta) < 5)
+    y_delta = (y_delta >= 0) ? std::min(5, target_y - geo.y) : std::max(-5, target_y - geo.y);
 
-  self->SetBaseXY(geo.x + x_delta, geo.y + y_delta);
+  SetBaseXY(geo.x + x_delta, geo.y + y_delta);
 
-  geo = self->GetGeometry();
+  nux::Geometry const& new_geo = GetGeometry();
 
-  if (geo.x == target_x && geo.y == target_y)
+  if (new_geo.x == target_x && new_geo.y == target_y)
   {
-    self->anim_completed.emit();
-    self->_anim_handle = 0;
+    anim_completed.emit();
+    animation_timer_.reset();
+
     return false;
   }
 
@@ -119,3 +117,6 @@ LauncherDragWindow::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw
 
   GfxContext.PopClippingRectangle();
 }
+
+} // namespace launcher
+} // namespace unity

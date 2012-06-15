@@ -61,6 +61,10 @@ nux::logging::Logger logger("unity.launcher");
 const std::string DEFAULT_ICON = "application-default-icon";
 const std::string MONO_TEST_ICON = "gnome-home";
 const std::string UNITY_THEME_NAME = "unity-icon-theme";
+
+const std::string CENTER_STABILIZE_TIMEOUT = "center-stabilize-timeout";
+const std::string PRESENT_TIMEOUT = "present-timeout";
+const std::string QUIRK_DELAY_TIMEOUT = "quirk-delay-timeout";
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(LauncherIcon);
@@ -72,9 +76,6 @@ LauncherIcon::LauncherIcon()
   : _remote_urgent(false)
   , _present_urgency(0)
   , _progress(0)
-  , _center_stabilize_handle(0)
-  , _present_time_handle(0)
-  , _time_delay_handle(0)
   , _sort_priority(0)
   , _last_monitor(0)
   , _background_color(nux::color::White)
@@ -99,6 +100,9 @@ LauncherIcon::LauncherIcon()
   for (int i = 0; i < max_num_monitors; ++i)
     _is_visible_on_monitor[i] = true;
 
+  tooltip_enabled = true;
+  tooltip_enabled.changed.connect(sigc::mem_fun(this, &LauncherIcon::OnTooltipEnabledChanged));
+
   tooltip_text.SetSetterFunction(sigc::mem_fun(this, &LauncherIcon::SetTooltipText));
   tooltip_text = "blank";
 
@@ -116,18 +120,6 @@ LauncherIcon::LauncherIcon()
 LauncherIcon::~LauncherIcon()
 {
   SetQuirk(QUIRK_URGENT, false);
-
-  if (_present_time_handle)
-    g_source_remove(_present_time_handle);
-  _present_time_handle = 0;
-
-  if (_center_stabilize_handle)
-    g_source_remove(_center_stabilize_handle);
-  _center_stabilize_handle = 0;
-
-  if (_time_delay_handle)
-    g_source_remove(_time_delay_handle);
-  _time_delay_handle = 0;
 
   // clean up the whole signal-callback mess
   if (needs_redraw_connection.connected())
@@ -237,7 +229,7 @@ LauncherIcon::OpenInstance(ActionArg arg)
   UpdateQuirkTime(QUIRK_LAST_ACTION);
 }
 
-nux::Color LauncherIcon::BackgroundColor()
+nux::Color LauncherIcon::BackgroundColor() const
 {
   return _background_color;
 }
@@ -481,6 +473,12 @@ bool LauncherIcon::SetTooltipText(std::string& target, std::string const& value)
   return result;
 }
 
+void LauncherIcon::OnTooltipEnabledChanged(bool value)
+{
+  if (!value)
+    HideTooltip();
+}
+
 void
 LauncherIcon::SetShortcut(guint64 shortcut)
 {
@@ -499,7 +497,7 @@ LauncherIcon::GetShortcut()
 void
 LauncherIcon::ShowTooltip()
 {
-  if (_quicklist && _quicklist->IsVisible())
+  if (!tooltip_enabled || (_quicklist && _quicklist->IsVisible()))
     return;
 
   int tip_x = 100;
@@ -621,13 +619,13 @@ bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
   return true;
 }
 
-void LauncherIcon::RecvMouseDown(int button, int monitor)
+void LauncherIcon::RecvMouseDown(int button, int monitor, unsigned long key_flags)
 {
   if (button == 3)
     OpenQuicklist();
 }
 
-void LauncherIcon::RecvMouseUp(int button, int monitor)
+void LauncherIcon::RecvMouseUp(int button, int monitor, unsigned long key_flags)
 {
   if (button == 3)
   {
@@ -636,14 +634,18 @@ void LauncherIcon::RecvMouseUp(int button, int monitor)
   }
 }
 
-void LauncherIcon::RecvMouseClick(int button, int monitor)
+void LauncherIcon::RecvMouseClick(int button, int monitor, unsigned long key_flags)
 {
   ActionArg arg(ActionArg::LAUNCHER, button);
   arg.monitor = monitor;
 
-  if (button == 1)
+  bool shift_pressed = nux::GetKeyModifierState(key_flags, nux::NUX_STATE_SHIFT);
+
+  // Click without shift
+  if (button == 1 && !shift_pressed)
     Activate(arg);
-  else if (button == 2)
+  // Middle click or click with shift
+  else if ((button == 2) || (button == 1 && shift_pressed))
     OpenInstance(arg);
 }
 
@@ -653,18 +655,15 @@ void LauncherIcon::HideTooltip()
     _tooltip->ShowWindow(false);
 }
 
-gboolean
-LauncherIcon::OnCenterTimeout(gpointer data)
+bool
+LauncherIcon::OnCenterStabilizeTimeout()
 {
-  LauncherIcon* self = (LauncherIcon*)data;
-
-  if (!std::equal(self->_center.begin(), self->_center.end(), self->_last_stable.begin()))
+  if (!std::equal(_center.begin(), _center.end(), _last_stable.begin()))
   {
-    self->OnCenterStabilized(self->_center);
-    self->_last_stable = self->_center;
+    OnCenterStabilized(_center);
+    _last_stable = _center;
   }
 
-  self->_center_stabilize_handle = 0;
   return false;
 }
 
@@ -688,10 +687,9 @@ LauncherIcon::SetCenter(nux::Point3 center, int monitor, nux::Geometry geo)
       _tooltip->ShowTooltipWithTipAt(tip_x, tip_y);
   }
 
-  if (_center_stabilize_handle)
-    g_source_remove(_center_stabilize_handle);
-
-  _center_stabilize_handle = g_timeout_add(500, &LauncherIcon::OnCenterTimeout, this);
+  auto timeout = std::make_shared<glib::Timeout>(500);
+  _source_manager.Add(timeout, CENTER_STABILIZE_TIMEOUT);
+  timeout->Run(sigc::mem_fun(this, &LauncherIcon::OnCenterStabilizeTimeout));
 }
 
 nux::Point3
@@ -744,15 +742,13 @@ LauncherIcon::IsVisibleOnMonitor(int monitor) const
   return _is_visible_on_monitor[monitor];
 }
 
-gboolean
-LauncherIcon::OnPresentTimeout(gpointer data)
+bool
+LauncherIcon::OnPresentTimeout()
 {
-  LauncherIcon* self = (LauncherIcon*) data;
-  if (!self->GetQuirk(QUIRK_PRESENTED))
+  if (!GetQuirk(QUIRK_PRESENTED))
     return false;
 
-  self->_present_time_handle = 0;
-  self->Unpresent();
+  Unpresent();
 
   return false;
 }
@@ -769,7 +765,11 @@ LauncherIcon::Present(float present_urgency, int length)
     return;
 
   if (length >= 0)
-    _present_time_handle = g_timeout_add(length, &LauncherIcon::OnPresentTimeout, this);
+  {
+    auto timeout = std::make_shared<glib::Timeout>(length);
+    _source_manager.Add(timeout, PRESENT_TIMEOUT);
+    timeout->Run(sigc::mem_fun(this, &LauncherIcon::OnPresentTimeout));
+  }
 
   _present_urgency = CLAMP(present_urgency, 0.0f, 1.0f);
   SetQuirk(QUIRK_PRESENTED, true);
@@ -781,10 +781,7 @@ LauncherIcon::Unpresent()
   if (!GetQuirk(QUIRK_PRESENTED))
     return;
 
-  if (_present_time_handle > 0)
-    g_source_remove(_present_time_handle);
-  _present_time_handle = 0;
-
+  _source_manager.Remove(PRESENT_TIMEOUT);
   SetQuirk(QUIRK_PRESENTED, false);
 }
 
@@ -861,28 +858,15 @@ LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value)
   }
 }
 
-gboolean
-LauncherIcon::OnDelayedUpdateTimeout(gpointer data)
-{
-  DelayedUpdateArg* arg = (DelayedUpdateArg*) data;
-  LauncherIcon* self = arg->self;
-
-  clock_gettime(CLOCK_MONOTONIC, &(self->_quirk_times[arg->quirk]));
-  self->EmitNeedsRedraw();
-
-  self->_time_delay_handle = 0;
-
-  return false;
-}
-
 void
 LauncherIcon::UpdateQuirkTimeDelayed(guint ms, LauncherIcon::Quirk quirk)
 {
-  DelayedUpdateArg* arg = new DelayedUpdateArg();
-  arg->self = this;
-  arg->quirk = quirk;
-
-  _time_delay_handle = g_timeout_add(ms, &LauncherIcon::OnDelayedUpdateTimeout, arg);
+  auto timeout = std::make_shared<glib::Timeout>(ms);
+  _source_manager.Add(timeout, QUIRK_DELAY_TIMEOUT);
+  timeout->Run([&, quirk] {
+    UpdateQuirkTime(quirk);
+    return false;
+  });
 }
 
 void

@@ -34,6 +34,8 @@ namespace unity
 namespace launcher
 {
 
+extern unsigned int ColorStrToARGB(const char *str);
+
 class Launcher;
 
 class BamfLauncherIcon : public SimpleLauncherIcon
@@ -60,12 +62,15 @@ public:
   virtual bool ShowInSwitcher(bool current);
   virtual unsigned long long SwitcherPriority();
 
+  virtual nux::Color BackgroundColor() const;
+
   std::vector<Window> Windows();
   std::vector<Window> WindowsOnViewport();
   std::vector<Window> WindowsForMonitor(int monitor);
   std::string NameForWindow(Window window);
 
 protected:
+  void Remove();
   void UpdateIconGeometries(std::vector<nux::Point3> center);
   void OnCenterStabilized(std::vector<nux::Point3> center);
   void AddProperties(GVariantBuilder* builder);
@@ -100,6 +105,7 @@ private:
 
   void EnsureWindowState();
   void EnsureMenuItemsReady();
+  void UpdateBackgroundColor();
   void UpdateDesktopFile();
   void UpdateMenus();
   void UpdateDesktopQuickList();
@@ -118,15 +124,8 @@ private:
   const std::set<std::string>& GetSupportedTypes();
   std::string GetDesktopID();
 
-
   glib::Object<BamfApplication> _bamf_app;
-  bool _dnd_hovered;
-  guint _dnd_hover_timer;
-
   bool _supported_types_filled;
-  guint _fill_supported_types_id;
-  guint _window_moved_id;
-  guint _quicklist_activated_id;
 
   std::string _remote_uri;
   std::string _desktop_file;
@@ -138,6 +137,9 @@ private:
   glib::Object<DbusmenuMenuitem> _menu_desktop_shortcuts;
   glib::Object<GFileMonitor> _desktop_file_monitor;
   glib::SignalManager _gsignals;
+
+  bool use_custom_bg_color_;
+  nux::Color bg_color_;
 };
 
 }

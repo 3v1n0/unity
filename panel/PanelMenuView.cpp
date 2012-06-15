@@ -24,7 +24,7 @@
 #include "unity-shared/CairoTexture.h"
 #include "PanelMenuView.h"
 #include "unity-shared/PanelStyle.h"
-#include "unity-shared/DashSettings.h"
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UScreen.h"
 
@@ -47,6 +47,11 @@ namespace
   const int DEFAULT_MENUS_DISCOVERY = 2;
   const int DEFAULT_DISCOVERY_FADEIN = 200;
   const int DEFAULT_DISCOVERY_FADEOUT = 300;
+
+  const std::string NEW_APP_HIDE_TIMEOUT = "new-app-hide-timeout";
+  const std::string NEW_APP_SHOW_TIMEOUT = "new-app-show-timeout";
+  const std::string WINDOW_MOVED_TIMEOUT = "window-moved-timeout";
+  const std::string UPDATE_SHOW_NOW_TIMEOUT = "update-show-now-timeout";
 }
 
 PanelMenuView::PanelMenuView()
@@ -64,18 +69,14 @@ PanelMenuView::PanelMenuView()
     _new_app_menu_shown(false),
     _monitor(0),
     _active_xid(0),
-    _active_moved_id(0),
-    _update_show_now_id(0),
-    _new_app_show_id(0),
-    _new_app_hide_id(0),
+    _desktop_name(_("Ubuntu Desktop")),
     _menus_fadein(DEFAULT_MENUS_FADEIN),
     _menus_fadeout(DEFAULT_MENUS_FADEOUT),
     _menus_discovery(DEFAULT_MENUS_DISCOVERY),
     _menus_discovery_fadein(DEFAULT_DISCOVERY_FADEIN),
     _menus_discovery_fadeout(DEFAULT_DISCOVERY_FADEOUT),
     _fade_in_animator(_menus_fadein),
-    _fade_out_animator(_menus_fadeout),
-    _desktop_name(_("Ubuntu Desktop"))
+    _fade_out_animator(_menus_fadeout)
 {
   layout_->SetContentDistribution(nux::eStackLeft);
 
@@ -93,9 +94,9 @@ PanelMenuView::PanelMenuView()
                                      sigc::mem_fun(this, &PanelMenuView::OnActiveAppChanged));
 
   _window_buttons = new WindowButtons();
+  _window_buttons->SetParentObject(this);
   _window_buttons->SetMonitor(_monitor);
   _window_buttons->SetControlledWindow(_active_xid);
-  _window_buttons->SetParentObject(this);
   _window_buttons->SetLeftAndRightPadding(MAIN_LEFT_PADDING, MENUBAR_PADDING);
   _window_buttons->SetMaximumHeight(panel::Style::Instance().panel_height);
   _window_buttons->ComputeContentSize();
@@ -103,7 +104,7 @@ PanelMenuView::PanelMenuView()
   _window_buttons->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
   _window_buttons->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
   //_window_buttons->mouse_move.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseMove));
-  AddChild(_window_buttons);
+  AddChild(_window_buttons.GetPointer());
 
   layout_->SetLeftAndRightPadding(_window_buttons->GetContentWidth(), 0);
   layout_->SetBaseHeight(panel::Style::Instance().panel_height);
@@ -116,7 +117,7 @@ PanelMenuView::PanelMenuView()
   _titlebar_grab_area->grab_started.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabStart));
   _titlebar_grab_area->grab_move.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabMove));
   _titlebar_grab_area->grab_end.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabEnd));
-  AddChild(_titlebar_grab_area);
+  AddChild(_titlebar_grab_area.GetPointer());
 
   WindowManager* win_manager = WindowManager::Default();
   win_manager->window_minimized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMinimized));
@@ -173,26 +174,9 @@ PanelMenuView::PanelMenuView()
 
 PanelMenuView::~PanelMenuView()
 {
-  // We need to disconnect these signals explicitly before we destroy the window buttons
-  // and titlebar grab area objects, otherwise there's a risk the signals will fire as the
-  // animator objects are destroyed (which happens after the destructor finishes).
-  _fade_in_animator.animation_updated.clear();
-  _fade_in_animator.animation_ended.clear();
-  _fade_out_animator.animation_updated.clear();
-  _fade_out_animator.animation_ended.clear();
   _style_changed_connection.disconnect();
-
-  if (_active_moved_id)
-    g_source_remove(_active_moved_id);
-
-  if (_new_app_show_id)
-    g_source_remove(_new_app_show_id);
-
-  if (_new_app_hide_id)
-    g_source_remove(_new_app_hide_id);
-
-  _window_buttons->UnReference();
-  _titlebar_grab_area->UnReference();
+  _window_buttons->UnParentObject();
+  _titlebar_grab_area->UnParentObject();
 }
 
 void PanelMenuView::OverlayShown()
@@ -268,7 +252,7 @@ nux::Area* PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, n
   {
     /* When the current panel is not active, it all behaves like a grab-area */
     if (GetAbsoluteGeometry().IsInside(mouse_position))
-      return _titlebar_grab_area;
+      return _titlebar_grab_area.GetPointer();
   }
 
   if (_is_maximized)
@@ -919,35 +903,31 @@ void PanelMenuView::OnNameChanged(BamfView* bamf_view, gchar* new_name, gchar* o
   FullRedraw();
 }
 
-gboolean PanelMenuView::OnNewAppShow(PanelMenuView* self)
+bool PanelMenuView::OnNewAppShow()
 {
-  BamfApplication* active_app = bamf_matcher_get_active_application(self->_matcher);
-  self->_new_application = glib::Object<BamfApplication>(active_app, glib::AddRef());
-  self->QueueDraw();
+  BamfApplication* active_app = bamf_matcher_get_active_application(_matcher);
+  _new_application = glib::Object<BamfApplication>(active_app, glib::AddRef());
+  QueueDraw();
 
-  if (self->_new_app_hide_id)
+  if (_sources.GetSource(NEW_APP_HIDE_TIMEOUT))
   {
-    g_source_remove(self->_new_app_hide_id);
-    self->_new_app_hide_id = 0;
-    self->_new_app_menu_shown = false;
+    _new_app_menu_shown = false;
   }
 
-  self->_new_app_hide_id = g_timeout_add_seconds(self->_menus_discovery,
-                                                 (GSourceFunc)PanelMenuView::OnNewAppHide,
-                                                 self);
-  self->_new_app_show_id = 0;
+  auto timeout = std::make_shared<glib::TimeoutSeconds>(_menus_discovery);
+  _sources.Add(timeout, NEW_APP_HIDE_TIMEOUT);
+  timeout->Run(sigc::mem_fun(this, &PanelMenuView::OnNewAppHide));
 
-  return FALSE;
+  return false;
 }
 
-gboolean PanelMenuView::OnNewAppHide(PanelMenuView* self)
+bool PanelMenuView::OnNewAppHide()
 {
-  self->OnApplicationClosed(self->_new_application);
-  self->_new_app_hide_id = 0;
-  self->_new_app_menu_shown = true;
-  self->QueueDraw();
+  OnApplicationClosed(_new_application);
+  _new_app_menu_shown = true;
+  QueueDraw();
 
-  return FALSE;
+  return false;
 }
 
 void PanelMenuView::OnViewOpened(BamfMatcher *matcher, BamfView *view)
@@ -1020,26 +1000,18 @@ void PanelMenuView::OnActiveAppChanged(BamfMatcher *matcher,
          * menus and to show the menus only when an application has been
          * kept active for some time */
 
-        if (_new_app_show_id)
-          g_source_remove(_new_app_show_id);
-
-        _new_app_show_id = g_timeout_add(300,
-                                         (GSourceFunc)PanelMenuView::OnNewAppShow,
-                                         this);
+        auto timeout = std::make_shared<glib::Timeout>(300);
+        _sources.Add(timeout, NEW_APP_SHOW_TIMEOUT);
+        timeout->Run(sigc::mem_fun(this, &PanelMenuView::OnNewAppShow));
       }
     }
     else
     {
-      if (_new_app_show_id)
-      {
-        g_source_remove(_new_app_show_id);
-        _new_app_show_id = 0;
-      }
+      _sources.Remove(NEW_APP_SHOW_TIMEOUT);
 
-      if (_new_app_hide_id)
+      if (_sources.GetSource(NEW_APP_HIDE_TIMEOUT))
       {
-        g_source_remove(_new_app_hide_id);
-        _new_app_hide_id = 0;
+        _sources.Remove(NEW_APP_HIDE_TIMEOUT);
         _new_app_menu_shown = false;
       }
 
@@ -1057,11 +1029,7 @@ void PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher,
   _is_maximized = false;
   _active_xid = 0;
 
-  if (_active_moved_id)
-  {
-    g_source_remove(_active_moved_id);
-    _active_moved_id = 0;
-  }
+  _sources.Remove(WINDOW_MOVED_TIMEOUT);
 
   if (BAMF_IS_WINDOW(new_view))
   {
@@ -1256,21 +1224,19 @@ void PanelMenuView::OnWindowRestored(guint xid)
   FullRedraw();
 }
 
-gboolean PanelMenuView::UpdateActiveWindowPosition(PanelMenuView* self)
+bool PanelMenuView::UpdateActiveWindowPosition()
 {
-  bool we_control_window = self->IsWindowUnderOurControl(self->_active_xid);
+  bool we_control_window = IsWindowUnderOurControl(_active_xid);
 
-  if (we_control_window != self->_we_control_active)
+  if (we_control_window != _we_control_active)
   {
-    self->_we_control_active = we_control_window;
+    _we_control_active = we_control_window;
 
-    self->Refresh();
-    self->QueueDraw();
+    Refresh();
+    QueueDraw();
   }
 
-  self->_active_moved_id = 0;
-
-  return FALSE;
+  return false;
 }
 
 void PanelMenuView::OnWindowMoved(guint xid)
@@ -1283,22 +1249,23 @@ void PanelMenuView::OnWindowMoved(guint xid)
      * Otherwise, if the moved window is not controlled by the current panel
      * every few millisecond we check the new window position */
 
-    unsigned int timeout = 250;
+    unsigned int timeout_length = 250;
 
     if (_we_control_active)
     {
-      if (_active_moved_id)
-        g_source_remove(_active_moved_id);
+      _sources.Remove(WINDOW_MOVED_TIMEOUT);
     }
     else
     {
-      timeout = 60;
-
-      if (_active_moved_id)
+      if (_sources.GetSource(WINDOW_MOVED_TIMEOUT))
         return;
+
+      timeout_length = 60;
     }
 
-    _active_moved_id = g_timeout_add(timeout, (GSourceFunc)UpdateActiveWindowPosition, this);
+    auto timeout = std::make_shared<glib::Timeout>(timeout_length);
+    _sources.Add(timeout, WINDOW_MOVED_TIMEOUT);
+    timeout->Run(sigc::mem_fun(this, &PanelMenuView::UpdateActiveWindowPosition));
   }
 }
 
@@ -1638,11 +1605,11 @@ void PanelMenuView::OnLauncherSelectionChanged(GVariant* data)
   QueueDraw();
 }
 
-gboolean PanelMenuView::UpdateShowNowWithDelay(PanelMenuView *self)
+bool PanelMenuView::UpdateShowNowWithDelay()
 {
   bool active = false;
 
-  for (auto entry : self->entries_)
+  for (auto entry : entries_)
   {
     if (entry.second->GetShowNow())
     {
@@ -1651,15 +1618,13 @@ gboolean PanelMenuView::UpdateShowNowWithDelay(PanelMenuView *self)
     }
   }
 
-  self->_update_show_now_id = 0;
-
   if (active)
   {
-    self->_show_now_activated = true;
-    self->QueueDraw();
+    _show_now_activated = true;
+    QueueDraw();
   }
 
-  return FALSE;
+  return false;
 }
 
 void PanelMenuView::UpdateShowNow(bool status)
@@ -1670,6 +1635,8 @@ void PanelMenuView::UpdateShowNow(bool status)
    * If the status is false, we just check that the menus entries are hidden
    * and we remove any eventual delayed request */
 
+   _sources.Remove(UPDATE_SHOW_NOW_TIMEOUT);
+
   if (!status && _show_now_activated)
   {
     _show_now_activated = false;
@@ -1677,17 +1644,11 @@ void PanelMenuView::UpdateShowNow(bool status)
     return;
   }
 
-  if (_update_show_now_id != 0)
-  {
-    g_source_remove(_update_show_now_id);
-    _update_show_now_id = 0;
-  }
-
   if (status && !_show_now_activated)
   {
-    _update_show_now_id = g_timeout_add(180, (GSourceFunc)
-                                        &PanelMenuView::UpdateShowNowWithDelay,
-                                        this);
+    auto timeout = std::make_shared<glib::Timeout>(180);
+    _sources.Add(timeout, UPDATE_SHOW_NOW_TIMEOUT);
+    timeout->Run(sigc::mem_fun(this, &PanelMenuView::UpdateShowNowWithDelay));
   }
 }
 

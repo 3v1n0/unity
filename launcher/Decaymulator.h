@@ -21,7 +21,7 @@
 #define UNITY_DECAYMULATOR_H
 
 #include <Nux/Nux.h>
-#include <glib.h>
+#include <UnityCore/GLibSource.h>
 
 namespace unity
 {
@@ -37,13 +37,12 @@ public:
   nux::Property<int> value;
 
   Decaymulator();
-  ~Decaymulator();
 
 private:
   void OnValueChanged(int value);
-  static gboolean OnDecayTimeout (gpointer value);
+  bool OnDecayTimeout();
 
-  guint on_decay_handle;
+  glib::Source::UniquePtr decay_timer_;
 };
 
 }

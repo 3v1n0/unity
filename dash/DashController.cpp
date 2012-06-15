@@ -21,7 +21,7 @@
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 
-#include "unity-shared/DashSettings.h"
+#include "unity-shared/UnitySettings.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/PluginAdapter.h"
 #include "unity-shared/UBusMessages.h"
@@ -35,27 +35,27 @@ namespace dash
 namespace
 {
 nux::logging::Logger logger("unity.dash.controller");
+const unsigned int PRELOAD_TIMEOUT_LENGTH = 40;
 }
 
 Controller::Controller()
   : launcher_width(64)
   , use_primary(false)
   , monitor_(0)
-  , window_(0)
   , visible_(false)
   , need_show_(false)
-  , timeline_id_(0)
-  , last_opacity_(0.0f)
-  , start_time_(0)
   , view_(nullptr)
+  , ensure_timeout_(PRELOAD_TIMEOUT_LENGTH)
+  , timeline_animator_(90)
 {
   SetupRelayoutCallbacks();
   RegisterUBusInterests();
 
-  ensure_id_ = g_timeout_add_seconds(60, [] (gpointer data) -> gboolean { static_cast<Controller*>(data)->EnsureDash(); return FALSE; }, this);
+  ensure_timeout_.Run([&]() { EnsureDash(); return false; });
+  timeline_animator_.animation_updated.connect(sigc::mem_fun(this, &Controller::OnViewShowHideFrame));
 
   SetupWindow();
-  
+
   Settings::Instance().changed.connect([&]()
   {
     if (window_ && view_)
@@ -67,23 +67,9 @@ Controller::Controller()
   });
 }
 
-Controller::~Controller()
-{
-  if (window_)
-    window_->UnReference();
-  window_ = 0;
-
-  if (timeline_id_)
-    g_source_remove(timeline_id_);
-
-  if (ensure_id_)
-    g_source_remove(ensure_id_);
-}
-
 void Controller::SetupWindow()
 {
   window_ = new nux::BaseWindow("Dash");
-  window_->SinkReference();
   window_->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
   window_->SetConfigureNotifyCallback(&Controller::OnWindowConfigure, this);
   window_->ShowWindow(false);
@@ -156,7 +142,7 @@ void Controller::EnsureDash()
   {
     SetupDashView();
     Relayout();
-    ensure_id_ = 0;
+    ensure_timeout_.Remove();
 
     on_realize.emit();
   }
@@ -164,7 +150,7 @@ void Controller::EnsureDash()
 
 nux::BaseWindow* Controller::window() const
 {
-  return window_;
+  return window_.GetPointer();
 }
 
 // We update the @geo that's sent in with our desired width and height
@@ -213,7 +199,7 @@ void Controller::Relayout(GdkScreen*screen)
 }
 
 void Controller::OnMouseDownOutsideWindow(int x, int y,
-                                              unsigned long bflags, unsigned long kflags)
+                                          unsigned long bflags, unsigned long kflags)
 {
   HideDash();
 }
@@ -251,7 +237,6 @@ void Controller::OnExternalHideDash(GVariant* variant)
 void Controller::ShowDash()
 {
   EnsureDash();
-
   PluginAdapter* adaptor = PluginAdapter::Default();
   // Don't want to show at the wrong time
   if (visible_ || adaptor->IsExpoActive() || adaptor->IsScaleActive())
@@ -267,12 +252,12 @@ void Controller::ShowDash()
     need_show_ = true;
     return;
   }
-
   view_->AboutToShow();
 
   window_->ShowWindow(true);
   window_->PushToFront();
-  window_->EnableInputWindow(true, "Dash", true, false);
+  if (!Settings::Instance().is_standalone) // in standalone mode, we do not need an input window. we are one.
+    window_->EnableInputWindow(true, "Dash", true, false);
   window_->SetInputFocus();
   window_->CaptureMouseDownAnyWhereElse(true);
   window_->QueueDraw();
@@ -319,46 +304,19 @@ void Controller::StartShowHideTimeline()
 {
   EnsureDash();
 
-  if (timeline_id_)
-    g_source_remove(timeline_id_);
-
-  timeline_id_ = g_timeout_add(15, (GSourceFunc)Controller::OnViewShowHideFrame, this);
-  last_opacity_ = window_->GetOpacity();
-  start_time_ = g_get_monotonic_time();
-
+  double current_opacity = window_->GetOpacity();
+  timeline_animator_.Stop();
+  timeline_animator_.Start(visible_ ? current_opacity : 1.0f - current_opacity);
 }
 
-gboolean Controller::OnViewShowHideFrame(Controller* self)
+void Controller::OnViewShowHideFrame(double progress)
 {
-  const float LENGTH = 90000.0f;
-  float diff = g_get_monotonic_time() - self->start_time_;
-  float progress = diff / LENGTH;
-  float last_opacity = self->last_opacity_;
+  window_->SetOpacity(visible_ ? progress : 1.0f - progress);
 
-  if (self->visible_)
+  if (progress == 1.0f && !visible_)
   {
-    self->window_->SetOpacity(last_opacity + ((1.0f - last_opacity) * progress));
+    window_->ShowWindow(false);
   }
-  else
-  {
-    self->window_->SetOpacity(last_opacity - (last_opacity * progress));
-  }
-
-  if (diff > LENGTH)
-  {
-    self->timeline_id_ = 0;
-
-    // Make sure the state is right
-    self->window_->SetOpacity(self->visible_ ? 1.0f : 0.0f);
-    if (!self->visible_)
-    {
-      self->window_->ShowWindow(false);
-    }
-
-    return FALSE;
-  }
-
-  return TRUE;
 }
 
 void Controller::OnActivateRequest(GVariant* variant)

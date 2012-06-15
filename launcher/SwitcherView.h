@@ -27,16 +27,10 @@
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/UnityWindowView.h"
 
-#include "unity-shared/Introspectable.h"
-
-#include <boost/shared_ptr.hpp>
-#include <sigc++/sigc++.h>
-
 #include <Nux/View.h>
-#include <NuxCore/ObjectPtr.h>
 #include <NuxCore/Property.h>
 
-
+#include <UnityCore/GLibSource.h>
 
 
 namespace unity
@@ -48,14 +42,13 @@ class AbstractLauncherIcon;
 namespace switcher
 {
 
-class SwitcherView : public debug::Introspectable, public ui::UnityWindowView
+class SwitcherView : public ui::UnityWindowView
 {
   NUX_DECLARE_OBJECT_TYPE(SwitcherView, ui::UnityWindowView);
 public:
   typedef nux::ObjectPtr<SwitcherView> Ptr;
 
   SwitcherView();
-  virtual ~SwitcherView();
 
   ui::LayoutWindowList ExternalTargets ();
 
@@ -110,8 +103,6 @@ private:
                              int &half_fold_left, 
                              int &half_fold_right);
 
-  static gboolean OnDrawTimeout(gpointer data);
-
   void SaveLast ();
 
   ui::LayoutSystem::Ptr layout_system_;
@@ -119,11 +110,8 @@ private:
   SwitcherModel::Ptr model_;
   bool target_sizes_set_;
 
-  guint redraw_handle_;
-
-  nux::BaseTexture* rounding_texture_;
-
-  nux::StaticCairoText* text_view_;
+  nux::ObjectPtr<nux::BaseTexture> rounding_texture_;
+  nux::ObjectPtr<nux::StaticCairoText> text_view_;
 
   std::list<ui::RenderArg> last_args_;
   std::list<ui::RenderArg> saved_args_;
@@ -137,6 +125,8 @@ private:
   timespec save_time_;
 
   bool animation_draw_;
+
+  glib::Source::UniquePtr redraw_idle_;
 };
 
 }
