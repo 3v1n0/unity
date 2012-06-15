@@ -489,3 +489,26 @@ class DashBorderTests(DashTestCase):
 
         self.assertThat(self.dash.visible, Eventually(Equals(True)))
 
+
+class CategoryHeaderTests(DashTestCase):
+    """Tests that category headers work.
+    """
+    def test_click_inside_highlight(self):
+        """Clicking into a category highlight must expand/collapse
+        the view.
+        """
+        lens = self.dash.reveal_file_lens()
+        self.addCleanup(self.dash.ensure_hidden)
+
+        category = lens.get_category_by_name("Folders")
+        is_expanded = category.is_expanded
+
+        self.mouse.move(self.dash.view.x + self.dash.view.width / 2,
+                        category.header_y + category.header_height / 2)
+
+        self.mouse.click() 
+        self.assertThat(category.is_expanded, Eventually(Equals(not is_expanded)))
+
+        self.mouse.click()
+        self.assertThat(category.is_expanded, Eventually(Equals(is_expanded)))
+
