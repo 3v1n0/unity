@@ -87,7 +87,7 @@ protected:
 
 private:
   class Impl;
-  Impl* pimpl;
+  std::unique_ptr<Impl> pimpl;
 };
 
 }

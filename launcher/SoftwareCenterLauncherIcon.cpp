@@ -74,22 +74,21 @@ void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
   launcher->RenderIconToTexture(nux::GetWindowThread()->GetGraphicsEngine(),
                                 AbstractLauncherIcon::Ptr(this),
                                 icon_texture_);
-  nux::Geometry geo = drag_window_->GetGeometry();
+
   drag_window_->SetBaseXY(icon_x, icon_y);
   drag_window_->ShowWindow(true);
-  drag_window_->SinkReference();
 
   // Find out the center of last BamfLauncherIcon with non-zero co-ordinates
   auto bamf_icons = launcher->GetModel()->GetSublist<BamfLauncherIcon>();
   //TODO: don't iterate through them and pick the last one, just use back() to get the last one.
   for (auto current_bamf_icon : bamf_icons)
   {
-    int x = (int) current_bamf_icon->GetCenter(launcher->monitor).x;
-    int y = (int) current_bamf_icon->GetCenter(launcher->monitor).y;
-    if (x != 0 && y != 0)
+    auto icon_center = current_bamf_icon->GetCenter(launcher->monitor);
+
+    if (icon_center.x != 0 && icon_center.y != 0)
     {
-       target_x = x;
-       target_y = y;
+       target_x = icon_center.x;
+       target_y = icon_center.y;
     }
   }
 

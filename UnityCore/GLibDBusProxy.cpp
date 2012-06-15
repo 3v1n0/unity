@@ -130,7 +130,7 @@ void DBusProxy::Impl::StartReconnectionTimeout()
 {
   LOG_DEBUG(logger) << "Starting reconnection timeout for " << name_;
 
-  auto callback = [&]()
+  auto callback = [&]
   {
     if (!proxy_)
       Connect();
@@ -138,7 +138,7 @@ void DBusProxy::Impl::StartReconnectionTimeout()
     return false;
   };
 
-  reconnect_timeout_.reset(new glib::Timeout(1000, callback));
+  reconnect_timeout_.reset(new glib::TimeoutSeconds(1, callback));
 }
 
 void DBusProxy::Impl::Connect()

@@ -103,21 +103,25 @@ class Dash(KeybindingsHelper):
         """Reveal the application lense."""
         logger.debug("Revealing application lens with Super+a.")
         self._reveal_lens("lens_reveal/apps", clear_search)
+        return self.view.get_lensview_by_name("applications.lens")
 
     def reveal_music_lens(self, clear_search=True):
         """Reveal the music lense."""
         logger.debug("Revealing music lens with Super+m.")
         self._reveal_lens("lens_reveal/music", clear_search)
+        return self.view.get_lensview_by_name("music.lens")
 
     def reveal_file_lens(self, clear_search=True):
         """Reveal the file lense."""
         logger.debug("Revealing file lens with Super+f.")
         self._reveal_lens("lens_reveal/files", clear_search)
+        return self.view.get_lensview_by_name("files.lens")
 
     def reveal_command_lens(self, clear_search=True):
         """Reveal the 'run command' lens."""
         logger.debug("Revealing command lens with Alt+F2.")
         self._reveal_lens("lens_reveal/command", clear_search)
+        return self.view.get_lensview_by_name("commands.lens")
 
     def _reveal_lens(self, binding_name, clear_search):
         self.keybinding_hold(binding_name)

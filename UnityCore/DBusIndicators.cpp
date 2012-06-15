@@ -142,7 +142,7 @@ void DBusIndicators::Impl::OnDisconnected()
   CheckLocalService();
   RequestSyncAll();
 
-  reconnect_timeout_.reset(new glib::Timeout(1000, [&]() {
+  reconnect_timeout_.reset(new glib::TimeoutSeconds(1, [&] {
     if (!gproxy_.IsConnected())
     {
       RequestSyncAll();
