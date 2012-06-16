@@ -44,7 +44,8 @@ bool IMTextEntry::InspectKeyEvent(unsigned int event_type,
                                   unsigned int keysym,
                                   const char* character)
 {
-  bool need_to_filter_event = TryHandleSpecial(event_type, keysym, character);
+  nux::Event const& event = nux::GetGraphicsDisplay()->GetCurrentEvent();
+  bool need_to_filter_event = TryHandleSpecial(event);
 
   if (need_to_filter_event)
     need_to_filter_event = TextEntry::InspectKeyEvent(event_type, keysym, character);
@@ -52,22 +53,21 @@ bool IMTextEntry::InspectKeyEvent(unsigned int event_type,
   return need_to_filter_event;
 }
 
-bool IMTextEntry::TryHandleSpecial(unsigned int eventType, unsigned int keysym, const char* character)
+bool IMTextEntry::TryHandleSpecial(nux::Event const& event)
 {
-  nux::Event event = nux::GetGraphicsDisplay()->GetCurrentEvent();
-  unsigned int keyval = keysym;
-  bool shift = (event.GetKeyState() & NUX_STATE_SHIFT);
-  bool ctrl = (event.GetKeyState() & NUX_STATE_CTRL);
-  bool super = (event.GetKeyState() & KEY_MODIFIER_SUPER);
-  bool alt = (event.GetKeyState() & KEY_MODIFIER_ALT);
-
   /* If there is preedit, handle the event else where, but we
      want to be able to copy/paste while ibus is active */
   if (!preedit_.empty())
     return true;
 
-  if (eventType != NUX_KEYDOWN)
+  if (event.type != NUX_KEYDOWN)
     return false;
+
+  unsigned int keyval = event.GetKeySym();
+  bool shift = event.GetKeyModifierState(KEY_MODIFIER_SHIFT);
+  bool ctrl = event.GetKeyModifierState(KEY_MODIFIER_CTRL);
+  bool super = event.GetKeyModifierState(KEY_MODIFIER_SUPER);
+  bool alt = event.GetKeyModifierState(KEY_MODIFIER_ALT);
 
   if ((ctrl && !shift && keyval == NUX_VK_x) ||    // Ctrl + X
       (shift && !ctrl && keyval == NUX_VK_DELETE)) // Shift + Del

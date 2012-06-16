@@ -43,7 +43,7 @@ public:
 
 private:
   bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
-  bool TryHandleSpecial(unsigned int eventType, unsigned int keysym, const char* character);
+  bool TryHandleSpecial(nux::Event const& event);
   void InsertText(std::string const& text);
   void Cut();
   void Copy();
