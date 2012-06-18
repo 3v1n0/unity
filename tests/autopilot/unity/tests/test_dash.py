@@ -62,6 +62,14 @@ class DashRevealTests(DashTestCase):
         self.keyboard.press_and_release("Alt+F4")
         self.assertThat(self.dash.visible, Eventually(Equals(False)))
 
+    def test_dash_closes_on_spread(self):
+        """This test shows that when the spread is initiated, the dash closes."""
+        self.dash.ensure_visible()
+        self.addCleanup(self.keybinding, "spread/cancel")
+        self.keybinding("spread/start")
+        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
+        self.assertThat(self.dash.visible, Eventually(Equals(False)))
+
 
 class DashSearchInputTests(DashTestCase):
     """Test features involving input to the dash search"""
@@ -84,7 +92,6 @@ class DashMultiKeyTests(DashSearchInputTests):
         self.call_gsettings_cmd('set', 'org.gnome.libgnomekbd.keyboard', 'options', "['Compose key\tcompose:caps']")
 
         super(DashMultiKeyTests, self).setUp()
-
     def test_multi_key(self):
         """Pressing 'Multi_key' must not add any characters to the search."""
         self.dash.reveal_application_lens()
