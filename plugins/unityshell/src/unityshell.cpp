@@ -1439,10 +1439,6 @@ void UnityScreen::nuxDamageCompiz()
     }
   }
 
-  nux::Geometry geo = lastTooltipArea;
-  nux_damage += CompRegion(lastTooltipArea.x, lastTooltipArea.y,
-                         lastTooltipArea.width, lastTooltipArea.height);
-
   /*
    * Avoid Nux damaging Nux as recommended by smspillaz. Though I don't
    * believe it would be harmful or significantly expensive right now.
@@ -1450,8 +1446,6 @@ void UnityScreen::nuxDamageCompiz()
   cScreen->damageRegionSetEnabled(this, false);
   cScreen->damageRegion(nux_damage);
   cScreen->damageRegionSetEnabled(this, true);
-
-  lastTooltipArea = geo;
 }
 
 /* handle X Events */

@@ -260,7 +260,6 @@ private:
   bool enable_shortcut_overlay_;
 
   GestureEngine                         gesture_engine_;
-  nux::Geometry                         lastTooltipArea;
   bool                                  needsRelayout;
   bool                                  _in_paint;
   bool                                  super_keypressed_;
