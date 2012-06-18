@@ -1248,8 +1248,6 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
     paintDisplay(region, transform, mask);
 #endif
 
-  wt->ClearDrawList();
-
   return ret;
 }
 
@@ -1308,6 +1306,8 @@ void UnityScreen::preparePaint(int ms)
 
 void UnityScreen::donePaint()
 {
+  wt->ClearDrawList();
+
   std::list <ShowdesktopHandlerWindowInterface *> remove_windows;
 
   for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
