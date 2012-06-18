@@ -234,6 +234,13 @@ class HudBehaviorTests(HudTestsBase):
         self.workspace.switch_to(2)
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
+    def test_hud_closes_on_spread(self):
+        """This test shows that when the spread is initiated, the hud closes."""
+        self.hud.ensure_visible()
+        self.addCleanup(self.keybinding, "spread/cancel")
+        self.keybinding("spread/start")
+        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
+        self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
 class HudLauncherInteractionsTests(HudTestsBase):
 
