@@ -44,7 +44,7 @@ want to watch and the log level for that domain. For example:
 
   UNITY_LOG_SEVERITY="unity.dash.lens=DEBUG" standalone-clients/dash
 
-
+If you want to run the autopilot test suite, refer to the instructions in tests/autopilot/README.
 
 for more information see the README file
 
