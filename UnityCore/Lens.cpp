@@ -22,6 +22,7 @@
 #include <gio/gio.h>
 #include <glib.h>
 #include <NuxCore/Logger.h>
+#include <unity-protocol.h>
 
 #include "config.h"
 #include "GLibDBusProxy.h"
@@ -126,6 +127,7 @@ public:
   glib::DBusProxy* proxy_;
   glib::Object<GCancellable> search_cancellable_;
   glib::Object<GCancellable> global_search_cancellable_;
+  glib::Object<GCancellable> preview_cancellable_;
 
   GVariant *results_variant_;
   GVariant *global_results_variant_;
@@ -495,7 +497,8 @@ void Lens::Impl::Activate(std::string const& uri)
     }
 
   proxy_->Call("Activate",
-               g_variant_new("(su)", uri.c_str(), 0),
+               g_variant_new("(su)", uri.c_str(),
+                             UNITY_PROTOCOL_ACTION_TYPE_ACTIVATE_RESULT),
                sigc::mem_fun(this, &Lens::Impl::ActivationReply));
 }
 
@@ -511,7 +514,25 @@ void Lens::Impl::ActivationReply(GVariant* parameters)
   glib::Variant dict (hints_variant, glib::StealRef());
   dict.ASVToHints(hints);
 
-  owner_->activated.emit(uri.Str(), static_cast<HandledType>(handled), hints);
+  if (handled == 4) // FIXME: enum from proto (SHOW_PREVIEW)
+  {
+    auto iter = hints.find("preview");
+    if (iter != hints.end())
+    {
+      Preview::Ptr preview(Preview::PreviewForVariant(iter->second));
+      if (preview)
+      {
+        owner_->preview_ready.emit(uri.Str(), preview);
+        return;
+      }
+    }
+
+    LOG_WARNING(logger) << "Unable to deserialize Preview";
+  }
+  else
+  {
+    owner_->activated.emit(uri.Str(), static_cast<HandledType>(handled), hints);
+  }
 }
 
 void Lens::Impl::Preview(std::string const& uri)
@@ -524,9 +545,17 @@ void Lens::Impl::Preview(std::string const& uri)
       return;
     }
 
-  proxy_->Call("Preview",
-               g_variant_new("(s)", uri.c_str()),
-               sigc::mem_fun(this, &Lens::Impl::PreviewReply));
+  if (preview_cancellable_)
+  {
+    g_cancellable_cancel(preview_cancellable_);
+  }
+  preview_cancellable_ = g_cancellable_new ();
+
+  proxy_->Call("Activate",
+               g_variant_new("(su)", uri.c_str(),
+                             UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_RESULT),
+               sigc::mem_fun(this, &Lens::Impl::ActivationReply),
+               preview_cancellable_);
 }
 
 void Lens::Impl::PreviewReply(GVariant* parameters)
