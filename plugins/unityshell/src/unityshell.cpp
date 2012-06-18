@@ -119,6 +119,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , newFocusedWindow(nullptr)
   , doShellRepaint(false)
   , allowWindowPaint(false)
+  , damaged(false)
   , _key_nav_mode_requested(false)
   , _last_output(nullptr)
 #ifndef USE_MODERN_COMPIZ_GL
@@ -235,6 +236,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
                                            &UnityScreen::initUnity,
                                            this));
 #endif
+
+     wt->RedrawRequested.connect(sigc::mem_fun(this, &UnityScreen::onRedrawRequested));
 
      unity_a11y_init(wt.get());
 
@@ -899,6 +902,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
   }
 
   doShellRepaint = false;
+  damaged = false;
 }
 
 bool UnityScreen::forcePaintOnTop ()
@@ -1292,7 +1296,12 @@ void UnityScreen::preparePaint(int ms)
   for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
     wi->HandleAnimations (ms);
 
-  nuxDamageCompiz();
+  if (damaged)
+  {
+    damaged = false;
+    nuxDamageCompiz();
+  }
+
 }
 
 void UnityScreen::donePaint()
@@ -1408,7 +1417,11 @@ void UnityScreen::nuxDamageCompiz()
 {
   CompRegion nux_damage;
 
+  if (damaged)
+    return;
+
   std::vector<nux::Geometry> dirty = wt->GetDrawList();
+  damaged = true;
 
   for (std::vector<nux::Geometry>::iterator it = dirty.begin(), end = dirty.end();
        it != end; ++it)
@@ -2626,6 +2639,11 @@ void UnityScreen::initUnity(nux::NThread* thread, void* InitData)
   nux::ColorLayer background(nux::color::Transparent);
   static_cast<nux::WindowThread*>(thread)->SetWindowBackgroundPaintLayer(&background);
   LOG_INFO(logger) << "UnityScreen::initUnity: " << timer.ElapsedSeconds() << "s";
+}
+
+void UnityScreen::onRedrawRequested()
+{
+  nuxDamageCompiz();
 }
 
 /* Handle option changes and plug that into nux windows */
