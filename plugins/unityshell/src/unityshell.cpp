@@ -1204,11 +1204,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
 {
   bool ret;
 
-  // A few cases where we want to force the shell to be painted
-  if (forcePaintOnTop() ||
-      PluginAdapter::Default()->IsExpoActive() ||
-      (mask & (PAINT_SCREEN_TRANSFORMED_MASK |
-               PAINT_SCREEN_WITH_TRANSFORMED_WINDOWS_MASK)))
+  if (forcePaintOnTop() || PluginAdapter::Default()->IsExpoActive())
   {
     compizDamageNux(region);
     doShellRepaint = true;
