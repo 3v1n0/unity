@@ -94,7 +94,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
     def _perform_switcher_exit_binding(self, keybinding):
         # If we're doing a normal activation, all we need to do is release the
-        # kaybinding. Otherwise, perform the keybinding specified *then* release
+        # keybinding. Otherwise, perform the keybinding specified *then* release
         # the switcher keybinding.
         if keybinding != "launcher/switcher":
             self._perform_switcher_binding(keybinding)
