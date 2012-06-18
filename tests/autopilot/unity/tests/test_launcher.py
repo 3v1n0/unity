@@ -375,7 +375,7 @@ class LauncherKeyNavTests(LauncherTestCase):
     def test_launcher_keynav_alt_tab_quits(self):
         """Tests that alt+tab exits keynav mode."""
 
-        self.switcher.initiate()
+        self.keybinding("switcher/reveal_normal")
         self.addCleanup(self.switcher.terminate)
         self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
 
