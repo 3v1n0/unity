@@ -26,9 +26,9 @@
 #include <vector>
 
 #include <glib.h>
+#include <gio/gio.h>
 #include <sigc++/trackable.h>
 #include <NuxCore/Property.h>
-#include <unity-protocol.h>
 
 #include "GLibWrapper.h"
 #include "Variant.h"
@@ -54,7 +54,9 @@ public:
 
   // TODO: actions, info hints
 protected:
-  Preview(unity::glib::Object<UnityProtocolPreview> const& proto_obj);
+  // this should be UnityProtocolPreview, but we want to keep the usage
+  // of libunity-protocol-private private to unity-core
+  Preview(unity::glib::Object<GObject> const& proto_obj);
 
   virtual void SetupGetters();
   static unity::glib::Object<GIcon> IconForString(std::string const& icon_hint);

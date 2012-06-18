@@ -17,6 +17,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
+#include <unity-protocol.h>
+
 #include "GenericPreview.h"
 
 namespace unity
@@ -24,7 +26,7 @@ namespace unity
 namespace dash
 {
 
-GenericPreview::GenericPreview(unity::glib::Object<UnityProtocolPreview> const& proto_obj)
+GenericPreview::GenericPreview(unity::glib::Object<GObject> const& proto_obj)
   : Preview(proto_obj)
 {
 }

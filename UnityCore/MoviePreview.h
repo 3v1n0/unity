@@ -36,7 +36,7 @@ class MoviePreview : public Preview
 public:
   typedef std::shared_ptr<MoviePreview> Ptr;
   
-  MoviePreview(unity::glib::Object<UnityProtocolPreview> const& proto_obj);
+  MoviePreview(unity::glib::Object<GObject> const& proto_obj);
 };
 
 }

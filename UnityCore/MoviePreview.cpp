@@ -17,6 +17,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
+#include <unity-protocol.h>
+
 #include "MoviePreview.h"
 
 namespace unity
@@ -24,7 +26,7 @@ namespace unity
 namespace dash
 {
 
-MoviePreview::MoviePreview(unity::glib::Object<UnityProtocolPreview> const& proto_obj)
+MoviePreview::MoviePreview(unity::glib::Object<GObject> const& proto_obj)
   : Preview(proto_obj)
 {
 }

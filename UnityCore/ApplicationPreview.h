@@ -36,7 +36,7 @@ class ApplicationPreview : public Preview
 public:
   typedef std::shared_ptr<ApplicationPreview> Ptr;
   
-  ApplicationPreview(unity::glib::Object<UnityProtocolPreview> const& proto_obj);
+  ApplicationPreview(unity::glib::Object<GObject> const& proto_obj);
 
 };
 

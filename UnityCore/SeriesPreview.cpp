@@ -24,7 +24,7 @@ namespace unity
 namespace dash
 {
 
-SeriesPreview::SeriesPreview(unity::glib::Object<UnityProtocolPreview> const& proto_obj)
+SeriesPreview::SeriesPreview(unity::glib::Object<GObject> const& proto_obj)
   : Preview(proto_obj)
 {
 }

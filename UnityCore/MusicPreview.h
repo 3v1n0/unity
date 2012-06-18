@@ -58,7 +58,7 @@ public:
   
   typedef std::vector<Track> Tracks;
 
-  MusicPreview(unity::glib::Object<UnityProtocolPreview> const& proto_obj);
+  MusicPreview(unity::glib::Object<GObject> const& proto_obj);
 };
 
 }

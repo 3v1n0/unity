@@ -18,6 +18,7 @@
  */
 
 #include <NuxCore/Logger.h>
+#include <unity-protocol.h>
 
 #include "Preview.h"
 
@@ -41,7 +42,14 @@ Preview::Ptr Preview::PreviewForVariant(unity::glib::Variant &properties)
 {
   unity::glib::Variant renderer(g_variant_get_child_value(properties, 0));
   std::string renderer_name(renderer.GetString());
-  unity::glib::Object<UnityProtocolPreview> proto_obj(unity_protocol_preview_parse(properties));
+  unity::glib::Object<UnityProtocolPreview> preview(unity_protocol_preview_parse(properties));
+  if (!preview)
+  {
+    LOG_WARN(logger) << "Unable to create Preview object for variant type: " << g_variant_get_type_string(properties);
+    return nullptr;
+  }
+
+  auto proto_obj = unity::glib::object_cast<GObject>(preview);
 
   if (renderer_name == "preview-generic")
   {
@@ -63,6 +71,10 @@ Preview::Ptr Preview::PreviewForVariant(unity::glib::Variant &properties)
   {
     return Preview::Ptr(new SeriesPreview(proto_obj));
   }
+  else
+  {
+    LOG_WARN(logger) << "Unable to create Preview for renderer: " << renderer_name;
+  }
 
   return nullptr;
 }
@@ -80,21 +92,23 @@ unity::glib::Object<GIcon> Preview::IconForString(std::string const& icon_hint)
   return icon;
 }
 
-Preview::Preview(glib::Object<UnityProtocolPreview> const& proto_obj)
+Preview::Preview(glib::Object<GObject> const& proto_obj)
 {
   SetupGetters();
 
-  if (!proto_obj) LOG_WARN(logger) << "Passed nullptr to Preview constructor";
+  if (!proto_obj || !UNITY_PROTOCOL_IS_PREVIEW(proto_obj.RawPtr()))
+    LOG_WARN(logger) << "Passed nullptr to Preview constructor";
   else
   {
+    auto preview = glib::object_cast<UnityProtocolPreview>(proto_obj);
     const gchar *s;
-    s = unity_protocol_preview_get_title (proto_obj);
+    s = unity_protocol_preview_get_title (preview);
     if (s) title_ = s;
-    s = unity_protocol_preview_get_subtitle (proto_obj);
+    s = unity_protocol_preview_get_subtitle (preview);
     if (s) subtitle_ = s;
-    s = unity_protocol_preview_get_description (proto_obj);
+    s = unity_protocol_preview_get_description (preview);
     if (s) description_ = s;
-    thumbnail_ = unity_protocol_preview_get_thumbnail (proto_obj);
+    thumbnail_ = unity_protocol_preview_get_thumbnail (preview);
   }
 }
 

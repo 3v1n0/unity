@@ -6,7 +6,9 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Lens.h>
 #include <UnityCore/MultiRangeFilter.h>
-#include <UnityCore/MusicPreviews.h>
+#include <UnityCore/MusicPreview.h>
+#include <UnityCore/Preview.h>
+#include <UnityCore/Variant.h>
 #include <UnityCore/RadioOptionFilter.h>
 #include <UnityCore/RatingsFilter.h>
 
@@ -209,6 +211,9 @@ TEST_F(TestLens, TestActivation)
 
 TEST_F(TestLens, TestPreview)
 {
+  unity::glib::Variant v(g_variant_new_string("whatever"));
+  auto preview = Preview::PreviewForVariant(v);
+  EXPECT_TRUE(preview != nullptr);
   // FIXME: fix up when unity-core supports current preview protocol
   /*
   std::string uri = PopulateAndGetFirstResultURI();

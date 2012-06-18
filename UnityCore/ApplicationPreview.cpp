@@ -17,6 +17,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
+#include <unity-protocol.h>
+
 #include "ApplicationPreview.h"
 
 namespace unity
@@ -24,7 +26,7 @@ namespace unity
 namespace dash
 {
 
-ApplicationPreview::ApplicationPreview(unity::glib::Object<UnityProtocolPreview> const& proto_obj)
+ApplicationPreview::ApplicationPreview(unity::glib::Object<GObject> const& proto_obj)
   : Preview(proto_obj)
 {
 }

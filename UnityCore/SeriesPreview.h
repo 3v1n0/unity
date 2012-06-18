@@ -36,7 +36,7 @@ class SeriesPreview : public Preview
 public:
   typedef std::shared_ptr<SeriesPreview> Ptr;
   
-  SeriesPreview(unity::glib::Object<UnityProtocolPreview> const& proto_obj);
+  SeriesPreview(unity::glib::Object<GObject> const& proto_obj);
 };
 
 }

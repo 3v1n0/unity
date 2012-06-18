@@ -36,7 +36,7 @@ class GenericPreview : public Preview
 public:
   typedef std::shared_ptr<GenericPreview> Ptr;
   
-  GenericPreview(unity::glib::Object<UnityProtocolPreview> const& proto_obj);
+  GenericPreview(unity::glib::Object<GObject> const& proto_obj);
 
   //unsigned int date_modified;
   //unsigned int size;
