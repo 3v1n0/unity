@@ -271,6 +271,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/unity-shared/JSONParser.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/OverlayRenderer.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/PanelStyle.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/PluginAdapterStandalone.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/SearchBar.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/SearchBarSpinner.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/StaticCairoText.cpp

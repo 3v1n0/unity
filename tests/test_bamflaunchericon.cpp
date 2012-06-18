@@ -34,8 +34,6 @@ class TestBamfLauncherIcon : public testing::Test
 public:
   virtual void SetUp()
   {
-    WindowManager::SetDefault(WindowManager::Default());
-
     bamf_matcher = bamf_matcher_get_default();
     bamf_app = bamf_matcher_get_application_for_desktop_file(bamf_matcher,
                                                              BUILDDIR"/tests/data/ubuntu-software-center.desktop",
