@@ -789,7 +789,7 @@ class LauncherIconTests(UnityTestCase):
 
     def test_shift_click_opens_new_application_instance(self):
         """Shift+Clicking MUST open a new instance of an already-running application."""
-        app = self.start_app("Text Editor")
+        app = self.start_app("Calculator")
         desktop_id = app.desktop_file
         icon = self.launcher.model.get_icon_by_desktop_id(desktop_id)
         launcher_instance = self.launcher.get_launcher_for_monitor(0)
