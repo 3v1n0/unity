@@ -110,7 +110,9 @@ Preview::Preview(glib::Object<GObject> const& proto_obj)
     if (s) subtitle_ = s;
     s = unity_protocol_preview_get_description(preview);
     if (s) description_ = s;
-    thumbnail_ = unity_protocol_preview_get_thumbnail(preview);
+    glib::Object<GIcon> icon(unity_protocol_preview_get_thumbnail(preview),
+                             unity::glib::AddRef());
+    thumbnail_ = icon;
 
     int actions_len;
     auto actions = unity_protocol_preview_get_actions(preview, &actions_len);

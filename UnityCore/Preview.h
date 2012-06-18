@@ -52,7 +52,7 @@ public:
     Action() {};
     Action(const gchar* id_, const gchar* display_name_,
            const gchar* icon_hint_, unsigned int layout_hint_)
-      : id(id_ != NULL ? id : "")
+      : id(id_ != NULL ? id_ : "")
       , display_name(display_name_ != NULL ? display_name_ : "")
       , icon_hint(icon_hint_ != NULL ? icon_hint_ : "")
       , layout_hint(layout_hint_) {};
@@ -70,7 +70,7 @@ public:
              const gchar* icon_hint_, GVariant* value_)
       : id(id_ != NULL ? id_ : "")
       , display_name(display_name_ != NULL ? display_name_ : "")
-      , icon_hint(icon_hint_ != NULL ? icon_hint : "")
+      , icon_hint(icon_hint_ != NULL ? icon_hint_ : "")
       , value(value_) {};
   };
 
