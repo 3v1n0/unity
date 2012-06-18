@@ -183,6 +183,7 @@ class LauncherSwitcherTests(LauncherTestCase):
 
     def test_launcher_switcher_activate_keep_focus(self):
         """Activating a running launcher icon should focus the application."""
+        self.launcher_instance.switcher_cancel()
         calc = self.start_app("Calculator")
         mahjongg = self.start_app("Mahjongg")
         self.assertTrue(mahjongg.is_active)
@@ -194,18 +195,23 @@ class LauncherSwitcherTests(LauncherTestCase):
         for icon in self.launcher.model.get_launcher_icons_for_monitor(self.launcher_monitor):
             if (icon.tooltip_text == calc.name):
                 found = True
-                # FIXME: When releasing the keybinding another "next" is done
-                self.launcher_instance.switcher_prev()
                 self.launcher_instance.switcher_activate()
                 break
             else:
                 self.launcher_instance.switcher_next()
 
-        sleep(.5)
         if not found:
             self.addCleanup(self.launcher_instance.switcher_cancel)
 
         self.assertTrue(found)
+        # TODO - we need to extend the Eventually() matcher to work on regular
+        # attributes too, at which point we can stop writing ugly stuff in our
+        # tests like this:
+        for i in range(10):
+            if calc.is_active and not mahjongg.is_active:
+                break
+            sleep(1)
+
         self.assertTrue(calc.is_active)
         self.assertFalse(mahjongg.is_active)
 
