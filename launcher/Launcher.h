@@ -47,6 +47,8 @@ namespace unity
 {
 namespace launcher
 {
+extern const char window_title[];
+
 class AbstractLauncherIcon;
 
 class Launcher : public unity::debug::Introspectable, public nux::View, public ui::EdgeBarrierSubscriber
