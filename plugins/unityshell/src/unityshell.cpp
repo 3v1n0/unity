@@ -119,7 +119,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , newFocusedWindow(nullptr)
   , doShellRepaint(false)
   , allowWindowPaint(false)
-  , damaged(false)
   , _key_nav_mode_requested(false)
   , _last_output(nullptr)
 #ifndef USE_MODERN_COMPIZ_GL
@@ -902,7 +901,6 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
   }
 
   doShellRepaint = false;
-  damaged = false;
 }
 
 bool UnityScreen::forcePaintOnTop ()
@@ -1204,22 +1202,19 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
 {
   bool ret;
 
+  /*
+   * Very important!
+   * Don't waste GPU and CPU rendering the shell on every frame if you don't
+   * need to. Doing so on every frame causes Nux to hog the GPU and slow down
+   * all other OpenGL apps (LP: #988079)
+   */
   if (forcePaintOnTop() || PluginAdapter::Default()->IsExpoActive())
-  {
-    compizDamageNux(region);
     doShellRepaint = true;
-  }
   else if (shellIsHidden(*output))
-  {
-    // Don't ever waste GPU and CPU rendering the shell in games/benchmarks!
     doShellRepaint = false;
-  }
   else
-  {
-    compizDamageNux(region);
     doShellRepaint = wt->GetDrawList().size() > 0 ||
                      BackgroundEffectHelper::HasDirtyHelpers();
-  }
 
   allowWindowPaint = true;
   _last_output = output;
@@ -1296,12 +1291,8 @@ void UnityScreen::preparePaint(int ms)
   for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
     wi->HandleAnimations (ms);
 
-  if (damaged)
-  {
-    damaged = false;
-    nuxDamageCompiz();
-  }
-
+  nuxDamageCompiz();
+  compizDamageNux(cScreen->currentDamage());
 }
 
 void UnityScreen::donePaint()
@@ -1417,11 +1408,7 @@ void UnityScreen::nuxDamageCompiz()
 {
   CompRegion nux_damage;
 
-  if (damaged)
-    return;
-
   std::vector<nux::Geometry> dirty = wt->GetDrawList();
-  damaged = true;
 
   for (std::vector<nux::Geometry>::iterator it = dirty.begin(), end = dirty.end();
        it != end; ++it)
@@ -1626,6 +1613,8 @@ void UnityScreen::damageRegion(const CompRegion &region)
     nux::Geometry geo(r.x(), r.y(), r.width(), r.height());
     BackgroundEffectHelper::ProcessDamage(geo);
   }
+
+  compizDamageNux(region);
 
   cScreen->damageRegion(region);
 }

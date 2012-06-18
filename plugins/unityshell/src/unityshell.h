@@ -278,7 +278,6 @@ private:
   /* handle paint order */
   bool    doShellRepaint;
   bool    allowWindowPaint;
-  bool    damaged;
   bool    _key_nav_mode_requested;
   CompOutput* _last_output;
   CompWindowList _withRemovedNuxWindows;
