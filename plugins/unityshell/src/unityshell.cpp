@@ -1296,7 +1296,6 @@ void UnityScreen::preparePaint(int ms)
   for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
     wi->HandleAnimations (ms);
 
-  nuxDamageCompiz();
   compizDamageNux(cScreen->currentDamage());
 }
 
