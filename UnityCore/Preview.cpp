@@ -96,19 +96,45 @@ Preview::Preview(glib::Object<GObject> const& proto_obj)
 {
   SetupGetters();
 
-  if (!proto_obj || !UNITY_PROTOCOL_IS_PREVIEW(proto_obj.RawPtr()))
+  if (!proto_obj)
+  {
     LOG_WARN(logger) << "Passed nullptr to Preview constructor";
-  else
+  }
+  else if (UNITY_PROTOCOL_IS_PREVIEW(proto_obj.RawPtr()))
   {
     auto preview = glib::object_cast<UnityProtocolPreview>(proto_obj);
     const gchar *s;
-    s = unity_protocol_preview_get_title (preview);
+    s = unity_protocol_preview_get_title(preview);
     if (s) title_ = s;
-    s = unity_protocol_preview_get_subtitle (preview);
+    s = unity_protocol_preview_get_subtitle(preview);
     if (s) subtitle_ = s;
-    s = unity_protocol_preview_get_description (preview);
+    s = unity_protocol_preview_get_description(preview);
     if (s) description_ = s;
-    thumbnail_ = unity_protocol_preview_get_thumbnail (preview);
+    thumbnail_ = unity_protocol_preview_get_thumbnail(preview);
+
+    int actions_len;
+    auto actions = unity_protocol_preview_get_actions(preview, &actions_len);
+    for (int i = 0; i < actions_len; i++)
+    {
+      UnityProtocolPreviewActionRaw *raw_action = &actions[i];
+      actions_list_.push_back(std::make_shared<Action>(
+            raw_action->id, raw_action->display_name,
+            raw_action->icon_hint, raw_action->layout_hint));
+    }
+    
+    int info_hints_len;
+    auto info_hints = unity_protocol_preview_get_info_hints(preview, &info_hints_len);
+    for (int i = 0; i < info_hints_len; i++)
+    {
+      UnityProtocolInfoHintRaw *raw_hint = &info_hints[i];
+      info_hint_list_.push_back(std::make_shared<InfoHint>(
+            raw_hint->id, raw_hint->display_name, raw_hint->icon_hint,
+            raw_hint->value));
+    }
+  }
+  else
+  {
+    LOG_WARN(logger) << "Object passed to Preview constructor isn't UnityProtocolPreview";
   }
 }
 
@@ -121,6 +147,16 @@ void Preview::SetupGetters()
   subtitle.SetGetterFunction(sigc::mem_fun(this, &Preview::get_subtitle));
   description.SetGetterFunction(sigc::mem_fun(this, &Preview::get_description));
   thumbnail.SetGetterFunction(sigc::mem_fun(this, &Preview::get_thumbnail));
+}
+
+Preview::ActionPtrList Preview::GetActions() const
+{
+  return actions_list_;
+}
+
+Preview::InfoHintPtrList Preview::GetInfoHints() const
+{
+  return info_hint_list_;
 }
 
 } // namespace dash

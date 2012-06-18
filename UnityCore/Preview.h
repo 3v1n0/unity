@@ -41,7 +41,44 @@ namespace dash
 class Preview : public sigc::trackable
 {
 public:
+  struct Action
+  {
+    std::string id;
+    std::string display_name;
+    std::string icon_hint;
+    unsigned int layout_hint;
+    // TODO: there's also a HashTable here (although unused atm)
+
+    Action() {};
+    Action(const gchar* id_, const gchar* display_name_,
+           const gchar* icon_hint_, unsigned int layout_hint_)
+      : id(id_ != NULL ? id : "")
+      , display_name(display_name_ != NULL ? display_name_ : "")
+      , icon_hint(icon_hint_ != NULL ? icon_hint_ : "")
+      , layout_hint(layout_hint_) {};
+  };
+
+  struct InfoHint
+  {
+    std::string id;
+    std::string display_name;
+    std::string icon_hint;
+    unity::glib::Variant value;
+
+    InfoHint() {};
+    InfoHint(const gchar* id_, const gchar* display_name_, 
+             const gchar* icon_hint_, GVariant* value_)
+      : id(id_ != NULL ? id_ : "")
+      , display_name(display_name_ != NULL ? display_name_ : "")
+      , icon_hint(icon_hint_ != NULL ? icon_hint : "")
+      , value(value_) {};
+  };
+
   typedef std::shared_ptr<Preview> Ptr;
+  typedef std::shared_ptr<Action> ActionPtr;
+  typedef std::shared_ptr<InfoHint> InfoHintPtr;
+  typedef std::vector<ActionPtr> ActionPtrList;
+  typedef std::vector<InfoHintPtr> InfoHintPtrList;
 
   virtual ~Preview();
 
@@ -52,7 +89,9 @@ public:
   nux::RWProperty<std::string> description;
   nux::RWProperty<unity::glib::Object<GIcon>> thumbnail;
 
-  // TODO: actions, info hints
+  ActionPtrList GetActions() const;
+  InfoHintPtrList GetInfoHints() const;
+
 protected:
   // this should be UnityProtocolPreview, but we want to keep the usage
   // of libunity-protocol-private private to unity-core
@@ -71,6 +110,8 @@ private:
   std::string subtitle_;
   std::string description_;
   unity::glib::Object<GIcon> thumbnail_;
+  ActionPtrList actions_list_;
+  InfoHintPtrList info_hint_list_;
 };
 
 }
