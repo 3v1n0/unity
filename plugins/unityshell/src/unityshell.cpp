@@ -1215,6 +1215,8 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   else
     doShellRepaint = wt->GetDrawList().size() > 0 ||
                      BackgroundEffectHelper::HasDirtyHelpers();
+
+//  g_print("vv: Draw List %d\n", (int)wt->GetDrawList().size());
 #if 0
   g_print("vv: glPaintOutput %u: doShellRepaint=%s emptyregion=%s\n",
 	output->id(), doShellRepaint?"Y":"N",
@@ -1360,6 +1362,12 @@ bool UnityScreen::shellIsHidden(const CompOutput &output)
   return hidden;
 }
 
+static void FastQueueDraw(nux::View *view)
+{
+  if (!view->IsRedrawNeeded())
+    view->QueueDraw();
+}
+
 void UnityScreen::compizDamageNux(const CompRegion &damage)
 {
   auto launchers = launcher_controller_->launchers();
@@ -1370,14 +1378,14 @@ void UnityScreen::compizDamageNux(const CompRegion &damage)
       nux::Geometry geo = launcher->GetAbsoluteGeometry();
       CompRegion launcher_region(geo.x, geo.y, geo.width, geo.height);
       if (damage.intersects(launcher_region))
-        launcher->QueueDraw();
+        FastQueueDraw(launcher.GetPointer());
       nux::ObjectPtr<nux::View> tooltip = launcher->GetActiveTooltip();
       if (!tooltip.IsNull())
       {
         nux::Geometry tip = tooltip->GetAbsoluteGeometry();
         CompRegion tip_region(tip.x, tip.y, tip.width, tip.height);
         if (damage.intersects(tip_region))
-          tooltip->QueueDraw();
+          FastQueueDraw(tooltip.GetPointer());
       }
     }
   }
@@ -1402,7 +1410,7 @@ void UnityScreen::compizDamageNux(const CompRegion &damage)
       nux::Geometry geo = view->GetAbsoluteGeometry();
       CompRegion quicklist_region(geo.x, geo.y, geo.width, geo.height);
       if (damage.intersects(quicklist_region))
-        view->QueueDraw();
+        FastQueueDraw(view);
     }
   }
 }
