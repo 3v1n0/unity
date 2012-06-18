@@ -1410,6 +1410,9 @@ void UnityScreen::compizDamageNux(const CompRegion &damage)
 /* Grab changed nux regions and add damage rects for them */
 void UnityScreen::nuxDamageCompiz()
 {
+  if (!launcher_controller_.get())   // Don't slow down during startup
+    return;
+
   CompRegion nux_damage;
 
   std::vector<nux::Geometry> dirty = wt->GetDrawList();
