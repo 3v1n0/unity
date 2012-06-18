@@ -1195,43 +1195,6 @@ void UnityWindow::handleEvent (XEvent *event)
   }
 }
 
-bool UnityScreen::shellIsHidden(const CompOutput &output)
-{
-  bool hidden = false;
-  const std::vector<Window> &nuxwins(nux::XInputWindow::NativeHandleList());
-
-  // Loop through windows from back to front
-  for (CompWindow *w : screen->windows ())
-  {
-    /*
-     * The shell is hidden if there exists any window that fully covers
-     * the output and is in front of all Nux windows on that output.
-     * We could also check CompositeWindow::opacity() but that would be slower
-     * and almost always pointless.
-     */
-    if (w->isMapped() &&
-        w->isViewable() &&
-        !w->inShowDesktopMode() &&  // Why must this != isViewable?
-        w->geometry().contains(output))
-    {
-      hidden = true;
-    }
-    else if (hidden)
-    {
-      for (Window n : nuxwins)
-      {
-        if (w->id() == n && output.intersects(w->geometry()))
-        {
-          hidden = false;
-          break;
-        }
-      }
-    }
-  }
-
-  return hidden;
-}
-
 /* called whenever we need to repaint parts of the screen */
 bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
                                 const GLMatrix& transform,
@@ -1367,6 +1330,43 @@ void UnityScreen::donePaint()
   }
 
   cScreen->donePaint ();
+}
+
+bool UnityScreen::shellIsHidden(const CompOutput &output)
+{
+  bool hidden = false;
+  const std::vector<Window> &nuxwins(nux::XInputWindow::NativeHandleList());
+
+  // Loop through windows from back to front
+  for (CompWindow *w : screen->windows ())
+  {
+    /*
+     * The shell is hidden if there exists any window that fully covers
+     * the output and is in front of all Nux windows on that output.
+     * We could also check CompositeWindow::opacity() but that would be slower
+     * and almost always pointless.
+     */
+    if (w->isMapped() &&
+        w->isViewable() &&
+        !w->inShowDesktopMode() &&  // Why must this != isViewable?
+        w->geometry().contains(output))
+    {
+      hidden = true;
+    }
+    else if (hidden)
+    {
+      for (Window n : nuxwins)
+      {
+        if (w->id() == n && output.intersects(w->geometry()))
+        {
+          hidden = false;
+          break;
+        }
+      }
+    }
+  }
+
+  return hidden;
 }
 
 void UnityScreen::compizDamageNux(const CompRegion &damage)
