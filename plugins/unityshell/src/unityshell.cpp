@@ -1210,15 +1210,17 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
    */
   if (forcePaintOnTop() || PluginAdapter::Default()->IsExpoActive())
     doShellRepaint = true;
-  else if (shellIsHidden(*output))
+  else if (region.isEmpty() || shellIsHidden(*output))
     doShellRepaint = false;
   else
     doShellRepaint = wt->GetDrawList().size() > 0 ||
                      BackgroundEffectHelper::HasDirtyHelpers();
-
-//  g_print("vv: glPaintOutput %u: doShellRepaint=%s\n",
-//          output->id(), doShellRepaint?"Y":"N");
-
+#if 0
+  g_print("vv: glPaintOutput %u: doShellRepaint=%s emptyregion=%s\n",
+	output->id(), doShellRepaint?"Y":"N",
+	region.isEmpty() ? "Y":"N"
+	);
+#endif
   allowWindowPaint = true;
   _last_output = output;
   paint_panel_ = false;
