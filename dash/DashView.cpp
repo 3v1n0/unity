@@ -30,6 +30,7 @@
 #include <UnityCore/RadioOptionFilter.h>
 
 #include "unity-shared/DashStyle.h"
+#include "unity-shared/KeyboardUtil.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/UBusMessages.h"
 
@@ -890,21 +891,8 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     }
   }
 
-  bool valid_search_key = false;
-
-  if (direction == KEY_NAV_NONE)
-  {
-    /* Excluding meta chars, see keysymdef.h for reference */
-    if (x11_key_code < XK_Select || x11_key_code > XK_Hyper_R)
-    {
-      if (x11_key_code == XK_Delete || x11_key_code == XK_BackSpace)
-        valid_search_key = true;
-      else
-        valid_search_key = g_unichar_isprint(x11_key_code);
-    }
-  }
-
-  if (valid_search_key || search_bar_->im_preedit)
+  if ((direction == KEY_NAV_NONE && ui::KeyboardUtil::IsPrintableKeySymbol(x11_key_code)) ||
+      search_bar_->im_preedit)
   {
     // then send the event to the search entry
     return search_bar_->text_entry();
