@@ -23,7 +23,6 @@
 #include <UnityCore/GLibWrapper.h>
 
 #include "BamfLauncherIcon.h"
-#include "unity-shared/WindowManager.h"
 using namespace unity;
 
 namespace

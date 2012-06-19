@@ -26,7 +26,6 @@ using namespace testing;
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UnitySettings.h"
-#include "unity-shared/WindowManager.h"
 #include "test_utils.h"
 using namespace unity;
 
@@ -59,7 +58,6 @@ class TestHudController : public Test
 public:
   virtual void SetUp()
   {
-    WindowManager::SetDefault(WindowManager::Default());
     view = new MockHudView;
     controller.reset(new hud::Controller([&view]{ return view.GetPointer(); }));
   }
