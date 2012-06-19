@@ -183,6 +183,7 @@ class LauncherSwitcherTests(LauncherTestCase):
 
     def test_launcher_switcher_activate_keep_focus(self):
         """Activating a running launcher icon should focus the application."""
+        self.launcher_instance.switcher_cancel()
         calc = self.start_app("Calculator")
         mahjongg = self.start_app("Mahjongg")
         self.assertTrue(mahjongg.is_active)
@@ -194,18 +195,23 @@ class LauncherSwitcherTests(LauncherTestCase):
         for icon in self.launcher.model.get_launcher_icons_for_monitor(self.launcher_monitor):
             if (icon.tooltip_text == calc.name):
                 found = True
-                # FIXME: When releasing the keybinding another "next" is done
-                self.launcher_instance.switcher_prev()
                 self.launcher_instance.switcher_activate()
                 break
             else:
                 self.launcher_instance.switcher_next()
 
-        sleep(.5)
         if not found:
             self.addCleanup(self.launcher_instance.switcher_cancel)
 
         self.assertTrue(found)
+        # TODO - we need to extend the Eventually() matcher to work on regular
+        # attributes too, at which point we can stop writing ugly stuff in our
+        # tests like this:
+        for i in range(10):
+            if calc.is_active and not mahjongg.is_active:
+                break
+            sleep(1)
+
         self.assertTrue(calc.is_active)
         self.assertFalse(mahjongg.is_active)
 
@@ -375,7 +381,7 @@ class LauncherKeyNavTests(LauncherTestCase):
     def test_launcher_keynav_alt_tab_quits(self):
         """Tests that alt+tab exits keynav mode."""
 
-        self.switcher.initiate()
+        self.keybinding("switcher/reveal_normal")
         self.addCleanup(self.switcher.terminate)
         self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
 
@@ -789,7 +795,7 @@ class LauncherIconTests(UnityTestCase):
 
     def test_shift_click_opens_new_application_instance(self):
         """Shift+Clicking MUST open a new instance of an already-running application."""
-        app = self.start_app("Text Editor")
+        app = self.start_app("Calculator")
         desktop_id = app.desktop_file
         icon = self.launcher.model.get_icon_by_desktop_id(desktop_id)
         launcher_instance = self.launcher.get_launcher_for_monitor(0)
