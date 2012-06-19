@@ -356,4 +356,21 @@ void LauncherEntryRemote::Update(GVariantIter* prop_iter)
   }
 }
 
+std::string LauncherEntryRemote::GetName() const
+{
+  // This seems a more appropriate name than LauncherEntryRemote
+  return "LauncherEntry";
+}
+
+void LauncherEntryRemote::AddProperties(GVariantBuilder* builder)
+{
+  variant::BuilderWrapper(builder)
+    .add("count", Count())
+    .add("progress", Progress())
+    .add("emblem_visible", EmblemVisible())
+    .add("count_visible", CountVisible())
+    .add("progress_visible", ProgressVisible())
+    .add("urgent", Urgent());
+}
+
 } // Namespace
