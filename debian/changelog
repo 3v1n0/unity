@@ -1,14 +1,23 @@
-unity (5.12-0ubuntu3) UNRELEASED; urgency=low
+unity (5.12-0ubuntu4) UNRELEASED; urgency=low
 
   * debian/control:
     - build on unversionned version of boost (to transition to 1.49 in quantal)
       (LP: #1008219)
+     - build-dep on latest compiz-dev version for ABI break
   * debian/rules:
     - build in parallel
   * Cherry-pick some upstream fixes for the newer g-c-c making previous upload
     FTBFS in quantal
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 31 May 2012 10:21:46 +0200
+
+unity (5.12-0ubuntu3) quantal; urgency=low
+
+  * Build with gcc-4.6 temporarily while upstream works
+    on fixing the build with gcc-4.7 and boost1.49.
+  * Rebuild for the libgnome-desktop SOVER bump.
+
+ -- Adam Conrad <adconrad@ubuntu.com>  Thu, 07 Jun 2012 16:16:44 -0600
 
 unity (5.12-0ubuntu2) quantal; urgency=low
 
