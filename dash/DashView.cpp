@@ -762,15 +762,15 @@ void DashView::ProcessDndEnter()
 }
 
 Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
-      unsigned long x11_key_code,
-      unsigned long special_keys_state)
+                                 unsigned long x11_key_code,
+                                 unsigned long special_keys_state)
 {
   // Do what nux::View does, but if the event isn't a key navigation,
   // designate the text entry to process it.
 
+  nux::KeyNavDirection direction = KEY_NAV_NONE;
   bool ctrl = (special_keys_state & NUX_STATE_CTRL);
 
-  nux::KeyNavDirection direction = KEY_NAV_NONE;
   switch (x11_key_code)
   {
   case NUX_VK_UP:
@@ -808,7 +808,6 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     break;
   default:
     direction = KEY_NAV_NONE;
-    break;
   }
 
   // We should not do it here, but I really don't want to make DashView
@@ -816,7 +815,7 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
   // DashView::KeyNavIteration.
    nux::InputArea* focus_area = nux::GetWindowCompositor().GetKeyFocusArea();
 
-  if (key_symbol == nux::NUX_KEYDOWN && !search_bar_->im_preedit)
+  if (direction != KEY_NAV_NONE && key_symbol == nux::NUX_KEYDOWN && !search_bar_->im_preedit)
   {
     std::list<nux::Area*> tabs;
     for (auto category : active_lens_view_->categories())
@@ -891,7 +890,21 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     }
   }
 
-  if (direction == KEY_NAV_NONE || search_bar_->im_preedit)
+  bool valid_search_key = false;
+
+  if (direction == KEY_NAV_NONE)
+  {
+    /* Excluding meta chars, see keysymdef.h for reference */
+    if (x11_key_code < XK_Select || x11_key_code > XK_Hyper_R)
+    {
+      if (x11_key_code == XK_Delete || x11_key_code == XK_BackSpace)
+        valid_search_key = true;
+      else
+        valid_search_key = g_unichar_isprint(x11_key_code);
+    }
+  }
+
+  if (valid_search_key || search_bar_->im_preedit)
   {
     // then send the event to the search entry
     return search_bar_->text_entry();
@@ -900,7 +913,8 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
   {
     return next_object_to_key_focus_area_->FindKeyFocusArea(key_symbol, x11_key_code, special_keys_state);
   }
-  return NULL;
+
+  return nullptr;
 }
 
 }
