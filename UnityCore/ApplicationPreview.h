@@ -37,7 +37,16 @@ public:
   typedef std::shared_ptr<ApplicationPreview> Ptr;
   
   ApplicationPreview(unity::glib::Object<GObject> const& proto_obj);
+  ~ApplicationPreview();
 
+  nux::RWProperty<std::string> last_update;
+  nux::RWProperty<std::string> copyright;
+  nux::RWProperty<std::string> license;
+  nux::RWProperty<glib::Object<GIcon>> app_icon;
+
+private:
+  class Impl;
+  Impl* pimpl;
 };
 
 }

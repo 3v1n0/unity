@@ -23,6 +23,7 @@
 #include <gio/gio.h>
 #include <UnityCore/Variant.h>
 #include <UnityCore/Preview.h>
+#include <UnityCore/ApplicationPreview.h>
 #include <UnityCore/MoviePreview.h>
 #include <unity-protocol.h>
 
@@ -116,6 +117,39 @@ TEST(TestPreviews, DeserializeGenericWithMeta)
   EXPECT_EQ(hint2->display_name, "Hint 2");
   EXPECT_EQ(hint2->icon_hint, "");
   EXPECT_EQ(hint2->value.GetString(), "string hint");
+}
+
+TEST(TestPreviews, DeserializeApplication)
+{
+  Object<GIcon> icon(g_icon_new_for_string("application", NULL));
+  Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_application_preview_new()));
+  unity_protocol_preview_set_title(proto_obj, "Title");
+  unity_protocol_preview_set_subtitle(proto_obj, "Subtitle");
+  unity_protocol_preview_set_description(proto_obj, "Description");
+  unity_protocol_preview_set_thumbnail(proto_obj, icon);
+  auto app_proto_obj = glib::object_cast<UnityProtocolApplicationPreview>(proto_obj);
+  unity_protocol_application_preview_set_last_update(app_proto_obj, "2012/06/13");
+  unity_protocol_application_preview_set_copyright(app_proto_obj, "(c) Canonical");
+  unity_protocol_application_preview_set_license(app_proto_obj, "GPLv3");
+  unity_protocol_application_preview_set_app_icon(app_proto_obj, icon);
+
+  Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
+            glib::StealRef());
+  EXPECT_TRUE(IsVariant(v));
+
+  Preview::Ptr base_preview = Preview::PreviewForVariant(v);
+  ApplicationPreview::Ptr preview = std::dynamic_pointer_cast<ApplicationPreview>(base_preview);
+  EXPECT_TRUE(preview != nullptr);
+
+  EXPECT_EQ(preview->renderer_name, "preview-application");
+  EXPECT_EQ(preview->title, "Title");
+  EXPECT_EQ(preview->subtitle, "Subtitle");
+  EXPECT_EQ(preview->description, "Description");
+  EXPECT_TRUE(g_icon_equal(preview->image(), icon) != FALSE);
+  EXPECT_EQ(preview->last_update, "2012/06/13");
+  EXPECT_EQ(preview->copyright, "(c) Canonical");
+  EXPECT_EQ(preview->license, "GPLv3");
+  EXPECT_TRUE(g_icon_equal(preview->app_icon(), icon) != FALSE);
 }
 
 TEST(TestPreviews, DeserializeMovie)
