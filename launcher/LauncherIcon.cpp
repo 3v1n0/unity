@@ -1037,6 +1037,7 @@ LauncherIcon::InsertEntryRemote(LauncherEntryRemote::Ptr const& remote)
     return;
 
   _entry_list.push_front(remote);
+  AddChild(remote.get());
 
   remote->emblem_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteEmblemChanged));
   remote->count_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteCountChanged));
@@ -1072,6 +1073,7 @@ LauncherIcon::RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote)
     return;
 
   _entry_list.remove(remote);
+  RemoveChild(remote.get());
 
   DeleteEmblem();
   SetQuirk(QUIRK_PROGRESS, false);
