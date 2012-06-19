@@ -61,11 +61,7 @@ Depends: ${shlibs:Depends},
          python-gconf,
          nux-tools,
          unity-asset-pool (>= 0.8.18)
-Provides: indicator-renderer,
-          netbook-launcher
-Conflicts: netbook-launcher (<< 1:2.1.18-0ubuntu2)
-Replaces: netbook-launcher (<< 1:2.1.18-0ubuntu2),
-          unity-common (<< 4.0.1-0ubuntu2~)
+Provides: indicator-renderer
 Recommends: unity-lens-applications,
             unity-lens-files,
             unity-lens-music,
@@ -78,8 +74,6 @@ Recommends: unity-lens-applications,
             indicator-printers,
             indicator-power,
             indicator-session,
-Breaks: compiz-core (<< 1:0.9.4+bzr20110606-0ubuntu5),
-        bamf (<< 0.2.76),
 Description: Interface designed for efficiency of space and interaction.
  Unity is a desktop experience that sings. Designed by Canonical and the Ayatana
  community, Unity is all about the combination of familiarity and the future. We
@@ -92,8 +86,6 @@ Package: unity-services
 Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
-Replaces: unity (<< 4.0.1-0ubuntu1~),
-          unity-common (<< 4.0.1-0ubuntu2~),
 Description: Services for the Unity interface
  Unity is a desktop experience that sings. Designed by Canonical and the Ayatana
  community, Unity is all about the combination of familiarity and the future. We
@@ -108,8 +100,6 @@ Package: unity-common
 Architecture: all
 Depends: ${misc:Depends},
          python,
-Replaces: unity (<< 4.0.1-0ubuntu1~)
-Conflicts: unity (<< 3.2.2-0ubuntu3)
 Description: Common files for the Unity interface.
  Unity is a desktop experience that sings. Designed by Canonical and the Ayatana
  community, Unity is all about the combination of familiarity and the future. We
@@ -156,13 +146,4 @@ Description: Core library for the Unity interface - development files
  .
  This package contains development files for libraries to be used by unity-3d
  and unity-2d.
-
-Package: netbook-launcher
-Section: oldlibs
-Priority: extra
-Architecture: all
-Depends: unity, ${misc:Depends}
-Description: transitional package
- unity supersedes netbook-launcher. This package ensures a clean upgrade path,
- and can be safely removed after the upgrade.
 
