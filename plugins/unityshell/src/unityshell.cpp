@@ -119,6 +119,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , newFocusedWindow(nullptr)
   , doShellRepaint(false)
   , allowWindowPaint(false)
+  , damaged(false)
   , _key_nav_mode_requested(false)
   , _last_output(nullptr)
 #ifndef USE_MODERN_COMPIZ_GL
@@ -901,6 +902,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
   }
 
   doShellRepaint = false;
+  damaged = false;
 }
 
 bool UnityScreen::forcePaintOnTop ()
@@ -1298,6 +1300,13 @@ void UnityScreen::preparePaint(int ms)
   for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
     wi->HandleAnimations (ms);
 
+  // Workaround Nux bug LP: #1014610:
+  if (damaged)
+  {
+    damaged = false;
+    nuxDamageCompiz();
+  }
+
   compizDamageNux(cScreen->currentDamage());
 }
 
@@ -1412,12 +1421,14 @@ void UnityScreen::compizDamageNux(const CompRegion &damage)
 /* Grab changed nux regions and add damage rects for them */
 void UnityScreen::nuxDamageCompiz()
 {
-  if (!launcher_controller_.get())   // Don't slow down during startup
-    return;
-
   CompRegion nux_damage;
 
+  // Workaround Nux bug LP: #1014610 (unbounded DrawList growth)
+  if (damaged)
+    return;
+
   std::vector<nux::Geometry> dirty = wt->GetDrawList();
+  damaged = true;
 
   for (std::vector<nux::Geometry>::iterator it = dirty.begin(), end = dirty.end();
        it != end; ++it)
