@@ -64,12 +64,12 @@ class UnityTestCase(AutopilotTestCase):
             well_behaved = False
             reason += "The test left the dash open.\n"
             self.dash.ensure_hidden()
-        #... or the hud?
+        # ... or the hud?
         if self.hud.visible:
             well_behaved = False
             reason += "The test left the hud open.\n"
             self.hud.ensure_hidden()
-        #Are we in show desktop mode?
+        # Are we in show desktop mode?
         if self.window_manager.showdesktop_active:
             well_behaved = False
             reason += "The test left the system in show_desktop mode.\n"
