@@ -44,7 +44,7 @@ Build-Depends: cmake,
                g++-4.6,
 Standards-Version: 3.9.3
 Homepage: https://launchpad.net/unity
-Vcs-Bzr: https://code.launchpad.net/~ubuntu-desktop/unity/ubuntu
+Vcs-Bzr: https://code.launchpad.net/+branch/ubuntu/unity
 
 Package: unity
 Architecture: any
