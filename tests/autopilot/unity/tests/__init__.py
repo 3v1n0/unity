@@ -51,32 +51,32 @@ class UnityTestCase(AutopilotTestCase):
 
         """
         well_behaved = True
-        reason = ""
+        reasons = []
 
         # Have we switched workspace?
         if self.workspace.current_workspace != self._initial_workspace_num:
             well_behaved = False
-            reason += "The test changed the active workspace from %d to %d.\n" \
-                % (self._initial_workspace_num, self.workspace.current_workspace)
+            reasons.append("The test changed the active workspace from %d to %d." \
+                % (self._initial_workspace_num, self.workspace.current_workspace))
             self.workspace.switch_to(self._initial_workspace_num)
         # Have we left the dash open?
         if self.dash.visible:
             well_behaved = False
-            reason += "The test left the dash open.\n"
+            reasons.append("The test left the dash open.")
             self.dash.ensure_hidden()
         # ... or the hud?
         if self.hud.visible:
             well_behaved = False
-            reason += "The test left the hud open.\n"
+            reasons.append("The test left the hud open.")
             self.hud.ensure_hidden()
         # Are we in show desktop mode?
         if self.window_manager.showdesktop_active:
             well_behaved = False
-            reason += "The test left the system in show_desktop mode.\n"
+            reasons.append("The test left the system in show_desktop mode.")
             self.window_manager.leave_show_desktop()
 
         if not well_behaved:
-            raise AssertionError("Test was not well behaved: " + reason)
+            self.fail("/n".join(reasons))
 
     @property
     def dash(self):
