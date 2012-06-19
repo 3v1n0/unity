@@ -97,8 +97,6 @@ protected:
   // this should be UnityProtocolPreview, but we want to keep the usage
   // of libunity-protocol-private private to unity-core
   Preview(unity::glib::Object<GObject> const& proto_obj);
-
-  virtual void SetupGetters();
   static unity::glib::Object<GIcon> IconForString(std::string const& icon_hint);
 
 private:

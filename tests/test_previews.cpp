@@ -23,6 +23,7 @@
 #include <gio/gio.h>
 #include <UnityCore/Variant.h>
 #include <UnityCore/Preview.h>
+#include <UnityCore/MoviePreview.h>
 #include <unity-protocol.h>
 
 using namespace std;
@@ -36,25 +37,26 @@ namespace
 
 bool IsVariant(Variant const& variant)
 {
-  return g_variant_get_type_string (variant) != NULL;
+  return g_variant_get_type_string(variant) != NULL;
 }
 
 TEST(TestPreviews, DeserializeGeneric)
 {
-  Object<GIcon> icon(g_icon_new_for_string ("accessories", NULL));
-  Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW (unity_protocol_generic_preview_new ()));
-  unity_protocol_preview_set_title (proto_obj, "Title");
-  unity_protocol_preview_set_subtitle (proto_obj, "Subtitle");
-  unity_protocol_preview_set_description (proto_obj, "Description");
-  unity_protocol_preview_set_thumbnail (proto_obj, icon);
+  Object<GIcon> icon(g_icon_new_for_string("accessories", NULL));
+  Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_generic_preview_new()));
+  unity_protocol_preview_set_title(proto_obj, "Title");
+  unity_protocol_preview_set_subtitle(proto_obj, "Subtitle");
+  unity_protocol_preview_set_description(proto_obj, "Description");
+  unity_protocol_preview_set_thumbnail(proto_obj, icon);
 
-  Variant v (dee_serializable_serialize (DEE_SERIALIZABLE (proto_obj.RawPtr())),
-             glib::StealRef());
+  Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
+            glib::StealRef());
   EXPECT_TRUE(IsVariant(v));
 
   Preview::Ptr preview = Preview::PreviewForVariant(v);
   EXPECT_TRUE(preview != nullptr);
 
+  EXPECT_EQ(preview->renderer_name, "preview-generic");
   EXPECT_EQ(preview->title, "Title");
   EXPECT_EQ(preview->subtitle, "Subtitle");
   EXPECT_EQ(preview->description, "Description");
@@ -63,24 +65,25 @@ TEST(TestPreviews, DeserializeGeneric)
 
 TEST(TestPreviews, DeserializeGenericWithMeta)
 {
-  Object<GIcon> icon(g_icon_new_for_string ("accessories", NULL));
-  Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW (unity_protocol_generic_preview_new ()));
-  unity_protocol_preview_set_title (proto_obj, "Title");
-  unity_protocol_preview_set_subtitle (proto_obj, "Subtitle");
-  unity_protocol_preview_set_description (proto_obj, "Description");
-  unity_protocol_preview_set_thumbnail (proto_obj, icon);
-  unity_protocol_preview_add_action (proto_obj, "action1", "Action #1", NULL, 0);
-  unity_protocol_preview_add_action (proto_obj, "action2", "Action #2", NULL, 0);
-  unity_protocol_preview_add_info_hint (proto_obj, "hint1", "Hint 1", NULL, g_variant_new ("i", 34));
-  unity_protocol_preview_add_info_hint (proto_obj, "hint2", "Hint 2", NULL, g_variant_new ("s", "string hint"));
+  Object<GIcon> icon(g_icon_new_for_string("accessories", NULL));
+  Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_generic_preview_new()));
+  unity_protocol_preview_set_title(proto_obj, "Title");
+  unity_protocol_preview_set_subtitle(proto_obj, "Subtitle");
+  unity_protocol_preview_set_description(proto_obj, "Description");
+  unity_protocol_preview_set_thumbnail(proto_obj, icon);
+  unity_protocol_preview_add_action(proto_obj, "action1", "Action #1", NULL, 0);
+  unity_protocol_preview_add_action(proto_obj, "action2", "Action #2", NULL, 0);
+  unity_protocol_preview_add_info_hint(proto_obj, "hint1", "Hint 1", NULL, g_variant_new("i", 34));
+  unity_protocol_preview_add_info_hint(proto_obj, "hint2", "Hint 2", NULL, g_variant_new("s", "string hint"));
 
-  Variant v (dee_serializable_serialize (DEE_SERIALIZABLE (proto_obj.RawPtr())),
-             glib::StealRef());
+  Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
+            glib::StealRef());
   EXPECT_TRUE(IsVariant(v));
 
   Preview::Ptr preview = Preview::PreviewForVariant(v);
   EXPECT_TRUE(preview != nullptr);
 
+  EXPECT_EQ(preview->renderer_name, "preview-generic");
   EXPECT_EQ(preview->title, "Title");
   EXPECT_EQ(preview->subtitle, "Subtitle");
   EXPECT_EQ(preview->description, "Description");
@@ -113,6 +116,37 @@ TEST(TestPreviews, DeserializeGenericWithMeta)
   EXPECT_EQ(hint2->display_name, "Hint 2");
   EXPECT_EQ(hint2->icon_hint, "");
   EXPECT_EQ(hint2->value.GetString(), "string hint");
+}
+
+TEST(TestPreviews, DeserializeMovie)
+{
+  Object<GIcon> icon(g_icon_new_for_string("movie", NULL));
+  Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_movie_preview_new()));
+  unity_protocol_preview_set_title(proto_obj, "Title");
+  unity_protocol_preview_set_subtitle(proto_obj, "Subtitle");
+  unity_protocol_preview_set_description(proto_obj, "Description");
+  unity_protocol_preview_set_thumbnail(proto_obj, icon);
+  auto movie_proto_obj = glib::object_cast<UnityProtocolMoviePreview>(proto_obj);
+  unity_protocol_movie_preview_set_year(movie_proto_obj, "2012");
+  unity_protocol_movie_preview_set_rating(movie_proto_obj, 4.0);
+  unity_protocol_movie_preview_set_num_ratings(movie_proto_obj, 12);
+
+  Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
+            glib::StealRef());
+  EXPECT_TRUE(IsVariant(v));
+
+  Preview::Ptr base_preview = Preview::PreviewForVariant(v);
+  MoviePreview::Ptr preview = std::dynamic_pointer_cast<MoviePreview>(base_preview);
+  EXPECT_TRUE(preview != nullptr);
+
+  EXPECT_EQ(preview->renderer_name, "preview-movie");
+  EXPECT_EQ(preview->title, "Title");
+  EXPECT_EQ(preview->subtitle, "Subtitle");
+  EXPECT_EQ(preview->description, "Description");
+  EXPECT_TRUE(g_icon_equal(preview->image(), icon) != FALSE);
+  EXPECT_EQ(preview->year, "2012");
+  EXPECT_EQ(preview->rating, 4.0);
+  EXPECT_EQ(preview->num_ratings, static_cast<unsigned int>(12));
 }
 
 } // Namespace

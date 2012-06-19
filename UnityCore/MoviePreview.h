@@ -37,6 +37,15 @@ public:
   typedef std::shared_ptr<MoviePreview> Ptr;
   
   MoviePreview(unity::glib::Object<GObject> const& proto_obj);
+  ~MoviePreview();
+
+  nux::RWProperty<std::string> year;
+  nux::RWProperty<float> rating;
+  nux::RWProperty<unsigned int> num_ratings;
+
+private:
+  class Impl;
+  Impl* pimpl;
 };
 
 }

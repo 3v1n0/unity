@@ -95,7 +95,7 @@ unity::glib::Object<GIcon> Preview::IconForString(std::string const& icon_hint)
 class Preview::Impl
 {
 public:
-  Impl(Preview* owner, glib::Object<GObject> proto_obj);
+  Impl(Preview* owner, glib::Object<GObject> const& proto_obj);
 
   void SetupGetters();
   std::string get_renderer_name() const { return renderer_name_; };
@@ -117,7 +117,7 @@ public:
   InfoHintPtrList info_hint_list_;
 };
 
-Preview::Impl::Impl(Preview* owner, glib::Object<GObject> proto_obj)
+Preview::Impl::Impl(Preview* owner, glib::Object<GObject> const& proto_obj)
   : owner_(owner)
 {
   if (!proto_obj)
@@ -164,6 +164,8 @@ Preview::Impl::Impl(Preview* owner, glib::Object<GObject> proto_obj)
   {
     LOG_WARN(logger) << "Object passed to Preview constructor isn't UnityProtocolPreview";
   }
+
+  SetupGetters();
 }
 
 void Preview::Impl::SetupGetters()
@@ -183,16 +185,10 @@ void Preview::Impl::SetupGetters()
 Preview::Preview(glib::Object<GObject> const& proto_obj)
   : pimpl(new Impl(this, proto_obj))
 {
-  SetupGetters();
 }
 
 Preview::~Preview()
 {}
-
-void Preview::SetupGetters()
-{
-  pimpl->SetupGetters();
-}
 
 Preview::ActionPtrList Preview::GetActions() const
 {
