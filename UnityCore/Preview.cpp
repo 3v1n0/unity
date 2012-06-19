@@ -92,10 +92,34 @@ unity::glib::Object<GIcon> Preview::IconForString(std::string const& icon_hint)
   return icon;
 }
 
-Preview::Preview(glib::Object<GObject> const& proto_obj)
+class Preview::Impl
 {
-  SetupGetters();
+public:
+  Impl(Preview* owner, glib::Object<GObject> proto_obj);
 
+  void SetupGetters();
+  std::string get_renderer_name() const { return renderer_name_; };
+  std::string get_title() const { return title_; };
+  std::string get_subtitle() const { return subtitle_; };
+  std::string get_description() const { return description_; };
+  unity::glib::Object<GIcon> get_image() const { return image_; };
+  ActionPtrList get_actions() const { return actions_list_; };
+  InfoHintPtrList get_info_hints() const { return info_hint_list_; };
+
+  Preview* owner_;
+
+  std::string renderer_name_;
+  std::string title_;
+  std::string subtitle_;
+  std::string description_;
+  unity::glib::Object<GIcon> image_;
+  ActionPtrList actions_list_;
+  InfoHintPtrList info_hint_list_;
+};
+
+Preview::Impl::Impl(Preview* owner, glib::Object<GObject> proto_obj)
+  : owner_(owner)
+{
   if (!proto_obj)
   {
     LOG_WARN(logger) << "Passed nullptr to Preview constructor";
@@ -104,6 +128,8 @@ Preview::Preview(glib::Object<GObject> const& proto_obj)
   {
     auto preview = glib::object_cast<UnityProtocolPreview>(proto_obj);
     const gchar *s;
+    // renderer is guaranteed to be non-NULL, if it is it's a bug in proto lib
+    renderer_name_ = unity_protocol_preview_get_renderer_name(preview);
     s = unity_protocol_preview_get_title(preview);
     if (s) title_ = s;
     s = unity_protocol_preview_get_subtitle(preview);
@@ -112,7 +138,7 @@ Preview::Preview(glib::Object<GObject> const& proto_obj)
     if (s) description_ = s;
     glib::Object<GIcon> icon(unity_protocol_preview_get_thumbnail(preview),
                              unity::glib::AddRef());
-    thumbnail_ = icon;
+    image_ = icon;
 
     int actions_len;
     auto actions = unity_protocol_preview_get_actions(preview, &actions_len);
@@ -140,25 +166,42 @@ Preview::Preview(glib::Object<GObject> const& proto_obj)
   }
 }
 
+void Preview::Impl::SetupGetters()
+{
+  owner_->renderer_name.SetGetterFunction(
+      sigc::mem_fun(this, &Preview::Impl::get_renderer_name));
+  owner_->title.SetGetterFunction(
+      sigc::mem_fun(this, &Preview::Impl::get_title));
+  owner_->subtitle.SetGetterFunction(
+      sigc::mem_fun(this, &Preview::Impl::get_subtitle));
+  owner_->description.SetGetterFunction(
+      sigc::mem_fun(this, &Preview::Impl::get_description));
+  owner_->image.SetGetterFunction(
+      sigc::mem_fun(this, &Preview::Impl::get_image));
+}
+
+Preview::Preview(glib::Object<GObject> const& proto_obj)
+  : pimpl(new Impl(this, proto_obj))
+{
+  SetupGetters();
+}
+
 Preview::~Preview()
 {}
 
 void Preview::SetupGetters()
 {
-  title.SetGetterFunction(sigc::mem_fun(this, &Preview::get_title));
-  subtitle.SetGetterFunction(sigc::mem_fun(this, &Preview::get_subtitle));
-  description.SetGetterFunction(sigc::mem_fun(this, &Preview::get_description));
-  thumbnail.SetGetterFunction(sigc::mem_fun(this, &Preview::get_thumbnail));
+  pimpl->SetupGetters();
 }
 
 Preview::ActionPtrList Preview::GetActions() const
 {
-  return actions_list_;
+  return pimpl->get_actions();
 }
 
 Preview::InfoHintPtrList Preview::GetInfoHints() const
 {
-  return info_hint_list_;
+  return pimpl->get_info_hints();
 }
 
 } // namespace dash

@@ -84,10 +84,11 @@ public:
 
   static Preview::Ptr PreviewForVariant(unity::glib::Variant& properties);
 
+  nux::RWProperty<std::string> renderer_name;
   nux::RWProperty<std::string> title;
   nux::RWProperty<std::string> subtitle;
   nux::RWProperty<std::string> description;
-  nux::RWProperty<unity::glib::Object<GIcon>> thumbnail;
+  nux::RWProperty<unity::glib::Object<GIcon>> image;
 
   ActionPtrList GetActions() const;
   InfoHintPtrList GetInfoHints() const;
@@ -101,17 +102,8 @@ protected:
   static unity::glib::Object<GIcon> IconForString(std::string const& icon_hint);
 
 private:
-  std::string get_title() const { return title_; };
-  std::string get_subtitle() const { return subtitle_; };
-  std::string get_description() const { return description_; };
-  unity::glib::Object<GIcon> get_thumbnail() const { return thumbnail_; };
-
-  std::string title_;
-  std::string subtitle_;
-  std::string description_;
-  unity::glib::Object<GIcon> thumbnail_;
-  ActionPtrList actions_list_;
-  InfoHintPtrList info_hint_list_;
+  class Impl;
+  std::unique_ptr<Impl> pimpl;
 };
 
 }
