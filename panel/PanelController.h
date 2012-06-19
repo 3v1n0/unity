@@ -41,6 +41,7 @@ public:
   void QueueRedraw();
 
   std::vector<Window> GetTrayXids() const;
+  std::vector<nux::View*> GetPanelViews() const;
   std::vector<nux::Geometry> GetGeometries() const;
 
   // NOTE: nux::Property maybe?

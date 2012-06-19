@@ -1218,7 +1218,6 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
     doShellRepaint = wt->GetDrawList().size() > 0 ||
                      BackgroundEffectHelper::HasDirtyHelpers();
 
-//  g_print("vv: Draw List %d\n", (int)wt->GetDrawList().size());
 #if 0
   g_print("vv: glPaintOutput %u: doShellRepaint=%s emptyregion=%s\n",
 	output->id(), doShellRepaint?"Y":"N",
@@ -1393,15 +1392,13 @@ void UnityScreen::compizDamageNux(const CompRegion &damage)
     }
   }
 
-  const std::vector<nux::Geometry> &geos(panel_controller_->GetGeometries());
-  for (const nux::Geometry &geo : geos)
+  const std::vector<nux::View*> &panels(panel_controller_->GetPanelViews());
+  for (nux::View *view : panels)
   {
+    nux::Geometry geo = view->GetAbsoluteGeometry();
     CompRegion panel_region(geo.x, geo.y, geo.width, geo.height);
     if (damage.intersects(panel_region))
-    {
-      panel_controller_->QueueRedraw();
-      break;
-    }
+      view->QueueDraw();
   }
 
   QuicklistManager *qm = QuicklistManager::Default();
