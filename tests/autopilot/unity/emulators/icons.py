@@ -93,3 +93,7 @@ class HudEmbeddedIcon(UnityIntrospectionObject):
     @property
     def geometry(self):
         return (self.x, self.y, self.width, self.height)
+
+
+class LauncherEntry(UnityIntrospectionObject):
+    """Proxy for the LauncherEntryRemote instances in Unity."""
