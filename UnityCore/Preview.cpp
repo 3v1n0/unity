@@ -38,18 +38,17 @@ namespace
   nux::logging::Logger logger("unity.dash.preview");
 }
 
-Preview::Ptr Preview::PreviewForVariant(unity::glib::Variant &properties)
+Preview::Ptr Preview::PreviewForProtocolObject(glib::Object<GObject> const& proto_obj)
 {
-  unity::glib::Variant renderer(g_variant_get_child_value(properties, 0));
-  std::string renderer_name(renderer.GetString());
-  unity::glib::Object<UnityProtocolPreview> preview(unity_protocol_preview_parse(properties));
-  if (!preview)
+  if (!proto_obj || !UNITY_PROTOCOL_IS_PREVIEW(proto_obj.RawPtr()))
   {
-    LOG_WARN(logger) << "Unable to create Preview object for variant type: " << g_variant_get_type_string(properties);
+    LOG_WARN(logger) << "Unable to create Preview object from " << proto_obj.RawPtr();
     return nullptr;
   }
 
-  auto proto_obj = unity::glib::object_cast<GObject>(preview);
+  std::string renderer_name(
+      unity_protocol_preview_get_renderer_name(
+        UNITY_PROTOCOL_PREVIEW(proto_obj.RawPtr())));
 
   if (renderer_name == "preview-generic")
   {
@@ -77,6 +76,19 @@ Preview::Ptr Preview::PreviewForVariant(unity::glib::Variant &properties)
   }
 
   return nullptr;
+}
+
+Preview::Ptr Preview::PreviewForVariant(glib::Variant &properties)
+{
+  glib::Object<UnityProtocolPreview> preview(unity_protocol_preview_parse(properties));
+  if (!preview)
+  {
+    LOG_WARN(logger) << "Unable to create Preview object for variant type: " << g_variant_get_type_string(properties);
+    return nullptr;
+  }
+
+  auto proto_obj = unity::glib::object_cast<GObject>(preview);
+  return PreviewForProtocolObject(proto_obj);
 }
 
 unity::glib::Object<GIcon> Preview::IconForString(std::string const& icon_hint)

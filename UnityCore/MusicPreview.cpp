@@ -33,6 +33,7 @@ public:
   Impl(MusicPreview* owner, glib::Object<GObject> const& proto_obj);
 
   MusicPreview* owner_;
+  // TODO: keep ref to the proto object as well?
   Tracks::Ptr tracks_model;
 };
 

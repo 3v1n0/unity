@@ -82,7 +82,8 @@ public:
 
   virtual ~Preview();
 
-  static Preview::Ptr PreviewForVariant(unity::glib::Variant& properties);
+  static Preview::Ptr PreviewForVariant(glib::Variant& properties);
+  static Preview::Ptr PreviewForProtocolObject(glib::Object<GObject> const& proto_obj);
 
   nux::RWProperty<std::string> renderer_name;
   nux::RWProperty<std::string> title;
@@ -96,8 +97,8 @@ public:
 protected:
   // this should be UnityProtocolPreview, but we want to keep the usage
   // of libunity-protocol-private private to unity-core
-  Preview(unity::glib::Object<GObject> const& proto_obj);
-  static unity::glib::Object<GIcon> IconForString(std::string const& icon_hint);
+  Preview(glib::Object<GObject> const& proto_obj);
+  static glib::Object<GIcon> IconForString(std::string const& icon_hint);
 
 private:
   class Impl;

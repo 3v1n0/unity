@@ -34,9 +34,34 @@ namespace dash
 class SeriesPreview : public Preview
 {
 public:
+  struct SeriesItem
+  {
+    std::string uri;
+    std::string title;
+    std::string icon_hint;
+
+    SeriesItem() {};
+    SeriesItem(const gchar* uri_, const gchar* title_, const gchar* icon_hint_)
+      : uri(uri_ != NULL ? uri_ : "")
+      , title(title_ != NULL ? title_ : "")
+      , icon_hint(icon_hint_ != NULL ? icon_hint_ : "") {};
+  };
+
   typedef std::shared_ptr<SeriesPreview> Ptr;
+  typedef std::shared_ptr<SeriesItem> SeriesItemPtr;
+  typedef std::vector<SeriesItemPtr> SeriesItemPtrList;
   
   SeriesPreview(unity::glib::Object<GObject> const& proto_obj);
+  ~SeriesPreview();
+
+  nux::RWProperty<int> selected_item_index;
+
+  SeriesItemPtrList GetItems() const;
+  Preview::Ptr GetChildPreview() const;
+
+private:
+  class Impl;
+  Impl* pimpl;
 };
 
 }
