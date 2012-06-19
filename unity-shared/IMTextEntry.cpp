@@ -83,10 +83,6 @@ bool IMTextEntry::TryHandleSpecial(nux::Event const& event)
   {
     Paste();
   }
-  else if (keyval == NUX_VK_TAB || keyval == NUX_VK_LEFT_TAB)
-  {
-    return true;
-  }
   else if (ctrl)
   {
     if (keyval == NUX_VK_LEFT || keyval == NUX_VK_RIGHT || // Ctrl + Move keys

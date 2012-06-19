@@ -43,13 +43,14 @@ public:
 
 private:
   bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
-  bool TryHandleSpecial(nux::Event const& event);
-  void InsertText(std::string const& text);
-  void Cut();
-  void Copy();
-  void Paste(bool primary = false);
-
   void OnMouseButtonUp(int x, int y, unsigned long bflags, unsigned long kflags);
+
+protected:
+  bool TryHandleSpecial(nux::Event const& event);
+  virtual void InsertText(std::string const& text);
+  virtual void Cut();
+  virtual void Copy();
+  virtual void Paste(bool primary = false);
 };
 
 }
