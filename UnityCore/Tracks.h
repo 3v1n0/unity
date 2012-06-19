@@ -17,34 +17,35 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_MUSIC_PREVIEW_H
-#define UNITY_MUSIC_PREVIEW_H
+#ifndef UNITY_TRACKS_H
+#define UNITY_TRACKS_H
 
 #include <memory>
 
-#include <sigc++/trackable.h>
-
-#include "Preview.h"
-#include "Tracks.h"
+#include "Model.h"
+#include "Track.h"
 
 namespace unity
 {
 namespace dash
 {
 
-class MusicPreview : public Preview
+class Tracks : public Model<Track>
 {
 public:
-  typedef std::shared_ptr<MusicPreview> Ptr;
+  typedef std::shared_ptr<Tracks> Ptr;
 
-  MusicPreview(unity::glib::Object<GObject> const& proto_obj);
-  ~MusicPreview();
+  Tracks();
+  Tracks(ModelType model_type);
 
-  Tracks::Ptr GetTracksModel() const;
+  sigc::signal<void, Track const&> track_added;
+  sigc::signal<void, Track const&> track_changed;
+  sigc::signal<void, Track const&> track_removed;
 
 private:
-  class Impl;
-  Impl* pimpl;
+  void OnRowAdded(Track& result);
+  void OnRowChanged(Track& result);
+  void OnRowRemoved(Track& result);
 };
 
 }

@@ -17,14 +17,6 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_MUSIC_PREVIEW_H
-#define UNITY_MUSIC_PREVIEW_H
-
-#include <memory>
-
-#include <sigc++/trackable.h>
-
-#include "Preview.h"
 #include "Tracks.h"
 
 namespace unity
@@ -32,22 +24,35 @@ namespace unity
 namespace dash
 {
 
-class MusicPreview : public Preview
+Tracks::Tracks()
 {
-public:
-  typedef std::shared_ptr<MusicPreview> Ptr;
+  row_added.connect(sigc::mem_fun(this, &Tracks::OnRowAdded));
+  row_changed.connect(sigc::mem_fun(this, &Tracks::OnRowChanged));
+  row_removed.connect(sigc::mem_fun(this, &Tracks::OnRowRemoved));
+}
 
-  MusicPreview(unity::glib::Object<GObject> const& proto_obj);
-  ~MusicPreview();
+Tracks::Tracks(ModelType model_type)
+  : Model<Track>::Model(model_type)
+{
+  row_added.connect(sigc::mem_fun(this, &Tracks::OnRowAdded));
+  row_changed.connect(sigc::mem_fun(this, &Tracks::OnRowChanged));
+  row_removed.connect(sigc::mem_fun(this, &Tracks::OnRowRemoved));
+}
 
-  Tracks::Ptr GetTracksModel() const;
+void Tracks::OnRowAdded(Track& result)
+{
+  track_added.emit(result);
+}
 
-private:
-  class Impl;
-  Impl* pimpl;
-};
+void Tracks::OnRowChanged(Track& result)
+{
+  track_changed.emit(result);
+}
+
+void Tracks::OnRowRemoved(Track& result)
+{
+  track_removed.emit(result);
+}
 
 }
 }
-
-#endif

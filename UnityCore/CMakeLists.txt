@@ -44,6 +44,8 @@ set (CORE_HEADERS
      Result.h
      Results.h
      SeriesPreview.h
+     Track.h
+     Tracks.h
      Variant.h
     )
 
@@ -79,6 +81,8 @@ set (CORE_SOURCES
      Result.cpp
      Results.cpp
      SeriesPreview.cpp
+     Track.cpp
+     Tracks.cpp
      Variant.cpp
     )
 
