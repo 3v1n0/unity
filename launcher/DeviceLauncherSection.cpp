@@ -30,10 +30,6 @@ DeviceLauncherSection::DeviceLauncherSection()
   sig_manager_.Add(new VolumeSignal(monitor_, "volume-added", sigc::mem_fun(this, &DeviceLauncherSection::OnVolumeAdded)));
   sig_manager_.Add(new VolumeSignal(monitor_, "volume-removed", sigc::mem_fun(this, &DeviceLauncherSection::OnVolumeRemoved)));
 
-  typedef glib::Signal<void, GVolumeMonitor*, GMount*> MountSignal;
-  sig_manager_.Add(new MountSignal(monitor_, "mount-added", sigc::mem_fun(this, &DeviceLauncherSection::OnMountAdded)));
-  sig_manager_.Add(new MountSignal(monitor_, "mount-pre-unmount", sigc::mem_fun(this, &DeviceLauncherSection::OnMountPreUnmount)));
-
   device_populate_idle_.Run([&] () {
     PopulateEntries();
     return false;
@@ -86,32 +82,6 @@ void DeviceLauncherSection::OnVolumeRemoved(GVolumeMonitor* monitor, GVolume* vo
     volume_it->second->OnRemoved();
     map_.erase(volume_it);
   }
-}
-
-/* Keep in mind: we could have a GMount without a related GVolume
- * so check everything to avoid unwanted behaviors.
- */
-void DeviceLauncherSection::OnMountAdded(GVolumeMonitor* monitor, GMount* mount)
-{
-  glib::Object<GVolume> volume(g_mount_get_volume(mount));
-
-  auto volume_it = map_.find(volume);
-
-  if (volume_it != map_.end())
-    volume_it->second->UpdateVisibility(1);
-}
-
-/* We don't use "mount-removed" signal since it is received after "volume-removed"
- * signal. You should read also the comment above.
- */
-void DeviceLauncherSection::OnMountPreUnmount(GVolumeMonitor* monitor, GMount* mount)
-{
-  glib::Object<GVolume> volume(g_mount_get_volume(mount));
-
-  auto volume_it = map_.find(volume);
-
-  if (volume_it != map_.end())
-    volume_it->second->UpdateVisibility(0);
 }
 
 } // namespace launcher
