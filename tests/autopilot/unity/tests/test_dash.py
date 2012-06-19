@@ -92,6 +92,7 @@ class DashMultiKeyTests(DashSearchInputTests):
         self.call_gsettings_cmd('set', 'org.gnome.libgnomekbd.keyboard', 'options', "['Compose key\tcompose:caps']")
 
         super(DashMultiKeyTests, self).setUp()
+
     def test_multi_key(self):
         """Pressing 'Multi_key' must not add any characters to the search."""
         self.dash.reveal_application_lens()
