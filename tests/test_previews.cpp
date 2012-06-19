@@ -25,6 +25,7 @@
 #include <UnityCore/Preview.h>
 #include <UnityCore/ApplicationPreview.h>
 #include <UnityCore/MoviePreview.h>
+#include <UnityCore/MusicPreview.h>
 #include <unity-protocol.h>
 
 using namespace std;
@@ -181,6 +182,31 @@ TEST(TestPreviews, DeserializeMovie)
   EXPECT_EQ(preview->year, "2012");
   EXPECT_EQ(preview->rating, 4.0);
   EXPECT_EQ(preview->num_ratings, static_cast<unsigned int>(12));
+}
+
+TEST(TestPreviews, DeserializeMusic)
+{
+  Object<GIcon> icon(g_icon_new_for_string("music", NULL));
+  Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_music_preview_new()));
+  unity_protocol_preview_set_title(proto_obj, "Title");
+  unity_protocol_preview_set_subtitle(proto_obj, "Subtitle");
+  unity_protocol_preview_set_description(proto_obj, "Description");
+  unity_protocol_preview_set_thumbnail(proto_obj, icon);
+  auto music_proto_obj = glib::object_cast<UnityProtocolMusicPreview>(proto_obj);
+
+  Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
+            glib::StealRef());
+  EXPECT_TRUE(IsVariant(v));
+
+  Preview::Ptr base_preview = Preview::PreviewForVariant(v);
+  MusicPreview::Ptr preview = std::dynamic_pointer_cast<MusicPreview>(base_preview);
+  EXPECT_TRUE(preview != nullptr);
+
+  EXPECT_EQ(preview->renderer_name, "preview-music");
+  EXPECT_EQ(preview->title, "Title");
+  EXPECT_EQ(preview->subtitle, "Subtitle");
+  EXPECT_EQ(preview->description, "Description");
+  EXPECT_TRUE(g_icon_equal(preview->image(), icon) != FALSE);
 }
 
 } // Namespace
