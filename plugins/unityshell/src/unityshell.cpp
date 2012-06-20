@@ -100,7 +100,6 @@ const unsigned int SCROLL_DOWN_BUTTON = 6;
 const unsigned int SCROLL_UP_BUTTON = 7;
 
 const std::string RELAYOUT_TIMEOUT = "relayout-timeout";
-const std::string REDRAW_IDLE = "redraw-idle";
 } // namespace local
 } // anon namespace
 
