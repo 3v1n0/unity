@@ -433,9 +433,6 @@ void Controller::Impl::OnLauncherAddRequest(char* path, AbstractLauncherIcon::Pt
   AbstractLauncherIcon::Ptr result = CreateFavorite(path);
   if (result)
   {
-    if (parent_->IsOverlayOpen())
-      ubus.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
-
     RegisterIcon(result);
     if (before)
       model_->ReorderBefore(result, before, false);

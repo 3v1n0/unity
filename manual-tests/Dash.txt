@@ -204,18 +204,6 @@ Action:
 Outcome:
   The Dash should close and the music file should open up in Firefox.
 
-Dash to Laucher application drag
---------------------------------
-
-Setup:
-#. Open the Dash (Super).
-
-Action:
-#. Drag any application onto the Launcher.
-
-Outcome:
-  The Dash should close and the icon should be added to the launcher.
-
 Lens Tests
 ============
 
