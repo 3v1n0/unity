@@ -415,6 +415,11 @@ class LauncherKeyNavTests(LauncherTestCase):
         self.keybinding("switcher/reveal_details")
         self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
 
+    def test_launcher_keynav_cancel_doesnt_activate_icon(self):
+        """This tests when canceling keynav the current icon doesnt activate."""
+
+        self.keyboard.press_and_release("Escape")
+        self.assertThat(self.dash.visible, Eventually(Equals(False)))
 
 class LauncherIconsBehaviorTests(LauncherTestCase):
     """Test the launcher icons interactions"""
