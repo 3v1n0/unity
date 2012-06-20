@@ -113,6 +113,21 @@ ResultView::ResultList ResultView::GetResultList()
   return results_;
 }
 
+// it would be nice to return a result here, but c++ does not have a good mechanism
+// for indicating out of bounds errors. so i return the index
+unsigned int ResultView::GetIndexForUri(const std::string& uri)
+{
+  unsigned int index = 0;
+  for (auto result : results_)
+  {
+    if (G_UNLIKELY(result.uri == uri))
+      break;
+
+    index++;
+  }
+  
+  return index;
+}
 
 long ResultView::ComputeContentSize()
 {
