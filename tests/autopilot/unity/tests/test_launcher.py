@@ -268,9 +268,9 @@ class LauncherKeyNavTests(LauncherTestCase):
         self.launcher_instance.key_nav_start()
 
     def tearDown(self):
-        super(LauncherKeyNavTests, self).tearDown()
         if self.launcher.key_nav_is_active:
             self.launcher_instance.key_nav_cancel()
+        super(LauncherKeyNavTests, self).tearDown()
 
     def test_launcher_keynav_initiate(self):
         """Tests we can initiate keyboard navigation on the launcher."""
