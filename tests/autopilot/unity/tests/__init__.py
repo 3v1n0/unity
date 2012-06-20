@@ -43,6 +43,10 @@ class UnityTestCase(AutopilotTestCase):
         self._setUpUnityLogging()
         self._initial_workspace_num = self.workspace.current_workspace
         self.addCleanup(self.check_test_behavior)
+        #
+        # Setting this here since the show desktop feature seems to be a bit
+        # ropey. Once it's been proven to work reliably we can remove this line:
+        self.set_unity_log_level("unity.plugin", "DEBUG")
 
     def check_test_behavior(self):
         """Fail the test if it did something naughty.
