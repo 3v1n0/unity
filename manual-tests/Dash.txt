@@ -199,7 +199,7 @@ Setup:
 #. Go to the Music Lens.
 
 Action:
-#. Drag any music file into Firefox icon in the launcher.
+#. Drag any music file into the Firefox icon on the launcher.
 
 Outcome:
   The Dash should close and the music file should open up in Firefox.
