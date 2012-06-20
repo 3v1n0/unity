@@ -211,20 +211,33 @@ guint KeyboardUtil::GetKeycodeAboveKeySymbol(KeySym key_symbol) const
   return result;
 }
 
-bool KeyboardUtil::IsPrintableKeySymbol(KeySym key_symbol)
+bool KeyboardUtil::IsPrintableKeySymbol(KeySym sym)
 {
   bool printable_key = false;
 
-  /* Excluding meta chars, see keysymdef.h for reference */
-  if (key_symbol < XK_Select || key_symbol > XK_Hyper_R)
+  if (sym == XK_Delete || sym == XK_BackSpace || sym == XK_Return)
   {
-    if (key_symbol == XK_Delete || key_symbol == XK_BackSpace)
-      printable_key = true;
-    else
-      printable_key = g_unichar_isprint(key_symbol);
+    printable_key = true;
+  }
+  /* Excluding terminal and modifiers keys, see keysymdef.h for reference */
+  else if (sym < 0xfd)
+  {
+    printable_key = g_unichar_isprint(sym);
   }
 
   return printable_key;
+}
+
+bool KeyboardUtil::IsMoveKeySymbol(KeySym sym)
+{
+  bool symbol_key = false;
+
+  if (sym >= XK_Home && sym <= XK_Begin)
+  {
+    symbol_key = true;
+  }
+
+  return symbol_key;
 }
 
 }

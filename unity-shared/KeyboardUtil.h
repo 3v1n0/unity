@@ -35,10 +35,12 @@ class KeyboardUtil
 {
 public:
   KeyboardUtil(Display *display);
-  virtual ~KeyboardUtil();
+  ~KeyboardUtil();
 
   guint GetKeycodeAboveKeySymbol(KeySym key_symbol) const;
+
   static bool IsPrintableKeySymbol(KeySym key_symbol);
+  static bool IsMoveKeySymbol(KeySym sym);
 
 private:
   bool CompareOffsets (int current_x, int current_y, int best_x, int best_y) const;

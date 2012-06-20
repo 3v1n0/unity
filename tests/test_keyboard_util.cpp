@@ -18,6 +18,7 @@
  */
 
 #include <gtest/gtest.h>
+#include <algorithm>
 
 #include "KeyboardUtil.h"
 
@@ -37,8 +38,6 @@ TEST(TestKeyboardUtil, PrintableKeySymbols)
   EXPECT_TRUE(KeyboardUtil::IsPrintableKeySymbol(XK_ntilde));
   EXPECT_TRUE(KeyboardUtil::IsPrintableKeySymbol(XK_0));
   EXPECT_TRUE(KeyboardUtil::IsPrintableKeySymbol(XK_exclam));
-  EXPECT_TRUE(KeyboardUtil::IsPrintableKeySymbol(XK_Home));
-  EXPECT_TRUE(KeyboardUtil::IsPrintableKeySymbol(XK_End));
 
   EXPECT_FALSE(KeyboardUtil::IsPrintableKeySymbol(XK_F1));
   EXPECT_FALSE(KeyboardUtil::IsPrintableKeySymbol(XK_Select));
@@ -50,6 +49,22 @@ TEST(TestKeyboardUtil, PrintableKeySymbols)
   EXPECT_FALSE(KeyboardUtil::IsPrintableKeySymbol(XK_Insert));
   EXPECT_FALSE(KeyboardUtil::IsPrintableKeySymbol(XK_Num_Lock));
   EXPECT_FALSE(KeyboardUtil::IsPrintableKeySymbol(XK_Caps_Lock));
+  EXPECT_FALSE(KeyboardUtil::IsPrintableKeySymbol(XK_ISO_Level3_Shift));
+}
+
+TEST(TestKeyboardUtil, MoveKeySymbols)
+{
+  std::vector<KeySym> move_symbols { XK_Home, XK_Left, XK_Up, XK_Right, XK_Down,
+                                     XK_Prior, XK_Page_Up, XK_Next, XK_Page_Down,
+                                     XK_End, XK_Begin };
+
+  for (KeySym sym = 0; sym < XK_VoidSymbol; ++sym)
+  {
+    if (std::find(move_symbols.begin(), move_symbols.end(), sym) != move_symbols.end())
+      EXPECT_TRUE(KeyboardUtil::IsMoveKeySymbol(sym));
+    else
+      EXPECT_FALSE(KeyboardUtil::IsMoveKeySymbol(sym));
+  }
 }
 
 } // Namespace
