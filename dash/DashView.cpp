@@ -891,8 +891,18 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     }
   }
 
-  if ((direction == KEY_NAV_NONE && ui::KeyboardUtil::IsPrintableKeySymbol(x11_key_code)) ||
-      search_bar_->im_preedit)
+  bool search_key = false;
+
+  if (direction == KEY_NAV_NONE)
+  {
+    if (ui::KeyboardUtil::IsPrintableKeySymbol(x11_key_code) ||
+        ui::KeyboardUtil::IsMoveKeySymbol(x11_key_code))
+    {
+      search_key = true;
+    }
+  }
+
+  if (search_key || search_bar_->im_preedit)
   {
     // then send the event to the search entry
     return search_bar_->text_entry();
