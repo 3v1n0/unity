@@ -283,6 +283,8 @@ class SwitcherDetailsTests(SwitcherTestCase):
 
         """
         #Fixme: setup
+        initial_workspace = self.workspace.current_workspace
+        self.addCleanup(self.workspace.switch_to, initial_workspace)
         self.close_all_app('Character Map')
         self.workspace.switch_to(1)
         self.start_app("Character Map")

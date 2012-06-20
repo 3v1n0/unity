@@ -462,6 +462,8 @@ class HudVisualTests(HudTestsBase):
         from the current desktop. As the Hud must go through the entire window
         stack to find the top most window.
         """
+        initial_workspace = self.workspace.current_workspace
+        self.addCleanup(self.workspace.switch_to, initial_workspace)
         self.workspace.switch_to(0)
         calc = self.start_app("Calculator")
         self.assertTrue(calc.is_active)
