@@ -378,6 +378,29 @@ class LauncherKeyNavTests(LauncherTestCase):
         self.assertTrue(calc.is_active)
         self.assertFalse(mahjongg.is_active)
 
+    def test_launcher_keynav_expo_focus(self):
+        """When entering expo mode from KeyNav the Desktop must get focus."""
+
+        for icon in self.launcher.model.get_launcher_icons_for_monitor(self.launcher_monitor):
+            if (icon.tooltip_text == "Workspace Switcher"):
+                self.launcher_instance.key_nav_activate()
+                break
+            self.launcher_instance.key_nav_next()
+
+        self.assertThat(self.panels.get_active_panel().title, Eventually(Equals("Ubuntu Desktop")))
+
+    def test_launcher_keynav_expo_exit_on_esc(self):
+        """Esc should quit expo when entering it from KeyNav."""
+
+        for icon in self.launcher.model.get_launcher_icons_for_monitor(self.launcher_monitor):
+            if (icon.tooltip_text == "Workspace Switcher"):
+                self.launcher_instance.key_nav_activate()
+                break
+            self.launcher_instance.key_nav_next()
+
+        self.keyboard.press_and_release("Escape")
+        self.assertThat(self.window_manager.expo_active, Eventually(Equals(False)))
+
     def test_launcher_keynav_alt_tab_quits(self):
         """Tests that alt+tab exits keynav mode."""
 
