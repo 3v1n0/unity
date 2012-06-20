@@ -213,9 +213,13 @@ class PanelWindowButtonsTests(PanelTestsBase):
         # THis initially used Show Desktop mode, but it's very buggy from within
         # autopilot. We assume that workspace 2 is empty (which is safe for the
         # jenkins runs at least.)
+        initial_workspace = self.workspace.current_workspace
+        self.addCleanup(self.workspace.switch_to, initial_workspace)
+
         self.workspace.switch_to(2)
         sleep(.5)
         self.assertFalse(self.panel.window_buttons_shown)
+
         self.panel.move_mouse_over_window_buttons()
         sleep(self.panel.menus.fadein_duration / 1000.0)
         self.assertFalse(self.panel.window_buttons_shown)
