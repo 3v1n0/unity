@@ -379,6 +379,7 @@ class LauncherKeyNavTests(LauncherTestCase):
         self.assertFalse(mahjongg.is_active)
 
     def test_launcher_keynav_expo_focus(self):
+        """When entering expo mode from KeyNav the Desktop must get focus."""
 
         for icon in self.launcher.model.get_launcher_icons_for_monitor(self.launcher_monitor):
             if (icon.tooltip_text == "Workspace Switcher"):
