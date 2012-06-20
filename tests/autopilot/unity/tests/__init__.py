@@ -40,6 +40,7 @@ class UnityTestCase(AutopilotTestCase):
 
     def setUp(self):
         super(UnityTestCase, self).setUp()
+        self._setUpUnityLogging()
         self._initial_workspace_num = self.workspace.current_workspace
         self.addCleanup(self.check_test_behavior)
 
@@ -160,5 +161,8 @@ class UnityTestCase(AutopilotTestCase):
         Components are dotted unity component names. The empty string specifies
         the root logging component.
         """
+        valid_levels = ('TRACE', 'DEBUG', 'INFO', 'WARN', 'WARNING', 'ERROR')
+        if level not in valid_levels:
+            raise ValueError("Log level '%s' must be one of: %r" % (level, valid_levels))
         set_log_severity(component, level)
 
