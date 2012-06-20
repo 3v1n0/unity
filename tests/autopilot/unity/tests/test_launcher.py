@@ -378,6 +378,16 @@ class LauncherKeyNavTests(LauncherTestCase):
         self.assertTrue(calc.is_active)
         self.assertFalse(mahjongg.is_active)
 
+    def test_launcher_keynav_expo_focus(self):
+
+        for icon in self.launcher.model.get_launcher_icons_for_monitor(self.launcher_monitor):
+            if (icon.tooltip_text == "Workspace Switcher"):
+                self.launcher_instance.key_nav_activate()
+                break
+            self.launcher_instance.key_nav_next()
+
+        self.assertThat(self.panels.get_active_panel().title, Equals("Ubuntu Desktop"));
+
     def test_launcher_keynav_alt_tab_quits(self):
         """Tests that alt+tab exits keynav mode."""
 
