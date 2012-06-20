@@ -19,6 +19,7 @@ class ShowDesktopTests(UnityTestCase):
 
     def setUp(self):
         super(ShowDesktopTests, self).setUp()
+        self.set_unity_log_level("unity.plugin", "DEBUG")
         # we need this to let the unity models update after we shutdown apps
         # before we start the next test.
         sleep(2)
