@@ -859,7 +859,7 @@ PluginAdapter::OnShowDesktop()
 void
 PluginAdapter::OnLeaveDesktop()
 {
-  LOG_DEBUG(logger) << "Not in show desktop mode.";
+  LOG_DEBUG(logger) << "No longer in show desktop mode.";
   _in_show_desktop = false;
 }
 
