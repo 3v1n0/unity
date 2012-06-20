@@ -564,7 +564,7 @@ Expected Results:
  * All icons are present in the Launcher
 
 
-Test 
+Test launcher removes device icons
 ------------------------------------------------------------
 This test makes sure that Unity doesn't shows internal partitions after
 they have been unmounted.
