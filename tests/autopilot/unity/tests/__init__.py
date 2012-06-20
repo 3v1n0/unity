@@ -38,6 +38,51 @@ class UnityTestCase(AutopilotTestCase):
     def __init__(self, *args):
         super(UnityTestCase, self).__init__(*args)
 
+    def setUp(self):
+        super(UnityTestCase, self).setUp()
+        self._setUpUnityLogging()
+        self._initial_workspace_num = self.workspace.current_workspace
+        self.addCleanup(self.check_test_behavior)
+        #
+        # Setting this here since the show desktop feature seems to be a bit
+        # ropey. Once it's been proven to work reliably we can remove this line:
+        self.set_unity_log_level("unity.plugin", "DEBUG")
+
+    def check_test_behavior(self):
+        """Fail the test if it did something naughty.
+
+        This includes leaving the dash or the hud open, changing the current
+        workspace, or leaving the system in show_desktop mode.
+
+        """
+        well_behaved = True
+        reasons = []
+
+        # Have we switched workspace?
+        if self.workspace.current_workspace != self._initial_workspace_num:
+            well_behaved = False
+            reasons.append("The test changed the active workspace from %d to %d." \
+                % (self._initial_workspace_num, self.workspace.current_workspace))
+            self.workspace.switch_to(self._initial_workspace_num)
+        # Have we left the dash open?
+        if self.dash.visible:
+            well_behaved = False
+            reasons.append("The test left the dash open.")
+            self.dash.ensure_hidden()
+        # ... or the hud?
+        if self.hud.visible:
+            well_behaved = False
+            reasons.append("The test left the hud open.")
+            self.hud.ensure_hidden()
+        # Are we in show desktop mode?
+        if self.window_manager.showdesktop_active:
+            well_behaved = False
+            reasons.append("The test left the system in show_desktop mode.")
+            self.window_manager.leave_show_desktop()
+
+        if not well_behaved:
+            self.fail("/n".join(reasons))
+
     @property
     def dash(self):
         if not getattr(self, '__dash', None):
@@ -120,5 +165,8 @@ class UnityTestCase(AutopilotTestCase):
         Components are dotted unity component names. The empty string specifies
         the root logging component.
         """
+        valid_levels = ('TRACE', 'DEBUG', 'INFO', 'WARN', 'WARNING', 'ERROR')
+        if level not in valid_levels:
+            raise ValueError("Log level '%s' must be one of: %r" % (level, valid_levels))
         set_log_severity(component, level)
 
