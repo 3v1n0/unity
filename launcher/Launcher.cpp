@@ -2805,9 +2805,6 @@ void Launcher::ProcessDndDrop(int x, int y)
 
         if (path)
         {
-          if (IsOverlayOpen())
-            ubus_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
-
           launcher_addrequest.emit(path, _dnd_hovered_icon);
           g_free(path);
         }
