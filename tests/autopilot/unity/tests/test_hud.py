@@ -229,6 +229,8 @@ class HudBehaviorTests(HudTestsBase):
 
     def test_hud_closes_on_workspace_switch(self):
         """This test shows that when you switch to another workspace the hud closes."""
+        initial_workspace = self.workspace.current_workspace
+        self.addCleanup(self.workspace.switch_to, initial_workspace)
         self.hud.ensure_visible()
         self.workspace.switch_to(1)
         self.workspace.switch_to(2)
