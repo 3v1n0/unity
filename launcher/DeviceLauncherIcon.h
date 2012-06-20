@@ -66,7 +66,7 @@ private:
   void ShowNotification(std::string const&, unsigned, glib::Object<GdkPixbuf> const&, std::string const&);
 
 private:
-  glib::SignalManager sig_manager_;
+  glib::Signal<void, GVolume*> signal_volume_changed_;
   glib::Source::UniquePtr changed_timeout_;
   glib::Object<GVolume> volume_;
 

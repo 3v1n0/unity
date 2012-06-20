@@ -48,8 +48,7 @@ DeviceLauncherIcon::DeviceLauncherIcon(glib::Object<GVolume> const& volume)
   : SimpleLauncherIcon()
   , volume_(volume)
 {
-  typedef glib::Signal<void, GVolume*> VolumeSignal;
-  sig_manager_.Add(new VolumeSignal(volume_, "changed", sigc::mem_fun(this, &DeviceLauncherIcon::OnVolumeChanged)));
+  signal_volume_changed_.Connect(volume, "changed", sigc::mem_fun(this, &DeviceLauncherIcon::OnVolumeChanged));
 
   DevicesSettings::GetDefault().changed.connect(sigc::mem_fun(this, &DeviceLauncherIcon::OnSettingsChanged));
 
