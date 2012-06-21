@@ -1425,13 +1425,9 @@ void UnityScreen::nuxDamageCompiz()
 
   CompRegion nux_damage;
 
-  std::vector<nux::Geometry> dirty = wt->GetDrawList();
-  for (std::vector<nux::Geometry>::iterator it = dirty.begin(), end = dirty.end();
-       it != end; ++it)
-  {
-    nux::Geometry const& geo = *it;
+  std::vector<nux::Geometry> const &dirty = wt->GetDrawList();
+  for (auto geo : dirty)
     nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
-  }
 
   if (launcher_controller_->IsOverlayOpen())
   {
