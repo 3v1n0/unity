@@ -17,8 +17,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_APPLICATION_PREVIEW_H
-#define UNITY_APPLICATION_PREVIEW_H
+#ifndef UNITY_SERIES_PREVIEW_H
+#define UNITY_SERIES_PREVIEW_H
 
 #include <memory>
 
@@ -31,18 +31,33 @@ namespace unity
 namespace dash
 {
 
-class ApplicationPreview : public Preview
+class SeriesPreview : public Preview
 {
 public:
-  typedef std::shared_ptr<ApplicationPreview> Ptr;
-  
-  ApplicationPreview(unity::glib::Object<GObject> const& proto_obj);
-  ~ApplicationPreview();
+  struct SeriesItem
+  {
+    std::string uri;
+    std::string title;
+    std::string icon_hint;
 
-  nux::RWProperty<std::string> last_update;
-  nux::RWProperty<std::string> copyright;
-  nux::RWProperty<std::string> license;
-  nux::RWProperty<glib::Object<GIcon>> app_icon;
+    SeriesItem() {};
+    SeriesItem(const gchar* uri_, const gchar* title_, const gchar* icon_hint_)
+      : uri(uri_ != NULL ? uri_ : "")
+      , title(title_ != NULL ? title_ : "")
+      , icon_hint(icon_hint_ != NULL ? icon_hint_ : "") {};
+  };
+
+  typedef std::shared_ptr<SeriesPreview> Ptr;
+  typedef std::shared_ptr<SeriesItem> SeriesItemPtr;
+  typedef std::vector<SeriesItemPtr> SeriesItemPtrList;
+  
+  SeriesPreview(unity::glib::Object<GObject> const& proto_obj);
+  ~SeriesPreview();
+
+  nux::RWProperty<int> selected_item_index;
+
+  SeriesItemPtrList GetItems() const;
+  Preview::Ptr GetChildPreview() const;
 
 private:
   class Impl;

@@ -17,8 +17,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_APPLICATION_PREVIEW_H
-#define UNITY_APPLICATION_PREVIEW_H
+#ifndef UNITY_MOVIE_PREVIEW_H
+#define UNITY_MOVIE_PREVIEW_H
 
 #include <memory>
 
@@ -31,18 +31,17 @@ namespace unity
 namespace dash
 {
 
-class ApplicationPreview : public Preview
+class MoviePreview : public Preview
 {
 public:
-  typedef std::shared_ptr<ApplicationPreview> Ptr;
+  typedef std::shared_ptr<MoviePreview> Ptr;
   
-  ApplicationPreview(unity::glib::Object<GObject> const& proto_obj);
-  ~ApplicationPreview();
+  MoviePreview(unity::glib::Object<GObject> const& proto_obj);
+  ~MoviePreview();
 
-  nux::RWProperty<std::string> last_update;
-  nux::RWProperty<std::string> copyright;
-  nux::RWProperty<std::string> license;
-  nux::RWProperty<glib::Object<GIcon>> app_icon;
+  nux::RWProperty<std::string> year;
+  nux::RWProperty<float> rating;
+  nux::RWProperty<unsigned int> num_ratings;
 
 private:
   class Impl;

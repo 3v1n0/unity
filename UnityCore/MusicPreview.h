@@ -17,32 +17,30 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_APPLICATION_PREVIEW_H
-#define UNITY_APPLICATION_PREVIEW_H
+#ifndef UNITY_MUSIC_PREVIEW_H
+#define UNITY_MUSIC_PREVIEW_H
 
 #include <memory>
 
 #include <sigc++/trackable.h>
 
 #include "Preview.h"
+#include "Tracks.h"
 
 namespace unity
 {
 namespace dash
 {
 
-class ApplicationPreview : public Preview
+class MusicPreview : public Preview
 {
 public:
-  typedef std::shared_ptr<ApplicationPreview> Ptr;
-  
-  ApplicationPreview(unity::glib::Object<GObject> const& proto_obj);
-  ~ApplicationPreview();
+  typedef std::shared_ptr<MusicPreview> Ptr;
 
-  nux::RWProperty<std::string> last_update;
-  nux::RWProperty<std::string> copyright;
-  nux::RWProperty<std::string> license;
-  nux::RWProperty<glib::Object<GIcon>> app_icon;
+  MusicPreview(unity::glib::Object<GObject> const& proto_obj);
+  ~MusicPreview();
+
+  Tracks::Ptr GetTracksModel() const;
 
 private:
   class Impl;

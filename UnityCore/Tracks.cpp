@@ -17,39 +17,42 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_APPLICATION_PREVIEW_H
-#define UNITY_APPLICATION_PREVIEW_H
-
-#include <memory>
-
-#include <sigc++/trackable.h>
-
-#include "Preview.h"
+#include "Tracks.h"
 
 namespace unity
 {
 namespace dash
 {
 
-class ApplicationPreview : public Preview
+Tracks::Tracks()
 {
-public:
-  typedef std::shared_ptr<ApplicationPreview> Ptr;
-  
-  ApplicationPreview(unity::glib::Object<GObject> const& proto_obj);
-  ~ApplicationPreview();
+  row_added.connect(sigc::mem_fun(this, &Tracks::OnRowAdded));
+  row_changed.connect(sigc::mem_fun(this, &Tracks::OnRowChanged));
+  row_removed.connect(sigc::mem_fun(this, &Tracks::OnRowRemoved));
+}
 
-  nux::RWProperty<std::string> last_update;
-  nux::RWProperty<std::string> copyright;
-  nux::RWProperty<std::string> license;
-  nux::RWProperty<glib::Object<GIcon>> app_icon;
+Tracks::Tracks(ModelType model_type)
+  : Model<Track>::Model(model_type)
+{
+  row_added.connect(sigc::mem_fun(this, &Tracks::OnRowAdded));
+  row_changed.connect(sigc::mem_fun(this, &Tracks::OnRowChanged));
+  row_removed.connect(sigc::mem_fun(this, &Tracks::OnRowRemoved));
+}
 
-private:
-  class Impl;
-  Impl* pimpl;
-};
+void Tracks::OnRowAdded(Track& result)
+{
+  track_added.emit(result);
+}
+
+void Tracks::OnRowChanged(Track& result)
+{
+  track_changed.emit(result);
+}
+
+void Tracks::OnRowRemoved(Track& result)
+{
+  track_removed.emit(result);
+}
 
 }
 }
-
-#endif
