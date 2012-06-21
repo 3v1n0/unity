@@ -1198,8 +1198,8 @@ void Controller::KeyNavTerminate(bool activate)
 
   if (activate)
   {
-    pimpl->sources_.Add(std::make_shared<glib::Idle>([this] () {
-        pimpl->model_->Selection()->Activate(ActionArg(ActionArg::LAUNCHER, 0));
+    pimpl->sources_.Add(std::make_shared<glib::Idle>([this] {
+      pimpl->model_->Selection()->Activate(ActionArg(ActionArg::LAUNCHER, 0));
       return false;
     }));
   }
