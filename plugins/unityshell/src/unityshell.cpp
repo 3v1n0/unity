@@ -1371,6 +1371,13 @@ bool UnityScreen::shellIsHidden(CompOutput const& output)
 
 void UnityScreen::compizDamageNux(CompRegion const& damage)
 {
+  CompRect::vector const& rects(damage.rects());
+  for (const CompRect &r : rects)
+  {
+    nux::Geometry geo(r.x(), r.y(), r.width(), r.height());
+    BackgroundEffectHelper::ProcessDamage(geo);
+  }
+
   auto launchers = launcher_controller_->launchers();
   for (auto launcher : launchers)
   {
@@ -1612,15 +1619,7 @@ void UnityScreen::handleEvent(XEvent* event)
 
 void UnityScreen::damageRegion(const CompRegion &region)
 {
-  const CompRect::vector &rects(region.rects());
-  for (const CompRect &r : rects)
-  {
-    nux::Geometry geo(r.x(), r.y(), r.width(), r.height());
-    BackgroundEffectHelper::ProcessDamage(geo);
-  }
-
   compizDamageNux(region);
-
   cScreen->damageRegion(region);
 }
 
