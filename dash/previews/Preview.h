@@ -32,6 +32,8 @@ namespace unity
 {
 namespace dash
 {
+namespace previews
+{
 class Preview : public nux::View, public debug::Introspectable
 {
 
@@ -54,6 +56,7 @@ protected:
   
 };
 
+}
 }
 }
 

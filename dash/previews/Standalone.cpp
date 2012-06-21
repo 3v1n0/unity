@@ -44,7 +44,7 @@ public:
   static void InitWindowThread (nux::NThread* thread, void* InitData);
   void Init ();
   nux::Layout *layout;
-  Preview *view;
+  previews::Preview *view;
 };
 
 TestRunner::TestRunner ()
@@ -59,7 +59,7 @@ void TestRunner::Init ()
 {
   layout = new nux::VLayout(NUX_TRACKER_LOCATION);
 
-  view = new Preview(); // this just makes the baseclass, you'll want to make 
+  view = new previews::Preview(); // this just makes the baseclass, you'll want to make 
   
   view->SetMinMaxSize(WIDTH, HEIGHT);
   layout->AddView (view, 1, nux::MINOR_POSITION_CENTER);

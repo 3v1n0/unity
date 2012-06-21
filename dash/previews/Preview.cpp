@@ -28,6 +28,9 @@ namespace unity
 {
 namespace dash
 {
+namespace previews
+{
+
 namespace
 {
 nux::logging::Logger logger("unity.dash.preview");
@@ -77,5 +80,6 @@ void Preview::AddProperties(GVariantBuilder* builder)
 {
 }
 
+}
 }
 }
