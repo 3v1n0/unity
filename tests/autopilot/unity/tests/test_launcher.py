@@ -228,11 +228,8 @@ class LauncherShortcutTests(LauncherTestCase):
     def setUp(self):
         super(LauncherShortcutTests, self).setUp()
         self.launcher_instance.keyboard_reveal_launcher()
+        self.addCleanup(self.launcher_instance.keyboard_unreveal_launcher)
         sleep(2)
-
-    def tearDown(self):
-        super(LauncherShortcutTests, self).tearDown()
-        self.launcher_instance.keyboard_unreveal_launcher()
 
     def test_launcher_keyboard_reveal_shows_shortcut_hints(self):
         """Launcher icons must show shortcut hints after revealing with keyboard."""
