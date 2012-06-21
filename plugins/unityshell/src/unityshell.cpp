@@ -1371,6 +1371,9 @@ bool UnityScreen::shellIsHidden(CompOutput const& output)
 
 void UnityScreen::compizDamageNux(CompRegion const& damage)
 {
+  if (!launcher_controller_)
+    return;
+
   CompRect::vector const& rects(damage.rects());
   for (const CompRect &r : rects)
   {
