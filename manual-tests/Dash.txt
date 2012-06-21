@@ -105,7 +105,7 @@ Setup:
 
 Outcome:
   "All" should be selected by default in every filter category.
-  
+
 Test "All" Button 2
 Note: Should be automated
 -------------------
@@ -119,7 +119,7 @@ Action:
 
 Outcome:
   Click on it should do nothing.
-  
+
 
 Test "All" Button 3
 Note: Should be automated
@@ -190,6 +190,20 @@ Outcome:
   this saturation-process should be smooth and without flicker.
   The tinting of the non-drag-targets should not change.
 
+
+Dash to Launcher document-file drag
+-----------------------------------
+
+Setup:
+#. Open the Dash (Super).
+#. Go to the Music Lens.
+
+Action:
+#. Drag any music file into the Firefox icon on the launcher.
+
+Outcome:
+  The Dash should close and the music file should open up in Firefox.
+
 Lens Tests
 ============
 
@@ -217,7 +231,7 @@ Regression testcase for https://bugs.launchpad.net/unity/+bug/929506
 Note: Should be automated
 ----------------------------------------------------
 
-Setup: 
+Setup:
 #. Restart your computer to get a clean unity instance
 
 Action:

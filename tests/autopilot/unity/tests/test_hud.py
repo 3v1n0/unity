@@ -229,11 +229,20 @@ class HudBehaviorTests(HudTestsBase):
 
     def test_hud_closes_on_workspace_switch(self):
         """This test shows that when you switch to another workspace the hud closes."""
+        initial_workspace = self.workspace.current_workspace
+        self.addCleanup(self.workspace.switch_to, initial_workspace)
         self.hud.ensure_visible()
         self.workspace.switch_to(1)
         self.workspace.switch_to(2)
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
+    def test_hud_closes_on_spread(self):
+        """This test shows that when the spread is initiated, the hud closes."""
+        self.hud.ensure_visible()
+        self.addCleanup(self.keybinding, "spread/cancel")
+        self.keybinding("spread/start")
+        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
+        self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
 class HudLauncherInteractionsTests(HudTestsBase):
 
@@ -460,6 +469,8 @@ class HudVisualTests(HudTestsBase):
         from the current desktop. As the Hud must go through the entire window
         stack to find the top most window.
         """
+        initial_workspace = self.workspace.current_workspace
+        self.addCleanup(self.workspace.switch_to, initial_workspace)
         self.workspace.switch_to(0)
         calc = self.start_app("Calculator")
         self.assertTrue(calc.is_active)

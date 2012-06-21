@@ -253,6 +253,8 @@ class SwitcherDetailsTests(SwitcherTestCase):
 
     def test_details_mode_on_delay(self):
         """Test that details mode activates on a timeout."""
+        initial_workspace = self.workspace.current_workspace
+        self.addCleanup(self.workspace.switch_to, initial_workspace)
         #FIXME: Setup
         self.close_all_app('Character Map')
         self.workspace.switch_to(1)
@@ -281,6 +283,8 @@ class SwitcherDetailsTests(SwitcherTestCase):
 
         """
         #Fixme: setup
+        initial_workspace = self.workspace.current_workspace
+        self.addCleanup(self.workspace.switch_to, initial_workspace)
         self.close_all_app('Character Map')
         self.workspace.switch_to(1)
         self.start_app("Character Map")
@@ -349,6 +353,8 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
 
     def test_switcher_shows_current_workspace_only(self):
         """Switcher must show apps from the current workspace only."""
+        initial_workspace = self.workspace.current_workspace
+        self.addCleanup(self.workspace.switch_to, initial_workspace)
         #FIXME: SETUP
         self.close_all_app('Calculator')
         self.close_all_app('Character Map')
@@ -370,6 +376,8 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
 
     def test_switcher_all_mode_shows_all_apps(self):
         """Test switcher 'show_all' mode shows apps from all workspaces."""
+        initial_workspace = self.workspace.current_workspace
+        self.addCleanup(self.workspace.switch_to, initial_workspace)
         self.close_all_app('Calculator')
         self.close_all_app('Character Map')
 
@@ -395,6 +403,8 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
         another instance of the same application on a different workspace.
 
         """
+        initial_workspace = self.workspace.current_workspace
+        self.addCleanup(self.workspace.switch_to, initial_workspace)
         #FIXME this is setup.
         # disable automatic gridding of the switcher after a timeout, since it makes
         # it harder to write the tests.

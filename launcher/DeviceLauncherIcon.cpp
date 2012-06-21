@@ -40,12 +40,16 @@ namespace
 
 nux::logging::Logger logger("unity.launcher");
 
+const unsigned int volume_changed_timeout =  500;
+
 }
 
 DeviceLauncherIcon::DeviceLauncherIcon(glib::Object<GVolume> const& volume)
   : SimpleLauncherIcon()
   , volume_(volume)
 {
+  signal_volume_changed_.Connect(volume, "changed", sigc::mem_fun(this, &DeviceLauncherIcon::OnVolumeChanged));
+
   DevicesSettings::GetDefault().changed.connect(sigc::mem_fun(this, &DeviceLauncherIcon::OnSettingsChanged));
 
   // Checks if in favorites!
@@ -57,6 +61,42 @@ DeviceLauncherIcon::DeviceLauncherIcon(glib::Object<GVolume> const& volume)
 
   UpdateDeviceIcon();
   UpdateVisibility();
+}
+
+void DeviceLauncherIcon::OnVolumeChanged(GVolume* volume)
+{
+  if (!G_IS_VOLUME(volume))
+    return;
+
+  changed_timeout_.reset(new glib::Timeout(volume_changed_timeout, [this]() {
+    UpdateDeviceIcon();
+    UpdateVisibility();
+    return false;
+  }));
+}
+
+void DeviceLauncherIcon::UpdateVisibility()
+{
+  switch (DevicesSettings::GetDefault().GetDevicesOption())
+  {
+    case DevicesSettings::NEVER:
+      SetQuirk(QUIRK_VISIBLE, false);
+      break;
+    case DevicesSettings::ONLY_MOUNTED:
+      if (keep_in_launcher_)
+      {
+        SetQuirk(QUIRK_VISIBLE, true);
+      }
+      else
+      {
+        glib::Object<GMount> mount(g_volume_get_mount(volume_));
+        SetQuirk(QUIRK_VISIBLE, mount);
+      }
+      break;
+    case DevicesSettings::ALWAYS:
+      SetQuirk(QUIRK_VISIBLE, true);
+      break;
+  }
 }
 
 void DeviceLauncherIcon::UpdateDeviceIcon()
@@ -393,34 +433,6 @@ void DeviceLauncherIcon::StopDrive()
                NULL,
                NULL,
                NULL);
-}
-
-void DeviceLauncherIcon::UpdateVisibility(int visibility)
-{
-  switch (DevicesSettings::GetDefault().GetDevicesOption())
-  {
-    case DevicesSettings::NEVER:
-      SetQuirk(QUIRK_VISIBLE, false);
-      break;
-    case DevicesSettings::ONLY_MOUNTED:
-      if (keep_in_launcher_)
-      {
-        SetQuirk(QUIRK_VISIBLE, true);
-      }
-      else if (visibility < 0)
-      {
-        glib::Object<GMount> mount(g_volume_get_mount(volume_));
-        SetQuirk(QUIRK_VISIBLE, mount.RawPtr() != NULL);
-      }
-      else
-      {
-        SetQuirk(QUIRK_VISIBLE, visibility);
-      }
-      break;
-    case DevicesSettings::ALWAYS:
-      SetQuirk(QUIRK_VISIBLE, true);
-      break;
-  }
 }
 
 void DeviceLauncherIcon::OnSettingsChanged()
