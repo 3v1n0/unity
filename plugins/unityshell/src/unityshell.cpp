@@ -900,6 +900,14 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
     }
   }
 
+  /*
+   * Only clear the draw list now that we've actually drawn everything.
+   * Since fixing Nux bug LP: #1014610, views will remain marked as queued
+   * for drawing until they're acutally drawn. Calling ClearDrawList does
+   * not unmark the views.
+   */
+  wt->ClearDrawList();
+
   doShellRepaint = false;
   damaged = false;
 }
@@ -1304,8 +1312,6 @@ void UnityScreen::preparePaint(int ms)
 
 void UnityScreen::donePaint()
 {
-  wt->ClearDrawList();
-
   std::list <ShowdesktopHandlerWindowInterface *> remove_windows;
 
   for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
