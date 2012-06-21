@@ -1326,13 +1326,13 @@ void UnityScreen::donePaint()
   cScreen->donePaint ();
 }
 
-bool UnityScreen::shellIsHidden(const CompOutput &output)
+bool UnityScreen::shellIsHidden(CompOutput const& output)
 {
   bool hidden = false;
-  const std::vector<Window> &nuxwins(nux::XInputWindow::NativeHandleList());
+  std::vector<Window> const& nuxwins(nux::XInputWindow::NativeHandleList());
 
   // Loop through windows from back to front
-  for (CompWindow *w : screen->windows ())
+  for (CompWindow* w : screen->windows ())
   {
     /*
      * The shell is hidden if there exists any window that fully covers
@@ -1363,7 +1363,7 @@ bool UnityScreen::shellIsHidden(const CompOutput &output)
   return hidden;
 }
 
-void UnityScreen::compizDamageNux(const CompRegion &damage)
+void UnityScreen::compizDamageNux(CompRegion const& damage)
 {
   auto launchers = launcher_controller_->launchers();
   for (auto launcher : launchers)
@@ -1385,8 +1385,8 @@ void UnityScreen::compizDamageNux(const CompRegion &damage)
     }
   }
 
-  const std::vector<nux::View*> &panels(panel_controller_->GetPanelViews());
-  for (nux::View *view : panels)
+  std::vector<nux::View*> const& panels(panel_controller_->GetPanelViews());
+  for (nux::View* view : panels)
   {
     nux::Geometry geo = view->GetAbsoluteGeometry();
     CompRegion panel_region(geo.x, geo.y, geo.width, geo.height);
@@ -1394,10 +1394,10 @@ void UnityScreen::compizDamageNux(const CompRegion &damage)
       view->QueueDraw();
   }
 
-  QuicklistManager *qm = QuicklistManager::Default();
+  QuicklistManager* qm = QuicklistManager::Default();
   if (qm)
   {
-    QuicklistView *view = qm->Current();
+    QuicklistView* view = qm->Current();
     if (view)
     {
       nux::Geometry geo = view->GetAbsoluteGeometry();
@@ -1438,7 +1438,7 @@ void UnityScreen::nuxDamageCompiz()
         nux::ObjectPtr<nux::View> tooltip = launcher->GetActiveTooltip();
         if (!tooltip.IsNull())
         {
-          const nux::Geometry &g = tooltip->GetAbsoluteGeometry();
+          nux::Geometry const& g = tooltip->GetAbsoluteGeometry();
           nux_damage += CompRegion(g.x, g.y, g.width, g.height);
         }
       }

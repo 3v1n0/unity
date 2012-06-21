@@ -213,10 +213,10 @@ private:
   bool initPluginActions();
   void initLauncher();
 
-  void compizDamageNux(const CompRegion &region);
+  void compizDamageNux(CompRegion const& region);
   void nuxDamageCompiz();
 
-  bool shellIsHidden(const CompOutput &output);
+  bool shellIsHidden(CompOutput const& output);
 
   void onRedrawRequested();
   void Relayout();
