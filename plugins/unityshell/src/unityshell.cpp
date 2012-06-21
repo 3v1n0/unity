@@ -1417,15 +1417,15 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
 /* Grab changed nux regions and add damage rects for them */
 void UnityScreen::nuxDamageCompiz()
 {
-  CompRegion nux_damage;
-
   // Workaround Nux bug LP: #1014610 (unbounded DrawList growth)
-  if (damaged)
+  // Also, ensure we don't dereference null *controller_ on startup.
+  if (damaged || !launcher_controller_ || !dash_controller_)
     return;
-
-  std::vector<nux::Geometry> dirty = wt->GetDrawList();
   damaged = true;
 
+  CompRegion nux_damage;
+
+  std::vector<nux::Geometry> dirty = wt->GetDrawList();
   for (std::vector<nux::Geometry>::iterator it = dirty.begin(), end = dirty.end();
        it != end; ++it)
   {
@@ -1433,28 +1433,27 @@ void UnityScreen::nuxDamageCompiz()
     nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
   }
 
-  // launcher_controller_ will still be null on startup
-  if (launcher_controller_.get())
+  if (launcher_controller_->IsOverlayOpen())
   {
-    auto launchers = launcher_controller_->launchers();
-    for (auto launcher : launchers)
+    nux::BaseWindow* dash_window = dash_controller_->window();
+    nux::Geometry const& geo = dash_window->GetAbsoluteGeometry();
+    nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
+  }
+
+  auto launchers = launcher_controller_->launchers();
+  for (auto launcher : launchers)
+  {
+    if (!launcher->Hidden())
     {
-      if (!launcher->Hidden())
+      nux::ObjectPtr<nux::View> tooltip = launcher->GetActiveTooltip();
+      if (!tooltip.IsNull())
       {
-        nux::ObjectPtr<nux::View> tooltip = launcher->GetActiveTooltip();
-        if (!tooltip.IsNull())
-        {
-          nux::Geometry const& g = tooltip->GetAbsoluteGeometry();
-          nux_damage += CompRegion(g.x, g.y, g.width, g.height);
-        }
+        nux::Geometry const& g = tooltip->GetAbsoluteGeometry();
+        nux_damage += CompRegion(g.x, g.y, g.width, g.height);
       }
     }
   }
 
-  /*
-   * Avoid Nux damaging Nux as recommended by smspillaz. Though I don't
-   * believe it would be harmful or significantly expensive right now.
-   */
   cScreen->damageRegionSetEnabled(this, false);
   cScreen->damageRegion(nux_damage);
   cScreen->damageRegionSetEnabled(this, true);
