@@ -27,6 +27,8 @@
 #include <libdbusmenu-glib/menuitem.h>
 #include <UnityCore/GLibWrapper.h>
 
+ #include "unity-shared/Introspectable.h"
+
 namespace unity
 {
 
@@ -37,7 +39,7 @@ namespace unity
  * You do not create instances of LauncherEntryRemote yourself. Instead they
  * are created and managed dynamically by a LauncherEntryRemoteModel.
  */
-class LauncherEntryRemote : public sigc::trackable
+class LauncherEntryRemote : public sigc::trackable, public unity::debug::Introspectable
 {
 public:
   typedef std::shared_ptr<LauncherEntryRemote> Ptr;
@@ -62,6 +64,10 @@ public:
   void Update(GVariantIter* prop_iter);
   /// Set a new DBus name. This destroys the current quicklist.
   void SetDBusName(std::string const& dbus_name);
+
+  // from Introspectable:
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
 
   sigc::signal<void, LauncherEntryRemote*, std::string> dbus_name_changed;   // gives the old name as arg
   sigc::signal<void, LauncherEntryRemote*> emblem_changed;

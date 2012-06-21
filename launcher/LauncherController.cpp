@@ -196,6 +196,7 @@ public:
 
   LauncherList launchers;
 
+  glib::Source::UniquePtr activate_idle_;
   glib::Object<BamfMatcher> matcher_;
   glib::Signal<void, BamfMatcher*, BamfView*> view_opened_signal_;
   glib::SourceManager sources_;
@@ -403,7 +404,7 @@ Launcher* Controller::Impl::CreateLauncher(int monitor)
   launcher_window->SetLayout(layout);
   launcher_window->SetBackgroundColor(nux::color::Transparent);
   launcher_window->ShowWindow(true);
-  launcher_window->EnableInputWindow(true, "launcher", false, false);
+  launcher_window->EnableInputWindow(true, launcher::window_title, false, false);
   launcher_window->InputWindowEnableStruts(false);
   launcher_window->SetEnterFocusInputArea(launcher);
 
@@ -1196,8 +1197,12 @@ void Controller::KeyNavTerminate(bool activate)
                             g_variant_new_boolean(pimpl->keynav_restore_window_));
   }
 
-  if (activate)
-    pimpl->model_->Selection()->Activate(ActionArg(ActionArg::LAUNCHER, 0));
+  pimpl->activate_idle_.reset(new glib::Idle([activate, this] () {
+    if (activate)
+      pimpl->model_->Selection()->Activate(ActionArg(ActionArg::LAUNCHER, 0));
+
+    return false;
+  }));
 
   pimpl->launcher_keynav = false;
   if (!pimpl->launcher_open)

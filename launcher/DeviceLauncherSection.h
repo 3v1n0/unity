@@ -50,8 +50,6 @@ private:
 
   void OnVolumeAdded(GVolumeMonitor* monitor, GVolume* volume);
   void OnVolumeRemoved(GVolumeMonitor* monitor, GVolume* volume);
-  void OnMountAdded(GVolumeMonitor* monitor, GMount* mount);
-  void OnMountPreUnmount(GVolumeMonitor* monitor, GMount* mount);
 
 private:
   std::map<GVolume*, DeviceLauncherIcon*> map_;

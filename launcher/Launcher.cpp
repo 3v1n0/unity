@@ -64,6 +64,8 @@ using ui::Decaymulator;
 namespace launcher
 {
 
+const char window_title[] = "unity-launcher";
+
 namespace
 {
 
@@ -1330,7 +1332,7 @@ void Launcher::SetHidden(bool hidden)
 
   TimeUtil::SetTimeStruct(&_times[TIME_AUTOHIDE], &_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT);
 
-  _parent->EnableInputWindow(!hidden, "launcher", false, false);
+  _parent->EnableInputWindow(!hidden, launcher::window_title, false, false);
 
   if (!hidden && GetActionState() == ACTION_DRAG_EXTERNAL)
     DndReset();
@@ -1486,7 +1488,7 @@ void Launcher::SetHideMode(LauncherHideMode hidemode)
   }
   else
   {
-    _parent->EnableInputWindow(true, "launcher", false, false);
+    _parent->EnableInputWindow(true, launcher::window_title, false, false);
 
     if (!sources_.GetSource(STRUT_HACK_TIMEOUT))
     {
@@ -2137,14 +2139,14 @@ void Launcher::UpdateDragWindowPosition(int x, int y)
           {
             if (!(*it)->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE) || !(*it)->IsVisibleOnMonitor(monitor))
               continue;
-            
+
             if ((*it) == hovered_icon) {
               if (prevIt != _model->end()) {
                 iconBeforeHover = *prevIt;
               }
               break;
             }
-            
+
             prevIt = it;
           }
 
@@ -2811,6 +2813,9 @@ void Launcher::ProcessDndDrop(int x, int y)
   }
   else if (_dnd_hovered_icon && _drag_action != nux::DNDACTION_NONE)
   {
+     if (IsOverlayOpen())
+       ubus_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+
     _dnd_hovered_icon->AcceptDrop(_dnd_data);
   }
 

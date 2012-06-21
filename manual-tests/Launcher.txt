@@ -562,3 +562,18 @@ Actions:
 Expected Results:
  * There are no icons doubled up in the Launcher
  * All icons are present in the Launcher
+
+
+Test launcher removes device icons
+------------------------------------------------------------
+This test makes sure that Unity doesn't shows internal partitions after
+they have been unmounted.
+
+Actions:
+ * Open Nautilus
+ * Mount an internal partition using the sidebar
+ * Make sure the launcher has the launcher icon for the partition
+ * Unmount that partition using Nautilus
+
+Expected Results:
+ * The device launcher icon has been removed.

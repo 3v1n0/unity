@@ -75,7 +75,9 @@ Controller::Controller(std::function<AbstractView*(void)> const& function)
 
   launcher_width.changed.connect([&] (int new_width) { Relayout(); });
 
-  WindowManager::Default()->compiz_screen_ungrabbed.connect(sigc::mem_fun(this, &Controller::OnScreenUngrabbed));
+  auto wm = WindowManager::Default();
+  wm->compiz_screen_ungrabbed.connect(sigc::mem_fun(this, &Controller::OnScreenUngrabbed));
+  wm->initiate_spread.connect(sigc::bind(sigc::mem_fun(this, &Controller::HideHud), true));
 
   hud_service_.queries_updated.connect(sigc::mem_fun(this, &Controller::OnQueriesFinished));
   timeline_animator_.animation_updated.connect(sigc::mem_fun(this, &Controller::OnViewShowHideFrame));
@@ -93,10 +95,11 @@ void Controller::SetupWindow()
   window_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &Controller::OnMouseDownOutsideWindow));
   
   /* FIXME - first time we load our windows there is a race that causes the input window not to actually get input, this side steps that by causing an input window show and hide before we really need it. */
-  WindowManager::Default()->saveInputFocus ();
+  auto wm = WindowManager::Default();
+  wm->saveInputFocus ();
   window_->EnableInputWindow(true, "Hud", true, false);
   window_->EnableInputWindow(false, "Hud", true, false);
-  WindowManager::Default()->restoreInputFocus ();
+  wm->restoreInputFocus ();
 }
 
 void Controller::SetupHudView()

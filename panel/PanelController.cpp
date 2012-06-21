@@ -33,6 +33,8 @@ namespace unity
 namespace panel
 {
 
+const char window_title[] = "unity-panel";
+
 namespace
 {
 nux::logging::Logger logger("unity.panel");
@@ -243,7 +245,7 @@ void Controller::Impl::OnScreenChanged(unsigned int primary_monitor,
       window->SetConfigureNotifyCallback(&Impl::WindowConfigureCallback, window.GetPointer());
       window->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
       window->ShowWindow(true);
-      window->EnableInputWindow(true, "panel", false, false);
+      window->EnableInputWindow(true, panel::window_title, false, false);
       window->InputWindowEnableStruts(true);
       window->SetGeometry(geo);
       window->SetMinMaxSize(geo.width, geo.height);

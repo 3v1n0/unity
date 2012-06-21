@@ -44,52 +44,60 @@ bool IMTextEntry::InspectKeyEvent(unsigned int event_type,
                                   unsigned int keysym,
                                   const char* character)
 {
-  bool need_to_filter_event = TryHandleSpecial(event_type, keysym, character);
- 
+  nux::Event const& event = nux::GetGraphicsDisplay()->GetCurrentEvent();
+  bool need_to_filter_event = TryHandleSpecial(event);
+
   if (need_to_filter_event)
     need_to_filter_event = TextEntry::InspectKeyEvent(event_type, keysym, character);
-  
+
   return need_to_filter_event;
 }
 
-bool IMTextEntry::TryHandleSpecial(unsigned int eventType, unsigned int keysym, const char* character)
+bool IMTextEntry::TryHandleSpecial(nux::Event const& event)
 {
-  nux::Event event = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent();
-  unsigned int keyval = keysym;
-  bool shift = (event.GetKeyState() & NUX_STATE_SHIFT);
-  bool ctrl = (event.GetKeyState() & NUX_STATE_CTRL);
-
   /* If there is preedit, handle the event else where, but we
      want to be able to copy/paste while ibus is active */
   if (!preedit_.empty())
     return true;
 
-  if (eventType != NUX_KEYDOWN)
+  if (event.type != NUX_KEYDOWN)
     return false;
 
-  if (((keyval == NUX_VK_x) && ctrl && !shift) ||
-      ((keyval == NUX_VK_DELETE) && shift && !ctrl))
+  unsigned int keyval = event.GetKeySym();
+  bool shift = event.GetKeyModifierState(KEY_MODIFIER_SHIFT);
+  bool ctrl = event.GetKeyModifierState(KEY_MODIFIER_CTRL);
+  bool super = event.GetKeyModifierState(KEY_MODIFIER_SUPER);
+  bool alt = event.GetKeyModifierState(KEY_MODIFIER_ALT);
+
+  if ((ctrl && !shift && keyval == NUX_VK_x) ||    // Ctrl + X
+      (shift && !ctrl && keyval == NUX_VK_DELETE)) // Shift + Del
   {
     Cut();
   }
-  else if (((keyval == NUX_VK_c) && ctrl && (!shift)) ||
-           ((keyval == NUX_VK_INSERT) && ctrl && (!shift)))
+  else if (ctrl && !shift && (keyval == NUX_VK_c || keyval == NUX_VK_INSERT))  // Ctrl + C / Ins
   {
     Copy();
   }
-  else if (((keyval == NUX_VK_v) && ctrl && (!shift)) ||
-      ((keyval == NUX_VK_INSERT) && shift && (!ctrl)))
+  else if ((ctrl && !shift && keyval == NUX_VK_v) ||   // Ctrl + V
+           (shift && !ctrl && keyval == NUX_VK_INSERT)) // Shift + Ins
   {
     Paste();
   }
-  else if (keyval == NUX_VK_TAB || keyval == NUX_VK_LEFT_TAB)
+  else if (ctrl)
+  {
+    if (keyval == NUX_VK_LEFT || keyval == NUX_VK_RIGHT || // Ctrl + Move keys
+        keyval == NUX_VK_HOME || keyval == NUX_VK_END || // Ctrl + Home / End
+        keyval == NUX_VK_BACKSPACE || keyval == NUX_VK_DELETE || // Ctrl + Backspace / Delete
+        keyval == NUX_VK_a) // Ctrl + A
+    {
+      return true;
+    }
+  }
+  else if (!alt && !super)
   {
     return true;
   }
-  else
-  {
-    return true;
-  }
+
   return false;
 }
 
@@ -146,10 +154,10 @@ void IMTextEntry::OnMouseButtonUp(int x, int y, unsigned long bflags, unsigned l
   int button = nux::GetEventButton(bflags);
 
   if (button == 2)
-  { 
+  {
     SetCursor(XYToTextIndex(x,y));
     Paste(true);
-  } 
+  }
 }
 
 bool IMTextEntry::im_preedit()
