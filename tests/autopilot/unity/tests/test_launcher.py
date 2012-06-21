@@ -9,19 +9,15 @@
 
 from __future__ import absolute_import
 
-from autopilot.emulators.bamf import Bamf
 from autopilot.emulators.X11 import ScreenGeometry
 from autopilot.matchers import Eventually
 from autopilot.testcase import multiply_scenarios
 import logging
-import os
-from subprocess import call
 from testtools.matchers import Equals, NotEquals, LessThan, GreaterThan
 from time import sleep
 
 from unity.emulators.icons import BFBLauncherIcon
 from unity.emulators.launcher import IconDragType
-from unity.emulators.switcher import SwitcherMode
 from unity.tests import UnityTestCase
 
 logger = logging.getLogger(__name__)
@@ -53,6 +49,8 @@ class LauncherTestCase(UnityTestCase):
         super(LauncherTestCase, self).setUp()
         self.screen_geo = ScreenGeometry()
         self.set_unity_log_level("unity.launcher", "DEBUG")
+        self.addCleanup(self.set_unity_log_level, "unity.launcher", "INFO")
+
         self.set_unity_option('num_launchers', int(self.only_primary))
         self.launcher_instance = self.get_launcher()
 
@@ -64,10 +62,6 @@ class LauncherTestCase(UnityTestCase):
             except ScreenGeometry.BlacklistedDriverError:
                 self.skipTest("Impossible to set the monitor %d as primary" % self.launcher_monitor)
 
-    def tearDown(self):
-        super(LauncherTestCase, self).tearDown()
-        self.set_unity_log_level("unity.launcher", "INFO")
-
     def get_launcher(self):
         """Get the launcher for the current scenario."""
         return self.launcher.get_launcher_for_monitor(self.launcher_monitor)
@@ -76,18 +70,19 @@ class LauncherTestCase(UnityTestCase):
 class LauncherSwitcherTests(LauncherTestCase):
     """ Tests the functionality of the launcher's switcher capability"""
 
-    def setUp(self):
-        super(LauncherSwitcherTests, self).setUp()
+    def start_switcher_with_cleanup_cancel(self):
+        """Start the launcher switcher and add a cleanup action to cancel it."""
         self.launcher_instance.switcher_start()
-        sleep(0.5)
+        self.addCleanup(self.safe_quit_switcher)
 
-    def tearDown(self):
-        super(LauncherSwitcherTests, self).tearDown()
-        if self.launcher_instance.in_switcher_mode:
+    def safe_quit_switcher(self):
+        """Quit the keynav mode if it's engaged."""
+        if self.launcher.key_nav_is_active:
             self.launcher_instance.switcher_cancel()
 
     def test_launcher_switcher_cancel(self):
         """Test that ending the launcher switcher actually works."""
+        self.launcher_instance.switcher_start()
         self.launcher_instance.switcher_cancel()
         self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
 
@@ -99,7 +94,7 @@ class LauncherSwitcherTests(LauncherTestCase):
         calc = self.start_app("Calculator")
         self.assertTrue(calc.is_active)
 
-        self.launcher_instance.switcher_start()
+        self.start_switcher_with_cleanup_cancel()
         sleep(.5)
         self.assertFalse(calc.is_active)
 
@@ -109,12 +104,15 @@ class LauncherSwitcherTests(LauncherTestCase):
 
     def test_launcher_switcher_starts_at_index_zero(self):
         """Test that starting the Launcher switcher puts the keyboard focus on item 0."""
+        self.start_switcher_with_cleanup_cancel()
+
         self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(True)))
         self.assertThat(self.launcher.key_nav_is_grabbed, Eventually(Equals(False)))
         self.assertThat(self.launcher.key_nav_selection, Eventually(Equals(0)))
 
     def test_launcher_switcher_next(self):
         """Moving to the next launcher item while switcher is activated must work."""
+        self.start_switcher_with_cleanup_cancel()
         self.launcher_instance.switcher_next()
         # The launcher model has hidden items, so the keynav indexes do not
         # increase by 1 each time. This test was failing because the 2nd icon
@@ -126,11 +124,13 @@ class LauncherSwitcherTests(LauncherTestCase):
 
     def test_launcher_switcher_prev(self):
         """Moving to the previous launcher item while switcher is activated must work."""
+        self.start_switcher_with_cleanup_cancel()
         self.launcher_instance.switcher_prev()
         self.assertThat(self.launcher.key_nav_selection, Eventually(NotEquals(0)))
 
     def test_launcher_switcher_down(self):
         """Pressing the down arrow key while switcher is activated must work."""
+        self.start_switcher_with_cleanup_cancel()
         self.launcher_instance.switcher_down()
         # The launcher model has hidden items, so the keynav indexes do not
         # increase by 1 each time. This test was failing because the 2nd icon
@@ -142,11 +142,13 @@ class LauncherSwitcherTests(LauncherTestCase):
 
     def test_launcher_switcher_up(self):
         """Pressing the up arrow key while switcher is activated must work."""
+        self.start_switcher_with_cleanup_cancel()
         self.launcher_instance.switcher_up()
         self.assertThat(self.launcher.key_nav_selection, Eventually(NotEquals(0)))
 
     def test_launcher_switcher_next_doesnt_show_shortcuts(self):
         """Moving forward in launcher switcher must not show launcher shortcuts."""
+        self.start_switcher_with_cleanup_cancel()
         self.launcher_instance.switcher_next()
         # sleep so that the shortcut timeout could be triggered
         sleep(2)
@@ -154,6 +156,7 @@ class LauncherSwitcherTests(LauncherTestCase):
 
     def test_launcher_switcher_prev_doesnt_show_shortcuts(self):
         """Moving backward in launcher switcher must not show launcher shortcuts."""
+        self.start_switcher_with_cleanup_cancel()
         self.launcher_instance.switcher_prev()
         # sleep so that the shortcut timeout could be triggered
         sleep(2)
@@ -161,6 +164,7 @@ class LauncherSwitcherTests(LauncherTestCase):
 
     def test_launcher_switcher_cycling_forward(self):
         """Launcher Switcher must loop through icons when cycling forwards"""
+        self.start_switcher_with_cleanup_cancel()
         prev_icon = 0
         num_icons = self.launcher.model.num_launcher_icons()
         logger.info("This launcher has %d icons", num_icons)
@@ -177,19 +181,19 @@ class LauncherSwitcherTests(LauncherTestCase):
 
     def test_launcher_switcher_cycling_backward(self):
         """Launcher Switcher must loop through icons when cycling backwards"""
+        self.start_switcher_with_cleanup_cancel()
         self.launcher_instance.switcher_prev()
         # FIXME We can't directly check for self.launcher.num_launcher_icons - 1
         self.assertThat(self.launcher.key_nav_selection, Eventually(GreaterThan(1)))
 
     def test_launcher_switcher_activate_keep_focus(self):
         """Activating a running launcher icon should focus the application."""
-        self.launcher_instance.switcher_cancel()
         calc = self.start_app("Calculator")
         mahjongg = self.start_app("Mahjongg")
         self.assertTrue(mahjongg.is_active)
         self.assertFalse(calc.is_active)
 
-        self.launcher_instance.switcher_start()
+        self.start_switcher_with_cleanup_cancel()
 
         found = False
         for icon in self.launcher.model.get_launcher_icons_for_monitor(self.launcher_monitor):
@@ -217,6 +221,7 @@ class LauncherSwitcherTests(LauncherTestCase):
 
     def test_launcher_switcher_using_shorcuts(self):
         """Using some other shortcut while switcher is active must cancel switcher."""
+        self.start_switcher_with_cleanup_cancel()
         self.keyboard.press_and_release("s")
         sleep(.25)
         self.keyboard.press_and_release("Escape")
@@ -225,14 +230,13 @@ class LauncherSwitcherTests(LauncherTestCase):
 
 
 class LauncherShortcutTests(LauncherTestCase):
+    """Tests for the shortcut hint window."""
+
     def setUp(self):
         super(LauncherShortcutTests, self).setUp()
         self.launcher_instance.keyboard_reveal_launcher()
+        self.addCleanup(self.launcher_instance.keyboard_unreveal_launcher)
         sleep(2)
-
-    def tearDown(self):
-        super(LauncherShortcutTests, self).tearDown()
-        self.launcher_instance.keyboard_unreveal_launcher()
 
     def test_launcher_keyboard_reveal_shows_shortcut_hints(self):
         """Launcher icons must show shortcut hints after revealing with keyboard."""
@@ -263,22 +267,25 @@ class LauncherShortcutTests(LauncherTestCase):
 
 class LauncherKeyNavTests(LauncherTestCase):
     """Test the launcher key navigation"""
-    def setUp(self):
-        super(LauncherKeyNavTests, self).setUp()
-        self.launcher_instance.key_nav_start()
 
-    def tearDown(self):
+    def start_keynav_with_cleanup_cancel(self):
+        self.launcher_instance.key_nav_start()
+        self.addCleanup(self.safe_quit_keynav)
+
+    def safe_quit_keynav(self):
+        """Quit the keynav mode if it's engaged."""
         if self.launcher.key_nav_is_active:
             self.launcher_instance.key_nav_cancel()
-        super(LauncherKeyNavTests, self).tearDown()
 
     def test_launcher_keynav_initiate(self):
         """Tests we can initiate keyboard navigation on the launcher."""
+        self.start_keynav_with_cleanup_cancel()
         self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(True)))
         self.assertThat(self.launcher.key_nav_is_grabbed, Eventually(Equals(True)))
 
     def test_launcher_keynav_cancel(self):
         """Test that we can exit keynav mode."""
+        self.launcher_instance.key_nav_start()
         self.launcher_instance.key_nav_cancel()
         self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
         self.assertThat(self.launcher.key_nav_is_grabbed, Eventually(Equals(False)))
@@ -288,7 +295,7 @@ class LauncherKeyNavTests(LauncherTestCase):
         calc = self.start_app("Calculator")
         self.assertTrue(calc.is_active)
 
-        self.launcher_instance.key_nav_start()
+        self.start_keynav_with_cleanup_cancel()
         self.assertFalse(calc.is_active)
 
         self.launcher_instance.key_nav_cancel()
@@ -296,10 +303,12 @@ class LauncherKeyNavTests(LauncherTestCase):
 
     def test_launcher_keynav_starts_at_index_zero(self):
         """Test keynav mode starts at index 0."""
+        self.start_keynav_with_cleanup_cancel()
         self.assertThat(self.launcher.key_nav_selection, Eventually(Equals(0)))
 
     def test_launcher_keynav_forward(self):
         """Must be able to move forwards while in keynav mode."""
+        self.start_keynav_with_cleanup_cancel()
         self.launcher_instance.key_nav_next()
         # The launcher model has hidden items, so the keynav indexes do not
         # increase by 1 each time. This test was failing because the 2nd icon
@@ -311,6 +320,7 @@ class LauncherKeyNavTests(LauncherTestCase):
 
     def test_launcher_keynav_prev_works(self):
         """Must be able to move backwards while in keynav mode."""
+        self.start_keynav_with_cleanup_cancel()
         self.launcher_instance.key_nav_next()
         self.assertThat(self.launcher.key_nav_selection, Eventually(GreaterThan(0)))
         self.launcher_instance.key_nav_prev()
@@ -318,6 +328,7 @@ class LauncherKeyNavTests(LauncherTestCase):
 
     def test_launcher_keynav_cycling_forward(self):
         """Launcher keynav must loop through icons when cycling forwards"""
+        self.start_keynav_with_cleanup_cancel()
         prev_icon = 0
         for icon in range(1, self.launcher.model.num_launcher_icons()):
             self.launcher_instance.key_nav_next()
@@ -332,12 +343,14 @@ class LauncherKeyNavTests(LauncherTestCase):
 
     def test_launcher_keynav_cycling_backward(self):
         """Launcher keynav must loop through icons when cycling backwards"""
+        self.start_keynav_with_cleanup_cancel()
         self.launcher_instance.key_nav_prev()
         # FIXME We can't directly check for self.launcher.num_launcher_icons - 1
         self.assertThat(self.launcher.key_nav_selection, Eventually(GreaterThan(1)))
 
     def test_launcher_keynav_can_open_and_close_quicklist(self):
         """Tests that we can open and close a quicklist from keynav mode."""
+        self.start_keynav_with_cleanup_cancel()
         self.launcher_instance.key_nav_next()
         self.launcher_instance.key_nav_enter_quicklist()
         self.assertThat(self.launcher_instance.quicklist_open, Eventually(Equals(True)))
@@ -349,17 +362,18 @@ class LauncherKeyNavTests(LauncherTestCase):
     def test_launcher_keynav_mode_toggles(self):
         """Tests that keynav mode toggles with Alt+F1."""
         # was initiated in setup.
+        self.start_keynav_with_cleanup_cancel()
         self.keybinding("launcher/keynav")
         self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
 
     def test_launcher_keynav_activate_keep_focus(self):
-        """Activating a running launcher icon should focus it"""
+        """Activating a running launcher icon must focus it."""
         calc = self.start_app("Calculator")
         mahjongg = self.start_app("Mahjongg")
         self.assertTrue(mahjongg.is_active)
         self.assertFalse(calc.is_active)
 
-        self.launcher_instance.key_nav_start()
+        self.start_keynav_with_cleanup_cancel()
 
         found = False
         for icon in self.launcher.model.get_launcher_icons_for_monitor(self.launcher_monitor):
@@ -371,8 +385,6 @@ class LauncherKeyNavTests(LauncherTestCase):
                 self.launcher_instance.key_nav_next()
 
         sleep(.5)
-        if not found:
-            self.addCleanup(self.launcher_instance.key_nav_cancel)
 
         self.assertTrue(found)
         self.assertTrue(calc.is_active)
@@ -380,6 +392,7 @@ class LauncherKeyNavTests(LauncherTestCase):
 
     def test_launcher_keynav_expo_focus(self):
         """When entering expo mode from KeyNav the Desktop must get focus."""
+        self.start_keynav_with_cleanup_cancel()
 
         for icon in self.launcher.model.get_launcher_icons_for_monitor(self.launcher_monitor):
             if (icon.tooltip_text == "Workspace Switcher"):
@@ -391,6 +404,7 @@ class LauncherKeyNavTests(LauncherTestCase):
 
     def test_launcher_keynav_expo_exit_on_esc(self):
         """Esc should quit expo when entering it from KeyNav."""
+        self.start_keynav_with_cleanup_cancel()
 
         for icon in self.launcher.model.get_launcher_icons_for_monitor(self.launcher_monitor):
             if (icon.tooltip_text == "Workspace Switcher"):
@@ -403,6 +417,7 @@ class LauncherKeyNavTests(LauncherTestCase):
 
     def test_launcher_keynav_alt_tab_quits(self):
         """Tests that alt+tab exits keynav mode."""
+        self.start_keynav_with_cleanup_cancel()
 
         self.keybinding("switcher/reveal_normal")
         self.addCleanup(self.switcher.terminate)
@@ -410,14 +425,14 @@ class LauncherKeyNavTests(LauncherTestCase):
 
     def test_launcher_keynav_alt_grave_quits(self):
         """Tests that alt+` exits keynav mode."""
-
+        self.start_keynav_with_cleanup_cancel()
         # Can't use switcher emulat here since the switcher won't appear.
         self.keybinding("switcher/reveal_details")
         self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
 
     def test_launcher_keynav_cancel_doesnt_activate_icon(self):
         """This tests when canceling keynav the current icon doesnt activate."""
-
+        self.start_keynav_with_cleanup_cancel()
         self.keyboard.press_and_release("Escape")
         self.assertThat(self.dash.visible, Eventually(Equals(False)))
 
@@ -498,6 +513,7 @@ class LauncherIconsBehaviorTests(LauncherTestCase):
         calc_icon = self.launcher.model.get_icon_by_desktop_id(desktop_file)
         self.assertThat(calc_icon, NotEquals(None))
         self.assertThat(calc_icon.visible, Eventually(Equals(True)))
+
 
 class LauncherDragIconsBehavior(LauncherTestCase):
     """Tests interation with dragging icons with the Launcher"""
