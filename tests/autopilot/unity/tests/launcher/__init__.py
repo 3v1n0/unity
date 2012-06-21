@@ -13,6 +13,7 @@ from autopilot.testcase import multiply_scenarios
 
 from unity.tests import UnityTestCase
 
+
 def _make_scenarios():
     """Make scenarios for launcher test cases based on the number of configured
     monitors.

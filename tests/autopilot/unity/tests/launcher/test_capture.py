@@ -20,7 +20,6 @@ from unity.tests import UnityTestCase
 logger = logging.getLogger(__name__)
 
 
-
 class LauncherCaptureTests(UnityTestCase):
     """Test the launchers ability to capture/not capture the mouse."""
 
