@@ -268,9 +268,9 @@ class LauncherKeyNavTests(LauncherTestCase):
         self.launcher_instance.key_nav_start()
 
     def tearDown(self):
-        super(LauncherKeyNavTests, self).tearDown()
         if self.launcher.key_nav_is_active:
             self.launcher_instance.key_nav_cancel()
+        super(LauncherKeyNavTests, self).tearDown()
 
     def test_launcher_keynav_initiate(self):
         """Tests we can initiate keyboard navigation on the launcher."""
@@ -415,6 +415,11 @@ class LauncherKeyNavTests(LauncherTestCase):
         self.keybinding("switcher/reveal_details")
         self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
 
+    def test_launcher_keynav_cancel_doesnt_activate_icon(self):
+        """This tests when canceling keynav the current icon doesnt activate."""
+
+        self.keyboard.press_and_release("Escape")
+        self.assertThat(self.dash.visible, Eventually(Equals(False)))
 
 class LauncherIconsBehaviorTests(LauncherTestCase):
     """Test the launcher icons interactions"""

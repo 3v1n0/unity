@@ -1197,7 +1197,7 @@ void Controller::KeyNavTerminate(bool activate)
                             g_variant_new_boolean(pimpl->keynav_restore_window_));
   }
 
-  pimpl->activate_idle_.reset(new glib::Idle([&] () {
+  pimpl->activate_idle_.reset(new glib::Idle([activate, this] () {
     if (activate)
       pimpl->model_->Selection()->Activate(ActionArg(ActionArg::LAUNCHER, 0));
 
