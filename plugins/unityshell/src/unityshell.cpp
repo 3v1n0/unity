@@ -1443,7 +1443,7 @@ void UnityScreen::nuxDamageCompiz()
 
   CompRegion nux_damage;
 
-  std::vector<nux::Geometry> const &dirty = wt->GetDrawList();
+  std::vector<nux::Geometry> const& dirty = wt->GetDrawList();
   for (auto geo : dirty)
     nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
 
