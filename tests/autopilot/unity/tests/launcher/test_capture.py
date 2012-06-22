@@ -85,9 +85,7 @@ class LauncherCaptureTests(UnityTestCase):
         while hidden and sticky is off.
         """
 
-        self.set_unity_option('launcher_hide_mode', 1)
         self.set_unity_option('launcher_capture_mouse', False)
-
         self.setHideMode(1)
 
         x, y, width, height = self.screen_geo.get_monitor_geometry(self.leftMostMonitor())
@@ -103,9 +101,6 @@ class LauncherCaptureTests(UnityTestCase):
         """Tests that the launcher captures the mouse when moving between monitors
         while hidden.
         """
-
-        self.set_unity_option('launcher_hide_mode', 1)
-
         self.setHideMode(1)
 
         x, y, width, height = self.screen_geo.get_monitor_geometry(self.leftMostMonitor())

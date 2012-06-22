@@ -28,16 +28,6 @@ class LauncherIconsTests(LauncherTestCase):
         super(LauncherIconsTests, self).setUp()
         self.set_unity_option('launcher_hide_mode', 0)
 
-    def assertNumberWinsIsEventually(self, app, num):
-        """Asserts that 'app' eventually has 'num' wins. Waits up to 10 seconds."""
-        for i in range(10):
-            wins = app.get_windows()
-            if len(wins) == num:
-                return
-            sleep(1)
-
-        self.assertThat(len(app.get_windows()), Equals(num))
-
     def test_bfb_tooltip_disappear_when_dash_is_opened(self):
          """Tests that the bfb tooltip disappear when the dash is opened."""
          bfb = self.launcher.model.get_bfb_icon()
