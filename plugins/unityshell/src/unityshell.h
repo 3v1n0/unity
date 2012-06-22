@@ -276,6 +276,7 @@ private:
 
   /* handle paint order */
   bool    doShellRepaint;
+  bool    didShellRepaint;
   bool    allowWindowPaint;
   bool    damaged;
   bool    _key_nav_mode_requested;

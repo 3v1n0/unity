@@ -117,6 +117,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , super_keypressed_(false)
   , newFocusedWindow(nullptr)
   , doShellRepaint(false)
+  , didShellRepaint(false)
   , allowWindowPaint(false)
   , damaged(false)
   , _key_nav_mode_requested(false)
@@ -901,6 +902,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
   }
 
   doShellRepaint = false;
+  didShellRepaint = true;
   damaged = false;
 }
 
@@ -1300,11 +1302,23 @@ void UnityScreen::preparePaint(int ms)
   }
 
   compizDamageNux(cScreen->currentDamage());
+
+  didShellRepaint = false;
 }
 
 void UnityScreen::donePaint()
 {
-  wt->ClearDrawList();
+  /*
+   * It's only safe to clear the draw list if drawing actually occurred
+   * (i.e. the shell was not obscured behind a fullscreen window).
+   * If you clear the draw list and drawing has not occured then you'd be
+   * left with all your views thinking they're queued for drawing still and
+   * would refuse to redraw when you return from fullscreen.
+   * I think this is a Nux bug. ClearDrawList should ideally also mark all
+   * the queued views as draw_cmd_queued_=false.
+   */
+  if (didShellRepaint)
+    wt->ClearDrawList();
 
   std::list <ShowdesktopHandlerWindowInterface *> remove_windows;
 
