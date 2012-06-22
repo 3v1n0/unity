@@ -38,12 +38,16 @@ nux::logging::Logger logger("unity.dash.preview");
 
 NUX_IMPLEMENT_OBJECT_TYPE(Preview);
 
-Preview::Preview()
+Preview::Preview(dash::Preview::Ptr preview_model_)
   : View(NUX_TRACKER_LOCATION)
 {
 }
 
 Preview::~Preview()
+{
+}
+
+void Preview::DisableNavButton(NavButton button)
 {
 }
 
@@ -53,12 +57,6 @@ void Preview::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
   gPainter.Paint2DQuadVGradient(gfx_engine, GetGeometry(), 
                                 nux::Color(0x96, 0x11, 0xDA), nux::Color(0x54, 0xD9, 0x11));
 }
-
-long Preview::ComputeContentSize()
-{
-  return View::ComputeContentSize();
-}
-
 
 void Preview::DrawContent(nux::GraphicsEngine& GfxContent, bool force_draw)
 {

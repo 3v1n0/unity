@@ -25,7 +25,7 @@
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
-
+#include <UnityCore/Preview.h>
 #include "unity-shared/Introspectable.h"
 
 namespace unity
@@ -34,26 +34,36 @@ namespace dash
 {
 namespace previews
 {
+typedef enum 
+{
+  LEFT,
+  RIGHT,
+  BOTH
+} NavButton;
+
 class Preview : public nux::View, public debug::Introspectable
 {
 public:
   typedef nux::ObjectPtr<Preview> Ptr;
   NUX_DECLARE_OBJECT_TYPE(Preview, nux::View);
 
-  Preview();
+  Preview(dash::Preview::Ptr preview_model_);
   virtual ~Preview();
 
-  std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
-  
+  // calling this should disable the nav buttons to the left or the right of the preview
+  virtual void DisableNavButton(NavButton button);
+ 
+  // For the nav buttons to the left/right of the previews, call when they are activated
   sigc::signal<void> navigate_left;
   sigc::signal<void> navigate_right;
+
+  // for introspection
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
 
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual long ComputeContentSize();
-  
 };
 
 }

@@ -24,6 +24,13 @@
 #include "Nux/WindowThread.h"
 #include "NuxGraphics/GraphicsEngine.h"
 #include <NuxCore/Logger.h>
+#include <UnityCore/Variant.h>
+#include <UnityCore/Preview.h>
+#include <UnityCore/ApplicationPreview.h>
+#include <UnityCore/MoviePreview.h>
+#include <UnityCore/MusicPreview.h>
+#include <UnityCore/SeriesPreview.h>
+#include <unity-protocol.h>
 
 #include "unity-shared/FontSettings.h"
 #include "unity-shared/UnitySettings.h"
@@ -33,6 +40,7 @@
 #define WIDTH 1024
 #define HEIGHT 768
 
+using namespace unity;
 using namespace unity::dash;
 
 class TestRunner
@@ -44,7 +52,8 @@ public:
   static void InitWindowThread (nux::NThread* thread, void* InitData);
   void Init ();
   nux::Layout *layout;
-  previews::Preview *view;
+  previews::Preview::Ptr view;
+  unity::dash::Preview::Ptr model;
 };
 
 TestRunner::TestRunner ()
@@ -58,13 +67,28 @@ TestRunner::~TestRunner ()
 void TestRunner::Init ()
 {
   layout = new nux::VLayout(NUX_TRACKER_LOCATION);
+  
+  // creates a generic preview object
+  glib::Object<GIcon> icon(g_icon_new_for_string("accessories", NULL));
+  glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_generic_preview_new()));
+  unity_protocol_preview_set_title(proto_obj, "Title");
+  unity_protocol_preview_set_subtitle(proto_obj, "Subtitle");
+  unity_protocol_preview_set_description(proto_obj, "Description");
+  unity_protocol_preview_set_thumbnail(proto_obj, icon);
+  unity_protocol_preview_add_action(proto_obj, "action1", "Action #1", NULL, 0);
+  unity_protocol_preview_add_action(proto_obj, "action2", "Action #2", NULL, 0);
+  unity_protocol_preview_add_info_hint(proto_obj, "hint1", "Hint 1", NULL, g_variant_new("i", 34));
+  unity_protocol_preview_add_info_hint(proto_obj, "hint2", "Hint 2", NULL, g_variant_new("s", "string hint"));
 
-  view = new previews::Preview(); // this just makes the baseclass, you'll want to make 
+  glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
+                  glib::StealRef());
+
+  model = dash::Preview::PreviewForVariant(v);
+  view = previews::Preview::Ptr(new previews::Preview(model));
   
   view->SetMinMaxSize(WIDTH, HEIGHT);
-  layout->AddView (view, 1, nux::MINOR_POSITION_CENTER);
+  layout->AddView (view.GetPointer(), 1, nux::MINOR_POSITION_CENTER);
   layout->SetMinMaxSize(WIDTH, HEIGHT);
-
 
   nux::GetWindowThread()->SetLayout (layout);
 }

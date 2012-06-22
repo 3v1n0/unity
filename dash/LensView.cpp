@@ -148,9 +148,9 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   filters_expanded.changed.connect([&](bool expanded) { fscroll_view_->SetVisible(expanded); QueueRelayout(); OnColumnsChanged(); });
   view_type.changed.connect(sigc::mem_fun(this, &LensView::OnViewTypeChanged));
 
-  lens_.preview_ready.connect([&] (std::string const& uri, Preview::Ptr preview) 
+  lens_->preview_ready.connect([&] (std::string const& uri, Preview::Ptr model) 
   {
-    preview_ = preview;
+    preview_ = previews::Preview::Ptr(new previews::Preview(model));
   });
 
   ubus_manager_.RegisterInterest(UBUS_RESULT_VIEW_KEYNAV_CHANGED, [&] (GVariant* data) {
@@ -301,7 +301,7 @@ void LensView::OnCategoryAdded(Category const& category)
   { 
     uri_activated.emit(uri); 
     lens_->Activate(uri); 
-    last_activated_result_uri = uri;
+    last_activated_result_uri_ = uri;
   });
   group->SetChildView(grid);
 
