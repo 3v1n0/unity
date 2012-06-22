@@ -22,24 +22,62 @@ from unity.tests.launcher import LauncherTestCase, _make_scenarios
 logger = logging.getLogger(__name__)
 
 
-class LauncherIconsBehaviorTests(LauncherTestCase):
+class LauncherIconsTests(LauncherTestCase):
     """Test the launcher icons interactions"""
 
-    def test_launcher_activate_last_focused_window(self):
-        """This tests shows that when you activate a launcher icon only the last
-        focused instance of that application is rasied.
+    def setUp(self):
+        super(LauncherIconsTests, self).setUp()
+        self.set_unity_option('launcher_hide_mode', 0)
 
-        This is tested by opening 2 Mahjongg and a Calculator.
-        Then we activate the Calculator launcher icon.
-        Then we actiavte the Mahjongg launcher icon.
-        Then we minimize the focused applications.
-        This should give focus to the next window on the stack.
-        Then we activate the Mahjongg launcher icon
-        This should bring to focus the non-minimized window.
-        If only 1 instance is raised then the Calculator gets the focus.
-        If ALL the instances are raised then the second Mahjongg gets the focus.
+    def assertNumberWinsIsEventually(self, app, num):
+        """Asserts that 'app' eventually has 'num' wins. Waits up to 10 seconds."""
+        for i in range(10):
+            wins = app.get_windows()
+            if len(wins) == num:
+                return
+            sleep(1)
+
+        self.assertThat(len(app.get_windows()), Equals(num))
+
+    def test_bfb_tooltip_disappear_when_dash_is_opened(self):
+         """Tests that the bfb tooltip disappear when the dash is opened."""
+         bfb = self.launcher.model.get_bfb_icon()
+         self.mouse.move(bfb.center_x, bfb.center_y)
+
+         self.dash.ensure_visible()
+         self.addCleanup(self.dash.ensure_hidden)
+
+         self.assertThat(bfb.get_tooltip().active, Eventually(Equals(False)))
+
+    def test_bfb_tooltip_is_disabled_when_dash_is_open(self):
+         """Tests the that bfb tooltip is disabled when the dash is open."""
+         self.dash.ensure_visible()
+         self.addCleanup(self.dash.ensure_hidden)
+
+         bfb = self.launcher.model.get_bfb_icon()
+         self.mouse.move(bfb.center_x, bfb.center_y)
+
+         self.assertThat(bfb.get_tooltip().active, Eventually(Equals(False)))
+
+    def test_shift_click_opens_new_application_instance(self):
+        """Shift+Clicking MUST open a new instance of an already-running application."""
+        app = self.start_app("Calculator")
+        desktop_id = app.desktop_file
+        icon = self.launcher.model.get_icon_by_desktop_id(desktop_id)
+        launcher_instance = self.launcher.get_launcher_for_monitor(0)
+
+        self.keyboard.press("Shift")
+        self.addCleanup(self.keyboard.release, "Shift")
+        launcher_instance.click_launcher_icon(icon)
+
+        self.assertNumberWinsIsEventually(app, 2)
+
+    def test_launcher_activate_last_focused_window(self):
+        """Activating a launcher icon must raise only the last focused instance
+        of that application.
 
         """
+
         mahj = self.start_app("Mahjongg")
         [mah_win1] = mahj.get_windows()
         self.assertTrue(mah_win1.is_focused)
@@ -86,7 +124,7 @@ class LauncherIconsBehaviorTests(LauncherTestCase):
         self.assertVisibleWindowStack([mah_win1, calc_win])
 
     def test_icon_shows_on_quick_application_reopen(self):
-        """Icons should stay on launcher when an application is quickly closed/reopened."""
+        """Icons must stay on launcher when an application is quickly closed/reopened."""
         calc = self.start_app("Calculator")
         desktop_file = calc.desktop_file
         calc_icon = self.launcher.model.get_icon_by_desktop_id(desktop_file)
@@ -102,7 +140,7 @@ class LauncherIconsBehaviorTests(LauncherTestCase):
 
 
 class LauncherDragIconsBehavior(LauncherTestCase):
-    """Tests interation with dragging icons with the Launcher"""
+    """Tests dragging icons around the Launcher."""
 
     scenarios = multiply_scenarios(_make_scenarios(),
                                    [
@@ -111,6 +149,7 @@ class LauncherDragIconsBehavior(LauncherTestCase):
                                    ])
 
     def ensure_calc_icon_not_in_launcher(self):
+        """Wait until the launcher model updates and removes the calc icon."""
         while 1:
             icon = self.launcher.model.get_icon_by_desktop_id("gcalctool.desktop")
             if not icon:
@@ -133,7 +172,7 @@ class LauncherDragIconsBehavior(LauncherTestCase):
         self.assertThat(moved_icon.id, Equals(calc_icon.id))
 
     def test_can_drag_icon_above_window_switcher(self):
-        """Launcher icons must be dragable to above the workspace switcher icon."""
+        """Application icons must be dragable to above the workspace switcher icon."""
 
         self.ensure_calc_icon_not_in_launcher()
         calc = self.start_app("Calculator")
@@ -154,55 +193,3 @@ class LauncherDragIconsBehavior(LauncherTestCase):
         moved_icon = self.launcher.model.\
                      get_launcher_icons_for_monitor(self.launcher_monitor)[-3]
         self.assertThat(moved_icon.id, Equals(calc_icon.id))
-
-
-
-class LauncherTooltipTests(UnityTestCase):
-    """Test the launcher tooltips"""
-
-    def setUp(self):
-        super(LauncherTooltipTests, self).setUp()
-        self.set_unity_option('launcher_hide_mode', 0)
-
-    def test_bfb_tooltip_disappear_when_dash_is_opened(self):
-         """Tests that the bfb tooltip disappear when the dash is opened."""
-         bfb = self.launcher.model.get_bfb_icon()
-         self.mouse.move(bfb.center_x, bfb.center_y)
-
-         self.dash.ensure_visible()
-         self.addCleanup(self.dash.ensure_hidden)
-
-         self.assertThat(bfb.get_tooltip().active, Eventually(Equals(False)))
-
-    def test_bfb_tooltip_is_disabled_when_dash_is_open(self):
-         """Tests the that bfb tooltip is disabled when the dash is open."""
-         self.dash.ensure_visible()
-         self.addCleanup(self.dash.ensure_hidden)
-
-         bfb = self.launcher.model.get_bfb_icon()
-         self.mouse.move(bfb.center_x, bfb.center_y)
-
-         self.assertThat(bfb.get_tooltip().active, Eventually(Equals(False)))
-
-    def assertNumberWinsIsEventually(self, app, num):
-        """Asserts that 'app' eventually has 'num' wins. Waits up to 10 seconds."""
-        for i in range(10):
-            wins = app.get_windows()
-            if len(wins) == num:
-                return
-            sleep(1)
-
-        self.assertThat(len(app.get_windows()), Equals(num))
-
-    def test_shift_click_opens_new_application_instance(self):
-        """Shift+Clicking MUST open a new instance of an already-running application."""
-        app = self.start_app("Calculator")
-        desktop_id = app.desktop_file
-        icon = self.launcher.model.get_icon_by_desktop_id(desktop_id)
-        launcher_instance = self.launcher.get_launcher_for_monitor(0)
-
-        self.keyboard.press("Shift")
-        self.addCleanup(self.keyboard.release, "Shift")
-        launcher_instance.click_launcher_icon(icon)
-
-        self.assertNumberWinsIsEventually(app, 2)

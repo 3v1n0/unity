@@ -23,6 +23,13 @@ class LauncherKeyNavTests(LauncherTestCase):
     """Test the launcher key navigation"""
 
     def start_keynav_with_cleanup_cancel(self):
+        """Start keynav mode safely.
+
+        This adds a cleanup action that cancels keynav mode at the end of the
+        test if it's still running (but does nothing otherwise).
+
+        """
+
         self.launcher_instance.key_nav_start()
         self.addCleanup(self.safe_quit_keynav)
 

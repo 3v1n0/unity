@@ -25,7 +25,12 @@ class LauncherSwitcherTests(LauncherTestCase):
     """ Tests the functionality of the launcher's switcher capability"""
 
     def start_switcher_with_cleanup_cancel(self):
-        """Start the launcher switcher and add a cleanup action to cancel it."""
+        """Start switcher mode safely.
+
+        This adds a cleanup action that cancels keynav mode at the end of the
+        test if it's still running (but does nothing otherwise).
+
+        """
         self.launcher_instance.switcher_start()
         self.addCleanup(self.safe_quit_switcher)
 
