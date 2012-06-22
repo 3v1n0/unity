@@ -17,8 +17,8 @@
  * Authored by: Jason Smith <jason.smith@canonical.com>
  */
 
+#include <gdk/gdk.h>
 #include <string.h>
-#include <stdio.h>
 #include <cmath>
 
 #include "KeyboardUtil.h"
@@ -219,10 +219,10 @@ bool KeyboardUtil::IsPrintableKeySymbol(KeySym sym)
   {
     printable_key = true;
   }
-  /* Excluding terminal and modifiers keys, see keysymdef.h for reference */
-  else if (sym < 0xfd)
+  else
   {
-    printable_key = g_unichar_isprint(sym);
+    unsigned int unicode = gdk_keyval_to_unicode(sym);
+    printable_key = g_unichar_isprint(unicode);
   }
 
   return printable_key;
