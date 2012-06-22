@@ -36,8 +36,8 @@ namespace previews
 {
 class Preview : public nux::View, public debug::Introspectable
 {
-
 public:
+  typedef nux::ObjectPtr<Preview> Ptr;
   NUX_DECLARE_OBJECT_TYPE(Preview, nux::View);
 
   Preview();
