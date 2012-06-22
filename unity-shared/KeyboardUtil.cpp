@@ -230,14 +230,14 @@ bool KeyboardUtil::IsPrintableKeySymbol(KeySym sym)
 
 bool KeyboardUtil::IsMoveKeySymbol(KeySym sym)
 {
-  bool symbol_key = false;
+  bool move_key = false;
 
   if (sym >= XK_Home && sym <= XK_Begin)
   {
-    symbol_key = true;
+    move_key = true;
   }
 
-  return symbol_key;
+  return move_key;
 }
 
 }
