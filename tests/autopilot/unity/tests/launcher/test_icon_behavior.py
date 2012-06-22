@@ -16,7 +16,6 @@ from testtools.matchers import Equals, NotEquals
 from time import sleep
 
 from unity.emulators.launcher import IconDragType
-from unity.tests import UnityTestCase
 from unity.tests.launcher import LauncherTestCase, _make_scenarios
 
 logger = logging.getLogger(__name__)
