@@ -169,15 +169,11 @@ class QuicklistKeyNavigationTests(UnityTestCase):
         self.ql_launcher.key_nav_start()
         self.addCleanup(self.ql_launcher.key_nav_cancel)
 
-        for icon in self.launcher.model.get_launcher_icons():
-            if icon.tooltip_text != self.ql_app.name:
-                self.ql_launcher.key_nav_next()
-            else:
-                self.keybinding("launcher/keynav/open-quicklist")
-                self.addCleanup(self.keybinding, "launcher/keynav/close-quicklist")
-                break
-
+        self.launcher.keyboard_select_icon(tooltip_text=self.ql_app.name)
+        self.keybinding("launcher/keynav/open-quicklist")
+        self.addCleanup(self.keybinding, "launcher/keynav/close-quicklist")
         self.quicklist = self.ql_launcher_icon.get_quicklist()
+
         self.assertThat(self.quicklist, NotEquals(None))
         self.assertThat(self.quicklist.selected_item, NotEquals(None))
 

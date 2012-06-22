@@ -169,6 +169,52 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         if self.hidemode == 1:
             self.is_showing.wait_for(False)
 
+    def keyboard_select_icon(self, **kwargs):
+        """Using either keynav mode or the switcher, select an icon in the launcher.
+
+        The desired mode (keynav or switcher) must be started already before
+        calling this methods or a RuntimeError will be raised.
+
+        This method won't activate the icon, it will only select it.
+
+        Icons are selected by passing keyword argument filters to this method.
+        For example:
+
+        >>> launcher.keyboard_select_icon(tooltip_text="Calculator")
+
+        ...will select the *first* icon that has a 'tooltip_text' attribute equal
+        to 'Calculator'. If an icon is missing the attribute, it is treated as
+        not matching.
+
+        If no icon is found, this method will raise a ValueError.
+
+        """
+
+        if not self.in_keynav_mode and not self.in_switcher_mode:
+            raise RuntimeError("Launcher must be in keynav or switcher mode")
+
+        [launcher_model] = LauncherModel.get_all_instances()
+        all_icons = launcher_model.get_launcher_icons()
+        logger.debug("all_icons = %r", [i.tooltip_text for i in all_icons])
+        for icon in all_icons:
+            # can't iterate over the model icons directly since some are hidden
+            # from the user.
+            if not icon.visible:
+                continue
+            logger.debug("Selected icon = %s", icon.tooltip_text)
+            matches = True
+            for arg,val in kwargs.iteritems():
+                if not hasattr(icon, arg) or getattr(icon, arg, None) != val:
+                    matches = False
+                    break
+            if matches:
+                return
+            if self.in_keynav_mode:
+                self.key_nav_next()
+            elif self.in_switcher_mode:
+                self.switcher_next()
+        raise ValueError("No icon found that matches: %r", kwargs)
+
     def key_nav_start(self):
         """Start keyboard navigation mode by pressing Alt+F1."""
         self._screen.move_mouse_to_monitor(self.monitor)

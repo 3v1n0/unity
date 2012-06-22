@@ -25,7 +25,12 @@ class LauncherSwitcherTests(LauncherTestCase):
     """ Tests the functionality of the launcher's switcher capability"""
 
     def start_switcher_with_cleanup_cancel(self):
-        """Start the launcher switcher and add a cleanup action to cancel it."""
+        """Start switcher mode safely.
+
+        This adds a cleanup action that cancels keynav mode at the end of the
+        test if it's still running (but does nothing otherwise).
+
+        """
         self.launcher_instance.switcher_start()
         self.addCleanup(self.safe_quit_switcher)
 
@@ -149,19 +154,9 @@ class LauncherSwitcherTests(LauncherTestCase):
 
         self.start_switcher_with_cleanup_cancel()
 
-        found = False
-        for icon in self.launcher.model.get_launcher_icons_for_monitor(self.launcher_monitor):
-            if (icon.tooltip_text == calc.name):
-                found = True
-                self.launcher_instance.switcher_activate()
-                break
-            else:
-                self.launcher_instance.switcher_next()
+        self.launcher_instance.keyboard_select_icon(tooltip_text=calc.name)
+        self.launcher_instance.switcher_activate()
 
-        if not found:
-            self.addCleanup(self.launcher_instance.switcher_cancel)
-
-        self.assertTrue(found)
         # TODO - we need to extend the Eventually() matcher to work on regular
         # attributes too, at which point we can stop writing ugly stuff in our
         # tests like this:
