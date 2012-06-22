@@ -244,6 +244,29 @@ class HudBehaviorTests(HudTestsBase):
         self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
+    def test_hud_closes_click_outside_geo_shrunk(self):
+        """When the hud is shrunk clicking outside of its geo should close it."""
+
+        self.hud.ensure_visible()
+        geo = self.hud.view.geometry
+        self.mouse.move(geo[2]/2, geo[3]-50,True,100,0.01)
+        self.mouse.click()
+
+        self.assertThat(self.hud.visible, Eventually(Equals(False)))
+
+    def test_hud_closes_click_outside_geo(self):
+        """Clicking outside of its geo should close it."""
+
+        self.hud.ensure_visible()
+        self.keyboard.type("Test")
+
+        geo = self.hud.view.geometry
+        self.mouse.move(geo[2]/2, geo[3]+50,True,100,0.01)
+        self.mouse.click()
+
+        self.assertThat(self.hud.visible, Eventually(Equals(False)))
+
+
 class HudLauncherInteractionsTests(HudTestsBase):
 
     launcher_modes = [('Launcher autohide', {'launcher_autohide': False}),
