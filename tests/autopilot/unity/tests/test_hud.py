@@ -252,7 +252,7 @@ class HudBehaviorTests(HudTestsBase):
 
         self.hud.ensure_visible()
         (x,y,w,h) = self.hud.view.geometry
-        self.mouse.move(w/2, h-50,True)
+        self.mouse.move(w/2, h-50)
         self.mouse.click()
 
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
@@ -263,9 +263,8 @@ class HudBehaviorTests(HudTestsBase):
         self.hud.ensure_visible()
         self.keyboard.type("Test")
 
-        geo = self.hud.view.geometry
         (x,y,w,h) = self.hud.view.geometry
-        self.mouse.move(w/2, h+50,True)
+        self.mouse.move(w/2, h+50)
         self.mouse.click()
 
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
