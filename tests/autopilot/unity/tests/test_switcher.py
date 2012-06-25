@@ -52,10 +52,10 @@ class SwitcherTests(SwitcherTestCase):
         """Starting switcher in details mode must show the focused window title."""
         app = self.start_app("Text Editor")
         sleep(1)
-        self.switcher.initiate(SwitcherMode.DETAIL)
-        self.addCleanup(self.switcher.terminate)
 
         [title] = [w.title for w in app.get_windows() if w.is_focused]
+        self.switcher.initiate(SwitcherMode.DETAIL)
+        self.addCleanup(self.switcher.terminate)
 
         self.assertThat(self.switcher.controller.view.label, Eventually(Equals(title)))
 
@@ -189,6 +189,22 @@ class SwitcherTests(SwitcherTestCase):
             self.switcher.initiate()
             self.addCleanup(self.switcher.terminate)
             self.assertThat(self.switcher.controller.monitor, Eventually(Equals(monitor)))
+
+    def test_switcher_alt_f4_is_disabled(self):
+        """Tests that alt+f4 does not work while switcher is active."""
+
+        app = self.start_app("Text Editor")
+        sleep(1)
+
+        self.switcher.initiate(SwitcherMode.DETAIL)
+        self.addCleanup(self.switcher.terminate)
+
+        self.keyboard.press_and_release("Alt+F4")
+        [win] = [w for w in app.get_windows()]
+
+        # Need the sleep to allow the window time to close, for jenkins!
+        sleep(10)
+        self.assertThat(win.is_valid, Equals(True))
 
 
 class SwitcherWindowsManagementTests(SwitcherTestCase):
