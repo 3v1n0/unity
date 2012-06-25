@@ -417,7 +417,8 @@ void View::OnKeyDown (unsigned long event_type, unsigned long keysym,
 
 void View::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
 {
-  nux::Geometry current_geo(0, 0, content_geo_.width, current_height_);
+  nux::Geometry current_geo(content_geo_);
+  current_geo.height = current_height_;
   if (!current_geo.IsPointInside(x, y))
   {
     ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
