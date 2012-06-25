@@ -1219,6 +1219,10 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
     doShellRepaint = wt->GetDrawList().size() > 0 ||
                      BackgroundEffectHelper::HasDirtyHelpers();
 
+  g_print("vv: glPaintOutput %u, %s\n",
+	output->id(),
+	doShellRepaint ? "REPAINT" : "idle");
+
   allowWindowPaint = true;
   _last_output = output;
   paint_panel_ = false;
@@ -1355,8 +1359,7 @@ bool UnityScreen::shellIsHidden(CompOutput const& output)
      * and almost always pointless.
      */
     if (w->isMapped() &&
-        w->isViewable() &&
-        !w->inShowDesktopMode() &&  // Why must this != isViewable?
+        !(w->state () & CompWindowStateHiddenMask) &&
         w->geometry().contains(output))
     {
       hidden = true;
