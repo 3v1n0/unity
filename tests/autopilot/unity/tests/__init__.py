@@ -10,6 +10,7 @@
 
 from __future__ import absolute_import
 
+from autopilot.matchers import Eventually
 from autopilot.testcase import AutopilotTestCase
 from dbus import DBusException
 from logging import getLogger
@@ -17,7 +18,6 @@ import os
 from tempfile import mktemp
 from testtools.content import text_content
 from testtools.matchers import Equals
-from time import sleep
 
 from unity.emulators.dash import Dash
 from unity.emulators.hud import Hud
@@ -194,10 +194,5 @@ class UnityTestCase(AutopilotTestCase):
 
     def assertNumberWinsIsEventually(self, app, num):
         """Asserts that 'app' eventually has 'num' wins. Waits up to 10 seconds."""
-        for i in range(10):
-            wins = app.get_windows()
-            if len(wins) == num:
-                return
-            sleep(1)
 
-        self.assertThat(len(app.get_windows()), Equals(num))
+        self.assertThat(lambda: len(app.get_windows()), Eventually(Equals(num)))
