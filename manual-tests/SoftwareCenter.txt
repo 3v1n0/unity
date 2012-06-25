@@ -1,16 +1,54 @@
-The SoftwareCenter Launcher Integration cancel
-----------------------------------------------
+
+Ubuntu Software Center Launcher Integration, installing an application from the Ubuntu archives
+-----------------------------------------------------------------------------------------------
 
 Setup: 
-#. Open software-center
+#. Launch Ubuntu Software Center
 
 Actions:  
-#. Click on install on a big application like wesnoth
-#. Verify that the icon "flies" into the launcher
-#. Wait until the "In Progress" appears in the toplevel toolbar of s-c
-#. Click on the "In Progress" button in the toolbar
-#. Click on the "cancel" button of the install of the application
+#. In Software Center, navigate to the "Games" category and click on an uninstalled game in the list.
+#. Click the "More Info" button.
+#. In the details view for the game, click the "Install" button.
+#. Enter the password for the install when prompted.
 
 Expected Result:
-  The icon is removed from the launcher again after the download was
-  canceled.
+  The game begins to install and the progress bar moves in Software Center.
+  At the very *end* of the installation process (when the progress bar has completed), the icon for the game "flies" into the Unity Launcher.
+  Verify that the icon that has been added to the launcher:
+   - Has the correct icon for the game that was installed.
+   - Hovering the mouse cursor over the icon displays the name of the application for its tooltip (and that it does *not* display the text "Waiting to install").
+   - Clicking the icon launches the newly installed game.
+   
+   
+Ubuntu Software Center Launcher Integration, cancelling an installation
+-----------------------------------------------------------------------
+
+Setup: 
+#. Launch Ubuntu Software Center
+
+Actions:  
+#. In Software Center, navigate to the "Games" category and click on an uninstalled game in the list.
+#. Click the "More Info" button.
+#. In the details view for the game, click the "Install" button.
+#. When prompted to enter your password for the install, click the "Cancel" button.
+
+Expected Result:
+  The installation is cancelled. Verify that no icon has been added to the Unity launcher integration.
+
+
+Ubuntu Software Center Launcher Integration, uninstalling an application
+------------------------------------------------------------------------
+
+Setup: 
+#. Launch Ubuntu Software Center
+
+Actions:  
+#. In Software Center, click the "Installed" toolbar button to access the list of installed applications.
+#. Choose an installed application to remove (choose one for which there is a corresponding icon in the Unity launcher).
+#. Click the "More Info" button.
+#. In the details view for the application, click the "Remove" button.
+#. Enter the password for the remove when prompted.
+
+Expected Result:
+  The uninstall process begins and the progress bar moves in Software Center.
+  At the very *end* of the installation process, verify that the corresponding icon in the Unity launcher is *removed*.
