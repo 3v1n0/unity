@@ -261,7 +261,7 @@ void Controller::Hide(bool accept_state)
     view_window_->SetOpacity(0.0f);
     view_window_->ShowWindow(false);
     view_window_->PushToBack();
-    view_window_->EnableInputWindow(false, "Switcher");
+    view_window_->EnableInputWindow(false);
   }
 
   ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN, g_variant_new("(bi)", false, monitor_));

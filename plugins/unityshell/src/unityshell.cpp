@@ -1922,7 +1922,7 @@ void UnityScreen::OnSwitcherStart(GVariant* data)
 {
   newFocusedWindow = screen->findWindow(switcher_controller_->GetSwitcherInputWindowId());
 
-  if (newFocusedWindow != screen->findWindow(screen->activeWindow()))
+  if (switcher_controller_->GetSwitcherInputWindowId() != screen->activeWindow())
     PluginAdapter::Default()->saveInputFocus();
 
   if (newFocusedWindow)
