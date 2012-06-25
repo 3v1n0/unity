@@ -9,7 +9,7 @@
 
 from __future__ import absolute_import
 
-from autopilot.matchers import Eventually
+from autopilot.matchers import Eventually, Is
 from autopilot.testcase import multiply_scenarios
 import logging
 from testtools.matchers import Equals, NotEquals
@@ -139,11 +139,8 @@ class LauncherDragIconsBehavior(LauncherTestCase):
 
     def ensure_calc_icon_not_in_launcher(self):
         """Wait until the launcher model updates and removes the calc icon."""
-        while 1:
-            icon = self.launcher.model.get_icon_by_desktop_id("gcalctool.desktop")
-            if not icon:
-                break
-            sleep(1)
+        refresh_fn = lambda: self.launcher.model.get_icon_by_desktop_id("gcalctool.desktop")
+        self.assertThat(refresh_fn, Eventually(Is(None)))
 
     def test_can_drag_icon_below_bfb(self):
         """Application icons must be draggable to below the BFB."""
