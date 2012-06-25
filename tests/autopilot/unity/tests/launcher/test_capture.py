@@ -25,7 +25,18 @@ class LauncherCaptureTests(UnityTestCase):
 
     screen_geo = ScreenGeometry()
 
+    def setUp(self):
+        super(LauncherCaptureTests, self).setUp()
+
+        if self.screen_geo.get_num_monitors() <= 1:
+            self.skipTest("This test requires two or more monitors.")
+
+        self.set_unity_option('launcher_capture_mouse', True)
+        self.set_unity_option('num_launchers', 0)
+        self.setHideMode(0)
+
     def setHideMode(self, mode):
+        self.set_unity_option('launcher_hide_mode', mode)
         launcher = self.launcher.get_launcher_for_monitor(0)
         self.assertThat(launcher.hidemode, Eventually(Equals(mode)))
 
@@ -38,22 +49,14 @@ class LauncherCaptureTests(UnityTestCase):
         return 1
 
     def rightMostMonitor(self):
+        # TODO: This will break setups with 3 or more monitors.
         return 1 - self.leftMostMonitor()
 
-    def setUp(self):
-        super(LauncherCaptureTests, self).setUp()
-        self.set_unity_option('launcher_capture_mouse', True)
-        self.set_unity_option('launcher_hide_mode', 0)
-        self.set_unity_option('num_launchers', 0)
-        self.setHideMode(0)
 
     def test_launcher_captures_while_sticky_and_revealed(self):
         """Tests that the launcher captures the mouse when moving between monitors
         while revealed.
         """
-        if self.screen_geo.get_num_monitors() <= 1:
-            self.skipTest("Cannot run this test with a single monitor configured.")
-
         x, y, width, height = self.screen_geo.get_monitor_geometry(self.rightMostMonitor())
         self.mouse.move(x + width / 2, y + height / 2, False)
         self.mouse.move(x - width / 2, y + height / 2, True, 5, .002)
@@ -66,8 +69,6 @@ class LauncherCaptureTests(UnityTestCase):
         """Tests that the launcher doesn't captures the mouse when moving between monitors
         while revealed and stick is off.
         """
-        if self.screen_geo.get_num_monitors() <= 1:
-            self.skipTest("Cannot run this test with a single monitor configured.")
 
         self.set_unity_option('launcher_capture_mouse', False)
 
@@ -83,12 +84,8 @@ class LauncherCaptureTests(UnityTestCase):
         """Tests that the launcher doesn't capture the mouse when moving between monitors
         while hidden and sticky is off.
         """
-        if self.screen_geo.get_num_monitors() <= 1:
-            self.skipTest("Cannot run this test with a single monitor configured.")
 
-        self.set_unity_option('launcher_hide_mode', 1)
         self.set_unity_option('launcher_capture_mouse', False)
-
         self.setHideMode(1)
 
         x, y, width, height = self.screen_geo.get_monitor_geometry(self.leftMostMonitor())
@@ -104,11 +101,6 @@ class LauncherCaptureTests(UnityTestCase):
         """Tests that the launcher captures the mouse when moving between monitors
         while hidden.
         """
-        if self.screen_geo.get_num_monitors() <= 1:
-            self.skipTest("Cannot run this test with a single monitor configured.")
-
-        self.set_unity_option('launcher_hide_mode', 1)
-
         self.setHideMode(1)
 
         x, y, width, height = self.screen_geo.get_monitor_geometry(self.leftMostMonitor())

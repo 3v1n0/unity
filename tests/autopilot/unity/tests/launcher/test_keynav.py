@@ -12,7 +12,6 @@ from __future__ import absolute_import
 from autopilot.matchers import Eventually
 import logging
 from testtools.matchers import Equals, GreaterThan
-from time import sleep
 
 from unity.tests.launcher import LauncherTestCase
 
@@ -23,6 +22,12 @@ class LauncherKeyNavTests(LauncherTestCase):
     """Test the launcher key navigation"""
 
     def start_keynav_with_cleanup_cancel(self):
+        """Start keynav mode safely.
+
+        This adds a cleanup action that cancels keynav mode at the end of the
+        test if it's still running (but does nothing otherwise).
+
+        """
         self.launcher_instance.key_nav_start()
         self.addCleanup(self.safe_quit_keynav)
 
@@ -129,18 +134,9 @@ class LauncherKeyNavTests(LauncherTestCase):
 
         self.start_keynav_with_cleanup_cancel()
 
-        found = False
-        for icon in self.launcher.model.get_launcher_icons_for_monitor(self.launcher_monitor):
-            if (icon.tooltip_text == calc.name):
-                found = True
-                self.launcher_instance.key_nav_activate()
-                break
-            else:
-                self.launcher_instance.key_nav_next()
+        self.launcher_instance.keyboard_select_icon(tooltip_text=calc.name)
+        self.launcher_instance.key_nav_activate()
 
-        sleep(.5)
-
-        self.assertTrue(found)
         self.assertTrue(calc.is_active)
         self.assertFalse(mahjongg.is_active)
 
@@ -148,11 +144,9 @@ class LauncherKeyNavTests(LauncherTestCase):
         """When entering expo mode from KeyNav the Desktop must get focus."""
         self.start_keynav_with_cleanup_cancel()
 
-        for icon in self.launcher.model.get_launcher_icons_for_monitor(self.launcher_monitor):
-            if (icon.tooltip_text == "Workspace Switcher"):
-                self.launcher_instance.key_nav_activate()
-                break
-            self.launcher_instance.key_nav_next()
+        self.launcher_instance.keyboard_select_icon(tooltip_text="Workspace Switcher")
+        self.launcher_instance.key_nav_activate()
+        self.addCleanup(self.keybinding, "expo/cancel")
 
         self.assertThat(self.panels.get_active_panel().title, Eventually(Equals("Ubuntu Desktop")))
 
@@ -160,11 +154,8 @@ class LauncherKeyNavTests(LauncherTestCase):
         """Esc should quit expo when entering it from KeyNav."""
         self.start_keynav_with_cleanup_cancel()
 
-        for icon in self.launcher.model.get_launcher_icons_for_monitor(self.launcher_monitor):
-            if (icon.tooltip_text == "Workspace Switcher"):
-                self.launcher_instance.key_nav_activate()
-                break
-            self.launcher_instance.key_nav_next()
+        self.launcher_instance.keyboard_select_icon(tooltip_text="Workspace Switcher")
+        self.launcher_instance.key_nav_activate()
 
         self.keyboard.press_and_release("Escape")
         self.assertThat(self.window_manager.expo_active, Eventually(Equals(False)))

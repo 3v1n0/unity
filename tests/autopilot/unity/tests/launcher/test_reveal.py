@@ -43,9 +43,8 @@ class LauncherRevealTests(LauncherTestCase):
         self.assertThat(self.launcher_instance.is_showing, Eventually(Equals(True)))
 
     def test_reveal_with_mouse_under_launcher(self):
-        """Tests that the launcher hides properly if the
-        mouse is under the launcher when it is revealed.
-        """
+        """The Launcher must hide properly if the mouse is under the launcher."""
+
         self.launcher_instance.move_mouse_over_launcher()
         # we can't use "launcher_instance.keyboard_reveal_launcher()"
         # since it moves the mouse out of the way, invalidating the test.

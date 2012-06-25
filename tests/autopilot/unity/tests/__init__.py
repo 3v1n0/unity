@@ -17,6 +17,7 @@ import os
 from tempfile import mktemp
 from testtools.content import text_content
 from testtools.matchers import Equals
+from time import sleep
 
 from unity.emulators.dash import Dash
 from unity.emulators.hud import Hud
@@ -191,3 +192,12 @@ class UnityTestCase(AutopilotTestCase):
             raise ValueError("Log level '%s' must be one of: %r" % (level, valid_levels))
         set_log_severity(component, level)
 
+    def assertNumberWinsIsEventually(self, app, num):
+        """Asserts that 'app' eventually has 'num' wins. Waits up to 10 seconds."""
+        for i in range(10):
+            wins = app.get_windows()
+            if len(wins) == num:
+                return
+            sleep(1)
+
+        self.assertThat(len(app.get_windows()), Equals(num))
