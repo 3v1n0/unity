@@ -11,6 +11,8 @@ unity (5.12-0ubuntu4) UNRELEASED; urgency=low
     - build in parallel
   * Cherry-pick some upstream fixes for the newer g-c-c making previous upload
     FTBFS in quantal
+  * as armel/armhf is temporary build with opengl now, build-dep on nux
+    2.12.0-0ubuntu2
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 31 May 2012 10:21:46 +0200
 
