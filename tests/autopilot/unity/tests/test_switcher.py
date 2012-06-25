@@ -202,6 +202,8 @@ class SwitcherTests(SwitcherTestCase):
         self.keyboard.press_and_release("Alt+F4")
         [win] = [w for w in app.get_windows()]
 
+        # Need the sleep to allow the window time to close, for jenkins!
+        sleep(10)
         self.assertThat(win.is_valid, Equals(True))
 
 
