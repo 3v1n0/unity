@@ -1219,12 +1219,6 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
     doShellRepaint = wt->GetDrawList().size() > 0 ||
                      BackgroundEffectHelper::HasDirtyHelpers();
 
-  g_print("vv: glPaintOutput %u, %s %s\n",
-	output->id(),
-	doShellRepaint ? "REPAINT" : "idle",
-	shellIsHidden(*output) ? "SHELLHIDDEN" : "shellnormal"
-	);
-
   allowWindowPaint = true;
   _last_output = output;
   paint_panel_ = false;
