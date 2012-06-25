@@ -47,8 +47,6 @@ class LauncherSwitcherTests(LauncherTestCase):
 
     def test_launcher_switcher_cancel_resume_focus(self):
         """Test that ending the launcher switcher resume the focus."""
-        # TODO either remove this test from the class or don't initiate the
-        # switcher in setup.
         self.close_all_app("Calculator")
         calc = self.start_app("Calculator")
         self.assertTrue(calc.is_active)
@@ -157,16 +155,8 @@ class LauncherSwitcherTests(LauncherTestCase):
         self.launcher_instance.keyboard_select_icon(tooltip_text=calc.name)
         self.launcher_instance.switcher_activate()
 
-        # TODO - we need to extend the Eventually() matcher to work on regular
-        # attributes too, at which point we can stop writing ugly stuff in our
-        # tests like this:
-        for i in range(10):
-            if calc.is_active and not mahjongg.is_active:
-                break
-            sleep(1)
-
-        self.assertTrue(calc.is_active)
-        self.assertFalse(mahjongg.is_active)
+        self.assertThat(lambda: calc.is_active, Eventually(Equals(True)))
+        self.assertThat(lambda: mahjongg.is_active, Eventually(Equals(False)))
 
     def test_launcher_switcher_using_shorcuts(self):
         """Using some other shortcut while switcher is active must cancel switcher."""

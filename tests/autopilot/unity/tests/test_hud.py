@@ -258,7 +258,7 @@ class HudBehaviorTests(HudTestsBase):
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
     def test_hud_closes_click_outside_geo(self):
-        """Clicking outside of the hud will make close it."""
+        """Clicking outside of the hud will make it close."""
 
         self.hud.ensure_visible()
         self.keyboard.type("Test")

@@ -497,7 +497,7 @@ void View::AddProperties(GVariantBuilder* builder)
 {
   unsigned num_buttons = buttons_.size();
   variant::BuilderWrapper(builder)
-    .add(content_geo_)
+    .add(GetGeometry())
     .add("selected_button", selected_button_)
     .add("num_buttons", num_buttons);
 }
