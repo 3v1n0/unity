@@ -1219,9 +1219,11 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
     doShellRepaint = wt->GetDrawList().size() > 0 ||
                      BackgroundEffectHelper::HasDirtyHelpers();
 
-  g_print("vv: glPaintOutput %u, %s\n",
+  g_print("vv: glPaintOutput %u, %s %s\n",
 	output->id(),
-	doShellRepaint ? "REPAINT" : "idle");
+	doShellRepaint ? "REPAINT" : "idle",
+	shellIsHidden(*output) ? "SHELLHIDDEN" : "shellnormal"
+	);
 
   allowWindowPaint = true;
   _last_output = output;
@@ -1346,12 +1348,17 @@ void UnityScreen::donePaint()
 
 bool UnityScreen::shellIsHidden(CompOutput const& output)
 {
-  bool hidden = false;
   std::vector<Window> const& nuxwins(nux::XInputWindow::NativeHandleList());
 
-  // Loop through windows from back to front
-  for (CompWindow* w : screen->windows ())
+  // Loop through windows from front to back
+  CompWindowList const& wins = screen->windows();
+  for ( CompWindowList::const_reverse_iterator r = wins.rbegin()
+      ; r != wins.rend()
+      ; r++
+      )
   {
+    CompWindow* w = *r;
+
     /*
      * The shell is hidden if there exists any window that fully covers
      * the output and is in front of all Nux windows on that output.
@@ -1362,22 +1369,19 @@ bool UnityScreen::shellIsHidden(CompOutput const& output)
         !(w->state () & CompWindowStateHiddenMask) &&
         w->geometry().contains(output))
     {
-      hidden = true;
+      return true;
     }
-    else if (hidden)
+    else
     {
       for (Window n : nuxwins)
       {
         if (w->id() == n && output.intersects(w->geometry()))
-        {
-          hidden = false;
-          break;
-        }
+          return false;
       }
     }
   }
 
-  return hidden;
+  return false;
 }
 
 void UnityScreen::compizDamageNux(CompRegion const& damage)
