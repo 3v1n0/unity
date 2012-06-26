@@ -52,9 +52,6 @@ override_dh_install:
 
 override_dh_gencontrol:
 	dh_gencontrol -- -Vcoreabiversion=$(CORE_ABIVERSION) -Vnuxabiversion=$(NUX_ABIVERSION)
-	# override netbook-launcher on i386 to get an epoch
-	rm -f debian/netbook-launcher/DEBIAN/control
-	dh_gencontrol -pnetbook-launcher -- -Vcoreabiversion=$(CORE_ABIVERSION) -Vnuxabiversion=$(NUX_ABIVERSION) -v2:$(DEB_VERSION)
 
 override_dh_makeshlibs:
 	dh_makeshlibs -plibunity-core-5.0-5 -V 'libunity-core-5.0-5 (>= 4.14.2)'
