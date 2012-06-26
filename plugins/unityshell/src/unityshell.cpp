@@ -1215,7 +1215,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
    * Very important!
    * Don't waste GPU and CPU rendering the shell on every frame if you don't
    * need to. Doing so on every frame causes Nux to hog the GPU and slow down
-   * all other OpenGL apps (LP: #988079)
+   * ALL rendering. (LP: #988079)
    */
   if (forcePaintOnTop() || PluginAdapter::Default()->IsExpoActive())
     doShellRepaint = true;
@@ -1362,8 +1362,6 @@ bool UnityScreen::shellIsHidden(CompOutput const& output)
     /*
      * The shell is hidden if there exists any window that fully covers
      * the output and is in front of all Nux windows on that output.
-     * We could also check CompositeWindow::opacity() but that would be slower
-     * and almost always pointless.
      */
     if (w->isMapped() &&
         !(w->state () & CompWindowStateHiddenMask) &&
