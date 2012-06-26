@@ -133,9 +133,6 @@ public:
                                 CompOutput*,
                                 unsigned int);
 
-  /* Pop our InputOutput windows from the paint list */
-  const CompWindowList& getWindowPaintList();
-
   /* handle X11 events */
   void handleEvent(XEvent*);
 
@@ -216,8 +213,6 @@ private:
   void compizDamageNux(CompRegion const& region);
   void nuxDamageCompiz();
 
-  bool shellIsHidden(CompOutput const& output);
-
   void onRedrawRequested();
   void Relayout();
 
@@ -286,7 +281,9 @@ private:
   bool    damaged;
   bool    _key_nav_mode_requested;
   CompOutput* _last_output;
-  CompWindowList _withRemovedNuxWindows;
+
+  CompRegion nuxRegion;
+  CompRegion overShell;
 
   nux::Property<nux::Geometry> primary_monitor_;
 

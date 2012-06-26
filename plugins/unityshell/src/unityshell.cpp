@@ -1219,7 +1219,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
    */
   if (forcePaintOnTop() || PluginAdapter::Default()->IsExpoActive())
     doShellRepaint = true;
-  else if (region.isEmpty() || shellIsHidden(*output))
+  else if (region.isEmpty())
     doShellRepaint = false;
   else
     doShellRepaint = wt->GetDrawList().size() > 0;
@@ -1243,10 +1243,16 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
     _fbo->bind (nux::Geometry (output->x (), output->y (), output->width (), output->height ()));
 #endif
 
+  overShell = CompRegion();
+  nuxRegion = CompRegion();
+
   /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
   ret = gScreen->glPaintOutput(attrib, transform, region, output, mask);
 
 #ifndef USE_MODERN_COMPIZ_GL
+  if (doShellRepaint && overShell.contains(*output))
+    doShellRepaint = false;
+
   if (doShellRepaint)
     paintDisplay(region, transform, mask);
 #endif
@@ -1343,42 +1349,6 @@ void UnityScreen::donePaint()
   }
 
   cScreen->donePaint ();
-}
-
-bool UnityScreen::shellIsHidden(CompOutput const& output)
-{
-  std::vector<Window> const& nuxwins(nux::XInputWindow::NativeHandleList());
-
-  // Loop through windows from front to back
-  CompWindowList const& wins = screen->windows();
-  for ( CompWindowList::const_reverse_iterator r = wins.rbegin()
-      ; r != wins.rend()
-      ; r++
-      )
-  {
-    CompWindow* w = *r;
-
-    /*
-     * The shell is hidden if there exists any window that fully covers
-     * the output and is in front of all Nux windows on that output.
-     */
-    if (w->isMapped() &&
-        !(w->state () & CompWindowStateHiddenMask) &&
-        w->geometry().contains(output))
-    {
-      return true;
-    }
-    else
-    {
-      for (Window n : nuxwins)
-      {
-        if (w->id() == n && output.intersects(w->geometry()))
-          return false;
-      }
-    }
-  }
-
-  return false;
 }
 
 void UnityScreen::compizDamageNux(CompRegion const& damage)
@@ -2267,14 +2237,6 @@ bool isNuxWindow (CompWindow* value)
   return false;
 }
 
-const CompWindowList& UnityScreen::getWindowPaintList()
-{
-  CompWindowList& pl = _withRemovedNuxWindows = cScreen->getWindowPaintList();
-  pl.remove_if(isNuxWindow);
-
-  return pl;
-}
-
 void UnityScreen::RaiseInputWindows()
 {
   std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
@@ -2299,6 +2261,24 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
                           const CompRegion& region,
                           unsigned int mask)
 {
+  if (isNuxWindow(window))
+  {
+    if (mask & PAINT_WINDOW_OCCLUSION_DETECTION_MASK)
+    {
+      uScreen->nuxRegion += window->geometry();
+      uScreen->nuxRegion -= uScreen->overShell;
+    }
+    return false;
+  }
+  else if (mask & PAINT_WINDOW_OCCLUSION_DETECTION_MASK &&
+           !(mask & PAINT_WINDOW_TRANSLUCENT_MASK) &&
+           window->state() & CompWindowStateFullscreenMask)
+           // && !window->alpha()  <-- doesn't work. False positives.
+  {
+    uScreen->overShell += window->geometry();
+    uScreen->overShell -= uScreen->nuxRegion;
+  }
+
   GLWindowPaintAttrib wAttrib = attrib;
 
   if (mMinimizeHandler)
@@ -2357,7 +2337,17 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     }
   }
 
-  if (uScreen->doShellRepaint && !uScreen->forcePaintOnTop ())
+  /*
+   * Paint the shell in *roughly* the compiz stacking order. This is only
+   * approximate because we're painting all the nux windows as soon as we find
+   * the bottom-most nux window (from bottom to top).
+   * But remember to avoid painting the shell if it's within the overShell
+   * region.
+   */
+  if (uScreen->doShellRepaint &&
+      !uScreen->forcePaintOnTop () &&
+      !uScreen->overShell.contains(window->geometry())
+     )
   {
     std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
     unsigned int size = xwns.size();
