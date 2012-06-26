@@ -59,6 +59,8 @@ public:
   SeriesItemPtrList GetItems() const;
   Preview::Ptr GetChildPreview() const;
 
+  sigc::signal<void, Preview::Ptr const&> child_preview_changed;
+
 private:
   class Impl;
   Impl* pimpl;

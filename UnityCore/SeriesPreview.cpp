@@ -32,11 +32,14 @@ public:
   Impl(SeriesPreview* owner, glib::Object<GObject> const& proto_obj);
 
   void SetupGetters();
+  void selected_item_reply(GVariant* reply);
   int get_selected_item_index() const { return selected_item_index_; };
+  bool set_selected_item_index(int index);
   SeriesItemPtrList get_items() const { return items_list_; };
   Preview::Ptr get_child_preview() const { return child_preview_; };
 
   SeriesPreview* owner_;
+  glib::Object<UnityProtocolSeriesPreview> raw_preview_;
 
   Preview::Ptr child_preview_;
   SeriesItemPtrList items_list_;
@@ -48,10 +51,11 @@ SeriesPreview::Impl::Impl(SeriesPreview* owner,
   : owner_(owner)
   , selected_item_index_(-1)
 {
-  auto preview = glib::object_cast<UnityProtocolSeriesPreview>(proto_obj);
+  raw_preview_ = glib::object_cast<UnityProtocolSeriesPreview>(proto_obj);
 
   int items_len;
-  auto items = unity_protocol_series_preview_get_items(preview, &items_len);
+  auto items = unity_protocol_series_preview_get_items(raw_preview_,
+                                                       &items_len);
   for (int i = 0; i < items_len; i++)
   {
     UnityProtocolSeriesItemRaw* raw_item = &items[i];
@@ -60,11 +64,12 @@ SeriesPreview::Impl::Impl(SeriesPreview* owner,
   }
 
   glib::Object<UnityProtocolPreview> child_preview(
-      unity_protocol_series_preview_get_child_preview(preview),
+      unity_protocol_series_preview_get_child_preview(raw_preview_),
       glib::AddRef());
   child_preview_ = Preview::PreviewForProtocolObject(glib::object_cast<GObject>(child_preview));
 
-  selected_item_index_ = unity_protocol_series_preview_get_selected_item(preview);
+  selected_item_index_ =
+    unity_protocol_series_preview_get_selected_item(raw_preview_);
 
   SetupGetters();
 }
@@ -73,6 +78,40 @@ void SeriesPreview::Impl::SetupGetters()
 {
   owner_->selected_item_index.SetGetterFunction(
       sigc::mem_fun(this, &SeriesPreview::Impl::get_selected_item_index));
+  owner_->selected_item_index.SetSetterFunction(
+      sigc::mem_fun(this, &SeriesPreview::Impl::set_selected_item_index));
+}
+
+bool SeriesPreview::Impl::set_selected_item_index(int index)
+{
+  if (index != selected_item_index_)
+  {
+    selected_item_index_ = index;
+    
+    UnityProtocolPreview *preview = UNITY_PROTOCOL_PREVIEW(raw_preview_.RawPtr());
+    unity_protocol_preview_begin_updates(preview);
+    unity_protocol_series_preview_set_selected_item(raw_preview_, index);
+    glib::Variant properties(unity_protocol_preview_end_updates(preview));
+    owner_->Update(properties, sigc::mem_fun(this, &SeriesPreview::Impl::selected_item_reply));
+    return true;
+  }
+
+  return false;
+}
+
+void SeriesPreview::Impl::selected_item_reply(GVariant *reply)
+{
+  glib::Variant dict(reply);
+  glib::HintsMap hints;
+  dict.ASVToHints(hints);
+
+  auto iter = hints.find("preview");
+  if (iter != hints.end())
+  {
+    Preview::Ptr new_child = Preview::PreviewForVariant(iter->second);
+    child_preview_ = new_child;
+    owner_->child_preview_changed.emit(new_child);
+  }
 }
 
 SeriesPreview::SeriesPreview(unity::glib::Object<GObject> const& proto_obj)
