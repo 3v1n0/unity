@@ -131,6 +131,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , hud_keypress_time_(0)
   , panel_texture_has_changed_(true)
   , paint_panel_(false)
+  , scale_just_activated_(false)
 {
   Timer timer;
   gfloat version;
