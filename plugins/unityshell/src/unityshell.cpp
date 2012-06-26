@@ -353,6 +353,12 @@ UnityScreen::UnityScreen(CompScreen* screen)
      ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWTICHER,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherEndKeyNav));
 
+     ubus_manager_.RegisterInterest(UBUS_SWITCHER_START,
+                   sigc::mem_fun(this, &UnityScreen::OnSwitcherStart));
+
+     ubus_manager_.RegisterInterest(UBUS_SWITCHER_END,
+                   sigc::mem_fun(this, &UnityScreen::OnSwitcherEnd));
+
      auto init_plugins_cb = sigc::mem_fun(this, &UnityScreen::initPluginActions);
      sources_.Add(std::make_shared<glib::Idle>(init_plugins_cb, glib::Source::Priority::DEFAULT));
 
@@ -2029,6 +2035,27 @@ void UnityScreen::OnLauncherStartKeyNav(GVariant* data)
 }
 
 void UnityScreen::OnLauncherEndKeyNav(GVariant* data)
+{
+  RestoreWindow(data);
+}
+
+void UnityScreen::OnSwitcherStart(GVariant* data)
+{
+  newFocusedWindow = screen->findWindow(switcher_controller_->GetSwitcherInputWindowId());
+
+  if (switcher_controller_->GetSwitcherInputWindowId() != screen->activeWindow())
+    PluginAdapter::Default()->saveInputFocus();
+
+  if (newFocusedWindow)
+    newFocusedWindow->moveInputFocusTo();
+}
+
+void UnityScreen::OnSwitcherEnd(GVariant* data)
+{
+  RestoreWindow(data);
+}
+
+void UnityScreen::RestoreWindow(GVariant* data)
 {
   bool preserve_focus = false;
 

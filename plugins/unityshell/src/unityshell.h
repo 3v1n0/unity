@@ -233,6 +233,11 @@ private:
   void OnLauncherStartKeyNav(GVariant* data);
   void OnLauncherEndKeyNav(GVariant* data);
 
+  void OnSwitcherStart(GVariant* data);
+  void OnSwitcherEnd(GVariant* data);
+
+  void RestoreWindow(GVariant* data);
+
   void InitHints();
 
   void OnPanelStyleChanged();
