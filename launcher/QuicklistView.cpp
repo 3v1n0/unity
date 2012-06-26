@@ -65,8 +65,6 @@ QuicklistView::QuicklistView()
   , _corner_radius(4)
   , _padding(13)
   , _left_padding_correction(-1)
-  , _bottom_padding_correction_normal(-2)
-  , _bottom_padding_correction_single_item(-4)
   , _offset_correction(-1)
   , _cairo_text_has_changed(true)
   , _current_item_index(-1)
@@ -449,44 +447,49 @@ void QuicklistView::PreLayoutManagement()
       continue;
     }
     else if (!item->GetParentObject())
+    {
       _item_layout->AddView(item, 1, nux::eCenter, nux::eFull);
+    }
 
     int  textWidth  = 0;
     int  textHeight = 0;
     item->GetTextExtents(textWidth, textHeight);
-    if (textWidth > MaxItemWidth)
-      MaxItemWidth = textWidth;
+    textHeight += QuicklistMenuItem::ITEM_MARGIN * 2;
+
+    MaxItemWidth = std::max(MaxItemWidth, textWidth);
     TotalItemHeight += textHeight;
   }
 
   if (TotalItemHeight < _anchor_height)
   {
-    _top_space->SetMinMaxSize(1, (_anchor_height - TotalItemHeight) / 2 + 1 + _padding + _corner_radius);
-    _bottom_space->SetMinMaxSize(1, (_anchor_height - TotalItemHeight) / 2 + 1 +
-                                     _padding + _corner_radius +
-                                     _bottom_padding_correction_single_item);
+    _top_space->SetMinimumHeight((_anchor_height - TotalItemHeight) / 2 + _padding + _corner_radius + _offset_correction);
+    _top_space->SetMaximumHeight((_anchor_height - TotalItemHeight) / 2 + _padding + _corner_radius + _offset_correction);
+
+    _bottom_space->SetMinimumHeight((_anchor_height - TotalItemHeight) / 2 + _padding + _corner_radius);
+    _bottom_space->SetMaximumHeight((_anchor_height - TotalItemHeight) / 2 + _padding + _corner_radius);
   }
   else
   {
-    _top_space->SetMinMaxSize(_padding + _corner_radius, _padding + _corner_radius);
-    _bottom_space->SetMinMaxSize(_padding + _corner_radius - 2,
-                                 _padding + _corner_radius +
-                                 _bottom_padding_correction_normal);
+    _top_space->SetMinimumHeight(_padding + _corner_radius + _offset_correction);
+    _top_space->SetMaximumHeight(_padding + _corner_radius + _offset_correction);
+
+    _bottom_space->SetMinimumHeight(_padding + _corner_radius);
+    _bottom_space->SetMaximumHeight(_padding + _corner_radius);
   }
 
   _item_layout->SetMinimumWidth(MaxItemWidth);
 
-  BaseWindow::PreLayoutManagement();
+  CairoBaseWindow::PreLayoutManagement();
 }
 
 long QuicklistView::PostLayoutManagement(long LayoutResult)
 {
-  long result = BaseWindow::PostLayoutManagement(LayoutResult);
+  long result = CairoBaseWindow::PostLayoutManagement(LayoutResult);
 
   UpdateTexture();
 
   int x = _padding + _anchor_width + _corner_radius + _offset_correction;
-  int y = _padding + _corner_radius + _offset_correction;
+  int y = _top_space->GetMinimumHeight();
 
   for (auto item : _item_list)
   {
