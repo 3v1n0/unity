@@ -26,7 +26,7 @@
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
-#include <NuxImage/CairoGraphics.h>
+#include <NuxGraphics/CairoGraphics.h>
 
 #include <pango/pango.h>
 #include <pango/pangocairo.h>

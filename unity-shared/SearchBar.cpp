@@ -23,6 +23,7 @@
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
 #include <NuxCore/Logger.h>
+
 #include <UnityCore/Variant.h>
 
 #include <glib/gi18n-lib.h>
