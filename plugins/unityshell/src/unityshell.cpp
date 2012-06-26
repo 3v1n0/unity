@@ -1217,7 +1217,8 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
    * need to. Doing so on every frame causes Nux to hog the GPU and slow down
    * ALL rendering. (LP: #988079)
    */
-  if (forcePaintOnTop() || PluginAdapter::Default()->IsExpoActive())
+  bool force = forcePaintOnTop() || PluginAdapter::Default()->IsExpoActive();
+  if (force)
     doShellRepaint = true;
   else if (region.isEmpty())
     doShellRepaint = false;
@@ -1250,7 +1251,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   ret = gScreen->glPaintOutput(attrib, transform, region, output, mask);
 
 #ifndef USE_MODERN_COMPIZ_GL
-  if (doShellRepaint && overShell.contains(*output))
+  if (doShellRepaint && !force && overShell.contains(*output))
     doShellRepaint = false;
 
   if (doShellRepaint)
