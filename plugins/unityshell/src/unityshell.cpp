@@ -1647,26 +1647,6 @@ bool UnityScreen::executeCommand(CompAction* action,
   return true;
 }
 
-void UnityScreen::startLauncherKeyNav()
-{
-  // get CompWindow* of launcher-window
-  newFocusedWindow = screen->findWindow(launcher_controller_->KeyNavLauncherInputWindowId());
-
-  // check if currently focused window isn't the launcher-window
-  if (newFocusedWindow != screen->findWindow(screen->activeWindow()))
-    PluginAdapter::Default()->saveInputFocus();
-
-  // set input-focus on launcher-window and start key-nav mode
-  if (newFocusedWindow)
-  {
-    // Put the launcher BaseWindow at the top of the BaseWindow stack. The
-    // input focus coming from the XinputWindow will be processed by the
-    // launcher BaseWindow only. Then the Launcher BaseWindow will decide
-    // which View will get the input focus.
-    launcher_controller_->PushToFront();
-    newFocusedWindow->moveInputFocusTo();
-  }
-}
 
 bool UnityScreen::setKeyboardFocusKeyInitiate(CompAction* action,
                                               CompAction::State state,
@@ -1910,7 +1890,12 @@ bool UnityScreen::launcherSwitcherTerminate(CompAction* action, CompAction::Stat
 
 void UnityScreen::OnLauncherStartKeyNav(GVariant* data)
 {
-  startLauncherKeyNav();
+  // Put the launcher BaseWindow at the top of the BaseWindow stack. The
+  // input focus coming from the XinputWindow will be processed by the
+  // launcher BaseWindow only. Then the Launcher BaseWindow will decide
+  // which View will get the input focus.
+  if (SaveInputThenFocus(launcher_controller_->KeyNavLauncherInputWindowId()))
+    launcher_controller_->PushToFront();
 }
 
 void UnityScreen::OnLauncherEndKeyNav(GVariant* data)
@@ -1920,13 +1905,7 @@ void UnityScreen::OnLauncherEndKeyNav(GVariant* data)
 
 void UnityScreen::OnSwitcherStart(GVariant* data)
 {
-  newFocusedWindow = screen->findWindow(switcher_controller_->GetSwitcherInputWindowId());
-
-  if (switcher_controller_->GetSwitcherInputWindowId() != screen->activeWindow())
-    PluginAdapter::Default()->saveInputFocus();
-
-  if (newFocusedWindow)
-    newFocusedWindow->moveInputFocusTo();
+  SaveInputThenFocus(switcher_controller_->GetSwitcherInputWindowId());
 }
 
 void UnityScreen::OnSwitcherEnd(GVariant* data)
@@ -1947,6 +1926,24 @@ void UnityScreen::RestoreWindow(GVariant* data)
   // entered)
   if (preserve_focus)
     PluginAdapter::Default ()->restoreInputFocus ();
+}
+
+bool UnityScreen::SaveInputThenFocus(const guint xid)
+{
+  // get CompWindow*
+  newFocusedWindow = screen->findWindow(xid);
+
+  // check if currently focused window isn't it self
+  if (xid != screen->activeWindow())
+    PluginAdapter::Default()->saveInputFocus();
+
+  // set input-focus on window
+  if (newFocusedWindow)
+  {
+    newFocusedWindow->moveInputFocusTo();
+    return true;
+  }
+  return false;
 }
 
 bool UnityScreen::ShowHud()
