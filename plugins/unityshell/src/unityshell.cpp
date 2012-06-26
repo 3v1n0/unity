@@ -1532,6 +1532,11 @@ void UnityScreen::handleCompizEvent(const char* plugin,
     ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
   }
 
+  if (PluginAdapter::Default()->IsScaleActive() && g_strcmp0(plugin, "scale") == 0)
+  {
+    scale_just_activated_ = true;
+  }
+
   screen->handleCompizEvent(plugin, event, option);
 }
 
@@ -1578,6 +1583,18 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
   bool was_tap = state & CompAction::StateTermTapped;
   LOG_DEBUG(logger) << "Super released: " << (was_tap ? "tapped" : "released");
   int when = options[7].value().i();  // XEvent time in millisec
+
+  // hack...if the scale just wasn't activated AND the 'when' time is within time to start the
+  // dash then assume was_tap is also true, since the ScalePlugin doesn't accept that state...
+  if (PluginAdapter::Default()->IsScaleActive() && !scale_just_activated_ && launcher_controller_->AboutToShowDash(true, when))
+  {
+    PluginAdapter::Default()->TerminateScale();
+    was_tap = true;
+  }
+  else if (scale_just_activated_)
+  {
+    scale_just_activated_ = false;
+  }
 
   if (hud_controller_->IsVisible() && launcher_controller_->AboutToShowDash(was_tap, when))
     hud_controller_->HideHud();
@@ -1635,6 +1652,12 @@ void UnityScreen::SendExecuteCommand()
   {
     hud_controller_->HideHud();
   }
+
+  if (PluginAdapter::Default()->IsScaleActive())
+  {
+    PluginAdapter::Default()->TerminateScale();
+  }
+
   ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
                             g_variant_new("(sus)", "commands.lens", 0, ""));
 }
