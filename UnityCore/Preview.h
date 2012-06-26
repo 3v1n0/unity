@@ -31,12 +31,15 @@
 #include <NuxCore/Property.h>
 
 #include "GLibWrapper.h"
+#include "GLibDBusProxy.h"
 #include "Variant.h"
 
 namespace unity
 {
 namespace dash
 {
+
+class Lens;
 
 class Preview : public sigc::trackable
 {
@@ -85,11 +88,15 @@ public:
   static Preview::Ptr PreviewForVariant(glib::Variant& properties);
   static Preview::Ptr PreviewForProtocolObject(glib::Object<GObject> const& proto_obj);
 
-  nux::RWProperty<std::string> renderer_name;
-  nux::RWProperty<std::string> title;
-  nux::RWProperty<std::string> subtitle;
-  nux::RWProperty<std::string> description;
-  nux::RWProperty<unity::glib::Object<GIcon>> image;
+  nux::ROProperty<std::string> renderer_name;
+  nux::ROProperty<std::string> title;
+  nux::ROProperty<std::string> subtitle;
+  nux::ROProperty<std::string> description;
+  nux::ROProperty<unity::glib::Object<GIcon>> image;
+
+  // can't use Lens::Ptr to avoid circular dependency
+  nux::RWProperty<std::shared_ptr<Lens>> parent_lens;
+  nux::Property<std::string> preview_uri;
 
   ActionPtrList GetActions() const;
   InfoHintPtrList GetInfoHints() const;
@@ -98,6 +105,9 @@ protected:
   // this should be UnityProtocolPreview, but we want to keep the usage
   // of libunity-protocol-private private to unity-core
   Preview(glib::Object<GObject> const& proto_obj);
+  void Update(glib::Variant const& properties,
+              glib::DBusProxy::ReplyCallback reply_callback =
+                sigc::ptr_fun(&glib::DBusProxy::NoReplyCallback)) const;
   static glib::Object<GIcon> IconForString(std::string const& icon_hint);
 
 private:

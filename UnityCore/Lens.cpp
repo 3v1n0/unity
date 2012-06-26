@@ -86,6 +86,9 @@ public:
   void ActivationReply(GVariant* parameters);
   void Preview(std::string const& uri);
   void PreviewReply(GVariant* parameters);
+  void SignalPreview(std::string const& preview_uri,
+                     glib::Variant const& preview_update,
+                     glib::DBusProxy::ReplyCallback reply_cb);
 
   string const& id() const;
   string const& dbus_name() const;
@@ -522,6 +525,8 @@ void Lens::Impl::ActivationReply(GVariant* parameters)
       Preview::Ptr preview(Preview::PreviewForVariant(iter->second));
       if (preview)
       {
+        preview->parent_lens().reset(owner_);
+        preview->preview_uri = uri.Str();
         owner_->preview_ready.emit(uri.Str(), preview);
         return;
       }
@@ -573,6 +578,26 @@ void Lens::Impl::PreviewReply(GVariant* parameters)
   //Preview::Ptr preview = Preview::PreviewForProperties(renderer_name.Str(), hints);
   //owner_->preview_ready.emit(uri.Str(), preview);
 }
+
+void Lens::Impl::SignalPreview(std::string const& preview_uri,
+                               glib::Variant const& preview_update,
+                               glib::DBusProxy::ReplyCallback reply_cb)
+{
+  LOG_DEBUG(logger) << "Signalling preview '" << preview_uri << "' on  '" << id_ << "'";
+
+  if (!proxy_->IsConnected())
+    {
+      LOG_DEBUG(logger) << "Can't signal preview. Proxy not connected. ('" << id_ << "')";
+      return;
+    }
+
+  GVariant *preview_update_variant = preview_update;
+  proxy_->Call("UpdatePreviewProperty",
+               g_variant_new("(s@a{sv})", preview_uri.c_str(),
+                             preview_update_variant),
+               reply_cb);
+}
+
 string const& Lens::Impl::id() const
 {
   return id_;
@@ -730,6 +755,14 @@ void Lens::Preview(std::string const& uri)
 {
   pimpl->Preview(uri);
 }
+
+void Lens::SignalPreview(std::string const& uri,
+                         glib::Variant const& preview_update,
+                         glib::DBusProxy::ReplyCallback reply_cb)
+{
+  pimpl->SignalPreview(uri, preview_update, reply_cb);
+}
+
 
 }
 }

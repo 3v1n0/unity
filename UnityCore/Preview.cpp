@@ -20,6 +20,7 @@
 #include <NuxCore/Logger.h>
 #include <unity-protocol.h>
 
+#include "Lens.h"
 #include "Preview.h"
 
 #include "ApplicationPreview.h"
@@ -118,6 +119,13 @@ public:
   ActionPtrList get_actions() const { return actions_list_; };
   InfoHintPtrList get_info_hints() const { return info_hint_list_; };
 
+  Lens::Ptr get_parent_lens() const { return parent_lens_; };
+  bool set_parent_lens(Lens::Ptr const& lens)
+  {
+    parent_lens_ = lens;
+    return false; // TODO: do we need the notifications here?
+  };
+
   Preview* owner_;
 
   std::string renderer_name_;
@@ -127,6 +135,7 @@ public:
   unity::glib::Object<GIcon> image_;
   ActionPtrList actions_list_;
   InfoHintPtrList info_hint_list_;
+  Lens::Ptr parent_lens_;
 };
 
 Preview::Impl::Impl(Preview* owner, glib::Object<GObject> const& proto_obj)
@@ -192,6 +201,11 @@ void Preview::Impl::SetupGetters()
       sigc::mem_fun(this, &Preview::Impl::get_description));
   owner_->image.SetGetterFunction(
       sigc::mem_fun(this, &Preview::Impl::get_image));
+
+  owner_->parent_lens.SetGetterFunction(
+      sigc::mem_fun(this, &Preview::Impl::get_parent_lens));
+  owner_->parent_lens.SetSetterFunction(
+      sigc::mem_fun(this, &Preview::Impl::set_parent_lens));
 }
 
 Preview::Preview(glib::Object<GObject> const& proto_obj)
@@ -210,6 +224,19 @@ Preview::ActionPtrList Preview::GetActions() const
 Preview::InfoHintPtrList Preview::GetInfoHints() const
 {
   return pimpl->get_info_hints();
+}
+
+void Preview::Update(glib::Variant const& properties,
+                     glib::DBusProxy::ReplyCallback reply_callback) const
+{
+  if (pimpl->parent_lens_)
+  {
+    pimpl->parent_lens_->SignalPreview(preview_uri, properties, reply_callback);
+  }
+  else
+  {
+    LOG_WARN(logger) << "Unable to update Preview, parent_lens wasn't set!";
+  }
 }
 
 } // namespace dash
