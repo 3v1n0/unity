@@ -1222,8 +1222,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   else if (region.isEmpty() || shellIsHidden(*output))
     doShellRepaint = false;
   else
-    doShellRepaint = wt->GetDrawList().size() > 0 ||
-                     BackgroundEffectHelper::HasDirtyHelpers();
+    doShellRepaint = wt->GetDrawList().size() > 0;
 
   allowWindowPaint = true;
   _last_output = output;
