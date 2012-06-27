@@ -180,7 +180,7 @@ class HudBehaviorTests(HudTestsBase):
         self.hud.ensure_visible()
 
         self.keyboard.type("undo")
-        hud_query_check = lambda: self.hud.hud_buttons[0].label_no_formatting
+        hud_query_check = lambda: self.hud.selected_hud_button.label_no_formatting
         self.assertThat(hud_query_check,
                         Eventually(Equals("Edit > Undo")))
         self.keyboard.press_and_release('Return')

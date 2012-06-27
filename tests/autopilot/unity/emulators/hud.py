@@ -113,6 +113,13 @@ class Hud(KeybindingsHelper):
         return self.view.hud_buttons
 
     @property
+    def selected_hud_button(self):
+        try:
+            return self.hud_buttons[0]
+        except IndexError:
+            raise RuntimeError("No HUD buttons found, is hud active?")
+
+    @property
     def num_buttons(self):
         view = self.controller.get_hud_view()
         if view:
