@@ -1219,7 +1219,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
    * ALL rendering. (LP: #988079)
    */
   bool force = forcePaintOnTop() || PluginAdapter::Default()->IsExpoActive();
-  doShellRepaint = force || (!region.isEmpty() && wt->GetDrawList().size());
+  doShellRepaint = force || !(region.isEmpty() || wt->GetDrawList().empty());
 
   g_print("vv: glPaintOutput %u %s",
 	output->id(),
