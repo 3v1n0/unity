@@ -313,6 +313,8 @@ private:
   bool paint_panel_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> panel_texture_;
 
+  bool scale_just_activated_;
+
 #ifndef USE_MODERN_COMPIZ_GL
   ScreenEffectFramebufferObject::GLXGetProcAddressProc glXGetProcAddressP;
 #endif
