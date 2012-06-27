@@ -27,6 +27,8 @@
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
 
+#include "unity-shared/Introspectable.h"
+
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/DashStyle.h"
 
@@ -350,7 +352,7 @@ void View::SetupViews()
 {
   dash::Style& style = dash::Style::Instance();
 
-  nux::VLayout* super_layout = new nux::VLayout(); 
+  nux::VLayout* super_layout = new nux::VLayout();
   layout_ = new nux::HLayout();
   {
     // fill layout with icon
@@ -398,7 +400,7 @@ void View::OnSearchChanged(std::string const& search_string)
   {
     button->fake_focused = false;
   }
-  
+
   if (!buttons_.empty())
     buttons_.back()->fake_focused = true;
 }
@@ -457,7 +459,7 @@ void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
       x += content_width - 1;
       nux::GetPainter().Draw2DLine(gfx_context, x, y, x, y + height, nux::color::White * 0.13);
     }
- 
+
     GetLayout()->ProcessDraw(gfx_context, force_draw);
     nux::GetPainter().PopBackgroundStack();
   }
@@ -498,6 +500,17 @@ void View::AddProperties(GVariantBuilder* builder)
     .add(GetGeometry())
     .add("selected_button", selected_button_)
     .add("num_buttons", num_buttons);
+}
+
+debug::Introspectable::IntrospectableList const& View::GetIntrospectableChildren()
+{
+    introspectable_children_.clear();
+    for (auto button: buttons_)
+    {
+      introspectable_children_.push_front(button.GetPointer());
+    }
+
+    return introspectable_children_;
 }
 
 bool View::InspectKeyEvent(unsigned int eventType,

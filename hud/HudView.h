@@ -61,7 +61,7 @@ public:
   void AboutToHide();
 
   void SetWindowGeometry(nux::Geometry const& absolute_geo, nux::Geometry const& geo);
-  
+
 protected:
   virtual Area* FindKeyFocusArea(unsigned int event_type,
   unsigned long x11_key_code,
@@ -70,6 +70,8 @@ protected:
   void SetupViews();
   void OnSearchChanged(std::string const& search_string);
   virtual long PostLayoutManagement(long LayoutResult);
+
+  IntrospectableList introspectable_children_;
 
 private:
   void OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key);
@@ -87,6 +89,7 @@ private:
 
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
+  IntrospectableList const& GetIntrospectableChildren();
 
 private:
   UBusManager ubus;

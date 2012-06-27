@@ -105,7 +105,7 @@ void HudButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonV
 
 bool HudButton::AcceptKeyNavFocus()
 {
-  // The button will not receive the keyboard focus. The keyboard focus is always to remain with the 
+  // The button will not receive the keyboard focus. The keyboard focus is always to remain with the
   // text entry in the hud.
   return false;
 }
@@ -209,7 +209,8 @@ std::string HudButton::GetName() const
 void HudButton::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
-    .add("label", label());
+    .add("label", label())
+    .add("focused", fake_focused());
 }
 
 } // namespace hud

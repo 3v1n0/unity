@@ -11,6 +11,7 @@ from __future__ import absolute_import
 
 from autopilot.introspection.unity import UnityIntrospectionObject
 from autopilot.keybindings import KeybindingsHelper
+import re
 
 from unity.emulators.dash import SearchBar
 from unity.emulators.icons import HudEmbeddedIcon, HudLauncherIcon
@@ -133,3 +134,11 @@ class HudController(UnityIntrospectionObject):
     def get_hud_view(self):
         views = self.get_children_by_type(HudView)
         return views[0] if views else None
+
+class HudButton(UnityIntrospectionObject):
+    """Proxy object for the hud buttons."""
+
+    @property
+    def label_no_formatting(self):
+        """Returns the label text with the formatting removed"""
+        return re.sub("<[^>]*>", "", self.label).replace("&gt;", ">")
