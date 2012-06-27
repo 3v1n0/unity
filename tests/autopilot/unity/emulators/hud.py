@@ -107,6 +107,11 @@ class Hud(KeybindingsHelper):
             return 0
 
     @property
+    def hud_buttons(self):
+        """Returns a list of current HUD buttons."""
+        return HudButton.get_all_instances()
+
+    @property
     def num_buttons(self):
         view = self.controller.get_hud_view()
         if view:
