@@ -11,6 +11,7 @@ from __future__ import absolute_import
 
 from autopilot.introspection.unity import UnityIntrospectionObject
 from autopilot.keybindings import KeybindingsHelper
+from HTMLParser import HTMLParser
 import re
 
 from unity.emulators.dash import SearchBar
@@ -109,7 +110,7 @@ class Hud(KeybindingsHelper):
     @property
     def hud_buttons(self):
         """Returns a list of current HUD buttons."""
-        return HudButton.get_all_instances()
+        return self.view.hud_buttons
 
     @property
     def num_buttons(self):
@@ -129,6 +130,10 @@ class HudView(UnityIntrospectionObject):
         return self.get_children_by_type(SearchBar)[0]
 
     @property
+    def hud_buttons(self):
+        return self.get_children_by_type(HudButton)
+
+    @property
     def geometry(self):
         return (self.x, self.y, self.width, self.height)
 
@@ -145,5 +150,6 @@ class HudButton(UnityIntrospectionObject):
 
     @property
     def label_no_formatting(self):
-        """Returns the label text with the formatting removed"""
-        return re.sub("<[^>]*>", "", self.label).replace("&gt;", ">")
+        """Returns the label text with the formatting removed."""
+        htmlparser = HTMLParser()
+        return htmlparser.unescape(re.sub("<[^>]*>", "", self.label))
