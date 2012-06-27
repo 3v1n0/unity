@@ -69,7 +69,7 @@ const gchar DebugDBusInterface::introspection_xml[] =
   ""
   "   </interface>"
   ""
-  "   <interface name='com.canonical.Unity.Debug.Introspection'>"
+  "   <interface name='com.canonical.Unity.Debug.Logging'>"
   ""
   "     <method name='StartLogToFile'>"
   "       <arg type='s' name='file_path' direction='in' />"
