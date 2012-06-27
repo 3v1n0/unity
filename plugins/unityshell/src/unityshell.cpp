@@ -1245,14 +1245,14 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
     _fbo->bind (nux::Geometry (output->x (), output->y (), output->width (), output->height ()));
 #endif
 
-  overShell = CompRegion();
+  aboveShell = CompRegion();
   nuxRegion = CompRegion();
 
   /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
   ret = gScreen->glPaintOutput(attrib, transform, region, output, mask);
 
 #ifndef USE_MODERN_COMPIZ_GL
-  if (doShellRepaint && !force && overShell.contains(*output))
+  if (doShellRepaint && !force && aboveShell.contains(*output))
     doShellRepaint = false;
 
   if (doShellRepaint)
@@ -2291,7 +2291,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
     if (mask & PAINT_WINDOW_OCCLUSION_DETECTION_MASK)
     {
       uScreen->nuxRegion += window->geometry();
-      uScreen->nuxRegion -= uScreen->overShell;
+      uScreen->nuxRegion -= uScreen->aboveShell;
     }
     return false;
   }
@@ -2300,8 +2300,8 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
            window->state() & CompWindowStateFullscreenMask)
            // && !window->alpha()  <-- doesn't work. False positives.
   {
-    uScreen->overShell += window->geometry();
-    uScreen->overShell -= uScreen->nuxRegion;
+    uScreen->aboveShell += window->geometry();
+    uScreen->aboveShell -= uScreen->nuxRegion;
   }
 
   GLWindowPaintAttrib wAttrib = attrib;
@@ -2366,12 +2366,12 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
    * Paint the shell in *roughly* the compiz stacking order. This is only
    * approximate because we're painting all the nux windows as soon as we find
    * the bottom-most nux window (from bottom to top).
-   * But remember to avoid painting the shell if it's within the overShell
+   * But remember to avoid painting the shell if it's within the aboveShell
    * region.
    */
   if (uScreen->doShellRepaint &&
       !uScreen->forcePaintOnTop () &&
-      !uScreen->overShell.contains(window->geometry())
+      !uScreen->aboveShell.contains(window->geometry())
      )
   {
     std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
