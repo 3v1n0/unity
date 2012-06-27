@@ -220,7 +220,6 @@ private:
   static void OnStartKeyNav(GVariant* data, void* value);
   static void OnExitKeyNav(GVariant* data, void* value);
 
-  void startLauncherKeyNav();
   void restartLauncherKeyNav();
 
   void OnDashRealized ();
@@ -232,6 +231,7 @@ private:
   void OnSwitcherEnd(GVariant* data);
 
   void RestoreWindow(GVariant* data);
+  bool SaveInputThenFocus(const guint xid);
 
   void InitHints();
 
