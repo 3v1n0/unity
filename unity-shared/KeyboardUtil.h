@@ -33,22 +33,23 @@ namespace ui
 
 class KeyboardUtil
 {
-
 public:
-
   KeyboardUtil(Display *display);
-  virtual ~KeyboardUtil();
+  ~KeyboardUtil();
 
-  guint GetKeycodeAboveKeySymbol(KeySym key_symbol);
+  guint GetKeycodeAboveKeySymbol(KeySym key_symbol) const;
+
+  static bool IsPrintableKeySymbol(KeySym key_symbol);
+  static bool IsMoveKeySymbol(KeySym sym);
 
 private:
-  bool CompareOffsets (int current_x, int current_y, int best_x, int best_y);
-  guint ConvertKeyToKeycode (XkbKeyPtr key);
+  bool CompareOffsets (int current_x, int current_y, int best_x, int best_y) const;
+  guint ConvertKeyToKeycode (XkbKeyPtr key) const;
 
-  bool FindKeyInGeometry(XkbGeometryPtr geo, char *key_name, int& res_section, XkbBoundsRec& res_bounds);
-  bool FindKeyInSectionAboveBounds (XkbGeometryPtr geo, int section, XkbBoundsRec const& target_bounds, guint &keycode);
+  bool FindKeyInGeometry(XkbGeometryPtr geo, char *key_name, int& res_section, XkbBoundsRec& res_bounds) const;
+  bool FindKeyInSectionAboveBounds (XkbGeometryPtr geo, int section, XkbBoundsRec const& target_bounds, guint &keycode) const;
 
-  XkbBoundsRec GetAbsoluteKeyBounds (XkbKeyPtr key, XkbRowPtr row, XkbSectionPtr section, XkbGeometryPtr geo);
+  XkbBoundsRec GetAbsoluteKeyBounds (XkbKeyPtr key, XkbRowPtr row, XkbSectionPtr section, XkbGeometryPtr geo) const;
 
   XkbDescPtr keyboard_;
   Display *display_;
