@@ -60,12 +60,16 @@ const char* DebugDBusInterface::DBUS_DEBUG_OBJECT_PATH = "/com/canonical/Unity/D
 
 const gchar DebugDBusInterface::introspection_xml[] =
   " <node>"
-  "   <interface name='com.canonical.Unity.Debug.Introspection'>"
+  "   <interface name='com.canonical.Autopilot.Introspection'>"
   ""
   "     <method name='GetState'>"
   "       <arg type='s' name='piece' direction='in' />"
   "       <arg type='aa{sv}' name='state' direction='out' />"
   "     </method>"
+  ""
+  "   </interface>"
+  ""
+  "   <interface name='com.canonical.Unity.Debug.Introspection'>"
   ""
   "     <method name='StartLogToFile'>"
   "       <arg type='s' name='file_path' direction='in' />"
