@@ -220,7 +220,6 @@ private:
   static void OnStartKeyNav(GVariant* data, void* value);
   static void OnExitKeyNav(GVariant* data, void* value);
 
-  void startLauncherKeyNav();
   void restartLauncherKeyNav();
 
   void OnDashRealized ();
