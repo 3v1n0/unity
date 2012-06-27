@@ -1221,10 +1221,6 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   bool force = forcePaintOnTop() || PluginAdapter::Default()->IsExpoActive();
   doShellRepaint = force || !(region.isEmpty() || wt->GetDrawList().empty());
 
-  g_print("vv: glPaintOutput %u %s",
-	output->id(),
-	doShellRepaint ? "REPAINT" : "idle");
-
   allowWindowPaint = true;
   _last_output = output;
   paint_panel_ = false;
@@ -1253,11 +1249,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
 
 #ifndef USE_MODERN_COMPIZ_GL
   if (doShellRepaint && !force && aboveShell.contains(*output))
-  {
-    g_print("-cancelled");
     doShellRepaint = false;
-  }
-  g_print("\n");
 
   if (doShellRepaint)
     paintDisplay(region, transform, mask);
