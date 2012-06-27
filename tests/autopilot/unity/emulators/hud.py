@@ -115,7 +115,8 @@ class Hud(KeybindingsHelper):
     @property
     def selected_hud_button(self):
         try:
-            return self.hud_buttons[0]
+            [button] = filter(lambda x: x.focused, self.hud_buttons)
+            return button
         except IndexError:
             raise RuntimeError("No HUD buttons found, is hud active?")
 
