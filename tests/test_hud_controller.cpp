@@ -73,6 +73,7 @@ public:
 TEST_F(TestHudController, TestHideHud)
 {
   controller->ShowHud();
+  Utils::WaitForTimeout(1);
 
   EXPECT_CALL(*view, ResetToDefault())
     .Times(1);
