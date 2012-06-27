@@ -27,6 +27,8 @@
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
 
+#include "unity-shared/Introspectable.h"
+
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/DashStyle.h"
 
@@ -500,6 +502,17 @@ void View::AddProperties(GVariantBuilder* builder)
     .add(GetGeometry())
     .add("selected_button", selected_button_)
     .add("num_buttons", num_buttons);
+}
+
+debug::Introspectable::IntrospectableList const& View::GetIntrospectableChildren()
+{
+    introspectable_children_.clear();
+    for (auto button: buttons_)
+    {
+      introspectable_children_.push_front(button.GetPointer());
+    }
+
+    return introspectable_children_;
 }
 
 bool View::InspectKeyEvent(unsigned int eventType,
