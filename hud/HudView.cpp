@@ -240,6 +240,8 @@ void View::SetQueries(Hud::Queries queries)
 
     HudButton::Ptr button(new HudButton());
     buttons_.push_front(button);
+    button->SetMinimumWidth(content_width);
+    button->SetMaximumWidth(content_width);
     button->SetQuery(query);
 
     button_views_->AddView(button.GetPointer(), 0, nux::MINOR_POSITION_LEFT);
@@ -257,7 +259,6 @@ void View::SetQueries(Hud::Queries queries)
         query_selected.emit(dynamic_cast<HudButton*>(area)->GetQuery());
     });
 
-    button->SetMinimumWidth(content_width);
     ++found_items;
   }
 
