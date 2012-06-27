@@ -1219,12 +1219,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
    * ALL rendering. (LP: #988079)
    */
   bool force = forcePaintOnTop() || PluginAdapter::Default()->IsExpoActive();
-  if (force)
-    doShellRepaint = true;
-  else if (region.isEmpty())
-    doShellRepaint = false;
-  else
-    doShellRepaint = wt->GetDrawList().size() > 0;
+  doShellRepaint = force || (!region.isEmpty() && wt->GetDrawList().size());
 
   g_print("vv: glPaintOutput %u %s",
 	output->id(),
@@ -1249,6 +1244,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
     _fbo->bind (nux::Geometry (output->x (), output->y (), output->width (), output->height ()));
 #endif
 
+  // CompRegion has no clear() method. So this is the fastest alternative.
   aboveShell = CompRegion();
   nuxRegion = CompRegion();
 
