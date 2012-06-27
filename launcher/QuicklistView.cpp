@@ -340,7 +340,7 @@ void QuicklistView::ShowQuicklistWithTipAt(int anchor_tip_x, int anchor_tip_y)
 
   if (!_enable_quicklist_for_testing)
   {
-    if ((_item_list.size() != 0))
+    if (!_item_list.empty())
     {
       int offscreen_size = GetBaseY() +
                            GetBaseHeight() -
@@ -462,19 +462,25 @@ void QuicklistView::PreLayoutManagement()
 
   if (TotalItemHeight < _anchor_height)
   {
-    _top_space->SetMinimumHeight((_anchor_height - TotalItemHeight) / 2 + _padding + _corner_radius + _offset_correction);
-    _top_space->SetMaximumHeight((_anchor_height - TotalItemHeight) / 2 + _padding + _corner_radius + _offset_correction);
+    int b = (_anchor_height - TotalItemHeight) / 2 + _padding + _corner_radius;
+    int t = b + _offset_correction;
 
-    _bottom_space->SetMinimumHeight((_anchor_height - TotalItemHeight) / 2 + _padding + _corner_radius);
-    _bottom_space->SetMaximumHeight((_anchor_height - TotalItemHeight) / 2 + _padding + _corner_radius);
+    _top_space->SetMinimumHeight(t);
+    _top_space->SetMaximumHeight(t);
+
+    _bottom_space->SetMinimumHeight(b);
+    _bottom_space->SetMaximumHeight(b);
   }
   else
   {
-    _top_space->SetMinimumHeight(_padding + _corner_radius + _offset_correction);
-    _top_space->SetMaximumHeight(_padding + _corner_radius + _offset_correction);
+    int b = _padding + _corner_radius;
+    int t = b + _offset_correction;
 
-    _bottom_space->SetMinimumHeight(_padding + _corner_radius);
-    _bottom_space->SetMaximumHeight(_padding + _corner_radius);
+    _top_space->SetMinimumHeight(t);
+    _top_space->SetMaximumHeight(t);
+
+    _bottom_space->SetMinimumHeight(b);
+    _bottom_space->SetMaximumHeight(b);
   }
 
   _item_layout->SetMinimumWidth(MaxItemWidth);
