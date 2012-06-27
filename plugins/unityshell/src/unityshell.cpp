@@ -1226,6 +1226,10 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   else
     doShellRepaint = wt->GetDrawList().size() > 0;
 
+  g_print("vv: glPaintOutput %u %s",
+	output->id(),
+	doShellRepaint ? "REPAINT" : "idle");
+
   allowWindowPaint = true;
   _last_output = output;
   paint_panel_ = false;
@@ -1253,7 +1257,11 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
 
 #ifndef USE_MODERN_COMPIZ_GL
   if (doShellRepaint && !force && aboveShell.contains(*output))
+  {
+    g_print("-cancelled");
     doShellRepaint = false;
+  }
+  g_print("\n");
 
   if (doShellRepaint)
     paintDisplay(region, transform, mask);
@@ -2286,6 +2294,10 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
                           const CompRegion& region,
                           unsigned int mask)
 {
+  /*
+   * The occlusion pass tests windows from TOP to BOTTOM. That's opposite to
+   * the actual painting loop.
+   */
   if (isNuxWindow(window))
   {
     if (mask & PAINT_WINDOW_OCCLUSION_DETECTION_MASK)
@@ -2293,15 +2305,22 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
       uScreen->nuxRegion += window->geometry();
       uScreen->nuxRegion -= uScreen->aboveShell;
     }
-    return false;
+    return false;  // Ensure nux windows are never painted by compiz
   }
-  else if (mask & PAINT_WINDOW_OCCLUSION_DETECTION_MASK &&
-           !(mask & PAINT_WINDOW_TRANSLUCENT_MASK) &&
-           window->state() & CompWindowStateFullscreenMask)
-           // && !window->alpha()  <-- doesn't work. False positives.
+  else if (mask & PAINT_WINDOW_OCCLUSION_DETECTION_MASK)
   {
-    uScreen->aboveShell += window->geometry();
-    uScreen->aboveShell -= uScreen->nuxRegion;
+    static const unsigned int nonOcclusionBits =
+                              PAINT_WINDOW_TRANSLUCENT_MASK |
+                              PAINT_WINDOW_TRANSFORMED_MASK |
+                              PAINT_WINDOW_NO_CORE_INSTANCE_MASK;
+    if (!(mask & nonOcclusionBits))
+        // And I've been advised to test other things, but they don't work:
+        // && (attrib.opacity == OPAQUE)) <-- Doesn't work; Only set in glDraw
+        // && !window->alpha() <-- Doesn't work; Opaque windows often have alpha
+    {
+      uScreen->aboveShell += window->geometry();
+      uScreen->aboveShell -= uScreen->nuxRegion;
+    }
   }
 
   GLWindowPaintAttrib wAttrib = attrib;
