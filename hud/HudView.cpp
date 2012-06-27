@@ -151,6 +151,11 @@ void View::ProcessGrowShrink()
    current_height_ = new_height;
   }
 
+  for (auto button : buttons_)
+  {
+    button->SetSkipDraw((button->GetAbsoluteY() + button->GetBaseHeight()) > (GetAbsoluteY() + current_height_));
+  }
+
   QueueDraw();
 
   if (diff > grow_anim_length + pause_before_grow_length)
