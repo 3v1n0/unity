@@ -119,8 +119,8 @@ public:
   ActionPtrList get_actions() const { return actions_list_; };
   InfoHintPtrList get_info_hints() const { return info_hint_list_; };
 
-  Lens::Ptr get_parent_lens() const { return parent_lens_; };
-  bool set_parent_lens(Lens::Ptr const& lens)
+  Lens* get_parent_lens() const { return parent_lens_; };
+  bool set_parent_lens(Lens* lens)
   {
     parent_lens_ = lens;
     return false; // TODO: do we need the notifications here?
@@ -135,11 +135,12 @@ public:
   unity::glib::Object<GIcon> image_;
   ActionPtrList actions_list_;
   InfoHintPtrList info_hint_list_;
-  Lens::Ptr parent_lens_;
+  Lens* parent_lens_;
 };
 
 Preview::Impl::Impl(Preview* owner, glib::Object<GObject> const& proto_obj)
   : owner_(owner)
+  , parent_lens_(nullptr)
 {
   if (!proto_obj)
   {

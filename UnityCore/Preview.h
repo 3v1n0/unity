@@ -95,7 +95,7 @@ public:
   nux::ROProperty<unity::glib::Object<GIcon>> image;
 
   // can't use Lens::Ptr to avoid circular dependency
-  nux::RWProperty<std::shared_ptr<Lens>> parent_lens;
+  nux::RWProperty<Lens*> parent_lens;
   nux::Property<std::string> preview_uri;
 
   ActionPtrList GetActions() const;
