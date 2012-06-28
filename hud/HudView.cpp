@@ -118,10 +118,6 @@ View::View()
 
 View::~View()
 {
-  for (auto button = buttons_.begin(); button != buttons_.end(); button++)
-  {
-    RemoveChild((*button).GetPointer());
-  }
 }
 
 void View::ProcessGrowShrink()
@@ -504,9 +500,10 @@ void View::AddProperties(GVariantBuilder* builder)
     .add("num_buttons", num_buttons);
 }
 
-debug::Introspectable::IntrospectableList const& View::GetIntrospectableChildren()
+debug::Introspectable::IntrospectableList View::GetIntrospectableChildren()
 {
     introspectable_children_.clear();
+    introspectable_children_.merge(debug::Introspectable::GetIntrospectableChildren());
     for (auto button: buttons_)
     {
       introspectable_children_.push_front(button.GetPointer());

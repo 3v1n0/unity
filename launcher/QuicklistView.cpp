@@ -1500,7 +1500,7 @@ QuicklistView::GetSelectedMenuItem()
   return GetNthItems(_current_item_index);
 }
 
-debug::Introspectable::IntrospectableList const& QuicklistView::GetIntrospectableChildren()
+debug::Introspectable::IntrospectableList QuicklistView::GetIntrospectableChildren()
 {
   _introspectable_children.clear();
   for (auto item: _item_list)
