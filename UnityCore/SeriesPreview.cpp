@@ -91,7 +91,8 @@ bool SeriesPreview::Impl::set_selected_item_index(int index)
     UnityProtocolPreview *preview = UNITY_PROTOCOL_PREVIEW(raw_preview_.RawPtr());
     unity_protocol_preview_begin_updates(preview);
     unity_protocol_series_preview_set_selected_item(raw_preview_, index);
-    glib::Variant properties(unity_protocol_preview_end_updates(preview));
+    glib::Variant properties(unity_protocol_preview_end_updates(preview),
+                             glib::StealRef());
     owner_->Update(properties, sigc::mem_fun(this, &SeriesPreview::Impl::selected_item_reply));
     return true;
   }

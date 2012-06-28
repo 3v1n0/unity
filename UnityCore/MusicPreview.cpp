@@ -32,9 +32,13 @@ class MusicPreview::Impl
 public:
   Impl(MusicPreview* owner, glib::Object<GObject> const& proto_obj);
 
+  void PlayUri(std::string const& uri) const;
+  void PauseUri(std::string const& uri) const;
+
   MusicPreview* owner_;
   // TODO: keep ref to the proto object as well?
   Tracks::Ptr tracks_model;
+  glib::Object<UnityProtocolMusicPreview> raw_preview_;
 };
 
 MusicPreview::Impl::Impl(MusicPreview* owner,
@@ -43,11 +47,11 @@ MusicPreview::Impl::Impl(MusicPreview* owner,
   , tracks_model(new Tracks())
 {
   const gchar* s;
-  auto preview = glib::object_cast<UnityProtocolMusicPreview>(proto_obj);
+  raw_preview_ = glib::object_cast<UnityProtocolMusicPreview>(proto_obj);
 
-  s = unity_protocol_music_preview_get_track_data_swarm_name(preview);
+  s = unity_protocol_music_preview_get_track_data_swarm_name(raw_preview_);
   std::string swarm_name(s != NULL ? s : "");
-  s = unity_protocol_music_preview_get_track_data_address(preview);
+  s = unity_protocol_music_preview_get_track_data_address(raw_preview_);
   std::string peer_address(s != NULL ? s : "");
 
   // TODO: we're not using private connection yet
@@ -55,6 +59,28 @@ MusicPreview::Impl::Impl(MusicPreview* owner,
   {
     tracks_model->swarm_name = swarm_name;
   }
+}
+
+void MusicPreview::Impl::PlayUri(std::string const& uri) const
+{
+  UnityProtocolPreview *preview = UNITY_PROTOCOL_PREVIEW(raw_preview_.RawPtr());
+
+  unity_protocol_preview_begin_updates(preview);
+  unity_protocol_music_preview_play_uri(raw_preview_, uri.c_str());
+  glib::Variant properties(unity_protocol_preview_end_updates(preview),
+                           glib::StealRef());
+  owner_->Update(properties);
+}
+
+void MusicPreview::Impl::PauseUri(std::string const& uri) const
+{
+  UnityProtocolPreview *preview = UNITY_PROTOCOL_PREVIEW(raw_preview_.RawPtr());
+
+  unity_protocol_preview_begin_updates(preview);
+  unity_protocol_music_preview_pause_uri(raw_preview_, uri.c_str());
+  glib::Variant properties(unity_protocol_preview_end_updates(preview),
+                           glib::StealRef());
+  owner_->Update(properties);
 }
 
 MusicPreview::MusicPreview(unity::glib::Object<GObject> const& proto_obj)
@@ -71,6 +97,16 @@ MusicPreview::~MusicPreview()
 Tracks::Ptr MusicPreview::GetTracksModel() const
 {
   return pimpl->tracks_model;
+}
+
+void MusicPreview::PlayUri(std::string const& uri) const
+{
+  pimpl->PlayUri(uri);
+}
+
+void MusicPreview::PauseUri(std::string const& uri) const
+{
+  pimpl->PauseUri(uri);
 }
 
 }
