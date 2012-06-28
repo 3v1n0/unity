@@ -94,12 +94,12 @@ protected:
 
 };
 
-TEST_F(TestIntrospection, TestTest) 
+TEST_F(TestIntrospection, TestTest)
 {
   ASSERT_STREQ("Unity", root_->GetName().c_str());
 }
 
-TEST_F(TestIntrospection, TestVariousRootQueries) 
+TEST_F(TestIntrospection, TestVariousRootQueries)
 {
   std::list<Introspectable*> results;
   std::string query;
@@ -108,7 +108,7 @@ TEST_F(TestIntrospection, TestVariousRootQueries)
   ASSERT_EQ(1, results.size());
   EXPECT_STREQ("Unity", results.front()->GetName().c_str());
 
-  query = "/";  
+  query = "/";
   results = GetIntrospectableNodesFromQuery(query, root_.get());
   ASSERT_EQ(1, results.size());
   EXPECT_STREQ("Unity", results.front()->GetName().c_str());
@@ -117,6 +117,23 @@ TEST_F(TestIntrospection, TestVariousRootQueries)
   results = GetIntrospectableNodesFromQuery(query, root_.get());
   ASSERT_EQ(1, results.size());
   EXPECT_STREQ("Unity", results.front()->GetName().c_str());
+}
+
+TEST_F(TestIntrospection, TestAsteriskWildcard)
+{
+  std::list<Introspectable*> results;
+  std::string query = "/Unity/*";
+
+  results = GetIntrospectableNodesFromQuery(query, root_.get());
+  ASSERT_EQ(2, results.size());
+
+  for(auto p : results)
+  {
+    ASSERT_TRUE(
+      p->GetName() == "DashController" ||
+      p->GetName() == "PanelController"
+      );
+  }
 }
 
 TEST_F(TestIntrospection, TestAbsoluteQueries)
@@ -136,14 +153,14 @@ TEST_F(TestIntrospection, TestMalformedRelativeQueries)
 
   results = GetIntrospectableNodesFromQuery(query, root_.get());
   ASSERT_EQ(1, results.size());
-  EXPECT_STREQ("Unity", results.front()->GetName().c_str()); 
+  EXPECT_STREQ("Unity", results.front()->GetName().c_str());
 
   query = "Foo";
   results = GetIntrospectableNodesFromQuery(query, root_.get());
   ASSERT_EQ(3, results.size());
   for(auto p : results)
   {
-    EXPECT_STREQ("Foo", p->GetName().c_str()); 
+    EXPECT_STREQ("Foo", p->GetName().c_str());
   }
 }
 
@@ -154,14 +171,14 @@ TEST_F(TestIntrospection, TestSimpleRelativeQueries)
 
   results = GetIntrospectableNodesFromQuery(query, root_.get());
   ASSERT_EQ(1, results.size());
-  EXPECT_STREQ("Unity", results.front()->GetName().c_str()); 
+  EXPECT_STREQ("Unity", results.front()->GetName().c_str());
 
   query = "//Foo";
   results = GetIntrospectableNodesFromQuery(query, root_.get());
   ASSERT_EQ(3, results.size());
   for(auto p : results)
   {
-    EXPECT_STREQ("Foo", p->GetName().c_str()); 
+    EXPECT_STREQ("Foo", p->GetName().c_str());
   }
 }
 
@@ -174,7 +191,7 @@ TEST_F(TestIntrospection, TestComplexRelativeQueries)
   ASSERT_EQ(3, results.size());
   for(auto p : results)
   {
-    EXPECT_STREQ("Foo", p->GetName().c_str()); 
+    EXPECT_STREQ("Foo", p->GetName().c_str());
   }
 }
 
@@ -185,7 +202,7 @@ TEST_F(TestIntrospection, TestQueriesWithNoResults)
 
   results = GetIntrospectableNodesFromQuery(query, root_.get());
   ASSERT_EQ(0, results.size());
-  
+
   query = "DoesNotEverExist";
   results = GetIntrospectableNodesFromQuery(query, root_.get());
   ASSERT_EQ(0, results.size());
@@ -211,7 +228,7 @@ TEST_F(TestIntrospection, TestQueriesWithParams)
   ASSERT_EQ(3, results.size());
   for(auto p : results)
   {
-    EXPECT_STREQ("Foo", p->GetName().c_str()); 
+    EXPECT_STREQ("Foo", p->GetName().c_str());
   }
 
   // make sure param queries work with descendant nodes as well:
@@ -219,7 +236,7 @@ TEST_F(TestIntrospection, TestQueriesWithParams)
   ASSERT_EQ(3, results.size());
   for(auto p : results)
   {
-    EXPECT_STREQ("Foo", p->GetName().c_str()); 
+    EXPECT_STREQ("Foo", p->GetName().c_str());
   }
 }
 
@@ -259,7 +276,7 @@ TEST_F(TestIntrospection, TestQueryTypeBool)
 TEST_F(TestIntrospection, TestQueryTypeInt)
 {
   std::list<Introspectable*> results;
-  
+
   // these should all select the root Unity node:
   std::list<std::string> queries = {"/Unity[BytePropertyPos=12]",
                                     "/Unity[Int16PropertyPos=1012]",
@@ -291,7 +308,7 @@ TEST_F(TestIntrospection, TestQueryTypeInt)
   {
     results = GetIntrospectableNodesFromQuery(query, root_.get());
     ASSERT_EQ(0, results.size());
-  }              
+  }
 }
 
 TEST_F(TestIntrospection, TestMalformedQueries)
@@ -320,6 +337,6 @@ TEST_F(TestIntrospection, TestMalformedQueries)
   for (std::string query : queries)
   {
     results = GetIntrospectableNodesFromQuery(query, root_.get());
-    ASSERT_EQ(0, results.size()) << "Failing query: " << query; 
+    ASSERT_EQ(0, results.size()) << "Failing query: " << query;
   }
 }
