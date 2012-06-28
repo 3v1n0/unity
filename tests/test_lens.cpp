@@ -6,8 +6,8 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Lens.h>
 #include <UnityCore/MultiRangeFilter.h>
-#include <UnityCore/MusicPreview.h>
 #include <UnityCore/Preview.h>
+#include <UnityCore/SeriesPreview.h>
 #include <UnityCore/Variant.h>
 #include <UnityCore/RadioOptionFilter.h>
 #include <UnityCore/RatingsFilter.h>
@@ -54,7 +54,7 @@ public:
   void WaitForConnected()
   {
     bool timeout_reached = false;
-    guint32 timeout_id = Utils::ScheduleTimeout(&timeout_reached);
+    guint32 timeout_id = Utils::ScheduleTimeout(&timeout_reached, 2000);
 
     while (!lens_->connected && !timeout_reached)
     {
@@ -70,7 +70,7 @@ public:
   void WaitForModel(Model<Adaptor>* model, unsigned int n_rows)
   {
     bool timeout_reached = false;
-    guint32 timeout_id = Utils::ScheduleTimeout(&timeout_reached);
+    guint32 timeout_id = Utils::ScheduleTimeout(&timeout_reached, 2000);
     
     while (model->count != n_rows && !timeout_reached)
     {
@@ -211,40 +211,28 @@ TEST_F(TestLens, TestActivation)
 
 TEST_F(TestLens, TestPreview)
 {
-  unity::glib::Variant v(g_variant_new_string("whatever"));
-  auto preview = Preview::PreviewForVariant(v);
-  EXPECT_TRUE(preview != nullptr);
-  // FIXME: fix up when unity-core supports current preview protocol
-  /*
   std::string uri = PopulateAndGetFirstResultURI();
   bool previewed = false;
 
   auto preview_cb = [&previewed, &uri] (std::string const& uri_,
-                                  Preview::Ptr preview)
+                                        Preview::Ptr preview)
   {
     EXPECT_EQ(uri, uri_);
-    EXPECT_EQ(preview->renderer_name, "preview-generic");
+    EXPECT_EQ(preview->renderer_name, "preview-series");
 
-    TrackPreview::Ptr track_preview = std::static_pointer_cast<TrackPreview>(preview);
-    EXPECT_EQ(track_preview->number, (unsigned int)1);
-    EXPECT_EQ(track_preview->title, "Animus Vox");
-    EXPECT_EQ(track_preview->artist, "The Glitch Mob");
-    EXPECT_EQ(track_preview->album, "Drink The Sea");
-    EXPECT_EQ(track_preview->length, (unsigned int)404);
-    EXPECT_EQ(track_preview->album_cover, "file://music/the/track");
-    EXPECT_EQ(track_preview->primary_action_name, "Play");
-    EXPECT_EQ(track_preview->primary_action_icon_hint, "");
-    EXPECT_EQ(track_preview->primary_action_uri, "play://music/the/track");
-    EXPECT_EQ(track_preview->play_action_uri, "preview://music/the/track");
-    EXPECT_EQ(track_preview->pause_action_uri, "pause://music/the/track");
-    EXPECT_EQ(track_preview->genres.size(), (unsigned int)1);
+    auto series = std::dynamic_pointer_cast<SeriesPreview>(preview);
+    EXPECT_EQ(series->GetItems().size(), (unsigned)4);
+    EXPECT_EQ(series->selected_item_index, 2);
+
+    auto child = series->GetChildPreview();
+    EXPECT_EQ(child->title, "A preview");
     previewed = true;
   };
+
   lens_->preview_ready.connect(sigc::slot<void, std::string const&, Preview::Ptr>(preview_cb));
 
   lens_->Preview(uri);
   Utils::WaitUntil(previewed);
-  */
 }
 
 TEST_F(TestLens, TestFilterSync)
