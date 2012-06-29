@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2011-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Michal Hruby <michal.hruby@canonical.com>
  */
 
 #include <unity-protocol.h>
@@ -36,9 +37,9 @@ public:
   void PauseUri(std::string const& uri) const;
 
   MusicPreview* owner_;
-  // TODO: keep ref to the proto object as well?
-  Tracks::Ptr tracks_model;
+
   glib::Object<UnityProtocolMusicPreview> raw_preview_;
+  Tracks::Ptr tracks_model;
 };
 
 MusicPreview::Impl::Impl(MusicPreview* owner,

@@ -518,7 +518,7 @@ void Lens::Impl::ActivationReply(GVariant* parameters)
   glib::Variant dict (hints_variant, glib::StealRef());
   dict.ASVToHints(hints);
 
-  if (handled == 4) // FIXME: enum from proto (SHOW_PREVIEW)
+  if (handled == UNITY_PROTOCOL_HANDLED_TYPE_SHOW_PREVIEW)
   {
     auto iter = hints.find("preview");
     if (iter != hints.end())
