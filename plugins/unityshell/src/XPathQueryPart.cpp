@@ -41,12 +41,12 @@ XPathQueryPart::XPathQueryPart(std::string const& query_part)
 {
   std::vector<std::string> part_pieces;
   boost::algorithm::split(part_pieces, query_part, boost::algorithm::is_any_of("[]="));
-  // Boost's split() implementation does not match it's documentation! According to the 
-  // docs, it's not supposed to add empty strings, but it does, which is a PITA. This 
+  // Boost's split() implementation does not match it's documentation! According to the
+  // docs, it's not supposed to add empty strings, but it does, which is a PITA. This
   // next line removes them:
-  part_pieces.erase( std::remove_if( part_pieces.begin(), 
-                                      part_pieces.end(), 
-                                      boost::bind( &std::string::empty, _1 ) ), 
+  part_pieces.erase( std::remove_if( part_pieces.begin(),
+                                      part_pieces.end(),
+                                      boost::bind( &std::string::empty, _1 ) ),
                     part_pieces.end());
   if (part_pieces.size() == 1)
   {
@@ -71,7 +71,7 @@ bool XPathQueryPart::Matches(Introspectable* node) const
   bool matches = false;
   if (param_name_ == "")
   {
-    matches = node->GetName() == node_name_;
+    matches = (node_name_ == "*" || node->GetName() == node_name_);
   }
   else
   {
@@ -85,9 +85,9 @@ bool XPathQueryPart::Matches(Introspectable* node) const
     if (prop_value != NULL)
     {
       GVariantClass prop_val_type = g_variant_classify(prop_value);
-      // it'd be nice to be able to do all this with one method. However, the booleans need 
+      // it'd be nice to be able to do all this with one method. However, the booleans need
       // special treatment, and I can't figure out how to group all the integer types together
-      // without resorting to template functions.... and we all know what happens when you 
+      // without resorting to template functions.... and we all know what happens when you
       // start doing that...
       switch (prop_val_type)
       {
@@ -116,7 +116,7 @@ bool XPathQueryPart::Matches(Introspectable* node) const
           std::stringstream stream(param_value_);
           int val; // changing this to guchar causes problems.
           stream >> val;
-          matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 && 
+          matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 &&
                     val == g_variant_get_byte(prop_value);
         }
         break;
@@ -125,7 +125,7 @@ bool XPathQueryPart::Matches(Introspectable* node) const
           std::stringstream stream(param_value_);
           gint16 val;
           stream >> val;
-          matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 && 
+          matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 &&
                     val == g_variant_get_int16(prop_value);
         }
         break;
@@ -134,8 +134,8 @@ bool XPathQueryPart::Matches(Introspectable* node) const
           std::stringstream stream(param_value_);
           guint16 val;
           stream >> val;
-          matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 && 
-                    val == g_variant_get_uint16(prop_value);            
+          matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 &&
+                    val == g_variant_get_uint16(prop_value);
         }
         break;
         case G_VARIANT_CLASS_INT32:
@@ -143,7 +143,7 @@ bool XPathQueryPart::Matches(Introspectable* node) const
           std::stringstream stream(param_value_);
           gint32 val;
           stream >> val;
-          matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 && 
+          matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 &&
                     val == g_variant_get_int32(prop_value);
         }
         break;
@@ -152,7 +152,7 @@ bool XPathQueryPart::Matches(Introspectable* node) const
           std::stringstream stream(param_value_);
           guint32 val;
           stream >> val;
-          matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 && 
+          matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 &&
                     val == g_variant_get_uint32(prop_value);
         }
         break;
@@ -161,7 +161,7 @@ bool XPathQueryPart::Matches(Introspectable* node) const
           std::stringstream stream(param_value_);
           gint64 val;
           stream >> val;
-          matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 && 
+          matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 &&
                     val == g_variant_get_int64(prop_value);
         }
         break;
@@ -170,7 +170,7 @@ bool XPathQueryPart::Matches(Introspectable* node) const
           std::stringstream stream(param_value_);
           guint64 val;
           stream >> val;
-          matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 && 
+          matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 &&
                     val == g_variant_get_uint64(prop_value);
         }
         break;

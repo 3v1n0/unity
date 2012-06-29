@@ -9,11 +9,11 @@
 
 from __future__ import absolute_import
 
-from autopilot.introspection.unity import UnityIntrospectionObject
 from autopilot.keybindings import KeybindingsHelper
 from HTMLParser import HTMLParser
 import re
 
+from unity.emulators import UnityIntrospectionObject
 from unity.emulators.dash import SearchBar
 from unity.emulators.icons import HudEmbeddedIcon, HudLauncherIcon
 
