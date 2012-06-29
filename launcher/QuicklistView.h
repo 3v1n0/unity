@@ -169,6 +169,8 @@ private:
   // used by keyboard/a11y-navigation
   int _current_item_index;
 
+  bool _item_triggered;
+
   // list of introspectable children, used to return children in the correct order:
   IntrospectableList _introspectable_children;
 };

@@ -70,6 +70,7 @@ QuicklistView::QuicklistView()
   , _offset_correction(-1)
   , _cairo_text_has_changed(true)
   , _current_item_index(-1)
+  , _item_triggered(false)
 {
   SetGeometry(nux::Geometry(0, 0, 1, 1));
 
@@ -304,6 +305,7 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
     case NUX_KP_ENTER:
       if (IsMenuItemSelectable(_current_item_index))
       {
+        _item_triggered = true;
         dbusmenu_menuitem_handle_event(GetNthItems(_current_item_index)->_menuItem,
                                        "clicked",
                                        NULL,
@@ -409,6 +411,14 @@ void QuicklistView::Hide()
     {
       selection_change.emit();
       _current_item_index = -1;
+    }
+
+    if (_item_triggered)
+    {
+      ubus_server_send_message(ubus_server_get_default(),
+                               UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                               NULL);
+      _item_triggered = false;
     }
   }
 }
@@ -556,6 +566,7 @@ void QuicklistView::CheckAndEmitItemSignal(int x, int y)
       // An action is performed: send the signal back to the application
       if (item->_menuItem)
       {
+        _item_triggered = true;
         dbusmenu_menuitem_handle_event(item->_menuItem, "clicked", NULL, 0);
       }
     }
