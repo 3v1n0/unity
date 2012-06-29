@@ -19,6 +19,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 import gconf
+import glib
 import glob
 from optparse import OptionParser
 import os
@@ -78,7 +79,7 @@ def reset_unity_compiz_profile ():
     # as compiz set a new schema instead of a value..
     try:
         current_profile_schema = client.get_schema("/apps/compizconfig-1/current_profile")
-    except (GError, AttributeError), e:
+    except (glib.GError, AttributeError), e:
         print "WARNING: environment is incorrect: %s\nDid you just try to reset in a tty?" % e
         return
     
