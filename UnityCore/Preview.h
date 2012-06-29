@@ -101,6 +101,8 @@ public:
   ActionPtrList GetActions() const;
   InfoHintPtrList GetInfoHints() const;
 
+  void PerformAction(std::string const& id) const;
+
 protected:
   // this should be UnityProtocolPreview, but we want to keep the usage
   // of libunity-protocol-private private to unity-core

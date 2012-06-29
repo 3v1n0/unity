@@ -85,7 +85,8 @@ public:
   void Activate(std::string const& uri);
   void ActivationReply(GVariant* parameters);
   void Preview(std::string const& uri);
-  void PreviewReply(GVariant* parameters);
+  void ActivatePreviewAction(std::string const& action_id,
+                             std::string const& uri);
   void SignalPreview(std::string const& preview_uri,
                      glib::Variant const& preview_update,
                      glib::DBusProxy::ReplyCallback reply_cb);
@@ -565,20 +566,23 @@ void Lens::Impl::Preview(std::string const& uri)
                preview_cancellable_);
 }
 
-void Lens::Impl::PreviewReply(GVariant* parameters)
+void Lens::Impl::ActivatePreviewAction(std::string const& action_id,
+                                       std::string const& uri)
 {
-  glib::String uri;
-  glib::String renderer_name;
-  GVariant* hints_variant;
-  Hints hints;
-  
-  g_variant_get(parameters, "((ss@a{sv}))", &uri, &renderer_name, &hints_variant);
+  LOG_DEBUG(logger) << "Activating action '" << action_id << "' on  '" << id_ << "'";
 
-  glib::Variant dict (hints_variant, glib::StealRef());
-  //dict.ASVToHints(hints);
+  if (!proxy_->IsConnected())
+    {
+      LOG_DEBUG(logger) << "Skipping activation. Proxy not connected. ('" << id_ << "')";
+      return;
+    }
 
-  //Preview::Ptr preview = Preview::PreviewForProperties(renderer_name.Str(), hints);
-  //owner_->preview_ready.emit(uri.Str(), preview);
+  glib::String activation_uri(g_strdup_printf("%s:%s", action_id.c_str(), uri.c_str()));
+
+  proxy_->Call("Activate",
+               g_variant_new("(su)", activation_uri.Value(),
+                             UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_ACTION),
+               sigc::mem_fun(this, &Lens::Impl::ActivationReply));
 }
 
 void Lens::Impl::SignalPreview(std::string const& preview_uri,
@@ -756,6 +760,12 @@ void Lens::Activate(std::string const& uri)
 void Lens::Preview(std::string const& uri)
 {
   pimpl->Preview(uri);
+}
+
+void Lens::ActivatePreviewAction(std::string const& action_id,
+                                 std::string const& uri)
+{
+  pimpl->ActivatePreviewAction(action_id, uri);
 }
 
 void Lens::SignalPreview(std::string const& uri,

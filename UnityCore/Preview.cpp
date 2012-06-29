@@ -240,5 +240,17 @@ void Preview::Update(glib::Variant const& properties,
   }
 }
 
+void Preview::PerformAction(std::string const& id) const
+{
+  if (pimpl->parent_lens_)
+  {
+    pimpl->parent_lens_->ActivatePreviewAction(id, preview_uri);
+  }
+  else
+  {
+    LOG_WARN(logger) << "Unable to perform action, parent_lens wasn't set!";
+  }
+}
+
 } // namespace dash
 } // namespace unity

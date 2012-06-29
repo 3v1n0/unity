@@ -215,7 +215,7 @@ TEST_F(TestLens, TestPreview)
   bool previewed = false;
 
   auto preview_cb = [&previewed, &uri] (std::string const& uri_,
-                                        Preview::Ptr preview)
+                                        Preview::Ptr const& preview)
   {
     EXPECT_EQ(uri, uri_);
     EXPECT_EQ(preview->renderer_name, "preview-series");
@@ -243,7 +243,7 @@ TEST_F(TestLens, TestPreviewSignal)
 
   auto preview_cb = [&previewed, &uri, &series_preview]
                                         (std::string const& uri_,
-                                         Preview::Ptr preview)
+                                         Preview::Ptr const& preview)
   {
     EXPECT_EQ(uri, uri_);
     EXPECT_EQ(preview->renderer_name, "preview-series");
