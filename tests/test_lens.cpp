@@ -229,10 +229,50 @@ TEST_F(TestLens, TestPreview)
     previewed = true;
   };
 
-  lens_->preview_ready.connect(sigc::slot<void, std::string const&, Preview::Ptr>(preview_cb));
+  lens_->preview_ready.connect(sigc::slot<void, std::string const&, Preview::Ptr const&>(preview_cb));
 
   lens_->Preview(uri);
   Utils::WaitUntil(previewed);
+}
+
+TEST_F(TestLens, TestPreviewAction)
+{
+  std::string uri = PopulateAndGetFirstResultURI();
+  bool previewed = false;
+  Preview::Ptr preview;
+
+  auto preview_cb = [&previewed, &uri, &preview]
+                                        (std::string const& uri_,
+                                         Preview::Ptr const& preview_)
+  {
+    EXPECT_EQ(uri, uri_);
+    EXPECT_EQ(preview_->renderer_name, "preview-series");
+
+    preview = preview_;
+    previewed = true;
+  };
+
+  lens_->preview_ready.connect(sigc::slot<void, std::string const&, Preview::Ptr const&>(preview_cb));
+  lens_->Preview(uri);
+
+  Utils::WaitUntil(previewed);
+
+  bool action_executed = false;
+  auto activated_cb = [&action_executed] (std::string const& uri,
+                                          HandledType handled_type,
+                                          Lens::Hints const& hints)
+  {
+    EXPECT_EQ(handled_type, HandledType::SHOW_DASH);
+    action_executed = true;
+  };
+
+  lens_->activated.connect(sigc::slot<void, std::string const&, HandledType,
+                                      Lens::Hints const&>(activated_cb));
+  EXPECT_GT(preview->GetActions().size(), (unsigned)0);
+  auto action = preview->GetActions()[0];
+  preview->PerformAction(action->id);
+
+  Utils::WaitUntil(action_executed);
 }
 
 TEST_F(TestLens, TestPreviewSignal)
@@ -252,9 +292,9 @@ TEST_F(TestLens, TestPreviewSignal)
     previewed = true;
   };
 
-  lens_->preview_ready.connect(sigc::slot<void, std::string const&, Preview::Ptr>(preview_cb));
-
+  lens_->preview_ready.connect(sigc::slot<void, std::string const&, Preview::Ptr const&>(preview_cb));
   lens_->Preview(uri);
+
   Utils::WaitUntil(previewed);
 
   bool child_changed = false;
