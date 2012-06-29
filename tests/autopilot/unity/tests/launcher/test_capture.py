@@ -80,8 +80,8 @@ class LauncherCaptureTests(UnityTestCase):
         # The launcher should have held the mouse a little bit
         self.assertThat(x_fin, Equals(x - width / 2))
 
-    def test_launcher_capture_while_not_sticky_and_hidden_moving_right(self):
-        """Tests that the launcher capture the mouse when moving between monitors
+    def test_launcher_capture_while_not_sticky_and_hidden(self):
+        """Tests that the launcher captures the mouse when moving between monitors
         while hidden and sticky is off. (moving left)
         """
 
