@@ -136,6 +136,20 @@ TEST_F(TestIntrospection, TestAsteriskWildcard)
   }
 }
 
+TEST_F(TestIntrospection, TestRelativeAsteriskWildcard)
+{
+  std::list<Introspectable*> results;
+  std::string query = "//DashController/*";
+
+  results = GetIntrospectableNodesFromQuery(query, root_.get());
+  ASSERT_EQ(3, results.size());
+
+  for(auto p : results)
+  {
+    ASSERT_TRUE(p->GetName() == "Foo");
+  }
+}
+
 TEST_F(TestIntrospection, TestAbsoluteQueries)
 {
   std::list<Introspectable*> results;
