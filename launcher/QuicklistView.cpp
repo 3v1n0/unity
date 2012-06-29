@@ -101,8 +101,6 @@ QuicklistView::QuicklistView()
   _item_layout     = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
   _vlayout->AddLayout(_item_layout, 0);
 
-  _default_item_layout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
-  _vlayout->AddLayout(_default_item_layout, 0);
   _vlayout->AddLayout(_bottom_space, 0);
   _vlayout->SetMinimumWidth(140);
 
@@ -321,22 +319,13 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
 
 QuicklistView::~QuicklistView()
 {
-  std::list<QuicklistMenuItem*>::iterator it;
-  for (it = _item_list.begin(); it != _item_list.end(); it++)
+  for (auto item : _item_list)
   {
     // Remove from introspection
-    RemoveChild(*it);
-    (*it)->UnReference();
+    RemoveChild(item);
+    item->UnReference();
   }
 
-  for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
-  {
-    // Remove from introspection
-    RemoveChild(*it);
-    (*it)->UnReference();
-  }
-
-  _default_item_list.clear();
   _item_list.clear();
 }
 
@@ -353,7 +342,7 @@ void QuicklistView::ShowQuicklistWithTipAt(int anchor_tip_x, int anchor_tip_y)
 
   if (!_enable_quicklist_for_testing)
   {
-    if ((_item_list.size() != 0) || (_default_item_list.size() != 0))
+    if ((_item_list.size() != 0))
     {
       int offscreen_size = GetBaseY() +
                            GetBaseHeight() -
@@ -434,17 +423,10 @@ void QuicklistView::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 
   gfxContext.PushClippingRectangle(base);
 
-  std::list<QuicklistMenuItem*>::iterator it;
-  for (it = _item_list.begin(); it != _item_list.end(); it++)
+  for (auto item : _item_list)
   {
-    if ((*it)->GetVisible())
-      (*it)->ProcessDraw(gfxContext, forceDraw);
-  }
-
-  for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
-  {
-    if ((*it)->GetVisible())
-      (*it)->ProcessDraw(gfxContext, forceDraw);
+    if (item->GetVisible())
+      item->ProcessDraw(gfxContext, forceDraw);
   }
 
   gfxContext.PopClippingRectangle();
@@ -458,40 +440,20 @@ void QuicklistView::PreLayoutManagement()
   int MaxItemWidth = 0;
   int TotalItemHeight = 0;
 
-  std::list<QuicklistMenuItem*>::iterator it;
-  for (it = _item_list.begin(); it != _item_list.end(); it++)
+  for (auto item : _item_list)
   {
     // Make sure item is in layout if it should be
-    if (!(*it)->GetVisible())
+    if (!item->GetVisible())
     {
-      _item_layout->RemoveChildObject(*it);
+      _item_layout->RemoveChildObject(item);
       continue;
     }
-    else if (!(*it)->GetParentObject())
-      _item_layout->AddView(*it, 1, nux::eCenter, nux::eFull);
+    else if (!item->GetParentObject())
+      _item_layout->AddView(item, 1, nux::eCenter, nux::eFull);
 
     int  textWidth  = 0;
     int  textHeight = 0;
-    (*it)->GetTextExtents(textWidth, textHeight);
-    if (textWidth > MaxItemWidth)
-      MaxItemWidth = textWidth;
-    TotalItemHeight += textHeight;
-  }
-
-  for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
-  {
-    // Make sure item is in layout if it should be
-    if (!(*it)->GetVisible())
-    {
-      _default_item_layout->RemoveChildObject(*it);
-      continue;
-    }
-    else if (!(*it)->GetParentObject())
-      _default_item_layout->AddView(*it, 1, nux::eCenter, nux::eFull);
-
-    int  textWidth  = 0;
-    int  textHeight = 0;
-    (*it)->GetTextExtents(textWidth, textHeight);
+    item->GetTextExtents(textWidth, textHeight);
     if (textWidth > MaxItemWidth)
       MaxItemWidth = textWidth;
     TotalItemHeight += textHeight;
@@ -513,7 +475,6 @@ void QuicklistView::PreLayoutManagement()
   }
 
   _item_layout->SetMinimumWidth(MaxItemWidth);
-  _default_item_layout->SetMinimumWidth(MaxItemWidth);
 
   BaseWindow::PreLayoutManagement();
 }
@@ -527,27 +488,15 @@ long QuicklistView::PostLayoutManagement(long LayoutResult)
   int x = _padding + _anchor_width + _corner_radius + _offset_correction;
   int y = _padding + _corner_radius + _offset_correction;
 
-  std::list<QuicklistMenuItem*>::iterator it;
-  for (it = _item_list.begin(); it != _item_list.end(); it++)
+  for (auto item : _item_list)
   {
-    if (!(*it)->GetVisible())
+    if (!item->GetVisible())
       continue;
 
-    (*it)->SetBaseX(x);
-    (*it)->SetBaseY(y);
+    item->SetBaseX(x);
+    item->SetBaseY(y);
 
-    y += (*it)->GetBaseHeight();
-  }
-
-  for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
-  {
-    if (!(*it)->GetVisible())
-      continue;
-
-    (*it)->SetBaseX(x);
-    (*it)->SetBaseY(y);
-
-    y += (*it)->GetBaseHeight();
+    y += item->GetBaseHeight();
   }
 
   // We must correct the width of line separators. The rendering of the separator can be smaller than the width of the
@@ -555,21 +504,10 @@ long QuicklistView::PostLayoutManagement(long LayoutResult)
   // only after MaxItemWidth is computed in QuicklistView::PreLayoutManagement.
   // The setting of the separator width is done here after the Layout cycle for this widget is over. The width of the separator
   // has bee set correctly during the layout cycle, but the cairo rendering still need to be adjusted.
-  int separator_width = nux::Max<int>(_default_item_layout->GetBaseWidth(), _item_layout->GetBaseWidth());
+  int separator_width = _item_layout->GetBaseWidth();
 
-  for (it = _item_list.begin(); it != _item_list.end(); it++)
+  for (auto item : _item_list)
   {
-    QuicklistMenuItem* item = (QuicklistMenuItem*)(*it);
-    if (item->GetVisible() && item->CairoSurfaceWidth() != separator_width)
-    {
-      // Compute textures of the item.
-      item->UpdateTexture();
-    }
-  }
-
-  for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
-  {
-    QuicklistMenuItem* item = (QuicklistMenuItem*)(*it);
     if (item->GetVisible() && item->CairoSurfaceWidth() != separator_width)
     {
       // Compute textures of the item.
@@ -605,39 +543,20 @@ void QuicklistView::RecvItemMouseClick(QuicklistMenuItem* item, int x, int y)
 void QuicklistView::CheckAndEmitItemSignal(int x, int y)
 {
   nux::Geometry geo;
-  std::list<QuicklistMenuItem*>::iterator it;
-  for (it = _item_list.begin(); it != _item_list.end(); it++)
+  for (auto item : _item_list)
   {
-    if (!(*it)->GetVisible())
+    if (!item->GetVisible())
       continue;
 
-    geo = (*it)->GetGeometry();
+    geo = item->GetGeometry();
     geo.width = _item_layout->GetBaseWidth();
 
     if (geo.IsPointInside(x, y))
     {
       // An action is performed: send the signal back to the application
-      if ((*it)->_menuItem)
+      if (item->_menuItem)
       {
-        dbusmenu_menuitem_handle_event((*it)->_menuItem, "clicked", NULL, 0);
-      }
-    }
-  }
-
-  for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
-  {
-    if (!(*it)->GetVisible())
-      continue;
-
-    geo = (*it)->GetGeometry();
-    geo.width = _default_item_layout->GetBaseWidth();
-
-    if (geo.IsPointInside(x, y))
-    {
-      // An action is performed: send the signal back to the application
-      if ((*it)->_menuItem)
-      {
-        dbusmenu_menuitem_handle_event((*it)->_menuItem, "clicked", NULL, 0);
+        dbusmenu_menuitem_handle_event(item->_menuItem, "clicked", NULL, 0);
       }
     }
   }
@@ -659,47 +578,24 @@ void QuicklistView::RecvItemMouseRelease(QuicklistMenuItem* item, int x, int y)
 
 void QuicklistView::CancelItemsPrelightStatus()
 {
-  std::list<QuicklistMenuItem*>::iterator it;
-  for (it = _item_list.begin(); it != _item_list.end(); it++)
+  for (auto item : _item_list)
   {
-    (*it)->_prelight = false;
-  }
-
-  for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
-  {
-    (*it)->_prelight = false;
+    item->_prelight = false;
   }
 }
 
 void QuicklistView::RecvItemMouseDrag(QuicklistMenuItem* item, int x, int y)
 {
   nux::Geometry geo;
-
-  for (auto it : _item_list)
+  for (auto item : _item_list)
   {
-    int item_index = GetItemIndex(it);
+    int item_index = GetItemIndex(item);
 
     if (!IsMenuItemSelectable(item_index))
       continue;
 
-    geo = it->GetGeometry();
+    geo = item->GetGeometry();
     geo.width = _item_layout->GetBaseWidth();
-
-    if (geo.IsPointInside(x + item->GetBaseX(), y + item->GetBaseY()))
-    {
-      SelectItem(item_index);
-    }
-  }
-
-  for (auto it : _default_item_list)
-  {
-    int item_index = GetItemIndex(it);
-
-    if (!IsMenuItemSelectable(item_index))
-      continue;
-
-    geo = it->GetGeometry();
-    geo.width = _default_item_layout->GetBaseWidth();
 
     if (geo.IsPointInside(x + item->GetBaseX(), y + item->GetBaseY()))
     {
@@ -765,26 +661,17 @@ void QuicklistView::RecvMouseDownOutsideOfQuicklist(int x, int y, unsigned long 
 
 void QuicklistView::RemoveAllMenuItem()
 {
-  std::list<QuicklistMenuItem*>::iterator it;
-  for (it = _item_list.begin(); it != _item_list.end(); it++)
+  for (auto item : _item_list)
   {
     // Remove from introspection
-    RemoveChild(*it);
-    (*it)->UnReference();
+    RemoveChild(item);
+    item->UnReference();
   }
 
-  for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
-  {
-    // Remove from introspection
-    RemoveChild(*it);
-    (*it)->UnReference();
-  }
 
   _item_list.clear();
-  _default_item_list.clear();
 
   _item_layout->Clear();
-  _default_item_layout->Clear();
   _cairo_text_has_changed = true;
   nux::GetWindowThread()->QueueObjectLayout(this);
 }
@@ -819,7 +706,7 @@ void QuicklistView::RenderQuicklistView()
 
 int QuicklistView::GetNumItems()
 {
-  return _item_list.size() + _default_item_list.size();
+  return _item_list.size();
 }
 
 QuicklistMenuItem* QuicklistView::GetNthItems(int index)
@@ -827,24 +714,10 @@ QuicklistMenuItem* QuicklistView::GetNthItems(int index)
   if (index < (int)_item_list.size())
   {
     int i = 0;
-    std::list<QuicklistMenuItem*>::iterator it;
-    for (i = 0, it = _item_list.begin(); it != _item_list.end(); i++, it++)
+    for (auto item : _item_list)
     {
-      if (i == index)
-        return *it;
-    }
-  }
-
-  if (index < (int)_item_list.size() + (int)_default_item_list.size())
-  {
-    int i = 0;
-    if (_item_list.size() > 0)
-      i = _item_list.size() - 1;
-    std::list<QuicklistMenuItem*>::iterator it;
-    for (it = _default_item_list.begin(); it != _default_item_list.end(); i++, it++)
-    {
-      if (i == index)
-        return *it;
+      if (i++ == index)
+        return item;
     }
   }
 
@@ -856,14 +729,6 @@ int QuicklistView::GetItemIndex(QuicklistMenuItem* item)
   int index = -1;
 
   for (auto it : _item_list)
-  {
-    ++index;
-
-    if (it == item)
-      return index;
-  }
-
-  for (auto it : _default_item_list)
   {
     ++index;
 
@@ -1304,7 +1169,7 @@ void QuicklistView::UpdateTexture()
 
   if (!_enable_quicklist_for_testing)
   {
-    if (!_item_list.empty() || !_default_item_list.empty())
+    if (!_item_list.empty())
     {
       int offscreen_size = GetBaseY() +
                            height -

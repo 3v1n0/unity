@@ -10,8 +10,10 @@
 
 from __future__ import absolute_import
 
+from autopilot.matchers import Eventually
 from autopilot.testcase import AutopilotTestCase
 from dbus import DBusException
+from logging import getLogger
 import os
 from tempfile import mktemp
 from testtools.content import text_content
@@ -30,6 +32,8 @@ from unity.emulators.unity import (
     reset_logging,
     )
 
+
+log = getLogger(__name__)
 
 
 class UnityTestCase(AutopilotTestCase):
@@ -57,31 +61,49 @@ class UnityTestCase(AutopilotTestCase):
         """
         well_behaved = True
         reasons = []
+        log.info("Checking system state for badly behaving test...")
 
         # Have we switched workspace?
         if self.workspace.current_workspace != self._initial_workspace_num:
             well_behaved = False
             reasons.append("The test changed the active workspace from %d to %d." \
                 % (self._initial_workspace_num, self.workspace.current_workspace))
+            log.warning("Test changed the active workspace, changing it back...")
             self.workspace.switch_to(self._initial_workspace_num)
         # Have we left the dash open?
         if self.dash.visible:
             well_behaved = False
             reasons.append("The test left the dash open.")
+            log.warning("Test left the dash open, closing it...")
             self.dash.ensure_hidden()
         # ... or the hud?
         if self.hud.visible:
             well_behaved = False
             reasons.append("The test left the hud open.")
+            log.warning("Test left the hud open, closing it...")
             self.hud.ensure_hidden()
         # Are we in show desktop mode?
         if self.window_manager.showdesktop_active:
             well_behaved = False
             reasons.append("The test left the system in show_desktop mode.")
+            log.warning("Test left the system in show desktop mode, exiting it...")
             self.window_manager.leave_show_desktop()
+        for launcher in self.launcher.get_launchers():
+            if launcher.in_keynav_mode:
+                well_behaved = False
+                reasons.append("The test left the launcher keynav mode enabled.")
+                log.warning("Test left the launcher in keynav mode, exiting it...")
+                launcher.key_nav_cancel()
+            if launcher.in_switcher_mode:
+                well_behaved = False
+                reasons.append("The test left the launcher in switcher mode.")
+                log.warning("Test left the launcher in switcher mode, exiting it...")
+                launcher.switcher_cancel()
 
         if not well_behaved:
             self.fail("/n".join(reasons))
+        else:
+            log.info("Test was well behaved.")
 
     @property
     def dash(self):
@@ -170,3 +192,7 @@ class UnityTestCase(AutopilotTestCase):
             raise ValueError("Log level '%s' must be one of: %r" % (level, valid_levels))
         set_log_severity(component, level)
 
+    def assertNumberWinsIsEventually(self, app, num):
+        """Asserts that 'app' eventually has 'num' wins. Waits up to 10 seconds."""
+
+        self.assertThat(lambda: len(app.get_windows()), Eventually(Equals(num)))

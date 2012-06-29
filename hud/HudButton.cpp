@@ -105,7 +105,7 @@ void HudButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonV
 
 bool HudButton::AcceptKeyNavFocus()
 {
-  // The button will not receive the keyboard focus. The keyboard focus is always to remain with the 
+  // The button will not receive the keyboard focus. The keyboard focus is always to remain with the
   // text entry in the hud.
   return false;
 }
@@ -131,6 +131,7 @@ long HudButton::ComputeContentSize()
 void HudButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry const& geo = GetGeometry();
+  GfxContext.PushClippingRectangle(geo);
   gPainter.PaintBackground(GfxContext, geo);
 
   // set up our texture mode
@@ -170,12 +171,18 @@ void HudButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                       nux::color::White);
 
   GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
+
+  GfxContext.PopClippingRectangle();
 }
 
 void HudButton::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   if (IsFullRedraw())
+  {
+    GfxContext.PushClippingRectangle(GetGeometry());
     hlayout_->ProcessDraw(GfxContext, force_draw);
+    GfxContext.PopClippingRectangle();
+  }
 }
 
 void HudButton::SetQuery(Query::Ptr query)
@@ -188,7 +195,7 @@ void HudButton::SetQuery(Query::Ptr query)
   hlayout_->Clear();
   for (auto item : items)
   {
-    nux::StaticCairoText* text = new nux::StaticCairoText(item.first.c_str());
+    nux::StaticCairoText* text = new nux::StaticCairoText(item.first);
     text->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, item.second ? 1.0f : 0.5f));
     text->SetFont(button_font);
     hlayout_->AddView(text, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
@@ -209,7 +216,8 @@ std::string HudButton::GetName() const
 void HudButton::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
-    .add("label", label());
+    .add("label", label())
+    .add("focused", fake_focused());
 }
 
 } // namespace hud

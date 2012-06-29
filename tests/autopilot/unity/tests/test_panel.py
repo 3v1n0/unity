@@ -715,9 +715,8 @@ class PanelMenuTests(PanelTestsBase):
         # TODO: This doesn't test what it says on the tin. Setting MENUPROXY to ''
         # just makes the menu appear inside the app. That's fine, but it's not
         # what is described in the docstring or test id.
-        old_env = os.environ["UBUNTU_MENUPROXY"]
-        os.putenv("UBUNTU_MENUPROXY", "")
-        self.addCleanup(os.putenv, "UBUNTU_MENUPROXY", old_env)
+        self.patch_environment("UBUNTU_MENUPROXY", "")
+
         calc_win = self.open_new_application_window("Calculator")
         sleep(1)
 
