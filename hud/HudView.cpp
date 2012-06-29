@@ -589,6 +589,12 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
     // Not sure if Enter should be a navigation key
     direction = nux::KEY_NAV_ENTER;
     break;
+  case NUX_VK_F4:
+    if (special_keys_state & NUX_STATE_ALT)
+    {
+      ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
+    }
+    break;
   default:
     direction = nux::KEY_NAV_NONE;
     break;
