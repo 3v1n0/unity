@@ -44,7 +44,6 @@ namespace
 nux::logging::Logger logger("unity.favorites");
 
 const char* SETTINGS_NAME = "com.canonical.Unity.Launcher";
-const char* LATEST_SETTINGS_MIGRATION = "3.2.10";
 
 void on_settings_updated(GSettings* settings,
                          const gchar* key,
@@ -68,30 +67,6 @@ FavoriteStoreGSettings::FavoriteStoreGSettings(GSettingsBackend* backend)
 
 void FavoriteStoreGSettings::Init()
 {
-  /* migrate the favorites if needed and ignore errors */
-  glib::String latest_migration_update(g_settings_get_string(
-                                         settings_, "favorite-migration"));
-  if (latest_migration_update.Str() < LATEST_SETTINGS_MIGRATION)
-  {
-    glib::Error error;
-    std::string cmd(PREFIXDIR);
-    cmd += "/lib/unity/migrate_favorites.py";
-
-    glib::String output;
-
-    g_spawn_command_line_sync(cmd.c_str(),
-                              &output,
-                              NULL,
-                              NULL,
-                              &error);
-    if (error)
-    {
-      LOG_WARN(logger) << "WARNING: Unable to run the migrate favorites "
-                       << "tools successfully: " << error
-                       << ".\n\tThe output was:" << output;
-    }
-  }
-
   g_signal_connect(settings_, "changed", G_CALLBACK(on_settings_updated), this);
   Refresh();
 }
