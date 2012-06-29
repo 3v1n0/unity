@@ -36,7 +36,14 @@ public:
   int get_selected_item_index() const { return selected_item_index_; };
   bool set_selected_item_index(int index);
   SeriesItemPtrList get_items() const { return items_list_; };
-  Preview::Ptr get_child_preview() const { return child_preview_; };
+  Preview::Ptr get_child_preview() const
+  {
+    if (!child_preview_->parent_lens)
+      child_preview_->parent_lens = owner_->parent_lens();
+    if (child_preview_->preview_uri().empty())
+      child_preview_->preview_uri = owner_->preview_uri();
+    return child_preview_;
+  };
 
   SeriesPreview* owner_;
   glib::Object<UnityProtocolSeriesPreview> raw_preview_;
@@ -110,6 +117,8 @@ void SeriesPreview::Impl::selected_item_reply(GVariant *reply)
   if (iter != hints.end())
   {
     Preview::Ptr new_child = Preview::PreviewForVariant(iter->second);
+    new_child->parent_lens = owner_->parent_lens();
+    new_child->preview_uri = owner_->preview_uri(); // FIXME: really?
     child_preview_ = new_child;
     owner_->child_preview_changed.emit(new_child);
   }
