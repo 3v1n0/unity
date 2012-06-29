@@ -64,7 +64,7 @@ const gchar DebugDBusInterface::introspection_xml[] =
   ""
   "     <method name='GetState'>"
   "       <arg type='s' name='piece' direction='in' />"
-  "       <arg type='a(sa{sv})' name='state' direction='out' />"
+  "       <arg type='a(sv)' name='state' direction='out' />"
   "     </method>"
   ""
   "   </interface>"
@@ -227,7 +227,7 @@ GVariant* GetState(std::string const& query)
   // process the XPath query:
   std::list<Introspectable*> parts = GetIntrospectableNodesFromQuery(query, _parent_introspectable);
   GVariantBuilder  builder;
-  g_variant_builder_init(&builder, G_VARIANT_TYPE("a(sa{sv})"));
+  g_variant_builder_init(&builder, G_VARIANT_TYPE("a(sv)"));
   if (parts.empty())
   {
     LOG_WARNING(logger) << "Query '" << query << "' Did not match anything.";
@@ -237,7 +237,7 @@ GVariant* GetState(std::string const& query)
     g_variant_builder_add(&builder, "(sv)", node->GetName().c_str(), node->Introspect());
   }
 
-  return g_variant_new("(a(sa{sv}))", &builder);
+  return g_variant_new("(a(sv))", &builder);
 }
 
 void StartLogToFile(std::string const& file_path)
