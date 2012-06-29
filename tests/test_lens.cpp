@@ -235,6 +235,41 @@ TEST_F(TestLens, TestPreview)
   Utils::WaitUntil(previewed);
 }
 
+TEST_F(TestLens, TestPreviewSignal)
+{
+  std::string uri = PopulateAndGetFirstResultURI();
+  bool previewed = false;
+  SeriesPreview::Ptr series_preview;
+
+  auto preview_cb = [&previewed, &uri, &series_preview]
+                                        (std::string const& uri_,
+                                         Preview::Ptr preview)
+  {
+    EXPECT_EQ(uri, uri_);
+    EXPECT_EQ(preview->renderer_name, "preview-series");
+
+    series_preview = std::dynamic_pointer_cast<SeriesPreview>(preview);
+    previewed = true;
+  };
+
+  lens_->preview_ready.connect(sigc::slot<void, std::string const&, Preview::Ptr>(preview_cb));
+
+  lens_->Preview(uri);
+  Utils::WaitUntil(previewed);
+
+  bool child_changed = false;
+  auto child_changed_cb = [&child_changed] (Preview::Ptr const& new_child)
+  {
+    EXPECT_EQ(new_child->title, "A preview");
+    child_changed = true;
+  };
+
+  series_preview->child_preview_changed.connect(sigc::slot<void, Preview::Ptr const&>(child_changed_cb));
+  series_preview->selected_item_index = 1;
+
+  Utils::WaitUntil(child_changed);
+}
+
 TEST_F(TestLens, TestFilterSync)
 {
   Filters::Ptr filters = lens_->filters;
