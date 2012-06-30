@@ -9,7 +9,7 @@
 
 from __future__ import absolute_import
 
-from autopilot.matchers import Eventually, Is
+from autopilot.matchers import Eventually
 from autopilot.testcase import multiply_scenarios
 import logging
 from testtools.matchers import Equals, NotEquals
@@ -112,6 +112,33 @@ class LauncherIconsTests(LauncherTestCase):
         self.assertTrue(mah_win2.is_hidden)
         self.assertVisibleWindowStack([mah_win1, calc_win])
 
+    def test_clicking_icon_twice_initiates_spread(self):
+        """This tests shows that when you click on a launcher icon twice,
+        when an application window is focused, the spread is initiated.
+        """
+        calc = self.start_app("Calculator")
+        [calc_win1] = calc.get_windows()
+        self.assertTrue(calc_win1.is_focused)
+
+        self.start_app("Calculator")
+        # Sleeping due to the start_app only waiting for the bamf model to be
+        # updated with the application.  Since the app has already started,
+        # and we are just waiting on a second window, however a defined sleep
+        # here is likely to be problematic.
+        # TODO: fix bamf emulator to enable waiting for new windows.
+        sleep(1)
+        [calc_win2] = [w for w in calc.get_windows() if w.x_id != calc_win1.x_id]
+
+        self.assertVisibleWindowStack([calc_win2, calc_win1])
+        self.assertTrue(calc_win2.is_focused)
+
+        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
+        self.addCleanup(self.keybinding, "spread/cancel")
+        self.launcher_instance.click_launcher_icon(calc_icon)
+
+        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
+        self.assertThat(self.window_manager.scale_active_for_group, Eventually(Equals(True)))
+
     def test_icon_shows_on_quick_application_reopen(self):
         """Icons must stay on launcher when an application is quickly closed/reopened."""
         calc = self.start_app("Calculator")
@@ -140,7 +167,7 @@ class LauncherDragIconsBehavior(LauncherTestCase):
     def ensure_calc_icon_not_in_launcher(self):
         """Wait until the launcher model updates and removes the calc icon."""
         refresh_fn = lambda: self.launcher.model.get_icon_by_desktop_id("gcalctool.desktop")
-        self.assertThat(refresh_fn, Eventually(Is(None)))
+        self.assertThat(refresh_fn, Eventually(Equals(None)))
 
     def test_can_drag_icon_below_bfb(self):
         """Application icons must be draggable to below the BFB."""
