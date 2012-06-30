@@ -180,3 +180,12 @@ class LauncherKeyNavTests(LauncherTestCase):
         self.start_keynav_with_cleanup_cancel()
         self.keyboard.press_and_release("Escape")
         self.assertThat(self.dash.visible, Eventually(Equals(False)))
+
+    def test_alt_f1_closes_dash(self):
+        """This test when Alt+F1 is activated it must close the dash."""
+        self.dash.ensure_visible()
+
+        self.start_keynav_with_cleanup_cancel()
+
+        self.assertThat(self.dash.visible, Equals(False))
+        self.assertThat(self.launcher.key_nav_is_active, Equals(True))

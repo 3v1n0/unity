@@ -372,6 +372,9 @@ void Controller::Impl::OnWindowFocusChanged (guint32 xid)
 {
   static bool keynav_first_focus = false;
 
+  if (parent_->IsOverlayOpen())
+    keynav_first_focus = false;
+
   if (keynav_first_focus)
   {
     keynav_first_focus = false;
@@ -1097,7 +1100,6 @@ void Controller::Impl::ReceiveMouseDownOutsideArea(int x, int y, unsigned long b
 
 void Controller::KeyNavGrab()
 {
-  pimpl->ubus.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
   pimpl->launcher_grabbed = true;
   KeyNavActivate();
   pimpl->keyboard_launcher_->GrabKeyboard();

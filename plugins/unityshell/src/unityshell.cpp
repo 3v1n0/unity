@@ -1369,8 +1369,14 @@ void UnityScreen::handleEvent(XEvent* event)
 #ifndef USE_MODERN_COMPIZ_GL
       cScreen->damageScreen();  // evil hack
 #endif
-      if (_key_nav_mode_requested && !launcher_controller_->IsOverlayOpen())
+      if (_key_nav_mode_requested)
+      {
+        if (launcher_controller_->IsOverlayOpen())
+        {
+          dash_controller_->HideDash();
+        }
         launcher_controller_->KeyNavGrab();
+      }
       _key_nav_mode_requested = false;
       break;
     case ButtonPress:
