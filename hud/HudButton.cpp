@@ -52,10 +52,13 @@ namespace unity
 namespace hud
 {
 
+NUX_IMPLEMENT_OBJECT_TYPE(HudButton);
+
 HudButton::HudButton(NUX_FILE_LINE_DECL)
   : nux::Button(NUX_FILE_LINE_PARAM)
   , is_rounded(false)
   , is_focused_(false)
+  , skip_draw_(true)
 {
   hlayout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
   hlayout_->SetLeftAndRightPadding(hlayout_left_padding, -1);
@@ -130,6 +133,9 @@ long HudButton::ComputeContentSize()
 
 void HudButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
+  if (skip_draw_)
+    return;
+
   nux::Geometry const& geo = GetGeometry();
   GfxContext.PushClippingRectangle(geo);
   gPainter.PaintBackground(GfxContext, geo);
@@ -177,6 +183,9 @@ void HudButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 void HudButton::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
+  if (skip_draw_)
+    return;
+
   if (IsFullRedraw())
   {
     GfxContext.PushClippingRectangle(GetGeometry());
@@ -206,6 +215,12 @@ Query::Ptr HudButton::GetQuery()
 {
   return query_;
 }
+
+void HudButton::SetSkipDraw(bool skip_draw)
+{
+  skip_draw_ = skip_draw;
+}
+
 
 // Introspectable
 std::string HudButton::GetName() const
