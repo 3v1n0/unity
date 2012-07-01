@@ -220,13 +220,18 @@ private:
   static void OnStartKeyNav(GVariant* data, void* value);
   static void OnExitKeyNav(GVariant* data, void* value);
 
-  void startLauncherKeyNav();
   void restartLauncherKeyNav();
 
   void OnDashRealized ();
 
   void OnLauncherStartKeyNav(GVariant* data);
   void OnLauncherEndKeyNav(GVariant* data);
+
+  void OnSwitcherStart(GVariant* data);
+  void OnSwitcherEnd(GVariant* data);
+
+  void RestoreWindow(GVariant* data);
+  bool SaveInputThenFocus(const guint xid);
 
   void InitHints();
 
@@ -305,6 +310,8 @@ private:
   bool panel_texture_has_changed_;
   bool paint_panel_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> panel_texture_;
+
+  bool scale_just_activated_;
 
 #ifndef USE_MODERN_COMPIZ_GL
   ScreenEffectFramebufferObject::GLXGetProcAddressProc glXGetProcAddressP;

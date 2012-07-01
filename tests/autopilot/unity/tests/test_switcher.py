@@ -52,10 +52,10 @@ class SwitcherTests(SwitcherTestCase):
         """Starting switcher in details mode must show the focused window title."""
         app = self.start_app("Text Editor")
         sleep(1)
-        self.switcher.initiate(SwitcherMode.DETAIL)
-        self.addCleanup(self.switcher.terminate)
 
         [title] = [w.title for w in app.get_windows() if w.is_focused]
+        self.switcher.initiate(SwitcherMode.DETAIL)
+        self.addCleanup(self.switcher.terminate)
 
         self.assertThat(self.switcher.controller.view.label, Eventually(Equals(title)))
 
@@ -190,6 +190,22 @@ class SwitcherTests(SwitcherTestCase):
             self.addCleanup(self.switcher.terminate)
             self.assertThat(self.switcher.controller.monitor, Eventually(Equals(monitor)))
 
+    def test_switcher_alt_f4_is_disabled(self):
+        """Tests that alt+f4 does not work while switcher is active."""
+
+        app = self.start_app("Text Editor")
+        sleep(1)
+
+        self.switcher.initiate(SwitcherMode.DETAIL)
+        self.addCleanup(self.switcher.terminate)
+
+        self.keyboard.press_and_release("Alt+F4")
+        [win] = [w for w in app.get_windows()]
+
+        # Need the sleep to allow the window time to close, for jenkins!
+        sleep(10)
+        self.assertThat(win.is_valid, Equals(True))
+
 
 class SwitcherWindowsManagementTests(SwitcherTestCase):
     """Test the switcher window management."""
@@ -253,6 +269,8 @@ class SwitcherDetailsTests(SwitcherTestCase):
 
     def test_details_mode_on_delay(self):
         """Test that details mode activates on a timeout."""
+        initial_workspace = self.workspace.current_workspace
+        self.addCleanup(self.workspace.switch_to, initial_workspace)
         #FIXME: Setup
         self.close_all_app('Character Map')
         self.workspace.switch_to(1)
@@ -281,6 +299,8 @@ class SwitcherDetailsTests(SwitcherTestCase):
 
         """
         #Fixme: setup
+        initial_workspace = self.workspace.current_workspace
+        self.addCleanup(self.workspace.switch_to, initial_workspace)
         self.close_all_app('Character Map')
         self.workspace.switch_to(1)
         self.start_app("Character Map")
@@ -349,6 +369,8 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
 
     def test_switcher_shows_current_workspace_only(self):
         """Switcher must show apps from the current workspace only."""
+        initial_workspace = self.workspace.current_workspace
+        self.addCleanup(self.workspace.switch_to, initial_workspace)
         #FIXME: SETUP
         self.close_all_app('Calculator')
         self.close_all_app('Character Map')
@@ -370,6 +392,8 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
 
     def test_switcher_all_mode_shows_all_apps(self):
         """Test switcher 'show_all' mode shows apps from all workspaces."""
+        initial_workspace = self.workspace.current_workspace
+        self.addCleanup(self.workspace.switch_to, initial_workspace)
         self.close_all_app('Calculator')
         self.close_all_app('Character Map')
 
@@ -395,6 +419,8 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
         another instance of the same application on a different workspace.
 
         """
+        initial_workspace = self.workspace.current_workspace
+        self.addCleanup(self.workspace.switch_to, initial_workspace)
         #FIXME this is setup.
         # disable automatic gridding of the switcher after a timeout, since it makes
         # it harder to write the tests.

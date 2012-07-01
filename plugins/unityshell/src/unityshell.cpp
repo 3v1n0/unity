@@ -131,6 +131,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , hud_keypress_time_(0)
   , panel_texture_has_changed_(true)
   , paint_panel_(false)
+  , scale_just_activated_(false)
 {
   Timer timer;
   gfloat version;
@@ -352,6 +353,12 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWTICHER,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherEndKeyNav));
+
+     ubus_manager_.RegisterInterest(UBUS_SWITCHER_START,
+                   sigc::mem_fun(this, &UnityScreen::OnSwitcherStart));
+
+     ubus_manager_.RegisterInterest(UBUS_SWITCHER_END,
+                   sigc::mem_fun(this, &UnityScreen::OnSwitcherEnd));
 
      auto init_plugins_cb = sigc::mem_fun(this, &UnityScreen::initPluginActions);
      sources_.Add(std::make_shared<glib::Idle>(init_plugins_cb, glib::Source::Priority::DEFAULT));
@@ -1362,8 +1369,14 @@ void UnityScreen::handleEvent(XEvent* event)
 #ifndef USE_MODERN_COMPIZ_GL
       cScreen->damageScreen();  // evil hack
 #endif
-      if (_key_nav_mode_requested && !launcher_controller_->IsOverlayOpen())
+      if (_key_nav_mode_requested)
+      {
+        if (launcher_controller_->IsOverlayOpen())
+        {
+          dash_controller_->HideDash();
+        }
         launcher_controller_->KeyNavGrab();
+      }
       _key_nav_mode_requested = false;
       break;
     case ButtonPress:
@@ -1526,6 +1539,11 @@ void UnityScreen::handleCompizEvent(const char* plugin,
     ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
   }
 
+  if (PluginAdapter::Default()->IsScaleActive() && g_strcmp0(plugin, "scale") == 0)
+  {
+    scale_just_activated_ = true;
+  }
+
   screen->handleCompizEvent(plugin, event, option);
 }
 
@@ -1572,6 +1590,18 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
   bool was_tap = state & CompAction::StateTermTapped;
   LOG_DEBUG(logger) << "Super released: " << (was_tap ? "tapped" : "released");
   int when = options[7].value().i();  // XEvent time in millisec
+
+  // hack...if the scale just wasn't activated AND the 'when' time is within time to start the
+  // dash then assume was_tap is also true, since the ScalePlugin doesn't accept that state...
+  if (PluginAdapter::Default()->IsScaleActive() && !scale_just_activated_ && launcher_controller_->AboutToShowDash(true, when))
+  {
+    PluginAdapter::Default()->TerminateScale();
+    was_tap = true;
+  }
+  else if (scale_just_activated_)
+  {
+    scale_just_activated_ = false;
+  }
 
   if (hud_controller_->IsVisible() && launcher_controller_->AboutToShowDash(was_tap, when))
     hud_controller_->HideHud();
@@ -1629,6 +1659,12 @@ void UnityScreen::SendExecuteCommand()
   {
     hud_controller_->HideHud();
   }
+
+  if (PluginAdapter::Default()->IsScaleActive())
+  {
+    PluginAdapter::Default()->TerminateScale();
+  }
+
   ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
                             g_variant_new("(sus)", "commands.lens", 0, ""));
 }
@@ -1641,26 +1677,6 @@ bool UnityScreen::executeCommand(CompAction* action,
   return true;
 }
 
-void UnityScreen::startLauncherKeyNav()
-{
-  // get CompWindow* of launcher-window
-  newFocusedWindow = screen->findWindow(launcher_controller_->KeyNavLauncherInputWindowId());
-
-  // check if currently focused window isn't the launcher-window
-  if (newFocusedWindow != screen->findWindow(screen->activeWindow()))
-    PluginAdapter::Default()->saveInputFocus();
-
-  // set input-focus on launcher-window and start key-nav mode
-  if (newFocusedWindow)
-  {
-    // Put the launcher BaseWindow at the top of the BaseWindow stack. The
-    // input focus coming from the XinputWindow will be processed by the
-    // launcher BaseWindow only. Then the Launcher BaseWindow will decide
-    // which View will get the input focus.
-    launcher_controller_->PushToFront();
-    newFocusedWindow->moveInputFocusTo();
-  }
-}
 
 bool UnityScreen::setKeyboardFocusKeyInitiate(CompAction* action,
                                               CompAction::State state,
@@ -1904,10 +1920,30 @@ bool UnityScreen::launcherSwitcherTerminate(CompAction* action, CompAction::Stat
 
 void UnityScreen::OnLauncherStartKeyNav(GVariant* data)
 {
-  startLauncherKeyNav();
+  // Put the launcher BaseWindow at the top of the BaseWindow stack. The
+  // input focus coming from the XinputWindow will be processed by the
+  // launcher BaseWindow only. Then the Launcher BaseWindow will decide
+  // which View will get the input focus.
+  if (SaveInputThenFocus(launcher_controller_->KeyNavLauncherInputWindowId()))
+    launcher_controller_->PushToFront();
 }
 
 void UnityScreen::OnLauncherEndKeyNav(GVariant* data)
+{
+  RestoreWindow(data);
+}
+
+void UnityScreen::OnSwitcherStart(GVariant* data)
+{
+  SaveInputThenFocus(switcher_controller_->GetSwitcherInputWindowId());
+}
+
+void UnityScreen::OnSwitcherEnd(GVariant* data)
+{
+  RestoreWindow(data);
+}
+
+void UnityScreen::RestoreWindow(GVariant* data)
 {
   bool preserve_focus = false;
 
@@ -1920,6 +1956,24 @@ void UnityScreen::OnLauncherEndKeyNav(GVariant* data)
   // entered)
   if (preserve_focus)
     PluginAdapter::Default ()->restoreInputFocus ();
+}
+
+bool UnityScreen::SaveInputThenFocus(const guint xid)
+{
+  // get CompWindow*
+  newFocusedWindow = screen->findWindow(xid);
+
+  // check if currently focused window isn't it self
+  if (xid != screen->activeWindow())
+    PluginAdapter::Default()->saveInputFocus();
+
+  // set input-focus on window
+  if (newFocusedWindow)
+  {
+    newFocusedWindow->moveInputFocusTo();
+    return true;
+  }
+  return false;
 }
 
 bool UnityScreen::ShowHud()

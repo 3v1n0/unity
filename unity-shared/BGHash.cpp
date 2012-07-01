@@ -59,9 +59,9 @@ void BGHash::OverrideColor(nux::Color const& color)
 
 void BGHash::RefreshColor()
 {
-  if (_override_color.alpha)
+  if (override_color_.alpha)
   {
-    TransitionToNewColor (_override_color);
+    TransitionToNewColor (override_color_);
     return;
   }
 

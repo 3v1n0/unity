@@ -2142,14 +2142,14 @@ void Launcher::UpdateDragWindowPosition(int x, int y)
           {
             if (!(*it)->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE) || !(*it)->IsVisibleOnMonitor(monitor))
               continue;
-            
+
             if ((*it) == hovered_icon) {
               if (prevIt != _model->end()) {
                 iconBeforeHover = *prevIt;
               }
               break;
             }
-            
+
             prevIt = it;
           }
 
@@ -2816,6 +2816,9 @@ void Launcher::ProcessDndDrop(int x, int y)
   }
   else if (_dnd_hovered_icon && _drag_action != nux::DNDACTION_NONE)
   {
+     if (IsOverlayOpen())
+       ubus_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+
     _dnd_hovered_icon->AcceptDrop(_dnd_data);
   }
 

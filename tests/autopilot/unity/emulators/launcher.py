@@ -12,7 +12,6 @@ from __future__ import absolute_import
 from autopilot.emulators.dbus_handler import session_bus
 from autopilot.emulators.X11 import Mouse, ScreenGeometry
 from autopilot.keybindings import KeybindingsHelper
-from autopilot.introspection.unity import UnityIntrospectionObject
 from autopilot.utilities import get_compiz_option
 import dbus
 import logging
@@ -20,6 +19,7 @@ from math import floor
 from testtools.matchers import NotEquals
 from time import sleep
 
+from unity.emulators import UnityIntrospectionObject
 from unity.emulators.icons import BFBLauncherIcon, BamfLauncherIcon, SimpleLauncherIcon
 
 logger = logging.getLogger(__name__)
@@ -93,10 +93,12 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         self.keybinding(keybinding)
 
     def _perform_switcher_exit_binding(self, keybinding):
-        self._perform_switcher_binding(keybinding)
-        # if our exit binding was something besides just releasing, we need to release
+        # If we're doing a normal activation, all we need to do is release the
+        # keybinding. Otherwise, perform the keybinding specified *then* release
+        # the switcher keybinding.
         if keybinding != "launcher/switcher":
-            self.keybinding_release("launcher/switcher")
+            self._perform_switcher_binding(keybinding)
+        self.keybinding_release("launcher/switcher")
         self.in_switcher_mode = False
 
     def _get_controller(self):
@@ -166,6 +168,52 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         # only wait if the launcher is set to autohide
         if self.hidemode == 1:
             self.is_showing.wait_for(False)
+
+    def keyboard_select_icon(self, **kwargs):
+        """Using either keynav mode or the switcher, select an icon in the launcher.
+
+        The desired mode (keynav or switcher) must be started already before
+        calling this methods or a RuntimeError will be raised.
+
+        This method won't activate the icon, it will only select it.
+
+        Icons are selected by passing keyword argument filters to this method.
+        For example:
+
+        >>> launcher.keyboard_select_icon(tooltip_text="Calculator")
+
+        ...will select the *first* icon that has a 'tooltip_text' attribute equal
+        to 'Calculator'. If an icon is missing the attribute, it is treated as
+        not matching.
+
+        If no icon is found, this method will raise a ValueError.
+
+        """
+
+        if not self.in_keynav_mode and not self.in_switcher_mode:
+            raise RuntimeError("Launcher must be in keynav or switcher mode")
+
+        [launcher_model] = LauncherModel.get_all_instances()
+        all_icons = launcher_model.get_launcher_icons()
+        logger.debug("all_icons = %r", [i.tooltip_text for i in all_icons])
+        for icon in all_icons:
+            # can't iterate over the model icons directly since some are hidden
+            # from the user.
+            if not icon.visible:
+                continue
+            logger.debug("Selected icon = %s", icon.tooltip_text)
+            matches = True
+            for arg,val in kwargs.iteritems():
+                if not hasattr(icon, arg) or getattr(icon, arg, None) != val:
+                    matches = False
+                    break
+            if matches:
+                return
+            if self.in_keynav_mode:
+                self.key_nav_next()
+            elif self.in_switcher_mode:
+                self.switcher_next()
+        raise ValueError("No icon found that matches: %r", kwargs)
 
     def key_nav_start(self):
         """Start keyboard navigation mode by pressing Alt+F1."""
