@@ -38,7 +38,7 @@ Introspectable::~Introspectable()
     child->_parents.remove(this);
 }
 
-Introspectable::IntrospectableList const& Introspectable::GetIntrospectableChildren()
+Introspectable::IntrospectableList Introspectable::GetIntrospectableChildren()
 {
   return _children;
 }

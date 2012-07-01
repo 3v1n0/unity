@@ -310,7 +310,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         `icon` must be an instance of SimpleLauncherIcon or it's descendants.
         """
         if not isinstance(icon, SimpleLauncherIcon):
-            raise TypeError("icon must be a LauncherIcon")
+            raise TypeError("icon must be a LauncherIcon, not %s" % type(icon))
 
         logger.debug("Clicking launcher icon %r on monitor %d with mouse button %d",
             icon, self.monitor, button)
