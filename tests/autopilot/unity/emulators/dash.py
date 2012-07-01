@@ -293,7 +293,7 @@ class FilterBar(UnityIntrospectionObject):
         """
         state_info = self.get_state_by_path("//DashView/SearchBar")
         assert(len(state_info) == 1)
-        return make_introspection_object(("SearchBar", state_info[0]))
+        return make_introspection_object(state_info[0])
 
 
 class FilterExpanderLabel(UnityIntrospectionObject):

@@ -32,7 +32,7 @@ class Introspectable
 {
 public:
   typedef std::list<Introspectable*> IntrospectableList;
-  
+
   Introspectable();
   virtual ~Introspectable();
   GVariant* Introspect();
@@ -40,7 +40,7 @@ public:
   void AddChild(Introspectable* child);
   void RemoveChild(Introspectable* child);
   virtual void AddProperties(GVariantBuilder* builder) = 0;
-  virtual IntrospectableList const& GetIntrospectableChildren();
+  virtual IntrospectableList GetIntrospectableChildren();
   guint64 GetIntrospectionId() const;
 
 protected:

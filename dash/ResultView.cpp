@@ -142,7 +142,7 @@ void ResultView::AddProperties(GVariantBuilder* builder)
     .add("expanded", expanded);
 }
 
-debug::Introspectable::IntrospectableList const& ResultView::GetIntrospectableChildren()
+debug::Introspectable::IntrospectableList ResultView::GetIntrospectableChildren()
 {
   ClearIntrospectableWrappers();
 

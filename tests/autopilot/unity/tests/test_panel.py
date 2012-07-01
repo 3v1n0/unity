@@ -360,10 +360,6 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
         self.assertTrue(text_win.is_hidden)
 
-        icon = self.launcher.model.get_icon_by_desktop_id(text_win.application.desktop_file)
-        launcher = self.launcher.get_launcher_for_monitor(self.panel_monitor)
-        launcher.click_launcher_icon(icon)
-
     def test_window_buttons_minimize_follows_fitts_law(self):
         """Tests that the 'Minimize' button is conform to Fitts's Law.
 
