@@ -12,7 +12,7 @@ from __future__ import absolute_import
 from autopilot.matchers import Eventually
 from autopilot.testcase import multiply_scenarios
 import logging
-from testtools.matchers import Equals, NotEquals, Is
+from testtools.matchers import Equals, NotEquals
 from time import sleep
 
 from unity.emulators.launcher import IconDragType
