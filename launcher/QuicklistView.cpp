@@ -304,7 +304,7 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
     case NUX_KP_ENTER:
       if (IsMenuItemSelectable(_current_item_index))
       {
-        ActivateItem(GetNthItems(_current_item_index)->_menuItem);
+        ActivateItem(GetNthItems(_current_item_index));
         Hide();
       }
       break;
@@ -553,20 +553,20 @@ void QuicklistView::CheckAndEmitItemSignal(int x, int y)
       // An action is performed: send the signal back to the application
       if (item->_menuItem)
       {
-        ActivateItem(item->_menuItem);
+        ActivateItem(item);
       }
     }
   }
 }
 
-void QuicklistView::ActivateItem(DbusmenuMenuitem* item)
+void QuicklistView::ActivateItem(QuicklistMenuItem* item)
 {
 
   ubus_server_send_message(ubus_server_get_default(),
                            UBUS_PLACE_VIEW_CLOSE_REQUEST,
                            NULL);
 
-  dbusmenu_menuitem_handle_event(item, "clicked", NULL, 0);
+  dbusmenu_menuitem_handle_event(item->_menuItem, "clicked", NULL, 0);
 }
 
 void QuicklistView::RecvItemMouseRelease(QuicklistMenuItem* item, int x, int y)
