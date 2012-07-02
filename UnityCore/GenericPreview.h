@@ -38,6 +38,7 @@ public:
   typedef std::shared_ptr<GenericPreview> Ptr;
   
   GenericPreview(unity::glib::Object<GObject> const& proto_obj);
+  ~GenericPreview();
 };
 
 }

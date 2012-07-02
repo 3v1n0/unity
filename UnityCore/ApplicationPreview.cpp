@@ -86,7 +86,6 @@ ApplicationPreview::ApplicationPreview(unity::glib::Object<GObject> const& proto
 
 ApplicationPreview::~ApplicationPreview()
 {
-  delete pimpl;
 }
 
 }

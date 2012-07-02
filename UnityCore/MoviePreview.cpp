@@ -76,7 +76,6 @@ MoviePreview::MoviePreview(unity::glib::Object<GObject> const& proto_obj)
 
 MoviePreview::~MoviePreview()
 {
-  delete pimpl;
 }
 
 }

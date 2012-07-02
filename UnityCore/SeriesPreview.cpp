@@ -133,7 +133,6 @@ SeriesPreview::SeriesPreview(unity::glib::Object<GObject> const& proto_obj)
 
 SeriesPreview::~SeriesPreview()
 {
-  delete pimpl;
 }
 
 Preview::Ptr SeriesPreview::GetChildPreview() const

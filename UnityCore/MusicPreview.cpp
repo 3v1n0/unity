@@ -92,7 +92,6 @@ MusicPreview::MusicPreview(unity::glib::Object<GObject> const& proto_obj)
 
 MusicPreview::~MusicPreview()
 {
-  delete pimpl;
 }
 
 Tracks::Ptr MusicPreview::GetTracksModel() const

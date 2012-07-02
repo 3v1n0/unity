@@ -32,6 +32,10 @@ GenericPreview::GenericPreview(unity::glib::Object<GObject> const& proto_obj)
 {
 }
 
+GenericPreview::~GenericPreview()
+{
+}
+
 
 }
 }

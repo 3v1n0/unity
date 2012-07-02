@@ -216,7 +216,8 @@ Preview::Preview(glib::Object<GObject> const& proto_obj)
 }
 
 Preview::~Preview()
-{}
+{
+}
 
 Preview::ActionPtrList Preview::GetActions() const
 {
