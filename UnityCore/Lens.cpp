@@ -577,10 +577,12 @@ void Lens::Impl::ActivatePreviewAction(std::string const& action_id,
       return;
     }
 
-  glib::String activation_uri(g_strdup_printf("%s:%s", action_id.c_str(), uri.c_str()));
+  std::string activation_uri(action_id);
+  activation_uri += ":";
+  activation_uri += uri;
 
   proxy_->Call("Activate",
-               g_variant_new("(su)", activation_uri.Value(),
+               g_variant_new("(su)", activation_uri.c_str(),
                              UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_ACTION),
                sigc::mem_fun(this, &Lens::Impl::ActivationReply));
 }
