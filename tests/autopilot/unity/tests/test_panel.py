@@ -10,6 +10,7 @@ from __future__ import absolute_import
 
 from autopilot.emulators.X11 import ScreenGeometry
 from autopilot.emulators.bamf import BamfWindow
+from autopilot.matchers import Eventually
 import logging
 import os
 from testtools.matchers import Equals,  GreaterThan, NotEquals
@@ -478,14 +479,13 @@ class PanelWindowButtonsTests(PanelTestsBase):
         """Tests that the 'Minimize' button is disabled for the dash."""
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
-        sleep(.5)
 
         button = self.panel.window_buttons.minimize
         button.mouse_click()
         sleep(.5)
 
-        self.assertFalse(button.enabled)
-        self.assertTrue(self.dash.visible)
+        self.assertThat(button.enabled, Eventually(Equals(False)))
+        self.assertThat(self.dash.visible, Eventually(Equals(True)))
 
     def test_window_buttons_maximization_buttons_works_for_dash(self):
         """'Maximize' and 'Restore' buttons (when both enabled) must work as expected."""
