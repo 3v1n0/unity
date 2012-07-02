@@ -1,4 +1,5 @@
 import apport.packaging
+from apport.hookutils import *
 
 def add_info(report, ui):
 
@@ -14,7 +15,7 @@ def add_info(report, ui):
         report['Tags'] += " rc-%s" % version
     
     # the crash is not in the unity code so reassign
-    if report.has_key("Stacktrace") and "/usr/lib/indicators" in report["Stacktrace"]:
+    if "Stacktrace" in report and "/usr/lib/indicators" in report["Stacktrace"]:
         for words in report["Stacktrace"].split():
             if words.startswith("/usr/lib/indicators"):
                 report.add_package_info(apport.packaging.get_file_package(words))
