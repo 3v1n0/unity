@@ -1,3 +1,13 @@
+unity (5.12-0ubuntu5) UNRELEASED; urgency=low
+
+  * debian/rules, debian/control, debian/unity-autopilot.install:
+    - install new unity-autopilot package, containing autopilot bindings and
+      test for Unity
+    - use dh_python2 and add some python:Depends dep for automatic python
+      version detection
+
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 02 Jul 2012 13:33:54 +0200
+
 unity (5.12-0ubuntu4) quantal-proposed; urgency=low
 
   * debian/control:

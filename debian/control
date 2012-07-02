@@ -6,6 +6,7 @@ Build-Depends: cmake,
                debhelper (>= 7.0.50~),
                dh-translations (>= 94),
                pkg-config,
+               python (>= 2.7),
                quilt,
                intltool (>= 0.35.0),
                libsigc++-2.0-dev,
@@ -50,6 +51,7 @@ Package: unity
 Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
+         ${python:Depends},
          libunity-core-5.0-5 (= ${binary:Version}),
          unity-common (= ${source:Version}),
          compiz,
@@ -57,7 +59,6 @@ Depends: ${shlibs:Depends},
          libnux-abiversion-${nuxabiversion},
          compiz-plugins-main-default,
          libglib2.0-bin,
-         python,
          python-gconf,
          nux-tools,
          unity-asset-pool (>= 0.8.18)
@@ -99,7 +100,7 @@ Description: Services for the Unity interface
 Package: unity-common
 Architecture: all
 Depends: ${misc:Depends},
-         python,
+         ${python:Depends},
 Description: Common files for the Unity interface.
  Unity is a desktop experience that sings. Designed by Canonical and the Ayatana
  community, Unity is all about the combination of familiarity and the future. We
@@ -146,4 +147,15 @@ Description: Core library for the Unity interface - development files
  .
  This package contains development files for libraries to be used by unity-3d
  and unity-2d.
+
+Package: unity-autopilot
+Section: python
+Architecture: all
+Depends: ${misc:Depends},
+         ${python:Depends},
+Description: Autopiloted tests for Unity
+ We test Unity automatically through autopilot, a framework which enables us
+ to trigger keyboard and mouse events on the fly as well as introspecting
+ objects. This package contains the specific unity introspection bindings
+ to be able to write tests in python as well as the full test suite for Unity.
 

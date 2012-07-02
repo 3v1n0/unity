@@ -43,6 +43,12 @@ else
 endif
 
 override_dh_install:
+	# install autopilot tests
+	cd tests/autopilot; \
+	set -ex; for python in $(shell pyversions -r); do \
+        $$python setup.py install --root=$(CURDIR)/debian/tmp --install-layout=deb; \
+	done; \
+	cd $(CURDIR)
 	find debian/tmp/usr/lib -name \*.*a -exec rm {} \;
 	rm -f debian/tmp/usr/share/compiz/networkarearegion.xml
 	rm -f debian/tmp//usr/lib/compiz/libnetworkarearegion.so
@@ -60,4 +66,4 @@ override_dh_auto_test:
 	echo "not working right now"
 
 %:
-	dh $@ --with translations,quilt --parallel
+	dh $@ --with translations,quilt,python2 --parallel
