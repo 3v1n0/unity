@@ -140,6 +140,17 @@ class QuicklistActionTests(UnityTestCase):
         self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
         self.assertThat(self.window_manager.scale_active_for_group, Eventually(Equals(True)))
 
+    def test_quicklist_closes_when_hud_opens(self):
+        calc = self.start_app("Calculator")
+        [calc_win1] = calc.get_windows()
+        self.assertTrue(calc_win1.is_focused)
+
+        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
+        calc_ql = self.open_quicklist_for_icon(calc_icon)
+
+        self.hud.ensure_visible()
+        self.assertThat(self.hud.visible, Eventually(Equals(True)))
+
 
 class QuicklistKeyNavigationTests(UnityTestCase):
     """Tests for the quicklist key navigation."""

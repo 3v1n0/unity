@@ -1998,6 +1998,9 @@ bool UnityScreen::ShowHud()
     if (launcher_controller_->IsOverlayOpen())
       dash_controller_->HideDash();
 
+    if (QuicklistManager::Default()->Current())
+      QuicklistManager::Default()->Current()->Hide();
+
     hud_controller_->ShowHud();
   }
 
