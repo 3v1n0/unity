@@ -88,10 +88,15 @@ public:
   SignalManager();
   void Add(SignalBase* signal);
   void Add(SignalBase::Ptr const& signal);
+  template <typename R, typename G, typename... Ts>
+  void Add(G object, std::string const& signal_name, typename Signal<R, G, Ts...>::SignalCallback const& callback)
+  {
+    Add(std::make_shared<Signal<R, G, Ts...>>(object, signal_name, callback));
+  }
 
   void Disconnect(void* object, std::string const& signal_name = "");
 
-private:
+protected:
   std::vector<SignalBase::Ptr> connections_;
 };
 
