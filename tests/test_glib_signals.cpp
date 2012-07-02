@@ -118,23 +118,13 @@ protected:
 
 TEST_F(TestGLibSignals, TestConstructions)
 {
-  SignalBase base;
-
-  Signal0<void, TestSignals*> signal0;
-  Signal1<void, TestSignals*, string> signal1;
-  Signal2<void, TestSignals*, string, int> signal2;
-  Signal3<void, TestSignals*, string, int, float> signal3;
-  Signal4<void, TestSignals*, string, int, float, double> signal4;
-  Signal5<void, TestSignals*, string, int, float, double, gboolean> signal5;
-  Signal6<gboolean, TestSignals*, string, int, float, double, gboolean, char> signal6;
-
-  Signal<void, TestSignals*> signal00;
-  Signal<void, TestSignals*, string> signal01;
-  Signal<void, TestSignals*, string, int> signal02;
-  Signal<void, TestSignals*, string, int, float> signal03;
-  Signal<void, TestSignals*, string, int, float, double> signal04;
-  Signal<void, TestSignals*, string, int, float, double, gboolean> signal05;
-  Signal<gboolean, TestSignals*, string, int, float, double, gboolean, char> signal06;
+  Signal<void, TestSignals*> signal0;
+  Signal<void, TestSignals*, string> signal1;
+  Signal<void, TestSignals*, string, int> signal2;
+  Signal<void, TestSignals*, string, int, float> signal3;
+  Signal<void, TestSignals*, string, int, float, double> signal4;
+  Signal<void, TestSignals*, string, int, float, double, gboolean> signal5;
+  Signal<gboolean, TestSignals*, string, int, float, double, gboolean, char> signal6;
 }
 
 TEST_F(TestGLibSignals, TestSignal0)
