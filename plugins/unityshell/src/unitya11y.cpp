@@ -64,8 +64,6 @@ static GHashTable* accessible_table = NULL;
 static gboolean a11y_initialized = FALSE;
 
 #define INIT_METHOD "gnome_accessibility_module_init"
-#define DESKTOP_SCHEMA "org.gnome.desktop.interface"
-#define ACCESSIBILITY_ENABLED_KEY "toolkit-accessibility"
 
 static void
 unity_a11y_restore_environment(void)
@@ -79,45 +77,6 @@ load_unity_atk_util(nux::WindowThread* wt)
 {
   unity_util_accessible_set_window_thread(wt);
   g_type_class_unref(g_type_class_ref(UNITY_TYPE_UTIL_ACCESSIBLE));
-}
-
-/* This method is required because g_setting_new abort if the schema
-   is not present. */
-static gboolean
-has_gsettings_schema(const gchar* schema)
-{
-  const char* const* list_schemas = NULL;
-  gboolean found = FALSE;
-  int i = 0;
-
-  list_schemas = g_settings_list_schemas();
-  for (i = 0; list_schemas [i]; i++)
-  {
-    if (!g_strcmp0(list_schemas[i], schema))
-    {
-      found = TRUE;
-      break;
-    }
-  }
-
-  return found;
-}
-
-static gboolean
-should_enable_a11y(void)
-{
-  GSettings* desktop_settings = NULL;
-  gboolean value = FALSE;
-
-  if (!has_gsettings_schema(DESKTOP_SCHEMA))
-    return FALSE;
-
-  desktop_settings = g_settings_new(DESKTOP_SCHEMA);
-  value = g_settings_get_boolean(desktop_settings, ACCESSIBILITY_ENABLED_KEY);
-
-  g_object_unref(desktop_settings);
-
-  return value;
 }
 
 /********************************************************************************/
@@ -142,12 +101,7 @@ void
 unity_a11y_init(nux::WindowThread* wt)
 {
   unity_a11y_restore_environment();
-
-  if (!should_enable_a11y())
-    return;
-
   load_unity_atk_util(wt);
-
   atk_bridge_adaptor_init (NULL, NULL);
 
 // NOTE: we run manually the unit tests while developing by
