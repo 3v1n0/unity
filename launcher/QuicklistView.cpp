@@ -551,22 +551,21 @@ void QuicklistView::CheckAndEmitItemSignal(int x, int y)
     if (geo.IsPointInside(x, y))
     {
       // An action is performed: send the signal back to the application
-      if (item->_menuItem)
-      {
-        ActivateItem(item);
-      }
+      ActivateItem(item);
     }
   }
 }
 
 void QuicklistView::ActivateItem(QuicklistMenuItem* item)
 {
+  if (item->_menuItem)
+  {
+    ubus_server_send_message(ubus_server_get_default(),
+                             UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                             NULL);
 
-  ubus_server_send_message(ubus_server_get_default(),
-                           UBUS_PLACE_VIEW_CLOSE_REQUEST,
-                           NULL);
-
-  dbusmenu_menuitem_handle_event(item->_menuItem, "clicked", NULL, 0);
+    dbusmenu_menuitem_handle_event(item->_menuItem, "clicked", NULL, 0);
+  }
 }
 
 void QuicklistView::RecvItemMouseRelease(QuicklistMenuItem* item, int x, int y)
