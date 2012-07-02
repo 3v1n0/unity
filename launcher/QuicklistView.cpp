@@ -558,7 +558,7 @@ void QuicklistView::CheckAndEmitItemSignal(int x, int y)
 
 void QuicklistView::ActivateItem(QuicklistMenuItem* item)
 {
-  if (item->_menuItem)
+  if (item && item->_menuItem)
   {
     ubus_server_send_message(ubus_server_get_default(),
                              UBUS_PLACE_VIEW_CLOSE_REQUEST,
