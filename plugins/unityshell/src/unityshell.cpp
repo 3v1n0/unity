@@ -1406,12 +1406,10 @@ void UnityScreen::handleEvent(XEvent* event)
         /* We need an idle to postpone this action, after the current event
          * has been processed */
         sources_.Add(std::make_shared<glib::Idle>([&]() {
-          if (!launcher_controller_->KeyNavIsActive())
-          {
-            shortcut_controller_->SetEnabled(false);
-            shortcut_controller_->Hide();
-            EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, false);
-          }
+          shortcut_controller_->SetEnabled(false);
+          shortcut_controller_->Hide();
+          EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, false);
+
           return false; 
         }));
       }
