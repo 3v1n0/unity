@@ -169,7 +169,7 @@ class QuicklistKeyNavigationTests(UnityTestCase):
         self.ql_launcher.key_nav_start()
         self.addCleanup(self.ql_launcher.key_nav_cancel)
 
-        self.launcher.keyboard_select_icon(tooltip_text=self.ql_app.name)
+        self.ql_launcher.keyboard_select_icon(tooltip_text=self.ql_app.name)
         self.keybinding("launcher/keynav/open-quicklist")
         self.addCleanup(self.keybinding, "launcher/keynav/close-quicklist")
         self.quicklist = self.ql_launcher_icon.get_quicklist()
