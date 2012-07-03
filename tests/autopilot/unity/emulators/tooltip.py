@@ -7,13 +7,9 @@
 # by the Free Software Foundation.
 #
 
-import logging
-from time import sleep
+from __future__ import absolute_import
 
-from autopilot.introspection.unity import UnityIntrospectionObject
-
-
-logger = logging.getLogger(__name__)
+from unity.emulators import UnityIntrospectionObject
 
 
 class ToolTip(UnityIntrospectionObject):

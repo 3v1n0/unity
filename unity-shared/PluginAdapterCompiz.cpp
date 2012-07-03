@@ -533,9 +533,7 @@ bool
 PluginAdapter::IsWindowOnTop(guint32 xid)
 {
   Window win = xid;
-  CompWindow* window;
-
-  window = m_Screen->findWindow(win);
+  CompWindow* window = m_Screen->findWindow(win);
 
   if (window)
   {
@@ -543,6 +541,7 @@ PluginAdapter::IsWindowOnTop(guint32 xid)
       return false;
 
     CompPoint window_vp = window->defaultViewport();
+    nux::Geometry const& window_vp_geo = GetWorkAreaGeometry(window->id());
     std::vector<Window> const& our_xids = nux::XInputWindow::NativeHandleList();
 
     for (CompWindow* sibling = window->next; sibling; sibling = sibling->next)
@@ -550,6 +549,13 @@ PluginAdapter::IsWindowOnTop(guint32 xid)
       if (sibling->defaultViewport() == window_vp && !sibling->minimized() &&
           sibling->isMapped() && sibling->isViewable() && !sibling->inShowDesktopMode() &&
           !(sibling->state() & CompWindowStateAboveMask) &&
+          !(sibling->type() & CompWindowTypeSplashMask) &&
+          !(sibling->type() & CompWindowTypeDockMask) &&
+          /* FIXME: This should be included by the above defaultViewport() check,
+           * but it doesn't seem to work correctly when there's only one workspace
+           * enabled, so please drop the line above when bug #996604 is fixed in
+           * Compiz. */
+          !window_vp_geo.Intersect(GetWindowGeometry(sibling->id())).IsNull() &&
           std::find(our_xids.begin(), our_xids.end(), sibling->id()) == our_xids.end())
       {
         return false;

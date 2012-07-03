@@ -17,9 +17,8 @@
  * Authored by: Jason Smith <jason.smith@canonical.com>
  */
 
+#include <gdk/gdk.h>
 #include <string.h>
-
-#include <stdio.h>
 #include <cmath>
 
 #include "KeyboardUtil.h"
@@ -31,7 +30,7 @@ KeyboardUtil::KeyboardUtil(Display *display)
   : display_(display)
 {
   unsigned int fetch_mask = XkbGBN_KeyNamesMask | XkbGBN_ClientSymbolsMask | XkbGBN_GeometryMask;
-  keyboard_ = XkbGetKeyboard (display, fetch_mask, XkbUseCoreKbd); 
+  keyboard_ = XkbGetKeyboard (display, fetch_mask, XkbUseCoreKbd);
 }
 
 KeyboardUtil::~KeyboardUtil()
@@ -39,7 +38,7 @@ KeyboardUtil::~KeyboardUtil()
   XkbFreeKeyboard (keyboard_, 0, True);
 }
 
-bool KeyboardUtil::FindKeyInGeometry(XkbGeometryPtr geo, char *key_name, int& res_section, XkbBoundsRec& res_bounds)
+bool KeyboardUtil::FindKeyInGeometry(XkbGeometryPtr geo, char *key_name, int& res_section, XkbBoundsRec& res_bounds) const
 {
   // seems that Xkb does not give null terminated strings... was painful
   int name_length = XkbKeyNameLength;
@@ -73,7 +72,7 @@ bool KeyboardUtil::FindKeyInGeometry(XkbGeometryPtr geo, char *key_name, int& re
   return false;
 }
 
-bool KeyboardUtil::CompareOffsets (int current_x, int current_y, int best_x, int best_y)
+bool KeyboardUtil::CompareOffsets(int current_x, int current_y, int best_x, int best_y) const
 {
   // never EVER prefer something higher on the keyboard than what we have
   if (current_y > best_y)
@@ -85,7 +84,7 @@ bool KeyboardUtil::CompareOffsets (int current_x, int current_y, int best_x, int
   return false;
 }
 
-guint KeyboardUtil::ConvertKeyToKeycode (XkbKeyPtr key)
+guint KeyboardUtil::ConvertKeyToKeycode(XkbKeyPtr key) const
 {
   int min_code = keyboard_->min_key_code;
   int max_code = keyboard_->max_key_code;
@@ -98,7 +97,7 @@ guint KeyboardUtil::ConvertKeyToKeycode (XkbKeyPtr key)
   return 0;
 }
 
-XkbBoundsRec KeyboardUtil::GetAbsoluteKeyBounds (XkbKeyPtr key, XkbRowPtr row, XkbSectionPtr section, XkbGeometryPtr geo)
+XkbBoundsRec KeyboardUtil::GetAbsoluteKeyBounds(XkbKeyPtr key, XkbRowPtr row, XkbSectionPtr section, XkbGeometryPtr geo) const
 {
   XkbShapePtr shape = XkbKeyShape(geo, key);
 
@@ -117,7 +116,7 @@ XkbBoundsRec KeyboardUtil::GetAbsoluteKeyBounds (XkbKeyPtr key, XkbRowPtr row, X
       y_offset += local_shape->bounds.y2 - local_shape->bounds.y1;
     else
       x_offset += local_shape->bounds.x2 - local_shape->bounds.x1;
-    
+
     i++;
   }
 
@@ -129,7 +128,7 @@ XkbBoundsRec KeyboardUtil::GetAbsoluteKeyBounds (XkbKeyPtr key, XkbRowPtr row, X
   return result;
 }
 
-bool KeyboardUtil::FindKeyInSectionAboveBounds (XkbGeometryPtr geo, int section_index, XkbBoundsRec const& target_bounds, guint &keycode)
+bool KeyboardUtil::FindKeyInSectionAboveBounds(XkbGeometryPtr geo, int section_index, XkbBoundsRec const& target_bounds, guint &keycode) const
 {
   XkbKeyPtr best = NULL;
   int best_x_offset = G_MAXINT;
@@ -155,7 +154,7 @@ bool KeyboardUtil::FindKeyInSectionAboveBounds (XkbGeometryPtr geo, int section_
       int center = (bounds.x1 + bounds.x2) / 2;
       if (center < target_bounds.x1 || center > target_bounds.x2)
         continue;
-      
+
       // make sure the key is actually above our target.
       int current_y_offset = target_bounds.y1 - bounds.y2;
       if (current_y_offset < 0)
@@ -181,7 +180,7 @@ bool KeyboardUtil::FindKeyInSectionAboveBounds (XkbGeometryPtr geo, int section_
   return false;
 }
 
-guint KeyboardUtil::GetKeycodeAboveKeySymbol(KeySym key_symbol)
+guint KeyboardUtil::GetKeycodeAboveKeySymbol(KeySym key_symbol) const
 {
   guint result = 0;
 
@@ -208,8 +207,37 @@ guint KeyboardUtil::GetKeycodeAboveKeySymbol(KeySym key_symbol)
     if (found_key)
       result = maybe;
   }
-  
+
   return result;
+}
+
+bool KeyboardUtil::IsPrintableKeySymbol(KeySym sym)
+{
+  bool printable_key = false;
+
+  if (sym == XK_Delete || sym == XK_BackSpace || sym == XK_Return)
+  {
+    printable_key = true;
+  }
+  else
+  {
+    unsigned int unicode = gdk_keyval_to_unicode(sym);
+    printable_key = g_unichar_isprint(unicode);
+  }
+
+  return printable_key;
+}
+
+bool KeyboardUtil::IsMoveKeySymbol(KeySym sym)
+{
+  bool move_key = false;
+
+  if (sym >= XK_Home && sym <= XK_Begin)
+  {
+    move_key = true;
+  }
+
+  return move_key;
 }
 
 }

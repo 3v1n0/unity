@@ -12,9 +12,9 @@ from __future__ import absolute_import
 import logging
 
 from autopilot.emulators.X11 import Mouse
-from autopilot.introspection.unity import UnityIntrospectionObject
 from autopilot.keybindings import KeybindingsHelper
 
+from unity.emulators import UnityIntrospectionObject
 # even though we don't use these directly, we need to make sure they've been
 # imported so the classes contained are registered with the introspection API.
 from unity.emulators.icons import *

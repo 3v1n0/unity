@@ -30,6 +30,7 @@
 #include <UnityCore/RadioOptionFilter.h>
 
 #include "unity-shared/DashStyle.h"
+#include "unity-shared/KeyboardUtil.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/UBusMessages.h"
 
@@ -762,15 +763,15 @@ void DashView::ProcessDndEnter()
 }
 
 Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
-      unsigned long x11_key_code,
-      unsigned long special_keys_state)
+                                 unsigned long x11_key_code,
+                                 unsigned long special_keys_state)
 {
   // Do what nux::View does, but if the event isn't a key navigation,
   // designate the text entry to process it.
 
+  nux::KeyNavDirection direction = KEY_NAV_NONE;
   bool ctrl = (special_keys_state & NUX_STATE_CTRL);
 
-  nux::KeyNavDirection direction = KEY_NAV_NONE;
   switch (x11_key_code)
   {
   case NUX_VK_UP:
@@ -808,7 +809,6 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     break;
   default:
     direction = KEY_NAV_NONE;
-    break;
   }
 
   // We should not do it here, but I really don't want to make DashView
@@ -816,7 +816,7 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
   // DashView::KeyNavIteration.
    nux::InputArea* focus_area = nux::GetWindowCompositor().GetKeyFocusArea();
 
-  if (key_symbol == nux::NUX_KEYDOWN && !search_bar_->im_preedit)
+  if (direction != KEY_NAV_NONE && key_symbol == nux::NUX_KEYDOWN && !search_bar_->im_preedit)
   {
     std::list<nux::Area*> tabs;
     for (auto category : active_lens_view_->categories())
@@ -891,7 +891,18 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     }
   }
 
-  if (direction == KEY_NAV_NONE || search_bar_->im_preedit)
+  bool search_key = false;
+
+  if (direction == KEY_NAV_NONE)
+  {
+    if (ui::KeyboardUtil::IsPrintableKeySymbol(x11_key_code) ||
+        ui::KeyboardUtil::IsMoveKeySymbol(x11_key_code))
+    {
+      search_key = true;
+    }
+  }
+
+  if (search_key || search_bar_->im_preedit)
   {
     // then send the event to the search entry
     return search_bar_->text_entry();
@@ -900,7 +911,8 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
   {
     return next_object_to_key_focus_area_->FindKeyFocusArea(key_symbol, x11_key_code, special_keys_state);
   }
-  return NULL;
+
+  return nullptr;
 }
 
 }

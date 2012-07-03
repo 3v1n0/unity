@@ -38,7 +38,7 @@ Introspectable::~Introspectable()
     child->_parents.remove(this);
 }
 
-Introspectable::IntrospectableList const& Introspectable::GetIntrospectableChildren()
+Introspectable::IntrospectableList Introspectable::GetIntrospectableChildren()
 {
   return _children;
 }
@@ -55,14 +55,14 @@ Introspectable::Introspect()
 
   AddProperties(&builder);
 
-  g_variant_builder_init(&child_builder, G_VARIANT_TYPE("a(sv)"));
+  g_variant_builder_init(&child_builder, G_VARIANT_TYPE("as"));
 
   auto children = GetIntrospectableChildren();
   for (auto it = children.begin(); it != children.end(); it++)
   {
     if ((*it)->GetName() != "")
     {
-      g_variant_builder_add(&child_builder, "(sv)", (*it)->GetName().c_str(), (*it)->Introspect());
+      g_variant_builder_add(&child_builder, "s", (*it)->GetName().c_str());
       n_children++;
     }
   }

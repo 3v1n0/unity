@@ -71,7 +71,7 @@ public:
   // Introspection
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
-  IntrospectableList const& GetIntrospectableChildren();
+  IntrospectableList GetIntrospectableChildren();
 
   void EnableQuicklistForTesting(bool enable_testing);
 
@@ -157,7 +157,6 @@ private:
   nux::HLayout* _hlayout;
   nux::VLayout* _vlayout;
   nux::VLayout* _item_layout;
-  nux::VLayout* _default_item_layout;
   nux::SpaceLayout* _left_space;  //!< Space from the left of the widget to the left of the text.
   nux::SpaceLayout* _right_space; //!< Space from the right of the text to the right of the widget.
   nux::SpaceLayout* _top_space;  //!< Space from the left of the widget to the left of the text.
@@ -166,7 +165,6 @@ private:
   bool _cairo_text_has_changed;
   void UpdateTexture();
   std::list<QuicklistMenuItem*> _item_list;
-  std::list<QuicklistMenuItem*> _default_item_list;
 
   // used by keyboard/a11y-navigation
   int _current_item_index;

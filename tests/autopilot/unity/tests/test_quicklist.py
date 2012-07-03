@@ -169,13 +169,13 @@ class QuicklistKeyNavigationTests(UnityTestCase):
         self.ql_launcher.key_nav_start()
         self.addCleanup(self.ql_launcher.key_nav_cancel)
 
-        self.launcher.keyboard_select_icon(tooltip_text=self.ql_app.name)
+        self.ql_launcher.keyboard_select_icon(tooltip_text=self.ql_app.name)
         self.keybinding("launcher/keynav/open-quicklist")
         self.addCleanup(self.keybinding, "launcher/keynav/close-quicklist")
-        self.quicklist = self.ql_launcher_icon.get_quicklist()
 
-        self.assertThat(self.quicklist, NotEquals(None))
-        self.assertThat(self.quicklist.selected_item, NotEquals(None))
+        self.assertThat(self.ql_launcher_icon.get_quicklist, Eventually(NotEquals(None)))
+        self.quicklist = self.ql_launcher_icon.get_quicklist()
+        self.assertThat(lambda: self.quicklist.selected_item, Eventually(NotEquals(None)))
 
     def test_keynav_selects_first_item_when_unselected(self):
         """Home key MUST select the first selectable item in a quicklist."""

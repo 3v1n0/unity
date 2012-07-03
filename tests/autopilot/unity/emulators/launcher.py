@@ -12,7 +12,6 @@ from __future__ import absolute_import
 from autopilot.emulators.dbus_handler import session_bus
 from autopilot.emulators.X11 import Mouse, ScreenGeometry
 from autopilot.keybindings import KeybindingsHelper
-from autopilot.introspection.unity import UnityIntrospectionObject
 from autopilot.utilities import get_compiz_option
 import dbus
 import logging
@@ -20,6 +19,7 @@ from math import floor
 from testtools.matchers import NotEquals
 from time import sleep
 
+from unity.emulators import UnityIntrospectionObject
 from unity.emulators.icons import BFBLauncherIcon, BamfLauncherIcon, SimpleLauncherIcon
 
 logger = logging.getLogger(__name__)
@@ -310,7 +310,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         `icon` must be an instance of SimpleLauncherIcon or it's descendants.
         """
         if not isinstance(icon, SimpleLauncherIcon):
-            raise TypeError("icon must be a LauncherIcon")
+            raise TypeError("icon must be a LauncherIcon, not %s" % type(icon))
 
         logger.debug("Clicking launcher icon %r on monitor %d with mouse button %d",
             icon, self.monitor, button)
