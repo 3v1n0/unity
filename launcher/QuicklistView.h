@@ -131,6 +131,8 @@ private:
   //! Check the mouse up event sent by an item. Detect the item where the mous is and emit the appropriate signal.
   void CheckAndEmitItemSignal(int x, int y);
 
+  void ActivateItem(QuicklistMenuItem* item);
+
   void SelectItem(int index);
   bool IsMenuItemSelectable(int index);
 
