@@ -1407,6 +1407,19 @@ void UnityScreen::handleEvent(XEvent* event)
       break;
     case KeyPress:
     {
+      if (super_keypressed_)
+      {
+        /* We need an idle to postpone this action, after the current event
+         * has been processed */
+        sources_.Add(std::make_shared<glib::Idle>([&]() {
+          shortcut_controller_->SetEnabled(false);
+          shortcut_controller_->Hide();
+          EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, false);
+
+          return false; 
+        }));
+      }
+
       KeySym key_sym;
       char key_string[2];
       int result = XLookupString(&(event->xkey), key_string, 2, &key_sym, 0);
@@ -1434,21 +1447,6 @@ void UnityScreen::handleEvent(XEvent* event)
 
         if (super_keypressed_)
         {
-          if (key_sym != XK_Escape || (key_sym == XK_Escape && !launcher_controller_->KeyNavIsActive()))
-          {
-            /* We need an idle to postpone this action, after the current event
-             * has been processed */
-            sources_.Add(std::make_shared<glib::Idle>([&]() {
-              if (!launcher_controller_->KeyNavIsActive())
-              {
-                shortcut_controller_->SetEnabled(false);
-                shortcut_controller_->Hide();
-                EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, false);
-              }
-              return false;
-            }));
-          }
-
           skip_other_plugins = launcher_controller_->HandleLauncherKeyEvent(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string);
           if (!skip_other_plugins)
             skip_other_plugins = dash_controller_->CheckShortcutActivation(key_string);
