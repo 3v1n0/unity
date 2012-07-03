@@ -60,7 +60,7 @@ public:
 /* Versions of GCC prior to 4.7 doesn't support the Ts... expansion, we can
  * workaround this issue using the trick below.
  * See GCC bug http://gcc.gnu.org/bugzilla/show_bug.cgi?id=35722 */
-#if !__GNUC__ || (__GNUC__ >= 4 && __GNUC_MINOR__ >= 7)
+#if !defined(__GNUC__) || (__GNUC__ >= 4 && __GNUC_MINOR__ >= 7)
   typedef sigc::slot<R, G, Ts...> SignalCallback;
 #else
   template<template <typename...> class T, typename... params>
