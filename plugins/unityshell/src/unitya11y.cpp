@@ -63,8 +63,6 @@ static GHashTable* accessible_table = NULL;
 
 static gboolean a11y_initialized = FALSE;
 
-#define INIT_METHOD "gnome_accessibility_module_init"
-
 static void
 unity_a11y_restore_environment(void)
 {
@@ -100,9 +98,15 @@ unity_a11y_preset_environment(void)
 void
 unity_a11y_init(nux::WindowThread* wt)
 {
+  if (a11y_initialized)
+    return;
+
   unity_a11y_restore_environment();
   load_unity_atk_util(wt);
-  atk_bridge_adaptor_init (NULL, NULL);
+  atk_bridge_adaptor_init(NULL, NULL);
+  atk_get_root();
+
+  a11y_initialized = TRUE;
 
 // NOTE: we run manually the unit tests while developing by
 // uncommenting this. Take a look to the explanation on
