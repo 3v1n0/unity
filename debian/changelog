@@ -4,9 +4,9 @@ unity (5.12-0ubuntu5) UNRELEASED; urgency=low
   * debian/rules, debian/control, debian/unity-autopilot.install:
     - install new unity-autopilot package, containing autopilot bindings and
       test for Unity
+    - add some python build-dep for executing setup.py
     - use dh_python2 and add some python:Depends dep for automatic python
       version detection
-
   [ Matthieu Baerts (matttbe) ]
   * Update apport hook for python3 ; thanks to Edward Donovan (LP: #1013171)
 
