@@ -7,8 +7,13 @@ unity (5.12-0ubuntu5) UNRELEASED; urgency=low
     - add some python build-dep for executing setup.py
     - use dh_python2 and add some python:Depends dep for automatic python
       version detection
+
   [ Matthieu Baerts (matttbe) ]
   * Update apport hook for python3 ; thanks to Edward Donovan (LP: #1013171)
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * debian/control, debian/rules:
+    - switch to nux-3.0
 
  -- Didier Roche <didrocks@ubuntu.com>  Tue, 03 Jul 2012 10:40:50 +0200
 
