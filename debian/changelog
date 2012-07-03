@@ -10,7 +10,7 @@ unity (5.12-0ubuntu5) UNRELEASED; urgency=low
   [ Matthieu Baerts (matttbe) ]
   * Update apport hook for python3 ; thanks to Edward Donovan (LP: #1013171)
 
- -- Matthieu Baerts (matttbe) <matttbe@gmail.com>  Mon, 02 Jul 2012 14:56:18 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Tue, 03 Jul 2012 10:40:50 +0200
 
 unity (5.12-0ubuntu4) quantal-proposed; urgency=low
 
