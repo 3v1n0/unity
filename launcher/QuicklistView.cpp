@@ -27,7 +27,7 @@
 #include <Nux/Button.h>
 #include <NuxGraphics/GraphicsEngine.h>
 #include <Nux/TextureArea.h>
-#include <NuxImage/CairoGraphics.h>
+#include <NuxGraphics/CairoGraphics.h>
 #include <UnityCore/Variant.h>
 
 #include "unity-shared/CairoTexture.h"
