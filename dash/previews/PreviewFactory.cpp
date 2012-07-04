@@ -44,6 +44,11 @@ PreviewFactory::PreviewFactory()
 
 PreviewFactory::~PreviewFactory()
 {
+  for (auto factory_item: factory_items_)
+  {
+    delete factory_item.second;
+  }
+  factory_items_.clear();
 }
 
 PreviewFactory& PreviewFactory::Instance()

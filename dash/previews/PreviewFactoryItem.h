@@ -42,6 +42,8 @@ private:
 class IPreviewFactoryItem
 {
 public:
+  virtual ~IPreviewFactoryItem() {} 
+  
   virtual Preview::Ptr CreateModel(glib::Object<GObject> const& proto_obj) const = 0;
   virtual previews::Preview::Ptr CreateView(Preview::Ptr model) const = 0;
 };
