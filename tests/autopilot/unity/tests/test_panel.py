@@ -128,10 +128,9 @@ class PanelTitleTests(PanelTestsBase):
 
     def test_panel_title_with_restored_application(self):
         """Panel must display application name for a non-maximised application."""
-        calc_win = self.open_new_application_window("Calculator")
+        calc_win = self.open_new_application_window("Calculator", maximized=False)
 
-        self.assertFalse(calc_win.is_maximized)
-        self.assertThat(self.panel.title, Equals(calc_win.application.name))
+        self.assertThat(self.panel.title, Eventually(Equals(calc_win.application.name)))
 
     def test_panel_title_with_maximized_application(self):
         """Panel must display application name for a maximised application."""
