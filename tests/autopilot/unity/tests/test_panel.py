@@ -216,8 +216,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.addCleanup(self.workspace.switch_to, initial_workspace)
 
         self.workspace.switch_to(2)
-        sleep(.5)
-        self.assertFalse(self.panel.window_buttons_shown)
+        self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(False)))
 
         self.panel.move_mouse_over_window_buttons()
         # Sleep twice as long as the timeout, just to be sure. timeout is in
@@ -228,9 +227,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
     def test_window_buttons_dont_show_for_restored_window(self):
         """Tests that the window buttons are not shown for a restored window."""
         self.open_new_application_window("Calculator")
-
         self.panel.move_mouse_below_the_panel()
-        sleep(self.panel.menus.fadein_duration / 500.0)
 
         self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(False)))
 
