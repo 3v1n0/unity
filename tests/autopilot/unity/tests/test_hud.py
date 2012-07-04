@@ -271,6 +271,12 @@ class HudBehaviorTests(HudTestsBase):
 
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
+    def test_alt_f4_close_hud(self):
+        """Hud must close on alt+F4."""
+        self.hud.ensure_visible()
+        self.keyboard.press_and_release("Alt+F4")
+        self.assertThat(self.hud.visible, Eventually(Equals(False)))
+
 
 class HudLauncherInteractionsTests(HudTestsBase):
 

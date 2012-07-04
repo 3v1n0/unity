@@ -271,16 +271,6 @@ class DashKeyNavTests(DashTestCase):
         category = lens.get_focused_category()
         self.assertIsNot(category, None)
 
-    def test_alt_f1_disabled(self):
-        """This test that Alt+F1 is disabled when the dash is opened."""
-        self.dash.ensure_visible()
-        # can't use launcher emulator since we'll fail to start keynav:
-        self.keybinding("launcher/keynav")
-        # can't use Eventually here - sleep long enough for the launcher controller
-        # to react to the keypress (well, hopefully not)
-        sleep(5)
-        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
-
 
 class DashClipboardTests(DashTestCase):
     """Test the Unity clipboard"""

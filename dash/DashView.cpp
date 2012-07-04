@@ -762,13 +762,14 @@ void DashView::ProcessDndEnter()
   ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
 }
 
-Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
-                                 unsigned long x11_key_code,
-                                 unsigned long special_keys_state)
+nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
+                                      unsigned long x11_key_code,
+                                      unsigned long special_keys_state)
 {
   // Do what nux::View does, but if the event isn't a key navigation,
   // designate the text entry to process it.
 
+  using namespace nux;
   nux::KeyNavDirection direction = KEY_NAV_NONE;
   bool ctrl = (special_keys_state & NUX_STATE_CTRL);
 
@@ -802,7 +803,7 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
   case NUX_VK_F4:
     // Maybe we should not do it here, but it needs to be checked where
     // we are able to know if alt is pressed.
-    if (special_keys_state & NUX_STATE_ALT)
+    if (special_keys_state == NUX_STATE_ALT)
     {
       ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
     }

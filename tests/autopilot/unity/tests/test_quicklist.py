@@ -140,6 +140,22 @@ class QuicklistActionTests(UnityTestCase):
         self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
         self.assertThat(self.window_manager.scale_active_for_group, Eventually(Equals(True)))
 
+    def test_quicklist_item_triggered_closes_dash(self):
+        """When any quicklist item is triggered it must close the dash."""
+
+        calc = self.start_app("Calculator")
+        [calc_win] = calc.get_windows()
+        self.assertTrue(calc_win.is_focused)
+
+        self.dash.ensure_visible()
+
+        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
+        calc_ql = self.open_quicklist_for_icon(calc_icon)
+
+        self.keyboard.press_and_release("Down")
+        self.keyboard.press_and_release("Enter")
+        self.assertThat(self.dash.visible, Eventually(Equals(False)))
+
 
 class QuicklistKeyNavigationTests(UnityTestCase):
     """Tests for the quicklist key navigation."""
@@ -169,13 +185,13 @@ class QuicklistKeyNavigationTests(UnityTestCase):
         self.ql_launcher.key_nav_start()
         self.addCleanup(self.ql_launcher.key_nav_cancel)
 
-        self.launcher.keyboard_select_icon(tooltip_text=self.ql_app.name)
+        self.ql_launcher.keyboard_select_icon(tooltip_text=self.ql_app.name)
         self.keybinding("launcher/keynav/open-quicklist")
         self.addCleanup(self.keybinding, "launcher/keynav/close-quicklist")
-        self.quicklist = self.ql_launcher_icon.get_quicklist()
 
-        self.assertThat(self.quicklist, NotEquals(None))
-        self.assertThat(self.quicklist.selected_item, NotEquals(None))
+        self.assertThat(self.ql_launcher_icon.get_quicklist, Eventually(NotEquals(None)))
+        self.quicklist = self.ql_launcher_icon.get_quicklist()
+        self.assertThat(lambda: self.quicklist.selected_item, Eventually(NotEquals(None)))
 
     def test_keynav_selects_first_item_when_unselected(self):
         """Home key MUST select the first selectable item in a quicklist."""

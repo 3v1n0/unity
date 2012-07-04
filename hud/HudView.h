@@ -71,8 +71,6 @@ protected:
   void OnSearchChanged(std::string const& search_string);
   virtual long PostLayoutManagement(long LayoutResult);
 
-  IntrospectableList introspectable_children_;
-
 private:
   void OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key);
   void OnKeyDown (unsigned long event_type, unsigned long event_keysym,
@@ -89,7 +87,7 @@ private:
 
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
-  IntrospectableList const& GetIntrospectableChildren();
+  IntrospectableList GetIntrospectableChildren();
 
 private:
   UBusManager ubus;
@@ -97,6 +95,7 @@ private:
   nux::ObjectPtr<nux::Layout> content_layout_;
   nux::ObjectPtr<nux::VLayout> button_views_;
   std::list<HudButton::Ptr> buttons_;
+  IntrospectableList introspectable_children_;
 
   //FIXME - replace with dash search bar once modifications to dash search bar land
   SearchBar::Ptr search_bar_;

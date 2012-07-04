@@ -27,7 +27,7 @@
 #include <Nux/Button.h>
 #include <NuxGraphics/GraphicsEngine.h>
 #include <Nux/TextureArea.h>
-#include <NuxImage/CairoGraphics.h>
+#include <NuxGraphics/CairoGraphics.h>
 #include <UnityCore/Variant.h>
 
 #include "unity-shared/CairoTexture.h"
@@ -304,10 +304,7 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
     case NUX_KP_ENTER:
       if (IsMenuItemSelectable(_current_item_index))
       {
-        dbusmenu_menuitem_handle_event(GetNthItems(_current_item_index)->_menuItem,
-                                       "clicked",
-                                       NULL,
-                                       0);
+        ActivateItem(GetNthItems(_current_item_index));
         Hide();
       }
       break;
@@ -554,11 +551,20 @@ void QuicklistView::CheckAndEmitItemSignal(int x, int y)
     if (geo.IsPointInside(x, y))
     {
       // An action is performed: send the signal back to the application
-      if (item->_menuItem)
-      {
-        dbusmenu_menuitem_handle_event(item->_menuItem, "clicked", NULL, 0);
-      }
+      ActivateItem(item);
     }
+  }
+}
+
+void QuicklistView::ActivateItem(QuicklistMenuItem* item)
+{
+  if (item && item->_menuItem)
+  {
+    ubus_server_send_message(ubus_server_get_default(),
+                             UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                             NULL);
+
+    dbusmenu_menuitem_handle_event(item->_menuItem, "clicked", NULL, 0);
   }
 }
 
@@ -1365,7 +1371,7 @@ QuicklistView::GetSelectedMenuItem()
   return GetNthItems(_current_item_index);
 }
 
-debug::Introspectable::IntrospectableList const& QuicklistView::GetIntrospectableChildren()
+debug::Introspectable::IntrospectableList QuicklistView::GetIntrospectableChildren()
 {
   _introspectable_children.clear();
   for (auto item: _item_list)
