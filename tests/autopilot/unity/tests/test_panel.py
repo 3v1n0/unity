@@ -173,24 +173,19 @@ class PanelTitleTests(PanelTestsBase):
 
     def test_panel_title_updates_on_maximized_window_title_changes(self):
         """Panel title must change when the title of a maximized application changes."""
-
         text_win = self.open_new_application_window("Text Editor", maximized=True)
-
-        self.assertThat(self.panel.title, Equals(text_win.title))
         old_title = text_win.title
-        sleep(.25)
 
         text_win.set_focus()
         self.keyboard.type("Unity rocks!")
-        self.addCleanup(os.remove, "/tmp/autopilot-awesome-test.txt")
         self.keyboard.press_and_release("Ctrl+S")
         sleep(.25)
         self.keyboard.type("/tmp/autopilot-awesome-test.txt")
         self.keyboard.press_and_release("Return")
-        sleep(1)
+        self.addCleanup(os.remove, "/tmp/autopilot-awesome-test.txt")
 
-        self.assertThat(old_title, NotEquals(text_win.title))
-        self.assertThat(self.panel.title, Equals(text_win.title))
+        self.assertThat(lambda: text_win.title, Eventually(NotEquals(old_title)))
+        self.assertThat(self.panel.title, Eventually(Equals(text_win.title)))
 
 
 class PanelWindowButtonsTests(PanelTestsBase):
@@ -216,8 +211,10 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.assertFalse(self.panel.window_buttons_shown)
 
         self.panel.move_mouse_over_window_buttons()
-        sleep(self.panel.menus.fadein_duration / 1000.0)
-        self.assertFalse(self.panel.window_buttons_shown)
+        # Sleep twice as long as the timeout, just to be sure. timeout is in
+        # mS, we need seconds, hence the divide by 500.0
+        sleep(self.panel.menus.fadein_duration / 500.0)
+        self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(False)))
 
     def test_window_buttons_dont_show_for_restored_window(self):
         """Tests that the window buttons are not shown for a restored window."""
