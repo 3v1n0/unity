@@ -144,35 +144,32 @@ class PanelTitleTests(PanelTestsBase):
         """
         text_win = self.open_new_application_window("Text Editor", maximized=True)
 
-        self.assertTrue(text_win.is_maximized)
-        self.assertThat(self.panel.title, Equals(text_win.title))
-
+        # Ctrl+h opens the replace dialog.
         self.keyboard.press_and_release("Ctrl+h")
         self.addCleanup(self.keyboard.press_and_release, "Escape")
-        sleep(.25)
+
+        self.assertThat(lambda: len(text_win.application.get_windows()),
+                        Eventually(Equals(2)))
         self.assertThat(self.panel.title, Equals(text_win.application.name))
 
-    def test_panel_title_switching_active_window(self):
-        """Tests the title shown in the panel with a maximized application."""
-        # Locked Launchers on all monitors
-        self.set_unity_option('num_launchers', 0)
-        self.set_unity_option('launcher_hide_mode', 0)
+    def test_panel_shows_app_title_with_maximised_app(self):
+        """Tests app titles are shown in the panel with a non-focused maximized application."""
+        self.open_new_application_window("Text Editor", maximized=True)
+        calc_win = self.open_new_application_window("Calculator", maximized=False)
 
+        self.assertThat(self.panel.title, Eventually(Equals(calc_win.application.name)))
+
+    def test_panel_title_updates_when_switching_to_maximized_app(self):
+        """Switching to a maximised app from a restored one must update the panel title."""
         text_win = self.open_new_application_window("Text Editor", maximized=True)
-
-        self.assertTrue(text_win.is_maximized)
-        self.assertThat(self.panel.title, Equals(text_win.title))
-        sleep(.25)
-
-        calc_win = self.open_new_application_window("Calculator")
-        self.assertThat(self.panel.title, Equals(calc_win.application.name))
+        self.open_new_application_window("Calculator", maximized=False)
 
         icon = self.launcher.model.get_icon_by_desktop_id(text_win.application.desktop_file)
         launcher = self.launcher.get_launcher_for_monitor(self.panel_monitor)
         launcher.click_launcher_icon(icon)
 
-        self.assertTrue(text_win.is_focused)
-        self.assertThat(self.panel.title, Equals(text_win.title))
+        self.assertThat(lambda: text_win.is_focused, Eventually(Equals(True)))
+        self.assertThat(self.panel.title, Eventually(Equals(text_win.title)))
 
     def test_panel_title_updates_on_maximized_window_title_changes(self):
         """Tests that the title of a maximized application updates with
