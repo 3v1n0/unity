@@ -45,6 +45,7 @@ set (UNITY_SHARED_SOURCES
      LineSeparator.cpp
      OverlayRenderer.cpp
      PanelStyle.cpp
+     PreviewStyle.cpp
      SearchBar.cpp
      SearchBarSpinner.cpp
      StaticCairoText.cpp

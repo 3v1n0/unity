@@ -16,16 +16,17 @@
  * License version 3 along with this program.  If not, see
  * <http://www.gnu.org/licenses/>
  *
- * Authored by: Gordon Allott <gord.allott@canonical.com>
+ * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  *
  */
 
-#ifndef PREVIEW_H
-#define PREVIEW_H
+#ifndef PREVIEWNAVIGATOR_H
+#define PREVIEWNAVIGATOR_H
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
-#include <UnityCore/Preview.h>
+#include <Nux/Button.h>
+#include "unity-shared/PreviewStyle.h"
 #include "unity-shared/Introspectable.h"
 
 namespace unity
@@ -35,53 +36,36 @@ namespace dash
 namespace previews
 {
 
-class PreviewNavigator;
-
-typedef enum 
+class PreviewNavigator :  public debug::Introspectable,
+                          public nux::View
 {
-  LEFT,
-  RIGHT,
-  BOTH
-} NavButton;
-
-class Preview : public nux::View, public debug::Introspectable
-{
+  NUX_DECLARE_OBJECT_TYPE(PreviewNavigator, nux::View);
 public:
-  typedef nux::ObjectPtr<Preview> Ptr;
-  NUX_DECLARE_OBJECT_TYPE(Preview, nux::View);
-
-  Preview(dash::Preview::Ptr preview_model);
-  virtual ~Preview();
-
-  // calling this should disable the nav buttons to the left or the right of the preview
-  virtual void DisableNavButton(NavButton button);
- 
-  // For the nav buttons to the left/right of the previews, call when they are activated
-  sigc::signal<void> navigate_left;
-  sigc::signal<void> navigate_right;
+  typedef nux::ObjectPtr<PreviewNavigator> Ptr;  
+  PreviewNavigator(Orientation orientation, NUX_FILE_LINE_PROTO);
 
   // From debug::Introspectable
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(GVariantBuilder*);
 
-protected:
+  sigc::signal<void> activated;
+
+private:
   virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);
 
   void SetupViews();
 
-protected:
-  dash::Preview::Ptr preview_model_;
+  void OnClicked();
 
-  // View related
-  nux::HLayout* layout_;
-  PreviewNavigator* nav_left_;
-  PreviewNavigator* nav_right_;
-  View* content_;
+private:
+  const Orientation orientation_;
+  nux::Layout* layout_;
+  nux::Button* button_;
 };
 
-}
-}
-}
+} // namespace previews
+} // namespace dash
+} // namespace unity
 
-#endif // PREVIEW_H
+#endif // PREVIEWNAVIGATOR_H

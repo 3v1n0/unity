@@ -31,6 +31,7 @@
 #include <UnityCore/MusicPreview.h>
 #include <UnityCore/SeriesPreview.h>
 #include <unity-protocol.h>
+#include "PreviewFactory.h"
 
 #include "unity-shared/FontSettings.h"
 #include "unity-shared/UnitySettings.h"
@@ -83,8 +84,10 @@ void TestRunner::Init ()
   glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
                   glib::StealRef());
 
-  model = dash::Preview::PreviewForVariant(v);
-  view = previews::Preview::Ptr(new previews::Preview(model));
+  PreviewFactoryOperator previewOperator(PreviewFactory::Instance().Item(v));
+
+  model = previewOperator.CreateModel();
+  view = previewOperator.CreateView(model);
   
   view->SetMinMaxSize(WIDTH, HEIGHT);
   layout->AddView (view.GetPointer(), 1, nux::MINOR_POSITION_CENTER);
