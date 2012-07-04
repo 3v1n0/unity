@@ -124,7 +124,7 @@ class PanelTitleTests(PanelTestsBase):
         self.window_manager.enter_show_desktop()
         self.addCleanup(self.window_manager.leave_show_desktop)
 
-        self.assertTrue(self.panel.desktop_is_active)
+        self.assertThat(self.panel.desktop_is_active, Eventually(Equals(True)))
 
     def test_panel_title_with_restored_application(self):
         """Panel must display application name for a non-maximised application."""
