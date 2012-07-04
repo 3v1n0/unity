@@ -841,36 +841,23 @@ LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value)
     clock_gettime(CLOCK_MONOTONIC, &(_quirk_times[quirk]));
   EmitNeedsRedraw();
 
-  switch (quirk)
+  // Present on urgent as a general policy
+  if (quirk == QUIRK_VISIBLE && value)
+    Present(0.5f, 1500);
+  if (quirk == QUIRK_URGENT)
   {
-    case QUIRK_VISIBLE:
+    if (value)
     {
-      // Present on urgent as a general policy
-      if (value)
-        Present(0.5, 1500);
+      Present(0.5f, 1500);
+    }
 
-      visibility_changed.emit();
-      break;
-    }
-    case QUIRK_URGENT:
-    {
-      if (value)
-        Present(0.5f, 1500);
+    UBusServer* ubus = ubus_server_get_default();
+    ubus_server_send_message(ubus, UBUS_LAUNCHER_ICON_URGENT_CHANGED, g_variant_new_boolean(value));
+  }
 
-      UBusServer* ubus = ubus_server_get_default();
-      ubus_server_send_message(ubus, UBUS_LAUNCHER_ICON_URGENT_CHANGED, g_variant_new_boolean(value));
-      break;
-    }
-    case QUIRK_DROP_PRELIGHT:
-    {
-      if (value)
-        Present(0.5, -1);
-      else
-        Unpresent();
-      break;
-    }
-    default:
-      break;
+  if (quirk == QUIRK_VISIBLE)
+  {
+     visibility_changed.emit();
   }
 }
 
