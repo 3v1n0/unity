@@ -136,8 +136,7 @@ class PanelTitleTests(PanelTestsBase):
         """Panel must display application name for a maximised application."""
         text_win = self.open_new_application_window("Text Editor", maximized=True)
 
-        self.assertTrue(text_win.is_maximized)
-        self.assertThat(self.panel.title, Equals(text_win.title))
+        self.assertThat(self.panel.title, Eventually(Equals(text_win.title)))
 
     def test_panel_title_with_maximized_window_restored_child(self):
         """Tests the title shown in the panel when opening the restored child of
