@@ -100,7 +100,6 @@ const unsigned int SCROLL_DOWN_BUTTON = 6;
 const unsigned int SCROLL_UP_BUTTON = 7;
 
 const std::string RELAYOUT_TIMEOUT = "relayout-timeout";
-const std::string REDRAW_IDLE = "redraw-idle";
 } // namespace local
 } // anon namespace
 
@@ -118,6 +117,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , super_keypressed_(false)
   , newFocusedWindow(nullptr)
   , doShellRepaint(false)
+  , didShellRepaint(false)
   , allowWindowPaint(false)
   , damaged(false)
   , _key_nav_mode_requested(false)
@@ -909,6 +909,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
   }
 
   doShellRepaint = false;
+  didShellRepaint = true;
   damaged = false;
 }
 
@@ -1211,7 +1212,15 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
 {
   bool ret;
 
-  doShellRepaint = true;
+  /*
+   * Very important!
+   * Don't waste GPU and CPU rendering the shell on every frame if you don't
+   * need to. Doing so on every frame causes Nux to hog the GPU and slow down
+   * ALL rendering. (LP: #988079)
+   */
+  bool force = forcePaintOnTop() || PluginAdapter::Default()->IsExpoActive();
+  doShellRepaint = force || !(region.isEmpty() || wt->GetDrawList().empty());
+
   allowWindowPaint = true;
   _last_output = output;
   paint_panel_ = false;
@@ -1227,13 +1236,21 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
    *   attempts to bind it will only increment
    *   its bind reference so make sure that
    *   you always unbind as much as you bind */
-  _fbo->bind (nux::Geometry (output->x (), output->y (), output->width (), output->height ()));
+  if (doShellRepaint)
+    _fbo->bind (nux::Geometry (output->x (), output->y (), output->width (), output->height ()));
 #endif
+
+  // CompRegion has no clear() method. So this is the fastest alternative.
+  aboveShell = CompRegion();
+  nuxRegion = CompRegion();
 
   /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
   ret = gScreen->glPaintOutput(attrib, transform, region, output, mask);
 
 #ifndef USE_MODERN_COMPIZ_GL
+  if (doShellRepaint && !force && aboveShell.contains(*output))
+    doShellRepaint = false;
+
   if (doShellRepaint)
     paintDisplay(region, transform, mask);
 #endif
@@ -1286,16 +1303,32 @@ void UnityScreen::preparePaint(int ms)
   for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
     wi->HandleAnimations (ms);
 
+  // Workaround Nux bug LP: #1014610:
   if (damaged)
   {
     damaged = false;
-    damageNuxRegions();
+    nuxDamageCompiz();
   }
 
+  compizDamageNux(cScreen->currentDamage());
+
+  didShellRepaint = false;
 }
 
 void UnityScreen::donePaint()
 {
+  /*
+   * It's only safe to clear the draw list if drawing actually occurred
+   * (i.e. the shell was not obscured behind a fullscreen window).
+   * If you clear the draw list and drawing has not occured then you'd be
+   * left with all your views thinking they're queued for drawing still and
+   * would refuse to redraw when you return from fullscreen.
+   * I think this is a Nux bug. ClearDrawList should ideally also mark all
+   * the queued views as draw_cmd_queued_=false.
+   */
+  if (didShellRepaint)
+    wt->ClearDrawList();
+
   std::list <ShowdesktopHandlerWindowInterface *> remove_windows;
 
   for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
@@ -1316,42 +1349,100 @@ void UnityScreen::donePaint()
   cScreen->donePaint ();
 }
 
-/* Grab changed nux regions and add damage rects for them */
-void UnityScreen::damageNuxRegions()
+void UnityScreen::compizDamageNux(CompRegion const& damage)
 {
-  CompRegion nux_damage;
-
-  if (damaged)
+  if (!launcher_controller_)
     return;
 
-  std::vector<nux::Geometry> dirty = wt->GetDrawList();
+  CompRect::vector const& rects(damage.rects());
+  for (const CompRect &r : rects)
+  {
+    nux::Geometry geo(r.x(), r.y(), r.width(), r.height());
+    BackgroundEffectHelper::ProcessDamage(geo);
+  }
+
+  auto launchers = launcher_controller_->launchers();
+  for (auto launcher : launchers)
+  {
+    if (!launcher->Hidden())
+    {
+      nux::Geometry geo = launcher->GetAbsoluteGeometry();
+      CompRegion launcher_region(geo.x, geo.y, geo.width, geo.height);
+      if (damage.intersects(launcher_region))
+        launcher->QueueDraw();
+      nux::ObjectPtr<nux::View> tooltip = launcher->GetActiveTooltip();
+      if (!tooltip.IsNull())
+      {
+        nux::Geometry tip = tooltip->GetAbsoluteGeometry();
+        CompRegion tip_region(tip.x, tip.y, tip.width, tip.height);
+        if (damage.intersects(tip_region))
+          tooltip->QueueDraw();
+      }
+    }
+  }
+
+  std::vector<nux::View*> const& panels(panel_controller_->GetPanelViews());
+  for (nux::View* view : panels)
+  {
+    nux::Geometry geo = view->GetAbsoluteGeometry();
+    CompRegion panel_region(geo.x, geo.y, geo.width, geo.height);
+    if (damage.intersects(panel_region))
+      view->QueueDraw();
+  }
+
+  QuicklistManager* qm = QuicklistManager::Default();
+  if (qm)
+  {
+    QuicklistView* view = qm->Current();
+    if (view)
+    {
+      nux::Geometry geo = view->GetAbsoluteGeometry();
+      CompRegion quicklist_region(geo.x, geo.y, geo.width, geo.height);
+      if (damage.intersects(quicklist_region))
+        view->QueueDraw();
+    }
+  }
+}
+
+/* Grab changed nux regions and add damage rects for them */
+void UnityScreen::nuxDamageCompiz()
+{
+  // Workaround Nux bug LP: #1014610 (unbounded DrawList growth)
+  // Also, ensure we don't dereference null *controller_ on startup.
+  if (damaged || !launcher_controller_ || !dash_controller_)
+    return;
   damaged = true;
 
-  for (std::vector<nux::Geometry>::iterator it = dirty.begin(), end = dirty.end();
-       it != end; ++it)
+  CompRegion nux_damage;
+
+  std::vector<nux::Geometry> const& dirty = wt->GetDrawList();
+  for (auto geo : dirty)
+    nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
+
+  if (launcher_controller_->IsOverlayOpen())
   {
-    nux::Geometry const& geo = *it;
+    nux::BaseWindow* dash_window = dash_controller_->window();
+    nux::Geometry const& geo = dash_window->GetAbsoluteGeometry();
     nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
   }
 
-  nux::Geometry geo = wt->GetWindowCompositor().GetTooltipMainWindowGeometry();
-  nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
+  auto launchers = launcher_controller_->launchers();
+  for (auto launcher : launchers)
+  {
+    if (!launcher->Hidden())
+    {
+      nux::ObjectPtr<nux::View> tooltip = launcher->GetActiveTooltip();
+      if (!tooltip.IsNull())
+      {
+        nux::Geometry const& g = tooltip->GetAbsoluteGeometry();
+        nux_damage += CompRegion(g.x, g.y, g.width, g.height);
+      }
+    }
+  }
 
-  geo = lastTooltipArea;
-  nux_damage += CompRegion(lastTooltipArea.x, lastTooltipArea.y,
-                         lastTooltipArea.width, lastTooltipArea.height);
-
-  /*
-   * Avoid Nux damaging Nux as recommended by smspillaz. Though I don't
-   * believe it would be harmful or significantly expensive right now.
-   */
   cScreen->damageRegionSetEnabled(this, false);
   cScreen->damageRegion(nux_damage);
   cScreen->damageRegionSetEnabled(this, true);
-
-  wt->ClearDrawList();
-
-  lastTooltipArea = geo;
 }
 
 /* handle X Events */
@@ -1515,13 +1606,7 @@ void UnityScreen::handleEvent(XEvent* event)
 
 void UnityScreen::damageRegion(const CompRegion &region)
 {
-  const CompRect::vector &rects(region.rects());
-  for (const CompRect &r : rects)
-  {
-    nux::Geometry geo(r.x(), r.y(), r.width(), r.height());
-    BackgroundEffectHelper::ProcessDamage(geo);
-  }
-
+  compizDamageNux(region);
   cScreen->damageRegion(region);
 }
 
@@ -2174,14 +2259,6 @@ bool isNuxWindow (CompWindow* value)
   return false;
 }
 
-const CompWindowList& UnityScreen::getWindowPaintList()
-{
-  CompWindowList& pl = _withRemovedNuxWindows = cScreen->getWindowPaintList();
-  pl.remove_if(isNuxWindow);
-
-  return pl;
-}
-
 void UnityScreen::RaiseInputWindows()
 {
   std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
@@ -2206,6 +2283,35 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
                           const CompRegion& region,
                           unsigned int mask)
 {
+  /*
+   * The occlusion pass tests windows from TOP to BOTTOM. That's opposite to
+   * the actual painting loop.
+   */
+  if (isNuxWindow(window))
+  {
+    if (mask & PAINT_WINDOW_OCCLUSION_DETECTION_MASK)
+    {
+      uScreen->nuxRegion += window->geometry();
+      uScreen->nuxRegion -= uScreen->aboveShell;
+    }
+    return false;  // Ensure nux windows are never painted by compiz
+  }
+  else if (mask & PAINT_WINDOW_OCCLUSION_DETECTION_MASK)
+  {
+    static const unsigned int nonOcclusionBits =
+                              PAINT_WINDOW_TRANSLUCENT_MASK |
+                              PAINT_WINDOW_TRANSFORMED_MASK |
+                              PAINT_WINDOW_NO_CORE_INSTANCE_MASK;
+    if (!(mask & nonOcclusionBits))
+        // And I've been advised to test other things, but they don't work:
+        // && (attrib.opacity == OPAQUE)) <-- Doesn't work; Only set in glDraw
+        // && !window->alpha() <-- Doesn't work; Opaque windows often have alpha
+    {
+      uScreen->aboveShell += window->geometry();
+      uScreen->aboveShell -= uScreen->nuxRegion;
+    }
+  }
+
   GLWindowPaintAttrib wAttrib = attrib;
 
   if (mMinimizeHandler)
@@ -2264,7 +2370,17 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     }
   }
 
-  if (uScreen->doShellRepaint && !uScreen->forcePaintOnTop ())
+  /*
+   * Paint the shell in *roughly* the compiz stacking order. This is only
+   * approximate because we're painting all the nux windows as soon as we find
+   * the bottom-most nux window (from bottom to top).
+   * But remember to avoid painting the shell if it's within the aboveShell
+   * region.
+   */
+  if (uScreen->doShellRepaint &&
+      !uScreen->forcePaintOnTop () &&
+      !uScreen->aboveShell.contains(window->geometry())
+     )
   {
     std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
     unsigned int size = xwns.size();
@@ -2579,25 +2695,7 @@ void UnityScreen::initUnity(nux::NThread* thread, void* InitData)
 
 void UnityScreen::onRedrawRequested()
 {
-  // disable blur updates so we dont waste perf. This can stall the blur during animations
-  // but ensures a smooth animation.
-  if (_in_paint)
-  {
-    if (!sources_.GetSource(local::REDRAW_IDLE))
-    {
-      auto redraw_idle(std::make_shared<glib::Idle>(glib::Source::Priority::DEFAULT));
-      sources_.Add(redraw_idle, local::REDRAW_IDLE);
-
-      redraw_idle->Run([&]() {
-        onRedrawRequested();
-        return false;
-      });
-    }
-  }
-  else
-  {
-    damageNuxRegions();
-  }
+  nuxDamageCompiz();
 }
 
 /* Handle option changes and plug that into nux windows */

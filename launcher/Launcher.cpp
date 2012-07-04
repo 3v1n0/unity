@@ -1520,6 +1520,11 @@ bool Launcher::IsBackLightModeToggles() const
   }
 }
 
+nux::ObjectPtr<nux::View> Launcher::GetActiveTooltip() const
+{
+  return _active_tooltip;
+}
+
 void Launcher::SetActionState(LauncherActionState actionstate)
 {
   if (_launcher_action_state == actionstate)
@@ -1681,6 +1686,7 @@ void Launcher::OnIconAdded(AbstractLauncherIcon::Ptr icon)
   EnsureAnimation();
 
   icon->needs_redraw.connect(sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
+  icon->tooltip_visible.connect(sigc::mem_fun(this, &Launcher::OnTooltipVisible));
 }
 
 void Launcher::OnIconRemoved(AbstractLauncherIcon::Ptr icon)
@@ -1755,6 +1761,11 @@ void Launcher::OnSelectionChanged(AbstractLauncherIcon::Ptr selection)
 void Launcher::OnIconNeedsRedraw(AbstractLauncherIcon::Ptr icon)
 {
   EnsureAnimation();
+}
+
+void Launcher::OnTooltipVisible(nux::ObjectPtr<nux::View> view)
+{
+  _active_tooltip = view;
 }
 
 void Launcher::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
