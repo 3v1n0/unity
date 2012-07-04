@@ -141,18 +141,15 @@ class QuicklistActionTests(UnityTestCase):
         self.assertThat(self.window_manager.scale_active_for_group, Eventually(Equals(True)))
 
     def test_quicklist_closes_when_dash_opens(self):
-        """When the quicklist is open and you open the dash:
-        The quicklist should close then the dash must open.
+        """When the quicklist is open you must still be able to open the dash."""
 
-        """
         calc = self.start_app("Calculator")
-        [calc_win1] = calc.get_windows()
-        self.assertTrue(calc_win1.is_focused)
 
         calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
         calc_ql = self.open_quicklist_for_icon(calc_icon)
 
         self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
         self.assertThat(self.dash.visible, Eventually(Equals(True)))
 
 
