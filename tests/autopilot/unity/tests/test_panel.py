@@ -172,9 +172,8 @@ class PanelTitleTests(PanelTestsBase):
         self.assertThat(self.panel.title, Eventually(Equals(text_win.title)))
 
     def test_panel_title_updates_on_maximized_window_title_changes(self):
-        """Tests that the title of a maximized application updates with
-        window title changes.
-        """
+        """Panel title must change when the title of a maximized application changes."""
+
         text_win = self.open_new_application_window("Text Editor", maximized=True)
 
         self.assertThat(self.panel.title, Equals(text_win.title))
