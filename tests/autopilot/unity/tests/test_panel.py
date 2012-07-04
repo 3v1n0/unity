@@ -294,20 +294,33 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.assertThat(button.visual_state, Eventually(Equals("pressed")))
 
     def test_window_buttons_cancel(self):
-        """Tests how the buttons ignore clicks when the mouse is pressed over
-        them and released outside their area.
+        """Window buttons must ignore clicks when the mouse released outside
+        their area.
         """
         self.hud.ensure_visible()
-        self.addCleanup(self.hud.ensure_hidden)
         button = self.panel.window_buttons.close
+
+        # FIXME: THere's a bug in unity that prevents us from doing:
+        # self.addCleanup(self.hud.ensure_hidden)
+        # SO we do this instead. The bug is:
+        #
+        # https://bugs.launchpad.net/ubuntu/+source/unity/+bug/1021087
+        #
+        # Once that's fixed the next two lines can be removed, and the one above
+        # added instead.
+        self.addCleanup(self.assertThat, self.hud.visible, Eventually(Equals(False)))
+        self.addCleanup(button.mouse_click)
 
         button.mouse_move_to()
         self.mouse.press()
-        self.addCleanup(self.mouse.release)
-        sleep(.25)
+        self.assertThat(button.visual_state, Eventually(Equals("pressed")))
         self.panel.move_mouse_below_the_panel()
-        sleep(.25)
-        self.assertTrue(self.hud.visible)
+        self.mouse.release()
+
+        self.assertThat(button.visual_state, Eventually(Equals("normal")))
+        self.assertThat(self.hud.visible, Eventually(Equals(True)))
+
+
 
     def test_window_buttons_close_button_works_for_window(self):
         """Tests that the window button 'Close' actually closes a window."""
