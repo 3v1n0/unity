@@ -2595,7 +2595,7 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
       {
         it->SetQuirk(AbstractLauncherIcon::QUIRK_DESAT, false);
         it->SetQuirk(AbstractLauncherIcon::QUIRK_DROP_PRELIGHT, true);
-        it->SetQuirk(AbstractLauncherIcon::QUIRK_PRESENT, true);
+        it->SetQuirk(AbstractLauncherIcon::QUIRK_PRESENTED, true);
       }
       else
       {
@@ -2630,7 +2630,7 @@ void Launcher::DndReset()
   {
     it->SetQuirk(AbstractLauncherIcon::QUIRK_DROP_PRELIGHT, false);
     it->SetQuirk(AbstractLauncherIcon::QUIRK_DROP_DIM, false);
-    it->SetQuirk(AbstractLauncherIcon::QUIRK_PRESENT, false);
+    it->SetQuirk(AbstractLauncherIcon::QUIRK_PRESENTED, false);
   }
 
   DndHoveredIconReset();
