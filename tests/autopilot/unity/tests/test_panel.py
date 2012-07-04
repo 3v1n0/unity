@@ -279,23 +279,19 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.assert_win_buttons_in_overlay_mode(True)
 
     def test_window_buttons_update_visual_state(self):
-        """Tests that the window button updates its visual state."""
+        """Window button must update its state in response to mouse events."""
         self.hud.ensure_visible()
         self.addCleanup(self.hud.ensure_hidden)
         button = self.panel.window_buttons.close
 
-        self.assertThat(button.visual_state, Equals("normal"))
+        self.assertThat(button.visual_state, Eventually(Equals("normal")))
 
         button.mouse_move_to()
-        self.assertTrue(button.visible)
-        self.assertTrue(button.enabled)
-        sleep(.25)
-        self.assertThat(button.visual_state, Equals("prelight"))
+        self.assertThat(button.visual_state, Eventually(Equals("prelight")))
 
         self.mouse.press()
         self.addCleanup(self.mouse.release)
-        sleep(.25)
-        self.assertThat(button.visual_state, Equals("pressed"))
+        self.assertThat(button.visual_state, Eventually(Equals("pressed")))
 
     def test_window_buttons_cancel(self):
         """Tests how the buttons ignore clicks when the mouse is pressed over

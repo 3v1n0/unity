@@ -9,6 +9,7 @@
 
 from __future__ import absolute_import
 
+from autopilot.emulators.X11 import Keyboard
 from autopilot.keybindings import KeybindingsHelper
 from HTMLParser import HTMLParser
 import re
@@ -26,11 +27,12 @@ class Hud(KeybindingsHelper):
         controllers = HudController.get_all_instances()
         assert(len(controllers) == 1)
         self.controller = controllers[0]
+        self.keyboard = Keyboard()
 
     def ensure_hidden(self):
         """Hides the hud if it's not already hidden."""
         if self.visible:
-            self.toggle_reveal()
+            self.keyboard.press_and_release("Escape")
             self.visible.wait_for(False)
 
     def ensure_visible(self):
