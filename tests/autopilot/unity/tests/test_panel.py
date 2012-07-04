@@ -114,6 +114,16 @@ class PanelTestsBase(UnityTestCase):
         sleep(.5)
         self.assertTrue(indicator.active)
 
+    def assert_win_buttons_not_in_overlay_mode(self, buttons):
+        """Assert that 'buttons' contains three buttons and none of them are in
+        overlay mode.
+
+        """
+        self.assertThat(len(buttons), Equals(3))
+        for button in buttons:
+            self.assertThat(button.overlay_mode, Eventually(Equals(False)))
+
+
 
 class PanelTitleTests(PanelTestsBase):
 
@@ -237,32 +247,27 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
 
     def test_window_buttons_dont_show_for_maximized_window_on_mouse_out(self):
-        """Tests that the windows button arenot shown for a maximized window
-        when the mouse is outside the panel.
+        """Window buttons must not show for a maximized window when the mouse is
+        outside the panel.
         """
         self.open_new_application_window("Text Editor", maximized=True)
 
         sleep(self.panel.menus.discovery_duration)
         sleep(self.panel.menus.discovery_fadein_duration / 1000.0)
         sleep(self.panel.menus.discovery_fadeout_duration / 1000.0)
-        self.assertFalse(self.panel.window_buttons_shown)
+
+        self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(False)))
 
     def test_window_buttons_show_for_maximized_window_on_mouse_in(self):
-        """Tests that the window buttons are shown when a maximized window
-        is focused and the mouse is over the menu-view panel areas.
+        """Window buttons must show when a maximized window is focused and the
+        mouse is over the menu-view panel areas.
+
         """
         self.open_new_application_window("Text Editor", maximized=True)
-
-        sleep(self.panel.menus.discovery_duration)
-
         self.panel.move_mouse_over_window_buttons()
-        sleep(self.panel.menus.fadein_duration / 1000.0)
-        self.assertTrue(self.panel.window_buttons_shown)
 
-        buttons = self.panel.window_buttons.get_buttons()
-        self.assertThat(len(buttons), Equals(3))
-        for button in buttons:
-            self.assertFalse(button.overlay_mode)
+        self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(True)))
+        self.assert_win_buttons_not_in_overlay_mode(self.panel.window_buttons.get_buttons())
 
     def test_window_buttons_show_with_dash(self):
         """Tests that the window buttons are shown when opening the dash."""
