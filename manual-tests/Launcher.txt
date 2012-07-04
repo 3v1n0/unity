@@ -577,3 +577,21 @@ Actions:
 
 Expected Results:
  * The device launcher icon has been removed.
+
+
+Test launcher unfolds valid drop icons during dnd
+------------------------------------------------------------
+This test makes sure that Unity launcher unfolds valid drop icons during
+drag and drop.
+
+Setup:
+ * Add many icons to the launcher.
+ * Add Nautilus icon too.
+ * Move Nautilus icon at the bottom of the launcher.
+
+Actions:
+ * Show Desktop
+ * Drag a folder icon
+
+Expected Results:
+ * All the valid drop icons should unfold during the drag and drop.
