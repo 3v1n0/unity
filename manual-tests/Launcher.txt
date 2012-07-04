@@ -585,9 +585,8 @@ This test makes sure that Unity launcher unfolds valid drop icons during
 drag and drop.
 
 Setup:
- * Add many icons to the launcher.
- * Add Nautilus icon too.
- * Move Nautilus icon at the bottom of the launcher.
+ * Add icons to the laucnher so that some of them in the bottom are folded.
+ * Add Nautilus icon too, making sure it is folded.
 
 Actions:
  * Show Desktop
