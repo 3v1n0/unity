@@ -220,11 +220,21 @@ class PanelWindowButtonsTests(PanelTestsBase):
         """Tests that the window buttons are not shown for a restored window."""
         self.open_new_application_window("Calculator")
 
-        self.assertFalse(self.panel.window_buttons_shown)
+        self.panel.move_mouse_below_the_panel()
+        sleep(self.panel.menus.fadein_duration / 500.0)
+
+        self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(False)))
+
+    def test_window_buttons_dont_show_for_restored_window_with_mouse_in_panel(self):
+        """Tests that the window buttons are not shown for a restored window with
+        the mouse in the panel."""
+        self.open_new_application_window("Calculator")
 
         self.panel.move_mouse_over_window_buttons()
-        sleep(self.panel.menus.fadein_duration / 1000.0)
-        self.assertFalse(self.panel.window_buttons_shown)
+        sleep(self.panel.menus.fadein_duration / 500.0)
+
+        self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(False)))
+
 
     def test_window_buttons_dont_show_for_maximized_window_on_mouse_out(self):
         """Tests that the windows button arenot shown for a maximized window
