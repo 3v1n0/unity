@@ -124,7 +124,6 @@ class PanelTestsBase(UnityTestCase):
             self.assertThat(button.overlay_mode, Eventually(Equals(False)))
 
 
-
 class PanelTitleTests(PanelTestsBase):
 
     scenarios = _make_monitor_scenarios()
@@ -251,10 +250,6 @@ class PanelWindowButtonsTests(PanelTestsBase):
         outside the panel.
         """
         self.open_new_application_window("Text Editor", maximized=True)
-
-        sleep(self.panel.menus.discovery_duration)
-        sleep(self.panel.menus.discovery_fadein_duration / 1000.0)
-        sleep(self.panel.menus.discovery_fadeout_duration / 1000.0)
 
         self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(False)))
 
