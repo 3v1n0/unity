@@ -271,16 +271,12 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.assert_win_buttons_in_overlay_mode(True)
 
     def test_window_buttons_show_with_hud(self):
-        """Tests that the window buttons are shown when opening the HUD."""
+        """Window buttons must be shown when the HUD is open."""
         self.hud.ensure_visible()
         self.addCleanup(self.hud.ensure_hidden)
-        sleep(1)
-        self.assertTrue(self.panel.window_buttons_shown)
 
-        buttons = self.panel.window_buttons.get_buttons()
-        self.assertThat(len(buttons), Equals(3))
-        for button in buttons:
-            self.assertTrue(button.overlay_mode)
+        self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(True)))
+        self.assert_win_buttons_in_overlay_mode(True)
 
     def test_window_buttons_update_visual_state(self):
         """Tests that the window button updates its visual state."""
