@@ -9,6 +9,7 @@ unity (5.12-0ubuntu5) UNRELEASED; urgency=low
       version detection
   * debian/control:
     - remove gnome-desktop dependency: not needed upstream anymore
+    - unity Breaks older lenses due to path change
   * debian/libunity-core-6.0-5.install, debian/libunity-core-6.0-dev.install,
     debian/control:
     - version bump in libunity-core, change soname
