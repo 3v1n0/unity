@@ -114,14 +114,18 @@ class PanelTestsBase(UnityTestCase):
         sleep(.5)
         self.assertTrue(indicator.active)
 
-    def assert_win_buttons_not_in_overlay_mode(self, buttons):
-        """Assert that 'buttons' contains three buttons and none of them are in
-        overlay mode.
+    def assert_win_buttons_in_overlay_mode(self, overlay_mode):
+        """Assert that there are three panel window buttons and all of them are
+        in the specified overlay mode.
 
         """
+        if type(overlay_mode) is not bool:
+            raise TypeError("overlay_mode must be True or False")
+
+        buttons = self.panel.window_buttons.get_buttons()
         self.assertThat(len(buttons), Equals(3))
         for button in buttons:
-            self.assertThat(button.overlay_mode, Eventually(Equals(False)))
+            self.assertThat(button.overlay_mode, Eventually(Equals(overlay_mode)))
 
 
 class PanelTitleTests(PanelTestsBase):
@@ -256,19 +260,15 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.panel.move_mouse_over_window_buttons()
 
         self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(True)))
-        self.assert_win_buttons_not_in_overlay_mode(self.panel.window_buttons.get_buttons())
+        self.assert_win_buttons_in_overlay_mode(False)
 
     def test_window_buttons_show_with_dash(self):
-        """Tests that the window buttons are shown when opening the dash."""
+        """Window buttons must be shown when the dash is open."""
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
-        sleep(.5)
-        self.assertTrue(self.panel.window_buttons_shown)
 
-        buttons = self.panel.window_buttons.get_buttons()
-        self.assertThat(len(buttons), Equals(3))
-        for button in buttons:
-            self.assertTrue(button.overlay_mode)
+        self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(True)))
+        self.assert_win_buttons_in_overlay_mode(True)
 
     def test_window_buttons_show_with_hud(self):
         """Tests that the window buttons are shown when opening the HUD."""
