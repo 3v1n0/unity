@@ -26,12 +26,12 @@
 namespace unity {
 namespace ui {
 namespace {
-  const unsigned int FETCH_MAKS = XkbGBN_KeyNamesMask | XkbGBN_ClientSymbolsMask | XkbGBN_GeometryMask;
+  const unsigned int FETCH_MASK = XkbGBN_KeyNamesMask | XkbGBN_ClientSymbolsMask | XkbGBN_GeometryMask;
 }
 
 KeyboardUtil::KeyboardUtil(Display *display)
   : display_(display)
-  , keyboard_(XkbGetKeyboard(display_, FETCH_MAKS, XkbUseCoreKbd))
+  , keyboard_(XkbGetKeyboard(display_, FETCH_MASK, XkbUseCoreKbd))
 {}
 
 KeyboardUtil::~KeyboardUtil()
