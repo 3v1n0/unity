@@ -88,7 +88,7 @@ bool KeyboardUtil::CompareOffsets(int current_x, int current_y, int best_x, int 
 guint KeyboardUtil::ConvertKeyToKeycode(XkbKeyPtr key) const
 {
   if (!keyboard_)
-    return;
+    return 0;
 
   int min_code = keyboard_->min_key_code;
   int max_code = keyboard_->max_key_code;
