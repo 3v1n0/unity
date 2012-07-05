@@ -857,11 +857,8 @@ class PanelMenuTests(PanelTestsBase):
         panel menu area.
         """
         self.open_new_application_window("Text Editor", maximized=True)
-        sleep(self.panel.menus.fadein_duration / 1000.0)
-        sleep(self.panel.menus.discovery_duration)
-        sleep(self.panel.menus.fadeout_duration / 1000.0)
 
-        self.assertFalse(self.panel.menus_shown)
+        self.assertThat(self.panel.menus_shown, Eventually(Equals(False)))
 
     def test_menus_show_for_maximized_window_on_mouse_in(self):
         """Maximized window menus must only show when the mouse is over the
