@@ -26,6 +26,8 @@
 #include "Preview.h"
 #include <Nux/Nux.h>
 #include <UnityCore/ApplicationPreview.h>
+#include "unity-shared/StaticCairoText.h"
+#include <Nux/StaticText.h>
 
 namespace unity
 {
@@ -51,8 +53,18 @@ protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
+  void SetupViews();
+
 protected:
-  
+  nux::View* app_image_;
+  nux::View* app_icon_;
+  nux::View* app_rating_;
+
+  nux::StaticCairoText* app_name_;
+  nux::StaticCairoText* version_size_;
+  nux::StaticCairoText* last_update_;
+  nux::StaticCairoText* copywrite_;
+  nux::StaticCairoText* app_description_;  
 };
 
 }

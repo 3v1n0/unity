@@ -129,6 +129,8 @@ PreviewFactoryOperator PreviewFactory::Item(glib::Object<GObject> const& proto_o
       unity_protocol_preview_get_renderer_name(
         UNITY_PROTOCOL_PREVIEW(proto_obj.RawPtr())));
 
+  LOG_TRACE(logger) << "Fetch preview item: " << renderer_name;
+
   auto iter = factory_items_.find(renderer_name);
   if (iter == factory_items_.end())
   {

@@ -36,6 +36,7 @@ set (PREVIEWS_SOURCES
      PreviewContainer.cpp
      PreviewFactory.cpp
      PreviewNavigator.cpp
+     ActionButton.cpp
      )
 
 add_library (previews-lib STATIC ${PREVIEWS_SOURCES})

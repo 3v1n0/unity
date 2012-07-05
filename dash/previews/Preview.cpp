@@ -39,9 +39,6 @@ nux::logging::Logger logger("unity.dash.previews.preview");
 
 NUX_IMPLEMENT_OBJECT_TYPE(Preview);
 
-int Y = 0;
-int DY = 7;
-
 Preview::Preview(dash::Preview::Ptr preview_model)
   : View(NUX_TRACKER_LOCATION)
   , preview_model_(preview_model)
@@ -55,8 +52,8 @@ Preview::~Preview()
 
 void Preview::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
 {
-    gPainter.Paint2DQuadVGradient(gfx_engine, GetGeometry(), 
-                                nux::Color(0x96, 0x11, 0xDA), nux::Color(0x54, 0xD9, 0x11));
+//    gPainter.Paint2DQuadVGradient(gfx_engine, GetGeometry(), 
+//                                nux::Color(0x96, 0x11, 0xDA), nux::Color(0x54, 0xD9, 0x11));
 }
 
 void Preview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)

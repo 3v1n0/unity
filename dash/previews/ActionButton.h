@@ -20,47 +20,47 @@
  *
  */
 
-#ifndef PREVIEW_H
-#define PREVIEW_H
+#ifndef ACTIONBUTTON_H
+#define ACTIONBUTTON_H
 
 #include <Nux/Nux.h>
-#include <Nux/View.h>
-#include <UnityCore/Preview.h>
-#include "unity-shared/Introspectable.h"
+#include <Nux/CairoWrapper.h>
+#include <Nux/Button.h>
 
 namespace unity
 {
 namespace dash
 {
-namespace previews
-{
 
-class Preview : public nux::View, public debug::Introspectable
+class ActionButton : public nux::Button
 {
 public:
-  typedef nux::ObjectPtr<Preview> Ptr;
-  NUX_DECLARE_OBJECT_TYPE(Preview, nux::View);
-
-  Preview(dash::Preview::Ptr preview_model);
-  virtual ~Preview();
- 
-  // From debug::Introspectable
-  std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  ActionButton(std::string const& label, NUX_FILE_LINE_PROTO);
+  ~ActionButton();
 
 protected:
-  virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
-  virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);
+  virtual long ComputeContentSize();
+  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-  void SetupViews();
+  void Init();
+  void InitTheme();
+  void RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state);
+  void RedrawFocusOverlay(nux::Geometry const& geom, cairo_t* cr);
 
-protected:
-  dash::Preview::Ptr preview_model_;
+  typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
 
+  NuxCairoPtr prelight_;
+  NuxCairoPtr active_;
+  NuxCairoPtr normal_;
+  NuxCairoPtr focus_;
+
+  nux::Geometry cached_geometry_;
+
+private:
+  std::string label_;
 };
 
-}
-}
-}
+} // namespace dash
+} // namespace unity
 
-#endif // PREVIEW_H
+#endif // ACTIONBUTTON_H

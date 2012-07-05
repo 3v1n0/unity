@@ -23,6 +23,8 @@
 #ifndef PREVIEWSTYLE_H
 #define PREVIEWSTYLE_H
 
+ #include <string>
+
 namespace unity
 {
 namespace dash
@@ -47,7 +49,16 @@ public:
 
   int NavigatorMinimumWidth() const;
   int NavigatorMaximumWidth() const;
-  
+
+  ////////////////////////////////
+  // Application Preview
+  std::string app_name_font() const;
+  std::string version_size_font() const;
+  std::string app_last_update_font() const;
+  std::string app_copywrite_font() const;
+  std::string app_description_font() const;
+   ////////////////////////////////
+ 
 protected:
 
 };

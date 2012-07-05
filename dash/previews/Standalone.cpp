@@ -36,13 +36,14 @@
 #include "unity-shared/FontSettings.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/PreviewStyle.h"
+#include "unity-shared/DashStyle.h"
 
 #include "Preview.h"
 #include "PreviewContainer.h"
 
 
-#define WIDTH 1024
-#define HEIGHT 768
+#define WIDTH 940
+#define HEIGHT 420
 
 using namespace unity;
 using namespace unity::dash;
@@ -70,6 +71,7 @@ TestRunner::~TestRunner ()
 
 void TestRunner::Init ()
 {
+
   container_ = new previews::PreviewContainer(NUX_TRACKER_LOCATION);
   container_->SetMinMaxSize(WIDTH, HEIGHT);
 
@@ -79,7 +81,7 @@ void TestRunner::Init ()
   
   // creates a generic preview object
   glib::Object<GIcon> icon(g_icon_new_for_string("accessories", NULL));
-  glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_generic_preview_new()));
+  glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_application_preview_new()));
   unity_protocol_preview_set_title(proto_obj, "Title");
   unity_protocol_preview_set_subtitle(proto_obj, "Subtitle");
   unity_protocol_preview_set_description(proto_obj, "Description");
@@ -111,10 +113,12 @@ int main(int argc, char **argv)
 
   nux::NuxInitialize(0);
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
+  nux::logging::Logger("unity").SetLogLevel(nux::logging::Trace);
   // The instances for the pseudo-singletons.
-  unity::dash::previews::Style panel_style;
-  unity::dash::PreviewFactory preview_factory;
   unity::Settings settings;
+  unity::dash::previews::Style panel_style;
+  unity::dash::Style dash_style;
+  unity::dash::PreviewFactory preview_factory;
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Unity Preview"),
