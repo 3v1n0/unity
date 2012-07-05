@@ -789,14 +789,14 @@ class PanelMenuTests(PanelTestsBase):
     def test_menus_are_added_on_new_application(self):
         """Tests that menus are added when a new application is opened."""
         self.open_new_application_window("Calculator")
-        sleep(.5)
-        menu_entries = self.panel.menus.get_entries()
-        self.assertThat(len(menu_entries), Equals(3))
+
+        refresh_fn = lambda: len(self.panel.menus.get_entries())
+        self.assertThat(refresh_fn, Eventually(Equals(3)))
 
         menu_view = self.panel.menus
-        self.assertThat(menu_view.get_menu_by_label("_Calculator"), NotEquals(None))
-        self.assertThat(menu_view.get_menu_by_label("_Mode"), NotEquals(None))
-        self.assertThat(menu_view.get_menu_by_label("_Help"), NotEquals(None))
+        self.assertThat(lambda: menu_view.get_menu_by_label("_Calculator"), Eventually(NotEquals(None)))
+        self.assertThat(lambda: menu_view.get_menu_by_label("_Mode"), Eventually(NotEquals(None)))
+        self.assertThat(lambda: menu_view.get_menu_by_label("_Help"), Eventually(NotEquals(None)))
 
     def test_menus_are_not_shown_if_the_application_has_no_menus(self):
         """Tests that if an application has no menus, then they are not
