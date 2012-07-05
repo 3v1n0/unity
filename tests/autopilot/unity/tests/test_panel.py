@@ -127,6 +127,13 @@ class PanelTestsBase(UnityTestCase):
         for button in buttons:
             self.assertThat(button.overlay_mode, Eventually(Equals(overlay_mode)))
 
+    def assert_no_window_open_with_xid(self, x_id):
+        """Assert that Bamf doesn't know of any open windows with the given xid."""
+        # We can't check text_win.closed since we've just destroyed the window.
+        # Instead we make sure no window with it's x_id exists.
+        refresh_fn = lambda: [w for w in self.bamf.get_open_windows() if w.x_id == x_id]
+        self.assertThat(refresh_fn, Eventually(Equals([])))
+
 
 class PanelTitleTests(PanelTestsBase):
 
@@ -328,29 +335,24 @@ class PanelWindowButtonsTests(PanelTestsBase):
         win_xid = text_win.x_id
 
         self.panel.window_buttons.close.mouse_click()
-
-        # We can't check text_win.closed since we've just destroyed the window.
-        # Instead we make sure no window with it's x_id exists.
-        refresh_fn = lambda: [w for w in self.bamf.get_open_windows() if w.x_id == win_xid]
-        self.assertThat(refresh_fn, Eventually(Equals([])))
+        self.assert_no_window_open_with_xid(win_xid)
 
     def test_window_buttons_close_follows_fitts_law(self):
         """Tests that the 'Close' button is activated when clicking at 0,0.
 
         See bug #839690
         """
-        text_win = self.open_new_application_window("Text Editor", maximized=True, move_to_monitor=False)
-        self.move_window_to_panel_monitor(text_win, restore_position=False)
-        self.keybinding("window/maximize")
+        text_win = self.open_new_application_window("Text Editor",
+            maximized=True,
+            move_to_monitor=True)
+        win_xid = text_win.x_id
 
         self.panel.move_mouse_over_window_buttons()
         screen_x, screen_y, _, _ = self.screen_geo.get_monitor_geometry(self.panel_monitor)
-        self.mouse.move(screen_x, screen_y, rate=20, time_between_events=0.005)
-        sleep(.5)
-        self.mouse.click(press_duration=.1)
-        sleep(1)
+        self.mouse.move(screen_x, screen_y)
+        self.mouse.click()
 
-        self.assertTrue(text_win.closed)
+        self.assert_no_window_open_with_xid(win_xid)
 
     def test_window_buttons_minimize_button_works_for_window(self):
         """Tests that the window button 'Minimize' actually minimizes a window."""
