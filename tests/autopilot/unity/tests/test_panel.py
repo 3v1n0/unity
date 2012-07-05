@@ -887,60 +887,6 @@ class PanelMenuTests(PanelTestsBase):
 
         self.assertThat(self.panel.menus_shown, Eventually(Equals(False)))
 
-    def test_menus_show_after_closing_an_entry(self):
-        """Opening a menu entry, and then hovering on other entries must open them.
-
-        We also check that the menus are still drawn when closed.
-        """
-        # TODO - should be split into multiple tests.
-        self.open_new_application_window("Calculator")
-        entries = self.panel.menus.get_entries()
-
-        self.assertThat(len(entries), GreaterThan(0))
-        self.mouse_open_indicator(entries[0])
-
-        for entry in entries:
-            entry.mouse_move_to()
-
-            self.assertThat(entry.active, Eventually(Equals(True)))
-            self.assertThat(entry.menu_y, Eventually(NotEquals(0)))
-
-        entries[-1].mouse_click()
-        self.assertThat(entries[-1].active, Eventually(Equals(False)))
-        self.assertThat(entries[-1].menu_y, Eventually(Equals(0)))
-
-    def test_menus_show_when_indicator_active_and_mouse_over_panel(self):
-        """When an indicator is opened, and the mouse goes over the panel view,
-        the menus must be revealed.
-        """
-        self.open_new_application_window("Calculator")
-        indicator = self.panel.indicators.get_indicator_by_name_hint("indicator-session-devices")
-        self.mouse_open_indicator(indicator)
-        self.sleep_menu_settle_period()
-
-        self.assertThat(self.panel.menus_shown, Eventually(Equals(False)))
-        self.panel.move_mouse_below_the_panel()
-
-        self.assertThat(self.panel.menus_shown, Eventually(Equals(False)))
-        self.panel.move_mouse_over_grab_area()
-        self.assertThat(self.panel.menus_shown, Eventually(Equals(True)))
-
-    def test_menus_show_when_holding_show_menu_key(self):
-        self.open_new_application_window("Calculator")
-        sleep(self.panel.menus.fadein_duration / 1000.0)
-        sleep(self.panel.menus.discovery_duration)
-        sleep(self.panel.menus.fadeout_duration / 1000.0)
-
-        self.keybinding_hold("panel/show_menus")
-        self.addCleanup(self.keybinding_release, "panel/show_menus")
-        sleep(1)
-        self.assertTrue(self.panel.menus_shown)
-
-        self.keybinding_release("panel/show_menus")
-        sleep(self.panel.menus.fadeout_duration / 1000.0)
-
-        self.assertFalse(self.panel.menus_shown)
-
 
 class PanelIndicatorEntriesTests(PanelTestsBase):
     """Tests for the indicator entries, including both menu and indicators."""
