@@ -888,7 +888,7 @@ class PanelMenuTests(PanelTestsBase):
         self.assertThat(self.panel.menus_shown, Eventually(Equals(False)))
 
 
-class PanelIndicatorEntriesTests(PanelTestsBase):
+class PanelIndicatorEntryTests(PanelTestsBase):
     """Tests for the indicator entries, including both menu and indicators."""
 
     scenarios = _make_monitor_scenarios()
@@ -896,45 +896,43 @@ class PanelIndicatorEntriesTests(PanelTestsBase):
     def test_menu_opens_on_click(self):
         """Tests that clicking on a menu entry, opens a menu."""
         self.open_new_application_window("Calculator")
-        sleep(.5)
-
         menu_entry = self.panel.menus.get_entries()[0]
         self.mouse_open_indicator(menu_entry)
 
-        self.assertTrue(menu_entry.active)
-        self.assertThat(menu_entry.menu_x, Equals(menu_entry.x))
-        self.assertThat(menu_entry.menu_y, Equals(self.panel.height))
+        self.assertThat(menu_entry.active, Eventually(Equals(True)))
+        self.assertThat(menu_entry.menu_x, Eventually(Equals(menu_entry.x)))
+        self.assertThat(menu_entry.menu_y, Eventually(Equals(self.panel.height)))
 
     def test_menu_opens_closes_on_click(self):
         """Clicking on an open menu entru must close it again."""
         self.open_new_application_window("Calculator")
-
         menu_entry = self.panel.menus.get_entries()[0]
         self.mouse_open_indicator(menu_entry)
 
+        # This assert is for timing purposes only:
+        self.assertThat(menu_entry.active, Eventually(Equals(True)))
         self.mouse.click()
-        sleep(.25)
-        self.assertFalse(menu_entry.active)
-        self.assertThat(menu_entry.menu_x, Equals(0))
-        self.assertThat(menu_entry.menu_y, Equals(0))
+
+        self.assertThat(menu_entry.active, Eventually(Equals(False)))
+        self.assertThat(menu_entry.menu_x, Eventually(Equals(0)))
+        self.assertThat(menu_entry.menu_y, Eventually(Equals(0)))
 
     def test_menu_closes_on_click_outside(self):
         """Clicking outside an open menu must close it."""
         self.open_new_application_window("Calculator")
-
         menu_entry = self.panel.menus.get_entries()[0]
         self.mouse_open_indicator(menu_entry)
 
-        self.assertTrue(menu_entry.active)
+        # This assert is for timing purposes only:
+        self.assertThat(menu_entry.active, Eventually(Equals(True)))
         target_x = menu_entry.menu_x + menu_entry.menu_width/2
         target_y = menu_entry.menu_y + menu_entry.menu_height + 10
         self.mouse.move(target_x, target_y)
         self.mouse.click()
-        sleep(.5)
 
-        self.assertFalse(menu_entry.active)
-        self.assertThat(menu_entry.menu_x, Equals(0))
-        self.assertThat(menu_entry.menu_y, Equals(0))
+        self.assertThat(menu_entry.active, Eventually(Equals(False)))
+        self.assertThat(menu_entry.menu_x, Eventually(Equals(0)))
+        self.assertThat(menu_entry.menu_y, Eventually(Equals(0)))
 
 
 class PanelKeyNavigationTests(PanelTestsBase):
