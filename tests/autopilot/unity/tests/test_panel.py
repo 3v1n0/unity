@@ -511,57 +511,70 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
     def test_window_buttons_maximization_buttons_works_for_dash(self):
         """'Maximize' and 'Restore' buttons (when both enabled) must work as expected."""
+        # Mega-TODO:
+        #
+        # This test is terrible. The docstring is terrible. The test id is terrible.
+        # Someone needs to split this into several smaller tests. However, I'm
+        # not doing that in this branch. Consider this an invitation to split
+        # this test out and make it suck less.
+        #
+        # For your sanity I have annotated it with comments.
         self.dash.ensure_visible()
         self.addCleanup(self.panel.window_buttons.close.mouse_click)
-        sleep(.5)
 
         unmaximize = self.panel.window_buttons.unmaximize
         maximize = self.panel.window_buttons.maximize
-        netbook_dash = (self.dash.view.form_factor == "netbook")
 
-        if netbook_dash and not unmaximize.enabled:
+        # "netbook" means "dash is maximised"
+        dash_maximised = (self.dash.view.form_factor == "netbook")
+
+        # this if statement will proc only when we're on very small screens,
+        # where it doesn't make sense to have the dash anything other than
+        # maximised.
+        if dash_maximised and not unmaximize.enabled:
             unmaximize.mouse_click()
-            sleep(.5)
+            # nice long sleep to make sure that any changes have time to process.
+            sleep(5)
             self.assertThat(self.dash.view.form_factor, Equals("netbook"))
         else:
+            # we are able to resize the dash.
+            # maximise and unmaximise (restore) buttons are shown in the same place
+            # but only one is shown at once:
             if maximize.visible:
                 active_button = maximize
-                unactive_button = unmaximize
+                inactive_button = unmaximize
             else:
                 active_button = unmaximize
-                unactive_button = maximize
+                inactive_button = maximize
 
-            self.assertTrue(active_button.visible)
-            self.assertTrue(active_button.sensitive)
-            self.assertTrue(active_button.enabled)
-            self.assertFalse(unactive_button.visible)
+            self.assertThat(active_button.visible, Eventually(Equals(True)))
+            self.assertThat(active_button.sensitive, Eventually(Equals(True)))
+            self.assertThat(active_button.enabled, Eventually(Equals(True)))
+            self.assertThat(inactive_button.visible, Eventually(Equals(False)))
 
-            self.addCleanup(unactive_button.mouse_click)
+            self.addCleanup(inactive_button.mouse_click)
             active_button.mouse_click()
-            sleep(.5)
 
-            self.assertTrue(unactive_button.visible)
-            self.assertTrue(unactive_button.sensitive)
-            self.assertTrue(unactive_button.enabled)
-            self.assertFalse(active_button.visible)
-            sleep(.5)
+            self.assertThat(inactive_button.visible, Eventually(Equals(True)))
+            self.assertThat(inactive_button.sensitive, Eventually(Equals(True)))
+            self.assertThat(inactive_button.enabled, Eventually(Equals(True)))
+            self.assertThat(active_button.visible, Eventually(Equals(False)))
 
-            if netbook_dash:
-                self.assertThat(self.dash.view.form_factor, Equals("desktop"))
+            if dash_maximised:
+                self.assertThat(self.dash.view.form_factor, Eventually(Equals("desktop")))
             else:
-                self.assertThat(self.dash.view.form_factor, Equals("netbook"))
+                self.assertThat(self.dash.view.form_factor, Eventually(Equals("netbook")))
 
             self.addCleanup(active_button.mouse_click)
-            unactive_button.mouse_click()
-            sleep(.5)
+            inactive_button.mouse_click()
 
-            self.assertTrue(active_button.visible)
-            self.assertFalse(unactive_button.visible)
+            self.assertThat(active_button.visible, Eventually(Equals(True)))
+            self.assertThat(inactive_button.visible, Eventually(Equals(False)))
 
-            if netbook_dash:
-                self.assertThat(self.dash.view.form_factor, Equals("netbook"))
+            if dash_maximised:
+                self.assertThat(self.dash.view.form_factor, Eventually(Equals("netbook")))
             else:
-                self.assertThat(self.dash.view.form_factor, Equals("desktop"))
+                self.assertThat(self.dash.view.form_factor, Eventually(Equals("desktop")))
 
     def test_window_buttons_minimize_button_disabled_for_non_minimizable_windows(self):
         """Tests that if a maximized window doesn't support the minimization,
