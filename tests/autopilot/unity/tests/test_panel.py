@@ -939,6 +939,15 @@ class PanelKeyNavigationTests(PanelTestsBase):
 
     scenarios = _make_monitor_scenarios()
 
+    def get_active_indicator(self):
+        """Get the active indicator in a safe manner.
+
+        This method will wait until the active indicator has been set.
+
+        """
+        self.assertThat(self.panel.get_active_indicator, Eventually(NotEquals(None)))
+        return self.panel.get_active_indicator()
+
     def test_panel_first_menu_show_works(self):
         """Pressing the open-menus keybinding must open the first indicator."""
         self.open_new_application_window("Calculator")
@@ -946,9 +955,7 @@ class PanelKeyNavigationTests(PanelTestsBase):
         self.keybinding("panel/open_first_menu")
         self.addCleanup(self.keyboard.press_and_release, "Escape")
 
-        self.assertThat(self.panel.get_active_indicator, Eventually(NotEquals(None)))
-
-        open_indicator = self.panel.get_active_indicator()
+        open_indicator = self.get_active_indicator()
         expected_indicator = self.panel.get_indicator_entries(include_hidden_menus=True)[0]
         self.assertThat(open_indicator.entry_id, Eventually(Equals(expected_indicator.entry_id)))
 
@@ -962,9 +969,7 @@ class PanelKeyNavigationTests(PanelTestsBase):
         self.keyboard.press_and_release("Alt+c")
         self.addCleanup(self.keyboard.press_and_release, "Escape")
 
-        self.assertThat(self.panel.get_active_indicator, Eventually(NotEquals(None)))
-        open_indicator = self.panel.get_active_indicator()
-
+        open_indicator = self.get_active_indicator()
         self.assertThat(open_indicator.label, Eventually(Equals("_Calculator")))
 
     def test_panel_indicators_key_navigation_next_works(self):
