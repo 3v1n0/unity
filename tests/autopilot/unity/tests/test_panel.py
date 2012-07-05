@@ -576,33 +576,25 @@ class PanelWindowButtonsTests(PanelTestsBase):
             else:
                 self.assertThat(self.dash.view.form_factor, Eventually(Equals("desktop")))
 
-    def test_window_buttons_minimize_button_disabled_for_non_minimizable_windows(self):
-        """Tests that if a maximized window doesn't support the minimization,
-        then the 'Minimize' window button should be disabled.
-        """
-        text_win = self.open_new_application_window("Text Editor")
-        sleep(.25)
+    def test_minimize_button_disabled_for_non_minimizable_windows(self):
+        """Minimize button must be disabled for windows that don't support minimization."""
+        text_win = self.open_new_application_window("Text Editor",
+            maximized=False,
+            move_to_monitor=True)
+
         self.keyboard.press_and_release("Ctrl+S")
         self.addCleanup(self.keyboard.press_and_release, "Escape")
 
         wins = text_win.application.get_windows()
         self.assertThat(len(wins), Equals(2))
-        for win in wins:
-            if win.x_id != text_win.x_id:
-                target_win = win
-                break
-
-        target_win.set_focus()
-        self.assertTrue(target_win.is_focused)
+        [target_win] = [w for w in wins if w.x_id != text_win.x_id]
         self.move_window_to_panel_monitor(target_win, restore_position=False)
 
         self.keybinding("window/maximize")
+        self.assertThat(lambda: target_win.is_maximized, Eventually(Equals(True)))
 
-        self.assertThat(target_win.monitor, Equals(self.panel_monitor))
-        self.assertTrue(target_win.is_maximized)
-
-        self.assertTrue(self.panel.window_buttons.close.enabled)
-        self.assertFalse(self.panel.window_buttons.minimize.enabled)
+        self.assertThat(self.panel.window_buttons.close.enabled, Eventually(Equals(True)))
+        self.assertThat(self.panel.window_buttons.minimize.enabled, Eventually(Equals(False)))
 
     def test_window_buttons_show_when_indicator_active_and_mouse_over_panel(self):
         """Tests that when an indicator is opened, and the mouse goes over the
