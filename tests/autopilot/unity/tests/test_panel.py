@@ -384,15 +384,15 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
     def test_window_buttons_unmaximize_button_works_for_window(self):
         """Tests that the window button 'Unmaximize' actually unmaximizes a window."""
-        text_win = self.open_new_application_window("Text Editor", maximized=True)
+        text_win = self.open_new_application_window("Text Editor",
+            maximized=True,
+            move_to_monitor=True)
 
         self.panel.window_buttons.unmaximize.mouse_click()
-        sleep(.5)
 
-        self.assertFalse(text_win.is_maximized)
-        self.assertTrue(text_win.is_focused)
-        sleep(self.panel.menus.fadeout_duration / 1000.0)
-        self.assertFalse(self.panel.window_buttons_shown)
+        self.assertThat(lambda: text_win.is_maximized, Eventually(Equals(False)))
+        self.assertThat(lambda: text_win.is_focused, Eventually(Equals(True)))
+        self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(False)))
 
     def test_window_buttons_unmaximize_follows_fitts_law(self):
         """Tests that the 'Unmaximize' button is conform to Fitts's Law.
