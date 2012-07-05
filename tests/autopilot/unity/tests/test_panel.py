@@ -417,12 +417,9 @@ class PanelWindowButtonsTests(PanelTestsBase):
         """Tests that the window 'Close' actually closes the HUD."""
         self.hud.ensure_visible()
         self.addCleanup(self.hud.ensure_hidden)
-        sleep(.5)
 
         self.panel.window_buttons.close.mouse_click()
-        sleep(.75)
-
-        self.assertFalse(self.hud.visible)
+        self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
     def test_window_buttons_minimize_button_disabled_for_hud(self):
         """Tests that the window 'Minimize' does nothing to the HUD."""
