@@ -75,10 +75,10 @@ Recommends: unity-lens-applications,
             indicator-printers,
             indicator-power,
             indicator-session,
-Breaks: unity-lens-applications (<< 6.0.0),
-        unity-lens-files (<< 6.0.0),
+Breaks: unity-lens-applications (<< 5.12.0-0ubuntu2),
+        unity-lens-files (<< 5.10.0-0ubuntu2),
         unity-lens-music (<< 6.0.0),
-        unity-lens-video (<< 6.0.0),
+        unity-lens-video (<< 0.3.6-0ubuntu2),
 Description: Interface designed for efficiency of space and interaction.
  Unity is a desktop experience that sings. Designed by Canonical and the Ayatana
  community, Unity is all about the combination of familiarity and the future. We
