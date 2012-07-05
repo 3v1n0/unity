@@ -824,16 +824,13 @@ class PanelMenuTests(PanelTestsBase):
     def test_menus_dont_show_if_a_new_application_window_is_opened(self):
         """This tests the menu discovery feature on new window for a know application."""
         self.open_new_application_window("Calculator")
-        sleep(self.panel.menus.fadein_duration / 1000.0)
-
-        self.assertTrue(self.panel.menus_shown)
-
-        sleep(self.panel.menus.discovery_duration)
-        sleep(self.panel.menus.fadeout_duration / 1000.0)
+        self.sleep_menu_settle_period()
 
         self.start_app("Calculator")
         sleep(self.panel.menus.fadein_duration / 1000.0)
-        self.assertFalse(self.panel.menus_shown)
+        # Not using Eventually here since this is time-critical. Need to work
+        # out a better way to do this.
+        self.assertThat(self.panel.menus_shown, Equals(False))
 
     def test_menus_dont_show_for_restored_window_on_mouse_out(self):
         """Restored window menus must not show when the mouse is outside the
