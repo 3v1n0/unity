@@ -436,7 +436,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         # https://bugs.launchpad.net/ubuntu/+source/unity/+bug/1021087
         #
         # We can replace the following line with:
-        # self.addCleanup()
+        # self.addCleanup(self.hud.ensure_hidden)
         self.addCleanup(self.panel.window_buttons.close.mouse_click)
         self.panel.window_buttons.minimize.mouse_click()
 
@@ -457,25 +457,32 @@ class PanelWindowButtonsTests(PanelTestsBase):
         # https://bugs.launchpad.net/ubuntu/+source/unity/+bug/1021087
         #
         # We can replace the following line with:
-        # self.addCleanup()
+        # self.addCleanup(self.hud.ensure_hidden)
         self.addCleanup(self.panel.window_buttons.close.mouse_click)
         self.panel.window_buttons.maximize.mouse_click()
 
         self.assertThat(self.hud.visible, Eventually(Equals(True)))
 
-    def test_window_buttons_maximize_in_hud_does_not_change_dash_form_factor(self):
-        """Clicking on the 'Maximize' button of the HUD must do nothing.
+    def test_hud_maximize_button_does_not_change_dash_form_factor(self):
+        """Clicking on the 'Maximize' button of the HUD must not change the dash
+        layout.
 
         See bug #939054
         """
         inital_form_factor = self.dash.view.form_factor
         self.hud.ensure_visible()
-        self.addCleanup(self.hud.ensure_hidden)
-        sleep(.5)
+        # FIXME: When this bug is fixed:
+        #
+        # https://bugs.launchpad.net/ubuntu/+source/unity/+bug/1021087
+        #
+        # We can replace the following line with:
+        # self.addCleanup(self.hud.ensure_hidden)
+        self.addCleanup(self.panel.window_buttons.close.mouse_click)
 
         self.panel.window_buttons.maximize.mouse_click()
-        sleep(.5)
-
+        # long sleep here to make sure that any change that might happen will
+        # have already happened.
+        sleep(5)
         self.assertThat(self.dash.view.form_factor, Equals(inital_form_factor))
 
     def test_window_buttons_close_button_works_for_dash(self):
