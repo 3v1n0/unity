@@ -945,12 +945,12 @@ class PanelKeyNavigationTests(PanelTestsBase):
         sleep(1)
         self.keybinding("panel/open_first_menu")
         self.addCleanup(self.keyboard.press_and_release, "Escape")
-        sleep(1)
+
+        self.assertThat(self.panel.get_active_indicator, Eventually(NotEquals(None)))
 
         open_indicator = self.panel.get_active_indicator()
         expected_indicator = self.panel.get_indicator_entries(include_hidden_menus=True)[0]
-        self.assertThat(open_indicator, NotEquals(None))
-        self.assertThat(open_indicator.entry_id, Equals(expected_indicator.entry_id))
+        self.assertThat(open_indicator.entry_id, Eventually(Equals(expected_indicator.entry_id)))
 
         self.keybinding("panel/open_first_menu")
         sleep(.5)
