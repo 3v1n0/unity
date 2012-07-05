@@ -489,12 +489,9 @@ class PanelWindowButtonsTests(PanelTestsBase):
         """Tests that the window 'Close' actually closes the Dash."""
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
-        sleep(.5)
-
         self.panel.window_buttons.close.mouse_click()
-        sleep(.75)
 
-        self.assertFalse(self.dash.visible)
+        self.assertThat(self.dash.visible, Eventually(Equals(False)))
 
     def test_window_buttons_minimize_button_disabled_for_dash(self):
         """Tests that the 'Minimize' button is disabled for the dash."""
