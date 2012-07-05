@@ -533,7 +533,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         # "netbook" means "dash is maximised"
         dash_maximised = (self.dash.view.form_factor == "netbook")
 
-        # this if statement will proc only when we're on very small screens,
+        # this if statement will trigger only when we're on very small screens,
         # where it doesn't make sense to have the dash anything other than
         # maximised.
         if dash_maximised and not unmaximize.enabled:
