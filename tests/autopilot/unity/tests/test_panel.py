@@ -878,6 +878,7 @@ class PanelMenuTests(PanelTestsBase):
 
         self.assertThat(self.panel.menus_shown, Eventually(Equals(False)))
 
+
     def test_menus_dont_show_with_hud(self):
         """Tests that menus are not showing when opening the HUD."""
         self.open_new_application_window("Text Editor", maximized=True)
@@ -900,15 +901,13 @@ class PanelMenuTests(PanelTestsBase):
 
         for entry in entries:
             entry.mouse_move_to()
-            sleep(.25)
-            self.assertTrue(entry.active)
-            self.assertThat(entry.menu_y, NotEquals(0))
-            last_entry = entry
 
-        last_entry.mouse_click()
-        sleep(.25)
-        self.assertFalse(last_entry.active)
-        self.assertThat(last_entry.menu_y, Equals(0))
+            self.assertThat(entry.active, Eventually(Equals(True)))
+            self.assertThat(entry.menu_y, Eventually(NotEquals(0)))
+
+        entries[-1].mouse_click()
+        self.assertThat(entries[-1].active, Eventually(Equals(False)))
+        self.assertThat(entries[-1].menu_y, Eventually(Equals(0)))
 
     def test_menus_show_when_indicator_active_and_mouse_over_panel(self):
         """When an indicator is opened, and the mouse goes over the panel view,
