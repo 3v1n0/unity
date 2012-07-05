@@ -493,16 +493,20 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
         self.assertThat(self.dash.visible, Eventually(Equals(False)))
 
-    def test_window_buttons_minimize_button_disabled_for_dash(self):
+    def test_minimize_button_disabled_for_dash(self):
         """Tests that the 'Minimize' button is disabled for the dash."""
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
 
-        button = self.panel.window_buttons.minimize
-        button.mouse_click()
-        sleep(.5)
+        self.assertThat(self.panel.window_buttons.minimize.enabled, Eventually(Equals(False)))
 
-        self.assertThat(button.enabled, Eventually(Equals(False)))
+    def test_minimize_button_does_nothing_for_dash(self):
+        """Tests that the 'Minimize' button is disabled for the dash."""
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
+
+        self.panel.window_buttons.minimize.mouse_click()
+        sleep(5)
         self.assertThat(self.dash.visible, Eventually(Equals(True)))
 
     def test_window_buttons_maximization_buttons_works_for_dash(self):
