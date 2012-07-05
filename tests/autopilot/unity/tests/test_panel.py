@@ -133,6 +133,12 @@ class PanelTestsBase(UnityTestCase):
         refresh_fn = lambda: [w for w in self.bamf.get_open_windows() if w.x_id == x_id]
         self.assertThat(refresh_fn, Eventually(Equals([])))
 
+    def sleep_menu_settle_period(self):
+        """Sleep long enough for the menus to fade in and fade out again."""
+        sleep(self.panel.menus.fadein_duration / 1000.0)
+        sleep(self.panel.menus.discovery_duration)
+        sleep(self.panel.menus.fadeout_duration / 1000.0)
+
 
 class PanelTitleTests(PanelTestsBase):
 
@@ -630,39 +636,71 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(False)))
 
 
-class PanelHoveringTests(PanelTestsBase):
+class PanelHoverTests(PanelTestsBase):
     """Tests with the mouse pointer hovering the panel area."""
 
     scenarios = _make_monitor_scenarios()
 
-    def test_only_menus_show_for_restored_window_on_mouse_in(self):
-        """Tests that only menus of a restored window are shown only when
-        the mouse pointer is over the panel menu area.
+    def test_only_menus_show_for_restored_window_on_mouse_in_window_btn_area(self):
+        """Restored windows should only show menus when the mouse is in the window
+        button area.
         """
-        self.open_new_application_window("Calculator")
-        sleep(self.panel.menus.fadein_duration / 1000.0)
-        sleep(self.panel.menus.discovery_duration)
-        sleep(self.panel.menus.fadeout_duration / 1000.0)
+        self.open_new_application_window("Calculator",
+            maximized=False,
+            move_to_monitor=True)
+        self.sleep_menu_settle_period()
 
         self.panel.move_mouse_over_window_buttons()
-        sleep(self.panel.menus.fadeout_duration / 1000.0)
-        self.assertFalse(self.panel.window_buttons_shown)
-        self.assertTrue(self.panel.menus_shown)
+
+        self.assertThat(self.panel.menus_shown, Eventually(Equals(True)))
+        self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(False)))
+
+    def test_only_menus_show_for_restored_window_on_mouse_in_menu_area(self):
+        """Restored windows should only show menus when the mouse is in the window
+        menu area.
+        """
+        self.open_new_application_window("Calculator",
+            maximized=False,
+            move_to_monitor=True)
+        self.sleep_menu_settle_period()
 
         self.panel.move_mouse_over_menus()
-        sleep(self.panel.menus.fadein_duration / 1000.0)
-        self.assertFalse(self.panel.window_buttons_shown)
-        self.assertTrue(self.panel.menus_shown)
 
-        if self.panel.grab_area.width > 0:
-            self.panel.move_mouse_over_grab_area()
-            sleep(self.panel.menus.fadeout_duration / 1000.0)
-            self.assertFalse(self.panel.window_buttons_shown)
-            self.assertTrue(self.panel.menus_shown)
+        self.assertThat(self.panel.menus_shown, Eventually(Equals(True)))
+        self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(False)))
+
+    def test_only_menus_show_for_restored_window_on_mouse_in_grab_area(self):
+        """Restored windows should only show menus when the mouse is in the panel
+        grab area.
+        """
+        self.open_new_application_window("Calculator",
+            maximized=False,
+            move_to_monitor=True)
+        self.sleep_menu_settle_period()
+
+        if self.panel.grab_area.width <= 0:
+            self.skipTest("Grab area is too small to run test!")
+
+        self.panel.move_mouse_over_grab_area()
+
+        self.assertThat(self.panel.menus_shown, Eventually(Equals(True)))
+        self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(False)))
+
+    def test_hovering_over_indicators_does_not_show_app_menus(self):
+        """Hovering the mouse over the indicators must not show app menus."""
+        self.open_new_application_window("Calculator",
+            maximized=False,
+            move_to_monitor=True)
+        self.sleep_menu_settle_period()
+
+        self.panel.move_mouse_over_menus()
+        # This assert is repeated from above, but we use it to make sure that
+        # the menus are shown before we move over the indicators.
+        self.assertThat(self.panel.menus_shown, Eventually(Equals(True)))
 
         self.panel.move_mouse_over_indicators()
-        sleep(self.panel.menus.fadeout_duration / 1000.0)
-        self.assertFalse(self.panel.menus_shown)
+
+        self.assertThat(self.panel.menus_shown, Eventually(Equals(False)))
 
     def test_menus_show_for_maximized_window_on_mouse_in(self):
         """Tests that menus and window buttons of a maximized window are shown
