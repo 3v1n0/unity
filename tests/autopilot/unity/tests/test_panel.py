@@ -421,18 +421,26 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.panel.window_buttons.close.mouse_click()
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
-    def test_window_buttons_minimize_button_disabled_for_hud(self):
-        """Tests that the window 'Minimize' does nothing to the HUD."""
+    def test_minimize_button_disabled_for_hud(self):
+        """Minimize button must be disabled for the HUD."""
         self.hud.ensure_visible()
         self.addCleanup(self.hud.ensure_hidden)
-        sleep(.5)
 
-        button = self.panel.window_buttons.minimize
-        button.mouse_click()
-        sleep(.5)
+        self.assertThat(self.panel.window_buttons.minimize.enabled, Eventually(Equals(False)))
 
-        self.assertFalse(button.enabled)
-        self.assertTrue(self.hud.visible)
+    def test_minimize_button_does_nothing_for_hud(self):
+        """Minimize button must not affect the Hud."""
+        self.hud.ensure_visible()
+        # FIXME: When this bug is fixed:
+        #
+        # https://bugs.launchpad.net/ubuntu/+source/unity/+bug/1021087
+        #
+        # We can replace the following line with:
+        # self.addCleanup()
+        self.addCleanup(self.panel.window_buttons.close.mouse_click)
+        self.panel.window_buttons.minimize.mouse_click()
+
+        self.assertThat(self.hud.visible, Eventually(Equals(True)))
 
     def test_window_buttons_maximize_button_disabled_for_hud(self):
         """Tests that the window 'Maximize' does nothing to the HUD."""
