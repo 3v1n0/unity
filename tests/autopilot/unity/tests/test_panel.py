@@ -1075,22 +1075,21 @@ class PanelCrossMonitorsTests(PanelTestsBase):
             self.skipTest("This test requires a multimonitor setup")
 
     def test_panel_title_updates_moving_window(self):
-        """Tests the title shown in the panel, moving a restored window around them."""
+        """Panel must show the title of a restored window when moved to it's monitor."""
         calc_win = self.open_new_application_window("Calculator")
 
-        prev_monitor = -1
+        prev_monitor = None
         for monitor in range(0, self.screen_geo.get_num_monitors()):
             if calc_win.monitor != monitor:
-                self.addCleanup(self.screen_geo.drag_window_to_monitor, calc_win, calc_win.monitor)
                 self.screen_geo.drag_window_to_monitor(calc_win, monitor)
-                sleep(.25)
 
-            if prev_monitor >= 0:
-                self.assertFalse(self.panels.get_panel_for_monitor(prev_monitor).active)
+            if prev_monitor:
+                prev_panel = self.panels.get_panel_for_monitor(prev_monitor)
+                self.assertThat(prev_panel.active, Eventually(Equals(False)))
 
             panel = self.panels.get_panel_for_monitor(monitor)
-            self.assertTrue(panel.active)
-            self.assertThat(panel.title, Equals(calc_win.application.name))
+            self.assertThat(panel.active, Eventually(Equals(True)))
+            self.assertThat(panel.title, Eventually(Equals(calc_win.application.name)))
 
             prev_monitor = monitor
 
@@ -1099,18 +1098,18 @@ class PanelCrossMonitorsTests(PanelTestsBase):
         other monitors.
         """
         self.open_new_application_window("Text Editor", maximized=True)
-
-        sleep(self.panel.menus.discovery_duration)
+        self.sleep_menu_settle_period()
 
         for monitor in range(0, self.screen_geo.get_num_monitors()):
             panel = self.panels.get_panel_for_monitor(monitor)
             panel.move_mouse_over_window_buttons()
-            sleep(self.panel.menus.fadein_duration / 1000.0)
+
+            self.sleep_menu_settle_period()
 
             if self.panel_monitor == monitor:
-                self.assertTrue(panel.window_buttons_shown)
+                self.assertThat(panel.window_buttons_shown, Eventually(Equals(True)))
             else:
-                self.assertFalse(panel.window_buttons_shown)
+                self.assertThat(panel.window_buttons_shown, Eventually(Equals(False)))
 
     def test_window_buttons_dont_show_in_other_monitors_when_dash_is_open(self):
         """Window buttons must not show on the panels other than the one where
@@ -1123,9 +1122,9 @@ class PanelCrossMonitorsTests(PanelTestsBase):
             panel = self.panels.get_panel_for_monitor(monitor)
 
             if self.dash.monitor == monitor:
-                self.assertTrue(panel.window_buttons_shown)
+                self.assertThat(panel.window_buttons_shown, Eventually(Equals(True)))
             else:
-                self.assertFalse(panel.window_buttons_shown)
+                self.assertThat(panel.window_buttons_shown, Eventually(Equals(False)))
 
     def test_window_buttons_dont_show_in_other_monitors_when_hud_is_open(self):
         """Window buttons must not show on the panels other than the one where
@@ -1138,12 +1137,13 @@ class PanelCrossMonitorsTests(PanelTestsBase):
             panel = self.panels.get_panel_for_monitor(monitor)
 
             if self.hud.monitor == monitor:
-                self.assertTrue(panel.window_buttons_shown)
+                self.assertThat(panel.window_buttons_shown, Eventually(Equals(True)))
             else:
-                self.assertFalse(panel.window_buttons_shown)
+                self.assertThat(panel.window_buttons_shown, Eventually(Equals(False)))
 
     def test_window_buttons_close_inactive_when_clicked_in_another_monitor(self):
-        """Clicking the close button must not affect the active maximized window on another monitor.
+        """Clicking the close button must not affect the active maximized window
+        on another monitor.
 
         See bug #865701
         """
@@ -1153,12 +1153,13 @@ class PanelCrossMonitorsTests(PanelTestsBase):
             panel = self.panels.get_panel_for_monitor(monitor)
 
             if monitor != text_win.monitor:
+                panel.window_buttons.close.mouse_move_to()
                 panel.window_buttons.close.mouse_click()
-                sleep(.25)
-                self.assertFalse(text_win.closed)
+                self.assertThat(text_win.closed, Equals(False))
 
     def test_window_buttons_minimize_inactive_when_clicked_in_another_monitor(self):
-        """Clicking the minimise button must not affect the active maximized window on another monitor.
+        """Clicking the minimise button must not affect the active maximized
+        window on another monitor.
 
         See bug #865701
         """
@@ -1169,11 +1170,11 @@ class PanelCrossMonitorsTests(PanelTestsBase):
 
             if monitor != text_win.monitor:
                 panel.window_buttons.minimize.mouse_click()
-                sleep(.25)
-                self.assertFalse(text_win.is_hidden)
+                self.assertThat(text_win.is_hidden, Equals(False))
 
     def test_window_buttons_unmaximize_inactive_when_clicked_in_another_monitor(self):
-        """Clicking the restore button must not affect the active maximized window on another monitor.
+        """Clicking the restore button must not affect the active maximized
+        window on another monitor.
 
         See bug #865701
         """
@@ -1184,8 +1185,7 @@ class PanelCrossMonitorsTests(PanelTestsBase):
 
             if monitor != text_win.monitor:
                 panel.window_buttons.unmaximize.mouse_click()
-                sleep(.25)
-                self.assertTrue(text_win.is_maximized)
+                self.assertThat(text_win.is_maximized, Equals(True))
 
     def test_hovering_indicators_on_multiple_monitors(self):
         """Opening an indicator entry and then hovering others entries must open them."""
@@ -1202,13 +1202,13 @@ class PanelCrossMonitorsTests(PanelTestsBase):
 
             for entry in entries:
                 entry.mouse_move_to()
-                sleep(.5)
 
                 if monitor != self.panel_monitor and entry.type == "menu":
-                    self.assertFalse(entry.active)
-                    self.assertFalse(entry.visible)
-                    self.assertThat(entry.menu_y, Equals(0))
+                    # we're on the "other" monitor, so the menu should be hidden.
+                    self.assertThat(entry.active, Eventually(Equals(False)))
+                    self.assertThat(entry.visible, Eventually(Equals(False)))
+                    self.assertThat(entry.menu_y, Eventually(Equals(0)))
                 else:
-                    self.assertTrue(entry.visible)
-                    self.assertTrue(entry.active)
-                    self.assertThat(entry.menu_y, NotEquals(0))
+                    self.assertThat(entry.visible, Eventually(Equals(True)))
+                    self.assertThat(entry.active, Eventually(Equals(True)))
+                    self.assertThat(entry.menu_y, Eventually(NotEquals(0)))
