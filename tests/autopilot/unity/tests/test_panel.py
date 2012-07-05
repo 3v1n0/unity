@@ -916,18 +916,14 @@ class PanelMenuTests(PanelTestsBase):
         self.open_new_application_window("Calculator")
         indicator = self.panel.indicators.get_indicator_by_name_hint("indicator-session-devices")
         self.mouse_open_indicator(indicator)
-        sleep(self.panel.menus.fadein_duration / 1000.0)
-        sleep(self.panel.menus.discovery_duration)
-        sleep(self.panel.menus.fadeout_duration / 1000.0)
+        self.sleep_menu_settle_period()
 
-        self.assertFalse(self.panel.menus_shown)
+        self.assertThat(self.panel.menus_shown, Eventually(Equals(False)))
         self.panel.move_mouse_below_the_panel()
-        sleep(self.panel.menus.fadeout_duration / 1000.0)
 
-        self.assertFalse(self.panel.menus_shown)
+        self.assertThat(self.panel.menus_shown, Eventually(Equals(False)))
         self.panel.move_mouse_over_grab_area()
-        sleep(self.panel.menus.fadein_duration / 1000.0)
-        self.assertTrue(self.panel.menus_shown)
+        self.assertThat(self.panel.menus_shown, Eventually(Equals(True)))
 
     def test_menus_show_when_holding_show_menu_key(self):
         self.open_new_application_window("Calculator")
