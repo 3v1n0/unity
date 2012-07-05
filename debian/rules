@@ -60,7 +60,7 @@ override_dh_gencontrol:
 	dh_gencontrol -- -Vcoreabiversion=$(CORE_ABIVERSION) -Vnuxabiversion=$(NUX_ABIVERSION)
 
 override_dh_makeshlibs:
-	dh_makeshlibs -plibunity-core-5.0-5 -V 'libunity-core-5.0-5 (>= 4.14.2)'
+	dh_makeshlibs -plibunity-core-6.0-5 -V 'libunity-core-6.0-5 (>= 4.14.2)'
 
 override_dh_auto_test:
 	echo "not working right now"
