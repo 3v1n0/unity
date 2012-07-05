@@ -353,7 +353,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         win_xid = text_win.x_id
 
         self.panel.move_mouse_over_window_buttons()
-        screen_x, screen_y, _, _ = self.screen_geo.get_monitor_geometry(self.panel_monitor)
+        screen_x, screen_y = self.screen_geo.get_monitor_geometry(self.panel_monitor)[:2]
         self.mouse.move(screen_x, screen_y)
         self.mouse.click()
 
