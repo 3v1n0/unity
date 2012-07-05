@@ -111,8 +111,7 @@ class PanelTestsBase(UnityTestCase):
         indicator.mouse_click()
         self.addCleanup(self.panel.move_mouse_below_the_panel)
         self.addCleanup(self.keyboard.press_and_release, "Escape")
-        sleep(.5)
-        self.assertTrue(indicator.active)
+        self.assertThat(indicator.active, Eventually(Equals(True)))
 
     def assert_win_buttons_in_overlay_mode(self, overlay_mode):
         """Assert that there are three panel window buttons and all of them are
@@ -597,41 +596,38 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.assertThat(self.panel.window_buttons.minimize.enabled, Eventually(Equals(False)))
 
     def test_window_buttons_show_when_indicator_active_and_mouse_over_panel(self):
-        """Tests that when an indicator is opened, and the mouse goes over the
-        panel view, then the window buttons are revealed.
+        """Window buttons must be shown when mouse is over panel area with an
+        indicator open.
         """
-        self.open_new_application_window("Text Editor", maximized=True)
-        sleep(self.panel.menus.fadein_duration / 1000.0)
-        sleep(self.panel.menus.discovery_duration)
-        sleep(self.panel.menus.fadeout_duration / 1000.0)
+        self.open_new_application_window("Text Editor",
+            maximized=True,
+            move_to_monitor=True)
 
         indicator = self.panel.indicators.get_indicator_by_name_hint("indicator-session-devices")
         self.mouse_open_indicator(indicator)
+        self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(False)))
 
-        self.assertFalse(self.panel.window_buttons_shown)
         self.panel.move_mouse_below_the_panel()
-        sleep(self.panel.menus.fadeout_duration / 1000.0)
+        self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(False)))
 
-        self.assertFalse(self.panel.window_buttons_shown)
         self.panel.move_mouse_over_grab_area()
-        sleep(self.panel.menus.fadein_duration / 1000.0)
-        self.assertTrue(self.panel.window_buttons_shown)
+        self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(True)))
 
     def test_window_buttons_show_when_holding_show_menu_key(self):
-        self.open_new_application_window("Text Editor", maximized=True)
-        sleep(self.panel.menus.fadein_duration / 1000.0)
-        sleep(self.panel.menus.discovery_duration)
-        sleep(self.panel.menus.fadeout_duration / 1000.0)
+        """Window buttons must show when we press the show-menu keybinding."""
+        self.open_new_application_window("Text Editor",
+            maximized=True,
+            move_to_monitor=True)
+
+        self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(False)))
 
         self.keybinding_hold("panel/show_menus")
         self.addCleanup(self.keybinding_release, "panel/show_menus")
-        sleep(1)
-        self.assertTrue(self.panel.window_buttons_shown)
+
+        self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(True)))
 
         self.keybinding_release("panel/show_menus")
-        sleep(self.panel.menus.fadeout_duration / 1000.0)
-
-        self.assertFalse(self.panel.window_buttons_shown)
+        self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(False)))
 
 
 class PanelHoveringTests(PanelTestsBase):
