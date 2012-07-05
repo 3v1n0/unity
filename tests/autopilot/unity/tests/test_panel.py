@@ -702,35 +702,69 @@ class PanelHoverTests(PanelTestsBase):
 
         self.assertThat(self.panel.menus_shown, Eventually(Equals(False)))
 
-    def test_menus_show_for_maximized_window_on_mouse_in(self):
-        """Tests that menus and window buttons of a maximized window are shown
-        only when the mouse pointer is over the panel menu area.
+    def test_menus_show_for_maximized_window_on_mouse_in_btn_area(self):
+        """Menus and window buttons must be shown when the mouse is in the window
+        button area for a maximised application.
         """
-        self.open_new_application_window("Text Editor", maximized=True)
-        sleep(self.panel.menus.fadein_duration / 1000.0)
-        sleep(self.panel.menus.discovery_duration)
-        sleep(self.panel.menus.fadeout_duration / 1000.0)
+        self.open_new_application_window("Text Editor",
+            maximized=True,
+            move_to_monitor=True)
+        self.sleep_menu_settle_period()
 
         self.panel.move_mouse_over_window_buttons()
-        sleep(self.panel.menus.fadeout_duration / 1000.0)
-        self.assertTrue(self.panel.window_buttons_shown)
-        self.assertTrue(self.panel.menus_shown)
+
+        self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(True)))
+        self.assertThat(self.panel.menus_shown, Eventually(Equals(True)))
+
+    def test_menus_show_for_maximized_window_on_mouse_in_menu_area(self):
+        """Menus and window buttons must be shown when the mouse is in the menu
+        area for a maximised application.
+        """
+        self.open_new_application_window("Text Editor",
+            maximized=True,
+            move_to_monitor=True)
+        self.sleep_menu_settle_period()
 
         self.panel.move_mouse_over_menus()
-        sleep(self.panel.menus.fadein_duration / 1000.0)
-        self.assertTrue(self.panel.window_buttons_shown)
-        self.assertTrue(self.panel.menus_shown)
 
-        if self.panel.grab_area.width > 0:
-            self.panel.move_mouse_over_grab_area()
-            sleep(self.panel.menus.fadeout_duration / 1000.0)
-            self.assertTrue(self.panel.window_buttons_shown)
-            self.assertTrue(self.panel.menus_shown)
+        self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(True)))
+        self.assertThat(self.panel.menus_shown, Eventually(Equals(True)))
+
+    def test_menus_show_for_maximized_window_on_mouse_in_grab_area(self):
+        """Menus and window buttons must be shown when the mouse is in the grab
+        area for a maximised application.
+        """
+        if self.panel.grab_area.width <= 0:
+            self.skipTest("Grab area is too small to run this test!")
+
+        self.open_new_application_window("Text Editor",
+            maximized=True,
+            move_to_monitor=True)
+        self.sleep_menu_settle_period()
+
+        self.panel.move_mouse_over_grab_area()
+
+        self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(True)))
+        self.assertTrue(self.panel.menus_shown, Eventually(Equals(True)))
+
+    def test_menus_and_btns_hidden_with_mouse_over_indicators(self):
+        """Hovering the mouse over the indicators must hide the menus and window
+        buttons.
+        """
+        self.open_new_application_window("Text Editor",
+            maximized=True,
+            move_to_monitor=True)
+        self.sleep_menu_settle_period()
+
+        self.panel.move_mouse_over_menus()
+        # We use this assert to make sure that the menus are visible before we
+        # move the mouse:
+        self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(True)))
 
         self.panel.move_mouse_over_indicators()
-        sleep(self.panel.menus.fadeout_duration / 1000.0)
-        self.assertFalse(self.panel.window_buttons_shown)
-        self.assertFalse(self.panel.menus_shown)
+
+        self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(False)))
+        self.assertThat(self.panel.menus_shown, Eventually(Equals(False)))
 
     def test_hovering_indicators_open_menus(self):
         """Opening an indicator entry, and then hovering on other entries must
