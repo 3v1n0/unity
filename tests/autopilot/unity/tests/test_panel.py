@@ -778,9 +778,8 @@ class PanelHoverTests(PanelTestsBase):
 
         for entry in entries:
             entry.mouse_move_to()
-            sleep(.25)
-            self.assertTrue(entry.active)
-            self.assertThat(entry.menu_y, NotEquals(0))
+            self.assertThat(entry.active, Eventually(Equals(True)))
+            self.assertThat(entry.menu_y, Eventually(NotEquals(0)))
 
 
 class PanelMenuTests(PanelTestsBase):
