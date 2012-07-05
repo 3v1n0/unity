@@ -442,18 +442,26 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
         self.assertThat(self.hud.visible, Eventually(Equals(True)))
 
-    def test_window_buttons_maximize_button_disabled_for_hud(self):
-        """Tests that the window 'Maximize' does nothing to the HUD."""
+    def test_maximize_button_disabled_for_hud(self):
+        """Maximize button must be disabled for the HUD."""
         self.hud.ensure_visible()
         self.addCleanup(self.hud.ensure_hidden)
-        sleep(.5)
 
-        button = self.panel.window_buttons.maximize
-        button.mouse_click()
-        sleep(.5)
+        self.assertThat(self.panel.window_buttons.maximize.enabled, Eventually(Equals(False)))
 
-        self.assertFalse(button.enabled)
-        self.assertTrue(self.hud.visible)
+    def test_maximize_button_does_nothing_for_hud(self):
+        """Maximize button must not affect the Hud."""
+        self.hud.ensure_visible()
+        # FIXME: When this bug is fixed:
+        #
+        # https://bugs.launchpad.net/ubuntu/+source/unity/+bug/1021087
+        #
+        # We can replace the following line with:
+        # self.addCleanup()
+        self.addCleanup(self.panel.window_buttons.close.mouse_click)
+        self.panel.window_buttons.maximize.mouse_click()
+
+        self.assertThat(self.hud.visible, Eventually(Equals(True)))
 
     def test_window_buttons_maximize_in_hud_does_not_change_dash_form_factor(self):
         """Clicking on the 'Maximize' button of the HUD must do nothing.
