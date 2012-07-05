@@ -23,7 +23,7 @@
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
-#include <NuxImage/CairoGraphics.h>
+#include <NuxGraphics/CairoGraphics.h>
 
 #include "QuicklistMenuItem.h"
 

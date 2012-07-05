@@ -140,6 +140,21 @@ class QuicklistActionTests(UnityTestCase):
         self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
         self.assertThat(self.window_manager.scale_active_for_group, Eventually(Equals(True)))
 
+    def test_quicklist_item_triggered_closes_dash(self):
+        """When any quicklist item is triggered it must close the dash."""
+
+        calc = self.start_app("Calculator")
+
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
+
+        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
+        calc_ql = self.open_quicklist_for_icon(calc_icon)
+
+        self.keyboard.press_and_release("Down")
+        self.keyboard.press_and_release("Enter")
+        self.assertThat(self.dash.visible, Eventually(Equals(False)))
+
     def test_quicklist_closes_when_hud_opens(self):
         """When a quicklist is open you must still be able to open the Hud."""
         calc = self.start_app("Calculator")

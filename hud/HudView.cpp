@@ -255,7 +255,7 @@ void View::SetQueries(Hud::Queries queries)
       query_activated.emit(dynamic_cast<HudButton*>(area)->GetQuery());
     });
 
-    button->key_nav_focus_change.connect([&](nux::Area* area, bool recieving, KeyNavDirection direction){
+    button->key_nav_focus_change.connect([&](nux::Area* area, bool recieving, nux::KeyNavDirection direction){
       if (recieving)
         query_selected.emit(dynamic_cast<HudButton*>(area)->GetQuery());
     });
@@ -592,7 +592,7 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
     direction = nux::KEY_NAV_ENTER;
     break;
   case NUX_VK_F4:
-    if (special_keys_state & NUX_STATE_ALT)
+    if (special_keys_state == nux::NUX_STATE_ALT)
     {
       ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
     }
