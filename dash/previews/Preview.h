@@ -35,15 +35,6 @@ namespace dash
 namespace previews
 {
 
-class PreviewNavigator;
-
-typedef enum 
-{
-  LEFT,
-  RIGHT,
-  BOTH
-} NavButton;
-
 class Preview : public nux::View, public debug::Introspectable
 {
 public:
@@ -52,14 +43,7 @@ public:
 
   Preview(dash::Preview::Ptr preview_model);
   virtual ~Preview();
-
-  // calling this should disable the nav buttons to the left or the right of the preview
-  virtual void DisableNavButton(NavButton button);
  
-  // For the nav buttons to the left/right of the previews, call when they are activated
-  sigc::signal<void> navigate_left;
-  sigc::signal<void> navigate_right;
-
   // From debug::Introspectable
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
@@ -72,12 +56,6 @@ protected:
 
 protected:
   dash::Preview::Ptr preview_model_;
-
-  // View related
-  nux::HLayout* layout_;
-  PreviewNavigator* nav_left_;
-  PreviewNavigator* nav_right_;
-  View* content_;
 };
 
 }

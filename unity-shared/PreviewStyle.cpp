@@ -20,6 +20,7 @@
  *
  */
 #include "PreviewStyle.h"
+#include <NuxCore/Logger.h>
 
 namespace unity
 {
@@ -27,21 +28,40 @@ namespace dash
 {
 namespace previews
 {
+namespace
+{
+Style* style_instance = nullptr;
+
+nux::logging::Logger logger("unity.dash.previews.style");
+
+} // namespace
 
 Style::Style()
 {
-
+  if (style_instance)
+  {
+    LOG_ERROR(logger) << "More than one previews::Style created.";
+  }
+  else
+  {
+    style_instance = this;
+  }
 }
 
 Style::~Style()
 {
-
+  if (style_instance == this)
+    style_instance = nullptr;
 }
 
 Style& Style::Instance()
 {
-  static Style style;
-  return style;
+  if (!style_instance)
+  {
+    LOG_ERROR(logger) << "No previews::Style created yet.";
+  }
+
+  return *style_instance;
 }
 
 int Style::NavigatorMinimumWidth() const

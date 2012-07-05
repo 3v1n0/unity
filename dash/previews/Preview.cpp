@@ -24,9 +24,6 @@
 #include "unity-shared/IntrospectableWrappers.h"
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
-#include <Nux/ProgramFramework/TestView.h>
-
-#include "PreviewNavigator.h"
 
 namespace unity
 {
@@ -37,28 +34,13 @@ namespace previews
 
 namespace
 {
-nux::logging::Logger logger("unity.dash.preview");
+nux::logging::Logger logger("unity.dash.previews.preview");
 }
 
-class TestView2 : public nux::View
-{
-public:
-  TestView2():View(NUX_TRACKER_LOCATION) {}
-
-
-  void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
-  {
-    // just for debugging, draw a vertical gradient
-    gPainter.Paint2DQuadVGradient(gfx_engine, GetGeometry(), 
-                                  nux::Color(0x96, 0x11, 0xDA), nux::Color(0x54, 0xD9, 0x11));
-  }
-
-  void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
-  {
-  }
-};
-
 NUX_IMPLEMENT_OBJECT_TYPE(Preview);
+
+int Y = 0;
+int DY = 7;
 
 Preview::Preview(dash::Preview::Ptr preview_model)
   : View(NUX_TRACKER_LOCATION)
@@ -71,15 +53,10 @@ Preview::~Preview()
 {
 }
 
-void Preview::DisableNavButton(NavButton button)
-{
-}
-
 void Preview::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
 {
-  // just for debugging, draw a vertical gradient
-  // gPainter.Paint2DQuadColor(gfx_engine, GetGeometry(), 
-  //                               nux::Color(0, 0, 0));
+    gPainter.Paint2DQuadVGradient(gfx_engine, GetGeometry(), 
+                                nux::Color(0x96, 0x11, 0xDA), nux::Color(0x54, 0xD9, 0x11));
 }
 
 void Preview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
@@ -104,25 +81,6 @@ void Preview::AddProperties(GVariantBuilder* builder)
 
 void Preview::SetupViews()
 {
-  previews::Style& stlye = previews::Style::Instance();
-
-  layout_ = new nux::HLayout();
-  SetLayout(layout_);
-
-  nav_left_ = new PreviewNavigator(Orientation::LEFT, NUX_TRACKER_LOCATION);
-  nav_left_->SetMinimumWidth(stlye.NavigatorMinimumWidth());
-  nav_left_->SetMaximumWidth(stlye.NavigatorMaximumWidth());
-  nav_left_->activated.connect([&]() { navigate_left.emit(); });
-  layout_->AddView(nav_left_, 0);
-
-  content_ = new TestView2();
-  layout_->AddView(content_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-
-  nav_right_ = new PreviewNavigator(Orientation::RIGHT, NUX_TRACKER_LOCATION);
-  nav_right_->SetMinimumWidth(stlye.NavigatorMinimumWidth());
-  nav_right_->SetMaximumWidth(stlye.NavigatorMaximumWidth());
-  nav_right_->activated.connect([&]() { navigate_right.emit(); });
-  layout_->AddView(nav_right_, 0);
 }
 
 }

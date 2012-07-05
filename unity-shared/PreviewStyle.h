@@ -40,15 +40,15 @@ enum class Orientation {
 class Style
 {
 public:
+  Style();
+  ~Style();
+  
   static Style& Instance();
 
   int NavigatorMinimumWidth() const;
   int NavigatorMaximumWidth() const;
   
 protected:
-  Style();
-  ~Style();
-
 
 };
 

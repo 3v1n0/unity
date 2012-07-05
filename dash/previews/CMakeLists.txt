@@ -33,6 +33,7 @@ set (PREVIEWS_SOURCES
      MusicPreview.cpp
      MoviePreview.cpp
      Preview.cpp
+     PreviewContainer.cpp
      PreviewFactory.cpp
      PreviewNavigator.cpp
      )

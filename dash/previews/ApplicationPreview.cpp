@@ -35,9 +35,7 @@ namespace previews
 
 namespace
 {
-nux::logging::Logger logger("unity.dash.applicationpreview");
-
-bool registered(PreviewFactory::Instance().RegisterItem("preview-application", new PreviewFactoryItem<dash::ApplicationPreview, previews::ApplicationPreview>()));
+nux::logging::Logger logger("unity.dash.previews.applicationpreview");
 
 }
 

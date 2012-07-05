@@ -16,7 +16,7 @@
  * License version 3 along with this program.  If not, see
  * <http://www.gnu.org/licenses/>
  *
- * Authored by: Gordon Allott <gord.allott@canonical.com>
+ * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  *
  */
 
@@ -25,7 +25,17 @@
 #include <NuxCore/Logger.h>
 #include <unity-protocol.h>
 
+// PreviewClasses
+#include <UnityCore/GenericPreview.h>
 #include "GenericPreview.h"
+#include <UnityCore/ApplicationPreview.h>
+#include "ApplicationPreview.h"
+#include <UnityCore/GenericPreview.h>
+#include "GenericPreview.h"
+#include <UnityCore/MoviePreview.h>
+#include "MoviePreview.h"
+#include <UnityCore/MusicPreview.h>
+#include "MusicPreview.h"
 
 namespace unity
 {
@@ -33,13 +43,27 @@ namespace dash
 {
 namespace
 {
-nux::logging::Logger logger("unity.dash.previewfactory");
+nux::logging::Logger logger("unity.dash.previews.previewfactory");
+
+PreviewFactory* factory_instance = nullptr;
 }
 
 
 PreviewFactory::PreviewFactory()
 {
+  if (factory_instance)
+  {
+    LOG_ERROR(logger) << "More than one dash::PreviewFactory created.";
+  }
+  else
+  {
+    factory_instance = this;
+  }
+
+  RegisterItem("preview-application", new PreviewFactoryItem<dash::ApplicationPreview, previews::ApplicationPreview>());
   RegisterItem("preview-generic", new PreviewFactoryItem<dash::GenericPreview, previews::GenericPreview>());
+  RegisterItem("preview-movie", new PreviewFactoryItem<dash::MoviePreview, previews::MoviePreview>());
+  RegisterItem("preview-movie", new PreviewFactoryItem<dash::MusicPreview, previews::MusicPreview>());
 }
 
 PreviewFactory::~PreviewFactory()
@@ -49,12 +73,19 @@ PreviewFactory::~PreviewFactory()
     delete factory_item.second;
   }
   factory_items_.clear();
+
+  if (factory_instance == this)
+    factory_instance = nullptr;
 }
 
 PreviewFactory& PreviewFactory::Instance()
 {
-  static PreviewFactory factory;
-  return factory;
+  if (!factory_instance)
+  {
+    LOG_ERROR(logger) << "No previews::Style created yet.";
+  }
+
+  return *factory_instance;
 }
 
 bool PreviewFactory::RegisterItem(std::string const& renderer_name, IPreviewFactoryItem*const item)
@@ -71,7 +102,7 @@ bool PreviewFactory::RegisterItem(std::string const& renderer_name, IPreviewFact
   return true;
 }
 
-PreviewFactoryOperator PreviewFactory::Item(glib::Variant& properties)
+PreviewFactoryOperator PreviewFactory::Item(glib::Variant const& properties)
 {  
   static PreviewFactoryOperator nullOperator;
   glib::Object<UnityProtocolPreview> preview(unity_protocol_preview_parse(properties));

@@ -16,7 +16,7 @@
  * License version 3 along with this program.  If not, see
  * <http://www.gnu.org/licenses/>
  *
- * Authored by: Gordon Allott <gord.allott@canonical.com>
+ * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  *
  */
 
@@ -34,16 +34,17 @@ class PreviewFactory
 {
   typedef std::map<std::string, IPreviewFactoryItem*> FactoryItems;
 public:
+  PreviewFactory();
+  ~PreviewFactory();
+  
   static PreviewFactory& Instance();
 
   bool RegisterItem(std::string const& renderer_name, IPreviewFactoryItem*const item);
 
-  PreviewFactoryOperator Item(glib::Variant& properties);
+  PreviewFactoryOperator Item(glib::Variant const& properties);
   PreviewFactoryOperator Item(glib::Object<GObject> const& proto_obj);
 
 private:
-  PreviewFactory();
-  ~PreviewFactory();
 
   FactoryItems factory_items_;
 };

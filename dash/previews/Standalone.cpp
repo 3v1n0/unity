@@ -35,8 +35,11 @@
 
 #include "unity-shared/FontSettings.h"
 #include "unity-shared/UnitySettings.h"
+#include "unity-shared/PreviewStyle.h"
 
 #include "Preview.h"
+#include "PreviewContainer.h"
+
 
 #define WIDTH 1024
 #define HEIGHT 768
@@ -52,9 +55,9 @@ public:
 
   static void InitWindowThread (nux::NThread* thread, void* InitData);
   void Init ();
-  nux::Layout *layout;
-  previews::Preview::Ptr view;
-  unity::dash::Preview::Ptr model;
+
+  previews::PreviewContainer::Ptr container_;
+  nux::Layout *layout_;
 };
 
 TestRunner::TestRunner ()
@@ -67,7 +70,12 @@ TestRunner::~TestRunner ()
 
 void TestRunner::Init ()
 {
-  layout = new nux::VLayout(NUX_TRACKER_LOCATION);
+  container_ = new previews::PreviewContainer(NUX_TRACKER_LOCATION);
+  container_->SetMinMaxSize(WIDTH, HEIGHT);
+
+  layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
+  layout_->AddView(container_.GetPointer(), 1, nux::MINOR_POSITION_CENTER);
+  layout_->SetMinMaxSize(WIDTH, HEIGHT);
   
   // creates a generic preview object
   glib::Object<GIcon> icon(g_icon_new_for_string("accessories", NULL));
@@ -84,16 +92,9 @@ void TestRunner::Init ()
   glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
                   glib::StealRef());
 
-  PreviewFactoryOperator previewOperator(PreviewFactory::Instance().Item(v));
+  container_->preview(v);
 
-  model = previewOperator.CreateModel();
-  view = previewOperator.CreateView(model);
-  
-  view->SetMinMaxSize(WIDTH, HEIGHT);
-  layout->AddView (view.GetPointer(), 1, nux::MINOR_POSITION_CENTER);
-  layout->SetMinMaxSize(WIDTH, HEIGHT);
-
-  nux::GetWindowThread()->SetLayout (layout);
+  nux::GetWindowThread()->SetLayout (layout_);
 }
 
 void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)
@@ -111,6 +112,8 @@ int main(int argc, char **argv)
   nux::NuxInitialize(0);
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
   // The instances for the pseudo-singletons.
+  unity::dash::previews::Style panel_style;
+  unity::dash::PreviewFactory preview_factory;
   unity::Settings settings;
 
   TestRunner *test_runner = new TestRunner ();

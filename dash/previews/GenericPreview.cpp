@@ -35,9 +35,7 @@ namespace previews
 
 namespace
 {
-nux::logging::Logger logger("unity.dash.genericpreview");
-
-bool registered(PreviewFactory::Instance().RegisterItem("preview-generic", new PreviewFactoryItem<dash::GenericPreview, previews::GenericPreview>()));
+nux::logging::Logger logger("unity.dash.previews.genericpreview");
 
 }
 
