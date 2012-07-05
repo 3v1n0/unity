@@ -837,11 +837,9 @@ class PanelMenuTests(PanelTestsBase):
         panel menu area.
         """
         self.open_new_application_window("Calculator")
-        sleep(self.panel.menus.fadein_duration / 1000.0)
-        sleep(self.panel.menus.discovery_duration)
-        sleep(self.panel.menus.fadeout_duration / 1000.0)
+        self.sleep_menu_settle_period()
 
-        self.assertFalse(self.panel.menus_shown)
+        self.assertThat(self.panel.menus_shown, Eventually(Equals(False)))
 
     def test_menus_show_for_restored_window_on_mouse_in(self):
         """Restored window menus must show only when the mouse is over the panel
