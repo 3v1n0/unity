@@ -953,19 +953,19 @@ class PanelKeyNavigationTests(PanelTestsBase):
         self.assertThat(open_indicator.entry_id, Eventually(Equals(expected_indicator.entry_id)))
 
         self.keybinding("panel/open_first_menu")
-        sleep(.5)
-        self.assertThat(self.panel.get_active_indicator(), Equals(None))
+        self.assertThat(self.panel.get_active_indicator(), Eventually(Equals(None)))
 
     def test_panel_menu_accelerators_work(self):
+        """Pressing a valid menu accelerator must open the correct menu item."""
         self.open_new_application_window("Calculator")
         sleep(1)
         self.keyboard.press_and_release("Alt+c")
         self.addCleanup(self.keyboard.press_and_release, "Escape")
-        sleep(.5)
 
+        self.assertThat(self.panel.get_active_indicator, Eventually(NotEquals(None)))
         open_indicator = self.panel.get_active_indicator()
-        self.assertThat(open_indicator, NotEquals(None))
-        self.assertThat(open_indicator.label, Equals("_Calculator"))
+
+        self.assertThat(open_indicator.label, Eventually(Equals("_Calculator")))
 
     def test_panel_indicators_key_navigation_next_works(self):
         self.open_new_application_window("Calculator")
