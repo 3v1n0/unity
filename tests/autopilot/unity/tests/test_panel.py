@@ -80,7 +80,7 @@ class PanelTestsBase(UnityTestCase):
 
         return app_win
 
-    def move_window_to_panel_monitor(self, window, restore_position=True):
+    def move_window_to_panel_monitor(self, window, restore_position=False):
         """Drags a window to another monitor, eventually restoring it before"""
         if not isinstance(window, BamfWindow):
             raise TypeError("Window must be a BamfWindow")
@@ -320,19 +320,19 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.assertThat(button.visual_state, Eventually(Equals("normal")))
         self.assertThat(self.hud.visible, Eventually(Equals(True)))
 
-
-
     def test_window_buttons_close_button_works_for_window(self):
-        """Tests that the window button 'Close' actually closes a window."""
-        text_win = self.open_new_application_window("Text Editor", maximized=True, move_to_monitor=False)
-        self.move_window_to_panel_monitor(text_win, restore_position=False)
-        self.keybinding("window/maximize")
+        """Close window button must actually closes a window."""
+        text_win = self.open_new_application_window("Text Editor",
+            maximized=True,
+            move_to_monitor=True)
+        win_xid = text_win.x_id
 
-        self.panel.move_mouse_over_window_buttons()
         self.panel.window_buttons.close.mouse_click()
-        sleep(1)
 
-        self.assertTrue(text_win.closed)
+        # We can't check text_win.closed since we've just destroyed the window.
+        # Instead we make sure no window with it's x_id exists.
+        refresh_fn = lambda: [w for w in self.bamf.get_open_windows() if w.x_id == win_xid]
+        self.assertThat(refresh_fn, Eventually(Equals([])))
 
     def test_window_buttons_close_follows_fitts_law(self):
         """Tests that the 'Close' button is activated when clicking at 0,0.
