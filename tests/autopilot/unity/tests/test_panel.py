@@ -975,22 +975,14 @@ class PanelKeyNavigationTests(PanelTestsBase):
     def test_panel_indicators_key_navigation_next_works(self):
         self.open_new_application_window("Calculator")
         available_indicators = self.panel.get_indicator_entries(include_hidden_menus=True)
-        sleep(1)
 
         self.keybinding("panel/open_first_menu")
         self.addCleanup(self.keyboard.press_and_release, "Escape")
-        sleep(1)
-
-        open_indicator = self.panel.get_active_indicator()
-        expected_indicator = available_indicators[0]
-        self.assertThat(open_indicator.entry_id, Equals(expected_indicator.entry_id))
-        sleep(.5)
 
         self.keybinding("panel/next_indicator")
-        open_indicator = self.panel.get_active_indicator()
+        open_indicator = self.get_active_indicator()
         expected_indicator = available_indicators[1]
-        sleep(.5)
-        self.assertThat(open_indicator.entry_id, Equals(expected_indicator.entry_id))
+        self.assertThat(open_indicator.entry_id, Eventually(Equals(expected_indicator.entry_id)))
 
     def test_panel_indicators_key_navigation_prev_works(self):
         self.open_new_application_window("Calculator")
