@@ -806,15 +806,12 @@ class PanelMenuTests(PanelTestsBase):
         # just makes the menu appear inside the app. That's fine, but it's not
         # what is described in the docstring or test id.
         self.patch_environment("UBUNTU_MENUPROXY", "")
-
         calc_win = self.open_new_application_window("Calculator")
-        sleep(1)
 
-        self.assertThat(len(self.panel.menus.get_entries()), Equals(0))
+        self.assertThat(lambda: len(self.panel.menus.get_entries()), Eventually(Equals(0)))
 
         self.panel.move_mouse_over_grab_area()
-        sleep(self.panel.menus.fadein_duration / 1000.0)
-        self.assertThat(self.panel.title, Equals(calc_win.application.name))
+        self.assertThat(self.panel.title, Eventually(Equals(calc_win.application.name)))
 
     def test_menus_shows_when_new_application_is_opened(self):
         """This tests the menu discovery feature on new application."""
