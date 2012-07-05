@@ -1036,35 +1036,34 @@ class PanelGrabAreaTests(PanelTestsBase):
         self.mouse.press()
         self.panel.move_mouse_below_the_panel()
         self.mouse.release()
-        sleep(.5)
 
-        self.assertFalse(text_win.is_maximized)
+        self.assertThat(lambda: text_win.is_maximized, Eventually(Equals(False)))
 
     def test_focus_the_maximized_window_works(self):
         """Clicking on the grab area must put a maximized window in focus."""
         text_win = self.open_new_application_window("Text Editor", maximized=True)
-        sleep(.5)
-        self.open_new_application_window("Calculator")
-        self.assertFalse(text_win.is_focused)
+        calc_win = self.open_new_application_window("Calculator")
+
+        self.assertThat(lambda: text_win.is_focused, Eventually(Equals(False)))
+        self.assertThat(lambda: calc_win.is_focused, Eventually(Equals(True)))
 
         self.move_mouse_over_grab_area()
         self.mouse.click()
-        sleep(.5)
 
-        self.assertTrue(text_win.is_focused)
+        self.assertThat(lambda: text_win.is_focused, Eventually(Equals(True)))
 
     def test_lower_the_maximized_window_works(self):
         """Middle-clicking on the panel grab area must lower a maximized window."""
         calc_win = self.open_new_application_window("Calculator")
-        sleep(.5)
-        self.open_new_application_window("Text Editor", maximized=True)
-        self.assertFalse(calc_win.is_focused)
+        text_win = self.open_new_application_window("Text Editor", maximized=True)
+
+        self.assertThat(lambda: text_win.is_focused, Eventually(Equals(True)))
+        self.assertThat(lambda: calc_win.is_focused, Eventually(Equals(False)))
 
         self.move_mouse_over_grab_area()
         self.mouse.click(2)
-        sleep(.5)
 
-        self.assertTrue(calc_win.is_focused)
+        self.assertThat(lambda: calc_win.is_focused, Eventually(Equals(True)))
 
 
 class PanelCrossMonitorsTests(PanelTestsBase):
