@@ -356,12 +356,13 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
     def test_window_buttons_minimize_button_works_for_window(self):
         """Tests that the window button 'Minimize' actually minimizes a window."""
-        text_win = self.open_new_application_window("Text Editor", maximized=True)
+        text_win = self.open_new_application_window("Text Editor",
+            maximized=True,
+            move_to_monitor=True)
 
         self.panel.window_buttons.minimize.mouse_click()
-        sleep(.5)
 
-        self.assertTrue(text_win.is_hidden)
+        self.assertThat(lambda: text_win.is_hidden, Eventually(Equals(True)))
 
     def test_window_buttons_minimize_follows_fitts_law(self):
         """Tests that the 'Minimize' button is conform to Fitts's Law.
