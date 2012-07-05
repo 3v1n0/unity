@@ -141,14 +141,14 @@ class QuicklistActionTests(UnityTestCase):
         self.assertThat(self.window_manager.scale_active_for_group, Eventually(Equals(True)))
 
     def test_quicklist_closes_when_hud_opens(self):
+        """When a quicklist is open you must still be able to open the Hud."""
         calc = self.start_app("Calculator")
-        [calc_win1] = calc.get_windows()
-        self.assertTrue(calc_win1.is_focused)
 
         calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
         calc_ql = self.open_quicklist_for_icon(calc_icon)
 
         self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
         self.assertThat(self.hud.visible, Eventually(Equals(True)))
 
 
