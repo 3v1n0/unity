@@ -399,18 +399,19 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
         See bug #839690
         """
-        text_win = self.open_new_application_window("Text Editor", maximized=True)
+        text_win = self.open_new_application_window("Text Editor",
+            maximized=True,
+            move_to_monitor=True)
 
         button = self.panel.window_buttons.unmaximize
         button.mouse_move_to()
         target_x = button.x + button.width / 2
         target_y = self.screen_geo.get_monitor_geometry(self.panel_monitor)[1]
-        self.mouse.move(target_x, target_y, rate=20, time_between_events=0.005)
-        sleep(.5)
-        self.mouse.click(press_duration=.1)
+        self.mouse.move(target_x, target_y)
         sleep(1)
+        self.mouse.click()
 
-        self.assertFalse(text_win.is_maximized)
+        self.assertThat(lambda: text_win.is_maximized, Eventually(Equals(False)))
 
     def test_window_buttons_close_button_works_for_hud(self):
         """Tests that the window 'Close' actually closes the HUD."""
