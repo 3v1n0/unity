@@ -1000,22 +1000,22 @@ class PanelKeyNavigationTests(PanelTestsBase):
         self.assertThat(open_indicator.entry_id, Eventually(Equals(expected_indicator.entry_id)))
 
     def test_mouse_does_not_break_key_navigation(self):
+        """Must be able to use the mouse to open indicators after they've been
+        opened with the keyboard.
+        """
         self.open_new_application_window("Calculator")
         available_indicators = self.panel.get_indicator_entries(include_hidden_menus=True)
-        sleep(1)
 
         self.keybinding("panel/open_first_menu")
         self.addCleanup(self.keyboard.press_and_release, "Escape")
-        sleep(1)
 
         available_indicators[2].mouse_move_to()
         self.addCleanup(self.panel.move_mouse_below_the_panel)
-        sleep(.25)
-        self.assertTrue(available_indicators[2].active)
-        sleep(1)
+
+        self.assertThat(available_indicators[2].active, Eventually(Equals(True)))
 
         self.keybinding("panel/prev_indicator")
-        self.assertTrue(available_indicators[1].active)
+        self.assertThat(available_indicators[1].active, Eventually(Equals(True)))
 
 
 class PanelGrabAreaTests(PanelTestsBase):
