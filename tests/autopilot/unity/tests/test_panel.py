@@ -817,14 +817,9 @@ class PanelMenuTests(PanelTestsBase):
         """This tests the menu discovery feature on new application."""
 
         self.open_new_application_window("Calculator")
-        sleep(self.panel.menus.fadein_duration / 1000.0)
-
-        self.assertTrue(self.panel.menus_shown)
-
-        sleep(self.panel.menus.discovery_duration)
-        sleep(self.panel.menus.fadeout_duration / 1000.0)
-
-        self.assertFalse(self.panel.menus_shown)
+        self.assertThat(self.panel.menus_shown, Eventually(Equals(True)))
+        self.sleep_menu_settle_period()
+        self.assertThat(self.panel.menus_shown, Eventually(Equals(False)))
 
     def test_menus_dont_show_if_a_new_application_window_is_opened(self):
         """This tests the menu discovery feature on new window for a know application."""
