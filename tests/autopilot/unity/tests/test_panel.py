@@ -880,11 +880,11 @@ class PanelMenuTests(PanelTestsBase):
 
     def test_menus_dont_show_with_hud(self):
         """Tests that menus are not showing when opening the HUD."""
+        self.open_new_application_window("Text Editor", maximized=True)
         self.hud.ensure_visible()
         self.addCleanup(self.hud.ensure_hidden)
-        sleep(1)
 
-        self.assertFalse(self.panel.menus_shown)
+        self.assertThat(self.panel.menus_shown, Eventually(Equals(False)))
 
     def test_menus_show_after_closing_an_entry(self):
         """Opening a menu entry, and then hovering on other entries must open them.
