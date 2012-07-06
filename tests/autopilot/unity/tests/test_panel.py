@@ -606,6 +606,25 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
         self.assertFalse(self.panel.window_buttons_shown)
 
+    def test_window_buttons_cant_accept_keynav_focus(self):
+        """On a mouse down event over the window buttons
+        you must still be able to type into the Hud.
+
+        """
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
+
+        self.keyboard.type("Hello")
+
+        [cur_x,cur_y] = self.mouse.position()
+        self.mouse.move(0, 0)
+        self.mouse.press()
+        self.mouse.move(cur_x, cur_y)
+        self.mouse.release()
+
+        self.keyboard.type("World")
+        self.assertThat(self.hud.search_string, Eventually(Equals("HelloWorld")))
+
 
 class PanelHoveringTests(PanelTestsBase):
     """Tests with the mouse pointer hovering the panel area."""
@@ -1063,6 +1082,18 @@ class PanelGrabAreaTests(PanelTestsBase):
         self.assertTrue(calc_win.is_focused)
 
     def test_panels_dont_steal_keynav_foucs_from_hud(self):
+        """On a mouse click event on the panel you must still be able to type into the Hud."""
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
+
+        self.keyboard.type("Hello")
+
+        cur_x = self.mouse.position()[0]
+        self.mouse.move(cur_x,0)
+        self.mouse.click()
+
+        self.keyboard.type("World")
+        self.assertThat(self.hud.search_string, Eventually(Equals("HelloWorld")))
 
 
 class PanelCrossMonitorsTests(PanelTestsBase):
