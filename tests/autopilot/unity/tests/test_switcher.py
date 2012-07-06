@@ -8,6 +8,7 @@
 
 from __future__ import absolute_import
 
+from autopilot.emulators.bamf import BamfWindow
 from autopilot.matchers import Eventually
 import logging
 from testtools.matchers import Equals, Contains, Not
@@ -210,6 +211,57 @@ class SwitcherTests(SwitcherTestCase):
 class SwitcherWindowsManagementTests(SwitcherTestCase):
     """Test the switcher window management."""
 
+    def open_three_test_apps(self):
+        """Opens three test apps.
+
+        This method returns a tuple of BamfWindow instances. The instances are
+        in window stacking order. From first to last, the windows are:
+
+         * Mahjongg (top of stack, focused)
+         * Calculator
+         * Mahjongg (buttom of stack)
+
+         """
+        self.close_all_app("Mahjongg")
+        self.close_all_app("Calculator")
+
+        mahj = self.start_app("Mahjongg")
+        [mah_win1] = mahj.get_windows()
+        self.assert_window_focused(mah_win1)
+
+        calc = self.start_app("Calculator")
+        [calc_win] = calc.get_windows()
+        self.assert_window_focused(calc_win)
+
+        self.start_app("Mahjongg")
+        # Sleeping due to the start_app only waiting for the bamf model to be
+        # updated with the application.  Since the app has already started,
+        # and we are just waiting on a second window, however a defined sleep
+        # here is likely to be problematic.
+        # TODO: fix bamf emulator to enable waiting for new windows.
+        mah_win2 = None
+        for i in range(10):
+            try:
+                [mah_win2] = [w for w in mahj.get_windows() if w.x_id != mah_win1.x_id]
+                self.assert_window_focused(mah_win2)
+            except ValueError:
+                sleep(1)
+
+        if not mah_win2:
+            raise AssertionError("Could not find second Mahjongg window.")
+
+        return (mah_win2, calc_win, mah_win1)
+
+    def assert_window_focused(self, window):
+        """Asserts that an instance of a BamfWindow is focused using the
+        Eventually matcher.
+
+        """
+        if type(window) is not BamfWindow:
+            raise TypeError("'window' must be an instance of BamfWindow, not %r" % type(window))
+
+        self.assertThat(lambda: window.is_focused, Eventually(Equals(True)))
+
     def test_switcher_raises_only_last_focused_window(self):
         """Tests that when we do an alt+tab only the previously focused window is raised.
 
@@ -218,46 +270,19 @@ class SwitcherWindowsManagementTests(SwitcherTestCase):
         Then we close the currently focused window.
 
         """
-        #FIXME: Setup
-        # There are a lot of asserts in this test that are just making sure the env. is properly
-        # initialized.
-        self.close_all_app("Mahjongg")
-        self.close_all_app("Calculator")
-
-        mahj = self.start_app("Mahjongg")
-        [mah_win1] = mahj.get_windows()
-        self.assertTrue(mah_win1.is_focused)
-
-        calc = self.start_app("Calculator")
-        [calc_win] = calc.get_windows()
-        self.assertTrue(calc_win.is_focused)
-
-        self.start_app("Mahjongg")
-        # Sleeping due to the start_app only waiting for the bamf model to be
-        # updated with the application.  Since the app has already started,
-        # and we are just waiting on a second window, however a defined sleep
-        # here is likely to be problematic.
-        # TODO: fix bamf emulator to enable waiting for new windows.
-        sleep(1)
-        [mah_win2] = [w for w in mahj.get_windows() if w.x_id != mah_win1.x_id]
-        self.assertTrue(mah_win2.is_focused)
-
+        mah_win2, calc_win, mah_win1 = self.open_three_test_apps()
         self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
-        #end setup?
 
         self.keybinding("switcher/reveal_normal")
-        sleep(1)
-        self.assertThat(calc_win.is_focused, Equals(True))
+        self.assertThat(lambda: calc_win.is_focused, Eventually(Equals(True)))
         self.assertVisibleWindowStack([calc_win, mah_win2, mah_win1])
 
         self.keybinding("switcher/reveal_normal")
-        sleep(1)
-        self.assertThat(mah_win2.is_focused, Equals(True))
+        self.assertThat(lambda: mah_win2.is_focused, Eventually(Equals(True)))
         self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
 
         self.keybinding("window/close")
-        sleep(1)
-        self.assertThat(calc_win.is_focused, Equals(True))
+        self.assertThat(lambda: calc_win.is_focused, Eventually(Equals(True)))
         self.assertVisibleWindowStack([calc_win, mah_win1])
 
 
