@@ -749,8 +749,6 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 {
   CompOutput *output = _last_output;
 
-  g_print("vv: paintDisplay\n");
-
 #ifndef USE_MODERN_COMPIZ_GL
   bool was_bound = _fbo->bound ();
 
@@ -1223,8 +1221,6 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
    */
   bool force = forcePaintOnTop() || PluginAdapter::Default()->IsExpoActive();
   doShellRepaint = force || !(region.isEmpty() || wt->GetDrawList().empty());
-
-  g_print("vv: glPaintOutput %u\n", output->id());
 
   allowWindowPaint = true;
   _last_output = output;
@@ -2389,7 +2385,6 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
       !uScreen->fullscreenRegion.contains(window->geometry())
      )
   {
-    g_print("vv: firstWindowAboveShell %x\n",  (int)window->id());
 #ifdef USE_MODERN_COMPIZ_GL
     uScreen->paintDisplay();
 #else
