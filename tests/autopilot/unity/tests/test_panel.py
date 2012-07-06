@@ -1062,6 +1062,8 @@ class PanelGrabAreaTests(PanelTestsBase):
 
         self.assertTrue(calc_win.is_focused)
 
+    def test_panels_dont_steal_keynav_foucs_from_hud(self):
+
 
 class PanelCrossMonitorsTests(PanelTestsBase):
     """Multimonitor panel tests."""

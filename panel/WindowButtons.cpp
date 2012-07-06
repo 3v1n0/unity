@@ -200,6 +200,7 @@ public:
 
     _overlay_is_open = open;
 
+    SetAcceptKeyNavFocusOnMouseDown(!_overlay_is_open);
     UpdateSize();
     QueueDraw();
   }
