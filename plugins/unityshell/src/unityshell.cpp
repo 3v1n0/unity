@@ -914,7 +914,8 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 bool UnityScreen::forcePaintOnTop ()
 {
     return !allowWindowPaint ||
-      ((switcher_controller_->Visible() || launcher_controller_->IsOverlayOpen())
+      ((switcher_controller_->Visible() ||
+        PluginAdapter::Default()->IsExpoActive())
        && !fullscreen_windows_.empty () && (!(screen->grabbed () && !screen->otherGrabExist (NULL))));
 }
 
@@ -1239,14 +1240,14 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
 #endif
 
   // CompRegion has no clear() method. So this is the fastest alternative.
-  aboveShell = CompRegion();
+  fullscreenRegion = CompRegion();
   nuxRegion = CompRegion();
 
   /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
   ret = gScreen->glPaintOutput(attrib, transform, region, output, mask);
 
 #ifndef USE_MODERN_COMPIZ_GL
-  if (doShellRepaint && !force && aboveShell.contains(*output))
+  if (doShellRepaint && !force && fullscreenRegion.contains(*output))
     doShellRepaint = false;
 
   if (doShellRepaint)
@@ -1304,6 +1305,7 @@ void UnityScreen::preparePaint(int ms)
   compizDamageNux(cScreen->currentDamage());
 
   didShellRepaint = false;
+  firstWindowAboveShell = NULL;
 }
 
 void UnityScreen::donePaint()
@@ -2281,13 +2283,17 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
   /*
    * The occlusion pass tests windows from TOP to BOTTOM. That's opposite to
    * the actual painting loop.
+   *
+   * Detect uScreen->fullscreenRegion here. That represents the region which
+   * fully covers the shell on its output. It does not include regular windows
+   * stacked above the shell like DnD icons or Onboard etc.
    */
   if (isNuxWindow(window))
   {
     if (mask & PAINT_WINDOW_OCCLUSION_DETECTION_MASK)
     {
       uScreen->nuxRegion += window->geometry();
-      uScreen->nuxRegion -= uScreen->aboveShell;
+      uScreen->nuxRegion -= uScreen->fullscreenRegion;
     }
     return false;  // Ensure nux windows are never painted by compiz
   }
@@ -2297,14 +2303,17 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
                               PAINT_WINDOW_TRANSLUCENT_MASK |
                               PAINT_WINDOW_TRANSFORMED_MASK |
                               PAINT_WINDOW_NO_CORE_INSTANCE_MASK;
-    if (!(mask & nonOcclusionBits))
+    if (!(mask & nonOcclusionBits) &&
+        (window->state() & CompWindowStateFullscreenMask))
         // And I've been advised to test other things, but they don't work:
         // && (attrib.opacity == OPAQUE)) <-- Doesn't work; Only set in glDraw
         // && !window->alpha() <-- Doesn't work; Opaque windows often have alpha
     {
-      uScreen->aboveShell += window->geometry();
-      uScreen->aboveShell -= uScreen->nuxRegion;
+      uScreen->fullscreenRegion += window->geometry();
+      uScreen->fullscreenRegion -= uScreen->nuxRegion;
     }
+    if (uScreen->nuxRegion.isEmpty())
+      uScreen->firstWindowAboveShell = window;
   }
 
   GLWindowPaintAttrib wAttrib = attrib;
@@ -2365,38 +2374,17 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     }
   }
 
-  /*
-   * Paint the shell in *roughly* the compiz stacking order. This is only
-   * approximate because we're painting all the nux windows as soon as we find
-   * the bottom-most nux window (from bottom to top).
-   * But remember to avoid painting the shell if it's within the aboveShell
-   * region.
-   */
   if (uScreen->doShellRepaint &&
       !uScreen->forcePaintOnTop () &&
-      !uScreen->aboveShell.contains(window->geometry())
+      window == uScreen->firstWindowAboveShell &&
+      !uScreen->fullscreenRegion.contains(window->geometry())
      )
   {
-    std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
-    unsigned int size = xwns.size();
-
-    for (CompWindow* w = window; w && uScreen->doShellRepaint; w = w->prev)
-    {
-      auto id = w->id();
-
-      for (unsigned int i = 0; i < size; ++i)
-      {
-        if (xwns[i] == id)
-        {
 #ifdef USE_MODERN_COMPIZ_GL
-          uScreen->paintDisplay();
+    uScreen->paintDisplay();
 #else
-          uScreen->paintDisplay(region, matrix, mask);
+    uScreen->paintDisplay(region, matrix, mask);
 #endif
-          break;
-        }
-      }
-    }
   }
 
   if (window->type() == CompWindowTypeDesktopMask)
