@@ -21,11 +21,14 @@
 
 #include "unity-shared/DashStyle.h"
 #include "ActionButton.h"
+#include <NuxCore/Logger.h>
 
 namespace
 {
 const int kMinButtonHeight = 30;
 const int kMinButtonWidth  = 48;
+
+nux::logging::Logger logger("unity.dash.actionbutton");
 }
 
 namespace unity
@@ -37,6 +40,8 @@ ActionButton::ActionButton(std::string const& label, NUX_FILE_LINE_DECL)
   : nux::Button(NUX_FILE_LINE_PARAM)
   , label_(label)
 {
+  SetLayoutPadding(2, 11, 2, 11);
+  Button::SetLabel(label);
   Init();
 }
 
@@ -44,12 +49,11 @@ ActionButton::~ActionButton()
 {
 }
 
-
 void ActionButton::Init()
 {
   InitTheme();
   SetAcceptKeyNavFocusOnMouseDown(false);
-  SetAcceptKeyNavFocusOnMouseEnter(true);
+  SetAcceptKeyNavFocusOnMouseEnter(false);
 
   key_nav_focus_change.connect([&] (nux::Area*, bool, nux::KeyNavDirection)
   {
@@ -81,7 +85,11 @@ void ActionButton::InitTheme()
 
 void ActionButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
 {
-  Style::Instance().Button(cr, faked_state, label_, -1, Alignment::CENTER, true);
+  int font_size = -1;
+  Style::Instance().Button(cr, faked_state, label_, font_size, Alignment::CENTER, true);
+
+  if (GetLabelFontSize() != font_size)
+    SetLabelFontSize(font_size);
 }
 
 void ActionButton::RedrawFocusOverlay(nux::Geometry const& geom, cairo_t* cr)
@@ -147,7 +155,7 @@ void ActionButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                       texxform,
                       nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
 
-  if (HasKeyboardFocus())
+  if (IsMouseInside() || HasKeyboardFocus())
   {
     GfxContext.QRP_1Tex(geo.x,
                         geo.y,

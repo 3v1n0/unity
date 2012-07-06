@@ -105,8 +105,8 @@ void ApplicationPreview::SetupViews()
     /////////////////////
     // App Data Panel
     nux::VLayout* full_data_layout = new nux::VLayout();
-    full_data_layout->SetPadding(8);
-    full_data_layout->SetSpaceBetweenChildren(8);
+    full_data_layout->SetPadding(10);
+    full_data_layout->SetSpaceBetweenChildren(12);
 
       /////////////////////
       // Main App Info
@@ -173,8 +173,11 @@ void ApplicationPreview::SetupViews()
       app_description_ = new nux::StaticCairoText("");
       app_description_->SetFont(style.app_description_font().c_str());
       app_description_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_TOP);
-      app_description_->SetLines(10);
-      app_description_->SetText("Description test\ntest this is a test\ntest2\ntest3\nplop1\ntest2\ntest3\nplop1");
+      app_description_->SetLines(-10);
+      app_description_->SetLineSpacing(1);
+      app_description_->SetMaximumWidth(400);
+      app_description_->SetText("Skype is a proprietary voice-over-Internet Protocol service and software application originally created by Niklas Zennström and Janus Friis in 2003, and owned by Microsoft since 2011. \
+The service allows users to communicate with peers by voice, video, and instant messaging over the Internet.");
       /////////////////////
 
       /////////////////////
@@ -185,20 +188,21 @@ void ApplicationPreview::SetupViews()
 
       for (dash::Preview::ActionPtr action : preview_model_->GetActions())
       {
-        actions_layout->AddView(new ActionButton(action->display_name, NUX_TRACKER_LOCATION), 0);
+        actions_layout->AddView(new ActionButton(action->display_name, NUX_TRACKER_LOCATION), 0, nux::MINOR_POSITION_END, nux::MINOR_SIZE_MATCHCONTENT);
       }
       /////////////////////
 
     full_data_layout->AddLayout(main_app_info, 0);
     full_data_layout->AddView(app_description_, 0);
-    full_data_layout->AddSpace(0, 1);
-    full_data_layout->AddLayout(actions_layout, 0);
+    full_data_layout->AddLayout(actions_layout, 1);
     /////////////////////
   
   image_data_layout->AddView(app_image_, 1);
   image_data_layout->AddLayout(full_data_layout, 1);
 
   SetLayout(image_data_layout);
+
+  LOG_WARN(logger) << "Line Count" << app_description_->GetLineCount();
 }
 
 }

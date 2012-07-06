@@ -121,7 +121,7 @@ public:
   void Text(cairo_t* cr,
             nux::Color const& color,
             std::string const& label,
-            int font_size = -1,
+            int& font_size,
             double horizMargin = 4.0,
             Alignment alignment = Alignment::CENTER);
 
@@ -1315,7 +1315,7 @@ void Style::Impl::GetTextExtents(int& width,
 void Style::Impl::Text(cairo_t*    cr,
                        nux::Color const&  color,
                        std::string const& label,
-                       int text_size,
+                       int& text_size,
                        double horizMargin,
                        Alignment alignment)
 {
@@ -1352,6 +1352,10 @@ void Style::Impl::Text(cairo_t*    cr,
   if (text_size > 0)
   {
     pango_font_description_set_absolute_size(desc, text_size * PANGO_SCALE);
+  }
+  else if (desc)
+  {
+    text_size = pango_font_description_get_size(desc) / PANGO_SCALE;
   }
 
   PangoWeight weight;
@@ -1528,7 +1532,7 @@ void Style::Impl::DrawOverlay(cairo_t*  cr,
 }
 
 bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
-                   std::string const& label, int font_size,
+                   std::string const& label, int& font_size,
                    Alignment alignment, bool zeromargin)
 {
   // sanity checks
@@ -1622,7 +1626,7 @@ nux::AbstractPaintLayer* Style::FocusOverlay(int width, int height)
 
 bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
                          std::string const& label, bool curve_bottom,
-                         int font_size, Alignment alignment,
+                         int& font_size, Alignment alignment,
                          bool zeromargin)
 {
   // sanity checks
@@ -1833,10 +1837,11 @@ bool Style::MultiRangeSegment(cairo_t*    cr,
   }
   cairo_set_source_rgba(cr, pimpl->button_label_border_color_[state]);
   cairo_stroke(cr);
+  int label_font_size = 10;
   pimpl->Text(cr,
               pimpl->button_label_text_color_[state],
               label,
-              10); // 13px = 10pt
+              label_font_size); // 13px = 10pt
 
   return true;
 }
