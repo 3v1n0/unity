@@ -46,6 +46,7 @@ public:
     , _overlay_is_open(false)
     , _opacity(1.0f)
   {
+    SetAcceptKeyNavFocusOnMouseDown(false);
     panel::Style::Instance().changed.connect(sigc::mem_fun(this, &WindowButton::LoadImages));
     LoadImages();
   }
@@ -200,7 +201,6 @@ public:
 
     _overlay_is_open = open;
 
-    SetAcceptKeyNavFocusOnMouseDown(!_overlay_is_open);
     UpdateSize();
     QueueDraw();
   }
