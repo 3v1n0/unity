@@ -244,6 +244,7 @@ class SwitcherWindowsManagementTests(SwitcherTestCase):
             try:
                 [mah_win2] = [w for w in mahj.get_windows() if w.x_id != mah_win1.x_id]
                 self.assert_window_focused(mah_win2)
+                break
             except ValueError:
                 sleep(1)
 
