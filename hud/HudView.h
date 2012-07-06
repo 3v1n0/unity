@@ -61,7 +61,7 @@ public:
   void AboutToHide();
 
   void SetWindowGeometry(nux::Geometry const& absolute_geo, nux::Geometry const& geo);
-  
+
 protected:
   virtual Area* FindKeyFocusArea(unsigned int event_type,
   unsigned long x11_key_code,
@@ -87,6 +87,7 @@ private:
 
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
+  IntrospectableList GetIntrospectableChildren();
 
 private:
   UBusManager ubus;
@@ -94,6 +95,7 @@ private:
   nux::ObjectPtr<nux::Layout> content_layout_;
   nux::ObjectPtr<nux::VLayout> button_views_;
   std::list<HudButton::Ptr> buttons_;
+  IntrospectableList introspectable_children_;
 
   //FIXME - replace with dash search bar once modifications to dash search bar land
   SearchBar::Ptr search_bar_;

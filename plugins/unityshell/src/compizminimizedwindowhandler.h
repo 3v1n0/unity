@@ -104,6 +104,7 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::CompizMinimizedWindowHandl
 template <typename Screen, typename Window>
 compiz::CompizMinimizedWindowHandler<Screen, Window>::~CompizMinimizedWindowHandler ()
 {
+  minimizingWindows.remove (priv->mWindow);
   minimizedWindows.remove (this);
 }
 

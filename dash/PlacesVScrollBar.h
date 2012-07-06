@@ -25,7 +25,7 @@
 #include <Nux/ScrollView.h>
 #include <Nux/BaseWindow.h>
 #include <Nux/VScrollBar.h>
-#include <NuxImage/CairoGraphics.h>
+#include <NuxGraphics/CairoGraphics.h>
 
 class PlacesVScrollBar : public nux::VScrollBar
 {

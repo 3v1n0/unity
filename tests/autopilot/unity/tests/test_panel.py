@@ -10,6 +10,7 @@ from __future__ import absolute_import
 
 from autopilot.emulators.X11 import ScreenGeometry
 from autopilot.emulators.bamf import BamfWindow
+from autopilot.matchers import Eventually
 import logging
 import os
 from testtools.matchers import Equals,  GreaterThan, NotEquals
@@ -360,10 +361,6 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
         self.assertTrue(text_win.is_hidden)
 
-        icon = self.launcher.model.get_icon_by_desktop_id(text_win.application.desktop_file)
-        launcher = self.launcher.get_launcher_for_monitor(self.panel_monitor)
-        launcher.click_launcher_icon(icon)
-
     def test_window_buttons_minimize_follows_fitts_law(self):
         """Tests that the 'Minimize' button is conform to Fitts's Law.
 
@@ -482,14 +479,13 @@ class PanelWindowButtonsTests(PanelTestsBase):
         """Tests that the 'Minimize' button is disabled for the dash."""
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
-        sleep(.5)
 
         button = self.panel.window_buttons.minimize
         button.mouse_click()
         sleep(.5)
 
-        self.assertFalse(button.enabled)
-        self.assertTrue(self.dash.visible)
+        self.assertThat(button.enabled, Eventually(Equals(False)))
+        self.assertThat(self.dash.visible, Eventually(Equals(True)))
 
     def test_window_buttons_maximization_buttons_works_for_dash(self):
         """'Maximize' and 'Restore' buttons (when both enabled) must work as expected."""
@@ -715,9 +711,8 @@ class PanelMenuTests(PanelTestsBase):
         # TODO: This doesn't test what it says on the tin. Setting MENUPROXY to ''
         # just makes the menu appear inside the app. That's fine, but it's not
         # what is described in the docstring or test id.
-        old_env = os.environ["UBUNTU_MENUPROXY"]
-        os.putenv("UBUNTU_MENUPROXY", "")
-        self.addCleanup(os.putenv, "UBUNTU_MENUPROXY", old_env)
+        self.patch_environment("UBUNTU_MENUPROXY", "")
+
         calc_win = self.open_new_application_window("Calculator")
         sleep(1)
 

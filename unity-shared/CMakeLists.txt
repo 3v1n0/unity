@@ -41,6 +41,7 @@ set (UNITY_SHARED_SOURCES
      BackgroundEffectHelper.cpp
      DashStyle.cpp
      FontSettings.cpp
+     KeyboardUtil.cpp
      IMTextEntry.cpp
      IconLoader.cpp
      IconRenderer.cpp

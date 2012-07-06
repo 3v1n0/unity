@@ -180,7 +180,9 @@ class HudBehaviorTests(HudTestsBase):
         self.hud.ensure_visible()
 
         self.keyboard.type("undo")
-        self.assertThat(self.hud.search_string, Eventually(Equals("undo")))
+        hud_query_check = lambda: self.hud.selected_hud_button.label_no_formatting
+        self.assertThat(hud_query_check,
+                        Eventually(Equals("Edit > Undo")))
         self.keyboard.press_and_release('Return')
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
         self.keyboard.press_and_release("Ctrl+s")
@@ -243,6 +245,38 @@ class HudBehaviorTests(HudTestsBase):
         self.keybinding("spread/start")
         self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
+
+    def test_hud_closes_click_outside_geo_shrunk(self):
+        """
+        Clicking outside the hud when it is shurnk will make it close.
+        Shurnk is when the hud has no results and is much smaller then normal.
+        """
+
+        self.hud.ensure_visible()
+        (x,y,w,h) = self.hud.view.geometry
+        self.mouse.move(w/2, h-50)
+        self.mouse.click()
+
+        self.assertThat(self.hud.visible, Eventually(Equals(False)))
+
+    def test_hud_closes_click_outside_geo(self):
+        """Clicking outside of the hud will make it close."""
+
+        self.hud.ensure_visible()
+        self.keyboard.type("Test")
+
+        (x,y,w,h) = self.hud.view.geometry
+        self.mouse.move(w/2, h+50)
+        self.mouse.click()
+
+        self.assertThat(self.hud.visible, Eventually(Equals(False)))
+
+    def test_alt_f4_close_hud(self):
+        """Hud must close on alt+F4."""
+        self.hud.ensure_visible()
+        self.keyboard.press_and_release("Alt+F4")
+        self.assertThat(self.hud.visible, Eventually(Equals(False)))
+
 
 class HudLauncherInteractionsTests(HudTestsBase):
 

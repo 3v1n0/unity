@@ -9,7 +9,7 @@
 
 from __future__ import absolute_import
 
-from autopilot.introspection.unity import UnityIntrospectionObject
+from unity.emulators import UnityIntrospectionObject
 from unity.emulators.quicklist import Quicklist
 from unity.emulators.tooltip import ToolTip
 

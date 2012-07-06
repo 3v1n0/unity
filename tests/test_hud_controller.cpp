@@ -59,7 +59,7 @@ public:
   virtual void SetUp()
   {
     view = new MockHudView;
-    controller.reset(new hud::Controller([&view]{ return view.GetPointer(); }));
+    controller.reset(new hud::Controller([this]{ return view.GetPointer(); }));
   }
 
   Settings unity_settings;
@@ -73,6 +73,7 @@ public:
 TEST_F(TestHudController, TestHideHud)
 {
   controller->ShowHud();
+  Utils::WaitForTimeout(1);
 
   EXPECT_CALL(*view, ResetToDefault())
     .Times(1);

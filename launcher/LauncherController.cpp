@@ -196,7 +196,6 @@ public:
 
   LauncherList launchers;
 
-  glib::Source::UniquePtr activate_idle_;
   glib::Object<BamfMatcher> matcher_;
   glib::Signal<void, BamfMatcher*, BamfView*> view_opened_signal_;
   glib::SourceManager sources_;
@@ -372,6 +371,9 @@ void Controller::Impl::OnScreenChanged(int primary_monitor, std::vector<nux::Geo
 void Controller::Impl::OnWindowFocusChanged (guint32 xid)
 {
   static bool keynav_first_focus = false;
+
+  if (parent_->IsOverlayOpen())
+    keynav_first_focus = false;
 
   if (keynav_first_focus)
   {
@@ -1098,7 +1100,6 @@ void Controller::Impl::ReceiveMouseDownOutsideArea(int x, int y, unsigned long b
 
 void Controller::KeyNavGrab()
 {
-  pimpl->ubus.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
   pimpl->launcher_grabbed = true;
   KeyNavActivate();
   pimpl->keyboard_launcher_->GrabKeyboard();
@@ -1197,12 +1198,13 @@ void Controller::KeyNavTerminate(bool activate)
                             g_variant_new_boolean(pimpl->keynav_restore_window_));
   }
 
-  pimpl->activate_idle_.reset(new glib::Idle([activate, this] () {
-    if (activate)
+  if (activate)
+  {
+    pimpl->sources_.Add(std::make_shared<glib::Idle>([this] {
       pimpl->model_->Selection()->Activate(ActionArg(ActionArg::LAUNCHER, 0));
-
-    return false;
-  }));
+      return false;
+    }));
+  }
 
   pimpl->launcher_keynav = false;
   if (!pimpl->launcher_open)

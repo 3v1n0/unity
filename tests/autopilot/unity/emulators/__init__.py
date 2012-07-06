@@ -8,3 +8,12 @@
 #
 
 """A collection of Unity-specific emulators."""
+
+
+from autopilot.introspection.dbus import DBusIntrospectionObject
+
+
+class UnityIntrospectionObject(DBusIntrospectionObject):
+
+    DBUS_SERVICE = "com.canonical.Unity"
+    DBUS_OBJECT = "/com/canonical/Unity/Debug"

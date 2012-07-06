@@ -513,6 +513,7 @@ LauncherIcon::ShowTooltip()
     LoadTooltip();
   _tooltip->ShowTooltipWithTipAt(tip_x, tip_y);
   _tooltip->ShowWindow(!tooltip_text().empty());
+  tooltip_visible.emit(_tooltip);
 }
 
 void
@@ -534,6 +535,7 @@ void LauncherIcon::RecvMouseLeave(int monitor)
 
   if (_tooltip)
     _tooltip->ShowWindow(false);
+  tooltip_visible.emit(nux::ObjectPtr<nux::View>(nullptr));
 }
 
 bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
@@ -653,6 +655,7 @@ void LauncherIcon::HideTooltip()
 {
   if (_tooltip)
     _tooltip->ShowWindow(false);
+  tooltip_visible.emit(nux::ObjectPtr<nux::View>(nullptr));
 }
 
 bool

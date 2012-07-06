@@ -11,9 +11,9 @@ from __future__ import absolute_import
 
 import logging
 
-from autopilot.introspection.unity import UnityIntrospectionObject
 from autopilot.emulators.X11 import Mouse
 
+from unity.emulators import UnityIntrospectionObject
 
 logger = logging.getLogger(__name__)
 

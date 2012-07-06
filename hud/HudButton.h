@@ -38,8 +38,8 @@ namespace hud
 
 class HudButton : public nux::Button, public unity::debug::Introspectable 
 {
-  typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
-  typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
+  NUX_DECLARE_OBJECT_TYPE(HudButton, nux::Button);
+
 public:
   typedef nux::ObjectPtr<HudButton> Ptr;
 
@@ -47,6 +47,8 @@ public:
 
   void SetQuery(Query::Ptr query);
   std::shared_ptr<Query> GetQuery();
+
+  void SetSkipDraw(bool skip_draw);
 
   nux::Property<std::string> label;
   nux::Property<bool> is_rounded;
@@ -65,9 +67,13 @@ protected:
   void RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state);
 
 private:
+  typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
+
   Query::Ptr query_;
   nux::Geometry cached_geometry_;
+
   bool is_focused_;
+  bool skip_draw_;
 
   NuxCairoPtr prelight_;
   NuxCairoPtr active_;

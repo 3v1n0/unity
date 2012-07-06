@@ -15,20 +15,20 @@ from dbus import Interface
 # acquire the debugging dbus object
 UNITY_BUS_NAME = 'com.canonical.Unity'
 DEBUG_PATH = '/com/canonical/Unity/Debug'
-INTROSPECTION_IFACE = 'com.canonical.Unity.Debug.Introspection'
+LOGGING_IFACE = 'com.canonical.Unity.Debug.Logging'
 
 
 _debug_proxy_obj = session_bus.get_object(UNITY_BUS_NAME, DEBUG_PATH)
-_introspection_iface = Interface(_debug_proxy_obj, INTROSPECTION_IFACE)
+_logging_iface = Interface(_debug_proxy_obj, LOGGING_IFACE)
 
 def start_log_to_file(file_path):
     """Instruct Unity to start logging to the given file."""
-    _introspection_iface.StartLogToFile(file_path)
+    _logging_iface.StartLogToFile(file_path)
 
 
 def reset_logging():
     """Instruct Unity to stop logging to a file."""
-    _introspection_iface.ResetLogging()
+    _logging_iface.ResetLogging()
 
 
 def set_log_severity(component, severity):
@@ -39,7 +39,7 @@ def set_log_severity(component, severity):
     'severity' is the severity name (like 'DEBUG', 'INFO' etc.)
 
     """
-    _introspection_iface.SetLogSeverity(component, severity)
+    _logging_iface.SetLogSeverity(component, severity)
 
 
 def log_unity_message(severity, message):
@@ -53,5 +53,5 @@ def log_unity_message(severity, message):
     test, use the python logging framework instead.
 
     """
-    _introspection_iface.LogMessage(severity, message)
+    _logging_iface.LogMessage(severity, message)
 

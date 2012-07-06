@@ -44,7 +44,7 @@ void LauncherModel::AddProperties(GVariantBuilder* builder)
   .add("selection", selection_);
 }
 
-unity::debug::Introspectable::IntrospectableList const& LauncherModel::GetIntrospectableChildren()
+unity::debug::Introspectable::IntrospectableList LauncherModel::GetIntrospectableChildren()
 {
   introspection_results_.clear();
 

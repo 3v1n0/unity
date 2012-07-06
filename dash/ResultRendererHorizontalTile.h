@@ -29,7 +29,7 @@
 #include <NuxCore/Object.h>
 #include <NuxCore/Property.h>
 #include <Nux/TextureArea.h>
-#include <NuxImage/CairoGraphics.h>
+#include <NuxGraphics/CairoGraphics.h>
 
 #include "ResultRendererTile.h"
 

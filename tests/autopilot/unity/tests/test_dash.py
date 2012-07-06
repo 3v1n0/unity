@@ -70,6 +70,30 @@ class DashRevealTests(DashTestCase):
         self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
         self.assertThat(self.dash.visible, Eventually(Equals(False)))
 
+    def test_dash_opens_when_in_spread(self):
+        """This test shows the dash opens when in spread mode."""
+        self.keybinding("spread/start")
+        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
+
+        self.dash.ensure_visible()
+        self.assertThat(self.dash.visible, Eventually(Equals(True)))
+
+    def test_command_lens_opens_when_in_spread(self):
+        """This test shows the command lens opens when in spread mode."""
+        self.keybinding("spread/start")
+        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
+
+        self.dash.reveal_command_lens()
+        self.assertThat(self.dash.active_lens, Eventually(Equals('commands.lens')))
+
+    def test_lens_opens_when_in_spread(self):
+        """This test shows that any lens opens when in spread mode."""
+        self.keybinding("spread/start")
+        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
+
+        self.dash.reveal_application_lens()
+        self.assertThat(self.dash.active_lens, Eventually(Equals('applications.lens')))
+
 
 class DashSearchInputTests(DashTestCase):
     """Test features involving input to the dash search"""
@@ -246,16 +270,6 @@ class DashKeyNavTests(DashTestCase):
         self.keyboard.press_and_release('Tab')
         category = lens.get_focused_category()
         self.assertIsNot(category, None)
-
-    def test_alt_f1_disabled(self):
-        """This test that Alt+F1 is disabled when the dash is opened."""
-        self.dash.ensure_visible()
-        # can't use launcher emulator since we'll fail to start keynav:
-        self.keybinding("launcher/keynav")
-        # can't use Eventually here - sleep long enough for the launcher controller
-        # to react to the keypress (well, hopefully not)
-        sleep(5)
-        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
 
 
 class DashClipboardTests(DashTestCase):
@@ -514,7 +528,7 @@ class CategoryHeaderTests(DashTestCase):
         self.mouse.move(self.dash.view.x + self.dash.view.width / 2,
                         category.header_y + category.header_height / 2)
 
-        self.mouse.click() 
+        self.mouse.click()
         self.assertThat(category.is_expanded, Eventually(Equals(not is_expanded)))
 
         self.mouse.click()
