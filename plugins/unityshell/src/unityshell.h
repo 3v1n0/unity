@@ -283,7 +283,8 @@ private:
   CompOutput* _last_output;
 
   CompRegion nuxRegion;
-  CompRegion aboveShell;
+  CompRegion fullscreenRegion;
+  CompWindow* firstWindowAboveShell;
 
   nux::Property<nux::Geometry> primary_monitor_;
 
