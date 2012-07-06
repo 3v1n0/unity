@@ -1459,9 +1459,11 @@ void UnityScreen::handleEvent(XEvent* event)
 #endif
       if (_key_nav_mode_requested)
       {
+        // Close any overlay that is open.
         if (launcher_controller_->IsOverlayOpen())
         {
           dash_controller_->HideDash();
+          hud_controller_->HideHud();
         }
         launcher_controller_->KeyNavGrab();
       }
@@ -1504,7 +1506,7 @@ void UnityScreen::handleEvent(XEvent* event)
           shortcut_controller_->Hide();
           EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, false);
 
-          return false; 
+          return false;
         }));
       }
 
