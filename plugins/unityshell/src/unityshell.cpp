@@ -119,7 +119,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , doShellRepaint(false)
   , didShellRepaint(false)
   , allowWindowPaint(false)
-  , damaged(false)
   , _key_nav_mode_requested(false)
   , _last_output(nullptr)
 #ifndef USE_MODERN_COMPIZ_GL
@@ -910,7 +909,6 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 
   doShellRepaint = false;
   didShellRepaint = true;
-  damaged = false;
 }
 
 bool UnityScreen::forcePaintOnTop ()
@@ -1303,13 +1301,6 @@ void UnityScreen::preparePaint(int ms)
   for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
     wi->HandleAnimations (ms);
 
-  // Workaround Nux bug LP: #1014610:
-  if (damaged)
-  {
-    damaged = false;
-    nuxDamageCompiz();
-  }
-
   compizDamageNux(cScreen->currentDamage());
 
   didShellRepaint = false;
@@ -1407,11 +1398,15 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
 /* Grab changed nux regions and add damage rects for them */
 void UnityScreen::nuxDamageCompiz()
 {
-  // Workaround Nux bug LP: #1014610 (unbounded DrawList growth)
-  // Also, ensure we don't dereference null *controller_ on startup.
-  if (damaged || !launcher_controller_ || !dash_controller_)
+  /*
+   * WARNING: Nux bug LP: #1014610 (unbounded DrawList growth) will cause
+   *          this code to be called far too often in some cases and
+   *          Unity will appear to freeze for a while. Please ensure you
+   *          have Nux 3.0+ with the fix for LP: #1014610.
+   */
+
+  if (!launcher_controller_ || !dash_controller_)
     return;
-  damaged = true;
 
   CompRegion nux_damage;
 
