@@ -28,6 +28,48 @@ class LauncherIconsTests(LauncherTestCase):
         super(LauncherIconsTests, self).setUp()
         self.set_unity_option('launcher_hide_mode', 0)
 
+    def open_three_test_apps(self):
+        """Opens three test apps.
+
+        This method returns a tuple of BamfWindow instances. The instances are
+        in window stacking order. From first to last, the windows are:
+
+         * Mahjongg (top of stack, focused)
+         * Calculator
+         * Mahjongg (buttom of stack)
+
+         """
+        self.close_all_app("Mahjongg")
+        self.close_all_app("Calculator")
+
+        mahj = self.start_app("Mahjongg")
+        [mah_win1] = mahj.get_windows()
+        self.assert_window_focused(mah_win1)
+
+        calc = self.start_app("Calculator")
+        [calc_win] = calc.get_windows()
+        self.assert_window_focused(calc_win)
+
+        self.start_app("Mahjongg")
+        # Sleeping due to the start_app only waiting for the bamf model to be
+        # updated with the application.  Since the app has already started,
+        # and we are just waiting on a second window, however a defined sleep
+        # here is likely to be problematic.
+        mah_win2 = None
+        for i in range(10):
+            try:
+                [mah_win2] = [w for w in mahj.get_windows() if w.x_id != mah_win1.x_id]
+                self.assert_window_focused(mah_win2)
+                break
+            except ValueError:
+                sleep(1)
+
+        if not mah_win2:
+            raise AssertionError("Could not find second Mahjongg window.")
+
+        return (mah_win2, calc_win, mah_win1)
+
+
     def test_bfb_tooltip_disappear_when_dash_is_opened(self):
          """Tests that the bfb tooltip disappear when the dash is opened."""
          bfb = self.launcher.model.get_bfb_icon()
@@ -67,49 +109,31 @@ class LauncherIconsTests(LauncherTestCase):
 
         """
 
-        mahj = self.start_app("Mahjongg")
-        [mah_win1] = mahj.get_windows()
-        self.assertTrue(mah_win1.is_focused)
-
-        calc = self.start_app("Calculator")
-        [calc_win] = calc.get_windows()
-        self.assertTrue(calc_win.is_focused)
-
-        self.start_app("Mahjongg")
-        # Sleeping due to the start_app only waiting for the bamf model to be
-        # updated with the application.  Since the app has already started,
-        # and we are just waiting on a second window, however a defined sleep
-        # here is likely to be problematic.
-        # TODO: fix bamf emulator to enable waiting for new windows.
-        sleep(1)
-        [mah_win2] = [w for w in mahj.get_windows() if w.x_id != mah_win1.x_id]
-        self.assertTrue(mah_win2.is_focused)
+        mah_win2, calc_win, mah_win1 = self.open_three_test_apps()
         self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
 
-        mahj_icon = self.launcher.model.get_icon_by_desktop_id(mahj.desktop_file)
-        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
+        mahj_icon = self.launcher.model.get_icon_by_desktop_id(
+            mah_win2.application.desktop_file)
+        calc_icon = self.launcher.model.get_icon_by_desktop_id(
+            calc_win.application.desktop_file)
 
         self.launcher_instance.click_launcher_icon(calc_icon)
-        sleep(1)
-        self.assertTrue(calc_win.is_focused)
+        self.assert_window_focused(calc_win)
         self.assertVisibleWindowStack([calc_win, mah_win2, mah_win1])
 
         self.launcher_instance.click_launcher_icon(mahj_icon)
-        sleep(1)
-        self.assertTrue(mah_win2.is_focused)
+        self.assert_window_focused(mah_win2)
         self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
 
         self.keybinding("window/minimize")
-        sleep(1)
 
-        self.assertTrue(mah_win2.is_hidden)
-        self.assertTrue(calc_win.is_focused)
+        self.assertThat(lambda: mah_win2.is_hidden, Eventually(Equals(True)))
+        self.assert_window_focused(calc_win)
         self.assertVisibleWindowStack([calc_win, mah_win1])
 
         self.launcher_instance.click_launcher_icon(mahj_icon)
-        sleep(1)
-        self.assertTrue(mah_win1.is_focused)
-        self.assertTrue(mah_win2.is_hidden)
+        self.assert_window_focused(mah_win1)
+        self.assertThat(lambda: mah_win2.is_hidden, Eventually(Equals(True)))
         self.assertVisibleWindowStack([mah_win1, calc_win])
 
     def test_clicking_icon_twice_initiates_spread(self):

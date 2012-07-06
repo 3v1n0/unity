@@ -8,7 +8,6 @@
 
 from __future__ import absolute_import
 
-from autopilot.emulators.bamf import BamfWindow
 from autopilot.matchers import Eventually
 import logging
 from testtools.matchers import Equals, Contains, Not
@@ -238,7 +237,6 @@ class SwitcherWindowsManagementTests(SwitcherTestCase):
         # updated with the application.  Since the app has already started,
         # and we are just waiting on a second window, however a defined sleep
         # here is likely to be problematic.
-        # TODO: fix bamf emulator to enable waiting for new windows.
         mah_win2 = None
         for i in range(10):
             try:
@@ -252,16 +250,6 @@ class SwitcherWindowsManagementTests(SwitcherTestCase):
             raise AssertionError("Could not find second Mahjongg window.")
 
         return (mah_win2, calc_win, mah_win1)
-
-    def assert_window_focused(self, window):
-        """Asserts that an instance of a BamfWindow is focused using the
-        Eventually matcher.
-
-        """
-        if type(window) is not BamfWindow:
-            raise TypeError("'window' must be an instance of BamfWindow, not %r" % type(window))
-
-        self.assertThat(lambda: window.is_focused, Eventually(Equals(True)))
 
     def test_switcher_raises_only_last_focused_window(self):
         """Tests that when we do an alt+tab only the previously focused window is raised.
