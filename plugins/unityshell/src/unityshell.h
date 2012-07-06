@@ -278,7 +278,7 @@ private:
   bool    doShellRepaint;
   bool    didShellRepaint;
   bool    allowWindowPaint;
-  bool    damaged;
+  int     damages;
   bool    _key_nav_mode_requested;
   CompOutput* _last_output;
 

@@ -119,7 +119,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , doShellRepaint(false)
   , didShellRepaint(false)
   , allowWindowPaint(false)
-  , damaged(false)
+  , damages(0)
   , _key_nav_mode_requested(false)
   , _last_output(nullptr)
 #ifndef USE_MODERN_COMPIZ_GL
@@ -910,7 +910,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 
   doShellRepaint = false;
   didShellRepaint = true;
-  damaged = false;
+  damages = 0;
 }
 
 bool UnityScreen::forcePaintOnTop ()
@@ -1304,9 +1304,9 @@ void UnityScreen::preparePaint(int ms)
     wi->HandleAnimations (ms);
 
   // Workaround Nux bug LP: #1014610:
-  if (damaged)
+  if (damages)
   {
-    damaged = false;
+    damages = 0;
     nuxDamageCompiz();
   }
 
@@ -1407,11 +1407,19 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
 /* Grab changed nux regions and add damage rects for them */
 void UnityScreen::nuxDamageCompiz()
 {
-  // Workaround Nux bug LP: #1014610 (unbounded DrawList growth)
-  // Also, ensure we don't dereference null *controller_ on startup.
-  if (damaged || !launcher_controller_ || !dash_controller_)
+  /*
+   * Workaround Nux bug LP: #1014610 (unbounded DrawList growth).
+   * Also, ensure we don't dereference null *controller_ on startup.
+   *
+   * The workaround is a bit ugly right now (damages > 500). This is necessary
+   * to also avoid regression LP: #1021549 which the workaround causes.
+   * But soon enough we will be able to remove the workaround and "damages"
+   * completely. Just as soon as we're sure all users of Unity 6.0 have
+   * upgraded to Nux 3.0 which has the fix for LP: #1014610.
+   */
+  if ((damages > 500) || !launcher_controller_ || !dash_controller_)
     return;
-  damaged = true;
+  damages++;
 
   CompRegion nux_damage;
 
