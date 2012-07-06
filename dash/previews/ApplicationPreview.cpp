@@ -176,7 +176,8 @@ void ApplicationPreview::SetupViews()
       app_description_->SetLines(-10);
       app_description_->SetLineSpacing(1);
       app_description_->SetMaximumWidth(400);
-      app_description_->SetText("Skype is a proprietary voice-over-Internet Protocol service and software application originally created by Niklas Zennström and Janus Friis in 2003, and owned by Microsoft since 2011. \
+      app_description_->SetText("Skype is a proprietary voice-over-Internet Protocol service and software application originally \
+created by Niklas Zennström and Janus Friis in 2003, and owned by Microsoft since 2011. \
 The service allows users to communicate with peers by voice, video, and instant messaging over the Internet.");
       /////////////////////
 
@@ -201,8 +202,6 @@ The service allows users to communicate with peers by voice, video, and instant 
   image_data_layout->AddLayout(full_data_layout, 1);
 
   SetLayout(image_data_layout);
-
-  LOG_WARN(logger) << "Line Count" << app_description_->GetLineCount();
 }
 
 }

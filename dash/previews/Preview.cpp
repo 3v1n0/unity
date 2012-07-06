@@ -52,8 +52,8 @@ Preview::~Preview()
 
 void Preview::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
 {
-//    gPainter.Paint2DQuadVGradient(gfx_engine, GetGeometry(), 
-//                                nux::Color(0x96, 0x11, 0xDA), nux::Color(0x54, 0xD9, 0x11));
+   // gPainter.Paint2DQuadVGradient(gfx_engine, GetGeometry(), 
+   //                             nux::Color(0x96, 0x11, 0xDA), nux::Color(0x54, 0xD9, 0x11));
 }
 
 void Preview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)

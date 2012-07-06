@@ -56,6 +56,8 @@ public:
 
   static void InitWindowThread (nux::NThread* thread, void* InitData);
   void Init ();
+  void NavRight();
+  void NavLeft();
 
   previews::PreviewContainer::Ptr container_;
   nux::Layout *layout_;
@@ -74,6 +76,8 @@ void TestRunner::Init ()
 
   container_ = new previews::PreviewContainer(NUX_TRACKER_LOCATION);
   container_->SetMinMaxSize(WIDTH, HEIGHT);
+  container_->navigate_right.connect(sigc::mem_fun(this, &TestRunner::NavRight));
+  container_->navigate_left.connect(sigc::mem_fun(this, &TestRunner::NavLeft));
 
   layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
   layout_->AddView(container_.GetPointer(), 1, nux::MINOR_POSITION_CENTER);
@@ -94,9 +98,49 @@ void TestRunner::Init ()
   glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
                   glib::StealRef());
 
-  container_->preview(v);
+  container_->preview(v, previews::RIGHT);
 
   nux::GetWindowThread()->SetLayout (layout_);
+}
+
+void TestRunner::NavRight()
+{
+  // creates a generic preview object
+  glib::Object<GIcon> icon(g_icon_new_for_string("accessories", NULL));
+  glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_application_preview_new()));
+  unity_protocol_preview_set_title(proto_obj, "Title");
+  unity_protocol_preview_set_subtitle(proto_obj, "Subtitle");
+  unity_protocol_preview_set_description(proto_obj, "Description");
+  unity_protocol_preview_set_thumbnail(proto_obj, icon);
+  unity_protocol_preview_add_action(proto_obj, "action1", "Action #1", NULL, 0);
+  unity_protocol_preview_add_action(proto_obj, "action2", "Action #2", NULL, 0);
+  unity_protocol_preview_add_info_hint(proto_obj, "hint1", "Hint 1", NULL, g_variant_new("i", 34));
+  unity_protocol_preview_add_info_hint(proto_obj, "hint2", "Hint 2", NULL, g_variant_new("s", "string hint"));
+
+  glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
+                  glib::StealRef());
+
+  container_->preview(v, previews::RIGHT);
+}
+
+void TestRunner::NavLeft()
+{
+  // creates a generic preview object
+  glib::Object<GIcon> icon(g_icon_new_for_string("accessories", NULL));
+  glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_application_preview_new()));
+  unity_protocol_preview_set_title(proto_obj, "Title");
+  unity_protocol_preview_set_subtitle(proto_obj, "Subtitle");
+  unity_protocol_preview_set_description(proto_obj, "Description");
+  unity_protocol_preview_set_thumbnail(proto_obj, icon);
+  unity_protocol_preview_add_action(proto_obj, "action1", "Action #1", NULL, 0);
+  unity_protocol_preview_add_action(proto_obj, "action2", "Action #2", NULL, 0);
+  unity_protocol_preview_add_info_hint(proto_obj, "hint1", "Hint 1", NULL, g_variant_new("i", 34));
+  unity_protocol_preview_add_info_hint(proto_obj, "hint2", "Hint 2", NULL, g_variant_new("s", "string hint"));
+
+  glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
+                  glib::StealRef());
+
+  container_->preview(v, previews::LEFT);
 }
 
 void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)

@@ -38,6 +38,7 @@ namespace previews
 {
 
 class PreviewNavigator;
+class PreviewContent;
 
 typedef enum 
 {
@@ -55,7 +56,7 @@ public:
   PreviewContainer(NUX_FILE_LINE_PROTO);
   virtual ~PreviewContainer();
 
-  void preview(glib::Variant const& preview);
+  void preview(glib::Variant const& preview, NavButton direction);
 
   // calling this should disable the nav buttons to the left or the right of the preview
   virtual void DisableNavButton(NavButton button);
@@ -77,13 +78,14 @@ private:
 
   bool AnimationInProgress();
   void EnsureAnimation();
+  float GetSwipeAnimationProgress(struct timespec const& current) const;
 
 private:
   // View related
   nux::HLayout* layout_;
   PreviewNavigator* nav_left_;
   PreviewNavigator* nav_right_;
-  nux::HLayout* content_layout_;
+  PreviewContent* content_layout_;
   previews::Preview::Ptr current_preview_;
 
   // Animation
