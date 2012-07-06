@@ -17,10 +17,12 @@ endif (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
 add_definitions (${CFLAGS})
 
 if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv7l")
-  set (LIBS ${CACHED_UNITY_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION} -lm")
-else()
-  set (LIBS ${CACHED_UNITY_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION} -lm -lGL -lGLU")
-endif()
+    set (UNITY_STANDALONE_LADD "-lunity-core-${UNITY_API_VERSION} -lm")
+else ()
+    set (UNITY_STANDALONE_LADD "-lunity-core-${UNITY_API_VERSION} -lm -lGL -lGLU")
+endif ()
+
+set (LIBS ${CACHED_UNITY_DEPS_LIBRARIES} ${UNITY_STANDALONE_LADD})
 
 link_libraries (${LIBS})
 
