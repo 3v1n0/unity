@@ -28,32 +28,6 @@ class LauncherIconsTests(LauncherTestCase):
         super(LauncherIconsTests, self).setUp()
         self.set_unity_option('launcher_hide_mode', 0)
 
-    def open_three_test_apps(self):
-        """Opens three test apps.
-
-        This method returns a tuple of BamfWindow instances. The instances are
-        in window stacking order. From first to last, the windows are:
-
-         * Mahjongg (top of stack, focused)
-         * Calculator
-         * Mahjongg (buttom of stack)
-
-         """
-        self.close_all_app("Mahjongg")
-        self.close_all_app("Calculator")
-
-        mah_win1 = self.start_app_window("Mahjongg")
-        self.assert_window_focused(mah_win1)
-
-        calc_win = self.start_app_window("Calculator")
-        self.assert_window_focused(calc_win)
-
-        mah_win2 = self.start_app_window("Mahjongg")
-        self.assert_window_focused(mah_win2)
-
-        return (mah_win2, calc_win, mah_win1)
-
-
     def test_bfb_tooltip_disappear_when_dash_is_opened(self):
          """Tests that the bfb tooltip disappear when the dash is opened."""
          bfb = self.launcher.model.get_bfb_icon()
@@ -92,8 +66,10 @@ class LauncherIconsTests(LauncherTestCase):
         of that application.
 
         """
+        mah_win1 = self.start_app_window("Mahjongg")
+        calc_win = self.start_app_window("Calculator")
+        mah_win2 = self.start_app_window("Mahjongg")
 
-        mah_win2, calc_win, mah_win1 = self.open_three_test_apps()
         self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
 
         mahj_icon = self.launcher.model.get_icon_by_desktop_id(
