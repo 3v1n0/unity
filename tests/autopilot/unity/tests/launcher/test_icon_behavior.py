@@ -42,30 +42,14 @@ class LauncherIconsTests(LauncherTestCase):
         self.close_all_app("Mahjongg")
         self.close_all_app("Calculator")
 
-        mahj = self.start_app("Mahjongg")
-        [mah_win1] = mahj.get_windows()
+        mah_win1 = self.start_app_window("Mahjongg")
         self.assert_window_focused(mah_win1)
 
-        calc = self.start_app("Calculator")
-        [calc_win] = calc.get_windows()
+        calc_win = self.start_app_window("Calculator")
         self.assert_window_focused(calc_win)
 
-        self.start_app("Mahjongg")
-        # Sleeping due to the start_app only waiting for the bamf model to be
-        # updated with the application.  Since the app has already started,
-        # and we are just waiting on a second window, however a defined sleep
-        # here is likely to be problematic.
-        mah_win2 = None
-        for i in range(10):
-            try:
-                [mah_win2] = [w for w in mahj.get_windows() if w.x_id != mah_win1.x_id]
-                self.assert_window_focused(mah_win2)
-                break
-            except ValueError:
-                sleep(1)
-
-        if not mah_win2:
-            raise AssertionError("Could not find second Mahjongg window.")
+        mah_win2 = self.start_app_window("Mahjongg")
+        self.assert_window_focused(mah_win2)
 
         return (mah_win2, calc_win, mah_win1)
 
