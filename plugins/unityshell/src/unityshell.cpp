@@ -1347,11 +1347,23 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
   if (!launcher_controller_)
     return;
 
-  CompRect::vector const& rects(damage.rects());
-  for (const CompRect &r : rects)
+  /*
+   * Prioritise user interaction over active blur updates. So the general
+   * slowness of the active blur doesn't affect the UI interaction performance.
+   *
+   * Also, BackgroundEffectHelper::ProcessDamage() is causing a feedback loop
+   * while the dash is open. Calling it results in the NEXT frame (and the
+   * current one?) to get some damage. This GetDrawList().empty() check avoids
+   * that feedback loop and allows us to idle correctly.
+   */
+  if (wt->GetDrawList().empty())
   {
-    nux::Geometry geo(r.x(), r.y(), r.width(), r.height());
-    BackgroundEffectHelper::ProcessDamage(geo);
+    CompRect::vector const& rects(damage.rects());
+    for (CompRect const& r : rects)
+    {
+      nux::Geometry geo(r.x(), r.y(), r.width(), r.height());
+      BackgroundEffectHelper::ProcessDamage(geo);
+    }
   }
 
   auto launchers = launcher_controller_->launchers();
