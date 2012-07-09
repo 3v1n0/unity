@@ -32,9 +32,13 @@ class SwitcherTests(SwitcherTestCase):
     def setUp(self):
         super(SwitcherTests, self).setUp()
         self.set_timeout_setting(False)
-        self.char_map = self.start_app('Character Map')
-        self.calc = self.start_app('Calculator')
-        self.mahjongg = self.start_app('Mahjongg')
+
+    def start_three_test_apps(self):
+        """Start the Character map, Calculator and Mahjong, returning their windows."""
+        char_map_win = self.start_app_window('Character Map')
+        calc_win = self.start_app_window('Calculator')
+        mahjongg_win = self.start_app_window('Mahjongg')
+        return (char_map_win, calc_win, mahjongg_win)
 
     def tearDown(self):
         super(SwitcherTests, self).tearDown()
@@ -42,18 +46,16 @@ class SwitcherTests(SwitcherTestCase):
     def test_witcher_starts_in_normal_mode(self):
         """Switcher must start in normal (i.e.- not details) mode."""
         self.start_app("Character Map")
-        sleep(1)
 
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
-        self.assertThat(self.switcher.mode, Equals(SwitcherMode.NORMAL))
+        self.assertProperty(self.switcher, mode=SwitcherMode.NORMAL)
 
     def test_first_detail_mode_has_correct_label(self):
         """Starting switcher in details mode must show the focused window title."""
-        app = self.start_app("Text Editor")
-        sleep(1)
+        window = self.start_app_window("Text Editor")
+        title = window.title
 
-        [title] = [w.title for w in app.get_windows() if w.is_focused]
         self.switcher.initiate(SwitcherMode.DETAIL)
         self.addCleanup(self.switcher.terminate)
 
@@ -61,44 +63,47 @@ class SwitcherTests(SwitcherTestCase):
 
     def test_switcher_move_next(self):
         """Test that pressing the next icon binding moves to the next icon"""
+        self.start_three_test_apps()
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
 
         start = self.switcher.selection_index
         self.switcher.next_icon()
-        self.assertThat(self.switcher.selection_index, Equals(start + 1))
+
+        self.assertThat(self.switcher.selection_index, Eventually(Equals(start + 1)))
 
     def test_switcher_move_prev(self):
         """Test that pressing the previous icon binding moves to the previous icon"""
+        self.start_three_test_apps()
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
 
         start = self.switcher.selection_index
         self.switcher.previous_icon()
-        self.assertThat(self.switcher.selection_index, Equals(start - 1))
+
+        self.assertThat(self.switcher.selection_index, Eventually(Equals(start - 1)))
 
     def test_switcher_scroll_next(self):
         """Test that scrolling the mouse wheel down moves to the next icon"""
+        self.start_three_test_apps()
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
 
         start = self.switcher.selection_index
         self.switcher.next_via_mouse()
 
-        self.assertThat(self.switcher.selection_index, Equals(start + 1))
+        self.assertThat(self.switcher.selection_index, Eventually(Equals(start + 1)))
 
     def test_switcher_scroll_prev(self):
         """Test that scrolling the mouse wheel up moves to the previous icon"""
+        self.start_three_test_apps()
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
 
         start = self.switcher.selection_index
         self.switcher.previous_via_mouse()
 
-        end = self.switcher.selection_index
-        self.assertThat(end, Equals(start - 1))
-
-        self.switcher.terminate()
+        self.assertThat(self.switcher.selection_index, Eventually(Equals(start - 1)))
 
     def test_switcher_scroll_next_ignores_fast_events(self):
         """Ensures that smoothing is working correctly for next icon scrolling.
@@ -142,21 +147,24 @@ class SwitcherTests(SwitcherTestCase):
         Regression test for LP:??????
 
         """
-        self.keyboard.press('Alt')
-        self.addCleanup(self.keyboard.release, 'Alt')
-        self.keyboard.press_and_release('Right')
+        self.keyboard.press_and_release('Alt+Right')
         self.assertThat(self.switcher.visible, Equals(False))
 
     def test_lazy_switcher_initiate(self):
+        """Inserting a long delay between the Alt press and the Tab tab must still
+        open the switcher.
+
+        """
         self.keybinding_hold("switcher/reveal_normal")
         self.addCleanup(self.keybinding_release, "switcher/reveal_normal")
         self.assertThat(self.switcher.visible, Eventually(Equals(False)))
-
+        sleep(5)
         self.keybinding_tap("switcher/reveal_normal")
         self.addCleanup(self.keybinding, "switcher/cancel")
         self.assertThat(self.switcher.visible, Eventually(Equals(True)))
 
     def test_switcher_cancel(self):
+        """Pressing the switcher cancel keystroke must cancel the switcher."""
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
 
@@ -165,9 +173,11 @@ class SwitcherTests(SwitcherTestCase):
         self.assertThat(self.switcher.visible, Eventually(Equals(False)))
 
     def test_lazy_switcher_cancel(self):
+        """Must be able to cancel the switcher after a 'lazy' initiation."""
         self.keybinding_hold("switcher/reveal_normal")
         self.addCleanup(self.keybinding_release, "switcher/reveal_normal")
         self.assertThat(self.switcher.visible, Eventually(Equals(False)))
+        sleep(5)
         self.keybinding_tap("switcher/reveal_normal")
         self.assertThat(self.switcher.visible, Eventually(Equals(True)))
         self.switcher.cancel()
@@ -179,13 +189,17 @@ class SwitcherTests(SwitcherTestCase):
         This is defined as the monitor with a focused window.
 
         """
+        # TODO - this test fails in multi-monitor setups. You can't use addCleanup
+        # a better way would be to have a scenario'd class for multi-monitor
+        # switcher tests.
         num_monitors = self.screen_geo.get_num_monitors()
         if num_monitors == 1:
             self.skip("No point testing this on one monitor")
 
-        [calc_win] = self.calc.get_windows()
+        charmap, calc, mahjongg = self.start_three_test_apps()
+
         for monitor in range(num_monitors):
-            self.screen_geo.drag_window_to_monitor(calc_win, monitor)
+            self.screen_geo.drag_window_to_monitor(calc, monitor)
             self.switcher.initiate()
             self.addCleanup(self.switcher.terminate)
             self.assertThat(self.switcher.controller.monitor, Eventually(Equals(monitor)))
@@ -193,18 +207,15 @@ class SwitcherTests(SwitcherTestCase):
     def test_switcher_alt_f4_is_disabled(self):
         """Tests that alt+f4 does not work while switcher is active."""
 
-        app = self.start_app("Text Editor")
-        sleep(1)
+        win = self.start_app_window("Text Editor")
 
         self.switcher.initiate(SwitcherMode.DETAIL)
         self.addCleanup(self.switcher.terminate)
 
         self.keyboard.press_and_release("Alt+F4")
-        [win] = [w for w in app.get_windows()]
-
         # Need the sleep to allow the window time to close, for jenkins!
         sleep(10)
-        self.assertThat(win.is_valid, Equals(True))
+        self.assertProperty(win, is_valid=True)
 
 
 class SwitcherWindowsManagementTests(SwitcherTestCase):
