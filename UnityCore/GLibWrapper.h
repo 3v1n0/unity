@@ -26,6 +26,7 @@
 
 #include <boost/utility.hpp>
 #include <glib.h>
+#include <glib-object.h>
 
 namespace unity
 {
@@ -56,6 +57,7 @@ public:
   T* RawPtr() const;
   // Release ownership of the object. No unref will occur.
   T* Release();
+  bool IsType(GType type) const;
 
 private:
   T* object_;
