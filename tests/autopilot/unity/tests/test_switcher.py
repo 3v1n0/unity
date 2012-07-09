@@ -25,6 +25,28 @@ class SwitcherTestCase(UnityTestCase):
         self.set_unity_option("alt_tab_timeout", state)
         sleep(1)
 
+    def start_applications(self, *args):
+        """Start some applications, returning their windows.
+
+        If no applications are specified, the following will be started:
+         * Character Map
+         * Calculator
+         * Calculator
+
+         Windows are always started in the order that they are specified (which
+        means the last specified application will *probably* be at the top of the
+        window stack after calling this method). Windows are returned in the same
+        order they are specified in.
+
+        """
+        if len(args) == 0:
+            args = ('Character Map', 'Calculator', 'Calculator')
+        windows = []
+        for app in args:
+            windows.append(self.start_app_window(app))
+
+        return windows
+
 
 class SwitcherTests(SwitcherTestCase):
     """Test the switcher."""
@@ -32,13 +54,6 @@ class SwitcherTests(SwitcherTestCase):
     def setUp(self):
         super(SwitcherTests, self).setUp()
         self.set_timeout_setting(False)
-
-    def start_three_test_apps(self):
-        """Start the Character map, Calculator and Mahjong, returning their windows."""
-        char_map_win = self.start_app_window('Character Map')
-        calc_win = self.start_app_window('Calculator')
-        mahjongg_win = self.start_app_window('Mahjongg')
-        return (char_map_win, calc_win, mahjongg_win)
 
     def tearDown(self):
         super(SwitcherTests, self).tearDown()
@@ -63,7 +78,7 @@ class SwitcherTests(SwitcherTestCase):
 
     def test_switcher_move_next(self):
         """Test that pressing the next icon binding moves to the next icon"""
-        self.start_three_test_apps()
+        self.start_applications()
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
 
@@ -74,7 +89,7 @@ class SwitcherTests(SwitcherTestCase):
 
     def test_switcher_move_prev(self):
         """Test that pressing the previous icon binding moves to the previous icon"""
-        self.start_three_test_apps()
+        self.start_applications()
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
 
@@ -85,7 +100,7 @@ class SwitcherTests(SwitcherTestCase):
 
     def test_switcher_scroll_next(self):
         """Test that scrolling the mouse wheel down moves to the next icon"""
-        self.start_three_test_apps()
+        self.start_applications()
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
 
@@ -96,7 +111,7 @@ class SwitcherTests(SwitcherTestCase):
 
     def test_switcher_scroll_prev(self):
         """Test that scrolling the mouse wheel up moves to the previous icon"""
-        self.start_three_test_apps()
+        self.start_applications()
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
 
@@ -196,7 +211,7 @@ class SwitcherTests(SwitcherTestCase):
         if num_monitors == 1:
             self.skip("No point testing this on one monitor")
 
-        charmap, calc, mahjongg = self.start_three_test_apps()
+        charmap, calc, mahjongg = self.start_applications()
 
         for monitor in range(num_monitors):
             self.screen_geo.drag_window_to_monitor(calc, monitor)
@@ -229,10 +244,7 @@ class SwitcherWindowsManagementTests(SwitcherTestCase):
         Then we close the currently focused window.
 
         """
-        mah_win1 = self.start_app_window("Mahjongg")
-        calc_win = self.start_app_window("Calculator")
-        mah_win2 = self.start_app_window("Mahjongg")
-
+        mah_win1, calc_win, mah_win2 = self.start_applications("Mahjongg", "Calculator", "Mahjongg")
         self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
 
         self.keybinding("switcher/reveal_normal")
@@ -258,13 +270,8 @@ class SwitcherDetailsTests(SwitcherTestCase):
         """Test that details mode activates on a timeout."""
         initial_workspace = self.workspace.current_workspace
         self.addCleanup(self.workspace.switch_to, initial_workspace)
-        #FIXME: Setup
         self.workspace.switch_to(1)
-        self.start_app_window("Character Map")
-        self.start_app_window("Character Map")
-        # Need to start a different app, so it has focus, so alt-tab goes to
-        # the character map.
-        self.start_app_window('Mahjongg')
+        self.start_applications("Character Map", "Character Map", "Mahjongg")
 
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
@@ -284,10 +291,7 @@ class SwitcherDetailsTests(SwitcherTestCase):
         self.workspace.switch_to(1)
         self.start_app_window("Character Map")
         self.workspace.switch_to(2)
-        self.start_app_window("Character Map")
-        # Need to start a different app, so it has focus, so alt-tab goes to
-        # the character map.
-        self.start_app_window('Mahjongg')
+        self.start_applications("Character Map", "Mahjongg")
 
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
@@ -309,14 +313,16 @@ class SwitcherDetailsModeTests(SwitcherTestCase):
     ]
 
     def test_can_start_details_mode(self):
-        """Must be able to initiate details mode using selected scenario keycode.
+        """Must be able to switch to details mode using selected scenario keycode.
 
         """
-        self.start_app("Character Map")
+        self.start_app_window("Character Map")
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
+
         self.keyboard.press_and_release(self.initiate_keycode)
-        self.assertThat(self.switcher.mode, Equals(SwitcherMode.DETAIL))
+
+        self.assertProperty(self.switcher, mode=SwitcherMode.DETAIL)
 
     def test_next_icon_from_last_detail_works(self):
         """Pressing next while showing last switcher item in details mode
@@ -336,7 +342,7 @@ class SwitcherDetailsModeTests(SwitcherTestCase):
             self.switcher.next_detail()
 
         self.switcher.next_icon()
-        self.assertThat(self.switcher.selection_index, Equals(0))
+        self.assertThat(self.switcher.selection_index, Eventually(Equals(0)))
 
 
 class SwitcherWorkspaceTests(SwitcherTestCase):
@@ -346,47 +352,36 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
         """Switcher must show apps from the current workspace only."""
         initial_workspace = self.workspace.current_workspace
         self.addCleanup(self.workspace.switch_to, initial_workspace)
-        #FIXME: SETUP
-        self.close_all_app('Calculator')
-        self.close_all_app('Character Map')
 
         self.workspace.switch_to(1)
         calc = self.start_app("Calculator")
-        sleep(1)
         self.workspace.switch_to(2)
         char_map = self.start_app("Character Map")
-        sleep(1)
-        # END SETUP
 
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
 
-        icon_names = [i.tooltip_text for i in self.switcher.icons]
-        self.assertThat(icon_names, Contains(char_map.name))
-        self.assertThat(icon_names, Not(Contains(calc.name)))
+        get_icon_names = lambda: [i.tooltip_text for i in self.switcher.icons]
+        self.assertThat(get_icon_names, Eventually(Contains(char_map.name)))
+        self.assertThat(get_icon_names, Eventually(Not(Contains(calc.name))))
 
     def test_switcher_all_mode_shows_all_apps(self):
         """Test switcher 'show_all' mode shows apps from all workspaces."""
         initial_workspace = self.workspace.current_workspace
         self.addCleanup(self.workspace.switch_to, initial_workspace)
-        self.close_all_app('Calculator')
-        self.close_all_app('Character Map')
 
-        #FIXME: this is setup
         self.workspace.switch_to(1)
         calc = self.start_app("Calculator")
-        sleep(1)
         self.workspace.switch_to(2)
         char_map = self.start_app("Character Map")
-        sleep(1)
-        # END SETUP
+
 
         self.switcher.initiate(SwitcherMode.ALL)
         self.addCleanup(self.switcher.terminate)
 
-        icon_names = [i.tooltip_text for i in self.switcher.icons]
-        self.assertThat(icon_names, Contains(calc.name))
-        self.assertThat(icon_names, Contains(char_map.name))
+        get_icon_names = lambda: [i.tooltip_text for i in self.switcher.icons]
+        self.assertThat(get_icon_names, Eventually(Contains(calc.name)))
+        self.assertThat(get_icon_names, Eventually(Contains(char_map.name)))
 
     def test_switcher_can_switch_to_minimised_window(self):
         """Switcher must be able to switch to a minimised window when there's
@@ -396,37 +391,24 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
         """
         initial_workspace = self.workspace.current_workspace
         self.addCleanup(self.workspace.switch_to, initial_workspace)
-        #FIXME this is setup.
+
         # disable automatic gridding of the switcher after a timeout, since it makes
         # it harder to write the tests.
         self.set_unity_option("alt_tab_timeout", False)
-        self.close_all_app("Calculator")
-        self.close_all_app("Mahjongg")
 
         self.workspace.switch_to(1)
         self.start_app("Mahjongg")
 
         self.workspace.switch_to(3)
-        mahjongg = self.start_app("Mahjongg")
-        sleep(1)
+        mah_win2 = self.start_app_window("Mahjongg")
         self.keybinding("window/minimize")
-        sleep(1)
+        self.assertProperty(mah_win2, is_hidden=True)
 
         self.start_app("Calculator")
-        sleep(1)
-        # END SETUP
 
         self.switcher.initiate()
-        while self.switcher.current_icon.tooltip_text != mahjongg.name:
-            logger.debug("%s -> %s" % (self.switcher.current_icon.tooltip_text, mahjongg.name))
+        while self.switcher.current_icon.tooltip_text != mah_win2.application.name:
             self.switcher.next_icon()
-            sleep(1)
         self.switcher.select()
 
-        #get mahjongg windows - there should be two:
-        wins = mahjongg.get_windows()
-        self.assertThat(len(wins), Equals(2))
-        # Ideally we should be able to find the instance that is on the
-        # current workspace and ask that one if it is hidden.
-        self.assertFalse(wins[0].is_hidden)
-        self.assertFalse(wins[1].is_hidden)
+        self.assertProperty(mah_win2, is_hidden=False)
