@@ -1,4 +1,4 @@
-unity (6.0.0-0ubuntu1) UNRELEASED; urgency=low
+unity (6.0.0-0ubuntu2) UNRELEASED; urgency=low
 
   [ Didier Roche ]
   * debian/rules, debian/control, debian/unity-autopilot.install:
@@ -10,6 +10,7 @@ unity (6.0.0-0ubuntu1) UNRELEASED; urgency=low
   * debian/control:
     - remove gnome-desktop dependency: not needed upstream anymore
     - unity Breaks older lenses due to path change
+    - remove libgdu in build-dep
   * debian/libunity-core-6.0-5.install, debian/libunity-core-6.0-dev.install,
     debian/control:
     - version bump in libunity-core, change soname
@@ -18,11 +19,11 @@ unity (6.0.0-0ubuntu1) UNRELEASED; urgency=low
   * Update apport hook for python3 ; thanks to Edward Donovan (LP: #1013171)
 
   [ Łukasz 'sil2100' Zemczak ]
+  * New upstream release.
   * debian/control, debian/rules:
     - switch to nux-3.0
-  * New upstream release.
 
- -- Łukasz 'sil2100' Zemczak <lukasz.zemczak@canonical.com>  Mon, 09 Jul 2012 10:03:10 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 09 Jul 2012 18:07:36 +0200
 
 unity (5.12-0ubuntu4) quantal-proposed; urgency=low
 
