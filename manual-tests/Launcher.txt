@@ -592,3 +592,17 @@ Actions:
 
 Expected Results:
  * The device launcher icon has been removed.
+
+
+Drag and Drop doesn't freeze Unity
+----------------------------------
+Actions:
+#. Open Firefox
+#. Go to http://launchpad.net/unity
+#. Drag around the Unity icon image shown in the top-left corner
+   of the browser window.
+#. Drop it wherever you want.
+
+Expected Result:
+Unity must not freeze during the drag and drop.
+
