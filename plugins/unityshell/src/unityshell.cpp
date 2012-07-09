@@ -344,13 +344,13 @@ UnityScreen::UnityScreen(CompScreen* screen)
      ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_NAV,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherStartKeyNav));
 
-     ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWTICHER,
+     ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWITCHER,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherStartKeyNav));
 
      ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_NAV,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherEndKeyNav));
 
-     ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWTICHER,
+     ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWITCHER,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherEndKeyNav));
 
      ubus_manager_.RegisterInterest(UBUS_SWITCHER_START,
@@ -2259,7 +2259,7 @@ bool isNuxWindow (CompWindow* value)
   auto id = value->id();
 
   // iterate loop by hand rather than use std::find as this is considerably faster
-  // we care about performance here becuase of the high frequency in which this function is
+  // we care about performance here because of the high frequency in which this function is
   // called (nearly every frame)
   unsigned int size = xwns.size();
   for (unsigned int i = 0; i < size; ++i)
@@ -3001,6 +3001,7 @@ void UnityScreen::InitHints()
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", " + A", _("Open the Dash App Lens."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", " + F", _("Open the Dash Files Lens."), shortcut::COMPIZ_KEY_OPTION,"unityshell", "show_launcher"));
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", " + M", _("Open the Dash Music Lens."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
+  hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", "", _("Switches between Lenses."), shortcut::HARDCODED_OPTION, _("Ctrl + Tab")));
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", "", _("Switches between Lenses."), shortcut::HARDCODED_OPTION, _("Ctrl + Tab")));
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", "", _("Moves the focus."), shortcut::HARDCODED_OPTION, _("Cursor Keys")));
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", "", _("Open currently focused item."), shortcut::HARDCODED_OPTION, _("Enter & Return")));
