@@ -193,7 +193,7 @@ class PanelTitleTests(PanelTestsBase):
         launcher = self.launcher.get_launcher_for_monitor(self.panel_monitor)
         launcher.click_launcher_icon(icon)
 
-        self.assertThat(lambda: text_win.is_focused, Eventually(Equals(True)))
+        self.assertProperty(text_win, is_focused=True)
         self.assertThat(self.panel.title, Eventually(Equals(text_win.title)))
 
     def test_panel_title_updates_on_maximized_window_title_changes(self):
@@ -367,7 +367,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
         self.panel.window_buttons.minimize.mouse_click()
 
-        self.assertThat(lambda: text_win.is_hidden, Eventually(Equals(True)))
+        self.assertProperty(text_win, is_hidden=True)
 
     def test_window_buttons_minimize_follows_fitts_law(self):
         """Tests that the 'Minimize' button is conform to Fitts's Law.
@@ -385,7 +385,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.mouse.move(target_x, target_y)
         self.mouse.click()
 
-        self.assertThat(lambda: text_win.is_hidden, Eventually(Equals(True)))
+        self.assertProperty(text_win, is_hidden=True)
 
     def test_window_buttons_unmaximize_button_works_for_window(self):
         """Tests that the window button 'Unmaximize' actually unmaximizes a window."""
@@ -395,8 +395,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
         self.panel.window_buttons.unmaximize.mouse_click()
 
-        self.assertThat(lambda: text_win.is_maximized, Eventually(Equals(False)))
-        self.assertThat(lambda: text_win.is_focused, Eventually(Equals(True)))
+        self.assertProperties(text_win, is_maximized=False, is_focused=True)
         self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(False)))
 
     def test_window_buttons_unmaximize_follows_fitts_law(self):
@@ -416,7 +415,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         sleep(1)
         self.mouse.click()
 
-        self.assertThat(lambda: text_win.is_maximized, Eventually(Equals(False)))
+        self.assertProperty(text_win, is_maximized=False)
 
     def test_window_buttons_close_button_works_for_hud(self):
         """Tests that the window 'Close' actually closes the HUD."""
@@ -596,7 +595,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.move_window_to_panel_monitor(target_win, restore_position=False)
 
         self.keybinding("window/maximize")
-        self.assertThat(lambda: target_win.is_maximized, Eventually(Equals(True)))
+        self.assertProperty(target_win, is_maximized=True)
 
         self.assertThat(self.panel.window_buttons.close.enabled, Eventually(Equals(True)))
         self.assertThat(self.panel.window_buttons.minimize.enabled, Eventually(Equals(False)))
@@ -1051,33 +1050,33 @@ class PanelGrabAreaTests(PanelTestsBase):
         self.panel.move_mouse_below_the_panel()
         self.mouse.release()
 
-        self.assertThat(lambda: text_win.is_maximized, Eventually(Equals(False)))
+        self.assertProperty(text_win, is_maximized=False)
 
     def test_focus_the_maximized_window_works(self):
         """Clicking on the grab area must put a maximized window in focus."""
         text_win = self.open_new_application_window("Text Editor", maximized=True)
         calc_win = self.open_new_application_window("Calculator")
 
-        self.assertThat(lambda: text_win.is_focused, Eventually(Equals(False)))
-        self.assertThat(lambda: calc_win.is_focused, Eventually(Equals(True)))
+        self.assertProperty(text_win, is_focused=False)
+        self.assertProperty(calc_win, is_focused=True)
 
         self.move_mouse_over_grab_area()
         self.mouse.click()
 
-        self.assertThat(lambda: text_win.is_focused, Eventually(Equals(True)))
+        self.assertProperty(text_win, is_focused=True)
 
     def test_lower_the_maximized_window_works(self):
         """Middle-clicking on the panel grab area must lower a maximized window."""
         calc_win = self.open_new_application_window("Calculator")
         text_win = self.open_new_application_window("Text Editor", maximized=True)
 
-        self.assertThat(lambda: text_win.is_focused, Eventually(Equals(True)))
-        self.assertThat(lambda: calc_win.is_focused, Eventually(Equals(False)))
+        self.assertProperty(text_win, is_focused=True)
+        self.assertProperty(calc_win, is_focused=False)
 
         self.move_mouse_over_grab_area()
         self.mouse.click(2)
 
-        self.assertThat(lambda: calc_win.is_focused, Eventually(Equals(True)))
+        self.assertProperty(calc_win, is_focused=True)
 
     def test_panels_dont_steal_keynav_foucs_from_hud(self):
         """On a mouse click event on the panel you must still be able to type into the Hud."""
