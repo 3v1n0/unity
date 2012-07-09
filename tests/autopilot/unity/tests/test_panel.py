@@ -193,7 +193,7 @@ class PanelTitleTests(PanelTestsBase):
         launcher = self.launcher.get_launcher_for_monitor(self.panel_monitor)
         launcher.click_launcher_icon(icon)
 
-        self.assertThat(lambda: text_win.is_focused, Eventually(Equals(True)))
+        self.assertProperty(text_win, is_focused=True)
         self.assertThat(self.panel.title, Eventually(Equals(text_win.title)))
 
     def test_panel_title_updates_on_maximized_window_title_changes(self):
@@ -395,8 +395,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
         self.panel.window_buttons.unmaximize.mouse_click()
 
-        self.assertThat(lambda: text_win.is_maximized, Eventually(Equals(False)))
-        self.assertThat(lambda: text_win.is_focused, Eventually(Equals(True)))
+        self.assertProperties(text_win, is_maximized=False, is_focused=True)
         self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(False)))
 
     def test_window_buttons_unmaximize_follows_fitts_law(self):
