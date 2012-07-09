@@ -225,7 +225,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
     def test_window_buttons_dont_show_on_empty_desktop(self):
         """Tests that the window buttons are not shown on clean desktop."""
-        # THis initially used Show Desktop mode, but it's very buggy from within
+        # This initially used Show Desktop mode, but it's very buggy from within
         # autopilot. We assume that workspace 2 is empty (which is safe for the
         # jenkins runs at least.)
         initial_workspace = self.workspace.current_workspace
@@ -310,19 +310,9 @@ class PanelWindowButtonsTests(PanelTestsBase):
         their area.
         """
         self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
+
         button = self.panel.window_buttons.close
-
-        # FIXME: THere's a bug in unity that prevents us from doing:
-        # self.addCleanup(self.hud.ensure_hidden)
-        # SO we do this instead. The bug is:
-        #
-        # https://bugs.launchpad.net/ubuntu/+source/unity/+bug/1021087
-        #
-        # Once that's fixed the next two lines can be removed, and the one above
-        # added instead.
-        self.addCleanup(self.assertThat, self.hud.visible, Eventually(Equals(False)))
-        self.addCleanup(button.mouse_click)
-
         button.mouse_move_to()
         self.mouse.press()
         self.assertThat(button.visual_state, Eventually(Equals("pressed")))
@@ -435,13 +425,8 @@ class PanelWindowButtonsTests(PanelTestsBase):
     def test_minimize_button_does_nothing_for_hud(self):
         """Minimize button must not affect the Hud."""
         self.hud.ensure_visible()
-        # FIXME: When this bug is fixed:
-        #
-        # https://bugs.launchpad.net/ubuntu/+source/unity/+bug/1021087
-        #
-        # We can replace the following line with:
-        # self.addCleanup(self.hud.ensure_hidden)
-        self.addCleanup(self.panel.window_buttons.close.mouse_click)
+        self.addCleanup(self.hud.ensure_hidden)
+
         self.panel.window_buttons.minimize.mouse_click()
 
         self.assertThat(self.hud.visible, Eventually(Equals(True)))
@@ -456,13 +441,8 @@ class PanelWindowButtonsTests(PanelTestsBase):
     def test_maximize_button_does_nothing_for_hud(self):
         """Maximize button must not affect the Hud."""
         self.hud.ensure_visible()
-        # FIXME: When this bug is fixed:
-        #
-        # https://bugs.launchpad.net/ubuntu/+source/unity/+bug/1021087
-        #
-        # We can replace the following line with:
-        # self.addCleanup(self.hud.ensure_hidden)
-        self.addCleanup(self.panel.window_buttons.close.mouse_click)
+        self.addCleanup(self.hud.ensure_hidden)
+
         self.panel.window_buttons.maximize.mouse_click()
 
         self.assertThat(self.hud.visible, Eventually(Equals(True)))
@@ -475,13 +455,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         """
         inital_form_factor = self.dash.view.form_factor
         self.hud.ensure_visible()
-        # FIXME: When this bug is fixed:
-        #
-        # https://bugs.launchpad.net/ubuntu/+source/unity/+bug/1021087
-        #
-        # We can replace the following line with:
-        # self.addCleanup(self.hud.ensure_hidden)
-        self.addCleanup(self.panel.window_buttons.close.mouse_click)
+        self.addCleanup(self.hud.ensure_hidden)
 
         self.panel.window_buttons.maximize.mouse_click()
         # long sleep here to make sure that any change that might happen will
