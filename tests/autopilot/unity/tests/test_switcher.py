@@ -259,24 +259,18 @@ class SwitcherDetailsTests(SwitcherTestCase):
         initial_workspace = self.workspace.current_workspace
         self.addCleanup(self.workspace.switch_to, initial_workspace)
         #FIXME: Setup
-        self.close_all_app('Character Map')
         self.workspace.switch_to(1)
-        self.start_app("Character Map")
-        sleep(1)
-        self.start_app("Character Map")
-        sleep(1)
-
+        self.start_app_window("Character Map")
+        self.start_app_window("Character Map")
         # Need to start a different app, so it has focus, so alt-tab goes to
         # the character map.
-        self.start_app('Mahjongg')
-        sleep(1)
-        # end setup
+        self.start_app_window('Mahjongg')
 
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
         # Wait longer than details mode.
         sleep(3)
-        self.assertThat(self.switcher.mode, Equals(SwitcherMode.DETAIL))
+        self.assertProperty(self.switcher, mode=SwitcherMode.DETAIL)
 
     def test_no_details_for_apps_on_different_workspace(self):
         """Tests that details mode does not initiates when there are multiple windows
@@ -285,27 +279,21 @@ class SwitcherDetailsTests(SwitcherTestCase):
         Regression test for LP:933406.
 
         """
-        #Fixme: setup
         initial_workspace = self.workspace.current_workspace
         self.addCleanup(self.workspace.switch_to, initial_workspace)
-        self.close_all_app('Character Map')
         self.workspace.switch_to(1)
-        self.start_app("Character Map")
-        sleep(1)
+        self.start_app_window("Character Map")
         self.workspace.switch_to(2)
-        self.start_app("Character Map")
-        sleep(1)
+        self.start_app_window("Character Map")
         # Need to start a different app, so it has focus, so alt-tab goes to
         # the character map.
-        self.start_app('Mahjongg')
-        sleep(1)
-        # end setup
+        self.start_app_window('Mahjongg')
 
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
         # Wait longer than details mode.
         sleep(3)
-        self.assertThat(self.switcher.mode, Equals(SwitcherMode.NORMAL))
+        self.assertProperty(self.switcher, mode=SwitcherMode.NORMAL)
 
 
 class SwitcherDetailsModeTests(SwitcherTestCase):
