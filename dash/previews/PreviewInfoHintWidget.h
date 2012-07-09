@@ -16,17 +16,18 @@
  * License version 3 along with this program.  If not, see
  * <http://www.gnu.org/licenses/>
  *
- * Authored by: Gordon Allott <gord.allott@canonical.com>
+ * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  *
  */
 
-#ifndef PREVIEW_H
-#define PREVIEW_H
+#ifndef PREVIEWINFOHINTWIDGET_H
+#define PREVIEWINFOHINTWIDGET_H
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
 #include <UnityCore/Preview.h>
 #include "unity-shared/Introspectable.h"
+
 
 namespace unity
 {
@@ -35,28 +36,38 @@ namespace dash
 namespace previews
 {
 
-class Preview : public nux::View, public debug::Introspectable
+class PreviewInfoHintWidget : public nux::View, public debug::Introspectable
 {
 public:
-  typedef nux::ObjectPtr<Preview> Ptr;
-  NUX_DECLARE_OBJECT_TYPE(Preview, nux::View);
+  typedef nux::ObjectPtr<PreviewInfoHintWidget> Ptr;
+  NUX_DECLARE_OBJECT_TYPE(PreviewInfoHintWidget, nux::View);
 
-  Preview(dash::Preview::Ptr preview_model);
-  virtual ~Preview();
- 
+  PreviewInfoHintWidget(dash::Preview::Ptr preview_model);
+  virtual ~PreviewInfoHintWidget();
+
   // From debug::Introspectable
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
 protected:
-  
+  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+
+  void SetupBackground();
+  void SetupViews();
+
+  void IconLoaded(std::string const& texid,
+                                    unsigned size,
+                                    glib::Object<GdkPixbuf> const& pixbuf,
+                                    std::string icon_name);
+
 protected:
   dash::Preview::Ptr preview_model_;
-
+  typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 };
 
-}
-}
-}
+} // napespace prviews
+} // namespace dash
+} // namespace unity
 
-#endif // PREVIEW_H
+#endif //PREVIEWINFOHINTWIDGET_H

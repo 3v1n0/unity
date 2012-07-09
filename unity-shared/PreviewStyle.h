@@ -54,9 +54,12 @@ public:
   // Application Preview
   std::string app_name_font() const;
   std::string version_size_font() const;
+  std::string app_license_font() const;
   std::string app_last_update_font() const;
   std::string app_copywrite_font() const;
   std::string app_description_font() const;
+  std::string info_hint_font() const;
+  std::string user_rating_font() const;
    ////////////////////////////////
  
 protected:

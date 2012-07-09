@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2011-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,11 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Michal Hruby <michal.hruby@canonical.com>
  */
 
 #include <NuxCore/Logger.h>
 #include <unity-protocol.h>
 
+#include "Lens.h"
 #include "Preview.h"
 
 #include "ApplicationPreview.h"
@@ -118,6 +120,13 @@ public:
   ActionPtrList get_actions() const { return actions_list_; };
   InfoHintPtrList get_info_hints() const { return info_hint_list_; };
 
+  Lens* get_parent_lens() const { return parent_lens_; };
+  bool set_parent_lens(Lens* lens)
+  {
+    parent_lens_ = lens;
+    return false; // TODO: do we need the notifications here?
+  };
+
   Preview* owner_;
 
   std::string renderer_name_;
@@ -127,10 +136,12 @@ public:
   unity::glib::Object<GIcon> image_;
   ActionPtrList actions_list_;
   InfoHintPtrList info_hint_list_;
+  Lens* parent_lens_;
 };
 
 Preview::Impl::Impl(Preview* owner, glib::Object<GObject> const& proto_obj)
   : owner_(owner)
+  , parent_lens_(nullptr)
 {
   if (!proto_obj)
   {
@@ -192,6 +203,11 @@ void Preview::Impl::SetupGetters()
       sigc::mem_fun(this, &Preview::Impl::get_description));
   owner_->image.SetGetterFunction(
       sigc::mem_fun(this, &Preview::Impl::get_image));
+
+  owner_->parent_lens.SetGetterFunction(
+      sigc::mem_fun(this, &Preview::Impl::get_parent_lens));
+  owner_->parent_lens.SetSetterFunction(
+      sigc::mem_fun(this, &Preview::Impl::set_parent_lens));
 }
 
 Preview::Preview(glib::Object<GObject> const& proto_obj)
@@ -200,7 +216,8 @@ Preview::Preview(glib::Object<GObject> const& proto_obj)
 }
 
 Preview::~Preview()
-{}
+{
+}
 
 Preview::ActionPtrList Preview::GetActions() const
 {
@@ -210,6 +227,31 @@ Preview::ActionPtrList Preview::GetActions() const
 Preview::InfoHintPtrList Preview::GetInfoHints() const
 {
   return pimpl->get_info_hints();
+}
+
+void Preview::Update(glib::Variant const& properties,
+                     glib::DBusProxy::ReplyCallback reply_callback) const
+{
+  if (pimpl->parent_lens_)
+  {
+    pimpl->parent_lens_->SignalPreview(preview_uri, properties, reply_callback);
+  }
+  else
+  {
+    LOG_WARN(logger) << "Unable to update Preview, parent_lens wasn't set!";
+  }
+}
+
+void Preview::PerformAction(std::string const& id) const
+{
+  if (pimpl->parent_lens_)
+  {
+    pimpl->parent_lens_->ActivatePreviewAction(id, preview_uri);
+  }
+  else
+  {
+    LOG_WARN(logger) << "Unable to perform action, parent_lens wasn't set!";
+  }
 }
 
 } // namespace dash

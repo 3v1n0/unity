@@ -82,6 +82,10 @@ std::string Style::version_size_font() const
 {
   return "Ubuntu 12";
 }
+std::string Style::app_license_font() const
+{
+  return "Ubuntu Light 9.5";
+}
 std::string Style::app_last_update_font() const
 {
   return "Ubuntu Light 10";
@@ -91,6 +95,15 @@ std::string Style::app_copywrite_font() const
   return "Ubuntu Light 10";
 }
 std::string Style::app_description_font() const
+{
+  return "Ubuntu Light 10";
+}
+
+std::string Style::info_hint_font() const
+{
+  return "Ubuntu Light 10";
+}
+std::string Style::user_rating_font() const
 {
   return "Ubuntu Light 10";
 }

@@ -25,16 +25,25 @@
 
 #include "Preview.h"
 #include <Nux/Nux.h>
-#include <UnityCore/ApplicationPreview.h>
 #include "unity-shared/StaticCairoText.h"
 #include <Nux/StaticText.h>
 
+namespace nux
+{
+class AbstractPaintLayer;
+class VLayout;
+}
+
 namespace unity
 {
+class IconTexture;
+
 namespace dash
 {
 namespace previews
 {
+
+class PreviewRatingsWidget;
 
 class ApplicationPreview : public Preview
 {
@@ -53,18 +62,23 @@ protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
+  void SetupBackground();
   void SetupViews();
 
 protected:
-  nux::View* app_image_;
-  nux::View* app_icon_;
-  nux::View* app_rating_;
+  IconTexture* app_icon_;
+  PreviewRatingsWidget* app_rating_;
+  nux::VLayout* full_data_layout_;
 
   nux::StaticCairoText* app_name_;
-  nux::StaticCairoText* version_size_;
+  nux::StaticCairoText* subtitle_;
+  nux::StaticCairoText* license_;
   nux::StaticCairoText* last_update_;
   nux::StaticCairoText* copywrite_;
-  nux::StaticCairoText* app_description_;  
+  nux::StaticCairoText* app_description_;
+
+  typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
+  LayerPtr details_bg_layer_;
 };
 
 }

@@ -23,6 +23,7 @@
 #include "Nux/VLayout.h"
 #include "Nux/WindowThread.h"
 #include "NuxGraphics/GraphicsEngine.h"
+#include <Nux/Layout.h>
 #include <NuxCore/Logger.h>
 #include <UnityCore/Variant.h>
 #include <UnityCore/Preview.h>
@@ -42,11 +43,70 @@
 #include "PreviewContainer.h"
 
 
-#define WIDTH 940
-#define HEIGHT 420
+#define WIDTH 972
+#define HEIGHT 452
 
 using namespace unity;
 using namespace unity::dash;
+
+class DummyView : public nux::View
+{
+public:
+  DummyView(nux::View* view)
+  : View(NUX_TRACKER_LOCATION)
+  {
+    nux::ROPConfig rop;
+    rop.Blend = true;
+    rop.SrcBlend = GL_ONE;
+    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+    bg_layer_.reset(new nux::ColorLayer(nux::Color(81, 26, 48), true, rop));
+
+    nux::Layout* layout = new nux::VLayout();
+    layout->SetPadding(16);
+    layout->AddView(view, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+    SetLayout(layout);
+  }
+
+protected:
+  virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
+  {
+    nux::Geometry const& base = GetGeometry();
+
+    gfx_engine.PushClippingRectangle(base);
+    nux::GetPainter().PaintBackground(gfx_engine, base);
+
+    unsigned int alpha, src, dest = 0;
+    gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
+    gfx_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+    bg_layer_->SetGeometry(GetGeometry());
+    nux::GetPainter().RenderSinglePaintLayer(gfx_engine, GetGeometry(), bg_layer_.get());
+
+    gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
+
+    gfx_engine.PopClippingRectangle();
+  }
+
+  virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
+  {
+    nux::Geometry const& base = GetGeometry();
+    gfx_engine.PushClippingRectangle(base);
+
+    if (!IsFullRedraw())
+      nux::GetPainter().PushLayer(gfx_engine, GetGeometry(), bg_layer_.get());
+
+    if (GetCompositionLayout())
+      GetCompositionLayout()->ProcessDraw(gfx_engine, force_draw);
+
+    if (!IsFullRedraw())
+      nux::GetPainter().PopBackground();
+
+    gfx_engine.PopClippingRectangle();
+  }
+
+   typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
+  LayerPtr bg_layer_;
+};
 
 class TestRunner
 {
@@ -61,10 +121,12 @@ public:
 
   previews::PreviewContainer::Ptr container_;
   nux::Layout *layout_;
+  int nav_iter;
 };
 
 TestRunner::TestRunner ()
 {
+  nav_iter = 0;
 }
 
 TestRunner::~TestRunner ()
@@ -73,49 +135,88 @@ TestRunner::~TestRunner ()
 
 void TestRunner::Init ()
 {
-
   container_ = new previews::PreviewContainer(NUX_TRACKER_LOCATION);
-  container_->SetMinMaxSize(WIDTH, HEIGHT);
   container_->navigate_right.connect(sigc::mem_fun(this, &TestRunner::NavRight));
   container_->navigate_left.connect(sigc::mem_fun(this, &TestRunner::NavLeft));
 
+  DummyView* dummyView = new DummyView(container_.GetPointer());
   layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
-  layout_->AddView(container_.GetPointer(), 1, nux::MINOR_POSITION_CENTER);
-  layout_->SetMinMaxSize(WIDTH, HEIGHT);
-  
-  // creates a generic preview object
+  layout_->AddView(dummyView, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  nux::GetWindowThread()->SetLayout (layout_);
+
+
+   std::stringstream app_name;
+  app_name << "Title " << nav_iter;
+
+  const char* subtitle = "Version 3.2, Size 32 MB";
+  const char* description = "Skype is a proprietary voice-over-Internet Protocol service and software application originally created by Niklas Zennström and Janus Friis in 2003, and owned by Microsoft since 2011. \
+The service allows users to communicate with peers by voice, video, and instant messaging over the Internet. Phone calls may be placed to recipients on the traditional telephone networks. Calls to other users within the Skype service are free of charge, while calls to landline telephones and mobile phones are charged via a debit-based user account system.";
+
+ // creates a generic preview object
   glib::Object<GIcon> icon(g_icon_new_for_string("accessories", NULL));
+  glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/5/lens-nav-music.svg", NULL));
+  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/5/lens-nav-home.svg", NULL));
+  glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/5/lens-nav-people.svg", NULL));
+
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_application_preview_new()));
-  unity_protocol_preview_set_title(proto_obj, "Title");
-  unity_protocol_preview_set_subtitle(proto_obj, "Subtitle");
-  unity_protocol_preview_set_description(proto_obj, "Description");
+
+  unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string("/home/nick/Work/unity/preview-infrastructure/build/dash/previews/SkypeIcon.png", NULL));
+  unity_protocol_application_preview_set_license(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "Proprietary");
+  unity_protocol_application_preview_set_copyright(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "(c) Skype 2012");
+  unity_protocol_application_preview_set_last_update(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "11th Apr 2012");
+
+
+  unity_protocol_preview_set_title(proto_obj, app_name.str().c_str());
+  unity_protocol_preview_set_subtitle(proto_obj, subtitle);
+  unity_protocol_preview_set_description(proto_obj, description);
   unity_protocol_preview_set_thumbnail(proto_obj, icon);
-  unity_protocol_preview_add_action(proto_obj, "action1", "Action #1", NULL, 0);
-  unity_protocol_preview_add_action(proto_obj, "action2", "Action #2", NULL, 0);
-  unity_protocol_preview_add_info_hint(proto_obj, "hint1", "Hint 1", NULL, g_variant_new("i", 34));
-  unity_protocol_preview_add_info_hint(proto_obj, "hint2", "Hint 2", NULL, g_variant_new("s", "string hint"));
+  unity_protocol_preview_add_action(proto_obj, "uninstall", "Uninstall", NULL, 0);
+  unity_protocol_preview_add_action(proto_obj, "launch", "Launch", NULL, 0);
+  unity_protocol_preview_add_info_hint(proto_obj, "time", "Total time", iconHint1, g_variant_new("s", "16 h 34miin 45sec"));
+  unity_protocol_preview_add_info_hint(proto_obj, "energy",  "Energy", iconHint2, g_variant_new("s", "58.07 mWh"));
+  unity_protocol_preview_add_info_hint(proto_obj, "load",  "CPU Load", iconHint3, g_variant_new("i", 12));
+
 
   glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
                   glib::StealRef());
 
   container_->preview(v, previews::RIGHT);
 
-  nux::GetWindowThread()->SetLayout (layout_);
 }
 
 void TestRunner::NavRight()
 {
-  // creates a generic preview object
+   std::stringstream app_name;
+  app_name << "Title " << ++nav_iter;
+
+  const char* subtitle = "Version 3.2, Size 32 MB";
+  const char* description = "Skype is a proprietary voice-over-Internet Protocol service and software application originally created by Niklas Zennström and Janus Friis in 2003, and owned by Microsoft since 2011. \
+The service allows users to communicate with peers by voice, video, and instant messaging over the Internet. Phone calls may be placed to recipients on the traditional telephone networks. Calls to other users within the Skype service are free of charge, while calls to landline telephones and mobile phones are charged via a debit-based user account system.";
+
+ // creates a generic preview object
   glib::Object<GIcon> icon(g_icon_new_for_string("accessories", NULL));
+  glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/5/lens-nav-music.svg", NULL));
+  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/5/lens-nav-home.svg", NULL));
+  glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/5/lens-nav-people.svg", NULL));
+
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_application_preview_new()));
-  unity_protocol_preview_set_title(proto_obj, "Title");
-  unity_protocol_preview_set_subtitle(proto_obj, "Subtitle");
-  unity_protocol_preview_set_description(proto_obj, "Description");
+
+
+  unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string("/home/nick/Work/unity/preview-infrastructure/build/dash/previews/SkypeIcon.png", NULL));
+  unity_protocol_application_preview_set_license(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "Proprietary");
+  unity_protocol_application_preview_set_copyright(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "(c) Skype 2012");
+  unity_protocol_application_preview_set_last_update(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "11th Apr 2012");
+
+  unity_protocol_preview_set_title(proto_obj, app_name.str().c_str());
+  unity_protocol_preview_set_subtitle(proto_obj, subtitle);
+  unity_protocol_preview_set_description(proto_obj, description);
   unity_protocol_preview_set_thumbnail(proto_obj, icon);
-  unity_protocol_preview_add_action(proto_obj, "action1", "Action #1", NULL, 0);
-  unity_protocol_preview_add_action(proto_obj, "action2", "Action #2", NULL, 0);
-  unity_protocol_preview_add_info_hint(proto_obj, "hint1", "Hint 1", NULL, g_variant_new("i", 34));
-  unity_protocol_preview_add_info_hint(proto_obj, "hint2", "Hint 2", NULL, g_variant_new("s", "string hint"));
+  unity_protocol_preview_add_action(proto_obj, "uninstall", "Uninstall", NULL, 0);
+  unity_protocol_preview_add_action(proto_obj, "launch", "Launch", NULL, 0);
+  unity_protocol_preview_add_info_hint(proto_obj, "time", "Total time", iconHint1, g_variant_new("s", "16 h 34miin 45sec"));
+  unity_protocol_preview_add_info_hint(proto_obj, "energy",  "Energy", iconHint2, g_variant_new("s", "58.07 mWh"));
+  unity_protocol_preview_add_info_hint(proto_obj, "load",  "CPU Load", iconHint3, g_variant_new("i", 12));
+
 
   glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
                   glib::StealRef());
@@ -125,17 +226,36 @@ void TestRunner::NavRight()
 
 void TestRunner::NavLeft()
 {
-  // creates a generic preview object
+   std::stringstream app_name;
+  app_name << "Title " << --nav_iter;
+
+  const char* subtitle = "Version 3.2, Size 32 MB";
+  const char* description = "Skype is a proprietary voice-over-Internet Protocol service and software application originally created by Niklas Zennström and Janus Friis in 2003, and owned by Microsoft since 2011. \
+The service allows users to communicate with peers by voice, video, and instant messaging over the Internet. Phone calls may be placed to recipients on the traditional telephone networks. Calls to other users within the Skype service are free of charge, while calls to landline telephones and mobile phones are charged via a debit-based user account system.";
+
+ // creates a generic preview object
   glib::Object<GIcon> icon(g_icon_new_for_string("accessories", NULL));
+  glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/5/lens-nav-music.svg", NULL));
+  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/5/lens-nav-home.svg", NULL));
+  glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/5/lens-nav-people.svg", NULL));
+
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_application_preview_new()));
-  unity_protocol_preview_set_title(proto_obj, "Title");
-  unity_protocol_preview_set_subtitle(proto_obj, "Subtitle");
-  unity_protocol_preview_set_description(proto_obj, "Description");
+
+
+  unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string("/home/nick/Work/unity/preview-infrastructure/build/dash/previews/SkypeIcon.png", NULL));
+  unity_protocol_application_preview_set_license(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "Proprietary");
+  unity_protocol_application_preview_set_copyright(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "(c) Skype 2012");
+  unity_protocol_application_preview_set_last_update(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "11th Apr 2012");
+
+  unity_protocol_preview_set_title(proto_obj, app_name.str().c_str());
+  unity_protocol_preview_set_subtitle(proto_obj, subtitle);
+  unity_protocol_preview_set_description(proto_obj, description);
   unity_protocol_preview_set_thumbnail(proto_obj, icon);
-  unity_protocol_preview_add_action(proto_obj, "action1", "Action #1", NULL, 0);
-  unity_protocol_preview_add_action(proto_obj, "action2", "Action #2", NULL, 0);
-  unity_protocol_preview_add_info_hint(proto_obj, "hint1", "Hint 1", NULL, g_variant_new("i", 34));
-  unity_protocol_preview_add_info_hint(proto_obj, "hint2", "Hint 2", NULL, g_variant_new("s", "string hint"));
+  unity_protocol_preview_add_action(proto_obj, "uninstall", "Uninstall", NULL, 0);
+  unity_protocol_preview_add_action(proto_obj, "launch", "Launch", NULL, 0);
+  unity_protocol_preview_add_info_hint(proto_obj, "time", "Total time", iconHint1, g_variant_new("s", "16 h 34miin 45sec"));
+  unity_protocol_preview_add_info_hint(proto_obj, "energy",  "Energy", iconHint2, g_variant_new("s", "58.07 mWh"));
+  unity_protocol_preview_add_info_hint(proto_obj, "load",  "CPU Load", iconHint3, g_variant_new("i", 12));
 
   glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
                   glib::StealRef());

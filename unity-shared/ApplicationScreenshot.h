@@ -16,17 +16,19 @@
  * License version 3 along with this program.  If not, see
  * <http://www.gnu.org/licenses/>
  *
- * Authored by: Gordon Allott <gord.allott@canonical.com>
+ * Authored by: Andrea Cimitan <andrea.cimitan@canonical.com>
  *
  */
 
-#ifndef PREVIEW_H
-#define PREVIEW_H
+#ifndef APPLICATIONSCREENSHOT_H
+#define APPLICATIONSCREENSHOT_H
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
-#include <UnityCore/Preview.h>
-#include "unity-shared/Introspectable.h"
+#include <UnityCore/ApplicationPreview.h>
+#include "unity-shared/StaticCairoText.h"
+#include <Nux/StaticText.h>
+#include <NuxCore/ObjectPtr.h>
 
 namespace unity
 {
@@ -35,23 +37,26 @@ namespace dash
 namespace previews
 {
 
-class Preview : public nux::View, public debug::Introspectable
+class ApplicationScreenshot : public nux::View
 {
 public:
-  typedef nux::ObjectPtr<Preview> Ptr;
-  NUX_DECLARE_OBJECT_TYPE(Preview, nux::View);
+  typedef nux::ObjectPtr<ApplicationScreenshot> Ptr;
+  NUX_DECLARE_OBJECT_TYPE(ApplicationScreenshot, nux::View);
 
-  Preview(dash::Preview::Ptr preview_model);
-  virtual ~Preview();
- 
+  ApplicationScreenshot(std::string const& image_hint);
+  virtual ~ApplicationScreenshot();
+
   // From debug::Introspectable
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
 
 protected:
-  
-protected:
-  dash::Preview::Ptr preview_model_;
+  virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
+  virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);
+
+  void SetupViews();
+
+private:
+  nux::ObjectPtr<nux::BaseTexture> texture_screenshot_;
 
 };
 
@@ -59,4 +64,4 @@ protected:
 }
 }
 
-#endif // PREVIEW_H
+#endif // APPLICATIONSCREENSHOT_H

@@ -28,6 +28,7 @@ include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_D
 # Headers & Sources
 #
 set (PREVIEWS_SOURCES
+     ActionButton.cpp
      ApplicationPreview.cpp
      GenericPreview.cpp
      MusicPreview.cpp
@@ -35,8 +36,9 @@ set (PREVIEWS_SOURCES
      Preview.cpp
      PreviewContainer.cpp
      PreviewFactory.cpp
+     PreviewInfoHintWidget.cpp
      PreviewNavigator.cpp
-     ActionButton.cpp
+     PreviewRatingsWidget.cpp
      )
 
 add_library (previews-lib STATIC ${PREVIEWS_SOURCES})

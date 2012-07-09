@@ -20,44 +20,46 @@
  *
  */
 
-#include "Preview.h"
-#include "unity-shared/IntrospectableWrappers.h"
-#include <NuxCore/Logger.h>
-#include <Nux/HLayout.h>
+#ifndef UNITYSHELL_PREVIEWRATINGSWIDGET_H
+#define UNITYSHELL_PREVIEWRATINGSWIDGET_H
+
+#include <Nux/Nux.h>
+#include <Nux/View.h>
+
+namespace nux
+{
+class StaticCairoText;
+}
 
 namespace unity
 {
+class RatingsButton;
 namespace dash
 {
 namespace previews
 {
 
-namespace
+class PreviewRatingsWidget : public nux::View
 {
-nux::logging::Logger logger("unity.dash.previews.preview");
-}
+  NUX_DECLARE_OBJECT_TYPE(PreviewRatingsWidget, nux::View);
+public:
+  PreviewRatingsWidget(NUX_FILE_LINE_PROTO);
+  virtual ~PreviewRatingsWidget();
 
-NUX_IMPLEMENT_OBJECT_TYPE(Preview);
+  void SetRating(float rating);
+  void SetReviews(int count);
 
-Preview::Preview(dash::Preview::Ptr preview_model)
-  : View(NUX_TRACKER_LOCATION)
-  , preview_model_(preview_model)
-{
-}
+protected:
+  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-Preview::~Preview()
-{
-}
+private:
+  RatingsButton* ratings_;
+  nux::StaticCairoText* reviews_;
+};
 
-std::string Preview::GetName() const
-{
-  return "Preview";
-}
+} // namespace previews
+} // namespace dash
+} // namespace unity
 
-void Preview::AddProperties(GVariantBuilder* builder)
-{
-}
-
-}
-}
-}
+#endif // UNITYSHELL_PREVIEWRATINGSWIDGET_H

@@ -59,10 +59,6 @@ void PreviewNavigator::AddProperties(GVariantBuilder* builder)
 
 void PreviewNavigator::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
 {
-    // just for debugging, draw a vertical gradient
-    gPainter.Paint2DQuadVGradient(gfx_engine, GetGeometry(), 
-                                  nux::Color(0x54, 0xD9, 0x11), nux::Color(0x96, 0x11, 0xDA));
-
 }
 
 void PreviewNavigator::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)

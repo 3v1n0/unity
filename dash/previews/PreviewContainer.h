@@ -28,6 +28,7 @@
 #include <UnityCore/Preview.h>
 #include "Preview.h"
 #include "unity-shared/Introspectable.h"
+
 #include <UnityCore/GLibSource.h>
 
 namespace unity
@@ -86,16 +87,14 @@ private:
   PreviewNavigator* nav_left_;
   PreviewNavigator* nav_right_;
   PreviewContent* content_layout_;
-  previews::Preview::Ptr current_preview_;
 
   // Animation
-  typedef enum {
-    TIME_PREVIEW_NAVIGATE,
-    TIME_LAST
-  } PreviewActionTimes;
-  struct timespec  _times[TIME_LAST];
+  struct timespec  last_progress_time_;
+  float navigation_progress_speed_;
+  int navigation_count_;
   
   glib::SourceManager sources_;
+  friend class PreviewContent;
 };
 
 } // napespace prviews
