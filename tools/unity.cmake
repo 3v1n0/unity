@@ -19,6 +19,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 import gconf
+import glib
 import glob
 from optparse import OptionParser
 import os
@@ -38,9 +39,6 @@ well_known_local_path = ("%s/share/locale/*/LC_MESSAGES/*unity*" % supported_pre
                          "%s/bin/*unity*" % supported_prefix,
                          "%s/include/Unity*"  % supported_prefix,
                          "%s/lib/pkgconfig/unity*"  % supported_prefix,
-                         "%s/.compiz-1/*/*gtkloader*" % home_dir,
-                         "%s/.config/compiz-1/gsettings/schemas/*gtkloader*" % home_dir,
-                         "%s/.gconf/schemas/*gtkloader*" % home_dir,
                          "%s/.compiz-1/*/*networkarearegion*" % home_dir,
                          "%s/.config/compiz-1/gsettings/schemas/*networkarearegion*" % home_dir,
                          "%s/.gconf/schemas/*networkarearegion*" % home_dir,
@@ -81,7 +79,7 @@ def reset_unity_compiz_profile ():
     # as compiz set a new schema instead of a value..
     try:
         current_profile_schema = client.get_schema("/apps/compizconfig-1/current_profile")
-    except (GError, AttributeError), e:
+    except (glib.GError, AttributeError), e:
         print "WARNING: environment is incorrect: %s\nDid you just try to reset in a tty?" % e
         return
     

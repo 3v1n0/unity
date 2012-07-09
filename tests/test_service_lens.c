@@ -186,13 +186,12 @@ on_activate_uri(UnityScope* scope, const char* uri, ServiceLens* self)
 static UnityPreview*
 on_preview_uri(UnityScope* scope, const char* uri, ServiceLens *self)
 {
-  gchar *genres[] = {"awesome"};
-  return (UnityPreview*)unity_track_preview_new(1, "Animus Vox",
-                                                "The Glitch Mob", "Drink The Sea", 
-                                                404, genres, 1,
-                                                "file://music/the/track", "Play",
-                                                "", "play://music/the/track",
-                                                "preview://music/the/track", "pause://music/the/track");
+  return NULL;
+  // FIXME: update when the new preview types are well defined
+  /*
+  return (UnityPreview*)unity_generic_preview_new(
+      "Animus Vox", "The Glitch Mob - Drink The Sea", NULL);
+  */
 }
 
 ServiceLens*

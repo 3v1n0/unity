@@ -23,7 +23,7 @@ PREFIX=$HOME/staging/
 PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig
 LD_LIBRARY_PATH=$PREFIX/lib
 # These are the dependencies for ubuntu. This script should work on other distros provided the dependencies are met
-DEPENDENCIES="git-core cmake libcairo2-dev librsvg2-dev libglib2.0-dev libpng12-dev libdbus-1-dev libboost-dev libboost-serialization-dev libxml2-dev libgl1-mesa-dev libglu1-mesa-dev libwnck-dev libgconf2-dev libx11-xcb-dev libxslt1-dev libnotify-dev libprotobuf-dev libmetacity-dev libgnome-window-settings-dev libgnome-desktop-dev gnome-control-center-dev intltool cython python2.6-dev"
+DEPENDENCIES="git-core cmake libcairo2-dev librsvg2-dev libglib2.0-dev libpng12-dev libdbus-1-dev libboost-dev libboost-serialization-dev libxml2-dev libgl1-mesa-dev libglu1-mesa-dev libwnck-dev libgconf2-dev libx11-xcb-dev libxslt1-dev libnotify-dev libprotobuf-dev libmetacity-dev libgnome-window-settings-dev gnome-control-center-dev intltool cython python2.6-dev"
 COMPONENTS=(core libcompizconfig compizconfig-python ccsm compizconfig-backend-gconf plugins-main plugins-extra plugins-unsupported)
 
 echo "Installing dependencies..."

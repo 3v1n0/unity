@@ -68,11 +68,11 @@ public:
     view_shown_ = true;
   }
 
-  virtual gboolean OnDetailTimer()
+  virtual bool OnDetailTimer()
   {
     detail_timeout_reached_ = true;
     clock_gettime(CLOCK_MONOTONIC, &detail_timespec_);
-    return FALSE;
+    return false;
   }
 
   unsigned int GetConstructTimeout() const
@@ -154,6 +154,17 @@ TEST(TestSwitcherController, DetailTimeout)
   Utils::WaitUntil(controller.detail_timeout_reached_, 2);
   ASSERT_TRUE(controller.detail_timeout_reached_);
   EXPECT_TRUE(unity::TimeUtil::TimeDelta(&controller.detail_timespec_, &current) >= 1000);
+}
+
+TEST(TestSwitcherController, ShowSwitcher)
+{
+  MockSwitcherController controller;
+  std::vector<unity::launcher::AbstractLauncherIcon::Ptr> results;
+
+  controller.Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, false, results);
+
+  Utils::WaitUntil(controller.view_shown_, 2);
+  ASSERT_TRUE(controller.view_shown_);
 }
 
 }
