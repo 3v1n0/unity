@@ -78,21 +78,21 @@ class LauncherIconsTests(LauncherTestCase):
             calc_win.application.desktop_file)
 
         self.launcher_instance.click_launcher_icon(calc_icon)
-        self.assert_window_focused(calc_win)
+        self.assertProperty(calc_win, is_focused=True)
         self.assertVisibleWindowStack([calc_win, mah_win2, mah_win1])
 
         self.launcher_instance.click_launcher_icon(mahj_icon)
-        self.assert_window_focused(mah_win2)
+        self.assertProperty(mah_win2, is_focused=True)
         self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
 
         self.keybinding("window/minimize")
 
         self.assertThat(lambda: mah_win2.is_hidden, Eventually(Equals(True)))
-        self.assert_window_focused(calc_win)
+        self.assertProperty(calc_win, is_focused=True)
         self.assertVisibleWindowStack([calc_win, mah_win1])
 
         self.launcher_instance.click_launcher_icon(mahj_icon)
-        self.assert_window_focused(mah_win1)
+        self.assertProperty(mah_win1, is_focused=True)
         self.assertThat(lambda: mah_win2.is_hidden, Eventually(Equals(True)))
         self.assertVisibleWindowStack([mah_win1, calc_win])
 
@@ -105,7 +105,7 @@ class LauncherIconsTests(LauncherTestCase):
         calc_app = calc_win1.application
 
         self.assertVisibleWindowStack([calc_win2, calc_win1])
-        self.assert_window_focused(calc_win2)
+        self.assertProperty(calc_win2, is_focused=True)
 
         calc_icon = self.launcher.model.get_icon_by_desktop_id(calc_app.desktop_file)
         self.addCleanup(self.keybinding, "spread/cancel")

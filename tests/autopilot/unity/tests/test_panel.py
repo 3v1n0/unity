@@ -57,7 +57,7 @@ class PanelTestsBase(UnityTestCase):
         app_win = self.start_app_win(app_name, locale="C")
 
         app_win.set_focus()
-        self.assert_window_focused(app_win)
+        self.assertProperty(app_win, is_focused=True)
 
         if move_to_monitor:
             self.move_window_to_panel_monitor(app_win)
@@ -169,7 +169,7 @@ class PanelTitleTests(PanelTestsBase):
         launcher = self.launcher.get_launcher_for_monitor(self.panel_monitor)
         launcher.click_launcher_icon(icon)
 
-        self.assertTrue(text_win.is_focused)
+        self.assertProperty(text_win, is_focused=True)
         self.assertThat(self.panel.title, Equals(text_win.title))
 
     def test_panel_title_updates_on_maximized_window_title_changes(self):
@@ -386,7 +386,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         sleep(.5)
 
         self.assertFalse(text_win.is_maximized)
-        self.assertTrue(text_win.is_focused)
+        self.assertProperty(text_win, is_focused=True)
         sleep(self.panel.menus.fadeout_duration / 1000.0)
         self.assertFalse(self.panel.window_buttons_shown)
 

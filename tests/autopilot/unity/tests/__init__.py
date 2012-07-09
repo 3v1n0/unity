@@ -197,13 +197,3 @@ class UnityTestCase(AutopilotTestCase):
         """Asserts that 'app' eventually has 'num' wins. Waits up to 10 seconds."""
 
         self.assertThat(lambda: len(app.get_windows()), Eventually(Equals(num)))
-
-    def assert_window_focused(self, window):
-        """Asserts that an instance of a BamfWindow is focused using the
-        Eventually matcher.
-
-        """
-        if type(window) is not BamfWindow:
-            raise TypeError("'window' must be an instance of BamfWindow, not %r" % type(window))
-
-        self.assertThat(lambda: window.is_focused, Eventually(Equals(True)))

@@ -89,13 +89,13 @@ class QuicklistActionTests(UnityTestCase):
         calc_ql = self.open_quicklist_for_icon(calc_icon)
         calc_ql.get_quicklist_application_item(calc_win.application.name).mouse_click()
 
-        self.assert_window_focused(calc_win)
+        self.assertProperty(calc_win, is_focused=True)
         self.assertVisibleWindowStack([calc_win, mah_win2, mah_win1])
 
         mahj_ql = self.open_quicklist_for_icon(mahj_icon)
         mahj_ql.get_quicklist_application_item(mah_win1.application.name).mouse_click()
 
-        self.assert_window_focused(mah_win2)
+        self.assertProperty(mah_win2, is_focused=True)
         self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
 
     def test_quicklist_application_item_initiate_spread(self):
@@ -107,7 +107,7 @@ class QuicklistActionTests(UnityTestCase):
         calc_app = calc_win1.application
 
         self.assertVisibleWindowStack([calc_win2, calc_win1])
-        self.assert_window_focused(calc_win2)
+        self.assertProperty(calc_win2, is_focused=True)
 
         calc_icon = self.launcher.model.get_icon_by_desktop_id(calc_app.desktop_file)
 
@@ -123,7 +123,7 @@ class QuicklistActionTests(UnityTestCase):
         """When any quicklist item is triggered it must close the dash."""
 
         calc_win = self.start_app_window("Calculator")
-        self.assert_window_focused(calc_win)
+        self.assertProperty(calc_win, is_focused=True)
 
         self.dash.ensure_visible()
 
