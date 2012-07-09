@@ -18,24 +18,40 @@
  *              Michal Hruby <michal.hruby@canonical.com>
  */
 
-#include <unity-protocol.h>
+#ifndef UNITY_MUSIC_PREVIEW_H
+#define UNITY_MUSIC_PREVIEW_H
 
-#include "GenericPreview.h"
+#include <memory>
+
+#include <sigc++/trackable.h>
+
+#include "Preview.h"
+#include "Tracks.h"
 
 namespace unity
 {
 namespace dash
 {
 
-GenericPreview::GenericPreview(unity::glib::Object<GObject> const& proto_obj)
-  : Preview(proto_obj)
+class MusicPreview : public Preview
 {
+public:
+  typedef std::shared_ptr<MusicPreview> Ptr;
+
+  MusicPreview(unity::glib::Object<GObject> const& proto_obj);
+  ~MusicPreview();
+
+  Tracks::Ptr GetTracksModel() const;
+
+  void PlayUri(std::string const& uri) const;
+  void PauseUri(std::string const& uri) const;
+
+private:
+  class Impl;
+  std::unique_ptr<Impl> pimpl;
+};
+
+}
 }
 
-GenericPreview::~GenericPreview()
-{
-}
-
-
-}
-}
+#endif

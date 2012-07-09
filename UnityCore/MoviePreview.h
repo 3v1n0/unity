@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011-2012 Canonical Ltd
+ * Copyright (C) 2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -18,24 +18,38 @@
  *              Michal Hruby <michal.hruby@canonical.com>
  */
 
-#include <unity-protocol.h>
+#ifndef UNITY_MOVIE_PREVIEW_H
+#define UNITY_MOVIE_PREVIEW_H
 
-#include "GenericPreview.h"
+#include <memory>
+
+#include <sigc++/trackable.h>
+
+#include "Preview.h"
 
 namespace unity
 {
 namespace dash
 {
 
-GenericPreview::GenericPreview(unity::glib::Object<GObject> const& proto_obj)
-  : Preview(proto_obj)
+class MoviePreview : public Preview
 {
+public:
+  typedef std::shared_ptr<MoviePreview> Ptr;
+  
+  MoviePreview(unity::glib::Object<GObject> const& proto_obj);
+  ~MoviePreview();
+
+  nux::RWProperty<std::string> year;
+  nux::RWProperty<float> rating;
+  nux::RWProperty<unsigned int> num_ratings;
+
+private:
+  class Impl;
+  std::unique_ptr<Impl> pimpl;
+};
+
+}
 }
 
-GenericPreview::~GenericPreview()
-{
-}
-
-
-}
-}
+#endif
