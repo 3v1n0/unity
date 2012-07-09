@@ -102,26 +102,17 @@ class QuicklistActionTests(UnityTestCase):
         """This tests shows that when you activate a quicklist application item
         when an application window is focused, the spread is initiated.
         """
-        calc = self.start_app("Calculator")
-        [calc_win1] = calc.get_windows()
-        self.assertTrue(calc_win1.is_focused)
-
-        self.start_app("Calculator")
-        # Sleeping due to the start_app only waiting for the bamf model to be
-        # updated with the application.  Since the app has already started,
-        # and we are just waiting on a second window, however a defined sleep
-        # here is likely to be problematic.
-        # TODO: fix bamf emulator to enable waiting for new windows.
-        sleep(1)
-        [calc_win2] = [w for w in calc.get_windows() if w.x_id != calc_win1.x_id]
+        calc_win1 = self.start_app_window("Calculator")
+        calc_win2 = self.start_app_window("Calculator")
+        calc_app = calc_win1.application
 
         self.assertVisibleWindowStack([calc_win2, calc_win1])
-        self.assertTrue(calc_win2.is_focused)
+        self.assert_window_focused(calc_win2)
 
-        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
+        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc_app.desktop_file)
 
         calc_ql = self.open_quicklist_for_icon(calc_icon)
-        app_item = calc_ql.get_quicklist_application_item(calc.name)
+        app_item = calc_ql.get_quicklist_application_item(calc_app.name)
 
         self.addCleanup(self.keybinding, "spread/cancel")
         app_item.mouse_click()
