@@ -420,7 +420,7 @@ UnityDialogWindow::glAddGeometry(const GLTexture::MatrixList& matrices,
 /* Collect textures */
 void
 UnityDialogWindow::glDrawTexture(GLTexture*          texture,
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
                                  const GLMatrix            &transform,
                                  const GLWindowPaintAttrib &attrib,
 #else
@@ -453,7 +453,7 @@ unity::GeometryCollection::addGeometryForWindow (CompWindow *w, const CompRegion
 {
   /* We can reset the window geometry since it will be
    * re-added later */
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
   GLWindow::get (w)->vertexBuffer()->begin();
 #else
   GLWindow::get (w)->geometry().reset();
@@ -472,7 +472,7 @@ unity::GeometryCollection::addGeometryForWindow (CompWindow *w, const CompRegion
     GLWindow::get (w)->glAddGeometry(matl, reg, paintRegion, min, max);
   }
 
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
   GLWindow::get (w)->vertexBuffer()->end();
 #endif
 }
@@ -511,7 +511,7 @@ unity::TexGeometryCollection::setTexture (GLTexture *tex)
 
 void
 unity::TexGeometryCollection::addGeometriesAndDrawTextureForWindow(CompWindow *w,
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
                                                                    const GLMatrix &transform,
 #endif
                                                                    unsigned int mask)
@@ -526,7 +526,7 @@ unity::TexGeometryCollection::addGeometriesAndDrawTextureForWindow(CompWindow *w
 
     mGeometries.addGeometryForWindow (w, paintRegion);
 
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
     UnityDialogScreen *uds = UnityDialogScreen::get (screen);
     GLWindowPaintAttrib attrib (gWindow->lastPaintAttrib());
     unsigned int glDrawTextureIndex = gWindow->glDrawTextureGetCurrentIndex();
@@ -619,13 +619,13 @@ unity::PaintInfoCollector::processTexture (GLTexture *tex)
 
 void
 unity::PaintInfoCollector::drawGeometriesForWindow(CompWindow *w,
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
                                                    const GLMatrix &transform,
 #endif
                                                    unsigned int pm)
 {
   for (unity::TexGeometryCollection &tcg : mCollection)
-#if USE_GLES
+#if USE_MODERN_COMPIZ_GL
     tcg.addGeometriesAndDrawTextureForWindow (w, transform, pm);
 #else
     tcg.addGeometriesAndDrawTextureForWindow (w, pm);
@@ -644,7 +644,7 @@ unity::PaintInfoCollector::Active ()
 
 bool
 UnityDialogWindow::glDraw(const GLMatrix& transform,
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
                           const GLWindowPaintAttrib& attrib,
 #else
                           GLFragment::Attrib& fragment,
@@ -660,7 +660,7 @@ UnityDialogWindow::glDraw(const GLMatrix& transform,
   /* Draw the window on the bottom, we will be drawing the
    * dim render on top */
   bool status = gWindow->glDraw(transform,
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
                                 attrib,
 #else
                                 fragment,
@@ -673,13 +673,13 @@ UnityDialogWindow::glDraw(const GLMatrix& transform,
   {
     GLTexture::MatrixList matl;
     GLTexture::Matrix     mat = tex->matrix();
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
     GLWindowPaintAttrib   wAttrib(attrib);
 #endif
 
     /* We can reset the window geometry since it will be
      * re-added later */
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
     gWindow->vertexBuffer()->begin();
 #else
     gWindow->geometry().reset();
@@ -704,11 +704,11 @@ UnityDialogWindow::glDraw(const GLMatrix& transform,
      * dim (so we get a nice render for things like
      * wobbly etc etc */
     gWindow->glAddGeometry(matl, reg, paintRegion);
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
     gWindow->vertexBuffer()->end();
 #endif
 
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
     unsigned int glDrawTextureIndex = gWindow->glDrawTextureGetCurrentIndex();
     wAttrib.opacity = mShadeProgress;
     /* Texture rendering set-up */
@@ -759,7 +759,7 @@ UnityDialogWindow::glDraw(const GLMatrix& transform,
 
       pc.collect();
       pc.drawGeometriesForWindow (window,
-#ifdef USE_GLES
+#ifdef USE_MODERN_COMPIZ_GL
                                   transform,
 #endif
                                   mask);
@@ -1051,7 +1051,7 @@ UnityDialogWindow::moveNotify(int dx, int dy, bool immediate)
   if (!mSkipNotify)
   {
     if (mParent && UnityDialogScreen::get(screen)->switchingVp() &&
-        !(mGrabMask && CompWindowGrabMoveMask))
+        !(mGrabMask & CompWindowGrabMoveMask))
     {
       moveParentToRect(window, window->serverBorderRect(), true);
     }

@@ -3,6 +3,7 @@
     <value nick="Automatic" value="0" />
     <value nick="Desktop" value="1" />
     <value nick="Netbook" value="2" />
+    <value nick="TV" value="3" />
   </enum>
   <enum id="home-expanded-enum">
     <value nick="Not Expanded" value="0" />

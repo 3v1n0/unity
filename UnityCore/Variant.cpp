@@ -125,7 +125,11 @@ BuilderWrapper& BuilderWrapper::add(char const* name, bool value)
 
 BuilderWrapper& BuilderWrapper::add(char const* name, char const* value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_string(value));
+  if (value)
+    g_variant_builder_add(builder_, "{sv}", name, g_variant_new_string(value));
+  else
+    g_variant_builder_add(builder_, "{sv}", name, g_variant_new_string(""));
+
   return *this;
 }
 
