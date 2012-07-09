@@ -100,42 +100,6 @@ class SwitcherTests(SwitcherTestCase):
 
         self.switcher.terminate()
 
-    def test_switcher_scroll_next_ignores_fast_events(self):
-        """Ensures that smoothing is working correctly for next icon scrolling.
-
-        Only the first event in a rapid fire string of events should be acted upon.
-        The rest ignored.
-
-        """
-        self.switcher.initiate()
-        self.addCleanup(self.switcher.terminate)
-
-        # Quickly repeated events should be ignored (except the first)
-        start = self.switcher.selection_index
-        self.switcher.next_via_mouse()
-        self.switcher.next_via_mouse()
-        self.switcher.next_via_mouse()
-
-        self.assertThat(self.switcher.selection_index, Equals(start + 1))
-
-    def test_switcher_scroll_prev_ignores_fast_events(self):
-        """Ensures that smoothing is working correctly for previous icon scrolling.
-
-        Only the first event in a rapid fire string of events should be acted upon.
-        The rest ignored.
-
-        """
-        self.switcher.initiate()
-        self.addCleanup(self.switcher.terminate)
-
-        # Quickly repeatead events should be ignored (except the first)
-        start = self.switcher.selection_index
-        self.switcher.previous_via_mouse()
-        self.switcher.previous_via_mouse()
-        self.switcher.previous_via_mouse()
-
-        self.assertThat(self.switcher.selection_index, Equals(start - 1))
-
     def test_switcher_arrow_key_does_not_init(self):
         """Ensure that Alt+Right does not initiate switcher.
 

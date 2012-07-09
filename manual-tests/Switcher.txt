@@ -73,7 +73,7 @@ Action:
 
 Outcome
   The switcher should appear with the detail view for the given application
-  (e.g. the terminal), with all terminal applications for the workspace 
+  (e.g. the terminal), with all terminal applications for the workspace
   visible. The switcher should look normally.
 
 
@@ -95,3 +95,31 @@ Outcome
   On every quick tap, the focus should switch to the next same-application
   type window. During that switch the switcher should not appear, not even
   for a brief moment (if done fast enough). No 'flickering' of the switcher.
+
+
+Fast mouse-wheel switching
+--------------------------
+This test ensures that there is 'smoothing' when using the mouse-wheel to select
+from the switcher.
+
+Setup:
+#. Have a couple of different applications open (i.e. a Terminal and a
+ Mahjongg).
+
+Action:
+#. Initiate the switcher (using Alt+Tab).
+#. While holding switcher open (i.e. holding down Alt) spin the middle mouse
+ wheel downward.
+
+Outcome:
+  The switcher should select the available icons at a slower rate then you
+  would expect (if you where scrolling down a web page for instance).
+
+Action:
+#. Initiate the switcher (using Alt+Tab).
+#. While holding switcher open (i.e. holding down Alt) spin the middle mouse
+ wheel upward.
+
+Outcome:
+  The switcher should select the available icons at a slower rate then you
+  would expect (if you where scrolling down a web page for instance).
