@@ -33,21 +33,22 @@ void DndData::Fill(char* uris)
   Reset();
   
   char* pch = strtok (uris, "\r\n");
-  while (pch != NULL)
+  while (pch)
   {
-    glib::Object<GFile> file(g_file_new_for_uri(pch));
-    glib::Object<GFileInfo> info(g_file_query_info(file, G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE, G_FILE_QUERY_INFO_NONE, NULL, NULL));
-    const char* content_type = g_file_info_get_content_type(info);
-    
-    uris_.insert(pch);
-    
-    if (content_type != NULL)
+    glib::String content_type(g_content_type_guess(pch,
+                                                   nullptr,
+                                                   0,
+                                                   nullptr));
+
+    if (content_type)
     {
-      types_.insert(content_type);
-      uris_to_types_[pch] = content_type;
-      types_to_uris_[content_type].insert(pch);
+      types_.insert(content_type.Str());
+      uris_to_types_[pch] = content_type.Str();
+      types_to_uris_[content_type.Str()].insert(pch);
     }
-       
+
+    uris_.insert(pch);
+
     pch = strtok (NULL, "\r\n");
   }
 }

@@ -2697,7 +2697,7 @@ void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
     {
       for (auto it : *_model)
       {
-        if (it->QueryAcceptDrop(_dnd_data) != nux::DNDACTION_NONE)
+        if (it->ShouldHighlightOnDrag(_dnd_data))
           it->SetQuirk(AbstractLauncherIcon::QUIRK_DROP_PRELIGHT, true);
         else
           it->SetQuirk(AbstractLauncherIcon::QUIRK_DROP_DIM, true);
