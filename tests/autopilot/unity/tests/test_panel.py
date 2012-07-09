@@ -54,14 +54,10 @@ class PanelTestsBase(UnityTestCase):
 
         """
         self.close_all_app(app_name)
-        app = self.start_app(app_name, locale="C")
-
-        [app_win] = app.get_windows()
+        app_win = self.start_app_win(app_name, locale="C")
 
         app_win.set_focus()
-        self.assertTrue(app.is_active)
-        self.assertTrue(app_win.is_focused)
-        self.assertThat(app.desktop_file, Equals(app_win.application.desktop_file))
+        self.assert_window_focused(app_win)
 
         if move_to_monitor:
             self.move_window_to_panel_monitor(app_win)

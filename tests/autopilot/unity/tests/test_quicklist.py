@@ -122,14 +122,14 @@ class QuicklistActionTests(UnityTestCase):
     def test_quicklist_item_triggered_closes_dash(self):
         """When any quicklist item is triggered it must close the dash."""
 
-        calc = self.start_app("Calculator")
-        [calc_win] = calc.get_windows()
-        self.assertTrue(calc_win.is_focused)
+        calc_win = self.start_app_window("Calculator")
+        self.assert_window_focused(calc_win)
 
         self.dash.ensure_visible()
 
-        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
-        calc_ql = self.open_quicklist_for_icon(calc_icon)
+        calc_icon = self.launcher.model.get_icon_by_desktop_id(
+            calc_win.application.desktop_file)
+        self.open_quicklist_for_icon(calc_icon)
 
         self.keyboard.press_and_release("Down")
         self.keyboard.press_and_release("Enter")
@@ -144,7 +144,8 @@ class QuicklistKeyNavigationTests(UnityTestCase):
 
         self.ql_app = self.start_app("Text Editor")
 
-        self.ql_launcher_icon = self.launcher.model.get_icon_by_desktop_id(self.ql_app.desktop_file)
+        self.ql_launcher_icon = self.launcher.model.get_icon_by_desktop_id(
+            self.ql_app.desktop_file)
         self.assertThat(self.ql_launcher_icon, NotEquals(None))
 
         self.ql_launcher = self.launcher.get_launcher_for_monitor(0)
