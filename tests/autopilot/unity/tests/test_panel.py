@@ -113,7 +113,7 @@ class PanelTestsBase(UnityTestCase):
         self.addCleanup(self.keyboard.press_and_release, "Escape")
         self.assertThat(indicator.active, Eventually(Equals(True)))
 
-    def assert_win_buttons_in_overlay_mode(self, overlay_mode):
+    def assertWinButtonsInOverlayMode(self, overlay_mode):
         """Assert that there are three panel window buttons and all of them are
         in the specified overlay mode.
 
@@ -126,7 +126,7 @@ class PanelTestsBase(UnityTestCase):
         for button in buttons:
             self.assertThat(button.overlay_mode, Eventually(Equals(overlay_mode)))
 
-    def assert_no_window_open_with_xid(self, x_id):
+    def assertNoWindowOpenWithXid(self, x_id):
         """Assert that Bamf doesn't know of any open windows with the given xid."""
         # We can't check text_win.closed since we've just destroyed the window.
         # Instead we make sure no window with it's x_id exists.
@@ -272,7 +272,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.panel.move_mouse_over_window_buttons()
 
         self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(True)))
-        self.assert_win_buttons_in_overlay_mode(False)
+        self.assertWinButtonsInOverlayMode(False)
 
     def test_window_buttons_show_with_dash(self):
         """Window buttons must be shown when the dash is open."""
@@ -280,7 +280,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.addCleanup(self.dash.ensure_hidden)
 
         self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(True)))
-        self.assert_win_buttons_in_overlay_mode(True)
+        self.assertWinButtonsInOverlayMode(True)
 
     def test_window_buttons_show_with_hud(self):
         """Window buttons must be shown when the HUD is open."""
@@ -288,7 +288,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.addCleanup(self.hud.ensure_hidden)
 
         self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(True)))
-        self.assert_win_buttons_in_overlay_mode(True)
+        self.assertWinButtonsInOverlayMode(True)
 
     def test_window_buttons_update_visual_state(self):
         """Window button must update its state in response to mouse events."""
@@ -340,7 +340,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         win_xid = text_win.x_id
 
         self.panel.window_buttons.close.mouse_click()
-        self.assert_no_window_open_with_xid(win_xid)
+        self.assertNoWindowOpenWithXid(win_xid)
 
     def test_window_buttons_close_follows_fitts_law(self):
         """Tests that the 'Close' button is activated when clicking at 0,0.
@@ -357,7 +357,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.mouse.move(screen_x, screen_y)
         self.mouse.click()
 
-        self.assert_no_window_open_with_xid(win_xid)
+        self.assertNoWindowOpenWithXid(win_xid)
 
     def test_window_buttons_minimize_button_works_for_window(self):
         """Tests that the window button 'Minimize' actually minimizes a window."""
