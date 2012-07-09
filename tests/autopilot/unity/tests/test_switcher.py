@@ -236,15 +236,15 @@ class SwitcherWindowsManagementTests(SwitcherTestCase):
         self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
 
         self.keybinding("switcher/reveal_normal")
-        self.assertThat(lambda: calc_win.is_focused, Eventually(Equals(True)))
+        self.assertProperty(calc_win, is_focused=True)
         self.assertVisibleWindowStack([calc_win, mah_win2, mah_win1])
 
         self.keybinding("switcher/reveal_normal")
-        self.assertThat(lambda: mah_win2.is_focused, Eventually(Equals(True)))
+        self.assertProperty(mah_win2, is_focused=True)
         self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
 
         self.keybinding("window/close")
-        self.assertThat(lambda: calc_win.is_focused, Eventually(Equals(True)))
+        self.assertProperty(calc_win, is_focused=True)
         self.assertVisibleWindowStack([calc_win, mah_win1])
 
 
