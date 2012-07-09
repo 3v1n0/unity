@@ -10,6 +10,7 @@
 
 from __future__ import absolute_import
 
+from autopilot.emulators.bamf import BamfWindow
 from autopilot.matchers import Eventually
 from autopilot.testcase import AutopilotTestCase
 from dbus import DBusException

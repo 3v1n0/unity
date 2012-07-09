@@ -66,73 +66,48 @@ class LauncherIconsTests(LauncherTestCase):
         of that application.
 
         """
+        mah_win1 = self.start_app_window("Mahjongg")
+        calc_win = self.start_app_window("Calculator")
+        mah_win2 = self.start_app_window("Mahjongg")
 
-        mahj = self.start_app("Mahjongg")
-        [mah_win1] = mahj.get_windows()
-        self.assertTrue(mah_win1.is_focused)
-
-        calc = self.start_app("Calculator")
-        [calc_win] = calc.get_windows()
-        self.assertTrue(calc_win.is_focused)
-
-        self.start_app("Mahjongg")
-        # Sleeping due to the start_app only waiting for the bamf model to be
-        # updated with the application.  Since the app has already started,
-        # and we are just waiting on a second window, however a defined sleep
-        # here is likely to be problematic.
-        # TODO: fix bamf emulator to enable waiting for new windows.
-        sleep(1)
-        [mah_win2] = [w for w in mahj.get_windows() if w.x_id != mah_win1.x_id]
-        self.assertTrue(mah_win2.is_focused)
         self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
 
-        mahj_icon = self.launcher.model.get_icon_by_desktop_id(mahj.desktop_file)
-        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
+        mahj_icon = self.launcher.model.get_icon_by_desktop_id(
+            mah_win2.application.desktop_file)
+        calc_icon = self.launcher.model.get_icon_by_desktop_id(
+            calc_win.application.desktop_file)
 
         self.launcher_instance.click_launcher_icon(calc_icon)
-        sleep(1)
-        self.assertTrue(calc_win.is_focused)
+        self.assertProperty(calc_win, is_focused=True)
         self.assertVisibleWindowStack([calc_win, mah_win2, mah_win1])
 
         self.launcher_instance.click_launcher_icon(mahj_icon)
-        sleep(1)
-        self.assertTrue(mah_win2.is_focused)
+        self.assertProperty(mah_win2, is_focused=True)
         self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
 
         self.keybinding("window/minimize")
-        sleep(1)
 
-        self.assertTrue(mah_win2.is_hidden)
-        self.assertTrue(calc_win.is_focused)
+        self.assertThat(lambda: mah_win2.is_hidden, Eventually(Equals(True)))
+        self.assertProperty(calc_win, is_focused=True)
         self.assertVisibleWindowStack([calc_win, mah_win1])
 
         self.launcher_instance.click_launcher_icon(mahj_icon)
-        sleep(1)
-        self.assertTrue(mah_win1.is_focused)
-        self.assertTrue(mah_win2.is_hidden)
+        self.assertProperty(mah_win1, is_focused=True)
+        self.assertThat(lambda: mah_win2.is_hidden, Eventually(Equals(True)))
         self.assertVisibleWindowStack([mah_win1, calc_win])
 
     def test_clicking_icon_twice_initiates_spread(self):
         """This tests shows that when you click on a launcher icon twice,
         when an application window is focused, the spread is initiated.
         """
-        calc = self.start_app("Calculator")
-        [calc_win1] = calc.get_windows()
-        self.assertTrue(calc_win1.is_focused)
-
-        self.start_app("Calculator")
-        # Sleeping due to the start_app only waiting for the bamf model to be
-        # updated with the application.  Since the app has already started,
-        # and we are just waiting on a second window, however a defined sleep
-        # here is likely to be problematic.
-        # TODO: fix bamf emulator to enable waiting for new windows.
-        sleep(1)
-        [calc_win2] = [w for w in calc.get_windows() if w.x_id != calc_win1.x_id]
+        calc_win1 = self.start_app_window("Calculator")
+        calc_win2 = self.start_app_window("Calculator")
+        calc_app = calc_win1.application
 
         self.assertVisibleWindowStack([calc_win2, calc_win1])
-        self.assertTrue(calc_win2.is_focused)
+        self.assertProperty(calc_win2, is_focused=True)
 
-        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
+        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc_app.desktop_file)
         self.addCleanup(self.keybinding, "spread/cancel")
         self.launcher_instance.click_launcher_icon(calc_icon)
 
