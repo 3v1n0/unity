@@ -7,11 +7,11 @@ include (cmake/Documentation.cmake)
 # Base bits
 #
 set (PROJECT_NAME "unity")
-set (UNITY_MAJOR 5)
-set (UNITY_MINOR 12)
+set (UNITY_MAJOR 6)
+set (UNITY_MINOR 0)
 set (UNITY_MICRO 0)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
-set (UNITY_API_VERSION "5.0")
+set (UNITY_API_VERSION "6.0")
 
 set (CMAKE_CXX_FLAGS "-DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissive")
 set (CMAKE_CXX_FLAGS_DEBUG "-g3")
