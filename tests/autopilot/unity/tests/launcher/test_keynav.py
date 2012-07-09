@@ -182,10 +182,19 @@ class LauncherKeyNavTests(LauncherTestCase):
         self.assertThat(self.dash.visible, Eventually(Equals(False)))
 
     def test_alt_f1_closes_dash(self):
-        """This test when Alt+F1 is activated it must close the dash."""
+        """Pressing Alt+F1 when the Dash is open must close the Dash and start keynav."""
         self.dash.ensure_visible()
 
         self.start_keynav_with_cleanup_cancel()
 
         self.assertThat(self.dash.visible, Equals(False))
+        self.assertThat(self.launcher.key_nav_is_active, Equals(True))
+
+    def test_alt_f1_closes_hud(self):
+        """Pressing Alt+F1 when the HUD is open must close the HUD and start keynav."""
+        self.hud.ensure_visible()
+
+        self.start_keynav_with_cleanup_cancel()
+
+        self.assertThat(self.hud.visible, Equals(False))
         self.assertThat(self.launcher.key_nav_is_active, Equals(True))
