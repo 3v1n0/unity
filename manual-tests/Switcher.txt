@@ -107,19 +107,17 @@ Setup:
  Mahjongg).
 
 Action:
-#. Initiate the switcher (using Alt+Tab).
-#. While holding switcher open (i.e. holding down Alt) spin the middle mouse
- wheel downward.
+#. Hold down the 'Alt' and tap 'Tab' key.
+#. While holding down the 'Alt' key, scroll the middle mouse-wheel downward
+ quickly 3-4 clicks.
 
 Outcome:
-  The switcher should select the available icons at a slower rate then you
-  would expect (if you where scrolling down a web page for instance).
+  The switcher should only select the next icon (and not zoom through the list).
 
 Action:
-#. Initiate the switcher (using Alt+Tab).
-#. While holding switcher open (i.e. holding down Alt) spin the middle mouse
- wheel upward.
+#. Hold down the 'Alt' and tap 'Tab' key.
+#. While holding down the 'Alt' key, scroll the middle mouse-wheel upward
+ quickly 3-4 clicks.
 
 Outcome:
-  The switcher should select the available icons at a slower rate then you
-  would expect (if you where scrolling down a web page for instance).
+  The switcher should only select the next icon (and not zoom through the list).
