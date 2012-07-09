@@ -204,6 +204,21 @@ Action:
 Outcome:
   The Dash should close and the music file should open up in Firefox.
 
+
+DnD stacking
+------------
+
+Setup:
+#. Open the Dash (Super).
+
+Action:
+#. Drag any icon from the dash and wave it over the dash and launcher area.
+
+Outcome:
+  The icon being dragged is drawn on top of the dash and launcher. Never
+  below it.
+
+
 Lens Tests
 ============
 
