@@ -33,6 +33,8 @@ namespace unity
 namespace panel
 {
 
+const char window_title[] = "unity-panel";
+
 namespace
 {
 nux::logging::Logger logger("unity.panel");
@@ -47,6 +49,7 @@ public:
   void QueueRedraw();
 
   std::vector<Window> GetTrayXids() const;
+  std::vector<nux::View*> GetPanelViews() const;
   std::vector<nux::Geometry> GetGeometries() const;
 
   // NOTE: nux::Property maybe?
@@ -102,6 +105,15 @@ std::vector<Window> Controller::Impl::GetTrayXids() const
   }
 
   return xids;
+}
+
+std::vector<nux::View*> Controller::Impl::GetPanelViews() const
+{
+  std::vector<nux::View*> views;
+  views.reserve(windows_.size());
+  for (auto window: windows_)
+    views.push_back(ViewForWindow(window));
+  return views;
 }
 
 std::vector<nux::Geometry> Controller::Impl::GetGeometries() const
@@ -243,7 +255,7 @@ void Controller::Impl::OnScreenChanged(unsigned int primary_monitor,
       window->SetConfigureNotifyCallback(&Impl::WindowConfigureCallback, window.GetPointer());
       window->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
       window->ShowWindow(true);
-      window->EnableInputWindow(true, "panel", false, false);
+      window->EnableInputWindow(true, panel::window_title, false, false);
       window->InputWindowEnableStruts(true);
       window->SetGeometry(geo);
       window->SetMinMaxSize(geo.width, geo.height);
@@ -321,6 +333,11 @@ void Controller::QueueRedraw()
 std::vector<Window> Controller::GetTrayXids() const
 {
   return pimpl->GetTrayXids();
+}
+
+std::vector<nux::View*> Controller::GetPanelViews() const
+{
+  return pimpl->GetPanelViews();
 }
 
 std::vector<nux::Geometry> Controller::GetGeometries() const

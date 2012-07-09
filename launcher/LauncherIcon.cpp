@@ -513,6 +513,7 @@ LauncherIcon::ShowTooltip()
     LoadTooltip();
   _tooltip->ShowTooltipWithTipAt(tip_x, tip_y);
   _tooltip->ShowWindow(!tooltip_text().empty());
+  tooltip_visible.emit(_tooltip);
 }
 
 void
@@ -534,6 +535,7 @@ void LauncherIcon::RecvMouseLeave(int monitor)
 
   if (_tooltip)
     _tooltip->ShowWindow(false);
+  tooltip_visible.emit(nux::ObjectPtr<nux::View>(nullptr));
 }
 
 bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
@@ -653,6 +655,7 @@ void LauncherIcon::HideTooltip()
 {
   if (_tooltip)
     _tooltip->ShowWindow(false);
+  tooltip_visible.emit(nux::ObjectPtr<nux::View>(nullptr));
 }
 
 bool
@@ -1030,6 +1033,7 @@ LauncherIcon::InsertEntryRemote(LauncherEntryRemote::Ptr const& remote)
     return;
 
   _entry_list.push_front(remote);
+  AddChild(remote.get());
 
   remote->emblem_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteEmblemChanged));
   remote->count_changed.connect(sigc::mem_fun(this, &LauncherIcon::OnRemoteCountChanged));
@@ -1065,6 +1069,7 @@ LauncherIcon::RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote)
     return;
 
   _entry_list.remove(remote);
+  RemoveChild(remote.get());
 
   DeleteEmblem();
   SetQuirk(QUIRK_PROGRESS, false);

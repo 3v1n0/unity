@@ -148,7 +148,7 @@ if (GTEST_SRC_DIR AND
                  test_main_xless.cpp
                  test_grabhandle.cpp
                  test_unityshell_private.cpp
-		             test_showdesktop_handler.cpp
+                 test_showdesktop_handler.cpp
                  test_hud_private.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/AbstractLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/Animator.cpp
@@ -167,7 +167,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/unity-shared/Timer.cpp
                  ${UNITY_SRC}/UnityshellPrivate.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/WindowManager.cpp
-		             ${UNITY_SRC}/UnityShowdesktopHandler.cpp
+                 ${UNITY_SRC}/UnityShowdesktopHandler.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-group.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-impl-factory.cpp
@@ -201,12 +201,15 @@ if (GTEST_SRC_DIR AND
   add_executable(test-gtest
                  test_bamflaunchericon.cpp
                  test_hud_button.cpp
+                 test_hud_controller.cpp
                  test_dashview_impl.cpp
                  test_texture_cache.cpp
                  test_main.cpp
                  test_lensview_impl.cpp
                  test_icon_loader.cpp
+                 test_im_text_entry.cpp
                  test_hud_view.cpp
+                 test_keyboard_util.cpp
                  test_resultviewgrid.cpp
                  test_single_monitor_launcher_icon.cpp
                  test_switcher_controller.cpp
@@ -217,7 +220,9 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/dash/ResultRenderer.cpp
                  ${CMAKE_SOURCE_DIR}/dash/ResultView.cpp
                  ${CMAKE_SOURCE_DIR}/dash/ResultViewGrid.cpp
+                 ${CMAKE_SOURCE_DIR}/hud/HudAbstractView.cpp
                  ${CMAKE_SOURCE_DIR}/hud/HudButton.cpp
+                 ${CMAKE_SOURCE_DIR}/hud/HudController.cpp
                  ${CMAKE_SOURCE_DIR}/hud/HudIcon.cpp
                  ${CMAKE_SOURCE_DIR}/hud/HudIconTextureSource.cpp
                  ${CMAKE_SOURCE_DIR}/hud/HudPrivate.cpp
@@ -255,6 +260,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/launcher/SwitcherModel.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/SwitcherView.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/Tooltip.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/Animator.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/BackgroundEffectHelper.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/DashStyle.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/IconLoader.cpp
@@ -265,8 +271,10 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/unity-shared/Introspectable.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/IntrospectableWrappers.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/JSONParser.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/KeyboardUtil.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/OverlayRenderer.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/PanelStyle.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/PluginAdapterStandalone.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/SearchBar.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/SearchBarSpinner.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/StaticCairoText.cpp

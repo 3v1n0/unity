@@ -30,7 +30,7 @@
 #include <NuxCore/ObjectPtr.h>
 #include <NuxCore/Property.h>
 #include <Nux/TextureArea.h>
-#include <NuxImage/CairoGraphics.h>
+#include <NuxGraphics/CairoGraphics.h>
 #include "unity-shared/IconLoader.h"
 
 #include "ResultRenderer.h"

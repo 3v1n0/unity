@@ -31,7 +31,6 @@
 #include <UnityCore/Results.h>
 
 #include "unity-shared/Introspectable.h"
-#include "PreviewBase.h"
 #include "ResultRenderer.h"
 
 namespace unity
@@ -55,17 +54,14 @@ public:
 
   ResultList GetResultList ();
 
-  void SetPreview(PreviewBase* preview, Result& related_result);
-
   nux::Property<bool> expanded;
   nux::Property<int> results_per_row;
 
   sigc::signal<void, std::string const&> UriActivated;
-  sigc::signal<void, std::string const&> ChangePreview; // request a new preview, string is the uri
 
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
-  IntrospectableList const& GetIntrospectableChildren();
+  IntrospectableList GetIntrospectableChildren();
 
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -73,9 +69,6 @@ protected:
   virtual long ComputeContentSize();
 
   // properties
-  nux::Layout* preview_layout_;
-  nux::Layout* preview_spacer_;
-  std::string preview_result_uri_;
   ResultRenderer* renderer_;
   ResultList results_;
   IntrospectableList introspectable_children_;

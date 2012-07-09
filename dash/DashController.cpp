@@ -32,6 +32,8 @@ namespace unity
 namespace dash
 {
 
+const char window_title[] = "unity-dash";
+
 namespace
 {
 nux::logging::Logger logger("unity.dash.controller");
@@ -65,22 +67,26 @@ Controller::Controller()
       nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
     }
   });
+
+  auto spread_cb = sigc::bind(sigc::mem_fun(this, &Controller::HideDash), true);
+  PluginAdapter::Default()->initiate_spread.connect(spread_cb);
 }
 
 void Controller::SetupWindow()
 {
-  window_ = new nux::BaseWindow("Dash");
+  window_ = new nux::BaseWindow(dash::window_title);
   window_->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
   window_->SetConfigureNotifyCallback(&Controller::OnWindowConfigure, this);
   window_->ShowWindow(false);
   window_->SetOpacity(0.0f);
   window_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &Controller::OnMouseDownOutsideWindow));
-  
+
   /* FIXME - first time we load our windows there is a race that causes the input window not to actually get input, this side steps that by causing an input window show and hide before we really need it. */
-  PluginAdapter::Default()->saveInputFocus ();
-  window_->EnableInputWindow(true, "Dash", true, false);
-  window_->EnableInputWindow(false, "Dash", true, false);
-  PluginAdapter::Default()->restoreInputFocus ();
+  auto plugin_adapter = PluginAdapter::Default();
+  plugin_adapter->saveInputFocus ();
+  window_->EnableInputWindow(true, dash::window_title, true, false);
+  window_->EnableInputWindow(false, dash::window_title, true, false);
+  plugin_adapter->restoreInputFocus ();
 }
 
 void Controller::SetupDashView()
@@ -257,7 +263,7 @@ void Controller::ShowDash()
   window_->ShowWindow(true);
   window_->PushToFront();
   if (!Settings::Instance().is_standalone) // in standalone mode, we do not need an input window. we are one.
-    window_->EnableInputWindow(true, "Dash", true, false);
+    window_->EnableInputWindow(true, dash::window_title, true, false);
   window_->SetInputFocus();
   window_->CaptureMouseDownAnyWhereElse(true);
   window_->QueueDraw();
@@ -286,7 +292,7 @@ void Controller::HideDash(bool restore)
   view_->AboutToHide();
 
   window_->CaptureMouseDownAnyWhereElse(false);
-  window_->EnableInputWindow(false, "Dash", true, false);
+  window_->EnableInputWindow(false, dash::window_title, true, false);
   visible_ = false;
 
   nux::GetWindowCompositor().SetKeyFocusArea(NULL,nux::KEY_NAV_NONE);
@@ -331,6 +337,9 @@ gboolean Controller::CheckShortcutActivation(const char* key_string)
   std::string lens_id = view_->GetIdForShortcutActivation(std::string(key_string));
   if (lens_id != "")
   {
+    if (PluginAdapter::Default()->IsScaleActive())
+      PluginAdapter::Default()->TerminateScale();
+
     GVariant* args = g_variant_new("(sus)", lens_id.c_str(), dash::GOTO_DASH_URI, "");
     OnActivateRequest(args);
     g_variant_unref(args);

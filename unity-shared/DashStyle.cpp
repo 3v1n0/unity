@@ -32,7 +32,9 @@
 
 #include <NuxCore/Color.h>
 #include <NuxCore/Logger.h>
-#include <NuxImage/CairoGraphics.h>
+#include <NuxGraphics/ImageSurface.h>
+#include <NuxGraphics/CairoGraphics.h>
+
 #include <Nux/PaintLayer.h>
 
 #include <UnityCore/GLibSignal.h>

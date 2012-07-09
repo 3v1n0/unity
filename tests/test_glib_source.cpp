@@ -330,7 +330,8 @@ TEST(TestGLibTimeoutSeconds, MultipleShotsRun)
   }
 
   EXPECT_TRUE(callback_called);
-  EXPECT_EQ(callback_call_count, 3);
+  EXPECT_GE(callback_call_count, 3);
+  EXPECT_LE(callback_call_count, 4);
   int time_delta = unity::TimeUtil::TimeDelta(&post, &pre);
   EXPECT_GE(time_delta, 3500);
   EXPECT_LT(time_delta, 5000);

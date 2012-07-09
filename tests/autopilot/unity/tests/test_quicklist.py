@@ -75,70 +75,65 @@ class QuicklistActionTests(UnityTestCase):
         Then we activate the Calculator quicklist item.
         Then we actiavte the Mahjongg launcher icon.
         """
-        mahj = self.start_app("Mahjongg")
-        [mah_win1] = mahj.get_windows()
-        self.assertTrue(mah_win1.is_focused)
-
-        calc = self.start_app("Calculator")
-        [calc_win] = calc.get_windows()
-        self.assertTrue(calc_win.is_focused)
-
-        self.start_app("Mahjongg")
-        # Sleeping due to the start_app only waiting for the bamf model to be
-        # updated with the application.  Since the app has already started,
-        # and we are just waiting on a second window, however a defined sleep
-        # here is likely to be problematic.
-        # TODO: fix bamf emulator to enable waiting for new windows.
-        sleep(1)
-        [mah_win2] = [w for w in mahj.get_windows() if w.x_id != mah_win1.x_id]
-        self.assertTrue(mah_win2.is_focused)
+        mah_win1 = self.start_app_window("Mahjongg")
+        calc_win = self.start_app_window("Calculator")
+        mah_win2 = self.start_app_window("Mahjongg")
 
         self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
 
-        mahj_icon = self.launcher.model.get_icon_by_desktop_id(mahj.desktop_file)
-        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
+        mahj_icon = self.launcher.model.get_icon_by_desktop_id(
+            mah_win1.application.desktop_file)
+        calc_icon = self.launcher.model.get_icon_by_desktop_id(
+            calc_win.application.desktop_file)
 
         calc_ql = self.open_quicklist_for_icon(calc_icon)
-        calc_ql.get_quicklist_application_item(calc.name).mouse_click()
-        sleep(1)
-        self.assertTrue(calc_win.is_focused)
+        calc_ql.get_quicklist_application_item(calc_win.application.name).mouse_click()
+
+        self.assertProperty(calc_win, is_focused=True)
         self.assertVisibleWindowStack([calc_win, mah_win2, mah_win1])
 
         mahj_ql = self.open_quicklist_for_icon(mahj_icon)
-        mahj_ql.get_quicklist_application_item(mahj.name).mouse_click()
-        sleep(1)
-        self.assertTrue(mah_win2.is_focused)
+        mahj_ql.get_quicklist_application_item(mah_win1.application.name).mouse_click()
+
+        self.assertProperty(mah_win2, is_focused=True)
         self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
 
     def test_quicklist_application_item_initiate_spread(self):
         """This tests shows that when you activate a quicklist application item
         when an application window is focused, the spread is initiated.
         """
-        calc = self.start_app("Calculator")
-        [calc_win1] = calc.get_windows()
-        self.assertTrue(calc_win1.is_focused)
-
-        self.start_app("Calculator")
-        # Sleeping due to the start_app only waiting for the bamf model to be
-        # updated with the application.  Since the app has already started,
-        # and we are just waiting on a second window, however a defined sleep
-        # here is likely to be problematic.
-        # TODO: fix bamf emulator to enable waiting for new windows.
-        sleep(1)
-        [calc_win2] = [w for w in calc.get_windows() if w.x_id != calc_win1.x_id]
+        calc_win1 = self.start_app_window("Calculator")
+        calc_win2 = self.start_app_window("Calculator")
+        calc_app = calc_win1.application
 
         self.assertVisibleWindowStack([calc_win2, calc_win1])
-        self.assertTrue(calc_win2.is_focused)
+        self.assertProperty(calc_win2, is_focused=True)
 
-        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
+        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc_app.desktop_file)
 
         calc_ql = self.open_quicklist_for_icon(calc_icon)
-        app_item = calc_ql.get_quicklist_application_item(calc.name)
+        app_item = calc_ql.get_quicklist_application_item(calc_app.name)
 
         self.addCleanup(self.keybinding, "spread/cancel")
         app_item.mouse_click()
         self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
         self.assertThat(self.window_manager.scale_active_for_group, Eventually(Equals(True)))
+
+    def test_quicklist_item_triggered_closes_dash(self):
+        """When any quicklist item is triggered it must close the dash."""
+
+        calc_win = self.start_app_window("Calculator")
+        self.assertProperty(calc_win, is_focused=True)
+
+        self.dash.ensure_visible()
+
+        calc_icon = self.launcher.model.get_icon_by_desktop_id(
+            calc_win.application.desktop_file)
+        self.open_quicklist_for_icon(calc_icon)
+
+        self.keyboard.press_and_release("Down")
+        self.keyboard.press_and_release("Enter")
+        self.assertThat(self.dash.visible, Eventually(Equals(False)))
 
 
 class QuicklistKeyNavigationTests(UnityTestCase):
@@ -149,7 +144,8 @@ class QuicklistKeyNavigationTests(UnityTestCase):
 
         self.ql_app = self.start_app("Text Editor")
 
-        self.ql_launcher_icon = self.launcher.model.get_icon_by_desktop_id(self.ql_app.desktop_file)
+        self.ql_launcher_icon = self.launcher.model.get_icon_by_desktop_id(
+            self.ql_app.desktop_file)
         self.assertThat(self.ql_launcher_icon, NotEquals(None))
 
         self.ql_launcher = self.launcher.get_launcher_for_monitor(0)
@@ -169,17 +165,13 @@ class QuicklistKeyNavigationTests(UnityTestCase):
         self.ql_launcher.key_nav_start()
         self.addCleanup(self.ql_launcher.key_nav_cancel)
 
-        for icon in self.launcher.model.get_launcher_icons():
-            if icon.tooltip_text != self.ql_app.name:
-                self.ql_launcher.key_nav_next()
-            else:
-                self.keybinding("launcher/keynav/open-quicklist")
-                self.addCleanup(self.keybinding, "launcher/keynav/close-quicklist")
-                break
+        self.ql_launcher.keyboard_select_icon(tooltip_text=self.ql_app.name)
+        self.keybinding("launcher/keynav/open-quicklist")
+        self.addCleanup(self.keybinding, "launcher/keynav/close-quicklist")
 
+        self.assertThat(self.ql_launcher_icon.get_quicklist, Eventually(NotEquals(None)))
         self.quicklist = self.ql_launcher_icon.get_quicklist()
-        self.assertThat(self.quicklist, NotEquals(None))
-        self.assertThat(self.quicklist.selected_item, NotEquals(None))
+        self.assertThat(lambda: self.quicklist.selected_item, Eventually(NotEquals(None)))
 
     def test_keynav_selects_first_item_when_unselected(self):
         """Home key MUST select the first selectable item in a quicklist."""

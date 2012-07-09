@@ -104,7 +104,7 @@ private:
     ~IconLoaderTask()
     {
       if (icon_info)
-        gtk_icon_info_free(icon_info);
+        ::gtk_icon_info_free(icon_info);
     }
 
     void InvokeSlot()
@@ -151,8 +151,8 @@ private:
 
     bool ProcessIconNameTask()
     {
-      GtkIconInfo* info = gtk_icon_theme_lookup_icon(impl->theme_, data.c_str(),
-                                                     size, static_cast<GtkIconLookupFlags>(0));
+      GtkIconInfo* info = ::gtk_icon_theme_lookup_icon(impl->theme_, data.c_str(),
+                                                       size, static_cast<GtkIconLookupFlags>(0));
       if (info)
       {
         icon_info = info;
@@ -175,13 +175,13 @@ private:
     bool ProcessGIconTask()
     {
       glib::Error error;
-      glib::Object<GIcon> icon(g_icon_new_for_string(data.c_str(), &error));
+      glib::Object<GIcon> icon(::g_icon_new_for_string(data.c_str(), &error));
 
       if (G_IS_FILE_ICON(icon.RawPtr()))
       {
         // [trasfer none]
-        GFile* file = g_file_icon_get_file(G_FILE_ICON(icon.RawPtr()));
-        glib::String uri(g_file_get_uri(file));
+        GFile* file = ::g_file_icon_get_file(G_FILE_ICON(icon.RawPtr()));
+        glib::String uri(::g_file_get_uri(file));
 
         type = REQUEST_TYPE_URI;
         data = uri.Str();
@@ -190,8 +190,8 @@ private:
       }
       else if (G_IS_ICON(icon.RawPtr()))
       {
-        GtkIconInfo* info = gtk_icon_theme_lookup_by_gicon(impl->theme_, icon, size,
-                                                           static_cast<GtkIconLookupFlags>(0));
+        GtkIconInfo* info = ::gtk_icon_theme_lookup_by_gicon(impl->theme_, icon, size,
+                                                             static_cast<GtkIconLookupFlags>(0));
         if (info)
         {
           icon_info = info;
@@ -240,7 +240,7 @@ private:
 
     void PushSchedulerJob()
     {
-      g_io_scheduler_push_job (LoaderJobFunc, this, nullptr, G_PRIORITY_HIGH_IDLE, nullptr);
+      ::g_io_scheduler_push_job (LoaderJobFunc, this, nullptr, G_PRIORITY_HIGH_IDLE, nullptr);
     }
 
     // Loading/rendering of pixbufs is done in a separate thread
@@ -251,31 +251,31 @@ private:
       // careful here this is running in non-main thread
       if (task->icon_info)
       {
-        task->result = gtk_icon_info_load_icon(task->icon_info, &task->error);
+        task->result = ::gtk_icon_info_load_icon(task->icon_info, &task->error);
       }
       else if (task->type == REQUEST_TYPE_URI)
       {
-        glib::Object<GFile> file(g_file_new_for_uri(task->data.c_str()));
+        glib::Object<GFile> file(::g_file_new_for_uri(task->data.c_str()));
         glib::String contents;
         gsize length = 0;
 
-        if (g_file_load_contents(file, canc, &contents, &length,
+        if (::g_file_load_contents(file, canc, &contents, &length,
                                  nullptr, &task->error))
         {
           glib::Object<GInputStream> stream(
-              g_memory_input_stream_new_from_data(contents.Value(), length, nullptr));
+              ::g_memory_input_stream_new_from_data(contents.Value(), length, nullptr));
 
-          task->result = gdk_pixbuf_new_from_stream_at_scale(stream,
-                                                             -1,
-                                                             task->size,
-                                                             TRUE,
-                                                             canc,
-                                                             &task->error);
-          g_input_stream_close(stream, canc, nullptr);
+          task->result = ::gdk_pixbuf_new_from_stream_at_scale(stream,
+                                                               -1,
+                                                               task->size,
+                                                               TRUE,
+                                                               canc,
+                                                               &task->error);
+          ::g_input_stream_close(stream, canc, nullptr);
         }
       }
 
-      g_io_scheduler_job_send_to_mainloop_async (job, LoadIconComplete, task, nullptr);
+      ::g_io_scheduler_job_send_to_mainloop_async (job, LoadIconComplete, task, nullptr);
 
       return FALSE;
     }
@@ -284,15 +284,30 @@ private:
     static gboolean LoadIconComplete(gpointer data)
     {
       auto task = static_cast<IconLoaderTask*>(data);
-      task->impl->finished_tasks_.push_back(task);
+      auto impl = task->impl;
 
-      if (!task->impl->coalesce_timeout_)
+      if (GDK_IS_PIXBUF(task->result.RawPtr()))
+      {
+        impl->cache_[task->key] = task->result;
+      }
+      else
+      {
+        if (task->result)
+          task->result = nullptr;
+
+        LOG_WARNING(logger) << "Unable to load icon " << task->data
+                            << " at size " << task->size << ": " << task->error;
+      }
+
+      impl->finished_tasks_.push_back(task);
+
+      if (!impl->coalesce_timeout_)
       {
         // we're using lower priority than the GIOSchedulerJob uses to deliver
         // results to the mainloop
         auto prio = static_cast<glib::Source::Priority>(glib::Source::Priority::DEFAULT_IDLE + 40);
-        task->impl->coalesce_timeout_.reset(new glib::Timeout(40, prio));
-        task->impl->coalesce_timeout_->Run(sigc::mem_fun(task->impl, &Impl::CoalesceTasksCb));
+        impl->coalesce_timeout_.reset(new glib::Timeout(40, prio));
+        impl->coalesce_timeout_->Run(sigc::mem_fun(impl, &Impl::CoalesceTasksCb));
       }
 
       return FALSE;
@@ -339,8 +354,8 @@ private:
 
 IconLoader::Impl::Impl()
   : // Option to disable loading, if you're testing performance of other things
-    no_load_(getenv("UNITY_ICON_LOADER_DISABLE"))
-  , theme_(gtk_icon_theme_get_default())
+    no_load_(::getenv("UNITY_ICON_LOADER_DISABLE"))
+  , theme_(::gtk_icon_theme_get_default())
   , handle_counter_(0)
 {
   theme_changed_signal_.Connect(theme_, "changed", [&] (GtkIconTheme*) {
@@ -387,8 +402,8 @@ int IconLoader::Impl::LoadFromFilename(std::string const& filename,
   if (no_load_ || filename.empty() || size < MIN_ICON_SIZE)
     return 0;
 
-  glib::Object<GFile> file(g_file_new_for_path(filename.c_str()));
-  glib::String uri(g_file_get_uri(file));
+  glib::Object<GFile> file(::g_file_new_for_path(filename.c_str()));
+  glib::String uri(::g_file_get_uri(file));
 
   return LoadFromURI(uri.Str(), size, slot);
 }
@@ -440,13 +455,11 @@ int IconLoader::Impl::QueueTask(std::string const& key,
                                 IconLoaderRequestType type)
 {
   auto task = std::make_shared<IconLoaderTask>(type, data, size, key, slot, ++handle_counter_, this);
-
   auto iter = queued_tasks_.find(key);
-  bool already_queued = iter != queued_tasks_.end();
-  IconLoaderTask::Ptr const& running_task = already_queued ? iter->second : nullptr;
 
-  if (running_task)
+  if (iter != queued_tasks_.end())
   {
+    IconLoaderTask::Ptr const& running_task = iter->second;
     running_task->shadow_tasks.push_back(task);
     // do NOT push the task into the tasks queue,
     // the parent task (which is in the queue) will handle it
@@ -503,19 +516,6 @@ bool IconLoader::Impl::CoalesceTasksCb()
 {
   for (auto task : finished_tasks_)
   {
-    // FIXME: we could update the cache sooner, but there are ref-counting
-    // issues on the pixbuf (and inside the slot callbacks) that prevent us
-    // from doing that.
-    if (GDK_IS_PIXBUF(task->result.RawPtr()))
-    {
-      cache_[task->key] = task->result;
-    }
-    else
-    {
-      LOG_WARNING(logger) << "Unable to load icon " << task->data
-                          << " at size " << task->size << ": " << task->error;
-    }
-
     task->InvokeSlot();
 
     // this was all async, we need to erase the task from the task_map

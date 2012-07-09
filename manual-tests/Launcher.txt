@@ -40,6 +40,21 @@ Outcome
   in the last used workspace.
 
 
+Test Alt+F1 KeyNavMode Rendering
+--------------------------------
+This test shows that the launcher is redrawing correctly during Alt+F1
+KeyNav mode.
+
+Action:
+#. Press Alt+F1 to enter keynav mode.
+#. Keep pressing the down arrow key until the highlighted launcher icon is the
+   bottom one (usually Trash).
+
+Outcome:
+  For every Down keypress, the next launcher icon down should be highlighted.
+  Verify each icon gets highlighted from top to bottom.
+
+
 Test Alt+F1 KeyNavMode Mouse Works
 -------------------------------
 This test shows that the mouse still works normally while keynav mode is active.
@@ -48,9 +63,9 @@ This test shows that the mouse still works normally while keynav mode is active.
 #. Using the mouse perform a normal action (such as dragging a window)
 
 Outcome
-  The keynav mode exits, along with the mouse performing the normal action 
+  The keynav mode exits, along with the mouse performing the normal action
   the user expects. Such as highlighting text, moving a window, clicking out
-  of keynav mode, or clicking on a launcher icon. All these actions should 
+  of keynav mode, or clicking on a launcher icon. All these actions should
   also exit the keynav mode.
 
 
@@ -59,7 +74,7 @@ Test Alt+F1 KeyNavMode Shortcuts
 This test shows that all the shortcuts work and also exits from keynav mode.
 
 #. Press Alt+F1 to enter keynav mode
-#. Press Super + a 
+#. Press Super + a
 #. Press Esc
 #. Press Alt+F1
 #. Press Alt + Tab
@@ -73,7 +88,7 @@ Outcome
   closing the keynav mode.
 
 
-Test Alt+F1 NavMode Quicklist Click Exit 
+Test Alt+F1 NavMode Quicklist Click Exit
 ----------------------------------------
 This Test shows that clicking on a quicklist option quits keynav mode.
 
@@ -88,7 +103,7 @@ Outcome
 Drag Icons to Trash
 -------------------
 
-This test verifies that dragging icons to the trash removes them from the 
+This test verifies that dragging icons to the trash removes them from the
 launcher, and that the animation is smooth.
 
 #. Move mouse pointer over an application or device icon (not BFB, Workspace switcher or trash)
@@ -156,7 +171,7 @@ Outcome:
 
 Dragging icon while program is starting
 ---------------------------------------
-This test that when a program is executed from the launcher and the icon is 
+This test that when a program is executed from the launcher and the icon is
 getting dragged that the icon doesn't get frozen on the launcher.
 
 #. Click on Ubuntu Software Center from the launcher.
@@ -182,9 +197,9 @@ Action:
 Outcome:
   The usb pen drive will be "ejected" and an OSD-notification will appear. The
   icon in the notification is the same icon used for the launcher icon.
-  
-  
-  
+
+
+
 Drag CD Device Launcher to Eject
 -------------------
 This test shows that the correct icon is shown in the OSD notification when a
@@ -454,7 +469,7 @@ Actions:
 # Hold down Super until the "Keyboard Shortcuts" screen appears
 
 Expected Result:
-The numbers [1-9] should be displayed overlaid on the icons. 
+The numbers [1-9] should be displayed overlaid on the icons.
 "Keyboard Shortcut" menu should appear as well.
 
 Actions:
@@ -462,7 +477,7 @@ Actions:
 # Hold down Super until the "Keyboard Shortcuts" screen appears
 
 Expected Result:
-The numbers [1-9] should be displayed overlaid on the icons. 
+The numbers [1-9] should be displayed overlaid on the icons.
 "Keyboard Shortcut" menu should appear as well.
 
 
@@ -540,3 +555,40 @@ Actions:
 
 Expected Results:
  * Terminal window will be raised to the top of the stack (over the GIMP window)
+
+
+Test killing bamfdaemon does not duplicate icons in launcher
+------------------------------------------------------------
+This test shows that restarting/killing the BAMF Daemon does not result in
+duplicate icons in the Launcher.
+
+Actions:
+ * Open Calculator
+ * Open System Settings
+ * Open xclock (Alt-F2, xclock, enter)
+ * Open a terminal and kill the bamf daemon (command: pkill bamfdaemon)
+ * (wait for bamfdaemon to be killed)
+ * Restart bamfdaemon (Open another Terminal, this will kick bamfdaemon back
+   into life)
+ * (You can ensure that bamfdaemon has been restarted by running in the
+   terminal: ps aux | grep bamfdaemon. You're looking for:
+   /usr/lib/bamf/bamfdaemon)
+
+Expected Results:
+ * There are no icons doubled up in the Launcher
+ * All icons are present in the Launcher
+
+
+Test launcher removes device icons
+------------------------------------------------------------
+This test makes sure that Unity doesn't shows internal partitions after
+they have been unmounted.
+
+Actions:
+ * Open Nautilus
+ * Mount an internal partition using the sidebar
+ * Make sure the launcher has the launcher icon for the partition
+ * Unmount that partition using Nautilus
+
+Expected Results:
+ * The device launcher icon has been removed.

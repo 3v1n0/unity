@@ -9,7 +9,7 @@
 
 from __future__ import absolute_import
 
-from autopilot.introspection.unity import UnityIntrospectionObject
+from unity.emulators import UnityIntrospectionObject
 from unity.emulators.quicklist import Quicklist
 from unity.emulators.tooltip import ToolTip
 
@@ -93,3 +93,7 @@ class HudEmbeddedIcon(UnityIntrospectionObject):
     @property
     def geometry(self):
         return (self.x, self.y, self.width, self.height)
+
+
+class LauncherEntry(UnityIntrospectionObject):
+    """Proxy for the LauncherEntryRemote instances in Unity."""

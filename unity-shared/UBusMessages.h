@@ -35,7 +35,7 @@
 #define UBUS_DASH_ABOUT_TO_SHOW "DASH_ABOUT_TO_SHOW"
 
 // Signal sent when an overlay interface is shown, includes a gvariant
-// gvariant format is (sb), (interface-name, can_maximize?) 
+// gvariant format is (sb), (interface-name, can_maximize?)
 #define UBUS_OVERLAY_FORMAT_STRING "(sbi)"
 #define UBUS_OVERLAY_HIDDEN "OVERLAY_HIDDEN"
 #define UBUS_OVERLAY_SHOWN "OVERLAY_SHOWN"
@@ -88,6 +88,8 @@
 
 // Signals sent when the switcher is shown, hidden or changes selection
 #define UBUS_SWITCHER_SHOWN             "SWITCHER_SHOWN"
+#define UBUS_SWITCHER_START             "SWITCHER_SHOWN_START"
+#define UBUS_SWITCHER_END               "SWITCHER_SHOWN_END"
 #define UBUS_SWITCHER_SELECTION_CHANGED "SWITCHER_SELECTION_CHANGED"
 
 #endif // UBUS_MESSAGES_H

@@ -23,7 +23,7 @@
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
 #include <Nux/VLayout.h>
-#include <NuxImage/GdkGraphics.h>
+#include <NuxGraphics/GdkGraphics.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 
@@ -52,7 +52,6 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   , mouse_over_index_(-1)
   , active_index_(-1)
   , selected_index_(-1)
-  , preview_row_(0)
   , last_lazy_loaded_result_(0)
   , last_mouse_down_x_(-1)
   , last_mouse_down_y_(-1)
@@ -192,38 +191,6 @@ int ResultViewGrid::GetItemsPerRow()
   return (items_per_row) ? items_per_row : 1; // always at least one item per row
 }
 
-void ResultViewGrid::SetPreview(PreviewBase* preview, Result& related_result)
-{
-  ResultView::SetPreview(preview, related_result);
-
-  int items_per_row = GetItemsPerRow();
-  uint row_size = renderer_->height + vertical_spacing;
-
-  uint index = 0;
-  ResultList::iterator it;
-  for (it = results_.begin(); it != results_.end(); it++)
-  {
-    if ((*it).uri == preview_result_uri_)
-    {
-      break;
-    }
-    index++;
-  }
-
-  uint row_number = index / items_per_row;
-  int y_position = row_number * row_size;
-
-  preview_layout_->SetMinimumHeight(600);
-  preview_layout_->SetGeometry(GetGeometry().x, y_position,
-                               GetGeometry().width, 600);
-
-  preview_layout_->SetBaseY(160);
-  preview_layout_->SetMaximumHeight(600);
-
-  SizeReallocate();
-
-}
-
 void ResultViewGrid::SetModelRenderer(ResultRenderer* renderer)
 {
   ResultView::SetModelRenderer(renderer);
@@ -253,11 +220,6 @@ void ResultViewGrid::SizeReallocate()
   if (expanded)
   {
     total_height = (total_rows * renderer_->height) + (total_rows * vertical_spacing);
-
-    if (!preview_result_uri_.empty())
-    {
-      total_height += preview_layout_->GetGeometry().height + vertical_spacing;
-    }
   }
   else
   {
@@ -275,51 +237,9 @@ void ResultViewGrid::SizeReallocate()
 
   SetMinimumHeight(total_height + (padding * 2));
   SetMaximumHeight(total_height + (padding * 2));
-  PositionPreview();
 
   mouse_over_index_ = GetIndexAtPosition(mouse_last_x_, mouse_last_y_);
   results_per_row = items_per_row;
-}
-
-void ResultViewGrid::PositionPreview()
-{
-  if (preview_layout_ == NULL)
-    return;
-
-  if (expanded == false)
-    return;
-
-  int items_per_row = GetItemsPerRow();
-  int total_rows = (results_.size() / items_per_row) + 1;
-
-  int row_size = renderer_->height + vertical_spacing;
-
-  int y_position = padding;
-  for (int row_index = 0; row_index <= total_rows; row_index++)
-  {
-    bool preview_in_this_row = false;
-
-    for (int column_index = 0; column_index < items_per_row; column_index++)
-    {
-      uint index = (row_index * items_per_row) + column_index;
-      if (index >= results_.size())
-        break;
-
-      if (results_[index].uri == preview_result_uri_)
-        preview_in_this_row = true;
-    }
-
-    y_position += row_size;
-
-    if (preview_in_this_row)
-    {
-      // the preview is in this row, so we want to position it below here
-      preview_spacer_->SetMinimumHeight(y_position);
-      preview_spacer_->SetMaximumHeight(y_position);
-      preview_row_ = row_index;
-      break;
-    }
-  }
 }
 
 bool ResultViewGrid::InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character)
@@ -675,12 +595,6 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       }
     }
 
-    // if we have a preview displaying on this row, flow the rest of the items down
-    if (preview_layout_ != NULL && preview_row_ == row_index)
-    {
-      y_position += preview_layout_->GetGeometry().height + vertical_spacing;
-
-    }
     y_position += row_size;
   }
 }
@@ -734,12 +648,6 @@ uint ResultViewGrid::GetIndexAtPosition(int x, int y)
 
   uint column_size = renderer_->width + horizontal_spacing + extra_horizontal_spacing_;
   uint row_size = renderer_->height + vertical_spacing;
-
-  if (preview_layout_ != NULL && (y - padding) / row_size > preview_row_)
-  {
-    // because we are "above" the preview row, we can just fudge the number
-    y -= preview_layout_->GetGeometry().height + vertical_spacing;
-  }
 
   int x_bound = items_per_row * column_size + padding;
 

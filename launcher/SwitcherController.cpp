@@ -150,8 +150,11 @@ void Controller::ShowView()
 
   ConstructView();
 
+  ubus_manager_.SendMessage(UBUS_SWITCHER_START, NULL);
+
   if (view_window_) {
     view_window_->ShowWindow(true);
+    view_window_->PushToFront();
     view_window_->SetOpacity(1.0f);
   }
 }
@@ -170,6 +173,7 @@ void Controller::ConstructWindow()
     view_window_->SetLayout(main_layout_);
     view_window_->SetBackgroundColor(nux::Color(0x00000000));
     view_window_->SetGeometry(workarea_);
+    view_window_->EnableInputWindow(true, "Switcher", false, false);
   }
 }
 
@@ -231,6 +235,8 @@ void Controller::Hide(bool accept_state)
     }
   }
 
+  ubus_manager_.SendMessage(UBUS_SWITCHER_END, g_variant_new_boolean(!accept_state));
+
   sources_.Remove(VIEW_CONSTRUCT_IDLE);
   sources_.Remove(SHOW_TIMEOUT);
   sources_.Remove(DETAIL_TIMEOUT);
@@ -245,6 +251,8 @@ void Controller::Hide(bool accept_state)
   {
     view_window_->SetOpacity(0.0f);
     view_window_->ShowWindow(false);
+    view_window_->PushToBack();
+    view_window_->EnableInputWindow(false);
   }
 
   ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN, g_variant_new("(bi)", false, monitor_));
@@ -374,6 +382,11 @@ LayoutWindowList Controller::ExternalRenderTargets()
     return result;
   }
   return view_->ExternalTargets();
+}
+
+guint Controller::GetSwitcherInputWindowId() const
+{
+  return view_window_->GetInputWindowId();
 }
 
 bool Controller::CompareSwitcherItemsPriority(AbstractLauncherIcon::Ptr first,
