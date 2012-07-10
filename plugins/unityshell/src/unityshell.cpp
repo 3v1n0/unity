@@ -3232,6 +3232,8 @@ void capture_g_log_calls(const gchar* log_domain,
                          const gchar* message,
                          gpointer user_data)
 {
+  // If the environment variable is set, we capture the backtrace.
+  static bool glog_backtrace = ::getenv("UNITY_LOG_GLOG_BACKTRACE");
   // If nothing else, all log messages from unity should be identified as such
   std::string module("unity");
   if (log_domain)
@@ -3242,14 +3244,16 @@ void capture_g_log_calls(const gchar* log_domain,
   nux::logging::Level level = glog_level_to_nux(log_level);
   if (level >= logger.GetEffectiveLogLevel())
   {
-    nux::logging::LogStream(level, logger.module(), "<unknown>", 0).stream()
-        << message;
-    if (level >= nux::logging::Error)
+    std::string backtrace;
+    if (glog_backtrace && level >= nux::logging::Warning)
     {
-      nux::logging::Backtrace();
+      backtrace = "\n" + nux::logging::Backtrace();
     }
+    nux::logging::LogStream(level, logger.module(), "<unknown>", 0).stream()
+      << message << backtrace;
   }
 }
 
 } // anonymous namespace
 } // namespace unity
+
