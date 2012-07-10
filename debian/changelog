@@ -1,4 +1,4 @@
-unity (6.0.0-0ubuntu2) UNRELEASED; urgency=low
+unity (6.0.0-0ubuntu1) UNRELEASED; urgency=low
 
   [ Didier Roche ]
   * debian/rules, debian/control, debian/unity-autopilot.install:
@@ -20,6 +20,89 @@ unity (6.0.0-0ubuntu2) UNRELEASED; urgency=low
 
   [ Łukasz 'sil2100' Zemczak ]
   * New upstream release.
+    - compiz crashed with SIGSEGV in get_current_slide() from
+      unity::BGHash::OnSlideshowTransition() (LP: #889625)
+    - Unity is visible on top of fullscreen apps (LP: #734908)
+    - App icon on the Unity Launcher lost track of running instance
+      (LP: #772063)
+    - unity crashed with NameError in reset_unity_compiz_profile(): global
+      name 'GError' is not defined (LP: #778470)
+    - compiz crashed with SIGSEGV in CompWindow::id() from getPaintMask()
+      [compizminimizedwindowhandler.h] from unity::UnityWindow::glPaint()
+      (LP: #851982)
+    - HUD - Formatting of text in the auto-complete is wrong (LP: #939436)
+    - [regression] Launcher is silent to screen reader users (LP: #949448)
+    - still some accent issues with unity/nux (LP: #950740)
+    - [regression] [precise] 3D apps run much slower under Unity (LP: #987304)
+    - No launcher icon or Alt+Tab entry for Gimp windows (LP: #995916)
+    - Locked smuxi launcher icon does not indicate smuxi running status
+      (LP: #999820)
+    - When number of workspaces is set to 1, the Spread no longer works
+      (LP: #996604)
+    - Much slower OpenGL frame rates with unityshell loaded, than plain compiz
+      (LP: #988079)
+    - Port to libudisks2 (LP: #1012000)
+    - Desktop, Launcher and menu bar still visible when screen locked
+      (LP: #886605)
+    - Searching in the HUD freezes unity (LP: #1016239)
+    - Dragged icons rendered under dash (LP: #1021541)
+    - Regression in Launcher keyboard navigation (with Alt+F1) (LP: #1021549)
+    - Unity dash is is much slower/laggy after revision 2469. (LP: #1021665)
+    - Dash and Launcher - As soon as a user starts dragging a file from the
+      Dash, there is a 'flicker' before the Launcher icons that are valid drop
+      receptacles re-saturate (LP: #863230)
+    - Dash - when a file is dragged from the Dash (Dash home, file lens, or
+      music lens) and dropped on a Launcher icon, the Dash should
+      automatically close (LP: #865168)
+    - Refreshing active blur makes the dash painfully slow (LP: #874230)
+    - Open dash, press Alt+f1 - dash remains open (LP: #919209)
+    - application reopens itself when last instance is closed from
+      windows/application switcher (LP: #926406)
+    - HUD Draws improperly while searching for results (LP: #932531)
+    - Spread/Scale should exit if Dash is invoked (LP: #944033)
+    - Launcher - Add API to allow apps to override the Launcher tile
+      colourisation with a colour of their choosing (LP: #962120)
+    - Dash - search field is hidden by tooltips (LP: #978030)
+    - Dash: Inconsistent hover/highlight/clickable area behavior (LP: #979686)
+    - Black background around after dash is restored (LP: #992516)
+    - Unity launcher shows internal partitions after they have been unmounted
+      (LP: #994163)
+    - Unity r2395 fails to build with libnux 2.12.0-0ubuntu1 (LP: #1010348)
+    - Hud flickers when show up. (LP: #1011507)
+    - Nothing should be written into the dash/hud searchbar when holding
+      super, ctrl or Alt (LP: #1013751)
+    - Releasing mouse button outside panel 'close' window button removes
+      keyboard focus from Dash & Hud (LP: #1021087)
+    - [regression] Unity panel transparency (active blur) not updating
+      properly (LP: #865006)
+    - When selecting an action from a quicklist after opening the dash the
+      dash stays put (LP: #937338)
+    - Wrong keyboard focus after opening workspace switcher via keyboard
+      navigation (LP: #962408)
+    - can't click to dismiss hud in the area where dynamic hud results are
+      meant to apper (LP: #962651)
+    - launcher reordering "line" doesn't go to the bottom slot (LP: #971421)
+    - Tooltips backgrounds are not refreshed (no active blur) (LP: #967112)
+    - Dash maximise button changed location (LP: #987674)
+    - alt-backtick flickers between windows (LP: #987156)
+    - When blur is disabled, shortcuts overlay and alt+tab switcher is
+      completely transparent. (LP: #989291)
+    - Duplicated applications icons on quick application restart
+      (LP: #1003574)
+    - [Hud] The result grid is not drawn in proximity of the search entry.
+      (LP: #1008603)
+    - [hud] The last button is not rounded. (LP: #1008656)
+    - 'UnityNETWorkareaRegionWindow::resizeNotify' hides overloaded virtual
+      function (LP: #1010303)
+    - use of logical '&&' with constant operand (LP: #1010307)
+    - Unity/Nux input window titles are too generic (risky to match): "panel",
+      "launcher", "Dash" (LP: #1010338)
+    - Hud should close with Alt+F4 (LP: #1019440)
+    - Dragging windows around is slow/sluggish/laggy when multiple monitors
+      are enabled (LP: #874619)
+    - No launcher icon or Alt+Tab entry for Scribus windows (LP: #999171)
+    - launcher is not refreshed after user session switch (LP: #1016430)
+    - Alt F1 keynav mode is not disabled when the Hud is open (LP: #1020808)
   * debian/control, debian/rules:
     - switch to nux-3.0
 
