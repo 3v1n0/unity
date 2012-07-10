@@ -1,4 +1,4 @@
-unity (6.0.0-0ubuntu1) UNRELEASED; urgency=low
+unity (6.0.0-0ubuntu1) quantal-proposed; urgency=low
 
   [ Didier Roche ]
   * debian/rules, debian/control, debian/unity-autopilot.install:
