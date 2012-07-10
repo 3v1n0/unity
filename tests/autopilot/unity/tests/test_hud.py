@@ -254,6 +254,15 @@ class HudBehaviorTests(HudTestsBase):
         self.keyboard.press_and_release("Alt+F4")
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
+    def test_alt_f4_close_hud_with_capslock_on(self):
+        """Hud must close on Alt+F4 even when the capslock is turned on."""
+        self.keyboard.press_and_release("Caps_Lock")
+        self.addCleanup(self.keyboard.press_and_release, "Caps_Lock")
+
+        self.hud.ensure_visible()
+        self.keyboard.press_and_release("Alt+F4")
+        self.assertThat(self.hud.visible, Eventually(Equals(False)))
+
 
 class HudLauncherInteractionsTests(HudTestsBase):
 
