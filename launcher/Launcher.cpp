@@ -1398,9 +1398,8 @@ void Launcher::DndTimeoutSetup()
   if (sources_.GetSource(DND_CHECK_TIMEOUT))
     return;
 
-  auto timeout = std::make_shared<glib::Timeout>(200);
-  sources_.Add(timeout, DND_CHECK_TIMEOUT);
-  timeout->Run(sigc::mem_fun(this, &Launcher::OnUpdateDragManagerTimeout));
+  auto cb_func = sigc::mem_fun(this, &Launcher::OnUpdateDragManagerTimeout);
+  sources_.AddTimeout(200, cb_func, DND_CHECK_TIMEOUT);
 }
 
 void Launcher::OnWindowMapped(guint32 xid)
@@ -1492,8 +1491,7 @@ void Launcher::SetHideMode(LauncherHideMode hidemode)
 
     if (!sources_.GetSource(STRUT_HACK_TIMEOUT))
     {
-      auto timeout = std::make_shared<glib::Timeout>(1000, sigc::mem_fun(this, &Launcher::StrutHack));
-      sources_.Add(timeout, STRUT_HACK_TIMEOUT);
+      sources_.AddTimeout(1000, sigc::mem_fun(this, &Launcher::StrutHack), STRUT_HACK_TIMEOUT);
     }
 
     _parent->InputWindowEnableStruts(true);
@@ -1641,8 +1639,7 @@ void Launcher::EnsureScrollTimer()
 
   if (needed && !sources_.GetSource(SCROLL_TIMEOUT))
   {
-    auto timeout = std::make_shared<glib::Timeout>(20, sigc::mem_fun(this, &Launcher::OnScrollTimeout));
-    sources_.Add(timeout, SCROLL_TIMEOUT);
+    sources_.AddTimeout(20, sigc::mem_fun(this, &Launcher::OnScrollTimeout), SCROLL_TIMEOUT);
   }
   else if (!needed)
   {
@@ -2447,9 +2444,8 @@ void Launcher::MouseDownLogic(int x, int y, unsigned long button_flags, unsigned
   {
     _icon_mouse_down = launcher_icon;
     // if MouseUp after the time ended -> it's an icon drag, otherwise, it's starting an app
-    auto timeout = std::make_shared<glib::Timeout>(START_DRAGICON_DURATION);
-    sources_.Add(timeout, START_DRAGICON_TIMEOUT);
-    timeout->Run(sigc::mem_fun(this, &Launcher::StartIconDragTimeout));
+    auto cb_func = sigc::mem_fun(this, &Launcher::StartIconDragTimeout);
+    sources_.AddTimeout(START_DRAGICON_DURATION, cb_func, START_DRAGICON_TIMEOUT);
 
     launcher_icon->mouse_down.emit(nux::GetEventButton(button_flags), monitor, key_flags);
   }
@@ -2697,7 +2693,7 @@ void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
     {
       for (auto it : *_model)
       {
-        if (it->QueryAcceptDrop(_dnd_data) != nux::DNDACTION_NONE)
+        if (it->ShouldHighlightOnDrag(_dnd_data))
           it->SetQuirk(AbstractLauncherIcon::QUIRK_DROP_PRELIGHT, true);
         else
           it->SetQuirk(AbstractLauncherIcon::QUIRK_DROP_DIM, true);
