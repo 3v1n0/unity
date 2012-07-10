@@ -1513,13 +1513,13 @@ void UnityScreen::handleEvent(XEvent* event)
       {
         /* We need an idle to postpone this action, after the current event
          * has been processed */
-        sources_.Add(std::make_shared<glib::Idle>([&]() {
+        sources_.AddIdle([&] {
           shortcut_controller_->SetEnabled(false);
           shortcut_controller_->Hide();
           EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, false);
 
           return false;
-        }));
+        });
       }
 
       KeySym key_sym;
@@ -2851,17 +2851,14 @@ void UnityScreen::ScheduleRelayout(guint timeout)
 {
   if (!sources_.GetSource(local::RELAYOUT_TIMEOUT))
   {
-    auto relayout_timeout(std::make_shared<glib::Timeout>(timeout));
-    sources_.Add(relayout_timeout, local::RELAYOUT_TIMEOUT);
-
-    relayout_timeout->Run([&]() {
+    sources_.AddTimeout(timeout, [&] {
       NeedsRelayout();
       Relayout();
 
       cScreen->damageScreen();
 
       return false;
-    });
+    }, local::RELAYOUT_TIMEOUT);
   }
 }
 

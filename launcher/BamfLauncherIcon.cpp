@@ -135,9 +135,10 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
                                * have a splash screen won't be removed from
                                * the launcher while the splash is closed and
                                * a new window is opened. */
-                              auto timeout = std::make_shared<glib::TimeoutSeconds>(1);
-                              _source_manager.Add(timeout, ICON_REMOVE_TIMEOUT);
-                              timeout->Run([&] { Remove(); return false; });
+                              _source_manager.AddTimeoutSeconds(1, [&] {
+                                Remove();
+                                return false;
+                              }, ICON_REMOVE_TIMEOUT);
                             }
                           });
   _gsignals.Add(sig);
@@ -156,8 +157,7 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   SetProgress(0.0f);
 
   // Calls when there are no higher priority events pending to the default main loop.
-  auto idle = std::make_shared<glib::Idle>([&] { FillSupportedTypes(); return false; });
-  _source_manager.Add(idle);
+  _source_manager.AddIdle([&] { FillSupportedTypes(); return false; });
 }
 
 BamfLauncherIcon::~BamfLauncherIcon()
@@ -448,15 +448,12 @@ void BamfLauncherIcon::OnWindowMoved(guint32 moved_win)
   if (!OwnsWindow(moved_win))
     return;
 
-  auto timeout = std::make_shared<glib::Timeout>(250);
-  _source_manager.Add(timeout, WINDOW_MOVE_TIMEOUT);
-
-  timeout->Run([&] {
+  _source_manager.AddTimeout(250, [&] {
     EnsureWindowState();
     UpdateIconGeometries(GetCenters());
 
     return false;
-  });
+  }, WINDOW_MOVE_TIMEOUT);
 }
 
 void BamfLauncherIcon::UpdateDesktopFile()
@@ -1048,9 +1045,7 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
 
     _gsignals.Add(new glib::Signal<void, DbusmenuMenuitem*, int>(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
                                     [&] (DbusmenuMenuitem*, int) {
-                                      auto idle = std::make_shared<glib::Idle>();
-                                      _source_manager.Add(idle);
-                                      idle->Run([&] {
+                                      _source_manager.AddIdle([&] {
                                         ActivateLauncherIcon(ActionArg());
                                         return false;
                                       });
@@ -1181,9 +1176,10 @@ void BamfLauncherIcon::OnDndHovered()
 void BamfLauncherIcon::OnDndEnter()
 {
   /* Disabled, since the DND code is currently disabled as well.
-  auto timeout = std::make_shared<glib::Timeout>(1000);
-  _source_manager.Add(timeout, ICON_DND_OVER_TIMEOUT);
-  timeout->Run([&] { OnDndHovered(); return false; });
+  _source_manager.AddTimeout(1000, [&] {
+    OnDndHovered();
+    return false;
+  }, ICON_DND_OVER_TIMEOUT);
   */
 }
 
