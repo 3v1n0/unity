@@ -62,29 +62,4 @@ TEST_F(TestBamfLauncherIcon, TestCustomBackgroundColor)
   EXPECT_EQ(color.alpha, 0xff / 255.0f);
 }
 
-TEST_F(TestBamfLauncherIcon, TestColorStringConversion)
-{
-  EXPECT_EQ(launcher::ColorStrToARGB("#12345678"), 0x78123456);
-  EXPECT_EQ(launcher::ColorStrToARGB("12345678"), 0x78123456);
-  EXPECT_EQ(launcher::ColorStrToARGB("#12345678q"), 0x0);
-  EXPECT_EQ(launcher::ColorStrToARGB("12345678q"), 0x0);
-  EXPECT_EQ(launcher::ColorStrToARGB("#1234567890"), 0x0);
-  EXPECT_EQ(launcher::ColorStrToARGB("1234567890"), 0x0);
-  EXPECT_EQ(launcher::ColorStrToARGB("#AABBCC"), 0xFFAABBCC);
-  EXPECT_EQ(launcher::ColorStrToARGB("AABBCC"), 0xFFAABBCC);
-  EXPECT_EQ(launcher::ColorStrToARGB("#eeddccbb"), 0xBBEEDDCC);
-  EXPECT_EQ(launcher::ColorStrToARGB("eeddccbb"), 0xBBEEDDCC);
-  EXPECT_EQ(launcher::ColorStrToARGB("#2040"), 0x0);
-  EXPECT_EQ(launcher::ColorStrToARGB("2040"), 0x0);
-  EXPECT_EQ(launcher::ColorStrToARGB("#2040809"), 0x0);
-  EXPECT_EQ(launcher::ColorStrToARGB("2040809"), 0x0);
-  EXPECT_EQ(launcher::ColorStrToARGB("#204080"), 0xFF204080);
-  EXPECT_EQ(launcher::ColorStrToARGB("204080"), 0xFF204080);
-  EXPECT_EQ(launcher::ColorStrToARGB("#blah"), 0x0);
-  EXPECT_EQ(launcher::ColorStrToARGB("blah"), 0x0);
-  EXPECT_EQ(launcher::ColorStrToARGB("#"), 0x0);
-  EXPECT_EQ(launcher::ColorStrToARGB(""), 0x0);
-  EXPECT_EQ(launcher::ColorStrToARGB("helloworld helloworld !!!!"), 0x0);
-}
-
 }
