@@ -97,7 +97,7 @@ unity::glib::Object<GIcon> Preview::IconForString(std::string const& icon_hint)
 {
   glib::Error error;
   glib::Object<GIcon> icon(g_icon_new_for_string(icon_hint.c_str(), &error));
-
+\
   if (error)
   {
     LOG_WARN(logger) << "Unable to instantiate icon: " << icon_hint;
@@ -250,7 +250,7 @@ void Preview::PerformAction(std::string const& id) const
   }
   else
   {
-    LOG_WARN(logger) << "Unable to perform action, parent_lens wasn't set!";
+    LOG_WARN(logger) << "Unable to perform action '" << id << "', parent_lens wasn't set!";
   }
 }
 

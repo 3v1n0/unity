@@ -59,8 +59,6 @@ public:
   void PushPreview(previews::Preview::Ptr preview, NavButton direction)
   {
     AddView(preview.GetPointer());
-    preview->SetReconfigureParentLayoutOnGeometryChange(false);
-
     preview->SetVisible(false);
     PreviewSwipe swipe;
     swipe.direction = direction;
@@ -132,6 +130,7 @@ public:
         if (current_preview_)
           RemoveChildObject(current_preview_.GetPointer());
         current_preview_ = swipe_.preview;
+        swipe_.preview.Release();
       } 
 
       // another swipe?
@@ -161,7 +160,7 @@ public:
   void ProcessDraw2(nux::GraphicsEngine& gfx_engine, bool force_draw)
   {
     if (swipe_.preview && swipe_.preview->IsVisible()) { swipe_.preview->ProcessDraw(gfx_engine, force_draw); }
-    if (current_preview_ && swipe_.preview->IsVisible()) {  current_preview_->ProcessDraw(gfx_engine, force_draw); }
+    if (current_preview_ && current_preview_->IsVisible()) { current_preview_->ProcessDraw(gfx_engine, force_draw); }
 
     _queued_draw = false;
   }

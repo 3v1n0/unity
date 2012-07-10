@@ -63,7 +63,7 @@ public:
 
     nux::Layout* layout = new nux::VLayout();
     layout->SetPadding(16);
-    layout->AddView(view, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+    layout->AddView(view, 1, nux::MINOR_POSITION_CENTER);
     SetLayout(layout);
   }
 

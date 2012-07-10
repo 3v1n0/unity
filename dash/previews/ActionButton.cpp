@@ -42,6 +42,10 @@ ActionButton::ActionButton(std::string const& label, NUX_FILE_LINE_DECL)
 {
   SetLayoutPadding(2, 11, 2, 11);
   Button::SetLabel(label);
+
+  SetAcceptKeyNavFocusOnMouseDown(false);
+  SetAcceptKeyNavFocusOnMouseEnter(false);
+
   Init();
 }
 
@@ -52,8 +56,6 @@ ActionButton::~ActionButton()
 void ActionButton::Init()
 {
   InitTheme();
-  SetAcceptKeyNavFocusOnMouseDown(false);
-  SetAcceptKeyNavFocusOnMouseEnter(false);
 
   key_nav_focus_change.connect([&] (nux::Area*, bool, nux::KeyNavDirection)
   {

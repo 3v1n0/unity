@@ -32,6 +32,7 @@ namespace nux
 {
 class AbstractPaintLayer;
 class VLayout;
+class Button;
 }
 
 namespace unity
@@ -64,6 +65,8 @@ protected:
 
   void SetupBackground();
   void SetupViews();
+
+  void OnActionActivated(nux::Button* button, std::string const& id);
 
 protected:
   IconTexture* app_icon_;

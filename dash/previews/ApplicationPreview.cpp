@@ -259,7 +259,10 @@ void ApplicationPreview::SetupViews()
 
       for (dash::Preview::ActionPtr action : preview_model_->GetActions())
       {
-        actions_layout->AddView(new ActionButton(action->display_name, NUX_TRACKER_LOCATION), 0);
+        ActionButton* button = new ActionButton(action->display_name, NUX_TRACKER_LOCATION);
+        button->click.connect(sigc::bind(sigc::mem_fun(this, &ApplicationPreview::OnActionActivated), action->id));
+
+        actions_layout->AddView(button, 0);
       }
       /////////////////////
 
@@ -274,6 +277,12 @@ void ApplicationPreview::SetupViews()
   SetLayout(image_data_layout);
 }
 
+void ApplicationPreview::OnActionActivated(nux::Button*, std::string const& id)
+{
+  if (preview_model_)
+    preview_model_->PerformAction(id);
 }
-}
-}
+
+} // namespace previews
+} // namespace dash
+} // namepsace unity
