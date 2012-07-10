@@ -44,6 +44,8 @@ public:
   nux::RWProperty<std::string> copyright;
   nux::RWProperty<std::string> license;
   nux::RWProperty<glib::Object<GIcon>> app_icon;
+  nux::RWProperty<float> rating;
+  nux::RWProperty<unsigned int> num_ratings;
 
 private:
   class Impl;

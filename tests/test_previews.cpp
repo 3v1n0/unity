@@ -134,6 +134,8 @@ TEST(TestPreviews, DeserializeApplication)
   unity_protocol_application_preview_set_copyright(app_proto_obj, "(c) Canonical");
   unity_protocol_application_preview_set_license(app_proto_obj, "GPLv3");
   unity_protocol_application_preview_set_app_icon(app_proto_obj, icon);
+  unity_protocol_application_preview_set_rating(app_proto_obj, 4.0);
+  unity_protocol_application_preview_set_num_ratings(app_proto_obj, 12);
 
   Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
             glib::StealRef());
@@ -152,6 +154,8 @@ TEST(TestPreviews, DeserializeApplication)
   EXPECT_EQ(preview->copyright, "(c) Canonical");
   EXPECT_EQ(preview->license, "GPLv3");
   EXPECT_TRUE(g_icon_equal(preview->app_icon(), icon) != FALSE);
+  EXPECT_EQ(preview->rating, 4.0);
+  EXPECT_EQ(preview->num_ratings, static_cast<unsigned>(12));
 }
 
 TEST(TestPreviews, DeserializeMovie)

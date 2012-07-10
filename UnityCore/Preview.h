@@ -42,6 +42,15 @@ namespace dash
 
 class Lens;
 
+enum LayoutHint
+{
+  NONE,
+  LEFT,
+  RIGHT,
+  TOP,
+  BOTTOM
+};
+
 class Preview : public sigc::trackable
 {
 public:
@@ -50,12 +59,12 @@ public:
     std::string id;
     std::string display_name;
     std::string icon_hint;
-    unsigned int layout_hint;
+    LayoutHint layout_hint;
     // TODO: there's also a HashTable here (although unused atm)
 
     Action() {};
     Action(const gchar* id_, const gchar* display_name_,
-           const gchar* icon_hint_, unsigned int layout_hint_)
+           const gchar* icon_hint_, LayoutHint layout_hint_)
       : id(id_ != NULL ? id_ : "")
       , display_name(display_name_ != NULL ? display_name_ : "")
       , icon_hint(icon_hint_ != NULL ? icon_hint_ : "")
