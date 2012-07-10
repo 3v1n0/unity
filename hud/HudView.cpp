@@ -565,7 +565,7 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
       unsigned long x11_key_code,
       unsigned long special_keys_state)
 {
-    // Only care about states of Alt, Ctrl, Super, Shift, not the lock keys
+  // Only care about states of Alt, Ctrl, Super, Shift, not the lock keys
   special_keys_state &= (nux::NUX_STATE_ALT | nux::NUX_STATE_CTRL |
                          nux::NUX_STATE_SUPER | nux::NUX_STATE_SHIFT);
 
