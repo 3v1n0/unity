@@ -62,6 +62,15 @@ class DashRevealTests(DashTestCase):
         self.keyboard.press_and_release("Alt+F4")
         self.assertThat(self.dash.visible, Eventually(Equals(False)))
 
+    def test_alt_f4_close_dash_with_capslock_on(self):
+        """Dash must close on Alt+F4 even when the capslock is turned on."""
+        self.keyboard.press_and_release("Caps_Lock")
+        self.addCleanup(self.keyboard.press_and_release, "Caps_Lock")
+
+        self.dash.ensure_visible()
+        self.keyboard.press_and_release("Alt+F4")
+        self.assertThat(self.dash.visible, Eventually(Equals(False)))
+
     def test_dash_closes_on_spread(self):
         """This test shows that when the spread is initiated, the dash closes."""
         self.dash.ensure_visible()
