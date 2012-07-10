@@ -97,20 +97,8 @@ class ShowDesktopTests(UnityTestCase):
 
         # show desktop, verify all windows are hidden:
         self.switcher.initiate()
-        sleep(0.5)
-        found = False
-        switcher_model = self.switcher.controller.model
-        for i in switcher_model.icons:
-            current_icon = self.switcher.current_icon
-            self.assertIsNotNone(current_icon)
-            if isinstance(current_icon, DesktopLauncherIcon):
-                found = True
-                break
-            self.switcher.previous_icon()
-            sleep(0.25)
-        self.assertTrue(found, "Could not find 'Show Desktop' entry in switcher.")
+        self.switcher.select_icon(self.switcher.DIRECTION_BACKWARDS, tooltip_text="Show Desktop")
         self.addCleanup(self.window_manager.leave_show_desktop)
-
         self.switcher.select()
 
         for win in test_windows:
