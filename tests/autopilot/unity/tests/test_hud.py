@@ -191,29 +191,6 @@ class HudBehaviorTests(HudTestsBase):
         contents = open("/tmp/autopilot_gedit_undo_test_temp_file.txt").read().strip('\n')
         self.assertEqual("0 ", contents)
 
-    def test_disabled_alt_f1(self):
-        """Pressing Alt+F1 when the HUD is open must not start keyboard navigation mode."""
-        self.hud.ensure_visible()
-
-        self.keybinding("launcher/keynav")
-        # we need a sleep here to ensure that the launcher has had time to start
-        # keynav before we check the key_nav_is_active attribute.
-        #
-        # Ideally we'd do 'key_nav_is_active, Eventually(Equals(True)' and expect a test
-        # failure.
-        sleep(1)
-
-        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
-
-    def test_hud_to_dash_disabled_alt_f1(self):
-        """When switching from the hud to the dash alt+f1 is disabled."""
-        self.hud.ensure_visible()
-        self.dash.ensure_visible()
-        self.addCleanup(self.dash.ensure_hidden)
-
-        self.keybinding("launcher/keynav")
-        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
-
     def test_hud_to_dash_has_key_focus(self):
         """When switching from the hud to the dash you don't lose key focus."""
         self.hud.ensure_visible()
@@ -273,6 +250,15 @@ class HudBehaviorTests(HudTestsBase):
 
     def test_alt_f4_close_hud(self):
         """Hud must close on alt+F4."""
+        self.hud.ensure_visible()
+        self.keyboard.press_and_release("Alt+F4")
+        self.assertThat(self.hud.visible, Eventually(Equals(False)))
+
+    def test_alt_f4_close_hud_with_capslock_on(self):
+        """Hud must close on Alt+F4 even when the capslock is turned on."""
+        self.keyboard.press_and_release("Caps_Lock")
+        self.addCleanup(self.keyboard.press_and_release, "Caps_Lock")
+
         self.hud.ensure_visible()
         self.keyboard.press_and_release("Alt+F4")
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
