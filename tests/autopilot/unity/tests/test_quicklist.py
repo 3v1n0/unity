@@ -164,9 +164,9 @@ class QuicklistKeyNavigationTests(UnityTestCase):
         self.ql_launcher.click_launcher_icon(self.ql_launcher_icon, button=3)
         self.addCleanup(self.keyboard.press_and_release, "Escape")
         self.quicklist = self.ql_launcher_icon.get_quicklist()
-        self.assertThat(self.quicklist, NotEquals(None))
+        self.assertThat(lambda: self.quicklist, Eventually(NotEquals(None)))
         self.quicklist.move_mouse_to_right()
-        self.assertThat(self.quicklist.selected_item, Equals(None))
+        self.assertThat(lambda: self.quicklist.selected_item, Eventually(Equals(None)))
 
     def open_quicklist_with_keyboard(self):
         """Opens a quicklist using the keyboard."""
