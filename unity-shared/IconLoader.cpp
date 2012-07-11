@@ -22,8 +22,13 @@
 #include <queue>
 #include <sstream>
 #include <boost/algorithm/string.hpp>
+#include <unity-protocol.h>
+#include <pango/pango.h>
+#include <pango/pangocairo.h>
 
+#include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
+#include <NuxGraphics/CairoGraphics.h>
 #include <UnityCore/GLibSource.h>
 #include <UnityCore/GLibSignal.h>
 
@@ -43,6 +48,8 @@ public:
   // The Handle typedef is used to explicitly indicate which integers are
   // infact our opaque handles.
   typedef int Handle;
+  static const int FONT_SIZE = 10;
+  static const int MIN_FONT_SIZE = 6;
 
   Impl();
 
@@ -63,6 +70,8 @@ public:
                      IconLoaderCallback slot);
 
   void DisconnectHandle(Handle handle);
+
+  static void CalculateTextHeight(int* width, int* height);
 
 private:
 
@@ -85,6 +94,8 @@ private:
     Handle handle;
     Impl* impl;
     GtkIconInfo* icon_info;
+    bool no_cache;
+    int helper_handle;
     glib::Object<GdkPixbuf> result;
     glib::Error error;
     std::list<IconLoaderTask::Ptr> shadow_tasks;
@@ -98,13 +109,15 @@ private:
                    Impl* self_)
       : type(type_), data(data_), size(size_), key(key_)
       , slot(slot_), handle(handle_), impl(self_)
-      , icon_info(nullptr)
+      , icon_info(nullptr), no_cache(false), helper_handle(0)
       {}
 
     ~IconLoaderTask()
     {
       if (icon_info)
         ::gtk_icon_info_free(icon_info);
+      if (helper_handle != 0)
+        impl->DisconnectHandle(helper_handle);
     }
 
     void InvokeSlot()
@@ -177,7 +190,21 @@ private:
       glib::Error error;
       glib::Object<GIcon> icon(::g_icon_new_for_string(data.c_str(), &error));
 
-      if (G_IS_FILE_ICON(icon.RawPtr()))
+      if (icon.IsType(UNITY_PROTOCOL_TYPE_ANNOTATED_ICON))
+      {
+        UnityProtocolAnnotatedIcon *anno;
+        anno = UNITY_PROTOCOL_ANNOTATED_ICON(icon.RawPtr());
+        GIcon* base_icon = unity_protocol_annotated_icon_get_icon(anno);
+        glib::String gicon_string(g_icon_to_string(base_icon));
+
+        no_cache = true;
+        auto helper_slot = sigc::bind(sigc::mem_fun(this, &IconLoaderTask::BaseIconLoaded), glib::object_cast<UnityProtocolAnnotatedIcon>(icon));
+        helper_handle = impl->LoadFromGIconString(gicon_string.Str(),
+                                                  size, helper_slot);
+
+        return false;
+      }
+      else if (icon.IsType(G_TYPE_FILE_ICON))
       {
         // [trasfer none]
         GFile* file = ::g_file_icon_get_file(G_FILE_ICON(icon.RawPtr()));
@@ -188,7 +215,7 @@ private:
 
         return ProcessURITask();
       }
-      else if (G_IS_ICON(icon.RawPtr()))
+      else if (icon.IsType(G_TYPE_ICON))
       {
         GtkIconInfo* info = ::gtk_icon_theme_lookup_by_gicon(impl->theme_, icon, size,
                                                              static_cast<GtkIconLookupFlags>(0));
@@ -236,6 +263,189 @@ private:
       PushSchedulerJob();
 
       return false;
+    }
+
+    void CategoryIconLoaded(std::string const& base_icon_string, unsigned size,
+                            glib::Object<GdkPixbuf> const& category_pixbuf,
+                            glib::Object<UnityProtocolAnnotatedIcon> const& anno_icon)
+    {
+      helper_handle = 0;
+      if (category_pixbuf)
+      {
+        // assuming the category pixbuf is smaller than result
+        gdk_pixbuf_composite(category_pixbuf, result, // src, dest
+                             0, 0, // dest_x, dest_y
+                             gdk_pixbuf_get_width(category_pixbuf), // dest_w
+                             gdk_pixbuf_get_height(category_pixbuf), // dest_h
+                             0.0, 0.0, // offset_x, offset_y
+                             1.0, 1.0, // scale_x, scale_y
+                             GDK_INTERP_NEAREST, // interpolation
+                             255); // src_alpha
+      }
+
+      const gchar* detail_text = unity_protocol_annotated_icon_get_ribbon(anno_icon);
+      if (detail_text)
+      {
+        int icon_w = gdk_pixbuf_get_width(result);
+        int icon_h = gdk_pixbuf_get_height(result);
+
+        int max_font_height;
+        CalculateTextHeight(nullptr, &max_font_height);
+
+        max_font_height = max_font_height * 9 / 8; // let's have some padding on the stripe
+        int pixbuf_size = static_cast<int>(
+            sqrt(max_font_height*max_font_height*8));
+        if (pixbuf_size > icon_w) pixbuf_size = icon_w;
+
+        nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32,
+                                          pixbuf_size, pixbuf_size);
+        cairo_t* cr = cairo_graphics.GetContext();
+
+        glib::Object<PangoLayout> layout;
+        PangoFontDescription* desc = NULL;
+        PangoContext* pango_context = NULL;
+        GdkScreen* screen = gdk_screen_get_default(); // not ref'ed
+        glib::String font;
+        int dpi = -1;
+
+        g_object_get(gtk_settings_get_default(), "gtk-font-name", &font, NULL);
+        g_object_get(gtk_settings_get_default(), "gtk-xft-dpi", &dpi, NULL);
+        cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
+        layout = pango_cairo_create_layout(cr);
+        desc = pango_font_description_from_string(font);
+        pango_font_description_set_weight(desc, PANGO_WEIGHT_BOLD);
+        int font_size = FONT_SIZE;
+        pango_font_description_set_size (desc, font_size * PANGO_SCALE);
+
+        pango_layout_set_font_description(layout, desc);
+        pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);
+
+        double size_dbl = static_cast<double>(pixbuf_size);
+        // we'll allow tiny bit of overflow since the text is rotated and there
+        // is some space left... FIXME: 10/9? / 11/10?
+        double max_text_width = sqrt(size_dbl*size_dbl / 2) * 9/8;
+
+        pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
+        pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
+
+        glib::String escaped_text(g_markup_escape_text(detail_text, -1));
+        pango_layout_set_markup(layout, escaped_text, -1);
+
+        pango_context = pango_layout_get_context(layout);  // is not ref'ed
+        // FIXME: for reasons unknown, it looks better without this
+        //pango_cairo_context_set_font_options(pango_context,
+        //                                     gdk_screen_get_font_options(screen));
+        pango_cairo_context_set_resolution(pango_context,
+                                           dpi == -1 ? 96.0f : dpi/(float) PANGO_SCALE);
+        pango_layout_context_changed(layout);
+
+        // find proper font size (can we do this before the rotation?)
+        int text_width, text_height;
+        pango_layout_get_pixel_size(layout, &text_width, nullptr);
+        while (text_width > max_text_width && font_size > MIN_FONT_SIZE)
+        {
+          font_size--;
+          pango_font_description_set_size (desc, font_size * PANGO_SCALE);
+          pango_layout_set_font_description(layout, desc);
+          pango_layout_get_pixel_size(layout, &text_width, nullptr);
+        }
+        pango_layout_set_width(layout, static_cast<int>(max_text_width * PANGO_SCALE));
+
+        cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+        cairo_paint(cr);
+
+        cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+
+        // draw the trapezoid
+        cairo_move_to(cr, 0.0, size_dbl);
+        cairo_line_to(cr, size_dbl, 0.0);
+        cairo_line_to(cr, size_dbl, size_dbl / 2.0);
+        cairo_line_to(cr, size_dbl / 2.0, size_dbl);
+        cairo_close_path(cr);
+
+        cairo_set_source_rgba(cr, 0.196f, 0.086f, 0.1607f, 0.8825f);
+        cairo_fill(cr);
+
+        // draw the text (rotated!)
+        cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
+        cairo_move_to(cr, size_dbl * 0.25, size_dbl);
+        cairo_rotate(cr, -G_PI_4); // rotate by -45 degrees
+
+        pango_cairo_update_layout(cr, layout);
+        pango_layout_get_pixel_size(layout, nullptr, &text_height);
+        // current point is now in the middle of the stripe, need to translate
+        // it, so that the text is centered
+        cairo_rel_move_to(cr, 0.0, text_height / -2.0);
+        double diagonal = sqrt(size_dbl*size_dbl*2);
+        // x coordinate also needs to be shifted
+        cairo_rel_move_to(cr, (diagonal - max_text_width) / 4, 0.0);
+        pango_cairo_show_layout(cr, layout);
+
+        // clean up
+        pango_font_description_free(desc);
+        cairo_destroy(cr);
+
+        // FIXME: going from image_surface to pixbuf, and then to texture :(
+        glib::Object<GdkPixbuf> detail_pb(
+            gdk_pixbuf_get_from_surface(cairo_graphics.GetSurface(),
+                                        0, 0,
+                                        cairo_graphics.GetWidth(),
+                                        cairo_graphics.GetHeight()));
+
+        gdk_pixbuf_composite(detail_pb, result, // src, dest
+                             icon_w - pixbuf_size, // dest_x
+                             icon_h - pixbuf_size, // dest_y
+                             pixbuf_size, // dest_w
+                             pixbuf_size, // dest_h
+                             icon_w - pixbuf_size, // offset_x
+                             icon_h - pixbuf_size, // offset_y
+                             1.0, 1.0, // scale_x, scale_y
+                             GDK_INTERP_NEAREST, // interpolation
+                             255); // src_alpha
+      }
+
+      g_idle_add(LoadIconComplete, this);
+    }
+
+    void BaseIconLoaded(std::string const& base_icon_string, unsigned size,
+                        glib::Object<GdkPixbuf> const& base_pixbuf,
+                        glib::Object<UnityProtocolAnnotatedIcon> const& anno_icon)
+    {
+      helper_handle = 0;
+      if (base_pixbuf)
+      {
+        result = gdk_pixbuf_copy(base_pixbuf);
+        // FIXME: can we composite the pixbuf in helper thread?
+        UnityProtocolCategoryType category = unity_protocol_annotated_icon_get_category(anno_icon);
+        auto helper_slot = sigc::bind(sigc::mem_fun(this, &IconLoaderTask::CategoryIconLoaded), anno_icon);
+        unsigned cat_size = size / 4;
+        // FIXME: where to find category assets?
+        switch (category)
+        {
+          case UNITY_PROTOCOL_CATEGORY_TYPE_BOOK:
+            helper_handle =
+              impl->LoadFromIconName("emblem-favorite", cat_size, helper_slot);
+            break;
+          case UNITY_PROTOCOL_CATEGORY_TYPE_SONG:
+            helper_handle =
+              impl->LoadFromIconName("emblem-favorite", cat_size, helper_slot);
+            break;
+          case UNITY_PROTOCOL_CATEGORY_TYPE_MOVIE:
+            helper_handle =
+              impl->LoadFromIconName("emblem-favorite", cat_size, helper_slot);
+            break;
+          default:
+            // rest of the processing is the CategoryIconLoaded, lets invoke it
+            glib::Object<GdkPixbuf> null_pixbuf;
+            helper_slot("", cat_size, null_pixbuf);
+            break;
+        }
+      }
+      else
+      {
+        result = nullptr;
+        g_idle_add(LoadIconComplete, this);
+      }
     }
 
     void PushSchedulerJob()
@@ -286,9 +496,9 @@ private:
       auto task = static_cast<IconLoaderTask*>(data);
       auto impl = task->impl;
 
-      if (GDK_IS_PIXBUF(task->result.RawPtr()))
+      if (task->result.IsType(GDK_TYPE_PIXBUF))
       {
-        impl->cache_[task->key] = task->result;
+        if (!task->no_cache) impl->cache_[task->key] = task->result;
       }
       else
       {
@@ -338,6 +548,13 @@ private:
 
 private:
   std::map<std::string, glib::Object<GdkPixbuf>> cache_;
+  /* FIXME: the reference counting of IconLoaderTasks with shared pointers
+   * is currently somewhat broken, and the queued_tasks_ member is what keeps
+   * it from crashing randomly.
+   * The IconLoader instance is assuming that it is the only owner of the loader
+   * tasks, but when they are being completed in a worker thread, the thread
+   * should own them as well (yet it doesn't), this could cause trouble
+   * in the future... You've been warned! */
   std::map<std::string, IconLoaderTask::Ptr> queued_tasks_;
   std::queue<IconLoaderTask::Ptr> tasks_;
   std::map<Handle, IconLoaderTask::Ptr> task_map_;
@@ -426,6 +643,44 @@ void IconLoader::Impl::DisconnectHandle(Handle handle)
   {
     iter->second->slot.disconnect();
   }
+}
+
+void IconLoader::Impl::CalculateTextHeight(int* width, int* height)
+{
+  // FIXME: what about CJK?
+  const char* const SAMPLE_MAX_TEXT = "Chromium Web Browser";
+  GtkSettings* settings = gtk_settings_get_default();
+
+  nux::CairoGraphics util_cg(CAIRO_FORMAT_ARGB32, 1, 1);
+  cairo_t* cr = util_cg.GetInternalContext();
+
+  glib::String font;
+  int dpi = 0;
+  g_object_get(settings,
+                 "gtk-font-name", &font,
+                 "gtk-xft-dpi", &dpi,
+                 NULL);
+  PangoFontDescription* desc = pango_font_description_from_string(font);
+  pango_font_description_set_weight(desc, PANGO_WEIGHT_BOLD);
+  pango_font_description_set_size(desc, FONT_SIZE * PANGO_SCALE);
+
+  glib::Object<PangoLayout> layout(pango_cairo_create_layout(cr));
+  pango_layout_set_font_description(layout, desc);
+  pango_layout_set_text(layout, SAMPLE_MAX_TEXT, -1);
+
+  PangoContext* cxt = pango_layout_get_context(layout);
+  GdkScreen* screen = gdk_screen_get_default();
+  pango_cairo_context_set_font_options(cxt, gdk_screen_get_font_options(screen));
+  pango_cairo_context_set_resolution(cxt, dpi / (double) PANGO_SCALE);
+  pango_layout_context_changed(layout);
+
+  PangoRectangle log_rect;
+  pango_layout_get_extents(layout, NULL, &log_rect);
+
+  if (width) *width = log_rect.width / PANGO_SCALE;
+  if (height) *height = log_rect.height / PANGO_SCALE;
+
+  pango_font_description_free(desc);
 }
 
 //
