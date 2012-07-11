@@ -606,3 +606,20 @@ Actions:
 Expected Result:
 Unity must not freeze during the drag and drop.
 
+
+Test launcher unfolds valid drop icons during dnd
+------------------------------------------------------------
+This test makes sure that Unity launcher unfolds valid drop icons during
+drag and drop.
+
+Setup:
+ * Add icons to the laucnher so that some of them in the bottom are folded.
+ * Add Nautilus icon too, making sure it is folded.
+
+Actions:
+ * Show Desktop
+ * Drag a folder icon
+
+Expected Results:
+ * All the valid drop icons should unfold during the drag and drop.
+
