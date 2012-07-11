@@ -47,7 +47,7 @@ class QuicklistActionTests(UnityTestCase):
         desktop_file = os.path.join('/usr/share/applications', desktop_id)
         de = DesktopEntry(desktop_file)
         # get the launcher icon from the launcher:
-        launcher_icon = self.launcher.model.get_icon_by_desktop_id(desktop_id)
+        launcher_icon = self.launcher.model.get_icon(desktop_id=desktop_id)
         self.assertThat(launcher_icon, NotEquals(None))
 
         # open the icon quicklist, and get all the text labels:
@@ -78,10 +78,10 @@ class QuicklistActionTests(UnityTestCase):
 
         self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
 
-        mahj_icon = self.launcher.model.get_icon_by_desktop_id(
-            mah_win1.application.desktop_file)
-        calc_icon = self.launcher.model.get_icon_by_desktop_id(
-            calc_win.application.desktop_file)
+        mahj_icon = self.launcher.model.get_icon(
+            desktop_id=mah_win1.application.desktop_file)
+        calc_icon = self.launcher.model.get_icon(
+            desktop_id=calc_win.application.desktop_file)
 
         calc_ql = self.open_quicklist_for_icon(calc_icon)
         calc_ql.get_quicklist_application_item(calc_win.application.name).mouse_click()
@@ -106,7 +106,7 @@ class QuicklistActionTests(UnityTestCase):
         self.assertVisibleWindowStack([calc_win2, calc_win1])
         self.assertProperty(calc_win2, is_focused=True)
 
-        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc_app.desktop_file)
+        calc_icon = self.launcher.model.get_icon(desktop_id=calc_app.desktop_file)
 
         calc_ql = self.open_quicklist_for_icon(calc_icon)
         app_item = calc_ql.get_quicklist_application_item(calc_app.name)
@@ -124,8 +124,8 @@ class QuicklistActionTests(UnityTestCase):
 
         self.dash.ensure_visible()
 
-        calc_icon = self.launcher.model.get_icon_by_desktop_id(
-            calc_win.application.desktop_file)
+        calc_icon = self.launcher.model.get_icon(
+            desktop_id=calc_win.application.desktop_file)
         self.open_quicklist_for_icon(calc_icon)
 
         self.keyboard.press_and_release("Down")

@@ -458,48 +458,6 @@ class LauncherModel(UnityIntrospectionObject):
 
         return icons
 
-    def get_icon_by_tooltip_text(self, tooltip_text):
-        """Get a launcher icon given it's tooltip text.
-
-        Returns None if there is no icon with the specified text.
-        """
-        for icon in self.get_launcher_icons():
-            if icon.tooltip_text == tooltip_text:
-                return icon
-        return None
-
-    def get_icon_by_desktop_id(self, desktop_id):
-        """Gets a launcher icon with the specified desktop id.
-
-        Returns None if there is no such launcher icon.
-        """
-        icons = self.get_children_by_type(SimpleLauncherIcon, desktop_id=desktop_id)
-        if len(icons):
-            return icons[0]
-
-        return None
-
-    def get_icon_by_window_xid(self, xid):
-        """Gets a launcher icon that controls the specified window xid."""
-        icons = [i for i in self.get_children_by_type(SimpleLauncherIcon) if i.xids.contains(xid)]
-        if (len(icons)):
-            return icons[0]
-
-        return None
-
-    def get_icons_by_filter(self, **kwargs):
-        """Get a list of icons that satisfy the given filters.
-
-        For example:
-
-        >>> get_icons_by_filter(tooltip_text="My Application")
-        ... [...]
-
-        Returns an empty list if no icons matched the filter.
-
-        """
-        return self.get_children_by_type(SimpleLauncherIcon, **kwargs)
-
     def get_icon(self, **kwargs):
         """Get a launcher icon from the model according to some filters.
 

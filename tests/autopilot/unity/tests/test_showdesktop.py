@@ -80,7 +80,7 @@ class ShowDesktopTests(UnityTestCase):
             self.assertTrue(win.is_hidden, "Window '%s' is not hidden after show desktop activated." % (win.title))
 
         # We'll un-minimise the character map - find it's launcherIcon in the launcher:
-        charmap_icon = self.launcher.model.get_icon_by_desktop_id("gucharmap.desktop")
+        charmap_icon = self.launcher.model.get_icon(desktop_id="gucharmap.desktop")
         if charmap_icon:
             self.launcher.get_launcher_for_monitor(0).click_launcher_icon(charmap_icon)
         else:
