@@ -76,11 +76,11 @@ class ShowDesktopTests(UnityTestCase):
             self.assertProperty(win, is_hidden=True)
 
         # We'll un-minimise the character map - find it's launcherIcon in the launcher:
-        charmap, calc = test_windows
-        find_icon_fn = lambda: self.launcher.model.get_icon_by_desktop_id(charmap.application.desktop_file)
-        self.assertThat(find_icon_fn, Eventually(NotEquals(None)))
-        charmap_icon = find_icon_fn()
-        self.launcher.get_launcher_for_monitor(0).click_launcher_icon(charmap_icon)
+        charmap_icon = self.launcher.model.get_icon(desktop_id="gucharmap.desktop")
+        if charmap_icon:
+            self.launcher.get_launcher_for_monitor(0).click_launcher_icon(charmap_icon)
+        else:
+            self.fail("Could not find launcher icon in launcher.")
 
         self.assertProperty(charmap, is_hidden=False)
         self.assertProperty(calc, is_hidden=True)
