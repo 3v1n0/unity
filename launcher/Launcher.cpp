@@ -111,7 +111,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   , _active_quicklist(nullptr)
   , _hovered(false)
   , _hidden(false)
-  , _scroll_limit_reached(false)
   , _render_drag_window(false)
   , _shortcuts_shown(false)
   , _data_checked(false)
@@ -122,7 +121,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   , _folded_angle(1.0f)
   , _neg_folded_angle(-1.0f)
   , _folded_z_distance(10.0f)
-  , _last_delta_y(0.0f)
   , _edge_overcome_pressure(0.0f)
   , _launcher_action_state(ACTION_NONE)
   , _space_between_icons(5)
@@ -135,6 +133,8 @@ Launcher::Launcher(nux::BaseWindow* parent,
   , _postreveal_mousemove_delta_x(0)
   , _postreveal_mousemove_delta_y(0)
   , _launcher_drag_delta(0)
+  , _launcher_drag_delta_max(0)
+  , _launcher_drag_delta_min(0)
   , _enter_y(0)
   , _last_button_press(0)
   , _drag_out_id(0)
@@ -1074,22 +1074,22 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
 
     // logically dnd exit only restores to the clamped ranges
     // hover_progress restores to 0
-    float max = 0.0f;
-    float min = MIN(0.0f, launcher_height - sum);
+    _launcher_drag_delta_max = 0.0f;
+    _launcher_drag_delta_min = MIN(0.0f, launcher_height - sum);
 
-    if (_launcher_drag_delta > max)
-      delta_y = max + DragLimiter(delta_y - max);
-    else if (_launcher_drag_delta < min)
-      delta_y = min + DragLimiter(delta_y - min);
+    if (_launcher_drag_delta > _launcher_drag_delta_max)
+      delta_y = _launcher_drag_delta_max + DragLimiter(delta_y - _launcher_drag_delta_max);
+    else if (_launcher_drag_delta < _launcher_drag_delta_min)
+      delta_y = _launcher_drag_delta_min + DragLimiter(delta_y - _launcher_drag_delta_min);
 
     if (GetActionState() != ACTION_DRAG_LAUNCHER)
     {
       float dnd_progress = DnDExitProgress(current);
 
-      if (_launcher_drag_delta > max)
-        delta_y = max + (delta_y - max) * dnd_progress;
-      else if (_launcher_drag_delta < min)
-        delta_y = min + (delta_y - min) * dnd_progress;
+      if (_launcher_drag_delta > _launcher_drag_delta_max)
+        delta_y = _launcher_drag_delta_max + (delta_y - _launcher_drag_delta_max) * dnd_progress;
+      else if (_launcher_drag_delta < _launcher_drag_delta_min)
+        delta_y = _launcher_drag_delta_min + (delta_y - _launcher_drag_delta_min) * dnd_progress;
 
       if (dnd_progress == 0.0f)
         _launcher_drag_delta = (int) delta_y;
@@ -1098,9 +1098,6 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
     delta_y *= hover_progress;
     center.y += delta_y;
     folding_threshold += delta_y;
-
-    _scroll_limit_reached = (delta_y == _last_delta_y);
-    _last_delta_y = delta_y;
   }
   else
   {
@@ -1592,26 +1589,25 @@ bool Launcher::OnScrollTimeout()
 {
   bool continue_animation = true;
 
-  //
-  // Always check _scroll_limit_reached to ensure we don't keep spinning
-  // this timer if the mouse happens to be left idle over one of the autoscroll
-  // hotspots on the launcher.
-  //
-  if (IsInKeyNavMode() || !_hovered || _scroll_limit_reached ||
+  if (IsInKeyNavMode() || !_hovered ||
       GetActionState() == ACTION_DRAG_LAUNCHER)
   {
     continue_animation = false;
   }
   else if (MouseOverTopScrollArea())
   {
-    if (MouseOverTopScrollExtrema())
+    if (_launcher_drag_delta >= _launcher_drag_delta_max)
+      continue_animation = false;
+    else if (MouseOverTopScrollExtrema())
       _launcher_drag_delta += 6;
     else
       _launcher_drag_delta += 3;
   }
   else if (MouseOverBottomScrollArea())
   {
-    if (MouseOverBottomScrollExtrema())
+    if (_launcher_drag_delta <= _launcher_drag_delta_min)
+      continue_animation = false;
+    else if (MouseOverBottomScrollExtrema())
       _launcher_drag_delta -= 6;
     else
       _launcher_drag_delta -= 3;
@@ -1624,10 +1620,6 @@ bool Launcher::OnScrollTimeout()
   if (continue_animation)
   {
     EnsureAnimation();
-  }
-  else
-  {
-    _scroll_limit_reached = false;
   }
 
   return continue_animation;

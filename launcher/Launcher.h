@@ -359,6 +359,8 @@ private:
   int _postreveal_mousemove_delta_x;
   int _postreveal_mousemove_delta_y;
   int _launcher_drag_delta;
+  int _launcher_drag_delta_max;
+  int _launcher_drag_delta_min;
   int _enter_y;
   int _last_button_press;
   int _drag_out_id;
