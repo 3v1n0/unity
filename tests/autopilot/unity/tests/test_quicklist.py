@@ -126,6 +126,7 @@ class QuicklistActionTests(UnityTestCase):
         self.assertProperty(calc_win, is_focused=True)
 
         self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
 
         calc_icon = self.launcher.model.get_icon_by_desktop_id(
             calc_win.application.desktop_file)
@@ -134,6 +135,17 @@ class QuicklistActionTests(UnityTestCase):
         self.keyboard.press_and_release("Down")
         self.keyboard.press_and_release("Enter")
         self.assertThat(self.dash.visible, Eventually(Equals(False)))
+
+    def test_quicklist_closes_when_hud_opens(self):
+        """When a quicklist is open you must still be able to open the Hud."""
+        calc = self.start_app("Calculator")
+
+        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
+        calc_ql = self.open_quicklist_for_icon(calc_icon)
+
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
+        self.assertThat(self.hud.visible, Eventually(Equals(True)))
 
 
 class QuicklistKeyNavigationTests(UnityTestCase):
