@@ -1697,8 +1697,18 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
     scale_just_activated_ = false;
   }
 
-  if (hud_controller_->IsVisible() && launcher_controller_->AboutToShowDash(was_tap, when))
-    hud_controller_->HideHud();
+  if (launcher_controller_->AboutToShowDash(was_tap, when))
+  {
+    if (hud_controller_->IsVisible())
+    {
+      hud_controller_->HideHud();
+    }
+
+    if (QuicklistManager::Default()->Current())
+    {
+      QuicklistManager::Default()->Current()->Hide();
+    }
+  }
 
   super_keypressed_ = false;
   launcher_controller_->KeyNavTerminate(true);

@@ -144,6 +144,17 @@ class QuicklistActionTests(UnityTestCase):
         self.addCleanup(self.hud.ensure_hidden)
         self.assertThat(self.hud.visible, Eventually(Equals(True)))
 
+    def test_quicklist_closes_when_dash_opens(self):
+        """When the quicklist is open you must still be able to open the dash."""
+        calc = self.start_app("Calculator")
+
+        calc_icon = self.launcher.model.get_icon(desktop_id=calc.desktop_file)
+        calc_ql = self.open_quicklist_for_icon(calc_icon)
+
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
+        self.assertThat(self.dash.visible, Eventually(Equals(True)))
+
 
 class QuicklistKeyNavigationTests(UnityTestCase):
     """Tests for the quicklist key navigation."""
