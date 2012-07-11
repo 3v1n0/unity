@@ -79,9 +79,9 @@ class LauncherRevealTests(LauncherTestCase):
              self.skip("There are already more than 9 icons in the launcher")
 
          desktop_file = self.KNOWN_APPS['Calculator']['desktop-file']
-         if self.launcher.model.get_icon_by_desktop_id(desktop_file) != None:
+         if self.launcher.model.get_icon(desktop_id=desktop_file) != None:
              self.skip("Calculator icon is already on the launcher.")
 
          self.start_app('Calculator')
-         icon = self.launcher.model.get_icon_by_desktop_id(desktop_file)
+         icon = self.launcher.model.get_icon(desktop_id=desktop_file)
          self.assertThat(icon.shortcut, GreaterThan(0))

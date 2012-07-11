@@ -168,6 +168,7 @@ void PanelView::OnOverlayHidden(GVariant* data)
     _active_overlay = "";
     _menu_view->OverlayHidden();
     _indicators->OverlayHidden();
+    SetAcceptKeyNavFocusOnMouseDown(true);
     ForceUpdateBackground();
   }
 }
@@ -187,6 +188,7 @@ void PanelView::OnOverlayShown(GVariant* data)
     _overlay_is_open = true;
     _indicators->OverlayShown();
     _menu_view->OverlayShown();
+    SetAcceptKeyNavFocusOnMouseDown(false);
     ForceUpdateBackground();
   }
 }
@@ -233,7 +235,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
     else
     {
-      _bg_blur_texture = _bg_effect_helper.GetRegion(blur_geo); 
+      _bg_blur_texture = _bg_effect_helper.GetRegion(blur_geo);
     }
 
     if (_bg_blur_texture.IsValid() && (_overlay_is_open || _opacity != 1.0f))

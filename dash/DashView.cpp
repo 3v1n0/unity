@@ -227,7 +227,7 @@ void DashView::Relayout()
   nux::Geometry const& geo = GetGeometry();
   content_geo_ = GetBestFitGeometry(geo);
   dash::Style& style = dash::Style::Instance();
-  
+
   if (style.always_maximised)
   {
     if (geo.width >= content_geo_.width && geo.height > content_geo_.height)
@@ -460,7 +460,7 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
   });
 
   // global search done is handled by the home lens, no need to connect to it
-  // BUT, we will special case global search finished coming from 
+  // BUT, we will special case global search finished coming from
   // the applications lens, because we want to be able to launch applications
   // immediately without waiting for the search finished signal which will
   // be delayed by all the lenses we're searching
@@ -766,6 +766,10 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
                                       unsigned long x11_key_code,
                                       unsigned long special_keys_state)
 {
+  // Only care about states of Alt, Ctrl, Super, Shift, not the lock keys
+  special_keys_state &= (nux::NUX_STATE_ALT | nux::NUX_STATE_CTRL |
+                         nux::NUX_STATE_SUPER | nux::NUX_STATE_SHIFT);
+
   // Do what nux::View does, but if the event isn't a key navigation,
   // designate the text entry to process it.
 

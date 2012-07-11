@@ -15,6 +15,7 @@ import logging
 from testtools.matchers import Equals, NotEquals
 from time import sleep
 
+from unity.emulators.icons import BamfLauncherIcon
 from unity.emulators.launcher import IconDragType
 from unity.tests.launcher import LauncherTestCase, _make_scenarios
 
@@ -51,8 +52,7 @@ class LauncherIconsTests(LauncherTestCase):
     def test_shift_click_opens_new_application_instance(self):
         """Shift+Clicking MUST open a new instance of an already-running application."""
         app = self.start_app("Calculator")
-        desktop_id = app.desktop_file
-        icon = self.launcher.model.get_icon_by_desktop_id(desktop_id)
+        icon = self.launcher.model.get_icon(desktop_id=app.desktop_file)
         launcher_instance = self.launcher.get_launcher_for_monitor(0)
 
         self.keyboard.press("Shift")
@@ -66,73 +66,48 @@ class LauncherIconsTests(LauncherTestCase):
         of that application.
 
         """
+        mah_win1 = self.start_app_window("Mahjongg")
+        calc_win = self.start_app_window("Calculator")
+        mah_win2 = self.start_app_window("Mahjongg")
 
-        mahj = self.start_app("Mahjongg")
-        [mah_win1] = mahj.get_windows()
-        self.assertTrue(mah_win1.is_focused)
-
-        calc = self.start_app("Calculator")
-        [calc_win] = calc.get_windows()
-        self.assertTrue(calc_win.is_focused)
-
-        self.start_app("Mahjongg")
-        # Sleeping due to the start_app only waiting for the bamf model to be
-        # updated with the application.  Since the app has already started,
-        # and we are just waiting on a second window, however a defined sleep
-        # here is likely to be problematic.
-        # TODO: fix bamf emulator to enable waiting for new windows.
-        sleep(1)
-        [mah_win2] = [w for w in mahj.get_windows() if w.x_id != mah_win1.x_id]
-        self.assertTrue(mah_win2.is_focused)
         self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
 
-        mahj_icon = self.launcher.model.get_icon_by_desktop_id(mahj.desktop_file)
-        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
+        mahj_icon = self.launcher.model.get_icon(
+            desktop_id=mah_win2.application.desktop_file)
+        calc_icon = self.launcher.model.get_icon(
+            desktop_id=calc_win.application.desktop_file)
 
         self.launcher_instance.click_launcher_icon(calc_icon)
-        sleep(1)
-        self.assertTrue(calc_win.is_focused)
+        self.assertProperty(calc_win, is_focused=True)
         self.assertVisibleWindowStack([calc_win, mah_win2, mah_win1])
 
         self.launcher_instance.click_launcher_icon(mahj_icon)
-        sleep(1)
-        self.assertTrue(mah_win2.is_focused)
+        self.assertProperty(mah_win2, is_focused=True)
         self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
 
         self.keybinding("window/minimize")
-        sleep(1)
 
-        self.assertTrue(mah_win2.is_hidden)
-        self.assertTrue(calc_win.is_focused)
+        self.assertThat(lambda: mah_win2.is_hidden, Eventually(Equals(True)))
+        self.assertProperty(calc_win, is_focused=True)
         self.assertVisibleWindowStack([calc_win, mah_win1])
 
         self.launcher_instance.click_launcher_icon(mahj_icon)
-        sleep(1)
-        self.assertTrue(mah_win1.is_focused)
-        self.assertTrue(mah_win2.is_hidden)
+        self.assertProperty(mah_win1, is_focused=True)
+        self.assertThat(lambda: mah_win2.is_hidden, Eventually(Equals(True)))
         self.assertVisibleWindowStack([mah_win1, calc_win])
 
     def test_clicking_icon_twice_initiates_spread(self):
         """This tests shows that when you click on a launcher icon twice,
         when an application window is focused, the spread is initiated.
         """
-        calc = self.start_app("Calculator")
-        [calc_win1] = calc.get_windows()
-        self.assertTrue(calc_win1.is_focused)
-
-        self.start_app("Calculator")
-        # Sleeping due to the start_app only waiting for the bamf model to be
-        # updated with the application.  Since the app has already started,
-        # and we are just waiting on a second window, however a defined sleep
-        # here is likely to be problematic.
-        # TODO: fix bamf emulator to enable waiting for new windows.
-        sleep(1)
-        [calc_win2] = [w for w in calc.get_windows() if w.x_id != calc_win1.x_id]
+        calc_win1 = self.start_app_window("Calculator")
+        calc_win2 = self.start_app_window("Calculator")
+        calc_app = calc_win1.application
 
         self.assertVisibleWindowStack([calc_win2, calc_win1])
-        self.assertTrue(calc_win2.is_focused)
+        self.assertProperty(calc_win2, is_focused=True)
 
-        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
+        calc_icon = self.launcher.model.get_icon(desktop_id=calc_app.desktop_file)
         self.addCleanup(self.keybinding, "spread/cancel")
         self.launcher_instance.click_launcher_icon(calc_icon)
 
@@ -143,14 +118,14 @@ class LauncherIconsTests(LauncherTestCase):
         """Icons must stay on launcher when an application is quickly closed/reopened."""
         calc = self.start_app("Calculator")
         desktop_file = calc.desktop_file
-        calc_icon = self.launcher.model.get_icon_by_desktop_id(desktop_file)
+        calc_icon = self.launcher.model.get_icon(desktop_id=desktop_file)
         self.assertThat(calc_icon.visible, Eventually(Equals(True)))
 
         self.close_all_app("Calculator")
         calc = self.start_app("Calculator")
         sleep(2)
 
-        calc_icon = self.launcher.model.get_icon_by_desktop_id(desktop_file)
+        calc_icon = self.launcher.model.get_icon(desktop_id=desktop_file)
         self.assertThat(calc_icon, NotEquals(None))
         self.assertThat(calc_icon.visible, Eventually(Equals(True)))
 
@@ -166,7 +141,11 @@ class LauncherDragIconsBehavior(LauncherTestCase):
 
     def ensure_calc_icon_not_in_launcher(self):
         """Wait until the launcher model updates and removes the calc icon."""
-        refresh_fn = lambda: self.launcher.model.get_icon_by_desktop_id("gcalctool.desktop")
+        # Normally we'd use get_icon(desktop_id="...") but we're expecting it to
+        # not exist, and we don't want to wait for 10 seconds, so we do this
+        # the old fashioned way.
+        refresh_fn = lambda: self.launcher.model.get_children_by_type(
+            BamfLauncherIcon, desktop_id="gcalctool.desktop")
         self.assertThat(refresh_fn, Eventually(Equals(None)))
 
     def test_can_drag_icon_below_bfb(self):
@@ -174,7 +153,7 @@ class LauncherDragIconsBehavior(LauncherTestCase):
 
         self.ensure_calc_icon_not_in_launcher()
         calc = self.start_app("Calculator")
-        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
+        calc_icon = self.launcher.model.get_icon(desktop_id=calc.desktop_file)
 
         bfb_icon_position = 0
         self.launcher_instance.drag_icon_to_position(calc_icon,
@@ -189,7 +168,7 @@ class LauncherDragIconsBehavior(LauncherTestCase):
 
         self.ensure_calc_icon_not_in_launcher()
         calc = self.start_app("Calculator")
-        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
+        calc_icon = self.launcher.model.get_icon(desktop_id=calc.desktop_file)
 
         # Move a known icon to the top as it needs to be more than 2 icon
         # spaces away for this test to actually do anything

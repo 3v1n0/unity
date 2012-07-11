@@ -40,6 +40,21 @@ Outcome
   in the last used workspace.
 
 
+Test Alt+F1 KeyNavMode Rendering
+--------------------------------
+This test shows that the launcher is redrawing correctly during Alt+F1
+KeyNav mode.
+
+Action:
+#. Press Alt+F1 to enter keynav mode.
+#. Keep pressing the down arrow key until the highlighted launcher icon is the
+   bottom one (usually Trash).
+
+Outcome:
+  For every Down keypress, the next launcher icon down should be highlighted.
+  Verify each icon gets highlighted from top to bottom.
+
+
 Test Alt+F1 KeyNavMode Mouse Works
 -------------------------------
 This test shows that the mouse still works normally while keynav mode is active.
@@ -579,6 +594,19 @@ Expected Results:
  * The device launcher icon has been removed.
 
 
+Drag and Drop doesn't freeze Unity
+----------------------------------
+Actions:
+#. Open Firefox
+#. Go to http://launchpad.net/unity
+#. Drag around the Unity icon image shown in the top-left corner
+   of the browser window.
+#. Drop it wherever you want.
+
+Expected Result:
+Unity must not freeze during the drag and drop.
+
+
 Test launcher unfolds valid drop icons during dnd
 ------------------------------------------------------------
 This test makes sure that Unity launcher unfolds valid drop icons during
@@ -594,3 +622,4 @@ Actions:
 
 Expected Results:
  * All the valid drop icons should unfold during the drag and drop.
+

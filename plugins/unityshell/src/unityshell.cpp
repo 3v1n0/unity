@@ -119,7 +119,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , doShellRepaint(false)
   , didShellRepaint(false)
   , allowWindowPaint(false)
-  , damaged(false)
   , _key_nav_mode_requested(false)
   , _last_output(nullptr)
 #ifndef USE_MODERN_COMPIZ_GL
@@ -910,13 +909,13 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 
   doShellRepaint = false;
   didShellRepaint = true;
-  damaged = false;
 }
 
 bool UnityScreen::forcePaintOnTop ()
 {
     return !allowWindowPaint ||
-      ((switcher_controller_->Visible() || launcher_controller_->IsOverlayOpen())
+      ((switcher_controller_->Visible() ||
+        PluginAdapter::Default()->IsExpoActive())
        && !fullscreen_windows_.empty () && (!(screen->grabbed () && !screen->otherGrabExist (NULL))));
 }
 
@@ -1241,14 +1240,14 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
 #endif
 
   // CompRegion has no clear() method. So this is the fastest alternative.
-  aboveShell = CompRegion();
+  fullscreenRegion = CompRegion();
   nuxRegion = CompRegion();
 
   /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
   ret = gScreen->glPaintOutput(attrib, transform, region, output, mask);
 
 #ifndef USE_MODERN_COMPIZ_GL
-  if (doShellRepaint && !force && aboveShell.contains(*output))
+  if (doShellRepaint && !force && fullscreenRegion.contains(*output))
     doShellRepaint = false;
 
   if (doShellRepaint)
@@ -1303,16 +1302,10 @@ void UnityScreen::preparePaint(int ms)
   for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
     wi->HandleAnimations (ms);
 
-  // Workaround Nux bug LP: #1014610:
-  if (damaged)
-  {
-    damaged = false;
-    nuxDamageCompiz();
-  }
-
   compizDamageNux(cScreen->currentDamage());
 
   didShellRepaint = false;
+  firstWindowAboveShell = NULL;
 }
 
 void UnityScreen::donePaint()
@@ -1354,11 +1347,23 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
   if (!launcher_controller_)
     return;
 
-  CompRect::vector const& rects(damage.rects());
-  for (const CompRect &r : rects)
+  /*
+   * Prioritise user interaction over active blur updates. So the general
+   * slowness of the active blur doesn't affect the UI interaction performance.
+   *
+   * Also, BackgroundEffectHelper::ProcessDamage() is causing a feedback loop
+   * while the dash is open. Calling it results in the NEXT frame (and the
+   * current one?) to get some damage. This GetDrawList().empty() check avoids
+   * that feedback loop and allows us to idle correctly.
+   */
+  if (wt->GetDrawList().empty())
   {
-    nux::Geometry geo(r.x(), r.y(), r.width(), r.height());
-    BackgroundEffectHelper::ProcessDamage(geo);
+    CompRect::vector const& rects(damage.rects());
+    for (CompRect const& r : rects)
+    {
+      nux::Geometry geo(r.x(), r.y(), r.width(), r.height());
+      BackgroundEffectHelper::ProcessDamage(geo);
+    }
   }
 
   auto launchers = launcher_controller_->launchers();
@@ -1407,11 +1412,15 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
 /* Grab changed nux regions and add damage rects for them */
 void UnityScreen::nuxDamageCompiz()
 {
-  // Workaround Nux bug LP: #1014610 (unbounded DrawList growth)
-  // Also, ensure we don't dereference null *controller_ on startup.
-  if (damaged || !launcher_controller_ || !dash_controller_)
+  /*
+   * WARNING: Nux bug LP: #1014610 (unbounded DrawList growth) will cause
+   *          this code to be called far too often in some cases and
+   *          Unity will appear to freeze for a while. Please ensure you
+   *          have Nux 3.0+ with the fix for LP: #1014610.
+   */
+
+  if (!launcher_controller_ || !dash_controller_)
     return;
-  damaged = true;
 
   CompRegion nux_damage;
 
@@ -1462,9 +1471,11 @@ void UnityScreen::handleEvent(XEvent* event)
 #endif
       if (_key_nav_mode_requested)
       {
+        // Close any overlay that is open.
         if (launcher_controller_->IsOverlayOpen())
         {
           dash_controller_->HideDash();
+          hud_controller_->HideHud();
         }
         launcher_controller_->KeyNavGrab();
       }
@@ -1502,13 +1513,13 @@ void UnityScreen::handleEvent(XEvent* event)
       {
         /* We need an idle to postpone this action, after the current event
          * has been processed */
-        sources_.Add(std::make_shared<glib::Idle>([&]() {
+        sources_.AddIdle([&] {
           shortcut_controller_->SetEnabled(false);
           shortcut_controller_->Hide();
           EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, false);
 
-          return false; 
-        }));
+          return false;
+        });
       }
 
       KeySym key_sym;
@@ -2081,6 +2092,9 @@ bool UnityScreen::ShowHud()
     if (launcher_controller_->IsOverlayOpen())
       dash_controller_->HideDash();
 
+    if (QuicklistManager::Default()->Current())
+      QuicklistManager::Default()->Current()->Hide();
+
     hud_controller_->ShowHud();
   }
 
@@ -2286,13 +2300,17 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
   /*
    * The occlusion pass tests windows from TOP to BOTTOM. That's opposite to
    * the actual painting loop.
+   *
+   * Detect uScreen->fullscreenRegion here. That represents the region which
+   * fully covers the shell on its output. It does not include regular windows
+   * stacked above the shell like DnD icons or Onboard etc.
    */
   if (isNuxWindow(window))
   {
     if (mask & PAINT_WINDOW_OCCLUSION_DETECTION_MASK)
     {
       uScreen->nuxRegion += window->geometry();
-      uScreen->nuxRegion -= uScreen->aboveShell;
+      uScreen->nuxRegion -= uScreen->fullscreenRegion;
     }
     return false;  // Ensure nux windows are never painted by compiz
   }
@@ -2302,14 +2320,17 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
                               PAINT_WINDOW_TRANSLUCENT_MASK |
                               PAINT_WINDOW_TRANSFORMED_MASK |
                               PAINT_WINDOW_NO_CORE_INSTANCE_MASK;
-    if (!(mask & nonOcclusionBits))
+    if (!(mask & nonOcclusionBits) &&
+        (window->state() & CompWindowStateFullscreenMask))
         // And I've been advised to test other things, but they don't work:
         // && (attrib.opacity == OPAQUE)) <-- Doesn't work; Only set in glDraw
         // && !window->alpha() <-- Doesn't work; Opaque windows often have alpha
     {
-      uScreen->aboveShell += window->geometry();
-      uScreen->aboveShell -= uScreen->nuxRegion;
+      uScreen->fullscreenRegion += window->geometry();
+      uScreen->fullscreenRegion -= uScreen->nuxRegion;
     }
+    if (uScreen->nuxRegion.isEmpty())
+      uScreen->firstWindowAboveShell = window;
   }
 
   GLWindowPaintAttrib wAttrib = attrib;
@@ -2370,38 +2391,17 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     }
   }
 
-  /*
-   * Paint the shell in *roughly* the compiz stacking order. This is only
-   * approximate because we're painting all the nux windows as soon as we find
-   * the bottom-most nux window (from bottom to top).
-   * But remember to avoid painting the shell if it's within the aboveShell
-   * region.
-   */
   if (uScreen->doShellRepaint &&
       !uScreen->forcePaintOnTop () &&
-      !uScreen->aboveShell.contains(window->geometry())
+      window == uScreen->firstWindowAboveShell &&
+      !uScreen->fullscreenRegion.contains(window->geometry())
      )
   {
-    std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
-    unsigned int size = xwns.size();
-
-    for (CompWindow* w = window; w && uScreen->doShellRepaint; w = w->prev)
-    {
-      auto id = w->id();
-
-      for (unsigned int i = 0; i < size; ++i)
-      {
-        if (xwns[i] == id)
-        {
 #ifdef USE_MODERN_COMPIZ_GL
-          uScreen->paintDisplay();
+    uScreen->paintDisplay();
 #else
-          uScreen->paintDisplay(region, matrix, mask);
+    uScreen->paintDisplay(region, matrix, mask);
 #endif
-          break;
-        }
-      }
-    }
   }
 
   if (window->type() == CompWindowTypeDesktopMask)
@@ -2854,17 +2854,14 @@ void UnityScreen::ScheduleRelayout(guint timeout)
 {
   if (!sources_.GetSource(local::RELAYOUT_TIMEOUT))
   {
-    auto relayout_timeout(std::make_shared<glib::Timeout>(timeout));
-    sources_.Add(relayout_timeout, local::RELAYOUT_TIMEOUT);
-
-    relayout_timeout->Run([&]() {
+    sources_.AddTimeout(timeout, [&] {
       NeedsRelayout();
       Relayout();
 
       cScreen->damageScreen();
 
       return false;
-    });
+    }, local::RELAYOUT_TIMEOUT);
   }
 }
 
@@ -2957,7 +2954,6 @@ void UnityScreen::initLauncher()
                                         optionGetMenusDiscoveryDuration(),
                                         optionGetMenusDiscoveryFadein(),
                                         optionGetMenusDiscoveryFadeout());
-  panel_controller_->SetOpacity(optionGetPanelOpacity());
   LOG_INFO(logger) << "initLauncher-Panel " << timer.ElapsedSeconds() << "s";
 
   /* Setup Places */
@@ -3239,6 +3235,8 @@ void capture_g_log_calls(const gchar* log_domain,
                          const gchar* message,
                          gpointer user_data)
 {
+  // If the environment variable is set, we capture the backtrace.
+  static bool glog_backtrace = ::getenv("UNITY_LOG_GLOG_BACKTRACE");
   // If nothing else, all log messages from unity should be identified as such
   std::string module("unity");
   if (log_domain)
@@ -3249,14 +3247,16 @@ void capture_g_log_calls(const gchar* log_domain,
   nux::logging::Level level = glog_level_to_nux(log_level);
   if (level >= logger.GetEffectiveLogLevel())
   {
-    nux::logging::LogStream(level, logger.module(), "<unknown>", 0).stream()
-        << message;
-    if (level >= nux::logging::Error)
+    std::string backtrace;
+    if (glog_backtrace && level >= nux::logging::Warning)
     {
-      nux::logging::Backtrace();
+      backtrace = "\n" + nux::logging::Backtrace();
     }
+    nux::logging::LogStream(level, logger.module(), "<unknown>", 0).stream()
+      << message << backtrace;
   }
 }
 
 } // anonymous namespace
 } // namespace unity
+
