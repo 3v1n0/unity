@@ -303,7 +303,7 @@ class HudLauncherInteractionsTests(HudTestsBase):
             self.hud.ensure_hidden()
 
         # click application icons for running apps in the launcher:
-        icon = self.launcher.model.get_icon_by_desktop_id("gucharmap.desktop")
+        icon = self.launcher.model.get_icon(desktop_id="gucharmap.desktop")
         launcher.click_launcher_icon(icon)
 
         # see how many apps are marked as being active:
