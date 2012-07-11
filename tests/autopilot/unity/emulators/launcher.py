@@ -428,7 +428,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
 
 class LauncherModel(UnityIntrospectionObject):
-    """THe launcher model. Contains all launcher icons as children."""
+    """The launcher model. Contains all launcher icons as children."""
 
     def get_bfb_icon(self):
         icons = BFBLauncherIcon.get_all_instances()
@@ -499,6 +499,40 @@ class LauncherModel(UnityIntrospectionObject):
 
         """
         return self.get_children_by_type(SimpleLauncherIcon, **kwargs)
+
+    def get_icon(self, **kwargs):
+        """Get a launcher icon from the model according to some filters.
+
+        This method accepts keyword argument that are the filters to use when
+        looking for an icon. For example, to find an icon with a particular
+        desktop_id, one might do this from within a test:
+
+        >>> self.launcher.model.get_icon(desktop_id="gcalctool.desktop")
+
+        This method returns only one icon. It is the callers responsibility to
+        ensure that the filter matches only one icon.
+
+        This method will attempt to get the launcher icon using the Eventually
+        matcher, so the caller can be assured that if this method doesn't find
+        the icon it really does not exist.
+
+        If no keyword arguments are specified, ValueError will be raised.
+
+        If no icons are matched, None is returned.
+
+        """
+
+        if not kwargs:
+            raise ValueError("You must specify at least one keyword argument to ths method.")
+
+        for i in range(10):
+            icons = self.get_children_by_type(SimpleLauncherIcon, **kwargs)
+            if len(icons) > 1:
+                logger.warning("Got more than one icon returned using filters=%r. Returning first one", kwargs)
+            if icons:
+                return icons[0]
+            sleep(1)
+        return None
 
     def num_launcher_icons(self):
         """Get the number of icons in the launcher model."""

@@ -35,11 +35,8 @@ class QuicklistActionTests(UnityTestCase):
         launcher = self.launcher.get_launcher_for_monitor(0)
         launcher.click_launcher_icon(launcher_icon, button=3)
         self.addCleanup(self.keyboard.press_and_release, "Escape")
-        for i in range(10):
-            ql = launcher_icon.get_quicklist()
-            if ql:
-                return ql
-            sleep(1)
+        self.assertThat(launcher_icon.get_quicklist, Eventually(NotEquals(None)))
+        return launcher_icon.get_quicklist()
 
     def test_quicklist_actions(self):
         """Test that all actions present in the destop file are shown in the quicklist."""
@@ -144,8 +141,8 @@ class QuicklistKeyNavigationTests(UnityTestCase):
 
         self.ql_app = self.start_app("Text Editor")
 
-        self.ql_launcher_icon = self.launcher.model.get_icon_by_desktop_id(
-            self.ql_app.desktop_file)
+        self.ql_launcher_icon = self.launcher.model.get_icon(
+            desktop_id=self.ql_app.desktop_file)
         self.assertThat(self.ql_launcher_icon, NotEquals(None))
 
         self.ql_launcher = self.launcher.get_launcher_for_monitor(0)
