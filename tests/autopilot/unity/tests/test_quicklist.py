@@ -138,7 +138,6 @@ class QuicklistActionTests(UnityTestCase):
         calc = self.start_app("Calculator")
 
         calc_icon = self.launcher.model.get_icon(desktop_id=calc.desktop_file)
-        calc_ql = self.open_quicklist_for_icon(calc_icon)
 
         self.hud.ensure_visible()
         self.addCleanup(self.hud.ensure_hidden)
@@ -149,7 +148,6 @@ class QuicklistActionTests(UnityTestCase):
         calc = self.start_app("Calculator")
 
         calc_icon = self.launcher.model.get_icon(desktop_id=calc.desktop_file)
-        calc_ql = self.open_quicklist_for_icon(calc_icon)
 
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
@@ -174,10 +172,12 @@ class QuicklistKeyNavigationTests(UnityTestCase):
         """Opens a quicklist with the mouse."""
         self.ql_launcher.click_launcher_icon(self.ql_launcher_icon, button=3)
         self.addCleanup(self.keyboard.press_and_release, "Escape")
+        self.assertThat(self.ql_launcher_icon.get_quicklist,
+                        Eventually(NotEquals(None)))
         self.quicklist = self.ql_launcher_icon.get_quicklist()
-        self.assertThat(lambda: self.quicklist, Eventually(NotEquals(None)))
         self.quicklist.move_mouse_to_right()
-        self.assertThat(lambda: self.quicklist.selected_item, Eventually(Equals(None)))
+        self.assertThat(lambda: self.quicklist.selected_item,
+                        Eventually(Equals(None)))
 
     def open_quicklist_with_keyboard(self):
         """Opens a quicklist using the keyboard."""
@@ -189,11 +189,14 @@ class QuicklistKeyNavigationTests(UnityTestCase):
         self.keybinding("launcher/keynav/open-quicklist")
         self.addCleanup(self.keybinding, "launcher/keynav/close-quicklist")
 
-        self.assertThat(self.ql_launcher_icon.get_quicklist, Eventually(NotEquals(None)))
+        self.assertThat(self.ql_launcher_icon.get_quicklist,
+                        Eventually(NotEquals(None)))
         self.quicklist = self.ql_launcher_icon.get_quicklist()
-        self.assertThat(lambda: self.quicklist.selected_item, Eventually(NotEquals(None)))
+        self.assertThat(lambda: self.quicklist.selected_item,
+                        Eventually(NotEquals(None)))
 
     def assertCorrectItemSelected(self, item):
+        """Ensure the item considers itself selected and that quicklist agrees."""
         self.assertThat(item.selected, Eventually(Equals(True)))
         self.assertThat(self.quicklist.selected_item.id, Equals(item.id))
 
