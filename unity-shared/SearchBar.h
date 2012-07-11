@@ -20,7 +20,7 @@
 #ifndef SEARCH_BAR_H
 #define SEARCH_BAR_H
 
-
+#include <gtk/gtk.h>
 #include <NuxCore/Property.h>
 #include <Nux/LayeredLayout.h>
 #include <Nux/VLayout.h>

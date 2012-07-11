@@ -98,7 +98,7 @@ TEST(TestGLibTimeout, Construction)
 
 TEST(TestGLibTimeout, ConstructionEmptyCallback)
 {
-  Timeout timeout(1000, Source::SourceCallback());
+  Timeout timeout(1000, Source::Callback());
   EXPECT_NE(timeout.Id(), 0);
   EXPECT_TRUE(timeout.IsRunning());
   EXPECT_EQ(timeout.GetPriority(), Source::Priority::DEFAULT);
@@ -171,7 +171,7 @@ TEST(TestGLibTimeout, MultipleShotsRun)
 TEST(TestGLibTimeout, OneShotRunWithEmptyCallback)
 {
   struct timespec pre, post;
-  Timeout timeout(100, Source::SourceCallback());
+  Timeout timeout(100, Source::Callback());
   clock_gettime(CLOCK_MONOTONIC, &pre);
   timeout.removed.connect([&] (unsigned int id) { clock_gettime(CLOCK_MONOTONIC, &post); });
 
@@ -566,6 +566,30 @@ TEST(TestGLibSourceManager, AddingDuplicatedNamedSources)
 
   EXPECT_FALSE(timeout_1->IsRunning());
   EXPECT_EQ(manager.GetSources().size(), 1);
+}
+
+TEST(TestGLibSourceManager, AddingTimeouts)
+{
+  MockSourceManager manager;
+
+  auto timeout1 = manager.AddTimeout(1);
+  auto timeout2 = manager.AddTimeout(1, &OnSourceCallbackContinue);
+
+  EXPECT_EQ(manager.GetSources().size(), 2);
+  EXPECT_FALSE(timeout1->IsRunning());
+  EXPECT_TRUE(timeout2->IsRunning());
+}
+
+TEST(TestGLibSourceManager, AddingIdles)
+{
+  MockSourceManager manager;
+
+  auto idle1 = manager.AddIdle();
+  auto idle2 = manager.AddIdle(&OnSourceCallbackContinue);
+
+  EXPECT_EQ(manager.GetSources().size(), 2);
+  EXPECT_FALSE(idle1->IsRunning());
+  EXPECT_TRUE(idle2->IsRunning());
 }
 
 TEST(TestGLibSourceManager, RemovingSourcesById)

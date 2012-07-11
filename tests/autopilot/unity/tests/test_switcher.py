@@ -100,42 +100,6 @@ class SwitcherTests(SwitcherTestCase):
 
         self.switcher.terminate()
 
-    def test_switcher_scroll_next_ignores_fast_events(self):
-        """Ensures that smoothing is working correctly for next icon scrolling.
-
-        Only the first event in a rapid fire string of events should be acted upon.
-        The rest ignored.
-
-        """
-        self.switcher.initiate()
-        self.addCleanup(self.switcher.terminate)
-
-        # Quickly repeated events should be ignored (except the first)
-        start = self.switcher.selection_index
-        self.switcher.next_via_mouse()
-        self.switcher.next_via_mouse()
-        self.switcher.next_via_mouse()
-
-        self.assertThat(self.switcher.selection_index, Equals(start + 1))
-
-    def test_switcher_scroll_prev_ignores_fast_events(self):
-        """Ensures that smoothing is working correctly for previous icon scrolling.
-
-        Only the first event in a rapid fire string of events should be acted upon.
-        The rest ignored.
-
-        """
-        self.switcher.initiate()
-        self.addCleanup(self.switcher.terminate)
-
-        # Quickly repeatead events should be ignored (except the first)
-        start = self.switcher.selection_index
-        self.switcher.previous_via_mouse()
-        self.switcher.previous_via_mouse()
-        self.switcher.previous_via_mouse()
-
-        self.assertThat(self.switcher.selection_index, Equals(start - 1))
-
     def test_switcher_arrow_key_does_not_init(self):
         """Ensure that Alt+Right does not initiate switcher.
 
@@ -218,46 +182,22 @@ class SwitcherWindowsManagementTests(SwitcherTestCase):
         Then we close the currently focused window.
 
         """
-        #FIXME: Setup
-        # There are a lot of asserts in this test that are just making sure the env. is properly
-        # initialized.
-        self.close_all_app("Mahjongg")
-        self.close_all_app("Calculator")
-
-        mahj = self.start_app("Mahjongg")
-        [mah_win1] = mahj.get_windows()
-        self.assertTrue(mah_win1.is_focused)
-
-        calc = self.start_app("Calculator")
-        [calc_win] = calc.get_windows()
-        self.assertTrue(calc_win.is_focused)
-
-        self.start_app("Mahjongg")
-        # Sleeping due to the start_app only waiting for the bamf model to be
-        # updated with the application.  Since the app has already started,
-        # and we are just waiting on a second window, however a defined sleep
-        # here is likely to be problematic.
-        # TODO: fix bamf emulator to enable waiting for new windows.
-        sleep(1)
-        [mah_win2] = [w for w in mahj.get_windows() if w.x_id != mah_win1.x_id]
-        self.assertTrue(mah_win2.is_focused)
+        mah_win1 = self.start_app_window("Mahjongg")
+        calc_win = self.start_app_window("Calculator")
+        mah_win2 = self.start_app_window("Mahjongg")
 
         self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
-        #end setup?
 
         self.keybinding("switcher/reveal_normal")
-        sleep(1)
-        self.assertThat(calc_win.is_focused, Equals(True))
+        self.assertThat(lambda: calc_win.is_focused, Eventually(Equals(True)))
         self.assertVisibleWindowStack([calc_win, mah_win2, mah_win1])
 
         self.keybinding("switcher/reveal_normal")
-        sleep(1)
-        self.assertThat(mah_win2.is_focused, Equals(True))
+        self.assertThat(lambda: mah_win2.is_focused, Eventually(Equals(True)))
         self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
 
         self.keybinding("window/close")
-        sleep(1)
-        self.assertThat(calc_win.is_focused, Equals(True))
+        self.assertThat(lambda: calc_win.is_focused, Eventually(Equals(True)))
         self.assertVisibleWindowStack([calc_win, mah_win1])
 
 

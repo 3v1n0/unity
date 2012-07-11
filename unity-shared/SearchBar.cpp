@@ -23,6 +23,7 @@
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
 #include <NuxCore/Logger.h>
+
 #include <UnityCore/Variant.h>
 
 #include <glib/gi18n-lib.h>
@@ -250,7 +251,7 @@ void SearchBar::Init()
     expand_icon_->mouse_click.connect(mouse_expand);
   }
 
-  sig_manager_.Add(new Signal<void, GtkSettings*, GParamSpec*>
+  sig_manager_.Add(new glib::Signal<void, GtkSettings*, GParamSpec*>
       (gtk_settings_get_default(),
        "notify::gtk-font-name",
        sigc::mem_fun(this, &SearchBar::OnFontChanged)));

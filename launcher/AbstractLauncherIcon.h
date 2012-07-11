@@ -218,6 +218,7 @@ public:
 
   sigc::signal<void, AbstractLauncherIcon::Ptr> needs_redraw;
   sigc::signal<void, AbstractLauncherIcon::Ptr> remove;
+  sigc::signal<void, nux::ObjectPtr<nux::View>> tooltip_visible;
   sigc::signal<void> visibility_changed;
 
   sigc::connection needs_redraw_connection;
