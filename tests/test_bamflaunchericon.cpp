@@ -62,17 +62,4 @@ TEST_F(TestBamfLauncherIcon, TestCustomBackgroundColor)
   EXPECT_EQ(color.alpha, 0xff / 255.0f);
 }
 
-TEST_F(TestBamfLauncherIcon, TestDefaultIcon)
-{
-  BamfApplication* bamf_app_d;
-  bamf_app_d = bamf_matcher_get_application_for_desktop_file(bamf_matcher,
-                                                             BUILDDIR"/tests/data/no-icon.desktop",
-                                                             TRUE);
-
-
-  nux::ObjectPtr<launcher::BamfLauncherIcon> default_icon;
-  default_icon = new launcher::BamfLauncherIcon(bamf_app_d);
-
-  EXPECT_EQ(default_icon->icon_name.Get(), "application-default-icon");
-}
 }

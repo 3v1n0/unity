@@ -11,8 +11,6 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/update-manager.desktop
                 ${CMAKE_BINARY_DIR}/tests/data/update-manager.desktop)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/bzr-handle-patch.desktop
                 ${CMAKE_BINARY_DIR}/tests/data/bzr-handle-patch.desktop)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/no-icon.desktop
-                ${CMAKE_BINARY_DIR}/tests/data/no-icon.desktop)
 #
 # Unit tests
 #
