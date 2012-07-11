@@ -470,8 +470,8 @@ class LauncherModel(UnityIntrospectionObject):
         This method returns only one icon. It is the callers responsibility to
         ensure that the filter matches only one icon.
 
-        This method will attempt to get the launcher icon using the Eventually
-        matcher, so the caller can be assured that if this method doesn't find
+        This method will attempt to get the launcher icon, and will retry several
+        times, so the caller can be assured that if this method doesn't find
         the icon it really does not exist.
 
         If no keyword arguments are specified, ValueError will be raised.
