@@ -137,7 +137,7 @@ class QuicklistActionTests(UnityTestCase):
         """When a quicklist is open you must still be able to open the Hud."""
         calc = self.start_app("Calculator")
 
-        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
+        calc_icon = self.launcher.model.get_icon(desktop_id=calc.desktop_file)
         calc_ql = self.open_quicklist_for_icon(calc_icon)
 
         self.hud.ensure_visible()
@@ -148,7 +148,7 @@ class QuicklistActionTests(UnityTestCase):
         """When the quicklist is open you must still be able to open the dash."""
         calc = self.start_app("Calculator")
 
-        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
+        calc_icon = self.launcher.model.get_icon(desktop_id=calc.desktop_file)
         calc_ql = self.open_quicklist_for_icon(calc_icon)
 
         self.dash.ensure_visible()
