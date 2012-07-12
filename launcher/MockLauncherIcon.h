@@ -50,6 +50,11 @@ public:
     tooltip_text = "Mock Icon";
     sort_priority_ = 0;
     type_ = TYPE_APPLICATION;
+
+    for (int i = 0; i < QUIRK_LAST; ++i)
+    {
+      quirks_[i] = false;
+    }
   }
 
   std::string GetName() const { return "MockLauncherIcon"; }
@@ -201,10 +206,13 @@ public:
 
   bool GetQuirk(Quirk quirk) const
   {
-    return false;
+    return quirks_[quirk];
   }
 
-  void SetQuirk(Quirk quirk, bool value) {}
+  void SetQuirk(Quirk quirk, bool value)
+  {
+    quirks_[quirk] = value;
+  }
 
   void ResetQuirkTime(Quirk quirk) {};
 
@@ -336,9 +344,8 @@ private:
   nux::BaseTexture* icon_;
   int sort_priority_;
   IconType type_;
+  bool quirks_[QUIRK_LAST];
 };
-
-NUX_IMPLEMENT_OBJECT_TYPE(MockLauncherIcon);
 
 }
 }

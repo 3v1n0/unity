@@ -159,6 +159,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/unity-shared/IconTextureSource.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/LauncherModel.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/LauncherEntryRemote.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/MockLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/FavoriteStorePrivate.cpp
                  ${CMAKE_SOURCE_DIR}/shortcuts/ShortcutModel.cpp
                  ${CMAKE_SOURCE_DIR}/shortcuts/ShortcutHintPrivate.cpp
@@ -205,6 +206,7 @@ if (GTEST_SRC_DIR AND
                  test_dashview_impl.cpp
                  test_texture_cache.cpp
                  test_main.cpp
+                 test_launcher.cpp
                  test_lensview_impl.cpp
                  test_icon_loader.cpp
                  test_im_text_entry.cpp
@@ -245,6 +247,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/launcher/LauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/LauncherModel.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/LayoutSystem.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/MockLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/PointerBarrier.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/QuicklistManager.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/QuicklistMenuItem.cpp

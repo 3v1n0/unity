@@ -104,6 +104,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(Launcher);
 const int Launcher::Launcher::ANIM_DURATION_SHORT = 125;
 
 Launcher::Launcher(nux::BaseWindow* parent,
+                   nux::ObjectPtr<DNDCollectionWindow> const& collection_window,
                    NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , monitor(0)
@@ -140,12 +141,12 @@ Launcher::Launcher(nux::BaseWindow* parent,
   , _drag_out_id(0)
   , _drag_out_delta_x(0.0f)
   , _last_reveal_progress(0.0f)
+  , _collection_window(collection_window)
   , _selection_atom(0)
   , _background_color(nux::color::DimGray)
 {
   m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  _collection_window = new unity::DNDCollectionWindow();
   _collection_window->collected.connect(sigc::mem_fun(this, &Launcher::OnDNDDataCollected));
 
   _offscreen_drag_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(2, 2, 1, nux::BITFMT_R8G8B8A8);

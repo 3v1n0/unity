@@ -391,7 +391,7 @@ Launcher* Controller::Impl::CreateLauncher(int monitor)
 {
   nux::BaseWindow* launcher_window = new nux::BaseWindow(TEXT("LauncherWindow"));
 
-  Launcher* launcher = new Launcher(launcher_window);
+  Launcher* launcher = new Launcher(launcher_window, nux::ObjectPtr<DNDCollectionWindow>(new DNDCollectionWindow));
   launcher->display = display_;
   launcher->monitor = monitor;
   launcher->options = parent_->options();
