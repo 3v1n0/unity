@@ -32,6 +32,9 @@ class Hud(KeybindingsHelper):
     def ensure_hidden(self):
         """Hides the hud if it's not already hidden."""
         if self.visible:
+            if self.search_string:
+                self.keyboard.press_and_release("Escape")
+                self.search_string.wait_for("")
             self.keyboard.press_and_release("Escape")
             self.visible.wait_for(False)
 
