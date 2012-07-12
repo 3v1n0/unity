@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: l 10n\n"
 "Report-Msgid-Bugs-To: ayatana-dev@lists.launchpad.net\n"
-"POT-Creation-Date: 2011-07-29 16:39+0200\n"
+"POT-Creation-Date: 2012-07-12 17:07+0100\n"
 "PO-Revision-Date: 2010-03-02 12:36-0500\n"
 "Last-Translator: Canonical OEM\n"
 "Language-Team: Greek\n"
@@ -17,16 +17,56 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgid "<b>Show the launcher when the pointer:</b>"
+msgid " (Press)"
 msgstr ""
 
-msgid "All items in the Trash will be permanently deleted."
+msgid " (Tap)"
 msgstr ""
 
-msgid "Browse the Web"
+msgid " + 1 to 9"
 msgstr ""
 
-msgid "Check Email"
+msgid " + Cursor Keys"
+msgstr ""
+
+msgid " + Shift + 1 to 9"
+msgstr ""
+
+msgid " Drag"
+msgstr ""
+
+msgid " or Right"
+msgstr ""
+
+msgid "All"
+msgstr ""
+
+msgid "Alt + Space"
+msgstr ""
+
+msgid "Categories"
+msgstr ""
+
+msgid "Closes current window."
+msgstr ""
+
+msgid "Ctrl + Alt + Num"
+msgstr ""
+
+msgid "Ctrl + Tab"
+msgstr ""
+
+msgid "Cursor Keys"
+msgstr ""
+
+msgid "Cursor Left or Right"
+msgstr ""
+
+#. Dash...
+msgid "Dash"
+msgstr ""
+
+msgid "Dash Home"
 msgstr ""
 
 msgid "Drop To Add Application"
@@ -38,49 +78,126 @@ msgstr ""
 msgid "Eject parent drive"
 msgstr ""
 
-msgid "Empty Trash"
-msgstr ""
-
 msgid "Empty Trash..."
 msgstr ""
 
-msgid "Empty all items from Trash?"
+msgid "Enter & Return"
 msgstr ""
 
-#. Find Files
-msgid "Find Files"
+msgid "Filter results"
 msgstr ""
 
-#. Internet Apps
-msgid "Internet Apps"
+#. Menu Bar
+msgid "HUD & Menu Bar"
+msgstr ""
+
+msgid "Home"
+msgstr ""
+
+msgid "Home screen"
+msgstr ""
+
+msgid "Keyboard Shortcuts"
+msgstr ""
+
+#. TODO move category text into a vector...
+#. Launcher...
+msgid "Launcher"
+msgstr ""
+
+msgid "Left Mouse"
 msgstr ""
 
 #, fuzzy
-msgid "Keep in launcher"
-msgstr "Διατήρηση στο πρόγραμμα εκκίνησης"
+msgid "Lock to Launcher"
+msgstr "Κατάργηση από το πρόγραμμα εκκίνησης"
 
-msgid "Launcher & Menus"
+msgid "Maximises the current window."
 msgstr ""
 
-msgid "Listen to Music"
+msgid "Middle Mouse"
 msgstr ""
 
-#. Media Apps
-msgid "Media Apps"
+msgid "Minimises all windows."
 msgstr ""
 
-#. More Apps
-msgid "More Apps"
+msgid "Move focused window to different workspace."
+msgstr ""
+
+msgid "Move window."
+msgstr ""
+
+msgid "Moves focus between indicators."
+msgstr ""
+
+msgid "Moves the focus."
+msgstr ""
+
+msgid "Multi-range"
 msgstr ""
 
 msgid "Open"
 msgstr ""
 
-msgid "Pushes the left edge of the screen"
+msgid "Open Launcher keyboard navigation mode."
+msgstr ""
+
+msgid "Open Launcher, displays shortcuts."
+msgstr ""
+
+msgid "Open currently focused item."
+msgstr ""
+
+msgid "Open new window of the app."
+msgstr ""
+
+msgid "Open the Dash App Lens."
+msgstr ""
+
+msgid "Open the Dash Files Lens."
+msgstr ""
+
+msgid "Open the Dash Home."
+msgstr ""
+
+msgid "Open the Dash Music Lens."
+msgstr ""
+
+msgid "Open the HUD."
+msgstr ""
+
+msgid "Open the Trash."
+msgstr ""
+
+msgid "Opens the indicator menu."
+msgstr ""
+
+msgid "Opens window accessibility menu."
+msgstr ""
+
+msgid "Places window in corresponding positions."
+msgstr ""
+
+msgid "Quicklist"
 msgstr ""
 
 msgid "Quit"
 msgstr "Κλείσιμο"
+
+msgid "Rating"
+msgstr ""
+
+msgid "Resize window."
+msgstr ""
+
+msgid "Restores or minimises current window."
+msgstr ""
+
+msgid "Reveals application menu."
+msgstr ""
+
+msgid "Right Mouse"
+msgstr ""
 
 msgid "Safely remove"
 msgstr ""
@@ -88,38 +205,85 @@ msgstr ""
 msgid "Safely remove parent drive"
 msgstr ""
 
-msgid "Search"
+msgid "Same as clicking on a Launcher icon."
 msgstr ""
 
-msgid "Search across all places"
+msgid "Search"
 msgstr ""
 
 msgid "See fewer results"
 msgstr ""
 
-msgid "Shortcuts"
+msgid "Semi-maximises current window."
+msgstr ""
+
+msgid "Show Desktop"
+msgstr ""
+
+msgid "Sorry, there is nothing that matches your search."
+msgstr ""
+
+msgid "Spread workspaces."
+msgstr ""
+
+msgid "Spreads all windows in the current workspace."
+msgstr ""
+
+msgid "Switch applications via Launcher."
+msgstr ""
+
+msgid "Switch between applications."
+msgstr ""
+
+msgid "Switch windows of current application."
+msgstr ""
+
+msgid "Switch workspaces."
+msgstr ""
+
+msgid "Switcher"
+msgstr ""
+
+msgid "Switches between Lenses."
+msgstr ""
+
+#. Switching
+msgid "Switching"
 msgstr ""
 
 msgid "The drive has been successfully ejected"
 msgstr ""
 
-msgid "Touches the top left corner of the screen"
-msgstr ""
-
 msgid "Trash"
 msgstr ""
+
+msgid "Type your command"
+msgstr ""
+
+msgid "Ubuntu Desktop"
+msgstr ""
+
+#, fuzzy
+msgid "Unlock from Launcher"
+msgstr "Κατάργηση από το πρόγραμμα εκκίνησης"
 
 msgid "Unmount"
 msgstr ""
 
-#. Photos
-#. FIXME: Need to figure out the default
-msgid "View Photos"
+msgid "Waiting to install"
+msgstr ""
+
+#. Windows
+msgid "Windows"
 msgstr ""
 
 msgid "Workspace Switcher"
 msgstr ""
 
+#. Workspaces
+msgid "Workspaces"
+msgstr ""
+
 #, fuzzy
-#~ msgid "Remove from launcher"
-#~ msgstr "Κατάργηση από το πρόγραμμα εκκίνησης"
+#~ msgid "Keep in launcher"
+#~ msgstr "Διατήρηση στο πρόγραμμα εκκίνησης"

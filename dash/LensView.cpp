@@ -31,9 +31,6 @@
 #include "unity-shared/UBusWrapper.h"
 #include "PlacesVScrollBar.h"
 
-#include <UnityCore/Preview.h>
-#include "previews/Preview.h"
-
 #include <glib/gi18n-lib.h>
 
 namespace unity

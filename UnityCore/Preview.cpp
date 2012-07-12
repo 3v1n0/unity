@@ -97,7 +97,7 @@ unity::glib::Object<GIcon> Preview::IconForString(std::string const& icon_hint)
 {
   glib::Error error;
   glib::Object<GIcon> icon(g_icon_new_for_string(icon_hint.c_str(), &error));
-\
+
   if (error)
   {
     LOG_WARN(logger) << "Unable to instantiate icon: " << icon_hint;
@@ -170,7 +170,8 @@ Preview::Impl::Impl(Preview* owner, glib::Object<GObject> const& proto_obj)
       UnityProtocolPreviewActionRaw *raw_action = &actions[i];
       actions_list_.push_back(std::make_shared<Action>(
             raw_action->id, raw_action->display_name,
-            raw_action->icon_hint, raw_action->layout_hint));
+            raw_action->icon_hint,
+            static_cast<LayoutHint>(raw_action->layout_hint)));
     }
     
     int info_hints_len;
