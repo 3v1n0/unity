@@ -124,7 +124,7 @@ MultiActionList::TerminateAll(CompOption::Vector& extraArgs)
 {
 }
 
-unsigned long long 
+unsigned long long
 PluginAdapter::GetWindowActiveNumber (guint32 xid)
 {
   return 0;
@@ -264,6 +264,39 @@ PluginAdapter::Minimize(guint32 xid)
 void
 PluginAdapter::Close(guint32 xid)
 {
+  GdkDisplay* gdkdisplay;
+  GdkScreen* screen;
+  Display* xdisplay;
+  Atom net_close_win;
+  Window xroot;
+  XEvent ev;
+
+  gdkdisplay  = gdk_display_get_default();
+  xdisplay    = GDK_DISPLAY_XDISPLAY(gdkdisplay);
+  screen      = gdk_display_get_default_screen (gdkdisplay);
+  xroot       = RootWindowOfScreen (gdk_x11_screen_get_xscreen (screen));
+
+  net_close_win = XInternAtom (xdisplay, "_NET_CLOSE_WINDOW", 0);
+  printf("Here\n");
+
+  ev.xclient.type         = ClientMessage;
+  ev.xclient.display      = xdisplay;
+
+  ev.xclient.serial       = 0;
+  ev.xclient.send_event   = TRUE;
+
+  ev.xclient.window       = xid;
+  ev.xclient.message_type = net_close_win;
+  ev.xclient.format       = 32;
+
+  ev.xclient.data.l[0]    = CurrentTime;
+  ev.xclient.data.l[1]    = 1; //application
+
+  XSendEvent (xdisplay, xroot, FALSE,
+    SubstructureRedirectMask | SubstructureNotifyMask,
+    &ev);
+
+  XSync (xdisplay, FALSE);
 }
 
 void
@@ -281,18 +314,18 @@ PluginAdapter::Lower(guint32 xid)
 {
 }
 
-void 
+void
 PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility focus_visibility, int monitor, bool only_top_win)
 {
 }
 
-bool 
+bool
 PluginAdapter::ScaleWindowGroup(std::vector<Window> windows, int state, bool force)
 {
   return false;
 }
 
-void 
+void
 PluginAdapter::SetWindowIconGeometry(Window window, nux::Geometry const& geo)
 {
 }
@@ -332,14 +365,14 @@ PluginAdapter::GetWindowSavedGeometry(guint32 xid) const
   return geo;
 }
 
-nux::Geometry 
+nux::Geometry
 PluginAdapter::GetScreenGeometry() const
 {
   nux::Geometry geo(0, 0, 1, 1);
-  return geo;  
+  return geo;
 }
 
-nux::Geometry 
+nux::Geometry
 PluginAdapter::GetWorkAreaGeometry(guint32 xid) const
 {
   nux::Geometry geo(0, 0, 1, 1);
@@ -352,7 +385,7 @@ PluginAdapter::CheckWindowIntersection(nux::Geometry const& region, CompWindow* 
   return false;
 }
 
-void 
+void
 PluginAdapter::CheckWindowIntersections (nux::Geometry const& region, bool &active, bool &any)
 {
 }
