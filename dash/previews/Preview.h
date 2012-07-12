@@ -49,6 +49,8 @@ public:
   void AddProperties(GVariantBuilder* builder);
 
 protected:
+  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {}
+  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {}
   
 protected:
   dash::Preview::Ptr preview_model_;

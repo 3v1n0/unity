@@ -247,7 +247,7 @@ Controller::Impl::Impl(Display* display, Controller* parent)
 
   InsertTrash();
 
-  sources_.Add(std::make_shared<glib::Timeout>(500, [&]() { SetupBamf(); return false; }));
+  sources_.AddTimeout(500, [&] { SetupBamf(); return false; });
 
   remote_model_.entry_added.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteAdded));
   remote_model_.entry_removed.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteRemoved));
@@ -371,6 +371,9 @@ void Controller::Impl::OnScreenChanged(int primary_monitor, std::vector<nux::Geo
 void Controller::Impl::OnWindowFocusChanged (guint32 xid)
 {
   static bool keynav_first_focus = false;
+
+  if (parent_->IsOverlayOpen())
+    keynav_first_focus = false;
 
   if (keynav_first_focus)
   {
@@ -979,8 +982,7 @@ void Controller::HandleLauncherKeyPress(int when)
 
     return false;
   };
-  auto key_timeout = std::make_shared<glib::Timeout>(local::super_tap_duration, show_launcher);
-  pimpl->sources_.Add(key_timeout, local::KEYPRESS_TIMEOUT);
+  pimpl->sources_.AddTimeout(local::super_tap_duration, show_launcher, local::KEYPRESS_TIMEOUT);
 
   auto show_shortcuts = [&]()
   {
@@ -995,8 +997,7 @@ void Controller::HandleLauncherKeyPress(int when)
 
     return false;
   };
-  auto labels_timeout = std::make_shared<glib::Timeout>(local::shortcuts_show_delay, show_shortcuts);
-  pimpl->sources_.Add(labels_timeout, local::LABELS_TIMEOUT);
+  pimpl->sources_.AddTimeout(local::shortcuts_show_delay, show_shortcuts, local::LABELS_TIMEOUT);
 }
 
 bool Controller::AboutToShowDash(int was_tap, int when) const
@@ -1053,8 +1054,7 @@ void Controller::HandleLauncherKeyRelease(bool was_tap, int when)
         return false;
       };
 
-      auto hide_timeout = std::make_shared<glib::Timeout>(time_left, hide_launcher);
-      pimpl->sources_.Add(hide_timeout, local::HIDE_TIMEOUT);
+      pimpl->sources_.AddTimeout(time_left, hide_launcher, local::HIDE_TIMEOUT);
     }
   }
 }
@@ -1097,7 +1097,6 @@ void Controller::Impl::ReceiveMouseDownOutsideArea(int x, int y, unsigned long b
 
 void Controller::KeyNavGrab()
 {
-  pimpl->ubus.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
   pimpl->launcher_grabbed = true;
   KeyNavActivate();
   pimpl->keyboard_launcher_->GrabKeyboard();
@@ -1197,7 +1196,12 @@ void Controller::KeyNavTerminate(bool activate)
   }
 
   if (activate)
-    pimpl->model_->Selection()->Activate(ActionArg(ActionArg::LAUNCHER, 0));
+  {
+    pimpl->sources_.AddIdle([this] {
+      pimpl->model_->Selection()->Activate(ActionArg(ActionArg::LAUNCHER, 0));
+      return false;
+    });
+  }
 
   pimpl->launcher_keynav = false;
   if (!pimpl->launcher_open)

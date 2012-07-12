@@ -90,6 +90,8 @@ public:
 
   ui::LayoutWindowList ExternalRenderTargets ();
 
+  guint GetSwitcherInputWindowId() const;
+
 protected:
   // Introspectable methods
   std::string GetName() const;

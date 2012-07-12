@@ -12,7 +12,6 @@ from __future__ import absolute_import
 from autopilot.emulators.dbus_handler import session_bus
 from autopilot.emulators.X11 import Mouse, ScreenGeometry
 from autopilot.keybindings import KeybindingsHelper
-from autopilot.introspection.unity import UnityIntrospectionObject
 from autopilot.utilities import get_compiz_option
 import dbus
 import logging
@@ -20,6 +19,7 @@ from math import floor
 from testtools.matchers import NotEquals
 from time import sleep
 
+from unity.emulators import UnityIntrospectionObject
 from unity.emulators.icons import BFBLauncherIcon, BamfLauncherIcon, SimpleLauncherIcon
 
 logger = logging.getLogger(__name__)
@@ -169,6 +169,52 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         if self.hidemode == 1:
             self.is_showing.wait_for(False)
 
+    def keyboard_select_icon(self, **kwargs):
+        """Using either keynav mode or the switcher, select an icon in the launcher.
+
+        The desired mode (keynav or switcher) must be started already before
+        calling this methods or a RuntimeError will be raised.
+
+        This method won't activate the icon, it will only select it.
+
+        Icons are selected by passing keyword argument filters to this method.
+        For example:
+
+        >>> launcher.keyboard_select_icon(tooltip_text="Calculator")
+
+        ...will select the *first* icon that has a 'tooltip_text' attribute equal
+        to 'Calculator'. If an icon is missing the attribute, it is treated as
+        not matching.
+
+        If no icon is found, this method will raise a ValueError.
+
+        """
+
+        if not self.in_keynav_mode and not self.in_switcher_mode:
+            raise RuntimeError("Launcher must be in keynav or switcher mode")
+
+        [launcher_model] = LauncherModel.get_all_instances()
+        all_icons = launcher_model.get_launcher_icons()
+        logger.debug("all_icons = %r", [i.tooltip_text for i in all_icons])
+        for icon in all_icons:
+            # can't iterate over the model icons directly since some are hidden
+            # from the user.
+            if not icon.visible:
+                continue
+            logger.debug("Selected icon = %s", icon.tooltip_text)
+            matches = True
+            for arg,val in kwargs.iteritems():
+                if not hasattr(icon, arg) or getattr(icon, arg, None) != val:
+                    matches = False
+                    break
+            if matches:
+                return
+            if self.in_keynav_mode:
+                self.key_nav_next()
+            elif self.in_switcher_mode:
+                self.switcher_next()
+        raise ValueError("No icon found that matches: %r", kwargs)
+
     def key_nav_start(self):
         """Start keyboard navigation mode by pressing Alt+F1."""
         self._screen.move_mouse_to_monitor(self.monitor)
@@ -264,7 +310,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         `icon` must be an instance of SimpleLauncherIcon or it's descendants.
         """
         if not isinstance(icon, SimpleLauncherIcon):
-            raise TypeError("icon must be a LauncherIcon")
+            raise TypeError("icon must be a LauncherIcon, not %s" % type(icon))
 
         logger.debug("Clicking launcher icon %r on monitor %d with mouse button %d",
             icon, self.monitor, button)
@@ -382,7 +428,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
 
 class LauncherModel(UnityIntrospectionObject):
-    """THe launcher model. Contains all launcher icons as children."""
+    """The launcher model. Contains all launcher icons as children."""
 
     def get_bfb_icon(self):
         icons = BFBLauncherIcon.get_all_instances()
@@ -412,47 +458,39 @@ class LauncherModel(UnityIntrospectionObject):
 
         return icons
 
-    def get_icon_by_tooltip_text(self, tooltip_text):
-        """Get a launcher icon given it's tooltip text.
+    def get_icon(self, **kwargs):
+        """Get a launcher icon from the model according to some filters.
 
-        Returns None if there is no icon with the specified text.
-        """
-        for icon in self.get_launcher_icons():
-            if icon.tooltip_text == tooltip_text:
-                return icon
-        return None
+        This method accepts keyword argument that are the filters to use when
+        looking for an icon. For example, to find an icon with a particular
+        desktop_id, one might do this from within a test:
 
-    def get_icon_by_desktop_id(self, desktop_id):
-        """Gets a launcher icon with the specified desktop id.
+        >>> self.launcher.model.get_icon(desktop_id="gcalctool.desktop")
 
-        Returns None if there is no such launcher icon.
-        """
-        icons = self.get_children_by_type(SimpleLauncherIcon, desktop_id=desktop_id)
-        if len(icons):
-            return icons[0]
+        This method returns only one icon. It is the callers responsibility to
+        ensure that the filter matches only one icon.
 
-        return None
+        This method will attempt to get the launcher icon, and will retry several
+        times, so the caller can be assured that if this method doesn't find
+        the icon it really does not exist.
 
-    def get_icon_by_window_xid(self, xid):
-        """Gets a launcher icon that controls the specified window xid."""
-        icons = [i for i in self.get_children_by_type(SimpleLauncherIcon) if i.xids.contains(xid)]
-        if (len(icons)):
-            return icons[0]
+        If no keyword arguments are specified, ValueError will be raised.
 
-        return None
-
-    def get_icons_by_filter(self, **kwargs):
-        """Get a list of icons that satisfy the given filters.
-
-        For example:
-
-        >>> get_icons_by_filter(tooltip_text="My Application")
-        ... [...]
-
-        Returns an empty list if no icons matched the filter.
+        If no icons are matched, None is returned.
 
         """
-        return self.get_children_by_type(SimpleLauncherIcon, **kwargs)
+
+        if not kwargs:
+            raise ValueError("You must specify at least one keyword argument to ths method.")
+
+        for i in range(10):
+            icons = self.get_children_by_type(SimpleLauncherIcon, **kwargs)
+            if len(icons) > 1:
+                logger.warning("Got more than one icon returned using filters=%r. Returning first one", kwargs)
+            if icons:
+                return icons[0]
+            sleep(1)
+        return None
 
     def num_launcher_icons(self):
         """Get the number of icons in the launcher model."""

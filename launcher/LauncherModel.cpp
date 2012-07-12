@@ -44,7 +44,7 @@ void LauncherModel::AddProperties(GVariantBuilder* builder)
   .add("selection", selection_);
 }
 
-unity::debug::Introspectable::IntrospectableList const& LauncherModel::GetIntrospectableChildren()
+unity::debug::Introspectable::IntrospectableList LauncherModel::GetIntrospectableChildren()
 {
   introspection_results_.clear();
 
@@ -133,10 +133,7 @@ LauncherModel::RemoveIcon(AbstractLauncherIcon::Ptr icon)
 void
 LauncherModel::OnIconRemove(AbstractLauncherIcon::Ptr icon)
 {
-  auto timeout = std::make_shared<glib::Timeout>(1000);
-  timeouts_.Add(timeout);
-
-  timeout->Run([&, icon] {
+  timeouts_.AddTimeout(1000, [&, icon] {
     RemoveIcon(icon);
     return false;
   });

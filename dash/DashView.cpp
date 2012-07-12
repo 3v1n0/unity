@@ -30,6 +30,7 @@
 #include <UnityCore/RadioOptionFilter.h>
 
 #include "unity-shared/DashStyle.h"
+#include "unity-shared/KeyboardUtil.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/UBusMessages.h"
 
@@ -226,7 +227,7 @@ void DashView::Relayout()
   nux::Geometry const& geo = GetGeometry();
   content_geo_ = GetBestFitGeometry(geo);
   dash::Style& style = dash::Style::Instance();
-  
+
   if (style.always_maximised)
   {
     if (geo.width >= content_geo_.width && geo.height > content_geo_.height)
@@ -459,7 +460,7 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
   });
 
   // global search done is handled by the home lens, no need to connect to it
-  // BUT, we will special case global search finished coming from 
+  // BUT, we will special case global search finished coming from
   // the applications lens, because we want to be able to launch applications
   // immediately without waiting for the search finished signal which will
   // be delayed by all the lenses we're searching
@@ -761,16 +762,21 @@ void DashView::ProcessDndEnter()
   ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
 }
 
-Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
-      unsigned long x11_key_code,
-      unsigned long special_keys_state)
+nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
+                                      unsigned long x11_key_code,
+                                      unsigned long special_keys_state)
 {
+  // Only care about states of Alt, Ctrl, Super, Shift, not the lock keys
+  special_keys_state &= (nux::NUX_STATE_ALT | nux::NUX_STATE_CTRL |
+                         nux::NUX_STATE_SUPER | nux::NUX_STATE_SHIFT);
+
   // Do what nux::View does, but if the event isn't a key navigation,
   // designate the text entry to process it.
 
+  using namespace nux;
+  nux::KeyNavDirection direction = KEY_NAV_NONE;
   bool ctrl = (special_keys_state & NUX_STATE_CTRL);
 
-  nux::KeyNavDirection direction = KEY_NAV_NONE;
   switch (x11_key_code)
   {
   case NUX_VK_UP:
@@ -801,14 +807,13 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
   case NUX_VK_F4:
     // Maybe we should not do it here, but it needs to be checked where
     // we are able to know if alt is pressed.
-    if (special_keys_state & NUX_STATE_ALT)
+    if (special_keys_state == NUX_STATE_ALT)
     {
       ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
     }
     break;
   default:
     direction = KEY_NAV_NONE;
-    break;
   }
 
   // We should not do it here, but I really don't want to make DashView
@@ -816,7 +821,7 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
   // DashView::KeyNavIteration.
    nux::InputArea* focus_area = nux::GetWindowCompositor().GetKeyFocusArea();
 
-  if (key_symbol == nux::NUX_KEYDOWN && !search_bar_->im_preedit)
+  if (direction != KEY_NAV_NONE && key_symbol == nux::NUX_KEYDOWN && !search_bar_->im_preedit)
   {
     std::list<nux::Area*> tabs;
     for (auto category : active_lens_view_->categories())
@@ -891,7 +896,18 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     }
   }
 
-  if (direction == KEY_NAV_NONE || search_bar_->im_preedit)
+  bool search_key = false;
+
+  if (direction == KEY_NAV_NONE)
+  {
+    if (ui::KeyboardUtil::IsPrintableKeySymbol(x11_key_code) ||
+        ui::KeyboardUtil::IsMoveKeySymbol(x11_key_code))
+    {
+      search_key = true;
+    }
+  }
+
+  if (search_key || search_bar_->im_preedit)
   {
     // then send the event to the search entry
     return search_bar_->text_entry();
@@ -900,7 +916,8 @@ Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
   {
     return next_object_to_key_focus_area_->FindKeyFocusArea(key_symbol, x11_key_code, special_keys_state);
   }
-  return NULL;
+
+  return nullptr;
 }
 
 }

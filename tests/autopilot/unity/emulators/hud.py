@@ -9,9 +9,12 @@
 
 from __future__ import absolute_import
 
-from autopilot.introspection.unity import UnityIntrospectionObject
+from autopilot.emulators.X11 import Keyboard
 from autopilot.keybindings import KeybindingsHelper
+from HTMLParser import HTMLParser
+import re
 
+from unity.emulators import UnityIntrospectionObject
 from unity.emulators.dash import SearchBar
 from unity.emulators.icons import HudEmbeddedIcon, HudLauncherIcon
 
@@ -24,11 +27,12 @@ class Hud(KeybindingsHelper):
         controllers = HudController.get_all_instances()
         assert(len(controllers) == 1)
         self.controller = controllers[0]
+        self.keyboard = Keyboard()
 
     def ensure_hidden(self):
         """Hides the hud if it's not already hidden."""
         if self.visible:
-            self.toggle_reveal()
+            self.keyboard.press_and_release("Escape")
             self.visible.wait_for(False)
 
     def ensure_visible(self):
@@ -106,6 +110,19 @@ class Hud(KeybindingsHelper):
             return 0
 
     @property
+    def hud_buttons(self):
+        """Returns a list of current HUD buttons."""
+        return self.view.hud_buttons
+
+    @property
+    def selected_hud_button(self):
+        try:
+            [button] = filter(lambda x: x.focused, self.hud_buttons)
+            return button
+        except IndexError:
+            raise RuntimeError("No HUD buttons found, is hud active?")
+
+    @property
     def num_buttons(self):
         view = self.controller.get_hud_view()
         if view:
@@ -123,6 +140,10 @@ class HudView(UnityIntrospectionObject):
         return self.get_children_by_type(SearchBar)[0]
 
     @property
+    def hud_buttons(self):
+        return self.get_children_by_type(HudButton)
+
+    @property
     def geometry(self):
         return (self.x, self.y, self.width, self.height)
 
@@ -133,3 +154,12 @@ class HudController(UnityIntrospectionObject):
     def get_hud_view(self):
         views = self.get_children_by_type(HudView)
         return views[0] if views else None
+
+class HudButton(UnityIntrospectionObject):
+    """Proxy object for the hud buttons."""
+
+    @property
+    def label_no_formatting(self):
+        """Returns the label text with the formatting removed."""
+        htmlparser = HTMLParser()
+        return htmlparser.unescape(re.sub("<[^>]*>", "", self.label))

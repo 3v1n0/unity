@@ -28,7 +28,7 @@
 #include <Nux/Nux.h>
 #include <Nux/HLayout.h>
 #include <NuxCore/Logger.h>
-#include <NuxImage/CairoGraphics.h>
+#include <NuxGraphics/CairoGraphics.h>
 #include <NuxGraphics/NuxGraphics.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
@@ -52,10 +52,13 @@ namespace unity
 namespace hud
 {
 
+NUX_IMPLEMENT_OBJECT_TYPE(HudButton);
+
 HudButton::HudButton(NUX_FILE_LINE_DECL)
   : nux::Button(NUX_FILE_LINE_PARAM)
   , is_rounded(false)
   , is_focused_(false)
+  , skip_draw_(true)
 {
   hlayout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
   hlayout_->SetLeftAndRightPadding(hlayout_left_padding, -1);
@@ -106,7 +109,7 @@ void HudButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonV
 
 bool HudButton::AcceptKeyNavFocus()
 {
-  // The button will not receive the keyboard focus. The keyboard focus is always to remain with the 
+  // The button will not receive the keyboard focus. The keyboard focus is always to remain with the
   // text entry in the hud.
   return false;
 }
@@ -131,7 +134,11 @@ long HudButton::ComputeContentSize()
 
 void HudButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
+  if (skip_draw_)
+    return;
+
   nux::Geometry const& geo = GetGeometry();
+  GfxContext.PushClippingRectangle(geo);
   gPainter.PaintBackground(GfxContext, geo);
 
   // set up our texture mode
@@ -171,12 +178,21 @@ void HudButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                       nux::color::White);
 
   GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
+
+  GfxContext.PopClippingRectangle();
 }
 
 void HudButton::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
+  if (skip_draw_)
+    return;
+
   if (IsFullRedraw())
+  {
+    GfxContext.PushClippingRectangle(GetGeometry());
     hlayout_->ProcessDraw(GfxContext, force_draw);
+    GfxContext.PopClippingRectangle();
+  }
 }
 
 void HudButton::SetQuery(Query::Ptr query)
@@ -189,7 +205,7 @@ void HudButton::SetQuery(Query::Ptr query)
   hlayout_->Clear();
   for (auto item : items)
   {
-    nux::StaticCairoText* text = new nux::StaticCairoText(item.first.c_str());
+    nux::StaticCairoText* text = new nux::StaticCairoText(item.first);
     text->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, item.second ? 1.0f : 0.5f));
     text->SetFont(button_font);
     hlayout_->AddView(text, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
@@ -201,6 +217,12 @@ Query::Ptr HudButton::GetQuery()
   return query_;
 }
 
+void HudButton::SetSkipDraw(bool skip_draw)
+{
+  skip_draw_ = skip_draw;
+}
+
+
 // Introspectable
 std::string HudButton::GetName() const
 {
@@ -210,7 +232,8 @@ std::string HudButton::GetName() const
 void HudButton::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
-    .add("label", label());
+    .add("label", label())
+    .add("focused", fake_focused());
 }
 
 } // namespace hud

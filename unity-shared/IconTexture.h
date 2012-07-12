@@ -25,7 +25,7 @@
 #include <Nux/View.h>
 // FIXME: Nux/TextureArea.h needs View included first.
 #include <Nux/TextureArea.h>
-#include <NuxImage/CairoGraphics.h>
+#include <NuxGraphics/CairoGraphics.h>
 #include <NuxGraphics/GraphicsEngine.h>
 #include <UnityCore/GLibWrapper.h>
 

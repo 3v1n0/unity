@@ -208,7 +208,9 @@ if (GTEST_SRC_DIR AND
                  test_main.cpp
                  test_lensview_impl.cpp
                  test_icon_loader.cpp
+                 test_im_text_entry.cpp
                  test_hud_view.cpp
+                 test_keyboard_util.cpp
                  test_resultviewgrid.cpp
                  test_single_monitor_launcher_icon.cpp
                  test_switcher_controller.cpp
@@ -270,8 +272,10 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/unity-shared/Introspectable.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/IntrospectableWrappers.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/JSONParser.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/KeyboardUtil.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/OverlayRenderer.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/PanelStyle.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/PluginAdapterStandalone.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/SearchBar.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/SearchBarSpinner.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/StaticCairoText.cpp

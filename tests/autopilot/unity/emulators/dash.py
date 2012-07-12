@@ -9,14 +9,11 @@
 
 from __future__ import absolute_import
 
-from autopilot.introspection.unity import (
-    get_state_by_path,
-    make_introspection_object,
-    UnityIntrospectionObject,
-    )
+from autopilot.introspection.dbus import make_introspection_object
 from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.keybindings import KeybindingsHelper
 
+from unity.emulators import UnityIntrospectionObject
 import logging
 
 
@@ -294,9 +291,9 @@ class FilterBar(UnityIntrospectionObject):
         and for some reason the FilterBar stuff is bundled in the SearchBar.
 
         """
-        state_info = get_state_by_path("//DashView/SearchBar")
-        assert(len(state_info) == 1)
-        return make_introspection_object(("SearchBar", state_info[0]))
+        searchbar_state = self.get_state_by_path("//DashView/SearchBar")
+        assert(len(searchbar_state) == 1)
+        return make_introspection_object(searchbar_state[0])
 
 
 class FilterExpanderLabel(UnityIntrospectionObject):

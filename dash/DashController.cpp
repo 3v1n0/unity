@@ -67,6 +67,9 @@ Controller::Controller()
       nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
     }
   });
+
+  auto spread_cb = sigc::bind(sigc::mem_fun(this, &Controller::HideDash), true);
+  PluginAdapter::Default()->initiate_spread.connect(spread_cb);
 }
 
 void Controller::SetupWindow()
@@ -77,12 +80,13 @@ void Controller::SetupWindow()
   window_->ShowWindow(false);
   window_->SetOpacity(0.0f);
   window_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &Controller::OnMouseDownOutsideWindow));
-  
+
   /* FIXME - first time we load our windows there is a race that causes the input window not to actually get input, this side steps that by causing an input window show and hide before we really need it. */
-  PluginAdapter::Default()->saveInputFocus ();
+  auto plugin_adapter = PluginAdapter::Default();
+  plugin_adapter->saveInputFocus ();
   window_->EnableInputWindow(true, dash::window_title, true, false);
   window_->EnableInputWindow(false, dash::window_title, true, false);
-  PluginAdapter::Default()->restoreInputFocus ();
+  plugin_adapter->restoreInputFocus ();
 }
 
 void Controller::SetupDashView()
@@ -333,6 +337,9 @@ gboolean Controller::CheckShortcutActivation(const char* key_string)
   std::string lens_id = view_->GetIdForShortcutActivation(std::string(key_string));
   if (lens_id != "")
   {
+    if (PluginAdapter::Default()->IsScaleActive())
+      PluginAdapter::Default()->TerminateScale();
+
     GVariant* args = g_variant_new("(sus)", lens_id.c_str(), dash::GOTO_DASH_URI, "");
     OnActivateRequest(args);
     g_variant_unref(args);

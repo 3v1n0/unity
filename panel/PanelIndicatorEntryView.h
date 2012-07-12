@@ -23,7 +23,7 @@
 
 #include <Nux/TextureArea.h>
 #include <Nux/View.h>
-#include <NuxImage/CairoGraphics.h>
+#include <NuxGraphics/CairoGraphics.h>
 #include <NuxGraphics/GraphicsEngine.h>
 
 #include <UnityCore/IndicatorEntry.h>

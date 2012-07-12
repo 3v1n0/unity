@@ -64,7 +64,7 @@ public:
 
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
-  IntrospectableList const& GetIntrospectableChildren();
+  IntrospectableList GetIntrospectableChildren();
 
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);

@@ -11,7 +11,8 @@ from __future__ import absolute_import
 
 import logging
 from autopilot.keybindings import KeybindingsHelper
-from autopilot.introspection.unity import UnityIntrospectionObject
+
+from unity.emulators import UnityIntrospectionObject
 
 logger = logging.getLogger(__name__)
 
@@ -26,10 +27,18 @@ class WindowManager(UnityIntrospectionObject, KeybindingsHelper):
 
     def enter_show_desktop(self):
         if not self.showdesktop_active:
+            logger.info("Entering show desktop mode.")
             self.keybinding("window/show_desktop")
             self.showdesktop_active.wait_for(True)
+        else:
+            logger.warning("Test tried to enter show desktop mode while already \
+                in show desktop mode.")
 
     def leave_show_desktop(self):
         if self.showdesktop_active:
+            logger.info("Leaving show desktop mode.")
             self.keybinding("window/show_desktop")
             self.showdesktop_active.wait_for(False)
+        else:
+            logger.warning("Test tried to leave show desktop mode while not in \
+                show desktop mode.")

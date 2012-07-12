@@ -96,6 +96,8 @@ public:
     return _parent;
   };
 
+  nux::ObjectPtr<nux::View> GetActiveTooltip() const;  // nullptr = no tooltip
+
   virtual void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
@@ -269,6 +271,7 @@ private:
   void OnOrderChanged();
 
   void OnIconNeedsRedraw(AbstractLauncherIcon::Ptr icon);
+  void OnTooltipVisible(nux::ObjectPtr<nux::View> view);
 
   void OnOverlayHidden(GVariant* data);
   void OnOverlayShown(GVariant* data);
@@ -311,6 +314,7 @@ private:
 
   LauncherModel::Ptr _model;
   nux::BaseWindow* _parent;
+  nux::ObjectPtr<nux::View> _active_tooltip;
   QuicklistView* _active_quicklist;
 
   nux::HLayout* m_Layout;

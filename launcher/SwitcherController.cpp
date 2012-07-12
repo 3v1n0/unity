@@ -56,9 +56,7 @@ Controller::Controller(unsigned int load_timeout)
 {
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
 
-  auto lazy_timeout = std::make_shared<glib::TimeoutSeconds>(construct_timeout_, glib::Source::Priority::LOW);
-  lazy_timeout->Run([&] { ConstructWindow(); return false; });
-  sources_.Add(lazy_timeout, LAZY_TIMEOUT);
+  sources_.AddTimeoutSeconds(construct_timeout_, [&] { ConstructWindow(); return false; }, LAZY_TIMEOUT);
 }
 
 void Controller::OnBackgroundUpdate(GVariant* data)
@@ -90,13 +88,8 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
 
   if (timeout_length > 0)
   {
-    auto view_idle_construct = std::make_shared<glib::Idle>();
-    sources_.Add(view_idle_construct, VIEW_CONSTRUCT_IDLE);
-    view_idle_construct->Run([&] () { ConstructView(); return false; });
-
-    auto show_timeout = std::make_shared<glib::Timeout>(timeout_length);
-    sources_.Add(show_timeout, SHOW_TIMEOUT);
-    show_timeout->Run([&] () { ShowView(); return false; });
+    sources_.AddIdle([&] { ConstructView(); return false; }, VIEW_CONSTRUCT_IDLE);
+    sources_.AddTimeout(timeout_length, [&] { ShowView(); return false; }, SHOW_TIMEOUT);
   }
   else
   {
@@ -105,9 +98,8 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
 
   if (detail_on_timeout)
   {
-    auto detail_timeout = std::make_shared<glib::Timeout>(initial_detail_timeout_length);
-    sources_.Add(detail_timeout, DETAIL_TIMEOUT);
-    detail_timeout->Run(sigc::mem_fun(this, &Controller::OnDetailTimer));
+    auto cb_func = sigc::mem_fun(this, &Controller::OnDetailTimer);
+    sources_.AddTimeout(initial_detail_timeout_length, cb_func, DETAIL_TIMEOUT);
   }
 
   ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
@@ -135,9 +127,8 @@ void Controller::OnModelSelectionChanged(AbstractLauncherIcon::Ptr icon)
 {
   if (detail_on_timeout)
   {
-    auto detail_timeout = std::make_shared<glib::Timeout>(detail_timeout_length);
-    sources_.Add(detail_timeout, DETAIL_TIMEOUT);
-    detail_timeout->Run(sigc::mem_fun(this, &Controller::OnDetailTimer));
+    auto cb_func = sigc::mem_fun(this, &Controller::OnDetailTimer);
+    sources_.AddTimeout(detail_timeout_length, cb_func, DETAIL_TIMEOUT);
   }
 
   if (icon)
@@ -159,8 +150,11 @@ void Controller::ShowView()
 
   ConstructView();
 
+  ubus_manager_.SendMessage(UBUS_SWITCHER_START, NULL);
+
   if (view_window_) {
     view_window_->ShowWindow(true);
+    view_window_->PushToFront();
     view_window_->SetOpacity(1.0f);
   }
 }
@@ -179,6 +173,7 @@ void Controller::ConstructWindow()
     view_window_->SetLayout(main_layout_);
     view_window_->SetBackgroundColor(nux::Color(0x00000000));
     view_window_->SetGeometry(workarea_);
+    view_window_->EnableInputWindow(true, "Switcher", false, false);
   }
 }
 
@@ -240,6 +235,8 @@ void Controller::Hide(bool accept_state)
     }
   }
 
+  ubus_manager_.SendMessage(UBUS_SWITCHER_END, g_variant_new_boolean(!accept_state));
+
   sources_.Remove(VIEW_CONSTRUCT_IDLE);
   sources_.Remove(SHOW_TIMEOUT);
   sources_.Remove(DETAIL_TIMEOUT);
@@ -254,6 +251,8 @@ void Controller::Hide(bool accept_state)
   {
     view_window_->SetOpacity(0.0f);
     view_window_->ShowWindow(false);
+    view_window_->PushToBack();
+    view_window_->EnableInputWindow(false);
   }
 
   ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN, g_variant_new("(bi)", false, monitor_));
@@ -383,6 +382,11 @@ LayoutWindowList Controller::ExternalRenderTargets()
     return result;
   }
   return view_->ExternalTargets();
+}
+
+guint Controller::GetSwitcherInputWindowId() const
+{
+  return view_window_->GetInputWindowId();
 }
 
 bool Controller::CompareSwitcherItemsPriority(AbstractLauncherIcon::Ptr first,

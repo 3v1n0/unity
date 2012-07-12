@@ -23,7 +23,7 @@
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
 #include <Nux/VLayout.h>
-#include <NuxImage/GdkGraphics.h>
+#include <NuxGraphics/GdkGraphics.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 
