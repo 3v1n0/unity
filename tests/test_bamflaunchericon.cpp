@@ -15,6 +15,7 @@
  * <http://www.gnu.org/licenses/>
  *
  * Authored by: Andrea Azzarone <azzarone@gmail.com>
+ *              Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
 #include <config.h>
@@ -23,6 +24,11 @@
 #include <UnityCore/GLibWrapper.h>
 
 #include "BamfLauncherIcon.h"
+
+#include "unity-shared/PluginAdapter.h"
+#include <gio/gdesktopappinfo.h>
+#include <unistd.h>
+
 using namespace unity;
 
 namespace
@@ -60,6 +66,44 @@ TEST_F(TestBamfLauncherIcon, TestCustomBackgroundColor)
   EXPECT_EQ(color.green, 0xbb / 255.0f);
   EXPECT_EQ(color.blue, 0xcc / 255.0f);
   EXPECT_EQ(color.alpha, 0xff / 255.0f);
+}
+
+TEST_F(TestBamfLauncherIcon, TestDefaultIcon)
+{
+  glib::Error error;
+  BamfApplication* app;
+  nux::ObjectPtr<launcher::BamfLauncherIcon> default_icon;
+
+  glib::Object<GDesktopAppInfo> desktopInfo(g_desktop_app_info_new_from_filename(BUILDDIR"/tests/data/no-icon.desktop"));
+  auto appInfo = glib::object_cast<GAppInfo>(desktopInfo);
+
+  g_app_info_launch(appInfo, nullptr, nullptr, &error);
+
+  if (error)
+        g_warning("%s\n", error.Message().c_str());
+  EXPECT_FALSE(error);
+
+  for (int i = 0; i < 5 && !bamf_matcher_application_is_running(bamf_matcher, BUILDDIR"/tests/data/no-icon.desktop"); i++)
+    sleep(1);
+  EXPECT_TRUE(bamf_matcher_application_is_running(bamf_matcher, BUILDDIR"/tests/data/no-icon.desktop"));
+
+  app = bamf_matcher_get_active_application(bamf_matcher);
+  default_icon = new launcher::BamfLauncherIcon(app);
+
+  GList* children, *l;
+  children = bamf_view_get_children(BAMF_VIEW(app));
+
+  for (l = children; l; l = l->next)
+  {
+    if (!BAMF_IS_WINDOW(l->data))
+      continue;
+
+    Window xid = bamf_window_get_xid(static_cast<BamfWindow*>(l->data));
+    PluginAdapter::Default()->Close(xid);
+  }
+  g_list_free(children);
+
+  EXPECT_EQ(default_icon->icon_name.Get(), "application-default-icon");
 }
 
 }
