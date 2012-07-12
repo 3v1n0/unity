@@ -277,7 +277,6 @@ PluginAdapter::Close(guint32 xid)
   xroot       = RootWindowOfScreen (gdk_x11_screen_get_xscreen (screen));
 
   net_close_win = XInternAtom (xdisplay, "_NET_CLOSE_WINDOW", 0);
-  printf("Here\n");
 
   ev.xclient.type         = ClientMessage;
   ev.xclient.display      = xdisplay;
