@@ -36,6 +36,7 @@ class Hud(KeybindingsHelper):
                 # need this to clear the search string, and then another to
                 # close the hud.
                 self.keyboard.press_and_release("Escape")
+                self.search_string.wait_for("")
             self.keyboard.press_and_release("Escape")
             self.visible.wait_for(False)
 

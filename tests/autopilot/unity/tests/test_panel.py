@@ -54,9 +54,8 @@ class PanelTestsBase(UnityTestCase):
 
         """
         self.close_all_app(app_name)
-        app = self.start_app(app_name, locale="C")
-
-        [app_win] = app.get_windows()
+        app_win = self.start_app_window(app_name, locale="C")
+        app = app_win.application
 
         app_win.set_focus()
         self.assertTrue(app.is_active)
@@ -880,10 +879,17 @@ class PanelIndicatorEntryTests(PanelTestsBase):
 
     scenarios = _make_monitor_scenarios()
 
+    def open_app_and_get_menu_entry(self):
+        """Open the test app and wait for the menu entry to appear."""
+        self.open_new_application_window("Calculator")
+        refresh_fn = lambda: len(self.panel.menus.get_entries())
+        self.assertThat(refresh_fn, Eventually(GreaterThan(0)))
+        menu_entry = self.panel.menus.get_entries()[0]
+        return menu_entry
+
     def test_menu_opens_on_click(self):
         """Tests that clicking on a menu entry, opens a menu."""
-        self.open_new_application_window("Calculator")
-        menu_entry = self.panel.menus.get_entries()[0]
+        menu_entry = self.open_app_and_get_menu_entry()
         self.mouse_open_indicator(menu_entry)
 
         self.assertThat(menu_entry.active, Eventually(Equals(True)))
@@ -892,8 +898,7 @@ class PanelIndicatorEntryTests(PanelTestsBase):
 
     def test_menu_opens_closes_on_click(self):
         """Clicking on an open menu entru must close it again."""
-        self.open_new_application_window("Calculator")
-        menu_entry = self.panel.menus.get_entries()[0]
+        menu_entry = self.open_app_and_get_menu_entry()
         self.mouse_open_indicator(menu_entry)
 
         # This assert is for timing purposes only:
@@ -906,8 +911,7 @@ class PanelIndicatorEntryTests(PanelTestsBase):
 
     def test_menu_closes_on_click_outside(self):
         """Clicking outside an open menu must close it."""
-        self.open_new_application_window("Calculator")
-        menu_entry = self.panel.menus.get_entries()[0]
+        menu_entry = self.open_app_and_get_menu_entry()
         self.mouse_open_indicator(menu_entry)
 
         # This assert is for timing purposes only:
