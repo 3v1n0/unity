@@ -138,6 +138,7 @@ class QuicklistActionTests(UnityTestCase):
         calc = self.start_app("Calculator")
 
         calc_icon = self.launcher.model.get_icon(desktop_id=calc.desktop_file)
+        self.open_quicklist_for_icon(calc_icon)
 
         self.hud.ensure_visible()
         self.addCleanup(self.hud.ensure_hidden)
@@ -148,6 +149,7 @@ class QuicklistActionTests(UnityTestCase):
         calc = self.start_app("Calculator")
 
         calc_icon = self.launcher.model.get_icon(desktop_id=calc.desktop_file)
+        self.open_quicklist_for_icon(calc_icon)
 
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
