@@ -1433,17 +1433,6 @@ LauncherHideMode Launcher::GetHideMode() const
 
 /* End Launcher Show/Hide logic */
 
-// Hacks around compiz failing to see the struts because the window was just mapped.
-bool Launcher::StrutHack()
-{
-  _parent->InputWindowEnableStruts(false);
-
-  if (options()->hide_mode == LAUNCHER_HIDE_NEVER)
-    _parent->InputWindowEnableStruts(true);
-
-  return false;
-}
-
 void Launcher::OnOptionsChanged(Options::Ptr options)
 {
    UpdateOptions(options);
@@ -1485,12 +1474,6 @@ void Launcher::SetHideMode(LauncherHideMode hidemode)
   else
   {
     _parent->EnableInputWindow(true, launcher::window_title, false, false);
-
-    if (!sources_.GetSource(STRUT_HACK_TIMEOUT))
-    {
-      sources_.AddTimeout(1000, sigc::mem_fun(this, &Launcher::StrutHack), STRUT_HACK_TIMEOUT);
-    }
-
     _parent->InputWindowEnableStruts(true);
   }
 
