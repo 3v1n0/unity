@@ -114,6 +114,26 @@ class LauncherIconsTests(LauncherTestCase):
         self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
         self.assertThat(self.window_manager.scale_active_for_group, Eventually(Equals(True)))
 
+    def test_while_in_scale_mode_the_dash_will_still_open(self):
+        """If scale is initiated through the laucher pressing super must close
+        scale and open the dash.
+        """
+        calc_win1 = self.start_app_window("Calculator")
+        calc_win2 = self.start_app_window("Calculator")
+        calc_app = calc_win1.application
+
+        self.assertVisibleWindowStack([calc_win2, calc_win1])
+        self.assertProperty(calc_win2, is_focused=True)
+
+        calc_icon = self.launcher.model.get_icon(desktop_id=calc_app.desktop_file)
+        self.launcher_instance.click_launcher_icon(calc_icon)
+
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
+
+        self.assertThat(self.dash.visible, Eventually(Equals(True)))
+        self.assertThat(self.window_manager.scale_active, Eventually(Equals(False)))
+
     def test_icon_shows_on_quick_application_reopen(self):
         """Icons must stay on launcher when an application is quickly closed/reopened."""
         calc = self.start_app("Calculator")
