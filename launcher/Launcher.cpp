@@ -964,7 +964,7 @@ float Launcher::DragLimiter(float x)
 nux::Color FullySaturateColor (nux::Color color)
 {
   float max = std::max<float>(color.red, std::max<float>(color.green, color.blue));
-  if (max != 0)
+  if (max > 0.0f)
   {
     color = color * (1.0f / max);
   }
