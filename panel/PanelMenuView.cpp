@@ -914,9 +914,8 @@ bool PanelMenuView::OnNewAppShow()
     _new_app_menu_shown = false;
   }
 
-  auto timeout = std::make_shared<glib::TimeoutSeconds>(_menus_discovery);
-  _sources.Add(timeout, NEW_APP_HIDE_TIMEOUT);
-  timeout->Run(sigc::mem_fun(this, &PanelMenuView::OnNewAppHide));
+  auto cb_func = sigc::mem_fun(this, &PanelMenuView::OnNewAppHide);
+  _sources.AddTimeoutSeconds(_menus_discovery, cb_func, NEW_APP_HIDE_TIMEOUT);
 
   return false;
 }
@@ -1000,9 +999,8 @@ void PanelMenuView::OnActiveAppChanged(BamfMatcher *matcher,
          * menus and to show the menus only when an application has been
          * kept active for some time */
 
-        auto timeout = std::make_shared<glib::Timeout>(300);
-        _sources.Add(timeout, NEW_APP_SHOW_TIMEOUT);
-        timeout->Run(sigc::mem_fun(this, &PanelMenuView::OnNewAppShow));
+        auto cb_func = sigc::mem_fun(this, &PanelMenuView::OnNewAppShow);
+        _sources.AddTimeout(300, cb_func, NEW_APP_SHOW_TIMEOUT);
       }
     }
     else
@@ -1263,9 +1261,8 @@ void PanelMenuView::OnWindowMoved(guint xid)
       timeout_length = 60;
     }
 
-    auto timeout = std::make_shared<glib::Timeout>(timeout_length);
-    _sources.Add(timeout, WINDOW_MOVED_TIMEOUT);
-    timeout->Run(sigc::mem_fun(this, &PanelMenuView::UpdateActiveWindowPosition));
+    auto cb_func = sigc::mem_fun(this, &PanelMenuView::UpdateActiveWindowPosition);
+    _sources.AddTimeout(timeout_length, cb_func, WINDOW_MOVED_TIMEOUT);
   }
 }
 
@@ -1646,9 +1643,8 @@ void PanelMenuView::UpdateShowNow(bool status)
 
   if (status && !_show_now_activated)
   {
-    auto timeout = std::make_shared<glib::Timeout>(180);
-    _sources.Add(timeout, UPDATE_SHOW_NOW_TIMEOUT);
-    timeout->Run(sigc::mem_fun(this, &PanelMenuView::UpdateShowNowWithDelay));
+    auto cb_func = sigc::mem_fun(this, &PanelMenuView::UpdateShowNowWithDelay);
+    _sources.AddTimeout(180, cb_func, UPDATE_SHOW_NOW_TIMEOUT);
   }
 }
 
