@@ -54,9 +54,8 @@ class PanelTestsBase(UnityTestCase):
 
         """
         self.close_all_app(app_name)
-        app = self.start_app(app_name, locale="C")
-
-        [app_win] = app.get_windows()
+        app_win = self.start_app_window(app_name, locale="C")
+        app = app_win.application
 
         app_win.set_focus()
         self.assertTrue(app.is_active)
@@ -978,7 +977,7 @@ class PanelKeyNavigationTests(PanelTestsBase):
         self.assertThat(open_indicator.entry_id, Eventually(Equals(expected_indicator.entry_id)))
 
         self.keybinding("panel/open_first_menu")
-        self.assertThat(self.panel.get_active_indicator(), Eventually(Equals(None)))
+        self.assertThat(self.panel.get_active_indicator, Eventually(Equals(None)))
 
     def test_panel_menu_accelerators_work(self):
         """Pressing a valid menu accelerator must open the correct menu item."""
