@@ -1,3 +1,3479 @@
+2012-07-09  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix several intermittently failing tests.. Fixes: . Approved by Tim Penhey.
+
+2012-07-09  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk, fixed conflicts.
+
+2012-07-09  Thomi Richards  <thomi.richards@canonical.com>
+
+	Use new assertProperty method in favour of assert_window_focused.
+
+2012-07-09  Thomi Richards  <thomi.richards@canonical.com>
+
+	moar fixes.
+
+2012-07-09  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed another test to use start_app_window method.
+
+2012-07-09  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed another quicklist test to use start_application_window method.
+
+2012-07-09  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed quicklist test to use start_app_window method.
+
+2012-07-09  Thomi Richards  <thomi.richards@canonical.com>
+
+	Cleaned up switcher tests.
+
+2012-07-09  Thomi Richards  <thomi.richards@canonical.com>
+
+	Get rid of open_test_apps method alltogether.
+
+2012-07-09  Thomi Richards  <thomi.richards@canonical.com>
+
+	test_icon_behavior tests now use new autopilot method.
+
+2012-07-06  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed launcher test.
+
+2012-07-06  Thomi Richards  <thomi.richards@canonical.com>
+
+	Forgot a break.
+
+2012-07-06  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed timing issues in a switcher test.
+
+2012-07-08  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Fix dash slowness/lag by prioritizing user interaction ahead of active blur
+	updates. (LP: #1021665) (LP: #874230)
+	. Fixes: https://bugs.launchpad.net/bugs/874230, https://bugs.launchpad.net/bugs/1021665. Approved by Andrea Azzarone, Sam Spilsbury.
+
+2012-07-08  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Fix dash slowness/lag by prioritizing user interaction ahead of active blur
+	updates. (LP: #1021665) (LP: #874230)
+
+2012-07-08  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Panels and window buttons do not steal keynav focus when the overlays are open now.. Fixes: https://bugs.launchpad.net/bugs/1021087. Approved by Thomi Richards.
+
+2012-07-08  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* fixed confilcts
+
+2012-07-08  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixed ap test
+
+2012-07-06  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* test added
+
+2012-07-06  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* No keynav focus when mouse down for window buttons! Ever!
+
+2012-07-05  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* should WindowButtons even accept keynav focus?
+
+2012-07-05  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* When an overlay starts on a moniter turn of keynav focus on mouse down.
+
+2012-07-08  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed up panel autopilot tests.. Fixes: . Approved by Marco Trevisan (Treviño), Christopher Lee.
+
+2012-07-06  Thomi Richards  <thomi.richards@canonical.com>
+
+	Apparently 'proc' isn't a real word.
+
+2012-07-06  Thomi Richards  <thomi.richards@canonical.com>
+
+	Style fix.
+
+2012-07-06  Thomi Richards  <thomi.richards@canonical.com>
+
+	Cleaned up docstrings.
+
+2012-07-06  Thomi Richards  <thomi.richards@canonical.com>
+
+	Multi-monitor tests fixed up to use the Eventually matcher.
+
+2012-07-06  Thomi Richards  <thomi.richards@canonical.com>
+
+	PanelGrabAreaTests class fixed up to use Eventually matcher.
+
+2012-07-06  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed test_mouse_does_not_break_key_navigation test,
+
+2012-07-06  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed up the test_panel_indicators_key_navigation_prev_works test.
+
+2012-07-06  Thomi Richards  <thomi.richards@canonical.com>
+
+	Refactored test_panel_indicators_key_navigation_next_works test to use the Eventually matcher, and not test things outside it's remit.
+
+2012-07-06  Thomi Richards  <thomi.richards@canonical.com>
+
+	Refactoring...
+
+2012-07-06  Thomi Richards  <thomi.richards@canonical.com>
+
+	test_panel_menu_accelerators_work test uses Eventually matcher.
+
+2012-07-06  Thomi Richards  <thomi.richards@canonical.com>
+
+	test_panel_first_menu_show_works test uses Eventually matcher.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed the PanelIndicatorEntryTests tests: removed dupliactes, converted tests to use the Eventually matcher.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed some tests that I realised were duplicated.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	test_menus_show_when_indicator_active_and_mouse_over_panel test now uses Eventually matcher.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed test_menus_show_after_closing_an_entry test to use Eventually matcher.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	test_menus_dont_show_with_hud test now uses Eventually matcher.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	test_menus_dont_show_with_dash test uses Eventually matcher.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed the test_menus_show_for_maximized_window_on_mouse_in test to use Eventually matcher.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed test_menus_dont_show_for_maximized_window_on_mouse_out test.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Cleaned up test_menus_show_for_restored_window_on_mouse_in test.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Cleaned up test_menus_dont_show_for_restored_window_on_mouse_out.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Cleaned up test_menus_dont_show_if_a_new_application_window_is_opened test.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	test_menus_shows_when_new_application_is_opened uses Eventually matcher.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	test_menus_are_not_shown_if_the_application_has_no_menus test now uses the Eventually matcher.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Converted the test_menus_are_added_on_new_application test to use the Eventually matcher.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Converted the test_hovering_indicators_open_menus test to use the Eventually matcher.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Split the test_menus_show_for_maximized_window_on_mouse_in test into four tests, and converted them all to use the Eventually matcher.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Split the test_only_menus_show_for_restored_window_on_mouse_in test into four smaller ones, and converted them all to use the Eventually matcher.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	CLeaned up the test_window_buttons_show_when_holding_show_menu_key test.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Converted the test_minimize_button_disabled_for_non_minimizable_windows test to use the Eventually matcher.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Converted the test_window_buttons_maximization_buttons_works_for_dash test to use the Eventually matcher, and added a bunch of comments to help explain it to other people. I don't have the patience to split it apart right now.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Split dash minimize button test into two smaller tests that both use the Eventually matcher.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	cleaned up the test_window_buttons_close_button_works_for_dash test.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed the test_hud_maximize_button_does_not_change_dash_form_factor test, and several copy and paste errors in comments.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Split a test into two, and made both use the Eventually matcher.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Split the test_minimize_button_disabled_for_hud test into two, and made both use the Eventually matcher.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Cleaned up test_window_buttons_close_button_works_for_hud test.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	test_window_buttons_unmaximize_follows_fitts_law test now uses Eventually matcher.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Cleaned up test_window_buttons_unmaximize_button_works_for_window test.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	CLeaned up test_window_buttons_minimize_follows_fitts_law test.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Cleaned up test_window_buttons_close_button_works_for_window test.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Cleaned up test_window_buttons_close_follows_fitts_law test.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	test_window_buttons_close_button_works_for_window uses Eventually matcher, no longer uses a bamf interface that's died, and works correctly on multi-monitor setups.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Cleanup test_window_buttons_cancel test to use Eventually matcher and work around a bug in the panel.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed test_window_buttons_update_visual_state test to use Eventually matcher, and changed the hud emulator so closing the hud is always done with the Escape key, to avoid race conditions between closing the hud with the mouse and with the keyboard, which was causing this test to fail occaisonally.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	test_window_buttons_show_with_hud test uses Eventually matcher and custom assertion method.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	test_window_buttons_show_with_dash test cleaned up. uses eventually matcher, and fixed custom window button assertion method to be more flexible.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added an EVentually to test_window_buttons_dont_show_on_empty_desktop test.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Don't need to sleep in the test_window_buttons_dont_show_for_restored_window_with_mouse_in_panel test thanks to the eventually matcher.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Don't need to sleep in test_window_buttons_dont_show_for_maximized_window_on_mouse_out test thanks to eventually matcher.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	test_window_buttons_show_for_maximized_window_on_mouse_in uses Eventually matcher and custom assert method.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Split the test_window_buttons_dont_show_for_restored_window test into two smaller tests, and made both use the Eventually matcher.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	test_window_buttons_dont_show_on_empty_desktop uses eventually matcher, and sleeps longer before checking window buttons.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	test_panel_title_updates_on_maximized_window_title_changes now uses Eventually matcher.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Split a panel test into two tests and made both tests use the Eventually matcher.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	test_panel_title_with_maximized_application uses Eventually matcher.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	test_panel_title_with_restored_application uses Eventually matcher and is more explicit.
+
+2012-07-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	test_panel_title_on_empty_desktop uses Eventually matcher.
+
+2012-07-06  timo.jyrinki@canonical.com
+
+	Fix building on ARM without OpenGL (only EGL + OpenGL ES). A successful build also needed the -fPIC addition for arm.. Fixes: . Approved by Sam Spilsbury, jenkins.
+
+2012-07-06  timo.jyrinki@canonical.com
+
+	Move the check to the top-level CMakeLists.txt
+
+2012-07-06  timo.jyrinki@canonical.com
+
+	Merge trunk.
+
+2012-07-06  timo.jyrinki@canonical.com
+
+	Use a more concise form for the ARM changes.
+
+2012-06-21  timo.jyrinki@canonical.com
+
+	Fix building on ARM without OpenGL (only EGL + OpenGL ES). A successful build also needed the -fPIC addition for arm.
+
+2012-07-06  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Fixes Alt+F1 mode while the HUD is open.. Fixes: https://bugs.launchpad.net/bugs/1020808. Approved by Łukasz Zemczak, Thomi Richards.
+
+2012-07-05  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixes Alt+F1 problem with the Hud
+
+2012-07-06  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Ensure the unity shell gets drawn before (below) windows stacked above it,
+	like DnD icons (LP: #1021541). Fixes: https://bugs.launchpad.net/bugs/1021541. Approved by Łukasz Zemczak.
+
+2012-07-06  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Add manual test.
+
+2012-07-06  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Remove debug output
+
+2012-07-06  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	First prototype fix for LP: #1021541
+	Ensure windows stacked above the shell actually get rendered above the shell.
+
+2012-07-06  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Ensure the launcher gets redrawn during keynav mode (LP: #1021549)
+	. Fixes: https://bugs.launchpad.net/bugs/1021549. Approved by Łukasz Zemczak, Sam Spilsbury.
+
+2012-07-06  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Use a much nicer fix for LP: #1021549 which involves removing the workaround
+	for Nux bug LP: #1014610. This assumes everyone has upgraded to Nux 3.0 (!)
+
+2012-07-06  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Ensure the launcher gets redrawn during keynav mode (LP: #1021549)
+
+2012-07-06  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Revert fix for LP: #833727 for now. It either needs test cases or to be
+	replaced with a more generic fix that applies to all unityshell plugin
+	options. And I'd rather wait for the latter before writing tests for it.
+	. Fixes: https://bugs.launchpad.net/bugs/833727. Approved by .
+
+2012-07-06  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Revert fix for LP: #833727 for now. It either needs test cases or to be
+	replaced with a more generic fix that applies to all unityshell plugin
+	options. And I'd rather wait for the latter before writing tests for it.
+
+2012-07-03  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Stop Unity from redrawing the shell on every frame (ie. when it doesn't need
+	to). It had a severe impact on graphics performance. (LP: #988079)
+	
+	This especially improves OpenGL application performance and multi-monitor
+	desktop performance. Because unity was previously slowing down compiz
+	rendering by 20-40% for each monitor added to the system. This slowdown no
+	longer occurs as only damaged areas of the unity shell are repainted. Now
+	unity will not have any impact on compiz rendering performance for most
+	video frames.
+	
+	Coincidentally, this fixes a number of other bugs (linked).. Fixes: https://bugs.launchpad.net/bugs/734908, https://bugs.launchpad.net/bugs/874619, https://bugs.launchpad.net/bugs/886605, https://bugs.launchpad.net/bugs/967112, https://bugs.launchpad.net/bugs/988079, https://bugs.launchpad.net/bugs/992516, https://bugs.launchpad.net/bugs/1016430. Approved by Tim Penhey, Sam Spilsbury, jenkins.
+
+2012-06-27  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Remove debug code.
+
+2012-06-27  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Optimize boolean logic.
+
+2012-06-27  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Simplify and add comments.
+
+2012-06-27  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Generalized occlusion detection. Not just fullscreen windows can be over
+	the shell.
+
+2012-06-27  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Better variable naming.
+
+2012-06-27  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Rebase on latest lp:unity
+
+2012-06-26  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Honour force-paint-on-top. Even when the windows are not stacked correctly.
+	Incorrect stacking of the shell over fullscreen windows however is not
+	something to fix in this branch. I'm just making it look the same as it does
+	with trunk already.
+
+2012-06-26  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Occlusion detection, compiz-style. Removed shellIsHidden.
+	
+	I think this is a bit bigger, uglier and slower than shellIsHidden. But
+	more in line with the existing compiz occlusion code.
+
+2012-06-26  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Don't check BackgroundEffectHelper::HasDirtyHelpers for doShellRepaint.
+	It has nothing directly to do with shell rendering as smspillaz mentioned.
+
+2012-06-26  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Clean up comments
+
+2012-06-26  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Rebase on latest upstream lp:unity
+
+2012-06-25  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Remove debug output
+
+2012-06-25  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Simplify shellIsHidden() how smspillaz suggests.
+
+2012-06-25  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Use CompWindowStateHiddenMask as suggested by smspillaz.
+
+2012-06-25  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Rebase on latest lp:unity
+
+2012-06-22  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Fix style per Marco.
+
+2012-06-22  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Fix failure to redraw the shell on returning from full screen. This time
+	without breaking multi-monitor support.
+
+2012-06-22  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Revert r2445. It's causing multi-monitor redraw problems.
+
+2012-06-22  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Rebase on latest lp:unity
+
+2012-06-21  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Avoid potential crashes on startup. Just in case.
+
+2012-06-21  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	A more logical location for damaging BackgroundEffectHelper.
+
+2012-06-21  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Simplify and optimize damage propagation from GetDrawList.
+
+2012-06-21  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Fixed: Dash was not always redrawing in some cases (unless something was
+	redrawing behind it).
+
+2012-06-21  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Fix typo.
+
+2012-06-21  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Don't clear the draw list when doShellRepaint==false. Otherwise returning
+	from fullscreen the shell views will still think they're already queued
+	for drawing then they're not and will fail to redraw.
+	
+	The problem only happened when this branch was used with the fix for Nux
+	bug LP: #1014610.
+
+2012-06-21  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Style tweaks per Marco.
+
+2012-06-21  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Rebase on latest upstream lp:unity
+
+2012-06-20  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Remove unused variable REDRAW_IDLE.
+
+2012-06-20  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Rebase on latest lp:unity
+
+2012-06-19  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Remove debug code.
+
+2012-06-19  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Damage panels independently. This gives a significant performance boost with
+	multiple monitors since damaging one panel no longer triggers redraws of
+	all panels.
+
+2012-06-19  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Rebase on latest lp:unity
+
+2012-06-19  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Reintroduce some old code, which it turns out was a workaround for
+	Nux bug LP: #1014610. Now we're not dependent on the fix being released in
+	Nux.
+
+2012-06-19  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Rebase on latest upstream lp:unity
+
+2012-06-18  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Remove the almost pointless FastQueueDraw(). A correct fix for the pauses
+	and poor performance has been proposed for Nux --> LP: #1014610
+
+2012-06-18  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Slight improvement in avoiding DrawList floods, which are causing UI pauses.
+
+2012-06-18  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Faster startup. I think.
+
+2012-06-18  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Remove some dead damage code.
+
+2012-06-18  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Remove redundant damage call.
+
+2012-06-18  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Don't repaint the shell on outputs where the repaint region is empty.
+	Maybe the opengl plugin needs fixing. Not sure.
+
+2012-06-18  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Add debug code. Will need it again. It seems shellIsHidden() isn't working
+	perfectly. There are two buggy cases:
+	
+	1. Two monitors and fullscreen video on one monitor --> results in shell
+	repaints far too often. Even though the shell on the monitor with the
+	video isn't visible.
+	
+	2. Again, a fullscreen window on one monitor. Now if you focus any window
+	on the other monitor, the shell will overdraw the fullscreen window
+	on the second. Not sure if this is a new bug though... ?
+
+2012-06-18  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Fixed damage feedback causing high CPU, observed with >1 monitors.
+
+2012-06-18  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Revert previous commit. It causes redraw regressions.
+
+2012-06-18  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Fixed feedback loop causing constant CPU usage with multiple monitors.
+
+2012-06-18  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Move ClearDrawList() to donePaint() as per smspillaz' suggestion. Don't see
+	any difference myself.
+
+2012-06-18  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Simplify.
+
+2012-06-18  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Shrink the diff.
+
+2012-06-18  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Rebase on latest lp:unity
+
+2012-06-15  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Detect when a fullscreen window is obscuring the shell and avoid wasting
+	GPU and CPU cycles on redrawing the shell. Very important for games and
+	benchmarks.
+
+2012-06-15  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Rebase on latest upstream lp:unity
+
+2012-06-14  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Rebase on latest upstream lp:unity and fix a conflict.
+
+2012-06-14  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Remove unnecessary launcher redraw
+
+2012-06-14  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Finally fixed all tooltip and quicklist damage bugs ?!
+
+2012-06-14  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Finally tooltips render completely. Seems to cause a regression in quicklists
+	though.
+
+2012-06-14  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Use safer reference-counted pointers
+
+2012-06-14  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	More const, less copying.
+
+2012-06-14  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Much improved rendering of tooltips on top of Nux damage. Still not perfect.
+
+2012-06-14  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Merge in lp:~vanvugt/unity/fix-865006 because we will need the new function
+	UnityScreen::damageRegion soon.
+
+2012-06-14  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Report no tooltip when there is none.
+
+2012-06-14  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Finally, tooltips draw on top of compiz damage. However, still some problems
+	with not all of the tooltip being redrawn. Probably incomplete communication
+	of tooltips queued for drawing --> compiz damage.
+
+2012-06-14  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Ensure Quicklists always draw on top of any compiz damage below them.
+
+2012-06-13  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Simplified. We no longer need to force shell repainting on all full-screen
+	redraws, so the performance optimization will now also work for people who
+	have full screen redraws enabled.
+
+2012-06-13  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Rebase on upstream changes from lp:unity
+
+2012-06-13  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Rebase on latest upstream lp:unity
+
+2012-06-12  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Rebase on latest lp:unity and fix conflicts.
+
+2012-06-12  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Tidy up comments
+
+2012-06-12  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Add stub for redrawing tooltips damaged by other windows (compiz). Not
+	finished yet.
+
+2012-06-12  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Remove an old optimization which is now redundant and in fact harmful (it
+	seems to make performance worse now).
+
+2012-06-12  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Fixed almost all damage problems.
+
+2012-06-12  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Initial prototype.
+	
+	Don't redraw Unity shell on every frame; just when we need to. This solves
+	graphics application performance problems (LP: #988079).
+	
+	What's still broken:
+	- Windows damaging the launcher/panel when the launcer/panel are idle.
+	- Screen damage when unmaximizing the dash (changing from fullscreen dash
+	back to normal).
+
+2012-07-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IMTextEntry: updated to match the new interface of lp:~3v1n0/nux/text-entry-virtual-clipboard. Fixes: https://bugs.launchpad.net/bugs/1016354. Approved by Brandon Schaefer.
+
+2012-07-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IMTextEntry: updated to match the new interface of lp:~3v1n0/nux/text-entry-virtual-clipboard
+
+2012-07-03  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Close the overlay is a modifier key is pressed. Don't treat super+tab as a special case.. Fixes: https://bugs.launchpad.net/bugs/934062. Approved by Marco Trevisan (Treviño), jenkins.
+
+2012-07-02  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug 934062.
+
+2012-06-29  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Close the shortcut overlay if a key modifier has been pressed.
+
+2012-07-03  Didier Roche  <didier.roche@canonical.com>
+
+	libgnome-desktop is not needed anymore. Removing the dep check. Fixes: . Approved by Andrea Cimitan.
+
+2012-07-03  Didier Roche  <didier.roche@canonical.com>
+
+	remove gnome-desktop check, not needed anymore
+
+2012-07-03  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Using Nux API 3.0
+	* Deprecated nux-image. Fixes: . Approved by Łukasz Zemczak, Didier Roche, Tim Penhey.
+
+2012-07-03  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	One more dependency that needed changing to 3.0.
+
+2012-06-29  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fixed requirement for Nux 3.0
+
+2012-06-26  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Merged with Unity trunk.
+
+2012-05-25  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Deprecated nux-image. Files under NuxImage/ are now under NuxGraphics.
+	* Requires nux-3.0.
+
+2012-07-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSignal: rewrite using the variadic templates to generate multiple types
+	
+	Also, use std::shared_ptr and boost::noncopyable, plus add utility template function to the Manager to add signals without initialization.. Fixes: . Approved by jenkins, Tim Penhey.
+
+2012-07-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSignal: properly use defined to check __GNUC__
+
+2012-07-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSignal: fix copyright dates
+
+2012-07-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSignal: check for invalid __GNUC__ too
+
+2012-07-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSignal, Manager: add utility template function to add signals without initialization
+
+2012-07-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_glib_signals: update against the new API
+
+2012-07-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSignal: rewrite using the variadic templates to generate multiple types
+	
+	Also, use std::shared_ptr and boost::noncopyable
+
+2012-07-03  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Triggering any quicklist item now closes the dash, if open.. Fixes: https://bugs.launchpad.net/bugs/937338. Approved by Marco Trevisan (Treviño).
+
+2012-07-02  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Check if item is valid also
+
+2012-07-02  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Moved safety check
+
+2012-07-01  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Changed to use QuicklistMenuItem
+
+2012-06-29  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Changed into function
+
+2012-06-29  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* merged trunk
+
+2012-06-29  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* When any quicklist item is triggered it will close the dash.
+
+2012-07-02  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed panel and quicklist autopilot tests.. Fixes: . Approved by Christopher Lee.
+
+2012-07-02  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed broken panel test.
+
+2012-07-02  Thomi Richards  <thomi.richards@canonical.com>
+
+	FIxed the quicklist tests.
+
+2012-07-02  Thomi Richards  <thomi.richards@canonical.com>
+
+	quicklist tests now open the quicklist correctly.
+
+2012-07-02  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed unused import
+
+2012-07-01  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed two failing dash autopilot tests.. Fixes: . Approved by Christopher Lee.
+
+2012-07-02  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed naming issue from code review.
+
+2012-07-02  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged previous test fix branch and frixed two failing dash tests.
+
+2012-07-01  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix broken Hud autopilot tests.. Fixes: . Approved by Christopher Lee, jenkins.
+
+2012-06-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed bad import statement.
+
+2012-06-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged code that contains the updated autopilot dbus code.
+
+2012-06-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged prerequisite branch to get wildcard support.
+
+2012-06-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed panel minimise window button test.
+
+2012-06-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix hud searchbar and icon not being found.
+
+2012-06-29  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix a crash in compizminimizedwindowhandler.. Fixes: https://bugs.launchpad.net/bugs/851982. Approved by Marco Trevisan (Treviño), jenkins.
+
+2012-06-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug 851982.
+
+2012-06-29  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix hud expand animation.. Fixes: https://bugs.launchpad.net/bugs/932531. Approved by Marco Trevisan (Treviño), Brandon Schaefer, jenkins.
+
+2012-06-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug 932531.
+
+2012-06-29  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Alt+F4 closes the hud. Fixes: https://bugs.launchpad.net/bugs/1019440. Approved by Marco Trevisan (Treviño).
+
+2012-06-29  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Alt+F4 closes the hud
+
+2012-06-29  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Alt+F1 now closes the dash when activated.. Fixes: https://bugs.launchpad.net/bugs/919209. Approved by Marco Trevisan (Treviño).
+
+2012-06-29  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	*merged trunk
+
+2012-06-29  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Re-enables activating Alt+F1 mode while the Dash is open.
+
+2012-06-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PluginAdapterCompiz: ignore offscreen windows when looking for the top one. Fixes: https://bugs.launchpad.net/bugs/996604. Approved by jenkins, Brandon Schaefer.
+
+2012-06-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_icon_behavior: add the scale test and fix runtime error
+
+2012-06-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PluginAdapterCompiz: ignore offscreen windows when looking for the top one
+
+2012-06-29  Didier Roche  <didier.roche@canonical.com>
+
+	Fix a crash when a GError exception is triggered. Fixes: https://bugs.launchpad.net/bugs/778470. Approved by Sam Spilsbury, jenkins.
+
+2012-06-28  Didier Roche  <didier.roche@canonical.com>
+
+	import glib for handling the GError (LP: #778470)
+
+2012-06-29  Didier Roche  <didier.roche@canonical.com>
+
+	Remove migration configuration tool from unity as we don't support those upgrade paths anymore.. Fixes: . Approved by jenkins.
+
+2012-06-25  Didier Roche  <didier.roche@canonical.com>
+
+	remove favorite-migration tool, not needed anymore
+
+2012-06-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	This branch updates unity to conform to the new Autopilot DBus wire protocol.. Fixes: . Approved by Christopher Lee, jenkins.
+
+2012-06-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	thereifixedit.
+
+2012-06-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Trying things to get new DBus protocol to work
+
+2012-06-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Add wildcard support (and tests) for DBus XPath query matching.
+
+2012-06-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Don't introspect recursively. Instead, send child names only.
+
+2012-06-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Modified unity test suite to work with the new autopilot DBus specification.
+
+2012-06-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Unity logging interface given a better name.
+
+2012-06-28  Thomi Richards  <thomi.richards@canonical.com>
+
+	Unity debug dbus interface now split into two DBus interfaces - the autopilot one and the debug logging one.
+
+2012-06-27  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Condensed some code in for saving input focus and focusing a new window in unityshell.cpp. Fixes: . Approved by Andrea Azzarone.
+
+2012-06-27  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* remove old function
+
+2012-06-26  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Condense saving input, then focusing window function. It is used twice
+
+2012-06-27  Christopher Lee  <chris.lee@canonical.com>
+
+	Hud test now checks query result before hitting enter.. Fixes: . Approved by Thomi Richards, jenkins.
+
+2012-06-28  Christopher Lee  <chris.lee@canonical.com>
+
+	Corrected hud_selected_button to return selected not first button
+
+2012-06-27  Christopher Lee  <chris.lee@canonical.com>
+
+	Merge trunk
+
+2012-06-27  Christopher Lee  <chris.lee@canonical.com>
+
+	Cleaned up 'selected hud button' usage
+
+2012-06-27  Christopher Lee  <chris.lee@canonical.com>
+
+	Updated test so it checks the actual hud query result before hitting enter
+
+2012-06-27  Christopher Lee  <chris.lee@canonical.com>
+
+	Merge hud button introspection
+
+2012-06-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use the "Range-based for" feature in QuicklistView.cpp. Fixes: . Approved by Marco Trevisan (Treviño), jenkins.
+
+2012-06-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use c++11 for.
+
+2012-06-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashView: filter out the unprintable keys when focusing the search bar
+	
+	The search bar can't be focused when invalid keys (such as shift, ctrl, F1...) are pressed.. Fixes: https://bugs.launchpad.net/bugs/931393. Approved by Andrea Azzarone, jenkins.
+
+2012-06-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	KeyboardUtil tests, re-added the above key symbol tests
+
+2012-06-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	KeyboardUtil: IsMoveKeySymbol, use better variable name
+
+2012-06-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	KeyboardUtil: use gdk_keyval_to_unicode instead of raw checking
+
+2012-06-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashView: use both IsPrintableKeySymbol and IsMoveKeySymbol to check search key
+
+2012-06-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	KeyboardUtil: add IsMoveKeySymbol, change IsPrintableKeySymbol behavior
+	
+	IsMoveKeySymbol is used to check move keys, IsPrintableKeySymbol to check
+	if the symbol can modify the printed text
+	
+	Tests updated
+
+2012-06-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests, test_keyboard_util: added test for KeyboardUtil::IsPrintableKeySymbol
+
+2012-06-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	KeyboardUtil: move to unity-shared and add IsPrintableKeySymbol() method
+
+2012-06-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashView: filter out the unprintable keys when focusing the search bar
+	
+	The search bar can't be focused when invalid keys (such as shift, ctrl
+	F1...) are pressed.
+
+2012-06-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix build failure using gcc 4.7. Fixes: . Approved by Łukasz Zemczak, jenkins.
+
+2012-06-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Don't use class members in lamda capture list.
+
+2012-06-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Set a min/max width for the hudbutton to avoid layout issues.. Fixes: https://bugs.launchpad.net/bugs/1016239. Approved by Marco Trevisan (Treviño), jenkins.
+
+2012-06-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug #1016239.
+
+2012-06-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix a test failure.. Fixes: . Approved by Didier Roche.
+
+2012-06-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add a timeout just to be sure that the hud has been shown.
+
+2012-06-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove dead code in QuiclistView.cpp. Fixes: . Approved by Marco Trevisan (Treviño), jenkins.
+
+2012-06-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove _default_item_layout and _default_item_list.
+
+2012-06-26  Christopher Lee  <chris.lee@canonical.com>
+
+	Added introspection for HudButtons (hud query results). Fixes: . Approved by jenkins, Thomi Richards.
+
+2012-06-27  Christopher Lee  <chris.lee@canonical.com>
+
+	Moved access to hud_buttons a little and better escaping for labels
+
+2012-06-27  Christopher Lee  <chris.lee@canonical.com>
+
+	Added help property for access to emulators hudbuttons
+
+2012-06-27  Christopher Lee  <chris.lee@canonical.com>
+
+	Added introspection for HudButtons (hud query results)
+
+2012-06-26  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	The dash will now open when invoked while in spread/scale mode.. Fixes: https://bugs.launchpad.net/bugs/944033. Approved by Marco Trevisan (Treviño).
+
+2012-06-26  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Initialize...never forget to do that!
+
+2012-06-26  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Added AP test for the dash opening in spread mode (lens, command, and home)
+
+2012-06-26  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Scale will now exit when you invoke the dash in anyway
+
+2012-06-25  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Fixes closing the shurnk Hud when clicking outside it's geometry.. Fixes: https://bugs.launchpad.net/bugs/962651. Approved by Thomi Richards, Gord Allott.
+
+2012-06-25  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* conflict for some reason...
+
+2012-06-25  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Missed removing some default values
+
+2012-06-25  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Copy the entire content_geo now
+	* Fixed the ap test
+
+2012-06-25  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	The switcher now focuses it's own window, instead of leaving it to the current one. Now Alt+F4 does not work while the switcher is active.. Fixes: https://bugs.launchpad.net/bugs/926406. Approved by Andrea Azzarone, Thomi Richards.
+
+2012-06-25  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* minor changes
+
+2012-06-25  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Update with a sleep so the window has time to close on slower machines.
+
+2012-06-23  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixes a failed AP this branch would cause
+	* Added an ap test to show alt+f4 is disabled
+
+2012-06-22  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* merged to another branch...removed wrong rev
+
+2012-06-22  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Switcher now focuses its own window so other events cannot happen behind it,
+	such as alt+f4.
+
+2012-06-22  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixes closing the hud by clicking outside its geo when shrunk
+
+2012-06-25  Thomi Richards  <thomi.richards@canonical.com>
+
+	Remove several ugly bits in the autopilot tests since we can now use the new Eventually matcher callable support.. Fixes: . Approved by Christopher Lee, jenkins.
+
+2012-06-25  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed a few other places with the same issues.
+
+2012-06-25  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed another place.
+
+2012-06-25  Thomi Richards  <thomi.richards@canonical.com>
+
+	Seems to work...
+
+2012-06-25  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed an autopilot test that was failing.. Fixes: . Approved by Christopher Lee.
+
+2012-06-25  Thomi Richards  <thomi.richards@canonical.com>
+
+	Use new autopilot patch_environment feature, instead of doing it ourself (badly).
+
+2012-06-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Made it easier to select an icon in the launcher using the keyboard controls from within an autopilot test.. Fixes: . Approved by Christopher Lee.
+
+2012-06-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Moved assertNumberWins custom assertion up the inheritance tree, and fixed a few places where we were being particularly stupid about setLauncherHideMode.
+
+2012-06-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-06-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Updated more tests to use the new method.
+
+2012-06-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added kaybord_select_icon method, and used an existing test to make sure that it worked.
+
+2012-06-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Various code cleanups in the launcher tests.
+
+2012-06-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	Split the autopilot launcher tests into several smaller files.. Fixes: . Approved by Christopher Lee.
+
+2012-06-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	PEP8 fixes.
+
+2012-06-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Split the MASSIVE test_launcher file into a separate package that contains different files for each different class of tests. This will make it easier to hack on the autopilot tests without causing conflicts.
+
+2012-06-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	Extend the autopilot bad behavior tests.. Fixes: . Approved by Christopher Lee.
+
+2012-06-22  Thomi Richards  <thomi.richards@canonical.com>
+
+	Extended the bad behavior tests that get run at the end of each autopilot test.
+
+2012-06-21  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Removed activate_idle_ unique ptr to using the source manager already in launcher controller.. Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-06-21  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* minor fixes
+
+2012-06-21  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Changed from using UniqePtr to using the SourceManager
+
+2012-06-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	Cleaned up launcher autopilot tests.. Fixes: . Approved by Christopher Lee.
+
+2012-06-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed unused impoprts, prefer addCleanup to tearDown, and don't use setUp methods for things that are really part of the test.
+
+2012-06-21  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix launcher switcher tests.
+
+2012-06-20  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Documents and files now dragged from the Dash to the Launcher into an application will close the dash.. Fixes: https://bugs.launchpad.net/bugs/865168. Approved by Thomi Richards.
+
+2012-06-20  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* re-worded
+
+2012-06-20  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Not part of the design for the bug.
+
+2012-06-20  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Added manual test
+
+2012-06-20  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Only want to close the dash if the icon is new.
+
+2012-06-20  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Dash will close when an icon gets added to the launcher or a file is draged into another program.
+
+2012-06-20  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Lambda function was using an undefined variable, changed to pass by value now.. Fixes: . Approved by Tim Penhey.
+
+2012-06-20  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Moved the super call in TearDown to be below keynav cancel.
+
+2012-06-20  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* added an AP test
+
+2012-06-20  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Explict capture usage
+
+2012-06-20  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Need to pass by value not refrence in Lambda function.
+
+2012-06-20  Christopher Lee  <chris.lee@canonical.com>
+
+	Ensured that any test that changes workspaces returns to the original one at completion of the test.. Fixes: . Approved by Thomi Richards.
+
+2012-06-21  Christopher Lee  <chris.lee@canonical.com>
+
+	Added a couple more misbehaving tests (workspace switching)
+
+2012-06-20  Christopher Lee  <chris.lee@canonical.com>
+
+	Merge trunk
+
+2012-06-20  Christopher Lee  <chris.lee@canonical.com>
+
+	Fixed tests that didn't return to initial workspace
+
+2012-06-20  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Fixes focus problem when entering expo mode from KeyNav(Alt+F1).. Fixes: https://bugs.launchpad.net/bugs/962408. Approved by Thomi Richards, Jason Smith.
+
+2012-06-20  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Added another ap test for using Esc to exit expo mode
+
+2012-06-20  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Added missing ap info
+
+2012-06-20  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* ap test added
+
+2012-06-20  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixes races condition created by ubus messages.
+
+2012-06-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove internal partitions after they have been unmounted.. Fixes: https://bugs.launchpad.net/bugs/994163. Approved by Marco Trevisan (Treviño).
+
+2012-06-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix manual test title.
+
+2012-06-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix.
+
+2012-06-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add manual test.
+
+2012-06-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug 994163.
+
+2012-06-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IMTextEntry: ignore invalid keypress when using modifiers keys.
+	
+	All the key pressure when pressing the Alt or Super key should be ignored.
+	When pressing Ctrl key we should only allow: A key, arrow keys, Backspace or Delete keys and Home or Delete keys.. Fixes: https://bugs.launchpad.net/bugs/1013751. Approved by Andrea Azzarone.
+
+2012-06-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests: added test_im_text_entry to check IMTextEntry values
+
+2012-06-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IMTextEntry: pass a nux::Event to TryHandleSpecial
+
+2012-06-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IMTextEntry: ignore invalid keypress when using modifiers keys.
+	
+	All the key pressure when pressing the Alt or Super key should be ignored.
+	When pressing Ctrl key we should only allow: A key, arrow keys, Backspace
+	or Delete keys and Home or Delete keys.
+
+2012-06-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashController / HudController: hide the overlay when the spread is initiated. Fixes: https://bugs.launchpad.net/bugs/870284. Approved by Tim Penhey.
+
+2012-06-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_dash: fix spacing
+
+2012-06-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests, test-gtest: remove the unneeded WindowManager calls into tests
+
+2012-06-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_dash: add test to check if it closes on spread
+
+2012-06-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_hud: add test to check if HUD closes on spread
+
+2012-06-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests, test_main: initialize the Plugin adapter, and use the standalone version
+
+2012-06-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudController: hide the HUD when the spread is initiated
+
+2012-06-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashController: hide the dash when spread is initiated
+
+2012-06-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-06-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged icon-loader-cleanup into timeout-seconds.
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged icon-loader-cleanup into timeout-seconds.
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged icon-loader-cleanup into timeout-seconds.
+
+2012-06-20  Thomi Richards  <thomi.richards@canonical.com>
+
+	Adds logging to the unity / compiz plugin adapter class, and code in autopilot to collect those logs.. Fixes: . Approved by Christopher Lee.
+
+2012-06-20  Thomi Richards  <thomi.richards@canonical.com>
+
+	Make log messages easier to tell apart.
+
+2012-06-20  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added logging to the unity/compiz plugin class, and set all tests to attach those logs to failed AP tests.
+
+2012-06-20  Thomi Richards  <thomi.richards@canonical.com>
+
+	Autopilot tests once again attach the unity log to the test results.. Fixes: . Approved by Christopher Lee.
+
+2012-06-20  Thomi Richards  <thomi.richards@canonical.com>
+
+	Re-enable the collection of unity logs.
+
+2012-06-19  Thomi Richards  <thomi.richards@canonical.com>
+
+	Autopilot tests that leave the system in a bad state will now fail with a descriptive message.. Fixes: . Approved by Tim Penhey.
+
+2012-06-19  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixes from code review.
+
+2012-06-19  Thomi Richards  <thomi.richards@canonical.com>
+
+	Whitespace fixes.
+
+2012-06-19  Thomi Richards  <thomi.richards@canonical.com>
+
+	Tests that are not well bahaved will now fail.
+
+2012-06-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests, glib_source: be more permissive on TestGLibTimeoutSeconds.MultipleShotsRun. Fixes: . Approved by Michal Hruby.
+
+2012-06-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests, glib_source: be more permissive on TestGLibTimeoutSeconds.MultipleShotsRun
+
+2012-06-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added LauncherEntryRemote to the unity introspection tree.. Fixes: . Approved by Tim Penhey.
+
+2012-06-19  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added python emulator support.
+
+2012-06-19  Thomi Richards  <thomi.richards@canonical.com>
+
+	LauncherEntry inbstances are now introspectable.
+
+2012-06-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added extra logging to the autopilot window manager emulator.. Fixes: . Approved by Christopher Lee.
+
+2012-06-19  Thomi Richards  <thomi.richards@canonical.com>
+
+	More logging for show desktop functions in window manager emulator.
+
+2012-06-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Updated HACKING file to point to the new autopilot documentation.. Fixes: . Approved by Tim Penhey.
+
+2012-06-19  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added a separate README file for autopilot-running instructions, updated the autopilot shell script, and the HACKING file.
+
+2012-06-19  Thomi Richards  <thomi.richards@canonical.com>
+
+	Updated instructions for autopilot migration.
+
+2012-06-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix a timing issue in a launcher autopilot test.. Fixes: . Approved by Christopher Lee.
+
+2012-06-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed spelling mistake.
+
+2012-06-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed test.
+
+2012-06-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed the test_launcher_keynav_alt_tab_quits autopilot test.. Fixes: . Approved by Christopher Lee.
+
+2012-06-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed the LauncherKeyNavTests.test_launcher_keynav_alt_tab_quits autopilot test. We can't use the emulator, since we expect the initiate action to fail.
+
+2012-06-17  Christopher Lee  <chris.lee@canonical.com>
+
+	Use calculator rather than gedit for an autopilot test since gedit has some odd new-instance behavior.. Fixes: . Approved by Thomi Richards.
+
+2012-06-18  Christopher Lee  <chris.lee@canonical.com>
+
+	Use calculator not gedit for this test as gedit was just opening another tab (designed like this?)
+
+2012-06-15  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Give Unity's input windows more unique names, so we can do matching on them
+	more reliably. (LP: #1010338)
+	. Fixes: https://bugs.launchpad.net/bugs/1010338. Approved by Sam Spilsbury, Andrea Azzarone.
+
+2012-06-15  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Rebase on latest lp:unity and fix a conflict.
+
+2012-06-12  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Merge upstream lp:unity changes. Fix a conflict.
+
+2012-06-08  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Give Unity's input windows more unique names, so we can do matching on them
+	more reliably. (LP: #1010338)
+
+2012-06-15  Thomi Richards  <thomi.richards@canonical.com>
+
+	Update method signature in UnityNETWorkareaRegionWindow::resizeNotify so this method is called when the base class resizeNotify method is called.. Fixes: https://bugs.launchpad.net/bugs/1010303. Approved by Tim Penhey.
+
+2012-06-12  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed a place where we'd changed a method signiture incorrectly, so it wasn't being called.
+
+2012-06-15  Gord Allott  <gord.allott@canonical.com>
+
+	Removes old, unused, preview codebase. Fixes: . Approved by Mikkel Kamstrup Erlandsen.
+
+2012-06-15  Gord Allott  <gord.allott@canonical.com>
+
+	just removes the old preview codebase, not relevant for the current dash and was never used
+
+2012-06-15  Andrea Azzarone  <azzaronea@gmail.com>
+
+	The dash maximise button changes location if clicked just after the login.. Fixes: https://bugs.launchpad.net/bugs/987674. Approved by Marco Trevisan (Treviño).
+
+2012-06-14  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug 987674.
+
+2012-06-14  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix inconsistent hover/highlight/clickable area behavior.. Fixes: https://bugs.launchpad.net/bugs/979686. Approved by Thomi Richards.
+
+2012-06-11  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes.
+
+2012-06-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove space.
+
+2012-06-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add AP test.
+
+2012-06-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug 979686.
+
+2012-06-14  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix compilation problems on quantal.. Fixes: https://bugs.launchpad.net/bugs/1012000. Approved by Andrea Azzarone, Sam Spilsbury.
+
+2012-06-12  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove format menuitem.
+
+2012-06-12  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix compilation errors.
+
+2012-06-14  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Fixed: The panel blur was not always updating when something behind it
+	changed (LP: #865006)
+	
+	The reason for this bug was because we were tracking damage from the
+	XDamage extension. However XDamage only provides a subset of the total
+	damage applied to the compiz screen. For example, redrawing/moving window
+	decorations does not necessarily generate any XDamage. Nor do OpenGL
+	operations from compiz plugins.. Fixes: https://bugs.launchpad.net/bugs/865006. Approved by Sam Spilsbury.
+
+2012-06-14  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Fix style - no whitespace in: function (calls);
+
+2012-06-14  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Avoid potential future feedback loops. And const-ify with references where
+	appropriate.
+
+2012-06-13  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Monitor real damage regions rather than assuming glPaintOutput will always
+	have the superset of damage.
+
+2012-06-13  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Rebase on latest upstream lp:unity
+
+2012-06-13  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Fixed: The panel blur was not always updating when something behind it
+	changed (LP: #865006)
+	
+	The reason for this bug was because we were tracking damage from the
+	XDamage extension. However XDamage only provides a subset of the total
+	damage applied to the compiz screen. For example, redrawing/moving window
+	decorations does not necessarily generate any XDamage. Nor do OpenGL
+	operations from compiz plugins.
+	
+	Instead, look at the total damage region passed to glPaintOutput. That will
+	always contain the real damage, which is a superset of the XDamage. This
+	method should also be faster because it's only executed once per frame. The
+	old XDamage code could easily be called thousands of times per frame.
+
+2012-06-13  Tim Penhey  <tim.penhey@canonical.com>
+
+	Clean up StaticCairoText and make sure all members are initialised.. Fixes: . Approved by Thomi Richards.
+
+2012-06-13  Tim Penhey  <tim.penhey@canonical.com>
+
+	Update header.
+
+2012-06-13  Tim Penhey  <tim.penhey@canonical.com>
+
+	Refactor the StaticCairoText.
+
+2012-06-13  Tim Penhey  <tim.penhey@canonical.com>
+
+	Make sure the hud::Controller deletes the window when destroyed.. Fixes: . Approved by Thomi Richards.
+
+2012-06-14  Tim Penhey  <tim.penhey@canonical.com>
+
+	Have the smart pointer own the reference.
+
+2012-06-13  Albert Astals  <albert.astals@canonical.com>
+
+	Launcher: Fix dragging to the last position when out of the launcher. Fixes: https://bugs.launchpad.net/bugs/971421. Approved by Thomi Richards.
+
+2012-06-11  Christopher Lee  <chris.lee@canonical.com>
+
+	Merge in lp:~aacid/unity/fix_draging_last_position_out_of_launcher
+
+2012-06-05  Albert Astals  <albert.astals@canonical.com>
+
+	Fix dragging to the last position when out of the launcher 
+
+2012-06-11  Christopher Lee  <chris.lee@canonical.com>
+
+	Added test for dragging of icons in the launcher
+	
+	Added icon drag functionality in launcher emulator
+	Added 2 tests for dragging
+
+2012-06-08  Christopher Lee  <veebers@gmail.com>
+
+	Merge trunk
+
+2012-06-13  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Don't ignore the panel opacity setting on startup (LP: #833727)
+	. Fixes: https://bugs.launchpad.net/bugs/833727. Approved by Tim Penhey.
+
+2012-06-13  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Don't ignore the panel opacity setting on startup (LP: #833727)
+
+2012-06-13  Christopher Lee  <chris.lee@canonical.com>
+
+	Removed bamf daemon killing/restarting tests (check no double-ups on launcher) and made it a manual test.. Fixes: . Approved by Tim Penhey, Thomi Richards.
+
+2012-06-13  Christopher Lee  <chris.lee@canonical.com>
+
+	Remove Bamf Reports (killing bamfdaemon) && made it a manual test.
+
+2012-06-12  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix HUD flickering when showing up after closing previous search. Included with respective unit test and required changes.. Fixes: https://bugs.launchpad.net/bugs/1011507. Approved by Łukasz Zemczak.
+
+2012-06-12  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-06-11  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-06-09  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Call hud::view::ResetToDefault when at the end of the fade-out animation.
+
+2012-06-05  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Reset the hud view when it's about to hide.
+
+2012-06-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSource: added glib::TimeoutSeconds to use g_timeout_add_seconds directly
+	
+	Code using seconds-timeouts ported to the new class.. Fixes: . Approved by Michal Hruby.
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Use glib::TimeoutSeconds when we can
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged icon-loader-cleanup into timeout-seconds.
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged icon-loader-cleanup into timeout-seconds.
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests, glib::Source: added tests for glib::TimeoutSeconds
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSource: added glib::TimeoutSeconds to use g_timeout_add_seconds directly
+
+2012-06-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconLoader: updated to be more safe using smart pointers and glib wrappers.
+	
+	Using glib::Object<GdkPixbuf> to handle the loaded pixbufs and shared_ptr for the IconLoaderTask instances.
+	Moved some methods into the IconLoaderTask.. Fixes: . Approved by Tim Penhey, Michal Hruby.
+
+2012-06-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconLoader: update the cache sooner (in IconLoaderTask::LoadIconComplete)
+
+2012-06-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconLoader: Reverting previous commit
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconLoader: remove the Calesce timeout, do all in task LoadIconComplete
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconLoader: fix possible assigment from a const& to nullptr...
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconLoader: setting back functions to global namespace prefix
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged launcher-cleanup into icon-loader-cleanup.
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource-manager-rewrite into launcher-cleanup.
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource-rewrite into gsource-manager-rewrite.
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged launcher-cleanup into icon-loader-cleanup.
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource-manager-rewrite into launcher-cleanup.
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ResultRendererTile: use more less vertical space for IconLoaded function
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged launcher-cleanup into icon-loader-cleanup.
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged launcher-cleanup into icon-loader-cleanup.
+
+2012-06-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged launcher-cleanup into icon-loader-cleanup.
+
+2012-06-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged launcher-cleanup into icon-loader-cleanup.
+
+2012-06-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged launcher-cleanup into icon-loader-cleanup.
+
+2012-06-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconLoader: connect to theme-changed signal and clear the pixbuf cache on theme changed
+
+2012-06-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconLoader(Task): use the impl defined theme instead of passing a new one
+
+2012-06-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconLoader: move the task handling methods into IconLoaderTask struct
+
+2012-06-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconLoader: invoke slot doesn't really need a parameter
+
+2012-06-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconLoader: use shared_ptr to handle IconLoaderTask's
+
+2012-06-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconLoader: use glib::Object<GdkPixbuf> in callback slot too
+	
+	Using classes updated, using nux::Size in IconTexture too.
+
+2012-06-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconLoader: use glib::Object to store the pixbuf into IconLoaderTask
+	
+	Also add a destructor
+
+2012-06-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: some code cleanup, move the dbus server to the Controller.. Fixes: . Approved by Tim Penhey, Andrea Azzarone.
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource-manager-rewrite into launcher-cleanup.
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource-manager-rewrite into launcher-cleanup.
+
+2012-06-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: put return types in the same line of function definition
+
+2012-06-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with dependant branches
+
+2012-06-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource-manager-rewrite into launcher-cleanup.
+
+2012-06-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource-manager-rewrite into launcher-cleanup.
+
+2012-06-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource-manager-rewrite into launcher-cleanup.
+
+2012-06-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource-manager-rewrite into launcher-cleanup.
+
+2012-06-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: add a new SC icon on current launcher.
+
+2012-06-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SoftwareCenterLauncherIcon: don't reference the drag-window, the ptr will do it.
+
+2012-06-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: move the dbus-server to handle special call here
+	
+	It was pointless to add it to each Launcher.
+
+2012-06-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: use initialization list
+
+2012-06-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: use LauncherModel::Ptr
+
+2012-06-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Port the Unity source to use the glib::Source (Manager) utilities for idles and timeouts. Fixes: . Approved by Tim Penhey.
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherController, PanelMenuView: use std::make_shared to create sources
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with BamfLauncherIcon changes
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource-rewrite into gsource-manager-rewrite.
+
+2012-06-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: add DndTimeoutSetup() to unify the timeout creation
+
+2012-06-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Use constant strings to define glib::Source's names
+
+2012-06-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource-rewrite into gsource-manager-rewrite.
+
+2012-06-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Use std::make_shared to create Timeout and Idles whenever possible.
+
+2012-06-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource-rewrite into gsource-manager-rewrite.
+
+2012-06-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource-rewrite into gsource-manager-rewrite.
+
+2012-06-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: set the the visibility to false on closed signal
+
+2012-06-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: check for _bamf_app validity on move timeout
+
+2012-06-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherController: syntax cleanup
+
+2012-06-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource-rewrite into gsource-manager-rewrite.
+
+2012-06-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherController: remove timeouts when not needed anymore
+
+2012-06-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource-rewrite into gsource-manager-rewrite.
+
+2012-06-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: use glib::SourceManager to handle timeouts
+
+2012-06-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: use the LauncherIcon glib::SourceManager to handle timeouts and idles
+
+2012-06-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: don't try to set a g_object_qdata to null pointer
+
+2012-06-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: add protected glib::SourceManager and use it to handle timeouts
+
+2012-06-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource-rewrite into gsource-manager-rewrite.
+
+2012-06-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherModel: no need to use a queue, passing icon by value is enough!
+
+2012-05-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource-rewrite into gsource-manager-rewrite.
+
+2012-05-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherModel: use glib::Source to handle remove timeouts
+	
+	Prevents possible crashes too.
+
+2012-05-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource-rewrite into gsource-manager-rewrite.
+
+2012-05-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource-rewrite into gsource-manager-rewrite.
+
+2012-05-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelController: use nux::ObjectPtr to handle the windows
+
+2012-05-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherController: use glib::SourceManager
+	
+	Update tests
+
+2012-05-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ShortcutController: removed unneeded dtor
+
+2012-05-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource-rewrite into gsource-manager-rewrite.
+
+2012-05-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherController: use nux::ObjectPtr to handle the BaseWindow
+
+2012-05-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ShortcutController: use nux::ObjectPtr to handle the BaseWindow
+
+2012-05-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScren: use glib::SourceManager to handle timeouts and idles
+
+2012-05-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: use glib::Timeout
+
+2012-05-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: add missing destructor (empty) or it won't compile.
+
+2012-05-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: use glib::SourceManager
+
+2012-05-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: use unique_ptr for handling pimpl
+
+2012-05-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: use glib::SourceManager and smart pointers when really needed.
+	
+	Plus some extra code cleanup
+
+2012-06-12  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix a spot in the code where someone was using '&&' where they should have been using '&'.. Fixes: https://bugs.launchpad.net/bugs/1010307. Approved by Tim Penhey.
+
+2012-06-12  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix a spot in the code where the author obviously meant t o do a bitwise comparison, but used '&&' by mistake.
+
+2012-06-12  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Fix build failure with Nux 2.x. (LP: #1010348)
+	
+	Don't depend on Nux 3.x API changes until it becomes necessary.. Fixes: https://bugs.launchpad.net/bugs/1010348. Approved by Thomi Richards, Sam Spilsbury.
+
+2012-06-10  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Add tests. Fix edge-cases.
+
+2012-06-08  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Fix build failure with Nux 2.x. (LP: #1010348)
+	
+	Don't depend on Nux 3.x API changes until it becomes necessary.
+
+2012-06-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Port the Unity source to use the glib::Source utilities for idles and timeouts. Fixes: . Approved by Tim Penhey.
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSource: few documentation fixes
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource into gsource-rewrite.
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests, glib::Source: added tests for empty callbacks
+
+2012-06-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DBusIndicators: use NuxLogger
+
+2012-06-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Various code cleanups, to make Tim happy ;)
+
+2012-06-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests, glib::Source, added tests for removing sources on callbacks
+
+2012-06-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherHideMachine: put the "const" keyword where it shold be
+
+2012-06-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashController: removed redoundant SetOpacity
+
+2012-06-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudController: removed unneeded SetOpacity
+
+2012-06-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Overall: use glib::Source::UniquePtr.reset() instead of = nullptr
+
+2012-06-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityCore, Filter: use std::make_shared
+
+2012-06-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityCore, indicators: use std::shared_ptr instead of boost (and std::make_shared)
+
+2012-06-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DBusIndicators: pass entry_id by value in ShowEntry Idle
+
+2012-06-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource into gsource-rewrite.
+
+2012-06-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource into gsource-rewrite.
+
+2012-06-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource into gsource-rewrite.
+
+2012-06-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DBusIndicators: use glib::Idle for delayed calls
+
+2012-05-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconLoader: use std::unique_ptr
+
+2012-05-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconLoader: Use glib::Timeout
+
+2012-05-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ResultViewGrid: fix missing icons issue on expand
+
+2012-05-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconLoader: use glib::Idle
+
+2012-05-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource into gsource-rewrite.
+
+2012-05-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource into gsource-rewrite.
+
+2012-05-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: reverting last change, putting it into another branch
+
+2012-05-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: use glib::SourceManager and smart pointers when really needed.
+	
+	Plus some extra code cleanup
+
+2012-05-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: don't use Adopt for WindowButtons and PanelTitlebarGrabArea
+
+2012-05-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: always use the class' UBusManager
+
+2012-05-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource into gsource-rewrite.
+
+2012-05-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashController: use constant to define preload timeout length
+
+2012-05-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource into gsource-rewrite.
+
+2012-05-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DeviceLauncherSection: use glib::Idle, reorder members to avoid crashes on destruction
+
+2012-05-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherHideMachine: use glib::Idle and glib::Timeout, move into unity::launcher namespace
+	
+	And other C++ code cleanups
+
+2012-05-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ResultViewGrid: use glib::Idle and glib::Timeout
+
+2012-05-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherDragWindow: move also into unity::launcher namespace
+
+2012-05-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherDragWindow: use glib::Timeout, move into the unity namespace
+	
+	Plus some extra C++isms...
+
+2012-05-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PointerBarrier: use glib::Timeout and initialization list
+
+2012-05-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashView: use glib::Timeout 
+
+2012-05-22  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PlacesGroup: Use HIGH priority idle, as it was...
+
+2012-05-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelTray: use glib::Idle
+
+2012-05-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: Use nux::ObjectPtr to destroy the child items before the Animator
+
+2012-05-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Unity: make the sources to always destroy before other relevant objects
+
+2012-05-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SearchBar: use glib::Source timeouts and idles, and std::unique_ptr
+
+2012-05-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UScreen: use glib::Idle
+
+2012-05-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Decaymulator: use glib::Timeout
+
+2012-05-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherView: use ObjectPtr to handle the rounding_texture_ and the text_view.
+
+2012-05-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SwitcherView: move to glib::Idle
+
+2012-05-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherHoverMachine: use glib::Idle and move into the unity namespace
+
+2012-05-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelTitlebarGrabAreaView: move to glib::Timeout
+
+2012-05-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelView: use glib::Timeout to track the mouse position
+
+2012-05-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudController: use nux::ObjectPtr to handle the window
+
+2012-05-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashController: add glib::Timeout to ensure the dash on startup!
+
+2012-05-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashController: use ObjectPtr to wrap the Window
+
+2012-05-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DashController: use Animator to fade in/out the window instead of a simple timeout
+
+2012-05-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PlacesGroup: move to std::string
+
+2012-05-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PlacesGroup: move to glib::Idle and wrap pointers with std::unique_ptr or nux::ObjectPtr
+
+2012-05-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LensView: move to glib::Idle
+
+2012-05-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudView: move to glib::Idle
+
+2012-05-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FilesystemLenses: move to glib::Idle
+
+2012-05-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibDBusProxy: move to glib::Source
+
+2012-05-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DBusIndicators: use glib::Source::UniquePtr
+
+2012-05-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BGHash: optimize the class adding more const functions, remove unneeded dtor
+
+2012-05-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BGHash: remove all the unneeded code, we only have to monitor the Atom change right now.
+
+2012-05-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BGHash: move to glib::Object and UBusManager, avoid unneeded computation
+
+2012-05-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Animator, ShortcutController: use glib::Source::UniquePtr (fixes some crashes on startup)
+
+2012-05-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource into gsource-rewrite.
+
+2012-05-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityScreen: don't refresh the background color when it has not been changed!
+	
+	This saves a lot of unneded calls to the BGHash.RefreshColor() function, especially on itialization.
+
+2012-05-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudController: correctly initialize the animator start progress
+
+2012-05-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DBusIndicators: move to glib::Timeout
+
+2012-05-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged gsource into gsource-rewrite.
+
+2012-05-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudController: use unity Animator instead of timeout
+
+2012-05-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BGHash: connect only once to the animator signal
+
+2012-05-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ShortcutController: move to glib::Timeout
+
+2012-05-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BGHash: move to Animator instead of g_timeout
+
+2012-05-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Animator: move to glib::Timeout
+
+2012-06-08  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Remove dead code: gtkloader plugin
+	
+	gtkloader has never been used AFAIK. Instead, in Unity 4.x the GTK init
+	happened in compiz' main(). And in Unity 5.x, the GTK init happens in
+	unityshell.cpp: UnityPluginVTable::init(). gtkloader is not even mentioned
+	in the Unity compizconfig profile. It's dead code, and redundant too.
+	. Fixes: . Approved by Andrea Azzarone.
+
+2012-06-08  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Remove dead code: gtkloader plugin
+	
+	gtkloader has never been used AFAIK. Instead, in Unity 4.x the GTK init
+	happened in compiz' main(). And in Unity 5.x, the GTK init happens in
+	unityshell.cpp: UnityPluginVTable::init(). gtkloader is not even mentioned
+	in the Unity compizconfig profile. It's dead code, and redundant too.
+
+2012-06-08  Christopher Lee  <veebers@gmail.com>
+
+	Moving get_compiz_option from Unity AP emulator into Autopilot.. Fixes: . Approved by Thomi Richards.
+
+2012-06-08  Christopher Lee  <veebers@gmail.com>
+
+	Fixed import list to be coding standard compliant.
+
+2012-06-08  Christopher Lee  <veebers@gmail.com>
+
+	Removed 'get_comiz_option' functionality that should be/now is in Autopilot
+
+2012-06-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSource: wrapper for GSource, to handle GLib timeouts and Idle
+	
+	This is a wrapper for the GLib sources like idle and timeouts, it also includes a Manager to handle multiple sources at once.. Fixes: . Approved by Tim Penhey.
+
+2012-06-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-06-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSource: add CallBackData struct, since the DestroyCallback can be called later
+	
+	We add a new struct that is used to pass the Source pointer to the callbacks
+	since the DestroyCallback can be called even after that the wrapper
+	has been destroyed. This would cause a seg-fault.
+	
+	At this point the Manager doesn't need to check when we remove a source.
+
+2012-06-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSources: comments added. tests, glib::Source code cleanup
+
+2012-06-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSource: make Remove() methods to return booleans
+
+2012-06-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSource: no need to call again Remove in OnSourceRemoved or it will cause troubles
+
+2012-06-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests, glib source: added more running checks.
+
+2012-06-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSource, SourceManager: added utility function to remove source
+	
+	Plus, fixed some potential crashes caused by removing sources from
+	SourceManager when the Remove() method was called inside the callback
+	function. The callback return value should actually control this.
+
+2012-06-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSource: adding virtual destructor, using lexical cast and fix iterator
+
+2012-06-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-05-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests, test_glib_source: add some more tests for GetSource
+
+2012-05-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SourceManager: use std::map.find to remove a source
+
+2012-05-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSource: removing the virtual dtor, it's not needed here.
+	
+	Saving some overhead, we can just do everything at the base level.
+
+2012-05-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSource: added some basic documentation.
+
+2012-05-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-05-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests, test_glib_source: check adding duplicated sources to the SourceManager
+
+2012-05-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSource: don't allow to add the same sources two times to the SourceManager
+
+2012-05-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests, glib_source: add tests for SourceManager using nicks
+
+2012-05-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSource: reference the sources with std::string in SourceManager
+
+2012-05-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	glib::Source don't use inline sources...
+
+2012-05-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	glib::Source: use non-virtual Run method, but a general one.
+
+2012-05-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-05-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSource: add also unique_ptr typedef
+
+2012-05-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSource: include some sigc typedef needed to make the lambda functions to work with glib::Source
+
+2012-05-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests: added test_glib_source to test the new glib::Source classes
+	
+	Includes test for glib::Source, glib::Timeout, glib::Idle and glib::SourceManager
+
+2012-05-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Test utils: remove duplicated unneeded functions
+
+2012-05-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSource: wrapper for GSource, to handle GLib timeouts and Idle
+	
+	This is a wrapper for the GLib sources like idle and timeouts, it
+	also includes a Manager to handle multiple sources at once.
+
+2012-06-06  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Adds support for X-Unity-IconBackgroundColor in the .desktop file.. Fixes: . Approved by Thomi Richards, Marco Trevisan (Treviño).
+
+2012-06-06  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix.
+
+2012-06-06  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-06-01  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Replace the AP test with a unit test.
+
+2012-06-01  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-06-01  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix.
+
+2012-06-01  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes.
+
+2012-05-28  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add AP test.
+
+2012-05-28  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Make ...::BackgroundColor() const.
+
+2012-05-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes.
+
+2012-05-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes.
+
+2012-05-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-05-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use the new nux::Color ctor to create a color from the html notation.
+
+2012-05-23  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Adds another unit test.
+
+2012-05-23  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add unit test.
+
+2012-05-23  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-05-23  Andrea Azzarone  <azzaronea@gmail.com>
+
+	First draft for X-Unity-IconBackroundColor.
+
+2012-06-06  Jay Taoko  <jay.taoko@canonical.com>
+
+	Fixes Nux/Unity crash on Quantal.. Fixes: . Approved by Marco Trevisan (Treviño), Didier Roche, Łukasz Zemczak.
+
+2012-06-06  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Removed PanelIndicatorsView::QueueDraw().
+	* Incidentally fixes Unity crash on Quantal.
+
+2012-06-06  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Draw the result grid in proximity of the search entry.. Fixes: https://bugs.launchpad.net/bugs/1008603. Approved by Marco Trevisan (Treviño), Łukasz Zemczak.
+
+2012-06-06  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bottom padding.
+
+2012-06-04  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Don't draw the grid if there are no results.
+
+2012-06-04  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug 1008603.
+
+2012-06-06  Michal Hruby  <michal.mhr@gmail.com>
+
+	Disabling tests that got broken due to an API change in libunity.. Fixes: . Approved by Andrea Azzarone, Łukasz Zemczak.
+
+2012-06-06  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix test break with latest libunity
+
+2012-06-05  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	When dragging a non-application, do not saturate all icons automatically, but only those that are needed.
+	
+	Eliminates flickering before 'prelighting' the Launcher icons that can handle the current drag-and-drop (LP #863230).. Fixes: https://bugs.launchpad.net/bugs/863230. Approved by Jason Smith, Sam Spilsbury.
+
+2012-05-31  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Merging all changes made from the time when the fix was prepared.
+
+2012-05-09  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Merged the latest trunk changes, essentially fixing the segfault on startup.
+
+2012-05-08  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	When dragging a non-application, do not saturate all icons automatically, but only those that are needed.
+	
+	Eliminates flickering before 'prelighting' the Launcher icons that can handle the current drag-and-drop (LP #863230).
+
+2012-06-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix several switcher autopilot tests.. Fixes: . Approved by Christopher Lee.
+
+2012-06-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed an error in the switcher tests.
+
+2012-06-05  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix for bug #754565 - Shift+Click on a launcher icon should open a new instance of the application.. Fixes: . Approved by Tim Penhey, Christopher Lee.
+
+2012-06-01  Thomi Richards  <thomi.richards@canonical.com>
+
+	CLeaned up test a little bit.
+
+2012-06-01  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk (I think).
+
+2012-05-03  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added working autopilot test.
+
+2012-05-03  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-04-11  Miklos Juhasz  <juhasz.miklos.1@gmail.com>
+
+	[unityshell] Added key modifier/flags to the mouse events of launcher icons, and added logic for shift+click = new instance
+	
+	modified:
+	plugins/unityshell/src/AbstractLauncherIcon.h
+	- Added flags to the mouse events
+	
+	plugins/unityshell/src/Launcher.cpp
+	- Pass through key flags to launcher icons
+	
+	plugins/unityshell/src/LauncherIcon.cpp
+	- Logic added for shift click based on flag state
+	
+	plugins/unityshell/src/LauncherIcon.h
+	plugins/unityshell/src/SimpleLauncherIcon.cpp
+	plugins/unityshell/src/SimpleLauncherIcon.h
+	- Changed interfaces based on the AbstractLauncherIcon
+
+2012-06-05  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Don't show the switcher window during constructing the view. Wait for the ShowView timeout.. Fixes: https://bugs.launchpad.net/bugs/987156. Approved by Tim Penhey.
+
+2012-06-01  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Added two manual-tests for testing the fixed behavior. Better have everything well tested.
+
+2012-06-01  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Added a unit test for the switcher show functionality. The same as in the previous proposition.
+
+2012-05-31  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Don't show the switcher window during constructing the view. Wait for the show timeout.
+
+2012-06-04  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Makes rounded the last hud button,. Fixes: https://bugs.launchpad.net/bugs/1008656. Approved by Marco Trevisan (Treviño).
+
+2012-06-05  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Improve the readability of the test. 
+
+2012-06-05  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add unity test for hud::View::SetQueries.
+
+2012-06-04  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug #1008656.
+
+2012-06-04  Christopher Lee  <veebers@gmail.com>
+
+	Expose, for introspection, the amount of current details displayed on the switcher.
+	Update the emulator and tests so that it utilises this new detail (so it can prepare the test correctly).
+	
+	AP switcher test was failing if the last icon had > 1 details. Was unable to get to the end of the window list, there was no way to tell how many details the icon had.
+	
+	Updated AP tests to use the newly exposed details so it runs correctly.. Fixes: . Approved by Thomi Richards.
+
+2012-06-01  Christopher Lee  <veebers@gmail.com>
+
+	Updated test to use renamed property
+
+2012-06-01  Christopher Lee  <veebers@gmail.com>
+
+	merged branch that fixes switcher tests
+
+2012-06-01  Christopher Lee  <veebers@gmail.com>
+
+	Code cleanup of switcher test
+
+2012-06-01  Christopher Lee  <veebers@gmail.com>
+
+	Better named property for consistancy
+
+2012-05-31  Christopher Lee  <veebers@gmail.com>
+
+	Exposed, for introspection, the count of details visible from the switcher
+
+2012-06-02  Gord Allott  <gord.allott@canonical.com>
+
+	fixes the standalone clients in unity. Fixes: . Approved by Jason Smith.
+
+2012-06-01  Gord Allott  <gord.allott@canonical.com>
+
+	fix the standalone clients
+
+2012-06-02  Christopher Lee  <veebers@gmail.com>
+
+	Removed duplicate method as well as renaming and added check for argument to assist in clarifying usage.. Fixes: . Approved by Thomi Richards.
+
+2012-06-01  Christopher Lee  <veebers@gmail.com>
+
+	Code cleanup: clarification of method use
+
+2012-06-01  Christopher Lee  <veebers@gmail.com>
+
+	Code cleanup: remove duplicate method declaration
+
+2012-06-01  Marco Mariani  <dfly720@gmail.com>
+
+	Show correct label when switcher starts in detail model.. Fixes: . Approved by Andrea Azzarone, Thomi Richards.
+
+2012-06-01  Thomi Richards  <thomi.richards@canonical.com>
+
+	Made test PEP8 compliant, and made it a bit more pythonic.
+
+2012-06-01  Marco Mariani  <dfly720@gmail.com>
+
+	Add AP test.
+
+2012-05-31  Marco Mariani  <dfly720@gmail.com>
+
+	Merge trunk
+
+2012-04-27  Marco Mariani  <dfly720@gmail.com>
+
+	Use the correct label when the applications switcher starts in detail mode.
+
+2012-06-01  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix bug where disabled menus could be opened.. Fixes: . Approved by Tim Penhey.
+
+2012-06-01  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added a manual test.
+
+2012-05-25  Albert Astals  <albert.astals@canonical.com>
+
+	And now make it compile :D
+
+2012-05-25  Albert Astals  <albert.astals@canonical.com>
+
+	Do not show the menu if it is not sensitive
+
+2012-05-31  smspillaz  <sam.spilsbury@canonical.com>
+
+	Use COMPIZ_PLUGIN_INSTALL_TYPE=package by default.. Fixes: . Approved by Thomi Richards.
+
+2012-05-28  smspillaz  <sam.spilsbury@canonical.com>
+
+	Use COMPIZ_PLUGIN_INSTALL_TYPE=package by default
+
+2012-05-31  Tim Penhey  <tim.penhey@canonical.com>
+
+	Update the coding guidelines to be more in line with what we actually do.. Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-05-29  Tim Penhey  <tim.penhey@canonical.com>
+
+	Update the coding style guide.
+
+2012-05-31  Didier Roche  <didrocks@ubuntu.com>
+
+	fix some gcc 4.7 new warnings/errors. Fixes: . Approved by Gord Allott.
+
+2012-05-31  Didier Roche  <didrocks@ubuntu.com>
+
+	fix unsigned to sign comparaison error when value can only be > 0
+
+2012-05-31  Didier Roche  <didrocks@ubuntu.com>
+
+	fixing inconsistent user-defined literal, macro needs to be separated to be expanded now
+
+2012-05-31  smspillaz  <sam.spilsbury@canonical.com>
+
+	Don't delete through a nonvirtual destructor.. Fixes: . Approved by Didier Roche.
+
+2012-05-31  smspillaz  <sam.spilsbury@canonical.com>
+
+	Don't delete through a nonvirtual destructor
+
+2012-05-30  Christopher Lee  <veebers@gmail.com>
+
+	Added introspection to expose _in_show_desktop and updated AP tests to use this.. Fixes: . Approved by Thomi Richards.
+
+2012-05-31  Christopher Lee  <veebers@gmail.com>
+
+	Updated window_manager for show_desktop introspection && updated tests
+	
+	Tests that used to use keybindings to hide/show desktop now use
+	enter_show_desktop/leave_show_desktop
+
+2012-05-31  Christopher Lee  <veebers@gmail.com>
+
+	Added 'show desktop' introspection details to all PluginAdapters
+
+2012-05-30  Christopher Lee  <veebers@gmail.com>
+
+	Added 'show desktop' details for introspection
+
+2012-05-30  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use transparent text for not match parts in hud buttons.. Fixes: https://bugs.launchpad.net/bugs/939436. Approved by Marco Trevisan (Treviño), Xi Zhu.
+
+2012-05-30  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove unneeded condtion.
+
+2012-05-30  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove magic number.
+
+2012-05-30  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Update the design of the hud button text. Use a full opacity for the highlighted text.
+
+2012-05-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed a typo in the tools/autopilot shell script.. Fixes: . Approved by Sam Spilsbury.
+
+2012-05-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed autopilot redirection script hint to have the correct AP package name.
+
+2012-05-29  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	A small syntax change for g++ 4.7.0 - 'this' before Connect() in GLibSignal-inl.h is now needed.
+	Fixes one build problem on quantal.
+	. Fixes: . Approved by Tim Penhey.
+
+2012-05-29  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	A small syntax change for g++ 4.7.0 - 'this' is now needed. 
+	Fixes one build problem on quantal.
+
+2012-05-29  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Update hudbutton.cpp coding style.. Fixes: . Approved by Tim Penhey.
+
+2012-05-29  Andrea Azzarone  <azzaronea@gmail.com>
+
+	We can pass [&] intead of [this].
+
+2012-05-28  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove un-needed code.
+
+2012-05-28  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix hudbutton.cpp coding style.
+
+2012-05-27  Alexandros Frantzis  <alexandros.frantzis@linaro.org>
+
+	Disassociate using GLES and using the modern Compiz GL API.
+	
+	This allows building using the modern Compiz GL API with desktop GL
+	by configuring with -DUSE_MODERN_COMPIZ_GL=ON.
+	
+	It's a safe change, in the sense that it only changes some instances
+	of the USE_GLES define guard to use USE_MODERN_COMPIZ_GL instead.. Fixes: . Approved by Tim Penhey, Sam Spilsbury.
+
+2012-04-06  Alexandros Frantzis  <alexandros.frantzis@linaro.org>
+
+	Disassociate using GLES and using the modern Compiz GL API.
+	
+	This allows building using the modern Compiz GL API with desktop GL
+	by configuring with -DUSE_MODERN_COMPIZ_GL=ON.
+
+2012-05-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: Unset the BamfApplication when removing the icon.
+	
+	Doing this manually, we prevent that a duplicated application can be added between the removal of the BamfLauncherIcon and the effective destruction (that is controlled by a timeout in LauncherModel).
+	. Fixes: https://bugs.launchpad.net/bugs/1003574. Approved by Tim Penhey.
+
+2012-05-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: use glib::Signal to handle the Bamf matcher signal.
+
+2012-05-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: Add better comments in ::Remove()
+
+2012-05-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: Disconnect all the _bamf_app signals at once on removal.
+
+2012-05-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests, glib_signals: added test for the object signals disconnection.
+
+2012-05-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLib::SignalManager: allow to disconnect all the signals for a given Object.
+	
+	When the signal string name is empty, we disconnect all the sigals
+	for the given object.
+
+2012-05-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: Unset the BamfApplication when removing the icon.
+	
+	Doing this manually, we prevent that a duplicated application can be
+	added between the removal of the BamfLauncherIcon and the effective
+	destruction (that is controlled by a timeout in LauncherModel).
+
+2012-05-24  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Add a comment explaining how important it is to avoid rebinding the FBO, so as to avoid yet another regression like LP: #987304.. Fixes: . Approved by Omer Akram, Sam Spilsbury, Michal Hruby.
+
+2012-05-24  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Add a comment explaining how important it is to avoid rebinding the FBO,
+	so as to avoid yet another regression like LP: #987304.
+
+2012-05-24  Gord Allott  <gord.allott@canonical.com>
+
+	* Capture information about the icon of the application to be installed from the software center. Re-use it when rendering the launcher interface.
+	* Fix bug #981168. Fixes: https://bugs.launchpad.net/bugs/981168. Approved by Gord Allott.
+
+2012-05-24  Gord Allott  <gord.allott@canonical.com>
+
+	fixed up memory leaks
+
+2012-04-17  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Capture information about the icon of the application to be installed from the software center. Re-use it when rendering the launcher interface.
+
+2012-04-16  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Capture part of the content of Launcher::handle_dbus_method_call into a lambda call.
+
+2012-05-23  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Fix major performance regression-regression due to rebinding FBO's much more
+	often than is required (LP: #987304)
+	
+	This commit just reintroduces the fix for LP: #861061 (the same performance
+	regression) which was deleted by the fix for LP: #839480 in Unity 5.10.
+	
+	UPDATE: This is not a complete fix for bug 987304 as other (new) performance problems seem to be present in Unity 5.x. But it is a critical part of the fix for bug 987304.. Fixes: https://bugs.launchpad.net/bugs/987304. Approved by Andrea Azzarone, Marco Trevisan (Treviño), Łukasz Zemczak, Tim Penhey.
+
+2012-05-07  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Fix major performance regression-regression due to rebinding FBO's much more
+	often than is required (LP: #987304)
+	
+	This commit just reintroduces the fix for LP: #861061 (the same performance
+	regression) which was deleted by the fix for LP: #839480 in Unity 5.10.
+
+2012-05-23  Gord Allott  <gord.allott@canonical.com>
+
+	Adds a standalone mode to unity. Fixes: . Approved by Jason Smith.
+
+2012-05-22  Gord Allott  <gord.allott@canonical.com>
+
+	merged trunk
+
+2012-05-22  Gord Allott  <gord.allott@canonical.com>
+
+	added standalone PluginAdapter
+
+2012-05-22  Gord Allott  <gord.allott@canonical.com>
+
+	fixed up the pluginadapter abstractation
+
+2012-05-22  Gord Allott  <gord.allott@canonical.com>
+
+	added in a switch for unity standalone mode against tv mode
+
+2012-05-22  Gord Allott  <gord.allott@canonical.com>
+
+	added standdalone flag and always maximised flag into Settigns and Dash Style
+
+2012-05-22  Gord Allott  <gord.allott@canonical.com>
+
+	added tv form factor
+
+2012-05-21  Gord Allott  <gord.allott@canonical.com>
+
+	reverted out po changes
+
+2012-05-21  Gord Allott  <gord.allott@canonical.com>
+
+	Snapshot before refactoring components
+
+2012-05-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Reduces the number of calling to ResultViewGrid::QueueDraw.. Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-05-15  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Adds unit-test.
+
+2012-05-08  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Reduce the number of calling to QueueDraw/NeedRedraw in ResultViewGrid.cpp
+
+2012-05-08  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes.
+
+2012-05-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix several erroring autopilot tests that were broken either during the recent switcher emulator API changes, or when we removed autopilot from the unity source tree.. Fixes: . Approved by Tim Penhey.
+
+2012-05-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed innacurate docstring.
+
+2012-05-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed show desktop tests that were broken in the recent switcher API change.
+
+2012-05-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Quicklist tests now work when there's more icons than can fit on the launcher (i.e.- icons are scrolled off the bottom of the launcher).
+
+2012-05-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed launcher test case 'test_launcher_keynav_alt_grave_quits'.
+
+2012-05-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Unmute launcher.. Fixes: https://bugs.launchpad.net/bugs/949448. Approved by Marco Trevisan (Treviño).
+
+2012-04-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Unmute launcher.
+
+2012-04-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Un-mute screen reader.
+
+2012-05-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix UnityViewWindow background when blur is disabled.. Fixes: https://bugs.launchpad.net/bugs/989291. Approved by Alex Launi.
+
+2012-05-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-05-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add AP test.
+
+2012-05-16  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove manual test.
+
+2012-04-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix typos.
+
+2012-04-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add manual test.
+
+2012-04-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes bug #989291.
+
+2012-05-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove places tile code.. Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-05-08  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove place tile tests.
+
+2012-05-08  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove placestile.cpp code.
+
+2012-05-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	Remove autopilot from the unity source tree - large reorganization of the autopilot code.. Fixes: . Approved by Tim Penhey.
+
+2012-05-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk, resolved conflicts.
+
+2012-05-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed several tests that were failing due to AP removal.
+
+2012-05-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-05-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	Autopilot script now provides instructions on how to run unity AP tests.
+
+2012-05-15  Thomi Richards  <thomi.richards@canonical.com>
+
+	Test case class members are now properties, to avoid the overhead of the dbus call every time the test is loaded. Previously this made the 'list' autopilot command unusable.
+
+2012-05-08  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.:
+
+2012-05-08  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added a few missing files. Removed the MANIFEST.
+
+2012-05-08  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-05-08  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed autopilot emulators and added absolute imports for all python files.
+
+2012-05-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: add a timeout on application close before removing the icon
+	
+	This makes the application to correctly hide when closed, but avoids
+	that the launcher icon is removed when an application is quickly opened/closed
+	
+	Also we override the Remove() method to make sure that once it's called
+	we remove the "unity-seen" flag from the BamfApplication object.
+	So an application icon could be re-added in the period between the Remove()
+	call and the ~BamfLauncherIcon call (that could take some time).. Fixes: https://bugs.launchpad.net/bugs/995916, https://bugs.launchpad.net/bugs/999820. Approved by Tim Penhey, Thomi Richards.
+
+2012-05-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, fix the close_all_app to correctly use kill
+
+2012-05-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: add a timeout on application close before removing the icon
+	
+	This makes the application to correctly hide when closed, but avoids
+	that the launcher icon is removed when an application is quickly opened/closed
+	
+	Also we override the Remove() method to make sure that once it's called
+	we remove the "unity-seen" flag from the BamfApplication object.
+	So an application icon could be re-added in the period between the Remove()
+	call and the ~BamfLauncherIcon call (that could take some time).
+
+2012-05-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_launcher: added test for missing-icon on quick application reopen
+
+2012-05-15  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Disable the bfb/hudlaunchericon tooltip when the dash/hud is open.. Fixes: https://bugs.launchpad.net/bugs/978030. Approved by Marco Trevisan (Treviño).
+
+2012-04-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add AP tests.
+
+2012-04-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Disable the bfb/hudlaunchericon tooltip when the dash/hud is open.
+	Hide a launcher icon tooltip as soon as the dash/hud is shown.
+
+2012-05-14  Thomi Richards  <thomi.richards@canonical.com>
+
+	Variant wrapper now adds an empty string as the value when it's passed a NULL char* value parameter.. Fixes: . Approved by Sam Spilsbury.
+
+2012-05-14  Thomi Richards  <thomi.richards@canonical.com>
+
+	use gvariant_new, although passing an empty string seems to work as well
+
+2012-05-14  Thomi Richards  <thomi.richards@canonical.com>
+
+	Don't add NULL pointers to GVariant inside the variant wrapper.
+
+2012-05-14  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Fixes ibus pinyin and hangul ap test. Fixes: . Approved by Thomi Richards.
+
+2012-05-13  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Update the ibus ap test to fix the Pinyin and Hangul failures.
+
+2012-05-13  Thomi Richards  <thomi.richards@canonical.com>
+
+	QuicklistMenuItem class now uses std::string instead of a gchar*.. Fixes: . Approved by Tim Penhey.
+
+2012-05-14  Thomi Richards  <thomi.richards@canonical.com>
+
+	Don't use gchar* inside QuicklistMenuItem, use std::string instead.
+
+2012-05-08  Gord Allott  <gord.allott@canonical.com>
+
+	fixes runtime segfault in trunk. Fixes: . Approved by Łukasz Zemczak.
+
+2012-05-08  Gord Allott  <gord.allott@canonical.com>
+
+	some files wern't being built, caused errors on load
+
+2012-05-07  Gord Allott  <gord.allott@canonical.com>
+
+	re-architectures the physical file structure of unity
+	now several souce directories inside of unity that each house their own specific files. Fixes: . Approved by Gord Allott, Tim Penhey.
+
+2012-05-07  Gord Allott  <gord.allott@canonical.com>
+
+	added missing file
+
+2012-05-07  Gord Allott  <gord.allott@canonical.com>
+
+	revert pot changes
+
+2012-05-07  Gord Allott  <gord.allott@canonical.com>
+
+	reverted po changes
+
+2012-05-07  Gord Allott  <gord.allott@canonical.com>
+
+	tests building and working
+
+2012-05-07  Gord Allott  <gord.allott@canonical.com>
+
+	removed standalone clients
+
+2012-05-07  Gord Allott  <gord.allott@canonical.com>
+
+	shortcuts and unityshell working woo
+
+2012-05-07  Gord Allott  <gord.allott@canonical.com>
+
+	launcher and switcher added
+
+2012-05-06  Gord Allott  <gord.allott@canonical.com>
+
+	added hud
+
+2012-05-06  Gord Allott  <gord.allott@canonical.com>
+
+	panel and dash moved to subdirectories
+
+2012-05-07  Alex Launi  <alex.launi@canonical.com>
+
+	Remove GLibRunner from Autopilot.. Fixes: . Approved by Alex Launi.
+
+2012-05-04  Alex Launi  <alex.launi@canonical.com>
+
+	remove glibrunner import
+
+2012-05-04  Alex Launi  <alex.launi@canonical.com>
+
+	Remove GLibRunner. No longer run tests in glib loop
+
+2012-05-03  Alex Launi  <alex.launi@canonical.com>
+
+	Run all tests inside the glib loop
+
+2012-04-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot: added tests to avoid duplication of icons for applications with no .desktop files. Fixes: . Approved by Thomi Richards.
+
+2012-04-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: rely to BamfLauncherIcon the "unity-seen" qdata setting
+
+2012-04-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, bamf: get_window_by_xid filter in one step
+
+2012-04-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_launcher: check for any duplicated icon on bamf restart
+	
+	We check if there are two icons that refers to the same BamfApplication.
+	Fix also a docstring.
+
+2012-04-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_launcher: add tests for desktop-less applications based on xids
+	
+	We check if there are more than one icon that controls the tested xids
+
+2012-04-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, launcher: get an icon by controlled xid
+
+2012-04-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, icon: add method to check if an icon controls a specified xid
+
+2012-04-29  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, bamf: add some xid based getters and use WindowStackForMonitor
+	
+	No need to use '_NET_CLIENT_LIST_STACKING', bamf already can give us
+	a list.
+
+2012-04-27  Alex Launi  <alex.launi@canonical.com>
+
+	Port autopilot switcher emulator to new-style API.. Fixes: . Approved by Thomi Richards.
+
+2012-04-26  Alex Launi  <alex.launi@canonical.com>
+
+	merge thomi's whitespace fixes
+
+2012-04-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed trailing whitespace issues.
+
+2012-04-26  Alex Launi  <alex.launi@canonical.com>
+
+	update from merge comments
+
+2012-04-24  Alex Launi  <alex.launi@canonical.com>
+
+	Fix documentation, slight test refactoring
+
+2012-04-24  Alex Launi  <alex.launi@canonical.com>
+
+	initial port to new API finished. tests pass
+
+2012-04-23  Alex Launi  <alex.launi@canonical.com>
+
+	Begin porting switcher to new style API
+
+2012-04-27  Didier Roche  <didier.roche@canonical.com>
+
+	Release\ 5.12.0
+
 2012-04-26  Sebastien Bacher  <seb128@ubuntu.com>
 
 	Revert r2331, it's creating hang issues on start.. Fixes: . Approved by Didier Roche.

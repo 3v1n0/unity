@@ -133,9 +133,6 @@ public:
                                 CompOutput*,
                                 unsigned int);
 
-  /* Pop our InputOutput windows from the paint list */
-  const CompWindowList& getWindowPaintList();
-
   /* handle X11 events */
   void handleEvent(XEvent*);
 
@@ -212,7 +209,10 @@ private:
 
   bool initPluginActions();
   void initLauncher();
-  void damageNuxRegions();
+
+  void compizDamageNux(CompRegion const& region);
+  void nuxDamageCompiz();
+
   void onRedrawRequested();
   void Relayout();
 
@@ -260,7 +260,6 @@ private:
   bool enable_shortcut_overlay_;
 
   GestureEngine                         gesture_engine_;
-  nux::Geometry                         lastTooltipArea;
   bool                                  needsRelayout;
   bool                                  _in_paint;
   bool                                  super_keypressed_;
@@ -277,11 +276,14 @@ private:
 
   /* handle paint order */
   bool    doShellRepaint;
+  bool    didShellRepaint;
   bool    allowWindowPaint;
-  bool    damaged;
   bool    _key_nav_mode_requested;
   CompOutput* _last_output;
-  CompWindowList _withRemovedNuxWindows;
+
+  CompRegion nuxRegion;
+  CompRegion fullscreenRegion;
+  CompWindow* firstWindowAboveShell;
 
   nux::Property<nux::Geometry> primary_monitor_;
 

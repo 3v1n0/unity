@@ -24,6 +24,7 @@
 
 using namespace testing;
 using namespace unity;
+using namespace nux;
 
 namespace
 {
@@ -48,14 +49,15 @@ public:
 class MockTextEntry : public IMTextEntry
 {
 public:
-  MOCK_METHOD1(InsertText, void(std::string const&));
-  MOCK_METHOD0(Cut, void());
-  MOCK_METHOD0(Copy, void());
-  MOCK_METHOD1(Paste, void(bool));
+  MOCK_METHOD0(CutClipboard, void());
+  MOCK_METHOD0(CopyClipboard, void());
+  MOCK_METHOD0(PasteClipboard, void());
+  MOCK_METHOD0(PastePrimaryClipboard, void());
 
-  bool TryHandleSpecial(nux::Event const& event)
+  bool InspectKeyEvent(nux::Event const& event)
   {
-    return IMTextEntry::TryHandleSpecial(event);
+    key_down.emit(event.type, event.GetKeySym(), event.GetKeyState(), nullptr, 0);
+    return IMTextEntry::InspectKeyEvent(event);
   }
 };
 
@@ -66,8 +68,8 @@ TEST(TestIMTextEntry, CopyCtrlC)
 
   TestEvent event(KEY_MODIFIER_CTRL, NUX_VK_c);
 
-  EXPECT_CALL(text_entry, Copy());
-  EXPECT_FALSE(text_entry.TryHandleSpecial(event));
+  EXPECT_CALL(text_entry, CopyClipboard());
+  EXPECT_TRUE(text_entry.InspectKeyEvent(event));
 }
 
 TEST(TestIMTextEntry, CopyCtrlIns)
@@ -76,8 +78,8 @@ TEST(TestIMTextEntry, CopyCtrlIns)
 
   TestEvent event(KEY_MODIFIER_CTRL, NUX_VK_INSERT);
 
-  EXPECT_CALL(text_entry, Copy());
-  EXPECT_FALSE(text_entry.TryHandleSpecial(event));
+  EXPECT_CALL(text_entry, CopyClipboard());
+  EXPECT_TRUE(text_entry.InspectKeyEvent(event));
 }
 
 TEST(TestIMTextEntry, PasteCtrlV)
@@ -86,8 +88,8 @@ TEST(TestIMTextEntry, PasteCtrlV)
 
   TestEvent event(KEY_MODIFIER_CTRL, NUX_VK_v);
 
-  EXPECT_CALL(text_entry, Paste(false));
-  EXPECT_FALSE(text_entry.TryHandleSpecial(event));
+  EXPECT_CALL(text_entry, PasteClipboard());
+  EXPECT_TRUE(text_entry.InspectKeyEvent(event));
 }
 
 TEST(TestIMTextEntry, PasteShiftIns)
@@ -96,8 +98,8 @@ TEST(TestIMTextEntry, PasteShiftIns)
 
   TestEvent event(KEY_MODIFIER_SHIFT, NUX_VK_INSERT);
 
-  EXPECT_CALL(text_entry, Paste(false));
-  EXPECT_FALSE(text_entry.TryHandleSpecial(event));
+  EXPECT_CALL(text_entry, PasteClipboard());
+  EXPECT_TRUE(text_entry.InspectKeyEvent(event));
 }
 
 TEST(TestIMTextEntry, CutCtrlX)
@@ -106,8 +108,8 @@ TEST(TestIMTextEntry, CutCtrlX)
 
   TestEvent event(KEY_MODIFIER_CTRL, NUX_VK_x);
 
-  EXPECT_CALL(text_entry, Cut());
-  EXPECT_FALSE(text_entry.TryHandleSpecial(event));
+  EXPECT_CALL(text_entry, CutClipboard());
+  EXPECT_TRUE(text_entry.InspectKeyEvent(event));
 }
 
 TEST(TestIMTextEntry, CutShiftDel)
@@ -116,8 +118,8 @@ TEST(TestIMTextEntry, CutShiftDel)
 
   TestEvent event(KEY_MODIFIER_SHIFT, NUX_VK_DELETE);
 
-  EXPECT_CALL(text_entry, Cut());
-  EXPECT_FALSE(text_entry.TryHandleSpecial(event));
+  EXPECT_CALL(text_entry, CutClipboard());
+  EXPECT_TRUE(text_entry.InspectKeyEvent(event));
 }
 
 TEST(TestIMTextEntry, CtrlMoveKeys)
@@ -125,16 +127,16 @@ TEST(TestIMTextEntry, CtrlMoveKeys)
   MockTextEntry text_entry;
 
   TestEvent left(KEY_MODIFIER_CTRL, NUX_VK_LEFT);
-  EXPECT_TRUE(text_entry.TryHandleSpecial(left));
+  EXPECT_TRUE(text_entry.InspectKeyEvent(left));
 
   TestEvent right(KEY_MODIFIER_CTRL, NUX_VK_RIGHT);
-  EXPECT_TRUE(text_entry.TryHandleSpecial(right));
+  EXPECT_TRUE(text_entry.InspectKeyEvent(right));
 
   TestEvent home(KEY_MODIFIER_CTRL, NUX_VK_HOME);
-  EXPECT_TRUE(text_entry.TryHandleSpecial(home));
+  EXPECT_TRUE(text_entry.InspectKeyEvent(home));
 
   TestEvent end(KEY_MODIFIER_CTRL, NUX_VK_END);
-  EXPECT_TRUE(text_entry.TryHandleSpecial(end));
+  EXPECT_TRUE(text_entry.InspectKeyEvent(end));
 }
 
 TEST(TestIMTextEntry, CtrlDeleteKeys)
@@ -142,10 +144,10 @@ TEST(TestIMTextEntry, CtrlDeleteKeys)
   MockTextEntry text_entry;
 
   TestEvent del(KEY_MODIFIER_CTRL, NUX_VK_DELETE);
-  EXPECT_TRUE(text_entry.TryHandleSpecial(del));
+  EXPECT_TRUE(text_entry.InspectKeyEvent(del));
 
   TestEvent backspace(KEY_MODIFIER_CTRL, NUX_VK_BACKSPACE);
-  EXPECT_TRUE(text_entry.TryHandleSpecial(backspace));
+  EXPECT_TRUE(text_entry.InspectKeyEvent(backspace));
 }
 
 TEST(TestIMTextEntry, CtrlA)
@@ -153,7 +155,7 @@ TEST(TestIMTextEntry, CtrlA)
   MockTextEntry text_entry;
 
   TestEvent selectall(KEY_MODIFIER_CTRL, NUX_VK_a);
-  EXPECT_TRUE(text_entry.TryHandleSpecial(selectall));
+  EXPECT_TRUE(text_entry.InspectKeyEvent(selectall));
 }
 
 TEST(TestIMTextEntry, CtrlKeybindings)
@@ -165,15 +167,10 @@ TEST(TestIMTextEntry, CtrlKeybindings)
                                             NUX_VK_HOME, NUX_VK_END,
                                             NUX_VK_BACKSPACE, NUX_VK_DELETE };
 
-  for (unsigned long keysym = 0; keysym < XK_VoidSymbol; ++keysym)
+  for (auto keysym : allowed_keys)
   {
-    bool should_be_handled = false;
-
-    if (std::find(allowed_keys.begin(), allowed_keys.end(), keysym) != allowed_keys.end())
-      should_be_handled = true;
-
     TestEvent event(KEY_MODIFIER_CTRL, keysym);
-    EXPECT_EQ(text_entry.TryHandleSpecial(event), should_be_handled);
+    EXPECT_TRUE(text_entry.InspectKeyEvent(event));
   }
 }
 
@@ -184,7 +181,7 @@ TEST(TestIMTextEntry, AltKeybindings)
   for (unsigned long keysym = 0; keysym < XK_VoidSymbol; ++keysym)
   {
     TestEvent event(KEY_MODIFIER_ALT, keysym);
-    EXPECT_FALSE(text_entry.TryHandleSpecial(event));
+    EXPECT_FALSE(text_entry.InspectKeyEvent(event));
   }
 }
 
@@ -195,7 +192,7 @@ TEST(TestIMTextEntry, SuperKeybindings)
   for (unsigned long keysym = 0; keysym < XK_VoidSymbol; ++keysym)
   {
     TestEvent event(KEY_MODIFIER_SUPER, keysym);
-    EXPECT_FALSE(text_entry.TryHandleSpecial(event));
+    EXPECT_FALSE(text_entry.InspectKeyEvent(event));
   }
 }
 

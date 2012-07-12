@@ -25,7 +25,7 @@
 #include <Nux/BaseWindow.h>
 #include <NuxGraphics/GraphicsEngine.h>
 #include <Nux/TextureArea.h>
-#include <NuxImage/CairoGraphics.h>
+#include <NuxGraphics/CairoGraphics.h>
 
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
@@ -71,7 +71,7 @@ public:
   // Introspection
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
-  IntrospectableList const& GetIntrospectableChildren();
+  IntrospectableList GetIntrospectableChildren();
 
   void EnableQuicklistForTesting(bool enable_testing);
 
@@ -131,6 +131,8 @@ private:
   //! Check the mouse up event sent by an item. Detect the item where the mous is and emit the appropriate signal.
   void CheckAndEmitItemSignal(int x, int y);
 
+  void ActivateItem(QuicklistMenuItem* item);
+
   void SelectItem(int index);
   bool IsMenuItemSelectable(int index);
 
@@ -151,8 +153,6 @@ private:
   float _corner_radius;
   float _padding;
   float _left_padding_correction;
-  float _bottom_padding_correction_normal;
-  float _bottom_padding_correction_single_item;
   float _offset_correction;
   nux::HLayout* _hlayout;
   nux::VLayout* _vlayout;

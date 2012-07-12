@@ -26,7 +26,7 @@
 #include <Nux/View.h>
 #include <Nux/TextureArea.h>
 #include <NuxGraphics/GraphicsEngine.h>
-#include <NuxImage/CairoGraphics.h>
+#include <NuxGraphics/CairoGraphics.h>
 #include <gdk/gdkx.h>
 
 #include <UnityCore/DBusIndicators.h>

@@ -118,10 +118,6 @@ View::View()
 
 View::~View()
 {
-  for (auto button = buttons_.begin(); button != buttons_.end(); button++)
-  {
-    RemoveChild((*button).GetPointer());
-  }
 }
 
 void View::ProcessGrowShrink()
@@ -259,7 +255,7 @@ void View::SetQueries(Hud::Queries queries)
       query_activated.emit(dynamic_cast<HudButton*>(area)->GetQuery());
     });
 
-    button->key_nav_focus_change.connect([&](nux::Area* area, bool recieving, KeyNavDirection direction){
+    button->key_nav_focus_change.connect([&](nux::Area* area, bool recieving, nux::KeyNavDirection direction){
       if (recieving)
         query_selected.emit(dynamic_cast<HudButton*>(area)->GetQuery());
     });
@@ -510,9 +506,10 @@ void View::AddProperties(GVariantBuilder* builder)
     .add("num_buttons", num_buttons);
 }
 
-debug::Introspectable::IntrospectableList const& View::GetIntrospectableChildren()
+debug::Introspectable::IntrospectableList View::GetIntrospectableChildren()
 {
     introspectable_children_.clear();
+    introspectable_children_.merge(debug::Introspectable::GetIntrospectableChildren());
     for (auto button: buttons_)
     {
       introspectable_children_.push_front(button.GetPointer());
@@ -568,6 +565,10 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
       unsigned long x11_key_code,
       unsigned long special_keys_state)
 {
+  // Only care about states of Alt, Ctrl, Super, Shift, not the lock keys
+  special_keys_state &= (nux::NUX_STATE_ALT | nux::NUX_STATE_CTRL |
+                         nux::NUX_STATE_SUPER | nux::NUX_STATE_SHIFT);
+
   nux::KeyNavDirection direction = nux::KEY_NAV_NONE;
   switch (x11_key_code)
   {
@@ -595,7 +596,7 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
     direction = nux::KEY_NAV_ENTER;
     break;
   case NUX_VK_F4:
-    if (special_keys_state & NUX_STATE_ALT)
+    if (special_keys_state == nux::NUX_STATE_ALT)
     {
       ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
     }

@@ -93,6 +93,7 @@ class ShortcutHintTests(BaseShortcutHintTests):
 
         self.assertThat(self.shortcut_hint.get_shortcut_view().bg_texture_is_valid, Eventually(Equals(True)))
 
+
 class ShortcutHintInteractionsTests(BaseShortcutHintTests):
     """Test the shortcuthint interactions with other Unity parts."""
 
@@ -103,6 +104,13 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
 
         self.keybinding_tap("expo/start")
         self.addCleanup(self.keybinding, "expo/cancel")
+
+    def test_shortcut_hint_hide_pressing_modifiers(self):
+        """Pressing a modifer key must hide the shortcut hint."""
+        self.shortcut_hint.ensure_visible()
+        self.addCleanup(self.shortcut_hint.ensure_hidden)
+
+        self.keyboard.press('Control')
 
         self.assertThat(self.shortcut_hint.visible, Eventually(Equals(False)))
 
@@ -132,84 +140,6 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
         sleep(switcher_timeout * 2)
 
         self.assertThat(self.shortcut_hint.visible, Equals(False))
-
-    def test_launcher_switcher_next_keeps_shortcut_hint(self):
-        """Super+Tab switcher cycling forwards must not dispel an already-showing
-        shortcut hint.
-
-        """
-        show_timeout = self.shortcut_hint.get_show_timeout()
-        self.shortcut_hint.ensure_visible()
-        self.addCleanup(self.shortcut_hint.ensure_hidden)
-
-        self.keybinding("launcher/switcher/next")
-        self.addCleanup(self.keyboard.press_and_release, "Escape")
-
-        self.assertThat(self.launcher.key_nav_is_active, Equals(True))
-
-        self.keybinding("launcher/switcher/next")
-        sleep(show_timeout * 2)
-        self.assertThat(self.shortcut_hint.visible, Equals(True))
-
-    def test_launcher_switcher_prev_keeps_shortcut_hint(self):
-        """Super+Tab switcher cycling backwards must not dispel an already-showing
-        shortcut hint.
-
-        """
-        show_timeout = self.shortcut_hint.get_show_timeout()
-        self.shortcut_hint.ensure_visible()
-        self.addCleanup(self.shortcut_hint.ensure_visible)
-
-        self.keybinding("launcher/switcher/next")
-        self.addCleanup(self.keyboard.press_and_release, "Escape")
-        self.assertThat(self.launcher.key_nav_is_active, Equals(True))
-
-        self.keybinding("launcher/switcher/prev")
-        self.keybinding("launcher/switcher/prev")
-        sleep(show_timeout * 2)
-        self.assertThat(self.shortcut_hint.visible, Equals(True))
-
-    def test_launcher_switcher_cancel_doesnt_hide_shortcut_hint(self):
-        """Cancelling the launcher switcher (by Escape) must not hide the
-        shortcut hint view.
-
-        """
-        self.shortcut_hint.ensure_visible()
-        self.addCleanup(self.shortcut_hint.ensure_hidden)
-
-        self.keybinding("launcher/switcher/next")
-        # NOTE: This will generate an extra Escape keypress if the test passes,
-        # but that's better than the alternative...
-        self.addCleanup(self.keybinding, "launcher/switcher/exit")
-
-        self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(True)))
-        self.assertThat(self.shortcut_hint.visible, Equals(True))
-
-        self.keyboard.press_and_release("Escape")
-
-        self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
-        self.assertThat(self.shortcut_hint.visible, Equals(True))
-
-    def test_launcher_switcher_and_shortcut_hint_escaping(self):
-        """Cancelling the launcher switcher (by Escape) should not hide the
-        shortcut hint view, an extra keypress is needed.
-
-        """
-        self.shortcut_hint.ensure_visible()
-        self.addCleanup(self.shortcut_hint.ensure_hidden)
-
-        self.keybinding("launcher/switcher/next")
-
-        self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(True)))
-        self.assertThat(self.shortcut_hint.visible, Equals(True))
-
-        self.keyboard.press_and_release("Escape")
-
-        self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
-        self.assertThat(self.shortcut_hint.visible, Equals(True))
-
-        self.keyboard.press_and_release("Escape")
-        self.assertThat(self.shortcut_hint.visible, Eventually(Equals(False)))
 
     def test_launcher_icons_hints_show_with_shortcut_hint(self):
         """When the shortcut hint is shown also the launcer's icons hints should

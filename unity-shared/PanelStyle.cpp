@@ -27,7 +27,7 @@
 
 #include <Nux/Nux.h>
 #include <NuxGraphics/GraphicsEngine.h>
-#include <NuxImage/CairoGraphics.h>
+#include <NuxGraphics/CairoGraphics.h>
 #include <NuxCore/Logger.h>
 
 #include "CairoTexture.h"
