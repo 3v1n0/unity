@@ -805,7 +805,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 #else
   nux::ObjectPtr<nux::IOpenGLTexture2D> device_texture =
     nux::GetGraphicsDisplay()->GetGpuDevice()->CreateTexture2DFromID(gScreen->fbo ()->tex ()->name (),
-      output->width(), output->height(), 1, nux::BITFMT_R8G8B8A8);
+      screen->width(), screen->height(), 1, nux::BITFMT_R8G8B8A8);
 #endif
 
   nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_ = device_texture;
@@ -818,7 +818,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
   GLint fboID;
   // Nux renders to the referenceFramebuffer when it's embedded.
   glGetIntegerv(GL_FRAMEBUFFER_BINDING, &fboID);
-  wt->GetWindowCompositor().SetReferenceFramebuffer(fboID, geo);
+  wt->GetWindowCompositor().SetReferenceFramebuffer(fboID, oGeo);
 #endif
 
   nuxPrologue();
