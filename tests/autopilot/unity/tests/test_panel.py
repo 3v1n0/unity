@@ -189,7 +189,7 @@ class PanelTitleTests(PanelTestsBase):
         text_win = self.open_new_application_window("Text Editor", maximized=True)
         self.open_new_application_window("Calculator", maximized=False)
 
-        icon = self.launcher.model.get_icon_by_desktop_id(text_win.application.desktop_file)
+        icon = self.launcher.model.get_icon(desktop_id=text_win.application.desktop_file)
         launcher = self.launcher.get_launcher_for_monitor(self.panel_monitor)
         launcher.click_launcher_icon(icon)
 

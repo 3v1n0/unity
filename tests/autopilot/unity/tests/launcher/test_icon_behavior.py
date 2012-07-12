@@ -15,6 +15,7 @@ import logging
 from testtools.matchers import Equals, NotEquals
 from time import sleep
 
+from unity.emulators.icons import BamfLauncherIcon
 from unity.emulators.launcher import IconDragType
 from unity.tests.launcher import LauncherTestCase, _make_scenarios
 
@@ -51,8 +52,7 @@ class LauncherIconsTests(LauncherTestCase):
     def test_shift_click_opens_new_application_instance(self):
         """Shift+Clicking MUST open a new instance of an already-running application."""
         app = self.start_app("Calculator")
-        desktop_id = app.desktop_file
-        icon = self.launcher.model.get_icon_by_desktop_id(desktop_id)
+        icon = self.launcher.model.get_icon(desktop_id=app.desktop_file)
         launcher_instance = self.launcher.get_launcher_for_monitor(0)
 
         self.keyboard.press("Shift")
@@ -72,10 +72,10 @@ class LauncherIconsTests(LauncherTestCase):
 
         self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
 
-        mahj_icon = self.launcher.model.get_icon_by_desktop_id(
-            mah_win2.application.desktop_file)
-        calc_icon = self.launcher.model.get_icon_by_desktop_id(
-            calc_win.application.desktop_file)
+        mahj_icon = self.launcher.model.get_icon(
+            desktop_id=mah_win2.application.desktop_file)
+        calc_icon = self.launcher.model.get_icon(
+            desktop_id=calc_win.application.desktop_file)
 
         self.launcher_instance.click_launcher_icon(calc_icon)
         self.assertProperty(calc_win, is_focused=True)
@@ -107,7 +107,7 @@ class LauncherIconsTests(LauncherTestCase):
         self.assertVisibleWindowStack([calc_win2, calc_win1])
         self.assertProperty(calc_win2, is_focused=True)
 
-        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc_app.desktop_file)
+        calc_icon = self.launcher.model.get_icon(desktop_id=calc_app.desktop_file)
         self.addCleanup(self.keybinding, "spread/cancel")
         self.launcher_instance.click_launcher_icon(calc_icon)
 
@@ -118,14 +118,14 @@ class LauncherIconsTests(LauncherTestCase):
         """Icons must stay on launcher when an application is quickly closed/reopened."""
         calc = self.start_app("Calculator")
         desktop_file = calc.desktop_file
-        calc_icon = self.launcher.model.get_icon_by_desktop_id(desktop_file)
+        calc_icon = self.launcher.model.get_icon(desktop_id=desktop_file)
         self.assertThat(calc_icon.visible, Eventually(Equals(True)))
 
         self.close_all_app("Calculator")
         calc = self.start_app("Calculator")
         sleep(2)
 
-        calc_icon = self.launcher.model.get_icon_by_desktop_id(desktop_file)
+        calc_icon = self.launcher.model.get_icon(desktop_id=desktop_file)
         self.assertThat(calc_icon, NotEquals(None))
         self.assertThat(calc_icon.visible, Eventually(Equals(True)))
 
@@ -141,7 +141,11 @@ class LauncherDragIconsBehavior(LauncherTestCase):
 
     def ensure_calc_icon_not_in_launcher(self):
         """Wait until the launcher model updates and removes the calc icon."""
-        refresh_fn = lambda: self.launcher.model.get_icon_by_desktop_id("gcalctool.desktop")
+        # Normally we'd use get_icon(desktop_id="...") but we're expecting it to
+        # not exist, and we don't want to wait for 10 seconds, so we do this
+        # the old fashioned way.
+        refresh_fn = lambda: self.launcher.model.get_children_by_type(
+            BamfLauncherIcon, desktop_id="gcalctool.desktop")
         self.assertThat(refresh_fn, Eventually(Equals(None)))
 
     def test_can_drag_icon_below_bfb(self):
@@ -149,7 +153,7 @@ class LauncherDragIconsBehavior(LauncherTestCase):
 
         self.ensure_calc_icon_not_in_launcher()
         calc = self.start_app("Calculator")
-        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
+        calc_icon = self.launcher.model.get_icon(desktop_id=calc.desktop_file)
 
         bfb_icon_position = 0
         self.launcher_instance.drag_icon_to_position(calc_icon,
@@ -164,7 +168,7 @@ class LauncherDragIconsBehavior(LauncherTestCase):
 
         self.ensure_calc_icon_not_in_launcher()
         calc = self.start_app("Calculator")
-        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc.desktop_file)
+        calc_icon = self.launcher.model.get_icon(desktop_id=calc.desktop_file)
 
         # Move a known icon to the top as it needs to be more than 2 icon
         # spaces away for this test to actually do anything

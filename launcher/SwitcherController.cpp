@@ -56,9 +56,7 @@ Controller::Controller(unsigned int load_timeout)
 {
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
 
-  auto lazy_timeout = std::make_shared<glib::TimeoutSeconds>(construct_timeout_, glib::Source::Priority::LOW);
-  lazy_timeout->Run([&] { ConstructWindow(); return false; });
-  sources_.Add(lazy_timeout, LAZY_TIMEOUT);
+  sources_.AddTimeoutSeconds(construct_timeout_, [&] { ConstructWindow(); return false; }, LAZY_TIMEOUT);
 }
 
 void Controller::OnBackgroundUpdate(GVariant* data)
@@ -90,13 +88,8 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
 
   if (timeout_length > 0)
   {
-    auto view_idle_construct = std::make_shared<glib::Idle>();
-    sources_.Add(view_idle_construct, VIEW_CONSTRUCT_IDLE);
-    view_idle_construct->Run([&] () { ConstructView(); return false; });
-
-    auto show_timeout = std::make_shared<glib::Timeout>(timeout_length);
-    sources_.Add(show_timeout, SHOW_TIMEOUT);
-    show_timeout->Run([&] () { ShowView(); return false; });
+    sources_.AddIdle([&] { ConstructView(); return false; }, VIEW_CONSTRUCT_IDLE);
+    sources_.AddTimeout(timeout_length, [&] { ShowView(); return false; }, SHOW_TIMEOUT);
   }
   else
   {
@@ -105,9 +98,8 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
 
   if (detail_on_timeout)
   {
-    auto detail_timeout = std::make_shared<glib::Timeout>(initial_detail_timeout_length);
-    sources_.Add(detail_timeout, DETAIL_TIMEOUT);
-    detail_timeout->Run(sigc::mem_fun(this, &Controller::OnDetailTimer));
+    auto cb_func = sigc::mem_fun(this, &Controller::OnDetailTimer);
+    sources_.AddTimeout(initial_detail_timeout_length, cb_func, DETAIL_TIMEOUT);
   }
 
   ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
@@ -135,9 +127,8 @@ void Controller::OnModelSelectionChanged(AbstractLauncherIcon::Ptr icon)
 {
   if (detail_on_timeout)
   {
-    auto detail_timeout = std::make_shared<glib::Timeout>(detail_timeout_length);
-    sources_.Add(detail_timeout, DETAIL_TIMEOUT);
-    detail_timeout->Run(sigc::mem_fun(this, &Controller::OnDetailTimer));
+    auto cb_func = sigc::mem_fun(this, &Controller::OnDetailTimer);
+    sources_.AddTimeout(detail_timeout_length, cb_func, DETAIL_TIMEOUT);
   }
 
   if (icon)

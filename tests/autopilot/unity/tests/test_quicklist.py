@@ -35,11 +35,8 @@ class QuicklistActionTests(UnityTestCase):
         launcher = self.launcher.get_launcher_for_monitor(0)
         launcher.click_launcher_icon(launcher_icon, button=3)
         self.addCleanup(self.keyboard.press_and_release, "Escape")
-        for i in range(10):
-            ql = launcher_icon.get_quicklist()
-            if ql:
-                return ql
-            sleep(1)
+        self.assertThat(launcher_icon.get_quicklist, Eventually(NotEquals(None)))
+        return launcher_icon.get_quicklist()
 
     def test_quicklist_actions(self):
         """Test that all actions present in the destop file are shown in the quicklist."""
@@ -50,7 +47,7 @@ class QuicklistActionTests(UnityTestCase):
         desktop_file = os.path.join('/usr/share/applications', desktop_id)
         de = DesktopEntry(desktop_file)
         # get the launcher icon from the launcher:
-        launcher_icon = self.launcher.model.get_icon_by_desktop_id(desktop_id)
+        launcher_icon = self.launcher.model.get_icon(desktop_id=desktop_id)
         self.assertThat(launcher_icon, NotEquals(None))
 
         # open the icon quicklist, and get all the text labels:
@@ -81,10 +78,10 @@ class QuicklistActionTests(UnityTestCase):
 
         self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
 
-        mahj_icon = self.launcher.model.get_icon_by_desktop_id(
-            mah_win1.application.desktop_file)
-        calc_icon = self.launcher.model.get_icon_by_desktop_id(
-            calc_win.application.desktop_file)
+        mahj_icon = self.launcher.model.get_icon(
+            desktop_id=mah_win1.application.desktop_file)
+        calc_icon = self.launcher.model.get_icon(
+            desktop_id=calc_win.application.desktop_file)
 
         calc_ql = self.open_quicklist_for_icon(calc_icon)
         calc_ql.get_quicklist_application_item(calc_win.application.name).mouse_click()
@@ -109,7 +106,7 @@ class QuicklistActionTests(UnityTestCase):
         self.assertVisibleWindowStack([calc_win2, calc_win1])
         self.assertProperty(calc_win2, is_focused=True)
 
-        calc_icon = self.launcher.model.get_icon_by_desktop_id(calc_app.desktop_file)
+        calc_icon = self.launcher.model.get_icon(desktop_id=calc_app.desktop_file)
 
         calc_ql = self.open_quicklist_for_icon(calc_icon)
         app_item = calc_ql.get_quicklist_application_item(calc_app.name)
@@ -126,14 +123,37 @@ class QuicklistActionTests(UnityTestCase):
         self.assertProperty(calc_win, is_focused=True)
 
         self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
 
-        calc_icon = self.launcher.model.get_icon_by_desktop_id(
-            calc_win.application.desktop_file)
+        calc_icon = self.launcher.model.get_icon(
+            desktop_id=calc_win.application.desktop_file)
         self.open_quicklist_for_icon(calc_icon)
 
         self.keyboard.press_and_release("Down")
         self.keyboard.press_and_release("Enter")
         self.assertThat(self.dash.visible, Eventually(Equals(False)))
+
+    def test_quicklist_closes_when_hud_opens(self):
+        """When a quicklist is open you must still be able to open the Hud."""
+        calc = self.start_app("Calculator")
+
+        calc_icon = self.launcher.model.get_icon(desktop_id=calc.desktop_file)
+        calc_ql = self.open_quicklist_for_icon(calc_icon)
+
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
+        self.assertThat(self.hud.visible, Eventually(Equals(True)))
+
+    def test_quicklist_closes_when_dash_opens(self):
+        """When the quicklist is open you must still be able to open the dash."""
+        calc = self.start_app("Calculator")
+
+        calc_icon = self.launcher.model.get_icon(desktop_id=calc.desktop_file)
+        calc_ql = self.open_quicklist_for_icon(calc_icon)
+
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
+        self.assertThat(self.dash.visible, Eventually(Equals(True)))
 
 
 class QuicklistKeyNavigationTests(UnityTestCase):
@@ -144,8 +164,8 @@ class QuicklistKeyNavigationTests(UnityTestCase):
 
         self.ql_app = self.start_app("Text Editor")
 
-        self.ql_launcher_icon = self.launcher.model.get_icon_by_desktop_id(
-            self.ql_app.desktop_file)
+        self.ql_launcher_icon = self.launcher.model.get_icon(
+            desktop_id=self.ql_app.desktop_file)
         self.assertThat(self.ql_launcher_icon, NotEquals(None))
 
         self.ql_launcher = self.launcher.get_launcher_for_monitor(0)

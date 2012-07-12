@@ -805,7 +805,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 #else
   nux::ObjectPtr<nux::IOpenGLTexture2D> device_texture =
     nux::GetGraphicsDisplay()->GetGpuDevice()->CreateTexture2DFromID(gScreen->fbo ()->tex ()->name (),
-      output->width(), output->height(), 1, nux::BITFMT_R8G8B8A8);
+      screen->width(), screen->height(), 1, nux::BITFMT_R8G8B8A8);
 #endif
 
   nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_ = device_texture;
@@ -818,7 +818,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
   GLint fboID;
   // Nux renders to the referenceFramebuffer when it's embedded.
   glGetIntegerv(GL_FRAMEBUFFER_BINDING, &fboID);
-  wt->GetWindowCompositor().SetReferenceFramebuffer(fboID, geo);
+  wt->GetWindowCompositor().SetReferenceFramebuffer(fboID, oGeo);
 #endif
 
   nuxPrologue();
@@ -1513,13 +1513,13 @@ void UnityScreen::handleEvent(XEvent* event)
       {
         /* We need an idle to postpone this action, after the current event
          * has been processed */
-        sources_.Add(std::make_shared<glib::Idle>([&]() {
+        sources_.AddIdle([&] {
           shortcut_controller_->SetEnabled(false);
           shortcut_controller_->Hide();
           EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, false);
 
           return false;
-        }));
+        });
       }
 
       KeySym key_sym;
@@ -1697,8 +1697,18 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
     scale_just_activated_ = false;
   }
 
-  if (hud_controller_->IsVisible() && launcher_controller_->AboutToShowDash(was_tap, when))
-    hud_controller_->HideHud();
+  if (launcher_controller_->AboutToShowDash(was_tap, when))
+  {
+    if (hud_controller_->IsVisible())
+    {
+      hud_controller_->HideHud();
+    }
+
+    if (QuicklistManager::Default()->Current())
+    {
+      QuicklistManager::Default()->Current()->Hide();
+    }
+  }
 
   super_keypressed_ = false;
   launcher_controller_->KeyNavTerminate(true);
@@ -2091,6 +2101,9 @@ bool UnityScreen::ShowHud()
     // If an overlay is open, it must be the dash! Close it!
     if (launcher_controller_->IsOverlayOpen())
       dash_controller_->HideDash();
+
+    if (QuicklistManager::Default()->Current())
+      QuicklistManager::Default()->Current()->Hide();
 
     hud_controller_->ShowHud();
   }
@@ -2851,17 +2864,14 @@ void UnityScreen::ScheduleRelayout(guint timeout)
 {
   if (!sources_.GetSource(local::RELAYOUT_TIMEOUT))
   {
-    auto relayout_timeout(std::make_shared<glib::Timeout>(timeout));
-    sources_.Add(relayout_timeout, local::RELAYOUT_TIMEOUT);
-
-    relayout_timeout->Run([&]() {
+    sources_.AddTimeout(timeout, [&] {
       NeedsRelayout();
       Relayout();
 
       cScreen->damageScreen();
 
       return false;
-    });
+    }, local::RELAYOUT_TIMEOUT);
   }
 }
 
@@ -3235,6 +3245,8 @@ void capture_g_log_calls(const gchar* log_domain,
                          const gchar* message,
                          gpointer user_data)
 {
+  // If the environment variable is set, we capture the backtrace.
+  static bool glog_backtrace = ::getenv("UNITY_LOG_GLOG_BACKTRACE");
   // If nothing else, all log messages from unity should be identified as such
   std::string module("unity");
   if (log_domain)
@@ -3245,14 +3257,16 @@ void capture_g_log_calls(const gchar* log_domain,
   nux::logging::Level level = glog_level_to_nux(log_level);
   if (level >= logger.GetEffectiveLogLevel())
   {
-    nux::logging::LogStream(level, logger.module(), "<unknown>", 0).stream()
-        << message;
-    if (level >= nux::logging::Error)
+    std::string backtrace;
+    if (glog_backtrace && level >= nux::logging::Warning)
     {
-      nux::logging::Backtrace();
+      backtrace = "\n" + nux::logging::Backtrace();
     }
+    nux::logging::LogStream(level, logger.module(), "<unknown>", 0).stream()
+      << message << backtrace;
   }
 }
 
 } // anonymous namespace
 } // namespace unity
+
