@@ -127,6 +127,7 @@ class LauncherIconsTests(LauncherTestCase):
 
         calc_icon = self.launcher.model.get_icon(desktop_id=calc_app.desktop_file)
         self.launcher_instance.click_launcher_icon(calc_icon)
+        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
 
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
@@ -166,7 +167,7 @@ class LauncherDragIconsBehavior(LauncherTestCase):
         # the old fashioned way.
         refresh_fn = lambda: self.launcher.model.get_children_by_type(
             BamfLauncherIcon, desktop_id="gcalctool.desktop")
-        self.assertThat(refresh_fn, Eventually(Equals(None)))
+        self.assertThat(refresh_fn, Eventually(Equals([])))
 
     def test_can_drag_icon_below_bfb(self):
         """Application icons must be draggable to below the BFB."""
