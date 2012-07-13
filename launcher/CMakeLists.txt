@@ -57,6 +57,7 @@ set (LAUNCHER_SOURCES
      LauncherIcon.cpp
      LauncherModel.cpp
      LauncherOptions.cpp
+     MockLauncherIcon.cpp
      PointerBarrier.cpp
      QuicklistManager.cpp
      QuicklistMenuItem.cpp
