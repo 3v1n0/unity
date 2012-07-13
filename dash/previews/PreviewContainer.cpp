@@ -208,10 +208,7 @@ PreviewContainer::PreviewContainer(NUX_FILE_LINE_DECL)
   last_progress_time_.tv_sec = 0;
   last_progress_time_.tv_nsec = 0;
 
-  mouse_move.connect(sigc::mem_fun(this, &PreviewContainer::RecvMouseMove));
   key_down.connect(sigc::mem_fun(this, &PreviewContainer::OnKeyDown));
-  key_nav_focus_change.connect(sigc::mem_fun(this, &PreviewContainer::OnKeyNavFocusChange));
-
 }
 
 PreviewContainer::~PreviewContainer()
@@ -447,8 +444,11 @@ void PreviewContainer::OnKeyDown(unsigned long event_type, unsigned long event_k
   }
 }
 
-
 nux::Area* PreviewContainer::KeyNavIteration(nux::KeyNavDirection direction)
 {
   return this;
 }
+
+} // namespace previews
+} // namespace dash
+} // namespace unity

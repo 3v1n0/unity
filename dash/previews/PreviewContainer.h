@@ -80,7 +80,6 @@ protected:
   void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);
 
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
-  void OnKeyNavFocusChange(nux::Area *area, bool has_focus, nux::KeyNavDirection direction);
 
   bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
   void OnKeyDown(unsigned long event_type, unsigned long event_keysym, unsigned long event_state, const TCHAR* character, unsigned short key_repeat_count);
