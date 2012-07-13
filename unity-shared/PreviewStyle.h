@@ -60,6 +60,7 @@ public:
   std::string app_description_font() const;
   std::string info_hint_font() const;
   std::string user_rating_font() const;
+  std::string no_preview_image_font() const;
    ////////////////////////////////
  
 protected:

@@ -23,6 +23,7 @@
 #include "ApplicationScreenshot.h"
 #include "unity-shared/IntrospectableWrappers.h"
 #include <NuxCore/Logger.h>
+#include <Nux/VLayout.h>
 
 namespace unity
 {
@@ -38,15 +39,31 @@ nux::logging::Logger logger("unity.dash.previews.applicationscreenshot");
 
 NUX_IMPLEMENT_OBJECT_TYPE(ApplicationScreenshot);
 
-ApplicationScreenshot::ApplicationScreenshot(std::string const& image_hint)
+ApplicationScreenshot::ApplicationScreenshot()
   : View(NUX_TRACKER_LOCATION)
+  , overlay_text_(nullptr)
 {
-  texture_screenshot_.Adopt(nux::CreateTexture2DFromFile(image_hint.c_str(), -1, true));
   SetupViews();
 }
 
 ApplicationScreenshot::~ApplicationScreenshot()
 {
+  if (overlay_text_)
+    overlay_text_->UnReference();
+}
+
+void ApplicationScreenshot::SetImage(std::string const& image_hint)
+{
+  if (overlay_text_ && GetLayout())
+    GetLayout()->RemoveChildObject(overlay_text_);
+
+  texture_screenshot_.Adopt(nux::CreateTexture2DFromFile(image_hint.c_str(), -1, true));  
+
+  if (!texture_screenshot_ && GetLayout())
+  {
+    GetLayout()->AddView(overlay_text_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0, nux::LayoutPosition(1));   
+  }
+  QueueDraw();
 }
 
 void ApplicationScreenshot::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
@@ -55,14 +72,6 @@ void ApplicationScreenshot::Draw(nux::GraphicsEngine& gfx_engine, bool force_dra
 
   gfx_engine.PushClippingRectangle(base);
   nux::GetPainter().PaintBackground(gfx_engine, base);
-
-  gfx_engine.PopClippingRectangle();
-}
-
-void ApplicationScreenshot::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
-{
-  nux::Geometry const& base = GetGeometry();
-  gfx_engine.PushClippingRectangle(base);
 
   if (texture_screenshot_)
   {
@@ -83,7 +92,6 @@ void ApplicationScreenshot::DrawContent(nux::GraphicsEngine& gfx_engine, bool fo
 
     int border_width = 1;
 
-    //DrawBorder(gfx_engine, imageDest, 0, nux::Color(0.15f, 0.15f, 0.15f));
     gfx_engine.QRP_Color(imageDest.x + (float(base.GetWidth() - imageDest.GetWidth()) / 2),
                       imageDest.y + (float(base.GetHeight() - imageDest.GetHeight()) / 2),
                       imageDest.GetWidth(),
@@ -107,6 +115,38 @@ void ApplicationScreenshot::DrawContent(nux::GraphicsEngine& gfx_engine, bool fo
                         texxform,
                         nux::color::White);
   }
+  else
+  {
+    unsigned int alpha, src, dest = 0;
+    gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
+    gfx_engine.GetRenderStates().SetBlend(true);
+
+    gfx_engine.QRP_Color(base.x,
+                      base.y,
+                      base.GetWidth(),
+                      base.GetHeight(),
+                      nux::Color(0.15f, 0.15f, 0.15f, 0.15f));
+
+    gPainter.Paint2DQuadWireframe(gfx_engine,
+                      base.x+1,
+                      base.y,
+                      base.GetWidth(),
+                      base.GetHeight(),
+                      nux::Color(0.5f, 0.5, 0.5, 0.15f));
+
+    gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
+  }
+
+  gfx_engine.PopClippingRectangle();
+}
+
+void ApplicationScreenshot::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
+{
+  nux::Geometry const& base = GetGeometry();
+  gfx_engine.PushClippingRectangle(base);
+
+  if (GetLayout())
+    GetLayout()->ProcessDraw(gfx_engine, force_draw);
 
   gfx_engine.PopClippingRectangle();
 }
@@ -118,6 +158,22 @@ std::string ApplicationScreenshot::GetName() const
 
 void ApplicationScreenshot::SetupViews()
 {
+  nux::VLayout* layout = new nux::VLayout();
+  layout->AddSpace(0, 1);
+  layout->AddSpace(0, 1);
+  SetLayout(layout);
+
+  overlay_text_ = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
+  overlay_text_->Reference();
+  overlay_text_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
+  overlay_text_->SetFont("Ubuntu 14");
+  overlay_text_->SetLines(-3);
+  overlay_text_->SetText("No Image Available");
+}
+
+void ApplicationScreenshot::SetFont(std::string const& font)
+{
+  overlay_text_->SetFont(font);
 }
 
 }

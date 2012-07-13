@@ -27,7 +27,6 @@
 #include <Nux/View.h>
 #include <UnityCore/ApplicationPreview.h>
 #include "unity-shared/StaticCairoText.h"
-#include <Nux/StaticText.h>
 #include <NuxCore/ObjectPtr.h>
 
 namespace unity
@@ -43,11 +42,15 @@ public:
   typedef nux::ObjectPtr<ApplicationScreenshot> Ptr;
   NUX_DECLARE_OBJECT_TYPE(ApplicationScreenshot, nux::View);
 
-  ApplicationScreenshot(std::string const& image_hint);
+  ApplicationScreenshot();
   virtual ~ApplicationScreenshot();
+
+  void SetImage(std::string const& image_hint);
 
   // From debug::Introspectable
   std::string GetName() const;
+
+  void SetFont(std::string const& font);
 
 protected:
   virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
@@ -57,7 +60,7 @@ protected:
 
 private:
   nux::ObjectPtr<nux::BaseTexture> texture_screenshot_;
-
+  nux::StaticCairoText* overlay_text_;
 };
 
 }

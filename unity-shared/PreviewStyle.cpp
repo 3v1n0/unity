@@ -107,6 +107,10 @@ std::string Style::user_rating_font() const
 {
   return "Ubuntu Light 10";
 }
+std::string Style::no_preview_image_font() const
+{
+  return "Ubuntu Light 16";
+}
 
 }
 }

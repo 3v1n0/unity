@@ -155,7 +155,9 @@ void ApplicationPreview::SetupViews()
   nux::HLayout* image_data_layout = new nux::HLayout();
   image_data_layout->SetSpaceBetweenChildren(12);
 
-  ApplicationScreenshot* app_image = new ApplicationScreenshot("../../../dash/previews/Skype.png");
+  ApplicationScreenshot* app_image = new ApplicationScreenshot();
+  app_image->SetImage(g_icon_to_string(preview_model_->image.Get().RawPtr()));
+  app_image->SetFont(style.no_preview_image_font());
 
     /////////////////////
     // App Data Panel
@@ -178,8 +180,8 @@ void ApplicationPreview::SetupViews()
 
         app_rating_ = new PreviewRatingsWidget();
         app_rating_->SetMinimumHeight(36);
-        app_rating_->SetRating(0.7);
-        app_rating_->SetReviews(17);
+        app_rating_->SetRating(app_preview_model->rating);
+        app_rating_->SetReviews(app_preview_model->num_ratings);
         icon_layout->AddView(app_rating_, 0);
 
         // buffer space      
