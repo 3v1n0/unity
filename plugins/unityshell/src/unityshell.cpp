@@ -1633,7 +1633,8 @@ void UnityScreen::handleCompizEvent(const char* plugin,
     ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
   }
 
-  if (PluginAdapter::Default()->IsScaleActive() && g_strcmp0(plugin, "scale") == 0)
+  if (PluginAdapter::Default()->IsScaleActive() &&
+      g_strcmp0(plugin, "scale") == 0 && super_keypressed_)
   {
     scale_just_activated_ = true;
   }
