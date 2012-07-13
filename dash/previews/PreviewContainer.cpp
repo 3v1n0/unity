@@ -37,9 +37,16 @@ namespace dash
 namespace previews
 {
 
+Navigation operator&(const Navigation lhs, const Navigation rhs)
+{
+  return Navigation(int(lhs) & int(rhs));
+}
+
 namespace
 {
 nux::logging::Logger logger("unity.dash.previews.previewcontainer");
+
+
 
 const int ANIM_DURATION_SHORT_SHORT = 100;
 const int ANIM_DURATION = 200;
@@ -56,7 +63,7 @@ public:
   , animating_(false)
   , parent_(parent) {}
 
-  void PushPreview(previews::Preview::Ptr preview, NavButton direction)
+  void PushPreview(previews::Preview::Ptr preview, Navigation direction)
   {
     AddView(preview.GetPointer());
     preview->SetVisible(false);
@@ -101,9 +108,9 @@ public:
         current_preview_->SetVisible(true);
 
         nux::Geometry swipeOut = geometry;
-        if (swipe_.direction == RIGHT)
+        if (swipe_.direction == Navigation::RIGHT)
           swipeOut.OffsetPosition(-(progress_ * (geometry.GetWidth() + parent_->nav_left_->GetGeometry().GetWidth())), 0);
-        else if (swipe_.direction == LEFT)
+        else if (swipe_.direction == Navigation::LEFT)
           swipeOut.OffsetPosition(progress_* (geometry.GetWidth() + parent_->nav_right_->GetGeometry().GetWidth()), 0);
         current_preview_->SetGeometry(swipeOut);
       }
@@ -114,9 +121,9 @@ public:
         swipe_.preview->SetVisible(true);
 
         nux::Geometry swipeIn = geometry;
-        if (swipe_.direction == RIGHT)
+        if (swipe_.direction == Navigation::RIGHT)
           swipeIn.OffsetPosition(float(geometry.GetWidth() + parent_->nav_right_->GetGeometry().GetWidth()) - (progress_ * (geometry.GetWidth() + parent_->nav_right_->GetGeometry().GetWidth())), 0);
-        else if (swipe_.direction == LEFT)
+        else if (swipe_.direction == Navigation::LEFT)
           swipeIn.OffsetPosition(-((1.0-progress_)*(geometry.GetWidth() + parent_->nav_left_->GetGeometry().GetWidth())), 0);
         swipe_.preview->SetGeometry(swipeIn);
       }
@@ -173,7 +180,7 @@ protected:
 private:
   struct PreviewSwipe
   {
-    NavButton direction;
+    Navigation direction;
     previews::Preview::Ptr preview;
 
     void reset() { preview.Release(); }
@@ -193,19 +200,25 @@ NUX_IMPLEMENT_OBJECT_TYPE(PreviewContainer);
 PreviewContainer::PreviewContainer(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , content_layout_(nullptr)
+  , nav_disabled_(Navigation::NONE)
   , navigation_progress_speed_(0.0)
   , navigation_count_(0)
 {
   SetupViews();
   last_progress_time_.tv_sec = 0;
   last_progress_time_.tv_nsec = 0;
+
+  mouse_move.connect(sigc::mem_fun(this, &PreviewContainer::RecvMouseMove));
+  key_down.connect(sigc::mem_fun(this, &PreviewContainer::OnKeyDown));
+  key_nav_focus_change.connect(sigc::mem_fun(this, &PreviewContainer::OnKeyNavFocusChange));
+
 }
 
 PreviewContainer::~PreviewContainer()
 {
 }
 
-void PreviewContainer::preview(glib::Variant const& preview, NavButton direction)
+void PreviewContainer::preview(glib::Variant const& preview, Navigation direction)
 {
   PreviewFactoryOperator previewOperator(PreviewFactory::Instance().Item(preview));
 
@@ -215,43 +228,16 @@ void PreviewContainer::preview(glib::Variant const& preview, NavButton direction
   content_layout_->PushPreview(preview_view, direction);
 }
 
-void PreviewContainer::DisableNavButton(NavButton button)
+void PreviewContainer::DisableNavButton(Navigation button)
 {
+  nav_disabled_ = button;
+  nav_right_->SetEnabled(IsNavigationDisabled(Navigation::RIGHT) == false);
+  nav_left_->SetEnabled(IsNavigationDisabled(Navigation::LEFT) == false);
 }
 
-void PreviewContainer::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
+bool PreviewContainer::IsNavigationDisabled(Navigation button) const
 {
-}
-
-void PreviewContainer::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
-{
-  nux::Geometry base = GetGeometry();
-  gfx_engine.PushClippingRectangle(base);
-
-  // Paint using ProcessDraw2. ProcessDraw is overrided  by empty impl so we can control z order.
-  if (content_layout_)
-  {
-    // rely on the compiz event loop to come back to us in a nice throttling
-    if (AnimationInProgress())
-    {
-      EnsureAnimation();
-
-      timespec current;
-      clock_gettime(CLOCK_MONOTONIC, &current);
-      content_layout_->UpdateAnimationProgress(GetSwipeAnimationProgress(current));
-      last_progress_time_ = current;
-    }
-    else if (content_layout_ && content_layout_->IsAnimating())
-    {
-      content_layout_->UpdateAnimationProgress(1.0f);
-    }
-
-    content_layout_->ProcessDraw2(gfx_engine, force_draw);
-  }
-  if (GetCompositionLayout())
-    GetCompositionLayout()->ProcessDraw(gfx_engine, force_draw);
-
-  gfx_engine.PopClippingRectangle();
+  return (nav_disabled_ & button) != Navigation::NONE;  
 }
 
 std::string PreviewContainer::GetName() const
@@ -295,12 +281,12 @@ void PreviewContainer::SetupViews()
     navigation_count_++;
 
     navigation_progress_speed_ = navigation_progress_remaining / ANIM_DURATION_LONG;
-    EnsureAnimation();
+    QueueAnimation();
   });
 
   content_layout_->continue_navigation.connect([&]()
   {
-    EnsureAnimation(); 
+    QueueAnimation(); 
   });
 
   content_layout_->end_navigation.connect([&]()
@@ -308,6 +294,36 @@ void PreviewContainer::SetupViews()
     navigation_count_ = 0;
     navigation_progress_speed_ = 0;
   });
+}
+
+void PreviewContainer::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
+{
+}
+
+void PreviewContainer::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
+{
+  nux::Geometry base = GetGeometry();
+  gfx_engine.PushClippingRectangle(base);
+
+  // Paint using ProcessDraw2. ProcessDraw is overrided  by empty impl so we can control z order.
+  if (content_layout_)
+  {
+    // rely on the compiz event loop to come back to us in a nice throttling
+    if (AnimationInProgress())
+    {
+      QueueAnimation();
+    }
+    else if (content_layout_ && content_layout_->IsAnimating())
+    {
+      content_layout_->UpdateAnimationProgress(1.0f);
+    }
+
+    content_layout_->ProcessDraw2(gfx_engine, force_draw);
+  }
+  if (GetCompositionLayout())
+    GetCompositionLayout()->ProcessDraw(gfx_engine, force_draw);
+
+  gfx_engine.PopClippingRectangle();
 }
 
 bool PreviewContainer::AnimationInProgress()
@@ -335,17 +351,104 @@ float PreviewContainer::GetSwipeAnimationProgress(struct timespec const& current
   return progress;
 }
 
-void PreviewContainer::EnsureAnimation()
+void PreviewContainer::QueueAnimation()
 {
-    auto idle = std::make_shared<glib::Idle>(glib::Source::Priority::DEFAULT);
-    sources_.Add(idle, ANIMATION_IDLE);
-    idle->Run([&]() {
-      QueueDraw();
-      return false;
-    });
+  if (!idle_)
+  {
+    idle_.reset(new glib::Idle(sigc::mem_fun(this, &PreviewContainer::Iteration), glib::Source::Priority::DEFAULT));
+  }
+}
+
+bool PreviewContainer::Iteration()
+{
+  idle_.reset();
+
+  timespec current;
+  clock_gettime(CLOCK_MONOTONIC, &current);
+  content_layout_->UpdateAnimationProgress(GetSwipeAnimationProgress(current));
+  last_progress_time_ = current;
+
+  QueueDraw();
+  return false;
+}
+
+bool PreviewContainer::AcceptKeyNavFocus()
+{
+  return true;
+}
+
+bool PreviewContainer::InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character)
+{
+
+  nux::KeyNavDirection direction = nux::KEY_NAV_NONE;
+  switch (keysym)
+  {
+    case NUX_VK_UP:
+      direction = nux::KeyNavDirection::KEY_NAV_UP;
+      break;
+    case NUX_VK_DOWN:
+      direction = nux::KeyNavDirection::KEY_NAV_DOWN;
+      break;
+    case NUX_VK_LEFT:
+      direction = nux::KeyNavDirection::KEY_NAV_LEFT;
+      break;
+    case NUX_VK_RIGHT:
+      direction = nux::KeyNavDirection::KEY_NAV_RIGHT;
+      break;
+    case NUX_VK_LEFT_TAB:
+      direction = nux::KeyNavDirection::KEY_NAV_TAB_PREVIOUS;
+      break;
+    case NUX_VK_TAB:
+      direction = nux::KeyNavDirection::KEY_NAV_TAB_NEXT;
+      break;
+    case NUX_VK_ENTER:
+    case NUX_KP_ENTER:
+      direction = nux::KeyNavDirection::KEY_NAV_ENTER;
+      break;
+    default:
+      direction = nux::KeyNavDirection::KEY_NAV_NONE;
+      break;
+  }
+
+  if (direction == nux::KeyNavDirection::KEY_NAV_NONE
+      || direction == nux::KeyNavDirection::KEY_NAV_UP
+      || direction == nux::KeyNavDirection::KEY_NAV_DOWN
+      || direction == nux::KeyNavDirection::KEY_NAV_TAB_NEXT
+      || direction == nux::KeyNavDirection::KEY_NAV_TAB_PREVIOUS
+      || direction == nux::KeyNavDirection::KEY_NAV_ENTER)
+  {
+    // we don't handle these cases
+    return false;
+  }
+
+   // check for edge cases where we want the keynav to bubble up
+  if (direction == nux::KEY_NAV_LEFT && IsNavigationDisabled(Navigation::LEFT))
+    return false; // pressed left on the first item, no diiice
+  else if (direction == nux::KEY_NAV_RIGHT && IsNavigationDisabled(Navigation::RIGHT))
+    return false; // pressed right on the last item, nope. nothing for you
+
+  return true;
+}
+
+void PreviewContainer::OnKeyDown(unsigned long event_type, unsigned long event_keysym,
+                                    unsigned long event_state, const TCHAR* character,
+                                    unsigned short key_repeat_count)
+{
+  switch (event_keysym)
+  {
+    case NUX_VK_LEFT:
+      navigate_left.emit();
+      break;
+    case NUX_VK_RIGHT:
+      navigate_right.emit();
+      break;
+    default:
+      return;
+  }
 }
 
 
-}
-}
+nux::Area* PreviewContainer::KeyNavIteration(nux::KeyNavDirection direction)
+{
+  return this;
 }

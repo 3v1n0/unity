@@ -82,6 +82,55 @@ void PreviewInfoHintWidget::AddProperties(GVariantBuilder* builder)
 {
 }
 
+std::string StringFromVariant(GVariant* variant)
+{
+    std::stringstream ss;
+    const GVariantType* info_hint_type = g_variant_get_type(variant);
+    
+    if (g_variant_type_equal(info_hint_type, G_VARIANT_TYPE_BOOLEAN))
+    {
+      ss << g_variant_get_int16(variant);
+    }
+    else if (g_variant_type_equal(info_hint_type, G_VARIANT_TYPE_INT16))
+    {
+      ss << g_variant_get_int16(variant);
+    }
+    else if (g_variant_type_equal(info_hint_type, G_VARIANT_TYPE_UINT16))
+    {
+      ss << g_variant_get_uint16(variant);
+    }
+    else if (g_variant_type_equal(info_hint_type, G_VARIANT_TYPE_INT32))
+    {
+      ss << g_variant_get_int32(variant);
+    }
+    else if (g_variant_type_equal(info_hint_type,  G_VARIANT_TYPE_UINT32))
+    {
+      ss << g_variant_get_uint32(variant);
+    }
+    else if (g_variant_type_equal(info_hint_type,  G_VARIANT_TYPE_INT64))
+    {
+      ss << g_variant_get_int64(variant);
+    }
+    else if (g_variant_type_equal(info_hint_type,   G_VARIANT_TYPE_UINT64))
+    {
+      ss << g_variant_get_uint64(variant);
+    }
+    else if (g_variant_type_equal(info_hint_type,   G_VARIANT_TYPE_DOUBLE))
+    {
+      ss << g_variant_get_double(variant);
+    }
+    else if (g_variant_type_equal(info_hint_type,   G_VARIANT_TYPE_STRING))
+    {
+      std::string str = g_variant_get_string(variant, NULL);
+      ss << str;
+    }
+    else
+    {
+      ss << "unknown value";
+    }
+    return ss.str();
+}
+
 void PreviewInfoHintWidget::SetupViews()
 {
   previews::Style& style = previews::Style::Instance();
@@ -107,7 +156,7 @@ void PreviewInfoHintWidget::SetupViews()
     info_name_layout->SetMaximumWidth(128 - (icon_width > 0 ? (icon_width + 16) : 0));
 
 
-    nux::StaticCairoText* info_value = new nux::StaticCairoText(info_hint->value.GetString(), NUX_TRACKER_LOCATION);
+    nux::StaticCairoText* info_value = new nux::StaticCairoText(StringFromVariant(info_hint->value), NUX_TRACKER_LOCATION);
     info_value->SetFont(style.info_hint_font());
     nux::Layout* info_value_layout = new nux::HLayout();
     info_value_layout->AddView(info_value, 1, nux::MINOR_POSITION_CENTER);

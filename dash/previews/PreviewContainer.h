@@ -41,12 +41,13 @@ namespace previews
 class PreviewNavigator;
 class PreviewContent;
 
-typedef enum 
+enum class Navigation : unsigned int
 {
+  NONE = 0,
   LEFT = (1<<0),
   RIGHT = (1<<1),
   BOTH = LEFT|RIGHT
-} NavButton;
+};
 
 class PreviewContainer : public nux::View, public debug::Introspectable
 {
@@ -57,29 +58,41 @@ public:
   PreviewContainer(NUX_FILE_LINE_PROTO);
   virtual ~PreviewContainer();
 
-  void preview(glib::Variant const& preview, NavButton direction);
+  void preview(glib::Variant const& preview, Navigation direction);
 
   // calling this should disable the nav buttons to the left or the right of the preview
-  virtual void DisableNavButton(NavButton button);
+  void DisableNavButton(Navigation button);
+  bool IsNavigationDisabled(Navigation button) const;
 
   // From debug::Introspectable
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
+
   // For the nav buttons to the left/right of the previews, call when they are activated
   sigc::signal<void> navigate_left;
   sigc::signal<void> navigate_right;
 
+  bool AcceptKeyNavFocus();
+
 protected:
-  virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
-  virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);
+  void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
+  void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);
+
+  nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
+  void OnKeyNavFocusChange(nux::Area *area, bool has_focus, nux::KeyNavDirection direction);
+
+  bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
+  void OnKeyDown(unsigned long event_type, unsigned long event_keysym, unsigned long event_state, const TCHAR* character, unsigned short key_repeat_count);
 
 private:
   void SetupViews();
 
   bool AnimationInProgress();
-  void EnsureAnimation();
   float GetSwipeAnimationProgress(struct timespec const& current) const;
+
+  void QueueAnimation();
+  bool Iteration();
 
 private:
   // View related
@@ -87,13 +100,14 @@ private:
   PreviewNavigator* nav_left_;
   PreviewNavigator* nav_right_;
   PreviewContent* content_layout_;
+  Navigation nav_disabled_;
 
   // Animation
   struct timespec  last_progress_time_;
   float navigation_progress_speed_;
   int navigation_count_;
   
-  glib::SourceManager sources_;
+  glib::Source::UniquePtr idle_;
   friend class PreviewContent;
 };
 

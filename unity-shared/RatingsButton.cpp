@@ -37,6 +37,7 @@ namespace unity
 RatingsButton::RatingsButton(int star_size, int star_gap, NUX_FILE_LINE_DECL)
   : nux::ToggleButton(NUX_FILE_LINE_PARAM)
   , editable_(true)
+  , rating_(0.0)
   , focused_star_(-1)
   , star_size_(star_size)
   , star_gap_(star_gap)
@@ -245,6 +246,9 @@ void RatingsButton::OnKeyDown(unsigned long event_type, unsigned long event_keys
                                     unsigned long event_state, const TCHAR* character,
                                     unsigned short key_repeat_count)
 {
+  if (!editable_)
+    return;
+
   switch (event_keysym)
   {
     case NUX_VK_LEFT:

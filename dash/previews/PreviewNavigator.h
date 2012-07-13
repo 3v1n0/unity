@@ -44,6 +44,8 @@ public:
   typedef nux::ObjectPtr<PreviewNavigator> Ptr;  
   PreviewNavigator(Orientation orientation, NUX_FILE_LINE_PROTO);
 
+  void SetEnabled(bool enabled);
+
   // From debug::Introspectable
   std::string GetName() const;
   void AddProperties(GVariantBuilder*);

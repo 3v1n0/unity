@@ -52,6 +52,12 @@ std::string PreviewNavigator::GetName() const
   return "PreviewNavigator";
 }
 
+void PreviewNavigator::SetEnabled(bool enabled)
+{
+  button_->SetEnableView(enabled);
+  button_->SetVisible(enabled);
+}
+
 void PreviewNavigator::AddProperties(GVariantBuilder* builder)
 {
 
