@@ -16,6 +16,7 @@
  *
  * Authored by: Andrea Azzarone <azzarone@gmail.com>
  *              Brandon Schaefer <brandon.schaefer@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 #include <config.h>
