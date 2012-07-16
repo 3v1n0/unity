@@ -794,7 +794,10 @@ class PanelMenuTests(PanelTestsBase):
         self.patch_environment("UBUNTU_MENUPROXY", "")
         calc_win = self.open_new_application_window("Calculator")
 
-        self.assertThat(lambda: len(self.panel.menus.get_entries()), Eventually(Equals(0)))
+        self.assertThat(
+            lambda: len(self.panel.menus.get_entries()),
+            Eventually(Equals(0)),
+            "Current panel entries are: %r" % self.panel.menus.get_entries())
 
         self.panel.move_mouse_over_grab_area()
         self.assertThat(self.panel.title, Eventually(Equals(calc_win.application.name)))
