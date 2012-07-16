@@ -264,38 +264,6 @@ PluginAdapter::Minimize(guint32 xid)
 void
 PluginAdapter::Close(guint32 xid)
 {
-  GdkDisplay* gdkdisplay;
-  GdkScreen* screen;
-  Display* xdisplay;
-  Atom net_close_win;
-  Window xroot;
-  XEvent ev;
-
-  gdkdisplay  = gdk_display_get_default();
-  xdisplay    = GDK_DISPLAY_XDISPLAY(gdkdisplay);
-  screen      = gdk_display_get_default_screen (gdkdisplay);
-  xroot       = RootWindowOfScreen (gdk_x11_screen_get_xscreen (screen));
-
-  net_close_win = XInternAtom (xdisplay, "_NET_CLOSE_WINDOW", 0);
-
-  ev.xclient.type         = ClientMessage;
-  ev.xclient.display      = xdisplay;
-
-  ev.xclient.serial       = 0;
-  ev.xclient.send_event   = TRUE;
-
-  ev.xclient.window       = xid;
-  ev.xclient.message_type = net_close_win;
-  ev.xclient.format       = 32;
-
-  ev.xclient.data.l[0]    = CurrentTime;
-  ev.xclient.data.l[1]    = 1; //application
-
-  XSendEvent (xdisplay, xroot, FALSE,
-    SubstructureRedirectMask | SubstructureNotifyMask,
-    &ev);
-
-  XSync (xdisplay, FALSE);
 }
 
 void
