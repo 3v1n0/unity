@@ -77,7 +77,6 @@ public:
   struct CallData
   {
     DBusProxy::ReplyCallback callback;
-    DBusProxy::Impl* impl;
     std::string method_name;
   };
 
@@ -242,7 +241,6 @@ void DBusProxy::Impl::Call(string const& method_name,
   {
     CallData* data = new CallData();
     data->callback = callback;
-    data->impl = this;
     data->method_name = method_name;
 
     g_dbus_proxy_call(proxy_,
@@ -264,31 +262,35 @@ void DBusProxy::Impl::Call(string const& method_name,
 void DBusProxy::Impl::OnCallCallback(GObject* source, GAsyncResult* res, gpointer call_data)
 {
   glib::Error error;
-  std::unique_ptr<CallData> data (static_cast<CallData*>(call_data));
-  GVariant* result = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
+  std::unique_ptr<CallData> data(static_cast<CallData*>(call_data));
+  std::shared_ptr<GVariant> result(g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error),
+                                   g_variant_unref);
 
-  if (error && g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+  if (error)
   {
-    // silently ignore
+    if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+    {
+      // silently ignore
+    }
+    else
+    {
+      LOG_WARNING(logger) << "Calling method \"" << data->method_name
+        << "\" on object path: \""
+        << g_dbus_proxy_get_object_path(G_DBUS_PROXY(source))
+        << "\" failed: " << error;
+    }
+
+    return;
   }
-  else if (error)
-  {
-    // Do not touch the impl pointer as the operation may have been cancelled
-    LOG_WARNING(logger) << "Calling method \"" << data->method_name
-      << "\" on object path: \""
-      << g_dbus_proxy_get_object_path (G_DBUS_PROXY (source))
-      << "\" failed: " << error;
-  }
-  else
-  {
-    data->callback(result);
-    g_variant_unref(result);
-  }
+
+  if (data->callback)
+    data->callback(result.get());
 }
 
 void DBusProxy::Impl::Connect(std::string const& signal_name, ReplyCallback callback)
 {
-  handlers_[signal_name].push_back(callback);
+  if (callback)
+    handlers_[signal_name].push_back(callback);
 }
 
 DBusProxy::DBusProxy(string const& name,
