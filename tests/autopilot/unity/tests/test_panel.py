@@ -201,23 +201,7 @@ class PanelTitleTests(PanelTestsBase):
         old_title = text_win.title
 
         text_win.set_focus()
-        self.keyboard.type("Unity rocks!")
-        self.keyboard.press_and_release("Ctrl+S")
-        sleep(.25)
-        self.keyboard.type("/tmp/autopilot-awesome-test.txt")
-        self.keyboard.press_and_release("Return")
-
-        # We need to close the window BEFORE removing the file, or gedit doesn't
-        # close properly, since it's asking us if we want to "exit without saving".
-        # Cleanup actionsa re executed in LIFO order, so we first add a cleanup
-        # action that sleeps a few seconds (to wait for the window to close), and
-        # then removed the file...
-        def cleanup_file():
-            sleep(5)
-            os.remove("/tmp/autopilot-awesome-test.txt")
-        self.addCleanup(cleanup_file)
-        #... and an action to close the window.
-        self.addCleanup(text_win.close)
+        self.keyboard.press_and_release("Ctrl+n")
 
         self.assertThat(lambda: text_win.title, Eventually(NotEquals(old_title)))
         self.assertThat(self.panel.title, Eventually(Equals(text_win.title)))
