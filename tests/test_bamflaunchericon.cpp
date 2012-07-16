@@ -25,10 +25,6 @@
 
 #include "BamfLauncherIcon.h"
 
-#include "unity-shared/PluginAdapter.h"
-#include <gio/gdesktopappinfo.h>
-#include <unistd.h>
-
 using namespace unity;
 
 namespace
@@ -39,23 +35,20 @@ class TestBamfLauncherIcon : public testing::Test
 public:
   virtual void SetUp()
   {
+    BamfApplication* bamf_app;
     bamf_matcher = bamf_matcher_get_default();
     bamf_app = bamf_matcher_get_application_for_desktop_file(bamf_matcher,
                                                              BUILDDIR"/tests/data/ubuntu-software-center.desktop",
                                                              TRUE);
-
     usc_icon = new launcher::BamfLauncherIcon(bamf_app);
 
-  }
-
-  virtual void TearDown()
-  {
+    bamf_app = bamf_matcher_get_application_for_desktop_file(bamf_matcher, BUILDDIR"/tests/data/no-icon.desktop", TRUE);
+    empty_icon = new launcher::BamfLauncherIcon(bamf_app);
   }
 
   glib::Object<BamfMatcher> bamf_matcher;
-  BamfApplication* bamf_app;
   nux::ObjectPtr<launcher::BamfLauncherIcon> usc_icon;
-
+  nux::ObjectPtr<launcher::BamfLauncherIcon> empty_icon;
 };
 
 TEST_F(TestBamfLauncherIcon, TestCustomBackgroundColor)
@@ -70,40 +63,8 @@ TEST_F(TestBamfLauncherIcon, TestCustomBackgroundColor)
 
 TEST_F(TestBamfLauncherIcon, TestDefaultIcon)
 {
-  glib::Error error;
-  BamfApplication* app;
-  nux::ObjectPtr<launcher::BamfLauncherIcon> default_icon;
-
-  glib::Object<GDesktopAppInfo> desktopInfo(g_desktop_app_info_new_from_filename(BUILDDIR"/tests/data/no-icon.desktop"));
-  auto appInfo = glib::object_cast<GAppInfo>(desktopInfo);
-
-  g_app_info_launch(appInfo, nullptr, nullptr, &error);
-
-  if (error)
-        g_warning("%s\n", error.Message().c_str());
-  EXPECT_FALSE(error);
-
-  for (int i = 0; i < 5 && !bamf_matcher_application_is_running(bamf_matcher, BUILDDIR"/tests/data/no-icon.desktop"); i++)
-    sleep(1);
-  EXPECT_TRUE(bamf_matcher_application_is_running(bamf_matcher, BUILDDIR"/tests/data/no-icon.desktop"));
-
-  app = bamf_matcher_get_active_application(bamf_matcher);
-  default_icon = new launcher::BamfLauncherIcon(app);
-
-  GList* children, *l;
-  children = bamf_view_get_children(BAMF_VIEW(app));
-
-  for (l = children; l; l = l->next)
-  {
-    if (!BAMF_IS_WINDOW(l->data))
-      continue;
-
-    Window xid = bamf_window_get_xid(static_cast<BamfWindow*>(l->data));
-    PluginAdapter::Default()->Close(xid);
-  }
-  g_list_free(children);
-
-  EXPECT_EQ(default_icon->icon_name.Get(), "application-default-icon");
+  EXPECT_EQ(usc_icon->icon_name.Get(), "softwarecenter");
+  EXPECT_EQ(empty_icon->icon_name.Get(), "application-default-icon");
 }
 
 }
