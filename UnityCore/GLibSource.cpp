@@ -104,7 +104,7 @@ gboolean Source::SourceCallback(gpointer data)
 
   auto self = static_cast<CallBackData*>(data)->self;
 
-  if (self && !self->callback_.empty() && self->callback_())
+  if (self && self->callback_ && self->callback_())
   {
     return G_SOURCE_CONTINUE;
   }
