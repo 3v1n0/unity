@@ -53,7 +53,6 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
 
-#include <type_traits>
 #include <sigc++/sigc++.h>
 
 namespace unity
@@ -214,7 +213,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   icon_renderer->SetTargetSize(_icon_size, _icon_image_size, _space_between_icons);
 
   TextureCache& cache = TextureCache::GetDefault();
-  TextureCache::CreateTextureCallback cb = [&](std::string const& name, int width, int height) -> nux::BaseTexture* {
+  TextureCache::CreateTextureCallback cb = [&](std::string const& name, int width, int height) {
     return nux::CreateTexture2DFromFile((PKGDATADIR"/" + name + ".png").c_str(), -1, true);
   };
 
