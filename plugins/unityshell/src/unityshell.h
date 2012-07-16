@@ -113,6 +113,8 @@ public:
 
   void damageRegion(const CompRegion &region);
 
+  bool shellCouldBeHidden(CompOutput const& output);
+
   /* paint on top of all windows if we could not find a window
    * to paint underneath */
   bool glPaintOutput(const GLScreenPaintAttrib&,
