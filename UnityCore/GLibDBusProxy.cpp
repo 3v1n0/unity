@@ -281,14 +281,17 @@ void DBusProxy::Impl::OnCallCallback(GObject* source, GAsyncResult* res, gpointe
   }
   else
   {
-    data->callback(result);
+    if (data->callback)
+      data->callback(result);
+
     g_variant_unref(result);
   }
 }
 
 void DBusProxy::Impl::Connect(std::string const& signal_name, ReplyCallback callback)
 {
-  handlers_[signal_name].push_back(callback);
+  if (callback)
+    handlers_[signal_name].push_back(callback);
 }
 
 DBusProxy::DBusProxy(string const& name,
