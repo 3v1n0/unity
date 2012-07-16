@@ -22,45 +22,39 @@
 #include <memory>
 #include <string>
 #include <vector>
-
-#include <sigc++/slot.h>
+#include <boost/utility.hpp>
 
 #include "ubus-server.h"
 
 namespace unity
 {
 
-class UBusManager
+class UBusManager : public boost::noncopyable
 {
 public:
-  typedef sigc::slot<void, GVariant*> UBusManagerCallback;
-
-  struct UBusConnection
-  {
-  public:
-    typedef std::shared_ptr<UBusConnection> Ptr;
-
-    UBusManager* manager;
-    std::string name;
-    UBusManagerCallback slot;
-    guint id;
-  };
-  typedef std::vector<UBusConnection::Ptr> Connections;
+  typedef std::function<void(GVariant*)> UBusManagerCallback;
 
   UBusManager();
   ~UBusManager();
 
-  void RegisterInterest(std::string const& interest_name,
-                        UBusManagerCallback slot);
+  void RegisterInterest(std::string const& interest_name, UBusManagerCallback slot);
   void UnregisterInterest(std::string const& interest_name);
   void SendMessage(std::string const& message_name, GVariant* args = NULL);
 
 private:
+  struct UBusConnection
+  {
+    typedef std::shared_ptr<UBusConnection> Ptr;
+
+    std::string name;
+    UBusManagerCallback slot;
+    guint id;
+  };
+
   static void OnCallback(GVariant* args, gpointer user_data);
 
-private:
   UBusServer* server_;
-  Connections connections_;
+  std::vector<UBusConnection::Ptr> connections_;
 };
 
 }

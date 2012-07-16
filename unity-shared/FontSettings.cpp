@@ -21,6 +21,7 @@
 #include <cairo/cairo.h>
 
 #include <UnityCore/GLibWrapper.h>
+#include <sigc++/sigc++.h>
 
 namespace unity
 {
