@@ -279,6 +279,8 @@ void DBusProxy::Impl::OnCallCallback(GObject* source, GAsyncResult* res, gpointe
         << g_dbus_proxy_get_object_path(G_DBUS_PROXY(source))
         << "\" failed: " << error;
     }
+
+    return;
   }
 
   if (data->callback)
