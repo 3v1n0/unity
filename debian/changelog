@@ -1,3 +1,11 @@
+unity (6.0.0-0ubuntu2) UNRELEASED; urgency=low
+
+  * Cherry pick upstream fixes.
+    - [regression] [unity 6.0] Fullscreen windows flicker and/or never redraw 
+      properly if panel_opacity<1.0 or dash is opened (LP: #1024911)
+
+ -- Łukasz 'sil2100' Zemczak <lukasz.zemczak@canonical.com>  Mon, 16 Jul 2012 14:48:14 +0200
+
 unity (6.0.0-0ubuntu1) quantal-proposed; urgency=low
 
   [ Didier Roche ]
