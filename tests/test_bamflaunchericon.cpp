@@ -30,6 +30,9 @@ using namespace unity;
 namespace
 {
 
+const std::string USC_DESKTOP = BUILDDIR"/tests/data/ubuntu-software-center.desktop";
+const std::string NO_ICON_DESKTOP = BUILDDIR"/tests/data/no-icon.desktop";
+
 class TestBamfLauncherIcon : public testing::Test
 {
 public:
@@ -37,18 +40,24 @@ public:
   {
     BamfApplication* bamf_app;
     bamf_matcher = bamf_matcher_get_default();
-    bamf_app = bamf_matcher_get_application_for_desktop_file(bamf_matcher,
-                                                             BUILDDIR"/tests/data/ubuntu-software-center.desktop",
-                                                             TRUE);
-    usc_icon = new launcher::BamfLauncherIcon(bamf_app);
 
-    bamf_app = bamf_matcher_get_application_for_desktop_file(bamf_matcher, BUILDDIR"/tests/data/no-icon.desktop", TRUE);
+    bamf_app = bamf_matcher_get_application_for_desktop_file(bamf_matcher, USC_DESKTOP.c_str(), TRUE);
+    usc_icon = new launcher::BamfLauncherIcon(bamf_app);
+    ASSERT_EQ(usc_icon->DesktopFile(), USC_DESKTOP);
+
+    bamf_app = bamf_matcher_get_application_for_desktop_file(bamf_matcher, NO_ICON_DESKTOP.c_str(), TRUE);
     empty_icon = new launcher::BamfLauncherIcon(bamf_app);
+    ASSERT_EQ(empty_icon->DesktopFile(), NO_ICON_DESKTOP);
+
+    bamf_app = static_cast<BamfApplication*>(g_object_new(BAMF_TYPE_APPLICATION, nullptr));
+    empty_app = new launcher::BamfLauncherIcon(bamf_app);
+    ASSERT_TRUE(empty_app->DesktopFile().empty());
   }
 
   glib::Object<BamfMatcher> bamf_matcher;
   nux::ObjectPtr<launcher::BamfLauncherIcon> usc_icon;
   nux::ObjectPtr<launcher::BamfLauncherIcon> empty_icon;
+  nux::ObjectPtr<launcher::BamfLauncherIcon> empty_app;
 };
 
 TEST_F(TestBamfLauncherIcon, TestCustomBackgroundColor)
@@ -65,6 +74,7 @@ TEST_F(TestBamfLauncherIcon, TestDefaultIcon)
 {
   EXPECT_EQ(usc_icon->icon_name.Get(), "softwarecenter");
   EXPECT_EQ(empty_icon->icon_name.Get(), "application-default-icon");
+  EXPECT_EQ(empty_app->icon_name.Get(), "application-default-icon");
 }
 
 }
