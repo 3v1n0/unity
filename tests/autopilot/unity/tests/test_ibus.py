@@ -77,7 +77,7 @@ class IBusTests(UnityTestCase):
         self.keyboard.release(self.activate_binding, 0.05)
 
     def activate_ibus_on_release(self, widget):
-        """Activate IBus, and wait till it's actived on 'widget'"""
+        """Activate IBus when keys have been released, and wait till it's actived on 'widget'"""
         self.assertThat(widget.im_active, Equals(False))
         self.keyboard.press(self.activate_release_binding, 0.05)
         self.addCleanup(self.keyboard.release, self.activate_release_binding, 0.05)
@@ -86,7 +86,7 @@ class IBusTests(UnityTestCase):
         self.assertThat(widget.im_active, Eventually(Equals(True)))
 
     def deactivate_ibus_on_release(self, widget):
-        """Activate IBus, and wait till it's actived on 'widget'"""
+        """Activate IBus when keys have been released, and wait till it's actived on 'widget'"""
         self.assertThat(widget.im_active, Equals(True))
         self.keyboard.press(self.activate_release_binding, 0.05)
         self.addCleanup(self.keyboard.release, self.activate_release_binding, 0.05)
