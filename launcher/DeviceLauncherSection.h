@@ -21,14 +21,10 @@
 
 #include <map>
 
-#include <gio/gio.h>
-#include <sigc++/sigc++.h>
-#include <sigc++/signal.h>
-#include <UnityCore/GLibWrapper.h>
-#include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibSource.h>
 
 #include "DeviceLauncherIcon.h"
+#include "AbstractVolumeMonitorWrapper.h"
 
 class Launcher;
 class LauncherIcon;
@@ -41,21 +37,20 @@ namespace launcher
 class DeviceLauncherSection : public sigc::trackable
 {
 public:
-  DeviceLauncherSection();
+  DeviceLauncherSection(AbstractVolumeMonitorWrapper::Ptr volume_monitor);
 
   sigc::signal<void, AbstractLauncherIcon::Ptr> IconAdded;
 
 private:
   void PopulateEntries();
 
-  void OnVolumeAdded(GVolumeMonitor* monitor, GVolume* volume);
-  void OnVolumeRemoved(GVolumeMonitor* monitor, GVolume* volume);
+  void OnVolumeAdded(glib::Object<GVolume> const& volume);
+  void OnVolumeRemoved(glib::Object<GVolume> const& volume);
 
 private:
   std::map<GVolume*, DeviceLauncherIcon*> map_;
-  glib::Object<GVolumeMonitor> monitor_;
+  AbstractVolumeMonitorWrapper::Ptr monitor_;
   glib::Idle device_populate_idle_;
-  glib::SignalManager sig_manager_;
 };
 
 }
