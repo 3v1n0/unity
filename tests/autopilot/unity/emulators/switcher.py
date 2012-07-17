@@ -37,6 +37,9 @@ class Switcher(KeybindingsHelper):
 
     """
 
+    DIRECTION_FORWARDS = 0
+    DIRECTION_BACKWARDS = 1
+
     def __init__(self):
         super(Switcher, self).__init__()
         self._mouse = Mouse()
@@ -106,6 +109,42 @@ class Switcher(KeybindingsHelper):
         """Move to the previous icon."""
         logger.debug("Selecting previous item in switcher.")
         self.keybinding("switcher/prev")
+
+    def select_icon(self, direction, **kwargs):
+        """Select an icon in the switcher.
+
+        direction must be one of Switcher.DIRECTION_FORWARDS or Switcher.DIRECTION_BACKWARDS.
+
+        The keyword arguments are used to select an icon. For example, you might
+        do this to select the 'Show Desktop' icon:
+
+        >>> self.switcher.select_icon(Switcher.DIRECTION_BACKWARDS, tooltip_text="Show Desktop")
+
+        The switcher must be initiated already, and must be in normal mode when
+        this method is called, or a RuntimeError will be raised.
+
+        If no icon matches, a ValueError will be raised.
+
+        """
+        if self.mode != SwitcherMode.NORMAL:
+            raise RuntimeError("Switcher must be initiated in normal mode before calling this method.")
+
+        if direction not in (self.DIRECTION_BACKWARDS, self.DIRECTION_FORWARDS):
+            raise ValueError("direction must be one of Switcher.DIRECTION_BACKWARDS, Switcher.DIRECTION_FORWARDS")
+
+        for i in self.controller.model.icons:
+            current_icon = self.current_icon
+            passed=True
+            for key,val in kwargs.iteritems():
+                if not hasattr(current_icon, key) or getattr(current_icon, key) != val:
+                    passed=False
+            if passed:
+                return
+            if direction == self.DIRECTION_FORWARDS:
+                self.next_icon()
+            elif direction == self.DIRECTION_BACKWARDS:
+                self.previous_icon()
+        raise ValueError("No icon found in switcher model that matches: %r" % kwargs)
 
     def cancel(self):
         """Stop switcher without activating the selected icon and releasing the keys.

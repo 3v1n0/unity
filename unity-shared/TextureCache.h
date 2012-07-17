@@ -25,8 +25,6 @@
 #include <map>
 
 #include <Nux/Nux.h>
-
-#include <sigc++/sigc++.h>
 #include <sigc++/trackable.h>
 
 /* A simple texture cache system, you ask the cache for a texture by id if the
@@ -43,7 +41,7 @@ public:
   typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
   // id, width, height -> texture
-  typedef sigc::slot<nux::BaseTexture*, std::string const&, int, int> CreateTextureCallback;
+  typedef std::function<nux::BaseTexture*(std::string const&, int, int)> CreateTextureCallback;
 
   static TextureCache& GetDefault();
 

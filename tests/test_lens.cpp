@@ -192,7 +192,7 @@ TEST_F(TestLens, TestGlobalSearch)
 TEST_F(TestLens, TestActivation)
 {
   std::string uri = PopulateAndGetFirstResultURI();
-  
+
   bool activated = false;
   auto activated_cb = [&activated, &uri] (std::string const& uri_,
                                           HandledType handled,
@@ -203,8 +203,8 @@ TEST_F(TestLens, TestActivation)
     EXPECT_EQ(hints.size(), 0);
     activated = true;
   };
-  lens_->activated.connect(sigc::slot<void, std::string const&, HandledType,Lens::Hints const&>(activated_cb));  
-  
+  lens_->activated.connect(activated_cb);
+
   lens_->Activate(uri);
   Utils::WaitUntil(activated);
 }
@@ -229,7 +229,7 @@ TEST_F(TestLens, TestPreview)
     previewed = true;
   };
 
-  lens_->preview_ready.connect(sigc::slot<void, std::string const&, Preview::Ptr const&>(preview_cb));
+  lens_->preview_ready.connect(preview_cb);
 
   lens_->Preview(uri);
   Utils::WaitUntil(previewed);
@@ -252,7 +252,7 @@ TEST_F(TestLens, TestPreviewAction)
     previewed = true;
   };
 
-  lens_->preview_ready.connect(sigc::slot<void, std::string const&, Preview::Ptr const&>(preview_cb));
+  lens_->preview_ready.connect(preview_cb);
   lens_->Preview(uri);
 
   Utils::WaitUntil(previewed);
@@ -266,8 +266,7 @@ TEST_F(TestLens, TestPreviewAction)
     action_executed = true;
   };
 
-  lens_->activated.connect(sigc::slot<void, std::string const&, HandledType,
-                                      Lens::Hints const&>(activated_cb));
+  lens_->activated.connect(activated_cb);
   EXPECT_GT(preview->GetActions().size(), (unsigned)0);
   auto action = preview->GetActions()[0];
   preview->PerformAction(action->id);
@@ -292,7 +291,7 @@ TEST_F(TestLens, TestPreviewSignal)
     previewed = true;
   };
 
-  lens_->preview_ready.connect(sigc::slot<void, std::string const&, Preview::Ptr const&>(preview_cb));
+  lens_->preview_ready.connect(preview_cb);
   lens_->Preview(uri);
 
   Utils::WaitUntil(previewed);
@@ -304,7 +303,7 @@ TEST_F(TestLens, TestPreviewSignal)
     child_changed = true;
   };
 
-  series_preview->child_preview_changed.connect(sigc::slot<void, Preview::Ptr const&>(child_changed_cb));
+  series_preview->child_preview_changed.connect(child_changed_cb);
   series_preview->selected_item_index = 1;
 
   Utils::WaitUntil(child_changed);

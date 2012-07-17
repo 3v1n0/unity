@@ -113,6 +113,8 @@ public:
 
   void damageRegion(const CompRegion &region);
 
+  bool shellCouldBeHidden(CompOutput const& output);
+
   /* paint on top of all windows if we could not find a window
    * to paint underneath */
   bool glPaintOutput(const GLScreenPaintAttrib&,
@@ -278,12 +280,12 @@ private:
   bool    doShellRepaint;
   bool    didShellRepaint;
   bool    allowWindowPaint;
-  bool    damaged;
   bool    _key_nav_mode_requested;
   CompOutput* _last_output;
 
   CompRegion nuxRegion;
-  CompRegion aboveShell;
+  CompRegion fullscreenRegion;
+  CompWindow* firstWindowAboveShell;
 
   nux::Property<nux::Geometry> primary_monitor_;
 

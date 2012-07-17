@@ -15,6 +15,8 @@
  * <http://www.gnu.org/licenses/>
  *
  * Authored by: Andrea Azzarone <azzarone@gmail.com>
+ *              Brandon Schaefer <brandon.schaefer@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 #include <config.h>
@@ -23,33 +25,40 @@
 #include <UnityCore/GLibWrapper.h>
 
 #include "BamfLauncherIcon.h"
+
 using namespace unity;
 
 namespace
 {
+
+const std::string USC_DESKTOP = BUILDDIR"/tests/data/ubuntu-software-center.desktop";
+const std::string NO_ICON_DESKTOP = BUILDDIR"/tests/data/no-icon.desktop";
 
 class TestBamfLauncherIcon : public testing::Test
 {
 public:
   virtual void SetUp()
   {
+    BamfApplication* bamf_app;
     bamf_matcher = bamf_matcher_get_default();
-    bamf_app = bamf_matcher_get_application_for_desktop_file(bamf_matcher,
-                                                             BUILDDIR"/tests/data/ubuntu-software-center.desktop",
-                                                             TRUE);
 
+    bamf_app = bamf_matcher_get_application_for_desktop_file(bamf_matcher, USC_DESKTOP.c_str(), TRUE);
     usc_icon = new launcher::BamfLauncherIcon(bamf_app);
+    ASSERT_EQ(usc_icon->DesktopFile(), USC_DESKTOP);
 
-  }
+    bamf_app = bamf_matcher_get_application_for_desktop_file(bamf_matcher, NO_ICON_DESKTOP.c_str(), TRUE);
+    empty_icon = new launcher::BamfLauncherIcon(bamf_app);
+    ASSERT_EQ(empty_icon->DesktopFile(), NO_ICON_DESKTOP);
 
-  virtual void TearDown()
-  {
+    bamf_app = static_cast<BamfApplication*>(g_object_new(BAMF_TYPE_APPLICATION, nullptr));
+    empty_app = new launcher::BamfLauncherIcon(bamf_app);
+    ASSERT_TRUE(empty_app->DesktopFile().empty());
   }
 
   glib::Object<BamfMatcher> bamf_matcher;
-  BamfApplication* bamf_app;
   nux::ObjectPtr<launcher::BamfLauncherIcon> usc_icon;
-
+  nux::ObjectPtr<launcher::BamfLauncherIcon> empty_icon;
+  nux::ObjectPtr<launcher::BamfLauncherIcon> empty_app;
 };
 
 TEST_F(TestBamfLauncherIcon, TestCustomBackgroundColor)
@@ -62,29 +71,11 @@ TEST_F(TestBamfLauncherIcon, TestCustomBackgroundColor)
   EXPECT_EQ(color.alpha, 0xff / 255.0f);
 }
 
-TEST_F(TestBamfLauncherIcon, TestColorStringConversion)
+TEST_F(TestBamfLauncherIcon, TestDefaultIcon)
 {
-  EXPECT_EQ(launcher::ColorStrToARGB("#12345678"), 0x78123456);
-  EXPECT_EQ(launcher::ColorStrToARGB("12345678"), 0x78123456);
-  EXPECT_EQ(launcher::ColorStrToARGB("#12345678q"), 0x0);
-  EXPECT_EQ(launcher::ColorStrToARGB("12345678q"), 0x0);
-  EXPECT_EQ(launcher::ColorStrToARGB("#1234567890"), 0x0);
-  EXPECT_EQ(launcher::ColorStrToARGB("1234567890"), 0x0);
-  EXPECT_EQ(launcher::ColorStrToARGB("#AABBCC"), 0xFFAABBCC);
-  EXPECT_EQ(launcher::ColorStrToARGB("AABBCC"), 0xFFAABBCC);
-  EXPECT_EQ(launcher::ColorStrToARGB("#eeddccbb"), 0xBBEEDDCC);
-  EXPECT_EQ(launcher::ColorStrToARGB("eeddccbb"), 0xBBEEDDCC);
-  EXPECT_EQ(launcher::ColorStrToARGB("#2040"), 0x0);
-  EXPECT_EQ(launcher::ColorStrToARGB("2040"), 0x0);
-  EXPECT_EQ(launcher::ColorStrToARGB("#2040809"), 0x0);
-  EXPECT_EQ(launcher::ColorStrToARGB("2040809"), 0x0);
-  EXPECT_EQ(launcher::ColorStrToARGB("#204080"), 0xFF204080);
-  EXPECT_EQ(launcher::ColorStrToARGB("204080"), 0xFF204080);
-  EXPECT_EQ(launcher::ColorStrToARGB("#blah"), 0x0);
-  EXPECT_EQ(launcher::ColorStrToARGB("blah"), 0x0);
-  EXPECT_EQ(launcher::ColorStrToARGB("#"), 0x0);
-  EXPECT_EQ(launcher::ColorStrToARGB(""), 0x0);
-  EXPECT_EQ(launcher::ColorStrToARGB("helloworld helloworld !!!!"), 0x0);
+  EXPECT_EQ(usc_icon->icon_name.Get(), "softwarecenter");
+  EXPECT_EQ(empty_icon->icon_name.Get(), "application-default-icon");
+  EXPECT_EQ(empty_app->icon_name.Get(), "application-default-icon");
 }
 
 }

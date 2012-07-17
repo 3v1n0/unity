@@ -26,7 +26,6 @@
 #include <memory>
 #include <boost/noncopyable.hpp>
 #include <glib-object.h>
-#include <sigc++/sigc++.h>
 
 namespace unity
 {
@@ -61,14 +60,14 @@ public:
  * workaround this issue using the trick below.
  * See GCC bug http://gcc.gnu.org/bugzilla/show_bug.cgi?id=35722 */
 #if !defined(__GNUC__) || (__GNUC__ >= 4 && __GNUC_MINOR__ >= 7)
-  typedef sigc::slot<R, G, Ts...> SignalCallback;
+  typedef std::function<R(G, Ts...)> SignalCallback;
 #else
   template<template <typename...> class T, typename... params>
   struct expand_variadic {
       typedef T<params...> type;
   };
 
-  typedef typename expand_variadic<sigc::slot, R, G, Ts...>::type SignalCallback;
+  typedef typename expand_variadic<std::function, R(G, Ts...)>::type SignalCallback;
 #endif
 
   inline Signal() {};
