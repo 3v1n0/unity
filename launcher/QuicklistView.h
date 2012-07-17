@@ -153,8 +153,6 @@ private:
   float _corner_radius;
   float _padding;
   float _left_padding_correction;
-  float _bottom_padding_correction_normal;
-  float _bottom_padding_correction_single_item;
   float _offset_correction;
   nux::HLayout* _hlayout;
   nux::VLayout* _vlayout;

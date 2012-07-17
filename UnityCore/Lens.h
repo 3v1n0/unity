@@ -89,8 +89,7 @@ public:
                                      std::string const& uri);
   virtual void SignalPreview(std::string const& uri,
       glib::Variant const& preview_update,
-      glib::DBusProxy::ReplyCallback reply_cb =
-        sigc::ptr_fun(&glib::DBusProxy::NoReplyCallback));
+      glib::DBusProxy::ReplyCallback reply_cb = nullptr);
 
   nux::RWProperty<std::string> id;
   nux::RWProperty<std::string> dbus_name;

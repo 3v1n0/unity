@@ -42,6 +42,15 @@ namespace dash
 
 class Lens;
 
+enum LayoutHint
+{
+  NONE,
+  LEFT,
+  RIGHT,
+  TOP,
+  BOTTOM
+};
+
 class Preview : public sigc::trackable
 {
 public:
@@ -50,12 +59,12 @@ public:
     std::string id;
     std::string display_name;
     std::string icon_hint;
-    unsigned int layout_hint;
+    LayoutHint layout_hint;
     // TODO: there's also a HashTable here (although unused atm)
 
     Action() {};
     Action(const gchar* id_, const gchar* display_name_,
-           const gchar* icon_hint_, unsigned int layout_hint_)
+           const gchar* icon_hint_, LayoutHint layout_hint_)
       : id(id_ != NULL ? id_ : "")
       , display_name(display_name_ != NULL ? display_name_ : "")
       , icon_hint(icon_hint_ != NULL ? icon_hint_ : "")
@@ -109,8 +118,7 @@ protected:
   // of libunity-protocol-private private to unity-core
   Preview(glib::Object<GObject> const& proto_obj);
   void Update(glib::Variant const& properties,
-              glib::DBusProxy::ReplyCallback reply_callback =
-                sigc::ptr_fun(&glib::DBusProxy::NoReplyCallback)) const;
+              glib::DBusProxy::ReplyCallback reply_callback = nullptr) const;
   static glib::Object<GIcon> IconForString(std::string const& icon_hint);
 
 private:

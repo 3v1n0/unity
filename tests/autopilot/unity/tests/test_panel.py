@@ -54,9 +54,8 @@ class PanelTestsBase(UnityTestCase):
 
         """
         self.close_all_app(app_name)
-        app = self.start_app(app_name, locale="C")
-
-        [app_win] = app.get_windows()
+        app_win = self.start_app_window(app_name, locale="C")
+        app = app_win.application
 
         app_win.set_focus()
         self.assertTrue(app.is_active)
@@ -113,7 +112,7 @@ class PanelTestsBase(UnityTestCase):
         self.addCleanup(self.keyboard.press_and_release, "Escape")
         self.assertThat(indicator.active, Eventually(Equals(True)))
 
-    def assert_win_buttons_in_overlay_mode(self, overlay_mode):
+    def assertWinButtonsInOverlayMode(self, overlay_mode):
         """Assert that there are three panel window buttons and all of them are
         in the specified overlay mode.
 
@@ -126,7 +125,7 @@ class PanelTestsBase(UnityTestCase):
         for button in buttons:
             self.assertThat(button.overlay_mode, Eventually(Equals(overlay_mode)))
 
-    def assert_no_window_open_with_xid(self, x_id):
+    def assertNoWindowOpenWithXid(self, x_id):
         """Assert that Bamf doesn't know of any open windows with the given xid."""
         # We can't check text_win.closed since we've just destroyed the window.
         # Instead we make sure no window with it's x_id exists.
@@ -189,7 +188,7 @@ class PanelTitleTests(PanelTestsBase):
         text_win = self.open_new_application_window("Text Editor", maximized=True)
         self.open_new_application_window("Calculator", maximized=False)
 
-        icon = self.launcher.model.get_icon_by_desktop_id(text_win.application.desktop_file)
+        icon = self.launcher.model.get_icon(desktop_id=text_win.application.desktop_file)
         launcher = self.launcher.get_launcher_for_monitor(self.panel_monitor)
         launcher.click_launcher_icon(icon)
 
@@ -202,12 +201,7 @@ class PanelTitleTests(PanelTestsBase):
         old_title = text_win.title
 
         text_win.set_focus()
-        self.keyboard.type("Unity rocks!")
-        self.keyboard.press_and_release("Ctrl+S")
-        sleep(.25)
-        self.keyboard.type("/tmp/autopilot-awesome-test.txt")
-        self.keyboard.press_and_release("Return")
-        self.addCleanup(os.remove, "/tmp/autopilot-awesome-test.txt")
+        self.keyboard.press_and_release("Ctrl+n")
 
         self.assertThat(lambda: text_win.title, Eventually(NotEquals(old_title)))
         self.assertThat(self.panel.title, Eventually(Equals(text_win.title)))
@@ -225,7 +219,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
     def test_window_buttons_dont_show_on_empty_desktop(self):
         """Tests that the window buttons are not shown on clean desktop."""
-        # THis initially used Show Desktop mode, but it's very buggy from within
+        # This initially used Show Desktop mode, but it's very buggy from within
         # autopilot. We assume that workspace 2 is empty (which is safe for the
         # jenkins runs at least.)
         initial_workspace = self.workspace.current_workspace
@@ -272,7 +266,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.panel.move_mouse_over_window_buttons()
 
         self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(True)))
-        self.assert_win_buttons_in_overlay_mode(False)
+        self.assertWinButtonsInOverlayMode(False)
 
     def test_window_buttons_show_with_dash(self):
         """Window buttons must be shown when the dash is open."""
@@ -280,7 +274,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.addCleanup(self.dash.ensure_hidden)
 
         self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(True)))
-        self.assert_win_buttons_in_overlay_mode(True)
+        self.assertWinButtonsInOverlayMode(True)
 
     def test_window_buttons_show_with_hud(self):
         """Window buttons must be shown when the HUD is open."""
@@ -288,7 +282,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.addCleanup(self.hud.ensure_hidden)
 
         self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(True)))
-        self.assert_win_buttons_in_overlay_mode(True)
+        self.assertWinButtonsInOverlayMode(True)
 
     def test_window_buttons_update_visual_state(self):
         """Window button must update its state in response to mouse events."""
@@ -310,19 +304,9 @@ class PanelWindowButtonsTests(PanelTestsBase):
         their area.
         """
         self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
+
         button = self.panel.window_buttons.close
-
-        # FIXME: THere's a bug in unity that prevents us from doing:
-        # self.addCleanup(self.hud.ensure_hidden)
-        # SO we do this instead. The bug is:
-        #
-        # https://bugs.launchpad.net/ubuntu/+source/unity/+bug/1021087
-        #
-        # Once that's fixed the next two lines can be removed, and the one above
-        # added instead.
-        self.addCleanup(self.assertThat, self.hud.visible, Eventually(Equals(False)))
-        self.addCleanup(button.mouse_click)
-
         button.mouse_move_to()
         self.mouse.press()
         self.assertThat(button.visual_state, Eventually(Equals("pressed")))
@@ -340,7 +324,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         win_xid = text_win.x_id
 
         self.panel.window_buttons.close.mouse_click()
-        self.assert_no_window_open_with_xid(win_xid)
+        self.assertNoWindowOpenWithXid(win_xid)
 
     def test_window_buttons_close_follows_fitts_law(self):
         """Tests that the 'Close' button is activated when clicking at 0,0.
@@ -357,7 +341,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.mouse.move(screen_x, screen_y)
         self.mouse.click()
 
-        self.assert_no_window_open_with_xid(win_xid)
+        self.assertNoWindowOpenWithXid(win_xid)
 
     def test_window_buttons_minimize_button_works_for_window(self):
         """Tests that the window button 'Minimize' actually minimizes a window."""
@@ -367,7 +351,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
         self.panel.window_buttons.minimize.mouse_click()
 
-        self.assertThat(lambda: text_win.is_hidden, Eventually(Equals(True)))
+        self.assertProperty(text_win, is_hidden=True)
 
     def test_window_buttons_minimize_follows_fitts_law(self):
         """Tests that the 'Minimize' button is conform to Fitts's Law.
@@ -385,7 +369,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.mouse.move(target_x, target_y)
         self.mouse.click()
 
-        self.assertThat(lambda: text_win.is_hidden, Eventually(Equals(True)))
+        self.assertProperty(text_win, is_hidden=True)
 
     def test_window_buttons_unmaximize_button_works_for_window(self):
         """Tests that the window button 'Unmaximize' actually unmaximizes a window."""
@@ -415,7 +399,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         sleep(1)
         self.mouse.click()
 
-        self.assertThat(lambda: text_win.is_maximized, Eventually(Equals(False)))
+        self.assertProperty(text_win, is_maximized=False)
 
     def test_window_buttons_close_button_works_for_hud(self):
         """Tests that the window 'Close' actually closes the HUD."""
@@ -435,13 +419,8 @@ class PanelWindowButtonsTests(PanelTestsBase):
     def test_minimize_button_does_nothing_for_hud(self):
         """Minimize button must not affect the Hud."""
         self.hud.ensure_visible()
-        # FIXME: When this bug is fixed:
-        #
-        # https://bugs.launchpad.net/ubuntu/+source/unity/+bug/1021087
-        #
-        # We can replace the following line with:
-        # self.addCleanup(self.hud.ensure_hidden)
-        self.addCleanup(self.panel.window_buttons.close.mouse_click)
+        self.addCleanup(self.hud.ensure_hidden)
+
         self.panel.window_buttons.minimize.mouse_click()
 
         self.assertThat(self.hud.visible, Eventually(Equals(True)))
@@ -456,13 +435,8 @@ class PanelWindowButtonsTests(PanelTestsBase):
     def test_maximize_button_does_nothing_for_hud(self):
         """Maximize button must not affect the Hud."""
         self.hud.ensure_visible()
-        # FIXME: When this bug is fixed:
-        #
-        # https://bugs.launchpad.net/ubuntu/+source/unity/+bug/1021087
-        #
-        # We can replace the following line with:
-        # self.addCleanup(self.hud.ensure_hidden)
-        self.addCleanup(self.panel.window_buttons.close.mouse_click)
+        self.addCleanup(self.hud.ensure_hidden)
+
         self.panel.window_buttons.maximize.mouse_click()
 
         self.assertThat(self.hud.visible, Eventually(Equals(True)))
@@ -475,13 +449,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         """
         inital_form_factor = self.dash.view.form_factor
         self.hud.ensure_visible()
-        # FIXME: When this bug is fixed:
-        #
-        # https://bugs.launchpad.net/ubuntu/+source/unity/+bug/1021087
-        #
-        # We can replace the following line with:
-        # self.addCleanup(self.hud.ensure_hidden)
-        self.addCleanup(self.panel.window_buttons.close.mouse_click)
+        self.addCleanup(self.hud.ensure_hidden)
 
         self.panel.window_buttons.maximize.mouse_click()
         # long sleep here to make sure that any change that might happen will
@@ -595,7 +563,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.move_window_to_panel_monitor(target_win, restore_position=False)
 
         self.keybinding("window/maximize")
-        self.assertThat(lambda: target_win.is_maximized, Eventually(Equals(True)))
+        self.assertProperty(target_win, is_maximized=True)
 
         self.assertThat(self.panel.window_buttons.close.enabled, Eventually(Equals(True)))
         self.assertThat(self.panel.window_buttons.minimize.enabled, Eventually(Equals(False)))
@@ -821,7 +789,10 @@ class PanelMenuTests(PanelTestsBase):
         self.patch_environment("UBUNTU_MENUPROXY", "")
         calc_win = self.open_new_application_window("Calculator")
 
-        self.assertThat(lambda: len(self.panel.menus.get_entries()), Eventually(Equals(0)))
+        self.assertThat(
+            lambda: len(self.panel.menus.get_entries()),
+            Eventually(Equals(0)),
+            "Current panel entries are: %r" % self.panel.menus.get_entries())
 
         self.panel.move_mouse_over_grab_area()
         self.assertThat(self.panel.title, Eventually(Equals(calc_win.application.name)))
@@ -906,10 +877,17 @@ class PanelIndicatorEntryTests(PanelTestsBase):
 
     scenarios = _make_monitor_scenarios()
 
+    def open_app_and_get_menu_entry(self):
+        """Open the test app and wait for the menu entry to appear."""
+        self.open_new_application_window("Calculator")
+        refresh_fn = lambda: len(self.panel.menus.get_entries())
+        self.assertThat(refresh_fn, Eventually(GreaterThan(0)))
+        menu_entry = self.panel.menus.get_entries()[0]
+        return menu_entry
+
     def test_menu_opens_on_click(self):
         """Tests that clicking on a menu entry, opens a menu."""
-        self.open_new_application_window("Calculator")
-        menu_entry = self.panel.menus.get_entries()[0]
+        menu_entry = self.open_app_and_get_menu_entry()
         self.mouse_open_indicator(menu_entry)
 
         self.assertThat(menu_entry.active, Eventually(Equals(True)))
@@ -918,8 +896,7 @@ class PanelIndicatorEntryTests(PanelTestsBase):
 
     def test_menu_opens_closes_on_click(self):
         """Clicking on an open menu entru must close it again."""
-        self.open_new_application_window("Calculator")
-        menu_entry = self.panel.menus.get_entries()[0]
+        menu_entry = self.open_app_and_get_menu_entry()
         self.mouse_open_indicator(menu_entry)
 
         # This assert is for timing purposes only:
@@ -932,8 +909,7 @@ class PanelIndicatorEntryTests(PanelTestsBase):
 
     def test_menu_closes_on_click_outside(self):
         """Clicking outside an open menu must close it."""
-        self.open_new_application_window("Calculator")
-        menu_entry = self.panel.menus.get_entries()[0]
+        menu_entry = self.open_app_and_get_menu_entry()
         self.mouse_open_indicator(menu_entry)
 
         # This assert is for timing purposes only:
@@ -973,7 +949,7 @@ class PanelKeyNavigationTests(PanelTestsBase):
         self.assertThat(open_indicator.entry_id, Eventually(Equals(expected_indicator.entry_id)))
 
         self.keybinding("panel/open_first_menu")
-        self.assertThat(self.panel.get_active_indicator(), Eventually(Equals(None)))
+        self.assertThat(self.panel.get_active_indicator, Eventually(Equals(None)))
 
     def test_panel_menu_accelerators_work(self):
         """Pressing a valid menu accelerator must open the correct menu item."""
@@ -1050,33 +1026,33 @@ class PanelGrabAreaTests(PanelTestsBase):
         self.panel.move_mouse_below_the_panel()
         self.mouse.release()
 
-        self.assertThat(lambda: text_win.is_maximized, Eventually(Equals(False)))
+        self.assertProperty(text_win, is_maximized=False)
 
     def test_focus_the_maximized_window_works(self):
         """Clicking on the grab area must put a maximized window in focus."""
         text_win = self.open_new_application_window("Text Editor", maximized=True)
         calc_win = self.open_new_application_window("Calculator")
 
-        self.assertThat(lambda: text_win.is_focused, Eventually(Equals(False)))
-        self.assertThat(lambda: calc_win.is_focused, Eventually(Equals(True)))
+        self.assertProperty(text_win, is_focused=False)
+        self.assertProperty(calc_win, is_focused=True)
 
         self.move_mouse_over_grab_area()
         self.mouse.click()
 
-        self.assertThat(lambda: text_win.is_focused, Eventually(Equals(True)))
+        self.assertProperty(text_win, is_focused=True)
 
     def test_lower_the_maximized_window_works(self):
         """Middle-clicking on the panel grab area must lower a maximized window."""
         calc_win = self.open_new_application_window("Calculator")
         text_win = self.open_new_application_window("Text Editor", maximized=True)
 
-        self.assertThat(lambda: text_win.is_focused, Eventually(Equals(True)))
-        self.assertThat(lambda: calc_win.is_focused, Eventually(Equals(False)))
+        self.assertProperty(text_win, is_focused=True)
+        self.assertProperty(calc_win, is_focused=False)
 
         self.move_mouse_over_grab_area()
         self.mouse.click(2)
 
-        self.assertThat(lambda: calc_win.is_focused, Eventually(Equals(True)))
+        self.assertProperty(calc_win, is_focused=True)
 
     def test_panels_dont_steal_keynav_foucs_from_hud(self):
         """On a mouse click event on the panel you must still be able to type into the Hud."""

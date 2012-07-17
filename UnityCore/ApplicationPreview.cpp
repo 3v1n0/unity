@@ -37,6 +37,8 @@ public:
   std::string get_copyright() { return copyright_; };
   std::string get_license() { return license_; };
   glib::Object<GIcon> get_app_icon() { return app_icon_; };
+  float get_rating() const { return rating_; };
+  unsigned int get_num_ratings() const { return num_ratings_; };
 
   ApplicationPreview* owner_;
 
@@ -44,6 +46,8 @@ public:
   std::string copyright_;
   std::string license_;
   glib::Object<GIcon> app_icon_;
+  float rating_;
+  unsigned int num_ratings_;
 };
 
 ApplicationPreview::Impl::Impl(ApplicationPreview* owner, glib::Object<GObject> const& proto_obj)
@@ -62,6 +66,8 @@ ApplicationPreview::Impl::Impl(ApplicationPreview* owner, glib::Object<GObject> 
   glib::Object<GIcon> icon(unity_protocol_application_preview_get_app_icon(preview),
                            glib::AddRef());
   app_icon_ = icon;
+  rating_ = unity_protocol_application_preview_get_rating(preview);
+  num_ratings_ = unity_protocol_application_preview_get_num_ratings(preview);
       
   SetupGetters();
 }
@@ -76,6 +82,10 @@ void ApplicationPreview::Impl::SetupGetters()
             sigc::mem_fun(this, &ApplicationPreview::Impl::get_license));
   owner_->app_icon.SetGetterFunction(
             sigc::mem_fun(this, &ApplicationPreview::Impl::get_app_icon));
+  owner_->rating.SetGetterFunction(
+            sigc::mem_fun(this, &ApplicationPreview::Impl::get_rating));
+  owner_->num_ratings.SetGetterFunction(
+            sigc::mem_fun(this, &ApplicationPreview::Impl::get_num_ratings));
 }
 
 ApplicationPreview::ApplicationPreview(unity::glib::Object<GObject> const& proto_obj)

@@ -34,8 +34,6 @@ namespace unity
 namespace launcher
 {
 
-extern unsigned int ColorStrToARGB(const char *str);
-
 class Launcher;
 
 class BamfLauncherIcon : public SimpleLauncherIcon

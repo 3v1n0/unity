@@ -170,7 +170,8 @@ Preview::Impl::Impl(Preview* owner, glib::Object<GObject> const& proto_obj)
       UnityProtocolPreviewActionRaw *raw_action = &actions[i];
       actions_list_.push_back(std::make_shared<Action>(
             raw_action->id, raw_action->display_name,
-            raw_action->icon_hint, raw_action->layout_hint));
+            raw_action->icon_hint,
+            static_cast<LayoutHint>(raw_action->layout_hint)));
     }
     
     int info_hints_len;

@@ -56,7 +56,7 @@ class Launcher : public unity::debug::Introspectable, public nux::View, public u
   NUX_DECLARE_OBJECT_TYPE(Launcher, nux::View);
 public:
 
-  Launcher(nux::BaseWindow* parent, NUX_FILE_LINE_PROTO);
+  Launcher(nux::BaseWindow* parent, nux::ObjectPtr<DNDCollectionWindow> const& collection_window, NUX_FILE_LINE_PROTO);
 
   nux::Property<Display*> display;
   nux::Property<int> monitor;
@@ -359,6 +359,8 @@ private:
   int _postreveal_mousemove_delta_x;
   int _postreveal_mousemove_delta_y;
   int _launcher_drag_delta;
+  int _launcher_drag_delta_max;
+  int _launcher_drag_delta_min;
   int _enter_y;
   int _last_button_press;
   int _drag_out_id;

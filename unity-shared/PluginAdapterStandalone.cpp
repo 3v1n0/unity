@@ -124,7 +124,7 @@ MultiActionList::TerminateAll(CompOption::Vector& extraArgs)
 {
 }
 
-unsigned long long 
+unsigned long long
 PluginAdapter::GetWindowActiveNumber (guint32 xid)
 {
   return 0;
@@ -281,18 +281,18 @@ PluginAdapter::Lower(guint32 xid)
 {
 }
 
-void 
+void
 PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility focus_visibility, int monitor, bool only_top_win)
 {
 }
 
-bool 
+bool
 PluginAdapter::ScaleWindowGroup(std::vector<Window> windows, int state, bool force)
 {
   return false;
 }
 
-void 
+void
 PluginAdapter::SetWindowIconGeometry(Window window, nux::Geometry const& geo)
 {
 }
@@ -332,14 +332,14 @@ PluginAdapter::GetWindowSavedGeometry(guint32 xid) const
   return geo;
 }
 
-nux::Geometry 
+nux::Geometry
 PluginAdapter::GetScreenGeometry() const
 {
   nux::Geometry geo(0, 0, 1, 1);
-  return geo;  
+  return geo;
 }
 
-nux::Geometry 
+nux::Geometry
 PluginAdapter::GetWorkAreaGeometry(guint32 xid) const
 {
   nux::Geometry geo(0, 0, 1, 1);
@@ -352,7 +352,7 @@ PluginAdapter::CheckWindowIntersection(nux::Geometry const& region, CompWindow* 
   return false;
 }
 
-void 
+void
 PluginAdapter::CheckWindowIntersections (nux::Geometry const& region, bool &active, bool &any)
 {
 }

@@ -122,12 +122,15 @@ private:
 
     void InvokeSlot()
     {
-      slot(data, size, result);
+      if (slot)
+        slot(data, size, result);
 
       // notify shadow tasks
       for (auto shadow_task : shadow_tasks)
       {
-        shadow_task->slot(shadow_task->data, shadow_task->size, result);
+        if (shadow_task->slot)
+          shadow_task->slot(shadow_task->data, shadow_task->size, result);
+
         impl->task_map_.erase(shadow_task->handle);
       }
 
@@ -590,7 +593,7 @@ int IconLoader::Impl::LoadFromIconName(std::string const& icon_name,
                                        unsigned size,
                                        IconLoaderCallback slot)
 {
-  if (no_load_ || icon_name.empty() || size < MIN_ICON_SIZE)
+  if (no_load_ || icon_name.empty() || size < MIN_ICON_SIZE || !slot)
     return 0;
 
   // We need to check this because of legacy desktop files
@@ -606,7 +609,7 @@ int IconLoader::Impl::LoadFromGIconString(std::string const& gicon_string,
                                           unsigned size,
                                           IconLoaderCallback slot)
 {
-  if (no_load_ || gicon_string.empty() || size < MIN_ICON_SIZE)
+  if (no_load_ || gicon_string.empty() || size < MIN_ICON_SIZE || !slot)
     return 0;
 
   return ReturnCachedOrQueue(gicon_string, size, slot, REQUEST_TYPE_GICON_STRING);
@@ -616,7 +619,7 @@ int IconLoader::Impl::LoadFromFilename(std::string const& filename,
                                        unsigned size,
                                        IconLoaderCallback slot)
 {
-  if (no_load_ || filename.empty() || size < MIN_ICON_SIZE)
+  if (no_load_ || filename.empty() || size < MIN_ICON_SIZE || !slot)
     return 0;
 
   glib::Object<GFile> file(::g_file_new_for_path(filename.c_str()));
@@ -629,7 +632,7 @@ int IconLoader::Impl::LoadFromURI(std::string const& uri,
                                   unsigned size,
                                   IconLoaderCallback slot)
 {
-  if (no_load_ || uri.empty() || size < MIN_ICON_SIZE)
+  if (no_load_ || uri.empty() || size < MIN_ICON_SIZE || !slot)
     return 0;
 
   return ReturnCachedOrQueue(uri, size, slot, REQUEST_TYPE_URI);
@@ -641,7 +644,7 @@ void IconLoader::Impl::DisconnectHandle(Handle handle)
 
   if (iter != task_map_.end())
   {
-    iter->second->slot.disconnect();
+    iter->second->slot = nullptr;
   }
 }
 
@@ -758,7 +761,7 @@ bool IconLoader::Impl::CacheLookup(std::string const& key,
   auto iter = cache_.find(key);
   bool found = iter != cache_.end();
 
-  if (found)
+  if (found && slot)
   {
     glib::Object<GdkPixbuf> const& pixbuf = iter->second;
     slot(data, size, pixbuf);
