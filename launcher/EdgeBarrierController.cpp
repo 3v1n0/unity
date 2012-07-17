@@ -123,10 +123,10 @@ void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const
 
 void EdgeBarrierController::Impl::OnPointerBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event)
 {
-  int monitor = owner->index;
+  unsigned int monitor = owner->index;
   bool process = true;
 
-  if ((size_t)monitor <= subscribers_.size())
+  if (monitor <= subscribers_.size())
   {
     auto subscriber = subscribers_[monitor];
     if (subscriber && subscriber->HandleBarrierEvent(owner, event))
@@ -157,21 +157,21 @@ EdgeBarrierController::EdgeBarrierController()
 EdgeBarrierController::~EdgeBarrierController()
 {}
 
-void EdgeBarrierController::Subscribe(EdgeBarrierSubscriber* subscriber, int monitor)
+void EdgeBarrierController::Subscribe(EdgeBarrierSubscriber* subscriber, unsigned int monitor)
 {
-  if (pimpl->subscribers_.size() <= (size_t)monitor)
+  if (pimpl->subscribers_.size() <= monitor)
     pimpl->subscribers_.resize(monitor + 1);
-  pimpl->subscribers_[monitor] = subscriber;
 
+  pimpl->subscribers_[monitor] = subscriber;
   pimpl->SetupBarriers(UScreen::GetDefault()->GetMonitors());
 }
 
-void EdgeBarrierController::Unsubscribe(EdgeBarrierSubscriber* subscriber, int monitor)
+void EdgeBarrierController::Unsubscribe(EdgeBarrierSubscriber* subscriber, unsigned int monitor)
 {
-  if (pimpl->subscribers_.size() < (size_t)monitor || pimpl->subscribers_[monitor] != subscriber)
+  if (pimpl->subscribers_.size() < monitor || pimpl->subscribers_[monitor] != subscriber)
     return;
-  pimpl->subscribers_[monitor] = nullptr;
 
+  pimpl->subscribers_[monitor] = nullptr;
   pimpl->SetupBarriers(UScreen::GetDefault()->GetMonitors());
 }
 

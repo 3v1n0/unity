@@ -41,8 +41,8 @@ public:
   nux::Property<bool> sticky_edges;
   nux::Property<launcher::Options::Ptr> options;
 
-  void Subscribe(EdgeBarrierSubscriber* subscriber, int monitor);
-  void Unsubscribe(EdgeBarrierSubscriber* subscriber, int monitor);
+  void Subscribe(EdgeBarrierSubscriber* subscriber, unsigned int monitor);
+  void Unsubscribe(EdgeBarrierSubscriber* subscriber, unsigned int monitor);
 
 private:
   struct Impl;
