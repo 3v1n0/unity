@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
 #ifndef _DEVICE_LAUNCHER_SECTION_H_
@@ -24,7 +25,7 @@
 #include <UnityCore/GLibSource.h>
 
 #include "DeviceLauncherIcon.h"
-#include "AbstractVolumeMonitorWrapper.h"
+#include "VolumeMonitorWrapper.h"
 
 class Launcher;
 class LauncherIcon;
@@ -37,19 +38,17 @@ namespace launcher
 class DeviceLauncherSection : public sigc::trackable
 {
 public:
-  DeviceLauncherSection(AbstractVolumeMonitorWrapper::Ptr volume_monitor);
+  DeviceLauncherSection(VolumeMonitorWrapper::Ptr volume_monitor);
 
   sigc::signal<void, AbstractLauncherIcon::Ptr> IconAdded;
 
 private:
   void PopulateEntries();
-
   void OnVolumeAdded(glib::Object<GVolume> const& volume);
   void OnVolumeRemoved(glib::Object<GVolume> const& volume);
 
-private:
   std::map<GVolume*, DeviceLauncherIcon*> map_;
-  AbstractVolumeMonitorWrapper::Ptr monitor_;
+  VolumeMonitorWrapper::Ptr monitor_;
   glib::Idle device_populate_idle_;
 };
 

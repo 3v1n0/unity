@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
 #include "DeviceLauncherSection.h"
@@ -23,7 +24,7 @@ namespace unity
 namespace launcher
 {
 
-DeviceLauncherSection::DeviceLauncherSection(AbstractVolumeMonitorWrapper::Ptr volume_monitor)
+DeviceLauncherSection::DeviceLauncherSection(VolumeMonitorWrapper::Ptr volume_monitor)
   : monitor_(volume_monitor)
 {
   monitor_->volume_added.connect(sigc::mem_fun(this, &DeviceLauncherSection::OnVolumeAdded));

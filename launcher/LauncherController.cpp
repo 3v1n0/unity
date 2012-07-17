@@ -41,7 +41,6 @@
 #include "AbstractLauncherIcon.h"
 #include "SoftwareCenterLauncherIcon.h"
 #include "LauncherModel.h"
-#include "VolumeMonitorWrapper.h"
 #include "unity-shared/WindowManager.h"
 #include "TrashLauncherIcon.h"
 #include "BFBLauncherIcon.h"
