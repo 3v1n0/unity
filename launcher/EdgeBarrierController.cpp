@@ -143,7 +143,7 @@ void EdgeBarrierController::Impl::OnPointerBarrierEvent(ui::PointerBarrierWrappe
   if (process && owner->x1 > 0)
   {
     decaymulator_->value = decaymulator_->value + event->velocity;
-    if (decaymulator_->value > edge_overcome_pressure_ || !parent_->options()->edge_resist())
+    if (decaymulator_->value > edge_overcome_pressure_ || (!parent_->options()->edge_resist() && !subscribers_[monitor]))
     {
       owner->ReleaseBarrier(event->event_id);
       decaymulator_->value = 0;
