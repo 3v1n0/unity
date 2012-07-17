@@ -34,15 +34,14 @@ struct EdgeBarrierController::Impl
   void OnPointerBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event);
 
   std::vector<PointerBarrierWrapper::Ptr> barriers_;
-  Decaymulator::Ptr decaymulator_;
+  std::vector<EdgeBarrierSubscriber*> subscribers_;
+  Decaymulator decaymulator_;
   float edge_overcome_pressure_;
   EdgeBarrierController* parent_;
-  std::vector<EdgeBarrierSubscriber*> subscribers_;
 };
 
 EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
-  : decaymulator_(Decaymulator::Ptr(new Decaymulator()))
-  , edge_overcome_pressure_(0)
+  : edge_overcome_pressure_(0)
   , parent_(parent)
 {
   UScreen *uscreen = UScreen::GetDefault();
@@ -116,7 +115,7 @@ void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const
   }
 
   float decay_responsiveness_mult = ((parent_->options()->edge_responsiveness() - 1) * .3f) + 1;
-  decaymulator_->rate_of_decay = parent_->options()->edge_decay_rate() * decay_responsiveness_mult;
+  decaymulator_.rate_of_decay = parent_->options()->edge_decay_rate() * decay_responsiveness_mult;
 
   float overcome_responsiveness_mult = ((parent_->options()->edge_responsiveness() - 1) * 1.0f) + 1;
   edge_overcome_pressure_ = parent_->options()->edge_overcome_pressure() * overcome_responsiveness_mult;
@@ -136,16 +135,17 @@ void EdgeBarrierController::Impl::OnPointerBarrierEvent(ui::PointerBarrierWrappe
 
   if (process && owner->x1 > 0)
   {
-    decaymulator_->value = decaymulator_->value + event->velocity;
-    if (decaymulator_->value > edge_overcome_pressure_ || (!parent_->options()->edge_resist() && !subscribers_[monitor]))
+    decaymulator_.value = decaymulator_.value + event->velocity;
+
+    if (decaymulator_.value > edge_overcome_pressure_ || (!parent_->options()->edge_resist() && !subscribers_[monitor]))
     {
       owner->ReleaseBarrier(event->event_id);
-      decaymulator_->value = 0;
+      decaymulator_.value = 0;
     }
   }
   else
   {
-    decaymulator_->value = 0;
+    decaymulator_.value = 0;
   }
 }
 

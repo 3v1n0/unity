@@ -35,30 +35,29 @@ const unsigned int HIDE_DELAY_TIMEOUT_LENGTH = 750;
 
 LauncherHideMachine::LauncherHideMachine()
   : reveal_progress(0)
-  , decaymulator_(new ui::Decaymulator())
   , _mode(HIDE_NEVER)
   , _quirks(DEFAULT)
   , _should_hide(false)
   , _latest_emit_should_hide(false)
 {
-  decaymulator_->value.changed.connect([&](int value) { reveal_progress = value / static_cast<float>(reveal_pressure); });
+  decaymulator_.value.changed.connect([&](int value) { reveal_progress = value / static_cast<float>(reveal_pressure); });
   edge_decay_rate.changed.connect(sigc::mem_fun (this, &LauncherHideMachine::OnDecayRateChanged));
 }
 
 void LauncherHideMachine::OnDecayRateChanged(int value)
 {
-  decaymulator_->rate_of_decay = value;  
+  decaymulator_.rate_of_decay = value;
 }
 
 void LauncherHideMachine::AddRevealPressure(int pressure)
 {
-  decaymulator_->value = decaymulator_->value + pressure;
+  decaymulator_.value = decaymulator_.value + pressure;
 
-  if (decaymulator_->value > reveal_pressure)
+  if (decaymulator_.value > reveal_pressure)
   {
     SetQuirk(REVEAL_PRESSURE_PASS, true);
     SetQuirk(MOUSE_MOVE_POST_REVEAL, true);
-    decaymulator_->value = 0;
+    decaymulator_.value = 0;
   }
 }
 
