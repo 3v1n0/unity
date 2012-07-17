@@ -192,7 +192,7 @@ public:
   int                    launcher_key_press_time_;
   unsigned int           dbus_owner_;
 
-  ui::EdgeBarrierController::Ptr edge_barriers_;
+  ui::EdgeBarrierController edge_barriers_;
 
   LauncherList launchers;
 
@@ -215,10 +215,9 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   , sort_priority_(0)
   , show_desktop_icon_(false)
   , display_(display)
-  , edge_barriers_(new ui::EdgeBarrierController())
   , matcher_(bamf_matcher_get_default())
 {
-  edge_barriers_->options = parent_->options();
+  edge_barriers_.options = parent_->options();
 
   UScreen* uscreen = UScreen::GetDefault();
   auto monitors = uscreen->GetMonitors();
@@ -351,7 +350,7 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
     {
       parent_->RemoveChild(launcher.GetPointer());
       launcher->GetParent()->UnReference();
-      edge_barriers_->Unsubscribe(launcher.GetPointer(), launcher->monitor);
+      edge_barriers_.Unsubscribe(launcher.GetPointer(), launcher->monitor);
     }
   }
 
@@ -359,7 +358,7 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
 
   for (size_t i = 0; i < launchers.size(); ++i)
   {
-    edge_barriers_->Subscribe(launchers[i].GetPointer(), launchers[i]->monitor);
+    edge_barriers_.Subscribe(launchers[i].GetPointer(), launchers[i]->monitor);
   }
 }
 

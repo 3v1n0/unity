@@ -123,7 +123,7 @@ void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const
 
   float decay_responsiveness_mult = ((parent_->options()->edge_responsiveness() - 1) * .3f) + 1;
   decaymulator_->rate_of_decay = parent_->options()->edge_decay_rate() * decay_responsiveness_mult;
-  
+
   float overcome_responsiveness_mult = ((parent_->options()->edge_responsiveness() - 1) * 1.0f) + 1;
   edge_overcome_pressure_ = parent_->options()->edge_overcome_pressure() * overcome_responsiveness_mult;
 }

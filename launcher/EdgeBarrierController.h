@@ -29,14 +29,12 @@ namespace ui {
 class EdgeBarrierSubscriber
 {
 public:
-  virtual bool HandleBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event) { return false; };
+  virtual bool HandleBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event) = 0;
 };
 
 class EdgeBarrierController : public sigc::trackable
 {
 public:
-  typedef std::shared_ptr<EdgeBarrierController> Ptr;
-
   EdgeBarrierController();
   ~EdgeBarrierController();
 
