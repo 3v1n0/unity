@@ -118,8 +118,7 @@ protected:
   // of libunity-protocol-private private to unity-core
   Preview(glib::Object<GObject> const& proto_obj);
   void Update(glib::Variant const& properties,
-              glib::DBusProxy::ReplyCallback reply_callback =
-                sigc::ptr_fun(&glib::DBusProxy::NoReplyCallback)) const;
+              glib::DBusProxy::ReplyCallback reply_callback = nullptr) const;
   static glib::Object<GIcon> IconForString(std::string const& icon_hint);
 
 private:
