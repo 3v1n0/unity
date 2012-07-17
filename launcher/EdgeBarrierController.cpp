@@ -27,7 +27,6 @@ namespace ui {
 struct EdgeBarrierController::Impl
 {
   Impl(EdgeBarrierController *parent);
-  ~Impl();
 
   void ResizeBarrierList(std::vector<nux::Geometry> const& layout);
   void SetupBarriers(std::vector<nux::Geometry> const& layout);
@@ -66,11 +65,6 @@ EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
     });
     SetupBarriers(UScreen::GetDefault()->GetMonitors());
   });
-}
-
-EdgeBarrierController::Impl::~Impl()
-{
-
 }
 
 void EdgeBarrierController::Impl::ResizeBarrierList(std::vector<nux::Geometry> const& layout)
@@ -158,13 +152,10 @@ void EdgeBarrierController::Impl::OnPointerBarrierEvent(ui::PointerBarrierWrappe
 EdgeBarrierController::EdgeBarrierController()
   : sticky_edges(false)
   , pimpl(new Impl(this))
-{
-}
+{}
 
 EdgeBarrierController::~EdgeBarrierController()
-{
-
-}
+{}
 
 void EdgeBarrierController::Subscribe(EdgeBarrierSubscriber* subscriber, int monitor)
 {

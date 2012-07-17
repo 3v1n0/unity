@@ -46,7 +46,7 @@ public:
 
 private:
   struct Impl;
-  Impl* pimpl;
+  std::unique_ptr<Impl> pimpl;
 };
 
 }
