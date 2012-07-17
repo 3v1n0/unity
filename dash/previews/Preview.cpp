@@ -58,6 +58,12 @@ void Preview::AddProperties(GVariantBuilder* builder)
 {
 }
 
+void Preview::OnActionActivated(nux::Button* button, std::string const& id)
+{
+  if (preview_model_)
+    preview_model_->PerformAction(id);
+}
+
 }
 }
 }

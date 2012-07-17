@@ -16,7 +16,7 @@
  * License version 3 along with this program.  If not, see
  * <http://www.gnu.org/licenses/>
  *
- * Authored by: Gordon Allott <gord.allott@canonical.com>
+ * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  *
  */
 

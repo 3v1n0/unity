@@ -20,18 +20,20 @@
  *
  */
 
-#include "ApplicationPreview.h"
-#include "ActionButton.h"
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/PreviewStyle.h"
-#include "unity-shared/ApplicationScreenshot.h"
+#include "unity-shared/CoverArt.h"
 #include "unity-shared/IconTexture.h"
+#include "unity-shared/StaticCairoText.h"
 #include <UnityCore/ApplicationPreview.h>
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
 #include <Nux/Button.h>
 #include <PreviewFactory.h>
+ 
+#include "ApplicationPreview.h"
+#include "ActionButton.h"
 #include "PreviewInfoHintWidget.h"
 #include "PreviewRatingsWidget.h"
 
@@ -42,23 +44,6 @@ namespace dash
 {
 namespace previews
 {
-
-#define TMP_VIEW(name, colour) \
-class TmpView_##name : public nux::View \
-{ \
-public: \
-  TmpView_##name():View(NUX_TRACKER_LOCATION) {} \
-  ~TmpView_##name() {} \
-  virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw) { \
-    gPainter.Paint2DQuadColor(gfx_engine, GetGeometry(), colour); \
-  } \
-  virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw) {} \
-};
-
-TMP_VIEW(AppImage, nux::Color(0xAA, 0x00, 0x00, 0.1f))
-TMP_VIEW(AppIcon, nux::Color(0x00, 0x00, 0xAA, 0.1f))
-TMP_VIEW(UserRating, nux::Color(0x00, 0xAA, 0x00, 0.1f))
-TMP_VIEW(Actions, nux::Color(0x00, 0xAA, 0xAA, 0.1f))
 
 namespace
 {
@@ -155,9 +140,11 @@ void ApplicationPreview::SetupViews()
   nux::HLayout* image_data_layout = new nux::HLayout();
   image_data_layout->SetSpaceBetweenChildren(12);
 
-  ApplicationScreenshot* app_image = new ApplicationScreenshot();
-  app_image->SetImage(g_icon_to_string(preview_model_->image.Get().RawPtr()));
+  CoverArt* app_image = new CoverArt();
+  app_image->SetImage(preview_model_->image.Get().RawPtr() ? g_icon_to_string(preview_model_->image.Get().RawPtr()) : "");
   app_image->SetFont(style.no_preview_image_font());
+  app_image->SetMinimumWidth(style.GetImageWidth());
+  app_image->SetMaximumWidth(style.GetImageWidth());
 
     /////////////////////
     // App Data Panel
@@ -173,7 +160,7 @@ void ApplicationPreview::SetupViews()
         /////////////////////
         // Icon Layout
         nux::VLayout* icon_layout = new nux::VLayout();
-        app_icon_ = new IconTexture(g_icon_to_string(app_preview_model->app_icon.Get().RawPtr()), 72);
+        app_icon_ = new IconTexture(app_preview_model->app_icon.Get().RawPtr() ? g_icon_to_string(app_preview_model->app_icon.Get().RawPtr()) : "", 72);
         app_icon_->SetMinimumSize(100,100);
         app_icon_->SetMaximumSize(100,100);
         icon_layout->AddView(app_icon_, 0);
@@ -188,18 +175,18 @@ void ApplicationPreview::SetupViews()
         /////////////////////
 
         /////////////////////
-        // App Data
+        // Data
         nux::VLayout* app_data_layout = new nux::VLayout();
         app_data_layout->SetSpaceBetweenChildren(14);
 
-        nux::VLayout* app_name_subtitle_layout = new nux::VLayout();
-        app_name_subtitle_layout->SetSpaceBetweenChildren(8);
+        nux::VLayout* title_subtitle_layout = new nux::VLayout();
+        title_subtitle_layout->SetSpaceBetweenChildren(8);
 
-        app_name_ = new nux::StaticCairoText(app_preview_model->title);
-        app_name_->SetFont(style.app_name_font().c_str());
+        title_ = new nux::StaticCairoText(app_preview_model->title);
+        title_->SetFont(style.title_font().c_str());
 
         subtitle_ = new nux::StaticCairoText(app_preview_model->subtitle);
-        subtitle_->SetFont(style.version_size_font().c_str());
+        subtitle_->SetFont(style.subtitle_size_font().c_str());
 
         nux::VLayout* app_updated_copywrite_layout = new nux::VLayout();
         app_updated_copywrite_layout->SetSpaceBetweenChildren(8);
@@ -213,14 +200,14 @@ void ApplicationPreview::SetupViews()
         copywrite_ = new nux::StaticCairoText(app_preview_model->copyright);
         copywrite_->SetFont(style.app_copywrite_font().c_str());
 
-        app_name_subtitle_layout->AddView(app_name_, 1);
-        app_name_subtitle_layout->AddView(subtitle_, 1);
+        title_subtitle_layout->AddView(title_, 1);
+        title_subtitle_layout->AddView(subtitle_, 1);
 
         app_updated_copywrite_layout->AddView(license_, 1);
         app_updated_copywrite_layout->AddView(last_update_, 1);
         app_updated_copywrite_layout->AddView(copywrite_, 1);
 
-        app_data_layout->AddLayout(app_name_subtitle_layout);
+        app_data_layout->AddLayout(title_subtitle_layout);
         app_data_layout->AddLayout(app_updated_copywrite_layout);
 
         // buffer space
@@ -231,7 +218,7 @@ void ApplicationPreview::SetupViews()
       /////////////////////
 
       /////////////////////
-      // App Description
+      // Description
       nux::ScrollView* app_info = new nux::ScrollView(NUX_TRACKER_LOCATION);
       app_info->EnableHorizontalScrollBar(false);
 
@@ -247,14 +234,14 @@ void ApplicationPreview::SetupViews()
       app_description_->SetMaximumWidth(400);
       app_description_->SetText(app_preview_model->description);
 
-      PreviewInfoHintWidget* preview_info_hints = new PreviewInfoHintWidget(preview_model_);
+      PreviewInfoHintWidget* preview_info_hints = new PreviewInfoHintWidget(preview_model_, 24);
 
       app_info_layout->AddView(app_description_);
       app_info_layout->AddView(preview_info_hints);
       /////////////////////
 
       /////////////////////
-      // App Actions
+      // Actions
       nux::HLayout* actions_layout = new nux::HLayout();
       actions_layout->SetSpaceBetweenChildren(12);
       actions_layout->AddSpace(0, 1);
@@ -273,16 +260,10 @@ void ApplicationPreview::SetupViews()
     full_data_layout_->AddLayout(actions_layout, 0);
     /////////////////////
   
-  image_data_layout->AddView(app_image, 1);
+  image_data_layout->AddView(app_image, 0);
   image_data_layout->AddLayout(full_data_layout_, 1);
 
   SetLayout(image_data_layout);
-}
-
-void ApplicationPreview::OnActionActivated(nux::Button*, std::string const& id)
-{
-  if (preview_model_)
-    preview_model_->PerformAction(id);
 }
 
 } // namespace previews

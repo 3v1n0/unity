@@ -25,6 +25,8 @@
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
+#include <unity-shared/IconTexture.h>
+#include <unity-shared/PreviewStyle.h>
 
 namespace unity
 {
@@ -43,6 +45,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(PreviewNavigator);
 PreviewNavigator::PreviewNavigator(Orientation orientation, NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , orientation_(orientation)
+  , texture_(nullptr)
 {
   SetupViews();
 }
@@ -54,8 +57,8 @@ std::string PreviewNavigator::GetName() const
 
 void PreviewNavigator::SetEnabled(bool enabled)
 {
-  button_->SetEnableView(enabled);
-  button_->SetVisible(enabled);
+  texture_->SetEnableView(enabled);
+  texture_->SetVisible(enabled);
 }
 
 void PreviewNavigator::AddProperties(GVariantBuilder* builder)
@@ -72,8 +75,14 @@ void PreviewNavigator::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_d
   nux::Geometry base = GetGeometry();
   gfx_engine.PushClippingRectangle(base);
 
+    unsigned int alpha, src, dest = 0;
+    gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
+    gfx_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
   if (GetCompositionLayout())
     GetCompositionLayout()->ProcessDraw(gfx_engine, force_draw);
+
+  gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
 
   gfx_engine.PopClippingRectangle();
 }
@@ -85,6 +94,11 @@ void PreviewNavigator::SetupViews()
     nux::VLayout* vlayout = new nux::VLayout();
     vlayout->SetSpaceBetweenChildren(0);
     layout_ = vlayout;
+
+    if (orientation_ == Orientation::LEFT)
+      texture_ = new IconTexture(Style::Instance().GetNavLeftIcon(), 32, 32);
+    else 
+      texture_ = new IconTexture(Style::Instance().GetNavRightIcon(), 32, 32);
   }
   else if (orientation_ == Orientation::UP || orientation_ == Orientation::DOWN)
   {
@@ -96,21 +110,19 @@ void PreviewNavigator::SetupViews()
 
   layout_->AddSpace(0, 1);
 
-  button_ = new nux::Button("nav", NUX_TRACKER_LOCATION);
-  button_->SetMinimumHeight(64);
-  button_->SetMaximumHeight(64);
-  button_->SetMinimumWidth(32);
-  button_->SetMaximumWidth(32);
-  button_->click.connect([&](nux::Button* const&) { OnClicked(); });
-  layout_->AddView(button_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  if (texture_)
+  {
+    texture_->mouse_click.connect([&](int, int, unsigned long, unsigned long) { activated.emit(); });
+    texture_->SetMinimumHeight(32);
+    texture_->SetMaximumHeight(32);
+    texture_->SetMinimumWidth(32);
+    texture_->SetMaximumWidth(32);
+    layout_->AddView(texture_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);    
+  }
 
   layout_->AddSpace(0, 1);
 }
 
-void PreviewNavigator::OnClicked()
-{
-  activated.emit();  
-}
 
 } // namespace previews
 } // namespace dash

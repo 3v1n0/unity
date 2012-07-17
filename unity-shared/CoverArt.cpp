@@ -17,10 +17,11 @@
  * <http://www.gnu.org/licenses/>
  *
  * Authored by: Andrea Cimitan <andrea.cimitan@canonical.com>
+ *              Nick Dedekind <nick.dedekind@canonical.com>
  *
  */
 
-#include "ApplicationScreenshot.h"
+#include "CoverArt.h"
 #include "unity-shared/IntrospectableWrappers.h"
 #include <NuxCore/Logger.h>
 #include <Nux/VLayout.h>
@@ -34,25 +35,25 @@ namespace previews
 
 namespace
 {
-nux::logging::Logger logger("unity.dash.previews.applicationscreenshot");
+nux::logging::Logger logger("unity.dash.previews.coverart");
 }
 
-NUX_IMPLEMENT_OBJECT_TYPE(ApplicationScreenshot);
+NUX_IMPLEMENT_OBJECT_TYPE(CoverArt);
 
-ApplicationScreenshot::ApplicationScreenshot()
+CoverArt::CoverArt()
   : View(NUX_TRACKER_LOCATION)
   , overlay_text_(nullptr)
 {
   SetupViews();
 }
 
-ApplicationScreenshot::~ApplicationScreenshot()
+CoverArt::~CoverArt()
 {
   if (overlay_text_)
     overlay_text_->UnReference();
 }
 
-void ApplicationScreenshot::SetImage(std::string const& image_hint)
+void CoverArt::SetImage(std::string const& image_hint)
 {
   if (overlay_text_ && GetLayout())
     GetLayout()->RemoveChildObject(overlay_text_);
@@ -66,7 +67,7 @@ void ApplicationScreenshot::SetImage(std::string const& image_hint)
   QueueDraw();
 }
 
-void ApplicationScreenshot::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
+void CoverArt::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
 {
   nux::Geometry const& base = GetGeometry();
 
@@ -140,7 +141,7 @@ void ApplicationScreenshot::Draw(nux::GraphicsEngine& gfx_engine, bool force_dra
   gfx_engine.PopClippingRectangle();
 }
 
-void ApplicationScreenshot::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
+void CoverArt::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
 {
   nux::Geometry const& base = GetGeometry();
   gfx_engine.PushClippingRectangle(base);
@@ -151,12 +152,12 @@ void ApplicationScreenshot::DrawContent(nux::GraphicsEngine& gfx_engine, bool fo
   gfx_engine.PopClippingRectangle();
 }
 
-std::string ApplicationScreenshot::GetName() const
+std::string CoverArt::GetName() const
 {
-  return "ApplicationScreenshot";
+  return "CoverArt";
 }
 
-void ApplicationScreenshot::SetupViews()
+void CoverArt::SetupViews()
 {
   nux::VLayout* layout = new nux::VLayout();
   layout->AddSpace(0, 1);
@@ -171,7 +172,7 @@ void ApplicationScreenshot::SetupViews()
   overlay_text_->SetText("No Image Available");
 }
 
-void ApplicationScreenshot::SetFont(std::string const& font)
+void CoverArt::SetFont(std::string const& font)
 {
   overlay_text_->SetFont(font);
 }

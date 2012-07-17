@@ -39,8 +39,9 @@ nux::logging::Logger logger("unity.dash.previews.previewinfohintwidget");
 
 NUX_IMPLEMENT_OBJECT_TYPE(PreviewInfoHintWidget);
 
-PreviewInfoHintWidget::PreviewInfoHintWidget(dash::Preview::Ptr preview_model)
+PreviewInfoHintWidget::PreviewInfoHintWidget(dash::Preview::Ptr preview_model, int icon_size)
   : View(NUX_TRACKER_LOCATION)
+  , icon_size_(icon_size)
   , preview_model_(preview_model)
 {
   SetupViews();
@@ -136,32 +137,36 @@ void PreviewInfoHintWidget::SetupViews()
   previews::Style& style = previews::Style::Instance();
 
   nux::VLayout* layout = new nux::VLayout();
+  layout->SetSpaceBetweenChildren(6);
 
   for (dash::Preview::InfoHintPtr info_hint : preview_model_->GetInfoHints())
   {
     nux::HLayout* hint_layout = new nux::HLayout();
     hint_layout->SetSpaceBetweenChildren(16);
 
-    int icon_width = 32;
-
-    IconTexture* info_icon = new IconTexture(info_hint->icon_hint, icon_width);
-    info_icon->SetMinimumSize(icon_width, icon_width);
+    IconTexture* info_icon = new IconTexture(info_hint->icon_hint, icon_size_);
+    info_icon->SetMinimumSize(icon_size_, icon_size_);
     info_icon->SetVisible(true);
     hint_layout->AddView(info_icon, 0);
 
-    nux::StaticCairoText* info_name = new nux::StaticCairoText(info_hint->display_name, NUX_TRACKER_LOCATION);
-    info_name->SetFont(style.info_hint_font());
-    nux::Layout* info_name_layout = new nux::HLayout();
-    info_name_layout->AddView(info_name, 1, nux::MINOR_POSITION_CENTER);
-    info_name_layout->SetMaximumWidth(128 - (icon_width > 0 ? (icon_width + 16) : 0));
+    if (info_hint->display_name.size() > 0)
+    {
+      nux::StaticCairoText* info_name = new nux::StaticCairoText(info_hint->display_name, NUX_TRACKER_LOCATION);
+      info_name->SetFont(style.info_hint_font());
+  
+      nux::Layout* info_name_layout = new nux::HLayout();
+      info_name_layout->AddView(info_name, 1, nux::MINOR_POSITION_CENTER);
+      info_name_layout->SetMaximumWidth(128 - (icon_size_ > 0 ? (icon_size_ + 16) : 0));
+  
+      hint_layout->AddView(info_name_layout, 1);
+    }
 
-
+ 
     nux::StaticCairoText* info_value = new nux::StaticCairoText(StringFromVariant(info_hint->value), NUX_TRACKER_LOCATION);
     info_value->SetFont(style.info_hint_font());
     nux::Layout* info_value_layout = new nux::HLayout();
     info_value_layout->AddView(info_value, 1, nux::MINOR_POSITION_CENTER);
 
-    hint_layout->AddView(info_name_layout, 1);
     hint_layout->AddView(info_value_layout, 1);
 
     layout->AddLayout(hint_layout, 0);

@@ -27,6 +27,13 @@
 #include <Nux/Nux.h>
 #include <UnityCore/GenericPreview.h>
 
+namespace nux
+{
+class AbstractPaintLayer;
+class StaticCairoText;
+class VLayout;
+}
+
 namespace unity
 {
 namespace dash
@@ -50,6 +57,19 @@ public:
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+
+  void SetupBackground();
+  void SetupViews();
+
+protected:
+  nux::VLayout* full_data_layout_;
+
+  nux::StaticCairoText* title_;
+  nux::StaticCairoText* subtitle_;
+  nux::StaticCairoText* app_description_;
+
+  typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
+  LayerPtr details_bg_layer_;
 };
 
 }

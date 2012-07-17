@@ -25,12 +25,14 @@
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
-#include <Nux/Button.h>
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/Introspectable.h"
 
+
 namespace unity
 {
+class IconTexture;
+
 namespace dash
 {
 namespace previews
@@ -58,12 +60,10 @@ private:
 
   void SetupViews();
 
-  void OnClicked();
-
 private:
   const Orientation orientation_;
   nux::Layout* layout_;
-  nux::Button* button_;
+  IconTexture* texture_;
 };
 
 } // namespace previews

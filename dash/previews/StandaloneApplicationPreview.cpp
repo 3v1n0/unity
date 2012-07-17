@@ -26,11 +26,7 @@
 #include <Nux/Layout.h>
 #include <NuxCore/Logger.h>
 #include <UnityCore/Variant.h>
-#include <UnityCore/Preview.h>
 #include <UnityCore/ApplicationPreview.h>
-#include <UnityCore/MoviePreview.h>
-#include <UnityCore/MusicPreview.h>
-#include <UnityCore/SeriesPreview.h>
 #include <unity-protocol.h>
 #include "PreviewFactory.h"
 
@@ -192,7 +188,7 @@ The service allows users to communicate with peers by voice, video, and instant 
   glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
                   glib::StealRef());
 
-  container_->preview(v, previews::Navigation::RIGHT);
+  container_->Preview(v, previews::Navigation::RIGHT);
 
 }
 
@@ -237,7 +233,7 @@ The service allows users to communicate with peers by voice, video, and instant 
   glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
                   glib::StealRef());
 
-  container_->preview(v, previews::Navigation::RIGHT);
+  container_->Preview(v, previews::Navigation::RIGHT);
 }
 
 void TestRunner::NavLeft()
@@ -279,7 +275,7 @@ The service allows users to communicate with peers by voice, video, and instant 
   glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
                   glib::StealRef());
 
-  container_->preview(v, previews::Navigation::LEFT);
+  container_->Preview(v, previews::Navigation::LEFT);
 }
 
 void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)

@@ -16,41 +16,44 @@
  * License version 3 along with this program.  If not, see
  * <http://www.gnu.org/licenses/>
  *
- * Authored by: Andrea Cimitan <andrea.cimitan@canonical.com>
+ * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  *
  */
 
-#ifndef APPLICATIONSCREENSHOT_H
-#define APPLICATIONSCREENSHOT_H
+#ifndef TRACKS_H
+#define TRACKS_H
 
 #include <Nux/Nux.h>
-#include <Nux/View.h>
-#include <UnityCore/ApplicationPreview.h>
-#include "unity-shared/StaticCairoText.h"
-#include <NuxCore/ObjectPtr.h>
+#include <Nux/ScrollView.h>
+#include <UnityCore/Tracks.h>
+#include "unity-shared/Introspectable.h"
+#include "Track.h"
 
 namespace unity
 {
 namespace dash
 {
+class Track;
+
 namespace previews
 {
+class TrackLayout;
 
-class ApplicationScreenshot : public nux::View
+class Tracks : public nux::ScrollView, public debug::Introspectable
 {
 public:
-  typedef nux::ObjectPtr<ApplicationScreenshot> Ptr;
-  NUX_DECLARE_OBJECT_TYPE(ApplicationScreenshot, nux::View);
+  typedef nux::ObjectPtr<Tracks> Ptr;
+  NUX_DECLARE_OBJECT_TYPE(Tracks, nux::View);
 
-  ApplicationScreenshot();
-  virtual ~ApplicationScreenshot();
-
-  void SetImage(std::string const& image_hint);
-
+  Tracks(dash::Tracks::Ptr tracks, NUX_FILE_LINE_PROTO);
+  virtual ~Tracks();
+ 
   // From debug::Introspectable
   std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
 
-  void SetFont(std::string const& font);
+  sigc::signal<void, std::string const&> play;
+  sigc::signal<void, std::string const&> pause;
 
 protected:
   virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
@@ -58,13 +61,23 @@ protected:
 
   void SetupViews();
 
-private:
-  nux::ObjectPtr<nux::BaseTexture> texture_screenshot_;
-  nux::StaticCairoText* overlay_text_;
+  void OnTrackUpdated(dash::Track const& track);
+  void OnTrackAdded(dash::Track const& track);
+  void OnTrackRemoved(dash::Track const&track);
+
+  void onPlayTrack(std::string const& uri);
+  void onPauseTrack(std::string const& uri);
+
+protected:
+  dash::Tracks::Ptr tracks_;
+
+  TrackLayout* layout_;
+  std::map<std::string, previews::Track::Ptr> m_tracks;
+  int track_count_;
 };
 
 }
 }
 }
 
-#endif // APPLICATIONSCREENSHOT_H
+#endif // TRACKS_H

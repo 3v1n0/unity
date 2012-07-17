@@ -63,7 +63,7 @@ PreviewFactory::PreviewFactory()
   RegisterItem("preview-application", new PreviewFactoryItem<dash::ApplicationPreview, previews::ApplicationPreview>());
   RegisterItem("preview-generic", new PreviewFactoryItem<dash::GenericPreview, previews::GenericPreview>());
   RegisterItem("preview-movie", new PreviewFactoryItem<dash::MoviePreview, previews::MoviePreview>());
-  RegisterItem("preview-movie", new PreviewFactoryItem<dash::MusicPreview, previews::MusicPreview>());
+  RegisterItem("preview-music", new PreviewFactoryItem<dash::MusicPreview, previews::MusicPreview>());
 }
 
 PreviewFactory::~PreviewFactory()
@@ -134,6 +134,14 @@ PreviewFactoryOperator PreviewFactory::Item(glib::Object<GObject> const& proto_o
   auto iter = factory_items_.find(renderer_name);
   if (iter == factory_items_.end())
   {
+    LOG_TRACE(logger) << "No preview factor item for '" << renderer_name << "'; using generic preview";
+
+    iter = factory_items_.find("preview-generic");
+    if (iter != factory_items_.end())
+    {
+      return PreviewFactoryOperator(proto_obj, (*iter).second);
+    }
+
     LOG_WARN(logger) << "Factory item '" << renderer_name << " not registered.";
     return nullOperator;
   }

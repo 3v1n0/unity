@@ -19,8 +19,13 @@
  * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  *
  */
+
 #include "PreviewStyle.h"
 #include <NuxCore/Logger.h>
+
+#include <NuxGraphics/GLTextureResourceManager.h>
+#include <UnityCore/GLibWrapper.h>
+#include "config.h"
 
 namespace unity
 {
@@ -34,9 +39,48 @@ Style* style_instance = nullptr;
 
 nux::logging::Logger logger("unity.dash.previews.style");
 
+typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
+
+class LazyLoadTexture
+{
+public:
+  LazyLoadTexture(std::string const& filename, int size = -1);
+  nux::BaseTexture* texture();
+private:
+  void LoadTexture();
+private:
+  std::string filename_;
+  int size_;
+  BaseTexturePtr texture_;
+};
+
 } // namespace
 
+
+class Style::Impl
+{
+public:
+  Impl(Style* owner)
+  : owner_(owner)
+  , preview_nav_left_texture_("/prev.svg")
+  , preview_nav_right_texture_("/next.svg")
+  , preview_play_texture_("/play.svg")
+  , preview_pause_texture_("/pause.svg")
+  {
+  }
+  ~Impl() {}
+
+  Style* owner_;
+
+  LazyLoadTexture preview_nav_left_texture_;
+  LazyLoadTexture preview_nav_right_texture_;
+  LazyLoadTexture preview_play_texture_;
+  LazyLoadTexture preview_pause_texture_;
+};
+
+
 Style::Style()
+: pimpl(new Impl(this))
 {
   if (style_instance)
   {
@@ -64,23 +108,23 @@ Style& Style::Instance()
   return *style_instance;
 }
 
-int Style::NavigatorMinimumWidth() const
+int Style::GetNavigatorWidth() const
 {
   return 42;
 }
 
-int Style::NavigatorMaximumWidth() const
+int Style::GetImageWidth() const
 {
-  return 42;
+  return 400;
 }
 
-std::string Style::app_name_font() const
+std::string Style::title_font() const
 {
-  return "Ubuntu 20";
+  return "Ubuntu 22";
 }
-std::string Style::version_size_font() const
+std::string Style::subtitle_size_font() const
 {
-  return "Ubuntu 12";
+  return "Ubuntu 12.5";
 }
 std::string Style::app_license_font() const
 {
@@ -112,6 +156,69 @@ std::string Style::no_preview_image_font() const
   return "Ubuntu Light 16";
 }
 
+std::string Style::track_font() const
+{
+  return "Ubuntu Light 10";
 }
+
+
+
+nux::BaseTexture* Style::GetNavLeftIcon()
+{
+  return pimpl->preview_nav_left_texture_.texture();
 }
+
+nux::BaseTexture* Style::GetNavRightIcon()
+{
+  return pimpl->preview_nav_right_texture_.texture();
 }
+
+nux::BaseTexture* Style::GetPlayIcon()
+{
+  return pimpl->preview_play_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetPauseIcon()
+{
+  return pimpl->preview_pause_texture_.texture();
+}
+
+
+
+namespace
+{
+LazyLoadTexture::LazyLoadTexture(std::string const& filename, int size)
+  : filename_(filename)
+  , size_(size)
+{
+}
+
+nux::BaseTexture* LazyLoadTexture::texture()
+{
+  if (!texture_)
+    LoadTexture();
+  return texture_.GetPointer();
+}
+
+void LazyLoadTexture::LoadTexture()
+{
+  std::string full_path = PKGDATADIR + filename_;
+  glib::Object<GdkPixbuf> pixbuf;
+  glib::Error error;
+
+  pixbuf = ::gdk_pixbuf_new_from_file_at_size(full_path.c_str(), size_, size_, &error);
+  if (error)
+  {
+    LOG_WARN(logger) << "Unable to texture " << full_path << ": " << error;
+  }
+  else
+  {
+    texture_.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
+  }
+}
+
+} // namesspace
+
+} // namespace previews
+} // namespace dash
+} // namespace unity

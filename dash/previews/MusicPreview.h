@@ -25,7 +25,14 @@
 
 #include "Preview.h"
 #include <Nux/Nux.h>
-#include <UnityCore/MusicPreview.h>
+#include <Nux/StaticText.h>
+
+namespace nux
+{
+class AbstractPaintLayer;
+class StaticCairoText;
+class VLayout;
+}
 
 namespace unity
 {
@@ -33,6 +40,8 @@ namespace dash
 {
 namespace previews
 {
+class Tracks;
+
 
 class MusicPreview : public Preview
 {
@@ -50,7 +59,22 @@ public:
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-};
+
+  void SetupBackground();
+  void SetupViews();
+
+  void OnPlayTrack(std::string const& uri);
+  void OnPauseTrack(std::string const& uri);
+
+private:
+  nux::StaticCairoText* title_;
+  nux::StaticCairoText* subtitle_;
+  nux::VLayout* full_data_layout_;
+  nux::View* tracks_;
+
+  typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
+  LayerPtr details_bg_layer_;
+ };
 
 }
 }

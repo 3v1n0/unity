@@ -65,8 +65,11 @@ public:
 
   void PushPreview(previews::Preview::Ptr preview, Navigation direction)
   {
-    AddView(preview.GetPointer());
-    preview->SetVisible(false);
+    if (preview)
+    {
+        AddView(preview.GetPointer());
+      preview->SetVisible(false);
+    }
     PreviewSwipe swipe;
     swipe.direction = direction;
     swipe.preview = preview;
@@ -215,7 +218,7 @@ PreviewContainer::~PreviewContainer()
 {
 }
 
-void PreviewContainer::preview(glib::Variant const& preview, Navigation direction)
+void PreviewContainer::Preview(glib::Variant const& preview, Navigation direction)
 {
   PreviewFactoryOperator previewOperator(PreviewFactory::Instance().Item(preview));
 
@@ -230,6 +233,7 @@ void PreviewContainer::DisableNavButton(Navigation button)
   nav_disabled_ = button;
   nav_right_->SetEnabled(IsNavigationDisabled(Navigation::RIGHT) == false);
   nav_left_->SetEnabled(IsNavigationDisabled(Navigation::LEFT) == false);
+  QueueDraw();
 }
 
 bool PreviewContainer::IsNavigationDisabled(Navigation button) const
@@ -254,8 +258,8 @@ void PreviewContainer::SetupViews()
   SetLayout(layout_);
 
   nav_left_ = new PreviewNavigator(Orientation::LEFT, NUX_TRACKER_LOCATION);
-  nav_left_->SetMinimumWidth(stlye.NavigatorMinimumWidth());
-  nav_left_->SetMaximumWidth(stlye.NavigatorMaximumWidth());
+  nav_left_->SetMinimumWidth(stlye.GetNavigatorWidth());
+  nav_left_->SetMaximumWidth(stlye.GetNavigatorWidth());
   nav_left_->activated.connect([&]() { navigate_left.emit(); });
   layout_->AddView(nav_left_, 0);
 
@@ -263,8 +267,8 @@ void PreviewContainer::SetupViews()
   layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   nav_right_ = new PreviewNavigator(Orientation::RIGHT, NUX_TRACKER_LOCATION);
-  nav_right_->SetMinimumWidth(stlye.NavigatorMinimumWidth());
-  nav_right_->SetMaximumWidth(stlye.NavigatorMaximumWidth());
+  nav_right_->SetMinimumWidth(stlye.GetNavigatorWidth());
+  nav_right_->SetMaximumWidth(stlye.GetNavigatorWidth());
   nav_right_->activated.connect([&]() { navigate_right.emit(); });
   layout_->AddView(nav_right_, 0);
 

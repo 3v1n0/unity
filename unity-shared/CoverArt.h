@@ -16,22 +16,19 @@
  * License version 3 along with this program.  If not, see
  * <http://www.gnu.org/licenses/>
  *
- * Authored by: Gordon Allott <gord.allott@canonical.com>
+ * Authored by: Andrea Cimitan <andrea.cimitan@canonical.com>
+ *              Nick Dedekind <nick.dedekind@canonical.com>
  *
  */
 
-#ifndef PREVIEW_H
-#define PREVIEW_H
+#ifndef COVERART_H
+#define COVERART_H
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
-#include <UnityCore/Preview.h>
-#include "unity-shared/Introspectable.h"
-
-namespace nux
-{
-class Button;
-}
+#include <UnityCore/ApplicationPreview.h>
+#include "unity-shared/StaticCairoText.h"
+#include <NuxCore/ObjectPtr.h>
 
 namespace unity
 {
@@ -40,32 +37,35 @@ namespace dash
 namespace previews
 {
 
-class Preview : public nux::View, public debug::Introspectable
+class CoverArt : public nux::View
 {
 public:
-  typedef nux::ObjectPtr<Preview> Ptr;
-  NUX_DECLARE_OBJECT_TYPE(Preview, nux::View);
+  typedef nux::ObjectPtr<CoverArt> Ptr;
+  NUX_DECLARE_OBJECT_TYPE(CoverArt, nux::View);
 
-  Preview(dash::Preview::Ptr preview_model);
-  virtual ~Preview();
- 
+  CoverArt();
+  virtual ~CoverArt();
+
+  void SetImage(std::string const& image_hint);
+
   // From debug::Introspectable
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+
+  void SetFont(std::string const& font);
 
 protected:
-  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {}
-  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {}
-  
-  virtual void OnActionActivated(nux::Button* button, std::string const& id);
-  
-protected:
-  dash::Preview::Ptr preview_model_;
+  virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
+  virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);
 
+  void SetupViews();
+
+private:
+  nux::ObjectPtr<nux::BaseTexture> texture_screenshot_;
+  nux::StaticCairoText* overlay_text_;
 };
 
 }
 }
 }
 
-#endif // PREVIEW_H
+#endif // APPLICATIONSCREENSHOT_H

@@ -42,7 +42,7 @@ public:
   typedef nux::ObjectPtr<PreviewInfoHintWidget> Ptr;
   NUX_DECLARE_OBJECT_TYPE(PreviewInfoHintWidget, nux::View);
 
-  PreviewInfoHintWidget(dash::Preview::Ptr preview_model);
+  PreviewInfoHintWidget(dash::Preview::Ptr preview_model, int icon_size);
   virtual ~PreviewInfoHintWidget();
 
   // From debug::Introspectable
@@ -62,6 +62,8 @@ protected:
                                     std::string icon_name);
 
 protected:
+  int icon_size_;
+  
   dash::Preview::Ptr preview_model_;
   typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 };

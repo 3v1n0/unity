@@ -25,14 +25,12 @@
 
 #include "Preview.h"
 #include <Nux/Nux.h>
-#include "unity-shared/StaticCairoText.h"
-#include <Nux/StaticText.h>
 
 namespace nux
 {
 class AbstractPaintLayer;
 class VLayout;
-class Button;
+class StaticCairoText;
 }
 
 namespace unity
@@ -66,14 +64,13 @@ protected:
   void SetupBackground();
   void SetupViews();
 
-  void OnActionActivated(nux::Button* button, std::string const& id);
 
 protected:
   IconTexture* app_icon_;
   PreviewRatingsWidget* app_rating_;
   nux::VLayout* full_data_layout_;
 
-  nux::StaticCairoText* app_name_;
+  nux::StaticCairoText* title_;
   nux::StaticCairoText* subtitle_;
   nux::StaticCairoText* license_;
   nux::StaticCairoText* last_update_;

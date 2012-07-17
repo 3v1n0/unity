@@ -23,7 +23,16 @@
 #ifndef PREVIEWSTYLE_H
 #define PREVIEWSTYLE_H
 
- #include <string>
+#include <Nux/Nux.h>
+#include <Nux/View.h>
+ 
+#include <string>
+#include <memory>
+
+namespace nux
+{
+  class BaseTexture;
+}
 
 namespace unity
 {
@@ -47,13 +56,15 @@ public:
   
   static Style& Instance();
 
-  int NavigatorMinimumWidth() const;
-  int NavigatorMaximumWidth() const;
+  int GetNavigatorWidth() const;
+  int GetImageWidth() const;
+
+
+  std::string title_font() const;
+  std::string subtitle_size_font() const;
 
   ////////////////////////////////
   // Application Preview
-  std::string app_name_font() const;
-  std::string version_size_font() const;
   std::string app_license_font() const;
   std::string app_last_update_font() const;
   std::string app_copywrite_font() const;
@@ -62,8 +73,21 @@ public:
   std::string user_rating_font() const;
   std::string no_preview_image_font() const;
    ////////////////////////////////
+
+  ////////////////////////////////
+  // Music Preview
+  std::string track_font() const;
+  ////////////////////////////////
+  
+
+  nux::BaseTexture* GetNavLeftIcon();
+  nux::BaseTexture* GetNavRightIcon();
+  nux::BaseTexture* GetPlayIcon();
+  nux::BaseTexture* GetPauseIcon();
  
 protected:
+  class Impl;
+  std::unique_ptr<Impl> pimpl;
 
 };
 

@@ -31,8 +31,8 @@ include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_D
 set (UNITY_SHARED_SOURCES
      AbstractSeparator.cpp
      Animator.cpp
-     ApplicationScreenshot.cpp
      BGHash.cpp
+     CoverArt.cpp
      BackgroundEffectHelper.cpp
      DashStyle.cpp
      FontSettings.cpp
