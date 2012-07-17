@@ -18,12 +18,19 @@ from autopilot.emulators.ibus import (
 from autopilot.matchers import Eventually
 from autopilot.testcase import multiply_scenarios
 from testtools.matchers import Equals, NotEquals
+from unity.emulators.dash import Dash
+from unity.emulators.hud import Hud
 
 from unity.tests import UnityTestCase
 
 
 class IBusTests(UnityTestCase):
     """Base class for IBus tests."""
+
+    scenarios = [
+        ('dash', {'widget': Dash()}),
+        ('hud', {'widget': Hud()})
+    ]
 
     def setUp(self):
         self.activate_binding = 'Control+space'
@@ -63,35 +70,25 @@ class IBusTests(UnityTestCase):
     def activate_ibus(self, widget):
         """Activate IBus, and wait till it's actived on 'widget'"""
         self.assertThat(widget.im_active, Equals(False))
-        self.keyboard.press(self.activate_binding, 0.05)
-        self.addCleanup(self.keyboard.release, self.activate_binding, 0.05)
+        self.keyboard.press_and_release(self.activate_binding)
         self.assertThat(widget.im_active, Eventually(Equals(True)))
-        self.keyboard.release(self.activate_binding, 0.05)
 
     def deactivate_ibus(self, widget):
         """Deactivate ibus, and wait till it's inactive on 'widget'"""
         self.assertThat(widget.im_active, Equals(True))
-        self.keyboard.press(self.activate_binding, 0.05)
-        self.addCleanup(self.keyboard.release, self.activate_binding, 0.05)
+        self.keyboard.press_and_release(self.activate_binding)
         self.assertThat(widget.im_active, Eventually(Equals(False)))
-        self.keyboard.release(self.activate_binding, 0.05)
 
     def activate_ibus_on_release(self, widget):
         """Activate IBus when keys have been released, and wait till it's actived on 'widget'"""
         self.assertThat(widget.im_active, Equals(False))
-        self.keyboard.press(self.activate_release_binding, 0.05)
-        self.addCleanup(self.keyboard.release, self.activate_release_binding, 0.05)
-        self.assertThat(widget.im_active, Eventually(Equals(False)))
-        self.keyboard.release(self.activate_release_binding, 0.05)
+        self.keyboard.press_and_release(self.activate_release_binding)
         self.assertThat(widget.im_active, Eventually(Equals(True)))
 
     def deactivate_ibus_on_release(self, widget):
         """Activate IBus when keys have been released, and wait till it's actived on 'widget'"""
         self.assertThat(widget.im_active, Equals(True))
-        self.keyboard.press(self.activate_release_binding, 0.05)
-        self.addCleanup(self.keyboard.release, self.activate_release_binding, 0.05)
-        self.assertThat(widget.im_active, Eventually(Equals(True)))
-        self.keyboard.release(self.activate_release_binding, 0.05)
+        self.keyboard.press_and_release(self.activate_release_binding)
         self.assertThat(widget.im_active, Eventually(Equals(False)))
 
     def do_dash_test_with_engine(self):
@@ -116,29 +113,59 @@ class IBusTests(UnityTestCase):
         self.deactivate_ibus(self.hud.searchbar)
         self.assertThat(self.hud.search_string, Eventually(Equals(self.result)))
 
-    def test_activate_on_hud(self):
-        self.hud.ensure_visible()
-        self.addCleanup(self.hud.ensure_hidden)
-        self.activate_ibus(self.hud.searchbar)
-        self.deactivate_ibus(self.hud.searchbar)
+    def test_activate(self):
+        """Tests the ibus activation using the "key-down" keybinding"""
+        print "test_activate"+str(type(self.widget))
+        self.widget.ensure_visible()
+        self.addCleanup(self.widget.ensure_hidden)
 
-    def test_activate_on_dash(self):
-        self.dash.ensure_visible()
-        self.addCleanup(self.dash.ensure_hidden)
-        self.activate_ibus(self.dash.searchbar)
-        self.deactivate_ibus(self.dash.searchbar)
+        self.assertThat(self.widget.searchbar.im_active, Equals(False))
+        self.keyboard.press(self.activate_binding)
+        self.addCleanup(self.keyboard.release, self.activate_binding)
+        self.assertThat(self.widget.searchbar.im_active, Eventually(Equals(True)))
+        self.keyboard.release(self.activate_binding)
 
-    def test_activate_on_release_on_hud(self):
-        self.hud.ensure_visible()
-        self.addCleanup(self.hud.ensure_hidden)
-        self.activate_ibus_on_release(self.hud.searchbar)
-        self.deactivate_ibus_on_release(self.hud.searchbar)
+        self.deactivate_ibus(self.widget.searchbar)
 
-    def test_activate_on_release_dash(self):
-        self.dash.ensure_visible()
-        self.addCleanup(self.dash.ensure_hidden)
-        self.activate_ibus_on_release(self.dash.searchbar)
-        self.deactivate_ibus_on_release(self.dash.searchbar)
+    def test_deactivate(self):
+        """Tests the ibus deactivation using the "key-down" keybinding"""
+        self.widget.ensure_visible()
+        self.addCleanup(self.widget.ensure_hidden)
+        self.activate_ibus(self.widget.searchbar)
+
+        self.assertThat(self.widget.searchbar.im_active, Equals(True))
+        self.keyboard.press(self.activate_binding)
+        self.addCleanup(self.keyboard.release, self.activate_binding)
+        self.assertThat(self.widget.searchbar.im_active, Eventually(Equals(False)))
+        self.keyboard.release(self.activate_binding)
+        self.assertThat(self.widget.searchbar.im_active, Eventually(Equals(False)))
+
+    def test_activate_on_release(self):
+        """Tests the ibus activation using "key-up" keybinding"""
+        self.widget.ensure_visible()
+        self.addCleanup(self.widget.ensure_hidden)
+
+        self.assertThat(self.widget.searchbar.im_active, Equals(False))
+        self.keyboard.press(self.activate_release_binding)
+        self.addCleanup(self.keyboard.release, self.activate_release_binding)
+        self.assertThat(self.widget.searchbar.im_active, Eventually(Equals(False)))
+        self.keyboard.release(self.activate_release_binding)
+        self.assertThat(self.widget.searchbar.im_active, Eventually(Equals(True)))
+
+        self.deactivate_ibus_on_release(self.widget.searchbar)
+
+    def test_deactivate_on_release(self):
+        """Tests the ibus deactivation using "key-up" keybinding"""
+        self.widget.ensure_visible()
+        self.addCleanup(self.widget.ensure_hidden)
+        self.activate_ibus_on_release(self.widget.searchbar)
+
+        self.assertThat(self.widget.searchbar.im_active, Equals(True))
+        self.keyboard.press(self.activate_release_binding)
+        self.addCleanup(self.keyboard.release, self.activate_release_binding)
+        self.assertThat(self.widget.searchbar.im_active, Eventually(Equals(True)))
+        self.keyboard.release(self.activate_release_binding)
+        self.assertThat(self.widget.searchbar.im_active, Eventually(Equals(False)))
 
 
 class IBusTestsPinyin(IBusTests):
