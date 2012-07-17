@@ -115,7 +115,6 @@ class IBusTests(UnityTestCase):
 
     def test_activate(self):
         """Tests the ibus activation using the "key-down" keybinding"""
-        print "test_activate"+str(type(self.widget))
         self.widget.ensure_visible()
         self.addCleanup(self.widget.ensure_hidden)
 
