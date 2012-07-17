@@ -27,9 +27,6 @@
 #include "DeviceLauncherIcon.h"
 #include "VolumeMonitorWrapper.h"
 
-class Launcher;
-class LauncherIcon;
-
 namespace unity
 {
 namespace launcher

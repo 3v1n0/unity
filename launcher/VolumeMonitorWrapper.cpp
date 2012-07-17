@@ -66,3 +66,4 @@ void VolumeMonitorWrapper::OnVolumeRemoved(GVolumeMonitor* monitor, GVolume* vol
 
 } // namespace launcher
 } // namespace unity
+

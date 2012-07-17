@@ -28,7 +28,6 @@
 
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSignal.h>
-#include <UnityCore/GLibSource.h>
 
 namespace unity
 {

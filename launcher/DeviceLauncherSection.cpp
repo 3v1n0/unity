@@ -38,9 +38,7 @@ DeviceLauncherSection::DeviceLauncherSection(VolumeMonitorWrapper::Ptr volume_mo
 
 void DeviceLauncherSection::PopulateEntries()
 {
-  auto const& volumes = monitor_->GetVolumes();
-
-  for (auto volume : volumes)
+  for (auto volume : monitor_->GetVolumes())
   {
     // Sanity check. Avoid duplicates.
     if (map_.find(volume) != map_.end())
