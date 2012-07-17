@@ -27,6 +27,7 @@
 #include "GLibWrapper.h"
 #include "GLibSignal.h"
 #include "GLibSource.h"
+#include "Variant.h"
 
 namespace unity
 {
@@ -263,8 +264,7 @@ void DBusProxy::Impl::OnCallCallback(GObject* source, GAsyncResult* res, gpointe
 {
   glib::Error error;
   std::unique_ptr<CallData> data(static_cast<CallData*>(call_data));
-  std::shared_ptr<GVariant> result(g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error),
-                                   g_variant_unref);
+  glib::Variant result(g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error), glib::StealRef());
 
   if (error)
   {
@@ -284,7 +284,7 @@ void DBusProxy::Impl::OnCallCallback(GObject* source, GAsyncResult* res, gpointe
   }
 
   if (data->callback)
-    data->callback(result.get());
+    data->callback(result);
 }
 
 void DBusProxy::Impl::Connect(std::string const& signal_name, ReplyCallback callback)
