@@ -63,6 +63,9 @@ void DeviceLauncherSection::PopulateEntries()
  */
 void DeviceLauncherSection::OnVolumeAdded(GVolumeMonitor* monitor, GVolume* volume)
 {
+  if (map_.find(volume) != map_.end())
+    return;
+
   // This just wraps the volume in a glib::Object, global ref_count is only
   // temporary changed.
   glib::Object<GVolume> gvolume(volume, glib::AddRef());
