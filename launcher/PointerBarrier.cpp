@@ -144,7 +144,6 @@ bool PointerBarrierWrapper::HandleEvent(XEvent xevent)
 
         smoothing_timeout_.reset(new glib::Timeout(smoothing(), smoothing_cb));
       }
-
     }
 
     return notify_event->barrier == barrier;
