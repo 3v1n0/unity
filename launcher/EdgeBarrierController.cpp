@@ -40,13 +40,11 @@ struct EdgeBarrierController::Impl
   Decaymulator decaymulator_;
   glib::Source::UniquePtr release_timeout_;
   float edge_overcome_pressure_;
-  bool disabled_;
   EdgeBarrierController* parent_;
 };
 
 EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
   : edge_overcome_pressure_(0)
-  , disabled_(false)
   , parent_(parent)
 {
   UScreen *uscreen = UScreen::GetDefault();
@@ -137,7 +135,7 @@ void EdgeBarrierController::Impl::OnPointerBarrierEvent(ui::PointerBarrierWrappe
       process = false;
   }
 
-  if (process && disabled_)
+  if (process && owner->released)
   {
     BarrierRelease(owner, event->event_id);
   }
@@ -159,11 +157,11 @@ void EdgeBarrierController::Impl::OnPointerBarrierEvent(ui::PointerBarrierWrappe
 void EdgeBarrierController::Impl::BarrierRelease(ui::PointerBarrierWrapper* owner, int event)
 {
   owner->ReleaseBarrier(event);
+  owner->released = true;
   decaymulator_.value = 0;
-  disabled_ = true;
 
-  release_timeout_.reset(new glib::Timeout(1000, [&disabled_] {
-    disabled_ = false;
+  release_timeout_.reset(new glib::Timeout(1000, [owner] {
+    owner->released = false;
     return false;
   }));
 }
