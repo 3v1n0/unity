@@ -86,25 +86,6 @@ class IBusTests(UnityTestCase):
         self.keyboard.press_and_release(self.activate_binding)
         self.assertThat(widget.im_active, Eventually(Equals(False)))
 
-    def activate_ibus_on_release(self, widget):
-        """Activate IBus when keys have been released, and wait till it's actived
-        on 'widget'.
-
-        """
-        self.assertThat(widget.im_active, Equals(False))
-        self.keyboard.press_and_release(self.activate_release_binding)
-        self.assertThat(widget.im_active, Eventually(Equals(True)))
-
-    def deactivate_ibus_on_release(self, widget):
-        """Activate IBus when keys have been released, and wait till it's actived
-        on 'widget'.
-
-        """
-        self.assertThat(widget.im_active, Equals(True))
-        self.keyboard.press_and_release(self.activate_release_binding)
-        self.assertThat(widget.im_active, Eventually(Equals(False)))
-
-
 
 class IBusWidgetScenariodTests(IBusTests):
     """A class that includes scenarios for the hud and dash widgets."""
@@ -285,6 +266,24 @@ class IBusActivationTests(IBusTests):
     def setUp(self):
         super(IBusActivationTests, self).setUp()
         self.activate_input_engine_or_skip(self.engine_name)
+
+    def activate_ibus_on_release(self, widget):
+        """Activate IBus when keys have been released, and wait till it's actived
+        on 'widget'.
+
+        """
+        self.assertThat(widget.im_active, Equals(False))
+        self.keyboard.press_and_release(self.activate_release_binding)
+        self.assertThat(widget.im_active, Eventually(Equals(True)))
+
+    def deactivate_ibus_on_release(self, widget):
+        """Activate IBus when keys have been released, and wait till it's actived
+        on 'widget'.
+
+        """
+        self.assertThat(widget.im_active, Equals(True))
+        self.keyboard.press_and_release(self.activate_release_binding)
+        self.assertThat(widget.im_active, Eventually(Equals(False)))
 
     def test_activate(self):
         """Tests the ibus activation using the "key-down" keybinding."""
