@@ -19,7 +19,6 @@
 
 #include "LauncherHideMachine.h"
 
-#include <boost/lexical_cast.hpp>
 #include <NuxCore/Logger.h>
 
 namespace unity
@@ -239,7 +238,7 @@ std::string LauncherHideMachine::DebugHideQuirks() const
 {
   // Although I do wonder why we are returning a string representation
   // of the enum value as an integer anyway.
-  return boost::lexical_cast<std::string>(_quirks);
+  return std::to_string(_quirks);
 }
 
 } // namespace launcher
