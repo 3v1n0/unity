@@ -1202,6 +1202,42 @@ void UnityWindow::handleEvent (XEvent *event)
   }
 }
 
+bool UnityScreen::shellCouldBeHidden(CompOutput const& output)
+{
+  std::vector<Window> const& nuxwins(nux::XInputWindow::NativeHandleList());
+
+  // Loop through windows from front to back
+  CompWindowList const& wins = screen->windows();
+  for ( CompWindowList::const_reverse_iterator r = wins.rbegin()
+      ; r != wins.rend()
+      ; r++
+      )
+  {
+    CompWindow* w = *r;
+
+    /*
+     * The shell is hidden if there exists any window that fully covers
+     * the output and is in front of all Nux windows on that output.
+     */
+    if (w->isMapped() &&
+        !(w->state () & CompWindowStateHiddenMask) &&
+        w->geometry().contains(output))
+    {
+      return true;
+    }
+    else
+    {
+      for (Window n : nuxwins)
+      {
+        if (w->id() == n && output.intersects(w->geometry()))
+          return false;
+      }
+    }
+  }
+
+  return false;
+}
+
 /* called whenever we need to repaint parts of the screen */
 bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
                                 const GLMatrix& transform,
@@ -1217,8 +1253,13 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
    * need to. Doing so on every frame causes Nux to hog the GPU and slow down
    * ALL rendering. (LP: #988079)
    */
-  bool force = forcePaintOnTop() || PluginAdapter::Default()->IsExpoActive();
-  doShellRepaint = force || !(region.isEmpty() || wt->GetDrawList().empty());
+  bool force = forcePaintOnTop();
+  doShellRepaint = force ||
+                   ( !region.isEmpty() &&
+                     ( !wt->GetDrawList().empty() ||
+                       (mask & PAINT_SCREEN_FULL_MASK)
+                     )
+                   );
 
   allowWindowPaint = true;
   _last_output = output;
@@ -1234,8 +1275,13 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
    *   once an fbo is bound any further
    *   attempts to bind it will only increment
    *   its bind reference so make sure that
-   *   you always unbind as much as you bind */
-  if (doShellRepaint)
+   *   you always unbind as much as you bind
+   *
+   * But NOTE: It is only safe to bind the FBO if !shellCouldBeHidden.
+   *           Otherwise it's possible painting won't occur and that would
+   *           confuse the state of the FBO.
+   */
+  if (doShellRepaint && !shellCouldBeHidden(*output))
     _fbo->bind (nux::Geometry (output->x (), output->y (), output->width (), output->height ()));
 #endif
 
@@ -1633,7 +1679,8 @@ void UnityScreen::handleCompizEvent(const char* plugin,
     ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
   }
 
-  if (PluginAdapter::Default()->IsScaleActive() && g_strcmp0(plugin, "scale") == 0)
+  if (PluginAdapter::Default()->IsScaleActive() &&
+      g_strcmp0(plugin, "scale") == 0 && super_keypressed_)
   {
     scale_just_activated_ = true;
   }

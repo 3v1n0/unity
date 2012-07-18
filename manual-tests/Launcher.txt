@@ -623,3 +623,15 @@ Actions:
 Expected Results:
  * All the valid drop icons should unfold during the drag and drop.
 
+
+Test launcher autoscrolls when holding an icon
+----------------------------------------------
+Setup:
+ * Add icons to the laucnher so that some of them in the bottom are folded.
+
+Actions:
+ * Drag a launcher icon of the top side of the launcher. Don't release the mouse.
+ * Move the mouse at the bottom of the launcher.
+
+Expected Results:
+ * The launcher should autoscroll so you can reach the trash icon.

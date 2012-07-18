@@ -79,3 +79,21 @@ Setup:
 
 Expected Results:
 #. THe Go menu should NOT open.
+
+
+Panel (and Launcher) blinking/flickering
+-----------------------------------------
+Setup:
+#. Optionally install "emacs23"
+
+Actions:
+#. Open LibreOffice Impress.
+#. Click on "Click to add title" and "Click to add text" a few times.
+#. Optionally: Run emacs23
+#. Optionally: Open a large file in emacs23.
+#. Optionally: Scroll to the bottom of the file using Page Down.
+
+Outcome:
+  At no point during the actions should the panel (or launcher) blink or
+  flicker out of existence.
+
