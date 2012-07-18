@@ -16,6 +16,8 @@ CFLAGS=$(shell echo $$CFLAGS | sed -e 's/\-Wall//')
 CORE_ABIVERSION := $(shell sed -rn 's/^\#define[[:space:]]+CORE_ABIVERSION[[:space:]]+//p' /usr/include/compiz/core/abiversion.h )
 NUX_ABIVERSION := $(shell sed -rn 's/^\#define[[:space:]]+NUX_ABIVERSION[[:space:]]+//p' /usr/include/Nux-3.0/Nux/ABI.h )
 
+LIBUNITY_PRIVATE := $(shell pkg-config --libs-only-L unity-protocol-private | sed -e 's/^.*-L\(.*\)/\1/' )
+
 override_dh_quilt_patch:
 	dh_quilt_patch
 	if test -r debian/patches/series.$(DEB_HOST_ARCH); then \
@@ -61,6 +63,9 @@ override_dh_gencontrol:
 
 override_dh_makeshlibs:
 	dh_makeshlibs -plibunity-core-6.0-5 -V 'libunity-core-6.0-5 (>= 4.14.2)'
+
+override_dh_shlibdeps:
+	dh_shlibdeps -l$(LIBUNITY_PRIVATE) -O--parallel
 
 override_dh_auto_test:
 	echo "not working right now"
