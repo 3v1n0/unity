@@ -124,7 +124,7 @@ if (BOOT_LOGGER)
     SET (BOOT_LOGGER_FLAG "-DENABLE_LOGGER")
 endif (BOOT_LOGGER)
 
-SET (MAINTAINER_CFLAGS "-Werror -Wall -Wcast-align -Wno-uninitialized -Wempty-body -Wformat-security -Winit-self -Warray-bounds")
+SET (MAINTAINER_CFLAGS "-Werror -Wall -Wcast-align -Wempty-body -Wformat-security -Winit-self -Warray-bounds")
 option (DISABLE_MAINTAINER_CFLAGS "Disable maintainer CFlags" OFF)
 if (DISABLE_MAINTAINER_CFLAGS)
   SET (MAINTAINER_CFLAGS "")
