@@ -26,7 +26,6 @@
 
 static void g_mock_volume_volume_iface_init (GVolumeIface *iface);
 
-#define g_mock_volume_get_type _g_mock_volume_get_type
 G_DEFINE_TYPE_WITH_CODE (GMockVolume, g_mock_volume, G_TYPE_OBJECT,
 			 G_IMPLEMENT_INTERFACE (G_TYPE_VOLUME,
 						g_mock_volume_volume_iface_init))
@@ -51,7 +50,7 @@ g_mock_volume_init (GMockVolume *mock_volume)
 }
 
 GMockVolume *
-_g_mock_volume_new ()
+g_mock_volume_new ()
 {
   GMockVolume *volume;
   

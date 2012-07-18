@@ -55,8 +55,8 @@ public:
   typedef std::shared_ptr<MockVolumeMonitorWrapper> Ptr;
 
   MockVolumeMonitorWrapper()
-    : volume1(G_VOLUME(_g_mock_volume_new()))
-    , volume2(G_VOLUME(_g_mock_volume_new()))
+    : volume1(G_VOLUME(g_mock_volume_new()))
+    , volume2(G_VOLUME(g_mock_volume_new()))
   {
   }
 

@@ -27,7 +27,7 @@
 
 G_BEGIN_DECLS
 
-#define G_TYPE_MOCK_VOLUME        (_g_mock_volume_get_type ())
+#define G_TYPE_MOCK_VOLUME        (g_mock_volume_get_type ())
 #define G_MOCK_VOLUME(o)          (G_TYPE_CHECK_INSTANCE_CAST ((o), G_TYPE_MOCK_VOLUME, GMockVolume))
 #define G_MOCK_VOLUME_CLASS(k)    (G_TYPE_CHECK_CLASS_CAST((k), G_TYPE_MOCK_VOLUME, GMockVolumeClass))
 #define G_IS_MOCK_VOLUME(o)       (G_TYPE_CHECK_INSTANCE_TYPE ((o), G_TYPE_MOCK_VOLUME))
@@ -44,8 +44,8 @@ struct _GMockVolumeClass {
   GObjectClass parent_class;
 };
 
-GType         _g_mock_volume_get_type (void) G_GNUC_CONST;
-GMockVolume * _g_mock_volume_new      ();
+GType         g_mock_volume_get_type (void) G_GNUC_CONST;
+GMockVolume * g_mock_volume_new      ();
 
 G_END_DECLS
 
