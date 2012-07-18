@@ -25,7 +25,7 @@
 #include <UnityCore/GLibSource.h>
 
 #include "DeviceLauncherIcon.h"
-#include "VolumeMonitorWrapper.h"
+#include "AbstractVolumeMonitorWrapper.h"
 
 namespace unity
 {
@@ -35,7 +35,7 @@ namespace launcher
 class DeviceLauncherSection : public sigc::trackable
 {
 public:
-  DeviceLauncherSection(VolumeMonitorWrapper::Ptr volume_monitor);
+  DeviceLauncherSection(AbstractVolumeMonitorWrapper::Ptr volume_monitor);
 
   sigc::signal<void, AbstractLauncherIcon::Ptr> IconAdded;
 
@@ -45,7 +45,7 @@ private:
   void OnVolumeRemoved(glib::Object<GVolume> const& volume);
 
   std::map<GVolume*, DeviceLauncherIcon::Ptr> map_;
-  VolumeMonitorWrapper::Ptr monitor_;
+  AbstractVolumeMonitorWrapper::Ptr monitor_;
   glib::Idle device_populate_idle_;
 };
 

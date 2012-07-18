@@ -24,10 +24,11 @@
 using namespace testing;
 
 #include "DeviceLauncherSection.h"
-#include "VolumeMonitorWrapper.h"
+#include "AbstractVolumeMonitorWrapper.h"
 using namespace unity;
 using namespace unity::launcher;
 
+#include "gmockvolume.h"
 #include "test_utils.h"
 
 namespace
@@ -48,11 +49,36 @@ public:
   bool icon_added;
 };
 
+class MockVolumeMonitorWrapper : public AbstractVolumeMonitorWrapper
+{
+public:
+  typedef std::shared_ptr<MockVolumeMonitorWrapper> Ptr;
+
+  MockVolumeMonitorWrapper()
+    : volume1(G_VOLUME(_g_mock_volume_new()))
+    , volume2(G_VOLUME(_g_mock_volume_new()))
+  {
+  }
+
+  VolumeList GetVolumes()
+  {
+    VolumeList ret;
+
+    ret.push_back(volume1);
+    ret.push_back(volume2);
+
+    return ret;
+  }
+
+  glib::Object<GVolume> volume1;
+  glib::Object<GVolume> volume2;
+};
+
 class TestDeviceLauncherSection : public Test
 {
 public:
   TestDeviceLauncherSection()
-    : monitor_(new VolumeMonitorWrapper)
+    : monitor_(new MockVolumeMonitorWrapper)
     , section_(monitor_)
   {}
 
@@ -62,7 +88,7 @@ public:
     Utils::WaitForTimeoutMSec(1500);
   }
 
-  VolumeMonitorWrapper::Ptr monitor_;
+  MockVolumeMonitorWrapper::Ptr monitor_;
   DeviceLauncherSection section_;
 };
 
@@ -73,8 +99,8 @@ TEST_F(TestDeviceLauncherSection, TestNoDuplicates)
   section_.IconAdded.connect(sigc::mem_fun(*listener, &EventListener::OnIconAdded));
 
   // Emit the signal volume_added for each volume.
-  for (auto volume : monitor_->GetVolumes())
-    monitor_->volume_added.emit(volume);
+  monitor_->volume_added.emit(monitor_->volume1);
+  monitor_->volume_added.emit(monitor_->volume2);
 
   Utils::WaitForTimeoutMSec(500);
 

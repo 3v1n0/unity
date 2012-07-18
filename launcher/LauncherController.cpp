@@ -41,6 +41,7 @@
 #include "AbstractLauncherIcon.h"
 #include "SoftwareCenterLauncherIcon.h"
 #include "LauncherModel.h"
+#include "VolumeMonitorWrapper.h"
 #include "unity-shared/WindowManager.h"
 #include "TrashLauncherIcon.h"
 #include "BFBLauncherIcon.h"
@@ -175,7 +176,7 @@ public:
   nux::ObjectPtr<Launcher> launcher_;
   nux::ObjectPtr<Launcher> keyboard_launcher_;
   int                    sort_priority_;
-  VolumeMonitorWrapper::Ptr volume_monitor_;
+  AbstractVolumeMonitorWrapper::Ptr volume_monitor_;
   DeviceLauncherSection  device_section_;
   LauncherEntryRemoteModel remote_model_;
   AbstractLauncherIcon::Ptr expo_icon_;

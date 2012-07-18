@@ -19,38 +19,22 @@
 #ifndef UNITYSHELL_VOLUME_MONITOR_WRAPPER_H
 #define UNITYSHELL_VOLUME_MONITOR_WRAPPER_H
 
-#include <list>
-#include <memory>
-
-#include <gio/gio.h>
-#include <sigc++/signal.h>
-#include <sigc++/trackable.h>
-
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSignal.h>
+
+#include "AbstractVolumeMonitorWrapper.h"
 
 namespace unity
 {
 namespace launcher
 {
 
-class VolumeMonitorWrapper : public sigc::trackable
+class VolumeMonitorWrapper : public AbstractVolumeMonitorWrapper
 {
 public:
-  typedef std::shared_ptr<VolumeMonitorWrapper> Ptr;
-  typedef std::list<glib::Object<GVolume>> VolumeList;
-
   VolumeMonitorWrapper();
 
-  // Makes VolumeMonitorWrapper uncopyable
-  VolumeMonitorWrapper(VolumeMonitorWrapper const&) = delete;
-  VolumeMonitorWrapper& operator=(VolumeMonitorWrapper const&) = delete;
-
   VolumeList GetVolumes();
-
-  // Signals
-  sigc::signal<void, glib::Object<GVolume> const&> volume_added;
-  sigc::signal<void, glib::Object<GVolume> const&> volume_removed;
 
 private:
   void OnVolumeAdded(GVolumeMonitor* monitor, GVolume* volume);

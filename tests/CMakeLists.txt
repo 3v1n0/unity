@@ -219,6 +219,7 @@ if (GTEST_SRC_DIR AND
                  test_single_monitor_launcher_icon.cpp
                  test_switcher_controller.cpp
                  test_switcher_model.cpp
+                 gmockvolume.c
                  ${CMAKE_SOURCE_DIR}/dash/AbstractPlacesGroup.cpp
                  ${CMAKE_SOURCE_DIR}/dash/DashViewPrivate.cpp
                  ${CMAKE_SOURCE_DIR}/dash/LensViewPrivate.cpp

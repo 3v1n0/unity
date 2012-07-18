@@ -24,7 +24,7 @@ namespace unity
 namespace launcher
 {
 
-DeviceLauncherSection::DeviceLauncherSection(VolumeMonitorWrapper::Ptr volume_monitor)
+DeviceLauncherSection::DeviceLauncherSection(AbstractVolumeMonitorWrapper::Ptr volume_monitor)
   : monitor_(volume_monitor)
 {
   monitor_->volume_added.connect(sigc::mem_fun(this, &DeviceLauncherSection::OnVolumeAdded));
