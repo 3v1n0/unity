@@ -26,25 +26,24 @@ namespace launcher
 {
 
 Options::Options()
+    // defaults from XML file
+  : hide_mode(LAUNCHER_HIDE_NEVER)
+  , launch_animation(LAUNCH_ANIMATION_PULSE)
+  , urgent_animation(URGENT_ANIMATION_WIGGLE)
+  , auto_hide_animation(FADE_AND_SLIDE)
+  , backlight_mode(BACKLIGHT_ALWAYS_ON)
+  , reveal_trigger(RevealTrigger::EDGE)
+  , icon_size(48)
+  , tile_size(54)
+  , background_alpha(0.6667)
+  , edge_decay_rate(1500)
+  , edge_overcome_pressure(2000)
+  , edge_stop_velocity(6500)
+  , edge_reveal_pressure(2000)
+  , edge_responsiveness(2.0f)
+  , edge_resist(true)
+  , show_for_all(false)
 {
-  // defaults from XML file
-  auto_hide_animation = FADE_AND_SLIDE;
-  background_alpha = 0.6667;
-  backlight_mode = BACKLIGHT_ALWAYS_ON;
-  edge_decay_rate = 1500;
-  edge_overcome_pressure = 2000;
-  edge_responsiveness = 2.0f;
-  edge_reveal_pressure = 2000;
-  edge_stop_velocity = 6500;
-  hide_mode = LAUNCHER_HIDE_NEVER;
-  icon_size = 48;
-  launch_animation = LAUNCH_ANIMATION_PULSE;
-  reveal_trigger = RevealTrigger::EDGE;
-  tile_size = 54;
-  urgent_animation = URGENT_ANIMATION_WIGGLE;
-  edge_resist = true;
-  show_for_all = false;
-
   auto_hide_animation.changed.connect   ([&] (AutoHideAnimation value)-> void { option_changed.emit(); });
   background_alpha.changed.connect      ([&] (float value)            -> void { option_changed.emit(); });
   backlight_mode.changed.connect        ([&] (BacklightMode value)    -> void { option_changed.emit(); });
