@@ -37,6 +37,7 @@ namespace
 
 PointerBarrierWrapper::PointerBarrierWrapper()
   : active(false)
+  , released(false)
   , smoothing(75)
   , max_velocity_multiplier(1.0f)
   , direction(BOTH)
@@ -65,7 +66,7 @@ void PointerBarrierWrapper::ConstructBarrier()
                                                DefaultRootWindow(dpy),
                                                x1, y1,
                                                x2, y2,
-                                               (int) direction,
+                                               static_cast<int>(direction),
                                                threshold,
                                                0,
                                                NULL);
@@ -128,7 +129,16 @@ bool PointerBarrierWrapper::HandleEvent(XEvent xevent)
       smoothing_accum_ += notify_event->velocity;
       smoothing_count_++;
 
-      if (!smoothing_timeout_)
+      if (released)
+      {
+        /* If the barrier is released, just emit the current event without
+         * waiting, so there won't be any delay on releasing the barrier. */
+        smoothing_timeout_.reset();
+        auto event = std::make_shared<BarrierEvent>(notify_event->x, notify_event->y,
+                                                    notify_event->velocity, notify_event->event_id);
+        barrier_event.emit(this, event);
+      }
+      else if (!smoothing_timeout_)
       {
         int x = notify_event->x;
         int y = notify_event->y;
@@ -142,7 +152,7 @@ bool PointerBarrierWrapper::HandleEvent(XEvent xevent)
           return false;
         };
 
-        smoothing_timeout_.reset(new glib::Timeout(smoothing(), smoothing_cb));
+        smoothing_timeout_.reset(new glib::Timeout(smoothing, smoothing_cb));
       }
     }
 

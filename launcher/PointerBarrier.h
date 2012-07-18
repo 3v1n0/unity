@@ -66,6 +66,7 @@ public:
   nux::Property<int> threshold;
 
   nux::Property<bool> active;
+  nux::Property<bool> released;
 
   nux::Property<int> smoothing;
 
