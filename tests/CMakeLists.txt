@@ -270,7 +270,6 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/launcher/SwitcherModel.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/SwitcherView.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/Tooltip.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/VolumeMonitorWrapper.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/Animator.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/BackgroundEffectHelper.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/DashStyle.cpp
