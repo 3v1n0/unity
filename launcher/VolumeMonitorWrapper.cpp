@@ -31,12 +31,12 @@ VolumeMonitorWrapper::VolumeMonitorWrapper()
   sig_manager_.Add(new VolumeSignal(monitor_, "volume-removed", sigc::mem_fun(this, &VolumeMonitorWrapper::OnVolumeRemoved)));
 }
 
-std::list<glib::Object<GVolume>> VolumeMonitorWrapper::GetVolumes()
+VolumeMonitorWrapper::VolumeList VolumeMonitorWrapper::GetVolumes()
 {
-  std::list<glib::Object<GVolume>> ret;
-  GList* volumes = g_volume_monitor_get_volumes(monitor_);
+  VolumeList ret;
+  auto volumes = std::shared_ptr<GList>(g_volume_monitor_get_volumes(monitor_), g_list_free);
 
-  for (GList* v = volumes; v; v = v->next)
+  for (GList* v = volumes.get(); v; v = v->next)
   {
     if (!G_IS_VOLUME(v->data))
       continue;
@@ -46,8 +46,6 @@ std::list<glib::Object<GVolume>> VolumeMonitorWrapper::GetVolumes()
     glib::Object<GVolume> volume(G_VOLUME(v->data));
     ret.push_back(volume);
   }
-
-  g_list_free(volumes);
 
   return ret;
 }

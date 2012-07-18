@@ -44,7 +44,7 @@ private:
   void OnVolumeAdded(glib::Object<GVolume> const& volume);
   void OnVolumeRemoved(glib::Object<GVolume> const& volume);
 
-  std::map<GVolume*, DeviceLauncherIcon*> map_;
+  std::map<GVolume*, DeviceLauncherIcon::Ptr> map_;
   VolumeMonitorWrapper::Ptr monitor_;
   glib::Idle device_populate_idle_;
 };

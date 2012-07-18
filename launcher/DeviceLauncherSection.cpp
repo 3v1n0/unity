@@ -44,10 +44,10 @@ void DeviceLauncherSection::PopulateEntries()
     if (map_.find(volume) != map_.end())
       continue;
 
-    DeviceLauncherIcon* icon = new DeviceLauncherIcon(volume);
+    DeviceLauncherIcon::Ptr icon(new DeviceLauncherIcon(volume));
 
     map_[volume] = icon;
-    IconAdded.emit(AbstractLauncherIcon::Ptr(icon));
+    IconAdded.emit(icon);
   }
 }
 
@@ -61,9 +61,10 @@ void DeviceLauncherSection::OnVolumeAdded(glib::Object<GVolume> const& volume)
   if (map_.find(volume) != map_.end())
     return;
 
-  DeviceLauncherIcon* icon = new DeviceLauncherIcon(volume);
+  DeviceLauncherIcon::Ptr icon(new DeviceLauncherIcon(volume));
+
   map_[volume] = icon;
-  IconAdded.emit(AbstractLauncherIcon::Ptr(icon));
+  IconAdded.emit(icon);
 }
 
 void DeviceLauncherSection::OnVolumeRemoved(glib::Object<GVolume> const& volume)

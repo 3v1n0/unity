@@ -38,10 +38,15 @@ class VolumeMonitorWrapper : public sigc::trackable
 {
 public:
   typedef std::shared_ptr<VolumeMonitorWrapper> Ptr;
+  typedef std::list<glib::Object<GVolume>> VolumeList;
 
   VolumeMonitorWrapper();
 
-  std::list<glib::Object<GVolume>> GetVolumes();
+  // Makes VolumeMonitorWrapper uncopyable
+  VolumeMonitorWrapper(VolumeMonitorWrapper const&) = delete;
+  VolumeMonitorWrapper& operator=(VolumeMonitorWrapper const&) = delete;
+
+  VolumeList GetVolumes();
 
   // Signals
   sigc::signal<void, glib::Object<GVolume> const&> volume_added;
