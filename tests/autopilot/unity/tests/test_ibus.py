@@ -33,22 +33,30 @@ class IBusTests(UnityTestCase):
     ]
 
     def setUp(self):
-        self.activate_binding = 'Control+space'
-        self.activate_release_binding = 'Alt+Control_L'
+        super(IBusTests, self).setUp()
+        self.set_correct_ibus_trigger_keys()
 
-        activate_release_binding_option = 'Alt+Release+Control_L'
+    def set_correct_ibus_trigger_keys(self):
+        """Set the correct keys to trigger IBus.
+
+        This method configures the ibus trigger keys inside gconf, and also sets
+        self.activate_binding and self.activate_release_binding.
+
+        This method adds a cleanUp to reset the old keys once the test is done.
+
+        """
+        # get the existing keys:
         trigger_hotkey_path = '/desktop/ibus/general/hotkey/trigger'
-
         old_keys = self.get_gconf_option(trigger_hotkey_path)
+
+        self.activate_binding = 'Control+space'
+        activate_release_binding_option = 'Alt+Release+Control_L'
         new_keys = [self.activate_binding, activate_release_binding_option]
 
-        self.set_gconf_option(trigger_hotkey_path, new_keys)
-        self.addCleanup(self.set_gconf_option, trigger_hotkey_path, old_keys)
-
-        super(IBusTests, self).setUp()
-
-    def tearDown(self):
-        super(IBusTests, self).tearDown()
+        if new_keys != old_keys:
+            self.set_gconf_option(trigger_hotkey_path, new_keys)
+            self.addCleanup(self.set_gconf_option, trigger_hotkey_path, old_keys)
+        self.activate_release_binding = 'Alt+Control_L'
 
     @classmethod
     def setUpClass(cls):
