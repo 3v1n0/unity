@@ -42,7 +42,6 @@ Build-Depends: cmake,
                libxfixes-dev (>= 1:5.0-4ubuntu4),
                gcc-4.6,
                g++-4.6,
-               libunity-protocol-private0,
 Standards-Version: 3.9.3
 Homepage: https://launchpad.net/unity
 Vcs-Bzr: https://code.launchpad.net/+branch/ubuntu/unity

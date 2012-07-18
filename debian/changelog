@@ -3,8 +3,6 @@ unity (6.0.0-0ubuntu3) UNRELEASED; urgency=low
   * debian/rules:
     - added override for dh_shlibdeps to point it to the private directory of
       libunity-protocol-private.so
-  * debian/control:
-    - added dependency on libunity-protocol-private0
 
  -- Łukasz 'sil2100' Zemczak <lukasz.zemczak@canonical.com>  Wed, 18 Jul 2012 12:50:15 +0200
 
