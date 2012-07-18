@@ -40,9 +40,6 @@ PointerBarrierWrapper::PointerBarrierWrapper()
   , smoothing(75)
   , max_velocity_multiplier(1.0f)
   , direction(BOTH)
-  , last_event_(0)
-  , last_x_(0)
-  , last_y_(0)
   , smoothing_count_(0)
   , smoothing_accum_(0)
 {}
@@ -103,19 +100,16 @@ void PointerBarrierWrapper::DestroyBarrier()
 
 void PointerBarrierWrapper::ReleaseBarrier(int event_id)
 {
-  XFixesBarrierReleasePointer (nux::GetGraphicsDisplay()->GetX11Display(), barrier, event_id);
+  XFixesBarrierReleasePointer(nux::GetGraphicsDisplay()->GetX11Display(), barrier, event_id);
 }
 
-void PointerBarrierWrapper::EmitCurrentData()
+void PointerBarrierWrapper::EmitCurrentData(int event_id, int x, int y)
 {
   if (smoothing_count_ <= 0)
     return;
 
-  BarrierEvent::Ptr event (new BarrierEvent());
-  event->x = last_x_;
-  event->y = last_y_;
-  event->velocity = std::min<int> (600 * max_velocity_multiplier, smoothing_accum_ / smoothing_count_);
-  event->event_id = last_event_;
+  int velocity = std::min<int>(600 * max_velocity_multiplier, smoothing_accum_ / smoothing_count_);
+  auto event = std::make_shared<BarrierEvent>(x, y, velocity, event_id);
 
   barrier_event.emit(this, event);
 
@@ -131,17 +125,18 @@ bool PointerBarrierWrapper::HandleEvent(XEvent xevent)
 
     if (notify_event->barrier == barrier && notify_event->subtype == XFixesBarrierHitNotify)
     {
-      last_x_ = notify_event->x;
-      last_y_ = notify_event->y;
-      last_event_ = notify_event->event_id;
       smoothing_accum_ += notify_event->velocity;
       smoothing_count_++;
 
       if (!smoothing_timeout_)
       {
-        auto smoothing_cb = [&] ()
+        int x = notify_event->x;
+        int y = notify_event->y;
+        int event = notify_event->event_id;
+
+        auto smoothing_cb = [&, event, x, y] ()
         {
-          EmitCurrentData();
+          EmitCurrentData(event, x, y);
 
           smoothing_timeout_.reset();
           return false;
