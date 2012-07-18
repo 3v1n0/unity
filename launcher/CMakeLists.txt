@@ -72,6 +72,7 @@ set (LAUNCHER_SOURCES
      SpacerLauncherIcon.cpp
      Tooltip.cpp
      TrashLauncherIcon.cpp
+     VolumeMonitorWrapper.cpp
      )
 
 add_library (launcher-lib STATIC ${LAUNCHER_SOURCES})
