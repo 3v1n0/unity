@@ -41,7 +41,7 @@ public:
   typedef std::list<glib::Object<GVolume>> VolumeList;
 
   AbstractVolumeMonitorWrapper() = default;
-  virtual ~AbstractVolumeMonitorWrapper() = default;
+  virtual ~AbstractVolumeMonitorWrapper() {};
 
   // Makes VolumeMonitorWrapper uncopyable
   AbstractVolumeMonitorWrapper(AbstractVolumeMonitorWrapper const&) = delete;
