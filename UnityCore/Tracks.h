@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011-2012 Canonical Ltd
+ * Copyright (C) 2011 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,41 +15,37 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
- *              Michal Hruby <michal.hruby@canonical.com>
  */
 
-#ifndef UNITY_APPLICATION_PREVIEW_H
-#define UNITY_APPLICATION_PREVIEW_H
+#ifndef UNITY_TRACKS_H
+#define UNITY_TRACKS_H
 
 #include <memory>
 
-#include <sigc++/trackable.h>
-
-#include "Preview.h"
+#include "Model.h"
+#include "Track.h"
 
 namespace unity
 {
 namespace dash
 {
 
-class ApplicationPreview : public Preview
+class Tracks : public Model<Track>
 {
 public:
-  typedef std::shared_ptr<ApplicationPreview> Ptr;
-  
-  ApplicationPreview(unity::glib::Object<GObject> const& proto_obj);
-  ~ApplicationPreview();
+  typedef std::shared_ptr<Tracks> Ptr;
 
-  nux::RWProperty<std::string> last_update;
-  nux::RWProperty<std::string> copyright;
-  nux::RWProperty<std::string> license;
-  nux::RWProperty<glib::Object<GIcon>> app_icon;
-  nux::RWProperty<float> rating;
-  nux::RWProperty<unsigned int> num_ratings;
+  Tracks();
+  Tracks(ModelType model_type);
+
+  sigc::signal<void, Track const&> track_added;
+  sigc::signal<void, Track const&> track_changed;
+  sigc::signal<void, Track const&> track_removed;
 
 private:
-  class Impl;
-  std::unique_ptr<Impl> pimpl;
+  void OnRowAdded(Track& result);
+  void OnRowChanged(Track& result);
+  void OnRowRemoved(Track& result);
 };
 
 }

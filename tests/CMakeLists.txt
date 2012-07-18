@@ -144,6 +144,7 @@ if (GTEST_SRC_DIR AND
                  test_favorite_store_private.cpp
                  test_home_lens.cpp
                  test_launcher_entry_remote.cpp
+                 test_previews.cpp
                  test_shortcut_model.cpp
                  test_shortcut_private.cpp
                  test_introspection.cpp
