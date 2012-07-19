@@ -1,3 +1,11 @@
+unity (6.0.0-0ubuntu4) UNRELEASED; urgency=low
+
+  * debian/control:
+    - make unity depending on dconf-tools as the migration script is using the
+      dconf binary
+
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 19 Jul 2012 18:33:09 +0200
+
 unity (6.0.0-0ubuntu3) quantal; urgency=low
 
   * Add a dconf migration script from /desktop/unity to /com/canonical/unity

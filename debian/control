@@ -61,7 +61,8 @@ Depends: ${shlibs:Depends},
          libglib2.0-bin,
          python-gconf,
          nux-tools,
-         unity-asset-pool (>= 0.8.18)
+         dconf-tools,
+         unity-asset-pool (>= 0.8.18),
 Provides: indicator-renderer
 Recommends: unity-lens-applications,
             unity-lens-files,
