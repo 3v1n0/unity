@@ -41,26 +41,27 @@ Options::Options()
   , edge_stop_velocity(6500)
   , edge_reveal_pressure(2000)
   , edge_responsiveness(2.0f)
+  , edge_passed_disabled_ms(1000)
   , edge_resist(true)
   , show_for_all(false)
 {
-  auto_hide_animation.changed.connect   ([&] (AutoHideAnimation value)-> void { option_changed.emit(); });
-  background_alpha.changed.connect      ([&] (float value)            -> void { option_changed.emit(); });
-  backlight_mode.changed.connect        ([&] (BacklightMode value)    -> void { option_changed.emit(); });
-  edge_decay_rate.changed.connect       ([&] (int value)              -> void { option_changed.emit(); });
-  edge_overcome_pressure.changed.connect([&] (int value)              -> void { option_changed.emit(); });
-  edge_responsiveness.changed.connect   ([&] (float value)            -> void { option_changed.emit(); });
-  edge_reveal_pressure.changed.connect  ([&] (int value)              -> void { option_changed.emit(); });
-  edge_stop_velocity.changed.connect    ([&] (int value)              -> void { option_changed.emit(); });
-  hide_mode.changed.connect             ([&] (LauncherHideMode value) -> void { option_changed.emit(); });
-  icon_size.changed.connect             ([&] (int value)              -> void { option_changed.emit(); });
-  launch_animation.changed.connect      ([&] (LaunchAnimation value)  -> void { option_changed.emit(); });
-  reveal_trigger.changed.connect        ([&] (RevealTrigger vallue)   -> void { option_changed.emit(); });
-  tile_size.changed.connect             ([&] (int value)              -> void { option_changed.emit(); });
-  urgent_animation.changed.connect      ([&] (UrgentAnimation value)  -> void { option_changed.emit(); });
-  edge_resist.changed.connect           ([&] (bool value)             -> void { option_changed.emit(); });
+  auto_hide_animation.changed.connect    ([this] (AutoHideAnimation value) { option_changed.emit(); });
+  background_alpha.changed.connect       ([this] (float value)             { option_changed.emit(); });
+  backlight_mode.changed.connect         ([this] (BacklightMode value)     { option_changed.emit(); });
+  edge_decay_rate.changed.connect        ([this] (int value)               { option_changed.emit(); });
+  edge_overcome_pressure.changed.connect ([this] (int value)               { option_changed.emit(); });
+  edge_responsiveness.changed.connect    ([this] (float value)             { option_changed.emit(); });
+  edge_reveal_pressure.changed.connect   ([this] (int value)               { option_changed.emit(); });
+  edge_stop_velocity.changed.connect     ([this] (int value)               { option_changed.emit(); });
+  edge_passed_disabled_ms.changed.connect([this] (unsigned value)          { option_changed.emit(); });
+  hide_mode.changed.connect              ([this] (LauncherHideMode value)  { option_changed.emit(); });
+  icon_size.changed.connect              ([this] (int value)               { option_changed.emit(); });
+  launch_animation.changed.connect       ([this] (LaunchAnimation value)   { option_changed.emit(); });
+  reveal_trigger.changed.connect         ([this] (RevealTrigger vallue)    { option_changed.emit(); });
+  tile_size.changed.connect              ([this] (int value)               { option_changed.emit(); });
+  urgent_animation.changed.connect       ([this] (UrgentAnimation value)   { option_changed.emit(); });
+  edge_resist.changed.connect            ([this] (bool value)              { option_changed.emit(); });
 }
-
 
 }
 }
