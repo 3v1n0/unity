@@ -160,7 +160,8 @@ void EdgeBarrierController::Impl::BarrierRelease(ui::PointerBarrierWrapper* owne
   owner->released = true;
   decaymulator_.value = 0;
 
-  release_timeout_.reset(new glib::Timeout(1000, [owner] {
+  unsigned duration = parent_->options()->edge_passed_disabled_ms;
+  release_timeout_.reset(new glib::Timeout(duration, [owner] {
     owner->released = false;
     return false;
   }));
