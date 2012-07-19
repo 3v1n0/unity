@@ -120,9 +120,9 @@ void PointerBarrierWrapper::EmitCurrentData(int event_id, int x, int y)
 
 bool PointerBarrierWrapper::HandleEvent(XEvent xevent)
 {
-  if(xevent.type - event_base_ == XFixesBarrierNotify)
+  if (xevent.type - event_base_ == XFixesBarrierNotify)
   {
-    XFixesBarrierNotifyEvent *notify_event = (XFixesBarrierNotifyEvent *)&xevent;
+    auto notify_event = reinterpret_cast<XFixesBarrierNotifyEvent*>(&xevent);
 
     if (notify_event->barrier == barrier && notify_event->subtype == XFixesBarrierHitNotify)
     {
