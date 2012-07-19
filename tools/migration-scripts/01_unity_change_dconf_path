@@ -1,0 +1,5 @@
+set -ex
+
+dconf dump /desktop/unity/ | dconf load /com/canonical/unity/
+dconf reset -f /desktop/unity/
+
