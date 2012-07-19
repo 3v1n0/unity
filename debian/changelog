@@ -1,7 +1,7 @@
 unity (6.0.0-0ubuntu3) UNRELEASED; urgency=low
 
   * Add a dconf migration script from /desktop/unity to /com/canonical/unity
-    + debian/unity.migrations, debian/control:
+    + debian/unity.migrations, debian/control, debian/rules:
       - build-dep on dh-migrations
       - include the upstream migration script (cherry-picked)
 

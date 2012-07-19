@@ -66,4 +66,4 @@ override_dh_auto_test:
 	echo "not working right now"
 
 %:
-	dh $@ --with translations,quilt,python2 --parallel
+	dh $@ --with translations,quilt,python2,migrations --parallel
