@@ -210,7 +210,7 @@ a11y_unit_test_launcher_connection(void)
   AtkObject* launcher_icon_accessible = NULL;
 
   window = new nux::BaseWindow(TEXT(""));
-  launcher = new Launcher(window, NULL);
+  launcher = new Launcher(window, nux::ObjectPtr<unity::DNDCollectionWindow>(new unity::DNDCollectionWindow), NULL);
   launcher->SinkReference();
   launcher_accessible = unity_a11y_get_accessible(launcher);
 

@@ -113,11 +113,6 @@ void Filter::IgnoreChanges(bool ignore)
   ignore_changes_ = ignore;
 }
 
-void Filter::OnModelDestroyed(Filter* self, DeeModel* old_location)
-{
-  self->OnRowRemoved(self->model_, self->iter_);
-}
-
 void Filter::OnRowChanged(DeeModel* model, DeeModelIter* iter)
 {
   if (iter_ != iter || ignore_changes_)
@@ -132,12 +127,17 @@ void Filter::OnRowChanged(DeeModel* model, DeeModelIter* iter)
   filtering.EmitChanged(get_filtering());
 }
 
+void Filter::OnModelDestroyed(Filter* self, DeeModel* old_location)
+{
+  self->model_ = 0;
+  self->OnRowRemoved(old_location, self->iter_);
+}
+
 void Filter::OnRowRemoved(DeeModel* model, DeeModelIter* iter)
 {
   if (iter_ != iter)
     return;
 
-  model_ = 0;
   iter_ = 0;
   removed.emit();
 }

@@ -36,8 +36,10 @@ UBusManager::~UBusManager()
 void UBusManager::RegisterInterest(std::string const& interest_name,
                                    UBusManagerCallback slot)
 {
-  UBusConnection::Ptr connection (new UBusConnection());
-  connection->manager = this;
+  if (!slot || interest_name.empty())
+    return;
+
+  auto connection = std::make_shared<UBusConnection>();
   connection->name = interest_name;
   connection->slot = slot;
   connection->id = ubus_server_register_interest(server_,

@@ -53,7 +53,6 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
 
-#include <type_traits>
 #include <sigc++/sigc++.h>
 
 namespace unity
@@ -104,6 +103,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(Launcher);
 const int Launcher::Launcher::ANIM_DURATION_SHORT = 125;
 
 Launcher::Launcher(nux::BaseWindow* parent,
+                   nux::ObjectPtr<DNDCollectionWindow> const& collection_window,
                    NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , monitor(0)
@@ -111,7 +111,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   , _active_quicklist(nullptr)
   , _hovered(false)
   , _hidden(false)
-  , _scroll_limit_reached(false)
   , _render_drag_window(false)
   , _shortcuts_shown(false)
   , _data_checked(false)
@@ -122,7 +121,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   , _folded_angle(1.0f)
   , _neg_folded_angle(-1.0f)
   , _folded_z_distance(10.0f)
-  , _last_delta_y(0.0f)
   , _edge_overcome_pressure(0.0f)
   , _launcher_action_state(ACTION_NONE)
   , _space_between_icons(5)
@@ -135,17 +133,19 @@ Launcher::Launcher(nux::BaseWindow* parent,
   , _postreveal_mousemove_delta_x(0)
   , _postreveal_mousemove_delta_y(0)
   , _launcher_drag_delta(0)
+  , _launcher_drag_delta_max(0)
+  , _launcher_drag_delta_min(0)
   , _enter_y(0)
   , _last_button_press(0)
   , _drag_out_id(0)
   , _drag_out_delta_x(0.0f)
   , _last_reveal_progress(0.0f)
+  , _collection_window(collection_window)
   , _selection_atom(0)
   , _background_color(nux::color::DimGray)
 {
   m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  _collection_window = new unity::DNDCollectionWindow();
   _collection_window->collected.connect(sigc::mem_fun(this, &Launcher::OnDNDDataCollected));
 
   _offscreen_drag_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(2, 2, 1, nux::BITFMT_R8G8B8A8);
@@ -213,7 +213,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   icon_renderer->SetTargetSize(_icon_size, _icon_image_size, _space_between_icons);
 
   TextureCache& cache = TextureCache::GetDefault();
-  TextureCache::CreateTextureCallback cb = [&](std::string const& name, int width, int height) -> nux::BaseTexture* {
+  TextureCache::CreateTextureCallback cb = [&](std::string const& name, int width, int height) {
     return nux::CreateTexture2DFromFile((PKGDATADIR"/" + name + ".png").c_str(), -1, true);
   };
 
@@ -1071,22 +1071,22 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
 
     // logically dnd exit only restores to the clamped ranges
     // hover_progress restores to 0
-    float max = 0.0f;
-    float min = MIN(0.0f, launcher_height - sum);
+    _launcher_drag_delta_max = 0.0f;
+    _launcher_drag_delta_min = MIN(0.0f, launcher_height - sum);
 
-    if (_launcher_drag_delta > max)
-      delta_y = max + DragLimiter(delta_y - max);
-    else if (_launcher_drag_delta < min)
-      delta_y = min + DragLimiter(delta_y - min);
+    if (_launcher_drag_delta > _launcher_drag_delta_max)
+      delta_y = _launcher_drag_delta_max + DragLimiter(delta_y - _launcher_drag_delta_max);
+    else if (_launcher_drag_delta < _launcher_drag_delta_min)
+      delta_y = _launcher_drag_delta_min + DragLimiter(delta_y - _launcher_drag_delta_min);
 
     if (GetActionState() != ACTION_DRAG_LAUNCHER)
     {
       float dnd_progress = DnDExitProgress(current);
 
-      if (_launcher_drag_delta > max)
-        delta_y = max + (delta_y - max) * dnd_progress;
-      else if (_launcher_drag_delta < min)
-        delta_y = min + (delta_y - min) * dnd_progress;
+      if (_launcher_drag_delta > _launcher_drag_delta_max)
+        delta_y = _launcher_drag_delta_max + (delta_y - _launcher_drag_delta_max) * dnd_progress;
+      else if (_launcher_drag_delta < _launcher_drag_delta_min)
+        delta_y = _launcher_drag_delta_min + (delta_y - _launcher_drag_delta_min) * dnd_progress;
 
       if (dnd_progress == 0.0f)
         _launcher_drag_delta = (int) delta_y;
@@ -1095,9 +1095,6 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
     delta_y *= hover_progress;
     center.y += delta_y;
     folding_threshold += delta_y;
-
-    _scroll_limit_reached = (delta_y == _last_delta_y);
-    _last_delta_y = delta_y;
   }
   else
   {
@@ -1572,26 +1569,25 @@ bool Launcher::OnScrollTimeout()
 {
   bool continue_animation = true;
 
-  //
-  // Always check _scroll_limit_reached to ensure we don't keep spinning
-  // this timer if the mouse happens to be left idle over one of the autoscroll
-  // hotspots on the launcher.
-  //
-  if (IsInKeyNavMode() || !_hovered || _scroll_limit_reached ||
+  if (IsInKeyNavMode() || !_hovered ||
       GetActionState() == ACTION_DRAG_LAUNCHER)
   {
     continue_animation = false;
   }
   else if (MouseOverTopScrollArea())
   {
-    if (MouseOverTopScrollExtrema())
+    if (_launcher_drag_delta >= _launcher_drag_delta_max)
+      continue_animation = false;
+    else if (MouseOverTopScrollExtrema())
       _launcher_drag_delta += 6;
     else
       _launcher_drag_delta += 3;
   }
   else if (MouseOverBottomScrollArea())
   {
-    if (MouseOverBottomScrollExtrema())
+    if (_launcher_drag_delta <= _launcher_drag_delta_min)
+      continue_animation = false;
+    else if (MouseOverBottomScrollExtrema())
       _launcher_drag_delta -= 6;
     else
       _launcher_drag_delta -= 3;
@@ -1604,10 +1600,6 @@ bool Launcher::OnScrollTimeout()
   if (continue_animation)
   {
     EnsureAnimation();
-  }
-  else
-  {
-    _scroll_limit_reached = false;
   }
 
   return continue_animation;

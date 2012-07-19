@@ -358,9 +358,9 @@ class HudLockedLauncherInteractionsTests(HudTestsBase):
 
         for icon in self.launcher.model.get_launcher_icons_for_monitor(self.hud_monitor):
             if isinstance(icon, HudLauncherIcon):
-                self.assertFalse(icon.desaturated)
+                self.assertThat(icon.desaturated, Eventually(Equals(False)))
             else:
-                self.assertTrue(icon.desaturated)
+                self.assertThat(icon.desaturated, Eventually(Equals(True)))
 
     def test_hud_launcher_icon_click_hides_hud(self):
         """Clicking the Hud Icon should hide the HUD"""
