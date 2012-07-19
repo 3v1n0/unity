@@ -26,6 +26,7 @@
 #include <sigc++/trackable.h>
 
 #include "Variant.h"
+#include "GLibDBusProxy.h"
 #include "Categories.h"
 #include "Filters.h"
 #include "Preview.h"
@@ -84,6 +85,11 @@ public:
   virtual void Search(std::string const& search_string);
   virtual void Activate(std::string const& uri);
   virtual void Preview(std::string const& uri);
+  virtual void ActivatePreviewAction(std::string const& action_id,
+                                     std::string const& uri);
+  virtual void SignalPreview(std::string const& uri,
+      glib::Variant const& preview_update,
+      glib::DBusProxy::ReplyCallback reply_cb = nullptr);
 
   nux::RWProperty<std::string> id;
   nux::RWProperty<std::string> dbus_name;
@@ -106,7 +112,7 @@ public:
   sigc::signal<void, Hints const&> search_finished;
   sigc::signal<void, Hints const&> global_search_finished;
   sigc::signal<void, std::string const&, HandledType, Hints const&> activated;
-  sigc::signal<void, std::string const&, Preview::Ptr> preview_ready;
+  sigc::signal<void, std::string const&, Preview::Ptr const&> preview_ready;
 
 private:
   class Impl;
