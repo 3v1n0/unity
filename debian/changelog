@@ -1,10 +1,18 @@
+unity (6.0.0-0ubuntu4) UNRELEASED; urgency=low
+
+  * debian/rules:
+    - added override for dh_shlibdeps to point it to the private directory of
+      libunity-protocol-private.so
+
+ -- Łukasz 'sil2100' Zemczak <lukasz.zemczak@canonical.com>  Wed, 18 Jul 2012 12:50:15 +0200
+
 unity (6.0.0-0ubuntu3) quantal; urgency=low
 
   * Add a dconf migration script from /desktop/unity to /com/canonical/unity
     + debian/unity.migrations, debian/control, debian/rules:
       - build-dep on dh-migrations
       - include the upstream migration script (cherry-picked)
-
+ 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 19 Jul 2012 12:49:13 +0200
 
 unity (6.0.0-0ubuntu2) quantal; urgency=low
