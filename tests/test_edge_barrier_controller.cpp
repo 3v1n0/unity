@@ -76,6 +76,7 @@ public:
   virtual void SetUp()
   {
     bc.options = std::make_shared<launcher::Options>();
+    bc.options()->edge_passed_disabled_ms = 150;
 
     for (int i = 0; i < max_num_monitors; ++i)
     {
@@ -161,6 +162,48 @@ TEST_F(TestEdgeBarrierController, ProcessUnHandledEventOnReleasedBarrier)
 
   EXPECT_CALL(owner, ReleaseBarrier(not_breaking_id));
   bc.ProcessBarrierEvent(&owner, not_breaking_barrier_event);
+}
+
+TEST_F(TestEdgeBarrierController, BreakingEdgeTemporaryReleasesBarrier)
+{
+  MockPointerBarrier owner;
+
+  EXPECT_CALL(owner, ReleaseBarrier(1));
+  bc.ProcessBarrierEvent(&owner, MakeBarrierEvent(1, true));
+  ASSERT_TRUE(owner.released());
+
+  Utils::WaitForTimeoutMSec(bc.options()->edge_passed_disabled_ms);
+  EXPECT_FALSE(owner.released());
+}
+
+TEST_F(TestEdgeBarrierController, BreakingEdgeTemporaryReleasesBarrierForNotHandledEvents)
+{
+  MockPointerBarrier owner;
+  int monitor = 0;
+  subscribers_[monitor].handles_ = false;
+
+  EXPECT_CALL(owner, ReleaseBarrier(5));
+  bc.ProcessBarrierEvent(&owner, MakeBarrierEvent(5, true));
+  ASSERT_TRUE(owner.released());
+
+  subscribers_[monitor].handles_ = false;
+  EXPECT_CALL(owner, ReleaseBarrier(6));
+  bc.ProcessBarrierEvent(&owner, MakeBarrierEvent(6, false));
+}
+
+TEST_F(TestEdgeBarrierController, BreakingEdgeDontReleasesBarrierForHandledEvents)
+{
+  MockPointerBarrier owner;
+  int monitor = 0;
+  subscribers_[monitor].handles_ = false;
+
+  EXPECT_CALL(owner, ReleaseBarrier(5));
+  bc.ProcessBarrierEvent(&owner, MakeBarrierEvent(5, true));
+  ASSERT_TRUE(owner.released());
+
+  subscribers_[monitor].handles_ = true;
+  EXPECT_CALL(owner, ReleaseBarrier(_)).Times(0);
+  bc.ProcessBarrierEvent(&owner, MakeBarrierEvent(6, true));
 }
 
 }
