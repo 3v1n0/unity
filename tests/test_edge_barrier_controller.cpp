@@ -83,6 +83,12 @@ public:
     }
   }
 
+  BarrierEvent::Ptr MakeBarrierEvent(int id, bool breaker)
+  {
+    int velocity = breaker ? std::numeric_limits<int>::max() : bc.options()->edge_overcome_pressure() - 1;
+    return std::make_shared<BarrierEvent>(0, 1, velocity, id);
+  }
+
   TestBarrierSubscriber subscribers_[max_num_monitors];
   MockEdgeBarrierController bc;
 };
@@ -100,8 +106,7 @@ TEST_F(TestEdgeBarrierController, ProcessHandledEvent)
   bc.Subscribe(&handling_subscriber, monitor);
 
   MockPointerBarrier owner(monitor);
-  int velocity = std::numeric_limits<int>::max();
-  auto breaking_barrier_event = std::make_shared<BarrierEvent>(1, 1, velocity, 0);
+  auto breaking_barrier_event = MakeBarrierEvent(0, true);
 
   EXPECT_CALL(owner, ReleaseBarrier(_)).Times(0);
   bc.ProcessBarrierEvent(&owner, breaking_barrier_event);
@@ -115,8 +120,7 @@ TEST_F(TestEdgeBarrierController, ProcessHandledEventOnReleasedBarrier)
   bc.Subscribe(&handling_subscriber, monitor);
 
   MockPointerBarrier owner(monitor, true);
-  int velocity = std::numeric_limits<int>::max();
-  auto breaking_barrier_event = std::make_shared<BarrierEvent>(1, 1, velocity, 0);
+  auto breaking_barrier_event = MakeBarrierEvent(0, true);
 
   EXPECT_CALL(owner, ReleaseBarrier(_)).Times(0);
   bc.ProcessBarrierEvent(&owner, breaking_barrier_event);
@@ -131,8 +135,7 @@ TEST_F(TestEdgeBarrierController, ProcessUnHandledEventBreakingBarrier)
 
   MockPointerBarrier owner(monitor);
   int breaking_id = 12345;
-  int velocity = std::numeric_limits<int>::max();
-  auto breaking_barrier_event = std::make_shared<BarrierEvent>(1, 1, velocity, breaking_id);
+  auto breaking_barrier_event = MakeBarrierEvent(breaking_id, true);
 
   EXPECT_CALL(owner, ReleaseBarrier(breaking_id));
   bc.ProcessBarrierEvent(&owner, breaking_barrier_event);
@@ -147,8 +150,7 @@ TEST_F(TestEdgeBarrierController, ProcessUnHandledEventNotBreakingBarrier)
 
   MockPointerBarrier owner(monitor);
   int not_breaking_id = 54321;
-  int velocity = bc.options()->edge_overcome_pressure() - 1;
-  auto not_breaking_barrier_event = std::make_shared<BarrierEvent>(1, 1, velocity, not_breaking_id);
+  auto not_breaking_barrier_event = MakeBarrierEvent(not_breaking_id, false);
 
   EXPECT_CALL(owner, ReleaseBarrier(not_breaking_id)).Times(0);
   bc.ProcessBarrierEvent(&owner, not_breaking_barrier_event);
@@ -163,8 +165,7 @@ TEST_F(TestEdgeBarrierController, ProcessUnHandledEventOnReleasedBarrier)
 
   MockPointerBarrier owner(monitor, true);
   int not_breaking_id = 345678;
-  int velocity = bc.options()->edge_overcome_pressure() - 1;
-  auto not_breaking_barrier_event = std::make_shared<BarrierEvent>(1, 1, velocity, not_breaking_id);
+  auto not_breaking_barrier_event = MakeBarrierEvent(not_breaking_id, false);
 
   EXPECT_CALL(owner, ReleaseBarrier(not_breaking_id));
   bc.ProcessBarrierEvent(&owner, not_breaking_barrier_event);
