@@ -79,6 +79,7 @@ public:
 
     for (int i = 0; i < max_num_monitors; ++i)
     {
+      // By default we assume that no subscriber handles the events!!!
       bc.Subscribe(&subscribers_[i], i);
     }
   }
@@ -130,9 +131,6 @@ TEST_F(TestEdgeBarrierController, ProcessUnHandledEventBreakingBarrier)
 {
   int monitor = 1;
 
-  TestBarrierSubscriber unhandling_subscriber(false);
-  bc.Subscribe(&unhandling_subscriber, monitor);
-
   MockPointerBarrier owner(monitor);
   int breaking_id = 12345;
   auto breaking_barrier_event = MakeBarrierEvent(breaking_id, true);
@@ -145,9 +143,6 @@ TEST_F(TestEdgeBarrierController, ProcessUnHandledEventNotBreakingBarrier)
 {
   int monitor = 2;
 
-  TestBarrierSubscriber unhandling_subscriber(false);
-  bc.Subscribe(&unhandling_subscriber, monitor);
-
   MockPointerBarrier owner(monitor);
   int not_breaking_id = 54321;
   auto not_breaking_barrier_event = MakeBarrierEvent(not_breaking_id, false);
@@ -159,9 +154,6 @@ TEST_F(TestEdgeBarrierController, ProcessUnHandledEventNotBreakingBarrier)
 TEST_F(TestEdgeBarrierController, ProcessUnHandledEventOnReleasedBarrier)
 {
   int monitor = 2;
-
-  TestBarrierSubscriber unhandling_subscriber(false);
-  bc.Subscribe(&unhandling_subscriber, monitor);
 
   MockPointerBarrier owner(monitor, true);
   int not_breaking_id = 345678;
