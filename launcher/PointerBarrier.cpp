@@ -41,6 +41,8 @@ PointerBarrierWrapper::PointerBarrierWrapper()
   , smoothing(75)
   , max_velocity_multiplier(1.0f)
   , direction(BOTH)
+  , event_base_(0)
+  , barrier(0)
   , smoothing_count_(0)
   , smoothing_accum_(0)
 {}
@@ -57,7 +59,8 @@ void PointerBarrierWrapper::ConstructBarrier()
 
   Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
 
-  XFixesQueryExtension(dpy, &event_base_, &error_base_);
+  int error_base;
+  XFixesQueryExtension(dpy, &event_base_, &error_base);
 
   int maj,min;
   XFixesQueryVersion(dpy, &maj, &min);

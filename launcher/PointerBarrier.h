@@ -58,6 +58,9 @@ class PointerBarrierWrapper : public sigc::trackable
 public:
   typedef std::shared_ptr<PointerBarrierWrapper> Ptr;
 
+  PointerBarrierWrapper();
+  virtual ~PointerBarrierWrapper();
+
   nux::Property<int> x1;
   nux::Property<int> x2;
   nux::Property<int> y1;
@@ -76,22 +79,20 @@ public:
 
   nux::Property<BarrierDirection> direction;
 
-  PointerBarrierWrapper();
-  ~PointerBarrierWrapper();
-
-  void ConstructBarrier();
-  void DestroyBarrier();
-  void ReleaseBarrier(int event_id);
+  virtual void ConstructBarrier();
+  virtual void DestroyBarrier();
+  virtual void ReleaseBarrier(int event_id);
 
   sigc::signal<void, PointerBarrierWrapper*, BarrierEvent::Ptr> barrier_event;
 
-private:
+protected:
   void EmitCurrentData(int event_id, int x, int y);
-  bool HandleEvent (XEvent event);
+  bool HandleEvent(XEvent event);
+
+private:
   static bool HandleEventWrapper(XEvent event, void* data);
 
   int event_base_;
-  int error_base_;
   PointerBarrier barrier;
 
   int smoothing_count_;
