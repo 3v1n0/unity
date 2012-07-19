@@ -5,6 +5,7 @@ Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: cmake,
                debhelper (>= 7.0.50~),
                dh-translations (>= 94),
+               dh-migrations,
                pkg-config,
                python (>= 2.7),
                python-setuptools,
