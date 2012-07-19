@@ -131,6 +131,7 @@ void EdgeBarrierController::Impl::OnPointerBarrierEvent(PointerBarrierWrapper* o
   if (monitor <= subscribers_.size())
   {
     auto subscriber = subscribers_[monitor];
+
     if (subscriber && subscriber->HandleBarrierEvent(owner, event))
       process = false;
   }
@@ -191,6 +192,11 @@ void EdgeBarrierController::Unsubscribe(EdgeBarrierSubscriber* subscriber, unsig
 
   pimpl->subscribers_[monitor] = nullptr;
   pimpl->SetupBarriers(UScreen::GetDefault()->GetMonitors());
+}
+
+void EdgeBarrierController::ProcessBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event)
+{
+  pimpl->OnPointerBarrierEvent(owner, event);
 }
 
 }
