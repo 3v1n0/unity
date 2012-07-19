@@ -204,22 +204,23 @@ if (GTEST_SRC_DIR AND
 
 # Tests that require X
   add_executable(test-gtest
-                 test_bamflaunchericon.cpp
-                 test_hud_button.cpp
-                 test_hud_controller.cpp
-                 test_dashview_impl.cpp
-                 test_texture_cache.cpp
                  test_main.cpp
+                 test_bamflaunchericon.cpp
+                 test_dashview_impl.cpp
+                 test_edge_barrier_controller.cpp
                  test_launcher.cpp
                  test_lensview_impl.cpp
+                 test_hud_button.cpp
+                 test_hud_controller.cpp
+                 test_hud_view.cpp
                  test_icon_loader.cpp
                  test_im_text_entry.cpp
-                 test_hud_view.cpp
                  test_keyboard_util.cpp
                  test_resultviewgrid.cpp
                  test_single_monitor_launcher_icon.cpp
                  test_switcher_controller.cpp
                  test_switcher_model.cpp
+                 test_texture_cache.cpp
                  ${CMAKE_SOURCE_DIR}/dash/AbstractPlacesGroup.cpp
                  ${CMAKE_SOURCE_DIR}/dash/DashViewPrivate.cpp
                  ${CMAKE_SOURCE_DIR}/dash/LensViewPrivate.cpp
@@ -239,6 +240,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/launcher/DNDCollectionWindow.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/Decaymulator.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/DndData.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/EdgeBarrierController.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/FavoriteStore.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/FavoriteStoreGSettings.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/FavoriteStorePrivate.cpp
@@ -250,6 +252,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/launcher/LauncherHoverMachine.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/LauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/LauncherModel.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/LauncherOptions.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/LayoutSystem.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/MockLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/PointerBarrier.cpp
