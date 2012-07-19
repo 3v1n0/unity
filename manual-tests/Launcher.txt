@@ -646,5 +646,5 @@ Actions:
  * Change Launcher Icon Size.
 
 Expected Results:
- * The gedit window must not flickers behind the launcher.
+ * The gedit window must not flicker behind the launcher.
 
