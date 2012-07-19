@@ -124,6 +124,7 @@ if (GTEST_SRC_DIR AND
 
 # The actual test executable (xless) - do not put anything that requires X in here
   add_executable(test-gtest-xless
+                 test_main_xless.cpp
                  test_animator.cpp
                  test_launcher_model.cpp
                  test_glib_object.cpp
@@ -134,24 +135,24 @@ if (GTEST_SRC_DIR AND
                  test_glib_signals_utils.h
                  test_glib_source.cpp
                  test_glib_variant.cpp
+                 test_grabhandle.cpp
                  test_desktop_utilities.cpp
-                 ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
+                 test_hud_private.cpp
                  test_indicator.cpp
                  test_indicator_appmenu.cpp
                  test_indicator_entry.cpp
                  test_indicators.cpp
+                 test_introspection.cpp
                  test_favorite_store_gsettings.cpp
                  test_favorite_store_private.cpp
                  test_home_lens.cpp
                  test_launcher_entry_remote.cpp
+                 test_pointer_barrier.cpp
                  test_shortcut_model.cpp
                  test_shortcut_private.cpp
-                 test_introspection.cpp
-                 test_main_xless.cpp
-                 test_grabhandle.cpp
-                 test_unityshell_private.cpp
                  test_showdesktop_handler.cpp
-                 test_hud_private.cpp
+                 test_unityshell_private.cpp
+                 ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/AbstractLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/Animator.cpp
                  ${UNITY_SRC}/DebugDBusInterface.cpp
@@ -163,6 +164,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/launcher/LauncherEntryRemote.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/MockLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/FavoriteStorePrivate.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/PointerBarrier.cpp
                  ${CMAKE_SOURCE_DIR}/shortcuts/ShortcutModel.cpp
                  ${CMAKE_SOURCE_DIR}/shortcuts/ShortcutHintPrivate.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/Introspectable.cpp
