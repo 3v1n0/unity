@@ -330,7 +330,7 @@
                     <precision>1</precision>
                 </option>
                 <option name="edge_passed_disabled_ms" type="int">
-                    <_short>Broken Sticky Edge Duration</_short>
+                    <_short>Duration of Sticky Edge Release after Break</_short>
                     <_long>Sticky edges deactivated for number of milliseconds after the user breaks the barrier</_long>
                     <default>1000</default>
                     <min>0</min>
