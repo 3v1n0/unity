@@ -26,6 +26,7 @@
 
 using namespace unity;
 using namespace unity::ui;
+using namespace testing;
 
 namespace
 {
@@ -33,16 +34,32 @@ namespace
 class MockPointerBarrier : public PointerBarrierWrapper
 {
 public:
+  MockPointerBarrier(int monitor = 0, bool released_ = false)
+  {
+    index = monitor;
+    x1 = 1;
+    released = released_;
+  }
+
   MOCK_METHOD0(ConstructBarrier, void());
   MOCK_METHOD0(DestroyBarrier, void());
   MOCK_METHOD1(ReleaseBarrier, void(int));
+};
+
+class MockEdgeBarrierController : public EdgeBarrierController
+{
+public:
+  void ProcessBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event)
+  {
+    EdgeBarrierController::ProcessBarrierEvent(owner, event);
+  }
 };
 
 class TestBarrierSubscriber : public EdgeBarrierSubscriber
 {
 public:
   TestBarrierSubscriber(bool handles = false)
-    : handles_(false)
+    : handles_(handles)
   {}
 
   bool HandleBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event)
@@ -53,7 +70,7 @@ public:
   bool handles_;
 };
 
-class TestEdgeBarrierController : public testing::Test
+class TestEdgeBarrierController : public Test
 {
 public:
   virtual void SetUp()
@@ -66,13 +83,91 @@ public:
     }
   }
 
-  EdgeBarrierController bc;
   TestBarrierSubscriber subscribers_[max_num_monitors];
+  MockEdgeBarrierController bc;
 };
 
 TEST_F(TestEdgeBarrierController, Construction)
 {
   EXPECT_FALSE(bc.sticky_edges);
+}
+
+TEST_F(TestEdgeBarrierController, ProcessHandledEvent)
+{
+  int monitor = 0;
+
+  TestBarrierSubscriber handling_subscriber(true);
+  bc.Subscribe(&handling_subscriber, monitor);
+
+  MockPointerBarrier owner(monitor);
+  int velocity = std::numeric_limits<int>::max();
+  auto breaking_barrier_event = std::make_shared<BarrierEvent>(1, 1, velocity, 0);
+
+  EXPECT_CALL(owner, ReleaseBarrier(_)).Times(0);
+  bc.ProcessBarrierEvent(&owner, breaking_barrier_event);
+}
+
+TEST_F(TestEdgeBarrierController, ProcessHandledEventOnReleasedBarrier)
+{
+  int monitor = max_num_monitors-1;
+
+  TestBarrierSubscriber handling_subscriber(true);
+  bc.Subscribe(&handling_subscriber, monitor);
+
+  MockPointerBarrier owner(monitor, true);
+  int velocity = std::numeric_limits<int>::max();
+  auto breaking_barrier_event = std::make_shared<BarrierEvent>(1, 1, velocity, 0);
+
+  EXPECT_CALL(owner, ReleaseBarrier(_)).Times(0);
+  bc.ProcessBarrierEvent(&owner, breaking_barrier_event);
+}
+
+TEST_F(TestEdgeBarrierController, ProcessUnHandledEventBreakingBarrier)
+{
+  int monitor = 1;
+
+  TestBarrierSubscriber unhandling_subscriber(false);
+  bc.Subscribe(&unhandling_subscriber, monitor);
+
+  MockPointerBarrier owner(monitor);
+  int breaking_id = 12345;
+  int velocity = std::numeric_limits<int>::max();
+  auto breaking_barrier_event = std::make_shared<BarrierEvent>(1, 1, velocity, breaking_id);
+
+  EXPECT_CALL(owner, ReleaseBarrier(breaking_id));
+  bc.ProcessBarrierEvent(&owner, breaking_barrier_event);
+}
+
+TEST_F(TestEdgeBarrierController, ProcessUnHandledEventNotBreakingBarrier)
+{
+  int monitor = 2;
+
+  TestBarrierSubscriber unhandling_subscriber(false);
+  bc.Subscribe(&unhandling_subscriber, monitor);
+
+  MockPointerBarrier owner(monitor);
+  int not_breaking_id = 54321;
+  int velocity = bc.options()->edge_overcome_pressure() - 1;
+  auto not_breaking_barrier_event = std::make_shared<BarrierEvent>(1, 1, velocity, not_breaking_id);
+
+  EXPECT_CALL(owner, ReleaseBarrier(not_breaking_id)).Times(0);
+  bc.ProcessBarrierEvent(&owner, not_breaking_barrier_event);
+}
+
+TEST_F(TestEdgeBarrierController, ProcessUnHandledEventOnReleasedBarrier)
+{
+  int monitor = 2;
+
+  TestBarrierSubscriber unhandling_subscriber(false);
+  bc.Subscribe(&unhandling_subscriber, monitor);
+
+  MockPointerBarrier owner(monitor, true);
+  int not_breaking_id = 345678;
+  int velocity = bc.options()->edge_overcome_pressure() - 1;
+  auto not_breaking_barrier_event = std::make_shared<BarrierEvent>(1, 1, velocity, not_breaking_id);
+
+  EXPECT_CALL(owner, ReleaseBarrier(not_breaking_id));
+  bc.ProcessBarrierEvent(&owner, not_breaking_barrier_event);
 }
 
 }
