@@ -32,8 +32,8 @@ struct EdgeBarrierController::Impl
   void ResizeBarrierList(std::vector<nux::Geometry> const& layout);
   void SetupBarriers(std::vector<nux::Geometry> const& layout);
 
-  void OnPointerBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event);
-  void BarrierRelease(ui::PointerBarrierWrapper* owner, int event);
+  void OnPointerBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event);
+  void BarrierRelease(PointerBarrierWrapper* owner, int event);
 
   std::vector<PointerBarrierWrapper::Ptr> barriers_;
   std::vector<EdgeBarrierSubscriber*> subscribers_;
@@ -79,7 +79,7 @@ void EdgeBarrierController::Impl::ResizeBarrierList(std::vector<nux::Geometry> c
 
   while (barriers_.size() < num_monitors)
   {
-    auto barrier = PointerBarrierWrapper::Ptr(new PointerBarrierWrapper());
+    auto barrier = std::make_shared<PointerBarrierWrapper>();
     barrier->barrier_event.connect(sigc::mem_fun(this, &EdgeBarrierController::Impl::OnPointerBarrierEvent));
     barriers_.push_back(barrier);
   }
@@ -123,7 +123,7 @@ void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const
   edge_overcome_pressure_ = parent_->options()->edge_overcome_pressure() * overcome_responsiveness_mult;
 }
 
-void EdgeBarrierController::Impl::OnPointerBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event)
+void EdgeBarrierController::Impl::OnPointerBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event)
 {
   unsigned int monitor = owner->index;
   bool process = true;
@@ -154,7 +154,7 @@ void EdgeBarrierController::Impl::OnPointerBarrierEvent(ui::PointerBarrierWrappe
   }
 }
 
-void EdgeBarrierController::Impl::BarrierRelease(ui::PointerBarrierWrapper* owner, int event)
+void EdgeBarrierController::Impl::BarrierRelease(PointerBarrierWrapper* owner, int event)
 {
   owner->ReleaseBarrier(event);
   owner->released = true;
@@ -192,7 +192,6 @@ void EdgeBarrierController::Unsubscribe(EdgeBarrierSubscriber* subscriber, unsig
   pimpl->subscribers_[monitor] = nullptr;
   pimpl->SetupBarriers(UScreen::GetDefault()->GetMonitors());
 }
-
 
 }
 }
