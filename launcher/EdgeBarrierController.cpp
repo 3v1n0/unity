@@ -57,8 +57,17 @@ EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
     SetupBarriers(layout);
   });
 
-  parent_->sticky_edges.changed.connect([&](bool value) {
-    SetupBarriers(UScreen::GetDefault()->GetMonitors());
+  parent_->sticky_edges.SetGetterFunction([parent_] {
+    return parent_->options() ? parent_->options()->edge_resist() : false;
+  });
+
+  parent_->sticky_edges.SetSetterFunction([parent_] (bool const& new_val) {
+    if (parent_->options() && new_val != parent_->options()->edge_resist())
+    {
+      parent_->options()->edge_resist = new_val;
+      return true;
+    }
+    return false;
   });
 
   parent_->options.changed.connect([&](launcher::Options::Ptr options) {
@@ -87,7 +96,7 @@ void EdgeBarrierController::Impl::ResizeBarrierList(std::vector<nux::Geometry> c
 
 void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const& layout)
 {
-  bool edge_resist = parent_->options()->edge_resist();
+  bool edge_resist = parent_->sticky_edges();
 
   for (unsigned i = 0; i < layout.size(); i++)
   {
@@ -144,7 +153,7 @@ void EdgeBarrierController::Impl::OnPointerBarrierEvent(PointerBarrierWrapper* o
   {
     decaymulator_.value = decaymulator_.value + event->velocity;
 
-    if (decaymulator_.value > edge_overcome_pressure_ || (!parent_->options()->edge_resist() && !subscribers_[monitor]))
+    if (decaymulator_.value > edge_overcome_pressure_ || (!parent_->sticky_edges() && !subscribers_[monitor]))
     {
       BarrierRelease(owner, event->event_id);
     }
@@ -169,8 +178,7 @@ void EdgeBarrierController::Impl::BarrierRelease(PointerBarrierWrapper* owner, i
 }
 
 EdgeBarrierController::EdgeBarrierController()
-  : sticky_edges(false)
-  , pimpl(new Impl(this))
+  : pimpl(new Impl(this))
 {}
 
 EdgeBarrierController::~EdgeBarrierController()

@@ -38,7 +38,7 @@ public:
   EdgeBarrierController();
   ~EdgeBarrierController();
 
-  nux::Property<bool> sticky_edges;
+  nux::RWProperty<bool> sticky_edges;
   nux::Property<launcher::Options::Ptr> options;
 
   void Subscribe(EdgeBarrierSubscriber* subscriber, unsigned int monitor);
