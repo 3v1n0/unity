@@ -67,6 +67,8 @@ public:
   int GetPanelSplitWidth() const;
 
   int GetSpaceBetweenTitleAndSubtitle() const;
+
+  int GetActionButtonHeight() const;
   int GetSpaceBetweenActions() const;
 
 

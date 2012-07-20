@@ -43,6 +43,7 @@ PreviewRatingsWidget::PreviewRatingsWidget(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
 {
   nux::VLayout* layout = new nux::VLayout();
+  layout->SetSpaceBetweenChildren(3);
 
   previews::Style& style = previews::Style::Instance();
 

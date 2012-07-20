@@ -135,7 +135,7 @@ void MusicPreview::SetupViews()
 
   previews::Style& style = dash::previews::Style::Instance();
 
-  int details_width = style.GetPreviewWidth() - style.GetPreviewHeight() - style.GetPanelSplitWidth();
+  int details_width = style.GetPreviewWidth() - style.GetPreviewHeight() - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin();
 
   nux::HLayout* image_data_layout = new nux::HLayout();
   image_data_layout->SetSpaceBetweenChildren(style.GetPanelSplitWidth());
@@ -153,18 +153,16 @@ void MusicPreview::SetupViews()
 
       /////////////////////
       // Music Info
-      int top_app_info_max_width = details_width - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() - style.GetSpaceBetweenIconAndDetails();;
-
       nux::VLayout* album_data_layout = new nux::VLayout();
       album_data_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
 
       title_ = new nux::StaticCairoText(preview_model_->title);
       title_->SetFont(style.title_font().c_str());
-      title_->SetMaximumWidth(top_app_info_max_width);
+      title_->SetMaximumWidth(details_width);
 
       subtitle_ = new nux::StaticCairoText(preview_model_->subtitle);
       subtitle_->SetFont(style.subtitle_size_font().c_str());
-      subtitle_->SetMaximumWidth(top_app_info_max_width);
+      subtitle_->SetMaximumWidth(details_width);
 
       album_data_layout->AddView(title_, 1);
       album_data_layout->AddView(subtitle_, 1);
@@ -186,36 +184,31 @@ void MusicPreview::SetupViews()
 
       nux::HLayout* hint_actions_layout = new nux::HLayout();
 
-       /////////////////////
-        // Hints
-        nux::VLayout* hints_layout = new nux::VLayout();
+      /////////////////////
+      // Hints && Actions
+      nux::VLayout* hints_layout = NULL;
+      nux::Layout* actions_layout = NULL;
+      if (preview_model_->GetInfoHints().size() > 0)
+      {
+        hints_layout = new nux::VLayout();
         hints_layout->SetSpaceBetweenChildren(0);
         hints_layout->AddSpace(0, 1);
         PreviewInfoHintWidget* preview_info_hints = new PreviewInfoHintWidget(preview_model_, 24);
         hints_layout->AddView(preview_info_hints, 0);
 
-        /////////////////////
-        // Actions
-        nux::VLayout* actions_container_layout = new nux::VLayout();
-        actions_container_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
-        actions_container_layout->SetSpaceBetweenChildren(0);
-        actions_container_layout->AddSpace(0, 1);
-        
-        nux::VLayout* actions_layout = new nux::VLayout();
-        actions_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenActions());
-        actions_container_layout->AddLayout(actions_layout, 0);
-
-        for (dash::Preview::ActionPtr action : preview_model_->GetActions())
-        {
-          ActionButton* button = new ActionButton(action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
-          button->click.connect(sigc::bind(sigc::mem_fun(this, &MusicPreview::OnActionActivated), action->id));
-
-          actions_layout->AddView(button, 0);
-        }
+        // If there are actions, we use a vertical layout
+        actions_layout = BuildGridActionsLayout(preview_model_->GetActions(), (details_width - style.GetSpaceBetweenActions()) / 2, style.GetActionButtonHeight());
+        actions_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
+      }
+      else // otherwise we add a grid layout.
+      {
+        actions_layout = BuildGridActionsLayout(preview_model_->GetActions(), (details_width - style.GetSpaceBetweenActions()) / 2, style.GetActionButtonHeight());
+        actions_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
+      }
         /////////////////////
 
-      hint_actions_layout->AddView(hints_layout, 1);
-      hint_actions_layout->AddView(actions_container_layout, 0);
+      if (hints_layout) hint_actions_layout->AddView(hints_layout, 1);
+      hint_actions_layout->AddView(actions_layout, 0);
 
     full_data_layout_->AddLayout(album_data_layout, 0);
     if (tracks_) { full_data_layout_->AddView(tracks_, 1); }

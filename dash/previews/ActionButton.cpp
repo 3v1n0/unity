@@ -107,8 +107,7 @@ void ActionButton::BuildLayout(std::string const& label, std::string const& icon
         BuildLayout(label_, icon_hint_);
       });
       image_->SetInputEventSensitivity(false);
-      image_->SetMinimumSize(24,24);
-      image_->SetMaximumSize(24,24);
+      image_->SetMinMaxSize(24,24);
     }
   }
 
@@ -128,6 +127,7 @@ void ActionButton::BuildLayout(std::string const& label, std::string const& icon
         static_text_->SetFont(font_hint_);
       static_text_->Reference();
       static_text_->SetInputEventSensitivity(false);
+      static_text_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
     }
   }
 
@@ -136,10 +136,12 @@ void ActionButton::BuildLayout(std::string const& label, std::string const& icon
   nux::HLayout* layout = new nux::HLayout();
   layout->SetHorizontalInternalMargin(6);
   layout->SetPadding(2, 11, 2, 11);
+  layout->AddSpace(0,1);
   if (image_)
     layout->AddView(image_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
   if (static_text_)
     layout->AddView(static_text_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
+  layout->AddSpace(0,1);
   SetLayout(layout);
 
   ComputeContentSize();

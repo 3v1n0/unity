@@ -27,10 +27,12 @@
 #include <Nux/View.h>
 #include <UnityCore/Preview.h>
 #include "unity-shared/Introspectable.h"
+#include "unity-shared/PreviewStyle.h"
 
 namespace nux
 {
 class AbstractButton;
+class Layout;
 }
 
 namespace unity
@@ -62,6 +64,9 @@ protected:
   virtual void OnNavigateIn() {}
   virtual void OnNavigateInComplete() {}
   virtual void OnNavigateOut() {}
+
+  nux::Layout* BuildGridActionsLayout(dash::Preview::ActionPtrList actions, int action_width, int action_height);
+  nux::Layout* BuildVerticalActionsLayout(dash::Preview::ActionPtrList actions, int action_width, int action_height);
   
 protected:
   dash::Preview::Ptr preview_model_;

@@ -150,7 +150,7 @@ int Style::GetPanelSplitWidth() const
 
 int Style::GetAppIconAreaWidth() const
 {
-  return 100;
+  return 105;
 }
 
 int Style::GetSpaceBetweenTitleAndSubtitle() const
@@ -166,6 +166,11 @@ int Style::GetSpaceBetweenIconAndDetails() const
 int Style::GetTrackHeight() const
 {
   return 28;
+}
+
+int Style::GetActionButtonHeight() const
+{
+  return 36;
 }
 
 int Style::GetSpaceBetweenActions() const

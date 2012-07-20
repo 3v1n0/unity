@@ -24,6 +24,8 @@
 #include "unity-shared/IntrospectableWrappers.h"
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
+#include <Nux/VLayout.h>
+#include "ActionButton.h"
 
 namespace unity
 {
@@ -62,6 +64,72 @@ void Preview::OnActionActivated(nux::AbstractButton* button, std::string const& 
 {
   if (preview_model_)
     preview_model_->PerformAction(id);
+}
+
+nux::Layout* Preview::BuildGridActionsLayout(dash::Preview::ActionPtrList actions, int action_width, int action_height)
+{
+  previews::Style& style = dash::previews::Style::Instance();
+
+  nux::VLayout* actions_buffer_v = new nux::VLayout();
+  actions_buffer_v->AddSpace(0, 1);
+  nux::VLayout* actions_layout_v = new nux::VLayout();
+  actions_layout_v->SetSpaceBetweenChildren(style.GetSpaceBetweenActions());
+
+  uint rows = actions.size() / 2 + ((actions.size() % 2 > 0) ? 1 : 0);
+  uint action_iter = 0;
+  for (uint i = 0; i < rows; i++)
+  {
+    nux::HLayout* actions_buffer_h = new nux::HLayout();
+    actions_buffer_h->AddSpace(0, 1);
+    nux::HLayout* actions_layout_h = new nux::HLayout();
+    actions_layout_h->SetSpaceBetweenChildren(style.GetSpaceBetweenActions());
+ 
+    for (uint j = 0; j < 2 && action_iter < actions.size(); j++, action_iter++)
+    {
+        dash::Preview::ActionPtr action = actions[action_iter];
+
+        ActionButton* button = new ActionButton(action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
+        button->SetMinMaxSize(action_width, action_height);
+        button->click.connect(sigc::bind(sigc::mem_fun(this, &Preview::OnActionActivated), action->id));
+
+        actions_layout_h->AddView(button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
+    }
+    actions_buffer_h->AddLayout(actions_layout_h, 0);
+    actions_layout_v->AddLayout(actions_buffer_h, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
+  }
+
+  actions_buffer_v->AddLayout(actions_layout_v, 0);
+  return actions_buffer_v;
+}
+
+nux::Layout* Preview::BuildVerticalActionsLayout(dash::Preview::ActionPtrList actions, int action_width, int action_height)
+{
+  previews::Style& style = dash::previews::Style::Instance();
+
+  nux::HLayout* actions_buffer_h = new nux::HLayout();
+  actions_buffer_h->AddSpace(0, 1);
+
+  nux::VLayout* actions_buffer_v = new nux::VLayout();
+  actions_buffer_v->AddSpace(0, 1);
+  nux::VLayout* actions_layout_v = new nux::VLayout();
+  actions_layout_v->SetSpaceBetweenChildren(style.GetSpaceBetweenActions());
+
+  uint action_iter = 0;
+  for (uint i = 0; i < actions.size(); i++)
+  {
+      dash::Preview::ActionPtr action = actions[action_iter];
+
+      ActionButton* button = new ActionButton(action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
+      button->SetMinMaxSize(action_width, action_height);
+      button->click.connect(sigc::bind(sigc::mem_fun(this, &Preview::OnActionActivated), action->id));
+
+      actions_layout_v->AddView(button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
+
+  }
+  actions_buffer_v->AddLayout(actions_layout_v, 0);
+  actions_buffer_h->AddLayout(actions_buffer_v, 0);
+
+  return actions_buffer_h;
 }
 
 }

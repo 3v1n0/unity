@@ -24,14 +24,15 @@
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/CoverArt.h"
 #include "unity-shared/StaticCairoText.h"
+#include "unity-shared/PlacesVScrollBar.h"
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
+#include <Nux/GridHLayout.h>
 #include <Nux/Button.h>
 #include <UnityCore/GenericPreview.h>
  
 #include "GenericPreview.h"
-#include "ActionButton.h"
 #include "PreviewInfoHintWidget.h"
 
 namespace unity
@@ -46,6 +47,17 @@ namespace
 nux::logging::Logger logger("unity.dash.previews.genericpreview");
 
 }
+
+class DetailsScrollView : public nux::ScrollView
+{
+public:
+  DetailsScrollView(NUX_FILE_LINE_PROTO)
+  : ScrollView(NUX_FILE_LINE_PARAM)
+  {
+    SetVScrollBar(new dash::PlacesVScrollBar(NUX_TRACKER_LOCATION));
+  }
+
+};
 
 NUX_IMPLEMENT_OBJECT_TYPE(GenericPreview);
 
@@ -132,8 +144,10 @@ void GenericPreview::SetupViews()
 
   previews::Style& style = dash::previews::Style::Instance();
 
+  int details_width = style.GetPreviewWidth() - style.GetPreviewHeight() - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin();
+
   nux::HLayout* image_data_layout = new nux::HLayout();
-  image_data_layout->SetSpaceBetweenChildren(12);
+  image_data_layout->SetSpaceBetweenChildren(style.GetPanelSplitWidth());
 
   CoverArt* image = new CoverArt();
   image->SetImage(preview_model_->image.Get().RawPtr() ? g_icon_to_string(preview_model_->image.Get().RawPtr()) : "");
@@ -143,19 +157,24 @@ void GenericPreview::SetupViews()
     /////////////////////
     // Data Panel
     full_data_layout_ = new nux::VLayout();
-    full_data_layout_->SetPadding(10);
+    full_data_layout_->SetPadding(style.GetDetailsTopMargin(), 0, style.GetDetailsBottomMargin(), style.GetDetailsLeftMargin());
     full_data_layout_->SetSpaceBetweenChildren(16);
 
       /////////////////////
       // Data
+
       nux::VLayout* app_data_layout = new nux::VLayout();
-      app_data_layout->SetSpaceBetweenChildren(8);
+      app_data_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
 
       title_ = new nux::StaticCairoText(app_preview_model->title);
+      title_->SetLines(-1);
       title_->SetFont(style.title_font().c_str());
+      title_->SetMaximumWidth(details_width);
 
       subtitle_ = new nux::StaticCairoText(app_preview_model->subtitle);
+      subtitle_->SetLines(-1);
       subtitle_->SetFont(style.subtitle_size_font().c_str());
+      subtitle_->SetMaximumWidth(details_width);
 
       app_data_layout->AddView(title_, 1);
       app_data_layout->AddView(subtitle_, 1);
@@ -163,45 +182,38 @@ void GenericPreview::SetupViews()
 
       /////////////////////
       // Description
-      nux::ScrollView* app_info = new nux::ScrollView(NUX_TRACKER_LOCATION);
+      nux::ScrollView* app_info = new DetailsScrollView(NUX_TRACKER_LOCATION);
       app_info->EnableHorizontalScrollBar(false);
 
       nux::VLayout* app_info_layout = new nux::VLayout();
-      app_info_layout->SetSpaceBetweenChildren(16);
+      app_info_layout->SetSpaceBetweenChildren(12);
       app_info->SetLayout(app_info_layout);
 
       app_description_ = new nux::StaticCairoText("");
       app_description_->SetFont(style.app_description_font().c_str());
       app_description_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_TOP);
       app_description_->SetLines(-20);
-      app_description_->SetLineSpacing(1);
-      app_description_->SetMaximumWidth(400);
+      app_description_->SetLineSpacing(1.5);
       app_description_->SetText(app_preview_model->description);
-
-      PreviewInfoHintWidget* preview_info_hints = new PreviewInfoHintWidget(preview_model_, 24);
+      app_description_->SetMaximumWidth(details_width);
 
       app_info_layout->AddView(app_description_);
-      app_info_layout->AddView(preview_info_hints);
+      if (preview_model_->GetInfoHints().size() > 0)
+      {
+        PreviewInfoHintWidget* preview_info_hints = new PreviewInfoHintWidget(preview_model_, 24);
+        app_info_layout->AddView(preview_info_hints);
+      }
       /////////////////////
 
       /////////////////////
       // Actions
-      nux::HLayout* actions_layout = new nux::HLayout();
-      actions_layout->SetSpaceBetweenChildren(12);
-      actions_layout->AddSpace(0, 1);
-
-      for (dash::Preview::ActionPtr action : preview_model_->GetActions())
-      {
-        ActionButton* button = new ActionButton(action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
-        button->click.connect(sigc::bind(sigc::mem_fun(this, &GenericPreview::OnActionActivated), action->id));
-
-        actions_layout->AddView(button, 0);
-      }
-      /////////////////////
+      nux::Layout* actions_layout = BuildGridActionsLayout(preview_model_->GetActions(), (details_width - style.GetSpaceBetweenActions()) / 2, style.GetActionButtonHeight());
+      actions_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
+      ///////////////////
 
     full_data_layout_->AddLayout(app_data_layout, 0);
     full_data_layout_->AddView(app_info, 1);
-    full_data_layout_->AddLayout(actions_layout, 0);
+    full_data_layout_->AddView(actions_layout, 0);
     /////////////////////
   
   image_data_layout->AddView(image, 0);

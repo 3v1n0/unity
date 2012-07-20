@@ -60,8 +60,8 @@ PreviewFactory::PreviewFactory()
     factory_instance = this;
   }
 
-  RegisterItem("preview-application", new PreviewFactoryItem<dash::ApplicationPreview, previews::ApplicationPreview>());
   RegisterItem("preview-generic", new PreviewFactoryItem<dash::GenericPreview, previews::GenericPreview>());
+  RegisterItem("preview-application", new PreviewFactoryItem<dash::ApplicationPreview, previews::ApplicationPreview>());
   RegisterItem("preview-movie", new PreviewFactoryItem<dash::MoviePreview, previews::MoviePreview>());
   RegisterItem("preview-music", new PreviewFactoryItem<dash::MusicPreview, previews::MusicPreview>());
 }

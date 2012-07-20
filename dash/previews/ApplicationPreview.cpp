@@ -30,6 +30,7 @@
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
+#include <Nux/GridHLayout.h>
 #include <Nux/Button.h>
 #include <PreviewFactory.h>
  
@@ -149,7 +150,7 @@ void ApplicationPreview::SetupViews()
 
   previews::Style& style = dash::previews::Style::Instance();
 
-  int details_width = style.GetPreviewWidth() - style.GetPreviewHeight() - style.GetPanelSplitWidth();
+  int details_width = style.GetPreviewWidth() - style.GetPreviewHeight() - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin();
 
   nux::HLayout* image_data_layout = new nux::HLayout();
   image_data_layout->SetSpaceBetweenChildren(style.GetPanelSplitWidth());
@@ -173,9 +174,10 @@ void ApplicationPreview::SetupViews()
         /////////////////////
         // Icon Layout
         nux::VLayout* icon_layout = new nux::VLayout();
+        icon_layout->SetSpaceBetweenChildren(3);
         app_icon_ = new IconTexture(app_preview_model->app_icon.Get().RawPtr() ? g_icon_to_string(app_preview_model->app_icon.Get().RawPtr()) : "", 72);
-        app_icon_->SetMinimumSize(100,100);
-        app_icon_->SetMaximumSize(100,100);
+        app_icon_->SetMinimumSize(style.GetAppIconAreaWidth(), style.GetAppIconAreaWidth());
+        app_icon_->SetMaximumSize(style.GetAppIconAreaWidth(), style.GetAppIconAreaWidth());
         icon_layout->AddView(app_icon_, 0);
 
         app_rating_ = new PreviewRatingsWidget();
@@ -188,7 +190,7 @@ void ApplicationPreview::SetupViews()
 
         /////////////////////
         // Data
-        int top_app_info_max_width = details_width - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() - style.GetAppIconAreaWidth() - style.GetSpaceBetweenIconAndDetails();;
+        int top_app_info_max_width = details_width - style.GetAppIconAreaWidth() - style.GetSpaceBetweenIconAndDetails();;
 
         nux::VLayout* app_data_layout = new nux::VLayout();
         app_data_layout->SetSpaceBetweenChildren(16);
@@ -253,9 +255,9 @@ void ApplicationPreview::SetupViews()
       app_description_->SetFont(style.app_description_font().c_str());
       app_description_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_TOP);
       app_description_->SetLines(-20);
-      app_description_->SetLineSpacing(1.5);
+      app_description_->SetLineSpacing(2);
       app_description_->SetText(app_preview_model->description);
-      app_description_->SetMaximumWidth(details_width - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
+      app_description_->SetMaximumWidth(details_width);
 
       app_info_layout->AddView(app_description_);
       if (preview_model_->GetInfoHints().size() > 0)
@@ -267,27 +269,13 @@ void ApplicationPreview::SetupViews()
 
       /////////////////////
       // Actions
-      nux::VLayout* actions_container_layout = new nux::VLayout();
-      actions_container_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
-      actions_container_layout->SetSpaceBetweenChildren(0);
-      actions_container_layout->AddSpace(0, 1);
-
-      nux::HLayout* actions_layout = new nux::HLayout();
-      actions_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenActions());
-      actions_container_layout->AddLayout(actions_layout, 0);
-
-      for (dash::Preview::ActionPtr action : preview_model_->GetActions())
-      {
-        ActionButton* button = new ActionButton(action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
-        button->click.connect(sigc::bind(sigc::mem_fun(this, &ApplicationPreview::OnActionActivated), action->id));
-
-        actions_layout->AddView(button, 0);
-      }
+      nux::Layout* actions_layout = BuildGridActionsLayout(preview_model_->GetActions(), (details_width - style.GetSpaceBetweenActions()) / 2, style.GetActionButtonHeight());
+      actions_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
       ///////////////////
 
     full_data_layout_->AddLayout(main_app_info, 0);
     full_data_layout_->AddView(app_info, 1);
-    full_data_layout_->AddLayout(actions_container_layout, 0);
+    full_data_layout_->AddLayout(actions_layout, 0);
     /////////////////////
   
   image_data_layout->AddView(app_image, 0);
