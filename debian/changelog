@@ -1,4 +1,4 @@
-unity (6.0.0-0ubuntu4) UNRELEASED; urgency=low
+unity (6.0.0-0ubuntu5) UNRELEASED; urgency=low
 
   * debian/rules:
     - added override for dh_shlibdeps to point it to the private directory of
