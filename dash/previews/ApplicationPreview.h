@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright 2011 Canonical Ltd.
+ * Copyright 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3, as
@@ -65,11 +65,13 @@ protected:
   void SetupViews();
 
 
+
 protected:
+  nux::VLayout* full_data_layout_;
+  nux::VLayout* title_subtitle_layout_;
+
   IconTexture* app_icon_;
   PreviewRatingsWidget* app_rating_;
-  nux::VLayout* full_data_layout_;
-
   nux::StaticCairoText* title_;
   nux::StaticCairoText* subtitle_;
   nux::StaticCairoText* license_;

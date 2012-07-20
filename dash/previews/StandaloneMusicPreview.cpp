@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Canonical Ltd.
+ * Copyright 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3, as published
@@ -26,7 +26,7 @@
 #include <Nux/Layout.h>
 #include <NuxCore/Logger.h>
 #include <UnityCore/Variant.h>
-#include <UnityCore/MusicPreview.h>
+#include <UnityCore/Preview.h>
 #include <unity-protocol.h>
 #include "PreviewFactory.h"
 
@@ -45,6 +45,11 @@
 
 using namespace unity;
 using namespace unity::dash;
+
+namespace
+{
+nux::logging::Logger logger("unity.dash.StandaloneGenericPreview");
+}
 
 class DummyView : public nux::View
 {
@@ -117,7 +122,7 @@ protected:
 class TestRunner :  public previews::StandaloneDBusTestRunner 
 {
 public:
-  TestRunner();
+  TestRunner(std::string const& search_string);
   ~TestRunner ();
 
   static void InitWindowThread (nux::NThread* thread, void* InitData);
@@ -125,23 +130,44 @@ public:
   void NavRight();
   void NavLeft();
 
- 
-
   previews::PreviewContainer::Ptr container_;
   nux::Layout *layout_;
-  int nav_iter;
+  unsigned int nav_iter;
+  previews::Navigation nav_direction_;
+  std::string search_string_;
+  bool first_;
 };
 
-TestRunner::TestRunner ()
+TestRunner::TestRunner (std::string const& search_string)
 : StandaloneDBusTestRunner("com.canonical.Unity.Lens.Music","/com/canonical/unity/lens/music")
+, search_string_(search_string)
+, first_(true)
 {
   nav_iter = 0;
-  preview_ready.connect([&](std::string const& uri, glib::Object<UnityProtocolPreview> const& proto_obj)
-  {
-    glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
-                glib::StealRef());
+  nav_direction_ = previews::Navigation::RIGHT;
 
-    container_->Preview(v, previews::Navigation::RIGHT);
+  connected.connect([&](bool connected) {
+    if (connected)
+    {
+      Search(search_string_);
+    } 
+  });
+
+  results_->result_added.connect([&](Result const& result)
+  {
+    previews::Navigation navDisabled =  previews::Navigation::BOTH;
+    if (nav_iter < results_->count.Get())
+      navDisabled = previews::Navigation( (unsigned int)results_ & ~((unsigned int)previews::Navigation::RIGHT));
+    if (results_->count.Get() > 0 && nav_iter > 0)
+      navDisabled = previews::Navigation( (unsigned int)results_ & ~((unsigned int)previews::Navigation::LEFT));
+
+    if (first_)
+    {
+      first_ = false;
+      Preview(result.uri);
+    }
+
+    container_->DisableNavButton(navDisabled);
   });
 }
 
@@ -159,78 +185,49 @@ void TestRunner::Init ()
   layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
   layout_->AddView(dummyView, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   nux::GetWindowThread()->SetLayout (layout_);
+
+  container_->DisableNavButton(previews::Navigation::BOTH);
+  
+  preview_ready.connect([&](std::string const& uri, glib::Object<UnityProtocolPreview> const& proto_obj)
+  {
+    glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
+                glib::StealRef());
+
+    container_->Preview(uri, v, nav_direction_);
+  });
 }
 
 void TestRunner::NavRight()
 {
-  std::string uri ="0x9dda078:album://Led Zeppelin/Houses of the Holy";
-  Preview(uri);
+  nav_direction_ = previews::Navigation::RIGHT;
+  Result result = results_->RowAtIndex(++nav_iter);
+  LOG_DEBUG(logger) << "Preview: " << result.uri.Get();
+  Preview(result.uri);
+
+  previews::Navigation navDisabled =  previews::Navigation::BOTH;
+  if (nav_iter < results_->count.Get())
+    navDisabled = previews::Navigation( (unsigned int)results_ & ~((unsigned int)previews::Navigation::RIGHT));
+  if (results_->count.Get() > 0 && nav_iter > 0)
+    navDisabled = previews::Navigation( (unsigned int)results_ & ~((unsigned int)previews::Navigation::LEFT));
+
+  container_->DisableNavButton(navDisabled);
 }
 
 void TestRunner::NavLeft()
 {
-  std::string uri ="0x9dda078:album://Led Zeppelin/Houses of the Holy";
-  Preview(uri);
+  nav_direction_ = previews::Navigation::LEFT;
+  Result result = results_->RowAtIndex(--nav_iter);
+  LOG_DEBUG(logger) << "Preview: " << result.uri.Get();
+  Preview(result.uri);
+
+  previews::Navigation navDisabled =  previews::Navigation::BOTH;
+  if (nav_iter < results_->count.Get())
+    navDisabled = previews::Navigation( (unsigned int)results_ & ~((unsigned int)previews::Navigation::RIGHT));
+  if (results_->count.Get() > 0 && nav_iter > 0)
+    navDisabled = previews::Navigation( (unsigned int)results_ & ~((unsigned int)previews::Navigation::LEFT));
+
+  container_->DisableNavButton(navDisabled);
 }
-/*
-void TestRunner::NavRight()
-{
-   std::stringstream app_name;
-  app_name << "Title " << ++nav_iter;
-
-  const char* subtitle = "The Beatles, 1986";
-  const char* description = "";
-
- // creates a generic preview object
-  glib::Object<GIcon> image(g_icon_new_for_string("./Beatles.png", NULL));
-  glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/5/lens-nav-music.svg", NULL));
-  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/5/lens-nav-home.svg", NULL));
-
-  glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_music_preview_new()));
-
-  unity_protocol_preview_set_title(proto_obj, app_name.str().c_str());
-  unity_protocol_preview_set_subtitle(proto_obj, subtitle);
-  unity_protocol_preview_set_description(proto_obj, description);
-  unity_protocol_preview_set_thumbnail(proto_obj, image);
-  unity_protocol_preview_add_action(proto_obj, "play-album", "Play Album", NULL, 0);
-  unity_protocol_preview_add_info_hint(proto_obj, "run-time", "", iconHint1, g_variant_new("s", "10 Tracks, 37.50 min"));
-  unity_protocol_preview_add_info_hint(proto_obj, "genre",  "", iconHint2, g_variant_new("s", "60s, Rock 'n Roll, britpop"));
-
-  glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
-                  glib::StealRef());
-
-  container_->preview(v, previews::Navigation::RIGHT);
-}
-
-void TestRunner::NavLeft()
-{
-   std::stringstream app_name;
-  app_name << "Title " << --nav_iter;
-
-  const char* subtitle = "The Beatles, 1986";
-  const char* description = "";
-
- // creates a generic preview object
-  glib::Object<GIcon> image(g_icon_new_for_string("./Beatles.png", NULL));
-  glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/5/lens-nav-music.svg", NULL));
-  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/5/lens-nav-home.svg", NULL));
-
-  glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_music_preview_new()));
-
-  unity_protocol_preview_set_title(proto_obj, app_name.str().c_str());
-  unity_protocol_preview_set_subtitle(proto_obj, subtitle);
-  unity_protocol_preview_set_description(proto_obj, description);
-  unity_protocol_preview_set_thumbnail(proto_obj, image);
-  unity_protocol_preview_add_action(proto_obj, "play-album", "Play Album", NULL, 0);
-  unity_protocol_preview_add_info_hint(proto_obj, "run-time", "", iconHint1, g_variant_new("s", "10 Tracks, 37.50 min"));
-  unity_protocol_preview_add_info_hint(proto_obj, "genre",  "", iconHint2, g_variant_new("s", "60s, Rock 'n Roll, britpop"));
-
-  glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
-                  glib::StealRef());
-
-  container_->preview(v, previews::Navigation::LEFT);
-}
-*/
 
 void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)
 {
@@ -244,16 +241,22 @@ int main(int argc, char **argv)
 
   gtk_init (&argc, &argv);
 
+  if (argc < 2)
+  {
+    printf("Usage: music_previews SEARCH_STRING");
+    return 1;
+  }
+
   nux::NuxInitialize(0);
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
-  nux::logging::Logger("unity").SetLogLevel(nux::logging::Debug);
+  nux::logging::Logger("unity").SetLogLevel(nux::logging::Trace);
   // The instances for the pseudo-singletons.
   unity::Settings settings;
   unity::dash::previews::Style panel_style;
   unity::dash::Style dash_style;
   unity::dash::PreviewFactory preview_factory;
 
-  TestRunner *test_runner = new TestRunner ();
+  TestRunner *test_runner = new TestRunner (argv[1]);
   wt = nux::CreateGUIThread(TEXT("Unity Preview"),
                             WIDTH, HEIGHT,
                             0,

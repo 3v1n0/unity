@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright 2011 Canonical Ltd.
+ * Copyright 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3, as
@@ -43,21 +43,6 @@ namespace dash
 {
 namespace previews
 {
-
-
-#define TMP_VIEW(name, colour) \
-class TmpView_##name : public nux::View \
-{ \
-public: \
-  TmpView_##name():View(NUX_TRACKER_LOCATION) {} \
-  ~TmpView_##name() {} \
-  virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw) { \
-    gPainter.Paint2DQuadColor(gfx_engine, GetGeometry(), colour); \
-  } \
-  virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw) {} \
-};
-
-TMP_VIEW(Tracks, nux::Color(0xAA, 0x00, 0x00, 0.1f))
 
 namespace
 {
@@ -150,31 +135,36 @@ void MusicPreview::SetupViews()
 
   previews::Style& style = dash::previews::Style::Instance();
 
+  int details_width = style.GetPreviewWidth() - style.GetPreviewHeight() - style.GetPanelSplitWidth();
+
   nux::HLayout* image_data_layout = new nux::HLayout();
-  image_data_layout->SetSpaceBetweenChildren(12);
+  image_data_layout->SetSpaceBetweenChildren(style.GetPanelSplitWidth());
 
   CoverArt* album_cover = new CoverArt();
   album_cover->SetImage(preview_model_->image.Get().RawPtr() ? g_icon_to_string(preview_model_->image.Get().RawPtr()) : "");
   album_cover->SetFont(style.no_preview_image_font());
-  album_cover->SetMinimumWidth(style.GetImageWidth());
-  album_cover->SetMaximumWidth(style.GetImageWidth());
+  album_cover->SetMinMaxSize(style.GetPreviewHeight(), style.GetPreviewHeight());
 
     /////////////////////
     // App Data Panel
     full_data_layout_ = new nux::VLayout();
-    full_data_layout_->SetPadding(10);
+    full_data_layout_->SetPadding(style.GetDetailsTopMargin(), 0, style.GetDetailsBottomMargin(), style.GetDetailsLeftMargin());
     full_data_layout_->SetSpaceBetweenChildren(16);
 
       /////////////////////
       // Music Info
+      int top_app_info_max_width = details_width - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() - style.GetSpaceBetweenIconAndDetails();;
+
       nux::VLayout* album_data_layout = new nux::VLayout();
-      album_data_layout->SetSpaceBetweenChildren(8);
+      album_data_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
 
       title_ = new nux::StaticCairoText(preview_model_->title);
       title_->SetFont(style.title_font().c_str());
+      title_->SetMaximumWidth(top_app_info_max_width);
 
       subtitle_ = new nux::StaticCairoText(preview_model_->subtitle);
       subtitle_->SetFont(style.subtitle_size_font().c_str());
+      subtitle_->SetMaximumWidth(top_app_info_max_width);
 
       album_data_layout->AddView(title_, 1);
       album_data_layout->AddView(subtitle_, 1);
@@ -207,15 +197,17 @@ void MusicPreview::SetupViews()
         /////////////////////
         // Actions
         nux::VLayout* actions_container_layout = new nux::VLayout();
+        actions_container_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
         actions_container_layout->SetSpaceBetweenChildren(0);
         actions_container_layout->AddSpace(0, 1);
+        
         nux::VLayout* actions_layout = new nux::VLayout();
-        actions_layout->SetSpaceBetweenChildren(10);
+        actions_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenActions());
         actions_container_layout->AddLayout(actions_layout, 0);
 
         for (dash::Preview::ActionPtr action : preview_model_->GetActions())
         {
-          ActionButton* button = new ActionButton(action->display_name, NUX_TRACKER_LOCATION);
+          ActionButton* button = new ActionButton(action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
           button->click.connect(sigc::bind(sigc::mem_fun(this, &MusicPreview::OnActionActivated), action->id));
 
           actions_layout->AddView(button, 0);
@@ -238,12 +230,26 @@ void MusicPreview::SetupViews()
 
 void MusicPreview::OnPlayTrack(std::string const& uri)
 { 
-  LOG_ERROR(logger) << "Play not connected";
+  dash::MusicPreview* music_preview_model = dynamic_cast<dash::MusicPreview*>(preview_model_.get());
+  if (!music_preview_model)
+  {
+    LOG_ERROR(logger) << "Play failed. No preview found";
+    return;
+  }
+
+  music_preview_model->PlayUri(uri);
 }
 
 void MusicPreview::OnPauseTrack(std::string const& uri)
 {
-  LOG_ERROR(logger) << "Pause not connected";
+  dash::MusicPreview* music_preview_model = dynamic_cast<dash::MusicPreview*>(preview_model_.get());
+  if (!music_preview_model)
+  {
+    LOG_ERROR(logger) << "Pause failed. No preview found";
+    return;
+  }
+
+  music_preview_model->PauseUri(uri);
 }
 
 

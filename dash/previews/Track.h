@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright 2011 Canonical Ltd.
+ * Copyright 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3, as
@@ -65,12 +65,15 @@ protected:
   virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);
   
+  void SetupBackground();
   void SetupViews();
 
   bool HasStatusFocus() const;
 
   void OnTrackControlMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void OnTrackControlMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags);
+
+  void UpdateTrackState();
 
 protected:
   std::string uri_;
@@ -79,23 +82,19 @@ protected:
   nux::StaticCairoText* title_;
   nux::StaticCairoText* duration_;
 
+  typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
+  LayerPtr focus_layer_;
+  LayerPtr progress_layer_;
+
   nux::Layout* title_layout_;
   nux::Layout* duration_layout_;
   nux::Layout* status_play_layout_;
   nux::Layout* status_pause_layout_;
   nux::Layout* track_number_layout_;
   nux::LayeredLayout* track_status_layout_;
-  nux::Area* persistant_status_;
 
-  bool track_busy_;
-
-  enum class TrackState {
-    STOPPED,
-    PAUSED,
-    PLAYING,
-  };
-  TrackState track_state;
-
+  dash::PlayState play_state_;
+  bool mouse_over_;
 };
 
 }

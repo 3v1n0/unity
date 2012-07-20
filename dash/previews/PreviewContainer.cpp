@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright 2011 Canonical Ltd.
+ * Copyright 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3, as
@@ -26,6 +26,7 @@
 
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/TimeUtil.h"
+#include "unity-shared/PreviewStyle.h"
 #include "PreviewNavigator.h"
 #include "PreviewFactory.h"
 #include <boost/math/constants/constants.hpp>
@@ -67,7 +68,10 @@ public:
   {
     if (preview)
     {
-        AddView(preview.GetPointer());
+      previews::Style& style = dash::previews::Style::Instance();
+      preview->SetMinMaxSize(style.GetPreviewWidth(), style.GetPreviewHeight());
+
+      AddView(preview.GetPointer());
       preview->SetVisible(false);
     }
     PreviewSwipe swipe;
@@ -77,7 +81,7 @@ public:
 
     if (!animating_)
     {
-      UpdateAnimationProgress(0.0);
+      UpdateAnimationProgress(0.0, 0.0);
     }
     start_navigation.emit();
   }
@@ -88,7 +92,7 @@ public:
 
   float GetAnimationProgress() const { return progress_; }
 
-  void UpdateAnimationProgress(float progress)
+  void UpdateAnimationProgress(float progress, float curve_progress)
   {
     progress_ = progress;
 
@@ -99,6 +103,11 @@ public:
         animating_= true;
         swipe_ = push_preview_.front();
         push_preview_.pop();
+
+        if (current_preview_)
+          current_preview_->OnNavigateOut();
+        if (swipe_.preview)
+          swipe_.preview->OnNavigateIn();
       }
     }
 
@@ -112,9 +121,9 @@ public:
 
         nux::Geometry swipeOut = geometry;
         if (swipe_.direction == Navigation::RIGHT)
-          swipeOut.OffsetPosition(-(progress_ * (geometry.GetWidth() + parent_->nav_left_->GetGeometry().GetWidth())), 0);
+          swipeOut.OffsetPosition(-(curve_progress * (geometry.GetWidth() + parent_->nav_left_->GetGeometry().GetWidth())), 0);
         else if (swipe_.direction == Navigation::LEFT)
-          swipeOut.OffsetPosition(progress_* (geometry.GetWidth() + parent_->nav_right_->GetGeometry().GetWidth()), 0);
+          swipeOut.OffsetPosition(curve_progress* (geometry.GetWidth() + parent_->nav_right_->GetGeometry().GetWidth()), 0);
         current_preview_->SetGeometry(swipeOut);
       }
  
@@ -125,9 +134,9 @@ public:
 
         nux::Geometry swipeIn = geometry;
         if (swipe_.direction == Navigation::RIGHT)
-          swipeIn.OffsetPosition(float(geometry.GetWidth() + parent_->nav_right_->GetGeometry().GetWidth()) - (progress_ * (geometry.GetWidth() + parent_->nav_right_->GetGeometry().GetWidth())), 0);
+          swipeIn.OffsetPosition(float(geometry.GetWidth() + parent_->nav_right_->GetGeometry().GetWidth()) - (curve_progress * (geometry.GetWidth() + parent_->nav_right_->GetGeometry().GetWidth())), 0);
         else if (swipe_.direction == Navigation::LEFT)
-          swipeIn.OffsetPosition(-((1.0-progress_)*(geometry.GetWidth() + parent_->nav_left_->GetGeometry().GetWidth())), 0);
+          swipeIn.OffsetPosition(-((1.0-curve_progress)*(geometry.GetWidth() + parent_->nav_left_->GetGeometry().GetWidth())), 0);
         swipe_.preview->SetGeometry(swipeIn);
       }
     }
@@ -135,12 +144,17 @@ public:
     if (progress >= 1.0)
     {
       animating_ = false;
+      if (current_preview_)
+      {
+        RemoveChildObject(current_preview_.GetPointer());
+        current_preview_.Release();
+      }
       if (swipe_.preview)
       {
-        if (current_preview_)
-          RemoveChildObject(current_preview_.GetPointer());
         current_preview_ = swipe_.preview;
         swipe_.preview.Release();
+        if (current_preview_)
+          current_preview_->OnNavigateInComplete();
       } 
 
       // another swipe?
@@ -218,11 +232,11 @@ PreviewContainer::~PreviewContainer()
 {
 }
 
-void PreviewContainer::Preview(glib::Variant const& preview, Navigation direction)
+void PreviewContainer::Preview(std::string const& preview_pri, glib::Variant const& preview_data, Navigation direction)
 {
-  PreviewFactoryOperator previewOperator(PreviewFactory::Instance().Item(preview));
+  PreviewFactoryOperator previewOperator(PreviewFactory::Instance().Item(preview_data));
 
-  dash::Preview::Ptr model = previewOperator.CreateModel();
+  dash::Preview::Ptr model = previewOperator.CreateModel(preview_pri);
   previews::Preview::Ptr preview_view = previewOperator.CreateView(model);
 
   content_layout_->PushPreview(preview_view, direction);
@@ -316,7 +330,7 @@ void PreviewContainer::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_d
     }
     else if (content_layout_ && content_layout_->IsAnimating())
     {
-      content_layout_->UpdateAnimationProgress(1.0f);
+      content_layout_->UpdateAnimationProgress(1.0f, 1.0f);
     }
 
     content_layout_->ProcessDraw2(gfx_engine, force_draw);
@@ -343,12 +357,32 @@ bool PreviewContainer::AnimationInProgress()
   return false;
 }
 
+static float easeInOutQuart(float t)
+{
+    t*=2.0f;
+    if (t < 1) return 0.5f*t*t*t*t;
+    else {
+        t -= 2.0f;
+        return -0.5f * (t*t*t*t- 2);
+    }
+}
+
+// static float easeInOutCubic(float t)
+// {
+//     t*=2.0f;
+//     if(t < 1.0f) {
+//         return 0.5f*t*t*t;
+//     } else {
+//         t -= 2.0f;
+//         return 0.5f*(t*t*t + 2);
+//     }
+// }
+
 float PreviewContainer::GetSwipeAnimationProgress(struct timespec const& current) const
 {
   int time_delta = TimeUtil::TimeDelta(&current, &last_progress_time_);
   float progress = content_layout_->GetAnimationProgress() + (navigation_progress_speed_ * time_delta);
 
-  // ease in/out.
   return progress;
 }
 
@@ -366,7 +400,8 @@ bool PreviewContainer::Iteration()
 
   timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
-  content_layout_->UpdateAnimationProgress(GetSwipeAnimationProgress(current));
+  float progress = GetSwipeAnimationProgress(current);
+  content_layout_->UpdateAnimationProgress(progress, easeInOutQuart(progress)); // ease in/out.
   last_progress_time_ = current;
 
   QueueDraw();

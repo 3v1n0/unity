@@ -60,10 +60,3 @@ target_link_libraries (app_previews previews-lib unity-shared)
 add_executable (music_previews StandaloneMusicPreview.cpp)
 add_dependencies (music_previews previews-lib)
 target_link_libraries (music_previews previews-lib unity-shared)
-
-# 
-# Generic Standalone variant
-#
-add_executable (generic_previews StandaloneGenericPreview.cpp)
-add_dependencies (generic_previews previews-lib)
-target_link_libraries (generic_previews previews-lib unity-shared)

@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright 2011 Canonical Ltd.
+ * Copyright 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3, as
@@ -58,7 +58,7 @@ public:
   PreviewContainer(NUX_FILE_LINE_PROTO);
   virtual ~PreviewContainer();
 
-  void Preview(glib::Variant const& preview, Navigation direction);
+  void Preview(std::string const& preview_pri, glib::Variant const& preview, Navigation direction);
 
   // calling this should disable the nav buttons to the left or the right of the preview
   void DisableNavButton(Navigation button);

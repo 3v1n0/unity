@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright 2011 Canonical Ltd.
+ * Copyright 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3, as
@@ -90,7 +90,7 @@ PreviewFactory& PreviewFactory::Instance()
 
 bool PreviewFactory::RegisterItem(std::string const& renderer_name, IPreviewFactoryItem*const item)
 {
-  LOG_INFO(logger) << "Registering dash preview " << renderer_name; 
+  LOG_TRACE(logger) << "Registering dash preview " << renderer_name; 
 
   if (factory_items_.find(renderer_name) != factory_items_.end())
   {
@@ -129,13 +129,9 @@ PreviewFactoryOperator PreviewFactory::Item(glib::Object<GObject> const& proto_o
       unity_protocol_preview_get_renderer_name(
         UNITY_PROTOCOL_PREVIEW(proto_obj.RawPtr())));
 
-  LOG_TRACE(logger) << "Fetch preview item: " << renderer_name;
-
   auto iter = factory_items_.find(renderer_name);
   if (iter == factory_items_.end())
   {
-    LOG_TRACE(logger) << "No preview factor item for '" << renderer_name << "'; using generic preview";
-
     iter = factory_items_.find("preview-generic");
     if (iter != factory_items_.end())
     {

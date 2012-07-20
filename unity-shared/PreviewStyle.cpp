@@ -113,9 +113,64 @@ int Style::GetNavigatorWidth() const
   return 42;
 }
 
-int Style::GetImageWidth() const
+int Style::GetPreviewHeight() const
 {
-  return 400;
+  return 390;
+}
+
+int Style::GetPreviewWidth() const
+{
+  return 796;
+}
+
+int Style::GetDetailsTopMargin() const
+{
+  return 5;
+}
+
+int Style::GetDetailsBottomMargin() const
+{
+  return 10;
+}
+
+int Style::GetDetailsRightMargin() const
+{
+  return 10;
+}
+
+int Style::GetDetailsLeftMargin() const
+{
+  return 10;
+}
+
+int Style::GetPanelSplitWidth() const
+{
+  return 16;
+}
+
+int Style::GetAppIconAreaWidth() const
+{
+  return 100;
+}
+
+int Style::GetSpaceBetweenTitleAndSubtitle() const
+{
+  return 6;
+}
+
+int Style::GetSpaceBetweenIconAndDetails() const
+{
+  return 18;
+}
+
+int Style::GetTrackHeight() const
+{
+  return 28;
+}
+
+int Style::GetSpaceBetweenActions() const
+{
+  return 10;
 }
 
 std::string Style::title_font() const
@@ -128,7 +183,7 @@ std::string Style::subtitle_size_font() const
 }
 std::string Style::app_license_font() const
 {
-  return "Ubuntu Light 9.5";
+  return "Ubuntu Light 10";
 }
 std::string Style::app_last_update_font() const
 {

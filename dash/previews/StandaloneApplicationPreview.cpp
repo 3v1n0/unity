@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Canonical Ltd.
+ * Copyright 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3, as published
@@ -14,7 +14,7 @@
  * version 3 along with this program.  If not, see
  * <http://www.gnu.org/licenses/>
  *
- * Authored by: Gordon Allott <gord.allott@canonical.com>
+ * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  *
  */
 #include <gtk/gtk.h>
@@ -150,10 +150,10 @@ void TestRunner::Init ()
   nux::GetWindowThread()->SetLayout (layout_);
 
 
-   std::stringstream app_name;
-  app_name << "Title " << nav_iter;
+  std::stringstream app_name;
+  app_name << "Yellow Submarine Eleanoewee ew";
 
-  const char* subtitle = "Version 3.2, Size 32 MB";
+  const char* subtitle = "The Beatles, 1986";
   const char* description = "Skype is a proprietary voice-over-Internet Protocol service and software application originally created by Niklas Zennström and Janus Friis in 2003, and owned by Microsoft since 2011. \
 The service allows users to communicate with peers by voice, video, and instant messaging over the Internet. Phone calls may be placed to recipients on the traditional telephone networks. Calls to other users within the Skype service are free of charge, while calls to landline telephones and mobile phones are charged via a debit-based user account system.";
 
@@ -178,8 +178,8 @@ The service allows users to communicate with peers by voice, video, and instant 
   unity_protocol_preview_set_subtitle(proto_obj, subtitle);
   unity_protocol_preview_set_description(proto_obj, description);
   unity_protocol_preview_set_thumbnail(proto_obj, icon);
-  unity_protocol_preview_add_action(proto_obj, "uninstall", "Uninstall", NULL, 0);
-  unity_protocol_preview_add_action(proto_obj, "launch", "Launch", NULL, 0);
+  unity_protocol_preview_add_action(proto_obj, "uninstall", "Uninstall", iconHint1, 0);
+  unity_protocol_preview_add_action(proto_obj, "launch", "Launch", iconHint2, 0);
   unity_protocol_preview_add_info_hint(proto_obj, "time", "Total time", iconHint1, g_variant_new("s", "16 h 34miin 45sec"));
   unity_protocol_preview_add_info_hint(proto_obj, "energy",  "Energy", iconHint2, g_variant_new("s", "58.07 mWh"));
   unity_protocol_preview_add_info_hint(proto_obj, "load",  "CPU Load", iconHint3, g_variant_new("i", 12));
@@ -188,7 +188,7 @@ The service allows users to communicate with peers by voice, video, and instant 
   glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
                   glib::StealRef());
 
-  container_->Preview(v, previews::Navigation::RIGHT);
+  container_->Preview("", v, previews::Navigation::RIGHT);
 
 }
 
@@ -223,8 +223,8 @@ The service allows users to communicate with peers by voice, video, and instant 
   unity_protocol_preview_set_subtitle(proto_obj, subtitle);
   unity_protocol_preview_set_description(proto_obj, description);
   unity_protocol_preview_set_thumbnail(proto_obj, icon);
-  unity_protocol_preview_add_action(proto_obj, "uninstall", "Uninstall", NULL, 0);
-  unity_protocol_preview_add_action(proto_obj, "launch", "Launch", NULL, 0);
+  unity_protocol_preview_add_action(proto_obj, "uninstall", "Uninstall", iconHint1, 0);
+  unity_protocol_preview_add_action(proto_obj, "launch", "Launch", iconHint2, 0);
   unity_protocol_preview_add_info_hint(proto_obj, "time", "Total time", iconHint1, g_variant_new("s", "16 h 34miin 45sec"));
   unity_protocol_preview_add_info_hint(proto_obj, "energy",  "Energy", iconHint2, g_variant_new("s", "58.07 mWh"));
   unity_protocol_preview_add_info_hint(proto_obj, "load",  "CPU Load", iconHint3, g_variant_new("d", 12.1));
@@ -233,7 +233,7 @@ The service allows users to communicate with peers by voice, video, and instant 
   glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
                   glib::StealRef());
 
-  container_->Preview(v, previews::Navigation::RIGHT);
+  container_->Preview("", v, previews::Navigation::RIGHT);
 }
 
 void TestRunner::NavLeft()
@@ -266,8 +266,8 @@ The service allows users to communicate with peers by voice, video, and instant 
   unity_protocol_preview_set_subtitle(proto_obj, subtitle);
   unity_protocol_preview_set_description(proto_obj, description);
   unity_protocol_preview_set_thumbnail(proto_obj, icon);
-  unity_protocol_preview_add_action(proto_obj, "uninstall", "Uninstall", NULL, 0);
-  unity_protocol_preview_add_action(proto_obj, "launch", "Launch", NULL, 0);
+  unity_protocol_preview_add_action(proto_obj, "uninstall", "Uninstall", iconHint1, 0);
+  unity_protocol_preview_add_action(proto_obj, "launch", "Launch", iconHint2, 0);
   unity_protocol_preview_add_info_hint(proto_obj, "time", "Total time", iconHint1, g_variant_new("s", "16 h 34miin 45sec"));
   unity_protocol_preview_add_info_hint(proto_obj, "energy",  "Energy", iconHint2, g_variant_new("s", "58.07 mWh"));
   unity_protocol_preview_add_info_hint(proto_obj, "load",  "CPU Load", iconHint3, g_variant_new("i", 22));
@@ -275,7 +275,7 @@ The service allows users to communicate with peers by voice, video, and instant 
   glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
                   glib::StealRef());
 
-  container_->Preview(v, previews::Navigation::LEFT);
+  container_->Preview("", v, previews::Navigation::LEFT);
 }
 
 void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)

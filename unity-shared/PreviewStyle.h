@@ -57,7 +57,17 @@ public:
   static Style& Instance();
 
   int GetNavigatorWidth() const;
-  int GetImageWidth() const;
+  int GetPreviewHeight() const;
+  int GetPreviewWidth() const;
+
+  int GetDetailsTopMargin() const;
+  int GetDetailsBottomMargin() const;
+  int GetDetailsRightMargin() const;
+  int GetDetailsLeftMargin() const;
+  int GetPanelSplitWidth() const;
+
+  int GetSpaceBetweenTitleAndSubtitle() const;
+  int GetSpaceBetweenActions() const;
 
 
   std::string title_font() const;
@@ -72,11 +82,16 @@ public:
   std::string info_hint_font() const;
   std::string user_rating_font() const;
   std::string no_preview_image_font() const;
+
+  int GetAppIconAreaWidth() const;
+  int GetSpaceBetweenIconAndDetails() const;
    ////////////////////////////////
 
   ////////////////////////////////
   // Music Preview
   std::string track_font() const;
+
+  int GetTrackHeight() const;
   ////////////////////////////////
   
 

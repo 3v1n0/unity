@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright 2011 Canonical Ltd.
+ * Copyright 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3, as
@@ -21,9 +21,11 @@
  */
 
 #include "Tracks.h"
-#include "unity-shared/IntrospectableWrappers.h"
 #include <NuxCore/Logger.h>
 #include <Nux/VLayout.h>
+#include "unity-shared/IntrospectableWrappers.h"
+#include "unity-shared/PlacesVScrollBar.h"
+#include "unity-shared/PreviewStyle.h"
 #include <UnityCore/Track.h>
 
 
@@ -103,15 +105,15 @@ void Tracks::AddProperties(GVariantBuilder* builder)
 
 void Tracks::SetupViews()
 {
+  SetVScrollBar(new dash::PlacesVScrollBar(NUX_TRACKER_LOCATION));
   layout_ = new TrackLayout();
+  layout_->SetPadding(0, previews::Style::Instance().GetDetailsRightMargin(), 0, 0);
   layout_->SetSpaceBetweenChildren(1);
   SetLayout(layout_);
 }
 
 void Tracks::OnTrackUpdated(dash::Track const& track_row)
 {
-  LOG_DEBUG(logger) << "OnTrackUpdated for " << track_row.title.Get();
-
   auto pos = m_tracks.find(track_row.uri.Get());
   if (pos == m_tracks.end())
     return;
@@ -121,19 +123,21 @@ void Tracks::OnTrackUpdated(dash::Track const& track_row)
 
 void Tracks::OnTrackAdded(dash::Track const& track_row)
 {
-  LOG_DEBUG(logger) << "OnTrackAdded for " << track_row.title.Get();
+  LOG_TRACE(logger) << "OnTrackAdded for " << track_row.title.Get();
 
   std::string track_uri = track_row.uri.Get();
   if (m_tracks.find(track_uri) != m_tracks.end())
     return;
+
+  previews::Style& style = dash::previews::Style::Instance();
 
   previews::Track::Ptr track_view(new previews::Track(NUX_TRACKER_LOCATION));
   track_view->play.connect([&](std::string const& uri) { play.emit(uri); });
   track_view->pause.connect([&](std::string const& uri) { pause.emit(uri); });
 
   track_view->Update(track_row);
-  track_view->SetMinimumHeight(25);
-  track_view->SetMaximumHeight(25);
+  track_view->SetMinimumHeight(style.GetTrackHeight());
+  track_view->SetMaximumHeight(style.GetTrackHeight());
   layout_->AddView(track_view.GetPointer(), 0);
 
   m_tracks[track_uri] = track_view;
@@ -141,7 +145,7 @@ void Tracks::OnTrackAdded(dash::Track const& track_row)
 
 void Tracks::OnTrackRemoved(dash::Track const& track_row)
 {
-  LOG_DEBUG(logger) << "OnTrackRemoved for " << track_row.title.Get();
+  LOG_TRACE(logger) << "OnTrackRemoved for " << track_row.title.Get();
   
   auto pos = m_tracks.find(track_row.uri.Get());
   if (pos == m_tracks.end())

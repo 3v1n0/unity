@@ -25,39 +25,62 @@
 
 #include <Nux/Nux.h>
 #include <Nux/CairoWrapper.h>
-#include <Nux/Button.h>
+#include <Nux/AbstractButton.h>
+
+namespace nux
+{
+class StaticCairoText;
+}
 
 namespace unity
 {
+class IconTexture;
+
 namespace dash
 {
 
-class ActionButton : public nux::Button
+class ActionButton : public nux::AbstractButton
 {
 public:
-  ActionButton(std::string const& label, NUX_FILE_LINE_PROTO);
+  ActionButton(std::string const& label, std::string const& icon_hint, NUX_FILE_LINE_PROTO);
   ~ActionButton();
+
+  sigc::signal<void, nux::AbstractButton*> click;
+
+  void SetFont(std::string const& font_hint);
+
+  void Activate();
+  void Deactivate();
 
 protected:
   virtual long ComputeContentSize();
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {}
+  virtual void RecvClick(int x, int y, unsigned long button_flags, unsigned long key_flags);
 
   void Init();
   void InitTheme();
   void RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state);
   void RedrawFocusOverlay(nux::Geometry const& geom, cairo_t* cr);
 
+  void BuildLayout(std::string const& label, std::string const& icon_hint);
+
+
   typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
 
-  NuxCairoPtr prelight_;
-  NuxCairoPtr active_;
-  NuxCairoPtr normal_;
-  NuxCairoPtr focus_;
+  NuxCairoPtr cr_prelight_;
+  NuxCairoPtr cr_active_;
+  NuxCairoPtr cr_normal_;
+  NuxCairoPtr cr_focus_;
 
   nux::Geometry cached_geometry_;
 
 private:
-  std::string label_;
+  std::string icon_hint_;
+  std::string font_hint_;
+
+  IconTexture* image_;
+  nux::StaticCairoText* static_text_;
 };
 
 } // namespace dash

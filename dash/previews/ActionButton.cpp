@@ -22,10 +22,13 @@
 #include "unity-shared/DashStyle.h"
 #include "ActionButton.h"
 #include <NuxCore/Logger.h>
+#include <Nux/HLayout.h>
+#include "unity-shared/IconTexture.h"
+#include "unity-shared/StaticCairoText.h"
 
 namespace
 {
-const int kMinButtonHeight = 30;
+const int kMinButtonHeight = 36;
 const int kMinButtonWidth  = 48;
 
 nux::logging::Logger logger("unity.dash.actionbutton");
@@ -36,17 +39,16 @@ namespace unity
 namespace dash
 {
 
-ActionButton::ActionButton(std::string const& label, NUX_FILE_LINE_DECL)
-  : nux::Button(NUX_FILE_LINE_PARAM)
-  , label_(label)
+ActionButton::ActionButton(std::string const& label, std::string const& icon_hint, NUX_FILE_LINE_DECL)
+  : nux::AbstractButton(NUX_FILE_LINE_PARAM)
+  , image_(nullptr)
+  , static_text_(nullptr)
 {
-  SetLayoutPadding(2, 11, 2, 11);
-  Button::SetLabel(label);
 
   SetAcceptKeyNavFocusOnMouseDown(false);
   SetAcceptKeyNavFocusOnMouseEnter(false);
-
   Init();
+  BuildLayout(label, icon_hint);
 }
 
 ActionButton::~ActionButton()
@@ -71,27 +73,83 @@ void ActionButton::Init()
 
 void ActionButton::InitTheme()
 {
-  if (!active_)
+  if (!cr_active_)
   {
     nux::Geometry const& geo = GetGeometry();
 
-    prelight_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &ActionButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)));
-    active_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &ActionButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRESSED)));
-    normal_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &ActionButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
-    focus_.reset(new nux::CairoWrapper(geo, sigc::mem_fun(this, &ActionButton::RedrawFocusOverlay)));
+    cr_prelight_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &ActionButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)));
+    cr_active_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &ActionButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_PRESSED)));
+    cr_normal_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &ActionButton::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
+    cr_focus_.reset(new nux::CairoWrapper(geo, sigc::mem_fun(this, &ActionButton::RedrawFocusOverlay)));
   }
 
   SetMinimumHeight(kMinButtonHeight);
   SetMinimumWidth(kMinButtonWidth);
 }
 
+void ActionButton::BuildLayout(std::string const& label, std::string const& icon_hint)
+{
+  if (icon_hint != icon_hint_)
+  {
+    icon_hint_ = icon_hint;
+    if (image_)
+    {
+      image_->UnReference();
+      image_ = NULL;
+    }
+
+    if (icon_hint_.size()>0)
+    {
+      image_ = new IconTexture(icon_hint, 24);
+      image_->Reference();
+      image_->texture_updated.connect([&](nux::BaseTexture*)
+      {
+        BuildLayout(label_, icon_hint_);
+      });
+      image_->SetInputEventSensitivity(false);
+      image_->SetMinimumSize(24,24);
+      image_->SetMaximumSize(24,24);
+    }
+  }
+
+  if (label != label_)
+  {
+    label_ = label;
+    if (static_text_)
+    {
+      static_text_->UnReference();
+      static_text_ = NULL;
+    }
+
+    if (label_.size()>0)
+    {
+      static_text_ = new nux::StaticCairoText(label_, NUX_TRACKER_LOCATION);
+      if (font_hint_.size()>0)
+        static_text_->SetFont(font_hint_);
+      static_text_->Reference();
+      static_text_->SetInputEventSensitivity(false);
+    }
+  }
+
+  RemoveLayout();
+
+  nux::HLayout* layout = new nux::HLayout();
+  layout->SetHorizontalInternalMargin(6);
+  layout->SetPadding(2, 11, 2, 11);
+  if (image_)
+    layout->AddView(image_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
+  if (static_text_)
+    layout->AddView(static_text_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
+  SetLayout(layout);
+
+  ComputeContentSize();
+  QueueDraw();
+}
+
 void ActionButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
 {
-  int font_size = -1;
-  Style::Instance().Button(cr, faked_state, label_, font_size, Alignment::CENTER, true);
-
-  if (GetLabelFontSize() != font_size)
-    SetLabelFontSize(font_size);
+  int font_size=-1;
+  Style::Instance().Button(cr, faked_state, "", font_size, Alignment::CENTER, true);
 }
 
 void ActionButton::RedrawFocusOverlay(nux::Geometry const& geom, cairo_t* cr)
@@ -101,16 +159,16 @@ void ActionButton::RedrawFocusOverlay(nux::Geometry const& geom, cairo_t* cr)
 
 long ActionButton::ComputeContentSize()
 {
-  long ret = nux::Button::ComputeContentSize();
+  long ret = nux::View::ComputeContentSize();
 
   nux::Geometry const& geo = GetGeometry();
 
   if (cached_geometry_ != geo)
   {
-    if (prelight_) prelight_->Invalidate(geo);
-    if (active_) active_->Invalidate(geo);
-    if (normal_) normal_->Invalidate(geo);
-    if (focus_) focus_->Invalidate(geo);
+    if (cr_prelight_) cr_prelight_->Invalidate(geo);
+    if (cr_active_) cr_active_->Invalidate(geo);
+    if (cr_normal_) cr_normal_->Invalidate(geo);
+    if (cr_focus_) cr_focus_->Invalidate(geo);
 
     cached_geometry_ = geo;
   }
@@ -141,13 +199,13 @@ void ActionButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                        geo.height,
                        col);
 
-  nux::BaseTexture* texture = normal_->GetTexture();
+  nux::BaseTexture* texture = cr_normal_->GetTexture();
   if (Active())
-    texture = active_->GetTexture();
+    texture = cr_active_->GetTexture();
   else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
-    texture = prelight_->GetTexture();
+    texture = cr_prelight_->GetTexture();
   else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
-    texture = active_->GetTexture();
+    texture = cr_active_->GetTexture();
 
   GfxContext.QRP_1Tex(geo.x,
                       geo.y,
@@ -163,12 +221,68 @@ void ActionButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                         geo.y,
                         geo.width,
                         geo.height,
-                        focus_->GetTexture()->GetDeviceTexture(),
+                        cr_focus_->GetTexture()->GetDeviceTexture(),
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
   }
 
   GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
+
+
+  if (GetCompositionLayout())
+  {
+    gPainter.PushPaintLayerStack();
+    {
+      nux::Geometry clip_geo = geo;
+
+      GfxContext.PushClippingRectangle(clip_geo);
+      gPainter.PushPaintLayerStack();
+      GetCompositionLayout()->ProcessDraw(GfxContext, force_draw);
+      gPainter.PopPaintLayerStack();
+      GfxContext.PopClippingRectangle();
+    }
+    gPainter.PopPaintLayerStack();
+  }
+}
+
+void ActionButton::RecvClick(int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  click.emit(this);
+}
+
+void ActionButton::SetFont(std::string const& font_hint)
+{
+  if (static_text_)
+  {
+    static_text_->SetFont(font_hint);
+    ComputeContentSize();
+    QueueDraw();
+  }
+}
+
+
+void ActionButton::Activate()
+{
+  if (active_ == true)
+  {
+    // already active
+    return;
+  }
+
+  active_ = true;
+  QueueDraw();
+}
+
+void ActionButton::Deactivate()
+{
+  if (active_ == false)
+  {
+    // already deactivated
+    return;
+  }
+
+  active_ = false;
+  QueueDraw();
 }
 
 } // namespace dash

@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright 2011 Canonical Ltd.
+ * Copyright 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3, as
@@ -23,8 +23,11 @@
 #include "MoviePreview.h"
 #include "unity-shared/IntrospectableWrappers.h"
 #include <NuxCore/Logger.h>
-#include <Nux/Layout.h>
-#include <PreviewFactory.h>
+#include <Nux/HLayout.h>
+#include <Nux/VLayout.h>
+#include <UnityCore/MoviePreview.h>
+#include "unity-shared/StaticCairoText.h"
+#include "unity-shared/VideoPlayer.h"
 
 namespace unity
 {
@@ -44,26 +47,11 @@ NUX_IMPLEMENT_OBJECT_TYPE(MoviePreview);
 MoviePreview::MoviePreview(dash::Preview::Ptr preview_model)
 : Preview(preview_model)
 {
+  SetupView();
 }
 
 MoviePreview::~MoviePreview()
 {
-}
-
-void MoviePreview::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
-{
-  Preview::Draw(gfx_engine, force_draw);  
-}
-
-void MoviePreview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
-{
-  Preview::DrawContent(gfx_engine, force_draw);
-
-  nux::Geometry base = GetGeometry();
-  gfx_engine.PushClippingRectangle(base);
-
-
-  gfx_engine.PopClippingRectangle();
 }
 
 std::string MoviePreview::GetName() const
@@ -74,6 +62,39 @@ std::string MoviePreview::GetName() const
 void MoviePreview::AddProperties(GVariantBuilder* builder)
 {
   Preview::AddProperties(builder);
+}
+
+void MoviePreview::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
+{
+  Preview::Draw(gfx_engine, force_draw);  
+}
+
+void MoviePreview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
+{
+  if (GetCompositionLayout())
+    GetCompositionLayout()->ProcessDraw(gfx_engine, force_draw);
+}
+
+void MoviePreview::OnNavigateInComplete()
+{
+}
+
+void MoviePreview::OnNavigateOut()
+{
+}
+
+void MoviePreview::SetupBackground()
+{
+}
+
+void MoviePreview::SetupView()
+{
+  dash::MoviePreview* music_preview_model = dynamic_cast<dash::MoviePreview*>(preview_model_.get());
+  if (!music_preview_model)
+    return;
+
+  nux::HLayout* layout = new nux::HLayout();
+  SetLayout(layout);
 }
 
 }

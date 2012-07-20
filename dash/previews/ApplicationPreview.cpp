@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright 2011 Canonical Ltd.
+ * Copyright 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3, as
@@ -25,6 +25,7 @@
 #include "unity-shared/CoverArt.h"
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/StaticCairoText.h"
+#include "unity-shared/PlacesVScrollBar.h"
 #include <UnityCore/ApplicationPreview.h>
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
@@ -50,6 +51,17 @@ namespace
 nux::logging::Logger logger("unity.dash.previews.applicationpreview");
 
 }
+
+class DetailsScrollView : public nux::ScrollView
+{
+public:
+  DetailsScrollView(NUX_FILE_LINE_PROTO)
+  : ScrollView(NUX_FILE_LINE_PARAM)
+  {
+    SetVScrollBar(new dash::PlacesVScrollBar(NUX_TRACKER_LOCATION));
+  }
+
+};
 
 NUX_IMPLEMENT_OBJECT_TYPE(ApplicationPreview);
 
@@ -137,25 +149,26 @@ void ApplicationPreview::SetupViews()
 
   previews::Style& style = dash::previews::Style::Instance();
 
+  int details_width = style.GetPreviewWidth() - style.GetPreviewHeight() - style.GetPanelSplitWidth();
+
   nux::HLayout* image_data_layout = new nux::HLayout();
-  image_data_layout->SetSpaceBetweenChildren(12);
+  image_data_layout->SetSpaceBetweenChildren(style.GetPanelSplitWidth());
 
   CoverArt* app_image = new CoverArt();
   app_image->SetImage(preview_model_->image.Get().RawPtr() ? g_icon_to_string(preview_model_->image.Get().RawPtr()) : "");
   app_image->SetFont(style.no_preview_image_font());
-  app_image->SetMinimumWidth(style.GetImageWidth());
-  app_image->SetMaximumWidth(style.GetImageWidth());
+  app_image->SetMinMaxSize(style.GetPreviewHeight(), style.GetPreviewHeight());
 
     /////////////////////
     // App Data Panel
     full_data_layout_ = new nux::VLayout();
-    full_data_layout_->SetPadding(10);
+    full_data_layout_->SetPadding(style.GetDetailsTopMargin(), 0, style.GetDetailsBottomMargin(), style.GetDetailsLeftMargin());
     full_data_layout_->SetSpaceBetweenChildren(16);
 
       /////////////////////
       // Main App Info
       nux::HLayout* main_app_info = new nux::HLayout();
-      main_app_info->SetSpaceBetweenChildren(16);
+      main_app_info->SetSpaceBetweenChildren(style.GetSpaceBetweenIconAndDetails());
 
         /////////////////////
         // Icon Layout
@@ -171,43 +184,53 @@ void ApplicationPreview::SetupViews()
         app_rating_->SetReviews(app_preview_model->num_ratings);
         icon_layout->AddView(app_rating_, 0);
 
-        // buffer space      
         /////////////////////
 
         /////////////////////
         // Data
-        nux::VLayout* app_data_layout = new nux::VLayout();
-        app_data_layout->SetSpaceBetweenChildren(14);
+        int top_app_info_max_width = details_width - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() - style.GetAppIconAreaWidth() - style.GetSpaceBetweenIconAndDetails();;
 
-        nux::VLayout* title_subtitle_layout = new nux::VLayout();
-        title_subtitle_layout->SetSpaceBetweenChildren(8);
+        nux::VLayout* app_data_layout = new nux::VLayout();
+        app_data_layout->SetSpaceBetweenChildren(16);
+
+        title_subtitle_layout_ = new nux::VLayout();
+        title_subtitle_layout_->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
 
         title_ = new nux::StaticCairoText(app_preview_model->title);
+        title_->SetLines(-1);
         title_->SetFont(style.title_font().c_str());
+        title_->SetMaximumWidth(top_app_info_max_width);
 
         subtitle_ = new nux::StaticCairoText(app_preview_model->subtitle);
         subtitle_->SetFont(style.subtitle_size_font().c_str());
+        subtitle_->SetLines(-1);
+        subtitle_->SetMaximumWidth(top_app_info_max_width);
 
         nux::VLayout* app_updated_copywrite_layout = new nux::VLayout();
         app_updated_copywrite_layout->SetSpaceBetweenChildren(8);
 
         license_ = new nux::StaticCairoText(app_preview_model->license);
         license_->SetFont(style.app_license_font().c_str());
+        license_->SetLines(-1);
+        license_->SetMaximumWidth(top_app_info_max_width);
 
         last_update_ = new nux::StaticCairoText(std::string("Last Updated ") + app_preview_model->last_update.Get());
         last_update_->SetFont(style.app_last_update_font().c_str());
+        last_update_->SetMaximumWidth(top_app_info_max_width);
 
         copywrite_ = new nux::StaticCairoText(app_preview_model->copyright);
         copywrite_->SetFont(style.app_copywrite_font().c_str());
+        copywrite_->SetLines(-1);
+        copywrite_->SetMaximumWidth(top_app_info_max_width);
 
-        title_subtitle_layout->AddView(title_, 1);
-        title_subtitle_layout->AddView(subtitle_, 1);
+        title_subtitle_layout_->AddView(title_, 1);
+        title_subtitle_layout_->AddView(subtitle_, 1);
 
         app_updated_copywrite_layout->AddView(license_, 1);
         app_updated_copywrite_layout->AddView(last_update_, 1);
         app_updated_copywrite_layout->AddView(copywrite_, 1);
 
-        app_data_layout->AddLayout(title_subtitle_layout);
+        app_data_layout->AddLayout(title_subtitle_layout_);
         app_data_layout->AddLayout(app_updated_copywrite_layout);
 
         // buffer space
@@ -219,52 +242,61 @@ void ApplicationPreview::SetupViews()
 
       /////////////////////
       // Description
-      nux::ScrollView* app_info = new nux::ScrollView(NUX_TRACKER_LOCATION);
+      nux::ScrollView* app_info = new DetailsScrollView(NUX_TRACKER_LOCATION);
       app_info->EnableHorizontalScrollBar(false);
 
       nux::VLayout* app_info_layout = new nux::VLayout();
-      app_info_layout->SetSpaceBetweenChildren(16);
+      app_info_layout->SetSpaceBetweenChildren(12);
       app_info->SetLayout(app_info_layout);
 
       app_description_ = new nux::StaticCairoText("");
       app_description_->SetFont(style.app_description_font().c_str());
       app_description_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_TOP);
       app_description_->SetLines(-20);
-      app_description_->SetLineSpacing(1);
-      app_description_->SetMaximumWidth(400);
+      app_description_->SetLineSpacing(1.5);
       app_description_->SetText(app_preview_model->description);
-
-      PreviewInfoHintWidget* preview_info_hints = new PreviewInfoHintWidget(preview_model_, 24);
+      app_description_->SetMaximumWidth(details_width - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
 
       app_info_layout->AddView(app_description_);
-      app_info_layout->AddView(preview_info_hints);
+      if (preview_model_->GetInfoHints().size() > 0)
+      {
+        PreviewInfoHintWidget* preview_info_hints = new PreviewInfoHintWidget(preview_model_, 24);
+        app_info_layout->AddView(preview_info_hints);
+      }
       /////////////////////
 
       /////////////////////
       // Actions
+      nux::VLayout* actions_container_layout = new nux::VLayout();
+      actions_container_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
+      actions_container_layout->SetSpaceBetweenChildren(0);
+      actions_container_layout->AddSpace(0, 1);
+
       nux::HLayout* actions_layout = new nux::HLayout();
-      actions_layout->SetSpaceBetweenChildren(12);
-      actions_layout->AddSpace(0, 1);
+      actions_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenActions());
+      actions_container_layout->AddLayout(actions_layout, 0);
 
       for (dash::Preview::ActionPtr action : preview_model_->GetActions())
       {
-        ActionButton* button = new ActionButton(action->display_name, NUX_TRACKER_LOCATION);
+        ActionButton* button = new ActionButton(action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
         button->click.connect(sigc::bind(sigc::mem_fun(this, &ApplicationPreview::OnActionActivated), action->id));
 
         actions_layout->AddView(button, 0);
       }
-      /////////////////////
+      ///////////////////
 
     full_data_layout_->AddLayout(main_app_info, 0);
     full_data_layout_->AddView(app_info, 1);
-    full_data_layout_->AddLayout(actions_layout, 0);
+    full_data_layout_->AddLayout(actions_container_layout, 0);
     /////////////////////
   
   image_data_layout->AddView(app_image, 0);
   image_data_layout->AddLayout(full_data_layout_, 1);
 
+
   SetLayout(image_data_layout);
 }
+
 
 } // namespace previews
 } // namespace dash

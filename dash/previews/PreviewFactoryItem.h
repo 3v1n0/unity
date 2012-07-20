@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright 2011 Canonical Ltd.
+ * Copyright 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3, as
@@ -44,7 +44,7 @@ class IPreviewFactoryItem
 public:
   virtual ~IPreviewFactoryItem() {} 
   
-  virtual Preview::Ptr CreateModel(glib::Object<GObject> const& proto_obj) const = 0;
+  virtual Preview::Ptr CreateModel(std::string const& uri, glib::Object<GObject> const& proto_obj) const = 0;
   virtual previews::Preview::Ptr CreateView(Preview::Ptr model) const = 0;
 };
 
@@ -54,9 +54,11 @@ class PreviewFactoryItem : public IPreviewFactoryItem
 public:
   PreviewFactoryItem() {}
 
-  Preview::Ptr CreateModel(glib::Object<GObject> const& proto_obj) const
+  Preview::Ptr CreateModel(std::string const& uri, glib::Object<GObject> const& proto_obj) const
   {
-    return Preview::Ptr(new MODEL(proto_obj));    
+    Preview::Ptr preview(new MODEL(proto_obj));
+    preview->preview_uri = uri;
+    return preview;
   }
   previews::Preview::Ptr CreateView(Preview::Ptr model) const
   {
@@ -69,12 +71,12 @@ class PreviewFactoryOperator
 public:
   ~PreviewFactoryOperator() {}
 
-  virtual Preview::Ptr CreateModel() const
+  virtual Preview::Ptr CreateModel(std::string const& uri) const
   {
     if (creator_ == nullptr)
       return nullptr;
 
-    return creator_->CreateModel(proto_obj_);
+    return creator_->CreateModel(uri, proto_obj_);
   }
   virtual previews::Preview::Ptr CreateView(Preview::Ptr model) const
   {

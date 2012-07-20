@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright 2011 Canonical Ltd.
+ * Copyright 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3, as
@@ -135,11 +135,10 @@ void GenericPreview::SetupViews()
   nux::HLayout* image_data_layout = new nux::HLayout();
   image_data_layout->SetSpaceBetweenChildren(12);
 
-  CoverArt* app_image = new CoverArt();
-  app_image->SetImage(preview_model_->image.Get().RawPtr() ? g_icon_to_string(preview_model_->image.Get().RawPtr()) : "");
-  app_image->SetFont(style.no_preview_image_font());
-  app_image->SetMinimumWidth(style.GetImageWidth());
-  app_image->SetMaximumWidth(style.GetImageWidth());
+  CoverArt* image = new CoverArt();
+  image->SetImage(preview_model_->image.Get().RawPtr() ? g_icon_to_string(preview_model_->image.Get().RawPtr()) : "");
+  image->SetFont(style.no_preview_image_font());
+  image->SetMinMaxSize(style.GetPreviewHeight(), style.GetPreviewHeight());
 
     /////////////////////
     // Data Panel
@@ -193,7 +192,7 @@ void GenericPreview::SetupViews()
 
       for (dash::Preview::ActionPtr action : preview_model_->GetActions())
       {
-        ActionButton* button = new ActionButton(action->display_name, NUX_TRACKER_LOCATION);
+        ActionButton* button = new ActionButton(action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
         button->click.connect(sigc::bind(sigc::mem_fun(this, &GenericPreview::OnActionActivated), action->id));
 
         actions_layout->AddView(button, 0);
@@ -205,7 +204,7 @@ void GenericPreview::SetupViews()
     full_data_layout_->AddLayout(actions_layout, 0);
     /////////////////////
   
-  image_data_layout->AddView(app_image, 0);
+  image_data_layout->AddView(image, 0);
   image_data_layout->AddLayout(full_data_layout_, 1);
 
   SetLayout(image_data_layout);

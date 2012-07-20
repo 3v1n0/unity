@@ -95,6 +95,7 @@ void RatingsButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::Geometry const& geo = GetGeometry();
   nux::Geometry geo_star(geo);
   geo_star.width = star_size_;
+  geo_star.height = star_size_;
 
   gPainter.PaintBackground(GfxContext, geo);
   // set up our texture mode

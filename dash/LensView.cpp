@@ -29,7 +29,7 @@
 #include "ResultRendererHorizontalTile.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UBusWrapper.h"
-#include "PlacesVScrollBar.h"
+#include "unity-shared/PlacesVScrollBar.h"
 
 #include <glib/gi18n-lib.h>
 

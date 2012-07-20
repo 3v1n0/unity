@@ -48,6 +48,7 @@ set (UNITY_SHARED_SOURCES
      LineSeparator.cpp
      OverlayRenderer.cpp
      PanelStyle.cpp
+     PlacesVScrollBar.cpp
      PreviewStyle.cpp
      RatingsButton.cpp
      SearchBar.cpp

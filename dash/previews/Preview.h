@@ -30,7 +30,7 @@
 
 namespace nux
 {
-class Button;
+class AbstractButton;
 }
 
 namespace unity
@@ -57,11 +57,16 @@ protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {}
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {}
   
-  virtual void OnActionActivated(nux::Button* button, std::string const& id);
+  virtual void OnActionActivated(nux::AbstractButton* button, std::string const& id);
+
+  virtual void OnNavigateIn() {}
+  virtual void OnNavigateInComplete() {}
+  virtual void OnNavigateOut() {}
   
 protected:
   dash::Preview::Ptr preview_model_;
 
+  friend class PreviewContent;
 };
 
 }

@@ -93,11 +93,11 @@ void CoverArt::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
 
     int border_width = 1;
 
-    gfx_engine.QRP_Color(imageDest.x + (float(base.GetWidth() - imageDest.GetWidth()) / 2),
-                      imageDest.y + (float(base.GetHeight() - imageDest.GetHeight()) / 2),
-                      imageDest.GetWidth(),
-                      imageDest.GetHeight(),
-                      nux::Color(0.15f, 0.15f, 0.15f));
+    gfx_engine.QRP_Color(base.x,
+                      base.y,
+                      base.GetWidth(),
+                      base.GetHeight(),
+                      nux::Color(0.03f, 0.03f, 0.03f, 0.0f));
 
     texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_SCALE_COORD);
     texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
@@ -126,7 +126,7 @@ void CoverArt::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
                       base.y,
                       base.GetWidth(),
                       base.GetHeight(),
-                      nux::Color(0.15f, 0.15f, 0.15f, 0.15f));
+                      nux::Color(0.03f, 0.03f, 0.03f, 0.0f));
 
     gPainter.Paint2DQuadWireframe(gfx_engine,
                       base.x+1,

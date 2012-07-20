@@ -33,9 +33,9 @@
 #include "FilterBar.h"
 #include "unity-shared/Introspectable.h"
 #include "PlacesGroup.h"
-#include "PlacesVScrollBar.h"
 #include "ResultViewGrid.h"
 #include "unity-shared/UBusWrapper.h"
+#include "unity-shared/PlacesVScrollBar.h"
 #include "previews/Preview.h"
 
 namespace unity

@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright 2011 Canonical Ltd.
+ * Copyright 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3, as
@@ -44,10 +44,73 @@ nux::logging::Logger logger("unity.dash.previews.track");
 
 NUX_IMPLEMENT_OBJECT_TYPE(Track);
 
+class TrackProgressLayer : public nux::AbstractPaintLayer
+{
+public:
+  TrackProgressLayer(nux::Color const& left_color, nux::Color const& right_color, nux::Color const& progress_color,
+                    bool write_alpha = false, nux::ROPConfig const& ROP = nux::ROPConfig::Default)
+  : left_color_(left_color)
+  , right_color_(right_color)
+  , progress_color_(progress_color)
+  , write_alpha_(write_alpha)
+  , rop_(ROP)
+  {}
+
+  virtual void Renderlayer(nux::GraphicsEngine& graphics_engine)
+  {
+    unsigned int current_red_mask;
+    unsigned int current_green_mask;
+    unsigned int current_blue_mask;
+    unsigned int current_alpha_mask;
+    unsigned int current_alpha_blend;
+    unsigned int current_src_blend_factor;
+    unsigned int current_dest_blend_factor;
+
+    // Get the current color mask and blend states. They will be restored later.
+    graphics_engine.GetRenderStates().GetColorMask(current_red_mask, current_green_mask, current_blue_mask, current_alpha_mask);
+    // Get the current blend states. They will be restored later.
+    graphics_engine.GetRenderStates().GetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+    
+    graphics_engine.GetRenderStates().SetColorMask(GL_TRUE, GL_TRUE, GL_TRUE, write_alpha_ ? GL_TRUE : GL_FALSE);
+    graphics_engine.GetRenderStates().SetBlend(rop_.Blend, rop_.SrcBlend, rop_.DstBlend);
+    
+    // Gradient to current pos.
+    graphics_engine.QRP_Color(geometry_.x, geometry_.y, geometry_.width, geometry_.height, left_color_, left_color_, right_color_, right_color_);
+
+    int current_progress_pos = geometry_.width > 2 ? (geometry_.x + geometry_.width) - 2 : geometry_.x;
+
+    // current pos outline.
+    graphics_engine.QRP_Color(current_progress_pos,
+                      geometry_.y,
+                      MIN(2, geometry_.width),
+                      geometry_.height,
+                      progress_color_);
+
+    // Restore Color mask and blend states.
+    graphics_engine.GetRenderStates().SetColorMask(current_red_mask, current_green_mask, current_blue_mask, current_alpha_mask);
+    // Restore the blend state
+    graphics_engine.GetRenderStates().SetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+  }
+
+  virtual nux::AbstractPaintLayer* Clone() const
+  {
+    return new TrackProgressLayer(*this);
+  }
+
+private:
+  nux::Color left_color_;
+  nux::Color right_color_;
+  nux::Color progress_color_;
+  bool write_alpha_;
+  nux::ROPConfig rop_;
+};
+
 Track::Track(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
-  , track_state(TrackState::STOPPED)
+  , play_state_(dash::STOPPED)
+  , mouse_over_(false)
 {
+  SetupBackground();
   SetupViews();
 }
 
@@ -68,7 +131,6 @@ void Track::Update(dash::Track const& track)
 {
   uri_ = track.uri;
   progress_ = track.progress;
-  if (track.track_number == 5) { progress_ = 0.5; }
 
   title_->SetText(track.title);
 
@@ -76,35 +138,31 @@ void Track::Update(dash::Track const& track)
   ss_track_number << track.track_number;
   track_number_->SetText(ss_track_number.str());
 
-  gchar* duration = g_strdup_printf("%d:%.2d", track.length/60000, (track.length/1000) % 60);
+  gchar* duration = g_strdup_printf("%d:%.2d", track.length/60, (track.length) % 60);
   duration_->SetText(duration);
   g_free(duration);
 
-  track_busy_ = track.is_playing.Get() || (progress_ > 0.0);
-
-  if (track.is_playing)
-  {
-    track_status_layout_->SetActiveLayer(status_pause_layout_);
-    track_state = TrackState::PLAYING;
-  }
-  else if (progress_ > 0.0)
-  {
-    track_status_layout_->SetActiveLayer(status_play_layout_);
-    track_state = TrackState::PAUSED;
-  }
-  else
-  {
-    track_status_layout_->SetActiveLayer(track_number_layout_);
-    track_state = TrackState::STOPPED;
-  }
+  play_state_ = track.play_state;
+  UpdateTrackState();
 
   QueueDraw();
+}
+
+void Track::SetupBackground()
+{ 
+  nux::ROPConfig rop;
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+  focus_layer_.reset(new nux::ColorLayer(nux::Color(0.15f, 0.15f, 0.15f, 0.15f), true, rop));
+  progress_layer_.reset(new TrackProgressLayer(nux::Color(0.25f, 0.25f, 0.25f, 0.15f), nux::Color(0.05f, 0.05f, 0.05f, 0.15f), nux::Color(0.60f, 0.60f, 0.60f, 0.15f), true, rop));
 }
 
 void Track::SetupViews()
 {
   previews::Style& style = previews::Style::Instance();
   nux::Layout* layout = new nux::HLayout();
+  layout->SetLeftAndRightPadding(0,5);
 
   nux::BaseTexture* tex_play = style.GetPlayIcon();
   IconTexture* status_play = new IconTexture(tex_play, tex_play ? tex_play->GetWidth() : 25, tex_play ? tex_play->GetHeight() : 25);
@@ -119,28 +177,30 @@ void Track::SetupViews()
   status_pause->mouse_leave.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseLeave));
 
   track_number_ = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
-  track_number_->SetTextEllipsize(nux::StaticCairoText::NUX_ELLIPSIZE_NONE);
   track_number_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
   track_number_->SetTextVerticalAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
   track_number_->SetLines(-1);
   track_number_->SetFont(style.track_font());
   track_number_->mouse_enter.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseEnter));
   track_number_->mouse_leave.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseLeave));
+  track_number_->SetMaximumWidth(30);
+
+  int track_width = style.GetPreviewWidth() - style.GetPreviewHeight() - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin();
 
   title_ = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
-  title_->SetTextEllipsize(nux::StaticCairoText::NUX_ELLIPSIZE_NONE);
   title_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
   title_->SetTextVerticalAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
   title_->SetLines(-1);
   title_->SetFont(style.track_font());
+  title_->SetMaximumWidth(track_width - 30 - 60 - 10);
 
   duration_ = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
   duration_->SetTextEllipsize(nux::StaticCairoText::NUX_ELLIPSIZE_NONE);
   duration_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_RIGHT);
   duration_->SetTextVerticalAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
   duration_->SetLines(-1);
+  duration_->SetMaximumWidth(30);
   duration_->SetFont(style.track_font());
-
   // Layouts
   // stick text fields in a layout so they don't alter thier geometry.
   status_play_layout_ = new nux::HLayout();
@@ -163,8 +223,8 @@ void Track::SetupViews()
   track_status_layout_->AddLayer(status_pause_layout_, true);
   track_status_layout_->AddLayer(track_number_layout_, true);
   track_status_layout_->SetActiveLayer(track_number_layout_);
-  track_status_layout_->SetMinimumWidth(25);
-  track_status_layout_->SetMaximumWidth(25);
+  track_status_layout_->SetMinimumWidth(30);
+  track_status_layout_->SetMaximumWidth(30);
 
   title_layout_ = new nux::HLayout();
   title_layout_->SetLeftAndRightPadding(3);
@@ -172,8 +232,6 @@ void Track::SetupViews()
   title_layout_->AddSpace(0, 0);
 
   duration_layout_ = new nux::HLayout();
-  duration_layout_->SetMinimumWidth(60);
-  duration_layout_->SetMaximumWidth(60);
   duration_layout_->AddSpace(0, 1);
   duration_layout_->AddView(duration_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
@@ -181,16 +239,11 @@ void Track::SetupViews()
   layout->AddLayout(title_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   layout->AddLayout(duration_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   SetLayout(layout);
-
-  persistant_status_ = track_status_layout_->GetActiveLayer();
 }
 
 void Track::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
 {
   nux::Geometry const& base = GetGeometry();
-
-  gfx_engine.PushClippingRectangle(base);
-  nux::GetPainter().PaintBackground(gfx_engine, base);
 
   unsigned int alpha, src, dest = 0;
   gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
@@ -198,47 +251,23 @@ void Track::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
 
   if (HasStatusFocus())
   {
-    nux::Geometry geo_highlight(track_status_layout_->GetGeometry());
-
-    gfx_engine.QRP_Color(geo_highlight.x,
-                      geo_highlight.y,
-                      geo_highlight.width,
-                      geo_highlight.height,
-                      nux::Color(0.15f, 0.15f, 0.15f, 0.15f));
+    focus_layer_->SetGeometry(track_status_layout_->GetGeometry());
+    nux::GetPainter().RenderSinglePaintLayer(gfx_engine, focus_layer_->GetGeometry(), focus_layer_.get());
   }
 
   int progress_width = progress_ * (duration_layout_->GetGeometry().x + duration_layout_->GetGeometry().width - title_layout_->GetGeometry().x);
   if (progress_width > 0.0)
-   {
-
+  {
     nux::Geometry geo_progress(title_layout_->GetGeometry().x,
                               base.y,
                               progress_width,
                               base.height);
-    
-    gfx_engine.QRP_Color(geo_progress.x,
-                      geo_progress.y,
-                      geo_progress.width,
-                      geo_progress.height,
-                      nux::Color(0.15f, 0.15f, 0.15f, 0.15f),
-                      nux::Color(0.15f, 0.15f, 0.15f, 0.15f),
-                      nux::Color(0.05, 0.05, 0.05, 0.15f),
-                      nux::Color(0.05, 0.05, 0.05, 0.15f));
 
-    int current_progress_pos = progress_width > 2 ? (geo_progress.x+geo_progress.width) - 2 : geo_progress.x;
-
-
-    gfx_engine.QRP_Color(current_progress_pos,
-                      geo_progress.y,
-                      MIN(2, progress_width),
-                      geo_progress.height,
-                      nux::Color(0.7f, 0.7f, 0.7f, 0.15f));
-
+    progress_layer_->SetGeometry(geo_progress);
+    nux::GetPainter().RenderSinglePaintLayer(gfx_engine, progress_layer_->GetGeometry(), progress_layer_.get());
   }
   
   gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
-
-  gfx_engine.PopClippingRectangle();
 }
 
 void Track::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
@@ -246,7 +275,23 @@ void Track::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
   nux::Geometry const& base = GetGeometry();
   gfx_engine.PushClippingRectangle(base);
 
-  if (IsFullRedraw())
+  int pop_layers = 0;
+  if (!IsFullRedraw())
+  {
+    if (HasStatusFocus())
+    {
+      nux::GetPainter().PushLayer(gfx_engine, focus_layer_->GetGeometry(), focus_layer_.get());
+      pop_layers++;
+    }
+
+    int progress_width = progress_ * (duration_layout_->GetGeometry().x + duration_layout_->GetGeometry().width - title_layout_->GetGeometry().x);
+    if (progress_width > 0.0)
+    {
+      nux::GetPainter().PushLayer(gfx_engine, progress_layer_->GetGeometry(), progress_layer_.get());
+      pop_layers++;
+    }
+  }
+  else
     nux::GetPainter().PushPaintLayerStack();
 
   unsigned int alpha, src, dest = 0;
@@ -260,47 +305,53 @@ void Track::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
 
   if (IsFullRedraw())
     nux::GetPainter().PopPaintLayerStack();
+  else if (pop_layers > 0)
+    nux::GetPainter().PopBackground(pop_layers);
 
   gfx_engine.PopClippingRectangle();
 }
 
 bool Track::HasStatusFocus() const
 {
-  return track_state == TrackState::PLAYING || track_state == TrackState::PAUSED;
+  return play_state_ == dash::PLAYING || play_state_ == dash::PAUSED;
 }
 
 void Track::OnTrackControlMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  switch (track_state)
-  {
-    case TrackState::PLAYING:
-      track_status_layout_->SetActiveLayer(status_pause_layout_);
-      break;
-    case TrackState::PAUSED:
-    case TrackState::STOPPED:
-    default:
-      track_status_layout_->SetActiveLayer(status_play_layout_);
-      break;
-  }
+  mouse_over_ = true;
+  UpdateTrackState();
+
   QueueDraw();
 }
 
 void Track::OnTrackControlMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  switch (track_state)
-  {
-    case TrackState::PLAYING:
-      track_status_layout_->SetActiveLayer(status_pause_layout_);
-      break;
-    case TrackState::PAUSED:
-      track_status_layout_->SetActiveLayer(status_play_layout_);
-      break;
-    case TrackState::STOPPED:
-    default:
-      track_status_layout_->SetActiveLayer(track_number_layout_);
-      break;
-  }
+  mouse_over_ = false;
+  UpdateTrackState();
+
   QueueDraw();
+}
+
+void Track::UpdateTrackState()
+{
+  if (mouse_over_)
+  {
+    switch (play_state_)
+    {
+      case dash::PLAYING:
+        track_status_layout_->SetActiveLayer(status_pause_layout_);
+        break;
+      case dash::PAUSED:
+      case dash::STOPPED:
+      default:
+        track_status_layout_->SetActiveLayer(status_play_layout_);
+        break;
+    }
+  }
+  else
+  {
+    track_status_layout_->SetActiveLayer(track_number_layout_);
+  }
 }
 
 

@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright 2011 Canonical Ltd.
+ * Copyright 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3, as
@@ -25,7 +25,6 @@
 
 #include "Preview.h"
 #include <Nux/Nux.h>
-#include <UnityCore/MoviePreview.h>
 
 namespace unity
 {
@@ -50,6 +49,17 @@ public:
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+
+  virtual void OnNavigateOut();
+  virtual void OnNavigateInComplete();
+
+  void SetupBackground();
+  void SetupView();
+  
+protected:
+
+  typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
+  LayerPtr details_bg_layer_;
 };
 
 }
