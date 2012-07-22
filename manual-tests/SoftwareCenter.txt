@@ -6,7 +6,8 @@ Setup:
 #. Launch Ubuntu Software Center
 
 Actions:  
-#. In Software Center, navigate to the "Games" category and click on an uninstalled game in the list.
+#. In Software Center, click on the "Games" category in the left panel to view the display of game genre icons, "Top Rated Games", etc.
+#. Select the "Card Games" icon and then select any uninstalled game in the displayed list.
 #. Click the "More Info" button.
 #. In the details view for the game, click the "Install" button.
 #. Enter the password for the install when prompted.
@@ -28,7 +29,8 @@ Setup:
 #. Launch Ubuntu Software Center
 
 Actions:  
-#. In Software Center, navigate to the "Games" category and click on an uninstalled game in the list.
+#. In Software Center, click on the "Games" category in the left panel to view the display of game genre icons, "Top Rated Games", etc.
+#. Select the "Card Games" icon and then select any uninstalled game in the displayed list.
 #. Click the "More Info" button.
 #. In the details view for the game, click the "Install" button.
 #. In the dialog that prompts you to enter your password for the install, click the "Cancel" button.
