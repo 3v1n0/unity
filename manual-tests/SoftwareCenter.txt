@@ -15,7 +15,7 @@ Actions:
 Expected Result:
   The game begins to install and the progress bar moves in Software Center.
   At the very *end* of the installation process (when the progress bar has completed), the icon for the game "flies" into the Unity Launcher.
-  Verify that the icon that has been added to the launcher and that:
+  Verify that the icon has been added to the launcher and that:
    - If the Unity launcher was set to auto-hide, it correctly autohides at the end of the installation and is not "stuck" in a displayed state.
    - The launcher icon has the correct icon for the game that was installed.
    - Hovering the mouse cursor over the icon displays the name of the application for its tooltip (and that it does *not* display the text "Waiting to install").
@@ -56,7 +56,7 @@ Actions:
 Expected Result:
   The the progress bar activates in Software Center. Note that for purchased items, it can take a bit of time before the progress bar transitions from intdeterminate to determinate.
   At the very *end* of the installation process (when the progress bar has completed), the icon for the purchased item "flies" into the Unity Launcher.
-  Verify that the icon that has been added to the launcher and that:
+  Verify that the icon has been added to the launcher and that:
    - If the Unity launcher was set to auto-hide, it correctly autohides at the end of the installation and is not "stuck" in a displayed state.
    - The launcher icon has the correct icon for the application that was installed.
    - Hovering the mouse cursor over the icon displays the name of the application for its tooltip (and that it does *not* display the text "Waiting to install").
@@ -79,7 +79,7 @@ Actions:
 xpected Result:
   The application begins to install and the progress bar moves in Software Center.
   At the very *end* of the installation process (when the progress bar has completed), the icon for the application "flies" into the Unity Launcher.
-  Verify that the icon that has been added to the launcher and that:
+  Verify that the icon has been added to the launcher and that:
    - If the Unity launcher was set to auto-hide, it correctly autohides at the end of the installation and is not "stuck" in a displayed state.
    - The launcher icon has the correct icon for the application that was installed.
    - Hovering the mouse cursor over the icon displays the name of the application for its tooltip (and that it does *not* display the text "Waiting to install").
