@@ -201,12 +201,7 @@ class PanelTitleTests(PanelTestsBase):
         old_title = text_win.title
 
         text_win.set_focus()
-        self.keyboard.type("Unity rocks!")
-        self.keyboard.press_and_release("Ctrl+S")
-        sleep(.25)
-        self.keyboard.type("/tmp/autopilot-awesome-test.txt")
-        self.keyboard.press_and_release("Return")
-        self.addCleanup(os.remove, "/tmp/autopilot-awesome-test.txt")
+        self.keyboard.press_and_release("Ctrl+n")
 
         self.assertThat(lambda: text_win.title, Eventually(NotEquals(old_title)))
         self.assertThat(self.panel.title, Eventually(Equals(text_win.title)))
@@ -794,7 +789,10 @@ class PanelMenuTests(PanelTestsBase):
         self.patch_environment("UBUNTU_MENUPROXY", "")
         calc_win = self.open_new_application_window("Calculator")
 
-        self.assertThat(lambda: len(self.panel.menus.get_entries()), Eventually(Equals(0)))
+        self.assertThat(
+            lambda: len(self.panel.menus.get_entries()),
+            Eventually(Equals(0)),
+            "Current panel entries are: %r" % self.panel.menus.get_entries())
 
         self.panel.move_mouse_over_grab_area()
         self.assertThat(self.panel.title, Eventually(Equals(calc_win.application.name)))

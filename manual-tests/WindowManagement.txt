@@ -4,27 +4,21 @@ This test shows how unity should manage applications with both user visible
 and invisible windows.
 
 Setup:
-#. Open gedit
-#. Open the 'open files' dialog
 
-Outcome:
-  The launcher icon should count with left icon indicators (pips) only the visible
-  window(s); 
+Actions:
+  * Open gedit
+  * Open the 'open files' dialog
+  * Assert: The launcher icon should count with left icon indicators (pips) only 
+    the visible  window(s); 
+  * Click the gedit launcher icon
+  * Assert: The main gedit window should come into focus
+  * Click the gedit launcher icon again, gedit still focused
+  * Assert: Spread with both visible and invisible windows should be activated.
 
-Action:
-#. Click the gedit launcher icon
+Expected Result:
+  Assertions from above hold.
 
-Outcome:
-  The main gedit window should come into focus
-
-Action:
-#. Click the gedit launcher icon again, gedit still focused
-	
-Outcome:
-  Spread with both visible and invisible windows should be activated.
-
-
-Auto-maximize window
+Auto-maximize window -- window not maximized
 ----------------------
 Thit test make sure that the auto-maximize window feature is disabled for
 resolution above the 1024x600.
@@ -33,19 +27,42 @@ Setup:
 #. Open the display panel
 #. Set a resolution greater then 1024x600 (e.g 1366x768)
 
-Action:
+Actions:
 #. Open nautilus
 
-Outcome:
+Expected Result:
   The window should not be in the maximized state.
 
+
+Auto-maximize window -- window auto-maximized
+----------------------
 Setup:
 #. Open the display panel
 #. Set a resolution lower or equal to 1024x600.
 #. Open the ccsm and change the automaximize-threshold option to 20 (experimental-tab of unity-plugin).
 
-Action:
+Actions:
 #. Open nautilus, that usually doesn't start maximized
 
-Outcome:
+Expected Result:
   The window should be in the maximized state.
+
+
+Fullscreen windows
+--------------------
+Tests rendering of fullscreen windows.
+
+Action:
+#. Set a window to full screen. e.g. F11 in a web browser.
+#. Verify you can scroll the window.
+#. Tap the Super key.
+#. Verify you can still scroll the window.
+
+Outcome:
+  The fullscreen window should never look corrupt and always be scrollable.
+
+Recovery (in case of failure):
+#. Tap the Super key again.
+#. Tap F11 to leave full screen.
+#. Press Super+S twice to force a full screen redraw.
+
