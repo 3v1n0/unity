@@ -46,6 +46,7 @@ public:
     , _overlay_is_open(false)
     , _opacity(1.0f)
   {
+    SetAcceptKeyNavFocusOnMouseDown(false);
     panel::Style::Instance().changed.connect(sigc::mem_fun(this, &WindowButton::LoadImages));
     LoadImages();
   }
@@ -506,7 +507,7 @@ void WindowButtons::OnOverlayShown(GVariant* data)
   glib::String overlay_identity;
   gboolean can_maximise = FALSE;
   gint32 overlay_monitor = 0;
-  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
+  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
   if (overlay_monitor != monitor_)
@@ -538,6 +539,9 @@ void WindowButtons::OnOverlayShown(GVariant* data)
 
       if (button->GetType() == panel::WindowButtonType::MAXIMIZE)
         maximize_button = button;
+
+      if (button->GetType() == panel::WindowButtonType::MINIMIZE)
+        button->SetEnabled(false);
 
       button->SetOverlayOpen(true);
     }
@@ -574,7 +578,7 @@ void WindowButtons::OnOverlayHidden(GVariant* data)
   glib::String overlay_identity;
   gboolean can_maximise = FALSE;
   gint32 overlay_monitor = 0;
-  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, 
+  g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
   if (overlay_monitor != monitor_)

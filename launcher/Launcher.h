@@ -56,7 +56,7 @@ class Launcher : public unity::debug::Introspectable, public nux::View, public u
   NUX_DECLARE_OBJECT_TYPE(Launcher, nux::View);
 public:
 
-  Launcher(nux::BaseWindow* parent, NUX_FILE_LINE_PROTO);
+  Launcher(nux::BaseWindow* parent, nux::ObjectPtr<DNDCollectionWindow> const& collection_window, NUX_FILE_LINE_PROTO);
 
   nux::Property<Display*> display;
   nux::Property<int> monitor;
@@ -95,6 +95,8 @@ public:
   {
     return _parent;
   };
+
+  nux::ObjectPtr<nux::View> GetActiveTooltip() const;  // nullptr = no tooltip
 
   virtual void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -269,6 +271,7 @@ private:
   void OnOrderChanged();
 
   void OnIconNeedsRedraw(AbstractLauncherIcon::Ptr icon);
+  void OnTooltipVisible(nux::ObjectPtr<nux::View> view);
 
   void OnOverlayHidden(GVariant* data);
   void OnOverlayShown(GVariant* data);
@@ -311,6 +314,7 @@ private:
 
   LauncherModel::Ptr _model;
   nux::BaseWindow* _parent;
+  nux::ObjectPtr<nux::View> _active_tooltip;
   QuicklistView* _active_quicklist;
 
   nux::HLayout* m_Layout;
@@ -355,6 +359,8 @@ private:
   int _postreveal_mousemove_delta_x;
   int _postreveal_mousemove_delta_y;
   int _launcher_drag_delta;
+  int _launcher_drag_delta_max;
+  int _launcher_drag_delta_min;
   int _enter_y;
   int _last_button_press;
   int _drag_out_id;

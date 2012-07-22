@@ -27,6 +27,8 @@
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
 
+#include "unity-shared/Introspectable.h"
+
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/DashStyle.h"
 
@@ -116,10 +118,6 @@ View::View()
 
 View::~View()
 {
-  for (auto button = buttons_.begin(); button != buttons_.end(); button++)
-  {
-    RemoveChild((*button).GetPointer());
-  }
 }
 
 void View::ProcessGrowShrink()
@@ -147,6 +145,11 @@ void View::ProcessGrowShrink()
    LOG_DEBUG(logger) << "resizing to " << target_height << " (" << new_height << ")"
                      << "View height: " << GetGeometry().height;
    current_height_ = new_height;
+  }
+
+  for (auto button : buttons_)
+  {
+    button->SetSkipDraw((button->GetAbsoluteY() + button->GetBaseHeight()) > (GetAbsoluteY() + current_height_));
   }
 
   QueueDraw();
@@ -238,6 +241,8 @@ void View::SetQueries(Hud::Queries queries)
 
     HudButton::Ptr button(new HudButton());
     buttons_.push_front(button);
+    button->SetMinimumWidth(content_width);
+    button->SetMaximumWidth(content_width);
     button->SetQuery(query);
 
     button_views_->AddView(button.GetPointer(), 0, nux::MINOR_POSITION_LEFT);
@@ -250,12 +255,11 @@ void View::SetQueries(Hud::Queries queries)
       query_activated.emit(dynamic_cast<HudButton*>(area)->GetQuery());
     });
 
-    button->key_nav_focus_change.connect([&](nux::Area* area, bool recieving, KeyNavDirection direction){
+    button->key_nav_focus_change.connect([&](nux::Area* area, bool recieving, nux::KeyNavDirection direction){
       if (recieving)
         query_selected.emit(dynamic_cast<HudButton*>(area)->GetQuery());
     });
 
-    button->SetMinimumWidth(content_width);
     ++found_items;
   }
 
@@ -350,7 +354,7 @@ void View::SetupViews()
 {
   dash::Style& style = dash::Style::Instance();
 
-  nux::VLayout* super_layout = new nux::VLayout(); 
+  nux::VLayout* super_layout = new nux::VLayout();
   layout_ = new nux::HLayout();
   {
     // fill layout with icon
@@ -398,7 +402,7 @@ void View::OnSearchChanged(std::string const& search_string)
   {
     button->fake_focused = false;
   }
-  
+
   if (!buttons_.empty())
     buttons_.back()->fake_focused = true;
 }
@@ -417,7 +421,9 @@ void View::OnKeyDown (unsigned long event_type, unsigned long keysym,
 
 void View::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
 {
-  if (!content_geo_.IsPointInside(x, y))
+  nux::Geometry current_geo(content_geo_);
+  current_geo.height = current_height_;
+  if (!current_geo.IsPointInside(x, y))
   {
     ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
   }
@@ -457,7 +463,7 @@ void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
       x += content_width - 1;
       nux::GetPainter().Draw2DLine(gfx_context, x, y, x, y + height, nux::color::White * 0.13);
     }
- 
+
     GetLayout()->ProcessDraw(gfx_context, force_draw);
     nux::GetPainter().PopBackgroundStack();
   }
@@ -498,6 +504,18 @@ void View::AddProperties(GVariantBuilder* builder)
     .add(GetGeometry())
     .add("selected_button", selected_button_)
     .add("num_buttons", num_buttons);
+}
+
+debug::Introspectable::IntrospectableList View::GetIntrospectableChildren()
+{
+    introspectable_children_.clear();
+    introspectable_children_.merge(debug::Introspectable::GetIntrospectableChildren());
+    for (auto button: buttons_)
+    {
+      introspectable_children_.push_front(button.GetPointer());
+    }
+
+    return introspectable_children_;
 }
 
 bool View::InspectKeyEvent(unsigned int eventType,
@@ -547,6 +565,10 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
       unsigned long x11_key_code,
       unsigned long special_keys_state)
 {
+  // Only care about states of Alt, Ctrl, Super, Shift, not the lock keys
+  special_keys_state &= (nux::NUX_STATE_ALT | nux::NUX_STATE_CTRL |
+                         nux::NUX_STATE_SUPER | nux::NUX_STATE_SHIFT);
+
   nux::KeyNavDirection direction = nux::KEY_NAV_NONE;
   switch (x11_key_code)
   {
@@ -572,6 +594,12 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
   case NUX_KP_ENTER:
     // Not sure if Enter should be a navigation key
     direction = nux::KEY_NAV_ENTER;
+    break;
+  case NUX_VK_F4:
+    if (special_keys_state == nux::NUX_STATE_ALT)
+    {
+      ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
+    }
     break;
   default:
     direction = nux::KEY_NAV_NONE;

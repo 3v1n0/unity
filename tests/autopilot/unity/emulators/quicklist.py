@@ -11,9 +11,9 @@ from __future__ import absolute_import
 
 import logging
 
-from autopilot.introspection.unity import UnityIntrospectionObject
 from autopilot.emulators.X11 import Mouse
 
+from unity.emulators import UnityIntrospectionObject
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +36,7 @@ class Quicklist(UnityIntrospectionObject):
         if not self.active:
             raise RuntimeError("Cannot get quicklist items. Quicklist is inactive!")
 
-        matches = filter(lambda i: i.text == text,
-            self.get_children_by_type(QuicklistMenuItemLabel))
+        matches = self.get_children_by_type(QuicklistMenuItemLabel, text=text)
 
         return matches[0] if matches else None
 

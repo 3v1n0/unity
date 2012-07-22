@@ -113,6 +113,8 @@ public:
 
   void damageRegion(const CompRegion &region);
 
+  bool shellCouldBeHidden(CompOutput const& output);
+
   /* paint on top of all windows if we could not find a window
    * to paint underneath */
   bool glPaintOutput(const GLScreenPaintAttrib&,
@@ -132,9 +134,6 @@ public:
                                 const CompRegion&,
                                 CompOutput*,
                                 unsigned int);
-
-  /* Pop our InputOutput windows from the paint list */
-  const CompWindowList& getWindowPaintList();
 
   /* handle X11 events */
   void handleEvent(XEvent*);
@@ -212,7 +211,10 @@ private:
 
   bool initPluginActions();
   void initLauncher();
-  void damageNuxRegions();
+
+  void compizDamageNux(CompRegion const& region);
+  void nuxDamageCompiz();
+
   void onRedrawRequested();
   void Relayout();
 
@@ -220,13 +222,18 @@ private:
   static void OnStartKeyNav(GVariant* data, void* value);
   static void OnExitKeyNav(GVariant* data, void* value);
 
-  void startLauncherKeyNav();
   void restartLauncherKeyNav();
 
   void OnDashRealized ();
 
   void OnLauncherStartKeyNav(GVariant* data);
   void OnLauncherEndKeyNav(GVariant* data);
+
+  void OnSwitcherStart(GVariant* data);
+  void OnSwitcherEnd(GVariant* data);
+
+  void RestoreWindow(GVariant* data);
+  bool SaveInputThenFocus(const guint xid);
 
   void InitHints();
 
@@ -255,7 +262,6 @@ private:
   bool enable_shortcut_overlay_;
 
   GestureEngine                         gesture_engine_;
-  nux::Geometry                         lastTooltipArea;
   bool                                  needsRelayout;
   bool                                  _in_paint;
   bool                                  super_keypressed_;
@@ -272,11 +278,14 @@ private:
 
   /* handle paint order */
   bool    doShellRepaint;
+  bool    didShellRepaint;
   bool    allowWindowPaint;
-  bool    damaged;
   bool    _key_nav_mode_requested;
   CompOutput* _last_output;
-  CompWindowList _withRemovedNuxWindows;
+
+  CompRegion nuxRegion;
+  CompRegion fullscreenRegion;
+  CompWindow* firstWindowAboveShell;
 
   nux::Property<nux::Geometry> primary_monitor_;
 
@@ -305,6 +314,8 @@ private:
   bool panel_texture_has_changed_;
   bool paint_panel_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> panel_texture_;
+
+  bool scale_just_activated_;
 
 #ifndef USE_MODERN_COMPIZ_GL
   ScreenEffectFramebufferObject::GLXGetProcAddressProc glXGetProcAddressP;

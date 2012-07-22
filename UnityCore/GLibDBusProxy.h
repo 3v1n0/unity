@@ -37,7 +37,7 @@ class DBusProxy : public sigc::trackable, boost::noncopyable
 {
 public:
   typedef std::shared_ptr<DBusProxy> Ptr;
-  typedef sigc::slot<void, GVariant*> ReplyCallback;
+  typedef std::function<void(GVariant*)> ReplyCallback;
 
   DBusProxy(std::string const& name,
             std::string const& object_path,
@@ -47,9 +47,9 @@ public:
   ~DBusProxy();
 
   void Call(std::string const& method_name,
-            GVariant* parameters = NULL,
-            ReplyCallback callback = sigc::ptr_fun(&NoReplyCallback),
-            GCancellable *cancellable = NULL,
+            GVariant* parameters = nullptr,
+            ReplyCallback callback = nullptr,
+            GCancellable *cancellable = nullptr,
             GDBusCallFlags flags = G_DBUS_CALL_FLAGS_NONE,
             int timeout_msec = -1);
 
@@ -58,8 +58,6 @@ public:
 
   sigc::signal<void> connected;
   sigc::signal<void> disconnected;
-
-  static void NoReplyCallback(GVariant* v) {};
 
   // Public due to use in some callbacks
 private:
