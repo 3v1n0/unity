@@ -80,9 +80,25 @@ class LauncherCaptureTests(UnityTestCase):
         # The launcher should have held the mouse a little bit
         self.assertThat(x_fin, Equals(x - width / 2))
 
+    def test_launcher_capture_while_not_sticky_and_hidden(self):
+        """Tests that the launcher captures the mouse when moving between monitors
+        while hidden and sticky is off. (moving left)
+        """
+
+        self.set_unity_option('launcher_capture_mouse', False)
+        self.setHideMode(1)
+
+        x, y, width, height = self.screen_geo.get_monitor_geometry(self.rightMostMonitor())
+        self.mouse.move(x + width / 2, y + height / 2, False)
+        self.mouse.move(x - width / 2, y + height / 2, True, 5, .002)
+
+        x_fin, y_fin = self.mouse.position()
+        # The launcher should have held the mouse a little bit
+        self.assertThat(x_fin, GreaterThan(x - width / 2))
+
     def test_launcher_not_capture_while_not_sticky_and_hidden_moving_right(self):
         """Tests that the launcher doesn't capture the mouse when moving between monitors
-        while hidden and sticky is off.
+        while hidden and sticky is off (moving right).
         """
 
         self.set_unity_option('launcher_capture_mouse', False)

@@ -11,6 +11,8 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/update-manager.desktop
                 ${CMAKE_BINARY_DIR}/tests/data/update-manager.desktop)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/bzr-handle-patch.desktop
                 ${CMAKE_BINARY_DIR}/tests/data/bzr-handle-patch.desktop)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/no-icon.desktop
+                ${CMAKE_BINARY_DIR}/tests/data/no-icon.desktop)
 #
 # Unit tests
 #
@@ -142,6 +144,7 @@ if (GTEST_SRC_DIR AND
                  test_favorite_store_private.cpp
                  test_home_lens.cpp
                  test_launcher_entry_remote.cpp
+                 test_previews.cpp
                  test_shortcut_model.cpp
                  test_shortcut_private.cpp
                  test_introspection.cpp
@@ -159,6 +162,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/unity-shared/IconTextureSource.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/LauncherModel.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/LauncherEntryRemote.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/MockLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/FavoriteStorePrivate.cpp
                  ${CMAKE_SOURCE_DIR}/shortcuts/ShortcutModel.cpp
                  ${CMAKE_SOURCE_DIR}/shortcuts/ShortcutHintPrivate.cpp
@@ -205,6 +209,8 @@ if (GTEST_SRC_DIR AND
                  test_dashview_impl.cpp
                  test_texture_cache.cpp
                  test_main.cpp
+                 test_launcher.cpp
+                 test_device_launcher_section.cpp
                  test_lensview_impl.cpp
                  test_icon_loader.cpp
                  test_im_text_entry.cpp
@@ -214,6 +220,7 @@ if (GTEST_SRC_DIR AND
                  test_single_monitor_launcher_icon.cpp
                  test_switcher_controller.cpp
                  test_switcher_model.cpp
+                 gmockvolume.c
                  ${CMAKE_SOURCE_DIR}/dash/AbstractPlacesGroup.cpp
                  ${CMAKE_SOURCE_DIR}/dash/DashViewPrivate.cpp
                  ${CMAKE_SOURCE_DIR}/dash/LensViewPrivate.cpp
@@ -232,6 +239,9 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/launcher/CairoBaseWindow.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/DNDCollectionWindow.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/Decaymulator.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/DeviceLauncherIcon.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/DeviceLauncherSection.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/DevicesSettings.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/DndData.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/FavoriteStore.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/FavoriteStoreGSettings.cpp
@@ -245,6 +255,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/launcher/LauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/LauncherModel.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/LayoutSystem.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/MockLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/PointerBarrier.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/QuicklistManager.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/QuicklistMenuItem.cpp

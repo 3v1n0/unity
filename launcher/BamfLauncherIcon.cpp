@@ -51,6 +51,7 @@ nux::logging::Logger logger("unity.launcher");
   const std::string WINDOW_MOVE_TIMEOUT = "bamf-window-move";
   const std::string ICON_REMOVE_TIMEOUT = "bamf-icon-remove";
   //const std::string ICON_DND_OVER_TIMEOUT = "bamf-icon-dnd-over";
+  const std::string DEFAULT_ICON = "application-default-icon";
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(BamfLauncherIcon);
@@ -69,7 +70,7 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   glib::String icon(bamf_view_get_icon(bamf_view));
 
   tooltip_text = BamfName();
-  icon_name = icon.Str();
+  icon_name = (icon ? icon.Str() : DEFAULT_ICON);
   SetIconType(TYPE_APPLICATION);
 
   if (IsSticky())

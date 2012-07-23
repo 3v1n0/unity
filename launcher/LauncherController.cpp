@@ -41,6 +41,7 @@
 #include "AbstractLauncherIcon.h"
 #include "SoftwareCenterLauncherIcon.h"
 #include "LauncherModel.h"
+#include "VolumeMonitorWrapper.h"
 #include "unity-shared/WindowManager.h"
 #include "TrashLauncherIcon.h"
 #include "BFBLauncherIcon.h"
@@ -175,6 +176,7 @@ public:
   nux::ObjectPtr<Launcher> launcher_;
   nux::ObjectPtr<Launcher> keyboard_launcher_;
   int                    sort_priority_;
+  AbstractVolumeMonitorWrapper::Ptr volume_monitor_;
   DeviceLauncherSection  device_section_;
   LauncherEntryRemoteModel remote_model_;
   AbstractLauncherIcon::Ptr expo_icon_;
@@ -213,6 +215,8 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   : parent_(parent)
   , model_(new LauncherModel())
   , sort_priority_(0)
+  , volume_monitor_(new VolumeMonitorWrapper)
+  , device_section_(volume_monitor_)
   , show_desktop_icon_(false)
   , display_(display)
   , edge_barriers_(new ui::EdgeBarrierController())
@@ -391,7 +395,7 @@ Launcher* Controller::Impl::CreateLauncher(int monitor)
 {
   nux::BaseWindow* launcher_window = new nux::BaseWindow(TEXT("LauncherWindow"));
 
-  Launcher* launcher = new Launcher(launcher_window);
+  Launcher* launcher = new Launcher(launcher_window, nux::ObjectPtr<DNDCollectionWindow>(new DNDCollectionWindow));
   launcher->display = display_;
   launcher->monitor = monitor;
   launcher->options = parent_->options();

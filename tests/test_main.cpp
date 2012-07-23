@@ -4,6 +4,7 @@
 #include <NuxCore/Logger.h>
 #include <Nux/Nux.h>
 
+#include "GestureEngine.h"
 #include "unity-shared/PluginAdapter.h"
 #include "unity-shared/WindowManager.h"
 
@@ -26,6 +27,7 @@ int main(int argc, char** argv)
   // Setting the PluginAdapter to null, using the Standalone version at link time.
   PluginAdapter::Initialize(NULL);
   WindowManager::SetDefault(PluginAdapter::Default());
+  GeisAdapter geis_adapter;
 
   int ret = RUN_ALL_TESTS();
 
