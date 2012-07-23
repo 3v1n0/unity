@@ -27,7 +27,6 @@
 #include <Nux/VLayout.h>
 #include <UnityCore/MoviePreview.h>
 #include "unity-shared/StaticCairoText.h"
-#include "unity-shared/VideoPlayer.h"
 
 namespace unity
 {
