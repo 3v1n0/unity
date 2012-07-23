@@ -84,17 +84,17 @@ Filter::Ptr Filter::FilterFromIter(DeeModel* model, DeeModelIter* iter)
   std::string renderer = dee_model_get_string(model, iter, 3);
 
   if (renderer == "filter-ratings")
-    return Filter::Ptr(new RatingsFilter(model, iter));
+    return std::make_shared<RatingsFilter>(model, iter);
   else if (renderer == "filter-radiooption")
-    return Filter::Ptr(new RadioOptionFilter(model, iter));
+    return std::make_shared<RadioOptionFilter>(model, iter);
   else if (renderer == "filter-checkoption")
-    return Filter::Ptr(new CheckOptionFilter(model, iter));
+    return std::make_shared<CheckOptionFilter>(model, iter);
   else if (renderer == "filter-checkoption-compact")
-    return Filter::Ptr(new CheckOptionFilter(model, iter));
+    return std::make_shared<CheckOptionFilter>(model, iter);
   else if (renderer == "filter-multirange")
-    return Filter::Ptr(new MultiRangeFilter(model, iter));
+    return std::make_shared<MultiRangeFilter>(model, iter);
   else
-    return Filter::Ptr(new RatingsFilter(model, iter));
+    return std::make_shared<RatingsFilter>(model, iter);
 }
 
 bool Filter::IsValid() const
@@ -113,11 +113,6 @@ void Filter::IgnoreChanges(bool ignore)
   ignore_changes_ = ignore;
 }
 
-void Filter::OnModelDestroyed(Filter* self, DeeModel* old_location)
-{
-  self->OnRowRemoved(self->model_, self->iter_);
-}
-
 void Filter::OnRowChanged(DeeModel* model, DeeModelIter* iter)
 {
   if (iter_ != iter || ignore_changes_)
@@ -132,12 +127,17 @@ void Filter::OnRowChanged(DeeModel* model, DeeModelIter* iter)
   filtering.EmitChanged(get_filtering());
 }
 
+void Filter::OnModelDestroyed(Filter* self, DeeModel* old_location)
+{
+  self->model_ = 0;
+  self->OnRowRemoved(old_location, self->iter_);
+}
+
 void Filter::OnRowRemoved(DeeModel* model, DeeModelIter* iter)
 {
   if (iter_ != iter)
     return;
 
-  model_ = 0;
   iter_ = 0;
   removed.emit();
 }

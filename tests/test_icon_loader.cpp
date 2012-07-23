@@ -18,6 +18,7 @@
  */
 
 #include <gmock/gmock.h>
+#include <sigc++/sigc++.h>
 
 #include "IconLoader.h"
 
@@ -47,7 +48,7 @@ struct LoadResult
 
   LoadResult() : pixbuf(NULL), got_callback(false) {}
   void IconLoaded(std::string const& icon_name, unsigned size,
-                  GdkPixbuf *buf)
+                  glib::Object<GdkPixbuf> const& buf)
   {
     pixbuf = buf;
 

@@ -17,7 +17,7 @@
  * Authored By: Sam Spilsbury <sam.spilsbury@canonical.com>
  */
 
-#ifndef USE_GLES
+#ifndef USE_MODERN_COMPIZ_GL
 #include "ScreenEffectFramebufferObject.h"
 #include "BackgroundEffectHelper.h"
 #include <NuxCore/Logger.h>
@@ -101,6 +101,14 @@ bool unity::ScreenEffectFramebufferObject::status ()
 
 void unity::ScreenEffectFramebufferObject::bind (const nux::Geometry &output)
 {
+  /* Very important!
+   * Don't bind unless BackgroundEffectHelper says it's necessary.
+   * Because binding has a severe impact on graphics performance and we
+   * can't afford to do it every frame. (LP: #861061) (LP: #987304)
+   */
+  if (!BackgroundEffectHelper::HasDirtyHelpers())
+    return;
+
   /* Clear the error bit */
   glGetError ();
 
@@ -231,5 +239,5 @@ unity::ScreenEffectFramebufferObject::~ScreenEffectFramebufferObject ()
     glDeleteTextures (1, &mFBTexture);
 }
 
-#endif // USE_GLES
+#endif // USE_MODERN_COMPIZ_GL
 

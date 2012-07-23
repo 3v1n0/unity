@@ -6,9 +6,9 @@ This test ensures that the keyboard shortcuts overlay bottom is not truncated.
 Setup:
 #. Make sure you have a monitor with a resoultion bigger than 1024x768.
 
-Action:
+Actions:
 #. Move your mouse in that monitor.
 #. Press "Super" key.
 
-Outcome:
+Expected Result:
   The keyboard shortcuts overlay bottom is not truncated.

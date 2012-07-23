@@ -41,19 +41,19 @@ public:
    stopped_(false),
    ended_(false)
   {
-    test_animator_.animation_started.connect([&started_]() {
+    test_animator_.animation_started.connect([this]() {
       started_ = true;
     });
 
-    test_animator_.animation_ended.connect([&ended_]() {
+    test_animator_.animation_ended.connect([this]() {
       ended_ = true;
     });
 
-    test_animator_.animation_stopped.connect([&stopped_](double progress) {
+    test_animator_.animation_stopped.connect([this](double progress) {
       stopped_ = true;
     });
 
-    test_animator_.animation_updated.connect([&](double progress) {
+    test_animator_.animation_updated.connect([this](double progress) {
       n_steps_++;
       current_progress_ = progress;
       got_update_ = true;

@@ -36,7 +36,7 @@ std::list<Introspectable*> GetIntrospectableNodesFromQuery(std::string const& qu
 class DebugDBusInterface
 {
 public:
-  DebugDBusInterface(Introspectable* introspectable, CompScreen* uscreen);
+  DebugDBusInterface(Introspectable* introspectable);
   ~DebugDBusInterface();
 
 private:

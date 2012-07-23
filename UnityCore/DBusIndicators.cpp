@@ -18,12 +18,15 @@
  *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
+#include <NuxCore/Logger.h>
+
 #include "config.h"
-#include "DBusIndicators.h"
 
 #include "GLibWrapper.h"
 #include "GLibDBusProxy.h"
+#include "GLibSource.h"
 #include "Variant.h"
+#include "DBusIndicators.h"
 
 namespace unity
 {
@@ -32,6 +35,8 @@ namespace indicator
 
 namespace
 {
+nux::logging::Logger logger("unity.indicator.DBusIndicators");
+
 const std::string SERVICE_NAME("com.canonical.Unity.Panel.Service");
 const std::string SERVICE_PATH("/com/canonical/Unity/Panel/Service");
 const std::string SERVICE_IFACE("com.canonical.Unity.Panel.Service");
@@ -44,7 +49,6 @@ class DBusIndicators::Impl
 {
 public:
   Impl(DBusIndicators* owner);
-  ~Impl();
 
   void CheckLocalService();
   void RequestSyncAll();
@@ -69,17 +73,12 @@ public:
   virtual void OnShowAppMenu(unsigned int xid, int x, int y,
                              unsigned int timestamp);
 
-  struct CallData
-  {
-    Impl* self;
-    glib::Variant parameters;
-  };
-
   DBusIndicators* owner_;
-  guint reconnect_timeout_id_;
-  guint show_entry_idle_id_;
-  guint show_appmenu_idle_id_;
+
   glib::DBusProxy gproxy_;
+  glib::Source::UniquePtr reconnect_timeout_;
+  glib::Source::UniquePtr show_entry_idle_;
+  glib::Source::UniquePtr show_appmenu_idle_;
   std::map<std::string, EntryLocationMap> cached_locations_;
 };
 
@@ -87,9 +86,6 @@ public:
 // Public Methods
 DBusIndicators::Impl::Impl(DBusIndicators* owner)
   : owner_(owner)
-  , reconnect_timeout_id_(0)
-  , show_entry_idle_id_(0)
-  , show_appmenu_idle_id_(0)
   , gproxy_(SERVICE_NAME, SERVICE_PATH, SERVICE_IFACE,
             G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES)
 {
@@ -104,18 +100,6 @@ DBusIndicators::Impl::Impl(DBusIndicators* owner)
   CheckLocalService();
 }
 
-DBusIndicators::Impl::~Impl()
-{
-  if (reconnect_timeout_id_)
-    g_source_remove(reconnect_timeout_id_);
-
-  if (show_entry_idle_id_)
-    g_source_remove(show_entry_idle_id_);
-
-  if (show_appmenu_idle_id_)
-    g_source_remove(show_appmenu_idle_id_);
-}
-
 void DBusIndicators::Impl::CheckLocalService()
 {
   if (g_getenv("PANEL_USE_LOCAL_SERVICE"))
@@ -128,16 +112,15 @@ void DBusIndicators::Impl::CheckLocalService()
     // This is obviously hackish, but this part of the code is mostly hackish...
     // Let's attempt to run it from where we expect it to be
     std::string cmd = PREFIXDIR + std::string("/lib/unity/unity-panel-service");
-    std::cerr << "\nWARNING: Couldn't load panel from installed services, "
-              << "so trying to load panel from known location: "
-              << cmd << "\n";
+    LOG_WARN(logger) << "Couldn't load panel from installed services, "
+                     << "so trying to load panel from known location: " << cmd;
 
     g_spawn_command_line_async(cmd.c_str(), &error);
 
     if (error)
     {
-      std::cerr << "\nWARNING: Unable to launch remote service manually: "
-                << error.Message() << "\n";
+      LOG_ERROR(logger) << "Unable to launch remote service manually: "
+                        << error.Message();
     }
   }
 }
@@ -159,21 +142,15 @@ void DBusIndicators::Impl::OnDisconnected()
   CheckLocalService();
   RequestSyncAll();
 
-  if (reconnect_timeout_id_)
-    g_source_remove(reconnect_timeout_id_);
-
-  reconnect_timeout_id_ = g_timeout_add_seconds(1, [](gpointer data) -> gboolean {
-    auto self = static_cast<DBusIndicators::Impl*>(data);
-
-    if (!self->gproxy_.IsConnected())
+  reconnect_timeout_.reset(new glib::TimeoutSeconds(1, [&] {
+    if (!gproxy_.IsConnected())
     {
-      self->RequestSyncAll();
-      return TRUE;
+      RequestSyncAll();
+      return true;
     }
 
-    self->reconnect_timeout_id_ = 0;
-    return FALSE;
-  }, this);
+    return false;
+  }));
 }
 
 void DBusIndicators::Impl::OnReSync(GVariant* parameters)
@@ -243,20 +220,13 @@ void DBusIndicators::Impl::OnEntryShowMenu(std::string const& entry_id,
   // We have to do this because on certain systems X won't have time to
   // respond to our request for XUngrabPointer and this will cause the
   // menu not to show
-  auto data = new CallData();
-  data->self = this;
-  data->parameters = g_variant_new("(suiiuu)", entry_id.c_str(), xid, x, y,
-                                   button, timestamp);
 
-  if (show_entry_idle_id_)
-    g_source_remove(show_entry_idle_id_);
-
-  show_entry_idle_id_ = g_idle_add_full (G_PRIORITY_DEFAULT, [] (gpointer data) -> gboolean {
-    auto call_data = static_cast<CallData*>(data);
-    call_data->self->gproxy_.Call("ShowEntry", call_data->parameters);
-
-    return FALSE;
-  }, data, [] (gpointer data) { delete static_cast<CallData*>(data); });
+  show_entry_idle_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
+  show_entry_idle_->Run([&, entry_id, xid, x, y, button, timestamp] {
+    gproxy_.Call("ShowEntry", g_variant_new("(suiiuu)", entry_id.c_str(), xid,
+                                                        x, y, button, timestamp));
+    return false;
+  });
 }
 
 void DBusIndicators::Impl::OnShowAppMenu(unsigned int xid, int x, int y,
@@ -267,19 +237,12 @@ void DBusIndicators::Impl::OnShowAppMenu(unsigned int xid, int x, int y,
   // We have to do this because on certain systems X won't have time to
   // respond to our request for XUngrabPointer and this will cause the
   // menu not to show
-  auto data = new CallData();
-  data->self = this;
-  data->parameters = g_variant_new("(uiiu)", xid, x, y, timestamp);
 
-  if (show_appmenu_idle_id_)
-    g_source_remove(show_appmenu_idle_id_);
-
-  show_appmenu_idle_id_ = g_idle_add_full (G_PRIORITY_DEFAULT, [] (gpointer data) -> gboolean {
-    auto call_data = static_cast<CallData*>(data);
-    call_data->self->gproxy_.Call("ShowAppMenu", call_data->parameters);
-
-    return FALSE;
-  }, data, [] (gpointer data) { delete static_cast<CallData*>(data); });
+  show_entry_idle_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
+  show_entry_idle_->Run([&, xid, x, y, timestamp] {
+    gproxy_.Call("ShowEntry", g_variant_new("(uiiu)", xid, x, y, timestamp));
+    return false;
+  });
 }
 
 void DBusIndicators::Impl::OnEntrySecondaryActivate(std::string const& entry_id,
@@ -346,16 +309,9 @@ void DBusIndicators::Impl::Sync(GVariant* args)
 
       if (!e)
       {
-        e = Entry::Ptr(new Entry(entry,
-                                 name_hint,
-                                 label,
-                                 label_sensitive,
-                                 label_visible,
-                                 image_type,
-                                 image_data,
-                                 image_sensitive,
-                                 image_visible,
-                                 priority));
+        e = std::make_shared<Entry>(entry, name_hint, label, label_sensitive,
+                                    label_visible, image_type, image_data,
+                                    image_sensitive, image_visible, priority);
       }
       else
       {

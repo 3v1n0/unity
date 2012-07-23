@@ -2,10 +2,10 @@ if (GTEST_SRC_DIR)
   set(UNITY_SRC ${CMAKE_SOURCE_DIR}/plugins/unityshell/src)
 
   add_custom_command(OUTPUT GestureEngine.cpp GestureEngine.h UBusMessages.h
-                     COMMAND cp ${UNITY_SRC}/GestureEngine.cpp ${UNITY_SRC}/GestureEngine.h ${UNITY_SRC}/UBusMessages.h ${CMAKE_CURRENT_BINARY_DIR}
+                     COMMAND cp ${UNITY_SRC}/GestureEngine.cpp ${UNITY_SRC}/GestureEngine.h ${CMAKE_SOURCE_DIR}/unity-shared//UBusMessages.h ${CMAKE_CURRENT_BINARY_DIR}
                      COMMAND sed -f ${CMAKE_CURRENT_SOURCE_DIR}/sed_script ${UNITY_SRC}/GestureEngine.cpp > ${CMAKE_CURRENT_BINARY_DIR}/GestureEngine.cpp
                      COMMAND sed -f ${CMAKE_CURRENT_SOURCE_DIR}/sed_script ${UNITY_SRC}/GestureEngine.h > ${CMAKE_CURRENT_BINARY_DIR}/GestureEngine.h
-                     DEPENDS ${UNITY_SRC}/GestureEngine.cpp ${UNITY_SRC}/GestureEngine.h ${UNITY_SRC}/UBusMessages.h
+                     DEPENDS ${UNITY_SRC}/GestureEngine.cpp ${UNITY_SRC}/GestureEngine.h ${CMAKE_SOURCE_DIR}/unity-shared/UBusMessages.h
                      COMMENT "Copying GestureEngine source.")
 
   # Clean-up includes and definitions made in ../CmakeLists.txt
@@ -34,7 +34,7 @@ if (GTEST_SRC_DIR)
                 )
   target_link_libraries(test-gesture-engine gtest ${TEST_GESTURE_ENGINE_DEPS_LIBRARIES} -lcompiz_core)
   add_test(UnityGTestGestureEngine test-gesture-engine)
-  add_dependencies(test-gesture-engine gtest)
+  add_dependencies(test-gesture-engine gtest unity-core-${UNITY_API_VERSION})
 
   add_custom_target (check-gesture-engine COMMAND ./test-gesture-engine DEPENDS test-gesture-engine)
 endif (GTEST_SRC_DIR)

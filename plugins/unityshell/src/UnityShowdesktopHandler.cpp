@@ -51,7 +51,7 @@ bool ShowdesktopHandler::ShouldHide (ShowdesktopHandlerWindowInterface *wi)
     return false;
 
   if (wi->Hidden())
-    if ((wi->ShowDesktopMode() || wi->Shaded()))
+    if ((wi->ShowDesktopMode() || wi->Shaded() || wi->Minimized()))
       return false;
 
   return true;
@@ -79,9 +79,10 @@ ShowdesktopHandler::InhibitingXid()
   return inhibiting_xid;
 }
 
-ShowdesktopHandler::ShowdesktopHandler (ShowdesktopHandlerWindowInterface *wi) :
+ShowdesktopHandler::ShowdesktopHandler (ShowdesktopHandlerWindowInterface *wi, compiz::WindowInputRemoverLockAcquireInterface *lock_acquire_interface) :
   showdesktop_handler_window_interface_ (wi),
-  remover_ (wi->InputRemover()),
+  lock_acquire_interface_ (lock_acquire_interface),
+  remover_(),
   state_ (StateVisible),
   progress_ (0.0f)
 {
@@ -105,8 +106,7 @@ void ShowdesktopHandler::FadeOut()
   {
     showdesktop_handler_window_interface_->Hide();
     showdesktop_handler_window_interface_->NotifyHidden();
-    remover_->save();
-    remover_->remove();
+    remover_ = lock_acquire_interface_->InputRemover();
 
     if (std::find (animating_windows.begin(),
                    animating_windows.end(),
@@ -127,7 +127,7 @@ void ShowdesktopHandler::FadeIn()
   {
     showdesktop_handler_window_interface_->Show();
     showdesktop_handler_window_interface_->NotifyShown();
-    remover_->restore();
+    remover_.reset();
 
     if (std::find (animating_windows.begin(),
                    animating_windows.end(),
@@ -184,8 +184,7 @@ void ShowdesktopHandler::HandleShapeEvent()
   /* Ignore sent events from the InputRemover */
   if (remover_)
   {
-    remover_->save();
-    remover_->remove();
+    remover_->refresh();
   }
 }
 

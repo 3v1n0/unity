@@ -60,12 +60,16 @@ const char* DebugDBusInterface::DBUS_DEBUG_OBJECT_PATH = "/com/canonical/Unity/D
 
 const gchar DebugDBusInterface::introspection_xml[] =
   " <node>"
-  "   <interface name='com.canonical.Unity.Debug.Introspection'>"
+  "   <interface name='com.canonical.Autopilot.Introspection'>"
   ""
   "     <method name='GetState'>"
   "       <arg type='s' name='piece' direction='in' />"
-  "       <arg type='aa{sv}' name='state' direction='out' />"
+  "       <arg type='a(sv)' name='state' direction='out' />"
   "     </method>"
+  ""
+  "   </interface>"
+  ""
+  "   <interface name='com.canonical.Unity.Debug.Logging'>"
   ""
   "     <method name='StartLogToFile'>"
   "       <arg type='s' name='file_path' direction='in' />"
@@ -94,13 +98,10 @@ GDBusInterfaceVTable DebugDBusInterface::interface_vtable =
   NULL
 };
 
-static CompScreen* _screen;
 static Introspectable* _parent_introspectable;
 
-DebugDBusInterface::DebugDBusInterface(Introspectable* parent,
-                                       CompScreen* screen)
+DebugDBusInterface::DebugDBusInterface(Introspectable* parent)
 {
-  _screen = screen;
   _parent_introspectable = parent;
   _owner_id = g_bus_own_name(G_BUS_TYPE_SESSION,
                              unity::DBUS_BUS_NAME.c_str(),
@@ -177,8 +178,9 @@ DebugDBusInterface::HandleDBusMethodCall(GDBusConnection* connection,
     g_variant_get(parameters, "(&s)", &input);
 
     ret = GetState(input);
+    // GetState returns a floating variant and
+    // g_dbus_method_invocation_return_value ref sinks it
     g_dbus_method_invocation_return_value(invocation, ret);
-    g_variant_unref(ret);
   }
   else if (g_strcmp0(method_name, "StartLogToFile") == 0)
   {
@@ -225,14 +227,17 @@ GVariant* GetState(std::string const& query)
   // process the XPath query:
   std::list<Introspectable*> parts = GetIntrospectableNodesFromQuery(query, _parent_introspectable);
   GVariantBuilder  builder;
-  g_variant_builder_init(&builder, G_VARIANT_TYPE("aa{sv}"));
-
+  g_variant_builder_init(&builder, G_VARIANT_TYPE("a(sv)"));
+  if (parts.empty())
+  {
+    LOG_WARNING(logger) << "Query '" << query << "' Did not match anything.";
+  }
   for (Introspectable *node : parts)
   {
-    g_variant_builder_add_value(&builder, node->Introspect());
+    g_variant_builder_add(&builder, "(sv)", node->GetName().c_str(), node->Introspect());
   }
 
-  return g_variant_new("(aa{sv})", &builder);
+  return g_variant_new("(a(sv))", &builder);
 }
 
 void StartLogToFile(std::string const& file_path)

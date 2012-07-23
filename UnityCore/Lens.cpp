@@ -22,6 +22,7 @@
 #include <gio/gio.h>
 #include <glib.h>
 #include <NuxCore/Logger.h>
+#include <unity-protocol.h>
 
 #include "config.h"
 #include "GLibDBusProxy.h"
@@ -84,7 +85,11 @@ public:
   void Activate(std::string const& uri);
   void ActivationReply(GVariant* parameters);
   void Preview(std::string const& uri);
-  void PreviewReply(GVariant* parameters);
+  void ActivatePreviewAction(std::string const& action_id,
+                             std::string const& uri);
+  void SignalPreview(std::string const& preview_uri,
+                     glib::Variant const& preview_update,
+                     glib::DBusProxy::ReplyCallback reply_cb);
 
   string const& id() const;
   string const& dbus_name() const;
@@ -126,6 +131,7 @@ public:
   glib::DBusProxy* proxy_;
   glib::Object<GCancellable> search_cancellable_;
   glib::Object<GCancellable> global_search_cancellable_;
+  glib::Object<GCancellable> preview_cancellable_;
 
   GVariant *results_variant_;
   GVariant *global_results_variant_;
@@ -495,7 +501,8 @@ void Lens::Impl::Activate(std::string const& uri)
     }
 
   proxy_->Call("Activate",
-               g_variant_new("(su)", uri.c_str(), 0),
+               g_variant_new("(su)", uri.c_str(),
+                             UNITY_PROTOCOL_ACTION_TYPE_ACTIVATE_RESULT),
                sigc::mem_fun(this, &Lens::Impl::ActivationReply));
 }
 
@@ -511,7 +518,29 @@ void Lens::Impl::ActivationReply(GVariant* parameters)
   glib::Variant dict (hints_variant, glib::StealRef());
   dict.ASVToHints(hints);
 
-  owner_->activated.emit(uri.Str(), static_cast<HandledType>(handled), hints);
+  if (handled == UNITY_PROTOCOL_HANDLED_TYPE_SHOW_PREVIEW)
+  {
+    auto iter = hints.find("preview");
+    if (iter != hints.end())
+    {
+      Preview::Ptr preview(Preview::PreviewForVariant(iter->second));
+      if (preview)
+      {
+        // would be nice to make parent_lens a shared_ptr,
+        // but that's not really doable from here
+        preview->parent_lens = owner_;
+        preview->preview_uri = uri.Str();
+        owner_->preview_ready.emit(uri.Str(), preview);
+        return;
+      }
+    }
+
+    LOG_WARNING(logger) << "Unable to deserialize Preview";
+  }
+  else
+  {
+    owner_->activated.emit(uri.Str(), static_cast<HandledType>(handled), hints);
+  }
 }
 
 void Lens::Impl::Preview(std::string const& uri)
@@ -524,26 +553,59 @@ void Lens::Impl::Preview(std::string const& uri)
       return;
     }
 
-  proxy_->Call("Preview",
-               g_variant_new("(s)", uri.c_str()),
-               sigc::mem_fun(this, &Lens::Impl::PreviewReply));
+  if (preview_cancellable_)
+  {
+    g_cancellable_cancel(preview_cancellable_);
+  }
+  preview_cancellable_ = g_cancellable_new ();
+
+  proxy_->Call("Activate",
+               g_variant_new("(su)", uri.c_str(),
+                             UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_RESULT),
+               sigc::mem_fun(this, &Lens::Impl::ActivationReply),
+               preview_cancellable_);
 }
 
-void Lens::Impl::PreviewReply(GVariant* parameters)
+void Lens::Impl::ActivatePreviewAction(std::string const& action_id,
+                                       std::string const& uri)
 {
-  glib::String uri;
-  glib::String renderer_name;
-  GVariant* hints_variant;
-  Hints hints;
-  
-  g_variant_get(parameters, "((ss@a{sv}))", &uri, &renderer_name, &hints_variant);
+  LOG_DEBUG(logger) << "Activating action '" << action_id << "' on  '" << id_ << "'";
 
-  glib::Variant dict (hints_variant, glib::StealRef());
-  dict.ASVToHints(hints);
+  if (!proxy_->IsConnected())
+    {
+      LOG_DEBUG(logger) << "Skipping activation. Proxy not connected. ('" << id_ << "')";
+      return;
+    }
 
-  Preview::Ptr preview = Preview::PreviewForProperties(renderer_name.Str(), hints);
-  owner_->preview_ready.emit(uri.Str(), preview);
+  std::string activation_uri(action_id);
+  activation_uri += ":";
+  activation_uri += uri;
+
+  proxy_->Call("Activate",
+               g_variant_new("(su)", activation_uri.c_str(),
+                             UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_ACTION),
+               sigc::mem_fun(this, &Lens::Impl::ActivationReply));
 }
+
+void Lens::Impl::SignalPreview(std::string const& preview_uri,
+                               glib::Variant const& preview_update,
+                               glib::DBusProxy::ReplyCallback reply_cb)
+{
+  LOG_DEBUG(logger) << "Signalling preview '" << preview_uri << "' on  '" << id_ << "'";
+
+  if (!proxy_->IsConnected())
+    {
+      LOG_DEBUG(logger) << "Can't signal preview. Proxy not connected. ('" << id_ << "')";
+      return;
+    }
+
+  GVariant *preview_update_variant = preview_update;
+  proxy_->Call("UpdatePreviewProperty",
+               g_variant_new("(s@a{sv})", preview_uri.c_str(),
+                             preview_update_variant),
+               reply_cb);
+}
+
 string const& Lens::Impl::id() const
 {
   return id_;
@@ -701,6 +763,20 @@ void Lens::Preview(std::string const& uri)
 {
   pimpl->Preview(uri);
 }
+
+void Lens::ActivatePreviewAction(std::string const& action_id,
+                                 std::string const& uri)
+{
+  pimpl->ActivatePreviewAction(action_id, uri);
+}
+
+void Lens::SignalPreview(std::string const& uri,
+                         glib::Variant const& preview_update,
+                         glib::DBusProxy::ReplyCallback reply_cb)
+{
+  pimpl->SignalPreview(uri, preview_update, reply_cb);
+}
+
 
 }
 }

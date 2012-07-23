@@ -1,5 +1,5 @@
 find_package (PkgConfig)
-pkg_check_modules (CORE_DEPS REQUIRED glib-2.0 gio-2.0 dee-1.0 sigc++-2.0 nux-core-2.0 gdk-pixbuf-2.0 unity)
+pkg_check_modules (CORE_DEPS REQUIRED glib-2.0 gio-2.0 dee-1.0 sigc++-2.0 nux-core-3.0 gdk-pixbuf-2.0 unity-protocol-private)
 
 execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} unity --variable lensesdir OUTPUT_VARIABLE _lensesdir OUTPUT_STRIP_TRAILING_WHITESPACE)
 
@@ -21,6 +21,7 @@ set (CORE_HEADERS
      GLibDBusProxy.h
      GLibSignal.h
      GLibSignal-inl.h
+     GLibSource.h
      GLibWrapper.h
      GLibWrapper-inl.h
      Hud.h
@@ -30,8 +31,9 @@ set (CORE_HEADERS
      Indicators.h
      Lens.h
      Lenses.h
+     MoviePreview.h
      MultiRangeFilter.h
-     MusicPreviews.h
+     MusicPreview.h
      Model.h
      Model-inl.h
      ModelRowAdaptor.h
@@ -41,6 +43,9 @@ set (CORE_HEADERS
      RatingsFilter.h
      Result.h
      Results.h
+     SeriesPreview.h
+     Track.h
+     Tracks.h
      Variant.h
     )
 
@@ -58,6 +63,7 @@ set (CORE_SOURCES
      GenericPreview.cpp
      GLibDBusProxy.cpp
      GLibSignal.cpp
+     GLibSource.cpp
      GLibWrapper.cpp
      Hud.cpp
      HomeLens.cpp
@@ -65,14 +71,18 @@ set (CORE_SOURCES
      IndicatorEntry.cpp
      Indicators.cpp
      Lens.cpp
+     MoviePreview.cpp
      MultiRangeFilter.cpp
-     MusicPreviews.cpp
+     MusicPreview.cpp
      ModelRowAdaptor.cpp
      Preview.cpp
      RatingsFilter.cpp
      RadioOptionFilter.cpp
      Result.cpp
      Results.cpp
+     SeriesPreview.cpp
+     Track.cpp
+     Tracks.cpp
      Variant.cpp
     )
 

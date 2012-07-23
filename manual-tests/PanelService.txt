@@ -1,10 +1,13 @@
 Panel Service doesn't crash with a11y
 -------------------------------------
 
+Setup:
+
+Actions:
 #. Start with a clean screen
 #. Save this python script and run it http://paste.ubuntu.com/893441/
 
-Outcome:
+Expected Result:
   The test should open the Software Center, move to the accessories and then
   close it again, during this process the the panel service shouldn't crash.
   This means that the menus and indicators must not be removed and readded

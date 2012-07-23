@@ -146,13 +146,13 @@ Indicator::Ptr Indicators::Impl::AddIndicator(std::string const& name)
 
   if (name == "libappmenu.so")
   {
-    AppmenuIndicator *appmenu = new AppmenuIndicator(name);
+    auto appmenu = std::make_shared<AppmenuIndicator>(name);
     appmenu->on_show_appmenu.connect(sigc::mem_fun(owner_, &Indicators::OnShowAppMenu));
-    indicator.reset(appmenu);
+    indicator = appmenu;
   }
   else
   {
-    indicator.reset(new Indicator(name));
+    indicator = std::make_shared<Indicator>(name);
   }
 
   // The owner Indicators class is interested in the other events.

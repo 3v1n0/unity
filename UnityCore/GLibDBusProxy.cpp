@@ -26,6 +26,8 @@
 
 #include "GLibWrapper.h"
 #include "GLibSignal.h"
+#include "GLibSource.h"
+#include "Variant.h"
 
 namespace unity
 {
@@ -76,7 +78,6 @@ public:
   struct CallData
   {
     DBusProxy::ReplyCallback callback;
-    DBusProxy::Impl* impl;
     std::string method_name;
   };
 
@@ -90,11 +91,11 @@ public:
   glib::Object<GDBusProxy> proxy_;
   glib::Object<GCancellable> cancellable_;
   guint watcher_id_;
-  guint reconnect_timeout_id_;
   bool connected_;
 
   glib::Signal<void, GDBusProxy*, char*, char*, GVariant*> g_signal_connection_;
   glib::Signal<void, GDBusProxy*, GParamSpec*> name_owner_signal_;
+  glib::Source::UniquePtr reconnect_timeout_;
 
   SignalHandlers handlers_;
 };
@@ -113,7 +114,6 @@ DBusProxy::Impl::Impl(DBusProxy* owner,
   , flags_(flags)
   , cancellable_(g_cancellable_new())
   , watcher_id_(0)
-  , reconnect_timeout_id_(0)
   , connected_(false)
 {
   StartReconnectionTimeout();
@@ -124,27 +124,21 @@ DBusProxy::Impl::~Impl()
   g_cancellable_cancel(cancellable_);
   if (watcher_id_)
     g_bus_unwatch_name(watcher_id_);
-  if (reconnect_timeout_id_)
-    g_source_remove(reconnect_timeout_id_);
 }
 
 void DBusProxy::Impl::StartReconnectionTimeout()
 {
   LOG_DEBUG(logger) << "Starting reconnection timeout for " << name_;
 
-  if (reconnect_timeout_id_)
-    g_source_remove(reconnect_timeout_id_);
-
-  auto callback = [](gpointer user_data) -> gboolean
+  auto callback = [&]
   {
-    DBusProxy::Impl* self = static_cast<DBusProxy::Impl*>(user_data);
-    if (!self->proxy_)
-      self->Connect();
+    if (!proxy_)
+      Connect();
 
-    self->reconnect_timeout_id_ = 0;
-    return FALSE;
+    return false;
   };
-  reconnect_timeout_id_ = g_timeout_add_seconds(1, callback, this);
+
+  reconnect_timeout_.reset(new glib::TimeoutSeconds(1, callback));
 }
 
 void DBusProxy::Impl::Connect()
@@ -248,7 +242,6 @@ void DBusProxy::Impl::Call(string const& method_name,
   {
     CallData* data = new CallData();
     data->callback = callback;
-    data->impl = this;
     data->method_name = method_name;
 
     g_dbus_proxy_call(proxy_,
@@ -270,31 +263,34 @@ void DBusProxy::Impl::Call(string const& method_name,
 void DBusProxy::Impl::OnCallCallback(GObject* source, GAsyncResult* res, gpointer call_data)
 {
   glib::Error error;
-  std::unique_ptr<CallData> data (static_cast<CallData*>(call_data));
-  GVariant* result = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
+  std::unique_ptr<CallData> data(static_cast<CallData*>(call_data));
+  glib::Variant result(g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error), glib::StealRef());
 
-  if (error && g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+  if (error)
   {
-    // silently ignore
+    if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+    {
+      // silently ignore
+    }
+    else
+    {
+      LOG_WARNING(logger) << "Calling method \"" << data->method_name
+        << "\" on object path: \""
+        << g_dbus_proxy_get_object_path(G_DBUS_PROXY(source))
+        << "\" failed: " << error;
+    }
+
+    return;
   }
-  else if (error)
-  {
-    // Do not touch the impl pointer as the operation may have been cancelled
-    LOG_WARNING(logger) << "Calling method \"" << data->method_name
-      << "\" on object path: \""
-      << g_dbus_proxy_get_object_path (G_DBUS_PROXY (source))
-      << "\" failed: " << error;
-  }
-  else
-  {
+
+  if (data->callback)
     data->callback(result);
-    g_variant_unref(result);
-  }
 }
 
 void DBusProxy::Impl::Connect(std::string const& signal_name, ReplyCallback callback)
 {
-  handlers_[signal_name].push_back(callback);
+  if (callback)
+    handlers_[signal_name].push_back(callback);
 }
 
 DBusProxy::DBusProxy(string const& name,

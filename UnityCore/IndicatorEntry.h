@@ -24,9 +24,8 @@
 #include <iosfwd>
 #include <map>
 #include <string>
-
+#include <memory>
 #include <sigc++/signal.h>
-#include <boost/shared_ptr.hpp>
 
 #include <NuxCore/Rect.h>
 
@@ -42,7 +41,7 @@ typedef std::map<std::string, nux::Rect> EntryLocationMap;
 class Entry
 {
 public:
-  typedef boost::shared_ptr<Entry> Ptr;
+  typedef std::shared_ptr<Entry> Ptr;
 
   Entry(std::string const& id,
         std::string const& name_hint,

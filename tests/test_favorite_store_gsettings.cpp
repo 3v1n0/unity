@@ -43,7 +43,7 @@ namespace {
 // Constant
 const gchar* SCHEMA_DIRECTORY = BUILDDIR"/settings";
 const gchar* BASE_STORE_FILE = BUILDDIR"/settings/test-favorite-store-gsettings.store";
-const gchar* BASE_STORE_CONTENTS = "[desktop/unity/launcher]\n" \
+const gchar* BASE_STORE_CONTENTS = "[com/canonical/unity/launcher]\n" \
                                    "favorites=['%s', '%s', '%s']";
 
 const char* base_store_favs[] = { BUILDDIR"/tests/data/ubuntuone-installer.desktop",
