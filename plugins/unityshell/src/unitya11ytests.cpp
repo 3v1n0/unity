@@ -48,7 +48,7 @@ using unity::launcher::SimpleLauncherIcon;
  * This unit test checks if the destroy management is working:
  *
  * - If the state of a accessibility object is properly updated after
- *   the objects destruction
+ *   the object's destruction
  *
  */
 static gboolean
