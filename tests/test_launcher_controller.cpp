@@ -21,10 +21,13 @@
 #include <gmock/gmock.h>
 #include "test_utils.h"
 
+#include "FavoriteStore.h"
+#include "MultiMonitor.h"
+#include "LauncherController.h"
+#include "Launcher.h"
 #include "PanelStyle.h"
 #include "UnitySettings.h"
-#include "FavoriteStore.h"
-#include "LauncherController.h"
+#include "UScreen.h"
 
 using namespace unity;
 using namespace unity::launcher;
@@ -50,6 +53,41 @@ private:
   FavoriteList fav_list_;
 };
 
+class MockUScreen : public UScreen
+{
+public:
+  MockUScreen()
+  {
+    Reset(false);
+  }
+
+  ~MockUScreen()
+  {
+    if (default_screen_ == this)
+      default_screen_ = nullptr;
+  }
+
+  void Reset(bool emit = true)
+  {
+    default_screen_ = this;
+    primary_ = 0;
+    monitors_ = {nux::Geometry(0, 0, 1024, 768)};
+
+    changed.emit(primary_, monitors_);
+  }
+
+  void SetPrimary(int primary, bool emit = true)
+  {
+    if (primary_ != primary)
+    {
+      primary_ = primary;
+
+      if (emit)
+        changed.emit(primary_, monitors_);
+    }
+  }
+};
+
 class TestLauncherController : public Test
 {
 public:
@@ -63,6 +101,24 @@ public:
     lc.multiple_launchers = true;
   }
 
+  void SetupFakeMultiMonitor(int primary = 0, bool emit_update = true)
+  {
+    uscreen.SetPrimary(primary, false);
+    uscreen.GetMonitors().clear();
+    const unsigned MONITOR_WIDTH = 1024;
+    const unsigned MONITOR_HEIGHT = 768;
+
+    for (int i = 0, total_width = 0; i < max_num_monitors; ++i)
+    {
+      uscreen.GetMonitors().push_back(nux::Geometry(MONITOR_WIDTH, MONITOR_HEIGHT, total_width, 0));
+      total_width += MONITOR_WIDTH;
+    }
+
+    if (emit_update)
+      uscreen.changed.emit(uscreen.GetPrimaryMonitor(), uscreen.GetMonitors());
+  }
+
+  MockUScreen uscreen;
   Settings settings;
   panel::Style panel_style;
   MockFavoriteStore favorite_store;
@@ -73,6 +129,56 @@ TEST_F(TestLauncherController, Construction)
 {
   EXPECT_NE(lc.options(), nullptr);
   EXPECT_TRUE(lc.multiple_launchers());
+}
+
+TEST_F(TestLauncherController, MultimonitorMultipleLaunchers)
+{
+  lc.multiple_launchers = true;
+  SetupFakeMultiMonitor();
+
+  ASSERT_EQ(lc.launchers().size(), max_num_monitors);
+
+  for (int i = 0; i < max_num_monitors; ++i)
+  {
+    EXPECT_EQ(lc.launchers()[i]->monitor(), i);
+  }
+}
+
+TEST_F(TestLauncherController, MultimonitorSingleLauncher)
+{
+  lc.multiple_launchers = false;
+  SetupFakeMultiMonitor(0, false);
+
+  for (int i = 0; i < max_num_monitors; ++i)
+  {
+    uscreen.SetPrimary(i);
+    ASSERT_EQ(lc.launchers().size(), 1);
+    EXPECT_EQ(lc.launcher().monitor(), i);
+  }
+}
+
+TEST_F(TestLauncherController, MultimonitorSwitchToMultipleLaunchers)
+{
+  lc.multiple_launchers = false;
+  SetupFakeMultiMonitor();
+
+  ASSERT_EQ(lc.launchers().size(), 1);
+
+  lc.multiple_launchers = true;
+  EXPECT_EQ(lc.launchers().size(), 6);
+}
+
+TEST_F(TestLauncherController, MultimonitorSwitchToSingleLauncher)
+{
+  lc.multiple_launchers = true;
+  int primary = 3;
+  SetupFakeMultiMonitor(primary);
+
+  ASSERT_EQ(lc.launchers().size(), max_num_monitors);
+
+  lc.multiple_launchers = false;
+  EXPECT_EQ(lc.launchers().size(), 1);
+  EXPECT_EQ(lc.launcher().monitor(), primary);
 }
 
 }
