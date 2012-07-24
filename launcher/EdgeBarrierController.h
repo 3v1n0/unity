@@ -29,26 +29,27 @@ namespace ui {
 class EdgeBarrierSubscriber
 {
 public:
-  virtual bool HandleBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event) { return false; };
+  virtual bool HandleBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event) = 0;
 };
 
 class EdgeBarrierController : public sigc::trackable
 {
 public:
-  typedef std::shared_ptr<EdgeBarrierController> Ptr;
-
   EdgeBarrierController();
   ~EdgeBarrierController();
 
-  nux::Property<bool> sticky_edges;
+  nux::RWProperty<bool> sticky_edges;
   nux::Property<launcher::Options::Ptr> options;
 
-  void Subscribe(EdgeBarrierSubscriber* subscriber, int monitor);
-  void Unsubscribe(EdgeBarrierSubscriber* subscriber, int monitor);
+  void Subscribe(EdgeBarrierSubscriber* subscriber, unsigned int monitor);
+  void Unsubscribe(EdgeBarrierSubscriber* subscriber, unsigned int monitor);
+
+protected:
+  void ProcessBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event);
 
 private:
   struct Impl;
-  Impl* pimpl;
+  std::unique_ptr<Impl> pimpl;
 };
 
 }
