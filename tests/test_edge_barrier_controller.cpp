@@ -53,6 +53,11 @@ public:
   {
     EdgeBarrierController::ProcessBarrierEvent(owner, event);
   }
+
+  EdgeBarrierSubscriber* GetSubscriber(unsigned int monitor)
+  {
+    return EdgeBarrierController::GetSubscriber(monitor);
+  }
 };
 
 class TestBarrierSubscriber : public EdgeBarrierSubscriber
@@ -101,6 +106,9 @@ public:
 TEST_F(TestEdgeBarrierController, Construction)
 {
   EXPECT_FALSE(bc.sticky_edges);
+
+  for (int i = 0; i < max_num_monitors; ++i)
+    ASSERT_EQ(bc.GetSubscriber(i), &subscribers_[i]);
 }
 
 TEST_F(TestEdgeBarrierController, ProcessHandledEvent)
