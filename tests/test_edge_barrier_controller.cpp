@@ -111,6 +111,28 @@ TEST_F(TestEdgeBarrierController, Construction)
     ASSERT_EQ(bc.GetSubscriber(i), &subscribers_[i]);
 }
 
+TEST_F(TestEdgeBarrierController, Unsubscribe)
+{
+  for (int i = 0; i < max_num_monitors; ++i)
+  {
+    bc.Unsubscribe(&subscribers_[i], i);
+    ASSERT_EQ(bc.GetSubscriber(i), nullptr);
+  }
+}
+
+TEST_F(TestEdgeBarrierController, UnsubscribeInvalid)
+{
+  bc.Unsubscribe(&subscribers_[2], 1);
+  ASSERT_EQ(bc.GetSubscriber(2), &subscribers_[2]);
+}
+
+TEST_F(TestEdgeBarrierController, SubscriberReplace)
+{
+  TestBarrierSubscriber handling_subscriber(true);
+  bc.Subscribe(&handling_subscriber, 0);
+  EXPECT_EQ(bc.GetSubscriber(0), &handling_subscriber);
+}
+
 TEST_F(TestEdgeBarrierController, ProcessHandledEvent)
 {
   int monitor = 0;
