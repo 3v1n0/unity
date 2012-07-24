@@ -217,6 +217,7 @@ if (GTEST_SRC_DIR AND
                  test_hud_view.cpp
                  test_icon_loader.cpp
                  test_im_text_entry.cpp
+                 test_launcher_controller.cpp
                  test_keyboard_util.cpp
                  test_resultviewgrid.cpp
                  test_single_monitor_launcher_icon.cpp
@@ -239,9 +240,11 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/hud/HudView.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/AbstractLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/BamfLauncherIcon.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/BFBLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/CairoBaseWindow.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/DNDCollectionWindow.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/Decaymulator.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/DesktopLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/DeviceLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/DeviceLauncherSection.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/DevicesSettings.cpp
@@ -251,9 +254,12 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/launcher/FavoriteStoreGSettings.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/FavoriteStorePrivate.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/GeisAdapter.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/HudLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/Launcher.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/LauncherController.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/LauncherDragWindow.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/LauncherEntryRemote.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/LauncherEntryRemoteModel.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/LauncherHideMachine.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/LauncherHoverMachine.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/LauncherIcon.cpp
@@ -271,11 +277,14 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/launcher/QuicklistView.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/SimpleLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/SingleMonitorLauncherIcon.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/SoftwareCenterLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/SpacerLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/SwitcherController.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/SwitcherModel.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/SwitcherView.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/Tooltip.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/TrashLauncherIcon.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/VolumeMonitorWrapper.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/Animator.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/BackgroundEffectHelper.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/DashStyle.cpp
