@@ -214,6 +214,12 @@ void DashView::SetupUBusConnections()
 {
   ubus_manager_.RegisterInterest(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
       sigc::mem_fun(this, &DashView::OnActivateRequest));
+  ubus_manager_.RegisterInterest(UBUS_DASH_SET_SEARCH_VISIBILITY, [&] (GVariant* data) 
+  {
+    gboolean visibility;
+    g_variant_get(data, "(b)", &visibility);
+    search_bar_->SetVisible((visibility) ? true : false);
+  });
 }
 
 long DashView::PostLayoutManagement (long LayoutResult)

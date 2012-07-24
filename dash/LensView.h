@@ -119,6 +119,7 @@ private:
   nux::StaticCairoText* no_results_;
 
   previews::Preview::Ptr preview_;
+  ResultView* preview_resultview_;
   std::string last_activated_result_uri_;
   UBusManager ubus_manager_;
   glib::Source::UniquePtr fix_rendering_idle_;

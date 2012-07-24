@@ -71,7 +71,10 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   selected_index_.changed.connect(needredraw_lambda);
 
   key_nav_focus_change.connect(sigc::mem_fun(this, &ResultViewGrid::OnKeyNavFocusChange));
-  key_nav_focus_activate.connect([&] (nux::Area *area) { UriActivated.emit (focused_uri_); });
+  key_nav_focus_activate.connect([&] (nux::Area *area) 
+  { 
+    UriActivated.emit (focused_uri_, ResultView::ActivateType::DIRECT); 
+  });
   key_down.connect(sigc::mem_fun(this, &ResultViewGrid::OnKeyDown));
   mouse_move.connect(sigc::mem_fun(this, &ResultViewGrid::MouseMove));
   mouse_click.connect(sigc::mem_fun(this, &ResultViewGrid::MouseClick));
@@ -99,7 +102,23 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   });
 
   preview_spacer.changed.connect([this] (int space) { SizeReallocate(); });
-  preview_result_uri.changed.connect([this] (std::string uri) { QueueDraw(); });
+  preview_result_uri.changed.connect([this] (std::string uri) {
+    int found_index = 0;
+    for (auto result: results_)
+    {
+      if (result.uri() == uri)
+        break;
+
+      found_index++;
+    }
+   
+    int position = GetAbsoluteY() + padding + GetGeometry().y
+                 + (found_index / GetItemsPerRow()) * (renderer_->height + vertical_spacing);
+
+    ubus_.SendMessage(UBUS_RESULT_VIEW_EXPLICIT_SCROLL_POSITION,
+                      g_variant_new("(i)", position));
+    QueueDraw();
+    });
 
   SetDndEnabled(true, false);
 }
@@ -542,6 +561,7 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   ResultListBounds visible_bounds = GetVisableResults();
 
+  bool add_preview_spacer = false;
   for (uint row_index = 0; row_index <= total_rows; row_index++)
   {
     int row_lower_bound = row_index * items_per_row;
@@ -587,12 +607,21 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
           offset_x = 0;
           offset_y = 0;
         }
+        
+        // this is slow obviously, will optimise later
+        if (results_[index].uri() == preview_result_uri())
+          add_preview_spacer = true;
+
         nux::Geometry render_geo(x_position, y_position, renderer_->width, renderer_->height);
-//nux::GetPainter().Paint2DQuadColor(GfxContext, render_geo, nux::color::Blue*0.20);
         renderer_->Render(GfxContext, results_[index], state, render_geo, offset_x, offset_y);
 
         x_position += renderer_->width + horizontal_spacing + extra_horizontal_spacing_;
       }
+    }
+    if (add_preview_spacer)
+    {
+      y_position += preview_spacer;
+      add_preview_spacer = false;
     }
 
     y_position += row_size;
@@ -638,7 +667,7 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
     Result result = results_[index];
     selected_index_ = index;
     focused_uri_ = result.uri;
-    UriActivated.emit(result.uri);
+    UriActivated.emit(result.uri, ResultView::ActivateType::PREVIEW);
   }
 }
 

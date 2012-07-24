@@ -57,6 +57,20 @@ public:
     SetVScrollBar(scroll_bar);
   }
 
+  void ExplicitScrollToPoition(int position)
+  {
+    int child_y = position - GetGeometry().y;
+    int child_y_diff = child_y - abs (_delta_y);
+    if (child_y_diff < 0)
+    {
+      ScrollUp (1, abs (child_y_diff));
+    }
+    else
+    {
+      ScrollDown (1, child_y_diff);
+    }
+  }
+
   void ScrollToPosition(nux::Geometry const& position)
   {
     // much of this code is copied from Nux/ScrollView.cpp
@@ -132,6 +146,7 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   , lens_(lens)
   , initial_activation_(true)
   , no_results_active_(false)
+  , preview_resultview_(nullptr)
 {
   SetupViews(show_filters);
   SetupCategories();
@@ -148,6 +163,9 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   lens_->preview_ready.connect([&] (std::string const& uri, Preview::Ptr model) 
   {
     preview_ = previews::Preview::Ptr(new previews::Preview(model));
+    preview_resultview_->preview_spacer = 600; // make height of the view - some amount
+    preview_resultview_->preview_result_uri = last_activated_result_uri_;
+    fscroll_view_->SetVisible(false); 
   });
 
   ubus_manager_.RegisterInterest(UBUS_RESULT_VIEW_KEYNAV_CHANGED, [&] (GVariant* data) {
@@ -178,6 +196,13 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
     }
   });
 
+  ubus_manager_.RegisterInterest(UBUS_RESULT_VIEW_EXPLICIT_SCROLL_POSITION, [&] (GVariant* data) {
+    int scroll_to_pos;
+    g_variant_get(data, "(i)", &scroll_to_pos);
+    LOG_DEBUG(logger) << "scroll to pos: " << scroll_to_pos;
+    scroll_view_->ExplicitScrollToPoition(scroll_to_pos);
+    ubus_manager_.SendMessage(UBUS_DASH_SET_SEARCH_VISIBILITY, g_variant_new("(b)", FALSE));
+  });
 }
 
 void LensView::SetupViews(nux::Area* show_filters)
@@ -294,12 +319,32 @@ void LensView::OnCategoryAdded(Category const& category)
   else
     grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
 
-  grid->UriActivated.connect([&] (std::string const& uri) 
+  grid->UriActivated.connect(sigc::bind([&] (std::string const& uri, ResultView::ActivateType type, ResultView* view) 
   { 
-    uri_activated.emit(uri); 
-    lens_->Activate(uri); 
+    switch (type)
+    {
+      case ResultView::ActivateType::DIRECT:
+      {
+        uri_activated.emit(uri); 
+        lens_->Activate(uri);  
+      } break;
+      case ResultView::ActivateType::PREVIEW:
+      {
+        lens_->Preview(uri);
+      } break;
+      default: break;
+    };
+    
     last_activated_result_uri_ = uri;
-  });
+    if (preview_resultview_)
+    {
+      preview_resultview_->preview_spacer = 0;
+      preview_resultview_->preview_result_uri = "";
+    }
+
+    preview_resultview_ = view;
+  }, dynamic_cast<ResultView*>(grid)));
+  
   group->SetChildView(grid);
 
   /* We need the full range of method args so we can specify the offset
