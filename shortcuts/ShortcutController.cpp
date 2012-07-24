@@ -42,7 +42,7 @@ Controller::Controller(std::list<AbstractHint::Ptr>& hints)
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED,
                                  sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
 
-  ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWTICHER, [&] (GVariant*) {
+  ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWITCHER, [&] (GVariant*) {
                                    enabled_ = false;
                                  });
 
