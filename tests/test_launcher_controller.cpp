@@ -112,10 +112,10 @@ public:
     {
       uscreen.GetMonitors().push_back(nux::Geometry(MONITOR_WIDTH, MONITOR_HEIGHT, total_width, 0));
       total_width += MONITOR_WIDTH;
-    }
 
-    if (emit_update)
-      uscreen.changed.emit(uscreen.GetPrimaryMonitor(), uscreen.GetMonitors());
+      if (emit_update)
+        uscreen.changed.emit(uscreen.GetPrimaryMonitor(), uscreen.GetMonitors());
+    }
   }
 
   MockUScreen uscreen;
@@ -165,7 +165,7 @@ TEST_F(TestLauncherController, MultimonitorSwitchToMultipleLaunchers)
   ASSERT_EQ(lc.launchers().size(), 1);
 
   lc.multiple_launchers = true;
-  EXPECT_EQ(lc.launchers().size(), 6);
+  EXPECT_EQ(lc.launchers().size(), max_num_monitors);
 }
 
 TEST_F(TestLauncherController, MultimonitorSwitchToSingleLauncher)
@@ -179,6 +179,26 @@ TEST_F(TestLauncherController, MultimonitorSwitchToSingleLauncher)
   lc.multiple_launchers = false;
   EXPECT_EQ(lc.launchers().size(), 1);
   EXPECT_EQ(lc.launcher().monitor(), primary);
+}
+
+TEST_F(TestLauncherController, MultimonitorSwitchToSingleMonitor)
+{
+  SetupFakeMultiMonitor();
+
+  ASSERT_EQ(lc.launchers().size(), max_num_monitors);
+
+  uscreen.Reset();
+  EXPECT_EQ(lc.launchers().size(), 1);
+  EXPECT_EQ(lc.launcher().monitor(), 0);
+}
+
+TEST_F(TestLauncherController, SingleMonitorSwitchToMultimonitor)
+{
+  ASSERT_EQ(lc.launchers().size(), 1);
+
+  SetupFakeMultiMonitor();
+
+  EXPECT_EQ(lc.launchers().size(), max_num_monitors);
 }
 
 }
