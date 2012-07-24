@@ -316,41 +316,35 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
   unsigned int num_monitors = monitors.size();
   unsigned int num_launchers = parent_->multiple_launchers ? num_monitors : 1;
   unsigned int launchers_size = launchers.size();
-  unsigned int last_monitor = 0;
+  unsigned int last_launcher = 0;
 
-  if (num_launchers == 1)
+  for (unsigned int i = 0; i < num_launchers; i++, last_launcher++)
   {
-    if (launchers_size == 0)
+    if (i >= launchers_size)
     {
-      launchers.push_back(nux::ObjectPtr<Launcher>(CreateLauncher(primary)));
+      launchers.push_back(nux::ObjectPtr<Launcher>(CreateLauncher(i)));
     }
-    else if (!launchers[0].IsValid())
+    else if (!launchers[i])
     {
-      launchers[0] = nux::ObjectPtr<Launcher>(CreateLauncher(primary));
+      launchers[i] = nux::ObjectPtr<Launcher>(CreateLauncher(i));
     }
 
-    launchers[0]->monitor(primary);
-    launchers[0]->Resize();
-    last_monitor = 1;
-  }
-  else
-  {
-    for (unsigned int i = 0; i < num_monitors; i++, last_monitor++)
-    {
-      if (i >= launchers_size)
-      {
-        launchers.push_back(nux::ObjectPtr<Launcher>(CreateLauncher(i)));
-      }
+    int monitor = (num_launchers == 1) ? primary : i;
 
-      launchers[i]->monitor(i);
-      launchers[i]->Resize();
+    if (launchers[i]->monitor() != monitor)
+    {
+      edge_barriers_.Unsubscribe(launchers[i].GetPointer(), launchers[i]->monitor);
     }
+
+    launchers[i]->monitor(monitor);
+    launchers[i]->Resize();
+    edge_barriers_.Subscribe(launchers[i].GetPointer(), launchers[i]->monitor);
   }
 
-  for (unsigned int i = last_monitor; i < launchers_size; ++i)
+  for (unsigned int i = last_launcher; i < launchers_size; ++i)
   {
     auto launcher = launchers[i];
-    if (launcher.IsValid())
+    if (launcher)
     {
       parent_->RemoveChild(launcher.GetPointer());
       launcher->GetParent()->UnReference();
@@ -359,11 +353,6 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
   }
 
   launchers.resize(num_launchers);
-
-  for (size_t i = 0; i < launchers.size(); ++i)
-  {
-    edge_barriers_.Subscribe(launchers[i].GetPointer(), launchers[i]->monitor);
-  }
 }
 
 void Controller::Impl::OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors)
