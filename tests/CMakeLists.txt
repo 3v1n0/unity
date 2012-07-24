@@ -322,16 +322,16 @@ set (GTEST_TEST_COMMAND_GESTURE_ENGINE ./test-gesture-engine/test-gesture-engine
 
 set (TEST_COMMAND
      gtester --verbose -k --g-fatal-warnings -o=${TEST_RESULT_XML} ./test-unit
-  && ${GTEST_TEST_COMMAND}
-  && ${GTEST_TEST_COMMAND_XLESS}
-  && ${GTEST_TEST_COMMAND_GESTURE_ENGINE}
-  && ${GTEST_TEST_COMMAND_DBUS}
+  && ${GTEST_TEST_COMMAND} --gtest_output=xml:./
+  && ${GTEST_TEST_COMMAND_XLESS} --gtest_output=xml:./
+  && ${GTEST_TEST_COMMAND_GESTURE_ENGINE} --gtest_output=xml:./
+  && ${GTEST_TEST_COMMAND_DBUS} --gtest_output=xml:./
     )
 
 set (TEST_COMMAND_HEADLESS
-     ${GTEST_TEST_COMMAND_XLESS}
-  && ${GTEST_TEST_COMMAND_GESTURE_ENGINE}
-  #&& ${GTEST_TEST_COMMAND_DBUS}
+     ${GTEST_TEST_COMMAND_XLESS} --gtest_output=xml:./
+  && ${GTEST_TEST_COMMAND_GESTURE_ENGINE} --gtest_output=xml:./
+  #&& ${GTEST_TEST_COMMAND_DBUS} --gtest_output=xml:./
   && echo "Warning, DBus test cases are disabled!!")
 
 if (GTEST_SRC_DIR)
