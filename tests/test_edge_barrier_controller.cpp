@@ -20,9 +20,9 @@
 
 #include <gmock/gmock.h>
 #include "test_utils.h"
+#include "test_uscreen_mock.h"
 
 #include "EdgeBarrierController.h"
-#include "MultiMonitor.h"
 
 using namespace unity;
 using namespace unity::ui;
@@ -78,6 +78,8 @@ public:
     bc.options = std::make_shared<launcher::Options>();
     bc.options()->edge_passed_disabled_ms = 150;
 
+    uscreen.SetupFakeMultiMonitor();
+
     for (int i = 0; i < max_num_monitors; ++i)
     {
       // By default we assume that no subscriber handles the events!!!
@@ -92,6 +94,7 @@ public:
   }
 
   TestBarrierSubscriber subscribers_[max_num_monitors];
+  MockUScreen uscreen;
   MockEdgeBarrierController bc;
 };
 

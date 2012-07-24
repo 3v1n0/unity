@@ -15,19 +15,16 @@
  * <http://www.gnu.org/licenses/>
  *
  * Authored by: Marco Trevisan (Treviño) <marco.trevisan@canonical.com>
- *
  */
 
 #include <gmock/gmock.h>
-#include "test_utils.h"
+#include "test_uscreen_mock.h"
 
 #include "FavoriteStore.h"
-#include "MultiMonitor.h"
 #include "LauncherController.h"
 #include "Launcher.h"
 #include "PanelStyle.h"
 #include "UnitySettings.h"
-#include "UScreen.h"
 
 using namespace unity;
 using namespace unity::launcher;
@@ -53,41 +50,6 @@ private:
   FavoriteList fav_list_;
 };
 
-class MockUScreen : public UScreen
-{
-public:
-  MockUScreen()
-  {
-    Reset(false);
-  }
-
-  ~MockUScreen()
-  {
-    if (default_screen_ == this)
-      default_screen_ = nullptr;
-  }
-
-  void Reset(bool emit = true)
-  {
-    default_screen_ = this;
-    primary_ = 0;
-    monitors_ = {nux::Geometry(0, 0, 1024, 768)};
-
-    changed.emit(primary_, monitors_);
-  }
-
-  void SetPrimary(int primary, bool emit = true)
-  {
-    if (primary_ != primary)
-    {
-      primary_ = primary;
-
-      if (emit)
-        changed.emit(primary_, monitors_);
-    }
-  }
-};
-
 class TestLauncherController : public Test
 {
 public:
@@ -99,23 +61,6 @@ public:
   {
     lc.options = std::make_shared<Options>();
     lc.multiple_launchers = true;
-  }
-
-  void SetupFakeMultiMonitor(int primary = 0, bool emit_update = true)
-  {
-    uscreen.SetPrimary(primary, false);
-    uscreen.GetMonitors().clear();
-    const unsigned MONITOR_WIDTH = 1024;
-    const unsigned MONITOR_HEIGHT = 768;
-
-    for (int i = 0, total_width = 0; i < max_num_monitors; ++i)
-    {
-      uscreen.GetMonitors().push_back(nux::Geometry(MONITOR_WIDTH, MONITOR_HEIGHT, total_width, 0));
-      total_width += MONITOR_WIDTH;
-
-      if (emit_update)
-        uscreen.changed.emit(uscreen.GetPrimaryMonitor(), uscreen.GetMonitors());
-    }
   }
 
   MockUScreen uscreen;
@@ -134,7 +79,7 @@ TEST_F(TestLauncherController, Construction)
 TEST_F(TestLauncherController, MultimonitorMultipleLaunchers)
 {
   lc.multiple_launchers = true;
-  SetupFakeMultiMonitor();
+  uscreen.SetupFakeMultiMonitor();
 
   ASSERT_EQ(lc.launchers().size(), max_num_monitors);
 
@@ -147,7 +92,7 @@ TEST_F(TestLauncherController, MultimonitorMultipleLaunchers)
 TEST_F(TestLauncherController, MultimonitorSingleLauncher)
 {
   lc.multiple_launchers = false;
-  SetupFakeMultiMonitor(0, false);
+  uscreen.SetupFakeMultiMonitor(0, false);
 
   for (int i = 0; i < max_num_monitors; ++i)
   {
@@ -160,7 +105,7 @@ TEST_F(TestLauncherController, MultimonitorSingleLauncher)
 TEST_F(TestLauncherController, MultimonitorSwitchToMultipleLaunchers)
 {
   lc.multiple_launchers = false;
-  SetupFakeMultiMonitor();
+  uscreen.SetupFakeMultiMonitor();
 
   ASSERT_EQ(lc.launchers().size(), 1);
 
@@ -172,7 +117,7 @@ TEST_F(TestLauncherController, MultimonitorSwitchToSingleLauncher)
 {
   lc.multiple_launchers = true;
   int primary = 3;
-  SetupFakeMultiMonitor(primary);
+  uscreen.SetupFakeMultiMonitor(primary);
 
   ASSERT_EQ(lc.launchers().size(), max_num_monitors);
 
@@ -183,7 +128,7 @@ TEST_F(TestLauncherController, MultimonitorSwitchToSingleLauncher)
 
 TEST_F(TestLauncherController, MultimonitorSwitchToSingleMonitor)
 {
-  SetupFakeMultiMonitor();
+  uscreen.SetupFakeMultiMonitor();
   ASSERT_EQ(lc.launchers().size(), max_num_monitors);
 
   uscreen.Reset();
@@ -193,7 +138,7 @@ TEST_F(TestLauncherController, MultimonitorSwitchToSingleMonitor)
 
 TEST_F(TestLauncherController, MultimonitorRemoveMiddleMonitor)
 {
-  SetupFakeMultiMonitor();
+  uscreen.SetupFakeMultiMonitor();
   ASSERT_EQ(lc.launchers().size(), max_num_monitors);
 
   std::vector<nux::Geometry> &monitors = uscreen.GetMonitors();
@@ -209,7 +154,7 @@ TEST_F(TestLauncherController, SingleMonitorSwitchToMultimonitor)
 {
   ASSERT_EQ(lc.launchers().size(), 1);
 
-  SetupFakeMultiMonitor();
+  uscreen.SetupFakeMultiMonitor();
 
   EXPECT_EQ(lc.launchers().size(), max_num_monitors);
 }
