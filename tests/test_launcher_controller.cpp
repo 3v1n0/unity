@@ -184,12 +184,25 @@ TEST_F(TestLauncherController, MultimonitorSwitchToSingleLauncher)
 TEST_F(TestLauncherController, MultimonitorSwitchToSingleMonitor)
 {
   SetupFakeMultiMonitor();
-
   ASSERT_EQ(lc.launchers().size(), max_num_monitors);
 
   uscreen.Reset();
   EXPECT_EQ(lc.launchers().size(), 1);
   EXPECT_EQ(lc.launcher().monitor(), 0);
+}
+
+TEST_F(TestLauncherController, MultimonitorRemoveMiddleMonitor)
+{
+  SetupFakeMultiMonitor();
+  ASSERT_EQ(lc.launchers().size(), max_num_monitors);
+
+  std::vector<nux::Geometry> &monitors = uscreen.GetMonitors();
+  monitors.erase(monitors.begin() + monitors.size()/2);
+  uscreen.changed.emit(uscreen.GetPrimaryMonitor(), uscreen.GetMonitors());
+  ASSERT_EQ(lc.launchers().size(), max_num_monitors - 1);
+
+  for (int i = 0; i < max_num_monitors - 1; ++i)
+    EXPECT_EQ(lc.launchers()[i]->monitor(), i);
 }
 
 TEST_F(TestLauncherController, SingleMonitorSwitchToMultimonitor)
