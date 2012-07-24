@@ -51,8 +51,8 @@ private:
 
   XkbBoundsRec GetAbsoluteKeyBounds (XkbKeyPtr key, XkbRowPtr row, XkbSectionPtr section, XkbGeometryPtr geo) const;
 
-  XkbDescPtr keyboard_;
   Display *display_;
+  XkbDescPtr keyboard_;
 };
 
 }
