@@ -143,6 +143,20 @@ TEST_F(TestEdgeBarrierController, ProcessUnHandledEventBreakingBarrier)
   bc.ProcessBarrierEvent(&owner, breaking_barrier_event);
 }
 
+TEST_F(TestEdgeBarrierController, ProcessUnHandledEventBreakingBarrierOnMaxMonitor)
+{
+  int monitor = max_num_monitors;
+
+  MockPointerBarrier owner(monitor);
+  auto breaking_barrier_event = MakeBarrierEvent(0, true);
+
+  // This was leading to a crash, see bug #1020075
+  // you can reproduce this repeating this test multiple times using the
+  // --gtest_repeat=X command line
+  EXPECT_CALL(owner, ReleaseBarrier(_));
+  bc.ProcessBarrierEvent(&owner, breaking_barrier_event);
+}
+
 TEST_F(TestEdgeBarrierController, ProcessUnHandledEventNotBreakingBarrier)
 {
   int monitor = 2;
