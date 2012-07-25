@@ -234,19 +234,12 @@ public:
       auto iter = hints.find("preview");
       if (iter != hints.end())
       {
-        glib::Object<UnityProtocolPreview> proto_object(unity_protocol_preview_parse(iter->second));
-        if (!proto_object)
-        {
-          LOG_WARN(logger) << "Unable to create Preview object for variant type: " << g_variant_get_type_string(iter->second);
-          return;
-        }
-        else
-        {
-          // would be nice to make parent_lens a shared_ptr,
-          // but that's not really doable from here
-          preview_ready.emit(uri.Str(), proto_object);
-          return;
-        }
+        dash::Preview::Ptr preview(dash::Preview::PreviewForVariant(iter->second));
+
+        // would be nice to make parent_lens a shared_ptr,
+        // but that's not really doable from here
+        preview_ready.emit(uri.Str(), preview);
+        return;
       }
 
       LOG_WARNING(logger) << "Unable to deserialize Preview";
@@ -258,7 +251,7 @@ public:
 
 
   sigc::signal<void, bool> connected;
-  sigc::signal<void, std::string const&, glib::Object<UnityProtocolPreview> const&> preview_ready;
+  sigc::signal<void, std::string const&, dash::Preview::Ptr> preview_ready;
   sigc::signal<void, Hints const&> search_finished;
 
 protected:

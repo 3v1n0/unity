@@ -33,6 +33,8 @@
 #include "unity-shared/KeyboardUtil.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/UBusMessages.h"
+#include "unity-shared/PreviewStyle.h"
+
 
 namespace unity
 {
@@ -42,7 +44,7 @@ namespace
 {
 
 nux::logging::Logger logger("unity.dash.view");
-
+previews::Style preview_style;
 }
 
 // This is so we can access some protected members in nux::VLayout and

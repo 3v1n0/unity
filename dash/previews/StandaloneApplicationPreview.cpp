@@ -28,7 +28,6 @@
 #include <UnityCore/Variant.h>
 #include <UnityCore/ApplicationPreview.h>
 #include <unity-protocol.h>
-#include "PreviewFactory.h"
 
 #include "unity-shared/FontSettings.h"
 #include "unity-shared/UnitySettings.h"
@@ -184,11 +183,11 @@ The service allows users to communicate with peers by voice, video, and instant 
   unity_protocol_preview_add_info_hint(proto_obj, "energy",  "Energy", iconHint2, g_variant_new("s", "58.07 mWh"));
   unity_protocol_preview_add_info_hint(proto_obj, "load",  "CPU Load", iconHint3, g_variant_new("i", 12));
 
-
   glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
-                  glib::StealRef());
+              glib::StealRef());
 
-  container_->Preview("", v, previews::Navigation::RIGHT);
+  dash::Preview::Ptr preview_model(dash::Preview::PreviewForVariant(v));
+  container_->Preview(preview_model, previews::Navigation::RIGHT);
 
 }
 
@@ -229,11 +228,11 @@ The service allows users to communicate with peers by voice, video, and instant 
   unity_protocol_preview_add_info_hint(proto_obj, "energy",  "Energy", iconHint2, g_variant_new("s", "58.07 mWh"));
   unity_protocol_preview_add_info_hint(proto_obj, "load",  "CPU Load", iconHint3, g_variant_new("d", 12.1));
 
-
   glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
-                  glib::StealRef());
+              glib::StealRef());
 
-  container_->Preview("", v, previews::Navigation::RIGHT);
+  dash::Preview::Ptr preview_model(dash::Preview::PreviewForVariant(v));
+  container_->Preview(preview_model, previews::Navigation::RIGHT);
 }
 
 void TestRunner::NavLeft()
@@ -273,9 +272,10 @@ The service allows users to communicate with peers by voice, video, and instant 
   unity_protocol_preview_add_info_hint(proto_obj, "load",  "CPU Load", iconHint3, g_variant_new("i", 22));
 
   glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
-                  glib::StealRef());
+              glib::StealRef());
 
-  container_->Preview("", v, previews::Navigation::LEFT);
+  dash::Preview::Ptr preview_model(dash::Preview::PreviewForVariant(v));
+  container_->Preview(preview_model, previews::Navigation::LEFT);
 }
 
 void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)
@@ -297,7 +297,6 @@ int main(int argc, char **argv)
   unity::Settings settings;
   unity::dash::previews::Style panel_style;
   unity::dash::Style dash_style;
-  unity::dash::PreviewFactory preview_factory;
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Unity Preview"),

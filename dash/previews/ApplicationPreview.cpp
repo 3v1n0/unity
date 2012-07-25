@@ -32,7 +32,7 @@
 #include <Nux/VLayout.h>
 #include <Nux/GridHLayout.h>
 #include <Nux/Button.h>
-#include <PreviewFactory.h>
+#include <glib/gi18n-lib.h>
  
 #include "ApplicationPreview.h"
 #include "ActionButton.h"
@@ -216,7 +216,7 @@ void ApplicationPreview::SetupViews()
         license_->SetLines(-1);
         license_->SetMaximumWidth(top_app_info_max_width);
 
-        last_update_ = new nux::StaticCairoText(std::string("Last Updated ") + app_preview_model->last_update.Get());
+        last_update_ = new nux::StaticCairoText(_("Last Updated ") + app_preview_model->last_update.Get());
         last_update_->SetFont(style.app_last_update_font().c_str());
         last_update_->SetMaximumWidth(top_app_info_max_width);
 
@@ -252,7 +252,7 @@ void ApplicationPreview::SetupViews()
       app_info->SetLayout(app_info_layout);
 
       app_description_ = new nux::StaticCairoText("");
-      app_description_->SetFont(style.app_description_font().c_str());
+      app_description_->SetFont(style.description_font().c_str());
       app_description_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_TOP);
       app_description_->SetLines(-20);
       app_description_->SetLineSpacing(2);

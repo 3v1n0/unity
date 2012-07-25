@@ -178,6 +178,11 @@ int Style::GetSpaceBetweenActions() const
   return 10;
 }
 
+int Style::GetTrackBarHeight() const
+{
+  return 25;
+}
+
 std::string Style::title_font() const
 {
   return "Ubuntu 22";
@@ -186,6 +191,11 @@ std::string Style::subtitle_size_font() const
 {
   return "Ubuntu 12.5";
 }
+std::string Style::description_font() const
+{
+  return "Ubuntu Light 10";
+}
+
 std::string Style::app_license_font() const
 {
   return "Ubuntu Light 10";
@@ -195,10 +205,6 @@ std::string Style::app_last_update_font() const
   return "Ubuntu Light 10";
 }
 std::string Style::app_copywrite_font() const
-{
-  return "Ubuntu Light 10";
-}
-std::string Style::app_description_font() const
 {
   return "Ubuntu Light 10";
 }

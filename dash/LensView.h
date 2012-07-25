@@ -96,6 +96,13 @@ private:
 
   virtual void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
+  
+public:
+  nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
+  virtual nux::Area* FindKeyFocusArea(unsigned int key_symbol, unsigned long x11_key_code, unsigned long special_keys_state);
+  virtual nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
+
+private:
 
   virtual bool AcceptKeyNavFocus();
   virtual std::string GetName() const;
@@ -121,6 +128,8 @@ private:
 
   previews::PreviewContainer::Ptr preview_;
   ResultView* preview_resultview_;
+  bool currently_in_preview_;
+  
   std::string last_activated_result_uri_;
   UBusManager ubus_manager_;
   glib::Source::UniquePtr fix_rendering_idle_;

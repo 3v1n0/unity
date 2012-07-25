@@ -146,7 +146,9 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   , lens_(lens)
   , initial_activation_(true)
   , no_results_active_(false)
+  , preview_(nullptr)
   , preview_resultview_(nullptr)
+  , currently_in_preview_(false)
 {
   SetupViews(show_filters);
   SetupCategories();
@@ -162,17 +164,19 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
 
   lens_->preview_ready.connect([&] (std::string const& uri, Preview::Ptr model) 
   {
-//[10:07:01] <mhr3> preview-generic
-//[10:07:08] <mhr3> preview-application
-//[10:07:23] <mhr3> preview-music
-//[10:07:29] <mhr3> preview-movie
-//[10:07:36] <mhr3> preview-series
     preview_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
-    preview_->Preview(uri, model, previews::Navigation::BOTH);
+    preview_->Preview(model, previews::Navigation::BOTH);
     
+    auto preview_geo = GetGeometry();
+    preview_geo.height -= 24; //FIXME!! - total guess. 
+    preview_->SetGeometry(preview_geo);
+    currently_in_preview_ = true;
+
     preview_resultview_->preview_spacer = 600; // make height of the view - some amount
     preview_resultview_->preview_result_uri = last_activated_result_uri_;
-    fscroll_view_->SetVisible(false); 
+    fscroll_view_->SetVisible(false);
+
+    QueueDraw();
   });
 
   ubus_manager_.RegisterInterest(UBUS_RESULT_VIEW_KEYNAV_CHANGED, [&] (GVariant* data) {
@@ -552,12 +556,20 @@ void LensView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
   gfx_context.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(gfx_context, geo);
   gfx_context.PopClippingRectangle();
+
 }
 
 void LensView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   gfx_context.PushClippingRectangle(GetGeometry());
-  layout_->ProcessDraw(gfx_context, force_draw);
+  if (currently_in_preview_ && preview_)
+  {
+    preview_->ProcessDraw(gfx_context, force_draw);
+  }
+  else
+  {
+    layout_->ProcessDraw(gfx_context, force_draw);
+  }
   gfx_context.PopClippingRectangle();
 }
 
@@ -644,6 +656,54 @@ void LensView::AddProperties(GVariantBuilder* builder)
     .add("name", lens_->id)
     .add("lens-name", lens_->name)
     .add("no-results-active", no_results_active_);
+}
+
+nux::Area* LensView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
+{
+  nux::Area* view = nullptr;
+  if (currently_in_preview_)
+  {
+    view = dynamic_cast<nux::Area*>(preview_.GetPointer())->FindAreaUnderMouse(mouse_position, event_type);
+  }
+  else
+  {
+    view = View::FindAreaUnderMouse(mouse_position, event_type);
+  }
+
+  return (view == nullptr) ? this : view;
+}
+
+nux::Area* LensView::FindKeyFocusArea(unsigned int key_symbol,
+                    unsigned long x11_key_code,
+                    unsigned long special_keys_state)
+{
+  Area* view = nullptr;
+
+  if (currently_in_preview_)
+  {
+    view = dynamic_cast<nux::Area*>(preview_.GetPointer())->FindKeyFocusArea(key_symbol, x11_key_code, special_keys_state);
+  }
+  else
+  {
+    view = View::FindKeyFocusArea(key_symbol, x11_key_code, special_keys_state);
+  }
+
+  return view;
+}
+
+nux::Area* LensView::KeyNavIteration(nux::KeyNavDirection direction)
+{
+  nux::Area* view = nullptr;
+  if (currently_in_preview_)
+  {
+    view = dynamic_cast<nux::Area*>(preview_.GetPointer())->KeyNavIteration(direction);
+  }
+  else
+  {
+    view = View::KeyNavIteration(direction);
+  }
+
+  return view;
 }
 
 
