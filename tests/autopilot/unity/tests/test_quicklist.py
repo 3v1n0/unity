@@ -349,7 +349,7 @@ class QuicklistKeyNavigationTests(UnityTestCase):
         self.assertThat(self.quicklist.selected_item.id, Equals(mouse_item.id))
 
     def test_moving_mouse_during_grab_select_correct_menuitem(self):
-        """Test that moving the mouse during grabbing select the
+        """Test that moving the mouse during grabbing selects the
         correct menu item. See bug #1027955.
         """
         self.open_quicklist_with_mouse()
