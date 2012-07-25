@@ -37,6 +37,7 @@
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/PlacesVScrollBar.h"
 #include "previews/Preview.h"
+#include "previews/PreviewContainer.h"
 
 namespace unity
 {
@@ -118,7 +119,7 @@ private:
   FilterBar* filter_bar_;
   nux::StaticCairoText* no_results_;
 
-  previews::Preview::Ptr preview_;
+  previews::PreviewContainer::Ptr preview_;
   ResultView* preview_resultview_;
   std::string last_activated_result_uri_;
   UBusManager ubus_manager_;

@@ -162,7 +162,14 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
 
   lens_->preview_ready.connect([&] (std::string const& uri, Preview::Ptr model) 
   {
-    preview_ = previews::Preview::Ptr(new previews::Preview(model));
+//[10:07:01] <mhr3> preview-generic
+//[10:07:08] <mhr3> preview-application
+//[10:07:23] <mhr3> preview-music
+//[10:07:29] <mhr3> preview-movie
+//[10:07:36] <mhr3> preview-series
+    preview_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
+    preview_->Preview(uri, model, previews::Navigation::BOTH);
+    
     preview_resultview_->preview_spacer = 600; // make height of the view - some amount
     preview_resultview_->preview_result_uri = last_activated_result_uri_;
     fscroll_view_->SetVisible(false); 
