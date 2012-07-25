@@ -58,6 +58,7 @@ FilterRatingsButton::FilterRatingsButton(NUX_FILE_LINE_DECL)
 
     QueueDraw();
   });
+
   key_nav_focus_activate.connect([&](nux::Area*) { filter_->rating = static_cast<float>(focused_star_+1)/num_stars; });
   key_down.connect(sigc::mem_fun(this, &FilterRatingsButton::OnKeyDown));
 }

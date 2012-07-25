@@ -96,7 +96,6 @@ FilterExpanderLabel::FilterExpanderLabel(std::string const& label, NUX_FILE_LINE
 {
   expanded.changed.connect(sigc::mem_fun(this, &FilterExpanderLabel::DoExpandChange));
   BuildLayout();
-  SetAcceptKeyNavFocusOnMouseDown(false);
 
   separator_ = new HSeparator;
   separator_->SinkReference();
@@ -227,24 +226,6 @@ void FilterExpanderLabel::BuildLayout()
   expander_view_->key_nav_focus_activate.connect(key_expand);
   cairo_label_->mouse_click.connect(mouse_expand);
   expand_icon_->mouse_click.connect(mouse_expand);
-  key_nav_focus_change.connect([&](nux::Area* area, bool has_focus, nux::KeyNavDirection direction)
-  {
-    if(!has_focus)
-      return;
-
-    switch (direction)
-    {
-    case nux::KEY_NAV_UP:
-      {
-        auto child = dynamic_cast<nux::InputArea*>(contents_->GetChildren().back());
-        if (child)
-          nux::GetWindowCompositor().SetKeyFocusArea(child, direction);
-        break;
-      }
-    default:
-      nux::GetWindowCompositor().SetKeyFocusArea(expander_view_, direction);
-    }
-  });
 
   QueueRelayout();
   NeedRedraw();
@@ -317,7 +298,7 @@ void FilterExpanderLabel::DrawContent(nux::GraphicsEngine& GfxContext, bool forc
 //
 bool FilterExpanderLabel::AcceptKeyNavFocus()
 {
-  return true;
+  return false;
 }
 
 //
@@ -330,9 +311,18 @@ std::string FilterExpanderLabel::GetName() const
 
 void FilterExpanderLabel::AddProperties(GVariantBuilder* builder)
 {
+  bool content_has_focus = false;
+  auto focus_area = nux::GetWindowCompositor().GetKeyFocusArea();
+
+  if (focus_area && contents_)
+    content_has_focus = focus_area->IsChildOf(contents_.GetPointer());
+
   unity::variant::BuilderWrapper wrapper(builder);
 
-  wrapper.add("expander-has-focus", expander_view_->HasKeyFocus());
+  wrapper.add("expander-has-focus", (expander_view_ && expander_view_->HasKeyFocus()))
+         .add("expanded", expanded())
+         .add(GetAbsoluteGeometry())
+         .add("content-has-focus", content_has_focus);
 }
 
 } // namespace dash
