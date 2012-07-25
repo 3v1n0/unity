@@ -229,8 +229,21 @@ void FilterExpanderLabel::BuildLayout()
   expand_icon_->mouse_click.connect(mouse_expand);
   key_nav_focus_change.connect([&](nux::Area* area, bool has_focus, nux::KeyNavDirection direction)
   {
-    if(has_focus)
-      nux::GetWindowCompositor().SetKeyFocusArea(expander_view_);
+    if(!has_focus)
+      return;
+
+    switch (direction)
+    {
+    case nux::KEY_NAV_UP:
+      {
+        auto child = dynamic_cast<nux::InputArea*>(contents_->GetChildren().back());
+        if (child)
+          nux::GetWindowCompositor().SetKeyFocusArea(child, direction);
+        break;
+      }
+    default:
+      nux::GetWindowCompositor().SetKeyFocusArea(expander_view_, direction);
+    }
   });
 
   QueueRelayout();
