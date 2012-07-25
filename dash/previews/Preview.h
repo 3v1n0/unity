@@ -55,6 +55,8 @@ public:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
+  static previews::Preview::Ptr PreviewForModel(dash::Preview::Ptr model);  
+
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {}
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {}

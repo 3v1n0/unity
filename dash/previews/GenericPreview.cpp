@@ -29,7 +29,6 @@
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
 #include <Nux/GridHLayout.h>
-#include <Nux/Button.h>
 #include <UnityCore/GenericPreview.h>
  
 #include "GenericPreview.h"
@@ -138,10 +137,6 @@ void GenericPreview::SetupBackground()
 
 void GenericPreview::SetupViews()
 {
-  dash::GenericPreview* app_preview_model = dynamic_cast<dash::GenericPreview*>(preview_model_.get());
-  if (!app_preview_model)
-    return;
-
   previews::Style& style = dash::previews::Style::Instance();
 
   int details_width = style.GetPreviewWidth() - style.GetPreviewHeight() - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin();
@@ -163,45 +158,45 @@ void GenericPreview::SetupViews()
       /////////////////////
       // Data
 
-      nux::VLayout* app_data_layout = new nux::VLayout();
-      app_data_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
+      nux::VLayout* preview_data_layout = new nux::VLayout();
+      preview_data_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
 
-      title_ = new nux::StaticCairoText(app_preview_model->title);
+      title_ = new nux::StaticCairoText(preview_model_->title);
       title_->SetLines(-1);
       title_->SetFont(style.title_font().c_str());
       title_->SetMaximumWidth(details_width);
 
-      subtitle_ = new nux::StaticCairoText(app_preview_model->subtitle);
+      subtitle_ = new nux::StaticCairoText(preview_model_->subtitle);
       subtitle_->SetLines(-1);
       subtitle_->SetFont(style.subtitle_size_font().c_str());
       subtitle_->SetMaximumWidth(details_width);
 
-      app_data_layout->AddView(title_, 1);
-      app_data_layout->AddView(subtitle_, 1);
+      preview_data_layout->AddView(title_, 1);
+      preview_data_layout->AddView(subtitle_, 1);
       /////////////////////
 
       /////////////////////
       // Description
-      nux::ScrollView* app_info = new DetailsScrollView(NUX_TRACKER_LOCATION);
-      app_info->EnableHorizontalScrollBar(false);
+      nux::ScrollView* preview_info = new DetailsScrollView(NUX_TRACKER_LOCATION);
+      preview_info->EnableHorizontalScrollBar(false);
 
-      nux::VLayout* app_info_layout = new nux::VLayout();
-      app_info_layout->SetSpaceBetweenChildren(12);
-      app_info->SetLayout(app_info_layout);
+      nux::VLayout* preview_info_layout = new nux::VLayout();
+      preview_info_layout->SetSpaceBetweenChildren(12);
+      preview_info->SetLayout(preview_info_layout);
 
-      app_description_ = new nux::StaticCairoText("");
-      app_description_->SetFont(style.app_description_font().c_str());
-      app_description_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_TOP);
-      app_description_->SetLines(-20);
-      app_description_->SetLineSpacing(1.5);
-      app_description_->SetText(app_preview_model->description);
-      app_description_->SetMaximumWidth(details_width);
+      description_ = new nux::StaticCairoText("");
+      description_->SetFont(style.description_font().c_str());
+      description_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_TOP);
+      description_->SetLines(-20);
+      description_->SetLineSpacing(1.5);
+      description_->SetText(preview_model_->description);
+      description_->SetMaximumWidth(details_width);
 
-      app_info_layout->AddView(app_description_);
+      preview_info_layout->AddView(description_);
       if (preview_model_->GetInfoHints().size() > 0)
       {
         PreviewInfoHintWidget* preview_info_hints = new PreviewInfoHintWidget(preview_model_, 24);
-        app_info_layout->AddView(preview_info_hints);
+        preview_info_layout->AddView(preview_info_hints);
       }
       /////////////////////
 
@@ -211,8 +206,8 @@ void GenericPreview::SetupViews()
       actions_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
       ///////////////////
 
-    full_data_layout_->AddLayout(app_data_layout, 0);
-    full_data_layout_->AddView(app_info, 1);
+    full_data_layout_->AddLayout(preview_data_layout, 0);
+    full_data_layout_->AddView(preview_info, 1);
     full_data_layout_->AddView(actions_layout, 0);
     /////////////////////
   

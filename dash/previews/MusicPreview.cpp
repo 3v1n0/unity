@@ -30,7 +30,6 @@
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
 #include <Nux/Button.h>
-#include <PreviewFactory.h>
  
 #include "MusicPreview.h"
 #include "ActionButton.h"
@@ -197,11 +196,12 @@ void MusicPreview::SetupViews()
         hints_layout->AddView(preview_info_hints, 0);
 
         // If there are actions, we use a vertical layout
-        actions_layout = BuildGridActionsLayout(preview_model_->GetActions(), (details_width - style.GetSpaceBetweenActions()) / 2, style.GetActionButtonHeight());
+        actions_layout = BuildVerticalActionsLayout(preview_model_->GetActions(), (details_width - style.GetSpaceBetweenActions()) / 2, style.GetActionButtonHeight());
         actions_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
       }
       else // otherwise we add a grid layout.
       {
+        hint_actions_layout->AddSpace(0,1);
         actions_layout = BuildGridActionsLayout(preview_model_->GetActions(), (details_width - style.GetSpaceBetweenActions()) / 2, style.GetActionButtonHeight());
         actions_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
       }

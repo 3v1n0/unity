@@ -28,7 +28,6 @@
 #include <UnityCore/Variant.h>
 #include <UnityCore/Preview.h>
 #include <unity-protocol.h>
-#include "PreviewFactory.h"
 
 #include "unity-shared/FontSettings.h"
 #include "unity-shared/UnitySettings.h"
@@ -48,7 +47,7 @@ using namespace unity::dash;
 
 namespace
 {
-nux::logging::Logger logger("unity.dash.StandaloneGenericPreview");
+nux::logging::Logger logger("unity.dash.StandaloneMusicPreview");
 }
 
 class DummyView : public nux::View
@@ -188,12 +187,9 @@ void TestRunner::Init ()
 
   container_->DisableNavButton(previews::Navigation::BOTH);
   
-  preview_ready.connect([&](std::string const& uri, glib::Object<UnityProtocolPreview> const& proto_obj)
+  preview_ready.connect([&](std::string const& uri, dash::Preview::Ptr preview_model)
   {
-    glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
-                glib::StealRef());
-
-    container_->Preview(uri, v, nav_direction_);
+    container_->Preview(preview_model, nav_direction_);
   });
 }
 
@@ -254,7 +250,6 @@ int main(int argc, char **argv)
   unity::Settings settings;
   unity::dash::previews::Style panel_style;
   unity::dash::Style dash_style;
-  unity::dash::PreviewFactory preview_factory;
 
   TestRunner *test_runner = new TestRunner (argv[1]);
   wt = nux::CreateGUIThread(TEXT("Unity Preview"),

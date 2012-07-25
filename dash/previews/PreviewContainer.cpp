@@ -28,7 +28,6 @@
 #include "unity-shared/TimeUtil.h"
 #include "unity-shared/PreviewStyle.h"
 #include "PreviewNavigator.h"
-#include "PreviewFactory.h"
 #include <boost/math/constants/constants.hpp>
 
 namespace unity
@@ -68,9 +67,6 @@ public:
   {
     if (preview)
     {
-      previews::Style& style = dash::previews::Style::Instance();
-      preview->SetMinMaxSize(style.GetPreviewWidth(), style.GetPreviewHeight());
-
       AddView(preview.GetPointer());
       preview->SetVisible(false);
     }
@@ -232,13 +228,9 @@ PreviewContainer::~PreviewContainer()
 {
 }
 
-void PreviewContainer::Preview(std::string const& preview_pri, glib::Variant const& preview_data, Navigation direction)
+void PreviewContainer::Preview(dash::Preview::Ptr preview_model, Navigation direction)
 {
-  PreviewFactoryOperator previewOperator(PreviewFactory::Instance().Item(preview_data));
-
-  dash::Preview::Ptr model = previewOperator.CreateModel(preview_pri);
-  previews::Preview::Ptr preview_view = previewOperator.CreateView(model);
-
+  previews::Preview::Ptr preview_view = previews::Preview::PreviewForModel(preview_model);
   content_layout_->PushPreview(preview_view, direction);
 }
 
@@ -266,23 +258,24 @@ void PreviewContainer::AddProperties(GVariantBuilder* builder)
 
 void PreviewContainer::SetupViews()
 {
-  previews::Style& stlye = previews::Style::Instance();
+  previews::Style& style = previews::Style::Instance();
 
   layout_ = new nux::HLayout();
   SetLayout(layout_);
 
   nav_left_ = new PreviewNavigator(Orientation::LEFT, NUX_TRACKER_LOCATION);
-  nav_left_->SetMinimumWidth(stlye.GetNavigatorWidth());
-  nav_left_->SetMaximumWidth(stlye.GetNavigatorWidth());
+  nav_left_->SetMinimumWidth(style.GetNavigatorWidth());
+  nav_left_->SetMaximumWidth(style.GetNavigatorWidth());
   nav_left_->activated.connect([&]() { navigate_left.emit(); });
   layout_->AddView(nav_left_, 0);
 
   content_layout_ = new PreviewContent(this);
-  layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  content_layout_->SetMinMaxSize(style.GetPreviewWidth(), style.GetPreviewHeight());
+  layout_->AddLayout(content_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   nav_right_ = new PreviewNavigator(Orientation::RIGHT, NUX_TRACKER_LOCATION);
-  nav_right_->SetMinimumWidth(stlye.GetNavigatorWidth());
-  nav_right_->SetMaximumWidth(stlye.GetNavigatorWidth());
+  nav_right_->SetMinimumWidth(style.GetNavigatorWidth());
+  nav_right_->SetMaximumWidth(style.GetNavigatorWidth());
   nav_right_->activated.connect([&]() { navigate_right.emit(); });
   layout_->AddView(nav_right_, 0);
 

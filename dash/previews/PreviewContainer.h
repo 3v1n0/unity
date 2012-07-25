@@ -58,7 +58,7 @@ public:
   PreviewContainer(NUX_FILE_LINE_PROTO);
   virtual ~PreviewContainer();
 
-  void Preview(std::string const& preview_pri, glib::Variant const& preview, Navigation direction);
+  void Preview(dash::Preview::Ptr preview_model, Navigation direction);
 
   // calling this should disable the nav buttons to the left or the right of the preview
   void DisableNavButton(Navigation button);

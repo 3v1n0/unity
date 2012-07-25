@@ -66,7 +66,7 @@ protected:
 
   nux::StaticCairoText* title_;
   nux::StaticCairoText* subtitle_;
-  nux::StaticCairoText* app_description_;
+  nux::StaticCairoText* description_;
 
   typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
   LayerPtr details_bg_layer_;

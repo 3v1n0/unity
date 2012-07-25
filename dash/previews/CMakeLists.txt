@@ -35,7 +35,6 @@ set (PREVIEWS_SOURCES
      MoviePreview.cpp
      Preview.cpp
      PreviewContainer.cpp
-     PreviewFactory.cpp
      PreviewInfoHintWidget.cpp
      PreviewNavigator.cpp
      PreviewRatingsWidget.cpp

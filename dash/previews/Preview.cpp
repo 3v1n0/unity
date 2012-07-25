@@ -27,6 +27,12 @@
 #include <Nux/VLayout.h>
 #include "ActionButton.h"
 
+ #include "GenericPreview.h"
+ #include "ApplicationPreview.h"
+ #include "MusicPreview.h"
+ #include "MoviePreview.h"
+ //#include "SeriesPreview.h"
+
 namespace unity
 {
 namespace dash
@@ -37,6 +43,42 @@ namespace previews
 namespace
 {
 nux::logging::Logger logger("unity.dash.previews.preview");
+}
+
+previews::Preview::Ptr Preview::PreviewForModel(dash::Preview::Ptr model)
+{
+  if (!model)
+  {
+    LOG_WARN(logger) << "Unable to create Preview object";
+    return previews::Preview::Ptr();
+  }
+ 
+  if (model->renderer_name == "preview-generic")
+  {
+    return Preview::Ptr(new GenericPreview(model));
+  }
+  else if (model->renderer_name == "preview-application")
+  {
+    return Preview::Ptr(new ApplicationPreview(model));
+  }
+  else if (model->renderer_name == "preview-music")
+  {
+    return Preview::Ptr(new MusicPreview(model));
+  }
+  else if (model->renderer_name == "preview-movie")
+  {
+    return Preview::Ptr(new MoviePreview(model));
+  }
+  // else if (renderer_name == "preview-series")
+  // {
+  //   return Preview::Ptr(new SeriesPreview(model));
+  // }
+  else
+  {
+    LOG_WARN(logger) << "Unable to create Preview for renderer: " << model->renderer_name.Get();
+  }
+
+  return previews::Preview::Ptr();
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(Preview);
@@ -124,7 +166,6 @@ nux::Layout* Preview::BuildVerticalActionsLayout(dash::Preview::ActionPtrList ac
       button->click.connect(sigc::bind(sigc::mem_fun(this, &Preview::OnActionActivated), action->id));
 
       actions_layout_v->AddView(button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
-
   }
   actions_buffer_v->AddLayout(actions_layout_v, 0);
   actions_buffer_h->AddLayout(actions_buffer_v, 0);

@@ -74,13 +74,13 @@ public:
 
   std::string title_font() const;
   std::string subtitle_size_font() const;
+  std::string description_font() const;
 
   ////////////////////////////////
   // Application Preview
   std::string app_license_font() const;
   std::string app_last_update_font() const;
   std::string app_copywrite_font() const;
-  std::string app_description_font() const;
   std::string info_hint_font() const;
   std::string user_rating_font() const;
   std::string no_preview_image_font() const;
@@ -96,6 +96,10 @@ public:
   int GetTrackHeight() const;
   ////////////////////////////////
   
+  ////////////////////////////////
+  // Movie Preview
+  int GetTrackBarHeight() const;
+  ////////////////////////////////
 
   nux::BaseTexture* GetNavLeftIcon();
   nux::BaseTexture* GetNavRightIcon();
