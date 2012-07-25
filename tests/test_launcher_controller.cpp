@@ -167,6 +167,14 @@ TEST_F(TestLauncherController, SingleMonitorSwitchToMultimonitor)
   EXPECT_EQ(lc.launchers().size(), max_num_monitors);
 }
 
+TEST_F(TestLauncherController, MultiMonitorEdgeBarrierSubscriptions)
+{
+  uscreen.SetupFakeMultiMonitor();
+
+  for (int i = 0; i < max_num_monitors; ++i)
+    ASSERT_EQ(GetBarrierController().GetSubscriber(i), lc.launchers()[i].GetPointer());
+}
+
 TEST_F(TestLauncherController, SingleMonitorEdgeBarrierSubscriptionsUpdates)
 {
   lc.multiple_launchers = false;
