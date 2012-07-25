@@ -107,7 +107,7 @@ Actions:
 #. Optionally: Open a large file in emacs23.
 #. Optionally: Scroll to the bottom of the file using Page Down.
 
-Expected Results:
+Expected Result:
   At no point during the actions should the panel (or launcher) blink or
   flicker out of existence.
 
