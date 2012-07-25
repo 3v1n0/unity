@@ -51,7 +51,7 @@ private:
 
 namespace launcher
 {
-class TestLauncherController : public Test
+class TestLauncherController : public testing::Test
 {
 public:
   TestLauncherController()
@@ -65,6 +65,11 @@ public:
   }
 
 protected:
+  ui::EdgeBarrierController &GetBarrierController()
+  {
+    return lc.pimpl->edge_barriers_;
+  }
+
   MockUScreen uscreen;
   Settings settings;
   panel::Style panel_style;
@@ -160,6 +165,29 @@ TEST_F(TestLauncherController, SingleMonitorSwitchToMultimonitor)
   uscreen.SetupFakeMultiMonitor();
 
   EXPECT_EQ(lc.launchers().size(), max_num_monitors);
+}
+
+TEST_F(TestLauncherController, SingleMonitorEdgeBarrierSubscriptionsUpdates)
+{
+  lc.multiple_launchers = false;
+  uscreen.SetupFakeMultiMonitor(0, false);
+
+  for (int i = 0; i < max_num_monitors; ++i)
+  {
+    uscreen.SetPrimary(i);
+
+    for (int j = 0; j < max_num_monitors; ++j)
+    {
+      if (j == i)
+      {
+        ASSERT_EQ(GetBarrierController().GetSubscriber(j), &lc.launcher());
+      }
+      else
+      {
+        ASSERT_EQ(GetBarrierController().GetSubscriber(j), nullptr);
+      }
+    }
+  }
 }
 
 }
