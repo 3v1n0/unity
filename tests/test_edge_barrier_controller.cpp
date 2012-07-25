@@ -81,6 +81,7 @@ public:
   virtual void SetUp()
   {
     bc.options = std::make_shared<launcher::Options>();
+    bc.options()->edge_resist = true;
     bc.options()->edge_passed_disabled_ms = 150;
 
     uscreen.SetupFakeMultiMonitor();
@@ -105,7 +106,7 @@ public:
 
 TEST_F(TestEdgeBarrierController, Construction)
 {
-  EXPECT_FALSE(bc.sticky_edges);
+  EXPECT_TRUE(bc.sticky_edges);
 
   for (int i = 0; i < max_num_monitors; ++i)
     ASSERT_EQ(bc.GetSubscriber(i), &subscribers_[i]);
@@ -251,6 +252,21 @@ TEST_F(TestEdgeBarrierController, BreakingEdgeDontReleasesBarrierForHandledEvent
   subscribers_[monitor].handles_ = true;
   EXPECT_CALL(owner, ReleaseBarrier(_)).Times(0);
   bc.ProcessBarrierEvent(&owner, MakeBarrierEvent(6, true));
+}
+
+TEST_F(TestEdgeBarrierController, StickyEdgePropertyProxiesLauncherOption)
+{
+  bc.options()->edge_resist = false;
+  EXPECT_FALSE(bc.sticky_edges());
+
+  bc.options()->edge_resist = true;
+  EXPECT_TRUE(bc.sticky_edges());
+
+  bc.sticky_edges = false;
+  EXPECT_FALSE(bc.options()->edge_resist());
+
+  bc.sticky_edges = true;
+  EXPECT_TRUE(bc.options()->edge_resist());
 }
 
 }

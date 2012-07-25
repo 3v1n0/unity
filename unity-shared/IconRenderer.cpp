@@ -760,9 +760,9 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
   int TextureObjectLocation;
   int VertexLocation;
   int TextureCoord0Location;
-  int FragmentColor;
-  int ColorifyColor;
-  int DesatFactor;
+  int FragmentColor = 0;
+  int ColorifyColor = 0;
+  int DesatFactor = 0;
 
   if (nux::GetWindowThread()->GetGraphicsEngine().UsingGLSLCodePath())
   {
