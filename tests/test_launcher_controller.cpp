@@ -22,15 +22,14 @@
 
 #include "FavoriteStore.h"
 #include "LauncherController.h"
-#include "Launcher.h"
+#include "LauncherControllerPrivate.h"
 #include "PanelStyle.h"
 #include "UnitySettings.h"
 
-using namespace unity;
 using namespace unity::launcher;
 using namespace testing;
 
-namespace
+namespace unity
 {
 
 class MockFavoriteStore : public FavoriteStore
@@ -50,6 +49,8 @@ private:
   FavoriteList fav_list_;
 };
 
+namespace launcher
+{
 class TestLauncherController : public Test
 {
 public:
@@ -63,12 +64,14 @@ public:
     lc.multiple_launchers = true;
   }
 
+protected:
   MockUScreen uscreen;
   Settings settings;
   panel::Style panel_style;
   MockFavoriteStore favorite_store;
   Controller lc;
 };
+}
 
 TEST_F(TestLauncherController, Construction)
 {
