@@ -43,6 +43,7 @@ public:
 
   void Subscribe(EdgeBarrierSubscriber* subscriber, unsigned int monitor);
   void Unsubscribe(EdgeBarrierSubscriber* subscriber, unsigned int monitor);
+  EdgeBarrierSubscriber* GetSubscriber(unsigned int monitor);
 
 protected:
   void ProcessBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event);

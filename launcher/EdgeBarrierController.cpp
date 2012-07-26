@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Jason Smith <jason.smith@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 #include "EdgeBarrierController.h"
@@ -157,7 +158,7 @@ void EdgeBarrierController::Impl::OnPointerBarrierEvent(PointerBarrierWrapper* o
   unsigned int monitor = owner->index;
   bool process = true;
 
-  if (monitor <= subscribers_.size())
+  if (monitor < subscribers_.size())
   {
     auto subscriber = subscribers_[monitor];
 
@@ -206,20 +207,32 @@ EdgeBarrierController::~EdgeBarrierController()
 
 void EdgeBarrierController::Subscribe(EdgeBarrierSubscriber* subscriber, unsigned int monitor)
 {
-  if (pimpl->subscribers_.size() <= monitor)
+  if (monitor >= pimpl->subscribers_.size())
     pimpl->subscribers_.resize(monitor + 1);
 
+  auto const& monitors = UScreen::GetDefault()->GetMonitors();
   pimpl->subscribers_[monitor] = subscriber;
-  pimpl->SetupBarriers(UScreen::GetDefault()->GetMonitors());
+  pimpl->ResizeBarrierList(monitors);
+  pimpl->SetupBarriers(monitors);
 }
 
 void EdgeBarrierController::Unsubscribe(EdgeBarrierSubscriber* subscriber, unsigned int monitor)
 {
-  if (pimpl->subscribers_.size() < monitor || pimpl->subscribers_[monitor] != subscriber)
+  if (monitor >= pimpl->subscribers_.size() || pimpl->subscribers_[monitor] != subscriber)
     return;
 
+  auto const& monitors = UScreen::GetDefault()->GetMonitors();
   pimpl->subscribers_[monitor] = nullptr;
-  pimpl->SetupBarriers(UScreen::GetDefault()->GetMonitors());
+  pimpl->ResizeBarrierList(monitors);
+  pimpl->SetupBarriers(monitors);
+}
+
+EdgeBarrierSubscriber* EdgeBarrierController::GetSubscriber(unsigned int monitor)
+{
+  if (monitor >= pimpl->subscribers_.size())
+    return nullptr;
+
+  return pimpl->subscribers_[monitor];
 }
 
 void EdgeBarrierController::ProcessBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event)
