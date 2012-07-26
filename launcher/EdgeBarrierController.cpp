@@ -210,7 +210,7 @@ void EdgeBarrierController::Subscribe(EdgeBarrierSubscriber* subscriber, unsigne
   if (monitor >= pimpl->subscribers_.size())
     pimpl->subscribers_.resize(monitor + 1);
 
-  auto monitors = UScreen::GetDefault()->GetMonitors();
+  auto const& monitors = UScreen::GetDefault()->GetMonitors();
   pimpl->subscribers_[monitor] = subscriber;
   pimpl->ResizeBarrierList(monitors);
   pimpl->SetupBarriers(monitors);
@@ -221,7 +221,7 @@ void EdgeBarrierController::Unsubscribe(EdgeBarrierSubscriber* subscriber, unsig
   if (monitor >= pimpl->subscribers_.size() || pimpl->subscribers_[monitor] != subscriber)
     return;
 
-  auto monitors = UScreen::GetDefault()->GetMonitors();
+  auto const& monitors = UScreen::GetDefault()->GetMonitors();
   pimpl->subscribers_[monitor] = nullptr;
   pimpl->ResizeBarrierList(monitors);
   pimpl->SetupBarriers(monitors);
