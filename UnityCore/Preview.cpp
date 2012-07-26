@@ -161,10 +161,10 @@ Preview::Impl::Impl(Preview* owner, glib::Object<GObject> const& proto_obj)
     if (s) subtitle_ = s;
     s = unity_protocol_preview_get_description(preview);
     if (s) description_ = s;
-    glib::Object<GIcon> icon(unity_protocol_preview_get_thumbnail(preview),
+    glib::Object<GIcon> icon(unity_protocol_preview_get_image(preview),
                              unity::glib::AddRef());
     image_ = icon;
-    s = unity_protocol_preview_get_thumbnail_source(preview);
+    s = unity_protocol_preview_get_image_source(preview);
     if (s) image_source_uri_ = s;
 
     int actions_len;
