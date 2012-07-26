@@ -41,6 +41,7 @@ namespace dash
 {
 namespace previews
 {
+class CoverArt;
 
 class PreviewRatingsWidget;
 
@@ -60,16 +61,16 @@ public:
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual long ComputeContentSize();
 
   void SetupBackground();
   void SetupViews();
-
-
 
 protected:
   nux::VLayout* full_data_layout_;
   nux::VLayout* title_subtitle_layout_;
 
+  CoverArt* image_;
   IconTexture* app_icon_;
   PreviewRatingsWidget* app_rating_;
   nux::StaticCairoText* title_;
@@ -77,7 +78,7 @@ protected:
   nux::StaticCairoText* license_;
   nux::StaticCairoText* last_update_;
   nux::StaticCairoText* copywrite_;
-  nux::StaticCairoText* app_description_;
+  nux::StaticCairoText* description_;
 
   typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
   LayerPtr details_bg_layer_;

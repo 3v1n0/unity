@@ -161,8 +161,8 @@ void Track::SetupBackground()
 void Track::SetupViews()
 {
   previews::Style& style = previews::Style::Instance();
-  nux::Layout* layout = new nux::HLayout();
-  layout->SetLeftAndRightPadding(0,5);
+  nux::HLayout* layout = new nux::HLayout();
+  layout->SetLeftAndRightPadding(0,0);
 
   nux::BaseTexture* tex_play = style.GetPlayIcon();
   IconTexture* status_play = new IconTexture(tex_play, tex_play ? tex_play->GetWidth() : 25, tex_play ? tex_play->GetHeight() : 25);
@@ -183,23 +183,18 @@ void Track::SetupViews()
   track_number_->SetFont(style.track_font());
   track_number_->mouse_enter.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseEnter));
   track_number_->mouse_leave.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseLeave));
-  track_number_->SetMaximumWidth(30);
-
-  int track_width = style.GetPreviewWidth() - style.GetPreviewHeight() - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin();
 
   title_ = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
   title_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
   title_->SetTextVerticalAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
   title_->SetLines(-1);
   title_->SetFont(style.track_font());
-  title_->SetMaximumWidth(track_width - 30 - 60 - 10);
 
   duration_ = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
   duration_->SetTextEllipsize(nux::StaticCairoText::NUX_ELLIPSIZE_NONE);
   duration_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_RIGHT);
   duration_->SetTextVerticalAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
   duration_->SetLines(-1);
-  duration_->SetMaximumWidth(30);
   duration_->SetFont(style.track_font());
   // Layouts
   // stick text fields in a layout so they don't alter thier geometry.
@@ -223,8 +218,6 @@ void Track::SetupViews()
   track_status_layout_->AddLayer(status_pause_layout_, true);
   track_status_layout_->AddLayer(track_number_layout_, true);
   track_status_layout_->SetActiveLayer(track_number_layout_);
-  track_status_layout_->SetMinimumWidth(30);
-  track_status_layout_->SetMaximumWidth(30);
 
   title_layout_ = new nux::HLayout();
   title_layout_->SetLeftAndRightPadding(3);
@@ -235,6 +228,7 @@ void Track::SetupViews()
   duration_layout_->AddSpace(0, 1);
   duration_layout_->AddView(duration_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
+  layout->SetSpaceBetweenChildren(6);
   layout->AddLayout(track_status_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   layout->AddLayout(title_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   layout->AddLayout(duration_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
@@ -353,6 +347,24 @@ void Track::UpdateTrackState()
     track_status_layout_->SetActiveLayer(track_number_layout_);
   }
 }
+
+
+long Track::ComputeContentSize()
+{
+  track_status_layout_->SetMinimumWidth(30);
+  track_status_layout_->SetMaximumWidth(30);
+
+  track_number_->SetMinimumWidth(30);
+  track_number_->SetMaximumWidth(30);
+
+  duration_->SetMaximumWidth(40);
+  duration_->SetMaximumWidth(40);
+
+  title_->SetMaximumWidth(GetGeometry().width - 30 - 30 - 12);
+
+  return View::ComputeContentSize();
+}
+
 
 
 }

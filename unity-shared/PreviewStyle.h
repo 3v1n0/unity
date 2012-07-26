@@ -57,8 +57,8 @@ public:
   static Style& Instance();
 
   int GetNavigatorWidth() const;
-  int GetPreviewHeight() const;
-  int GetPreviewWidth() const;
+  int GetPreviewPreferredHeight() const;
+  int GetPreviewPreferredWidth() const;
 
   int GetDetailsTopMargin() const;
   int GetDetailsBottomMargin() const;
@@ -70,6 +70,9 @@ public:
 
   int GetActionButtonHeight() const;
   int GetSpaceBetweenActions() const;
+  int GetActionButtonMaximumWidth() const;
+
+  int GetDetailsPanelMinimumWidth() const;
 
 
   std::string title_font() const;
@@ -84,6 +87,8 @@ public:
   std::string info_hint_font() const;
   std::string user_rating_font() const;
   std::string no_preview_image_font() const;
+
+  float GetAppImageAspectRatio() const;
 
   int GetAppIconAreaWidth() const;
   int GetSpaceBetweenIconAndDetails() const;

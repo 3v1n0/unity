@@ -40,6 +40,7 @@ namespace dash
 {
 namespace previews
 {
+class CoverArt;
 
 class GenericPreview : public Preview
 {
@@ -57,6 +58,7 @@ public:
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual long ComputeContentSize();
 
   void SetupBackground();
   void SetupViews();
@@ -64,6 +66,7 @@ protected:
 protected:
   nux::VLayout* full_data_layout_;
 
+  CoverArt* image_;
   nux::StaticCairoText* title_;
   nux::StaticCairoText* subtitle_;
   nux::StaticCairoText* description_;

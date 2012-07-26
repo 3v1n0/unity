@@ -67,11 +67,12 @@ protected:
   virtual void OnNavigateInComplete() {}
   virtual void OnNavigateOut() {}
 
-  nux::Layout* BuildGridActionsLayout(dash::Preview::ActionPtrList actions, int action_width, int action_height);
-  nux::Layout* BuildVerticalActionsLayout(dash::Preview::ActionPtrList actions, int action_width, int action_height);
+  nux::Layout* BuildGridActionsLayout(dash::Preview::ActionPtrList actions, std::list<nux::AbstractButton*>& buttons);
+  nux::Layout* BuildVerticalActionsLayout(dash::Preview::ActionPtrList actions, std::list<nux::AbstractButton*>& buttons);
   
 protected:
   dash::Preview::Ptr preview_model_;
+  std::list<nux::AbstractButton*> action_buttons_;
 
   friend class PreviewContent;
 };

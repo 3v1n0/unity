@@ -30,6 +30,7 @@
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
 #include <Nux/GridHLayout.h>
+#include <Nux/AbstractButton.h>
 
 #include "MoviePreview.h"
 #include "PreviewInfoHintWidget.h"
@@ -151,15 +152,12 @@ void MoviePreview::SetupView()
 
   previews::Style& style = dash::previews::Style::Instance();
 
-  int details_width = style.GetPreviewWidth() - style.GetPreviewHeight() - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin();
-
   nux::HLayout* image_data_layout = new nux::HLayout();
   image_data_layout->SetSpaceBetweenChildren(style.GetPanelSplitWidth());
 
   CoverArt* image = new CoverArt();
   image->SetImage(preview_model_->image.Get().RawPtr() ? g_icon_to_string(preview_model_->image.Get().RawPtr()) : "");
   image->SetFont(style.no_preview_image_font());
-  image->SetMinMaxSize(style.GetPreviewHeight(), style.GetPreviewHeight());
 
     /////////////////////
     // Data Panel
@@ -176,12 +174,10 @@ void MoviePreview::SetupView()
       title_ = new nux::StaticCairoText(preview_model_->title);
       title_->SetLines(-1);
       title_->SetFont(style.title_font().c_str());
-      title_->SetMaximumWidth(details_width);
 
       subtitle_ = new nux::StaticCairoText(preview_model_->subtitle);
       subtitle_->SetLines(-1);
       subtitle_->SetFont(style.subtitle_size_font().c_str());
-      subtitle_->SetMaximumWidth(details_width);
 
       app_data_layout->AddView(title_, 1);
       app_data_layout->AddView(subtitle_, 1);
@@ -202,7 +198,6 @@ void MoviePreview::SetupView()
       description_->SetLines(-20);
       description_->SetLineSpacing(1.5);
       description_->SetText(preview_model_->description);
-      description_->SetMaximumWidth(details_width);
 
       preview_info_layout->AddView(description_);
       if (preview_model_->GetInfoHints().size() > 0)
@@ -214,7 +209,8 @@ void MoviePreview::SetupView()
 
       /////////////////////
       // Actions
-      nux::Layout* actions_layout = BuildGridActionsLayout(preview_model_->GetActions(), (details_width - style.GetSpaceBetweenActions()) / 2, style.GetActionButtonHeight());
+      action_buttons_.clear();
+      nux::Layout* actions_layout = BuildGridActionsLayout(preview_model_->GetActions(), action_buttons_);
       actions_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
       ///////////////////
 
@@ -227,6 +223,40 @@ void MoviePreview::SetupView()
   image_data_layout->AddLayout(full_data_layout_, 1);
 
   SetLayout(image_data_layout);
+}
+
+
+long MoviePreview::ComputeContentSize()
+{
+  nux::Geometry geo = GetGeometry();
+  GetLayout()->SetGeometry(geo);
+
+  previews::Style& style = dash::previews::Style::Instance();
+
+  nux::Geometry geo_art(geo.x, geo.y, style.GetAppImageAspectRatio() * geo.height, geo.height);
+
+  if (geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() < style.GetDetailsPanelMinimumWidth())
+    geo_art.width = MAX(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() - style.GetDetailsPanelMinimumWidth());
+  image_->SetGeometry(geo_art);
+
+  full_data_layout_->SetGeometry(nux::Geometry(geo_art.x + geo_art.width + style.GetPanelSplitWidth(), geo.y,
+                    geo.width - geo_art.width - style.GetPanelSplitWidth(), geo.height));
+
+  int details_width = MAX(0, geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
+
+  title_->SetMaximumWidth(details_width);
+  subtitle_->SetMaximumWidth(details_width);
+  description_->SetMaximumWidth(details_width);
+
+  for (nux::AbstractButton* button : action_buttons_)
+  {
+    button->SetMinMaxSize(MIN((details_width - style.GetSpaceBetweenActions()) / 2, style.GetActionButtonMaximumWidth()), style.GetActionButtonHeight());
+  }
+
+  image_->ComputeContentSize();
+  full_data_layout_->ComputeContentSize();
+
+  return nux::eCompliantHeight | nux::eCompliantWidth;
 }
 
 } // namespace previews
