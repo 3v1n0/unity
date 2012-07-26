@@ -113,12 +113,12 @@ int Style::GetNavigatorWidth() const
   return 42;
 }
 
-int Style::GetPreviewHeight() const
+int Style::GetPreviewPreferredHeight() const
 {
   return 390;
 }
 
-int Style::GetPreviewWidth() const
+int Style::GetPreviewPreferredWidth() const
 {
   return 796;
 }
@@ -173,6 +173,11 @@ int Style::GetActionButtonHeight() const
   return 36;
 }
 
+int Style::GetActionButtonMaximumWidth() const
+{
+  return 190;
+}
+
 int Style::GetSpaceBetweenActions() const
 {
   return 10;
@@ -181,6 +186,16 @@ int Style::GetSpaceBetweenActions() const
 int Style::GetTrackBarHeight() const
 {
   return 25;
+}
+
+float Style::GetAppImageAspectRatio() const
+{
+  return 1.0;
+}
+
+int Style::GetDetailsPanelMinimumWidth() const
+{
+  return 300;
 }
 
 std::string Style::title_font() const

@@ -270,8 +270,7 @@ void PreviewContainer::SetupViews()
   layout_->AddView(nav_left_, 0);
 
   content_layout_ = new PreviewContent(this);
-  content_layout_->SetMinMaxSize(style.GetPreviewWidth(), style.GetPreviewHeight());
-  layout_->AddLayout(content_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   nav_right_ = new PreviewNavigator(Orientation::RIGHT, NUX_TRACKER_LOCATION);
   nav_right_->SetMinimumWidth(style.GetNavigatorWidth());
@@ -434,6 +433,8 @@ bool PreviewContainer::InspectKeyEvent(unsigned int eventType, unsigned int keys
     case NUX_KP_ENTER:
       direction = nux::KeyNavDirection::KEY_NAV_ENTER;
       break;
+    case NUX_VK_ESCAPE:
+      return true;
     default:
       direction = nux::KeyNavDirection::KEY_NAV_NONE;
       break;
@@ -468,9 +469,15 @@ void PreviewContainer::OnKeyDown(unsigned long event_type, unsigned long event_k
     case NUX_VK_LEFT:
       navigate_left.emit();
       break;
+
     case NUX_VK_RIGHT:
       navigate_right.emit();
       break;
+
+    case NUX_VK_ESCAPE:
+      request_close.emit();
+      break;
+
     default:
       return;
   }

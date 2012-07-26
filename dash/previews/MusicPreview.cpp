@@ -29,7 +29,7 @@
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
-#include <Nux/Button.h>
+#include <Nux/AbstractButton.h>
  
 #include "MusicPreview.h"
 #include "ActionButton.h"
@@ -134,15 +134,12 @@ void MusicPreview::SetupViews()
 
   previews::Style& style = dash::previews::Style::Instance();
 
-  int details_width = style.GetPreviewWidth() - style.GetPreviewHeight() - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin();
-
   nux::HLayout* image_data_layout = new nux::HLayout();
   image_data_layout->SetSpaceBetweenChildren(style.GetPanelSplitWidth());
 
-  CoverArt* album_cover = new CoverArt();
-  album_cover->SetImage(preview_model_->image.Get().RawPtr() ? g_icon_to_string(preview_model_->image.Get().RawPtr()) : "");
-  album_cover->SetFont(style.no_preview_image_font());
-  album_cover->SetMinMaxSize(style.GetPreviewHeight(), style.GetPreviewHeight());
+  image_ = new CoverArt();
+  image_->SetImage(preview_model_->image.Get().RawPtr() ? g_icon_to_string(preview_model_->image.Get().RawPtr()) : "");
+  image_->SetFont(style.no_preview_image_font());
 
     /////////////////////
     // App Data Panel
@@ -157,11 +154,11 @@ void MusicPreview::SetupViews()
 
       title_ = new nux::StaticCairoText(preview_model_->title);
       title_->SetFont(style.title_font().c_str());
-      title_->SetMaximumWidth(details_width);
+      title_->SetLines(-1);
 
       subtitle_ = new nux::StaticCairoText(preview_model_->subtitle);
       subtitle_->SetFont(style.subtitle_size_font().c_str());
-      subtitle_->SetMaximumWidth(details_width);
+      subtitle_->SetLines(-1);
 
       album_data_layout->AddView(title_, 1);
       album_data_layout->AddView(subtitle_, 1);
@@ -196,13 +193,15 @@ void MusicPreview::SetupViews()
         hints_layout->AddView(preview_info_hints, 0);
 
         // If there are actions, we use a vertical layout
-        actions_layout = BuildVerticalActionsLayout(preview_model_->GetActions(), (details_width - style.GetSpaceBetweenActions()) / 2, style.GetActionButtonHeight());
+        action_buttons_.clear();
+        actions_layout = BuildVerticalActionsLayout(preview_model_->GetActions(), action_buttons_);
         actions_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
       }
       else // otherwise we add a grid layout.
       {
         hint_actions_layout->AddSpace(0,1);
-        actions_layout = BuildGridActionsLayout(preview_model_->GetActions(), (details_width - style.GetSpaceBetweenActions()) / 2, style.GetActionButtonHeight());
+        action_buttons_.clear();
+        actions_layout = BuildGridActionsLayout(preview_model_->GetActions(), action_buttons_);
         actions_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
       }
         /////////////////////
@@ -211,11 +210,14 @@ void MusicPreview::SetupViews()
       hint_actions_layout->AddView(actions_layout, 0);
 
     full_data_layout_->AddLayout(album_data_layout, 0);
-    if (tracks_) { full_data_layout_->AddView(tracks_, 1); }
+    if (tracks_)
+    {
+      full_data_layout_->AddView(tracks_, 1);
+    }
     full_data_layout_->AddLayout(hint_actions_layout, 0);
     /////////////////////
   
-  image_data_layout->AddView(album_cover, 0);
+  image_data_layout->AddView(image_, 0);
   image_data_layout->AddLayout(full_data_layout_, 1);
 
   SetLayout(image_data_layout);
@@ -245,6 +247,37 @@ void MusicPreview::OnPauseTrack(std::string const& uri)
   music_preview_model->PauseUri(uri);
 }
 
+long MusicPreview::ComputeContentSize()
+{
+  nux::Geometry geo = GetGeometry();
+  GetLayout()->SetGeometry(geo);
+
+  previews::Style& style = dash::previews::Style::Instance();
+
+  nux::Geometry geo_art(geo.x, geo.y, style.GetAppImageAspectRatio() * geo.height, geo.height);
+
+  if (geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() < style.GetDetailsPanelMinimumWidth())
+    geo_art.width = MAX(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() - style.GetDetailsPanelMinimumWidth());
+  image_->SetGeometry(geo_art);
+
+  full_data_layout_->SetGeometry(nux::Geometry(geo_art.x + geo_art.width + style.GetPanelSplitWidth(), geo.y,
+                    geo.width - geo_art.width - style.GetPanelSplitWidth(), geo.height));
+
+  int details_width = MAX(0, geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
+
+  title_->SetMaximumWidth(details_width);
+  subtitle_->SetMaximumWidth(details_width);
+
+  for (nux::AbstractButton* button : action_buttons_)
+  {
+    button->SetMinMaxSize(MIN((details_width - style.GetSpaceBetweenActions()) / 2, style.GetActionButtonMaximumWidth()), style.GetActionButtonHeight());
+  }
+
+  image_->ComputeContentSize();
+  full_data_layout_->ComputeContentSize();
+
+  return nux::eCompliantHeight | nux::eCompliantWidth;
+}
 
 }
 }

@@ -53,32 +53,32 @@ previews::Preview::Ptr Preview::PreviewForModel(dash::Preview::Ptr model)
     return previews::Preview::Ptr();
   }
  
-  if (model->renderer_name == "preview-generic")
-  {
-    return Preview::Ptr(new GenericPreview(model));
-  }
-  else if (model->renderer_name == "preview-application")
-  {
-    return Preview::Ptr(new ApplicationPreview(model));
-  }
-  else if (model->renderer_name == "preview-music")
-  {
-    return Preview::Ptr(new MusicPreview(model));
-  }
-  else if (model->renderer_name == "preview-movie")
-  {
-    return Preview::Ptr(new MoviePreview(model));
-  }
-  // else if (renderer_name == "preview-series")
+  // if (model->renderer_name == "preview-generic")
   // {
-  //   return Preview::Ptr(new SeriesPreview(model));
+  //   return Preview::Ptr(new GenericPreview(model));
   // }
-  else
-  {
-    LOG_WARN(logger) << "Unable to create Preview for renderer: " << model->renderer_name.Get();
-  }
+  // else if (model->renderer_name == "preview-application")
+  // {
+  //   return Preview::Ptr(new ApplicationPreview(model));
+  // }
+  // else if (model->renderer_name == "preview-music")
+  // {
+  //   return Preview::Ptr(new MusicPreview(model));
+  // }
+  // else if (model->renderer_name == "preview-movie")
+  // {
+  //   return Preview::Ptr(new MoviePreview(model));
+  // }
+  // // else if (renderer_name == "preview-series")
+  // // {
+  // //   return Preview::Ptr(new SeriesPreview(model));
+  // // }
+  // else
+  // {
+  //   LOG_WARN(logger) << "Unable to create Preview for renderer: " << model->renderer_name.Get() << "; using generic";
+  // }
 
-  return previews::Preview::Ptr();
+  return Preview::Ptr(new GenericPreview(model));
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(Preview);
@@ -108,7 +108,7 @@ void Preview::OnActionActivated(nux::AbstractButton* button, std::string const& 
     preview_model_->PerformAction(id);
 }
 
-nux::Layout* Preview::BuildGridActionsLayout(dash::Preview::ActionPtrList actions, int action_width, int action_height)
+nux::Layout* Preview::BuildGridActionsLayout(dash::Preview::ActionPtrList actions, std::list<nux::AbstractButton*>& buttons)
 {
   previews::Style& style = dash::previews::Style::Instance();
 
@@ -131,8 +131,8 @@ nux::Layout* Preview::BuildGridActionsLayout(dash::Preview::ActionPtrList action
         dash::Preview::ActionPtr action = actions[action_iter];
 
         ActionButton* button = new ActionButton(action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
-        button->SetMinMaxSize(action_width, action_height);
         button->click.connect(sigc::bind(sigc::mem_fun(this, &Preview::OnActionActivated), action->id));
+        buttons.push_back(button);
 
         actions_layout_h->AddView(button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
     }
@@ -144,7 +144,7 @@ nux::Layout* Preview::BuildGridActionsLayout(dash::Preview::ActionPtrList action
   return actions_buffer_v;
 }
 
-nux::Layout* Preview::BuildVerticalActionsLayout(dash::Preview::ActionPtrList actions, int action_width, int action_height)
+nux::Layout* Preview::BuildVerticalActionsLayout(dash::Preview::ActionPtrList actions, std::list<nux::AbstractButton*>& buttons)
 {
   previews::Style& style = dash::previews::Style::Instance();
 
@@ -162,8 +162,8 @@ nux::Layout* Preview::BuildVerticalActionsLayout(dash::Preview::ActionPtrList ac
       dash::Preview::ActionPtr action = actions[action_iter];
 
       ActionButton* button = new ActionButton(action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
-      button->SetMinMaxSize(action_width, action_height);
       button->click.connect(sigc::bind(sigc::mem_fun(this, &Preview::OnActionActivated), action->id));
+      buttons.push_back(button);
 
       actions_layout_v->AddView(button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
   }

@@ -44,7 +44,6 @@ ActionButton::ActionButton(std::string const& label, std::string const& icon_hin
   , image_(nullptr)
   , static_text_(nullptr)
 {
-
   SetAcceptKeyNavFocusOnMouseDown(false);
   SetAcceptKeyNavFocusOnMouseEnter(false);
   Init();

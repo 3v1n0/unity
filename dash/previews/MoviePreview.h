@@ -39,6 +39,7 @@ namespace dash
 {
 namespace previews
 {
+class CoverArt;
 
 class MoviePreview : public Preview
 {
@@ -56,6 +57,7 @@ public:
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual long ComputeContentSize();
 
   virtual void OnNavigateOut();
   virtual void OnNavigateInComplete();
@@ -66,6 +68,7 @@ protected:
 protected:
   nux::VLayout* full_data_layout_;
 
+  CoverArt* image_;
   nux::StaticCairoText* title_;
   nux::StaticCairoText* subtitle_;
   nux::StaticCairoText* description_;

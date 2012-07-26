@@ -72,6 +72,7 @@ public:
   // For the nav buttons to the left/right of the previews, call when they are activated
   sigc::signal<void> navigate_left;
   sigc::signal<void> navigate_right;
+  sigc::signal<void> request_close;
 
   bool AcceptKeyNavFocus();
 

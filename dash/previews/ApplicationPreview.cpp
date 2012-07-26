@@ -150,15 +150,13 @@ void ApplicationPreview::SetupViews()
 
   previews::Style& style = dash::previews::Style::Instance();
 
-  int details_width = style.GetPreviewWidth() - style.GetPreviewHeight() - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin();
 
   nux::HLayout* image_data_layout = new nux::HLayout();
   image_data_layout->SetSpaceBetweenChildren(style.GetPanelSplitWidth());
 
-  CoverArt* app_image = new CoverArt();
-  app_image->SetImage(preview_model_->image.Get().RawPtr() ? g_icon_to_string(preview_model_->image.Get().RawPtr()) : "");
-  app_image->SetFont(style.no_preview_image_font());
-  app_image->SetMinMaxSize(style.GetPreviewHeight(), style.GetPreviewHeight());
+  image_ = new CoverArt();
+  image_->SetImage(preview_model_->image.Get().RawPtr() ? g_icon_to_string(preview_model_->image.Get().RawPtr()) : "");
+  image_->SetFont(style.no_preview_image_font());
 
     /////////////////////
     // App Data Panel
@@ -190,7 +188,6 @@ void ApplicationPreview::SetupViews()
 
         /////////////////////
         // Data
-        int top_app_info_max_width = details_width - style.GetAppIconAreaWidth() - style.GetSpaceBetweenIconAndDetails();;
 
         nux::VLayout* app_data_layout = new nux::VLayout();
         app_data_layout->SetSpaceBetweenChildren(16);
@@ -201,12 +198,10 @@ void ApplicationPreview::SetupViews()
         title_ = new nux::StaticCairoText(app_preview_model->title);
         title_->SetLines(-1);
         title_->SetFont(style.title_font().c_str());
-        title_->SetMaximumWidth(top_app_info_max_width);
 
         subtitle_ = new nux::StaticCairoText(app_preview_model->subtitle);
         subtitle_->SetFont(style.subtitle_size_font().c_str());
         subtitle_->SetLines(-1);
-        subtitle_->SetMaximumWidth(top_app_info_max_width);
 
         nux::VLayout* app_updated_copywrite_layout = new nux::VLayout();
         app_updated_copywrite_layout->SetSpaceBetweenChildren(8);
@@ -214,16 +209,13 @@ void ApplicationPreview::SetupViews()
         license_ = new nux::StaticCairoText(app_preview_model->license);
         license_->SetFont(style.app_license_font().c_str());
         license_->SetLines(-1);
-        license_->SetMaximumWidth(top_app_info_max_width);
 
         last_update_ = new nux::StaticCairoText(_("Last Updated ") + app_preview_model->last_update.Get());
         last_update_->SetFont(style.app_last_update_font().c_str());
-        last_update_->SetMaximumWidth(top_app_info_max_width);
 
         copywrite_ = new nux::StaticCairoText(app_preview_model->copyright);
         copywrite_->SetFont(style.app_copywrite_font().c_str());
         copywrite_->SetLines(-1);
-        copywrite_->SetMaximumWidth(top_app_info_max_width);
 
         title_subtitle_layout_->AddView(title_, 1);
         title_subtitle_layout_->AddView(subtitle_, 1);
@@ -251,15 +243,13 @@ void ApplicationPreview::SetupViews()
       app_info_layout->SetSpaceBetweenChildren(12);
       app_info->SetLayout(app_info_layout);
 
-      app_description_ = new nux::StaticCairoText("");
-      app_description_->SetFont(style.description_font().c_str());
-      app_description_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_TOP);
-      app_description_->SetLines(-20);
-      app_description_->SetLineSpacing(2);
-      app_description_->SetText(app_preview_model->description);
-      app_description_->SetMaximumWidth(details_width);
-
-      app_info_layout->AddView(app_description_);
+      description_ = new nux::StaticCairoText("");
+      description_->SetFont(style.description_font().c_str());
+      description_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_TOP);
+      description_->SetLines(-20);
+      description_->SetLineSpacing(2);
+      description_->SetText(app_preview_model->description);
+      app_info_layout->AddView(description_);
       if (preview_model_->GetInfoHints().size() > 0)
       {
         PreviewInfoHintWidget* preview_info_hints = new PreviewInfoHintWidget(preview_model_, 24);
@@ -269,7 +259,8 @@ void ApplicationPreview::SetupViews()
 
       /////////////////////
       // Actions
-      nux::Layout* actions_layout = BuildGridActionsLayout(preview_model_->GetActions(), (details_width - style.GetSpaceBetweenActions()) / 2, style.GetActionButtonHeight());
+      action_buttons_.clear();
+      nux::Layout* actions_layout = BuildGridActionsLayout(preview_model_->GetActions(), action_buttons_);
       actions_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
       ///////////////////
 
@@ -278,11 +269,48 @@ void ApplicationPreview::SetupViews()
     full_data_layout_->AddLayout(actions_layout, 0);
     /////////////////////
   
-  image_data_layout->AddView(app_image, 0);
+  image_data_layout->AddView(image_, 0);
   image_data_layout->AddLayout(full_data_layout_, 1);
 
 
   SetLayout(image_data_layout);
+}
+
+long ApplicationPreview::ComputeContentSize()
+{
+  nux::Geometry geo = GetGeometry();
+  GetLayout()->SetGeometry(geo);
+
+  previews::Style& style = dash::previews::Style::Instance();
+
+  nux::Geometry geo_art(geo.x, geo.y, style.GetAppImageAspectRatio() * geo.height, geo.height);
+
+  if (geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() < style.GetDetailsPanelMinimumWidth())
+    geo_art.width = MAX(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() - style.GetDetailsPanelMinimumWidth());
+  image_->SetGeometry(geo_art);
+
+  full_data_layout_->SetGeometry(nux::Geometry(geo_art.x + geo_art.width + style.GetPanelSplitWidth(), geo.y,
+                    geo.width - geo_art.width - style.GetPanelSplitWidth(), geo.height));
+
+  int details_width = MAX(0, geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
+  int top_app_info_max_width = details_width - style.GetAppIconAreaWidth() - style.GetSpaceBetweenIconAndDetails();
+
+  title_->SetMaximumWidth(top_app_info_max_width);
+  subtitle_->SetMaximumWidth(top_app_info_max_width);
+  license_->SetMaximumWidth(top_app_info_max_width);
+  last_update_->SetMaximumWidth(top_app_info_max_width);
+  copywrite_->SetMaximumWidth(top_app_info_max_width);
+  description_->SetMaximumWidth(details_width);
+
+  for (nux::AbstractButton* button : action_buttons_)
+  {
+    button->SetMinMaxSize(MIN((details_width - style.GetSpaceBetweenActions()) / 2, style.GetActionButtonMaximumWidth()), style.GetActionButtonHeight());
+  }
+
+  image_->ComputeContentSize();
+  full_data_layout_->ComputeContentSize();
+
+  return nux::eCompliantHeight | nux::eCompliantWidth;
 }
 
 

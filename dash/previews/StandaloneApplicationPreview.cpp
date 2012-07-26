@@ -142,6 +142,7 @@ void TestRunner::Init ()
   container_ = new previews::PreviewContainer(NUX_TRACKER_LOCATION);
   container_->navigate_right.connect(sigc::mem_fun(this, &TestRunner::NavRight));
   container_->navigate_left.connect(sigc::mem_fun(this, &TestRunner::NavLeft));
+  container_->request_close.connect([&]() { exit(0); });
 
   DummyView* dummyView = new DummyView(container_.GetPointer());
   layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
@@ -150,9 +151,9 @@ void TestRunner::Init ()
 
 
   std::stringstream app_name;
-  app_name << "Yellow Submarine Eleanoewee ew";
+  app_name << "Skype";
 
-  const char* subtitle = "The Beatles, 1986";
+  const char* subtitle = "Version 3.2, Size 32 MB";
   const char* description = "Skype is a proprietary voice-over-Internet Protocol service and software application originally created by Niklas Zennström and Janus Friis in 2003, and owned by Microsoft since 2011. \
 The service allows users to communicate with peers by voice, video, and instant messaging over the Internet. Phone calls may be placed to recipients on the traditional telephone networks. Calls to other users within the Skype service are free of charge, while calls to landline telephones and mobile phones are charged via a debit-based user account system.";
 

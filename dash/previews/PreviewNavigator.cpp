@@ -75,10 +75,10 @@ void PreviewNavigator::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_d
   nux::Geometry base = GetGeometry();
   gfx_engine.PushClippingRectangle(base);
 
-    unsigned int alpha, src, dest = 0;
-    gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
-    gfx_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
+  unsigned int alpha, src, dest = 0;
+  gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
+  gfx_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    
   if (GetCompositionLayout())
     GetCompositionLayout()->ProcessDraw(gfx_engine, force_draw);
 
@@ -92,21 +92,34 @@ void PreviewNavigator::SetupViews()
   if (orientation_ == Orientation::LEFT || orientation_ == Orientation::RIGHT)
   {
     nux::VLayout* vlayout = new nux::VLayout();
+    nux::HLayout* hlayout = new nux::HLayout();
     vlayout->SetSpaceBetweenChildren(0);
-    layout_ = vlayout;
+    hlayout->SetSpaceBetweenChildren(0);
+    layout_ = hlayout;
 
     if (orientation_ == Orientation::LEFT)
-      texture_ = new IconTexture(Style::Instance().GetNavLeftIcon(), 32, 32);
+      texture_ = new IconTexture(Style::Instance().GetNavLeftIcon(), 24, 24);
     else 
-      texture_ = new IconTexture(Style::Instance().GetNavRightIcon(), 32, 32);
+      texture_ = new IconTexture(Style::Instance().GetNavRightIcon(), 24, 24);
+
+    vlayout->AddSpace(0,1);
+    vlayout->AddLayout(hlayout);
+    vlayout->AddSpace(0,1);
+    SetLayout(vlayout);
   }
   else if (orientation_ == Orientation::UP || orientation_ == Orientation::DOWN)
   {
     nux::HLayout* hlayout = new nux::HLayout();
+    nux::VLayout* vlayout = new nux::VLayout();
     hlayout->SetSpaceBetweenChildren(0);
-    layout_ = hlayout;
+    vlayout->SetSpaceBetweenChildren(0);
+    layout_ = vlayout;
+
+    hlayout->AddSpace(0,1);
+    hlayout->AddLayout(vlayout);
+    hlayout->AddSpace(0,1);
+    SetLayout(hlayout);
   }
-  SetLayout(layout_);
 
   layout_->AddSpace(0, 1);
 
