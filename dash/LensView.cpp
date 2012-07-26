@@ -166,17 +166,15 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   {
     preview_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
     preview_->Preview(model, previews::Navigation::BOTH);
-    
+  
     auto preview_geo = GetGeometry();
-    preview_geo.height -= 24; //FIXME!! - total guess. 
+    preview_geo.height -= 24; //FIXME!! - total guess. i love guessing.  
     preview_->SetGeometry(preview_geo);
     currently_in_preview_ = true;
 
     preview_resultview_->preview_spacer = 600; // make height of the view - some amount
     preview_resultview_->preview_result_uri = last_activated_result_uri_;
     fscroll_view_->SetVisible(false);
-
-    QueueDraw();
   });
 
   ubus_manager_.RegisterInterest(UBUS_RESULT_VIEW_KEYNAV_CHANGED, [&] (GVariant* data) {
@@ -215,7 +213,31 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
     ubus_manager_.SendMessage(UBUS_DASH_SET_SEARCH_VISIBILITY, g_variant_new("(b)", FALSE));
   });
 }
+/*
+void LensView::BuildPreview(std::string const& uri, Preview::Ptr model)
+{
+  if (currently_in_preview_ == false)
+  {
+    preview_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
+    preview_->Preview(model, previews::Navigation::BOTH);
+  
+    auto preview_geo = GetGeometry();
+    preview_geo.height -= 24; //FIXME!! - total guess. i love guessing.  
+    preview_->SetGeometry(preview_geo);
+    currently_in_preview_ = true;
 
+    preview_resultview_->preview_spacer = 600; // make height of the view - some amount
+    preview_resultview_->preview_result_uri = last_activated_result_uri_;
+    fscroll_view_->SetVisible(false);
+
+    preview->navigate_left.connect([&] () 
+    {
+      preview_resultview_->
+    }
+
+  QueueDraw();
+}
+*/
 void LensView::SetupViews(nux::Area* show_filters)
 {
   dash::Style& style = dash::Style::Instance();

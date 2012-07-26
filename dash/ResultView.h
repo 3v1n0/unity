@@ -58,7 +58,9 @@ public:
   void AddResult(Result& result);
   void RemoveResult(Result& result); 
   unsigned int GetIndexForUri(const std::string& uri); 
-
+  std::string GetUriForIndex(unsigned int);
+  unsigned int GetModelSize();
+  
   ResultList GetResultList ();
 
   nux::Property<bool> expanded;
