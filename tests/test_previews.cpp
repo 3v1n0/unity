@@ -51,7 +51,7 @@ TEST(TestPreviews, DeserializeGeneric)
   unity_protocol_preview_set_subtitle(proto_obj, "Subtitle");
   unity_protocol_preview_set_description(proto_obj, "Description");
   unity_protocol_preview_set_image(proto_obj, icon);
-  unity_protocol_preview_set_image_source(proto_obj, "Source");
+  unity_protocol_preview_set_image_source_uri(proto_obj, "Source");
 
   Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
             glib::StealRef());
@@ -76,7 +76,7 @@ TEST(TestPreviews, DeserializeGenericWithMeta)
   unity_protocol_preview_set_subtitle(proto_obj, "Subtitle");
   unity_protocol_preview_set_description(proto_obj, "Description");
   unity_protocol_preview_set_image(proto_obj, icon);
-  unity_protocol_preview_set_image_source(proto_obj, "Source");
+  unity_protocol_preview_set_image_source_uri(proto_obj, "Source");
   unity_protocol_preview_add_action(proto_obj, "action1", "Action #1", NULL, 0);
   unity_protocol_preview_add_action(proto_obj, "action2", "Action #2", NULL, 0);
   unity_protocol_preview_add_info_hint(proto_obj, "hint1", "Hint 1", NULL, g_variant_new("i", 34));
