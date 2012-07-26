@@ -117,7 +117,7 @@ public:
   std::string get_subtitle() const { return subtitle_; };
   std::string get_description() const { return description_; };
   unity::glib::Object<GIcon> get_image() const { return image_; };
-  std::string get_image_source() const { return image_source_; };
+  std::string get_image_source_uri() const { return image_source_uri_; };
   ActionPtrList get_actions() const { return actions_list_; };
   InfoHintPtrList get_info_hints() const { return info_hint_list_; };
 
@@ -135,7 +135,7 @@ public:
   std::string subtitle_;
   std::string description_;
   unity::glib::Object<GIcon> image_;
-  std::string image_source_;
+  std::string image_source_uri_;
   ActionPtrList actions_list_;
   InfoHintPtrList info_hint_list_;
   Lens* parent_lens_;
@@ -165,7 +165,7 @@ Preview::Impl::Impl(Preview* owner, glib::Object<GObject> const& proto_obj)
                              unity::glib::AddRef());
     image_ = icon;
     s = unity_protocol_preview_get_thumbnail_source(preview);
-    if (s) image_source_ = s;
+    if (s) image_source_uri_ = s;
 
     int actions_len;
     auto actions = unity_protocol_preview_get_actions(preview, &actions_len);
@@ -208,8 +208,8 @@ void Preview::Impl::SetupGetters()
       sigc::mem_fun(this, &Preview::Impl::get_description));
   owner_->image.SetGetterFunction(
       sigc::mem_fun(this, &Preview::Impl::get_image));
-  owner_->image_source.SetGetterFunction(
-    sigc::mem_fun(this, &Preview::Impl::get_image_source));
+  owner_->image_source_uri.SetGetterFunction(
+    sigc::mem_fun(this, &Preview::Impl::get_image_source_uri));
 
   owner_->parent_lens.SetGetterFunction(
       sigc::mem_fun(this, &Preview::Impl::get_parent_lens));

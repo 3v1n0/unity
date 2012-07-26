@@ -64,7 +64,7 @@ TEST(TestPreviews, DeserializeGeneric)
   EXPECT_EQ(preview->title, "Title");
   EXPECT_EQ(preview->subtitle, "Subtitle");
   EXPECT_EQ(preview->description, "Description");
-  EXPECT_EQ(preview->image_source, "Source");
+  EXPECT_EQ(preview->image_source_uri, "Source");
   EXPECT_TRUE(g_icon_equal(preview->image(), icon) != FALSE);
 }
 
@@ -94,7 +94,7 @@ TEST(TestPreviews, DeserializeGenericWithMeta)
   EXPECT_EQ(preview->subtitle, "Subtitle");
   EXPECT_EQ(preview->description, "Description");
   EXPECT_TRUE(g_icon_equal(preview->image(), icon) != FALSE);
-  EXPECT_EQ(preview->image_source, "Source");
+  EXPECT_EQ(preview->image_source_uri, "Source");
 
   auto actions = preview->GetActions();
   auto info_hints = preview->GetInfoHints();
