@@ -74,6 +74,7 @@ protected:
   Settings settings;
   panel::Style panel_style;
   MockFavoriteStore favorite_store;
+  GeisAdapter geis_adapter;
   Controller lc;
 };
 }
