@@ -51,6 +51,7 @@ TEST(TestPreviews, DeserializeGeneric)
   unity_protocol_preview_set_subtitle(proto_obj, "Subtitle");
   unity_protocol_preview_set_description(proto_obj, "Description");
   unity_protocol_preview_set_thumbnail(proto_obj, icon);
+  unity_protocol_preview_set_thumbnail_source(proto_obj, "Source");
 
   Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
             glib::StealRef());
@@ -63,6 +64,7 @@ TEST(TestPreviews, DeserializeGeneric)
   EXPECT_EQ(preview->title, "Title");
   EXPECT_EQ(preview->subtitle, "Subtitle");
   EXPECT_EQ(preview->description, "Description");
+  EXPECT_EQ(preview->image_source, "Source");
   EXPECT_TRUE(g_icon_equal(preview->image(), icon) != FALSE);
 }
 
@@ -74,6 +76,7 @@ TEST(TestPreviews, DeserializeGenericWithMeta)
   unity_protocol_preview_set_subtitle(proto_obj, "Subtitle");
   unity_protocol_preview_set_description(proto_obj, "Description");
   unity_protocol_preview_set_thumbnail(proto_obj, icon);
+  unity_protocol_preview_set_thumbnail_source(proto_obj, "Source");
   unity_protocol_preview_add_action(proto_obj, "action1", "Action #1", NULL, 0);
   unity_protocol_preview_add_action(proto_obj, "action2", "Action #2", NULL, 0);
   unity_protocol_preview_add_info_hint(proto_obj, "hint1", "Hint 1", NULL, g_variant_new("i", 34));
@@ -91,6 +94,7 @@ TEST(TestPreviews, DeserializeGenericWithMeta)
   EXPECT_EQ(preview->subtitle, "Subtitle");
   EXPECT_EQ(preview->description, "Description");
   EXPECT_TRUE(g_icon_equal(preview->image(), icon) != FALSE);
+  EXPECT_EQ(preview->image_source, "Source");
 
   auto actions = preview->GetActions();
   auto info_hints = preview->GetInfoHints();

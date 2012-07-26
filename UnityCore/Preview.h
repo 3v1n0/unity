@@ -103,6 +103,7 @@ public:
   nux::ROProperty<std::string> subtitle;
   nux::ROProperty<std::string> description;
   nux::ROProperty<unity::glib::Object<GIcon>> image;
+  nux::ROProperty<std::string> image_source;
 
   // can't use Lens::Ptr to avoid circular dependency
   nux::RWProperty<Lens*> parent_lens;
