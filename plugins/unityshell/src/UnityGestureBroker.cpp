@@ -33,6 +33,7 @@ UnityGestureBroker::UnityGestureBroker()
   WindowGestureTarget::fleur_cursor = XCreateFontCursor (screen->dpy (), XC_fleur);
 
   unity_target.reset(new UnityGestureTarget);
+  gestural_window_switcher_.reset(new GesturalWindowSwitcher);
 }
 
 UnityGestureBroker::~UnityGestureBroker()
@@ -48,6 +49,8 @@ std::vector<nux::ShPtGestureTarget>
 UnityGestureBroker::FindGestureTargets(const nux::GestureEvent &event)
 {
   std::vector<nux::ShPtGestureTarget> targets;
+  targets.reserve(2);
+
   const std::vector<nux::TouchPoint> &touches = event.GetTouches();
 
   if (touches.size() == 4)
@@ -56,6 +59,8 @@ UnityGestureBroker::FindGestureTargets(const nux::GestureEvent &event)
   }
   else if (touches.size() == 3)
   {
+    targets.push_back(gestural_window_switcher_);
+
     CompWindow *window = FindWindowHitByGesture(event);
     if (window)
     {

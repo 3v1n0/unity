@@ -92,6 +92,8 @@ public:
 
   guint GetSwitcherInputWindowId() const;
 
+  sigc::signal<void> view_built;
+
 protected:
   // Introspectable methods
   std::string GetName() const;
