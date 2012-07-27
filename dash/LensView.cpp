@@ -742,7 +742,11 @@ nux::Area* LensView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::N
   if (preview_is_active)
   {
     LOG_DEBUG(logger) << "going to preview";
-    view = dynamic_cast<nux::Area*>(preview_.GetPointer())->FindAreaUnderMouse(mouse_position, event_type);
+    nux::Point newpos = mouse_position;
+    // COMPLETE HACK OMG LOL, if this makes it into a merge request just slap gord. seriously.
+    newpos.x -= 32;
+    newpos.y -= 24;
+    view = dynamic_cast<nux::Area*>(preview_.GetPointer())->FindAreaUnderMouse(newpos, event_type);
   }
   else
   {
