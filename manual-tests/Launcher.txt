@@ -663,3 +663,16 @@ Actions:
 
 Expected Result:
  * The launcher should autoscroll so you can reach the trash icon.
+
+
+No flickering when resizing the launcher
+----------------------------------------
+Actions:
+ * Open gedit.
+ * Maximize it. Make sure it remains maximized during the test.
+ * Open Appearance panel in System Settings.
+ * Change Launcher Icon Size.
+
+Expected Results:
+ * The gedit window must not flicker behind the launcher.
+
