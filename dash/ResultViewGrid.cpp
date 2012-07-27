@@ -667,7 +667,10 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
     Result result = results_[index];
     selected_index_ = index;
     focused_uri_ = result.uri;
-    UriActivated.emit(result.uri, ResultView::ActivateType::PREVIEW);
+    if (nux::GetEventButton(button_flags) == nux::MouseButton::MOUSE_BUTTON3)
+      UriActivated.emit(result.uri, ResultView::ActivateType::PREVIEW);
+    else
+      UriActivated.emit(result.uri, ResultView::ActivateType::DIRECT);
   }
 }
 

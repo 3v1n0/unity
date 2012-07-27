@@ -741,10 +741,12 @@ nux::Area* LensView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::N
   nux::Area* view = nullptr;
   if (preview_is_active)
   {
+    LOG_DEBUG(logger) << "going to preview";
     view = dynamic_cast<nux::Area*>(preview_.GetPointer())->FindAreaUnderMouse(mouse_position, event_type);
   }
   else
   {
+    LOG_DEBUG(logger) << "going to result view";
     view = View::FindAreaUnderMouse(mouse_position, event_type);
   }
 
