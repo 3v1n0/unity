@@ -337,6 +337,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetOvercomePressureNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDecayRateNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetShowMinimizedWindowsNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetEdgePassedDisabledMsNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
 
      optionSetNumLaunchersNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetLauncherCaptureMouseNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -2894,8 +2895,12 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::RevealPressure:
       launcher_options->edge_reveal_pressure = optionGetRevealPressure() * 100;
+      break;
     case UnityshellOptions::EdgeResponsiveness:
       launcher_options->edge_responsiveness = optionGetEdgeResponsiveness();
+      break;
+    case UnityshellOptions::EdgePassedDisabledMs:
+      launcher_options->edge_passed_disabled_ms = optionGetEdgePassedDisabledMs();
       break;
     default:
       break;

@@ -5,12 +5,12 @@ This test makes sure that the hud will search and activate items.
 Setup:
 #. Ensure the devices indicator is present
 
-Action:
+Actions:
 #. Tap Alt
 #. Type "system" to search for the "System settings..." item in the devices indicator
 #. Press return to activate the search query. 
 
-Outcome:
+Expected Result:
   The system settings interface presents itself, the hud disappears. 
   If the hud does not disappear, this test failed. If the system settings interface
   did not present itself, this test did *not* fail. 
@@ -23,13 +23,13 @@ This test ensures the hud key navigation is intact
 Setup:
 #. Ensure the messaging indicator is present
 
-Action:
+Actions:
 #. Tap Alt
 #. Type "Message" to search for items from the messaging indicator
 #. Press down twice
 #. Press return
 
-Outcome:
+Expected Result:
   The item selected will activate and the hud with disappear.
   If the hud does not disappear, this test failed.
   If the buttons under the search box do not highlight, this test failed.
@@ -39,13 +39,15 @@ Hud Dismiss
 ----------
 This test ensures that the hud is dismissable
 
-Action:
+Setup:
+
+Actions:
 #. Tap Alt
 #. Type "test"
 #. Press escape
 #. Click anywhere on the screen that is not the hud interface
 
-Outcome:
+Expected Result:
   After pressing escape in step three, the text "test" should be removed from the hud search
   After step four, the hud should dismiss itself and not be present.
 
@@ -59,21 +61,23 @@ Note: Should be automated
 Setup:
 #. Open gnome-terminal
 
-Action:
+Actions:
 #. While holding Alt, tap arrow keys: Up, Down, Right, Left
 
-Outcome:
+Expected Result:
   The terminal should show the keycodes were received as text "ABCD".
 
 Alt+Enter Crash
 ---------------
 Tests that Alt+Enter does not cause unity to crash (LP: #960957)
 
-Action:
+Setup:
+
+Actions:
 #. Press Alt+Enter.
 
-Expected Outcome:
+Expected Result:
   Nothing happens
-
-Wrong Outcome:
+ 
+Wrong Result:
   Unity/compiz crashes

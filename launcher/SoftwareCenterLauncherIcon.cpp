@@ -43,6 +43,7 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
                    G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START)
 , finished_(true)
 , needs_urgent_(false)
+, aptdaemon_trans_id_(aptdaemon_trans_id)
 {
 
   aptdaemon_trans_.Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
@@ -50,7 +51,8 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
 
   SetIconType(TYPE_APPLICATION);
   icon_name = icon_path;
-  tooltip_text = _("Waiting to install");
+  if (!aptdaemon_trans_id_.empty()) // Application is being installed, or hasn't been installed yet
+    tooltip_text = _("Waiting to install");
 }
 
 void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,

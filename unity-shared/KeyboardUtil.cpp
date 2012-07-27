@@ -25,17 +25,18 @@
 
 namespace unity {
 namespace ui {
+namespace {
+  const unsigned int FETCH_MASK = XkbGBN_KeyNamesMask | XkbGBN_ClientSymbolsMask | XkbGBN_GeometryMask;
+}
 
 KeyboardUtil::KeyboardUtil(Display *display)
   : display_(display)
-{
-  unsigned int fetch_mask = XkbGBN_KeyNamesMask | XkbGBN_ClientSymbolsMask | XkbGBN_GeometryMask;
-  keyboard_ = XkbGetKeyboard (display, fetch_mask, XkbUseCoreKbd);
-}
+  , keyboard_(XkbGetKeyboard(display_, FETCH_MASK, XkbUseCoreKbd))
+{}
 
 KeyboardUtil::~KeyboardUtil()
 {
-  XkbFreeKeyboard (keyboard_, 0, True);
+  XkbFreeKeyboard(keyboard_, 0, True);
 }
 
 bool KeyboardUtil::FindKeyInGeometry(XkbGeometryPtr geo, char *key_name, int& res_section, XkbBoundsRec& res_bounds) const
@@ -86,6 +87,9 @@ bool KeyboardUtil::CompareOffsets(int current_x, int current_y, int best_x, int 
 
 guint KeyboardUtil::ConvertKeyToKeycode(XkbKeyPtr key) const
 {
+  if (!keyboard_)
+    return 0;
+
   int min_code = keyboard_->min_key_code;
   int max_code = keyboard_->max_key_code;
 
@@ -94,6 +98,7 @@ guint KeyboardUtil::ConvertKeyToKeycode(XkbKeyPtr key) const
     if (!strncmp(key->name.name, keyboard_->names->keys[i].name, XkbKeyNameLength))
       return i;
   }
+
   return 0;
 }
 
@@ -186,7 +191,7 @@ guint KeyboardUtil::GetKeycodeAboveKeySymbol(KeySym key_symbol) const
 
   int code = XKeysymToKeycode(display_, key_symbol);
 
-  if (!code)
+  if (!code || !keyboard_)
     return result;
 
   if (keyboard_->min_key_code > code || keyboard_->max_key_code < code)
