@@ -69,12 +69,15 @@ public:
   nux::Property<bool> filters_expanded;
   nux::Property<ViewType> view_type;
   nux::Property<bool> can_refine_search;
+  nux::Property<bool> preview_is_active;
 
   sigc::signal<void, std::string const&> uri_activated;
 
   void PerformSearch(std::string const& search_query);
   void CheckNoResults(Lens::Hints const& hints);
   void HideResultsMessage();
+
+  void CloseActivePreview();  
 
 private:
   void SetupViews(nux::Area* show_filters);
@@ -93,6 +96,8 @@ private:
   void OnViewTypeChanged(ViewType view_type);
   void QueueFixRenderering();
   bool FixRenderering();
+
+  void BuildPreview(std::string const& uri, Preview::Ptr model);
 
   virtual void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
@@ -129,7 +134,8 @@ private:
   previews::PreviewContainer::Ptr preview_;
   ResultView* preview_resultview_;
   bool currently_in_preview_;
-  
+  unsigned int preview_index_;
+
   std::string last_activated_result_uri_;
   UBusManager ubus_manager_;
   glib::Source::UniquePtr fix_rendering_idle_;
