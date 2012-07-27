@@ -173,11 +173,11 @@ The service allows users to communicate with peers by voice, video, and instant 
   unity_protocol_application_preview_set_num_ratings(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 17);
 
 
-  unity_protocol_preview_set_thumbnail(proto_obj, g_icon_new_for_string("~/Skype.png", NULL));
+  unity_protocol_preview_set_image(proto_obj, g_icon_new_for_string("~/Skype.png", NULL));
   unity_protocol_preview_set_title(proto_obj, app_name.str().c_str());
   unity_protocol_preview_set_subtitle(proto_obj, subtitle);
   unity_protocol_preview_set_description(proto_obj, description);
-  unity_protocol_preview_set_thumbnail(proto_obj, icon);
+  unity_protocol_preview_set_image(proto_obj, icon);
   unity_protocol_preview_add_action(proto_obj, "uninstall", "Uninstall", iconHint1, 0);
   unity_protocol_preview_add_action(proto_obj, "launch", "Launch", iconHint2, 0);
   unity_protocol_preview_add_info_hint(proto_obj, "time", "Total time", iconHint1, g_variant_new("s", "16 h 34miin 45sec"));
@@ -218,11 +218,11 @@ The service allows users to communicate with peers by voice, video, and instant 
   unity_protocol_application_preview_set_rating(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 0.25);
   unity_protocol_application_preview_set_num_ratings(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 5);
 
-  unity_protocol_preview_set_thumbnail(proto_obj, g_icon_new_for_string("Skype.png", NULL));
+  unity_protocol_preview_set_image(proto_obj, g_icon_new_for_string("Skype.png", NULL));
   unity_protocol_preview_set_title(proto_obj, app_name.str().c_str());
   unity_protocol_preview_set_subtitle(proto_obj, subtitle);
   unity_protocol_preview_set_description(proto_obj, description);
-  unity_protocol_preview_set_thumbnail(proto_obj, icon);
+  unity_protocol_preview_set_image(proto_obj, icon);
   unity_protocol_preview_add_action(proto_obj, "uninstall", "Uninstall", iconHint1, 0);
   unity_protocol_preview_add_action(proto_obj, "launch", "Launch", iconHint2, 0);
   unity_protocol_preview_add_info_hint(proto_obj, "time", "Total time", iconHint1, g_variant_new("s", "16 h 34miin 45sec"));
@@ -261,11 +261,11 @@ The service allows users to communicate with peers by voice, video, and instant 
   unity_protocol_application_preview_set_rating(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 0.8);
   unity_protocol_application_preview_set_num_ratings(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 1223);
 
-  unity_protocol_preview_set_thumbnail(proto_obj, g_icon_new_for_string("Skype.png", NULL));
+  unity_protocol_preview_set_image(proto_obj, g_icon_new_for_string("Skype.png", NULL));
   unity_protocol_preview_set_title(proto_obj, app_name.str().c_str());
   unity_protocol_preview_set_subtitle(proto_obj, subtitle);
   unity_protocol_preview_set_description(proto_obj, description);
-  unity_protocol_preview_set_thumbnail(proto_obj, icon);
+  unity_protocol_preview_set_image(proto_obj, icon);
   unity_protocol_preview_add_action(proto_obj, "uninstall", "Uninstall", iconHint1, 0);
   unity_protocol_preview_add_action(proto_obj, "launch", "Launch", iconHint2, 0);
   unity_protocol_preview_add_info_hint(proto_obj, "time", "Total time", iconHint1, g_variant_new("s", "16 h 34miin 45sec"));
