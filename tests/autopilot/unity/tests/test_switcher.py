@@ -19,7 +19,6 @@ from unity.tests import UnityTestCase
 
 logger = logging.getLogger(__name__)
 
-
 class SwitcherTestCase(UnityTestCase):
 
     scenarios = [
