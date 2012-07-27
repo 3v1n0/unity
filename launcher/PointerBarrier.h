@@ -30,10 +30,13 @@ namespace unity
 namespace ui
 {
 
-class BarrierEvent
+struct BarrierEvent
 {
-public:
   typedef std::shared_ptr<BarrierEvent> Ptr;
+
+  BarrierEvent(int x_, int y_, int velocity_, int event_id_)
+    : x(x_), y(y_), velocity(velocity_), event_id(event_id_)
+  {}
 
   int x;
   int y;
@@ -55,6 +58,9 @@ class PointerBarrierWrapper : public sigc::trackable
 public:
   typedef std::shared_ptr<PointerBarrierWrapper> Ptr;
 
+  PointerBarrierWrapper();
+  virtual ~PointerBarrierWrapper();
+
   nux::Property<int> x1;
   nux::Property<int> x2;
   nux::Property<int> y1;
@@ -63,6 +69,7 @@ public:
   nux::Property<int> threshold;
 
   nux::Property<bool> active;
+  nux::Property<bool> released;
 
   nux::Property<int> smoothing;
 
@@ -72,28 +79,22 @@ public:
 
   nux::Property<BarrierDirection> direction;
 
-  PointerBarrierWrapper();
-  ~PointerBarrierWrapper();
-
-  void ConstructBarrier();
-  void DestroyBarrier();
-  void ReleaseBarrier(int event_id);
+  virtual void ConstructBarrier();
+  virtual void DestroyBarrier();
+  virtual void ReleaseBarrier(int event_id);
 
   sigc::signal<void, PointerBarrierWrapper*, BarrierEvent::Ptr> barrier_event;
 
+protected:
+  void EmitCurrentData(int event_id, int x, int y);
+  bool HandleEvent(XEvent event);
+
 private:
-  void EmitCurrentData();
-  bool HandleEvent (XEvent event);
   static bool HandleEventWrapper(XEvent event, void* data);
 
-  int last_event_;
-  int last_x_;
-  int last_y_;
-
   int event_base_;
-  int error_base_;
   PointerBarrier barrier;
-  
+
   int smoothing_count_;
   int smoothing_accum_;
   glib::Source::UniquePtr smoothing_timeout_;

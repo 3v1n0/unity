@@ -33,8 +33,9 @@ namespace launcher
 
 class DeviceLauncherIcon : public SimpleLauncherIcon
 {
-
 public:
+  typedef nux::ObjectPtr<DeviceLauncherIcon> Ptr;
+
   DeviceLauncherIcon(glib::Object<GVolume> const& volume);
 
   void OnRemoved();

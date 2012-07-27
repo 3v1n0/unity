@@ -31,12 +31,10 @@ namespace ui
 class Decaymulator
 {
 public:
-  typedef std::shared_ptr<Decaymulator> Ptr;
+  Decaymulator();
 
   nux::Property<int> rate_of_decay;
   nux::Property<int> value;
-
-  Decaymulator();
 
 private:
   void OnValueChanged(int value);

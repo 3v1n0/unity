@@ -124,6 +124,7 @@ if (GTEST_SRC_DIR AND
 
 # The actual test executable (xless) - do not put anything that requires X in here
   add_executable(test-gtest-xless
+                 test_main_xless.cpp
                  test_animator.cpp
                  test_launcher_model.cpp
                  test_glib_object.cpp
@@ -134,25 +135,25 @@ if (GTEST_SRC_DIR AND
                  test_glib_signals_utils.h
                  test_glib_source.cpp
                  test_glib_variant.cpp
+                 test_grabhandle.cpp
                  test_desktop_utilities.cpp
-                 ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
+                 test_hud_private.cpp
                  test_indicator.cpp
                  test_indicator_appmenu.cpp
                  test_indicator_entry.cpp
                  test_indicators.cpp
+                 test_introspection.cpp
                  test_favorite_store_gsettings.cpp
                  test_favorite_store_private.cpp
                  test_home_lens.cpp
                  test_launcher_entry_remote.cpp
+                 test_pointer_barrier.cpp
                  test_previews.cpp
                  test_shortcut_model.cpp
                  test_shortcut_private.cpp
-                 test_introspection.cpp
-                 test_main_xless.cpp
-                 test_grabhandle.cpp
-                 test_unityshell_private.cpp
                  test_showdesktop_handler.cpp
-                 test_hud_private.cpp
+                 test_unityshell_private.cpp
+                 ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/AbstractLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/Animator.cpp
                  ${UNITY_SRC}/DebugDBusInterface.cpp
@@ -164,6 +165,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/launcher/LauncherEntryRemote.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/MockLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/FavoriteStorePrivate.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/PointerBarrier.cpp
                  ${CMAKE_SOURCE_DIR}/shortcuts/ShortcutModel.cpp
                  ${CMAKE_SOURCE_DIR}/shortcuts/ShortcutHintPrivate.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/Introspectable.cpp
@@ -203,22 +205,26 @@ if (GTEST_SRC_DIR AND
 
 # Tests that require X
   add_executable(test-gtest
+                 test_main.cpp
                  test_bamflaunchericon.cpp
+                 test_dashview_impl.cpp
+                 test_edge_barrier_controller.cpp
+                 test_launcher.cpp
+                 test_device_launcher_section.cpp
+                 test_lensview_impl.cpp
                  test_hud_button.cpp
                  test_hud_controller.cpp
-                 test_dashview_impl.cpp
-                 test_texture_cache.cpp
-                 test_main.cpp
-                 test_launcher.cpp
-                 test_lensview_impl.cpp
+                 test_hud_view.cpp
                  test_icon_loader.cpp
                  test_im_text_entry.cpp
-                 test_hud_view.cpp
+                 test_launcher_controller.cpp
                  test_keyboard_util.cpp
                  test_resultviewgrid.cpp
                  test_single_monitor_launcher_icon.cpp
                  test_switcher_controller.cpp
                  test_switcher_model.cpp
+                 test_texture_cache.cpp
+                 gmockvolume.c
                  ${CMAKE_SOURCE_DIR}/dash/AbstractPlacesGroup.cpp
                  ${CMAKE_SOURCE_DIR}/dash/DashViewPrivate.cpp
                  ${CMAKE_SOURCE_DIR}/dash/LensViewPrivate.cpp
@@ -234,21 +240,31 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/hud/HudView.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/AbstractLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/BamfLauncherIcon.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/BFBLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/CairoBaseWindow.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/DNDCollectionWindow.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/Decaymulator.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/DesktopLauncherIcon.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/DeviceLauncherIcon.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/DeviceLauncherSection.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/DevicesSettings.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/DndData.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/EdgeBarrierController.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/FavoriteStore.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/FavoriteStoreGSettings.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/FavoriteStorePrivate.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/GeisAdapter.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/HudLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/Launcher.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/LauncherController.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/LauncherDragWindow.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/LauncherEntryRemote.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/LauncherEntryRemoteModel.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/LauncherHideMachine.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/LauncherHoverMachine.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/LauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/LauncherModel.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/LauncherOptions.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/LayoutSystem.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/MockLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/PointerBarrier.cpp
@@ -261,11 +277,14 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/launcher/QuicklistView.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/SimpleLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/SingleMonitorLauncherIcon.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/SoftwareCenterLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/SpacerLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/SwitcherController.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/SwitcherModel.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/SwitcherView.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/Tooltip.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/TrashLauncherIcon.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/VolumeMonitorWrapper.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/Animator.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/BackgroundEffectHelper.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/DashStyle.cpp
@@ -317,16 +336,16 @@ set (GTEST_TEST_COMMAND_GESTURE_ENGINE ./test-gesture-engine/test-gesture-engine
 
 set (TEST_COMMAND
      gtester --verbose -k --g-fatal-warnings -o=${TEST_RESULT_XML} ./test-unit
-  && ${GTEST_TEST_COMMAND}
-  && ${GTEST_TEST_COMMAND_XLESS}
-  && ${GTEST_TEST_COMMAND_GESTURE_ENGINE}
-  && ${GTEST_TEST_COMMAND_DBUS}
+  && ${GTEST_TEST_COMMAND} --gtest_output=xml:./
+  && ${GTEST_TEST_COMMAND_XLESS} --gtest_output=xml:./
+  && ${GTEST_TEST_COMMAND_GESTURE_ENGINE} --gtest_output=xml:./
+  && ${GTEST_TEST_COMMAND_DBUS} --gtest_output=xml:./
     )
 
 set (TEST_COMMAND_HEADLESS
-     ${GTEST_TEST_COMMAND_XLESS}
-  && ${GTEST_TEST_COMMAND_GESTURE_ENGINE}
-  #&& ${GTEST_TEST_COMMAND_DBUS}
+     ${GTEST_TEST_COMMAND_XLESS} --gtest_output=xml:./
+  && ${GTEST_TEST_COMMAND_GESTURE_ENGINE} --gtest_output=xml:./
+  #&& ${GTEST_TEST_COMMAND_DBUS} --gtest_output=xml:./
   && echo "Warning, DBus test cases are disabled!!")
 
 if (GTEST_SRC_DIR)

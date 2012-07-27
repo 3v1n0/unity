@@ -24,17 +24,18 @@ namespace unity
 
 namespace
 {
-static UScreen* default_screen_ = nullptr;
 nux::logging::Logger logger("unity.screen");
 }
 
+UScreen* UScreen::default_screen_ = nullptr;
+
 UScreen::UScreen()
-  : screen_(gdk_screen_get_default(), glib::AddRef())
+  : primary_(0)
+  , screen_(gdk_screen_get_default(), glib::AddRef())
   , proxy_("org.freedesktop.UPower",
            "/org/freedesktop/UPower",
            "org.freedesktop.UPower",
            G_BUS_TYPE_SYSTEM)
-  , primary_(0)
 {
   size_changed_signal_.Connect(screen_, "size-changed", sigc::mem_fun(this, &UScreen::Changed));
   monitors_changed_signal_.Connect(screen_, "monitors-changed", sigc::mem_fun(this, &UScreen::Changed));
