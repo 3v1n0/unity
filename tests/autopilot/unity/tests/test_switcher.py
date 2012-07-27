@@ -9,6 +9,7 @@
 from __future__ import absolute_import
 
 from autopilot.matchers import Eventually
+from autopilot.testcase import multiply_scenarios
 import logging
 from testtools.matchers import Equals, Contains, Not
 from time import sleep
@@ -18,7 +19,22 @@ from unity.tests import UnityTestCase
 
 logger = logging.getLogger(__name__)
 
+def _make_scenarios():
+    scenarios = [
+        ('show_desktop_icon_true', {'show_desktop_option': True}),
+        ('show_desktop_icon_false', {'show_desktop_option': False}),
+    ]
+    return scenarios
+
+
 class SwitcherTestCase(UnityTestCase):
+
+    def set_show_desktop(self, state):
+        if type(state) is not bool:
+            raise TypeError("'state' must be boolean, not %r" % type(state))
+        self.set_unity_option("disable_show_desktop", state)
+        sleep(1)
+
     def set_timeout_setting(self, state):
         if type(state) is not bool:
             raise TypeError("'state' must be boolean, not %r" % type(state))
@@ -51,9 +67,12 @@ class SwitcherTestCase(UnityTestCase):
 class SwitcherTests(SwitcherTestCase):
     """Test the switcher."""
 
+    scenarios = _make_scenarios()
+
     def setUp(self):
         super(SwitcherTests, self).setUp()
         self.set_timeout_setting(False)
+        self.set_show_desktop(self.show_desktop_option)
 
     def tearDown(self):
         super(SwitcherTests, self).tearDown()
@@ -134,6 +153,8 @@ class SwitcherTests(SwitcherTestCase):
         open the switcher.
 
         """
+        self.start_app("Character Map")
+
         self.keybinding_hold("switcher/reveal_normal")
         self.addCleanup(self.keybinding_release, "switcher/reveal_normal")
         self.assertThat(self.switcher.visible, Eventually(Equals(False)))
@@ -144,6 +165,8 @@ class SwitcherTests(SwitcherTestCase):
 
     def test_switcher_cancel(self):
         """Pressing the switcher cancel keystroke must cancel the switcher."""
+        self.start_app("Character Map")
+
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
 
@@ -153,6 +176,8 @@ class SwitcherTests(SwitcherTestCase):
 
     def test_lazy_switcher_cancel(self):
         """Must be able to cancel the switcher after a 'lazy' initiation."""
+        self.start_app("Character Map")
+
         self.keybinding_hold("switcher/reveal_normal")
         self.addCleanup(self.keybinding_release, "switcher/reveal_normal")
         self.assertThat(self.switcher.visible, Eventually(Equals(False)))
@@ -200,6 +225,12 @@ class SwitcherTests(SwitcherTestCase):
 class SwitcherWindowsManagementTests(SwitcherTestCase):
     """Test the switcher window management."""
 
+    scenarios = _make_scenarios()
+
+    def setUp(self):
+        super(SwitcherWindowsManagementTests, self).setUp()
+        self.set_show_desktop(self.show_desktop_option)
+
     def test_switcher_raises_only_last_focused_window(self):
         """Tests that when we do an alt+tab only the previously focused window is raised.
 
@@ -226,6 +257,13 @@ class SwitcherWindowsManagementTests(SwitcherTestCase):
 
 class SwitcherDetailsTests(SwitcherTestCase):
     """Test the details mode for the switcher."""
+
+    scenarios = _make_scenarios()
+
+    def setUp(self):
+        super(SwitcherDetailsTests, self).setUp()
+        self.set_show_desktop(self.show_desktop_option)
+
     def setUp(self):
         super(SwitcherDetailsTests, self).setUp()
         self.set_timeout_setting(True)
@@ -271,10 +309,17 @@ class SwitcherDetailsModeTests(SwitcherTestCase):
 
     """
 
-    scenarios = [
-        ('initiate_with_grave', {'initiate_keycode': '`'}),
-        ('initiate_with_down', {'initiate_keycode': 'Down'}),
-    ]
+    scenarios = multiply_scenarios(_make_scenarios(),
+      [
+          ('initiate_with_grave', {'initiate_keycode': '`'}),
+          ('initiate_with_down', {'initiate_keycode': 'Down'}),
+      ]
+      )
+
+    def setUp(self):
+      super(SwitcherDetailsModeTests, self).setUp()
+      print self.show_desktop_option
+      self.set_show_desktop(self.show_desktop_option)
 
     def test_can_start_details_mode(self):
         """Must be able to switch to details mode using selected scenario keycode.
@@ -311,6 +356,12 @@ class SwitcherDetailsModeTests(SwitcherTestCase):
 
 class SwitcherWorkspaceTests(SwitcherTestCase):
     """Test Switcher behavior with respect to multiple workspaces."""
+
+    scenarios = _make_scenarios()
+
+    def setUp(self):
+      super(SwitcherWorkspaceTests, self).setUp()
+      self.set_show_desktop(self.show_desktop_option)
 
     def test_switcher_shows_current_workspace_only(self):
         """Switcher must show apps from the current workspace only."""

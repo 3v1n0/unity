@@ -120,7 +120,7 @@
                       <default>true</default>
                 </option>
                 <option name="disable_show_desktop" type="bool">
-                      <_short>Disables Show Desktop in the switcher</_short>
+                      <_short>Disable Show Desktop in the switcher</_short>
                       <_long>Disables the Show Desktop icon in the switcher</_long>
                       <default>false</default>
                 </option>
