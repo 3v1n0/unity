@@ -425,11 +425,11 @@ void Controller::SelectFirstItem()
   if (!model_)
     return;
 
-  int first_i = StartIndex();
-  int second_i = first_i+1;
+  int first_icon_index = StartIndex();
+  int second_icon_index = first_icon_index + 1;
 
-  AbstractLauncherIcon::Ptr first  = model_->at(first_i);
-  AbstractLauncherIcon::Ptr second = model_->at(second_i);
+  AbstractLauncherIcon::Ptr first  = model_->at(first_icon_index);
+  AbstractLauncherIcon::Ptr second = model_->at(second_icon_index);
 
   if (!first)
   {
@@ -483,14 +483,14 @@ void
 Controller::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper(builder)
-  .add("timeout-length", timeout_length())
-  .add("detail-on-timeout", detail_on_timeout())
-  .add("initial-detail-timeout-length", initial_detail_timeout_length())
-  .add("detail-timeout-length", detail_timeout_length())
+  .add("timeout_length", timeout_length())
+  .add("detail_on_timeout", detail_on_timeout())
+  .add("initial_detail_timeout_length", initial_detail_timeout_length())
+  .add("detail_timeout_length", detail_timeout_length())
   .add("visible", visible_)
   .add("monitor", monitor_)
-  .add("show-desktop-disabled", show_desktop_disabled_)
-  .add("detail-mode", detail_mode_);
+  .add("show_desktop_disabled", show_desktop_disabled_)
+  .add("detail_mode", detail_mode_);
 }
 
 } // switcher namespace
