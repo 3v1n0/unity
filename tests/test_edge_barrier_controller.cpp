@@ -20,9 +20,9 @@
 
 #include <gmock/gmock.h>
 #include "test_utils.h"
+#include "test_uscreen_mock.h"
 
 #include "EdgeBarrierController.h"
-#include "MultiMonitor.h"
 
 using namespace unity;
 using namespace unity::ui;
@@ -53,6 +53,11 @@ public:
   {
     EdgeBarrierController::ProcessBarrierEvent(owner, event);
   }
+
+  EdgeBarrierSubscriber* GetSubscriber(unsigned int monitor)
+  {
+    return EdgeBarrierController::GetSubscriber(monitor);
+  }
 };
 
 class TestBarrierSubscriber : public EdgeBarrierSubscriber
@@ -79,6 +84,8 @@ public:
     bc.options()->edge_resist = true;
     bc.options()->edge_passed_disabled_ms = 150;
 
+    uscreen.SetupFakeMultiMonitor();
+
     for (int i = 0; i < max_num_monitors; ++i)
     {
       // By default we assume that no subscriber handles the events!!!
@@ -93,12 +100,38 @@ public:
   }
 
   TestBarrierSubscriber subscribers_[max_num_monitors];
+  MockUScreen uscreen;
   MockEdgeBarrierController bc;
 };
 
 TEST_F(TestEdgeBarrierController, Construction)
 {
   EXPECT_TRUE(bc.sticky_edges);
+
+  for (int i = 0; i < max_num_monitors; ++i)
+    ASSERT_EQ(bc.GetSubscriber(i), &subscribers_[i]);
+}
+
+TEST_F(TestEdgeBarrierController, Unsubscribe)
+{
+  for (int i = 0; i < max_num_monitors; ++i)
+  {
+    bc.Unsubscribe(&subscribers_[i], i);
+    ASSERT_EQ(bc.GetSubscriber(i), nullptr);
+  }
+}
+
+TEST_F(TestEdgeBarrierController, UnsubscribeInvalid)
+{
+  bc.Unsubscribe(&subscribers_[2], 1);
+  ASSERT_EQ(bc.GetSubscriber(2), &subscribers_[2]);
+}
+
+TEST_F(TestEdgeBarrierController, SubscriberReplace)
+{
+  TestBarrierSubscriber handling_subscriber(true);
+  bc.Subscribe(&handling_subscriber, 0);
+  EXPECT_EQ(bc.GetSubscriber(0), &handling_subscriber);
 }
 
 TEST_F(TestEdgeBarrierController, ProcessHandledEvent)
@@ -138,6 +171,20 @@ TEST_F(TestEdgeBarrierController, ProcessUnHandledEventBreakingBarrier)
   auto breaking_barrier_event = MakeBarrierEvent(breaking_id, true);
 
   EXPECT_CALL(owner, ReleaseBarrier(breaking_id));
+  bc.ProcessBarrierEvent(&owner, breaking_barrier_event);
+}
+
+TEST_F(TestEdgeBarrierController, ProcessUnHandledEventBreakingBarrierOnMaxMonitor)
+{
+  int monitor = max_num_monitors;
+
+  MockPointerBarrier owner(monitor);
+  auto breaking_barrier_event = MakeBarrierEvent(0, true);
+
+  // This was leading to a crash, see bug #1020075
+  // you can reproduce this repeating this test multiple times using the
+  // --gtest_repeat=X command line
+  EXPECT_CALL(owner, ReleaseBarrier(_));
   bc.ProcessBarrierEvent(&owner, breaking_barrier_event);
 }
 

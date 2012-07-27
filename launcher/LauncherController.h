@@ -35,6 +35,7 @@ namespace launcher
 class AbstractLauncherIcon;
 class Launcher;
 class LauncherModel;
+class TestLauncherController;
 
 class Controller : public unity::debug::Introspectable, public sigc::trackable
 {
@@ -86,6 +87,7 @@ protected:
   void AddProperties(GVariantBuilder* builder);
 
 private:
+  friend class TestLauncherController;
   class Impl;
   std::unique_ptr<Impl> pimpl;
 };

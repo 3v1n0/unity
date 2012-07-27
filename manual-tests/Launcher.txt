@@ -661,5 +661,5 @@ Actions:
  * Drag a launcher icon of the top side of the launcher. Don't release the mouse.
  * Move the mouse at the bottom of the launcher.
 
-Expected Results:
+Expected Result:
  * The launcher should autoscroll so you can reach the trash icon.

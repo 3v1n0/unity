@@ -335,6 +335,22 @@ class SwitcherDetailsModeTests(SwitcherTestCase):
         self.switcher.next_icon()
         self.assertThat(self.switcher.selection_index, Eventually(Equals(0)))
 
+    def test_detail_mode_selects_last_active_window(self):
+        """The active selection in detail mode must be the last focused window.
+        If it was the currently active application type.
+        """
+        calc_win1, calc_win2 = self.start_applications("Calculator", "Calculator")
+        self.assertVisibleWindowStack([calc_win2, calc_win1])
+
+        self.switcher.initiate()
+        while self.switcher.current_icon.tooltip_text != calc_win2.application.name:
+            self.switcher.next_icon()
+        self.keyboard.press_and_release(self.initiate_keycode)
+        sleep(0.5)
+        self.switcher.select()
+
+        self.assertProperty(calc_win1, is_focused=True)
+
 
 class SwitcherWorkspaceTests(SwitcherTestCase):
     """Test Switcher behavior with respect to multiple workspaces."""
@@ -365,7 +381,6 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
         calc = self.start_app("Calculator")
         self.workspace.switch_to(2)
         char_map = self.start_app("Character Map")
-
 
         self.switcher.initiate(SwitcherMode.ALL)
         self.addCleanup(self.switcher.terminate)
