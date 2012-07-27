@@ -10,6 +10,8 @@
 
 <<Test Summary>>
 ----------------------------------------------------
+<<Test Case Description>>
+
 Setup: 
 <<What needs to be done prior the test execution>>
 
