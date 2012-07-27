@@ -52,6 +52,7 @@ Controller::Controller(unsigned int load_timeout)
   ,  main_layout_(nullptr)
   ,  monitor_(0)
   ,  visible_(false)
+  ,  show_desktop_disabled_(false)
   ,  bg_color_(0, 0, 0, 0.5)
 {
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
@@ -389,6 +390,21 @@ guint Controller::GetSwitcherInputWindowId() const
   return view_window_->GetInputWindowId();
 }
 
+bool Controller::IsShowDesktopDisabled() const
+{
+  return show_desktop_disabled_;
+}
+
+void Controller::SetShowDesktopDisabled(bool disabled)
+{
+  show_desktop_disabled_ = disabled;
+}
+
+int Controller::StartIndex() const
+{
+  return (show_desktop_disabled_ ? 0 : 1);
+}
+
 bool Controller::CompareSwitcherItemsPriority(AbstractLauncherIcon::Ptr first,
                                               AbstractLauncherIcon::Ptr second)
 {
@@ -409,8 +425,11 @@ void Controller::SelectFirstItem()
   if (!model_)
     return;
 
-  AbstractLauncherIcon::Ptr first  = model_->at(1);
-  AbstractLauncherIcon::Ptr second = model_->at(2);
+  int first_i = StartIndex();
+  int second_i = first_i+1;
+
+  AbstractLauncherIcon::Ptr first  = model_->at(first_i);
+  AbstractLauncherIcon::Ptr second = model_->at(second_i);
 
   if (!first)
   {
@@ -470,6 +489,7 @@ Controller::AddProperties(GVariantBuilder* builder)
   .add("detail-timeout-length", detail_timeout_length())
   .add("visible", visible_)
   .add("monitor", monitor_)
+  .add("show-desktop-disabled", show_desktop_disabled_)
   .add("detail-mode", detail_mode_);
 }
 

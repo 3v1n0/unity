@@ -55,7 +55,7 @@ public:
 
   void UpdateNumWorkspaces(int workspaces);
   std::vector<char> GetAllShortcuts() const;
-  std::vector<AbstractLauncherIcon::Ptr> GetAltTabIcons(bool current) const;
+  std::vector<AbstractLauncherIcon::Ptr> GetAltTabIcons(bool current, bool show_deskop_disabled) const;
 
   void PushToFront();
 
