@@ -219,14 +219,14 @@ void PanelView::AddProperties(GVariantBuilder* builder)
 void
 PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  nux::Geometry geo = GetGeometry();
-  nux::Geometry geo_absolute = GetAbsoluteGeometry();
+  nux::Geometry const& geo = GetGeometry();
   UpdateBackground();
 
-  GfxContext.PushClippingRectangle(GetGeometry());
+  GfxContext.PushClippingRectangle(geo);
 
   if ((_overlay_is_open || (_opacity != 1.0f && _opacity != 0.0f)))
   {
+    nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
     nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, geo.width, geo.height);
 
     if (BackgroundEffectHelper::blur_type != BLUR_NONE)
@@ -251,8 +251,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       rop.SrcBlend = GL_ONE;
       rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-      nux::Geometry bg_clip = geo;
-      GfxContext.PushClippingRectangle(bg_clip);
+      GfxContext.PushClippingRectangle(geo);
 
 #ifndef NUX_OPENGLES_20
       if (GfxContext.UsingGLSLCodePath())
@@ -285,12 +284,12 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     if (_overlay_is_open)
     {
-      nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), _bg_darken_layer.get());
+      nux::GetPainter().RenderSinglePaintLayer(GfxContext, geo, _bg_darken_layer.get());
     }
   }
 
   if (!_overlay_is_open || GfxContext.UsingGLSLCodePath() == false)
-    nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), _bg_layer.get());
+    nux::GetPainter().RenderSinglePaintLayer(GfxContext, geo, _bg_layer.get());
 
   GfxContext.PopClippingRectangle();
 
@@ -307,7 +306,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::Geometry const& geo = GetGeometry();
   int bgs = 1;
 
-  GfxContext.PushClippingRectangle(GetGeometry());
+  GfxContext.PushClippingRectangle(geo);
 
   GfxContext.GetRenderStates().SetBlend(true);
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
@@ -315,7 +314,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   if (_bg_blur_texture.IsValid() &&
       (_overlay_is_open || (_opacity != 1.0f && _opacity != 0.0f)))
   {
-    nux::Geometry geo_absolute = GetAbsoluteGeometry ();
+    nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
     nux::TexCoordXForm texxform_blur_bg;
     texxform_blur_bg.flip_v_coord = true;
     texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
@@ -359,13 +358,13 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     if (_overlay_is_open)
     {
-      nux::GetPainter().PushLayer(GfxContext, GetGeometry(), _bg_darken_layer.get());
+      nux::GetPainter().PushLayer(GfxContext, geo, _bg_darken_layer.get());
       bgs++;
     }
   }
 
   if (!_overlay_is_open || GfxContext.UsingGLSLCodePath() == false)
-    gPainter.PushLayer(GfxContext, GetGeometry(), _bg_layer.get());
+    gPainter.PushLayer(GfxContext, geo, _bg_layer.get());
 
   if (_overlay_is_open)
   {
@@ -378,7 +377,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     rop.Blend = true;
     rop.SrcBlend = GL_DST_COLOR;
     rop.DstBlend = GL_ONE;
-    nux::GetPainter().PushTextureLayer(GfxContext, GetGeometry(),
+    nux::GetPainter().PushTextureLayer(GfxContext, geo,
                                        _panel_sheen->GetDeviceTexture(),
                                        texxform,
                                        nux::color::White,
