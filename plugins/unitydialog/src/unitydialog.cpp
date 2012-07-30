@@ -367,7 +367,7 @@ UnityDialogScreen::donePaint()
       continue;
     }
 
-    it++;
+    ++it;
   }
 }
 
