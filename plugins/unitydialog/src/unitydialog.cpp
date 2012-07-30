@@ -1383,7 +1383,6 @@ UnityDialogWindow::place(CompPoint& pos)
     CompWindow::Geometry transientGeometry;
     CompRegion transientPos, outputRegion, outsideArea, outsideRegion;
     pos = getChildCenteredPositionForRect(mParent->serverBorderRect());
-    int    hdirection, vdirection;
 
     transientGeometry = CompWindow::Geometry(pos.x(),
                                              pos.y(),
@@ -1406,8 +1405,8 @@ UnityDialogWindow::place(CompPoint& pos)
       int width;
       int height;
 
-      hdirection = outsideArea.boundingRect().x() < 0 ? 1 : -1;
-      vdirection = outsideArea.boundingRect().y() < 0 ? 1 : -1;
+      int hdirection = outsideArea.boundingRect().x() < 0 ? 1 : -1;
+      int vdirection = outsideArea.boundingRect().y() < 0 ? 1 : -1;
 
       width  = outsideArea.boundingRect().width() >=
                window->serverBorderRect().width() ? 0 :
