@@ -250,7 +250,7 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
 
   std::list<RenderArg>::iterator it;
   int i;
-  for (it = args.begin(), i = 0; it != args.end(); it++, i++)
+  for (it = args.begin(), i = 0; it != args.end(); ++it, i++)
   {
 
     IconTextureSource* launcher_icon = it->icon;
