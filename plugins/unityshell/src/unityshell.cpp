@@ -1309,10 +1309,9 @@ void UnityScreen::glPaintCompositedOutput (const CompRegion &region,
                                            ::GLFramebufferObject *fbo,
                                            unsigned int        mask)
 {
-  bool useFbo = false;
-
   if (doShellRepaint)
   {
+    bool useFbo = false;
     oldFbo = fbo->bind ();
     useFbo = fbo->checkStatus () && fbo->tex ();
     if (!useFbo) {
