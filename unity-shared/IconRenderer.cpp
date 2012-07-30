@@ -757,7 +757,6 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
   CHECKGL(glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0));
   CHECKGL(glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0));
 
-  int TextureObjectLocation;
   int VertexLocation;
   int TextureCoord0Location;
   int FragmentColor = 0;
@@ -768,7 +767,7 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
   {
     local::shader_program_uv_persp_correction->Begin();
 
-    TextureObjectLocation   = local::shader_program_uv_persp_correction->GetUniformLocationARB("TextureObject0");
+    int TextureObjectLocation   = local::shader_program_uv_persp_correction->GetUniformLocationARB("TextureObject0");
     VertexLocation          = local::shader_program_uv_persp_correction->GetAttributeLocation("iVertex");
     TextureCoord0Location   = local::shader_program_uv_persp_correction->GetAttributeLocation("iTexCoord0");
     FragmentColor           = local::shader_program_uv_persp_correction->GetUniformLocationARB("color0");
