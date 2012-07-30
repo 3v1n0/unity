@@ -1211,7 +1211,7 @@ bool UnityScreen::shellCouldBeHidden(CompOutput const& output)
   CompWindowList const& wins = screen->windows();
   for ( CompWindowList::const_reverse_iterator r = wins.rbegin()
       ; r != wins.rend()
-      ; r++
+      ; ++r
       )
   {
     CompWindow* w = *r;
