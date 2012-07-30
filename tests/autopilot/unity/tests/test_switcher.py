@@ -9,6 +9,7 @@
 from __future__ import absolute_import
 
 from autopilot.matchers import Eventually
+from autopilot.testcase import multiply_scenarios
 import logging
 from testtools.matchers import Equals, Contains, Not
 from time import sleep
@@ -19,6 +20,22 @@ from unity.tests import UnityTestCase
 logger = logging.getLogger(__name__)
 
 class SwitcherTestCase(UnityTestCase):
+
+    scenarios = [
+        ('show_desktop_icon_true', {'show_desktop_option': True}),
+        ('show_desktop_icon_false', {'show_desktop_option': False}),
+    ]
+
+    def setUp(self):
+        super(SwitcherTestCase, self).setUp()
+        self.set_show_desktop(self.show_desktop_option)
+
+    def set_show_desktop(self, state):
+        if type(state) is not bool:
+            raise TypeError("'state' must be boolean, not %r" % type(state))
+        self.set_unity_option("disable_show_desktop", state)
+        self.assertThat(self.switcher.controller.show_desktop_disabled, Eventually(Equals(state)))
+
     def set_timeout_setting(self, state):
         if type(state) is not bool:
             raise TypeError("'state' must be boolean, not %r" % type(state))
@@ -134,6 +151,8 @@ class SwitcherTests(SwitcherTestCase):
         open the switcher.
 
         """
+        self.start_app("Character Map")
+
         self.keybinding_hold("switcher/reveal_normal")
         self.addCleanup(self.keybinding_release, "switcher/reveal_normal")
         self.assertThat(self.switcher.visible, Eventually(Equals(False)))
@@ -144,6 +163,8 @@ class SwitcherTests(SwitcherTestCase):
 
     def test_switcher_cancel(self):
         """Pressing the switcher cancel keystroke must cancel the switcher."""
+        self.start_app("Character Map")
+
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
 
@@ -153,6 +174,8 @@ class SwitcherTests(SwitcherTestCase):
 
     def test_lazy_switcher_cancel(self):
         """Must be able to cancel the switcher after a 'lazy' initiation."""
+        self.start_app("Character Map")
+
         self.keybinding_hold("switcher/reveal_normal")
         self.addCleanup(self.keybinding_release, "switcher/reveal_normal")
         self.assertThat(self.switcher.visible, Eventually(Equals(False)))
@@ -226,6 +249,7 @@ class SwitcherWindowsManagementTests(SwitcherTestCase):
 
 class SwitcherDetailsTests(SwitcherTestCase):
     """Test the details mode for the switcher."""
+
     def setUp(self):
         super(SwitcherDetailsTests, self).setUp()
         self.set_timeout_setting(True)
@@ -271,10 +295,12 @@ class SwitcherDetailsModeTests(SwitcherTestCase):
 
     """
 
-    scenarios = [
-        ('initiate_with_grave', {'initiate_keycode': '`'}),
-        ('initiate_with_down', {'initiate_keycode': 'Down'}),
-    ]
+    scenarios = multiply_scenarios(SwitcherTestCase.scenarios,
+      [
+          ('initiate_with_grave', {'initiate_keycode': '`'}),
+          ('initiate_with_down', {'initiate_keycode': 'Down'}),
+      ]
+      )
 
     def test_can_start_details_mode(self):
         """Must be able to switch to details mode using selected scenario keycode.
@@ -316,6 +342,8 @@ class SwitcherDetailsModeTests(SwitcherTestCase):
         self.assertVisibleWindowStack([calc_win2, calc_win1])
 
         self.switcher.initiate()
+        while self.switcher.current_icon.tooltip_text != calc_win2.application.name:
+            self.switcher.next_icon()
         self.keyboard.press_and_release(self.initiate_keycode)
         sleep(0.5)
         self.switcher.select()

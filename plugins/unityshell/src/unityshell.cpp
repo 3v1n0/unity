@@ -300,6 +300,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetAutomaximizeValueNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAltTabTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAltTabBiasViewportNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetDisableShowDesktopNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
 
      optionSetAltTabForwardAllInitiate(boost::bind(&UnityScreen::altTabForwardAllInitiate, this, _1, _2, _3));
      optionSetAltTabForwardInitiate(boost::bind(&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
@@ -1879,7 +1880,8 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
 
   RaiseInputWindows();
 
-  auto results = launcher_controller_->GetAltTabIcons(show_mode == switcher::ShowMode::CURRENT_VIEWPORT);
+  auto results = launcher_controller_->GetAltTabIcons(show_mode == switcher::ShowMode::CURRENT_VIEWPORT,
+                                                      switcher_controller_->IsShowDesktopDisabled());
 
   if (!(results.size() == 1 && results[0]->GetIconType() == AbstractLauncherIcon::IconType::TYPE_DESKTOP))
     switcher_controller_->Show(show_mode, switcher::SortMode::FOCUS_ORDER, false, results);
@@ -1993,7 +1995,7 @@ bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State
   if (!switcher_controller_->Visible())
   {
     altTabInitiateCommon(action, switcher::ShowMode::CURRENT_VIEWPORT);
-    switcher_controller_->Select(1); // always select the current application
+    switcher_controller_->Select((switcher_controller_->StartIndex())); // always select the current application
   }
 
   switcher_controller_->NextDetail();
@@ -2871,6 +2873,9 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       switcher_controller_->detail_on_timeout = optionGetAltTabTimeout();
     case UnityshellOptions::AltTabBiasViewport:
       PluginAdapter::Default()->bias_active_to_viewport = optionGetAltTabBiasViewport();
+      break;
+    case UnityshellOptions::DisableShowDesktop:
+      switcher_controller_->SetShowDesktopDisabled(optionGetDisableShowDesktop());
       break;
     case UnityshellOptions::ShowMinimizedWindows:
       compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::setFunctions (optionGetShowMinimizedWindows ());
