@@ -354,7 +354,7 @@ void ResultViewGrid::OnKeyDown (unsigned long event_type, unsigned long event_ke
   total_rows = (expanded) ? total_rows : 1; // restrict to one row if not expanded
 
   // find the currently focused item
-  for (it = results_.begin(); it != results_.end(); it++)
+  for (it = results_.begin(); it != results_.end(); ++it)
   {
     std::string result_uri = (*it).uri;
     if (result_uri == focused_uri_)
