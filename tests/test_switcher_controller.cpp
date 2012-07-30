@@ -167,4 +167,13 @@ TEST(TestSwitcherController, ShowSwitcher)
   ASSERT_TRUE(controller.view_shown_);
 }
 
+TEST(TestSwitcherController, ShowSwitcherNoShowDeskop)
+{
+  MockSwitcherController controller;
+  controller.SetShowDesktopDisabled(true);
+
+  ASSERT_TRUE(controller.IsShowDesktopDisabled());
+  ASSERT_TRUE(controller.StartIndex() == 0);
+}
+
 }
