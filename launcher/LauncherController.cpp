@@ -940,7 +940,7 @@ bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, 
   LauncherModel::iterator it;
 
   // Shortcut to start launcher icons. Only relies on Keycode, ignore modifier
-  for (it = pimpl->model_->begin(); it != pimpl->model_->end(); it++)
+  for (it = pimpl->model_->begin(); it != pimpl->model_->end(); ++it)
   {
     if ((XKeysymToKeycode(display, (*it)->GetShortcut()) == key_code) ||
         ((gchar)((*it)->GetShortcut()) == key_string[0]))
