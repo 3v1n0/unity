@@ -149,6 +149,8 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   , no_results_active_(false)
   , preview_(nullptr)
   , preview_resultview_(nullptr)
+  , currently_in_preview_(false)
+  , preview_index_(0)
 {
   SetupViews(show_filters);
   SetupCategories();
@@ -222,6 +224,13 @@ void LensView::CloseActivePreview()
 
 void LensView::BuildPreview(std::string const& uri, Preview::Ptr model)
 {
+
+  if (preview_resultview_ == nullptr)
+  {
+    LOG_ERROR(logger) << "preview has no attached resultview, something is wrong";
+    return;
+  }
+
   if (preview_is_active == false)
   {
     preview_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
