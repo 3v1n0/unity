@@ -9,6 +9,7 @@ unity (6.0.0-0ubuntu6) UNRELEASED; urgency=low
 unity (6.0.0-0ubuntu5) quantal; urgency=low
 
   * Update build-deps to lib{geis,grail}-dev for the great library renaming.
+  * debian/patches/libgeis-rename.patch: Update CMakeLists.txt for the above.
 
  -- Adam Conrad <adconrad@ubuntu.com>  Mon, 30 Jul 2012 16:09:17 -0600
 
