@@ -623,16 +623,13 @@ bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
 
 void LauncherIcon::RecvMouseDown(int button, int monitor, unsigned long key_flags)
 {
-  if (button == 3)
-    OpenQuicklist();
 }
 
 void LauncherIcon::RecvMouseUp(int button, int monitor, unsigned long key_flags)
 {
   if (button == 3)
   {
-    if (_quicklist && _quicklist->IsVisible())
-      _quicklist->CaptureMouseDownAnyWhereElse(true);
+    OpenQuicklist();
   }
 }
 
