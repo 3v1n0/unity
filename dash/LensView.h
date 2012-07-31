@@ -135,6 +135,7 @@ private:
   ResultView* preview_resultview_;
   bool currently_in_preview_;
   unsigned int preview_index_;
+  bool waiting_for_preview_;
 
   std::string last_activated_result_uri_;
   UBusManager ubus_manager_;

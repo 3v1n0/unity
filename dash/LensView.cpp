@@ -151,6 +151,7 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   , preview_resultview_(nullptr)
   , currently_in_preview_(false)
   , preview_index_(0)
+  , waiting_for_preview_(false)
 {
   SetupViews(show_filters);
   SetupCategories();
@@ -224,18 +225,16 @@ void LensView::CloseActivePreview()
 
 void LensView::BuildPreview(std::string const& uri, Preview::Ptr model)
 {
-
-  if (preview_resultview_ == nullptr)
-  {
-    LOG_ERROR(logger) << "preview has no attached resultview, something is wrong";
+  if (waiting_for_preview_)
+    waiting_for_preview_ = false;
+  else
     return;
-  }
-
+  
   if (preview_is_active == false)
   {
     preview_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
     
-    preview_index_ = preview_resultview_->GetIndexForUri(uri);
+    //preview_index_ = preview_resultview_->GetIndexForUri(uri);
 
     preview_->Preview(model, previews::Navigation::NONE);
 
@@ -244,38 +243,42 @@ void LensView::BuildPreview(std::string const& uri, Preview::Ptr model)
     preview_->SetGeometry(preview_geo);
     preview_is_active = true;
 
-    preview_resultview_->preview_spacer = 600; // make height of the view - some amount
-    preview_resultview_->preview_result_uri = last_activated_result_uri_;
+    //preview_resultview_->preview_spacer = 600; // make height of the view - some amount
+    //preview_resultview_->preview_result_uri = last_activated_result_uri_;
     fscroll_view_->SetVisible(false);
 
-    preview_->navigate_right.connect([&] () 
+
+    if (preview_resultview_ != nullptr)
     {
-      LOG_DEBUG(logger) << "navleft";
-      // get the next uri and activate it
-      if (preview_index_ >= preview_resultview_->GetModelSize() - 1)
+      preview_->navigate_right.connect([&] () 
       {
-        LOG_ERROR(logger) << "Preview asked us to navigate right but there are no more items";
-        return;
-      }
+        LOG_DEBUG(logger) << "navleft";
+        // get the next uri and activate it
+        if (preview_index_ >= preview_resultview_->GetModelSize() - 1)
+        {
+          LOG_ERROR(logger) << "Preview asked us to navigate right but there are no more items";
+          return;
+        }
 
-      auto new_uri = preview_resultview_->GetUriForIndex(preview_index_ + 1);
-      preview_resultview_->UriActivated.emit(new_uri, ResultView::ActivateType::PREVIEW); 
+        auto new_uri = preview_resultview_->GetUriForIndex(preview_index_ + 1);
+        preview_resultview_->UriActivated.emit(new_uri, ResultView::ActivateType::PREVIEW); 
 
-    });
-    preview_->navigate_left.connect([&] () 
-    {
-      LOG_DEBUG(logger) << "navleft";
-      // get the next uri and activate it
-      if (preview_index_ == 0)
+      });
+      preview_->navigate_left.connect([&] () 
       {
-        LOG_ERROR(logger) << "Preview asked us to navigate left but there are no more items";
-        return;
-      }
+        LOG_DEBUG(logger) << "navleft";
+        // get the next uri and activate it
+        if (preview_index_ == 0)
+        {
+          LOG_ERROR(logger) << "Preview asked us to navigate left but there are no more items";
+          return;
+        }
 
-      auto new_uri = preview_resultview_->GetUriForIndex(preview_index_ - 1);
-      preview_resultview_->UriActivated.emit(new_uri, ResultView::ActivateType::PREVIEW); 
+        auto new_uri = preview_resultview_->GetUriForIndex(preview_index_ - 1);
+        preview_resultview_->UriActivated.emit(new_uri, ResultView::ActivateType::PREVIEW); 
 
-    });
+      });
+    }
   }
   else
   {
@@ -288,13 +291,15 @@ void LensView::BuildPreview(std::string const& uri, Preview::Ptr model)
     preview_->Preview(model, preview_navmode);
   }
 
-  if (preview_index_ == 0)
-    preview_->DisableNavButton(previews::Navigation::LEFT);
-  else if (preview_index_ == preview_resultview_->GetModelSize() - 1)
-    preview_->DisableNavButton(previews::Navigation::RIGHT);
-  else
-    preview_->DisableNavButton(previews::Navigation::NONE);
-
+  if (preview_resultview_ != nullptr)
+  {
+    if (preview_index_ == 0)
+      preview_->DisableNavButton(previews::Navigation::LEFT);
+    else if (preview_index_ == preview_resultview_->GetModelSize() - 1)
+      preview_->DisableNavButton(previews::Navigation::RIGHT);
+    else
+      preview_->DisableNavButton(previews::Navigation::NONE);
+  }
   QueueDraw();
 }
 
@@ -413,7 +418,8 @@ void LensView::OnCategoryAdded(Category const& category)
     grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
 
   grid->UriActivated.connect(sigc::bind([&] (std::string const& uri, ResultView::ActivateType type, ResultView* view) 
-  { 
+  {
+    LOG_ERROR(logger) << "resultview view pointer is: " << view;
     switch (type)
     {
       case ResultView::ActivateType::DIRECT:
@@ -423,6 +429,7 @@ void LensView::OnCategoryAdded(Category const& category)
       } break;
       case ResultView::ActivateType::PREVIEW:
       {
+        waiting_for_preview_ = true;
         lens_->Preview(uri);
       } break;
       default: break;
@@ -431,8 +438,8 @@ void LensView::OnCategoryAdded(Category const& category)
     last_activated_result_uri_ = uri;
     if (preview_resultview_)
     {
-      preview_resultview_->preview_spacer = 0;
-      preview_resultview_->preview_result_uri = "";
+      //preview_resultview_->preview_spacer = 0;
+      //preview_resultview_->preview_result_uri = "";
     }
 
     preview_resultview_ = view;
@@ -451,6 +458,7 @@ void LensView::OnResultAdded(Result const& result)
 {
   try {
     PlacesGroup* group = categories_.at(result.category_index);
+
     ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
 
     std::string uri = result.uri;
