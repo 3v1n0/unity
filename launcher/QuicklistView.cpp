@@ -67,6 +67,7 @@ QuicklistView::QuicklistView()
   , _left_padding_correction(-1)
   , _offset_correction(-1)
   , _cairo_text_has_changed(true)
+  , _dont_show_ql(false)
   , _current_item_index(-1)
 {
   SetGeometry(nux::Geometry(0, 0, 1, 1));
@@ -375,7 +376,7 @@ void QuicklistView::ShowWindow(bool b, bool start_modal)
 
 void QuicklistView::Show()
 {
-  if (!IsVisible())
+  if (!IsVisible() && !_dont_show_ql)
   {
     // FIXME: ShowWindow shouldn't need to be called first
     ShowWindow(true);
@@ -405,6 +406,13 @@ void QuicklistView::Hide()
       selection_change.emit();
       _current_item_index = -1;
     }
+
+    _dont_show_ql = true;
+    _ql_show_delay.reset (new glib::Timeout(100, [&]
+    {
+      _dont_show_ql = false;
+      return false;
+    }));
   }
 }
 
