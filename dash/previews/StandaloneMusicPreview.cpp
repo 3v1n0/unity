@@ -36,7 +36,7 @@
 
 #include "Preview.h"
 #include "PreviewContainer.h"
-#include "StandaloneDBusTestRunner.h"
+#include "LensDBusTestRunner.h"
 
 
 #define WIDTH 972
@@ -118,7 +118,7 @@ protected:
   LayerPtr bg_layer_;
 };
 
-class TestRunner :  public previews::StandaloneDBusTestRunner 
+class TestRunner :  public previews::LensDBusTestRunner 
 {
 public:
   TestRunner(std::string const& search_string);
@@ -138,7 +138,7 @@ public:
 };
 
 TestRunner::TestRunner (std::string const& search_string)
-: StandaloneDBusTestRunner("com.canonical.Unity.Lens.Music","/com/canonical/unity/lens/music")
+: LensDBusTestRunner("com.canonical.Unity.Lens.Music","/com/canonical/unity/lens/music", "com.canonical.Unity.Lens")
 , search_string_(search_string)
 , first_(true)
 {

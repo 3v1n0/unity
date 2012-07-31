@@ -16,7 +16,6 @@
  * <http://www.gnu.org/licenses/>
  **
  * Authored by: Gordon Allott <gord.allott@canonical.com>
- *              Nick Dedekind <nick.dedelomd@canonical.com>
  *
  */
 
@@ -27,6 +26,8 @@
 
 #include <Nux/Nux.h>
 #include <Nux/ToggleButton.h>
+
+
 
 namespace unity
 {

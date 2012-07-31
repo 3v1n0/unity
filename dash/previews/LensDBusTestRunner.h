@@ -18,12 +18,11 @@
  *
  */
 
- #include <UnityCore/GLibDBusProxy.h>
+#ifndef LENSDBUSTESTRUNNER_H
+#define LENSDBUSTESTRUNNER_H
 
-#include <UnityCore/Preview.h>
-#include <UnityCore/Lens.h>
-#include <UnityCore/Results.h>
-#include <NuxCore/Logger.h>
+
+#include "DBusTestRunner.h"
 
 namespace unity
 {
@@ -31,50 +30,30 @@ namespace dash
 {
 namespace previews
 {
-namespace
-{
-nux::logging::Logger logger("unity.dash.StandaloneDBusTestRunner");
-}
 
-
-class StandaloneDBusTestRunner
+class LensDBusTestRunner : public DBusTestRunner
 {
 public:
   typedef std::map<std::string, unity::glib::Variant> Hints;
 
-  StandaloneDBusTestRunner(std::string const& dbus_name, std::string const& dbus_path)
-  : proxy_(nullptr)
+  LensDBusTestRunner(std::string const& dbus_name, std::string const& dbus_path, std::string const& interface_name)
+  : DBusTestRunner(dbus_name, dbus_path, interface_name)
   , results_(new Results(ModelType::REMOTE))
   , results_variant_(NULL)
-  , connected_(false)
-  , dbus_name_(dbus_name)
-  , dbus_path_(dbus_path)
   {
-    proxy_ = new glib::DBusProxy(dbus_name, dbus_path, "com.canonical.Unity.Lens");
-    proxy_->connected.connect(sigc::mem_fun(this, &StandaloneDBusTestRunner::OnProxyConnectionChanged));
-    proxy_->disconnected.connect(sigc::mem_fun(this, &StandaloneDBusTestRunner::OnProxyDisconnected));
-    proxy_->Connect("Changed", sigc::mem_fun(this, &StandaloneDBusTestRunner::OnChanged));
-
-    results_->end_transaction.connect(sigc::mem_fun(this, &StandaloneDBusTestRunner::ResultsModelUpdated));
+    proxy_->Connect("Changed", sigc::mem_fun(this, &LensDBusTestRunner::OnChanged));
+    results_->end_transaction.connect(sigc::mem_fun(this, &LensDBusTestRunner::ResultsModelUpdated));
   }
 
   void OnProxyConnectionChanged()
   {
-    LOG_DEBUG(logger) << "Dbus connection changed. connected=" << (proxy_->IsConnected() ? "true" : "false");
+    DBusTestRunner::OnProxyConnectionChanged();
 
     if (proxy_->IsConnected())
     {
       proxy_->Call("InfoRequest");
       proxy_->Call("SetViewType", g_variant_new("(u)", LENS_VIEW));
     }
-  }
-
-  void OnProxyDisconnected()
-  {
-    LOG_DEBUG(logger) << "Dbus disconnected";
-
-    connected_ = false;
-    connected.emit(connected_);
   }
 
   void OnChanged(GVariant* parameters)
@@ -147,7 +126,7 @@ public:
                  g_variant_new("(sa{sv})",
                                search_string.c_str(),
                                &b),
-                 sigc::mem_fun(this, &StandaloneDBusTestRunner::OnSearchFinished),
+                 sigc::mem_fun(this, &LensDBusTestRunner::OnSearchFinished),
                  search_cancellable_);
 
     g_variant_builder_clear(&b);
@@ -190,8 +169,6 @@ public:
     }
   }
 
-
-
   void Preview(std::string const& uri)
   {
     LOG_DEBUG(logger) << "Previewing '" << uri << "' on  '" << dbus_name_ << "'";
@@ -211,7 +188,7 @@ public:
     proxy_->Call("Activate",
                  g_variant_new("(su)", uri.c_str(),
                                UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_RESULT),
-                 sigc::mem_fun(this, &StandaloneDBusTestRunner::ActivationReply),
+                 sigc::mem_fun(this, &LensDBusTestRunner::ActivationReply),
                  preview_cancellable_);
   }
 
@@ -250,7 +227,6 @@ public:
   }
 
 
-  sigc::signal<void, bool> connected;
   sigc::signal<void, std::string const&, dash::Preview::Ptr> preview_ready;
   sigc::signal<void, Hints const&> search_finished;
 
@@ -276,22 +252,15 @@ protected:
   }
 
 
-  glib::DBusProxy* proxy_;
   glib::Object<GCancellable> preview_cancellable_;
   glib::Object<GCancellable> search_cancellable_;
   Results::Ptr results_;
   GVariant *results_variant_;
-
-  bool connected_;
-  std::string dbus_name_;
-  std::string dbus_path_;
 };
-
-
-
-
 
 
 } // namespace previews
 } // namespace dash
 } // namespace unity
+
+#endif // LENSDBUSTESTRUNNER_H
