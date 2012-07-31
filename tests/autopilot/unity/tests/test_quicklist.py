@@ -171,9 +171,11 @@ class QuicklistActionTests(UnityTestCase):
             desktop_id=mahj_win.application.desktop_file)
 
         calc_ql = self.open_quicklist_for_icon(calc_icon)
+        self.assertThat(calc_ql.active, Eventually(Equals(True)))
 
         mahj_ql = self.open_quicklist_for_icon(mahj_icon)
         self.assertThat(mahj_ql.active, Eventually(Equals(True)))
+        self.assertThat(calc_ql.active, Eventually(Equals(False)))
 
 
 class QuicklistKeyNavigationTests(UnityTestCase):

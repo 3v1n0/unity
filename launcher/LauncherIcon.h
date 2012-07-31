@@ -70,8 +70,6 @@ public:
 
   void RecvMouseLeave(int monitor);
 
-  void RecvMouseDown(int button, int monitor, unsigned long key_flags = 0);
-
   void RecvMouseUp(int button, int monitor, unsigned long key_flags = 0);
 
   void RecvMouseClick(int button, int monitor, unsigned long key_flags = 0);
