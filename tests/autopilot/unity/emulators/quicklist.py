@@ -36,7 +36,6 @@ class Quicklist(UnityIntrospectionObject):
         """Items that can be selected in the quicklist."""
         return self.get_children_by_type(Quicklist, visible=True, selectable=True).active
 
-
     def get_quicklist_item_by_text(self, text):
         """Returns a QuicklistMenuItemLabel object with the given text, or None."""
         if not self.active:
