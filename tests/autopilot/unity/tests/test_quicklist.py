@@ -155,6 +155,26 @@ class QuicklistActionTests(UnityTestCase):
         self.addCleanup(self.dash.ensure_hidden)
         self.assertThat(self.dash.visible, Eventually(Equals(True)))
 
+    def test_right_click_opens_quicklist_if_already_open(self):
+        """A right click to another icon in the launcher must
+        close the current open quicklist and open the other
+        icons quicklist.
+        lp:890991
+        """
+
+        calc_win = self.start_app_window("Calculator")
+        mahj_win = self.start_app_window("Mahjongg")
+
+        calc_icon = self.launcher.model.get_icon(
+            desktop_id=calc_win.application.desktop_file)
+        mahj_icon = self.launcher.model.get_icon(
+            desktop_id=mahj_win.application.desktop_file)
+
+        calc_ql = self.open_quicklist_for_icon(calc_icon)
+
+        mahj_ql = self.open_quicklist_for_icon(mahj_icon)
+        self.assertThat(mahj_ql.active, Eventually(Equals(True)))
+
 
 class QuicklistKeyNavigationTests(UnityTestCase):
     """Tests for the quicklist key navigation."""
