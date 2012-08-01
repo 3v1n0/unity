@@ -112,6 +112,7 @@ LauncherIcon::LauncherIcon()
 
   mouse_enter.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseEnter));
   mouse_leave.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
+  mouse_down.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));
   mouse_up.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
   mouse_click.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseClick));
 }
@@ -620,11 +621,18 @@ bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
   return true;
 }
 
+void LauncherIcon::RecvMouseDown(int button, int monitor, unsigned long key_flags)
+{
+  if (button == 3)
+    OpenQuicklist();
+}
+
 void LauncherIcon::RecvMouseUp(int button, int monitor, unsigned long key_flags)
 {
   if (button == 3)
   {
-    OpenQuicklist(false, monitor);
+    if (_quicklist && _quicklist->IsVisible())
+      _quicklist->CaptureMouseDownAnyWhereElse(true);
   }
 }
 
