@@ -64,6 +64,7 @@ class Style
 {
 public:
   Style();
+  Style(GSettingsBackend* backend);
   ~Style();
 
   static Style& Instance();
@@ -81,6 +82,7 @@ public:
   sigc::signal<void> changed;
 
 private:
+  void Init();
   void Refresh();
 
   glib::Object<GtkStyleContext> _style_context;
