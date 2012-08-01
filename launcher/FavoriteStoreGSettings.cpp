@@ -55,22 +55,13 @@ FavoriteStoreGSettings::FavoriteStoreGSettings()
   : settings_(g_settings_new(SETTINGS_NAME))
   , ignore_signals_(false)
 {
-  Init();
-}
+  favorites_changed_.Connect(settings_, "changed::favorites", [&] (GSettings*, gchar*)
+  {
+    Changed();
+  });
 
-FavoriteStoreGSettings::FavoriteStoreGSettings(GSettingsBackend* backend)
-  : settings_(g_settings_new_with_backend(SETTINGS_NAME, backend))
-  , ignore_signals_(false)
-{
-  Init();
-}
-
-void FavoriteStoreGSettings::Init()
-{
-  g_signal_connect(settings_, "changed", G_CALLBACK(on_settings_updated), this);
   Refresh();
 }
-
 
 void FavoriteStoreGSettings::Refresh()
 {
@@ -229,9 +220,9 @@ void FavoriteStoreGSettings::SaveFavorites(FavoriteList const& favorites, bool i
   ignore_signals_ = false;
 }
 
-void FavoriteStoreGSettings::Changed(std::string const& key)
+void FavoriteStoreGSettings::Changed()
 {
-  if (ignore_signals_ or key != "favorites")
+  if (ignore_signals_)
     return;
 
   FavoriteList old(favorites_);
@@ -260,21 +251,6 @@ void FavoriteStoreGSettings::Changed(std::string const& key)
     reordered.emit();
 
 }
-
-namespace
-{
-
-void on_settings_updated(GSettings* settings,
-                         const gchar* key,
-                         FavoriteStoreGSettings* self)
-{
-  if (settings and key)
-  {
-    self->Changed(key);
-  }
-}
-
-} // anonymous namespace
 
 } // namespace internal
 } // namespace unity
