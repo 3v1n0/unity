@@ -74,7 +74,6 @@ TEST_F(TestPanelStyle, TestAllocation)
 
 TEST_F(TestPanelStyle, TestGetFontDescription)
 {
-  // TODO add test for PanelItem::INDICATOR/MENU
   ASSERT_EQ(panel_style_instance->GetFontDescription(panel::PanelItem::TITLE), TITLEBAR_FONT);
 }
 
@@ -82,8 +81,7 @@ TEST_F(TestPanelStyle, TestChangedSignal)
 {
   bool signal_received = false;
 
-  panel_style_instance->changed.connect([&]()
-  {
+  panel_style_instance->changed.connect([&](){
     signal_received = true;
   });
 
@@ -95,7 +93,5 @@ TEST_F(TestPanelStyle, TestChangedSignal)
   ASSERT_TRUE(signal_received);
   ASSERT_EQ(panel_style_instance->GetFontDescription(panel::PanelItem::TITLE), "Ubuntu Italic 11");  
 }
-
-
 
 }
