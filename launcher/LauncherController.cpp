@@ -502,11 +502,11 @@ void Controller::Impl::OnFavoriteStoreFavoriteAdded(std::string const& entry, st
 
 void Controller::Impl::OnFavoriteStoreFavoriteRemoved(std::string const& entry)
 {
-  for (auto it : model_->GetSublist<BamfLauncherIcon> ())
+  for (auto icon : model_->GetSublist<BamfLauncherIcon> ())
   {
-    if (it->DesktopFile() == entry)
+    if (icon->DesktopFile() == entry)
     {
-      OnLauncherRemoveRequest(it);
+      icon->UnStick();
       break;
      }
   }
