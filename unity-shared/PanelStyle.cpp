@@ -57,6 +57,11 @@ nux::Color ColorFromGdkRGBA(GdkRGBA const& color)
                     color.alpha);
 }
 
+void on_settings_changed(GSettings* settings,
+                         const gchar* key,
+                         Style* self);
+
+
 }
 
 Style::Style()
@@ -109,10 +114,13 @@ Style::Style()
     changed.emit();
   });
 
+  /* FIXME: crash
   _settings_changed_signal.Connect(_gsettings, "changed::titlebar-font",
-  [&] (GSettings*, gchar*, gpointer data) {
+  [&] (GSettings*, gchar*) {
     changed.emit();
-  });
+  });*/
+
+  g_signal_connect(_gsettings, "changed::titlebar-font", G_CALLBACK(on_settings_changed), this);
 
   Refresh();
 }
@@ -121,6 +129,8 @@ Style::~Style()
 {
   if (style_instance == this)
     style_instance = nullptr;
+
+  g_signal_handlers_disconnect_by_func(_gsettings, (void*) on_settings_changed, this);
 }
 
 Style& Style::Instance()
@@ -388,6 +398,18 @@ int Style::GetTextDPI()
   g_object_get(gtk_settings_get_default(), "gtk-xft-dpi", &dpi, nullptr);
 
   return dpi;
+}
+
+namespace
+{
+
+void on_settings_changed(GSettings* settings,
+                         const gchar* key,
+                         Style* self)
+{
+  self->changed();
+}
+
 }
 
 } // namespace panel
