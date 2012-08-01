@@ -69,19 +69,6 @@ Style::Style()
   , _style_context(gtk_style_context_new())
   , _gsettings(g_settings_new(SETTINGS_NAME.c_str()))
 {
-  Init();
-}
-
-Style::Style(GSettingsBackend* backend)
-  : panel_height(24)
-  , _style_context(gtk_style_context_new())
-  , _gsettings(g_settings_new_with_backend(SETTINGS_NAME.c_str(), backend))
-{
-  Init();
-}
-
-void Style::Init()
-{
   if (style_instance)
   {
     LOG_ERROR(logger) << "More than one panel::Style created.";

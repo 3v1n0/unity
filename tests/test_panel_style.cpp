@@ -20,8 +20,7 @@
 
 #include <config.h>
 
-#define G_SETTINGS_ENABLE_BACKEND
-#include <gio/gsettingsbackend.h>
+#include <gio/gio.h>
 #include <gtest/gtest.h>
 
 #include "unity-shared/PanelStyle.h"
@@ -33,44 +32,30 @@ using namespace testing;
 namespace
 {
 
-const std::string SCHEMA_DIRECTORY = BUILDDIR"/settings";
-const std::string BASE_STORE_FILE = BUILDDIR"/settings/test-panel-style-gsettings.store";
-const std::string BASE_STORE_CONTENTS = "[org/gnome/desktop/wm/preferences]\n" \
-                                        "titlebar-font='%s'";
 const std::string TITLEBAR_FONT = "Ubuntu Bold 11";
-
 
 class TestPanelStyle : public Test
 {
 public:
-  glib::Object<GSettingsBackend> backend;
+  glib::Object<GSettings> gsettings;
   Settings unity_settings;
   std::unique_ptr<panel::Style> panel_style_instance;
 
   /* override */ void SetUp()
   {
-    // set the data directory so gsettings can find the schema
-    g_setenv("GSETTINGS_SCHEMA_DIR", SCHEMA_DIRECTORY.c_str(), false);
+	g_setenv("GSETTINGS_BACKEND", "memory", TRUE);
 
-    glib::Error error;
-    glib::String contents(g_strdup_printf(BASE_STORE_CONTENTS.c_str(), TITLEBAR_FONT.c_str()));
+    gsettings = g_settings_new("org.gnome.desktop.wm.preferences");
+    g_settings_set_string(gsettings, "titlebar-font", TITLEBAR_FONT.c_str());
 
-    g_file_set_contents(BASE_STORE_FILE.c_str(),
-                        contents.Value(),
-                        -1,
-                        &error);
+    panel_style_instance.reset(new panel::Style());
+  }
 
-    ASSERT_FALSE(error);
-
-    backend = g_keyfile_settings_backend_new(BASE_STORE_FILE.c_str(), "/", "root");
-    panel_style_instance.reset(new panel::Style(backend));
+  /* override */ void TearDown()
+  {
+    g_setenv("GSETTINGS_BACKEND", "", TRUE);
   }
 };
-
-TEST_F(TestPanelStyle, TestAllocation)
-{
-  EXPECT_TRUE(G_IS_SETTINGS_BACKEND(backend.RawPtr()));
-}
 
 TEST_F(TestPanelStyle, TestGetFontDescription)
 {
@@ -85,7 +70,6 @@ TEST_F(TestPanelStyle, TestChangedSignal)
     signal_received = true;
   });
 
-  glib::Object<GSettings> gsettings(g_settings_new_with_backend("org.gnome.desktop.wm.zXpreferences", backend));
   g_settings_set_string(gsettings, "titlebar-font", "Ubuntu Italic 11");
 
   sleep(1);
