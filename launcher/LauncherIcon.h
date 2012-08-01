@@ -339,6 +339,8 @@ private:
   bool             _quirks[QUIRK_LAST];
   struct timespec  _quirk_times[QUIRK_LAST];
 
+  bool             _open_quicklist;
+
   std::list<LauncherEntryRemote::Ptr> _entry_list;
 
 protected:

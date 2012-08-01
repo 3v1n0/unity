@@ -110,7 +110,6 @@ QuicklistView::QuicklistView()
   SetWindowSizeMatchLayout(true);
   SetLayout(_hlayout);
 
-  mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &QuicklistView::RecvMouseDownOutsideOfQuicklist));
   mouse_down.connect(sigc::mem_fun(this, &QuicklistView::RecvMouseDown));
   mouse_up.connect(sigc::mem_fun(this, &QuicklistView::RecvMouseUp));
   mouse_click.connect(sigc::mem_fun(this, &QuicklistView::RecvMouseClick));
@@ -667,11 +666,6 @@ void QuicklistView::RecvMouseMove(int x, int y, int dx, int dy, unsigned long bu
 void QuicklistView::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
 
-}
-
-void QuicklistView::RecvMouseDownOutsideOfQuicklist(int x, int y, unsigned long button_flags, unsigned long key_flags)
-{
-  Hide();
 }
 
 void QuicklistView::RemoveAllMenuItem()

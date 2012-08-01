@@ -87,6 +87,7 @@ LauncherIcon::LauncherIcon()
   , _last_stable(max_num_monitors)
   , _parent_geo(max_num_monitors)
   , _saved_center(max_num_monitors)
+  , _open_quicklist(true)
 {
   for (int i = 0; i < QUIRK_LAST; i++)
   {
@@ -152,6 +153,12 @@ void LauncherIcon::LoadQuicklist()
 {
   _quicklist = new QuicklistView();
   AddChild(_quicklist.GetPointer());
+
+  _quicklist->mouse_down_outside_pointer_grab_area.connect([&] (int x, int y, unsigned long button_flags, unsigned long key_flags)
+  {
+    _quicklist->Hide();
+    _open_quicklist = false;
+  });
 
   QuicklistManager::Default()->RegisterQuicklist(_quicklist.GetPointer());
 }
@@ -532,6 +539,7 @@ LauncherIcon::RecvMouseEnter(int monitor)
 void LauncherIcon::RecvMouseLeave(int monitor)
 {
   _last_monitor = -1;
+  _open_quicklist = true;
 
   if (_tooltip)
     _tooltip->ShowWindow(false);
@@ -631,9 +639,17 @@ void LauncherIcon::RecvMouseUp(int button, int monitor, unsigned long key_flags)
 {
   if (button == 3)
   {
+    if (_open_quicklist)
+    {
+      OpenQuicklist();
+    }
+
     if (_quicklist && _quicklist->IsVisible())
+    {
       _quicklist->CaptureMouseDownAnyWhereElse(true);
+    }
   }
+  _open_quicklist = true;
 }
 
 void LauncherIcon::RecvMouseClick(int button, int monitor, unsigned long key_flags)
