@@ -91,7 +91,7 @@ private:
   glib::Signal<void, GtkSettings*, GParamSpec*> _style_changed_signal;
   glib::Signal<void, GtkSettings*, GParamSpec*> _font_changed_signal;
   glib::Signal<void, GtkSettings*, GParamSpec*> _dpi_changed_signal;
-  //glib::Signal<void, GSettings*, gchar*> _settings_changed_signal;
+  glib::Signal<void, GSettings*, gchar*> _settings_changed_signal;
 };
 
 }

@@ -57,11 +57,6 @@ nux::Color ColorFromGdkRGBA(GdkRGBA const& color)
                     color.alpha);
 }
 
-void on_settings_changed(GSettings* settings,
-                         const gchar* key,
-                         Style* self);
-
-
 }
 
 Style::Style()
@@ -114,13 +109,10 @@ Style::Style()
     changed.emit();
   });
 
-  /* FIXME: Don't uncomment this code. Probable crashes.
-  _settings_changed_signal.Connect(_gsettings, "changed::titlebar-font",
+  _settings_changed_signal.Connect(_gsettings, "changed::" + PANEL_TITLE_FONT_KEY,
   [&] (GSettings*, gchar*) {
     changed.emit();
-  });*/
-
-  g_signal_connect(_gsettings, ("changed::" + PANEL_TITLE_FONT_KEY).c_str(), G_CALLBACK(on_settings_changed), this);
+  });
 
   Refresh();
 }
@@ -129,8 +121,6 @@ Style::~Style()
 {
   if (style_instance == this)
     style_instance = nullptr;
-
-  g_signal_handlers_disconnect_by_func(_gsettings, (void*) on_settings_changed, this);
 }
 
 Style& Style::Instance()
@@ -390,17 +380,6 @@ int Style::GetTextDPI()
   return dpi;
 }
 
-namespace
-{
-
-void on_settings_changed(GSettings* settings,
-                         const gchar* key,
-                         Style* self)
-{
-  self->changed();
-}
-
-}
-
 } // namespace panel
 } // namespace unity
+
