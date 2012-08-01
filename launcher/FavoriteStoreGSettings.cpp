@@ -42,8 +42,8 @@ namespace
 {
 
 nux::logging::Logger logger("unity.favorites");
-
-const char* SETTINGS_NAME = "com.canonical.Unity.Launcher";
+const std::string SETTINGS_NAME = "com.canonical.Unity.Launcher";
+const std::string SETTINGS_KEY = "favorites";
 
 void on_settings_updated(GSettings* settings,
                          const gchar* key,
@@ -52,10 +52,10 @@ void on_settings_updated(GSettings* settings,
 }
 
 FavoriteStoreGSettings::FavoriteStoreGSettings()
-  : settings_(g_settings_new(SETTINGS_NAME))
-  , ignore_signals_(false)
+  : ignore_signals_(false)
+  , settings_(g_settings_new(SETTINGS_NAME.c_str()))
 {
-  favorites_changed_.Connect(settings_, "changed::favorites", [&] (GSettings*, gchar*)
+  favorites_changed_.Connect(settings_, "changed::"+SETTINGS_KEY, [&] (GSettings*, gchar*)
   {
     Changed();
   });
@@ -72,7 +72,7 @@ void FavoriteStoreGSettings::FillList(FavoriteList& list)
 {
   list.clear();
 
-  gchar** favs = g_settings_get_strv(settings_, "favorites");
+  gchar** favs = g_settings_get_strv(settings_, SETTINGS_KEY.c_str());
 
   for (int i = 0; favs[i] != NULL; ++i)
   {
@@ -213,7 +213,7 @@ void FavoriteStoreGSettings::SaveFavorites(FavoriteList const& favorites, bool i
   }
 
   ignore_signals_ = ignore;
-  if (!g_settings_set_strv(settings_, "favorites", favs))
+  if (!g_settings_set_strv(settings_, SETTINGS_KEY.c_str(), favs))
   {
     LOG_WARNING(logger) << "Saving favorites failed.";
   }
