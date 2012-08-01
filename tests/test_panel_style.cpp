@@ -43,7 +43,7 @@ public:
 
   /* override */ void SetUp()
   {
-	g_setenv("GSETTINGS_BACKEND", "memory", TRUE);
+    g_setenv("GSETTINGS_BACKEND", "memory", TRUE);
 
     gsettings = g_settings_new("org.gnome.desktop.wm.preferences");
     g_settings_set_string(gsettings, "titlebar-font", TITLEBAR_FONT.c_str());
