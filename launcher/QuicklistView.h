@@ -30,8 +30,6 @@
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
 
-#include <UnityCore/GLibSource.h>
-
 #include "CairoBaseWindow.h"
 #include "QuicklistMenuItem.h"
 
@@ -167,9 +165,6 @@ private:
   bool _cairo_text_has_changed;
   void UpdateTexture();
   std::list<QuicklistMenuItem*> _item_list;
-
-  bool _dont_show_ql;
-  glib::Source::UniquePtr _ql_show_delay;
 
   // used by keyboard/a11y-navigation
   int _current_item_index;

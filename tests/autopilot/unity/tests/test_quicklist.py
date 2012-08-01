@@ -177,6 +177,22 @@ class QuicklistActionTests(UnityTestCase):
         self.assertThat(mahj_ql.active, Eventually(Equals(True)))
         self.assertThat(calc_ql.active, Eventually(Equals(False)))
 
+    def test_right_clicking_same_icon_doesnt_reopen_ql(self):
+        """A right click to the same icon in the launcher must
+        not re-open the quicklist if already open. It must hide.
+        """
+
+        calc_win = self.start_app_window("Calculator")
+
+        calc_icon = self.launcher.model.get_icon(
+            desktop_id=calc_win.application.desktop_file)
+
+        calc_ql = self.open_quicklist_for_icon(calc_icon)
+        self.assertThat(calc_ql.active, Eventually(Equals(True)))
+
+        calc_ql = self.open_quicklist_for_icon(calc_icon)
+        self.assertThat(calc_ql.active, Eventually(Equals(False)))
+
 
 class QuicklistKeyNavigationTests(UnityTestCase):
     """Tests for the quicklist key navigation."""
