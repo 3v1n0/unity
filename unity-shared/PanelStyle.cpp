@@ -114,13 +114,13 @@ Style::Style()
     changed.emit();
   });
 
-  /* FIXME: crash
+  /* FIXME: Don't uncomment this code. Probable crashes.
   _settings_changed_signal.Connect(_gsettings, "changed::titlebar-font",
   [&] (GSettings*, gchar*) {
     changed.emit();
   });*/
 
-  g_signal_connect(_gsettings, "changed::titlebar-font", G_CALLBACK(on_settings_changed), this);
+  g_signal_connect(_gsettings, ("changed::" + PANEL_TITLE_FONT_KEY).c_str(), G_CALLBACK(on_settings_changed), this);
 
   Refresh();
 }
@@ -374,18 +374,8 @@ std::string Style::GetFontDescription(PanelItem item)
     }
     case PanelItem::TITLE:
     {
-      std::shared_ptr<gchar*> keys(g_settings_list_keys(_gsettings), g_strfreev);
-
-      // g_settings_get_string doesn't like invalid keys.
-      gchar** raw_keys = keys.get();
-      while (*raw_keys)
-      {
-        if (!strcmp(*raw_keys++, PANEL_TITLE_FONT_KEY.c_str()))
-        {
-          glib::String font_name(g_settings_get_string(_gsettings, PANEL_TITLE_FONT_KEY.c_str()));
-          return font_name.Str();
-        }
-      }
+      glib::String font_name(g_settings_get_string(_gsettings, PANEL_TITLE_FONT_KEY.c_str()));
+      return font_name.Str();
     }
   }
 
