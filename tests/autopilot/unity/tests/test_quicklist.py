@@ -347,3 +347,23 @@ class QuicklistKeyNavigationTests(UnityTestCase):
         mouse_item.mouse_move_to()
         self.assertThat(mouse_item.selected, Eventually(Equals(True)))
         self.assertThat(self.quicklist.selected_item.id, Equals(mouse_item.id))
+
+    def test_moving_mouse_during_grab_select_correct_menuitem(self):
+        """Test that moving the mouse during grabbing selects the
+        correct menu item. See bug #1027955.
+        """
+        self.open_quicklist_with_mouse()
+        mouse_item = self.quicklist.selectable_items[0]
+        mouse_item.mouse_move_to()
+        self.assertThat(mouse_item.selected, Eventually(Equals(True)))
+
+        # Dragging the mouse horizontally doesn't change the selection
+        self.mouse.press()
+        self.addCleanup(self.mouse.release)
+        self.mouse.move(mouse_item.x + mouse_item.width - 10, mouse_item.y + mouse_item.height / 2)
+        self.assertThat(mouse_item.selected, Eventually(Equals(True)))
+
+        # Moving the mouse down selects the next item
+        mouse_item = self.quicklist.selectable_items[1]
+        mouse_item.mouse_move_to()
+        self.assertThat(mouse_item.selected, Eventually(Equals(True)))
