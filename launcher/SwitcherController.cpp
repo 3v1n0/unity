@@ -81,6 +81,9 @@ bool Controller::CanShowSwitcher(const std::vector<AbstractLauncherIcon::Ptr>& r
 void Controller::Show(ShowMode show, SortMode sort, bool reverse,
                       std::vector<AbstractLauncherIcon::Ptr> results)
 {
+  if (results.empty())
+    return;
+
   if (sort == SortMode::FOCUS_ORDER)
   {
     std::sort(results.begin(), results.end(), CompareSwitcherItemsPriority);
