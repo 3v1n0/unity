@@ -38,7 +38,7 @@ namespace
 }
 
 TrashLauncherIcon::TrashLauncherIcon()
-  : SimpleLauncherIcon()
+  : SimpleLauncherIcon(IconType::TRASH)
   , on_trash_changed_handler_id_(0)
   , proxy_("org.gnome.Nautilus", "/org/gnome/Nautilus", "org.gnome.Nautilus.FileOperations")
 {
@@ -46,7 +46,6 @@ TrashLauncherIcon::TrashLauncherIcon()
   icon_name = "user-trash";
   SetQuirk(Quirk::VISIBLE, true);
   SetQuirk(Quirk::RUNNING, false);
-  SetIconType(IconType::TRASH);
   SetShortcut('t');
 
   glib::Object<GFile> location(g_file_new_for_uri("trash:///"));

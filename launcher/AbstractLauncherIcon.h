@@ -175,7 +175,7 @@ public:
 
   virtual void ResetQuirkTime(Quirk quirk) = 0;
 
-  virtual IconType GetIconType() = 0;
+  virtual IconType GetIconType() const = 0;
 
   virtual std::string RemoteUri() = 0;
 

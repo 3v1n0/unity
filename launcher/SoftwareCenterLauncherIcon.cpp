@@ -49,7 +49,6 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
   aptdaemon_trans_.Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
   aptdaemon_trans_.Connect("Finished", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnFinished));
 
-  SetIconType(IconType::APPLICATION);
   icon_name = icon_path;
   if (!aptdaemon_trans_id_.empty()) // Application is being installed, or hasn't been installed yet
     tooltip_text = _("Waiting to install");

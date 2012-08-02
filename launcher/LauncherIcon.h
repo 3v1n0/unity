@@ -54,7 +54,7 @@ class LauncherIcon : public AbstractLauncherIcon
 public:
   typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
-  LauncherIcon();
+  LauncherIcon(IconType type);
 
   virtual ~LauncherIcon();
 
@@ -139,7 +139,7 @@ public:
 
   struct timespec GetQuirkTime(Quirk quirk);
 
-  IconType GetIconType();
+  IconType GetIconType() const;
 
   virtual nux::Color BackgroundColor() const;
 
@@ -185,8 +185,6 @@ public:
   {
     OnDndLeave();
   }
-
-  void SetIconType(IconType type);
 
   virtual std::string DesktopFile() { return std::string(""); }
 
@@ -298,6 +296,8 @@ protected:
   glib::Object<DbusmenuClient> _menuclient_dynamic_quicklist;
 
 private:
+  IconType _icon_type;
+
   nux::ObjectPtr<Tooltip> _tooltip;
   nux::ObjectPtr<QuicklistView> _quicklist;
 
@@ -322,8 +322,6 @@ private:
   nux::Color        _glow_color;
 
   gint64            _shortcut;
-
-  IconType                 _icon_type;
 
   std::vector<nux::Point3> _center;
   std::vector<bool> _has_visible_window;
