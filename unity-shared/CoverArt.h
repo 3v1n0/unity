@@ -27,6 +27,7 @@
 #include <Nux/Nux.h>
 #include <Nux/View.h>
 #include <UnityCore/ApplicationPreview.h>
+#include <UnityCore/GLibSource.h>
 #include "unity-shared/StaticCairoText.h"
 #include <NuxCore/ObjectPtr.h>
 
@@ -46,7 +47,10 @@ public:
   CoverArt();
   virtual ~CoverArt();
 
+  // Use for setting an image which is already an image (path to iamge, gicon).
   void SetImage(std::string const& image_hint);
+  // Use for generating an image for a uri which is not necessarily an image.
+  void GenerateImage(std::string const& uri);
 
   // From debug::Introspectable
   std::string GetName() const;
@@ -59,9 +63,30 @@ protected:
 
   void SetupViews();
 
+  void OnThumbnailGenerated(unsigned int thumb_handle, std::string const& uri);
+  void OnThumbnailError(unsigned int thumb_handle, std::string const& error_hint);
+  bool OnFrameTimeout();
+
+  void IconLoaded(std::string const& texid, unsigned size, glib::Object<GdkPixbuf> const& pixbuf);
+
+  void StartWaiting();
+
 private:
   nux::ObjectPtr<nux::BaseTexture> texture_screenshot_;
   nux::StaticCairoText* overlay_text_;
+
+  std::string image_hint_;
+  unsigned int thumb_handle_;
+  int slot_handle_;
+  bool stretch_image_;
+  
+  // Spinner
+  bool waiting_;
+  nux::BaseTexture* spin_;
+  glib::Source::UniquePtr spinner_timeout_;
+  glib::Source::UniquePtr frame_timeout_;
+  nux::Matrix4 rotate_matrix_;
+  float rotation_;
 };
 
 }

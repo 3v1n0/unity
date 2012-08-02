@@ -50,7 +50,8 @@ TEST(TestPreviews, DeserializeGeneric)
   unity_protocol_preview_set_title(proto_obj, "Title");
   unity_protocol_preview_set_subtitle(proto_obj, "Subtitle");
   unity_protocol_preview_set_description(proto_obj, "Description");
-  unity_protocol_preview_set_thumbnail(proto_obj, icon);
+  unity_protocol_preview_set_image(proto_obj, icon);
+  unity_protocol_preview_set_image_source_uri(proto_obj, "Source");
 
   Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
             glib::StealRef());
@@ -63,6 +64,7 @@ TEST(TestPreviews, DeserializeGeneric)
   EXPECT_EQ(preview->title, "Title");
   EXPECT_EQ(preview->subtitle, "Subtitle");
   EXPECT_EQ(preview->description, "Description");
+  EXPECT_EQ(preview->image_source_uri, "Source");
   EXPECT_TRUE(g_icon_equal(preview->image(), icon) != FALSE);
 }
 
@@ -73,7 +75,8 @@ TEST(TestPreviews, DeserializeGenericWithMeta)
   unity_protocol_preview_set_title(proto_obj, "Title");
   unity_protocol_preview_set_subtitle(proto_obj, "Subtitle");
   unity_protocol_preview_set_description(proto_obj, "Description");
-  unity_protocol_preview_set_thumbnail(proto_obj, icon);
+  unity_protocol_preview_set_image(proto_obj, icon);
+  unity_protocol_preview_set_image_source_uri(proto_obj, "Source");
   unity_protocol_preview_add_action(proto_obj, "action1", "Action #1", NULL, 0);
   unity_protocol_preview_add_action(proto_obj, "action2", "Action #2", NULL, 0);
   unity_protocol_preview_add_info_hint(proto_obj, "hint1", "Hint 1", NULL, g_variant_new("i", 34));
@@ -91,6 +94,7 @@ TEST(TestPreviews, DeserializeGenericWithMeta)
   EXPECT_EQ(preview->subtitle, "Subtitle");
   EXPECT_EQ(preview->description, "Description");
   EXPECT_TRUE(g_icon_equal(preview->image(), icon) != FALSE);
+  EXPECT_EQ(preview->image_source_uri, "Source");
 
   auto actions = preview->GetActions();
   auto info_hints = preview->GetInfoHints();
@@ -128,7 +132,7 @@ TEST(TestPreviews, DeserializeApplication)
   unity_protocol_preview_set_title(proto_obj, "Title");
   unity_protocol_preview_set_subtitle(proto_obj, "Subtitle");
   unity_protocol_preview_set_description(proto_obj, "Description");
-  unity_protocol_preview_set_thumbnail(proto_obj, icon);
+  unity_protocol_preview_set_image(proto_obj, icon);
   auto app_proto_obj = glib::object_cast<UnityProtocolApplicationPreview>(proto_obj);
   unity_protocol_application_preview_set_last_update(app_proto_obj, "2012/06/13");
   unity_protocol_application_preview_set_copyright(app_proto_obj, "(c) Canonical");
@@ -165,7 +169,7 @@ TEST(TestPreviews, DeserializeMovie)
   unity_protocol_preview_set_title(proto_obj, "Title");
   unity_protocol_preview_set_subtitle(proto_obj, "Subtitle");
   unity_protocol_preview_set_description(proto_obj, "Description");
-  unity_protocol_preview_set_thumbnail(proto_obj, icon);
+  unity_protocol_preview_set_image(proto_obj, icon);
   auto movie_proto_obj = glib::object_cast<UnityProtocolMoviePreview>(proto_obj);
   unity_protocol_movie_preview_set_year(movie_proto_obj, "2012");
   unity_protocol_movie_preview_set_rating(movie_proto_obj, 4.0);
@@ -196,7 +200,7 @@ TEST(TestPreviews, DeserializeMusic)
   unity_protocol_preview_set_title(proto_obj, "Title");
   unity_protocol_preview_set_subtitle(proto_obj, "Subtitle");
   unity_protocol_preview_set_description(proto_obj, "Description");
-  unity_protocol_preview_set_thumbnail(proto_obj, icon);
+  unity_protocol_preview_set_image(proto_obj, icon);
   auto music_proto_obj = glib::object_cast<UnityProtocolMusicPreview>(proto_obj);
 
   Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
@@ -229,7 +233,7 @@ TEST(TestPreviews, DeserializeSeries)
   unity_protocol_preview_set_title(child_proto_obj, "Title");
   unity_protocol_preview_set_subtitle(child_proto_obj, "Subtitle");
   unity_protocol_preview_set_description(child_proto_obj, "Description");
-  unity_protocol_preview_set_thumbnail(child_proto_obj, icon);
+  unity_protocol_preview_set_image(child_proto_obj, icon);
 
   unity_protocol_series_preview_set_child_preview(series_proto_obj,
       child_proto_obj);

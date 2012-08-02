@@ -1363,10 +1363,6 @@ void Style::Impl::Text(cairo_t*    cr,
   PangoWeight weight;
   switch (regular_text_weight_)
   {
-  case FontWeight::REGULAR:
-    weight = PANGO_WEIGHT_NORMAL;
-    break;
-
   case FontWeight::LIGHT:
     weight = PANGO_WEIGHT_LIGHT;
     break;
@@ -1374,6 +1370,10 @@ void Style::Impl::Text(cairo_t*    cr,
   case FontWeight::BOLD:
     weight = PANGO_WEIGHT_BOLD;
     break;
+
+  case FontWeight::REGULAR:
+  default:
+    weight = PANGO_WEIGHT_NORMAL;
   }
   pango_font_description_set_weight(desc, weight);
 
