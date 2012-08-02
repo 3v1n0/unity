@@ -2101,7 +2101,7 @@ void Launcher::UpdateDragWindowPosition(int x, int y)
     if (_drag_icon && hovered_icon && _drag_icon != hovered_icon)
     {
       float progress = DragThresholdProgress(current);
-/*
+
       if (progress >= 1.0f)
         _model->ReorderSmart(_drag_icon, hovered_icon, true);
       else if (progress == 0.0f) {
@@ -2133,7 +2133,7 @@ void Launcher::UpdateDragWindowPosition(int x, int y)
             _model->ReorderAfter(_drag_icon, iconBeforeHover);
           }
         }
-      }*/
+      }
 
       if (progress >= 1.0f)
       {
