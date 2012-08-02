@@ -417,3 +417,19 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
         self.switcher.select()
 
         self.assertProperty(mah_win2, is_hidden=False)
+
+    def test_switcher_is_disabled_when_wall_plugin_active(self):
+        """The switcher must not open when the wall plugin is active using ctrl+alt+<direction>."""
+
+        initial_workspace = self.workspace.current_workspace
+        self.addCleanup(self.workspace.switch_to, initial_workspace)
+
+        self.workspace.switch_to(0)
+        sleep(1)
+        self.keyboard.press("Ctrl+Alt+Right")
+        sleep(1)
+        self.keybinding_hold_part_then_tap("switcher/reveal_normal")
+        self.addCleanup(self.switcher.terminate)
+        self.keyboard.release("Ctrl+Alt")
+
+        self.assertThat(self.switcher.visible, Eventually(Equals(False)))
