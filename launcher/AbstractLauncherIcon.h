@@ -116,10 +116,18 @@ public:
     LAST
   };
 
+  enum class Position
+  {
+    BEGIN,
+    FLOATING,
+    END
+  };
+
   virtual ~AbstractLauncherIcon() {}
 
   nux::Property<std::string> tooltip_text;
   nux::Property<bool> tooltip_enabled;
+  nux::Property<Position> position;
 
   virtual void HideTooltip() = 0;
 
