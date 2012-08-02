@@ -32,111 +32,82 @@ using namespace unity::launcher;
 namespace
 {
 
-class EventListener
+class TestLauncherModel : public testing::Test
 {
-  public:
-    EventListener()
-    {
-      icon_added = false;
-      icon_removed = false;
-    }
-
-    void OnIconAdded (AbstractLauncherIcon::Ptr icon)
-    {
-      icon_added = true;
-    }
-
-    void OnIconRemoved (AbstractLauncherIcon::Ptr icon)
-    {
-      icon_removed = true;
-    }
-
-    bool icon_added;
-    bool icon_removed; 
+public:
+  LauncherModel model;
 };
-//bool seen_result;
 
-TEST(TestLauncherModel, TestConstructor)
+TEST_F(TestLauncherModel, TestConstructor)
 {
-  LauncherModel::Ptr model(new LauncherModel());
-  EXPECT_EQ(model->Size(), 0);
+  EXPECT_EQ(model.Size(), 0);
 }
 
-TEST(TestLauncherModel, TestAdd)
+TEST_F(TestLauncherModel, TestAdd)
 {
   AbstractLauncherIcon::Ptr first(new MockLauncherIcon());
-  LauncherModel::Ptr model(new LauncherModel());
 
-  EXPECT_EQ(model->Size(), 0);
-  model->AddIcon(first);
-  EXPECT_EQ(model->Size(), 1);
+  EXPECT_EQ(model.Size(), 0);
+  model.AddIcon(first);
+  EXPECT_EQ(model.Size(), 1);
 }
 
-TEST(TestLauncherModel, TestRemove)
+TEST_F(TestLauncherModel, TestRemove)
 {
   AbstractLauncherIcon::Ptr first(new MockLauncherIcon());
-  LauncherModel::Ptr model(new LauncherModel());
 
-  EXPECT_EQ(model->Size(), 0);
-  model->AddIcon(first);
-  EXPECT_EQ(model->Size(), 1);
-  model->RemoveIcon(first);
-  EXPECT_EQ(model->Size(), 0);
+  EXPECT_EQ(model.Size(), 0);
+  model.AddIcon(first);
+  EXPECT_EQ(model.Size(), 1);
+  model.RemoveIcon(first);
+  EXPECT_EQ(model.Size(), 0);
 }
 
-TEST(TestLauncherModel, TestAddSignal)
+TEST_F(TestLauncherModel, TestAddSignal)
 {
   AbstractLauncherIcon::Ptr first(new MockLauncherIcon());
-  LauncherModel::Ptr model(new LauncherModel());
 
-  EventListener *listener = new EventListener();
+  bool icon_added = false;
+  model.icon_added.connect([&icon_added] (AbstractLauncherIcon::Ptr) { icon_added = true; });
 
-  model->icon_added.connect(sigc::mem_fun(listener, &EventListener::OnIconAdded));
-  model->AddIcon(first);
-  EXPECT_EQ(listener->icon_added, true);
-
-  delete listener;
+  model.AddIcon(first);
+  EXPECT_EQ(icon_added, true);
 }
 
-TEST(TestLauncherModel, TestRemoveSignal)
+TEST_F(TestLauncherModel, TestRemoveSignal)
 {
   AbstractLauncherIcon::Ptr first(new MockLauncherIcon());
-  LauncherModel::Ptr model(new LauncherModel());
 
-  EventListener *listener = new EventListener();
+  bool icon_removed = false;
+  model.icon_removed.connect([&icon_removed] (AbstractLauncherIcon::Ptr) { icon_removed = true; });
 
-  model->icon_removed.connect(sigc::mem_fun(listener, &EventListener::OnIconRemoved));
-  model->AddIcon(first);
-  EXPECT_EQ(listener->icon_removed, false);
-  model->RemoveIcon(first);
-  EXPECT_EQ(listener->icon_removed, true);
-
-  delete listener;
+  model.AddIcon(first);
+  EXPECT_EQ(icon_removed, false);
+  model.RemoveIcon(first);
+  EXPECT_EQ(icon_removed, true);
 }
 
-TEST(TestLauncherModel, TestSort)
+TEST_F(TestLauncherModel, TestSort)
 {
   AbstractLauncherIcon::Ptr first(new MockLauncherIcon());
   AbstractLauncherIcon::Ptr second(new MockLauncherIcon());
   AbstractLauncherIcon::Ptr third(new MockLauncherIcon());
   AbstractLauncherIcon::Ptr fourth(new MockLauncherIcon());
-
-  LauncherModel::Ptr model(new LauncherModel());
 
   third->SetSortPriority(0);
-  model->AddIcon(third);
+  model.AddIcon(third);
 
   first->SetSortPriority(-1);
-  model->AddIcon(first);
+  model.AddIcon(first);
 
   fourth->SetSortPriority(2);
-  model->AddIcon(fourth);
+  model.AddIcon(fourth);
 
   second->SetSortPriority(0);
-  model->AddIcon(second);
+  model.AddIcon(second);
 
   LauncherModel::iterator it;
-  it = model->begin();
+  it = model.begin();
 
   EXPECT_EQ(first, *it);
   it++;
@@ -147,29 +118,27 @@ TEST(TestLauncherModel, TestSort)
   EXPECT_EQ(fourth, *it);
 }
 
-TEST(TestLauncherModel, TestReorderBefore)
+TEST_F(TestLauncherModel, TestReorderBefore)
 {
   AbstractLauncherIcon::Ptr first(new MockLauncherIcon());
   AbstractLauncherIcon::Ptr second(new MockLauncherIcon());
   AbstractLauncherIcon::Ptr third(new MockLauncherIcon());
   AbstractLauncherIcon::Ptr fourth(new MockLauncherIcon());
 
-  LauncherModel::Ptr model(new LauncherModel());
-
   first->SetSortPriority(0);
   second->SetSortPriority(1);
   third->SetSortPriority(2);
   fourth->SetSortPriority(3);
 
-  model->AddIcon(first);
-  model->AddIcon(second);
-  model->AddIcon(third);
-  model->AddIcon(fourth);
+  model.AddIcon(first);
+  model.AddIcon(second);
+  model.AddIcon(third);
+  model.AddIcon(fourth);
 
-  model->ReorderBefore(third, second, false);
+  model.ReorderBefore(third, second, false);
 
   LauncherModel::iterator it;
-  it = model->begin();
+  it = model.begin();
 
   EXPECT_EQ(first, *it);
   it++;
@@ -180,29 +149,27 @@ TEST(TestLauncherModel, TestReorderBefore)
   EXPECT_EQ(fourth, *it);
 }
 
-TEST(TestLauncherModel, TestReorderSmart)
+TEST_F(TestLauncherModel, TestReorderSmart)
 {
   AbstractLauncherIcon::Ptr first(new MockLauncherIcon());
   AbstractLauncherIcon::Ptr second(new MockLauncherIcon());
   AbstractLauncherIcon::Ptr third(new MockLauncherIcon());
   AbstractLauncherIcon::Ptr fourth(new MockLauncherIcon());
 
-  LauncherModel::Ptr model(new LauncherModel());
-
   first->SetSortPriority(0);
   second->SetSortPriority(1);
   third->SetSortPriority(2);
   fourth->SetSortPriority(3);
 
-  model->AddIcon(first);
-  model->AddIcon(second);
-  model->AddIcon(third);
-  model->AddIcon(fourth);
+  model.AddIcon(first);
+  model.AddIcon(second);
+  model.AddIcon(third);
+  model.AddIcon(fourth);
 
-  model->ReorderSmart(third, second, false);
+  model.ReorderSmart(third, second, false);
 
   LauncherModel::iterator it;
-  it = model->begin();
+  it = model.begin();
 
   EXPECT_EQ(first, *it);
   it++;
