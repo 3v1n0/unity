@@ -1,10 +1,19 @@
-unity (6.0.0-0ubuntu6) UNRELEASED; urgency=low
+unity (6.0.0-0ubuntu7) UNRELEASED; urgency=low
 
   * debian/rules:
     - added override for dh_shlibdeps to point it to the private directory of
       libunity-protocol-private.so
 
  -- Łukasz 'sil2100' Zemczak <lukasz.zemczak@canonical.com>  Wed, 18 Jul 2012 12:50:15 +0200
+
+unity (6.0.0-0ubuntu6) quantal; urgency=low
+
+  * Don't specify a specific destination for the dbus signals, that
+    creates issues with the new dbus eavedropping behaviour,
+    thanks Neil J. Patel for the fix! Required for the new dbus version.
+    (lp: #1014850)
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Thu, 02 Aug 2012 16:35:04 +0200
 
 unity (6.0.0-0ubuntu5) quantal; urgency=low
 
