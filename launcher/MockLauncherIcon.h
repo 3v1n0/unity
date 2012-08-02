@@ -222,7 +222,7 @@ public:
     return tv;
   }
 
-  IconType GetIconType()
+  IconType GetIconType() const
   {
     return type_;
   }
