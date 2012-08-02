@@ -2005,7 +2005,7 @@ void Launcher::StartIconDragRequest(int x, int y)
 
   // FIXME: nux doesn't give nux::GetEventButton (button_flags) there, relying
   // on an internal Launcher property then
-  if (drag_icon && _last_button_press == 1 && _model->IconHasSister(drag_icon))
+  if (drag_icon && _last_button_press == 1 && drag_icon->position() == AbstractLauncherIcon::Position::FLOATING)
   {
     SetActionState(ACTION_DRAG_ICON);
     StartIconDrag(drag_icon);
@@ -2091,57 +2091,45 @@ void Launcher::UpdateDragWindowPosition(int x, int y)
 {
   if (_drag_window)
   {
-    nux::Geometry const& geo = _drag_window->GetGeometry();
+    auto const& geo = _drag_window->GetGeometry();
+    auto const& launcher_geo = GetGeometry();
     _drag_window->SetBaseXY(x - geo.width / 2, y - geo.height / 2);
 
-    AbstractLauncherIcon::Ptr hovered_icon = MouseIconIntersection((int)((GetGeometry().x + GetGeometry().width) / 2.0f), y - GetAbsoluteGeometry().y);
+    auto const& hovered_icon = MouseIconIntersection((launcher_geo.x + launcher_geo.width) / 2.0, y - GetAbsoluteY());
 
-    struct timespec current;
-    clock_gettime(CLOCK_MONOTONIC, &current);
-    if (_drag_icon && hovered_icon && _drag_icon != hovered_icon)
+    if (_drag_icon)
     {
+      struct timespec current;
+      clock_gettime(CLOCK_MONOTONIC, &current);
       float progress = DragThresholdProgress(current);
-/*
-      if (progress >= 1.0f)
-        _model->ReorderSmart(_drag_icon, hovered_icon, true);
-      else if (progress == 0.0f) {
-        if (_drag_icon->GetIconType() == hovered_icon->GetIconType()) {
+
+      if (hovered_icon && _drag_icon != hovered_icon)
+      {
+        if (progress >= 1.0f)
+        {
+          _model->ReorderSmart(_drag_icon, hovered_icon, true);
+        }
+        else if (progress == 0.0f)
+        {
           _model->ReorderBefore(_drag_icon, hovered_icon, false);
-        } else {
-          // LauncherModel::ReorderBefore does not work on different icon types
-          // so if hovered_icon is of a different type than _drag_icon
-          // try to use LauncherModel::ReorderAfter with the icon that is before hovered_icon
-          AbstractLauncherIcon::Ptr iconBeforeHover;
-          LauncherModel::iterator it;
-          LauncherModel::iterator prevIt = _model->end();
-          for (it = _model->begin(); it != _model->end(); it++)
+        }
+      }
+      else if (!hovered_icon && progress == 0.0f)
+      {
+        /* If no icon is hovered, then we can add our icon to the bottom */
+        for (auto it = _model->main_rbegin(); it != _model->main_rend(); ++it)
+        {
+          auto const& icon = *it;
+
+          if (!icon->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE) || !icon->IsVisibleOnMonitor(monitor))
+            continue;
+
+          if (y >= icon->GetCenter(monitor).y)
           {
-            if (!(*it)->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE) || !(*it)->IsVisibleOnMonitor(monitor))
-              continue;
-
-            if ((*it) == hovered_icon) {
-              if (prevIt != _model->end()) {
-                iconBeforeHover = *prevIt;
-              }
-              break;
-            }
-
-            prevIt = it;
-          }
-
-          if (iconBeforeHover && _drag_icon != iconBeforeHover) {
-            _model->ReorderAfter(_drag_icon, iconBeforeHover);
+            _model->ReorderAfter(_drag_icon, icon);
+            break;
           }
         }
-      }*/
-
-      if (progress >= 1.0f)
-      {
-        _model->ReorderSmart(_drag_icon, hovered_icon, true);
-      }
-      else if (progress == 0.0f)
-      {
-        _model->ReorderBefore(_drag_icon, hovered_icon, false);
       }
     }
   }
@@ -2640,6 +2628,7 @@ void Launcher::ProcessDndLeave()
 
 void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
 {
+  g_print("Processing drag at %dx%d\n",x,y);
   nux::Area* parent = GetToplevel();
   unity::glib::String uri_list_const(g_strdup("text/uri-list"));
 
@@ -2711,8 +2700,10 @@ void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
     if (hovered_icon->GetIconType() == AbstractLauncherIcon::IconType::TRASH)
       _steal_drag = false;
 
-    if (hovered_icon->GetIconType() == AbstractLauncherIcon::IconType::APPLICATION || hovered_icon->GetIconType() == AbstractLauncherIcon::IconType::EXPO)
-      hovered_icon_is_appropriate = true;
+    /*if (hovered_icon->GetIconType() == AbstractLauncherIcon::IconType::APPLICATION || hovered_icon->GetIconType() == AbstractLauncherIcon::IconType::EXPO)
+      hovered_icon_is_appropriate = true;*/
+      if (hovered_icon->position() == AbstractLauncherIcon::Position::FLOATING)
+        hovered_icon_is_appropriate = true;
   }
 
   if (_steal_drag)
