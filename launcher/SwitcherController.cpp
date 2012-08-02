@@ -223,7 +223,7 @@ void Controller::Hide(bool accept_state)
       }
       else
       {
-        if (selection->GetQuirk (AbstractLauncherIcon::QUIRK_ACTIVE) &&
+        if (selection->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE) &&
             !model_->DetailXids().empty ())
         {
           selection->Activate(ActionArg (ActionArg::SWITCHER, 0, model_->DetailXids()[0]));
@@ -411,10 +411,10 @@ bool Controller::CompareSwitcherItemsPriority(AbstractLauncherIcon::Ptr first,
   if (first->GetIconType() == second->GetIconType())
     return first->SwitcherPriority() > second->SwitcherPriority();
 
-  if (first->GetIconType() == AbstractLauncherIcon::IconType::TYPE_DESKTOP)
+  if (first->GetIconType() == AbstractLauncherIcon::IconType::DESKTOP)
     return true;
 
-  if (second->GetIconType() == AbstractLauncherIcon::IconType::TYPE_DESKTOP)
+  if (second->GetIconType() == AbstractLauncherIcon::IconType::DESKTOP)
     return false;
 
   return first->GetIconType() < second->GetIconType();

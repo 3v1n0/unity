@@ -336,8 +336,8 @@ private:
 
   BaseTexturePtr _emblem;
 
-  bool             _quirks[QUIRK_LAST];
-  struct timespec  _quirk_times[QUIRK_LAST];
+  bool             _quirks[unsigned(Quirk::LAST)];
+  struct timespec  _quirk_times[unsigned(Quirk::LAST)];
 
   std::list<LauncherEntryRemote::Ptr> _entry_list;
 
