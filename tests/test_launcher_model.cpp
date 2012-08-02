@@ -180,4 +180,47 @@ TEST_F(TestLauncherModel, TestReorderSmart)
   EXPECT_EQ(fourth, *it);
 }
 
+TEST_F(TestLauncherModel, TestOrderByPosition)
+{
+  AbstractLauncherIcon::Ptr first(new MockLauncherIcon());
+  AbstractLauncherIcon::Ptr second(new MockLauncherIcon());
+  AbstractLauncherIcon::Ptr third(new MockLauncherIcon());
+  AbstractLauncherIcon::Ptr fourth(new MockLauncherIcon());
+
+  first->position = AbstractLauncherIcon::Position::BEGIN;
+  second->position = AbstractLauncherIcon::Position::FLOATING;
+  third->position = AbstractLauncherIcon::Position::FLOATING;
+  fourth->position = AbstractLauncherIcon::Position::END;
+
+  model.AddIcon(third);
+  model.AddIcon(fourth);
+  model.AddIcon(second);
+  model.AddIcon(first);
+
+  auto it = model.begin();
+  EXPECT_EQ(first, *it);
+  it++;
+  EXPECT_EQ(third, *it);
+  it++;
+  EXPECT_EQ(second, *it);
+  it++;
+  EXPECT_EQ(fourth, *it);
+  it++;
+  EXPECT_EQ(it, model.end());
+
+  auto it_main = model.main_begin();
+  EXPECT_EQ(first, *it_main);
+  it_main++;
+  EXPECT_EQ(third, *it_main);
+  it_main++;
+  EXPECT_EQ(second, *it_main);
+  it_main++;
+  EXPECT_EQ(it_main, model.main_end());
+
+  auto it_shelf = model.shelf_begin();
+  EXPECT_EQ(fourth, *it_shelf);
+  it_shelf++;
+  EXPECT_EQ(it_shelf, model.shelf_end());
+}
+
 }
