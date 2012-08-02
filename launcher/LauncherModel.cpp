@@ -61,10 +61,10 @@ bool LauncherModel::IconShouldShelf(AbstractLauncherIcon::Ptr icon) const
 
 bool LauncherModel::CompareIcons(AbstractLauncherIcon::Ptr first, AbstractLauncherIcon::Ptr second)
 {
-  /*if (first->GetIconType() < second->GetIconType())
+  if (first->GetIconType() < second->GetIconType())
     return true;
   else if (first->GetIconType() > second->GetIconType())
-    return false;*/
+    return false;
 
   return first->SortPriority() < second->SortPriority();
 }
