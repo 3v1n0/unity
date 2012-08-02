@@ -106,10 +106,10 @@ LauncherIcon::LauncherIcon(IconType type)
   tooltip_text.SetSetterFunction(sigc::mem_fun(this, &LauncherIcon::SetTooltipText));
   tooltip_text = "blank";
 
+  position = Position::FLOATING;
+
   // FIXME: the abstraction is already broken, should be fixed for O
   // right now, hooking the dynamic quicklist the less ugly possible way
-
-
   mouse_enter.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseEnter));
   mouse_leave.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
   mouse_down.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));

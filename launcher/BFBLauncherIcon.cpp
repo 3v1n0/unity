@@ -39,6 +39,7 @@ BFBLauncherIcon::BFBLauncherIcon(LauncherHideMode hide_mode)
 {
   tooltip_text = _("Dash Home");
   icon_name = PKGDATADIR"/launcher_bfb.png";
+  position = Position::BEGIN;
   SetQuirk(Quirk::VISIBLE, true);
   SetQuirk(Quirk::RUNNING, false);
 

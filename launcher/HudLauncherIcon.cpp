@@ -44,6 +44,7 @@ HudLauncherIcon::HudLauncherIcon(LauncherHideMode hide_mode)
 {
   tooltip_text = _("HUD");
   icon_name = PKGDATADIR"/launcher_bfb.png";
+  position = Position::BEGIN;
   SetQuirk(Quirk::VISIBLE, false);
   SetQuirk(Quirk::RUNNING, false);
   SetQuirk(Quirk::ACTIVE, true);
