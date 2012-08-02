@@ -508,7 +508,7 @@ void Controller::Impl::OnFavoriteStoreFavoriteRemoved(std::string const& entry)
     {
       icon->UnStick();
       break;
-     }
+    }
   }
 }
 
