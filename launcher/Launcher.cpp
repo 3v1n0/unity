@@ -1056,14 +1056,15 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   last_geo = box_geo;
   _enter_y = 0;
 
+  
+  // logically dnd exit only restores to the clamped ranges
+  // hover_progress restores to 0
+  _launcher_drag_delta_max = 0.0f;
+  _launcher_drag_delta_min = MIN(0.0f, launcher_height - sum);
+
   if (hover_progress > 0.0f && _launcher_drag_delta != 0)
   {
     float delta_y = _launcher_drag_delta;
-
-    // logically dnd exit only restores to the clamped ranges
-    // hover_progress restores to 0
-    _launcher_drag_delta_max = 0.0f;
-    _launcher_drag_delta_min = MIN(0.0f, launcher_height - sum);
 
     if (_launcher_drag_delta > _launcher_drag_delta_max)
       delta_y = _launcher_drag_delta_max + DragLimiter(delta_y - _launcher_drag_delta_max);
