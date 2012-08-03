@@ -242,7 +242,7 @@ void
 MultiActionList::InitiateAll(CompOption::Vector& extraArgs, int state)
 {
   CompOption::Vector argument;
-  if (!m_ActionList.size())
+  if (m_ActionList.empty())
     return;
 
   argument.resize(1);
@@ -269,7 +269,7 @@ MultiActionList::TerminateAll(CompOption::Vector& extraArgs)
 {
   CompOption::Vector argument;
   CompOption::Value  value;
-  if (!m_ActionList.size())
+  if (m_ActionList.empty())
     return;
 
   argument.resize(1);
@@ -815,7 +815,7 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
 bool
 PluginAdapter::ScaleWindowGroup(std::vector<Window> windows, int state, bool force)
 {
-  if (windows.size() > 1 || (force && windows.size() > 0))
+  if (windows.size() > 1 || (force && !windows.empty()))
   {
     std::string match = MatchStringForXids(&windows);
     InitiateScale(match, state);
