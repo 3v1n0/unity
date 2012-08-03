@@ -427,7 +427,7 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
         self.workspace.switch_to(0)
         sleep(1)
         self.keyboard.press("Ctrl+Alt+Right")
-        self.addCleanup(self.keyboard.release, "Right+Alt+Ctrl")
+        self.addCleanup(self.keyboard.release, "Ctrl+Alt+Right")
         sleep(1)
         self.keybinding_hold_part_then_tap("switcher/reveal_normal")
         self.addCleanup(self.switcher.terminate)
