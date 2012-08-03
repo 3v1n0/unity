@@ -219,6 +219,7 @@ if (GTEST_SRC_DIR AND
                  test_im_text_entry.cpp
                  test_launcher_controller.cpp
                  test_keyboard_util.cpp
+                 test_panel_style.cpp
                  test_resultviewgrid.cpp
                  test_single_monitor_launcher_icon.cpp
                  test_switcher_controller.cpp
