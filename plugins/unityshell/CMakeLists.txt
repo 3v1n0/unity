@@ -5,7 +5,7 @@ include (CompizPlugin)
 set (COMPIZ_PLUGIN_INSTALL_TYPE "package")
 
 compiz_plugin (unityshell
-               PKGDEPS ${UNITY_PLUGIN_DEPS}
+               PKGDEPS "${UNITY_PLUGIN_DEPS};${UNITY_PROTOCOL_PRIVATE_DEPS}"
                PLUGINDEPS composite opengl compiztoolbox
                CFLAGSADD "-DINSTALLPREFIX='\"${CMAKE_INSTALL_PREFIX}\"' -DPKGDATADIR='\"${PKGDATADIR}\"' -I${CMAKE_BINARY_DIR} -I${CMAKE_SOURCE_DIR} ${BOOT_LOGGER_FLAG} -DGETTEXT_PACKAGE='\"unity\"' ${MAINTAINER_CFLAGS} -I${CMAKE_SOURCE_DIR}/dash/ -I${CMAKE_SOURCE_DIR}/launcher/ -I${CMAKE_SOURCE_DIR}/hud/ -I${CMAKE_SOURCE_DIR}/panel/ -I${CMAKE_SOURCE_DIR}/shortcuts/ -I${CMAKE_SOURCE_DIR}/unity-shared/"
                LIBDIRS "${CMAKE_BINARY_DIR}/UnityCore"
