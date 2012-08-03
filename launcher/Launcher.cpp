@@ -944,7 +944,7 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr icon,
 
   // FIXME: this is a hack, we should have a look why SetAnimationTarget is necessary in SetAnimationTarget
   // we should ideally just need it at start to set the target
-  if (!_initial_drag_animation && icon == _drag_icon && _drag_window && _drag_window->Animating())
+  if (icon == _drag_icon && _drag_window && _drag_window->Animating())
     _drag_window->SetAnimationTarget(static_cast<int>(_drag_icon->GetCenter(monitor).x),
                                      static_cast<int>(_drag_icon->GetCenter(monitor).y));
 
@@ -1977,7 +1977,7 @@ void Launcher::OnDragWindowAnimCompleted()
   EnsureAnimation();
 }
 
-bool Launcher::StartIconDragTimeout()
+bool Launcher::StartIconDragTimeout(int x, int y)
 {
   // if we are still waiting…
   if (GetActionState() == ACTION_NONE)
@@ -1987,8 +1987,7 @@ bool Launcher::StartIconDragTimeout()
       _icon_under_mouse->mouse_leave.emit(monitor);
       _icon_under_mouse = nullptr;
     }
-    _initial_drag_animation = true;
-    StartIconDragRequest(GetMouseX(), GetMouseY());
+    StartIconDragRequest(x, y);
   }
 
   return false;
@@ -1996,12 +1995,8 @@ bool Launcher::StartIconDragTimeout()
 
 void Launcher::StartIconDragRequest(int x, int y)
 {
-  nux::Geometry geo = GetAbsoluteGeometry();
-  AbstractLauncherIcon::Ptr drag_icon = MouseIconIntersection((int)(GetGeometry().width / 2.0f), y);
-
-  x += geo.x;
-  y += geo.y;
-
+  nux::Geometry const& abs_geo = GetAbsoluteGeometry();
+  AbstractLauncherIcon::Ptr drag_icon = MouseIconIntersection(abs_geo.width / 2.0f, y);
 
   // FIXME: nux doesn't give nux::GetEventButton (button_flags) there, relying
   // on an internal Launcher property then
@@ -2009,12 +2004,7 @@ void Launcher::StartIconDragRequest(int x, int y)
   {
     SetActionState(ACTION_DRAG_ICON);
     StartIconDrag(drag_icon);
-    UpdateDragWindowPosition(drag_icon->GetCenter(monitor).x, drag_icon->GetCenter(monitor).y);
-    if (_initial_drag_animation)
-    {
-      _drag_window->SetAnimationTarget(x, y);
-      _drag_window->StartAnimation();
-    }
+    UpdateDragWindowPosition(abs_geo.x + x, abs_geo.y + y);
     EnsureAnimation();
   }
   else
@@ -2178,9 +2168,6 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
 
   SetMousePosition(x, y);
 
-  // FIXME: hack (see SetupRenderArg)
-  _initial_drag_animation = false;
-
   _dnd_delta_y += dy;
   _dnd_delta_x += dx;
 
@@ -2205,7 +2192,9 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
     }
     else
     {
-      StartIconDragRequest(x, y);
+      // We we can safely start the icon drag, from the original down position
+      sources_.Remove(START_DRAGICON_DURATION);
+      StartIconDragRequest(x - _dnd_delta_x, y - _dnd_delta_y);
     }
   }
   else if (GetActionState() == ACTION_DRAG_LAUNCHER)
@@ -2215,7 +2204,7 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
   }
   else if (GetActionState() == ACTION_DRAG_ICON)
   {
-    nux::Geometry geo = GetAbsoluteGeometry();
+    nux::Geometry const& geo = GetAbsoluteGeometry();
     UpdateDragWindowPosition(geo.x + x, geo.y + y);
   }
 
@@ -2412,7 +2401,7 @@ void Launcher::MouseDownLogic(int x, int y, unsigned long button_flags, unsigned
   {
     _icon_mouse_down = launcher_icon;
     // if MouseUp after the time ended -> it's an icon drag, otherwise, it's starting an app
-    auto cb_func = sigc::mem_fun(this, &Launcher::StartIconDragTimeout);
+    auto cb_func = sigc::bind(sigc::mem_fun(this, &Launcher::StartIconDragTimeout), x, y);
     sources_.AddTimeout(START_DRAGICON_DURATION, cb_func, START_DRAGICON_TIMEOUT);
 
     launcher_icon->mouse_down.emit(nux::GetEventButton(button_flags), monitor, key_flags);
@@ -2628,7 +2617,6 @@ void Launcher::ProcessDndLeave()
 
 void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
 {
-  g_print("Processing drag at %dx%d\n",x,y);
   nux::Area* parent = GetToplevel();
   unity::glib::String uri_list_const(g_strdup("text/uri-list"));
 
@@ -2700,10 +2688,8 @@ void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
     if (hovered_icon->GetIconType() == AbstractLauncherIcon::IconType::TRASH)
       _steal_drag = false;
 
-    /*if (hovered_icon->GetIconType() == AbstractLauncherIcon::IconType::APPLICATION || hovered_icon->GetIconType() == AbstractLauncherIcon::IconType::EXPO)
-      hovered_icon_is_appropriate = true;*/
-      if (hovered_icon->position() == AbstractLauncherIcon::Position::FLOATING)
-        hovered_icon_is_appropriate = true;
+    if (hovered_icon->position() == AbstractLauncherIcon::Position::FLOATING)
+      hovered_icon_is_appropriate = true;
   }
 
   if (_steal_drag)
