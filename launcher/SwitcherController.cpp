@@ -74,8 +74,7 @@ bool Controller::CanShowSwitcher(const std::vector<AbstractLauncherIcon::Ptr>& r
 {
   bool empty = (show_desktop_disabled_ ? results.empty() : results.size() == 1);
 
-  return (!empty &&
-          !WindowManager::Default()->IsWallActive());
+  return (!empty && !WindowManager::Default()->IsWallActive());
 }
 
 void Controller::Show(ShowMode show, SortMode sort, bool reverse,
