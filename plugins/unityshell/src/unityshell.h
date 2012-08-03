@@ -245,6 +245,7 @@ private:
   FontSettings   font_settings_;
   GeisAdapter    geis_adapter_;
   internal::FavoriteStoreGSettings favorite_store_;
+  ThumbnailGenerator thumbnail_generator_;
 
   /* The window thread should be the last thing removed, as c++ does it in reverse order */
   std::unique_ptr<nux::WindowThread> wt;

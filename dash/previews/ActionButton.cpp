@@ -164,7 +164,7 @@ long ActionButton::ComputeContentSize()
 
   nux::Geometry const& geo = GetGeometry();
 
-  if (cached_geometry_ != geo)
+  if (cached_geometry_ != geo && geo.width > 0 && geo.height > 0)
   {
     if (cr_prelight_) cr_prelight_->Invalidate(geo);
     if (cr_active_) cr_active_->Invalidate(geo);

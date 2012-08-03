@@ -307,7 +307,7 @@ long ApplicationPreview::ComputeContentSize()
 
   for (nux::AbstractButton* button : action_buttons_)
   {
-    button->SetMinMaxSize(MIN((details_width - style.GetSpaceBetweenActions()) / 2, style.GetActionButtonMaximumWidth()), style.GetActionButtonHeight());
+    button->SetMinMaxSize(CLAMP((details_width - style.GetSpaceBetweenActions()) / 2, 0, style.GetActionButtonMaximumWidth()), style.GetActionButtonHeight());
   }
 
   image_->ComputeContentSize();
