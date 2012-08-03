@@ -500,6 +500,15 @@ void UnityScreen::nuxPrologue()
 
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
+
+  /* This is needed to Fix a crash in glDrawArrays with the NVIDIA driver
+   * see bugs #1031554 and #982626.
+   * The NVIDIA driver looks to see if the legacy GL_VERTEX_ARRAY,
+   * GL_TEXTURE_COORDINATES_ARRAY and other such client states are enabled
+   * first before checking if a vertex buffer is bound and will prefer the
+   * client buffers over the the vertex buffer object. */
+  glDisableClientState(GL_VERTEX_ARRAY);
+  glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 #endif
 
   glGetError();
@@ -529,6 +538,11 @@ void UnityScreen::nuxEpilogue()
   glReadBuffer(GL_BACK);
 
   glPopAttrib();
+
+  /* Re-enable the client states that have been disabled in nuxPrologue, for
+   * NVIDIA compatibility reasons */
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 #else
 #ifdef USE_GLES
   glDepthRangef(0, 1);
