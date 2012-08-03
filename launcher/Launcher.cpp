@@ -465,7 +465,7 @@ bool Launcher::AnimationInProgress() const
 
   // animations happening on specific icons
   LauncherModel::iterator it;
-  for (it = _model->begin(); it != _model->end(); it++)
+  for (it = _model->begin(); it != _model->end(); ++it)
     if (IconNeedsAnimation(*it, current))
       return true;
 
@@ -989,7 +989,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   // compute required height of launcher AND folding threshold
   float sum = 0.0f + center.y;
   float folding_threshold = launcher_height - _icon_size / 2.5f;
-  for (it = _model->begin(); it != _model->end(); it++)
+  for (it = _model->begin(); it != _model->end(); ++it)
   {
     float height = (_icon_size + _space_between_icons) * IconVisibleProgress(*it, current);
     sum += height;
@@ -1098,7 +1098,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   // wont start jumping around).  As a general rule ANY if () statements that modify center.y should be seen
   // as bugs.
   int index = 1;
-  for (it = _model->main_begin(); it != _model->main_end(); it++)
+  for (it = _model->main_begin(); it != _model->main_end(); ++it)
   {
     RenderArg arg;
     AbstractLauncherIcon::Ptr icon = *it;
@@ -1112,7 +1112,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
 
   // compute maximum height of shelf
   float shelf_sum = 0.0f;
-  for (it = _model->shelf_begin(); it != _model->shelf_end(); it++)
+  for (it = _model->shelf_begin(); it != _model->shelf_end(); ++it)
   {
     float height = (_icon_size + _space_between_icons) * IconVisibleProgress(*it, current);
     shelf_sum += height;
@@ -1126,7 +1126,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   folding_threshold += shelf_delta;
   center.y += shelf_delta;
 
-  for (it = _model->shelf_begin(); it != _model->shelf_end(); it++)
+  for (it = _model->shelf_begin(); it != _model->shelf_end(); ++it)
   {
     RenderArg arg;
     AbstractLauncherIcon::Ptr icon = *it;
@@ -1900,7 +1900,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   EventLogic();
 
   /* draw launcher */
-  for (rev_it = args.rbegin(); rev_it != args.rend(); rev_it++)
+  for (rev_it = args.rbegin(); rev_it != args.rend(); ++rev_it)
   {
     if ((*rev_it).stick_thingy)
       gPainter.Paint2DQuadColor(GfxContext,
@@ -2106,7 +2106,7 @@ void Launcher::UpdateDragWindowPosition(int x, int y)
           AbstractLauncherIcon::Ptr iconBeforeHover;
           LauncherModel::iterator it;
           LauncherModel::iterator prevIt = _model->end();
-          for (it = _model->begin(); it != _model->end(); it++)
+          for (it = _model->begin(); it != _model->end(); ++it)
           {
             if (!(*it)->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE) || !(*it)->IsVisibleOnMonitor(monitor))
               continue;
@@ -2450,7 +2450,7 @@ AbstractLauncherIcon::Ptr Launcher::MouseIconIntersection(int x, int y)
   nux::Point2 mouse_position(x, y);
   int inside = 0;
 
-  for (it = _model->begin(); it != _model->end(); it++)
+  for (it = _model->begin(); it != _model->end(); ++it)
   {
     if (!(*it)->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE) || !(*it)->IsVisibleOnMonitor(monitor))
       continue;

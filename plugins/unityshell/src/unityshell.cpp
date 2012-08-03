@@ -1211,7 +1211,7 @@ bool UnityScreen::shellCouldBeHidden(CompOutput const& output)
   CompWindowList const& wins = screen->windows();
   for ( CompWindowList::const_reverse_iterator r = wins.rbegin()
       ; r != wins.rend()
-      ; r++
+      ; ++r
       )
   {
     CompWindow* w = *r;
@@ -1309,10 +1309,9 @@ void UnityScreen::glPaintCompositedOutput (const CompRegion &region,
                                            ::GLFramebufferObject *fbo,
                                            unsigned int        mask)
 {
-  bool useFbo = false;
-
   if (doShellRepaint)
   {
+    bool useFbo = false;
     oldFbo = fbo->bind ();
     useFbo = fbo->checkStatus () && fbo->tex ();
     if (!useFbo) {
@@ -2167,10 +2166,9 @@ bool UnityScreen::ShowHudInitiate(CompAction* action,
 {
   // Look to see if there is a keycode.  If there is, then this isn't a
   // modifier only keybinding.
-  int key_code = 0;
   if (options[6].type() != CompOption::TypeUnset)
   {
-    key_code = options[6].value().i();
+    int key_code = options[6].value().i();
     LOG_DEBUG(logger) << "HUD initiate key code: " << key_code;
     // show it now, no timings or terminate needed.
     return ShowHud();
