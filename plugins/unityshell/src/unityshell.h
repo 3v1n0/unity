@@ -190,7 +190,10 @@ public:
 
   bool forcePaintOnTop ();
 
-  nux::View *LauncherView();
+  void SetUpAndShowSwitcher(switcher::ShowMode show_mode = switcher::ShowMode::CURRENT_VIEWPORT);
+
+  switcher::Controller::Ptr switcher_controller();
+  launcher::Controller::Ptr launcher_controller();
 
 protected:
   std::string GetName() const;

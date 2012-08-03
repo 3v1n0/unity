@@ -77,6 +77,8 @@ SwitcherView::SwitcherView()
 
   icon_size.changed.connect (sigc::mem_fun (this, &SwitcherView::OnIconSizeChanged));
   tile_size.changed.connect (sigc::mem_fun (this, &SwitcherView::OnTileSizeChanged));
+
+  CaptureMouseDownAnyWhereElse(true);
 }
 
 std::string SwitcherView::GetName() const
@@ -634,6 +636,36 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
   }
 
   animation_draw_ = false;
+}
+
+int SwitcherView::IconIndexAt(int x, int y)
+{
+  int half_size = icon_size.Get() / 2;
+  int icon_index = -1;
+
+  //TODO: Consider icon rotation
+
+  int i = 0;
+  for (auto arg : last_args_)
+  {
+    if (x < (arg.logical_center.x - half_size)
+        || x > (arg.logical_center.x + half_size))
+    {
+      ++i;
+    }
+    else if (y < (arg.logical_center.y - half_size)
+          || y > (arg.logical_center.y + half_size))
+    {
+      ++i;
+    }
+    else
+    {
+      icon_index = i;
+      break;
+    }
+  }
+
+  return icon_index;
 }
 
 }

@@ -24,6 +24,7 @@
 
 #include <Nux/Nux.h> // otherwise unityshell.h inclusion will cause failures
 #include "unityshell.h"
+#include "Launcher.h"
 
 #include "UBusMessages.h"
 #include "ubus-server.h"
@@ -32,7 +33,7 @@ using namespace nux;
 
 UnityGestureTarget::UnityGestureTarget()
 {
-  launcher = unity::UnityScreen::get(screen)->LauncherView();
+  launcher = &unity::UnityScreen::get(screen)->launcher_controller()->launcher();
 }
 
 GestureDeliveryRequest UnityGestureTarget::GestureEvent(const nux::GestureEvent &event)

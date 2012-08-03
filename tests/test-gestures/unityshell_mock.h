@@ -5,6 +5,9 @@
 #include <sigc++/sigc++.h>
 #include <NuxMock.h>
 
+#include "SwitcherControllerMock.h"
+#include "LauncherControllerMock.h"
+
 namespace unity
 {
 
@@ -24,13 +27,20 @@ class UnityScreenMock : public CompScreenMock
 {
   public:
   UnityScreenMock()
-    : launcher_(new nux::InputAreaMock)
   {
+    launcher_controller_ = std::make_shared<launcher::ControllerMock>();
+    switcher_controller_ = std::make_shared<switcher::ControllerMock>();
+    Reset();
+  }
+
+  void Reset()
+  {
+    SetUpAndShowSwitcher_count_ = 0;
+    switcher_controller_->Reset();
   }
 
   virtual ~UnityScreenMock()
   {
-    launcher_->Dispose();
   }
 
   static UnityScreenMock *get(CompScreenMock *screen)
@@ -39,12 +49,25 @@ class UnityScreenMock : public CompScreenMock
 
   }
 
-  nux::InputAreaMock *LauncherView()
+  void SetUpAndShowSwitcher()
   {
-    return launcher_;
+    ++SetUpAndShowSwitcher_count_;
+    switcher_controller_->is_visible_ = true;
   }
 
-  nux::InputAreaMock *launcher_;
+  switcher::ControllerMock::Ptr switcher_controller()
+  {
+    return switcher_controller_;
+  }
+
+  launcher::ControllerMock::Ptr launcher_controller()
+  {
+    return launcher_controller_;
+  }
+
+  switcher::ControllerMock::Ptr switcher_controller_;
+  launcher::ControllerMock::Ptr launcher_controller_;
+  int SetUpAndShowSwitcher_count_;
 };
 
 } // namespace unity
