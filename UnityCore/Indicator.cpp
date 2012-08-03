@@ -64,7 +64,7 @@ void Indicator::Sync(Indicator::Entries const& new_entries)
 {
   Entries to_rm;
 
-  if (entries_.size() == 0)
+  if (entries_.empty())
   {
     to_rm = entries_;
   }
