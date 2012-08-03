@@ -2005,12 +2005,13 @@ void Launcher::StartIconDragRequest(int x, int y)
   // on an internal Launcher property then
   if (drag_icon && _last_button_press == 1 && drag_icon->position() == AbstractLauncherIcon::Position::FLOATING)
   {
+    auto const& icon_center = drag_icon->GetCenter(monitor);
     x += abs_geo.x;
     y += abs_geo.y;
 
     SetActionState(ACTION_DRAG_ICON);
     StartIconDrag(drag_icon);
-    UpdateDragWindowPosition(x, y);
+    UpdateDragWindowPosition(icon_center.x, icon_center.y);
 
     if (_initial_drag_animation)
     {
