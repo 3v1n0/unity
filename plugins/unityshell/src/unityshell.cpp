@@ -500,6 +500,15 @@ void UnityScreen::nuxPrologue()
 
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
+
+  /* This is needed to Fix a crash in glDrawArrays with the NVIDIA driver
+   * see bugs #1031554 and #982626.
+   * The NVIDIA driver looks to see if the legacy GL_VERTEX_ARRAY,
+   * GL_TEXTURE_COORDINATES_ARRAY and other such client states are enabled
+   * first before checking if a vertex buffer is bound and will prefer the
+   * client buffers over the the vertex buffer object. */
+  glDisableClientState(GL_VERTEX_ARRAY);
+  glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 #endif
 
   glGetError();
@@ -529,6 +538,11 @@ void UnityScreen::nuxEpilogue()
   glReadBuffer(GL_BACK);
 
   glPopAttrib();
+
+  /* Re-enable the client states that have been disabled in nuxPrologue, for
+   * NVIDIA compatibility reasons */
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 #else
 #ifdef USE_GLES
   glDepthRangef(0, 1);
@@ -1211,7 +1225,7 @@ bool UnityScreen::shellCouldBeHidden(CompOutput const& output)
   CompWindowList const& wins = screen->windows();
   for ( CompWindowList::const_reverse_iterator r = wins.rbegin()
       ; r != wins.rend()
-      ; r++
+      ; ++r
       )
   {
     CompWindow* w = *r;
@@ -1309,10 +1323,9 @@ void UnityScreen::glPaintCompositedOutput (const CompRegion &region,
                                            ::GLFramebufferObject *fbo,
                                            unsigned int        mask)
 {
-  bool useFbo = false;
-
   if (doShellRepaint)
   {
+    bool useFbo = false;
     oldFbo = fbo->bind ();
     useFbo = fbo->checkStatus () && fbo->tex ();
     if (!useFbo) {
@@ -2167,10 +2180,9 @@ bool UnityScreen::ShowHudInitiate(CompAction* action,
 {
   // Look to see if there is a keycode.  If there is, then this isn't a
   // modifier only keybinding.
-  int key_code = 0;
   if (options[6].type() != CompOption::TypeUnset)
   {
-    key_code = options[6].value().i();
+    int key_code = options[6].value().i();
     LOG_DEBUG(logger) << "HUD initiate key code: " << key_code;
     // show it now, no timings or terminate needed.
     return ShowHud();
@@ -3082,6 +3094,7 @@ void UnityScreen::InitHints()
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", " + A", _("Open the Dash App Lens."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", " + F", _("Open the Dash Files Lens."), shortcut::COMPIZ_KEY_OPTION,"unityshell", "show_launcher"));
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", " + M", _("Open the Dash Music Lens."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
+  hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", " + V", _("Open the Dash Video Lens."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", "", _("Switches between Lenses."), shortcut::HARDCODED_OPTION, _("Ctrl + Tab")));
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", "", _("Moves the focus."), shortcut::HARDCODED_OPTION, _("Cursor Keys")));
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", "", _("Open currently focused item."), shortcut::HARDCODED_OPTION, _("Enter & Return")));
