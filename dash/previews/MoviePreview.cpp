@@ -156,7 +156,11 @@ void MoviePreview::SetupView()
   image_data_layout->SetSpaceBetweenChildren(style.GetPanelSplitWidth());
 
   CoverArt* image = new CoverArt();
-  image->SetImage(preview_model_->image.Get().RawPtr() ? g_icon_to_string(preview_model_->image.Get().RawPtr()) : "");
+  std::string image_hint = preview_model_->image.Get().RawPtr() ? g_icon_to_string(preview_model_->image.Get().RawPtr()) : "";
+  if (image_hint != "")
+    image->SetImage(image_hint);
+  else
+    image->GenerateImage(preview_model_->image_source_uri);
   image->SetFont(style.no_preview_image_font());
 
     /////////////////////

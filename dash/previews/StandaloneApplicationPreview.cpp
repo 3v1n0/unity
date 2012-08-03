@@ -33,6 +33,7 @@
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/DashStyle.h"
+#include "unity-shared/ThumbnailGenerator.h"
 
 #include "Preview.h"
 #include "PreviewContainer.h"
@@ -158,14 +159,13 @@ void TestRunner::Init ()
 The service allows users to communicate with peers by voice, video, and instant messaging over the Internet. Phone calls may be placed to recipients on the traditional telephone networks. Calls to other users within the Skype service are free of charge, while calls to landline telephones and mobile phones are charged via a debit-based user account system.";
 
  // creates a generic preview object
-  glib::Object<GIcon> icon(g_icon_new_for_string("accessories", NULL));
   glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/5/lens-nav-music.svg", NULL));
   glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/5/lens-nav-home.svg", NULL));
   glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/5/lens-nav-people.svg", NULL));
 
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_application_preview_new()));
 
-  unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string("~/SkypeIcon.png", NULL));
+  unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string("/home/nick/SkypeIcon.png", NULL));
   unity_protocol_application_preview_set_license(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "Proprietary");
   unity_protocol_application_preview_set_copyright(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "(c) Skype 2012");
   unity_protocol_application_preview_set_last_update(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "11th Apr 2012");
@@ -173,11 +173,10 @@ The service allows users to communicate with peers by voice, video, and instant 
   unity_protocol_application_preview_set_num_ratings(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 17);
 
 
-  unity_protocol_preview_set_image(proto_obj, g_icon_new_for_string("~/Skype.png", NULL));
+  unity_protocol_preview_set_image_source_uri(proto_obj, "file:///home/nick/Skype.png");
   unity_protocol_preview_set_title(proto_obj, app_name.str().c_str());
   unity_protocol_preview_set_subtitle(proto_obj, subtitle);
   unity_protocol_preview_set_description(proto_obj, description);
-  unity_protocol_preview_set_image(proto_obj, icon);
   unity_protocol_preview_add_action(proto_obj, "uninstall", "Uninstall", iconHint1, 0);
   unity_protocol_preview_add_action(proto_obj, "launch", "Launch", iconHint2, 0);
   unity_protocol_preview_add_info_hint(proto_obj, "time", "Total time", iconHint1, g_variant_new("s", "16 h 34miin 45sec"));
@@ -194,7 +193,7 @@ The service allows users to communicate with peers by voice, video, and instant 
 
 void TestRunner::NavRight()
 {
-   std::stringstream app_name;
+  std::stringstream app_name;
   app_name << "Title " << ++nav_iter;
 
   const char* subtitle = "Version 3.2, Size 32 MB";
@@ -202,7 +201,6 @@ void TestRunner::NavRight()
 The service allows users to communicate with peers by voice, video, and instant messaging over the Internet. Phone calls may be placed to recipients on the traditional telephone networks. Calls to other users within the Skype service are free of charge, while calls to landline telephones and mobile phones are charged via a debit-based user account system.";
 
  // creates a generic preview object
-  glib::Object<GIcon> icon(g_icon_new_for_string("accessories", NULL));
   glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/5/lens-nav-music.svg", NULL));
   glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/5/lens-nav-home.svg", NULL));
   glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/5/lens-nav-people.svg", NULL));
@@ -211,18 +209,17 @@ The service allows users to communicate with peers by voice, video, and instant 
 
   
 
-  unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string("SkypeIcon.png", NULL));
+  unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string("/home/nick/SkypeIcon.png", NULL));
   unity_protocol_application_preview_set_license(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "Proprietary");
   unity_protocol_application_preview_set_copyright(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "(c) Skype 2012");
   unity_protocol_application_preview_set_last_update(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "11th Apr 2012");
   unity_protocol_application_preview_set_rating(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 0.25);
   unity_protocol_application_preview_set_num_ratings(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 5);
 
-  unity_protocol_preview_set_image(proto_obj, g_icon_new_for_string("Skype.png", NULL));
+  unity_protocol_preview_set_image_source_uri(proto_obj, "file:///home/nick/Skype.png");
   unity_protocol_preview_set_title(proto_obj, app_name.str().c_str());
   unity_protocol_preview_set_subtitle(proto_obj, subtitle);
   unity_protocol_preview_set_description(proto_obj, description);
-  unity_protocol_preview_set_image(proto_obj, icon);
   unity_protocol_preview_add_action(proto_obj, "uninstall", "Uninstall", iconHint1, 0);
   unity_protocol_preview_add_action(proto_obj, "launch", "Launch", iconHint2, 0);
   unity_protocol_preview_add_info_hint(proto_obj, "time", "Total time", iconHint1, g_variant_new("s", "16 h 34miin 45sec"));
@@ -238,7 +235,7 @@ The service allows users to communicate with peers by voice, video, and instant 
 
 void TestRunner::NavLeft()
 {
-   std::stringstream app_name;
+  std::stringstream app_name;
   app_name << "Title " << --nav_iter;
 
   const char* subtitle = "Version 3.2, Size 32 MB";
@@ -246,7 +243,6 @@ void TestRunner::NavLeft()
 The service allows users to communicate with peers by voice, video, and instant messaging over the Internet. Phone calls may be placed to recipients on the traditional telephone networks. Calls to other users within the Skype service are free of charge, while calls to landline telephones and mobile phones are charged via a debit-based user account system.";
 
  // creates a generic preview object
-  glib::Object<GIcon> icon(g_icon_new_for_string("accessories", NULL));
   glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/5/lens-nav-music.svg", NULL));
   glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/5/lens-nav-home.svg", NULL));
   glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/5/lens-nav-people.svg", NULL));
@@ -254,18 +250,17 @@ The service allows users to communicate with peers by voice, video, and instant 
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_application_preview_new()));
 
 
-  unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string("SkypeIcon.png", NULL));
+  unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string("/home/nick/SkypeIcon.png", NULL));
   unity_protocol_application_preview_set_license(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "Proprietary");
   unity_protocol_application_preview_set_copyright(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "(c) Skype 2012");
   unity_protocol_application_preview_set_last_update(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "11th Apr 2012");
   unity_protocol_application_preview_set_rating(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 0.8);
   unity_protocol_application_preview_set_num_ratings(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 1223);
 
-  unity_protocol_preview_set_image(proto_obj, g_icon_new_for_string("Skype.png", NULL));
+  unity_protocol_preview_set_image_source_uri(proto_obj, "file:///home/nick/Skype.png");
   unity_protocol_preview_set_title(proto_obj, app_name.str().c_str());
   unity_protocol_preview_set_subtitle(proto_obj, subtitle);
   unity_protocol_preview_set_description(proto_obj, description);
-  unity_protocol_preview_set_image(proto_obj, icon);
   unity_protocol_preview_add_action(proto_obj, "uninstall", "Uninstall", iconHint1, 0);
   unity_protocol_preview_add_action(proto_obj, "launch", "Launch", iconHint2, 0);
   unity_protocol_preview_add_info_hint(proto_obj, "time", "Total time", iconHint1, g_variant_new("s", "16 h 34miin 45sec"));
@@ -298,6 +293,7 @@ int main(int argc, char **argv)
   unity::Settings settings;
   unity::dash::previews::Style panel_style;
   unity::dash::Style dash_style;
+  unity::ThumbnailGenerator thumbnail_generator;
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Unity Preview"),

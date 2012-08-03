@@ -33,10 +33,11 @@
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/DashStyle.h"
+#include "unity-shared/ThumbnailGenerator.h"
 
 #include "Preview.h"
 #include "PreviewContainer.h"
-#include "StandaloneDBusTestRunner.h"
+#include "LensDBusTestRunner.h"
 
 
 #define WIDTH 972
@@ -118,7 +119,7 @@ protected:
   LayerPtr bg_layer_;
 };
 
-class TestRunner :  public previews::StandaloneDBusTestRunner 
+class TestRunner :  public previews::LensDBusTestRunner 
 {
 public:
   TestRunner(std::string const& search_string);
@@ -138,7 +139,7 @@ public:
 };
 
 TestRunner::TestRunner (std::string const& search_string)
-: StandaloneDBusTestRunner("com.canonical.Unity.Lens.Music","/com/canonical/unity/lens/music")
+: LensDBusTestRunner("com.canonical.Unity.Lens.Files","/com/canonical/unity/lens/files", "com.canonical.Unity.Lens")
 , search_string_(search_string)
 , first_(true)
 {
@@ -251,6 +252,7 @@ int main(int argc, char **argv)
   unity::Settings settings;
   unity::dash::previews::Style panel_style;
   unity::dash::Style dash_style;
+  unity::ThumbnailGenerator thumbnail_generator;
 
   TestRunner *test_runner = new TestRunner (argv[1]);
   wt = nux::CreateGUIThread(TEXT("Unity Preview"),

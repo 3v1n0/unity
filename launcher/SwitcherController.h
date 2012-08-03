@@ -92,6 +92,10 @@ public:
 
   guint GetSwitcherInputWindowId() const;
 
+  bool IsShowDesktopDisabled() const;
+  void SetShowDesktopDisabled(bool disabled);
+  int StartIndex() const;
+
 protected:
   // Introspectable methods
   std::string GetName() const;
@@ -126,6 +130,7 @@ private:
 
   int monitor_;
   bool visible_;
+  bool show_desktop_disabled_;
   nux::Color bg_color_;
   DetailMode detail_mode_;
 

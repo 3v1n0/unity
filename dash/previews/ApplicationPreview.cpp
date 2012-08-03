@@ -150,12 +150,15 @@ void ApplicationPreview::SetupViews()
 
   previews::Style& style = dash::previews::Style::Instance();
 
-
   nux::HLayout* image_data_layout = new nux::HLayout();
   image_data_layout->SetSpaceBetweenChildren(style.GetPanelSplitWidth());
 
   image_ = new CoverArt();
-  image_->SetImage(preview_model_->image.Get().RawPtr() ? g_icon_to_string(preview_model_->image.Get().RawPtr()) : "");
+  std::string image_hint = preview_model_->image.Get().RawPtr() ? g_icon_to_string(preview_model_->image.Get().RawPtr()) : "";
+  if (image_hint != "")
+    image_->SetImage(image_hint);
+  else
+    image_->GenerateImage(preview_model_->image_source_uri);
   image_->SetFont(style.no_preview_image_font());
 
     /////////////////////
