@@ -29,6 +29,7 @@
 #include <NuxCore/Logger.h>
 
 #include <NuxGraphics/NuxGraphics.h>
+#include <NuxGraphics/GestureEvent.h>
 #include <NuxGraphics/GpuDevice.h>
 #include <NuxGraphics/GLTextureResourceManager.h>
 
@@ -136,8 +137,8 @@ Launcher::Launcher(nux::BaseWindow* parent,
   , _launcher_drag_delta_min(0)
   , _enter_y(0)
   , _last_button_press(0)
-  , _drag_out_id(0)
   , _drag_out_delta_x(0.0f)
+  , _drag_gesture_ongoing(false)
   , _last_reveal_progress(0.0f)
   , _collection_window(collection_window)
   , _selection_atom(0)
@@ -185,11 +186,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   plugin_adapter.terminate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   plugin_adapter.compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &Launcher::EnsureAnimation));
 
-  GeisAdapter& adapter = GeisAdapter::Instance();
-  adapter.drag_start.connect(sigc::mem_fun(this, &Launcher::OnDragStart));
-  adapter.drag_update.connect(sigc::mem_fun(this, &Launcher::OnDragUpdate));
-  adapter.drag_finish.connect(sigc::mem_fun(this, &Launcher::OnDragFinish));
-
   display.changed.connect(sigc::mem_fun(this, &Launcher::OnDisplayChanged));
 
   // 0 out timers to avoid wonky startups
@@ -233,45 +229,39 @@ void Launcher::OnDisplayChanged(Display* display)
   _collection_window->display = display;
 }
 
-void Launcher::OnDragStart(GeisAdapter::GeisDragData* data)
+void
+Launcher::OnDragStart(const nux::GestureEvent &event)
 {
-  if (_drag_out_id && _drag_out_id == data->id)
-    return;
-
-  if (data->touches == 4)
+  _drag_gesture_ongoing = true;
+  if (_hidden)
   {
-    _drag_out_id = data->id;
-    if (_hidden)
-    {
-      _drag_out_delta_x = 0.0f;
-    }
-    else
-    {
-      _drag_out_delta_x = DRAG_OUT_PIXELS;
-      _hide_machine.SetQuirk(LauncherHideMachine::MT_DRAG_OUT, false);
-    }
+    _drag_out_delta_x = 0.0f;
+  }
+  else
+  {
+    _drag_out_delta_x = DRAG_OUT_PIXELS;
+    _hide_machine.SetQuirk(LauncherHideMachine::MT_DRAG_OUT, false);
   }
 }
 
-void Launcher::OnDragUpdate(GeisAdapter::GeisDragData* data)
+void
+Launcher::OnDragUpdate(const nux::GestureEvent &event)
 {
-  if (data->id == _drag_out_id)
-  {
-    _drag_out_delta_x = CLAMP(_drag_out_delta_x + data->delta_x, 0.0f, DRAG_OUT_PIXELS);
-    EnsureAnimation();
-  }
+  _drag_out_delta_x =
+    CLAMP(_drag_out_delta_x + event.GetDelta().x, 0.0f, DRAG_OUT_PIXELS);
+  EnsureAnimation();
 }
 
-void Launcher::OnDragFinish(GeisAdapter::GeisDragData* data)
+void
+Launcher::OnDragFinish(const nux::GestureEvent &event)
 {
-  if (data->id == _drag_out_id)
-  {
-    if (_drag_out_delta_x >= DRAG_OUT_PIXELS - 90.0f)
-      _hide_machine.SetQuirk(LauncherHideMachine::MT_DRAG_OUT, true);
-    TimeUtil::SetTimeStruct(&_times[TIME_DRAG_OUT], &_times[TIME_DRAG_OUT], ANIM_DURATION_SHORT);
-    _drag_out_id = 0;
-    EnsureAnimation();
-  }
+  if (_drag_out_delta_x >= DRAG_OUT_PIXELS - 90.0f)
+    _hide_machine.SetQuirk(LauncherHideMachine::MT_DRAG_OUT, true);
+  TimeUtil::SetTimeStruct(&_times[TIME_DRAG_OUT],
+                          &_times[TIME_DRAG_OUT],
+                          ANIM_DURATION_SHORT);
+  EnsureAnimation();
+  _drag_gesture_ongoing = false;
 }
 
 void Launcher::AddProperties(GVariantBuilder* builder)
@@ -341,9 +331,11 @@ float Launcher::DragOutProgress(struct timespec const& current) const
   float timeout = CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_DRAG_OUT])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
   float progress = CLAMP(_drag_out_delta_x / DRAG_OUT_PIXELS, 0.0f, 1.0f);
 
-  if (_drag_out_id || _hide_machine.GetQuirk(LauncherHideMachine::MT_DRAG_OUT))
+  if (_drag_gesture_ongoing
+      || _hide_machine.GetQuirk(LauncherHideMachine::MT_DRAG_OUT))
     return progress;
-  return progress * (1.0f - timeout);
+  else
+    return progress * (1.0f - timeout);
 }
 
 float Launcher::AutohideProgress(struct timespec const& current) const
@@ -2505,7 +2497,26 @@ void Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLaun
   RestoreSystemRenderTarget();
 }
 
-void Launcher::SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
+nux::GestureDeliveryRequest Launcher::GestureEvent(const nux::GestureEvent &event)
+{
+  switch(event.type)
+  {
+    case nux::EVENT_GESTURE_BEGIN:
+      OnDragStart(event);
+      break;
+    case nux::EVENT_GESTURE_UPDATE:
+      OnDragUpdate(event);
+      break;
+    default: // EVENT_GESTURE_END
+      OnDragFinish(event);
+      break;
+  }
+
+  return nux::GestureDeliveryRequest::NONE;
+}
+
+void
+Launcher::SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
 {
   int width = texture->GetWidth();
   int height = texture->GetHeight();

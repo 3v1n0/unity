@@ -39,7 +39,7 @@ set (LIBS ${TEST_UNIT_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION} -lcompi
 link_libraries (${LIBS})
 
 set (LIB_PATHS ${TEST_UNIT_DEPS_LIBRARY_DIRS})
-link_directories (${CMAKE_BINARY_DIR}/UnityCore ${LIB_PATHS})
+link_directories (${CMAKE_BINARY_DIR}/UnityCore ${LIB_PATHS} ${COMPIZ_LIBDIR})
 
 include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR})
 include_directories (${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src)
@@ -253,7 +253,6 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/launcher/FavoriteStore.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/FavoriteStoreGSettings.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/FavoriteStorePrivate.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/GeisAdapter.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/HudLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/Launcher.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/LauncherController.cpp
@@ -321,7 +320,7 @@ endif (GTEST_SRC_DIR AND
        GMOCK_LIB AND
        GMOCK_MAIN_LIB)
 
-add_subdirectory (test-gesture-engine)
+add_subdirectory (test-gestures)
 
 #
 # check target
@@ -332,25 +331,25 @@ set (TEST_RESULT_HTML ${TEST_RESULT_DIR}/test-results.html)
 set (GTEST_TEST_COMMAND ./test-gtest)
 set (GTEST_TEST_COMMAND_XLESS ./test-gtest-xless)
 set (GTEST_TEST_COMMAND_DBUS dbus-test-runner --task ./test-gtest-service --task ./test-gtest-dbus)
-set (GTEST_TEST_COMMAND_GESTURE_ENGINE ./test-gesture-engine/test-gesture-engine)
+set (GTEST_TEST_COMMAND_GESTURES ./test-gestures/test-gestures)
 
 set (TEST_COMMAND
      gtester --verbose -k --g-fatal-warnings -o=${TEST_RESULT_XML} ./test-unit
   && ${GTEST_TEST_COMMAND} --gtest_output=xml:./
   && ${GTEST_TEST_COMMAND_XLESS} --gtest_output=xml:./
-  && ${GTEST_TEST_COMMAND_GESTURE_ENGINE} --gtest_output=xml:./
+  && ${GTEST_TEST_COMMAND_GESTURES} --gtest_output=xml:./
   && ${GTEST_TEST_COMMAND_DBUS} --gtest_output=xml:./
     )
 
 set (TEST_COMMAND_HEADLESS
      ${GTEST_TEST_COMMAND_XLESS} --gtest_output=xml:./
-  && ${GTEST_TEST_COMMAND_GESTURE_ENGINE} --gtest_output=xml:./
+  && ${GTEST_TEST_COMMAND_GESTURES} --gtest_output=xml:./
   #&& ${GTEST_TEST_COMMAND_DBUS} --gtest_output=xml:./
   && echo "Warning, DBus test cases are disabled!!")
 
 if (GTEST_SRC_DIR)
-  add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest test-gtest-xless test-gtest-dbus test-gesture-engine)
-  add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless test-gtest-dbus test-gesture-engine)
+  add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest test-gtest-xless test-gtest-dbus test-gestures)
+  add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless test-gtest-dbus test-gestures)
   add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})
   add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest test-gtest-xless)
 else (GTEST_SRC_DIR)

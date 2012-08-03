@@ -29,7 +29,6 @@
 #include "Launcher.h"
 #include "LauncherIcon.h"
 #include "LauncherController.h"
-#include "GeisAdapter.h"
 #include "DevicesSettings.h"
 #include "PluginAdapter.h"
 #include "QuicklistManager.h"
@@ -38,6 +37,7 @@
 #include "KeyboardUtil.h"
 #include "unityshell.h"
 #include "BackgroundEffectHelper.h"
+#include "UnityGestureBroker.h"
 
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib.h>
@@ -111,7 +111,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , gScreen(GLScreen::get(screen))
   , debugger_(this)
   , enable_shortcut_overlay_(true)
-  , gesture_engine_(screen)
   , needsRelayout(false)
   , _in_paint(false)
   , super_keypressed_(false)
@@ -364,7 +363,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      auto init_plugins_cb = sigc::mem_fun(this, &UnityScreen::initPluginActions);
      sources_.Add(std::make_shared<glib::Idle>(init_plugins_cb, glib::Source::Priority::DEFAULT));
 
-     geis_adapter_.Run();
+     InitGesturesSupport();
 
      CompString name(PKGDATADIR"/panel-shadow.png");
      CompString pname("unityshell");
@@ -2598,6 +2597,9 @@ void UnityWindow::windowNotify(CompWindowNotify n)
         window->minimizedSetEnabled (this, false);
       }
         break;
+      case CompWindowNotifyBeforeDestroy:
+        being_destroyed.emit();
+        break;
       default:
         break;
   }
@@ -3047,6 +3049,18 @@ void UnityScreen::initLauncher()
   ScheduleRelayout(0);
 }
 
+nux::View *UnityScreen::LauncherView()
+{
+  nux::View *result = nullptr;
+
+  if (launcher_controller_)
+  {
+    result = &launcher_controller_->launcher();
+  }
+
+  return result;
+}
+
 void UnityScreen::InitHints()
 {
   // TODO move category text into a vector...
@@ -3106,6 +3120,32 @@ void UnityScreen::InitHints()
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", "", _("Places window in corresponding positions."), shortcut::HARDCODED_OPTION, _("Ctrl + Alt + Num")));
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", _(" Drag"), _("Move window."), shortcut::COMPIZ_MOUSE_OPTION, "move", "initiate_button"));
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", _(" Drag"), _("Resize window."), shortcut::COMPIZ_MOUSE_OPTION, "resize", "initiate_button"));
+}
+
+void UnityScreen::InitGesturesSupport()
+{
+  std::unique_ptr<nux::GestureBroker> gesture_broker(new UnityGestureBroker);
+  wt->GetWindowCompositor().SetGestureBroker(std::move(gesture_broker));
+
+  gestures_sub_launcher_.reset(new nux::GesturesSubscription);
+  gestures_sub_launcher_->SetGestureClasses(nux::DRAG_GESTURE);
+  gestures_sub_launcher_->SetNumTouches(4);
+  gestures_sub_launcher_->SetWindowId(GDK_ROOT_WINDOW());
+  gestures_sub_launcher_->Activate();
+
+  gestures_sub_dash_.reset(new nux::GesturesSubscription);
+  gestures_sub_dash_->SetGestureClasses(nux::TAP_GESTURE);
+  gestures_sub_dash_->SetNumTouches(4);
+  gestures_sub_dash_->SetWindowId(GDK_ROOT_WINDOW());
+  gestures_sub_dash_->Activate();
+
+  gestures_sub_windows_.reset(new nux::GesturesSubscription);
+  gestures_sub_windows_->SetGestureClasses(nux::TOUCH_GESTURE
+                                         | nux::DRAG_GESTURE
+                                         | nux::PINCH_GESTURE);
+  gestures_sub_windows_->SetNumTouches(3);
+  gestures_sub_windows_->SetWindowId(GDK_ROOT_WINDOW());
+  gestures_sub_windows_->Activate();
 }
 
 /* Window init */

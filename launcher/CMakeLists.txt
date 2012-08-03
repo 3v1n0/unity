@@ -45,7 +45,6 @@ set (LAUNCHER_SOURCES
      FavoriteStore.cpp
      FavoriteStoreGSettings.cpp
      FavoriteStorePrivate.cpp
-     GeisAdapter.cpp
      HudLauncherIcon.cpp
      Launcher.cpp
      LauncherController.cpp
