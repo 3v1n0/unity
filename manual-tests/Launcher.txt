@@ -177,7 +177,7 @@ Expected Result:
 
 
 Dragging icons to reorder - away from launcher
------------------------------------------
+----------------------------------------------
 This test is about reordering the icons without the animation showing.
 
 Setup:
@@ -196,6 +196,22 @@ Expected Result:
   icons.
   * When released, the icon "flies" back into the launcher, a spaces opens for
   it, and the any pips for running apps show again.
+
+
+Dragged launcher icons out of the launcher are properly drawn
+-------------------------------------------------------------
+This test ensures that the launcher icons out of the launcher are properly drawn
+
+Setup:
+
+Actions:
+#. Move the mouse so it is over a launcher icon for an application
+#. Press and hold the mouse button
+#. Drag the icon away from the launcher, in the middle of the display
+#. Don't move the mouse pointer for some (4-5) seconds, keeping the button pressed
+
+Expected Result:
+  * The icon is always drawn, even when the mouse pointer does not move.
 
 
 Dragging icon while program is starting
