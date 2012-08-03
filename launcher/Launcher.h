@@ -193,6 +193,7 @@ private:
 
   void OnSelectionChanged(AbstractLauncherIcon::Ptr selection);
 
+  bool StrutHack();
   bool StartIconDragTimeout();
   bool OnScrollTimeout();
   bool OnUpdateDragManagerTimeout();

@@ -92,6 +92,7 @@ const int MOUSE_DEADZONE = 15;
 const float DRAG_OUT_PIXELS = 300.0f;
 
 const std::string DND_CHECK_TIMEOUT = "dnd-check-timeout";
+const std::string STRUT_HACK_TIMEOUT = "strut-hack-timeout";
 const std::string START_DRAGICON_TIMEOUT = "start-dragicon-timeout";
 const std::string SCROLL_TIMEOUT = "scroll-timeout";
 const std::string ANIMATION_IDLE = "animation-idle";
@@ -1421,6 +1422,17 @@ LauncherHideMode Launcher::GetHideMode() const
 
 /* End Launcher Show/Hide logic */
 
+// Hacks around compiz failing to see the struts because the window was just mapped.
+bool Launcher::StrutHack()
+{
+  _parent->InputWindowEnableStruts(false);
+
+  if (options()->hide_mode == LAUNCHER_HIDE_NEVER)
+    _parent->InputWindowEnableStruts(true);
+
+  return false;
+}
+
 void Launcher::OnOptionsChanged(Options::Ptr options)
 {
    UpdateOptions(options);
@@ -1462,6 +1474,12 @@ void Launcher::SetHideMode(LauncherHideMode hidemode)
   else
   {
     _parent->EnableInputWindow(true, launcher::window_title, false, false);
+
+    if (!sources_.GetSource(STRUT_HACK_TIMEOUT))
+    {
+      sources_.AddTimeout(1000, sigc::mem_fun(this, &Launcher::StrutHack), STRUT_HACK_TIMEOUT);
+    }
+
     _parent->InputWindowEnableStruts(true);
   }
 
