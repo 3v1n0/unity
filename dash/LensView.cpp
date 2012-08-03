@@ -427,11 +427,19 @@ void LensView::CheckNoResults(Lens::Hints const& hints)
 void LensView::CheckCategoryExpansion()
 {
     int no_of_displayed_categories = 0;
-    PlacesGroup* group_with_result = nullptr;
+    static PlacesGroup* group_with_result = nullptr;
+
+    // Check if we had expanded a group in last run
+    // If so, collapse it for now
+    if (group_with_result != nullptr)
+    {
+        group_with_result->SetExpanded(false);
+        group_with_result = nullptr;
+    }
+
     // Cycle through all categories
     for (auto category : categories_)
     {
-        category->SetExpanded(false);
         if (counts_[category] > 0) {
             no_of_displayed_categories++;
             group_with_result = category;
@@ -440,6 +448,8 @@ void LensView::CheckCategoryExpansion()
 
     if (no_of_displayed_categories == 1 && group_with_result != nullptr)
         group_with_result->SetExpanded(true);
+    else
+        group_with_result = nullptr;
 }
 
 void LensView::HideResultsMessage()
