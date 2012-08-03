@@ -40,7 +40,9 @@ public:
 
   void OnRemoved();
   bool CanEject();
+  bool CanStop();
   void Eject();
+  void StopDrive();
 
 protected:
   std::list<DbusmenuMenuitem*> GetMenus();
@@ -52,7 +54,6 @@ private:
   void ActivateLauncherIcon(ActionArg arg);
   void ShowMount(GMount* mount);
   void Unmount();
-  void StopDrive();
   static void OnTogglePin(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
   static void OnOpen(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
   static void OnEject(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);

@@ -119,6 +119,12 @@ DeviceLauncherIcon::CanEject()
   return g_volume_can_eject(volume_);
 }
 
+bool
+DeviceLauncherIcon::CanStop()
+{
+  return g_drive_can_stop(g_volume_get_drive(volume_));
+}
+
 std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
 {
   std::list<DbusmenuMenuitem*> result;
