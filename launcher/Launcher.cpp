@@ -1494,9 +1494,14 @@ bool Launcher::IsBackLightModeToggles() const
   }
 }
 
-nux::ObjectPtr<nux::View> Launcher::GetActiveTooltip() const
+nux::ObjectPtr<nux::View> const& Launcher::GetActiveTooltip() const
 {
   return _active_tooltip;
+}
+
+nux::ObjectPtr<LauncherDragWindow> const& Launcher::GetDraggedIcon() const
+{
+  return _drag_window;
 }
 
 void Launcher::SetActionState(LauncherActionState actionstate)
