@@ -72,6 +72,7 @@ public:
 
   void PerformSearch(std::string const& search_query);
   void CheckNoResults(Lens::Hints const& hints);
+  void CheckCategoryExpansion();
   void HideResultsMessage();
 
 private:

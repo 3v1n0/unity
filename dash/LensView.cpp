@@ -316,6 +316,10 @@ void LensView::OnResultAdded(Result const& result)
     {
       CheckNoResults(Lens::Hints());
     }
+
+    // Check if all results so far are from one category
+    // If so, then expand that category.
+    CheckCategoryExpansion();
   } catch (std::out_of_range& oor) {
     LOG_WARN(logger) << "Result does not have a valid category index: "
                      << boost::lexical_cast<unsigned int>(result.category_index)
@@ -418,6 +422,24 @@ void LensView::CheckNoResults(Lens::Hints const& hints)
     no_results_->SetText("");
     no_results_->SetVisible(false);
   }
+}
+
+void LensView::CheckCategoryExpansion()
+{
+    int no_of_displayed_categories = 0;
+    PlacesGroup* group_with_result = nullptr;
+    // Cycle through all categories
+    for (auto category : categories_)
+    {
+        category->SetExpanded(false);
+        if (counts_[category] > 0) {
+            no_of_displayed_categories++;
+            group_with_result = category;
+        }
+    }
+
+    if (no_of_displayed_categories == 1 && group_with_result != nullptr)
+        group_with_result->SetExpanded(true);
 }
 
 void LensView::HideResultsMessage()
