@@ -1429,11 +1429,22 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
 
       if (tooltip)
       {
-        nux::Geometry const& tip = tooltip->GetAbsoluteGeometry();
-        CompRegion tip_region(tip.x, tip.y, tip.width, tip.height);
+        nux::Geometry const& g = tooltip->GetAbsoluteGeometry();
+        CompRegion tip_region(g.x, g.y, g.width, g.height);
 
         if (damage.intersects(tip_region))
           tooltip->QueueDraw();
+      }
+
+      nux::ObjectPtr<LauncherDragWindow> const& dragged_icon = launcher->GetDraggedIcon();
+
+      if (dragged_icon)
+      {
+        nux::Geometry const& g = dragged_icon->GetAbsoluteGeometry();
+        CompRegion icon_region(g.x, g.y, g.width, g.height);
+
+        if (damage.intersects(icon_region))
+          dragged_icon->QueueDraw();
       }
     }
   }
@@ -1480,7 +1491,8 @@ void UnityScreen::nuxDamageCompiz()
   CompRegion nux_damage;
 
   std::vector<nux::Geometry> const& dirty = wt->GetDrawList();
-  for (auto geo : dirty)
+
+  for (auto const& geo : dirty)
     nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
 
   if (launcher_controller_->IsOverlayOpen())
@@ -1490,15 +1502,24 @@ void UnityScreen::nuxDamageCompiz()
     nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
   }
 
-  auto launchers = launcher_controller_->launchers();
-  for (auto launcher : launchers)
+  auto const& launchers = launcher_controller_->launchers();
+  for (auto const& launcher : launchers)
   {
     if (!launcher->Hidden())
     {
       nux::ObjectPtr<nux::View> tooltip = launcher->GetActiveTooltip();
+
       if (tooltip)
       {
         nux::Geometry const& g = tooltip->GetAbsoluteGeometry();
+        nux_damage += CompRegion(g.x, g.y, g.width, g.height);
+      }
+
+      nux::ObjectPtr<LauncherDragWindow> const& dragged_icon = launcher->GetDraggedIcon();
+
+      if (dragged_icon)
+      {
+        nux::Geometry const& g = dragged_icon->GetAbsoluteGeometry();
         nux_damage += CompRegion(g.x, g.y, g.width, g.height);
       }
     }
