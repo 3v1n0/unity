@@ -332,6 +332,7 @@ private:
   bool _data_checked;
   bool _steal_drag;
   bool _drag_edge_touching;
+  bool _initial_drag_animation;
   bool _dash_is_open;
   bool _hud_is_open;
 

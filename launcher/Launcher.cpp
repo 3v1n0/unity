@@ -115,6 +115,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   , _data_checked(false)
   , _steal_drag(false)
   , _drag_edge_touching(false)
+  , _initial_drag_animation(false)
   , _dash_is_open(false)
   , _hud_is_open(false)
   , _folded_angle(1.0f)
@@ -942,11 +943,12 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr icon,
 
   icon->SetCenter(nux::Point3(roundf(center.x), roundf(center.y), roundf(center.z)), monitor, parent_abs_geo);
 
-  // FIXME: this is a hack, we should have a look why SetAnimationTarget is necessary in SetAnimationTarget
-  // we should ideally just need it at start to set the target
-  if (icon == _drag_icon && _drag_window && _drag_window->Animating())
-    _drag_window->SetAnimationTarget(static_cast<int>(_drag_icon->GetCenter(monitor).x),
-                                     static_cast<int>(_drag_icon->GetCenter(monitor).y));
+  // FIXME: this is a hack, to avoid that we set the target to the end of the icon
+  if (!_initial_drag_animation && icon == _drag_icon && _drag_window && _drag_window->Animating())
+  {
+    auto const& icon_center = _drag_icon->GetCenter(monitor);
+    _drag_window->SetAnimationTarget(icon_center.x, icon_center.y);
+  }
 
   center.y += (half_size * size_modifier) + spacing;   // move to end
 }
@@ -1987,6 +1989,7 @@ bool Launcher::StartIconDragTimeout(int x, int y)
       _icon_under_mouse->mouse_leave.emit(monitor);
       _icon_under_mouse = nullptr;
     }
+    _initial_drag_animation = true;
     StartIconDragRequest(x, y);
   }
 
@@ -2002,9 +2005,19 @@ void Launcher::StartIconDragRequest(int x, int y)
   // on an internal Launcher property then
   if (drag_icon && _last_button_press == 1 && drag_icon->position() == AbstractLauncherIcon::Position::FLOATING)
   {
+    x += abs_geo.x;
+    y += abs_geo.y;
+
     SetActionState(ACTION_DRAG_ICON);
     StartIconDrag(drag_icon);
-    UpdateDragWindowPosition(abs_geo.x + x, abs_geo.y + y);
+    UpdateDragWindowPosition(x, y);
+
+    if (_initial_drag_animation)
+    {
+      _drag_window->SetAnimationTarget(x, y);
+      _drag_window->StartAnimation();
+    }
+
     EnsureAnimation();
   }
   else
@@ -2058,8 +2071,8 @@ void Launcher::EndIconDrag()
     {
       _model->Save();
 
-      _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter(monitor).x),
-                                       (int)(_drag_icon->GetCenter(monitor).y));
+      auto const &icon_center = _drag_icon->GetCenter(monitor);
+      _drag_window->SetAnimationTarget(icon_center.x, icon_center.y);
       _drag_window->StartAnimation();
 
       if (_drag_window->on_anim_completed.connected())
@@ -2081,9 +2094,9 @@ void Launcher::UpdateDragWindowPosition(int x, int y)
 {
   if (_drag_window)
   {
-    auto const& geo = _drag_window->GetGeometry();
+    auto const& icon_geo = _drag_window->GetGeometry();
     auto const& launcher_geo = GetGeometry();
-    _drag_window->SetBaseXY(x - geo.width / 2, y - geo.height / 2);
+    _drag_window->SetBaseXY(x - icon_geo.width / 2, y - icon_geo.height / 2);
 
     auto const& hovered_icon = MouseIconIntersection((launcher_geo.x + launcher_geo.width) / 2.0, y - GetAbsoluteY());
 
@@ -2168,6 +2181,9 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
 
   SetMousePosition(x, y);
 
+  // FIXME: hack (see SetupRenderArg)
+  _initial_drag_animation = false;
+
   _dnd_delta_y += dy;
   _dnd_delta_x += dx;
 
@@ -2245,8 +2261,6 @@ void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_
          nux::Abs(_postreveal_mousemove_delta_y) > MOUSE_DEADZONE))
       _hide_machine.SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, true);
   }
-
-
 
   // Every time the mouse moves, we check if it is inside an icon...
   EventLogic();
