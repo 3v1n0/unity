@@ -28,6 +28,7 @@
 
 #include "TextureThumbnailProvider.h"
 #include "DefaultThumbnailProvider.h"
+#include "UserThumbnailProvider.h"
 
 namespace unity
 {
@@ -38,24 +39,8 @@ namespace
   ThumbnailGenerator* thumbnail_instance = nullptr;
   static unsigned int last_handle = 1;
 
-  class ThumbnailerProcess : public Thumbnailer
-  {
-  public:
-    ThumbnailerProcess(std::string const& name, std::string const& command_line)
-    : name(name)
-    , command_line(command_line)
-    {}
-
-    std::string name;
-    std::string command_line;
-
-    virtual std::string GetName() const { return name; }
-
-    virtual bool Run(int size, std::string const& input_file, std::string& output_file, std::string& error_hint);
-  };
   static std::map<std::string, std::string> thumbnail_content_map;
   static std::map<std::string, Thumbnailer::Ptr> thumbnailers_;
-  static bool all_thumbnailers_initialized = false;
 
   pthread_mutex_t thumbnailers_mutex_ = PTHREAD_MUTEX_INITIALIZER;
 }
@@ -71,9 +56,6 @@ public:
 
   std::string Generate(std::string& error_hint);
 
-  unsigned int GetHandle() const;
-
-protected:
   std::string const uri_;
   unsigned int size_;
   const unsigned int handle_;
@@ -99,7 +81,6 @@ public:
 
   bool OnThumbnailComplete();
 
-  static void LoadThumbnailers();
   static Thumbnailer::Ptr GetThumbnailer(std::string const& content_type, std::string& error_hint);
 
 protected:
@@ -157,7 +138,7 @@ unsigned int ThumbnailGeneratorImpl::GetThumbnail(std::string const& uri, int si
 
   Thumbnail::Ptr thumb(new Thumbnail(uri, size));
   thumbnails_.push(thumb);
-  unsigned int handle = thumb->GetHandle();
+  unsigned int handle = thumb->handle_;
 
   pthread_mutex_unlock (&thumbnails_mutex_);
   /*********************************
@@ -200,7 +181,7 @@ void ThumbnailGeneratorImpl::Run_()
     pthread_mutex_lock (&thumbnails_mutex_);
 
     CompleteThumbnail complete_thumb;
-    complete_thumb.handle = thumb->GetHandle();
+    complete_thumb.handle = thumb->handle_;
     complete_thumb.thubnail_uri = uri_result;
     complete_thumb.error_hint = error_hint;
 
@@ -243,86 +224,8 @@ bool ThumbnailGeneratorImpl::OnThumbnailComplete()
   return false;
 }
 
-void ThumbnailGeneratorImpl::LoadThumbnailers()
-{
-  if (all_thumbnailers_initialized)
-    return;
-
-  GError* err = NULL;
-  GDir* thumbnailer_dir = g_dir_open("/usr/share/thumbnailers", 0, &err);
-  if (err != NULL)
-    return;
-
-  const gchar* file;
-  while((file = g_dir_read_name(thumbnailer_dir)) != NULL)
-  {
-    std::string file_name(file);
-    if (file_name == "." || file_name == "..")
-      continue;
-
-    pthread_mutex_lock (&thumbnailers_mutex_);
-    // Already have this one?
-    if (thumbnailers_.find(file_name) != thumbnailers_.end())
-    {
-      pthread_mutex_unlock (&thumbnailers_mutex_);
-      continue;
-    }
-    pthread_mutex_unlock (&thumbnailers_mutex_);
-
-    /*********************************
-     * READ SETTINGS
-     *********************************/  
-
-    GKeyFile* key_file = g_key_file_new();
-
-    err=NULL;
-    if (!g_key_file_load_from_file (key_file, (std::string("/usr/share/thumbnailers/") + file_name).c_str(), G_KEY_FILE_NONE, &err))
-    {
-      g_key_file_free(key_file);
-      g_error_free(err);
-      continue;
-    }
-
-    err=NULL;
-    glib::String command_line(g_key_file_get_string (key_file, "Thumbnailer Entry", "Exec", &err));
-    if (err != NULL)
-    {
-      g_key_file_free(key_file);
-      g_error_free(err);
-      continue;
-    }
-
-    err=NULL;
-    gsize mime_count = 0;
-    gchar** mime_types = g_key_file_get_string_list (key_file, "Thumbnailer Entry", "MimeType", &mime_count, &err);
-    if (err != NULL)
-    {
-      g_key_file_free(key_file);
-      g_error_free(err);
-      continue;
-    }
-
-    Thumbnailer::Ptr thumbnailer(new ThumbnailerProcess(file_name, command_line.Value()));
-    std::list<std::string> mime_type_list;
-    for (gsize i = 0; i < mime_count && mime_types[i] != NULL; i++)
-    {
-      mime_type_list.push_front(mime_types[i]);
-    }
-
-    ThumbnailGenerator::RegisterThumbnailer(mime_type_list, thumbnailer);
-
-    g_strfreev(mime_types);
-    g_key_file_free(key_file);
-  }
-
-  all_thumbnailers_initialized = true;
-  g_dir_close(thumbnailer_dir);
-}
-
 Thumbnailer::Ptr ThumbnailGeneratorImpl::GetThumbnailer(std::string const& content_type, std::string& error_hint)
 {
-  LoadThumbnailers();
-
   gchar** content_split = g_strsplit(content_type.c_str(), "/", -1);
 
   std::vector<std::string> content_list;
@@ -387,6 +290,7 @@ ThumbnailGenerator::ThumbnailGenerator()
   {
     thumbnail_instance = this;
     
+    UserThumbnailProvider::Initialise();
     TextureThumbnailProvider::Initialise();
     DefaultThumbnailProvider::Initialise();
   }
@@ -471,36 +375,6 @@ std::string  Thumbnail::Generate(std::string& error_hint)
   return output_file;
 }
 
-unsigned int Thumbnail::GetHandle() const
-{
-  return handle_;
-}
 
-bool ThumbnailerProcess::Run(int size, std::string const& input_file, std::string& output_file, std::string& error_hint)
-{
-  std::string tmp_command_line = command_line;
-
-  size_t pos = tmp_command_line.find("%s");
-  std::stringstream ss; ss << size;
-  if (pos != std::string::npos) { tmp_command_line.replace(pos, 2, ss.str()); }
-
-  pos = tmp_command_line.find("%u");
-  if (pos != std::string::npos) { tmp_command_line.replace(pos, 2, input_file); }
-
-  pos = tmp_command_line.find("%o");
-  if (pos != std::string::npos) { tmp_command_line.replace(pos, 2, output_file); }
-
-  gint exit_status = 0;
-  GError* err = NULL;
-  g_spawn_command_line_sync(tmp_command_line.c_str(), NULL, NULL, &exit_status, &err);
-  if (err != NULL)
-  {
-    error_hint = err->message;
-    g_error_free (err);
-    return false;
-  }
-
-  return true;
-}
 
 } // namespace unity

@@ -64,6 +64,7 @@ set (UNITY_SHARED_SOURCES
      UnitySettings.cpp
      UnityWindowStyle.cpp
      UnityWindowView.cpp
+     UserThumbnailProvider.cpp
      WindowManager.cpp
      ubus-server.cpp
 )
