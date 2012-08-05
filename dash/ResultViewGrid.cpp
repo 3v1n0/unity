@@ -347,7 +347,6 @@ void ResultViewGrid::OnKeyDown (unsigned long event_type, unsigned long event_ke
   if (focused_uri_.empty())
     focused_uri_ = results_.front().uri;
 
-  std::string next_focused_uri;
   ResultList::iterator it;
   int items_per_row = GetItemsPerRow();
   int total_rows = std::ceil(results_.size() / static_cast<float>(items_per_row)); // items per row is always at least 1
