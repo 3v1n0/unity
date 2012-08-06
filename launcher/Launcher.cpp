@@ -2282,12 +2282,12 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
   if (wheel_delta < 0)
   {
     // scroll up
-    _launcher_drag_delta -= 10;
+    _launcher_drag_delta -= 25;
   }
   else
   {
     // scroll down
-    _launcher_drag_delta += 10;
+    _launcher_drag_delta += 25;
   }
 
   EnsureAnimation();
