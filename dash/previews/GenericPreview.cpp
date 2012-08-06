@@ -63,6 +63,10 @@ NUX_IMPLEMENT_OBJECT_TYPE(GenericPreview);
 
 GenericPreview::GenericPreview(dash::Preview::Ptr preview_model)
 : Preview(preview_model)
+, full_data_layout_(nullptr)
+, title_(nullptr)
+, subtitle_(nullptr)
+, description_(nullptr)
 {
   SetupBackground();
   SetupViews();
@@ -167,13 +171,15 @@ void GenericPreview::SetupViews()
       title_ = new nux::StaticCairoText(preview_model_->title);
       title_->SetLines(-1);
       title_->SetFont(style.title_font().c_str());
-
-      subtitle_ = new nux::StaticCairoText(preview_model_->subtitle);
-      subtitle_->SetLines(-1);
-      subtitle_->SetFont(style.subtitle_size_font().c_str());
-
       preview_data_layout->AddView(title_, 1);
-      preview_data_layout->AddView(subtitle_, 1);
+
+      if (preview_model_->subtitle != "")
+      {
+        subtitle_ = new nux::StaticCairoText(preview_model_->subtitle);
+        subtitle_->SetLines(-1);
+        subtitle_->SetFont(style.subtitle_size_font().c_str());
+        preview_data_layout->AddView(subtitle_, 1);
+      }
       /////////////////////
 
       /////////////////////
@@ -185,14 +191,18 @@ void GenericPreview::SetupViews()
       preview_info_layout->SetSpaceBetweenChildren(12);
       preview_info->SetLayout(preview_info_layout);
 
-      description_ = new nux::StaticCairoText("");
-      description_->SetFont(style.description_font().c_str());
-      description_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_TOP);
-      description_->SetLines(-20);
-      description_->SetLineSpacing(1.5);
-      description_->SetText(preview_model_->description);
+      if (description_)
+      {
+        description_ = new nux::StaticCairoText("");
+        description_->SetFont(style.description_font().c_str());
+        description_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_TOP);
+        description_->SetLines(-20);
+        description_->SetLineSpacing(1.5);
+        description_->SetText(preview_model_->description);
 
-      preview_info_layout->AddView(description_);
+        preview_info_layout->AddView(description_);
+      }
+
       if (preview_model_->GetInfoHints().size() > 0)
       {
         PreviewInfoHintWidget* preview_info_hints = new PreviewInfoHintWidget(preview_model_, 24);
@@ -213,6 +223,7 @@ void GenericPreview::SetupViews()
     /////////////////////
   
   image_data_layout->AddView(image_, 0);
+
   image_data_layout->AddLayout(full_data_layout_, 1);
 
   SetLayout(image_data_layout);
@@ -236,9 +247,9 @@ long GenericPreview::ComputeContentSize()
 
   int details_width = MAX(0, geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
 
-  title_->SetMaximumWidth(details_width);
-  subtitle_->SetMaximumWidth(details_width);
-  description_->SetMaximumWidth(details_width);
+  if (title_) { title_->SetMaximumWidth(details_width); }
+  if (subtitle_) { subtitle_->SetMaximumWidth(details_width); }
+  if (description_) { description_->SetMaximumWidth(details_width); }
 
   for (nux::AbstractButton* button : action_buttons_)
   {
