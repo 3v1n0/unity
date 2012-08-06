@@ -139,7 +139,7 @@ public:
 };
 
 TestRunner::TestRunner (std::string const& search_string)
-: LensDBusTestRunner("com.canonical.Unity.Lens.Music","/com/canonical/unity/lens/music", "com.canonical.Unity.Lens")
+: LensDBusTestRunner("com.canonical.Unity.Lens.Files","/com/canonical/unity/lens/files", "com.canonical.Unity.Lens")
 , search_string_(search_string)
 , first_(true)
 {

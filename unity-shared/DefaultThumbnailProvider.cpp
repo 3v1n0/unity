@@ -58,7 +58,7 @@ bool DefaultThumbnailer::Run(int size, std::string const& input_file, std::strin
     return "";
   }
 
-  glib::Object<GIcon> icon(g_file_info_get_icon(file_info));
+  GIcon* icon = g_file_info_get_icon(file_info); // [transfer none]
   output_file = g_icon_to_string(icon);
 
   return true;

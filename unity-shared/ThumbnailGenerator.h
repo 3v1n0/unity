@@ -23,6 +23,7 @@
 #define UNITYSHARED_THUMBNAILGENERATOR_H
 
 #include <Nux/Nux.h>
+#include "UnityCore/GLibWrapper.h"
 
 namespace unity
 {
@@ -37,7 +38,27 @@ public:
   virtual bool Run(int size, std::string const& input_file, std::string& output_file, std::string& error_hint) = 0;
 };
 
+class ThumbnailNotifier : public nux::Object
+{
+public:
+  typedef  nux::ObjectPtr<ThumbnailNotifier> Ptr;
+  NUX_DECLARE_OBJECT_TYPE(ThumbnailNotifier, Object);
+
+  ThumbnailNotifier();
+
+  void Cancel();
+  bool IsCancelled() const;
+
+  sigc::signal<void, std::string> ready;
+  sigc::signal<void, std::string> error;
+
+private:
+  glib::Object<GCancellable> cancel_;
+};
+
+
 class ThumbnailGeneratorImpl;
+
 class ThumbnailGenerator
 {
 public:
@@ -48,10 +69,9 @@ public:
 
   static void RegisterThumbnailer(std::list<std::string> mime_types, Thumbnailer::Ptr thumbnailer);
 
-  unsigned int GetThumbnail(std::string const& uri, int size);
+  ThumbnailNotifier::Ptr GetThumbnail(std::string const& uri, int size);
 
-  sigc::signal<void, unsigned int, std::string> ready;
-  sigc::signal<void, unsigned int, std::string> error;
+  void DoCleanup();
 
 protected:
   std::unique_ptr<ThumbnailGeneratorImpl> pimpl;

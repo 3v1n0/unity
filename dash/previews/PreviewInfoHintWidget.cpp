@@ -160,7 +160,6 @@ void PreviewInfoHintWidget::SetupViews()
   
       hint_layout->AddView(info_name_layout, 1);
     }
-
  
     nux::StaticCairoText* info_value = new nux::StaticCairoText(StringFromVariant(info_hint->value), NUX_TRACKER_LOCATION);
     info_value->SetFont(style.info_hint_font());

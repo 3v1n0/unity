@@ -25,7 +25,6 @@
 #include "unity-shared/IntrospectableWrappers.h"
 #include <NuxCore/Logger.h>
 #include <Nux/VLayout.h>
-#include "ThumbnailGenerator.h"
 #include "DashStyle.h"
 #include "IconLoader.h"
 
@@ -53,9 +52,6 @@ CoverArt::CoverArt()
   , rotation_(0.0)
 {
   SetupViews();
-
-  ThumbnailGenerator::Instance().ready.connect(sigc::mem_fun(this, &CoverArt::OnThumbnailGenerated));
-  ThumbnailGenerator::Instance().error.connect(sigc::mem_fun(this, &CoverArt::OnThumbnailError));
 }
 
 CoverArt::~CoverArt()
@@ -68,6 +64,9 @@ CoverArt::~CoverArt()
     IconLoader::GetDefault().DisconnectHandle(slot_handle_);
     slot_handle_ = 0;
   }
+
+  if (notifier_)
+    notifier_->Cancel();
 }
 
 void CoverArt::SetImage(std::string const& image_hint)
@@ -81,9 +80,20 @@ void CoverArt::SetImage(std::string const& image_hint)
   if (GetLayout())
     GetLayout()->RemoveChildObject(overlay_text_);
 
-  GIcon*  icon = g_icon_new_for_string(image_hint.c_str(), NULL);
+  GIcon* icon = g_icon_new_for_string(image_hint.c_str(), NULL);
 
+  glib::Object<GFile> image_file;
   if (g_strrstr(image_hint.c_str(), "://"))
+  {
+    /* try to open the source file for reading */
+    image_file = g_file_new_for_uri (image_hint.c_str());
+  }
+  else
+  {
+    image_file = g_file_new_for_path (image_hint.c_str());
+  }
+
+  if (g_file_query_exists(image_file, NULL))
   {
     // for files on disk, we stretch to maximum aspect ratio.
     stretch_image_  = true;
@@ -92,17 +102,15 @@ void CoverArt::SetImage(std::string const& image_hint)
 
     GFileInputStream       *stream;
     GError                 *error = NULL;
-    GFile                  *file;
 
-    /* try to open the source file for reading */
-    file = g_file_new_for_uri (image_hint.c_str());
-    stream = g_file_read (file, NULL, &error);
-    g_object_unref (file);
+    stream = g_file_read (image_file, NULL, &error);
 
     if (error != NULL)
     {
       g_error_free (error);
-      QueueDraw();
+
+      if (icon != NULL)
+        g_object_unref(icon);
       return;
     }
 
@@ -111,7 +119,6 @@ void CoverArt::SetImage(std::string const& image_hint)
     g_object_unref (stream);
 
     texture_screenshot_.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
-    g_object_unref(pixbuf);
 
     if (!texture_screenshot_ && GetLayout())
     {
@@ -120,53 +127,15 @@ void CoverArt::SetImage(std::string const& image_hint)
     }
     QueueDraw();
   }
+  else if (G_IS_ICON(icon))
+  {
+    StartWaiting();
+    slot_handle_ = IconLoader::GetDefault().LoadFromGIconString(image_hint, 128, sigc::mem_fun(this, &CoverArt::IconLoaded));
+  }
   else
   {
-    GFile *file = g_file_new_for_path (image_hint.c_str());
-    if (g_file_query_exists(file, NULL))
-    {
-      // for files on disk, we stretch to maximum aspect ratio.
-      stretch_image_  = true;
-      spinner_timeout_.reset();
-      waiting_ = false;
-
-      GFileInputStream       *stream;
-      GError                 *error = NULL;
-
-      /* try to open the source file for reading */
-      stream = g_file_read (file, NULL, &error);
-      g_object_unref (file);
-
-      if (error != NULL)
-      {
-        g_error_free (error);
-        QueueDraw();
-        return;
-      }
-
-      /* stream image into pixel-buffer. */
-      glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_stream (G_INPUT_STREAM (stream), NULL, &error));
-      g_object_unref (stream);
-
-      texture_screenshot_.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
-
-      if (!texture_screenshot_ && GetLayout())
-      {
-        GetLayout()->AddView(overlay_text_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0, nux::LayoutPosition(1));   
-        ComputeContentSize();
-      }
-      QueueDraw();
-    }
-    else if (G_IS_ICON(icon))
-    {
-      StartWaiting();
-      slot_handle_ = IconLoader::GetDefault().LoadFromGIconString(image_hint, 128, sigc::mem_fun(this, &CoverArt::IconLoaded));
-    }
-    else
-    {
-      StartWaiting();
-      slot_handle_ = IconLoader::GetDefault().LoadFromIconName(image_hint, 128, sigc::mem_fun(this, &CoverArt::IconLoaded));
-    }
+    StartWaiting();
+    slot_handle_ = IconLoader::GetDefault().LoadFromIconName(image_hint, 128, sigc::mem_fun(this, &CoverArt::IconLoaded));
   }
 
   if (icon != NULL)
@@ -176,7 +145,10 @@ void CoverArt::SetImage(std::string const& image_hint)
 void CoverArt::GenerateImage(std::string const& uri)
 {
   StartWaiting();
-  thumb_handle_ = ThumbnailGenerator::Instance().GetThumbnail(uri, 512);
+  notifier_ = ThumbnailGenerator::Instance().GetThumbnail(uri, 512);
+
+  notifier_->ready.connect(sigc::mem_fun(this, &CoverArt::OnThumbnailGenerated));
+  notifier_->error.connect(sigc::mem_fun(this, &CoverArt::OnThumbnailError));
 }
 
 void CoverArt::StartWaiting()
@@ -296,14 +268,7 @@ void CoverArt::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
                       base.GetWidth(),
                       base.GetHeight(),
                       nux::Color(0.03f, 0.03f, 0.03f, 0.0f));
-
-    gPainter.Paint2DQuadWireframe(gfx_engine,
-                      base.x+1,
-                      base.y,
-                      base.GetWidth(),
-                      base.GetHeight(),
-                      nux::Color(0.5f, 0.5, 0.5, 0.15f));
-
+    
     if (waiting_)
     {  
       nux::TexCoordXForm texxform;
@@ -395,19 +360,14 @@ void CoverArt::SetFont(std::string const& font)
   overlay_text_->SetFont(font);
 }
 
-void CoverArt::OnThumbnailGenerated(unsigned int thumb_handle, std::string const& uri)
+void CoverArt::OnThumbnailGenerated(std::string const& uri)
 {
-  if (thumb_handle_ != thumb_handle)
-    return;
-
   SetImage(uri);
+  notifier_.Release();
 }
 
-void CoverArt::OnThumbnailError(unsigned int thumb_handle, std::string const& error_hint)
+void CoverArt::OnThumbnailError(std::string const& error_hint)
 {
-  if (thumb_handle_ != thumb_handle)
-    return;
-
   LOG_WARNING(logger) << "Failed to generate thumbnail: " << error_hint;
   spinner_timeout_.reset();
   frame_timeout_.reset();
@@ -421,6 +381,7 @@ void CoverArt::OnThumbnailError(unsigned int thumb_handle, std::string const& er
     ComputeContentSize();
   }
   QueueDraw();
+  notifier_.Release();
 }
 
 

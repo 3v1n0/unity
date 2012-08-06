@@ -28,8 +28,9 @@
 #include <Nux/View.h>
 #include <UnityCore/ApplicationPreview.h>
 #include <UnityCore/GLibSource.h>
-#include "unity-shared/StaticCairoText.h"
 #include <NuxCore/ObjectPtr.h>
+#include "unity-shared/StaticCairoText.h"
+#include "ThumbnailGenerator.h"
 
 namespace unity
 {
@@ -63,8 +64,8 @@ protected:
 
   void SetupViews();
 
-  void OnThumbnailGenerated(unsigned int thumb_handle, std::string const& uri);
-  void OnThumbnailError(unsigned int thumb_handle, std::string const& error_hint);
+  void OnThumbnailGenerated(std::string const& uri);
+  void OnThumbnailError(std::string const& error_hint);
   bool OnFrameTimeout();
 
   void IconLoaded(std::string const& texid, unsigned size, glib::Object<GdkPixbuf> const& pixbuf);
@@ -79,6 +80,7 @@ private:
   unsigned int thumb_handle_;
   int slot_handle_;
   bool stretch_image_;
+  ThumbnailNotifier::Ptr notifier_;
   
   // Spinner
   bool waiting_;

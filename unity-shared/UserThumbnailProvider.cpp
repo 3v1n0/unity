@@ -72,6 +72,13 @@ bool UserThumbnailer::Run(int size, std::string const& input_file, std::string& 
     g_error_free (err);
     return false;
   }
+  else if (exit_status != 0)
+  {
+    std::stringstream ss;
+    ss << "Failed to create thumbnail. Program exited with exit_status=" << exit_status;
+    error_hint = ss.str();
+    return false;
+  }
 
   return true;
 }
