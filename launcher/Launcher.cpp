@@ -1473,11 +1473,14 @@ void Launcher::SetHideMode(LauncherHideMode hidemode)
   }
   else
   {
+    static bool first_time = true;
+
     _parent->EnableInputWindow(true, launcher::window_title, false, false);
 
-    if (!sources_.GetSource(STRUT_HACK_TIMEOUT))
+    if (first_time && !sources_.GetSource(STRUT_HACK_TIMEOUT))
     {
       sources_.AddTimeout(1000, sigc::mem_fun(this, &Launcher::StrutHack), STRUT_HACK_TIMEOUT);
+      first_time = false;
     }
 
     _parent->InputWindowEnableStruts(true);
