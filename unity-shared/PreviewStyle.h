@@ -57,6 +57,8 @@ public:
   static Style& Instance();
 
   int GetNavigatorWidth() const;
+  int GetNavigatorIconSize() const;
+  
   int GetPreviewPreferredHeight() const;
   int GetPreviewPreferredWidth() const;
 
@@ -111,6 +113,8 @@ public:
   ////////////////////////////////
   // Movie Preview
   int GetTrackBarHeight() const;
+  int GetMusicDurationWidth() const;
+  int GetStatusIconSize() const;
   ////////////////////////////////
 
   nux::BaseTexture* GetNavLeftIcon();

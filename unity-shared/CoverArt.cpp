@@ -248,11 +248,10 @@ void CoverArt::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
     texxform.u1 = imageDest.width;
     texxform.v1 = imageDest.height;
 
-    int border_width = 1;
-    gfx_engine.QRP_1Tex(base.x + (float(base.GetWidth() - imageDest.GetWidth()) / 2) + border_width,
-                        base.y + (float(base.GetHeight() - imageDest.GetHeight()) / 2) + border_width,
-                        imageDest.width - (border_width * 2),
-                        imageDest.height - (border_width * 2),
+    gfx_engine.QRP_1Tex(base.x + (float(base.GetWidth() - imageDest.GetWidth()) / 2),
+                        base.y + (float(base.GetHeight() - imageDest.GetHeight()) / 2),
+                        imageDest.width,
+                        imageDest.height,
                         texture_screenshot_.GetPointer()->GetDeviceTexture(),
                         texxform,
                         nux::color::White);

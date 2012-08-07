@@ -89,9 +89,9 @@ protected:
 
   nux::Layout* title_layout_;
   nux::Layout* duration_layout_;
-  nux::Layout* status_play_layout_;
-  nux::Layout* status_pause_layout_;
-  nux::Layout* track_number_layout_;
+  nux::View* status_play_layout_;
+  nux::View* status_pause_layout_;
+  nux::View* track_number_layout_;
   nux::LayeredLayout* track_status_layout_;
 
   dash::PlayState play_state_;

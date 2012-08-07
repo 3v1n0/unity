@@ -62,10 +62,10 @@ class Style::Impl
 public:
   Impl(Style* owner)
   : owner_(owner)
-  , preview_nav_left_texture_("/prev.svg")
-  , preview_nav_right_texture_("/next.svg")
-  , preview_play_texture_("/play.svg")
-  , preview_pause_texture_("/pause.svg")
+  , preview_nav_left_texture_("/preview_previous.svg", 32)
+  , preview_nav_right_texture_("/preview_next.svg", 32)
+  , preview_play_texture_("/preview_play.svg", 32)
+  , preview_pause_texture_("/preview_pause.svg", 32)
   {
   }
   ~Impl() {}
@@ -111,6 +111,11 @@ Style& Style::Instance()
 int Style::GetNavigatorWidth() const
 {
   return 42;
+}
+
+int Style::GetNavigatorIconSize() const
+{
+  return 24;  
 }
 
 int Style::GetPreviewPreferredHeight() const
@@ -168,6 +173,11 @@ int Style::GetTrackHeight() const
   return 28;
 }
 
+int Style::GetMusicDurationWidth() const
+{
+  return 40;
+}
+
 int Style::GetActionButtonHeight() const
 {
   return 36;
@@ -221,6 +231,11 @@ int Style::GetDescriptionLineCount() const
 int Style::GetRatingWidgetHeight() const
 {
   return 36;
+}
+
+int Style::GetStatusIconSize() const
+{
+  return 12;
 }
 
 std::string Style::title_font() const
