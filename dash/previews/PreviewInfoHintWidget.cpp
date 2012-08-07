@@ -153,21 +153,18 @@ void PreviewInfoHintWidget::SetupViews()
     {
       nux::StaticCairoText* info_name = new nux::StaticCairoText(info_hint->display_name, NUX_TRACKER_LOCATION);
       info_name->SetFont(style.info_hint_font());
+      info_name->SetLines(-1);
+      info_name->SetMinimumWidth(style.GetInfoHintNameWidth());
+      info_name->SetMaximumWidth(style.GetInfoHintNameWidth());
   
-      nux::Layout* info_name_layout = new nux::HLayout();
-      info_name_layout->AddView(info_name, 1, nux::MINOR_POSITION_CENTER);
-      info_name_layout->SetMinimumWidth(style.GetInfoHintNameWidth());
-      info_name_layout->SetMaximumWidth(style.GetInfoHintNameWidth());
-  
-      hint_layout->AddView(info_name_layout, 0);
+      hint_layout->AddView(info_name, 0, nux::MINOR_POSITION_CENTER);
     }
  
     nux::StaticCairoText* info_value = new nux::StaticCairoText(StringFromVariant(info_hint->value), NUX_TRACKER_LOCATION);
     info_value->SetFont(style.info_hint_font());
-    nux::Layout* info_value_layout = new nux::HLayout();
-    info_value_layout->AddView(info_value, 1, nux::MINOR_POSITION_CENTER);
+    info_value->SetLines(-1);
 
-    hint_layout->AddView(info_value_layout, 1);
+    hint_layout->AddView(info_value, 1, nux::MINOR_POSITION_CENTER);
 
     layout->AddLayout(hint_layout, 0);
   }
