@@ -73,6 +73,9 @@ void Controller::OnBackgroundUpdate(GVariant* data)
 void Controller::Show(ShowMode show, SortMode sort, bool reverse,
                       std::vector<AbstractLauncherIcon::Ptr> results)
 {
+  if (results.empty())
+    return;
+
   if (sort == SortMode::FOCUS_ORDER)
   {
     std::sort(results.begin(), results.end(), CompareSwitcherItemsPriority);

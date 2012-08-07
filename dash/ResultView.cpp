@@ -97,7 +97,7 @@ void ResultView::RemoveResult(Result& result)
   ResultList::iterator it;
   std::string uri = result.uri;
 
-  for (it = results_.begin(); it != results_.end(); it++)
+  for (it = results_.begin(); it != results_.end(); ++it)
   {
     if (result.uri == (*it).uri)
     {
