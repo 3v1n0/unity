@@ -118,6 +118,30 @@ void DashView::SetMonitorOffset(int x, int y)
   renderer_.y_offset = y;
 }
 
+void DashView::SetPreview(Preview::Ptr preview_model)
+{
+  if (preview_displaying_ == false)
+  {
+    // we aren't currently displaying a preview so bootstrap
+    preview_container_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
+    preview_container_->SetGeometry(GetGeometry());
+    preview_container_->Preview(preview_model, previews::Navigation::NONE);
+  }
+  else
+  {
+    preview_container_->Preview(preview_model, previews::Navigation::NONE); // actually left/right
+  }
+
+  preview_displaying_ = true;
+}
+
+void DashView::ClosePreview()
+{
+  preview_displaying_ = false;
+  preview_container_ = nullptr; // free resources
+  QueueDraw();
+}
+
 void DashView::AboutToShow()
 {
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
@@ -146,10 +170,6 @@ void DashView::AboutToShow()
     active_lens_view_->lens()->view_type = ViewType::LENS_VIEW;
   }
 
-  for (auto lens_view : lens_views_)
-  {
-    lens_view.second->CloseActivePreview();
-  }
   // this will make sure the spinner animates if the search takes a while
   search_bar_->ForceSearchChanged();
 
@@ -220,14 +240,6 @@ void DashView::SetupUBusConnections()
 {
   ubus_manager_.RegisterInterest(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
       sigc::mem_fun(this, &DashView::OnActivateRequest));
-  
-  ubus_manager_.RegisterInterest(UBUS_DASH_SET_SEARCH_VISIBILITY, [&] (GVariant* data) 
-  {
-    gboolean visibility;
-    g_variant_get(data, "(b)", &visibility);
-    LOG_DEBUG(logger) << "setting dash search bar visibility: " << visibility;
-    search_bar_->SetVisible((visibility) ? true : false);
-  });
 }
 
 long DashView::PostLayoutManagement (long LayoutResult)
@@ -504,7 +516,6 @@ void DashView::OnLensBarActivated(std::string const& id)
 
     LOG_DEBUG(logger) << "Setting ViewType " << view_type
                       << " on '" << it.first << "'";
-    it.second->CloseActivePreview();
   }
 
   search_bar_->SetVisible(true);
@@ -708,16 +719,9 @@ bool DashView::InspectKeyEvent(unsigned int eventType,
                                unsigned int key_sym,
                                const char* character)
 {
-  LOG_DEBUG(logger) << "Inspecting key event";
   if ((eventType == nux::NUX_KEYDOWN) && (key_sym == NUX_VK_ESCAPE))
   {
-    LOG_DEBUG(logger) << "logging escape event";
-    if (active_lens_view_->preview_is_active)
-    {
-      active_lens_view_->CloseActivePreview();
-      LOG_DEBUG(logger) << "preview was active, closed";
-    }
-    else if (search_bar_->search_string != "")
+    if (search_bar_->search_string != "")
       search_bar_->search_string = "";
     else
       ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);

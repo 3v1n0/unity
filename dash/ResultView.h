@@ -65,8 +65,6 @@ public:
 
   nux::Property<bool> expanded;
   nux::Property<int> results_per_row;
-  nux::Property<int> preview_spacer; // makes a vertical space for the preview with the value as the height
-  nux::Property<std::string> preview_result_uri; //for highlighting a preview
   
   sigc::signal<void, std::string const&, ActivateType> UriActivated;
 

@@ -107,8 +107,6 @@ private:
 
   int extra_horizontal_spacing_;
 
-  unsigned int cached_preview_index_;
-
   UBusManager ubus_;
   glib::Source::UniquePtr lazy_load_source_;
   glib::Source::UniquePtr view_changed_idle_;

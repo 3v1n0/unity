@@ -57,20 +57,6 @@ public:
     SetVScrollBar(scroll_bar);
   }
 
-  void ExplicitScrollToPoition(int position)
-  {
-    int child_y = position - GetGeometry().y;
-    int child_y_diff = child_y - abs (_delta_y);
-    if (child_y_diff < 0)
-    {
-      ScrollUp (1, abs (child_y_diff));
-    }
-    else
-    {
-      ScrollDown (1, child_y_diff);
-    }
-  }
-
   void ScrollToPosition(nux::Geometry const& position)
   {
     // much of this code is copied from Nux/ScrollView.cpp
@@ -143,15 +129,9 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   : nux::View(NUX_TRACKER_LOCATION)
   , filters_expanded(false)
   , can_refine_search(false)
-  , preview_is_active(false)
   , lens_(lens)
   , initial_activation_(true)
   , no_results_active_(false)
-  , preview_(nullptr)
-  , preview_resultview_(nullptr)
-  , currently_in_preview_(false)
-  , preview_index_(0)
-  , waiting_for_preview_(false)
 {
   SetupViews(show_filters);
   SetupCategories();
@@ -164,8 +144,6 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   search_string.SetGetterFunction(sigc::mem_fun(this, &LensView::get_search_string));
   filters_expanded.changed.connect([&](bool expanded) { fscroll_view_->SetVisible(expanded); QueueRelayout(); OnColumnsChanged(); });
   view_type.changed.connect(sigc::mem_fun(this, &LensView::OnViewTypeChanged));
-
-  lens_->preview_ready.connect(sigc::mem_fun(this, &LensView::BuildPreview));
 
   ubus_manager_.RegisterInterest(UBUS_RESULT_VIEW_KEYNAV_CHANGED, [&] (GVariant* data) {
     // we get this signal when a result view keynav changes,
@@ -195,112 +173,6 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
     }
   });
 
-  ubus_manager_.RegisterInterest(UBUS_RESULT_VIEW_EXPLICIT_SCROLL_POSITION, [&] (GVariant* data) {
-    //int scroll_to_pos;
-    //g_variant_get(data, "(i)", &scroll_to_pos);
-    //LOG_DEBUG(logger) << "scroll to pos: " << scroll_to_pos;
-    //scroll_view_->ExplicitScrollToPoition(scroll_to_pos);
-    ubus_manager_.SendMessage(UBUS_DASH_SET_SEARCH_VISIBILITY, g_variant_new("(b)", FALSE));
-  });
-}
-
-void LensView::CloseActivePreview()
-{
-  if (preview_is_active == false)
-    return;
-
-  preview_is_active = false;
-  preview_ = nullptr;
-
-  last_activated_result_uri_ = "";
-  if (preview_resultview_)
-  {
-    preview_resultview_->preview_spacer = 0;
-    preview_resultview_->preview_result_uri = "";
-    preview_resultview_ = nullptr;
-  }
-
-  ubus_manager_.SendMessage(UBUS_DASH_SET_SEARCH_VISIBILITY, g_variant_new("(b)", TRUE));
-}
-
-void LensView::BuildPreview(std::string const& uri, Preview::Ptr model)
-{
-  if (waiting_for_preview_)
-    waiting_for_preview_ = false;
-  else
-    return;
-  
-  if (preview_is_active == false)
-  {
-    preview_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
-    
-    //preview_index_ = preview_resultview_->GetIndexForUri(uri);
-
-    preview_->Preview(model, previews::Navigation::NONE);
-
-    auto preview_geo = GetGeometry();
-    preview_geo.height -= 24; //FIXME!! - total guess. i love guessing!  
-    preview_->SetGeometry(preview_geo);
-    preview_is_active = true;
-
-    //preview_resultview_->preview_spacer = 600; // make height of the view - some amount
-    //preview_resultview_->preview_result_uri = last_activated_result_uri_;
-    fscroll_view_->SetVisible(false);
-
-
-    if (preview_resultview_ != nullptr)
-    {
-      preview_->navigate_right.connect([&] () 
-      {
-        LOG_DEBUG(logger) << "navleft";
-        // get the next uri and activate it
-        if (preview_index_ >= preview_resultview_->GetModelSize() - 1)
-        {
-          LOG_ERROR(logger) << "Preview asked us to navigate right but there are no more items";
-          return;
-        }
-
-        auto new_uri = preview_resultview_->GetUriForIndex(preview_index_ + 1);
-        preview_resultview_->UriActivated.emit(new_uri, ResultView::ActivateType::PREVIEW); 
-
-      });
-      preview_->navigate_left.connect([&] () 
-      {
-        LOG_DEBUG(logger) << "navleft";
-        // get the next uri and activate it
-        if (preview_index_ == 0)
-        {
-          LOG_ERROR(logger) << "Preview asked us to navigate left but there are no more items";
-          return;
-        }
-
-        auto new_uri = preview_resultview_->GetUriForIndex(preview_index_ - 1);
-        preview_resultview_->UriActivated.emit(new_uri, ResultView::ActivateType::PREVIEW); 
-
-      });
-    }
-  }
-  else
-  {
-    // we are in a preview, so likely we were asked to navigate somewhere else
-    
-    unsigned int new_preview_index = preview_resultview_->GetIndexForUri(uri);
-    auto preview_navmode = (new_preview_index > preview_index_) ? previews::Navigation::RIGHT
-                                                                : previews::Navigation::LEFT;
-    preview_index_ = new_preview_index;
-    preview_->Preview(model, preview_navmode);
-  }
-
-  if (preview_resultview_ != nullptr)
-  {
-    if (preview_index_ == 0)
-      preview_->DisableNavButton(previews::Navigation::LEFT);
-    else if (preview_index_ == preview_resultview_->GetModelSize() - 1)
-      preview_->DisableNavButton(previews::Navigation::RIGHT);
-    else
-      preview_->DisableNavButton(previews::Navigation::NONE);
-  }
-  QueueDraw();
 }
 
 void LensView::SetupViews(nux::Area* show_filters)
@@ -417,9 +289,8 @@ void LensView::OnCategoryAdded(Category const& category)
   else
     grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
 
-  grid->UriActivated.connect(sigc::bind([&] (std::string const& uri, ResultView::ActivateType type, ResultView* view) 
+  grid->UriActivated.connect([&] (std::string const& uri, ResultView::ActivateType type) 
   {
-    LOG_ERROR(logger) << "resultview view pointer is: " << view;
     switch (type)
     {
       case ResultView::ActivateType::DIRECT:
@@ -429,21 +300,12 @@ void LensView::OnCategoryAdded(Category const& category)
       } break;
       case ResultView::ActivateType::PREVIEW:
       {
-        waiting_for_preview_ = true;
         lens_->Preview(uri);
       } break;
       default: break;
     };
-    
-    last_activated_result_uri_ = uri;
-    if (preview_resultview_)
-    {
-      //preview_resultview_->preview_spacer = 0;
-      //preview_resultview_->preview_result_uri = "";
-    }
 
-    preview_resultview_ = view;
-  }, dynamic_cast<ResultView*>(grid)));
+  });
   
   group->SetChildView(grid);
 
@@ -645,10 +507,6 @@ void LensView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 
   gfx_context.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(gfx_context, geo);
-  if (preview_is_active && preview_)
-  {
-    preview_->ProcessDraw(gfx_context, true);//force_draw);
-  }
   gfx_context.PopClippingRectangle();
 
 }
@@ -656,14 +514,7 @@ void LensView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 void LensView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   gfx_context.PushClippingRectangle(GetGeometry());
-  if (preview_is_active && preview_)
-  {
-    preview_->ProcessDraw(gfx_context, true);//force_draw);
-  }
-  else
-  {
-    layout_->ProcessDraw(gfx_context, force_draw);
-  }
+  layout_->ProcessDraw(gfx_context, force_draw);
   gfx_context.PopClippingRectangle();
 }
 
@@ -751,62 +602,6 @@ void LensView::AddProperties(GVariantBuilder* builder)
     .add("lens-name", lens_->name)
     .add("no-results-active", no_results_active_);
 }
-
-nux::Area* LensView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
-{
-  LOG_DEBUG(logger) << "find area under mouse";
-  nux::Area* view = nullptr;
-  if (preview_is_active)
-  {
-    LOG_DEBUG(logger) << "going to preview";
-    nux::Point newpos = mouse_position;
-    // COMPLETE HACK OMG LOL, if this makes it into a merge request just slap gord. seriously.
-    newpos.x -= 32;
-    newpos.y -= 24;
-    view = dynamic_cast<nux::Area*>(preview_.GetPointer())->FindAreaUnderMouse(newpos, event_type);
-  }
-  else
-  {
-    LOG_DEBUG(logger) << "going to result view";
-    view = View::FindAreaUnderMouse(mouse_position, event_type);
-  }
-
-  return (view == nullptr) ? this : view;
-}
-
-nux::Area* LensView::FindKeyFocusArea(unsigned int key_symbol,
-                    unsigned long x11_key_code,
-                    unsigned long special_keys_state)
-{
-  Area* view = nullptr;
-
-  if (preview_is_active)
-  {
-    view = dynamic_cast<nux::Area*>(preview_.GetPointer())->FindKeyFocusArea(key_symbol, x11_key_code, special_keys_state);
-  }
-  else
-  {
-    view = View::FindKeyFocusArea(key_symbol, x11_key_code, special_keys_state);
-  }
-
-  return view;
-}
-
-nux::Area* LensView::KeyNavIteration(nux::KeyNavDirection direction)
-{
-  nux::Area* view = nullptr;
-  if (preview_is_active)
-  {
-    view = dynamic_cast<nux::Area*>(preview_.GetPointer())->KeyNavIteration(direction);
-  }
-  else
-  {
-    view = View::KeyNavIteration(direction);
-  }
-
-  return view;
-}
-
 
 }
 }

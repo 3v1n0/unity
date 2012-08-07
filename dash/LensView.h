@@ -36,8 +36,6 @@
 #include "ResultViewGrid.h"
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/PlacesVScrollBar.h"
-#include "previews/Preview.h"
-#include "previews/PreviewContainer.h"
 
 namespace unity
 {
@@ -69,15 +67,12 @@ public:
   nux::Property<bool> filters_expanded;
   nux::Property<ViewType> view_type;
   nux::Property<bool> can_refine_search;
-  nux::Property<bool> preview_is_active;
 
   sigc::signal<void, std::string const&> uri_activated;
 
   void PerformSearch(std::string const& search_query);
   void CheckNoResults(Lens::Hints const& hints);
   void HideResultsMessage();
-
-  void CloseActivePreview();  
 
 private:
   void SetupViews(nux::Area* show_filters);
@@ -102,11 +97,6 @@ private:
   virtual void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
   
-public:
-  nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
-  virtual nux::Area* FindKeyFocusArea(unsigned int key_symbol, unsigned long x11_key_code, unsigned long special_keys_state);
-  virtual nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
-
 private:
 
   virtual bool AcceptKeyNavFocus();
@@ -131,13 +121,6 @@ private:
   FilterBar* filter_bar_;
   nux::StaticCairoText* no_results_;
 
-  previews::PreviewContainer::Ptr preview_;
-  ResultView* preview_resultview_;
-  bool currently_in_preview_;
-  unsigned int preview_index_;
-  bool waiting_for_preview_;
-
-  std::string last_activated_result_uri_;
   UBusManager ubus_manager_;
   glib::Source::UniquePtr fix_rendering_idle_;
 };

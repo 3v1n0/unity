@@ -33,6 +33,7 @@
 #include "unity-shared/Animator.h"
 #include "unity-shared/Introspectable.h"
 #include "unity-shared/UBusWrapper.h"
+#include "PreviewStateMachine.h"
 
 namespace unity
 {
@@ -99,6 +100,7 @@ private:
   glib::TimeoutSeconds ensure_timeout_;
   Animator timeline_animator_;
   UBusManager ubus_manager_;
+  PreviewStateMachine preview_state_machine_;
 };
 
 

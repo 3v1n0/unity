@@ -124,7 +124,8 @@ void Controller::RegisterUBusInterests()
                                  sigc::mem_fun(this, &Controller::OnActivateRequest));
   ubus_manager_.RegisterInterest(UBUS_DASH_ABOUT_TO_SHOW,
                                  [&] (GVariant*) { EnsureDash(); });
-  ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [&] (GVariant *data) {
+  ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [&] (GVariant *data) 
+  {
     unity::glib::String overlay_identity;
     gboolean can_maximise = FALSE;
     gint32 overlay_monitor = 0;
@@ -135,6 +136,14 @@ void Controller::RegisterUBusInterests()
     {
       HideDash(true);
     }
+  });
+
+  ubus_manager_.RegisterInterest(UBUS_DASH_SPLIT_COORD_CHANGED, [&] (GVariant *data) 
+  {
+    SplitPosition position_type;
+    int position = -1;
+    g_variant_get(data, "(ii)", &position_type, &position);
+    preview_state_machine_.SetSplitPosition(position_type, position);
   });
 }
 

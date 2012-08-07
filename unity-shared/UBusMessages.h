@@ -81,9 +81,9 @@
 #define UBUS_DASH_SIZE_CHANGED "DASH_SIZE_CHANGED"
 // FIXME - fix the nux focus api so we don't need this
 #define UBUS_RESULT_VIEW_KEYNAV_CHANGED "RESULT_VIEW_KEYNAV_CHANGED"
-#define UBUS_RESULT_VIEW_EXPLICIT_SCROLL_POSITION "RESULT_VIEW_EXPLICIT_SCROLL_POSITION"
 
-#define UBUS_DASH_SET_SEARCH_VISIBILITY "DASH_SET_SEARCH_VISIBILITY"
+// for communicating positions to the preview state machine (ii)
+#define UBUS_DASH_SPLIT_COORD_CHANGED "DASH_SPLIT_COORD_CHANGED"
 
 // Sends a string datatype containing the new icon name
 #define UBUS_HUD_ICON_CHANGED "HUD_ICON_CHANGED"

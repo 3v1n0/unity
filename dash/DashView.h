@@ -34,6 +34,9 @@
 #include "LensView.h"
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/OverlayRenderer.h"
+#include "UnityCore/Preview.h"
+#include "previews/PreviewContainer.h"
+
 
 namespace unity
 {
@@ -57,6 +60,9 @@ public:
   void DisableBlur();
   void OnActivateRequest(GVariant* args);
   void SetMonitorOffset(int x, int y);
+
+  void SetPreview(Preview::Ptr preview);
+  void ClosePreview();
 
   std::string const GetIdForShortcutActivation(std::string const& shortcut) const;
   std::vector<char> GetAllShortcuts();
@@ -112,8 +118,9 @@ private:
   HomeLens::Ptr home_lens_;
   LensViews lens_views_;
 
-
   // View related
+  previews::PreviewContainer::Ptr preview_container_;
+  bool preview_displaying_;
   nux::VLayout* layout_;
   DashLayout* content_layout_;
   nux::HLayout* search_bar_layout_;
