@@ -149,16 +149,17 @@ void PreviewInfoHintWidget::SetupViews()
     info_icon->SetVisible(true);
     hint_layout->AddView(info_icon, 0);
 
-    if (info_hint->display_name.size() > 0)
+    if (!info_hint->display_name.empty())
     {
       nux::StaticCairoText* info_name = new nux::StaticCairoText(info_hint->display_name, NUX_TRACKER_LOCATION);
       info_name->SetFont(style.info_hint_font());
   
       nux::Layout* info_name_layout = new nux::HLayout();
       info_name_layout->AddView(info_name, 1, nux::MINOR_POSITION_CENTER);
-      info_name_layout->SetMaximumWidth(128 - (icon_size_ > 0 ? (icon_size_ + 16) : 0));
+      info_name_layout->SetMinimumWidth(style.GetInfoHintNameWidth());
+      info_name_layout->SetMaximumWidth(style.GetInfoHintNameWidth());
   
-      hint_layout->AddView(info_name_layout, 1);
+      hint_layout->AddView(info_name_layout, 0);
     }
  
     nux::StaticCairoText* info_value = new nux::StaticCairoText(StringFromVariant(info_hint->value), NUX_TRACKER_LOCATION);

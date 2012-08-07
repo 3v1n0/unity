@@ -198,6 +198,11 @@ int Style::GetDetailsPanelMinimumWidth() const
   return 300;
 }
 
+int Style::GetInfoHintNameWidth() const
+{
+  return 100;
+}
+
 std::string Style::title_font() const
 {
   return "Ubuntu 22";

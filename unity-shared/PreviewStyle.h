@@ -74,6 +74,8 @@ public:
 
   int GetDetailsPanelMinimumWidth() const;
 
+  int GetInfoHintNameWidth() const;
+
 
   std::string title_font() const;
   std::string subtitle_size_font() const;
