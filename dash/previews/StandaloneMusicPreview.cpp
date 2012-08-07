@@ -139,7 +139,7 @@ public:
 };
 
 TestRunner::TestRunner (std::string const& search_string)
-: LensDBusTestRunner("com.canonical.Unity.Lens.Files","/com/canonical/unity/lens/files", "com.canonical.Unity.Lens")
+: LensDBusTestRunner("com.canonical.Unity.Lens.Music","/com/canonical/unity/lens/music", "com.canonical.Unity.Lens")
 , search_string_(search_string)
 , first_(true)
 {
@@ -155,8 +155,6 @@ TestRunner::TestRunner (std::string const& search_string)
 
   results_->result_added.connect([&](Result const& result)
   {
-    printf("Number of results: %d\n", results_->count.Get());
-
     previews::Navigation navDisabled =  previews::Navigation::BOTH;
     if (nav_iter < results_->count.Get())
       navDisabled = previews::Navigation( (unsigned int)results_ & ~((unsigned int)previews::Navigation::RIGHT));
@@ -243,13 +241,12 @@ int main(int argc, char **argv)
 
   if (argc < 2)
   {
-    printf("Usage: music_previews SEARCH_STRING");
+    printf("Usage: music_previews SEARCH_STRING\n");
     return 1;
   }
 
   nux::NuxInitialize(0);
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
-  nux::logging::Logger("unity").SetLogLevel(nux::logging::Trace);
   // The instances for the pseudo-singletons.
   unity::Settings settings;
   unity::dash::previews::Style panel_style;

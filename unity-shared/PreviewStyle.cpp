@@ -198,9 +198,29 @@ int Style::GetDetailsPanelMinimumWidth() const
   return 300;
 }
 
+int Style::GetInfoHintIconSizeWidth() const
+{
+  return 24;
+}
+
 int Style::GetInfoHintNameWidth() const
 {
   return 100;
+}
+
+float Style::GetDescriptionLineSpacing() const
+{
+  return 2.0;
+}
+
+int Style::GetDescriptionLineCount() const
+{
+  return 20;
+}
+
+int Style::GetRatingWidgetHeight() const
+{
+  return 36;
 }
 
 std::string Style::title_font() const

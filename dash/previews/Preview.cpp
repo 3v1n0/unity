@@ -102,7 +102,7 @@ void Preview::AddProperties(GVariantBuilder* builder)
 {
 }
 
-void Preview::OnActionActivated(nux::AbstractButton* button, std::string const& id)
+void Preview::OnActionActivated(ActionButton* button, std::string const& id)
 {
   if (preview_model_)
     preview_model_->PerformAction(id);

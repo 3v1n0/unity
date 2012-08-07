@@ -39,6 +39,8 @@ namespace unity
 {
 namespace dash
 {
+class ActionButton;
+
 namespace previews
 {
 
@@ -61,7 +63,7 @@ protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {}
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {}
   
-  virtual void OnActionActivated(nux::AbstractButton* button, std::string const& id);
+  virtual void OnActionActivated(ActionButton* button, std::string const& id);
 
   virtual void OnNavigateIn() {}
   virtual void OnNavigateInComplete() {}

@@ -53,6 +53,9 @@ NUX_IMPLEMENT_OBJECT_TYPE(MusicPreview);
 
 MusicPreview::MusicPreview(dash::Preview::Ptr preview_model)
 : Preview(preview_model)
+, image_(nullptr)
+, title_(nullptr)
+, subtitle_(nullptr)
 {
   SetupBackground();
   SetupViews();
@@ -130,16 +133,30 @@ void MusicPreview::SetupViews()
 {
   dash::MusicPreview* music_preview_model = dynamic_cast<dash::MusicPreview*>(preview_model_.get());
   if (!music_preview_model)
+  {
+    LOG_ERROR(logger) << "Could not derive music preview model from given parameter.";
     return;
-
+  }
   previews::Style& style = dash::previews::Style::Instance();
 
   nux::HLayout* image_data_layout = new nux::HLayout();
   image_data_layout->SetSpaceBetweenChildren(style.GetPanelSplitWidth());
 
+  /////////////////////
+  // Image
+  std::string image_hint;
+  if (preview_model_->image.Get())
+  {
+    glib::String tmp_icon(g_icon_to_string(preview_model_->image.Get()));
+    image_hint = tmp_icon.Str();
+  }
   image_ = new CoverArt();
-  image_->SetImage(preview_model_->image.Get().RawPtr() ? g_icon_to_string(preview_model_->image.Get().RawPtr()) : "");
+  if (image_hint.empty())
+    image_->GenerateImage(preview_model_->image_source_uri);
+  else
+    image_->SetImage(image_hint);
   image_->SetFont(style.no_preview_image_font());
+  /////////////////////
 
     /////////////////////
     // App Data Panel
@@ -155,16 +172,17 @@ void MusicPreview::SetupViews()
       title_ = new nux::StaticCairoText(preview_model_->title);
       title_->SetFont(style.title_font().c_str());
       title_->SetLines(-1);
+      album_data_layout->AddView(title_.GetPointer(), 1);
 
-      subtitle_ = new nux::StaticCairoText(preview_model_->subtitle);
-      subtitle_->SetFont(style.subtitle_size_font().c_str());
-      subtitle_->SetLines(-1);
-
-      album_data_layout->AddView(title_, 1);
-      album_data_layout->AddView(subtitle_, 1);
+      if (!preview_model_->subtitle.Get().empty())
+      {
+        subtitle_ = new nux::StaticCairoText(preview_model_->subtitle);
+        subtitle_->SetFont(style.subtitle_size_font().c_str());
+        subtitle_->SetLines(-1);
+        album_data_layout->AddView(subtitle_.GetPointer(), 1);
+      }
 
       /////////////////////
-
 
       /////////////////////
       // Music Tracks
@@ -184,12 +202,12 @@ void MusicPreview::SetupViews()
       // Hints && Actions
       nux::VLayout* hints_layout = NULL;
       nux::Layout* actions_layout = NULL;
-      if (preview_model_->GetInfoHints().size() > 0)
+      if (!preview_model_->GetInfoHints().empty())
       {
         hints_layout = new nux::VLayout();
         hints_layout->SetSpaceBetweenChildren(0);
         hints_layout->AddSpace(0, 1);
-        PreviewInfoHintWidget* preview_info_hints = new PreviewInfoHintWidget(preview_model_, 24);
+        PreviewInfoHintWidget* preview_info_hints = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth());
         hints_layout->AddView(preview_info_hints, 0);
 
         // If there are actions, we use a vertical layout
@@ -199,7 +217,7 @@ void MusicPreview::SetupViews()
       }
       else // otherwise we add a grid layout.
       {
-        hint_actions_layout->AddSpace(0,1);
+        hint_actions_layout->AddSpace(0, 1);
         action_buttons_.clear();
         actions_layout = BuildGridActionsLayout(preview_model_->GetActions(), action_buttons_);
         actions_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
@@ -212,12 +230,12 @@ void MusicPreview::SetupViews()
     full_data_layout_->AddLayout(album_data_layout, 0);
     if (tracks_)
     {
-      full_data_layout_->AddView(tracks_, 1);
+      full_data_layout_->AddView(tracks_.GetPointer(), 1);
     }
     full_data_layout_->AddLayout(hint_actions_layout, 0);
     /////////////////////
   
-  image_data_layout->AddView(image_, 0);
+  image_data_layout->AddView(image_.GetPointer(), 0);
   image_data_layout->AddLayout(full_data_layout_, 1);
 
   SetLayout(image_data_layout);
@@ -265,8 +283,8 @@ long MusicPreview::ComputeContentSize()
 
   int details_width = MAX(0, geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
 
-  title_->SetMaximumWidth(details_width);
-  subtitle_->SetMaximumWidth(details_width);
+  if (title_) { title_->SetMaximumWidth(details_width); }
+  if (subtitle_) { subtitle_->SetMaximumWidth(details_width); }
 
   for (nux::AbstractButton* button : action_buttons_)
   {

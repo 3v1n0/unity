@@ -288,7 +288,6 @@ int main(int argc, char **argv)
 
   nux::NuxInitialize(0);
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
-  nux::logging::Logger("unity").SetLogLevel(nux::logging::Warning);
   // The instances for the pseudo-singletons.
   unity::Settings settings;
   unity::dash::previews::Style panel_style;

@@ -358,22 +358,24 @@ bool PreviewContainer::AnimationInProgress()
 
 static float easeInOutQuart(float t)
 {
+    t = CLAMP(t, 0.0, 1.0);
     t*=2.0f;
-    if (t < 1) return 0.5f*t*t*t*t;
+    if (t < 1.0) return 0.5f*pow(t, 4);
     else {
         t -= 2.0f;
-        return -0.5f * (t*t*t*t- 2);
+        return -0.5f * (pow(t, 4)- 2);
     }
 }
 
 // static float easeInOutCubic(float t)
 // {
+//     t = CLAMP(t, 0.0, 1.0);
 //     t*=2.0f;
 //     if(t < 1.0f) {
-//         return 0.5f*t*t*t;
+//         return 0.5f*pow(t, 3);
 //     } else {
 //         t -= 2.0f;
-//         return 0.5f*(t*t*t + 2);
+//         return 0.5f*(pow(t, 3) + 2);
 //     }
 // }
 

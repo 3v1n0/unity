@@ -68,11 +68,12 @@ protected:
   void OnPauseTrack(std::string const& uri);
 
 private:
-  CoverArt* image_;
-  nux::StaticCairoText* title_;
-  nux::StaticCairoText* subtitle_;
   nux::VLayout* full_data_layout_;
-  nux::View* tracks_;
+
+  nux::ObjectPtr<CoverArt> image_;
+  nux::ObjectPtr<nux::StaticCairoText> title_;
+  nux::ObjectPtr<nux::StaticCairoText> subtitle_;
+  nux::ObjectPtr<nux::View> tracks_;
 
   typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
   LayerPtr details_bg_layer_;

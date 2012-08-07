@@ -74,8 +74,13 @@ public:
 
   int GetDetailsPanelMinimumWidth() const;
 
+  int GetInfoHintIconSizeWidth() const;
   int GetInfoHintNameWidth() const;
 
+  float GetDescriptionLineSpacing() const;
+  int GetDescriptionLineCount() const;
+
+  int GetRatingWidgetHeight() const;
 
   std::string title_font() const;
   std::string subtitle_size_font() const;
