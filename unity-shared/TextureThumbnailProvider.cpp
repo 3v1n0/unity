@@ -63,8 +63,15 @@ bool GdkTextureThumbnailer::Run(int size, std::string const& input_file, std::st
     return false;
   }
 
-  glib::Object<GdkPixbuf> source_pixbuf(gdk_pixbuf_new_from_stream (G_INPUT_STREAM (stream), 
-                                              NULL, &error));
+  glib::Object<GdkPixbuf> source_pixbuf(::gdk_pixbuf_new_from_stream_at_scale(G_INPUT_STREAM (stream),
+                                                       -1,
+                                                       size,
+                                                       TRUE,
+                                                       NULL,
+                                                       NULL));
+
+  // glib::Object<GdkPixbuf> source_pixbuf(gdk_pixbuf_new_from_stream (G_INPUT_STREAM (stream), 
+  //                                             NULL, &error));
   g_object_unref (stream);
 
   if (error != NULL)

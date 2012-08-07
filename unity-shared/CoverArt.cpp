@@ -23,6 +23,7 @@
 
 #include "CoverArt.h"
 #include "unity-shared/IntrospectableWrappers.h"
+#include "unity-shared/CairoTexture.h"
 #include <NuxCore/Logger.h>
 #include <Nux/VLayout.h>
 #include "DashStyle.h"
@@ -38,6 +39,8 @@ namespace previews
 namespace
 {
 nux::logging::Logger logger("unity.dash.previews.coverart");
+
+const int icon_width = 256;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(CoverArt);
@@ -130,12 +133,12 @@ void CoverArt::SetImage(std::string const& image_hint)
   else if (G_IS_ICON(icon))
   {
     StartWaiting();
-    slot_handle_ = IconLoader::GetDefault().LoadFromGIconString(image_hint, 128, sigc::mem_fun(this, &CoverArt::IconLoaded));
+    slot_handle_ = IconLoader::GetDefault().LoadFromGIconString(image_hint, icon_width, sigc::mem_fun(this, &CoverArt::IconLoaded));
   }
   else
   {
     StartWaiting();
-    slot_handle_ = IconLoader::GetDefault().LoadFromIconName(image_hint, 128, sigc::mem_fun(this, &CoverArt::IconLoaded));
+    slot_handle_ = IconLoader::GetDefault().LoadFromIconName(image_hint, icon_width, sigc::mem_fun(this, &CoverArt::IconLoaded));
   }
 
   if (icon != NULL)
@@ -179,25 +182,75 @@ void CoverArt::StartWaiting()
 
 void CoverArt::IconLoaded(std::string const& texid, unsigned size, glib::Object<GdkPixbuf> const& pixbuf)
 {
-  if (GetLayout())
-    GetLayout()->RemoveChildObject(overlay_text_);
+  int height = size;
 
-  slot_handle_ = 0;
-  stretch_image_ = false;
-  texture_screenshot_.Release();
-  waiting_ = false;
-  spinner_timeout_.reset();
-
-  if (pixbuf)
+  int pixbuf_width, pixbuf_height;
+  pixbuf_width = gdk_pixbuf_get_width(pixbuf);
+  pixbuf_height = gdk_pixbuf_get_height(pixbuf);
+  if (G_UNLIKELY(!pixbuf_height || !pixbuf_width))
   {
-    texture_screenshot_.Adopt(nux::CreateTextureFromPixbuf(pixbuf));
-  
+    pixbuf_width = (pixbuf_width) ? pixbuf_width : 1; // no zeros please
+    pixbuf_height = (pixbuf_height) ? pixbuf_height: 1; // no zeros please
+  }
+
+  if (pixbuf_width == pixbuf_height)
+  {
+    // quick path for square icons
+    texture_screenshot_.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
     QueueDraw();
   }
-  else if (GetLayout())
+  else
   {
-    GetLayout()->AddView(overlay_text_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0, nux::LayoutPosition(1));
-    ComputeContentSize();
+    // slow path for non square icons that must be resized to fit in the square
+    // texture
+
+    float aspect = static_cast<float>(pixbuf_height) / pixbuf_width; // already sanitized width/height so can not be 0.0
+    if (aspect < 1.0f)
+    {
+      pixbuf_width = icon_width;
+      pixbuf_height = pixbuf_width * aspect;
+
+      if (pixbuf_height > height)
+      {
+        // scaled too big, scale down
+        pixbuf_height = height;
+        pixbuf_width = pixbuf_height / aspect;
+      }
+    }
+    else
+    {
+      pixbuf_height = height;
+      pixbuf_width = pixbuf_height / aspect;
+    }
+
+    if (gdk_pixbuf_get_height(pixbuf) == pixbuf_height)
+    {
+      // we changed our mind, fast path is good
+      texture_screenshot_.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
+      QueueDraw();
+      return;
+    }
+
+    nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, pixbuf_width, pixbuf_height);
+    cairo_t* cr = cairo_graphics.GetInternalContext();
+
+    cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+    cairo_paint(cr);
+
+    float scale = float(pixbuf_height) / gdk_pixbuf_get_height(pixbuf);
+
+    //cairo_translate(cr,
+    //                static_cast<int>((width - (pixbuf_width * scale)) * 0.5),
+    //                static_cast<int>((height - (pixbuf_height * scale)) * 0.5));
+
+    cairo_scale(cr, scale, scale);
+
+    cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+    gdk_cairo_set_source_pixbuf(cr, pixbuf, 0, 0);
+    cairo_paint(cr);
+
+    texture_screenshot_.Adopt(texture_from_cairo_graphics(cairo_graphics));
+    QueueDraw();
   }
 }
 
@@ -208,16 +261,20 @@ void CoverArt::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
   gfx_engine.PushClippingRectangle(base);
   nux::GetPainter().PaintBackground(gfx_engine, base);
 
-  if (texture_screenshot_)
-  {
-    nux::Geometry imageDest = base;
-    nux::TexCoordXForm texxform;
+  unsigned int alpha, src, dest = 0;
+  gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
+  gfx_engine.GetRenderStates().SetBlend(true);
 
     gfx_engine.QRP_Color(base.x,
                       base.y,
                       base.GetWidth(),
                       base.GetHeight(),
                       nux::Color(0.03f, 0.03f, 0.03f, 0.0f));
+
+  if (texture_screenshot_)
+  {
+    nux::Geometry imageDest = base;
+    nux::TexCoordXForm texxform;
 
     if (stretch_image_ || base.GetWidth() < texture_screenshot_->GetWidth() || base.height < texture_screenshot_->GetHeight())
     {
@@ -258,16 +315,6 @@ void CoverArt::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
   }
   else
   {
-    unsigned int alpha, src, dest = 0;
-    gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
-    gfx_engine.GetRenderStates().SetBlend(true);
-
-    gfx_engine.QRP_Color(base.x,
-                      base.y,
-                      base.GetWidth(),
-                      base.GetHeight(),
-                      nux::Color(0.03f, 0.03f, 0.03f, 0.0f));
-    
     if (waiting_)
     {  
       nux::TexCoordXForm texxform;
@@ -309,9 +356,9 @@ void CoverArt::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
         frame_timeout_.reset(new glib::Timeout(22, sigc::mem_fun(this, &CoverArt::OnFrameTimeout)));
       }
     }
-
-    gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
   }
+  
+  gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
 
   gfx_engine.PopClippingRectangle();
 }
