@@ -73,7 +73,11 @@ CoverArt::~CoverArt()
 }
 
 void CoverArt::SetImage(std::string const& image_hint)
-{
+{ 
+  spinner_timeout_.reset();
+  frame_timeout_.reset();
+  waiting_ = false;
+
   if (slot_handle_ > 0)
   {
     IconLoader::GetDefault().DisconnectHandle(slot_handle_);
@@ -100,8 +104,6 @@ void CoverArt::SetImage(std::string const& image_hint)
   {
     // for files on disk, we stretch to maximum aspect ratio.
     stretch_image_  = true;
-    spinner_timeout_.reset();
-    waiting_ = false;
 
     GFileInputStream       *stream;
     GError                 *error = NULL;
@@ -156,6 +158,9 @@ void CoverArt::GenerateImage(std::string const& uri)
 
 void CoverArt::StartWaiting()
 {
+  if (waiting_)
+    return;
+
   waiting_ = true;
 
   rotate_matrix_.Rotate_z(0.0f);
@@ -182,6 +187,13 @@ void CoverArt::StartWaiting()
 
 void CoverArt::IconLoaded(std::string const& texid, unsigned size, glib::Object<GdkPixbuf> const& pixbuf)
 {
+  // Finished waiting
+  spinner_timeout_.reset();
+  frame_timeout_.reset();
+  waiting_ = false;
+  
+  stretch_image_ = false;
+
   int height = size;
 
   int pixbuf_width, pixbuf_height;
