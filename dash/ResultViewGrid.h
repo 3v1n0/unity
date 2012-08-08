@@ -93,6 +93,8 @@ private:
   nux::Property<int> selected_index_;
   std::string focused_uri_;
 
+  std::string activated_uri_;
+
   int last_lazy_loaded_result_;
   int last_mouse_down_x_;
   int last_mouse_down_y_;

@@ -52,6 +52,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   , mouse_over_index_(-1)
   , active_index_(-1)
   , selected_index_(-1)
+  , activated_uri_("NULL")
   , last_lazy_loaded_result_(0)
   , last_mouse_down_x_(-1)
   , last_mouse_down_y_(-1)
@@ -98,6 +99,36 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
     // on dash size changed, we update our stored values, this sucks
     //FIXME in P - make dash size the size of our dash not the entire screen
     g_variant_get (data, "(ii)", &recorded_dash_width_, &recorded_dash_height_);
+  });
+
+  ubus_.RegisterInterest(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, [&] (GVariant* data) {
+    int nav_mode = 0;
+    gchar* uri;
+    g_variant_get(data, "(is)", &nav_mode, &uri);
+   
+    if (std::string(uri) == activated_uri_)
+    {
+      int current_index = GetIndexForUri(activated_uri_);
+      if (nav_mode == -1)
+      {
+        current_index--;  
+      }
+      else if (nav_mode == 1)
+      {
+        current_index++;
+      }
+      
+      if (nav_mode == 0)
+      {
+        activated_uri_ = "";
+      }
+      else
+      {
+        activated_uri_ = GetUriForIndex(current_index);
+        UriActivated.emit(activated_uri_, ActivateType::PREVIEW);
+      }
+    }
+
   });
 
   SetDndEnabled(true, false);
@@ -637,9 +668,19 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
     selected_index_ = index;
     focused_uri_ = result.uri;
     if (nux::GetEventButton(button_flags) == nux::MouseButton::MOUSE_BUTTON3)
+    {
+      activated_uri_ = result.uri();
       UriActivated.emit(result.uri, ResultView::ActivateType::PREVIEW);
+      int left_results = index;
+      int right_results = (results_.size() - index) - 1;
+      //FIXME - just uses y right now, needs to use the absolute position of the bottom of the result 
+      ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 
+                                g_variant_new("(iii)", y, left_results, right_results));
+    }
     else
+    {
       UriActivated.emit(result.uri, ResultView::ActivateType::DIRECT);
+    }
   }
 }
 

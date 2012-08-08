@@ -43,13 +43,16 @@ public:
   PreviewStateMachine();
   ~PreviewStateMachine();
 
-  void ActivatePreview(Preview::Ptr preview); // async call.
+  void ActivatePreview(Preview::Ptr preview); // potentially async call.
   void ClosePreview();
 
   void SetSplitPosition(SplitPosition position, int coord);
   int  GetSplitPosition(SplitPosition position);
 
   nux::Property<bool> preview_active;
+  nux::Property<int> left_results;
+  nux::Property<int> right_results;
+  
   sigc::signal<void, Preview::Ptr> PreviewActivated;
 
 private:
@@ -57,7 +60,7 @@ private:
 
   // all stored co-ordinates are absolute geometry
   // to make dealing with the views inside the scrollview easier to understand
-  std::unordered_map<SplitPosition, int> split_positions_;
+  std::unordered_map<int, int> split_positions_;
 
   Preview::Ptr stored_preview_;
 };

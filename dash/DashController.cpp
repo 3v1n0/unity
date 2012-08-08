@@ -138,13 +138,6 @@ void Controller::RegisterUBusInterests()
     }
   });
 
-  ubus_manager_.RegisterInterest(UBUS_DASH_SPLIT_COORD_CHANGED, [&] (GVariant *data) 
-  {
-    SplitPosition position_type;
-    int position = -1;
-    g_variant_get(data, "(ii)", &position_type, &position);
-    preview_state_machine_.SetSplitPosition(position_type, position);
-  });
 }
 
 void Controller::EnsureDash()

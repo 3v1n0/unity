@@ -25,12 +25,17 @@ namespace dash
 
 PreviewStateMachine::PreviewStateMachine()
   : preview_active(false)
+  , left_results(-1)
+  , right_results(-1)
   , stored_preview_(nullptr)
 {
   for (int pos = SplitPosition::START; pos != SplitPosition::END; pos++)
   {
-    split_positions_[static_cast<SplitPosition>(pos)] = -1;
+    split_positions_[pos] = -1;
   }
+
+  left_results.changed.connect([&] (int value) { CheckPreviewRequirementsFulfilled();});
+  right_results.changed.connect([&] (int value) { CheckPreviewRequirementsFulfilled();});
 }
 
 PreviewStateMachine::~PreviewStateMachine()
@@ -51,13 +56,13 @@ void PreviewStateMachine::ClosePreview()
 
 void PreviewStateMachine::SetSplitPosition(SplitPosition position, int coord)
 {
-  split_positions_[position] = coord;
+  split_positions_[static_cast<int>(position)] = coord;
   CheckPreviewRequirementsFulfilled();
 }
 
 int PreviewStateMachine::GetSplitPosition(SplitPosition position)
 {
-  return split_positions_[position];
+  return split_positions_[static_cast<int>(position)];
 }
 
 void PreviewStateMachine::CheckPreviewRequirementsFulfilled()
@@ -68,10 +73,19 @@ void PreviewStateMachine::CheckPreviewRequirementsFulfilled()
   if (stored_preview_ == nullptr)
     return;
 
+  /* right now this is disabled as long as we aren't doing the fancy splitting animation
+   * as we don't care about positions
+   *
   if (GetSplitPosition(CONTENT_AREA) < 0) return;
   if (GetSplitPosition(FILTER_BAR) < 0) return;
   if (GetSplitPosition(LENS_BAR) < 0) return;
   if (GetSplitPosition(SEARCH_BAR) < 0) return;
+   */
+ 
+  if (left_results < 0 &&
+      right_results < 0)
+    return;
+
 
   preview_active = true;
   PreviewActivated(stored_preview_);

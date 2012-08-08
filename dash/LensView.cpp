@@ -300,6 +300,7 @@ void LensView::OnCategoryAdded(Category const& category)
       } break;
       case ResultView::ActivateType::PREVIEW:
       {
+        uri_preview_activated.emit(uri);
         lens_->Preview(uri);
       } break;
       default: break;

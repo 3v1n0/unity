@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: l 10n\n"
 "Report-Msgid-Bugs-To: ayatana-dev@lists.launchpad.net\n"
-"POT-Creation-Date: 2012-07-12 17:07+0100\n"
+"POT-Creation-Date: 2012-08-08 14:49+0100\n"
 "PO-Revision-Date: 2010-03-02 12:37-0500\n"
 "Last-Translator: Canonical OEM\n"
 "Language-Team: Chinese (simplified)\n"
@@ -269,6 +269,7 @@ msgstr "从启动程序中删除"
 msgid "Unmount"
 msgstr ""
 
+#. Application is being installed, or hasn't been installed yet
 msgid "Waiting to install"
 msgstr ""
 
