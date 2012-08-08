@@ -1292,21 +1292,22 @@ bool Launcher::IsOverlayOpen() const
 
 void Launcher::OnActionDone(GVariant* data)
 {
-  _hide_machine.SetQuirk(LauncherHideMachine::LAST_ACTION_ACTIVATE, true);
+  //_hide_machine.SetQuirk(LauncherHideMachine::LAST_ACTION_ACTIVATE, true);
 }
 
-void Launcher::SetHidden(bool hidden)
+void Launcher::SetHidden(bool hide_launcher)
 {
-  if (hidden == _hidden)
+  printf("SetHidden....:%i\n", hide_launcher);
+  if (hide_launcher == _hidden)
     return;
 
-  _hidden = hidden;
-  _hide_machine.SetQuirk(LauncherHideMachine::LAUNCHER_HIDDEN, hidden);
-  _hover_machine.SetQuirk(LauncherHoverMachine::LAUNCHER_HIDDEN, hidden);
+  _hidden = hide_launcher;
+  _hide_machine.SetQuirk(LauncherHideMachine::LAUNCHER_HIDDEN, hide_launcher);
+  _hover_machine.SetQuirk(LauncherHoverMachine::LAUNCHER_HIDDEN, hide_launcher);
 
-  _hide_machine.SetQuirk(LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
+  //_hide_machine.SetQuirk(LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
 
-  if (hidden)
+  if (hide_launcher)
   {
     _hide_machine.SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, false);
     _hide_machine.SetQuirk(LauncherHideMachine::MT_DRAG_OUT, false);
@@ -1318,15 +1319,29 @@ void Launcher::SetHidden(bool hidden)
 
   TimeUtil::SetTimeStruct(&_times[TIME_AUTOHIDE], &_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT);
 
-  _parent->EnableInputWindow(!hidden, launcher::window_title, false, false);
+  _parent->EnableInputWindow(!hide_launcher, launcher::window_title, false, false);
 
-  if (!hidden && GetActionState() == ACTION_DRAG_EXTERNAL)
+  if (!hide_launcher && GetActionState() == ACTION_DRAG_EXTERNAL)
     DndReset();
 
   EnsureAnimation();
 
   hidden_changed.emit();
 }
+
+void Launcher::UpdateChangeInMousePosition(int delta_x, int delta_y)
+{
+  printf("x: %i, y: %i\n", delta_x, MOUSE_DEADZONE);
+  _postreveal_mousemove_delta_x += delta_x;
+  _postreveal_mousemove_delta_y += delta_y;
+
+  // check the state before changing it to avoid uneeded hide calls
+  if (!_hide_machine.GetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL) &&
+     (nux::Abs(_postreveal_mousemove_delta_x) > MOUSE_DEADZONE ||
+     nux::Abs(_postreveal_mousemove_delta_y) > MOUSE_DEADZONE))
+       _hide_machine.SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, true);
+}
+
 
 int Launcher::GetMouseX() const
 {
@@ -2237,6 +2252,7 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
 
 void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
+  printf("MouseEnter\n");
   SetMousePosition(x, y);
   SetStateMouseOverLauncher(true);
 
@@ -2247,28 +2263,18 @@ void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned
 void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   SetStateMouseOverLauncher(false);
-
+  printf("MouseLeave\n");
   EventLogic();
   EnsureAnimation();
 }
 
 void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
+  printf("MouseMove: %i - %i\n", x-_postreveal_mousemove_delta_x, y-_postreveal_mousemove_delta_y);
   SetMousePosition(x, y);
 
   if (!_hidden)
-  {
-    _postreveal_mousemove_delta_x += dx;
-    _postreveal_mousemove_delta_y += dy;
-
-    // check the state before changing it to avoid uneeded hide calls
-    if (!_hide_machine.GetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL) &&
-        (nux::Abs(_postreveal_mousemove_delta_x) > MOUSE_DEADZONE ||
-         nux::Abs(_postreveal_mousemove_delta_y) > MOUSE_DEADZONE))
-      _hide_machine.SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, true);
-  }
-
-
+    UpdateChangeInMousePosition(dx, dy);
 
   // Every time the mouse moves, we check if it is inside an icon...
   EventLogic();
@@ -2408,7 +2414,7 @@ void Launcher::EventLogic()
     launcher_icon->mouse_enter.emit(monitor);
     _icon_under_mouse = launcher_icon;
 
-    _hide_machine.SetQuirk(LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
+    //_hide_machine.SetQuirk(LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
   }
 }
 
@@ -2417,7 +2423,7 @@ void Launcher::MouseDownLogic(int x, int y, unsigned long button_flags, unsigned
   AbstractLauncherIcon::Ptr launcher_icon;
   launcher_icon = MouseIconIntersection(_mouse_position.x, _mouse_position.y);
 
-  _hide_machine.SetQuirk(LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
+  //_hide_machine.SetQuirk(LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
 
   if (launcher_icon)
   {

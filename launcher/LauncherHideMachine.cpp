@@ -116,7 +116,7 @@ void LauncherHideMachine::EnsureHideState(bool skip_delay)
     SetShouldHide(false, skip_delay);
     return;
   }
-  
+
   // early check to see if we are locking to hidden - but only if we are in non HIDE_NEVER
   if (GetQuirk(LOCK_HIDE))
   {
