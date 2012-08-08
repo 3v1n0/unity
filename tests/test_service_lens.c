@@ -155,8 +155,31 @@ on_search_changed(UnityScope* scope, UnityLensSearch *search,
   // to differentiate global and non-global searches, we'll return more items
   // in the case of global search
   int num_items = search_type == UNITY_SEARCH_TYPE_GLOBAL ? 10 : 5;
+  const gchar* search_string = unity_lens_search_get_search_string(search);
 
   DeeModel* model = (DeeModel*)unity_lens_search_get_results_model(search);
+
+  // If the search string asks for one category
+  // Return 10 results on one single category
+  if (!g_strcmp0(search_string,"One category only please")) {
+    dee_model_clear(model);
+
+    for (i=0; i<10; i++)
+    {
+      dee_model_append(model,
+                       "file:///test",
+                       "gtk-apply",
+                       0,
+                       "text/html",
+                       "As you demand",
+                       "One does not simply write code",
+                       "file:///test");
+    }
+
+    unity_lens_search_finished(search);
+
+    return;
+  }
 
   for (i = 0; i < num_items; i++)
   {

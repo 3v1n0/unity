@@ -14,6 +14,9 @@
 
 #include "test_utils.h"
 
+#include "LensView.h"
+#include "PlacesGroup.h"
+
 using namespace std;
 using namespace unity::dash;
 
@@ -31,6 +34,7 @@ public:
                      "Test Lens", "gtk-apply")),
       n_categories_(0)
     , n_filters_(0)
+    , lensview_(new LensView(lens_, nullptr))
   {
     WaitForConnected();
 
@@ -96,6 +100,7 @@ public:
   Lens::Ptr lens_;
   unsigned int n_categories_;
   unsigned int n_filters_;
+  LensView* lensview_;
 };
 
 TEST_F(TestLens, TestConnection)
@@ -187,6 +192,19 @@ TEST_F(TestLens, TestGlobalSearch)
     EXPECT_EQ(result.comment, "kamstrup likes ponies");
     EXPECT_EQ(result.dnd_uri, "file:///test");
   }
+}
+
+TEST_F(TestLens, TestCategoryExpansion)
+{
+  Results::Ptr results = lens_->results;
+
+  lens_->Search("One category only please");
+  WaitForModel<Result>(results.get(),10);
+
+  // Check if the first category has expanded
+  Result result = results->RowAtIndex(0);
+  unity::PlacesGroup* places_group = lensview_->GetPlacesGroupAtCategoryIndex(result.category_index);
+  EXPECT_TRUE(places_group->GetExpanded());
 }
 
 TEST_F(TestLens, TestActivation)

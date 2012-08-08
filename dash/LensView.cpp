@@ -134,7 +134,8 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   , no_results_active_(false)
   , last_expanded_group_(nullptr)
 {
-  SetupViews(show_filters);
+  if (show_filters != nullptr)
+    SetupViews(show_filters);
   SetupCategories();
   SetupResults();
   SetupFilters();
@@ -450,6 +451,11 @@ void LensView::CheckCategoryExpansion()
         last_expanded_group_->SetExpanded(true);
     else
         last_expanded_group_ = nullptr;
+}
+
+PlacesGroup* LensView::GetPlacesGroupAtCategoryIndex(int index)
+{
+  return categories_.at(index);
 }
 
 void LensView::HideResultsMessage()
