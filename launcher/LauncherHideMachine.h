@@ -57,7 +57,6 @@ public:
     VERTICAL_SLIDE_ACTIVE  = 1 << 12,
     KEY_NAV_ACTIVE         = 1 << 13,
     PLACES_VISIBLE         = 1 << 14,
-    LAST_ACTION_ACTIVATE   = 1 << 15,
     SCALE_ACTIVE           = 1 << 16,
     EXPO_ACTIVE            = 1 << 17,
     MT_DRAG_OUT            = 1 << 18,
