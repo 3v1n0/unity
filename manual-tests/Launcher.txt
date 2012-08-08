@@ -679,3 +679,19 @@ Expected Result:
  * No icon flickers near the top panel.
  * See https://bugs.launchpad.net/unity/+bug/980942/+attachment/3059914/+files/launcher-accordion-effect-tooltip-bug.ogv.
 
+
+Stop SD card by dragging it's icon to trash
+---------------------------------------------------
+
+Setup:
+ * Have an SD Card reader and an SD Card
+
+Actions:
+ * Insert the SD card into the SD card reader.
+ * Wait for the SD card to mount.
+ * Drag and drop the SD card icon into the trash.
+
+Expected result:
+ * The SD card launcher icon appears in the launcher after the SD card is mounted
+ * After the icon is dragged into the trash, the SD card is "stopped"
+ * A notification appears, stating that the SD card has been stopped.
