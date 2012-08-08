@@ -602,14 +602,14 @@ void QuicklistView::CancelItemsPrelightStatus()
 void QuicklistView::RecvItemMouseDrag(QuicklistMenuItem* item, int x, int y)
 {
   nux::Geometry geo;
-  for (auto item : _item_list)
+  for (auto it : _item_list)
   {
-    int item_index = GetItemIndex(item);
+    int item_index = GetItemIndex(it);
 
     if (!IsMenuItemSelectable(item_index))
       continue;
 
-    geo = item->GetGeometry();
+    geo = it->GetGeometry();
     geo.width = _item_layout->GetBaseWidth();
 
     if (geo.IsPointInside(x + item->GetBaseX(), y + item->GetBaseY()))

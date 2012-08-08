@@ -404,7 +404,7 @@ create_children(UnitySwitcherAccessible* self)
   if (switcher_model == NULL)
     return;
 
-  for (it = switcher_model->begin(); it != switcher_model->end(); it++)
+  for (it = switcher_model->begin(); it != switcher_model->end(); ++it)
   {
     child = *it;
     child_accessible = unity_launcher_icon_accessible_new(child.GetPointer());

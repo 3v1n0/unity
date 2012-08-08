@@ -164,7 +164,6 @@ int main(int argc, char **argv)
   dash::Style dash_style;
   panel::Style panel_style;
 
-  GeisAdapter geis_adapter;
   internal::FavoriteStoreGSettings favorite_store;
   BackgroundEffectHelper::blur_type = BLUR_NONE;
 
