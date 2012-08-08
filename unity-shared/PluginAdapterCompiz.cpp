@@ -1010,7 +1010,7 @@ PluginAdapter::CheckWindowIntersections (nux::Geometry const& region, bool &acti
   }
   else
   {
-    for (it = window_list.begin(); it != window_list.end(); it++)
+    for (it = window_list.begin(); it != window_list.end(); ++it)
     {
       if (CheckWindowIntersection(region, *it))
       {

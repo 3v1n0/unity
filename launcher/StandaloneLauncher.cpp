@@ -59,7 +59,6 @@ int main(int argc, char** argv)
 
   nux::NuxInitialize(0);
 
-  GeisAdapter geis_adapter;
   unity::Settings settings;
   panel::Style panel_style;
   internal::FavoriteStoreGSettings favorite_store;
