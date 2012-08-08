@@ -16,6 +16,8 @@
 
 #include "LensView.h"
 #include "PlacesGroup.h"
+#include "unity-shared/DashStyle.h"
+#include "unity-shared/UnitySettings.h"
 
 using namespace std;
 using namespace unity::dash;
@@ -100,6 +102,8 @@ public:
   Lens::Ptr lens_;
   unsigned int n_categories_;
   unsigned int n_filters_;
+  unity::Settings settings;
+  unity::dash::Style dash_style;
   LensView* lensview_;
 };
 
