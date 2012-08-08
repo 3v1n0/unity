@@ -198,7 +198,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
 
   ubus_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &Launcher::OnOverlayShown));
   ubus_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &Launcher::OnOverlayHidden));
-  ubus_.RegisterInterest(UBUS_LAUNCHER_ACTION_DONE, sigc::mem_fun(this, &Launcher::OnActionDone));
   ubus_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Launcher::OnBGColorChanged));
   ubus_.RegisterInterest(UBUS_LAUNCHER_LOCK_HIDE, sigc::mem_fun(this, &Launcher::OnLockHideChanged));
 
@@ -1288,11 +1287,6 @@ void Launcher::OnOverlayHidden(GVariant* data)
 bool Launcher::IsOverlayOpen() const
 {
   return _dash_is_open || _hud_is_open;
-}
-
-void Launcher::OnActionDone(GVariant* data)
-{
-  //_hide_machine.SetQuirk(LauncherHideMachine::LAST_ACTION_ACTIVATE, true);
 }
 
 void Launcher::SetHidden(bool hide_launcher)
