@@ -93,6 +93,7 @@ TEST_F(TestLauncher, TestMouseWheelScroll)
 {
   int initial_scroll_delta;
 
+  launcher_->SetHover(true);
   initial_scroll_delta = launcher_->GetDragDelta();
 
   // scroll down
@@ -102,6 +103,8 @@ TEST_F(TestLauncher, TestMouseWheelScroll)
   // scroll up
   launcher_->RecvMouseWheel(0,0,-20,0,0);
   EXPECT_EQ(launcher_->GetDragDelta(), initial_scroll_delta);
+
+  launcher_->SetHover(false);
 }
 
 }
