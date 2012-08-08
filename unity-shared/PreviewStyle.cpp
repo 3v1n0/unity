@@ -238,14 +238,21 @@ int Style::GetStatusIconSize() const
   return 12;
 }
 
+float Style::GetVideoImageAspectRatio() const
+{
+  return float(540)/380;
+}
+
 std::string Style::title_font() const
 {
   return "Ubuntu 22";
 }
+
 std::string Style::subtitle_size_font() const
 {
   return "Ubuntu 12.5";
 }
+
 std::string Style::description_font() const
 {
   return "Ubuntu Light 10";
@@ -255,10 +262,12 @@ std::string Style::app_license_font() const
 {
   return "Ubuntu Light 10";
 }
+
 std::string Style::app_last_update_font() const
 {
   return "Ubuntu Light 10";
 }
+
 std::string Style::app_copywrite_font() const
 {
   return "Ubuntu Light 10";
@@ -268,10 +277,17 @@ std::string Style::info_hint_font() const
 {
   return "Ubuntu Light 10";
 }
+
+std::string Style::info_hint_bold_font() const
+{
+  return "Ubuntu Bold 10";
+}
+
 std::string Style::user_rating_font() const
 {
   return "Ubuntu Light 10";
 }
+
 std::string Style::no_preview_image_font() const
 {
   return "Ubuntu Light 16";

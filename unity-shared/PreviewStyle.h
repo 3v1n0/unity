@@ -94,6 +94,7 @@ public:
   std::string app_last_update_font() const;
   std::string app_copywrite_font() const;
   std::string info_hint_font() const;
+  std::string info_hint_bold_font() const;
   std::string user_rating_font() const;
   std::string no_preview_image_font() const;
 
@@ -112,6 +113,8 @@ public:
   
   ////////////////////////////////
   // Movie Preview
+  float GetVideoImageAspectRatio() const;
+
   int GetTrackBarHeight() const;
   int GetMusicDurationWidth() const;
   int GetStatusIconSize() const;

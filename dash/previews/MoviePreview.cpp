@@ -34,6 +34,7 @@
 
 #include "MoviePreview.h"
 #include "PreviewInfoHintWidget.h"
+#include "PreviewRatingsWidget.h"
  
 namespace unity
 {
@@ -198,8 +199,13 @@ void MoviePreview::SetupView()
         subtitle_->SetFont(style.subtitle_size_font().c_str());
         app_data_layout->AddView(subtitle_.GetPointer(), 1);
       }
-
       /////////////////////
+      
+      rating_ = new PreviewRatingsWidget();
+      rating_->SetMaximumHeight(style.GetRatingWidgetHeight());
+      rating_->SetMinimumHeight(style.GetRatingWidgetHeight());
+      rating_->SetRating(movie_preview_model->rating);
+      rating_->SetReviews(movie_preview_model->num_ratings);
 
       /////////////////////
       // Description
@@ -209,6 +215,12 @@ void MoviePreview::SetupView()
       nux::VLayout* preview_info_layout = new nux::VLayout();
       preview_info_layout->SetSpaceBetweenChildren(12);
       preview_info->SetLayout(preview_info_layout);
+
+      if (!preview_model_->GetInfoHints().empty())
+      {
+        PreviewInfoHintWidget* preview_info_hints = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth(), false, true);
+        preview_info_layout->AddView(preview_info_hints, 0);
+      }
 
       if (!preview_model_->description.Get().empty())
       {
@@ -220,12 +232,6 @@ void MoviePreview::SetupView()
         description_->SetText(preview_model_->description);
         preview_info_layout->AddView(description_.GetPointer());
       }
-
-      if (!preview_model_->GetInfoHints().empty())
-      {
-        PreviewInfoHintWidget* preview_info_hints = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth());
-        preview_info_layout->AddView(preview_info_hints);
-      }
       /////////////////////
 
       /////////////////////
@@ -236,6 +242,7 @@ void MoviePreview::SetupView()
       ///////////////////
 
     full_data_layout_->AddLayout(app_data_layout, 0);
+    full_data_layout_->AddView(rating_.GetPointer(), 0);
     full_data_layout_->AddView(preview_info, 1);
     full_data_layout_->AddView(actions_layout, 0);
     /////////////////////
@@ -254,7 +261,7 @@ long MoviePreview::ComputeContentSize()
 
   previews::Style& style = dash::previews::Style::Instance();
 
-  nux::Geometry geo_art(geo.x, geo.y, style.GetAppImageAspectRatio() * geo.height, geo.height);
+  nux::Geometry geo_art(geo.x, geo.y, style.GetVideoImageAspectRatio() * geo.height, geo.height);
 
   if (geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() < style.GetDetailsPanelMinimumWidth())
     geo_art.width = MAX(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() - style.GetDetailsPanelMinimumWidth());

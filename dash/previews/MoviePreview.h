@@ -40,6 +40,7 @@ namespace dash
 namespace previews
 {
 class CoverArt;
+class PreviewRatingsWidget;
 
 class MoviePreview : public Preview
 {
@@ -69,6 +70,7 @@ protected:
   nux::VLayout* full_data_layout_;
 
   nux::ObjectPtr<CoverArt> image_;
+  nux::ObjectPtr<PreviewRatingsWidget> rating_;
   nux::ObjectPtr<nux::StaticCairoText> title_;
   nux::ObjectPtr<nux::StaticCairoText> subtitle_;
   nux::ObjectPtr<nux::StaticCairoText> description_;

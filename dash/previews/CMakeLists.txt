@@ -61,6 +61,13 @@ add_dependencies (music_previews previews-lib)
 target_link_libraries (music_previews previews-lib unity-shared)
 
 # 
+# Music Standalone variant
+#
+add_executable (movie_previews StandaloneMoviePreview.cpp)
+add_dependencies (movie_previews previews-lib)
+target_link_libraries (movie_previews previews-lib unity-shared)
+
+# 
 # Thumbnail Standalone
 #
 add_executable (thumbnailer StandaloneThumbnailer.cpp)
