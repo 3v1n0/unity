@@ -73,6 +73,24 @@ class LauncherRevealTests(LauncherTestCase):
         sleep(5)
         self.assertThat(self.launcher_instance.is_showing, Equals(False))
 
+    def test_launcher_stays_open_after_spread(self):
+        """When """
+        calc_win1 = self.start_app_window("Calculator")
+        #calc_win2 = self.start_app_window("Calculator")
+        calc_app = calc_win1.application
+
+        #self.assertVisibleWindowStack([calc_win2, calc_win1])
+        #self.assertProperty(calc_win2, is_focused=True)
+
+        calc_icon = self.launcher.model.get_icon(desktop_id=calc_app.desktop_file)
+        #self.addCleanup(self.keybinding, "spread/cancel")
+        self.launcher_instance.click_launcher_icon(calc_icon)
+        self.launcher_instance.click_launcher_icon(calc_icon)
+
+        self.assertThat(self.window_manager.scale_active, Eventually(Equals(False)))
+
+
+
     def test_new_icon_has_the_shortcut(self):
          """New icons should have an associated shortcut"""
          if self.launcher.model.num_bamf_launcher_icons() >= 10:
