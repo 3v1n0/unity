@@ -212,14 +212,14 @@ public:
   void SetQuirk(Quirk quirk, bool value)
   {
     quirks_[quirk] = value;
+    clock_gettime(CLOCK_MONOTONIC, &(quirk_times_[quirk]));
   }
 
   void ResetQuirkTime(Quirk quirk) {};
 
   struct timespec GetQuirkTime(Quirk quirk)
   {
-    timespec tv;
-    return tv;
+    return quirk_times_[quirk];
   }
 
   IconType GetIconType()
@@ -345,6 +345,7 @@ private:
   int sort_priority_;
   IconType type_;
   bool quirks_[QUIRK_LAST];
+  timespec  quirk_times_[QUIRK_LAST];
 };
 
 }
