@@ -182,7 +182,7 @@ void PreviewInfoHintWidget::SetupViews()
       std::string tmp_display_name = info_hint->display_name;
       if (condensed_format_) { tmp_display_name += ":"; }
 
-      info_name.Adopt(new nux::StaticCairoText(tmp_display_name, NUX_TRACKER_LOCATION));
+      info_name = new nux::StaticCairoText(tmp_display_name, NUX_TRACKER_LOCATION);
       info_name->SetFont(condensed_format_ ? style.info_hint_bold_font() : style.info_hint_font());
       info_name->SetLines(-1);
       if (!condensed_format_)
