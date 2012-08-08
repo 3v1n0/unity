@@ -113,6 +113,8 @@ public:
 
   void Resize();
 
+  int GetDragDelta() const;
+
   sigc::signal<void, char*, AbstractLauncherIcon::Ptr> launcher_addrequest;
   sigc::signal<void, AbstractLauncherIcon::Ptr> launcher_removerequest;
   sigc::signal<void, AbstractLauncherIcon::Ptr> icon_animation_complete;

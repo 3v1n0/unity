@@ -2858,5 +2858,10 @@ bool Launcher::InspectKeyEvent(unsigned int eventType,
   return true;
 }
 
+int Launcher::GetDragDelta() const
+{
+  return _launcher_drag_delta;
+}
+
 } // namespace launcher
 } // namespace unity
