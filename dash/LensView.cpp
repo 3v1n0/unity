@@ -132,6 +132,7 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   , lens_(lens)
   , initial_activation_(true)
   , no_results_active_(false)
+  , last_expanded_group_(nullptr)
 {
   SetupViews(show_filters);
   SetupCategories();
@@ -426,30 +427,29 @@ void LensView::CheckNoResults(Lens::Hints const& hints)
 
 void LensView::CheckCategoryExpansion()
 {
-    int no_of_displayed_categories = 0;
-    static PlacesGroup* group_with_result = nullptr;
+    int number_of_displayed_categories = 0;
 
     // Check if we had expanded a group in last run
     // If so, collapse it for now
-    if (group_with_result != nullptr)
+    if (last_expanded_group_ != nullptr)
     {
-        group_with_result->SetExpanded(false);
-        group_with_result = nullptr;
+        last_expanded_group_->SetExpanded(false);
+        last_expanded_group_ = nullptr;
     }
 
     // Cycle through all categories
     for (auto category : categories_)
     {
         if (counts_[category] > 0) {
-            no_of_displayed_categories++;
-            group_with_result = category;
+            number_of_displayed_categories++;
+            last_expanded_group_ = category;
         }
     }
 
-    if (no_of_displayed_categories == 1 && group_with_result != nullptr)
-        group_with_result->SetExpanded(true);
+    if (number_of_displayed_categories == 1 && last_expanded_group_ != nullptr)
+        last_expanded_group_->SetExpanded(true);
     else
-        group_with_result = nullptr;
+        last_expanded_group_ = nullptr;
 }
 
 void LensView::HideResultsMessage()

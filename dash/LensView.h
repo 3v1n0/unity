@@ -109,6 +109,7 @@ private:
   bool initial_activation_;
   bool no_results_active_;
   std::string search_string_;
+  PlacesGroup* last_expanded_group_;
 
   nux::HLayout* layout_;
   LensScrollView* scroll_view_;
