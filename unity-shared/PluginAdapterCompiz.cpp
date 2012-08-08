@@ -815,7 +815,8 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
 bool
 PluginAdapter::ScaleWindowGroup(std::vector<Window> windows, int state, bool force)
 {
-  if (windows.size() > 1 || (force && !windows.empty()))
+  std::size_t num_windows = windows.size();
+  if (num_windows > 1 || (force && num_windows))
   {
     std::string match = MatchStringForXids(&windows);
     InitiateScale(match, state);
