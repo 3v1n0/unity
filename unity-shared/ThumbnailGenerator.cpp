@@ -40,8 +40,8 @@ namespace
   nux::logging::Logger logger("unity.thumbnailgenerator");
   ThumbnailGenerator* thumbnail_instance = nullptr;
 
-  const unsigned int CLEANUP_DURATION = 10*1000;
-  const unsigned int CLEANUP_PREVIEW_AGE = 60*1000;
+  const unsigned int CLEANUP_DURATION = 60*1000;         // 1 minute
+  const unsigned int CLEANUP_PREVIEW_AGE = 6*60*60*1000; // 6 hours
 
   static std::multimap<std::string, std::string> thumbnail_content_map;
   static std::map<std::string, Thumbnailer::Ptr> thumbnailers_;
