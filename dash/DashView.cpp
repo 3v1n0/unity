@@ -843,7 +843,7 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
       for (auto child : active_lens_view_->filter_bar()->GetLayout()->GetChildren())
       {
         FilterExpanderLabel* filter = dynamic_cast<FilterExpanderLabel*>(child);
-        if (child)
+        if (filter)
           tabs.push_back(filter->expander_view());
       }
     }
