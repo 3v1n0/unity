@@ -394,26 +394,6 @@
                     <default>75</default>
                 </option>
 
-                <option name="devices_option" type="int">
-                    <_short>Show Devices</_short>
-                    <_long>Show devices in the launcher</_long>
-                    <min>0</min>
-                    <max>2</max>
-                    <default>1</default>
-                    <desc>
-                        <value>0</value>
-                        <_name>Never</_name>
-                    </desc>
-                    <desc>
-                        <value>1</value>
-                        <_name>Only Mounted</_name>
-                    </desc>
-                    <desc>
-                        <value>2</value>
-                        <_name>Always</_name>
-                    </desc>
-                </option>
-
                 <option name="shortcut_overlay" type="bool">
                   <_short>Enable Shortcut Hints Overlay</_short>
                   <_long>Enable Shortcut Hints Overlay</_long>

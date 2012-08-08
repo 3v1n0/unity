@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-12 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,130 +14,161 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Andrea Azzarone <aazzarone@hotmail.it>
+ * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
+#include <gio/gio.h>
+#include <NuxCore/Logger.h>
+
 #include "DevicesSettings.h"
+#include <UnityCore/GLibSignal.h>
+#include <UnityCore/GLibWrapper.h>
 
-#include <algorithm>
+namespace unity
+{
+namespace
+{
 
-namespace unity {
+nux::logging::Logger logger("unity.device_settings");
 
-namespace {
+const std::string SETTINGS_NAME = "com.canonical.Unity.Devices";
+const std::string KEY_NAME = "favorites";
 
-const char* SETTINGS_NAME = "com.canonical.Unity.Devices";
+} // unnamed namespace
 
-void on_settings_updated(GSettings* settings,
-                         const gchar* key,
-                         DevicesSettings* self);
-
-} // anonymous namespace
-
+//
+// Singleton
+//
 DevicesSettings& DevicesSettings::GetDefault()
 {
   static DevicesSettings instance;
   return instance;
 }
 
-DevicesSettings::DevicesSettings()
-  : settings_(g_settings_new(SETTINGS_NAME))
-  , ignore_signals_(false)
-  , devices_option_(ONLY_MOUNTED)
+//
+// Start private implementation
+//
+class DevicesSettings::Impl
 {
+public:
+  Impl(DevicesSettings* parent)
+    : parent_(parent)
+    , settings_(g_settings_new(SETTINGS_NAME.c_str()))
+    , ignore_signals_(false)
+  {
+    DownloadFavorites();
+    ConnectSignals();
+  }
 
-  g_signal_connect(settings_, "changed", G_CALLBACK(on_settings_updated), this);
+  void ConnectSignals()
+  {
+    settings_changed_signal_.Connect(settings_, "changed::" + KEY_NAME,
+    [this] (GSettings*, gchar*) {
+      if (ignore_signals_)
+        return;
+  
+      DownloadFavorites();
+      parent_->changed.emit();
+    });
+  }
 
-  Refresh();
+  void DownloadFavorites()
+  {
+    std::shared_ptr<gchar*> downloaded_favorites(g_settings_get_strv(settings_, KEY_NAME.c_str()), g_strfreev);
+
+    favorites_.clear();
+
+    auto downloaded_favorites_raw = downloaded_favorites.get();
+    for (int i = 0; downloaded_favorites_raw[i]; ++i)
+      favorites_.push_back(downloaded_favorites_raw[i]);
+  }
+
+  void UploadFavorites()
+  {
+    const int size = favorites_.size();
+    const char* favorites_to_be_uploaded[size+1];
+
+    int index = 0;
+    for (auto favorite : favorites_)
+      favorites_to_be_uploaded[index++] = favorite.c_str();
+    favorites_to_be_uploaded[index] = nullptr;
+
+    ignore_signals_ = true;
+    if (!g_settings_set_strv(settings_, KEY_NAME.c_str(), favorites_to_be_uploaded))
+    {
+      LOG_WARNING(logger) << "Saving favorites failed.";
+    }
+    ignore_signals_ = false;
+  }
+
+  DeviceList GetFavorites() const
+  {
+    return favorites_;
+  }
+
+  bool IsAFavoriteDevice(std::string const& uuid) const
+  {
+    auto begin = std::begin(favorites_);
+    auto end = std::end(favorites_);
+    return std::find(begin, end, uuid) == end;
+  }
+
+  void AddFavorite(std::string const& uuid)
+  {
+    if (uuid.empty())
+      return;
+  
+    favorites_.push_back(uuid);
+
+    UploadFavorites();
+  }
+
+  void RemoveFavorite(std::string const& uuid)
+  {
+    if (uuid.empty())
+      return;
+
+    if (!IsAFavoriteDevice(uuid))
+      return;
+
+    favorites_.remove(uuid);
+    UploadFavorites();
+  }
+
+  DevicesSettings* parent_;
+  glib::Object<GSettings> settings_;
+  DeviceList favorites_;
+  bool ignore_signals_;
+  glib::Signal<void, GSettings*, gchar*> settings_changed_signal_;
+
+};
+
+//
+// End private implementation
+//
+
+DevicesSettings::DevicesSettings()
+  : pimpl(new Impl(this))
+{}
+
+DeviceList DevicesSettings::GetFavorites() const
+{
+  return pimpl->GetFavorites();
 }
 
-void DevicesSettings::Refresh()
+bool DevicesSettings::IsAFavoriteDevice(std::string const& uuid) const
 {
-  gchar** favs = g_settings_get_strv(settings_, "favorites");
-
-  favorites_.clear();
-
-  for (int i = 0; favs[i] != NULL; i++)
-    favorites_.push_back(favs[i]);
-
-  g_strfreev(favs);
+  return pimpl->IsAFavoriteDevice(uuid);
 }
 
 void DevicesSettings::AddFavorite(std::string const& uuid)
 {
-  if (uuid.empty())
-    return;
-  
-  favorites_.push_back(uuid);
-
-  SaveFavorites(favorites_);
-  Refresh();
+  pimpl->AddFavorite(uuid);
 }
 
 void DevicesSettings::RemoveFavorite(std::string const& uuid)
 {
-  if (uuid.empty())
-    return;
-
-  DeviceList::iterator pos = std::find(favorites_.begin(), favorites_.end(), uuid);
-  if (pos == favorites_.end())
-    return;
-
-  favorites_.erase(pos);
-  SaveFavorites(favorites_);
-  Refresh();
+  pimpl->RemoveFavorite(uuid);
 }
-
-void DevicesSettings::SaveFavorites(DeviceList const& favorites)
-{
-  const int size = favorites.size();
-  const char* favs[size + 1];
-  favs[size] = NULL;
-
-  int index = 0;
-  for (DeviceList::const_iterator i = favorites.begin(), end = favorites.end();
-       i != end; ++i, ++index)
-  {
-    favs[index] = i->c_str();
-  }
-
-  ignore_signals_ = true;
-  if (!g_settings_set_strv(settings_, "favorites", favs))
-    g_warning("Saving favorites failed.");
-  ignore_signals_ = false;
-}
-
-
-void DevicesSettings::Changed(std::string const& key)
-{
-  if (ignore_signals_)
-    return;
-  
-  Refresh();
-  
-  changed.emit();
-}
-
-void DevicesSettings::SetDevicesOption(DevicesOption devices_option)
-{
-  if (devices_option == devices_option_)
-    return;
-
-  devices_option_ = devices_option;
-
-  changed.emit();
-}
-
-namespace {
-
-void on_settings_updated(GSettings* settings,
-                         const gchar* key,
-                         DevicesSettings* self)
-{
-  if (settings and key) {
-    self->Changed(key);
-  }
-}
-
-} // anonymous namespace
 
 } // namespace unity

@@ -54,10 +54,7 @@ DeviceLauncherIcon::DeviceLauncherIcon(glib::Object<GVolume> const& volume)
 
   // Checks if in favorites!
   glib::String uuid(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_UUID));
-  DeviceList favorites = DevicesSettings::GetDefault().GetFavorites();
-  DeviceList::iterator pos = std::find(favorites.begin(), favorites.end(), uuid.Str());
-
-  keep_in_launcher_ = pos != favorites.end();
+  keep_in_launcher_ = DevicesSettings::GetDefault().IsAFavoriteDevice(uuid.Str());
 
   UpdateDeviceIcon();
   UpdateVisibility();
@@ -77,26 +74,15 @@ void DeviceLauncherIcon::OnVolumeChanged(GVolume* volume)
 
 void DeviceLauncherIcon::UpdateVisibility()
 {
-  switch (DevicesSettings::GetDefault().GetDevicesOption())
-  {
-    case DevicesSettings::NEVER:
-      SetQuirk(QUIRK_VISIBLE, false);
-      break;
-    case DevicesSettings::ONLY_MOUNTED:
-      if (keep_in_launcher_)
-      {
-        SetQuirk(QUIRK_VISIBLE, true);
-      }
-      else
-      {
-        glib::Object<GMount> mount(g_volume_get_mount(volume_));
-        SetQuirk(QUIRK_VISIBLE, mount);
-      }
-      break;
-    case DevicesSettings::ALWAYS:
-      SetQuirk(QUIRK_VISIBLE, true);
-      break;
-  }
+ if (keep_in_launcher_)
+ {
+   SetQuirk(QUIRK_VISIBLE, true);
+ }
+ else
+ {
+   glib::Object<GMount> mount(g_volume_get_mount(volume_));
+   SetQuirk(QUIRK_VISIBLE, mount);
+ }
 }
 
 void DeviceLauncherIcon::UpdateDeviceIcon()
@@ -126,8 +112,7 @@ std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
   glib::Object<GDrive> drive(g_volume_get_drive(volume_));
 
   // "Lock to Launcher"/"Unlock from Launcher" item
-  if (DevicesSettings::GetDefault().GetDevicesOption() == DevicesSettings::ONLY_MOUNTED
-      && drive && !g_drive_is_media_removable (drive))
+  if (drive && !g_drive_is_media_removable (drive))
   {
     menu_item = dbusmenu_menuitem_new();
 
@@ -437,16 +422,15 @@ void DeviceLauncherIcon::StopDrive()
 
 void DeviceLauncherIcon::OnSettingsChanged()
 {
-  // Checks if in favourites!
   glib::String uuid(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_UUID));
-  DeviceList favorites = DevicesSettings::GetDefault().GetFavorites();
-  DeviceList::iterator pos = std::find(favorites.begin(), favorites.end(), uuid.Str());
-
-  keep_in_launcher_ = pos != favorites.end();
+  keep_in_launcher_ = DevicesSettings::GetDefault().IsAFavoriteDevice(uuid.Str());
 
   UpdateVisibility();
 }
 
+//
+// Introspection
+//
 std::string DeviceLauncherIcon::GetName() const
 {
   return "DeviceLauncherIcon";

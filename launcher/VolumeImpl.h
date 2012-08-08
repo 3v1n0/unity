@@ -22,6 +22,7 @@
 
 #include <memory>
 
+#include <gio/gio.h>
 #include <UnityCore/GLibWrapper.h>
 
 #include "Volume.h"
