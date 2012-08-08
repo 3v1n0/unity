@@ -75,8 +75,6 @@ public:
   void CheckCategoryExpansion();
   void HideResultsMessage();
 
-  PlacesGroup* GetPlacesGroupAtCategoryIndex(int index);
-
 private:
   void SetupViews(nux::Area* show_filters);
   void SetupCategories();

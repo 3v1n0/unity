@@ -192,6 +192,7 @@ if (GTEST_SRC_DIR AND
                  test_filter.cpp
                  test_gdbus_proxy.cpp
                  test_hud.cpp
+                 test_lens.cpp
                  test_main_dbus.cpp
                  test_model.cpp
                  test_utils.h
@@ -210,7 +211,6 @@ if (GTEST_SRC_DIR AND
                  test_edge_barrier_controller.cpp
                  test_launcher.cpp
                  test_device_launcher_section.cpp
-                 test_lens.cpp
                  test_lensview_impl.cpp
                  test_hud_button.cpp
                  test_hud_controller.cpp
@@ -228,26 +228,10 @@ if (GTEST_SRC_DIR AND
                  gmockvolume.c
                  ${CMAKE_SOURCE_DIR}/dash/AbstractPlacesGroup.cpp
                  ${CMAKE_SOURCE_DIR}/dash/DashViewPrivate.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/FilterAllButton.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/FilterBasicButton.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/FilterBar.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/FilterExpanderLabel.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/FilterFactory.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/FilterGenreWidget.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/FilterGenreButton.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/FilterRatingsWidget.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/FilterRatingsButton.cpp 
-                 ${CMAKE_SOURCE_DIR}/dash/FilterMultiRangeWidget.cpp 
-                 ${CMAKE_SOURCE_DIR}/dash/FilterMultiRangeButton.cpp
                  ${CMAKE_SOURCE_DIR}/dash/LensViewPrivate.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/LensView.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/PlacesGroup.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/PlacesVScrollBar.cpp
                  ${CMAKE_SOURCE_DIR}/dash/ResultRenderer.cpp
                  ${CMAKE_SOURCE_DIR}/dash/ResultView.cpp
                  ${CMAKE_SOURCE_DIR}/dash/ResultViewGrid.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/ResultRendererTile.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/ResultRendererHorizontalTile.cpp
                  ${CMAKE_SOURCE_DIR}/hud/HudAbstractView.cpp
                  ${CMAKE_SOURCE_DIR}/hud/HudButton.cpp
                  ${CMAKE_SOURCE_DIR}/hud/HudController.cpp
@@ -301,11 +285,9 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/launcher/Tooltip.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/TrashLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/VolumeMonitorWrapper.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/AbstractSeparator.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/Animator.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/BackgroundEffectHelper.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/DashStyle.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/LineSeparator.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/IconLoader.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/IconRenderer.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/IconTexture.cpp
