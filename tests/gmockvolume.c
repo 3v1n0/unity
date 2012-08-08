@@ -24,11 +24,11 @@
 
 #include "gmockvolume.h"
 
-static void g_mock_volume_volume_iface_init (GVolumeIface *iface);
+static void g_mock_volume_iface_init (GVolumeIface *iface);
 
 G_DEFINE_TYPE_WITH_CODE (GMockVolume, g_mock_volume, G_TYPE_OBJECT,
 			 G_IMPLEMENT_INTERFACE (G_TYPE_VOLUME,
-						g_mock_volume_volume_iface_init))
+						g_mock_volume_iface_init))
 
 static void
 g_mock_volume_finalize (GObject *object)
@@ -37,16 +37,42 @@ g_mock_volume_finalize (GObject *object)
 }
 
 static void
+g_mock_volume_dispose (GObject *object)
+{
+  GMockVolume *self = G_MOCK_VOLUME (object);
+
+  if (self->name)
+    g_free(self->name);
+
+  if (self->icon)
+    g_object_unref(self->icon);
+
+  if (self->uuid)
+    g_free(self->uuid);
+
+  if (self->mount)
+    g_object_unref(self->mount);
+
+  G_OBJECT_CLASS (g_mock_volume_parent_class)->dispose (object);
+}
+
+
+static void
 g_mock_volume_class_init (GMockVolumeClass *klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->finalize = g_mock_volume_finalize;
+  gobject_class->dispose = g_mock_volume_dispose;
 }
 
 static void
 g_mock_volume_init (GMockVolume *mock_volume)
 {
+  mock_volume->name = g_strdup("");
+  mock_volume->icon = g_icon_new_for_string("", NULL);
+  mock_volume->uuid = g_strdup("");
+  mock_volume->mount = NULL;
 }
 
 GMockVolume *
@@ -59,22 +85,53 @@ g_mock_volume_new ()
   return volume;
 }
 
+void
+g_mock_volume_set_name (GMockVolume *volume, const char* name)
+{
+  if (volume->name)
+    g_free(volume->name);
+
+  volume->name = g_strdup (name); 
+}
+
 static char *
 g_mock_volume_get_name (GVolume *volume)
 {
-  return g_strdup ("");
+  GMockVolume *self = G_MOCK_VOLUME (volume);
+  return g_strdup (self->name);
 }
+
+void
+g_mock_volume_set_icon (GMockVolume *volume, GIcon *icon)
+{
+  if (volume->icon)
+    g_object_unref(volume->icon);
+
+  volume->icon = icon;
+}
+
 
 static GIcon *
 g_mock_volume_get_icon (GVolume *volume)
 {
-  return g_icon_new_for_string("", NULL);
+  GMockVolume *self = G_MOCK_VOLUME (volume);
+  return g_object_ref (self->icon);
+}
+
+void
+g_mock_volume_set_uuid (GMockVolume *volume, const char* uuid)
+{
+  if (volume->uuid)
+    g_free(volume->uuid);
+
+  volume->uuid = g_strdup (uuid); 
 }
 
 static char *
 g_mock_volume_get_uuid (GVolume *volume)
 {
-  return NULL;
+  GMockVolume *self = G_MOCK_VOLUME (volume);
+  return g_strdup (self->uuid);
 }
 
 static GDrive *
@@ -83,10 +140,20 @@ g_mock_volume_get_drive (GVolume *volume)
   return NULL;
 }
 
+void
+g_mock_volume_set_mount (GMockVolume *volume, GMount *mount)
+{
+  if (volume->mount)
+    g_object_unref(volume->mount);
+
+  volume->mount = mount;
+}
+
 static GMount *
 g_mock_volume_get_mount (GVolume *volume)
 {
-  return NULL;
+  GMockVolume *self = G_MOCK_VOLUME (volume);
+  return self->mount;
 }
 
 static gboolean
@@ -115,6 +182,7 @@ g_mock_volume_mount (GVolume            *volume,
                      GAsyncReadyCallback  callback,
                      gpointer             user_data)
 {
+  callback(NULL, NULL, user_data);
 }
 
 static gboolean
@@ -146,6 +214,11 @@ static gchar *
 g_mock_volume_get_identifier (GVolume     *volume,
                               const gchar *kind)
 {
+  GMockVolume *self = G_MOCK_VOLUME (volume);
+
+  if (!g_strcmp0 (kind, G_VOLUME_IDENTIFIER_KIND_UUID))
+    return g_strdup (self->uuid);
+
   return NULL;
 }
 
@@ -156,7 +229,7 @@ g_mock_volume_enumerate_identifiers (GVolume *volume)
 }
 
 static void
-g_mock_volume_volume_iface_init (GVolumeIface *iface)
+g_mock_volume_iface_init (GVolumeIface *iface)
 {
   iface->get_name = g_mock_volume_get_name;
   iface->get_icon = g_mock_volume_get_icon;
@@ -173,4 +246,3 @@ g_mock_volume_volume_iface_init (GVolumeIface *iface)
   iface->get_identifier = g_mock_volume_get_identifier;
   iface->enumerate_identifiers = g_mock_volume_enumerate_identifiers;
 }
-
