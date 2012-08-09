@@ -156,10 +156,10 @@ TestRunner::TestRunner (std::string const& search_string)
   results_->result_added.connect([&](Result const& result)
   {
     previews::Navigation navDisabled =  previews::Navigation::BOTH;
-    if (nav_iter < results_->count.Get())
-      navDisabled = previews::Navigation( (unsigned int)results_ & ~((unsigned int)previews::Navigation::RIGHT));
+    if (nav_iter < results_->count.Get() - 1)
+      navDisabled = previews::Navigation( static_cast<unsigned>(navDisabled) & ~static_cast<unsigned>(previews::Navigation::RIGHT));
     if (results_->count.Get() > 0 && nav_iter > 0)
-      navDisabled = previews::Navigation( (unsigned int)results_ & ~((unsigned int)previews::Navigation::LEFT));
+      navDisabled = previews::Navigation( static_cast<unsigned>(navDisabled) & ~static_cast<unsigned>(previews::Navigation::LEFT));
 
     if (first_)
     {
@@ -203,10 +203,10 @@ void TestRunner::NavRight()
   Preview(result.uri);
 
   previews::Navigation navDisabled =  previews::Navigation::BOTH;
-  if (nav_iter < results_->count.Get()-1)
-    navDisabled = previews::Navigation( (unsigned int)navDisabled & ~((unsigned int)previews::Navigation::RIGHT));
+  if (nav_iter < results_->count.Get() - 1)
+    navDisabled = previews::Navigation( static_cast<unsigned>(navDisabled) & ~static_cast<unsigned>(previews::Navigation::RIGHT));
   if (results_->count.Get() > 0 && nav_iter > 0)
-    navDisabled = previews::Navigation( (unsigned int)navDisabled & ~((unsigned int)previews::Navigation::LEFT));
+    navDisabled = previews::Navigation( static_cast<unsigned>(navDisabled) & ~static_cast<unsigned>(previews::Navigation::LEFT));
 
   container_->DisableNavButton(navDisabled);
 }
@@ -219,10 +219,10 @@ void TestRunner::NavLeft()
   Preview(result.uri);
 
   previews::Navigation navDisabled =  previews::Navigation::BOTH;
-  if (nav_iter < results_->count.Get()-1)
-    navDisabled = previews::Navigation( (unsigned int)navDisabled & ~((unsigned int)previews::Navigation::RIGHT));
+  if (nav_iter < results_->count.Get() - 1)
+    navDisabled = previews::Navigation( static_cast<unsigned>(navDisabled) & ~static_cast<unsigned>(previews::Navigation::RIGHT));
   if (results_->count.Get() > 0 && nav_iter > 0)
-    navDisabled = previews::Navigation( (unsigned int)navDisabled & ~((unsigned int)previews::Navigation::LEFT));
+    navDisabled = previews::Navigation( static_cast<unsigned>(navDisabled) & ~static_cast<unsigned>(previews::Navigation::LEFT));
 
   container_->DisableNavButton(navDisabled);
 }
