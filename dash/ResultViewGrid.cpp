@@ -138,12 +138,14 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
       }
       else
       {
-        LOG_DEBUG(logger) << "activating preview for index: " << current_index;
+        activated_uri_ = GetUriForIndex(current_index);
+        LOG_DEBUG(logger) << "activating preview for index: " 
+        << "(" << current_index << ")"
+        << " " << activated_uri_;
         int left_results = current_index;
         int right_results = (results_.size()) ? (results_.size() - current_index) - 1 : 0;
         ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 
                                 g_variant_new("(iii)", 0, left_results, right_results));
-        activated_uri_ = GetUriForIndex(current_index);
         UriActivated.emit(activated_uri_, ActivateType::PREVIEW);
       }
     }

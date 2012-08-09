@@ -44,6 +44,7 @@ public:
   ~PreviewStateMachine();
 
   void ActivatePreview(Preview::Ptr preview); // potentially async call.
+  void Reset(); // resets the state but does not close the preview
   void ClosePreview();
 
   void SetSplitPosition(SplitPosition position, int coord);
@@ -64,6 +65,7 @@ private:
 
   Preview::Ptr stored_preview_;
   bool requires_activation_;
+  bool requires_new_position_;
 };
 
 }

@@ -156,10 +156,6 @@ TestRunner::TestRunner (std::string const& search_string)
   results_->result_added.connect([&](Result const& result)
   {
     previews::Navigation navDisabled =  previews::Navigation::BOTH;
-    if (nav_iter < results_->count.Get())
-      navDisabled = previews::Navigation( (unsigned int)results_ & ~((unsigned int)previews::Navigation::RIGHT));
-    if (results_->count.Get() > 0 && nav_iter > 0)
-      navDisabled = previews::Navigation( (unsigned int)results_ & ~((unsigned int)previews::Navigation::LEFT));
 
     if (first_)
     {

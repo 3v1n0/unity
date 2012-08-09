@@ -131,7 +131,7 @@ void DashView::ClosePreview()
 
 void DashView::BuildPreview(Preview::Ptr model)
 {
-  LOG_DEBUG(logger) << "building preview...";
+  LOG_DEBUG(logger) << "building preview...: " << model->preview_uri();
   if (!preview_displaying_)
   {
     preview_container_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
@@ -148,11 +148,13 @@ void DashView::BuildPreview(Preview::Ptr model)
     preview_displaying_ = true;
   
     preview_container_->navigate_left.connect([&] () {
+      preview_state_machine_.Reset();
       preview_navigation_mode_ = previews::Navigation::LEFT;
       ubus_manager_.SendMessage(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, g_variant_new("(iss)", -1, stored_preview_uri_identifier_.c_str(), stored_preview_unique_id_.c_str()));
     });
 
     preview_container_->navigate_right.connect([&] () {
+      preview_state_machine_.Reset();
       preview_navigation_mode_ = previews::Navigation::RIGHT;
       ubus_manager_.SendMessage(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, g_variant_new("(iss)", 1, stored_preview_uri_identifier_.c_str(), stored_preview_unique_id_.c_str()));
     });
@@ -368,10 +370,6 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   renderer_.DrawFull(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
-  if (preview_displaying_ && preview_container_)
-  {
-    preview_container_->ProcessDraw(gfx_context, force_draw);
-  }
 }
 
 void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
