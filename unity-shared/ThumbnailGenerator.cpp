@@ -447,7 +447,7 @@ ThumbnailGenerator& ThumbnailGenerator::Instance()
 {
   if (!thumbnail_instance)
   {
-    LOG_ERROR(logger) << "No panel::Style created yet.";
+    LOG_ERROR(logger) << "No thumbnail generator created yet.";
   }
 
   return *thumbnail_instance;
