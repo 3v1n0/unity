@@ -74,22 +74,35 @@ class LauncherRevealTests(LauncherTestCase):
         self.assertThat(self.launcher_instance.is_showing, Equals(False))
 
     def test_launcher_stays_open_after_spread(self):
-        """When """
-        calc_win1 = self.start_app_window("Calculator")
-        #calc_win2 = self.start_app_window("Calculator")
-        calc_app = calc_win1.application
+        """When clicking on the launcher to close spread the launcher must not autohide."""
+        char_win1 = self.start_app_window("Character Map")
+        char_win2 = self.start_app_window("Character Map")
+        char_app = char_win1.application
 
-        #self.assertVisibleWindowStack([calc_win2, calc_win1])
-        #self.assertProperty(calc_win2, is_focused=True)
+        self.assertVisibleWindowStack([char_win2, char_win1])
+        self.assertProperty(char_win2, is_focused=True)
 
-        calc_icon = self.launcher.model.get_icon(desktop_id=calc_app.desktop_file)
-        #self.addCleanup(self.keybinding, "spread/cancel")
-        self.launcher_instance.click_launcher_icon(calc_icon)
-        self.launcher_instance.click_launcher_icon(calc_icon)
+        char_icon = self.launcher.model.get_icon(desktop_id=char_app.desktop_file)
 
+        self.launcher_instance.click_launcher_icon(char_icon, move_mouse_after=False)
+        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
+        self.launcher_instance.click_launcher_icon(char_icon, move_mouse_after=False)
+
+        self.assertThat(self.launcher_instance.is_showing, Eventually(Equals(True)))
         self.assertThat(self.window_manager.scale_active, Eventually(Equals(False)))
 
+    def test_launcher_stays_open_after_icon_click(self):
+        """When clicking on an icon the launcher must not autohide."""
+        char_win = self.start_app_window("Character Map")
+        char_app = char_win.application
 
+        char_icon = self.launcher.model.get_icon(desktop_id=char_app.desktop_file)
+        self.launcher_instance.click_launcher_icon(char_icon, move_mouse_after=False)
+
+        # Have to sleep to give the launcher time to hide (what the old behavior was)
+        sleep(1)
+
+        self.assertThat(self.launcher_instance.is_showing, Eventually(Equals(True)))
 
     def test_new_icon_has_the_shortcut(self):
          """New icons should have an associated shortcut"""
