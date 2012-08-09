@@ -66,10 +66,10 @@ protected:
 protected:
   nux::VLayout* full_data_layout_;
 
-  CoverArt* image_;
-  nux::StaticCairoText* title_;
-  nux::StaticCairoText* subtitle_;
-  nux::StaticCairoText* description_;
+  nux::ObjectPtr<CoverArt> image_;
+  nux::ObjectPtr<nux::StaticCairoText> title_;
+  nux::ObjectPtr<nux::StaticCairoText> subtitle_;
+  nux::ObjectPtr<nux::StaticCairoText> description_;
 
   typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
   LayerPtr details_bg_layer_;

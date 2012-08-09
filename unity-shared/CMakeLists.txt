@@ -35,6 +35,7 @@ set (UNITY_SHARED_SOURCES
      CoverArt.cpp
      BackgroundEffectHelper.cpp
      DashStyle.cpp
+     DefaultThumbnailProvider.cpp
      FontSettings.cpp
      KeyboardUtil.cpp
      IMTextEntry.cpp
@@ -55,12 +56,15 @@ set (UNITY_SHARED_SOURCES
      SearchBarSpinner.cpp
      StaticCairoText.cpp
      TextureCache.cpp
+     TextureThumbnailProvider.cpp
+     ThumbnailGenerator.cpp
      Timer.cpp
      UBusWrapper.cpp
      UScreen.cpp
      UnitySettings.cpp
      UnityWindowStyle.cpp
      UnityWindowView.cpp
+     UserThumbnailProvider.cpp
      WindowManager.cpp
      ubus-server.cpp
 )

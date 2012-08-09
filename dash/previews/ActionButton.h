@@ -45,7 +45,7 @@ public:
   ActionButton(std::string const& label, std::string const& icon_hint, NUX_FILE_LINE_PROTO);
   ~ActionButton();
 
-  sigc::signal<void, nux::AbstractButton*> click;
+  sigc::signal<void, ActionButton*> click;
 
   void SetFont(std::string const& font_hint);
 
@@ -80,7 +80,7 @@ private:
   std::string font_hint_;
 
   IconTexture* image_;
-  nux::StaticCairoText* static_text_;
+  nux::ObjectPtr<nux::StaticCairoText> static_text_;
 };
 
 } // namespace dash

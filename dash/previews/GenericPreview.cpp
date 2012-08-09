@@ -63,6 +63,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(GenericPreview);
 
 GenericPreview::GenericPreview(dash::Preview::Ptr preview_model)
 : Preview(preview_model)
+, full_data_layout_(nullptr)
 {
   SetupBackground();
   SetupViews();
@@ -143,9 +144,21 @@ void GenericPreview::SetupViews()
   nux::HLayout* image_data_layout = new nux::HLayout();
   image_data_layout->SetSpaceBetweenChildren(style.GetPanelSplitWidth());
 
+  /////////////////////
+  // Image
+  std::string image_hint;
+  if (preview_model_->image.Get())
+  {
+    glib::String tmp_icon(g_icon_to_string(preview_model_->image.Get()));
+    image_hint = tmp_icon.Str();
+  }
   image_ = new CoverArt();
-  image_->SetImage(preview_model_->image.Get().RawPtr() ? g_icon_to_string(preview_model_->image.Get().RawPtr()) : "");
+  if (image_hint.empty())
+    image_->GenerateImage(preview_model_->image_source_uri);
+  else
+    image_->SetImage(image_hint);
   image_->SetFont(style.no_preview_image_font());
+  /////////////////////
 
     /////////////////////
     // Data Panel
@@ -162,13 +175,15 @@ void GenericPreview::SetupViews()
       title_ = new nux::StaticCairoText(preview_model_->title);
       title_->SetLines(-1);
       title_->SetFont(style.title_font().c_str());
+      preview_data_layout->AddView(title_.GetPointer(), 1);
 
-      subtitle_ = new nux::StaticCairoText(preview_model_->subtitle);
-      subtitle_->SetLines(-1);
-      subtitle_->SetFont(style.subtitle_size_font().c_str());
-
-      preview_data_layout->AddView(title_, 1);
-      preview_data_layout->AddView(subtitle_, 1);
+      if (!preview_model_->subtitle.Get().empty())
+      {
+        subtitle_ = new nux::StaticCairoText(preview_model_->subtitle);
+        subtitle_->SetLines(-1);
+        subtitle_->SetFont(style.subtitle_size_font().c_str());
+        preview_data_layout->AddView(subtitle_.GetPointer(), 1);
+      }
       /////////////////////
 
       /////////////////////
@@ -180,17 +195,20 @@ void GenericPreview::SetupViews()
       preview_info_layout->SetSpaceBetweenChildren(12);
       preview_info->SetLayout(preview_info_layout);
 
-      description_ = new nux::StaticCairoText("");
-      description_->SetFont(style.description_font().c_str());
-      description_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_TOP);
-      description_->SetLines(-20);
-      description_->SetLineSpacing(1.5);
-      description_->SetText(preview_model_->description);
-
-      preview_info_layout->AddView(description_);
-      if (preview_model_->GetInfoHints().size() > 0)
+      if (!preview_model_->description.Get().empty())
       {
-        PreviewInfoHintWidget* preview_info_hints = new PreviewInfoHintWidget(preview_model_, 24);
+        description_ = new nux::StaticCairoText("");
+        description_->SetFont(style.description_font().c_str());
+        description_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_TOP);
+        description_->SetLines(-style.GetDescriptionLineCount());
+        description_->SetLineSpacing(style.GetDescriptionLineSpacing());
+        description_->SetText(preview_model_->description);
+        preview_info_layout->AddView(description_.GetPointer());
+      }
+
+      if (!preview_model_->GetInfoHints().empty())
+      {
+        PreviewInfoHintWidget* preview_info_hints = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth());
         preview_info_layout->AddView(preview_info_hints);
       }
       /////////////////////
@@ -207,7 +225,8 @@ void GenericPreview::SetupViews()
     full_data_layout_->AddView(actions_layout, 0);
     /////////////////////
   
-  image_data_layout->AddView(image_, 0);
+  image_data_layout->AddView(image_.GetPointer(), 0);
+
   image_data_layout->AddLayout(full_data_layout_, 1);
 
   SetLayout(image_data_layout);
@@ -231,13 +250,13 @@ long GenericPreview::ComputeContentSize()
 
   int details_width = MAX(0, geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
 
-  title_->SetMaximumWidth(details_width);
-  subtitle_->SetMaximumWidth(details_width);
-  description_->SetMaximumWidth(details_width);
+  if (title_) { title_->SetMaximumWidth(details_width); }
+  if (subtitle_) { subtitle_->SetMaximumWidth(details_width); }
+  if (description_) { description_->SetMaximumWidth(details_width); }
 
   for (nux::AbstractButton* button : action_buttons_)
   {
-    button->SetMinMaxSize(MIN((details_width - style.GetSpaceBetweenActions()) / 2, style.GetActionButtonMaximumWidth()), style.GetActionButtonHeight());
+    button->SetMinMaxSize(CLAMP((details_width - style.GetSpaceBetweenActions()) / 2, 0, style.GetActionButtonMaximumWidth()), style.GetActionButtonHeight());
   }
 
   image_->ComputeContentSize();

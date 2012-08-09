@@ -57,6 +57,8 @@ public:
   static Style& Instance();
 
   int GetNavigatorWidth() const;
+  int GetNavigatorIconSize() const;
+  
   int GetPreviewPreferredHeight() const;
   int GetPreviewPreferredWidth() const;
 
@@ -74,6 +76,13 @@ public:
 
   int GetDetailsPanelMinimumWidth() const;
 
+  int GetInfoHintIconSizeWidth() const;
+  int GetInfoHintNameWidth() const;
+
+  float GetDescriptionLineSpacing() const;
+  int GetDescriptionLineCount() const;
+
+  int GetRatingWidgetHeight() const;
 
   std::string title_font() const;
   std::string subtitle_size_font() const;
@@ -85,6 +94,7 @@ public:
   std::string app_last_update_font() const;
   std::string app_copywrite_font() const;
   std::string info_hint_font() const;
+  std::string info_hint_bold_font() const;
   std::string user_rating_font() const;
   std::string no_preview_image_font() const;
 
@@ -103,7 +113,11 @@ public:
   
   ////////////////////////////////
   // Movie Preview
+  float GetVideoImageAspectRatio() const;
+
   int GetTrackBarHeight() const;
+  int GetMusicDurationWidth() const;
+  int GetStatusIconSize() const;
   ////////////////////////////////
 
   nux::BaseTexture* GetNavLeftIcon();

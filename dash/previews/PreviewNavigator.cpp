@@ -38,6 +38,7 @@ namespace previews
 namespace
 {
 nux::logging::Logger logger("unity.dash.previews.previewnavigator");
+
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(PreviewNavigator);
@@ -89,6 +90,8 @@ void PreviewNavigator::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_d
 
 void PreviewNavigator::SetupViews()
 {
+  previews::Style& style = dash::previews::Style::Instance();
+  
   if (orientation_ == Orientation::LEFT || orientation_ == Orientation::RIGHT)
   {
     nux::VLayout* vlayout = new nux::VLayout();
@@ -98,9 +101,10 @@ void PreviewNavigator::SetupViews()
     layout_ = hlayout;
 
     if (orientation_ == Orientation::LEFT)
-      texture_ = new IconTexture(Style::Instance().GetNavLeftIcon(), 24, 24);
+      texture_ = new IconTexture(Style::Instance().GetNavLeftIcon(), style.GetNavigatorIconSize(), style.GetNavigatorIconSize());
     else 
-      texture_ = new IconTexture(Style::Instance().GetNavRightIcon(), 24, 24);
+      texture_ = new IconTexture(Style::Instance().GetNavRightIcon(), style.GetNavigatorIconSize(), style.GetNavigatorIconSize());
+    texture_->SetDrawMode(IconTexture::DrawMode::STRETCH_WITH_ASPECT);
 
     vlayout->AddSpace(0,1);
     vlayout->AddLayout(hlayout);
@@ -126,10 +130,6 @@ void PreviewNavigator::SetupViews()
   if (texture_)
   {
     texture_->mouse_click.connect([&](int, int, unsigned long, unsigned long) { activated.emit(); });
-    texture_->SetMinimumHeight(32);
-    texture_->SetMaximumHeight(32);
-    texture_->SetMinimumWidth(32);
-    texture_->SetMaximumWidth(32);
     layout_->AddView(texture_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);    
   }
 

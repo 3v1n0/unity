@@ -123,7 +123,7 @@ public:
   void Text(cairo_t* cr,
             nux::Color const& color,
             std::string const& label,
-            int& font_size,
+            int font_size,
             double horizMargin = 4.0,
             Alignment alignment = Alignment::CENTER);
 
@@ -1317,7 +1317,7 @@ void Style::Impl::GetTextExtents(int& width,
 void Style::Impl::Text(cairo_t*    cr,
                        nux::Color const&  color,
                        std::string const& label,
-                       int& text_size,
+                       int text_size,
                        double horizMargin,
                        Alignment alignment)
 {
@@ -1534,7 +1534,7 @@ void Style::Impl::DrawOverlay(cairo_t*  cr,
 }
 
 bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
-                   std::string const& label, int& font_size,
+                   std::string const& label, int font_size,
                    Alignment alignment, bool zeromargin)
 {
   // sanity checks
@@ -1628,10 +1628,9 @@ nux::AbstractPaintLayer* Style::FocusOverlay(int width, int height)
 
 bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
                          std::string const& label, bool curve_bottom,
-                         int& font_size, Alignment alignment,
+                         int font_size, Alignment alignment,
                          bool zeromargin)
 {
-  // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
     return false;
 
@@ -1839,11 +1838,10 @@ bool Style::MultiRangeSegment(cairo_t*    cr,
   }
   cairo_set_source_rgba(cr, pimpl->button_label_border_color_[state]);
   cairo_stroke(cr);
-  int label_font_size = 10;
   pimpl->Text(cr,
               pimpl->button_label_text_color_[state],
               label,
-              label_font_size); // 13px = 10pt
+              10); // 13px = 10pt
 
   return true;
 }

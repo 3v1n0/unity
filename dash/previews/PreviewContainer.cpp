@@ -303,6 +303,23 @@ void PreviewContainer::SetupViews()
   });
 }
 
+void PreviewContainer::ProcessDraw(nux::GraphicsEngine& gfx_engine, bool force_draw)
+{
+  bool bNextQueue = AnimationInProgress();
+  // rely on the compiz event loop to come back to us in a nice throttling
+  if (!bNextQueue && content_layout_ && content_layout_->IsAnimating())
+  {
+    content_layout_->UpdateAnimationProgress(1.0f, 1.0f);
+  }
+
+  View::ProcessDraw(gfx_engine, force_draw);
+
+  if (bNextQueue)
+  {
+    QueueAnimation();
+  }
+}
+
 void PreviewContainer::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
 {
 }
@@ -315,16 +332,6 @@ void PreviewContainer::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_d
   // Paint using ProcessDraw2. ProcessDraw is overrided  by empty impl so we can control z order.
   if (content_layout_)
   {
-    // rely on the compiz event loop to come back to us in a nice throttling
-    if (AnimationInProgress())
-    {
-      QueueAnimation();
-    }
-    else if (content_layout_ && content_layout_->IsAnimating())
-    {
-      content_layout_->UpdateAnimationProgress(1.0f, 1.0f);
-    }
-
     content_layout_->ProcessDraw2(gfx_engine, force_draw);
   }
   if (GetCompositionLayout())
@@ -351,22 +358,24 @@ bool PreviewContainer::AnimationInProgress()
 
 static float easeInOutQuart(float t)
 {
+    t = CLAMP(t, 0.0, 1.0);
     t*=2.0f;
-    if (t < 1) return 0.5f*t*t*t*t;
+    if (t < 1.0) return 0.5f*pow(t, 4);
     else {
         t -= 2.0f;
-        return -0.5f * (t*t*t*t- 2);
+        return -0.5f * (pow(t, 4)- 2);
     }
 }
 
 // static float easeInOutCubic(float t)
 // {
+//     t = CLAMP(t, 0.0, 1.0);
 //     t*=2.0f;
 //     if(t < 1.0f) {
-//         return 0.5f*t*t*t;
+//         return 0.5f*pow(t, 3);
 //     } else {
 //         t -= 2.0f;
-//         return 0.5f*(t*t*t + 2);
+//         return 0.5f*(pow(t, 3) + 2);
 //     }
 // }
 
@@ -380,15 +389,15 @@ float PreviewContainer::GetSwipeAnimationProgress(struct timespec const& current
 
 void PreviewContainer::QueueAnimation()
 {
-  if (!idle_)
-  {
-    idle_.reset(new glib::Idle(sigc::mem_fun(this, &PreviewContainer::Iteration), glib::Source::Priority::DEFAULT));
-  }
-}
+//   if (!idle_)
+//   {
+//     idle_.reset(new glib::Idle(sigc::mem_fun(this, &PreviewContainer::Iteration), glib::Source::Priority::DEFAULT));
+//   }
+// }
 
-bool PreviewContainer::Iteration()
-{
-  idle_.reset();
+// bool PreviewContainer::Iteration()
+// {
+  // idle_.reset();
 
   timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
@@ -397,7 +406,6 @@ bool PreviewContainer::Iteration()
   last_progress_time_ = current;
 
   QueueDraw();
-  return false;
 }
 
 bool PreviewContainer::AcceptKeyNavFocus()

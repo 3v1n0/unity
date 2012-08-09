@@ -53,30 +53,30 @@ previews::Preview::Ptr Preview::PreviewForModel(dash::Preview::Ptr model)
     return previews::Preview::Ptr();
   }
  
-  // if (model->renderer_name == "preview-generic")
+  if (model->renderer_name == "preview-generic")
+  {
+    return Preview::Ptr(new GenericPreview(model));
+  }
+  else if (model->renderer_name == "preview-application")
+  {
+    return Preview::Ptr(new ApplicationPreview(model));
+  }
+  else if (model->renderer_name == "preview-music")
+  {
+    return Preview::Ptr(new MusicPreview(model));
+  }
+  else if (model->renderer_name == "preview-movie")
+  {
+    return Preview::Ptr(new MoviePreview(model));
+  }
+  // else if (renderer_name == "preview-series")
   // {
-  //   return Preview::Ptr(new GenericPreview(model));
+  //   return Preview::Ptr(new SeriesPreview(model));
   // }
-  // else if (model->renderer_name == "preview-application")
-  // {
-  //   return Preview::Ptr(new ApplicationPreview(model));
-  // }
-  // else if (model->renderer_name == "preview-music")
-  // {
-  //   return Preview::Ptr(new MusicPreview(model));
-  // }
-  // else if (model->renderer_name == "preview-movie")
-  // {
-  //   return Preview::Ptr(new MoviePreview(model));
-  // }
-  // // else if (renderer_name == "preview-series")
-  // // {
-  // //   return Preview::Ptr(new SeriesPreview(model));
-  // // }
-  // else
-  // {
-  //   LOG_WARN(logger) << "Unable to create Preview for renderer: " << model->renderer_name.Get() << "; using generic";
-  // }
+  else
+  {
+    LOG_WARN(logger) << "Unable to create Preview for renderer: " << model->renderer_name.Get() << "; using generic";
+  }
 
   return Preview::Ptr(new GenericPreview(model));
 }
@@ -102,7 +102,7 @@ void Preview::AddProperties(GVariantBuilder* builder)
 {
 }
 
-void Preview::OnActionActivated(nux::AbstractButton* button, std::string const& id)
+void Preview::OnActionActivated(ActionButton* button, std::string const& id)
 {
   if (preview_model_)
     preview_model_->PerformAction(id);

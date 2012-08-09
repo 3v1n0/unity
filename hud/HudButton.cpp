@@ -101,9 +101,8 @@ void HudButton::InitTheme()
 
 void HudButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
 {
-  int font_size = 17;
   dash::Style::Instance().SquareButton(cr, faked_state, "",
-                                       is_rounded, font_size,
+                                       is_rounded, 17,
                                        dash::Alignment::LEFT, true);
 }
 
