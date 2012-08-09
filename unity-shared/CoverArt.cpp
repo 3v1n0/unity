@@ -84,9 +84,6 @@ void CoverArt::SetImage(std::string const& image_hint)
     slot_handle_ = 0;
   }
 
-  if (GetLayout())
-    GetLayout()->RemoveChildObject(overlay_text_);
-
   GIcon* icon = g_icon_new_for_string(image_hint.c_str(), NULL);
 
   glib::Object<GFile> image_file;
@@ -125,22 +122,27 @@ void CoverArt::SetImage(std::string const& image_hint)
 
     texture_screenshot_.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
 
-    if (!texture_screenshot_ && GetLayout())
+    if (!texture_screenshot_)
     {
-      GetLayout()->AddView(overlay_text_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0, nux::LayoutPosition(1));   
-      ComputeContentSize();
+      SetNoImageAvailable();
     }
     QueueDraw();
   }
-  else if (G_IS_ICON(icon))
-  {
-    StartWaiting();
-    slot_handle_ = IconLoader::GetDefault().LoadFromGIconString(image_hint, icon_width, sigc::mem_fun(this, &CoverArt::IconLoaded));
-  }
   else
   {
-    StartWaiting();
-    slot_handle_ = IconLoader::GetDefault().LoadFromIconName(image_hint, icon_width, sigc::mem_fun(this, &CoverArt::IconLoaded));
+    if (GetLayout())
+      GetLayout()->RemoveChildObject(overlay_text_);
+    
+    if (G_IS_ICON(icon))
+    {
+      StartWaiting();
+      slot_handle_ = IconLoader::GetDefault().LoadFromGIconString(image_hint, icon_width, sigc::mem_fun(this, &CoverArt::IconLoaded));
+    }
+    else
+    {
+      StartWaiting();
+      slot_handle_ = IconLoader::GetDefault().LoadFromIconName(image_hint, icon_width, sigc::mem_fun(this, &CoverArt::IconLoaded));
+    }
   }
 
   if (icon != NULL)
@@ -171,18 +173,23 @@ void CoverArt::StartWaiting()
     texture_screenshot_.Release();
     waiting_ = false;
 
-    if (GetLayout())
-    {
-      GetLayout()->RemoveChildObject(overlay_text_);
-      GetLayout()->AddView(overlay_text_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0, nux::LayoutPosition(1));
-      ComputeContentSize();
-    }
-
-    QueueDraw();
+    SetNoImageAvailable();
     return false;
   }));
   
   QueueDraw();
+}
+
+void CoverArt::SetNoImageAvailable()
+{
+  if (GetLayout())
+  {
+    GetLayout()->RemoveChildObject(overlay_text_);
+    GetLayout()->AddView(overlay_text_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0, nux::LayoutPosition(1));
+    ComputeContentSize();
+    
+    QueueDraw();
+  }
 }
 
 void CoverArt::IconLoaded(std::string const& texid, unsigned size, glib::Object<GdkPixbuf> const& pixbuf)
@@ -191,8 +198,13 @@ void CoverArt::IconLoaded(std::string const& texid, unsigned size, glib::Object<
   spinner_timeout_.reset();
   frame_timeout_.reset();
   waiting_ = false;
-  
   stretch_image_ = false;
+
+  if (!pixbuf)
+  {
+    SetNoImageAvailable();
+    return;
+  }
 
   int height = size;
 

@@ -71,6 +71,7 @@ protected:
   void IconLoaded(std::string const& texid, unsigned size, glib::Object<GdkPixbuf> const& pixbuf);
 
   void StartWaiting();
+  void SetNoImageAvailable();
 
 private:
   nux::ObjectPtr<nux::BaseTexture> texture_screenshot_;
