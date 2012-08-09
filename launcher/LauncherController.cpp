@@ -776,11 +776,12 @@ std::vector<char> Controller::GetAllShortcuts() const
   return shortcuts;
 }
 
-std::vector<AbstractLauncherIcon::Ptr> Controller::GetAltTabIcons(bool current) const
+std::vector<AbstractLauncherIcon::Ptr> Controller::GetAltTabIcons(bool current, bool show_desktop_disabled) const
 {
   std::vector<AbstractLauncherIcon::Ptr> results;
 
-  results.push_back(pimpl->desktop_icon_);
+  if (!show_desktop_disabled)
+    results.push_back(pimpl->desktop_icon_);
 
   for (auto icon : *(pimpl->model_))
   {
@@ -940,7 +941,7 @@ bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, 
   LauncherModel::iterator it;
 
   // Shortcut to start launcher icons. Only relies on Keycode, ignore modifier
-  for (it = pimpl->model_->begin(); it != pimpl->model_->end(); it++)
+  for (it = pimpl->model_->begin(); it != pimpl->model_->end(); ++it)
   {
     if ((XKeysymToKeycode(display, (*it)->GetShortcut()) == key_code) ||
         ((gchar)((*it)->GetShortcut()) == key_string[0]))

@@ -665,14 +665,17 @@ Expected Result:
  * The launcher should autoscroll so you can reach the trash icon.
 
 
-No flickering when resizing the launcher
-----------------------------------------
-Actions:
- * Open gedit.
- * Maximize it. Make sure it remains maximized during the test.
- * Open Appearance panel in System Settings.
- * Change Launcher Icon Size.
+No flashing tooltips when peforming the accordion effect. 
+----------------------------------------------------
+Setup:
+ * Make sure the launcher setting is to never hide.
+ * Add icons to the launcher so that some of them in the bottom are folded.
 
-Expected Results:
- * The gedit window must not flicker behind the launcher.
+Actions:  
+ * Quickly move the mouse pointer to the bottom-left corner.
+ * Quickly move the mouse pointer outside the launcher area.
+
+Expected Result:
+ * No icon flickers near the top panel.
+ * See https://bugs.launchpad.net/unity/+bug/980942/+attachment/3059914/+files/launcher-accordion-effect-tooltip-bug.ogv.
 
