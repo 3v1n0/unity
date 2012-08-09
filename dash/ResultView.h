@@ -47,10 +47,10 @@ public:
   ResultView(NUX_FILE_LINE_DECL);
   virtual ~ResultView();
 
-  void SetModelRenderer(ResultRenderer* renderer);
+  virtual void SetModelRenderer(ResultRenderer* renderer);
 
-  void AddResult(Result& result);
-  void RemoveResult(Result& result);
+  virtual void AddResult(Result& result);
+  virtual void RemoveResult(Result& result);
 
   ResultList GetResultList ();
 

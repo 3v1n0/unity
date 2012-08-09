@@ -192,6 +192,9 @@ public:
 
   nux::BaseTexture* GetGroupUnexpandIcon();
   nux::BaseTexture* GetGroupExpandIcon();
+  
+  nux::BaseTexture* GetGroupGridIcon();
+  nux::BaseTexture* GetGroupCoverflowIcon();
 
   nux::BaseTexture* GetStarDeselectedIcon();
   nux::BaseTexture* GetStarSelectedIcon();

@@ -54,6 +54,10 @@ ResultView::ResultView(NUX_FILE_LINE_DECL)
 
 ResultView::~ResultView()
 {
+  if (renderer_ == NULL)
+  {
+    return;
+  }
   ClearIntrospectableWrappers();
 
   for (auto result : results_)
@@ -87,7 +91,9 @@ void ResultView::SetModelRenderer(ResultRenderer* renderer)
 void ResultView::AddResult(Result& result)
 {
   results_.push_back(result);
-  renderer_->Preload(result);
+  
+  if (renderer_ != NULL)
+    renderer_->Preload(result);
 
   NeedRedraw();
 }
@@ -105,7 +111,9 @@ void ResultView::RemoveResult(Result& result)
       break;
     }
   }
-  renderer_->Unload(result);
+
+  if (renderer_ != NULL)
+    renderer_->Unload(result);
 }
 
 ResultView::ResultList ResultView::GetResultList()

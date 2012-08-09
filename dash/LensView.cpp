@@ -25,6 +25,8 @@
 #include <NuxCore/Logger.h>
 
 #include "unity-shared/DashStyle.h"
+#include "CoverflowResultView.h"
+
 #include "ResultRendererTile.h"
 #include "ResultRendererHorizontalTile.h"
 #include "unity-shared/UBusMessages.h"
@@ -278,6 +280,7 @@ void LensView::OnCategoryAdded(Category const& category)
   /* Reset result count */
   counts_[group] = 0;
 
+
   ResultViewGrid* grid = new ResultViewGrid(NUX_TRACKER_LOCATION);
   grid->expanded = false;
   if (renderer_name == "tile-horizontal")
@@ -289,8 +292,8 @@ void LensView::OnCategoryAdded(Category const& category)
   else
     grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
 
-  grid->UriActivated.connect([&] (std::string const& uri) { uri_activated.emit(uri); lens_->Activate(uri); });
-  group->SetChildView(grid);
+  group->SetRendererName(renderer_name.c_str());
+  group->UriActivated.connect([&] (std::string const& uri) { uri_activated.emit(uri); lens_->Activate(uri); });
 
   /* We need the full range of method args so we can specify the offset
    * of the group into the layout */
@@ -303,7 +306,7 @@ void LensView::OnResultAdded(Result const& result)
 {
   try {
     PlacesGroup* group = categories_.at(result.category_index);
-    ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
+    ResultView* grid = static_cast<ResultView*>(group->GetChildView());
 
     std::string uri = result.uri;
     LOG_TRACE(logger) << "Result added: " << uri;
@@ -327,7 +330,7 @@ void LensView::OnResultRemoved(Result const& result)
 {
   try {
     PlacesGroup* group = categories_.at(result.category_index);
-    ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
+    ResultView* grid = static_cast<ResultView*>(group->GetChildView());
 
     std::string uri = result.uri;
     LOG_TRACE(logger) << "Result removed: " << uri;
@@ -444,7 +447,7 @@ std::string LensView::get_search_string() const
 
 void LensView::OnGroupExpanded(PlacesGroup* group)
 {
-  ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
+  ResultView* grid = static_cast<ResultView*>(group->GetChildView());
   grid->expanded = group->GetExpanded();
   ubus_manager_.SendMessage(UBUS_PLACE_VIEW_QUEUE_DRAW);
 }
