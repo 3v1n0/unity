@@ -278,17 +278,15 @@ void MusicPreview::PreLayoutManagement()
     geo_art.width = MAX(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() - style.GetDetailsPanelMinimumWidth());
   image_->SetMinMaxSize(geo_art.width, geo_art.height);
 
-  full_data_layout_->SetMinMaxSize(geo.width - geo_art.width - style.GetPanelSplitWidth(), geo.height);
+  int details_width = MAX(0, geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
 
-  // int details_width = MAX(0, geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
+  if (title_) { title_->SetMaximumWidth(details_width); }
+  if (subtitle_) { subtitle_->SetMaximumWidth(details_width); }
 
-  // if (title_) { title_->SetMaximumWidth(details_width); }
-  // if (subtitle_) { subtitle_->SetMaximumWidth(details_width); }
-
-  // for (nux::AbstractButton* button : action_buttons_)
-  // {
-  //   button->SetMinMaxSize(CLAMP((details_width - style.GetSpaceBetweenActions()) / 2, 0, style.GetActionButtonMaximumWidth()), style.GetActionButtonHeight());
-  // }
+  for (nux::AbstractButton* button : action_buttons_)
+  {
+    button->SetMinMaxSize(CLAMP((details_width - style.GetSpaceBetweenActions()) / 2, 0, style.GetActionButtonMaximumWidth()), style.GetActionButtonHeight());
+  }
 
   Preview::PreLayoutManagement();
 }
