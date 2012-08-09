@@ -75,8 +75,6 @@ public:
   sigc::signal<void> request_close;
 
   bool AcceptKeyNavFocus();
-  
-  void ProcessDraw(nux::GraphicsEngine& gfx_engine, bool force_draw);
 
 protected:
   void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
@@ -93,7 +91,7 @@ private:
   bool AnimationInProgress();
   float GetSwipeAnimationProgress(struct timespec const& current) const;
 
-  void QueueAnimation();
+  bool QueueAnimation();
 
 private:
   // View related
@@ -108,7 +106,7 @@ private:
   float navigation_progress_speed_;
   int navigation_count_;
   
-  glib::Source::UniquePtr idle_;
+  glib::Source::UniquePtr animation_timer_;
   friend class PreviewContent;
 };
 

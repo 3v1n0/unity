@@ -303,23 +303,6 @@ void PreviewContainer::SetupViews()
   });
 }
 
-void PreviewContainer::ProcessDraw(nux::GraphicsEngine& gfx_engine, bool force_draw)
-{
-  bool bNextQueue = AnimationInProgress();
-  // rely on the compiz event loop to come back to us in a nice throttling
-  if (!bNextQueue && content_layout_ && content_layout_->IsAnimating())
-  {
-    content_layout_->UpdateAnimationProgress(1.0f, 1.0f);
-  }
-
-  View::ProcessDraw(gfx_engine, force_draw);
-
-  if (bNextQueue)
-  {
-    QueueAnimation();
-  }
-}
-
 void PreviewContainer::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
 {
 }
@@ -328,6 +311,17 @@ void PreviewContainer::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_d
 {
   nux::Geometry base = GetGeometry();
   gfx_engine.PushClippingRectangle(base);
+
+    // rely on the compiz event loop to come back to us in a nice throttling
+  if (AnimationInProgress())
+  {
+    if (!animation_timer_)
+       animation_timer_.reset(new glib::Timeout(1000/60, sigc::mem_fun(this, &PreviewContainer::QueueAnimation)));
+  }
+  else if (content_layout_ && content_layout_->IsAnimating())
+  {
+    content_layout_->UpdateAnimationProgress(1.0f, 1.0f);
+  }
 
   // Paint using ProcessDraw2. ProcessDraw is overrided  by empty impl so we can control z order.
   if (content_layout_)
@@ -387,18 +381,10 @@ float PreviewContainer::GetSwipeAnimationProgress(struct timespec const& current
   return progress;
 }
 
-void PreviewContainer::QueueAnimation()
+bool PreviewContainer::QueueAnimation()
 {
-//   if (!idle_)
-//   {
-//     idle_.reset(new glib::Idle(sigc::mem_fun(this, &PreviewContainer::Iteration), glib::Source::Priority::DEFAULT));
-//   }
-// }
-
-// bool PreviewContainer::Iteration()
-// {
-  // idle_.reset();
-
+  animation_timer_.reset();
+  
   timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
   float progress = GetSwipeAnimationProgress(current);
@@ -406,6 +392,7 @@ void PreviewContainer::QueueAnimation()
   last_progress_time_ = current;
 
   QueueDraw();
+  return true;
 }
 
 bool PreviewContainer::AcceptKeyNavFocus()
