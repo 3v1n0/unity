@@ -265,7 +265,7 @@ void MusicPreview::OnPauseTrack(std::string const& uri)
   music_preview_model->PauseUri(uri);
 }
 
-long MusicPreview::ComputeContentSize()
+void MusicPreview::PreLayoutManagement()
 {
   nux::Geometry geo = GetGeometry();
   GetLayout()->SetGeometry(geo);
@@ -276,25 +276,21 @@ long MusicPreview::ComputeContentSize()
 
   if (geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() < style.GetDetailsPanelMinimumWidth())
     geo_art.width = MAX(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() - style.GetDetailsPanelMinimumWidth());
-  image_->SetGeometry(geo_art);
+  image_->SetMinMaxSize(geo_art.width, geo_art.height);
 
-  full_data_layout_->SetGeometry(nux::Geometry(geo_art.x + geo_art.width + style.GetPanelSplitWidth(), geo.y,
-                    geo.width - geo_art.width - style.GetPanelSplitWidth(), geo.height));
+  full_data_layout_->SetMinMaxSize(geo.width - geo_art.width - style.GetPanelSplitWidth(), geo.height);
 
-  int details_width = MAX(0, geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
+  // int details_width = MAX(0, geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
 
-  if (title_) { title_->SetMaximumWidth(details_width); }
-  if (subtitle_) { subtitle_->SetMaximumWidth(details_width); }
+  // if (title_) { title_->SetMaximumWidth(details_width); }
+  // if (subtitle_) { subtitle_->SetMaximumWidth(details_width); }
 
-  for (nux::AbstractButton* button : action_buttons_)
-  {
-    button->SetMinMaxSize(CLAMP((details_width - style.GetSpaceBetweenActions()) / 2, 0, style.GetActionButtonMaximumWidth()), style.GetActionButtonHeight());
-  }
+  // for (nux::AbstractButton* button : action_buttons_)
+  // {
+  //   button->SetMinMaxSize(CLAMP((details_width - style.GetSpaceBetweenActions()) / 2, 0, style.GetActionButtonMaximumWidth()), style.GetActionButtonHeight());
+  // }
 
-  image_->ComputeContentSize();
-  full_data_layout_->ComputeContentSize();
-
-  return nux::eCompliantHeight | nux::eCompliantWidth;
+  Preview::PreLayoutManagement();
 }
 
 }

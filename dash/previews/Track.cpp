@@ -374,7 +374,7 @@ void Track::UpdateTrackState()
 }
 
 
-long Track::ComputeContentSize()
+void Track::PreLayoutManagement()
 {
   previews::Style& style = previews::Style::Instance();
   nux::Geometry const& geo = GetGeometry();
@@ -384,7 +384,7 @@ long Track::ComputeContentSize()
 
   title_->SetMaximumWidth(GetGeometry().width - geo.height - style.GetMusicDurationWidth() - layout_spacing*2);
 
-  return View::ComputeContentSize();
+  View::PreLayoutManagement();
 }
 
 

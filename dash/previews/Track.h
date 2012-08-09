@@ -64,7 +64,7 @@ public:
 protected:
   virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);
-  virtual long ComputeContentSize();
+  virtual void PreLayoutManagement();
   
   void SetupBackground();
   void SetupViews();

@@ -232,10 +232,9 @@ void GenericPreview::SetupViews()
   SetLayout(image_data_layout);
 }
 
-long GenericPreview::ComputeContentSize()
+void GenericPreview::PreLayoutManagement()
 {
   nux::Geometry geo = GetGeometry();
-  GetLayout()->SetGeometry(geo);
 
   previews::Style& style = dash::previews::Style::Instance();
 
@@ -243,10 +242,7 @@ long GenericPreview::ComputeContentSize()
 
   if (geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() < style.GetDetailsPanelMinimumWidth())
     geo_art.width = MAX(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() - style.GetDetailsPanelMinimumWidth());
-  image_->SetGeometry(geo_art);
-
-  full_data_layout_->SetGeometry(nux::Geometry(geo_art.x + geo_art.width + style.GetPanelSplitWidth(), geo.y,
-                    geo.width - geo_art.width - style.GetPanelSplitWidth(), geo.height));
+  image_->SetMinMaxSize(geo_art.width, geo_art.height);
 
   int details_width = MAX(0, geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
 
@@ -259,10 +255,7 @@ long GenericPreview::ComputeContentSize()
     button->SetMinMaxSize(CLAMP((details_width - style.GetSpaceBetweenActions()) / 2, 0, style.GetActionButtonMaximumWidth()), style.GetActionButtonHeight());
   }
 
-  image_->ComputeContentSize();
-  full_data_layout_->ComputeContentSize();
-
-  return nux::eCompliantHeight | nux::eCompliantWidth;
+  Preview::PreLayoutManagement();
 }
 
 

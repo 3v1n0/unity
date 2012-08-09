@@ -208,11 +208,11 @@ void PreviewInfoHintWidget::SetupViews()
 }
 
 
-long PreviewInfoHintWidget::ComputeContentSize()
+void PreviewInfoHintWidget::PreLayoutManagement()
 {
   previews::Style& style = previews::Style::Instance();
   nux::Geometry const& geo = GetGeometry();
-
+  
   for (InfoHint const& info_hint : info_hints_)
   {
     int max_info_value_width = geo.width;
@@ -238,7 +238,7 @@ long PreviewInfoHintWidget::ComputeContentSize()
       info_hint.second->SetMaximumWidth(max_info_value_width);
   }
 
-  return View::ComputeContentSize();
+  View::PreLayoutManagement();
 }
 
 
