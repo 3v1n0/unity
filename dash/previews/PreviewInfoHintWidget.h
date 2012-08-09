@@ -28,6 +28,10 @@
 #include <UnityCore/Preview.h>
 #include "unity-shared/Introspectable.h"
 
+namespace nux
+{
+class StaticCairoText;
+}
 
 namespace unity
 {
@@ -42,12 +46,17 @@ public:
   typedef nux::ObjectPtr<PreviewInfoHintWidget> Ptr;
   NUX_DECLARE_OBJECT_TYPE(PreviewInfoHintWidget, nux::View);
 
-  PreviewInfoHintWidget(dash::Preview::Ptr preview_model, int icon_size);
+  PreviewInfoHintWidget(dash::Preview::Ptr preview_model, int icon_size, bool visible_icons = true, bool condensed_format = false);
   virtual ~PreviewInfoHintWidget();
+
+  void SetVisibleIcons(bool visible);
+  void SetCondensedFormat(bool condensed);
 
   // From debug::Introspectable
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
+  
+  long ComputeContentSize();
 
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -63,6 +72,12 @@ protected:
 
 protected:
   int icon_size_;
+  bool condensed_format_;
+  bool visible_icons_;
+
+  typedef nux::ObjectPtr<nux::StaticCairoText> StaticCairoTextPtr;
+  typedef std::pair<StaticCairoTextPtr, StaticCairoTextPtr> InfoHint; 
+  std::list<InfoHint> info_hints_;
   
   dash::Preview::Ptr preview_model_;
   typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;

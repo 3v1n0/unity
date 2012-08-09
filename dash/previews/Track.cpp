@@ -37,9 +37,24 @@ namespace dash
 namespace previews
 {
 
+class TmpView : public nux::View
+{
+public:
+  TmpView(NUX_FILE_LINE_PROTO): View(NUX_FILE_LINE_PARAM) {}
+
+  void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw) {}
+  void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
+  {
+    if (GetCompositionLayout())
+      GetCompositionLayout()->ProcessDraw(gfx_engine, force_draw);
+  }
+};
+
 namespace
 {
 nux::logging::Logger logger("unity.dash.previews.track");
+
+const int layout_spacing = 6;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(Track);
@@ -165,24 +180,21 @@ void Track::SetupViews()
   layout->SetLeftAndRightPadding(0,0);
 
   nux::BaseTexture* tex_play = style.GetPlayIcon();
-  IconTexture* status_play = new IconTexture(tex_play, tex_play ? tex_play->GetWidth() : 25, tex_play ? tex_play->GetHeight() : 25);
-  status_play->mouse_click.connect([&](int, int, unsigned long, unsigned long) { play.emit(uri_); });
-  status_play->mouse_enter.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseEnter));
-  status_play->mouse_leave.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseLeave));
+  IconTexture* status_play = new IconTexture(tex_play, style.GetStatusIconSize(), style.GetStatusIconSize());
+  status_play->SetDrawMode(IconTexture::DrawMode::STRETCH_WITH_ASPECT);
+  status_play->SetInputEventSensitivity(false);  
 
   nux::BaseTexture* tex_pause = style.GetPauseIcon();
-  IconTexture* status_pause = new IconTexture(tex_pause, tex_pause ? tex_pause->GetWidth() : 25, tex_pause ? tex_pause->GetHeight() : 25);
-  status_pause->mouse_click.connect([&](int, int, unsigned long, unsigned long) { pause.emit(uri_); });
-  status_pause->mouse_enter.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseEnter));
-  status_pause->mouse_leave.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseLeave));
+  IconTexture* status_pause = new IconTexture(tex_pause, style.GetStatusIconSize(), style.GetStatusIconSize());
+  status_pause->SetDrawMode(IconTexture::DrawMode::STRETCH_WITH_ASPECT);
+  status_pause->SetInputEventSensitivity(false);  
 
   track_number_ = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
   track_number_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
   track_number_->SetTextVerticalAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
   track_number_->SetLines(-1);
   track_number_->SetFont(style.track_font());
-  track_number_->mouse_enter.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseEnter));
-  track_number_->mouse_leave.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseLeave));
+  track_number_->SetInputEventSensitivity(false);  
 
   title_ = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
   title_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
@@ -196,22 +208,35 @@ void Track::SetupViews()
   duration_->SetTextVerticalAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
   duration_->SetLines(-1);
   duration_->SetFont(style.track_font());
+  duration_->SetMaximumWidth(style.GetMusicDurationWidth());
+  duration_->SetMaximumWidth(style.GetMusicDurationWidth());
   // Layouts
   // stick text fields in a layout so they don't alter thier geometry.
-  status_play_layout_ = new nux::HLayout();
-  status_play_layout_->AddSpace(0, 1);
-  status_play_layout_->AddView(status_play, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-  status_play_layout_->AddSpace(0, 1);
+  status_play_layout_ = new TmpView();
+  status_play_layout_->SetLayout(new nux::HLayout());
+  status_play_layout_->GetLayout()->AddSpace(0, 1);
+  status_play_layout_->GetLayout()->AddView(status_play, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  status_play_layout_->GetLayout()->AddSpace(0, 1);
+  status_play_layout_->mouse_click.connect([&](int, int, unsigned long, unsigned long) { play.emit(uri_); });
+  status_play_layout_->mouse_enter.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseEnter));
+  status_play_layout_->mouse_leave.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseLeave));
 
-  status_pause_layout_ = new nux::HLayout();
-  status_pause_layout_->AddSpace(0, 1);
-  status_pause_layout_->AddView(status_pause, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-  status_pause_layout_->AddSpace(0, 1);
+  status_pause_layout_ = new TmpView();
+  status_pause_layout_->SetLayout(new nux::HLayout());
+  status_pause_layout_->GetLayout()->AddSpace(0, 1);
+  status_pause_layout_->GetLayout()->AddView(status_pause, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  status_pause_layout_->GetLayout()->AddSpace(0, 1);
+  status_pause_layout_->mouse_click.connect([&](int, int, unsigned long, unsigned long) { pause.emit(uri_); });
+  status_pause_layout_->mouse_enter.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseEnter));
+  status_pause_layout_->mouse_leave.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseLeave));
 
-  track_number_layout_ = new nux::HLayout();
-  track_number_layout_->AddSpace(0, 1);
-  track_number_layout_->AddView(track_number_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-  track_number_layout_->AddSpace(0, 1);
+  track_number_layout_ = new TmpView();
+  track_number_layout_->SetLayout(new nux::HLayout());
+  track_number_layout_->GetLayout()->AddSpace(0, 1);
+  track_number_layout_->GetLayout()->AddView(track_number_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  track_number_layout_->GetLayout()->AddSpace(0, 1);
+  track_number_layout_->mouse_enter.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseEnter));
+  track_number_layout_->mouse_leave.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseLeave));
 
   track_status_layout_ = new nux::LayeredLayout();
   track_status_layout_->AddLayer(status_play_layout_, true);
@@ -351,16 +376,13 @@ void Track::UpdateTrackState()
 
 long Track::ComputeContentSize()
 {
-  track_status_layout_->SetMinimumWidth(30);
-  track_status_layout_->SetMaximumWidth(30);
+  previews::Style& style = previews::Style::Instance();
+  nux::Geometry const& geo = GetGeometry();
 
-  track_number_->SetMinimumWidth(30);
-  track_number_->SetMaximumWidth(30);
+  track_status_layout_->SetMinimumWidth(geo.height);
+  track_status_layout_->SetMaximumWidth(geo.height);
 
-  duration_->SetMaximumWidth(40);
-  duration_->SetMaximumWidth(40);
-
-  title_->SetMaximumWidth(GetGeometry().width - 30 - 30 - 12);
+  title_->SetMaximumWidth(GetGeometry().width - geo.height - style.GetMusicDurationWidth() - layout_spacing*2);
 
   return View::ComputeContentSize();
 }

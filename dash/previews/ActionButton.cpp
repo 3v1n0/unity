@@ -31,6 +31,8 @@ namespace
 const int kMinButtonHeight = 36;
 const int kMinButtonWidth  = 48;
 
+const int icon_size  = 24;
+
 nux::logging::Logger logger("unity.dash.actionbutton");
 }
 
@@ -42,7 +44,6 @@ namespace dash
 ActionButton::ActionButton(std::string const& label, std::string const& icon_hint, NUX_FILE_LINE_DECL)
   : nux::AbstractButton(NUX_FILE_LINE_PARAM)
   , image_(nullptr)
-  , static_text_(nullptr)
 {
   SetAcceptKeyNavFocusOnMouseDown(false);
   SetAcceptKeyNavFocusOnMouseEnter(false);
@@ -97,16 +98,16 @@ void ActionButton::BuildLayout(std::string const& label, std::string const& icon
       image_ = NULL;
     }
 
-    if (icon_hint_.size()>0)
+    if (!icon_hint_.empty())
     {
-      image_ = new IconTexture(icon_hint, 24);
+      image_ = new IconTexture(icon_hint, icon_size);
       image_->Reference();
       image_->texture_updated.connect([&](nux::BaseTexture*)
       {
         BuildLayout(label_, icon_hint_);
       });
       image_->SetInputEventSensitivity(false);
-      image_->SetMinMaxSize(24,24);
+      image_->SetMinMaxSize(icon_size, icon_size);
     }
   }
 
@@ -115,16 +116,15 @@ void ActionButton::BuildLayout(std::string const& label, std::string const& icon
     label_ = label;
     if (static_text_)
     {
-      static_text_->UnReference();
+      static_text_.Release();
       static_text_ = NULL;
     }
 
-    if (label_.size()>0)
+    if (!label_.empty())
     {
       static_text_ = new nux::StaticCairoText(label_, NUX_TRACKER_LOCATION);
-      if (font_hint_.size()>0)
+      if (!font_hint_.empty())
         static_text_->SetFont(font_hint_);
-      static_text_->Reference();
       static_text_->SetInputEventSensitivity(false);
       static_text_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
     }
@@ -139,7 +139,7 @@ void ActionButton::BuildLayout(std::string const& label, std::string const& icon
   if (image_)
     layout->AddView(image_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
   if (static_text_)
-    layout->AddView(static_text_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
+    layout->AddView(static_text_.GetPointer(), 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
   layout->AddSpace(0,1);
   SetLayout(layout);
 
@@ -149,8 +149,7 @@ void ActionButton::BuildLayout(std::string const& label, std::string const& icon
 
 void ActionButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
 {
-  int font_size=-1;
-  Style::Instance().Button(cr, faked_state, "", font_size, Alignment::CENTER, true);
+  Style::Instance().Button(cr, faked_state, "", -1, Alignment::CENTER, true);
 }
 
 void ActionButton::RedrawFocusOverlay(nux::Geometry const& geom, cairo_t* cr)
@@ -164,7 +163,7 @@ long ActionButton::ComputeContentSize()
 
   nux::Geometry const& geo = GetGeometry();
 
-  if (cached_geometry_ != geo)
+  if (cached_geometry_ != geo && geo.width > 0 && geo.height > 0)
   {
     if (cr_prelight_) cr_prelight_->Invalidate(geo);
     if (cr_active_) cr_active_->Invalidate(geo);

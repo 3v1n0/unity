@@ -26,7 +26,7 @@
 #include <Nux/Layout.h>
 #include <NuxCore/Logger.h>
 #include <UnityCore/Variant.h>
-#include <UnityCore/Preview.h>
+#include <UnityCore/ApplicationPreview.h>
 #include <unity-protocol.h>
 
 #include "unity-shared/FontSettings.h"
@@ -37,7 +37,6 @@
 
 #include "Preview.h"
 #include "PreviewContainer.h"
-#include "LensDBusTestRunner.h"
 
 
 #define WIDTH 972
@@ -45,11 +44,6 @@
 
 using namespace unity;
 using namespace unity::dash;
-
-namespace
-{
-nux::logging::Logger logger("unity.dash.StandaloneMusicPreview");
-}
 
 class DummyView : public nux::View
 {
@@ -119,10 +113,10 @@ protected:
   LayerPtr bg_layer_;
 };
 
-class TestRunner :  public previews::LensDBusTestRunner 
+class TestRunner
 {
 public:
-  TestRunner(std::string const& search_string);
+  TestRunner ();
   ~TestRunner ();
 
   static void InitWindowThread (nux::NThread* thread, void* InitData);
@@ -132,43 +126,12 @@ public:
 
   previews::PreviewContainer::Ptr container_;
   nux::Layout *layout_;
-  unsigned int nav_iter;
-  previews::Navigation nav_direction_;
-  std::string search_string_;
-  bool first_;
+  int nav_iter;
 };
 
-TestRunner::TestRunner (std::string const& search_string)
-: LensDBusTestRunner("com.canonical.Unity.Lens.Music","/com/canonical/unity/lens/music", "com.canonical.Unity.Lens")
-, search_string_(search_string)
-, first_(true)
+TestRunner::TestRunner ()
 {
   nav_iter = 0;
-  nav_direction_ = previews::Navigation::RIGHT;
-
-  connected.connect([&](bool connected) {
-    if (connected)
-    {
-      Search(search_string_);
-    } 
-  });
-
-  results_->result_added.connect([&](Result const& result)
-  {
-    previews::Navigation navDisabled =  previews::Navigation::BOTH;
-    if (nav_iter < results_->count.Get())
-      navDisabled = previews::Navigation( (unsigned int)results_ & ~((unsigned int)previews::Navigation::RIGHT));
-    if (results_->count.Get() > 0 && nav_iter > 0)
-      navDisabled = previews::Navigation( (unsigned int)results_ & ~((unsigned int)previews::Navigation::LEFT));
-
-    if (first_)
-    {
-      first_ = false;
-      Preview(result.uri);
-    }
-
-    container_->DisableNavButton(navDisabled);
-  });
 }
 
 TestRunner::~TestRunner ()
@@ -187,44 +150,69 @@ void TestRunner::Init ()
   layout_->AddView(dummyView, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   nux::GetWindowThread()->SetLayout (layout_);
 
-  container_->DisableNavButton(previews::Navigation::BOTH);
-  
-  preview_ready.connect([&](std::string const& uri, dash::Preview::Ptr preview_model)
-  {
-    container_->Preview(preview_model, nav_direction_);
-  });
+  NavRight();
 }
 
 void TestRunner::NavRight()
 {
-  nav_direction_ = previews::Navigation::RIGHT;
-  Result result = results_->RowAtIndex(++nav_iter);
-  LOG_DEBUG(logger) << "Preview: " << result.uri.Get();
-  Preview(result.uri);
+  std::stringstream title;
+  title << "Up " << ++nav_iter;
 
-  previews::Navigation navDisabled =  previews::Navigation::BOTH;
-  if (nav_iter < results_->count.Get()-1)
-    navDisabled = previews::Navigation( (unsigned int)navDisabled & ~((unsigned int)previews::Navigation::RIGHT));
-  if (results_->count.Get() > 0 && nav_iter > 0)
-    navDisabled = previews::Navigation( (unsigned int)navDisabled & ~((unsigned int)previews::Navigation::LEFT));
+  const char* subtitle = "2009";
+  const char* description = "By tying thousands of balloons to his home, 78-year-old Carl sets out to fulfill his lifelong dream to see the wilds of South America. Russell, a wilderness explorer 70 years younger, inadvertently becomes a stowaway.";
 
-  container_->DisableNavButton(navDisabled);
+  glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_movie_preview_new()));
+
+  unity_protocol_movie_preview_set_rating(UNITY_PROTOCOL_MOVIE_PREVIEW(proto_obj.RawPtr()), 0.5);
+  unity_protocol_movie_preview_set_num_ratings(UNITY_PROTOCOL_MOVIE_PREVIEW(proto_obj.RawPtr()), 17);
+
+//  unity_protocol_preview_set_image_source_uri(proto_obj, "file:///home/nick/Videos/test-1.ogv");
+  unity_protocol_preview_set_image_source_uri(proto_obj, "http://ia.media-imdb.com/images/M/MV5BMTMwODg0NDY1Nl5BMl5BanBnXkFtZTcwMjkwNTgyMg@@._V1._SY317_.jpg");
+  unity_protocol_preview_set_title(proto_obj, title.str().c_str());
+  unity_protocol_preview_set_subtitle(proto_obj, subtitle);
+  unity_protocol_preview_set_description(proto_obj, description);
+  unity_protocol_preview_add_action(proto_obj, "play", "Play", NULL, 0);
+  unity_protocol_preview_add_action(proto_obj, "upgradHD", "Upgrade to HD", NULL, 0);
+  unity_protocol_preview_add_info_hint(proto_obj, "director", "Director", NULL, g_variant_new("s", "Steve Martino, Mike Thurmeier"));
+  unity_protocol_preview_add_info_hint(proto_obj, "cast",  "Cast", NULL, g_variant_new("s", "Ray Romano, Denis Leary and John Leguizamo"));
+  unity_protocol_preview_add_info_hint(proto_obj, "genre",  "Genre", NULL, g_variant_new("s", "Animation"));
+
+  glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
+              glib::StealRef());
+
+  dash::Preview::Ptr preview_model(dash::Preview::PreviewForVariant(v));
+  container_->Preview(preview_model, previews::Navigation::RIGHT);
 }
 
 void TestRunner::NavLeft()
 {
-  nav_direction_ = previews::Navigation::LEFT;
-  Result result = results_->RowAtIndex(--nav_iter);
-  LOG_DEBUG(logger) << "Preview: " << result.uri.Get();
-  Preview(result.uri);
+  std::stringstream title;
+  title << "Ice Age, Continental Drift" << --nav_iter;
 
-  previews::Navigation navDisabled =  previews::Navigation::BOTH;
-  if (nav_iter < results_->count.Get()-1)
-    navDisabled = previews::Navigation( (unsigned int)navDisabled & ~((unsigned int)previews::Navigation::RIGHT));
-  if (results_->count.Get() > 0 && nav_iter > 0)
-    navDisabled = previews::Navigation( (unsigned int)navDisabled & ~((unsigned int)previews::Navigation::LEFT));
+  const char* subtitle = "2012, 88 min";
+  const char* description = "Manny, Diego, and Sid embark upon another adventure after their continent is set adrift. Using an iceberg as a ship, they encounter sea creatures and battle pirates as they explore a new world.";
 
-  container_->DisableNavButton(navDisabled);
+  glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_movie_preview_new()));
+
+  unity_protocol_movie_preview_set_rating(UNITY_PROTOCOL_MOVIE_PREVIEW(proto_obj.RawPtr()), 0.5);
+  unity_protocol_movie_preview_set_num_ratings(UNITY_PROTOCOL_MOVIE_PREVIEW(proto_obj.RawPtr()), 17);
+
+  unity_protocol_preview_set_image_source_uri(proto_obj, "http://ia.media-imdb.com/images/M/MV5BMTM3NDM5MzY5Ml5BMl5BanBnXkFtZTcwNjExMDUwOA@@._V1._SY317_.jpg");
+  unity_protocol_preview_set_title(proto_obj, title.str().c_str());
+  unity_protocol_preview_set_subtitle(proto_obj, subtitle);
+  unity_protocol_preview_set_description(proto_obj, description);
+  unity_protocol_preview_add_action(proto_obj, "play", "Play", NULL, 0);
+  unity_protocol_preview_add_action(proto_obj, "upgradHD", "Upgrade to HD", NULL, 0);
+  unity_protocol_preview_add_info_hint(proto_obj, "director", "Director", NULL, g_variant_new("s", "Steve Martino, Mike Thurmeier"));
+  unity_protocol_preview_add_info_hint(proto_obj, "cast",  "Cast", NULL, g_variant_new("s", "Ray Romano, Denis Leary and John Leguizamo"));
+  unity_protocol_preview_add_info_hint(proto_obj, "genre",  "Genre", NULL, g_variant_new("s", "Animation"));
+
+  glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
+              glib::StealRef());
+
+  dash::Preview::Ptr preview_model(dash::Preview::PreviewForVariant(v));
+  container_->Preview(preview_model, previews::Navigation::LEFT);
+
 }
 
 void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)
@@ -239,12 +227,6 @@ int main(int argc, char **argv)
 
   gtk_init (&argc, &argv);
 
-  if (argc < 2)
-  {
-    printf("Usage: music_previews SEARCH_STRING\n");
-    return 1;
-  }
-
   nux::NuxInitialize(0);
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
   // The instances for the pseudo-singletons.
@@ -253,7 +235,7 @@ int main(int argc, char **argv)
   unity::dash::Style dash_style;
   unity::ThumbnailGenerator thumbnail_generator;
 
-  TestRunner *test_runner = new TestRunner (argv[1]);
+  TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Unity Preview"),
                             WIDTH, HEIGHT,
                             0,

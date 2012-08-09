@@ -70,15 +70,15 @@ protected:
   nux::VLayout* full_data_layout_;
   nux::VLayout* title_subtitle_layout_;
 
-  CoverArt* image_;
-  IconTexture* app_icon_;
-  PreviewRatingsWidget* app_rating_;
-  nux::StaticCairoText* title_;
-  nux::StaticCairoText* subtitle_;
-  nux::StaticCairoText* license_;
-  nux::StaticCairoText* last_update_;
-  nux::StaticCairoText* copywrite_;
-  nux::StaticCairoText* description_;
+  nux::ObjectPtr<CoverArt> image_;
+  nux::ObjectPtr<IconTexture> app_icon_;
+  nux::ObjectPtr<PreviewRatingsWidget> app_rating_;
+  nux::ObjectPtr<nux::StaticCairoText> title_;
+  nux::ObjectPtr<nux::StaticCairoText> subtitle_;
+  nux::ObjectPtr<nux::StaticCairoText> license_;
+  nux::ObjectPtr<nux::StaticCairoText> last_update_;
+  nux::ObjectPtr<nux::StaticCairoText> copywrite_;
+  nux::ObjectPtr<nux::StaticCairoText> description_;
 
   typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
   LayerPtr details_bg_layer_;

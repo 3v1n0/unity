@@ -35,20 +35,41 @@ namespace dash
 {
 namespace previews
 {
+namespace
+{
 nux::logging::Logger logger("unity.dash.previews.previewinfohintwidget");
+
+const int layout_spacing = 12;
+}
 
 NUX_IMPLEMENT_OBJECT_TYPE(PreviewInfoHintWidget);
 
-PreviewInfoHintWidget::PreviewInfoHintWidget(dash::Preview::Ptr preview_model, int icon_size)
-  : View(NUX_TRACKER_LOCATION)
-  , icon_size_(icon_size)
-  , preview_model_(preview_model)
+PreviewInfoHintWidget::PreviewInfoHintWidget(dash::Preview::Ptr preview_model, int icon_size, bool visible_icons, bool condensed_format)
+: View(NUX_TRACKER_LOCATION)
+, icon_size_(icon_size)
+, condensed_format_(condensed_format)
+, visible_icons_(visible_icons)
+, preview_model_(preview_model)
 {
   SetupViews();
 }
 
 PreviewInfoHintWidget::~PreviewInfoHintWidget()
 {
+}
+
+void PreviewInfoHintWidget::SetVisibleIcons(bool visible)
+{
+  visible_icons_ = visible;
+  SetupViews();
+  QueueDraw();
+}
+
+void PreviewInfoHintWidget::SetCondensedFormat(bool condensed)
+{
+  condensed_format_ = condensed;
+  SetupViews();
+  QueueDraw();
 }
 
 void PreviewInfoHintWidget::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
@@ -134,6 +155,9 @@ std::string StringFromVariant(GVariant* variant)
 
 void PreviewInfoHintWidget::SetupViews()
 {
+  RemoveLayout();
+  info_hints_.clear();
+
   previews::Style& style = previews::Style::Instance();
 
   nux::VLayout* layout = new nux::VLayout();
@@ -142,38 +166,81 @@ void PreviewInfoHintWidget::SetupViews()
   for (dash::Preview::InfoHintPtr info_hint : preview_model_->GetInfoHints())
   {
     nux::HLayout* hint_layout = new nux::HLayout();
-    hint_layout->SetSpaceBetweenChildren(16);
+    hint_layout->SetSpaceBetweenChildren(layout_spacing);
 
-    IconTexture* info_icon = new IconTexture(info_hint->icon_hint, icon_size_);
-    info_icon->SetMinimumSize(icon_size_, icon_size_);
-    info_icon->SetVisible(true);
-    hint_layout->AddView(info_icon, 0);
-
-    if (info_hint->display_name.size() > 0)
+    if (visible_icons_)
     {
-      nux::StaticCairoText* info_name = new nux::StaticCairoText(info_hint->display_name, NUX_TRACKER_LOCATION);
-      info_name->SetFont(style.info_hint_font());
-  
-      nux::Layout* info_name_layout = new nux::HLayout();
-      info_name_layout->AddView(info_name, 1, nux::MINOR_POSITION_CENTER);
-      info_name_layout->SetMaximumWidth(128 - (icon_size_ > 0 ? (icon_size_ + 16) : 0));
-  
-      hint_layout->AddView(info_name_layout, 1);
+      IconTexture* info_icon = new IconTexture(info_hint->icon_hint, icon_size_);
+      info_icon->SetMinimumSize(icon_size_, icon_size_);
+      info_icon->SetVisible(true);
+      hint_layout->AddView(info_icon, 0);
     }
 
- 
-    nux::StaticCairoText* info_value = new nux::StaticCairoText(StringFromVariant(info_hint->value), NUX_TRACKER_LOCATION);
-    info_value->SetFont(style.info_hint_font());
-    nux::Layout* info_value_layout = new nux::HLayout();
-    info_value_layout->AddView(info_value, 1, nux::MINOR_POSITION_CENTER);
+    StaticCairoTextPtr info_name;
+    if (!info_hint->display_name.empty())
+    {
+      std::string tmp_display_name = info_hint->display_name;
+      if (condensed_format_) { tmp_display_name += ":"; }
 
-    hint_layout->AddView(info_value_layout, 1);
+      info_name = new nux::StaticCairoText(tmp_display_name, NUX_TRACKER_LOCATION);
+      info_name->SetFont(condensed_format_ ? style.info_hint_bold_font() : style.info_hint_font());
+      info_name->SetLines(-1);
+      if (!condensed_format_)
+      {
+        info_name->SetMinimumWidth(style.GetInfoHintNameWidth());
+        info_name->SetMaximumWidth(style.GetInfoHintNameWidth());
+      }
+      hint_layout->AddView(info_name.GetPointer(), 0, nux::MINOR_POSITION_CENTER);
+    }
+
+    StaticCairoTextPtr info_value(new nux::StaticCairoText(StringFromVariant(info_hint->value), NUX_TRACKER_LOCATION));
+    info_value->SetFont(style.info_hint_font());
+    info_value->SetLines(-1);
+    hint_layout->AddView(info_value.GetPointer(), 1, nux::MINOR_POSITION_CENTER);
+
+    InfoHint info_hint_views(info_name, info_value);
+    info_hints_.push_back(info_hint_views);
 
     layout->AddLayout(hint_layout, 0);
   }
 
   SetLayout(layout);
 }
+
+
+long PreviewInfoHintWidget::ComputeContentSize()
+{
+  previews::Style& style = previews::Style::Instance();
+  nux::Geometry const& geo = GetGeometry();
+
+  for (InfoHint const& info_hint : info_hints_)
+  {
+    int max_info_value_width = geo.width;
+    if (visible_icons_)
+    {
+      max_info_value_width -= icon_size_;
+      max_info_value_width -= layout_spacing;
+    }
+    if (info_hint.first)
+    {
+      if (condensed_format_)
+      {
+        max_info_value_width -= info_hint.first->GetTextExtents().width;
+      }
+      else
+      {
+        max_info_value_width -= style.GetInfoHintNameWidth();
+      }
+      max_info_value_width -= layout_spacing;
+    }
+
+    if (info_hint.second)
+      info_hint.second->SetMaximumWidth(max_info_value_width);
+  }
+
+  return View::ComputeContentSize();
+}
+
 
 } // namespace previews
 } // namespace dash

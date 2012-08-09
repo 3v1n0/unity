@@ -62,10 +62,10 @@ class Style::Impl
 public:
   Impl(Style* owner)
   : owner_(owner)
-  , preview_nav_left_texture_("/prev.svg")
-  , preview_nav_right_texture_("/next.svg")
-  , preview_play_texture_("/play.svg")
-  , preview_pause_texture_("/pause.svg")
+  , preview_nav_left_texture_("/preview_previous.svg", 32)
+  , preview_nav_right_texture_("/preview_next.svg", 32)
+  , preview_play_texture_("/preview_play.svg", 32)
+  , preview_pause_texture_("/preview_pause.svg", 32)
   {
   }
   ~Impl() {}
@@ -111,6 +111,11 @@ Style& Style::Instance()
 int Style::GetNavigatorWidth() const
 {
   return 42;
+}
+
+int Style::GetNavigatorIconSize() const
+{
+  return 24;  
 }
 
 int Style::GetPreviewPreferredHeight() const
@@ -168,6 +173,11 @@ int Style::GetTrackHeight() const
   return 28;
 }
 
+int Style::GetMusicDurationWidth() const
+{
+  return 40;
+}
+
 int Style::GetActionButtonHeight() const
 {
   return 36;
@@ -198,14 +208,51 @@ int Style::GetDetailsPanelMinimumWidth() const
   return 300;
 }
 
+int Style::GetInfoHintIconSizeWidth() const
+{
+  return 24;
+}
+
+int Style::GetInfoHintNameWidth() const
+{
+  return 100;
+}
+
+float Style::GetDescriptionLineSpacing() const
+{
+  return 2.0;
+}
+
+int Style::GetDescriptionLineCount() const
+{
+  return 20;
+}
+
+int Style::GetRatingWidgetHeight() const
+{
+  return 36;
+}
+
+int Style::GetStatusIconSize() const
+{
+  return 12;
+}
+
+float Style::GetVideoImageAspectRatio() const
+{
+  return float(540)/380;
+}
+
 std::string Style::title_font() const
 {
   return "Ubuntu 22";
 }
+
 std::string Style::subtitle_size_font() const
 {
   return "Ubuntu 12.5";
 }
+
 std::string Style::description_font() const
 {
   return "Ubuntu Light 10";
@@ -215,10 +262,12 @@ std::string Style::app_license_font() const
 {
   return "Ubuntu Light 10";
 }
+
 std::string Style::app_last_update_font() const
 {
   return "Ubuntu Light 10";
 }
+
 std::string Style::app_copywrite_font() const
 {
   return "Ubuntu Light 10";
@@ -228,10 +277,17 @@ std::string Style::info_hint_font() const
 {
   return "Ubuntu Light 10";
 }
+
+std::string Style::info_hint_bold_font() const
+{
+  return "Ubuntu Bold 10";
+}
+
 std::string Style::user_rating_font() const
 {
   return "Ubuntu Light 10";
 }
+
 std::string Style::no_preview_image_font() const
 {
   return "Ubuntu Light 16";
