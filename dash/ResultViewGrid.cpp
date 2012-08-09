@@ -104,26 +104,45 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   ubus_.RegisterInterest(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, [&] (GVariant* data) {
     int nav_mode = 0;
     gchar* uri;
-    g_variant_get(data, "(is)", &nav_mode, &uri);
+    gchar* proposed_unique_id;
+    g_variant_get(data, "(iss)", &nav_mode, &uri, &proposed_unique_id);
    
+    //LOG_DEBUG(logger) << "got navigation request: " << nav_mode << ", " << uri;
+    //LOG_DEBUG(logger) << "testing '" << unique_id() << "' vs '" << proposed_unique_id << "'";
+    if (std::string(proposed_unique_id) != unique_id())
+      return;
+
     if (std::string(uri) == activated_uri_)
     {
       int current_index = GetIndexForUri(activated_uri_);
-      if (nav_mode == -1)
+      LOG_DEBUG(logger) << "current index: " << current_index << " (" << activated_uri_ << ")";
+      if (nav_mode == -1) // left
       {
         current_index--;  
       }
-      else if (nav_mode == 1)
+      else if (nav_mode == 1) // right
       {
         current_index++;
       }
+
+      if (current_index < 0 || static_cast<unsigned int>(current_index) >= results_.size())
+      {
+        LOG_ERROR(logger) << "requested to activated a result that does not exist: " << current_index;
+        return;
+      }
       
+      // closed
       if (nav_mode == 0)
       {
         activated_uri_ = "";
       }
       else
       {
+        LOG_DEBUG(logger) << "activating preview for index: " << current_index;
+        int left_results = current_index;
+        int right_results = (results_.size()) ? (results_.size() - current_index) - 1 : 0;
+        ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 
+                                g_variant_new("(iii)", 0, left_results, right_results));
         activated_uri_ = GetUriForIndex(current_index);
         UriActivated.emit(activated_uri_, ActivateType::PREVIEW);
       }

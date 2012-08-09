@@ -69,7 +69,7 @@ public:
   nux::Property<bool> can_refine_search;
 
   sigc::signal<void, std::string const&> uri_activated;
-  sigc::signal<void, std::string const&> uri_preview_activated;
+  sigc::signal<void, std::string const&, std::string const&> uri_preview_activated;
 
   void PerformSearch(std::string const& search_query);
   void CheckNoResults(Lens::Hints const& hints);

@@ -279,6 +279,8 @@ void LensView::OnCategoryAdded(Category const& category)
   counts_[group] = 0;
 
   ResultViewGrid* grid = new ResultViewGrid(NUX_TRACKER_LOCATION);
+  std::string unique_id = name + lens_->name();
+  grid->unique_id = unique_id;
   grid->expanded = false;
   if (renderer_name == "tile-horizontal")
   {
@@ -289,7 +291,7 @@ void LensView::OnCategoryAdded(Category const& category)
   else
     grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
 
-  grid->UriActivated.connect([&] (std::string const& uri, ResultView::ActivateType type) 
+  grid->UriActivated.connect(sigc::bind([&] (std::string const& uri, ResultView::ActivateType type, std::string const& view_id) 
   {
     switch (type)
     {
@@ -300,13 +302,13 @@ void LensView::OnCategoryAdded(Category const& category)
       } break;
       case ResultView::ActivateType::PREVIEW:
       {
-        uri_preview_activated.emit(uri);
+        uri_preview_activated.emit(uri, view_id);
         lens_->Preview(uri);
       } break;
       default: break;
     };
 
-  });
+  }, unique_id));
   
   group->SetChildView(grid);
 

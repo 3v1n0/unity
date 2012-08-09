@@ -123,7 +123,9 @@ private:
   PreviewStateMachine preview_state_machine_;
   previews::PreviewContainer::Ptr preview_container_;
   bool preview_displaying_;
+  std::string stored_preview_unique_id_;
   std::string stored_preview_uri_identifier_;
+  dash::previews::Navigation preview_navigation_mode_;
 
   nux::VLayout* layout_;
   DashLayout* content_layout_;

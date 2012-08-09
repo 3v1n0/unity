@@ -82,6 +82,7 @@ DashView::DashView()
   , home_lens_(new HomeLens(_("Home"), _("Home screen"), _("Search")))
   , preview_container_(nullptr)
   , preview_displaying_(false)
+  , preview_navigation_mode_(previews::Navigation::NONE)
   , active_lens_view_(0)
   , last_activated_uri_("")
   , search_in_progress_(false)
@@ -120,27 +121,57 @@ void DashView::SetMonitorOffset(int x, int y)
   renderer_.y_offset = y;
 }
 
-void DashView::SetPreview(Preview::Ptr preview_model)
-{
-  if (preview_displaying_ == false)
-  {
-    // we aren't currently displaying a preview so bootstrap
-    preview_container_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
-    preview_container_->SetGeometry(GetGeometry());
-    preview_container_->Preview(preview_model, previews::Navigation::NONE);
-  }
-  else
-  {
-    preview_container_->Preview(preview_model, previews::Navigation::NONE); // actually left/right
-  }
-
-  preview_displaying_ = true;
-}
-
 void DashView::ClosePreview()
 {
   preview_displaying_ = false;
   preview_container_ = nullptr; // free resources
+  preview_state_machine_.ClosePreview();
+  QueueDraw();
+}
+
+void DashView::BuildPreview(Preview::Ptr model)
+{
+  LOG_DEBUG(logger) << "building preview...";
+  if (!preview_displaying_)
+  {
+    preview_container_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
+    preview_container_->Preview(model, previews::Navigation::NONE); // no swipe left or right
+
+    nux::Geometry preview_geo = layout_->GetGeometry();
+    preview_geo.height -= 24;
+    //preview_geo.width -= 120;
+    //preview_geo.x += 60;
+    preview_geo.y += 12;
+
+    preview_container_->SetGeometry(preview_geo);
+    
+    preview_displaying_ = true;
+  
+    preview_container_->navigate_left.connect([&] () {
+      preview_navigation_mode_ = previews::Navigation::LEFT;
+      ubus_manager_.SendMessage(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, g_variant_new("(iss)", -1, stored_preview_uri_identifier_.c_str(), stored_preview_unique_id_.c_str()));
+    });
+
+    preview_container_->navigate_right.connect([&] () {
+      preview_navigation_mode_ = previews::Navigation::RIGHT;
+      ubus_manager_.SendMessage(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, g_variant_new("(iss)", 1, stored_preview_uri_identifier_.c_str(), stored_preview_unique_id_.c_str()));
+    });
+  }
+  else
+  {
+    // got a new preview whilst already displaying, we probably clicked a navigation button.
+    preview_container_->Preview(model, preview_navigation_mode_); // TODO
+  }
+
+  if (G_LIKELY(preview_state_machine_.left_results() > 0 && preview_state_machine_.right_results() > 0))
+    preview_container_->DisableNavButton(previews::Navigation::NONE);
+  else if (preview_state_machine_.left_results() > 0)
+    preview_container_->DisableNavButton(previews::Navigation::RIGHT);
+  else if (preview_state_machine_.right_results() > 0)
+    preview_container_->DisableNavButton(previews::Navigation::LEFT);
+  else
+    preview_container_->DisableNavButton(previews::Navigation::BOTH);
+
   QueueDraw();
 }
 
@@ -227,6 +258,13 @@ void DashView::SetupViews()
   content_layout_->AddView(lenses_layout_, 1, nux::MINOR_POSITION_LEFT);
 
   home_view_ = new LensView(home_lens_, nullptr);
+  home_view_->uri_preview_activated.connect([&] (std::string const& uri, std::string const& unique_id) 
+  {
+    LOG_DEBUG(logger) << "got unique id from preview activation: " << unique_id;
+    stored_preview_unique_id_ = unique_id;
+    stored_preview_uri_identifier_ = uri;
+  });
+
   AddChild(home_view_);
   active_lens_view_ = home_view_;
   lens_views_[home_lens_->id] = home_view_;
@@ -330,6 +368,10 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   renderer_.DrawFull(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
+  if (preview_displaying_ && preview_container_)
+  {
+    preview_container_->ProcessDraw(gfx_context, force_draw);
+  }
 }
 
 void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
@@ -486,8 +528,10 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
   AddChild(view);
   view->SetVisible(false);
   view->uri_activated.connect(sigc::mem_fun(this, &DashView::OnUriActivated));
-  view->uri_preview_activated.connect([&] (std::string const& uri) 
+  view->uri_preview_activated.connect([&] (std::string const& uri, std::string const& unique_id) 
   {
+    LOG_DEBUG(logger) << "got unique id from preview activation: " << unique_id;
+    stored_preview_unique_id_ = unique_id;
     stored_preview_uri_identifier_ = uri;
   });
 
@@ -510,6 +554,7 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
   // Hook up to the new preview infrastructure
   lens->preview_ready.connect([&] (std::string const& uri, Preview::Ptr model)
   {
+    LOG_DEBUG(logger) << "Got preview for: " << uri;
     preview_state_machine_.ActivatePreview(model); // this does not immediately display a preview - we now wait.
   });
 
@@ -522,49 +567,6 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
   {
     lens->global_search_finished.connect(sigc::mem_fun(this, &DashView::OnAppsGlobalSearchFinished));
   }
-}
-
-void DashView::BuildPreview(Preview::Ptr model)
-{
-  if (!preview_displaying_)
-  {
-    preview_container_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
-    preview_container_->Preview(model, previews::Navigation::NONE); // no swipe left or right
-
-    nux::Geometry preview_geo = GetGeometry();
-    preview_geo.height -= 120;
-    preview_geo.width -= 120;
-    //preview_geo.x += 60;
-    //preview_geo.y += 60;
-
-    preview_container_->SetGeometry(preview_geo);
-    
-    preview_displaying_ = true;
-  
-    preview_container_->navigate_left.connect([&] () {
-      ubus_manager_.SendMessage(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, g_variant_new("(is)", -1, stored_preview_uri_identifier_.c_str()));
-    });
-
-    preview_container_->navigate_right.connect([&] () {
-      ubus_manager_.SendMessage(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, g_variant_new("(is)", 1, stored_preview_uri_identifier_.c_str()));
-    });
-  }
-  else
-  {
-    // got a new preview whilst already displaying, we probably clicked a navigation button.
-    preview_container_->Preview(model, previews::Navigation::LEFT); // TODO
-  }
-
-  if (G_LIKELY(preview_state_machine_.left_results() > 0 && preview_state_machine_.right_results() > 0))
-    preview_container_->DisableNavButton(previews::Navigation::NONE);
-  else if (preview_state_machine_.left_results() > 0)
-    preview_container_->DisableNavButton(previews::Navigation::RIGHT);
-  else if (preview_state_machine_.right_results() > 0)
-    preview_container_->DisableNavButton(previews::Navigation::LEFT);
-  else
-    preview_container_->DisableNavButton(previews::Navigation::BOTH);
-
-  QueueDraw();
 }
 
 void DashView::OnLensBarActivated(std::string const& id)
@@ -792,7 +794,9 @@ bool DashView::InspectKeyEvent(unsigned int eventType,
 {
   if ((eventType == nux::NUX_KEYDOWN) && (key_sym == NUX_VK_ESCAPE))
   {
-    if (search_bar_->search_string != "")
+    if (preview_displaying_)
+      ClosePreview();
+    else if (search_bar_->search_string != "")
       search_bar_->search_string = "";
     else
       ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);

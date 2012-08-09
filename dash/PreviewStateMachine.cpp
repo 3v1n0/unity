@@ -17,17 +17,22 @@
  */
 
 #include "PreviewStateMachine.h"
-
+#include <NuxCore/Logger.h>
 namespace unity
 {
 namespace dash
 {
 
+namespace
+{
+nux::logging::Logger logger("unity.dash.PreviewStateMachine");
+}
 PreviewStateMachine::PreviewStateMachine()
   : preview_active(false)
   , left_results(-1)
   , right_results(-1)
   , stored_preview_(nullptr)
+  , requires_activation_(true)
 {
   for (int pos = SplitPosition::START; pos != SplitPosition::END; pos++)
   {
@@ -46,11 +51,17 @@ void PreviewStateMachine::ActivatePreview(Preview::Ptr preview)
 {
   stored_preview_ = preview;
   CheckPreviewRequirementsFulfilled();
+  left_results = -1;
+  right_results = -1;
+  requires_activation_ = true;
 }
 
 void PreviewStateMachine::ClosePreview()
 {
   stored_preview_ = nullptr;
+  left_results = -1;
+  right_results = -1;
+  preview_active = true;
   SetSplitPosition(SplitPosition::CONTENT_AREA, -1); 
 }
 
@@ -67,8 +78,11 @@ int PreviewStateMachine::GetSplitPosition(SplitPosition position)
 
 void PreviewStateMachine::CheckPreviewRequirementsFulfilled()
 {
-  if (preview_active())
+  if (!requires_activation_)
     return;
+
+  //if (preview_active())
+  //  return;
 
   if (stored_preview_ == nullptr)
     return;
@@ -82,13 +96,14 @@ void PreviewStateMachine::CheckPreviewRequirementsFulfilled()
   if (GetSplitPosition(SEARCH_BAR) < 0) return;
    */
  
-  if (left_results < 0 &&
+  if (left_results < 0 ||
       right_results < 0)
     return;
 
-
+  LOG_DEBUG(logger) << "activating preview: " << left_results << " - " << right_results;
   preview_active = true;
   PreviewActivated(stored_preview_);
+  requires_activation_ = false;
 }
 
 }

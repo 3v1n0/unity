@@ -65,7 +65,7 @@ public:
 
   nux::Property<bool> expanded;
   nux::Property<int> results_per_row;
-  
+  nux::Property<std::string> unique_id;  
   sigc::signal<void, std::string const&, ActivateType> UriActivated;
 
   std::string GetName() const;

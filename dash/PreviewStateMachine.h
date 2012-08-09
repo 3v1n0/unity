@@ -63,6 +63,7 @@ private:
   std::unordered_map<int, int> split_positions_;
 
   Preview::Ptr stored_preview_;
+  bool requires_activation_;
 };
 
 }
