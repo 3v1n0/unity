@@ -56,7 +56,7 @@ public:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
   
-  long ComputeContentSize();
+  void PreLayoutManagement();
 
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
