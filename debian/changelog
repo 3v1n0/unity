@@ -14,6 +14,65 @@ unity (6.2.0-0ubuntu1) UNRELEASED; urgency=low
 
   [ Didier Roche ]
   * New upstream release.
+    - [nvidia] compiz crashed with SIGSEGV in
+      nux::GraphicsEngine::QRP_GLSL_Color() from
+      nux::GraphicsEngine::QRP_Color() from nux::BasePainter::PaintBackground
+      (LP: #982626)
+    - Launcher - when a user starts dragging a item, any folded launcher icons
+      that are valid drop receptacles should unfold. (LP: #839717)
+    - running applications without an icon use a blank icon (LP: #886778)
+    - compiz crashed with SIGSEGV in
+      unity::ui::KeyboardUtil::GetKeycodeAboveKeySymbol() (LP: #920258)
+    - still some accent issues with unity/nux (LP: #950740)
+    - Launcher doesn't autoscroll when holding an icon (can't reach trash)
+      (LP: #987223)
+    - Purchased items are not being added to the Unity launcher (LP: #925014)
+    - [GLES] framebuffer output scaled incorrect in both blur and items above
+      shell with multimonitor (LP: #1016789)
+    - [regression] [unity 6.0] Fullscreen windows flicker and/or never redraw
+      properly if panel_opacity<1.0 or dash is opened. (LP: #1024911)
+    - panel and launcher blinks when using libreoffice presenter/spreadsheet
+      (LP: #1024459)
+    - compiz crashed with SIGSEGV in
+      unity::ui::EdgeBarrierController::Impl::OnPointerBarrierEvent()
+      (LP: #1020075)
+    - Update to 1.6.4 (LP: #1014850)
+    - [nvidia] unity crashed in nux::GraphicsEngine::QRP_GLSL_1Tex
+      (glDrawArrays)  (LP: #1031554)
+    - Dragging image from firefox/chrome to dock causes lagg/freeze
+      (LP: #772445)
+    - Launcher, Dash - Showing dash, via super key, with a quicklist shown
+      doesn't work (LP: #913994)
+    - REGRESSION: can't type characters with accent (dead keys) (LP: #961741)
+    - Launcher wrongly shows top tooltip when peforming the accordion effect
+      (LP: #980942)
+    - Unity Launcher Fails To Auto-Hide When Enabled & Installing Commercial
+      Software (LP: #1002440)
+    - logging out/in with mounted drives causes unity launcher icons to be
+      duplicated (LP: #1010714)
+    - Mounted volume icons doubled up in launcher (LP: #1010858)
+    - Launcher -  when a user starts dragging a item, the launcher icons that
+      are *not* valid drop receptacles should be tinted (LP: #1020891)
+    - Alt+F4 does not close the hud when Numlock or Capslock are on.
+      (LP: #1022801)
+    - Unity shortcut overlay needs to include shortcut for video lens
+      (LP: #937334)
+    - padding between last quicklist item and bottom edge is non-deterministic
+      (changes randomly) (LP: #955158)
+    - give a way to remove 'Show Desktop' from the Alt-Tab items
+      (LP: #1014346)
+    - Multi-monitor - Add 'sticky edges deactivated for number of milliseconds
+      after the user breaks the barrier' variable (LP: #1020058)
+    - Quicklist blocks Hud from opening (LP: #1020246)
+    - dash should open when pressing "super" in scale mode (LP: #1023811)
+    - Screen flickers when changing launcher icon size. (LP: #1024113)
+    - Dragging on a quicklist item highlights the wrong item in the list
+      (LP: #1027955)
+    - Switcher does not focus the last active window in detail mode
+      (LP: #1029215)
+    - An application is closed if manually removed from favorites on gsettings
+      (LP: #1032157)
+    - Support for automation (LP: #685199)
   * debian/control:
     - build on latest nux (ABI break)
 
