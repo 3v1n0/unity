@@ -131,11 +131,11 @@ void DashView::ClosePreview()
 
 void DashView::BuildPreview(Preview::Ptr model)
 {
-  LOG_DEBUG(logger) << "building preview...: " << model->preview_uri();
   if (!preview_displaying_)
   {
     preview_container_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
     preview_container_->Preview(model, previews::Navigation::NONE); // no swipe left or right
+    preview_container_->SetParentObject(this);
 
     nux::Geometry preview_geo = layout_->GetGeometry();
     preview_geo.height -= 24;
@@ -207,6 +207,13 @@ void DashView::AboutToShow()
 
   // this will make sure the spinner animates if the search takes a while
   search_bar_->ForceSearchChanged();
+
+  // if a preview is open, close it
+  if (preview_displaying_) 
+  {
+    preview_state_machine_.ClosePreview();
+    preview_displaying_ = false;
+  }
 
   renderer_.AboutToShow();
 }
@@ -370,6 +377,12 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   renderer_.DrawFull(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
+  if (preview_displaying_)
+  {
+ 
+  //dynamic_cast<nux::View*>(preview_container_.GetPointer())->DrawContent(gfx_context, true);//ProcessDraw(gfx_context, true);
+    preview_container_->ProcessDraw(gfx_context, true); 
+  }
 }
 
 void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
@@ -379,25 +392,25 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   if (IsFullRedraw())
     nux::GetPainter().PushBackgroundStack();
   
-  if (preview_displaying_ && preview_container_)
+  if (preview_displaying_)
   {
     preview_container_->ProcessDraw(gfx_context, force_draw);
   }
   else
   {
-    layout_->ProcessDraw(gfx_context, force_draw);
+      layout_->ProcessDraw(gfx_context, force_draw);
   }
-  
+    
   if (IsFullRedraw())
     nux::GetPainter().PopBackgroundStack();
 
   renderer_.DrawInnerCleanup(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
 }
 
-void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
-{
-  dash::Style& style = dash::Style::Instance();
-  nux::Geometry geo(content_geo_);
+  void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
+  {
+    dash::Style& style = dash::Style::Instance();
+    nux::Geometry geo(content_geo_);
 
   if (Settings::Instance().GetFormFactor() == FormFactor::DESKTOP)
   {
@@ -420,6 +433,13 @@ void DashView::OnActivateRequest(GVariant* args)
   g_variant_get(args, "(sus)", &uri, &handled_type, &search_string);
 
   std::string id(AnalyseLensURI(uri.Str()));
+
+  // we got an activation request, we should probably close the preview
+  if (preview_displaying_)
+  {
+    preview_state_machine_.ClosePreview();
+    preview_displaying_ = false;
+  }
 
   if (!visible_)
   {
