@@ -11,9 +11,13 @@ unity (6.2.0-0ubuntu1) UNRELEASED; urgency=low
     debian/libunity-core-6.0-5.lintian-overrides:
     - added override to silence the binary-or-shlib-defines-rpath error, since
       we are forced to use RPATH in our case
-  * New upstream release.
 
- -- Łukasz 'sil2100' Zemczak <lukasz.zemczak@canonical.com>  Fri, 10 Aug 2012 11:35:49 +0200
+  [ Didier Roche ]
+  * New upstream release.
+  * debian/control:
+    - build on latest nux (ABI break)
+
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 10 Aug 2012 15:01:01 +0200
 
 unity (6.0.0-0ubuntu6) quantal; urgency=low
 
