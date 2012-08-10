@@ -322,6 +322,7 @@ PreviewContainer::PreviewContainer(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , content_layout_(nullptr)
   , nav_disabled_(Navigation::NONE)
+  , last_calc_height_(0)
   , navigation_progress_speed_(0.0)
   , navigation_count_(0)
 {
@@ -370,12 +371,13 @@ void PreviewContainer::SetupViews()
 
   layout_ = new nux::HLayout();
   SetLayout(layout_);
+  layout_->AddSpace(0, 0);
 
   nav_left_ = new PreviewNavigator(Orientation::LEFT, NUX_TRACKER_LOCATION);
   nav_left_->SetMinimumWidth(style.GetNavigatorWidth());
   nav_left_->SetMaximumWidth(style.GetNavigatorWidth());
   nav_left_->activated.connect([&]() { navigate_left.emit(); });
-  layout_->AddView(nav_left_, 0);
+  layout_->AddView(nav_left_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   content_layout_ = new PreviewContent(this);
   layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
@@ -384,7 +386,9 @@ void PreviewContainer::SetupViews()
   nav_right_->SetMinimumWidth(style.GetNavigatorWidth());
   nav_right_->SetMaximumWidth(style.GetNavigatorWidth());
   nav_right_->activated.connect([&]() { navigate_right.emit(); });
-  layout_->AddView(nav_right_, 0);
+  layout_->AddView(nav_right_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+
+  layout_->AddSpace(0, 0);
 
   content_layout_->start_navigation.connect([&]()
   {
@@ -443,6 +447,32 @@ void PreviewContainer::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_d
     GetCompositionLayout()->ProcessDraw(gfx_engine, force_draw);
 
   gfx_engine.PopClippingRectangle();
+}
+
+void PreviewContainer::PreLayoutManagement()
+{
+  previews::Style& style = previews::Style::Instance();
+  nux::Geometry const& geo = GetGeometry();
+
+  int available_preview_width = MAX(1, geo.width - nav_left_->GetGeometry().width - nav_right_->GetGeometry().width);
+  int aspect_altered_height = available_preview_width / style.GetPreviewAspectRatio();
+
+  aspect_altered_height = CLAMP(aspect_altered_height, 1, geo.height);
+  if (last_calc_height_ != aspect_altered_height)
+  {
+    last_calc_height_ = aspect_altered_height;
+
+    content_layout_->SetMinimumHeight(aspect_altered_height);
+    content_layout_->SetMaximumHeight(aspect_altered_height);
+
+    nav_left_->SetMinimumHeight(aspect_altered_height);
+    nav_left_->SetMaximumHeight(aspect_altered_height);
+
+    nav_right_->SetMinimumHeight(aspect_altered_height);
+    nav_right_->SetMaximumHeight(aspect_altered_height);
+  }
+
+  View::PreLayoutManagement();
 }
 
 bool PreviewContainer::AnimationInProgress()

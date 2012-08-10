@@ -148,14 +148,9 @@ int Style::GetNavigatorIconSize() const
   return 24;  
 }
 
-int Style::GetPreviewPreferredHeight() const
+float Style::GetPreviewAspectRatio() const
 {
-  return 390;
-}
-
-int Style::GetPreviewPreferredWidth() const
-{
-  return 796;
+  return static_cast<float>(796)/390;
 }
 
 int Style::GetDetailsTopMargin() const
@@ -243,9 +238,14 @@ int Style::GetInfoHintIconSizeWidth() const
   return 24;
 }
 
-int Style::GetInfoHintNameWidth() const
+int Style::GetInfoHintNameMinimumWidth() const
 {
   return 100;
+}
+
+int Style::GetInfoHintNameMaximumWidth() const
+{
+  return 160;
 }
 
 float Style::GetDescriptionLineSpacing() const
