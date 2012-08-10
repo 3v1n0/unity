@@ -144,15 +144,15 @@ static void on_keybinding_changed (GSettings *settings,
  */
 
 static void
-panel_service_class_dispose (GObject *object)
+panel_service_class_dispose (GObject *self)
 {
-  PanelServicePrivate *priv = PANEL_SERVICE (object)->priv;
+  PanelServicePrivate *priv = PANEL_SERVICE (self)->priv;
   gint i;
 
   g_hash_table_destroy (priv->id2entry_hash);
   g_hash_table_destroy (priv->panel2entries_hash);
 
-  gdk_window_remove_filter (NULL, (GdkFilterFunc)event_filter, object);
+  gdk_window_remove_filter (NULL, (GdkFilterFunc)event_filter, self);
 
   if (GTK_IS_WIDGET (priv->menubar) &&
       gtk_widget_get_realized (GTK_WIDGET (priv->menubar)))
@@ -190,10 +190,10 @@ panel_service_class_dispose (GObject *object)
         }
     }
 
-  g_signal_handlers_disconnect_by_func (priv->gsettings, on_keybinding_changed, object);
+  g_signal_handlers_disconnect_by_func (priv->gsettings, on_keybinding_changed, self);
   g_object_unref (priv->gsettings);
 
-  G_OBJECT_CLASS (panel_service_parent_class)->dispose (object);
+  G_OBJECT_CLASS (panel_service_parent_class)->dispose (self);
 }
 
 static void
