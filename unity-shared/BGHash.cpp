@@ -155,7 +155,6 @@ nux::Color BGHash::MatchColor(nux::Color const& base_color) const
   colors[10] = nux::Color (0x1b134c);
   colors[11] = nux::Color (0x2c0d46);
 
-  float closest_diff = 200.0f;
   nux::Color chosen_color;
   nux::color::HueSaturationValue base_hsv (base_color);
 
@@ -168,6 +167,7 @@ nux::Color BGHash::MatchColor(nux::Color const& base_color) const
   }
   else
   {
+    float closest_diff = 200.0f;
     LOG_DEBUG (logger) << "got a colour image";
     // full colour image
     for (int i = 0; i < 11; i++)

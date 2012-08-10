@@ -7,7 +7,6 @@ If you want to hack on unity you need the following packages
   - gthread-2.0
   - indicator
   - atk
-  - libutouch-geis
 
 Or if you are on ubuntu run the command, apt-get build-dep unity
 

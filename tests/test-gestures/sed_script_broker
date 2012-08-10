@@ -5,10 +5,7 @@ s|\<CompWindowVector\>|CompWindowMockVector|g
 s|\<screen\>|screen_mock|g
 s|\<pointerX\>|pointerX_mock|g
 s|\<pointerY\>|pointerY_mock|g
-s|\<XSync\>|XSyncMock|g
-s|\<XWarpPointer\>|XWarpPointerMock|g
 s|\<XFreeCursor\>|XFreeCursorMock|g
 s|\<XCreateFontCursor\>|XCreateFontCursorMock|g
-s|\<GeisAdapter\>|GeisAdapterMock|g
-s|\<PluginAdapter\>|PluginAdapterMock|g
-s|\<ubus-server.h\>|ubus-server-mock.h|g
+s|\<WindowGestureTarget\>|WindowGestureTargetMock|g
+s|\<UnityGestureTarget\>|UnityGestureTargetMock|g
