@@ -164,3 +164,60 @@ Description: Autopiloted tests for Unity
  objects. This package contains the specific unity introspection bindings
  to be able to write tests in python as well as the full test suite for Unity.
 
+Package: unity-2d
+Depends: unity, ${misc:Depends}
+Architecture: all
+Section: oldlibs
+Description: transitional dummy package
+ This is a transitional dummy package for unity-2d -> unity migration.
+ It can safely be removed.
+
+Package: libunity-2d-private0
+Depends: unity, ${misc:Depends}
+Architecture: all
+Section: oldlibs
+Description: transitional dummy package 
+ This is a transitional dummy package for unity-2d -> unity migration.
+ It can safely be removed.
+
+Package: libunity-2d-private-dev
+Depends: unity, ${misc:Depends}
+Architecture: all
+Section: oldlibs
+Description: transitional dummy package 
+ This is a transitional dummy package for unity-2d -> unity migration.
+ It can safely be removed.
+
+Package: unity-2d-panel
+Depends: unity, ${misc:Depends}
+Architecture: all
+Section: oldlibs
+Description: transitional dummy package 
+ This is a transitional dummy package for unity-2d -> unity migration.
+ It can safely be removed.
+
+Package: unity-2d-spread
+Depends: unity, ${misc:Depends}
+Architecture: all
+Section: oldlibs
+Description: transitional dummy package 
+ This is a transitional dummy package for unity-2d -> unity migration.
+ It can safely be removed.
+
+Package: unity-2d-common
+Depends: unity, ${misc:Depends}
+Architecture: all
+Section: oldlibs
+Description: transitional dummy package 
+ This is a transitional dummy package for unity-2d -> unity migration.
+ It can safely be removed.
+
+Package: unity-2d-dbg
+Priority: extra
+Depends: unity, ${misc:Depends}
+Architecture: all
+Section: oldlibs
+Description: transitional dummy package
+ This is a transitional dummy package for unity-2d -> unity migration.
+ It can safely be removed.
+
