@@ -29,6 +29,7 @@
 #include <NuxCore/Logger.h>
 
 #include <NuxGraphics/NuxGraphics.h>
+#include <NuxGraphics/GestureEvent.h>
 #include <NuxGraphics/GpuDevice.h>
 #include <NuxGraphics/GLTextureResourceManager.h>
 
@@ -91,6 +92,7 @@ const int MOUSE_DEADZONE = 15;
 const float DRAG_OUT_PIXELS = 300.0f;
 
 const std::string DND_CHECK_TIMEOUT = "dnd-check-timeout";
+const std::string STRUT_HACK_TIMEOUT = "strut-hack-timeout";
 const std::string START_DRAGICON_TIMEOUT = "start-dragicon-timeout";
 const std::string SCROLL_TIMEOUT = "scroll-timeout";
 const std::string ANIMATION_IDLE = "animation-idle";
@@ -136,8 +138,8 @@ Launcher::Launcher(nux::BaseWindow* parent,
   , _launcher_drag_delta_min(0)
   , _enter_y(0)
   , _last_button_press(0)
-  , _drag_out_id(0)
   , _drag_out_delta_x(0.0f)
+  , _drag_gesture_ongoing(false)
   , _last_reveal_progress(0.0f)
   , _collection_window(collection_window)
   , _selection_atom(0)
@@ -185,11 +187,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   plugin_adapter.terminate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   plugin_adapter.compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &Launcher::EnsureAnimation));
 
-  GeisAdapter& adapter = GeisAdapter::Instance();
-  adapter.drag_start.connect(sigc::mem_fun(this, &Launcher::OnDragStart));
-  adapter.drag_update.connect(sigc::mem_fun(this, &Launcher::OnDragUpdate));
-  adapter.drag_finish.connect(sigc::mem_fun(this, &Launcher::OnDragFinish));
-
   display.changed.connect(sigc::mem_fun(this, &Launcher::OnDisplayChanged));
 
   // 0 out timers to avoid wonky startups
@@ -233,45 +230,39 @@ void Launcher::OnDisplayChanged(Display* display)
   _collection_window->display = display;
 }
 
-void Launcher::OnDragStart(GeisAdapter::GeisDragData* data)
+void
+Launcher::OnDragStart(const nux::GestureEvent &event)
 {
-  if (_drag_out_id && _drag_out_id == data->id)
-    return;
-
-  if (data->touches == 4)
+  _drag_gesture_ongoing = true;
+  if (_hidden)
   {
-    _drag_out_id = data->id;
-    if (_hidden)
-    {
-      _drag_out_delta_x = 0.0f;
-    }
-    else
-    {
-      _drag_out_delta_x = DRAG_OUT_PIXELS;
-      _hide_machine.SetQuirk(LauncherHideMachine::MT_DRAG_OUT, false);
-    }
+    _drag_out_delta_x = 0.0f;
+  }
+  else
+  {
+    _drag_out_delta_x = DRAG_OUT_PIXELS;
+    _hide_machine.SetQuirk(LauncherHideMachine::MT_DRAG_OUT, false);
   }
 }
 
-void Launcher::OnDragUpdate(GeisAdapter::GeisDragData* data)
+void
+Launcher::OnDragUpdate(const nux::GestureEvent &event)
 {
-  if (data->id == _drag_out_id)
-  {
-    _drag_out_delta_x = CLAMP(_drag_out_delta_x + data->delta_x, 0.0f, DRAG_OUT_PIXELS);
-    EnsureAnimation();
-  }
+  _drag_out_delta_x =
+    CLAMP(_drag_out_delta_x + event.GetDelta().x, 0.0f, DRAG_OUT_PIXELS);
+  EnsureAnimation();
 }
 
-void Launcher::OnDragFinish(GeisAdapter::GeisDragData* data)
+void
+Launcher::OnDragFinish(const nux::GestureEvent &event)
 {
-  if (data->id == _drag_out_id)
-  {
-    if (_drag_out_delta_x >= DRAG_OUT_PIXELS - 90.0f)
-      _hide_machine.SetQuirk(LauncherHideMachine::MT_DRAG_OUT, true);
-    TimeUtil::SetTimeStruct(&_times[TIME_DRAG_OUT], &_times[TIME_DRAG_OUT], ANIM_DURATION_SHORT);
-    _drag_out_id = 0;
-    EnsureAnimation();
-  }
+  if (_drag_out_delta_x >= DRAG_OUT_PIXELS - 90.0f)
+    _hide_machine.SetQuirk(LauncherHideMachine::MT_DRAG_OUT, true);
+  TimeUtil::SetTimeStruct(&_times[TIME_DRAG_OUT],
+                          &_times[TIME_DRAG_OUT],
+                          ANIM_DURATION_SHORT);
+  EnsureAnimation();
+  _drag_gesture_ongoing = false;
 }
 
 void Launcher::AddProperties(GVariantBuilder* builder)
@@ -341,9 +332,11 @@ float Launcher::DragOutProgress(struct timespec const& current) const
   float timeout = CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_DRAG_OUT])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
   float progress = CLAMP(_drag_out_delta_x / DRAG_OUT_PIXELS, 0.0f, 1.0f);
 
-  if (_drag_out_id || _hide_machine.GetQuirk(LauncherHideMachine::MT_DRAG_OUT))
+  if (_drag_gesture_ongoing
+      || _hide_machine.GetQuirk(LauncherHideMachine::MT_DRAG_OUT))
     return progress;
-  return progress * (1.0f - timeout);
+  else
+    return progress * (1.0f - timeout);
 }
 
 float Launcher::AutohideProgress(struct timespec const& current) const
@@ -473,7 +466,7 @@ bool Launcher::AnimationInProgress() const
 
   // animations happening on specific icons
   LauncherModel::iterator it;
-  for (it = _model->begin(); it != _model->end(); it++)
+  for (it = _model->begin(); it != _model->end(); ++it)
     if (IconNeedsAnimation(*it, current))
       return true;
 
@@ -997,7 +990,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   // compute required height of launcher AND folding threshold
   float sum = 0.0f + center.y;
   float folding_threshold = launcher_height - _icon_size / 2.5f;
-  for (it = _model->begin(); it != _model->end(); it++)
+  for (it = _model->begin(); it != _model->end(); ++it)
   {
     float height = (_icon_size + _space_between_icons) * IconVisibleProgress(*it, current);
     sum += height;
@@ -1106,7 +1099,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   // wont start jumping around).  As a general rule ANY if () statements that modify center.y should be seen
   // as bugs.
   int index = 1;
-  for (it = _model->main_begin(); it != _model->main_end(); it++)
+  for (it = _model->main_begin(); it != _model->main_end(); ++it)
   {
     RenderArg arg;
     AbstractLauncherIcon::Ptr icon = *it;
@@ -1120,7 +1113,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
 
   // compute maximum height of shelf
   float shelf_sum = 0.0f;
-  for (it = _model->shelf_begin(); it != _model->shelf_end(); it++)
+  for (it = _model->shelf_begin(); it != _model->shelf_end(); ++it)
   {
     float height = (_icon_size + _space_between_icons) * IconVisibleProgress(*it, current);
     shelf_sum += height;
@@ -1134,7 +1127,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   folding_threshold += shelf_delta;
   center.y += shelf_delta;
 
-  for (it = _model->shelf_begin(); it != _model->shelf_end(); it++)
+  for (it = _model->shelf_begin(); it != _model->shelf_end(); ++it)
   {
     RenderArg arg;
     AbstractLauncherIcon::Ptr icon = *it;
@@ -1429,6 +1422,17 @@ LauncherHideMode Launcher::GetHideMode() const
 
 /* End Launcher Show/Hide logic */
 
+// Hacks around compiz failing to see the struts because the window was just mapped.
+bool Launcher::StrutHack()
+{
+  _parent->InputWindowEnableStruts(false);
+
+  if (options()->hide_mode == LAUNCHER_HIDE_NEVER)
+    _parent->InputWindowEnableStruts(true);
+
+  return false;
+}
+
 void Launcher::OnOptionsChanged(Options::Ptr options)
 {
    UpdateOptions(options);
@@ -1470,6 +1474,12 @@ void Launcher::SetHideMode(LauncherHideMode hidemode)
   else
   {
     _parent->EnableInputWindow(true, launcher::window_title, false, false);
+
+    if (!sources_.GetSource(STRUT_HACK_TIMEOUT))
+    {
+      sources_.AddTimeout(1000, sigc::mem_fun(this, &Launcher::StrutHack), STRUT_HACK_TIMEOUT);
+    }
+
     _parent->InputWindowEnableStruts(true);
   }
 
@@ -1908,7 +1918,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   EventLogic();
 
   /* draw launcher */
-  for (rev_it = args.rbegin(); rev_it != args.rend(); rev_it++)
+  for (rev_it = args.rbegin(); rev_it != args.rend(); ++rev_it)
   {
     if ((*rev_it).stick_thingy)
       gPainter.Paint2DQuadColor(GfxContext,
@@ -2114,7 +2124,7 @@ void Launcher::UpdateDragWindowPosition(int x, int y)
           AbstractLauncherIcon::Ptr iconBeforeHover;
           LauncherModel::iterator it;
           LauncherModel::iterator prevIt = _model->end();
-          for (it = _model->begin(); it != _model->end(); it++)
+          for (it = _model->begin(); it != _model->end(); ++it)
           {
             if (!(*it)->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE) || !(*it)->IsVisibleOnMonitor(monitor))
               continue;
@@ -2245,9 +2255,7 @@ void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned
 
 void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  SetMousePosition(x, y);
   SetStateMouseOverLauncher(false);
-  //AbstractLauncherIcon::SetSkipTooltipDelay(false);
 
   EventLogic();
   EnsureAnimation();
@@ -2469,7 +2477,7 @@ AbstractLauncherIcon::Ptr Launcher::MouseIconIntersection(int x, int y)
   nux::Point2 mouse_position(x, y);
   int inside = 0;
 
-  for (it = _model->begin(); it != _model->end(); it++)
+  for (it = _model->begin(); it != _model->end(); ++it)
   {
     if (!(*it)->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE) || !(*it)->IsVisibleOnMonitor(monitor))
       continue;
@@ -2514,7 +2522,26 @@ void Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLaun
   RestoreSystemRenderTarget();
 }
 
-void Launcher::SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
+nux::GestureDeliveryRequest Launcher::GestureEvent(const nux::GestureEvent &event)
+{
+  switch(event.type)
+  {
+    case nux::EVENT_GESTURE_BEGIN:
+      OnDragStart(event);
+      break;
+    case nux::EVENT_GESTURE_UPDATE:
+      OnDragUpdate(event);
+      break;
+    default: // EVENT_GESTURE_END
+      OnDragFinish(event);
+      break;
+  }
+
+  return nux::GestureDeliveryRequest::NONE;
+}
+
+void
+Launcher::SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
 {
   int width = texture->GetWidth();
   int height = texture->GetHeight();
