@@ -268,12 +268,21 @@ private:
           glib::Object<GInputStream> stream(
               ::g_memory_input_stream_new_from_data(contents.Value(), length, nullptr));
 
-          task->result = ::gdk_pixbuf_new_from_stream_at_scale(stream,
-                                                               -1,
-                                                               task->size,
-                                                               TRUE,
-                                                               canc,
-                                                               &task->error);
+          if (task->size != static_cast<unsigned int>(~0))
+          {
+            task->result = ::gdk_pixbuf_new_from_stream_at_scale(stream,
+                                                                 -1,
+                                                                 task->size,
+                                                                 TRUE,
+                                                                 canc,
+                                                                 &task->error);
+          }
+          else
+          {
+            task->result = ::gdk_pixbuf_new_from_stream(stream,
+                                                        canc,
+                                                        &task->error);
+          }          
           ::g_input_stream_close(stream, canc, nullptr);
         }
       }

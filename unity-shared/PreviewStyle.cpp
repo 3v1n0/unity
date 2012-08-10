@@ -41,17 +41,45 @@ nux::logging::Logger logger("unity.dash.previews.style");
 
 typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
+template <int default_size = 1>
 class LazyLoadTexture
 {
 public:
-  LazyLoadTexture(std::string const& filename, int size = -1);
-  nux::BaseTexture* texture();
+  LazyLoadTexture(std::string const& filename)
+  : filename_(filename) {}
+
+  nux::BaseTexture* texture(int size = default_size)
+  {
+    auto tex_iter = textures_.find(size);
+    if (tex_iter != textures_.end())
+      return tex_iter->second.GetPointer();
+
+    return LoadTexture(size).GetPointer();
+  }
+
 private:
-  void LoadTexture();
+  BaseTexturePtr LoadTexture(int size)
+  {
+    BaseTexturePtr texture;
+    std::string full_path = PKGDATADIR + filename_;
+    glib::Object<GdkPixbuf> pixbuf;
+    glib::Error error;
+
+    pixbuf = ::gdk_pixbuf_new_from_file_at_size(full_path.c_str(), size, size, &error);
+    if (error)
+    {
+      LOG_WARN(logger) << "Unable to texture " << full_path << " at size '" << size << "' : " << error;
+    }
+    else
+    {
+      texture.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
+    }
+    textures_[size] = texture;
+    return texture;
+  }
 private:
   std::string filename_;
-  int size_;
-  BaseTexturePtr texture_;
+  std::map<int, BaseTexturePtr> textures_;
 };
 
 } // namespace
@@ -62,20 +90,22 @@ class Style::Impl
 public:
   Impl(Style* owner)
   : owner_(owner)
-  , preview_nav_left_texture_("/preview_previous.svg", 32)
-  , preview_nav_right_texture_("/preview_next.svg", 32)
-  , preview_play_texture_("/preview_play.svg", 32)
-  , preview_pause_texture_("/preview_pause.svg", 32)
+  , preview_nav_left_texture_("/preview_previous.svg")
+  , preview_nav_right_texture_("/preview_next.svg")
+  , preview_play_texture_("/preview_play.svg")
+  , preview_pause_texture_("/preview_pause.svg")
+  , preview_spin_texture_("/search_spin.svg")
   {
   }
   ~Impl() {}
 
   Style* owner_;
 
-  LazyLoadTexture preview_nav_left_texture_;
-  LazyLoadTexture preview_nav_right_texture_;
-  LazyLoadTexture preview_play_texture_;
-  LazyLoadTexture preview_pause_texture_;
+  LazyLoadTexture<32> preview_nav_left_texture_;
+  LazyLoadTexture<32> preview_nav_right_texture_;
+  LazyLoadTexture<32> preview_play_texture_;
+  LazyLoadTexture<32> preview_pause_texture_;
+  LazyLoadTexture<32> preview_spin_texture_;
 };
 
 
@@ -118,14 +148,9 @@ int Style::GetNavigatorIconSize() const
   return 24;  
 }
 
-int Style::GetPreviewPreferredHeight() const
+float Style::GetPreviewAspectRatio() const
 {
-  return 390;
-}
-
-int Style::GetPreviewPreferredWidth() const
-{
-  return 796;
+  return static_cast<float>(796)/390;
 }
 
 int Style::GetDetailsTopMargin() const
@@ -213,9 +238,14 @@ int Style::GetInfoHintIconSizeWidth() const
   return 24;
 }
 
-int Style::GetInfoHintNameWidth() const
+int Style::GetInfoHintNameMinimumWidth() const
 {
   return 100;
+}
+
+int Style::GetInfoHintNameMaximumWidth() const
+{
+  return 160;
 }
 
 float Style::GetDescriptionLineSpacing() const
@@ -320,41 +350,11 @@ nux::BaseTexture* Style::GetPauseIcon()
   return pimpl->preview_pause_texture_.texture();
 }
 
-
-
-namespace
+nux::BaseTexture* Style::GetSearchSpinIcon(int size)
 {
-LazyLoadTexture::LazyLoadTexture(std::string const& filename, int size)
-  : filename_(filename)
-  , size_(size)
-{
+  return pimpl->preview_spin_texture_.texture(size);
 }
 
-nux::BaseTexture* LazyLoadTexture::texture()
-{
-  if (!texture_)
-    LoadTexture();
-  return texture_.GetPointer();
-}
-
-void LazyLoadTexture::LoadTexture()
-{
-  std::string full_path = PKGDATADIR + filename_;
-  glib::Object<GdkPixbuf> pixbuf;
-  glib::Error error;
-
-  pixbuf = ::gdk_pixbuf_new_from_file_at_size(full_path.c_str(), size_, size_, &error);
-  if (error)
-  {
-    LOG_WARN(logger) << "Unable to texture " << full_path << ": " << error;
-  }
-  else
-  {
-    texture_.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
-  }
-}
-
-} // namesspace
 
 } // namespace previews
 } // namespace dash

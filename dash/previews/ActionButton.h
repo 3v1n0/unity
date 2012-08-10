@@ -79,7 +79,7 @@ private:
   std::string icon_hint_;
   std::string font_hint_;
 
-  IconTexture* image_;
+  nux::ObjectPtr<IconTexture> image_;
   nux::ObjectPtr<nux::StaticCairoText> static_text_;
 };
 

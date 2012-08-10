@@ -29,6 +29,7 @@
 #include "unity-shared/PreviewStyle.h"
 #include "PreviewNavigator.h"
 #include <boost/math/constants/constants.hpp>
+#include "config.h"
 
 namespace unity
 {
@@ -58,13 +59,22 @@ const std::string ANIMATION_IDLE = "animation-idle";
 class PreviewContent : public nux::Layout
 {
 public:
-  PreviewContent(const PreviewContainer*const parent)
-  : progress_(0.0)
+  PreviewContent(PreviewContainer*const parent)
+  : parent_(parent)
+  , progress_(0.0)
   , animating_(false)
-  , parent_(parent) {}
+  , waiting_preview_(false)
+  , rotation_(0.0)
+  {
+    Style& style = previews::Style::Instance();
+
+    spin_= style.GetSearchSpinIcon(256);
+  }
 
   void PushPreview(previews::Preview::Ptr preview, Navigation direction)
   {
+    StopPreviewWait();
+
     if (preview)
     {
       AddView(preview.GetPointer());
@@ -172,6 +182,43 @@ public:
     }
   }
 
+  void StartPreviewWait()
+  {
+    preview_wait_timer_.reset(new glib::Timeout(300, [&] () {
+
+      if (waiting_preview_)
+        return false;
+
+      waiting_preview_ = true;
+
+      rotate_matrix_.Rotate_z(0.0f);
+      rotation_ = 0.0f;
+      parent_->QueueDraw();
+      return false;
+    }));
+  }
+
+  void StopPreviewWait()
+  {
+    preview_wait_timer_.reset();
+    waiting_preview_ = false;
+    parent_->QueueDraw();
+  }
+
+  bool OnFrameTimeout()
+  {
+    frame_timeout_.reset();
+    rotation_ += 0.1f;
+
+    if (rotation_ >= 360.0f)
+      rotation_ = 0.0f;
+
+    rotate_matrix_.Rotate_z(rotation_);
+    parent_->QueueDraw();
+
+    return false;
+  }
+
   // Dont draw in process draw. this is so we can control the z order.
   void ProcessDraw(nux::GraphicsEngine& gfx_engine, bool force_draw)
   {
@@ -182,6 +229,57 @@ public:
     if (swipe_.preview && swipe_.preview->IsVisible()) { swipe_.preview->ProcessDraw(gfx_engine, force_draw); }
     if (current_preview_ && current_preview_->IsVisible()) { current_preview_->ProcessDraw(gfx_engine, force_draw); }
 
+
+    if (waiting_preview_)
+    { 
+      nux::Geometry const& base = GetGeometry(); 
+
+      unsigned int alpha, src, dest = 0;
+      gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
+      gfx_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+      nux::TexCoordXForm texxform;
+      texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+      texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+      texxform.min_filter = nux::TEXFILTER_LINEAR;
+      texxform.mag_filter = nux::TEXFILTER_LINEAR;
+
+      nux::Geometry spin_geo(base.x + ((base.width - spin_->GetWidth()) / 2),
+                             base.y + ((base.height - spin_->GetHeight()) / 2),
+                             spin_->GetWidth(),
+                             spin_->GetHeight());
+      // Geometry (== Rect) uses integers which were rounded above,
+      // hence an extra 0.5 offset for odd sizes is needed
+      // because pure floating point is not being used.
+      int spin_offset_w = !(base.width % 2) ? 0 : 1;
+      int spin_offset_h = !(base.height % 2) ? 0 : 1;
+
+      gfx_engine.PushModelViewMatrix(nux::Matrix4::TRANSLATE(-spin_geo.x - (spin_geo.width + spin_offset_w) / 2.0f,
+                                                             -spin_geo.y - (spin_geo.height + spin_offset_h) / 2.0f, 0));
+      gfx_engine.PushModelViewMatrix(rotate_matrix_);
+      gfx_engine.PushModelViewMatrix(nux::Matrix4::TRANSLATE(spin_geo.x + (spin_geo.width + spin_offset_w) / 2.0f,
+                                                             spin_geo.y + (spin_geo.height + spin_offset_h) / 2.0f, 0));
+
+      gfx_engine.QRP_1Tex(spin_geo.x,
+                          spin_geo.y,
+                          spin_geo.width,
+                          spin_geo.height,
+                          spin_->GetDeviceTexture(),
+                          texxform,
+                          nux::color::White);
+
+      gfx_engine.PopModelViewMatrix();
+      gfx_engine.PopModelViewMatrix();
+      gfx_engine.PopModelViewMatrix();
+
+      gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
+
+      if (!frame_timeout_)
+      {
+        frame_timeout_.reset(new glib::Timeout(22, sigc::mem_fun(this, &PreviewContent::OnFrameTimeout)));
+      }
+    }
+
     _queued_draw = false;
   }
 
@@ -189,8 +287,10 @@ public:
   sigc::signal<void> continue_navigation;
   sigc::signal<void> end_navigation;
 
-protected:
 private:
+  PreviewContainer*const parent_;
+
+  // Swipe animation
   struct PreviewSwipe
   {
     Navigation direction;
@@ -198,14 +298,22 @@ private:
 
     void reset() { preview.Release(); }
   };
-  std::queue<PreviewSwipe> push_preview_;
-
   previews::Preview::Ptr current_preview_;
+  std::queue<PreviewSwipe> push_preview_;
   PreviewSwipe swipe_;
 
   float progress_;
   bool animating_;
-  const PreviewContainer*const parent_;
+
+  // wait animation
+  glib::Source::UniquePtr preview_wait_timer_;
+  glib::Source::UniquePtr _frame_timeout;
+  bool waiting_preview_;
+  nux::ObjectPtr<nux::BaseTexture> spin_;
+
+  glib::Source::UniquePtr frame_timeout_;
+  nux::Matrix4 rotate_matrix_;
+  float rotation_;
 };
 
 NUX_IMPLEMENT_OBJECT_TYPE(PreviewContainer);
@@ -214,6 +322,7 @@ PreviewContainer::PreviewContainer(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , content_layout_(nullptr)
   , nav_disabled_(Navigation::NONE)
+  , last_calc_height_(0)
   , navigation_progress_speed_(0.0)
   , navigation_count_(0)
 {
@@ -262,12 +371,13 @@ void PreviewContainer::SetupViews()
 
   layout_ = new nux::HLayout();
   SetLayout(layout_);
+  layout_->AddSpace(0, 0);
 
   nav_left_ = new PreviewNavigator(Orientation::LEFT, NUX_TRACKER_LOCATION);
   nav_left_->SetMinimumWidth(style.GetNavigatorWidth());
   nav_left_->SetMaximumWidth(style.GetNavigatorWidth());
   nav_left_->activated.connect([&]() { navigate_left.emit(); });
-  layout_->AddView(nav_left_, 0);
+  layout_->AddView(nav_left_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   content_layout_ = new PreviewContent(this);
   layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
@@ -276,7 +386,9 @@ void PreviewContainer::SetupViews()
   nav_right_->SetMinimumWidth(style.GetNavigatorWidth());
   nav_right_->SetMaximumWidth(style.GetNavigatorWidth());
   nav_right_->activated.connect([&]() { navigate_right.emit(); });
-  layout_->AddView(nav_right_, 0);
+  layout_->AddView(nav_right_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+
+  layout_->AddSpace(0, 0);
 
   content_layout_->start_navigation.connect([&]()
   {
@@ -301,6 +413,9 @@ void PreviewContainer::SetupViews()
     navigation_count_ = 0;
     navigation_progress_speed_ = 0;
   });
+
+  navigate_right.connect( [&]() { content_layout_->StartPreviewWait(); } );
+  navigate_left.connect( [&]() { content_layout_->StartPreviewWait(); } );
 }
 
 void PreviewContainer::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
@@ -334,6 +449,32 @@ void PreviewContainer::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_d
   gfx_engine.PopClippingRectangle();
 }
 
+void PreviewContainer::PreLayoutManagement()
+{
+  previews::Style& style = previews::Style::Instance();
+  nux::Geometry const& geo = GetGeometry();
+
+  int available_preview_width = MAX(1, geo.width - nav_left_->GetGeometry().width - nav_right_->GetGeometry().width);
+  int aspect_altered_height = available_preview_width / style.GetPreviewAspectRatio();
+
+  aspect_altered_height = CLAMP(aspect_altered_height, 1, geo.height);
+  if (last_calc_height_ != aspect_altered_height)
+  {
+    last_calc_height_ = aspect_altered_height;
+
+    content_layout_->SetMinimumHeight(aspect_altered_height);
+    content_layout_->SetMaximumHeight(aspect_altered_height);
+
+    nav_left_->SetMinimumHeight(aspect_altered_height);
+    nav_left_->SetMaximumHeight(aspect_altered_height);
+
+    nav_right_->SetMinimumHeight(aspect_altered_height);
+    nav_right_->SetMaximumHeight(aspect_altered_height);
+  }
+
+  View::PreLayoutManagement();
+}
+
 bool PreviewContainer::AnimationInProgress()
 {
    // short circuit to avoid unneeded calculations
@@ -360,18 +501,6 @@ static float easeInOutQuart(float t)
         return -0.5f * (pow(t, 4)- 2);
     }
 }
-
-// static float easeInOutCubic(float t)
-// {
-//     t = CLAMP(t, 0.0, 1.0);
-//     t*=2.0f;
-//     if(t < 1.0f) {
-//         return 0.5f*pow(t, 3);
-//     } else {
-//         t -= 2.0f;
-//         return 0.5f*(pow(t, 3) + 2);
-//     }
-// }
 
 float PreviewContainer::GetSwipeAnimationProgress(struct timespec const& current) const
 {

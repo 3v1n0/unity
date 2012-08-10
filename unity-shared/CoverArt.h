@@ -69,6 +69,7 @@ protected:
   bool OnFrameTimeout();
 
   void IconLoaded(std::string const& texid, unsigned size, glib::Object<GdkPixbuf> const& pixbuf);
+  void TextureLoaded(std::string const& texid, unsigned size, glib::Object<GdkPixbuf> const& pixbuf);
 
   void StartWaiting();
   void SetNoImageAvailable();

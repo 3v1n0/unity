@@ -79,6 +79,7 @@ public:
 protected:
   void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
   void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);
+  void PreLayoutManagement();
 
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
 
@@ -100,6 +101,7 @@ private:
   PreviewNavigator* nav_right_;
   PreviewContent* content_layout_;
   Navigation nav_disabled_;
+  int last_calc_height_;
 
   // Animation
   struct timespec  last_progress_time_;

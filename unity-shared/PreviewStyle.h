@@ -59,8 +59,7 @@ public:
   int GetNavigatorWidth() const;
   int GetNavigatorIconSize() const;
   
-  int GetPreviewPreferredHeight() const;
-  int GetPreviewPreferredWidth() const;
+  float GetPreviewAspectRatio() const;
 
   int GetDetailsTopMargin() const;
   int GetDetailsBottomMargin() const;
@@ -77,7 +76,8 @@ public:
   int GetDetailsPanelMinimumWidth() const;
 
   int GetInfoHintIconSizeWidth() const;
-  int GetInfoHintNameWidth() const;
+  int GetInfoHintNameMinimumWidth() const;
+  int GetInfoHintNameMaximumWidth() const;
 
   float GetDescriptionLineSpacing() const;
   int GetDescriptionLineCount() const;
@@ -124,6 +124,7 @@ public:
   nux::BaseTexture* GetNavRightIcon();
   nux::BaseTexture* GetPlayIcon();
   nux::BaseTexture* GetPauseIcon();
+  nux::BaseTexture* GetSearchSpinIcon(int size = -1);
  
 protected:
   class Impl;

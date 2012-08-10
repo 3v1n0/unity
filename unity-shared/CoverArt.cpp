@@ -86,49 +86,20 @@ void CoverArt::SetImage(std::string const& image_hint)
 
   GIcon* icon = g_icon_new_for_string(image_hint.c_str(), NULL);
 
-  glib::Object<GFile> image_file;
-  if (g_strrstr(image_hint.c_str(), "://"))
+  bool bLoadTexture = false;
+  bLoadTexture |= g_strrstr(image_hint.c_str(), "://") != NULL;
+  if (!bLoadTexture && !image_hint.empty())
   {
-    /* try to open the source file for reading */
-    image_file = g_file_new_for_uri (image_hint.c_str());
-  }
-  else
-  {
-    image_file = g_file_new_for_path (image_hint.c_str());
+    bLoadTexture |= image_hint[0] == '/' && image_hint.size() > 1;
   }
 
-  if (g_file_query_exists(image_file, NULL))
-  {
-    // for files on disk, we stretch to maximum aspect ratio.
-    stretch_image_  = true;
-
-    GFileInputStream       *stream;
-    GError                 *error = NULL;
-
-    stream = g_file_read (image_file, NULL, &error);
-
-    if (error != NULL)
-    {
-      g_error_free (error);
-
-      if (icon != NULL)
-        g_object_unref(icon);
-      return;
-    }
-
-    /* stream image into pixel-buffer. */
-    glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_stream (G_INPUT_STREAM (stream), NULL, &error));
-    g_object_unref (stream);
-
-    texture_screenshot_.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
-
-    if (!texture_screenshot_)
-    {
-      SetNoImageAvailable();
-    }
-    QueueDraw();
+  // texture from file.
+  if (bLoadTexture)
+  {    
+    StartWaiting();
+    slot_handle_ = IconLoader::GetDefault().LoadFromGIconString(image_hint, ~0, sigc::mem_fun(this, &CoverArt::TextureLoaded));
   }
-  else
+  else if (!image_hint.empty())
   {
     if (GetLayout())
       GetLayout()->RemoveChildObject(overlay_text_);
@@ -143,6 +114,10 @@ void CoverArt::SetImage(std::string const& image_hint)
       StartWaiting();
       slot_handle_ = IconLoader::GetDefault().LoadFromIconName(image_hint, icon_width, sigc::mem_fun(this, &CoverArt::IconLoaded));
     }
+  }
+  else
+  {
+    SetNoImageAvailable();
   }
 
   if (icon != NULL)
@@ -262,11 +237,6 @@ void CoverArt::IconLoaded(std::string const& texid, unsigned size, glib::Object<
     cairo_paint(cr);
 
     float scale = float(pixbuf_height) / gdk_pixbuf_get_height(pixbuf);
-
-    //cairo_translate(cr,
-    //                static_cast<int>((width - (pixbuf_width * scale)) * 0.5),
-    //                static_cast<int>((height - (pixbuf_height * scale)) * 0.5));
-
     cairo_scale(cr, scale, scale);
 
     cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
@@ -278,6 +248,22 @@ void CoverArt::IconLoaded(std::string const& texid, unsigned size, glib::Object<
   }
 }
 
+void CoverArt::TextureLoaded(std::string const& texid, unsigned size, glib::Object<GdkPixbuf> const& pixbuf)
+{
+  // Finished waiting
+  spinner_timeout_.reset();
+  frame_timeout_.reset();
+  waiting_ = false;
+  stretch_image_ = true;
+
+  if (!pixbuf)
+  {
+    SetNoImageAvailable();
+    return;
+  }
+  texture_screenshot_.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
+}
+
 void CoverArt::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
 {
   nux::Geometry const& base = GetGeometry();
@@ -287,13 +273,13 @@ void CoverArt::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
 
   unsigned int alpha, src, dest = 0;
   gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
-  gfx_engine.GetRenderStates().SetBlend(true);
+  gfx_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-    gfx_engine.QRP_Color(base.x,
-                      base.y,
-                      base.GetWidth(),
-                      base.GetHeight(),
-                      nux::Color(0.03f, 0.03f, 0.03f, 0.0f));
+  gfx_engine.QRP_Color(base.x,
+                    base.y,
+                    base.GetWidth(),
+                    base.GetHeight(),
+                    nux::Color(0.03f, 0.03f, 0.03f, 0.0f));
 
   if (texture_screenshot_)
   {

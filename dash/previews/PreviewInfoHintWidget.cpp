@@ -44,11 +44,9 @@ const int layout_spacing = 12;
 
 NUX_IMPLEMENT_OBJECT_TYPE(PreviewInfoHintWidget);
 
-PreviewInfoHintWidget::PreviewInfoHintWidget(dash::Preview::Ptr preview_model, int icon_size, bool visible_icons, bool condensed_format)
+PreviewInfoHintWidget::PreviewInfoHintWidget(dash::Preview::Ptr preview_model, int icon_size)
 : View(NUX_TRACKER_LOCATION)
 , icon_size_(icon_size)
-, condensed_format_(condensed_format)
-, visible_icons_(visible_icons)
 , preview_model_(preview_model)
 {
   SetupViews();
@@ -56,20 +54,6 @@ PreviewInfoHintWidget::PreviewInfoHintWidget(dash::Preview::Ptr preview_model, i
 
 PreviewInfoHintWidget::~PreviewInfoHintWidget()
 {
-}
-
-void PreviewInfoHintWidget::SetVisibleIcons(bool visible)
-{
-  visible_icons_ = visible;
-  SetupViews();
-  QueueDraw();
-}
-
-void PreviewInfoHintWidget::SetCondensedFormat(bool condensed)
-{
-  condensed_format_ = condensed;
-  SetupViews();
-  QueueDraw();
 }
 
 void PreviewInfoHintWidget::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
@@ -168,28 +152,16 @@ void PreviewInfoHintWidget::SetupViews()
     nux::HLayout* hint_layout = new nux::HLayout();
     hint_layout->SetSpaceBetweenChildren(layout_spacing);
 
-    if (visible_icons_)
-    {
-      IconTexture* info_icon = new IconTexture(info_hint->icon_hint, icon_size_);
-      info_icon->SetMinimumSize(icon_size_, icon_size_);
-      info_icon->SetVisible(true);
-      hint_layout->AddView(info_icon, 0);
-    }
-
     StaticCairoTextPtr info_name;
     if (!info_hint->display_name.empty())
     {
       std::string tmp_display_name = info_hint->display_name;
-      if (condensed_format_) { tmp_display_name += ":"; }
+      tmp_display_name += ":";
 
       info_name = new nux::StaticCairoText(tmp_display_name, NUX_TRACKER_LOCATION);
-      info_name->SetFont(condensed_format_ ? style.info_hint_bold_font() : style.info_hint_font());
+      info_name->SetFont(style.info_hint_bold_font());
       info_name->SetLines(-1);
-      if (!condensed_format_)
-      {
-        info_name->SetMinimumWidth(style.GetInfoHintNameWidth());
-        info_name->SetMaximumWidth(style.GetInfoHintNameWidth());
-      }
+      info_name->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_RIGHT);
       hint_layout->AddView(info_name.GetPointer(), 0, nux::MINOR_POSITION_CENTER);
     }
 
@@ -213,29 +185,42 @@ void PreviewInfoHintWidget::PreLayoutManagement()
   previews::Style& style = previews::Style::Instance();
   nux::Geometry const& geo = GetGeometry();
   
+  int info_hint_width = 0;
   for (InfoHint const& info_hint : info_hints_)
   {
-    int max_info_value_width = geo.width;
-    if (visible_icons_)
-    {
-      max_info_value_width -= icon_size_;
-      max_info_value_width -= layout_spacing;
-    }
+    int width = style.GetInfoHintNameMinimumWidth();
     if (info_hint.first)
     {
-      if (condensed_format_)
-      {
-        max_info_value_width -= info_hint.first->GetTextExtents().width;
-      }
-      else
-      {
-        max_info_value_width -= style.GetInfoHintNameWidth();
-      }
-      max_info_value_width -= layout_spacing;
+      width = info_hint.first->GetTextExtents().width;
+
+      if (width < style.GetInfoHintNameMinimumWidth())
+        width = style.GetInfoHintNameMinimumWidth();
+      else if (width > style.GetInfoHintNameMaximumWidth())
+        width = style.GetInfoHintNameMaximumWidth();
     }
 
+    if (info_hint_width < width)
+    {
+      info_hint_width = width;
+    }
+  }
+
+  int info_value_width = geo.width;
+  info_value_width -= layout_spacing;
+  info_value_width -= info_hint_width;
+
+  for (InfoHint const& info_hint : info_hints_)
+  {
+    if (info_hint.first)
+    {
+      info_hint.first->SetMinimumWidth(info_hint_width);
+      info_hint.first->SetMaximumWidth(info_hint_width);
+    }
     if (info_hint.second)
-      info_hint.second->SetMaximumWidth(max_info_value_width);
+    {
+      info_hint.second->SetMinimumWidth(info_value_width);
+      info_hint.second->SetMaximumWidth(info_value_width);
+    }
   }
 
   View::PreLayoutManagement();
