@@ -45,10 +45,9 @@ G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 #define N_TIMEOUT_SLOTS 50
 #define MAX_INDICATOR_ENTRIES 50
 
-#define COMPIZ_OPTION_PATH "org.compiz"
-#define COMPIZ_CURRENT_PROFILE_KEY "current-profile"
-#define COMPIZ_UNITYSHELL_PATH "org.compiz.profiles.%s.plugins.unityshell" // %s will be replaced with the value of current-profile
-#define MENU_TOGGLE_KEYBINDING_KEY "panel_first_menu"
+#define COMPIZ_OPTION_SCHEMA "org.compiz.unityshell"
+#define COMPIZ_OPTION_PATH "/org/compiz/profiles/unity/plugins/"
+#define MENU_TOGGLE_KEYBINDING_KEY "panel-first-menu"
 
 static PanelService *static_service = NULL;
 
@@ -483,6 +482,8 @@ panel_service_update_menu_keybinding (PanelService *self)
 {
   gchar *binding = g_settings_get_string (self->priv->gsettings, MENU_TOGGLE_KEYBINDING_KEY);
 
+  g_print("############### %s", binding);
+
   KeyCode keycode = 0;
   KeySym keysym = NoSymbol;
   guint32 modifiers = 0;
@@ -569,20 +570,12 @@ panel_service_init (PanelService *self)
   sort_indicators (self);
   suppress_signals = FALSE;
 
-  GSettings *gsettings = g_settings_new (COMPIZ_OPTION_PATH);
-  gchar *current_profile = g_settings_get_string (gsettings, COMPIZ_CURRENT_PROFILE_KEY);
-
-  gchar *unityshell_gsettings_path = g_strdup_printf (COMPIZ_UNITYSHELL_PATH, current_profile);
-  priv->gsettings = g_settings_new (unityshell_gsettings_path);
+  priv->gsettings = g_settings_new_with_path (COMPIZ_OPTION_SCHEMA, COMPIZ_OPTION_PATH);
   g_signal_connect (priv->gsettings, "changed::"MENU_TOGGLE_KEYBINDING_KEY, G_CALLBACK(on_keybinding_changed), self);
 
   panel_service_update_menu_keybinding (self);
 
   priv->initial_sync_id = g_idle_add ((GSourceFunc)initial_resync, self);
-
-  g_free (unityshell_gsettings_path);
-  g_free (current_profile);
-  g_object_unref (gsettings);
 }
 
 static gboolean
