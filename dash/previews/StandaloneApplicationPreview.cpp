@@ -127,6 +127,7 @@ public:
   previews::PreviewContainer::Ptr container_;
   nux::Layout *layout_;
   int nav_iter;
+  glib::Source::UniquePtr preview_wait_timer_;
 };
 
 TestRunner::TestRunner ()
@@ -235,43 +236,49 @@ The service allows users to communicate with peers by voice, video, and instant 
 
 void TestRunner::NavLeft()
 {
-  std::stringstream app_name;
-  app_name << "Title " << --nav_iter;
-
-  const char* subtitle = "Version 3.2, Size 32 MB";
-  const char* description = "Skype is a proprietary voice-over-Internet Protocol service and software application originally created by Niklas Zennström and Janus Friis in 2003, and owned by Microsoft since 2011. \
-The service allows users to communicate with peers by voice, video, and instant messaging over the Internet. Phone calls may be placed to recipients on the traditional telephone networks. Calls to other users within the Skype service are free of charge, while calls to landline telephones and mobile phones are charged via a debit-based user account system.";
-
- // creates a generic preview object
-  glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/5/lens-nav-music.svg", NULL));
-  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/5/lens-nav-home.svg", NULL));
-  glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/5/lens-nav-people.svg", NULL));
-
-  glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_application_preview_new()));
+  preview_wait_timer_.reset(new glib::Timeout(2000, [&] () {
 
 
-  unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string("/home/nick/SkypeIcon.png", NULL));
-  unity_protocol_application_preview_set_license(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "Proprietary");
-  unity_protocol_application_preview_set_copyright(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "(c) Skype 2012");
-  unity_protocol_application_preview_set_last_update(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "11th Apr 2012");
-  unity_protocol_application_preview_set_rating(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 0.8);
-  unity_protocol_application_preview_set_num_ratings(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 1223);
+    std::stringstream app_name;
+    app_name << "Title " << --nav_iter;
 
-  unity_protocol_preview_set_image_source_uri(proto_obj, "file:///home/nick/Skype.png");
-  unity_protocol_preview_set_title(proto_obj, app_name.str().c_str());
-  unity_protocol_preview_set_subtitle(proto_obj, subtitle);
-  unity_protocol_preview_set_description(proto_obj, description);
-  unity_protocol_preview_add_action(proto_obj, "uninstall", "Uninstall", iconHint1, 0);
-  unity_protocol_preview_add_action(proto_obj, "launch", "Launch", iconHint2, 0);
-  unity_protocol_preview_add_info_hint(proto_obj, "time", "Total time", iconHint1, g_variant_new("s", "16 h 34miin 45sec"));
-  unity_protocol_preview_add_info_hint(proto_obj, "energy",  "Energy", iconHint2, g_variant_new("s", "58.07 mWh"));
-  unity_protocol_preview_add_info_hint(proto_obj, "load",  "CPU Load", iconHint3, g_variant_new("i", 22));
+    const char* subtitle = "Version 3.2, Size 32 MB";
+    const char* description = "Skype is a proprietary voice-over-Internet Protocol service and software application originally created by Niklas Zennström and Janus Friis in 2003, and owned by Microsoft since 2011. \
+  The service allows users to communicate with peers by voice, video, and instant messaging over the Internet. Phone calls may be placed to recipients on the traditional telephone networks. Calls to other users within the Skype service are free of charge, while calls to landline telephones and mobile phones are charged via a debit-based user account system.";
 
-  glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
-              glib::StealRef());
+   // creates a generic preview object
+    glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/5/lens-nav-music.svg", NULL));
+    glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/5/lens-nav-home.svg", NULL));
+    glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/5/lens-nav-people.svg", NULL));
 
-  dash::Preview::Ptr preview_model(dash::Preview::PreviewForVariant(v));
-  container_->Preview(preview_model, previews::Navigation::LEFT);
+    glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_application_preview_new()));
+
+
+    unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string("/home/nick/SkypeIcon.png", NULL));
+    unity_protocol_application_preview_set_license(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "Proprietary");
+    unity_protocol_application_preview_set_copyright(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "(c) Skype 2012");
+    unity_protocol_application_preview_set_last_update(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "11th Apr 2012");
+    unity_protocol_application_preview_set_rating(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 0.8);
+    unity_protocol_application_preview_set_num_ratings(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 1223);
+
+    unity_protocol_preview_set_image_source_uri(proto_obj, "file:///home/nick/Skype.png");
+    unity_protocol_preview_set_title(proto_obj, app_name.str().c_str());
+    unity_protocol_preview_set_subtitle(proto_obj, subtitle);
+    unity_protocol_preview_set_description(proto_obj, description);
+    unity_protocol_preview_add_action(proto_obj, "uninstall", "Uninstall", iconHint1, 0);
+    unity_protocol_preview_add_action(proto_obj, "launch", "Launch", iconHint2, 0);
+    unity_protocol_preview_add_info_hint(proto_obj, "time", "Total time", iconHint1, g_variant_new("s", "16 h 34miin 45sec"));
+    unity_protocol_preview_add_info_hint(proto_obj, "energy",  "Energy", iconHint2, g_variant_new("s", "58.07 mWh"));
+    unity_protocol_preview_add_info_hint(proto_obj, "load",  "CPU Load", iconHint3, g_variant_new("i", 22));
+
+    glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
+                glib::StealRef());
+
+    dash::Preview::Ptr preview_model(dash::Preview::PreviewForVariant(v));
+    container_->Preview(preview_model, previews::Navigation::LEFT);
+
+    return false;
+  }));
 }
 
 void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)

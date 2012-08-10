@@ -124,6 +124,7 @@ public:
   nux::BaseTexture* GetNavRightIcon();
   nux::BaseTexture* GetPlayIcon();
   nux::BaseTexture* GetPauseIcon();
+  nux::BaseTexture* GetSearchSpinIcon(int size = -1);
  
 protected:
   class Impl;
