@@ -46,9 +46,9 @@ class SwitcherTestCase(UnityTestCase):
         """Start some applications, returning their windows.
 
         If no applications are specified, the following will be started:
+         * Calculator
          * Character Map
-         * Calculator
-         * Calculator
+         * Character Map
 
          Windows are always started in the order that they are specified (which
         means the last specified application will *probably* be at the top of the
@@ -57,7 +57,7 @@ class SwitcherTestCase(UnityTestCase):
 
         """
         if len(args) == 0:
-            args = ('Character Map', 'Calculator', 'Calculator')
+            args = ('Calculator', 'Character Map', 'Character Map')
         windows = []
         for app in args:
             windows.append(self.start_app_window(app))
@@ -231,20 +231,20 @@ class SwitcherWindowsManagementTests(SwitcherTestCase):
         Then we close the currently focused window.
 
         """
-        mah_win1, calc_win, mah_win2 = self.start_applications("Mahjongg", "Calculator", "Mahjongg")
-        self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
+        char_win1, calc_win, char_win2 = self.start_applications("Character Map", "Calculator", "Character Map")
+        self.assertVisibleWindowStack([char_win2, calc_win, char_win1])
 
         self.keybinding("switcher/reveal_normal")
         self.assertProperty(calc_win, is_focused=True)
-        self.assertVisibleWindowStack([calc_win, mah_win2, mah_win1])
+        self.assertVisibleWindowStack([calc_win, char_win2, char_win1])
 
         self.keybinding("switcher/reveal_normal")
-        self.assertProperty(mah_win2, is_focused=True)
-        self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
+        self.assertProperty(char_win2, is_focused=True)
+        self.assertVisibleWindowStack([char_win2, calc_win, char_win1])
 
         self.keybinding("window/close")
         self.assertProperty(calc_win, is_focused=True)
-        self.assertVisibleWindowStack([calc_win, mah_win1])
+        self.assertVisibleWindowStack([calc_win, char_win1])
 
 
 class SwitcherDetailsTests(SwitcherTestCase):
@@ -338,17 +338,17 @@ class SwitcherDetailsModeTests(SwitcherTestCase):
         """The active selection in detail mode must be the last focused window.
         If it was the currently active application type.
         """
-        calc_win1, calc_win2 = self.start_applications("Calculator", "Calculator")
-        self.assertVisibleWindowStack([calc_win2, calc_win1])
+        char_win1, char_win2 = self.start_applications("Character Map", "Character Map")
+        self.assertVisibleWindowStack([char_win2, char_win1])
 
         self.switcher.initiate()
-        while self.switcher.current_icon.tooltip_text != calc_win2.application.name:
+        while self.switcher.current_icon.tooltip_text != char_win2.application.name:
             self.switcher.next_icon()
         self.keyboard.press_and_release(self.initiate_keycode)
         sleep(0.5)
         self.switcher.select()
 
-        self.assertProperty(calc_win1, is_focused=True)
+        self.assertProperty(char_win1, is_focused=True)
 
 
 class SwitcherWorkspaceTests(SwitcherTestCase):
@@ -402,21 +402,21 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
         self.set_unity_option("alt_tab_timeout", False)
 
         self.workspace.switch_to(1)
-        self.start_app("Mahjongg")
+        self.start_app("Character Map")
 
         self.workspace.switch_to(3)
-        mah_win2 = self.start_app_window("Mahjongg")
+        char_win2 = self.start_app_window("Character Map")
         self.keybinding("window/minimize")
-        self.assertProperty(mah_win2, is_hidden=True)
+        self.assertProperty(char_win2, is_hidden=True)
 
         self.start_app("Calculator")
 
         self.switcher.initiate()
-        while self.switcher.current_icon.tooltip_text != mah_win2.application.name:
+        while self.switcher.current_icon.tooltip_text != char_win2.application.name:
             self.switcher.next_icon()
         self.switcher.select()
 
-        self.assertProperty(mah_win2, is_hidden=False)
+        self.assertProperty(char_win2, is_hidden=False)
 
     def test_switcher_is_disabled_when_wall_plugin_active(self):
         """The switcher must not open when the wall plugin is active using ctrl+alt+<direction>."""

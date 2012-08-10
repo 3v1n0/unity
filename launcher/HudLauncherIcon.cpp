@@ -44,10 +44,10 @@ HudLauncherIcon::HudLauncherIcon(LauncherHideMode hide_mode)
 {
   tooltip_text = _("HUD");
   icon_name = PKGDATADIR"/launcher_bfb.png";
-  SetQuirk(QUIRK_VISIBLE, false);
-  SetQuirk(QUIRK_RUNNING, false);
-  SetQuirk(QUIRK_ACTIVE, true);
-  SetIconType(TYPE_HUD);
+  SetQuirk(Quirk::VISIBLE, false);
+  SetQuirk(Quirk::RUNNING, false);
+  SetQuirk(Quirk::ACTIVE, true);
+  SetIconType(IconType::HUD);
 
   background_color_ = nux::color::White;
 
@@ -82,7 +82,7 @@ void HudLauncherIcon::SetHideMode(LauncherHideMode hide_mode)
     launcher_hide_mode_ = hide_mode;
 
     if (launcher_hide_mode_ == LAUNCHER_HIDE_AUTOHIDE)
-      SetQuirk(QUIRK_VISIBLE, false);
+      SetQuirk(Quirk::VISIBLE, false);
   }
 }
 
@@ -99,8 +99,8 @@ void HudLauncherIcon::OnOverlayShown(GVariant* data, bool visible)
       launcher_hide_mode_ == LAUNCHER_HIDE_NEVER)
   {
     SetMonitor(overlay_monitor);
-    SetQuirk(QUIRK_VISIBLE, visible);
-    SetQuirk(QUIRK_ACTIVE, visible);
+    SetQuirk(Quirk::VISIBLE, visible);
+    SetQuirk(Quirk::ACTIVE, visible);
     tooltip_enabled = !visible;
     EmitNeedsRedraw();
   }
@@ -118,7 +118,7 @@ nux::Color HudLauncherIcon::GlowColor()
 
 void HudLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
-  if (GetQuirk(QUIRK_VISIBLE))
+  if (GetQuirk(Quirk::VISIBLE))
   {
     ubus_manager_.SendMessage(UBUS_HUD_CLOSE_REQUEST);
   }
