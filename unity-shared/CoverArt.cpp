@@ -237,11 +237,6 @@ void CoverArt::IconLoaded(std::string const& texid, unsigned size, glib::Object<
     cairo_paint(cr);
 
     float scale = float(pixbuf_height) / gdk_pixbuf_get_height(pixbuf);
-
-    //cairo_translate(cr,
-    //                static_cast<int>((width - (pixbuf_width * scale)) * 0.5),
-    //                static_cast<int>((height - (pixbuf_height * scale)) * 0.5));
-
     cairo_scale(cr, scale, scale);
 
     cairo_set_operator(cr, CAIRO_OPERATOR_OVER);

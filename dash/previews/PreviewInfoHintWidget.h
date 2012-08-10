@@ -46,11 +46,8 @@ public:
   typedef nux::ObjectPtr<PreviewInfoHintWidget> Ptr;
   NUX_DECLARE_OBJECT_TYPE(PreviewInfoHintWidget, nux::View);
 
-  PreviewInfoHintWidget(dash::Preview::Ptr preview_model, int icon_size, bool visible_icons = true, bool condensed_format = false);
+  PreviewInfoHintWidget(dash::Preview::Ptr preview_model, int icon_size);
   virtual ~PreviewInfoHintWidget();
-
-  void SetVisibleIcons(bool visible);
-  void SetCondensedFormat(bool condensed);
 
   // From debug::Introspectable
   std::string GetName() const;
@@ -72,8 +69,6 @@ protected:
 
 protected:
   int icon_size_;
-  bool condensed_format_;
-  bool visible_icons_;
 
   typedef nux::ObjectPtr<nux::StaticCairoText> StaticCairoTextPtr;
   typedef std::pair<StaticCairoTextPtr, StaticCairoTextPtr> InfoHint; 
