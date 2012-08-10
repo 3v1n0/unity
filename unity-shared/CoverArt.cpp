@@ -289,11 +289,11 @@ void CoverArt::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
   gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
   gfx_engine.GetRenderStates().SetBlend(true);
 
-    gfx_engine.QRP_Color(base.x,
-                      base.y,
-                      base.GetWidth(),
-                      base.GetHeight(),
-                      nux::Color(0.03f, 0.03f, 0.03f, 0.0f));
+  gfx_engine.QRP_Color(base.x,
+                    base.y,
+                    base.GetWidth(),
+                    base.GetHeight(),
+                    nux::Color(0.03f, 0.03f, 0.03f, 0.0f));
 
   if (texture_screenshot_)
   {
