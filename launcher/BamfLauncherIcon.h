@@ -111,6 +111,7 @@ private:
 
   void OpenInstanceWithUris(std::set<std::string> uris);
   void Focus(ActionArg arg);
+  std::vector<Window> GetFocusWindows(ActionArg arg, bool &any_visible, bool &any_urgent);
   bool Spread(bool current_desktop, int state, bool force);
 
   void OnWindowMinimized(guint32 xid);
