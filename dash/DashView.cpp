@@ -138,10 +138,10 @@ void DashView::BuildPreview(Preview::Ptr model)
     preview_container_->SetParentObject(this);
 
     nux::Geometry preview_geo = layout_->GetGeometry();
-    preview_geo.height -= 24;
+    //preview_geo.height -= 24;
     //preview_geo.width -= 120;
     //preview_geo.x += 60;
-    preview_geo.y += 12;
+    //preview_geo.y += 12;
 
     preview_container_->SetGeometry(preview_geo);
     
