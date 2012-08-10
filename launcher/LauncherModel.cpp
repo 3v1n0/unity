@@ -79,14 +79,14 @@ LauncherModel::Populate()
   iterator it, it2;
 
   int i = 0;
-  for (it = main_begin(); it != main_end(); it++)
+  for (it = main_begin(); it != main_end(); ++it)
   {
     _inner.push_back(*it);
     (*it)->SetSortPriority(i);
     ++i;
   }
 
-  for (it = shelf_begin(); it != shelf_end(); it++)
+  for (it = shelf_begin(); it != shelf_end(); ++it)
   {
     _inner.push_back(*it);
     (*it)->SetSortPriority(i);
@@ -406,7 +406,7 @@ LauncherModel::at(int index)
   int i;
 
   // start currently selected icon
-  for (it = _inner.begin(), i = 0; it != _inner.end(); it++, i++)
+  for (it = _inner.begin(), i = 0; it != _inner.end(); ++it, i++)
   {
     if (i == index)
       return it;

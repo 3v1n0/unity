@@ -24,6 +24,7 @@
 #include "test_utils.h"
 
 #include "SwitcherController.h"
+#include "DesktopLauncherIcon.h"
 #include "TimeUtil.h"
 
 
@@ -127,6 +128,7 @@ TEST(TestSwitcherController, InitialDetailTimeout)
 {
   MockSwitcherController controller;
   std::vector<unity::launcher::AbstractLauncherIcon::Ptr> results;
+  results.push_back(unity::launcher::AbstractLauncherIcon::Ptr(new unity::launcher::DesktopLauncherIcon()));
   struct timespec current;
 
   controller.initial_detail_timeout_length = 2000;
@@ -160,6 +162,7 @@ TEST(TestSwitcherController, ShowSwitcher)
 {
   MockSwitcherController controller;
   std::vector<unity::launcher::AbstractLauncherIcon::Ptr> results;
+  results.push_back(unity::launcher::AbstractLauncherIcon::Ptr(new unity::launcher::DesktopLauncherIcon()));
 
   controller.Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, false, results);
 
@@ -174,6 +177,17 @@ TEST(TestSwitcherController, ShowSwitcherNoShowDeskop)
 
   ASSERT_TRUE(controller.IsShowDesktopDisabled());
   ASSERT_TRUE(controller.StartIndex() == 0);
+}
+
+TEST(TestSwitcherController, ShowSwitcherNoResults)
+{
+  MockSwitcherController controller;
+  controller.SetShowDesktopDisabled(true);
+  std::vector<unity::launcher::AbstractLauncherIcon::Ptr> results;
+
+  controller.Show(ShowMode::CURRENT_VIEWPORT, SortMode::FOCUS_ORDER, false, results);
+
+  ASSERT_FALSE(controller.Visible());
 }
 
 }
