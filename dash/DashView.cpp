@@ -335,6 +335,9 @@ void DashView::Relayout()
 
   ubus_manager_.SendMessage(UBUS_DASH_SIZE_CHANGED, g_variant_new("(ii)", content_geo_.width, content_geo_.height));
 
+  if (preview_displaying_)
+    preview_container_->SetGeometry(layout_->GetGeometry());
+
   QueueDraw();
 }
 
