@@ -83,22 +83,22 @@ void LauncherHideMachine::SetShouldHide(bool value, bool skip_delay)
 }
 
 /* == Quick Quirk Reference : please keep up to date ==
-    LAUNCHER_HIDDEN        = 1 << 0, 1
-    MOUSE_OVER_LAUNCHER    = 1 << 1, 2
-    QUICKLIST_OPEN         = 1 << 4, 16  #VISIBLE_REQUIRED
-    EXTERNAL_DND_ACTIVE    = 1 << 5, 32  #VISIBLE_REQUIRED
-    INTERNAL_DND_ACTIVE    = 1 << 6, 64  #VISIBLE_REQUIRED
-    TRIGGER_BUTTON_SHOW    = 1 << 7, 128 #VISIBLE_REQUIRED
-    DND_PUSHED_OFF         = 1 << 10, 1024
-    MOUSE_MOVE_POST_REVEAL = 1 << 11, 2k
-    VERTICAL_SLIDE_ACTIVE  = 1 << 12, 4k  #VISIBLE_REQUIRED
-    KEY_NAV_ACTIVE         = 1 << 13, 8k  #VISIBLE_REQUIRED
-    PLACES_VISIBLE         = 1 << 14, 16k #VISIBLE_REQUIRED
-    SCALE_ACTIVE           = 1 << 16, 64k  #VISIBLE_REQUIRED
-    EXPO_ACTIVE            = 1 << 17, 128k #VISIBLE_REQUIRED
-    MT_DRAG_OUT            = 1 << 18, 256k #VISIBLE_REQUIRED
-    LAUNCHER_PULSE         = 1 << 20, 1M   #VISIBLE_REQUIRED
-    LOCK_HIDE              = 1 << 21, 2M
+    LAUNCHER_HIDDEN        = 1 << 0,  1
+    MOUSE_OVER_LAUNCHER    = 1 << 1,  2
+    QUICKLIST_OPEN         = 1 << 2,  4      #VISIBLE_REQUIRED
+    EXTERNAL_DND_ACTIVE    = 1 << 3,  8      #VISIBLE_REQUIRED
+    INTERNAL_DND_ACTIVE    = 1 << 4,  16     #VISIBLE_REQUIRED
+    TRIGGER_BUTTON_SHOW    = 1 << 5,  32     #VISIBLE_REQUIRED
+    DND_PUSHED_OFF         = 1 << 6,  64
+    MOUSE_MOVE_POST_REVEAL = 1 << 7,  128
+    VERTICAL_SLIDE_ACTIVE  = 1 << 8,  256   #VISIBLE_REQUIRED
+    KEY_NAV_ACTIVE         = 1 << 9,  512   #VISIBLE_REQUIRED
+    PLACES_VISIBLE         = 1 << 10, 1024  #VISIBLE_REQUIRED
+    SCALE_ACTIVE           = 1 << 11, 2048  #VISIBLE_REQUIRED
+    EXPO_ACTIVE            = 1 << 12, 4096  #VISIBLE_REQUIRED
+    MT_DRAG_OUT            = 1 << 13, 8192  #VISIBLE_REQUIRED
+    LAUNCHER_PULSE         = 1 << 14, 16384 #VISIBLE_REQUIRED
+    LOCK_HIDE              = 1 << 15, 32768
 */
 
 #define VISIBLE_REQUIRED (QUICKLIST_OPEN | EXTERNAL_DND_ACTIVE | \
@@ -128,6 +128,7 @@ void LauncherHideMachine::EnsureHideState(bool skip_delay)
     // first we check the condition where external DND is active and the push off has happened
     if (GetQuirk((HideQuirk)(EXTERNAL_DND_ACTIVE | DND_PUSHED_OFF), false))
     {
+      printf("Drag...should hide\n");
       should_hide = true;
       break;
     }
