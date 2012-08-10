@@ -259,7 +259,7 @@ void CoverArt::TextureLoaded(std::string const& texid, unsigned size, glib::Obje
   spinner_timeout_.reset();
   frame_timeout_.reset();
   waiting_ = false;
-  stretch_image_ = false;
+  stretch_image_ = true;
 
   if (!pixbuf)
   {
@@ -278,7 +278,7 @@ void CoverArt::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
 
   unsigned int alpha, src, dest = 0;
   gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
-  gfx_engine.GetRenderStates().SetBlend(true);
+  gfx_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
   gfx_engine.QRP_Color(base.x,
                     base.y,
