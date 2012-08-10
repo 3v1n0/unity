@@ -71,15 +71,15 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
 
   tooltip_text = BamfName();
   icon_name = (icon ? icon.Str() : DEFAULT_ICON);
-  SetIconType(TYPE_APPLICATION);
+  SetIconType(IconType::APPLICATION);
 
   if (IsSticky())
-    SetQuirk(QUIRK_VISIBLE, true);
+    SetQuirk(Quirk::VISIBLE, true);
   else
-    SetQuirk(QUIRK_VISIBLE, bamf_view_user_visible(bamf_view));
+    SetQuirk(Quirk::VISIBLE, bamf_view_user_visible(bamf_view));
 
-  SetQuirk(QUIRK_ACTIVE, bamf_view_is_active(bamf_view));
-  SetQuirk(QUIRK_RUNNING, bamf_view_is_running(bamf_view));
+  SetQuirk(Quirk::ACTIVE, bamf_view_is_active(bamf_view));
+  SetQuirk(Quirk::RUNNING, bamf_view_is_running(bamf_view));
 
   glib::SignalBase* sig;
 
@@ -97,19 +97,19 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
 
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view, "urgent-changed",
                           [&] (BamfView*, gboolean urgent) {
-                            SetQuirk(QUIRK_URGENT, urgent);
+                            SetQuirk(Quirk::URGENT, urgent);
                           });
   _gsignals.Add(sig);
 
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view, "active-changed",
                           [&] (BamfView*, gboolean active) {
-                            SetQuirk(QUIRK_ACTIVE, active);
+                            SetQuirk(Quirk::ACTIVE, active);
                           });
   _gsignals.Add(sig);
 
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view, "running-changed",
                           [&] (BamfView*, gboolean running) {
-                            SetQuirk(QUIRK_RUNNING, running);
+                            SetQuirk(Quirk::RUNNING, running);
 
                             if (running)
                             {
@@ -123,7 +123,7 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view, "user-visible-changed",
                           [&] (BamfView*, gboolean visible) {
                             if (!IsSticky())
-                              SetQuirk(QUIRK_VISIBLE, visible);
+                              SetQuirk(Quirk::VISIBLE, visible);
                           });
   _gsignals.Add(sig);
 
@@ -131,7 +131,7 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
                           [&] (BamfView*) {
                             if (!IsSticky())
                             {
-                              SetQuirk(QUIRK_VISIBLE, false);
+                              SetQuirk(Quirk::VISIBLE, false);
 
                               /* Use a timeout to remove the icon, this avoids
                                * that we remove an application that is going
@@ -196,22 +196,22 @@ bool BamfLauncherIcon::IsSticky() const
 
 bool BamfLauncherIcon::IsVisible() const
 {
-  return GetQuirk(QUIRK_VISIBLE);
+  return GetQuirk(Quirk::VISIBLE);
 }
 
 bool BamfLauncherIcon::IsActive() const
 {
-  return GetQuirk(QUIRK_ACTIVE);
+  return GetQuirk(Quirk::ACTIVE);
 }
 
 bool BamfLauncherIcon::IsRunning() const
 {
-  return GetQuirk(QUIRK_RUNNING);
+  return GetQuirk(Quirk::RUNNING);
 }
 
 bool BamfLauncherIcon::IsUrgent() const
 {
-  return GetQuirk(QUIRK_URGENT);
+  return GetQuirk(Quirk::URGENT);
 }
 
 void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
@@ -303,7 +303,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 
   if (!IsRunning() || (IsRunning() && !user_visible)) // #1 above
   {
-    if (GetQuirk(QUIRK_STARTING))
+    if (GetQuirk(Quirk::STARTING))
       return;
 
     if (scaleWasActive)
@@ -311,7 +311,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
       wm->TerminateScale();
     }
 
-    SetQuirk(QUIRK_STARTING, true);
+    SetQuirk(Quirk::STARTING, true);
     OpenInstanceLauncherIcon(ActionArg());
   }
   else // app is running
@@ -452,7 +452,7 @@ void BamfLauncherIcon::OnWindowMinimized(guint32 xid)
     return;
 
   Present(0.5f, 600);
-  UpdateQuirkTimeDelayed(300, QUIRK_SHIMMER);
+  UpdateQuirkTimeDelayed(300, Quirk::SHIMMER);
 }
 
 void BamfLauncherIcon::OnWindowMoved(guint32 moved_win)
@@ -607,7 +607,7 @@ void BamfLauncherIcon::OpenInstanceWithUris(std::set<std::string> uris)
   if (error)
     g_warning("%s\n", error.Message().c_str());
 
-  UpdateQuirkTime(QUIRK_STARTING);
+  UpdateQuirkTime(Quirk::STARTING);
 }
 
 void BamfLauncherIcon::OpenInstanceLauncherIcon(ActionArg arg)
