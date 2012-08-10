@@ -369,7 +369,19 @@ void Track::UpdateTrackState()
   }
   else
   {
-    track_status_layout_->SetActiveLayer(track_number_layout_);
+    switch (play_state_)
+    {
+      case dash::PLAYING:
+        track_status_layout_->SetActiveLayer(status_play_layout_);
+        break;
+      case dash::PAUSED:
+        track_status_layout_->SetActiveLayer(status_pause_layout_);
+        break;
+      case dash::STOPPED:
+      default:
+        track_status_layout_->SetActiveLayer(track_number_layout_);
+        break;
+    }
   }
 }
 
