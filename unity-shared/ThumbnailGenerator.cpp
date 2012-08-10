@@ -119,8 +119,8 @@ private:
 private:
   ThumbnailGenerator* parent_;
 
-  glib::Source::UniquePtr idle_;
-  glib::Source::UniquePtr idle_return_;
+  glib::Source::UniquePtr thread_create_timer_;
+  glib::Source::UniquePtr thread_return_timer_;
 
   /* Our mutex used when accessing data shared between the main thread and the
    thumbnail thread, i.e. the thumbnail_thread_is_running flag and the
@@ -179,9 +179,9 @@ ThumbnailNotifier::Ptr ThumbnailGeneratorImpl::GetThumbnail(std::string const& u
     complete_thumbnails_.push_back(complete_thumb);
 
     // Delay the thumbnail update until after this method has returned with the notifier
-    if (!idle_return_)
+    if (!thread_return_timer_)
     {
-      idle_return_.reset(new glib::Idle(sigc::mem_fun(this, &ThumbnailGeneratorImpl::OnThumbnailComplete), glib::Source::Priority::LOW));
+      thread_return_timer_.reset(new glib::Timeout(0, sigc::mem_fun(this, &ThumbnailGeneratorImpl::OnThumbnailComplete), glib::Source::Priority::LOW));
     }
 
     pthread_mutex_unlock (&thumbnails_mutex_);
@@ -196,13 +196,14 @@ ThumbnailNotifier::Ptr ThumbnailGeneratorImpl::GetThumbnail(std::string const& u
    * MUTEX LOCKED
    *********************************/
 
-  if (!idle_ && thumbnail_thread_is_running_ == false)
+  if (!thread_create_timer_ && thumbnail_thread_is_running_ == false)
   {
-    idle_.reset(new glib::Idle([&]()
+
+    thread_create_timer_.reset(new glib::Timeout(0, [&]()
     {
       thumbnail_thread_is_running_ = true;
       pthread_create (&thumbnail_thread_, NULL, thumbnail_thread_start, this);
-      idle_.reset();
+      thread_create_timer_.reset();
       return false;
     }, glib::Source::Priority::LOW));
   }
@@ -271,9 +272,9 @@ void ThumbnailGeneratorImpl::RunGenerate()
 
     complete_thumbnails_.push_back(complete_thumb);
 
-    if (!idle_return_)
+    if (!thread_return_timer_)
     {
-      idle_return_.reset(new glib::Idle(sigc::mem_fun(this, &ThumbnailGeneratorImpl::OnThumbnailComplete), glib::Source::Priority::LOW));
+      thread_return_timer_.reset(new glib::Timeout(0, sigc::mem_fun(this, &ThumbnailGeneratorImpl::OnThumbnailComplete), glib::Source::Priority::LOW));
     }
 
     pthread_mutex_unlock (&thumbnails_mutex_);
@@ -291,7 +292,7 @@ bool ThumbnailGeneratorImpl::OnThumbnailComplete()
 
     if (complete_thumbnails_.size() == 0)
     {
-      idle_return_.reset();
+      thread_return_timer_.reset();
       pthread_mutex_unlock (&thumbnails_mutex_);
       return false;
     }
