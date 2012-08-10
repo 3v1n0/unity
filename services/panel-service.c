@@ -482,8 +482,6 @@ panel_service_update_menu_keybinding (PanelService *self)
 {
   gchar *binding = g_settings_get_string (self->priv->gsettings, MENU_TOGGLE_KEYBINDING_KEY);
 
-  g_print("############### %s", binding);
-
   KeyCode keycode = 0;
   KeySym keysym = NoSymbol;
   guint32 modifiers = 0;
