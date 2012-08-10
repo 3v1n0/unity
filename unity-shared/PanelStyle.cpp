@@ -22,7 +22,6 @@
 
 #include <math.h>
 #include <gtk/gtk.h>
-#include <gconf/gconf-client.h>
 #include <boost/algorithm/string/predicate.hpp>
 
 #include <Nux/Nux.h>
@@ -46,8 +45,8 @@ Style* style_instance = nullptr;
 
 nux::logging::Logger logger("unity.panel.style");
 
-const std::string METACITY_SETTINGS_PATH("/apps/metacity/general/");
-const std::string PANEL_TITLE_FONT_KEY("/apps/metacity/general/titlebar_font");
+const std::string SETTINGS_NAME("org.gnome.desktop.wm.preferences");
+const std::string PANEL_TITLE_FONT_KEY("titlebar-font");
 const std::string HIGH_CONTRAST_THEME_PREFIX("HighContrast");
 
 nux::Color ColorFromGdkRGBA(GdkRGBA const& color)
@@ -63,6 +62,7 @@ nux::Color ColorFromGdkRGBA(GdkRGBA const& color)
 Style::Style()
   : panel_height(24)
   , _style_context(gtk_style_context_new())
+  , _gsettings(g_settings_new(SETTINGS_NAME.c_str()))
 {
   if (style_instance)
   {
@@ -109,14 +109,10 @@ Style::Style()
     changed.emit();
   });
 
-  GConfClient* client = gconf_client_get_default();
-  gconf_client_add_dir(client, METACITY_SETTINGS_PATH.c_str(), GCONF_CLIENT_PRELOAD_NONE, nullptr);
-  _gconf_notify_id = gconf_client_notify_add(client, PANEL_TITLE_FONT_KEY.c_str(),
-    [] (GConfClient*,guint,GConfEntry*, gpointer data)
-    {
-      auto self = static_cast<Style*>(data);
-      self->changed.emit();
-    }, this, nullptr, nullptr);
+  _settings_changed_signal.Connect(_gsettings, "changed::" + PANEL_TITLE_FONT_KEY,
+  [&] (GSettings*, gchar*) {
+    changed.emit();
+  });
 
   Refresh();
 }
@@ -125,9 +121,6 @@ Style::~Style()
 {
   if (style_instance == this)
     style_instance = nullptr;
-
-  if (_gconf_notify_id)
-    gconf_client_notify_remove(gconf_client_get_default(), _gconf_notify_id);
 }
 
 Style& Style::Instance()
@@ -371,8 +364,7 @@ std::string Style::GetFontDescription(PanelItem item)
     }
     case PanelItem::TITLE:
     {
-      GConfClient* client = gconf_client_get_default();
-      glib::String font_name(gconf_client_get_string(client, PANEL_TITLE_FONT_KEY.c_str(), nullptr));
+      glib::String font_name(g_settings_get_string(_gsettings, PANEL_TITLE_FONT_KEY.c_str()));
       return font_name.Str();
     }
   }
@@ -390,3 +382,4 @@ int Style::GetTextDPI()
 
 } // namespace panel
 } // namespace unity
+

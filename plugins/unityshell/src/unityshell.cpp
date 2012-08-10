@@ -29,7 +29,6 @@
 #include "Launcher.h"
 #include "LauncherIcon.h"
 #include "LauncherController.h"
-#include "GeisAdapter.h"
 #include "DevicesSettings.h"
 #include "PluginAdapter.h"
 #include "QuicklistManager.h"
@@ -38,6 +37,7 @@
 #include "KeyboardUtil.h"
 #include "unityshell.h"
 #include "BackgroundEffectHelper.h"
+#include "UnityGestureBroker.h"
 
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib.h>
@@ -111,7 +111,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , gScreen(GLScreen::get(screen))
   , debugger_(this)
   , enable_shortcut_overlay_(true)
-  , gesture_engine_(screen)
   , needsRelayout(false)
   , _in_paint(false)
   , super_keypressed_(false)
@@ -300,6 +299,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetAutomaximizeValueNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAltTabTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAltTabBiasViewportNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetDisableShowDesktopNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
 
      optionSetAltTabForwardAllInitiate(boost::bind(&UnityScreen::altTabForwardAllInitiate, this, _1, _2, _3));
      optionSetAltTabForwardInitiate(boost::bind(&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
@@ -337,6 +337,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetOvercomePressureNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDecayRateNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetShowMinimizedWindowsNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetEdgePassedDisabledMsNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
 
      optionSetNumLaunchersNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetLauncherCaptureMouseNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -362,7 +363,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      auto init_plugins_cb = sigc::mem_fun(this, &UnityScreen::initPluginActions);
      sources_.Add(std::make_shared<glib::Idle>(init_plugins_cb, glib::Source::Priority::DEFAULT));
 
-     geis_adapter_.Run();
+     InitGesturesSupport();
 
      CompString name(PKGDATADIR"/panel-shadow.png");
      CompString pname("unityshell");
@@ -499,6 +500,15 @@ void UnityScreen::nuxPrologue()
 
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
+
+  /* This is needed to Fix a crash in glDrawArrays with the NVIDIA driver
+   * see bugs #1031554 and #982626.
+   * The NVIDIA driver looks to see if the legacy GL_VERTEX_ARRAY,
+   * GL_TEXTURE_COORDINATES_ARRAY and other such client states are enabled
+   * first before checking if a vertex buffer is bound and will prefer the
+   * client buffers over the the vertex buffer object. */
+  glDisableClientState(GL_VERTEX_ARRAY);
+  glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 #endif
 
   glGetError();
@@ -528,6 +538,11 @@ void UnityScreen::nuxEpilogue()
   glReadBuffer(GL_BACK);
 
   glPopAttrib();
+
+  /* Re-enable the client states that have been disabled in nuxPrologue, for
+   * NVIDIA compatibility reasons */
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 #else
 #ifdef USE_GLES
   glDepthRangef(0, 1);
@@ -805,7 +820,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 #else
   nux::ObjectPtr<nux::IOpenGLTexture2D> device_texture =
     nux::GetGraphicsDisplay()->GetGpuDevice()->CreateTexture2DFromID(gScreen->fbo ()->tex ()->name (),
-      output->width(), output->height(), 1, nux::BITFMT_R8G8B8A8);
+      screen->width(), screen->height(), 1, nux::BITFMT_R8G8B8A8);
 #endif
 
   nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_ = device_texture;
@@ -818,7 +833,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
   GLint fboID;
   // Nux renders to the referenceFramebuffer when it's embedded.
   glGetIntegerv(GL_FRAMEBUFFER_BINDING, &fboID);
-  wt->GetWindowCompositor().SetReferenceFramebuffer(fboID, geo);
+  wt->GetWindowCompositor().SetReferenceFramebuffer(fboID, oGeo);
 #endif
 
   nuxPrologue();
@@ -1202,6 +1217,42 @@ void UnityWindow::handleEvent (XEvent *event)
   }
 }
 
+bool UnityScreen::shellCouldBeHidden(CompOutput const& output)
+{
+  std::vector<Window> const& nuxwins(nux::XInputWindow::NativeHandleList());
+
+  // Loop through windows from front to back
+  CompWindowList const& wins = screen->windows();
+  for ( CompWindowList::const_reverse_iterator r = wins.rbegin()
+      ; r != wins.rend()
+      ; ++r
+      )
+  {
+    CompWindow* w = *r;
+
+    /*
+     * The shell is hidden if there exists any window that fully covers
+     * the output and is in front of all Nux windows on that output.
+     */
+    if (w->isMapped() &&
+        !(w->state () & CompWindowStateHiddenMask) &&
+        w->geometry().contains(output))
+    {
+      return true;
+    }
+    else
+    {
+      for (Window n : nuxwins)
+      {
+        if (w->id() == n && output.intersects(w->geometry()))
+          return false;
+      }
+    }
+  }
+
+  return false;
+}
+
 /* called whenever we need to repaint parts of the screen */
 bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
                                 const GLMatrix& transform,
@@ -1217,8 +1268,13 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
    * need to. Doing so on every frame causes Nux to hog the GPU and slow down
    * ALL rendering. (LP: #988079)
    */
-  bool force = forcePaintOnTop() || PluginAdapter::Default()->IsExpoActive();
-  doShellRepaint = force || !(region.isEmpty() || wt->GetDrawList().empty());
+  bool force = forcePaintOnTop();
+  doShellRepaint = force ||
+                   ( !region.isEmpty() &&
+                     ( !wt->GetDrawList().empty() ||
+                       (mask & PAINT_SCREEN_FULL_MASK)
+                     )
+                   );
 
   allowWindowPaint = true;
   _last_output = output;
@@ -1234,8 +1290,13 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
    *   once an fbo is bound any further
    *   attempts to bind it will only increment
    *   its bind reference so make sure that
-   *   you always unbind as much as you bind */
-  if (doShellRepaint)
+   *   you always unbind as much as you bind
+   *
+   * But NOTE: It is only safe to bind the FBO if !shellCouldBeHidden.
+   *           Otherwise it's possible painting won't occur and that would
+   *           confuse the state of the FBO.
+   */
+  if (doShellRepaint && !shellCouldBeHidden(*output))
     _fbo->bind (nux::Geometry (output->x (), output->y (), output->width (), output->height ()));
 #endif
 
@@ -1262,10 +1323,9 @@ void UnityScreen::glPaintCompositedOutput (const CompRegion &region,
                                            ::GLFramebufferObject *fbo,
                                            unsigned int        mask)
 {
-  bool useFbo = false;
-
   if (doShellRepaint)
   {
+    bool useFbo = false;
     oldFbo = fbo->bind ();
     useFbo = fbo->checkStatus () && fbo->tex ();
     if (!useFbo) {
@@ -1513,13 +1573,13 @@ void UnityScreen::handleEvent(XEvent* event)
       {
         /* We need an idle to postpone this action, after the current event
          * has been processed */
-        sources_.Add(std::make_shared<glib::Idle>([&]() {
+        sources_.AddIdle([&] {
           shortcut_controller_->SetEnabled(false);
           shortcut_controller_->Hide();
           EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, false);
 
           return false;
-        }));
+        });
       }
 
       KeySym key_sym;
@@ -1633,7 +1693,8 @@ void UnityScreen::handleCompizEvent(const char* plugin,
     ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
   }
 
-  if (PluginAdapter::Default()->IsScaleActive() && g_strcmp0(plugin, "scale") == 0)
+  if (PluginAdapter::Default()->IsScaleActive() &&
+      g_strcmp0(plugin, "scale") == 0 && super_keypressed_)
   {
     scale_just_activated_ = true;
   }
@@ -1697,8 +1758,18 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
     scale_just_activated_ = false;
   }
 
-  if (hud_controller_->IsVisible() && launcher_controller_->AboutToShowDash(was_tap, when))
-    hud_controller_->HideHud();
+  if (launcher_controller_->AboutToShowDash(was_tap, when))
+  {
+    if (hud_controller_->IsVisible())
+    {
+      hud_controller_->HideHud();
+    }
+
+    if (QuicklistManager::Default()->Current())
+    {
+      QuicklistManager::Default()->Current()->Hide();
+    }
+  }
 
   super_keypressed_ = false;
   launcher_controller_->KeyNavTerminate(true);
@@ -1821,9 +1892,10 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
 
   RaiseInputWindows();
 
-  auto results = launcher_controller_->GetAltTabIcons(show_mode == switcher::ShowMode::CURRENT_VIEWPORT);
+  auto results = launcher_controller_->GetAltTabIcons(show_mode == switcher::ShowMode::CURRENT_VIEWPORT,
+                                                      switcher_controller_->IsShowDesktopDisabled());
 
-  if (!(results.size() == 1 && results[0]->GetIconType() == AbstractLauncherIcon::IconType::TYPE_DESKTOP))
+  if (!(results.size() == 1 && results[0]->GetIconType() == AbstractLauncherIcon::IconType::TYPE_DESKTOP) && !results.empty())
     switcher_controller_->Show(show_mode, switcher::SortMode::FOCUS_ORDER, false, results);
 
   return true;
@@ -1935,7 +2007,7 @@ bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State
   if (!switcher_controller_->Visible())
   {
     altTabInitiateCommon(action, switcher::ShowMode::CURRENT_VIEWPORT);
-    switcher_controller_->Select(1); // always select the current application
+    switcher_controller_->Select((switcher_controller_->StartIndex())); // always select the current application
   }
 
   switcher_controller_->NextDetail();
@@ -2092,6 +2164,9 @@ bool UnityScreen::ShowHud()
     if (launcher_controller_->IsOverlayOpen())
       dash_controller_->HideDash();
 
+    if (QuicklistManager::Default()->Current())
+      QuicklistManager::Default()->Current()->Hide();
+
     hud_controller_->ShowHud();
   }
 
@@ -2105,10 +2180,9 @@ bool UnityScreen::ShowHudInitiate(CompAction* action,
 {
   // Look to see if there is a keycode.  If there is, then this isn't a
   // modifier only keybinding.
-  int key_code = 0;
   if (options[6].type() != CompOption::TypeUnset)
   {
-    key_code = options[6].value().i();
+    int key_code = options[6].value().i();
     LOG_DEBUG(logger) << "HUD initiate key code: " << key_code;
     // show it now, no timings or terminate needed.
     return ShowHud();
@@ -2535,6 +2609,9 @@ void UnityWindow::windowNotify(CompWindowNotify n)
         window->minimizedSetEnabled (this, false);
       }
         break;
+      case CompWindowNotifyBeforeDestroy:
+        being_destroyed.emit();
+        break;
       default:
         break;
   }
@@ -2811,6 +2888,9 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
     case UnityshellOptions::AltTabBiasViewport:
       PluginAdapter::Default()->bias_active_to_viewport = optionGetAltTabBiasViewport();
       break;
+    case UnityshellOptions::DisableShowDesktop:
+      switcher_controller_->SetShowDesktopDisabled(optionGetDisableShowDesktop());
+      break;
     case UnityshellOptions::ShowMinimizedWindows:
       compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::setFunctions (optionGetShowMinimizedWindows ());
       screen->enterShowDesktopModeSetEnabled (this, optionGetShowMinimizedWindows ());
@@ -2834,8 +2914,12 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::RevealPressure:
       launcher_options->edge_reveal_pressure = optionGetRevealPressure() * 100;
+      break;
     case UnityshellOptions::EdgeResponsiveness:
       launcher_options->edge_responsiveness = optionGetEdgeResponsiveness();
+      break;
+    case UnityshellOptions::EdgePassedDisabledMs:
+      launcher_options->edge_passed_disabled_ms = optionGetEdgePassedDisabledMs();
       break;
     default:
       break;
@@ -2851,17 +2935,14 @@ void UnityScreen::ScheduleRelayout(guint timeout)
 {
   if (!sources_.GetSource(local::RELAYOUT_TIMEOUT))
   {
-    auto relayout_timeout(std::make_shared<glib::Timeout>(timeout));
-    sources_.Add(relayout_timeout, local::RELAYOUT_TIMEOUT);
-
-    relayout_timeout->Run([&]() {
+    sources_.AddTimeout(timeout, [&] {
       NeedsRelayout();
       Relayout();
 
       cScreen->damageScreen();
 
       return false;
-    });
+    }, local::RELAYOUT_TIMEOUT);
   }
 }
 
@@ -2980,6 +3061,18 @@ void UnityScreen::initLauncher()
   ScheduleRelayout(0);
 }
 
+nux::View *UnityScreen::LauncherView()
+{
+  nux::View *result = nullptr;
+
+  if (launcher_controller_)
+  {
+    result = &launcher_controller_->launcher();
+  }
+
+  return result;
+}
+
 void UnityScreen::InitHints()
 {
   // TODO move category text into a vector...
@@ -3001,6 +3094,7 @@ void UnityScreen::InitHints()
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", " + A", _("Open the Dash App Lens."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", " + F", _("Open the Dash Files Lens."), shortcut::COMPIZ_KEY_OPTION,"unityshell", "show_launcher"));
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", " + M", _("Open the Dash Music Lens."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
+  hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", " + V", _("Open the Dash Video Lens."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", "", _("Switches between Lenses."), shortcut::HARDCODED_OPTION, _("Ctrl + Tab")));
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", "", _("Moves the focus."), shortcut::HARDCODED_OPTION, _("Cursor Keys")));
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", "", _("Open currently focused item."), shortcut::HARDCODED_OPTION, _("Enter & Return")));
@@ -3039,6 +3133,32 @@ void UnityScreen::InitHints()
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", "", _("Places window in corresponding positions."), shortcut::HARDCODED_OPTION, _("Ctrl + Alt + Num")));
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", _(" Drag"), _("Move window."), shortcut::COMPIZ_MOUSE_OPTION, "move", "initiate_button"));
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", _(" Drag"), _("Resize window."), shortcut::COMPIZ_MOUSE_OPTION, "resize", "initiate_button"));
+}
+
+void UnityScreen::InitGesturesSupport()
+{
+  std::unique_ptr<nux::GestureBroker> gesture_broker(new UnityGestureBroker);
+  wt->GetWindowCompositor().SetGestureBroker(std::move(gesture_broker));
+
+  gestures_sub_launcher_.reset(new nux::GesturesSubscription);
+  gestures_sub_launcher_->SetGestureClasses(nux::DRAG_GESTURE);
+  gestures_sub_launcher_->SetNumTouches(4);
+  gestures_sub_launcher_->SetWindowId(GDK_ROOT_WINDOW());
+  gestures_sub_launcher_->Activate();
+
+  gestures_sub_dash_.reset(new nux::GesturesSubscription);
+  gestures_sub_dash_->SetGestureClasses(nux::TAP_GESTURE);
+  gestures_sub_dash_->SetNumTouches(4);
+  gestures_sub_dash_->SetWindowId(GDK_ROOT_WINDOW());
+  gestures_sub_dash_->Activate();
+
+  gestures_sub_windows_.reset(new nux::GesturesSubscription);
+  gestures_sub_windows_->SetGestureClasses(nux::TOUCH_GESTURE
+                                         | nux::DRAG_GESTURE
+                                         | nux::PINCH_GESTURE);
+  gestures_sub_windows_->SetNumTouches(3);
+  gestures_sub_windows_->SetWindowId(GDK_ROOT_WINDOW());
+  gestures_sub_windows_->Activate();
 }
 
 /* Window init */
@@ -3235,6 +3355,8 @@ void capture_g_log_calls(const gchar* log_domain,
                          const gchar* message,
                          gpointer user_data)
 {
+  // If the environment variable is set, we capture the backtrace.
+  static bool glog_backtrace = ::getenv("UNITY_LOG_GLOG_BACKTRACE");
   // If nothing else, all log messages from unity should be identified as such
   std::string module("unity");
   if (log_domain)
@@ -3245,14 +3367,16 @@ void capture_g_log_calls(const gchar* log_domain,
   nux::logging::Level level = glog_level_to_nux(log_level);
   if (level >= logger.GetEffectiveLogLevel())
   {
-    nux::logging::LogStream(level, logger.module(), "<unknown>", 0).stream()
-        << message;
-    if (level >= nux::logging::Error)
+    std::string backtrace;
+    if (glog_backtrace && level >= nux::logging::Warning)
     {
-      nux::logging::Backtrace();
+      backtrace = "\n" + nux::logging::Backtrace();
     }
+    nux::logging::LogStream(level, logger.module(), "<unknown>", 0).stream()
+      << message << backtrace;
   }
 }
 
 } // anonymous namespace
 } // namespace unity
+

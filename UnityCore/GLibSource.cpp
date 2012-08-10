@@ -18,7 +18,6 @@
 */
 
 #include "GLibSource.h"
-#include <boost/lexical_cast.hpp>
 
 namespace unity
 {
@@ -70,7 +69,7 @@ Source::Priority Source::GetPriority() const
   return static_cast<Priority>(prio);
 }
 
-bool Source::Run(SourceCallback callback)
+bool Source::Run(Callback callback)
 {
   if (!source_ || source_id_ || IsRunning())
     return false;
@@ -78,7 +77,7 @@ bool Source::Run(SourceCallback callback)
   callback_ = callback;
   callback_data_ = new CallBackData(this);
 
-  g_source_set_callback(source_, Callback, callback_data_, DestroyCallback);
+  g_source_set_callback(source_, SourceCallback, callback_data_, DestroyCallback);
   source_id_ = g_source_attach(source_, nullptr);
 
   return true;
@@ -97,14 +96,14 @@ unsigned int Source::Id() const
   return source_id_;
 }
 
-gboolean Source::Callback(gpointer data)
+gboolean Source::SourceCallback(gpointer data)
 {
   if (!data)
     return G_SOURCE_REMOVE;
 
   auto self = static_cast<CallBackData*>(data)->self;
 
-  if (self && !self->callback_.empty() && self->callback_())
+  if (self && self->callback_ && self->callback_())
   {
     return G_SOURCE_CONTINUE;
   }
@@ -134,7 +133,7 @@ void Source::DestroyCallback(gpointer data)
 }
 
 
-Timeout::Timeout(unsigned int milliseconds, SourceCallback cb, Priority prio)
+Timeout::Timeout(unsigned int milliseconds, Callback cb, Priority prio)
 {
   Init(milliseconds, prio);
   Run(cb);
@@ -152,7 +151,7 @@ void Timeout::Init(unsigned int milliseconds, Priority prio)
 }
 
 
-TimeoutSeconds::TimeoutSeconds(unsigned int seconds, SourceCallback cb, Priority prio)
+TimeoutSeconds::TimeoutSeconds(unsigned int seconds, Callback cb, Priority prio)
 {
   Init(seconds, prio);
   Run(cb);
@@ -170,7 +169,7 @@ void TimeoutSeconds::Init(unsigned int seconds, Priority prio)
 }
 
 
-Idle::Idle(SourceCallback cb, Priority prio)
+Idle::Idle(Callback cb, Priority prio)
 {
   Init(prio);
   Run(cb);
@@ -225,7 +224,7 @@ bool SourceManager::Add(Source::Ptr const& source, std::string const& nick)
   if (source_nick.empty())
   {
     /* If we don't have a nick, we use the source pointer string as nick. */
-    source_nick = boost::lexical_cast<std::string>(source.get());
+    source_nick = std::to_string(reinterpret_cast<uintptr_t>(source.get()));
   }
 
   auto old_source_it = sources_.find(source_nick);
@@ -242,6 +241,81 @@ bool SourceManager::Add(Source::Ptr const& source, std::string const& nick)
   source->removed.connect(sigc::mem_fun(this, &SourceManager::OnSourceRemoved));
 
   return true;
+}
+
+Source::Ptr SourceManager::AddTimeout(unsigned int milliseconds, std::string const& nick)
+{
+  auto timeout = std::make_shared<Timeout>(milliseconds);
+
+  if (Add(timeout, nick))
+  {
+    return timeout;
+  }
+
+  return nullptr;
+}
+
+Source::Ptr SourceManager::AddTimeout(unsigned int milliseconds, Source::Callback cb, std::string const& nick)
+{
+  auto timeout = std::make_shared<Timeout>(milliseconds);
+
+  if (Add(timeout, nick))
+  {
+    timeout->Run(cb);
+    return timeout;
+  }
+
+  return nullptr;
+}
+
+Source::Ptr SourceManager::AddTimeoutSeconds(unsigned int seconds, std::string const& nick)
+{
+  auto timeout = std::make_shared<Timeout>(seconds);
+
+  if (Add(timeout, nick))
+  {
+    return timeout;
+  }
+
+  return nullptr;
+}
+
+Source::Ptr SourceManager::AddTimeoutSeconds(unsigned int seconds, Source::Callback cb, std::string const& nick)
+{
+  auto timeout = std::make_shared<TimeoutSeconds>(seconds);
+
+  if (Add(timeout, nick))
+  {
+    timeout->Run(cb);
+    return timeout;
+  }
+
+  return nullptr;
+}
+
+Source::Ptr SourceManager::AddIdle(std::string const& nick)
+{
+  auto idle = std::make_shared<Idle>();
+
+  if (Add(idle, nick))
+  {
+    return idle;
+  }
+
+  return nullptr;
+}
+
+Source::Ptr SourceManager::AddIdle(Source::Callback cb, std::string const& nick)
+{
+  auto idle = std::make_shared<Idle>();
+
+  if (Add(idle, nick))
+  {
+    idle->Run(cb);
+    return idle;
+  }
+
+  return nullptr;
 }
 
 void SourceManager::OnSourceRemoved(unsigned int id)
@@ -318,7 +392,7 @@ Source::Ptr SourceManager::GetSource(std::string const& nick) const
     return it->second;
   }
 
-  return Source::Ptr();
+  return nullptr;
 }
 
 }

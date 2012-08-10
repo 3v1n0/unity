@@ -63,11 +63,25 @@ bool RowAdaptorBase::GetBoolAt(int position)
   return dee_model_get_bool(model_, iter_, position);
 }
 
+int RowAdaptorBase::GetIntAt(int position)
+{
+  if (!model_ || !iter_)
+    return 0;
+  return dee_model_get_int32(model_, iter_, position);
+}
+
 unsigned int RowAdaptorBase::GetUIntAt(int position)
 {
   if (!model_ || !iter_)
     return 0;
   return dee_model_get_uint32(model_, iter_, position);
+}
+
+float RowAdaptorBase::GetFloatAt(int position)
+{
+  if (!model_ || !iter_)
+    return 0.0;
+  return static_cast<float>(dee_model_get_double(model_, iter_, position));
 }
 
 }

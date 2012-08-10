@@ -55,14 +55,17 @@ private:
   void Changed(GdkScreen* screen);
   void Refresh();
 
-private:
+protected:
+  static UScreen* default_screen_;
   std::vector<nux::Geometry> monitors_;
+  int primary_;
+
+private:
   glib::Object<GdkScreen> screen_;
   glib::DBusProxy proxy_;
   glib::Signal<void, GdkScreen*> size_changed_signal_;
   glib::Signal<void, GdkScreen*> monitors_changed_signal_;
   glib::Source::UniquePtr refresh_idle_;
-  int primary_;
 };
 
 } // Namespace

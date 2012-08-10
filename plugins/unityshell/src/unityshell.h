@@ -22,6 +22,7 @@
 #ifndef UNITYSHELL_H
 #define UNITYSHELL_H
 
+#include <Nux/GesturesSubscription.h>
 #include <Nux/WindowThread.h>
 #include <NuxCore/Property.h>
 #include <sigc++/sigc++.h>
@@ -46,7 +47,6 @@
 #include "PanelController.h"
 #include "PanelStyle.h"
 #include "UScreen.h"
-#include "GestureEngine.h"
 #include "DebugDBusInterface.h"
 #include "SwitcherController.h"
 #include "UBusWrapper.h"
@@ -112,6 +112,8 @@ public:
                      CompOption::Vector &o);
 
   void damageRegion(const CompRegion &region);
+
+  bool shellCouldBeHidden(CompOutput const& output);
 
   /* paint on top of all windows if we could not find a window
    * to paint underneath */
@@ -188,6 +190,8 @@ public:
 
   bool forcePaintOnTop ();
 
+  nux::View *LauncherView();
+
 protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
@@ -237,11 +241,12 @@ private:
 
   void OnPanelStyleChanged();
 
+  void InitGesturesSupport();
+
   Settings dash_settings_;
   dash::Style    dash_style_;
   panel::Style   panel_style_;
   FontSettings   font_settings_;
-  GeisAdapter    geis_adapter_;
   internal::FavoriteStoreGSettings favorite_store_;
 
   /* The window thread should be the last thing removed, as c++ does it in reverse order */
@@ -259,7 +264,15 @@ private:
   std::list<shortcut::AbstractHint::Ptr> hints_;
   bool enable_shortcut_overlay_;
 
-  GestureEngine                         gesture_engine_;
+  /* Subscription for gestures that manipulate Unity launcher */
+  std::unique_ptr<nux::GesturesSubscription> gestures_sub_launcher_;
+
+  /* Subscription for gestures that manipulate Unity dash */
+  std::unique_ptr<nux::GesturesSubscription> gestures_sub_dash_;
+
+  /* Subscription for gestures that manipulate windows. */
+  std::unique_ptr<nux::GesturesSubscription> gestures_sub_windows_;
+
   bool                                  needsRelayout;
   bool                                  _in_paint;
   bool                                  super_keypressed_;
@@ -396,6 +409,8 @@ public:
 
   ShowdesktopHandler             *mShowdesktopHandler;
 
+  //! Emited when CompWindowNotifyBeforeDestroy is received
+  sigc::signal<void> being_destroyed;
 private:
   void DoEnableFocus ();
   void DoDisableFocus ();

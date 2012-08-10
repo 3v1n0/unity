@@ -441,7 +441,7 @@ update_children_index(UnityLauncherAccessible* self)
   if (launcher_model == NULL)
     return;
 
-  for (it = launcher_model->begin(); it != launcher_model->end(); it++)
+  for (it = launcher_model->begin(); it != launcher_model->end(); ++it)
   {
     child =  dynamic_cast<nux::Object*>((*it).GetPointer());
     child_accessible = unity_a11y_get_accessible(child);

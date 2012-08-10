@@ -1,12 +1,14 @@
 Test highlight BFB
-=====================
-
+--------------------------------
 This test shows that the BFB launcher icon highlights during key navigation.
 
+Setup:
+
+Actions:
 #. Start with a clear screen
 #. Press ALT+F1
 
-Outcome
+Expected Result:
   The launcher key navigation starts and the BFB launcher icon highlights.
   It looks like `this`__:
   __https://launchpadlibrarian.net/85700200/bfb85.png

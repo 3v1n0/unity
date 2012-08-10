@@ -93,6 +93,7 @@ class ShortcutHintTests(BaseShortcutHintTests):
 
         self.assertThat(self.shortcut_hint.get_shortcut_view().bg_texture_is_valid, Eventually(Equals(True)))
 
+
 class ShortcutHintInteractionsTests(BaseShortcutHintTests):
     """Test the shortcuthint interactions with other Unity parts."""
 

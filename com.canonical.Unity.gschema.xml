@@ -10,7 +10,7 @@
     <value nick="Expanded" value="1" />
   </enum>
 
-  <schema path="/desktop/unity/" id="com.canonical.Unity" gettext-domain="unity">
+  <schema path="/com/canonical/unity/" id="com.canonical.Unity" gettext-domain="unity">
     <key enum="form-factor-enum" name="form-factor">
       <default>"Automatic"</default>
       <summary>The form factor Unity should target.</summary>
@@ -22,7 +22,7 @@
       <description>Whether the home screen should be expanded.</description>
     </key>
   </schema>
-  <schema path="/desktop/unity/launcher/" id="com.canonical.Unity.Launcher" gettext-domain="unity">
+  <schema path="/com/canonical/unity/launcher/" id="com.canonical.Unity.Launcher" gettext-domain="unity">
     <key type="as" name="favorites">
       <default>[ 'ubiquity-gtkui.desktop', 'nautilus-home.desktop', 'firefox.desktop', 'libreoffice-writer.desktop', 'libreoffice-calc.desktop', 'libreoffice-impress.desktop', 'ubuntu-software-center.desktop', 'ubuntuone-installer.desktop', 'gnome-control-center.desktop' ]</default>
       <summary>List of desktop file ids for favorites on the launcher.</summary>
@@ -34,21 +34,21 @@
       <description>This is a detection key for the favorite migration script to know whether the needed migration is done or not.</description>
     </key>
   </schema>
-  <schema path="/desktop/unity/panel/" id="com.canonical.Unity.Panel" gettext-domain="unity">
+  <schema path="/com/canonical/unity/panel/" id="com.canonical.Unity.Panel" gettext-domain="unity">
     <key type="as" name="systray-whitelist">
       <default>[ 'JavaEmbeddedFrame', 'Wine', 'Update-notifier' ]</default>
       <summary>List of client names, resource classes or wm classes to allow in the Panel's systray implementation.</summary>
       <description>"" (empty) will not allow any tray icons, "all" will allow all tray icons, otherwise there will be an attempt to match each icon to a value here.</description>
     </key>
   </schema>
-  <schema path="/desktop/unity/devices/" id="com.canonical.Unity.Devices" gettext-domain="unity">
+  <schema path="/com/canonical/unity/devices/" id="com.canonical.Unity.Devices" gettext-domain="unity">
     <key type="as" name="favorites">
         <default>[]</default>
         <summary>List of device uuid for favorites on the launcher.</summary>
         <description>These devices are shown in the Launcher by default.</description>
     </key>
   </schema>
-  <schema path="/desktop/unity/dash/" id="com.canonical.Unity.Dash" gettext-domain="unity">
+  <schema path="/com/canonical/unity/dash/" id="com.canonical.Unity.Dash" gettext-domain="unity">
     <key type="as" name="home-lens-ordering">
       <default>[ 'applications.lens', 'files.lens', 'music.lens' ]</default>
       <summary>List of lens ids specifying how lenses should be ordered in the Dash home screen.</summary>

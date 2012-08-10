@@ -45,7 +45,6 @@ set (LAUNCHER_SOURCES
      FavoriteStore.cpp
      FavoriteStoreGSettings.cpp
      FavoriteStorePrivate.cpp
-     GeisAdapter.cpp
      HudLauncherIcon.cpp
      Launcher.cpp
      LauncherController.cpp
@@ -57,6 +56,7 @@ set (LAUNCHER_SOURCES
      LauncherIcon.cpp
      LauncherModel.cpp
      LauncherOptions.cpp
+     MockLauncherIcon.cpp
      PointerBarrier.cpp
      QuicklistManager.cpp
      QuicklistMenuItem.cpp
@@ -71,6 +71,7 @@ set (LAUNCHER_SOURCES
      SpacerLauncherIcon.cpp
      Tooltip.cpp
      TrashLauncherIcon.cpp
+     VolumeMonitorWrapper.cpp
      )
 
 add_library (launcher-lib STATIC ${LAUNCHER_SOURCES})
