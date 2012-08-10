@@ -94,14 +94,13 @@ void ActionButton::BuildLayout(std::string const& label, std::string const& icon
     icon_hint_ = icon_hint;
     if (image_)
     {
-      image_->UnReference();
+      image_.Release();
       image_ = NULL;
     }
 
     if (!icon_hint_.empty())
     {
       image_ = new IconTexture(icon_hint, icon_size);
-      image_->Reference();
       image_->texture_updated.connect([&](nux::BaseTexture*)
       {
         BuildLayout(label_, icon_hint_);
@@ -137,7 +136,7 @@ void ActionButton::BuildLayout(std::string const& label, std::string const& icon
   layout->SetPadding(2, 11, 2, 11);
   layout->AddSpace(0,1);
   if (image_)
-    layout->AddView(image_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
+    layout->AddView(image_.GetPointer(), 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
   if (static_text_)
     layout->AddView(static_text_.GetPointer(), 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
   layout->AddSpace(0,1);
