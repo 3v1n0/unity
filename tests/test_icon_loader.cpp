@@ -18,6 +18,7 @@
  */
 
 #include <gmock/gmock.h>
+#include <sigc++/sigc++.h>
 
 #include "IconLoader.h"
 

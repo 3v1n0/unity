@@ -65,8 +65,6 @@ QuicklistView::QuicklistView()
   , _corner_radius(4)
   , _padding(13)
   , _left_padding_correction(-1)
-  , _bottom_padding_correction_normal(-2)
-  , _bottom_padding_correction_single_item(-4)
   , _offset_correction(-1)
   , _cairo_text_has_changed(true)
   , _current_item_index(-1)
@@ -339,7 +337,7 @@ void QuicklistView::ShowQuicklistWithTipAt(int anchor_tip_x, int anchor_tip_y)
 
   if (!_enable_quicklist_for_testing)
   {
-    if ((_item_list.size() != 0))
+    if (!_item_list.empty())
     {
       int offscreen_size = GetBaseY() +
                            GetBaseHeight() -
@@ -446,44 +444,55 @@ void QuicklistView::PreLayoutManagement()
       continue;
     }
     else if (!item->GetParentObject())
+    {
       _item_layout->AddView(item, 1, nux::eCenter, nux::eFull);
+    }
 
     int  textWidth  = 0;
     int  textHeight = 0;
     item->GetTextExtents(textWidth, textHeight);
-    if (textWidth > MaxItemWidth)
-      MaxItemWidth = textWidth;
+    textHeight += QuicklistMenuItem::ITEM_MARGIN * 2;
+
+    MaxItemWidth = std::max(MaxItemWidth, textWidth);
     TotalItemHeight += textHeight;
   }
 
   if (TotalItemHeight < _anchor_height)
   {
-    _top_space->SetMinMaxSize(1, (_anchor_height - TotalItemHeight) / 2 + 1 + _padding + _corner_radius);
-    _bottom_space->SetMinMaxSize(1, (_anchor_height - TotalItemHeight) / 2 + 1 +
-                                     _padding + _corner_radius +
-                                     _bottom_padding_correction_single_item);
+    int b = (_anchor_height - TotalItemHeight) / 2 + _padding + _corner_radius;
+    int t = b + _offset_correction;
+
+    _top_space->SetMinimumHeight(t);
+    _top_space->SetMaximumHeight(t);
+
+    _bottom_space->SetMinimumHeight(b);
+    _bottom_space->SetMaximumHeight(b);
   }
   else
   {
-    _top_space->SetMinMaxSize(_padding + _corner_radius, _padding + _corner_radius);
-    _bottom_space->SetMinMaxSize(_padding + _corner_radius - 2,
-                                 _padding + _corner_radius +
-                                 _bottom_padding_correction_normal);
+    int b = _padding + _corner_radius;
+    int t = b + _offset_correction;
+
+    _top_space->SetMinimumHeight(t);
+    _top_space->SetMaximumHeight(t);
+
+    _bottom_space->SetMinimumHeight(b);
+    _bottom_space->SetMaximumHeight(b);
   }
 
   _item_layout->SetMinimumWidth(MaxItemWidth);
 
-  BaseWindow::PreLayoutManagement();
+  CairoBaseWindow::PreLayoutManagement();
 }
 
 long QuicklistView::PostLayoutManagement(long LayoutResult)
 {
-  long result = BaseWindow::PostLayoutManagement(LayoutResult);
+  long result = CairoBaseWindow::PostLayoutManagement(LayoutResult);
 
   UpdateTexture();
 
   int x = _padding + _anchor_width + _corner_radius + _offset_correction;
-  int y = _padding + _corner_radius + _offset_correction;
+  int y = _top_space->GetMinimumHeight();
 
   for (auto item : _item_list)
   {
@@ -593,14 +602,14 @@ void QuicklistView::CancelItemsPrelightStatus()
 void QuicklistView::RecvItemMouseDrag(QuicklistMenuItem* item, int x, int y)
 {
   nux::Geometry geo;
-  for (auto item : _item_list)
+  for (auto it : _item_list)
   {
-    int item_index = GetItemIndex(item);
+    int item_index = GetItemIndex(it);
 
     if (!IsMenuItemSelectable(item_index))
       continue;
 
-    geo = item->GetGeometry();
+    geo = it->GetGeometry();
     geo.width = _item_layout->GetBaseWidth();
 
     if (geo.IsPointInside(x + item->GetBaseX(), y + item->GetBaseY()))

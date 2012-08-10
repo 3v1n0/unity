@@ -52,13 +52,12 @@ Controller::Controller(unsigned int load_timeout)
   ,  main_layout_(nullptr)
   ,  monitor_(0)
   ,  visible_(false)
+  ,  show_desktop_disabled_(false)
   ,  bg_color_(0, 0, 0, 0.5)
 {
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
 
-  auto lazy_timeout = std::make_shared<glib::TimeoutSeconds>(construct_timeout_, glib::Source::Priority::LOW);
-  lazy_timeout->Run([&] { ConstructWindow(); return false; });
-  sources_.Add(lazy_timeout, LAZY_TIMEOUT);
+  sources_.AddTimeoutSeconds(construct_timeout_, [&] { ConstructWindow(); return false; }, LAZY_TIMEOUT);
 }
 
 void Controller::OnBackgroundUpdate(GVariant* data)
@@ -74,6 +73,9 @@ void Controller::OnBackgroundUpdate(GVariant* data)
 void Controller::Show(ShowMode show, SortMode sort, bool reverse,
                       std::vector<AbstractLauncherIcon::Ptr> results)
 {
+  if (results.empty())
+    return;
+
   if (sort == SortMode::FOCUS_ORDER)
   {
     std::sort(results.begin(), results.end(), CompareSwitcherItemsPriority);
@@ -90,13 +92,8 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
 
   if (timeout_length > 0)
   {
-    auto view_idle_construct = std::make_shared<glib::Idle>();
-    sources_.Add(view_idle_construct, VIEW_CONSTRUCT_IDLE);
-    view_idle_construct->Run([&] () { ConstructView(); return false; });
-
-    auto show_timeout = std::make_shared<glib::Timeout>(timeout_length);
-    sources_.Add(show_timeout, SHOW_TIMEOUT);
-    show_timeout->Run([&] () { ShowView(); return false; });
+    sources_.AddIdle([&] { ConstructView(); return false; }, VIEW_CONSTRUCT_IDLE);
+    sources_.AddTimeout(timeout_length, [&] { ShowView(); return false; }, SHOW_TIMEOUT);
   }
   else
   {
@@ -105,9 +102,8 @@ void Controller::Show(ShowMode show, SortMode sort, bool reverse,
 
   if (detail_on_timeout)
   {
-    auto detail_timeout = std::make_shared<glib::Timeout>(initial_detail_timeout_length);
-    sources_.Add(detail_timeout, DETAIL_TIMEOUT);
-    detail_timeout->Run(sigc::mem_fun(this, &Controller::OnDetailTimer));
+    auto cb_func = sigc::mem_fun(this, &Controller::OnDetailTimer);
+    sources_.AddTimeout(initial_detail_timeout_length, cb_func, DETAIL_TIMEOUT);
   }
 
   ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
@@ -135,9 +131,8 @@ void Controller::OnModelSelectionChanged(AbstractLauncherIcon::Ptr icon)
 {
   if (detail_on_timeout)
   {
-    auto detail_timeout = std::make_shared<glib::Timeout>(detail_timeout_length);
-    sources_.Add(detail_timeout, DETAIL_TIMEOUT);
-    detail_timeout->Run(sigc::mem_fun(this, &Controller::OnDetailTimer));
+    auto cb_func = sigc::mem_fun(this, &Controller::OnDetailTimer);
+    sources_.AddTimeout(detail_timeout_length, cb_func, DETAIL_TIMEOUT);
   }
 
   if (icon)
@@ -398,6 +393,21 @@ guint Controller::GetSwitcherInputWindowId() const
   return view_window_->GetInputWindowId();
 }
 
+bool Controller::IsShowDesktopDisabled() const
+{
+  return show_desktop_disabled_;
+}
+
+void Controller::SetShowDesktopDisabled(bool disabled)
+{
+  show_desktop_disabled_ = disabled;
+}
+
+int Controller::StartIndex() const
+{
+  return (show_desktop_disabled_ ? 0 : 1);
+}
+
 bool Controller::CompareSwitcherItemsPriority(AbstractLauncherIcon::Ptr first,
                                               AbstractLauncherIcon::Ptr second)
 {
@@ -418,8 +428,11 @@ void Controller::SelectFirstItem()
   if (!model_)
     return;
 
-  AbstractLauncherIcon::Ptr first  = model_->at(1);
-  AbstractLauncherIcon::Ptr second = model_->at(2);
+  int first_icon_index = StartIndex();
+  int second_icon_index = first_icon_index + 1;
+
+  AbstractLauncherIcon::Ptr first  = model_->at(first_icon_index);
+  AbstractLauncherIcon::Ptr second = model_->at(second_icon_index);
 
   if (!first)
   {
@@ -473,13 +486,14 @@ void
 Controller::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper(builder)
-  .add("timeout-length", timeout_length())
-  .add("detail-on-timeout", detail_on_timeout())
-  .add("initial-detail-timeout-length", initial_detail_timeout_length())
-  .add("detail-timeout-length", detail_timeout_length())
+  .add("timeout_length", timeout_length())
+  .add("detail_on_timeout", detail_on_timeout())
+  .add("initial_detail_timeout_length", initial_detail_timeout_length())
+  .add("detail_timeout_length", detail_timeout_length())
   .add("visible", visible_)
   .add("monitor", monitor_)
-  .add("detail-mode", detail_mode_);
+  .add("show_desktop_disabled", show_desktop_disabled_)
+  .add("detail_mode", detail_mode_);
 }
 
 } // switcher namespace

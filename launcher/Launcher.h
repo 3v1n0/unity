@@ -32,7 +32,6 @@
 #include "DNDCollectionWindow.h"
 #include "DndData.h"
 #include "EdgeBarrierController.h"
-#include "GeisAdapter.h"
 #include "unity-shared/Introspectable.h"
 #include "LauncherModel.h"
 #include "LauncherOptions.h"
@@ -56,7 +55,7 @@ class Launcher : public unity::debug::Introspectable, public nux::View, public u
   NUX_DECLARE_OBJECT_TYPE(Launcher, nux::View);
 public:
 
-  Launcher(nux::BaseWindow* parent, NUX_FILE_LINE_PROTO);
+  Launcher(nux::BaseWindow* parent, nux::ObjectPtr<DNDCollectionWindow> const& collection_window, NUX_FILE_LINE_PROTO);
 
   nux::Property<Display*> display;
   nux::Property<int> monitor;
@@ -136,6 +135,7 @@ public:
 
   void RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherIcon::Ptr icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
 
+  virtual nux::GestureDeliveryRequest GestureEvent(const nux::GestureEvent &event);
 protected:
   // Introspectable methods
   std::string GetName() const;
@@ -183,9 +183,9 @@ private:
   void OnWindowMapped(guint32 xid);
   void OnWindowUnmapped(guint32 xid);
 
-  void OnDragStart(GeisAdapter::GeisDragData* data);
-  void OnDragUpdate(GeisAdapter::GeisDragData* data);
-  void OnDragFinish(GeisAdapter::GeisDragData* data);
+  void OnDragStart(const nux::GestureEvent &event);
+  void OnDragUpdate(const nux::GestureEvent &event);
+  void OnDragFinish(const nux::GestureEvent &event);
 
   bool HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event);
 
@@ -359,10 +359,12 @@ private:
   int _postreveal_mousemove_delta_x;
   int _postreveal_mousemove_delta_y;
   int _launcher_drag_delta;
+  int _launcher_drag_delta_max;
+  int _launcher_drag_delta_min;
   int _enter_y;
   int _last_button_press;
-  int _drag_out_id;
   float _drag_out_delta_x;
+  bool _drag_gesture_ongoing;
   float _last_reveal_progress;
 
   nux::Point2 _mouse_position;

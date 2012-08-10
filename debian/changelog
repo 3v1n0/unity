@@ -1,10 +1,19 @@
-unity (6.0.0-0ubuntu7) UNRELEASED; urgency=low
+unity (6.2.0-0ubuntu1) UNRELEASED; urgency=low
 
+  [ Adam Conrad ]
+  * Removed debian/patches/libgeis-rename.patch
+
+  [ Łukasz 'sil2100' Zemczak ]
   * debian/rules:
     - added override for dh_shlibdeps to point it to the private directory of
       libunity-protocol-private.so
+  * debian/unity.lintian-overrides,
+    debian/libunity-core-6.0-5.lintian-overrides:
+    - added override to silence the binary-or-shlib-defines-rpath error, since
+      we are forced to use RPATH in our case
+  * New upstream release.
 
- -- Łukasz 'sil2100' Zemczak <lukasz.zemczak@canonical.com>  Wed, 18 Jul 2012 12:50:15 +0200
+ -- Łukasz 'sil2100' Zemczak <lukasz.zemczak@canonical.com>  Fri, 10 Aug 2012 11:35:49 +0200
 
 unity (6.0.0-0ubuntu6) quantal; urgency=low
 

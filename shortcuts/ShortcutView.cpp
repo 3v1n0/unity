@@ -208,16 +208,16 @@ nux::View* View::CreateShortKeyEntryView(AbstractHint::Ptr const& hint)
   layout->SetSpaceBetweenChildren(INTER_SPACE_SHORTKEY_DESCRIPTION);
   description_layout->SetContentDistribution(nux::MAJOR_POSITION_START);
 
-   auto on_shortkey_changed = [](std::string const& new_shortkey, nux::View* main_view, nux::StaticText* view) {
+   auto on_shortkey_changed = [view, shortkey_view] (std::string const& new_shortkey) {
       std::string skey("<b>");
       skey += new_shortkey;
       skey += "</b>";
 
-      view->SetText(skey);
-      main_view->SetVisible(!new_shortkey.empty());
+      shortkey_view->SetText(skey);
+      view->SetVisible(!new_shortkey.empty());
    };
 
-  hint->shortkey.changed.connect(sigc::bind(sigc::slot<void, std::string const&, nux::View*, nux::StaticText*>(on_shortkey_changed), view, shortkey_view));
+  hint->shortkey.changed.connect(on_shortkey_changed);
 
   return view;
 }

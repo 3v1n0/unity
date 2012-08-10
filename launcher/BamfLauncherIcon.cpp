@@ -22,6 +22,7 @@
 
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
+#include <NuxCore/Logger.h>
 
 #include <UnityCore/Variant.h>
 #include <UnityCore/GLibWrapper.h>
@@ -44,10 +45,13 @@ namespace launcher
 {
 namespace
 {
+nux::logging::Logger logger("unity.launcher");
+
   // We use the "bamf-" prefix since the manager is protected, to avoid name clash
   const std::string WINDOW_MOVE_TIMEOUT = "bamf-window-move";
   const std::string ICON_REMOVE_TIMEOUT = "bamf-icon-remove";
   //const std::string ICON_DND_OVER_TIMEOUT = "bamf-icon-dnd-over";
+  const std::string DEFAULT_ICON = "application-default-icon";
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(BamfLauncherIcon);
@@ -66,7 +70,7 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   glib::String icon(bamf_view_get_icon(bamf_view));
 
   tooltip_text = BamfName();
-  icon_name = icon.Str();
+  icon_name = (icon ? icon.Str() : DEFAULT_ICON);
   SetIconType(TYPE_APPLICATION);
 
   if (IsSticky())
@@ -135,9 +139,10 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
                                * have a splash screen won't be removed from
                                * the launcher while the splash is closed and
                                * a new window is opened. */
-                              auto timeout = std::make_shared<glib::TimeoutSeconds>(1);
-                              _source_manager.Add(timeout, ICON_REMOVE_TIMEOUT);
-                              timeout->Run([&] { Remove(); return false; });
+                              _source_manager.AddTimeoutSeconds(1, [&] {
+                                Remove();
+                                return false;
+                              }, ICON_REMOVE_TIMEOUT);
                             }
                           });
   _gsignals.Add(sig);
@@ -156,8 +161,7 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   SetProgress(0.0f);
 
   // Calls when there are no higher priority events pending to the default main loop.
-  auto idle = std::make_shared<glib::Idle>([&] { FillSupportedTypes(); return false; });
-  _source_manager.Add(idle);
+  _source_manager.AddIdle([&] { FillSupportedTypes(); return false; });
 }
 
 BamfLauncherIcon::~BamfLauncherIcon()
@@ -184,7 +188,10 @@ void BamfLauncherIcon::Remove()
 
 bool BamfLauncherIcon::IsSticky() const
 {
-  return bamf_view_is_sticky(BAMF_VIEW(_bamf_app.RawPtr()));
+  if (!BAMF_IS_VIEW(_bamf_app.RawPtr()))
+    return false;
+  else
+    return bamf_view_is_sticky(BAMF_VIEW(_bamf_app.RawPtr()));
 }
 
 bool BamfLauncherIcon::IsVisible() const
@@ -348,15 +355,23 @@ std::vector<Window> BamfLauncherIcon::GetWindows(WindowFilterMask filter, int mo
 {
   WindowManager* wm = WindowManager::Default();
   std::vector<Window> results;
-  GList* children, *l;
+
+  if (!BAMF_IS_VIEW(_bamf_app.RawPtr()))
+  {
+    if (_bamf_app)
+    {
+      LOG_WARNING(logger) << "Not a view but not null.";
+    }
+    return results;
+  }
 
   monitor = (filter & WindowFilter::ON_ALL_MONITORS) ? -1 : monitor;
   bool mapped = (filter & WindowFilter::MAPPED);
   bool user_visible = (filter & WindowFilter::USER_VISIBLE);
   bool current_desktop = (filter & WindowFilter::ON_CURRENT_DESKTOP);
 
-  children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
-  for (l = children; l; l = l->next)
+  GList* children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
+  for (GList* l = children; l; l = l->next)
   {
     if (!BAMF_IS_WINDOW(l->data))
       continue;
@@ -448,19 +463,24 @@ void BamfLauncherIcon::OnWindowMoved(guint32 moved_win)
   if (!OwnsWindow(moved_win))
     return;
 
-  auto timeout = std::make_shared<glib::Timeout>(250);
-  _source_manager.Add(timeout, WINDOW_MOVE_TIMEOUT);
-
-  timeout->Run([&] {
+  _source_manager.AddTimeout(250, [&] {
     EnsureWindowState();
     UpdateIconGeometries(GetCenters());
 
     return false;
-  });
+  }, WINDOW_MOVE_TIMEOUT);
 }
 
 void BamfLauncherIcon::UpdateDesktopFile()
 {
+  if (!BAMF_IS_APPLICATION(_bamf_app.RawPtr()))
+  {
+    if (_bamf_app)
+    {
+      LOG_WARNING(logger) << "Not an app but not null.";
+    }
+    return;
+  }
   const char* filename = bamf_application_get_desktop_file(_bamf_app);
 
   if (filename != nullptr && filename[0] != '\0' && _desktop_file != filename)
@@ -679,30 +699,38 @@ bool BamfLauncherIcon::Spread(bool current_desktop, int state, bool force)
 
 void BamfLauncherIcon::EnsureWindowState()
 {
-  GList* children, *l;
   std::vector<bool> monitors;
   monitors.resize(max_num_monitors);
 
-  children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
-  for (l = children; l; l = l->next)
+  if (BAMF_IS_VIEW(_bamf_app.RawPtr()))
   {
-    if (!BAMF_IS_WINDOW(l->data))
-      continue;
+    GList* children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
+    for (GList* l = children; l; l = l->next)
+    {
+      if (!BAMF_IS_WINDOW(l->data))
+        continue;
 
-    auto window = static_cast<BamfWindow*>(l->data);
-    Window xid = bamf_window_get_xid(window);
-    int monitor = bamf_window_get_monitor(window);
+      auto window = static_cast<BamfWindow*>(l->data);
+      Window xid = bamf_window_get_xid(window);
+      int monitor = bamf_window_get_monitor(window);
 
-    if (monitor >= 0 && WindowManager::Default()->IsWindowOnCurrentDesktop(xid))
-      monitors[monitor] = true;
+      if (monitor >= 0 && WindowManager::Default()->IsWindowOnCurrentDesktop(xid))
+        monitors[monitor] = true;
+    }
+
+    g_list_free(children);
   }
-
+  else
+  {
+    if (_bamf_app)
+    {
+      LOG_WARNING(logger) << "Not a view but not null.";
+    }
+  }
   for (int i = 0; i < max_num_monitors; i++)
     SetWindowVisibleOnMonitor(monitors[i], i);
 
   EmitNeedsRedraw();
-
-  g_list_free(children);
 }
 
 void BamfLauncherIcon::UpdateDesktopQuickList()
@@ -758,38 +786,6 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
   }
 }
 
-//
-// ColorStrToARGB:
-// Parses a color string in the form: "#rrggbbaa", where # and aa are optional.
-// Returns the color in 32-bit ARGB format: 0xaarrggbb.
-//
-// In Nux 3.x, this function is superseded by:
-//   nux::color::Color(std::string const& hex)
-// (even though this function is much smaller and faster)
-//
-// I would really like to #if NUX_VERSION <= ... around this code, but
-// no such integer macro seems to exist in the Nux headers.
-//
-unsigned int ColorStrToARGB(const char *str)
-{
-  unsigned int ret = 0;
-  if (str)
-  {
-    const char *hex = str[0] == '#' ? str + 1 : str;
-    int digits = 0, color = 0;
-    if (sscanf(hex, "%x%n", &color, &digits))
-    {
-      if (hex[digits])  // extra characters after the hex
-        ret = 0;
-      else if (digits == 6)
-        ret = (unsigned int)color | 0xff000000;
-      else if (digits == 8)   // Convert RGBA to ARGB:
-        ret = ((unsigned int)color >> 8) | ((unsigned int)color << 24);
-    }
-  }
-  return ret;
-}
-
 void BamfLauncherIcon::UpdateBackgroundColor()
 {
   bool last_use_custom_bg_color = use_custom_bg_color_;
@@ -800,7 +796,7 @@ void BamfLauncherIcon::UpdateBackgroundColor()
   use_custom_bg_color_ = !color.empty();
 
   if (use_custom_bg_color_)
-    bg_color_ = nux::Color(ColorStrToARGB(color.c_str()));
+    bg_color_ = nux::Color(color);
 
   if (last_use_custom_bg_color != use_custom_bg_color_ ||
       last_bg_color != bg_color_)
@@ -1048,9 +1044,7 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
 
     _gsignals.Add(new glib::Signal<void, DbusmenuMenuitem*, int>(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
                                     [&] (DbusmenuMenuitem*, int) {
-                                      auto idle = std::make_shared<glib::Idle>();
-                                      _source_manager.Add(idle);
-                                      idle->Run([&] {
+                                      _source_manager.AddIdle([&] {
                                         ActivateLauncherIcon(ActionArg());
                                         return false;
                                       });
@@ -1108,15 +1102,22 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
 
 void BamfLauncherIcon::UpdateIconGeometries(std::vector<nux::Point3> center)
 {
-  GList* children, *l;
-  nux::Geometry geo;
+  if (!BAMF_IS_VIEW(_bamf_app.RawPtr()))
+  {
+    if (_bamf_app)
+    {
+      LOG_WARNING(logger) << "Not a view but not null.";
+    }
+    return;
+  }
 
+  nux::Geometry geo;
   geo.width = 48;
   geo.height = 48;
 
-  children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
+  GList* children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
 
-  for (l = children; l; l = l->next)
+  for (GList* l = children; l; l = l->next)
   {
     if (!BAMF_IS_WINDOW(l->data))
       continue;
@@ -1181,9 +1182,10 @@ void BamfLauncherIcon::OnDndHovered()
 void BamfLauncherIcon::OnDndEnter()
 {
   /* Disabled, since the DND code is currently disabled as well.
-  auto timeout = std::make_shared<glib::Timeout>(1000);
-  _source_manager.Add(timeout, ICON_DND_OVER_TIMEOUT);
-  timeout->Run([&] { OnDndHovered(); return false; });
+  _source_manager.AddTimeout(1000, [&] {
+    OnDndHovered();
+    return false;
+  }, ICON_DND_OVER_TIMEOUT);
   */
 }
 

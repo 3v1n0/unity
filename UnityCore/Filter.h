@@ -24,7 +24,7 @@
 #include <map>
 #include <memory>
 #include <NuxCore/Property.h>
-#include <sigc++/trackable.h>
+#include <sigc++/sigc++.h>
 
 #include "GLibSignal.h"
 #include "Variant.h"

@@ -15,11 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Jason Smith <jason.smith@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 #include "EdgeBarrierController.h"
 #include "Decaymulator.h"
 #include "unity-shared/UScreen.h"
+#include "UnityCore/GLibSource.h"
 
 namespace unity {
 namespace ui {
@@ -27,23 +29,38 @@ namespace ui {
 struct EdgeBarrierController::Impl
 {
   Impl(EdgeBarrierController *parent);
-  ~Impl();
 
   void ResizeBarrierList(std::vector<nux::Geometry> const& layout);
   void SetupBarriers(std::vector<nux::Geometry> const& layout);
 
-  void OnPointerBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event);
+  void OnPointerBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event);
+  void BarrierRelease(PointerBarrierWrapper* owner, int event);
+
+  bool StickyEdgeSetter(bool const& new_val)
+  {
+    if (parent_->options() && new_val != parent_->options()->edge_resist())
+    {
+      parent_->options()->edge_resist = new_val;
+      return true;
+    }
+    return false;
+  }
+
+  bool StickyEdgeGetter()
+  {
+    return parent_->options() ? parent_->options()->edge_resist() : false;
+  }
 
   std::vector<PointerBarrierWrapper::Ptr> barriers_;
-  Decaymulator::Ptr decaymulator_;
+  std::vector<EdgeBarrierSubscriber*> subscribers_;
+  Decaymulator decaymulator_;
+  glib::Source::UniquePtr release_timeout_;
   float edge_overcome_pressure_;
   EdgeBarrierController* parent_;
-  std::vector<EdgeBarrierSubscriber*> subscribers_;
 };
 
 EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
-  : decaymulator_(Decaymulator::Ptr(new Decaymulator()))
-  , edge_overcome_pressure_(0)
+  : edge_overcome_pressure_(0)
   , parent_(parent)
 {
   UScreen *uscreen = UScreen::GetDefault();
@@ -56,9 +73,23 @@ EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
     SetupBarriers(layout);
   });
 
-  parent_->sticky_edges.changed.connect([&](bool value) {
-    SetupBarriers(UScreen::GetDefault()->GetMonitors());
+  parent_->sticky_edges.SetGetterFunction(sigc::mem_fun(this, &Impl::StickyEdgeGetter));
+  parent_->sticky_edges.SetSetterFunction(sigc::mem_fun(this, &Impl::StickyEdgeSetter));
+
+/* Set this back, once lp:~3v1n0/nux/use-std-function is merged
+  parent_->sticky_edges.SetGetterFunction([parent_] {
+    return parent_->options() ? parent_->options()->edge_resist() : false;
   });
+
+  parent_->sticky_edges.SetSetterFunction([parent_] (bool const& new_val) {
+    if (parent_->options() && new_val != parent_->options()->edge_resist())
+    {
+      parent_->options()->edge_resist = new_val;
+      return true;
+    }
+    return false;
+  });
+  */
 
   parent_->options.changed.connect([&](launcher::Options::Ptr options) {
     options->option_changed.connect([&]() {
@@ -68,14 +99,9 @@ EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
   });
 }
 
-EdgeBarrierController::Impl::~Impl()
-{
-
-}
-
 void EdgeBarrierController::Impl::ResizeBarrierList(std::vector<nux::Geometry> const& layout)
 {
-  size_t num_monitors = layout.size();
+  auto num_monitors = layout.size();
   if (barriers_.size() > num_monitors)
   {
     barriers_.resize(num_monitors);
@@ -83,7 +109,7 @@ void EdgeBarrierController::Impl::ResizeBarrierList(std::vector<nux::Geometry> c
 
   while (barriers_.size() < num_monitors)
   {
-    auto barrier = PointerBarrierWrapper::Ptr(new PointerBarrierWrapper());
+    auto barrier = std::make_shared<PointerBarrierWrapper>();
     barrier->barrier_event.connect(sigc::mem_fun(this, &EdgeBarrierController::Impl::OnPointerBarrierEvent));
     barriers_.push_back(barrier);
   }
@@ -91,10 +117,9 @@ void EdgeBarrierController::Impl::ResizeBarrierList(std::vector<nux::Geometry> c
 
 void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const& layout)
 {
-  bool edge_resist = parent_->options()->edge_resist();
+  bool edge_resist = parent_->sticky_edges();
 
-  size_t size = layout.size();
-  for (size_t i = 0; i < size; i++)
+  for (unsigned i = 0; i < layout.size(); i++)
   {
     auto barrier = barriers_[i];
     auto monitor = layout[i];
@@ -122,68 +147,98 @@ void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const
   }
 
   float decay_responsiveness_mult = ((parent_->options()->edge_responsiveness() - 1) * .3f) + 1;
-  decaymulator_->rate_of_decay = parent_->options()->edge_decay_rate() * decay_responsiveness_mult;
-  
+  decaymulator_.rate_of_decay = parent_->options()->edge_decay_rate() * decay_responsiveness_mult;
+
   float overcome_responsiveness_mult = ((parent_->options()->edge_responsiveness() - 1) * 1.0f) + 1;
   edge_overcome_pressure_ = parent_->options()->edge_overcome_pressure() * overcome_responsiveness_mult;
 }
 
-void EdgeBarrierController::Impl::OnPointerBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event)
+void EdgeBarrierController::Impl::OnPointerBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event)
 {
-  int monitor = owner->index;
+  unsigned int monitor = owner->index;
   bool process = true;
 
-  if ((size_t)monitor <= subscribers_.size())
+  if (monitor < subscribers_.size())
   {
     auto subscriber = subscribers_[monitor];
+
     if (subscriber && subscriber->HandleBarrierEvent(owner, event))
       process = false;
   }
 
-  if (process && owner->x1 > 0)
+  if (process && owner->released)
   {
-    decaymulator_->value = decaymulator_->value + event->velocity;
-    if (decaymulator_->value > edge_overcome_pressure_ || !parent_->options()->edge_resist())
+    BarrierRelease(owner, event->event_id);
+  }
+  else if (process && owner->x1 > 0)
+  {
+    decaymulator_.value = decaymulator_.value + event->velocity;
+
+    if (decaymulator_.value > edge_overcome_pressure_ || (!parent_->sticky_edges() && !subscribers_[monitor]))
     {
-      owner->ReleaseBarrier(event->event_id);
-      decaymulator_->value = 0;
+      BarrierRelease(owner, event->event_id);
     }
   }
   else
   {
-    decaymulator_->value = 0;
+    decaymulator_.value = 0;
   }
 }
 
-EdgeBarrierController::EdgeBarrierController()
-  : sticky_edges(false)
-  , pimpl(new Impl(this))
+void EdgeBarrierController::Impl::BarrierRelease(PointerBarrierWrapper* owner, int event)
 {
+  owner->ReleaseBarrier(event);
+  owner->released = true;
+  decaymulator_.value = 0;
+
+  unsigned duration = parent_->options()->edge_passed_disabled_ms;
+  release_timeout_.reset(new glib::Timeout(duration, [owner] {
+    owner->released = false;
+    return false;
+  }));
 }
+
+EdgeBarrierController::EdgeBarrierController()
+  : pimpl(new Impl(this))
+{}
 
 EdgeBarrierController::~EdgeBarrierController()
-{
+{}
 
-}
-
-void EdgeBarrierController::Subscribe(EdgeBarrierSubscriber* subscriber, int monitor)
+void EdgeBarrierController::Subscribe(EdgeBarrierSubscriber* subscriber, unsigned int monitor)
 {
-  if (pimpl->subscribers_.size() <= (size_t)monitor)
+  if (monitor >= pimpl->subscribers_.size())
     pimpl->subscribers_.resize(monitor + 1);
+
+  auto const& monitors = UScreen::GetDefault()->GetMonitors();
   pimpl->subscribers_[monitor] = subscriber;
-
-  pimpl->SetupBarriers(UScreen::GetDefault()->GetMonitors());
+  pimpl->ResizeBarrierList(monitors);
+  pimpl->SetupBarriers(monitors);
 }
 
-void EdgeBarrierController::Unsubscribe(EdgeBarrierSubscriber* subscriber, int monitor)
+void EdgeBarrierController::Unsubscribe(EdgeBarrierSubscriber* subscriber, unsigned int monitor)
 {
-  if (pimpl->subscribers_.size() < (size_t)monitor || pimpl->subscribers_[monitor] != subscriber)
+  if (monitor >= pimpl->subscribers_.size() || pimpl->subscribers_[monitor] != subscriber)
     return;
-  pimpl->subscribers_[monitor] = nullptr;
 
-  pimpl->SetupBarriers(UScreen::GetDefault()->GetMonitors());
+  auto const& monitors = UScreen::GetDefault()->GetMonitors();
+  pimpl->subscribers_[monitor] = nullptr;
+  pimpl->ResizeBarrierList(monitors);
+  pimpl->SetupBarriers(monitors);
 }
 
+EdgeBarrierSubscriber* EdgeBarrierController::GetSubscriber(unsigned int monitor)
+{
+  if (monitor >= pimpl->subscribers_.size())
+    return nullptr;
+
+  return pimpl->subscribers_[monitor];
+}
+
+void EdgeBarrierController::ProcessBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event)
+{
+  pimpl->OnPointerBarrierEvent(owner, event);
+}
 
 }
 }

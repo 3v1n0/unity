@@ -254,6 +254,15 @@ class HudBehaviorTests(HudTestsBase):
         self.keyboard.press_and_release("Alt+F4")
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
+    def test_alt_f4_close_hud_with_capslock_on(self):
+        """Hud must close on Alt+F4 even when the capslock is turned on."""
+        self.keyboard.press_and_release("Caps_Lock")
+        self.addCleanup(self.keyboard.press_and_release, "Caps_Lock")
+
+        self.hud.ensure_visible()
+        self.keyboard.press_and_release("Alt+F4")
+        self.assertThat(self.hud.visible, Eventually(Equals(False)))
+
 
 class HudLauncherInteractionsTests(HudTestsBase):
 
@@ -294,7 +303,7 @@ class HudLauncherInteractionsTests(HudTestsBase):
             self.hud.ensure_hidden()
 
         # click application icons for running apps in the launcher:
-        icon = self.launcher.model.get_icon_by_desktop_id("gucharmap.desktop")
+        icon = self.launcher.model.get_icon(desktop_id="gucharmap.desktop")
         launcher.click_launcher_icon(icon)
 
         # see how many apps are marked as being active:
@@ -349,9 +358,9 @@ class HudLockedLauncherInteractionsTests(HudTestsBase):
 
         for icon in self.launcher.model.get_launcher_icons_for_monitor(self.hud_monitor):
             if isinstance(icon, HudLauncherIcon):
-                self.assertFalse(icon.desaturated)
+                self.assertThat(icon.desaturated, Eventually(Equals(False)))
             else:
-                self.assertTrue(icon.desaturated)
+                self.assertThat(icon.desaturated, Eventually(Equals(True)))
 
     def test_hud_launcher_icon_click_hides_hud(self):
         """Clicking the Hud Icon should hide the HUD"""

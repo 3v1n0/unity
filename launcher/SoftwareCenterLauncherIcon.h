@@ -21,6 +21,7 @@
 #ifndef SOFTWARE_CENTER_LAUNCHERICON_H
 #define SOFTWARE_CENTER_LAUNCHERICON_H
 
+#include <string>
 #include <UnityCore/GLibDBusProxy.h>
 #include "BamfLauncherIcon.h"
 #include "LauncherDragWindow.h"
@@ -60,6 +61,8 @@ private:
   nux::ObjectPtr<Launcher> launcher_;
   bool finished_;
   bool needs_urgent_;
+
+  std::string aptdaemon_trans_id_;
 };
 
 }
