@@ -84,9 +84,9 @@ TEST_F(TestLauncher, TestQuirksDuringDnd)
 
   Utils::WaitForTimeout(1);
 
-  EXPECT_FALSE(first->GetQuirk(launcher::AbstractLauncherIcon::QUIRK_DESAT));
-  EXPECT_FALSE(second->GetQuirk(launcher::AbstractLauncherIcon::QUIRK_DESAT));
-  EXPECT_TRUE(third->GetQuirk(launcher::AbstractLauncherIcon::QUIRK_DESAT));
+  EXPECT_FALSE(first->GetQuirk(launcher::AbstractLauncherIcon::Quirk::DESAT));
+  EXPECT_FALSE(second->GetQuirk(launcher::AbstractLauncherIcon::Quirk::DESAT));
+  EXPECT_TRUE(third->GetQuirk(launcher::AbstractLauncherIcon::Quirk::DESAT));
 }
 
 }
