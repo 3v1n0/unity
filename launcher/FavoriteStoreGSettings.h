@@ -24,6 +24,7 @@
 
 #include "FavoriteStore.h"
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/GLibSignal.h>
 
 // An abstract object that facilitates getting and modifying the list of favorites
 // Use GetDefault () to get the correct store for the session
@@ -36,7 +37,6 @@ class FavoriteStoreGSettings : public FavoriteStore
 {
 public:
   FavoriteStoreGSettings();
-  FavoriteStoreGSettings(GSettingsBackend* backend);
 
   virtual FavoriteList const& GetFavorites();
   virtual void AddFavorite(std::string const& desktop_path, int position);
@@ -45,17 +45,15 @@ public:
   void SaveFavorites(FavoriteList const& favorites, bool ignore = true);
   virtual void SetFavorites(FavoriteList const& desktop_paths);
 
-  //Methods
-  void Changed(std::string const& key);
-
 private:
-  void Init();
   void Refresh();
+  void Changed();
   void FillList(FavoriteList& list);
 
   FavoriteList favorites_;
-  glib::Object<GSettings> settings_;
   bool ignore_signals_;
+  glib::Object<GSettings> settings_;
+  glib::Signal<void, GSettings*, gchar*> favorites_changed_;
 };
 
 }

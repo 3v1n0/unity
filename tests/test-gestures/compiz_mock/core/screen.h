@@ -31,41 +31,42 @@ typedef std::vector<CompWindowMock*> CompWindowMockVector;
 
 class CompScreenMock {
 public:
-  CompScreenMock() : _grab_count(0) {}
+  CompScreenMock() : grab_count_(0), next_grab_handle_(1) {}
 
   typedef int GrabHandle;
 
-  int width() const {return _width;}
-  int height() const {return _height;}
+  int width() const {return width_;}
+  int height() const {return height_;}
 
-  Display *dpy() {return _dpy;}
+  Display *dpy() {return dpy_;}
 
   const CompWindowMockVector & clientList(bool stackingOrder = true) {
     if (stackingOrder)
-      return _client_list_stacking;
+      return client_list_stacking_;
     else
-      return _client_list;
+      return client_list_;
   }
 
-  Window root() {return _root;}
+  Window root() {return root_;}
 
   GrabHandle pushGrab(Cursor cursor, const char *name) {
-    _grab_count++;
-    return 0;
+    grab_count_++;
+    return next_grab_handle_++;
   }
   void removeGrab(GrabHandle handle, CompPoint *restorePointer) {
-    _grab_count--;
+    grab_count_--;
   }
 
   Cursor invisibleCursor() {return 1;}
 
-  int _width;
-  int _height;
-  Display *_dpy;
-  CompWindowMockVector _client_list;
-  CompWindowMockVector _client_list_stacking;
-  Window _root;
-  int _grab_count;
+  int width_;
+  int height_;
+  Display *dpy_;
+  CompWindowMockVector client_list_;
+  CompWindowMockVector client_list_stacking_;
+  Window root_;
+  int grab_count_;
+  int next_grab_handle_;
 };
 
 extern CompScreenMock *screen_mock;

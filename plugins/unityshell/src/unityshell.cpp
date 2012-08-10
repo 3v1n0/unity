@@ -29,7 +29,6 @@
 #include "Launcher.h"
 #include "LauncherIcon.h"
 #include "LauncherController.h"
-#include "GeisAdapter.h"
 #include "DevicesSettings.h"
 #include "PluginAdapter.h"
 #include "QuicklistManager.h"
@@ -38,6 +37,7 @@
 #include "KeyboardUtil.h"
 #include "unityshell.h"
 #include "BackgroundEffectHelper.h"
+#include "UnityGestureBroker.h"
 
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib.h>
@@ -111,7 +111,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , gScreen(GLScreen::get(screen))
   , debugger_(this)
   , enable_shortcut_overlay_(true)
-  , gesture_engine_(screen)
   , needsRelayout(false)
   , _in_paint(false)
   , super_keypressed_(false)
@@ -364,7 +363,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      auto init_plugins_cb = sigc::mem_fun(this, &UnityScreen::initPluginActions);
      sources_.Add(std::make_shared<glib::Idle>(init_plugins_cb, glib::Source::Priority::DEFAULT));
 
-     geis_adapter_.Run();
+     InitGesturesSupport();
 
      CompString name(PKGDATADIR"/panel-shadow.png");
      CompString pname("unityshell");
@@ -501,6 +500,15 @@ void UnityScreen::nuxPrologue()
 
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
+
+  /* This is needed to Fix a crash in glDrawArrays with the NVIDIA driver
+   * see bugs #1031554 and #982626.
+   * The NVIDIA driver looks to see if the legacy GL_VERTEX_ARRAY,
+   * GL_TEXTURE_COORDINATES_ARRAY and other such client states are enabled
+   * first before checking if a vertex buffer is bound and will prefer the
+   * client buffers over the the vertex buffer object. */
+  glDisableClientState(GL_VERTEX_ARRAY);
+  glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 #endif
 
   glGetError();
@@ -530,6 +538,11 @@ void UnityScreen::nuxEpilogue()
   glReadBuffer(GL_BACK);
 
   glPopAttrib();
+
+  /* Re-enable the client states that have been disabled in nuxPrologue, for
+   * NVIDIA compatibility reasons */
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 #else
 #ifdef USE_GLES
   glDepthRangef(0, 1);
@@ -1212,7 +1225,7 @@ bool UnityScreen::shellCouldBeHidden(CompOutput const& output)
   CompWindowList const& wins = screen->windows();
   for ( CompWindowList::const_reverse_iterator r = wins.rbegin()
       ; r != wins.rend()
-      ; r++
+      ; ++r
       )
   {
     CompWindow* w = *r;
@@ -1310,10 +1323,9 @@ void UnityScreen::glPaintCompositedOutput (const CompRegion &region,
                                            ::GLFramebufferObject *fbo,
                                            unsigned int        mask)
 {
-  bool useFbo = false;
-
   if (doShellRepaint)
   {
+    bool useFbo = false;
     oldFbo = fbo->bind ();
     useFbo = fbo->checkStatus () && fbo->tex ();
     if (!useFbo) {
@@ -1883,7 +1895,7 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
   auto results = launcher_controller_->GetAltTabIcons(show_mode == switcher::ShowMode::CURRENT_VIEWPORT,
                                                       switcher_controller_->IsShowDesktopDisabled());
 
-  if (!(results.size() == 1 && results[0]->GetIconType() == AbstractLauncherIcon::IconType::TYPE_DESKTOP))
+  if (!(results.size() == 1 && results[0]->GetIconType() == AbstractLauncherIcon::IconType::DESKTOP) && !results.empty())
     switcher_controller_->Show(show_mode, switcher::SortMode::FOCUS_ORDER, false, results);
 
   return true;
@@ -2168,10 +2180,9 @@ bool UnityScreen::ShowHudInitiate(CompAction* action,
 {
   // Look to see if there is a keycode.  If there is, then this isn't a
   // modifier only keybinding.
-  int key_code = 0;
   if (options[6].type() != CompOption::TypeUnset)
   {
-    key_code = options[6].value().i();
+    int key_code = options[6].value().i();
     LOG_DEBUG(logger) << "HUD initiate key code: " << key_code;
     // show it now, no timings or terminate needed.
     return ShowHud();
@@ -2597,6 +2608,9 @@ void UnityWindow::windowNotify(CompWindowNotify n)
         window->unminimizeSetEnabled (this, false);
         window->minimizedSetEnabled (this, false);
       }
+        break;
+      case CompWindowNotifyBeforeDestroy:
+        being_destroyed.emit();
         break;
       default:
         break;
@@ -3047,6 +3061,18 @@ void UnityScreen::initLauncher()
   ScheduleRelayout(0);
 }
 
+nux::View *UnityScreen::LauncherView()
+{
+  nux::View *result = nullptr;
+
+  if (launcher_controller_)
+  {
+    result = &launcher_controller_->launcher();
+  }
+
+  return result;
+}
+
 void UnityScreen::InitHints()
 {
   // TODO move category text into a vector...
@@ -3068,6 +3094,7 @@ void UnityScreen::InitHints()
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", " + A", _("Open the Dash App Lens."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", " + F", _("Open the Dash Files Lens."), shortcut::COMPIZ_KEY_OPTION,"unityshell", "show_launcher"));
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", " + M", _("Open the Dash Music Lens."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
+  hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", " + V", _("Open the Dash Video Lens."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher"));
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", "", _("Switches between Lenses."), shortcut::HARDCODED_OPTION, _("Ctrl + Tab")));
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", "", _("Moves the focus."), shortcut::HARDCODED_OPTION, _("Cursor Keys")));
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", "", _("Open currently focused item."), shortcut::HARDCODED_OPTION, _("Enter & Return")));
@@ -3106,6 +3133,32 @@ void UnityScreen::InitHints()
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", "", _("Places window in corresponding positions."), shortcut::HARDCODED_OPTION, _("Ctrl + Alt + Num")));
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", _(" Drag"), _("Move window."), shortcut::COMPIZ_MOUSE_OPTION, "move", "initiate_button"));
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", _(" Drag"), _("Resize window."), shortcut::COMPIZ_MOUSE_OPTION, "resize", "initiate_button"));
+}
+
+void UnityScreen::InitGesturesSupport()
+{
+  std::unique_ptr<nux::GestureBroker> gesture_broker(new UnityGestureBroker);
+  wt->GetWindowCompositor().SetGestureBroker(std::move(gesture_broker));
+
+  gestures_sub_launcher_.reset(new nux::GesturesSubscription);
+  gestures_sub_launcher_->SetGestureClasses(nux::DRAG_GESTURE);
+  gestures_sub_launcher_->SetNumTouches(4);
+  gestures_sub_launcher_->SetWindowId(GDK_ROOT_WINDOW());
+  gestures_sub_launcher_->Activate();
+
+  gestures_sub_dash_.reset(new nux::GesturesSubscription);
+  gestures_sub_dash_->SetGestureClasses(nux::TAP_GESTURE);
+  gestures_sub_dash_->SetNumTouches(4);
+  gestures_sub_dash_->SetWindowId(GDK_ROOT_WINDOW());
+  gestures_sub_dash_->Activate();
+
+  gestures_sub_windows_.reset(new nux::GesturesSubscription);
+  gestures_sub_windows_->SetGestureClasses(nux::TOUCH_GESTURE
+                                         | nux::DRAG_GESTURE
+                                         | nux::PINCH_GESTURE);
+  gestures_sub_windows_->SetNumTouches(3);
+  gestures_sub_windows_->SetWindowId(GDK_ROOT_WINDOW());
+  gestures_sub_windows_->Activate();
 }
 
 /* Window init */

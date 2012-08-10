@@ -1,3 +1,1508 @@
+2012-08-09  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Calculator and Mahjongg can only have 1 instances now; this breaks AP tests. Character map is now used when you need more then 1 instance.. Fixes: . Approved by Łukasz Zemczak.
+
+2012-08-09  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixs panel test
+
+2012-08-08  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* You cannot have 2 gcalctools open anymore. Switched to Character map
+
+2012-08-09  Thomi Richards  <thomi.richards@canonical.com>
+
+	Use the new clipboard emulator in autopilot. Fixes some hanging tests.. Fixes: . Approved by Brandon Schaefer.
+
+2012-08-03  Thomi Richards  <thomi.richards@canonical.com>
+
+	Don't use the gtk Clipboard class. Instead, use the new clipboard emulator in autopilot.
+
+2012-08-09  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Cherrypick rev 2539 from lp:~3v1n0/unity/launcher-icon-construction-type.. Fixes: . Approved by Łukasz Zemczak.
+
+2012-08-09  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Cherrypick rev 2539 from lp:~3v1n0/unity/launcher-icon-construction-type. Thank you Marco.
+
+2012-08-09  Sebastien Bacher  <seb128@ubuntu.com>
+
+	Update the POTFILE.in list of sources. Fixes: . Approved by Łukasz Zemczak.
+
+2012-08-09  Sebastien Bacher  <seb128@ubuntu.com>
+
+	Update sources in POTFILES.in
+
+2012-08-03  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Revert rev 2525. Fixes: . Approved by Michal Hruby.
+
+2012-08-03  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-08-03  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Revert rev 2525.
+
+2012-08-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FavoriteStoreGSettings: remove unneeded methods, use glib::Signal, refactor tests to use memory backend. Fixes: . Approved by Brandon Schaefer.
+
+2012-08-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FavoriteStoreGSettings: use constant values for settings name and keys
+
+2012-08-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FavoriteStoreGSettings: remove unneeded methods, use glib::Signal
+
+2012-08-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_favorite_store_gsettings: refactored to use gsettings memory backend
+	
+	Plus remove unneeded timeouts
+
+2012-08-03  Sebastien Bacher  <seb128@ubuntu.com>
+
+	Don't specify a specific destination for the dbus signals. Fixes: https://bugs.launchpad.net/bugs/1014850. Approved by Michal Hruby.
+
+2012-08-02  Sebastien Bacher  <seb128@ubuntu.com>
+
+	Don't specify a specific destination for the dbus signals, that 
+	creates issues with the new dbus eavedropping behaviour,
+	thanks Neil J. Patel for the fix!
+
+2012-08-03  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Add the libunity private directory to unityshell.so and libunity-core-6.0.so RPATHs, so that they can easily find the libunity-protocol-private.so library on load.. Fixes: . Approved by Michal Hruby.
+
+2012-08-03  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	As proposed by mhr3, we just re-add unity-protocol-private to the main deps
+
+2012-08-03  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Fixed some build issues to incomplete merges and invalid thought process
+
+2012-08-03  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Merge in latest trunk changes
+
+2012-08-03  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Also added the same RPATH for unity-core.
+
+2012-08-02  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Add the libunity private directory to unityshell.so RPATH, so that it can easily find the libunity-protocol-private.so library on load.
+
+2012-08-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unityshell: fix the nvidia crash on glDrawArrays disabling/enabling the client state on nuxPrologue/Epilogue (LP: #982626) (LP: #1031554). Fixes: https://bugs.launchpad.net/bugs/982626, https://bugs.launchpad.net/bugs/1031554. Approved by Daniel van Vugt, Sam Spilsbury.
+
+2012-08-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unityshell: fix the nvidia crash on glDrawArrays disabling/enabling the client state on nuxPrologue/Epilogue
+
+2012-08-03  jokerdino@bvm128.zdom.org
+
+	Add keyboard shortcut for the video lens in the shortcut overlay.. Fixes: https://bugs.launchpad.net/bugs/937334. Approved by Łukasz Zemczak.
+
+2012-07-16  jokerdino@bvm128.zdom.org
+
+	Add shortcut for video lens
+
+2012-08-03  MC Return  <mc.return@gmx.net>
+
+	Optimized performance and style following suggestions reported by cppcheck:
+	
+	1. Reduced the scope of various variables.
+	
+	2. Used prefix ++ operators for non-primitive types, because those can be more efficient than post-increment. Post-increment usually keeps a copy of the previous value, adds extra code and is slower.. Fixes: . Approved by Brandon Schaefer, Marco Trevisan (Treviño).
+
+2012-07-30  MC Return  <mc.return@gmx.net>
+
+	Reduced the scope of the variable 'TextureObjectLocation' in IconRenderer.cpp
+
+2012-07-30  MC Return  <mc.return@gmx.net>
+
+	Reduced the scope of the variable 'radius' in DashStyle.cpp
+
+2012-07-30  MC Return  <mc.return@gmx.net>
+
+	Reduced the scope of the variable 'closest_diff' in BGHash.cpp
+
+2012-07-30  MC Return  <mc.return@gmx.net>
+
+	Reduced the scope of the variable 'useFbo' in unityshell.cpp
+
+2012-07-30  MC Return  <mc.return@gmx.net>
+
+	Reduced the scope of the variable 'key_code' in unityshell.cpp
+
+2012-07-30  MC Return  <mc.return@gmx.net>
+
+	Reduced the scope of the variables 'hdirection' and 'vdirection' in unitydialog.cpp
+
+2012-07-30  MC Return  <mc.return@gmx.net>
+
+	Reduced the scope of the variable 'fading_pixels' in PanelMenuView.cpp
+
+2012-07-30  MC Return  <mc.return@gmx.net>
+
+	Reduced the scope of the variable 'text_width' in PanelIndicatorEntryView.cpp
+
+2012-07-30  MC Return  <mc.return@gmx.net>
+
+	Fixed possible performance issue in PluginAdapterCompiz.cpp by replacement of postfix ++ operator with prefix one
+
+2012-07-30  MC Return  <mc.return@gmx.net>
+
+	Fixed possible performance issue in IconRenderer.cpp by replacement of postfix ++ operator with prefix one
+
+2012-07-30  MC Return  <mc.return@gmx.net>
+
+	Fixed possible performance issue in unityshell.cpp by replacement of postfix ++ operator with prefix one
+
+2012-07-30  MC Return  <mc.return@gmx.net>
+
+	Fixed possible performance issue in unity-switcher-accessible.cpp by replacement of postfix ++ operator with prefix one
+
+2012-07-30  MC Return  <mc.return@gmx.net>
+
+	Fixed possible performance issue in unity-launcher-accessible.cpp by replacement of postfix ++ operator with prefix one
+
+2012-07-30  MC Return  <mc.return@gmx.net>
+
+	Fixed possible performance issue in nux-layout-accessible.cpp by replacement of postfix ++ operator with prefix one
+
+2012-07-30  MC Return  <mc.return@gmx.net>
+
+	Fixed possible performance issue in unitydialog.cpp by replacement of postfix ++ operator with prefix one
+
+2012-07-30  MC Return  <mc.return@gmx.net>
+
+	Fixed possible performance issue in unity-mt-grab-handles.cpp by replacement of postfix ++ operator with prefix one
+
+2012-07-30  MC Return  <mc.return@gmx.net>
+
+	Fixed possible performance issues in LauncherModel.cpp by replacement of postfix ++ operators with prefix ones
+
+2012-07-30  MC Return  <mc.return@gmx.net>
+
+	Fixed possible performance issue in LauncherController.cpp by replacement of postfix ++ operator with prefix one
+
+2012-07-30  MC Return  <mc.return@gmx.net>
+
+	Fixed possible performance issues in Launcher.cpp by replacement of postfix ++ operators with prefix ones
+
+2012-07-30  MC Return  <mc.return@gmx.net>
+
+	Fixed possible performance issue in ResultViewGrid.cpp by replacement of postfix ++ operator with prefix one
+
+2012-07-30  MC Return  <mc.return@gmx.net>
+
+	Fixed possible performance issue in ResultView.cpp by replacement of postfix ++ operator with prefix one
+
+2012-07-30  MC Return  <mc.return@gmx.net>
+
+	Fixed possible performance issues in HomeLens.cpp by replacement of postfix ++ operators with prefix ones
+
+2012-08-03  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Don't set mouse position on mouse leaving.. Fixes: https://bugs.launchpad.net/bugs/980942. Approved by Brandon Schaefer.
+
+2012-08-02  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug 980942.
+
+2012-08-03  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove gconf dep in panel::Style.. Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-08-01  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use glib::Signal.
+
+2012-08-01  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix indent bug.
+
+2012-08-01  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use g_setenv("GSETTINGS_BACKEND", "memory", TRUE);
+
+2012-08-01  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Minor changes.
+
+2012-08-01  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add unit test.
+
+2012-08-01  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove check. This key is installed on precise too.
+
+2012-08-01  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Don't use glib::Signal for "changed" signal.
+
+2012-07-31  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove gconf dep in panel::Style.
+
+2012-08-03  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	use the gestures support from nux instead of talking to libgeis directly.. Fixes: . Approved by .
+
+2012-07-27  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	make tests compilation succeed even if compiz lib is at a non-standard dir
+
+2012-07-27  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	Use gestures support from Nux and adapt code for regular gesture rules
+	
+	Remove GeisAdapter as we are getting gesture events from Nux instead.
+	
+	Then modify code to handle geisv2-style gestures. They require
+	acceptance/rejection and enable multiple simultaneous gestures
+
+2012-08-02  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	The switcher causes a crash if the current desktop has zero results. (Can only happen if you disable Show Desktop Icon). Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-08-01  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* added and fixed test
+
+2012-08-01  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* fixes a crash if zero results are there in a current workspace
+
+2012-07-30  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Add the option to disable the ShowDesktop icon in the switcher in CCSM.. Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-07-30  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Adds a unit test
+
+2012-07-27  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Removed extra space
+
+2012-07-27  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	*Merged trunk. Fixed an AP test
+
+2012-07-26  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixed AP test, as well as the switcher code
+
+2012-07-26  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Now the switcher ap test will run all test with and with out the Show Desktop icon.
+
+2012-07-26  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Adds the option to disable the ShowDesktop icon in the switcher
+
+2012-07-30  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Avoid extra calls to GetGeometry and GetAbsoluteGeometry.. Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-07-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Avoid calls to GetGeometry and GetAbsoluteGeometry.
+
+2012-07-29  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix typo in QuicklistView::RecvItemMouseDrag. It was the cause of the bug #1027955.. Fixes: https://bugs.launchpad.net/bugs/1027955. Approved by Marco Trevisan (Treviño).
+
+2012-07-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix typo.
+
+2012-07-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug 1027955.
+
+2012-07-27  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Added image_source_uri property to Preview base class. Fixes: . Approved by Michal Hruby.
+
+2012-07-26  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Previews: renamed image_source to image_source_uri in unity protocol lib.
+
+2012-07-26  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Require unity-protocol-private 5.93.1, not 5.94.0.
+
+2012-07-26  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Previews: renamed thumbnail to image in protocol lib.
+
+2012-07-26  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Bumped required verison of unity-protocol-private.
+
+2012-07-26  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Previews: renamed image_source preview property to image_source_uri.
+
+2012-07-26  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Previews - added image_source preview property (wraps thumbnail_source from the libunity protocol).
+
+2012-07-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove "strut hack" in launcher.cpp. Fixes: https://bugs.launchpad.net/bugs/1024113. Approved by Marco Trevisan (Treviño), jenkins.
+
+2012-07-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Minor change.
+
+2012-07-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix typo.
+
+2012-07-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add manual test.
+
+2012-07-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-07-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove strut hack. It seems to cause bug 1024113.
+
+2012-07-26  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	The switcher in detail mode will now focus the last active window, instead of the current one. If the current focus window activated the switcher.. Fixes: https://bugs.launchpad.net/bugs/1029215. Approved by Christopher Lee.
+
+2012-07-25  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixes detail mode not selecting the last active window.
+	* This also fixes the problem with Detail mode swaping icons.
+
+2012-07-26  Martin Mrazik  <martin.mrazik@canonical.com>
+
+	Fixed few manual test-cases which were not consistent with the TEST_TEMPLATE.txt and other manual test-cases.. Fixes: . Approved by Thomi Richards.
+
+2012-07-25  Martin Mrazik  <martin.mrazik@canonical.com>
+
+	Fixed occurence of Expected Result_s_
+
+2012-07-25  Martin Mrazik  <martin.mrazik@canonical.com>
+
+	Changing few manual tests to be consistent with the TEST_TEMPLATE.txt
+
+2012-07-26  Thomi Richards  <thomi.richards@canonical.com>
+
+	Make the autopilot unity logging functions more stable when unity crashes & restarts.. Fixes: . Approved by Christopher Lee.
+
+2012-07-27  Thomi Richards  <thomi.richards@canonical.com>
+
+	Don't cache the unity debug logging dbus interface, so if unity crashes and comes back we can continue the test run.
+
+2012-07-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: Rewritten EnsureLaunchers() added tests, fix a crash caused by invalid barrier subscriptions.. Fixes: https://bugs.launchpad.net/bugs/1020075. Approved by Andrea Azzarone.
+
+2012-07-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_launcher_controller: initialize also GeisAdapter
+
+2012-07-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	EdgeBarrierController: use auto const& for type
+
+2012-07-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-07-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_launcher_controller: more barrier subscriptions tests
+
+2012-07-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_launcher_controller: check the barrier controller subscriptions
+
+2012-07-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: make TestLauncherController friend of it
+
+2012-07-26  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	EdgeBarrierController: make GetSubscriber public
+
+2012-07-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: move launcher::Controller::Impl definition in LauncherControllerPrivate
+	
+	So that we can test it!
+
+2012-07-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_edge_barrier_controller: add subscribing tests
+
+2012-07-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_edge_barrier_controller: Add test for GetSubscriber
+
+2012-07-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	EdgeBarrierController: fix the monitor/size comparisons
+	
+	This fixes a crash, plus add GetSubscriber protected member
+
+2012-07-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_edge_barrier_controller: check the breaking events with invalid monitor values
+
+2012-07-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_uscreen_mock.h: add MockUscreen and use it in tests
+
+2012-07-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: use only one cycle to ensure launchers, and correctly unsubscribe barriers
+
+2012-07-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_launcher_controller: test removal of internal monitors
+
+2012-07-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_launcher_controller: add switching tests
+
+2012-07-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_launcher_controller: added multimonitor launchers tests
+
+2012-07-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	EdgeBarrierController: be safer, always resize the barrier list on setup barriers
+
+2012-07-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UScreen: make the default screen a static member, so that we can mock it
+
+2012-07-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_launcher_controller: added basic LauncherController test
+
+2012-07-24  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	SoftwareCenterLauncherIcon: avoid the "Waiting to Install" tooltip to stay after installation
+	
+	Be consistent with auto-hiding launcher.. Fixes: https://bugs.launchpad.net/bugs/925014. Approved by Brandon Schaefer, Tim Penhey, Marco Trevisan (Treviño).
+
+2012-06-06  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Fix string{,.h} include, thanks Tim
+
+2012-06-05  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	If the aptdaemon transaction ID isn't supplied, then don't change tooltip to "Waiting to install" (Bug #925014)
+
+2012-07-24  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	The launcher will auto hide when installing a program from the software center now.. Fixes: https://bugs.launchpad.net/bugs/1002440. Approved by Brandon Schaefer, Marco Trevisan (Treviño).
+
+2012-06-17  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Fix string comparison with SC agent, thanks Tim
+
+2012-06-13  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Merge from trunk
+
+2012-06-13  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Semicolon missed, ah well, blame Python.
+
+2012-06-13  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Return early if the desktop file wasn't specified, or is set to SC agent
+
+2012-06-09  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Unhide launcher only when the animation is feasable (with a desktop file and all) LP: #1002440
+
+2012-07-24  Gary Lasker  <gary.lasker@canonical.com>
+
+	manual-tests/SoftwareCenter.txt: added tests for Ubuntu Software Center/Unity launcher integration feature. Fixes: . Approved by Brandon Schaefer, jenkins.
+
+2012-07-22  Gary Lasker  <gary.lasker@canonical.com>
+
+	fix typo
+
+2012-07-21  Gary Lasker  <gary.lasker@canonical.com>
+
+	clarify tests per Brandon Schaefer's recommendations in the corresponding Unity 5.0 branch MR, https://code.launchpad.net/~gary-lasker/unity/software-center-launcher-integration-tests-for-5.0/+merge/114241
+
+2012-07-21  Gary Lasker  <gary.lasker@canonical.com>
+
+	merge trunk
+
+2012-06-25  Gary Lasker  <gary.lasker@canonical.com>
+
+	more test details
+
+2012-06-25  Gary Lasker  <gary.lasker@canonical.com>
+
+	additional tests to round out the suite, these will thoroughly test all of the bug fixes for Unity branch https://code.launchpad.net/~bilalakhtar/unity/5.0series-sru-software-center-integration-fixes/+merge/110214 and the corresponding Software Center branch https://code.launchpad.net/~gary-lasker/software-center/unity-launcher-integration-fixes
+
+2012-06-25  Gary Lasker  <gary.lasker@canonical.com>
+
+	start adding a suite of manual tests for the Ubuntu Software Center Unity launcher integration feature
+
+2012-07-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BarrierEdgeController, PointerBarrier: release the sticky edge after that the user has broken it for configurable ms. Fixes: https://bugs.launchpad.net/bugs/1020058. Approved by jenkins, Brandon Schaefer.
+
+2012-07-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	EdgeBarrierController: disable the lambda based proxy version
+	
+	Nux does not support that yet
+
+2012-07-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_edge_barrier_controller: add test for sticky edge property
+
+2012-07-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	EdgeBarrierController: make sticky_edges property a proxy to launcher options
+
+2012-07-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unityshell.xml.in: changed the short name of the setting
+
+2012-07-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	merging with trunk
+
+2012-07-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_edge_barrier_controller: added tests for temporary released barrier
+
+2012-07-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_edge_barrier_controller: no need to explictly set an unhandling subscriber
+
+2012-07-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_edge_barrier_controller: add MakeBarrierEvent function to generate events
+
+2012-07-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_edge_barrier_controller: add tests to check the event Processing
+
+2012-07-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	EdgeBarrierController: add ProcessBarrierEvent as protected member
+	
+	So we can use it for testing
+
+2012-07-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_edge_barrier_controller: added skeleton test
+
+2012-07-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	EdgeBarrierController: use make_shared, avoid unneeded namespaces
+
+2012-07-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_pointer_barrier.cpp can be xless
+
+2012-07-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_pointer_barrier: added tests for PointerBarrier
+
+2012-07-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PointerBarrier: make pointer barrier more testable
+
+2012-07-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PointerBarrier: use reinterpret cast
+
+2012-07-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unityshell: add option to set the launcher sticky edge disabled duration
+
+2012-07-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	EdgeBarrierController: use the launcher option to set the disable timeout duration
+
+2012-07-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherOptions: add edge_passed_disabled_time option
+
+2012-07-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherOptions: use initializer list
+
+2012-07-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	EdgeBarrierController: use the barrier's released property to disable the sticky edge
+
+2012-07-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PointerBarrier: add released property, if set remove the notify delay
+
+2012-07-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	EdgeBarrierController: temporary disable the barrier when just passed through
+
+2012-07-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSource: use std::to_string instead of lexical cast
+
+2012-07-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PointerBarrier: use by-value callback data instead of class data in timeout
+	
+	Also use initializer list in BarrierEvent
+
+2012-07-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherHideMachine, LauncherHoverMachine: use std::to_string instead of boost
+
+2012-07-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	EdgeBarrierController: use unsigned integers for monitor
+	
+	(remove evil casts)
+
+2012-07-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherHideMachine, EdgeBarrierController: use stack allocated Decaymulator
+
+2012-07-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	EdgeBarrierController: use std::unique_ptr for pimpl
+	
+	FIXES MEMORY LEAK!
+
+2012-07-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: use stack allcoated EdgeBarrierController
+
+2012-07-23  Martin Mrazik  <martin.mrazik@canonical.com>
+
+	Adding gtest_output=xml to unit tests to generate Junit XML. Fixes: . Approved by Tim Penhey, jenkins, Sam Spilsbury.
+
+2012-06-13  Martin Mrazik  <martin.mrazik@canonical.com>
+
+	Adding gtest_output=xml to unit tests to generate Junit XML
+
+2012-07-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	KeyboardUtil: fix possible crash if XkbGetKeyboard returns null
+	
+	Also use initializer list. Fixes: https://bugs.launchpad.net/bugs/920258. Approved by Tim Penhey, Andrea Azzarone, jenkins.
+
+2012-07-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	KeyboardUtil: fixed typo
+
+2012-07-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	KeyboardUtil: oops fix return value.
+
+2012-07-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	KeyboardUtil: fix possible crash if XkbGetKeyboard returns null
+	
+	Also use initializer list
+
+2012-07-22  Tim Penhey  <tim.penhey@canonical.com>
+
+	Remove the -Wno-uninitialized to bring back the compiler warning for uninitialized variables.. Fixes: . Approved by Christopher Lee.
+
+2012-07-23  Tim Penhey  <tim.penhey@canonical.com>
+
+	Initialize some colors.
+
+2012-07-23  Tim Penhey  <tim.penhey@canonical.com>
+
+	Make sure that weight is always set.
+
+2012-07-23  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk.
+
+2012-07-18  Tim Penhey  <tim.penhey@canonical.com>
+
+	Stop turning off the uninitialized check.
+
+2012-07-19  Martin Mrazik  <martin.mrazik@canonical.com>
+
+	Making manual test-cases consistent with TEST_TEMPLATE.txt. Fixes: . Approved by Tim Penhey, jenkins.
+
+2012-07-12  Martin Mrazik  <martin.mrazik@canonical.com>
+
+	updated README.txt
+
+2012-07-12  Martin Mrazik  <martin.mrazik@canonical.com>
+
+	Making manual test-cases consistent with TEST_TEMPLATE.txt
+
+2012-07-19  Didier Roche  <didier.roche@canonical.com>
+
+	Migration session from /desktop/unity/ to /com/canonical/unity/ as the dconf
+	documentation recommends. Fixes: . Approved by jenkins, Michal Hruby.
+
+2012-07-19  Didier Roche  <didier.roche@canonical.com>
+
+	move schema and value from old /desktop/unity/ location to /com/canonical/unity/ new one as the dconf documentation recommends
+
+2012-07-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix duplicated device launcher icons.. Fixes: https://bugs.launchpad.net/bugs/1010714, https://bugs.launchpad.net/bugs/1010858. Approved by Marco Trevisan (Treviño).
+
+2012-07-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix build issue on precise.
+
+2012-07-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove _ prefix.
+
+2012-07-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Minor change.
+
+2012-07-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix build issue.
+
+2012-07-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix build issue.
+
+2012-07-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Mock GVolume too.
+
+2012-07-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Minor changes.
+
+2012-07-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Minor changes.
+
+2012-07-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add unit test.
+
+2012-07-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add a wrapper for GVolumeMonitor.
+
+2012-07-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Don't duplicate device launcher icons.
+
+2012-07-18  Michal Hruby  <michal.mhr@gmail.com>
+
+	Updated the Preview API present in UnityCore to match latest protocol used by libunity. Fixes: . Approved by Marco Trevisan (Treviño), Gord Allott.
+
+2012-07-17  Michal Hruby  <michal.mhr@gmail.com>
+
+	Get rid of NoReplyCallback usage, as it disappeared
+
+2012-07-17  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge trunk
+
+2012-07-17  Michal Hruby  <michal.mhr@gmail.com>
+
+	Use enum for Track play_state, not just a bool
+
+2012-07-10  Michal Hruby  <michal.mhr@gmail.com>
+
+	Add missing properties to ApplicationPreview and LayoutHint enum
+
+2012-07-04  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge trunk
+
+2012-07-02  Michal Hruby  <michal.mhr@gmail.com>
+
+	Use unique_ptr for pimpl even in Preview subclasses (and it actually works when one uses proper incantations)
+
+2012-07-02  Michal Hruby  <michal.mhr@gmail.com>
+
+	Make Marco happy, get rid of g_strdup...
+
+2012-06-29  Michal Hruby  <michal.mhr@gmail.com>
+
+	A couple of issues brought up during review
+
+2012-06-29  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge trunk
+
+2012-06-29  Michal Hruby  <michal.mhr@gmail.com>
+
+	Add more tests
+
+2012-06-29  Michal Hruby  <michal.mhr@gmail.com>
+
+	Propagate preview_lens and uri to child preview
+
+2012-06-29  Michal Hruby  <michal.mhr@gmail.com>
+
+	Implement Preview::PerformAction
+
+2012-06-29  Michal Hruby  <michal.mhr@gmail.com>
+
+	Added TestPreviewSignal
+
+2012-06-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Enable TestLens.TestPreview
+
+2012-06-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Whoops parent_lens can't be a shared_ptr
+
+2012-06-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix segfault caused by TestFilter
+
+2012-06-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Commit the music signals
+
+2012-06-26  Michal Hruby  <michal.mhr@gmail.com>
+
+	Signal lens when SeriesPreview::selected_item_index changes
+
+2012-06-26  Michal Hruby  <michal.mhr@gmail.com>
+
+	Prepare base Preview methods for interaction with previews
+
+2012-06-21  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge trunk
+
+2012-06-19  Michal Hruby  <michal.mhr@gmail.com>
+
+	Implement SeriesPreview
+
+2012-06-19  Michal Hruby  <michal.mhr@gmail.com>
+
+	Add test for MusicPreview
+
+2012-06-19  Michal Hruby  <michal.mhr@gmail.com>
+
+	Implement MusicPreview
+
+2012-06-19  Michal Hruby  <michal.mhr@gmail.com>
+
+	Implement ApplicationPreview
+
+2012-06-19  Michal Hruby  <michal.mhr@gmail.com>
+
+	Implement MoviePreview
+
+2012-06-19  Michal Hruby  <michal.mhr@gmail.com>
+
+	Hide stuff under pimpl
+
+2012-06-18  Michal Hruby  <michal.mhr@gmail.com>
+
+	Hook up the Preview method
+
+2012-06-18  Michal Hruby  <michal.mhr@gmail.com>
+
+	Add a few tests
+
+2012-06-18  Michal Hruby  <michal.mhr@gmail.com>
+
+	Wrap actions and info hints
+
+2012-06-18  Michal Hruby  <michal.mhr@gmail.com>
+
+	Make it link as well
+
+2012-06-15  Michal Hruby  <michal.mhr@gmail.com>
+
+	Start new Preview API
+
+2012-07-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibDBusProxy: use glib::Variant instead of std::shared_ptr. Fixes: . Approved by Michal Hruby.
+
+2012-07-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibDBusProxy: use glib::Variant instead of std::shared_ptr
+
+2012-07-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix 'Launcher Edge Stop Overcome Pressure' when the Launcher is set to autohide and 'Sticky edges' are turned off.. Fixes: https://bugs.launchpad.net/bugs/987955. Approved by Marco Trevisan (Treviño), jenkins.
+
+2012-06-29  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Minor changes.
+
+2012-06-28  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add AP test.
+
+2012-06-28  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug 987955.
+
+2012-07-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix an autopilot panel test and add additional logging to other autopilot tests.. Fixes: . Approved by jenkins, Brandon Schaefer.
+
+2012-07-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Made the test much simpler.
+
+2012-07-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed failing test.
+
+2012-07-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	Made the panel assertion a bit more verbose, and removed an error about the Try object being missing.
+
+2012-07-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_bamflaunchericon: don't try to run an application, just test for the icon name. Fixes: . Approved by jenkins, Brandon Schaefer.
+
+2012-07-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_bamflaunchericon: updated copyright
+
+2012-07-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_bamflaunchericon: check default icon for empty application
+
+2012-07-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PluginAdapterStandalone: remove the unneeded close implementation
+
+2012-07-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_bamflaunchericon: don't try to run an application, just test for the icon name
+
+2012-07-16  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix launcher autoscroll during dnd.. Fixes: https://bugs.launchpad.net/bugs/987223. Approved by Brandon Schaefer, jenkins.
+
+2012-07-11  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add a manual test.
+
+2012-07-11  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug 987223.
+
+2012-07-16  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Fix blinking/flickering of the launcher and panel, especially when running
+	LibreOffice or Emacs. (LP: #1024459). Fixes: https://bugs.launchpad.net/bugs/1024459. Approved by jenkins, Łukasz Zemczak.
+
+2012-07-16  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Don't force shell repaint on every fullscreen redraw. That will cause the
+	panel and launcher to appear over the top of fullscreen windows,
+	intermittently. Which is bad.
+
+2012-07-16  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Rebase on latest upstream lp:unity
+
+2012-07-16  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Add test cases.
+
+2012-07-16  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Fix blinking/flickering of the launcher and panel, especially when running
+	LibreOffice or Emacs. (LP: #1024459)
+
+2012-07-16  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Don't bind the FBO if it's possible it won't get painted and unbound. That
+	could lead the the screen freezing while fullscreen windows are open.
+	(LP: #1024911)
+	. Fixes: https://bugs.launchpad.net/bugs/1024911. Approved by Łukasz Zemczak, jenkins.
+
+2012-07-16  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Add test case.
+
+2012-07-16  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Don't bind the FBO if it's possible it won't get painted and unbound. That
+	could lead the the screen freezing while fullscreen windows are open.
+	(LP: #1024911)
+
+2012-07-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Use std::function instead of sigc::slot. Fixes: . Approved by jenkins, Tim Penhey.
+
+2012-07-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibDBusProxy: always return on error
+
+2012-07-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibDBusProxy: use std::shared_ptr with deleter to unref the variant
+
+2012-07-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ShortcutView: pass values to lambda by value instead of using sigc::bind
+
+2012-07-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Fix various code depending on sigc::slot
+
+2012-07-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TextureCache: replace sigc::slot with std::function
+
+2012-07-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UBusWrapper: replace sigc::slot with std::function
+	
+	Also make UBusConnection struct private and remove the unneeded manager field
+
+2012-07-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	IconLoader: replace sigc::slot with std::function
+	
+	Also don't accept requests from invalid slots
+
+2012-07-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibDBusProxy: replace sigc::slot with std::function
+	
+	Also remove the NoReplyCallback and use default nullptr value
+
+2012-07-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSignal: replace sigc::slot with std::function
+
+2012-07-16  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSource: replace sigc::slot with std::function
+
+2012-07-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add test for bug 1020891.. Fixes: https://bugs.launchpad.net/bugs/1020891. Approved by Gord Allott, jenkins.
+
+2012-07-12  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add unit test for branch lp:~andyrock/unity/fix-1020891
+
+2012-07-12  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Scale mode now does not skip the first super to open the dash.. Fixes: https://bugs.launchpad.net/bugs/1023811. Approved by Thomi Richards.
+
+2012-07-12  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Merged trunk, and fixed ap test
+
+2012-07-12  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Dont set scale_just_active if super was not pressed to start scale.
+
+2012-07-12  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix up panel autopilot tests.. Fixes: . Approved by Christopher Lee, jenkins, Brandon Schaefer.
+
+2012-07-13  Thomi Richards  <thomi.richards@canonical.com>
+
+	Well behaved checks now use assertProperty, thereby giving us some grace time.
+
+2012-07-13  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged branch that fixes regressions.
+
+2012-07-12  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed failing show desktop test.
+
+2012-07-12  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed failing autopilot test.
+
+2012-07-12  Thomi Richards  <thomi.richards@canonical.com>
+
+	Converted a hud test that failed to use the Eventually matcher.
+
+2012-07-12  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed an error waiting for the Bamf model to update.
+
+2012-07-12  Thomi Richards  <thomi.richards@canonical.com>
+
+	Hud now closes correctly.
+
+2012-07-12  Thomi Richards  <thomi.richards@canonical.com>
+
+	Made the panel menu entry tests more reliable.
+
+2012-07-13  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged parent.
+
+2012-07-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed erroring panel test.
+
+2012-07-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	FIxed an issue in the hud emulator.
+
+2012-07-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-07-09  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged prerequisite branch.
+
+2012-07-09  Thomi Richards  <thomi.richards@canonical.com>
+
+	Undo the workaround for the panel tests that was needed to avoid a bug in Unity.
+
+2012-07-09  Thomi Richards  <thomi.richards@canonical.com>
+
+	Change panel tests to use the new assertProperty method available in autopilot.
+
+2012-07-09  Thomi Richards  <thomi.richards@canonical.com>
+
+	Changed case of custom assert methods to be camelCase.
+
+2012-07-12  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Default Icon used if one isn't found by bamf.. Fixes: https://bugs.launchpad.net/bugs/886778. Approved by Tim Penhey, Thomi Richards.
+
+2012-07-11  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* removed debugging
+
+2012-07-11  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Added gtest for blank icon
+
+2012-07-10  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* test was bad...
+
+2012-07-10  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Adds a gtest
+
+2012-07-10  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* If no icon is found, then use a default one.
+
+2012-07-12  smspillaz  <sam.spilsbury@canonical.com>
+
+	Scale the generated fbo tex by the screen dimentions as its screen size
+	and ensure nux sets the reference viewport back to output size.
+	
+	(LP: #1016789). Fixes: https://bugs.launchpad.net/bugs/1016789. Approved by Daniel van Vugt, jenkins.
+
+2012-06-23  smspillaz  <sam.spilsbury@canonical.com>
+
+	Scale the generated fbo tex by the screen dimentions as its screen size
+	and ensure nux sets the reference viewport back to output size.
+	
+	(LP: #1016789)
+
+2012-07-11  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Quicklist closes when opening the Dash.. Fixes: https://bugs.launchpad.net/bugs/913994. Approved by Thomi Richards.
+
+2012-07-11  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* small fixes
+
+2012-07-11  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Merged trunk, fixed conflicts
+
+2012-07-03  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* mistakes in the ap test
+
+2012-07-02  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Quickilist closes when dash is activated
+
+2012-07-11  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix up switcher test suite to use new assert methods available in the latest autopilot.. Fixes: . Approved by jenkins, Brandon Schaefer.
+
+2012-07-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Made new start_applications() method that starts test apps for the switcher tests. Fixed the rest of the switcher tests to not sleep so much, use new style asserts instead.
+
+2012-07-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed more switcher tests.
+
+2012-07-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Converted the switcher window management tests to use the assertProperty method in favour of the lambda-based Eventually matcher.
+
+2012-07-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Several cleanups to the basic switcher tests.
+
+2012-07-11  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Tint the launcher icons that are *not* valid drop receptacles.. Fixes: https://bugs.launchpad.net/bugs/1020891. Approved by Andrea Azzarone.
+
+2012-07-11  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-07-04  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug 1020891.
+
+2012-07-11  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix padding issues in quicklist view.. Fixes: https://bugs.launchpad.net/bugs/955158. Approved by Andrea Azzarone.
+
+2012-06-27  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Minor changes.
+
+2012-06-26  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix padding issues in QuicklistView.cpp
+
+2012-07-11  Thomi Richards  <thomi.richards@canonical.com>
+
+	Autopilot launcher model cleanup.. Fixes: . Approved by Christopher Lee.
+
+2012-07-11  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk, fixed conflicts.
+
+2012-07-11  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed docstring.
+
+2012-07-11  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed a spot where we were using filter(...) and we didn't need to.
+
+2012-07-11  Thomi Richards  <thomi.richards@canonical.com>
+
+	Removed a bunch of methods that weren't being used in the launcher model, and updated lots of places in the code where we were using get_icon_by_desktop_id and replaced it with get_icon(...) calls, as this is safer.
+
+2012-07-11  Thomi Richards  <thomi.richards@canonical.com>
+
+	A couple of quicklist test changes, and added the new get_icon method to the launcher mode.
+
+2012-07-11  Thomi Richards  <thomi.richards@canonical.com>
+
+	PEP8 fixes in test_shortcut_hint.py
+
+2012-07-11  Christopher Lee  <chris.lee@canonical.com>
+
+	Removed references to files that have been removed. Fixes: . Approved by Tim Penhey.
+
+2012-07-11  Christopher Lee  <chris.lee@canonical.com>
+
+	Removed references to files that where removed (revno: 2414)
+
+2012-07-10  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Hud closes when a Quicklist is open.. Fixes: https://bugs.launchpad.net/bugs/1020246. Approved by Thomi Richards.
+
+2012-07-09  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Merged with trunk, fixed conflicts
+
+2012-07-05  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Merged with trunk and fix confict.
+
+2012-07-05  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixed ap test
+
+2012-07-02  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* The hud will now open if a quicklist is open
+
+2012-07-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Unfold valid drop icons.. Fixes: https://bugs.launchpad.net/bugs/839717. Approved by jenkins, Marco Trevisan (Treviño).
+
+2012-07-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-07-04  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Minor changes to the manual test.
+
+2012-07-04  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add manual test.
+
+2012-07-04  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Minor changes.
+
+2012-07-04  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Don't link QUIRK_DROP_PRELIGHT and QUIRK_PRESENTED.
+
+2012-07-04  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug #839717.
+
+2012-07-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Show desktop autopilot tests now use new-style autopilot assertions.. Fixes: . Approved by Christopher Lee.
+
+2012-07-11  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged trunk.
+
+2012-07-11  Thomi Richards  <thomi.richards@canonical.com>
+
+	Pushed switcher icon selection code into the switcher emulator.
+
+2012-07-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed errors.
+
+2012-07-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	No commit message
+2012-07-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Revert revision 2398.. Fixes: . Approved by Tim Penhey.
+
+2012-07-04  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Revert revision 2398.
+
+2012-07-10  Michal Hruby  <michal.mhr@gmail.com>
+
+	Added Object::IsType method. Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-07-04  Michal Hruby  <michal.mhr@gmail.com>
+
+	Added Object::IsType method
+
+2012-07-10  Tim Penhey  <tim.penhey@canonical.com>
+
+	Reduce the amount of logging spam from bamf by checking for null first.. Fixes: . Approved by Thomi Richards.
+
+2012-07-05  Tim Penhey  <tim.penhey@canonical.com>
+
+	Bamf logging changes.
+
+2012-07-10  Christopher Lee  <chris.lee@canonical.com>
+
+	Removed 2 fast-switching tests, made them manual tests instead.. Fixes: . Approved by Thomi Richards.
+
+2012-07-09  Christopher Lee  <chris.lee@canonical.com>
+
+	Made instructions a little more explicit
+
+2012-07-09  Christopher Lee  <chris.lee@canonical.com>
+
+	Removed fast-switching tests, made them manual tests
+
+2012-07-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSource, SourceManager: add utility functions to add timeouts and idles
+	
+	Update the code to use them.. Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-07-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: use AddIdle
+
+2012-07-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merge with trunk
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests, glib::SourceManager: added tests for adding timeouts and idles
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Use glib::SourceManager Add utility functions to add Idles and Timeouts
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSource, SourceManager: add utility functions to add timeouts and idles
+
+2012-06-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	glib::Source, rename Source::SourceCallback to Source::Callback
+
+2012-07-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix freezes during dnd.. Fixes: https://bugs.launchpad.net/bugs/772445. Approved by Gord Allott.
+
+2012-07-09  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add manual test.
+
+2012-07-09  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Replace g_file_info_get_content_type with g_content_type_guess.
+
+2012-07-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Dash and hud now close on Alt+F4 even when the caps lock or num lock keys are active.. Fixes: https://bugs.launchpad.net/bugs/1022801. Approved by Tim Penhey.
+
+2012-07-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Dash test passes now too.
+
+2012-07-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Hud test passes.
+
+2012-07-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Have failing dash test too.
+
+2012-07-10  Thomi Richards  <thomi.richards@canonical.com>
+
+	Have failing test.
+
+2012-07-09  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Release\ 6.0.0
+
 2012-07-09  Thomi Richards  <thomi.richards@canonical.com>
 
 	Fix several intermittently failing tests.. Fixes: . Approved by Tim Penhey.
