@@ -76,12 +76,12 @@ void DeviceLauncherIcon::UpdateVisibility()
 {
  if (keep_in_launcher_)
  {
-   SetQuirk(QUIRK_VISIBLE, true);
+   SetQuirk(Quirk::VISIBLE, true);
  }
  else
  {
    glib::Object<GMount> mount(g_volume_get_mount(volume_));
-   SetQuirk(QUIRK_VISIBLE, mount);
+   SetQuirk(Quirk::VISIBLE, mount);
  }
 }
 
@@ -95,8 +95,8 @@ void DeviceLauncherIcon::UpdateDeviceIcon()
   tooltip_text = name_;
   icon_name = icon_string.Str();
 
-  SetIconType(TYPE_DEVICE);
-  SetQuirk(QUIRK_RUNNING, false);
+  SetIconType(IconType::DEVICE);
+  SetQuirk(Quirk::RUNNING, false);
 }
 
 bool
@@ -247,7 +247,7 @@ void DeviceLauncherIcon::ShowMount(GMount* mount)
 void DeviceLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   SimpleLauncherIcon::ActivateLauncherIcon(arg);
-  SetQuirk(QUIRK_STARTING, true);
+  SetQuirk(Quirk::STARTING, true);
 
   glib::Object<GMount> mount(g_volume_get_mount(volume_));
 
@@ -336,7 +336,7 @@ void DeviceLauncherIcon::OnTogglePin(DbusmenuMenuitem* item,
     glib::Object<GMount> mount(g_volume_get_mount(self->volume_));
 
     if (!mount)
-      self->SetQuirk(QUIRK_VISIBLE, false);
+      self->SetQuirk(Quirk::VISIBLE, false);
 
     // Remove from favorites
     if (!uuid.Str().empty())

@@ -59,7 +59,7 @@ public:
     [this] (GSettings*, gchar*) {
       if (ignore_signals_)
         return;
-  
+
       DownloadFavorites();
       parent_->changed.emit();
     });
@@ -110,7 +110,7 @@ public:
   {
     if (uuid.empty())
       return;
-  
+
     favorites_.push_back(uuid);
 
     UploadFavorites();

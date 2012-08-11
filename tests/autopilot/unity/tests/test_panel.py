@@ -807,10 +807,10 @@ class PanelMenuTests(PanelTestsBase):
 
     def test_menus_dont_show_if_a_new_application_window_is_opened(self):
         """This tests the menu discovery feature on new window for a know application."""
-        self.open_new_application_window("Calculator")
+        self.open_new_application_window("Character Map")
         self.sleep_menu_settle_period()
 
-        self.start_app("Calculator")
+        self.start_app("Character Map")
         sleep(self.panel.menus.fadein_duration / 1000.0)
         # Not using Eventually here since this is time-critical. Need to work
         # out a better way to do this.

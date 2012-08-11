@@ -362,7 +362,7 @@ Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
 
   if (result)
   {
-    result->SetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE, false);
+    result->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, false);
     result->Animate(CurrentLauncher(), icon_x, icon_y, icon_size);
     RegisterIcon(result);
     Save();
@@ -371,7 +371,7 @@ Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
 
 void Controller::Impl::OnSCIconAnimationComplete(AbstractLauncherIcon::Ptr icon)
 {
-  icon->SetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE, true);
+  icon->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, true);
   launcher_->ForceReveal(false);
 }
 
@@ -411,7 +411,7 @@ void Controller::Impl::OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr icon)
 {
   switch (icon->GetIconType())
   {
-    case AbstractLauncherIcon::TYPE_APPLICATION:
+    case AbstractLauncherIcon::IconType::APPLICATION:
     {
       BamfLauncherIcon* bamf_icon = dynamic_cast<BamfLauncherIcon*>(icon.GetPointer());
 
@@ -423,7 +423,7 @@ void Controller::Impl::OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr icon)
 
       break;
     }
-    case AbstractLauncherIcon::TYPE_DEVICE:
+    case AbstractLauncherIcon::IconType::DEVICE:
     {
       DeviceLauncherIcon* device_icon = dynamic_cast<DeviceLauncherIcon*>(icon.GetPointer());
 
@@ -470,7 +470,7 @@ void Controller::Impl::OnFavoriteStoreFavoriteAdded(std::string const& entry, st
   {
     for (auto it : bamf_list)
     {
-      if (it->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE) && pos == it->DesktopFile())
+      if (it->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE) && pos == it->DesktopFile())
         other = it;
     }
   }
@@ -503,13 +503,13 @@ void Controller::Impl::OnFavoriteStoreFavoriteAdded(std::string const& entry, st
 
 void Controller::Impl::OnFavoriteStoreFavoriteRemoved(std::string const& entry)
 {
-  for (auto it : model_->GetSublist<BamfLauncherIcon> ())
+  for (auto icon : model_->GetSublist<BamfLauncherIcon> ())
   {
-    if (it->DesktopFile() == entry)
+    if (icon->DesktopFile() == entry)
     {
-      OnLauncherRemoveRequest(it);
+      icon->UnStick();
       break;
-     }
+    }
   }
 }
 
@@ -571,9 +571,9 @@ void Controller::Impl::InsertExpoAction()
   SimpleLauncherIcon* icon = static_cast<SimpleLauncherIcon*>(expo_icon_.GetPointer());
   icon->tooltip_text = _("Workspace Switcher");
   icon->icon_name = "workspace-switcher";
-  icon->SetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE, true);
-  icon->SetQuirk(AbstractLauncherIcon::QUIRK_RUNNING, false);
-  icon->SetIconType(AbstractLauncherIcon::TYPE_EXPO);
+  icon->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, true);
+  icon->SetQuirk(AbstractLauncherIcon::Quirk::RUNNING, false);
+  icon->SetIconType(AbstractLauncherIcon::IconType::EXPO);
   icon->SetShortcut('s');
 
   on_expoicon_activate_connection_ = icon->activate.connect(sigc::mem_fun(this, &Impl::OnExpoActivated));
@@ -789,7 +789,7 @@ std::vector<AbstractLauncherIcon::Ptr> Controller::GetAltTabIcons(bool current, 
     if (icon->ShowInSwitcher(current))
     {
       //otherwise we get two desktop icons in the switcher.
-      if (icon->GetIconType() != AbstractLauncherIcon::IconType::TYPE_DESKTOP)
+      if (icon->GetIconType() != AbstractLauncherIcon::IconType::DESKTOP)
       {
         results.push_back(icon);
       }
@@ -947,7 +947,7 @@ bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, 
     if ((XKeysymToKeycode(display, (*it)->GetShortcut()) == key_code) ||
         ((gchar)((*it)->GetShortcut()) == key_string[0]))
     {
-      struct timespec last_action_time = (*it)->GetQuirkTime(AbstractLauncherIcon::QUIRK_LAST_ACTION);
+      struct timespec last_action_time = (*it)->GetQuirkTime(AbstractLauncherIcon::Quirk::LAST_ACTION);
       struct timespec current;
       TimeUtil::SetTimeStruct(&current);
       if (TimeUtil::TimeDelta(&current, &last_action_time) > local::ignore_repeat_shortcut_duration)
@@ -1053,7 +1053,7 @@ void Controller::KeyNavTerminate(bool activate)
   {
     /* If the selected icon is running, we must not restore the input to the old */
     AbstractLauncherIcon::Ptr const& icon = pimpl->model_->Selection();
-    pimpl->keynav_restore_window_ = !icon->GetQuirk(AbstractLauncherIcon::QUIRK_RUNNING);
+    pimpl->keynav_restore_window_ = !icon->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING);
   }
 
   pimpl->keyboard_launcher_->ExitKeyNavMode();

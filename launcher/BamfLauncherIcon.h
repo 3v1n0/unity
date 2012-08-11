@@ -53,9 +53,9 @@ public:
   bool IsRunning() const;
   bool IsUrgent() const;
 
-  void Quit();
-  void Stick(bool save = true);
-  void UnStick();
+  virtual void Quit();
+  virtual void Stick(bool save = true);
+  virtual void UnStick();
 
   virtual bool ShowInSwitcher(bool current);
   virtual unsigned long long SwitcherPriority();
