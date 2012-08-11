@@ -31,12 +31,15 @@ namespace unity
 namespace launcher
 {
 
+class DevicesSettings;
+
 class DeviceLauncherIcon : public SimpleLauncherIcon
 {
 public:
   typedef nux::ObjectPtr<DeviceLauncherIcon> Ptr;
 
-  DeviceLauncherIcon(glib::Object<GVolume> const& volume);
+  DeviceLauncherIcon(glib::Object<GVolume> const& volume,
+                     std::shared_ptr<DevicesSettings> const& devices_settings);
 
   void OnRemoved();
   bool CanEject();
@@ -67,12 +70,14 @@ private:
   void ShowNotification(std::string const&, unsigned, glib::Object<GdkPixbuf> const&, std::string const&);
 
 private:
-  glib::Signal<void, GVolume*> signal_volume_changed_;
-  glib::Source::UniquePtr changed_timeout_;
   glib::Object<GVolume> volume_;
+  std::shared_ptr<DevicesSettings> devices_settings_;
 
   std::string name_;
   bool keep_in_launcher_;
+
+  glib::Signal<void, GVolume*> signal_volume_changed_;
+  glib::Source::UniquePtr changed_timeout_;
 };
 
 }

@@ -24,6 +24,7 @@
 using namespace testing;
 
 #include "DeviceLauncherSection.h"
+#include "DevicesSettings.h"
 #include "AbstractVolumeMonitorWrapper.h"
 using namespace unity;
 using namespace unity::launcher;
@@ -79,7 +80,8 @@ class TestDeviceLauncherSection : public Test
 public:
   TestDeviceLauncherSection()
     : monitor_(new MockVolumeMonitorWrapper)
-    , section_(monitor_)
+    , devices_settings_(new DevicesSettings) // TODO: we should mock DevicesSettings
+    , section_(monitor_, devices_settings_)
   {}
 
   void SetUp()
@@ -89,6 +91,7 @@ public:
   }
 
   MockVolumeMonitorWrapper::Ptr monitor_;
+  std::shared_ptr<DevicesSettings> devices_settings_;
   DeviceLauncherSection section_;
 };
 

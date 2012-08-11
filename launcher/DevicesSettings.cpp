@@ -26,6 +26,8 @@
 
 namespace unity
 {
+namespace launcher
+{
 namespace
 {
 
@@ -35,15 +37,6 @@ const std::string SETTINGS_NAME = "com.canonical.Unity.Devices";
 const std::string KEY_NAME = "favorites";
 
 } // unnamed namespace
-
-//
-// Singleton
-//
-DevicesSettings& DevicesSettings::GetDefault()
-{
-  static DevicesSettings instance;
-  return instance;
-}
 
 //
 // Start private implementation
@@ -101,7 +94,7 @@ public:
     ignore_signals_ = false;
   }
 
-  DeviceList GetFavorites() const
+  std::list<std::string> GetFavorites() const
   {
     return favorites_;
   }
@@ -137,7 +130,7 @@ public:
 
   DevicesSettings* parent_;
   glib::Object<GSettings> settings_;
-  DeviceList favorites_;
+  std::list<std::string> favorites_;
   bool ignore_signals_;
   glib::Signal<void, GSettings*, gchar*> settings_changed_signal_;
 
@@ -151,7 +144,10 @@ DevicesSettings::DevicesSettings()
   : pimpl(new Impl(this))
 {}
 
-DeviceList DevicesSettings::GetFavorites() const
+DevicesSettings::~DevicesSettings()
+{}
+
+std::list<std::string> DevicesSettings::GetFavorites() const
 {
   return pimpl->GetFavorites();
 }
@@ -171,4 +167,5 @@ void DevicesSettings::RemoveFavorite(std::string const& uuid)
   pimpl->RemoveFavorite(uuid);
 }
 
+} // namespace launcher
 } // namespace unity

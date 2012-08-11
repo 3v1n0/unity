@@ -44,20 +44,20 @@ const unsigned int volume_changed_timeout =  500;
 
 }
 
-DeviceLauncherIcon::DeviceLauncherIcon(glib::Object<GVolume> const& volume)
+DeviceLauncherIcon::DeviceLauncherIcon(glib::Object<GVolume> const& volume,
+                                       std::shared_ptr<DevicesSettings> const& devices_settings)
   : SimpleLauncherIcon()
   , volume_(volume)
+  , devices_settings_(devices_settings)
 {
-  signal_volume_changed_.Connect(volume, "changed", sigc::mem_fun(this, &DeviceLauncherIcon::OnVolumeChanged));
-
-  DevicesSettings::GetDefault().changed.connect(sigc::mem_fun(this, &DeviceLauncherIcon::OnSettingsChanged));
-
-  // Checks if in favorites!
   glib::String uuid(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_UUID));
-  keep_in_launcher_ = DevicesSettings::GetDefault().IsAFavoriteDevice(uuid.Str());
+  keep_in_launcher_ = devices_settings_->IsAFavoriteDevice(uuid.Str());
 
   UpdateDeviceIcon();
   UpdateVisibility();
+
+  signal_volume_changed_.Connect(volume, "changed", sigc::mem_fun(this, &DeviceLauncherIcon::OnVolumeChanged));
+  devices_settings_->changed.connect(sigc::mem_fun(this, &DeviceLauncherIcon::OnSettingsChanged));
 }
 
 void DeviceLauncherIcon::OnVolumeChanged(GVolume* volume)
@@ -340,12 +340,12 @@ void DeviceLauncherIcon::OnTogglePin(DbusmenuMenuitem* item,
 
     // Remove from favorites
     if (!uuid.Str().empty())
-      DevicesSettings::GetDefault().RemoveFavorite(uuid.Str());
+      self->devices_settings_->RemoveFavorite(uuid.Str());
   }
   else
   {
     if (!uuid.Str().empty())
-      DevicesSettings::GetDefault().AddFavorite(uuid.Str());
+      self->devices_settings_->AddFavorite(uuid.Str());
   }
 }
 
@@ -423,7 +423,7 @@ void DeviceLauncherIcon::StopDrive()
 void DeviceLauncherIcon::OnSettingsChanged()
 {
   glib::String uuid(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_UUID));
-  keep_in_launcher_ = DevicesSettings::GetDefault().IsAFavoriteDevice(uuid.Str());
+  keep_in_launcher_ = devices_settings_->IsAFavoriteDevice(uuid.Str());
 
   UpdateVisibility();
 }

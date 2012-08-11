@@ -18,33 +18,31 @@
  */
 
 #ifndef UNITYSHELL_DEVICES_SETTINGS_H
-#define UNITYSHELLDEVICES_SETTINGS_H
+#define UNITYSHELL_DEVICES_SETTINGS_H
 
 #include <boost/noncopyable.hpp>
-#include <memory>
 #include <list>
+#include <memory>
 #include <string>
 
 #include <sigc++/signal.h>
 
 namespace unity
 {
-
-typedef std::list<std::string> DeviceList;
+namespace launcher
+{
 
 class DevicesSettings : boost::noncopyable
 {
 public:
   DevicesSettings();
-  
-  static DevicesSettings& GetDefault();
+  ~DevicesSettings();
 
-  DeviceList GetFavorites() const;
+  std::list<std::string> GetFavorites() const;
   bool IsAFavoriteDevice(std::string const& uuid) const;
   void AddFavorite(std::string const& uuid);
   void RemoveFavorite(std::string const& uuid);
   
-  // Signals
   sigc::signal<void> changed;
   
 private:
@@ -52,6 +50,7 @@ private:
   std::unique_ptr<Impl> pimpl;
 };
 
+} // namespace launcher
 } // namespace unity
 
 #endif // DEVICES_SETTINGS_H

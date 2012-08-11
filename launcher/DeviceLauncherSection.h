@@ -17,10 +17,11 @@
  *              Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
-#ifndef _DEVICE_LAUNCHER_SECTION_H_
-#define _DEVICE_LAUNCHER_SECTION_H_
+#ifndef UNITYSHELL_DEVICE_LAUNCHER_SECTION_H
+#define UNITYSHELL_DEVICE_LAUNCHER_SECTION_H
 
 #include <map>
+#include <memory>
 
 #include <UnityCore/GLibSource.h>
 
@@ -32,10 +33,13 @@ namespace unity
 namespace launcher
 {
 
+class DevicesSettings;
+
 class DeviceLauncherSection : public sigc::trackable
 {
 public:
-  DeviceLauncherSection(AbstractVolumeMonitorWrapper::Ptr volume_monitor);
+  DeviceLauncherSection(AbstractVolumeMonitorWrapper::Ptr volume_monitor,
+  	                    std::shared_ptr<DevicesSettings> devices_settings);
 
   sigc::signal<void, AbstractLauncherIcon::Ptr> IconAdded;
 
@@ -46,10 +50,12 @@ private:
 
   std::map<GVolume*, DeviceLauncherIcon::Ptr> map_;
   AbstractVolumeMonitorWrapper::Ptr monitor_;
+  std::shared_ptr<DevicesSettings> devices_settings_;
+
   glib::Idle device_populate_idle_;
 };
 
-}
+} // namespace launcher
 } // namespace unity
 
-#endif // _DEVICE_LAUNCHER_SECTION_H_
+#endif // UNITYSHELL_DEVICE_LAUNCHER_SECTION_H
