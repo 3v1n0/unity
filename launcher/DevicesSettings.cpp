@@ -17,6 +17,8 @@
  * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
+#include <list>
+
 #include <gio/gio.h>
 #include <NuxCore/Logger.h>
 
@@ -94,11 +96,6 @@ public:
     ignore_signals_ = false;
   }
 
-  std::list<std::string> GetFavorites() const
-  {
-    return favorites_;
-  }
-
   bool IsAFavoriteDevice(std::string const& uuid) const
   {
     auto begin = std::begin(favorites_);
@@ -146,11 +143,6 @@ DevicesSettings::DevicesSettings()
 
 DevicesSettings::~DevicesSettings()
 {}
-
-std::list<std::string> DevicesSettings::GetFavorites() const
-{
-  return pimpl->GetFavorites();
-}
 
 bool DevicesSettings::IsAFavoriteDevice(std::string const& uuid) const
 {

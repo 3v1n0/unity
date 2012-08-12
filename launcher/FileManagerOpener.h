@@ -17,40 +17,26 @@
  * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
-#ifndef UNITYSHELL_VOLUME_IMPL_H
-#define UNITYSHELL_VOLUME_IMPL_H
+#ifndef UNITYSHELL_FILEMANAGER_OPENER_H
+#define UNITYSHELL_FILEMANAGER_OPENER_H
 
-#include <memory>
-
-#include <UnityCore/GLibWrapper.h>
-
-#include "FileManagerOpener.h"
-#include "Volume.h"
+#include <boost/noncopyable.hpp>
+#include <string>
 
 namespace unity
 {
 namespace launcher
 {
 
-class VolumeImpl : public Volume
+class FileManagerOpener : private boost::noncopyable
 {
 public:
-  VolumeImpl(glib::Object<GVolume> const& volume,
-             std::shared_ptr<FileManagerOpener> const& file_manager_opener);
-  virtual ~VolumeImpl();
+  virtual ~FileManagerOpener() {}
 
-  virtual std::string GetName() const;
-  virtual std::string GetIconName() const;
-  virtual std::string GetIdentifer() const;
-  virtual bool IsMounted() const;
-  virtual void MountAndOpenInFileManager();
-
-private:
-  class Impl;
-  std::unique_ptr<Impl> pimpl;
+  virtual void Open(std::string const& uri) = 0;
 };
 
-} // namespace launcher
-} // namespace unity
+}
+}
 
-#endif // UNITYSHELL_VOLUME_IMPL_H
+#endif

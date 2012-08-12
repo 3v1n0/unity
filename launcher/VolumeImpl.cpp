@@ -17,6 +17,9 @@
  * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
+#include <gio/gio.h>
+
+#include "FileManagerOpener.h"
 #include "VolumeImpl.h"
 
 namespace unity
@@ -31,9 +34,17 @@ namespace launcher
 class VolumeImpl::Impl
 {
 public:
-  Impl(glib::Object<GVolume> const& volume)
-    : volume_(volume)
+  Impl(glib::Object<GVolume> const& volume,
+       std::shared_ptr<FileManagerOpener> const& file_manager_opener)
+    : cancellable_(g_cancellable_new())
+    , volume_(volume)
+    , file_manager_opener_(file_manager_opener)
   {}
+
+  ~Impl()
+  {
+    g_cancellable_cancel(cancellable_);
+  }
 
   std::string GetName() const
   {
@@ -59,37 +70,62 @@ public:
 
   void MountAndOpenInFileManager()
   {
-    if (not IsMounted())
-      Mount();
-    OpenInFileManager();
+    if (!IsMounted())
+      MountAndOnFinishOpenInFileManager();
+    else
+      OpenInFileManager();
   }
 
-  void Mount()
+  void MountAndOnFinishOpenInFileManager()
   {
-    // TODO: Implement it
+    g_volume_mount(volume_,
+                   (GMountMountFlags) 0,
+                   nullptr,
+                   nullptr,
+                   (GAsyncReadyCallback) &Impl::OnMountFinish,
+                   this);
+  }
+
+  static void OnMountFinish(GObject* object,
+                            GAsyncResult* result,
+                            Impl* self)
+  {
+    if (g_volume_mount_finish(self->volume_, result, nullptr))
+      self->OpenInFileManager();
   }
 
   void OpenInFileManager()
   {
-    // TODO: Implement it
+    file_manager_opener_->Open(GetUri());
   }
-  
+
+  std::string GetUri()
+  {
+    glib::Object<GMount> mount(g_volume_get_mount(volume_));
+    glib::Object<GFile> root(g_mount_get_root(mount));
+
+    if (root.IsType(G_TYPE_FILE))
+      return glib::String(g_file_get_uri(root)).Str();
+    else
+     return std::string();
+  }
+
+  glib::Object<GCancellable> cancellable_;
   glib::Object<GVolume> volume_;
+  std::shared_ptr<FileManagerOpener> file_manager_opener_;
 };
 
 //
 // End private implementation
-// 
+//
 
-VolumeImpl::VolumeImpl(glib::Object<GVolume> const& volume)
-  : pimpl(new Impl(volume))
+VolumeImpl::VolumeImpl(glib::Object<GVolume> const& volume,
+                       std::shared_ptr<FileManagerOpener> const& file_manager_opener)
+  : pimpl(new Impl(volume, file_manager_opener))
 {}
 
 VolumeImpl::~VolumeImpl()
-{
-  // For some weird reasons there are building issues removing this
-  // apparently useless dtor.
-}
+{}
 
 std::string VolumeImpl::GetName() const
 {

@@ -21,7 +21,6 @@
 #define UNITYSHELL_DEVICES_SETTINGS_H
 
 #include <boost/noncopyable.hpp>
-#include <list>
 #include <memory>
 #include <string>
 
@@ -38,13 +37,12 @@ public:
   DevicesSettings();
   ~DevicesSettings();
 
-  std::list<std::string> GetFavorites() const;
   bool IsAFavoriteDevice(std::string const& uuid) const;
   void AddFavorite(std::string const& uuid);
   void RemoveFavorite(std::string const& uuid);
-  
+
   sigc::signal<void> changed;
-  
+
 private:
   class Impl;
   std::unique_ptr<Impl> pimpl;

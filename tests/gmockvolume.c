@@ -22,6 +22,7 @@
 
 #include <glib.h>
 
+#include "gmockmount.h"
 #include "gmockvolume.h"
 
 static void g_mock_volume_iface_init (GVolumeIface *iface);
@@ -79,7 +80,7 @@ GMockVolume *
 g_mock_volume_new ()
 {
   GMockVolume *volume;
-  
+
   volume = g_object_new (G_TYPE_MOCK_VOLUME, NULL);
 
   return volume;
@@ -91,7 +92,7 @@ g_mock_volume_set_name (GMockVolume *volume, const char* name)
   if (volume->name)
     g_free(volume->name);
 
-  volume->name = g_strdup (name); 
+  volume->name = g_strdup (name);
 }
 
 static char *
@@ -115,7 +116,11 @@ static GIcon *
 g_mock_volume_get_icon (GVolume *volume)
 {
   GMockVolume *self = G_MOCK_VOLUME (volume);
-  return g_object_ref (self->icon);
+
+  if (self->icon)
+    return g_object_ref (self->icon);
+  else
+    return NULL;
 }
 
 void
@@ -124,7 +129,7 @@ g_mock_volume_set_uuid (GMockVolume *volume, const char* uuid)
   if (volume->uuid)
     g_free(volume->uuid);
 
-  volume->uuid = g_strdup (uuid); 
+  volume->uuid = g_strdup (uuid);
 }
 
 static char *
@@ -153,7 +158,10 @@ static GMount *
 g_mock_volume_get_mount (GVolume *volume)
 {
   GMockVolume *self = G_MOCK_VOLUME (volume);
-  return self->mount;
+  if (self->mount)
+    return g_object_ref (self->mount);
+  else
+    return NULL;
 }
 
 static gboolean
@@ -182,7 +190,11 @@ g_mock_volume_mount (GVolume            *volume,
                      GAsyncReadyCallback  callback,
                      gpointer             user_data)
 {
-  callback(NULL, NULL, user_data);
+  g_mock_volume_set_mount(G_MOCK_VOLUME(volume), G_MOUNT(g_mock_mount_new()));
+
+  callback(NULL,
+           G_ASYNC_RESULT (g_simple_async_result_new (NULL, NULL, NULL, NULL)),
+           user_data);
 }
 
 static gboolean

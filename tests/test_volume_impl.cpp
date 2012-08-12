@@ -19,17 +19,25 @@
 
 #include <memory>
 
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 using namespace testing;
 
 #include "gmockmount.h"
 #include "gmockvolume.h"
 #include "launcher/VolumeImpl.h"
+#include "launcher/FileManagerOpener.h"
 #include "test_utils.h"
 using namespace unity;
 
 namespace
 {
+
+class MockFileManagerOpener : public launcher::FileManagerOpener
+{
+public:
+   MOCK_METHOD1(Open, void(std::string const& uri));
+};
+
 
 class TestVolumeImpl : public Test
 {
@@ -37,12 +45,20 @@ public:
   void SetUp()
   {
     gvolume_ = g_mock_volume_new();
-    volume_.reset(new launcher::VolumeImpl(glib::Object<GVolume>(G_VOLUME(gvolume_.RawPtr()))));
+    file_manager_opener_.reset(new MockFileManagerOpener);
+    volume_.reset(new launcher::VolumeImpl(glib::Object<GVolume>(G_VOLUME(gvolume_.RawPtr()), glib::AddRef()),
+                                           file_manager_opener_));
   }
 
   glib::Object<GMockVolume> gvolume_;
+  std::shared_ptr<MockFileManagerOpener> file_manager_opener_;
   std::unique_ptr<launcher::VolumeImpl> volume_;
 };
+
+TEST_F(TestVolumeImpl, TestCtor)
+{
+  EXPECT_FALSE(volume_->IsMounted());
+}
 
 TEST_F(TestVolumeImpl, TestGetName)
 {
@@ -74,6 +90,21 @@ TEST_F(TestVolumeImpl, TestIsMounted)
   ASSERT_FALSE(volume_->IsMounted());
 
   g_mock_volume_set_mount(gvolume_, G_MOUNT(g_mock_mount_new()));
+  EXPECT_TRUE(volume_->IsMounted());
+}
+
+TEST_F(TestVolumeImpl, TestMountAndOpenInFileManager)
+{
+  EXPECT_CALL(*file_manager_opener_, Open("file:///some/directory/testfile"))
+      .Times(1);
+
+  volume_->MountAndOpenInFileManager();
+  EXPECT_TRUE(volume_->IsMounted());
+
+  EXPECT_CALL(*file_manager_opener_, Open("file:///some/directory/testfile"))
+      .Times(1);
+
+  volume_->MountAndOpenInFileManager();
   EXPECT_TRUE(volume_->IsMounted());
 }
 

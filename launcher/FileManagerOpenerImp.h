@@ -17,40 +17,23 @@
  * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
-#ifndef UNITYSHELL_VOLUME_IMPL_H
-#define UNITYSHELL_VOLUME_IMPL_H
-
-#include <memory>
-
-#include <UnityCore/GLibWrapper.h>
+#ifndef UNITYSHELL_FILEMANAGER_OPENER_IMP_H
+#define UNITYSHELL_FILEMANAGER_OPENER_IMP_H
 
 #include "FileManagerOpener.h"
-#include "Volume.h"
 
-namespace unity
+namespace unityshell
 {
 namespace launcher
 {
 
-class VolumeImpl : public Volume
+class FileManagerOpenerImp : public FileManagerOpener
 {
 public:
-  VolumeImpl(glib::Object<GVolume> const& volume,
-             std::shared_ptr<FileManagerOpener> const& file_manager_opener);
-  virtual ~VolumeImpl();
-
-  virtual std::string GetName() const;
-  virtual std::string GetIconName() const;
-  virtual std::string GetIdentifer() const;
-  virtual bool IsMounted() const;
-  virtual void MountAndOpenInFileManager();
-
-private:
-  class Impl;
-  std::unique_ptr<Impl> pimpl;
+  virtual void Open(std::string const& uri);
 };
 
-} // namespace launcher
-} // namespace unity
+}
+}
 
-#endif // UNITYSHELL_VOLUME_IMPL_H
+#endif
