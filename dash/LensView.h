@@ -91,6 +91,7 @@ private:
   void OnViewTypeChanged(ViewType view_type);
   void QueueFixRenderering();
   bool FixRenderering();
+  bool ReinitializeFilterModels();
 
   virtual void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
@@ -119,6 +120,8 @@ private:
 
   UBusManager ubus_manager_;
   glib::Source::UniquePtr fix_rendering_idle_;
+  int last_good_filter_model_;
+  glib::Source::UniquePtr fix_filter_models_idle_;
 };
 
 

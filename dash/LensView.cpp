@@ -132,6 +132,7 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   , lens_(lens)
   , initial_activation_(true)
   , no_results_active_(false)
+  , last_good_filter_model_(-1)
 {
   SetupViews(show_filters);
   SetupCategories();
@@ -237,6 +238,20 @@ void LensView::SetupResults()
   results->result_added.connect(sigc::mem_fun(this, &LensView::OnResultAdded));
   results->result_removed.connect(sigc::mem_fun(this, &LensView::OnResultRemoved));
 
+  results->model.changed.connect([this] (glib::Object<DeeModel> model)
+  {
+    for (unsigned int i = 0; i < categories_.size(); ++i)
+    {
+      PlacesGroup* group = categories_[i];
+      ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
+      DeeFilter filter;
+      dee_filter_new_for_any_column(2, g_variant_new_uint32 (i), &filter);
+      glib::Object<DeeModel> filter_model(dee_filter_model_new(model, &filter));
+      Results::Ptr results_model = lens_->results;
+      grid->SetModel(filter_model, results_model->GetTag());
+    }
+  });
+
   for (unsigned int i = 0; i < results->count(); ++i)
     OnResultAdded(results->RowAtIndex(i));
 }
@@ -257,6 +272,7 @@ void LensView::OnCategoryAdded(Category const& category)
   std::string icon_hint = category.icon_hint;
   std::string renderer_name = category.renderer_name;
   int index = category.index;
+  bool reset_filter_models = false;
 
   LOG_DEBUG(logger) << "Category added: " << name
                     << "(" << icon_hint
@@ -271,7 +287,7 @@ void LensView::OnCategoryAdded(Category const& category)
   group->SetVisible(false);
   group->expanded.connect(sigc::mem_fun(this, &LensView::OnGroupExpanded));
 
-
+  reset_filter_models = static_cast<unsigned>(index) < categories_.size();
   /* Add the group at the correct offset into the categories vector */
   categories_.insert(categories_.begin() + index, group);
 
@@ -292,11 +308,55 @@ void LensView::OnCategoryAdded(Category const& category)
   grid->UriActivated.connect([&] (std::string const& uri) { uri_activated.emit(uri); lens_->Activate(uri); });
   group->SetChildView(grid);
 
+  /* Set up filter model for this category */
+  Results::Ptr results_model = lens_->results;
+  if (results_model->model())
+  {
+    DeeFilter filter;
+    dee_filter_new_for_any_column(2, g_variant_new_uint32 (static_cast<unsigned>(index)), &filter);
+    glib::Object<DeeModel> filter_model(dee_filter_model_new(results_model->model(), &filter));
+    grid->SetModel(filter_model, results_model->GetTag());
+  }
+
+  if (reset_filter_models)
+  {
+    for (auto it = categories_.begin() + (index + 1); it != categories_.end(); ++it)
+    {
+      grid = static_cast<ResultViewGrid*>((*it)->GetChildView());
+      grid->SetModel(glib::Object<DeeModel>(), NULL);
+    }
+
+    if (index < last_good_filter_model_ || last_good_filter_model_ < 0)
+      last_good_filter_model_ = index;
+    if (!fix_filter_models_idle_)
+    {
+      fix_filter_models_idle_.reset(new glib::Idle(sigc::mem_fun(this, &LensView::ReinitializeFilterModels), glib::Source::Priority::HIGH));
+    }
+  }
+
   /* We need the full range of method args so we can specify the offset
    * of the group into the layout */
   scroll_layout_->AddView(group, 0, nux::MinorDimensionPosition::eAbove,
                           nux::MinorDimensionSize::eFull, 100.0f,
                           (nux::LayoutPosition)index);
+}
+
+bool LensView::ReinitializeFilterModels()
+{
+  Results::Ptr results_model = lens_->results;
+  for (unsigned i = last_good_filter_model_ + 1; i < categories_.size(); ++i)
+  {
+    PlacesGroup* group = categories_[i];
+    ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
+    DeeFilter filter;
+    dee_filter_new_for_any_column(2, g_variant_new_uint32 (i), &filter);
+    glib::Object<DeeModel> filter_model(dee_filter_model_new(results_model->model(), &filter));
+    grid->SetModel(filter_model, results_model->GetTag());
+  }
+
+  last_good_filter_model_ = -1;
+  fix_filter_models_idle_.reset();
+  return false;
 }
 
 void LensView::OnResultAdded(Result const& result)

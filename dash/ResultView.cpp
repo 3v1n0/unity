@@ -119,6 +119,12 @@ void ResultView::SetModel(glib::Object<DeeModel> const& model, DeeModelTag* tag)
   {
     sig_manager_.Disconnect(result_model_.RawPtr(), "row-added");
     sig_manager_.Disconnect(result_model_.RawPtr(), "row-removed");
+
+    for (ResultIterator it(GetIteratorAtRow(0)); !it.IsLast(); ++it)
+    {
+      Result result(*it);
+      RemoveResult(result);
+    }
   }
 
   result_model_ = model;
@@ -134,7 +140,12 @@ void ResultView::SetModel(glib::Object<DeeModel> const& model, DeeModelTag* tag)
     sig_manager_.Add(new RowSignalType(model,
                                        "row-removed",
                                        sigc::mem_fun(this, &ResultView::OnRowRemoved)));
-    
+
+    for (ResultIterator it(GetIteratorAtRow(0)); !it.IsLast(); ++it)
+    {
+      Result result(*it);
+      AddResult(result);
+    }
   }
 }
 
