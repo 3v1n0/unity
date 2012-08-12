@@ -15,9 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
-#include "DeviceLauncherIcon.h"
+#include "VolumeLauncherIcon.h"
 
 #include <algorithm>
 #include <list>
@@ -44,7 +45,7 @@ const unsigned int volume_changed_timeout =  500;
 
 }
 
-DeviceLauncherIcon::DeviceLauncherIcon(glib::Object<GVolume> const& volume,
+VolumeLauncherIcon::VolumeLauncherIcon(glib::Object<GVolume> const& volume,
                                        std::shared_ptr<DevicesSettings> const& devices_settings)
   : SimpleLauncherIcon()
   , volume_(volume)
@@ -53,26 +54,26 @@ DeviceLauncherIcon::DeviceLauncherIcon(glib::Object<GVolume> const& volume,
   glib::String uuid(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_UUID));
   keep_in_launcher_ = devices_settings_->IsAFavoriteDevice(uuid.Str());
 
-  UpdateDeviceIcon();
+  UpdateIcon();
   UpdateVisibility();
 
-  signal_volume_changed_.Connect(volume, "changed", sigc::mem_fun(this, &DeviceLauncherIcon::OnVolumeChanged));
-  devices_settings_->changed.connect(sigc::mem_fun(this, &DeviceLauncherIcon::OnSettingsChanged));
+  signal_volume_changed_.Connect(volume, "changed", sigc::mem_fun(this, &VolumeLauncherIcon::OnVolumeChanged));
+  devices_settings_->changed.connect(sigc::mem_fun(this, &VolumeLauncherIcon::OnSettingsChanged));
 }
 
-void DeviceLauncherIcon::OnVolumeChanged(GVolume* volume)
+void VolumeLauncherIcon::OnVolumeChanged(GVolume* volume)
 {
   if (!G_IS_VOLUME(volume))
     return;
 
   changed_timeout_.reset(new glib::Timeout(volume_changed_timeout, [this]() {
-    UpdateDeviceIcon();
+    UpdateIcon();
     UpdateVisibility();
     return false;
   }));
 }
 
-void DeviceLauncherIcon::UpdateVisibility()
+void VolumeLauncherIcon::UpdateVisibility()
 {
  if (keep_in_launcher_)
  {
@@ -85,7 +86,7 @@ void DeviceLauncherIcon::UpdateVisibility()
  }
 }
 
-void DeviceLauncherIcon::UpdateDeviceIcon()
+void VolumeLauncherIcon::UpdateIcon()
 {
   name_ = glib::String(g_volume_get_name(volume_)).Str();
 
@@ -99,13 +100,12 @@ void DeviceLauncherIcon::UpdateDeviceIcon()
   SetQuirk(Quirk::RUNNING, false);
 }
 
-bool
-DeviceLauncherIcon::CanEject()
+bool VolumeLauncherIcon::CanEject()
 {
   return g_volume_can_eject(volume_);
 }
 
-std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
+std::list<DbusmenuMenuitem*> VolumeLauncherIcon::GetMenus()
 {
   std::list<DbusmenuMenuitem*> result;
   DbusmenuMenuitem* menu_item;
@@ -121,7 +121,7 @@ std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
     g_signal_connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                     G_CALLBACK(&DeviceLauncherIcon::OnTogglePin), this);
+                     G_CALLBACK(&VolumeLauncherIcon::OnTogglePin), this);
 
     result.push_back(menu_item);
   }
@@ -134,7 +134,7 @@ std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
   g_signal_connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                   G_CALLBACK(&DeviceLauncherIcon::OnOpen), this);
+                   G_CALLBACK(&VolumeLauncherIcon::OnOpen), this);
 
   result.push_back(menu_item);
 
@@ -158,7 +158,7 @@ std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
     g_signal_connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                     G_CALLBACK(&DeviceLauncherIcon::OnEject), this);
+                     G_CALLBACK(&VolumeLauncherIcon::OnEject), this);
 
     result.push_back(menu_item);
   }
@@ -183,7 +183,7 @@ std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
     g_signal_connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                     G_CALLBACK(&DeviceLauncherIcon::OnDriveStop), this);
+                     G_CALLBACK(&VolumeLauncherIcon::OnDriveStop), this);
 
     result.push_back(menu_item);
   }
@@ -202,7 +202,7 @@ std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
       dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
       g_signal_connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                       G_CALLBACK(&DeviceLauncherIcon::OnUnmount), this);
+                       G_CALLBACK(&VolumeLauncherIcon::OnUnmount), this);
 
       result.push_back(menu_item);
     }
@@ -211,7 +211,7 @@ std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
   return result;
 }
 
-void DeviceLauncherIcon::ShowMount(GMount* mount)
+void VolumeLauncherIcon::ShowMount(GMount* mount)
 {
   if (G_IS_MOUNT(mount))
   {
@@ -244,7 +244,7 @@ void DeviceLauncherIcon::ShowMount(GMount* mount)
   }
 }
 
-void DeviceLauncherIcon::ActivateLauncherIcon(ActionArg arg)
+void VolumeLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   SimpleLauncherIcon::ActivateLauncherIcon(arg);
   SetQuirk(Quirk::STARTING, true);
@@ -258,13 +258,13 @@ void DeviceLauncherIcon::ActivateLauncherIcon(ActionArg arg)
                    (GMountMountFlags)0,
                    NULL,
                    NULL,
-                   (GAsyncReadyCallback)&DeviceLauncherIcon::OnMountReady,
+                   (GAsyncReadyCallback)&VolumeLauncherIcon::OnMountReady,
                    this);
 }
 
-void DeviceLauncherIcon::OnMountReady(GObject* object,
+void VolumeLauncherIcon::OnMountReady(GObject* object,
                                       GAsyncResult* result,
-                                      DeviceLauncherIcon* self)
+                                      VolumeLauncherIcon* self)
 {
   glib::Error error;
 
@@ -280,18 +280,18 @@ void DeviceLauncherIcon::OnMountReady(GObject* object,
   }
 }
 
-void DeviceLauncherIcon::OnEjectReady(GObject* object,
+void VolumeLauncherIcon::OnEjectReady(GObject* object,
                                       GAsyncResult* result,
-                                      DeviceLauncherIcon* self)
+                                      VolumeLauncherIcon* self)
 {
   if (g_volume_eject_with_operation_finish(self->volume_, result, NULL))
   {
     IconLoader::GetDefault().LoadFromGIconString(self->icon_name(), 48,
-                                                 sigc::bind(sigc::mem_fun(self, &DeviceLauncherIcon::ShowNotification), self->name_));
+                                                 sigc::bind(sigc::mem_fun(self, &VolumeLauncherIcon::ShowNotification), self->name_));
   }
 }
 
-void DeviceLauncherIcon::ShowNotification(std::string const& icon_name,
+void VolumeLauncherIcon::ShowNotification(std::string const& icon_name,
                                           unsigned size,
                                           glib::Object<GdkPixbuf> const& pixbuf,
                                           std::string const& name)
@@ -310,7 +310,7 @@ void DeviceLauncherIcon::ShowNotification(std::string const& icon_name,
   notify_notification_show(notification, NULL);
 }
 
-void DeviceLauncherIcon::Eject()
+void VolumeLauncherIcon::Eject()
 {
   glib::Object<GMountOperation> mount_op(gtk_mount_operation_new(NULL));
 
@@ -322,9 +322,9 @@ void DeviceLauncherIcon::Eject()
                                 this);
 }
 
-void DeviceLauncherIcon::OnTogglePin(DbusmenuMenuitem* item,
+void VolumeLauncherIcon::OnTogglePin(DbusmenuMenuitem* item,
                                      int time,
-                                     DeviceLauncherIcon* self)
+                                     VolumeLauncherIcon* self)
 {
   glib::String uuid(g_volume_get_identifier(self->volume_, G_VOLUME_IDENTIFIER_KIND_UUID));
 
@@ -349,29 +349,29 @@ void DeviceLauncherIcon::OnTogglePin(DbusmenuMenuitem* item,
   }
 }
 
-void DeviceLauncherIcon::OnOpen(DbusmenuMenuitem* item,
+void VolumeLauncherIcon::OnOpen(DbusmenuMenuitem* item,
                                 int time,
-                                DeviceLauncherIcon* self)
+                                VolumeLauncherIcon* self)
 {
   self->ActivateLauncherIcon(ActionArg(ActionArg::OTHER, 0));
 }
 
-void DeviceLauncherIcon::OnEject(DbusmenuMenuitem* item,
+void VolumeLauncherIcon::OnEject(DbusmenuMenuitem* item,
                                  int time,
-                                 DeviceLauncherIcon* self)
+                                 VolumeLauncherIcon* self)
 {
   self->Eject();
 }
 
-void DeviceLauncherIcon::OnUnmountReady(GObject* object,
+void VolumeLauncherIcon::OnUnmountReady(GObject* object,
                                         GAsyncResult* result,
-                                        DeviceLauncherIcon* self)
+                                        VolumeLauncherIcon* self)
 {
   if (G_IS_MOUNT(object))
     g_mount_unmount_with_operation_finish(G_MOUNT(object), result, NULL);
 }
 
-void DeviceLauncherIcon::Unmount()
+void VolumeLauncherIcon::Unmount()
 {
   glib::Object<GMount> mount(g_volume_get_mount(volume_));
 
@@ -388,26 +388,26 @@ void DeviceLauncherIcon::Unmount()
   }
 }
 
-void DeviceLauncherIcon::OnUnmount(DbusmenuMenuitem* item,
+void VolumeLauncherIcon::OnUnmount(DbusmenuMenuitem* item,
                                    int time,
-                                   DeviceLauncherIcon* self)
+                                   VolumeLauncherIcon* self)
 {
   self->Unmount();
 }
 
-void DeviceLauncherIcon::OnRemoved()
+void VolumeLauncherIcon::OnRemoved()
 {
   Remove();
 }
 
-void DeviceLauncherIcon::OnDriveStop(DbusmenuMenuitem* item,
+void VolumeLauncherIcon::OnDriveStop(DbusmenuMenuitem* item,
                                      int time,
-                                     DeviceLauncherIcon* self)
+                                     VolumeLauncherIcon* self)
 {
   self->StopDrive();
 }
 
-void DeviceLauncherIcon::StopDrive()
+void VolumeLauncherIcon::StopDrive()
 {
   glib::Object<GDrive> drive(g_volume_get_drive(volume_));
   glib::Object<GMountOperation> mount_op(gtk_mount_operation_new(NULL));
@@ -420,7 +420,7 @@ void DeviceLauncherIcon::StopDrive()
                NULL);
 }
 
-void DeviceLauncherIcon::OnSettingsChanged()
+void VolumeLauncherIcon::OnSettingsChanged()
 {
   glib::String uuid(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_UUID));
   keep_in_launcher_ = devices_settings_->IsAFavoriteDevice(uuid.Str());
@@ -431,9 +431,9 @@ void DeviceLauncherIcon::OnSettingsChanged()
 //
 // Introspection
 //
-std::string DeviceLauncherIcon::GetName() const
+std::string VolumeLauncherIcon::GetName() const
 {
-  return "DeviceLauncherIcon";
+  return "VolumeLauncherIcon";
 }
 
 } // namespace launcher

@@ -32,7 +32,7 @@ DeviceLauncherSection::DeviceLauncherSection(AbstractVolumeMonitorWrapper::Ptr v
 {
   monitor_->volume_added.connect(sigc::mem_fun(this, &DeviceLauncherSection::OnVolumeAdded));
   monitor_->volume_removed.connect(sigc::mem_fun(this, &DeviceLauncherSection::OnVolumeRemoved));
-  
+
   device_populate_idle_.Run([this] () {
     PopulateEntries();
     return false;
@@ -47,7 +47,7 @@ void DeviceLauncherSection::PopulateEntries()
     if (map_.find(volume) != map_.end())
       continue;
 
-    DeviceLauncherIcon::Ptr icon(new DeviceLauncherIcon(volume, devices_settings_));
+    VolumeLauncherIcon::Ptr icon(new VolumeLauncherIcon(volume, devices_settings_));
 
     map_[volume] = icon;
     IconAdded.emit(icon);
@@ -60,7 +60,7 @@ void DeviceLauncherSection::OnVolumeAdded(glib::Object<GVolume> const& volume)
   if (map_.find(volume) != map_.end())
     return;
 
-  DeviceLauncherIcon::Ptr icon(new DeviceLauncherIcon(volume, devices_settings_));
+  VolumeLauncherIcon::Ptr icon(new VolumeLauncherIcon(volume, devices_settings_));
 
   map_[volume] = icon;
   IconAdded.emit(icon);
@@ -80,4 +80,3 @@ void DeviceLauncherSection::OnVolumeRemoved(glib::Object<GVolume> const& volume)
 
 } // namespace launcher
 } // namespace unity
-

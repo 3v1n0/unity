@@ -15,10 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
-#ifndef _DEVICE_LAUNCHER_ICON_H__H
-#define _DEVICE_LAUNCHER_ICON_H__H
+#ifndef UNITYSHELL_VOLUME_LAUNCHER_ICON_H
+#define UNITYSHELL_VOLUME_LAUNCHER_ICON_H
 
 #include <gio/gio.h>
 #include <UnityCore/GLibWrapper.h>
@@ -33,12 +34,12 @@ namespace launcher
 
 class DevicesSettings;
 
-class DeviceLauncherIcon : public SimpleLauncherIcon
+class VolumeLauncherIcon : public SimpleLauncherIcon
 {
 public:
-  typedef nux::ObjectPtr<DeviceLauncherIcon> Ptr;
+  typedef nux::ObjectPtr<VolumeLauncherIcon> Ptr;
 
-  DeviceLauncherIcon(glib::Object<GVolume> const& volume,
+  VolumeLauncherIcon(glib::Object<GVolume> const& volume,
                      std::shared_ptr<DevicesSettings> const& devices_settings);
 
   void OnRemoved();
@@ -51,20 +52,20 @@ protected:
 
 private:
   void UpdateVisibility();
-  void UpdateDeviceIcon();
+  void UpdateIcon();
   void ActivateLauncherIcon(ActionArg arg);
   void ShowMount(GMount* mount);
   void Unmount();
   void StopDrive();
-  static void OnTogglePin(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
-  static void OnOpen(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
-  static void OnEject(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
-  static void OnUnmount(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
-  static void OnChanged(GVolume* volume, DeviceLauncherIcon* self);
-  static void OnMountReady(GObject* object, GAsyncResult* result, DeviceLauncherIcon* self);
-  static void OnEjectReady(GObject* object, GAsyncResult* result, DeviceLauncherIcon* self);
-  static void OnUnmountReady(GObject* object, GAsyncResult* result, DeviceLauncherIcon* self);
-  static void OnDriveStop(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
+  static void OnTogglePin(DbusmenuMenuitem* item, int time, VolumeLauncherIcon* self);
+  static void OnOpen(DbusmenuMenuitem* item, int time, VolumeLauncherIcon* self);
+  static void OnEject(DbusmenuMenuitem* item, int time, VolumeLauncherIcon* self);
+  static void OnUnmount(DbusmenuMenuitem* item, int time, VolumeLauncherIcon* self);
+  static void OnChanged(GVolume* volume, VolumeLauncherIcon* self);
+  static void OnMountReady(GObject* object, GAsyncResult* result, VolumeLauncherIcon* self);
+  static void OnEjectReady(GObject* object, GAsyncResult* result, VolumeLauncherIcon* self);
+  static void OnUnmountReady(GObject* object, GAsyncResult* result, VolumeLauncherIcon* self);
+  static void OnDriveStop(DbusmenuMenuitem* item, int time, VolumeLauncherIcon* self);
   void OnVolumeChanged(GVolume* volume);
   void OnSettingsChanged();
   void ShowNotification(std::string const&, unsigned, glib::Object<GdkPixbuf> const&, std::string const&);

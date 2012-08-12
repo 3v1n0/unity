@@ -29,7 +29,7 @@
 #include "LauncherOptions.h"
 #include "BamfLauncherIcon.h"
 #include "DesktopLauncherIcon.h"
-#include "DeviceLauncherIcon.h"
+#include "VolumeLauncherIcon.h"
 #include "FavoriteStore.h"
 #include "HudLauncherIcon.h"
 #include "LauncherController.h"
@@ -425,7 +425,7 @@ void Controller::Impl::OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr icon)
     }
     case AbstractLauncherIcon::IconType::DEVICE:
     {
-      DeviceLauncherIcon* device_icon = dynamic_cast<DeviceLauncherIcon*>(icon.GetPointer());
+      auto device_icon = dynamic_cast<VolumeLauncherIcon*>(icon.GetPointer());
 
       if (device_icon && device_icon->CanEject())
         device_icon->Eject();

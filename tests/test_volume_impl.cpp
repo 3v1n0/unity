@@ -26,7 +26,6 @@ using namespace testing;
 #include "gmockvolume.h"
 #include "launcher/VolumeImpl.h"
 #include "launcher/FileManagerOpener.h"
-#include "test_utils.h"
 using namespace unity;
 
 namespace

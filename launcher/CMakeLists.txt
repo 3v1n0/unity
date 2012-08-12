@@ -37,7 +37,7 @@ set (LAUNCHER_SOURCES
      DNDCollectionWindow.cpp
      Decaymulator.cpp
      DesktopLauncherIcon.cpp
-     DeviceLauncherIcon.cpp
+     VolumeLauncherIcon.cpp
      DeviceLauncherSection.cpp
      DevicesSettings.cpp
      DndData.cpp
@@ -87,7 +87,7 @@ set (SWITCHER_SOURCES
 add_library (switcher-lib STATIC ${SWITCHER_SOURCES})
 add_dependencies (switcher-lib unity-core-${UNITY_API_VERSION} unity-shared)
 
-# 
+#
 # Standalone variant
 #
 add_executable (launcher StandaloneLauncher.cpp)

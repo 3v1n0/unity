@@ -25,8 +25,8 @@
 
 #include <UnityCore/GLibSource.h>
 
-#include "DeviceLauncherIcon.h"
 #include "AbstractVolumeMonitorWrapper.h"
+#include "VolumeLauncherIcon.h"
 
 namespace unity
 {
@@ -48,7 +48,7 @@ private:
   void OnVolumeAdded(glib::Object<GVolume> const& volume);
   void OnVolumeRemoved(glib::Object<GVolume> const& volume);
 
-  std::map<GVolume*, DeviceLauncherIcon::Ptr> map_;
+  std::map<GVolume*, VolumeLauncherIcon::Ptr> map_;
   AbstractVolumeMonitorWrapper::Ptr monitor_;
   std::shared_ptr<DevicesSettings> devices_settings_;
 

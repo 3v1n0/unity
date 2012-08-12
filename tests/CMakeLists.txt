@@ -248,7 +248,6 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/launcher/DNDCollectionWindow.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/Decaymulator.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/DesktopLauncherIcon.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/DeviceLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/DeviceLauncherSection.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/DevicesSettings.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/DndData.cpp
@@ -287,6 +286,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/launcher/Tooltip.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/TrashLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/VolumeImpl.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/VolumeLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/VolumeMonitorWrapper.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/Animator.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/BackgroundEffectHelper.cpp
