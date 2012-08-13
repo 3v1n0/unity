@@ -34,7 +34,7 @@ public:
     : BFBLauncherIcon(LauncherHideMode::LAUNCHER_HIDE_NEVER)
   {}
 
-  std::vector<glib::Object<DbusmenuMenuitem>> GetMenus()
+  AbstractLauncherIcon::MenuItemsList GetMenus()
   {
     return BFBLauncherIcon::GetMenus();
   }

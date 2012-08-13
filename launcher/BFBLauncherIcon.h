@@ -46,7 +46,7 @@ public:
   void SetHideMode(LauncherHideMode hide_mode);
 
 protected:
-  std::vector<glib::Object<DbusmenuMenuitem>> GetMenus();
+  MenuItemsList GetMenus();
   std::string GetName() const;
 
 private:

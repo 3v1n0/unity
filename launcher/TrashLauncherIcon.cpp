@@ -74,9 +74,9 @@ TrashLauncherIcon::~TrashLauncherIcon()
   g_cancellable_cancel(cancellable_);
 }
 
-std::vector<glib::Object<DbusmenuMenuitem>> TrashLauncherIcon::GetMenus()
+AbstractLauncherIcon::MenuItemsList TrashLauncherIcon::GetMenus()
 {
-  std::vector<glib::Object<DbusmenuMenuitem>> result;
+  MenuItemsList result;
 
   /* Empty Trash */
   glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());

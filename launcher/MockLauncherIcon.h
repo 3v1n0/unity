@@ -260,9 +260,9 @@ public:
     return 0;
   }
 
-  std::vector<glib::Object<DbusmenuMenuitem>> Menus()
+  MenuItemsList Menus()
   {
-    return std::vector<glib::Object<DbusmenuMenuitem>> ();
+    return MenuItemsList ();
   }
 
   nux::DndAction QueryAcceptDrop(DndData const& dnd_data)

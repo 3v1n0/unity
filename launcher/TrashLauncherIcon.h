@@ -51,7 +51,7 @@ protected:
 
 private:
   void ActivateLauncherIcon(ActionArg arg);
-  std::vector<glib::Object<DbusmenuMenuitem>> GetMenus();
+  MenuItemsList GetMenus();
 
   static void UpdateTrashIconCb(GObject* source, GAsyncResult* res, gpointer data);
   static void OnEmptyTrash(DbusmenuMenuitem* item, int time, TrashLauncherIcon* self);

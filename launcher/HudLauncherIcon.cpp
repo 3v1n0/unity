@@ -124,12 +124,6 @@ void HudLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   }
 }
 
-std::vector<glib::Object<DbusmenuMenuitem>> HudLauncherIcon::GetMenus()
-{
-  std::vector<glib::Object<DbusmenuMenuitem>> result;
-  return result;
-}
-
 std::string HudLauncherIcon::GetName() const
 {
   return "HudLauncherIcon";

@@ -82,7 +82,7 @@ protected:
   bool OnShouldHighlightOnDrag(DndData const& dnd_data);
   nux::DndAction OnQueryAcceptDrop(DndData const& dnd_data);
 
-  std::vector<glib::Object<DbusmenuMenuitem>> GetMenus();
+  MenuItemsList GetMenus();
   std::set<std::string> ValidateUrisForLaunch(DndData const& dnd_data);
 
   std::string GetRemoteUri();

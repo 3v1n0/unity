@@ -540,7 +540,7 @@ void LauncherIcon::RecvMouseLeave(int monitor)
 
 bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
 {
-  std::vector<glib::Object<DbusmenuMenuitem>> const& menus = Menus();
+  MenuItemsList const& menus = Menus();
 
   if (!_quicklist)
     LoadQuicklist();
@@ -905,14 +905,14 @@ LauncherIcon::GetProgress()
   return _progress;
 }
 
-std::vector<glib::Object<DbusmenuMenuitem>> LauncherIcon::Menus()
+AbstractLauncherIcon::MenuItemsList LauncherIcon::Menus()
 {
   return GetMenus();
 }
 
-std::vector<glib::Object<DbusmenuMenuitem>> LauncherIcon::GetMenus()
+AbstractLauncherIcon::MenuItemsList LauncherIcon::GetMenus()
 {
-  std::vector<glib::Object<DbusmenuMenuitem>> result;
+  MenuItemsList result;
   return result;
 }
 

@@ -947,9 +947,9 @@ void BamfLauncherIcon::EnsureMenuItemsReady()
   }
 }
 
-std::vector<glib::Object<DbusmenuMenuitem>> BamfLauncherIcon::GetMenus()
+AbstractLauncherIcon::MenuItemsList BamfLauncherIcon::GetMenus()
 {
-  std::vector<glib::Object<DbusmenuMenuitem>> result;
+  MenuItemsList result;
   bool first_separator_needed = false;
 
   // FIXME for O: hack around the wrong abstraction

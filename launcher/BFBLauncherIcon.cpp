@@ -102,9 +102,9 @@ void BFBLauncherIcon::OnMenuitemActivated(DbusmenuMenuitem* item, int time, std:
   ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", lens.c_str(), dash::GOTO_DASH_URI, ""));
 }
 
-std::vector<glib::Object<DbusmenuMenuitem>> BFBLauncherIcon::GetMenus()
+AbstractLauncherIcon::MenuItemsList BFBLauncherIcon::GetMenus()
 {
-  std::vector<glib::Object<DbusmenuMenuitem>> result;
+  MenuItemsList result;
   glib::Object<DbusmenuMenuitem> menu_item;
 
   typedef glib::Signal<void, DbusmenuMenuitem*, int> ItemSignal;
