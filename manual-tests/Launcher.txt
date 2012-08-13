@@ -679,3 +679,14 @@ Expected Result:
  * No icon flickers near the top panel.
  * See https://bugs.launchpad.net/unity/+bug/980942/+attachment/3059914/+files/launcher-accordion-effect-tooltip-bug.ogv.
 
+
+No flickering when resizing the launcher
+-----------------------------------------
+Actions:
+* Open gedit.
+* Maximize it. Make sure it remains maximized during the test.
+* Open Appearance panel in System Settings.
+* Change Launcher Icon Size.
+
+Expected Results:
+* The gedit window must not flicker behind the launcher.

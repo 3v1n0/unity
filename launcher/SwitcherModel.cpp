@@ -42,7 +42,7 @@ SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> icons)
   for (auto icon : _inner)
   {
     AddChild(icon.GetPointer());
-    if (icon->GetQuirk(AbstractLauncherIcon::QUIRK_ACTIVE))
+    if (icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
       _last_active_icon = icon;
   }
 }

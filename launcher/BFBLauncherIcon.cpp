@@ -39,9 +39,9 @@ BFBLauncherIcon::BFBLauncherIcon(LauncherHideMode hide_mode)
 {
   tooltip_text = _("Dash Home");
   icon_name = PKGDATADIR"/launcher_bfb.png";
-  SetQuirk(QUIRK_VISIBLE, true);
-  SetQuirk(QUIRK_RUNNING, false);
-  SetIconType(TYPE_HOME);
+  SetQuirk(Quirk::VISIBLE, true);
+  SetQuirk(Quirk::RUNNING, false);
+  SetIconType(IconType::HOME);
 
   background_color_ = nux::color::White;
 
@@ -66,7 +66,7 @@ void BFBLauncherIcon::OnOverlayShown(GVariant *data, bool visible)
   if (overlay_identity.Str() == "dash" && IsVisibleOnMonitor(overlay_monitor))
   {
     tooltip_enabled = !visible;
-    SetQuirk(QUIRK_ACTIVE, visible);
+    SetQuirk(Quirk::ACTIVE, visible);
     EmitNeedsRedraw();
   }
   // If the hud is open, we hide the BFB if we have a locked launcher

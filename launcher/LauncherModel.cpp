@@ -56,7 +56,7 @@ unity::debug::Introspectable::IntrospectableList LauncherModel::GetIntrospectabl
 
 bool LauncherModel::IconShouldShelf(AbstractLauncherIcon::Ptr icon) const
 {
-  return icon->GetIconType() == AbstractLauncherIcon::TYPE_TRASH;
+  return icon->GetIconType() == AbstractLauncherIcon::IconType::TRASH;
 }
 
 bool LauncherModel::CompareIcons(AbstractLauncherIcon::Ptr first, AbstractLauncherIcon::Ptr second)
@@ -161,7 +161,7 @@ LauncherModel::IconHasSister(AbstractLauncherIcon::Ptr icon) const
   const_iterator it;
   const_iterator end;
 
-  if (icon && icon->GetIconType() == AbstractLauncherIcon::TYPE_DEVICE)
+  if (icon && icon->GetIconType() == AbstractLauncherIcon::IconType::DEVICE)
     return true;
 
   if (IconShouldShelf(icon))
@@ -357,7 +357,7 @@ void LauncherModel::SelectNext()
     if (temp >= Size())
       temp = 0;
 
-    if (_inner[temp]->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE))
+    if (_inner[temp]->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE))
     {
       selection_ = temp;
       selection_changed.emit(Selection());
@@ -377,7 +377,7 @@ void LauncherModel::SelectPrevious()
     if (temp < 0)
       temp = Size() - 1;
 
-    if (_inner[temp]->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE))
+    if (_inner[temp]->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE))
     {
       selection_ = temp;
       selection_changed.emit(Selection());
