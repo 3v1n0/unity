@@ -45,7 +45,7 @@ const unsigned int volume_changed_timeout =  500;
 }
 
 DeviceLauncherIcon::DeviceLauncherIcon(glib::Object<GVolume> const& volume)
-  : SimpleLauncherIcon()
+  : SimpleLauncherIcon(IconType::DEVICE)
   , volume_(volume)
 {
   signal_volume_changed_.Connect(volume, "changed", sigc::mem_fun(this, &DeviceLauncherIcon::OnVolumeChanged));
@@ -109,7 +109,6 @@ void DeviceLauncherIcon::UpdateDeviceIcon()
   tooltip_text = name_;
   icon_name = icon_string.Str();
 
-  SetIconType(IconType::DEVICE);
   SetQuirk(Quirk::RUNNING, false);
 }
 

@@ -565,14 +565,13 @@ void Controller::Impl::UpdateNumWorkspaces(int workspaces)
 
 void Controller::Impl::InsertExpoAction()
 {
-  expo_icon_ = AbstractLauncherIcon::Ptr(new SimpleLauncherIcon());
+  expo_icon_ = AbstractLauncherIcon::Ptr(new SimpleLauncherIcon(AbstractLauncherIcon::IconType::EXPO));
 
   SimpleLauncherIcon* icon = static_cast<SimpleLauncherIcon*>(expo_icon_.GetPointer());
   icon->tooltip_text = _("Workspace Switcher");
   icon->icon_name = "workspace-switcher";
   icon->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, true);
   icon->SetQuirk(AbstractLauncherIcon::Quirk::RUNNING, false);
-  icon->SetIconType(AbstractLauncherIcon::IconType::EXPO);
   icon->SetShortcut('s');
 
   on_expoicon_activate_connection_ = icon->activate.connect(sigc::mem_fun(this, &Impl::OnExpoActivated));

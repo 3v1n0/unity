@@ -222,7 +222,7 @@ public:
     return quirk_times_[unsigned(quirk)];
   }
 
-  IconType GetIconType()
+  IconType GetIconType() const
   {
     return type_;
   }

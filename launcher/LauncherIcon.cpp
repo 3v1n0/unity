@@ -72,8 +72,9 @@ NUX_IMPLEMENT_OBJECT_TYPE(LauncherIcon);
 int LauncherIcon::_current_theme_is_mono = -1;
 glib::Object<GtkIconTheme> LauncherIcon::_unity_theme;
 
-LauncherIcon::LauncherIcon()
-  : _remote_urgent(false)
+LauncherIcon::LauncherIcon(IconType type)
+  : _icon_type(type)
+  , _remote_urgent(false)
   , _present_urgency(0)
   , _progress(0)
   , _sort_priority(0)
@@ -81,7 +82,6 @@ LauncherIcon::LauncherIcon()
   , _background_color(nux::color::White)
   , _glow_color(nux::color::White)
   , _shortcut(0)
-  , _icon_type(IconType::NONE)
   , _center(max_num_monitors)
   , _has_visible_window(max_num_monitors)
   , _last_stable(max_num_monitors)
@@ -812,12 +812,6 @@ LauncherIcon::Remove()
 }
 
 void
-LauncherIcon::SetIconType(IconType type)
-{
-  _icon_type = type;
-}
-
-void
 LauncherIcon::SetSortPriority(int priority)
 {
   _sort_priority = priority;
@@ -830,7 +824,7 @@ LauncherIcon::SortPriority()
 }
 
 LauncherIcon::IconType
-LauncherIcon::GetIconType()
+LauncherIcon::GetIconType() const
 {
   return _icon_type;
 }
