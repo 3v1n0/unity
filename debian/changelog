@@ -1,4 +1,4 @@
-unity (6.2.0-0ubuntu3) UNRELEASED; urgency=low
+unity (6.2.0-0ubuntu2) UNRELEASED; urgency=low
 
   * debian/control:
     - create unity-2d transitional packages
