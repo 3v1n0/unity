@@ -96,7 +96,8 @@ public:
     return _parent;
   };
 
-  nux::ObjectPtr<nux::View> GetActiveTooltip() const;  // nullptr = no tooltip
+  nux::ObjectPtr<nux::View> const& GetActiveTooltip() const;
+  nux::ObjectPtr<LauncherDragWindow> const& GetDraggedIcon() const;
 
   virtual void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);

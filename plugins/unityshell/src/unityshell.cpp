@@ -1426,22 +1426,37 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
     }
   }
 
-  auto launchers = launcher_controller_->launchers();
-  for (auto launcher : launchers)
+  auto const& launchers = launcher_controller_->launchers();
+  for (auto const& launcher : launchers)
   {
     if (!launcher->Hidden())
     {
-      nux::Geometry geo = launcher->GetAbsoluteGeometry();
+      nux::Geometry const& geo = launcher->GetAbsoluteGeometry();
       CompRegion launcher_region(geo.x, geo.y, geo.width, geo.height);
+
       if (damage.intersects(launcher_region))
         launcher->QueueDraw();
-      nux::ObjectPtr<nux::View> tooltip = launcher->GetActiveTooltip();
-      if (!tooltip.IsNull())
+
+      nux::ObjectPtr<nux::View> const& tooltip = launcher->GetActiveTooltip();
+
+      if (tooltip)
       {
-        nux::Geometry tip = tooltip->GetAbsoluteGeometry();
-        CompRegion tip_region(tip.x, tip.y, tip.width, tip.height);
+        nux::Geometry const& g = tooltip->GetAbsoluteGeometry();
+        CompRegion tip_region(g.x, g.y, g.width, g.height);
+
         if (damage.intersects(tip_region))
           tooltip->QueueDraw();
+      }
+
+      nux::ObjectPtr<LauncherDragWindow> const& dragged_icon = launcher->GetDraggedIcon();
+
+      if (dragged_icon)
+      {
+        nux::Geometry const& g = dragged_icon->GetAbsoluteGeometry();
+        CompRegion icon_region(g.x, g.y, g.width, g.height);
+
+        if (damage.intersects(icon_region))
+          dragged_icon->QueueDraw();
       }
     }
   }
@@ -1449,8 +1464,10 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
   std::vector<nux::View*> const& panels(panel_controller_->GetPanelViews());
   for (nux::View* view : panels)
   {
-    nux::Geometry geo = view->GetAbsoluteGeometry();
+    nux::Geometry const& geo = view->GetAbsoluteGeometry();
+
     CompRegion panel_region(geo.x, geo.y, geo.width, geo.height);
+
     if (damage.intersects(panel_region))
       view->QueueDraw();
   }
@@ -1461,8 +1478,9 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
     QuicklistView* view = qm->Current();
     if (view)
     {
-      nux::Geometry geo = view->GetAbsoluteGeometry();
+      nux::Geometry const& geo = view->GetAbsoluteGeometry();
       CompRegion quicklist_region(geo.x, geo.y, geo.width, geo.height);
+
       if (damage.intersects(quicklist_region))
         view->QueueDraw();
     }
@@ -1485,7 +1503,8 @@ void UnityScreen::nuxDamageCompiz()
   CompRegion nux_damage;
 
   std::vector<nux::Geometry> const& dirty = wt->GetDrawList();
-  for (auto geo : dirty)
+
+  for (auto const& geo : dirty)
     nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
 
   if (launcher_controller_->IsOverlayOpen())
@@ -1495,15 +1514,24 @@ void UnityScreen::nuxDamageCompiz()
     nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
   }
 
-  auto launchers = launcher_controller_->launchers();
-  for (auto launcher : launchers)
+  auto const& launchers = launcher_controller_->launchers();
+  for (auto const& launcher : launchers)
   {
     if (!launcher->Hidden())
     {
       nux::ObjectPtr<nux::View> tooltip = launcher->GetActiveTooltip();
-      if (!tooltip.IsNull())
+
+      if (tooltip)
       {
         nux::Geometry const& g = tooltip->GetAbsoluteGeometry();
+        nux_damage += CompRegion(g.x, g.y, g.width, g.height);
+      }
+
+      nux::ObjectPtr<LauncherDragWindow> const& dragged_icon = launcher->GetDraggedIcon();
+
+      if (dragged_icon)
+      {
+        nux::Geometry const& g = dragged_icon->GetAbsoluteGeometry();
         nux_damage += CompRegion(g.x, g.y, g.width, g.height);
       }
     }
