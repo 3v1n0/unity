@@ -124,9 +124,9 @@ void HudLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   }
 }
 
-std::list<DbusmenuMenuitem*> HudLauncherIcon::GetMenus()
+std::vector<glib::Object<DbusmenuMenuitem>> HudLauncherIcon::GetMenus()
 {
-  std::list<DbusmenuMenuitem*> result;
+  std::vector<glib::Object<DbusmenuMenuitem>> result;
   return result;
 }
 

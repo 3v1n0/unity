@@ -46,7 +46,7 @@ public:
   void SetHideMode(LauncherHideMode hide_mode);
 
 protected:
-  std::list<DbusmenuMenuitem*> GetMenus();
+  std::vector<glib::Object<DbusmenuMenuitem>> GetMenus();
   std::string GetName() const;
 
 private:
@@ -56,7 +56,7 @@ private:
   nux::Color background_color_;
   dash::LensDirectoryReader::Ptr reader_;
   LauncherHideMode launcher_hide_mode_;
-  unity::UBusManager ubus_manager_;
+  UBusManager ubus_manager_;
   glib::SignalManager signals_;
 };
 

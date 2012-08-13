@@ -179,7 +179,7 @@ public:
 
   virtual std::string RemoteUri() = 0;
 
-  virtual std::list<DbusmenuMenuitem*> Menus() = 0;
+  virtual std::vector<glib::Object<DbusmenuMenuitem>> Menus() = 0;
 
   virtual nux::DndAction QueryAcceptDrop(DndData const& dnd_data) = 0;
 

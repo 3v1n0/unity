@@ -46,10 +46,7 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
 int main(int argc, char** argv)
 {
   g_type_init();
-  
   gtk_init(&argc, &argv);
-
-  dbus_g_thread_init();
 
   nux::NuxInitialize(0);
 

@@ -114,6 +114,7 @@ protected:
   nux::ObjectPtr<nux::BaseTexture> _normalTexture[2];
   nux::ObjectPtr<nux::BaseTexture> _prelightTexture[2];
   QuicklistMenuItemType _item_type;
+public:
   glib::Object<DbusmenuMenuitem> _menu_item;
   bool _prelight;
   int _pre_layout_width;

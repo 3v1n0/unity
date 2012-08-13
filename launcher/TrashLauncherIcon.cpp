@@ -74,15 +74,12 @@ TrashLauncherIcon::~TrashLauncherIcon()
   g_cancellable_cancel(cancellable_);
 }
 
-std::list<DbusmenuMenuitem*> TrashLauncherIcon::GetMenus()
+std::vector<glib::Object<DbusmenuMenuitem>> TrashLauncherIcon::GetMenus()
 {
-  std::list<DbusmenuMenuitem*> result;
-  DbusmenuMenuitem* menu_item;
+  std::vector<glib::Object<DbusmenuMenuitem>> result;
 
   /* Empty Trash */
-  menu_item = dbusmenu_menuitem_new();
-  g_object_ref(menu_item);
-
+  glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
   dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Empty Trash..."));
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, !empty_);
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
