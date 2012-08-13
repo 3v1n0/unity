@@ -389,6 +389,8 @@ private:
 
   UBusManager ubus_;
   glib::SourceManager sources_;
+
+  friend class TestLauncher;
 };
 
 }
