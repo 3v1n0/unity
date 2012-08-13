@@ -46,7 +46,7 @@ namespace switcher
 Controller::Controller(unsigned int load_timeout)
   :  timeout_length(75)
   ,  detail_on_timeout(true)
-  ,  detail_timeout_length(500)
+  ,  detail_timeout_length(250)
   ,  initial_detail_timeout_length(1500)
   ,  construct_timeout_(load_timeout)
   ,  main_layout_(nullptr)
