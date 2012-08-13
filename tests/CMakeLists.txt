@@ -74,6 +74,7 @@ add_executable (test-unit
                 ${CMAKE_SOURCE_DIR}/launcher/QuicklistMenuItemRadio.cpp
                 ${CMAKE_SOURCE_DIR}/launcher/QuicklistMenuItemSeparator.cpp
                 ${CMAKE_SOURCE_DIR}/launcher/QuicklistView.cpp
+                ${CMAKE_SOURCE_DIR}/unity-shared/UBusWrapper.cpp
                 ${CMAKE_SOURCE_DIR}/unity-shared/StaticCairoText.cpp
                 ../services/panel-service.c
                 ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c

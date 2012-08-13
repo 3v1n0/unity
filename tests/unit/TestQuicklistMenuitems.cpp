@@ -20,18 +20,18 @@
 
 #include "config.h"
 
+#include <libdbusmenu-glib/client.h>
+
 #include "QuicklistMenuItem.h"
 #include "QuicklistMenuItemCheckmark.h"
 #include "QuicklistMenuItemLabel.h"
 #include "QuicklistMenuItemRadio.h"
 #include "QuicklistMenuItemSeparator.h"
 
-#include "Nux/Nux.h"
 #include "Nux/VLayout.h"
 #include "Nux/HLayout.h"
 #include "Nux/WindowThread.h"
 #include "Nux/WindowCompositor.h"
-#include "Nux/BaseWindow.h"
 
 #include "QuicklistView.h"
 #include "TestThreadHelper.h"
@@ -89,9 +89,9 @@ TestMenuItemCheckmark()
 
   QuicklistMenuItemCheckmark* qlCheckmarkItem = NULL;
 
-  qlCheckmarkItem = new QuicklistMenuItemCheckmark(item, true);
+  qlCheckmarkItem = new QuicklistMenuItemCheckmark(item);
 
-  g_assert_cmpstr(qlCheckmarkItem->GetLabel(), == , "Unchecked");
+  g_assert_cmpstr(qlCheckmarkItem->GetLabel().c_str(), == , "Unchecked");
   g_assert_cmpint(qlCheckmarkItem->GetEnabled(), == , false);
   g_assert_cmpint(qlCheckmarkItem->GetActive(), == , false);
   g_assert_cmpint(qlCheckmarkItem->GetSelectable(), == , false);
@@ -126,9 +126,9 @@ TestMenuItemLabel()
 
   QuicklistMenuItemLabel* qlLabelItem = NULL;
 
-  qlLabelItem = new QuicklistMenuItemLabel(item, true);
+  qlLabelItem = new QuicklistMenuItemLabel(item);
 
-  g_assert_cmpstr(qlLabelItem->GetLabel(), == , "A Label");
+  g_assert_cmpstr(qlLabelItem->GetLabel().c_str(), == , "A Label");
   g_assert_cmpint(qlLabelItem->GetEnabled(), == , true);
   g_assert_cmpint(qlLabelItem->GetSelectable(), == , true);
   g_assert_cmpint(qlLabelItem->IsMarkupEnabled(), == , true);
@@ -165,10 +165,10 @@ TestMenuItemRadio()
 
   QuicklistMenuItemRadio* qlRadioItem = NULL;
 
-  qlRadioItem = new QuicklistMenuItemRadio(item, true);
+  qlRadioItem = new QuicklistMenuItemRadio(item);
   qlRadioItem->EnableLabelMarkup(true);
 
-  g_assert_cmpstr(qlRadioItem->GetLabel(), == , "Radio Active");
+  g_assert_cmpstr(qlRadioItem->GetLabel().c_str(), == , "Radio Active");
   g_assert_cmpint(qlRadioItem->GetEnabled(), == , true);
   g_assert_cmpint(qlRadioItem->GetActive(), == , true);
   g_assert_cmpint(qlRadioItem->GetSelectable(), == , true);
@@ -198,13 +198,49 @@ TestMenuItemSeparator()
 
   QuicklistMenuItemSeparator* qlSeparatorItem = NULL;
 
-  qlSeparatorItem = new QuicklistMenuItemSeparator(item, true);
+  qlSeparatorItem = new QuicklistMenuItemSeparator(item);
 
   g_assert_cmpint(qlSeparatorItem->GetEnabled(), == , true);
   g_assert_cmpint(qlSeparatorItem->GetSelectable(), == , false);
 
   qlSeparatorItem->Dispose();
   g_object_unref(item);
+}
+
+void populate_test_quicklist(QuicklistView* ql, DbusmenuMenuitem* root)
+{
+  ql->RemoveAllMenuItem();
+
+  if (root == 0)
+    return;
+
+  GList* child = NULL;
+  for (child = dbusmenu_menuitem_get_children(root); child != NULL; child = g_list_next(child))
+  {
+    const gchar* type = dbusmenu_menuitem_property_get((DbusmenuMenuitem*)child->data, DBUSMENU_MENUITEM_PROP_TYPE);
+    const gchar* toggle_type = dbusmenu_menuitem_property_get((DbusmenuMenuitem*)child->data, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
+
+    if (g_strcmp0(type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)
+    {
+      QuicklistMenuItemSeparator* item = new QuicklistMenuItemSeparator((DbusmenuMenuitem*)child->data, NUX_TRACKER_LOCATION);
+      ql->AddMenuItem(item);
+    }
+    else if (g_strcmp0(toggle_type, DBUSMENU_MENUITEM_TOGGLE_CHECK) == 0)
+    {
+      QuicklistMenuItemCheckmark* item = new QuicklistMenuItemCheckmark((DbusmenuMenuitem*)child->data, NUX_TRACKER_LOCATION);
+      ql->AddMenuItem(item);
+    }
+    else if (g_strcmp0(toggle_type, DBUSMENU_MENUITEM_TOGGLE_RADIO) == 0)
+    {
+      QuicklistMenuItemRadio* item = new QuicklistMenuItemRadio((DbusmenuMenuitem*)child->data, NUX_TRACKER_LOCATION);
+      ql->AddMenuItem(item);
+    }
+    else //if (g_strcmp0 (type, DBUSMENU_MENUITEM_PROP_LABEL) == 0)
+    {
+      QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel((DbusmenuMenuitem*)child->data, NUX_TRACKER_LOCATION);
+      ql->AddMenuItem(item);
+    }
+  }
 }
 
 static void
@@ -239,18 +275,17 @@ TestQuicklistMenuItem()
   dbusmenu_menuitem_child_append(root, child);
 
   QuicklistView* quicklist = new QuicklistView();
-
-  quicklist->TestMenuItems(root);
+  populate_test_quicklist(quicklist, root);
 
   g_assert_cmpint(quicklist->GetNumItems(), == , 4);
-  g_assert_cmpint(quicklist->GetNthType(0), == , unity::MENUITEM_TYPE_LABEL);
-  g_assert_cmpint(quicklist->GetNthType(1), == , unity::MENUITEM_TYPE_SEPARATOR);
-  g_assert_cmpint(quicklist->GetNthType(2), == , unity::MENUITEM_TYPE_LABEL);
-  g_assert_cmpint(quicklist->GetNthType(3), == , unity::MENUITEM_TYPE_CHECK);
+  g_assert(quicklist->GetNthType(0) == unity::QuicklistMenuItemType::LABEL);
+  g_assert(quicklist->GetNthType(1) == unity::QuicklistMenuItemType::SEPARATOR);
+  g_assert(quicklist->GetNthType(2) == unity::QuicklistMenuItemType::LABEL);
+  g_assert(quicklist->GetNthType(3) == unity::QuicklistMenuItemType::CHECK);
 
-  g_assert_cmpstr(quicklist->GetNthItems(0)->GetLabel(), == , "label 0");
-  g_assert_cmpstr(quicklist->GetNthItems(2)->GetLabel(), == , "label 1");
-  g_assert_cmpstr(quicklist->GetNthItems(3)->GetLabel(), == , "check mark 0");
+  g_assert_cmpstr(quicklist->GetNthItems(0)->GetLabel().c_str(), == , "label 0");
+  g_assert_cmpstr(quicklist->GetNthItems(2)->GetLabel().c_str(), == , "label 1");
+  g_assert_cmpstr(quicklist->GetNthItems(3)->GetLabel().c_str(), == , "check mark 0");
 
   g_assert_cmpint(quicklist->GetChildren().size(), == , 4);
 
