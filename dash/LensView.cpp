@@ -279,6 +279,8 @@ void LensView::OnCategoryAdded(Category const& category)
                     << ", " << renderer_name
                     << ", " << boost::lexical_cast<int>(index) << ")";
 
+  // FIXME: duplicating PlacesGroups when lens crashes and restarts!
+
   PlacesGroup* group = new PlacesGroup();
   AddChild(group);
   group->SetName(name);
@@ -320,6 +322,9 @@ void LensView::OnCategoryAdded(Category const& category)
 
   if (reset_filter_models)
   {
+    /* HomeLens is reodering the categories, and since their index is based
+     * on the row position in the model, we need to re-initialize the filter
+     * models if we got insert and not an append */
     for (auto it = categories_.begin() + (index + 1); it != categories_.end(); ++it)
     {
       grid = static_cast<ResultViewGrid*>((*it)->GetChildView());

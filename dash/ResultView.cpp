@@ -56,13 +56,10 @@ ResultView::~ResultView()
 {
   ClearIntrospectableWrappers();
 
-  if (result_model_)
+  for (ResultIterator iter(GetIteratorAtRow(0)); !iter.IsLast(); ++iter)
   {
-    for (ResultIterator iter(result_model_); !iter.IsLast(); ++iter)
-    {
-      Result result(*iter);
-      renderer_->Unload(result);
-    }
+    Result result(*iter);
+    renderer_->Unload(result);
   }
 
   renderer_->UnReference();
