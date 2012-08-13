@@ -24,6 +24,7 @@
 #include <Nux/View.h>
 #include <Nux/BaseWindow.h>
 #include <Nux/TimerProc.h>
+#include <NuxGraphics/GestureEvent.h>
 #include <NuxGraphics/IOpenGLAsmShader.h>
 
 #include "PointerBarrier.h"
@@ -389,6 +390,8 @@ private:
 
   UBusManager ubus_;
   glib::SourceManager sources_;
+
+  friend class TestLauncher;
 };
 
 }

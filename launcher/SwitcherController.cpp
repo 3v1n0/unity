@@ -70,6 +70,13 @@ void Controller::OnBackgroundUpdate(GVariant* data)
     view_->background_color = bg_color_;
 }
 
+bool Controller::CanShowSwitcher(const std::vector<AbstractLauncherIcon::Ptr>& results) const
+{
+  bool empty = (show_desktop_disabled_ ? results.empty() : results.size() == 1);
+
+  return (!empty && !WindowManager::Default()->IsWallActive());
+}
+
 void Controller::Show(ShowMode show, SortMode sort, bool reverse,
                       std::vector<AbstractLauncherIcon::Ptr> results)
 {
