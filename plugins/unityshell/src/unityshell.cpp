@@ -39,8 +39,6 @@
 #include "BackgroundEffectHelper.h"
 #include "UnityGestureBroker.h"
 
-#include <dbus/dbus.h>
-#include <dbus/dbus-glib.h>
 #include <glib/gi18n-lib.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -201,8 +199,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   if (!failed)
   {
      notify_init("unityshell");
-
-     dbus_g_thread_init();
 
      unity_a11y_preset_environment();
 
