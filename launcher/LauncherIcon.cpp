@@ -553,9 +553,9 @@ bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
 
   _quicklist->RemoveAllMenuItem();
 
-  for (auto menu_item : menus)
+  for (auto const& menu_item : menus)
   {
-    QuicklistMenuItem* ql_item;
+    QuicklistMenuItem* ql_item = nullptr;
 
     const gchar* type = dbusmenu_menuitem_property_get(menu_item, DBUSMENU_MENUITEM_PROP_TYPE);
     const gchar* toggle_type = dbusmenu_menuitem_property_get(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
@@ -596,7 +596,7 @@ bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
       monitor = 0;
   }
 
-  nux::Geometry geo = _parent_geo[monitor];
+  nux::Geometry const& geo = _parent_geo[monitor];
   int tip_x = geo.x + geo.width - 4 * geo.width / 48;
   int tip_y = _center[monitor].y;
 

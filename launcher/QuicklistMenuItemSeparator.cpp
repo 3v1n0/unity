@@ -24,7 +24,7 @@
 namespace unity
 {
 
-QuicklistMenuItemSeparator::QuicklistMenuItemSeparator(DbusmenuMenuitem* item, NUX_FILE_LINE_DECL)
+QuicklistMenuItemSeparator::QuicklistMenuItemSeparator(glib::Object<DbusmenuMenuitem> const& item, NUX_FILE_LINE_DECL)
   : QuicklistMenuItem(QuicklistMenuItemType::SEPARATOR, item, NUX_FILE_LINE_PARAM)
   , _color(1.0f, 1.0f, 1.0f, 0.5f)
   , _premultiplied_color(0.5f, 0.5f, 0.5f, 0.5f)

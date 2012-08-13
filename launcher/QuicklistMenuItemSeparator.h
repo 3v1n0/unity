@@ -29,7 +29,7 @@ namespace unity
 class QuicklistMenuItemSeparator : public QuicklistMenuItem
 {
 public:
-  QuicklistMenuItemSeparator(DbusmenuMenuitem* item, NUX_FILE_LINE_PROTO);
+  QuicklistMenuItemSeparator(glib::Object<DbusmenuMenuitem> const& item, NUX_FILE_LINE_PROTO);
 
   virtual bool GetSelectable();
 
