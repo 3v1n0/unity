@@ -54,13 +54,13 @@ private:
   MenuItemsList GetMenus();
 
   static void UpdateTrashIconCb(GObject* source, GAsyncResult* res, gpointer data);
-  static void OnEmptyTrash(DbusmenuMenuitem* item, int time, TrashLauncherIcon* self);
 
   gboolean empty_;
   glib::DBusProxy proxy_;
   glib::Object<GCancellable> cancellable_;
   glib::Object<GFileMonitor> trash_monitor_;
   glib::Signal<void, GFileMonitor*, GFile*, GFile*, GFileMonitorEvent> trash_changed_signal_;
+  glib::Signal<void, DbusmenuMenuitem*, int> empty_activated_signal_;
 };
 
 }
