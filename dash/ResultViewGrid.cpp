@@ -156,8 +156,7 @@ bool ResultViewGrid::DoLazyLoad()
   {
     if ((!expanded && index < items_per_row) || expanded)
     {
-      Result result(*it);
-      renderer_->Preload(result);
+      renderer_->Preload(*it);
       last_lazy_loaded_result_ = index;
     }
 
@@ -631,7 +630,7 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
   {
     // we got a click on a button so activate it
     ResultIterator it(GetIteratorAtRow(index));
-    Result result = *(it);
+    Result result = *it;
     selected_index_ = index;
     focused_uri_ = result.uri;
     UriActivated.emit(result.uri);

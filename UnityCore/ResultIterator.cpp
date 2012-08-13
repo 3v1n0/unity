@@ -129,7 +129,7 @@ ResultIterator ResultIterator::operator-(int count) const
   return tmp;
 }
 
-Result const& ResultIterator::operator*()
+Result& ResultIterator::operator*()
 {
   if (cache_invalidated_)
     iter_result_ = Result(model_, iter_, tag_);

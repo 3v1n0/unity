@@ -56,10 +56,9 @@ ResultView::~ResultView()
 {
   ClearIntrospectableWrappers();
 
-  for (ResultIterator iter(GetIteratorAtRow(0)); !iter.IsLast(); ++iter)
+  for (ResultIterator it(GetIteratorAtRow(0)); !it.IsLast(); ++it)
   {
-    Result result(*iter);
-    renderer_->Unload(result);
+    renderer_->Unload(*it);
   }
 
   renderer_->UnReference();
@@ -119,8 +118,7 @@ void ResultView::SetModel(glib::Object<DeeModel> const& model, DeeModelTag* tag)
 
     for (ResultIterator it(GetIteratorAtRow(0)); !it.IsLast(); ++it)
     {
-      Result result(*it);
-      RemoveResult(result);
+      RemoveResult(*it);
     }
   }
 
@@ -140,8 +138,7 @@ void ResultView::SetModel(glib::Object<DeeModel> const& model, DeeModelTag* tag)
 
     for (ResultIterator it(GetIteratorAtRow(0)); !it.IsLast(); ++it)
     {
-      Result result(*it);
-      AddResult(result);
+      AddResult(*it);
     }
   }
 }
