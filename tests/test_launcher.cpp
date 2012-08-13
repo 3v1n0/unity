@@ -104,9 +104,9 @@ TEST_F(TestLauncher, TestQuirksDuringDnd)
 
   Utils::WaitForTimeout(1);
 
-  EXPECT_FALSE(first->GetQuirk(AbstractLauncherIcon::QUIRK_DESAT));
-  EXPECT_FALSE(second->GetQuirk(AbstractLauncherIcon::QUIRK_DESAT));
-  EXPECT_TRUE(third->GetQuirk(AbstractLauncherIcon::QUIRK_DESAT));
+  EXPECT_FALSE(first->GetQuirk(launcher::AbstractLauncherIcon::Quirk::DESAT));
+  EXPECT_FALSE(second->GetQuirk(launcher::AbstractLauncherIcon::Quirk::DESAT));
+  EXPECT_TRUE(third->GetQuirk(launcher::AbstractLauncherIcon::Quirk::DESAT));
 }
 
 
@@ -124,9 +124,9 @@ TEST_F(TestLauncher, TestIconBackgroundIntensity)
   options_->backlight_mode = BACKLIGHT_NORMAL;
   options_->launch_animation = LAUNCH_ANIMATION_PULSE;
 
-  first->SetQuirk(AbstractLauncherIcon::QUIRK_RUNNING, true);
-  second->SetQuirk(AbstractLauncherIcon::QUIRK_RUNNING, true);
-  third->SetQuirk(AbstractLauncherIcon::QUIRK_RUNNING, false);
+  first->SetQuirk(AbstractLauncherIcon::Quirk::RUNNING, true);
+  second->SetQuirk(AbstractLauncherIcon::Quirk::RUNNING, true);
+  third->SetQuirk(AbstractLauncherIcon::Quirk::RUNNING, false);
 
   Utils::WaitForTimeoutMSec(STARTING_ANIMATION_DURATION);
   timespec current;
@@ -139,3 +139,4 @@ TEST_F(TestLauncher, TestIconBackgroundIntensity)
 
 }
 }
+

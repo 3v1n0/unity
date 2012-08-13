@@ -49,9 +49,9 @@ public:
   {
     tooltip_text = "Mock Icon";
     sort_priority_ = 0;
-    type_ = TYPE_APPLICATION;
+    type_ = IconType::APPLICATION;
 
-    for (int i = 0; i < QUIRK_LAST; ++i)
+    for (unsigned i = 0; i < unsigned(Quirk::LAST); ++i)
     {
       quirks_[i] = false;
     }
@@ -206,20 +206,20 @@ public:
 
   bool GetQuirk(Quirk quirk) const
   {
-    return quirks_[quirk];
+    return quirks_[unsigned(quirk)];
   }
 
   void SetQuirk(Quirk quirk, bool value)
   {
-    quirks_[quirk] = value;
-    clock_gettime(CLOCK_MONOTONIC, &(quirk_times_[quirk]));
+    quirks_[unsigned(quirk)] = value;
+    clock_gettime(CLOCK_MONOTONIC, &(quirk_times_[unsigned(quirk)]));
   }
 
   void ResetQuirkTime(Quirk quirk) {};
 
   struct timespec GetQuirkTime(Quirk quirk)
   {
-    return quirk_times_[quirk];
+    return quirk_times_[unsigned(quirk)];
   }
 
   IconType GetIconType()
@@ -344,8 +344,8 @@ private:
   nux::BaseTexture* icon_;
   int sort_priority_;
   IconType type_;
-  bool quirks_[QUIRK_LAST];
-  timespec  quirk_times_[QUIRK_LAST];
+  bool quirks_[unsigned(Quirk::LAST)];
+  timespec quirk_times_[unsigned(Quirk::LAST)];
 };
 
 }

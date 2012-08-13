@@ -8,7 +8,7 @@ include (cmake/Documentation.cmake)
 #
 set (PROJECT_NAME "unity")
 set (UNITY_MAJOR 6)
-set (UNITY_MINOR 0)
+set (UNITY_MINOR 2)
 set (UNITY_MICRO 0)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "6.0")
