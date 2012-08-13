@@ -1895,7 +1895,7 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
   auto results = launcher_controller_->GetAltTabIcons(show_mode == switcher::ShowMode::CURRENT_VIEWPORT,
                                                       switcher_controller_->IsShowDesktopDisabled());
 
-  if (!(results.size() == 1 && results[0]->GetIconType() == AbstractLauncherIcon::IconType::DESKTOP) && !results.empty())
+  if (switcher_controller_->CanShowSwitcher(results))
     switcher_controller_->Show(show_mode, switcher::SortMode::FOCUS_ORDER, false, results);
 
   return true;
@@ -1949,7 +1949,9 @@ bool UnityScreen::altTabForwardAllInitiate(CompAction* action,
                                         CompAction::State state,
                                         CompOption::Vector& options)
 {
-  if (switcher_controller_->Visible())
+  if (WindowManager::Default()->IsWallActive())
+    return false;
+  else if (switcher_controller_->Visible())
     switcher_controller_->Next();
   else
     altTabInitiateCommon(action, switcher::ShowMode::ALL);
