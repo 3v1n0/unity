@@ -200,6 +200,7 @@ if (GTEST_SRC_DIR AND
   add_executable(test-gtest
                  test_main.cpp
                  test_bamflaunchericon.cpp
+                 test_bfb_launcher_icon.cpp
                  test_dashview_impl.cpp
                  test_edge_barrier_controller.cpp
                  test_launcher.cpp
