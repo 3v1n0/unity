@@ -28,6 +28,8 @@
 
 namespace unity
 {
+const char* QuicklistMenuItem::MARKUP_ENABLED_PROPERTY = "unity-use-markup";
+const char* QuicklistMenuItem::OVERLAY_MENU_ITEM_PROPERTY = "unity-overlay-item";
 
 NUX_IMPLEMENT_OBJECT_TYPE(QuicklistMenuItem);
 
@@ -127,12 +129,16 @@ std::string QuicklistMenuItem::GetText() const
 
 void QuicklistMenuItem::Activate() const
 {
-  if (!_menu_item)
+  if (!_menu_item || !GetSelectable())
     return;
 
   dbusmenu_menuitem_handle_event(_menu_item, "clicked", nullptr, 0);
-  UBusManager manager;
-  manager.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+
+  if (!IsOverlayQuicklist())
+  {
+    UBusManager manager;
+    manager.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+  }
 }
 
 void QuicklistMenuItem::Select(bool select)
@@ -333,7 +339,7 @@ void QuicklistMenuItem::EnableLabelMarkup(bool enabled)
 {
   if (IsMarkupEnabled() != enabled)
   {
-    dbusmenu_menuitem_property_set_bool(_menu_item, "unity-use-markup", enabled);
+    dbusmenu_menuitem_property_set_bool(_menu_item, MARKUP_ENABLED_PROPERTY, enabled);
 
     _text = "";
     InitializeText();
@@ -345,8 +351,17 @@ bool QuicklistMenuItem::IsMarkupEnabled() const
   if (!_menu_item)
     return false;
 
-  gboolean markup = dbusmenu_menuitem_property_get_bool(_menu_item, "unity-use-markup");
+  gboolean markup = dbusmenu_menuitem_property_get_bool(_menu_item, MARKUP_ENABLED_PROPERTY);
   return (markup != FALSE);
+}
+
+bool QuicklistMenuItem::IsOverlayQuicklist() const
+{
+  if (!_menu_item)
+    return false;
+
+  gboolean overlay = dbusmenu_menuitem_property_get_bool(_menu_item, OVERLAY_MENU_ITEM_PROPERTY);
+  return (overlay != FALSE);
 }
 
 unsigned QuicklistMenuItem::GetCairoSurfaceWidth() const

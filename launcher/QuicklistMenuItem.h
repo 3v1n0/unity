@@ -61,6 +61,7 @@ public:
 
   void EnableLabelMarkup(bool enabled);
   bool IsMarkupEnabled() const;
+  bool IsOverlayQuicklist() const;
 
   void Activate() const;
 
@@ -78,6 +79,9 @@ public:
   sigc::signal<void, QuicklistMenuItem*, int, int> sigMouseReleased;
   sigc::signal<void, QuicklistMenuItem*, int, int> sigMouseClick;
   sigc::signal<void, QuicklistMenuItem*, int, int> sigMouseDrag;
+
+  static const char* MARKUP_ENABLED_PROPERTY;
+  static const char* OVERLAY_MENU_ITEM_PROPERTY;
 
 protected:
   // Introspection
