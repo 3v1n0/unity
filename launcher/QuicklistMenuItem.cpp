@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,322 +16,139 @@
  *
  * Authored by: Mirco Müller <mirco.mueller@canonical.com>
  *              Jay Taoko <jay.taoko@canonical.com>
- *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
-#include <gdk/gdk.h>
 #include <gtk/gtk.h>
-
-#include <Nux/Nux.h>
+#include <UnityCore/Variant.h>
+#include "unity-shared/UBusWrapper.h"
+#include "unity-shared/UBusMessages.h"
 
 #include "QuicklistMenuItem.h"
-#include <UnityCore/Variant.h>
-
-#include <X11/Xlib.h>
 
 namespace unity
 {
+const char* QuicklistMenuItem::MARKUP_ENABLED_PROPERTY = "unity-use-markup";
+const char* QuicklistMenuItem::OVERLAY_MENU_ITEM_PROPERTY = "unity-overlay-item";
 
 NUX_IMPLEMENT_OBJECT_TYPE(QuicklistMenuItem);
 
-static void
-OnPropertyChanged(gchar*             property,
-                  GValue*            value,
-                  QuicklistMenuItem* self);
-
-static void
-OnItemActivated(guint              timestamp,
-                QuicklistMenuItem* self);
-
-QuicklistMenuItem::QuicklistMenuItem(DbusmenuMenuitem* item,
-                                     NUX_FILE_LINE_DECL) :
-  View(NUX_FILE_LINE_PARAM)
+QuicklistMenuItem::QuicklistMenuItem(QuicklistMenuItemType type, DbusmenuMenuitem* item, NUX_FILE_LINE_DECL)
+  : nux::View(NUX_FILE_LINE_PARAM)
+  , _item_type(type)
+  , _menu_item(item, glib::AddRef())
+  , _prelight(false)
 {
-  if (item == 0)
-  {
-    g_warning("Invalid DbusmenuMenuitem in file %s at line %s.", G_STRFUNC, G_STRLOC);
-  }
-
-  Initialize(item, false);
-}
-
-QuicklistMenuItem::QuicklistMenuItem(DbusmenuMenuitem* item,
-                                     bool              debug,
-                                     NUX_FILE_LINE_DECL) :
-  View(NUX_FILE_LINE_PARAM)
-{
-  Initialize(item, debug);
-}
-
-void
-QuicklistMenuItem::Initialize(DbusmenuMenuitem* item, bool debug)
-{
-  _text        = "";
-  _color       = nux::Color(1.0f, 1.0f, 1.0f, 1.0f);
-  _menuItem    = DBUSMENU_MENUITEM(g_object_ref(item));
-  _debug       = debug;
-  _item_type   = MENUITEM_TYPE_UNKNOWN;
-
-  _normalTexture[0]   = NULL;
-  _normalTexture[1]   = NULL;
-  _prelightTexture[0] = NULL;
-  _prelightTexture[1] = NULL;
-
-  if (_menuItem)
-  {
-    g_signal_connect(_menuItem,
-                     "property-changed",
-                     G_CALLBACK(OnPropertyChanged),
-                     this);
-    g_signal_connect(_menuItem,
-                     "item-activated",
-                     G_CALLBACK(OnItemActivated),
-                     this);
-  }
-
   mouse_up.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseUp));
   mouse_click.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseClick));
   mouse_drag.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseDrag));
   mouse_enter.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseEnter));
   mouse_leave.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseLeave));
-
-  _prelight = false;
 }
 
 QuicklistMenuItem::~QuicklistMenuItem()
+{}
+
+std::string QuicklistMenuItem::GetDefaultText() const
 {
-  if (_normalTexture[0])
-    _normalTexture[0]->UnReference();
-
-  if (_normalTexture[1])
-    _normalTexture[1]->UnReference();
-
-  if (_prelightTexture[0])
-    _prelightTexture[0]->UnReference();
-
-  if (_prelightTexture[1])
-    _prelightTexture[1]->UnReference();
-
-  if (_menuItem)
-    g_object_unref(_menuItem);
+  return "";
 }
 
-const gchar*
-QuicklistMenuItem::GetDefaultText()
+void QuicklistMenuItem::InitializeText()
 {
-  return NULL;
-}
-
-void
-QuicklistMenuItem::InitializeText()
-{
-  if (_menuItem)
+  if (_menu_item)
     _text = GetText();
   else
     _text = GetDefaultText();
 
-  int textWidth = 1;
-  int textHeight = 1;
-  GetTextExtents(textWidth, textHeight);
-  SetMinimumSize(textWidth + ITEM_INDENT_ABS + 3 * ITEM_MARGIN,
-                 textHeight + 2 * ITEM_MARGIN);
+  // This is needed to setup the item size values
+  nux::CairoGraphics cairoGraphics(CAIRO_FORMAT_A1, 1, 1);
+  DrawText(cairoGraphics, 1, 1, nux::color::White);
 }
 
-QuicklistMenuItemType QuicklistMenuItem::GetItemType()
+QuicklistMenuItemType QuicklistMenuItem::GetItemType() const
 {
   return _item_type;
 }
 
-void
-QuicklistMenuItem::PreLayoutManagement()
+std::string QuicklistMenuItem::GetLabel() const
 {
-  View::PreLayoutManagement();
+  if (!_menu_item)
+    return "";
+
+  const char *label = dbusmenu_menuitem_property_get(_menu_item, DBUSMENU_MENUITEM_PROP_LABEL);
+
+  return label ? label : "";
 }
 
-long
-QuicklistMenuItem::PostLayoutManagement(long layoutResult)
+bool QuicklistMenuItem::GetEnabled() const
 {
-  long result = View::PostLayoutManagement(layoutResult);
-
-  return result;
-}
-
-void
-QuicklistMenuItem::Draw(nux::GraphicsEngine& gfxContext,
-                        bool                 forceDraw)
-{
-}
-
-void
-QuicklistMenuItem::DrawContent(nux::GraphicsEngine& gfxContext,
-                               bool                 forceDraw)
-{
-}
-
-void
-QuicklistMenuItem::PostDraw(nux::GraphicsEngine& gfxContext,
-                            bool                 forceDraw)
-{
-}
-
-const gchar*
-QuicklistMenuItem::GetLabel()
-{
-  if (_menuItem == 0)
-    return 0;
-  return dbusmenu_menuitem_property_get(_menuItem,
-                                        DBUSMENU_MENUITEM_PROP_LABEL);
-}
-
-bool
-QuicklistMenuItem::GetEnabled()
-{
-  if (_menuItem == 0)
+  if (!_menu_item)
     return false;
-  return dbusmenu_menuitem_property_get_bool(_menuItem,
-                                             DBUSMENU_MENUITEM_PROP_ENABLED);
+
+  return dbusmenu_menuitem_property_get_bool(_menu_item, DBUSMENU_MENUITEM_PROP_ENABLED);
 }
 
-bool
-QuicklistMenuItem::GetActive()
+bool QuicklistMenuItem::GetActive() const
 {
-  if (_menuItem == 0)
+  if (!_menu_item)
     return false;
-  return dbusmenu_menuitem_property_get_int(_menuItem,
-                                            DBUSMENU_MENUITEM_PROP_TOGGLE_STATE) == DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED;
+
+  int toggle = dbusmenu_menuitem_property_get_int(_menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE);
+
+  return (toggle == DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
 }
 
-bool
-QuicklistMenuItem::GetVisible()
+bool QuicklistMenuItem::GetVisible() const
 {
-  if (_menuItem == 0)
+  if (!_menu_item)
     return false;
-  return dbusmenu_menuitem_property_get_bool(_menuItem,
-                                             DBUSMENU_MENUITEM_PROP_VISIBLE);
+
+  return dbusmenu_menuitem_property_get_bool(_menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE);
 }
 
-bool
-QuicklistMenuItem::GetSelectable()
+bool QuicklistMenuItem::GetSelectable() const
 {
   return GetVisible() && GetEnabled();
 }
 
-void QuicklistMenuItem::ItemActivated()
+std::string QuicklistMenuItem::GetText() const
 {
-  if (_debug)
-    sigChanged.emit(*this);
+  std::string const& label = GetLabel();
 
-  std::cout << "ItemActivated() called" << std::endl;
-}
-
-gchar* QuicklistMenuItem::GetText()
-{
-  const gchar *label;
-  gchar *text;
-
-  if (!_menuItem)
-    return NULL;
-
-  label = GetLabel();
-
-  if (!label)
-    return NULL;
+  if (label.empty())
+    return "";
 
   if (!IsMarkupEnabled())
   {
-    text = g_markup_escape_text(label, -1);
-  }
-  else
-  {
-    text = g_strdup(label);
+    return glib::String(g_markup_escape_text(label.c_str(), -1)).Str();
   }
 
-  return text;
+  return label;
 }
 
-void QuicklistMenuItem::GetTextExtents(int& width, int& height)
+void QuicklistMenuItem::Activate() const
 {
-  GtkSettings* settings = gtk_settings_get_default();  // not ref'ed
-  gchar*       fontName = NULL;
-
-  g_object_get(settings, "gtk-font-name", &fontName, NULL);
-  GetTextExtents(fontName, width, height);
-  g_free(fontName);
-}
-
-void QuicklistMenuItem::GetTextExtents(const gchar* font,
-                                       int&         width,
-                                       int&         height)
-{
-  cairo_surface_t*      surface  = NULL;
-  cairo_t*              cr       = NULL;
-  PangoLayout*          layout   = NULL;
-  PangoFontDescription* desc     = NULL;
-  PangoContext*         pangoCtx = NULL;
-  PangoRectangle        logRect  = {0, 0, 0, 0};
-  int                   dpi      = 0;
-  GdkScreen*            screen   = gdk_screen_get_default();    // is not ref'ed
-  GtkSettings*          settings = gtk_settings_get_default();  // is not ref'ed
-
-  // sanity check
-  if (!font)
+  if (!_menu_item || !GetSelectable())
     return;
 
-  if (_text == "")
-    return;
+  dbusmenu_menuitem_handle_event(_menu_item, "clicked", nullptr, 0);
 
-  surface = cairo_image_surface_create(CAIRO_FORMAT_A1, 1, 1);
-  cr = cairo_create(surface);
-  cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
-  layout = pango_cairo_create_layout(cr);
-  desc = pango_font_description_from_string(font);
-  pango_font_description_set_weight(desc, PANGO_WEIGHT_NORMAL);
-  pango_layout_set_font_description(layout, desc);
-  pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
-  pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
-  pango_layout_set_markup_with_accel(layout, _text.c_str(), -1, '_', NULL);
-  pangoCtx = pango_layout_get_context(layout);  // is not ref'ed
-  pango_cairo_context_set_font_options(pangoCtx,
-                                       gdk_screen_get_font_options(screen));
-  g_object_get(settings, "gtk-xft-dpi", &dpi, NULL);
-  if (dpi == -1)
+  if (!IsOverlayQuicklist())
   {
-    // use some default DPI-value
-    pango_cairo_context_set_resolution(pangoCtx, 96.0f);
+    UBusManager manager;
+    manager.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
   }
-  else
-  {
-    pango_cairo_context_set_resolution(pangoCtx,
-                                       (float) dpi / (float) PANGO_SCALE);
-  }
-  pango_layout_context_changed(layout);
-  pango_layout_get_extents(layout, NULL, &logRect);
-
-  width  = logRect.width / PANGO_SCALE;
-  height = logRect.height / PANGO_SCALE;
-
-  // clean up
-  pango_font_description_free(desc);
-  g_object_unref(layout);
-  cairo_destroy(cr);
-  cairo_surface_destroy(surface);
 }
 
-static void
-OnPropertyChanged(gchar*             property,
-                  GValue*            value,
-                  QuicklistMenuItem* self)
+void QuicklistMenuItem::Select(bool select)
 {
-  //todo
-  //self->UpdateTexture ();
+  _prelight = select;
 }
 
-static void
-OnItemActivated(guint              timestamp,
-                QuicklistMenuItem* self)
+bool QuicklistMenuItem::IsSelected() const
 {
-  //todo:
-  //self->ItemActivated ();
+  return _prelight;
 }
 
 void QuicklistMenuItem::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags)
@@ -342,9 +159,8 @@ void QuicklistMenuItem::RecvMouseUp(int x, int y, unsigned long button_flags, un
 void QuicklistMenuItem::RecvMouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   if (!GetEnabled())
-  {
     return;
-  }
+
   sigMouseClick.emit(this, x, y);
 }
 
@@ -363,38 +179,115 @@ void QuicklistMenuItem::RecvMouseLeave(int x, int y, unsigned long button_flags,
   sigMouseLeave.emit(this);
 }
 
-void QuicklistMenuItem::DrawText(nux::CairoGraphics* cairo, int width, int height, nux::Color const& color)
+void QuicklistMenuItem::PreLayoutManagement()
 {
-  if (_text == "" || cairo == nullptr)
+  _pre_layout_width = GetBaseWidth();
+  _pre_layout_height = GetBaseHeight();
+
+  if (!_normalTexture[0])
+  {
+    UpdateTexture();
+  }
+
+  View::PreLayoutManagement();
+}
+
+long QuicklistMenuItem::PostLayoutManagement(long layoutResult)
+{
+  int w = GetBaseWidth();
+  int h = GetBaseHeight();
+
+  long result = 0;
+
+  if (_pre_layout_width < w)
+    result |= nux::eLargerWidth;
+  else if (_pre_layout_width > w)
+    result |= nux::eSmallerWidth;
+  else
+    result |= nux::eCompliantWidth;
+
+  if (_pre_layout_height < h)
+    result |= nux::eLargerHeight;
+  else if (_pre_layout_height > h)
+    result |= nux::eSmallerHeight;
+  else
+    result |= nux::eCompliantHeight;
+
+  return result;
+}
+
+void QuicklistMenuItem::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
+{
+  // Check if the texture have been computed. If they haven't, exit the function.
+  if (!_normalTexture[0] || !_prelightTexture[0])
     return;
 
-  cairo_t*              cr         = cairo->GetContext();
-  int                   textWidth  = 0;
-  int                   textHeight = 0;
-  PangoLayout*          layout     = NULL;
-  PangoFontDescription* desc       = NULL;
-  PangoContext*         pangoCtx   = NULL;
-  int                   dpi        = 0;
-  GdkScreen*            screen     = gdk_screen_get_default();    // not ref'ed
-  GtkSettings*          settings   = gtk_settings_get_default();  // not ref'ed
-  gchar*                fontName   = NULL;
+  nux::Geometry const& base = GetGeometry();
 
-  g_object_get(settings, "gtk-font-name", &fontName, NULL);
-  GetTextExtents(fontName, textWidth, textHeight);
+  gfxContext.PushClippingRectangle(base);
 
+  nux::TexCoordXForm texxform;
+  texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+  texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+
+  gfxContext.GetRenderStates().SetBlend(true);
+  gfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> texture;
+  unsigned int texture_idx = GetActive() ? 1 : 0;
+  bool enabled = GetEnabled();
+
+  if (!_prelight || !enabled)
+  {
+    texture = _normalTexture[texture_idx]->GetDeviceTexture();
+  }
+  else
+  {
+    texture = _prelightTexture[texture_idx]->GetDeviceTexture();
+  }
+
+  nux::Color const& color = enabled ? nux::color::White : nux::color::White * 0.35;
+
+  gfxContext.QRP_1Tex(base.x, base.y, base.width, base.height, texture, texxform, color);
+  gfxContext.GetRenderStates().SetBlend(false);
+  gfxContext.PopClippingRectangle();
+}
+
+nux::Size const& QuicklistMenuItem::GetTextExtents() const
+{
+  return _text_extents;
+}
+
+void QuicklistMenuItem::DrawText(nux::CairoGraphics& cairo, int width, int height, nux::Color const& color)
+{
+  if (_text.empty())
+    return;
+
+  GdkScreen* screen = gdk_screen_get_default(); // not ref'ed
+  GtkSettings* settings = gtk_settings_get_default(); // not ref'ed
+
+  glib::String font_name;
+  g_object_get(settings, "gtk-font-name", &font_name, nullptr);
+
+  std::shared_ptr<cairo_t> cairo_context(cairo.GetContext(), cairo_destroy);
+  cairo_t* cr = cairo_context.get();
   cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
   cairo_set_source_rgba(cr, color.red, color.blue, color.green, color.alpha);
   cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
-  layout = pango_cairo_create_layout(cr);
-  desc = pango_font_description_from_string(fontName);
-  pango_layout_set_font_description(layout, desc);
+
+  glib::Object<PangoLayout> layout(pango_cairo_create_layout(cr));
+  std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font_name), pango_font_description_free);
+  pango_layout_set_font_description(layout, desc.get());
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
-  pango_layout_set_markup_with_accel(layout, _text.c_str(), -1, '_', NULL);
-  pangoCtx = pango_layout_get_context(layout);  // is not ref'ed
-  pango_cairo_context_set_font_options(pangoCtx,
-                                       gdk_screen_get_font_options(screen));
-  g_object_get(settings, "gtk-xft-dpi", &dpi, NULL);
+  pango_layout_set_markup_with_accel(layout, _text.c_str(), -1, '_', nullptr);
+
+  PangoContext* pangoCtx = pango_layout_get_context(layout);  // is not ref'ed
+  pango_cairo_context_set_font_options(pangoCtx, gdk_screen_get_font_options(screen));
+
+  int dpi = 0;
+  g_object_get(settings, "gtk-xft-dpi", &dpi, nullptr);
+
   if (dpi == -1)
   {
     // use some default DPI-value
@@ -402,68 +295,88 @@ void QuicklistMenuItem::DrawText(nux::CairoGraphics* cairo, int width, int heigh
   }
   else
   {
-    pango_cairo_context_set_resolution(pangoCtx,
-                                       (float) dpi / (float) PANGO_SCALE);
+    pango_cairo_context_set_resolution(pangoCtx, static_cast<float>(dpi) / static_cast<float>(PANGO_SCALE));
   }
 
   pango_layout_context_changed(layout);
+  PangoRectangle log_rect  = {0, 0, 0, 0};
+  pango_layout_get_extents(layout, nullptr, &log_rect);
 
-  cairo_move_to(cr,
-                2 * ITEM_MARGIN + ITEM_INDENT_ABS,
-                (float)(height - textHeight) / 2.0f);
+  int text_width  = log_rect.width / PANGO_SCALE;
+  int text_height = log_rect.height / PANGO_SCALE;
+
+  _text_extents.width = text_width + ITEM_INDENT_ABS + 3 * ITEM_MARGIN;
+  _text_extents.height = text_height + 2 * ITEM_MARGIN;
+
+  SetMinimumSize(_text_extents.width, _text_extents.height);
+
+  cairo_move_to(cr, 2 * ITEM_MARGIN + ITEM_INDENT_ABS, static_cast<float>(height - text_height) / 2.0f);
   pango_cairo_show_layout(cr, layout);
-
-  // clean up
-  pango_font_description_free(desc);
-  g_free(fontName);
-  g_object_unref(layout);
-  cairo_destroy(cr);
 }
 
-void QuicklistMenuItem::DrawPrelight(nux::CairoGraphics* cairo, int width, int height, nux::Color const& color)
+void QuicklistMenuItem::DrawPrelight(nux::CairoGraphics& cairo, int width, int height, nux::Color const& color)
 {
-  if (!cairo)
-    return;
-
-  cairo_t* cr = cairo->GetContext();
+  std::shared_ptr<cairo_t> cairo_context(cairo.GetContext(), cairo_destroy);
+  cairo_t* cr = cairo_context.get();
 
   cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
   cairo_set_source_rgba(cr, color.red, color.blue, color.green, color.alpha);
-  cairo->DrawRoundedRectangle(cr, 1.0f, 0.0f, 0.0f, ITEM_CORNER_RADIUS_ABS,
-                              width, height);
+  cairo.DrawRoundedRectangle(cr, 1.0f, 0.0f, 0.0f, ITEM_CORNER_RADIUS_ABS, width, height);
   cairo_fill(cr);
-  cairo_destroy(cr);
 }
 
-void
-QuicklistMenuItem::EnableLabelMarkup(bool enabled)
+double QuicklistMenuItem::Align(double val)
+{
+  const double fract = val - static_cast<int>(val);
+
+  if (fract != 0.5f)
+    return static_cast<double>(static_cast<int>(val) + 0.5f);
+  else
+    return val;
+}
+
+void QuicklistMenuItem::EnableLabelMarkup(bool enabled)
 {
   if (IsMarkupEnabled() != enabled)
   {
-    dbusmenu_menuitem_property_set_bool(_menuItem, "unity-use-markup", enabled);
+    dbusmenu_menuitem_property_set_bool(_menu_item, MARKUP_ENABLED_PROPERTY, enabled);
 
     _text = "";
     InitializeText();
   }
 }
 
-bool
-QuicklistMenuItem::IsMarkupEnabled()
+bool QuicklistMenuItem::IsMarkupEnabled() const
 {
-  gboolean markup;
-
-  if (!_menuItem)
+  if (!_menu_item)
     return false;
 
-  markup = dbusmenu_menuitem_property_get_bool(_menuItem, "unity-use-markup");
+  gboolean markup = dbusmenu_menuitem_property_get_bool(_menu_item, MARKUP_ENABLED_PROPERTY);
   return (markup != FALSE);
+}
+
+bool QuicklistMenuItem::IsOverlayQuicklist() const
+{
+  if (!_menu_item)
+    return false;
+
+  gboolean overlay = dbusmenu_menuitem_property_get_bool(_menu_item, OVERLAY_MENU_ITEM_PROPERTY);
+  return (overlay != FALSE);
+}
+
+unsigned QuicklistMenuItem::GetCairoSurfaceWidth() const
+{
+  if (!_normalTexture[0])
+    return 0;
+
+  return _normalTexture[0]->GetWidth();
 }
 
 // Introspection
 
 std::string QuicklistMenuItem::GetName() const
 {
-  return _name;
+  return "QuicklistMenuItem";
 }
 
 void QuicklistMenuItem::AddProperties(GVariantBuilder* builder)
