@@ -124,7 +124,7 @@ public:
   LauncherModel::Ptr model_;
   nux::ObjectPtr<Launcher> launcher_;
   nux::ObjectPtr<Launcher> keyboard_launcher_;
-  int                    sort_priority_;
+  unsigned                 sort_priority_;
   AbstractVolumeMonitorWrapper::Ptr volume_monitor_;
   DeviceLauncherSection  device_section_;
   LauncherEntryRemoteModel remote_model_;

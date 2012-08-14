@@ -134,9 +134,10 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   remote_model_.entry_added.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteAdded));
   remote_model_.entry_removed.connect(sigc::mem_fun(this, &Impl::OnLauncherEntryRemoteRemoved));
 
-  FavoriteStore::Instance().favorite_added.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteAdded));
-  FavoriteStore::Instance().favorite_removed.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteRemoved));
-  FavoriteStore::Instance().reordered.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreReordered));
+  auto& favorite_store = FavoriteStore::Instance();
+  favorite_store.favorite_added.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteAdded));
+  favorite_store.favorite_removed.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteRemoved));
+  favorite_store.reordered.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreReordered));
 
   LauncherHideMode hide_mode = parent_->options()->hide_mode;
   BFBLauncherIcon* bfb = new BFBLauncherIcon(hide_mode);
@@ -162,15 +163,11 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   ubus.RegisterInterest(UBUS_QUICKLIST_END_KEY_NAV, [&](GVariant * args) {
     if (reactivate_keynav)
       parent_->KeyNavGrab();
-      model_->SetSelection(reactivate_index);
+
+    model_->SetSelection(reactivate_index);
   });
 
   parent_->AddChild(model_.get());
-
-  uscreen->resuming.connect([&]() -> void {
-    for (auto launcher : launchers)
-      launcher->QueueDraw();
-  });
 
   dbus_owner_ = g_bus_own_name(G_BUS_TYPE_SESSION, DBUS_NAME.c_str(), G_BUS_NAME_OWNER_FLAGS_NONE,
                                OnBusAcquired, nullptr, nullptr, this, nullptr);
@@ -438,7 +435,7 @@ void Controller::Impl::OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr icon)
 
 void Controller::Impl::OnLauncherEntryRemoteAdded(LauncherEntryRemote::Ptr const& entry)
 {
-  for (auto icon : *model_)
+  for (auto const& icon : model_->GetSublist<BamfLauncherIcon>())
   {
     if (!icon || icon->RemoteUri().empty())
       continue;
@@ -452,7 +449,7 @@ void Controller::Impl::OnLauncherEntryRemoteAdded(LauncherEntryRemote::Ptr const
 
 void Controller::Impl::OnLauncherEntryRemoteRemoved(LauncherEntryRemote::Ptr const& entry)
 {
-  for (auto icon : *model_)
+  for (auto const& icon : *model_)
   {
     icon->RemoveEntryRemote(entry);
   }
@@ -525,14 +522,14 @@ void Controller::Impl::OnFavoriteStoreReordered()
 
     if (icon != bamf_list.end())
     {
-      (*icon)->SetSortPriority(i++);
+      (*icon)->SetSortPriority(++i);
     }
   }
 
   for (auto it : bamf_list)
   {
     if (!it->IsSticky())
-      it->SetSortPriority(i++);
+      it->SetSortPriority(++i);
   }
 
   model_->Sort();
@@ -611,7 +608,6 @@ void Controller::Impl::RegisterIcon(AbstractLauncherIcon::Ptr icon)
   }
 }
 
-/* static private */
 void Controller::Impl::OnViewOpened(BamfMatcher* matcher, BamfView* view)
 {
   if (!BAMF_IS_APPLICATION(view))
@@ -627,7 +623,7 @@ void Controller::Impl::OnViewOpened(BamfMatcher* matcher, BamfView* view)
 
   AbstractLauncherIcon::Ptr icon(new BamfLauncherIcon(app));
   icon->visibility_changed.connect(sigc::mem_fun(this, &Impl::SortAndUpdate));
-  icon->SetSortPriority(sort_priority_++);
+  icon->SetSortPriority(++sort_priority_);
   RegisterIcon(icon);
   SortAndUpdate();
 }
@@ -649,7 +645,7 @@ AbstractLauncherIcon::Ptr Controller::Impl::CreateFavorite(const char* file_path
 
   bamf_view_set_sticky(BAMF_VIEW(app), true);
   AbstractLauncherIcon::Ptr icon (new BamfLauncherIcon(app));
-  icon->SetSortPriority(sort_priority_++);
+  icon->SetSortPriority(++sort_priority_);
   result = icon;
 
   return result;
@@ -674,50 +670,43 @@ SoftwareCenterLauncherIcon::Ptr Controller::Impl::CreateSCLauncherIcon(std::stri
 
   bamf_view_set_sticky(BAMF_VIEW(app), true);
   result = new SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path);
-  result->SetSortPriority(sort_priority_++);
+  result->SetSortPriority(++sort_priority_);
 
   return result;
 }
 
 void Controller::Impl::SetupBamf()
 {
-  GList* apps, *l;
-  BamfApplication* app;
-
-  // Sufficiently large number such that we ensure proper sorting
-  // (avoids case where first item gets tacked onto end rather than start)
-  int priority = 100;
-
   FavoriteList const& favs = FavoriteStore::Instance().GetFavorites();
 
-  for (FavoriteList::const_iterator i = favs.begin(), end = favs.end();
-       i != end; ++i)
+  for (auto const& fav_uri : favs)
   {
-    AbstractLauncherIcon::Ptr fav = CreateFavorite(i->c_str());
+    AbstractLauncherIcon::Ptr const& fav = CreateFavorite(fav_uri.c_str());
 
     if (fav)
     {
-      fav->SetSortPriority(priority);
+      fav->SetSortPriority(++sort_priority_);
       RegisterIcon(fav);
-      priority++;
     }
   }
 
-  apps = bamf_matcher_get_applications(matcher_);
+  std::shared_ptr<GList> apps(bamf_matcher_get_applications(matcher_), g_list_free);
   view_opened_signal_.Connect(matcher_, "view-opened", sigc::mem_fun(this, &Impl::OnViewOpened));
 
-  for (l = apps; l; l = l->next)
+  for (GList *l = apps.get(); l; l = l->next)
   {
-    app = BAMF_APPLICATION(l->data);
+    if (!BAMF_IS_APPLICATION(l->data))
+      continue;
+
+    BamfApplication* app = BAMF_APPLICATION(l->data);
 
     if (g_object_get_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen")))
       continue;
 
     AbstractLauncherIcon::Ptr icon(new BamfLauncherIcon(app));
-    icon->SetSortPriority(sort_priority_++);
+    icon->SetSortPriority(++sort_priority_);
     RegisterIcon(icon);
   }
-  g_list_free(apps);
   SortAndUpdate();
 
   model_->order_changed.connect(sigc::mem_fun(this, &Impl::SortAndUpdate));
