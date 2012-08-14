@@ -21,7 +21,13 @@
  */
 
 #include "CompoundGestureRecognizer.h"
+#include <NuxCore/Logger.h>
 #include <NuxGraphics/GestureEvent.h>
+
+namespace
+{
+  nux::logging::Logger logger("unity.compound_gesture_recognizer");
+}
 
 CompoundGestureRecognizer::CompoundGestureRecognizer()
   : state_(State::WaitingFirstTapBegin)
@@ -151,9 +157,8 @@ RecognitionResult CompoundGestureRecognizer::RecognizingSecondGesture(nux::Gestu
       ResetStateMachine();
     }
   }
-  else
+  else if (event.type == nux::EVENT_GESTURE_END)
   {
-    g_assert(event.type == nux::EVENT_GESTURE_END);
     second_gesture.end_time = event.GetTimestamp();
 
     if (second_gesture.Duration() <= MAX_TAP_TIME)
@@ -161,6 +166,12 @@ RecognitionResult CompoundGestureRecognizer::RecognizingSecondGesture(nux::Gestu
       result = RecognitionResult::DOUBLE_TAP_RECOGNIZED;
     }
     ResetStateMachine();
+  }
+  else
+  {
+    // This really shouldn't happen.
+    LOG_ERROR(logger) << "Unexpected gesture type."
+      " CompoundGestureRecognizer left in an undefined state.";
   }
 
   return result;
