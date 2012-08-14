@@ -30,6 +30,9 @@ namespace nux
   class GestureEvent;
 }
 
+namespace unity
+{
+
 enum class RecognitionResult
 {
   NONE,
@@ -86,5 +89,7 @@ class CompoundGestureRecognizer
     GestureInfo first_gesture;
     GestureInfo second_gesture;
 };
+
+} // namespace unity
 
 #endif // COMPOUND_GESTURE_RECOGNIZER_H

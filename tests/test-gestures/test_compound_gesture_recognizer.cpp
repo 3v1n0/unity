@@ -23,6 +23,8 @@
 #include "CompoundGestureRecognizer.h"
 #include "FakeGestureEvent.h"
 
+using namespace unity;
+
 class CompoundGestureRecognizerTest : public ::testing::Test
 {
  public:

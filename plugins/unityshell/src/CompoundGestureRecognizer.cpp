@@ -24,6 +24,8 @@
 #include <NuxCore/Logger.h>
 #include <NuxGraphics/GestureEvent.h>
 
+using namespace unity;
+
 namespace
 {
   nux::logging::Logger logger("unity.compound_gesture_recognizer");

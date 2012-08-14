@@ -25,6 +25,7 @@
 #include "unityshell.h"
 
 using namespace nux;
+using namespace unity;
 
 const float GesturalWindowSwitcher::DRAG_DELTA_FOR_CHANGING_SELECTION = 100.0f;
 const float GesturalWindowSwitcher::MOUSE_DRAG_THRESHOLD = 20.0f;

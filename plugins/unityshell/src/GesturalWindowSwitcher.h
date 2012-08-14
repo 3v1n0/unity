@@ -30,8 +30,8 @@
 
 namespace unity
 {
-  class UnityScreen;
-}
+
+class UnityScreen;
 
 /*
   Manipulates the window switcher according to multi-touch gestures
@@ -127,5 +127,7 @@ class GesturalWindowSwitcher : public nux::GestureTarget
     sigc::connection mouse_drag_connection_;
 };
 typedef std::shared_ptr<GesturalWindowSwitcher> ShPtGesturalWindowSwitcher;
+
+} // namespace unity
 
 #endif // GESTURAL_WINDOW_SWITCHER_H

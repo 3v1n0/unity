@@ -25,6 +25,8 @@
 #include "unityshell_mock.h"
 #include "compiz_mock/core/timer.h"
 
+using namespace unity;
+
 class GesturalWindowSwitcherTest: public ::testing::Test
 {
  public:

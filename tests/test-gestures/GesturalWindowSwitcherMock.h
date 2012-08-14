@@ -21,6 +21,9 @@
 
 #include <Nux/Gesture.h>
 
+namespace unity
+{
+
 class GesturalWindowSwitcherMock : public nux::GestureTarget
 {
   public:
@@ -33,4 +36,5 @@ class GesturalWindowSwitcherMock : public nux::GestureTarget
 };
 typedef std::shared_ptr<GesturalWindowSwitcherMock> ShPtGesturalWindowSwitcherMock;
 
+} //namespace unity
 #endif // GESTURAL_WINDOW_SWITCHER_MOCK_H

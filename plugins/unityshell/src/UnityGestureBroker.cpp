@@ -33,7 +33,7 @@ UnityGestureBroker::UnityGestureBroker()
   WindowGestureTarget::fleur_cursor = XCreateFontCursor (screen->dpy (), XC_fleur);
 
   unity_target.reset(new UnityGestureTarget);
-  gestural_window_switcher_.reset(new GesturalWindowSwitcher);
+  gestural_window_switcher_.reset(new unity::GesturalWindowSwitcher);
 }
 
 UnityGestureBroker::~UnityGestureBroker()

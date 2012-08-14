@@ -46,7 +46,7 @@ private:
   CompWindow* FindCompWindowAtPos(int pos_x, int pos_y);
 
   nux::ShPtGestureTarget unity_target;
-  ShPtGesturalWindowSwitcher gestural_window_switcher_;
+  unity::ShPtGesturalWindowSwitcher gestural_window_switcher_;
 };
 
 #endif // UNITY_GESTURE_BROKER
