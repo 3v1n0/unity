@@ -54,7 +54,7 @@ class CompoundGestureRecognizer
 
     CompoundGestureRecognizer();
 
-    virtual RecognitionResult GestureEvent(const nux::GestureEvent &event);
+    virtual RecognitionResult GestureEvent(nux::GestureEvent const& event);
 
   private:
     enum class State
@@ -65,10 +65,10 @@ class CompoundGestureRecognizer
       RecognizingSecondGesture
     };
 
-    RecognitionResult WaitingFirstTapBegin(const nux::GestureEvent &event);
-    RecognitionResult WaitingFirstTapEnd(const nux::GestureEvent &event);
-    RecognitionResult WaitingSecondGestureBegin(const nux::GestureEvent &event);
-    RecognitionResult RecognizingSecondGesture(const nux::GestureEvent &event);
+    RecognitionResult WaitingFirstTapBegin(nux::GestureEvent const& event);
+    RecognitionResult WaitingFirstTapEnd(nux::GestureEvent const& event);
+    RecognitionResult WaitingSecondGestureBegin(nux::GestureEvent const& event);
+    RecognitionResult RecognizingSecondGesture(nux::GestureEvent const& event);
     void ResetStateMachine();
 
     State state_;

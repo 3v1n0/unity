@@ -28,7 +28,7 @@ CompoundGestureRecognizer::CompoundGestureRecognizer()
 {
 }
 
-RecognitionResult CompoundGestureRecognizer::GestureEvent(const nux::GestureEvent &event)
+RecognitionResult CompoundGestureRecognizer::GestureEvent(nux::GestureEvent const& event)
 {
   switch (state_)
   {
@@ -46,7 +46,7 @@ RecognitionResult CompoundGestureRecognizer::GestureEvent(const nux::GestureEven
   }
 }
 
-RecognitionResult CompoundGestureRecognizer::WaitingFirstTapBegin(const nux::GestureEvent &event)
+RecognitionResult CompoundGestureRecognizer::WaitingFirstTapBegin(nux::GestureEvent const& event)
 {
   if (event.type == nux::EVENT_GESTURE_BEGIN)
   {
@@ -57,7 +57,7 @@ RecognitionResult CompoundGestureRecognizer::WaitingFirstTapBegin(const nux::Ges
   return RecognitionResult::NONE;
 }
 
-RecognitionResult CompoundGestureRecognizer::WaitingFirstTapEnd(const nux::GestureEvent &event)
+RecognitionResult CompoundGestureRecognizer::WaitingFirstTapEnd(nux::GestureEvent const& event)
 {
   if (event.type != nux::EVENT_GESTURE_END)
     return RecognitionResult::NONE;
@@ -90,7 +90,7 @@ RecognitionResult CompoundGestureRecognizer::WaitingFirstTapEnd(const nux::Gestu
   return RecognitionResult::NONE;
 }
 
-RecognitionResult CompoundGestureRecognizer::WaitingSecondGestureBegin(const nux::GestureEvent &event)
+RecognitionResult CompoundGestureRecognizer::WaitingSecondGestureBegin(nux::GestureEvent const& event)
 {
 
   if (event.type != nux::EVENT_GESTURE_BEGIN)
@@ -123,7 +123,7 @@ RecognitionResult CompoundGestureRecognizer::WaitingSecondGestureBegin(const nux
   return RecognitionResult::NONE;
 }
 
-RecognitionResult CompoundGestureRecognizer::RecognizingSecondGesture(const nux::GestureEvent &event)
+RecognitionResult CompoundGestureRecognizer::RecognizingSecondGesture(nux::GestureEvent const& event)
 {
   if (event.GetGestureId() != second_gesture.id)
   {
