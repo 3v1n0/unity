@@ -160,7 +160,7 @@ void Controller::ShowView()
     view_window_->ShowWindow(true);
     view_window_->PushToFront();
     view_window_->SetOpacity(1.0f);
-    view_window_->EnableInputWindow(true, "Switcher", true/*take focus*/, false);
+    view_window_->EnableInputWindow(true, "Switcher", true /* take focus */, false);
     view_window_->SetInputFocus();
     view_window_->CaptureMouseDownAnyWhereElse(true);
   }
