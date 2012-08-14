@@ -383,8 +383,6 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
   renderer_.DrawFull(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
   if (preview_displaying_)
   {
- 
-  //dynamic_cast<nux::View*>(preview_container_.GetPointer())->DrawContent(gfx_context, true);//ProcessDraw(gfx_context, true);
     preview_container_->ProcessDraw(gfx_context, true); 
   }
 }
@@ -398,11 +396,11 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   
   if (preview_displaying_)
   {
-    preview_container_->ProcessDraw(gfx_context, force_draw);
+    //preview_container_->ProcessDraw(gfx_context, force_draw);
   }
   else
   {
-      layout_->ProcessDraw(gfx_context, force_draw);
+    layout_->ProcessDraw(gfx_context, force_draw);
   }
     
   if (IsFullRedraw())
