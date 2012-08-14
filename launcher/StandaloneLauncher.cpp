@@ -37,7 +37,6 @@
 #include "Launcher.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UnitySettings.h"
-#include <dbus/dbus-glib.h>
 
 using namespace unity;
 
@@ -53,7 +52,6 @@ int main(int argc, char** argv)
 {
   g_type_init();
   gtk_init(&argc, &argv);
-
   nux::NuxInitialize(0);
 
   unity::Settings settings;

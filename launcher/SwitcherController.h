@@ -70,6 +70,8 @@ public:
   void Show(ShowMode show, SortMode sort, bool reverse, std::vector<launcher::AbstractLauncherIcon::Ptr> results);
   void Hide(bool accept_state=true);
 
+  bool CanShowSwitcher(const std::vector<launcher::AbstractLauncherIcon::Ptr>& resutls) const;
+
   bool Visible();
 
   void Next();

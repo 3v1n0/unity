@@ -57,7 +57,7 @@ nux::logging::Logger logger("unity.launcher");
 NUX_IMPLEMENT_OBJECT_TYPE(BamfLauncherIcon);
 
 BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
-  : SimpleLauncherIcon()
+  : SimpleLauncherIcon(IconType::APPLICATION)
   , _bamf_app(app, glib::AddRef())
   , _supported_types_filled(false)
   , use_custom_bg_color_(false)
@@ -71,7 +71,6 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
 
   tooltip_text = BamfName();
   icon_name = (icon ? icon.Str() : DEFAULT_ICON);
-  SetIconType(IconType::APPLICATION);
 
   if (IsSticky())
     SetQuirk(Quirk::VISIBLE, true);

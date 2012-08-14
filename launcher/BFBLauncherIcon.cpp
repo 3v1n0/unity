@@ -30,7 +30,7 @@ namespace launcher
 {
 
 BFBLauncherIcon::BFBLauncherIcon(LauncherHideMode hide_mode)
- : SimpleLauncherIcon()
+ : SimpleLauncherIcon(IconType::HOME)
  , reader_(dash::LensDirectoryReader::GetDefault())
  , launcher_hide_mode_(hide_mode)
 {
@@ -38,7 +38,6 @@ BFBLauncherIcon::BFBLauncherIcon(LauncherHideMode hide_mode)
   icon_name = PKGDATADIR"/launcher_bfb.png";
   SetQuirk(Quirk::VISIBLE, true);
   SetQuirk(Quirk::RUNNING, false);
-  SetIconType(IconType::HOME);
 
   background_color_ = nux::color::White;
 
