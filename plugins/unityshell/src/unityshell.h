@@ -242,6 +242,8 @@ private:
   void OnPanelStyleChanged();
 
   void InitGesturesSupport();
+  void SetMinimizeSpeed();
+  void UpdateMinimizeCount();
 
   Settings dash_settings_;
   dash::Style    dash_style_;
@@ -334,6 +336,16 @@ private:
 
   UBusManager ubus_manager_;
   glib::SourceManager sources_;
+
+  glib::Object<GSettings> _settings;
+  int _minimize_count;
+  int _minimize_speed_threshold;
+  int _minimize_min_speed;
+  int _minimize_max_speed;
+  glib::Signal<void, GSettings*, gchar* > _minimize_count_changed;
+  glib::Signal<void, GSettings*, gchar* > _minimize_speed_threshold_changed;
+  glib::Signal<void, GSettings*, gchar* > _minimize_min_speed_changed;
+  glib::Signal<void, GSettings*, gchar* > _minimize_max_speed_changed;
 
   friend class UnityWindow;
 };
