@@ -1303,10 +1303,10 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
   ret = gScreen->glPaintOutput(attrib, transform, region, output, mask);
 
-#ifndef USE_MODERN_COMPIZ_GL
   if (doShellRepaint && !force && fullscreenRegion.contains(*output))
     doShellRepaint = false;
 
+#ifndef USE_MODERN_COMPIZ_GL
   if (doShellRepaint)
     paintDisplay(region, transform, mask);
 #endif
