@@ -82,6 +82,11 @@ class Dash(KeybindingsHelper):
         """Returns the searchbar attached to the dash."""
         return self.view.get_searchbar()
 
+    @property
+    def preview_displaying(self):
+        """Returns true if the dash is currently displaying a preview"""
+        return self.view.preview_displaying;
+
     def get_num_rows(self):
         """Returns the number of displayed rows in the dash."""
         return self.view.num_rows
