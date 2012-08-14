@@ -381,8 +381,11 @@ void Lens::Impl::OnChanged(GVariant* parameters)
     LOG_WARNING(logger) << "Paths do not match " << dbus_path_ << " != " << dbus_path;
   }
 
-  connected_ = true;
-  owner_->connected.EmitChanged(connected_);
+  if (!connected_)
+  {
+    connected_ = true;
+    owner_->connected.EmitChanged(connected_);
+  }
 
   g_variant_iter_free(hints_iter);
 }
