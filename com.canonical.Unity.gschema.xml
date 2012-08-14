@@ -32,7 +32,7 @@
       <description>This is the speed that the minimize animation will have when it has been used more than an number of times equal minimize-speed-threshold.</description>
     </key>
     <key type="i" name="minimize-min-speed">
-      <default>1000</default>
+      <default>800</default>
       <summary>The minimum speed for the minimize animation.</summary>
       <description>This is the speed that the minimize animation will have when it has never been used.</description>
     </key>
