@@ -46,7 +46,7 @@ Controller::Controller(std::list<AbstractHint::Ptr>& hints)
                                    enabled_ = false;
                                  });
 
-  ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWTICHER, [&] (GVariant*) {
+  ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWITCHER, [&] (GVariant*) {
                                    enabled_ = true;
                                  });
 

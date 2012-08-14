@@ -1195,7 +1195,7 @@ void Controller::KeyNavTerminate(bool activate)
   }
   else
   {
-    pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_SWTICHER,
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_SWITCHER,
                             g_variant_new_boolean(pimpl->keynav_restore_window_));
   }
 
