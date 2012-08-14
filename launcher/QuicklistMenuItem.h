@@ -49,7 +49,7 @@ class QuicklistMenuItem : public nux::View, public debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(QuicklistMenuItem, nux::View);
 public:
-  QuicklistMenuItem(QuicklistMenuItemType type, DbusmenuMenuitem* item, NUX_FILE_LINE_PROTO);
+  QuicklistMenuItem(QuicklistMenuItemType type, glib::Object<DbusmenuMenuitem> const& item, NUX_FILE_LINE_PROTO);
   virtual ~QuicklistMenuItem();
 
   QuicklistMenuItemType GetItemType() const;

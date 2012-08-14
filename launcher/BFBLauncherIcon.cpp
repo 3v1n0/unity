@@ -18,19 +18,16 @@
  *              Andrea Azzarone <azzaronea@gmail.com>
  */
 
-#include "BFBLauncherIcon.h"
-#include "Launcher.h"
-
+#include <glib/gi18n-lib.h>
 #include "unity-shared/UBusMessages.h"
 
-#include <glib/gi18n-lib.h>
+#include "BFBLauncherIcon.h"
+#include "Launcher.h"
 
 namespace unity
 {
 namespace launcher
 {
-
-UBusManager BFBLauncherIcon::ubus_manager_;
 
 BFBLauncherIcon::BFBLauncherIcon(LauncherHideMode hide_mode)
  : SimpleLauncherIcon(IconType::HOME)
@@ -97,35 +94,29 @@ void BFBLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   // dont chain down to avoid random dash close events
 }
 
-void BFBLauncherIcon::OnMenuitemActivated(DbusmenuMenuitem* item,
-                                          int time,
-                                          gchar* lens)
+void BFBLauncherIcon::OnMenuitemActivated(DbusmenuMenuitem* item, int time, std::string const& lens)
 {
-  if (lens != NULL)
-  {
-    ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", lens, dash::GOTO_DASH_URI, ""));
-    g_free(lens);
-  }
+  if (lens.empty())
+    return;
+
+  ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", lens.c_str(), dash::GOTO_DASH_URI, ""));
 }
 
-std::list<DbusmenuMenuitem*> BFBLauncherIcon::GetMenus()
+AbstractLauncherIcon::MenuItemsVector BFBLauncherIcon::GetMenus()
 {
-  std::list<DbusmenuMenuitem*> result;
-  DbusmenuMenuitem* menu_item;
+  MenuItemsVector result;
+  glib::Object<DbusmenuMenuitem> menu_item;
+
+  typedef glib::Signal<void, DbusmenuMenuitem*, int> ItemSignal;
+  auto callback = sigc::mem_fun(this, &BFBLauncherIcon::OnMenuitemActivated);
 
   // Home dash
   menu_item = dbusmenu_menuitem_new();
-
   dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Dash Home"));
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
   dbusmenu_menuitem_property_set_bool(menu_item, QuicklistMenuItem::OVERLAY_MENU_ITEM_PROPERTY, true);
-
-  g_signal_connect(menu_item,
-                   DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                   (GCallback)&BFBLauncherIcon::OnMenuitemActivated,
-                   g_strdup("home.lens"));
-
+  signals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, sigc::bind(callback, "home.lens")));
   result.push_back(menu_item);
 
   // Other lenses..
@@ -135,17 +126,11 @@ std::list<DbusmenuMenuitem*> BFBLauncherIcon::GetMenus()
       continue;
 
     menu_item = dbusmenu_menuitem_new();
-
     dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, lens->name);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
     dbusmenu_menuitem_property_set_bool(menu_item, QuicklistMenuItem::OVERLAY_MENU_ITEM_PROPERTY, true);
-
-    g_signal_connect(menu_item,
-                     DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                     (GCallback)&BFBLauncherIcon::OnMenuitemActivated,
-                     g_strdup(lens->id));
-
+    signals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, sigc::bind(callback, lens->id.Str())));
     result.push_back(menu_item);
   }
 

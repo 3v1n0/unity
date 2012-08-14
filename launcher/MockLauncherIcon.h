@@ -261,9 +261,9 @@ public:
     return 0;
   }
 
-  std::list<DbusmenuMenuitem*> Menus()
+  MenuItemsVector Menus()
   {
-    return std::list<DbusmenuMenuitem*> ();
+    return MenuItemsVector ();
   }
 
   nux::DndAction QueryAcceptDrop(DndData const& dnd_data)

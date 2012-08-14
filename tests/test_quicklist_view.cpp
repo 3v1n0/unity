@@ -39,7 +39,7 @@ struct TestQuicklistView : public Test
     : quicklist(new QuicklistView())
   {}
 
-  void AddMenuItems(DbusmenuMenuitem* root)
+  void AddMenuItems(glib::Object<DbusmenuMenuitem> const& root)
   {
     quicklist->RemoveAllMenuItem();
 
@@ -48,28 +48,29 @@ struct TestQuicklistView : public Test
 
     for (GList* child = dbusmenu_menuitem_get_children(root); child; child = child->next)
     {
-      const gchar* type = dbusmenu_menuitem_property_get((DbusmenuMenuitem*)child->data, DBUSMENU_MENUITEM_PROP_TYPE);
-      const gchar* toggle_type = dbusmenu_menuitem_property_get((DbusmenuMenuitem*)child->data, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
+      glib::Object<DbusmenuMenuitem> item(static_cast<DbusmenuMenuitem*>(child->data), glib::AddRef());
+      const gchar* type = dbusmenu_menuitem_property_get(item, DBUSMENU_MENUITEM_PROP_TYPE);
+      const gchar* toggle_type = dbusmenu_menuitem_property_get(item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
 
       if (g_strcmp0(type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)
       {
-        QuicklistMenuItemSeparator* item = new QuicklistMenuItemSeparator((DbusmenuMenuitem*)child->data, NUX_TRACKER_LOCATION);
-        quicklist->AddMenuItem(item);
+        QuicklistMenuItemSeparator* qlitem = new QuicklistMenuItemSeparator(item, NUX_TRACKER_LOCATION);
+        quicklist->AddMenuItem(qlitem);
       }
       else if (g_strcmp0(toggle_type, DBUSMENU_MENUITEM_TOGGLE_CHECK) == 0)
       {
-        QuicklistMenuItemCheckmark* item = new QuicklistMenuItemCheckmark((DbusmenuMenuitem*)child->data, NUX_TRACKER_LOCATION);
-        quicklist->AddMenuItem(item);
+        QuicklistMenuItemCheckmark* qlitem = new QuicklistMenuItemCheckmark(item, NUX_TRACKER_LOCATION);
+        quicklist->AddMenuItem(qlitem);
       }
       else if (g_strcmp0(toggle_type, DBUSMENU_MENUITEM_TOGGLE_RADIO) == 0)
       {
-        QuicklistMenuItemRadio* item = new QuicklistMenuItemRadio((DbusmenuMenuitem*)child->data, NUX_TRACKER_LOCATION);
-        quicklist->AddMenuItem(item);
+        QuicklistMenuItemRadio* qlitem = new QuicklistMenuItemRadio(item, NUX_TRACKER_LOCATION);
+        quicklist->AddMenuItem(qlitem);
       }
       else //if (g_strcmp0 (type, DBUSMENU_MENUITEM_PROP_LABEL) == 0)
       {
-        QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel((DbusmenuMenuitem*)child->data, NUX_TRACKER_LOCATION);
-        quicklist->AddMenuItem(item);
+        QuicklistMenuItemLabel* qlitem = new QuicklistMenuItemLabel(item, NUX_TRACKER_LOCATION);
+        quicklist->AddMenuItem(qlitem);
       }
     }
   }
