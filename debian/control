@@ -212,6 +212,14 @@ Description: transitional dummy package
  This is a transitional dummy package for unity-2d -> unity migration.
  It can safely be removed.
 
+Package: unity-2d-shell
+Depends: unity, ${misc:Depends}
+Architecture: all
+Section: oldlibs
+Description: transitional dummy package
+ This is a transitional dummy package for unity-2d -> unity migration.
+ It can safely be removed.
+
 Package: unity-2d-dbg
 Priority: extra
 Depends: unity, ${misc:Depends}
