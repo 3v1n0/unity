@@ -24,21 +24,64 @@
 #include <NuxCore/Logger.h>
 #include <NuxGraphics/GestureEvent.h>
 
-using namespace unity;
-
 namespace
 {
   nux::logging::Logger logger("unity.compound_gesture_recognizer");
 }
 
-CompoundGestureRecognizer::CompoundGestureRecognizer()
-  : state_(State::WaitingFirstTapBegin)
+namespace unity
+{
+  class CompoundGestureRecognizerPrivate
+  {
+   public:
+    CompoundGestureRecognizerPrivate();
+
+    enum class State
+    {
+      WaitingFirstTapBegin,
+      WaitingFirstTapEnd,
+      WaitingSecondGestureBegin,
+      RecognizingSecondGesture
+    };
+
+    RecognitionResult GestureEvent(nux::GestureEvent const& event);
+
+    RecognitionResult WaitingFirstTapBegin(nux::GestureEvent const& event);
+    RecognitionResult WaitingFirstTapEnd(nux::GestureEvent const& event);
+    RecognitionResult WaitingSecondGestureBegin(nux::GestureEvent const& event);
+    RecognitionResult RecognizingSecondGesture(nux::GestureEvent const& event);
+    void ResetStateMachine();
+
+    State state;
+
+    class GestureInfo
+    {
+      public:
+        GestureInfo() {Clear();}
+        int begin_time;
+        int end_time;
+        int id;
+        int Duration() const {return end_time - begin_time;}
+        void Clear() {begin_time = end_time = id = -1;}
+    };
+    GestureInfo first_gesture;
+    GestureInfo second_gesture;
+  };
+}
+
+using namespace unity;
+
+///////////////////////////////////////////
+// private class
+
+CompoundGestureRecognizerPrivate::CompoundGestureRecognizerPrivate()
+  : state(State::WaitingFirstTapBegin)
 {
 }
 
-RecognitionResult CompoundGestureRecognizer::GestureEvent(nux::GestureEvent const& event)
+RecognitionResult CompoundGestureRecognizerPrivate::GestureEvent(nux::GestureEvent const& event)
 {
-  switch (state_)
+  switch (state)
   {
     case State::WaitingFirstTapBegin:
       return WaitingFirstTapBegin(event);
@@ -54,18 +97,18 @@ RecognitionResult CompoundGestureRecognizer::GestureEvent(nux::GestureEvent cons
   }
 }
 
-RecognitionResult CompoundGestureRecognizer::WaitingFirstTapBegin(nux::GestureEvent const& event)
+RecognitionResult CompoundGestureRecognizerPrivate::WaitingFirstTapBegin(nux::GestureEvent const& event)
 {
   if (event.type == nux::EVENT_GESTURE_BEGIN)
   {
     first_gesture.id = event.GetGestureId();
     first_gesture.begin_time = event.GetTimestamp();
-    state_ = State::WaitingFirstTapEnd;
+    state = State::WaitingFirstTapEnd;
   }
   return RecognitionResult::NONE;
 }
 
-RecognitionResult CompoundGestureRecognizer::WaitingFirstTapEnd(nux::GestureEvent const& event)
+RecognitionResult CompoundGestureRecognizerPrivate::WaitingFirstTapEnd(nux::GestureEvent const& event)
 {
   if (event.type != nux::EVENT_GESTURE_END)
     return RecognitionResult::NONE;
@@ -86,19 +129,20 @@ RecognitionResult CompoundGestureRecognizer::WaitingFirstTapEnd(nux::GestureEven
   }
 
   first_gesture.end_time = event.GetTimestamp();
-  if (first_gesture.Duration() > MAX_TAP_TIME)
+  if (first_gesture.Duration() > CompoundGestureRecognizer::MAX_TAP_TIME)
   {
     // can't be a tap. it took too long
     ResetStateMachine();
     return RecognitionResult::NONE;
   }
 
-  state_ = State::WaitingSecondGestureBegin;
+  state = State::WaitingSecondGestureBegin;
 
   return RecognitionResult::NONE;
 }
 
-RecognitionResult CompoundGestureRecognizer::WaitingSecondGestureBegin(nux::GestureEvent const& event)
+RecognitionResult CompoundGestureRecognizerPrivate::WaitingSecondGestureBegin(
+    nux::GestureEvent const& event)
 {
 
   if (event.type != nux::EVENT_GESTURE_BEGIN)
@@ -115,7 +159,7 @@ RecognitionResult CompoundGestureRecognizer::WaitingSecondGestureBegin(nux::Gest
   }
 
   int interval = event.GetTimestamp() - first_gesture.end_time;
-  if (interval > MAX_TIME_BETWEEN_GESTURES)
+  if (interval > CompoundGestureRecognizer::MAX_TIME_BETWEEN_GESTURES)
   {
     ResetStateMachine();
     // consider it as the possible first tap of a new compound gesture
@@ -126,12 +170,13 @@ RecognitionResult CompoundGestureRecognizer::WaitingSecondGestureBegin(nux::Gest
   second_gesture.id = event.GetGestureId();
   second_gesture.begin_time = event.GetTimestamp();
 
-  state_ = State::RecognizingSecondGesture;
+  state = State::RecognizingSecondGesture;
 
   return RecognitionResult::NONE;
 }
 
-RecognitionResult CompoundGestureRecognizer::RecognizingSecondGesture(nux::GestureEvent const& event)
+RecognitionResult CompoundGestureRecognizerPrivate::RecognizingSecondGesture(
+    nux::GestureEvent const& event)
 {
   if (event.GetGestureId() != second_gesture.id)
   {
@@ -153,7 +198,7 @@ RecognitionResult CompoundGestureRecognizer::RecognizingSecondGesture(nux::Gestu
 
   if (event.type == nux::EVENT_GESTURE_UPDATE)
   {
-    if (event.GetTimestamp() - second_gesture.begin_time >= HOLD_TIME)
+    if (event.GetTimestamp() - second_gesture.begin_time >= CompoundGestureRecognizer::HOLD_TIME)
     {
       result = RecognitionResult::TAP_AND_HOLD_RECOGNIZED;
       ResetStateMachine();
@@ -163,7 +208,7 @@ RecognitionResult CompoundGestureRecognizer::RecognizingSecondGesture(nux::Gestu
   {
     second_gesture.end_time = event.GetTimestamp();
 
-    if (second_gesture.Duration() <= MAX_TAP_TIME)
+    if (second_gesture.Duration() <= CompoundGestureRecognizer::MAX_TAP_TIME)
     {
       result = RecognitionResult::DOUBLE_TAP_RECOGNIZED;
     }
@@ -179,9 +224,27 @@ RecognitionResult CompoundGestureRecognizer::RecognizingSecondGesture(nux::Gestu
   return result;
 }
 
-void CompoundGestureRecognizer::ResetStateMachine()
+void CompoundGestureRecognizerPrivate::ResetStateMachine()
 {
   first_gesture.Clear();
   second_gesture.Clear();
-  state_ = State::WaitingFirstTapBegin;
+  state = State::WaitingFirstTapBegin;
+}
+
+///////////////////////////////////////////
+// public class
+
+CompoundGestureRecognizer::CompoundGestureRecognizer()
+  : p(new CompoundGestureRecognizerPrivate)
+{
+}
+
+CompoundGestureRecognizer::~CompoundGestureRecognizer()
+{
+  delete p;
+}
+
+RecognitionResult CompoundGestureRecognizer::GestureEvent(nux::GestureEvent const& event)
+{
+  return p->GestureEvent(event);
 }

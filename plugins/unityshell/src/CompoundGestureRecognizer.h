@@ -43,6 +43,8 @@ enum class RecognitionResult
                              trackpad. */
 };
 
+class CompoundGestureRecognizerPrivate;
+
 /*!
   Recognizes compound gestures. I.e. high level gestures that are maded up by
   two sequencial regular gestures (like a tap followed by a second tap).
@@ -56,38 +58,12 @@ class CompoundGestureRecognizer
     static const int HOLD_TIME = 600;
 
     CompoundGestureRecognizer();
+    virtual ~CompoundGestureRecognizer();
 
     virtual RecognitionResult GestureEvent(nux::GestureEvent const& event);
 
   private:
-    enum class State
-    {
-      WaitingFirstTapBegin,
-      WaitingFirstTapEnd,
-      WaitingSecondGestureBegin,
-      RecognizingSecondGesture
-    };
-
-    RecognitionResult WaitingFirstTapBegin(nux::GestureEvent const& event);
-    RecognitionResult WaitingFirstTapEnd(nux::GestureEvent const& event);
-    RecognitionResult WaitingSecondGestureBegin(nux::GestureEvent const& event);
-    RecognitionResult RecognizingSecondGesture(nux::GestureEvent const& event);
-    void ResetStateMachine();
-
-    State state_;
-
-    class GestureInfo
-    {
-      public:
-      GestureInfo() {Clear();}
-      int begin_time;
-      int end_time;
-      int id;
-      int Duration() const {return end_time - begin_time;}
-      void Clear() {begin_time = end_time = id = -1;}
-    };
-    GestureInfo first_gesture;
-    GestureInfo second_gesture;
+    CompoundGestureRecognizerPrivate* p;
 };
 
 } // namespace unity
