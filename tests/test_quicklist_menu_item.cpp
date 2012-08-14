@@ -20,12 +20,16 @@
 
 #include <gmock/gmock.h>
 #include <libdbusmenu-glib/client.h>
+#include <UnityCore/GLibSignal.h>
 
 #include "QuicklistMenuItem.h"
 #include "QuicklistMenuItemCheckmark.h"
 #include "QuicklistMenuItemLabel.h"
 #include "QuicklistMenuItemRadio.h"
 #include "QuicklistMenuItemSeparator.h"
+#include "unity-shared/UBusWrapper.h"
+#include "unity-shared/UBusMessages.h"
+#include "test_utils.h"
 
 using namespace unity;
 using namespace testing;
@@ -64,7 +68,7 @@ TEST_F(TestQuicklistMenuItem, QuicklistMenuItemLabel)
 {
   dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, "A Label");
   dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
-  dbusmenu_menuitem_property_set_bool(item, "unity-use-markup", true);
+  dbusmenu_menuitem_property_set_bool(item, QuicklistMenuItem::MARKUP_ENABLED_PROPERTY, true);
 
   nux::ObjectPtr<QuicklistMenuItemLabel> qlitem(new QuicklistMenuItemLabel(item));
 
@@ -102,6 +106,72 @@ TEST_F(TestQuicklistMenuItem, QuicklistMenuItemSeparator)
 
   EXPECT_TRUE(qlitem->GetEnabled());
   EXPECT_FALSE(qlitem->GetSelectable());
+}
+
+TEST_F(TestQuicklistMenuItem, OverlayMenuitem)
+{
+  dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, "Label");
+  dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+
+  nux::ObjectPtr<QuicklistMenuItemLabel> qlitem(new QuicklistMenuItemLabel(item));
+
+  EXPECT_FALSE(qlitem->IsOverlayQuicklist());
+
+  dbusmenu_menuitem_property_set_bool(item, QuicklistMenuItem::OVERLAY_MENU_ITEM_PROPERTY, true);
+  EXPECT_TRUE(qlitem->IsOverlayQuicklist());
+}
+
+TEST_F(TestQuicklistMenuItem, ItemActivate)
+{
+  dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, "Label");
+  dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+
+  nux::ObjectPtr<QuicklistMenuItemLabel> qlitem(new QuicklistMenuItemLabel(item));
+
+  bool item_activated = false;
+  glib::Signal<void, DbusmenuMenuitem*, int> signal(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+  [&] (DbusmenuMenuitem* menu_item, int time) {
+    EXPECT_EQ(menu_item, item);
+    item_activated = true;
+  });
+
+  qlitem->Activate();
+  EXPECT_TRUE(item_activated);
+}
+
+TEST_F(TestQuicklistMenuItem, ItemActivateClosesDash)
+{
+  dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, "Label");
+  dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+
+  nux::ObjectPtr<QuicklistMenuItemLabel> qlitem(new QuicklistMenuItemLabel(item));
+
+  bool closes_dash = false;
+  UBusManager manager;
+  manager.RegisterInterest(UBUS_PLACE_VIEW_CLOSE_REQUEST, [&] (GVariant*) { closes_dash = true; });
+
+  qlitem->Activate();
+  Utils::WaitUntil(closes_dash);
+
+  EXPECT_TRUE(closes_dash);
+}
+
+TEST_F(TestQuicklistMenuItem, OverlayItemActivateDoesNotCloseDash)
+{
+  dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, "Label");
+  dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+  dbusmenu_menuitem_property_set_bool(item, QuicklistMenuItem::OVERLAY_MENU_ITEM_PROPERTY, true);
+
+  nux::ObjectPtr<QuicklistMenuItemLabel> qlitem(new QuicklistMenuItemLabel(item));
+
+  bool closes_dash = false;
+  UBusManager manager;
+  manager.RegisterInterest(UBUS_PLACE_VIEW_CLOSE_REQUEST, [&] (GVariant*) { closes_dash = true; });
+
+  qlitem->Activate();
+  Utils::WaitForTimeoutMSec(100);
+
+  EXPECT_FALSE(closes_dash);
 }
 
 }

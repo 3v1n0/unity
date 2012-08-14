@@ -976,7 +976,7 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
       if (dbusmenu_menuitem_property_get_bool(item, DBUSMENU_MENUITEM_PROP_VISIBLE))
       {
         first_separator_needed = true;
-        dbusmenu_menuitem_property_set_bool(item, "unity-use-markup", FALSE);
+        dbusmenu_menuitem_property_set_bool(item, QuicklistMenuItem::MARKUP_ENABLED_PROPERTY, FALSE);
 
         result.push_back(item);
       }
@@ -1038,7 +1038,7 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
                                         DBUSMENU_MENUITEM_PROP_ENABLED,
                                         true);
     dbusmenu_menuitem_property_set_bool(item,
-                                        "unity-use-markup",
+                                        QuicklistMenuItem::MARKUP_ENABLED_PROPERTY,
                                         true);
 
     _gsignals.Add(new glib::Signal<void, DbusmenuMenuitem*, int>(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
