@@ -68,7 +68,10 @@ void Model<RowAdaptor>::OnSwarmNameChanged(std::string const& swarm_name)
 
   // Let the views clean up properly
   if (model_)
+  {
     dee_model_clear(model_);
+    sig_manager_.Disconnect(model_.RawPtr());
+  }
 
   switch(model_type_)
   {
