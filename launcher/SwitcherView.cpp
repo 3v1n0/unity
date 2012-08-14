@@ -643,7 +643,10 @@ int SwitcherView::IconIndexAt(int x, int y)
   int half_size = icon_size.Get() / 2;
   int icon_index = -1;
 
-  //TODO: Consider icon rotation
+  // Taking icon rotation into consideration will make selection more
+  // accurate when there are many icons present and the user clicks/taps
+  // on icons close to edges. But manual testing has shown that the current
+  // implementation is enough.
 
   int i = 0;
   for (auto arg : last_args_)
