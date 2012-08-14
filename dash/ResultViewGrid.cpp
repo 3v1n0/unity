@@ -107,15 +107,12 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
     gchar* proposed_unique_id;
     g_variant_get(data, "(iss)", &nav_mode, &uri, &proposed_unique_id);
    
-    //LOG_DEBUG(logger) << "got navigation request: " << nav_mode << ", " << uri;
-    //LOG_DEBUG(logger) << "testing '" << unique_id() << "' vs '" << proposed_unique_id << "'";
     if (std::string(proposed_unique_id) != unique_id())
       return;
 
     if (std::string(uri) == activated_uri_)
     {
       int current_index = GetIndexForUri(activated_uri_);
-      LOG_DEBUG(logger) << "current index: " << current_index << " (" << activated_uri_ << ")";
       if (nav_mode == -1) // left
       {
         current_index--;  
@@ -140,8 +137,8 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
       {
         activated_uri_ = GetUriForIndex(current_index);
         LOG_DEBUG(logger) << "activating preview for index: " 
-        << "(" << current_index << ")"
-        << " " << activated_uri_;
+                          << "(" << current_index << ")"
+                          << " " << activated_uri_;
         int left_results = current_index;
         int right_results = (results_.size()) ? (results_.size() - current_index) - 1 : 0;
         ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 

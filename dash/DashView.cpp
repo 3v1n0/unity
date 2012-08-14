@@ -137,6 +137,8 @@ void DashView::BuildPreview(Preview::Ptr model)
     preview_container_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
     AddChild(preview_container_.GetPointer());
     preview_container_->Preview(model, previews::Navigation::NONE); // no swipe left or right
+    nux::GetWindowCompositor().SetKeyFocusArea(preview_container_.GetPointer());
+    
     preview_container_->SetParentObject(this);
     preview_container_->SetGeometry(layout_->GetGeometry());
     preview_displaying_ = true;
@@ -270,7 +272,6 @@ void DashView::SetupViews()
   home_view_ = new LensView(home_lens_, nullptr);
   home_view_->uri_preview_activated.connect([&] (std::string const& uri, std::string const& unique_id) 
   {
-    LOG_DEBUG(logger) << "got unique id from preview activation: " << unique_id;
     stored_preview_unique_id_ = unique_id;
     stored_preview_uri_identifier_ = uri;
   });
@@ -869,7 +870,11 @@ void DashView::AddProperties(GVariantBuilder* builder)
 
 nux::Area* DashView::KeyNavIteration(nux::KeyNavDirection direction)
 {
-  if (direction == nux::KEY_NAV_DOWN && search_bar_ && active_lens_view_)
+  if (preview_displaying_)
+  {
+    preview_container_->KeyNavIteration(direction);
+  }
+  else if (direction == nux::KEY_NAV_DOWN && search_bar_ && active_lens_view_)
   {
     auto show_filters = search_bar_->show_filters();
     auto fscroll_view = active_lens_view_->fscroll_view();
@@ -943,6 +948,10 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
   default:
     direction = KEY_NAV_NONE;
   }
+
+  // send to previews here
+  if (preview_displaying_)
+    return preview_container_.GetPointer();
 
   // We should not do it here, but I really don't want to make DashView
   // focusable and I'm not able to know if ctrl is pressed in
@@ -1054,9 +1063,6 @@ nux::Area* DashView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::N
   if (preview_displaying_)
   {
     nux::Point newpos = mouse_position;
-    // COMPLETE HACK OMG LOL, if this makes it into a merge request just slap gord. seriously.
-    //newpos.x -= 32;
-    //newpos.y -= 24;
     view = dynamic_cast<nux::Area*>(preview_container_.GetPointer())->FindAreaUnderMouse(newpos, event_type);
   }
   else
