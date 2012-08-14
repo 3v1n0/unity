@@ -32,6 +32,7 @@ namespace unity
 {
 
 class UnityScreen;
+class GesturalWindowSwitcherPrivate;
 
 /*
   Manipulates the window switcher according to multi-touch gestures
@@ -72,59 +73,10 @@ class GesturalWindowSwitcher : public nux::GestureTarget
     // to be considered dragging the switcher.
     static const float MOUSE_DRAG_THRESHOLD;
 
-    virtual nux::GestureDeliveryRequest GestureEvent(const nux::GestureEvent &event);
+    virtual nux::GestureDeliveryRequest GestureEvent(nux::GestureEvent const& event);
 
   private:
-    void CloseSwitcherAfterTimeout(int timeout);
-    bool OnCloseSwitcherTimeout();
-    void CloseSwitcher();
-
-    // show the switcher and select the next application/window
-    void InitiateSwitcherNext();
-
-    // show the switcher and select the previous application/window
-    void InitiateSwitcherPrevious();
-
-    void ProcessAccumulatedHorizontalDrag();
-
-    nux::GestureDeliveryRequest WaitingCompoundGesture(const nux::GestureEvent &event);
-    nux::GestureDeliveryRequest WaitingEndOfTapAndHold(const nux::GestureEvent &event);
-    nux::GestureDeliveryRequest WaitingSwitcherManipulation(const nux::GestureEvent &event);
-    nux::GestureDeliveryRequest DraggingSwitcher(const nux::GestureEvent &event);
-    nux::GestureDeliveryRequest RecognizingMouseClickOrDrag(const nux::GestureEvent &event);
-    nux::GestureDeliveryRequest DraggingSwitcherWithMouse(const nux::GestureEvent &event);
-
-    void ProcessSwitcherViewMouseDown(int x, int y,
-        unsigned long button_flags, unsigned long key_flags);
-    void ProcessSwitcherViewMouseUp(int x, int y,
-        unsigned long button_flags, unsigned long key_flags);
-    void ProcessSwitcherViewMouseDrag(int x, int y, int dx, int dy,
-        unsigned long button_flags, unsigned long key_flags);
-
-    void ConnectToSwitcherViewMouseEvents();
-
-    enum class State
-    {
-      WaitingCompoundGesture,
-      WaitingEndOfTapAndHold,
-      WaitingSwitcherManipulation,
-      DraggingSwitcher,
-      RecognizingMouseClickOrDrag,
-      DraggingSwitcherWithMouse,
-      WaitingMandatorySwitcherClose,
-    } state_;
-
-    unity::UnityScreen *unity_screen_;
-    unity::switcher::Controller::Ptr switcher_controller_;
-    CompoundGestureRecognizer gesture_recognizer_;
-    CompTimer timer_close_switcher_;
-    float accumulated_horizontal_drag_;
-    int index_icon_hit_;
-
-    sigc::connection view_built_connection_;
-    sigc::connection mouse_down_connection_;
-    sigc::connection mouse_up_connection_;
-    sigc::connection mouse_drag_connection_;
+    GesturalWindowSwitcherPrivate* p;
 };
 typedef std::shared_ptr<GesturalWindowSwitcher> ShPtGesturalWindowSwitcher;
 

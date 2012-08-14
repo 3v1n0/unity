@@ -30,31 +30,97 @@ using namespace unity;
 const float GesturalWindowSwitcher::DRAG_DELTA_FOR_CHANGING_SELECTION = 100.0f;
 const float GesturalWindowSwitcher::MOUSE_DRAG_THRESHOLD = 20.0f;
 
-GesturalWindowSwitcher::GesturalWindowSwitcher()
+namespace unity
 {
-  state_ = State::WaitingCompoundGesture;
+  class GesturalWindowSwitcherPrivate
+  {
+   public:
+    GesturalWindowSwitcherPrivate();
+    virtual ~GesturalWindowSwitcherPrivate();
 
-  unity_screen_ = unity::UnityScreen::get(screen);
-  switcher_controller_ = unity_screen_->switcher_controller();
+    void CloseSwitcherAfterTimeout(int timeout);
+    bool OnCloseSwitcherTimeout();
+    void CloseSwitcher();
 
-  timer_close_switcher_.setCallback(
-      boost::bind(&GesturalWindowSwitcher::OnCloseSwitcherTimeout, this));
+    // show the switcher and select the next application/window
+    void InitiateSwitcherNext();
 
-  view_built_connection_ = switcher_controller_->view_built.connect(
-      sigc::mem_fun(this, &GesturalWindowSwitcher::ConnectToSwitcherViewMouseEvents));
+    // show the switcher and select the previous application/window
+    void InitiateSwitcherPrevious();
+
+    void ProcessAccumulatedHorizontalDrag();
+
+    nux::GestureDeliveryRequest GestureEvent(nux::GestureEvent const& event);
+
+    nux::GestureDeliveryRequest WaitingCompoundGesture(nux::GestureEvent const& event);
+    nux::GestureDeliveryRequest WaitingEndOfTapAndHold(nux::GestureEvent const& event);
+    nux::GestureDeliveryRequest WaitingSwitcherManipulation(nux::GestureEvent const& event);
+    nux::GestureDeliveryRequest DraggingSwitcher(nux::GestureEvent const& event);
+    nux::GestureDeliveryRequest RecognizingMouseClickOrDrag(nux::GestureEvent const& event);
+    nux::GestureDeliveryRequest DraggingSwitcherWithMouse(nux::GestureEvent const& event);
+
+    void ProcessSwitcherViewMouseDown(int x, int y,
+        unsigned long button_flags, unsigned long key_flags);
+    void ProcessSwitcherViewMouseUp(int x, int y,
+        unsigned long button_flags, unsigned long key_flags);
+    void ProcessSwitcherViewMouseDrag(int x, int y, int dx, int dy,
+        unsigned long button_flags, unsigned long key_flags);
+
+    void ConnectToSwitcherViewMouseEvents();
+
+    enum class State
+    {
+      WaitingCompoundGesture,
+      WaitingEndOfTapAndHold,
+      WaitingSwitcherManipulation,
+      DraggingSwitcher,
+      RecognizingMouseClickOrDrag,
+      DraggingSwitcherWithMouse,
+      WaitingMandatorySwitcherClose,
+    } state;
+
+    unity::UnityScreen* unity_screen;
+    unity::switcher::Controller::Ptr switcher_controller;
+    CompoundGestureRecognizer gesture_recognizer;
+    CompTimer timer_close_switcher;
+    float accumulated_horizontal_drag;
+    int index_icon_hit;
+
+    sigc::connection view_built_connection;
+    sigc::connection mouse_down_connection;
+    sigc::connection mouse_up_connection;
+    sigc::connection mouse_drag_connection;
+  };
 }
 
-GesturalWindowSwitcher::~GesturalWindowSwitcher()
+///////////////////////////////////////////
+// private class
+
+GesturalWindowSwitcherPrivate::GesturalWindowSwitcherPrivate()
 {
-  view_built_connection_.disconnect();
-  mouse_down_connection_.disconnect();
-  mouse_up_connection_.disconnect();
-  mouse_drag_connection_.disconnect();
+  state = State::WaitingCompoundGesture;
+
+  unity_screen = unity::UnityScreen::get(screen);
+  switcher_controller = unity_screen->switcher_controller();
+
+  timer_close_switcher.setCallback(
+      boost::bind(&GesturalWindowSwitcherPrivate::OnCloseSwitcherTimeout, this));
+
+  view_built_connection = switcher_controller->view_built.connect(
+      sigc::mem_fun(this, &GesturalWindowSwitcherPrivate::ConnectToSwitcherViewMouseEvents));
 }
 
-GestureDeliveryRequest GesturalWindowSwitcher::GestureEvent(const nux::GestureEvent &event)
+GesturalWindowSwitcherPrivate::~GesturalWindowSwitcherPrivate()
 {
-  switch (state_)
+  view_built_connection.disconnect();
+  mouse_down_connection.disconnect();
+  mouse_up_connection.disconnect();
+  mouse_drag_connection.disconnect();
+}
+
+GestureDeliveryRequest GesturalWindowSwitcherPrivate::GestureEvent(nux::GestureEvent const& event)
+{
+  switch (state)
   {
     case State::WaitingCompoundGesture:
       return WaitingCompoundGesture(event);
@@ -85,29 +151,29 @@ GestureDeliveryRequest GesturalWindowSwitcher::GestureEvent(const nux::GestureEv
   }
 }
 
-GestureDeliveryRequest GesturalWindowSwitcher::WaitingCompoundGesture(const nux::GestureEvent &event)
+GestureDeliveryRequest GesturalWindowSwitcherPrivate::WaitingCompoundGesture(nux::GestureEvent const& event)
 {
   GestureDeliveryRequest request = GestureDeliveryRequest::NONE;
 
-  switch(gesture_recognizer_.GestureEvent(event))
+  switch (gesture_recognizer.GestureEvent(event))
   {
     case RecognitionResult::NONE:
       // Do nothing;
       break;
     case RecognitionResult::DOUBLE_TAP_RECOGNIZED:
       InitiateSwitcherNext();
-      CloseSwitcherAfterTimeout(SWITCHER_TIME_AFTER_DOUBLE_TAP);
+      CloseSwitcherAfterTimeout(GesturalWindowSwitcher::SWITCHER_TIME_AFTER_DOUBLE_TAP);
       break;
     default: // RecognitionResult::TAP_AND_HOLD_RECOGNIZED:
       InitiateSwitcherNext();
       request = GestureDeliveryRequest::EXCLUSIVITY;
-      state_ = State::WaitingEndOfTapAndHold;
+      state = State::WaitingEndOfTapAndHold;
   }
 
   return request;
 }
 
-GestureDeliveryRequest GesturalWindowSwitcher::WaitingEndOfTapAndHold(const nux::GestureEvent &event)
+GestureDeliveryRequest GesturalWindowSwitcherPrivate::WaitingEndOfTapAndHold(nux::GestureEvent const& event)
 {
   // There should be no simultaneous/overlapping gestures.
   g_assert(event.type != EVENT_GESTURE_BEGIN);
@@ -118,22 +184,22 @@ GestureDeliveryRequest GesturalWindowSwitcher::WaitingEndOfTapAndHold(const nux:
   {
     if (event.GetGestureClasses() & nux::DRAG_GESTURE)
     {
-      state_ = State::DraggingSwitcher;
-      accumulated_horizontal_drag_ = 0.0f;
+      state = State::DraggingSwitcher;
+      accumulated_horizontal_drag = 0.0f;
       request = DraggingSwitcher(event);
     }
   }
   else // event.type == EVENT_GESTURE_END
   {
-    CloseSwitcherAfterTimeout(SWITCHER_TIME_AFTER_HOLD_RELEASED);
-    state_ = State::WaitingSwitcherManipulation;
+    CloseSwitcherAfterTimeout(GesturalWindowSwitcher::SWITCHER_TIME_AFTER_HOLD_RELEASED);
+    state = State::WaitingSwitcherManipulation;
   }
 
   return request;
 }
 
 GestureDeliveryRequest
-GesturalWindowSwitcher::WaitingSwitcherManipulation(const nux::GestureEvent &event)
+GesturalWindowSwitcherPrivate::WaitingSwitcherManipulation(nux::GestureEvent const& event)
 {
   GestureDeliveryRequest request = GestureDeliveryRequest::NONE;
 
@@ -145,15 +211,15 @@ GesturalWindowSwitcher::WaitingSwitcherManipulation(const nux::GestureEvent &eve
 
   if (event.GetGestureClasses() & nux::DRAG_GESTURE)
   {
-    state_ = State::DraggingSwitcher;
-    timer_close_switcher_.stop();
+    state = State::DraggingSwitcher;
+    timer_close_switcher.stop();
     DraggingSwitcher(event);
   }
 
   return request;
 }
 
-GestureDeliveryRequest GesturalWindowSwitcher::DraggingSwitcher(const nux::GestureEvent &event)
+GestureDeliveryRequest GesturalWindowSwitcherPrivate::DraggingSwitcher(nux::GestureEvent const& event)
 {
   // There should be no simultaneous/overlapping gestures.
   g_assert(event.type != EVENT_GESTURE_BEGIN);
@@ -162,20 +228,20 @@ GestureDeliveryRequest GesturalWindowSwitcher::DraggingSwitcher(const nux::Gestu
 
   if (event.type == EVENT_GESTURE_UPDATE)
   {
-    accumulated_horizontal_drag_ += event.GetDelta().x;
+    accumulated_horizontal_drag += event.GetDelta().x;
     ProcessAccumulatedHorizontalDrag();
   }
   else // event.type == EVENT_GESTURE_END
   {
     CloseSwitcher();
-    state_ = State::WaitingCompoundGesture;
+    state = State::WaitingCompoundGesture;
   }
 
   return GestureDeliveryRequest::NONE;
 }
 
 GestureDeliveryRequest
-GesturalWindowSwitcher::RecognizingMouseClickOrDrag(const nux::GestureEvent &event)
+GesturalWindowSwitcherPrivate::RecognizingMouseClickOrDrag(nux::GestureEvent const& event)
 {
   // Mouse press event has come but gestures have precedence over mouse
   // for interacting with the switcher.
@@ -184,7 +250,7 @@ GesturalWindowSwitcher::RecognizingMouseClickOrDrag(const nux::GestureEvent &eve
 }
 
 GestureDeliveryRequest
-GesturalWindowSwitcher::DraggingSwitcherWithMouse(const nux::GestureEvent &event)
+GesturalWindowSwitcherPrivate::DraggingSwitcherWithMouse(nux::GestureEvent const& event)
 {
   // Mouse press event has come but gestures have precedence over mouse
   // for interacting with the switcher.
@@ -192,23 +258,23 @@ GesturalWindowSwitcher::DraggingSwitcherWithMouse(const nux::GestureEvent &event
   return WaitingSwitcherManipulation(event);
 }
 
-void GesturalWindowSwitcher::CloseSwitcherAfterTimeout(int timeout)
+void GesturalWindowSwitcherPrivate::CloseSwitcherAfterTimeout(int timeout)
 {
-  timer_close_switcher_.stop();
+  timer_close_switcher.stop();
   // min and max timeouts
-  timer_close_switcher_.setTimes(timeout,
+  timer_close_switcher.setTimes(timeout,
                                  timeout+50);
-  timer_close_switcher_.start();
+  timer_close_switcher.start();
 }
 
-bool GesturalWindowSwitcher::OnCloseSwitcherTimeout()
+bool GesturalWindowSwitcherPrivate::OnCloseSwitcherTimeout()
 {
 
-  switch (state_)
+  switch (state)
   {
     case State::WaitingSwitcherManipulation:
     case State::WaitingMandatorySwitcherClose:
-      state_ = State::WaitingCompoundGesture;
+      state = State::WaitingCompoundGesture;
       CloseSwitcher();
       break;
     default:
@@ -218,71 +284,71 @@ bool GesturalWindowSwitcher::OnCloseSwitcherTimeout()
   return false;
 }
 
-void GesturalWindowSwitcher::CloseSwitcher()
+void GesturalWindowSwitcherPrivate::CloseSwitcher()
 {
-  switcher_controller_->Hide();
+  switcher_controller->Hide();
 }
 
-void GesturalWindowSwitcher::InitiateSwitcherNext()
+void GesturalWindowSwitcherPrivate::InitiateSwitcherNext()
 {
-  timer_close_switcher_.stop();
+  timer_close_switcher.stop();
 
-  if (switcher_controller_->Visible())
-    switcher_controller_->Next();
+  if (switcher_controller->Visible())
+    switcher_controller->Next();
   else
   {
-    unity_screen_->SetUpAndShowSwitcher();
+    unity_screen->SetUpAndShowSwitcher();
   }
 }
 
-void GesturalWindowSwitcher::InitiateSwitcherPrevious()
+void GesturalWindowSwitcherPrivate::InitiateSwitcherPrevious()
 {
-  timer_close_switcher_.stop();
+  timer_close_switcher.stop();
 
-  if (switcher_controller_->Visible())
+  if (switcher_controller->Visible())
   {
-    switcher_controller_->Prev();
+    switcher_controller->Prev();
   }
 }
 
-void GesturalWindowSwitcher::ProcessSwitcherViewMouseDown(int x, int y,
+void GesturalWindowSwitcherPrivate::ProcessSwitcherViewMouseDown(int x, int y,
     unsigned long button_flags, unsigned long key_flags)
 {
-  if (state_ != State::WaitingSwitcherManipulation)
+  if (state != State::WaitingSwitcherManipulation)
     return;
 
   // Don't close the switcher while the mouse is pressed over it
-  timer_close_switcher_.stop();
+  timer_close_switcher.stop();
 
-  state_ = State::RecognizingMouseClickOrDrag;
+  state = State::RecognizingMouseClickOrDrag;
 
-  index_icon_hit_ = switcher_controller_->GetView()->IconIndexAt(x, y);
-  accumulated_horizontal_drag_ = 0.0f;
+  index_icon_hit = switcher_controller->GetView()->IconIndexAt(x, y);
+  accumulated_horizontal_drag = 0.0f;
 }
 
-void GesturalWindowSwitcher::ProcessSwitcherViewMouseUp(int x, int y,
+void GesturalWindowSwitcherPrivate::ProcessSwitcherViewMouseUp(int x, int y,
     unsigned long button_flags, unsigned long key_flags)
 {
-  switch (state_)
+  switch (state)
   {
     case State::RecognizingMouseClickOrDrag:
-      if (index_icon_hit_ >= 0)
+      if (index_icon_hit >= 0)
       {
         // it was a click after all.
-        switcher_controller_->Select(index_icon_hit_);
+        switcher_controller->Select(index_icon_hit);
         // it was not a double tap gesture but we use the same timeout
-        CloseSwitcherAfterTimeout(SWITCHER_TIME_AFTER_DOUBLE_TAP);
-        state_ = State::WaitingMandatorySwitcherClose;
+        CloseSwitcherAfterTimeout(GesturalWindowSwitcher::SWITCHER_TIME_AFTER_DOUBLE_TAP);
+        state = State::WaitingMandatorySwitcherClose;
       }
       else
       {
         CloseSwitcher();
-        state_ = State::WaitingCompoundGesture;
+        state = State::WaitingCompoundGesture;
       }
       break;
     case State::DraggingSwitcherWithMouse:
       CloseSwitcher();
-      state_ = State::WaitingCompoundGesture;
+      state = State::WaitingCompoundGesture;
       break;
     default:
       // do nothing
@@ -290,21 +356,22 @@ void GesturalWindowSwitcher::ProcessSwitcherViewMouseUp(int x, int y,
   }
 }
 
-void GesturalWindowSwitcher::ProcessSwitcherViewMouseDrag(int x, int y, int dx, int dy,
+void GesturalWindowSwitcherPrivate::ProcessSwitcherViewMouseDrag(int x, int y, int dx, int dy,
     unsigned long button_flags, unsigned long key_flags)
 {
-  switch (state_)
+  switch (state)
   {
     case State::RecognizingMouseClickOrDrag:
-      accumulated_horizontal_drag_ += dx;
-      if (fabsf(accumulated_horizontal_drag_) >= MOUSE_DRAG_THRESHOLD)
+      accumulated_horizontal_drag += dx;
+      if (fabsf(accumulated_horizontal_drag) >=
+          GesturalWindowSwitcher::MOUSE_DRAG_THRESHOLD)
       {
-        state_ = State::DraggingSwitcherWithMouse;
+        state = State::DraggingSwitcherWithMouse;
         ProcessAccumulatedHorizontalDrag();
       }
       break;
     case State::DraggingSwitcherWithMouse:
-      accumulated_horizontal_drag_ += dx;
+      accumulated_horizontal_drag += dx;
       ProcessAccumulatedHorizontalDrag();
       break;
     default:
@@ -313,31 +380,51 @@ void GesturalWindowSwitcher::ProcessSwitcherViewMouseDrag(int x, int y, int dx, 
   }
 }
 
-void GesturalWindowSwitcher::ProcessAccumulatedHorizontalDrag()
+void GesturalWindowSwitcherPrivate::ProcessAccumulatedHorizontalDrag()
 {
-  if (accumulated_horizontal_drag_ >= DRAG_DELTA_FOR_CHANGING_SELECTION)
+  if (accumulated_horizontal_drag >=
+      GesturalWindowSwitcher::DRAG_DELTA_FOR_CHANGING_SELECTION)
   {
     InitiateSwitcherNext();
-    accumulated_horizontal_drag_ = 0.0f;
+    accumulated_horizontal_drag = 0.0f;
   }
-  else if (accumulated_horizontal_drag_ <= -DRAG_DELTA_FOR_CHANGING_SELECTION)
+  else if (accumulated_horizontal_drag <=
+      -GesturalWindowSwitcher::DRAG_DELTA_FOR_CHANGING_SELECTION)
   {
     InitiateSwitcherPrevious();
-    accumulated_horizontal_drag_ = 0.0f;
+    accumulated_horizontal_drag = 0.0f;
   }
 }
 
-void GesturalWindowSwitcher::ConnectToSwitcherViewMouseEvents()
+void GesturalWindowSwitcherPrivate::ConnectToSwitcherViewMouseEvents()
 {
-  unity::switcher::SwitcherView *switcher_view = switcher_controller_->GetView();
+  unity::switcher::SwitcherView *switcher_view = switcher_controller->GetView();
   g_assert(switcher_view);
 
-  mouse_down_connection_ = switcher_view->mouse_down.connect(
-      sigc::mem_fun(this, &GesturalWindowSwitcher::ProcessSwitcherViewMouseDown));
+  mouse_down_connection = switcher_view->mouse_down.connect(
+      sigc::mem_fun(this, &GesturalWindowSwitcherPrivate::ProcessSwitcherViewMouseDown));
 
-  mouse_up_connection_ = switcher_view->mouse_up.connect(
-      sigc::mem_fun(this, &GesturalWindowSwitcher::ProcessSwitcherViewMouseUp));
+  mouse_up_connection = switcher_view->mouse_up.connect(
+      sigc::mem_fun(this, &GesturalWindowSwitcherPrivate::ProcessSwitcherViewMouseUp));
 
-  mouse_drag_connection_ = switcher_view->mouse_drag.connect(
-      sigc::mem_fun(this, &GesturalWindowSwitcher::ProcessSwitcherViewMouseDrag));
+  mouse_drag_connection = switcher_view->mouse_drag.connect(
+      sigc::mem_fun(this, &GesturalWindowSwitcherPrivate::ProcessSwitcherViewMouseDrag));
+}
+
+///////////////////////////////////////////
+// public class
+
+GesturalWindowSwitcher::GesturalWindowSwitcher()
+  : p(new GesturalWindowSwitcherPrivate)
+{
+}
+
+GesturalWindowSwitcher::~GesturalWindowSwitcher()
+{
+  delete p;
+}
+
+GestureDeliveryRequest GesturalWindowSwitcher::GestureEvent(nux::GestureEvent const& event)
+{
+  return p->GestureEvent(event);
 }
