@@ -556,13 +556,13 @@ class PreviewInvocationTests(DashTestCase):
 
         category = lens.get_category_by_name("Installed")
 
-        self.mouse_move(self.dash.view.x + 24,  
-                        category.header_y + category.header_height + 24)
+        self.mouse.move(self.dash.view.x + 64,  
+                        category.header_y + category.header_height + 32)
 
         self.mouse.click(button=3)
         #revealing a preview may be very slow, not sure if Eventually handles that nicely
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
 
-        self.keyboard.press_and_release("Esc")
+        self.keyboard.press_and_release("Escape")
 
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))

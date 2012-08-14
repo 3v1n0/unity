@@ -137,7 +137,7 @@ void DashView::BuildPreview(Preview::Ptr model)
     preview_container_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
     AddChild(preview_container_.GetPointer());
     preview_container_->Preview(model, previews::Navigation::NONE); // no swipe left or right
-    nux::GetWindowCompositor().SetKeyFocusArea(preview_container_.GetPointer());
+    //nux::GetWindowCompositor().SetKeyFocusArea(preview_container_.GetPointer());
     
     preview_container_->SetParentObject(this);
     preview_container_->SetGeometry(layout_->GetGeometry());
@@ -950,8 +950,8 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
   }
 
   // send to previews here
-  if (preview_displaying_)
-    return preview_container_.GetPointer();
+  //if (preview_displaying_)
+  //  return preview_container_.GetPointer();
 
   // We should not do it here, but I really don't want to make DashView
   // focusable and I'm not able to know if ctrl is pressed in
