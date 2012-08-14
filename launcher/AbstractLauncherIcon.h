@@ -80,41 +80,41 @@ public:
   typedef nux::ObjectPtr<AbstractLauncherIcon> Ptr;
   typedef std::vector<nux::Vector4> TransformVector;
 
-  typedef enum
+  enum class IconType
   {
-    TYPE_NONE,
-    TYPE_BEGIN,
-    TYPE_HOME,
-    TYPE_HUD,
-    TYPE_FAVORITE,
-    TYPE_APPLICATION,
-    TYPE_EXPO,
-    TYPE_DESKTOP,
-    TYPE_PLACE,
-    TYPE_DEVICE,
-    TYPE_TRASH,
-    TYPE_END,
-  } IconType;
+    NONE,
+    BEGIN,
+    HOME,
+    HUD,
+    FAVORITE,
+    APPLICATION,
+    EXPO,
+    DESKTOP,
+    PLACE,
+    DEVICE,
+    TRASH,
+    END
+  };
 
-  typedef enum
+  enum class Quirk
   {
-    QUIRK_VISIBLE,
-    QUIRK_ACTIVE,
-    QUIRK_RUNNING,
-    QUIRK_URGENT,
-    QUIRK_PRESENTED,
-    QUIRK_STARTING,
-    QUIRK_SHIMMER,
-    QUIRK_CENTER_SAVED,
-    QUIRK_PROGRESS,
-    QUIRK_DROP_PRELIGHT,
-    QUIRK_DROP_DIM,
-    QUIRK_DESAT,
-    QUIRK_PULSE_ONCE,
-    QUIRK_LAST_ACTION,
+    VISIBLE = 0,
+    ACTIVE,
+    RUNNING,
+    URGENT,
+    PRESENTED,
+    STARTING,
+    SHIMMER,
+    CENTER_SAVED,
+    PROGRESS,
+    DROP_PRELIGHT,
+    DROP_DIM,
+    DESAT,
+    PULSE_ONCE,
+    LAST_ACTION,
 
-    QUIRK_LAST,
-  } Quirk;
+    LAST
+  };
 
   virtual ~AbstractLauncherIcon() {}
 
@@ -175,7 +175,7 @@ public:
 
   virtual void ResetQuirkTime(Quirk quirk) = 0;
 
-  virtual IconType GetIconType() = 0;
+  virtual IconType GetIconType() const = 0;
 
   virtual std::string RemoteUri() = 0;
 
@@ -205,9 +205,9 @@ public:
   virtual void SetVisibleOnMonitor(int monitor, bool visible) = 0;
 
   virtual void AboutToRemove() = 0;
-  
+
   virtual void Stick(bool save = true) = 0;
-  
+
   virtual void UnStick() = 0;
 
   sigc::signal<void, int, int, unsigned long> mouse_down;

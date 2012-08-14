@@ -45,7 +45,7 @@ const unsigned int volume_changed_timeout =  500;
 }
 
 DeviceLauncherIcon::DeviceLauncherIcon(glib::Object<GVolume> const& volume)
-  : SimpleLauncherIcon()
+  : SimpleLauncherIcon(IconType::DEVICE)
   , volume_(volume)
 {
   signal_volume_changed_.Connect(volume, "changed", sigc::mem_fun(this, &DeviceLauncherIcon::OnVolumeChanged));
@@ -80,21 +80,21 @@ void DeviceLauncherIcon::UpdateVisibility()
   switch (DevicesSettings::GetDefault().GetDevicesOption())
   {
     case DevicesSettings::NEVER:
-      SetQuirk(QUIRK_VISIBLE, false);
+      SetQuirk(Quirk::VISIBLE, false);
       break;
     case DevicesSettings::ONLY_MOUNTED:
       if (keep_in_launcher_)
       {
-        SetQuirk(QUIRK_VISIBLE, true);
+        SetQuirk(Quirk::VISIBLE, true);
       }
       else
       {
         glib::Object<GMount> mount(g_volume_get_mount(volume_));
-        SetQuirk(QUIRK_VISIBLE, mount);
+        SetQuirk(Quirk::VISIBLE, mount);
       }
       break;
     case DevicesSettings::ALWAYS:
-      SetQuirk(QUIRK_VISIBLE, true);
+      SetQuirk(Quirk::VISIBLE, true);
       break;
   }
 }
@@ -109,8 +109,7 @@ void DeviceLauncherIcon::UpdateDeviceIcon()
   tooltip_text = name_;
   icon_name = icon_string.Str();
 
-  SetIconType(TYPE_DEVICE);
-  SetQuirk(QUIRK_RUNNING, false);
+  SetQuirk(Quirk::RUNNING, false);
 }
 
 bool
@@ -262,7 +261,7 @@ void DeviceLauncherIcon::ShowMount(GMount* mount)
 void DeviceLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   SimpleLauncherIcon::ActivateLauncherIcon(arg);
-  SetQuirk(QUIRK_STARTING, true);
+  SetQuirk(Quirk::STARTING, true);
 
   glib::Object<GMount> mount(g_volume_get_mount(volume_));
 
@@ -351,7 +350,7 @@ void DeviceLauncherIcon::OnTogglePin(DbusmenuMenuitem* item,
     glib::Object<GMount> mount(g_volume_get_mount(self->volume_));
 
     if (!mount)
-      self->SetQuirk(QUIRK_VISIBLE, false);
+      self->SetQuirk(Quirk::VISIBLE, false);
 
     // Remove from favorites
     if (!uuid.Str().empty())

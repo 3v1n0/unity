@@ -131,7 +131,7 @@ void LensBar::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 
   for (auto icon: icons_)
   {
-    if (icon->active)
+    if (icon->active && icon->IsVisible())
     {
       nux::Geometry const& geo = icon->GetGeometry();
       int middle = geo.x + geo.width/2;
@@ -147,7 +147,6 @@ void LensBar::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
                                             nux::color::White);
 
       break;
-
     }
   }
 

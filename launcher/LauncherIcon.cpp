@@ -72,8 +72,9 @@ NUX_IMPLEMENT_OBJECT_TYPE(LauncherIcon);
 int LauncherIcon::_current_theme_is_mono = -1;
 glib::Object<GtkIconTheme> LauncherIcon::_unity_theme;
 
-LauncherIcon::LauncherIcon()
-  : _remote_urgent(false)
+LauncherIcon::LauncherIcon(IconType type)
+  : _icon_type(type)
+  , _remote_urgent(false)
   , _present_urgency(0)
   , _progress(0)
   , _sort_priority(0)
@@ -81,14 +82,14 @@ LauncherIcon::LauncherIcon()
   , _background_color(nux::color::White)
   , _glow_color(nux::color::White)
   , _shortcut(0)
-  , _icon_type(TYPE_NONE)
   , _center(max_num_monitors)
   , _has_visible_window(max_num_monitors)
   , _last_stable(max_num_monitors)
   , _parent_geo(max_num_monitors)
   , _saved_center(max_num_monitors)
+  , _allow_quicklist_to_show(true)
 {
-  for (int i = 0; i < QUIRK_LAST; i++)
+  for (unsigned i = 0; i < unsigned(Quirk::LAST); i++)
   {
     _quirks[i] = false;
     _quirk_times[i].tv_sec = 0;
@@ -119,7 +120,7 @@ LauncherIcon::LauncherIcon()
 
 LauncherIcon::~LauncherIcon()
 {
-  SetQuirk(QUIRK_URGENT, false);
+  SetQuirk(Quirk::URGENT, false);
 
   // clean up the whole signal-callback mess
   if (needs_redraw_connection.connected())
@@ -152,6 +153,11 @@ void LauncherIcon::LoadQuicklist()
 {
   _quicklist = new QuicklistView();
   AddChild(_quicklist.GetPointer());
+
+  _quicklist->mouse_down_outside_pointer_grab_area.connect([&] (int x, int y, unsigned long button_flags, unsigned long key_flags)
+  {
+    _allow_quicklist_to_show = false;
+  });
 
   QuicklistManager::Default()->RegisterQuicklist(_quicklist.GetPointer());
 }
@@ -190,19 +196,19 @@ LauncherIcon::AddProperties(GVariantBuilder* builder)
   .add("center_x", _center[0].x)
   .add("center_y", _center[0].y)
   .add("center_z", _center[0].z)
-  .add("related_windows", static_cast<unsigned int>(Windows().size()))
-  .add("icon_type", _icon_type)
+  .add("related_windows", Windows().size())
+  .add("icon_type", unsigned(_icon_type))
   .add("tooltip_text", tooltip_text())
   .add("sort_priority", _sort_priority)
   .add("shortcut", _shortcut)
   .add("monitors_visibility", g_variant_builder_end(&monitors_builder))
-  .add("active", GetQuirk(QUIRK_ACTIVE))
-  .add("visible", GetQuirk(QUIRK_VISIBLE))
-  .add("urgent", GetQuirk(QUIRK_URGENT))
-  .add("running", GetQuirk(QUIRK_RUNNING))
-  .add("starting", GetQuirk(QUIRK_STARTING))
-  .add("desaturated", GetQuirk(QUIRK_DESAT))
-  .add("presented", GetQuirk(QUIRK_PRESENTED));
+  .add("active", GetQuirk(Quirk::ACTIVE))
+  .add("visible", GetQuirk(Quirk::VISIBLE))
+  .add("urgent", GetQuirk(Quirk::URGENT))
+  .add("running", GetQuirk(Quirk::RUNNING))
+  .add("starting", GetQuirk(Quirk::STARTING))
+  .add("desaturated", GetQuirk(Quirk::DESAT))
+  .add("presented", GetQuirk(Quirk::PRESENTED));
 }
 
 void
@@ -215,7 +221,7 @@ LauncherIcon::Activate(ActionArg arg)
 
   ActivateLauncherIcon(arg);
 
-  UpdateQuirkTime(QUIRK_LAST_ACTION);
+  UpdateQuirkTime(Quirk::LAST_ACTION);
 }
 
 void
@@ -226,7 +232,7 @@ LauncherIcon::OpenInstance(ActionArg arg)
 
   OpenInstanceLauncherIcon(arg);
 
-  UpdateQuirkTime(QUIRK_LAST_ACTION);
+  UpdateQuirkTime(Quirk::LAST_ACTION);
 }
 
 nux::Color LauncherIcon::BackgroundColor() const
@@ -532,6 +538,7 @@ LauncherIcon::RecvMouseEnter(int monitor)
 void LauncherIcon::RecvMouseLeave(int monitor)
 {
   _last_monitor = -1;
+  _allow_quicklist_to_show = true;
 
   if (_tooltip)
     _tooltip->ShowWindow(false);
@@ -624,16 +631,24 @@ bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
 void LauncherIcon::RecvMouseDown(int button, int monitor, unsigned long key_flags)
 {
   if (button == 3)
-    OpenQuicklist();
+    OpenQuicklist(false, monitor);
 }
 
 void LauncherIcon::RecvMouseUp(int button, int monitor, unsigned long key_flags)
 {
   if (button == 3)
   {
+    if (_allow_quicklist_to_show)
+    {
+      OpenQuicklist(false, monitor);
+    }
+
     if (_quicklist && _quicklist->IsVisible())
+    {
       _quicklist->CaptureMouseDownAnyWhereElse(true);
+    }
   }
+  _allow_quicklist_to_show = true;
 }
 
 void LauncherIcon::RecvMouseClick(int button, int monitor, unsigned long key_flags)
@@ -715,7 +730,7 @@ void
 LauncherIcon::SaveCenter()
 {
   _saved_center = _center;
-  UpdateQuirkTime(QUIRK_CENTER_SAVED);
+  UpdateQuirkTime(Quirk::CENTER_SAVED);
 }
 
 void
@@ -747,7 +762,7 @@ LauncherIcon::IsVisibleOnMonitor(int monitor) const
 bool
 LauncherIcon::OnPresentTimeout()
 {
-  if (!GetQuirk(QUIRK_PRESENTED))
+  if (!GetQuirk(Quirk::PRESENTED))
     return false;
 
   Unpresent();
@@ -763,7 +778,7 @@ float LauncherIcon::PresentUrgency()
 void
 LauncherIcon::Present(float present_urgency, int length)
 {
-  if (GetQuirk(QUIRK_PRESENTED))
+  if (GetQuirk(Quirk::PRESENTED))
     return;
 
   if (length >= 0)
@@ -773,17 +788,17 @@ LauncherIcon::Present(float present_urgency, int length)
   }
 
   _present_urgency = CLAMP(present_urgency, 0.0f, 1.0f);
-  SetQuirk(QUIRK_PRESENTED, true);
+  SetQuirk(Quirk::PRESENTED, true);
 }
 
 void
 LauncherIcon::Unpresent()
 {
-  if (!GetQuirk(QUIRK_PRESENTED))
+  if (!GetQuirk(Quirk::PRESENTED))
     return;
 
   _source_manager.Remove(PRESENT_TIMEOUT);
-  SetQuirk(QUIRK_PRESENTED, false);
+  SetQuirk(Quirk::PRESENTED, false);
 }
 
 void
@@ -792,14 +807,8 @@ LauncherIcon::Remove()
   if (_quicklist && _quicklist->IsVisible())
       _quicklist->Hide();
 
-  SetQuirk(QUIRK_VISIBLE, false);
+  SetQuirk(Quirk::VISIBLE, false);
   EmitRemove();
-}
-
-void
-LauncherIcon::SetIconType(IconType type)
-{
-  _icon_type = type;
 }
 
 void
@@ -815,7 +824,7 @@ LauncherIcon::SortPriority()
 }
 
 LauncherIcon::IconType
-LauncherIcon::GetIconType()
+LauncherIcon::GetIconType() const
 {
   return _icon_type;
 }
@@ -823,26 +832,26 @@ LauncherIcon::GetIconType()
 bool
 LauncherIcon::GetQuirk(LauncherIcon::Quirk quirk) const
 {
-  return _quirks[quirk];
+  return _quirks[unsigned(quirk)];
 }
 
 void
 LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value)
 {
-  if (_quirks[quirk] == value)
+  if (_quirks[unsigned(quirk)] == value)
     return;
 
-  _quirks[quirk] = value;
-  if (quirk == QUIRK_VISIBLE)
-    TimeUtil::SetTimeStruct(&(_quirk_times[quirk]), &(_quirk_times[quirk]), Launcher::ANIM_DURATION_SHORT);
+  _quirks[unsigned(quirk)] = value;
+  if (quirk == Quirk::VISIBLE)
+    TimeUtil::SetTimeStruct(&(_quirk_times[unsigned(quirk)]), &(_quirk_times[unsigned(quirk)]), Launcher::ANIM_DURATION_SHORT);
   else
-    clock_gettime(CLOCK_MONOTONIC, &(_quirk_times[quirk]));
+    clock_gettime(CLOCK_MONOTONIC, &(_quirk_times[unsigned(quirk)]));
   EmitNeedsRedraw();
 
   // Present on urgent as a general policy
-  if (quirk == QUIRK_VISIBLE && value)
+  if (quirk == Quirk::VISIBLE && value)
     Present(0.5f, 1500);
-  if (quirk == QUIRK_URGENT)
+  if (quirk == Quirk::URGENT)
   {
     if (value)
     {
@@ -853,7 +862,7 @@ LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value)
     ubus_server_send_message(ubus, UBUS_LAUNCHER_ICON_URGENT_CHANGED, g_variant_new_boolean(value));
   }
 
-  if (quirk == QUIRK_VISIBLE)
+  if (quirk == Quirk::VISIBLE)
   {
      visibility_changed.emit();
   }
@@ -871,21 +880,21 @@ LauncherIcon::UpdateQuirkTimeDelayed(guint ms, LauncherIcon::Quirk quirk)
 void
 LauncherIcon::UpdateQuirkTime(LauncherIcon::Quirk quirk)
 {
-  clock_gettime(CLOCK_MONOTONIC, &(_quirk_times[quirk]));
+  clock_gettime(CLOCK_MONOTONIC, &(_quirk_times[unsigned(quirk)]));
   EmitNeedsRedraw();
 }
 
 void
 LauncherIcon::ResetQuirkTime(LauncherIcon::Quirk quirk)
 {
-  _quirk_times[quirk].tv_sec = 0;
-  _quirk_times[quirk].tv_nsec = 0;
+  _quirk_times[unsigned(quirk)].tv_sec = 0;
+  _quirk_times[unsigned(quirk)].tv_nsec = 0;
 }
 
 struct timespec
 LauncherIcon::GetQuirkTime(LauncherIcon::Quirk quirk)
 {
-  return _quirk_times[quirk];
+  return _quirk_times[unsigned(quirk)];
 }
 
 void
@@ -1072,10 +1081,10 @@ LauncherIcon::RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote)
   RemoveChild(remote.get());
 
   DeleteEmblem();
-  SetQuirk(QUIRK_PROGRESS, false);
+  SetQuirk(Quirk::PROGRESS, false);
 
   if (_remote_urgent)
-    SetQuirk(QUIRK_URGENT, false);
+    SetQuirk(Quirk::URGENT, false);
 
   _menuclient_dynamic_quicklist = nullptr;
 }
@@ -1084,7 +1093,7 @@ void
 LauncherIcon::OnRemoteUrgentChanged(LauncherEntryRemote* remote)
 {
   _remote_urgent = remote->Urgent();
-  SetQuirk(QUIRK_URGENT, remote->Urgent());
+  SetQuirk(Quirk::URGENT, remote->Urgent());
 }
 
 void
@@ -1151,7 +1160,7 @@ LauncherIcon::OnRemoteCountVisibleChanged(LauncherEntryRemote* remote)
 void
 LauncherIcon::OnRemoteProgressVisibleChanged(LauncherEntryRemote* remote)
 {
-  SetQuirk(QUIRK_PROGRESS, remote->ProgressVisible());
+  SetQuirk(Quirk::PROGRESS, remote->ProgressVisible());
 
   if (remote->ProgressVisible())
     SetProgress(remote->Progress());

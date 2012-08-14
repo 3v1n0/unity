@@ -33,15 +33,14 @@ namespace launcher
 UBusManager BFBLauncherIcon::ubus_manager_;
 
 BFBLauncherIcon::BFBLauncherIcon(LauncherHideMode hide_mode)
- : SimpleLauncherIcon()
+ : SimpleLauncherIcon(IconType::HOME)
  , reader_(dash::LensDirectoryReader::GetDefault())
  , launcher_hide_mode_(hide_mode)
 {
   tooltip_text = _("Dash Home");
   icon_name = PKGDATADIR"/launcher_bfb.png";
-  SetQuirk(QUIRK_VISIBLE, true);
-  SetQuirk(QUIRK_RUNNING, false);
-  SetIconType(TYPE_HOME);
+  SetQuirk(Quirk::VISIBLE, true);
+  SetQuirk(Quirk::RUNNING, false);
 
   background_color_ = nux::color::White;
 
@@ -66,7 +65,7 @@ void BFBLauncherIcon::OnOverlayShown(GVariant *data, bool visible)
   if (overlay_identity.Str() == "dash" && IsVisibleOnMonitor(overlay_monitor))
   {
     tooltip_enabled = !visible;
-    SetQuirk(QUIRK_ACTIVE, visible);
+    SetQuirk(Quirk::ACTIVE, visible);
     EmitNeedsRedraw();
   }
   // If the hud is open, we hide the BFB if we have a locked launcher
@@ -119,6 +118,7 @@ std::list<DbusmenuMenuitem*> BFBLauncherIcon::GetMenus()
   dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Dash Home"));
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+  dbusmenu_menuitem_property_set_bool(menu_item, QuicklistMenuItem::OVERLAY_MENU_ITEM_PROPERTY, true);
 
   g_signal_connect(menu_item,
                    DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
@@ -138,6 +138,7 @@ std::list<DbusmenuMenuitem*> BFBLauncherIcon::GetMenus()
     dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, lens->name);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+    dbusmenu_menuitem_property_set_bool(menu_item, QuicklistMenuItem::OVERLAY_MENU_ITEM_PROPERTY, true);
 
     g_signal_connect(menu_item,
                      DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,

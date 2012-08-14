@@ -147,7 +147,7 @@ QuicklistView::SelectItem(int index)
     if (menu_item)
     {
       target_item = index;
-      menu_item->_prelight = true;
+      menu_item->Select();
     }
   }
 
@@ -448,13 +448,9 @@ void QuicklistView::PreLayoutManagement()
       _item_layout->AddView(item, 1, nux::eCenter, nux::eFull);
     }
 
-    int  textWidth  = 0;
-    int  textHeight = 0;
-    item->GetTextExtents(textWidth, textHeight);
-    textHeight += QuicklistMenuItem::ITEM_MARGIN * 2;
-
-    MaxItemWidth = std::max(MaxItemWidth, textWidth);
-    TotalItemHeight += textHeight;
+    nux::Size const& text_extents = item->GetTextExtents();
+    MaxItemWidth = std::max(MaxItemWidth, text_extents.width);
+    TotalItemHeight += text_extents.height;
   }
 
   if (TotalItemHeight < _anchor_height)
@@ -510,11 +506,11 @@ long QuicklistView::PostLayoutManagement(long LayoutResult)
   // only after MaxItemWidth is computed in QuicklistView::PreLayoutManagement.
   // The setting of the separator width is done here after the Layout cycle for this widget is over. The width of the separator
   // has bee set correctly during the layout cycle, but the cairo rendering still need to be adjusted.
-  int separator_width = _item_layout->GetBaseWidth();
+  unsigned separator_width = _item_layout->GetBaseWidth();
 
   for (auto item : _item_list)
   {
-    if (item->GetVisible() && item->CairoSurfaceWidth() != separator_width)
+    if (item->GetVisible() && item->GetCairoSurfaceWidth() != separator_width)
     {
       // Compute textures of the item.
       item->UpdateTexture();
@@ -567,14 +563,10 @@ void QuicklistView::CheckAndEmitItemSignal(int x, int y)
 
 void QuicklistView::ActivateItem(QuicklistMenuItem* item)
 {
-  if (item && item->_menuItem)
-  {
-    ubus_server_send_message(ubus_server_get_default(),
-                             UBUS_PLACE_VIEW_CLOSE_REQUEST,
-                             NULL);
+  if (!item)
+    return;
 
-    dbusmenu_menuitem_handle_event(item->_menuItem, "clicked", NULL, 0);
-  }
+  item->Activate();
 }
 
 void QuicklistView::RecvItemMouseRelease(QuicklistMenuItem* item, int x, int y)
@@ -595,7 +587,7 @@ void QuicklistView::CancelItemsPrelightStatus()
 {
   for (auto item : _item_list)
   {
-    item->_prelight = false;
+    item->Select(false);
   }
 }
 
@@ -760,7 +752,7 @@ QuicklistMenuItemType QuicklistView::GetNthType(int index)
   if (item)
     return item->GetItemType();
 
-  return MENUITEM_TYPE_UNKNOWN;
+  return QuicklistMenuItemType::UNKNOWN;
 }
 
 std::list<QuicklistMenuItem*> QuicklistView::GetChildren()
@@ -1308,42 +1300,6 @@ void QuicklistView::SetText(std::string const& text)
 
   _labelText = text;
   UpdateTexture();
-}
-
-void QuicklistView::TestMenuItems(DbusmenuMenuitem* root)
-{
-  RemoveAllMenuItem();
-
-  if (root == 0)
-    return;
-
-  GList* child = NULL;
-  for (child = dbusmenu_menuitem_get_children(root); child != NULL; child = g_list_next(child))
-  {
-    const gchar* type = dbusmenu_menuitem_property_get((DbusmenuMenuitem*)child->data, DBUSMENU_MENUITEM_PROP_TYPE);
-    const gchar* toggle_type = dbusmenu_menuitem_property_get((DbusmenuMenuitem*)child->data, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
-
-    if (g_strcmp0(type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)
-    {
-      QuicklistMenuItemSeparator* item = new QuicklistMenuItemSeparator((DbusmenuMenuitem*)child->data, NUX_TRACKER_LOCATION);
-      AddMenuItem(item);
-    }
-    else if (g_strcmp0(toggle_type, DBUSMENU_MENUITEM_TOGGLE_CHECK) == 0)
-    {
-      QuicklistMenuItemCheckmark* item = new QuicklistMenuItemCheckmark((DbusmenuMenuitem*)child->data, NUX_TRACKER_LOCATION);
-      AddMenuItem(item);
-    }
-    else if (g_strcmp0(toggle_type, DBUSMENU_MENUITEM_TOGGLE_RADIO) == 0)
-    {
-      QuicklistMenuItemRadio* item = new QuicklistMenuItemRadio((DbusmenuMenuitem*)child->data, NUX_TRACKER_LOCATION);
-      AddMenuItem(item);
-    }
-    else //if (g_strcmp0 (type, DBUSMENU_MENUITEM_PROP_LABEL) == 0)
-    {
-      QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel((DbusmenuMenuitem*)child->data, NUX_TRACKER_LOCATION);
-      AddMenuItem(item);
-    }
-  }
 }
 
 // Introspection
