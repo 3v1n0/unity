@@ -123,12 +123,6 @@ void HudLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   }
 }
 
-std::list<DbusmenuMenuitem*> HudLauncherIcon::GetMenus()
-{
-  std::list<DbusmenuMenuitem*> result;
-  return result;
-}
-
 std::string HudLauncherIcon::GetName() const
 {
   return "HudLauncherIcon";

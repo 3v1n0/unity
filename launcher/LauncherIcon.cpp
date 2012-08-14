@@ -547,7 +547,7 @@ void LauncherIcon::RecvMouseLeave(int monitor)
 
 bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
 {
-  std::list<DbusmenuMenuitem*> menus = Menus();
+  MenuItemsVector const& menus = Menus();
 
   if (!_quicklist)
     LoadQuicklist();
@@ -557,11 +557,12 @@ bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
 
   if (_tooltip)
     _tooltip->ShowWindow(false);
+
   _quicklist->RemoveAllMenuItem();
 
-  for (auto menu_item : menus)
+  for (auto const& menu_item : menus)
   {
-    QuicklistMenuItem* ql_item;
+    QuicklistMenuItem* ql_item = nullptr;
 
     const gchar* type = dbusmenu_menuitem_property_get(menu_item, DBUSMENU_MENUITEM_PROP_TYPE);
     const gchar* toggle_type = dbusmenu_menuitem_property_get(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
@@ -602,7 +603,7 @@ bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
       monitor = 0;
   }
 
-  nux::Geometry geo = _parent_geo[monitor];
+  nux::Geometry const& geo = _parent_geo[monitor];
   int tip_x = geo.x + geo.width - 4 * geo.width / 48;
   int tip_y = _center[monitor].y;
 
@@ -913,14 +914,14 @@ LauncherIcon::GetProgress()
   return _progress;
 }
 
-std::list<DbusmenuMenuitem*> LauncherIcon::Menus()
+AbstractLauncherIcon::MenuItemsVector LauncherIcon::Menus()
 {
   return GetMenus();
 }
 
-std::list<DbusmenuMenuitem*> LauncherIcon::GetMenus()
+AbstractLauncherIcon::MenuItemsVector LauncherIcon::GetMenus()
 {
-  std::list<DbusmenuMenuitem*> result;
+  MenuItemsVector result;
   return result;
 }
 

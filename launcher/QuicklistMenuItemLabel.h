@@ -30,7 +30,7 @@ namespace unity
 class QuicklistMenuItemLabel : public QuicklistMenuItem
 {
 public:
-  QuicklistMenuItemLabel(DbusmenuMenuitem* item, NUX_FILE_LINE_PROTO);
+  QuicklistMenuItemLabel(glib::Object<DbusmenuMenuitem> const& item, NUX_FILE_LINE_PROTO);
 
 protected:
   std::string GetName() const;

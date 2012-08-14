@@ -24,7 +24,7 @@
 namespace unity
 {
 
-QuicklistMenuItemRadio::QuicklistMenuItemRadio(DbusmenuMenuitem* item, NUX_FILE_LINE_DECL)
+QuicklistMenuItemRadio::QuicklistMenuItemRadio(glib::Object<DbusmenuMenuitem> const& item, NUX_FILE_LINE_DECL)
   : QuicklistMenuItem(QuicklistMenuItemType::RADIO, item, NUX_FILE_LINE_PARAM)
 {
   InitializeText();
