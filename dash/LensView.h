@@ -98,15 +98,12 @@ private:
   virtual void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
   
-private:
-
   virtual bool AcceptKeyNavFocus();
   virtual std::string GetName() const;
   virtual void AddProperties(GVariantBuilder* builder);
 
   std::string get_search_string() const;
 
-private:
   Lens::Ptr lens_;
   CategoryGroups categories_;
   ResultCounts counts_;

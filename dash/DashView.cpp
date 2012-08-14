@@ -124,6 +124,7 @@ void DashView::SetMonitorOffset(int x, int y)
 void DashView::ClosePreview()
 {
   preview_displaying_ = false;
+  RemoveChild(preview_container_.GetPointer());
   preview_container_ = nullptr; // free resources
   preview_state_machine_.ClosePreview();
   QueueDraw();
@@ -134,28 +135,28 @@ void DashView::BuildPreview(Preview::Ptr model)
   if (!preview_displaying_)
   {
     preview_container_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
+    AddChild(preview_container_.GetPointer());
     preview_container_->Preview(model, previews::Navigation::NONE); // no swipe left or right
     preview_container_->SetParentObject(this);
-
-    nux::Geometry preview_geo = layout_->GetGeometry();
-    //preview_geo.height -= 24;
-    //preview_geo.width -= 120;
-    //preview_geo.x += 60;
-    //preview_geo.y += 12;
-
-    preview_container_->SetGeometry(preview_geo);
-    
+    preview_container_->SetGeometry(layout_->GetGeometry());
     preview_displaying_ = true;
-  
+ 
+    // connect to nav left/right signals to request nav left/right movement.
     preview_container_->navigate_left.connect([&] () {
       preview_state_machine_.Reset();
       preview_navigation_mode_ = previews::Navigation::LEFT;
+
+      // sends a message to all result views, sending the the uri of the current preview result
+      // and the unique id of the result view that should be handling the results
       ubus_manager_.SendMessage(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, g_variant_new("(iss)", -1, stored_preview_uri_identifier_.c_str(), stored_preview_unique_id_.c_str()));
     });
 
     preview_container_->navigate_right.connect([&] () {
       preview_state_machine_.Reset();
       preview_navigation_mode_ = previews::Navigation::RIGHT;
+      
+      // sends a message to all result views, sending the the uri of the current preview result
+      // and the unique id of the result view that should be handling the results
       ubus_manager_.SendMessage(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, g_variant_new("(iss)", 1, stored_preview_uri_identifier_.c_str(), stored_preview_unique_id_.c_str()));
     });
   }
@@ -861,6 +862,7 @@ void DashView::AddProperties(GVariantBuilder* builder)
   wrapper.add("form_factor", form_factor);
   wrapper.add("right-border-width", style.GetDashRightTileWidth());
   wrapper.add("bottom-border-height", style.GetDashBottomTileHeight());
+  wrapper.add("preview_displaying", preview_displaying_);
 }
 
 nux::Area* DashView::KeyNavIteration(nux::KeyNavDirection direction)
