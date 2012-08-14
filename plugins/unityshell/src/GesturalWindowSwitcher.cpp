@@ -22,7 +22,13 @@
 
 #include "GesturalWindowSwitcher.h"
 #include <Nux/Nux.h>
+#include <NuxCore/Logger.h>
 #include "unityshell.h"
+
+namespace
+{
+  nux::logging::Logger logger("unity.gestural_window_switcher");
+}
 
 using namespace nux;
 using namespace unity;
@@ -175,10 +181,13 @@ GestureDeliveryRequest GesturalWindowSwitcherPrivate::WaitingCompoundGesture(nux
 
 GestureDeliveryRequest GesturalWindowSwitcherPrivate::WaitingEndOfTapAndHold(nux::GestureEvent const& event)
 {
-  // There should be no simultaneous/overlapping gestures.
-  g_assert(event.type != EVENT_GESTURE_BEGIN);
-
   GestureDeliveryRequest request = GestureDeliveryRequest::NONE;
+
+  if (event.type == EVENT_GESTURE_BEGIN)
+  {
+    LOG_ERROR(logger) << "There should be no simultaneous/overlapping gestures.";
+    return request;
+  }
 
   if (event.type == EVENT_GESTURE_UPDATE)
   {
@@ -221,10 +230,17 @@ GesturalWindowSwitcherPrivate::WaitingSwitcherManipulation(nux::GestureEvent con
 
 GestureDeliveryRequest GesturalWindowSwitcherPrivate::DraggingSwitcher(nux::GestureEvent const& event)
 {
-  // There should be no simultaneous/overlapping gestures.
-  g_assert(event.type != EVENT_GESTURE_BEGIN);
+  if (event.type == EVENT_GESTURE_BEGIN)
+  {
+    LOG_ERROR(logger) << "There should be no simultaneous/overlapping gestures.";
+    return GestureDeliveryRequest::NONE;
+  }
 
-  g_assert(event.GetGestureClasses() & nux::DRAG_GESTURE);
+  if (!(event.GetGestureClasses() & nux::DRAG_GESTURE))
+  {
+    LOG_ERROR(logger) << "Didn't get the expected drag gesture.";
+    return GestureDeliveryRequest::NONE;
+  }
 
   if (event.type == EVENT_GESTURE_UPDATE)
   {
