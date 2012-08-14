@@ -166,7 +166,6 @@ void TestRunner::NavRight()
   unity_protocol_movie_preview_set_rating(UNITY_PROTOCOL_MOVIE_PREVIEW(proto_obj.RawPtr()), 0.5);
   unity_protocol_movie_preview_set_num_ratings(UNITY_PROTOCOL_MOVIE_PREVIEW(proto_obj.RawPtr()), 17);
 
-//  unity_protocol_preview_set_image_source_uri(proto_obj, "file:///home/nick/Videos/test-1.ogv");
   unity_protocol_preview_set_image_source_uri(proto_obj, "http://ia.media-imdb.com/images/M/MV5BMTMwODg0NDY1Nl5BMl5BanBnXkFtZTcwMjkwNTgyMg@@._V1._SY317_.jpg");
   unity_protocol_preview_set_title(proto_obj, title.str().c_str());
   unity_protocol_preview_set_subtitle(proto_obj, subtitle);
