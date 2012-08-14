@@ -45,6 +45,7 @@ public:
 protected:
   MenuItemsVector GetMenus();
   std::string GetName() const;
+  std::string GetRemoteUri();
 
 private:
   void UpdateVisibility();

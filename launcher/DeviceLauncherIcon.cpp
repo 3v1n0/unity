@@ -53,9 +53,9 @@ DeviceLauncherIcon::DeviceLauncherIcon(glib::Object<GVolume> const& volume)
   DevicesSettings::GetDefault().changed.connect(sigc::mem_fun(this, &DeviceLauncherIcon::OnSettingsChanged));
 
   // Checks if in favorites!
-  glib::String uuid(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_UUID));
+  std::string const& icon_uri = GetRemoteUri();
   DeviceList favorites = DevicesSettings::GetDefault().GetFavorites();
-  DeviceList::iterator pos = std::find(favorites.begin(), favorites.end(), uuid.Str());
+  DeviceList::iterator pos = std::find(favorites.begin(), favorites.end(), icon_uri);
 
   keep_in_launcher_ = pos != favorites.end();
 
@@ -340,7 +340,7 @@ void DeviceLauncherIcon::OnTogglePin(DbusmenuMenuitem* item,
                                      int time,
                                      DeviceLauncherIcon* self)
 {
-  glib::String uuid(g_volume_get_identifier(self->volume_, G_VOLUME_IDENTIFIER_KIND_UUID));
+  std::string const& icon_uri = self->GetRemoteUri();
 
   self->keep_in_launcher_ = !self->keep_in_launcher_;
 
@@ -353,13 +353,13 @@ void DeviceLauncherIcon::OnTogglePin(DbusmenuMenuitem* item,
       self->SetQuirk(Quirk::VISIBLE, false);
 
     // Remove from favorites
-    if (!uuid.Str().empty())
-      DevicesSettings::GetDefault().RemoveFavorite(uuid.Str());
+    if (!icon_uri.empty())
+      DevicesSettings::GetDefault().RemoveFavorite(icon_uri);
   }
   else
   {
-    if (!uuid.Str().empty())
-      DevicesSettings::GetDefault().AddFavorite(uuid.Str());
+    if (!icon_uri.empty())
+      DevicesSettings::GetDefault().AddFavorite(icon_uri);
   }
 }
 
@@ -437,13 +437,23 @@ void DeviceLauncherIcon::StopDrive()
 void DeviceLauncherIcon::OnSettingsChanged()
 {
   // Checks if in favourites!
-  glib::String uuid(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_UUID));
+  std::string const& icon_uri = GetRemoteUri();
   DeviceList favorites = DevicesSettings::GetDefault().GetFavorites();
-  DeviceList::iterator pos = std::find(favorites.begin(), favorites.end(), uuid.Str());
+  DeviceList::iterator pos = std::find(favorites.begin(), favorites.end(), icon_uri);
 
   keep_in_launcher_ = pos != favorites.end();
 
   UpdateVisibility();
+}
+
+std::string DeviceLauncherIcon::GetRemoteUri()
+{
+  std::string const& uuid = glib::String(g_volume_get_uuid(volume_)).Str();
+
+  if (uuid.empty())
+    return "";
+
+  return "device://" + uuid;
 }
 
 std::string DeviceLauncherIcon::GetName() const
