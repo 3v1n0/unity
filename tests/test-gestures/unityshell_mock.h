@@ -6,7 +6,7 @@
 #include <NuxMock.h>
 
 #include "SwitcherControllerMock.h"
-#include "LauncherControllerMock.h"
+
 
 namespace unity
 {
@@ -28,7 +28,6 @@ class UnityScreenMock : public CompScreenMock
   public:
   UnityScreenMock()
   {
-    launcher_controller_ = std::make_shared<launcher::ControllerMock>();
     switcher_controller_ = std::make_shared<switcher::ControllerMock>();
     Reset();
   }
@@ -60,13 +59,7 @@ class UnityScreenMock : public CompScreenMock
     return switcher_controller_;
   }
 
-  launcher::ControllerMock::Ptr launcher_controller()
-  {
-    return launcher_controller_;
-  }
-
   switcher::ControllerMock::Ptr switcher_controller_;
-  launcher::ControllerMock::Ptr launcher_controller_;
   int SetUpAndShowSwitcher_count_;
 };
 
