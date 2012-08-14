@@ -49,7 +49,6 @@ std::vector<nux::ShPtGestureTarget>
 UnityGestureBroker::FindGestureTargets(const nux::GestureEvent &event)
 {
   std::vector<nux::ShPtGestureTarget> targets;
-  targets.reserve(2);
 
   const std::vector<nux::TouchPoint> &touches = event.GetTouches();
 
