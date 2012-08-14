@@ -220,18 +220,12 @@ bool GesturalWindowSwitcher::OnCloseSwitcherTimeout()
 
 void GesturalWindowSwitcher::CloseSwitcher()
 {
-  CompOption::Vector options;
-  CompAction action;
-
   switcher_controller_->Hide();
 }
 
 void GesturalWindowSwitcher::InitiateSwitcherNext()
 {
   timer_close_switcher_.stop();
-
-  CompOption::Vector options;
-  CompAction action;
 
   if (switcher_controller_->Visible())
     switcher_controller_->Next();
@@ -244,9 +238,6 @@ void GesturalWindowSwitcher::InitiateSwitcherNext()
 void GesturalWindowSwitcher::InitiateSwitcherPrevious()
 {
   timer_close_switcher_.stop();
-
-  CompOption::Vector options;
-  CompAction action;
 
   if (switcher_controller_->Visible())
   {
