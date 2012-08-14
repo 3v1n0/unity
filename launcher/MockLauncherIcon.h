@@ -260,9 +260,9 @@ public:
     return 0;
   }
 
-  MenuItemsList Menus()
+  MenuItemsVector Menus()
   {
-    return MenuItemsList ();
+    return MenuItemsVector ();
   }
 
   nux::DndAction QueryAcceptDrop(DndData const& dnd_data)

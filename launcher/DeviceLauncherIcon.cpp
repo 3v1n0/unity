@@ -118,9 +118,9 @@ DeviceLauncherIcon::CanEject()
   return g_volume_can_eject(volume_);
 }
 
-AbstractLauncherIcon::MenuItemsList DeviceLauncherIcon::GetMenus()
+AbstractLauncherIcon::MenuItemsVector DeviceLauncherIcon::GetMenus()
 {
-  MenuItemsList result;
+  MenuItemsVector result;
   glib::Object<DbusmenuMenuitem> menu_item;
   glib::Object<GDrive> drive(g_volume_get_drive(volume_));
 

@@ -34,7 +34,7 @@ public:
     : BFBLauncherIcon(LauncherHideMode::LAUNCHER_HIDE_NEVER)
   {}
 
-  AbstractLauncherIcon::MenuItemsList GetMenus()
+  AbstractLauncherIcon::MenuItemsVector GetMenus()
   {
     return BFBLauncherIcon::GetMenus();
   }

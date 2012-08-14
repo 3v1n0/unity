@@ -946,9 +946,9 @@ void BamfLauncherIcon::EnsureMenuItemsReady()
   }
 }
 
-AbstractLauncherIcon::MenuItemsList BamfLauncherIcon::GetMenus()
+AbstractLauncherIcon::MenuItemsVector BamfLauncherIcon::GetMenus()
 {
-  MenuItemsList result;
+  MenuItemsVector result;
   bool first_separator_needed = false;
 
   // FIXME for O: hack around the wrong abstraction

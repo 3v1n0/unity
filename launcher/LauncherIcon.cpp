@@ -547,7 +547,7 @@ void LauncherIcon::RecvMouseLeave(int monitor)
 
 bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
 {
-  MenuItemsList const& menus = Menus();
+  MenuItemsVector const& menus = Menus();
 
   if (!_quicklist)
     LoadQuicklist();
@@ -914,14 +914,14 @@ LauncherIcon::GetProgress()
   return _progress;
 }
 
-AbstractLauncherIcon::MenuItemsList LauncherIcon::Menus()
+AbstractLauncherIcon::MenuItemsVector LauncherIcon::Menus()
 {
   return GetMenus();
 }
 
-AbstractLauncherIcon::MenuItemsList LauncherIcon::GetMenus()
+AbstractLauncherIcon::MenuItemsVector LauncherIcon::GetMenus()
 {
-  MenuItemsList result;
+  MenuItemsVector result;
   return result;
 }
 

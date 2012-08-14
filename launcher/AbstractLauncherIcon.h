@@ -79,7 +79,7 @@ class AbstractLauncherIcon : public ui::IconTextureSource, public debug::Introsp
 public:
   typedef nux::ObjectPtr<AbstractLauncherIcon> Ptr;
   typedef std::vector<nux::Vector4> TransformVector;
-  typedef std::vector<glib::Object<DbusmenuMenuitem>> MenuItemsList;
+  typedef std::vector<glib::Object<DbusmenuMenuitem>> MenuItemsVector;
 
   enum class IconType
   {
@@ -180,7 +180,7 @@ public:
 
   virtual std::string RemoteUri() = 0;
 
-  virtual MenuItemsList Menus() = 0;
+  virtual MenuItemsVector Menus() = 0;
 
   virtual nux::DndAction QueryAcceptDrop(DndData const& dnd_data) = 0;
 

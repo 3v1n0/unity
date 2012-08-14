@@ -73,9 +73,9 @@ TrashLauncherIcon::~TrashLauncherIcon()
   g_cancellable_cancel(cancellable_);
 }
 
-AbstractLauncherIcon::MenuItemsList TrashLauncherIcon::GetMenus()
+AbstractLauncherIcon::MenuItemsVector TrashLauncherIcon::GetMenus()
 {
-  MenuItemsList result;
+  MenuItemsVector result;
 
   /* Empty Trash */
   glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());

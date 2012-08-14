@@ -46,7 +46,7 @@ public:
   void SetHideMode(LauncherHideMode hide_mode);
 
 protected:
-  MenuItemsList GetMenus();
+  MenuItemsVector GetMenus();
   std::string GetName() const;
 
 private:
