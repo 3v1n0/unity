@@ -22,9 +22,11 @@
 #define QUICKLISTVIEW_H
 
 #include <Nux/Nux.h>
+#include <Nux/VLayout.h>
+#include <Nux/HLayout.h>
 #include <Nux/BaseWindow.h>
-#include <NuxGraphics/GraphicsEngine.h>
 #include <Nux/TextureArea.h>
+#include <NuxGraphics/GraphicsEngine.h>
 #include <NuxGraphics/CairoGraphics.h>
 
 #include <pango/pango.h>
