@@ -162,6 +162,22 @@ ResultIterator ResultView::GetIteratorAtRow(int row)
   return ResultIterator(result_model_, iter, renderer_tag_);
 }
 
+// it would be nice to return a result here, but c++ does not have a good mechanism
+// for indicating out of bounds errors. so i return the index
+unsigned int ResultView::GetIndexForUri(const std::string& uri)
+{
+  unsigned int index = 0;
+  for (ResultIterator it(GetIteratorAtRow(0)); !it.IsLast(); ++it)
+  {
+    if ((*it).uri == uri)
+      break;
+
+    index++;
+  }
+
+  return index;
+}
+
 long ResultView::ComputeContentSize()
 {
   return View::ComputeContentSize();
