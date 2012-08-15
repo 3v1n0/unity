@@ -22,6 +22,7 @@
 #ifndef UNITYSHELL_H
 #define UNITYSHELL_H
 
+#include <NuxCore/AnimationController.h>
 #include <Nux/GesturesSubscription.h>
 #include <Nux/WindowThread.h>
 #include <NuxCore/Property.h>
@@ -242,6 +243,9 @@ private:
   void OnPanelStyleChanged();
 
   void InitGesturesSupport();
+
+  nux::animation::TickSource tick_source_;
+  nux::animation::AnimationController animation_controller_;
 
   Settings dash_settings_;
   dash::Style    dash_style_;
