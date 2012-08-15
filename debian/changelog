@@ -1,7 +1,9 @@
 unity (6.2.0-0ubuntu2) UNRELEASED; urgency=low
 
   * debian/control:
-    - create unity-2d transitional packages
+    - create unity-2d transitional packages. Removing unity-2d as it is now
+      not supported and won't be transitionned to the necessary gsettings
+      changes (part one of LP: #1035261)
   * debian/*preinst:
     - removed, useless now
   * debian/profile_upgrade*, debian/unity-common.install:
