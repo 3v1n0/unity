@@ -62,18 +62,11 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
 
 add_executable (test-unit
                 unit/TestMain.cpp
-                unit/TestQuicklistMenuitems.cpp
                 unit/TestPanelService.cpp
                 unit/TestUBus.cpp
                 unit/TestStaticCairoText.cpp
                 ${CMAKE_SOURCE_DIR}/launcher/CairoBaseWindow.cpp
                 ${CMAKE_SOURCE_DIR}/unity-shared/Introspectable.cpp
-                ${CMAKE_SOURCE_DIR}/launcher/QuicklistMenuItem.cpp
-                ${CMAKE_SOURCE_DIR}/launcher/QuicklistMenuItemCheckmark.cpp
-                ${CMAKE_SOURCE_DIR}/launcher/QuicklistMenuItemLabel.cpp
-                ${CMAKE_SOURCE_DIR}/launcher/QuicklistMenuItemRadio.cpp
-                ${CMAKE_SOURCE_DIR}/launcher/QuicklistMenuItemSeparator.cpp
-                ${CMAKE_SOURCE_DIR}/launcher/QuicklistView.cpp
                 ${CMAKE_SOURCE_DIR}/unity-shared/StaticCairoText.cpp
                 ../services/panel-service.c
                 ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
@@ -207,6 +200,7 @@ if (GTEST_SRC_DIR AND
   add_executable(test-gtest
                  test_main.cpp
                  test_bamflaunchericon.cpp
+                 test_bfb_launcher_icon.cpp
                  test_dashview_impl.cpp
                  test_edge_barrier_controller.cpp
                  test_launcher.cpp
@@ -224,6 +218,8 @@ if (GTEST_SRC_DIR AND
                  test_previews_generic.cpp
                  test_previews_movie.cpp
                  test_previews_music.cpp
+                 test_quicklist_menu_item.cpp
+                 test_quicklist_view.cpp
                  test_resultviewgrid.cpp
                  test_single_monitor_launcher_icon.cpp
                  test_switcher_controller.cpp

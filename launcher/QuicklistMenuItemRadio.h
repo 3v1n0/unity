@@ -15,18 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Mirco Müller <mirco.mueller@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 #ifndef QUICKLISTMENUITEMRADIO_H
 #define QUICKLISTMENUITEMRADIO_H
 
-#include <Nux/Nux.h>
-#include <Nux/View.h>
-#include <NuxGraphics/CairoGraphics.h>
-
 #include "QuicklistMenuItem.h"
-
-#include <X11/Xlib.h>
 
 namespace unity
 {
@@ -34,33 +29,13 @@ namespace unity
 class QuicklistMenuItemRadio : public QuicklistMenuItem
 {
 public:
-  QuicklistMenuItemRadio(DbusmenuMenuitem* item,
-                         NUX_FILE_LINE_PROTO);
-
-  QuicklistMenuItemRadio(DbusmenuMenuitem* item,
-                         bool              debug,
-                         NUX_FILE_LINE_PROTO);
-
-  ~QuicklistMenuItemRadio();
+  QuicklistMenuItemRadio(glib::Object<DbusmenuMenuitem> const& item, NUX_FILE_LINE_PROTO);
 
 protected:
-  void PreLayoutManagement();
+  std::string GetName() const;
 
-  long PostLayoutManagement(long layoutResult);
-
-  void Draw(nux::GraphicsEngine& gfxContext,
-            bool                 forceDraw);
-
-  void DrawContent(nux::GraphicsEngine& gfxContext,
-                   bool                 forceDraw);
-
-  void PostDraw(nux::GraphicsEngine& gfxContext,
-                bool                 forceDraw);
-
-  virtual const gchar* GetDefaultText();
-
+  virtual std::string GetDefaultText() const;
   virtual void UpdateTexture();
-  virtual int CairoSurfaceWidth();
 };
 
 } //NAMESPACE
