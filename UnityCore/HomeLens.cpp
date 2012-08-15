@@ -133,6 +133,11 @@ public:
     return target_cat_index;
   }
 
+  void NotifyOrderChanged ()
+  {
+    owner_->categories_reordered();
+  }
+
 private:
   std::map<std::string,unsigned int> reg_by_display_name_;
   std::map<ModelOffsetPair, unsigned> reg_category_map_;
@@ -429,7 +434,7 @@ void HomeLens::CategoryMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *i
   category_ordering_.insert(std::pair<unsigned, unsigned>(lens_prio, target_cat_index));
   if (category_ordering_.rbegin()->second != target_cat_index)
   {
-    // TODO: emit ordering changed
+    cat_registry_->NotifyOrderChanged();
   }
 
   for (unsigned int i = 0; i < n_cols_; i++) g_variant_unref(row_buf_[i]);

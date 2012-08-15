@@ -81,6 +81,7 @@ private:
   void SetupFilters();
 
   void OnCategoryAdded(Category const& category);
+  void OnCategoryOrderChanged();
   void OnResultAdded(Result const& result);
   void OnResultRemoved(Result const& result);
   void UpdateCounts(PlacesGroup* group);

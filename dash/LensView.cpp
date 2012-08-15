@@ -142,6 +142,7 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   dash::Style::Instance().columns_changed.connect(sigc::mem_fun(this, &LensView::OnColumnsChanged));
 
   lens_->connected.changed.connect([&](bool is_connected) { if (is_connected) initial_activation_ = true; });
+  lens_->categories_reordered.connect(sigc::mem_fun(this, &LensView::OnCategoryOrderChanged));
   search_string.SetGetterFunction(sigc::mem_fun(this, &LensView::get_search_string));
   filters_expanded.changed.connect([&](bool expanded) { fscroll_view_->SetVisible(expanded); QueueRelayout(); OnColumnsChanged(); });
   view_type.changed.connect(sigc::mem_fun(this, &LensView::OnViewTypeChanged));
@@ -271,7 +272,7 @@ void LensView::OnCategoryAdded(Category const& category)
   std::string name = category.name;
   std::string icon_hint = category.icon_hint;
   std::string renderer_name = category.renderer_name;
-  int index = category.index;
+  unsigned index = category.index;
   bool reset_filter_models = false;
 
   LOG_DEBUG(logger) << "Category added: " << name
@@ -279,17 +280,24 @@ void LensView::OnCategoryAdded(Category const& category)
                     << ", " << renderer_name
                     << ", " << boost::lexical_cast<int>(index) << ")";
 
-  // FIXME: duplicating PlacesGroups when lens crashes and restarts!
+  if (index < categories_.size())
+  {
+    // the lens might have restarted and we don't want to create
+    // new PlacesGroup if we can reuse the old one
+    PlacesGroup* existing_group = categories_.at(index);
+    if (existing_group->GetCategoryIndex() == index) return;
+  }
 
   PlacesGroup* group = new PlacesGroup();
   AddChild(group);
   group->SetName(name);
   group->SetIcon(icon_hint);
+  group->SetCategoryIndex(index);
   group->SetExpanded(false);
   group->SetVisible(false);
   group->expanded.connect(sigc::mem_fun(this, &LensView::OnGroupExpanded));
 
-  reset_filter_models = static_cast<unsigned>(index) < categories_.size();
+  reset_filter_models = index < categories_.size();
   /* Add the group at the correct offset into the categories vector */
   categories_.insert(categories_.begin() + index, group);
 
@@ -315,7 +323,7 @@ void LensView::OnCategoryAdded(Category const& category)
   if (results_model->model())
   {
     DeeFilter filter;
-    dee_filter_new_for_any_column(2, g_variant_new_uint32 (static_cast<unsigned>(index)), &filter);
+    dee_filter_new_for_any_column(2, g_variant_new_uint32 (index), &filter);
     glib::Object<DeeModel> filter_model(dee_filter_model_new(results_model->model(), &filter));
     grid->SetModel(filter_model, results_model->GetTag());
   }
@@ -331,8 +339,10 @@ void LensView::OnCategoryAdded(Category const& category)
       grid->SetModel(glib::Object<DeeModel>(), NULL);
     }
 
-    if (index < last_good_filter_model_ || last_good_filter_model_ < 0)
+    if (static_cast<int>(index) < last_good_filter_model_ || last_good_filter_model_ < 0)
+    {
       last_good_filter_model_ = index;
+    }
     if (!fix_filter_models_idle_)
     {
       fix_filter_models_idle_.reset(new glib::Idle(sigc::mem_fun(this, &LensView::ReinitializeFilterModels), glib::Source::Priority::HIGH));
@@ -344,6 +354,34 @@ void LensView::OnCategoryAdded(Category const& category)
   scroll_layout_->AddView(group, 0, nux::MinorDimensionPosition::eAbove,
                           nux::MinorDimensionSize::eFull, 100.0f,
                           (nux::LayoutPosition)index);
+}
+
+void LensView::OnCategoryOrderChanged()
+{
+  LOG_WARN(logger) << "Reordering categories for " << lens_->name();
+
+  // need references so that the Layout doesn't destroy the views
+  std::vector<nux::ObjectPtr<PlacesGroup> > child_views;
+  for (unsigned i = 0; i < categories_.size(); i++)
+  {
+    child_views.push_back(nux::ObjectPtr<PlacesGroup>(categories_.at(i)));
+    scroll_layout_->RemoveChildObject(categories_.at(i));
+  }
+
+  // there should be ~10 categories, so this shouldn't be too big of a deal
+  std::vector<unsigned> order(lens_->GetCategoriesOrder());
+  for (unsigned i = 0; i < order.size(); i++)
+  {
+    unsigned desired_category_index = order[i];
+    for (unsigned j = 0; j < child_views.size(); j++)
+    {
+      if (child_views[j]->GetCategoryIndex() == desired_category_index)
+      {
+        scroll_layout_->AddView(child_views[j].GetPointer(), 0);
+        break;
+      }
+    }
+  }
 }
 
 bool LensView::ReinitializeFilterModels()
@@ -606,6 +644,7 @@ void LensView::ActivateFirst()
   Results::Ptr results = lens_->results;
   if (results->count())
   {
+    // FIXME: Linear search in the result model, use category grid's model!
     for (unsigned int c = 0; c < scroll_layout_->GetChildren().size(); ++c)
     {
       for (unsigned int i = 0; i < results->count(); ++i)

@@ -110,6 +110,7 @@ public:
 
   nux::Property<ViewType> view_type;
 
+  sigc::signal<void> categories_reordered;
   sigc::signal<void, Hints const&> search_finished;
   sigc::signal<void, Hints const&> global_search_finished;
   sigc::signal<void, std::string const&, HandledType, Hints const&> activated;
