@@ -93,7 +93,7 @@ private:
 
   void OnDecayRateChanged (int value);
 
-  ui::Decaymulator::Ptr decaymulator_;
+  ui::Decaymulator decaymulator_;
   HideMode  _mode;
   HideQuirk _quirks;
   bool      _should_hide;

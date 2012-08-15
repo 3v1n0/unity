@@ -12,6 +12,9 @@ compiz_plugin (unityshell
                )
 add_dependencies(unityshell unity-core-${UNITY_API_VERSION} dash-lib launcher-lib switcher-lib hud-lib panel-lib shortcuts-lib unity-shared unity-shared-compiz)
 target_link_libraries(unityshell unity-core-${UNITY_API_VERSION} launcher-lib dash-lib switcher-lib hud-lib panel-lib shortcuts-lib unity-shared unity-shared-compiz)
+set_target_properties(unityshell 
+                      PROPERTIES INSTALL_RPATH "${CACHED_UNITY_PRIVATE_DEPS_LIBRARY_DIRS}"
+                      INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 #
 # Data

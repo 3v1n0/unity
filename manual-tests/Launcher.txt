@@ -177,7 +177,7 @@ Expected Result:
 
 
 Dragging icons to reorder - away from launcher
------------------------------------------
+----------------------------------------------
 This test is about reordering the icons without the animation showing.
 
 Setup:
@@ -196,6 +196,22 @@ Expected Result:
   icons.
   * When released, the icon "flies" back into the launcher, a spaces opens for
   it, and the any pips for running apps show again.
+
+
+Dragged launcher icons out of the launcher are properly drawn
+-------------------------------------------------------------
+This test ensures that the launcher icons out of the launcher are properly drawn
+
+Setup:
+
+Actions:
+#. Move the mouse so it is over a launcher icon for an application
+#. Press and hold the mouse button
+#. Drag the icon away from the launcher, in the middle of the display
+#. Don't move the mouse pointer for some (4-5) seconds, keeping the button pressed
+
+Expected Result:
+  * The icon is always drawn, even when the mouse pointer does not move.
 
 
 Dragging icon while program is starting
@@ -661,5 +677,32 @@ Actions:
  * Drag a launcher icon of the top side of the launcher. Don't release the mouse.
  * Move the mouse at the bottom of the launcher.
 
-Expected Results:
+Expected Result:
  * The launcher should autoscroll so you can reach the trash icon.
+
+
+No flashing tooltips when peforming the accordion effect. 
+----------------------------------------------------
+Setup:
+ * Make sure the launcher setting is to never hide.
+ * Add icons to the launcher so that some of them in the bottom are folded.
+
+Actions:  
+ * Quickly move the mouse pointer to the bottom-left corner.
+ * Quickly move the mouse pointer outside the launcher area.
+
+Expected Result:
+ * No icon flickers near the top panel.
+ * See https://bugs.launchpad.net/unity/+bug/980942/+attachment/3059914/+files/launcher-accordion-effect-tooltip-bug.ogv.
+
+
+No flickering when resizing the launcher
+-----------------------------------------
+Actions:
+* Open gedit.
+* Maximize it. Make sure it remains maximized during the test.
+* Open Appearance panel in System Settings.
+* Change Launcher Icon Size.
+
+Expected Results:
+* The gedit window must not flicker behind the launcher.

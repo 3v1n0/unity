@@ -70,6 +70,8 @@ public:
   void Show(ShowMode show, SortMode sort, bool reverse, std::vector<launcher::AbstractLauncherIcon::Ptr> results);
   void Hide(bool accept_state=true);
 
+  bool CanShowSwitcher(const std::vector<launcher::AbstractLauncherIcon::Ptr>& resutls) const;
+
   bool Visible();
 
   void Next();
@@ -91,6 +93,10 @@ public:
   ui::LayoutWindowList ExternalRenderTargets ();
 
   guint GetSwitcherInputWindowId() const;
+
+  bool IsShowDesktopDisabled() const;
+  void SetShowDesktopDisabled(bool disabled);
+  int StartIndex() const;
 
 protected:
   // Introspectable methods
@@ -126,6 +132,7 @@ private:
 
   int monitor_;
   bool visible_;
+  bool show_desktop_disabled_;
   nux::Color bg_color_;
   DetailMode detail_mode_;
 

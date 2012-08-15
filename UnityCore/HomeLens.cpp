@@ -105,7 +105,7 @@ public:
     /* Any existing categories with offsets >= target_cat_offset must be
      * pushed up. Update both maps by id and display name */
     std::map<std::string,unsigned int>::iterator end = reg_by_id_.end();
-    for (i = reg_by_id_.begin(); i != end; i++)
+    for (i = reg_by_id_.begin(); i != end; ++i)
     {
       if (i->second >= target_cat_offset)
       {
@@ -114,7 +114,7 @@ public:
       }
     }
 
-    for (i = reg_by_display_name_.begin(), end = reg_by_display_name_.end(); i != end; i++)
+    for (i = reg_by_display_name_.begin(), end = reg_by_display_name_.end(); i != end; ++i)
     {
       if (i->second >= target_cat_offset)
       {
@@ -637,7 +637,7 @@ void HomeLens::ResultsMerger::CheckCategoryRegistryDirty()
    * the category offset in the corresponding rows in the target model
    */
   for (i = source_to_target_tags_.begin(), end = source_to_target_tags_.end();
-       i != end; i++)
+       i != end; ++i)
   {
     source = i->first;
     target_tag = i->second;

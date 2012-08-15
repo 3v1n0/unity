@@ -43,7 +43,7 @@ public:
   void Eject();
 
 protected:
-  std::list<DbusmenuMenuitem*> GetMenus();
+  MenuItemsVector GetMenus();
   std::string GetName() const;
 
 private:

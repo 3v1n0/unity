@@ -369,7 +369,8 @@ long PlacesGroup::ComputeContentSize()
 
   nux::Geometry const& geo = GetGeometry();
 
-  if (_cached_geometry != geo)
+  // only the width matters
+  if (_cached_geometry.GetWidth() != geo.GetWidth())
   {
     _focus_layer.reset(dash::Style::Instance().FocusOverlay(geo.width - kHighlightLeftPadding - kHighlightRightPadding, kHighlightHeight));
 

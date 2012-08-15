@@ -15,18 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Mirco Müller <mirco.mueller@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 #ifndef QUICKLISTMENUITEMSEPARATOR_H
 #define QUICKLISTMENUITEMSEPARATOR_H
 
-#include <Nux/Nux.h>
-#include <Nux/View.h>
-#include <NuxGraphics/CairoGraphics.h>
-
 #include "QuicklistMenuItem.h"
-
-#include <X11/Xlib.h>
 
 namespace unity
 {
@@ -34,38 +29,18 @@ namespace unity
 class QuicklistMenuItemSeparator : public QuicklistMenuItem
 {
 public:
-  QuicklistMenuItemSeparator(DbusmenuMenuitem* item,
-                             NUX_FILE_LINE_PROTO);
-
-  QuicklistMenuItemSeparator(DbusmenuMenuitem* item,
-                             bool              debug,
-                             NUX_FILE_LINE_PROTO);
-
-  ~QuicklistMenuItemSeparator();
+  QuicklistMenuItemSeparator(glib::Object<DbusmenuMenuitem> const& item, NUX_FILE_LINE_PROTO);
 
   virtual bool GetSelectable();
 
 protected:
-
-  void PreLayoutManagement();
-
-  long PostLayoutManagement(long layoutResult);
-
   void Draw(nux::GraphicsEngine& gfxContext, bool forceDraw);
-
-  void DrawContent(nux::GraphicsEngine& gfxContext, bool forceDraw);
-
-  void PostDraw(nux::GraphicsEngine& gfxContext, bool forceDraw);
+  std::string GetName() const;
 
   virtual void UpdateTexture();
 
-  //! Returns the width of the separator line as defined by the size of the _normalTexture.
-  virtual int CairoSurfaceWidth();
-
-  friend class QuicklistView;
-
 private:
-
+  nux::Color _color;
   nux::Color _premultiplied_color;
 };
 
