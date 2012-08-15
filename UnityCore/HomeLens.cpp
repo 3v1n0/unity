@@ -383,7 +383,6 @@ void HomeLens::CategoryMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *i
   DeeModel* results_model;
   DeeModelIter* target_iter;
   DeeModelTag*  target_tag;
-  int target_cat_offset, source_cat_offset;
   const gchar* display_name;
   const unsigned int DISPLAY_NAME_COLUMN = 0;
 
@@ -399,13 +398,12 @@ void HomeLens::CategoryMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *i
   }
 
   target_tag = FindSourceToTargetTag(model);
-  source_cat_offset = dee_model_get_position(model, iter);
+  unsigned source_cat_offset = dee_model_get_position(model, iter);
 
   /* If we already have a category registered with the same display name
    * then we just use that. Otherwise register a new category for it */
   display_name = dee_model_get_string(model, iter, DISPLAY_NAME_COLUMN);
-  target_cat_offset = cat_registry_->FindCategoryOffset(display_name);
-  if (target_cat_offset >= 0)
+  if (cat_registry_->FindCategoryOffset(display_name) >= 0)
   {
     /* Make sure the <results_model, source_cat_offset> pair is registered */
     cat_registry_->RegisterCategoryOffset(results_model, source_cat_offset,
@@ -429,9 +427,10 @@ void HomeLens::CategoryMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *i
                                    G_OBJECT(model), "unity-homelens-priority"));
   unsigned lens_prio = static_cast<unsigned>(lens_priority);
   category_ordering_.insert(std::pair<unsigned, unsigned>(lens_prio, target_cat_index));
-  if (category_ordering_.rbegin()->second != target_cat_offset)
+  if (category_ordering_.rbegin()->second != target_cat_index)
+  {
     // TODO: emit ordering changed
-    ;
+  }
 
   for (unsigned int i = 0; i < n_cols_; i++) g_variant_unref(row_buf_[i]);
 }
