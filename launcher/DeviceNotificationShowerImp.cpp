@@ -49,7 +49,7 @@ public:
                                        glib::Object<GdkPixbuf> const& pixbuf,
                                        std::string const& volume_name)
   {
-    glib::Object<NotifyNotification> notification(notify_notification_new(icon_name.c_str(),
+    glib::Object<NotifyNotification> notification(notify_notification_new(volume_name.c_str(),
                                                                          _("The drive has been successfully ejected"),
                                                                           nullptr));
 

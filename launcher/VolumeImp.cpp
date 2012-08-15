@@ -21,6 +21,7 @@
 #include <gtk/gtk.h>
 #include <UnityCore/GLibSignal.h>
 
+#include "DeviceNotificationShower.h"
 #include "FileManagerOpener.h"
 #include "VolumeImp.h"
 
@@ -38,11 +39,13 @@ class VolumeImp::Impl
 public:
   Impl(glib::Object<GVolume> const& volume,
        std::shared_ptr<FileManagerOpener> const& file_manager_opener,
+       std::shared_ptr<DeviceNotificationShower> const& device_notification_shower,
        VolumeImp* parent)
     : parent_(parent)
     , cancellable_(g_cancellable_new())
     , volume_(volume)
     , file_manager_opener_(file_manager_opener)
+    , device_notification_shower_(device_notification_shower)
   {
     signal_volume_changed_.Connect(volume_, "changed", [this] (GVolume*) {
       parent_->changed.emit();
@@ -128,7 +131,7 @@ public:
   {
     if (g_volume_eject_with_operation_finish(self->volume_, result, nullptr))
     {
-      // Show notification!
+      self->device_notification_shower_->Show(self->GetIconName(), self->GetName());
     }
   }
 
@@ -206,6 +209,7 @@ public:
   glib::Object<GCancellable> cancellable_;
   glib::Object<GVolume> volume_;
   std::shared_ptr<FileManagerOpener> file_manager_opener_;
+  std::shared_ptr<DeviceNotificationShower> device_notification_shower_;
 
   glib::Signal<void, GVolume*> signal_volume_changed_;
 };
@@ -215,8 +219,9 @@ public:
 //
 
 VolumeImp::VolumeImp(glib::Object<GVolume> const& volume,
-                       std::shared_ptr<FileManagerOpener> const& file_manager_opener)
-  : pimpl(new Impl(volume, file_manager_opener, this))
+                     std::shared_ptr<FileManagerOpener> const& file_manager_opener,
+                     std::shared_ptr<DeviceNotificationShower> const& device_notification_shower)
+  : pimpl(new Impl(volume, file_manager_opener, device_notification_shower, this))
 {}
 
 VolumeImp::~VolumeImp()

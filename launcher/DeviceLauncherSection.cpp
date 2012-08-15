@@ -19,6 +19,7 @@
 
 #include "DeviceLauncherSection.h"
 #include "DevicesSettings.h"
+#include "DeviceNotificationShowerImp.h"
 #include "FileManagerOpenerImp.h"
 #include "VolumeImp.h"
 
@@ -32,6 +33,7 @@ DeviceLauncherSection::DeviceLauncherSection(AbstractVolumeMonitorWrapper::Ptr v
   : monitor_(volume_monitor)
   , devices_settings_(devices_settings)
   , file_manager_opener_(new FileManagerOpenerImp)
+  , device_notification_shower_(new DeviceNotificationShowerImp)
 {
   monitor_->volume_added.connect(sigc::mem_fun(this, &DeviceLauncherSection::OnVolumeAdded));
   monitor_->volume_removed.connect(sigc::mem_fun(this, &DeviceLauncherSection::OnVolumeRemoved));
@@ -50,7 +52,7 @@ void DeviceLauncherSection::PopulateEntries()
     if (map_.find(volume) != map_.end())
       continue;
 
-    VolumeLauncherIcon::Ptr icon(new VolumeLauncherIcon(std::make_shared<VolumeImp>(volume, file_manager_opener_),
+    VolumeLauncherIcon::Ptr icon(new VolumeLauncherIcon(std::make_shared<VolumeImp>(volume, file_manager_opener_, device_notification_shower_),
                                                         devices_settings_));
 
     map_[volume] = icon;
@@ -64,7 +66,7 @@ void DeviceLauncherSection::OnVolumeAdded(glib::Object<GVolume> const& volume)
   if (map_.find(volume) != map_.end())
     return;
 
-  VolumeLauncherIcon::Ptr icon(new VolumeLauncherIcon(std::make_shared<VolumeImp>(volume, file_manager_opener_),
+  VolumeLauncherIcon::Ptr icon(new VolumeLauncherIcon(std::make_shared<VolumeImp>(volume, file_manager_opener_, device_notification_shower_),
                                                       devices_settings_));
 
   map_[volume] = icon;

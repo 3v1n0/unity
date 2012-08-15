@@ -250,6 +250,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/launcher/Decaymulator.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/DesktopLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/DeviceLauncherSection.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/DeviceNotificationShowerImp.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/DevicesSettingsImp.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/DndData.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/EdgeBarrierController.cpp

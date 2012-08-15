@@ -25,6 +25,7 @@ using namespace testing;
 #include "gmockmount.h"
 #include "gmockvolume.h"
 #include "launcher/VolumeImp.h"
+#include "launcher/DeviceNotificationShower.h"
 #include "launcher/FileManagerOpener.h"
 #include "test_utils.h"
 using namespace unity;
@@ -38,6 +39,11 @@ public:
    MOCK_METHOD1(Open, void(std::string const& uri));
 };
 
+class MockDeviceNotificationShower : public launcher::DeviceNotificationShower
+{
+public:
+  MOCK_METHOD2(Show, void(std::string const& icon_name, std::string const& device_name));
+};
 
 class TestVolumeImp : public Test
 {
@@ -46,12 +52,14 @@ public:
   {
     gvolume_ = g_mock_volume_new();
     file_manager_opener_.reset(new MockFileManagerOpener);
+    device_notification_opener_.reset(new MockDeviceNotificationShower);
     volume_.reset(new launcher::VolumeImp(glib::Object<GVolume>(G_VOLUME(gvolume_.RawPtr()), glib::AddRef()),
-                                           file_manager_opener_));
+                                          file_manager_opener_, device_notification_opener_));
   }
 
   glib::Object<GMockVolume> gvolume_;
   std::shared_ptr<MockFileManagerOpener> file_manager_opener_;
+  std::shared_ptr<MockDeviceNotificationShower> device_notification_opener_;
   std::unique_ptr<launcher::VolumeImp> volume_;
 };
 

@@ -17,8 +17,8 @@
  * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
-#ifndef UNITYSHELL_VOLUME_IMPL_H
-#define UNITYSHELL_VOLUME_IMPL_H
+#ifndef UNITYSHELL_VOLUME_IMP_H
+#define UNITYSHELL_VOLUME_IMP_H
 
 #include <memory>
 
@@ -31,13 +31,15 @@ namespace unity
 namespace launcher
 {
 
+class DeviceNotificationShower;
 class FileManagerOpener;
 
 class VolumeImp : public Volume
 {
 public:
   VolumeImp(glib::Object<GVolume> const& volume,
-             std::shared_ptr<FileManagerOpener> const& file_manager_opener);
+            std::shared_ptr<FileManagerOpener> const& file_manager_opener,
+            std::shared_ptr<DeviceNotificationShower> const& device_notification_shower);
   virtual ~VolumeImp();
 
   virtual bool CanBeEjected() const;

@@ -34,6 +34,7 @@ namespace launcher
 {
 
 class DevicesSettings;
+class DeviceNotificationShower;
 class FileManagerOpener;
 
 class DeviceLauncherSection : public sigc::trackable
@@ -53,6 +54,7 @@ private:
   AbstractVolumeMonitorWrapper::Ptr monitor_;
   std::shared_ptr<DevicesSettings> devices_settings_;
   std::shared_ptr<FileManagerOpener> file_manager_opener_;
+  std::shared_ptr<DeviceNotificationShower> device_notification_shower_;
 
   glib::Idle device_populate_idle_;
 };
