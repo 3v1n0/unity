@@ -39,12 +39,13 @@ set (LAUNCHER_SOURCES
      DesktopLauncherIcon.cpp
      VolumeLauncherIcon.cpp
      DeviceLauncherSection.cpp
-     DevicesSettings.cpp
+     DevicesSettingsImp.cpp
      DndData.cpp
      EdgeBarrierController.cpp
      FavoriteStore.cpp
      FavoriteStoreGSettings.cpp
      FavoriteStorePrivate.cpp
+     FileManagerOpenerImp.cpp
      HudLauncherIcon.cpp
      Launcher.cpp
      LauncherController.cpp
@@ -71,6 +72,7 @@ set (LAUNCHER_SOURCES
      SpacerLauncherIcon.cpp
      Tooltip.cpp
      TrashLauncherIcon.cpp
+     VolumeImp.cpp
      VolumeMonitorWrapper.cpp
      )
 

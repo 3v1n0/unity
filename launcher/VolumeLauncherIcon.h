@@ -21,10 +21,6 @@
 #ifndef UNITYSHELL_VOLUME_LAUNCHER_ICON_H
 #define UNITYSHELL_VOLUME_LAUNCHER_ICON_H
 
-#include <gio/gio.h>
-#include <UnityCore/GLibWrapper.h>
-#include <UnityCore/GLibSignal.h>
-
 #include "SimpleLauncherIcon.h"
 
 namespace unity
@@ -32,6 +28,7 @@ namespace unity
 namespace launcher
 {
 
+class Volume;
 class DevicesSettings;
 
 class VolumeLauncherIcon : public SimpleLauncherIcon
@@ -39,49 +36,27 @@ class VolumeLauncherIcon : public SimpleLauncherIcon
 public:
   typedef nux::ObjectPtr<VolumeLauncherIcon> Ptr;
 
-  VolumeLauncherIcon(glib::Object<GVolume> const& volume,
+  VolumeLauncherIcon(std::shared_ptr<Volume> const& volume,
                      std::shared_ptr<DevicesSettings> const& devices_settings);
+  virtual ~VolumeLauncherIcon();
 
-  void OnRemoved();
-  bool CanEject();
-  void Eject();
+  bool CanEject(); // TODO: rename to public virtual bool IsTrashable();
+  void EjectAndShowNotification(); // TODO: rename to private virtual void DoDropToTrash();
+  virtual std::list<DbusmenuMenuitem*> GetMenus();
+  void OnRemoved(); // TODO: make virtual if create RemovableVolumeLauncherIcon too ;)
 
 protected:
-  std::list<DbusmenuMenuitem*> GetMenus();
-  std::string GetName() const;
+  virtual void ActivateLauncherIcon(ActionArg arg);
+
+  // Introspection
+  virtual std::string GetName() const;
 
 private:
-  void UpdateVisibility();
-  void UpdateIcon();
-  void ActivateLauncherIcon(ActionArg arg);
-  void ShowMount(GMount* mount);
-  void Unmount();
-  void StopDrive();
-  static void OnTogglePin(DbusmenuMenuitem* item, int time, VolumeLauncherIcon* self);
-  static void OnOpen(DbusmenuMenuitem* item, int time, VolumeLauncherIcon* self);
-  static void OnEject(DbusmenuMenuitem* item, int time, VolumeLauncherIcon* self);
-  static void OnUnmount(DbusmenuMenuitem* item, int time, VolumeLauncherIcon* self);
-  static void OnChanged(GVolume* volume, VolumeLauncherIcon* self);
-  static void OnMountReady(GObject* object, GAsyncResult* result, VolumeLauncherIcon* self);
-  static void OnEjectReady(GObject* object, GAsyncResult* result, VolumeLauncherIcon* self);
-  static void OnUnmountReady(GObject* object, GAsyncResult* result, VolumeLauncherIcon* self);
-  static void OnDriveStop(DbusmenuMenuitem* item, int time, VolumeLauncherIcon* self);
-  void OnVolumeChanged(GVolume* volume);
-  void OnSettingsChanged();
-  void ShowNotification(std::string const&, unsigned, glib::Object<GdkPixbuf> const&, std::string const&);
-
-private:
-  glib::Object<GVolume> volume_;
-  std::shared_ptr<DevicesSettings> devices_settings_;
-
-  std::string name_;
-  bool keep_in_launcher_;
-
-  glib::Signal<void, GVolume*> signal_volume_changed_;
-  glib::Source::UniquePtr changed_timeout_;
+  class Impl;
+  std::shared_ptr<Impl> pimpl_;
 };
 
 }
-} // namespace unity
+}
 
-#endif // _DEVICE_LAUNCHER_ICON_H__H
+#endif

@@ -75,12 +75,19 @@ public:
   glib::Object<GVolume> volume2;
 };
 
+class MockDevicesSettings : public DevicesSettings
+{
+  MOCK_CONST_METHOD1(IsABlacklistedDevice, bool(std::string const& uuid));
+  MOCK_METHOD1(AddBlacklisted, void(std::string const& uuid));
+  MOCK_METHOD1(RemoveBlacklisted, void(std::string const& uuid));
+};
+
 class TestDeviceLauncherSection : public Test
 {
 public:
   TestDeviceLauncherSection()
     : monitor_(new MockVolumeMonitorWrapper)
-    , devices_settings_(new DevicesSettings) // TODO: we should mock DevicesSettings
+    , devices_settings_(new MockDevicesSettings)
     , section_(monitor_, devices_settings_)
   {}
 

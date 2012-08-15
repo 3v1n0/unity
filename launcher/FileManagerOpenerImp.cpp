@@ -21,12 +21,12 @@
 
 #include "FileManagerOpenerImp.h"
 
-namespace unityshell
+namespace unity
 {
 namespace launcher
 {
 
-void FileManagerOpenerImp::Open(std::string const uri)
+void FileManagerOpenerImp::Open(std::string const& uri)
 {
   g_app_info_launch_default_for_uri(uri. c_str(), nullptr, nullptr);
 }

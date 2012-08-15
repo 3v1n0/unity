@@ -95,7 +95,7 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   , model_(new LauncherModel())
   , sort_priority_(0)
   , volume_monitor_(new VolumeMonitorWrapper)
-  , devices_settings_(new DevicesSettings)
+  , devices_settings_(new DevicesSettingsImp)
   , device_section_(volume_monitor_, devices_settings_)
   , show_desktop_icon_(false)
   , display_(display)
@@ -428,7 +428,7 @@ void Controller::Impl::OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr icon)
       auto device_icon = dynamic_cast<VolumeLauncherIcon*>(icon.GetPointer());
 
       if (device_icon && device_icon->CanEject())
-        device_icon->Eject();
+        device_icon->EjectAndShowNotification();
 
       break;
     }

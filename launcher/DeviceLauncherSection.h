@@ -34,6 +34,7 @@ namespace launcher
 {
 
 class DevicesSettings;
+class FileManagerOpener;
 
 class DeviceLauncherSection : public sigc::trackable
 {
@@ -51,6 +52,7 @@ private:
   std::map<GVolume*, VolumeLauncherIcon::Ptr> map_;
   AbstractVolumeMonitorWrapper::Ptr monitor_;
   std::shared_ptr<DevicesSettings> devices_settings_;
+  std::shared_ptr<FileManagerOpener> file_manager_opener_;
 
   glib::Idle device_populate_idle_;
 };

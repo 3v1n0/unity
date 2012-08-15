@@ -18,19 +18,14 @@
  *              Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
-#include "VolumeLauncherIcon.h"
-
-#include <algorithm>
-#include <list>
 
 #include <glib/gi18n-lib.h>
-#include <libnotify/notify.h>
 #include <NuxCore/Logger.h>
+#include <UnityCore/GLibSignal.h>
 
 #include "DevicesSettings.h"
-#include "unity-shared/IconLoader.h"
-#include "unity-shared/ubus-server.h"
-#include "unity-shared/UBusMessages.h"
+#include "Volume.h"
+#include "VolumeLauncherIcon.h"
 
 namespace unity
 {
@@ -45,387 +40,238 @@ const unsigned int volume_changed_timeout =  500;
 
 }
 
-VolumeLauncherIcon::VolumeLauncherIcon(glib::Object<GVolume> const& volume,
-                                       std::shared_ptr<DevicesSettings> const& devices_settings)
-  : SimpleLauncherIcon()
-  , volume_(volume)
-  , devices_settings_(devices_settings)
+//
+// Start private implementation
+//
+class VolumeLauncherIcon::Impl
 {
-  glib::String uuid(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_UUID));
-  keep_in_launcher_ = devices_settings_->IsAFavoriteDevice(uuid.Str());
-
-  UpdateIcon();
-  UpdateVisibility();
-
-  signal_volume_changed_.Connect(volume, "changed", sigc::mem_fun(this, &VolumeLauncherIcon::OnVolumeChanged));
-  devices_settings_->changed.connect(sigc::mem_fun(this, &VolumeLauncherIcon::OnSettingsChanged));
-}
-
-void VolumeLauncherIcon::OnVolumeChanged(GVolume* volume)
-{
-  if (!G_IS_VOLUME(volume))
-    return;
-
-  changed_timeout_.reset(new glib::Timeout(volume_changed_timeout, [this]() {
+public:
+  Impl(std::shared_ptr<Volume> const& volume,
+       std::shared_ptr<DevicesSettings> const& devices_settings,
+       VolumeLauncherIcon* parent)
+    : parent_(parent)
+    , volume_(volume)
+    , devices_settings_(devices_settings)
+  {
     UpdateIcon();
     UpdateVisibility();
-    return false;
-  }));
-}
+    ConnectSignals();
+  }
 
-void VolumeLauncherIcon::UpdateVisibility()
-{
- if (keep_in_launcher_)
- {
-   SetQuirk(Quirk::VISIBLE, true);
- }
- else
- {
-   glib::Object<GMount> mount(g_volume_get_mount(volume_));
-   SetQuirk(Quirk::VISIBLE, mount);
- }
-}
+  void UpdateIcon()
+  {
+    parent_->tooltip_text = volume_->GetName();
+    parent_->icon_name = volume_->GetIconName();
 
-void VolumeLauncherIcon::UpdateIcon()
-{
-  name_ = glib::String(g_volume_get_name(volume_)).Str();
+    parent_->SetIconType(IconType::DEVICE);
+    parent_->SetQuirk(Quirk::RUNNING, false);
+  }
 
-  glib::Object<GIcon> icon(g_volume_get_icon(volume_));
-  glib::String icon_string(g_icon_to_string(icon));
+  void UpdateVisibility()
+  {
+    UpdateKeepInLauncher();
+    parent_->SetQuirk(Quirk::VISIBLE, keep_in_launcher_);
+  }
 
-  tooltip_text = name_;
-  icon_name = icon_string.Str();
+  void UpdateKeepInLauncher()
+  {
+    auto identifier = volume_->GetIdentifier();
+    keep_in_launcher_ = !devices_settings_->IsABlacklistedDevice(identifier);
+  }
 
-  SetIconType(IconType::DEVICE);
-  SetQuirk(Quirk::RUNNING, false);
-}
+  void ConnectSignals()
+  {
+    volume_changed_connection_ = volume_->changed.connect([this]() {
+      // FIXME: find a way to remove this timeout.
+      changed_timeout_.reset(new glib::Timeout(volume_changed_timeout, [this]() {
+        UpdateIcon();
+        UpdateVisibility();
+        return false;
+      }));
+    });
+
+    devices_settings_->changed.connect([this]() {
+      UpdateVisibility();
+    });
+  }
+
+  bool CanEject() const
+  {
+    return volume_->CanBeEjected();
+  }
+
+  void EjectAndShowNotification()
+  {
+    return volume_->EjectAndShowNotification();
+  }
+
+  void OnRemoved()
+  {
+    volume_changed_connection_.disconnect();
+    changed_timeout_.reset();
+
+    if (devices_settings_->IsABlacklistedDevice(volume_->GetIdentifier()))
+      devices_settings_->RemoveBlacklisted(volume_->GetIdentifier());
+
+    parent_->Remove();
+  }
+
+  void ActivateLauncherIcon(ActionArg arg)
+  {
+    parent_->SimpleLauncherIcon::ActivateLauncherIcon(arg);
+    parent_->SetQuirk(Quirk::STARTING, true);
+
+    volume_->MountAndOpenInFileManager();
+  }
+
+  std::list<DbusmenuMenuitem*> GetMenus()
+  {
+    std::list<DbusmenuMenuitem*> result;
+
+    AppendUnlockFromLauncherItem(result);
+    AppendOpenItem(result);
+    AppendEjectItem(result);
+    AppendSafelyRemoveItem(result);
+    AppendUnmountItem(result);
+
+    return result;
+  }
+
+  void AppendUnlockFromLauncherItem(std::list<DbusmenuMenuitem*>& menu)
+  {
+    DbusmenuMenuitem* menu_item = dbusmenu_menuitem_new();
+
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Unlock from Launcher"));
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+
+    unlock_menuitem_activated_.Connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
+        auto identifier = volume_->GetIdentifier();
+        devices_settings_->AddBlacklisted(identifier);
+        UpdateVisibility();
+    });
+
+    menu.push_back(menu_item);
+  }
+
+  void AppendOpenItem(std::list<DbusmenuMenuitem*>& menu)
+  {
+    DbusmenuMenuitem* menu_item = dbusmenu_menuitem_new();
+
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Open"));
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+
+    open_menuitem_activated_.Connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
+        volume_->MountAndOpenInFileManager();
+    });
+
+    menu.push_back(menu_item);
+  }
+
+  void AppendEjectItem(std::list<DbusmenuMenuitem*>& menu)
+  {
+    if (!volume_->CanBeEjected())
+      return;
+
+    DbusmenuMenuitem* menu_item = dbusmenu_menuitem_new();
+
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, volume_->HasSiblings() ? _("Eject parent drive") : _("Eject"));
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+
+    eject_menuitem_activated_.Connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
+        volume_->EjectAndShowNotification();
+    });
+
+    menu.push_back(menu_item);
+  }
+
+  void AppendSafelyRemoveItem(std::list<DbusmenuMenuitem*>& menu)
+  {
+    if (!volume_->CanBeStopped())
+      return;
+
+    DbusmenuMenuitem* menu_item = dbusmenu_menuitem_new();
+
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, volume_->HasSiblings() ? _("Safely remove parent drive") : _("Safely remove"));
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+
+    stop_menuitem_activated_.Connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
+        volume_->StopDrive();
+    });
+
+    menu.push_back(menu_item);
+  }
+
+  void AppendUnmountItem(std::list<DbusmenuMenuitem*>& menu)
+  {
+    if (volume_->CanBeEjected() || volume_->CanBeStopped())
+      return;
+
+    DbusmenuMenuitem* menu_item = dbusmenu_menuitem_new();
+
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Unmount"));
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+
+    unmount_menuitem_activated_.Connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
+        volume_->Unmount();
+    });
+
+    menu.push_back(menu_item);
+  }
+
+  VolumeLauncherIcon* parent_;
+  bool keep_in_launcher_;
+  std::shared_ptr<Volume> volume_;
+  std::shared_ptr<DevicesSettings> devices_settings_;
+
+  sigc::connection volume_changed_connection_;
+  glib::Source::UniquePtr changed_timeout_;
+  glib::Signal<void, DbusmenuMenuitem*, int> unlock_menuitem_activated_;
+  glib::Signal<void, DbusmenuMenuitem*, int> open_menuitem_activated_;
+  glib::Signal<void, DbusmenuMenuitem*, int> eject_menuitem_activated_;
+  glib::Signal<void, DbusmenuMenuitem*, int> stop_menuitem_activated_;
+  glib::Signal<void, DbusmenuMenuitem*, int> unmount_menuitem_activated_;
+};
+
+//
+// End private implementation
+//
+
+VolumeLauncherIcon::VolumeLauncherIcon(std::shared_ptr<Volume> const& volume,
+                                       std::shared_ptr<DevicesSettings> const& devices_settings)
+  : pimpl_(new Impl(volume, devices_settings, this))
+{}
+
+VolumeLauncherIcon::~VolumeLauncherIcon()
+{}
 
 bool VolumeLauncherIcon::CanEject()
 {
-  return g_volume_can_eject(volume_);
+  return pimpl_->CanEject();
 }
 
-std::list<DbusmenuMenuitem*> VolumeLauncherIcon::GetMenus()
+void VolumeLauncherIcon::EjectAndShowNotification()
 {
-  std::list<DbusmenuMenuitem*> result;
-  DbusmenuMenuitem* menu_item;
-  glib::Object<GDrive> drive(g_volume_get_drive(volume_));
-
-  // "Lock to Launcher"/"Unlock from Launcher" item
-  if (drive && !g_drive_is_media_removable (drive))
-  {
-    menu_item = dbusmenu_menuitem_new();
-
-    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, !keep_in_launcher_ ? _("Lock to Launcher") : _("Unlock from Launcher"));
-    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
-    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
-
-    g_signal_connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                     G_CALLBACK(&VolumeLauncherIcon::OnTogglePin), this);
-
-    result.push_back(menu_item);
-  }
-
-  // "Open" item
-  menu_item = dbusmenu_menuitem_new();
-
-  dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Open"));
-  dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
-  dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
-
-  g_signal_connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                   G_CALLBACK(&VolumeLauncherIcon::OnOpen), this);
-
-  result.push_back(menu_item);
-
-  // "Eject" item
-  if (drive && g_drive_can_eject(drive))
-  {
-    menu_item = dbusmenu_menuitem_new();
-
-    GList *list = g_drive_get_volumes(drive);
-    if (list != NULL)
-    {
-      if (g_list_length (list) ==  1)
-        dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Eject"));
-      else
-        dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Eject parent drive"));
-
-      g_list_free_full(list, g_object_unref);
-    }
-
-    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
-    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
-
-    g_signal_connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                     G_CALLBACK(&VolumeLauncherIcon::OnEject), this);
-
-    result.push_back(menu_item);
-  }
-
-  // "Safely remove" item
-  if (drive && g_drive_can_stop(drive))
-  {
-    menu_item = dbusmenu_menuitem_new();
-
-    GList *list = g_drive_get_volumes(drive);
-    if (list != NULL)
-    {
-      if (g_list_length (list) ==  1)
-        dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Safely remove"));
-      else
-        dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Safely remove parent drive"));
-
-      g_list_free_full(list, g_object_unref);
-    }
-
-    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
-    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
-
-    g_signal_connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                     G_CALLBACK(&VolumeLauncherIcon::OnDriveStop), this);
-
-    result.push_back(menu_item);
-  }
-
-  // "Unmount" item
-  if (!g_volume_can_eject(volume_))  // Don't need Unmount if can Eject
-  {
-    glib::Object<GMount> mount(g_volume_get_mount(volume_));
-
-    if (mount && g_mount_can_unmount(mount))
-    {
-      menu_item = dbusmenu_menuitem_new();
-
-      dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Unmount"));
-      dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
-      dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
-
-      g_signal_connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                       G_CALLBACK(&VolumeLauncherIcon::OnUnmount), this);
-
-      result.push_back(menu_item);
-    }
-  }
-
-  return result;
-}
-
-void VolumeLauncherIcon::ShowMount(GMount* mount)
-{
-  if (G_IS_MOUNT(mount))
-  {
-    glib::Object<GFile> root(g_mount_get_root(mount));
-
-    if (G_IS_FILE(root.RawPtr()))
-    {
-      glib::String uri(g_file_get_uri(root));
-      glib::Error error;
-
-      g_app_info_launch_default_for_uri(uri.Value(), NULL, &error);
-
-      if (error)
-      {
-        LOG_WARNING(logger) << "Cannot open volume '" << name_
-                            << "': Unable to show " << uri
-                            << ": " << error;
-      }
-    }
-    else
-    {
-      LOG_WARNING(logger) << "Cannot open volume '" << name_
-                          << "': Mount has no root";
-    }
-  }
-  else
-  {
-    LOG_WARNING(logger) << "Cannot open volume '" << name_
-                        << "': Mount-point is invalid";
-  }
-}
-
-void VolumeLauncherIcon::ActivateLauncherIcon(ActionArg arg)
-{
-  SimpleLauncherIcon::ActivateLauncherIcon(arg);
-  SetQuirk(Quirk::STARTING, true);
-
-  glib::Object<GMount> mount(g_volume_get_mount(volume_));
-
-  if (G_IS_MOUNT(mount.RawPtr()))
-    ShowMount(mount);
-  else
-    g_volume_mount(volume_,
-                   (GMountMountFlags)0,
-                   NULL,
-                   NULL,
-                   (GAsyncReadyCallback)&VolumeLauncherIcon::OnMountReady,
-                   this);
-}
-
-void VolumeLauncherIcon::OnMountReady(GObject* object,
-                                      GAsyncResult* result,
-                                      VolumeLauncherIcon* self)
-{
-  glib::Error error;
-
-  if (g_volume_mount_finish(self->volume_, result, &error))
-  {
-    glib::Object<GMount> mount(g_volume_get_mount(self->volume_));
-    self->ShowMount(mount);
-  }
-  else
-  {
-    LOG_WARNING(logger) << "Cannot open volume '" << self->name_ << "' : " <<
-                            (error ? error.Message() : "Mount operation failed");
-  }
-}
-
-void VolumeLauncherIcon::OnEjectReady(GObject* object,
-                                      GAsyncResult* result,
-                                      VolumeLauncherIcon* self)
-{
-  if (g_volume_eject_with_operation_finish(self->volume_, result, NULL))
-  {
-    IconLoader::GetDefault().LoadFromGIconString(self->icon_name(), 48,
-                                                 sigc::bind(sigc::mem_fun(self, &VolumeLauncherIcon::ShowNotification), self->name_));
-  }
-}
-
-void VolumeLauncherIcon::ShowNotification(std::string const& icon_name,
-                                          unsigned size,
-                                          glib::Object<GdkPixbuf> const& pixbuf,
-                                          std::string const& name)
-{
-  glib::Object<NotifyNotification> notification(notify_notification_new(name.c_str(),
-                                                                        _("The drive has been successfully ejected"),
-                                                                        NULL));
-
-  notify_notification_set_hint(notification,
-                               "x-canonical-private-synchronous",
-                               g_variant_new_boolean(TRUE));
-
-  if (GDK_IS_PIXBUF(pixbuf.RawPtr()))
-    notify_notification_set_image_from_pixbuf(notification, pixbuf);
-
-  notify_notification_show(notification, NULL);
-}
-
-void VolumeLauncherIcon::Eject()
-{
-  glib::Object<GMountOperation> mount_op(gtk_mount_operation_new(NULL));
-
-  g_volume_eject_with_operation(volume_,
-                                (GMountUnmountFlags)0,
-                                mount_op,
-                                NULL,
-                                (GAsyncReadyCallback)OnEjectReady,
-                                this);
-}
-
-void VolumeLauncherIcon::OnTogglePin(DbusmenuMenuitem* item,
-                                     int time,
-                                     VolumeLauncherIcon* self)
-{
-  glib::String uuid(g_volume_get_identifier(self->volume_, G_VOLUME_IDENTIFIER_KIND_UUID));
-
-  self->keep_in_launcher_ = !self->keep_in_launcher_;
-
-  if (!self->keep_in_launcher_)
-  {
-    // If the volume is not mounted hide the icon
-    glib::Object<GMount> mount(g_volume_get_mount(self->volume_));
-
-    if (!mount)
-      self->SetQuirk(Quirk::VISIBLE, false);
-
-    // Remove from favorites
-    if (!uuid.Str().empty())
-      self->devices_settings_->RemoveFavorite(uuid.Str());
-  }
-  else
-  {
-    if (!uuid.Str().empty())
-      self->devices_settings_->AddFavorite(uuid.Str());
-  }
-}
-
-void VolumeLauncherIcon::OnOpen(DbusmenuMenuitem* item,
-                                int time,
-                                VolumeLauncherIcon* self)
-{
-  self->ActivateLauncherIcon(ActionArg(ActionArg::OTHER, 0));
-}
-
-void VolumeLauncherIcon::OnEject(DbusmenuMenuitem* item,
-                                 int time,
-                                 VolumeLauncherIcon* self)
-{
-  self->Eject();
-}
-
-void VolumeLauncherIcon::OnUnmountReady(GObject* object,
-                                        GAsyncResult* result,
-                                        VolumeLauncherIcon* self)
-{
-  if (G_IS_MOUNT(object))
-    g_mount_unmount_with_operation_finish(G_MOUNT(object), result, NULL);
-}
-
-void VolumeLauncherIcon::Unmount()
-{
-  glib::Object<GMount> mount(g_volume_get_mount(volume_));
-
-  if (mount)
-  {
-    glib::Object<GMountOperation> op(gtk_mount_operation_new(NULL));
-
-    g_mount_unmount_with_operation(mount,
-                                   (GMountUnmountFlags)0,
-                                   op,
-                                   NULL,
-                                   (GAsyncReadyCallback)OnUnmountReady,
-                                   this);
-  }
-}
-
-void VolumeLauncherIcon::OnUnmount(DbusmenuMenuitem* item,
-                                   int time,
-                                   VolumeLauncherIcon* self)
-{
-  self->Unmount();
+  pimpl_->EjectAndShowNotification();
 }
 
 void VolumeLauncherIcon::OnRemoved()
 {
-  Remove();
+  pimpl_->OnRemoved();
 }
 
-void VolumeLauncherIcon::OnDriveStop(DbusmenuMenuitem* item,
-                                     int time,
-                                     VolumeLauncherIcon* self)
+void VolumeLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
-  self->StopDrive();
+  pimpl_->ActivateLauncherIcon(arg);
 }
 
-void VolumeLauncherIcon::StopDrive()
+std::list<DbusmenuMenuitem*> VolumeLauncherIcon::GetMenus()
 {
-  glib::Object<GDrive> drive(g_volume_get_drive(volume_));
-  glib::Object<GMountOperation> mount_op(gtk_mount_operation_new(NULL));
-
-  g_drive_stop(drive,
-               (GMountUnmountFlags)0,
-               mount_op,
-               NULL,
-               NULL,
-               NULL);
-}
-
-void VolumeLauncherIcon::OnSettingsChanged()
-{
-  glib::String uuid(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_UUID));
-  keep_in_launcher_ = devices_settings_->IsAFavoriteDevice(uuid.Str());
-
-  UpdateVisibility();
+  return pimpl_->GetMenus();
 }
 
 //

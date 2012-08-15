@@ -21,6 +21,8 @@
 #define UNITYSHELL_VOLUME_H
 
 #include <boost/noncopyable.hpp>
+#include <sigc++/signal.h>
+#include <sigc++/trackable.h>
 #include <string>
 
 namespace unity
@@ -28,19 +30,29 @@ namespace unity
 namespace launcher
 {
 
-class Volume : boost::noncopyable
+class Volume : private boost::noncopyable, public sigc::trackable
 {
 public:
   virtual ~Volume() {}
 
+  virtual bool CanBeEjected() const = 0;
+  virtual bool CanBeRemoved() const = 0;
+  virtual bool CanBeStopped() const = 0;
   virtual std::string GetName() const = 0;
   virtual std::string GetIconName() const = 0;
-  virtual std::string GetIdentifer() const = 0;
+  virtual std::string GetIdentifier() const = 0;
+  virtual bool HasSiblings() const = 0;
   virtual bool IsMounted() const = 0;
+
+  virtual void EjectAndShowNotification() = 0;
   virtual void MountAndOpenInFileManager() = 0;
+  virtual void StopDrive() = 0;
+  virtual void Unmount() = 0;
+
+  sigc::signal<void> changed;
 };
 
-} // namespace launcher
-} // namespace unity
+}
+}
 
-#endif // UNITYSHELL_DEVICE_H
+#endif

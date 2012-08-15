@@ -24,7 +24,6 @@
 
 #include <UnityCore/GLibWrapper.h>
 
-#include "FileManagerOpener.h"
 #include "Volume.h"
 
 namespace unity
@@ -32,25 +31,35 @@ namespace unity
 namespace launcher
 {
 
-class VolumeImpl : public Volume
+class FileManagerOpener;
+
+class VolumeImp : public Volume
 {
 public:
-  VolumeImpl(glib::Object<GVolume> const& volume,
+  VolumeImp(glib::Object<GVolume> const& volume,
              std::shared_ptr<FileManagerOpener> const& file_manager_opener);
-  virtual ~VolumeImpl();
+  virtual ~VolumeImp();
 
+  virtual bool CanBeEjected() const;
+  virtual bool CanBeRemoved() const;
+  virtual bool CanBeStopped() const;
   virtual std::string GetName() const;
   virtual std::string GetIconName() const;
-  virtual std::string GetIdentifer() const;
+  virtual std::string GetIdentifier() const;
+  virtual bool HasSiblings() const;
   virtual bool IsMounted() const;
+
+  virtual void EjectAndShowNotification();
   virtual void MountAndOpenInFileManager();
+  virtual void StopDrive();
+  virtual void Unmount();
 
 private:
   class Impl;
   std::unique_ptr<Impl> pimpl;
 };
 
-} // namespace launcher
-} // namespace unity
+}
+}
 
-#endif // UNITYSHELL_VOLUME_IMPL_H
+#endif

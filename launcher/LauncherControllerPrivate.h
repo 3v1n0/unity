@@ -27,7 +27,7 @@
 
 #include "AbstractLauncherIcon.h"
 #include "DeviceLauncherSection.h"
-#include "DevicesSettings.h"
+#include "DevicesSettingsImp.h"
 #include "EdgeBarrierController.h"
 #include "LauncherController.h"
 #include "Launcher.h"
@@ -127,7 +127,7 @@ public:
   nux::ObjectPtr<Launcher> keyboard_launcher_;
   int                    sort_priority_;
   AbstractVolumeMonitorWrapper::Ptr volume_monitor_;
-  std::shared_ptr<DevicesSettings> devices_settings_;
+  std::shared_ptr<DevicesSettingsImp> devices_settings_;
   DeviceLauncherSection  device_section_;
   LauncherEntryRemoteModel remote_model_;
   AbstractLauncherIcon::Ptr expo_icon_;

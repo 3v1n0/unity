@@ -21,7 +21,6 @@
 #define UNITYSHELL_DEVICES_SETTINGS_H
 
 #include <boost/noncopyable.hpp>
-#include <memory>
 #include <string>
 
 #include <sigc++/signal.h>
@@ -34,21 +33,16 @@ namespace launcher
 class DevicesSettings : boost::noncopyable
 {
 public:
-  DevicesSettings();
-  ~DevicesSettings();
+  virtual ~DevicesSettings() {};
 
-  bool IsAFavoriteDevice(std::string const& uuid) const;
-  void AddFavorite(std::string const& uuid);
-  void RemoveFavorite(std::string const& uuid);
+  virtual bool IsABlacklistedDevice(std::string const& uuid) const = 0;
+  virtual void AddBlacklisted(std::string const& uuid) = 0;
+  virtual void RemoveBlacklisted(std::string const& uuid) = 0;
 
   sigc::signal<void> changed;
-
-private:
-  class Impl;
-  std::unique_ptr<Impl> pimpl;
 };
 
-} // namespace launcher
-} // namespace unity
+}
+}
 
-#endif // DEVICES_SETTINGS_H
+#endif

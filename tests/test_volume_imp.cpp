@@ -24,8 +24,9 @@ using namespace testing;
 
 #include "gmockmount.h"
 #include "gmockvolume.h"
-#include "launcher/VolumeImpl.h"
+#include "launcher/VolumeImp.h"
 #include "launcher/FileManagerOpener.h"
+#include "test_utils.h"
 using namespace unity;
 
 namespace
@@ -38,28 +39,28 @@ public:
 };
 
 
-class TestVolumeImpl : public Test
+class TestVolumeImp : public Test
 {
 public:
   void SetUp()
   {
     gvolume_ = g_mock_volume_new();
     file_manager_opener_.reset(new MockFileManagerOpener);
-    volume_.reset(new launcher::VolumeImpl(glib::Object<GVolume>(G_VOLUME(gvolume_.RawPtr()), glib::AddRef()),
+    volume_.reset(new launcher::VolumeImp(glib::Object<GVolume>(G_VOLUME(gvolume_.RawPtr()), glib::AddRef()),
                                            file_manager_opener_));
   }
 
   glib::Object<GMockVolume> gvolume_;
   std::shared_ptr<MockFileManagerOpener> file_manager_opener_;
-  std::unique_ptr<launcher::VolumeImpl> volume_;
+  std::unique_ptr<launcher::VolumeImp> volume_;
 };
 
-TEST_F(TestVolumeImpl, TestCtor)
+TEST_F(TestVolumeImp, TestCtor)
 {
   EXPECT_FALSE(volume_->IsMounted());
 }
 
-TEST_F(TestVolumeImpl, TestGetName)
+TEST_F(TestVolumeImp, TestGetName)
 {
   std::string const volume_name("Test Device");
 
@@ -67,7 +68,7 @@ TEST_F(TestVolumeImpl, TestGetName)
   EXPECT_EQ(volume_->GetName(), volume_name);
 }
 
-TEST_F(TestVolumeImpl, TestGetIconName)
+TEST_F(TestVolumeImp, TestGetIconName)
 {
   std::string const icon_name("gnome-dev-cdrom");
 
@@ -75,15 +76,15 @@ TEST_F(TestVolumeImpl, TestGetIconName)
   EXPECT_EQ(volume_->GetIconName(), icon_name);
 }
 
-TEST_F(TestVolumeImpl, TestGetIdentifer)
+TEST_F(TestVolumeImp, TestGetIdentifier)
 {
   std::string const uuid("0123456789abc");
 
   g_mock_volume_set_uuid(gvolume_, uuid.c_str());
-  EXPECT_EQ(volume_->GetIdentifer(), uuid);
+  EXPECT_EQ(volume_->GetIdentifier(), uuid);
 }
 
-TEST_F(TestVolumeImpl, TestIsMounted)
+TEST_F(TestVolumeImp, TestIsMounted)
 {
   g_mock_volume_set_mount(gvolume_, nullptr);
   ASSERT_FALSE(volume_->IsMounted());
@@ -92,7 +93,7 @@ TEST_F(TestVolumeImpl, TestIsMounted)
   EXPECT_TRUE(volume_->IsMounted());
 }
 
-TEST_F(TestVolumeImpl, TestMountAndOpenInFileManager)
+TEST_F(TestVolumeImp, TestMountAndOpenInFileManager)
 {
   EXPECT_CALL(*file_manager_opener_, Open("file:///some/directory/testfile"))
       .Times(1);
@@ -105,6 +106,21 @@ TEST_F(TestVolumeImpl, TestMountAndOpenInFileManager)
 
   volume_->MountAndOpenInFileManager();
   EXPECT_TRUE(volume_->IsMounted());
+}
+
+TEST_F(TestVolumeImp, TestChangedSignal)
+{
+  bool callback_called = false;
+  volume_->changed.connect([&]()
+  {
+    callback_called = true;
+  });
+
+  g_signal_emit_by_name(gvolume_, "changed", nullptr);
+
+  Utils::WaitUntil(callback_called);
+
+  EXPECT_TRUE(callback_called);
 }
 
 }

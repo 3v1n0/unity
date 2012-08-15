@@ -22,7 +22,7 @@
 
 #include "FileManagerOpener.h"
 
-namespace unityshell
+namespace unity
 {
 namespace launcher
 {
