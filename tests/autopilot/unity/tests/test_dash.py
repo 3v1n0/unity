@@ -50,6 +50,11 @@ class DashRevealTests(DashTestCase):
         self.dash.reveal_file_lens()
         self.assertThat(self.dash.active_lens, Eventually(Equals('files.lens')))
 
+    def test_video_lens_shortcut(self):
+        """Video lens must reveal when super+v is pressed."""
+        self.dash.reveal_video_lens()
+        self.assertThat(self.dash.active_lens, Eventually(Equals('video.lens')))
+
     def test_command_lens_shortcut(self):
         """Run Command lens must reveat on alt+F2."""
         self.dash.reveal_command_lens()
