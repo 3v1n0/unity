@@ -39,7 +39,7 @@ nux::logging::Logger logger("unity.launcher.hudlaunchericon");
 UBusManager HudLauncherIcon::ubus_manager_;
 
 HudLauncherIcon::HudLauncherIcon(LauncherHideMode hide_mode)
- : SingleMonitorLauncherIcon(0)
+ : SingleMonitorLauncherIcon(IconType::HUD, 0)
  , launcher_hide_mode_(hide_mode)
 {
   tooltip_text = _("HUD");
@@ -47,7 +47,6 @@ HudLauncherIcon::HudLauncherIcon(LauncherHideMode hide_mode)
   SetQuirk(Quirk::VISIBLE, false);
   SetQuirk(Quirk::RUNNING, false);
   SetQuirk(Quirk::ACTIVE, true);
-  SetIconType(IconType::HUD);
 
   background_color_ = nux::color::White;
 
@@ -122,12 +121,6 @@ void HudLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   {
     ubus_manager_.SendMessage(UBUS_HUD_CLOSE_REQUEST);
   }
-}
-
-std::list<DbusmenuMenuitem*> HudLauncherIcon::GetMenus()
-{
-  std::list<DbusmenuMenuitem*> result;
-  return result;
 }
 
 std::string HudLauncherIcon::GetName() const
