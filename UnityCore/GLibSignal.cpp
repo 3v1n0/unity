@@ -26,7 +26,7 @@ namespace glib
 {
 
 SignalBase::SignalBase()
-  : object_(0),
+  : object_(nullptr),
     connection_id_(0)
 {}
 
@@ -38,9 +38,12 @@ SignalBase::~SignalBase()
 void SignalBase::Disconnect()
 {
   if (connection_id_ && G_IS_OBJECT(object_))
+  {
     g_signal_handler_disconnect(object_, connection_id_);
+    g_object_remove_weak_pointer(object_, reinterpret_cast<gpointer*>(&object_));
+  }
 
-  object_ = 0;
+  object_ = nullptr;
   connection_id_ = 0;
 }
 
