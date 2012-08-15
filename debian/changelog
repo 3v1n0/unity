@@ -1,3 +1,9 @@
+unity (6.2.0-0ubuntu3) UNRELEASED; urgency=low
+
+  * Backport the gconf removal from upstream branch
+
+ -- Didier Roche <didrocks@ubuntu.com>  Wed, 15 Aug 2012 11:21:13 +0200
+
 unity (6.2.0-0ubuntu2) quantal; urgency=low
 
   * debian/control:
