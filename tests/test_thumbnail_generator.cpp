@@ -60,7 +60,6 @@ struct LoadResult
   }
   void ThumbnailFailed(std::string const& result)
   {
-    printf("thumbnail failed: %s\n", result.c_str());
     return_string = result;
 
     got_callback = true;
