@@ -820,14 +820,14 @@ void BamfLauncherIcon::UpdateMenus()
       continue;
 
     std::string address = bamf_indicator_get_remote_address(indicator);
-    DbusmenuClient* client = dbusmenu_client_new(address.c_str(), path.c_str());
-    _menu_clients[path] = glib::Object<DbusmenuClient>(client);
+    glib::Object<DbusmenuClient> client(dbusmenu_client_new(address.c_str(), path.c_str()));
+    _menu_clients[path] = client;
   }
 
   g_list_free(children);
 
   // add dynamic quicklist
-  if (_menuclient_dynamic_quicklist && DBUSMENU_IS_CLIENT(_menuclient_dynamic_quicklist.RawPtr()))
+  if (_menuclient_dynamic_quicklist && _menuclient_dynamic_quicklist.IsType(DBUSMENU_TYPE_CLIENT))
   {
     if (_menu_clients["dynamicquicklist"] != _menuclient_dynamic_quicklist)
     {
@@ -841,7 +841,7 @@ void BamfLauncherIcon::UpdateMenus()
   }
 
   // make a client for desktop file actions
-  if (!DBUSMENU_IS_MENUITEM(_menu_desktop_shortcuts.RawPtr()))
+  if (!_menu_desktop_shortcuts.IsType(DBUSMENU_TYPE_MENUITEM))
   {
     UpdateDesktopQuickList();
   }
@@ -907,7 +907,7 @@ void BamfLauncherIcon::ToggleSticky()
 
 void BamfLauncherIcon::EnsureMenuItemsReady()
 {
-  DbusmenuMenuitem* menu_item;
+  glib::Object<DbusmenuMenuitem> menu_item;
 
   /* Pin */
   if (_menu_items.find("Pin") == _menu_items.end())
@@ -921,7 +921,7 @@ void BamfLauncherIcon::EnsureMenuItemsReady()
                                       ToggleSticky();
                                     }));
 
-    _menu_items["Pin"] = glib::Object<DbusmenuMenuitem>(menu_item);
+    _menu_items["Pin"] = menu_item;
   }
 
   const char* label = !IsSticky() ? _("Lock to Launcher") : _("Unlock from Launcher");
@@ -942,25 +942,26 @@ void BamfLauncherIcon::EnsureMenuItemsReady()
                                       Quit();
                                     }));
 
-    _menu_items["Quit"] = glib::Object<DbusmenuMenuitem>(menu_item);
+    _menu_items["Quit"] = menu_item;
   }
 }
 
-std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
+AbstractLauncherIcon::MenuItemsVector BamfLauncherIcon::GetMenus()
 {
-  std::list<DbusmenuMenuitem*> result;
+  MenuItemsVector result;
   bool first_separator_needed = false;
-  DbusmenuMenuitem* item = nullptr;
 
   // FIXME for O: hack around the wrong abstraction
   UpdateMenus();
 
-  for (auto it = _menu_clients.begin(); it != _menu_clients.end(); ++it)
+  for (auto const& cli : _menu_clients)
   {
     GList* child = nullptr;
-    DbusmenuClient* client = it->second;
-    if (!client)
+    auto const& client = cli.second;
+
+    if (!client || !client.IsType(DBUSMENU_TYPE_CLIENT))
       continue;
+
     DbusmenuMenuitem* root = dbusmenu_client_get_root(client);
 
     if (!root || !dbusmenu_menuitem_property_get_bool(root, DBUSMENU_MENUITEM_PROP_VISIBLE))
@@ -968,15 +969,15 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
 
     for (child = dbusmenu_menuitem_get_children(root); child; child = child->next)
     {
-      DbusmenuMenuitem* item = (DbusmenuMenuitem*) child->data;
+      glib::Object<DbusmenuMenuitem> item(static_cast<DbusmenuMenuitem*>(child->data), glib::AddRef());
 
-      if (!item || !DBUSMENU_IS_MENUITEM(item))
+      if (!item || !item.IsType(DBUSMENU_TYPE_MENUITEM))
         continue;
 
       if (dbusmenu_menuitem_property_get_bool(item, DBUSMENU_MENUITEM_PROP_VISIBLE))
       {
         first_separator_needed = true;
-        dbusmenu_menuitem_property_set_bool(item, "unity-use-markup", FALSE);
+        dbusmenu_menuitem_property_set_bool(item, QuicklistMenuItem::MARKUP_ENABLED_PROPERTY, FALSE);
 
         result.push_back(item);
       }
@@ -990,9 +991,9 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
 
     for (child = dbusmenu_menuitem_get_children(_menu_desktop_shortcuts); child; child = child->next)
     {
-      DbusmenuMenuitem* item = (DbusmenuMenuitem*) child->data;
+      glib::Object<DbusmenuMenuitem> item(static_cast<DbusmenuMenuitem*>(child->data), glib::AddRef());
 
-      if (!item)
+      if (!item || !item.IsType(DBUSMENU_TYPE_MENUITEM))
         continue;
 
       first_separator_needed = true;
@@ -1001,9 +1002,12 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
     }
   }
 
+  glib::Object<DbusmenuMenuitem> item;
+
   if (first_separator_needed)
   {
     auto first_sep = _menu_items_extra.find("FirstSeparator");
+
     if (first_sep != _menu_items_extra.end())
     {
       item = first_sep->second;
@@ -1014,7 +1018,7 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
       dbusmenu_menuitem_property_set(item,
                                      DBUSMENU_MENUITEM_PROP_TYPE,
                                      DBUSMENU_CLIENT_TYPES_SEPARATOR);
-      _menu_items_extra["FirstSeparator"] = glib::Object<DbusmenuMenuitem>(item);
+      _menu_items_extra["FirstSeparator"] = item;
     }
     result.push_back(item);
   }
@@ -1038,7 +1042,7 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
                                         DBUSMENU_MENUITEM_PROP_ENABLED,
                                         true);
     dbusmenu_menuitem_property_set_bool(item,
-                                        "unity-use-markup",
+                                        QuicklistMenuItem::MARKUP_ENABLED_PROPERTY,
                                         true);
 
     _gsignals.Add(new glib::Signal<void, DbusmenuMenuitem*, int>(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
@@ -1070,21 +1074,23 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
 
   EnsureMenuItemsReady();
 
-  for (auto it_m = _menu_items.begin(); it_m != _menu_items.end(); ++it_m)
+  for (auto it : _menu_items)
   {
-    if (!IsRunning() && it_m->first == "Quit")
+    if (!IsRunning() && it.first == "Quit")
       continue;
 
     bool exists = false;
-    std::string label_default(dbusmenu_menuitem_property_get(it_m->second, DBUSMENU_MENUITEM_PROP_LABEL));
+    std::string label_default(dbusmenu_menuitem_property_get(it.second, DBUSMENU_MENUITEM_PROP_LABEL));
 
     for (auto menu_item : result)
     {
       const gchar* type = dbusmenu_menuitem_property_get(menu_item, DBUSMENU_MENUITEM_PROP_TYPE);
-      if (type == nullptr)//(g_strcmp0 (type, DBUSMENU_MENUITEM_PROP_LABEL) == 0)
+
+      if (!type)//(g_strcmp0 (type, DBUSMENU_MENUITEM_PROP_LABEL) == 0)
       {
-        std::string label_menu(dbusmenu_menuitem_property_get(menu_item, DBUSMENU_MENUITEM_PROP_LABEL));
-        if (label_menu == label_default)
+        const gchar* label = dbusmenu_menuitem_property_get(menu_item, DBUSMENU_MENUITEM_PROP_LABEL);
+
+        if (label && std::string(label) == label_default)
         {
           exists = true;
           break;
@@ -1093,7 +1099,7 @@ std::list<DbusmenuMenuitem*> BamfLauncherIcon::GetMenus()
     }
 
     if (!exists)
-      result.push_back(it_m->second);
+      result.push_back(it.second);
   }
 
   return result;
