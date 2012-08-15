@@ -40,6 +40,8 @@ void Signal<R, G, Ts...>::Connect(G object, std::string const& signal_name,
   if (!callback || !G_IS_OBJECT(object) || signal_name.empty())
     return;
 
+  Disconnect();
+
   object_ = reinterpret_cast<GObject*>(object);
   name_ = signal_name;
   callback_ = callback;

@@ -277,6 +277,21 @@ TEST_F(TestGLibSignals, TestCleanDestruction)
   g_object_unref(test_signals_);
 }
 
+TEST_F(TestGLibSignals, TestConnectReplacePreviousConnection)
+{
+  Signal<void, TestSignals*> signal;
+  signal.Connect(test_signals_, "signal0",
+                 sigc::mem_fun(this, &TestGLibSignals::Signal0Callback));
+
+  unsigned signal0_num_cb = 0;
+  signal.Connect(test_signals_, "signal0", [&] (TestSignals*) {++signal0_num_cb;});
+
+  g_signal_emit_by_name(test_signals_, "signal0");
+
+  EXPECT_FALSE(signal0_received_);
+  EXPECT_EQ(signal0_num_cb, 1);
+}
+
 TEST_F(TestGLibSignals, TestManagerConstruction)
 {
   MockSignalManager manager;
