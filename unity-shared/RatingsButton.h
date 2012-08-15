@@ -40,6 +40,7 @@ public:
 
   void SetEditable(bool editable);
   virtual void SetRating(float rating);
+  virtual float GetRating() const;
 
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -47,8 +48,6 @@ protected:
   // Key-nav
   virtual bool AcceptKeyNavFocus();
   virtual bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
-
-  virtual void UpdateRating(float rating);
 
 private:
   void OnKeyDown(unsigned long event_type, unsigned long event_keysym,

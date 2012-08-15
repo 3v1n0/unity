@@ -96,6 +96,7 @@ public:
   : parent_(parent)
   , thumbnails_mutex_(PTHREAD_MUTEX_INITIALIZER)
   , thumbnail_thread_is_running_(false)
+  , thumbnail_thread_(0)
   {}
 
   ~ThumbnailGeneratorImpl()
@@ -198,7 +199,6 @@ ThumbnailNotifier::Ptr ThumbnailGeneratorImpl::GetThumbnail(std::string const& u
 
   if (!thread_create_timer_ && thumbnail_thread_is_running_ == false)
   {
-
     thread_create_timer_.reset(new glib::Timeout(0, [&]()
     {
       thumbnail_thread_is_running_ = true;
@@ -441,7 +441,8 @@ ThumbnailGenerator::ThumbnailGenerator()
 
 ThumbnailGenerator::~ThumbnailGenerator()
 {
-
+  if (this == thumbnail_instance)
+    thumbnail_instance = NULL;
 }
 
 ThumbnailGenerator& ThumbnailGenerator::Instance()
@@ -497,7 +498,9 @@ std::string Thumbnail::Generate(std::string& error_hint)
   glib::Object<GFileInfo> file_info(g_file_query_info(file, G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE, G_FILE_QUERY_INFO_NONE, NULL, &err));
   if (err != NULL)
   {
-    error_hint = err->message;
+    std::stringstream error_stream;
+    error_stream << "Could not retrieve file info for '" << uri_ << "'";
+    error_hint = error_stream.str();
     g_error_free (err);
     return "";
   }
@@ -517,6 +520,8 @@ std::string Thumbnail::Generate(std::string& error_hint)
   for (Thumbnailer::Ptr const& thumbnailer : thumbnailers)
   {
     output_file = ss_output.str();
+
+    LOG_TRACE(logger) << "Attempting to generate thumbnail using '" << thumbnailer->GetName() << "' thumbnail provider";
 
     if (thumbnailer->Run(size_, uri_, output_file, error_hint))
     {

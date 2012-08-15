@@ -65,7 +65,7 @@ protected:
 
   void BuildLayout(std::string const& label, std::string const& icon_hint);
 
-
+private:
   typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
 
   NuxCairoPtr cr_prelight_;
@@ -75,7 +75,6 @@ protected:
 
   nux::Geometry cached_geometry_;
 
-private:
   std::string icon_hint_;
   std::string font_hint_;
 

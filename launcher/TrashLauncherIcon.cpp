@@ -74,6 +74,7 @@ TrashLauncherIcon::TrashLauncherIcon()
 
 TrashLauncherIcon::~TrashLauncherIcon()
 {
+  printf("destory trash launcher icon\n");
   if (on_trash_changed_handler_id_ != 0)
     g_signal_handler_disconnect((gpointer) trash_monitor_,
                                 on_trash_changed_handler_id_);

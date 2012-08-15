@@ -236,7 +236,10 @@ void ApplicationPreview::SetupViews()
 
         if (!app_preview_model->last_update.Get().empty())
         {
-          last_update_ = new nux::StaticCairoText(_("Last Updated ") + app_preview_model->last_update.Get());
+          std::stringstream last_update;
+          last_update << _("Last Updated") << " " << app_preview_model->last_update.Get();
+
+          last_update_ = new nux::StaticCairoText(last_update.str());
           last_update_->SetFont(style.app_last_update_font().c_str());
           app_updated_copywrite_layout->AddView(last_update_.GetPointer(), 1);
         }
@@ -281,8 +284,8 @@ void ApplicationPreview::SetupViews()
 
       if (!preview_model_->GetInfoHints().empty())
       {
-        PreviewInfoHintWidget* preview_info_hints = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth());
-        app_info_layout->AddView(preview_info_hints);
+        preview_info_hints_ = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth());
+        app_info_layout->AddView(preview_info_hints_.GetPointer());
       }
       /////////////////////
 

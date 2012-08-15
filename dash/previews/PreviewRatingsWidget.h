@@ -47,6 +47,8 @@ public:
   virtual ~PreviewRatingsWidget();
 
   void SetRating(float rating);
+  float GetRating() const;
+
   void SetReviews(int count);
 
 protected:

@@ -218,8 +218,8 @@ void MoviePreview::SetupView()
 
       if (!preview_model_->GetInfoHints().empty())
       {
-        PreviewInfoHintWidget* preview_info_hints = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth());
-        preview_info_layout->AddView(preview_info_hints, 0);
+        preview_info_hints_ = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth());
+        preview_info_layout->AddView(preview_info_hints_.GetPointer(), 0);
       }
 
       if (!preview_model_->description.Get().empty())

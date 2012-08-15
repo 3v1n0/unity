@@ -220,11 +220,16 @@ if (GTEST_SRC_DIR AND
                  test_launcher_controller.cpp
                  test_keyboard_util.cpp
                  test_panel_style.cpp
+                 test_previews_application.cpp
+                 test_previews_generic.cpp
+                 test_previews_movie.cpp
+                 test_previews_music.cpp
                  test_resultviewgrid.cpp
                  test_single_monitor_launcher_icon.cpp
                  test_switcher_controller.cpp
                  test_switcher_model.cpp
                  test_texture_cache.cpp
+                 test_thumbnail_generator.cpp
                  gmockvolume.c
                  ${CMAKE_SOURCE_DIR}/dash/AbstractPlacesGroup.cpp
                  ${CMAKE_SOURCE_DIR}/dash/DashViewPrivate.cpp
@@ -232,6 +237,16 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/dash/ResultRenderer.cpp
                  ${CMAKE_SOURCE_DIR}/dash/ResultView.cpp
                  ${CMAKE_SOURCE_DIR}/dash/ResultViewGrid.cpp
+                 ${CMAKE_SOURCE_DIR}/dash/previews/ActionButton.cpp
+                 ${CMAKE_SOURCE_DIR}/dash/previews/ApplicationPreview.cpp
+                 ${CMAKE_SOURCE_DIR}/dash/previews/GenericPreview.cpp
+                 ${CMAKE_SOURCE_DIR}/dash/previews/MoviePreview.cpp
+                 ${CMAKE_SOURCE_DIR}/dash/previews/MusicPreview.cpp
+                 ${CMAKE_SOURCE_DIR}/dash/previews/Preview.cpp
+                 ${CMAKE_SOURCE_DIR}/dash/previews/PreviewInfoHintWidget.cpp
+                 ${CMAKE_SOURCE_DIR}/dash/previews/PreviewRatingsWidget.cpp
+                 ${CMAKE_SOURCE_DIR}/dash/previews/Tracks.cpp
+                 ${CMAKE_SOURCE_DIR}/dash/previews/Track.cpp
                  ${CMAKE_SOURCE_DIR}/hud/HudAbstractView.cpp
                  ${CMAKE_SOURCE_DIR}/hud/HudButton.cpp
                  ${CMAKE_SOURCE_DIR}/hud/HudController.cpp
@@ -287,7 +302,9 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/launcher/VolumeMonitorWrapper.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/Animator.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/BackgroundEffectHelper.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/CoverArt.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/DashStyle.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/DefaultThumbnailProvider.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/IconLoader.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/IconRenderer.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/IconTexture.cpp
@@ -299,17 +316,23 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/unity-shared/KeyboardUtil.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/OverlayRenderer.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/PanelStyle.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/PlacesVScrollBar.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/PluginAdapterStandalone.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/PreviewStyle.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/RatingsButton.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/SearchBar.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/SearchBarSpinner.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/StaticCairoText.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/TextureCache.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/Timer.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/TextureThumbnailProvider.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/ThumbnailGenerator.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/UBusWrapper.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/UScreen.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/UnitySettings.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/UnityWindowStyle.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/UnityWindowView.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/UserThumbnailProvider.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/WindowManager.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/ubus-server.cpp
                 )
