@@ -19,8 +19,8 @@
 #ifndef BGHASH_H
 #define BGHASH_H
 
+#include <NuxCore/Animation.h>
 #include <Nux/Nux.h>
-#include "Animator.h"
 #include "UBusWrapper.h"
 
 namespace unity {
@@ -41,18 +41,15 @@ namespace unity
     void OverrideColor(nux::Color const& color);
 
   private:
-    void OnTransitionUpdated(double progress);
+    void OnTransitionUpdated(nux::Color const& new_color);
     void DoUbusColorEmit();
     void TransitionToNewColor(nux::Color const& new_color);
-    nux::Color InterpolateColor(nux::Color const& colora, nux::Color const& colorb, float value) const;
     nux::Color MatchColor(nux::Color const& base_color) const;
 
   private:
-    Animator transition_animator_;
+    nux::animation::AnimateValue<nux::Color> transition_animator_;
 
     nux::Color current_color_; // the current colour, including steps in transitions
-    nux::Color new_color_;     // in transitions, the next colour, otherwise the current colour
-    nux::Color old_color_;     // the last colour chosen, used for transitions
     nux::Color override_color_;
 
     UBusManager ubus_manager_;
