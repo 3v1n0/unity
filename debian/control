@@ -100,7 +100,7 @@ Description: Services for the Unity interface
  to produce what we hope will be the lightest, most elegant and most delightful
  way to use your PC.
  .
- This package contains the dbus service used for unity and unity-2d.
+ This package contains the dbus service used for unity.
 
 Package: unity-common
 Architecture: all
@@ -130,7 +130,7 @@ Description: Core library for the Unity interface.
  to produce what we hope will be the lightest, most elegant and most delightful
  way to use your PC.
  .
- This package contains shared libraries to be used by unity-3d and unity-2d.
+ This package contains shared libraries to be used by unity-3d.
 
 Package: libunity-core-6.0-dev
 Section: libdevel
@@ -150,8 +150,7 @@ Description: Core library for the Unity interface - development files
  to produce what we hope will be the lightest, most elegant and most delightful
  way to use your PC.
  .
- This package contains development files for libraries to be used by unity-3d
- and unity-2d.
+ This package contains development files for libraries to be used by unity.
 
 Package: unity-autopilot
 Section: python
