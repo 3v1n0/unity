@@ -57,8 +57,18 @@ std::string const& SignalBase::name() const
   return name_;
 }
 
+
 SignalManager::SignalManager()
 {}
+
+SignalManager::~SignalManager()
+{
+  for (auto const& signal : connections_)
+  {
+    if (G_IS_OBJECT(signal->object()))
+      g_object_weak_unref(signal->object(), (GWeakNotify)&OnObjectDestroyed, this);
+  }
+}
 
 // Ideally this would be SignalBase& but there is a specific requirment to allow
 // only one instance of Signal to control a connection. With the templating, it
@@ -73,6 +83,27 @@ void SignalManager::Add(SignalBase* signal)
 void SignalManager::Add(SignalBase::Ptr const& signal)
 {
   connections_.push_back(signal);
+  g_object_weak_ref(signal->object(), (GWeakNotify)&OnObjectDestroyed, this);
+}
+
+void SignalManager::OnObjectDestroyed(SignalManager* self, GObject* old_obj)
+{
+  for (auto it = self->connections_.begin(); it != self->connections_.end();)
+  {
+    auto const& signal = *it;
+
+    // When an object has been destroyed, the signal member is nullified,
+    // so at this point we can be sure that removing signal with a null object,
+    // means removing invalid signals.
+    if (!signal->object())
+    {
+      it = self->connections_.erase(it);
+    }
+    else
+    {
+      ++it;
+    }
+  }
 }
 
 // This uses void* to keep in line with the g_signal* functions
@@ -87,7 +118,7 @@ void SignalManager::Disconnect(void* object, std::string const& signal_name)
 
     if (signal->object() == object && (all_signals || signal->name() == signal_name))
     {
-      signal->Disconnect();
+      g_object_weak_unref(signal->object(), (GWeakNotify)&OnObjectDestroyed, this);
       it = connections_.erase(it);
     }
     else
