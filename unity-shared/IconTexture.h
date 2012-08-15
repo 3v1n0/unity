@@ -54,6 +54,13 @@ public:
 
   nux::BaseTexture* texture();
 
+  enum class DrawMode
+  {
+    NORMAL,
+    STRETCH_WITH_ASPECT
+  };
+  void SetDrawMode(DrawMode mode);
+  
   sigc::signal<void, nux::BaseTexture*> texture_updated;
 
 protected:
@@ -83,6 +90,7 @@ private:
   bool _loading;
   float _opacity;
   int _handle;
+  DrawMode _draw_mode;
 };
 
 }

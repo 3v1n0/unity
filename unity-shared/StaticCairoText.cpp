@@ -58,7 +58,7 @@ struct StaticCairoText::Impl
   std::string GetEffectiveFont() const;
   Size GetTextExtents() const;
 
-  void DrawText(cairo_t* cr, int width, int height, Color const& color);
+  void DrawText(cairo_t* cr, int width, int height, int line_spacing, Color const& color);
 
   void UpdateTexture();
   void OnFontChanged();
@@ -88,6 +88,7 @@ struct StaticCairoText::Impl
 
   int lines_;
   int actual_lines_;
+  float line_spacing_;
 };
 
 StaticCairoText::Impl::Impl(StaticCairoText* parent, std::string const& text)
@@ -104,6 +105,7 @@ StaticCairoText::Impl::Impl(StaticCairoText* parent, std::string const& text)
     // the desired height of the layout in Pango units if positive, or desired
     // number of lines if negative.
   , actual_lines_(0)
+  , line_spacing_(0.5)
 {
   GtkSettings* settings = gtk_settings_get_default();  // not ref'ed
   g_signal_connect(settings, "notify::gtk-font-name",
@@ -186,6 +188,13 @@ void StaticCairoText::SetTextVerticalAlignment(AlignState state)
 void StaticCairoText::SetLines(int lines)
 {
   pimpl->lines_ = lines;
+  pimpl->UpdateTexture();
+  QueueDraw();
+}
+
+void StaticCairoText::SetLineSpacing(float line_spacing)
+{
+  pimpl->line_spacing_ = line_spacing;
   pimpl->UpdateTexture();
   QueueDraw();
 }
@@ -400,9 +409,10 @@ Size StaticCairoText::Impl::GetTextExtents() const
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, GetPangoEllipsizeMode());
   pango_layout_set_alignment(layout, GetPangoAlignment());
-  pango_layout_set_markup(layout, text_.c_str(), -1);
   pango_layout_set_height(layout, lines_);
   pango_layout_set_width(layout, maxwidth * PANGO_SCALE);
+  pango_layout_set_markup(layout, text_.c_str(), -1);
+  pango_layout_set_spacing(layout, line_spacing_ * PANGO_SCALE);
 
   pangoCtx = pango_layout_get_context(layout);  // is not ref'ed
   pango_cairo_context_set_font_options(pangoCtx,
@@ -442,6 +452,7 @@ Size StaticCairoText::Impl::GetTextExtents() const
 void StaticCairoText::Impl::DrawText(cairo_t* cr,
                                      int width,
                                      int height,
+                                     int line_spacing,
                                      Color const& color)
 {
   PangoLayout*          layout     = NULL;
@@ -464,6 +475,7 @@ void StaticCairoText::Impl::DrawText(cairo_t* cr,
   pango_layout_set_markup(layout, text_.c_str(), -1);
   pango_layout_set_width(layout, width * PANGO_SCALE);
   pango_layout_set_height(layout, height * PANGO_SCALE);
+  pango_layout_set_spacing(layout, line_spacing * PANGO_SCALE);
 
   pango_layout_set_height(layout, lines_);
   pangoCtx = pango_layout_get_context(layout);  // is not ref'ed
@@ -510,7 +522,7 @@ void StaticCairoText::Impl::UpdateTexture()
                                geo.width, geo.height);
 
   DrawText(cairo_graphics.GetInternalContext(),
-           geo.width, geo.height, text_color_);
+           geo.width, geo.height, line_spacing_, text_color_);
 
   texture2D_ = texture_ptr_from_cairo_graphics(cairo_graphics);
 }

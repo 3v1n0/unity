@@ -85,6 +85,8 @@ private:
 
   int GetItemsPerRow();
   void SizeReallocate();
+  std::tuple<int, int> GetResultPosition(const std::string& uri);
+  std::tuple<int, int> GetResultPosition(const unsigned int& index);
 
   uint mouse_over_index_;
   int active_index_;
@@ -104,6 +106,8 @@ private:
   int mouse_last_y_;
 
   int extra_horizontal_spacing_;
+
+  unsigned int cached_preview_index_;
 
   UBusManager ubus_;
   glib::Source::UniquePtr lazy_load_source_;

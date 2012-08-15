@@ -33,16 +33,17 @@
 #include "FilterBar.h"
 #include "unity-shared/Introspectable.h"
 #include "PlacesGroup.h"
-#include "PlacesVScrollBar.h"
 #include "ResultViewGrid.h"
 #include "unity-shared/UBusWrapper.h"
+#include "unity-shared/PlacesVScrollBar.h"
+#include "previews/Preview.h"
 
 namespace unity
 {
 namespace dash
 {
-class LensScrollView;
 
+class LensScrollView;
 class LensView : public nux::View, public unity::debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(LensView, nux::View);
@@ -117,6 +118,8 @@ private:
   FilterBar* filter_bar_;
   nux::StaticCairoText* no_results_;
 
+  previews::Preview::Ptr preview_;
+  std::string last_activated_result_uri_;
   UBusManager ubus_manager_;
   glib::Source::UniquePtr fix_rendering_idle_;
 };

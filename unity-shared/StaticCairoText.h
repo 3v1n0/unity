@@ -75,6 +75,7 @@ public:
   void SetTextVerticalAlignment(AlignState state);
   void SetFont(std::string const& font);
   void SetLines(int maximum_lines);
+  void SetLineSpacing(float line_spacing);
 
   std::string GetText() const;
   Color GetTextColor() const;
