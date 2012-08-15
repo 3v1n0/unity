@@ -189,10 +189,9 @@ void MusicPreview::SetupViews()
       dash::Tracks::Ptr tracks_model = music_preview_model->GetTracksModel();
       if (tracks_model)
       {
-        previews::Tracks* tracks = new previews::Tracks(tracks_model, NUX_TRACKER_LOCATION);
-        tracks->play.connect(sigc::mem_fun(this, &MusicPreview::OnPlayTrack));
-        tracks->pause.connect(sigc::mem_fun(this, &MusicPreview::OnPauseTrack));
-        tracks_ = tracks;
+        tracks_ = new previews::Tracks(tracks_model, NUX_TRACKER_LOCATION);
+        tracks_->play.connect(sigc::mem_fun(this, &MusicPreview::OnPlayTrack));
+        tracks_->pause.connect(sigc::mem_fun(this, &MusicPreview::OnPauseTrack));
       }
       /////////////////////
 
@@ -207,8 +206,8 @@ void MusicPreview::SetupViews()
         hints_layout = new nux::VLayout();
         hints_layout->SetSpaceBetweenChildren(0);
         hints_layout->AddSpace(0, 1);
-        PreviewInfoHintWidget* preview_info_hints = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth());
-        hints_layout->AddView(preview_info_hints, 0);
+        preview_info_hints_ = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth());
+        hints_layout->AddView(preview_info_hints_.GetPointer(), 0);
 
         // If there are actions, we use a vertical layout
         action_buttons_.clear();

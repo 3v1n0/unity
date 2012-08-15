@@ -41,6 +41,7 @@ namespace dash
 namespace previews
 {
 class CoverArt;
+class PreviewInfoHintWidget;
 
 class GenericPreview : public Preview
 {
@@ -70,6 +71,7 @@ protected:
   nux::ObjectPtr<nux::StaticCairoText> title_;
   nux::ObjectPtr<nux::StaticCairoText> subtitle_;
   nux::ObjectPtr<nux::StaticCairoText> description_;
+  nux::ObjectPtr<PreviewInfoHintWidget> preview_info_hints_;
 
   typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
   LayerPtr details_bg_layer_;

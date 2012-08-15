@@ -68,6 +68,11 @@ void PreviewRatingsWidget::SetRating(float rating)
   ratings_->SetRating(rating);
 }
 
+float PreviewRatingsWidget::GetRating() const
+{
+  return ratings_->GetRating();
+}
+
 void PreviewRatingsWidget::SetReviews(int count)
 {
   std::stringstream out;

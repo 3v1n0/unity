@@ -25,7 +25,7 @@
 namespace unity
 {
 
-QuicklistMenuItemLabel::QuicklistMenuItemLabel(DbusmenuMenuitem* item, NUX_FILE_LINE_DECL)
+QuicklistMenuItemLabel::QuicklistMenuItemLabel(glib::Object<DbusmenuMenuitem> const& item, NUX_FILE_LINE_DECL)
   : QuicklistMenuItem(QuicklistMenuItemType::LABEL, item, NUX_FILE_LINE_PARAM)
 {
   InitializeText();

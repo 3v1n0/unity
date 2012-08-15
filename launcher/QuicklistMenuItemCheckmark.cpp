@@ -25,7 +25,7 @@
 namespace unity
 {
 
-QuicklistMenuItemCheckmark::QuicklistMenuItemCheckmark(DbusmenuMenuitem* item, NUX_FILE_LINE_DECL)
+QuicklistMenuItemCheckmark::QuicklistMenuItemCheckmark(glib::Object<DbusmenuMenuitem> const& item, NUX_FILE_LINE_DECL)
   : QuicklistMenuItem(QuicklistMenuItemType::CHECK, item, NUX_FILE_LINE_PARAM)
 {
   InitializeText();

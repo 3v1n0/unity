@@ -40,8 +40,9 @@ namespace dash
 {
 namespace previews
 {
+class CoverArt;
+class PreviewInfoHintWidget;
 class Tracks;
-
 
 class MusicPreview : public Preview
 {
@@ -67,13 +68,14 @@ protected:
   void OnPlayTrack(std::string const& uri);
   void OnPauseTrack(std::string const& uri);
 
-private:
+protected:
   nux::VLayout* full_data_layout_;
 
   nux::ObjectPtr<CoverArt> image_;
   nux::ObjectPtr<nux::StaticCairoText> title_;
   nux::ObjectPtr<nux::StaticCairoText> subtitle_;
-  nux::ObjectPtr<nux::View> tracks_;
+  nux::ObjectPtr<Tracks> tracks_;
+  nux::ObjectPtr<PreviewInfoHintWidget> preview_info_hints_;
 
   typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
   LayerPtr details_bg_layer_;

@@ -33,10 +33,10 @@ const char* QuicklistMenuItem::OVERLAY_MENU_ITEM_PROPERTY = "unity-overlay-item"
 
 NUX_IMPLEMENT_OBJECT_TYPE(QuicklistMenuItem);
 
-QuicklistMenuItem::QuicklistMenuItem(QuicklistMenuItemType type, DbusmenuMenuitem* item, NUX_FILE_LINE_DECL)
+QuicklistMenuItem::QuicklistMenuItem(QuicklistMenuItemType type, glib::Object<DbusmenuMenuitem> const& item, NUX_FILE_LINE_DECL)
   : nux::View(NUX_FILE_LINE_PARAM)
   , _item_type(type)
-  , _menu_item(item, glib::AddRef())
+  , _menu_item(item)
   , _prelight(false)
 {
   mouse_up.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseUp));

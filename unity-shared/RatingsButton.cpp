@@ -80,6 +80,11 @@ void RatingsButton::SetRating(float rating)
   QueueDraw();
 }
 
+float RatingsButton::GetRating() const
+{
+  return rating_;
+}
+
 void RatingsButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   int rating =  static_cast<int>(rating_ * num_stars);
@@ -177,7 +182,7 @@ void RatingsButton::UpdateRatingToMouse(int x)
   new_rating = ceil((num_stars * 1) * new_rating) / (num_stars * 1);
   new_rating = (new_rating > 1) ? 1 : ((new_rating < 0) ? 0 : new_rating);
 
-  UpdateRating(new_rating);
+  SetRating(new_rating);
 }
 
 void RatingsButton::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags)
@@ -268,11 +273,6 @@ void RatingsButton::OnKeyDown(unsigned long event_type, unsigned long event_keys
 bool RatingsButton::AcceptKeyNavFocus()
 {
   return true;
-}
-
-void RatingsButton::UpdateRating(float rating)
-{
-
 }
 
 } // namespace unity

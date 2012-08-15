@@ -42,8 +42,8 @@ namespace dash
 namespace previews
 {
 class CoverArt;
-
 class PreviewRatingsWidget;
+class PreviewInfoHintWidget;
 
 class ApplicationPreview : public Preview
 {
@@ -79,6 +79,7 @@ protected:
   nux::ObjectPtr<nux::StaticCairoText> last_update_;
   nux::ObjectPtr<nux::StaticCairoText> copywrite_;
   nux::ObjectPtr<nux::StaticCairoText> description_;
+  nux::ObjectPtr<PreviewInfoHintWidget> preview_info_hints_;
 
   typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
   LayerPtr details_bg_layer_;

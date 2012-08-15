@@ -208,8 +208,8 @@ void GenericPreview::SetupViews()
 
       if (!preview_model_->GetInfoHints().empty())
       {
-        PreviewInfoHintWidget* preview_info_hints = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth());
-        preview_info_layout->AddView(preview_info_hints);
+        preview_info_hints_ = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth());
+        preview_info_layout->AddView(preview_info_hints_.GetPointer());
       }
       /////////////////////
 

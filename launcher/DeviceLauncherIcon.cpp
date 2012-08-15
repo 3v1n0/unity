@@ -118,10 +118,10 @@ DeviceLauncherIcon::CanEject()
   return g_volume_can_eject(volume_);
 }
 
-std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
+AbstractLauncherIcon::MenuItemsVector DeviceLauncherIcon::GetMenus()
 {
-  std::list<DbusmenuMenuitem*> result;
-  DbusmenuMenuitem* menu_item;
+  MenuItemsVector result;
+  glib::Object<DbusmenuMenuitem> menu_item;
   glib::Object<GDrive> drive(g_volume_get_drive(volume_));
 
   // "Lock to Launcher"/"Unlock from Launcher" item
