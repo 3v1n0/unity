@@ -479,7 +479,7 @@ void UnityScreen::CreateSuperNewAction(char shortcut, impl::ActionModifiers flag
 
 void UnityScreen::nuxPrologue()
 {
-#ifndef USE_MODERN_COMPIZ_GL
+#ifndef USE_GLES
   /* Vertex lighting isn't used in Unity, we disable that state as it could have
    * been leaked by another plugin. That should theoretically be switched off
    * right after PushAttrib since ENABLE_BIT is meant to restore the LIGHTING
@@ -514,7 +514,8 @@ void UnityScreen::nuxEpilogue()
 {
 #ifndef USE_MODERN_COMPIZ_GL
   (*GL::bindFramebuffer)(GL_FRAMEBUFFER_EXT, _active_fbo);
-
+#endif
+#ifndef USE_GLES
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   glMatrixMode(GL_MODELVIEW);
@@ -539,14 +540,11 @@ void UnityScreen::nuxEpilogue()
    * NVIDIA compatibility reasons */
   glEnableClientState(GL_VERTEX_ARRAY);
   glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-#else
-#ifdef USE_GLES
-  glDepthRangef(0, 1);
-#else
   glDepthRange(0, 1);
-#endif
   //glViewport(-1, -1, 2, 2);
   gScreen->resetRasterPos();
+#else
+  glDepthRangef(0, 1);
 #endif
 
   glDisable(GL_SCISSOR_TEST);
