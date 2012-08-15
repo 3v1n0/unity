@@ -1,6 +1,8 @@
 unity (6.2.0-0ubuntu3) UNRELEASED; urgency=low
 
   * Backport the gconf removal from upstream branch
+  * debian/control:
+    - do not build-dep on gconf anymore
 
  -- Didier Roche <didrocks@ubuntu.com>  Wed, 15 Aug 2012 11:21:13 +0200
 
