@@ -92,6 +92,9 @@ public:
 
   void SetAcceptKeyNavFocus(bool accept);
 
+  void SetMaximumSize(int w, int h);
+  void SetMaximumWidth(int w);
+
 protected:
   // Key navigation
   virtual bool AcceptKeyNavFocus();
