@@ -512,11 +512,10 @@ void UnityScreen::nuxPrologue()
 
 void UnityScreen::nuxEpilogue()
 {
-#ifndef USE_GLES
 #ifndef USE_MODERN_COMPIZ_GL
   (*GL::bindFramebuffer)(GL_FRAMEBUFFER_EXT, _active_fbo);
 #endif
-
+#ifndef USE_GLES
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   glMatrixMode(GL_MODELVIEW);
@@ -541,14 +540,11 @@ void UnityScreen::nuxEpilogue()
    * NVIDIA compatibility reasons */
   glEnableClientState(GL_VERTEX_ARRAY);
   glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-#else
-#ifdef USE_GLES
-  glDepthRangef(0, 1);
-#else
   glDepthRange(0, 1);
-#endif
   //glViewport(-1, -1, 2, 2);
   gScreen->resetRasterPos();
+#else
+  glDepthRangef(0, 1);
 #endif
 
   glDisable(GL_SCISSOR_TEST);
