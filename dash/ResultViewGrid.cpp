@@ -103,8 +103,8 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
 
   ubus_.RegisterInterest(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, [&] (GVariant* data) {
     int nav_mode = 0;
-    gchar* uri;
-    gchar* proposed_unique_id;
+    gchar* uri = NULL;
+    gchar* proposed_unique_id = NULL;
     g_variant_get(data, "(iss)", &nav_mode, &uri, &proposed_unique_id);
    
     if (std::string(proposed_unique_id) != unique_id())
@@ -146,6 +146,9 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
         UriActivated.emit(activated_uri_, ActivateType::PREVIEW);
       }
     }
+
+    g_free(uri);
+    g_free(proposed_unique_id);
 
   });
 

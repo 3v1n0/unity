@@ -214,8 +214,7 @@ void DashView::AboutToShow()
   // if a preview is open, close it
   if (preview_displaying_) 
   {
-    preview_state_machine_.ClosePreview();
-    preview_displaying_ = false;
+    ClosePreview();
   }
 
   renderer_.AboutToShow();
@@ -444,8 +443,7 @@ void DashView::OnActivateRequest(GVariant* args)
   // we got an activation request, we should probably close the preview
   if (preview_displaying_)
   {
-    preview_state_machine_.ClosePreview();
-    preview_displaying_ = false;
+    ClosePreview();
   }
 
   if (!visible_)
@@ -948,10 +946,6 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
   default:
     direction = KEY_NAV_NONE;
   }
-
-  // send to previews here
-  //if (preview_displaying_)
-  //  return preview_container_.GetPointer();
 
   // We should not do it here, but I really don't want to make DashView
   // focusable and I'm not able to know if ctrl is pressed in

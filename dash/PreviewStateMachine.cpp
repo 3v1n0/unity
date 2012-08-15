@@ -87,9 +87,6 @@ void PreviewStateMachine::CheckPreviewRequirementsFulfilled()
   if (!requires_activation_)
     return;
 
-  //if (preview_active())
-  //  return;
-
   if (stored_preview_ == nullptr)
     return;
 
