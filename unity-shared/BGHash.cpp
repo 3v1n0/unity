@@ -106,7 +106,7 @@ void BGHash::TransitionToNewColor(nux::color::Color const& new_color)
   LOG_DEBUG(logger) << "transitioning from: " << current_color_.red << " to " << new_color.red;
 
   transition_animator_.SetStartValue(current_color_);
-  transition_animator_.SetEndValue(new_color_);
+  transition_animator_.SetFinishValue(new_color);
   transition_animator_.Stop();
   transition_animator_.Start();
 }
