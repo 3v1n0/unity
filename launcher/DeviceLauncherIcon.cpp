@@ -341,7 +341,7 @@ void DeviceLauncherIcon::Eject()
 
 void DeviceLauncherIcon::OnTogglePin(DbusmenuMenuitem* item, int time)
 {
-  glib::String uuid(g_volume_get_identifier(self->volume_, G_VOLUME_IDENTIFIER_KIND_UUID));
+  glib::String uuid(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_UUID));
 
   keep_in_launcher_ = !keep_in_launcher_;
 
