@@ -29,7 +29,7 @@
 #include "ResultRendererHorizontalTile.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UBusWrapper.h"
-#include "PlacesVScrollBar.h"
+#include "unity-shared/PlacesVScrollBar.h"
 
 #include <glib/gi18n-lib.h>
 
@@ -144,6 +144,11 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   search_string.SetGetterFunction(sigc::mem_fun(this, &LensView::get_search_string));
   filters_expanded.changed.connect([&](bool expanded) { fscroll_view_->SetVisible(expanded); QueueRelayout(); OnColumnsChanged(); });
   view_type.changed.connect(sigc::mem_fun(this, &LensView::OnViewTypeChanged));
+
+  lens_->preview_ready.connect([&] (std::string const& uri, Preview::Ptr model) 
+  {
+    preview_ = previews::Preview::Ptr(new previews::Preview(model));
+  });
 
   ubus_manager_.RegisterInterest(UBUS_RESULT_VIEW_KEYNAV_CHANGED, [&] (GVariant* data) {
     // we get this signal when a result view keynav changes,
@@ -289,7 +294,12 @@ void LensView::OnCategoryAdded(Category const& category)
   else
     grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
 
-  grid->UriActivated.connect([&] (std::string const& uri) { uri_activated.emit(uri); lens_->Activate(uri); });
+  grid->UriActivated.connect([&] (std::string const& uri) 
+  { 
+    uri_activated.emit(uri); 
+    lens_->Activate(uri); 
+    last_activated_result_uri_ = uri;
+  });
   group->SetChildView(grid);
 
   /* We need the full range of method args so we can specify the offset

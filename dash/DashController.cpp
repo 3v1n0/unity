@@ -107,11 +107,9 @@ void Controller::SetupDashView()
 void Controller::SetupRelayoutCallbacks()
 {
   GdkScreen* screen = gdk_screen_get_default();
-
-  sig_manager_.Add(new glib::Signal<void, GdkScreen*>(screen,
-    "monitors-changed", sigc::mem_fun(this, &Controller::Relayout)));
-  sig_manager_.Add(new glib::Signal<void, GdkScreen*>(screen,
-    "size-changed", sigc::mem_fun(this, &Controller::Relayout)));
+  auto relayout_cb = sigc::mem_fun(this, &Controller::Relayout);
+  sig_manager_.Add<void, GdkScreen*>(screen, "monitors-changed", relayout_cb);
+  sig_manager_.Add<void, GdkScreen*>(screen, "size-changed", relayout_cb);
 }
 
 void Controller::RegisterUBusInterests()

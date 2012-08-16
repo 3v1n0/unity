@@ -60,6 +60,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   , mouse_last_x_(-1)
   , mouse_last_y_(-1)
   , extra_horizontal_spacing_(0)
+  , cached_preview_index_(-1)
 {
   SetAcceptKeyNavFocusOnMouseDown(false);
 
@@ -96,6 +97,9 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
     //FIXME in P - make dash size the size of our dash not the entire screen
     g_variant_get (data, "(ii)", &recorded_dash_width_, &recorded_dash_height_);
   });
+
+  preview_spacer.changed.connect([this] (int space) { SizeReallocate(); });
+  preview_result_uri.changed.connect([this] (std::string uri) { QueueDraw(); });
 
   SetDndEnabled(true, false);
 }
@@ -235,8 +239,11 @@ void ResultViewGrid::SizeReallocate()
   if (extra_horizontal_spacing_ < 0)
     extra_horizontal_spacing_ = 0;
 
-  SetMinimumHeight(total_height + (padding * 2));
-  SetMaximumHeight(total_height + (padding * 2));
+  total_height += preview_spacer; // space needed for preview
+  total_height += (padding * 2); // add padding
+
+  SetMinimumHeight(total_height);
+  SetMaximumHeight(total_height);
 
   mouse_over_index_ = GetIndexAtPosition(mouse_last_x_, mouse_last_y_);
   results_per_row = items_per_row;
@@ -403,8 +410,10 @@ void ResultViewGrid::OnKeyDown (unsigned long event_type, unsigned long event_ke
   selected_index_ = std::min(static_cast<int>(results_.size() - 1), selected_index_());
   focused_uri_ = results_[selected_index_].uri;
 
-  int focused_x = (renderer_->width + horizontal_spacing + extra_horizontal_spacing_) * (selected_index_ % items_per_row);
-  int focused_y = (renderer_->height + vertical_spacing) * (selected_index_ / items_per_row);
+  std::tuple<int, int> focused_coord = GetResultPosition(selected_index_);
+
+  int focused_x = std::get<0>(focused_coord);
+  int focused_y = std::get<1>(focused_coord);
 
   ubus_.SendMessage(UBUS_RESULT_VIEW_KEYNAV_CHANGED,
                     g_variant_new("(iiii)", focused_x, focused_y, renderer_->width(), renderer_->height()));
@@ -425,10 +434,7 @@ void ResultViewGrid::OnKeyNavFocusChange(nux::Area *area, bool has_focus, nux::K
         focused_uri_ = results_.front().uri;
         selected_index_ = 0;
     }
-
-    int focused_x = 0;
-    int focused_y = 0;
-
+    
     int items_per_row = GetItemsPerRow();
 
     if (direction == nux::KEY_NAV_UP && expanded)
@@ -439,25 +445,19 @@ void ResultViewGrid::OnKeyNavFocusChange(nux::Area *area, bool has_focus, nux::K
 
       int total_rows = std::ceil(results_.size() / (double)items_per_row);
       selected_index_ = items_per_row * (total_rows-1);
-
-      focused_x = (renderer_->width + horizontal_spacing + extra_horizontal_spacing_) * (selected_index_ % items_per_row);
-      focused_y = (renderer_->height + vertical_spacing) * (selected_index_ / items_per_row);
-
     }
-    else
-    {
-      focused_x = (renderer_->width + horizontal_spacing + extra_horizontal_spacing_) * (selected_index_ % items_per_row);
-      focused_y = (renderer_->height + vertical_spacing) * (selected_index_ / items_per_row);
-    }
-
+    
     if (direction != nux::KEY_NAV_NONE)
     {
+      std::tuple<int, int> focused_coord = GetResultPosition(selected_index_);
+
+      int focused_x = std::get<0>(focused_coord);
+      int focused_y = std::get<1>(focused_coord);
       ubus_.SendMessage(UBUS_RESULT_VIEW_KEYNAV_CHANGED,
                         g_variant_new("(iiii)", focused_x, focused_y, renderer_->width(), renderer_->height()));
     }
 
     selection_change.emit();
-
   }
   else
   {
@@ -644,6 +644,9 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
 
 uint ResultViewGrid::GetIndexAtPosition(int x, int y)
 {
+  if (x < 0 || y < 0) 
+     return -1; 
+
   uint items_per_row = GetItemsPerRow();
 
   uint column_size = renderer_->width + horizontal_spacing + extra_horizontal_spacing_;
@@ -657,10 +660,46 @@ uint ResultViewGrid::GetIndexAtPosition(int x, int y)
   if (y < padding)
     return -1;
 
+  if (!preview_result_uri().empty())
+  {
+    // we have a preview so we have to deal with special positioning
+    std::tuple<int, int> preview_result_coord = GetResultPosition(cached_preview_index_);
+    if (static_cast<unsigned int>(y) > std::get<1>(preview_result_coord) + row_size)
+    {
+      // position is below the preview
+      y -= preview_spacer;
+    }
+  }
+
   uint row_number = std::max((y - padding), 0) / row_size ;
   uint column_number = std::max((x - padding), 0) / column_size;
 
   return (row_number * items_per_row) + column_number;
+}
+
+std::tuple<int, int> ResultViewGrid::GetResultPosition(const std::string& uri)
+{
+  unsigned int index = GetIndexForUri(uri);
+  cached_preview_index_ = index;
+  return GetResultPosition(index);
+}
+
+std::tuple<int, int> ResultViewGrid::GetResultPosition(const unsigned int& index)
+{
+  if (G_UNLIKELY(index >= results_.size() || index < 0)) 
+  {
+    LOG_ERROR(logger) << "index (" << index << ") does not exist in this category";;
+    return std::tuple<int, int>(0,0); 
+  } // out of bounds. 
+
+  int items_per_row = GetItemsPerRow();
+  int column_size = renderer_->width + horizontal_spacing + extra_horizontal_spacing_;
+  int row_size = renderer_->height + vertical_spacing;
+  
+  int y = row_size * (index / items_per_row) + padding;
+  int x = column_size * (index % items_per_row) + padding;
+
+  return std::tuple<int, int>(x, y);
 }
 
 /* --------
