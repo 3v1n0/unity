@@ -540,3 +540,26 @@ class CategoryHeaderTests(DashTestCase):
         self.mouse.click()
         self.assertThat(category.is_expanded, Eventually(Equals(is_expanded)))
 
+
+class PreviewInvocationTests(DashTestCase):
+    """Tests that previews can be opened and closed
+    """
+    def test_open_preview_close_preview(self):
+        """Right clicking on any result shall open a preview, 
+        escaping shall close the preview
+        """
+        lens = self.dash.reveal_application_lens()
+        self.addCleanup(self.dash.ensure_hidden)
+
+        category = lens.get_category_by_name("Installed")
+
+        self.mouse.move(self.dash.view.x + 64,  
+                        category.header_y + category.header_height + 32)
+
+        self.mouse.click(button=3)
+        #revealing a preview may be very slow, not sure if Eventually handles that nicely
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
+
+        self.keyboard.press_and_release("Escape")
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
