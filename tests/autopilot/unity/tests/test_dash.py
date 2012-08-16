@@ -10,7 +10,7 @@ from __future__ import absolute_import
 
 from autopilot.emulators.clipboard import get_clipboard_contents
 from autopilot.matchers import Eventually
-from testtools.matchers import Equals, NotEquals
+from testtools.matchers import Equals, NotEquals, GreaterThan
 from time import sleep
 
 from unity.tests import UnityTestCase
@@ -397,7 +397,8 @@ class DashLensResultsTests(DashTestCase):
         lens = self.dash.get_current_lens()
         self.keyboard.type(" ")
         self.assertThat(self.dash.search_string, Eventually(Equals(" ")))
-        results_category = lens.get_category_by_name("Installed")
+        results_category = lens.get_category_by_name(
+        lens = self.dash.get_current_lens())
         old_results = results_category.get_results()
 
         # FIXME: This should be a method on the dash emulator perhaps, or
@@ -538,5 +539,122 @@ class CategoryHeaderTests(DashTestCase):
         self.assertThat(category.is_expanded, Eventually(Equals(not is_expanded)))
 
         self.mouse.click()
-        self.assertThat(category.is_expanded, Eventually(Equals(is_expanded)))
+        #self.assertThat(category.is_expanded, Eventually(Equals(is_expanded)))
+
+class DashAppLensPreviewTests(DashTestCase):
+    """Tests that dash previews work in App Lens.
+    """
+    def assertSearchText(self, text):
+        self.assertThat(self.dash.search_string, Eventually(Equals(text)))
+
+    def test_app_preview_open(self):
+        """Test opening a dash preview in application lens (via right-click result).
+        """
+        self.dash.reveal_application_lens()
+        lens = self.dash.get_current_lens()
+        self.keyboard.type("Text Editor")
+        self.assertSearchText("Text Editor")
+
+        results_category = lens.get_category_by_name("Installed")
+        results = results_category.get_results()
+        # wait for a result
+        refresh_fn = lambda: len(results)
+        self.assertThat(refresh_fn, Eventually(GreaterThan(0)))
+
+        result = results[0]
+        result.preview()
+        #self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
+
+
+class DashFileLensPreviewTests(DashTestCase):
+    """Tests that dash previews work in File Lens.
+    """
+    def assertSearchText(self, text):
+        self.assertThat(self.dash.search_string, Eventually(Equals(text)))
+
+    def test_file_preview_open(self):
+        """Test opening a dash preview in file lens (via right-click result).
+        """
+        self.dash.reveal_file_lens()
+        lens = self.dash.get_current_lens()
+        self.keyboard.type("Documents")
+        self.assertSearchText("Documents")
+
+        results_category = lens.get_category_by_name("Folders")
+        results = results_category.get_results()
+        # wait for a result
+        refresh_fn = lambda: len(results)
+        self.assertThat(refresh_fn, Eventually(GreaterThan(0)))
+
+        result = results[0]
+        result.preview()
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
+
+
+class DashMusicLensPreviewTests(DashTestCase):
+    """Tests that dash previews work in Music Lens.
+    """
+    def assertSearchText(self, text):
+        self.assertThat(self.dash.search_string, Eventually(Equals(text)))
+
+    def test_music_preview_open(self):
+        """Test opening a dash preview in music lens (via right-click result).
+        """
+        self.dash.reveal_music_lens()
+        lens = self.dash.get_current_lens()
+        self.keyboard.type("Text Editor")
+        self.assertSearchText("Text Editor")
+
+        results_category = lens.get_category_by_name("Installed")
+        results = results_category.get_results()
+        # wait for a result
+        refresh_fn = lambda: len(results)
+        self.assertThat(refresh_fn, Eventually(GreaterThan(0)))
+
+        result = results[0]
+        result.preview()
+        #self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
+
+
+class DashVideoLensPreviewTests(DashTestCase):
+    """Tests that dash previews work in Video Lens.
+    """
+    def assertSearchText(self, text):
+        self.assertThat(self.dash.search_string, Eventually(Equals(text)))
+
+    def test_video_preview_open(self):
+        """Test opening a dash preview in video lens (via right-click result).
+        """
+        self.dash.reveal_video_lens()
+        lens = self.dash.get_current_lens()
+        self.keyboard.type("Text Editor")
+        self.assertSearchText("Text Editor")
+
+        results_category = lens.get_category_by_name("Installed")
+        results = results_category.get_results()
+        # wait for a result
+        refresh_fn = lambda: len(results)
+        self.assertThat(refresh_fn, Eventually(GreaterThan(0)))
+
+        result = results[0]
+        result.preview()
+        #self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

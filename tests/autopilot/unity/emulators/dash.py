@@ -164,6 +164,13 @@ class DashView(UnityIntrospectionObject):
             if lens.name == lens_name:
                 return lens
 
+    def get_preview_container(self):
+        """Get the preview container attached to this dash view."""
+        preview_containers = self.get_children_by_type(PreviewContainer)
+        for preview_container in preview_containers:
+            return preview_container
+        return None
+
 
 class SearchBar(UnityIntrospectionObject):
     """The search bar for the dash view."""
@@ -238,6 +245,20 @@ class ResultView(UnityIntrospectionObject):
 class Result(UnityIntrospectionObject):
     """A single result in the dash."""
 
+    def activate(self):
+        tx = self.x + (self.width / 2)
+        ty = self.y + (self.height / 2)
+        m = Mouse()
+        m.move(tx, ty)
+        m.click(1)
+
+    def preview(self):
+        tx = self.x + (self.width / 2)
+        ty = self.y + (self.height / 2)
+        m = Mouse()
+        m.move(tx, ty)
+        m.click(3)
+
 
 class FilterBar(UnityIntrospectionObject):
     """A filterbar, as shown inside a lens."""
@@ -298,3 +319,143 @@ class FilterBar(UnityIntrospectionObject):
 
 class FilterExpanderLabel(UnityIntrospectionObject):
     """A label that expands into a filter within a filter bar."""
+
+
+class CoverArt(UnityIntrospectionObject):
+    """A view which can be used to show a texture, or generate one using a thumbnailer."""
+
+
+class RatingsButton(UnityIntrospectionObject):
+    """A button which shows user rating as a function of stars."""
+
+
+class Preview(UnityIntrospectionObject):
+    """A preview of a dash lens result."""
+
+    def get_num_actions(self):
+        """Get the number of actions for the preview."""
+        actions = self.get_children_by_type(ActionButton)
+        return len(actions)
+
+    def get_action_by_id(self, action_id):
+        """Returns the action given it's action hint."""
+        actions = self.get_children_by_type(ActionButton)
+        for action in actions:
+            if action.action == action_id:
+                return action
+        return None
+
+    def execute_action_by_id(action_id, action):
+        """Executes an action given by the id."""
+        action = self.get_action_by_id(action_id)
+        if action:
+            tx = action.x + (searchbar.width / 2)
+            ty = action.y + (searchbar.height / 2)
+            m = Mouse()
+            m.move(tx, ty)
+            m.click()
+
+class PreviewContent(UnityIntrospectionObject):
+    """A preview content layout for the dash previews."""
+
+
+class PreviewContainer(UnityIntrospectionObject):
+    """A container view for the main dash preview widget."""
+
+    @property
+    def content(self):
+        return self.get_content()
+
+    @property
+    def lef_navigator(self):
+        return self.get_left_navigator()
+    
+    @property
+    def right_navigator(self):
+        return self.get_right_navigator()
+
+    def get_num_previews(self):
+        """Get the number of previews queued and current in the container."""
+        previews = self.content.get_children_by_type(Preview)
+        return len(previews)
+
+    def get_content(self):
+        """Get the preview content layout for the container."""
+        return self.get_children_by_type(PreviewContent)[0]
+
+    def get_left_navigator(self):
+        """Return the left navigator object"""
+        navigators = self.get_children_by_type(PreviewNavigator)
+        for nav in navigators:
+            if nav.orientation == 2:
+                return action
+        return None
+    
+    def get_right_navigator(self):
+        """Return the right navigator object"""
+        navigators = self.get_children_by_type(PreviewNavigator)
+        for nav in navigators:
+            if nav.orientation == 3:
+                return action
+        return None
+
+    def navigate_left(self):
+        """Navigate preview left"""
+        navigator_icon = self.lef_navigator.icon()
+
+        if navigator_icon:
+            tx = navigator_icon.x + (navigator_icon.width / 2)
+            ty = navigator_icon.y + (navigator_icon.height / 2)
+            m = Mouse()
+            m.move(tx, ty)
+            m.click()
+
+    def navigate_right(self):
+        """Navigate preview right"""
+        navigator_icon = self.right_navigator.icon()
+
+        if navigator_icon:
+            tx = navigator_icon.x + (navigator_icon.width / 2)
+            ty = navigator_icon.y + (navigator_icon.height / 2)
+            m = Mouse()
+            m.move(tx, ty)
+            m.click()
+
+    @property
+    def animating(self):
+        """Return True if the preview, False otherwise."""
+        return content.animating
+
+    @property
+    def waiting_preview(self):
+        """Return True if the preview, False otherwise."""
+        return content.waiting_preview
+
+    @property
+    def animation_progress(self):
+        """Return True if the preview, False otherwise."""
+        content = self._get_content()
+        return content.animation_progress
+
+class PreviewNavigator(UnityIntrospectionObject):
+    """A view containing a button to nagivate between previews."""
+
+    def icon(self):
+        return self.get_children_by_type(IconTexture);
+
+
+class PreviewRatingsWidget(UnityIntrospectionObject):
+    """A view containing a rating button and user rating count."""
+
+
+class Tracks(UnityIntrospectionObject):
+    """A view containing music tracks."""
+
+
+class Track(UnityIntrospectionObject):
+    """A singular music track for dash prevews."""
+
+
+class ActionButton(UnityIntrospectionObject):
+    """A preview action button."""
+
