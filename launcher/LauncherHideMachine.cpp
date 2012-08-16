@@ -128,7 +128,6 @@ void LauncherHideMachine::EnsureHideState(bool skip_delay)
     // first we check the condition where external DND is active and the push off has happened
     if (GetQuirk((HideQuirk)(EXTERNAL_DND_ACTIVE | DND_PUSHED_OFF), false))
     {
-      printf("Drag...should hide\n");
       should_hide = true;
       break;
     }
