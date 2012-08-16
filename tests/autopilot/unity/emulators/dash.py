@@ -9,7 +9,6 @@
 
 from __future__ import absolute_import
 
-from autopilot.introspection.dbus import make_introspection_object
 from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.keybindings import KeybindingsHelper
 
@@ -298,7 +297,7 @@ class FilterBar(UnityIntrospectionObject):
         """
         searchbar_state = self.get_state_by_path("//DashView/SearchBar")
         assert(len(searchbar_state) == 1)
-        return make_introspection_object(searchbar_state[0])
+        return self.make_introspection_object(searchbar_state[0])
 
 
 class FilterExpanderLabel(UnityIntrospectionObject):
