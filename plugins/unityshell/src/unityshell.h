@@ -340,12 +340,12 @@ private:
   glib::Object<GSettings> _settings;
   int _minimize_count;
   int _minimize_speed_threshold;
-  int _minimize_min_speed;
-  int _minimize_max_speed;
+  int _minimize_slow_duration;
+  int _minimize_fast_duration;
   glib::Signal<void, GSettings*, gchar* > _minimize_count_changed;
   glib::Signal<void, GSettings*, gchar* > _minimize_speed_threshold_changed;
-  glib::Signal<void, GSettings*, gchar* > _minimize_min_speed_changed;
-  glib::Signal<void, GSettings*, gchar* > _minimize_max_speed_changed;
+  glib::Signal<void, GSettings*, gchar* > _minimize_slow_duration_changed;
+  glib::Signal<void, GSettings*, gchar* > _minimize_fast_duration_changed;
 
   friend class UnityWindow;
 };

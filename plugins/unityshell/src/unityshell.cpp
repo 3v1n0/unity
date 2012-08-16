@@ -132,8 +132,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , _settings(g_settings_new(local::UNITY_SCHEMA.c_str()))
   , _minimize_count(g_settings_get_int(_settings, "minimize-count"))
   , _minimize_speed_threshold(g_settings_get_int(_settings, "minimize-speed-threshold"))
-  , _minimize_min_speed(g_settings_get_int(_settings, "minimize-min-speed"))
-  , _minimize_max_speed(g_settings_get_int(_settings, "minimize-max-speed"))
+  , _minimize_slow_duration(g_settings_get_int(_settings, "minimize-slow-duration"))
+  , _minimize_fast_duration(g_settings_get_int(_settings, "minimize-fast-duration"))
 {
   Timer timer;
   gfloat version;
@@ -404,14 +404,14 @@ UnityScreen::UnityScreen(CompScreen* screen)
     _minimize_speed_threshold = g_settings_get_int(_settings, name);
     SetMinimizeSpeed();
   });
-  _minimize_max_speed_changed.Connect(_settings, "changed::minimize-max-speed",
+  _minimize_fast_duration_changed.Connect(_settings, "changed::minimize-fast-duration",
                                       [&] (GSettings*, gchar* name) {
-    _minimize_max_speed = g_settings_get_int(_settings, name);
+    _minimize_fast_duration = g_settings_get_int(_settings, name);
     SetMinimizeSpeed();
   });
-  _minimize_min_speed_changed.Connect(_settings, "changed::minimize-min-speed",
+  _minimize_slow_duration_changed.Connect(_settings, "changed::minimize-slow-duration",
                                       [&] (GSettings*, gchar* name) {
-    _minimize_min_speed = g_settings_get_int(_settings, name);
+    _minimize_slow_duration = g_settings_get_int(_settings, name);
     SetMinimizeSpeed();
   });
 }
@@ -2617,12 +2617,12 @@ UnityWindow::minimized ()
 void UnityScreen::SetMinimizeSpeed()
 {
   /* Perform some sanity checks on the configuration values */
-  if (_minimize_max_speed > _minimize_min_speed)
+  if (_minimize_fast_duration > _minimize_slow_duration)
   {
-    LOG_WARN(logger) << "Configuration mismatch: minimize-max-speed (" 
-                      << _minimize_max_speed
-                      << ") is slower than minimize-min-speed ("
-                      << _minimize_min_speed << "). Not changing speed.";
+    LOG_WARN(logger) << "Configuration mismatch: minimize-fast-duration (" 
+                      << _minimize_fast_duration
+                      << ") is longer than minimize-slow-duration ("
+                      << _minimize_slow_duration << "). Not changing speed.";
     return;
   }
   
@@ -2633,10 +2633,10 @@ void UnityScreen::SetMinimizeSpeed()
   
   /* Adjust the speed so that it gets linearly closer to maximum speed as we
      approach the threshold */
-  int speed_range = _minimize_min_speed - _minimize_max_speed;
+  int speed_range = _minimize_slow_duration - _minimize_fast_duration;
   float position = (_minimize_speed_threshold <= 0) ? 1.0 :
                    static_cast<float>(_minimize_count) / _minimize_speed_threshold;
-  int speed = _minimize_min_speed - std::ceil(position * speed_range);
+  int speed = _minimize_slow_duration - std::ceil(position * speed_range);
   
   /* Update the compiz plugin setting with the new computed speed so that it
    * will be used in the following minimizations */
