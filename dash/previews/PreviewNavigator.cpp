@@ -27,6 +27,7 @@
 #include <Nux/VLayout.h>
 #include <unity-shared/IconTexture.h>
 #include <unity-shared/PreviewStyle.h>
+#include <UnityCore/Variant.h>
 
 namespace unity
 {
@@ -51,20 +52,22 @@ PreviewNavigator::PreviewNavigator(Orientation orientation, NUX_FILE_LINE_DECL)
   SetupViews();
 }
 
-std::string PreviewNavigator::GetName() const
-{
-  return "PreviewNavigator";
-}
-
 void PreviewNavigator::SetEnabled(bool enabled)
 {
   texture_->SetEnableView(enabled);
   texture_->SetVisible(enabled);
 }
 
+std::string PreviewNavigator::GetName() const
+{
+  return "PreviewNavigator";
+}
+
 void PreviewNavigator::AddProperties(GVariantBuilder* builder)
 {
-
+  variant::BuilderWrapper(builder)
+    .add(GetGeometry())
+    .add("orientation", static_cast<int>(orientation_));
 }
 
 void PreviewNavigator::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
@@ -129,6 +132,7 @@ void PreviewNavigator::SetupViews()
 
   if (texture_)
   {
+    AddChild(texture_);
     texture_->mouse_click.connect([&](int, int, unsigned long, unsigned long) { activated.emit(); });
     layout_->AddView(texture_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);    
   }

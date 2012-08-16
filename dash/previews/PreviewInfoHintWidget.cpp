@@ -86,6 +86,8 @@ std::string PreviewInfoHintWidget::GetName() const
 
 void PreviewInfoHintWidget::AddProperties(GVariantBuilder* builder)
 {
+  variant::BuilderWrapper(builder)
+    .add(GetGeometry());
 }
 
 std::string StringFromVariant(GVariant* variant)

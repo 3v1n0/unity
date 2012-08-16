@@ -56,7 +56,7 @@ const int ANIM_DURATION_LONG = 500;
 const std::string ANIMATION_IDLE = "animation-idle";
 }
 
-class PreviewContent : public nux::Layout
+class PreviewContent : public nux::Layout, public debug::Introspectable
 {
 public:
   PreviewContent(PreviewContainer*const parent)
@@ -71,12 +71,27 @@ public:
     spin_= style.GetSearchSpinIcon(256);
   }
 
+  // From debug::Introspectable
+  std::string GetName() const
+  {
+    return "PreviewContent";
+  }
+
+  void AddProperties(GVariantBuilder* builder)
+  {
+    variant::BuilderWrapper(builder)
+      .add("animating", animating_)
+      .add("animation_progress", progress_)
+      .add("waiting_preview", waiting_preview_);
+  }
+
   void PushPreview(previews::Preview::Ptr preview, Navigation direction)
   {
     StopPreviewWait();
 
     if (preview)
     {
+      AddChild(preview.GetPointer());
       AddView(preview.GetPointer());
       preview->SetVisible(false);
     }
@@ -152,6 +167,7 @@ public:
       animating_ = false;
       if (current_preview_)
       {
+        RemoveChild(current_preview_.GetPointer());
         RemoveChildObject(current_preview_.GetPointer());
         current_preview_.Release();
       }
@@ -363,6 +379,8 @@ std::string PreviewContainer::GetName() const
 
 void PreviewContainer::AddProperties(GVariantBuilder* builder)
 {
+  variant::BuilderWrapper(builder)
+    .add(GetGeometry());
 }
 
 void PreviewContainer::SetupViews()
@@ -380,6 +398,7 @@ void PreviewContainer::SetupViews()
   layout_->AddView(nav_left_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   content_layout_ = new PreviewContent(this);
+  AddChild(content_layout_);
   layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   nav_right_ = new PreviewNavigator(Orientation::RIGHT, NUX_TRACKER_LOCATION);

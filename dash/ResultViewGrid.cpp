@@ -27,6 +27,7 @@
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 
+#include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/Timer.h"
 #include "unity-shared/ubus-server.h"
 #include "unity-shared/UBusMessages.h"
@@ -872,6 +873,22 @@ int
 ResultViewGrid::GetSelectedIndex()
 {
   return selected_index_;
+}
+
+ResultViewGrid::IntrospectableList
+ResultViewGrid::GetIntrospectableChildren()
+{
+  ClearIntrospectableWrappers();
+
+  int i = 0;
+  for (auto result: results_)
+  {
+    // prospective positioning of items.
+    std::tuple<int, int> result_coord = GetResultPosition(i++);
+    nux::Geometry geo(std::get<0>(result_coord), std::get<0>(result_coord), renderer_->width, renderer_->height);
+    introspectable_children_.push_back(new debug::ResultWrapper(result, geo));
+  }
+  return introspectable_children_;
 }
 
 }

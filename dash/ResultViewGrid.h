@@ -55,6 +55,9 @@ public:
   int GetSelectedIndex();
   virtual uint GetIndexAtPosition(int x, int y);
 
+  // This is overridden so we can include position of results.
+  IntrospectableList GetIntrospectableChildren();
+
 protected:
   void MouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
   void MouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags);

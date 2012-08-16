@@ -202,6 +202,7 @@ void MoviePreview::SetupView()
       /////////////////////
       
       rating_ = new PreviewRatingsWidget();
+      AddChild(rating_.GetPointer());
       rating_->SetMaximumHeight(style.GetRatingWidgetHeight());
       rating_->SetMinimumHeight(style.GetRatingWidgetHeight());
       rating_->SetRating(movie_preview_model->rating);
@@ -219,6 +220,7 @@ void MoviePreview::SetupView()
       if (!preview_model_->GetInfoHints().empty())
       {
         preview_info_hints_ = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth());
+        AddChild(preview_info_hints_.GetPointer());
         preview_info_layout->AddView(preview_info_hints_.GetPointer(), 0);
       }
 

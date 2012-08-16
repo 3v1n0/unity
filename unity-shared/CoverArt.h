@@ -30,6 +30,7 @@
 #include <UnityCore/GLibSource.h>
 #include <NuxCore/ObjectPtr.h>
 #include "unity-shared/StaticCairoText.h"
+#include "unity-shared/Introspectable.h"
 #include "ThumbnailGenerator.h"
 
 namespace unity
@@ -39,7 +40,7 @@ namespace dash
 namespace previews
 {
 
-class CoverArt : public nux::View
+class CoverArt : public nux::View, public unity::debug::Introspectable
 {
 public:
   typedef nux::ObjectPtr<CoverArt> Ptr;
@@ -52,9 +53,6 @@ public:
   void SetImage(std::string const& image_hint);
   // Use for generating an image for a uri which is not necessarily an image.
   void GenerateImage(std::string const& uri);
-
-  // From debug::Introspectable
-  std::string GetName() const;
 
   void SetFont(std::string const& font);
 
@@ -73,6 +71,9 @@ protected:
 
   void StartWaiting();
   void SetNoImageAvailable();
+
+  virtual std::string GetName() const;
+  virtual void AddProperties(GVariantBuilder* builder);
 
 private:
   nux::ObjectPtr<nux::BaseTexture> texture_screenshot_;

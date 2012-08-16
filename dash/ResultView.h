@@ -70,13 +70,13 @@ protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual long ComputeContentSize();
+
+  void ClearIntrospectableWrappers();
+
   // properties
   ResultRenderer* renderer_;
   ResultList results_;
   IntrospectableList introspectable_children_;
-
-private:
-  void ClearIntrospectableWrappers();
 };
 
 }

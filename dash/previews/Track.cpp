@@ -29,6 +29,7 @@
 #include <unity-shared/IconTexture.h>
 #include <unity-shared/DashStyle.h>
 #include <unity-shared/PreviewStyle.h>
+#include <UnityCore/Variant.h>
 
 namespace unity
 {
@@ -140,6 +141,11 @@ std::string Track::GetName() const
 
 void Track::AddProperties(GVariantBuilder* builder)
 {
+  variant::BuilderWrapper(builder)
+    .add(GetGeometry())
+    .add("uri", uri_)
+    .add("play-state", play_state_)
+    .add("progress", progress_);
 }
 
 void Track::Update(dash::Track const& track)
