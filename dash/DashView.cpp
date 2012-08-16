@@ -400,7 +400,7 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   if (preview_displaying_)
   {
    // disabled until the draw cycle in previews can be improved
-   //preview_container_->ProcessDraw(gfx_context, force_draw);
+   preview_container_->ProcessDraw(gfx_context, force_draw);
   }
   else
   {
