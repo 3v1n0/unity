@@ -369,9 +369,9 @@ void HomeLens::ResultsMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *it
     DeeModelTag* target_tag = FindSourceToTargetTag(model);
     dee_model_set_tag(model, iter, target_tag, target_iter);
 
-    /*LOG_DEBUG(logger) << "Found " << dee_model_get_string(model, iter, 0)
+    LOG_DEBUG(logger) << "Found " << dee_model_get_string(model, iter, 0)
                       << " (source cat " << source_cat_offset << ", target cat "
-                      << target_cat_offset << ")";*/
+                      << target_cat_offset << ")";
   }
   else
   {

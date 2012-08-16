@@ -43,6 +43,8 @@ nux::logging::Logger logger("unity.dash.lensview");
 
 const int CARD_VIEW_GAP_VERT  = 24; // pixels
 const int CARD_VIEW_GAP_HORIZ = 25; // pixels
+
+const unsigned CATEGORY_COLUMN = 2;
 }
 
 // This is so we can access some protected members in scrollview.
@@ -251,7 +253,7 @@ void LensView::SetupResults()
       PlacesGroup* group = categories_[i];
       ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
       DeeFilter filter;
-      dee_filter_new_for_any_column(2, g_variant_new_uint32 (i), &filter);
+      GetFilterForCategoryIndex(i, &filter);
       glib::Object<DeeModel> filter_model(dee_filter_model_new(model, &filter));
       Results::Ptr results_model = lens_->results;
       grid->SetModel(filter_model, results_model->GetTag());
@@ -333,7 +335,7 @@ void LensView::OnCategoryAdded(Category const& category)
   if (results_model->model())
   {
     DeeFilter filter;
-    dee_filter_new_for_any_column(2, g_variant_new_uint32 (index), &filter);
+    GetFilterForCategoryIndex(index, &filter);
     glib::Object<DeeModel> filter_model(dee_filter_model_new(results_model->model(), &filter));
     grid->SetModel(filter_model, results_model->GetTag());
   }
@@ -368,7 +370,7 @@ void LensView::OnCategoryAdded(Category const& category)
 
 void LensView::OnCategoryOrderChanged()
 {
-  LOG_WARN(logger) << "Reordering categories for " << lens_->name();
+  LOG_DEBUG(logger) << "Reordering categories for " << lens_->name();
 
   // need references so that the Layout doesn't destroy the views
   std::vector<nux::ObjectPtr<PlacesGroup> > child_views;
@@ -394,6 +396,52 @@ void LensView::OnCategoryOrderChanged()
   }
 }
 
+static void category_filter_map_func (DeeModel* orig_model,
+                                      DeeFilterModel* filter_model,
+                                      gpointer user_data)
+{
+  DeeModelIter* iter;
+  DeeModelIter* end;
+  unsigned index = GPOINTER_TO_UINT(user_data);
+
+  iter = dee_model_get_first_iter(orig_model);
+  end = dee_model_get_last_iter(orig_model);
+  while (iter != end)
+  {
+    unsigned category_index = dee_model_get_uint32(orig_model, iter,
+                                                   CATEGORY_COLUMN);
+    if (index == category_index)
+    {
+      dee_filter_model_append_iter(filter_model, iter);
+    }
+    iter = dee_model_next(orig_model, iter);
+  }
+}
+
+static gboolean category_filter_notify_func (DeeModel* orig_model,
+                                             DeeModelIter* orig_iter,
+                                             DeeFilterModel* filter_model,
+                                             gpointer user_data)
+{
+  unsigned index = GPOINTER_TO_UINT(user_data);
+  unsigned category_index = dee_model_get_uint32(orig_model, orig_iter,
+                                                 CATEGORY_COLUMN);
+
+  if (index != category_index)
+    return FALSE;
+
+  dee_filter_model_insert_iter_with_original_order(filter_model, orig_iter);
+  return TRUE;
+}
+
+void LensView::GetFilterForCategoryIndex(unsigned index, DeeFilter* filter)
+{
+  filter->map_func = category_filter_map_func;
+  filter->map_notify = category_filter_notify_func;
+  filter->destroy = nullptr;
+  filter->userdata = GUINT_TO_POINTER(index);
+}
+
 bool LensView::ReinitializeFilterModels()
 {
   Results::Ptr results_model = lens_->results;
@@ -402,7 +450,7 @@ bool LensView::ReinitializeFilterModels()
     PlacesGroup* group = categories_[i];
     ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
     DeeFilter filter;
-    dee_filter_new_for_any_column(2, g_variant_new_uint32 (i), &filter);
+    GetFilterForCategoryIndex(i, &filter);
     glib::Object<DeeModel> filter_model(dee_filter_model_new(results_model->model(), &filter));
     grid->SetModel(filter_model, results_model->GetTag());
   }
