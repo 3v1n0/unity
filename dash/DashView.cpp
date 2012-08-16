@@ -16,6 +16,7 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
+
 #include "DashView.h"
 #include "DashViewPrivate.h"
 
@@ -35,6 +36,7 @@
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/PreviewStyle.h"
 
+#include "Nux/NuxTimerTickSource.h"
 
 namespace unity
 {
@@ -89,6 +91,10 @@ DashView::DashView()
   , activate_on_finish_(false)
   , visible_(false)
 {
+  SetRedirectRenderingToTexture(true); // render this view into an offscreen texture.
+  tick_source_.reset(new nux::NuxTimerTickSource);
+  animation_controller_.reset(new na::AnimationController(*tick_source_));
+
   renderer_.SetOwner(this);
   renderer_.need_redraw.connect([this] () {
     QueueDraw();
@@ -130,10 +136,38 @@ void DashView::ClosePreview()
   QueueDraw();
 }
 
+void DashView::FadeOutCallBack(float const& fade_out_value)
+{
+  fade_out_value_ = fade_out_value;
+  QueueDraw();
+}
+
 void DashView::BuildPreview(Preview::Ptr model)
 {
   if (!preview_displaying_)
   {
+    // Make a copy of this DashView backup texture.
+    {
+      nux::TexCoordXForm texxform;
+      nux::ObjectPtr<nux::IOpenGLBaseTexture> src_texture = BackupTexture();
+      nux::GetGraphicsDisplay()->GetGraphicsEngine()->QRP_GetCopyTexture(
+        GetWidth(), GetHeight(),
+        dash_view_copy_, src_texture,
+        texxform, nux::color::White);
+
+      // Set fade animation
+      animation_.SetDuration(1000);
+      animation_.SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::Linear));
+      animation_.updated.connect(sigc::mem_fun(this, &DashView::FadeOutCallBack));
+
+      fade_out_value_ = 1.0f;
+      animation_.SetStartValue(fade_out_value_);
+      animation_.SetFinishValue(0.0f);
+      animation_.Start();
+
+
+    }
+
     preview_container_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
     AddChild(preview_container_.GetPointer());
     preview_container_->Preview(model, previews::Navigation::NONE); // no swipe left or right
@@ -378,15 +412,27 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
   return nux::Geometry(0, 0, width, height);
 }
 
-void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
+void DashView::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
-  renderer_.DrawFull(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
+  renderer_.DrawFull(graphics_engine, content_geo_, GetAbsoluteGeometry(), GetGeometry());
   
   // we only do this because the previews don't redraw correctly right now, so we have to force
   // a full redraw every frame. performance sucks but we'll fix it post FF
+
   if (preview_displaying_)
   {
-    preview_container_->ProcessDraw(gfx_context, true); 
+    if (dash_view_copy_.IsValid())
+    {
+      graphics_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+      nux::TexCoordXForm texxform;
+      graphics_engine.QRP_1Tex(GetX(), GetY(), GetWidth(), GetHeight(),
+        dash_view_copy_, texxform, 
+        nux::Color(fade_out_value_, fade_out_value_, fade_out_value_, fade_out_value_));
+
+      graphics_engine.GetRenderStates().SetBlend(false);
+    }
+
+    preview_container_->ProcessDraw(graphics_engine, true); 
   }
 }
 

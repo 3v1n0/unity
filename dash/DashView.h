@@ -23,6 +23,8 @@
 #include <Nux/PaintLayer.h>
 #include <Nux/View.h>
 #include <Nux/VLayout.h>
+#include <Nux/NuxTimerTickSource.h>
+
 #include <UnityCore/FilesystemLenses.h>
 #include <UnityCore/HomeLens.h>
 #include <UnityCore/GLibSource.h>
@@ -37,6 +39,8 @@
 #include "UnityCore/Preview.h"
 #include "previews/PreviewContainer.h"
 #include "PreviewStateMachine.h"
+
+namespace na = nux::animation;
 
 namespace unity
 {
@@ -150,6 +154,14 @@ private:
 
   glib::Source::UniquePtr searching_timeout_;
   glib::Source::UniquePtr hide_message_delay_;
+
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> dash_view_copy_;
+  float fade_out_value_;
+  std::unique_ptr<nux::NuxTimerTickSource> tick_source_;
+  std::unique_ptr<na::AnimationController> animation_controller_;
+  na::AnimateValue<float> animation_;
+
+  void FadeOutCallBack(float const& fade_out_value);
 };
 
 
