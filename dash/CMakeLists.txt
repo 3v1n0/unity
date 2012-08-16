@@ -51,6 +51,7 @@ set (DASH_SOURCES
      LensView.cpp
      LensViewPrivate.cpp
      PlacesGroup.cpp
+     PreviewStateMachine.cpp
      ResultRenderer.cpp
      ResultRendererHorizontalTile.cpp
      ResultRendererTile.cpp

@@ -82,6 +82,15 @@
 // FIXME - fix the nux focus api so we don't need this
 #define UBUS_RESULT_VIEW_KEYNAV_CHANGED "RESULT_VIEW_KEYNAV_CHANGED"
 
+// for communicating positions to the preview state machine (iii)
+// (split y coord in absolute geometry, results to the left, results to the right)
+#define UBUS_DASH_PREVIEW_INFO_PAYLOAD "DASH_PREVIEW_INFO_PAYLOAD"
+
+// called when previews wish to navigate left/right or close (is)
+// -1 = left, 0 = close, 1 = right, 
+// string is the uri string that last result activated was
+#define UBUS_DASH_PREVIEW_NAVIGATION_REQUEST "DASH_PREVIEW_NAVIGATION_REQUEST"
+
 // Sends a string datatype containing the new icon name
 #define UBUS_HUD_ICON_CHANGED "HUD_ICON_CHANGED"
 #define UBUS_HUD_CLOSE_REQUEST "HUD_CLOSE_REQUEST"

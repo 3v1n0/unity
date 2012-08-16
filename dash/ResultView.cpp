@@ -129,6 +129,19 @@ unsigned int ResultView::GetIndexForUri(const std::string& uri)
   return index;
 }
 
+std::string ResultView::GetUriForIndex(unsigned int index)
+{
+  if (index >= results_.size())
+    return "";
+  
+  return results_[index].uri();
+}
+
+unsigned int ResultView::GetModelSize()
+{
+  return results_.size();
+}
+
 long ResultView::ComputeContentSize()
 {
   return View::ComputeContentSize();
