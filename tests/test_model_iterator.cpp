@@ -96,11 +96,11 @@ TEST_F(TestResultIterator, TestCopy)
   ResultIterator one(results->model());
   ResultIterator two(one);
 
-  EXPECT_TRUE(one == two);
+  EXPECT_EQ(one, two);
 
   ResultIterator const& original = two++;
-  EXPECT_TRUE(original == one);
-  EXPECT_FALSE(one == two);
+  EXPECT_EQ(original, one);
+  EXPECT_NE(one, two);
 }
 
 TEST_F(TestResultIterator, TestIncrement)
@@ -110,12 +110,12 @@ TEST_F(TestResultIterator, TestIncrement)
 
   ResultIterator it(results->model());
 
-  EXPECT_TRUE((*it).uri == "file:///foo.txt");
-  EXPECT_TRUE((*it).name == "Result #1");
+  EXPECT_EQ((*it).uri, "file:///foo.txt");
+  EXPECT_EQ((*it).name, "Result #1");
 
   it++;
-  EXPECT_TRUE((*it).uri == "file:///qoo.txt");
-  EXPECT_TRUE((*it).name == "Result #2");
+  EXPECT_EQ((*it).uri, "file:///qoo.txt");
+  EXPECT_EQ((*it).name, "Result #2");
 
   it++;
   EXPECT_TRUE(it.IsLast());

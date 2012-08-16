@@ -464,12 +464,10 @@ void LensView::OnResultAdded(Result const& result)
 {
   try {
     PlacesGroup* group = categories_.at(result.category_index);
-    //ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
 
     std::string uri = result.uri;
     LOG_TRACE(logger) << "Result added: " << uri;
 
-    //grid->AddResult(const_cast<Result&>(result));
     counts_[group]++;
     UpdateCounts(group);
     // make sure we don't display the no-results-hint if we do have results
@@ -488,12 +486,10 @@ void LensView::OnResultRemoved(Result const& result)
 {
   try {
     PlacesGroup* group = categories_.at(result.category_index);
-    //ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
 
     std::string uri = result.uri;
     LOG_TRACE(logger) << "Result removed: " << uri;
 
-    //grid->RemoveResult(const_cast<Result&>(result));
     counts_[group]--;
     UpdateCounts(group);
   } catch (std::out_of_range& oor) {

@@ -41,6 +41,9 @@ namespace
 
 nux::logging::Logger logger("unity.dash.homelens");
 
+const gchar* const HOMELENS_PRIORITY = "unity-homelens-priority";
+const gchar* const HOMELENS_RESULTS_MODEL = "unity-homelens-results-model";
+
 }
 
 /*
@@ -317,7 +320,7 @@ void HomeLens::ModelMerger::AddSource(Lens::Ptr& owner_lens,
   {
     if (it->second == source)
       return; // this model was already added
-    sig_manager_.Disconnect(it->second.RawPtr());
+    sig_manager_.Disconnect(it->second);
   }
   sources_by_owner_[owner_lens] = source;
 
@@ -394,7 +397,7 @@ void HomeLens::CategoryMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *i
   EnsureRowBuf(model);
 
   results_model = static_cast<DeeModel*>(g_object_get_data(
-                              G_OBJECT(model), "unity-homelens-results-model"));
+                              G_OBJECT(model), HOMELENS_RESULTS_MODEL));
   if (results_model == NULL)
   {
     LOG_DEBUG(logger) << "Category model " << model
@@ -429,7 +432,7 @@ void HomeLens::CategoryMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *i
                                           display_name);
 
   gsize lens_priority = GPOINTER_TO_SIZE(g_object_get_data(
-                                   G_OBJECT(model), "unity-homelens-priority"));
+                                   G_OBJECT(model), HOMELENS_PRIORITY));
   unsigned lens_prio = static_cast<unsigned>(lens_priority);
   category_ordering_.insert(std::pair<unsigned, unsigned>(lens_prio, target_cat_index));
   if (category_ordering_.rbegin()->second != target_cat_index)
@@ -662,12 +665,12 @@ void HomeLens::Impl::EnsureCategoryAnnotation (Lens::Ptr& lens,
     }
 
     g_object_set_data(G_OBJECT(categories),
-                      "unity-homelens-results-model",
+                      HOMELENS_RESULTS_MODEL,
                       results);
 
     gsize lens_priority = FindLensPriority(lens);
     g_object_set_data(G_OBJECT(categories),
-                      "unity-homelens-priority",
+                      HOMELENS_PRIORITY,
                       GSIZE_TO_POINTER(lens_priority));
 
     LOG_DEBUG(logger) << "Registering results model "  << results
