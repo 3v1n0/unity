@@ -64,6 +64,8 @@ public:
   void Activate(std::string const& uri);
   void Preview(std::string const& uri);
 
+  std::vector<unsigned> GetCategoriesOrder();
+
 private:
   class Impl;
   class ModelMerger;

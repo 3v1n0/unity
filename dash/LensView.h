@@ -82,6 +82,7 @@ private:
   void SetupFilters();
 
   void OnCategoryAdded(Category const& category);
+  void OnCategoryOrderChanged();
   void OnResultAdded(Result const& result);
   void OnResultRemoved(Result const& result);
   void UpdateCounts(PlacesGroup* group);
@@ -92,6 +93,9 @@ private:
   void OnViewTypeChanged(ViewType view_type);
   void QueueFixRenderering();
   bool FixRenderering();
+  bool ReinitializeFilterModels();
+
+  static void GetFilterForCategoryIndex(unsigned index, DeeFilter* filter);
 
   virtual void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
@@ -122,6 +126,8 @@ private:
   std::string last_activated_result_uri_;
   UBusManager ubus_manager_;
   glib::Source::UniquePtr fix_rendering_idle_;
+  int last_good_filter_model_;
+  glib::Source::UniquePtr fix_filter_models_idle_;
 };
 
 

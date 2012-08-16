@@ -63,6 +63,7 @@ public:
            ModelType::LOCAL)
   {
     search_in_global(true);
+    connected.SetGetterFunction(sigc::mem_fun(this, &StaticTestLens::force_connected));
 
     DeeModel* cats = categories()->model();
     DeeModel* results = global_results()->model();
@@ -87,6 +88,11 @@ public:
   }
 
   virtual ~StaticTestLens() {}
+
+  bool force_connected()
+  {
+    return true;
+  }
 
   virtual void DoGlobalSearch(string const& search_string)
   {

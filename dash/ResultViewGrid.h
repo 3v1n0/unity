@@ -43,8 +43,6 @@ public:
   ResultViewGrid(NUX_FILE_LINE_DECL);
 
   void SetModelRenderer(ResultRenderer* renderer);
-  void AddResult(Result& result);
-  void RemoveResult(Result& result);
 
   nux::Property<int> horizontal_spacing;
   nux::Property<int> vertical_spacing;
@@ -74,6 +72,9 @@ protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);;
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual long ComputeContentSize();
+
+  void AddResult(Result& result);
+  void RemoveResult(Result& result);
 
 private:
   typedef std::tuple <int, int> ResultListBounds;

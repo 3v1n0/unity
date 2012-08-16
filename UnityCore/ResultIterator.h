@@ -82,7 +82,7 @@ public:
   {
     return !(lhs == rhs);
   }
-  Result const& operator*();
+  Result& operator*();
 
   /* convenience methods */
   bool const IsLast();
