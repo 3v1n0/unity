@@ -105,6 +105,7 @@ Package: unity-common
 Architecture: all
 Depends: ${misc:Depends},
          ${python:Depends},
+         compiz-gnome (>> 1:0.9.8+bzr3308),
 Description: Common files for the Unity interface.
  Unity is a desktop experience that sings. Designed by Canonical and the Ayatana
  community, Unity is all about the combination of familiarity and the future. We
