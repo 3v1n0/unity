@@ -1,6 +1,8 @@
-unity (6.2.0-0ubuntu4) UNRELEASED; urgency=low
+unity (6.2.0-0ubuntu3) UNRELEASED; urgency=low
 
-  * Backport the gconf removal from upstream branch
+  * Backports:
+    - the remaining part of the gconf removal from upstream branch
+    - the .convert migration scripts
   * debian/control:
     - do not build-dep on gconf anymore
     - build-dep on latest compiz for building gsettings keys
