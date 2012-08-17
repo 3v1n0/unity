@@ -49,6 +49,7 @@ namespace launcher
 extern const char window_title[];
 
 class AbstractLauncherIcon;
+class DevicesSettings;
 
 class Launcher : public unity::debug::Introspectable, public nux::View, public ui::EdgeBarrierSubscriber
 {
@@ -80,6 +81,8 @@ public:
 
   void SetModel(LauncherModel::Ptr model);
   LauncherModel::Ptr GetModel() const;
+
+  void SetDevicesSettings(std::shared_ptr<DevicesSettings> devices_settings);
 
   void StartKeyShowLauncher();
   void EndKeyShowLauncher();
@@ -386,6 +389,8 @@ private:
 
   ui::AbstractIconRenderer::Ptr icon_renderer;
   BackgroundEffectHelper bg_effect_helper_;
+
+  std::shared_ptr<DevicesSettings> devices_settings_;
 
   UBusManager ubus_;
   glib::SourceManager sources_;

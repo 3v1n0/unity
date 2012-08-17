@@ -113,6 +113,7 @@ public:
 
   void OnRemoved()
   {
+    settings_changed_connection_.disconnect();
     volume_changed_connection_.disconnect();
     changed_timeout_.reset();
 
@@ -153,8 +154,7 @@ public:
 
     unlock_menuitem_activated_.Connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
         auto identifier = volume_->GetIdentifier();
-        devices_settings_->AddBlacklisted(identifier);
-        UpdateVisibility();
+        devices_settings_->TryToBlacklist(identifier);
     });
 
     menu.push_back(menu_item);

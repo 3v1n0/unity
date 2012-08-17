@@ -49,7 +49,6 @@ public:
   Impl(DevicesSettingsImp* parent)
     : parent_(parent)
     , settings_(g_settings_new(SETTINGS_NAME.c_str()))
-    , ignore_signals_(false)
   {
     DownloadBlacklist();
     ConnectSignals();
@@ -58,9 +57,6 @@ public:
   void ConnectSignals()
   {
     settings_changed_signal_.Connect(settings_, "changed::" + KEY_NAME, [this] (GSettings*, gchar*) {
-      if (ignore_signals_)
-        return;
-
       DownloadBlacklist();
       parent_->changed.emit();
     });
@@ -87,12 +83,10 @@ public:
       blacklist_to_be_uploaded[index++] = item.c_str();
     blacklist_to_be_uploaded[index] = nullptr;
 
-    ignore_signals_ = true;
     if (!g_settings_set_strv(settings_, KEY_NAME.c_str(), blacklist_to_be_uploaded))
     {
       LOG_WARNING(logger) << "Saving blacklist failed.";
     }
-    ignore_signals_ = false;
   }
 
   bool IsABlacklistedDevice(std::string const& uuid) const
@@ -102,7 +96,7 @@ public:
     return std::find(begin, end, uuid) != end;
   }
 
-  void AddBlacklisted(std::string const& uuid)
+  void TryToBlacklist(std::string const& uuid)
   {
     if (uuid.empty() || IsABlacklistedDevice(uuid))
       return;
@@ -123,7 +117,6 @@ public:
   DevicesSettingsImp* parent_;
   glib::Object<GSettings> settings_;
   std::list<std::string> blacklist_;
-  bool ignore_signals_;
   glib::Signal<void, GSettings*, gchar*> settings_changed_signal_;
 
 };
@@ -144,9 +137,9 @@ bool DevicesSettingsImp::IsABlacklistedDevice(std::string const& uuid) const
   return pimpl->IsABlacklistedDevice(uuid);
 }
 
-void DevicesSettingsImp::AddBlacklisted(std::string const& uuid)
+void DevicesSettingsImp::TryToBlacklist(std::string const& uuid)
 {
-  pimpl->AddBlacklisted(uuid);
+  pimpl->TryToBlacklist(uuid);
 }
 
 void DevicesSettingsImp::RemoveBlacklisted(std::string const& uuid)

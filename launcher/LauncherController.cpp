@@ -268,6 +268,7 @@ Launcher* Controller::Impl::CreateLauncher(int monitor)
   launcher->monitor = monitor;
   launcher->options = parent_->options();
   launcher->SetModel(model_);
+  launcher->SetDevicesSettings(devices_settings_);
 
   nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout->AddView(launcher, 1);

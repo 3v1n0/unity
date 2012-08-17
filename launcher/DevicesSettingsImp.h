@@ -36,7 +36,7 @@ public:
   virtual ~DevicesSettingsImp();
 
   virtual bool IsABlacklistedDevice(std::string const& uuid) const;
-  virtual void AddBlacklisted(std::string const& uuid);
+  virtual void TryToBlacklist(std::string const& uuid);
   virtual void RemoveBlacklisted(std::string const& uuid);
 
 private:

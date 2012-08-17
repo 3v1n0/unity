@@ -51,7 +51,7 @@ class MockDevicesSettings : public DevicesSettings
 {
 public:
   MOCK_CONST_METHOD1(IsABlacklistedDevice, bool(std::string const& uuid));
-  MOCK_METHOD1(AddBlacklisted, void(std::string const& uuid));
+  MOCK_METHOD1(TryToBlacklist, void(std::string const& uuid));
   MOCK_METHOD1(RemoveBlacklisted, void(std::string const& uuid));
 };
 
@@ -165,7 +165,7 @@ TEST_F(TestVolumeLauncherIcon, TestVisibilityAfterUnmount)
   EXPECT_CALL(*volume_, IsMounted())
     .WillRepeatedly(Return(false));
 
-  EXPECT_CALL(*settings_, AddBlacklisted(_))
+  EXPECT_CALL(*settings_, TryToBlacklist(_))
     .Times(0);
 
   volume_->changed.emit();
@@ -221,13 +221,14 @@ TEST_F(TestVolumeLauncherIcon, TestUnlockFromLauncherMenuItem_Success)
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
 
-  EXPECT_CALL(*settings_, AddBlacklisted(_))
+  EXPECT_CALL(*settings_, TryToBlacklist(_))
     .Times(1);
 
   EXPECT_CALL(*settings_, IsABlacklistedDevice(_))
     .WillRepeatedly(Return(true));
 
   dbusmenu_menuitem_handle_event(*menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
+  settings_->changed.emit(); // TryToBlacklist() worked!
   Utils::WaitForTimeout(1);
 
   ASSERT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
@@ -244,11 +245,11 @@ TEST_F(TestVolumeLauncherIcon, TestUnlockFromLauncherMenuItem_Failure)
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
 
-  EXPECT_CALL(*settings_, AddBlacklisted(_))
+  EXPECT_CALL(*settings_, TryToBlacklist(_))
     .Times(1);
 
   EXPECT_CALL(*settings_, IsABlacklistedDevice(_))
-    .WillRepeatedly(Return(false)); // AddBlacklisted can fails (e.g. you can blacklist CD/DVD/...)
+    .WillRepeatedly(Return(false)); // TryToBlacklist can fails (e.g. you can blacklist CD/DVD/...)
 
   dbusmenu_menuitem_handle_event(*menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
   Utils::WaitForTimeout(1);
@@ -427,7 +428,7 @@ TEST_F(TestVolumeLauncherIcon, OnRemoved)
 {
   CreateIcon();
 
-  EXPECT_CALL(*settings_, AddBlacklisted(_))
+  EXPECT_CALL(*settings_, TryToBlacklist(_))
     .Times(0);
   EXPECT_CALL(*settings_, RemoveBlacklisted(_))
     .Times(0);
@@ -441,7 +442,7 @@ TEST_F(TestVolumeLauncherIcon, OnRemoved_RemovabledVolume)
     .WillRepeatedly(Return(true));
   CreateIcon();
 
-  EXPECT_CALL(*settings_, AddBlacklisted(_))
+  EXPECT_CALL(*settings_, TryToBlacklist(_))
     .Times(0);
   EXPECT_CALL(*settings_, RemoveBlacklisted(_))
     .Times(0);
@@ -457,7 +458,7 @@ TEST_F(TestVolumeLauncherIcon, OnRemoved_RemovableAndBlacklistedVolume)
     .WillRepeatedly(Return(true));
   CreateIcon();
 
-  EXPECT_CALL(*settings_, AddBlacklisted(_))
+  EXPECT_CALL(*settings_, TryToBlacklist(_))
     .Times(0);
   EXPECT_CALL(*settings_, RemoveBlacklisted(_))
     .Times(1);
