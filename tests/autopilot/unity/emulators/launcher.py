@@ -308,6 +308,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
     def click_launcher_icon(self, icon, button=1, move_mouse_after=True):
         """Move the mouse over the launcher icon, and click it.
         `icon` must be an instance of SimpleLauncherIcon or it's descendants.
+        `move_mouse_after` moves the mouse outside the launcher if true.
         """
         if not isinstance(icon, SimpleLauncherIcon):
             raise TypeError("icon must be a LauncherIcon, not %s" % type(icon))
@@ -324,7 +325,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
                 break
             self._mouse.move(target_x, target_y )
             sleep(1)
-        self._mouse.click(button, press_duration=0.10)
+        self._mouse.click(button, press_duration)
         if (move_mouse_after):
           self.move_mouse_to_right_of_launcher()
 

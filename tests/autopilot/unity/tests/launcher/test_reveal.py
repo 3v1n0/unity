@@ -74,13 +74,10 @@ class LauncherRevealTests(LauncherTestCase):
         self.assertThat(self.launcher_instance.is_showing, Equals(False))
 
     def test_launcher_stays_open_after_spread(self):
-        """When clicking on the launcher to close spread the launcher must not autohide."""
+        """Clicking on the launcher to close an active spread must not hide the launcher."""
         char_win1 = self.start_app_window("Character Map")
         char_win2 = self.start_app_window("Character Map")
         char_app = char_win1.application
-
-        self.assertVisibleWindowStack([char_win2, char_win1])
-        self.assertProperty(char_win2, is_focused=True)
 
         char_icon = self.launcher.model.get_icon(desktop_id=char_app.desktop_file)
 
@@ -92,7 +89,7 @@ class LauncherRevealTests(LauncherTestCase):
         self.assertThat(self.window_manager.scale_active, Eventually(Equals(False)))
 
     def test_launcher_stays_open_after_icon_click(self):
-        """When clicking on an icon the launcher must not autohide."""
+        """Clicking on a launcher icon must not hide the launcher."""
         char_win = self.start_app_window("Character Map")
         char_app = char_win.application
 
@@ -100,7 +97,7 @@ class LauncherRevealTests(LauncherTestCase):
         self.launcher_instance.click_launcher_icon(char_icon, move_mouse_after=False)
 
         # Have to sleep to give the launcher time to hide (what the old behavior was)
-        sleep(1)
+        sleep(5)
 
         self.assertThat(self.launcher_instance.is_showing, Eventually(Equals(True)))
 
