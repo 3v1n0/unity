@@ -69,6 +69,7 @@ set (LAUNCHER_SOURCES
      SingleMonitorLauncherIcon.cpp
      SoftwareCenterLauncherIcon.cpp
      SpacerLauncherIcon.cpp
+     SpreadLauncherIcon.cpp
      Tooltip.cpp
      TrashLauncherIcon.cpp
      VolumeMonitorWrapper.cpp
