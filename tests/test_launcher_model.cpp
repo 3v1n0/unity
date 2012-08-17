@@ -223,4 +223,63 @@ TEST_F(TestLauncherModel, TestOrderByPosition)
   EXPECT_EQ(it_shelf, model.shelf_end());
 }
 
+TEST_F(TestLauncherModel, TestOrderByIconWeight)
+{
+  AbstractLauncherIcon::Ptr first(new MockLauncherIcon());
+  AbstractLauncherIcon::Ptr second(new MockLauncherIcon());
+  AbstractLauncherIcon::Ptr third(new MockLauncherIcon());
+  AbstractLauncherIcon::Ptr fourth(new MockLauncherIcon());
+
+  first->icon_weight = 10;
+  second->icon_weight = 100;
+  third->icon_weight = 1000;
+  fourth->icon_weight = 1001;
+
+  model.AddIcon(fourth);
+  model.AddIcon(second);
+  model.AddIcon(third);
+  model.AddIcon(first);
+
+  auto it = model.begin();
+  EXPECT_EQ(first, *it);
+  it++;
+  EXPECT_EQ(second, *it);
+  it++;
+  EXPECT_EQ(third, *it);
+  it++;
+  EXPECT_EQ(fourth, *it);
+}
+
+TEST_F(TestLauncherModel, TestReorderUpdatesIconWeight)
+{
+  AbstractLauncherIcon::Ptr first(new MockLauncherIcon());
+  AbstractLauncherIcon::Ptr second(new MockLauncherIcon());
+  AbstractLauncherIcon::Ptr third(new MockLauncherIcon());
+  AbstractLauncherIcon::Ptr fourth(new MockLauncherIcon());
+
+  first->icon_weight = 10;
+  second->icon_weight = 100;
+  third->icon_weight = 1000;
+  fourth->icon_weight = 1001;
+
+  model.AddIcon(fourth);
+  model.AddIcon(second);
+  model.AddIcon(third);
+  model.AddIcon(first);
+
+  model.ReorderBefore(fourth, third, false);
+
+  auto it = model.begin();
+  EXPECT_EQ(first, *it);
+  it++;
+  EXPECT_EQ(second, *it);
+  it++;
+  EXPECT_EQ(fourth, *it);
+  it++;
+  EXPECT_EQ(third, *it);
+
+  EXPECT_EQ(fourth->icon_weight(), third->icon_weight());
+}
+
+
 }

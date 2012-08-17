@@ -66,6 +66,11 @@ bool LauncherModel::CompareIcons(AbstractLauncherIcon::Ptr first, AbstractLaunch
   else if (first->position() > second->position())
     return false;
 
+  if (first->icon_weight() < second->icon_weight())
+    return true;
+  else if (first->icon_weight() > second->icon_weight())
+    return false;
+
   return first->SortPriority() < second->SortPriority();
 }
 
@@ -225,6 +230,8 @@ LauncherModel::ReorderBefore(AbstractLauncherIcon::Ptr icon, AbstractLauncherIco
   if (icon->position() != other->position())
     return;
 
+  icon->icon_weight = other->icon_weight();
+
   int i = 0;
   int j = 0;
   for (auto icon_it : _inner)
@@ -250,6 +257,7 @@ LauncherModel::ReorderBefore(AbstractLauncherIcon::Ptr icon, AbstractLauncherIco
     else
     {
       icon_it->SetSortPriority(i);
+
       if (i != j && save)
         icon_it->SaveCenter();
       i++;
@@ -268,6 +276,8 @@ LauncherModel::ReorderSmart(AbstractLauncherIcon::Ptr icon, AbstractLauncherIcon
 
   if (icon->position() != other->position())
     return;
+
+  icon->icon_weight = other->icon_weight();
 
   int i = 0;
   int j = 0;
