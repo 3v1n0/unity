@@ -113,8 +113,7 @@ void ResultView::SetModel(glib::Object<DeeModel> const& model, DeeModelTag* tag)
   // cleanup
   if (result_model_)
   {
-    sig_manager_.Disconnect(result_model_.RawPtr(), "row-added");
-    sig_manager_.Disconnect(result_model_.RawPtr(), "row-removed");
+    sig_manager_.Disconnect(result_model_);
 
     for (ResultIterator it(GetIteratorAtRow(0)); !it.IsLast(); ++it)
     {

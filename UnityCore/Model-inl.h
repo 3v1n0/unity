@@ -70,7 +70,7 @@ void Model<RowAdaptor>::OnSwarmNameChanged(std::string const& swarm_name)
   if (model_)
   {
     dee_model_clear(model_);
-    sig_manager_.Disconnect(model_.RawPtr());
+    sig_manager_.Disconnect(model_);
   }
 
   switch(model_type_)
