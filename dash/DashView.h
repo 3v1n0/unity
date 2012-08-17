@@ -34,6 +34,9 @@
 #include "LensView.h"
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/OverlayRenderer.h"
+#include "UnityCore/Preview.h"
+#include "previews/PreviewContainer.h"
+#include "PreviewStateMachine.h"
 
 namespace unity
 {
@@ -58,6 +61,9 @@ public:
   void OnActivateRequest(GVariant* args);
   void SetMonitorOffset(int x, int y);
 
+  void SetPreview(Preview::Ptr preview);
+  void ClosePreview();
+
   std::string const GetIdForShortcutActivation(std::string const& shortcut) const;
   std::vector<char> GetAllShortcuts();
 
@@ -79,7 +85,9 @@ private:
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
   virtual long PostLayoutManagement (long LayoutResult);
-
+  nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
+  
+  void BuildPreview(Preview::Ptr model);
   void OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key);
   void OnBackgroundColorChanged(GVariant* args);
   void OnSearchChanged(std::string const& search_string);
@@ -106,14 +114,19 @@ private:
 
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
 
-private:
   UBusManager ubus_manager_;
   FilesystemLenses lenses_;
   HomeLens::Ptr home_lens_;
   LensViews lens_views_;
 
-
   // View related
+  PreviewStateMachine preview_state_machine_;
+  previews::PreviewContainer::Ptr preview_container_;
+  bool preview_displaying_;
+  std::string stored_preview_unique_id_;
+  std::string stored_preview_uri_identifier_;
+  dash::previews::Navigation preview_navigation_mode_;
+
   nux::VLayout* layout_;
   DashLayout* content_layout_;
   nux::HLayout* search_bar_layout_;
