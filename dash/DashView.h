@@ -156,6 +156,10 @@ private:
   glib::Source::UniquePtr hide_message_delay_;
 
   nux::ObjectPtr<nux::IOpenGLBaseTexture> dash_view_copy_;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> search_view_copy_;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> filter_view_copy_;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> layout_copy_;
+
   float fade_out_value_;
   std::unique_ptr<nux::NuxTimerTickSource> tick_source_;
   std::unique_ptr<na::AnimationController> animation_controller_;
