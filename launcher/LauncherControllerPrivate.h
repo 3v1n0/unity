@@ -96,8 +96,6 @@ public:
 
   void EnsureLaunchers(int primary, std::vector<nux::Geometry> const& monitors);
 
-  void OnExpoActivated();
-
   void OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors);
 
   void OnWindowFocusChanged (guint32 xid);
@@ -152,7 +150,6 @@ public:
   glib::SourceManager sources_;
   UBusManager ubus;
 
-  sigc::connection on_expoicon_activate_connection_;
   sigc::connection launcher_key_press_connection_;
   sigc::connection launcher_event_outside_connection_;
 };

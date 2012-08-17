@@ -35,6 +35,7 @@
 #include "LauncherController.h"
 #include "LauncherControllerPrivate.h"
 #include "SoftwareCenterLauncherIcon.h"
+#include "SpreadLauncherIcon.h"
 #include "unity-shared/WindowManager.h"
 #include "TrashLauncherIcon.h"
 #include "BFBLauncherIcon.h"
@@ -150,8 +151,6 @@ Controller::Impl::Impl(Display* display, Controller* parent)
     bfb->SetHideMode(mode);
     hud->SetHideMode(mode);
   });
-
-  desktop_icon_ = AbstractLauncherIcon::Ptr(new DesktopLauncherIcon());
 
   uscreen->changed.connect(sigc::mem_fun(this, &Controller::Impl::OnScreenChanged));
 
@@ -535,11 +534,6 @@ void Controller::Impl::OnFavoriteStoreReordered()
   model_->Sort();
 }
 
-void Controller::Impl::OnExpoActivated()
-{
-  WindowManager::Default()->InitiateExpo();
-}
-
 void Controller::Impl::InsertTrash()
 {
   AbstractLauncherIcon::Ptr icon(new TrashLauncherIcon());
@@ -562,36 +556,26 @@ void Controller::Impl::UpdateNumWorkspaces(int workspaces)
 
 void Controller::Impl::InsertExpoAction()
 {
-  expo_icon_ = AbstractLauncherIcon::Ptr(new SimpleLauncherIcon(AbstractLauncherIcon::IconType::EXPO));
-
-  SimpleLauncherIcon* icon = static_cast<SimpleLauncherIcon*>(expo_icon_.GetPointer());
-  icon->tooltip_text = _("Workspace Switcher");
-  icon->icon_name = "workspace-switcher";
-  icon->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, true);
-  icon->SetQuirk(AbstractLauncherIcon::Quirk::RUNNING, false);
-  icon->SetShortcut('s');
-
-  on_expoicon_activate_connection_ = icon->activate.connect(sigc::mem_fun(this, &Impl::OnExpoActivated));
-
-
+  expo_icon_ = AbstractLauncherIcon::Ptr(new SpreadLauncherIcon());
   RegisterIcon(expo_icon_);
 }
 
 void Controller::Impl::RemoveExpoAction()
 {
-  if (on_expoicon_activate_connection_)
-    on_expoicon_activate_connection_.disconnect();
   model_->RemoveIcon(expo_icon_);
+  expo_icon_ = nullptr;
 }
 
 void Controller::Impl::InsertDesktopIcon()
 {
+  desktop_icon_ = AbstractLauncherIcon::Ptr(new DesktopLauncherIcon());
   RegisterIcon(desktop_icon_);
 }
 
 void Controller::Impl::RemoveDesktopIcon()
 {
   model_->RemoveIcon(desktop_icon_);
+  desktop_icon_ = nullptr;
 }
 
 void Controller::Impl::RegisterIcon(AbstractLauncherIcon::Ptr icon)

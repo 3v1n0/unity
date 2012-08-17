@@ -19,7 +19,8 @@
 
 #include <gmock/gmock.h>
 
-#include "BFBLauncherIcon.h"
+#include "SpreadLauncherIcon.h"
+#include "PluginAdapter.h"
 
 using namespace unity;
 using namespace unity::launcher;
@@ -27,23 +28,18 @@ using namespace unity::launcher;
 namespace
 {
 
-class MockBFBLauncherIcon : public BFBLauncherIcon
+TEST(TestSpreadLauncherIcon, ActivateToggleExpo)
 {
-public:
-  MockBFBLauncherIcon()
-    : BFBLauncherIcon(LauncherHideMode::LAUNCHER_HIDE_NEVER)
-  {}
-};
+  SpreadLauncherIcon icon;
+  auto plugin_adapter = PluginAdapter::Default();
 
-TEST(TestBFBLauncherIcon, OverlayMenus)
-{
-  MockBFBLauncherIcon bfb;
+  ASSERT_FALSE(plugin_adapter->IsExpoActive());
 
-  for (auto menu_item : bfb.Menus())
-  {
-    bool overlay_item = dbusmenu_menuitem_property_get_bool(menu_item, QuicklistMenuItem::OVERLAY_MENU_ITEM_PROPERTY);
-    ASSERT_TRUE(overlay_item);
-  }
+  icon.Activate(ActionArg());
+  ASSERT_TRUE(plugin_adapter->IsExpoActive());
+
+  icon.Activate(ActionArg());
+  EXPECT_FALSE(plugin_adapter->IsExpoActive());
 }
 
 }
