@@ -67,7 +67,7 @@ struct StaticCairoText::Impl
 
   StaticCairoText* parent_;
   bool accept_key_nav_focus_;
-  bool need_new_extent_cache_;
+  mutable bool need_new_extent_cache_;
   // The three following are all set in get text extents.
   mutable Size cached_extent_;
   mutable Size cached_base_;
@@ -309,6 +309,29 @@ void StaticCairoText::SetText(std::string const& text)
   }
 }
 
+void StaticCairoText::SetMaximumSize(int w, int h)
+{
+  if (w != GetMaximumWidth())
+  {
+    pimpl->need_new_extent_cache_ = true;
+    View::SetMaximumSize(w, h);
+    pimpl->UpdateTexture();
+    return;
+  } 
+
+  View::SetMaximumSize(w, h);
+}
+
+void StaticCairoText::SetMaximumWidth(int w)
+{
+  if (w != GetMaximumWidth())
+  {
+    pimpl->need_new_extent_cache_ = true;
+    View::SetMaximumWidth(w);
+    pimpl->UpdateTexture();
+  }
+}
+
 std::string StaticCairoText::GetText() const
 {
   return pimpl->text_;
@@ -333,12 +356,15 @@ void StaticCairoText::SetTextColor(Color const& textColor)
 
 void StaticCairoText::SetFont(std::string const& font)
 {
-  pimpl->font_ = font;
-  pimpl->need_new_extent_cache_ = true;
-  Size s = GetTextExtents();
-  SetMinimumHeight(s.height);
-  NeedRedraw();
-  sigFontChanged.emit(this);
+  if (pimpl->font_ != font)
+  {  
+    pimpl->font_ = font;
+    pimpl->need_new_extent_cache_ = true;
+    Size s = GetTextExtents();
+    SetMinimumHeight(s.height);
+    NeedRedraw();
+    sigFontChanged.emit(this);
+  }
 }
 
 int StaticCairoText::GetLineCount() const
@@ -440,6 +466,7 @@ Size StaticCairoText::Impl::GetTextExtents() const
   result.height = std::ceil(static_cast<float>(logRect.height) / PANGO_SCALE);
   cached_extent_ = result;
   baseline_ = pango_layout_get_baseline(layout) / PANGO_SCALE;
+  need_new_extent_cache_ = false;
 
   // clean up
   pango_font_description_free(desc);

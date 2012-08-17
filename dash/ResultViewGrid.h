@@ -52,8 +52,8 @@ public:
 
   sigc::signal<void> selection_change;
 
-  int GetSelectedIndex() const;
-  virtual uint GetIndexAtPosition(int x, int y) const;
+  int GetSelectedIndex();
+  virtual uint GetIndexAtPosition(int x, int y);
 
 protected:
   void MouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
@@ -76,7 +76,7 @@ protected:
   virtual long ComputeContentSize();
 
   // This is overridden so we can include position of results.
-  virtual debug::Introspectable* CreateResultWrapper(Result const& result, int index) const;
+  virtual debug::Introspectable* CreateResultWrapper(Result const& result, int index);
   
 private:
   typedef std::tuple <int, int> ResultListBounds;
@@ -86,15 +86,17 @@ private:
   void QueueViewChanged();
   bool DoLazyLoad();
 
-  int GetItemsPerRow() const;
+  int GetItemsPerRow();
   void SizeReallocate();
-  std::tuple<int, int> GetResultPosition(const std::string& uri) const;
-  std::tuple<int, int> GetResultPosition(const unsigned int& index) const;
+  std::tuple<int, int> GetResultPosition(const std::string& uri);
+  std::tuple<int, int> GetResultPosition(const unsigned int& index);
 
   uint mouse_over_index_;
   int active_index_;
   nux::Property<int> selected_index_;
   std::string focused_uri_;
+
+  std::string activated_uri_;
 
   int last_lazy_loaded_result_;
   int last_mouse_down_x_;
@@ -109,8 +111,6 @@ private:
   int mouse_last_y_;
 
   int extra_horizontal_spacing_;
-
-  mutable unsigned int cached_preview_index_;
 
   UBusManager ubus_;
   glib::Source::UniquePtr lazy_load_source_;

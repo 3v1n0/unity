@@ -10,7 +10,7 @@ from __future__ import absolute_import
 
 from autopilot.emulators.clipboard import get_clipboard_contents
 from autopilot.matchers import Eventually
-from testtools.matchers import Equals, NotEquals, GreaterThan
+from testtools.matchers import Equals, NotEquals
 from time import sleep
 
 from unity.tests import UnityTestCase
@@ -49,6 +49,11 @@ class DashRevealTests(DashTestCase):
         """File lense must reveal when Super+f is pressed."""
         self.dash.reveal_file_lens()
         self.assertThat(self.dash.active_lens, Eventually(Equals('files.lens')))
+
+    def test_video_lens_shortcut(self):
+        """Video lens must reveal when super+v is pressed."""
+        self.dash.reveal_video_lens()
+        self.assertThat(self.dash.active_lens, Eventually(Equals('video.lens')))
 
     def test_command_lens_shortcut(self):
         """Run Command lens must reveat on alt+F2."""
@@ -397,8 +402,7 @@ class DashLensResultsTests(DashTestCase):
         lens = self.dash.get_current_lens()
         self.keyboard.type(" ")
         self.assertThat(self.dash.search_string, Eventually(Equals(" ")))
-        results_category = lens.get_category_by_name(
-        lens = self.dash.get_current_lens())
+        results_category = lens.get_category_by_name("Installed")
         old_results = results_category.get_results()
 
         # FIXME: This should be a method on the dash emulator perhaps, or
@@ -541,7 +545,32 @@ class CategoryHeaderTests(DashTestCase):
         self.mouse.click()
         self.assertThat(category.is_expanded, Eventually(Equals(is_expanded)))
 
-class DashAppLensPreviewTests(DashTestCase):
+
+class PreviewInvocationTests(DashTestCase):
+    """Tests that previews can be opened and closed
+    """
+    def test_open_preview_close_preview(self):
+        """Right clicking on any result shall open a preview, 
+        escaping shall close the preview
+        """
+        lens = self.dash.reveal_application_lens()
+        self.addCleanup(self.dash.ensure_hidden)
+
+        category = lens.get_category_by_name("Installed")
+
+        self.mouse.move(self.dash.view.x + 64,  
+                        category.header_y + category.header_height + 32)
+
+        self.mouse.click(button=3)
+        #revealing a preview may be very slow, not sure if Eventually handles that nicely
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
+
+        self.keyboard.press_and_release("Escape")
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
+
+class PreviewAppLensTests(DashTestCase):
     """Tests that dash previews work in App Lens.
     """
     def assertSearchText(self, text):
@@ -566,21 +595,21 @@ class DashAppLensPreviewTests(DashTestCase):
         self.assertThat(self.dash.view.preview_displaying, Eventually(Equals(True)))
 
 
-class DashFileLensPreviewTests(DashTestCase):
+class PreviewFileLensTests(DashTestCase):
     """Tests that dash previews work in File Lens.
     """
     def assertSearchText(self, text):
         self.assertThat(self.dash.search_string, Eventually(Equals(text)))
 
 
-class DashMusicLensPreviewTests(DashTestCase):
+class PreviewMusicLensTests(DashTestCase):
     """Tests that dash previews work in Music Lens.
     """
     def assertSearchText(self, text):
         self.assertThat(self.dash.search_string, Eventually(Equals(text)))
 
 
-class DashVideoLensPreviewTests(DashTestCase):
+class PreviewVideoLensTests(DashTestCase):
     """Tests that dash previews work in Video Lens.
     """
     def assertSearchText(self, text):

@@ -54,7 +54,7 @@ ResultView::ResultView(NUX_FILE_LINE_DECL)
 
 ResultView::~ResultView()
 {
-  child_map_.clear();
+  introspectable_children_.clear();
   RemoveAllChildren(&ResultView::ChildResultDestructor);
 
   for (auto result : results_)
@@ -109,21 +109,21 @@ void ResultView::RemoveResult(Result& result)
  
   if (results_.size() == 0)
   {
-    child_map_.clear();
+    introspectable_children_.clear();
     RemoveAllChildren(&ResultView::ChildResultDestructor);  // clear children (with delete).
   }
 
   renderer_->Unload(result);
 }
 
-ResultView::ResultList ResultView::GetResultList() const
+ResultView::ResultList ResultView::GetResultList()
 {
   return results_;
 }
 
 // it would be nice to return a result here, but c++ does not have a good mechanism
 // for indicating out of bounds errors. so i return the index
-unsigned int ResultView::GetIndexForUri(const std::string& uri) const
+unsigned int ResultView::GetIndexForUri(const std::string& uri)
 {
   unsigned int index = 0;
   for (auto result : results_)
@@ -135,6 +135,19 @@ unsigned int ResultView::GetIndexForUri(const std::string& uri) const
   }
   
   return index;
+}
+
+std::string ResultView::GetUriForIndex(unsigned int index)
+{
+  if (index >= results_.size())
+    return "";
+  
+  return results_[index].uri();
+}
+
+unsigned int ResultView::GetModelSize()
+{
+  return results_.size();
 }
 
 long ResultView::ComputeContentSize()
@@ -187,12 +200,12 @@ ResultView::GetIntrospectableChildren()
   for (auto result: results_)
   {
     debug::Introspectable* result_wrapper = NULL;
-    auto iter = child_map_.find(result.uri);
+    auto iter = introspectable_children_.find(result.uri);
     // Create new result.
-    if (iter == child_map_.end())
+    if (iter == introspectable_children_.end())
     {
       result_wrapper = CreateResultWrapper(result, index);
-      child_map_[result.uri] = result_wrapper;
+      introspectable_children_[result.uri] = result_wrapper;
     }
     else
       result_wrapper = iter->second;
@@ -204,13 +217,13 @@ ResultView::GetIntrospectableChildren()
   }
 
   // Delete old children.
-  auto child_iter = child_map_.begin();
-  for (; child_iter != child_map_.end(); )
+  auto child_iter = introspectable_children_.begin();
+  for (; child_iter != introspectable_children_.end(); )
   {
     if (existing_results.find(child_iter->first) == existing_results.end())
     {
       RemoveChild(child_iter->second, &ResultView::ChildResultDestructor);
-      child_map_.erase(child_iter);
+      introspectable_children_.erase(child_iter);
     }
     else
     {
@@ -221,7 +234,7 @@ ResultView::GetIntrospectableChildren()
   return debug::Introspectable::GetIntrospectableChildren();
 }
 
-debug::Introspectable* ResultView::CreateResultWrapper(Result const& result, int index) const
+debug::Introspectable* ResultView::CreateResultWrapper(Result const& result, int index)
 {
   return new debug::ResultWrapper(result);
 }

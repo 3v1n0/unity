@@ -76,12 +76,12 @@ public:
 
   bool AcceptKeyNavFocus();
 
+  nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
+
 protected:
   void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
   void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);
   void PreLayoutManagement();
-
-  nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
 
   bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
   void OnKeyDown(unsigned long event_type, unsigned long event_keysym, unsigned long event_state, const TCHAR* character, unsigned short key_repeat_count);
