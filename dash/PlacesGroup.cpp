@@ -108,7 +108,8 @@ PlacesGroup::PlacesGroup()
     _child_view(nullptr),
     _is_expanded(true),
     _n_visible_items_in_unexpand_mode(0),
-    _n_total_items(0)
+    _n_total_items(0),
+    _category_index(0)
 {
   dash::Style& style = dash::Style::Instance();
 
@@ -422,7 +423,20 @@ void PlacesGroup::PostDraw(nux::GraphicsEngine& graphics_engine,
 }
 
 void
-PlacesGroup::SetCounts(guint n_visible_items_in_unexpand_mode, guint n_total_items)
+PlacesGroup::SetCategoryIndex(unsigned index)
+{
+  _category_index = index;
+}
+
+unsigned
+PlacesGroup::GetCategoryIndex() const
+{
+  return _category_index;
+}
+
+void
+PlacesGroup::SetCounts(unsigned n_visible_items_in_unexpand_mode,
+                       unsigned n_total_items)
 {
   _n_total_items = n_total_items;
 
