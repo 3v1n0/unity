@@ -24,13 +24,14 @@
 #include <string>
 
 #include <sigc++/signal.h>
+#include <sigc++/trackable.h>
 
 namespace unity
 {
 namespace launcher
 {
 
-class DevicesSettings : boost::noncopyable
+class DevicesSettings : boost::noncopyable, public sigc::trackable
 {
 public:
   virtual ~DevicesSettings() {};

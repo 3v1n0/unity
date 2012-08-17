@@ -58,6 +58,12 @@ public:
     ConnectSignals();
   }
 
+  ~Impl()
+  {
+    settings_changed_connection_.disconnect();
+    volume_changed_connection_.disconnect();
+  }
+
   void UpdateIcon()
   {
     parent_->tooltip_text = volume_->GetName();
@@ -90,7 +96,7 @@ public:
       }));
     });
 
-    devices_settings_->changed.connect([this]() {
+    settings_changed_connection_ = devices_settings_->changed.connect([this]() {
       UpdateVisibility();
     });
   }
@@ -207,7 +213,7 @@ public:
 
   void AppendUnmountItem(std::list<DbusmenuMenuitem*>& menu)
   {
-    if (volume_->CanBeEjected() || volume_->CanBeStopped())
+    if (!volume_->IsMounted() || volume_->CanBeEjected() || volume_->CanBeStopped())
       return;
 
     DbusmenuMenuitem* menu_item = dbusmenu_menuitem_new();
@@ -228,6 +234,7 @@ public:
   std::shared_ptr<Volume> volume_;
   std::shared_ptr<DevicesSettings> devices_settings_;
 
+  sigc::connection settings_changed_connection_;
   sigc::connection volume_changed_connection_;
   glib::Source::UniquePtr changed_timeout_;
   glib::Signal<void, DbusmenuMenuitem*, int> unlock_menuitem_activated_;

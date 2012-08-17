@@ -335,9 +335,24 @@ TEST_F(TestVolumeLauncherIcon, TestSafelyRemoveMenuItem)
   Utils::WaitForTimeout(1);
 }
 
+TEST_F(TestVolumeLauncherIcon, TestUnmountMenuItem_UnmountedVolume)
+{
+  EXPECT_CALL(*volume_, IsMounted())
+    .WillRepeatedly(Return(false));
+
+  CreateIcon();
+
+  for (auto menuitem : icon_->GetMenus())
+    ASSERT_STRNE(dbusmenu_menuitem_property_get(menuitem, DBUSMENU_MENUITEM_PROP_LABEL), "Unmount");
+}
+
+
 TEST_F(TestVolumeLauncherIcon, TestUnmountMenuItem_EjectableVolume)
 {
   EXPECT_CALL(*volume_, CanBeEjected())
+    .WillRepeatedly(Return(true));
+
+  EXPECT_CALL(*volume_, IsMounted())
     .WillRepeatedly(Return(true));
 
   CreateIcon();
@@ -351,6 +366,9 @@ TEST_F(TestVolumeLauncherIcon, TestUnmountMenuItem_StoppableVolume)
   EXPECT_CALL(*volume_, CanBeStopped())
     .WillRepeatedly(Return(true));
 
+  EXPECT_CALL(*volume_, IsMounted())
+    .WillRepeatedly(Return(true));
+
   CreateIcon();
 
   for (auto menuitem : icon_->GetMenus())
@@ -359,6 +377,9 @@ TEST_F(TestVolumeLauncherIcon, TestUnmountMenuItem_StoppableVolume)
 
 TEST_F(TestVolumeLauncherIcon, TestUnmountMenuItem)
 {
+  EXPECT_CALL(*volume_, IsMounted())
+    .WillRepeatedly(Return(true));
+    
   CreateIcon();
 
   auto menu = icon_->GetMenus();
