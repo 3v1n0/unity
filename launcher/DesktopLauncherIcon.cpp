@@ -28,17 +28,14 @@ namespace launcher
 {
 
 DesktopLauncherIcon::DesktopLauncherIcon()
-  :   SimpleLauncherIcon(IconType::DESKTOP)
-  ,   show_in_switcher_(true)
+  : SimpleLauncherIcon(IconType::DESKTOP)
+  , show_in_switcher_(true)
 {
   tooltip_text = _("Show Desktop");
   icon_name = "desktop";
   SetQuirk(Quirk::VISIBLE, true);
   SetQuirk(Quirk::RUNNING, false);
-}
-
-DesktopLauncherIcon::~DesktopLauncherIcon()
-{
+  SetShortcut('d');
 }
 
 void
@@ -51,6 +48,21 @@ DesktopLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 std::string DesktopLauncherIcon::GetName() const
 {
   return "DesktopLauncherIcon";
+}
+
+std::string DesktopLauncherIcon::GetRemoteUri()
+{
+  return "unity://show-desktop";
+}
+
+void DesktopLauncherIcon::SetShowInSwitcher(bool show_in_switcher)
+{
+  show_in_switcher_ = show_in_switcher;
+}
+
+bool DesktopLauncherIcon::ShowInSwitcher(bool current)
+{
+  return show_in_switcher_;
 }
 
 } // namespace launcher
