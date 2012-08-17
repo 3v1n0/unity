@@ -113,6 +113,7 @@ public:
   InfoHintPtrList GetInfoHints() const;
 
   void PerformAction(std::string const& id) const;
+  void PreviewClosed() const;
 
 protected:
   // this should be UnityProtocolPreview, but we want to keep the usage

@@ -120,6 +120,7 @@ public:
   std::string get_image_source_uri() const { return image_source_uri_; };
   ActionPtrList get_actions() const { return actions_list_; };
   InfoHintPtrList get_info_hints() const { return info_hint_list_; };
+  void PreviewClosed() const;
 
   Lens* get_parent_lens() const { return parent_lens_; };
   bool set_parent_lens(Lens* lens)
@@ -129,6 +130,7 @@ public:
   };
 
   Preview* owner_;
+  glib::Object<UnityProtocolPreview> raw_preview_;
 
   std::string renderer_name_;
   std::string title_;
@@ -151,24 +153,24 @@ Preview::Impl::Impl(Preview* owner, glib::Object<GObject> const& proto_obj)
   }
   else if (UNITY_PROTOCOL_IS_PREVIEW(proto_obj.RawPtr()))
   {
-    auto preview = glib::object_cast<UnityProtocolPreview>(proto_obj);
+    raw_preview_ = glib::object_cast<UnityProtocolPreview>(proto_obj);
     const gchar *s;
     // renderer is guaranteed to be non-NULL, if it is it's a bug in proto lib
-    renderer_name_ = unity_protocol_preview_get_renderer_name(preview);
-    s = unity_protocol_preview_get_title(preview);
+    renderer_name_ = unity_protocol_preview_get_renderer_name(raw_preview_);
+    s = unity_protocol_preview_get_title(raw_preview_);
     if (s) title_ = s;
-    s = unity_protocol_preview_get_subtitle(preview);
+    s = unity_protocol_preview_get_subtitle(raw_preview_);
     if (s) subtitle_ = s;
-    s = unity_protocol_preview_get_description(preview);
+    s = unity_protocol_preview_get_description(raw_preview_);
     if (s) description_ = s;
-    glib::Object<GIcon> icon(unity_protocol_preview_get_image(preview),
+    glib::Object<GIcon> icon(unity_protocol_preview_get_image(raw_preview_),
                              unity::glib::AddRef());
     image_ = icon;
-    s = unity_protocol_preview_get_image_source_uri(preview);
+    s = unity_protocol_preview_get_image_source_uri(raw_preview_);
     if (s) image_source_uri_ = s;
 
     int actions_len;
-    auto actions = unity_protocol_preview_get_actions(preview, &actions_len);
+    auto actions = unity_protocol_preview_get_actions(raw_preview_, &actions_len);
     for (int i = 0; i < actions_len; i++)
     {
       UnityProtocolPreviewActionRaw *raw_action = &actions[i];
@@ -179,7 +181,7 @@ Preview::Impl::Impl(Preview* owner, glib::Object<GObject> const& proto_obj)
     }
     
     int info_hints_len;
-    auto info_hints = unity_protocol_preview_get_info_hints(preview, &info_hints_len);
+    auto info_hints = unity_protocol_preview_get_info_hints(raw_preview_, &info_hints_len);
     for (int i = 0; i < info_hints_len; i++)
     {
       UnityProtocolInfoHintRaw *raw_hint = &info_hints[i];
@@ -215,6 +217,17 @@ void Preview::Impl::SetupGetters()
       sigc::mem_fun(this, &Preview::Impl::get_parent_lens));
   owner_->parent_lens.SetSetterFunction(
       sigc::mem_fun(this, &Preview::Impl::set_parent_lens));
+}
+
+void Preview::Impl::PreviewClosed() const
+{
+  UnityProtocolPreview *preview = UNITY_PROTOCOL_PREVIEW(raw_preview_.RawPtr());
+
+  unity_protocol_preview_begin_updates(preview);
+  unity_protocol_preview_preview_closed(raw_preview_);
+  glib::Variant properties(unity_protocol_preview_end_updates(preview),
+                           glib::StealRef());
+  owner_->Update(properties);
 }
 
 Preview::Preview(glib::Object<GObject> const& proto_obj)
@@ -259,6 +272,11 @@ void Preview::PerformAction(std::string const& id) const
   {
     LOG_WARN(logger) << "Unable to perform action '" << id << "', parent_lens wasn't set!";
   }
+}
+
+void Preview::PreviewClosed() const
+{
+  pimpl->PreviewClosed();
 }
 
 } // namespace dash
