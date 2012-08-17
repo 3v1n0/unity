@@ -1,5 +1,6 @@
-unity (6.2.0-0ubuntu3) UNRELEASED; urgency=low
+unity (6.2.0-0ubuntu3) UNRELEASE; urgency=low
 
+  [ Didier Roche ]
   * Backports:
     - the remaining part of the gconf removal from upstream branch
     - the .convert migration scripts
@@ -15,7 +16,11 @@ unity (6.2.0-0ubuntu3) UNRELEASED; urgency=low
       make unity-common depending on the right version of compiz-gnome (with
       the migration script)
 
- -- Didier Roche <didrocks@ubuntu.com>  Fri, 17 Aug 2012 08:08:47 +0200
+  [ Timo Jyrinki ]
+  * Add dbus-glib-1 to UNITY_PLUGIN_DEPS to fix FTBFS 
+  * Remove the remaining gconf files from installation
+
+ -- Timo Jyrinki <timo-jyrinki@ubuntu.com>  Fri, 17 Aug 2012 13:22:06 +0300
 
 unity (6.2.0-0ubuntu2) quantal; urgency=low
 

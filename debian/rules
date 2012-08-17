@@ -56,6 +56,7 @@ override_dh_install:
 	rm -f debian/tmp//usr/lib/compiz/libnetworkarearegion.so
 	rm -f debian/tmp/usr/share/compiz/unitydialog.xml
 	rm -f debian/tmp/usr/lib/compiz/libunitydialog.so
+	rm -rf debian/tmp/usr/share/gconf/schemas/ 
 	dh_install --fail-missing
 
 override_dh_gencontrol:
