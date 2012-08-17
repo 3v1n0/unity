@@ -85,11 +85,15 @@ private:
 
   int GetItemsPerRow();
   void SizeReallocate();
+  std::tuple<int, int> GetResultPosition(const std::string& uri);
+  std::tuple<int, int> GetResultPosition(const unsigned int& index);
 
   uint mouse_over_index_;
   int active_index_;
   nux::Property<int> selected_index_;
   std::string focused_uri_;
+
+  std::string activated_uri_;
 
   int last_lazy_loaded_result_;
   int last_mouse_down_x_;

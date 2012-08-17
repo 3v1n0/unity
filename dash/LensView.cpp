@@ -29,7 +29,7 @@
 #include "ResultRendererHorizontalTile.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UBusWrapper.h"
-#include "PlacesVScrollBar.h"
+#include "unity-shared/PlacesVScrollBar.h"
 
 #include <glib/gi18n-lib.h>
 
@@ -279,6 +279,8 @@ void LensView::OnCategoryAdded(Category const& category)
   counts_[group] = 0;
 
   ResultViewGrid* grid = new ResultViewGrid(NUX_TRACKER_LOCATION);
+  std::string unique_id = name + lens_->name();
+  grid->unique_id = unique_id;
   grid->expanded = false;
   if (renderer_name == "tile-horizontal")
   {
@@ -289,7 +291,25 @@ void LensView::OnCategoryAdded(Category const& category)
   else
     grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
 
-  grid->UriActivated.connect([&] (std::string const& uri) { uri_activated.emit(uri); lens_->Activate(uri); });
+  grid->UriActivated.connect(sigc::bind([&] (std::string const& uri, ResultView::ActivateType type, std::string const& view_id) 
+  {
+    switch (type)
+    {
+      case ResultView::ActivateType::DIRECT:
+      {
+        uri_activated.emit(uri); 
+        lens_->Activate(uri);  
+      } break;
+      case ResultView::ActivateType::PREVIEW:
+      {
+        uri_preview_activated.emit(uri, view_id);
+        lens_->Preview(uri);
+      } break;
+      default: break;
+    };
+
+  }, unique_id));
+  
   group->SetChildView(grid);
 
   /* We need the full range of method args so we can specify the offset
@@ -303,6 +323,7 @@ void LensView::OnResultAdded(Result const& result)
 {
   try {
     PlacesGroup* group = categories_.at(result.category_index);
+
     ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
 
     std::string uri = result.uri;
@@ -490,6 +511,7 @@ void LensView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
   gfx_context.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(gfx_context, geo);
   gfx_context.PopClippingRectangle();
+
 }
 
 void LensView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
@@ -583,7 +605,6 @@ void LensView::AddProperties(GVariantBuilder* builder)
     .add("lens-name", lens_->name)
     .add("no-results-active", no_results_active_);
 }
-
 
 }
 }

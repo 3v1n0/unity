@@ -46,7 +46,7 @@ namespace switcher
 Controller::Controller(unsigned int load_timeout)
   :  timeout_length(75)
   ,  detail_on_timeout(true)
-  ,  detail_timeout_length(500)
+  ,  detail_timeout_length(250)
   ,  initial_detail_timeout_length(1500)
   ,  construct_timeout_(load_timeout)
   ,  main_layout_(nullptr)
@@ -68,6 +68,13 @@ void Controller::OnBackgroundUpdate(GVariant* data)
 
   if (view_)
     view_->background_color = bg_color_;
+}
+
+bool Controller::CanShowSwitcher(const std::vector<AbstractLauncherIcon::Ptr>& results) const
+{
+  bool empty = (show_desktop_disabled_ ? results.empty() : results.size() == 1);
+
+  return (!empty && !WindowManager::Default()->IsWallActive());
 }
 
 void Controller::Show(ShowMode show, SortMode sort, bool reverse,
@@ -226,7 +233,7 @@ void Controller::Hide(bool accept_state)
       }
       else
       {
-        if (selection->GetQuirk (AbstractLauncherIcon::QUIRK_ACTIVE) &&
+        if (selection->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE) &&
             !model_->DetailXids().empty ())
         {
           selection->Activate(ActionArg (ActionArg::SWITCHER, 0, model_->DetailXids()[0]));
@@ -414,10 +421,10 @@ bool Controller::CompareSwitcherItemsPriority(AbstractLauncherIcon::Ptr first,
   if (first->GetIconType() == second->GetIconType())
     return first->SwitcherPriority() > second->SwitcherPriority();
 
-  if (first->GetIconType() == AbstractLauncherIcon::IconType::TYPE_DESKTOP)
+  if (first->GetIconType() == AbstractLauncherIcon::IconType::DESKTOP)
     return true;
 
-  if (second->GetIconType() == AbstractLauncherIcon::IconType::TYPE_DESKTOP)
+  if (second->GetIconType() == AbstractLauncherIcon::IconType::DESKTOP)
     return false;
 
   return first->GetIconType() < second->GetIconType();

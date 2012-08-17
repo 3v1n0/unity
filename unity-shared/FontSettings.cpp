@@ -30,9 +30,9 @@ FontSettings::FontSettings()
 {
   GtkSettings* settings = gtk_settings_get_default();
 
-  sig_man_.Add(new glib::Signal<void, GtkSettings*, GParamSpec*>(settings, "notify::gtk-xft-hintstyle", sigc::mem_fun(this, &FontSettings::Refresh)));
-  sig_man_.Add(new glib::Signal<void, GtkSettings*, GParamSpec*>(settings, "notify::gtk-xft-rgba", sigc::mem_fun(this, &FontSettings::Refresh)));
-  sig_man_.Add(new glib::Signal<void, GtkSettings*, GParamSpec*>(settings, "notify::gtk-xft-antialias", sigc::mem_fun(this, &FontSettings::Refresh)));
+  sig_man_.Add<void, GtkSettings*, GParamSpec*>(settings, "notify::gtk-xft-hintstyle", sigc::mem_fun(this, &FontSettings::Refresh));
+  sig_man_.Add<void, GtkSettings*, GParamSpec*>(settings, "notify::gtk-xft-rgba", sigc::mem_fun(this, &FontSettings::Refresh));
+  sig_man_.Add<void, GtkSettings*, GParamSpec*>(settings, "notify::gtk-xft-antialias", sigc::mem_fun(this, &FontSettings::Refresh));
 
   Refresh();
 }

@@ -33,16 +33,16 @@
 #include "FilterBar.h"
 #include "unity-shared/Introspectable.h"
 #include "PlacesGroup.h"
-#include "PlacesVScrollBar.h"
 #include "ResultViewGrid.h"
 #include "unity-shared/UBusWrapper.h"
+#include "unity-shared/PlacesVScrollBar.h"
 
 namespace unity
 {
 namespace dash
 {
-class LensScrollView;
 
+class LensScrollView;
 class LensView : public nux::View, public unity::debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(LensView, nux::View);
@@ -69,6 +69,7 @@ public:
   nux::Property<bool> can_refine_search;
 
   sigc::signal<void, std::string const&> uri_activated;
+  sigc::signal<void, std::string const&, std::string const&> uri_preview_activated;
 
   void PerformSearch(std::string const& search_query);
   void CheckNoResults(Lens::Hints const& hints);
@@ -92,16 +93,17 @@ private:
   void QueueFixRenderering();
   bool FixRenderering();
 
+  void BuildPreview(std::string const& uri, Preview::Ptr model);
+
   virtual void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
-
+  
   virtual bool AcceptKeyNavFocus();
   virtual std::string GetName() const;
   virtual void AddProperties(GVariantBuilder* builder);
 
   std::string get_search_string() const;
 
-private:
   Lens::Ptr lens_;
   CategoryGroups categories_;
   ResultCounts counts_;

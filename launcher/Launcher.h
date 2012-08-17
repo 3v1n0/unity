@@ -24,6 +24,7 @@
 #include <Nux/View.h>
 #include <Nux/BaseWindow.h>
 #include <Nux/TimerProc.h>
+#include <NuxGraphics/GestureEvent.h>
 #include <NuxGraphics/IOpenGLAsmShader.h>
 
 #include "PointerBarrier.h"
@@ -95,7 +96,8 @@ public:
     return _parent;
   };
 
-  nux::ObjectPtr<nux::View> GetActiveTooltip() const;  // nullptr = no tooltip
+  nux::ObjectPtr<nux::View> const& GetActiveTooltip() const;
+  nux::ObjectPtr<LauncherDragWindow> const& GetDraggedIcon() const;
 
   virtual void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -247,6 +249,8 @@ private:
   void SetHover(bool hovered);
   void SetHidden(bool hidden);
 
+  void UpdateChangeInMousePosition(int delta_x, int delta_y);
+
   void  SetDndDelta(float x, float y, nux::Geometry const& geo, timespec const& current);
   float DragLimiter(float x);
 
@@ -389,6 +393,8 @@ private:
 
   UBusManager ubus_;
   glib::SourceManager sources_;
+
+  friend class TestLauncher;
 };
 
 }

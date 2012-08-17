@@ -24,6 +24,11 @@
 
 using unity::texture_from_cairo_graphics;
 
+namespace unity
+{
+namespace dash
+{
+
 PlacesVScrollBar::PlacesVScrollBar(NUX_FILE_LINE_DECL)
   : VScrollBar(NUX_FILE_LINE_PARAM),
     _slider_texture(NULL)
@@ -131,3 +136,7 @@ void PlacesVScrollBar::UpdateTexture()
   cairo_destroy(cr);
   delete cairoGraphics;
 }
+
+} // namespace dash
+} // namespace unity
+

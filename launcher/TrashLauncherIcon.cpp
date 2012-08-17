@@ -38,24 +38,20 @@ namespace
 }
 
 TrashLauncherIcon::TrashLauncherIcon()
-  : SimpleLauncherIcon()
-  , on_trash_changed_handler_id_(0)
+  : SimpleLauncherIcon(IconType::TRASH)
   , proxy_("org.gnome.Nautilus", "/org/gnome/Nautilus", "org.gnome.Nautilus.FileOperations")
+  , cancellable_(g_cancellable_new())
 {
   tooltip_text = _("Trash");
   icon_name = "user-trash";
-  SetQuirk(QUIRK_VISIBLE, true);
-  SetQuirk(QUIRK_RUNNING, false);
-  SetIconType(TYPE_TRASH);
+  SetQuirk(Quirk::VISIBLE, true);
+  SetQuirk(Quirk::RUNNING, false);
   SetShortcut('t');
 
   glib::Object<GFile> location(g_file_new_for_uri("trash:///"));
 
   glib::Error err;
-  trash_monitor_ = g_file_monitor_directory(location,
-                                            G_FILE_MONITOR_NONE,
-                                            NULL,
-                                            &err);
+  trash_monitor_ = g_file_monitor_directory(location, G_FILE_MONITOR_NONE, nullptr, &err);
 
   if (err)
   {
@@ -63,10 +59,10 @@ TrashLauncherIcon::TrashLauncherIcon()
   }
   else
   {
-    on_trash_changed_handler_id_ = g_signal_connect(trash_monitor_,
-                                                  "changed",
-                                                  G_CALLBACK(&TrashLauncherIcon::OnTrashChanged),
-                                                  this);
+    trash_changed_signal_.Connect(trash_monitor_, "changed",
+    [this] (GFileMonitor*, GFile*, GFile*, GFileMonitorEvent) {
+      UpdateTrashIcon();
+    });
   }
 
   UpdateTrashIcon();
@@ -74,27 +70,23 @@ TrashLauncherIcon::TrashLauncherIcon()
 
 TrashLauncherIcon::~TrashLauncherIcon()
 {
-  if (on_trash_changed_handler_id_ != 0)
-    g_signal_handler_disconnect((gpointer) trash_monitor_,
-                                on_trash_changed_handler_id_);
+  g_cancellable_cancel(cancellable_);
 }
 
-std::list<DbusmenuMenuitem*> TrashLauncherIcon::GetMenus()
+AbstractLauncherIcon::MenuItemsVector TrashLauncherIcon::GetMenus()
 {
-  std::list<DbusmenuMenuitem*> result;
-  DbusmenuMenuitem* menu_item;
+  MenuItemsVector result;
 
   /* Empty Trash */
-  menu_item = dbusmenu_menuitem_new();
-  g_object_ref(menu_item);
-
+  glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
   dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Empty Trash..."));
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, !empty_);
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+  empty_activated_signal_.Connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+  [this] (DbusmenuMenuitem*, int) {
+    proxy_.Call("EmptyTrash");
+  });
 
-  g_signal_connect(menu_item,
-                   DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                   (GCallback)&TrashLauncherIcon::OnEmptyTrash, this);
   result.push_back(menu_item);
 
   return result;
@@ -108,11 +100,6 @@ void TrashLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   g_spawn_command_line_async("xdg-open trash://", &error);
 }
 
-void TrashLauncherIcon::OnEmptyTrash(DbusmenuMenuitem* item, int time, TrashLauncherIcon* self)
-{
-  self->proxy_.Call("EmptyTrash");
-}
-
 void TrashLauncherIcon::UpdateTrashIcon()
 {
   glib::Object<GFile> location(g_file_new_for_uri("trash:///"));
@@ -121,10 +108,9 @@ void TrashLauncherIcon::UpdateTrashIcon()
                           G_FILE_ATTRIBUTE_STANDARD_ICON,
                           G_FILE_QUERY_INFO_NONE,
                           0,
-                          NULL,
+                          cancellable_,
                           &TrashLauncherIcon::UpdateTrashIconCb,
                           this);
-
 }
 
 void TrashLauncherIcon::UpdateTrashIconCb(GObject* source,
@@ -147,16 +133,6 @@ void TrashLauncherIcon::UpdateTrashIconCb(GObject* source,
   }
 }
 
-void TrashLauncherIcon::OnTrashChanged(GFileMonitor* monitor,
-                                       GFile* file,
-                                       GFile* other_file,
-                                       GFileMonitorEvent event_type,
-                                       gpointer data)
-{
-  TrashLauncherIcon* self = (TrashLauncherIcon*) data;
-  self->UpdateTrashIcon();
-}
-
 
 nux::DndAction TrashLauncherIcon::OnQueryAcceptDrop(DndData const& dnd_data)
 {
@@ -177,7 +153,7 @@ void TrashLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
     g_file_trash(file, NULL, NULL);
   }
 
-  SetQuirk(LauncherIcon::QUIRK_PULSE_ONCE, true);
+  SetQuirk(LauncherIcon::Quirk::PULSE_ONCE, true);
 }
 
 std::string TrashLauncherIcon::GetName() const

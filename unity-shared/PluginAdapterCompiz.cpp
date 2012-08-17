@@ -298,7 +298,7 @@ MultiActionList::TerminateAll(CompOption::Vector& extraArgs)
 }
 
 unsigned long long
-PluginAdapter::GetWindowActiveNumber (guint32 xid)
+PluginAdapter::GetWindowActiveNumber (guint32 xid) const
 {
   Window win = xid;
   CompWindow* window;
@@ -368,21 +368,27 @@ PluginAdapter::TerminateScale()
 }
 
 bool
-PluginAdapter::IsScaleActive()
+PluginAdapter::IsScaleActive() const
 {
   return m_Screen->grabExist("scale");
 }
 
 bool
-PluginAdapter::IsScaleActiveForGroup()
+PluginAdapter::IsScaleActiveForGroup() const
 {
   return _spread_windows_state && m_Screen->grabExist("scale");
 }
 
 bool
-PluginAdapter::IsExpoActive()
+PluginAdapter::IsExpoActive() const
 {
   return m_Screen->grabExist("expo");
+}
+
+bool
+PluginAdapter::IsWallActive() const
+{
+  return m_Screen->grabExist("wall");
 }
 
 void
@@ -395,13 +401,13 @@ PluginAdapter::InitiateExpo()
 
 // WindowManager implementation
 guint32
-PluginAdapter::GetActiveWindow()
+PluginAdapter::GetActiveWindow() const
 {
   return m_Screen->activeWindow();
 }
 
 bool
-PluginAdapter::IsWindowMaximized(guint xid)
+PluginAdapter::IsWindowMaximized(guint xid) const
 {
   Window win = xid;
   CompWindow* window;
@@ -456,7 +462,7 @@ PluginAdapter::IsWindowDecorated(guint32 xid)
 }
 
 bool
-PluginAdapter::IsWindowOnCurrentDesktop(guint32 xid)
+PluginAdapter::IsWindowOnCurrentDesktop(guint32 xid) const
 {
   Window win = xid;
   CompWindow* window;
@@ -472,7 +478,7 @@ PluginAdapter::IsWindowOnCurrentDesktop(guint32 xid)
 }
 
 bool
-PluginAdapter::IsWindowObscured(guint32 xid)
+PluginAdapter::IsWindowObscured(guint32 xid) const
 {
   Window win = xid;
   CompWindow* window;
@@ -505,7 +511,7 @@ PluginAdapter::IsWindowObscured(guint32 xid)
 }
 
 bool
-PluginAdapter::IsWindowMapped(guint32 xid)
+PluginAdapter::IsWindowMapped(guint32 xid) const
 {
   Window win = xid;
   CompWindow* window;
@@ -517,7 +523,7 @@ PluginAdapter::IsWindowMapped(guint32 xid)
 }
 
 bool
-PluginAdapter::IsWindowVisible(guint32 xid)
+PluginAdapter::IsWindowVisible(guint32 xid) const
 {
   Window win = xid;
   CompWindow* window;
@@ -530,7 +536,7 @@ PluginAdapter::IsWindowVisible(guint32 xid)
 }
 
 bool
-PluginAdapter::IsWindowOnTop(guint32 xid)
+PluginAdapter::IsWindowOnTop(guint32 xid) const
 {
   Window win = xid;
   CompWindow* window = m_Screen->findWindow(win);
@@ -569,7 +575,7 @@ PluginAdapter::IsWindowOnTop(guint32 xid)
 }
 
 bool
-PluginAdapter::IsWindowClosable(guint32 xid)
+PluginAdapter::IsWindowClosable(guint32 xid) const
 {
   Window win = xid;
   CompWindow* window;
@@ -582,7 +588,7 @@ PluginAdapter::IsWindowClosable(guint32 xid)
 }
 
 bool
-PluginAdapter::IsWindowMinimizable(guint32 xid)
+PluginAdapter::IsWindowMinimizable(guint32 xid) const
 {
   Window win = xid;
   CompWindow* window;
@@ -595,7 +601,7 @@ PluginAdapter::IsWindowMinimizable(guint32 xid)
 }
 
 bool
-PluginAdapter::IsWindowMaximizable(guint32 xid)
+PluginAdapter::IsWindowMaximizable(guint32 xid) const
 {
   Window win = xid;
   CompWindow* window;
@@ -966,7 +972,7 @@ PluginAdapter::GetWorkAreaGeometry(guint32 xid) const
 }
 
 bool
-PluginAdapter::CheckWindowIntersection(nux::Geometry const& region, CompWindow* window)
+PluginAdapter::CheckWindowIntersection(nux::Geometry const& region, CompWindow* window) const
 {
   int intersect_types = CompWindowTypeNormalMask | CompWindowTypeDialogMask |
                         CompWindowTypeModalDialogMask | CompWindowTypeUtilMask;
@@ -1023,7 +1029,7 @@ PluginAdapter::CheckWindowIntersections (nux::Geometry const& region, bool &acti
 }
 
 int
-PluginAdapter::WorkspaceCount()
+PluginAdapter::WorkspaceCount() const
 {
   return m_Screen->vpSize().width() * m_Screen->vpSize().height();
 }
@@ -1106,19 +1112,19 @@ PluginAdapter::Undecorate(guint32 xid)
 }
 
 bool
-PluginAdapter::IsScreenGrabbed()
+PluginAdapter::IsScreenGrabbed() const
 {
   return m_Screen->grabbed();
 }
 
 bool
-PluginAdapter::IsViewPortSwitchStarted()
+PluginAdapter::IsViewPortSwitchStarted() const
 {
   return _vp_switch_started;
 }
 
 /* Returns true if the window was maximized */
-bool PluginAdapter::MaximizeIfBigEnough(CompWindow* window)
+bool PluginAdapter::MaximizeIfBigEnough(CompWindow* window) const
 {
   XClassHint   classHint;
   Status       status;
