@@ -257,7 +257,7 @@ void Preview::PerformAction(std::string const& id) const
   }
   else
   {
-    LOG_WARN(logger) << "Unable to perform action, parent_lens wasn't set!";
+    LOG_WARN(logger) << "Unable to perform action '" << id << "', parent_lens wasn't set!";
   }
 }
 
