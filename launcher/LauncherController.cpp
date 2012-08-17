@@ -394,7 +394,7 @@ void Controller::Impl::SortAndUpdate()
 
 void Controller::Impl::OnIconAdded(AbstractLauncherIcon::Ptr icon)
 {
-  this->RegisterIcon(icon);
+  RegisterIcon(icon);
 }
 
 void Controller::Impl::OnIconRemoved(AbstractLauncherIcon::Ptr icon)
@@ -465,7 +465,7 @@ void Controller::Impl::OnFavoriteStoreFavoriteAdded(std::string const& entry, st
   {
     for (auto it : bamf_list)
     {
-      if (it->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE) && pos == it->DesktopFile())
+      if (it->IsVisible() && pos == it->DesktopFile())
         other = it;
     }
   }

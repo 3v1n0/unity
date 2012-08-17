@@ -109,6 +109,8 @@ LauncherIcon::LauncherIcon(IconType type)
 
   position = Position::FLOATING;
 
+  icon_weight = static_cast<unsigned>(type);
+
   // FIXME: the abstraction is already broken, should be fixed for O
   // right now, hooking the dynamic quicklist the less ugly possible way
   mouse_enter.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseEnter));

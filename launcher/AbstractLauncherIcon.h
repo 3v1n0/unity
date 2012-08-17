@@ -129,6 +129,7 @@ public:
   nux::Property<std::string> tooltip_text;
   nux::Property<bool> tooltip_enabled;
   nux::Property<Position> position;
+  nux::Property<unsigned> icon_weight;
 
   virtual void HideTooltip() = 0;
 

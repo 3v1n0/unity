@@ -50,7 +50,8 @@ public:
     tooltip_text = "Mock Icon";
     sort_priority_ = 0;
     type_ = IconType::APPLICATION;
-    position == Position::FLOATING;
+    position = Position::FLOATING;
+    icon_weight = 0;
 
     for (unsigned i = 0; i < unsigned(Quirk::LAST); ++i)
     {
