@@ -141,6 +141,9 @@ public:
 
   void AppendUnlockFromLauncherItem(MenuItemsVector& menu)
   {
+    if (volume_->GetIdentifier().empty())
+      return;
+
     glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
 
     dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Unlock from Launcher"));

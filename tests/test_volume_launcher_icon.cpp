@@ -24,6 +24,7 @@ using namespace testing;
 #include "launcher/Volume.h"
 #include "launcher/VolumeLauncherIcon.h"
 #include "test_utils.h"
+using namespace unity;
 using namespace unity::launcher;
 
 namespace
@@ -110,16 +111,52 @@ public:
       .WillRepeatedly(Return(true));
   }
 
+  glib::Object<DbusmenuMenuitem> GetMenuItemAtIndex(int index)
+  {
+    auto menuitems = icon_->GetMenus();
+    auto menuitem = menuitems.begin();
+    std::advance(menuitem, index);
+
+    return *menuitem;
+  } 
+
   MockVolume::Ptr volume_;
   MockDevicesSettings::Ptr settings_;
   VolumeLauncherIcon::Ptr icon_;
 };
 
+TEST_F(TestVolumeLauncherIcon, TestIconType)
+{
+  CreateIcon();
+  EXPECT_EQ(icon_->GetIconType(), AbstractLauncherIcon::IconType::DEVICE);
+}
+
+TEST_F(TestVolumeLauncherIcon, TestQuirks)
+{
+  CreateIcon();
+
+  EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
+}
+
+TEST_F(TestVolumeLauncherIcon, TestTooltipText)
+{
+  CreateIcon();
+
+  ASSERT_EQ(icon_->tooltip_text, "Test Name");
+}
+
+TEST_F(TestVolumeLauncherIcon, TestIconName)
+{
+  CreateIcon();
+
+  ASSERT_EQ(icon_->icon_name, "Test Icon Name");
+}
+
 TEST_F(TestVolumeLauncherIcon, TestVisibility_InitiallyMountedVolume)
 {
   CreateIcon();
 
-  ASSERT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
+  EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
 }
 
 TEST_F(TestVolumeLauncherIcon, TestVisibility_InitiallyMountedBlacklistedVolume)
@@ -140,7 +177,7 @@ TEST_F(TestVolumeLauncherIcon, TestVisibility_InitiallyUnmountedVolume)
 
   CreateIcon();
 
-  ASSERT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
+  EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
 }
 
 
@@ -154,12 +191,18 @@ TEST_F(TestVolumeLauncherIcon, TestVisibility_InitiallyUnmountedBlacklistedVolum
 
   CreateIcon();
 
-  ASSERT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
+  EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
 }
 
-TEST_F(TestVolumeLauncherIcon, TestVolumeChangedSignal)
+TEST_F(TestVolumeLauncherIcon, TestSettingsChangedSignal)
 {
-  // FIXME
+  CreateIcon();
+
+  EXPECT_CALL(*settings_, IsABlacklistedDevice(_))
+    .WillRepeatedly(Return(true));
+  settings_->changed.emit();
+
+  EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
 }
 
 TEST_F(TestVolumeLauncherIcon, TestVisibilityAfterUnmount)
@@ -197,33 +240,26 @@ TEST_F(TestVolumeLauncherIcon, TestVisibilityAfterUnmount_BlacklistedVolume)
   EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
 }
 
-TEST_F(TestVolumeLauncherIcon, TestTooltipText)
+TEST_F(TestVolumeLauncherIcon, TestUnlockFromLauncherMenuItem_VolumeWithoutIdentifier)
 {
+  EXPECT_CALL(*volume_, GetIdentifier())
+    .WillRepeatedly(Return(""));
+
   CreateIcon();
 
-  ASSERT_EQ(icon_->tooltip_text, "Test Name");
+  for (auto menuitem : icon_->GetMenus())
+    ASSERT_STRNE(dbusmenu_menuitem_property_get(menuitem, DBUSMENU_MENUITEM_PROP_LABEL), "Unlock from Launcher");
 }
-
-TEST_F(TestVolumeLauncherIcon, TestIconName)
-{
-  CreateIcon();
-
-  ASSERT_EQ(icon_->icon_name, "Test Icon Name");
-}
-
-TEST_F(TestVolumeLauncherIcon, TestSettingsChangedSignal)
-{}
 
 TEST_F(TestVolumeLauncherIcon, TestUnlockFromLauncherMenuItem_Success)
 {
   CreateIcon();
 
-  auto menu = icon_->GetMenus();
-  auto menuitem = menu.begin();
+  auto menuitem = GetMenuItemAtIndex(0);
 
-  ASSERT_STREQ(dbusmenu_menuitem_property_get(*menuitem, DBUSMENU_MENUITEM_PROP_LABEL), "Unlock from Launcher");
-  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
-  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
+  ASSERT_STREQ(dbusmenu_menuitem_property_get(menuitem, DBUSMENU_MENUITEM_PROP_LABEL), "Unlock from Launcher");
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
 
   EXPECT_CALL(*settings_, TryToBlacklist(_))
     .Times(1);
@@ -231,8 +267,8 @@ TEST_F(TestVolumeLauncherIcon, TestUnlockFromLauncherMenuItem_Success)
   EXPECT_CALL(*settings_, IsABlacklistedDevice(_))
     .WillRepeatedly(Return(true));
 
-  dbusmenu_menuitem_handle_event(*menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
-  settings_->changed.emit(); // TryToBlacklist() worked!
+  dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
+  settings_->changed.emit(); // TryToBlacklist() works if DevicesSettings emits a changed signal.
   Utils::WaitForTimeout(1);
 
   ASSERT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
@@ -242,20 +278,16 @@ TEST_F(TestVolumeLauncherIcon, TestUnlockFromLauncherMenuItem_Failure)
 {
   CreateIcon();
 
-  auto menu = icon_->GetMenus();
-  auto menuitem = menu.begin();
+  auto menuitem = GetMenuItemAtIndex(0);
 
-  ASSERT_STREQ(dbusmenu_menuitem_property_get(*menuitem, DBUSMENU_MENUITEM_PROP_LABEL), "Unlock from Launcher");
-  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
-  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
+  ASSERT_STREQ(dbusmenu_menuitem_property_get(menuitem, DBUSMENU_MENUITEM_PROP_LABEL), "Unlock from Launcher");
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
 
   EXPECT_CALL(*settings_, TryToBlacklist(_))
     .Times(1);
 
-  EXPECT_CALL(*settings_, IsABlacklistedDevice(_))
-    .WillRepeatedly(Return(false)); // TryToBlacklist can fails (e.g. you can blacklist CD/DVD/...)
-
-  dbusmenu_menuitem_handle_event(*menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
+  dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
   Utils::WaitForTimeout(1);
 
   ASSERT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
@@ -265,18 +297,16 @@ TEST_F(TestVolumeLauncherIcon, TestOpenMenuItem)
 {
   CreateIcon();
 
-  auto menu = icon_->GetMenus();
-  auto menuitem = menu.begin();
-  std::advance(menuitem, 1);
+  auto menuitem = GetMenuItemAtIndex(1);
 
-  ASSERT_STREQ(dbusmenu_menuitem_property_get(*menuitem, DBUSMENU_MENUITEM_PROP_LABEL), "Open");
-  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
-  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
+  ASSERT_STREQ(dbusmenu_menuitem_property_get(menuitem, DBUSMENU_MENUITEM_PROP_LABEL), "Open");
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
 
   EXPECT_CALL(*volume_, MountAndOpenInFileManager())
     .Times(1);
 
-  dbusmenu_menuitem_handle_event(*menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
+  dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
   Utils::WaitForTimeout(1);
 }
 
@@ -295,18 +325,16 @@ TEST_F(TestVolumeLauncherIcon, TestEjectMenuItem)
 
   CreateIcon();
 
-  auto menu = icon_->GetMenus();
-  auto menuitem = menu.begin();
-  std::advance(menuitem, 2);
+  auto menuitem = GetMenuItemAtIndex(2);
 
   EXPECT_CALL(*volume_, EjectAndShowNotification())
     .Times(1);
 
-  ASSERT_STREQ(dbusmenu_menuitem_property_get(*menuitem, DBUSMENU_MENUITEM_PROP_LABEL), "Eject");
-  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
-  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
+  ASSERT_STREQ(dbusmenu_menuitem_property_get(menuitem, DBUSMENU_MENUITEM_PROP_LABEL), "Eject");
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
 
-  dbusmenu_menuitem_handle_event(*menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
+  dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
   Utils::WaitForTimeout(1);
 }
 
@@ -325,18 +353,16 @@ TEST_F(TestVolumeLauncherIcon, TestSafelyRemoveMenuItem)
 
   CreateIcon();
 
-  auto menu = icon_->GetMenus();
-  auto menuitem = menu.begin();
-  std::advance(menuitem, 2);
+  auto menuitem = GetMenuItemAtIndex(2);
 
   EXPECT_CALL(*volume_, StopDrive())
     .Times(1);
 
-  ASSERT_STREQ(dbusmenu_menuitem_property_get(*menuitem, DBUSMENU_MENUITEM_PROP_LABEL), "Safely remove");
-  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
-  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
+  ASSERT_STREQ(dbusmenu_menuitem_property_get(menuitem, DBUSMENU_MENUITEM_PROP_LABEL), "Safely remove");
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
 
-  dbusmenu_menuitem_handle_event(*menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
+  dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
   Utils::WaitForTimeout(1);
 }
 
@@ -387,18 +413,16 @@ TEST_F(TestVolumeLauncherIcon, TestUnmountMenuItem)
 
   CreateIcon();
 
-  auto menu = icon_->GetMenus();
-  auto menuitem = menu.begin();
-  std::advance(menuitem, 2);
+  auto menuitem = GetMenuItemAtIndex(2);
 
   EXPECT_CALL(*volume_, Unmount())
     .Times(1);
 
-  ASSERT_STREQ(dbusmenu_menuitem_property_get(*menuitem, DBUSMENU_MENUITEM_PROP_LABEL), "Unmount");
-  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
-  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
+  ASSERT_STREQ(dbusmenu_menuitem_property_get(menuitem, DBUSMENU_MENUITEM_PROP_LABEL), "Unmount");
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
 
-  dbusmenu_menuitem_handle_event(*menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
+  dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
   Utils::WaitForTimeout(1);
 }
 
@@ -425,6 +449,7 @@ TEST_F(TestVolumeLauncherIcon, TestEject)
 
   EXPECT_CALL(*volume_, EjectAndShowNotification())
     .Times(1);
+
   icon_->EjectAndShowNotification();
 }
 
