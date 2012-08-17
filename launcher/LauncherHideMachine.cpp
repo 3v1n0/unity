@@ -29,7 +29,7 @@ namespace launcher
 namespace
 {
 nux::logging::Logger logger("unity.launcher");
-const unsigned int HIDE_DELAY_TIMEOUT_LENGTH = 750;
+const unsigned int HIDE_DELAY_TIMEOUT_LENGTH = 400;
 }
 
 LauncherHideMachine::LauncherHideMachine()
@@ -83,23 +83,22 @@ void LauncherHideMachine::SetShouldHide(bool value, bool skip_delay)
 }
 
 /* == Quick Quirk Reference : please keep up to date ==
-    LAUNCHER_HIDDEN        = 1 << 0, 1
-    MOUSE_OVER_LAUNCHER    = 1 << 1, 2
-    QUICKLIST_OPEN         = 1 << 4, 16  #VISIBLE_REQUIRED
-    EXTERNAL_DND_ACTIVE    = 1 << 5, 32  #VISIBLE_REQUIRED
-    INTERNAL_DND_ACTIVE    = 1 << 6, 64  #VISIBLE_REQUIRED
-    TRIGGER_BUTTON_SHOW    = 1 << 7, 128 #VISIBLE_REQUIRED
-    DND_PUSHED_OFF         = 1 << 10, 1024
-    MOUSE_MOVE_POST_REVEAL = 1 << 11, 2k
-    VERTICAL_SLIDE_ACTIVE  = 1 << 12, 4k  #VISIBLE_REQUIRED
-    KEY_NAV_ACTIVE         = 1 << 13, 8k  #VISIBLE_REQUIRED
-    PLACES_VISIBLE         = 1 << 14, 16k #VISIBLE_REQUIRED
-    LAST_ACTION_ACTIVATE   = 1 << 15, 32k
-    SCALE_ACTIVE           = 1 << 16, 64k  #VISIBLE_REQUIRED
-    EXPO_ACTIVE            = 1 << 17, 128k #VISIBLE_REQUIRED
-    MT_DRAG_OUT            = 1 << 18, 256k #VISIBLE_REQUIRED
-    LAUNCHER_PULSE         = 1 << 20, 1M   #VISIBLE_REQUIRED
-    LOCK_HIDE              = 1 << 21, 2M
+    LAUNCHER_HIDDEN        = 1 << 0,  1
+    MOUSE_OVER_LAUNCHER    = 1 << 1,  2
+    QUICKLIST_OPEN         = 1 << 2,  4      #VISIBLE_REQUIRED
+    EXTERNAL_DND_ACTIVE    = 1 << 3,  8      #VISIBLE_REQUIRED
+    INTERNAL_DND_ACTIVE    = 1 << 4,  16     #VISIBLE_REQUIRED
+    TRIGGER_BUTTON_SHOW    = 1 << 5,  32     #VISIBLE_REQUIRED
+    DND_PUSHED_OFF         = 1 << 6,  64
+    MOUSE_MOVE_POST_REVEAL = 1 << 7,  128
+    VERTICAL_SLIDE_ACTIVE  = 1 << 8,  256   #VISIBLE_REQUIRED
+    KEY_NAV_ACTIVE         = 1 << 9,  512   #VISIBLE_REQUIRED
+    PLACES_VISIBLE         = 1 << 10, 1024  #VISIBLE_REQUIRED
+    SCALE_ACTIVE           = 1 << 11, 2048  #VISIBLE_REQUIRED
+    EXPO_ACTIVE            = 1 << 12, 4096  #VISIBLE_REQUIRED
+    MT_DRAG_OUT            = 1 << 13, 8192  #VISIBLE_REQUIRED
+    LAUNCHER_PULSE         = 1 << 14, 16384 #VISIBLE_REQUIRED
+    LOCK_HIDE              = 1 << 15, 32768
 */
 
 #define VISIBLE_REQUIRED (QUICKLIST_OPEN | EXTERNAL_DND_ACTIVE | \
@@ -116,7 +115,7 @@ void LauncherHideMachine::EnsureHideState(bool skip_delay)
     SetShouldHide(false, skip_delay);
     return;
   }
-  
+
   // early check to see if we are locking to hidden - but only if we are in non HIDE_NEVER
   if (GetQuirk(LOCK_HIDE))
   {
@@ -137,13 +136,6 @@ void LauncherHideMachine::EnsureHideState(bool skip_delay)
     bool hide_for_window = false;
     if (_mode == AUTOHIDE)
       hide_for_window = true;
-
-    // if we activated AND we would hide because of a window, go ahead and do it
-    if (!_should_hide && GetQuirk(LAST_ACTION_ACTIVATE) && hide_for_window)
-    {
-      should_hide = true;
-      break;
-    }
 
     // Is there anything holding us open?
     HideQuirk _should_show_quirk;
@@ -201,12 +193,7 @@ void LauncherHideMachine::SetQuirk(LauncherHideMachine::HideQuirk quirk, bool ac
   else
     _quirks = (HideQuirk)(_quirks & ~quirk);
 
-  // no skipping when last action was activate on general case
-  bool skip = quirk & SKIP_DELAY_QUIRK && !GetQuirk(LAST_ACTION_ACTIVATE);
-
-  // but skip on last action if we were out of the launcher/bfb
-  if (GetQuirk(LAST_ACTION_ACTIVATE) && !active && (quirk & (MOUSE_OVER_LAUNCHER)))
-    skip = true;
+  bool skip = quirk & SKIP_DELAY_QUIRK;
 
   EnsureHideState(skip);
 }
