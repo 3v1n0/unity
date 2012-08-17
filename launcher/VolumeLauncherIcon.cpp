@@ -46,6 +46,8 @@ const unsigned int volume_changed_timeout =  500;
 class VolumeLauncherIcon::Impl
 {
 public:
+  typedef glib::Signal<void, DbusmenuMenuitem*, int> ItemSignal;
+
   Impl(Volume::Ptr const& volume,
        DevicesSettings::Ptr const& devices_settings,
        VolumeLauncherIcon* parent)
@@ -58,19 +60,15 @@ public:
     ConnectSignals();
   }
 
-  ~Impl()
-  {
-    settings_changed_connection_.disconnect();
-    volume_changed_connection_.disconnect();
-  }
-
   void UpdateIcon()
   {
     parent_->tooltip_text = volume_->GetName();
     parent_->icon_name = volume_->GetIconName();
 
-    parent_->SetIconType(IconType::DEVICE);
     parent_->SetQuirk(Quirk::RUNNING, false);
+
+    if (volume_->IsMounted())
+      parent_->SetQuirk(Quirk::STARTING, false);
   }
 
   void UpdateVisibility()
@@ -87,18 +85,18 @@ public:
 
   void ConnectSignals()
   {
-    volume_changed_connection_ = volume_->changed.connect([this]() {
-      // FIXME: find a way to remove this timeout.
-      changed_timeout_.reset(new glib::Timeout(volume_changed_timeout, [this]() {
-        UpdateIcon();
-        UpdateVisibility();
-        return false;
-      }));
-    });
+    volume_->changed.connect(sigc::mem_fun(this, &Impl::OnVolumeChanged));
+    devices_settings_->changed.connect(sigc::mem_fun(this, &Impl::OnSettingsChanged));
+  }
 
-    settings_changed_connection_ = devices_settings_->changed.connect([this]() {
-      UpdateVisibility();
-    });
+  void OnVolumeChanged()
+  {
+    UpdateIcon();
+  }
+
+  void OnSettingsChanged()
+  {
+    UpdateVisibility();
   }
 
   bool CanEject() const
@@ -113,10 +111,6 @@ public:
 
   void OnRemoved()
   {
-    settings_changed_connection_.disconnect();
-    volume_changed_connection_.disconnect();
-    changed_timeout_.reset();
-
     if (devices_settings_->IsABlacklistedDevice(volume_->GetIdentifier()))
       devices_settings_->TryToUnblacklist(volume_->GetIdentifier());
 
@@ -131,9 +125,9 @@ public:
     volume_->MountAndOpenInFileManager();
   }
 
-  std::list<DbusmenuMenuitem*> GetMenus()
+  MenuItemsVector GetMenus()
   {
-    std::list<DbusmenuMenuitem*> result;
+    MenuItemsVector result;
 
     AppendUnlockFromLauncherItem(result);
     AppendOpenItem(result);
@@ -144,87 +138,87 @@ public:
     return result;
   }
 
-  void AppendUnlockFromLauncherItem(std::list<DbusmenuMenuitem*>& menu)
+  void AppendUnlockFromLauncherItem(MenuItemsVector& menu)
   {
-    DbusmenuMenuitem* menu_item = dbusmenu_menuitem_new();
+    glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
 
     dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Unlock from Launcher"));
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
-    unlock_menuitem_activated_.Connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
+    gsignals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
         auto identifier = volume_->GetIdentifier();
         devices_settings_->TryToBlacklist(identifier);
-    });
+    }));
 
     menu.push_back(menu_item);
   }
 
-  void AppendOpenItem(std::list<DbusmenuMenuitem*>& menu)
+  void AppendOpenItem(MenuItemsVector& menu)
   {
-    DbusmenuMenuitem* menu_item = dbusmenu_menuitem_new();
+    glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
 
     dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Open"));
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
-    open_menuitem_activated_.Connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
+    gsignals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
         volume_->MountAndOpenInFileManager();
-    });
+    }));
 
     menu.push_back(menu_item);
   }
 
-  void AppendEjectItem(std::list<DbusmenuMenuitem*>& menu)
+  void AppendEjectItem(MenuItemsVector& menu)
   {
     if (!volume_->CanBeEjected())
       return;
 
-    DbusmenuMenuitem* menu_item = dbusmenu_menuitem_new();
+    glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
 
     dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, volume_->HasSiblings() ? _("Eject parent drive") : _("Eject"));
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
-    eject_menuitem_activated_.Connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
+    gsignals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
         volume_->EjectAndShowNotification();
-    });
+    }));
 
     menu.push_back(menu_item);
   }
 
-  void AppendSafelyRemoveItem(std::list<DbusmenuMenuitem*>& menu)
+  void AppendSafelyRemoveItem(MenuItemsVector& menu)
   {
     if (!volume_->CanBeStopped())
       return;
 
-    DbusmenuMenuitem* menu_item = dbusmenu_menuitem_new();
+    glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
 
     dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, volume_->HasSiblings() ? _("Safely remove parent drive") : _("Safely remove"));
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
-    stop_menuitem_activated_.Connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
+    gsignals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
         volume_->StopDrive();
-    });
+    }));
 
     menu.push_back(menu_item);
   }
 
-  void AppendUnmountItem(std::list<DbusmenuMenuitem*>& menu)
+  void AppendUnmountItem(MenuItemsVector& menu)
   {
     if (!volume_->IsMounted() || volume_->CanBeEjected() || volume_->CanBeStopped())
       return;
 
-    DbusmenuMenuitem* menu_item = dbusmenu_menuitem_new();
+    glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
 
     dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Unmount"));
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
-    unmount_menuitem_activated_.Connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
+    gsignals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
         volume_->Unmount();
-    });
+    }));
 
     menu.push_back(menu_item);
   }
@@ -234,14 +228,7 @@ public:
   Volume::Ptr volume_;
   DevicesSettings::Ptr devices_settings_;
 
-  sigc::connection settings_changed_connection_;
-  sigc::connection volume_changed_connection_;
-  glib::Source::UniquePtr changed_timeout_;
-  glib::Signal<void, DbusmenuMenuitem*, int> unlock_menuitem_activated_;
-  glib::Signal<void, DbusmenuMenuitem*, int> open_menuitem_activated_;
-  glib::Signal<void, DbusmenuMenuitem*, int> eject_menuitem_activated_;
-  glib::Signal<void, DbusmenuMenuitem*, int> stop_menuitem_activated_;
-  glib::Signal<void, DbusmenuMenuitem*, int> unmount_menuitem_activated_;
+  glib::SignalManager gsignals_;
 };
 
 //
@@ -250,7 +237,8 @@ public:
 
 VolumeLauncherIcon::VolumeLauncherIcon(Volume::Ptr const& volume,
                                        DevicesSettings::Ptr const& devices_settings)
-  : pimpl_(new Impl(volume, devices_settings, this))
+  : SimpleLauncherIcon(IconType::DEVICE)
+  , pimpl_(new Impl(volume, devices_settings, this))
 {}
 
 VolumeLauncherIcon::~VolumeLauncherIcon()
@@ -276,7 +264,7 @@ void VolumeLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   pimpl_->ActivateLauncherIcon(arg);
 }
 
-std::list<DbusmenuMenuitem*> VolumeLauncherIcon::GetMenus()
+AbstractLauncherIcon::MenuItemsVector VolumeLauncherIcon::GetMenus()
 {
   return pimpl_->GetMenus();
 }

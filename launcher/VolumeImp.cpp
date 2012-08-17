@@ -98,7 +98,7 @@ public:
       return false;
 
     GList* volumes = g_drive_get_volumes(drive);
-    bool has_sibilings = volumes && g_list_length(volumes) > 1;
+    bool has_sibilings = volumes && volumes->next;
 
     if (volumes)
       g_list_free_full(volumes, g_object_unref);

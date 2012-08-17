@@ -163,6 +163,12 @@ const RowAdaptor Model<RowAdaptor>::RowAtIndex(std::size_t index)
 }
 
 template<class RowAdaptor>
+DeeModelTag* Model<RowAdaptor>::GetTag()
+{
+  return renderer_tag_;
+}
+
+template<class RowAdaptor>
 std::size_t Model<RowAdaptor>::get_count()
 {
   if (model_)

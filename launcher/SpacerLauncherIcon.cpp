@@ -28,11 +28,10 @@ namespace launcher
 {
 
 SpacerLauncherIcon::SpacerLauncherIcon(int monitor)
-  : SingleMonitorLauncherIcon(monitor)
+  : SingleMonitorLauncherIcon(IconType::APPLICATION, monitor)
 {
   SetQuirk(Quirk::VISIBLE, true);
   SetQuirk(Quirk::RUNNING, false);
-  SetIconType(IconType::APPLICATION);
 
   tooltip_text = _("Drop To Add Application");
 }

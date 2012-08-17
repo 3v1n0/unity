@@ -58,7 +58,7 @@ service_model_create_results(ServiceModel* self)
     dee_model_append(self->results_model_,
                      name,
                      name,
-                     (guint)i,
+                     (guint)(i/50), // new category every 50 results
                      name,
                      name,
                      name,

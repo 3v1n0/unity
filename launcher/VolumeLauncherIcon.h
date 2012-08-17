@@ -41,7 +41,7 @@ public:
 
   bool CanEject(); // TODO: rename to public virtual bool IsTrashable();
   void EjectAndShowNotification(); // TODO: rename to private virtual void DoDropToTrash();
-  virtual std::list<DbusmenuMenuitem*> GetMenus();
+  MenuItemsVector GetMenus();
   void OnRemoved();
 
 protected:
