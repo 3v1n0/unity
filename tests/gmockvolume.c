@@ -28,8 +28,7 @@
 static void g_mock_volume_iface_init (GVolumeIface *iface);
 
 G_DEFINE_TYPE_WITH_CODE (GMockVolume, g_mock_volume, G_TYPE_OBJECT,
-			 G_IMPLEMENT_INTERFACE (G_TYPE_VOLUME,
-						g_mock_volume_iface_init))
+                         G_IMPLEMENT_INTERFACE (G_TYPE_VOLUME, g_mock_volume_iface_init))
 
 static void
 g_mock_volume_finalize (GObject *object)
@@ -41,6 +40,8 @@ static void
 g_mock_volume_dispose (GObject *object)
 {
   GMockVolume *self = G_MOCK_VOLUME (object);
+
+  self->can_eject = FALSE;
 
   if (self->name)
     g_free(self->name);
@@ -173,7 +174,14 @@ g_mock_volume_can_mount (GVolume *volume)
 static gboolean
 g_mock_volume_can_eject (GVolume *volume)
 {
-  return FALSE;
+  GMockVolume *self = G_MOCK_VOLUME (volume);
+  return self->can_eject;
+}
+
+void
+g_mock_volume_set_can_eject (GMockVolume* mock_volume, gboolean can_eject)
+{
+  mock_volume->can_eject = can_eject;
 }
 
 static gboolean
@@ -212,7 +220,10 @@ g_mock_volume_eject (GVolume             *volume,
                      GAsyncReadyCallback  callback,
                      gpointer             user_data)
 {
-}
+  
+  callback(NULL,
+           G_ASYNC_RESULT (g_simple_async_result_new (NULL, NULL, NULL, NULL)),
+           user_data);}
 
 static gboolean
 g_mock_volume_eject_finish (GVolume       *volume,

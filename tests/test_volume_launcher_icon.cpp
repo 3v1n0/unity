@@ -32,6 +32,8 @@ namespace
 class MockVolume : public Volume
 {
 public:
+  typedef std::shared_ptr<MockVolume> Ptr;
+
   MOCK_CONST_METHOD0(CanBeRemoved, bool(void));
   MOCK_CONST_METHOD0(CanBeStopped, bool(void));
   MOCK_CONST_METHOD0(GetName, std::string(void));
@@ -50,6 +52,8 @@ public:
 class MockDevicesSettings : public DevicesSettings
 {
 public:
+  typedef std::shared_ptr<MockDevicesSettings> Ptr;
+
   MOCK_CONST_METHOD1(IsABlacklistedDevice, bool(std::string const& uuid));
   MOCK_METHOD1(TryToBlacklist, void(std::string const& uuid));
   MOCK_METHOD1(TryToUnblacklist, void(std::string const& uuid));
@@ -106,8 +110,8 @@ public:
       .WillRepeatedly(Return(true));
   }
 
-  std::shared_ptr<MockVolume> volume_;
-  std::shared_ptr<MockDevicesSettings> settings_;
+  MockVolume::Ptr volume_;
+  MockDevicesSettings::Ptr settings_;
   VolumeLauncherIcon::Ptr icon_;
 };
 

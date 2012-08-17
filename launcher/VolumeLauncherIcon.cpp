@@ -60,15 +60,18 @@ public:
     ConnectSignals();
   }
 
+  ~Impl()
+  { 
+    volume_changed_conn_.disconnect();
+    settings_changed_conn_.disconnect();
+  }
+
   void UpdateIcon()
   {
     parent_->tooltip_text = volume_->GetName();
     parent_->icon_name = volume_->GetIconName();
 
     parent_->SetQuirk(Quirk::RUNNING, false);
-
-    if (volume_->IsMounted())
-      parent_->SetQuirk(Quirk::STARTING, false);
   }
 
   void UpdateVisibility()
@@ -85,8 +88,8 @@ public:
 
   void ConnectSignals()
   {
-    volume_->changed.connect(sigc::mem_fun(this, &Impl::OnVolumeChanged));
-    devices_settings_->changed.connect(sigc::mem_fun(this, &Impl::OnSettingsChanged));
+    volume_changed_conn_ = volume_->changed.connect(sigc::mem_fun(this, &Impl::OnVolumeChanged));
+    settings_changed_conn_ = devices_settings_->changed.connect(sigc::mem_fun(this, &Impl::OnSettingsChanged));
   }
 
   void OnVolumeChanged()
@@ -120,8 +123,6 @@ public:
   void ActivateLauncherIcon(ActionArg arg)
   {
     parent_->SimpleLauncherIcon::ActivateLauncherIcon(arg);
-    parent_->SetQuirk(Quirk::STARTING, true);
-
     volume_->MountAndOpenInFileManager();
   }
 
@@ -229,6 +230,8 @@ public:
   DevicesSettings::Ptr devices_settings_;
 
   glib::SignalManager gsignals_;
+  sigc::connection settings_changed_conn_;
+  sigc::connection volume_changed_conn_;
 };
 
 //

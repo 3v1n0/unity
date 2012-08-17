@@ -36,6 +36,8 @@ namespace launcher
 class VolumeImp : public Volume
 {
 public:
+  typedef std::shared_ptr<VolumeImp> Ptr;
+
   VolumeImp(glib::Object<GVolume> const& volume,
             FileManagerOpener::Ptr const& file_manager_opener,
             DeviceNotificationShower::Ptr const& device_notification_shower);

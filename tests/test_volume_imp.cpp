@@ -36,12 +36,16 @@ namespace
 class MockFileManagerOpener : public launcher::FileManagerOpener
 {
 public:
-   MOCK_METHOD1(Open, void(std::string const& uri));
+  typedef std::shared_ptr<MockFileManagerOpener> Ptr;
+
+  MOCK_METHOD1(Open, void(std::string const& uri));
 };
 
 class MockDeviceNotificationShower : public launcher::DeviceNotificationShower
 {
 public:
+  typedef std::shared_ptr<MockDeviceNotificationShower> Ptr;
+
   MOCK_METHOD2(Show, void(std::string const& icon_name, std::string const& device_name));
 };
 
@@ -58,14 +62,22 @@ public:
   }
 
   glib::Object<GMockVolume> gvolume_;
-  std::shared_ptr<MockFileManagerOpener> file_manager_opener_;
-  std::shared_ptr<MockDeviceNotificationShower> device_notification_opener_;
-  std::unique_ptr<launcher::VolumeImp> volume_;
+  MockFileManagerOpener::Ptr file_manager_opener_;
+  MockDeviceNotificationShower::Ptr device_notification_opener_;
+  launcher::VolumeImp::Ptr volume_;
 };
 
 TEST_F(TestVolumeImp, TestCtor)
 {
   EXPECT_FALSE(volume_->IsMounted());
+}
+
+TEST_F(TestVolumeImp, TestCanBeEjected)
+{
+  EXPECT_FALSE(volume_->CanBeEjected());
+
+  g_mock_volume_set_can_eject(gvolume_, TRUE);
+  EXPECT_TRUE(volume_->CanBeEjected());
 }
 
 TEST_F(TestVolumeImp, TestGetName)
@@ -101,6 +113,16 @@ TEST_F(TestVolumeImp, TestIsMounted)
   EXPECT_TRUE(volume_->IsMounted());
 }
 
+TEST_F(TestVolumeImp, TestEjectAndShowNotification)
+{
+  g_mock_volume_set_can_eject(gvolume_, TRUE);
+
+  EXPECT_CALL(*device_notification_opener_, Show(volume_->GetIconName(), volume_->GetName()))
+    .Times(1);
+
+  volume_->EjectAndShowNotification();
+}
+
 TEST_F(TestVolumeImp, TestMountAndOpenInFileManager)
 {
   EXPECT_CALL(*file_manager_opener_, Open("file:///some/directory/testfile"))
@@ -119,16 +141,12 @@ TEST_F(TestVolumeImp, TestMountAndOpenInFileManager)
 TEST_F(TestVolumeImp, TestChangedSignal)
 {
   bool callback_called = false;
-  volume_->changed.connect([&]()
-  {
+  volume_->changed.connect([&]() {
     callback_called = true;
   });
 
   g_signal_emit_by_name(gvolume_, "changed", nullptr);
-
   Utils::WaitUntil(callback_called);
-
-  EXPECT_TRUE(callback_called);
 }
 
 }

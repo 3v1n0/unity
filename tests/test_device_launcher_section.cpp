@@ -98,7 +98,7 @@ public:
   }
 
   MockVolumeMonitorWrapper::Ptr monitor_;
-  std::shared_ptr<DevicesSettings> devices_settings_;
+  DevicesSettings::Ptr devices_settings_;
   DeviceLauncherSection section_;
 };
 
