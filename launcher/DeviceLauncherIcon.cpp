@@ -341,7 +341,7 @@ void DeviceLauncherIcon::Eject()
 
 void DeviceLauncherIcon::OnTogglePin(DbusmenuMenuitem* item, int time)
 {
-  std::string const& icon_uri = self->GetRemoteUri();
+  std::string const& icon_uri = GetRemoteUri();
 
   keep_in_launcher_ = !keep_in_launcher_;
 
