@@ -118,6 +118,12 @@ class Dash(KeybindingsHelper):
         self._reveal_lens("lens_reveal/files", clear_search)
         return self.view.get_lensview_by_name("files.lens")
 
+    def reveal_video_lens(self, clear_search=True):
+        """Reveal the video lens"""
+        logger.debug("Revealing video lens with Super+v.")
+        self._reveal_lens("lens_reveal/video", clear_search)
+        return self.view.get_lensview_by_name("video.lens")
+
     def reveal_command_lens(self, clear_search=True):
         """Reveal the 'run command' lens."""
         logger.debug("Revealing command lens with Alt+F2.")
