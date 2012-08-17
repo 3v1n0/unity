@@ -99,6 +99,8 @@ configure_file (${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 #
 find_package (Gettext REQUIRED)
 
+set (COMPIZ_I18N_DIR ${CMAKE_SOURCE_DIR}/po)
+
 add_custom_command (OUTPUT ${CMAKE_SOURCE_DIR}/po/unity.pot
 		COMMAND xgettext -c --files-from ${CMAKE_SOURCE_DIR}/po/POTFILES.in --keyword=_ -o ${CMAKE_SOURCE_DIR}/po/unity.pot --copyright-holder="Canonical Ltd" --msgid-bugs-address="ayatana-dev@lists.launchpad.net" --no-wrap --no-location
 		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
@@ -174,6 +176,8 @@ add_subdirectory(tests)
 add_subdirectory(tools)
 add_subdirectory(UnityCore)
 add_subdirectory(guides)
+
+add_subdirectory(gnome)
 
 #
 # GSettings Schema
