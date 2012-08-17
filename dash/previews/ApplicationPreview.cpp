@@ -165,10 +165,12 @@ void ApplicationPreview::SetupViews()
     image_hint = tmp_icon.Str();
   }
   image_ = new CoverArt();
-  if (image_hint.empty())
+  if (!image_hint.empty())
+    image_->SetImage(image_hint);
+  else if (!preview_model_->image_source_uri.Get().empty())
     image_->GenerateImage(preview_model_->image_source_uri);
   else
-    image_->SetImage(image_hint);
+    image_->SetNoImageAvailable();
   image_->SetFont(style.no_preview_image_font());
   /////////////////////
 
