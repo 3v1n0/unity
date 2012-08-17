@@ -11,9 +11,11 @@ from __future__ import absolute_import
 
 from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.keybindings import KeybindingsHelper
+from testtools.matchers import GreaterThan
 
 from unity.emulators import UnityIntrospectionObject
 import logging
+from time import sleep
 
 
 logger = logging.getLogger(__name__)
@@ -365,8 +367,26 @@ class Preview(UnityIntrospectionObject):
             m.move(tx, ty)
             m.click()
 
+class ApplicationPreview(Preview):
+    """A application preview of a dash lens result."""
+
+class GenericPreview(Preview):
+    """A generic preview of a dash lens result."""
+
+class MusicPreview(Preview):
+    """A music preview of a dash lens result."""
+
+class MoviePreview(Preview):
+    """A movie preview of a dash lens result."""
+
 class PreviewContent(UnityIntrospectionObject):
     """A preview content layout for the dash previews."""
+
+    def get_current_preview(self):
+        previews = self.get_children_by_type(Preview)
+        if len(previews) > 0:
+            return previews[0]
+        return None
 
 
 class PreviewContainer(UnityIntrospectionObject):
@@ -375,14 +395,6 @@ class PreviewContainer(UnityIntrospectionObject):
     @property
     def content(self):
         return self.get_content()
-
-    @property
-    def lef_navigator(self):
-        return self.get_left_navigator()
-    
-    @property
-    def right_navigator(self):
-        return self.get_right_navigator()
 
     def get_num_previews(self):
         """Get the number of previews queued and current in the container."""
@@ -397,55 +409,87 @@ class PreviewContainer(UnityIntrospectionObject):
         """Return the left navigator object"""
         navigators = self.get_children_by_type(PreviewNavigator)
         for nav in navigators:
-            if nav.orientation == 2:
-                return action
+            if nav.direction == 2:
+                return nav
         return None
     
     def get_right_navigator(self):
         """Return the right navigator object"""
         navigators = self.get_children_by_type(PreviewNavigator)
         for nav in navigators:
-            if nav.orientation == 3:
-                return action
+            if nav.direction == 3:
+                return nav
         return None
 
-    def navigate_left(self):
+    def navigate_left(self, count=1):
         """Navigate preview left"""
-        navigator_icon = self.lef_navigator.icon()
+        navigator = self.get_left_navigator()
 
-        if navigator_icon:
-            tx = navigator_icon.x + (navigator_icon.width / 2)
-            ty = navigator_icon.y + (navigator_icon.height / 2)
-            m = Mouse()
-            m.move(tx, ty)
+        tx = navigator.button_x + (navigator.button_width / 2)
+        ty = navigator.button_y + (navigator.button_height / 2)
+        m = Mouse()
+        m.move(tx, ty)
+
+        old_preview_initiate_count = self.preview_initiate_count
+
+        for i in range(count):
+            self.navigate_left_enabled.wait_for(True)
             m.click()
+            self.preview_initiate_count.wait_for(GreaterThan(old_preview_initiate_count))
+            old_preview_initiate_count = self.preview_initiate_count
 
-    def navigate_right(self):
+    def navigate_right(self, count=1):
         """Navigate preview right"""
-        navigator_icon = self.right_navigator.icon()
+        navigator = self.get_right_navigator()
 
-        if navigator_icon:
-            tx = navigator_icon.x + (navigator_icon.width / 2)
-            ty = navigator_icon.y + (navigator_icon.height / 2)
-            m = Mouse()
-            m.move(tx, ty)
+        tx = navigator.button_x + (navigator.button_width / 2)
+        ty = navigator.button_y + (navigator.button_height / 2)
+        m = Mouse()
+        m.move(tx, ty)
+
+        old_preview_initiate_count = self.preview_initiate_count
+
+        for i in range(count):
+            self.navigate_right_enabled.wait_for(True)
             m.click()
+            self.preview_initiate_count.wait_for(GreaterThan(old_preview_initiate_count))
+            old_preview_initiate_count = self.preview_initiate_count
 
     @property
     def animating(self):
         """Return True if the preview, False otherwise."""
-        return content.animating
+        return self.content.animating
 
     @property
     def waiting_preview(self):
         """Return True if the preview, False otherwise."""
-        return content.waiting_preview
+        return self.content.waiting_preview
 
     @property
     def animation_progress(self):
         """Return True if the preview, False otherwise."""
-        content = self._get_content()
-        return content.animation_progress
+        return self.content.animation_progress
+
+    @property
+    def current_preview(self):
+        """Return True if the preview, False otherwise."""
+        return self.content.get_current_preview()
+        preview_initiate_count_
+    
+    @property
+    def preview_initiate_count(self):
+        """Return the number of initiated previews since opened."""
+        return self.content.preview_initiate_count
+
+    @property
+    def navigation_complete_count(self):
+        """Return the number of completed previews since opened."""
+        return self.content.navigation_complete_count
+
+    @property
+    def relative_nav_index(self):
+        """Return the navigation position relative to the direction of movement."""
+        return self.content.relative_nav_index
 
 class PreviewNavigator(UnityIntrospectionObject):
     """A view containing a button to nagivate between previews."""

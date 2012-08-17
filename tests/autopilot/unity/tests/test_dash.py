@@ -10,7 +10,7 @@ from __future__ import absolute_import
 
 from autopilot.emulators.clipboard import get_clipboard_contents
 from autopilot.matchers import Eventually
-from testtools.matchers import Equals, NotEquals
+from testtools.matchers import Equals, NotEquals, GreaterThan
 from time import sleep
 
 from unity.tests import UnityTestCase
@@ -569,8 +569,77 @@ class PreviewInvocationTests(DashTestCase):
 
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
 
+class PreviewNavigateTests(DashTestCase):
+    """Tests that right navigation works with previews."""
 
-class PreviewAppLensTests(DashTestCase):
+    def setUp(self):
+        super(PreviewNavigateTests, self).setUp()
+
+        self.dash.reveal_application_lens()
+        self.addCleanup(self.dash.ensure_hidden)
+
+        lens = self.dash.get_current_lens()
+
+        results_category = lens.get_category_by_name("Installed")
+        results = results_category.get_results()
+        # wait for a result
+        refresh_fn = lambda: len(results)
+        self.assertThat(refresh_fn, Eventually(GreaterThan(4)))
+
+        result = results[1] # so we can navigate left
+        result.preview()
+        self.assertThat(self.dash.view.preview_displaying, Eventually(Equals(True)))
+
+        self.preview_container = self.dash.view.get_preview_container()
+
+    def test_navigate_left(self):
+        """Tests that left navigation works with previews."""
+
+        # wait until preview has finished animating
+        self.assertThat(self.preview_container.animating, Eventually(Equals(False)))
+        self.assertThat(self.preview_container.navigate_left_enabled, Eventually(Equals(True)))
+
+        old_navigation_complete_count = self.preview_container.navigation_complete_count
+        old_relative_nav_index = self.preview_container.relative_nav_index
+
+        self.preview_container.navigate_left(1)
+
+        self.assertThat(self.preview_container.navigation_complete_count, Eventually(Equals(old_navigation_complete_count+1)))
+        self.assertThat(self.preview_container.relative_nav_index, Eventually(Equals(old_relative_nav_index-1)))
+
+    def test_navigate_right(self):
+        """Tests that left navigation works with previews."""
+
+        # wait until preview has finished animating
+        self.assertThat(self.preview_container.animating, Eventually(Equals(False)))
+        self.assertThat(self.preview_container.navigate_left_enabled, Eventually(Equals(True)))
+
+        old_navigation_complete_count = self.preview_container.navigation_complete_count
+        old_relative_nav_index = self.preview_container.relative_nav_index
+
+        self.preview_container.navigate_right(1)
+
+        self.assertThat(self.preview_container.navigation_complete_count, Eventually(Equals(old_navigation_complete_count+1)))
+        self.assertThat(self.preview_container.relative_nav_index, Eventually(Equals(old_relative_nav_index+1)))
+
+    def test_navigate_right_multi(self):
+        """Tests that left navigation works with previews."""
+
+        # wait until preview has finished animating
+        self.assertThat(self.preview_container.animating, Eventually(Equals(False)))
+        self.assertThat(self.preview_container.navigate_left_enabled, Eventually(Equals(True)))
+
+        old_navigation_complete_count = self.preview_container.navigation_complete_count
+        old_relative_nav_index = self.preview_container.relative_nav_index
+
+        self.preview_container.navigate_right(3)
+
+        self.assertThat(self.preview_container.navigation_complete_count, Eventually(Equals(old_navigation_complete_count+3)))
+        self.assertThat(self.preview_container.relative_nav_index, Eventually(Equals(old_relative_nav_index+3)))
+
+
+
+class PreviewAppLensInvoke(DashTestCase):
     """Tests that dash previews work in App Lens.
     """
     def assertSearchText(self, text):
@@ -580,6 +649,8 @@ class PreviewAppLensTests(DashTestCase):
         """Test opening a dash preview in application lens (via right-click result).
         """
         self.dash.reveal_application_lens()
+        self.addCleanup(self.dash.ensure_hidden)
+
         lens = self.dash.get_current_lens()
         self.keyboard.type("Text Editor")
         self.assertSearchText("Text Editor")
@@ -593,7 +664,6 @@ class PreviewAppLensTests(DashTestCase):
         result = results[0]
         result.preview()
         self.assertThat(self.dash.view.preview_displaying, Eventually(Equals(True)))
-
 
 class PreviewFileLensTests(DashTestCase):
     """Tests that dash previews work in File Lens.
