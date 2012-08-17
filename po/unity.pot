@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: ayatana-dev@lists.launchpad.net\n"
-"POT-Creation-Date: 2012-08-17 15:55+0200\n"
+"POT-Creation-Date: 2011-08-23 20:58-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,74 +17,76 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid "Home"
-msgstr ""
-
-msgid "Home screen"
-msgstr ""
-
-msgid "Search"
-msgstr ""
-
-msgid "All"
-msgstr ""
-
-msgid "Categories"
-msgstr ""
-
-msgid "Multi-range"
-msgstr ""
-
-msgid "Rating"
-msgstr ""
-
-msgid "Sorry, there is nothing that matches your search."
-msgstr ""
-
-msgid "See fewer results"
-msgstr ""
-
-msgid "Type your command"
-msgstr ""
-
-msgid "Dash Home"
-msgstr ""
-
-msgid "Lock to Launcher"
-msgstr ""
-
-msgid "Unlock from Launcher"
+msgid "Keep in launcher"
 msgstr ""
 
 msgid "Quit"
 msgstr ""
 
-msgid "Show Desktop"
-msgstr ""
-
 msgid "Open"
-msgstr ""
-
-msgid "Eject parent drive"
 msgstr ""
 
 msgid "Eject"
 msgstr ""
 
-msgid "Safely remove parent drive"
+msgid "Eject parent drive"
 msgstr ""
 
 msgid "Safely remove"
 msgstr ""
 
+msgid "Safely remove parent drive"
+msgstr ""
+
 msgid "Unmount"
+msgstr ""
+
+msgid "The drive has been successfully ejected"
 msgstr ""
 
 msgid "Workspace Switcher"
 msgstr ""
 
-#. Application is being installed, or hasn't been installed yet
-msgid "Waiting to install"
+msgid "Search"
+msgstr ""
+
+msgid "Search across all places"
+msgstr ""
+
+msgid "See fewer results"
+msgstr ""
+
+msgid "Shortcuts"
+msgstr ""
+
+#. Media Apps
+msgid "Media Apps"
+msgstr ""
+
+#. Internet Apps
+msgid "Internet Apps"
+msgstr ""
+
+#. More Apps
+msgid "More Apps"
+msgstr ""
+
+#. Find Files
+msgid "Find Files"
+msgstr ""
+
+msgid "Browse the Web"
+msgstr ""
+
+#. Photos
+#. FIXME: Need to figure out the default
+msgid "View Photos"
+msgstr ""
+
+msgid "Check Email"
+msgstr ""
+
+msgid "Listen to Music"
 msgstr ""
 
 msgid "Drop To Add Application"
@@ -96,189 +98,23 @@ msgstr ""
 msgid "Empty Trash..."
 msgstr ""
 
-msgid "Ubuntu Desktop"
+msgid "Empty all items from Trash?"
 msgstr ""
 
-#. Dash...
-msgid "Dash"
+msgid "All items in the Trash will be permanently deleted."
 msgstr ""
 
-#. TODO move category text into a vector...
-#. Launcher...
-msgid "Launcher"
+msgid "Empty Trash"
 msgstr ""
 
-msgid "Quicklist"
+msgid "Launcher & Menus"
 msgstr ""
 
-msgid "Switcher"
+msgid "<b>Show the launcher when the pointer:</b>"
 msgstr ""
 
-msgid " (Press)"
+msgid "Pushes the left edge of the screen"
 msgstr ""
 
-msgid "Open Launcher, displays shortcuts."
-msgstr ""
-
-msgid "Open Launcher keyboard navigation mode."
-msgstr ""
-
-msgid "Switch applications via Launcher."
-msgstr ""
-
-msgid " + 1 to 9"
-msgstr ""
-
-msgid "Same as clicking on a Launcher icon."
-msgstr ""
-
-msgid " + Shift + 1 to 9"
-msgstr ""
-
-msgid "Open new window of the app."
-msgstr ""
-
-msgid "Open the Trash."
-msgstr ""
-
-msgid " (Tap)"
-msgstr ""
-
-msgid "Open the Dash Home."
-msgstr ""
-
-msgid "Open the Dash App Lens."
-msgstr ""
-
-msgid "Open the Dash Files Lens."
-msgstr ""
-
-msgid "Open the Dash Music Lens."
-msgstr ""
-
-msgid "Open the Dash Video Lens."
-msgstr ""
-
-msgid "Switches between Lenses."
-msgstr ""
-
-msgid "Ctrl + Tab"
-msgstr ""
-
-msgid "Moves the focus."
-msgstr ""
-
-msgid "Cursor Keys"
-msgstr ""
-
-msgid "Open currently focused item."
-msgstr ""
-
-msgid "Enter & Return"
-msgstr ""
-
-#. Menu Bar
-msgid "HUD & Menu Bar"
-msgstr ""
-
-msgid "Open the HUD."
-msgstr ""
-
-msgid "Reveals application menu."
-msgstr ""
-
-msgid "Opens the indicator menu."
-msgstr ""
-
-msgid "Moves focus between indicators."
-msgstr ""
-
-msgid "Cursor Left or Right"
-msgstr ""
-
-#. Switching
-msgid "Switching"
-msgstr ""
-
-msgid "Switch between applications."
-msgstr ""
-
-msgid "Switch windows of current application."
-msgstr ""
-
-#. Workspaces
-msgid "Workspaces"
-msgstr ""
-
-msgid "Spread workspaces."
-msgstr ""
-
-msgid " + Cursor Keys"
-msgstr ""
-
-msgid "Switch workspaces."
-msgstr ""
-
-msgid "Move focused window to different workspace."
-msgstr ""
-
-#. Windows
-msgid "Windows"
-msgstr ""
-
-msgid "Spreads all windows in the current workspace."
-msgstr ""
-
-msgid "Minimises all windows."
-msgstr ""
-
-msgid "Maximises the current window."
-msgstr ""
-
-msgid "Restores or minimises current window."
-msgstr ""
-
-msgid " or Right"
-msgstr ""
-
-msgid "Semi-maximises current window."
-msgstr ""
-
-msgid "Closes current window."
-msgstr ""
-
-msgid "Opens window accessibility menu."
-msgstr ""
-
-msgid "Alt + Space"
-msgstr ""
-
-msgid "Places window in corresponding positions."
-msgstr ""
-
-msgid "Ctrl + Alt + Num"
-msgstr ""
-
-msgid " Drag"
-msgstr ""
-
-msgid "Move window."
-msgstr ""
-
-msgid "Resize window."
-msgstr ""
-
-msgid "Left Mouse"
-msgstr ""
-
-msgid "Middle Mouse"
-msgstr ""
-
-msgid "Right Mouse"
-msgstr ""
-
-msgid "Keyboard Shortcuts"
-msgstr ""
-
-msgid "Filter results"
+msgid "Touches the top left corner of the screen"
 msgstr ""
