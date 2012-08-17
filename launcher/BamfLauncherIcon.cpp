@@ -345,9 +345,6 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
       }
     }
   }
-
-  if (arg.source != ActionArg::SWITCHER)
-    ubus_server_send_message(ubus_server_get_default(), UBUS_LAUNCHER_ACTION_DONE, nullptr);
 }
 
 std::vector<Window> BamfLauncherIcon::GetWindows(WindowFilterMask filter, int monitor)
@@ -616,7 +613,6 @@ void BamfLauncherIcon::OpenInstanceLauncherIcon(ActionArg arg)
 {
   std::set<std::string> empty;
   OpenInstanceWithUris(empty);
-  ubus_server_send_message(ubus_server_get_default(), UBUS_LAUNCHER_ACTION_DONE, nullptr);
 }
 
 void BamfLauncherIcon::Focus(ActionArg arg)

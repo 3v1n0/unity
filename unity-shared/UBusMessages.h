@@ -59,9 +59,6 @@
 #define UBUS_LAUNCHER_ICON_START_DND "LAUNCHER_ICON_START_DND"
 #define UBUS_LAUNCHER_ICON_END_DND   "LAUNCHER_ICON_END_DND"
 
-// Signal to send on icon action and that you want to request hiding the launcher
-#define UBUS_LAUNCHER_ACTION_DONE "LAUNCHER_ACTION_DONE"
-
 // Signal to force the launcher into locked mode, (b)
 #define UBUS_LAUNCHER_LOCK_HIDE "LAUNCHER_LOCK_HIDE"
 
