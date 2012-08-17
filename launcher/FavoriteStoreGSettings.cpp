@@ -40,15 +40,9 @@ namespace internal
 
 namespace
 {
-
 nux::logging::Logger logger("unity.favorites");
 const std::string SETTINGS_NAME = "com.canonical.Unity.Launcher";
 const std::string SETTINGS_KEY = "favorites";
-
-void on_settings_updated(GSettings* settings,
-                         const gchar* key,
-                         FavoriteStoreGSettings* self);
-
 }
 
 FavoriteStoreGSettings::FavoriteStoreGSettings()
