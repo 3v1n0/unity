@@ -46,11 +46,21 @@ class HomeLens : public Lens, public Lenses
 public:
   typedef std::shared_ptr<HomeLens> Ptr;
 
+  /* Specifies mode for category merging */
+  enum MergeMode
+  {
+    DISPLAY_NAME,
+    OWNER_LENS
+  };
+
   /**
    * Should be constructed with i18n arguments:
    *                         _("Home"), _("Home screen"), _("Search")
    */
-  HomeLens(std::string const& name, std::string const& description, std::string const& search_hint);
+  HomeLens(std::string const& name,
+           std::string const& description,
+           std::string const& search_hint,
+           MergeMode merge_mode = MergeMode::OWNER_LENS);
   virtual ~HomeLens();
 
   void AddLenses(Lenses& lenses);

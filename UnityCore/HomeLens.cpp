@@ -218,7 +218,8 @@ class HomeLens::CategoryMerger : public ModelMerger
 {
 public:
   CategoryMerger(glib::Object<DeeModel> target,
-                 HomeLens::CategoryRegistry* cat_registry);
+                 HomeLens::CategoryRegistry* cat_registry,
+                 MergeMode merge_mode);
 
   void OnSourceRowAdded(DeeModel *model, DeeModelIter *iter);
   void OnSourceRowRemoved(DeeModel *model, DeeModelIter *iter);
@@ -227,6 +228,7 @@ public:
 
 private:
   HomeLens::CategoryRegistry* cat_registry_;
+  MergeMode merge_mode_;
   std::multimap<unsigned, unsigned, std::greater<unsigned> > category_ordering_;
 };
 
@@ -250,7 +252,7 @@ public:
 class HomeLens::Impl : public sigc::trackable
 {
 public:
-  Impl(HomeLens* owner);
+  Impl(HomeLens* owner, MergeMode merge_mode);
   ~Impl();
 
   void OnLensAdded(Lens::Ptr& lens);
@@ -286,9 +288,11 @@ HomeLens::ResultsMerger::ResultsMerger(glib::Object<DeeModel> target,
 {}
 
 HomeLens::CategoryMerger::CategoryMerger(glib::Object<DeeModel> target,
-                                         CategoryRegistry *cat_registry)
+                                         CategoryRegistry *cat_registry,
+                                         MergeMode merge_mode)
   : HomeLens::ModelMerger::ModelMerger(target)
   , cat_registry_(cat_registry)
+  , merge_mode_(merge_mode)
 {}
 
 HomeLens::FiltersMerger::FiltersMerger(glib::Object<DeeModel> target)
@@ -393,6 +397,7 @@ void HomeLens::CategoryMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *i
   DeeModelTag*  target_tag;
   const gchar* display_name;
   const unsigned int DISPLAY_NAME_COLUMN = 0;
+  std::string lens_name("Unknown");
 
   EnsureRowBuf(model);
 
@@ -408,9 +413,24 @@ void HomeLens::CategoryMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *i
   target_tag = FindSourceToTargetTag(model);
   unsigned source_cat_offset = dee_model_get_position(model, iter);
 
+  if (merge_mode_ == MergeMode::OWNER_LENS)
+  {
+    for (auto it = sources_by_owner_.begin(); it != sources_by_owner_.end(); ++it)
+    {
+      if (it->second == model)
+      {
+        lens_name = it->first->name();
+      }
+    }
+    display_name = lens_name.c_str();
+  }
+  else
+  {
+    display_name = dee_model_get_string(model, iter, DISPLAY_NAME_COLUMN);
+  }
+
   /* If we already have a category registered with the same display name
    * then we just use that. Otherwise register a new category for it */
-  display_name = dee_model_get_string(model, iter, DISPLAY_NAME_COLUMN);
   if (cat_registry_->FindCategoryOffset(display_name) >= 0)
   {
     /* Make sure the <results_model, source_cat_offset> pair is registered */
@@ -425,6 +445,13 @@ void HomeLens::CategoryMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *i
 
   /* Add the row to the merged categories model and store required metadata */
   dee_model_get_row(model, iter, row_buf_);
+
+  /* Rename the category */
+  g_variant_unref(row_buf_[DISPLAY_NAME_COLUMN]);
+  row_buf_[DISPLAY_NAME_COLUMN] = g_variant_new_string(display_name);
+  // need to ref sink the floating variant
+  g_variant_ref_sink(row_buf_[DISPLAY_NAME_COLUMN]);
+
   target_iter = dee_model_append_row(target_, row_buf_);
   dee_model_set_tag(model, iter, target_tag, target_iter);
   unsigned target_cat_index = 
@@ -595,11 +622,11 @@ std::vector<unsigned> HomeLens::CategoryMerger::GetOrder()
   return result;
 }
 
-HomeLens::Impl::Impl(HomeLens *owner)
+HomeLens::Impl::Impl(HomeLens *owner, MergeMode merge_mode)
   : owner_(owner)
   , cat_registry_(owner)
   , results_merger_(owner->results()->model(), &cat_registry_)
-  , categories_merger_(owner->categories()->model(), &cat_registry_)
+  , categories_merger_(owner->categories()->model(), &cat_registry_, merge_mode)
   , filters_merger_(owner->filters()->model())
   , running_searches_(0)
   , settings_(g_settings_new("com.canonical.Unity.Dash"))
@@ -816,11 +843,14 @@ std::vector<unsigned> HomeLens::Impl::GetCategoriesOrder()
   return categories_merger_.GetOrder();
 }
 
-HomeLens::HomeLens(std::string const& name, std::string const& description, std::string const& search_hint)
+HomeLens::HomeLens(std::string const& name,
+                   std::string const& description,
+                   std::string const& search_hint,
+                   MergeMode merge_mode)
   : Lens("home.lens", "", "", name, PKGDATADIR"/lens-nav-home.svg",
          description, search_hint, true, "",
          ModelType::LOCAL)
-  , pimpl(new Impl(this))
+  , pimpl(new Impl(this, merge_mode))
 {
   count.SetGetterFunction(sigc::mem_fun(&pimpl->lenses_, &Lenses::LensList::size));
   search_in_global = false;
