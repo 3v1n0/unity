@@ -143,15 +143,15 @@ void ResultView::SetModel(glib::Object<DeeModel> const& model, DeeModelTag* tag)
   }
 }
 
-int ResultView::GetNumResults()
+unsigned ResultView::GetNumResults()
 {
   if (result_model_)
-    return static_cast<int>(dee_model_get_n_rows(result_model_));
+    return dee_model_get_n_rows(result_model_);
 
   return 0;
 }
 
-ResultIterator ResultView::GetIteratorAtRow(int row)
+ResultIterator ResultView::GetIteratorAtRow(unsigned row)
 {
   DeeModelIter* iter = NULL;
   if (result_model_)
@@ -176,6 +176,14 @@ unsigned int ResultView::GetIndexForUri(const std::string& uri)
   }
 
   return index;
+}
+
+std::string ResultView::GetUriForIndex(unsigned int index)
+{
+  if (index >= GetNumResults())
+    return "";
+
+  return (*GetIteratorAtRow(index)).uri();
 }
 
 long ResultView::ComputeContentSize()

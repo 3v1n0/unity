@@ -52,6 +52,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   , mouse_over_index_(-1)
   , active_index_(-1)
   , selected_index_(-1)
+  , activated_uri_("NULL")
   , last_lazy_loaded_result_(0)
   , last_mouse_down_x_(-1)
   , last_mouse_down_y_(-1)
@@ -60,7 +61,6 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   , mouse_last_x_(-1)
   , mouse_last_y_(-1)
   , extra_horizontal_spacing_(0)
-  , cached_preview_index_(-1)
 {
   SetAcceptKeyNavFocusOnMouseDown(false);
 
@@ -71,7 +71,10 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   selected_index_.changed.connect(needredraw_lambda);
 
   key_nav_focus_change.connect(sigc::mem_fun(this, &ResultViewGrid::OnKeyNavFocusChange));
-  key_nav_focus_activate.connect([&] (nux::Area *area) { UriActivated.emit (focused_uri_); });
+  key_nav_focus_activate.connect([&] (nux::Area *area) 
+  { 
+    UriActivated.emit (focused_uri_, ResultView::ActivateType::DIRECT); 
+  });
   key_down.connect(sigc::mem_fun(this, &ResultViewGrid::OnKeyDown));
   mouse_move.connect(sigc::mem_fun(this, &ResultViewGrid::MouseMove));
   mouse_click.connect(sigc::mem_fun(this, &ResultViewGrid::MouseClick));
@@ -80,7 +83,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   {
     last_mouse_down_x_ = x;
     last_mouse_down_y_ = y;
-    uint index = GetIndexAtPosition(x, y);
+    unsigned index = GetIndexAtPosition(x, y);
     mouse_over_index_ = index;
   });
 
@@ -98,8 +101,57 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
     g_variant_get (data, "(ii)", &recorded_dash_width_, &recorded_dash_height_);
   });
 
-  preview_spacer.changed.connect([this] (int space) { SizeReallocate(); });
-  preview_result_uri.changed.connect([this] (std::string uri) { QueueDraw(); });
+  ubus_.RegisterInterest(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, [&] (GVariant* data) {
+    int nav_mode = 0;
+    gchar* uri = NULL;
+    gchar* proposed_unique_id = NULL;
+    g_variant_get(data, "(iss)", &nav_mode, &uri, &proposed_unique_id);
+   
+    if (std::string(proposed_unique_id) != unique_id())
+      return;
+
+    unsigned num_results = GetNumResults();
+    if (std::string(uri) == activated_uri_)
+    {
+      int current_index = GetIndexForUri(activated_uri_);
+      if (nav_mode == -1) // left
+      {
+        current_index--;  
+      }
+      else if (nav_mode == 1) // right
+      {
+        current_index++;
+      }
+
+      if (current_index < 0 || static_cast<unsigned int>(current_index) >= num_results)
+      {
+        LOG_ERROR(logger) << "requested to activated a result that does not exist: " << current_index;
+        return;
+      }
+      
+      // closed
+      if (nav_mode == 0)
+      {
+        activated_uri_ = "";
+      }
+      else
+      {
+        activated_uri_ = GetUriForIndex(current_index);
+        LOG_DEBUG(logger) << "activating preview for index: " 
+                          << "(" << current_index << ")"
+                          << " " << activated_uri_;
+        int left_results = current_index;
+        int right_results = num_results ? (num_results - current_index) - 1 : 0;
+        ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 
+                                g_variant_new("(iii)", 0, left_results, right_results));
+        UriActivated.emit(activated_uri_, ActivateType::PREVIEW);
+      }
+    }
+
+    g_free(uri);
+    g_free(proposed_unique_id);
+
+  });
 
   SetDndEnabled(true, false);
 }
@@ -216,7 +268,7 @@ void ResultViewGrid::SizeReallocate()
 {
   //FIXME - needs to use the geometry assigned to it, but only after a layout
   int items_per_row = GetItemsPerRow();
-  int num_results = GetNumResults();
+  unsigned num_results = GetNumResults();
 
   int total_rows = std::ceil(num_results / (double)items_per_row) ;
   int total_height = 0;
@@ -239,7 +291,6 @@ void ResultViewGrid::SizeReallocate()
   if (extra_horizontal_spacing_ < 0)
     extra_horizontal_spacing_ = 0;
 
-  total_height += preview_spacer; // space needed for preview
   total_height += (padding * 2); // add padding
 
   SetMinimumHeight(total_height);
@@ -291,7 +342,7 @@ bool ResultViewGrid::InspectKeyEvent(unsigned int eventType, unsigned int keysym
   }
 
   int items_per_row = GetItemsPerRow();
-  int num_results = GetNumResults();
+  unsigned num_results = GetNumResults();
   int total_rows = std::ceil(num_results / static_cast<float>(items_per_row)); // items per row is always at least 1
   total_rows = (expanded) ? total_rows : 1; // restrict to one row if not expanded
 
@@ -356,14 +407,14 @@ void ResultViewGrid::OnKeyDown (unsigned long event_type, unsigned long event_ke
 
   std::string next_focused_uri;
   int items_per_row = GetItemsPerRow();
-  int num_results = GetNumResults();
+  unsigned num_results = GetNumResults();
   int total_rows = std::ceil(num_results / static_cast<float>(items_per_row)); // items per row is always at least 1
   total_rows = (expanded) ? total_rows : 1; // restrict to one row if not expanded
 
   if (direction == nux::KEY_NAV_LEFT && (selected_index_ == 0))
     return; // pressed left on the first item, no diiice
 
-  if (direction == nux::KEY_NAV_RIGHT && (selected_index_ == (num_results - 1)))
+  if (direction == nux::KEY_NAV_RIGHT && (selected_index_ == static_cast<int>(num_results - 1)))
     return; // pressed right on the last item, nope. nothing for you
 
   if (direction == nux::KEY_NAV_RIGHT && !expanded && selected_index_ == items_per_row - 1)
@@ -396,7 +447,7 @@ void ResultViewGrid::OnKeyDown (unsigned long event_type, unsigned long event_ke
   }
 
   selected_index_ = std::max(0, selected_index_());
-  selected_index_ = std::min(num_results - 1, selected_index_());
+  selected_index_ = std::min(static_cast<int>(num_results - 1), selected_index_());
   ResultIterator iter(GetIteratorAtRow(selected_index_));
   focused_uri_ = (*iter).uri;
 
@@ -427,7 +478,7 @@ void ResultViewGrid::OnKeyNavFocusChange(nux::Area *area, bool has_focus, nux::K
     }
     
     int items_per_row = GetItemsPerRow();
-    int num_results = GetNumResults();
+    unsigned num_results = GetNumResults();
 
     if (direction == nux::KEY_NAV_UP && expanded)
     {
@@ -473,7 +524,7 @@ typedef std::tuple <int, int> ResultListBounds;
 ResultListBounds ResultViewGrid::GetVisableResults()
 {
   int items_per_row = GetItemsPerRow();
-  int num_results = GetNumResults();
+  unsigned num_results = GetNumResults();
   int start, end;
 
   if (!expanded)
@@ -486,7 +537,7 @@ ResultListBounds ResultViewGrid::GetVisableResults()
   {
     //find the row we start at
     int absolute_y = GetAbsoluteY() - GetToplevel()->GetAbsoluteY();
-    uint row_size = renderer_->height + vertical_spacing;
+    unsigned row_size = renderer_->height + vertical_spacing;
 
     if (absolute_y < 0)
     {
@@ -515,7 +566,7 @@ ResultListBounds ResultViewGrid::GetVisableResults()
   }
 
   start = std::max(start, 0);
-  end = std::min(end, num_results - 1);
+  end = std::min(end, static_cast<int>(num_results - 1));
 
   return ResultListBounds(start, end);
 }
@@ -523,7 +574,7 @@ ResultListBounds ResultViewGrid::GetVisableResults()
 void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   int items_per_row = GetItemsPerRow();
-  int num_results = GetNumResults();
+  unsigned num_results = GetNumResults();
   int total_rows = (!expanded) ? 0 : (num_results / items_per_row) + 1;
 
   //find the row we start at
@@ -543,7 +594,7 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       int x_position = padding + GetGeometry().x;
       for (int column_index = 0; column_index < items_per_row; column_index++)
       {
-        int index = (row_index * items_per_row) + column_index;
+        unsigned index = (row_index * items_per_row) + column_index;
         if (index >= num_results)
           break;
 
@@ -579,8 +630,8 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
           offset_x = 0;
           offset_y = 0;
         }
+        
         nux::Geometry render_geo(x_position, y_position, renderer_->width, renderer_->height);
-//nux::GetPainter().Paint2DQuadColor(GfxContext, render_geo, nux::color::Blue*0.20);
         Result result(*GetIteratorAtRow(index));
         renderer_->Render(GfxContext, result, state, render_geo, offset_x, offset_y);
 
@@ -609,7 +660,7 @@ void ResultViewGrid::DrawContent(nux::GraphicsEngine& GfxContent, bool force_dra
 
 void ResultViewGrid::MouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
-  uint index = GetIndexAtPosition(x, y);
+  unsigned index = GetIndexAtPosition(x, y);
 
   if (mouse_over_index_ != index)
   {
@@ -623,8 +674,8 @@ void ResultViewGrid::MouseMove(int x, int y, int dx, int dy, unsigned long butto
 
 void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  uint num_results = static_cast<uint>(GetNumResults());
-  uint index = GetIndexAtPosition(x, y);
+  unsigned num_results = GetNumResults();
+  unsigned index = GetIndexAtPosition(x, y);
   mouse_over_index_ = index;
   if (index >= 0 && index < num_results)
   {
@@ -633,19 +684,32 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
     Result result = *it;
     selected_index_ = index;
     focused_uri_ = result.uri;
-    UriActivated.emit(result.uri);
+    if (nux::GetEventButton(button_flags) == nux::MouseButton::MOUSE_BUTTON3)
+    {
+      activated_uri_ = result.uri();
+      UriActivated.emit(result.uri, ResultView::ActivateType::PREVIEW);
+      int left_results = index;
+      int right_results = (num_results - index) - 1;
+      //FIXME - just uses y right now, needs to use the absolute position of the bottom of the result 
+      ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 
+                                g_variant_new("(iii)", y, left_results, right_results));
+    }
+    else
+    {
+      UriActivated.emit(result.uri, ResultView::ActivateType::DIRECT);
+    }
   }
 }
 
-uint ResultViewGrid::GetIndexAtPosition(int x, int y)
+unsigned ResultViewGrid::GetIndexAtPosition(int x, int y)
 {
   if (x < 0 || y < 0) 
      return -1; 
 
-  uint items_per_row = GetItemsPerRow();
+  unsigned items_per_row = GetItemsPerRow();
 
-  uint column_size = renderer_->width + horizontal_spacing + extra_horizontal_spacing_;
-  uint row_size = renderer_->height + vertical_spacing;
+  unsigned column_size = renderer_->width + horizontal_spacing + extra_horizontal_spacing_;
+  unsigned row_size = renderer_->height + vertical_spacing;
 
   int x_bound = items_per_row * column_size + padding;
 
@@ -655,19 +719,8 @@ uint ResultViewGrid::GetIndexAtPosition(int x, int y)
   if (y < padding)
     return -1;
 
-  if (!preview_result_uri().empty())
-  {
-    // we have a preview so we have to deal with special positioning
-    std::tuple<int, int> preview_result_coord = GetResultPosition(cached_preview_index_);
-    if (static_cast<unsigned int>(y) > std::get<1>(preview_result_coord) + row_size)
-    {
-      // position is below the preview
-      y -= preview_spacer;
-    }
-  }
-
-  uint row_number = std::max((y - padding), 0) / row_size ;
-  uint column_number = std::max((x - padding), 0) / column_size;
+  unsigned row_number = std::max((y - padding), 0) / row_size ;
+  unsigned column_number = std::max((x - padding), 0) / column_size;
 
   return (row_number * items_per_row) + column_number;
 }
@@ -675,7 +728,6 @@ uint ResultViewGrid::GetIndexAtPosition(int x, int y)
 std::tuple<int, int> ResultViewGrid::GetResultPosition(const std::string& uri)
 {
   unsigned int index = GetIndexForUri(uri);
-  cached_preview_index_ = index;
   return GetResultPosition(index);
 }
 
@@ -704,8 +756,8 @@ std::tuple<int, int> ResultViewGrid::GetResultPosition(const unsigned int& index
 bool
 ResultViewGrid::DndSourceDragBegin()
 {
-  uint num_results = static_cast<uint>(GetNumResults());
-  uint drag_index = GetIndexAtPosition(last_mouse_down_x_, last_mouse_down_y_);
+  unsigned num_results = GetNumResults();
+  unsigned drag_index = GetIndexAtPosition(last_mouse_down_x_, last_mouse_down_y_);
 
   if (drag_index >= num_results)
     return false;
