@@ -127,7 +127,7 @@ public:
   nux::ObjectPtr<Launcher> keyboard_launcher_;
   int                    sort_priority_;
   AbstractVolumeMonitorWrapper::Ptr volume_monitor_;
-  std::shared_ptr<DevicesSettingsImp> devices_settings_;
+  DevicesSettingsImp::Ptr devices_settings_;
   DeviceLauncherSection  device_section_;
   LauncherEntryRemoteModel remote_model_;
   AbstractLauncherIcon::Ptr expo_icon_;

@@ -21,6 +21,7 @@
 #define UNITYSHELL_DEVICES_SETTINGS_H
 
 #include <boost/noncopyable.hpp>
+#include <memory>
 #include <string>
 
 #include <sigc++/signal.h>
@@ -34,11 +35,13 @@ namespace launcher
 class DevicesSettings : boost::noncopyable, public sigc::trackable
 {
 public:
+  typedef std::shared_ptr<DevicesSettings> Ptr;
+
   virtual ~DevicesSettings() {};
 
   virtual bool IsABlacklistedDevice(std::string const& uuid) const = 0;
   virtual void TryToBlacklist(std::string const& uuid) = 0;
-  virtual void RemoveBlacklisted(std::string const& uuid) = 0;
+  virtual void TryToUnblacklist(std::string const& uuid) = 0;
 
   sigc::signal<void> changed;
 };

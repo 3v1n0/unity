@@ -20,8 +20,6 @@
 #ifndef UNITYSHELL_DEVICES_SETTINGS_IMP_H
 #define UNITYSHELL_DEVICES_SETTINGS_IMP_H
 
-#include <memory>
-
 #include "DevicesSettings.h"
 
 namespace unity
@@ -32,12 +30,14 @@ namespace launcher
 class DevicesSettingsImp : public DevicesSettings
 {
 public:
+  typedef std::shared_ptr<DevicesSettingsImp> Ptr; 
+
   DevicesSettingsImp();
   virtual ~DevicesSettingsImp();
 
   virtual bool IsABlacklistedDevice(std::string const& uuid) const;
   virtual void TryToBlacklist(std::string const& uuid);
-  virtual void RemoveBlacklisted(std::string const& uuid);
+  virtual void TryToUnblacklist(std::string const& uuid);
 
 private:
   class Impl;

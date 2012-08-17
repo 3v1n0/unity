@@ -38,7 +38,6 @@
 
 #include "Launcher.h"
 #include "AbstractLauncherIcon.h"
-#include "DevicesSettings.h"
 #include "unity-shared/PanelStyle.h"
 #include "SpacerLauncherIcon.h"
 #include "LauncherModel.h"
@@ -1709,7 +1708,7 @@ LauncherModel::Ptr Launcher::GetModel() const
   return _model;
 }
 
-void Launcher::SetDevicesSettings(std::shared_ptr<DevicesSettings> devices_settings)
+void Launcher::SetDevicesSettings(DevicesSettings::Ptr devices_settings)
 {
   devices_settings_ = devices_settings;
 }
@@ -2838,7 +2837,7 @@ void Launcher::ProcessDndDrop(int x, int y)
       else if (devices_settings_ && g_str_has_prefix(it.c_str(), "device:"))
       {
         const gchar* uuid = it.c_str() + 7;
-        devices_settings_->RemoveBlacklisted(uuid);
+        devices_settings_->TryToUnblacklist(uuid);
       }
     }
   }

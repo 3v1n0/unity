@@ -21,6 +21,7 @@
 #define UNITYSHELL_DEVICE_NOTIFICATION_SHOWER_H
 
 #include <boost/noncopyable.hpp>
+#include <memory>
 #include <string>
 
 namespace unity
@@ -31,6 +32,8 @@ namespace launcher
 class DeviceNotificationShower : private boost::noncopyable
 {
 public:
+  typedef std::shared_ptr<DeviceNotificationShower> Ptr;
+
   virtual ~DeviceNotificationShower() {}
 
   virtual void Show(std::string const& icon_name, std::string const& volume_name) = 0;

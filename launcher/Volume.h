@@ -21,6 +21,7 @@
 #define UNITYSHELL_VOLUME_H
 
 #include <boost/noncopyable.hpp>
+#include <memory>
 #include <sigc++/signal.h>
 #include <sigc++/trackable.h>
 #include <string>
@@ -33,6 +34,8 @@ namespace launcher
 class Volume : private boost::noncopyable, public sigc::trackable
 {
 public:
+  typedef std::shared_ptr<Volume> Ptr;
+
   virtual ~Volume() {}
 
   virtual bool CanBeEjected() const = 0;

@@ -46,8 +46,8 @@ const unsigned int volume_changed_timeout =  500;
 class VolumeLauncherIcon::Impl
 {
 public:
-  Impl(std::shared_ptr<Volume> const& volume,
-       std::shared_ptr<DevicesSettings> const& devices_settings,
+  Impl(Volume::Ptr const& volume,
+       DevicesSettings::Ptr const& devices_settings,
        VolumeLauncherIcon* parent)
     : parent_(parent)
     , volume_(volume)
@@ -118,7 +118,7 @@ public:
     changed_timeout_.reset();
 
     if (devices_settings_->IsABlacklistedDevice(volume_->GetIdentifier()))
-      devices_settings_->RemoveBlacklisted(volume_->GetIdentifier());
+      devices_settings_->TryToUnblacklist(volume_->GetIdentifier());
 
     parent_->Remove();
   }
@@ -231,8 +231,8 @@ public:
 
   VolumeLauncherIcon* parent_;
   bool keep_in_launcher_;
-  std::shared_ptr<Volume> volume_;
-  std::shared_ptr<DevicesSettings> devices_settings_;
+  Volume::Ptr volume_;
+  DevicesSettings::Ptr devices_settings_;
 
   sigc::connection settings_changed_connection_;
   sigc::connection volume_changed_connection_;
@@ -248,8 +248,8 @@ public:
 // End private implementation
 //
 
-VolumeLauncherIcon::VolumeLauncherIcon(std::shared_ptr<Volume> const& volume,
-                                       std::shared_ptr<DevicesSettings> const& devices_settings)
+VolumeLauncherIcon::VolumeLauncherIcon(Volume::Ptr const& volume,
+                                       DevicesSettings::Ptr const& devices_settings)
   : pimpl_(new Impl(volume, devices_settings, this))
 {}
 

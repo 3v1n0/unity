@@ -52,7 +52,7 @@ class MockDevicesSettings : public DevicesSettings
 public:
   MOCK_CONST_METHOD1(IsABlacklistedDevice, bool(std::string const& uuid));
   MOCK_METHOD1(TryToBlacklist, void(std::string const& uuid));
-  MOCK_METHOD1(RemoveBlacklisted, void(std::string const& uuid));
+  MOCK_METHOD1(TryToUnblacklist, void(std::string const& uuid));
 };
 
 
@@ -184,7 +184,7 @@ TEST_F(TestVolumeLauncherIcon, TestVisibilityAfterUnmount_BlacklistedVolume)
   EXPECT_CALL(*volume_, IsMounted())
     .WillRepeatedly(Return(false));
 
-  EXPECT_CALL(*settings_, RemoveBlacklisted(_))
+  EXPECT_CALL(*settings_, TryToUnblacklist(_))
     .Times(0);
 
   volume_->changed.emit();
@@ -380,7 +380,7 @@ TEST_F(TestVolumeLauncherIcon, TestUnmountMenuItem)
 {
   EXPECT_CALL(*volume_, IsMounted())
     .WillRepeatedly(Return(true));
-    
+
   CreateIcon();
 
   auto menu = icon_->GetMenus();
@@ -430,7 +430,7 @@ TEST_F(TestVolumeLauncherIcon, OnRemoved)
 
   EXPECT_CALL(*settings_, TryToBlacklist(_))
     .Times(0);
-  EXPECT_CALL(*settings_, RemoveBlacklisted(_))
+  EXPECT_CALL(*settings_, TryToUnblacklist(_))
     .Times(0);
 
   icon_->OnRemoved();
@@ -444,7 +444,7 @@ TEST_F(TestVolumeLauncherIcon, OnRemoved_RemovabledVolume)
 
   EXPECT_CALL(*settings_, TryToBlacklist(_))
     .Times(0);
-  EXPECT_CALL(*settings_, RemoveBlacklisted(_))
+  EXPECT_CALL(*settings_, TryToUnblacklist(_))
     .Times(0);
 
   icon_->OnRemoved();
@@ -460,7 +460,7 @@ TEST_F(TestVolumeLauncherIcon, OnRemoved_RemovableAndBlacklistedVolume)
 
   EXPECT_CALL(*settings_, TryToBlacklist(_))
     .Times(0);
-  EXPECT_CALL(*settings_, RemoveBlacklisted(_))
+  EXPECT_CALL(*settings_, TryToUnblacklist(_))
     .Times(1);
 
   icon_->OnRemoved();

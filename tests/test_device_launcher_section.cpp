@@ -79,7 +79,7 @@ class MockDevicesSettings : public DevicesSettings
 {
   MOCK_CONST_METHOD1(IsABlacklistedDevice, bool(std::string const& uuid));
   MOCK_METHOD1(TryToBlacklist, void(std::string const& uuid));
-  MOCK_METHOD1(RemoveBlacklisted, void(std::string const& uuid));
+  MOCK_METHOD1(TryToUnblacklist, void(std::string const& uuid));
 };
 
 class TestDeviceLauncherSection : public Test

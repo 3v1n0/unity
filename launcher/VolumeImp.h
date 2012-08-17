@@ -24,6 +24,8 @@
 
 #include <UnityCore/GLibWrapper.h>
 
+#include "DeviceNotificationShower.h"
+#include "FileManagerOpener.h"
 #include "Volume.h"
 
 namespace unity
@@ -31,15 +33,12 @@ namespace unity
 namespace launcher
 {
 
-class DeviceNotificationShower;
-class FileManagerOpener;
-
 class VolumeImp : public Volume
 {
 public:
   VolumeImp(glib::Object<GVolume> const& volume,
-            std::shared_ptr<FileManagerOpener> const& file_manager_opener,
-            std::shared_ptr<DeviceNotificationShower> const& device_notification_shower);
+            FileManagerOpener::Ptr const& file_manager_opener,
+            DeviceNotificationShower::Ptr const& device_notification_shower);
   virtual ~VolumeImp();
 
   virtual bool CanBeEjected() const;

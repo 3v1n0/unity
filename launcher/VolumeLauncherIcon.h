@@ -21,6 +21,8 @@
 #ifndef UNITYSHELL_VOLUME_LAUNCHER_ICON_H
 #define UNITYSHELL_VOLUME_LAUNCHER_ICON_H
 
+#include "Volume.h"
+#include "DevicesSettings.h"
 #include "SimpleLauncherIcon.h"
 
 namespace unity
@@ -28,22 +30,19 @@ namespace unity
 namespace launcher
 {
 
-class Volume;
-class DevicesSettings;
-
 class VolumeLauncherIcon : public SimpleLauncherIcon
 {
 public:
   typedef nux::ObjectPtr<VolumeLauncherIcon> Ptr;
 
-  VolumeLauncherIcon(std::shared_ptr<Volume> const& volume,
-                     std::shared_ptr<DevicesSettings> const& devices_settings);
+  VolumeLauncherIcon(Volume::Ptr const& volume,
+                     DevicesSettings::Ptr const& devices_settings);
   virtual ~VolumeLauncherIcon();
 
   bool CanEject(); // TODO: rename to public virtual bool IsTrashable();
   void EjectAndShowNotification(); // TODO: rename to private virtual void DoDropToTrash();
   virtual std::list<DbusmenuMenuitem*> GetMenus();
-  void OnRemoved(); // TODO: make virtual if create RemovableVolumeLauncherIcon too ;)
+  void OnRemoved();
 
 protected:
   virtual void ActivateLauncherIcon(ActionArg arg);

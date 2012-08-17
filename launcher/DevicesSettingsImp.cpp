@@ -105,7 +105,7 @@ public:
     UploadBlacklist();
   }
 
-  void RemoveBlacklisted(std::string const& uuid)
+  void TryToUnblacklist(std::string const& uuid)
   {
     if (uuid.empty() || !IsABlacklistedDevice(uuid))
       return;
@@ -142,9 +142,9 @@ void DevicesSettingsImp::TryToBlacklist(std::string const& uuid)
   pimpl->TryToBlacklist(uuid);
 }
 
-void DevicesSettingsImp::RemoveBlacklisted(std::string const& uuid)
+void DevicesSettingsImp::TryToUnblacklist(std::string const& uuid)
 {
-  pimpl->RemoveBlacklisted(uuid);
+  pimpl->TryToUnblacklist(uuid);
 }
 
 } // namespace launcher

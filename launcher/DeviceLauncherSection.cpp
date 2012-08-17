@@ -18,8 +18,8 @@
  */
 
 #include "DeviceLauncherSection.h"
-#include "DevicesSettings.h"
 #include "DeviceNotificationShowerImp.h"
+#include "DevicesSettings.h"
 #include "FileManagerOpenerImp.h"
 #include "VolumeImp.h"
 
@@ -29,7 +29,7 @@ namespace launcher
 {
 
 DeviceLauncherSection::DeviceLauncherSection(AbstractVolumeMonitorWrapper::Ptr volume_monitor,
-                                             std::shared_ptr<DevicesSettings> devices_settings)
+                                             DevicesSettings::Ptr devices_settings)
   : monitor_(volume_monitor)
   , devices_settings_(devices_settings)
   , file_manager_opener_(new FileManagerOpenerImp)
@@ -47,27 +47,21 @@ DeviceLauncherSection::DeviceLauncherSection(AbstractVolumeMonitorWrapper::Ptr v
 void DeviceLauncherSection::PopulateEntries()
 {
   for (auto volume : monitor_->GetVolumes())
-  {
-    // Sanity check. Avoid duplicates.
-    if (map_.find(volume) != map_.end())
-      continue;
-
-    VolumeLauncherIcon::Ptr icon(new VolumeLauncherIcon(std::make_shared<VolumeImp>(volume, file_manager_opener_, device_notification_shower_),
-                                                        devices_settings_));
-
-    map_[volume] = icon;
-    IconAdded.emit(icon);
-  }
+    TryToCreateAndAddIcon(volume);
 }
 
 void DeviceLauncherSection::OnVolumeAdded(glib::Object<GVolume> const& volume)
 {
-  // Sanity check. Avoid duplicates.
+  TryToCreateAndAddIcon(volume);
+}
+
+void DeviceLauncherSection::TryToCreateAndAddIcon(glib::Object<GVolume> volume)
+{
   if (map_.find(volume) != map_.end())
     return;
 
   VolumeLauncherIcon::Ptr icon(new VolumeLauncherIcon(std::make_shared<VolumeImp>(volume, file_manager_opener_, device_notification_shower_),
-                                                      devices_settings_));
+                                                        devices_settings_));
 
   map_[volume] = icon;
   IconAdded.emit(icon);
@@ -85,5 +79,5 @@ void DeviceLauncherSection::OnVolumeRemoved(glib::Object<GVolume> const& volume)
   }
 }
 
-} // namespace launcher
-} // namespace unity
+}
+}

@@ -20,8 +20,8 @@
 #include <gdk/gdk.h>
 #include <glib/gi18n-lib.h>
 #include <libnotify/notify.h>
-#include <UnityCore/GLibWrapper.h>
 #include <sigc++/sigc++.h>
+#include <UnityCore/GLibWrapper.h>
 
 #include "DeviceNotificationShowerImp.h"
 #include "unity-shared/IconLoader.h"
@@ -58,7 +58,7 @@ public:
     if (GDK_IS_PIXBUF(pixbuf.RawPtr()))
       notify_notification_set_image_from_pixbuf(notification, pixbuf);
 
-    notify_notification_show(notification, NULL);
+    notify_notification_show(notification, nullptr);
   }
 };
 

@@ -26,6 +26,9 @@
 #include <UnityCore/GLibSource.h>
 
 #include "AbstractVolumeMonitorWrapper.h"
+#include "DevicesSettings.h"
+#include "DeviceNotificationShower.h"
+#include "FileManagerOpener.h"
 #include "VolumeLauncherIcon.h"
 
 namespace unity
@@ -33,15 +36,11 @@ namespace unity
 namespace launcher
 {
 
-class DevicesSettings;
-class DeviceNotificationShower;
-class FileManagerOpener;
-
 class DeviceLauncherSection : public sigc::trackable
 {
 public:
   DeviceLauncherSection(AbstractVolumeMonitorWrapper::Ptr volume_monitor,
-  	                    std::shared_ptr<DevicesSettings> devices_settings);
+                        DevicesSettings::Ptr devices_settings);
 
   sigc::signal<void, AbstractLauncherIcon::Ptr> IconAdded;
 
@@ -49,17 +48,18 @@ private:
   void PopulateEntries();
   void OnVolumeAdded(glib::Object<GVolume> const& volume);
   void OnVolumeRemoved(glib::Object<GVolume> const& volume);
+  void TryToCreateAndAddIcon(glib::Object<GVolume> volume);
 
   std::map<GVolume*, VolumeLauncherIcon::Ptr> map_;
   AbstractVolumeMonitorWrapper::Ptr monitor_;
-  std::shared_ptr<DevicesSettings> devices_settings_;
-  std::shared_ptr<FileManagerOpener> file_manager_opener_;
-  std::shared_ptr<DeviceNotificationShower> device_notification_shower_;
+  DevicesSettings::Ptr devices_settings_;
+  FileManagerOpener::Ptr file_manager_opener_;
+  DeviceNotificationShower::Ptr device_notification_shower_;
 
   glib::Idle device_populate_idle_;
 };
 
-} // namespace launcher
-} // namespace unity
+}
+}
 
-#endif // UNITYSHELL_DEVICE_LAUNCHER_SECTION_H
+#endif

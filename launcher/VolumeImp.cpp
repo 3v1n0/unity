@@ -38,8 +38,8 @@ class VolumeImp::Impl
 {
 public:
   Impl(glib::Object<GVolume> const& volume,
-       std::shared_ptr<FileManagerOpener> const& file_manager_opener,
-       std::shared_ptr<DeviceNotificationShower> const& device_notification_shower,
+       FileManagerOpener::Ptr const& file_manager_opener,
+       DeviceNotificationShower::Ptr const& device_notification_shower,
        VolumeImp* parent)
     : parent_(parent)
     , cancellable_(g_cancellable_new())
@@ -208,8 +208,8 @@ public:
   VolumeImp* parent_;
   glib::Object<GCancellable> cancellable_;
   glib::Object<GVolume> volume_;
-  std::shared_ptr<FileManagerOpener> file_manager_opener_;
-  std::shared_ptr<DeviceNotificationShower> device_notification_shower_;
+  FileManagerOpener::Ptr file_manager_opener_;
+  DeviceNotificationShower::Ptr device_notification_shower_;
 
   glib::Signal<void, GVolume*> signal_volume_changed_;
 };
@@ -219,8 +219,8 @@ public:
 //
 
 VolumeImp::VolumeImp(glib::Object<GVolume> const& volume,
-                     std::shared_ptr<FileManagerOpener> const& file_manager_opener,
-                     std::shared_ptr<DeviceNotificationShower> const& device_notification_shower)
+                     FileManagerOpener::Ptr const& file_manager_opener,
+                     DeviceNotificationShower::Ptr const& device_notification_shower)
   : pimpl(new Impl(volume, file_manager_opener, device_notification_shower, this))
 {}
 
