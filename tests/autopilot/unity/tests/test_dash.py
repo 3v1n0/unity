@@ -352,25 +352,25 @@ class DashClipboardTests(DashTestCase):
 
         self.assertThat(self.dash.search_string, Eventually(Equals('CutPasteCutPaste')))
         
-	def test_middle_click_paste(self):
-		"""Tests if Middle mouse button pastes into searchbar"""
-		
-		self.start_app_window("Calculator", locale='C')
-		
-		self.keyboard.type("ThirdButtonPaste")
-		self.keyboard.press_and_release("Ctrl+a")
-		self.keyboard.press_and_release("Ctrl+c")
-		
-		self.assertThat(get_clipboard_contents, Eventually(Equals('ThirdButtonPaste')))
-		
-		self.dash.ensure_visible()
-		
-		self.mouse.move(self.dash.searchbar.x + self.dash.searchbar.width / 2,
-						self.dash.searchbar.y + self.dash.searchbar.height / 2)
-		
-		self.mouse.click(button=2)
-		
-		self.assertThat(self.dash.search_string, Eventually(Equals('ThirdButtonPaste')))
+    def test_middle_click_paste(self):
+        """Tests if Middle mouse button pastes into searchbar"""
+
+        self.start_app_window("Calculator", locale='C')
+
+        self.keyboard.type("ThirdButtonPaste")
+        self.keyboard.press_and_release("Ctrl+a")
+        self.keyboard.press_and_release("Ctrl+c")
+
+        self.assertThat(get_clipboard_contents, Eventually(Equals('ThirdButtonPaste')))
+
+        self.dash.ensure_visible()
+
+        self.mouse.move(self.dash.searchbar.x + self.dash.searchbar.width / 2,
+                       self.dash.searchbar.y + self.dash.searchbar.height / 2)
+
+        self.mouse.click(button=2)
+
+        self.assertThat(self.dash.search_string, Eventually(Equals('ThirdButtonPaste')))
 
 
 class DashKeyboardFocusTests(DashTestCase):
