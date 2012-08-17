@@ -65,7 +65,7 @@ std::string ActionButton::GetName() const
 void ActionButton::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
-    .add(GetGeometry())
+    .add(GetAbsoluteGeometry())
     .add("action", action_hint_)
     .add("label", label_)
     .add("icon-hint", icon_hint_)

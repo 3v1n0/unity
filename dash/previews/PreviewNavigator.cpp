@@ -44,9 +44,9 @@ nux::logging::Logger logger("unity.dash.previews.previewnavigator");
 
 NUX_IMPLEMENT_OBJECT_TYPE(PreviewNavigator);
 
-PreviewNavigator::PreviewNavigator(Orientation orientation, NUX_FILE_LINE_DECL)
+PreviewNavigator::PreviewNavigator(Orientation direction, NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
-  , orientation_(orientation)
+  , direction_(direction)
   , texture_(nullptr)
 {
   SetupViews();
@@ -66,8 +66,11 @@ std::string PreviewNavigator::GetName() const
 void PreviewNavigator::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
-    .add(GetGeometry())
-    .add("orientation", static_cast<int>(orientation_));
+    .add("button-x", texture_->GetAbsoluteX())
+    .add("button-y", texture_->GetAbsoluteY())
+    .add("button-width", texture_->GetGeometry().width)
+    .add("button-height", texture_->GetGeometry().height)
+    .add("direction", static_cast<int>(direction_));
 }
 
 void PreviewNavigator::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
@@ -95,7 +98,7 @@ void PreviewNavigator::SetupViews()
 {
   previews::Style& style = dash::previews::Style::Instance();
   
-  if (orientation_ == Orientation::LEFT || orientation_ == Orientation::RIGHT)
+  if (direction_ == Orientation::LEFT || direction_ == Orientation::RIGHT)
   {
     nux::VLayout* vlayout = new nux::VLayout();
     nux::HLayout* hlayout = new nux::HLayout();
@@ -103,7 +106,7 @@ void PreviewNavigator::SetupViews()
     hlayout->SetSpaceBetweenChildren(0);
     layout_ = hlayout;
 
-    if (orientation_ == Orientation::LEFT)
+    if (direction_ == Orientation::LEFT)
       texture_ = new IconTexture(Style::Instance().GetNavLeftIcon(), style.GetNavigatorIconSize(), style.GetNavigatorIconSize());
     else 
       texture_ = new IconTexture(Style::Instance().GetNavRightIcon(), style.GetNavigatorIconSize(), style.GetNavigatorIconSize());
@@ -114,8 +117,10 @@ void PreviewNavigator::SetupViews()
     vlayout->AddSpace(0,1);
     SetLayout(vlayout);
   }
-  else if (orientation_ == Orientation::UP || orientation_ == Orientation::DOWN)
+  else if (direction_ == Orientation::UP || direction_ == Orientation::DOWN)
   {
+  // No support for this Yet
+    g_assert(false);
     nux::HLayout* hlayout = new nux::HLayout();
     nux::VLayout* vlayout = new nux::VLayout();
     hlayout->SetSpaceBetweenChildren(0);

@@ -75,7 +75,6 @@ std::string Tracks::GetName() const
 void Tracks::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
-    .add(GetGeometry())
     .add("track-count", m_tracks.size());
 }
 

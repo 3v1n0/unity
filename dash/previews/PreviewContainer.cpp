@@ -380,7 +380,7 @@ std::string PreviewContainer::GetName() const
 void PreviewContainer::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
-    .add(GetGeometry());
+    .add(GetAbsoluteGeometry());
 }
 
 void PreviewContainer::SetupViews()

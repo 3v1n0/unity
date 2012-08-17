@@ -105,7 +105,7 @@ std::string PreviewRatingsWidget::GetName() const
 void PreviewRatingsWidget::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
-    .add(GetGeometry());
+    .add(GetAbsoluteGeometry());
 }
 
 

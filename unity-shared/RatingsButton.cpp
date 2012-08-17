@@ -283,13 +283,8 @@ std::string RatingsButton::GetName() const
 
 void RatingsButton::AddProperties(GVariantBuilder* builder)
 {
-  nux::Geometry geo = GetGeometry();
-
   variant::BuilderWrapper(builder)
-    .add("x", geo.x)
-    .add("y", geo.y)
-    .add("width", geo.width)
-    .add("height", geo.height)
+    .add(GetAbsoluteGeometry())
     .add("rating", rating_)
     .add("focused-star", focused_star_)
     .add("editable", editable_);

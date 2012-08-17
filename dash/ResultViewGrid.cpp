@@ -190,7 +190,7 @@ bool ResultViewGrid::DoLazyLoad()
 }
 
 
-int ResultViewGrid::GetItemsPerRow()
+int ResultViewGrid::GetItemsPerRow() const
 {
   int items_per_row = (GetGeometry().width - (padding * 2) + horizontal_spacing) / (renderer_->width + horizontal_spacing);
   return (items_per_row) ? items_per_row : 1; // always at least one item per row
@@ -643,7 +643,7 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
   }
 }
 
-uint ResultViewGrid::GetIndexAtPosition(int x, int y)
+uint ResultViewGrid::GetIndexAtPosition(int x, int y) const
 {
   if (x < 0 || y < 0) 
      return -1; 
@@ -678,14 +678,14 @@ uint ResultViewGrid::GetIndexAtPosition(int x, int y)
   return (row_number * items_per_row) + column_number;
 }
 
-std::tuple<int, int> ResultViewGrid::GetResultPosition(const std::string& uri)
+std::tuple<int, int> ResultViewGrid::GetResultPosition(const std::string& uri) const
 {
   unsigned int index = GetIndexForUri(uri);
   cached_preview_index_ = index;
   return GetResultPosition(index);
 }
 
-std::tuple<int, int> ResultViewGrid::GetResultPosition(const unsigned int& index)
+std::tuple<int, int> ResultViewGrid::GetResultPosition(const unsigned int& index) const
 {
   if (G_UNLIKELY(index >= results_.size() || index < 0)) 
   {
@@ -870,26 +870,25 @@ ResultViewGrid::DndSourceDragFinished(nux::DndAction result)
 }
 
 int
-ResultViewGrid::GetSelectedIndex()
+ResultViewGrid::GetSelectedIndex() const
 {
   return selected_index_;
 }
 
-ResultViewGrid::IntrospectableList
-ResultViewGrid::GetIntrospectableChildren()
+debug::Introspectable* ResultViewGrid::CreateResultWrapper(Result const& result, int index) const
 {
-  ClearIntrospectableWrappers();
+  int x_offset = GetAbsoluteX();
+  int y_offset = GetAbsoluteY();
 
-  int i = 0;
-  for (auto result: results_)
-  {
-    // prospective positioning of items.
-    std::tuple<int, int> result_coord = GetResultPosition(i++);
-    nux::Geometry geo(std::get<0>(result_coord), std::get<0>(result_coord), renderer_->width, renderer_->height);
-    introspectable_children_.push_back(new debug::ResultWrapper(result, geo));
-  }
-  return introspectable_children_;
+  std::tuple<int, int> result_coord = GetResultPosition(index);
+
+  nux::Geometry geo(std::get<0>(result_coord) + x_offset,
+    std::get<1>(result_coord) + y_offset,
+    renderer_->width,
+    renderer_->height);
+  return new debug::ResultWrapper(result, geo);
 }
+
 
 }
 }

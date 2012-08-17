@@ -52,11 +52,8 @@ public:
 
   sigc::signal<void> selection_change;
 
-  int GetSelectedIndex();
-  virtual uint GetIndexAtPosition(int x, int y);
-
-  // This is overridden so we can include position of results.
-  IntrospectableList GetIntrospectableChildren();
+  int GetSelectedIndex() const;
+  virtual uint GetIndexAtPosition(int x, int y) const;
 
 protected:
   void MouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
@@ -78,6 +75,9 @@ protected:
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual long ComputeContentSize();
 
+  // This is overridden so we can include position of results.
+  virtual debug::Introspectable* CreateResultWrapper(Result const& result, int index) const;
+  
 private:
   typedef std::tuple <int, int> ResultListBounds;
   ResultListBounds GetVisableResults();
@@ -86,10 +86,10 @@ private:
   void QueueViewChanged();
   bool DoLazyLoad();
 
-  int GetItemsPerRow();
+  int GetItemsPerRow() const;
   void SizeReallocate();
-  std::tuple<int, int> GetResultPosition(const std::string& uri);
-  std::tuple<int, int> GetResultPosition(const unsigned int& index);
+  std::tuple<int, int> GetResultPosition(const std::string& uri) const;
+  std::tuple<int, int> GetResultPosition(const unsigned int& index) const;
 
   uint mouse_over_index_;
   int active_index_;
@@ -110,7 +110,7 @@ private:
 
   int extra_horizontal_spacing_;
 
-  unsigned int cached_preview_index_;
+  mutable unsigned int cached_preview_index_;
 
   UBusManager ubus_;
   glib::Source::UniquePtr lazy_load_source_;

@@ -80,7 +80,7 @@ std::string CoverArt::GetName() const
 void CoverArt::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
-    .add(GetGeometry())
+    .add(GetAbsoluteGeometry())
     .add("image-hint", image_hint_)
     .add("waiting", waiting_);
 }

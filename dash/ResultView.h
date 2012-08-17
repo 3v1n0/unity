@@ -51,9 +51,9 @@ public:
 
   void AddResult(Result& result);
   void RemoveResult(Result& result); 
-  unsigned int GetIndexForUri(const std::string& uri); 
+  unsigned int GetIndexForUri(const std::string& uri) const; 
 
-  ResultList GetResultList ();
+  ResultList GetResultList () const;
 
   nux::Property<bool> expanded;
   nux::Property<int> results_per_row;
@@ -71,12 +71,13 @@ protected:
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual long ComputeContentSize();
 
-  void ClearIntrospectableWrappers();
+  static void ChildResultDestructor(debug::Introspectable* child);
+  virtual debug::Introspectable* CreateResultWrapper(Result const& result, int index) const;
 
   // properties
   ResultRenderer* renderer_;
   ResultList results_;
-  IntrospectableList introspectable_children_;
+  std::map<std::string, debug::Introspectable*> child_map_;
 };
 
 }

@@ -101,7 +101,7 @@ std::string Preview::GetName() const
 void Preview::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
-    .add(GetGeometry())
+    .add(GetAbsoluteGeometry())
     .add("uri", preview_model_->preview_uri.Get());
 }
 
