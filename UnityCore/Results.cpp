@@ -39,6 +39,16 @@ Results::Results(ModelType model_type)
   row_removed.connect(sigc::mem_fun(this, &Results::OnRowRemoved));
 }
 
+ResultIterator Results::begin()
+{
+  return ResultIterator(model(), dee_model_get_first_iter(model()), GetTag());
+}
+
+ResultIterator Results::end()
+{
+  return ResultIterator(model(), dee_model_get_last_iter(model()), GetTag());
+}
+
 void Results::OnRowAdded(Result& result)
 {
   result_added.emit(result);

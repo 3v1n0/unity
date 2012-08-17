@@ -249,6 +249,8 @@ private:
   void SetHover(bool hovered);
   void SetHidden(bool hidden);
 
+  void UpdateChangeInMousePosition(int delta_x, int delta_y);
+
   void  SetDndDelta(float x, float y, nux::Geometry const& geo, timespec const& current);
   float DragLimiter(float x);
 

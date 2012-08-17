@@ -345,9 +345,6 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
       }
     }
   }
-
-  if (arg.source != ActionArg::SWITCHER)
-    ubus_server_send_message(ubus_server_get_default(), UBUS_LAUNCHER_ACTION_DONE, nullptr);
 }
 
 std::vector<Window> BamfLauncherIcon::GetWindows(WindowFilterMask filter, int monitor)
@@ -616,7 +613,6 @@ void BamfLauncherIcon::OpenInstanceLauncherIcon(ActionArg arg)
 {
   std::set<std::string> empty;
   OpenInstanceWithUris(empty);
-  ubus_server_send_message(ubus_server_get_default(), UBUS_LAUNCHER_ACTION_DONE, nullptr);
 }
 
 void BamfLauncherIcon::Focus(ActionArg arg)
@@ -916,10 +912,10 @@ void BamfLauncherIcon::EnsureMenuItemsReady()
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
-    _gsignals.Add(new glib::Signal<void, DbusmenuMenuitem*, int>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                                    [&] (DbusmenuMenuitem*, int) {
-                                      ToggleSticky();
-                                    }));
+    _gsignals.Add<void, DbusmenuMenuitem*, int>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+      [&] (DbusmenuMenuitem*, int) {
+        ToggleSticky();
+    });
 
     _menu_items["Pin"] = menu_item;
   }
@@ -937,10 +933,10 @@ void BamfLauncherIcon::EnsureMenuItemsReady()
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
-    _gsignals.Add(new glib::Signal<void, DbusmenuMenuitem*, int>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                                    [&] (DbusmenuMenuitem*, int) {
-                                      Quit();
-                                    }));
+    _gsignals.Add<void, DbusmenuMenuitem*, int>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+      [&] (DbusmenuMenuitem*, int) {
+        Quit();
+    });
 
     _menu_items["Quit"] = menu_item;
   }
@@ -1045,13 +1041,13 @@ AbstractLauncherIcon::MenuItemsVector BamfLauncherIcon::GetMenus()
                                         QuicklistMenuItem::MARKUP_ENABLED_PROPERTY,
                                         true);
 
-    _gsignals.Add(new glib::Signal<void, DbusmenuMenuitem*, int>(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                                    [&] (DbusmenuMenuitem*, int) {
-                                      _source_manager.AddIdle([&] {
-                                        ActivateLauncherIcon(ActionArg());
-                                        return false;
-                                      });
-                                    }));
+    _gsignals.Add<void, DbusmenuMenuitem*, int>(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+      [&] (DbusmenuMenuitem*, int) {
+        _source_manager.AddIdle([&] {
+          ActivateLauncherIcon(ActionArg());
+          return false;
+        });
+    });
 
     _menu_items_extra["AppName"] = glib::Object<DbusmenuMenuitem>(item);
   }

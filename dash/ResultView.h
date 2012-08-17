@@ -40,6 +40,12 @@ namespace dash
 class ResultView : public nux::View, public debug::Introspectable
 {
 public:
+  typedef enum ActivateType_
+  {
+    DIRECT,
+    PREVIEW
+  } ActivateType;
+
   NUX_DECLARE_OBJECT_TYPE(ResultView, nux::View);
 
   typedef std::vector<Result> ResultList;
@@ -50,14 +56,17 @@ public:
   void SetModelRenderer(ResultRenderer* renderer);
 
   void AddResult(Result& result);
-  void RemoveResult(Result& result);
-
+  void RemoveResult(Result& result); 
+  unsigned int GetIndexForUri(const std::string& uri); 
+  std::string GetUriForIndex(unsigned int);
+  unsigned int GetModelSize();
+  
   ResultList GetResultList ();
 
   nux::Property<bool> expanded;
   nux::Property<int> results_per_row;
-
-  sigc::signal<void, std::string const&> UriActivated;
+  nux::Property<std::string> unique_id;  
+  sigc::signal<void, std::string const&, ActivateType> UriActivated;
 
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
@@ -67,7 +76,6 @@ protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual long ComputeContentSize();
-
   // properties
   ResultRenderer* renderer_;
   ResultList results_;
