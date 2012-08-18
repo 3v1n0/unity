@@ -263,6 +263,29 @@ class HudBehaviorTests(HudTestsBase):
         self.keyboard.press_and_release("Alt+F4")
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
+    def test_alt_arrow_keys_not_eaten(self):
+        """Tests that Alt+ArrowKey events are correctly passed to the
+        active window when Unity is not responding to them."""
+        
+        self.start_app_window("Terminal")
+        
+        self.keyboard.type('echo \"')
+        
+        self.keyboard.press("Alt")
+        self.keyboard.press_and_release("Up")
+        self.keyboard.press_and_release("Down")
+        self.keyboard.press_and_release("Right")
+        self.keyboard.press_and_release("Left")
+        self.keyboard.release("Alt")
+        
+        self.keyboard.type('\" > /tmp/ap_test_alt_keys')
+        self.addCleanup(remove, '/tmp/ap_test_alt_keys')
+        self.keyboard.press_and_release("Enter")
+        
+        file_contents = open('/tmp/ap_test_alt_keys', 'r').read()
+        file_contents = file_contents.strip()
+        
+        self.assertThat(file_contents, Equals('ABCD'))
 
 class HudLauncherInteractionsTests(HudTestsBase):
 
