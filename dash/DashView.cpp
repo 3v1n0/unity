@@ -447,7 +447,7 @@ void DashView::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
         nux::Color(fade_out_value_, fade_out_value_, fade_out_value_, fade_out_value_)
         );
 
-      int central_width = 0;
+
       if (active_lens_view_ && search_bar_->show_filters())
       {
         texxform.uoffset = (active_lens_view_->filter_bar()->GetX() -layout_->GetX())/(float)layout_->GetWidth();
@@ -462,9 +462,7 @@ void DashView::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
           active_lens_view_->filter_bar()->GetHeight(),
           layout_copy_, texxform,
           nux::Color(fade_out_value_, fade_out_value_, fade_out_value_, fade_out_value_)
-          );   
-
-        central_width = active_lens_view_->filter_bar()->GetX();
+          );
       }  
 
       // Center part 
@@ -473,10 +471,11 @@ void DashView::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 
       texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
 
+
       graphics_engine.QRP_1Tex(
         home_view_->GetX(),
         home_view_->GetY(),
-        central_width,
+        home_view_->GetWidth(),
         home_view_->GetHeight(),
         layout_copy_, texxform,
         nux::Color(fade_out_value_, fade_out_value_, fade_out_value_, fade_out_value_)
