@@ -278,6 +278,7 @@ class HudBehaviorTests(HudTestsBase):
         
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
+
 class HudLauncherInteractionsTests(HudTestsBase):
 
     launcher_modes = [('Launcher autohide', {'launcher_autohide': False}),
