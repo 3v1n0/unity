@@ -104,7 +104,7 @@ public:
 
     if (!animating_)
     {
-      if (push_preview_.size())
+      if (!push_preview_.empty())
       {
         animating_= true;
         swipe_ = push_preview_.front();
@@ -164,7 +164,7 @@ public:
       } 
 
       // another swipe?
-      if (push_preview_.size())
+      if (!push_preview_.empty())
       {
         progress_ = 0;
         continue_navigation.emit();
