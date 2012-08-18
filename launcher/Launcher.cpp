@@ -2586,7 +2586,7 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
 
   for (auto it : _dnd_data.Uris())
   {
-    if (g_str_has_suffix(it.c_str(), ".desktop") || g_str_has_prefix(it.c_str(), "device:"))
+    if (g_str_has_suffix(it.c_str(), ".desktop") || g_str_has_prefix(it.c_str(), "device://"))
     {
       _steal_drag = true;
       break;
@@ -2691,7 +2691,7 @@ void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
     // see if the launcher wants this one
     for (auto it : _dnd_data.Uris())
     {
-      if (g_str_has_suffix(it.c_str(), ".desktop") || g_str_has_prefix(it.c_str(), "device:"))
+      if (g_str_has_suffix(it.c_str(), ".desktop") || g_str_has_prefix(it.c_str(), "device://"))
       {
         _steal_drag = true;
         break;
@@ -2829,9 +2829,9 @@ void Launcher::ProcessDndDrop(int x, int y)
           g_free(path);
         }
       }
-      else if (devices_settings_ && g_str_has_prefix(it.c_str(), "device:"))
+      else if (devices_settings_ && g_str_has_prefix(it.c_str(), "device://"))
       {
-        const gchar* uuid = it.c_str() + 7;
+        const gchar* uuid = it.c_str() + 9;
         devices_settings_->TryToUnblacklist(uuid);
       }
     }
