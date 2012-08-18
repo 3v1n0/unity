@@ -264,8 +264,8 @@ class HudBehaviorTests(HudTestsBase):
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
         
     def test_app_activate_on_enter(self):
-		"""Hud should activate search item and close itself on enter."""
-        self.hud.ensure_visible()
+        """Hud should activate search item and close itself on enter."""
+        self.hud.ensure_visible()   
         
         self.keyboard.type("Device > System Settings")
         self.assertThat(self.hud.search_string, Eventually(Equals("Device > System Settings")))
@@ -277,7 +277,6 @@ class HudBehaviorTests(HudTestsBase):
         self.addCleanup(self.close_all_app,  "System Settings")
         
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
-
 
 class HudLauncherInteractionsTests(HudTestsBase):
 
