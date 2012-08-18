@@ -30,8 +30,8 @@ namespace
 }
 
 ResultIterator::ResultIterator(glib::Object<DeeModel> model)
-  : model_(model, glib::AddRef())
-  , iter_(dee_model_get_first_iter(model))
+  : model_(model)
+  , iter_(model ? dee_model_get_first_iter(model) : NULL)
   , tag_(NULL)
   , iter_result_(model_, iter_, tag_)
   , cache_invalidated_(false)
@@ -39,7 +39,7 @@ ResultIterator::ResultIterator(glib::Object<DeeModel> model)
 }
 
 ResultIterator::ResultIterator(glib::Object<DeeModel> model, DeeModelIter* iter, DeeModelTag* tag)
-  : model_(model, glib::AddRef())
+  : model_(model)
   , iter_(iter)
   , tag_(tag)
   , iter_result_(model_, iter_, tag_)
@@ -129,7 +129,7 @@ ResultIterator ResultIterator::operator-(int count) const
   return tmp;
 }
 
-Result const& ResultIterator::operator*()
+Result& ResultIterator::operator*()
 {
   if (cache_invalidated_)
     iter_result_ = Result(model_, iter_, tag_);
@@ -138,11 +138,13 @@ Result const& ResultIterator::operator*()
 
 bool const ResultIterator::IsLast()
 {
+  if (!model_) return true;
   return (dee_model_is_last(model_, iter_));
 }
 
 bool const ResultIterator::IsFirst()
 {
+  if (!model_) return true;
   return (dee_model_is_first(model_, iter_));
 }
 

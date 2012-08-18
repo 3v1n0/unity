@@ -63,6 +63,7 @@ public:
            ModelType::LOCAL)
   {
     search_in_global(true);
+    connected.SetGetterFunction(sigc::mem_fun(this, &StaticTestLens::force_connected));
 
     DeeModel* cats = categories()->model();
     DeeModel* results = global_results()->model();
@@ -87,6 +88,11 @@ public:
   }
 
   virtual ~StaticTestLens() {}
+
+  bool force_connected()
+  {
+    return true;
+  }
 
   virtual void DoGlobalSearch(string const& search_string)
   {
@@ -258,9 +264,10 @@ TEST(TestHomeLens, TestTwoStaticLenses)
   EXPECT_EQ(home_lens_.GetLensAtIndex(1)->id(), "second.lens");
 }
 
-TEST(TestHomeLens, TestCategoryMerging)
+TEST(TestHomeLens, TestCategoryMergingDisplayName)
 {
-  HomeLens home_lens_("name", "description", "searchhint");
+  HomeLens home_lens_("name", "description", "searchhint",
+                      HomeLens::MergeMode::DISPLAY_NAME);
   TwoStaticTestLenses lenses_;
   DeeModel* cats = home_lens_.categories()->model();
   DeeModelIter* iter;
@@ -292,6 +299,27 @@ TEST(TestHomeLens, TestCategoryMerging)
   EXPECT_EQ("cat1+second.lens", string(dee_model_get_string(cats, iter, NAME_COLUMN)));
 }
 
+TEST(TestHomeLens, TestCategoryMergingPerLens)
+{
+  HomeLens home_lens_("name", "description", "searchhint",
+                      HomeLens::MergeMode::OWNER_LENS);
+  TwoStaticTestLenses lenses_;
+  DeeModel* cats = home_lens_.categories()->model();
+  DeeModelIter* iter;
+  const unsigned int NAME_COLUMN = 0;
+
+  home_lens_.AddLenses(lenses_);
+
+  EXPECT_EQ(dee_model_get_n_rows(cats), 2); // just two lenses
+
+  /* Validate the merged categories */
+  iter = dee_model_get_iter_at_row(cats, 0);
+  EXPECT_EQ("First Lens", string(dee_model_get_string(cats, iter, NAME_COLUMN)));
+
+  iter = dee_model_get_iter_at_row(cats, 1);
+  EXPECT_EQ("Second Lens", string(dee_model_get_string(cats, iter, NAME_COLUMN)));
+}
+
 // It's not that we must not support filters. It is just not implemented yet.
 // But we actively test against it to make sure we don't end up with broken
 // filters in the UI. When/if we land support for filters on the home screen
@@ -307,7 +335,8 @@ TEST(TestHomeLens, TestIgnoreFilters)
 
 TEST(TestHomeLens, TestOneSearch)
 {
-  HomeLens home_lens_("name", "description", "searchhint");
+  HomeLens home_lens_("name", "description", "searchhint",
+                      HomeLens::MergeMode::DISPLAY_NAME);
   TwoStaticTestLenses lenses_;
   DeeModel* results = home_lens_.results()->model();
   DeeModel* cats = home_lens_.categories()->model();
