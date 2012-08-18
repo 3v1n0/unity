@@ -269,8 +269,11 @@ class HudBehaviorTests(HudTestsBase):
         
         self.start_app_window("Terminal")
         
+        #There's no easy way to read text from terminal, writing input
+        #to a text file and then reading from there works.
         self.keyboard.type('echo \"')
         
+        #Terminal is receiving input with Alt+Arrowkeys
         self.keyboard.press("Alt")
         self.keyboard.press_and_release("Up")
         self.keyboard.press_and_release("Down")
