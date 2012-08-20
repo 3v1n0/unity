@@ -125,11 +125,6 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
                               UpdateIconGeometries(GetCenters());
                               _source_manager.Remove(ICON_REMOVE_TIMEOUT);
                             }
-                            else 
-                            {
-                              if (!IsSticky())
-                                Remove();
-                            }
                           });
   _gsignals.Add(sig);
 
@@ -235,20 +230,6 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 
   bool active = IsActive();
   bool user_visible = IsRunning();
-
-  /* 
-     In the webapp case, BAMF/Unity can't know how to raise the application, as it could live in
-     browser tabs etc. In this case we delegate to the browser, or whatever is in the exec
-     entry of the .desktop file (which should hopefully be communicating with the browser and
-     know the right thing to do.
-  */
-  
-  //  if (g_strcmp0 (bamf_application_get_application_type (_bamf_app), "webapp") == 0)
-  //{
-  //  OpenInstanceLauncherIcon(arg);
-      
-  //  return;
-  //    }
 
   if (arg.target && OwnsWindow(arg.target))
   {
@@ -654,13 +635,13 @@ void BamfLauncherIcon::OpenInstanceLauncherIcon(ActionArg arg)
   ubus_server_send_message(ubus_server_get_default(), UBUS_LAUNCHER_ACTION_DONE, nullptr);
 }
 
-std::vector<Window> BamfLauncherIcon::GetFocusWindows(ActionArg arg, bool &any_visible, bool &any_urgent)
+std::vector<Window> BamfLauncherIcon::GetFocusableWindows(ActionArg arg, bool &any_visible, bool &any_urgent)
 {
   bool any_user_visible = false;
   WindowManager* wm = WindowManager::Default();
 
   std::vector<Window> windows;
-  GList* children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
+  GList* children;
 
   BamfView *focus_child = BAMF_VIEW (bamf_application_get_focus_child (_bamf_app.RawPtr()));
   
@@ -745,7 +726,7 @@ void BamfLauncherIcon::Focus(ActionArg arg)
 {
   bool any_visible = false, any_urgent = false;
   WindowManager* wm = WindowManager::Default();
-  std::vector<Window> windows = GetFocusWindows(arg, any_visible, any_urgent);
+  std::vector<Window> windows = GetFocusableWindows(arg, any_visible, any_urgent);
 
   auto visibility = WindowManager::FocusVisibility::OnlyVisible;
 
@@ -786,7 +767,7 @@ void BamfLauncherIcon::EnsureWindowState()
       if (BAMF_IS_TAB(l->data))
       {
         /* BamfTab does not support the monitor interface...so a bit of a nasty hack here. */
-        xid = bamf_tab_get_xid ((BamfTab *)l->data);
+        xid = bamf_tab_get_xid (static_cast<BamfTab*>(l->data));
         
         if (WindowManager::Default()->IsWindowOnCurrentDesktop(xid) == false)
           continue;
