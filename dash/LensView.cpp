@@ -322,6 +322,7 @@ void LensView::OnCategoryAdded(Category const& category)
   {
     grid = new CoverflowResultView(NUX_TRACKER_LOCATION);
     grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
+    group->SetHeaderCountVisible(false);
   } 
   else
   {

@@ -118,7 +118,8 @@ PlacesGroup::PlacesGroup()
     _n_visible_items_in_unexpand_mode(0),
     _n_total_items(0),
     _category_index(0),
-    _coverflow_enabled(false)
+    _coverflow_enabled(false),
+    disabled_header_count_(false)
 {
   dash::Style& style = dash::Style::Instance();
 
@@ -255,6 +256,12 @@ PlacesGroup::SetRendererName(const char *renderer_name)
     (static_cast<dash::ResultView*>(_child_view))->SetModelRenderer(new dash::ResultRendererTile(NUX_TRACKER_LOCATION));
 }
 
+void PlacesGroup::SetHeaderCountVisible(bool disable)
+{
+  disabled_header_count_ = !disable;
+  Relayout();
+}
+
 nux::StaticCairoText*
 PlacesGroup::GetLabel()
 {
@@ -318,6 +325,13 @@ void PlacesGroup::SetChildLayout(nux::Layout* layout)
 void
 PlacesGroup::RefreshLabel()
 {
+  if (disabled_header_count_)
+  {
+    _expand_icon->SetVisible(false);
+    _expand_label->SetVisible(false);
+    return;
+  }
+
   std::string result_string;
 
   if (_n_visible_items_in_unexpand_mode < _n_total_items)
@@ -337,11 +351,13 @@ PlacesGroup::RefreshLabel()
     }
   }
 
-  _expand_icon->SetVisible(!(_n_visible_items_in_unexpand_mode >= _n_total_items && _n_total_items != 0));
+  bool visible = !(_n_visible_items_in_unexpand_mode >= _n_total_items && _n_total_items != 0);
+
+  _expand_icon->SetVisible(visible);;
   SetName(_cached_name);
 
   _expand_label->SetText(result_string);
-  _expand_label->SetVisible(_n_visible_items_in_unexpand_mode < _n_total_items);
+  _expand_label->SetVisible(visible);
 
   // See bug #748101 ("Dash - "See more..." line should be base-aligned with section header")
   // We're making two assumptions here:
