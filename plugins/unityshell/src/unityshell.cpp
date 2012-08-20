@@ -1926,6 +1926,21 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
   screen->addAction(&scroll_up);
   screen->addAction(&scroll_down);
 
+  if (!optionGetAltTabBiasViewport())
+  {
+    if (show_mode == switcher::ShowMode::CURRENT_VIEWPORT)
+      show_mode = switcher::ShowMode::ALL;
+    else
+      show_mode = switcher::ShowMode::CURRENT_VIEWPORT;
+  }
+
+  SetUpAndShowSwitcher(show_mode);
+
+  return true;
+}
+
+void UnityScreen::SetUpAndShowSwitcher(switcher::ShowMode show_mode)
+{
   // maybe check launcher position/hide state?
 
   WindowManager *wm = WindowManager::Default();
@@ -1937,14 +1952,6 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
   monitor_geo.height -= 200;
   switcher_controller_->SetWorkspace(monitor_geo, monitor);
 
-  if (!optionGetAltTabBiasViewport())
-  {
-    if (show_mode == switcher::ShowMode::CURRENT_VIEWPORT)
-      show_mode = switcher::ShowMode::ALL;
-    else
-      show_mode = switcher::ShowMode::CURRENT_VIEWPORT;
-  }
-
   RaiseInputWindows();
 
   auto results = launcher_controller_->GetAltTabIcons(show_mode == switcher::ShowMode::CURRENT_VIEWPORT,
@@ -1952,8 +1959,6 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
 
   if (switcher_controller_->CanShowSwitcher(results))
     switcher_controller_->Show(show_mode, switcher::SortMode::FOCUS_ORDER, false, results);
-
-  return true;
 }
 
 bool UnityScreen::altTabTerminateCommon(CompAction* action,
@@ -3118,16 +3123,14 @@ void UnityScreen::initLauncher()
   ScheduleRelayout(0);
 }
 
-nux::View *UnityScreen::LauncherView()
+switcher::Controller::Ptr UnityScreen::switcher_controller()
 {
-  nux::View *result = nullptr;
+  return switcher_controller_;
+}
 
-  if (launcher_controller_)
-  {
-    result = &launcher_controller_->launcher();
-  }
-
-  return result;
+launcher::Controller::Ptr UnityScreen::launcher_controller()
+{
+  return launcher_controller_;
 }
 
 void UnityScreen::InitHints()

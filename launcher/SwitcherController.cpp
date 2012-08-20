@@ -167,6 +167,9 @@ void Controller::ShowView()
     view_window_->ShowWindow(true);
     view_window_->PushToFront();
     view_window_->SetOpacity(1.0f);
+    view_window_->EnableInputWindow(true, "Switcher", true /* take focus */, false);
+    view_window_->SetInputFocus();
+    view_window_->CaptureMouseDownAnyWhereElse(true);
   }
 }
 
@@ -185,6 +188,7 @@ void Controller::ConstructWindow()
     view_window_->SetBackgroundColor(nux::Color(0x00000000));
     view_window_->SetGeometry(workarea_);
     view_window_->EnableInputWindow(true, "Switcher", false, false);
+    view_window_->InputWindowEnableStruts(false);
   }
 }
 
@@ -204,8 +208,11 @@ void Controller::ConstructView()
 
   ConstructWindow();
   main_layout_->AddView(view_.GetPointer(), 1);
+  view_window_->SetEnterFocusInputArea(view_.GetPointer());
   view_window_->SetGeometry(workarea_);
   view_window_->SetOpacity(0.0f);
+
+  view_built.emit();
 }
 
 void Controller::SetWorkspace(nux::Geometry geo, int monitor)
