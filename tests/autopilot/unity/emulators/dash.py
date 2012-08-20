@@ -461,22 +461,22 @@ class PreviewContainer(UnityIntrospectionObject):
 
     @property
     def animating(self):
-        """Return True if the preview, False otherwise."""
+        """Return True if the preview is animating, False otherwise."""
         return self.content.animating
 
     @property
     def waiting_preview(self):
-        """Return True if the preview, False otherwise."""
+        """Return True if waiting for a preview, False otherwise."""
         return self.content.waiting_preview
 
     @property
     def animation_progress(self):
-        """Return True if the preview, False otherwise."""
+        """Return the progress of the current preview animation."""
         return self.content.animation_progress
 
     @property
     def current_preview(self):
-        """Return True if the preview, False otherwise."""
+        """Return the current preview object."""
         return self.content.get_current_preview()
         preview_initiate_count_
     
@@ -497,9 +497,11 @@ class PreviewContainer(UnityIntrospectionObject):
 
     @property
     def navigate_right_enabled(self):
+        """Return True if right preview navigation is enabled, False otherwise."""
         return self.content.navigate_right_enabled
 
     @property
+        """Return True if left preview navigation is enabled, False otherwise."""
     def navigate_left_enabled(self):
         return self.content.navigate_left_enabled
 

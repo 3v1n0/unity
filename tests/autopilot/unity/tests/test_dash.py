@@ -547,7 +547,7 @@ class CategoryHeaderTests(DashTestCase):
 
 
 class PreviewAppLensInvocationTests(DashTestCase):
-    """Tests that application previews can be opened and closed
+    """Tests that application lens previews can be opened and closed
     """
     def assertSearchText(self, text):
         self.assertThat(self.dash.search_string, Eventually(Equals(text)))
@@ -611,7 +611,7 @@ class PreviewAppLensInvocationTests(DashTestCase):
 
 
 class PreviewFileLensInvocationTests(DashTestCase):
-    """Tests that application previews can be opened and closed
+    """Tests that file lens previews can be opened and closed
     """
     def assertSearchText(self, text):
         self.assertThat(self.dash.search_string, Eventually(Equals(text)))
@@ -641,7 +641,7 @@ class PreviewFileLensInvocationTests(DashTestCase):
 
 
 class PreviewMusicLensInvocationTests(DashTestCase):
-    """Tests that application previews can be opened and closed
+    """Tests that music lens previews can be opened and closed
     """
     def assertSearchText(self, text):
         self.assertThat(self.dash.search_string, Eventually(Equals(text)))
@@ -671,7 +671,7 @@ class PreviewMusicLensInvocationTests(DashTestCase):
 
 
 class PreviewVideoLensInvocationTests(DashTestCase):
-    """Tests that application previews can be opened and closed
+    """Tests that video lens previews can be opened and closed
     """
     def assertSearchText(self, text):
         self.assertThat(self.dash.search_string, Eventually(Equals(text)))
@@ -701,7 +701,7 @@ class PreviewVideoLensInvocationTests(DashTestCase):
 
 
 class PreviewNavigateTests(DashTestCase):
-    """Tests that right navigation works with previews."""
+    """Tests that mouse navigation works with previews."""
 
     def setUp(self):
         super(PreviewNavigateTests, self).setUp()
@@ -748,7 +748,7 @@ class PreviewNavigateTests(DashTestCase):
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
 
     def test_navigate_left_multi(self):
-        """Tests that left navigation works with previews."""
+        """Tests that multiple left navigation works with previews."""
 
         # wait until preview has finished animating
         self.assertThat(self.preview_container.animating, Eventually(Equals(False)))
@@ -769,7 +769,7 @@ class PreviewNavigateTests(DashTestCase):
 
 
     def test_navigate_right(self):
-        """Tests that left navigation works with previews."""
+        """Tests that right navigation works with previews."""
 
         # wait until preview has finished animating
         self.assertThat(self.preview_container.animating, Eventually(Equals(False)))
@@ -793,7 +793,7 @@ class PreviewNavigateTests(DashTestCase):
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
 
     def test_navigate_right_multi(self):
-        """Tests that left navigation works with previews."""
+        """Tests that multiple right navigation works with previews."""
 
         # wait until preview has finished animating
         self.assertThat(self.preview_container.animating, Eventually(Equals(False)))
