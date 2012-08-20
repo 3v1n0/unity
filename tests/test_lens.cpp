@@ -273,10 +273,8 @@ TEST_F(TestLens, TestPreviewAction)
   Utils::WaitUntil(action_executed);
 }
 
-TEST_F(TestLens, TestPreviewSignal)
+TEST_F(TestLens, TestEmitClosedSignal)
 {
-  /* Add test for the closed signal when it hits unity core */
-  /*
   std::string uri = PopulateAndGetFirstResultURI();
   bool previewed = false;
   MoviePreview::Ptr movie_preview;
@@ -289,6 +287,10 @@ TEST_F(TestLens, TestPreviewSignal)
     EXPECT_EQ(preview->renderer_name, "preview-movie");
 
     movie_preview = std::dynamic_pointer_cast<MoviePreview>(preview);
+
+    //there isn't anything we can really test here - other than it's not crashing here
+    movie_preview->EmitClosed();
+
     previewed = true;
   };
 
@@ -296,19 +298,6 @@ TEST_F(TestLens, TestPreviewSignal)
   lens_->Preview(uri);
 
   Utils::WaitUntil(previewed);
-
-  bool child_changed = false;
-  auto child_changed_cb = [&child_changed] (Preview::Ptr const& new_child)
-  {
-    EXPECT_EQ(new_child->title, "A preview");
-    child_changed = true;
-  };
-
-  movie_preview->child_preview_changed.connect(child_changed_cb);
-  movie_preview->selected_item_index = 1;
-
-  Utils::WaitUntil(child_changed);
-  */
 }
 
 TEST_F(TestLens, TestFilterSync)
