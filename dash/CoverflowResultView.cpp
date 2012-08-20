@@ -150,7 +150,6 @@ void CoverflowResultView::AddResult(Result& result)
 
 void CoverflowResultView::RemoveResult(Result& result)
 {
-  ResultView::RemoveResult(result);
   // Ineffecient, API needs to be improved in Coverflow?
   for (nux::CoverflowItem::Ptr item : pimpl->coverflow_->model()->Items())
   {
