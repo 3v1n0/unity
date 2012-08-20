@@ -220,9 +220,6 @@ public:
 
   LazyLoadTexture group_unexpand_texture_;
   LazyLoadTexture group_expand_texture_;
-  
-  LazyLoadTexture group_grid_texture_;
-  LazyLoadTexture group_coverflow_texture_;
 
   LazyLoadTexture star_deselected_texture_;
   LazyLoadTexture star_selected_texture_;
@@ -263,8 +260,6 @@ Style::Impl::Impl(Style* owner)
   , search_spin_texture_("/search_spin.svg", 32)
   , group_unexpand_texture_("/dash_group_unexpand.png")
   , group_expand_texture_("/dash_group_expand.png")
-  , group_grid_texture_("/grid-view.svg")
-  , group_coverflow_texture_ ("/flow-view.svg")
   , star_deselected_texture_("/star_deselected.png")
   , star_selected_texture_("/star_selected.png")
   , star_highlight_texture_("/star_highlight.png")
@@ -2184,16 +2179,6 @@ nux::BaseTexture* Style::GetGroupUnexpandIcon()
 nux::BaseTexture* Style::GetGroupExpandIcon()
 {
   return pimpl->group_expand_texture_.texture();
-}
-
-nux::BaseTexture* Style::GetGroupGridIcon()
-{
-  return pimpl->group_grid_texture_.texture();
-}
-
-nux::BaseTexture* Style::GetGroupCoverflowIcon()
-{
-  return pimpl->group_coverflow_texture_.texture();
 }
 
 nux::BaseTexture* Style::GetStarDeselectedIcon()
