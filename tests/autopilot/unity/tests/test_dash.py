@@ -546,9 +546,12 @@ class CategoryHeaderTests(DashTestCase):
         self.assertThat(category.is_expanded, Eventually(Equals(is_expanded)))
 
 
-class PreviewInvocationTests(DashTestCase):
-    """Tests that previews can be opened and closed
+class PreviewAppLensInvocationTests(DashTestCase):
+    """Tests that application previews can be opened and closed
     """
+    def assertSearchText(self, text):
+        self.assertThat(self.dash.search_string, Eventually(Equals(text)))
+
     def test_open_preview_close_preview(self):
         """Right clicking on any result shall open a preview, 
         escaping shall close the preview
@@ -557,17 +560,145 @@ class PreviewInvocationTests(DashTestCase):
         self.addCleanup(self.dash.ensure_hidden)
 
         category = lens.get_category_by_name("Installed")
+        results = category.get_results()
+        # wait for a result
+        refresh_fn = lambda: len(results)
+        self.assertThat(refresh_fn, Eventually(GreaterThan(0)))
 
-        self.mouse.move(self.dash.view.x + 64,  
-                        category.header_y + category.header_height + 32)
-
-        self.mouse.click(button=3)
-        #revealing a preview may be very slow, not sure if Eventually handles that nicely
+        result = results[0]
+        # result.preview handles finding xy co-ords and right mouse-click
+        result.preview()
+        # revealing a preview may be very slow, not sure if Eventually handles that nicely
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
 
         self.keyboard.press_and_release("Escape")
 
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_preview_refocus_close(self):
+        """This tests that if the mouse is clicked on a preview element (Cover art for example),
+        the keyboard shortcut for closing ('Escape') still works correctly.
+        """
+        lens = self.dash.reveal_application_lens()
+        self.addCleanup(self.dash.ensure_hidden)
+
+        category = lens.get_category_by_name("Installed")
+        results = category.get_results()
+        # wait for a result
+        refresh_fn = lambda: len(results)
+        self.assertThat(refresh_fn, Eventually(GreaterThan(0)))
+
+        result = results[0]
+        # result.preview handles finding xy co-ords and right mouse-click
+        result.preview()
+        # revealing a preview may be very slow, not sure if Eventually handles that nicely
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
+
+        preview_container = self.dash.view.get_preview_container()
+        # wait for settle.
+        self.assertThat(preview_container.animating, Eventually(Equals(False)))
+        cover_art = preview_container.current_preview.cover_art
+
+        # click the cover-art (this will set focus)
+        tx = cover_art.x + (cover_art.width / 2)
+        ty = cover_art.y + (cover_art.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click()
+
+        self.keyboard.press_and_release("Escape")
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
+
+class PreviewFileLensInvocationTests(DashTestCase):
+    """Tests that application previews can be opened and closed
+    """
+    def assertSearchText(self, text):
+        self.assertThat(self.dash.search_string, Eventually(Equals(text)))
+
+    def test_open_preview_close_preview(self):
+        """Right clicking on any result shall open a preview, 
+        escaping shall close the preview
+        """
+        lens = self.dash.reveal_file_lens()
+        self.addCleanup(self.dash.ensure_hidden)
+
+        category = lens.get_category_by_name("Folders")
+        results = category.get_results()
+        # wait for a result
+        refresh_fn = lambda: len(results)
+        self.assertThat(refresh_fn, Eventually(GreaterThan(0)))
+
+        result = results[0]
+        # result.preview handles finding xy co-ords and right mouse-click
+        result.preview()
+        # revealing a preview may be very slow, not sure if Eventually handles that nicely
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
+
+        self.keyboard.press_and_release("Escape")
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
+
+class PreviewMusicLensInvocationTests(DashTestCase):
+    """Tests that application previews can be opened and closed
+    """
+    def assertSearchText(self, text):
+        self.assertThat(self.dash.search_string, Eventually(Equals(text)))
+
+    def test_open_preview_close_preview(self):
+        """Right clicking on any result shall open a preview, 
+        escaping shall close the preview
+        """
+        lens = self.dash.reveal_music_lens()
+        self.addCleanup(self.dash.ensure_hidden)
+
+        category = lens.get_category_by_name("Songs")
+        results = category.get_results()
+        # wait for a result
+        refresh_fn = lambda: len(results)
+        self.assertThat(refresh_fn, Eventually(GreaterThan(0)))
+
+        result = results[0]
+        # result.preview handles finding xy co-ords and right mouse-click
+        result.preview()
+        # revealing a preview may be very slow, not sure if Eventually handles that nicely
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
+
+        self.keyboard.press_and_release("Escape")
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
+
+class PreviewVideoLensInvocationTests(DashTestCase):
+    """Tests that application previews can be opened and closed
+    """
+    def assertSearchText(self, text):
+        self.assertThat(self.dash.search_string, Eventually(Equals(text)))
+
+    def test_open_preview_close_preview(self):
+        """Right clicking on any result shall open a preview, 
+        escaping shall close the preview
+        """
+        lens = self.dash.reveal_video_lens()
+        self.addCleanup(self.dash.ensure_hidden)
+
+        category = lens.get_category_by_name("My Videos")
+        results = category.get_results()
+        # wait for a result
+        refresh_fn = lambda: len(results)
+        self.assertThat(refresh_fn, Eventually(GreaterThan(0)))
+
+        result = results[0]
+        # result.preview handles finding xy co-ords and right mouse-click
+        result.preview()
+        # revealing a preview may be very slow, not sure if Eventually handles that nicely
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
+
+        self.keyboard.press_and_release("Escape")
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
 
 class PreviewNavigateTests(DashTestCase):
     """Tests that right navigation works with previews."""
@@ -582,11 +713,11 @@ class PreviewNavigateTests(DashTestCase):
 
         results_category = lens.get_category_by_name("Installed")
         results = results_category.get_results()
-        # wait for a result
+        # wait for results (we need 4 results to perorm the multi-navigation tests)
         refresh_fn = lambda: len(results)
         self.assertThat(refresh_fn, Eventually(GreaterThan(4)))
 
-        result = results[1] # so we can navigate left
+        result = results[2] # 2 so we can navigate left
         result.preview()
         self.assertThat(self.dash.view.preview_displaying, Eventually(Equals(True)))
 
@@ -607,6 +738,36 @@ class PreviewNavigateTests(DashTestCase):
         self.assertThat(self.preview_container.navigation_complete_count, Eventually(Equals(old_navigation_complete_count+1)))
         self.assertThat(self.preview_container.relative_nav_index, Eventually(Equals(old_relative_nav_index-1)))
 
+        # should be one more on the left
+        self.assertThat(self.preview_container.navigate_left_enabled, Eventually(Equals(True)))
+        # if we've navigated left, there should be at least one preview available on right.
+        self.assertThat(self.preview_container.navigate_right_enabled, Eventually(Equals(True)))
+
+        # Test close preview after navigate
+        self.keyboard.press_and_release("Escape")
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_navigate_left_multi(self):
+        """Tests that left navigation works with previews."""
+
+        # wait until preview has finished animating
+        self.assertThat(self.preview_container.animating, Eventually(Equals(False)))
+        self.assertThat(self.preview_container.navigate_left_enabled, Eventually(Equals(True)))
+
+        old_navigation_complete_count = self.preview_container.navigation_complete_count
+        old_relative_nav_index = self.preview_container.relative_nav_index
+
+        self.preview_container.navigate_left(2)
+
+        self.assertThat(self.preview_container.navigation_complete_count, Eventually(Equals(old_navigation_complete_count+2)))
+        self.assertThat(self.preview_container.relative_nav_index, Eventually(Equals(old_relative_nav_index-2)))
+
+        # shouldnt be any previews on left.
+        self.assertThat(self.preview_container.navigate_left_enabled, Eventually(Equals(False)))
+        # if we've navigated left, there should be at least one preview available on right.
+        self.assertThat(self.preview_container.navigate_right_enabled, Eventually(Equals(True)))
+
+
     def test_navigate_right(self):
         """Tests that left navigation works with previews."""
 
@@ -622,6 +783,15 @@ class PreviewNavigateTests(DashTestCase):
         self.assertThat(self.preview_container.navigation_complete_count, Eventually(Equals(old_navigation_complete_count+1)))
         self.assertThat(self.preview_container.relative_nav_index, Eventually(Equals(old_relative_nav_index+1)))
 
+        # should be at least one more on the left
+        self.assertThat(self.preview_container.navigate_left_enabled, Eventually(Equals(True)))
+        # if we've navigated right, there should be at least one preview available on left.
+        self.assertThat(self.preview_container.navigate_right_enabled, Eventually(Equals(True)))
+
+        # Test close preview after navigate
+        self.keyboard.press_and_release("Escape")
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
     def test_navigate_right_multi(self):
         """Tests that left navigation works with previews."""
 
@@ -632,60 +802,13 @@ class PreviewNavigateTests(DashTestCase):
         old_navigation_complete_count = self.preview_container.navigation_complete_count
         old_relative_nav_index = self.preview_container.relative_nav_index
 
-        self.preview_container.navigate_right(3)
+        self.preview_container.navigate_right(2)
 
-        self.assertThat(self.preview_container.navigation_complete_count, Eventually(Equals(old_navigation_complete_count+3)))
-        self.assertThat(self.preview_container.relative_nav_index, Eventually(Equals(old_relative_nav_index+3)))
+        self.assertThat(self.preview_container.navigation_complete_count, Eventually(Equals(old_navigation_complete_count+2)))
+        self.assertThat(self.preview_container.relative_nav_index, Eventually(Equals(old_relative_nav_index+2)))
 
-
-
-class PreviewAppLensInvoke(DashTestCase):
-    """Tests that dash previews work in App Lens.
-    """
-    def assertSearchText(self, text):
-        self.assertThat(self.dash.search_string, Eventually(Equals(text)))
-
-    def test_app_preview_open(self):
-        """Test opening a dash preview in application lens (via right-click result).
-        """
-        self.dash.reveal_application_lens()
-        self.addCleanup(self.dash.ensure_hidden)
-
-        lens = self.dash.get_current_lens()
-        self.keyboard.type("Text Editor")
-        self.assertSearchText("Text Editor")
-
-        results_category = lens.get_category_by_name("Installed")
-        results = results_category.get_results()
-        # wait for a result
-        refresh_fn = lambda: len(results)
-        self.assertThat(refresh_fn, Eventually(GreaterThan(0)))
-
-        result = results[0]
-        result.preview()
-        self.assertThat(self.dash.view.preview_displaying, Eventually(Equals(True)))
-
-class PreviewFileLensTests(DashTestCase):
-    """Tests that dash previews work in File Lens.
-    """
-    def assertSearchText(self, text):
-        self.assertThat(self.dash.search_string, Eventually(Equals(text)))
-
-
-class PreviewMusicLensTests(DashTestCase):
-    """Tests that dash previews work in Music Lens.
-    """
-    def assertSearchText(self, text):
-        self.assertThat(self.dash.search_string, Eventually(Equals(text)))
-
-
-class PreviewVideoLensTests(DashTestCase):
-    """Tests that dash previews work in Video Lens.
-    """
-    def assertSearchText(self, text):
-        self.assertThat(self.dash.search_string, Eventually(Equals(text)))
-
-
+        # if we've navigated right, there should be at least one preview available on left.
+        self.assertThat(self.preview_container.navigate_left_enabled, Eventually(Equals(True)))
 
 
 

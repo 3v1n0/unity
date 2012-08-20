@@ -367,6 +367,10 @@ class Preview(UnityIntrospectionObject):
             m.move(tx, ty)
             m.click()
 
+    @property
+    def cover_art(self):
+        return self.get_children_by_type(CoverArt)[0]
+
 class ApplicationPreview(Preview):
     """A application preview of a dash lens result."""
 
@@ -490,6 +494,15 @@ class PreviewContainer(UnityIntrospectionObject):
     def relative_nav_index(self):
         """Return the navigation position relative to the direction of movement."""
         return self.content.relative_nav_index
+
+    @property
+    def navigate_right_enabled(self):
+        return self.content.navigate_right_enabled
+
+    @property
+    def navigate_left_enabled(self):
+        return self.content.navigate_left_enabled
+
 
 class PreviewNavigator(UnityIntrospectionObject):
     """A view containing a button to nagivate between previews."""

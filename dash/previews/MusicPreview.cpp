@@ -151,6 +151,7 @@ void MusicPreview::SetupViews()
     image_hint = tmp_icon.Str();
   }
   image_ = new CoverArt();
+  AddChild(image_.GetPointer());
   if (image_hint.empty())
     image_->GenerateImage(preview_model_->image_source_uri);
   else
