@@ -20,6 +20,7 @@
 #include "CoverflowResultView.h"
 #include "unity-shared/IconLoader.h"
 #include "unity-shared/IconTexture.h"
+#include "unity-shared/DashStyle.h"
 #include <Nux/Nux.h>
 #include <Nux/View.h>
 #include <Nux/Coverflow.h>
@@ -67,9 +68,10 @@ CoverflowResultItem::CoverflowResultItem(Result& result, CoverflowResultView *pa
   , result_(result)
   , parent_(parent)
 {
+  Style& style = Style::Instance();
   std::string const& icon_hint = result.icon_hint;
   std::string icon_name = !icon_hint.empty() ? icon_hint : ". GThemedIcon text-x-preview";
-  static const int element_size = 128;
+  static const int element_size = style.GetTileHeight();
   
   icon_texture_ = new IconTexture(icon_name.c_str(), element_size, true);
   icon_texture_->LoadIcon();
@@ -129,7 +131,8 @@ CoverflowResultView::CoverflowResultView(NUX_FILE_LINE_DECL)
   : ResultView(NUX_FILE_LINE_PARAM)
   , pimpl(new CoverflowResultView::Impl(this))
 {
-  SetMinimumHeight(180);
+  Style& style = Style::Instance();
+  SetMinimumHeight(style.GetTileHeight());
 }
 
 CoverflowResultView::~CoverflowResultView()
