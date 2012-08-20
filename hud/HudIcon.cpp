@@ -24,8 +24,7 @@
 
 namespace
 {
-  nux::logging::Logger logger("unity.hud.icon");
-  const unsigned int vertical_padding = 4;
+nux::logging::Logger logger("unity.hud.icon");
 }
 
 namespace unity
@@ -45,12 +44,13 @@ Icon::Icon()
   });
 }
 
-void Icon::SetIcon(std::string const& icon_name, unsigned int icon_size, unsigned int tile_size)
+void Icon::SetIcon(std::string const& icon_name, unsigned int icon_size, unsigned int tile_size, unsigned int padding)
 {
   IconTexture::SetByIconName(icon_name, icon_size);
   icon_renderer_.SetTargetSize(tile_size, icon_size, 0);
-  SetMinimumWidth(tile_size);
-  SetMinimumHeight(tile_size + vertical_padding * 2);
+
+  SetMinimumHeight(tile_size + padding);
+  SetMinimumWidth(tile_size + padding);
 }
 
 void Icon::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
