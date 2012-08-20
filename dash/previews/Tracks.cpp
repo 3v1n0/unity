@@ -50,8 +50,8 @@ public:
     
     while (pos != _layout_element_list.end() && idx > 0)
     {
-      idx--;
-      pos++;
+      --idx;
+      ++pos;
     }
     if (pos != _layout_element_list.end())
     {
