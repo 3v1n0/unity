@@ -161,6 +161,11 @@ void DashView::BuildPreview(Preview::Ptr model)
       // and the unique id of the result view that should be handling the results
       ubus_manager_.SendMessage(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, g_variant_new("(iss)", 1, stored_preview_uri_identifier_.c_str(), stored_preview_unique_id_.c_str()));
     });
+
+    preview_container_->request_close.connect([&] () { ClosePreview(); });
+
+    nux::GetWindowCompositor().SetKeyFocusArea(preview_container_.GetPointer());
+
   }
   else
   {
@@ -858,7 +863,7 @@ nux::Area* DashView::KeyNavIteration(nux::KeyNavDirection direction)
 {
   if (preview_displaying_)
   {
-    preview_container_->KeyNavIteration(direction);
+    return preview_container_->KeyNavIteration(direction);
   }
   else if (direction == nux::KEY_NAV_DOWN && search_bar_ && active_lens_view_)
   {

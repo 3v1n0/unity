@@ -326,6 +326,9 @@ PreviewContainer::PreviewContainer(NUX_FILE_LINE_DECL)
   , navigation_progress_speed_(0.0)
   , navigation_count_(0)
 {
+  SetAcceptKeyNavFocusOnMouseDown(false);
+  SetAcceptKeyNavFocusOnMouseEnter(true);
+
   SetupViews();
   last_progress_time_.tv_sec = 0;
   last_progress_time_.tv_nsec = 0;
@@ -531,11 +534,13 @@ bool PreviewContainer::QueueAnimation()
 
 bool PreviewContainer::AcceptKeyNavFocus()
 {
+  printf("PreviewContainer::AcceptKeyNavFocus\n");
   return true;
 }
 
 bool PreviewContainer::InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character)
 {
+  printf("key pressed\n");
 
   nux::KeyNavDirection direction = nux::KEY_NAV_NONE;
   switch (keysym)
@@ -563,6 +568,7 @@ bool PreviewContainer::InspectKeyEvent(unsigned int eventType, unsigned int keys
       direction = nux::KeyNavDirection::KEY_NAV_ENTER;
       break;
     case NUX_VK_ESCAPE:
+      printf("esc key pressed\n");
       return true;
     default:
       direction = nux::KeyNavDirection::KEY_NAV_NONE;
@@ -593,22 +599,26 @@ void PreviewContainer::OnKeyDown(unsigned long event_type, unsigned long event_k
                                     unsigned long event_state, const TCHAR* character,
                                     unsigned short key_repeat_count)
 {
-  switch (event_keysym)
+  if (event_type == nux::NUX_KEYDOWN)
   {
-    case NUX_VK_LEFT:
-      navigate_left.emit();
-      break;
+    switch (event_keysym)
+    {
+      case NUX_VK_LEFT:
+        navigate_left.emit();
+        break;
 
-    case NUX_VK_RIGHT:
-      navigate_right.emit();
-      break;
+      case NUX_VK_RIGHT:
+        navigate_right.emit();
+        break;
 
-    case NUX_VK_ESCAPE:
-      request_close.emit();
-      break;
+      case NUX_VK_ESCAPE:
+        printf("esc key down\n");
+        request_close.emit();
+        break;
 
-    default:
-      return;
+      default:
+        return;
+    }
   }
 }
 
