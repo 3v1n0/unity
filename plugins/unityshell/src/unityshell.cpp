@@ -45,6 +45,8 @@
 #include <gdk/gdkx.h>
 #include <libnotify/notify.h>
 
+#include <text/text.h>
+
 #include <sstream>
 #include <memory>
 
@@ -80,6 +82,10 @@ namespace
 nux::logging::Logger logger("unity.shell");
 
 UnityScreen* uScreen = 0;
+
+static unsigned int CLOSE_ICON_SIZE = 19;
+static unsigned int CLOSE_ICON_SPACE = 5;
+static unsigned int SCALE_WINDOW_TITLE_SIZE = 24;
 
 void reset_glib_logging();
 void configure_logging();
@@ -1211,6 +1217,11 @@ void UnityWindow::handleEvent (XEvent *event)
   }
 }
 
+CompRect UnityWindow::closeButtonArea ()
+{
+    return close_button_area_;
+}
+
 bool UnityScreen::shellCouldBeHidden(CompOutput const& output)
 {
   std::vector<Window> const& nuxwins(nux::XInputWindow::NativeHandleList());
@@ -1569,6 +1580,22 @@ void UnityScreen::handleEvent(XEvent* event)
         launcher_controller_->KeyNavTerminate(false);
         EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
       }
+      if (PluginAdapter::Default()->IsScaleActive() && event->xbutton.button == Button1)
+      {
+        CompWindow *w = checkForWindowAt (pointerX, pointerY);
+        if (w)
+        {
+          UnityWindow *uw = UnityWindow::get (w);
+          CompPoint pointer (pointerX, pointerY);
+          if (uw->closeButtonArea ().contains (pointer))
+          {
+            w->close (0);
+            skip_other_plugins = true;
+          }
+        }
+
+      }
+
       break;
     case ButtonRelease:
       if (switcher_controller_ && switcher_controller_->Visible())
@@ -2378,6 +2405,35 @@ void UnityScreen::RaiseInputWindows()
     if (cwin)
       cwin->raise();
   }
+}
+
+// Based on Scale plugin code
+CompWindow* UnityScreen::checkForWindowAt (int x, int y)
+{
+  int x1, y1, x2, y2;
+  CompWindowList::reverse_iterator rit = screen->windows ().rbegin ();
+
+  for (; rit != screen->windows ().rend (); ++rit)
+  {
+    CompWindow *w = *rit;
+    SCALE_WINDOW (w);
+
+    ScalePosition pos = sw->getCurrentPosition ();
+    if (sw->hasSlot ())
+    {
+      x1 = w->x () - w->input ().left * pos.scale;
+      y1 = w->y () - w->input ().top  * pos.scale;
+      x2 = w->x () + (w->width () + w->input ().right) * pos.scale;
+      y2 = w->y () + (w->height () + w->input ().bottom) * pos.scale;
+      x1 += pos.x ();
+      y1 += pos.y ();
+      x2 += pos.x ();
+      y2 += pos.y ();
+      if (x1 <= x && y1 <= y && x2 > x && y2 > y)
+        return w;
+    }
+  }
+  return NULL;
 }
 
 /* detect occlusions
@@ -3196,6 +3252,7 @@ UnityWindow::UnityWindow(CompWindow* window)
 {
   WindowInterface::setHandler(window);
   GLWindowInterface::setHandler(gWindow);
+  ScaleWindowInterface::setHandler (ScaleWindow::get (window));
 
   if (UnityScreen::get (screen)->optionGetShowMinimizedWindows () &&
       window->mapNum ())
@@ -3238,6 +3295,100 @@ UnityWindow::UnityWindow(CompWindow* window)
       }
     }
   }
+
+  CompString name (PKGDATADIR"/close_dash.png");
+  CompString pname ("unityshell");
+  CompSize size (CLOSE_ICON_SIZE, CLOSE_ICON_SIZE);
+
+  close_icon_ = GLTexture::readImageToTexture(name, pname, size);
+}
+
+void UnityWindow::drawTexture (GLTexture* icon,
+                               const GLWindowPaintAttrib& attrib,
+                               const GLMatrix& transform,
+                               unsigned int mask,
+                               float x, float y,
+                               int &maxWidth, int &maxHeight)
+{
+  if (icon)
+  {
+    int width, height;
+    width  = icon->width ();
+    height = icon->height ();
+
+    if (height > maxHeight)
+      maxHeight = height;
+
+    if (width > maxWidth)
+      maxWidth = width;
+
+    CompRegion  iconReg (0, 0, width, height);
+    GLTexture::MatrixList ml (1);
+
+    ml[0] = icon->matrix ();
+    gWindow->geometry ().reset ();
+    if (width && height)
+      gWindow->glAddGeometry (ml, iconReg, iconReg);
+
+    if (gWindow->geometry ().vCount)
+    {
+      GLFragment::Attrib fragment (attrib);
+      GLMatrix wTransform (transform);
+
+      wTransform.translate (x, y, 0.0f);
+
+      glPushMatrix ();
+      glLoadMatrixf (wTransform.getMatrix ());
+      gWindow->glDrawTexture (icon, fragment, mask);
+      glPopMatrix ();
+    }
+  }
+}
+
+void UnityWindow::drawWindowTitle (float x, float y, float x2, float y2)
+{
+  // BG
+  glColor3f (0.0f, 0.0f, 0.0f);
+  glRectf (x, y2, x2, y);
+
+  //TODO: implement window title text draw
+}
+
+void UnityWindow::scalePaintDecoration (const GLWindowPaintAttrib& attrib,
+                                        const GLMatrix& transform,
+                                        const CompRegion& region,
+                                        unsigned int mask)
+{
+  ScaleWindow *sWindow = ScaleWindow::get (window);
+  if (!sWindow)
+    return;
+
+  sWindow->scalePaintDecoration (attrib, transform, region, mask);
+
+  if (!sWindow->hasSlot() ||   // animation finished
+      attrib.opacity != 65535) // no focus
+    return;
+
+  ScalePosition pos = sWindow->getCurrentPosition ();
+  int maxHeight, maxWidth;
+  int width = window->width () * pos.scale;
+  float x = pos.x () + window->x ();
+  float y = pos.y () + window->y ();
+  float iconY = y + ((SCALE_WINDOW_TITLE_SIZE - CLOSE_ICON_SIZE)  / 2.0);
+
+  maxHeight = maxWidth = 0;
+
+  drawWindowTitle (x, y, x + width, y + SCALE_WINDOW_TITLE_SIZE);
+
+  mask |= PAINT_WINDOW_BLEND_MASK;
+  foreach(GLTexture *icon, close_icon_)
+  {
+    drawTexture (icon, attrib, transform, mask,
+                 x + CLOSE_ICON_SPACE, iconY,
+                 maxWidth , maxHeight);
+  }
+
+  close_button_area_ = CompRect (x + CLOSE_ICON_SPACE, iconY, maxWidth, maxHeight);
 }
 
 UnityWindow::~UnityWindow()

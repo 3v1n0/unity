@@ -28,6 +28,7 @@
 #include <sigc++/sigc++.h>
 #include <boost/shared_ptr.hpp>
 
+#include <scale/scale.h>
 #include <core/core.h>
 #include <core/pluginclasshandler.h>
 #include <composite/composite.h>
@@ -244,6 +245,8 @@ private:
 
   void InitGesturesSupport();
 
+  CompWindow* checkForWindowAt (int x, int y);
+
   Settings dash_settings_;
   dash::Style    dash_style_;
   panel::Style   panel_style_;
@@ -345,6 +348,7 @@ class UnityWindow :
   public GLWindowInterface,
   public ShowdesktopHandlerWindowInterface,
   public compiz::WindowInputRemoverLockAcquireInterface,
+  public WrapableHandler<ScaleWindowInterface, 4>,
   public BaseSwitchWindow,
   public PluginClassHandler <UnityWindow, CompWindow>
 {
@@ -405,6 +409,8 @@ public:
 
   void handleEvent (XEvent *event);
 
+  CompRect closeButtonArea ();
+
   typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>
           UnityMinimizedHandler;
   std::unique_ptr <UnityMinimizedHandler> mMinimizeHandler;
@@ -413,6 +419,12 @@ public:
 
   //! Emited when CompWindowNotifyBeforeDestroy is received
   sigc::signal<void> being_destroyed;
+
+  void scalePaintDecoration (const GLWindowPaintAttrib &,
+                             const GLMatrix &,
+                             const CompRegion &,
+                             unsigned int);
+
 private:
   void DoEnableFocus ();
   void DoDisableFocus ();
@@ -444,8 +456,19 @@ private:
 
   compiz::WindowInputRemoverLock::Ptr GetInputRemover ();
 
+  void drawWindowTitle (float x, float y, float x2, float y2);
+  void drawTexture (GLTexture *icon,
+                    const GLWindowPaintAttrib& attrib,
+                    const GLMatrix& transform,
+                    unsigned int mask,
+                    float x, float y,
+                    int &maxWidth, int &maxHeight);
+
   compiz::WindowInputRemoverLock::Weak input_remover_;
   glib::Source::UniquePtr focus_desktop_timeout_;
+
+  GLTexture::List close_icon_;
+  CompRect close_button_area_;
 };
 
 
