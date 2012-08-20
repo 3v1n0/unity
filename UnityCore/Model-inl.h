@@ -68,7 +68,10 @@ void Model<RowAdaptor>::OnSwarmNameChanged(std::string const& swarm_name)
 
   // Let the views clean up properly
   if (model_)
+  {
     dee_model_clear(model_);
+    sig_manager_.Disconnect(model_);
+  }
 
   switch(model_type_)
   {
@@ -160,6 +163,12 @@ const RowAdaptor Model<RowAdaptor>::RowAtIndex(std::size_t index)
                 dee_model_get_iter_at_row(model_, index),
                 renderer_tag_);
   return it;
+}
+
+template<class RowAdaptor>
+DeeModelTag* Model<RowAdaptor>::GetTag()
+{
+  return renderer_tag_;
 }
 
 template<class RowAdaptor>

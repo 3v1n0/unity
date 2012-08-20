@@ -90,6 +90,7 @@ public:
   void SignalPreview(std::string const& preview_uri,
                      glib::Variant const& preview_update,
                      glib::DBusProxy::ReplyCallback reply_cb);
+  std::vector<unsigned> GetCategoriesOrder();
 
   string const& id() const;
   string const& dbus_name() const;
@@ -381,8 +382,11 @@ void Lens::Impl::OnChanged(GVariant* parameters)
     LOG_WARNING(logger) << "Paths do not match " << dbus_path_ << " != " << dbus_path;
   }
 
-  connected_ = true;
-  owner_->connected.EmitChanged(connected_);
+  if (!connected_)
+  {
+    connected_ = true;
+    owner_->connected.EmitChanged(connected_);
+  }
 
   g_variant_iter_free(hints_iter);
 }
@@ -606,6 +610,17 @@ void Lens::Impl::SignalPreview(std::string const& preview_uri,
                reply_cb);
 }
 
+std::vector<unsigned> Lens::Impl::GetCategoriesOrder()
+{
+  std::vector<unsigned> result;
+  for (std::size_t i=0; i < categories_->count; i++)
+  {
+    result.push_back(i);
+  }
+
+  return result;
+}
+
 string const& Lens::Impl::id() const
 {
   return id_;
@@ -775,6 +790,11 @@ void Lens::SignalPreview(std::string const& uri,
                          glib::DBusProxy::ReplyCallback reply_cb)
 {
   pimpl->SignalPreview(uri, preview_update, reply_cb);
+}
+
+std::vector<unsigned> Lens::GetCategoriesOrder()
+{
+  return pimpl->GetCategoriesOrder();
 }
 
 

@@ -9,7 +9,6 @@
 
 from __future__ import absolute_import
 
-from autopilot.introspection.dbus import make_introspection_object
 from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.keybindings import KeybindingsHelper
 
@@ -118,6 +117,12 @@ class Dash(KeybindingsHelper):
         logger.debug("Revealing file lens with Super+f.")
         self._reveal_lens("lens_reveal/files", clear_search)
         return self.view.get_lensview_by_name("files.lens")
+
+    def reveal_video_lens(self, clear_search=True):
+        """Reveal the video lens"""
+        logger.debug("Revealing video lens with Super+v.")
+        self._reveal_lens("lens_reveal/video", clear_search)
+        return self.view.get_lensview_by_name("video.lens")
 
     def reveal_command_lens(self, clear_search=True):
         """Reveal the 'run command' lens."""
@@ -298,7 +303,7 @@ class FilterBar(UnityIntrospectionObject):
         """
         searchbar_state = self.get_state_by_path("//DashView/SearchBar")
         assert(len(searchbar_state) == 1)
-        return make_introspection_object(searchbar_state[0])
+        return self.make_introspection_object(searchbar_state[0])
 
 
 class FilterExpanderLabel(UnityIntrospectionObject):

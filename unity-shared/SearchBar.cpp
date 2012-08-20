@@ -251,10 +251,8 @@ void SearchBar::Init()
     expand_icon_->mouse_click.connect(mouse_expand);
   }
 
-  sig_manager_.Add(new glib::Signal<void, GtkSettings*, GParamSpec*>
-      (gtk_settings_get_default(),
-       "notify::gtk-font-name",
-       sigc::mem_fun(this, &SearchBar::OnFontChanged)));
+  sig_manager_.Add<void, GtkSettings*, GParamSpec*>(gtk_settings_get_default(), "notify::gtk-font-name",
+                                                    sigc::mem_fun(this, &SearchBar::OnFontChanged));
   OnFontChanged(gtk_settings_get_default());
 
   search_hint.changed.connect([&](std::string const& s) { OnSearchHintChanged(); });
