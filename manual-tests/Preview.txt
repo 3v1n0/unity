@@ -1,5 +1,4 @@
 Preview Tests
-note: Should be automated.
 =============
 
 Application Preview Open
@@ -20,7 +19,6 @@ Expected Result:
 
 
 File Preview Open
-note: Should be automated.
 ------------
 This tests that the dash preview opens using mouse right-click
 
@@ -74,7 +72,6 @@ Expected Result:
 
 
 Preview Left Navigation
-note: Should be automated.
 ------------
 This tests the dash preview animation
 
@@ -94,7 +91,6 @@ Expected Result:
   
 
 Preview Right Navigation
-note: Should be automated.
 ------------
 This tests the dash preview animation
 
@@ -172,7 +168,6 @@ Expected Result:
 
 
 Preview Navigate Many
-note: Should be automated.
 ------------
 This tests the dash preview multi-navigation support
 
