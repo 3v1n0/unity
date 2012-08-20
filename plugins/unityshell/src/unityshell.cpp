@@ -209,10 +209,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
      CompositeScreenInterface::setHandler(cScreen);
      GLScreenInterface::setHandler(gScreen);
 
-#ifdef USE_MODERN_COMPIZ_GL
-     gScreen->glPaintCompositedOutputSetEnabled (this, true);
-#endif
-
      PluginAdapter::Initialize(screen);
      WindowManager::SetDefault(PluginAdapter::Default());
      AddChild(PluginAdapter::Default());
@@ -1308,36 +1304,15 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   if (doShellRepaint && !force && fullscreenRegion.contains(*output))
     doShellRepaint = false;
 
-#ifndef USE_MODERN_COMPIZ_GL
   if (doShellRepaint)
+#ifdef USE_MODERN_COMPIZ_GL
+    paintDisplay();
+#else
     paintDisplay(region, transform, mask);
 #endif
 
   return ret;
 }
-
-#ifdef USE_MODERN_COMPIZ_GL
-void UnityScreen::glPaintCompositedOutput (const CompRegion &region,
-                                           ::GLFramebufferObject *fbo,
-                                           unsigned int        mask)
-{
-  if (doShellRepaint)
-  {
-    bool useFbo = false;
-    oldFbo = fbo->bind ();
-    useFbo = fbo->checkStatus () && fbo->tex ();
-    if (!useFbo) {
-	printf ("bailing from UnityScreen::glPaintCompositedOutput");
-	::GLFramebufferObject::rebind (oldFbo);
-	return;
-    }
-    paintDisplay();
-    ::GLFramebufferObject::rebind (oldFbo);
-  }
-
-  gScreen->glPaintCompositedOutput(region, fbo, mask);
-}
-#endif
 
 /* called whenever a plugin needs to paint the entire scene
  * transformed */
