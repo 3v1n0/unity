@@ -21,6 +21,8 @@
 #include "unity-shared/IconLoader.h"
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/DashStyle.h"
+#include "unity-shared/UBusMessages.h"
+#include "unity-shared/UBusWrapper.h"
 #include <Nux/Nux.h>
 #include <Nux/View.h>
 #include <Nux/Coverflow.h>
@@ -39,15 +41,19 @@ NUX_IMPLEMENT_OBJECT_TYPE(CoverflowResultView);
 class CoverflowResultItem : public nux::CoverflowItem
 {
 public:
-  CoverflowResultItem(Result& result, CoverflowResultView *parent);
+  CoverflowResultItem(Result& result, CoverflowResultView *parent, nux::CoverflowModel::Ptr model);
   ~CoverflowResultItem();
 
   nux::ObjectPtr<nux::BaseTexture> GetTexture() const;
   virtual void Activate(int button);
 
+  int Index();
+
   Result result_;
   CoverflowResultView* parent_;
+  nux::CoverflowModel::Ptr model_;
   IconTexture *icon_texture_;
+  UBusManager ubus_;
 };
 
 class CoverflowResultView::Impl : public sigc::trackable
@@ -61,12 +67,14 @@ public:
   CoverflowResultView *parent_;
   nux::Coverflow *coverflow_;
   nux::HLayout* layout_;
+  UBusManager ubus_;
 };
 
-CoverflowResultItem::CoverflowResultItem(Result& result, CoverflowResultView *parent)
+CoverflowResultItem::CoverflowResultItem(Result& result, CoverflowResultView *parent, nux::CoverflowModel::Ptr model)
   : CoverflowItem(result.name())
   , result_(result)
   , parent_(parent)
+  , model_(model)
 {
   Style& style = Style::Instance();
   std::string const& icon_hint = result.icon_hint;
@@ -88,6 +96,18 @@ CoverflowResultItem::~CoverflowResultItem()
 
 }
 
+int CoverflowResultItem::Index()
+{
+  int i = 0;
+  for (auto item : model_->Items())
+  {
+    if (this == item.GetPointer())
+      return i;
+    i++;
+  }
+  return -1;
+}
+
 nux::ObjectPtr<nux::BaseTexture> CoverflowResultItem::GetTexture() const
 {
   return nux::ObjectPtr<nux::BaseTexture>(icon_texture_->texture());
@@ -99,6 +119,12 @@ void CoverflowResultItem::Activate(int button)
     parent_->UriActivated.emit(result_.uri, ResultView::ActivateType::DIRECT);
   else if (button == 3)
     parent_->UriActivated.emit(result_.uri, ResultView::ActivateType::PREVIEW);
+
+  int index = Index();
+  int size = model_->Items().size();
+
+  ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 
+                    g_variant_new("(iii)", 0, index, size - index));
 }
 
 CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
@@ -150,7 +176,7 @@ void CoverflowResultView::SetModelRenderer(ResultRenderer* renderer)
 
 void CoverflowResultView::AddResult(Result& result)
 {
-  nux::CoverflowItem::Ptr result_item(new CoverflowResultItem(result, this));
+  nux::CoverflowItem::Ptr result_item(new CoverflowResultItem(result, this, pimpl->coverflow_->model()));
   pimpl->coverflow_->model()->AddItem(result_item);
 }
 
