@@ -59,6 +59,7 @@ public:
   void SetIcon(std::string const& icon);
   void SetName(std::string const& name);
   void SetRendererName(const char *renderer_name);
+  void SetHeaderCountVisible(bool disable);
 
   nux::StaticCairoText* GetLabel();
   nux::StaticCairoText* GetExpandLabel();
@@ -141,6 +142,8 @@ private:
   
   std::string _renderer_name;
   bool _coverflow_enabled;
+
+  bool disabled_header_count_;
 
   glib::Source::UniquePtr _relayout_idle;
   UBusManager _ubus;
