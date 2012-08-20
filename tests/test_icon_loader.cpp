@@ -43,7 +43,7 @@ gboolean TimeoutReached (gpointer data)
 
 struct LoadResult
 {
-  GdkPixbuf *pixbuf;
+  glib::Object<GdkPixbuf> pixbuf;
   bool got_callback;
 
   LoadResult() : pixbuf(NULL), got_callback(false) {}
@@ -93,7 +93,7 @@ TEST(TestIconLoader, TestGetAnnotatedIcon)
   volatile bool timeout_reached = false;
 
   
-  icon_loader.LoadFromGIconString(". UnityProtocolAnnotatedIcon %7B'base-icon':%20%3C'gedit'%3E,%20'ribbon':%20%3C'foo'%3E%7D", 48, sigc::mem_fun(load_result,
+  icon_loader.LoadFromGIconString(". UnityProtocolAnnotatedIcon %7B'base-icon':%20%3C'gedit-icon'%3E,%20'ribbon':%20%3C'foo'%3E%7D", 48, sigc::mem_fun(load_result,
         &LoadResult::IconLoaded));
 
   guint tid = g_timeout_add (10000, TimeoutReached, (gpointer)(&timeout_reached));

@@ -587,6 +587,16 @@ IconLoader::Impl::Impl()
      *     apply immediately. */
     cache_.clear();
   });
+
+  // make sure the AnnotatedIcon type is registered, so we can deserialize it
+#if GLIB_CHECK_VERSION(2, 34, 0)
+  g_type_ensure(unity_protocol_annotated_icon_get_type());
+#else
+  // we need to fool the compiler cause get_type is marked as G_GNUC_CONST,
+  // which isn't exactly true
+  volatile GType proto_icon = unity_protocol_annotated_icon_get_type();
+  g_type_name(proto_icon);
+#endif
 }
 
 int IconLoader::Impl::LoadFromIconName(std::string const& icon_name,
