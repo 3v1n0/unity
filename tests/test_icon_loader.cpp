@@ -86,6 +86,28 @@ TEST(TestIconLoader, TestGetOneIcon)
   g_source_remove (tid);
 }
 
+TEST(TestIconLoader, TestGetAnnotatedIcon)
+{
+  LoadResult load_result;
+  IconLoader& icon_loader = IconLoader::GetDefault();
+  volatile bool timeout_reached = false;
+
+  
+  icon_loader.LoadFromGIconString(". UnityProtocolAnnotatedIcon %7B'base-icon':%20%3C'gedit'%3E,%20'ribbon':%20%3C'foo'%3E%7D", 48, sigc::mem_fun(load_result,
+        &LoadResult::IconLoaded));
+
+  guint tid = g_timeout_add (10000, TimeoutReached, (gpointer)(&timeout_reached));
+  while (!timeout_reached && !load_result.got_callback)
+  {
+    g_main_context_iteration (NULL, TRUE);
+  }
+
+  EXPECT_TRUE(load_result.got_callback);
+  EXPECT_TRUE(IsValidPixbuf(load_result.pixbuf));
+
+  g_source_remove (tid);
+}
+
 TEST(TestIconLoader, TestGetOneIconManyTimes)
 {
   std::vector<LoadResult> results;
