@@ -237,6 +237,7 @@ Preview::Preview(glib::Object<GObject> const& proto_obj)
 
 Preview::~Preview()
 {
+  EmitClosed();
 }
 
 Preview::ActionPtrList Preview::GetActions() const
