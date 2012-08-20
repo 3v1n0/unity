@@ -308,7 +308,6 @@ private:
         std::shared_ptr<cairo_t> cr(cairo_graphics.GetContext(), cairo_destroy);
 
         glib::Object<PangoLayout> layout;
-        PangoFontDescription* desc = NULL;
         PangoContext* pango_context = NULL;
         GdkScreen* screen = gdk_screen_get_default(); // not ref'ed
         glib::String font;
@@ -425,7 +424,7 @@ private:
         // FIXME: we still don't have the category assets
         switch (category)
         {
-          case UNITY_PROTOCOL_CATEGORY_TYPE_SONG:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_MUSIC:
             helper_handle =
               impl->LoadFromIconName("emblem-favorite", cat_size, helper_slot);
             break;
