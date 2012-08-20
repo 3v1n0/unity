@@ -1358,7 +1358,9 @@ void UnityScreen::preparePaint(int ms)
   for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
     wi->HandleAnimations (ms);
 
+#ifndef USE_MODERN_COMPIZ_GL
   compizDamageNux(cScreen->currentDamage());
+#endif
 
   didShellRepaint = false;
   firstWindowAboveShell = NULL;
@@ -1486,6 +1488,29 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
 /* Grab changed nux regions and add damage rects for them */
 void UnityScreen::nuxDamageCompiz()
 {
+#ifdef USE_MODERN_COMPIZ_GL
+  /*
+   * If Nux is going to redraw anything then we have to tell Compiz to
+   * redraw everything. This is because Nux has a bad habit (bug??) of drawing
+   * more than just the regions of its DrawList. (LP: #1036519)
+   *
+   * Forunately, this does not happen on most frames. Only when the Unity
+   * Shell needs to redraw something.
+   *
+   * TODO: Try to figure out why redrawing the panel makes the launcher also
+   *       redraw even though the launcher's geometry is not in DrawList, and
+   *       stop it. Then maybe we can revert back to the old code below #else.
+   */
+  std::vector<nux::Geometry> const& dirty = wt->GetDrawList();
+  if (!dirty.empty())
+  {
+    cScreen->damageRegionSetEnabled(this, false);
+    cScreen->damageScreen();
+    cScreen->damageRegionSetEnabled(this, true);
+  }
+
+#else
+
   /*
    * WARNING: Nux bug LP: #1014610 (unbounded DrawList growth) will cause
    *          this code to be called far too often in some cases and
@@ -1536,6 +1561,7 @@ void UnityScreen::nuxDamageCompiz()
   cScreen->damageRegionSetEnabled(this, false);
   cScreen->damageRegion(nux_damage);
   cScreen->damageRegionSetEnabled(this, true);
+#endif
 }
 
 /* handle X Events */
