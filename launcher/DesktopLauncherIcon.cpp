@@ -28,14 +28,13 @@ namespace launcher
 {
 
 DesktopLauncherIcon::DesktopLauncherIcon()
-  :   SimpleLauncherIcon()
+  :   SimpleLauncherIcon(IconType::DESKTOP)
   ,   show_in_switcher_(true)
 {
   tooltip_text = _("Show Desktop");
   icon_name = "desktop";
   SetQuirk(Quirk::VISIBLE, true);
   SetQuirk(Quirk::RUNNING, false);
-  SetIconType(IconType::DESKTOP);
 }
 
 DesktopLauncherIcon::~DesktopLauncherIcon()

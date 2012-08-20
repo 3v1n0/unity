@@ -49,18 +49,18 @@ public:
   static WindowManager* Default();
   static void           SetDefault(WindowManager* manager);
 
-  virtual guint32 GetActiveWindow() = 0;
+  virtual guint32 GetActiveWindow() const = 0;
 
-  virtual bool IsWindowMaximized(guint32 xid) = 0;
+  virtual bool IsWindowMaximized(guint32 xid) const = 0;
   virtual bool IsWindowDecorated(guint32 xid) = 0;
-  virtual bool IsWindowOnCurrentDesktop(guint32 xid) = 0;
-  virtual bool IsWindowObscured(guint32 xid) = 0;
-  virtual bool IsWindowMapped(guint32 xid) = 0;
-  virtual bool IsWindowVisible(guint32 xid) = 0;
-  virtual bool IsWindowOnTop(guint32 xid) = 0;
-  virtual bool IsWindowClosable(guint32 xid) = 0;
-  virtual bool IsWindowMinimizable(guint32 xid) = 0;
-  virtual bool IsWindowMaximizable(guint32 xid) = 0;
+  virtual bool IsWindowOnCurrentDesktop(guint32 xid) const = 0;
+  virtual bool IsWindowObscured(guint32 xid) const = 0;
+  virtual bool IsWindowMapped(guint32 xid) const = 0;
+  virtual bool IsWindowVisible(guint32 xid) const = 0;
+  virtual bool IsWindowOnTop(guint32 xid) const = 0;
+  virtual bool IsWindowClosable(guint32 xid) const = 0;
+  virtual bool IsWindowMinimizable(guint32 xid) const = 0;
+  virtual bool IsWindowMaximizable(guint32 xid) const = 0;
 
   virtual void ShowDesktop() = 0;
 
@@ -74,11 +74,13 @@ public:
   virtual void Lower(guint32 xid) = 0;
 
   virtual void TerminateScale() = 0;
-  virtual bool IsScaleActive() = 0;
-  virtual bool IsScaleActiveForGroup() = 0;
+  virtual bool IsScaleActive() const = 0;
+  virtual bool IsScaleActiveForGroup() const = 0;
 
   virtual void InitiateExpo() = 0;
-  virtual bool IsExpoActive() = 0;
+  virtual bool IsExpoActive() const = 0;
+
+  virtual bool IsWallActive() const = 0;
 
   virtual void FocusWindowGroup(std::vector<Window> windows, FocusVisibility, int monitor = -1, bool only_top_win = true) = 0;
   virtual bool ScaleWindowGroup(std::vector<Window> windows, int state, bool force) = 0;
@@ -86,8 +88,8 @@ public:
   virtual void Decorate(guint32 xid) {};
   virtual void Undecorate(guint32 xid) {};
 
-  virtual bool IsScreenGrabbed() = 0;
-  virtual bool IsViewPortSwitchStarted() = 0;
+  virtual bool IsScreenGrabbed() const = 0;
+  virtual bool IsViewPortSwitchStarted() const = 0;
 
   virtual void MoveResizeWindow(guint32 xid, nux::Geometry geometry) = 0;
   void StartMove(guint32 xid, int, int);
@@ -98,13 +100,13 @@ public:
   virtual nux::Geometry GetScreenGeometry() const = 0;
   virtual nux::Geometry GetWorkAreaGeometry(guint32 xid = 0) const = 0;
 
-  virtual unsigned long long GetWindowActiveNumber(guint32 xid) = 0;
+  virtual unsigned long long GetWindowActiveNumber(guint32 xid) const = 0;
 
   virtual void SetWindowIconGeometry(Window window, nux::Geometry const& geo) = 0;
 
   virtual void CheckWindowIntersections (nux::Geometry const& region, bool &active, bool &any) = 0;
 
-  virtual int WorkspaceCount() = 0;
+  virtual int WorkspaceCount() const = 0;
 
   virtual bool saveInputFocus() = 0;
   virtual bool restoreInputFocus() = 0;

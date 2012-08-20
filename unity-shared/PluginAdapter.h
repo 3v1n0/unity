@@ -92,11 +92,13 @@ public:
   void OnLeaveDesktop ();
 
   void TerminateScale();
-  bool IsScaleActive();
-  bool IsScaleActiveForGroup();
+  bool IsScaleActive() const;
+  bool IsScaleActiveForGroup() const;
 
   void InitiateExpo();
-  bool IsExpoActive();
+  bool IsExpoActive() const;
+
+  bool IsWallActive() const;
 
   void ShowGrabHandles(CompWindow* window, bool use_timer);
   void HideGrabHandles(CompWindow* window);
@@ -109,22 +111,22 @@ public:
   void NotifyCompizEvent(const char* plugin, const char* event, CompOption::Vector& option);
   void NotifyNewDecorationState(guint32 xid);
 
-  guint32 GetActiveWindow();
+  guint32 GetActiveWindow() const;
 
   void Decorate(guint32 xid);
   void Undecorate(guint32 xid);
 
   // WindowManager implementation
-  bool IsWindowMaximized(guint xid);
+  bool IsWindowMaximized(guint xid) const;
   bool IsWindowDecorated(guint xid);
-  bool IsWindowOnCurrentDesktop(guint xid);
-  bool IsWindowObscured(guint xid);
-  bool IsWindowMapped(guint xid);
-  bool IsWindowVisible(guint32 xid);
-  bool IsWindowOnTop(guint32 xid);
-  bool IsWindowClosable(guint32 xid);
-  bool IsWindowMinimizable(guint32 xid);
-  bool IsWindowMaximizable(guint32 xid);
+  bool IsWindowOnCurrentDesktop(guint xid) const;
+  bool IsWindowObscured(guint xid) const;
+  bool IsWindowMapped(guint xid) const;
+  bool IsWindowVisible(guint32 xid) const;
+  bool IsWindowOnTop(guint32 xid) const;
+  bool IsWindowClosable(guint32 xid) const;
+  bool IsWindowMinimizable(guint32 xid) const;
+  bool IsWindowMaximizable(guint32 xid) const;
 
   void Restore(guint32 xid);
   void RestoreAt(guint32 xid, int x, int y);
@@ -140,12 +142,12 @@ public:
   void FocusWindowGroup(std::vector<Window> windows, FocusVisibility, int monitor = -1, bool only_top_win = true);
   bool ScaleWindowGroup(std::vector<Window> windows, int state, bool force);
 
-  bool IsScreenGrabbed();
-  bool IsViewPortSwitchStarted();
+  bool IsScreenGrabbed() const;
+  bool IsViewPortSwitchStarted() const;
 
-  unsigned long long GetWindowActiveNumber (guint32 xid);
+  unsigned long long GetWindowActiveNumber (guint32 xid) const;
 
-  bool MaximizeIfBigEnough(CompWindow* window);
+  bool MaximizeIfBigEnough(CompWindow* window) const;
 
   int GetWindowMonitor(guint32 xid) const;
   nux::Geometry GetWindowGeometry(guint32 xid) const;
@@ -155,7 +157,7 @@ public:
 
   void CheckWindowIntersections(nux::Geometry const& region, bool &active, bool &any);
 
-  int WorkspaceCount();
+  int WorkspaceCount() const;
 
   void SetCoverageAreaBeforeAutomaximize(float area);
 
@@ -172,7 +174,7 @@ private:
   std::string MatchStringForXids(std::vector<Window> *windows);
   void InitiateScale(std::string const& match, int state = 0);
 
-  bool CheckWindowIntersection(nux::Geometry const& region, CompWindow* window);
+  bool CheckWindowIntersection(nux::Geometry const& region, CompWindow* window) const;
   void SetMwmWindowHints(Window xid, MotifWmHints* new_hints);
 
   CompScreen* m_Screen;

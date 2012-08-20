@@ -30,7 +30,6 @@
 #include <string.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
-#include <gconf/gconf-client.h>
 
 #include <X11/extensions/XInput2.h>
 #include <X11/XKBlib.h>
@@ -46,8 +45,9 @@ G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 #define N_TIMEOUT_SLOTS 50
 #define MAX_INDICATOR_ENTRIES 50
 
-#define COMPIZ_OPTIONS_PATH "/apps/compiz-1/plugins/unityshell/screen0/options"
-#define MENU_TOGGLE_KEYBINDING_PATH COMPIZ_OPTIONS_PATH"/panel_first_menu"
+#define COMPIZ_OPTION_SCHEMA "org.compiz.unityshell"
+#define COMPIZ_OPTION_PATH "/org/compiz/profiles/unity/plugins/"
+#define MENU_TOGGLE_KEYBINDING_KEY "panel-first-menu"
 
 static PanelService *static_service = NULL;
 
@@ -76,7 +76,7 @@ struct _PanelServicePrivate
 
   KeyCode toggle_key;
   guint32 toggle_modifiers;
-  guint32 key_monitor_id;
+  GSettings *gsettings;
 
   IndicatorObjectEntry *pressed_entry;
   gboolean use_event;
@@ -135,20 +135,24 @@ static GdkFilterReturn event_filter (GdkXEvent    *ev,
                                      GdkEvent     *gev,
                                      PanelService *self);
 
+static void on_keybinding_changed (GSettings *settings,
+                                   gchar     *key,
+                                   gpointer   data);
+
 /*
  * GObject stuff
  */
 
 static void
-panel_service_class_dispose (GObject *object)
+panel_service_class_dispose (GObject *self)
 {
-  PanelServicePrivate *priv = PANEL_SERVICE (object)->priv;
+  PanelServicePrivate *priv = PANEL_SERVICE (self)->priv;
   gint i;
 
   g_hash_table_destroy (priv->id2entry_hash);
   g_hash_table_destroy (priv->panel2entries_hash);
 
-  gdk_window_remove_filter (NULL, (GdkFilterFunc)event_filter, object);
+  gdk_window_remove_filter (NULL, (GdkFilterFunc)event_filter, self);
 
   if (GTK_IS_WIDGET (priv->menubar) &&
       gtk_widget_get_realized (GTK_WIDGET (priv->menubar)))
@@ -186,13 +190,14 @@ panel_service_class_dispose (GObject *object)
         }
     }
 
-  if (priv->key_monitor_id)
+  if (G_IS_OBJECT (priv->gsettings))
     {
-      gconf_client_notify_remove (gconf_client_get_default(), priv->key_monitor_id);
-      priv->key_monitor_id = 0;
+      g_signal_handlers_disconnect_by_func (priv->gsettings, on_keybinding_changed, self);
+      g_object_unref (priv->gsettings);
+      priv->gsettings = NULL;
     }
 
-  G_OBJECT_CLASS (panel_service_parent_class)->dispose (object);
+  G_OBJECT_CLASS (panel_service_parent_class)->dispose (self);
 }
 
 static void
@@ -479,8 +484,7 @@ initial_resync (PanelService *self)
 static void
 panel_service_update_menu_keybinding (PanelService *self)
 {
-  GConfClient *client = gconf_client_get_default ();
-  gchar *binding = gconf_client_get_string (client, MENU_TOGGLE_KEYBINDING_PATH, NULL);
+  gchar *binding = g_settings_get_string (self->priv->gsettings, MENU_TOGGLE_KEYBINDING_KEY);
 
   KeyCode keycode = 0;
   KeySym keysym = NoSymbol;
@@ -535,11 +539,11 @@ panel_service_update_menu_keybinding (PanelService *self)
   g_free (binding);
 }
 
-void
-on_keybinding_changed (GConfClient* client, guint id, GConfEntry* entry, gpointer data)
+static void
+on_keybinding_changed (GSettings *settings, gchar *key, gpointer data)
 {
-  PanelService *self = data;
   g_return_if_fail (PANEL_IS_SERVICE (data));
+  PanelService *self = data;
 
   panel_service_update_menu_keybinding (self);
 }
@@ -566,13 +570,11 @@ panel_service_init (PanelService *self)
   sort_indicators (self);
   suppress_signals = FALSE;
 
-  panel_service_update_menu_keybinding (self);
+  priv->gsettings = g_settings_new_with_path (COMPIZ_OPTION_SCHEMA, COMPIZ_OPTION_PATH);
+  g_signal_connect (priv->gsettings, "changed::"MENU_TOGGLE_KEYBINDING_KEY,
+                    G_CALLBACK(on_keybinding_changed), self);
 
-  GConfClient *client = gconf_client_get_default ();
-  gconf_client_add_dir (client, COMPIZ_OPTIONS_PATH, GCONF_CLIENT_PRELOAD_NONE, NULL);
-  priv->key_monitor_id = gconf_client_notify_add (client, MENU_TOGGLE_KEYBINDING_PATH,
-                                                  on_keybinding_changed, self,
-                                                  NULL, NULL);
+  panel_service_update_menu_keybinding (self);
 
   priv->initial_sync_id = g_idle_add ((GSourceFunc)initial_resync, self);
 }
@@ -904,7 +906,7 @@ on_indicator_menu_show (IndicatorObject      *object,
                         PanelService         *self)
 {
   gchar *entry_id;
-  
+
   g_return_if_fail (PANEL_IS_SERVICE (self));
   if (entry == NULL)
     {
@@ -924,7 +926,7 @@ on_indicator_menu_show_now_changed (IndicatorObject      *object,
                                     PanelService         *self)
 {
   gchar *entry_id;
-  
+
   g_return_if_fail (PANEL_IS_SERVICE (self));
   if (entry == NULL)
     {
