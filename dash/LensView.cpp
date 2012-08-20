@@ -309,7 +309,7 @@ void LensView::OnCategoryAdded(Category const& category)
   counts_[group] = 0;
 
   ResultView* grid;
-  renderer_name = "flowview";
+  renderer_name = "flow";
   
   if (renderer_name == "tile-horizontal")
   {
@@ -318,15 +318,17 @@ void LensView::OnCategoryAdded(Category const& category)
     static_cast<ResultViewGrid*> (grid)->horizontal_spacing = CARD_VIEW_GAP_HORIZ;
     static_cast<ResultViewGrid*> (grid)->vertical_spacing = CARD_VIEW_GAP_VERT;
   }
-  else if (renderer_name == "flowview")
+  else if (renderer_name == "flow")
   {
     grid = new CoverflowResultView(NUX_TRACKER_LOCATION);
+    grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
   } 
   else
   {
     grid = new ResultViewGrid(NUX_TRACKER_LOCATION);
     grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
   }
+  group->SetChildView(grid);
 
   std::string unique_id = name + lens_->name();
   grid->unique_id = unique_id;
@@ -352,7 +354,6 @@ void LensView::OnCategoryAdded(Category const& category)
 
   }, unique_id));
   
-  group->SetChildView(grid);
 
   /* Set up filter model for this category */
   Results::Ptr results_model = lens_->results;

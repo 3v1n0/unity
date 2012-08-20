@@ -195,13 +195,6 @@ PlacesGroup::PlacesGroup()
   _expand_label->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
   _expand_icon->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
   
-  dash::ResultView *grid = new dash::CoverflowResultView(NUX_TRACKER_LOCATION);
-  grid->expanded = false;
-
-  grid->SetModelRenderer(new dash::ResultRendererTile(NUX_TRACKER_LOCATION));
-  
-  SetChildView(grid);
-  
   key_nav_focus_change.connect([&](nux::Area* area, bool has_focus, nux::KeyNavDirection direction)
   {
     if (!has_focus)
