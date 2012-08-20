@@ -36,10 +36,6 @@ namespace hud
 Icon::Icon()
   : IconTexture("", 0, true)
 {
-  background_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_icon_back_54.png", -1, true));
-  gloss_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_icon_shine_54.png", -1, true));
-  edge_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_icon_edge_54.png", -1,  true));
-
   texture_updated.connect([&] (nux::BaseTexture* texture)
   {
     icon_texture_source_ = new HudIconTextureSource(nux::ObjectPtr<nux::BaseTexture>(texture));
@@ -75,7 +71,6 @@ void Icon::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   std::list<unity::ui::RenderArg> args;
   args.push_front(arg);
-
 
   auto toplevel = GetToplevel();
   icon_renderer_.PreprocessIcons(args, toplevel->GetGeometry());
