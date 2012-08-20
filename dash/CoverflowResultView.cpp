@@ -65,6 +65,7 @@ public:
 
   void ComputeFlatIcons();
   int GetIndexForUri(std::string uri);
+  std::string GetUriForIndex(int index);
 
   CoverflowResultView *parent_;
   nux::Coverflow *coverflow_;
@@ -186,7 +187,7 @@ CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
     {
       int left_results = current_index;
       int right_results = num_results ? (num_results - current_index) - 1 : 0;
-      parent_->UriActivated.emit(uri, ActivateType::PREVIEW);
+      parent_->UriActivated.emit(GetUriForIndex(current_index), ActivateType::PREVIEW);
       ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 
                               g_variant_new("(iii)", 0, left_results, right_results));
     }
@@ -212,6 +213,11 @@ int CoverflowResultView::Impl::GetIndexForUri(std::string uri)
     i++;
   }
   return -1;
+}
+
+std::string CoverflowResultView::Impl::GetUriForIndex(int index)
+{
+  return static_cast<CoverflowResultItem*>(coverflow_->model()->Items()[index].GetPointer())->Uri();
 }
 
 CoverflowResultView::CoverflowResultView(NUX_FILE_LINE_DECL)
