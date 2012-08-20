@@ -48,6 +48,7 @@ public:
   virtual void Activate(int button);
 
   int Index();
+  std::string Uri();
 
   Result result_;
   CoverflowResultView* parent_;
@@ -63,6 +64,7 @@ public:
   ~Impl();
 
   void ComputeFlatIcons();
+  int GetIndexForUri(std::string uri);
 
   CoverflowResultView *parent_;
   nux::Coverflow *coverflow_;
@@ -94,6 +96,11 @@ CoverflowResultItem::CoverflowResultItem(Result& result, CoverflowResultView *pa
 CoverflowResultItem::~CoverflowResultItem()
 {
 
+}
+
+std::string CoverflowResultItem::Uri()
+{
+  return result_.uri();
 }
 
 int CoverflowResultItem::Index()
@@ -149,11 +156,62 @@ CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
   coverflow_->pinching = 0.2f;
   coverflow_->y_offset = 0.15f;
   coverflow_->reflection_size = .5f;
+
+  ubus_.RegisterInterest(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, [&] (GVariant* data) {
+    int nav_mode = 0;
+    gchar* uri = NULL;
+    gchar* proposed_unique_id = NULL;
+    g_variant_get(data, "(iss)", &nav_mode, &uri, &proposed_unique_id);
+   
+    if (std::string(proposed_unique_id) != parent_->unique_id())
+      return;
+
+    unsigned num_results = coverflow_->model()->Items().size();
+    int current_index = GetIndexForUri(uri);
+    if (nav_mode == -1) // left
+    {
+      current_index--;  
+    }
+    else if (nav_mode == 1) // right
+    {
+      current_index++;
+    }
+
+    if (current_index < 0 || static_cast<unsigned int>(current_index) >= num_results)
+    {
+      return;
+    }
+    
+    if (nav_mode)
+    {
+      int left_results = current_index;
+      int right_results = num_results ? (num_results - current_index) - 1 : 0;
+      parent_->UriActivated.emit(uri, ActivateType::PREVIEW);
+      ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 
+                              g_variant_new("(iii)", 0, left_results, right_results));
+    }
+
+    g_free(uri);
+    g_free(proposed_unique_id);
+
+  });
 }
 
 CoverflowResultView::Impl::~Impl()
 {
   
+}
+
+int CoverflowResultView::Impl::GetIndexForUri(std::string uri)
+{
+  int i = 0;
+  for (auto item : coverflow_->model()->Items())
+  {
+    if (uri == static_cast<CoverflowResultItem*>(item.GetPointer())->Uri())
+      return i;
+    i++;
+  }
+  return -1;
 }
 
 CoverflowResultView::CoverflowResultView(NUX_FILE_LINE_DECL)
