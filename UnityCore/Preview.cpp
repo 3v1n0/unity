@@ -120,7 +120,7 @@ public:
   std::string get_image_source_uri() const { return image_source_uri_; };
   ActionPtrList get_actions() const { return actions_list_; };
   InfoHintPtrList get_info_hints() const { return info_hint_list_; };
-  void PreviewClosed() const;
+  void EmitClosed() const;
 
   Lens* get_parent_lens() const { return parent_lens_; };
   bool set_parent_lens(Lens* lens)
@@ -219,7 +219,7 @@ void Preview::Impl::SetupGetters()
       sigc::mem_fun(this, &Preview::Impl::set_parent_lens));
 }
 
-void Preview::Impl::PreviewClosed() const
+void Preview::Impl::EmitClosed() const
 {
   UnityProtocolPreview *preview = UNITY_PROTOCOL_PREVIEW(raw_preview_.RawPtr());
 
@@ -274,9 +274,9 @@ void Preview::PerformAction(std::string const& id) const
   }
 }
 
-void Preview::PreviewClosed() const
+void Preview::EmitClosed() const
 {
-  pimpl->PreviewClosed();
+  pimpl->EmitClosed();
 }
 
 } // namespace dash

@@ -273,7 +273,7 @@ TEST_F(TestLens, TestPreviewAction)
   Utils::WaitUntil(action_executed);
 }
 
-TEST_F(TestLens, TestPreviewClosedSignal)
+TEST_F(TestLens, TestEmitClosedSignal)
 {
   std::string uri = PopulateAndGetFirstResultURI();
   bool previewed = false;
@@ -289,7 +289,7 @@ TEST_F(TestLens, TestPreviewClosedSignal)
     movie_preview = std::dynamic_pointer_cast<MoviePreview>(preview);
 
     //there isn't anything we can really test here - other than it's not crashing here
-    movie_preview->PreviewClosed();
+    movie_preview->EmitClosed();
 
     previewed = true;
   };
