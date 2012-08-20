@@ -27,8 +27,6 @@
 #include <Nux/Nux.h>
 #include <Nux/ToggleButton.h>
 
-
-
 namespace unity
 {
 

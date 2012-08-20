@@ -66,6 +66,8 @@ protected:
   virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);
   virtual void PreLayoutManagement();
   
+  virtual bool AcceptKeyNavFocus() { return false; }
+  
   void SetupBackground();
   void SetupViews();
 
