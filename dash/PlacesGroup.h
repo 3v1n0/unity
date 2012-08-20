@@ -64,7 +64,11 @@ public:
 
   void Relayout();
 
-  void SetCounts(guint n_visible_items_in_unexpand_mode, guint n_total_items);
+  void SetCategoryIndex(unsigned index);
+  unsigned GetCategoryIndex() const;
+
+  void SetCounts(unsigned n_visible_items_in_unexpand_mode,
+                 unsigned n_total_items);
 
   void SetExpanded(bool is_expanded);
   bool GetExpanded() const;
@@ -121,8 +125,9 @@ private:
   IconTexture*          _expand_icon;
 
   bool  _is_expanded;
-  guint _n_visible_items_in_unexpand_mode;
-  guint _n_total_items;
+  unsigned _n_visible_items_in_unexpand_mode;
+  unsigned _n_total_items;
+  unsigned _category_index;
   std::string _cached_name;
   nux::Geometry _cached_geometry;
 

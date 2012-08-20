@@ -239,7 +239,7 @@ void ThumbnailGeneratorImpl::RunGenerate()
      *********************************/
     pthread_mutex_lock (&thumbnails_mutex_);
 
-    if (thumbnails_.size() == 0)
+    if (thumbnails_.empty())
     {
       thumbnail_thread_is_running_ = FALSE;
       pthread_mutex_unlock (&thumbnails_mutex_);
@@ -290,7 +290,7 @@ bool ThumbnailGeneratorImpl::OnThumbnailComplete()
   {
     pthread_mutex_lock (&thumbnails_mutex_);
 
-    if (complete_thumbnails_.size() == 0)
+    if (complete_thumbnails_.empty())
     {
       thread_return_timer_.reset();
       pthread_mutex_unlock (&thumbnails_mutex_);

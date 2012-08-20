@@ -122,7 +122,8 @@ void Controller::RegisterUBusInterests()
                                  sigc::mem_fun(this, &Controller::OnActivateRequest));
   ubus_manager_.RegisterInterest(UBUS_DASH_ABOUT_TO_SHOW,
                                  [&] (GVariant*) { EnsureDash(); });
-  ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [&] (GVariant *data) {
+  ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [&] (GVariant *data) 
+  {
     unity::glib::String overlay_identity;
     gboolean can_maximise = FALSE;
     gint32 overlay_monitor = 0;
@@ -134,6 +135,7 @@ void Controller::RegisterUBusInterests()
       HideDash(true);
     }
   });
+
 }
 
 void Controller::EnsureDash()

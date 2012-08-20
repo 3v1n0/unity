@@ -91,6 +91,8 @@ Preview::Preview(dash::Preview::Ptr preview_model)
 
 Preview::~Preview()
 {
+  if (preview_model_)
+    preview_model_->EmitClosed();
 }
 
 std::string Preview::GetName() const
