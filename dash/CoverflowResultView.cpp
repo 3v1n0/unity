@@ -43,7 +43,7 @@ public:
   ~CoverflowResultItem();
 
   nux::ObjectPtr<nux::BaseTexture> GetTexture() const;
-  void Activate();
+  virtual void Activate(int button);
 
   Result result_;
   CoverflowResultView* parent_;
@@ -93,9 +93,12 @@ nux::ObjectPtr<nux::BaseTexture> CoverflowResultItem::GetTexture() const
   return nux::ObjectPtr<nux::BaseTexture>(icon_texture_->texture());
 }
 
-void CoverflowResultItem::Activate()
+void CoverflowResultItem::Activate(int button)
 {
-  parent_->UriActivated.emit(result_.uri, ResultView::ActivateType::DIRECT);
+  if (button == 1)
+    parent_->UriActivated.emit(result_.uri, ResultView::ActivateType::DIRECT);
+  else if (button == 3)
+    parent_->UriActivated.emit(result_.uri, ResultView::ActivateType::PREVIEW);
 }
 
 CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
