@@ -72,14 +72,14 @@ class QuicklistActionTests(UnityTestCase):
         Then we activate the Calculator quicklist item.
         Then we actiavte the Mahjongg launcher icon.
         """
-        mah_win1 = self.start_app_window("Mahjongg")
+        char_win1 = self.start_app_window("Character Map")
         calc_win = self.start_app_window("Calculator")
-        mah_win2 = self.start_app_window("Mahjongg")
+        char_win2 = self.start_app_window("Character Map")
 
-        self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
+        self.assertVisibleWindowStack([char_win2, calc_win, char_win1])
 
-        mahj_icon = self.launcher.model.get_icon(
-            desktop_id=mah_win1.application.desktop_file)
+        char_icon = self.launcher.model.get_icon(
+            desktop_id=char_win1.application.desktop_file)
         calc_icon = self.launcher.model.get_icon(
             desktop_id=calc_win.application.desktop_file)
 
@@ -87,29 +87,29 @@ class QuicklistActionTests(UnityTestCase):
         calc_ql.get_quicklist_application_item(calc_win.application.name).mouse_click()
 
         self.assertProperty(calc_win, is_focused=True)
-        self.assertVisibleWindowStack([calc_win, mah_win2, mah_win1])
+        self.assertVisibleWindowStack([calc_win, char_win2, char_win1])
 
-        mahj_ql = self.open_quicklist_for_icon(mahj_icon)
-        mahj_ql.get_quicklist_application_item(mah_win1.application.name).mouse_click()
+        char_ql = self.open_quicklist_for_icon(char_icon)
+        char_ql.get_quicklist_application_item(char_win1.application.name).mouse_click()
 
-        self.assertProperty(mah_win2, is_focused=True)
-        self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
+        self.assertProperty(char_win2, is_focused=True)
+        self.assertVisibleWindowStack([char_win2, calc_win, char_win1])
 
     def test_quicklist_application_item_initiate_spread(self):
         """This tests shows that when you activate a quicklist application item
         when an application window is focused, the spread is initiated.
         """
-        calc_win1 = self.start_app_window("Calculator")
-        calc_win2 = self.start_app_window("Calculator")
-        calc_app = calc_win1.application
+        char_win1 = self.start_app_window("Character Map")
+        char_win2 = self.start_app_window("Character Map")
+        char_app = char_win1.application
 
-        self.assertVisibleWindowStack([calc_win2, calc_win1])
-        self.assertProperty(calc_win2, is_focused=True)
+        self.assertVisibleWindowStack([char_win2, char_win1])
+        self.assertProperty(char_win2, is_focused=True)
 
-        calc_icon = self.launcher.model.get_icon(desktop_id=calc_app.desktop_file)
+        char_icon = self.launcher.model.get_icon(desktop_id=char_app.desktop_file)
 
-        calc_ql = self.open_quicklist_for_icon(calc_icon)
-        app_item = calc_ql.get_quicklist_application_item(calc_app.name)
+        char_ql = self.open_quicklist_for_icon(char_icon)
+        app_item = char_ql.get_quicklist_application_item(char_app.name)
 
         self.addCleanup(self.keybinding, "spread/cancel")
         app_item.mouse_click()
@@ -154,6 +154,44 @@ class QuicklistActionTests(UnityTestCase):
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
         self.assertThat(self.dash.visible, Eventually(Equals(True)))
+
+    def test_right_click_opens_quicklist_if_already_open(self):
+        """A right click to another icon in the launcher must
+        close the current open quicklist and open the other
+        icons quicklist.
+        lp:890991
+        """
+
+        calc_win = self.start_app_window("Calculator")
+        mahj_win = self.start_app_window("Mahjongg")
+
+        calc_icon = self.launcher.model.get_icon(
+            desktop_id=calc_win.application.desktop_file)
+        mahj_icon = self.launcher.model.get_icon(
+            desktop_id=mahj_win.application.desktop_file)
+
+        calc_ql = self.open_quicklist_for_icon(calc_icon)
+        self.assertThat(calc_ql.active, Eventually(Equals(True)))
+
+        mahj_ql = self.open_quicklist_for_icon(mahj_icon)
+        self.assertThat(mahj_ql.active, Eventually(Equals(True)))
+        self.assertThat(calc_ql.active, Eventually(Equals(False)))
+
+    def test_right_clicking_same_icon_doesnt_reopen_ql(self):
+        """A right click to the same icon in the launcher must
+        not re-open the quicklist if already open. It must hide.
+        """
+
+        calc_win = self.start_app_window("Calculator")
+
+        calc_icon = self.launcher.model.get_icon(
+            desktop_id=calc_win.application.desktop_file)
+
+        calc_ql = self.open_quicklist_for_icon(calc_icon)
+        self.assertThat(calc_ql.active, Eventually(Equals(True)))
+
+        calc_ql = self.open_quicklist_for_icon(calc_icon)
+        self.assertThat(calc_ql.active, Eventually(Equals(False)))
 
 
 class QuicklistKeyNavigationTests(UnityTestCase):

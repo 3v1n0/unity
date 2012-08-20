@@ -30,7 +30,7 @@ namespace
 
 TEST(TestSingleMonitorLauncherIcon, Construction)
 {
-  SingleMonitorLauncherIcon icon(1);
+  SingleMonitorLauncherIcon icon(AbstractLauncherIcon::IconType::NONE, 1);
 
   EXPECT_EQ(icon.GetMonitor(), 1);
   EXPECT_TRUE(icon.IsVisibleOnMonitor(1));
@@ -39,7 +39,7 @@ TEST(TestSingleMonitorLauncherIcon, Construction)
 
 TEST(TestSingleMonitorLauncherIcon, MonitorVisibility)
 {
-  SingleMonitorLauncherIcon icon(2);
+  SingleMonitorLauncherIcon icon(AbstractLauncherIcon::IconType::NONE, 2);
 
   for (int i = 0; i < max_num_monitors; ++i)
   {

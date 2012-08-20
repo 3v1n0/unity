@@ -43,7 +43,6 @@ public:
   void SetHideMode(LauncherHideMode hide_mode);
 
 protected:
-  std::list<DbusmenuMenuitem*> GetMenus();
   std::string GetName() const;
 
 private:

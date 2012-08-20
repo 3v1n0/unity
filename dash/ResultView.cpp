@@ -54,15 +54,11 @@ ResultView::ResultView(NUX_FILE_LINE_DECL)
 
 ResultView::~ResultView()
 {
-  if (renderer_ == NULL)
-  {
-    return;
-  }
   ClearIntrospectableWrappers();
 
-  for (auto result : results_)
+  for (ResultIterator it(GetIteratorAtRow(0)); !it.IsLast(); ++it)
   {
-    renderer_->Unload(result);
+    renderer_->Unload(*it);
   }
 
   renderer_->UnReference();
@@ -90,37 +86,104 @@ void ResultView::SetModelRenderer(ResultRenderer* renderer)
 
 void ResultView::AddResult(Result& result)
 {
-  results_.push_back(result);
-  
-  if (renderer_ != NULL)
-    renderer_->Preload(result);
+  renderer_->Preload(result);
 
   NeedRedraw();
 }
 
 void ResultView::RemoveResult(Result& result)
 {
-  ResultList::iterator it;
-  std::string uri = result.uri;
+  renderer_->Unload(result);
+}
 
-  for (it = results_.begin(); it != results_.end(); ++it)
+void ResultView::OnRowAdded(DeeModel* model, DeeModelIter* iter)
+{
+  Result result(model, iter, renderer_tag_);
+  AddResult(result);
+}
+
+void ResultView::OnRowRemoved(DeeModel* model, DeeModelIter* iter)
+{
+  Result result(model, iter, renderer_tag_);
+  RemoveResult(result);
+}
+
+void ResultView::SetModel(glib::Object<DeeModel> const& model, DeeModelTag* tag)
+{
+  // cleanup
+  if (result_model_)
   {
-    if (result.uri == (*it).uri)
+    sig_manager_.Disconnect(result_model_);
+
+    for (ResultIterator it(GetIteratorAtRow(0)); !it.IsLast(); ++it)
     {
-      results_.erase(it);
-      break;
+      RemoveResult(*it);
     }
   }
 
-  if (renderer_ != NULL)
-    renderer_->Unload(result);
+  result_model_ = model;
+  renderer_tag_ = tag;
+
+  if (model)
+  {
+    typedef glib::Signal<void, DeeModel*, DeeModelIter*> RowSignalType;
+
+    sig_manager_.Add(new RowSignalType(model,
+                                       "row-added",
+                                       sigc::mem_fun(this, &ResultView::OnRowAdded)));
+    sig_manager_.Add(new RowSignalType(model,
+                                       "row-removed",
+                                       sigc::mem_fun(this, &ResultView::OnRowRemoved)));
+
+    for (ResultIterator it(GetIteratorAtRow(0)); !it.IsLast(); ++it)
+    {
+      AddResult(*it);
+    }
+  }
 }
 
-ResultView::ResultList ResultView::GetResultList()
+unsigned ResultView::GetNumResults()
 {
-  return results_;
+  if (result_model_)
+    return dee_model_get_n_rows(result_model_);
+
+  return 0;
 }
 
+ResultIterator ResultView::GetIteratorAtRow(unsigned row)
+{
+  DeeModelIter* iter = NULL;
+  if (result_model_)
+  {
+    iter = row > 0 ? dee_model_get_iter_at_row(result_model_, row) :
+      dee_model_get_first_iter(result_model_);
+  }
+  return ResultIterator(result_model_, iter, renderer_tag_);
+}
+
+// it would be nice to return a result here, but c++ does not have a good mechanism
+// for indicating out of bounds errors. so i return the index
+unsigned int ResultView::GetIndexForUri(const std::string& uri)
+{
+  unsigned int index = 0;
+  for (ResultIterator it(GetIteratorAtRow(0)); !it.IsLast(); ++it)
+  {
+    if ((*it).uri == uri)
+      break;
+
+    index++;
+  }
+
+  return index;
+}
+
+std::string ResultView::GetUriForIndex(unsigned int index)
+{
+  if (index >= GetNumResults())
+    return "";
+
+  return (*GetIteratorAtRow(index)).uri();
+}
 
 long ResultView::ComputeContentSize()
 {
@@ -154,10 +217,14 @@ debug::Introspectable::IntrospectableList ResultView::GetIntrospectableChildren(
 {
   ClearIntrospectableWrappers();
 
-  for (auto result: results_)
+  if (result_model_)
   {
-    introspectable_children_.push_back(new debug::ResultWrapper(result));
+    for (ResultIterator iter(result_model_); !iter.IsLast(); ++iter)
+    {
+      introspectable_children_.push_back(new debug::ResultWrapper(*iter));
+    }
   }
+
   return introspectable_children_;
 }
 

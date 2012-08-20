@@ -22,6 +22,7 @@
 #ifndef UNITYSHELL_H
 #define UNITYSHELL_H
 
+#include <NuxCore/AnimationController.h>
 #include <Nux/GesturesSubscription.h>
 #include <Nux/WindowThread.h>
 #include <NuxCore/Property.h>
@@ -52,6 +53,7 @@
 #include "UBusWrapper.h"
 #include "UnityshellPrivate.h"
 #include "UnityShowdesktopHandler.h"
+#include "ThumbnailGenerator.h"
 #ifndef USE_MODERN_COMPIZ_GL
 #include "ScreenEffectFramebufferObject.h"
 #endif
@@ -62,7 +64,7 @@
 #include <dlfcn.h>
 
 #include "HudController.h"
-
+#include "ThumbnailGenerator.h"
 namespace unity
 {
 
@@ -243,11 +245,15 @@ private:
 
   void InitGesturesSupport();
 
+  nux::animation::TickSource tick_source_;
+  nux::animation::AnimationController animation_controller_;
+
   Settings dash_settings_;
   dash::Style    dash_style_;
   panel::Style   panel_style_;
   FontSettings   font_settings_;
   internal::FavoriteStoreGSettings favorite_store_;
+  ThumbnailGenerator thumbnail_generator_;
 
   /* The window thread should be the last thing removed, as c++ does it in reverse order */
   std::unique_ptr<nux::WindowThread> wt;
@@ -334,7 +340,8 @@ private:
 
   UBusManager ubus_manager_;
   glib::SourceManager sources_;
-
+  unity::ThumbnailGenerator thumb_generator;
+  
   friend class UnityWindow;
 };
 

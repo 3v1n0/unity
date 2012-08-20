@@ -39,8 +39,6 @@
 #include "BackgroundEffectHelper.h"
 #include "UnityGestureBroker.h"
 
-#include <dbus/dbus.h>
-#include <dbus/dbus-glib.h>
 #include <glib/gi18n-lib.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -109,6 +107,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , screen(screen)
   , cScreen(CompositeScreen::get(screen))
   , gScreen(GLScreen::get(screen))
+  , animation_controller_(tick_source_)
   , debugger_(this)
   , enable_shortcut_overlay_(true)
   , needsRelayout(false)
@@ -201,8 +200,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   if (!failed)
   {
      notify_init("unityshell");
-
-     dbus_g_thread_init();
 
      unity_a11y_preset_environment();
 
@@ -1307,10 +1304,10 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
   ret = gScreen->glPaintOutput(attrib, transform, region, output, mask);
 
-#ifndef USE_MODERN_COMPIZ_GL
   if (doShellRepaint && !force && fullscreenRegion.contains(*output))
     doShellRepaint = false;
 
+#ifndef USE_MODERN_COMPIZ_GL
   if (doShellRepaint)
     paintDisplay(region, transform, mask);
 #endif
@@ -1359,10 +1356,16 @@ void UnityScreen::preparePaint(int ms)
 {
   cScreen->preparePaint(ms);
 
+  // Emit the current time throught the tick_source.  This moves any running
+  // animations along their path.
+  tick_source_.tick(g_get_monotonic_time());
+
   for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
     wi->HandleAnimations (ms);
 
+#ifndef USE_MODERN_COMPIZ_GL
   compizDamageNux(cScreen->currentDamage());
+#endif
 
   didShellRepaint = false;
   firstWindowAboveShell = NULL;
@@ -1426,22 +1429,37 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
     }
   }
 
-  auto launchers = launcher_controller_->launchers();
-  for (auto launcher : launchers)
+  auto const& launchers = launcher_controller_->launchers();
+  for (auto const& launcher : launchers)
   {
     if (!launcher->Hidden())
     {
-      nux::Geometry geo = launcher->GetAbsoluteGeometry();
+      nux::Geometry const& geo = launcher->GetAbsoluteGeometry();
       CompRegion launcher_region(geo.x, geo.y, geo.width, geo.height);
+
       if (damage.intersects(launcher_region))
         launcher->QueueDraw();
-      nux::ObjectPtr<nux::View> tooltip = launcher->GetActiveTooltip();
-      if (!tooltip.IsNull())
+
+      nux::ObjectPtr<nux::View> const& tooltip = launcher->GetActiveTooltip();
+
+      if (tooltip)
       {
-        nux::Geometry tip = tooltip->GetAbsoluteGeometry();
-        CompRegion tip_region(tip.x, tip.y, tip.width, tip.height);
+        nux::Geometry const& g = tooltip->GetAbsoluteGeometry();
+        CompRegion tip_region(g.x, g.y, g.width, g.height);
+
         if (damage.intersects(tip_region))
           tooltip->QueueDraw();
+      }
+
+      nux::ObjectPtr<LauncherDragWindow> const& dragged_icon = launcher->GetDraggedIcon();
+
+      if (dragged_icon)
+      {
+        nux::Geometry const& g = dragged_icon->GetAbsoluteGeometry();
+        CompRegion icon_region(g.x, g.y, g.width, g.height);
+
+        if (damage.intersects(icon_region))
+          dragged_icon->QueueDraw();
       }
     }
   }
@@ -1449,8 +1467,10 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
   std::vector<nux::View*> const& panels(panel_controller_->GetPanelViews());
   for (nux::View* view : panels)
   {
-    nux::Geometry geo = view->GetAbsoluteGeometry();
+    nux::Geometry const& geo = view->GetAbsoluteGeometry();
+
     CompRegion panel_region(geo.x, geo.y, geo.width, geo.height);
+
     if (damage.intersects(panel_region))
       view->QueueDraw();
   }
@@ -1461,8 +1481,9 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
     QuicklistView* view = qm->Current();
     if (view)
     {
-      nux::Geometry geo = view->GetAbsoluteGeometry();
+      nux::Geometry const& geo = view->GetAbsoluteGeometry();
       CompRegion quicklist_region(geo.x, geo.y, geo.width, geo.height);
+
       if (damage.intersects(quicklist_region))
         view->QueueDraw();
     }
@@ -1472,6 +1493,29 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
 /* Grab changed nux regions and add damage rects for them */
 void UnityScreen::nuxDamageCompiz()
 {
+#ifdef USE_MODERN_COMPIZ_GL
+  /*
+   * If Nux is going to redraw anything then we have to tell Compiz to
+   * redraw everything. This is because Nux has a bad habit (bug??) of drawing
+   * more than just the regions of its DrawList. (LP: #1036519)
+   *
+   * Forunately, this does not happen on most frames. Only when the Unity
+   * Shell needs to redraw something.
+   *
+   * TODO: Try to figure out why redrawing the panel makes the launcher also
+   *       redraw even though the launcher's geometry is not in DrawList, and
+   *       stop it. Then maybe we can revert back to the old code below #else.
+   */
+  std::vector<nux::Geometry> const& dirty = wt->GetDrawList();
+  if (!dirty.empty())
+  {
+    cScreen->damageRegionSetEnabled(this, false);
+    cScreen->damageScreen();
+    cScreen->damageRegionSetEnabled(this, true);
+  }
+
+#else
+
   /*
    * WARNING: Nux bug LP: #1014610 (unbounded DrawList growth) will cause
    *          this code to be called far too often in some cases and
@@ -1485,7 +1529,8 @@ void UnityScreen::nuxDamageCompiz()
   CompRegion nux_damage;
 
   std::vector<nux::Geometry> const& dirty = wt->GetDrawList();
-  for (auto geo : dirty)
+
+  for (auto const& geo : dirty)
     nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
 
   if (launcher_controller_->IsOverlayOpen())
@@ -1495,15 +1540,24 @@ void UnityScreen::nuxDamageCompiz()
     nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
   }
 
-  auto launchers = launcher_controller_->launchers();
-  for (auto launcher : launchers)
+  auto const& launchers = launcher_controller_->launchers();
+  for (auto const& launcher : launchers)
   {
     if (!launcher->Hidden())
     {
       nux::ObjectPtr<nux::View> tooltip = launcher->GetActiveTooltip();
-      if (!tooltip.IsNull())
+
+      if (tooltip)
       {
         nux::Geometry const& g = tooltip->GetAbsoluteGeometry();
+        nux_damage += CompRegion(g.x, g.y, g.width, g.height);
+      }
+
+      nux::ObjectPtr<LauncherDragWindow> const& dragged_icon = launcher->GetDraggedIcon();
+
+      if (dragged_icon)
+      {
+        nux::Geometry const& g = dragged_icon->GetAbsoluteGeometry();
         nux_damage += CompRegion(g.x, g.y, g.width, g.height);
       }
     }
@@ -1512,6 +1566,7 @@ void UnityScreen::nuxDamageCompiz()
   cScreen->damageRegionSetEnabled(this, false);
   cScreen->damageRegion(nux_damage);
   cScreen->damageRegionSetEnabled(this, true);
+#endif
 }
 
 /* handle X Events */
@@ -1895,7 +1950,7 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
   auto results = launcher_controller_->GetAltTabIcons(show_mode == switcher::ShowMode::CURRENT_VIEWPORT,
                                                       switcher_controller_->IsShowDesktopDisabled());
 
-  if (!(results.size() == 1 && results[0]->GetIconType() == AbstractLauncherIcon::IconType::TYPE_DESKTOP) && !results.empty())
+  if (switcher_controller_->CanShowSwitcher(results))
     switcher_controller_->Show(show_mode, switcher::SortMode::FOCUS_ORDER, false, results);
 
   return true;
@@ -1949,7 +2004,9 @@ bool UnityScreen::altTabForwardAllInitiate(CompAction* action,
                                         CompAction::State state,
                                         CompOption::Vector& options)
 {
-  if (switcher_controller_->Visible())
+  if (WindowManager::Default()->IsWallActive())
+    return false;
+  else if (switcher_controller_->Visible())
     switcher_controller_->Next();
   else
     altTabInitiateCommon(action, switcher::ShowMode::ALL);

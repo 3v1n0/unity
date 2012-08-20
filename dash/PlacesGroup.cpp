@@ -117,7 +117,7 @@ PlacesGroup::PlacesGroup()
     _is_expanded(true),
     _n_visible_items_in_unexpand_mode(0),
     _n_total_items(0),
-    _draw_sep(true),
+    _category_index(0),
     _coverflow_enabled(false)
 {
   dash::Style& style = dash::Style::Instance();
@@ -187,28 +187,13 @@ PlacesGroup::PlacesGroup()
   SetLayout(_group_layout);
 
   // don't need to disconnect these signals as they are disconnected when this object destroys the contents
-  _header_view->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
-  _header_view->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
   _header_view->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
   _header_view->key_nav_focus_change.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
   _header_view->key_nav_focus_activate.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelActivated));
   _icon->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
-  _icon->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
-  _icon->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
-  _icon->key_nav_focus_change.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
   _name->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
-  _name->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
-  _name->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
-  _name->key_nav_focus_change.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
   _expand_label->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
-  _expand_label->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
-  _expand_label->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
-  _expand_label->key_nav_focus_activate.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelActivated));
-  _expand_label->key_nav_focus_change.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
   _expand_icon->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
-  _expand_icon->mouse_enter.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseEnter));
-  _expand_icon->mouse_leave.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseLeave));
-  _expand_icon->key_nav_focus_change.connect(sigc::mem_fun(this, &PlacesGroup::OnLabelFocusChanged));
   
   dash::ResultView *grid = new dash::CoverflowResultView(NUX_TRACKER_LOCATION);
   grid->expanded = false;
@@ -323,11 +308,6 @@ PlacesGroup::SetChildView(dash::ResultView* view)
   });
 
   QueueDraw();
-  
-  view->UriActivated.connect([&] (std::string const& uri)
-  {
-    UriActivated.emit(uri);
-  });
 }
 
 nux::View*
@@ -370,12 +350,6 @@ PlacesGroup::RefreshLabel()
   _expand_label->SetText(result_string);
   _expand_label->SetVisible(_n_visible_items_in_unexpand_mode < _n_total_items);
 
-
-  _icon->SetAcceptKeyNavFocus(false);
-  _name->SetAcceptKeyNavFocus(false);
-  _expand_label->SetAcceptKeyNavFocus(false);
-  _expand_icon->SetAcceptKeyNavFocus(false);
-
   // See bug #748101 ("Dash - "See more..." line should be base-aligned with section header")
   // We're making two assumptions here:
   // [a] The font size _name is bigger than the font size of _expand_label
@@ -383,19 +357,7 @@ PlacesGroup::RefreshLabel()
   int bottom_padding = _name->GetBaseHeight() - _name->GetBaseline() -
                        (_expand_label->GetBaseHeight() - _expand_label->GetBaseline());
 
-
-
-  if (_expand_label->IsVisible())
-    _expand_label->SetAcceptKeyNavFocus(true);
-  else if (_expand_icon->IsVisible())
-    _expand_icon->SetAcceptKeyNavFocus(true);
-  else if (_name->IsVisible())
-    _name->SetAcceptKeyNavFocus(true);
-  else if (_icon->IsVisible())
-    _icon->SetAcceptKeyNavFocus(true);
-
   _expand_label_layout->SetTopAndBottomPadding(0, bottom_padding);
-
 
   QueueDraw();
 }
@@ -441,7 +403,8 @@ long PlacesGroup::ComputeContentSize()
 
   nux::Geometry const& geo = GetGeometry();
 
-  if (_cached_geometry != geo)
+  // only the width matters
+  if (_cached_geometry.GetWidth() != geo.GetWidth())
   {
     _focus_layer.reset(dash::Style::Instance().FocusOverlay(geo.width - kHighlightLeftPadding - kHighlightRightPadding, kHighlightHeight));
 
@@ -493,7 +456,20 @@ void PlacesGroup::PostDraw(nux::GraphicsEngine& graphics_engine,
 }
 
 void
-PlacesGroup::SetCounts(guint n_visible_items_in_unexpand_mode, guint n_total_items)
+PlacesGroup::SetCategoryIndex(unsigned index)
+{
+  _category_index = index;
+}
+
+unsigned
+PlacesGroup::GetCategoryIndex() const
+{
+  return _category_index;
+}
+
+void
+PlacesGroup::SetCounts(unsigned n_visible_items_in_unexpand_mode,
+                       unsigned n_total_items)
 {
   _n_total_items = n_total_items;
 
@@ -509,11 +485,11 @@ PlacesGroup::GetExpanded() const
 void
 PlacesGroup::SetExpanded(bool is_expanded)
 {
-  /*  if (_is_expanded == is_expanded)
+  if (_is_expanded == is_expanded)
     return;
 
   if (is_expanded && _n_total_items <= _n_visible_items_in_unexpand_mode)
-  return;*/
+    return;
 
   _is_expanded = is_expanded;
 

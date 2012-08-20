@@ -93,7 +93,7 @@ nux::ObjectPtr<nux::BaseTexture> CoverflowResultItem::GetTexture() const
 
 void CoverflowResultItem::Activate()
 {
-  parent_->UriActivated.emit(result_.uri);
+  parent_->UriActivated.emit(result_.uri, ResultView::ActivateType::DIRECT);
 }
 
 CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
@@ -144,8 +144,6 @@ void CoverflowResultView::SetModelRenderer(ResultRenderer* renderer)
 
 void CoverflowResultView::AddResult(Result& result)
 {
-  results_.push_back (result);
-
   nux::CoverflowItem::Ptr result_item(new CoverflowResultItem(result, this));
   pimpl->coverflow_->model()->AddItem(result_item);
 }

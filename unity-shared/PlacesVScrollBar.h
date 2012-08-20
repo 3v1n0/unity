@@ -27,6 +27,11 @@
 #include <Nux/VScrollBar.h>
 #include <NuxGraphics/CairoGraphics.h>
 
+namespace unity
+{
+namespace dash
+{
+
 class PlacesVScrollBar : public nux::VScrollBar
 {
 public:
@@ -46,5 +51,8 @@ private:
 private:
   nux::BaseTexture* _slider_texture;
 };
+
+} // namespace dash
+} // namespace unity
 
 #endif // PLACES_VSCROLLBAR_H
