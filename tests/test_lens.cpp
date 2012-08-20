@@ -7,7 +7,7 @@
 #include <UnityCore/Lens.h>
 #include <UnityCore/MultiRangeFilter.h>
 #include <UnityCore/Preview.h>
-#include <UnityCore/SeriesPreview.h>
+#include <UnityCore/MoviePreview.h>
 #include <UnityCore/Variant.h>
 #include <UnityCore/RadioOptionFilter.h>
 #include <UnityCore/RatingsFilter.h>
@@ -218,14 +218,13 @@ TEST_F(TestLens, TestPreview)
                                         Preview::Ptr const& preview)
   {
     EXPECT_EQ(uri, uri_);
-    EXPECT_EQ(preview->renderer_name, "preview-series");
+    EXPECT_EQ(preview->renderer_name, "preview-movie");
 
-    auto series = std::dynamic_pointer_cast<SeriesPreview>(preview);
-    EXPECT_EQ(series->GetItems().size(), (unsigned)4);
-    EXPECT_EQ(series->selected_item_index, 2);
+    auto movie_preview = std::dynamic_pointer_cast<MoviePreview>(preview);
+    EXPECT_EQ(movie_preview->title, "A movie");
+    EXPECT_EQ(movie_preview->subtitle, "With subtitle");
+    EXPECT_EQ(movie_preview->description, "And description");
 
-    auto child = series->GetChildPreview();
-    EXPECT_EQ(child->title, "A preview");
     previewed = true;
   };
 
@@ -246,7 +245,7 @@ TEST_F(TestLens, TestPreviewAction)
                                          Preview::Ptr const& preview_)
   {
     EXPECT_EQ(uri, uri_);
-    EXPECT_EQ(preview_->renderer_name, "preview-series");
+    EXPECT_EQ(preview_->renderer_name, "preview-movie");
 
     preview = preview_;
     previewed = true;
@@ -274,20 +273,24 @@ TEST_F(TestLens, TestPreviewAction)
   Utils::WaitUntil(action_executed);
 }
 
-TEST_F(TestLens, TestPreviewSignal)
+TEST_F(TestLens, TestEmitClosedSignal)
 {
   std::string uri = PopulateAndGetFirstResultURI();
   bool previewed = false;
-  SeriesPreview::Ptr series_preview;
+  MoviePreview::Ptr movie_preview;
 
-  auto preview_cb = [&previewed, &uri, &series_preview]
+  auto preview_cb = [&previewed, &uri, &movie_preview]
                                         (std::string const& uri_,
                                          Preview::Ptr const& preview)
   {
     EXPECT_EQ(uri, uri_);
-    EXPECT_EQ(preview->renderer_name, "preview-series");
+    EXPECT_EQ(preview->renderer_name, "preview-movie");
 
-    series_preview = std::dynamic_pointer_cast<SeriesPreview>(preview);
+    movie_preview = std::dynamic_pointer_cast<MoviePreview>(preview);
+
+    //there isn't anything we can really test here - other than it's not crashing here
+    movie_preview->EmitClosed();
+
     previewed = true;
   };
 
@@ -295,18 +298,6 @@ TEST_F(TestLens, TestPreviewSignal)
   lens_->Preview(uri);
 
   Utils::WaitUntil(previewed);
-
-  bool child_changed = false;
-  auto child_changed_cb = [&child_changed] (Preview::Ptr const& new_child)
-  {
-    EXPECT_EQ(new_child->title, "A preview");
-    child_changed = true;
-  };
-
-  series_preview->child_preview_changed.connect(child_changed_cb);
-  series_preview->selected_item_index = 1;
-
-  Utils::WaitUntil(child_changed);
 }
 
 TEST_F(TestLens, TestFilterSync)

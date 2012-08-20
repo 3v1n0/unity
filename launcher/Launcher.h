@@ -24,6 +24,7 @@
 #include <Nux/View.h>
 #include <Nux/BaseWindow.h>
 #include <Nux/TimerProc.h>
+#include <NuxGraphics/GestureEvent.h>
 #include <NuxGraphics/IOpenGLAsmShader.h>
 
 #include "PointerBarrier.h"
@@ -32,7 +33,6 @@
 #include "DNDCollectionWindow.h"
 #include "DndData.h"
 #include "EdgeBarrierController.h"
-#include "GeisAdapter.h"
 #include "unity-shared/Introspectable.h"
 #include "LauncherModel.h"
 #include "LauncherOptions.h"
@@ -96,7 +96,8 @@ public:
     return _parent;
   };
 
-  nux::ObjectPtr<nux::View> GetActiveTooltip() const;  // nullptr = no tooltip
+  nux::ObjectPtr<nux::View> const& GetActiveTooltip() const;
+  nux::ObjectPtr<LauncherDragWindow> const& GetDraggedIcon() const;
 
   virtual void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -136,6 +137,7 @@ public:
 
   void RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherIcon::Ptr icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
 
+  virtual nux::GestureDeliveryRequest GestureEvent(const nux::GestureEvent &event);
 protected:
   // Introspectable methods
   std::string GetName() const;
@@ -183,9 +185,9 @@ private:
   void OnWindowMapped(guint32 xid);
   void OnWindowUnmapped(guint32 xid);
 
-  void OnDragStart(GeisAdapter::GeisDragData* data);
-  void OnDragUpdate(GeisAdapter::GeisDragData* data);
-  void OnDragFinish(GeisAdapter::GeisDragData* data);
+  void OnDragStart(const nux::GestureEvent &event);
+  void OnDragUpdate(const nux::GestureEvent &event);
+  void OnDragFinish(const nux::GestureEvent &event);
 
   bool HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event);
 
@@ -193,6 +195,7 @@ private:
 
   void OnSelectionChanged(AbstractLauncherIcon::Ptr selection);
 
+  bool StrutHack();
   bool StartIconDragTimeout();
   bool OnScrollTimeout();
   bool OnUpdateDragManagerTimeout();
@@ -245,6 +248,8 @@ private:
 
   void SetHover(bool hovered);
   void SetHidden(bool hidden);
+
+  void UpdateChangeInMousePosition(int delta_x, int delta_y);
 
   void  SetDndDelta(float x, float y, nux::Geometry const& geo, timespec const& current);
   float DragLimiter(float x);
@@ -362,8 +367,8 @@ private:
   int _launcher_drag_delta_min;
   int _enter_y;
   int _last_button_press;
-  int _drag_out_id;
   float _drag_out_delta_x;
+  bool _drag_gesture_ongoing;
   float _last_reveal_progress;
 
   nux::Point2 _mouse_position;
@@ -388,6 +393,8 @@ private:
 
   UBusManager ubus_;
   glib::SourceManager sources_;
+
+  friend class TestLauncher;
 };
 
 }

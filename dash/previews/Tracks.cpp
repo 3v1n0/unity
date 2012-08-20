@@ -1,0 +1,180 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
+/*
+ * Copyright 2012 Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License version 3, as
+ * published by the  Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranties of
+ * MERCHANTABILITY, SATISFACTORY QUALITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the applicable version of the GNU Lesser General Public
+ * License for more details.
+ *
+ * You should have received a copy of both the GNU Lesser General Public
+ * License version 3 along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>
+ *
+ * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
+ *
+ */
+
+#include "Tracks.h"
+#include <NuxCore/Logger.h>
+#include <Nux/VLayout.h>
+#include "unity-shared/IntrospectableWrappers.h"
+#include "unity-shared/PlacesVScrollBar.h"
+#include "unity-shared/PreviewStyle.h"
+#include <UnityCore/Track.h>
+
+
+namespace unity
+{
+namespace dash
+{
+namespace previews
+{
+
+class TrackLayout : public nux::VLayout
+{
+public:
+  TrackLayout() {}
+
+  int ItemCount() const { return _layout_element_list.size(); }
+
+  void RemoveViewAt(unsigned int index)
+  {
+    unsigned int idx = index;
+    std::list<Area *>::iterator pos = _layout_element_list.begin();
+    
+    while (pos != _layout_element_list.end() && idx > 0)
+    {
+      --idx;
+      ++pos;
+    }
+    if (pos != _layout_element_list.end())
+    {
+      ViewRemoved.emit(this, *pos);
+      (*pos)->UnParentObject();
+      _layout_element_list.erase(pos);
+    }
+  }
+
+};
+
+namespace
+{
+nux::logging::Logger logger("unity.dash.previews.tracks");
+}
+
+NUX_IMPLEMENT_OBJECT_TYPE(Tracks);
+
+Tracks::Tracks(dash::Tracks::Ptr tracks, NUX_FILE_LINE_DECL)
+  : ScrollView(NUX_FILE_LINE_PARAM)
+  , tracks_(tracks)
+{
+  SetupViews();
+
+  if (tracks_)
+  {
+    tracks_->track_added.connect(sigc::mem_fun(this, &Tracks::OnTrackAdded));
+    tracks_->track_changed.connect(sigc::mem_fun(this, &Tracks::OnTrackUpdated));
+    tracks_->track_removed.connect(sigc::mem_fun(this, &Tracks::OnTrackRemoved));
+
+    // Add what we've got.
+    for (std::size_t i = 0; i < tracks_->count.Get(); i++)
+    {
+      OnTrackAdded(tracks_->RowAtIndex(i));
+    }
+  }
+}
+
+Tracks::~Tracks()
+{
+}
+
+std::string Tracks::GetName() const
+{
+  return "Tracks";
+}
+
+void Tracks::AddProperties(GVariantBuilder* builder)
+{
+}
+
+void Tracks::SetupViews()
+{
+  SetVScrollBar(new dash::PlacesVScrollBar(NUX_TRACKER_LOCATION));
+  layout_ = new TrackLayout();
+  layout_->SetPadding(0, previews::Style::Instance().GetDetailsRightMargin(), 0, 0);
+  layout_->SetSpaceBetweenChildren(1);
+  SetLayout(layout_);
+}
+
+void Tracks::OnTrackUpdated(dash::Track const& track_row)
+{
+  auto pos = m_tracks.find(track_row.uri.Get());
+  if (pos == m_tracks.end())
+    return;
+
+  pos->second->Update(track_row);
+}
+
+void Tracks::OnTrackAdded(dash::Track const& track_row)
+{
+  LOG_TRACE(logger) << "OnTrackAdded for " << track_row.title.Get();
+
+  std::string track_uri = track_row.uri.Get();
+  if (m_tracks.find(track_uri) != m_tracks.end())
+    return;
+
+  previews::Style& style = dash::previews::Style::Instance();
+
+  previews::Track::Ptr track_view(new previews::Track(NUX_TRACKER_LOCATION));
+  track_view->play.connect([&](std::string const& uri) { play.emit(uri); });
+  track_view->pause.connect([&](std::string const& uri) { pause.emit(uri); });
+
+  track_view->Update(track_row);
+  track_view->SetMinimumHeight(style.GetTrackHeight());
+  track_view->SetMaximumHeight(style.GetTrackHeight());
+  layout_->AddView(track_view.GetPointer(), 0);
+
+  m_tracks[track_uri] = track_view;
+}
+
+void Tracks::OnTrackRemoved(dash::Track const& track_row)
+{
+  LOG_TRACE(logger) << "OnTrackRemoved for " << track_row.title.Get();
+  
+  auto pos = m_tracks.find(track_row.uri.Get());
+  if (pos == m_tracks.end())
+    return;
+
+  layout_->RemoveChildObject(pos->second.GetPointer());
+}
+
+void Tracks::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
+{
+  nux::Geometry const& base = GetGeometry();
+
+  gfx_engine.PushClippingRectangle(base);
+  nux::GetPainter().PaintBackground(gfx_engine, base);
+
+  gfx_engine.PopClippingRectangle();
+}
+
+void Tracks::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
+{
+  nux::Geometry const& base = GetGeometry();
+  gfx_engine.PushClippingRectangle(base);
+
+  if (GetCompositionLayout())
+    GetCompositionLayout()->ProcessDraw(gfx_engine, force_draw);
+
+  gfx_engine.PopClippingRectangle();
+}
+
+} // namespace previews
+} // namespace dash
+} // namespace unity

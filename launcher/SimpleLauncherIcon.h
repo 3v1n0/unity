@@ -33,7 +33,7 @@ class SimpleLauncherIcon : public LauncherIcon
 {
   NUX_DECLARE_OBJECT_TYPE(SimpleLauncherIcon, LauncherIcon);
 public:
-  SimpleLauncherIcon();
+  SimpleLauncherIcon(IconType type);
   virtual ~SimpleLauncherIcon();
 
   // override

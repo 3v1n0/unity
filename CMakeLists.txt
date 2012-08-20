@@ -8,7 +8,7 @@ include (cmake/Documentation.cmake)
 #
 set (PROJECT_NAME "unity")
 set (UNITY_MAJOR 6)
-set (UNITY_MINOR 0)
+set (UNITY_MINOR 2)
 set (UNITY_MICRO 0)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "6.0")
@@ -23,13 +23,8 @@ else ()
     set (UNITY_STANDALONE_LADD "-lunity-core-${UNITY_API_VERSION} -lm -lGL -lGLU")
 endif ()
 
-option (USE_MODERN_COMPIZ_GL "Use Modern Compiz GL API" OFF)
-if (USE_MODERN_COMPIZ_GL)
-	SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_MODERN_COMPIZ_GL")
-endif (USE_MODERN_COMPIZ_GL)
-
 if (BUILD_GLES)
-	SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNUX_OPENGLES_20 -DUSE_GLES -DUSE_MODERN_COMPIZ_GL")
+	SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNUX_OPENGLES_20 -DUSE_GLES")
 endif (BUILD_GLES)
 
 #
@@ -133,11 +128,14 @@ endif (DISABLE_MAINTAINER_CFLAGS)
 #
 # Compiz Plugins
 #
-set (UNITY_PLUGIN_DEPS "compiz;nux-3.0>=3.0.0;libbamf3;dee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator3-0.4>=0.4.90;atk;unity-misc>=0.4.0;gconf-2.0;libutouch-geis;gtk+-3.0>=3.1;sigc++-2.0;json-glib-1.0;libnotify;xfixes;unity-protocol-private>=5.93.1")
+
+set (UNITY_PLUGIN_DEPS "compiz;nux-3.0>=3.0.0;libbamf3;dee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator3-0.4>=0.4.90;atk;unity-misc>=0.4.0;gtk+-3.0>=3.1;sigc++-2.0;json-glib-1.0;libnotify;xfixes;unity-protocol-private>=5.95.1;libgeis")
 # FIXME: unity-protocol-private shouldn't be there, but building of unityshell is just broken
+set (UNITY_PROTOCOL_PRIVATE_DEPS "unity-protocol-private>=5.95.1")
 
 find_package (PkgConfig)
 pkg_check_modules (CACHED_UNITY_DEPS REQUIRED ${UNITY_PLUGIN_DEPS})
+pkg_check_modules (CACHED_UNITY_PRIVATE_DEPS REQUIRED ${UNITY_PROTOCOL_PRIVATE_DEPS})
 add_subdirectory(unity-shared)
 add_subdirectory(panel)
 add_subdirectory(dash)

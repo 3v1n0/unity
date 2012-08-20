@@ -29,6 +29,7 @@
 
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/Results.h>
+#include <UnityCore/ResultIterator.h>
 
 #include "unity-shared/Introspectable.h"
 #include "ResultRenderer.h"
@@ -40,26 +41,30 @@ namespace dash
 class ResultView : public nux::View, public debug::Introspectable
 {
 public:
-  NUX_DECLARE_OBJECT_TYPE(ResultView, nux::View);
+  typedef enum ActivateType_
+  {
+    DIRECT,
+    PREVIEW
+  } ActivateType;
 
-  typedef std::vector<Result> ResultList;
+  NUX_DECLARE_OBJECT_TYPE(ResultView, nux::View);
 
   ResultView(NUX_FILE_LINE_DECL);
   virtual ~ResultView();
 
   void SetModelRenderer(ResultRenderer* renderer);
+  void SetModel(glib::Object<DeeModel> const& model, DeeModelTag* tag);
 
-  void AddResult(Result& result);
-  void RemoveResult(Result& result);
-
-  ResultList GetResultList ();
+  unsigned int GetIndexForUri(const std::string& uri); 
+  std::string GetUriForIndex(unsigned int);
 
   nux::Property<bool> expanded;
   nux::Property<int> results_per_row;
-
-  sigc::signal<void, std::string const&> UriActivated;
+  nux::Property<std::string> unique_id;  
+  sigc::signal<void, std::string const&, ActivateType> UriActivated;
 
   std::string GetName() const;
+  ResultIterator GetIteratorAtRow(unsigned row);
   void AddProperties(GVariantBuilder* builder);
   IntrospectableList GetIntrospectableChildren();
 
@@ -68,12 +73,21 @@ protected:
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual long ComputeContentSize();
 
+  virtual void AddResult(Result& result);
+  virtual void RemoveResult(Result& result);
+
+  unsigned GetNumResults();
+
   // properties
   ResultRenderer* renderer_;
-  ResultList results_;
+  glib::Object<DeeModel> result_model_;
+  DeeModelTag* renderer_tag_;
+  glib::SignalManager sig_manager_;
   IntrospectableList introspectable_children_;
 
 private:
+  void OnRowAdded(DeeModel* model, DeeModelIter* iter);
+  void OnRowRemoved(DeeModel* model, DeeModelIter* iter);
   void ClearIntrospectableWrappers();
 };
 

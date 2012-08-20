@@ -22,6 +22,8 @@
 #ifndef UNITYSHELL_H
 #define UNITYSHELL_H
 
+#include <NuxCore/AnimationController.h>
+#include <Nux/GesturesSubscription.h>
 #include <Nux/WindowThread.h>
 #include <NuxCore/Property.h>
 #include <sigc++/sigc++.h>
@@ -46,12 +48,12 @@
 #include "PanelController.h"
 #include "PanelStyle.h"
 #include "UScreen.h"
-#include "GestureEngine.h"
 #include "DebugDBusInterface.h"
 #include "SwitcherController.h"
 #include "UBusWrapper.h"
 #include "UnityshellPrivate.h"
 #include "UnityShowdesktopHandler.h"
+#include "ThumbnailGenerator.h"
 #ifndef USE_MODERN_COMPIZ_GL
 #include "ScreenEffectFramebufferObject.h"
 #endif
@@ -62,7 +64,7 @@
 #include <dlfcn.h>
 
 #include "HudController.h"
-
+#include "ThumbnailGenerator.h"
 namespace unity
 {
 
@@ -190,6 +192,11 @@ public:
 
   bool forcePaintOnTop ();
 
+  void SetUpAndShowSwitcher(switcher::ShowMode show_mode = switcher::ShowMode::CURRENT_VIEWPORT);
+
+  switcher::Controller::Ptr switcher_controller();
+  launcher::Controller::Ptr launcher_controller();
+
 protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
@@ -239,12 +246,17 @@ private:
 
   void OnPanelStyleChanged();
 
+  void InitGesturesSupport();
+
+  nux::animation::TickSource tick_source_;
+  nux::animation::AnimationController animation_controller_;
+
   Settings dash_settings_;
   dash::Style    dash_style_;
   panel::Style   panel_style_;
   FontSettings   font_settings_;
-  GeisAdapter    geis_adapter_;
   internal::FavoriteStoreGSettings favorite_store_;
+  ThumbnailGenerator thumbnail_generator_;
 
   /* The window thread should be the last thing removed, as c++ does it in reverse order */
   std::unique_ptr<nux::WindowThread> wt;
@@ -261,7 +273,15 @@ private:
   std::list<shortcut::AbstractHint::Ptr> hints_;
   bool enable_shortcut_overlay_;
 
-  GestureEngine                         gesture_engine_;
+  /* Subscription for gestures that manipulate Unity launcher */
+  std::unique_ptr<nux::GesturesSubscription> gestures_sub_launcher_;
+
+  /* Subscription for gestures that manipulate Unity dash */
+  std::unique_ptr<nux::GesturesSubscription> gestures_sub_dash_;
+
+  /* Subscription for gestures that manipulate windows. */
+  std::unique_ptr<nux::GesturesSubscription> gestures_sub_windows_;
+
   bool                                  needsRelayout;
   bool                                  _in_paint;
   bool                                  super_keypressed_;
@@ -323,7 +343,8 @@ private:
 
   UBusManager ubus_manager_;
   glib::SourceManager sources_;
-
+  unity::ThumbnailGenerator thumb_generator;
+  
   friend class UnityWindow;
 };
 
@@ -398,6 +419,8 @@ public:
 
   ShowdesktopHandler             *mShowdesktopHandler;
 
+  //! Emited when CompWindowNotifyBeforeDestroy is received
+  sigc::signal<void> being_destroyed;
 private:
   void DoEnableFocus ();
   void DoDisableFocus ();
