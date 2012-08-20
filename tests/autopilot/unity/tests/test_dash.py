@@ -640,66 +640,6 @@ class PreviewFileLensInvocationTests(DashTestCase):
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
 
 
-class PreviewMusicLensInvocationTests(DashTestCase):
-    """Tests that music lens previews can be opened and closed
-    """
-    def assertSearchText(self, text):
-        self.assertThat(self.dash.search_string, Eventually(Equals(text)))
-
-    def test_open_preview_close_preview(self):
-        """Right clicking on any result shall open a preview, 
-        escaping shall close the preview
-        """
-        lens = self.dash.reveal_music_lens()
-        self.addCleanup(self.dash.ensure_hidden)
-
-        category = lens.get_category_by_name("Songs")
-        results = category.get_results()
-        # wait for a result
-        refresh_fn = lambda: len(results)
-        self.assertThat(refresh_fn, Eventually(GreaterThan(0)))
-
-        result = results[0]
-        # result.preview handles finding xy co-ords and right mouse-click
-        result.preview()
-        # revealing a preview may be very slow, not sure if Eventually handles that nicely
-        self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
-
-        self.keyboard.press_and_release("Escape")
-
-        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
-
-
-class PreviewVideoLensInvocationTests(DashTestCase):
-    """Tests that video lens previews can be opened and closed
-    """
-    def assertSearchText(self, text):
-        self.assertThat(self.dash.search_string, Eventually(Equals(text)))
-
-    def test_open_preview_close_preview(self):
-        """Right clicking on any result shall open a preview, 
-        escaping shall close the preview
-        """
-        lens = self.dash.reveal_video_lens()
-        self.addCleanup(self.dash.ensure_hidden)
-
-        category = lens.get_category_by_name("My Videos")
-        results = category.get_results()
-        # wait for a result
-        refresh_fn = lambda: len(results)
-        self.assertThat(refresh_fn, Eventually(GreaterThan(0)))
-
-        result = results[0]
-        # result.preview handles finding xy co-ords and right mouse-click
-        result.preview()
-        # revealing a preview may be very slow, not sure if Eventually handles that nicely
-        self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
-
-        self.keyboard.press_and_release("Escape")
-
-        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
-
-
 class PreviewNavigateTests(DashTestCase):
     """Tests that mouse navigation works with previews."""
 
