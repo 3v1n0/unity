@@ -501,8 +501,8 @@ class PreviewContainer(UnityIntrospectionObject):
         return self.content.navigate_right_enabled
 
     @property
-        """Return True if left preview navigation is enabled, False otherwise."""
     def navigate_left_enabled(self):
+        """Return True if left preview navigation is enabled, False otherwise."""
         return self.content.navigate_left_enabled
 
 

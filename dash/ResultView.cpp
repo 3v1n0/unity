@@ -95,12 +95,6 @@ void ResultView::AddResult(Result& result)
 void ResultView::RemoveResult(Result& result)
 {
   renderer_->Unload(result);
-
-  if (GetNumResults() == 0)
-  {
-    introspectable_children_.clear();
-    RemoveAllChildren(&ResultView::ChildResultDestructor);  // clear children (with delete).
-  }
 }
 
 void ResultView::OnRowAdded(DeeModel* model, DeeModelIter* iter)
@@ -267,7 +261,8 @@ debug::Introspectable::IntrospectableList ResultView::GetIntrospectableChildren(
   {
     if (existing_results.find(child_iter->first) == existing_results.end())
     {
-      RemoveChild(child_iter->second, &ResultView::ChildResultDestructor);
+      // delete and remove the child from the map.
+      ResultView::ChildResultDestructor(child_iter->second);
       introspectable_children_.erase(child_iter);
     }
     else
