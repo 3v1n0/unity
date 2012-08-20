@@ -126,7 +126,7 @@ public:
 
     if (!animating_)
     {
-      if (push_preview_.size())
+      if (!push_preview_.empty())
       {
         animating_= true;
         swipe_ = push_preview_.front();
@@ -192,7 +192,7 @@ public:
       }
 
       // another swipe?
-      if (push_preview_.size())
+      if (!push_preview_.empty())
       {
         progress_ = 0;
         continue_navigation.emit();
@@ -460,6 +460,11 @@ void PreviewContainer::SetupViews()
 
 void PreviewContainer::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
 {
+  nux::Geometry const& geo = GetGeometry();
+
+  gfx_engine.PushClippingRectangle(geo);
+  nux::GetPainter().PaintBackground(gfx_engine, geo);
+  gfx_engine.PopClippingRectangle();
 }
 
 void PreviewContainer::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
@@ -655,3 +660,4 @@ nux::Area* PreviewContainer::KeyNavIteration(nux::KeyNavDirection direction)
 } // namespace previews
 } // namespace dash
 } // namespace unity
+

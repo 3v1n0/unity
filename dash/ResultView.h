@@ -29,6 +29,7 @@
 
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/Results.h>
+#include <UnityCore/ResultIterator.h>
 
 #include "unity-shared/Introspectable.h"
 #include "ResultRenderer.h"
@@ -48,20 +49,14 @@ public:
 
   NUX_DECLARE_OBJECT_TYPE(ResultView, nux::View);
 
-  typedef std::vector<Result> ResultList;
-
   ResultView(NUX_FILE_LINE_DECL);
   virtual ~ResultView();
 
   void SetModelRenderer(ResultRenderer* renderer);
+  void SetModel(glib::Object<DeeModel> const& model, DeeModelTag* tag);
 
-  void AddResult(Result& result);
-  void RemoveResult(Result& result); 
   unsigned int GetIndexForUri(const std::string& uri); 
   std::string GetUriForIndex(unsigned int);
-  unsigned int GetModelSize();
-  
-  ResultList GetResultList ();
 
   nux::Property<bool> expanded;
   nux::Property<int> results_per_row;
@@ -69,6 +64,7 @@ public:
   sigc::signal<void, std::string const&, ActivateType> UriActivated;
 
   std::string GetName() const;
+  ResultIterator GetIteratorAtRow(unsigned row);
   void AddProperties(GVariantBuilder* builder);
   IntrospectableList GetIntrospectableChildren();
 
@@ -77,13 +73,24 @@ protected:
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual long ComputeContentSize();
 
+  virtual void AddResult(Result& result);
+  virtual void RemoveResult(Result& result);
+
+  unsigned GetNumResults();
+
   static void ChildResultDestructor(debug::Introspectable* child);
   virtual debug::Introspectable* CreateResultWrapper(Result const& result, int index);
 
   // properties
   ResultRenderer* renderer_;
-  ResultList results_;
+  glib::Object<DeeModel> result_model_;
+  DeeModelTag* renderer_tag_;
+  glib::SignalManager sig_manager_;
   std::map<std::string, debug::Introspectable*> introspectable_children_;
+
+private:
+  void OnRowAdded(DeeModel* model, DeeModelIter* iter);
+  void OnRowRemoved(DeeModel* model, DeeModelIter* iter);
 };
 
 }

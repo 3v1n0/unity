@@ -381,13 +381,6 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   renderer_.DrawFull(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
-  
-  // we only do this because the previews don't redraw correctly right now, so we have to force
-  // a full redraw every frame. performance sucks but we'll fix it post FF
-  if (preview_displaying_)
-  {
-    preview_container_->ProcessDraw(gfx_context, true); 
-  }
 }
 
 void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
@@ -398,14 +391,9 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
     nux::GetPainter().PushBackgroundStack();
   
   if (preview_displaying_)
-  {
-   // disabled until the draw cycle in previews can be improved
-   //preview_container_->ProcessDraw(gfx_context, force_draw);
-  }
+   preview_container_->ProcessDraw(gfx_context, (!force_draw) ? IsFullRedraw() : force_draw);
   else
-  {
     layout_->ProcessDraw(gfx_context, force_draw);
-  }
     
   if (IsFullRedraw())
     nux::GetPainter().PopBackgroundStack();

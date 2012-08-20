@@ -57,9 +57,9 @@ ResultView::~ResultView()
   introspectable_children_.clear();
   RemoveAllChildren(&ResultView::ChildResultDestructor);
 
-  for (auto result : results_)
+  for (ResultIterator it(GetIteratorAtRow(0)); !it.IsLast(); ++it)
   {
-    renderer_->Unload(result);
+    renderer_->Unload(*it);
   }
 
   renderer_->UnReference();
@@ -87,7 +87,6 @@ void ResultView::SetModelRenderer(ResultRenderer* renderer)
 
 void ResultView::AddResult(Result& result)
 {
-  results_.push_back(result);
   renderer_->Preload(result);
 
   NeedRedraw();
@@ -95,30 +94,78 @@ void ResultView::AddResult(Result& result)
 
 void ResultView::RemoveResult(Result& result)
 {
-  ResultList::iterator it;
-  std::string uri = result.uri;
+  renderer_->Unload(result);
 
-  for (it = results_.begin(); it != results_.end(); ++it)
-  {
-    if (result.uri == (*it).uri)
-    {
-      results_.erase(it);
-      break;
-    }
-  }
- 
-  if (results_.size() == 0)
+  if (GetNumResults() == 0)
   {
     introspectable_children_.clear();
     RemoveAllChildren(&ResultView::ChildResultDestructor);  // clear children (with delete).
   }
-
-  renderer_->Unload(result);
 }
 
-ResultView::ResultList ResultView::GetResultList()
+void ResultView::OnRowAdded(DeeModel* model, DeeModelIter* iter)
 {
-  return results_;
+  Result result(model, iter, renderer_tag_);
+  AddResult(result);
+}
+
+void ResultView::OnRowRemoved(DeeModel* model, DeeModelIter* iter)
+{
+  Result result(model, iter, renderer_tag_);
+  RemoveResult(result);
+}
+
+void ResultView::SetModel(glib::Object<DeeModel> const& model, DeeModelTag* tag)
+{
+  // cleanup
+  if (result_model_)
+  {
+    sig_manager_.Disconnect(result_model_);
+
+    for (ResultIterator it(GetIteratorAtRow(0)); !it.IsLast(); ++it)
+    {
+      RemoveResult(*it);
+    }
+  }
+
+  result_model_ = model;
+  renderer_tag_ = tag;
+
+  if (model)
+  {
+    typedef glib::Signal<void, DeeModel*, DeeModelIter*> RowSignalType;
+
+    sig_manager_.Add(new RowSignalType(model,
+                                       "row-added",
+                                       sigc::mem_fun(this, &ResultView::OnRowAdded)));
+    sig_manager_.Add(new RowSignalType(model,
+                                       "row-removed",
+                                       sigc::mem_fun(this, &ResultView::OnRowRemoved)));
+
+    for (ResultIterator it(GetIteratorAtRow(0)); !it.IsLast(); ++it)
+    {
+      AddResult(*it);
+    }
+  }
+}
+
+unsigned ResultView::GetNumResults()
+{
+  if (result_model_)
+    return dee_model_get_n_rows(result_model_);
+
+  return 0;
+}
+
+ResultIterator ResultView::GetIteratorAtRow(unsigned row)
+{
+  DeeModelIter* iter = NULL;
+  if (result_model_)
+  {
+    iter = row > 0 ? dee_model_get_iter_at_row(result_model_, row) :
+      dee_model_get_first_iter(result_model_);
+  }
+  return ResultIterator(result_model_, iter, renderer_tag_);
 }
 
 // it would be nice to return a result here, but c++ does not have a good mechanism
@@ -126,28 +173,23 @@ ResultView::ResultList ResultView::GetResultList()
 unsigned int ResultView::GetIndexForUri(const std::string& uri)
 {
   unsigned int index = 0;
-  for (auto result : results_)
+  for (ResultIterator it(GetIteratorAtRow(0)); !it.IsLast(); ++it)
   {
-    if (G_UNLIKELY(result.uri == uri))
+    if ((*it).uri == uri)
       break;
 
     index++;
   }
-  
+
   return index;
 }
 
 std::string ResultView::GetUriForIndex(unsigned int index)
 {
-  if (index >= results_.size())
+  if (index >= GetNumResults())
     return "";
-  
-  return results_[index].uri();
-}
 
-unsigned int ResultView::GetModelSize()
-{
-  return results_.size();
+  return (*GetIteratorAtRow(index)).uri();
 }
 
 long ResultView::ComputeContentSize()
@@ -183,8 +225,7 @@ void ResultView::ChildResultDestructor(debug::Introspectable* child)
   delete child;
 }
 
-debug::Introspectable::IntrospectableList
-ResultView::GetIntrospectableChildren()
+debug::Introspectable::IntrospectableList ResultView::GetIntrospectableChildren()
 {
   // Because the children are in fact wrappers for the results, we can't just re-crate them every time the
   // GetIntrospectableChildren is called; otherwise result property introspection will not work correctly (objects change each time this is called).
@@ -192,28 +233,32 @@ ResultView::GetIntrospectableChildren()
 
   // clear children (no delete).
   RemoveAllChildren();
-
+  
   std::set<std::string> existing_results;
-
   // re-create list of children.
   int index = 0;
-  for (auto result: results_)
+  if (result_model_)
   {
-    debug::Introspectable* result_wrapper = NULL;
-    auto iter = introspectable_children_.find(result.uri);
-    // Create new result.
-    if (iter == introspectable_children_.end())
+    for (ResultIterator iter(result_model_); !iter.IsLast(); ++iter)
     {
-      result_wrapper = CreateResultWrapper(result, index);
-      introspectable_children_[result.uri] = result_wrapper;
+      Result const& result = *iter;
+
+      debug::Introspectable* result_wrapper = NULL;
+      auto iter = introspectable_children_.find(result.uri);
+      // Create new result.
+      if (iter == introspectable_children_.end())
+      {
+        result_wrapper = CreateResultWrapper(result, index);
+        introspectable_children_[result.uri] = result_wrapper;
+      }
+      else
+        result_wrapper = iter->second;
+
+      AddChild(result_wrapper);
+
+      existing_results.insert(result.uri);
+      index++;
     }
-    else
-      result_wrapper = iter->second;
-
-    AddChild(result_wrapper);
-
-    existing_results.insert(result.uri);
-    index++;
   }
 
   // Delete old children.
@@ -238,7 +283,6 @@ debug::Introspectable* ResultView::CreateResultWrapper(Result const& result, int
 {
   return new debug::ResultWrapper(result);
 }
-
 
 }
 }
