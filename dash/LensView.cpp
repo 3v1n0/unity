@@ -309,7 +309,6 @@ void LensView::OnCategoryAdded(Category const& category)
   counts_[group] = 0;
 
   ResultView* grid;
-  renderer_name = "flow";
   
   if (renderer_name == "tile-horizontal")
   {
