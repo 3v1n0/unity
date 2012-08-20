@@ -39,6 +39,8 @@
 #include <glib/gi18n-lib.h>
 #include <gio/gdesktopappinfo.h>
 
+#include <libbamf/bamf-tab.h>
+
 namespace unity
 {
 namespace launcher
@@ -92,6 +94,12 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
 
   sig = new glib::Signal<void, BamfView*, BamfView*>(bamf_view, "child-removed",
                           [&] (BamfView*, BamfView*) { EnsureWindowState(); });
+  _gsignals.Add(sig);
+  
+  sig = new glib::Signal<void, BamfView*, BamfView*>(bamf_view, "child-moved",
+                                                     [&] (BamfView *, BamfView *) {
+                                                       EnsureWindowState();
+                                                     });
   _gsignals.Add(sig);
 
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view, "urgent-changed",
@@ -227,6 +235,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     wm->Activate(arg.target);
     return;
   }
+  
 
   /* We should check each child to see if there is
    * an unmapped (!= minimized) window around and
@@ -253,7 +262,13 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 
         auto view = static_cast<BamfView*>(l->data);
         auto win = static_cast<BamfWindow*>(l->data);
-        Window xid = bamf_window_get_xid(win);
+        Window xid;
+
+        if (BAMF_IS_WINDOW(l->data))
+          xid = bamf_window_get_xid(static_cast<BamfWindow*>(l->data));
+        else if (BAMF_IS_TAB(l->data))
+          xid = bamf_tab_get_xid(static_cast<BamfTab*>(l->data));
+
 
         if (!any_visible && wm->IsWindowOnCurrentDesktop(xid))
         {
@@ -615,15 +630,45 @@ void BamfLauncherIcon::OpenInstanceLauncherIcon(ActionArg arg)
   OpenInstanceWithUris(empty);
 }
 
-void BamfLauncherIcon::Focus(ActionArg arg)
+std::vector<Window> BamfLauncherIcon::GetFocusableWindows(ActionArg arg, bool &any_visible, bool &any_urgent)
 {
-  bool any_urgent = false;
-  bool any_visible = false;
   bool any_user_visible = false;
   WindowManager* wm = WindowManager::Default();
 
   std::vector<Window> windows;
-  GList* children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
+  GList* children;
+
+  BamfView *focus_child = BAMF_VIEW (bamf_application_get_focus_child (_bamf_app.RawPtr()));
+  
+  if (focus_child != NULL)
+    {
+      Window xid;
+      
+      if (BAMF_IS_WINDOW (focus_child))
+        xid = bamf_window_get_xid (BAMF_WINDOW(focus_child));
+      else if (BAMF_IS_TAB (focus_child))
+        {
+          BamfTab *focus_tab = BAMF_TAB (focus_child);
+          
+          xid = bamf_tab_get_xid (focus_tab);
+          
+          bamf_tab_raise (focus_tab);
+        }
+      
+      windows.push_back(xid);
+      return windows;
+    }
+  else
+    {
+      if (g_strcmp0 (bamf_application_get_application_type (_bamf_app.RawPtr()), "webapp") == 0)
+        {
+          OpenInstanceLauncherIcon(arg);
+          
+          return windows;
+        }
+    }
+
+  children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
 
   /* get the list of windows */
   for (GList* l = children; l; l = l->next)
@@ -667,6 +712,16 @@ void BamfLauncherIcon::Focus(ActionArg arg)
   }
 
   g_list_free(children);
+  
+  return windows;
+
+}
+
+void BamfLauncherIcon::Focus(ActionArg arg)
+{
+  bool any_visible = false, any_urgent = false;
+  WindowManager* wm = WindowManager::Default();
+  std::vector<Window> windows = GetFocusableWindows(arg, any_visible, any_urgent);
 
   auto visibility = WindowManager::FocusVisibility::OnlyVisible;
 
@@ -702,11 +757,27 @@ void BamfLauncherIcon::EnsureWindowState()
     GList* children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
     for (GList* l = children; l; l = l->next)
     {
+      Window xid;
+
+      if (BAMF_IS_TAB(l->data))
+      {
+        /* BamfTab does not support the monitor interface...so a bit of a nasty hack here. */
+        xid = bamf_tab_get_xid (static_cast<BamfTab*>(l->data));
+        
+        if (WindowManager::Default()->IsWindowOnCurrentDesktop(xid) == false)
+          continue;
+        
+        for (int j = 0; j < max_num_monitors; j++)
+          monitors[j] = true;
+        
+        continue;
+      }
+
       if (!BAMF_IS_WINDOW(l->data))
         continue;
 
       auto window = static_cast<BamfWindow*>(l->data);
-      Window xid = bamf_window_get_xid(window);
+      xid = bamf_window_get_xid(window);
       int monitor = bamf_window_get_monitor(window);
 
       if (monitor >= 0 && WindowManager::Default()->IsWindowOnCurrentDesktop(xid))
@@ -851,6 +922,12 @@ void BamfLauncherIcon::Quit()
 
   for (l = children; l; l = l->next)
   {
+    if (BAMF_IS_TAB (l->data))
+    {
+      // As Unity can not close a tab inside the provider application, we have to ask Bamf to delegate for us.
+      bamf_tab_close (BAMF_TAB (l->data));
+      continue;
+    }
     if (!BAMF_IS_WINDOW(l->data))
       continue;
 
