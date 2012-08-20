@@ -135,11 +135,7 @@ void ApplicationPreview::AddProperties(GVariantBuilder* builder)
 
 void ApplicationPreview::SetupBackground()
 {
-  nux::ROPConfig rop;
-  rop.Blend = true;
-  rop.SrcBlend = GL_ONE;
-  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  details_bg_layer_.reset(new nux::ColorLayer(nux::Color(0.03f, 0.03f, 0.03f, 0.0f), true, rop));
+  details_bg_layer_.reset(dash::previews::Style::Instance().GetBackgroundLayer());
 }
 
 void ApplicationPreview::SetupViews()
