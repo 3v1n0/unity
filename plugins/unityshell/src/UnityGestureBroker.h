@@ -2,7 +2,7 @@
  * UnityGestureBroker.h
  * This file is part of Unity
  *
- * Copyright (C) 2011 - Canonical Ltd.
+ * Copyright (C) 2012 - Canonical Ltd.
  *
  * Unity is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,9 +20,13 @@
  * Boston, MA  02110-1301  USA
  */
 
+#ifndef UNITY_GESTURE_BROKER
+#define UNITY_GESTURE_BROKER
+
 #include <core/core.h>
 
 #include <Nux/GestureBroker.h>
+#include "GesturalWindowSwitcher.h"
 
 class UnityGestureBroker : public nux::GestureBroker
 {
@@ -42,4 +46,7 @@ private:
   CompWindow* FindCompWindowAtPos(int pos_x, int pos_y);
 
   nux::ShPtGestureTarget unity_target;
+  unity::ShPtGesturalWindowSwitcher gestural_window_switcher_;
 };
+
+#endif // UNITY_GESTURE_BROKER

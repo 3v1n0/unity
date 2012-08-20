@@ -154,7 +154,7 @@ public:
 
   nux::BaseTexture* Emblem();
 
-  std::list<DbusmenuMenuitem*> Menus();
+  MenuItemsVector Menus();
 
   void InsertEntryRemote(LauncherEntryRemote::Ptr const& remote);
 
@@ -227,7 +227,7 @@ protected:
 
   void SetEmblem(BaseTexturePtr const& emblem);
 
-  virtual std::list<DbusmenuMenuitem*> GetMenus();
+  virtual MenuItemsVector GetMenus();
 
   virtual nux::BaseTexture* GetTextureForSize(int size) = 0;
 

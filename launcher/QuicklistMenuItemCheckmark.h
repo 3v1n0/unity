@@ -30,7 +30,7 @@ namespace unity
 class QuicklistMenuItemCheckmark : public QuicklistMenuItem
 {
 public:
-  QuicklistMenuItemCheckmark(DbusmenuMenuitem* item, NUX_FILE_LINE_PROTO);
+  QuicklistMenuItemCheckmark(glib::Object<DbusmenuMenuitem> const& item, NUX_FILE_LINE_PROTO);
 
 protected:
   std::string GetName() const;

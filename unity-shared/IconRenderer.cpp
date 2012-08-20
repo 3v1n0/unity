@@ -757,8 +757,8 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
   CHECKGL(glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0));
   CHECKGL(glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0));
 
-  int VertexLocation;
-  int TextureCoord0Location;
+  int VertexLocation = -1;
+  int TextureCoord0Location = -1;
   int FragmentColor = 0;
   int ColorifyColor = 0;
   int DesatFactor = 0;

@@ -29,7 +29,7 @@ namespace unity
 class QuicklistMenuItemRadio : public QuicklistMenuItem
 {
 public:
-  QuicklistMenuItemRadio(DbusmenuMenuitem* item, NUX_FILE_LINE_PROTO);
+  QuicklistMenuItemRadio(glib::Object<DbusmenuMenuitem> const& item, NUX_FILE_LINE_PROTO);
 
 protected:
   std::string GetName() const;
