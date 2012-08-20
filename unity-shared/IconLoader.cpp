@@ -99,6 +99,7 @@ private:
     glib::Object<GdkPixbuf> result;
     glib::Error error;
     std::list<IconLoaderTask::Ptr> shadow_tasks;
+    unsigned idle_id;
 
     IconLoaderTask(IconLoaderRequestType type_,
                    std::string const& data_,
@@ -109,7 +110,7 @@ private:
                    Impl* self_)
       : type(type_), data(data_), size(size_), key(key_)
       , slot(slot_), handle(handle_), impl(self_)
-      , icon_info(nullptr), no_cache(false), helper_handle(0)
+      , icon_info(nullptr), no_cache(false), helper_handle(0), idle_id(0)
       {}
 
     ~IconLoaderTask()
@@ -118,6 +119,8 @@ private:
         ::gtk_icon_info_free(icon_info);
       if (helper_handle != 0)
         impl->DisconnectHandle(helper_handle);
+      if (idle_id != 0)
+        g_source_remove(idle_id);
     }
 
     void InvokeSlot()
@@ -302,7 +305,7 @@ private:
 
         nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32,
                                           pixbuf_size, pixbuf_size);
-        cairo_t* cr = cairo_graphics.GetContext();
+        std::shared_ptr<cairo_t> cr(cairo_graphics.GetContext(), cairo_destroy);
 
         glib::Object<PangoLayout> layout;
         PangoFontDescription* desc = NULL;
@@ -313,14 +316,14 @@ private:
 
         g_object_get(gtk_settings_get_default(), "gtk-font-name", &font, NULL);
         g_object_get(gtk_settings_get_default(), "gtk-xft-dpi", &dpi, NULL);
-        cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
-        layout = pango_cairo_create_layout(cr);
-        desc = pango_font_description_from_string(font);
-        pango_font_description_set_weight(desc, PANGO_WEIGHT_BOLD);
+        cairo_set_font_options(cr.get(), gdk_screen_get_font_options(screen));
+        layout = pango_cairo_create_layout(cr.get());
+        std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font), pango_font_description_free);
+        pango_font_description_set_weight(desc.get(), PANGO_WEIGHT_BOLD);
         int font_size = FONT_SIZE;
-        pango_font_description_set_size (desc, font_size * PANGO_SCALE);
+        pango_font_description_set_size (desc.get(), font_size * PANGO_SCALE);
 
-        pango_layout_set_font_description(layout, desc);
+        pango_layout_set_font_description(layout, desc.get());
         pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);
 
         double size_dbl = static_cast<double>(pixbuf_size);
@@ -348,45 +351,42 @@ private:
         while (text_width > max_text_width && font_size > MIN_FONT_SIZE)
         {
           font_size--;
-          pango_font_description_set_size (desc, font_size * PANGO_SCALE);
-          pango_layout_set_font_description(layout, desc);
+          pango_font_description_set_size (desc.get(), font_size * PANGO_SCALE);
+          pango_layout_set_font_description(layout, desc.get());
           pango_layout_get_pixel_size(layout, &text_width, nullptr);
         }
         pango_layout_set_width(layout, static_cast<int>(max_text_width * PANGO_SCALE));
 
-        cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
-        cairo_paint(cr);
+        cairo_set_operator(cr.get(), CAIRO_OPERATOR_CLEAR);
+        cairo_paint(cr.get());
 
-        cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+        cairo_set_operator(cr.get(), CAIRO_OPERATOR_OVER);
 
         // draw the trapezoid
-        cairo_move_to(cr, 0.0, size_dbl);
-        cairo_line_to(cr, size_dbl, 0.0);
-        cairo_line_to(cr, size_dbl, size_dbl / 2.0);
-        cairo_line_to(cr, size_dbl / 2.0, size_dbl);
-        cairo_close_path(cr);
+        cairo_move_to(cr.get(), 0.0, size_dbl);
+        cairo_line_to(cr.get(), size_dbl, 0.0);
+        cairo_line_to(cr.get(), size_dbl, size_dbl / 2.0);
+        cairo_line_to(cr.get(), size_dbl / 2.0, size_dbl);
+        cairo_close_path(cr.get());
 
-        cairo_set_source_rgba(cr, 0.196f, 0.086f, 0.1607f, 0.8825f);
-        cairo_fill(cr);
+        // this should be #dd4814
+        cairo_set_source_rgba(cr.get(), 0.86666f, 0.28235f, 0.07843f, 1.0f);
+        cairo_fill(cr.get());
 
         // draw the text (rotated!)
-        cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
-        cairo_move_to(cr, size_dbl * 0.25, size_dbl);
-        cairo_rotate(cr, -G_PI_4); // rotate by -45 degrees
+        cairo_set_source_rgba(cr.get(), 1.0f, 1.0f, 1.0f, 1.0f);
+        cairo_move_to(cr.get(), size_dbl * 0.25, size_dbl);
+        cairo_rotate(cr.get(), -G_PI_4); // rotate by -45 degrees
 
-        pango_cairo_update_layout(cr, layout);
+        pango_cairo_update_layout(cr.get(), layout);
         pango_layout_get_pixel_size(layout, nullptr, &text_height);
         // current point is now in the middle of the stripe, need to translate
         // it, so that the text is centered
-        cairo_rel_move_to(cr, 0.0, text_height / -2.0);
+        cairo_rel_move_to(cr.get(), 0.0, text_height / -2.0);
         double diagonal = sqrt(size_dbl*size_dbl*2);
         // x coordinate also needs to be shifted
-        cairo_rel_move_to(cr, (diagonal - max_text_width) / 4, 0.0);
-        pango_cairo_show_layout(cr, layout);
-
-        // clean up
-        pango_font_description_free(desc);
-        cairo_destroy(cr);
+        cairo_rel_move_to(cr.get(), (diagonal - max_text_width) / 4, 0.0);
+        pango_cairo_show_layout(cr.get(), layout);
 
         // FIXME: going from image_surface to pixbuf, and then to texture :(
         glib::Object<GdkPixbuf> detail_pb(
@@ -407,7 +407,7 @@ private:
                              255); // src_alpha
       }
 
-      g_idle_add(LoadIconComplete, this);
+      idle_id = g_idle_add(LoadIconComplete, this);
     }
 
     void BaseIconLoaded(std::string const& base_icon_string, unsigned size,
@@ -422,18 +422,10 @@ private:
         UnityProtocolCategoryType category = unity_protocol_annotated_icon_get_category(anno_icon);
         auto helper_slot = sigc::bind(sigc::mem_fun(this, &IconLoaderTask::CategoryIconLoaded), anno_icon);
         unsigned cat_size = size / 4;
-        // FIXME: where to find category assets?
+        // FIXME: we still don't have the category assets
         switch (category)
         {
-          case UNITY_PROTOCOL_CATEGORY_TYPE_BOOK:
-            helper_handle =
-              impl->LoadFromIconName("emblem-favorite", cat_size, helper_slot);
-            break;
           case UNITY_PROTOCOL_CATEGORY_TYPE_SONG:
-            helper_handle =
-              impl->LoadFromIconName("emblem-favorite", cat_size, helper_slot);
-            break;
-          case UNITY_PROTOCOL_CATEGORY_TYPE_MOVIE:
             helper_handle =
               impl->LoadFromIconName("emblem-favorite", cat_size, helper_slot);
             break;
@@ -447,7 +439,7 @@ private:
       else
       {
         result = nullptr;
-        g_idle_add(LoadIconComplete, this);
+        idle_id = g_idle_add(LoadIconComplete, this);
       }
     }
 
@@ -672,12 +664,12 @@ void IconLoader::Impl::CalculateTextHeight(int* width, int* height)
                  "gtk-font-name", &font,
                  "gtk-xft-dpi", &dpi,
                  NULL);
-  PangoFontDescription* desc = pango_font_description_from_string(font);
-  pango_font_description_set_weight(desc, PANGO_WEIGHT_BOLD);
-  pango_font_description_set_size(desc, FONT_SIZE * PANGO_SCALE);
+  std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font), pango_font_description_free);
+  pango_font_description_set_weight(desc.get(), PANGO_WEIGHT_BOLD);
+  pango_font_description_set_size(desc.get(), FONT_SIZE * PANGO_SCALE);
 
   glib::Object<PangoLayout> layout(pango_cairo_create_layout(cr));
-  pango_layout_set_font_description(layout, desc);
+  pango_layout_set_font_description(layout, desc.get());
   pango_layout_set_text(layout, SAMPLE_MAX_TEXT, -1);
 
   PangoContext* cxt = pango_layout_get_context(layout);
@@ -691,8 +683,6 @@ void IconLoader::Impl::CalculateTextHeight(int* width, int* height)
 
   if (width) *width = log_rect.width / PANGO_SCALE;
   if (height) *height = log_rect.height / PANGO_SCALE;
-
-  pango_font_description_free(desc);
 }
 
 //
