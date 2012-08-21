@@ -85,6 +85,7 @@ class SignalManager : boost::noncopyable
 {
 public:
   SignalManager();
+  ~SignalManager();
   void Add(SignalBase* signal);
   void Add(SignalBase::Ptr const& signal);
   template <typename R, typename G, typename... Ts>
@@ -94,6 +95,9 @@ public:
   }
 
   void Disconnect(void* object, std::string const& signal_name = "");
+
+private:
+  static void OnObjectDestroyed(SignalManager* self, GObject* old_obj);
 
 protected:
   std::vector<SignalBase::Ptr> connections_;

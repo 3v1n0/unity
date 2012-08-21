@@ -125,7 +125,7 @@ MultiActionList::TerminateAll(CompOption::Vector& extraArgs)
 }
 
 unsigned long long
-PluginAdapter::GetWindowActiveNumber (guint32 xid)
+PluginAdapter::GetWindowActiveNumber (guint32 xid) const
 {
   return 0;
 }
@@ -157,19 +157,19 @@ PluginAdapter::TerminateScale()
 }
 
 bool
-PluginAdapter::IsScaleActive()
+PluginAdapter::IsScaleActive() const
 {
   return false;
 }
 
 bool
-PluginAdapter::IsScaleActiveForGroup()
+PluginAdapter::IsScaleActiveForGroup() const
 {
   return false;
 }
 
 bool
-PluginAdapter::IsExpoActive()
+PluginAdapter::IsExpoActive() const
 {
   return false;
 }
@@ -179,15 +179,21 @@ PluginAdapter::InitiateExpo()
 {
 }
 
+bool
+PluginAdapter::IsWallActive() const
+{
+  return false;
+}
+
 // WindowManager implementation
 guint32
-PluginAdapter::GetActiveWindow()
+PluginAdapter::GetActiveWindow() const
 {
   return 0;
 }
 
 bool
-PluginAdapter::IsWindowMaximized(guint xid)
+PluginAdapter::IsWindowMaximized(guint xid) const
 {
   return false;
 }
@@ -199,49 +205,49 @@ PluginAdapter::IsWindowDecorated(guint32 xid)
 }
 
 bool
-PluginAdapter::IsWindowOnCurrentDesktop(guint32 xid)
+PluginAdapter::IsWindowOnCurrentDesktop(guint32 xid) const
 {
   return false;
 }
 
 bool
-PluginAdapter::IsWindowObscured(guint32 xid)
+PluginAdapter::IsWindowObscured(guint32 xid) const
 {
   return false;
 }
 
 bool
-PluginAdapter::IsWindowMapped(guint32 xid)
+PluginAdapter::IsWindowMapped(guint32 xid) const
 {
   return false;
 }
 
 bool
-PluginAdapter::IsWindowVisible(guint32 xid)
+PluginAdapter::IsWindowVisible(guint32 xid) const
 {
   return false;
 }
 
 bool
-PluginAdapter::IsWindowOnTop(guint32 xid)
+PluginAdapter::IsWindowOnTop(guint32 xid) const
 {
   return false;
 }
 
 bool
-PluginAdapter::IsWindowClosable(guint32 xid)
+PluginAdapter::IsWindowClosable(guint32 xid) const
 {
   return false;
 }
 
 bool
-PluginAdapter::IsWindowMinimizable(guint32 xid)
+PluginAdapter::IsWindowMinimizable(guint32 xid) const
 {
   return false;
 }
 
 bool
-PluginAdapter::IsWindowMaximizable(guint32 xid)
+PluginAdapter::IsWindowMaximizable(guint32 xid) const
 {
   return false;
 }
@@ -347,7 +353,7 @@ PluginAdapter::GetWorkAreaGeometry(guint32 xid) const
 }
 
 bool
-PluginAdapter::CheckWindowIntersection(nux::Geometry const& region, CompWindow* window)
+PluginAdapter::CheckWindowIntersection(nux::Geometry const& region, CompWindow* window) const
 {
   return false;
 }
@@ -358,7 +364,7 @@ PluginAdapter::CheckWindowIntersections (nux::Geometry const& region, bool &acti
 }
 
 int
-PluginAdapter::WorkspaceCount()
+PluginAdapter::WorkspaceCount() const
 {
   return 4;
 }
@@ -379,19 +385,19 @@ PluginAdapter::Undecorate(guint32 xid)
 }
 
 bool
-PluginAdapter::IsScreenGrabbed()
+PluginAdapter::IsScreenGrabbed() const
 {
   return false;
 }
 
 bool
-PluginAdapter::IsViewPortSwitchStarted()
+PluginAdapter::IsViewPortSwitchStarted() const
 {
   return false;
 }
 
 /* Returns true if the window was maximized */
-bool PluginAdapter::MaximizeIfBigEnough(CompWindow* window)
+bool PluginAdapter::MaximizeIfBigEnough(CompWindow* window) const
 {
   return true;
 }

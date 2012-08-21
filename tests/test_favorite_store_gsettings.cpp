@@ -88,7 +88,6 @@ public:
 
     // Setting the test values
     gsettings_client = g_settings_new(SETTINGS_NAME);
-    g_settings_set_strv(gsettings_client, SETTINGS_KEY, NULL);
     g_settings_set_strv(gsettings_client, SETTINGS_KEY, base_store_favs);
   }
 

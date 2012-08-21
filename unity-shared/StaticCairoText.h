@@ -75,6 +75,7 @@ public:
   void SetTextVerticalAlignment(AlignState state);
   void SetFont(std::string const& font);
   void SetLines(int maximum_lines);
+  void SetLineSpacing(float line_spacing);
 
   std::string GetText() const;
   Color GetTextColor() const;
@@ -90,6 +91,9 @@ public:
   sigc::signal<void, StaticCairoText*> sigFontChanged;
 
   void SetAcceptKeyNavFocus(bool accept);
+
+  void SetMaximumSize(int w, int h);
+  void SetMaximumWidth(int w);
 
 protected:
   // Key navigation

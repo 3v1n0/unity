@@ -64,6 +64,7 @@ void
 UnityNETWorkareaRegionScreen::outputChangeNotify()
 {
   setProperty();
+  screen->outputChangeNotify ();
 }
 
 void

@@ -8,11 +8,10 @@
 
 from __future__ import absolute_import
 
-from time import sleep
-
+from autopilot.emulators.clipboard import get_clipboard_contents
 from autopilot.matchers import Eventually
-from gtk import Clipboard
 from testtools.matchers import Equals, NotEquals
+from time import sleep
 
 from unity.tests import UnityTestCase
 
@@ -50,6 +49,11 @@ class DashRevealTests(DashTestCase):
         """File lense must reveal when Super+f is pressed."""
         self.dash.reveal_file_lens()
         self.assertThat(self.dash.active_lens, Eventually(Equals('files.lens')))
+
+    def test_video_lens_shortcut(self):
+        """Video lens must reveal when super+v is pressed."""
+        self.dash.reveal_video_lens()
+        self.assertThat(self.dash.active_lens, Eventually(Equals('video.lens')))
 
     def test_command_lens_shortcut(self):
         """Run Command lens must reveat on alt+F2."""
@@ -305,8 +309,7 @@ class DashClipboardTests(DashTestCase):
         self.keyboard.press_and_release("Ctrl+a")
         self.keyboard.press_and_release("Ctrl+c")
 
-        cb = Clipboard(selection="CLIPBOARD")
-        self.assertThat(self.dash.search_string, Eventually(Equals(cb.wait_for_text())))
+        self.assertThat(get_clipboard_contents, Eventually(Equals("Copy")))
 
     def test_ctrl_x(self):
         """ This test if ctrl+x deletes all text and copys it """
@@ -319,8 +322,7 @@ class DashClipboardTests(DashTestCase):
         self.keyboard.press_and_release("Ctrl+x")
         self.assertThat(self.dash.search_string, Eventually(Equals("")))
 
-        cb = Clipboard(selection="CLIPBOARD")
-        self.assertEqual(cb.wait_for_text(), u'Cut')
+        self.assertThat(get_clipboard_contents, Eventually(Equals('Cut')))
 
     def test_ctrl_c_v(self):
         """ This test if ctrl+c and ctrl+v copies and pastes text"""
@@ -543,3 +545,26 @@ class CategoryHeaderTests(DashTestCase):
         self.mouse.click()
         self.assertThat(category.is_expanded, Eventually(Equals(is_expanded)))
 
+
+class PreviewInvocationTests(DashTestCase):
+    """Tests that previews can be opened and closed
+    """
+    def test_open_preview_close_preview(self):
+        """Right clicking on any result shall open a preview, 
+        escaping shall close the preview
+        """
+        lens = self.dash.reveal_application_lens()
+        self.addCleanup(self.dash.ensure_hidden)
+
+        category = lens.get_category_by_name("Installed")
+
+        self.mouse.move(self.dash.view.x + 64,  
+                        category.header_y + category.header_height + 32)
+
+        self.mouse.click(button=3)
+        #revealing a preview may be very slow, not sure if Eventually handles that nicely
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
+
+        self.keyboard.press_and_release("Escape")
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))

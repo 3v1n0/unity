@@ -49,6 +49,17 @@ private:
   FavoriteList fav_list_;
 };
 
+class MockBamfLauncherIcon : public BamfLauncherIcon
+{
+public:
+  //typedef nux::ObjectPtr<MockMockLauncherIcon> Ptr;
+  MockBamfLauncherIcon(BamfApplication* app)
+    : BamfLauncherIcon(app) {}
+
+  MOCK_METHOD0(UnStick, void());
+  MOCK_METHOD0(Quit, void());
+};
+
 namespace launcher
 {
 class TestLauncherController : public testing::Test
@@ -68,6 +79,11 @@ protected:
   ui::EdgeBarrierController &GetBarrierController()
   {
     return lc.pimpl->edge_barriers_;
+  }
+
+  LauncherModel::Ptr GetLauncherModel()
+  {
+    return lc.pimpl->model_;
   }
 
   MockUScreen uscreen;
@@ -196,6 +212,22 @@ TEST_F(TestLauncherController, SingleMonitorEdgeBarrierSubscriptionsUpdates)
       }
     }
   }
+}
+
+TEST_F(TestLauncherController, OnlyUnstickIconOnFavoriteRemoval)
+{
+  const std::string USC_DESKTOP = BUILDDIR"/tests/data/ubuntu-software-center.desktop";
+
+  glib::Object<BamfMatcher> matcher(bamf_matcher_get_default());
+
+  auto bamf_app = bamf_matcher_get_application_for_desktop_file(matcher, USC_DESKTOP.c_str(), TRUE);
+  MockBamfLauncherIcon *bamf_icon = new MockBamfLauncherIcon(bamf_app);
+  GetLauncherModel()->AddIcon(AbstractLauncherIcon::Ptr(bamf_icon));
+
+  EXPECT_CALL(*bamf_icon, UnStick());
+  EXPECT_CALL(*bamf_icon, Quit()).Times(0);
+
+  favorite_store.favorite_removed.emit(USC_DESKTOP);
 }
 
 }

@@ -24,13 +24,18 @@
 #include <Nux/VLayout.h>
 #include <Nux/HLayout.h>
 #include <Nux/TextureArea.h>
-#include <UnityCore/GLibSource.h>
 
-#include "AbstractPlacesGroup.h"
+#include <sigc++/sigc++.h>
+
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/Introspectable.h"
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/UBusWrapper.h"
+
+#include <UnityCore/GLibSource.h>
+
+#include "AbstractPlacesGroup.h"
+
 #include "ResultView.h"
 
 namespace nux
@@ -53,6 +58,8 @@ public:
 
   void SetIcon(std::string const& icon);
   void SetName(std::string const& name);
+  void SetRendererName(const char *renderer_name);
+  void SetHeaderCountVisible(bool disable);
 
   nux::StaticCairoText* GetLabel();
   nux::StaticCairoText* GetExpandLabel();
@@ -64,7 +71,11 @@ public:
 
   void Relayout();
 
-  void SetCounts(guint n_visible_items_in_unexpand_mode, guint n_total_items);
+  void SetCategoryIndex(unsigned index);
+  unsigned GetCategoryIndex() const;
+
+  void SetCounts(unsigned n_visible_items_in_unexpand_mode,
+                 unsigned n_total_items);
 
   void SetExpanded(bool is_expanded);
   bool GetExpanded() const;
@@ -74,6 +85,7 @@ public:
   nux::View* GetHeaderFocusableView() const;
 
   sigc::signal<void, PlacesGroup*> expanded;
+  sigc::signal<void, std::string const&> UriActivated;
 
 protected:
   long ComputeContentSize();
@@ -121,10 +133,17 @@ private:
   IconTexture*          _expand_icon;
 
   bool  _is_expanded;
-  guint _n_visible_items_in_unexpand_mode;
-  guint _n_total_items;
+  unsigned _n_visible_items_in_unexpand_mode;
+  unsigned _n_total_items;
+  unsigned _category_index;
   std::string _cached_name;
+  bool  _draw_sep;
   nux::Geometry _cached_geometry;
+  
+  std::string _renderer_name;
+  bool _coverflow_enabled;
+
+  bool disabled_header_count_;
 
   glib::Source::UniquePtr _relayout_idle;
   UBusManager _ubus;

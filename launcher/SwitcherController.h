@@ -70,6 +70,8 @@ public:
   void Show(ShowMode show, SortMode sort, bool reverse, std::vector<launcher::AbstractLauncherIcon::Ptr> results);
   void Hide(bool accept_state=true);
 
+  bool CanShowSwitcher(const std::vector<launcher::AbstractLauncherIcon::Ptr>& resutls) const;
+
   bool Visible();
 
   void Next();
@@ -95,6 +97,8 @@ public:
   bool IsShowDesktopDisabled() const;
   void SetShowDesktopDisabled(bool disabled);
   int StartIndex() const;
+
+  sigc::signal<void> view_built;
 
 protected:
   // Introspectable methods
