@@ -262,6 +262,21 @@ class HudBehaviorTests(HudTestsBase):
         self.hud.ensure_visible()
         self.keyboard.press_and_release("Alt+F4")
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
+        
+    def test_app_activate_on_enter(self):
+        """Hud must close after activating a search item with Enter."""
+        self.hud.ensure_visible()   
+        
+        self.keyboard.type("Device > System Settings")
+        self.assertThat(self.hud.search_string, Eventually(Equals("Device > System Settings")))
+        
+        self.keyboard.press_and_release("Enter")
+        
+        app_found = self.bamf.wait_until_application_is_running("gnome-control-center.desktop", 5)
+        self.assertTrue(app_found)
+        self.addCleanup(self.close_all_app,  "System Settings")
+        
+        self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
 
 class HudLauncherInteractionsTests(HudTestsBase):
