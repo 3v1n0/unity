@@ -161,20 +161,8 @@ void MoviePreview::SetupView()
 
   /////////////////////
   // Image
-  std::string image_hint;
-  if (preview_model_->image.Get())
-  {
-    glib::String tmp_icon(g_icon_to_string(preview_model_->image.Get()));
-    image_hint = tmp_icon.Str();
-  }
   image_ = new CoverArt();
-  if (!image_hint.empty())
-    image_->SetImage(image_hint);
-  else if (!preview_model_->image_source_uri.Get().empty())
-    image_->GenerateImage(preview_model_->image_source_uri);
-  else
-    image_->SetNoImageAvailable();
-  image_->SetFont(style.no_preview_image_font());
+  UpdateCoverArtImage(image_.GetPointer());
   /////////////////////
 
     /////////////////////
