@@ -3419,8 +3419,8 @@ void UnityWindow::scalePaintDecoration (const GLWindowPaintAttrib& attrib,
 
   sWindow->scalePaintDecoration (attrib, transform, region, mask);
 
-  if (!sWindow->hasSlot() ||   // animation finished
-      attrib.opacity != 65535) // no focus
+  if (!sWindow->hasSlot() ||    // animation finished
+      attrib.opacity != OPAQUE) // no focus
     return;
 
   ScalePosition pos = sWindow->getCurrentPosition ();
