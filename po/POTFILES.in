@@ -35,4 +35,4 @@ shortcuts/StandaloneShortcuts.cpp
 unity-shared/DashStyle.cpp
 unity-shared/SearchBar.cpp
 unity-shared/UScreen.cpp
-
+gnome/50-unity-launchers.xml.in

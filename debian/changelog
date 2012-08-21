@@ -1,4 +1,4 @@
-unity (6.2.0-0ubuntu3) UNRELEASED; urgency=low
+unity (6.2.0-0ubuntu3~test4) quantal; urgency=low
 
   [ Didier Roche ]
   * Backports:
@@ -21,6 +21,8 @@ unity (6.2.0-0ubuntu3) UNRELEASED; urgency=low
   * Remove the remaining gconf files from installation
   * Remove gconf-2.0 dependency from services
   * Make sure USE_GSETTINGS is defined
+  * Backports:
+    - gnome-control-center integration
 
  -- Timo Jyrinki <timo-jyrinki@ubuntu.com>  Fri, 17 Aug 2012 13:22:06 +0300
 
