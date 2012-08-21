@@ -238,15 +238,15 @@ debug::Introspectable::IntrospectableList ResultView::GetIntrospectableChildren(
       Result const& result = *iter;
 
       debug::Introspectable* result_wrapper = NULL;
-      auto iter = introspectable_children_.find(result.uri);
+      auto map_iter = introspectable_children_.find(result.uri);
       // Create new result.
-      if (iter == introspectable_children_.end())
+      if (map_iter == introspectable_children_.end())
       {
         result_wrapper = CreateResultWrapper(result, index);
         introspectable_children_[result.uri] = result_wrapper;
       }
       else
-        result_wrapper = iter->second;
+        result_wrapper = map_iter->second;
 
       AddChild(result_wrapper);
 
