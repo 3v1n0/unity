@@ -3425,10 +3425,11 @@ void UnityWindow::scalePaintDecoration (const GLWindowPaintAttrib& attrib,
 
   ScalePosition pos = sWindow->getCurrentPosition ();
   int maxHeight, maxWidth;
-  int width = window->width () * pos.scale;
-  float x = pos.x () + window->x ();
-  float y = pos.y () + window->y ();
-  float iconY = y + ((SCALE_WINDOW_TITLE_SIZE - CLOSE_ICON_SIZE)  / 2.0);
+  const int width = window->width () * pos.scale;
+  const float x = pos.x () + window->x ();
+  const float y = pos.y () + window->y ();
+  const float iconX = x + CLOSE_ICON_SPACE;
+  const float iconY = y + ((SCALE_WINDOW_TITLE_SIZE - CLOSE_ICON_SIZE)  / 2.0);
 
   maxHeight = maxWidth = 0;
 
@@ -3438,11 +3439,11 @@ void UnityWindow::scalePaintDecoration (const GLWindowPaintAttrib& attrib,
   foreach(GLTexture *icon, close_icon_)
   {
     drawTexture (icon, attrib, transform, mask,
-                 x + CLOSE_ICON_SPACE, iconY,
+                 iconX, iconY,
                  maxWidth , maxHeight);
   }
 
-  close_button_area_ = CompRect (x + CLOSE_ICON_SPACE, iconY, maxWidth, maxHeight);
+  close_button_area_ = CompRect (iconX, iconY, maxWidth, maxHeight);
 }
 
 UnityWindow::~UnityWindow()
