@@ -72,7 +72,7 @@ public:
     unity_protocol_preview_set_image_source_uri(proto_obj, "http://ia.media-imdb.com/images/M/MV5BMTM3NDM5MzY5Ml5BMl5BanBnXkFtZTcwNjExMDUwOA@@._V1._SY317_.jpg");
     unity_protocol_preview_set_title(proto_obj, "Movie Title & special char");
     unity_protocol_preview_set_subtitle(proto_obj, "Movie Subtitle > special char");
-    unity_protocol_preview_set_description(proto_obj, "Movie Desctiption < special char");
+    unity_protocol_preview_set_description(proto_obj, "Movie Desctiption &lt; special char");
     unity_protocol_preview_add_action(proto_obj, "action1", "Action 1", NULL, 0);
     unity_protocol_preview_add_action(proto_obj, "action2", "Action 2", NULL, 0);
     unity_protocol_preview_add_info_hint(proto_obj, "hint1", "Hint 1", NULL, g_variant_new("s", "string hint 1"));

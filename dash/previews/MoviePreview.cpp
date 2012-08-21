@@ -224,7 +224,7 @@ void MoviePreview::SetupView()
 
       if (!preview_model_->description.Get().empty())
       {
-        description_ = new nux::StaticCairoText(preview_model_->description, true, NUX_TRACKER_LOCATION);
+        description_ = new nux::StaticCairoText(preview_model_->description, false, NUX_TRACKER_LOCATION); // not escaped!
         description_->SetFont(style.description_font().c_str());
         description_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_TOP);
         description_->SetLines(-style.GetDescriptionLineCount());

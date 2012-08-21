@@ -210,14 +210,14 @@ void ApplicationPreview::SetupViews()
         title_subtitle_layout_ = new nux::VLayout();
         title_subtitle_layout_->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
 
-        title_ = new nux::StaticCairoText(app_preview_model->title, true, NUX_TRACKER_LOCATION);
+        title_ = new nux::StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
         title_->SetLines(-1);
         title_->SetFont(style.title_font().c_str());
         title_subtitle_layout_->AddView(title_.GetPointer(), 1);
 
-        if (!app_preview_model->subtitle.Get().empty())
+        if (!preview_model_->subtitle.Get().empty())
         {
-          subtitle_ = new nux::StaticCairoText(app_preview_model->subtitle, true, NUX_TRACKER_LOCATION);
+          subtitle_ = new nux::StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
           subtitle_->SetFont(style.subtitle_size_font().c_str());
           subtitle_->SetLines(-1);
           title_subtitle_layout_->AddView(subtitle_.GetPointer(), 1);
@@ -273,7 +273,7 @@ void ApplicationPreview::SetupViews()
 
       if (!preview_model_->description.Get().empty())
       {
-        description_ = new nux::StaticCairoText(app_preview_model->description, true, NUX_TRACKER_LOCATION);
+        description_ = new nux::StaticCairoText(preview_model_->description, false, NUX_TRACKER_LOCATION); // not escaped!
         description_->SetFont(style.description_font().c_str());
         description_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_TOP);
         description_->SetLines(-style.GetDescriptionLineCount());
