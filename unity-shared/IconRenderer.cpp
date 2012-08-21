@@ -427,8 +427,6 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   {
     // Extra tweaks for tiles that are colorized with the launcher background color
     background_tile_color = nux::color::White;
-    backlight_intensity = 0.9f;
-    alpha = 1.0f;
   }
 
   if (arg.keyboard_nav_hl)
