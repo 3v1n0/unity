@@ -403,9 +403,11 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   nux::Color edge_color(0x55555555);
   nux::Color colorify = arg.colorify;
   nux::Color background_tile_colorify = arg.colorify;
+  bool colorify_background = arg.colorify_background;
   float backlight_intensity = arg.backlight_intensity;
   float glow_intensity = arg.glow_intensity;
   float shadow_intensity = 0.6f;
+  float alpha = arg.alpha;
 
   nux::BaseTexture* background = local::icon_background[size];
   nux::BaseTexture* edge = local::icon_edge[size];
@@ -414,6 +416,20 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   nux::BaseTexture* shadow = local::icon_shadow[size];
 
   bool force_filter = icon_size != background->GetWidth();
+
+  if (backlight_intensity == 0.0f)
+  {
+    // Colorize tiles without backlight with the launcher background color
+    colorify_background = true;
+  }
+
+  if (colorify_background)
+  {
+    // Extra tweaks for tiles that are colorized with the launcher background color
+    background_tile_color = nux::color::White;
+    backlight_intensity = 0.9f;
+    alpha = 1.0f;
+  }
 
   if (arg.keyboard_nav_hl)
   {
@@ -434,7 +450,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
     colorify.blue +=  (0.5f + 0.5f * arg.saturation) * (1.0f - colorify.blue);
     colorify.green += (0.5f + 0.5f * arg.saturation) * (1.0f - colorify.green);
 
-    if (arg.colorify_background)
+    if (colorify_background)
     {
       background_tile_colorify = background_tile_colorify * 0.7f;
     }
@@ -471,7 +487,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   shadow->GetDeviceTexture(),
                   nux::color::White,
                   shadow_color,
-                  shadow_intensity * arg.alpha,
+                  shadow_intensity * alpha,
                   force_filter,
                   arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_GLOW, monitor));
   }
@@ -486,7 +502,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   background->GetDeviceTexture(),
                   background_tile_color,
                   background_tile_colorify,
-                  backlight_intensity * arg.alpha,
+                  backlight_intensity * alpha,
                   force_filter,
                   tile_transform);
   }
@@ -494,7 +510,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   edge_color = edge_color + ((background_tile_color - edge_color) * backlight_intensity);
   nux::Color edge_tile_colorify = background_tile_colorify;
 
-  if (arg.colorify_background && !arg.keyboard_nav_hl)
+  if (colorify_background && !arg.keyboard_nav_hl)
   {
     // Mix edge_tile_colorify with plain white (1.0f).
     // Would be nicer to tweak value from HSV colorspace, instead.
@@ -510,7 +526,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                 edge->GetDeviceTexture(),
                 edge_color,
                 edge_tile_colorify,
-                arg.alpha * arg.alpha, // Dim edges of semi-transparent tiles
+                alpha * alpha, // Dim edges of semi-transparent tiles
                 force_filter,
                 tile_transform);
   // end tile draw
@@ -521,7 +537,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                 arg.icon->TextureForSize(image_size)->GetDeviceTexture(),
                 nux::color::White,
                 colorify,
-                arg.alpha,
+                alpha,
                 false,
                 arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_IMAGE, monitor));
 
@@ -531,7 +547,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                 shine->GetDeviceTexture(),
                 nux::color::White,
                 colorify,
-                arg.alpha,
+                alpha,
                 force_filter,
                 tile_transform);
 
@@ -543,7 +559,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   glow->GetDeviceTexture(),
                   glow_color,
                   nux::color::White,
-                  glow_intensity * arg.alpha,
+                  glow_intensity * alpha,
                   force_filter,
                   arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_GLOW, monitor));
   }
@@ -565,7 +581,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   local::icon_glow[size]->GetDeviceTexture(),
                   arg.icon->GlowColor(),
                   nux::color::White,
-                  fade_out * arg.alpha,
+                  fade_out * alpha,
                   force_filter,
                   arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_GLOW, monitor));
 
@@ -588,7 +604,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   local::offscreen_progress_texture,
                   nux::color::White,
                   nux::color::White,
-                  arg.alpha,
+                  alpha,
                   force_filter,
                   tile_transform);
   }
@@ -600,7 +616,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   arg.icon->Emblem()->GetDeviceTexture(),
                   nux::color::White,
                   nux::color::White,
-                  arg.alpha,
+                  alpha,
                   force_filter,
                   arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_EMBLEM, monitor));
   }
@@ -610,7 +626,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                    arg,
                    arg.running_arrow ? arg.window_indicators : 0,
                    arg.active_arrow ? 1 : 0,
-                   arg.alpha,
+                   alpha,
                    geo);
 
   // draw superkey-shortcut label
@@ -626,7 +642,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   local::label_map[shortcut]->GetDeviceTexture(),
                   nux::Color(0xFFFFFFFF),
                   nux::color::White,
-                  arg.alpha,
+                  alpha,
                   false,
                   tile_transform);
   }
