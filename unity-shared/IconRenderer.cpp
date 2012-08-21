@@ -522,7 +522,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                 nux::color::White,
                 colorify,
                 arg.alpha,
-                false,
+                force_filter,
                 arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_IMAGE, monitor));
 
   // draw overlay shine
