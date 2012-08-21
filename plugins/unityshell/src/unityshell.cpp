@@ -480,7 +480,7 @@ void UnityScreen::CreateSuperNewAction(char shortcut, impl::ActionModifiers flag
 
 void UnityScreen::nuxPrologue()
 {
-#ifndef USE_MODERN_COMPIZ_GL
+#ifndef USE_GLES
   /* Vertex lighting isn't used in Unity, we disable that state as it could have
    * been leaked by another plugin. That should theoretically be switched off
    * right after PushAttrib since ENABLE_BIT is meant to restore the LIGHTING
@@ -513,8 +513,10 @@ void UnityScreen::nuxPrologue()
 
 void UnityScreen::nuxEpilogue()
 {
+#ifndef USE_GLES
 #ifndef USE_MODERN_COMPIZ_GL
   (*GL::bindFramebuffer)(GL_FRAMEBUFFER_EXT, _active_fbo);
+#endif
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
