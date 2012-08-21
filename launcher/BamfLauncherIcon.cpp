@@ -257,9 +257,6 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 
       for (GList* l = children; l; l = l->next)
       {
-        if (!BAMF_IS_WINDOW(l->data))
-          continue;
-
         auto view = static_cast<BamfView*>(l->data);
         auto win = static_cast<BamfWindow*>(l->data);
         Window xid;
@@ -268,6 +265,8 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
           xid = bamf_window_get_xid(static_cast<BamfWindow*>(l->data));
         else if (BAMF_IS_TAB(l->data))
           xid = bamf_tab_get_xid(static_cast<BamfTab*>(l->data));
+        else
+          continue;
 
 
         if (!any_visible && wm->IsWindowOnCurrentDesktop(xid))
@@ -638,21 +637,21 @@ std::vector<Window> BamfLauncherIcon::GetFocusableWindows(ActionArg arg, bool &a
   std::vector<Window> windows;
   GList* children;
 
-  BamfView *focus_child = BAMF_VIEW (bamf_application_get_focus_child (_bamf_app.RawPtr()));
+  BamfView *focusable_child = BAMF_VIEW (bamf_application_get_focusable_child (_bamf_app.RawPtr()));
   
-  if (focus_child != NULL)
+  if (focusable_child != NULL)
     {
       Window xid;
       
-      if (BAMF_IS_WINDOW (focus_child))
-        xid = bamf_window_get_xid (BAMF_WINDOW(focus_child));
-      else if (BAMF_IS_TAB (focus_child))
+      if (BAMF_IS_WINDOW (focusable_child))
+        xid = bamf_window_get_xid (BAMF_WINDOW(focusable_child));
+      else if (BAMF_IS_TAB (focusable_child))
         {
-          BamfTab *focus_tab = BAMF_TAB (focus_child);
+          BamfTab *focusable_tab = BAMF_TAB (focusable_child);
           
-          xid = bamf_tab_get_xid (focus_tab);
+          xid = bamf_tab_get_xid (focusable_tab);
           
-          bamf_tab_raise (focus_tab);
+          bamf_tab_raise (focusable_tab);
         }
       
       windows.push_back(xid);
