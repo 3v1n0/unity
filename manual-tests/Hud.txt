@@ -33,21 +33,6 @@ Expected Result:
   After pressing escape in step three, the text "test" should be removed from the hud search
   After step four, the hud should dismiss itself and not be present.
 
-Alt+Arrow keys not passed to application
-----------------------------------------
-Tests that Alt+ArrowKey events are correctly passed to the active window
-when Unity is not responding to them.
-
-Note: Should be automated
-
-Setup:
-#. Open gnome-terminal
-
-Actions:
-#. While holding Alt, tap arrow keys: Up, Down, Right, Left
-
-Expected Result:
-  The terminal should show the keycodes were received as text "ABCD".
 
 Alt+Enter Crash
 ---------------
