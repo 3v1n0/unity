@@ -135,6 +135,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , panel_texture_has_changed_(true)
   , paint_panel_(false)
   , scale_just_activated_(false)
+  , highlighted_window_(0)
 {
   Timer timer;
   gfloat version;
@@ -1613,9 +1614,11 @@ void UnityScreen::handleEvent(XEvent* event)
         launcher_controller_->KeyNavTerminate(false);
         EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
       }
-      if (PluginAdapter::Default()->IsScaleActive() && event->xbutton.button == Button1)
+      if (PluginAdapter::Default()->IsScaleActive() &&
+          event->xbutton.button == Button1 &&
+          highlighted_window_ != 0)
       {
-        CompWindow *w = checkForWindowAt (pointerX, pointerY);
+        CompWindow *w = screen->findWindow (highlighted_window_);
         if (w)
         {
           UnityWindow *uw = UnityWindow::get (w);
@@ -2443,35 +2446,6 @@ void UnityScreen::RaiseInputWindows()
     if (cwin)
       cwin->raise();
   }
-}
-
-// Based on Scale plugin code
-CompWindow* UnityScreen::checkForWindowAt (int x, int y)
-{
-  int x1, y1, x2, y2;
-  CompWindowList::reverse_iterator rit = screen->windows ().rbegin ();
-
-  for (; rit != screen->windows ().rend (); ++rit)
-  {
-    CompWindow *w = *rit;
-    SCALE_WINDOW (w);
-
-    ScalePosition pos = sw->getCurrentPosition ();
-    if (sw->hasSlot ())
-    {
-      x1 = w->x () - w->input ().left * pos.scale;
-      y1 = w->y () - w->input ().top  * pos.scale;
-      x2 = w->x () + (w->width () + w->input ().right) * pos.scale;
-      y2 = w->y () + (w->height () + w->input ().bottom) * pos.scale;
-      x1 += pos.x ();
-      y1 += pos.y ();
-      x2 += pos.x ();
-      y2 += pos.y ();
-      if (x1 <= x && y1 <= y && x2 > x && y2 > y)
-        return w;
-    }
-  }
-  return NULL;
 }
 
 /* detect occlusions
@@ -3444,6 +3418,32 @@ void UnityWindow::scalePaintDecoration (const GLWindowPaintAttrib& attrib,
   }
 
   close_button_area_ = CompRect (iconX, iconY, maxWidth, maxHeight);
+}
+
+void UnityWindow::scaleSelectWindow ()
+{
+  UnityScreen* us = UnityScreen::get(screen);
+
+  if (us->highlighted_window_ != window->id ())
+  {
+    CompositeWindow *cWindow = CompositeWindow::get (window);
+    if (cWindow)
+      cWindow->addDamage ();
+
+    cWindow = 0;
+    CompWindow *old_window = screen->findWindow (us->highlighted_window_);
+    if (old_window)
+        cWindow = CompositeWindow::get (old_window);
+
+    if (cWindow)
+      cWindow->addDamage ();
+
+    us->highlighted_window_ = window->id ();
+  }
+
+  ScaleWindow *sWindow = ScaleWindow::get (window);
+  if (sWindow)
+    sWindow->scaleSelectWindow ();
 }
 
 UnityWindow::~UnityWindow()

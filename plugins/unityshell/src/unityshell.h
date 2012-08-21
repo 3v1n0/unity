@@ -249,8 +249,6 @@ private:
 
   void InitGesturesSupport();
 
-  CompWindow* checkForWindowAt (int x, int y);
-
   nux::animation::TickSource tick_source_;
   nux::animation::AnimationController animation_controller_;
 
@@ -347,7 +345,9 @@ private:
   UBusManager ubus_manager_;
   glib::SourceManager sources_;
   unity::ThumbnailGenerator thumb_generator;
-  
+
+  Window highlighted_window_;
+
   friend class UnityWindow;
 };
 
@@ -428,6 +428,7 @@ public:
   //! Emited when CompWindowNotifyBeforeDestroy is received
   sigc::signal<void> being_destroyed;
 
+  void scaleSelectWindow ();
   void scalePaintDecoration (const GLWindowPaintAttrib &,
                              const GLMatrix &,
                              const CompRegion &,
