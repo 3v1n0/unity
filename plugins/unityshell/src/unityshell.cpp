@@ -3384,8 +3384,26 @@ void UnityWindow::drawTexture (GLTexture* icon,
 void UnityWindow::drawWindowTitle (float x, float y, float x2, float y2)
 {
   // BG
+#ifndef USE_MODERN_COMPIZ_GL
   glColor3f (0.0f, 0.0f, 0.0f);
   glRectf (x, y2, x2, y);
+#else
+  GLVertexBuffer *vertexBuffer = GLVertexBuffer::streamingBuffer ();
+  const GLfloat vertices[] =
+  {
+    x, y2, 0.0f,
+    x, y, 0.0f,
+    x2, y, 0.0f,
+    x2, y2, 0.0f
+  };
+
+  vertexBuffer->begin (GL_TRIANGLE_STRIP)
+  vertexBuffer->addVertices (4, vertices);
+  vertexBuffer->color4f (0.0f, 0.0f, 0.0f, 1.0f);
+  vertexBuffer->end ();
+
+  vertexBuffer->render (transform, attrib);
+#endif
 
   //TODO: implement window title text draw
 }
