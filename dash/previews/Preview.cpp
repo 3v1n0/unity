@@ -22,16 +22,16 @@
 
 #include "Preview.h"
 #include "unity-shared/IntrospectableWrappers.h"
+#include "unity-shared/CoverArt.h"
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
 #include "ActionButton.h"
 
- #include "GenericPreview.h"
- #include "ApplicationPreview.h"
- #include "MusicPreview.h"
- #include "MoviePreview.h"
- //#include "SeriesPreview.h"
+#include "GenericPreview.h"
+#include "ApplicationPreview.h"
+#include "MusicPreview.h"
+#include "MoviePreview.h"
 
 namespace unity
 {
@@ -173,6 +173,28 @@ nux::Layout* Preview::BuildVerticalActionsLayout(dash::Preview::ActionPtrList ac
   actions_buffer_h->AddLayout(actions_buffer_v, 0);
 
   return actions_buffer_h;
+}
+
+void Preview::UpdateCoverArtImage(CoverArt* cover_art)
+{
+  if (!preview_model_)
+    return;
+  
+  previews::Style& style = dash::previews::Style::Instance();
+
+  std::string image_hint;
+  if (preview_model_->image.Get())
+  {
+    glib::String tmp_icon(g_icon_to_string(preview_model_->image.Get()));
+    image_hint = tmp_icon.Str();
+  }
+  if (!image_hint.empty())
+    cover_art->SetImage(image_hint);
+  else if (!preview_model_->image_source_uri.Get().empty())
+    cover_art->GenerateImage(preview_model_->image_source_uri);
+  else
+    cover_art->SetNoImageAvailable();
+  cover_art->SetFont(style.no_preview_image_font());
 }
 
 }
