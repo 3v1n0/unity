@@ -32,11 +32,11 @@ class BaseShortcutHintTests(UnityTestCase):
 
     def skip_if_monitor_too_small(self):
         monitor = self.screen_geo.get_primary_monitor()
-        monitor_geo = self.screen_geo.get_monitor_geometry(monitor);
-        monitor_w = monitor_geo[2];
-        monitor_h = monitor_geo[3];
-        launcher_width = self.launcher.get_launcher_for_monitor(monitor).geometry[2];
-        panel_height = 24 # TODO get it from panel
+        monitor_geo = self.screen_geo.get_monitor_geometry(monitor)
+        monitor_w = monitor_geo[2]
+        monitor_h = monitor_geo[3]
+        launcher_width = self.launcher.get_launcher_for_monitor(monitor).geometry[2]
+        panel_height =  self.panels.get_panel_for_monitor(monitor).geometry[3]
 
         if ((monitor_w - launcher_width) <= self.DEFAULT_WIDTH or
             (monitor_h - panel_height) <= self.DEFAULT_HEIGHT):

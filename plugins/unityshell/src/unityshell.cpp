@@ -216,10 +216,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
      CompositeScreenInterface::setHandler(cScreen);
      GLScreenInterface::setHandler(gScreen);
 
-#ifdef USE_MODERN_COMPIZ_GL
-     gScreen->glPaintCompositedOutputSetEnabled (this, true);
-#endif
-
      PluginAdapter::Initialize(screen);
      WindowManager::SetDefault(PluginAdapter::Default());
      AddChild(PluginAdapter::Default());
@@ -507,7 +503,7 @@ void UnityScreen::CreateSuperNewAction(char shortcut, impl::ActionModifiers flag
 
 void UnityScreen::nuxPrologue()
 {
-#ifndef USE_MODERN_COMPIZ_GL
+#ifndef USE_GLES
   /* Vertex lighting isn't used in Unity, we disable that state as it could have
    * been leaked by another plugin. That should theoretically be switched off
    * right after PushAttrib since ENABLE_BIT is meant to restore the LIGHTING
@@ -540,8 +536,10 @@ void UnityScreen::nuxPrologue()
 
 void UnityScreen::nuxEpilogue()
 {
+#ifndef USE_GLES
 #ifndef USE_MODERN_COMPIZ_GL
   (*GL::bindFramebuffer)(GL_FRAMEBUFFER_EXT, _active_fbo);
+#endif
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -1334,36 +1332,15 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   if (doShellRepaint && !force && fullscreenRegion.contains(*output))
     doShellRepaint = false;
 
-#ifndef USE_MODERN_COMPIZ_GL
   if (doShellRepaint)
+#ifdef USE_MODERN_COMPIZ_GL
+    paintDisplay();
+#else
     paintDisplay(region, transform, mask);
 #endif
 
   return ret;
 }
-
-#ifdef USE_MODERN_COMPIZ_GL
-void UnityScreen::glPaintCompositedOutput (const CompRegion &region,
-                                           ::GLFramebufferObject *fbo,
-                                           unsigned int        mask)
-{
-  if (doShellRepaint)
-  {
-    bool useFbo = false;
-    oldFbo = fbo->bind ();
-    useFbo = fbo->checkStatus () && fbo->tex ();
-    if (!useFbo) {
-	printf ("bailing from UnityScreen::glPaintCompositedOutput");
-	::GLFramebufferObject::rebind (oldFbo);
-	return;
-    }
-    paintDisplay();
-    ::GLFramebufferObject::rebind (oldFbo);
-  }
-
-  gScreen->glPaintCompositedOutput(region, fbo, mask);
-}
-#endif
 
 /* called whenever a plugin needs to paint the entire scene
  * transformed */
