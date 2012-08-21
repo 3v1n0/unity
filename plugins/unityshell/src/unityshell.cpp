@@ -2664,8 +2664,8 @@ void UnityScreen::SetMinimizeSpeed()
       {
         /* minimize_durations is a list value, but minimize applies only to
          * normal windows, so there's always one value */
-        CompOption::Value value = o.value();
-        CompOption::Value::Vector list = value.list();
+        CompOption::Value& value = o.value();
+        CompOption::Value::Vector& list = value.list();
         CompOption::Value::Vector::iterator i = list.begin();
         if (i != list.end())
           i->set(speed);
