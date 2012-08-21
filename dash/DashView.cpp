@@ -124,8 +124,13 @@ void DashView::SetMonitorOffset(int x, int y)
 void DashView::ClosePreview()
 {
   preview_displaying_ = false;
+
+  // sanity check
+  if (!preview_container_)
+    return;
   RemoveChild(preview_container_.GetPointer());
-  preview_container_ = nullptr; // free resources
+  preview_container_->UnParentObject();
+  preview_container_.Release(); // free resources
   preview_state_machine_.ClosePreview();
   QueueDraw();
 }
