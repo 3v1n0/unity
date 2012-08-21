@@ -54,10 +54,10 @@ private:
   void ActivateLauncherIcon(ActionArg arg);
   void ShowMount(GMount* mount);
   void Unmount();
-  void OnTogglePin(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
-  void OnOpen(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
-  void OnEject(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
-  void OnUnmount(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
+  void OnTogglePin(DbusmenuMenuitem* item, int time);
+  void OnSettingsChanged();
+  void ShowNotification(std::string const&, unsigned, glib::Object<GdkPixbuf> const&, std::string const&);
+  void OnVolumeChanged(GVolume* volume);
   static void OnChanged(GVolume* volume, DeviceLauncherIcon* self);
   static void OnMountReady(GObject* object, GAsyncResult* result, DeviceLauncherIcon* self);
   static void OnEjectReady(GObject* object, GAsyncResult* result, DeviceLauncherIcon* self);
