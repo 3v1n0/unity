@@ -121,7 +121,7 @@ void ActionButton::BuildLayout(std::string const& label, std::string const& icon
 
     if (!label_.empty())
     {
-      static_text_ = new nux::StaticCairoText(label_, NUX_TRACKER_LOCATION);
+      static_text_ = new nux::StaticCairoText(label_, true, NUX_TRACKER_LOCATION);
       if (!font_hint_.empty())
         static_text_->SetFont(font_hint_);
       static_text_->SetInputEventSensitivity(false);

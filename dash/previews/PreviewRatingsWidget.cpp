@@ -52,7 +52,7 @@ PreviewRatingsWidget::PreviewRatingsWidget(NUX_FILE_LINE_DECL)
   layout->AddView(ratings_);
   
 
-  reviews_ = new nux::StaticCairoText("");
+  reviews_ = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
   reviews_->SetFont(style.user_rating_font());
   layout->AddView(reviews_);
 

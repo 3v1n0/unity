@@ -65,9 +65,9 @@ public:
     glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_music_preview_new()));
 
     unity_protocol_preview_set_image_source_uri(proto_obj, "http://ia.media-imdb.com/images/M/MV5BMTM3NDM5MzY5Ml5BMl5BanBnXkFtZTcwNjExMDUwOA@@._V1._SY317_.jpg");
-    unity_protocol_preview_set_title(proto_obj, "Music Title");
-    unity_protocol_preview_set_subtitle(proto_obj, "Music Subtitle");
-    unity_protocol_preview_set_description(proto_obj, "Music Desctiption");
+    unity_protocol_preview_set_title(proto_obj, "Music Title & special char");
+    unity_protocol_preview_set_subtitle(proto_obj, "Music Subtitle > special char");
+    unity_protocol_preview_set_description(proto_obj, "Music Desctiption < special char");
     unity_protocol_preview_add_action(proto_obj, "action1", "Action 1", NULL, 0);
     unity_protocol_preview_add_action(proto_obj, "action2", "Action 2", NULL, 0);
     unity_protocol_preview_add_action(proto_obj, "action3", "Action 3", NULL, 0);
@@ -100,8 +100,8 @@ TEST_F(TestPreviewMusic, TestUIValues)
 {
   MockMusicPreview::Ptr preview_view(new MockMusicPreview(preview_model_));
 
-  EXPECT_EQ(preview_view->title_->GetText(), "Music Title");
-  EXPECT_EQ(preview_view->subtitle_->GetText(), "Music Subtitle");
+  EXPECT_EQ(preview_view->title_->GetText(), "Music Title &amp; special char");
+  EXPECT_EQ(preview_view->subtitle_->GetText(), "Music Subtitle &gt; special char");
 
   EXPECT_EQ(preview_view->action_buttons_.size(), 4);
 }

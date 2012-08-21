@@ -210,14 +210,14 @@ void ApplicationPreview::SetupViews()
         title_subtitle_layout_ = new nux::VLayout();
         title_subtitle_layout_->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
 
-        title_ = new nux::StaticCairoText(app_preview_model->title);
+        title_ = new nux::StaticCairoText(app_preview_model->title, true, NUX_TRACKER_LOCATION);
         title_->SetLines(-1);
         title_->SetFont(style.title_font().c_str());
         title_subtitle_layout_->AddView(title_.GetPointer(), 1);
 
         if (!app_preview_model->subtitle.Get().empty())
         {
-          subtitle_ = new nux::StaticCairoText(app_preview_model->subtitle);
+          subtitle_ = new nux::StaticCairoText(app_preview_model->subtitle, true, NUX_TRACKER_LOCATION);
           subtitle_->SetFont(style.subtitle_size_font().c_str());
           subtitle_->SetLines(-1);
           title_subtitle_layout_->AddView(subtitle_.GetPointer(), 1);
@@ -228,7 +228,7 @@ void ApplicationPreview::SetupViews()
 
         if (!app_preview_model->license.Get().empty())
         {
-          license_ = new nux::StaticCairoText(app_preview_model->license);
+          license_ = new nux::StaticCairoText(app_preview_model->license, true, NUX_TRACKER_LOCATION);
           license_->SetFont(style.app_license_font().c_str());
           license_->SetLines(-1);
           app_updated_copywrite_layout->AddView(license_.GetPointer(), 1);
@@ -239,14 +239,14 @@ void ApplicationPreview::SetupViews()
           std::stringstream last_update;
           last_update << _("Last Updated") << " " << app_preview_model->last_update.Get();
 
-          last_update_ = new nux::StaticCairoText(last_update.str());
+          last_update_ = new nux::StaticCairoText(last_update.str(), true, NUX_TRACKER_LOCATION);
           last_update_->SetFont(style.app_last_update_font().c_str());
           app_updated_copywrite_layout->AddView(last_update_.GetPointer(), 1);
         }
 
         if (!app_preview_model->copyright.Get().empty())
         {
-          copywrite_ = new nux::StaticCairoText(app_preview_model->copyright);
+          copywrite_ = new nux::StaticCairoText(app_preview_model->copyright, true, NUX_TRACKER_LOCATION);
           copywrite_->SetFont(style.app_copywrite_font().c_str());
           copywrite_->SetLines(-1);
           app_updated_copywrite_layout->AddView(copywrite_.GetPointer(), 1);
@@ -273,12 +273,11 @@ void ApplicationPreview::SetupViews()
 
       if (!preview_model_->description.Get().empty())
       {
-        description_ = new nux::StaticCairoText("");
+        description_ = new nux::StaticCairoText(app_preview_model->description, true, NUX_TRACKER_LOCATION);
         description_->SetFont(style.description_font().c_str());
         description_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_TOP);
         description_->SetLines(-style.GetDescriptionLineCount());
         description_->SetLineSpacing(style.GetDescriptionLineSpacing());
-        description_->SetText(app_preview_model->description);
         app_info_layout->AddView(description_.GetPointer());
       }
 

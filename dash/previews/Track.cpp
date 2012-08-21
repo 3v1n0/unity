@@ -147,7 +147,7 @@ void Track::Update(dash::Track const& track)
   uri_ = track.uri;
   progress_ = track.progress;
 
-  title_->SetText(track.title);
+  title_->SetText(track.title, true);
 
   std::stringstream ss_track_number;
   ss_track_number << track.track_number;
