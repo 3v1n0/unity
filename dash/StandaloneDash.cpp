@@ -31,6 +31,7 @@
 #include "DashView.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/DashStyle.h"
+#include "unity-shared/ThumbnailGenerator.h"
 
 #define WIDTH 1024
 #define HEIGHT 768
@@ -89,6 +90,7 @@ int main(int argc, char **argv)
   nux::NuxInitialize(0);
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
   // The instances for the pseudo-singletons.
+  unity::ThumbnailGenerator thumb_generator;
   unity::Settings settings;
   unity::dash::Style dash_style;
 

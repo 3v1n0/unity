@@ -18,30 +18,26 @@
  *              Andrea Azzarone <azzaronea@gmail.com>
  */
 
-#include "BFBLauncherIcon.h"
-#include "Launcher.h"
-
+#include <glib/gi18n-lib.h>
 #include "unity-shared/UBusMessages.h"
 
-#include <glib/gi18n-lib.h>
+#include "BFBLauncherIcon.h"
+#include "Launcher.h"
 
 namespace unity
 {
 namespace launcher
 {
 
-UBusManager BFBLauncherIcon::ubus_manager_;
-
 BFBLauncherIcon::BFBLauncherIcon(LauncherHideMode hide_mode)
- : SimpleLauncherIcon()
+ : SimpleLauncherIcon(IconType::HOME)
  , reader_(dash::LensDirectoryReader::GetDefault())
  , launcher_hide_mode_(hide_mode)
 {
   tooltip_text = _("Dash Home");
   icon_name = PKGDATADIR"/launcher_bfb.png";
-  SetQuirk(QUIRK_VISIBLE, true);
-  SetQuirk(QUIRK_RUNNING, false);
-  SetIconType(TYPE_HOME);
+  SetQuirk(Quirk::VISIBLE, true);
+  SetQuirk(Quirk::RUNNING, false);
 
   background_color_ = nux::color::White;
 
@@ -66,7 +62,7 @@ void BFBLauncherIcon::OnOverlayShown(GVariant *data, bool visible)
   if (overlay_identity.Str() == "dash" && IsVisibleOnMonitor(overlay_monitor))
   {
     tooltip_enabled = !visible;
-    SetQuirk(QUIRK_ACTIVE, visible);
+    SetQuirk(Quirk::ACTIVE, visible);
     EmitNeedsRedraw();
   }
   // If the hud is open, we hide the BFB if we have a locked launcher
@@ -97,34 +93,29 @@ void BFBLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   // dont chain down to avoid random dash close events
 }
 
-void BFBLauncherIcon::OnMenuitemActivated(DbusmenuMenuitem* item,
-                                          int time,
-                                          gchar* lens)
+void BFBLauncherIcon::OnMenuitemActivated(DbusmenuMenuitem* item, int time, std::string const& lens)
 {
-  if (lens != NULL)
-  {
-    ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", lens, dash::GOTO_DASH_URI, ""));
-    g_free(lens);
-  }
+  if (lens.empty())
+    return;
+
+  ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", lens.c_str(), dash::GOTO_DASH_URI, ""));
 }
 
-std::list<DbusmenuMenuitem*> BFBLauncherIcon::GetMenus()
+AbstractLauncherIcon::MenuItemsVector BFBLauncherIcon::GetMenus()
 {
-  std::list<DbusmenuMenuitem*> result;
-  DbusmenuMenuitem* menu_item;
+  MenuItemsVector result;
+  glib::Object<DbusmenuMenuitem> menu_item;
+
+  typedef glib::Signal<void, DbusmenuMenuitem*, int> ItemSignal;
+  auto callback = sigc::mem_fun(this, &BFBLauncherIcon::OnMenuitemActivated);
 
   // Home dash
   menu_item = dbusmenu_menuitem_new();
-
   dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Dash Home"));
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
-
-  g_signal_connect(menu_item,
-                   DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                   (GCallback)&BFBLauncherIcon::OnMenuitemActivated,
-                   g_strdup("home.lens"));
-
+  dbusmenu_menuitem_property_set_bool(menu_item, QuicklistMenuItem::OVERLAY_MENU_ITEM_PROPERTY, true);
+  signals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, sigc::bind(callback, "home.lens")));
   result.push_back(menu_item);
 
   // Other lenses..
@@ -134,16 +125,11 @@ std::list<DbusmenuMenuitem*> BFBLauncherIcon::GetMenus()
       continue;
 
     menu_item = dbusmenu_menuitem_new();
-
     dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, lens->name);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
-
-    g_signal_connect(menu_item,
-                     DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                     (GCallback)&BFBLauncherIcon::OnMenuitemActivated,
-                     g_strdup(lens->id));
-
+    dbusmenu_menuitem_property_set_bool(menu_item, QuicklistMenuItem::OVERLAY_MENU_ITEM_PROPERTY, true);
+    signals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, sigc::bind(callback, lens->id.Str())));
     result.push_back(menu_item);
   }
 
