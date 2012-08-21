@@ -54,11 +54,10 @@ private:
   void ActivateLauncherIcon(ActionArg arg);
   void ShowMount(GMount* mount);
   void Unmount();
-  void StopDrive();
-  static void OnTogglePin(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
-  static void OnOpen(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
-  static void OnEject(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
-  static void OnUnmount(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
+  void OnTogglePin(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
+  void OnOpen(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
+  void OnEject(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
+  void OnUnmount(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
   static void OnChanged(GVolume* volume, DeviceLauncherIcon* self);
   static void OnMountReady(GObject* object, GAsyncResult* result, DeviceLauncherIcon* self);
   static void OnEjectReady(GObject* object, GAsyncResult* result, DeviceLauncherIcon* self);
