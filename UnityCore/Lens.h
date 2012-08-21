@@ -90,6 +90,7 @@ public:
   virtual void SignalPreview(std::string const& uri,
       glib::Variant const& preview_update,
       glib::DBusProxy::ReplyCallback reply_cb = nullptr);
+  virtual std::vector<unsigned> GetCategoriesOrder();
 
   nux::RWProperty<std::string> id;
   nux::RWProperty<std::string> dbus_name;
@@ -109,6 +110,7 @@ public:
 
   nux::Property<ViewType> view_type;
 
+  sigc::signal<void> categories_reordered;
   sigc::signal<void, Hints const&> search_finished;
   sigc::signal<void, Hints const&> global_search_finished;
   sigc::signal<void, std::string const&, HandledType, Hints const&> activated;

@@ -107,6 +107,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , screen(screen)
   , cScreen(CompositeScreen::get(screen))
   , gScreen(GLScreen::get(screen))
+  , animation_controller_(tick_source_)
   , debugger_(this)
   , enable_shortcut_overlay_(true)
   , needsRelayout(false)
@@ -208,10 +209,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
      ScreenInterface::setHandler(screen);
      CompositeScreenInterface::setHandler(cScreen);
      GLScreenInterface::setHandler(gScreen);
-
-#ifdef USE_MODERN_COMPIZ_GL
-     gScreen->glPaintCompositedOutputSetEnabled (this, true);
-#endif
 
      PluginAdapter::Initialize(screen);
      WindowManager::SetDefault(PluginAdapter::Default());
@@ -479,7 +476,7 @@ void UnityScreen::CreateSuperNewAction(char shortcut, impl::ActionModifiers flag
 
 void UnityScreen::nuxPrologue()
 {
-#ifndef USE_MODERN_COMPIZ_GL
+#ifndef USE_GLES
   /* Vertex lighting isn't used in Unity, we disable that state as it could have
    * been leaked by another plugin. That should theoretically be switched off
    * right after PushAttrib since ENABLE_BIT is meant to restore the LIGHTING
@@ -512,8 +509,10 @@ void UnityScreen::nuxPrologue()
 
 void UnityScreen::nuxEpilogue()
 {
+#ifndef USE_GLES
 #ifndef USE_MODERN_COMPIZ_GL
   (*GL::bindFramebuffer)(GL_FRAMEBUFFER_EXT, _active_fbo);
+#endif
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -1306,36 +1305,15 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   if (doShellRepaint && !force && fullscreenRegion.contains(*output))
     doShellRepaint = false;
 
-#ifndef USE_MODERN_COMPIZ_GL
   if (doShellRepaint)
+#ifdef USE_MODERN_COMPIZ_GL
+    paintDisplay();
+#else
     paintDisplay(region, transform, mask);
 #endif
 
   return ret;
 }
-
-#ifdef USE_MODERN_COMPIZ_GL
-void UnityScreen::glPaintCompositedOutput (const CompRegion &region,
-                                           ::GLFramebufferObject *fbo,
-                                           unsigned int        mask)
-{
-  if (doShellRepaint)
-  {
-    bool useFbo = false;
-    oldFbo = fbo->bind ();
-    useFbo = fbo->checkStatus () && fbo->tex ();
-    if (!useFbo) {
-	printf ("bailing from UnityScreen::glPaintCompositedOutput");
-	::GLFramebufferObject::rebind (oldFbo);
-	return;
-    }
-    paintDisplay();
-    ::GLFramebufferObject::rebind (oldFbo);
-  }
-
-  gScreen->glPaintCompositedOutput(region, fbo, mask);
-}
-#endif
 
 /* called whenever a plugin needs to paint the entire scene
  * transformed */
@@ -1355,10 +1333,16 @@ void UnityScreen::preparePaint(int ms)
 {
   cScreen->preparePaint(ms);
 
+  // Emit the current time throught the tick_source.  This moves any running
+  // animations along their path.
+  tick_source_.tick(g_get_monotonic_time());
+
   for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
     wi->HandleAnimations (ms);
 
+#ifndef USE_MODERN_COMPIZ_GL
   compizDamageNux(cScreen->currentDamage());
+#endif
 
   didShellRepaint = false;
   firstWindowAboveShell = NULL;
@@ -1486,6 +1470,29 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
 /* Grab changed nux regions and add damage rects for them */
 void UnityScreen::nuxDamageCompiz()
 {
+#ifdef USE_MODERN_COMPIZ_GL
+  /*
+   * If Nux is going to redraw anything then we have to tell Compiz to
+   * redraw everything. This is because Nux has a bad habit (bug??) of drawing
+   * more than just the regions of its DrawList. (LP: #1036519)
+   *
+   * Forunately, this does not happen on most frames. Only when the Unity
+   * Shell needs to redraw something.
+   *
+   * TODO: Try to figure out why redrawing the panel makes the launcher also
+   *       redraw even though the launcher's geometry is not in DrawList, and
+   *       stop it. Then maybe we can revert back to the old code below #else.
+   */
+  std::vector<nux::Geometry> const& dirty = wt->GetDrawList();
+  if (!dirty.empty())
+  {
+    cScreen->damageRegionSetEnabled(this, false);
+    cScreen->damageScreen();
+    cScreen->damageRegionSetEnabled(this, true);
+  }
+
+#else
+
   /*
    * WARNING: Nux bug LP: #1014610 (unbounded DrawList growth) will cause
    *          this code to be called far too often in some cases and
@@ -1536,6 +1543,7 @@ void UnityScreen::nuxDamageCompiz()
   cScreen->damageRegionSetEnabled(this, false);
   cScreen->damageRegion(nux_damage);
   cScreen->damageRegionSetEnabled(this, true);
+#endif
 }
 
 /* handle X Events */
@@ -1895,6 +1903,21 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
   screen->addAction(&scroll_up);
   screen->addAction(&scroll_down);
 
+  if (!optionGetAltTabBiasViewport())
+  {
+    if (show_mode == switcher::ShowMode::CURRENT_VIEWPORT)
+      show_mode = switcher::ShowMode::ALL;
+    else
+      show_mode = switcher::ShowMode::CURRENT_VIEWPORT;
+  }
+
+  SetUpAndShowSwitcher(show_mode);
+
+  return true;
+}
+
+void UnityScreen::SetUpAndShowSwitcher(switcher::ShowMode show_mode)
+{
   // maybe check launcher position/hide state?
 
   WindowManager *wm = WindowManager::Default();
@@ -1906,14 +1929,6 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
   monitor_geo.height -= 200;
   switcher_controller_->SetWorkspace(monitor_geo, monitor);
 
-  if (!optionGetAltTabBiasViewport())
-  {
-    if (show_mode == switcher::ShowMode::CURRENT_VIEWPORT)
-      show_mode = switcher::ShowMode::ALL;
-    else
-      show_mode = switcher::ShowMode::CURRENT_VIEWPORT;
-  }
-
   RaiseInputWindows();
 
   auto results = launcher_controller_->GetAltTabIcons(show_mode == switcher::ShowMode::CURRENT_VIEWPORT,
@@ -1921,8 +1936,6 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
 
   if (switcher_controller_->CanShowSwitcher(results))
     switcher_controller_->Show(show_mode, switcher::SortMode::FOCUS_ORDER, false, results);
-
-  return true;
 }
 
 bool UnityScreen::altTabTerminateCommon(CompAction* action,
@@ -3087,16 +3100,14 @@ void UnityScreen::initLauncher()
   ScheduleRelayout(0);
 }
 
-nux::View *UnityScreen::LauncherView()
+switcher::Controller::Ptr UnityScreen::switcher_controller()
 {
-  nux::View *result = nullptr;
+  return switcher_controller_;
+}
 
-  if (launcher_controller_)
-  {
-    result = &launcher_controller_->launcher();
-  }
-
-  return result;
+launcher::Controller::Ptr UnityScreen::launcher_controller()
+{
+  return launcher_controller_;
 }
 
 void UnityScreen::InitHints()

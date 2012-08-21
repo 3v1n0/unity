@@ -98,6 +98,8 @@ public:
   void SetShowDesktopDisabled(bool disabled);
   int StartIndex() const;
 
+  sigc::signal<void> view_built;
+
 protected:
   // Introspectable methods
   std::string GetName() const;

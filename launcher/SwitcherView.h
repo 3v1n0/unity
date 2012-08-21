@@ -67,6 +67,10 @@ public:
   nux::Property<int> monitor;
   nux::Property<double> spread_size;
 
+  // Returns the index of the icon at the given position, in window coordinates.
+  // If there's no icon there, -1 is returned.
+  int IconIndexAt(int x, int y);
+
 protected:
   // Introspectable methods
   std::string GetName() const;
