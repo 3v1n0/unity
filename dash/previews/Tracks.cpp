@@ -106,6 +106,7 @@ void Tracks::AddProperties(GVariantBuilder* builder)
 void Tracks::SetupViews()
 {
   SetVScrollBar(new dash::PlacesVScrollBar(NUX_TRACKER_LOCATION));
+  EnableHorizontalScrollBar(false);
   layout_ = new TrackLayout();
   layout_->SetPadding(0, previews::Style::Instance().GetDetailsRightMargin(), 0, 0);
   layout_->SetSpaceBetweenChildren(1);
@@ -152,27 +153,6 @@ void Tracks::OnTrackRemoved(dash::Track const& track_row)
     return;
 
   layout_->RemoveChildObject(pos->second.GetPointer());
-}
-
-void Tracks::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
-{
-  nux::Geometry const& base = GetGeometry();
-
-  gfx_engine.PushClippingRectangle(base);
-  nux::GetPainter().PaintBackground(gfx_engine, base);
-
-  gfx_engine.PopClippingRectangle();
-}
-
-void Tracks::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
-{
-  nux::Geometry const& base = GetGeometry();
-  gfx_engine.PushClippingRectangle(base);
-
-  if (GetCompositionLayout())
-    GetCompositionLayout()->ProcessDraw(gfx_engine, force_draw);
-
-  gfx_engine.PopClippingRectangle();
 }
 
 } // namespace previews
