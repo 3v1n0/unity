@@ -145,6 +145,7 @@ void MusicPreview::SetupViews()
   /////////////////////
   // Image
   image_ = new CoverArt();
+  AddChild(image_.GetPointer());
   UpdateCoverArtImage(image_.GetPointer());
   /////////////////////
 
@@ -180,6 +181,7 @@ void MusicPreview::SetupViews()
       if (tracks_model)
       {
         tracks_ = new previews::Tracks(tracks_model, NUX_TRACKER_LOCATION);
+        AddChild(tracks_.GetPointer());
         tracks_->play.connect(sigc::mem_fun(this, &MusicPreview::OnPlayTrack));
         tracks_->pause.connect(sigc::mem_fun(this, &MusicPreview::OnPauseTrack));
       }
@@ -197,6 +199,7 @@ void MusicPreview::SetupViews()
         hints_layout->SetSpaceBetweenChildren(0);
         hints_layout->AddSpace(0, 1);
         preview_info_hints_ = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth());
+        AddChild(preview_info_hints_.GetPointer());
         hints_layout->AddView(preview_info_hints_.GetPointer(), 0);
 
         // If there are actions, we use a vertical layout

@@ -27,6 +27,7 @@
 #include <Nux/VLayout.h>
 #include <unity-shared/IconTexture.h>
 #include <unity-shared/PreviewStyle.h>
+#include <UnityCore/Variant.h>
 
 namespace unity
 {
@@ -43,17 +44,12 @@ nux::logging::Logger logger("unity.dash.previews.previewnavigator");
 
 NUX_IMPLEMENT_OBJECT_TYPE(PreviewNavigator);
 
-PreviewNavigator::PreviewNavigator(Orientation orientation, NUX_FILE_LINE_DECL)
+PreviewNavigator::PreviewNavigator(Orientation direction, NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
-  , orientation_(orientation)
+  , direction_(direction)
   , texture_(nullptr)
 {
   SetupViews();
-}
-
-std::string PreviewNavigator::GetName() const
-{
-  return "PreviewNavigator";
 }
 
 void PreviewNavigator::SetEnabled(bool enabled)
@@ -62,9 +58,19 @@ void PreviewNavigator::SetEnabled(bool enabled)
   texture_->SetVisible(enabled);
 }
 
+std::string PreviewNavigator::GetName() const
+{
+  return "PreviewNavigator";
+}
+
 void PreviewNavigator::AddProperties(GVariantBuilder* builder)
 {
-
+  variant::BuilderWrapper(builder)
+    .add("button-x", texture_->GetAbsoluteX())
+    .add("button-y", texture_->GetAbsoluteY())
+    .add("button-width", texture_->GetGeometry().width)
+    .add("button-height", texture_->GetGeometry().height)
+    .add("direction", static_cast<int>(direction_));
 }
 
 void PreviewNavigator::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
@@ -92,7 +98,7 @@ void PreviewNavigator::SetupViews()
 {
   previews::Style& style = dash::previews::Style::Instance();
   
-  if (orientation_ == Orientation::LEFT || orientation_ == Orientation::RIGHT)
+  if (direction_ == Orientation::LEFT || direction_ == Orientation::RIGHT)
   {
     nux::VLayout* vlayout = new nux::VLayout();
     nux::HLayout* hlayout = new nux::HLayout();
@@ -100,7 +106,7 @@ void PreviewNavigator::SetupViews()
     hlayout->SetSpaceBetweenChildren(0);
     layout_ = hlayout;
 
-    if (orientation_ == Orientation::LEFT)
+    if (direction_ == Orientation::LEFT)
       texture_ = new IconTexture(Style::Instance().GetNavLeftIcon(), style.GetNavigatorIconSize(), style.GetNavigatorIconSize());
     else 
       texture_ = new IconTexture(Style::Instance().GetNavRightIcon(), style.GetNavigatorIconSize(), style.GetNavigatorIconSize());
@@ -111,8 +117,10 @@ void PreviewNavigator::SetupViews()
     vlayout->AddSpace(0,1);
     SetLayout(vlayout);
   }
-  else if (orientation_ == Orientation::UP || orientation_ == Orientation::DOWN)
+  else if (direction_ == Orientation::UP || direction_ == Orientation::DOWN)
   {
+  // No support for this Yet
+    g_assert(false);
     nux::HLayout* hlayout = new nux::HLayout();
     nux::VLayout* vlayout = new nux::VLayout();
     hlayout->SetSpaceBetweenChildren(0);
@@ -129,6 +137,7 @@ void PreviewNavigator::SetupViews()
 
   if (texture_)
   {
+    AddChild(texture_);
     texture_->mouse_click.connect([&](int, int, unsigned long, unsigned long) { activated.emit(); });
     layout_->AddView(texture_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);    
   }

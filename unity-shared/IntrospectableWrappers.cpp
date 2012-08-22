@@ -25,11 +25,12 @@ namespace unity
 {
 namespace debug
 {
-  ResultWrapper::ResultWrapper(const dash::Result& result)
+  ResultWrapper::ResultWrapper(dash::Result const& result, nux::Geometry const& geo)
   : uri_(result.uri),
   name_(result.name),
   icon_hint_(result.icon_hint),
-  mime_type_(result.mimetype)
+  mime_type_(result.mimetype),
+  geo_(geo)
   {
   }
 
@@ -44,7 +45,8 @@ namespace debug
       .add("uri", uri_)
       .add("name", name_)
       .add("icon_hint", icon_hint_)
-      .add("mimetype", mime_type_);
+      .add("mimetype", mime_type_)
+      .add(geo_);
   }
 }
 }

@@ -54,7 +54,8 @@ ResultView::ResultView(NUX_FILE_LINE_DECL)
 
 ResultView::~ResultView()
 {
-  ClearIntrospectableWrappers();
+  introspectable_children_.clear();
+  RemoveAllChildren(&ResultView::ChildResultDestructor);
 
   for (ResultIterator it(GetIteratorAtRow(0)); !it.IsLast(); ++it)
   {
@@ -213,29 +214,69 @@ void ResultView::AddProperties(GVariantBuilder* builder)
     .add("expanded", expanded);
 }
 
+void ResultView::ChildResultDestructor(debug::Introspectable* child)
+{
+  delete child;
+}
+
 debug::Introspectable::IntrospectableList ResultView::GetIntrospectableChildren()
 {
-  ClearIntrospectableWrappers();
+  // Because the children are in fact wrappers for the results, we can't just re-crate them every time the
+  // GetIntrospectableChildren is called; otherwise result property introspection will not work correctly (objects change each time this is called).
+  // Therefore, we need to be a bit more clever, and acculumate and cache the wrappers.
 
+  // clear children (no delete).
+  RemoveAllChildren();
+  
+  std::set<std::string> existing_results;
+  // re-create list of children.
+  int index = 0;
   if (result_model_)
   {
     for (ResultIterator iter(result_model_); !iter.IsLast(); ++iter)
     {
-      introspectable_children_.push_back(new debug::ResultWrapper(*iter));
+      Result const& result = *iter;
+
+      debug::Introspectable* result_wrapper = NULL;
+      auto map_iter = introspectable_children_.find(result.uri);
+      // Create new result.
+      if (map_iter == introspectable_children_.end())
+      {
+        result_wrapper = CreateResultWrapper(result, index);
+        introspectable_children_[result.uri] = result_wrapper;
+      }
+      else
+        result_wrapper = map_iter->second;
+
+      AddChild(result_wrapper);
+
+      existing_results.insert(result.uri);
+      index++;
     }
   }
 
-  return introspectable_children_;
+  // Delete old children.
+  auto child_iter = introspectable_children_.begin();
+  for (; child_iter != introspectable_children_.end(); )
+  {
+    if (existing_results.find(child_iter->first) == existing_results.end())
+    {
+      // delete and remove the child from the map.
+      ResultView::ChildResultDestructor(child_iter->second);
+      introspectable_children_.erase(child_iter);
+    }
+    else
+    {
+      ++child_iter;
+    }
+  }
+
+  return debug::Introspectable::GetIntrospectableChildren();
 }
 
-void ResultView::ClearIntrospectableWrappers()
+debug::Introspectable* ResultView::CreateResultWrapper(Result const& result, int index)
 {
-  // delete old results, then add new results
-  for (auto old_result: introspectable_children_)
-  {
-    delete old_result;
-  }
-  introspectable_children_.clear();
+  return new debug::ResultWrapper(result);
 }
 
 }

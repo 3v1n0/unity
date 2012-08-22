@@ -72,6 +72,19 @@ CoverArt::~CoverArt()
     notifier_->Cancel();
 }
 
+std::string CoverArt::GetName() const
+{
+  return "CoverArt";
+}
+
+void CoverArt::AddProperties(GVariantBuilder* builder)
+{
+  variant::BuilderWrapper(builder)
+    .add(GetAbsoluteGeometry())
+    .add("image-hint", image_hint_)
+    .add("waiting", waiting_);
+}
+
 void CoverArt::SetImage(std::string const& image_hint)
 { 
   spinner_timeout_.reset();
@@ -392,11 +405,6 @@ void CoverArt::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
     GetLayout()->ProcessDraw(gfx_engine, force_draw);
 
   gfx_engine.PopClippingRectangle();
-}
-
-std::string CoverArt::GetName() const
-{
-  return "CoverArt";
 }
 
 void CoverArt::SetupViews()
