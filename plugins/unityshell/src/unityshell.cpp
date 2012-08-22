@@ -131,8 +131,10 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , scale_just_activated_(false)
 {
   Timer timer;
+#ifndef USE_GLES
   gfloat version;
   gchar* extensions;
+#endif
   bool  failed = false;
   configure_logging();
   LOG_DEBUG(logger) << __PRETTY_FUNCTION__;

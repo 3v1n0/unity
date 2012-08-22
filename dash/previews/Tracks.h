@@ -29,6 +29,11 @@
 #include "unity-shared/Introspectable.h"
 #include "Track.h"
 
+namespace nux
+{
+class VLayout;
+}
+
 namespace unity
 {
 namespace dash
@@ -37,9 +42,8 @@ class Track;
 
 namespace previews
 {
-class TrackLayout;
 
-class Tracks : public nux::ScrollView, public debug::Introspectable
+class Tracks : public debug::Introspectable, public nux::ScrollView
 {
 public:
   typedef nux::ObjectPtr<Tracks> Ptr;
@@ -47,15 +51,17 @@ public:
 
   Tracks(dash::Tracks::Ptr tracks, NUX_FILE_LINE_PROTO);
   virtual ~Tracks();
- 
+
   // From debug::Introspectable
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(GVariantBuilder* builder);  
 
   sigc::signal<void, std::string const&> play;
   sigc::signal<void, std::string const&> pause;
 
 protected:
+  virtual bool AcceptKeyNavFocus() { return false; }
+
   void SetupViews();
 
   void OnTrackUpdated(dash::Track const& track);
@@ -68,7 +74,7 @@ protected:
 protected:
   dash::Tracks::Ptr tracks_;
 
-  TrackLayout* layout_;
+  nux::VLayout* layout_;
   std::map<std::string, previews::Track::Ptr> m_tracks;
   int track_count_;
 };

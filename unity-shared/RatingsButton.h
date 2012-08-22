@@ -26,13 +26,12 @@
 
 #include <Nux/Nux.h>
 #include <Nux/ToggleButton.h>
-
-
+#include "unity-shared/Introspectable.h"
 
 namespace unity
 {
 
-class RatingsButton : public nux::ToggleButton
+class RatingsButton : public unity::debug::Introspectable, public nux::ToggleButton
 {
 public:
   RatingsButton(int star_size, int star_gap, NUX_FILE_LINE_PROTO);
@@ -48,6 +47,10 @@ protected:
   // Key-nav
   virtual bool AcceptKeyNavFocus();
   virtual bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
+
+  // Introspectable methods
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
 
 private:
   void OnKeyDown(unsigned long event_type, unsigned long event_keysym,
