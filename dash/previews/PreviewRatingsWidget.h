@@ -55,6 +55,8 @@ protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   
+  virtual bool AcceptKeyNavFocus() { return false; }
+
   // From debug::Introspectable
   std::string GetName() const;
   void AddProperties(GVariantBuilder*);

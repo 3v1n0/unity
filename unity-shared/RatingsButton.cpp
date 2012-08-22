@@ -220,7 +220,6 @@ void RatingsButton::RecvMouseMove(int x, int y, int dx, int dy,
   QueueDraw();
 }
 
-
 bool RatingsButton::InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character)
 {
   nux::KeyNavDirection direction = nux::KEY_NAV_NONE;
@@ -273,7 +272,7 @@ void RatingsButton::OnKeyDown(unsigned long event_type, unsigned long event_keys
 
 bool RatingsButton::AcceptKeyNavFocus()
 {
-  return true;
+  return editable_;
 }
 
 std::string RatingsButton::GetName() const

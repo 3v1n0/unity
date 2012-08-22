@@ -52,6 +52,10 @@ public:
   Tracks(dash::Tracks::Ptr tracks, NUX_FILE_LINE_PROTO);
   virtual ~Tracks();
 
+  // From debug::Introspectable
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);  
+
   sigc::signal<void, std::string const&> play;
   sigc::signal<void, std::string const&> pause;
 
@@ -59,9 +63,7 @@ protected:
   virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);
  
-  // From debug::Introspectable
-  std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  virtual bool AcceptKeyNavFocus() { return false; }
 
   void SetupViews();
 

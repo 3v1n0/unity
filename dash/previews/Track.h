@@ -66,6 +66,8 @@ protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
   
+  virtual bool AcceptKeyNavFocus() { return false; }
+  
   void SetupBackground();
   void SetupViews();
 

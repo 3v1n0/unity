@@ -43,12 +43,15 @@ class TmpView : public nux::View
 public:
   TmpView(NUX_FILE_LINE_PROTO): View(NUX_FILE_LINE_PARAM) {}
 
-  void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw) {}
-  void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
+  virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw) {}
+  virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
   {
     if (GetCompositionLayout())
       GetCompositionLayout()->ProcessDraw(gfx_engine, force_draw);
   }
+  
+  virtual bool AcceptKeyNavFocus() { return false; }
+
 };
 
 namespace

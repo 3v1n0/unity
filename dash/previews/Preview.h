@@ -70,6 +70,8 @@ protected:
   virtual void OnNavigateInComplete() {}
   virtual void OnNavigateOut() {}
 
+  virtual bool AcceptKeyNavFocus() { return false; }
+
   nux::Layout* BuildGridActionsLayout(dash::Preview::ActionPtrList actions, std::list<nux::AbstractButton*>& buttons);
   nux::Layout* BuildVerticalActionsLayout(dash::Preview::ActionPtrList actions, std::list<nux::AbstractButton*>& buttons);
   
