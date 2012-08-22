@@ -132,6 +132,9 @@ void DashView::ClosePreview()
   preview_container_->UnParentObject();
   preview_container_.Release(); // free resources
   preview_state_machine_.ClosePreview();
+
+  // re-focus dash view component.
+  nux::GetWindowCompositor().SetKeyFocusArea(default_focus());
   QueueDraw();
 }
 
@@ -142,7 +145,6 @@ void DashView::BuildPreview(Preview::Ptr model)
     preview_container_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
     AddChild(preview_container_.GetPointer());
     preview_container_->Preview(model, previews::Navigation::NONE); // no swipe left or right
-    //nux::GetWindowCompositor().SetKeyFocusArea(preview_container_.GetPointer());
     
     preview_container_->SetParentObject(this);
     preview_container_->SetGeometry(layout_->GetGeometry());
@@ -170,7 +172,6 @@ void DashView::BuildPreview(Preview::Ptr model)
     preview_container_->request_close.connect([&] () { ClosePreview(); });
 
     nux::GetWindowCompositor().SetKeyFocusArea(preview_container_.GetPointer());
-
   }
   else
   {
