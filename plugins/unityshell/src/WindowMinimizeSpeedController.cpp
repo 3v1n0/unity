@@ -19,10 +19,24 @@
  * not be able to re-use it if you want to use a different licence.
  */
 
+#include <gio/gio.h>
+#include <NuxCore/Logger.h>
+
 #include "WindowMinimizeSpeedController.h"
 
+namespace
+{
+
+nux::logging::Logger logger ("unity.WindowMinimizeSpeedController");
+
+namespace local
+{
+const std::string UNITY_SCHEMA = "com.canonical.Unity";
+}
+}
+
 WindowMinimizeSpeedController::WindowMinimizeSpeedController(CompScreen* screen) :
-  , mScreen(screen)
+    mScreen(screen)
   , _settings(g_settings_new(local::UNITY_SCHEMA.c_str()))
   , _minimize_count(g_settings_get_int(_settings, "minimize-count"))
   , _minimize_speed_threshold(g_settings_get_int(_settings, "minimize-speed-threshold"))
@@ -32,22 +46,22 @@ WindowMinimizeSpeedController::WindowMinimizeSpeedController(CompScreen* screen)
   _minimize_count_changed.Connect(_settings, "changed::minimize-count",
                                   [&] (GSettings*, gchar* name) {
     _minimize_count = g_settings_get_int(_settings, name);
-    SetMinimizeSpeed();
+    SetSpeed();
   });
   _minimize_speed_threshold_changed.Connect(_settings, "changed::minimize-speed-threshold",
                                             [&] (GSettings*, gchar* name) {
     _minimize_speed_threshold = g_settings_get_int(_settings, name);
-    SetMinimizeSpeed();
+    SetSpeed();
   });
   _minimize_fast_duration_changed.Connect(_settings, "changed::minimize-fast-duration",
                                       [&] (GSettings*, gchar* name) {
     _minimize_fast_duration = g_settings_get_int(_settings, name);
-    SetMinimizeSpeed();
+    SetSpeed();
   });
   _minimize_slow_duration_changed.Connect(_settings, "changed::minimize-slow-duration",
                                       [&] (GSettings*, gchar* name) {
     _minimize_slow_duration = g_settings_get_int(_settings, name);
-    SetMinimizeSpeed();
+    SetSpeed();
   });
 }
 

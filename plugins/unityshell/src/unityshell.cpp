@@ -98,7 +98,6 @@ const unsigned int SCROLL_DOWN_BUTTON = 6;
 const unsigned int SCROLL_UP_BUTTON = 7;
 
 const std::string RELAYOUT_TIMEOUT = "relayout-timeout";
-const std::string UNITY_SCHEMA = "com.canonical.Unity";
 } // namespace local
 } // anon namespace
 

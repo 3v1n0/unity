@@ -24,6 +24,9 @@
 
 #include <core/core.h>
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/GLibSignal.h>
+
+typedef struct _GSettings GSettings;
 
 using namespace unity;
 
