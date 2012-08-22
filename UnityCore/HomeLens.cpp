@@ -136,6 +136,20 @@ public:
     return target_cat_index;
   }
 
+  void UnregisterAllForModel(DeeModel *model)
+  {
+    auto it = reg_category_map_.begin();
+
+    // removal during iteration, careful here
+    while (it != reg_category_map_.end())
+    {
+      if (it->first.first == model)
+        reg_category_map_.erase(it++);
+      else
+        ++it;
+    }
+  }
+
   void NotifyOrderChanged ()
   {
     owner_->categories_reordered();
@@ -157,7 +171,8 @@ public:
   ModelMerger(glib::Object<DeeModel> target);
   virtual ~ModelMerger();
 
-  void AddSource(Lens::Ptr& owner_lens, glib::Object<DeeModel> source);
+  virtual void AddSource(Lens::Ptr& owner_lens, glib::Object<DeeModel> source);
+  virtual void RemoveSource(glib::Object<DeeModel> const& old_source);
 
 protected:
   virtual void OnSourceRowAdded(DeeModel *model, DeeModelIter *iter);
@@ -225,6 +240,9 @@ public:
   void OnSourceRowRemoved(DeeModel *model, DeeModelIter *iter);
 
   std::vector<unsigned> GetDefaultOrder();
+
+protected:
+  void RemoveSource(glib::Object<DeeModel> const& old_source);
 
 private:
   HomeLens::CategoryRegistry* cat_registry_;
@@ -325,7 +343,7 @@ void HomeLens::ModelMerger::AddSource(Lens::Ptr& owner_lens,
   {
     if (it->second == source)
       return; // this model was already added
-    sig_manager_.Disconnect(it->second);
+    RemoveSource(it->second);
   }
   sources_by_owner_[owner_lens] = source;
 
@@ -343,6 +361,17 @@ void HomeLens::ModelMerger::AddSource(Lens::Ptr& owner_lens,
   sig_manager_.Add(new RowSignalType(source.RawPtr(),
                                        "row-changed",
                                        sigc::mem_fun(this, &HomeLens::ModelMerger::OnSourceRowChanged)));
+}
+
+void HomeLens::ModelMerger::RemoveSource(glib::Object<DeeModel> const& source)
+{
+  if (!source)
+  {
+    LOG_ERROR(logger) << "Trying to remove NULL source from ModelMerger";
+    return;
+  }
+
+  sig_manager_.Disconnect(source);
 }
 
 void HomeLens::ModelMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *iter)
@@ -610,6 +639,14 @@ void HomeLens::ModelMerger::EnsureRowBuf(DeeModel *model)
 DeeModelTag* HomeLens::ModelMerger::FindSourceToTargetTag(DeeModel *model)
 {
   return source_to_target_tags_[model];
+}
+
+void HomeLens::CategoryMerger::RemoveSource(glib::Object<DeeModel> const& source)
+{
+  // call base()
+  HomeLens::ModelMerger::RemoveSource(source);
+
+  cat_registry_->UnregisterAllForModel(source);
 }
 
 std::vector<unsigned> HomeLens::CategoryMerger::GetDefaultOrder()
