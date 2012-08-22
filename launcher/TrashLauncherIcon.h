@@ -23,6 +23,7 @@
 #include <gio/gio.h>
 #include <UnityCore/GLibDBusProxy.h>
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/GLibSignal.h>
 
 #include "DndData.h"
 #include "SimpleLauncherIcon.h"
@@ -49,18 +50,17 @@ protected:
   std::string GetName() const;
 
 private:
-  gulong on_trash_changed_handler_id_;
-  glib::Object<GFileMonitor> trash_monitor_;
-  gboolean empty_;
-  glib::DBusProxy proxy_;
-
   void ActivateLauncherIcon(ActionArg arg);
-  std::list<DbusmenuMenuitem*> GetMenus();
+  MenuItemsVector GetMenus();
 
   static void UpdateTrashIconCb(GObject* source, GAsyncResult* res, gpointer data);
-  static void OnTrashChanged(GFileMonitor* monitor, GFile* file, GFile* other_file,
-                             GFileMonitorEvent event_type, gpointer data);
-  static void OnEmptyTrash(DbusmenuMenuitem* item, int time, TrashLauncherIcon* self);
+
+  gboolean empty_;
+  glib::DBusProxy proxy_;
+  glib::Object<GCancellable> cancellable_;
+  glib::Object<GFileMonitor> trash_monitor_;
+  glib::Signal<void, GFileMonitor*, GFile*, GFile*, GFileMonitorEvent> trash_changed_signal_;
+  glib::Signal<void, DbusmenuMenuitem*, int> empty_activated_signal_;
 };
 
 }

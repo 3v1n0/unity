@@ -18,6 +18,8 @@ from autopilot.emulators.ibus import (
 from autopilot.matchers import Eventually
 from autopilot.testcase import multiply_scenarios
 from testtools.matchers import Equals, NotEquals
+from unity.emulators.dash import Dash
+from unity.emulators.hud import Hud
 
 from unity.tests import UnityTestCase
 
@@ -27,9 +29,29 @@ class IBusTests(UnityTestCase):
 
     def setUp(self):
         super(IBusTests, self).setUp()
+        self.set_correct_ibus_trigger_keys()
 
-    def tearDown(self):
-        super(IBusTests, self).tearDown()
+    def set_correct_ibus_trigger_keys(self):
+        """Set the correct keys to trigger IBus.
+
+        This method configures the ibus trigger keys inside gconf, and also sets
+        self.activate_binding and self.activate_release_binding.
+
+        This method adds a cleanUp to reset the old keys once the test is done.
+
+        """
+        # get the existing keys:
+        trigger_hotkey_path = '/desktop/ibus/general/hotkey/trigger'
+        old_keys = self.get_gconf_option(trigger_hotkey_path)
+
+        self.activate_binding = 'Control+space'
+        activate_release_binding_option = 'Alt+Release+Control_L'
+        new_keys = [self.activate_binding, activate_release_binding_option]
+
+        if new_keys != old_keys:
+            self.set_gconf_option(trigger_hotkey_path, new_keys)
+            self.addCleanup(self.set_gconf_option, trigger_hotkey_path, old_keys)
+        self.activate_release_binding = 'Alt+Control_L'
 
     @classmethod
     def setUpClass(cls):
@@ -41,6 +63,10 @@ class IBusTests(UnityTestCase):
             set_active_engines(cls._old_engines)
 
     def activate_input_engine_or_skip(self, engine_name):
+        """Activate the input engine 'engine_name', or skip the test if the
+        engine name is not avaialble (probably because it's not been installed).
+
+        """
         available_engines = get_available_input_engines()
         if engine_name in available_engines:
             if get_active_input_engines() != [engine_name]:
@@ -49,92 +75,93 @@ class IBusTests(UnityTestCase):
             self.skip("This test requires the '%s' engine to be installed." % (engine_name))
 
     def activate_ibus(self, widget):
-        """Activate IBus, and wait till it's actived on 'widget'"""
+        """Activate IBus, and wait till it's actived on 'widget'."""
         self.assertThat(widget.im_active, Equals(False))
-        self.keyboard.press_and_release('Ctrl+Space', 0.05)
+        self.keyboard.press_and_release(self.activate_binding)
         self.assertThat(widget.im_active, Eventually(Equals(True)))
 
     def deactivate_ibus(self, widget):
-        """Deactivate ibus, and wait till it's inactive on 'widget'"""
+        """Deactivate ibus, and wait till it's inactive on 'widget'."""
         self.assertThat(widget.im_active, Equals(True))
-        self.keyboard.press_and_release('Ctrl+Space', 0.05)
+        self.keyboard.press_and_release(self.activate_binding)
         self.assertThat(widget.im_active, Eventually(Equals(False)))
 
-    def do_dash_test_with_engine(self):
-        self.dash.ensure_visible()
-        self.addCleanup(self.dash.ensure_hidden)
-        self.activate_ibus(self.dash.searchbar)
+
+class IBusWidgetScenariodTests(IBusTests):
+    """A class that includes scenarios for the hud and dash widgets."""
+
+    scenarios = [
+        ('dash', {'widget': Dash()}),
+        ('hud', {'widget': Hud()})
+    ]
+
+    def do_ibus_test(self):
+        """Do the basic IBus test on self.widget using self.input and self.result."""
+        self.widget.ensure_visible()
+        self.addCleanup(self.widget.ensure_hidden)
+        self.activate_ibus(self.widget.searchbar)
         self.keyboard.type(self.input)
         commit_key = getattr(self, 'commit_key', None)
         if commit_key:
             self.keyboard.press_and_release(commit_key)
-        self.deactivate_ibus(self.dash.searchbar)
-        self.assertThat(self.dash.search_string, Eventually(Equals(self.result)))
-
-    def do_hud_test_with_engine(self):
-        self.hud.ensure_visible()
-        self.addCleanup(self.hud.ensure_hidden)
-        self.activate_ibus(self.hud.searchbar)
-        self.keyboard.type(self.input)
-        commit_key = getattr(self, 'commit_key', None)
-        if commit_key:
-            self.keyboard.press_and_release(commit_key)
-        self.deactivate_ibus(self.hud.searchbar)
-        self.assertThat(self.hud.search_string, Eventually(Equals(self.result)))
+        self.deactivate_ibus(self.widget.searchbar)
+        self.assertThat(self.widget.search_string, Eventually(Equals(self.result)))
 
 
-class IBusTestsPinyin(IBusTests):
+
+class IBusTestsPinyin(IBusWidgetScenariodTests):
     """Tests for the Pinyin(Chinese) input engine."""
 
     engine_name = "pinyin"
 
-    scenarios = [
-        ('basic', {'input': 'abc1', 'result': u'\u963f\u5e03\u4ece'}),
-        ('photo', {'input': 'zhaopian ', 'result': u'\u7167\u7247'}),
-        ('internet', {'input': 'hulianwang ', 'result': u'\u4e92\u8054\u7f51'}),
-        ('disk', {'input': 'cipan ', 'result': u'\u78c1\u76d8'}),
-        ('disk_management', {'input': 'cipan guanli ', 'result': u'\u78c1\u76d8\u7ba1\u7406'}),
-    ]
+    scenarios = multiply_scenarios(
+        IBusWidgetScenariodTests.scenarios,
+        [
+            ('basic', {'input': 'abc1', 'result': u'\u963f\u5e03\u4ece'}),
+            ('photo', {'input': 'zhaopian ', 'result': u'\u7167\u7247'}),
+            ('internet', {'input': 'hulianwang ', 'result': u'\u4e92\u8054\u7f51'}),
+            ('disk', {'input': 'cipan ', 'result': u'\u78c1\u76d8'}),
+            ('disk_management', {'input': 'cipan guanli ', 'result': u'\u78c1\u76d8\u7ba1\u7406'}),
+        ]
+    )
 
     def setUp(self):
         super(IBusTestsPinyin, self).setUp()
         self.activate_input_engine_or_skip(self.engine_name)
 
-    def test_simple_input_dash(self):
-        self.do_dash_test_with_engine()
-
-    def test_simple_input_hud(self):
-        self.do_hud_test_with_engine()
+    def test_pinyin(self):
+        self.do_ibus_test()
 
 
-class IBusTestsHangul(IBusTests):
+class IBusTestsHangul(IBusWidgetScenariodTests):
     """Tests for the Hangul(Korean) input engine."""
 
     engine_name = "hangul"
 
-    scenarios = [
-        ('transmission', {'input': 'xmfostmaltus ', 'result': u'\ud2b8\ub79c\uc2a4\ubbf8\uc158 '}),
-        ('social', {'input': 'httuf ', 'result': u'\uc18c\uc15c '}),
-        ('document', {'input': 'anstj ', 'result': u'\ubb38\uc11c '}),
-        ]
+    scenarios = multiply_scenarios(
+        IBusWidgetScenariodTests.scenarios,
+            [
+                ('transmission', {'input': 'xmfostmaltus ', 'result': u'\ud2b8\ub79c\uc2a4\ubbf8\uc158 '}),
+                ('social', {'input': 'httuf ', 'result': u'\uc18c\uc15c '}),
+                ('document', {'input': 'anstj ', 'result': u'\ubb38\uc11c '}),
+            ]
+        )
 
     def setUp(self):
         super(IBusTestsHangul, self).setUp()
         self.activate_input_engine_or_skip(self.engine_name)
 
-    def test_simple_input_dash(self):
-        self.do_dash_test_with_engine()
-
-    def test_simple_input_hud(self):
-        self.do_hud_test_with_engine()
+    def test_hangul(self):
+        self.do_ibus_test()
 
 
-class IBusTestsAnthy(IBusTests):
+class IBusTestsAnthy(IBusWidgetScenariodTests):
     """Tests for the Anthy(Japanese) input engine."""
 
     engine_name = "anthy"
 
     scenarios = multiply_scenarios(
+        IBusWidgetScenariodTests.scenarios,
         [
             ('system', {'input': 'shisutemu ', 'result': u'\u30b7\u30b9\u30c6\u30e0'}),
             ('game', {'input': 'ge-mu ', 'result': u'\u30b2\u30fc\u30e0'}),
@@ -150,11 +177,8 @@ class IBusTestsAnthy(IBusTests):
         super(IBusTestsAnthy, self).setUp()
         self.activate_input_engine_or_skip(self.engine_name)
 
-    def test_simple_input_dash(self):
-        self.do_dash_test_with_engine()
-
-    def test_simple_input_hud(self):
-        self.do_hud_test_with_engine()
+    def test_anthy(self):
+        self.do_ibus_test()
 
 
 class IBusTestsPinyinIgnore(IBusTests):
@@ -194,6 +218,7 @@ class IBusTestsPinyinIgnore(IBusTests):
 class IBusTestsAnthyIgnore(IBusTests):
     """Tests for ignoring key events while the Anthy input engine is active."""
 
+    scenarios = None
     engine_name = "anthy"
 
     def setUp(self):
@@ -224,3 +249,92 @@ class IBusTestsAnthyIgnore(IBusTests):
         self.deactivate_ibus(self.hud.searchbar)
 
         self.assertEqual(old_selected, new_selected)
+
+
+class IBusActivationTests(IBusTests):
+
+    """This class contains tests that make sure each IBus engine can activate
+    and deactivate correctly with various keystrokes.
+
+    """
+
+    scenarios = multiply_scenarios(
+            IBusWidgetScenariodTests.scenarios,
+            [ (e, {'engine_name': e}) for e in ('pinyin','anthy','hangul') ]
+        )
+
+    def setUp(self):
+        super(IBusActivationTests, self).setUp()
+        self.activate_input_engine_or_skip(self.engine_name)
+
+    def activate_ibus_on_release(self, widget):
+        """Activate IBus when keys have been released, and wait till it's actived
+        on 'widget'.
+
+        """
+        self.assertThat(widget.im_active, Equals(False))
+        self.keyboard.press_and_release(self.activate_release_binding)
+        self.assertThat(widget.im_active, Eventually(Equals(True)))
+
+    def deactivate_ibus_on_release(self, widget):
+        """Activate IBus when keys have been released, and wait till it's actived
+        on 'widget'.
+
+        """
+        self.assertThat(widget.im_active, Equals(True))
+        self.keyboard.press_and_release(self.activate_release_binding)
+        self.assertThat(widget.im_active, Eventually(Equals(False)))
+
+    def test_activate(self):
+        """Tests the ibus activation using the "key-down" keybinding."""
+        self.widget.ensure_visible()
+        self.addCleanup(self.widget.ensure_hidden)
+        self.assertThat(self.widget.searchbar.im_active, Equals(False))
+
+        self.keyboard.press(self.activate_binding)
+        self.addCleanup(self.keyboard.release, self.activate_binding)
+
+        self.assertThat(self.widget.searchbar.im_active, Eventually(Equals(True)))
+        self.keyboard.release(self.activate_binding)
+
+        self.deactivate_ibus(self.widget.searchbar)
+
+    def test_deactivate(self):
+        """Tests the ibus deactivation using the "key-down" keybinding"""
+        self.widget.ensure_visible()
+        self.addCleanup(self.widget.ensure_hidden)
+        self.activate_ibus(self.widget.searchbar)
+
+        self.assertThat(self.widget.searchbar.im_active, Equals(True))
+        self.keyboard.press(self.activate_binding)
+        self.addCleanup(self.keyboard.release, self.activate_binding)
+        self.assertThat(self.widget.searchbar.im_active, Eventually(Equals(False)))
+        self.keyboard.release(self.activate_binding)
+        self.assertThat(self.widget.searchbar.im_active, Eventually(Equals(False)))
+
+    def test_activate_on_release(self):
+        """Tests the ibus activation using "key-up" keybinding"""
+        self.widget.ensure_visible()
+        self.addCleanup(self.widget.ensure_hidden)
+
+        self.assertThat(self.widget.searchbar.im_active, Equals(False))
+        self.keyboard.press(self.activate_release_binding)
+        self.addCleanup(self.keyboard.release, self.activate_release_binding)
+        self.assertThat(self.widget.searchbar.im_active, Eventually(Equals(False)))
+        self.keyboard.release(self.activate_release_binding)
+        self.assertThat(self.widget.searchbar.im_active, Eventually(Equals(True)))
+
+        self.deactivate_ibus_on_release(self.widget.searchbar)
+
+    def test_deactivate_on_release(self):
+        """Tests the ibus deactivation using "key-up" keybinding"""
+        self.widget.ensure_visible()
+        self.addCleanup(self.widget.ensure_hidden)
+        self.activate_ibus_on_release(self.widget.searchbar)
+
+        self.assertThat(self.widget.searchbar.im_active, Equals(True))
+        self.keyboard.press(self.activate_release_binding)
+        self.addCleanup(self.keyboard.release, self.activate_release_binding)
+        self.assertThat(self.widget.searchbar.im_active, Eventually(Equals(True)))
+        self.keyboard.release(self.activate_release_binding)
+        self.assertThat(self.widget.searchbar.im_active, Eventually(Equals(False)))

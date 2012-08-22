@@ -9,3 +9,4 @@ s|\<XFreeCursor\>|XFreeCursorMock|g
 s|\<XCreateFontCursor\>|XCreateFontCursorMock|g
 s|\<WindowGestureTarget\>|WindowGestureTargetMock|g
 s|\<UnityGestureTarget\>|UnityGestureTargetMock|g
+s|GesturalWindowSwitcher|GesturalWindowSwitcherMock|g
