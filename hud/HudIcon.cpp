@@ -24,8 +24,7 @@
 
 namespace
 {
-  nux::logging::Logger logger("unity.hud.icon");
-  const unsigned int vertical_padding = 4;
+nux::logging::Logger logger("unity.hud.icon");
 }
 
 namespace unity
@@ -36,10 +35,6 @@ namespace hud
 Icon::Icon()
   : IconTexture("", 0, true)
 {
-  background_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_icon_back_54.png", -1, true));
-  gloss_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_icon_shine_54.png", -1, true));
-  edge_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_icon_edge_54.png", -1,  true));
-
   texture_updated.connect([&] (nux::BaseTexture* texture)
   {
     icon_texture_source_ = new HudIconTextureSource(nux::ObjectPtr<nux::BaseTexture>(texture));
@@ -49,12 +44,13 @@ Icon::Icon()
   });
 }
 
-void Icon::SetIcon(std::string const& icon_name, unsigned int icon_size, unsigned int tile_size)
+void Icon::SetIcon(std::string const& icon_name, unsigned int icon_size, unsigned int tile_size, unsigned int padding)
 {
   IconTexture::SetByIconName(icon_name, icon_size);
   icon_renderer_.SetTargetSize(tile_size, icon_size, 0);
-  SetMinimumWidth(tile_size);
-  SetMinimumHeight(tile_size + vertical_padding * 2);
+
+  SetMinimumHeight(tile_size + padding);
+  SetMinimumWidth(tile_size + padding);
 }
 
 void Icon::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
@@ -75,7 +71,6 @@ void Icon::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   std::list<unity::ui::RenderArg> args;
   args.push_front(arg);
-
 
   auto toplevel = GetToplevel();
   icon_renderer_.PreprocessIcons(args, toplevel->GetGeometry());

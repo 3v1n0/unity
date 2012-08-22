@@ -56,7 +56,7 @@ const int ANIM_DURATION_LONG = 500;
 const std::string ANIMATION_IDLE = "animation-idle";
 }
 
-class PreviewContent : public nux::Layout
+class PreviewContent : public nux::Layout, public debug::Introspectable
 {
 public:
   PreviewContent(PreviewContainer*const parent)
@@ -65,18 +65,40 @@ public:
   , animating_(false)
   , waiting_preview_(false)
   , rotation_(0.0)
+  , preview_initiate_count_(0)
+  , nav_complete_(0)
+  , relative_nav_index_(0)
   {
     Style& style = previews::Style::Instance();
 
     spin_= style.GetSearchSpinIcon(256);
   }
 
+  // From debug::Introspectable
+  std::string GetName() const
+  {
+    return "PreviewContent";
+  }
+
+  void AddProperties(GVariantBuilder* builder)
+  {
+    variant::BuilderWrapper(builder)
+      .add("animating", animating_)
+      .add("animation_progress", progress_)
+      .add("waiting_preview", waiting_preview_)
+      .add("preview-initiate-count", preview_initiate_count_)
+      .add("navigation-complete-count", nav_complete_)
+      .add("relative-nav-index", relative_nav_index_);
+  }
+
   void PushPreview(previews::Preview::Ptr preview, Navigation direction)
   {
+    preview_initiate_count_++;
     StopPreviewWait();
 
     if (preview)
     {
+      AddChild(preview.GetPointer());
       AddView(preview.GetPointer());
       preview->SetVisible(false);
     }
@@ -152,16 +174,22 @@ public:
       animating_ = false;
       if (current_preview_)
       {
+        RemoveChild(current_preview_.GetPointer());
         RemoveChildObject(current_preview_.GetPointer());
         current_preview_.Release();
       }
       if (swipe_.preview)
       {
+        if (swipe_.direction == Navigation::RIGHT)
+          relative_nav_index_++;
+        else if (swipe_.direction == Navigation::LEFT)
+          relative_nav_index_--;
+
         current_preview_ = swipe_.preview;
         swipe_.preview.Release();
         if (current_preview_)
           current_preview_->OnNavigateInComplete();
-      } 
+      }
 
       // another swipe?
       if (!push_preview_.empty())
@@ -179,6 +207,7 @@ public:
       {
         current_preview_->SetGeometry(geometry);
       }
+      nav_complete_++;
     }
   }
 
@@ -304,7 +333,6 @@ private:
 
   float progress_;
   bool animating_;
-
   // wait animation
   glib::Source::UniquePtr preview_wait_timer_;
   glib::Source::UniquePtr _frame_timeout;
@@ -314,6 +342,11 @@ private:
   glib::Source::UniquePtr frame_timeout_;
   nux::Matrix4 rotate_matrix_;
   float rotation_;
+
+  // intropection data.
+  int preview_initiate_count_;
+  int nav_complete_;
+  int relative_nav_index_;
 };
 
 NUX_IMPLEMENT_OBJECT_TYPE(PreviewContainer);
@@ -366,6 +399,10 @@ std::string PreviewContainer::GetName() const
 
 void PreviewContainer::AddProperties(GVariantBuilder* builder)
 {
+  variant::BuilderWrapper(builder)
+    .add(GetAbsoluteGeometry())
+    .add("navigate-left-enabled", !IsNavigationDisabled(Navigation::LEFT))
+    .add("navigate-right-enabled", !IsNavigationDisabled(Navigation::RIGHT));
 }
 
 void PreviewContainer::SetupViews()
@@ -377,15 +414,18 @@ void PreviewContainer::SetupViews()
   layout_->AddSpace(0, 0);
 
   nav_left_ = new PreviewNavigator(Orientation::LEFT, NUX_TRACKER_LOCATION);
+  AddChild(nav_left_);
   nav_left_->SetMinimumWidth(style.GetNavigatorWidth());
   nav_left_->SetMaximumWidth(style.GetNavigatorWidth());
   nav_left_->activated.connect([&]() { navigate_left.emit(); });
   layout_->AddView(nav_left_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   content_layout_ = new PreviewContent(this);
+  AddChild(content_layout_);
   layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   nav_right_ = new PreviewNavigator(Orientation::RIGHT, NUX_TRACKER_LOCATION);
+  AddChild(nav_right_);
   nav_right_->SetMinimumWidth(style.GetNavigatorWidth());
   nav_right_->SetMaximumWidth(style.GetNavigatorWidth());
   nav_right_->activated.connect([&]() { navigate_right.emit(); });

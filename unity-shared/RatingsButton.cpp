@@ -23,6 +23,7 @@
 
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
+#include <UnityCore/Variant.h>
 
 #include "RatingsButton.h"
 #include "DashStyle.h"
@@ -272,6 +273,20 @@ void RatingsButton::OnKeyDown(unsigned long event_type, unsigned long event_keys
 bool RatingsButton::AcceptKeyNavFocus()
 {
   return editable_;
+}
+
+std::string RatingsButton::GetName() const
+{
+  return "RatingsButton";
+}
+
+void RatingsButton::AddProperties(GVariantBuilder* builder)
+{
+  variant::BuilderWrapper(builder)
+    .add(GetAbsoluteGeometry())
+    .add("rating", rating_)
+    .add("focused-star", focused_star_)
+    .add("editable", editable_);
 }
 
 } // namespace unity

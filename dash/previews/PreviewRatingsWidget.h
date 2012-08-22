@@ -39,7 +39,7 @@ namespace dash
 namespace previews
 {
 
-class PreviewRatingsWidget : public nux::View
+class PreviewRatingsWidget : public debug::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(PreviewRatingsWidget, nux::View);
 public:
@@ -56,6 +56,10 @@ protected:
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   
   virtual bool AcceptKeyNavFocus() { return false; }
+
+  // From debug::Introspectable
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder*);
 
 private:
   RatingsButton* ratings_;
