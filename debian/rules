@@ -39,9 +39,9 @@ override_dh_quilt_unpatch:
 
 override_dh_auto_configure:
 ifeq ($(DEB_HOST_ARCH),$(findstring $(DEB_HOST_ARCH), $(gles2_architectures)))
-	dh_auto_configure -- -DCOMPIZ_BUILD_WITH_RPATH=FALSE -DCOMPIZ_PACKAGING_ENABLED=TRUE -DCOMPIZ_PLUGIN_INSTALL_TYPE=package -DBUILD_GLES=TRUE -DDISABLE_MAINTAINER_CFLAGS=ON
+	dh_auto_configure -- -DUSE_GSETTINGS=TRUE -DCOMPIZ_BUILD_WITH_RPATH=FALSE -DCOMPIZ_PACKAGING_ENABLED=TRUE -DCOMPIZ_PLUGIN_INSTALL_TYPE=package -DBUILD_GLES=TRUE -DDISABLE_MAINTAINER_CFLAGS=ON
 else
-	dh_auto_configure -- -DCOMPIZ_BUILD_WITH_RPATH=FALSE -DCOMPIZ_PACKAGING_ENABLED=TRUE -DCOMPIZ_PLUGIN_INSTALL_TYPE=package
+	dh_auto_configure -- -DUSE_GSETTINGS=TRUE -DCOMPIZ_BUILD_WITH_RPATH=FALSE -DCOMPIZ_PACKAGING_ENABLED=TRUE -DCOMPIZ_PLUGIN_INSTALL_TYPE=package
 endif
 
 override_dh_install:
@@ -56,6 +56,7 @@ override_dh_install:
 	rm -f debian/tmp//usr/lib/compiz/libnetworkarearegion.so
 	rm -f debian/tmp/usr/share/compiz/unitydialog.xml
 	rm -f debian/tmp/usr/lib/compiz/libunitydialog.so
+	rm -rf debian/tmp/usr/share/gconf/schemas/ 
 	dh_install --fail-missing
 
 override_dh_gencontrol:
