@@ -65,6 +65,8 @@
 
 #include "HudController.h"
 #include "ThumbnailGenerator.h"
+#include "WindowMinimizeSpeedController.h"
+
 namespace unity
 {
 
@@ -242,8 +244,6 @@ private:
   void OnPanelStyleChanged();
 
   void InitGesturesSupport();
-  void SetMinimizeSpeed();
-  void UpdateMinimizeCount();
 
   nux::animation::TickSource tick_source_;
   nux::animation::AnimationController animation_controller_;
@@ -342,16 +342,8 @@ private:
   glib::SourceManager sources_;
   unity::ThumbnailGenerator thumb_generator;
 
-  glib::Object<GSettings> _settings;
-  int _minimize_count;
-  int _minimize_speed_threshold;
-  int _minimize_slow_duration;
-  int _minimize_fast_duration;
-  glib::Signal<void, GSettings*, gchar* > _minimize_count_changed;
-  glib::Signal<void, GSettings*, gchar* > _minimize_speed_threshold_changed;
-  glib::Signal<void, GSettings*, gchar* > _minimize_slow_duration_changed;
-  glib::Signal<void, GSettings*, gchar* > _minimize_fast_duration_changed;
-
+  WindowMinimizeSpeedController* minimize_speed_controller;
+  
   friend class UnityWindow;
 };
 
