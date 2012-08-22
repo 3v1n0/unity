@@ -53,10 +53,6 @@ public:
   virtual ~Track();
 
   void Update(dash::Track const& track_row);
- 
-  // From debug::Introspectable
-  std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
 
   sigc::signal<void, std::string const&> play;
   sigc::signal<void, std::string const&> pause;
@@ -65,6 +61,12 @@ protected:
   virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);
   virtual void PreLayoutManagement();
+ 
+  // From debug::Introspectable
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
+  
+  virtual bool AcceptKeyNavFocus() { return false; }
   
   void SetupBackground();
   void SetupViews();

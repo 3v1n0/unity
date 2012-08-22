@@ -124,9 +124,17 @@ void DashView::SetMonitorOffset(int x, int y)
 void DashView::ClosePreview()
 {
   preview_displaying_ = false;
+
+  // sanity check
+  if (!preview_container_)
+    return;
   RemoveChild(preview_container_.GetPointer());
-  preview_container_ = nullptr; // free resources
+  preview_container_->UnParentObject();
+  preview_container_.Release(); // free resources
   preview_state_machine_.ClosePreview();
+
+  // re-focus dash view component.
+  nux::GetWindowCompositor().SetKeyFocusArea(default_focus());
   QueueDraw();
 }
 
@@ -137,7 +145,6 @@ void DashView::BuildPreview(Preview::Ptr model)
     preview_container_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
     AddChild(preview_container_.GetPointer());
     preview_container_->Preview(model, previews::Navigation::NONE); // no swipe left or right
-    //nux::GetWindowCompositor().SetKeyFocusArea(preview_container_.GetPointer());
     
     preview_container_->SetParentObject(this);
     preview_container_->SetGeometry(layout_->GetGeometry());
@@ -161,6 +168,10 @@ void DashView::BuildPreview(Preview::Ptr model)
       // and the unique id of the result view that should be handling the results
       ubus_manager_.SendMessage(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, g_variant_new("(iss)", 1, stored_preview_uri_identifier_.c_str(), stored_preview_unique_id_.c_str()));
     });
+
+    preview_container_->request_close.connect([&] () { ClosePreview(); });
+
+    nux::GetWindowCompositor().SetKeyFocusArea(preview_container_.GetPointer());
   }
   else
   {
@@ -858,7 +869,7 @@ nux::Area* DashView::KeyNavIteration(nux::KeyNavDirection direction)
 {
   if (preview_displaying_)
   {
-    preview_container_->KeyNavIteration(direction);
+    return preview_container_->KeyNavIteration(direction);
   }
   else if (direction == nux::KEY_NAV_DOWN && search_bar_ && active_lens_view_)
   {

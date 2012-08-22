@@ -67,12 +67,21 @@ struct LoadResult
   }
 };
 
+TEST(TestThumbnailGenerator, TestNoURIThumbnail)
+{
+  ThumbnailGenerator thumbnail_generator;
+  ThumbnailNotifier::Ptr thumb = thumbnail_generator.GetThumbnail("", 256);
+  EXPECT_TRUE(thumb == nullptr);
+}
+
 TEST(TestThumbnailGenerator, TestGetOneFileThumbnail)
 {
   ThumbnailGenerator thumbnail_generator;
 
   LoadResult load_result;
   ThumbnailNotifier::Ptr thumb = thumbnail_generator.GetThumbnail("file://" PKGDATADIR "/switcher_background.png", 256);
+  EXPECT_TRUE(thumb != nullptr);
+
   thumb->ready.connect(sigc::mem_fun(load_result, &LoadResult::ThumbnailReady));
   thumb->error.connect(sigc::mem_fun(load_result, &LoadResult::ThumbnailFailed));
 
@@ -112,6 +121,8 @@ TEST(TestThumbnailGenerator, TestGetManyFileThumbnail)
   for (int i = 0; i < load_count; i++)
   {
     notifiers[i] = thumbnail_generator.GetThumbnail(thumbs[rand() % (sizeof(thumbs) / sizeof(char*))], 256);
+    EXPECT_TRUE(notifiers[i] != nullptr);
+
     notifiers[i]->ready.connect(sigc::mem_fun(results[i], &LoadResult::ThumbnailReady));
     notifiers[i]->error.connect(sigc::mem_fun(results[i], &LoadResult::ThumbnailFailed));
   }
@@ -164,6 +175,8 @@ TEST(TestThumbnailGenerator, TestGetOneGIcon)
 
   LoadResult load_result;
   ThumbnailNotifier::Ptr thumb = thumbnail_generator.GetThumbnail("file:///home", 256);
+  EXPECT_TRUE(thumb != nullptr);
+
   thumb->ready.connect(sigc::mem_fun(load_result, &LoadResult::ThumbnailReady));
   thumb->error.connect(sigc::mem_fun(load_result, &LoadResult::ThumbnailFailed));
 
@@ -203,6 +216,8 @@ TEST(TestThumbnailGenerator, TestGetManyGIcon)
   for (int i = 0; i < load_count; i++)
   {
     notifiers[i] = thumbnail_generator.GetThumbnail(thumbs[rand() % (sizeof(thumbs) / sizeof(char*))], 256);
+    EXPECT_TRUE(notifiers[i] != nullptr);
+
     notifiers[i]->ready.connect(sigc::mem_fun(results[i], &LoadResult::ThumbnailReady));
     notifiers[i]->error.connect(sigc::mem_fun(results[i], &LoadResult::ThumbnailFailed));
   }

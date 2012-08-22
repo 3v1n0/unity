@@ -262,7 +262,47 @@ class HudBehaviorTests(HudTestsBase):
         self.hud.ensure_visible()
         self.keyboard.press_and_release("Alt+F4")
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
+        
+    def test_app_activate_on_enter(self):
+        """Hud must close after activating a search item with Enter."""
+        self.hud.ensure_visible()   
+        
+        self.keyboard.type("Device > System Settings")
+        self.assertThat(self.hud.search_string, Eventually(Equals("Device > System Settings")))
+        
+        self.keyboard.press_and_release("Enter")
+        
+        app_found = self.bamf.wait_until_application_is_running("gnome-control-center.desktop", 5)
+        self.assertTrue(app_found)
+        self.addCleanup(self.close_all_app,  "System Settings")
+        
+        self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
+    def test_alt_arrow_keys_not_eaten(self):
+        """Tests that Alt+ArrowKey events are correctly passed to the
+        active window when Unity is not responding to them."""
+        
+        self.start_app_window("Terminal")
+        
+        #There's no easy way to read text from terminal, writing input
+        #to a text file and then reading from there works.
+        self.keyboard.type('echo "')
+        
+        #Terminal is receiving input with Alt+Arrowkeys
+        self.keyboard.press("Alt")
+        self.keyboard.press_and_release("Up")
+        self.keyboard.press_and_release("Down")
+        self.keyboard.press_and_release("Right")
+        self.keyboard.press_and_release("Left")
+        self.keyboard.release("Alt")
+        
+        self.keyboard.type('" > /tmp/ap_test_alt_keys')
+        self.addCleanup(remove, '/tmp/ap_test_alt_keys')
+        self.keyboard.press_and_release("Enter")
+        
+        file_contents = open('/tmp/ap_test_alt_keys', 'r').read().strip()
+        
+        self.assertThat(file_contents, Equals('ABCD'))
 
 class HudLauncherInteractionsTests(HudTestsBase):
 
