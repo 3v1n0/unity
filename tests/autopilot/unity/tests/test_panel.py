@@ -207,7 +207,7 @@ class PanelTitleTests(PanelTestsBase):
         self.assertThat(self.panel.title, Eventually(Equals(text_win.title)))
 
     def test_panel_title_doesnt_change_with_switcher(self):
-        """Panel title doesn't change while switching between apps."""
+        """Switching between apps must not change the Panels title."""
         calc_win = self.open_new_application_window("Calculator")
         text_win = self.open_new_application_window("Text Editor")
         current_title = self.panel.title
