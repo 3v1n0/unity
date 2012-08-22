@@ -139,11 +139,18 @@ void CoverArt::SetImage(std::string const& image_hint)
 
 void CoverArt::GenerateImage(std::string const& uri)
 {
-  StartWaiting();
   notifier_ = ThumbnailGenerator::Instance().GetThumbnail(uri, 512);
-
-  notifier_->ready.connect(sigc::mem_fun(this, &CoverArt::OnThumbnailGenerated));
-  notifier_->error.connect(sigc::mem_fun(this, &CoverArt::OnThumbnailError));
+  if (notifier_)
+  {
+    StartWaiting();
+    notifier_->ready.connect(sigc::mem_fun(this, &CoverArt::OnThumbnailGenerated));
+    notifier_->error.connect(sigc::mem_fun(this, &CoverArt::OnThumbnailError));
+  }
+  else
+  {
+    StopWaiting();
+    SetNoImageAvailable();    
+  }
 }
 
 void CoverArt::StartWaiting()
@@ -158,14 +165,21 @@ void CoverArt::StartWaiting()
 
   spinner_timeout_.reset(new glib::TimeoutSeconds(5, [&]
   {
-    texture_screenshot_.Release();
-    waiting_ = false;
+    StopWaiting();
 
+    texture_screenshot_.Release();
     SetNoImageAvailable();
     return false;
   }));
   
   QueueDraw();
+}
+
+void CoverArt::StopWaiting()
+{
+  spinner_timeout_.reset();
+  frame_timeout_.reset();
+  waiting_ = false;
 }
 
 void CoverArt::SetNoImageAvailable()
@@ -183,9 +197,7 @@ void CoverArt::SetNoImageAvailable()
 void CoverArt::IconLoaded(std::string const& texid, unsigned size, glib::Object<GdkPixbuf> const& pixbuf)
 {
   // Finished waiting
-  spinner_timeout_.reset();
-  frame_timeout_.reset();
-  waiting_ = false;
+  StopWaiting();
   stretch_image_ = false;
 
   if (!pixbuf)
@@ -264,9 +276,7 @@ void CoverArt::IconLoaded(std::string const& texid, unsigned size, glib::Object<
 void CoverArt::TextureLoaded(std::string const& texid, unsigned size, glib::Object<GdkPixbuf> const& pixbuf)
 {
   // Finished waiting
-  spinner_timeout_.reset();
-  frame_timeout_.reset();
-  waiting_ = false;
+  StopWaiting();
   stretch_image_ = true;
 
   if (!pixbuf)
@@ -433,9 +443,7 @@ void CoverArt::OnThumbnailGenerated(std::string const& uri)
 void CoverArt::OnThumbnailError(std::string const& error_hint)
 {
   LOG_WARNING(logger) << "Failed to generate thumbnail: " << error_hint;
-  spinner_timeout_.reset();
-  frame_timeout_.reset();
-  waiting_ = false;
+  StopWaiting();
 
   texture_screenshot_.Release();
   if (GetLayout())

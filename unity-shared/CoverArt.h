@@ -53,6 +53,8 @@ public:
   void SetImage(std::string const& image_hint);
   // Use for generating an image for a uri which is not necessarily an image.
   void GenerateImage(std::string const& uri);
+  
+  void SetNoImageAvailable();
 
   void SetFont(std::string const& font);
 
@@ -70,7 +72,7 @@ protected:
   void TextureLoaded(std::string const& texid, unsigned size, glib::Object<GdkPixbuf> const& pixbuf);
 
   void StartWaiting();
-  void SetNoImageAvailable();
+  void StopWaiting();
 
   virtual std::string GetName() const;
   virtual void AddProperties(GVariantBuilder* builder);

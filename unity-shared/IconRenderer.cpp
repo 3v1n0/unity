@@ -745,7 +745,7 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
     // Perspective correct
     v0.x, v0.y, 0.0f, 1.0f,     s0 / v0.w, t0 / v0.w, 0.0f, 1.0f / v0.w,
     v1.x, v1.y, 0.0f, 1.0f,     s1 / v1.w, t1 / v1.w, 0.0f, 1.0f / v1.w,
-#ifdef USE_MODERN_COMPIZ_GL
+#ifdef USE_GLES
     v3.x, v3.y, 0.0f, 1.0f,     s3 / v3.w, t3 / v3.w, 0.0f, 1.0f / v3.w,
     v2.x, v2.y, 0.0f, 1.0f,     s2 / v2.w, t2 / v2.w, 0.0f, 1.0f / v2.w,
 #else
@@ -783,7 +783,7 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
       local::shader_program_uv_persp_correction->SetUniformLocMatrix4fv((GLint)VPMatrixLocation, 1, false, (GLfloat*) & (_stored_projection_matrix.m));
     }
   }
-#ifndef USE_MODERN_COMPIZ_GL
+#ifndef USE_GLES
   else
   {
     local::asm_shader->Begin();
@@ -821,13 +821,13 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
     CHECKGL(glUniform4fARB(DesatFactor, arg.saturation, arg.saturation, arg.saturation, arg.saturation));
 
     nux::GetWindowThread()->GetGraphicsEngine().SetTexture(GL_TEXTURE0, icon);
-#ifdef USE_MODERN_COMPIZ_GL
+#ifdef USE_GLES
     CHECKGL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
 #else
     CHECKGL(glDrawArrays(GL_QUADS, 0, 4));
 #endif
   }
-#ifndef USE_MODERN_COMPIZ_GL
+#ifndef USE_GLES
   else
   {
     CHECKGL(glProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 0, bg_color.red, bg_color.green, bg_color.blue, bg_color.alpha));
