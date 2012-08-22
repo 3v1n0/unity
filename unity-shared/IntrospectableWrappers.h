@@ -21,6 +21,7 @@
 #define _INTROSPECTABLE_WRAPPERS_H
 
 #include <UnityCore/Result.h>
+#include <Nux/Nux.h>
 
 #include "Introspectable.h"
 
@@ -35,7 +36,7 @@ namespace debug
 class ResultWrapper: public Introspectable
 {
 public:
-  ResultWrapper(const dash::Result& result);
+  ResultWrapper(const dash::Result& result, nux::Geometry const& geo = nux::Geometry());
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 private:
@@ -43,6 +44,7 @@ private:
   std::string name_;
   std::string icon_hint_;
   std::string mime_type_;
+  nux::Geometry geo_;
 };
 
 }

@@ -139,6 +139,11 @@ void GenericPreview::SetupBackground()
 
 void GenericPreview::SetupViews()
 {
+  if (!preview_model_)
+  {
+    LOG_ERROR(logger) << "Could not derive preview model from given parameter.";
+    return;
+  }
   previews::Style& style = dash::previews::Style::Instance();
 
   nux::HLayout* image_data_layout = new nux::HLayout();
@@ -146,18 +151,9 @@ void GenericPreview::SetupViews()
 
   /////////////////////
   // Image
-  std::string image_hint;
-  if (preview_model_->image.Get())
-  {
-    glib::String tmp_icon(g_icon_to_string(preview_model_->image.Get()));
-    image_hint = tmp_icon.Str();
-  }
   image_ = new CoverArt();
-  if (image_hint.empty())
-    image_->GenerateImage(preview_model_->image_source_uri);
-  else
-    image_->SetImage(image_hint);
-  image_->SetFont(style.no_preview_image_font());
+  AddChild(image_.GetPointer());
+  UpdateCoverArtImage(image_.GetPointer());
   /////////////////////
 
     /////////////////////
@@ -209,6 +205,7 @@ void GenericPreview::SetupViews()
       if (!preview_model_->GetInfoHints().empty())
       {
         preview_info_hints_ = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth());
+        AddChild(preview_info_hints_.GetPointer());
         preview_info_layout->AddView(preview_info_hints_.GetPointer());
       }
       /////////////////////

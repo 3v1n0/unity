@@ -26,6 +26,7 @@
 #include <Nux/Nux.h>
 #include <Nux/CairoWrapper.h>
 #include <Nux/AbstractButton.h>
+#include "unity-shared/Introspectable.h"
 
 namespace nux
 {
@@ -39,13 +40,13 @@ class IconTexture;
 namespace dash
 {
 
-class ActionButton : public nux::AbstractButton
+class ActionButton : public nux::AbstractButton, public debug::Introspectable
 {
 public:
-  ActionButton(std::string const& label, std::string const& icon_hint, NUX_FILE_LINE_PROTO);
+  ActionButton(std::string const& action_hint, std::string const& label, std::string const& icon_hint, NUX_FILE_LINE_PROTO);
   ~ActionButton();
 
-  sigc::signal<void, ActionButton*> click;
+  sigc::signal<void, ActionButton*, std::string const&> click;
 
   void SetFont(std::string const& font_hint);
 
@@ -64,6 +65,10 @@ protected:
   void RedrawFocusOverlay(nux::Geometry const& geom, cairo_t* cr);
 
   void BuildLayout(std::string const& label, std::string const& icon_hint);
+ 
+  // From debug::Introspectable
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
 
 private:
   typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
@@ -75,6 +80,7 @@ private:
 
   nux::Geometry cached_geometry_;
 
+  std::string action_hint_;
   std::string icon_hint_;
   std::string font_hint_;
 

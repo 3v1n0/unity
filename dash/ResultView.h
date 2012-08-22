@@ -78,17 +78,19 @@ protected:
 
   unsigned GetNumResults();
 
+  static void ChildResultDestructor(debug::Introspectable* child);
+  virtual debug::Introspectable* CreateResultWrapper(Result const& result, int index);
+
   // properties
   ResultRenderer* renderer_;
   glib::Object<DeeModel> result_model_;
   DeeModelTag* renderer_tag_;
   glib::SignalManager sig_manager_;
-  IntrospectableList introspectable_children_;
+  std::map<std::string, debug::Introspectable*> introspectable_children_;
 
 private:
   void OnRowAdded(DeeModel* model, DeeModelIter* iter);
   void OnRowRemoved(DeeModel* model, DeeModelIter* iter);
-  void ClearIntrospectableWrappers();
 };
 
 }

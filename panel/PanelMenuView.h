@@ -113,7 +113,6 @@ private:
   std::string GetActiveViewName(bool use_appname = false) const;
 
   void OnSwitcherShown(GVariant* data);
-  void OnSwitcherSelectionChanged(GVariant* data);
   void OnLauncherKeyNavStarted(GVariant* data);
   void OnLauncherKeyNavEnded(GVariant* data);
   void OnLauncherSelectionChanged(GVariant* data);
