@@ -287,14 +287,6 @@ class DashKeyNavTests(DashTestCase):
         self.dash.reveal_application_lens()
         lens = self.dash.get_current_lens()
 
-        # Tabs to last category
-        for i in range(lens.get_num_visible_categories()):
-            self.keyboard.press_and_release('Tab')
-
-        # Tabs to "Filter results >"
-        self.keyboard.press_and_release('Tab')
-        self.assertThat(self.dash.searchbar.expander_has_focus, Eventually(Equals(True)))
-
         filter_bar = lens.get_filterbar()
         filter_bar.ensure_expanded()
 
