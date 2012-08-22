@@ -26,7 +26,7 @@
 #include <Nux/View.h>
 #include <Nux/TextureArea.h>
 #include <NuxGraphics/GraphicsEngine.h>
-#include <NuxImage/CairoGraphics.h>
+#include <NuxGraphics/CairoGraphics.h>
 #include <gdk/gdkx.h>
 
 #include <UnityCore/DBusIndicators.h>
@@ -88,7 +88,7 @@ private:
 
   void UpdateBackground();
   void ForceUpdateBackground();
-  void TrackMenuPointer();
+  bool TrackMenuPointer();
   void SyncGeometries();
   void AddPanelView(PanelIndicatorsView* child, unsigned int stretchFactor);
 
@@ -118,7 +118,6 @@ private:
 
   std::string _active_overlay;
 
-  guint       _track_menu_pointer_id;
   nux::Point  _tracked_pointer_pos;
 
   std::vector<sigc::connection> _on_indicator_updated_connections;
@@ -126,6 +125,7 @@ private:
   BackgroundEffectHelper _bg_effect_helper;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> _bg_blur_texture;
   UBusManager _ubus_manager;
+  glib::Source::UniquePtr _track_menu_pointer_timeout;
 };
 
 }

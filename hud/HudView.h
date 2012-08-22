@@ -16,34 +16,33 @@
  * Authored by: Gordon Allott <gord.allott@canonical.com>
  */
 
-#ifndef UNITY_HUD_VIEW_H_
-#define UNITY_HUD_VIEW_H_
+#ifndef UNITYSHELL_HUD_VIEW_H
+#define UNITYSHELL_HUD_VIEW_H
 
 #include <string>
 
 #include <Nux/Nux.h>
-#include <Nux/View.h>
 #include <Nux/VLayout.h>
+#include <UnityCore/GLibSource.h>
 
-#include <UnityCore/Hud.h>
-#include "unity-shared/Introspectable.h"
-
-#include "unity-shared/UBusWrapper.h"
 #include "HudIcon.h"
 #include "HudButton.h"
+#include "HudAbstractView.h"
 #include "unity-shared/SearchBar.h"
 #include "unity-shared/OverlayRenderer.h"
+#include "unity-shared/UBusWrapper.h"
 
 namespace unity
 {
 namespace hud
 {
 
-class View : public nux::View, public unity::debug::Introspectable
+class View : public AbstractView
 {
-  NUX_DECLARE_OBJECT_TYPE(HudView, nux::View);
-  typedef nux::ObjectPtr<View> Ptr;
+  NUX_DECLARE_OBJECT_TYPE(View, AbstractView);
 public:
+  typedef nux::ObjectPtr<View> Ptr;
+
   View();
   ~View();
 
@@ -54,7 +53,7 @@ public:
   std::list<HudButton::Ptr> const& buttons() const;
 
   void SetQueries(Hud::Queries queries);
-  void SetIcon(std::string icon_name, unsigned int tile_size, unsigned int size, unsigned int padding);
+  void SetIcon(std::string const& icon_name, unsigned int tile_size, unsigned int size, unsigned int padding);
   void ShowEmbeddedIcon(bool show);
   void SearchFinished();
 
@@ -63,11 +62,6 @@ public:
 
   void SetWindowGeometry(nux::Geometry const& absolute_geo, nux::Geometry const& geo);
 
-  sigc::signal<void, std::string> search_changed;
-  sigc::signal<void, std::string> search_activated;
-  sigc::signal<void, Query::Ptr> query_activated;
-  sigc::signal<void, Query::Ptr> query_selected;
-  
 protected:
   virtual Area* FindKeyFocusArea(unsigned int event_type,
   unsigned long x11_key_code,
@@ -76,6 +70,7 @@ protected:
   void SetupViews();
   void OnSearchChanged(std::string const& search_string);
   virtual long PostLayoutManagement(long LayoutResult);
+
 private:
   void OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key);
   void OnKeyDown (unsigned long event_type, unsigned long event_keysym,
@@ -92,6 +87,7 @@ private:
 
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
+  IntrospectableList GetIntrospectableChildren();
 
 private:
   UBusManager ubus;
@@ -99,6 +95,7 @@ private:
   nux::ObjectPtr<nux::Layout> content_layout_;
   nux::ObjectPtr<nux::VLayout> button_views_;
   std::list<HudButton::Ptr> buttons_;
+  IntrospectableList introspectable_children_;
 
   //FIXME - replace with dash search bar once modifications to dash search bar land
   SearchBar::Ptr search_bar_;
@@ -110,8 +107,8 @@ private:
   OverlayRenderer renderer_;
   nux::Geometry window_geometry_;
   nux::Geometry absolute_window_geometry_;
+  glib::Source::UniquePtr timeline_idle_;
 
-  guint timeline_id_;
   guint64 start_time_;
   int last_known_height_;
   int current_height_;
@@ -122,6 +119,7 @@ private:
 };
 
 
-}
-}
-#endif
+} // namespace hud
+} // namespace unity
+
+#endif // UNITYSHELL_HUD_VIEW_H

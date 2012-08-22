@@ -12,10 +12,10 @@ from __future__ import absolute_import
 import logging
 from time import sleep
 
-from autopilot.introspection.unity import UnityIntrospectionObject
 from autopilot.emulators.X11 import Mouse
 from autopilot.keybindings import KeybindingsHelper
 
+from unity.emulators import UnityIntrospectionObject
 logger = logging.getLogger(__name__)
 
 
@@ -338,3 +338,9 @@ class IndicatorEntry(UnityIntrospectionObject):
         """Returns a tuple of (x,y,w,h) for the opened menu geometry."""
         return (self.menu_x, self.menu_y, self.menu_width, self.menu_height)
 
+    def __repr__(self):
+        return "<IndicatorEntry 0x%x (%s)>" % (id(self), self.label)
+
+
+class Tray(UnityIntrospectionObject):
+    """A panel tray object."""

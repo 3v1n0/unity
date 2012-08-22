@@ -43,14 +43,15 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
                    G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START)
 , finished_(true)
 , needs_urgent_(false)
+, aptdaemon_trans_id_(aptdaemon_trans_id)
 {
 
   aptdaemon_trans_.Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
   aptdaemon_trans_.Connect("Finished", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnFinished));
 
-  SetIconType(TYPE_APPLICATION);
   icon_name = icon_path;
-  tooltip_text = _("Waiting to install");
+  if (!aptdaemon_trans_id_.empty()) // Application is being installed, or hasn't been installed yet
+    tooltip_text = _("Waiting to install");
 }
 
 void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
@@ -74,22 +75,21 @@ void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
   launcher->RenderIconToTexture(nux::GetWindowThread()->GetGraphicsEngine(),
                                 AbstractLauncherIcon::Ptr(this),
                                 icon_texture_);
-  nux::Geometry geo = drag_window_->GetGeometry();
+
   drag_window_->SetBaseXY(icon_x, icon_y);
   drag_window_->ShowWindow(true);
-  drag_window_->SinkReference();
 
   // Find out the center of last BamfLauncherIcon with non-zero co-ordinates
   auto bamf_icons = launcher->GetModel()->GetSublist<BamfLauncherIcon>();
   //TODO: don't iterate through them and pick the last one, just use back() to get the last one.
   for (auto current_bamf_icon : bamf_icons)
   {
-    int x = (int) current_bamf_icon->GetCenter(launcher->monitor).x;
-    int y = (int) current_bamf_icon->GetCenter(launcher->monitor).y;
-    if (x != 0 && y != 0)
+    auto icon_center = current_bamf_icon->GetCenter(launcher->monitor);
+
+    if (icon_center.x != 0 && icon_center.y != 0)
     {
-       target_x = x;
-       target_y = y;
+       target_x = icon_center.x;
+       target_y = icon_center.y;
     }
   }
 
@@ -113,13 +113,13 @@ void SoftwareCenterLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   {
       if (needs_urgent_)
       {
-          SetQuirk(QUIRK_URGENT, false);
+          SetQuirk(Quirk::URGENT, false);
           needs_urgent_ = false;
       }
       BamfLauncherIcon::ActivateLauncherIcon(arg);
   }
   else
-      SetQuirk(QUIRK_STARTING, false);
+      SetQuirk(Quirk::STARTING, false);
 }
 
 void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
@@ -130,8 +130,8 @@ void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
    if (exit_state.Str() == "exit-success")
    {
       tooltip_text = BamfName();
-      SetQuirk(QUIRK_PROGRESS, false);
-      SetQuirk(QUIRK_URGENT, true);
+      SetQuirk(Quirk::PROGRESS, false);
+      SetQuirk(Quirk::URGENT, true);
       SetProgress(0.0f);
       finished_ = true;
       needs_urgent_ = true;
@@ -156,7 +156,7 @@ void SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
 
     if (progress < 100)
     {
-      SetQuirk(QUIRK_PROGRESS, true);
+      SetQuirk(Quirk::PROGRESS, true);
       finished_ = false;
     }
 

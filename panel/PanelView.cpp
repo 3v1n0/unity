@@ -24,8 +24,8 @@
 #include <Nux/Layout.h>
 #include <Nux/WindowCompositor.h>
 
-#include <NuxImage/CairoGraphics.h>
-#include <NuxImage/ImageSurface.h>
+#include <NuxGraphics/CairoGraphics.h>
+#include <NuxGraphics/ImageSurface.h>
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
 
@@ -102,7 +102,6 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   // request the latest colour from bghash
   _ubus_manager.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 
-  _track_menu_pointer_id = 0;
   _bg_effect_helper.owner = this;
 
   //FIXME (gord)- replace with async loading
@@ -121,9 +120,6 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
 
 PanelView::~PanelView()
 {
-  if (_track_menu_pointer_id)
-    g_source_remove(_track_menu_pointer_id);
-
   for (auto conn : _on_indicator_updated_connections)
     conn.disconnect();
 
@@ -172,6 +168,7 @@ void PanelView::OnOverlayHidden(GVariant* data)
     _active_overlay = "";
     _menu_view->OverlayHidden();
     _indicators->OverlayHidden();
+    SetAcceptKeyNavFocusOnMouseDown(true);
     ForceUpdateBackground();
   }
 }
@@ -191,6 +188,7 @@ void PanelView::OnOverlayShown(GVariant* data)
     _overlay_is_open = true;
     _indicators->OverlayShown();
     _menu_view->OverlayShown();
+    SetAcceptKeyNavFocusOnMouseDown(false);
     ForceUpdateBackground();
   }
 }
@@ -221,14 +219,14 @@ void PanelView::AddProperties(GVariantBuilder* builder)
 void
 PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  nux::Geometry geo = GetGeometry();
-  nux::Geometry geo_absolute = GetAbsoluteGeometry();
+  nux::Geometry const& geo = GetGeometry();
   UpdateBackground();
 
-  GfxContext.PushClippingRectangle(GetGeometry());
+  GfxContext.PushClippingRectangle(geo);
 
   if ((_overlay_is_open || (_opacity != 1.0f && _opacity != 0.0f)))
   {
+    nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
     nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, geo.width, geo.height);
 
     if (BackgroundEffectHelper::blur_type != BLUR_NONE)
@@ -237,7 +235,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
     else
     {
-      _bg_blur_texture = _bg_effect_helper.GetRegion(blur_geo); 
+      _bg_blur_texture = _bg_effect_helper.GetRegion(blur_geo);
     }
 
     if (_bg_blur_texture.IsValid() && (_overlay_is_open || _opacity != 1.0f))
@@ -253,8 +251,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       rop.SrcBlend = GL_ONE;
       rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-      nux::Geometry bg_clip = geo;
-      GfxContext.PushClippingRectangle(bg_clip);
+      GfxContext.PushClippingRectangle(geo);
 
 #ifndef NUX_OPENGLES_20
       if (GfxContext.UsingGLSLCodePath())
@@ -287,12 +284,12 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     if (_overlay_is_open)
     {
-      nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), _bg_darken_layer.get());
+      nux::GetPainter().RenderSinglePaintLayer(GfxContext, geo, _bg_darken_layer.get());
     }
   }
 
   if (!_overlay_is_open || GfxContext.UsingGLSLCodePath() == false)
-    nux::GetPainter().RenderSinglePaintLayer(GfxContext, GetGeometry(), _bg_layer.get());
+    nux::GetPainter().RenderSinglePaintLayer(GfxContext, geo, _bg_layer.get());
 
   GfxContext.PopClippingRectangle();
 
@@ -309,7 +306,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::Geometry const& geo = GetGeometry();
   int bgs = 1;
 
-  GfxContext.PushClippingRectangle(GetGeometry());
+  GfxContext.PushClippingRectangle(geo);
 
   GfxContext.GetRenderStates().SetBlend(true);
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
@@ -317,7 +314,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   if (_bg_blur_texture.IsValid() &&
       (_overlay_is_open || (_opacity != 1.0f && _opacity != 0.0f)))
   {
-    nux::Geometry geo_absolute = GetAbsoluteGeometry ();
+    nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
     nux::TexCoordXForm texxform_blur_bg;
     texxform_blur_bg.flip_v_coord = true;
     texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
@@ -361,13 +358,13 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     if (_overlay_is_open)
     {
-      nux::GetPainter().PushLayer(GfxContext, GetGeometry(), _bg_darken_layer.get());
+      nux::GetPainter().PushLayer(GfxContext, geo, _bg_darken_layer.get());
       bgs++;
     }
   }
 
   if (!_overlay_is_open || GfxContext.UsingGLSLCodePath() == false)
-    gPainter.PushLayer(GfxContext, GetGeometry(), _bg_layer.get());
+    gPainter.PushLayer(GfxContext, geo, _bg_layer.get());
 
   if (_overlay_is_open)
   {
@@ -380,7 +377,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     rop.Blend = true;
     rop.SrcBlend = GL_DST_COLOR;
     rop.DstBlend = GL_ONE;
-    nux::GetPainter().PushTextureLayer(GfxContext, GetGeometry(),
+    nux::GetPainter().PushTextureLayer(GfxContext, geo,
                                        _panel_sheen->GetDeviceTexture(),
                                        texxform,
                                        nux::color::White,
@@ -538,7 +535,7 @@ void PanelView::OnEntryActivateRequest(std::string const& entry_id)
   if (!ret) _indicators->ActivateEntry(entry_id, 0);
 }
 
-void PanelView::TrackMenuPointer()
+bool PanelView::TrackMenuPointer()
 {
   auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
   if (_tracked_pointer_pos != mouse)
@@ -546,12 +543,14 @@ void PanelView::TrackMenuPointer()
     OnMenuPointerMoved(mouse.x, mouse.y);
     _tracked_pointer_pos = mouse;
   }
+
+  return true;
 }
 
 void PanelView::OnEntryActivated(std::string const& entry_id, nux::Rect const& geo)
 {
   bool active = (entry_id.size() > 0);
-  if (active && !_track_menu_pointer_id)
+  if (active && !_track_menu_pointer_timeout)
   {
     //
     // Track menus being scrubbed at 60Hz (about every 16 millisec)
@@ -563,19 +562,12 @@ void PanelView::OnEntryActivated(std::string const& entry_id, nux::Rect const& g
     // process. All the motion events will go to unity-panel-service while
     // scrubbing because the active panel menu has (needs) the pointer grab.
     //
-    _track_menu_pointer_id = g_timeout_add(16, [] (gpointer data) -> gboolean {
-                                            auto self = static_cast<PanelView*>(data);
-                                            self->TrackMenuPointer();
-                                            return TRUE;
-                                          }, this);
+    _track_menu_pointer_timeout.reset(new glib::Timeout(16));
+    _track_menu_pointer_timeout->Run(sigc::mem_fun(this, &PanelView::TrackMenuPointer));
   }
   else if (!active)
   {
-    if (_track_menu_pointer_id)
-    {
-      g_source_remove(_track_menu_pointer_id);
-      _track_menu_pointer_id = 0;
-    }
+    _track_menu_pointer_timeout.reset();
     _menu_view->NotifyAllMenusClosed();
     _tracked_pointer_pos = {-1, -1};
   }

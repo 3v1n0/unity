@@ -12,15 +12,23 @@ from __future__ import absolute_import
 from autopilot.emulators.dbus_handler import session_bus
 from autopilot.emulators.X11 import Mouse, ScreenGeometry
 from autopilot.keybindings import KeybindingsHelper
-from autopilot.introspection.unity import UnityIntrospectionObject
+from autopilot.utilities import get_compiz_option
 import dbus
 import logging
+from math import floor
 from testtools.matchers import NotEquals
 from time import sleep
 
+from unity.emulators import UnityIntrospectionObject
 from unity.emulators.icons import BFBLauncherIcon, BamfLauncherIcon, SimpleLauncherIcon
 
 logger = logging.getLogger(__name__)
+
+
+class IconDragType:
+    """Define possible positions to drag an icon onto another"""
+    INSIDE = 0
+    OUTSIDE = 1
 
 
 class LauncherController(UnityIntrospectionObject):
@@ -85,10 +93,12 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         self.keybinding(keybinding)
 
     def _perform_switcher_exit_binding(self, keybinding):
-        self._perform_switcher_binding(keybinding)
-        # if our exit binding was something besides just releasing, we need to release
+        # If we're doing a normal activation, all we need to do is release the
+        # keybinding. Otherwise, perform the keybinding specified *then* release
+        # the switcher keybinding.
         if keybinding != "launcher/switcher":
-            self.keybinding_release("launcher/switcher")
+            self._perform_switcher_binding(keybinding)
+        self.keybinding_release("launcher/switcher")
         self.in_switcher_mode = False
 
     def _get_controller(self):
@@ -116,6 +126,16 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
         logger.debug("Moving mouse to center of launcher.")
         self._mouse.move(target_x, target_y)
+
+    def move_mouse_to_icon(self, icon):
+        # The icon may be off the bottom of screen, so we do this in a loop:
+        while 1:
+            target_x = icon.center_x + self.x
+            target_y = icon.center_y
+            if self._mouse.x == target_x and self._mouse.y == target_y:
+                break
+            self._mouse.move(target_x, target_y)
+            sleep(0.5)
 
     def mouse_reveal_launcher(self):
         """Reveal this launcher with the mouse.
@@ -148,6 +168,52 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         # only wait if the launcher is set to autohide
         if self.hidemode == 1:
             self.is_showing.wait_for(False)
+
+    def keyboard_select_icon(self, **kwargs):
+        """Using either keynav mode or the switcher, select an icon in the launcher.
+
+        The desired mode (keynav or switcher) must be started already before
+        calling this methods or a RuntimeError will be raised.
+
+        This method won't activate the icon, it will only select it.
+
+        Icons are selected by passing keyword argument filters to this method.
+        For example:
+
+        >>> launcher.keyboard_select_icon(tooltip_text="Calculator")
+
+        ...will select the *first* icon that has a 'tooltip_text' attribute equal
+        to 'Calculator'. If an icon is missing the attribute, it is treated as
+        not matching.
+
+        If no icon is found, this method will raise a ValueError.
+
+        """
+
+        if not self.in_keynav_mode and not self.in_switcher_mode:
+            raise RuntimeError("Launcher must be in keynav or switcher mode")
+
+        [launcher_model] = LauncherModel.get_all_instances()
+        all_icons = launcher_model.get_launcher_icons()
+        logger.debug("all_icons = %r", [i.tooltip_text for i in all_icons])
+        for icon in all_icons:
+            # can't iterate over the model icons directly since some are hidden
+            # from the user.
+            if not icon.visible:
+                continue
+            logger.debug("Selected icon = %s", icon.tooltip_text)
+            matches = True
+            for arg,val in kwargs.iteritems():
+                if not hasattr(icon, arg) or getattr(icon, arg, None) != val:
+                    matches = False
+                    break
+            if matches:
+                return
+            if self.in_keynav_mode:
+                self.key_nav_next()
+            elif self.in_switcher_mode:
+                self.switcher_next()
+        raise ValueError("No icon found that matches: %r", kwargs)
 
     def key_nav_start(self):
         """Start keyboard navigation mode by pressing Alt+F1."""
@@ -239,12 +305,13 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         self._perform_switcher_binding("launcher/switcher/down")
         self._get_controller().key_nav_selection.wait_for(NotEquals(old_selection))
 
-    def click_launcher_icon(self, icon, button=1):
+    def click_launcher_icon(self, icon, button=1, move_mouse_after=True):
         """Move the mouse over the launcher icon, and click it.
         `icon` must be an instance of SimpleLauncherIcon or it's descendants.
+        `move_mouse_after` moves the mouse outside the launcher if true.
         """
         if not isinstance(icon, SimpleLauncherIcon):
-            raise TypeError("icon must be a LauncherIcon")
+            raise TypeError("icon must be a LauncherIcon, not %s" % type(icon))
 
         logger.debug("Clicking launcher icon %r on monitor %d with mouse button %d",
             icon, self.monitor, button)
@@ -258,7 +325,68 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
                 break
             self._mouse.move(target_x, target_y )
             sleep(1)
-        self._mouse.click(button)
+        self._mouse.click(button, press_duration)
+        if (move_mouse_after):
+          self.move_mouse_to_right_of_launcher()
+
+    def drag_icon_to_position(self, icon, pos, drag_type=IconDragType.INSIDE):
+        """Place the supplied icon above the icon in the position pos.
+
+        The icon is dragged inside or outside the launcher.
+
+        >>> drag_icon_to_position(calc_icon, 0, IconDragType.INSIDE)
+
+        This will drag the calculator icon above the bfb (but as you can't go
+        above the bfb it will move below it (to position 1))
+
+        """
+        if not isinstance(icon, BamfLauncherIcon):
+            raise TypeError("icon must be a LauncherIcon")
+
+        [launcher_model] = LauncherModel.get_all_instances()
+        all_icons = launcher_model.get_launcher_icons()
+        all_icon_len = len(all_icons)
+        if pos >= all_icon_len:
+            raise ValueError("pos is outside valid range (0-%d)" % all_icon_len)
+
+        logger.debug("Dragging launcher icon %r on monitor %d to position %s"
+                     % (icon, self.monitor, pos))
+        self.mouse_reveal_launcher()
+
+        icon_height = get_compiz_option("unityshell", "icon_size")
+
+        target_icon = all_icons[pos]
+        if target_icon.id == icon.id:
+            logger.warning("%s is already the icon in position %d. Nothing to do." % (icon, pos))
+            return
+
+        self.move_mouse_to_icon(icon)
+        self._mouse.press()
+        sleep(2)
+
+        if drag_type == IconDragType.OUTSIDE:
+            shift_over = self._mouse.x + (icon_height * 2)
+            self._mouse.move(shift_over, self._mouse.y)
+            sleep(0.5)
+
+        # find the target drop position, between the center & top of the target icon
+        target_y = target_icon.center_y - floor(icon_height / 4)
+
+        # Need to move the icons top (if moving up) or bottom (if moving
+        # downward) to the target position
+        moving_up = True if icon.center_y > target_icon.center_y else False
+        icon_half_height = floor(icon_height / 2)
+        fudge_factor = 5
+        if moving_up or drag_type == IconDragType.OUTSIDE:
+            target_y += icon_half_height + fudge_factor
+        else:
+            target_y -= icon_half_height - fudge_factor
+
+        self._mouse.move(self._mouse.x, target_y, rate=20,
+                         time_between_events=0.05)
+        sleep(1)
+
+        self._mouse.release()
         self.move_mouse_to_right_of_launcher()
 
     def lock_to_launcher(self, icon):
@@ -302,7 +430,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
 
 class LauncherModel(UnityIntrospectionObject):
-    """THe launcher model. Contains all launcher icons as children."""
+    """The launcher model. Contains all launcher icons as children."""
 
     def get_bfb_icon(self):
         icons = BFBLauncherIcon.get_all_instances()
@@ -332,47 +460,39 @@ class LauncherModel(UnityIntrospectionObject):
 
         return icons
 
-    def get_icon_by_tooltip_text(self, tooltip_text):
-        """Get a launcher icon given it's tooltip text.
+    def get_icon(self, **kwargs):
+        """Get a launcher icon from the model according to some filters.
 
-        Returns None if there is no icon with the specified text.
-        """
-        for icon in self.get_launcher_icons():
-            if icon.tooltip_text == tooltip_text:
-                return icon
-        return None
+        This method accepts keyword argument that are the filters to use when
+        looking for an icon. For example, to find an icon with a particular
+        desktop_id, one might do this from within a test:
 
-    def get_icon_by_desktop_id(self, desktop_id):
-        """Gets a launcher icon with the specified desktop id.
+        >>> self.launcher.model.get_icon(desktop_id="gcalctool.desktop")
 
-        Returns None if there is no such launcher icon.
-        """
-        icons = self.get_children_by_type(SimpleLauncherIcon, desktop_id=desktop_id)
-        if len(icons):
-            return icons[0]
+        This method returns only one icon. It is the callers responsibility to
+        ensure that the filter matches only one icon.
 
-        return None
+        This method will attempt to get the launcher icon, and will retry several
+        times, so the caller can be assured that if this method doesn't find
+        the icon it really does not exist.
 
-    def get_icon_by_window_xid(self, xid):
-        """Gets a launcher icon that controls the specified window xid."""
-        icons = [i for i in self.get_children_by_type(SimpleLauncherIcon) if i.xids.contains(xid)]
-        if (len(icons)):
-            return icons[0]
+        If no keyword arguments are specified, ValueError will be raised.
 
-        return None
-
-    def get_icons_by_filter(self, **kwargs):
-        """Get a list of icons that satisfy the given filters.
-
-        For example:
-
-        >>> get_icons_by_filter(tooltip_text="My Application")
-        ... [...]
-
-        Returns an empty list if no icons matched the filter.
+        If no icons are matched, None is returned.
 
         """
-        return self.get_children_by_type(SimpleLauncherIcon, **kwargs)
+
+        if not kwargs:
+            raise ValueError("You must specify at least one keyword argument to ths method.")
+
+        for i in range(10):
+            icons = self.get_children_by_type(SimpleLauncherIcon, **kwargs)
+            if len(icons) > 1:
+                logger.warning("Got more than one icon returned using filters=%r. Returning first one", kwargs)
+            if icons:
+                return icons[0]
+            sleep(1)
+        return None
 
     def num_launcher_icons(self):
         """Get the number of icons in the launcher model."""

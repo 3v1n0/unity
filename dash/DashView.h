@@ -19,15 +19,13 @@
 #ifndef UNITY_DASH_VIEW_H_
 #define UNITY_DASH_VIEW_H_
 
-#include <string>
-
-#include <NuxGraphics/GraphicsEngine.h>
 #include <Nux/Nux.h>
 #include <Nux/PaintLayer.h>
 #include <Nux/View.h>
 #include <Nux/VLayout.h>
 #include <UnityCore/FilesystemLenses.h>
 #include <UnityCore/HomeLens.h>
+#include <UnityCore/GLibSource.h>
 
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/SearchBar.h"
@@ -36,6 +34,9 @@
 #include "LensView.h"
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/OverlayRenderer.h"
+#include "UnityCore/Preview.h"
+#include "previews/PreviewContainer.h"
+#include "PreviewStateMachine.h"
 
 namespace unity
 {
@@ -60,6 +61,9 @@ public:
   void OnActivateRequest(GVariant* args);
   void SetMonitorOffset(int x, int y);
 
+  void SetPreview(Preview::Ptr preview);
+  void ClosePreview();
+
   std::string const GetIdForShortcutActivation(std::string const& shortcut) const;
   std::vector<char> GetAllShortcuts();
 
@@ -81,7 +85,9 @@ private:
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
   virtual long PostLayoutManagement (long LayoutResult);
-
+  nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
+  
+  void BuildPreview(Preview::Ptr model);
   void OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key);
   void OnBackgroundColorChanged(GVariant* args);
   void OnSearchChanged(std::string const& search_string);
@@ -108,17 +114,19 @@ private:
 
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
 
-  static gboolean ResetSearchStateCb(gpointer data);
-  static gboolean HideResultMessageCb(gpointer data);
-
-private:
   UBusManager ubus_manager_;
   FilesystemLenses lenses_;
   HomeLens::Ptr home_lens_;
   LensViews lens_views_;
 
-
   // View related
+  PreviewStateMachine preview_state_machine_;
+  previews::PreviewContainer::Ptr preview_container_;
+  bool preview_displaying_;
+  std::string stored_preview_unique_id_;
+  std::string stored_preview_uri_identifier_;
+  dash::previews::Navigation preview_navigation_mode_;
+
   nux::VLayout* layout_;
   DashLayout* content_layout_;
   nux::HLayout* search_bar_layout_;
@@ -135,13 +143,13 @@ private:
 
   std::string last_activated_uri_;
   // we're passing this back to g_* functions, so we'll keep the g* type
-  guint searching_timeout_id_;
   bool search_in_progress_;
   bool activate_on_finish_;
 
-  guint hide_message_delay_id_;
-
   bool visible_;
+
+  glib::Source::UniquePtr searching_timeout_;
+  glib::Source::UniquePtr hide_message_delay_;
 };
 
 

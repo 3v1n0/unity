@@ -242,7 +242,7 @@ void
 MultiActionList::InitiateAll(CompOption::Vector& extraArgs, int state)
 {
   CompOption::Vector argument;
-  if (!m_ActionList.size())
+  if (m_ActionList.empty())
     return;
 
   argument.resize(1);
@@ -269,7 +269,7 @@ MultiActionList::TerminateAll(CompOption::Vector& extraArgs)
 {
   CompOption::Vector argument;
   CompOption::Value  value;
-  if (!m_ActionList.size())
+  if (m_ActionList.empty())
     return;
 
   argument.resize(1);
@@ -297,8 +297,8 @@ MultiActionList::TerminateAll(CompOption::Vector& extraArgs)
   }
 }
 
-unsigned long long 
-PluginAdapter::GetWindowActiveNumber (guint32 xid)
+unsigned long long
+PluginAdapter::GetWindowActiveNumber (guint32 xid) const
 {
   Window win = xid;
   CompWindow* window;
@@ -311,7 +311,7 @@ PluginAdapter::GetWindowActiveNumber (guint32 xid)
     unsigned long long result = window->activeNum ();
     if (bias_active_to_viewport() && window->defaultViewport() == m_Screen->vp())
       result = result << 32;
-    
+
     return result;
   }
 
@@ -368,21 +368,27 @@ PluginAdapter::TerminateScale()
 }
 
 bool
-PluginAdapter::IsScaleActive()
+PluginAdapter::IsScaleActive() const
 {
   return m_Screen->grabExist("scale");
 }
 
 bool
-PluginAdapter::IsScaleActiveForGroup()
+PluginAdapter::IsScaleActiveForGroup() const
 {
   return _spread_windows_state && m_Screen->grabExist("scale");
 }
 
 bool
-PluginAdapter::IsExpoActive()
+PluginAdapter::IsExpoActive() const
 {
   return m_Screen->grabExist("expo");
+}
+
+bool
+PluginAdapter::IsWallActive() const
+{
+  return m_Screen->grabExist("wall");
 }
 
 void
@@ -395,13 +401,13 @@ PluginAdapter::InitiateExpo()
 
 // WindowManager implementation
 guint32
-PluginAdapter::GetActiveWindow()
+PluginAdapter::GetActiveWindow() const
 {
   return m_Screen->activeWindow();
 }
 
 bool
-PluginAdapter::IsWindowMaximized(guint xid)
+PluginAdapter::IsWindowMaximized(guint xid) const
 {
   Window win = xid;
   CompWindow* window;
@@ -456,7 +462,7 @@ PluginAdapter::IsWindowDecorated(guint32 xid)
 }
 
 bool
-PluginAdapter::IsWindowOnCurrentDesktop(guint32 xid)
+PluginAdapter::IsWindowOnCurrentDesktop(guint32 xid) const
 {
   Window win = xid;
   CompWindow* window;
@@ -472,7 +478,7 @@ PluginAdapter::IsWindowOnCurrentDesktop(guint32 xid)
 }
 
 bool
-PluginAdapter::IsWindowObscured(guint32 xid)
+PluginAdapter::IsWindowObscured(guint32 xid) const
 {
   Window win = xid;
   CompWindow* window;
@@ -505,7 +511,7 @@ PluginAdapter::IsWindowObscured(guint32 xid)
 }
 
 bool
-PluginAdapter::IsWindowMapped(guint32 xid)
+PluginAdapter::IsWindowMapped(guint32 xid) const
 {
   Window win = xid;
   CompWindow* window;
@@ -517,7 +523,7 @@ PluginAdapter::IsWindowMapped(guint32 xid)
 }
 
 bool
-PluginAdapter::IsWindowVisible(guint32 xid)
+PluginAdapter::IsWindowVisible(guint32 xid) const
 {
   Window win = xid;
   CompWindow* window;
@@ -530,12 +536,10 @@ PluginAdapter::IsWindowVisible(guint32 xid)
 }
 
 bool
-PluginAdapter::IsWindowOnTop(guint32 xid)
+PluginAdapter::IsWindowOnTop(guint32 xid) const
 {
   Window win = xid;
-  CompWindow* window;
-
-  window = m_Screen->findWindow(win);
+  CompWindow* window = m_Screen->findWindow(win);
 
   if (window)
   {
@@ -543,6 +547,7 @@ PluginAdapter::IsWindowOnTop(guint32 xid)
       return false;
 
     CompPoint window_vp = window->defaultViewport();
+    nux::Geometry const& window_vp_geo = GetWorkAreaGeometry(window->id());
     std::vector<Window> const& our_xids = nux::XInputWindow::NativeHandleList();
 
     for (CompWindow* sibling = window->next; sibling; sibling = sibling->next)
@@ -550,6 +555,13 @@ PluginAdapter::IsWindowOnTop(guint32 xid)
       if (sibling->defaultViewport() == window_vp && !sibling->minimized() &&
           sibling->isMapped() && sibling->isViewable() && !sibling->inShowDesktopMode() &&
           !(sibling->state() & CompWindowStateAboveMask) &&
+          !(sibling->type() & CompWindowTypeSplashMask) &&
+          !(sibling->type() & CompWindowTypeDockMask) &&
+          /* FIXME: This should be included by the above defaultViewport() check,
+           * but it doesn't seem to work correctly when there's only one workspace
+           * enabled, so please drop the line above when bug #996604 is fixed in
+           * Compiz. */
+          !window_vp_geo.Intersect(GetWindowGeometry(sibling->id())).IsNull() &&
           std::find(our_xids.begin(), our_xids.end(), sibling->id()) == our_xids.end())
       {
         return false;
@@ -563,7 +575,7 @@ PluginAdapter::IsWindowOnTop(guint32 xid)
 }
 
 bool
-PluginAdapter::IsWindowClosable(guint32 xid)
+PluginAdapter::IsWindowClosable(guint32 xid) const
 {
   Window win = xid;
   CompWindow* window;
@@ -576,7 +588,7 @@ PluginAdapter::IsWindowClosable(guint32 xid)
 }
 
 bool
-PluginAdapter::IsWindowMinimizable(guint32 xid)
+PluginAdapter::IsWindowMinimizable(guint32 xid) const
 {
   Window win = xid;
   CompWindow* window;
@@ -589,7 +601,7 @@ PluginAdapter::IsWindowMinimizable(guint32 xid)
 }
 
 bool
-PluginAdapter::IsWindowMaximizable(guint32 xid)
+PluginAdapter::IsWindowMaximizable(guint32 xid) const
 {
   Window win = xid;
   CompWindow* window;
@@ -684,7 +696,7 @@ PluginAdapter::Lower(guint32 xid)
     window->lower();
 }
 
-void 
+void
 PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility focus_visibility, int monitor, bool only_top_win)
 {
   CompPoint target_vp = m_Screen->vp();
@@ -806,10 +818,11 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
   }
 }
 
-bool 
+bool
 PluginAdapter::ScaleWindowGroup(std::vector<Window> windows, int state, bool force)
 {
-  if (windows.size() > 1 || (force && windows.size() > 0))
+  std::size_t num_windows = windows.size();
+  if (num_windows > 1 || (force && num_windows))
   {
     std::string match = MatchStringForXids(&windows);
     InitiateScale(match, state);
@@ -819,7 +832,7 @@ PluginAdapter::ScaleWindowGroup(std::vector<Window> windows, int state, bool for
   return false;
 }
 
-void 
+void
 PluginAdapter::SetWindowIconGeometry(Window window, nux::Geometry const& geo)
 {
   long data[4];
@@ -838,20 +851,28 @@ void
 PluginAdapter::ShowDesktop()
 {
   if (_in_show_desktop)
+  {
+    LOG_INFO(logger) << "Leaving show-desktop mode.";
     m_Screen->leaveShowDesktopMode(NULL);
+  }
   else
+  {
+    LOG_INFO(logger) << "Entering show-desktop mode.";
     m_Screen->enterShowDesktopMode();
+  }
 }
 
 void
 PluginAdapter::OnShowDesktop()
 {
+  LOG_DEBUG(logger) << "Now in show desktop mode.";
   _in_show_desktop = true;
 }
 
 void
 PluginAdapter::OnLeaveDesktop()
 {
+  LOG_DEBUG(logger) << "No longer in show desktop mode.";
   _in_show_desktop = false;
 }
 
@@ -910,20 +931,20 @@ PluginAdapter::GetWindowSavedGeometry(guint32 xid) const
   return geo;
 }
 
-nux::Geometry 
+nux::Geometry
 PluginAdapter::GetScreenGeometry() const
 {
   nux::Geometry geo;
-  
+
   geo.x = 0;
   geo.y = 0;
   geo.width = m_Screen->width();
   geo.height = m_Screen->height();
-  
-  return geo;  
+
+  return geo;
 }
 
-nux::Geometry 
+nux::Geometry
 PluginAdapter::GetWorkAreaGeometry(guint32 xid) const
 {
   CompWindow* window = nullptr;
@@ -951,7 +972,7 @@ PluginAdapter::GetWorkAreaGeometry(guint32 xid) const
 }
 
 bool
-PluginAdapter::CheckWindowIntersection(nux::Geometry const& region, CompWindow* window)
+PluginAdapter::CheckWindowIntersection(nux::Geometry const& region, CompWindow* window) const
 {
   int intersect_types = CompWindowTypeNormalMask | CompWindowTypeDialogMask |
                         CompWindowTypeModalDialogMask | CompWindowTypeUtilMask;
@@ -969,7 +990,7 @@ PluginAdapter::CheckWindowIntersection(nux::Geometry const& region, CompWindow* 
   return false;
 }
 
-void 
+void
 PluginAdapter::CheckWindowIntersections (nux::Geometry const& region, bool &active, bool &any)
 {
   // prime to false so we can assume values later one
@@ -996,7 +1017,7 @@ PluginAdapter::CheckWindowIntersections (nux::Geometry const& region, bool &acti
   }
   else
   {
-    for (it = window_list.begin(); it != window_list.end(); it++)
+    for (it = window_list.begin(); it != window_list.end(); ++it)
     {
       if (CheckWindowIntersection(region, *it))
       {
@@ -1008,7 +1029,7 @@ PluginAdapter::CheckWindowIntersections (nux::Geometry const& region, bool &acti
 }
 
 int
-PluginAdapter::WorkspaceCount()
+PluginAdapter::WorkspaceCount() const
 {
   return m_Screen->vpSize().width() * m_Screen->vpSize().height();
 }
@@ -1091,19 +1112,19 @@ PluginAdapter::Undecorate(guint32 xid)
 }
 
 bool
-PluginAdapter::IsScreenGrabbed()
+PluginAdapter::IsScreenGrabbed() const
 {
   return m_Screen->grabbed();
 }
 
 bool
-PluginAdapter::IsViewPortSwitchStarted()
+PluginAdapter::IsViewPortSwitchStarted() const
 {
   return _vp_switch_started;
 }
 
 /* Returns true if the window was maximized */
-bool PluginAdapter::MaximizeIfBigEnough(CompWindow* window)
+bool PluginAdapter::MaximizeIfBigEnough(CompWindow* window) const
 {
   XClassHint   classHint;
   Status       status;
@@ -1129,7 +1150,7 @@ bool PluginAdapter::MaximizeIfBigEnough(CompWindow* window)
   {
     win_wmclass = classHint.res_class;
     XFree(classHint.res_class);
-    
+
     if (classHint.res_name)
       XFree(classHint.res_name);
   }
@@ -1141,7 +1162,7 @@ bool PluginAdapter::MaximizeIfBigEnough(CompWindow* window)
 
   screen_height = o.workArea().height();
   screen_width = o.workArea().width();
-  
+
   // See bug https://bugs.launchpad.net/unity/+bug/797808
   if (screen_height * screen_width > THRESHOLD_HEIGHT * THRESHOLD_WIDTH)
     return false;

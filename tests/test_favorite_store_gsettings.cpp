@@ -41,10 +41,9 @@ using testing::Eq;
 namespace {
 
 // Constant
+const gchar* SETTINGS_NAME = "com.canonical.Unity.Launcher";
+const gchar* SETTINGS_KEY = "favorites";
 const gchar* SCHEMA_DIRECTORY = BUILDDIR"/settings";
-const gchar* BASE_STORE_FILE = BUILDDIR"/settings/test-favorite-store-gsettings.store";
-const gchar* BASE_STORE_CONTENTS = "[desktop/unity/launcher]\n" \
-                                   "favorites=['%s', '%s', '%s']";
 
 const char* base_store_favs[] = { BUILDDIR"/tests/data/ubuntuone-installer.desktop",
                                   BUILDDIR"/tests/data/ubuntu-software-center.desktop",
@@ -76,41 +75,33 @@ bool ends_with(std::string const& value, std::string const& suffix)
 class TestFavoriteStoreGSettings : public testing::Test
 {
 public:
-  glib::Object<GSettingsBackend> backend;
-  std::unique_ptr<internal::FavoriteStoreGSettings> setting_singleton_instance;
+  std::unique_ptr<internal::FavoriteStoreGSettings> favorite_store;
+  glib::Object<GSettings> gsettings_client;
 
   virtual void SetUp()
   {
     // set the data directory so gsettings can find the schema
-    g_setenv("GSETTINGS_SCHEMA_DIR", SCHEMA_DIRECTORY, false);
+    g_setenv("GSETTINGS_SCHEMA_DIR", SCHEMA_DIRECTORY, true);
+    g_setenv("GSETTINGS_BACKEND", "memory", true);
 
-    glib::Error error;
-    glib::String contents(g_strdup_printf(BASE_STORE_CONTENTS,
-                                          base_store_favs[0],
-                                          base_store_favs[1],
-                                          base_store_favs[2]
-                                          ));
+    favorite_store.reset(new internal::FavoriteStoreGSettings());
 
-    g_file_set_contents(BASE_STORE_FILE,
-                        contents.Value(),
-                        -1,
-                        error.AsOutParam());
-
-    ASSERT_FALSE(error);
-
-    backend = g_keyfile_settings_backend_new(BASE_STORE_FILE, "/", "root");
-    setting_singleton_instance.reset(new internal::FavoriteStoreGSettings(backend.RawPtr()));
+    // Setting the test values
+    gsettings_client = g_settings_new(SETTINGS_NAME);
+    g_settings_set_strv(gsettings_client, SETTINGS_KEY, base_store_favs);
   }
 
   virtual void TearDown()
   {
+    g_setenv("GSETTINGS_SCHEMA_DIR", "", true);
+    g_setenv("GSETTINGS_BACKEND", "", true);
   }
-
 };
 
 TEST_F(TestFavoriteStoreGSettings, TestAllocation)
 {
-  EXPECT_TRUE(G_IS_SETTINGS_BACKEND(backend.RawPtr()));
+  FavoriteStore &settings = FavoriteStore::Instance();
+  EXPECT_EQ(&settings, favorite_store.get());
 }
 
 TEST_F(TestFavoriteStoreGSettings, TestGetFavorites)
@@ -245,9 +236,7 @@ TEST_F(TestFavoriteStoreGSettings, TestFavoriteAddedSignalFirst)
   favs.push_back(base_store_favs[0]);
   favs.push_back(base_store_favs[1]);
   favs.push_back(base_store_favs[2]);
-  setting_singleton_instance->SaveFavorites(favs, false);
-
-  sleep(1);
+  favorite_store->SaveFavorites(favs, false);
 
   ASSERT_TRUE(signal_received);
   EXPECT_EQ(position, base_store_favs[0]);
@@ -273,9 +262,7 @@ TEST_F(TestFavoriteStoreGSettings, TestFavoriteAddedSignalMiddle)
   favs.push_back(base_store_favs[1]);
   favs.push_back(other_desktop);
   favs.push_back(base_store_favs[2]);
-  setting_singleton_instance->SaveFavorites(favs, false);
-
-  sleep(1);
+  favorite_store->SaveFavorites(favs, false);
 
   ASSERT_TRUE(signal_received);
   EXPECT_EQ(position, base_store_favs[1]);
@@ -301,9 +288,7 @@ TEST_F(TestFavoriteStoreGSettings, TestFavoriteAddedSignalEnd)
   favs.push_back(base_store_favs[1]);
   favs.push_back(base_store_favs[2]);
   favs.push_back(other_desktop);
-  setting_singleton_instance->SaveFavorites(favs, false);
-
-  sleep(1);
+  favorite_store->SaveFavorites(favs, false);
 
   ASSERT_TRUE(signal_received);
   EXPECT_EQ(position, base_store_favs[2]);
@@ -326,9 +311,7 @@ TEST_F(TestFavoriteStoreGSettings, TestFavoriteAddedSignalEmpty)
 
   FavoriteList favs;
   favs.push_back(other_desktop);
-  setting_singleton_instance->SaveFavorites(favs, false);
-
-  sleep(1);
+  favorite_store->SaveFavorites(favs, false);
 
   ASSERT_TRUE(signal_received);
   EXPECT_EQ(position, "");
@@ -350,9 +333,7 @@ TEST_F(TestFavoriteStoreGSettings, TestFavoriteRemoved)
   FavoriteList favs;
   favs.push_back(base_store_favs[0]);
   favs.push_back(base_store_favs[2]);
-  setting_singleton_instance->SaveFavorites(favs, false);
-
-  sleep(1);
+  favorite_store->SaveFavorites(favs, false);
 
   ASSERT_TRUE(signal_received);
   EXPECT_EQ(path_removed, base_store_favs[1]);
@@ -372,9 +353,7 @@ TEST_F(TestFavoriteStoreGSettings, TestFavoriteReordered)
   favs.push_back(base_store_favs[0]);
   favs.push_back(base_store_favs[2]);
   favs.push_back(base_store_favs[1]);
-  setting_singleton_instance->SaveFavorites(favs, false);
-
-  sleep(1);
+  favorite_store->SaveFavorites(favs, false);
 
   ASSERT_TRUE(signal_received);
 
@@ -382,9 +361,7 @@ TEST_F(TestFavoriteStoreGSettings, TestFavoriteReordered)
   favs.push_back(base_store_favs[0]);
   favs.push_back(base_store_favs[2]);
   favs.push_back(base_store_favs[1]);
-  setting_singleton_instance->SaveFavorites(favs, false);
-
-  sleep(1);
+  favorite_store->SaveFavorites(favs, false);
 
   ASSERT_FALSE(signal_received);
 }
@@ -415,9 +392,7 @@ TEST_F(TestFavoriteStoreGSettings, TestFavoriteSignalsMixed1)
   favs.push_back(base_store_favs[0]);
   favs.push_back(base_store_favs[1]);
   favs.push_back(other_desktop);
-  setting_singleton_instance->SaveFavorites(favs, false);
-
-  sleep(1);
+  favorite_store->SaveFavorites(favs, false);
 
   EXPECT_TRUE(added_received);
   EXPECT_TRUE(removed_received);
@@ -450,9 +425,7 @@ TEST_F(TestFavoriteStoreGSettings, TestFavoriteSignalsMixed2)
   favs.push_back(base_store_favs[1]);
   favs.push_back(other_desktop);
   favs.push_back(base_store_favs[0]);
-  setting_singleton_instance->SaveFavorites(favs, false);
-
-  sleep(1);
+  favorite_store->SaveFavorites(favs, false);
 
   EXPECT_TRUE(added_received);
   EXPECT_TRUE(removed_received);
@@ -484,9 +457,7 @@ TEST_F(TestFavoriteStoreGSettings, TestFavoriteSignalsMixed3)
   FavoriteList favs;
   favs.push_back(base_store_favs[1]);
   favs.push_back(base_store_favs[0]);
-  setting_singleton_instance->SaveFavorites(favs, false);
-
-  sleep(1);
+  favorite_store->SaveFavorites(favs, false);
 
   EXPECT_FALSE(added_received);
   EXPECT_TRUE(removed_received);

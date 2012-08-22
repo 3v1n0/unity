@@ -54,7 +54,9 @@ public:
 
   std::string GetStringAt(int position);
   bool GetBoolAt(int position);
+  int GetIntAt(int position);
   unsigned int GetUIntAt(int position);
+  float GetFloatAt(int position);
 
   template<typename T>
   void set_renderer(T renderer);

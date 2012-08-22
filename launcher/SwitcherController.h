@@ -20,17 +20,14 @@
 #ifndef SWITCHERCONTROLLER_H
 #define SWITCHERCONTROLLER_H
 
-#include <memory>
+#include <UnityCore/Variant.h>
+#include <UnityCore/GLibSource.h>
 
 #include "unity-shared/Introspectable.h"
-#include <UnityCore/Variant.h>
+#include "unity-shared/UBusWrapper.h"
 
 #include "SwitcherModel.h"
 #include "SwitcherView.h"
-#include "unity-shared/UBusWrapper.h"
-
-#include <boost/shared_ptr.hpp>
-#include <sigc++/sigc++.h>
 
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
@@ -64,7 +61,6 @@ public:
   typedef std::shared_ptr<Controller> Ptr;
 
   Controller(unsigned int load_timeout = 20);
-  virtual ~Controller();
 
   nux::Property<int> timeout_length;
   nux::Property<bool> detail_on_timeout;
@@ -73,6 +69,8 @@ public:
 
   void Show(ShowMode show, SortMode sort, bool reverse, std::vector<launcher::AbstractLauncherIcon::Ptr> results);
   void Hide(bool accept_state=true);
+
+  bool CanShowSwitcher(const std::vector<launcher::AbstractLauncherIcon::Ptr>& resutls) const;
 
   bool Visible();
 
@@ -85,7 +83,6 @@ public:
   void Select (int index);
 
   void SetDetail(bool detail, unsigned int min_windows = 1);
-  virtual gboolean OnDetailTimer();
 
   void SelectFirstItem();
 
@@ -94,6 +91,14 @@ public:
   SwitcherView * GetView ();
 
   ui::LayoutWindowList ExternalRenderTargets ();
+
+  guint GetSwitcherInputWindowId() const;
+
+  bool IsShowDesktopDisabled() const;
+  void SetShowDesktopDisabled(bool disabled);
+  int StartIndex() const;
+
+  sigc::signal<void> view_built;
 
 protected:
   // Introspectable methods
@@ -104,6 +109,7 @@ protected:
   virtual void ConstructView();
   virtual void ShowView();
 
+  virtual bool OnDetailTimer();
   void OnModelSelectionChanged(launcher::AbstractLauncherIcon::Ptr icon);
 
   unsigned int construct_timeout_;
@@ -117,26 +123,23 @@ private:
   };
 
   void OnBackgroundUpdate(GVariant* data);
+  static bool CompareSwitcherItemsPriority(launcher::AbstractLauncherIcon::Ptr first, launcher::AbstractLauncherIcon::Ptr second);
 
   SwitcherModel::Ptr model_;
   SwitcherView::Ptr view_;
 
-  UBusManager ubus_manager_;
   nux::Geometry workarea_;
-
-  nux::BaseWindow* view_window_;
+  nux::ObjectPtr<nux::BaseWindow> view_window_;
   nux::HLayout* main_layout_;
 
   int monitor_;
   bool visible_;
-  guint show_timer_;
-  guint detail_timer_;
-  guint lazy_timer_;
-  guint view_idle_timer_;
+  bool show_desktop_disabled_;
   nux::Color bg_color_;
   DetailMode detail_mode_;
 
-  static bool CompareSwitcherItemsPriority(launcher::AbstractLauncherIcon::Ptr first, launcher::AbstractLauncherIcon::Ptr second);
+  UBusManager ubus_manager_;
+  glib::SourceManager sources_;
 };
 
 }

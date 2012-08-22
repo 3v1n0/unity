@@ -28,20 +28,21 @@
 #include <Nux/View.h>
 #include <Nux/VLayout.h>
 #include <UnityCore/Lens.h>
+#include <UnityCore/GLibSource.h>
 
 #include "FilterBar.h"
 #include "unity-shared/Introspectable.h"
 #include "PlacesGroup.h"
-#include "PlacesVScrollBar.h"
 #include "ResultViewGrid.h"
 #include "unity-shared/UBusWrapper.h"
+#include "unity-shared/PlacesVScrollBar.h"
 
 namespace unity
 {
 namespace dash
 {
-class LensScrollView;
 
+class LensScrollView;
 class LensView : public nux::View, public unity::debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(LensView, nux::View);
@@ -51,7 +52,6 @@ class LensView : public nux::View, public unity::debug::Introspectable
 public:
   LensView();
   LensView(Lens::Ptr lens, nux::Area* show_filters);
-  ~LensView();
 
   CategoryGroups& categories() { return categories_; }
   FilterBar* filter_bar() const { return filter_bar_; }
@@ -69,6 +69,7 @@ public:
   nux::Property<bool> can_refine_search;
 
   sigc::signal<void, std::string const&> uri_activated;
+  sigc::signal<void, std::string const&, std::string const&> uri_preview_activated;
 
   void PerformSearch(std::string const& search_query);
   void CheckNoResults(Lens::Hints const& hints);
@@ -81,6 +82,7 @@ private:
   void SetupFilters();
 
   void OnCategoryAdded(Category const& category);
+  void OnCategoryOrderChanged();
   void OnResultAdded(Result const& result);
   void OnResultRemoved(Result const& result);
   void UpdateCounts(PlacesGroup* group);
@@ -90,20 +92,22 @@ private:
   void OnFilterRemoved(Filter::Ptr filter);
   void OnViewTypeChanged(ViewType view_type);
   void QueueFixRenderering();
+  bool FixRenderering();
+  bool ReinitializeFilterModels();
 
-  static gboolean FixRenderering(LensView* self);
+  static void GetFilterForCategoryIndex(unsigned index, DeeFilter* filter);
+
+  void BuildPreview(std::string const& uri, Preview::Ptr model);
 
   virtual void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
-
+  
   virtual bool AcceptKeyNavFocus();
   virtual std::string GetName() const;
   virtual void AddProperties(GVariantBuilder* builder);
 
   std::string get_search_string() const;
 
-private:
-  UBusManager ubus_manager_;
   Lens::Ptr lens_;
   CategoryGroups categories_;
   ResultCounts counts_;
@@ -119,9 +123,10 @@ private:
   FilterBar* filter_bar_;
   nux::StaticCairoText* no_results_;
 
-  guint fix_renderering_id_;
-
-  UBusManager ubus_;
+  UBusManager ubus_manager_;
+  glib::Source::UniquePtr fix_rendering_idle_;
+  int last_good_filter_model_;
+  glib::Source::UniquePtr fix_filter_models_idle_;
 };
 
 

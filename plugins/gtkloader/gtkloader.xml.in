@@ -1,7 +1,0 @@
-<compiz>
-	<plugin name="gtkloader" useBcop="true">
-		<_short>GTK Loader</_short>
-		<_long>Initializes GTK once</_long>
-		<category>Utility</category>
-	</plugin>
-</compiz>

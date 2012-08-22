@@ -37,7 +37,7 @@ public:
   typedef nux::ObjectPtr<Icon> Ptr;
   Icon();
 
-  void SetIcon(std::string const& icon_name, unsigned int icon_size, unsigned int tile_size);
+  void SetIcon(std::string const& icon_name, unsigned int icon_size, unsigned int tile_size, unsigned int padding);
 
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -45,9 +45,6 @@ protected:
   std::string GetName() const;
 
 private:
-  nux::ObjectPtr<nux::BaseTexture> background_;
-  nux::ObjectPtr<nux::BaseTexture> gloss_;
-  nux::ObjectPtr<nux::BaseTexture> edge_;
   nux::ObjectPtr<HudIconTextureSource> icon_texture_source_;
   unity::ui::IconRenderer icon_renderer_;
 };

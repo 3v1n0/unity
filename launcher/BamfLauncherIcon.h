@@ -53,9 +53,9 @@ public:
   bool IsRunning() const;
   bool IsUrgent() const;
 
-  void Quit();
-  void Stick(bool save = true);
-  void UnStick();
+  virtual void Quit();
+  virtual void Stick(bool save = true);
+  virtual void UnStick();
 
   virtual bool ShowInSwitcher(bool current);
   virtual unsigned long long SwitcherPriority();
@@ -82,7 +82,7 @@ protected:
   bool OnShouldHighlightOnDrag(DndData const& dnd_data);
   nux::DndAction OnQueryAcceptDrop(DndData const& dnd_data);
 
-  std::list<DbusmenuMenuitem*> GetMenus();
+  MenuItemsVector GetMenus();
   std::set<std::string> ValidateUrisForLaunch(DndData const& dnd_data);
 
   std::string GetRemoteUri();
@@ -122,16 +122,8 @@ private:
   const std::set<std::string>& GetSupportedTypes();
   std::string GetDesktopID();
 
-
   glib::Object<BamfApplication> _bamf_app;
-  bool _dnd_hovered;
-  guint _dnd_hover_timer;
-
   bool _supported_types_filled;
-  guint _remove_timeout_id;
-  guint _fill_supported_types_id;
-  guint _window_moved_id;
-  guint _quicklist_activated_id;
 
   std::string _remote_uri;
   std::string _desktop_file;

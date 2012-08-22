@@ -21,10 +21,9 @@
 #define _DEVICE_LAUNCHER_ICON_H__H
 
 #include <gio/gio.h>
-#define GDU_API_IS_SUBJECT_TO_CHANGE
-G_BEGIN_DECLS
-#include <gdu/gdu.h>
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/GLibSignal.h>
+
 #include "SimpleLauncherIcon.h"
 
 namespace unity
@@ -34,43 +33,41 @@ namespace launcher
 
 class DeviceLauncherIcon : public SimpleLauncherIcon
 {
-
 public:
+  typedef nux::ObjectPtr<DeviceLauncherIcon> Ptr;
+
   DeviceLauncherIcon(glib::Object<GVolume> const& volume);
 
-  void UpdateVisibility(int visibility = -1);
   void OnRemoved();
   bool CanEject();
   void Eject();
 
 protected:
-  std::list<DbusmenuMenuitem*> GetMenus();
-  void UpdateDeviceIcon();
+  MenuItemsVector GetMenus();
   std::string GetName() const;
 
 private:
+  void UpdateVisibility();
+  void UpdateDeviceIcon();
   void ActivateLauncherIcon(ActionArg arg);
   void ShowMount(GMount* mount);
   void Unmount();
   void StopDrive();
-  static void OnTogglePin(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
-  static void OnOpen(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
-  static void OnFormat(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
-  static void OnEject(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
-  static void OnUnmount(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
+  void OnTogglePin(DbusmenuMenuitem* item, int time);
+  void OnSettingsChanged();
+  void ShowNotification(std::string const&, unsigned, glib::Object<GdkPixbuf> const&, std::string const&);
+  void OnVolumeChanged(GVolume* volume);
   static void OnChanged(GVolume* volume, DeviceLauncherIcon* self);
   static void OnMountReady(GObject* object, GAsyncResult* result, DeviceLauncherIcon* self);
   static void OnEjectReady(GObject* object, GAsyncResult* result, DeviceLauncherIcon* self);
   static void OnUnmountReady(GObject* object, GAsyncResult* result, DeviceLauncherIcon* self);
-  static void OnDriveStop(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
-  void OnSettingsChanged();
-  void ShowNotification(std::string const&, unsigned, GdkPixbuf*, std::string const&);
 
 private:
+  glib::Source::UniquePtr changed_timeout_;
   glib::Object<GVolume> volume_;
-  glib::String device_file_;
+  glib::SignalManager gsignals_;
+
   std::string name_;
-  glib::Object<GduDevice> gdu_device_;
   bool keep_in_launcher_;
 };
 

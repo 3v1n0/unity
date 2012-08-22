@@ -25,9 +25,10 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
 #include <Nux/HLayout.h>
+#include <Nux/VLayout.h>
 
-#include <NuxCore/Logger.h>
-#include "HudButton.h"
+#include "unity-shared/Introspectable.h"
+
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/DashStyle.h"
 
@@ -35,10 +36,11 @@ namespace unity
 {
 namespace hud
 {
-
 namespace
 {
+
 nux::logging::Logger logger("unity.hud.view");
+
 const int grow_anim_length = 90 * 1000;
 const int pause_before_grow_length = 32 * 1000;
 
@@ -50,14 +52,14 @@ const int top_padding = 11;
 const int bottom_padding = 10;
 const int left_padding = 11;
 const int right_padding = 0;
+
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(View);
 
 View::View()
-  : nux::View(NUX_TRACKER_LOCATION)
-  , button_views_(NULL)
-  , timeline_id_(0)
+  : AbstractView()
+  , button_views_(nullptr)
   , start_time_(0)
   , last_known_height_(0)
   , current_height_(0)
@@ -69,11 +71,6 @@ View::View()
   renderer_.need_redraw.connect([this] () {
     QueueDraw();
   });
-
-  nux::ROPConfig rop;
-  rop.Blend = true;
-  rop.SrcBlend = GL_ONE;
-  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
   SetupViews();
   search_bar_->key_down.connect (sigc::mem_fun (this, &View::OnKeyDown));
@@ -121,13 +118,6 @@ View::View()
 
 View::~View()
 {
-  for (auto button = buttons_.begin(); button != buttons_.end(); button++)
-  {
-    RemoveChild((*button).GetPointer());
-  }
-
-  if (timeline_id_)
-    g_source_remove(timeline_id_);
 }
 
 void View::ProcessGrowShrink()
@@ -157,6 +147,11 @@ void View::ProcessGrowShrink()
    current_height_ = new_height;
   }
 
+  for (auto button : buttons_)
+  {
+    button->SetSkipDraw((button->GetAbsoluteY() + button->GetBaseHeight()) > (GetAbsoluteY() + current_height_));
+  }
+
   QueueDraw();
 
   if (diff > grow_anim_length + pause_before_grow_length)
@@ -171,6 +166,9 @@ void View::ProcessGrowShrink()
 
 void View::ResetToDefault()
 {
+  SetQueries(Hud::Queries());
+  current_height_ = content_layout_->GetBaseHeight();;
+
   search_bar_->search_string = "";
   search_bar_->search_hint = _("Type your command");
 }
@@ -218,7 +216,6 @@ std::list<HudButton::Ptr> const& View::buttons() const
   return buttons_;
 }
 
-
 void View::SetQueries(Hud::Queries queries)
 {
   // early exit, if the user is key navigating on the hud, we don't want to set new
@@ -244,6 +241,8 @@ void View::SetQueries(Hud::Queries queries)
 
     HudButton::Ptr button(new HudButton());
     buttons_.push_front(button);
+    button->SetMinimumWidth(content_width);
+    button->SetMaximumWidth(content_width);
     button->SetQuery(query);
 
     button_views_->AddView(button.GetPointer(), 0, nux::MINOR_POSITION_LEFT);
@@ -256,12 +255,11 @@ void View::SetQueries(Hud::Queries queries)
       query_activated.emit(dynamic_cast<HudButton*>(area)->GetQuery());
     });
 
-    button->key_nav_focus_change.connect([&](nux::Area* area, bool recieving, KeyNavDirection direction){
+    button->key_nav_focus_change.connect([&](nux::Area* area, bool recieving, nux::KeyNavDirection direction){
       if (recieving)
         query_selected.emit(dynamic_cast<HudButton*>(area)->GetQuery());
     });
 
-    button->SetMinimumWidth(content_width);
     ++found_items;
   }
 
@@ -272,20 +270,18 @@ void View::SetQueries(Hud::Queries queries)
     selected_button_ = 1;
   }
 
-
   QueueRelayout();
   QueueDraw();
 }
 
-void View::SetIcon(std::string icon_name, unsigned int tile_size, unsigned int size, unsigned int padding)
+void View::SetIcon(std::string const& icon_name, unsigned int tile_size, unsigned int size, unsigned int padding)
 {
   if (!icon_)
     return;
 
   LOG_DEBUG(logger) << "Setting icon to " << icon_name;
 
-  icon_->SetIcon(icon_name, size, tile_size);
-  icon_->SetMinimumWidth(tile_size + padding);
+  icon_->SetIcon(icon_name, size, tile_size, padding);
 
   /* We need to compute this value manually, since the _content_layout height changes */
   int content_height = search_bar_->GetBaseHeight() + top_padding + bottom_padding;
@@ -357,7 +353,7 @@ void View::SetupViews()
 {
   dash::Style& style = dash::Style::Instance();
 
-  nux::VLayout* super_layout = new nux::VLayout(); 
+  nux::VLayout* super_layout = new nux::VLayout();
   layout_ = new nux::HLayout();
   {
     // fill layout with icon
@@ -401,12 +397,11 @@ void View::OnSearchChanged(std::string const& search_string)
   LOG_DEBUG(logger) << "got search change";
   search_changed.emit(search_string);
 
-  std::list<HudButton::Ptr>::iterator it;
-  for(it = buttons_.begin(); it != buttons_.end(); ++it)
+  for(auto button : buttons_)
   {
-    (*it)->fake_focused = false;
+    button->fake_focused = false;
   }
-  
+
   if (!buttons_.empty())
     buttons_.back()->fake_focused = true;
 }
@@ -425,7 +420,9 @@ void View::OnKeyDown (unsigned long event_type, unsigned long keysym,
 
 void View::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
 {
-  if (!content_geo_.IsPointInside(x, y))
+  nux::Geometry current_geo(content_geo_);
+  current_geo.height = current_height_;
+  if (!current_geo.IsPointInside(x, y))
   {
     ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
   }
@@ -465,7 +462,7 @@ void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
       x += content_width - 1;
       nux::GetPainter().Draw2DLine(gfx_context, x, y, x, y + height, nux::color::White * 0.13);
     }
- 
+
     GetLayout()->ProcessDraw(gfx_context, force_draw);
     nux::GetPainter().PopBackgroundStack();
   }
@@ -477,15 +474,13 @@ void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 
   renderer_.DrawInnerCleanup(gfx_context, draw_content_geo, absolute_window_geometry_, window_geometry_);
 
-  if (timeline_need_more_draw_ && !timeline_id_)
+  if (timeline_need_more_draw_ && !timeline_idle_)
   {
-    timeline_id_ = g_idle_add([] (gpointer data) -> gboolean
-    {
-      View *self = static_cast<View*>(data);
-      self->QueueDraw();
-      self->timeline_id_ = 0;
-      return FALSE;
-    }, this);
+    timeline_idle_.reset(new glib::Idle([&] () {
+      QueueDraw();
+      timeline_idle_.reset();
+      return false;
+    }));
   }
 }
 
@@ -508,6 +503,18 @@ void View::AddProperties(GVariantBuilder* builder)
     .add(GetGeometry())
     .add("selected_button", selected_button_)
     .add("num_buttons", num_buttons);
+}
+
+debug::Introspectable::IntrospectableList View::GetIntrospectableChildren()
+{
+    introspectable_children_.clear();
+    introspectable_children_.merge(debug::Introspectable::GetIntrospectableChildren());
+    for (auto button: buttons_)
+    {
+      introspectable_children_.push_front(button.GetPointer());
+    }
+
+    return introspectable_children_;
 }
 
 bool View::InspectKeyEvent(unsigned int eventType,
@@ -557,6 +564,10 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
       unsigned long x11_key_code,
       unsigned long special_keys_state)
 {
+  // Only care about states of Alt, Ctrl, Super, Shift, not the lock keys
+  special_keys_state &= (nux::NUX_STATE_ALT | nux::NUX_STATE_CTRL |
+                         nux::NUX_STATE_SUPER | nux::NUX_STATE_SHIFT);
+
   nux::KeyNavDirection direction = nux::KEY_NAV_NONE;
   switch (x11_key_code)
   {
@@ -582,6 +593,12 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
   case NUX_KP_ENTER:
     // Not sure if Enter should be a navigation key
     direction = nux::KEY_NAV_ENTER;
+    break;
+  case NUX_VK_F4:
+    if (special_keys_state == nux::NUX_STATE_ALT)
+    {
+      ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
+    }
     break;
   default:
     direction = nux::KEY_NAV_NONE;
@@ -690,3 +707,4 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
 
 }
 }
+

@@ -33,6 +33,8 @@ namespace unity
 namespace panel
 {
 
+const char window_title[] = "unity-panel";
+
 namespace
 {
 nux::logging::Logger logger("unity.panel");
@@ -42,12 +44,12 @@ class Controller::Impl
 {
 public:
   Impl();
-  ~Impl();
 
   void FirstMenuShow();
   void QueueRedraw();
 
   std::vector<Window> GetTrayXids() const;
+  std::vector<nux::View*> GetPanelViews() const;
   std::vector<nux::Geometry> GetGeometries() const;
 
   // NOTE: nux::Property maybe?
@@ -59,9 +61,11 @@ public:
   void SetMenuShowTimings(int fadein, int fadeout, int discovery,
                           int discovery_fadein, int discovery_fadeout);
 
-  void OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors, Introspectable *iobj);
+  void OnScreenChanged(unsigned int primary_monitor, std::vector<nux::Geometry>& monitors, Introspectable *iobj);
 private:
-  unity::PanelView* ViewForWindow(nux::BaseWindow* window) const;
+  typedef nux::ObjectPtr<nux::BaseWindow> BaseWindowPtr;
+
+  unity::PanelView* ViewForWindow(BaseWindowPtr const& window) const;
 
   static void WindowConfigureCallback(int            window_width,
                                       int            window_height,
@@ -69,7 +73,7 @@ private:
                                       void*          user_data);
 
 private:
-  std::vector<nux::BaseWindow*> windows_;
+  std::vector<BaseWindowPtr> windows_;
   float opacity_;
   bool opacity_maximized_toggle_;
   int menus_fadein_;
@@ -91,14 +95,6 @@ Controller::Impl::Impl()
 {
 }
 
-Controller::Impl::~Impl()
-{
-  for (auto window : windows_)
-  {
-    window->UnReference();
-  }
-}
-
 std::vector<Window> Controller::Impl::GetTrayXids() const
 {
   std::vector<Window> xids;
@@ -109,6 +105,15 @@ std::vector<Window> Controller::Impl::GetTrayXids() const
   }
 
   return xids;
+}
+
+std::vector<nux::View*> Controller::Impl::GetPanelViews() const
+{
+  std::vector<nux::View*> views;
+  views.reserve(windows_.size());
+  for (auto window: windows_)
+    views.push_back(ViewForWindow(window));
+  return views;
 }
 
 std::vector<nux::Geometry> Controller::Impl::GetGeometries() const
@@ -176,24 +181,24 @@ void Controller::Impl::QueueRedraw()
   }
 }
 
-PanelView* Controller::Impl::ViewForWindow(nux::BaseWindow* window) const
+PanelView* Controller::Impl::ViewForWindow(BaseWindowPtr const& window) const
 {
   nux::Layout* layout = window->GetLayout();
-  std::list<nux::Area*>::iterator it = layout->GetChildren().begin();
+  auto it = layout->GetChildren().begin();
 
   return static_cast<PanelView*>(*it);
 }
 
 // We need to put a panel on every monitor, and try and re-use the panels we already have
-void Controller::Impl::OnScreenChanged(int primary_monitor,
+void Controller::Impl::OnScreenChanged(unsigned int primary_monitor,
                                        std::vector<nux::Geometry>& monitors,
                                        Introspectable *iobj)
 {
-  std::vector<nux::BaseWindow*>::iterator it, eit = windows_.end();
-  int n_monitors = monitors.size();
-  int i = 0;
+  std::vector<BaseWindowPtr>::iterator it;
+  unsigned n_monitors = monitors.size();
+  unsigned int i = 0;
 
-  for (it = windows_.begin(); it != eit; ++it)
+  for (it = windows_.begin(); it != windows_.end(); ++it)
   {
     if (i < n_monitors)
     {
@@ -243,19 +248,18 @@ void Controller::Impl::OnScreenChanged(int primary_monitor,
       layout->SetVerticalExternalMargin(0);
       layout->SetHorizontalExternalMargin(0);
 
-      nux::BaseWindow* window = new nux::BaseWindow("");
+      BaseWindowPtr window(new nux::BaseWindow());
       nux::Geometry geo = monitors[i];
       geo.height = panel::Style::Instance().panel_height;
 
-      window->SinkReference();
-      window->SetConfigureNotifyCallback(&Impl::WindowConfigureCallback, window);
+      window->SetConfigureNotifyCallback(&Impl::WindowConfigureCallback, window.GetPointer());
       window->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
       window->ShowWindow(true);
-      window->EnableInputWindow(true, "panel", false, false);
-      window->InputWindowEnableStruts(true);
+      window->EnableInputWindow(true, panel::window_title, false, false);
       window->SetGeometry(geo);
       window->SetMinMaxSize(geo.width, geo.height);
       window->SetLayout(layout);
+      window->InputWindowEnableStruts(true);
 
       windows_.push_back(window);
 
@@ -266,15 +270,9 @@ void Controller::Impl::OnScreenChanged(int primary_monitor,
     }
   }
 
-  if ((int)windows_.size() > n_monitors)
+  if (windows_.size() > n_monitors)
   {
-    std::vector<nux::BaseWindow*>::iterator sit;
-    for (sit = it; sit != eit; ++sit)
-    {
-      (*sit)->UnReference();
-      LOG_DEBUG(logger) << "Removed extra Panel";
-    }
-
+    LOG_DEBUG(logger) << "Removed extra Panels";
     windows_.erase(it, windows_.end());
   }
 }
@@ -335,6 +333,11 @@ void Controller::QueueRedraw()
 std::vector<Window> Controller::GetTrayXids() const
 {
   return pimpl->GetTrayXids();
+}
+
+std::vector<nux::View*> Controller::GetPanelViews() const
+{
+  return pimpl->GetPanelViews();
 }
 
 std::vector<nux::Geometry> Controller::GetGeometries() const

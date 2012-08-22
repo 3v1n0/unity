@@ -11,13 +11,14 @@ set (CFLAGS
      "-I${CMAKE_CURRENT_BINARY_DIR}"
      )
 
-if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv7l")
   set (CFLAGS ${CFLAGS} "-fPIC")
-endif (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+endif (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv7l")
 
 add_definitions (${CFLAGS})
 
-set (LIBS ${CACHED_UNITY_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION} -lm -lGL -lGLU")
+set (LIBS ${CACHED_UNITY_DEPS_LIBRARIES} ${UNITY_STANDALONE_LADD})
+
 link_libraries (${LIBS})
 
 set (LIB_PATHS ${CACHED_UNITY_DEPS_LIBRARY_DIRS})
@@ -44,7 +45,6 @@ set (LAUNCHER_SOURCES
      FavoriteStore.cpp
      FavoriteStoreGSettings.cpp
      FavoriteStorePrivate.cpp
-     GeisAdapter.cpp
      HudLauncherIcon.cpp
      Launcher.cpp
      LauncherController.cpp
@@ -56,6 +56,7 @@ set (LAUNCHER_SOURCES
      LauncherIcon.cpp
      LauncherModel.cpp
      LauncherOptions.cpp
+     MockLauncherIcon.cpp
      PointerBarrier.cpp
      QuicklistManager.cpp
      QuicklistMenuItem.cpp
@@ -70,6 +71,7 @@ set (LAUNCHER_SOURCES
      SpacerLauncherIcon.cpp
      Tooltip.cpp
      TrashLauncherIcon.cpp
+     VolumeMonitorWrapper.cpp
      )
 
 add_library (launcher-lib STATIC ${LAUNCHER_SOURCES})

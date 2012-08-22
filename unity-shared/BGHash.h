@@ -19,11 +19,9 @@
 #ifndef BGHASH_H
 #define BGHASH_H
 
-#include <sigc++/sigc++.h>
+#include <NuxCore/Animation.h>
 #include <Nux/Nux.h>
-#include <libgnome-desktop/gnome-bg.h>
-#include <unity-misc/gnome-bg-slideshow.h>
-#include <UnityCore/GLibSignal.h>
+#include "UBusWrapper.h"
 
 namespace unity {
 namespace colors {
@@ -36,41 +34,25 @@ namespace unity
   class BGHash
   {
   public:
-    BGHash ();
-    ~BGHash ();
+    BGHash();
 
-    static gboolean ForceUpdate(BGHash *self);
-    nux::Color CurrentColor ();
-    void OnBackgroundChanged (GnomeBG *bg);
-    void OnGSettingsChanged (GSettings *settings, gchar *key);
-    void OverrideColor (nux::Color color);
+    nux::Color const& CurrentColor() const;
     void RefreshColor();
+    void OverrideColor(nux::Color const& color);
 
   private:
-    gboolean DoTransitionCallback ();
-    static gboolean OnTransitionCallback (BGHash *self);
-    void DoUbusColorEmit ();
-    void TransitionToNewColor (nux::Color new_color);
-    nux::Color InterpolateColor (nux::Color colora, nux::Color colorb, float value);
-    nux::Color MatchColor (nux::Color base_color);
+    void OnTransitionUpdated(nux::Color const& new_color);
+    void DoUbusColorEmit();
+    void TransitionToNewColor(nux::Color const& new_color);
+    nux::Color MatchColor(nux::Color const& base_color) const;
 
   private:
-    GnomeBG *background_monitor_;
-    GSettings *client_;
+    nux::animation::AnimateValue<nux::Color> transition_animator_;
 
-    guint _transition_handler;
+    nux::Color current_color_; // the current colour, including steps in transitions
+    nux::Color override_color_;
 
-    nux::Color _current_color; // the current colour, including steps in transitions
-    nux::Color _new_color;     // in transitions, the next colour, otherwise the current colour
-    nux::Color _old_color;     // the last colour chosen, used for transitions
-
-    nux::Color _override_color;
-
-    guint64 _hires_time_start;
-    guint64 _hires_time_end;
-    glib::SignalManager signal_manager_;
-    uint _ubus_handle_request_colour;
-
+    UBusManager ubus_manager_;
   };
 };
 

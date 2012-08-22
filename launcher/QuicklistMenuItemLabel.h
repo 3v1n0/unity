@@ -15,19 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Mirco Müller <mirco.mueller@canonical.com>
- * Authored by: Jay Taoko <jay.taoko@canonical.com>
+ *              Jay Taoko <jay.taoko@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 #ifndef QUICKLISTMENUITEMLABEL_H
 #define QUICKLISTMENUITEMLABEL_H
 
-#include <Nux/Nux.h>
-#include <Nux/View.h>
-#include <NuxImage/CairoGraphics.h>
-
 #include "QuicklistMenuItem.h"
-
-#include <X11/Xlib.h>
 
 namespace unity
 {
@@ -35,31 +30,13 @@ namespace unity
 class QuicklistMenuItemLabel : public QuicklistMenuItem
 {
 public:
-  QuicklistMenuItemLabel(DbusmenuMenuitem* item,
-                         NUX_FILE_LINE_PROTO);
-
-  QuicklistMenuItemLabel(DbusmenuMenuitem* item,
-                         bool              debug,
-                         NUX_FILE_LINE_PROTO);
-
-  ~QuicklistMenuItemLabel();
+  QuicklistMenuItemLabel(glib::Object<DbusmenuMenuitem> const& item, NUX_FILE_LINE_PROTO);
 
 protected:
+  std::string GetName() const;
 
-  void PreLayoutManagement();
-
-  long PostLayoutManagement(long layoutResult);
-
-  void Draw(nux::GraphicsEngine& gfxContext, bool forceDraw);
-
-  void DrawContent(nux::GraphicsEngine& gfxContext, bool forceDraw);
-
-  void PostDraw(nux::GraphicsEngine& gfxContext, bool forceDraw);
-
-  virtual const gchar* GetDefaultText();
-
+  virtual std::string GetDefaultText() const;
   virtual void UpdateTexture();
-  virtual int CairoSurfaceWidth();
 };
 
 } // NAMESPACE

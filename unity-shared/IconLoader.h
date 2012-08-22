@@ -22,11 +22,9 @@
 
 #include <boost/utility.hpp>
 
-#include <string>
-#include <map>
-#include <vector>
-#include <sigc++/sigc++.h>
+#include <memory>
 #include <gtk/gtk.h>
+#include <UnityCore/GLibWrapper.h>
 
 namespace unity
 {
@@ -34,7 +32,7 @@ namespace unity
 class IconLoader : public boost::noncopyable
 {
 public:
-  typedef sigc::slot<void, std::string const&, unsigned, GdkPixbuf*> IconLoaderCallback;
+  typedef std::function<void(std::string const&, unsigned, glib::Object<GdkPixbuf> const&)> IconLoaderCallback;
 
   IconLoader();
   ~IconLoader();
@@ -66,8 +64,7 @@ public:
 
 private:
   class Impl;
-  Impl* pimpl;
-
+  std::unique_ptr<Impl> pimpl;
 };
 
 }

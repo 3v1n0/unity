@@ -1,0 +1,22 @@
+Unity Autopilot Tests
+=====================
+
+This directory contains the unity autopilot test suite. To run these tests:
+
+1. Make sure you have autopilot installed:
+  
+ sudo add-apt-repository ppa:autopilot/ppa
+ sudo apt-get update
+ sudo apt-get install python-autopilot
+
+2. Make sure the directory containing this README file is in your PYTHONPATH:
+
+ export PYTHONPATH=`pwd`
+
+ (... assuming you're in *this* directory).
+
+3. Run the tests:
+
+ autopilot run unity
+
+Simple!

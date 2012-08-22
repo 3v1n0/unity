@@ -21,7 +21,8 @@
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 #include <UnityCore/Variant.h>
-#include "unity-shared/PluginAdapter.h"
+
+#include "unity-shared/WindowManager.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UScreen.h"
@@ -39,20 +40,17 @@ namespace
 nux::logging::Logger logger("unity.hud.controller");
 }
 
-Controller::Controller()
+Controller::Controller(std::function<AbstractView*(void)> const& function)
   : launcher_width(64)
   , launcher_locked_out(false)
   , multiple_launchers(true)
   , hud_service_("com.canonical.hud", "/com/canonical/hud")
-  , window_(nullptr)
   , visible_(false)
   , need_show_(false)
-  , timeline_id_(0)
-  , last_opacity_(0.0f)
-  , start_time_(0)
+  , timeline_animator_(90)
   , view_(nullptr)
   , monitor_index_(0)
-  , type_wait_handle_(0)
+  , view_function_(function)
 {
   LOG_DEBUG(logger) << "hud startup";
   SetupWindow();
@@ -77,32 +75,19 @@ Controller::Controller()
 
   launcher_width.changed.connect([&] (int new_width) { Relayout(); });
 
-  PluginAdapter::Default()->compiz_screen_ungrabbed.connect(sigc::mem_fun(this, &Controller::OnScreenUngrabbed));
+  auto wm = WindowManager::Default();
+  wm->compiz_screen_ungrabbed.connect(sigc::mem_fun(this, &Controller::OnScreenUngrabbed));
+  wm->initiate_spread.connect(sigc::bind(sigc::mem_fun(this, &Controller::HideHud), true));
 
   hud_service_.queries_updated.connect(sigc::mem_fun(this, &Controller::OnQueriesFinished));
+  timeline_animator_.animation_updated.connect(sigc::mem_fun(this, &Controller::OnViewShowHideFrame));
+
   EnsureHud();
-}
-
-Controller::~Controller()
-{
-  if (window_)
-    window_->UnReference();
-  window_ = 0;
-
-  if (timeline_id_)
-    g_source_remove(timeline_id_);
-
-  if (ensure_id_)
-    g_source_remove(ensure_id_);
-
-  if (type_wait_handle_)
-    g_source_remove(type_wait_handle_);
 }
 
 void Controller::SetupWindow()
 {
-  window_ = new nux::BaseWindow("Hud");
-  window_->SinkReference();
+  window_.Adopt(new nux::BaseWindow("Hud"));
   window_->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
   window_->SetConfigureNotifyCallback(&Controller::OnWindowConfigure, this);
   window_->ShowWindow(false);
@@ -110,16 +95,17 @@ void Controller::SetupWindow()
   window_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &Controller::OnMouseDownOutsideWindow));
   
   /* FIXME - first time we load our windows there is a race that causes the input window not to actually get input, this side steps that by causing an input window show and hide before we really need it. */
-  PluginAdapter::Default()->saveInputFocus ();
+  auto wm = WindowManager::Default();
+  wm->saveInputFocus ();
   window_->EnableInputWindow(true, "Hud", true, false);
   window_->EnableInputWindow(false, "Hud", true, false);
-  PluginAdapter::Default()->restoreInputFocus ();
+  wm->restoreInputFocus ();
 }
 
 void Controller::SetupHudView()
 {
   LOG_DEBUG(logger) << "SetupHudView called";
-  view_ = new View();
+  view_ = view_function_();
 
   layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
   layout_->AddView(view_, 1, nux::MINOR_POSITION_TOP);
@@ -162,12 +148,11 @@ void Controller::EnsureHud()
 
   if (!window_)
     SetupWindow();
-  
+
   if (!view_)
   {
     SetupHudView();
     Relayout();
-    ensure_id_ = 0;
   }
 }
 
@@ -183,7 +168,7 @@ void Controller::SetIcon(std::string const& icon_name)
 
 nux::BaseWindow* Controller::window() const
 {
-  return window_;
+  return window_.GetPointer();
 }
 
 // We update the @geo that's sent in with our desired width and height
@@ -275,7 +260,7 @@ bool Controller::IsVisible()
 
 void Controller::ShowHud()
 {
-  PluginAdapter* adaptor = PluginAdapter::Default();
+  WindowManager* adaptor = WindowManager::Default();
   LOG_DEBUG(logger) << "Showing the hud";
   EnsureHud();
 
@@ -398,7 +383,7 @@ void Controller::HideHud(bool restore)
 
   restore = true;
   if (restore)
-    PluginAdapter::Default ()->restoreInputFocus ();
+    WindowManager::Default ()->restoreInputFocus ();
 
   hud_service_.CloseQuery();
 
@@ -414,50 +399,28 @@ void Controller::StartShowHideTimeline()
 {
   EnsureHud();
 
-  if (timeline_id_)
-    g_source_remove(timeline_id_);
-
-  timeline_id_ = g_timeout_add(15, (GSourceFunc)Controller::OnViewShowHideFrame, this);
-  last_opacity_ = window_->GetOpacity();
-  start_time_ = g_get_monotonic_time();
-
+  double current_opacity = window_->GetOpacity();
+  timeline_animator_.Stop();
+  timeline_animator_.Start(visible_ ? current_opacity : 1.0f - current_opacity);
 }
 
-gboolean Controller::OnViewShowHideFrame(Controller* self)
+void Controller::OnViewShowHideFrame(double progress)
 {
-  const float LENGTH = 90000.0f;
-  float diff = g_get_monotonic_time() - self->start_time_;
-  float progress = diff / LENGTH;
-  float last_opacity = self->last_opacity_;
+  window_->SetOpacity(visible_ ? progress : 1.0f - progress);
 
-  if (self->visible_)
+  if (progress == 1.0f)
   {
-    self->window_->SetOpacity(last_opacity + ((1.0f - last_opacity) * progress));
-  }
-  else
-  {
-    self->window_->SetOpacity(last_opacity - (last_opacity * progress));
-  }
-
-  if (diff > LENGTH)
-  {
-    self->timeline_id_ = 0;
-
-    // Make sure the state is right
-    self->window_->SetOpacity(self->visible_ ? 1.0f : 0.0f);
-    if (!self->visible_)
+    if (!visible_)
     {
-      self->window_->ShowWindow(false);
+      window_->ShowWindow(false);
+      view_->ResetToDefault();
     }
     else
     {
       // ensure the text entry is focused
-      nux::GetWindowCompositor().SetKeyFocusArea(self->view_->default_focus());
+      nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
     }
-    return FALSE;
   }
-
-  return TRUE;
 }
 
 void Controller::OnActivateRequest(GVariant* variant)

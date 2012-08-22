@@ -8,11 +8,10 @@
 
 from __future__ import absolute_import
 
-from time import sleep
-
+from autopilot.emulators.clipboard import get_clipboard_contents
 from autopilot.matchers import Eventually
-from gtk import Clipboard
 from testtools.matchers import Equals, NotEquals
+from time import sleep
 
 from unity.tests import UnityTestCase
 
@@ -51,6 +50,11 @@ class DashRevealTests(DashTestCase):
         self.dash.reveal_file_lens()
         self.assertThat(self.dash.active_lens, Eventually(Equals('files.lens')))
 
+    def test_video_lens_shortcut(self):
+        """Video lens must reveal when super+v is pressed."""
+        self.dash.reveal_video_lens()
+        self.assertThat(self.dash.active_lens, Eventually(Equals('video.lens')))
+
     def test_command_lens_shortcut(self):
         """Run Command lens must reveat on alt+F2."""
         self.dash.reveal_command_lens()
@@ -61,6 +65,47 @@ class DashRevealTests(DashTestCase):
         self.dash.ensure_visible()
         self.keyboard.press_and_release("Alt+F4")
         self.assertThat(self.dash.visible, Eventually(Equals(False)))
+
+    def test_alt_f4_close_dash_with_capslock_on(self):
+        """Dash must close on Alt+F4 even when the capslock is turned on."""
+        self.keyboard.press_and_release("Caps_Lock")
+        self.addCleanup(self.keyboard.press_and_release, "Caps_Lock")
+
+        self.dash.ensure_visible()
+        self.keyboard.press_and_release("Alt+F4")
+        self.assertThat(self.dash.visible, Eventually(Equals(False)))
+
+    def test_dash_closes_on_spread(self):
+        """This test shows that when the spread is initiated, the dash closes."""
+        self.dash.ensure_visible()
+        self.addCleanup(self.keybinding, "spread/cancel")
+        self.keybinding("spread/start")
+        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
+        self.assertThat(self.dash.visible, Eventually(Equals(False)))
+
+    def test_dash_opens_when_in_spread(self):
+        """This test shows the dash opens when in spread mode."""
+        self.keybinding("spread/start")
+        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
+
+        self.dash.ensure_visible()
+        self.assertThat(self.dash.visible, Eventually(Equals(True)))
+
+    def test_command_lens_opens_when_in_spread(self):
+        """This test shows the command lens opens when in spread mode."""
+        self.keybinding("spread/start")
+        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
+
+        self.dash.reveal_command_lens()
+        self.assertThat(self.dash.active_lens, Eventually(Equals('commands.lens')))
+
+    def test_lens_opens_when_in_spread(self):
+        """This test shows that any lens opens when in spread mode."""
+        self.keybinding("spread/start")
+        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
+
+        self.dash.reveal_application_lens()
+        self.assertThat(self.dash.active_lens, Eventually(Equals('applications.lens')))
 
 
 class DashSearchInputTests(DashTestCase):
@@ -239,16 +284,6 @@ class DashKeyNavTests(DashTestCase):
         category = lens.get_focused_category()
         self.assertIsNot(category, None)
 
-    def test_alt_f1_disabled(self):
-        """This test that Alt+F1 is disabled when the dash is opened."""
-        self.dash.ensure_visible()
-        # can't use launcher emulator since we'll fail to start keynav:
-        self.keybinding("launcher/keynav")
-        # can't use Eventually here - sleep long enough for the launcher controller
-        # to react to the keypress (well, hopefully not)
-        sleep(5)
-        self.assertThat(self.launcher.key_nav_is_active, Equals(False))
-
 
 class DashClipboardTests(DashTestCase):
     """Test the Unity clipboard"""
@@ -274,8 +309,7 @@ class DashClipboardTests(DashTestCase):
         self.keyboard.press_and_release("Ctrl+a")
         self.keyboard.press_and_release("Ctrl+c")
 
-        cb = Clipboard(selection="CLIPBOARD")
-        self.assertThat(self.dash.search_string, Eventually(Equals(cb.wait_for_text())))
+        self.assertThat(get_clipboard_contents, Eventually(Equals("Copy")))
 
     def test_ctrl_x(self):
         """ This test if ctrl+x deletes all text and copys it """
@@ -288,8 +322,7 @@ class DashClipboardTests(DashTestCase):
         self.keyboard.press_and_release("Ctrl+x")
         self.assertThat(self.dash.search_string, Eventually(Equals("")))
 
-        cb = Clipboard(selection="CLIPBOARD")
-        self.assertEqual(cb.wait_for_text(), u'Cut')
+        self.assertThat(get_clipboard_contents, Eventually(Equals('Cut')))
 
     def test_ctrl_c_v(self):
         """ This test if ctrl+c and ctrl+v copies and pastes text"""
@@ -318,6 +351,23 @@ class DashClipboardTests(DashTestCase):
         self.keyboard.press_and_release("Ctrl+v")
 
         self.assertThat(self.dash.search_string, Eventually(Equals('CutPasteCutPaste')))
+        
+    def test_middle_click_paste(self):
+        """Tests if Middle mouse button pastes into searchbar"""
+
+        self.start_app_window("Calculator", locale='C')
+
+        self.keyboard.type("ThirdButtonPaste")
+        self.keyboard.press_and_release("Ctrl+a")
+
+        self.dash.ensure_visible()
+
+        self.mouse.move(self.dash.searchbar.x + self.dash.searchbar.width / 2,
+                       self.dash.searchbar.y + self.dash.searchbar.height / 2)
+
+        self.mouse.click(button=2)
+
+        self.assertThat(self.dash.search_string, Eventually(Equals('ThirdButtonPaste')))
 
 
 class DashKeyboardFocusTests(DashTestCase):
@@ -489,3 +539,49 @@ class DashBorderTests(DashTestCase):
 
         self.assertThat(self.dash.visible, Eventually(Equals(True)))
 
+
+class CategoryHeaderTests(DashTestCase):
+    """Tests that category headers work.
+    """
+    def test_click_inside_highlight(self):
+        """Clicking into a category highlight must expand/collapse
+        the view.
+        """
+        lens = self.dash.reveal_file_lens()
+        self.addCleanup(self.dash.ensure_hidden)
+
+        category = lens.get_category_by_name("Folders")
+        is_expanded = category.is_expanded
+
+        self.mouse.move(self.dash.view.x + self.dash.view.width / 2,
+                        category.header_y + category.header_height / 2)
+
+        self.mouse.click()
+        self.assertThat(category.is_expanded, Eventually(Equals(not is_expanded)))
+
+        self.mouse.click()
+        self.assertThat(category.is_expanded, Eventually(Equals(is_expanded)))
+
+
+class PreviewInvocationTests(DashTestCase):
+    """Tests that previews can be opened and closed
+    """
+    def test_open_preview_close_preview(self):
+        """Right clicking on any result shall open a preview, 
+        escaping shall close the preview
+        """
+        lens = self.dash.reveal_application_lens()
+        self.addCleanup(self.dash.ensure_hidden)
+
+        category = lens.get_category_by_name("Installed")
+
+        self.mouse.move(self.dash.view.x + 64,  
+                        category.header_y + category.header_height + 32)
+
+        self.mouse.click(button=3)
+        #revealing a preview may be very slow, not sure if Eventually handles that nicely
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
+
+        self.keyboard.press_and_release("Escape")
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))

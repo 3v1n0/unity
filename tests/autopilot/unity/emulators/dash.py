@@ -9,14 +9,10 @@
 
 from __future__ import absolute_import
 
-from autopilot.introspection.unity import (
-    get_state_by_path,
-    make_introspection_object,
-    UnityIntrospectionObject,
-    )
 from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.keybindings import KeybindingsHelper
 
+from unity.emulators import UnityIntrospectionObject
 import logging
 
 
@@ -85,6 +81,11 @@ class Dash(KeybindingsHelper):
         """Returns the searchbar attached to the dash."""
         return self.view.get_searchbar()
 
+    @property
+    def preview_displaying(self):
+        """Returns true if the dash is currently displaying a preview"""
+        return self.view.preview_displaying;
+
     def get_num_rows(self):
         """Returns the number of displayed rows in the dash."""
         return self.view.num_rows
@@ -103,21 +104,31 @@ class Dash(KeybindingsHelper):
         """Reveal the application lense."""
         logger.debug("Revealing application lens with Super+a.")
         self._reveal_lens("lens_reveal/apps", clear_search)
+        return self.view.get_lensview_by_name("applications.lens")
 
     def reveal_music_lens(self, clear_search=True):
         """Reveal the music lense."""
         logger.debug("Revealing music lens with Super+m.")
         self._reveal_lens("lens_reveal/music", clear_search)
+        return self.view.get_lensview_by_name("music.lens")
 
     def reveal_file_lens(self, clear_search=True):
         """Reveal the file lense."""
         logger.debug("Revealing file lens with Super+f.")
         self._reveal_lens("lens_reveal/files", clear_search)
+        return self.view.get_lensview_by_name("files.lens")
+
+    def reveal_video_lens(self, clear_search=True):
+        """Reveal the video lens"""
+        logger.debug("Revealing video lens with Super+v.")
+        self._reveal_lens("lens_reveal/video", clear_search)
+        return self.view.get_lensview_by_name("video.lens")
 
     def reveal_command_lens(self, clear_search=True):
         """Reveal the 'run command' lens."""
         logger.debug("Revealing command lens with Alt+F2.")
         self._reveal_lens("lens_reveal/command", clear_search)
+        return self.view.get_lensview_by_name("commands.lens")
 
     def _reveal_lens(self, binding_name, clear_search):
         self.keybinding_hold(binding_name)
@@ -290,9 +301,9 @@ class FilterBar(UnityIntrospectionObject):
         and for some reason the FilterBar stuff is bundled in the SearchBar.
 
         """
-        state_info = get_state_by_path("//DashView/SearchBar")
-        assert(len(state_info) == 1)
-        return make_introspection_object(("SearchBar", state_info[0]))
+        searchbar_state = self.get_state_by_path("//DashView/SearchBar")
+        assert(len(searchbar_state) == 1)
+        return self.make_introspection_object(searchbar_state[0])
 
 
 class FilterExpanderLabel(UnityIntrospectionObject):

@@ -25,8 +25,9 @@
 #include <Nux/View.h>
 // FIXME: Nux/TextureArea.h needs View included first.
 #include <Nux/TextureArea.h>
-#include <NuxImage/CairoGraphics.h>
+#include <NuxGraphics/CairoGraphics.h>
 #include <NuxGraphics/GraphicsEngine.h>
+#include <UnityCore/GLibWrapper.h>
 
 #include "unity-shared/Introspectable.h"
 
@@ -53,6 +54,13 @@ public:
 
   nux::BaseTexture* texture();
 
+  enum class DrawMode
+  {
+    NORMAL,
+    STRETCH_WITH_ASPECT
+  };
+  void SetDrawMode(DrawMode mode);
+  
   sigc::signal<void, nux::BaseTexture*> texture_updated;
 
 protected:
@@ -63,28 +71,26 @@ protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
   virtual bool DoCanFocus();
-  GdkPixbuf* _pixbuf_cached;
+  glib::Object<GdkPixbuf> _pixbuf_cached;
 
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
 private:
   nux::BaseTexture* CreateTextureCallback(std::string const& texid, int width, int height);
-  void Refresh(GdkPixbuf* pixbuf);
-  void IconLoaded(std::string const& icon_name, unsigned size, GdkPixbuf* pixbuf);
+  void Refresh(glib::Object<GdkPixbuf> const& pixbuf);
+  void IconLoaded(std::string const& icon_name, unsigned size, glib::Object<GdkPixbuf> const& pixbuf);
 
   std::string _icon_name;
   unsigned int _size;
 
   nux::ObjectPtr<nux::BaseTexture> _texture_cached;
-  // FIXME: make these two a nux::Size.
-  int               _texture_width;
-  int               _texture_height;
+  nux::Size _texture_size;
 
   bool _loading;
-
   float _opacity;
   int _handle;
+  DrawMode _draw_mode;
 };
 
 }

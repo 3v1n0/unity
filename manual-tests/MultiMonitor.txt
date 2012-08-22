@@ -2,11 +2,14 @@ Test Barrier Toggle
 -----------
 This test is to ensure the barrier toggle works on multiple-monitor systems
 
+Setup:
+
+Actions:
 #. Get a system with 2 monitors, ensure the left most monitor is set as primary
 #. Disable the "Capture Mouse" setting in CCSM
 #. Move your mouse between the left and right monitor
 
-Outcome
+Expected Result:
   The mouse should move freely between monitors, without a launcher blocking its movement.
 
 
@@ -14,11 +17,14 @@ Test Number of Launchers
 -----------
 This test is to ensure that the number of launchers created and positioned can be properly configured
 
+Setup:
+
+Actions:
 #. Get a system with 2 monitors, ensure the left most monitor is set as primary
 #. Open CCSM and changed the Number of Launchers option to "Primary Only"
 #. Check for the existence of a launcher on your non-primary monitor
 
-Outcome
+Expected Result:
   There should only be a launcher on the primary monitor.
 
 
@@ -34,4 +40,3 @@ Actions:
 
 Expected Result:
   No crash.
-

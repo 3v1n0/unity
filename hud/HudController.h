@@ -16,9 +16,10 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_HUD_CONTROLLER_H_
-#define UNITY_HUD_CONTROLLER_H_
+#ifndef UNITYSHELL_HUD_CONTROLLER_H
+#define UNITYSHELL_HUD_CONTROLLER_H
 
+#include <functional>
 #include <memory>
 
 #include <gdk/gdk.h>
@@ -29,8 +30,9 @@
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 
-#include "HudView.h"
+#include "unity-shared/Animator.h"
 #include "unity-shared/UBusWrapper.h"
+#include "HudView.h"
 
 namespace unity
 {
@@ -42,8 +44,7 @@ class Controller : public unity::debug::Introspectable
 public:
   typedef std::shared_ptr<Controller> Ptr;
 
-  Controller();
-  ~Controller();
+  Controller(std::function<AbstractView*(void)> const& function = []() { return new View; });
 
   nux::BaseWindow* window() const;
 
@@ -59,6 +60,7 @@ public:
   bool IsVisible();
 
 protected:
+  // Introspectable
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
@@ -87,33 +89,31 @@ private:
   void OnQuerySelected(Query::Ptr query);
 
   void StartShowHideTimeline();
-  static gboolean OnViewShowHideFrame(Controller* self);
+  void OnViewShowHideFrame(double progress);
 
   static void OnWindowConfigure(int width, int height, nux::Geometry& geo, void* data);
 
   void OnQueriesFinished(Hud::Queries queries);
 
 private:
+  nux::ObjectPtr<nux::BaseWindow> window_;
   UBusManager ubus;
   Hud hud_service_;
-  nux::BaseWindow* window_;
   bool visible_;
   bool need_show_;
 
-  guint timeline_id_;
-  float last_opacity_;
-  gint64 start_time_;
+  Animator timeline_animator_;
 
-  View* view_;
-  guint ensure_id_;
+  AbstractView* view_;
   std::string focused_app_icon_;
   nux::Layout* layout_;
   uint monitor_index_;
-  guint type_wait_handle_;
   std::string last_search_;
+
+  std::function<AbstractView*(void)> view_function_;
 };
 
+} // namespace hud
+} // namespace unity
 
-}
-}
-#endif
+#endif // UNITYSHELL_HUD_CONTROLLER_H

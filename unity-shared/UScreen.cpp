@@ -24,18 +24,18 @@ namespace unity
 
 namespace
 {
-static UScreen* default_screen_ = nullptr;
 nux::logging::Logger logger("unity.screen");
-} 
+}
+
+UScreen* UScreen::default_screen_ = nullptr;
 
 UScreen::UScreen()
-  : screen_(gdk_screen_get_default(), glib::AddRef())
+  : primary_(0)
+  , screen_(gdk_screen_get_default(), glib::AddRef())
   , proxy_("org.freedesktop.UPower",
            "/org/freedesktop/UPower",
            "org.freedesktop.UPower",
            G_BUS_TYPE_SYSTEM)
-  , refresh_id_(0)
-  , primary_(0)
 {
   size_changed_signal_.Connect(screen_, "size-changed", sigc::mem_fun(this, &UScreen::Changed));
   monitors_changed_signal_.Connect(screen_, "monitors-changed", sigc::mem_fun(this, &UScreen::Changed));
@@ -48,9 +48,6 @@ UScreen::~UScreen()
 {
   if (default_screen_ == this)
     default_screen_ = nullptr;
-
-  if (refresh_id_ != 0)
-    g_source_remove(refresh_id_);
 }
 
 UScreen* UScreen::GetDefault()
@@ -98,16 +95,15 @@ std::vector<nux::Geometry>& UScreen::GetMonitors()
 
 void UScreen::Changed(GdkScreen* screen)
 {
-  if (refresh_id_)
+  if (refresh_idle_)
     return;
 
-  refresh_id_ = g_idle_add([] (gpointer data) -> gboolean {
-    auto self = static_cast<UScreen*>(data);
-    self->refresh_id_ = 0;
-    self->Refresh();
+  refresh_idle_.reset(new glib::Idle([&] () {
+    Refresh();
+    refresh_idle_.reset();
 
-    return FALSE;
-  }, this);
+    return false;
+  }));
 }
 
 void UScreen::Refresh()
@@ -117,8 +113,9 @@ void UScreen::Refresh()
   nux::Geometry last_geo;
   monitors_.clear();
   primary_ = gdk_screen_get_primary_monitor(screen_);
+  int monitors = gdk_screen_get_n_monitors(screen_);
 
-  for (int i = 0; i < gdk_screen_get_n_monitors(screen_); i++)
+  for (int i = 0; i < monitors; ++i)
   {
     GdkRectangle rect = { 0 };
     gdk_screen_get_monitor_geometry(screen_, i, &rect);

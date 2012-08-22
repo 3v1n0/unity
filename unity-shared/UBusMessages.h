@@ -35,7 +35,7 @@
 #define UBUS_DASH_ABOUT_TO_SHOW "DASH_ABOUT_TO_SHOW"
 
 // Signal sent when an overlay interface is shown, includes a gvariant
-// gvariant format is (sb), (interface-name, can_maximize?) 
+// gvariant format is (sb), (interface-name, can_maximize?)
 #define UBUS_OVERLAY_FORMAT_STRING "(sbi)"
 #define UBUS_OVERLAY_HIDDEN "OVERLAY_HIDDEN"
 #define UBUS_OVERLAY_SHOWN "OVERLAY_SHOWN"
@@ -59,9 +59,6 @@
 #define UBUS_LAUNCHER_ICON_START_DND "LAUNCHER_ICON_START_DND"
 #define UBUS_LAUNCHER_ICON_END_DND   "LAUNCHER_ICON_END_DND"
 
-// Signal to send on icon action and that you want to request hiding the launcher
-#define UBUS_LAUNCHER_ACTION_DONE "LAUNCHER_ACTION_DONE"
-
 // Signal to force the launcher into locked mode, (b)
 #define UBUS_LAUNCHER_LOCK_HIDE "LAUNCHER_LOCK_HIDE"
 
@@ -82,12 +79,23 @@
 // FIXME - fix the nux focus api so we don't need this
 #define UBUS_RESULT_VIEW_KEYNAV_CHANGED "RESULT_VIEW_KEYNAV_CHANGED"
 
+// for communicating positions to the preview state machine (iii)
+// (split y coord in absolute geometry, results to the left, results to the right)
+#define UBUS_DASH_PREVIEW_INFO_PAYLOAD "DASH_PREVIEW_INFO_PAYLOAD"
+
+// called when previews wish to navigate left/right or close (is)
+// -1 = left, 0 = close, 1 = right, 
+// string is the uri string that last result activated was
+#define UBUS_DASH_PREVIEW_NAVIGATION_REQUEST "DASH_PREVIEW_NAVIGATION_REQUEST"
+
 // Sends a string datatype containing the new icon name
 #define UBUS_HUD_ICON_CHANGED "HUD_ICON_CHANGED"
 #define UBUS_HUD_CLOSE_REQUEST "HUD_CLOSE_REQUEST"
 
 // Signals sent when the switcher is shown, hidden or changes selection
 #define UBUS_SWITCHER_SHOWN             "SWITCHER_SHOWN"
+#define UBUS_SWITCHER_START             "SWITCHER_SHOWN_START"
+#define UBUS_SWITCHER_END               "SWITCHER_SHOWN_END"
 #define UBUS_SWITCHER_SELECTION_CHANGED "SWITCHER_SELECTION_CHANGED"
 
 #endif // UBUS_MESSAGES_H

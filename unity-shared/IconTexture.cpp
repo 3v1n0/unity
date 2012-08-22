@@ -46,14 +46,13 @@ using namespace unity;
 IconTexture::IconTexture(nux::BaseTexture* texture, guint width, guint height)
   : TextureArea(NUX_TRACKER_LOCATION),
     _accept_key_nav_focus(false),
-    _pixbuf_cached(nullptr),
     _size(height),
     _texture_cached(texture),
-    _texture_width(width),
-    _texture_height(height),
+    _texture_size(width, height),
     _loading(false),
     _opacity(1.0f),
-    _handle(0)
+    _handle(0),
+    _draw_mode(DrawMode::NORMAL)
 {
   SetMinMaxSize(width, height);
 }
@@ -61,14 +60,12 @@ IconTexture::IconTexture(nux::BaseTexture* texture, guint width, guint height)
 IconTexture::IconTexture(std::string const& icon_name, unsigned int size, bool defer_icon_loading)
   : TextureArea(NUX_TRACKER_LOCATION),
     _accept_key_nav_focus(false),
-    _pixbuf_cached(nullptr),
     _icon_name(!icon_name.empty() ? icon_name : DEFAULT_ICON),
     _size(size),
-    _texture_width(0),
-    _texture_height(0),
     _loading(false),
     _opacity(1.0f),
-    _handle(0)
+    _handle(0),
+    _draw_mode(DrawMode::NORMAL)
 {
   if (!icon_name.empty () && !defer_icon_loading)
     LoadIcon();
@@ -112,9 +109,9 @@ void IconTexture::LoadIcon()
 
   _loading = true;
 
-  glib::Object<GIcon> icon(::g_icon_new_for_string(_icon_name.empty() ?  DEFAULT_GICON : _icon_name.c_str(), NULL));
+  glib::Object<GIcon> icon(g_icon_new_for_string(_icon_name.empty() ?  DEFAULT_GICON : _icon_name.c_str(), NULL));
 
-  if (icon)
+  if (G_IS_ICON(icon.RawPtr()))
   {
     _handle = IconLoader::GetDefault().LoadFromGIconString(_icon_name.empty() ? DEFAULT_GICON : _icon_name.c_str(),
                                                            _size,
@@ -138,32 +135,30 @@ nux::BaseTexture* IconTexture::CreateTextureCallback(std::string const& texid, i
   return nux::CreateTexture2DFromPixbuf(_pixbuf_cached, true);
 }
 
-void IconTexture::Refresh(GdkPixbuf* pixbuf)
+void IconTexture::Refresh(glib::Object<GdkPixbuf> const& pixbuf)
 {
   TextureCache& cache = TextureCache::GetDefault();
   _pixbuf_cached = pixbuf;
 
   // Cache the pixbuf dimensions so we scale correctly
-  _texture_width = gdk_pixbuf_get_width(pixbuf);
-  _texture_height = gdk_pixbuf_get_height(pixbuf);
+  _texture_size.width = gdk_pixbuf_get_width(pixbuf);
+  _texture_size.height = gdk_pixbuf_get_height(pixbuf);
 
   // Try and get a texture from the texture cache
   std::string id("IconTexture.");
   id += _icon_name.empty() ? DEFAULT_ICON : _icon_name;
-  _texture_cached = cache.FindTexture(id,
-                                      _texture_width,
-                                      _texture_height,
+  _texture_cached = cache.FindTexture(id, _texture_size.width, _texture_size.height,
                                       sigc::mem_fun(this, &IconTexture::CreateTextureCallback));
   QueueDraw();
   _loading = false;
 }
 
 void IconTexture::IconLoaded(std::string const& icon_name, unsigned size,
-                             GdkPixbuf* pixbuf)
+                             glib::Object<GdkPixbuf> const& pixbuf)
 {
   _handle = 0;
 
-  if (GDK_IS_PIXBUF(pixbuf))
+  if (GDK_IS_PIXBUF(pixbuf.RawPtr()))
   {
     Refresh(pixbuf);
   }
@@ -194,16 +189,60 @@ void IconTexture::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   {
     nux::Color col(1.0f * _opacity, 1.0f * _opacity, 1.0f * _opacity, _opacity);
     nux::TexCoordXForm texxform;
-    texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-    texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
 
-    GfxContext.QRP_1Tex(geo.x + ((geo.width - _texture_width) / 2),
-                        geo.y + ((geo.height - _texture_height) / 2),
-                        _texture_width,
-                        _texture_height,
-                        _texture_cached->GetDeviceTexture(),
-                        texxform,
-                        col);
+    if (_draw_mode == DrawMode::STRETCH_WITH_ASPECT)
+    {
+      nux::Geometry imageDest = geo;
+      
+      float geo_apsect = float(geo.GetWidth()) / geo.GetHeight();
+      float image_aspect = float(_texture_cached->GetWidth()) / _texture_cached->GetHeight();
+
+      if (image_aspect > geo_apsect)
+      {
+        imageDest.SetHeight(float(imageDest.GetWidth()) / image_aspect);
+      } 
+      if (image_aspect < geo_apsect)
+      {
+        imageDest.SetWidth(image_aspect * imageDest.GetHeight());
+      }
+      else
+      {
+        imageDest = nux::Geometry(0, 0, _texture_cached->GetWidth(), _texture_cached->GetHeight());
+      }
+
+      texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_SCALE_COORD);
+      texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
+      texxform.SetFilter(nux::TEXFILTER_LINEAR, nux::TEXFILTER_LINEAR);
+
+      texxform.u0 = 0;
+      texxform.v0 = 0;
+      texxform.u1 = imageDest.width;
+      texxform.v1 = imageDest.height;
+
+      int border_width = 1;
+      GfxContext.QRP_1Tex(geo.x + (float(geo.GetWidth() - imageDest.GetWidth()) / 2) + border_width,
+                          geo.y + (float(geo.GetHeight() - imageDest.GetHeight()) / 2) + border_width,
+                          imageDest.width - (border_width * 2),
+                          imageDest.height - (border_width * 2),
+                          _texture_cached.GetPointer()->GetDeviceTexture(),
+                          texxform,
+                          nux::color::White);
+    }
+    else
+    {
+      texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+      texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
+
+      GfxContext.QRP_1Tex(geo.x + ((geo.width - _texture_size.width) / 2),
+                          geo.y + ((geo.height - _texture_size.height) / 2),
+                          _texture_size.width,
+                          _texture_size.height,
+                          _texture_cached->GetDeviceTexture(),
+                          texxform,
+                          col);
+    }
+
+
   }
 
   GfxContext.PopClippingRectangle();
@@ -212,9 +251,9 @@ void IconTexture::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 void IconTexture::GetTextureSize(int* width, int* height)
 {
   if (width)
-    *width = _texture_width;
+    *width = _texture_size.width;
   if (height)
-    *height = _texture_height;
+    *height = _texture_size.height;
 }
 
 void IconTexture::SetOpacity(float opacity)
@@ -266,4 +305,9 @@ bool IconTexture::AcceptKeyNavFocus()
   return _accept_key_nav_focus;
 }
 
+void IconTexture::SetDrawMode(DrawMode mode)
+{
+  _draw_mode = mode;
+  QueueDraw();
+}
 }

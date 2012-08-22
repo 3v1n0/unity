@@ -147,7 +147,7 @@ unity_launcher_accessible_initialize(AtkObject* accessible,
   Launcher* launcher = NULL;
   nux::Object* nux_object = NULL;
   UnityLauncherAccessible* self = NULL;
-  LauncherModel* model = NULL;
+  LauncherModel::Ptr model = NULL;
 
   ATK_OBJECT_CLASS(unity_launcher_accessible_parent_class)->initialize(accessible, data);
 
@@ -181,7 +181,7 @@ unity_launcher_accessible_get_n_children(AtkObject* obj)
 {
   nux::Object* object = NULL;
   Launcher* launcher = NULL;
-  LauncherModel* launcher_model = NULL;
+  LauncherModel::Ptr launcher_model;
 
   g_return_val_if_fail(UNITY_IS_LAUNCHER_ACCESSIBLE(obj), 0);
 
@@ -206,7 +206,7 @@ unity_launcher_accessible_ref_child(AtkObject* obj,
   gint num = 0;
   nux::Object* nux_object = NULL;
   Launcher* launcher = NULL;
-  LauncherModel* launcher_model = NULL;
+  LauncherModel::Ptr launcher_model;
   LauncherModel::iterator it;
   nux::Object* child = NULL;
   AtkObject* child_accessible = NULL;
@@ -340,7 +340,7 @@ unity_launcher_accessible_is_child_selected(AtkSelection* selection,
   Launcher* launcher = NULL;
   AbstractLauncherIcon::Ptr icon;
   AbstractLauncherIcon::Ptr selected_icon;
-  LauncherModel* launcher_model = NULL;
+  LauncherModel::Ptr launcher_model;
   LauncherModel::iterator it;
   nux::Object* nux_object = NULL;
 
@@ -426,7 +426,7 @@ update_children_index(UnityLauncherAccessible* self)
   gint index = 0;
   nux::Object* nux_object = NULL;
   Launcher* launcher = NULL;
-  LauncherModel* launcher_model = NULL;
+  LauncherModel::Ptr launcher_model;
   LauncherModel::iterator it;
   nux::Object* child = NULL;
   AtkObject* child_accessible = NULL;
@@ -441,7 +441,7 @@ update_children_index(UnityLauncherAccessible* self)
   if (launcher_model == NULL)
     return;
 
-  for (it = launcher_model->begin(); it != launcher_model->end(); it++)
+  for (it = launcher_model->begin(); it != launcher_model->end(); ++it)
   {
     child =  dynamic_cast<nux::Object*>((*it).GetPointer());
     child_accessible = unity_a11y_get_accessible(child);

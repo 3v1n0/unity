@@ -6,8 +6,6 @@ dash/FilterMultiRangeWidget.cpp
 dash/FilterRatingsWidget.cpp
 dash/LensView.cpp
 dash/PlacesGroup.cpp
-dash/PreviewMusic.cpp
-dash/PreviewMusicTrack.cpp
 hud/HudController.cpp
 hud/HudView.cpp
 launcher/BFBLauncherIcon.cpp
@@ -19,7 +17,6 @@ launcher/SoftwareCenterLauncherIcon.cpp
 launcher/SpacerLauncherIcon.cpp
 launcher/TrashLauncherIcon.cpp
 panel/PanelMenuView.cpp
-plugins/gtkloader/gtkloader.xml.in
 plugins/networkarearegion/networkarearegion.xml.in
 plugins/unity-mt-grab-handles/unitymtgrabhandles.xml.in
 plugins/unitydialog/unitydialog.xml.in

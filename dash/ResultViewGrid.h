@@ -24,6 +24,8 @@
 #define UNITYSHELL_RESULTVIEWGRID_H
 
 #include <UnityCore/Categories.h>
+#include <UnityCore/GLibSource.h>
+
 #include "ResultView.h"
 #include "unity-shared/UBusWrapper.h"
 
@@ -39,13 +41,8 @@ public:
   NUX_DECLARE_OBJECT_TYPE(ResultViewGrid, ResultView);
 
   ResultViewGrid(NUX_FILE_LINE_DECL);
-  ~ResultViewGrid();
 
   void SetModelRenderer(ResultRenderer* renderer);
-  void AddResult(Result& result);
-  void RemoveResult(Result& result);
-
-  void SetPreview(PreviewBase* preview, Result& related_result);
 
   nux::Property<int> horizontal_spacing;
   nux::Property<int> vertical_spacing;
@@ -54,7 +51,7 @@ public:
   sigc::signal<void> selection_change;
 
   int GetSelectedIndex();
-  virtual uint GetIndexAtPosition(int x, int y);
+  virtual unsigned GetIndexAtPosition(int x, int y);
 
 protected:
   void MouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
@@ -76,28 +73,30 @@ protected:
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual long ComputeContentSize();
 
+  void AddResult(Result& result);
+  void RemoveResult(Result& result);
+
 private:
   typedef std::tuple <int, int> ResultListBounds;
   ResultListBounds GetVisableResults();
 
-  static gboolean OnLazyLoad(gpointer data);
   void QueueLazyLoad();
   void QueueViewChanged();
-  void DoLazyLoad();
+  bool DoLazyLoad();
 
   int GetItemsPerRow();
   void SizeReallocate();
-  void PositionPreview();
+  std::tuple<int, int> GetResultPosition(const std::string& uri);
+  std::tuple<int, int> GetResultPosition(const unsigned int& index);
 
-  uint mouse_over_index_;
+  unsigned mouse_over_index_;
   int active_index_;
   nux::Property<int> selected_index_;
-  uint preview_row_;
   std::string focused_uri_;
 
-  int last_lazy_loaded_result_;
-  unsigned lazy_load_handle_;
-  unsigned view_changed_handle_;
+  std::string activated_uri_;
+
+  unsigned last_lazy_loaded_result_;
   int last_mouse_down_x_;
   int last_mouse_down_y_;
   std::string current_drag_uri_;
@@ -112,7 +111,8 @@ private:
   int extra_horizontal_spacing_;
 
   UBusManager ubus_;
-
+  glib::Source::UniquePtr lazy_load_source_;
+  glib::Source::UniquePtr view_changed_idle_;
 };
 
 } // namespace dash

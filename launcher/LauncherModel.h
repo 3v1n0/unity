@@ -20,11 +20,9 @@
 #ifndef LAUNCHERMODEL_H
 #define LAUNCHERMODEL_H
 
-#include <memory>
-
+#include <UnityCore/GLibSource.h>
 #include "AbstractLauncherIcon.h"
 #include "unity-shared/Introspectable.h"
-#include <sigc++/sigc++.h>
 
 namespace unity
 {
@@ -42,7 +40,6 @@ public:
   typedef Base::reverse_iterator const_reverse_iterator;
 
   LauncherModel();
-  ~LauncherModel();
 
   void AddIcon(AbstractLauncherIcon::Ptr icon);
   void RemoveIcon(AbstractLauncherIcon::Ptr icon);
@@ -87,7 +84,7 @@ public:
   sigc::signal<void> saved;
   sigc::signal<void, AbstractLauncherIcon::Ptr> selection_changed;
 
-  IntrospectableList const& GetIntrospectableChildren();
+  IntrospectableList GetIntrospectableChildren();
 protected:
   // Introspectable methods
   std::string GetName() const;
@@ -99,12 +96,11 @@ private:
   Base             _inner_main;
   int              selection_;
   std::list<unity::debug::Introspectable*> introspection_results_;
+  glib::SourceManager timeouts_;
 
   bool Populate();
 
   bool IconShouldShelf(AbstractLauncherIcon::Ptr icon) const;
-
-  static gboolean RemoveCallback(gpointer data);
 
   static bool CompareIcons(AbstractLauncherIcon::Ptr first, AbstractLauncherIcon::Ptr second);
 

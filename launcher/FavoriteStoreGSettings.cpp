@@ -40,62 +40,22 @@ namespace internal
 
 namespace
 {
-
 nux::logging::Logger logger("unity.favorites");
-
-const char* SETTINGS_NAME = "com.canonical.Unity.Launcher";
-const char* LATEST_SETTINGS_MIGRATION = "3.2.10";
-
-void on_settings_updated(GSettings* settings,
-                         const gchar* key,
-                         FavoriteStoreGSettings* self);
-
+const std::string SETTINGS_NAME = "com.canonical.Unity.Launcher";
+const std::string SETTINGS_KEY = "favorites";
 }
 
 FavoriteStoreGSettings::FavoriteStoreGSettings()
-  : settings_(g_settings_new(SETTINGS_NAME))
-  , ignore_signals_(false)
+  : ignore_signals_(false)
+  , settings_(g_settings_new(SETTINGS_NAME.c_str()))
 {
-  Init();
-}
-
-FavoriteStoreGSettings::FavoriteStoreGSettings(GSettingsBackend* backend)
-  : settings_(g_settings_new_with_backend(SETTINGS_NAME, backend))
-  , ignore_signals_(false)
-{
-  Init();
-}
-
-void FavoriteStoreGSettings::Init()
-{
-  /* migrate the favorites if needed and ignore errors */
-  glib::String latest_migration_update(g_settings_get_string(
-                                         settings_, "favorite-migration"));
-  if (latest_migration_update.Str() < LATEST_SETTINGS_MIGRATION)
+  favorites_changed_.Connect(settings_, "changed::"+SETTINGS_KEY, [&] (GSettings*, gchar*)
   {
-    glib::Error error;
-    std::string cmd(PREFIXDIR);
-    cmd += "/lib/unity/migrate_favorites.py";
+    Changed();
+  });
 
-    glib::String output;
-
-    g_spawn_command_line_sync(cmd.c_str(),
-                              &output,
-                              NULL,
-                              NULL,
-                              &error);
-    if (error)
-    {
-      LOG_WARN(logger) << "WARNING: Unable to run the migrate favorites "
-                       << "tools successfully: " << error
-                       << ".\n\tThe output was:" << output;
-    }
-  }
-
-  g_signal_connect(settings_, "changed", G_CALLBACK(on_settings_updated), this);
   Refresh();
 }
-
 
 void FavoriteStoreGSettings::Refresh()
 {
@@ -106,7 +66,7 @@ void FavoriteStoreGSettings::FillList(FavoriteList& list)
 {
   list.clear();
 
-  gchar** favs = g_settings_get_strv(settings_, "favorites");
+  gchar** favs = g_settings_get_strv(settings_, SETTINGS_KEY.c_str());
 
   for (int i = 0; favs[i] != NULL; ++i)
   {
@@ -247,16 +207,16 @@ void FavoriteStoreGSettings::SaveFavorites(FavoriteList const& favorites, bool i
   }
 
   ignore_signals_ = ignore;
-  if (!g_settings_set_strv(settings_, "favorites", favs))
+  if (!g_settings_set_strv(settings_, SETTINGS_KEY.c_str(), favs))
   {
     LOG_WARNING(logger) << "Saving favorites failed.";
   }
   ignore_signals_ = false;
 }
 
-void FavoriteStoreGSettings::Changed(std::string const& key)
+void FavoriteStoreGSettings::Changed()
 {
-  if (ignore_signals_ or key != "favorites")
+  if (ignore_signals_)
     return;
 
   FavoriteList old(favorites_);
@@ -285,21 +245,6 @@ void FavoriteStoreGSettings::Changed(std::string const& key)
     reordered.emit();
 
 }
-
-namespace
-{
-
-void on_settings_updated(GSettings* settings,
-                         const gchar* key,
-                         FavoriteStoreGSettings* self)
-{
-  if (settings and key)
-  {
-    self->Changed(key);
-  }
-}
-
-} // anonymous namespace
 
 } // namespace internal
 } // namespace unity

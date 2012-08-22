@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -18,21 +18,13 @@
  * Authored by: Mirco Müller <mirco.mueller@canonical.com>
  */
 
-#ifndef STATICCAIROTEXT_H
-#define STATICCAIROTEXT_H
+#ifndef UNITYSHARED_STATICCAIROTEXT_H
+#define UNITYSHARED_STATICCAIROTEXT_H
+
+#include <string>
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
-//#include <NuxGraphics/OpenGLEngine.h"
-#include <Nux/TextureArea.h>
-#include <NuxImage/CairoGraphics.h>
-
-#include <pango/pango.h>
-#include <pango/pangocairo.h>
-
-#if defined(NUX_OS_LINUX)
-#include <X11/Xlib.h>
-#endif
 
 namespace nux
 {
@@ -42,25 +34,24 @@ class StaticCairoText : public View
 {
   NUX_DECLARE_OBJECT_TYPE (StaticCairoText, View);
 public:
-  typedef enum
+  enum EllipsizeState
   {
     NUX_ELLIPSIZE_END,
     NUX_ELLIPSIZE_START,
     NUX_ELLIPSIZE_MIDDLE,
     NUX_ELLIPSIZE_NONE,
-  } EllipsizeState;
+  };
 
-  typedef enum
+  enum AlignState
   {
     NUX_ALIGN_LEFT,
     NUX_ALIGN_CENTRE,
     NUX_ALIGN_RIGHT,
     NUX_ALIGN_TOP = NUX_ALIGN_LEFT,
     NUX_ALIGN_BOTTOM = NUX_ALIGN_RIGHT
-  } AlignState;
+  };
 
   StaticCairoText(std::string const& text, NUX_FILE_LINE_PROTO);
-
   ~StaticCairoText();
 
   void PreLayoutManagement();
@@ -82,63 +73,35 @@ public:
   void SetTextEllipsize(EllipsizeState state);
   void SetTextAlignment(AlignState state);
   void SetTextVerticalAlignment(AlignState state);
-  void SetFont(const char* fontstring);
+  void SetFont(std::string const& font);
   void SetLines(int maximum_lines);
+  void SetLineSpacing(float line_spacing);
 
   std::string GetText() const;
-  nux::Color GetTextColor() const;
+  Color GetTextColor() const;
 
-  int  GetLineCount();
+  int GetLineCount() const;
   int GetBaseline() const;
 
-  void GetTextExtents(int& width, int& height);
+  void GetTextExtents(int& width, int& height) const;
+  Size GetTextExtents() const;
 
   sigc::signal<void, StaticCairoText*> sigTextChanged;
   sigc::signal<void, StaticCairoText*> sigTextColorChanged;
   sigc::signal<void, StaticCairoText*> sigFontChanged;
 
   void SetAcceptKeyNavFocus(bool accept);
+
+  void SetMaximumSize(int w, int h);
+  void SetMaximumWidth(int w);
+
 protected:
   // Key navigation
   virtual bool AcceptKeyNavFocus();
-  bool _accept_key_nav_focus;
 
 private:
-  int            _cached_extent_width;
-  int            _cached_extent_height;
-  bool           _need_new_extent_cache;
-  int            _cached_base_width;
-  int            _cached_base_height;
-  int            _baseline;
-
-  std::string    _text;
-  Color          _textColor;
-  EllipsizeState _ellipsize;
-  AlignState     _align;
-  AlignState     _valign;
-  char*           _fontstring;
-
-  CairoGraphics* _cairoGraphics;
-  BaseTexture*   _texture2D;
-
-  int            _pre_layout_width;
-  int            _pre_layout_height;
-
-  int            _lines;
-  int            _actual_lines;
-
-  void GetTextExtents(const TCHAR* font,
-                      int&         width,
-                      int&         height);
-  void DrawText(cairo_t* cr,
-                int      width,
-                int      height,
-                Color    color);
-
-  void UpdateTexture();
-
-  static void OnFontChanged(GObject* gobject, GParamSpec* pspec,
-                            gpointer data);
+  struct Impl;
+  Impl* pimpl;
 };
 }
 

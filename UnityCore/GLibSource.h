@@ -32,8 +32,8 @@ namespace glib
 {
 
 /**
- * glib::Source is a wrapper class used to handle GSource based events using
- * at C++ level.
+ * glib::Source is a wrapper class made to handle GSource based events at C++
+ * level.
  *
  * The class is basically to be intended abstract and is currently implemented
  * by glib::Timeout() and glib::Idle() that are the higher-level wrappers for
@@ -55,7 +55,7 @@ class Source : public boost::noncopyable
 public:
   typedef std::shared_ptr<Source> Ptr;
   typedef std::unique_ptr<Source> UniquePtr;
-  typedef sigc::slot<bool> SourceCallback;
+  typedef std::function<bool()> Callback;
 
   /**
    * This is an enum used for convenience, you can actually cast to this
@@ -77,7 +77,7 @@ public:
    * This Run a source using the @callback function as Source's callback.
    * The method will return false if the source is already running, true otherwise.
    */
-  bool Run(SourceCallback callback);
+  bool Run(Callback callback);
   bool IsRunning() const;
 
   /**
@@ -111,12 +111,12 @@ private:
     Source* self;
   };
 
-  static gboolean Callback(gpointer data);
+  static gboolean SourceCallback(gpointer data);
   static void DestroyCallback(gpointer data);
 
   unsigned int source_id_;
   CallBackData* callback_data_;
-  SourceCallback callback_;
+  Callback callback_;
 };
 
 
@@ -125,18 +125,38 @@ private:
  * timeout that will be executed every @milliseconds milliseconds, whenever
  * there are no higher priority events pending to the default main loop.
  *
- * If the SourceCallback is defined on construction, then the Timeout is ran
- * as soon as it is created, otherwise you must manually call the Run() method
- * with the appropriate parameters.
+ * If the Callback is defined on construction, then the Timeout is ran as soon
+ * as it is created, otherwise you must manually call the Run() method with the
+ * appropriate parameters.
  */
 class Timeout : public Source
 {
 public:
   Timeout(unsigned int milliseconds, Priority prio = Priority::DEFAULT);
-  Timeout(unsigned int milliseconds, SourceCallback cb, Priority prio = Priority::DEFAULT);
+  Timeout(unsigned int milliseconds, Callback cb, Priority prio = Priority::DEFAULT);
 
 private:
   void Init(unsigned int milliseconds, Priority prio);
+};
+
+
+/**
+ * glib::TimeoutSeconds is a wrapper to g_timeout and must be used to initialize
+ * a timeout that will be executed every @seconds seconds, whenever
+ * there are no higher priority events pending to the default main loop.
+ *
+ * If the Callback is defined on construction, then the Timeout is ran as soon
+ * as it is created, otherwise you must manually call the Run() method with the
+ * appropriate parameters.
+ */
+class TimeoutSeconds : public Source
+{
+public:
+  TimeoutSeconds(unsigned int seconds, Priority prio = Priority::DEFAULT);
+  TimeoutSeconds(unsigned int seconds, Callback cb, Priority prio = Priority::DEFAULT);
+
+private:
+  void Init(unsigned int seconds, Priority prio);
 };
 
 
@@ -145,15 +165,15 @@ private:
  * that will be executed whenever there are no higher priority events pending to
  * the default main loop.
  *
- * If the SourceCallback is defined on construction, then the Timeout is ran
- * as soon as it is created, otherwise you must manually call the Run() method
- * with the appropriate parameters.
+ * If the Callback is defined on construction, then the Idle is ran as soon as
+ * it is created, otherwise you must manually call the Run() method with the
+ * appropriate parameters.
  */
 class Idle : public Source
 {
 public:
   Idle(Priority prio = Priority::DEFAULT_IDLE);
-  Idle(SourceCallback cb, Priority prio = Priority::DEFAULT_IDLE);
+  Idle(Callback cb, Priority prio = Priority::DEFAULT_IDLE);
 
 private:
   void Init(Priority prio);
@@ -185,6 +205,15 @@ public:
   bool Add(Source* source, std::string const& nick = "");
   bool Add(Source::Ptr const& source, std::string const& nick = "");
 
+  Source::Ptr AddTimeout(unsigned int milliseconds, std::string const& nick = "");
+  Source::Ptr AddTimeout(unsigned int milliseconds, Source::Callback cb, std::string const& nick = "");
+
+  Source::Ptr AddTimeoutSeconds(unsigned int seconds, std::string const& nick = "");
+  Source::Ptr AddTimeoutSeconds(unsigned int seconds, Source::Callback cb, std::string const& nick = "");
+
+  Source::Ptr AddIdle(std::string const& nick = "");
+  Source::Ptr AddIdle(Source::Callback cb, std::string const& nick = "");
+
   bool Remove(std::string const& nick);
   bool Remove(unsigned int id);
 
@@ -202,28 +231,5 @@ private:
 
 } // glib namespace
 } // unity namespace
-
-
-/* This code is needed to make the lambda functions with a return value to work
- * with the sigc::slot. We need that here to use lambdas as SourceCallback.
- * This can safely removed once libsigc++ will include it.
- *
- * Thanks to Chow Loong Jin <hyperair@gmail.com> for this code, see:
- * http://mail.gnome.org/archives/libsigc-list/2012-January/msg00000.html */
-
-#if __cplusplus >= 201100L || defined (__GXX_EXPERIMENTAL_CXX0X__)
-#include <type_traits>
-
-namespace sigc
-{
-  template <typename Functor>
-  struct functor_trait<Functor, false>
-  {
-    typedef decltype (::sigc::mem_fun(std::declval<Functor&>(), &Functor::operator())) _intermediate;
-    typedef typename _intermediate::result_type result_type;
-    typedef Functor functor_type;
-  };
-}
-#endif
 
 #endif

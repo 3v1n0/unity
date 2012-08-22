@@ -22,6 +22,8 @@
 #ifndef UNITYSHELL_H
 #define UNITYSHELL_H
 
+#include <NuxCore/AnimationController.h>
+#include <Nux/GesturesSubscription.h>
 #include <Nux/WindowThread.h>
 #include <NuxCore/Property.h>
 #include <sigc++/sigc++.h>
@@ -46,12 +48,12 @@
 #include "PanelController.h"
 #include "PanelStyle.h"
 #include "UScreen.h"
-#include "GestureEngine.h"
 #include "DebugDBusInterface.h"
 #include "SwitcherController.h"
 #include "UBusWrapper.h"
 #include "UnityshellPrivate.h"
 #include "UnityShowdesktopHandler.h"
+#include "ThumbnailGenerator.h"
 #ifndef USE_MODERN_COMPIZ_GL
 #include "ScreenEffectFramebufferObject.h"
 #endif
@@ -62,7 +64,7 @@
 #include <dlfcn.h>
 
 #include "HudController.h"
-
+#include "ThumbnailGenerator.h"
 namespace unity
 {
 
@@ -111,6 +113,9 @@ public:
                      const char         *eventName,
                      CompOption::Vector &o);
 
+  void damageRegion(const CompRegion &region);
+
+  bool shellCouldBeHidden(CompOutput const& output);
 
   /* paint on top of all windows if we could not find a window
    * to paint underneath */
@@ -119,11 +124,6 @@ public:
                      const CompRegion&,
                      CompOutput*,
                      unsigned int);
-#ifdef USE_MODERN_COMPIZ_GL
-  void glPaintCompositedOutput (const CompRegion    &region,
-                                ::GLFramebufferObject *fbo,
-                                unsigned int         mask);
-#endif
 
   /* paint in the special case that the output is transformed */
   void glPaintTransformedOutput(const GLScreenPaintAttrib&,
@@ -131,9 +131,6 @@ public:
                                 const CompRegion&,
                                 CompOutput*,
                                 unsigned int);
-
-  /* Pop our InputOutput windows from the paint list */
-  const CompWindowList& getWindowPaintList();
 
   /* handle X11 events */
   void handleEvent(XEvent*);
@@ -190,6 +187,11 @@ public:
 
   bool forcePaintOnTop ();
 
+  void SetUpAndShowSwitcher(switcher::ShowMode show_mode = switcher::ShowMode::CURRENT_VIEWPORT);
+
+  switcher::Controller::Ptr switcher_controller();
+  launcher::Controller::Ptr launcher_controller();
+
 protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
@@ -209,19 +211,19 @@ private:
   void CreateSuperNewAction(char shortcut, impl::ActionModifiers flag);
   void EnableCancelAction(CancelActionTarget target, bool enabled, int modifiers = 0);
 
-  static gboolean initPluginActions(gpointer data);
+  bool initPluginActions();
   void initLauncher();
-  void damageNuxRegions();
+
+  void compizDamageNux(CompRegion const& region);
+  void nuxDamageCompiz();
+
   void onRedrawRequested();
   void Relayout();
 
-  static gboolean RelayoutTimeout(gpointer data);
   static void initUnity(nux::NThread* thread, void* InitData);
   static void OnStartKeyNav(GVariant* data, void* value);
   static void OnExitKeyNav(GVariant* data, void* value);
-  static gboolean OnRedrawTimeout(gpointer data);
 
-  void startLauncherKeyNav();
   void restartLauncherKeyNav();
 
   void OnDashRealized ();
@@ -229,16 +231,27 @@ private:
   void OnLauncherStartKeyNav(GVariant* data);
   void OnLauncherEndKeyNav(GVariant* data);
 
+  void OnSwitcherStart(GVariant* data);
+  void OnSwitcherEnd(GVariant* data);
+
+  void RestoreWindow(GVariant* data);
+  bool SaveInputThenFocus(const guint xid);
+
   void InitHints();
 
   void OnPanelStyleChanged();
+
+  void InitGesturesSupport();
+
+  nux::animation::TickSource tick_source_;
+  nux::animation::AnimationController animation_controller_;
 
   Settings dash_settings_;
   dash::Style    dash_style_;
   panel::Style   panel_style_;
   FontSettings   font_settings_;
-  GeisAdapter    geis_adapter_;
   internal::FavoriteStoreGSettings favorite_store_;
+  ThumbnailGenerator thumbnail_generator_;
 
   /* The window thread should be the last thing removed, as c++ does it in reverse order */
   std::unique_ptr<nux::WindowThread> wt;
@@ -255,16 +268,21 @@ private:
   std::list<shortcut::AbstractHint::Ptr> hints_;
   bool enable_shortcut_overlay_;
 
-  std::unique_ptr<GestureEngine>        gesture_engine_;
-  nux::Geometry                         lastTooltipArea;
+  /* Subscription for gestures that manipulate Unity launcher */
+  std::unique_ptr<nux::GesturesSubscription> gestures_sub_launcher_;
+
+  /* Subscription for gestures that manipulate Unity dash */
+  std::unique_ptr<nux::GesturesSubscription> gestures_sub_dash_;
+
+  /* Subscription for gestures that manipulate windows. */
+  std::unique_ptr<nux::GesturesSubscription> gestures_sub_windows_;
+
   bool                                  needsRelayout;
   bool                                  _in_paint;
-  guint32                               relayoutSourceId;
-  guint32                               _redraw_handle;
+  bool                                  super_keypressed_;
   typedef std::shared_ptr<CompAction> CompActionPtr;
   typedef std::vector<CompActionPtr> ShortcutActions;
   ShortcutActions _shortcut_actions;
-  bool            super_keypressed_;
   std::map<CancelActionTarget, CompActionPtr> _escape_actions;
 
   /* keyboard-nav mode */
@@ -275,11 +293,14 @@ private:
 
   /* handle paint order */
   bool    doShellRepaint;
+  bool    didShellRepaint;
   bool    allowWindowPaint;
-  bool    damaged;
   bool    _key_nav_mode_requested;
   CompOutput* _last_output;
-  CompWindowList _withRemovedNuxWindows;
+
+  CompRegion nuxRegion;
+  CompRegion fullscreenRegion;
+  CompWindow* firstWindowAboveShell;
 
   nux::Property<nux::Geometry> primary_monitor_;
 
@@ -294,7 +315,6 @@ private:
 
   bool   queryForShader ();
 
-  UBusManager ubus_manager_;
   int dash_monitor_;
   CompScreen::GrabHandle grab_index_;
   CompWindowList         fullscreen_windows_;
@@ -310,10 +330,16 @@ private:
   bool paint_panel_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> panel_texture_;
 
+  bool scale_just_activated_;
+
 #ifndef USE_MODERN_COMPIZ_GL
   ScreenEffectFramebufferObject::GLXGetProcAddressProc glXGetProcAddressP;
 #endif
 
+  UBusManager ubus_manager_;
+  glib::SourceManager sources_;
+  unity::ThumbnailGenerator thumb_generator;
+  
   friend class UnityWindow;
 };
 
@@ -388,11 +414,9 @@ public:
 
   ShowdesktopHandler             *mShowdesktopHandler;
 
+  //! Emited when CompWindowNotifyBeforeDestroy is received
+  sigc::signal<void> being_destroyed;
 private:
-
-  guint  focusdesktop_handle_;
-  static gboolean FocusDesktopTimeout(gpointer data);
-
   void DoEnableFocus ();
   void DoDisableFocus ();
 
@@ -424,6 +448,7 @@ private:
   compiz::WindowInputRemoverLock::Ptr GetInputRemover ();
 
   compiz::WindowInputRemoverLock::Weak input_remover_;
+  glib::Source::UniquePtr focus_desktop_timeout_;
 };
 
 

@@ -20,26 +20,15 @@
 #include "config.h"
 
 #include <Nux/Nux.h>
-#include <Nux/BaseWindow.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
-#include <Nux/Layout.h>
-#include <Nux/WindowCompositor.h>
 #include <NuxCore/Logger.h>
 
-#include <NuxImage/CairoGraphics.h>
-#include <NuxImage/ImageSurface.h>
-#include <Nux/StaticText.h>
+#include <UnityCore/Variant.h>
 
-#include <NuxGraphics/GLThread.h>
-#include <NuxGraphics/RenderingPipe.h>
-
-#include <glib.h>
 #include <glib/gi18n-lib.h>
 
 #include "SearchBar.h"
-#include <UnityCore/Variant.h>
-
 #include "CairoTexture.h"
 #include "unity-shared/DashStyle.h"
 
@@ -128,8 +117,6 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   , show_filters_(nullptr)
   , last_width_(-1)
   , last_height_(-1)
-  , live_search_timeout_(0)
-  , start_spinner_timeout_(0)
 {
   Init();
 }
@@ -144,8 +131,6 @@ SearchBar::SearchBar(bool show_filter_hint_, NUX_FILE_LINE_DECL)
   , show_filters_(nullptr)
   , last_width_(-1)
   , last_height_(-1)
-  , live_search_timeout_(0)
-  , start_spinner_timeout_(0)
 {
   Init();
 }
@@ -155,7 +140,7 @@ void SearchBar::Init()
   dash::Style& style = dash::Style::Instance();
   nux::BaseTexture* icon = style.GetSearchMagnifyIcon();
 
-  bg_layer_ = new nux::ColorLayer(nux::Color(0xff595853), true);
+  bg_layer_.reset(new nux::ColorLayer(nux::Color(0xff595853), true));
 
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout_->SetLeftAndRightPadding(LEFT_INTERNAL_PADDING, SEARCH_ENTRY_RIGHT_BORDER);
@@ -266,10 +251,8 @@ void SearchBar::Init()
     expand_icon_->mouse_click.connect(mouse_expand);
   }
 
-  sig_manager_.Add(new Signal<void, GtkSettings*, GParamSpec*>
-      (gtk_settings_get_default(),
-       "notify::gtk-font-name",
-       sigc::mem_fun(this, &SearchBar::OnFontChanged)));
+  sig_manager_.Add<void, GtkSettings*, GParamSpec*>(gtk_settings_get_default(), "notify::gtk-font-name",
+                                                    sigc::mem_fun(this, &SearchBar::OnFontChanged));
   OnFontChanged(gtk_settings_get_default());
 
   search_hint.changed.connect([&](std::string const& s) { OnSearchHintChanged(); });
@@ -287,17 +270,6 @@ void SearchBar::Init()
       expand_icon_->SetVisible(can_refine);
     }
   });
-}
-
-SearchBar::~SearchBar()
-{
-  delete bg_layer_;
-
-  if (live_search_timeout_)
-    g_source_remove(live_search_timeout_);
-
-  if (start_spinner_timeout_)
-    g_source_remove(start_spinner_timeout_);
 }
 
 void SearchBar::OnFontChanged(GtkSettings* settings, GParamSpec* pspec)
@@ -341,21 +313,13 @@ void SearchBar::OnSearchChanged(nux::TextEntry* text_entry)
   // We don't want to set a new search string on every new character, so we add a sma
   // timeout to see if the user is typing a sentence. If more characters are added, we
   // keep restarting the timeout unti the user has actuay paused.
-  if (live_search_timeout_)
-    g_source_remove(live_search_timeout_);
-
-  live_search_timeout_ = g_timeout_add(LIVE_SEARCH_TIMEOUT,
-                                       (GSourceFunc)&OnLiveSearchTimeout,
-                                       this);
+  live_search_timeout_.reset(new glib::Timeout(LIVE_SEARCH_TIMEOUT));
+  live_search_timeout_->Run(sigc::mem_fun(this, &SearchBar::OnLiveSearchTimeout));
 
   // Don't animate the spinner immediately, the searches are fast and
   // the spinner would just flicker
-  if (start_spinner_timeout_)
-    g_source_remove(start_spinner_timeout_);
-
-  start_spinner_timeout_ = g_timeout_add(SPINNER_TIMEOUT,
-                                         (GSourceFunc)&OnSpinnerStartCb,
-                                         this);
+  start_spinner_timeout_.reset(new glib::Timeout(SPINNER_TIMEOUT));
+  start_spinner_timeout_->Run(sigc::mem_fun(this, &SearchBar::OnSpinnerStartCb));
 
   bool is_empty = pango_entry_->im_active() ? false : pango_entry_->GetText() == "";
   hint_->SetVisible(is_empty);
@@ -367,20 +331,16 @@ void SearchBar::OnSearchChanged(nux::TextEntry* text_entry)
   search_changed.emit(pango_entry_->GetText());
 }
 
-gboolean SearchBar::OnLiveSearchTimeout(SearchBar* sef)
+bool SearchBar::OnLiveSearchTimeout()
 {
-  sef->live_search_reached.emit(sef->pango_entry_->GetText());
-  sef->live_search_timeout_ = 0;
-
-  return FALSE;
+  live_search_reached.emit(pango_entry_->GetText());
+  return false;
 }
 
-gboolean SearchBar::OnSpinnerStartCb(SearchBar* sef)
+bool SearchBar::OnSpinnerStartCb()
 {
-  sef->spinner_->SetState(STATE_SEARCHING);
-  sef->start_spinner_timeout_ = 0;
-
-  return FALSE;
+  spinner_->SetState(STATE_SEARCHING);
+  return false;
 }
 
 void SearchBar::OnShowingFiltersChanged(bool is_showing)
@@ -407,7 +367,7 @@ void SearchBar::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   bg_layer_->SetGeometry(nux::Geometry(base.x, base.y, last_width_, last_height_));
   nux::GetPainter().RenderSinglePaintLayer(GfxContext,
                                            bg_layer_->GetGeometry(),
-                                           bg_layer_);
+                                           bg_layer_.get());
 
   if (ShouldBeHighlighted())
   {
@@ -442,7 +402,7 @@ void SearchBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (!IsFullRedraw())
   {
-    gPainter.PushLayer(GfxContext, bg_layer_->GetGeometry(), bg_layer_);
+    gPainter.PushLayer(GfxContext, bg_layer_->GetGeometry(), bg_layer_.get());
   }
   else
   {
@@ -467,11 +427,7 @@ void SearchBar::OnClearClicked(int x, int y, unsigned long button_fags,
                                      unsigned long key_fags)
 {
   pango_entry_->SetText("");
-  if (start_spinner_timeout_)
-  {
-    g_source_remove(start_spinner_timeout_);
-    start_spinner_timeout_ = 0;
-  }
+  start_spinner_timeout_.reset();
   live_search_reached.emit("");
 }
 
@@ -484,22 +440,13 @@ void SearchBar::ForceSearchChanged()
 {
   // this method will emit search_changed (and live_search_reached after
   // returning to mainloop) and starts animating the spinner
-
-  if (live_search_timeout_)
-    g_source_remove(live_search_timeout_);
-
-  live_search_timeout_ = g_idle_add_full(G_PRIORITY_DEFAULT,
-                                         (GSourceFunc)&OnLiveSearchTimeout,
-                                         this, NULL);
+  live_search_timeout_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
+  live_search_timeout_->Run(sigc::mem_fun(this, &SearchBar::OnLiveSearchTimeout));
 
   // Don't animate the spinner immediately, the searches are fast and
   // the spinner would just flicker
-  if (start_spinner_timeout_)
-    g_source_remove(start_spinner_timeout_);
-
-  start_spinner_timeout_ = g_timeout_add(SPINNER_TIMEOUT * 2,
-                                         (GSourceFunc)&OnSpinnerStartCb,
-                                         this);
+  start_spinner_timeout_.reset(new glib::Timeout(SPINNER_TIMEOUT * 2));
+  start_spinner_timeout_->Run(sigc::mem_fun(this, &SearchBar::OnSpinnerStartCb));
 
   search_changed.emit(pango_entry_->GetText());
 }
@@ -507,11 +454,7 @@ void SearchBar::ForceSearchChanged()
 void
 SearchBar::SearchFinished()
 {
-  if (start_spinner_timeout_)
-  {
-    g_source_remove(start_spinner_timeout_);
-    start_spinner_timeout_ = 0;
-  }
+  start_spinner_timeout_.reset();
 
   bool is_empty = pango_entry_->im_active() ?
     false : pango_entry_->GetText() == "";
@@ -564,19 +507,16 @@ void SearchBar::UpdateBackground(bool force)
   texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
   texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
 
-  if (bg_layer_)
-    delete bg_layer_;
-
   nux::ROPConfig rop;
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-  bg_layer_ = new nux::TextureLayer(texture2D->GetDeviceTexture(),
-                                    texxform,
-                                    nux::color::White,
-                                    true,
-                                    rop);
+  bg_layer_.reset(new nux::TextureLayer(texture2D->GetDeviceTexture(),
+                                        texxform,
+                                        nux::color::White,
+                                        true,
+                                        rop));
 
   texture2D->UnReference();
 }
@@ -613,11 +553,7 @@ bool SearchBar::set_search_string(std::string const& string)
   spinner_->SetState(string == "" ? STATE_READY : STATE_CLEAR);
 
   // we don't want the spinner animating in this case
-  if (start_spinner_timeout_)
-  {
-    g_source_remove(start_spinner_timeout_);
-    start_spinner_timeout_ = 0;
-  }
+  start_spinner_timeout_.reset();
 
   return true;
 }

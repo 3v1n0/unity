@@ -28,22 +28,8 @@ namespace unity
 namespace launcher
 {
 
-struct RemoveArg
-{
-  RemoveArg(AbstractLauncherIcon::Ptr const& icon_, LauncherModel* model)
-    : icon(icon_), self(model)
-  {}
-
-  AbstractLauncherIcon::Ptr icon;
-  LauncherModel* self;
-};
-
 LauncherModel::LauncherModel()
-{
-  selection_ = 0;
-}
-
-LauncherModel::~LauncherModel()
+  : selection_(0)
 {
 }
 
@@ -58,19 +44,19 @@ void LauncherModel::AddProperties(GVariantBuilder* builder)
   .add("selection", selection_);
 }
 
-unity::debug::Introspectable::IntrospectableList const& LauncherModel::GetIntrospectableChildren()
+unity::debug::Introspectable::IntrospectableList LauncherModel::GetIntrospectableChildren()
 {
   introspection_results_.clear();
-  
+
   for (auto icon : _inner)
     introspection_results_.push_back(icon.GetPointer());
-  
+
   return introspection_results_;
 }
 
 bool LauncherModel::IconShouldShelf(AbstractLauncherIcon::Ptr icon) const
 {
-  return icon->GetIconType() == AbstractLauncherIcon::TYPE_TRASH;
+  return icon->GetIconType() == AbstractLauncherIcon::IconType::TRASH;
 }
 
 bool LauncherModel::CompareIcons(AbstractLauncherIcon::Ptr first, AbstractLauncherIcon::Ptr second)
@@ -93,14 +79,14 @@ LauncherModel::Populate()
   iterator it, it2;
 
   int i = 0;
-  for (it = main_begin(); it != main_end(); it++)
+  for (it = main_begin(); it != main_end(); ++it)
   {
     _inner.push_back(*it);
     (*it)->SetSortPriority(i);
     ++i;
   }
 
-  for (it = shelf_begin(); it != shelf_end(); it++)
+  for (it = shelf_begin(); it != shelf_end(); ++it)
   {
     _inner.push_back(*it);
     (*it)->SetSortPriority(i);
@@ -144,25 +130,13 @@ LauncherModel::RemoveIcon(AbstractLauncherIcon::Ptr icon)
   }
 }
 
-gboolean
-LauncherModel::RemoveCallback(gpointer data)
-{
-  RemoveArg* arg = static_cast<RemoveArg*>(data);
-
-  if (arg)
-  {
-    arg->self->RemoveIcon(arg->icon);
-    delete arg;
-  }
-
-  return false;
-}
-
 void
 LauncherModel::OnIconRemove(AbstractLauncherIcon::Ptr icon)
 {
-  RemoveArg* arg = new RemoveArg(icon, this);
-  g_timeout_add(1000, &LauncherModel::RemoveCallback, arg);
+  timeouts_.AddTimeout(1000, [&, icon] {
+    RemoveIcon(icon);
+    return false;
+  });
 }
 
 void
@@ -187,7 +161,7 @@ LauncherModel::IconHasSister(AbstractLauncherIcon::Ptr icon) const
   const_iterator it;
   const_iterator end;
 
-  if (icon && icon->GetIconType() == AbstractLauncherIcon::TYPE_DEVICE)
+  if (icon && icon->GetIconType() == AbstractLauncherIcon::IconType::DEVICE)
     return true;
 
   if (IconShouldShelf(icon))
@@ -368,7 +342,7 @@ void LauncherModel::SetSelection(int selection)
 
   if (new_selection == selection_)
     return;
-  
+
   selection_ = new_selection;
   selection_changed.emit(Selection());
 }
@@ -383,7 +357,7 @@ void LauncherModel::SelectNext()
     if (temp >= Size())
       temp = 0;
 
-    if (_inner[temp]->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE))
+    if (_inner[temp]->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE))
     {
       selection_ = temp;
       selection_changed.emit(Selection());
@@ -403,7 +377,7 @@ void LauncherModel::SelectPrevious()
     if (temp < 0)
       temp = Size() - 1;
 
-    if (_inner[temp]->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE))
+    if (_inner[temp]->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE))
     {
       selection_ = temp;
       selection_changed.emit(Selection());
@@ -435,7 +409,7 @@ LauncherModel::at(int index)
   int i;
 
   // start currently selected icon
-  for (it = _inner.begin(), i = 0; it != _inner.end(); it++, i++)
+  for (it = _inner.begin(), i = 0; it != _inner.end(); ++it, i++)
   {
     if (i == index)
       return it;

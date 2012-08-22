@@ -90,7 +90,15 @@ TEST(TestGLibSource, Priority)
 
 TEST(TestGLibTimeout, Construction)
 {
-  Timeout timeout(1000, Source::SourceCallback());
+  Timeout timeout(1000, &OnSourceCallbackContinue);
+  EXPECT_NE(timeout.Id(), 0);
+  EXPECT_TRUE(timeout.IsRunning());
+  EXPECT_EQ(timeout.GetPriority(), Source::Priority::DEFAULT);
+}
+
+TEST(TestGLibTimeout, ConstructionEmptyCallback)
+{
+  Timeout timeout(1000, Source::Callback());
   EXPECT_NE(timeout.Id(), 0);
   EXPECT_TRUE(timeout.IsRunning());
   EXPECT_EQ(timeout.GetPriority(), Source::Priority::DEFAULT);
@@ -160,6 +168,20 @@ TEST(TestGLibTimeout, MultipleShotsRun)
   EXPECT_LT(time_delta, 700);
 }
 
+TEST(TestGLibTimeout, OneShotRunWithEmptyCallback)
+{
+  struct timespec pre, post;
+  Timeout timeout(100, Source::Callback());
+  clock_gettime(CLOCK_MONOTONIC, &pre);
+  timeout.removed.connect([&] (unsigned int id) { clock_gettime(CLOCK_MONOTONIC, &post); });
+
+  Utils::WaitForTimeoutMSec(500);
+  EXPECT_FALSE(timeout.IsRunning());
+  int time_delta = unity::TimeUtil::TimeDelta(&post, &pre);
+  EXPECT_GE(time_delta, 100);
+  EXPECT_LT(time_delta, 110);
+}
+
 TEST(TestGLibTimeout, Removal)
 {
   callback_called = false;
@@ -198,6 +220,122 @@ TEST(TestGLibTimeout, Running)
   EXPECT_EQ(callback_call_count, 1);
 }
 
+TEST(TestGLibTimeout, RemoveOnCallback)
+{
+  bool local_callback_called = false;
+  unsigned int local_callback_call_count = 0;
+
+  Timeout timeout(10, [&] {
+    local_callback_called = true;
+    ++local_callback_call_count;
+    timeout.Remove();
+
+    // this function would be called more than once if we had not removed the source.
+    return true;
+  });
+
+  Utils::WaitForTimeoutMSec(100);
+
+  ASSERT_EQ(timeout.IsRunning(), false);
+  EXPECT_EQ(local_callback_called, true);
+  EXPECT_EQ(local_callback_call_count, 1);
+}
+
+TEST(TestGLibTimeout, RemovePtrOnCallback)
+{
+  bool local_callback_called = false;
+  unsigned int local_callback_call_count = 0;
+
+  Source::UniquePtr timeout(new Timeout(10, [&] {
+    local_callback_called = true;
+    ++local_callback_call_count;
+    timeout.reset();
+
+    // this function would be called more than once if we had not removed the source.
+    return true;
+  }));
+
+  Utils::WaitForTimeoutMSec(100);
+
+  ASSERT_EQ(timeout, nullptr);
+  EXPECT_EQ(local_callback_called, true);
+  EXPECT_EQ(local_callback_call_count, 1);
+}
+
+// GLib TimeoutSeconds tests
+
+TEST(TestGLibTimeoutSeconds, Construction)
+{
+  TimeoutSeconds timeout(1, &OnSourceCallbackContinue);
+  EXPECT_NE(timeout.Id(), 0);
+  EXPECT_TRUE(timeout.IsRunning());
+  EXPECT_EQ(timeout.GetPriority(), Source::Priority::DEFAULT);
+}
+
+TEST(TestGLibTimeoutSeconds, DelayedRunConstruction)
+{
+  TimeoutSeconds timeout(1);
+  EXPECT_EQ(timeout.Id(), 0);
+  EXPECT_FALSE(timeout.IsRunning());
+  EXPECT_EQ(timeout.GetPriority(), Source::Priority::DEFAULT);
+}
+
+TEST(TestGLibTimeoutSeconds, Destroy)
+{
+  callback_called = false;
+  callback_call_count = 0;
+  bool removed_called = false;
+
+  {
+    TimeoutSeconds timeout(1, &OnSourceCallbackContinue);
+    timeout.removed.connect([&] (unsigned int id) { removed_called = true; });
+  }
+
+  EXPECT_TRUE(removed_called);
+  EXPECT_EQ(callback_call_count, 0);
+}
+
+TEST(TestGLibTimeoutSeconds, OneShotRun)
+{
+  callback_called = false;
+  callback_call_count = 0;
+  struct timespec pre, post;
+
+  TimeoutSeconds timeout(1, &OnSourceCallbackStop);
+  clock_gettime(CLOCK_MONOTONIC, &pre);
+  timeout.removed.connect([&] (unsigned int id) { clock_gettime(CLOCK_MONOTONIC, &post); });
+
+  Utils::WaitForTimeoutMSec(2000);
+  EXPECT_FALSE(timeout.IsRunning());
+  EXPECT_TRUE(callback_called);
+  EXPECT_EQ(callback_call_count, 1);
+  int time_delta = unity::TimeUtil::TimeDelta(&post, &pre);
+  EXPECT_GE(time_delta, 500);
+  EXPECT_LT(time_delta, 2000);
+}
+
+TEST(TestGLibTimeoutSeconds, MultipleShotsRun)
+{
+  callback_called = false;
+  callback_call_count = 0;
+  struct timespec pre, post;
+
+  {
+  TimeoutSeconds timeout(1, &OnSourceCallbackContinue);
+  clock_gettime(CLOCK_MONOTONIC, &pre);
+  timeout.removed.connect([&] (unsigned int id) { clock_gettime(CLOCK_MONOTONIC, &post); });
+
+  Utils::WaitForTimeoutMSec(3999);
+  EXPECT_TRUE(timeout.IsRunning());
+  }
+
+  EXPECT_TRUE(callback_called);
+  EXPECT_GE(callback_call_count, 3);
+  EXPECT_LE(callback_call_count, 4);
+  int time_delta = unity::TimeUtil::TimeDelta(&post, &pre);
+  EXPECT_GE(time_delta, 3500);
+  EXPECT_LT(time_delta, 5000);
+}
 
 // GLib Idle tests
 
@@ -299,6 +437,47 @@ TEST(TestGLibIdle, Running)
   EXPECT_EQ(callback_call_count, 1);
 }
 
+TEST(TestGLibIdle, RemoveOnCallback)
+{
+  bool local_callback_called = false;
+  unsigned int local_callback_call_count = 0;
+
+  Idle idle([&] {
+    local_callback_called = true;
+    ++local_callback_call_count;
+    idle.Remove();
+
+    // this function would be called more than once if we had not removed the source.
+    return true;
+  });
+
+  Utils::WaitForTimeoutMSec(100);
+
+  ASSERT_EQ(idle.IsRunning(), false);
+  EXPECT_EQ(local_callback_called, true);
+  EXPECT_EQ(local_callback_call_count, 1);
+}
+
+TEST(TestGLibIdle, RemovePtrOnCallback)
+{
+  bool local_callback_called = false;
+  unsigned int local_callback_call_count = 0;
+
+  Source::UniquePtr idle(new Idle([&] {
+    local_callback_called = true;
+    ++local_callback_call_count;
+    idle.reset();
+
+    // this function would be called more than once if we had not removed the source.
+    return true;
+  }));
+
+  Utils::WaitForTimeoutMSec(100);
+
+  ASSERT_EQ(idle, nullptr);
+  EXPECT_EQ(local_callback_called, true);
+  EXPECT_EQ(local_callback_call_count, 1);
+}
 
 // Test GLibSource Manager
 
@@ -387,6 +566,30 @@ TEST(TestGLibSourceManager, AddingDuplicatedNamedSources)
 
   EXPECT_FALSE(timeout_1->IsRunning());
   EXPECT_EQ(manager.GetSources().size(), 1);
+}
+
+TEST(TestGLibSourceManager, AddingTimeouts)
+{
+  MockSourceManager manager;
+
+  auto timeout1 = manager.AddTimeout(1);
+  auto timeout2 = manager.AddTimeout(1, &OnSourceCallbackContinue);
+
+  EXPECT_EQ(manager.GetSources().size(), 2);
+  EXPECT_FALSE(timeout1->IsRunning());
+  EXPECT_TRUE(timeout2->IsRunning());
+}
+
+TEST(TestGLibSourceManager, AddingIdles)
+{
+  MockSourceManager manager;
+
+  auto idle1 = manager.AddIdle();
+  auto idle2 = manager.AddIdle(&OnSourceCallbackContinue);
+
+  EXPECT_EQ(manager.GetSources().size(), 2);
+  EXPECT_FALSE(idle1->IsRunning());
+  EXPECT_TRUE(idle2->IsRunning());
 }
 
 TEST(TestGLibSourceManager, RemovingSourcesById)
@@ -495,6 +698,29 @@ TEST(TestGLibSourceManager, DisconnectsOnRemoval)
 
   EXPECT_FALSE(timeout->IsRunning());
   EXPECT_FALSE(idle->IsRunning());
+}
+
+TEST(TestGLibSourceManager, RemoveSourceOnCallback)
+{
+  SourceManager manager;
+  bool local_callback_called = false;
+  unsigned int local_callback_call_count = 0;
+
+  Source::Ptr idle(new Idle());
+  manager.Add(idle, "test-idle");
+  idle->Run([&] {
+    local_callback_called = true;
+    ++local_callback_call_count;
+    manager.Remove("test-idle");
+    // this function would be called more than once if we had not removed the source.
+    return true;
+  });
+
+  Utils::WaitForTimeoutMSec(100);
+
+  ASSERT_EQ(idle->IsRunning(), false);
+  EXPECT_EQ(local_callback_called, true);
+  EXPECT_EQ(local_callback_call_count, 1);
 }
 
 }

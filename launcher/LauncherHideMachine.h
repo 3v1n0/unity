@@ -23,8 +23,14 @@
 #include <sigc++/sigc++.h>
 #include <glib.h>
 #include <string>
+#include <UnityCore/GLibSource.h>
 
 #include "Decaymulator.h"
+
+namespace unity
+{
+namespace launcher
+{
 
 class LauncherHideMachine : public sigc::trackable
 {
@@ -42,31 +48,28 @@ public:
     DEFAULT                = 0,
     LAUNCHER_HIDDEN        = 1 << 0,
     MOUSE_OVER_LAUNCHER    = 1 << 1,
-    QUICKLIST_OPEN         = 1 << 4,
-    EXTERNAL_DND_ACTIVE    = 1 << 5,
-    INTERNAL_DND_ACTIVE    = 1 << 6,
-    TRIGGER_BUTTON_SHOW    = 1 << 7,
-    DND_PUSHED_OFF         = 1 << 10,
-    MOUSE_MOVE_POST_REVEAL = 1 << 11,
-    VERTICAL_SLIDE_ACTIVE  = 1 << 12,
-    KEY_NAV_ACTIVE         = 1 << 13,
-    PLACES_VISIBLE         = 1 << 14,
-    LAST_ACTION_ACTIVATE   = 1 << 15,
-    SCALE_ACTIVE           = 1 << 16,
-    EXPO_ACTIVE            = 1 << 17,
-    MT_DRAG_OUT            = 1 << 18,
-    REVEAL_PRESSURE_PASS   = 1 << 19,
-    LAUNCHER_PULSE         = 1 << 20,
-    LOCK_HIDE              = 1 << 21
+    QUICKLIST_OPEN         = 1 << 2,
+    EXTERNAL_DND_ACTIVE    = 1 << 3,
+    INTERNAL_DND_ACTIVE    = 1 << 4,
+    TRIGGER_BUTTON_SHOW    = 1 << 5,
+    DND_PUSHED_OFF         = 1 << 6,
+    MOUSE_MOVE_POST_REVEAL = 1 << 7,
+    VERTICAL_SLIDE_ACTIVE  = 1 << 8,
+    KEY_NAV_ACTIVE         = 1 << 9,
+    PLACES_VISIBLE         = 1 << 10,
+    SCALE_ACTIVE           = 1 << 11,
+    EXPO_ACTIVE            = 1 << 12,
+    MT_DRAG_OUT            = 1 << 13,
+    REVEAL_PRESSURE_PASS   = 1 << 14,
+    LAUNCHER_PULSE         = 1 << 15,
+    LOCK_HIDE              = 1 << 16
   } HideQuirk;
 
   nux::Property<int> reveal_pressure;
   nux::Property<int> edge_decay_rate;
-
   nux::Property<float> reveal_progress;
 
   LauncherHideMachine();
-  virtual ~LauncherHideMachine();
 
   void     SetMode(HideMode mode);
   HideMode GetMode() const;
@@ -85,22 +88,21 @@ public:
 private:
   void EnsureHideState(bool skip_delay);
   void SetShouldHide(bool value, bool skip_delay);
-
-  static gboolean OnHideDelayTimeout(gpointer data);
-  static gboolean EmitShouldHideChanged(gpointer data);
+  bool EmitShouldHideChanged();
 
   void OnDecayRateChanged (int value);
 
-  unity::ui::Decaymulator::Ptr decaymulator_;
-
+  ui::Decaymulator decaymulator_;
+  HideMode  _mode;
+  HideQuirk _quirks;
   bool      _should_hide;
   bool      _latest_emit_should_hide;
-  HideQuirk _quirks;
-  HideMode  _mode;
-  unsigned int _hide_delay_timeout_length;
 
-  guint _hide_delay_handle;
-  guint _hide_changed_emit_handle;
+  glib::Source::UniquePtr _hide_delay_timeout;
+  glib::Source::UniquePtr _hide_changed_emit_idle;
 };
+
+} // namespace launcher
+} // namespace unity
 
 #endif

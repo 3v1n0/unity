@@ -27,7 +27,6 @@ Animator::Animator(unsigned int default_duration, unsigned int fps_rate)
   , rate_(1)
   , duration_(0)
   , one_time_duration_(0)
-  , timeout_id_(0)
   , start_progress_(0.0f)
   , progress_(0.0f)
 {
@@ -66,7 +65,7 @@ unsigned int Animator::GetDuration() const
 
 bool Animator::IsRunning() const
 {
-  return (timeout_id_ != 0);
+  return bool(timeout_);
 }
 
 double Animator::GetProgress() const
@@ -76,7 +75,7 @@ double Animator::GetProgress() const
 
 void Animator::Start(unsigned int one_time_duration, double start_progress)
 {
-  if (timeout_id_ == 0 && start_progress < 1.0f)
+  if (!timeout_ && start_progress < 1.0f)
   {
     if (start_progress < 0.0f)
       start_progress = 0.0f;
@@ -85,7 +84,7 @@ void Animator::Start(unsigned int one_time_duration, double start_progress)
     start_progress_ = start_progress;
     progress_ = start_progress_;
     start_time_ = g_get_monotonic_time();
-    timeout_id_ = g_timeout_add(rate_, (GSourceFunc) &Animator::TimerTimeOut, this);
+    timeout_.reset(new glib::Timeout(rate_, sigc::mem_fun(this, &Animator::DoStep)));
     animation_started.emit();
   }
 }
@@ -97,14 +96,13 @@ void Animator::Start(double start_progress)
 
 void Animator::Stop()
 {
-  if (timeout_id_ != 0)
+  if (timeout_)
   {
-    g_source_remove(timeout_id_);
+    timeout_.reset();
     animation_updated.emit(progress_);
     animation_ended.emit();
     animation_stopped.emit(progress_);
     one_time_duration_ = 0;
-    timeout_id_ = 0;
   }
 }
 
@@ -128,15 +126,10 @@ bool Animator::DoStep()
     animation_updated.emit(1.0f);
     animation_ended.emit();
     one_time_duration_ = 0;
-    timeout_id_ = 0;
+    timeout_.reset();
 
     return false;
   }
-}
-
-gboolean Animator::TimerTimeOut(Animator *self)
-{
-  return self->DoStep() ? TRUE : FALSE;
 }
 
 } //namespace

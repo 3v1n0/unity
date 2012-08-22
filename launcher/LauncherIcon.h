@@ -22,23 +22,17 @@
 #define LAUNCHERICON_H
 
 #include <set>
-#include <string>
+#include <boost/unordered_map.hpp>
 
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 #include <NuxCore/Math/MathInc.h>
 
-#include <sigc++/trackable.h>
-#include <sigc++/signal.h>
-#include <sigc++/functors/ptr_fun.h>
-#include <sigc++/functors/mem_fun.h>
-
 #include <gtk/gtk.h>
 #include <libdbusmenu-glib/client.h>
 #include <libdbusmenu-glib/menuitem.h>
 
-#include <boost/unordered_map.hpp>
-
+#include <UnityCore/GLibSource.h>
 #include "AbstractLauncherIcon.h"
 #include "Tooltip.h"
 #include "QuicklistView.h"
@@ -60,7 +54,7 @@ class LauncherIcon : public AbstractLauncherIcon
 public:
   typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
-  LauncherIcon();
+  LauncherIcon(IconType type);
 
   virtual ~LauncherIcon();
 
@@ -145,7 +139,7 @@ public:
 
   struct timespec GetQuirkTime(Quirk quirk);
 
-  IconType GetIconType();
+  IconType GetIconType() const;
 
   virtual nux::Color BackgroundColor() const;
 
@@ -160,7 +154,7 @@ public:
 
   nux::BaseTexture* Emblem();
 
-  std::list<DbusmenuMenuitem*> Menus();
+  MenuItemsVector Menus();
 
   void InsertEntryRemote(LauncherEntryRemote::Ptr const& remote);
 
@@ -191,8 +185,6 @@ public:
   {
     OnDndLeave();
   }
-
-  void SetIconType(IconType type);
 
   virtual std::string DesktopFile() { return std::string(""); }
 
@@ -235,7 +227,7 @@ protected:
 
   void SetEmblem(BaseTexturePtr const& emblem);
 
-  virtual std::list<DbusmenuMenuitem*> GetMenus();
+  virtual MenuItemsVector GetMenus();
 
   virtual nux::BaseTexture* GetTextureForSize(int size) = 0;
 
@@ -304,20 +296,15 @@ protected:
   glib::Object<DbusmenuClient> _menuclient_dynamic_quicklist;
 
 private:
-  typedef struct
-  {
-    LauncherIcon* self;
-    Quirk quirk;
-  } DelayedUpdateArg;
+  IconType _icon_type;
 
   nux::ObjectPtr<Tooltip> _tooltip;
   nux::ObjectPtr<QuicklistView> _quicklist;
 
   static void ChildRealized(DbusmenuMenuitem* newitem, QuicklistView* quicklist);
   static void RootChanged(DbusmenuClient* client, DbusmenuMenuitem* newroot, QuicklistView* quicklist);
-  static gboolean OnPresentTimeout(gpointer data);
-  static gboolean OnCenterTimeout(gpointer data);
-  static gboolean OnDelayedUpdateTimeout(gpointer data);
+  bool OnPresentTimeout();
+  bool OnCenterStabilizeTimeout();
 
   void ColorForIcon(GdkPixbuf* pixbuf, nux::Color& background, nux::Color& glow);
 
@@ -329,17 +316,12 @@ private:
   bool              _remote_urgent;
   float             _present_urgency;
   float             _progress;
-  guint             _center_stabilize_handle;
-  guint             _present_time_handle;
-  guint             _time_delay_handle;
   int               _sort_priority;
   int               _last_monitor;
   nux::Color        _background_color;
   nux::Color        _glow_color;
 
   gint64            _shortcut;
-
-  IconType                 _icon_type;
 
   std::vector<nux::Point3> _center;
   std::vector<bool> _has_visible_window;
@@ -352,10 +334,15 @@ private:
 
   BaseTexturePtr _emblem;
 
-  bool             _quirks[QUIRK_LAST];
-  struct timespec  _quirk_times[QUIRK_LAST];
+  bool             _quirks[unsigned(Quirk::LAST)];
+  struct timespec  _quirk_times[unsigned(Quirk::LAST)];
+
+  bool             _allow_quicklist_to_show;
 
   std::list<LauncherEntryRemote::Ptr> _entry_list;
+
+protected:
+  glib::SourceManager _source_manager;
 };
 
 }
