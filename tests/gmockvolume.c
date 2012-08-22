@@ -44,16 +44,28 @@ g_mock_volume_dispose (GObject *object)
   self->can_eject = FALSE;
 
   if (self->name)
+  {
     g_free(self->name);
+    self->name = NULL;
+  }
 
   if (self->icon)
+  {
     g_object_unref(self->icon);
+    self->icon = NULL;
+  }
 
   if (self->uuid)
+  {
     g_free(self->uuid);
+    self->uuid = NULL;
+  }
 
   if (self->mount)
+  {
     g_object_unref(self->mount);
+    self->mount = NULL;
+  }
 
   G_OBJECT_CLASS (g_mock_volume_parent_class)->dispose (object);
 }

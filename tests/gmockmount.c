@@ -69,7 +69,7 @@ g_mock_mount_new ()
 static GFile *
 g_mock_mount_get_root (GMount *mount)
 {
-  return g_file_new_for_path ("/some/directory/testfile");
+  return g_file_new_for_path (ROOT_FILE_PATH);
 }
 
 static GIcon *

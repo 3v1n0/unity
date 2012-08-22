@@ -27,6 +27,9 @@
 
 G_BEGIN_DECLS
 
+#define ROOT_FILE_PATH "/some/directory/testfile"
+#define ROOT_FILE_URI "file://" ROOT_FILE_PATH
+
 #define G_TYPE_MOCK_MOUNT        (g_mock_mount_get_type ())
 #define G_MOCK_MOUNT(o)          (G_TYPE_CHECK_INSTANCE_CAST ((o), G_TYPE_MOCK_MOUNT, GMockMount))
 #define G_MOCK_MOUNT_CLASS(k)    (G_TYPE_CHECK_CLASS_CAST((k), G_TYPE_MOCK_MOUNT, GMockMountClass))

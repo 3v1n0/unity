@@ -82,6 +82,8 @@ TEST_F(TestVolumeImp, TestGetName)
 {
   std::string const volume_name("Test Device");
 
+  // g_mock_volume_set_name is equivalent to
+  // EXPECT_CALL(gvolume_, g_volume_get_name) ...
   g_mock_volume_set_name(gvolume_, volume_name.c_str());
   EXPECT_EQ(volume_->GetName(), volume_name);
 }
@@ -123,13 +125,13 @@ TEST_F(TestVolumeImp, TestEjectAndShowNotification)
 
 TEST_F(TestVolumeImp, TestMountAndOpenInFileManager)
 {
-  EXPECT_CALL(*file_manager_opener_, Open("file:///some/directory/testfile"))
+  EXPECT_CALL(*file_manager_opener_, Open(ROOT_FILE_URI))
       .Times(1);
 
   volume_->MountAndOpenInFileManager();
   EXPECT_TRUE(volume_->IsMounted());
 
-  EXPECT_CALL(*file_manager_opener_, Open("file:///some/directory/testfile"))
+  EXPECT_CALL(*file_manager_opener_, Open(ROOT_FILE_URI))
       .Times(1);
 
   volume_->MountAndOpenInFileManager();
