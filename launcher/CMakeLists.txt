@@ -39,7 +39,7 @@ set (LAUNCHER_SOURCES
      DesktopLauncherIcon.cpp
      VolumeLauncherIcon.cpp
      DeviceLauncherSection.cpp
-     DeviceNotificationShowerImp.cpp
+     DeviceNotificationDisplayImp.cpp
      DevicesSettingsImp.cpp
      DndData.cpp
      EdgeBarrierController.cpp

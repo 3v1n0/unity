@@ -25,8 +25,6 @@ using namespace testing;
 #include "gmockmount.h"
 #include "gmockvolume.h"
 #include "launcher/VolumeImp.h"
-#include "launcher/DeviceNotificationShower.h"
-#include "launcher/FileManagerOpener.h"
 #include "test_utils.h"
 using namespace unity;
 
@@ -41,12 +39,12 @@ public:
   MOCK_METHOD1(Open, void(std::string const& uri));
 };
 
-class MockDeviceNotificationShower : public launcher::DeviceNotificationShower
+class MockDeviceNotificationDisplay : public launcher::DeviceNotificationDisplay
 {
 public:
-  typedef std::shared_ptr<MockDeviceNotificationShower> Ptr;
+  typedef std::shared_ptr<MockDeviceNotificationDisplay> Ptr;
 
-  MOCK_METHOD2(Show, void(std::string const& icon_name, std::string const& device_name));
+  MOCK_METHOD2(Display, void(std::string const& icon_name, std::string const& device_name));
 };
 
 class TestVolumeImp : public Test
@@ -56,14 +54,14 @@ public:
   {
     gvolume_ = g_mock_volume_new();
     file_manager_opener_.reset(new MockFileManagerOpener);
-    device_notification_opener_.reset(new MockDeviceNotificationShower);
+    device_notification_display_.reset(new MockDeviceNotificationDisplay);
     volume_.reset(new launcher::VolumeImp(glib::Object<GVolume>(G_VOLUME(gvolume_.RawPtr()), glib::AddRef()),
-                                          file_manager_opener_, device_notification_opener_));
+                                          file_manager_opener_, device_notification_display_));
   }
 
   glib::Object<GMockVolume> gvolume_;
   MockFileManagerOpener::Ptr file_manager_opener_;
-  MockDeviceNotificationShower::Ptr device_notification_opener_;
+  MockDeviceNotificationDisplay::Ptr device_notification_display_;
   launcher::VolumeImp::Ptr volume_;
 };
 
@@ -117,7 +115,7 @@ TEST_F(TestVolumeImp, TestEjectAndShowNotification)
 {
   g_mock_volume_set_can_eject(gvolume_, TRUE);
 
-  EXPECT_CALL(*device_notification_opener_, Show(volume_->GetIconName(), volume_->GetName()))
+  EXPECT_CALL(*device_notification_display_, Display(volume_->GetIconName(), volume_->GetName()))
     .Times(1);
 
   volume_->EjectAndShowNotification();

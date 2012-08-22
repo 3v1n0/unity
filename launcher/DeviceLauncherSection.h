@@ -27,7 +27,7 @@
 
 #include "AbstractVolumeMonitorWrapper.h"
 #include "DevicesSettings.h"
-#include "DeviceNotificationShower.h"
+#include "DeviceNotificationDisplay.h"
 #include "FileManagerOpener.h"
 #include "VolumeLauncherIcon.h"
 
@@ -54,7 +54,7 @@ private:
   AbstractVolumeMonitorWrapper::Ptr monitor_;
   DevicesSettings::Ptr devices_settings_;
   FileManagerOpener::Ptr file_manager_opener_;
-  DeviceNotificationShower::Ptr device_notification_shower_;
+  DeviceNotificationDisplay::Ptr device_notification_display_;
 
   glib::Idle device_populate_idle_;
 };

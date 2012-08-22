@@ -21,8 +21,6 @@
 #include <gtk/gtk.h>
 #include <UnityCore/GLibSignal.h>
 
-#include "DeviceNotificationShower.h"
-#include "FileManagerOpener.h"
 #include "VolumeImp.h"
 
 namespace unity
@@ -39,13 +37,13 @@ class VolumeImp::Impl
 public:
   Impl(glib::Object<GVolume> const& volume,
        FileManagerOpener::Ptr const& file_manager_opener,
-       DeviceNotificationShower::Ptr const& device_notification_shower,
+       DeviceNotificationDisplay::Ptr const& device_notification_display,
        VolumeImp* parent)
     : parent_(parent)
     , cancellable_(g_cancellable_new())
     , volume_(volume)
     , file_manager_opener_(file_manager_opener)
-    , device_notification_shower_(device_notification_shower)
+    , device_notification_display_(device_notification_display)
   {
     signal_volume_changed_.Connect(volume_, "changed", [this] (GVolume*) {
       parent_->changed.emit();
@@ -131,7 +129,7 @@ public:
   {
     if (g_volume_eject_with_operation_finish(self->volume_, result, nullptr))
     {
-      self->device_notification_shower_->Show(self->GetIconName(), self->GetName());
+      self->device_notification_display_->Display(self->GetIconName(), self->GetName());
     }
   }
 
@@ -209,7 +207,7 @@ public:
   glib::Object<GCancellable> cancellable_;
   glib::Object<GVolume> volume_;
   FileManagerOpener::Ptr file_manager_opener_;
-  DeviceNotificationShower::Ptr device_notification_shower_;
+  DeviceNotificationDisplay::Ptr device_notification_display_;
 
   glib::Signal<void, GVolume*> signal_volume_changed_;
 };
@@ -220,8 +218,8 @@ public:
 
 VolumeImp::VolumeImp(glib::Object<GVolume> const& volume,
                      FileManagerOpener::Ptr const& file_manager_opener,
-                     DeviceNotificationShower::Ptr const& device_notification_shower)
-  : pimpl(new Impl(volume, file_manager_opener, device_notification_shower, this))
+                     DeviceNotificationDisplay::Ptr const& device_notification_display)
+  : pimpl(new Impl(volume, file_manager_opener, device_notification_display, this))
 {}
 
 VolumeImp::~VolumeImp()

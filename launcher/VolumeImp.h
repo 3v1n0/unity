@@ -24,7 +24,7 @@
 
 #include <UnityCore/GLibWrapper.h>
 
-#include "DeviceNotificationShower.h"
+#include "DeviceNotificationDisplay.h"
 #include "FileManagerOpener.h"
 #include "Volume.h"
 
@@ -40,7 +40,7 @@ public:
 
   VolumeImp(glib::Object<GVolume> const& volume,
             FileManagerOpener::Ptr const& file_manager_opener,
-            DeviceNotificationShower::Ptr const& device_notification_shower);
+            DeviceNotificationDisplay::Ptr const& device_notification_display);
   virtual ~VolumeImp();
 
   virtual bool CanBeEjected() const;

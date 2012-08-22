@@ -23,7 +23,7 @@
 #include <sigc++/sigc++.h>
 #include <UnityCore/GLibWrapper.h>
 
-#include "DeviceNotificationShowerImp.h"
+#include "DeviceNotificationDisplayImp.h"
 #include "unity-shared/IconLoader.h"
 
 namespace unity
@@ -34,7 +34,7 @@ namespace launcher
 //
 // Start private implementation
 //
-class DeviceNotificationShowerImp::Impl
+class DeviceNotificationDisplayImp::Impl
 {
 public:
   void Show(std::string const& icon_name, std::string const& volume_name)
@@ -66,14 +66,14 @@ public:
 // End private implementation
 //
 
-DeviceNotificationShowerImp::DeviceNotificationShowerImp()
+DeviceNotificationDisplayImp::DeviceNotificationDisplayImp()
   : pimpl(new Impl)
 {}
 
-DeviceNotificationShowerImp::~DeviceNotificationShowerImp()
+DeviceNotificationDisplayImp::~DeviceNotificationDisplayImp()
 {}
 
-void DeviceNotificationShowerImp::Show(std::string const& icon_name, std::string const& volume_name)
+void DeviceNotificationDisplayImp::Display(std::string const& icon_name, std::string const& volume_name)
 {
   pimpl->Show(icon_name, volume_name);
 }

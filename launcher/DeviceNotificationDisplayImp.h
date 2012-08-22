@@ -17,26 +17,27 @@
  * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
-#ifndef UNITYSHELL_DEVICE_NOTIFICATION_SHOWER_H
-#define UNITYSHELL_DEVICE_NOTIFICATION_SHOWER_H
+#ifndef UNITYSHELL_DEVICE_NOTIFICATION_DISPLAY_IMP_H
+#define UNITYSHELL_DEVICE_NOTIFICATION_DISPLAY_IMP_H
 
-#include <boost/noncopyable.hpp>
-#include <memory>
-#include <string>
+#include "DeviceNotificationDisplay.h"
 
 namespace unity
 {
 namespace launcher
 {
 
-class DeviceNotificationShower : private boost::noncopyable
+class DeviceNotificationDisplayImp : public DeviceNotificationDisplay
 {
 public:
-  typedef std::shared_ptr<DeviceNotificationShower> Ptr;
+  DeviceNotificationDisplayImp();
+  virtual ~DeviceNotificationDisplayImp();
 
-  virtual ~DeviceNotificationShower() {}
+  virtual void Display(std::string const& icon_name, std::string const& volume_name);
 
-  virtual void Show(std::string const& icon_name, std::string const& volume_name) = 0;
+private:
+  class Impl;
+  std::unique_ptr<Impl> pimpl;
 };
 
 }
