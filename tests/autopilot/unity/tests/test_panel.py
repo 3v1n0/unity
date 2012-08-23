@@ -629,7 +629,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
         self.assertThat(self.hud.search_string, Eventually(Equals("HelloWorld")))
         
-    def test_double_click_unmaximize_window(def):
+    def test_double_click_unmaximize_window(self):
 		"""Double clicking the grab area must unmaximize a maximized window."""
 		gedit_win = self.open_new_application_window("Text Editor", maximized=True)
 		
