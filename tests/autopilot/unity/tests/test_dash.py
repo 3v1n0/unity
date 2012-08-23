@@ -284,6 +284,34 @@ class DashKeyNavTests(DashTestCase):
         category = lens.get_focused_category()
         self.assertIsNot(category, None)
 
+    def test_bottom_up_keynav_with_filter_bar(self):
+        """This test makes sure that bottom-up key navigation works well
+        in the dash filter bar.
+        """
+        self.dash.reveal_application_lens()
+        lens = self.dash.get_current_lens()
+
+        filter_bar = lens.get_filterbar()
+        filter_bar.ensure_expanded()
+
+        # Tab to fist filter expander
+        self.keyboard.press_and_release('Tab')
+        self.assertThat(lambda: filter_bar.get_focused_filter(), Eventually(NotEquals(None)))
+        old_focused_filter = filter_bar.get_focused_filter()
+        old_focused_filter.ensure_expanded()
+
+        # Tab to the next filter expander
+        self.keyboard.press_and_release('Tab')
+        self.assertThat(lambda: filter_bar.get_focused_filter(), Eventually(NotEquals(None)))
+        new_focused_filter = filter_bar.get_focused_filter()
+        self.assertNotEqual(old_focused_filter, new_focused_filter)
+        new_focused_filter.ensure_expanded()
+
+        # Move the focus up.
+        self.keyboard.press_and_release("Up")
+        self.assertThat(lambda: filter_bar.get_focused_filter(), Eventually(Equals(None)))
+        self.assertThat(old_focused_filter.content_has_focus, Eventually(Equals(True)))
+
 
 class DashClipboardTests(DashTestCase):
     """Test the Unity clipboard"""
