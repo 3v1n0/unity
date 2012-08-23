@@ -207,11 +207,11 @@ class DashKeyNavTests(DashTestCase):
         self.assertThat(lensbar.focused_lens_icon, Eventually(Equals("")))
         
     def test_focus_returns_to_searchbar(self):
-		"""This test makes sure that the focus is returned to the searchbar of the newly
-		activated lens."""
-		self.dash.ensure_visible()
-		
-		for i in range(self.dash.get_num_rows()):
+        """This test makes sure that the focus is returned to the searchbar of the newly
+        activated lens."""
+        self.dash.ensure_visible()
+        
+        for i in range(self.dash.get_num_rows()):
             self.keyboard.press_and_release("Down")
         self.keyboard.press_and_release("Right")
         lensbar = self.dash.view.get_lensbar()
