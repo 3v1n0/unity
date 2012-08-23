@@ -304,6 +304,31 @@ class HudBehaviorTests(HudTestsBase):
         
         self.assertThat(file_contents, Equals('ABCD'))
 
+    def test_hud_key_navigation(self):
+        """This test ensures the hud key navigation is intact"""
+        # starting on a clean desktop because this way we are sure that our search
+        # string won't match any menu item from a focused application
+        self.window_manager.enter_show_desktop()
+        self.addCleanup(self.window_manager.leave_show_desktop)
+
+        self.hud.ensure_visible()
+
+        self.keyboard.type("settings")
+        self.assertThat(self.hud.search_string, Eventually(Equals("settings")))
+
+        self.keyboard.press_and_release('Down')
+        self.assertThat(self.hud.selected_button, Eventually(Equals(2)))
+        self.keyboard.press_and_release('Down')
+        self.assertThat(self.hud.selected_button, Eventually(Equals(3)))
+        self.keyboard.press_and_release('Enter')
+
+        # We are atleast sure that searching for "settings" on the desktop
+        # will reveal one of the settings panel of gnome control center.
+        self.addCleanup(self.close_all_app,  "System Settings")
+
+        self.assertThat(self.hud.visible, Eventually(Equals(False)))
+
+
 class HudLauncherInteractionsTests(HudTestsBase):
 
     launcher_modes = [('Launcher autohide', {'launcher_autohide': False}),
