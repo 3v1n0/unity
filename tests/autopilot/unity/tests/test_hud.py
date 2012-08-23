@@ -247,6 +247,20 @@ class HudBehaviorTests(HudTestsBase):
         self.mouse.click()
 
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
+        
+    def test_hud_closes_click_after_text_removed(self):
+        """Clicking outside of the hud after a search text has been entered and
+        then removed from the searchbox will make it close."""
+        
+        self.hud.ensure_visible()
+        self.keyboard.type("Test")
+        self.keyboard.press_and_release("Escape")
+
+        (x,y,w,h) = self.hud.view.geometry
+        self.mouse.move(w/2, h+50)
+        self.mouse.click()
+        
+        self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
     def test_alt_f4_close_hud(self):
         """Hud must close on alt+F4."""
@@ -275,6 +289,23 @@ class HudBehaviorTests(HudTestsBase):
         app_found = self.bamf.wait_until_application_is_running("gnome-control-center.desktop", 5)
         self.assertTrue(app_found)
         self.addCleanup(self.close_all_app,  "System Settings")
+        
+        self.assertThat(self.hud.visible, Eventually(Equals(False)))
+        
+    def test_hud_closes_on_escape(self):
+        """Hud must close on escape after searchbox is cleared"""
+        self.hud.ensure_visible()
+        
+        self.keyboard.type("ThisText")
+        self.keyboard.press_and_release("Escape")
+        self.keyboard.press_and_release("Escape")
+        
+        self.assertThat(self.hud.visible, Eventually(Equals(False)))
+    
+    def test_hud_closes_on_escape_shrunk(self):
+        """Hud must close when escape key is pressed"""
+        self.hud.ensure_visible()
+        self.keyboard.press_and_release("Escape")
         
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
