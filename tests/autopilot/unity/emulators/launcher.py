@@ -325,7 +325,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
                 break
             self._mouse.move(target_x, target_y )
             sleep(1)
-        self._mouse.click(button, press_duration=0.10)
+        self._mouse.click(button)
         if (move_mouse_after):
           self.move_mouse_to_right_of_launcher()
 
