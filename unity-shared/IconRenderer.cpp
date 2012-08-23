@@ -403,6 +403,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   nux::Color edge_color(0x55555555);
   nux::Color colorify = arg.colorify;
   nux::Color background_tile_colorify = arg.colorify;
+  bool colorify_background = arg.colorify_background;
   float backlight_intensity = arg.backlight_intensity;
   float glow_intensity = arg.glow_intensity;
   float shadow_intensity = 0.6f;
@@ -414,6 +415,18 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   nux::BaseTexture* shadow = local::icon_shadow[size];
 
   bool force_filter = icon_size != background->GetWidth();
+
+  if (backlight_intensity == 0.0f)
+  {
+    // Colorize tiles without backlight with the launcher background color
+    colorify_background = true;
+  }
+
+  if (colorify_background)
+  {
+    // Extra tweaks for tiles that are colorized with the launcher background color
+    background_tile_color = nux::color::White;
+  }
 
   if (arg.keyboard_nav_hl)
   {
@@ -434,7 +447,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
     colorify.blue +=  (0.5f + 0.5f * arg.saturation) * (1.0f - colorify.blue);
     colorify.green += (0.5f + 0.5f * arg.saturation) * (1.0f - colorify.green);
 
-    if (arg.colorify_background)
+    if (colorify_background)
     {
       background_tile_colorify = background_tile_colorify * 0.7f;
     }
@@ -494,7 +507,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   edge_color = edge_color + ((background_tile_color - edge_color) * backlight_intensity);
   nux::Color edge_tile_colorify = background_tile_colorify;
 
-  if (arg.colorify_background && !arg.keyboard_nav_hl)
+  if (colorify_background && !arg.keyboard_nav_hl)
   {
     // Mix edge_tile_colorify with plain white (1.0f).
     // Would be nicer to tweak value from HSV colorspace, instead.
@@ -522,7 +535,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                 nux::color::White,
                 colorify,
                 arg.alpha,
-                false,
+                force_filter,
                 arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_IMAGE, monitor));
 
   // draw overlay shine

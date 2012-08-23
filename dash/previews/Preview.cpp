@@ -102,6 +102,9 @@ std::string Preview::GetName() const
 
 void Preview::AddProperties(GVariantBuilder* builder)
 {
+  variant::BuilderWrapper(builder)
+    .add(GetAbsoluteGeometry())
+    .add("uri", preview_model_->preview_uri.Get());
 }
 
 void Preview::OnActionActivated(ActionButton* button, std::string const& id)
@@ -132,8 +135,9 @@ nux::Layout* Preview::BuildGridActionsLayout(dash::Preview::ActionPtrList action
     {
         dash::Preview::ActionPtr action = actions[action_iter];
 
-        ActionButton* button = new ActionButton(action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
-        button->click.connect(sigc::bind(sigc::mem_fun(this, &Preview::OnActionActivated), action->id));
+        ActionButton* button = new ActionButton(action->id, action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
+        AddChild(button);
+        button->click.connect(sigc::mem_fun(this, &Preview::OnActionActivated));
         buttons.push_back(button);
 
         actions_layout_h->AddView(button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
@@ -163,8 +167,9 @@ nux::Layout* Preview::BuildVerticalActionsLayout(dash::Preview::ActionPtrList ac
   {
       dash::Preview::ActionPtr action = actions[action_iter];
 
-      ActionButton* button = new ActionButton(action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
-      button->click.connect(sigc::bind(sigc::mem_fun(this, &Preview::OnActionActivated), action->id));
+      ActionButton* button = new ActionButton(action->id, action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
+      AddChild(button);
+      button->click.connect(sigc::mem_fun(this, &Preview::OnActionActivated));
       buttons.push_back(button);
 
       actions_layout_v->AddView(button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);

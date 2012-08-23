@@ -16,21 +16,46 @@ Expected Result:
   If the hud does not disappear, this test failed.
   If the buttons under the search box do not highlight, this test failed.
 
+<<<<<<< TREE
 Alt+Arrow keys not passed to application
 ----------------------------------------
 Tests that Alt+ArrowKey events are correctly passed to the active window
 when Unity is not responding to them.
+=======
+>>>>>>> MERGE-SOURCE
 
+<<<<<<< TREE
 Note: Should be automated
+=======
+Hud Dismiss
+----------
+This test ensures that the hud is dismissable
+>>>>>>> MERGE-SOURCE
 
 Setup:
+<<<<<<< TREE
 #. Open gnome-terminal
+=======
+>>>>>>> MERGE-SOURCE
 
 Actions:
+<<<<<<< TREE
 #. While holding Alt, tap arrow keys: Up, Down, Right, Left
+=======
+#. Tap Alt
+#. Type "test"
+#. Press escape
+#. Click anywhere on the screen that is not the hud interface
+>>>>>>> MERGE-SOURCE
 
 Expected Result:
+<<<<<<< TREE
   The terminal should show the keycodes were received as text "ABCD".
+=======
+  After pressing escape in step three, the text "test" should be removed from the hud search
+  After step four, the hud should dismiss itself and not be present.
+
+>>>>>>> MERGE-SOURCE
 
 Alt+Enter Crash
 ---------------

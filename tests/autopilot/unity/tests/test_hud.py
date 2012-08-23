@@ -309,6 +309,31 @@ class HudBehaviorTests(HudTestsBase):
         
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
+    def test_alt_arrow_keys_not_eaten(self):
+        """Tests that Alt+ArrowKey events are correctly passed to the
+        active window when Unity is not responding to them."""
+        
+        self.start_app_window("Terminal")
+        
+        #There's no easy way to read text from terminal, writing input
+        #to a text file and then reading from there works.
+        self.keyboard.type('echo "')
+        
+        #Terminal is receiving input with Alt+Arrowkeys
+        self.keyboard.press("Alt")
+        self.keyboard.press_and_release("Up")
+        self.keyboard.press_and_release("Down")
+        self.keyboard.press_and_release("Right")
+        self.keyboard.press_and_release("Left")
+        self.keyboard.release("Alt")
+        
+        self.keyboard.type('" > /tmp/ap_test_alt_keys')
+        self.addCleanup(remove, '/tmp/ap_test_alt_keys')
+        self.keyboard.press_and_release("Enter")
+        
+        file_contents = open('/tmp/ap_test_alt_keys', 'r').read().strip()
+        
+        self.assertThat(file_contents, Equals('ABCD'))
 
 class HudLauncherInteractionsTests(HudTestsBase):
 

@@ -85,6 +85,7 @@ CoverflowResultItem::CoverflowResultItem(Result& result, CoverflowResultView *pa
   static const int element_size = style.GetTileHeight();
   
   icon_texture_ = new IconTexture(icon_name.c_str(), element_size, true);
+  icon_texture_->SinkReference();
   icon_texture_->LoadIcon();
   
   icon_texture_->texture_updated.connect([&] (nux::BaseTexture *texture)
@@ -96,7 +97,7 @@ CoverflowResultItem::CoverflowResultItem(Result& result, CoverflowResultView *pa
 
 CoverflowResultItem::~CoverflowResultItem()
 {
-
+  icon_texture_->UnReference();
 }
 
 std::string CoverflowResultItem::Uri()

@@ -1,0 +1,258 @@
+Preview Tests
+=============
+
+Application Preview Open
+------------
+This tests that the dash preview opens using mouse right-click
+
+Setup:
+#. Open application lens (Super+A)
+#. Enter arbitrary search string and ensure a result is available.
+
+Actions:
+#. Right-click the mouse on one of the results.
+
+Expected Result:
+  A application preview view will replace the dash lens view.
+  If multiple results were available in the dash, there will be navigator
+  buttons on either side of the preview.
+
+
+File Preview Open
+------------
+This tests that the dash preview opens using mouse right-click
+
+Setup:
+#. Open file lens (Super+F)
+#. Enter arbitrary search string and ensure a result is available.
+
+Actions:
+#. Right-click the mouse on one of the results.
+
+Expected Result:
+  A file preview view will replace the dash lens view.
+  If multiple results were available in the dash, there will be navigator
+  icons on either side of the preview.
+
+
+Music Preview Open
+note: Should be automated.
+------------
+This tests that the dash preview opens using mouse right-click
+
+Setup:
+#. Open music lens (Super+M)
+#. Enter arbitrary search string and ensure a result is available.
+
+Actions:
+#. Right-click the mouse on one of the results.
+
+Expected Result:
+  A music preview view will replace the dash lens view.
+  If multiple results were available in the dash, there will be navigator
+  icons on either side of the preview.
+
+
+Video Preview Open
+note: Should be automated.
+------------
+This tests that the dash preview opens using mouse right-click
+
+Setup:
+#. Open video lens (Super+V)
+#. Enter arbitrary search string and ensure a result is available.
+
+Actions:
+#. Right-click the mouse on one of the results.
+
+Expected Result:
+  A video preview view will replace the dash lens view.
+  If multiple results were available in the dash, there will be navigator
+  icons on either side of the preview.
+
+
+Preview Left Navigation
+------------
+This tests the dash preview animation
+
+Setup:
+#. Open dash super
+#. Open a lens which supports previeing (eg Application, Music, File)
+#. Enter arbitrary search string and ensure at least 2 results are available.
+
+Actions:
+#. Right-click the mouse on at least the second result.
+#. Wait for the preview window to open and finish animating.
+#. Click the 'navigate left' icon.
+
+Expected Result:
+  The current preview will be replaced with a preview modelled on the previous result
+  in the dash.
+  
+
+Preview Right Navigation
+------------
+This tests the dash preview animation
+
+Setup:
+#. Open dash super
+#. Open a lens which supports previeing (eg Application, Music, File)
+#. Enter arbitrary search string and ensure at least 2 results are available.
+
+Actions:
+#. Right-click the mouse on at most the second last result.
+#. Wait for the preview window to open and finish animating.
+#. Click the 'navigate right' icon.
+
+Expected Result:
+  The current preview will be replaced with a preview modelled on the next result
+  in the dash.
+
+
+Preview Open Animation
+note: Should be automated.
+------------
+This tests the dash preview open animation
+
+Setup:
+#. Open dash super
+#. Open a lens which supports previeing (eg Application, Music, File)
+#. Enter arbitrary search string and ensure a result is available.
+
+Actions:
+#. Open preview for result.
+
+Expected Result:
+  A preview will open by animating a swipe from left to right using an
+  ease in-out curve progression.
+
+
+Preview Left Navigation Animation
+note: Should be automated.
+------------
+This tests the dash preview navigate left animation
+
+Setup:
+#. Open dash super
+#. Open a lens which supports previeing (eg Application, Music, File)
+#. Enter arbitrary search string and ensure at least 2 results are available.
+#. Right-click the mouse on at least the second result.
+#. Wait for the preview window to open and finish animating.
+
+Actions:
+#. Click the 'navigate left' icon.
+
+Expected Result:
+  The current preview will swipe out and the new prevew result will swipe from right
+  to left using an ease in-out curve progression.
+
+
+Preview Right Navigation Animation
+note: Should be automated.
+------------
+This tests the dash preview navigate right animation
+
+Setup:
+#. Open dash super
+#. Open a lens which supports previeing (eg Application, Music, File)
+#. Enter arbitrary search string and ensure at least 2 results are available.
+#. Right-click the mouse on at most the second last result.
+#. Wait for the preview window to open and finish animating.
+
+Actions:
+#. Click the navigate right icon.
+
+Expected Result:
+  The current preview will swipe out and the new prevew result will swipe from right
+  to left using an ease in-out curve progression.
+
+
+Preview Navigate Many
+------------
+This tests the dash preview multi-navigation support
+
+Setup:
+#. Open dash super
+#. Open a lens which supports previeing (eg Application, Music, File)
+#. Enter arbitrary search string and ensure at least 3 results are available.
+#. Right-click first result.
+#. Wait for the preview window to open and finish animating.
+
+Actions:
+#. Click 'navigate right' icon twice quickly.
+
+Expected Result:
+  The current preview will swipe out, being replaced intermittently by the next preview,
+  which will then be replaced by the next preview.
+
+
+Preview Music Tracks
+note: Should be automated.
+------------
+This tests the dash music preview track play
+
+Setup:
+#. Open music lens (Super+M)
+#. Enter arbitrary search string and ensure a result is available.
+
+Actions:
+#. Open a preview for a result.
+
+Expected Result:
+  A music preview will open and tracks for the music result will be populated.
+  The Track information will contain a title and duration.
+
+
+Preview Music Play
+note: Should be automated.
+------------
+This tests the dash music preview track play
+
+Setup:
+#. Open music lens (Super+M)
+#. Enter arbitrary search string and ensure a result is available.
+#. Open a preview for a result which contains tracks.
+
+Actions:
+#. Play first track.
+
+Expected Result:
+  Music Player daemon will start playing track and update status of the track
+  in the preview to playing as well as update it's progress.
+
+
+Preview Music Pause
+note: Should be automated.
+------------
+This tests the dash preview preview navigate right animation
+
+Setup:
+#. Open music lens (Super+M)
+#. Enter arbitrary search string and ensure a result is available.
+#. Open a preview for a result which contains tracks.
+#. Play first track.
+
+Actions:
+#. Pause playing track.
+
+Expected Result:
+  Music Player daemon will pause the playing track and update it's status
+  to paused. Progress will stop incresing.
+
+
+Preview Application Launch
+note: Should be automated.
+------------
+This tests the dash application preview launch action
+
+Setup:
+#. Open application lens (Super+F)
+#. Enter 'gedit' search string.
+#. Wait for result.
+#. Open preview for result. (Right-click)
+
+Actions:
+#. Click 'Launch' action button.
+
+Expected Result:
+  Preview should close and launch the gedit application.
