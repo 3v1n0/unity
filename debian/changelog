@@ -1,5 +1,8 @@
 unity (6.2.0-0ubuntu3) UNRELEASED; urgency=low
 
+  * debian/control:
+    - updated compiz gsettings version
+
   [ Didier Roche ]
   * Backports:
     - the remaining part of the gconf removal from upstream branch
@@ -24,7 +27,7 @@ unity (6.2.0-0ubuntu3) UNRELEASED; urgency=low
   * Backports:
     - gnome-control-center integration
 
- -- Timo Jyrinki <timo-jyrinki@ubuntu.com>  Fri, 17 Aug 2012 13:22:06 +0300
+ -- Sebastien Bacher <seb128@ubuntu.com>  Thu, 23 Aug 2012 17:52:34 +0200
 
 unity (6.2.0-0ubuntu2) quantal; urgency=low
 
