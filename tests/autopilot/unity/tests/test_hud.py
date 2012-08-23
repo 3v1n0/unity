@@ -353,8 +353,6 @@ class HudBehaviorTests(HudTestsBase):
         self.assertThat(self.hud.selected_button, Eventually(Equals(3)))
         self.keyboard.press_and_release('Enter')
 
-        # We are atleast sure that searching for "settings" on the desktop
-        # will reveal one of the settings panel of gnome control center.
         self.addCleanup(self.close_all_app,  "System Settings")
 
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
