@@ -6,8 +6,6 @@ dash/FilterMultiRangeWidget.cpp
 dash/FilterRatingsWidget.cpp
 dash/LensView.cpp
 dash/PlacesGroup.cpp
-dash/PreviewMusic.cpp
-dash/PreviewMusicTrack.cpp
 hud/HudController.cpp
 hud/HudView.cpp
 launcher/BFBLauncherIcon.cpp
@@ -33,4 +31,4 @@ shortcuts/ShortcutHintPrivate.cpp
 shortcuts/ShortcutView.cpp
 unity-shared/DashStyle.cpp
 unity-shared/SearchBar.cpp
-
+gnome/50-unity-launchers.xml.in

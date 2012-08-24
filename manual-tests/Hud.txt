@@ -16,24 +16,6 @@ Expected Result:
   If the hud does not disappear, this test failed.
   If the buttons under the search box do not highlight, this test failed.
 
-
-Hud Dismiss
-----------
-This test ensures that the hud is dismissable
-
-Setup:
-
-Actions:
-#. Tap Alt
-#. Type "test"
-#. Press escape
-#. Click anywhere on the screen that is not the hud interface
-
-Expected Result:
-  After pressing escape in step three, the text "test" should be removed from the hud search
-  After step four, the hud should dismiss itself and not be present.
-
-
 Alt+Enter Crash
 ---------------
 Tests that Alt+Enter does not cause unity to crash (LP: #960957)
