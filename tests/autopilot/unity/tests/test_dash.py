@@ -184,7 +184,7 @@ class DashKeyNavTests(DashTestCase):
 
         current_focused_icon = lensbar.focused_lens_icon
 
-        self.keyboard.press_and_release("Right");
+        self.keyboard.press_and_release("Right")
         self.assertThat(lensbar.focused_lens_icon, Eventually(NotEquals(current_focused_icon)))
 
         self.keyboard.press_and_release("Left")
@@ -196,17 +196,35 @@ class DashKeyNavTests(DashTestCase):
 
         for i in range(self.dash.get_num_rows()):
             self.keyboard.press_and_release("Down")
-        self.keyboard.press_and_release("Right");
+        self.keyboard.press_and_release("Right")
         lensbar = self.dash.view.get_lensbar()
         focused_icon = lensbar.focused_lens_icon
-        self.keyboard.press_and_release("Enter");
+        self.keyboard.press_and_release("Enter")
 
         self.assertThat(lensbar.active_lens, Eventually(Equals(focused_icon)))
 
         # lensbar should lose focus after activation.
-        # TODO this should be a different test to make sure focus
-        # returns to the correct place.
         self.assertThat(lensbar.focused_lens_icon, Eventually(Equals("")))
+        
+    def test_focus_returns_to_searchbar(self):
+        """This test makes sure that the focus is returned to the searchbar of the newly
+        activated lens."""
+        self.dash.ensure_visible()
+        
+        for i in range(self.dash.get_num_rows()):
+            self.keyboard.press_and_release("Down")
+        self.keyboard.press_and_release("Right")
+        lensbar = self.dash.view.get_lensbar()
+        focused_icon = lensbar.focused_lens_icon
+        self.keyboard.press_and_release("Enter")
+        
+        self.assertThat(lensbar.active_lens, Eventually(Equals(focused_icon)))
+        self.assertThat(lensbar.focused_lens_icon, Eventually(Equals("")))
+        
+        # Now we make sure if the newly activated lens searchbar have the focus.
+        self.keyboard.type("HasFocus")
+        
+        self.assertThat(self.dash.search_string, Eventually(Equals("HasFocus")))
 
     def test_category_header_keynav(self):
         """ Tests that a category header gets focus when 'down' is pressed after the
@@ -283,6 +301,34 @@ class DashKeyNavTests(DashTestCase):
         self.keyboard.press_and_release('Tab')
         category = lens.get_focused_category()
         self.assertIsNot(category, None)
+
+    def test_bottom_up_keynav_with_filter_bar(self):
+        """This test makes sure that bottom-up key navigation works well
+        in the dash filter bar.
+        """
+        self.dash.reveal_application_lens()
+        lens = self.dash.get_current_lens()
+
+        filter_bar = lens.get_filterbar()
+        filter_bar.ensure_expanded()
+
+        # Tab to fist filter expander
+        self.keyboard.press_and_release('Tab')
+        self.assertThat(lambda: filter_bar.get_focused_filter(), Eventually(NotEquals(None)))
+        old_focused_filter = filter_bar.get_focused_filter()
+        old_focused_filter.ensure_expanded()
+
+        # Tab to the next filter expander
+        self.keyboard.press_and_release('Tab')
+        self.assertThat(lambda: filter_bar.get_focused_filter(), Eventually(NotEquals(None)))
+        new_focused_filter = filter_bar.get_focused_filter()
+        self.assertNotEqual(old_focused_filter, new_focused_filter)
+        new_focused_filter.ensure_expanded()
+
+        # Move the focus up.
+        self.keyboard.press_and_release("Up")
+        self.assertThat(lambda: filter_bar.get_focused_filter(), Eventually(Equals(None)))
+        self.assertThat(old_focused_filter.content_has_focus, Eventually(Equals(True)))
 
 
 class DashClipboardTests(DashTestCase):
@@ -516,8 +562,8 @@ class DashBorderTests(DashTestCase):
         if (self.dash.view.form_factor != "desktop"):
             self.skip("Not in desktop form-factor.")
 
-        x = self.dash.view.x + self.dash.view.width + self.dash.view.right_border_width / 2;
-        y = self.dash.view.y + self.dash.view.height / 2;
+        x = self.dash.view.x + self.dash.view.width + self.dash.view.right_border_width / 2
+        y = self.dash.view.y + self.dash.view.height / 2
 
         self.mouse.move(x, y)
         self.mouse.click()
@@ -531,8 +577,8 @@ class DashBorderTests(DashTestCase):
         if (self.dash.view.form_factor != "desktop"):
             self.skip("Not in desktop form-factor.")
 
-        x = self.dash.view.x + self.dash.view.width / 2;
-        y = self.dash.view.y + self.dash.view.height + self.dash.view.bottom_border_height / 2;
+        x = self.dash.view.x + self.dash.view.width / 2
+        y = self.dash.view.y + self.dash.view.height + self.dash.view.bottom_border_height / 2
 
         self.mouse.move(x, y)
         self.mouse.click()
