@@ -609,93 +609,86 @@ class CategoryHeaderTests(DashTestCase):
         self.assertThat(category.is_expanded, Eventually(Equals(is_expanded)))
 
 
-class PreviewAppLensInvocationTests(DashTestCase):
-    """Tests that application lens previews can be opened and closed
-    """
-    def assertSearchText(self, text):
-        self.assertThat(self.dash.search_string, Eventually(Equals(text)))
-
-    def test_open_preview_close_preview(self):
-        """Right clicking on any result shall open a preview, 
-        escaping shall close the preview
-        """
+class PreviewInvocationTests(DashTestCase):
+    """Tests that dash previews can be opened in different
+    lenses."""
+    def test_app_lens_preview_open_close(self):
+        """Makes sure that right click on a result in applications
+        lens opens its preview."""
         lens = self.dash.reveal_application_lens()
         self.addCleanup(self.dash.ensure_hidden)
 
         category = lens.get_category_by_name("Installed")
         results = category.get_results()
-        # wait for a result
-        refresh_fn = lambda: len(results)
-        self.assertThat(refresh_fn, Eventually(GreaterThan(0)))
-
         result = results[0]
         # result.preview handles finding xy co-ords and right mouse-click
         result.preview()
-        # revealing a preview may be very slow, not sure if Eventually handles that nicely
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
 
         self.keyboard.press_and_release("Escape")
 
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
 
-    def test_preview_refocus_close(self):
-        """This tests that if the mouse is clicked on a preview element (Cover art for example),
-        the keyboard shortcut for closing ('Escape') still works correctly.
-        """
-        lens = self.dash.reveal_application_lens()
-        self.addCleanup(self.dash.ensure_hidden)
-
-        category = lens.get_category_by_name("Installed")
-        results = category.get_results()
-        # wait for a result
-        refresh_fn = lambda: len(results)
-        self.assertThat(refresh_fn, Eventually(GreaterThan(0)))
-
-        result = results[0]
-        # result.preview handles finding xy co-ords and right mouse-click
-        result.preview()
-        # revealing a preview may be very slow, not sure if Eventually handles that nicely
-        self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
-
-        preview_container = self.dash.view.get_preview_container()
-        # wait for settle.
-        self.assertThat(preview_container.animating, Eventually(Equals(False)))
-        cover_art = preview_container.current_preview.cover_art
-
-        # click the cover-art (this will set focus)
-        tx = cover_art.x + (cover_art.width / 2)
-        ty = cover_art.y + (cover_art.height / 2)
-        self.mouse.move(tx, ty)
-        self.mouse.click()
-
-        self.keyboard.press_and_release("Escape")
-
-        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
-
-
-class PreviewFileLensInvocationTests(DashTestCase):
-    """Tests that file lens previews can be opened and closed
-    """
-    def assertSearchText(self, text):
-        self.assertThat(self.dash.search_string, Eventually(Equals(text)))
-
-    def test_open_preview_close_preview(self):
-        """Right clicking on any result shall open a preview, 
-        escaping shall close the preview
-        """
+    def test_files_lens_preview_open_close(self):
+        """Makes sure that right click on a result in files lens
+        opens its preview."""
         lens = self.dash.reveal_file_lens()
         self.addCleanup(self.dash.ensure_hidden)
 
         category = lens.get_category_by_name("Folders")
         results = category.get_results()
-        # wait for a result
-        refresh_fn = lambda: len(results)
-        self.assertThat(refresh_fn, Eventually(GreaterThan(0)))
+        result = results[0]
+        # result.preview handles finding xy co-ords and right mouse-click
+        result.preview()
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
+
+        self.keyboard.press_and_release("Escape")
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_music_lens_preview_open_close(self):
+        """Makes sure that right click on a result in music lens
+        opens its preview."""
+        lens = self.dash.reveal_music_lens()
+        self.addCleanup(self.dash.ensure_hidden)
+
+        category = lens.get_category_by_name("Songs")
+        # Incase there was no music ever played we skip the test instead
+        # of failing.
+        if category is None:
+            self.skipTest("This lens is probably empty")
+        
+        results = category.get_results()
 
         result = results[0]
         # result.preview handles finding xy co-ords and right mouse-click
         result.preview()
-        # revealing a preview may be very slow, not sure if Eventually handles that nicely
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
+
+        self.keyboard.press_and_release("Escape")
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_video_lens_preview_open_close(self):
+        """Makes sure that right click on a result in video lens
+        opens its preview."""
+        lens = self.dash.reveal_video_lens()
+        self.addCleanup(self.dash.ensure_hidden)
+
+        category = lens.get_category_by_name("Recently Viewed")
+        # If there was no video played on this system this category is expected
+        # to be empty, if its empty we check if the 'Online' category have any
+        # contents, if not then we skip the test.
+        if category is None:
+            category = lens.get_category_by_name("Online")
+            if category is None:
+                self.skipTest("This lens is probably empty")
+        
+        results = category.get_results()
+
+        result = results[0]
+        # result.preview handles finding xy co-ords and right mouse-click
+        result.preview()
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
 
         self.keyboard.press_and_release("Escape")
@@ -813,5 +806,34 @@ class PreviewNavigateTests(DashTestCase):
         # if we've navigated right, there should be at least one preview available on left.
         self.assertThat(self.preview_container.navigate_left_enabled, Eventually(Equals(True)))
 
+    def test_preview_refocus_close(self):
+        """This tests that if the mouse is clicked on a preview element (Cover art for example),
+        the keyboard shortcut for closing ('Escape') still works correctly.
+        """
+        lens = self.dash.reveal_application_lens()
+        self.addCleanup(self.dash.ensure_hidden)
 
+        category = lens.get_category_by_name("Installed")
+        results = category.get_results()
+
+        result = results[0]
+        # result.preview handles finding xy co-ords and right mouse-click
+        result.preview()
+        # revealing a preview may be very slow, not sure if Eventually handles that nicely
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
+
+        preview_container = self.dash.view.get_preview_container()
+        # wait for settle.
+        self.assertThat(preview_container.animating, Eventually(Equals(False)))
+        cover_art = preview_container.current_preview.cover_art
+
+        # click the cover-art (this will set focus)
+        tx = cover_art.x + (cover_art.width / 2)
+        ty = cover_art.y + (cover_art.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click()
+
+        self.keyboard.press_and_release("Escape")
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
 
