@@ -263,7 +263,7 @@ debug::Introspectable::IntrospectableList ResultView::GetIntrospectableChildren(
     {
       // delete and remove the child from the map.
       ResultView::ChildResultDestructor(child_iter->second);
-      introspectable_children_.erase(child_iter);
+      introspectable_children_.erase(child_iter++);
     }
     else
     {
