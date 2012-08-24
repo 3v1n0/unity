@@ -493,6 +493,17 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   renderer_.DrawInner(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
 
+  if (!preview_displaying_)
+  {
+    // nux::Geometry geo = GetGeometry();
+    // geo.width -= 340;
+    // geo.height -= 20;
+
+    gfx_context.PushClippingRectangle(layout_->GetGeometry());
+    nux::GetPainter().PaintBackground(gfx_context, layout_->GetGeometry());
+    gfx_context.PopClippingRectangle();
+  }
+
   if (IsFullRedraw())
     nux::GetPainter().PushBackgroundStack();
   
