@@ -281,8 +281,7 @@ void View::SetIcon(std::string const& icon_name, unsigned int tile_size, unsigne
 
   LOG_DEBUG(logger) << "Setting icon to " << icon_name;
 
-  icon_->SetIcon(icon_name, size, tile_size);
-  icon_->SetMinimumWidth(tile_size + padding);
+  icon_->SetIcon(icon_name, size, tile_size, padding);
 
   /* We need to compute this value manually, since the _content_layout height changes */
   int content_height = search_bar_->GetBaseHeight() + top_padding + bottom_padding;

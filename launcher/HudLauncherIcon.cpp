@@ -20,6 +20,7 @@
 #include "HudLauncherIcon.h"
 #include "Launcher.h"
 #include "UnityCore/GLibWrapper.h"
+#include "UnityCore/Variant.h"
 #include <NuxCore/Logger.h>
 
 #include "unity-shared/UBusMessages.h"
@@ -51,28 +52,31 @@ HudLauncherIcon::HudLauncherIcon(LauncherHideMode hide_mode)
 
   background_color_ = nux::color::White;
 
-  ubus_manager_.RegisterInterest(UBUS_HUD_ICON_CHANGED, [&](GVariant *data)
-  {
-    std::string hud_icon_name;
-    const gchar* data_string = g_variant_get_string(data, NULL);
-    if (data_string)
-      hud_icon_name = data_string;
-    LOG_DEBUG(logger) << "Hud icon change: " << hud_icon_name;
-    if (hud_icon_name != icon_name)
-    {
-      if (hud_icon_name.empty())
-        icon_name = PKGDATADIR"/launcher_bfb.png";
-      else
-        icon_name = hud_icon_name;
-
-      EmitNeedsRedraw();
-    }
-  });
-
-  ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::bind(sigc::mem_fun(this, &HudLauncherIcon::OnOverlayShown), true));
-  ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::bind(sigc::mem_fun(this, &HudLauncherIcon::OnOverlayShown), false));
+  ubus_manager_.RegisterInterest(UBUS_HUD_ICON_CHANGED,
+                                 sigc::mem_fun(this, &HudLauncherIcon::OnHudIconChanged));
+  ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN,
+                                 sigc::bind(sigc::mem_fun(this, &HudLauncherIcon::OnOverlayShown),
+                                            true));
+  ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN,
+                                 sigc::bind(sigc::mem_fun(this, &HudLauncherIcon::OnOverlayShown),
+                                            false));
 
   mouse_enter.connect([&](int m) { ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW); });
+}
+
+void HudLauncherIcon::OnHudIconChanged(GVariant *data)
+{
+  std::string hud_icon_name = glib::Variant(data).GetString();
+  LOG_DEBUG(logger) << "Hud icon change: " << hud_icon_name;
+  if (hud_icon_name != icon_name)
+  {
+    if (hud_icon_name.empty())
+      icon_name = PKGDATADIR"/launcher_bfb.png";
+    else
+      icon_name = hud_icon_name;
+
+    EmitNeedsRedraw();
+  }
 }
 
 void HudLauncherIcon::SetHideMode(LauncherHideMode hide_mode)

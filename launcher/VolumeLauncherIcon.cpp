@@ -112,6 +112,16 @@ public:
     return volume_->EjectAndShowNotification();
   }
 
+  bool CanStop() const
+  {
+    return volume_->CanBeStopped();
+  }
+
+  void StopDrive()
+  {
+    volume_->StopDrive();
+  }
+
   void OnRemoved()
   {
     auto const& identifier = volume_->GetIdentifier();
@@ -262,7 +272,7 @@ VolumeLauncherIcon::VolumeLauncherIcon(Volume::Ptr const& volume,
 VolumeLauncherIcon::~VolumeLauncherIcon()
 {}
 
-bool VolumeLauncherIcon::CanEject()
+bool VolumeLauncherIcon::CanEject() const
 {
   return pimpl_->CanEject();
 }
@@ -270,6 +280,16 @@ bool VolumeLauncherIcon::CanEject()
 void VolumeLauncherIcon::EjectAndShowNotification()
 {
   pimpl_->EjectAndShowNotification();
+}
+
+bool VolumeLauncherIcon::CanStop() const
+{
+  return pimpl_->CanStop();
+}
+
+void VolumeLauncherIcon::StopDrive()
+{
+  return pimpl_->StopDrive();
 }
 
 void VolumeLauncherIcon::OnRemoved()

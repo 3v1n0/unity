@@ -27,7 +27,7 @@
 #include "unity-shared/PlacesVScrollBar.h"
 #include "unity-shared/PreviewStyle.h"
 #include <UnityCore/Track.h>
-
+#include <UnityCore/Variant.h>
 
 namespace unity
 {
@@ -35,33 +35,6 @@ namespace dash
 {
 namespace previews
 {
-
-class TrackLayout : public nux::VLayout
-{
-public:
-  TrackLayout() {}
-
-  int ItemCount() const { return _layout_element_list.size(); }
-
-  void RemoveViewAt(unsigned int index)
-  {
-    unsigned int idx = index;
-    std::list<Area *>::iterator pos = _layout_element_list.begin();
-    
-    while (pos != _layout_element_list.end() && idx > 0)
-    {
-      idx--;
-      pos++;
-    }
-    if (pos != _layout_element_list.end())
-    {
-      ViewRemoved.emit(this, *pos);
-      (*pos)->UnParentObject();
-      _layout_element_list.erase(pos);
-    }
-  }
-
-};
 
 namespace
 {
@@ -101,12 +74,14 @@ std::string Tracks::GetName() const
 
 void Tracks::AddProperties(GVariantBuilder* builder)
 {
+  variant::BuilderWrapper(builder)
+    .add("track-count", m_tracks.size());
 }
 
 void Tracks::SetupViews()
 {
   SetVScrollBar(new dash::PlacesVScrollBar(NUX_TRACKER_LOCATION));
-  layout_ = new TrackLayout();
+  layout_ = new nux::VLayout();
   layout_->SetPadding(0, previews::Style::Instance().GetDetailsRightMargin(), 0, 0);
   layout_->SetSpaceBetweenChildren(1);
   SetLayout(layout_);
@@ -132,6 +107,7 @@ void Tracks::OnTrackAdded(dash::Track const& track_row)
   previews::Style& style = dash::previews::Style::Instance();
 
   previews::Track::Ptr track_view(new previews::Track(NUX_TRACKER_LOCATION));
+  AddChild(track_view.GetPointer());
   track_view->play.connect([&](std::string const& uri) { play.emit(uri); });
   track_view->pause.connect([&](std::string const& uri) { pause.emit(uri); });
 
@@ -151,6 +127,7 @@ void Tracks::OnTrackRemoved(dash::Track const& track_row)
   if (pos == m_tracks.end())
     return;
 
+  RemoveChild(pos->second.GetPointer());
   layout_->RemoveChildObject(pos->second.GetPointer());
 }
 

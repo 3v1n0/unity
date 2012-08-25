@@ -37,7 +37,6 @@ set (LAUNCHER_SOURCES
      DNDCollectionWindow.cpp
      Decaymulator.cpp
      DesktopLauncherIcon.cpp
-     VolumeLauncherIcon.cpp
      DeviceLauncherSection.cpp
      DeviceNotificationDisplayImp.cpp
      DevicesSettingsImp.cpp
@@ -75,6 +74,7 @@ set (LAUNCHER_SOURCES
      Tooltip.cpp
      TrashLauncherIcon.cpp
      VolumeImp.cpp
+     VolumeLauncherIcon.cpp
      VolumeMonitorWrapper.cpp
      )
 

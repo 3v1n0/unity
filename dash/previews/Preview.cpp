@@ -22,16 +22,16 @@
 
 #include "Preview.h"
 #include "unity-shared/IntrospectableWrappers.h"
+#include "unity-shared/CoverArt.h"
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
 #include "ActionButton.h"
 
- #include "GenericPreview.h"
- #include "ApplicationPreview.h"
- #include "MusicPreview.h"
- #include "MoviePreview.h"
- //#include "SeriesPreview.h"
+#include "GenericPreview.h"
+#include "ApplicationPreview.h"
+#include "MusicPreview.h"
+#include "MoviePreview.h"
 
 namespace unity
 {
@@ -91,6 +91,8 @@ Preview::Preview(dash::Preview::Ptr preview_model)
 
 Preview::~Preview()
 {
+  if (preview_model_)
+    preview_model_->EmitClosed();
 }
 
 std::string Preview::GetName() const
@@ -100,6 +102,9 @@ std::string Preview::GetName() const
 
 void Preview::AddProperties(GVariantBuilder* builder)
 {
+  variant::BuilderWrapper(builder)
+    .add(GetAbsoluteGeometry())
+    .add("uri", preview_model_->preview_uri.Get());
 }
 
 void Preview::OnActionActivated(ActionButton* button, std::string const& id)
@@ -130,8 +135,9 @@ nux::Layout* Preview::BuildGridActionsLayout(dash::Preview::ActionPtrList action
     {
         dash::Preview::ActionPtr action = actions[action_iter];
 
-        ActionButton* button = new ActionButton(action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
-        button->click.connect(sigc::bind(sigc::mem_fun(this, &Preview::OnActionActivated), action->id));
+        ActionButton* button = new ActionButton(action->id, action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
+        AddChild(button);
+        button->click.connect(sigc::mem_fun(this, &Preview::OnActionActivated));
         buttons.push_back(button);
 
         actions_layout_h->AddView(button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
@@ -161,8 +167,9 @@ nux::Layout* Preview::BuildVerticalActionsLayout(dash::Preview::ActionPtrList ac
   {
       dash::Preview::ActionPtr action = actions[action_iter];
 
-      ActionButton* button = new ActionButton(action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
-      button->click.connect(sigc::bind(sigc::mem_fun(this, &Preview::OnActionActivated), action->id));
+      ActionButton* button = new ActionButton(action->id, action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
+      AddChild(button);
+      button->click.connect(sigc::mem_fun(this, &Preview::OnActionActivated));
       buttons.push_back(button);
 
       actions_layout_v->AddView(button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
@@ -171,6 +178,28 @@ nux::Layout* Preview::BuildVerticalActionsLayout(dash::Preview::ActionPtrList ac
   actions_buffer_h->AddLayout(actions_buffer_v, 0);
 
   return actions_buffer_h;
+}
+
+void Preview::UpdateCoverArtImage(CoverArt* cover_art)
+{
+  if (!preview_model_)
+    return;
+  
+  previews::Style& style = dash::previews::Style::Instance();
+
+  std::string image_hint;
+  if (preview_model_->image.Get())
+  {
+    glib::String tmp_icon(g_icon_to_string(preview_model_->image.Get()));
+    image_hint = tmp_icon.Str();
+  }
+  if (!image_hint.empty())
+    cover_art->SetImage(image_hint);
+  else if (!preview_model_->image_source_uri.Get().empty())
+    cover_art->GenerateImage(preview_model_->image_source_uri);
+  else
+    cover_art->SetNoImageAvailable();
+  cover_art->SetFont(style.no_preview_image_font());
 }
 
 }
