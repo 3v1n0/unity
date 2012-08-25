@@ -118,6 +118,9 @@ public:
 
   void Resize();
 
+  int GetDragDelta() const;
+  void SetHover(bool hovered);
+
   sigc::signal<void, char*, AbstractLauncherIcon::Ptr> launcher_addrequest;
   sigc::signal<void, AbstractLauncherIcon::Ptr> launcher_removerequest;
   sigc::signal<void, AbstractLauncherIcon::Ptr> icon_animation_complete;
@@ -249,7 +252,6 @@ private:
   float IconCenterTransitionProgress(AbstractLauncherIcon::Ptr icon, struct timespec const& current) const;
   float IconVisibleProgress(AbstractLauncherIcon::Ptr icon, struct timespec const& current) const;
 
-  void SetHover(bool hovered);
   void SetHidden(bool hidden);
 
   void UpdateChangeInMousePosition(int delta_x, int delta_y);

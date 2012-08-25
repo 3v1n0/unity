@@ -430,6 +430,8 @@ void Controller::Impl::OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr icon)
 
       if (device_icon && device_icon->CanEject())
         device_icon->EjectAndShowNotification();
+      else if (device_icon && device_icon->CanStop())
+        device_icon->StopDrive();
 
       break;
     }

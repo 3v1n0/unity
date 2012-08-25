@@ -44,7 +44,7 @@ class PreviewNavigator :  public debug::Introspectable,
   NUX_DECLARE_OBJECT_TYPE(PreviewNavigator, nux::View);
 public:
   typedef nux::ObjectPtr<PreviewNavigator> Ptr;  
-  PreviewNavigator(Orientation orientation, NUX_FILE_LINE_PROTO);
+  PreviewNavigator(Orientation direction, NUX_FILE_LINE_PROTO);
 
   void SetEnabled(bool enabled);
 
@@ -61,7 +61,7 @@ private:
   void SetupViews();
 
 private:
-  const Orientation orientation_;
+  const Orientation direction_;
   nux::Layout* layout_;
   IconTexture* texture_;
 };

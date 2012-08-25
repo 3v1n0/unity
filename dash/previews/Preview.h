@@ -43,6 +43,7 @@ class ActionButton;
 
 namespace previews
 {
+class CoverArt;
 
 class Preview : public nux::View, public debug::Introspectable
 {
@@ -69,9 +70,13 @@ protected:
   virtual void OnNavigateInComplete() {}
   virtual void OnNavigateOut() {}
 
+  virtual bool AcceptKeyNavFocus() { return false; }
+
   nux::Layout* BuildGridActionsLayout(dash::Preview::ActionPtrList actions, std::list<nux::AbstractButton*>& buttons);
   nux::Layout* BuildVerticalActionsLayout(dash::Preview::ActionPtrList actions, std::list<nux::AbstractButton*>& buttons);
   
+  void UpdateCoverArtImage(CoverArt* cover_art);
+
 protected:
   dash::Preview::Ptr preview_model_;
   std::list<nux::AbstractButton*> action_buttons_;

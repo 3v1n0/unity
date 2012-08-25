@@ -20,6 +20,7 @@
 
 #include <gtest/gtest.h>
 #include <compiz_mock/core/core.h>
+#include <compiz_mock/core/timer.h>
 #include <NuxGraphics/GestureEvent.h>
 #include "WindowGestureTargetMock.h"
 #include "unityshell_mock.h"
@@ -28,6 +29,8 @@ unity::UnityScreenMock concrete_screen_mock;
 CompScreenMock *screen_mock = &concrete_screen_mock;
 int pointerX_mock = 0;
 int pointerY_mock = 0;
+
+CompTimerMock *CompTimerMock::instance = nullptr;
 
 std::map<int, int> g_gesture_event_accept_count;
 void nux::GestureEvent::Accept()

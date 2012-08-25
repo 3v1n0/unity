@@ -32,6 +32,7 @@ add_subdirectory(previews)
 #
 set (DASH_SOURCES
      AbstractPlacesGroup.cpp
+     CoverflowResultView.cpp
      DashController.cpp
      DashView.cpp
      DashViewPrivate.cpp

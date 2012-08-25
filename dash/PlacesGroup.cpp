@@ -42,6 +42,14 @@ namespace
 nux::logging::Logger logger("unity.dash.placesgroup");
 }
 
+#include "ResultView.h"
+#include "ResultViewGrid.h"
+#include "ResultRendererTile.h"
+#include "ResultRendererHorizontalTile.h"
+#include "CoverflowResultView.h"
+#include "FilterBasicButton.h"
+
+
 namespace unity
 {
 namespace
@@ -108,7 +116,10 @@ PlacesGroup::PlacesGroup()
     _child_view(nullptr),
     _is_expanded(true),
     _n_visible_items_in_unexpand_mode(0),
-    _n_total_items(0)
+    _n_total_items(0),
+    _category_index(0),
+    _coverflow_enabled(false),
+    disabled_header_count_(false)
 {
   dash::Style& style = dash::Style::Instance();
 
@@ -184,7 +195,7 @@ PlacesGroup::PlacesGroup()
   _name->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
   _expand_label->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
   _expand_icon->mouse_click.connect(sigc::mem_fun(this, &PlacesGroup::RecvMouseClick));
-
+  
   key_nav_focus_change.connect([&](nux::Area* area, bool has_focus, nux::KeyNavDirection direction)
   {
     if (!has_focus)
@@ -234,6 +245,23 @@ PlacesGroup::SetName(std::string const& name)
   }
 }
 
+void
+PlacesGroup::SetRendererName(const char *renderer_name)
+{
+  _renderer_name = renderer_name;
+
+  if (g_strcmp0(renderer_name, "tile-horizontal") == 0)
+    (static_cast<dash::ResultView*>(_child_view))->SetModelRenderer(new dash::ResultRendererHorizontalTile(NUX_TRACKER_LOCATION));
+  else
+    (static_cast<dash::ResultView*>(_child_view))->SetModelRenderer(new dash::ResultRendererTile(NUX_TRACKER_LOCATION));
+}
+
+void PlacesGroup::SetHeaderCountVisible(bool disable)
+{
+  disabled_header_count_ = !disable;
+  Relayout();
+}
+
 nux::StaticCairoText*
 PlacesGroup::GetLabel()
 {
@@ -255,9 +283,15 @@ PlacesGroup::SetIcon(std::string const& path_to_emblem)
 void
 PlacesGroup::SetChildView(dash::ResultView* view)
 {
+  if (_child_view != NULL)
+    {
+      _group_layout->RemoveChildObject(_child_view);
+    }
+
   debug::Introspectable *i = dynamic_cast<debug::Introspectable*>(view);
   if (i)
     AddChild(i);
+
   _child_view = view;
 
   nux::VLayout* layout = new nux::VLayout();
@@ -291,6 +325,13 @@ void PlacesGroup::SetChildLayout(nux::Layout* layout)
 void
 PlacesGroup::RefreshLabel()
 {
+  if (disabled_header_count_)
+  {
+    _expand_icon->SetVisible(false);
+    _expand_label->SetVisible(false);
+    return;
+  }
+
   std::string result_string;
 
   if (_n_visible_items_in_unexpand_mode < _n_total_items)
@@ -310,11 +351,13 @@ PlacesGroup::RefreshLabel()
     }
   }
 
-  _expand_icon->SetVisible(!(_n_visible_items_in_unexpand_mode >= _n_total_items && _n_total_items != 0));
+  bool visible = !(_n_visible_items_in_unexpand_mode >= _n_total_items && _n_total_items != 0);
+
+  _expand_icon->SetVisible(visible);;
   SetName(_cached_name);
 
   _expand_label->SetText(result_string);
-  _expand_label->SetVisible(_n_visible_items_in_unexpand_mode < _n_total_items);
+  _expand_label->SetVisible(visible);
 
   // See bug #748101 ("Dash - "See more..." line should be base-aligned with section header")
   // We're making two assumptions here:
@@ -422,7 +465,20 @@ void PlacesGroup::PostDraw(nux::GraphicsEngine& graphics_engine,
 }
 
 void
-PlacesGroup::SetCounts(guint n_visible_items_in_unexpand_mode, guint n_total_items)
+PlacesGroup::SetCategoryIndex(unsigned index)
+{
+  _category_index = index;
+}
+
+unsigned
+PlacesGroup::GetCategoryIndex() const
+{
+  return _category_index;
+}
+
+void
+PlacesGroup::SetCounts(unsigned n_visible_items_in_unexpand_mode,
+                       unsigned n_total_items)
 {
   _n_total_items = n_total_items;
 
