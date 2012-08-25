@@ -30,6 +30,7 @@
 #include "PointerBarrier.h"
 #include "unity-shared/AbstractIconRenderer.h"
 #include "unity-shared/BackgroundEffectHelper.h"
+#include "DevicesSettings.h"
 #include "DNDCollectionWindow.h"
 #include "DndData.h"
 #include "EdgeBarrierController.h"
@@ -81,6 +82,8 @@ public:
 
   void SetModel(LauncherModel::Ptr model);
   LauncherModel::Ptr GetModel() const;
+
+  void SetDevicesSettings(DevicesSettings::Ptr devices_settings);
 
   void StartKeyShowLauncher();
   void EndKeyShowLauncher();
@@ -390,6 +393,8 @@ private:
 
   ui::AbstractIconRenderer::Ptr icon_renderer;
   BackgroundEffectHelper bg_effect_helper_;
+
+  DevicesSettings::Ptr devices_settings_;
 
   UBusManager ubus_;
   glib::SourceManager sources_;
