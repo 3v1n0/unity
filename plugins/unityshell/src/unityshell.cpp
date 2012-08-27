@@ -340,13 +340,13 @@ UnityScreen::UnityScreen(CompScreen* screen)
      ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_NAV,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherStartKeyNav));
 
-     ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWTICHER,
+     ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWITCHER,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherStartKeyNav));
 
      ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_NAV,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherEndKeyNav));
 
-     ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWTICHER,
+     ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWITCHER,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherEndKeyNav));
 
      ubus_manager_.RegisterInterest(UBUS_SWITCHER_START,
@@ -2378,7 +2378,7 @@ bool isNuxWindow (CompWindow* value)
   auto id = value->id();
 
   // iterate loop by hand rather than use std::find as this is considerably faster
-  // we care about performance here becuase of the high frequency in which this function is
+  // we care about performance here because of the high frequency in which this function is
   // called (nearly every frame)
   unsigned int size = xwns.size();
   for (unsigned int i = 0; i < size; ++i)

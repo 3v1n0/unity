@@ -395,7 +395,7 @@ register_interesting_messages(UnityRootAccessible* self)
                                 sigc::bind(sigc::ptr_fun(ubus_launcher_register_interest_cb),
                                 self));
 
-  ubus_manager.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWTICHER,
+  ubus_manager.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWITCHER,
                                 sigc::bind(sigc::ptr_fun(ubus_launcher_register_interest_cb),
                                 self));
 
