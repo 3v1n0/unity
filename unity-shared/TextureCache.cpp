@@ -55,6 +55,9 @@ TextureCache::BaseTexturePtr TextureCache::FindTexture(std::string const& textur
                                                        int width, int height,
                                                        CreateTextureCallback slot)
 {
+  if (!slot)
+    return BaseTexturePtr();
+
   std::string key = Hash(texture_id, width, height);
   BaseTexturePtr texture(cache_[key]);
 

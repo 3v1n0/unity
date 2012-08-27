@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<KeyListEntries schema="org.compiz.integrated" wm_name="Compiz" group="system" _name="Launchers" package="unity">
+
+	<KeyListEntry name="show-hud" _description="Key to show the HUD"/>
+
+</KeyListEntries>

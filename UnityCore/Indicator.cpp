@@ -64,18 +64,12 @@ void Indicator::Sync(Indicator::Entries const& new_entries)
 {
   Entries to_rm;
 
-  if (entries_.size() == 0)
-  {
-    to_rm = entries_;
-  }
-  else
+  if (!entries_.empty())
   {
     for (auto entry : entries_)
     {
       if (std::find(new_entries.begin(), new_entries.end(), entry) == new_entries.end())
-      {
         to_rm.push_back(entry);
-      }
     }
   }
 

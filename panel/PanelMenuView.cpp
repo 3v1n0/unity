@@ -152,7 +152,6 @@ PanelMenuView::PanelMenuView()
   _titlebar_grab_area->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
 
   _ubus_manager.RegisterInterest(UBUS_SWITCHER_SHOWN, sigc::mem_fun(this, &PanelMenuView::OnSwitcherShown));
-  _ubus_manager.RegisterInterest(UBUS_SWITCHER_SELECTION_CHANGED, sigc::mem_fun(this, &PanelMenuView::OnSwitcherSelectionChanged));
 
   _ubus_manager.RegisterInterest(UBUS_LAUNCHER_START_KEY_NAV, sigc::mem_fun(this, &PanelMenuView::OnLauncherKeyNavStarted));
   _ubus_manager.RegisterInterest(UBUS_LAUNCHER_END_KEY_NAV, sigc::mem_fun(this, &PanelMenuView::OnLauncherKeyNavEnded));
@@ -700,7 +699,6 @@ void PanelMenuView::DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::s
   using namespace panel;
   cairo_t* cr;
   cairo_pattern_t* linpat;
-  const int fading_pixels = 35;
   int x = MAIN_LEFT_PADDING + TITLE_PADDING + geo.x;
   int y = geo.y;
 
@@ -762,6 +760,7 @@ void PanelMenuView::DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::s
   if (text_width > text_space)
   {
     int out_pixels = text_width - text_space;
+    const int fading_pixels = 35;
     int fading_width = out_pixels < fading_pixels ? out_pixels : fading_pixels;
 
     cairo_push_group(cr);
@@ -1547,18 +1546,6 @@ void PanelMenuView::OnSwitcherShown(GVariant* data)
   {
     _show_now_activated = false;
   }
-
-  Refresh();
-  QueueDraw();
-}
-
-void PanelMenuView::OnSwitcherSelectionChanged(GVariant* data)
-{
-  if (!data || !_switcher_showing)
-    return;
-
-  const gchar *title = g_variant_get_string(data, 0);
-  _panel_title = (title ? title : "");
 
   Refresh();
   QueueDraw();

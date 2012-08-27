@@ -31,12 +31,7 @@ void WaitForResult(bool& result)
 void WaitForLensesToLoad(FilesystemLenses& lenses)
 {
   bool result = false;
-
-  auto lenses_loaded_cb = [&result]()
-  {
-    result = true;
-  };
-  lenses.lenses_loaded.connect(sigc::slot<void>(lenses_loaded_cb));
+  lenses.lenses_loaded.connect([&result] {result = true;});
 
   WaitForResult(result);
   EXPECT_TRUE(result);
@@ -61,12 +56,7 @@ TEST(TestFilesystemLenses, TestLensesAdded)
   LensDirectoryReader::Ptr test_reader(new LensDirectoryReader(TESTDATADIR"/lenses"));
   FilesystemLenses lenses(test_reader);
   unsigned int n_lenses = 0;
-
-  auto lens_added_cb = [&n_lenses](Lens::Ptr & p)
-  {
-    n_lenses++;
-  };
-  lenses.lens_added.connect(sigc::slot<void, Lens::Ptr&>(lens_added_cb));
+  lenses.lens_added.connect([&n_lenses](Lens::Ptr & p) { ++n_lenses; });
 
   WaitForLensesToLoad(lenses);
   EXPECT_EQ(n_lenses, (unsigned int)3);

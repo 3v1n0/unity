@@ -338,3 +338,9 @@ class IndicatorEntry(UnityIntrospectionObject):
         """Returns a tuple of (x,y,w,h) for the opened menu geometry."""
         return (self.menu_x, self.menu_y, self.menu_width, self.menu_height)
 
+    def __repr__(self):
+        return "<IndicatorEntry 0x%x (%s)>" % (id(self), self.label)
+
+
+class Tray(UnityIntrospectionObject):
+    """A panel tray object."""

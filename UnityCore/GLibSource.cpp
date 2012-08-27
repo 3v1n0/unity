@@ -18,7 +18,6 @@
 */
 
 #include "GLibSource.h"
-#include <boost/lexical_cast.hpp>
 
 namespace unity
 {
@@ -104,7 +103,7 @@ gboolean Source::SourceCallback(gpointer data)
 
   auto self = static_cast<CallBackData*>(data)->self;
 
-  if (self && !self->callback_.empty() && self->callback_())
+  if (self && self->callback_ && self->callback_())
   {
     return G_SOURCE_CONTINUE;
   }
@@ -225,7 +224,7 @@ bool SourceManager::Add(Source::Ptr const& source, std::string const& nick)
   if (source_nick.empty())
   {
     /* If we don't have a nick, we use the source pointer string as nick. */
-    source_nick = boost::lexical_cast<std::string>(source.get());
+    source_nick = std::to_string(reinterpret_cast<uintptr_t>(source.get()));
   }
 
   auto old_source_it = sources_.find(source_nick);

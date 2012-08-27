@@ -35,6 +35,7 @@ namespace launcher
 class AbstractLauncherIcon;
 class Launcher;
 class LauncherModel;
+class TestLauncherController;
 
 class Controller : public unity::debug::Introspectable, public sigc::trackable
 {
@@ -55,7 +56,7 @@ public:
 
   void UpdateNumWorkspaces(int workspaces);
   std::vector<char> GetAllShortcuts() const;
-  std::vector<AbstractLauncherIcon::Ptr> GetAltTabIcons(bool current) const;
+  std::vector<AbstractLauncherIcon::Ptr> GetAltTabIcons(bool current, bool show_deskop_disabled) const;
 
   void PushToFront();
 
@@ -86,6 +87,7 @@ protected:
   void AddProperties(GVariantBuilder* builder);
 
 private:
+  friend class TestLauncherController;
   class Impl;
   std::unique_ptr<Impl> pimpl;
 };

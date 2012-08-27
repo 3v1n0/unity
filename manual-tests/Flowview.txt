@@ -1,0 +1,13 @@
+Test Flowview Workin
+--------------------------------
+This test shows that the coverflow shows up and works when requested by the backend.
+
+Setup:
+
+Actions:
+#. Start with a clear screen
+#. Press Super
+#. Open a lens which uses flow
+
+Expected Result:
+  The flow view should be visible with icons folded at the edge of the screen.

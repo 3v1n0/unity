@@ -46,12 +46,13 @@ namespace switcher
 Controller::Controller(unsigned int load_timeout)
   :  timeout_length(75)
   ,  detail_on_timeout(true)
-  ,  detail_timeout_length(500)
+  ,  detail_timeout_length(250)
   ,  initial_detail_timeout_length(1500)
   ,  construct_timeout_(load_timeout)
   ,  main_layout_(nullptr)
   ,  monitor_(0)
   ,  visible_(false)
+  ,  show_desktop_disabled_(false)
   ,  bg_color_(0, 0, 0, 0.5)
 {
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
@@ -69,9 +70,19 @@ void Controller::OnBackgroundUpdate(GVariant* data)
     view_->background_color = bg_color_;
 }
 
+bool Controller::CanShowSwitcher(const std::vector<AbstractLauncherIcon::Ptr>& results) const
+{
+  bool empty = (show_desktop_disabled_ ? results.empty() : results.size() == 1);
+
+  return (!empty && !WindowManager::Default()->IsWallActive());
+}
+
 void Controller::Show(ShowMode show, SortMode sort, bool reverse,
                       std::vector<AbstractLauncherIcon::Ptr> results)
 {
+  if (results.empty())
+    return;
+
   if (sort == SortMode::FOCUS_ORDER)
   {
     std::sort(results.begin(), results.end(), CompareSwitcherItemsPriority);
@@ -156,6 +167,9 @@ void Controller::ShowView()
     view_window_->ShowWindow(true);
     view_window_->PushToFront();
     view_window_->SetOpacity(1.0f);
+    view_window_->EnableInputWindow(true, "Switcher", true /* take focus */, false);
+    view_window_->SetInputFocus();
+    view_window_->CaptureMouseDownAnyWhereElse(true);
   }
 }
 
@@ -174,6 +188,7 @@ void Controller::ConstructWindow()
     view_window_->SetBackgroundColor(nux::Color(0x00000000));
     view_window_->SetGeometry(workarea_);
     view_window_->EnableInputWindow(true, "Switcher", false, false);
+    view_window_->InputWindowEnableStruts(false);
   }
 }
 
@@ -193,8 +208,11 @@ void Controller::ConstructView()
 
   ConstructWindow();
   main_layout_->AddView(view_.GetPointer(), 1);
+  view_window_->SetEnterFocusInputArea(view_.GetPointer());
   view_window_->SetGeometry(workarea_);
   view_window_->SetOpacity(0.0f);
+
+  view_built.emit();
 }
 
 void Controller::SetWorkspace(nux::Geometry geo, int monitor)
@@ -222,7 +240,7 @@ void Controller::Hide(bool accept_state)
       }
       else
       {
-        if (selection->GetQuirk (AbstractLauncherIcon::QUIRK_ACTIVE) &&
+        if (selection->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE) &&
             !model_->DetailXids().empty ())
         {
           selection->Activate(ActionArg (ActionArg::SWITCHER, 0, model_->DetailXids()[0]));
@@ -389,16 +407,31 @@ guint Controller::GetSwitcherInputWindowId() const
   return view_window_->GetInputWindowId();
 }
 
+bool Controller::IsShowDesktopDisabled() const
+{
+  return show_desktop_disabled_;
+}
+
+void Controller::SetShowDesktopDisabled(bool disabled)
+{
+  show_desktop_disabled_ = disabled;
+}
+
+int Controller::StartIndex() const
+{
+  return (show_desktop_disabled_ ? 0 : 1);
+}
+
 bool Controller::CompareSwitcherItemsPriority(AbstractLauncherIcon::Ptr first,
                                               AbstractLauncherIcon::Ptr second)
 {
   if (first->GetIconType() == second->GetIconType())
     return first->SwitcherPriority() > second->SwitcherPriority();
 
-  if (first->GetIconType() == AbstractLauncherIcon::IconType::TYPE_DESKTOP)
+  if (first->GetIconType() == AbstractLauncherIcon::IconType::DESKTOP)
     return true;
 
-  if (second->GetIconType() == AbstractLauncherIcon::IconType::TYPE_DESKTOP)
+  if (second->GetIconType() == AbstractLauncherIcon::IconType::DESKTOP)
     return false;
 
   return first->GetIconType() < second->GetIconType();
@@ -409,8 +442,11 @@ void Controller::SelectFirstItem()
   if (!model_)
     return;
 
-  AbstractLauncherIcon::Ptr first  = model_->at(1);
-  AbstractLauncherIcon::Ptr second = model_->at(2);
+  int first_icon_index = StartIndex();
+  int second_icon_index = first_icon_index + 1;
+
+  AbstractLauncherIcon::Ptr first  = model_->at(first_icon_index);
+  AbstractLauncherIcon::Ptr second = model_->at(second_icon_index);
 
   if (!first)
   {
@@ -464,13 +500,14 @@ void
 Controller::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper(builder)
-  .add("timeout-length", timeout_length())
-  .add("detail-on-timeout", detail_on_timeout())
-  .add("initial-detail-timeout-length", initial_detail_timeout_length())
-  .add("detail-timeout-length", detail_timeout_length())
+  .add("timeout_length", timeout_length())
+  .add("detail_on_timeout", detail_on_timeout())
+  .add("initial_detail_timeout_length", initial_detail_timeout_length())
+  .add("detail_timeout_length", detail_timeout_length())
   .add("visible", visible_)
   .add("monitor", monitor_)
-  .add("detail-mode", detail_mode_);
+  .add("show_desktop_disabled", show_desktop_disabled_)
+  .add("detail_mode", detail_mode_);
 }
 
 } // switcher namespace

@@ -57,6 +57,7 @@ public:
   virtual ~Model();
 
   const RowAdaptor RowAtIndex(std::size_t index);
+  DeeModelTag*     GetTag();
 
   nux::Property<std::string> swarm_name;
   nux::ROProperty<std::size_t> count;

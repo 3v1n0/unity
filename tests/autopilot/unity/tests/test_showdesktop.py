@@ -8,11 +8,8 @@
 
 from __future__ import absolute_import
 
-from autopilot.matchers import Eventually
-from testtools.matchers import NotEquals
 from time import sleep
 
-from unity.emulators.icons import DesktopLauncherIcon
 from unity.tests import UnityTestCase
 
 
@@ -65,13 +62,13 @@ class ShowDesktopTests(UnityTestCase):
 
     def test_unhide_single_app(self):
         """Un-hide a single app from launcher after hiding all apps."""
-        test_windows = self.launch_test_apps()
+        charmap, calc = self.launch_test_apps()
 
         # show desktop, verify all windows are hidden:
         self.window_manager.enter_show_desktop()
         self.addCleanup(self.window_manager.leave_show_desktop)
 
-        for win in test_windows:
+        for win in (charmap, calc):
             self.assertProperty(win, is_valid=True)
             self.assertProperty(win, is_hidden=True)
 
@@ -88,7 +85,7 @@ class ShowDesktopTests(UnityTestCase):
         # hide desktop - now all windows should be visible:
         self.window_manager.leave_show_desktop()
 
-        for win in test_windows:
+        for win in (charmap, calc):
             self.assertProperty(win, is_hidden=False)
 
     def test_showdesktop_switcher(self):
