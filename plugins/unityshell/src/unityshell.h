@@ -125,11 +125,6 @@ public:
                      const CompRegion&,
                      CompOutput*,
                      unsigned int);
-#ifdef USE_MODERN_COMPIZ_GL
-  void glPaintCompositedOutput (const CompRegion    &region,
-                                ::GLFramebufferObject *fbo,
-                                unsigned int         mask);
-#endif
 
   /* paint in the special case that the output is transformed */
   void glPaintTransformedOutput(const GLScreenPaintAttrib&,

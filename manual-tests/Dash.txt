@@ -27,26 +27,6 @@ Expected Result:
   that lasts longer than that is not considered a tap.
 
 
-Dash SearchBar middle-click
-Note: Should be automated
----------------------------
-This test shows how the middle click over the dash search bar should work
-(see lp:842462)
-
-Setup:
-
-Actions:
-#. Select this text with you mouse.
-#. Press Super or Alt+F2 to open the Dash
-#. Move the mouse cursor over the dash search entry box.
-#. Middle click.
-
-Expected Result:
-  The text previously selected is pasted on the search bar at mouse pointer
-  position, if the operation is repeated the text is inserted where
-  the mouse pointer is.
-
-
 Dash correct number of "see more" results with horizontal renderer
 ---------------------------
 This test ensures a correct number of "see more" results in the dash when using a horizontal renderer

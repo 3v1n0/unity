@@ -24,22 +24,6 @@ Scenario 2:
   Firefox is shown in the alt-tab switcher, but the terminal on workspace 1 is not.
 
 
-Panel on Alt+Tab
-----------------
-This tests that the panel title changes with Alt+Tab
-
-Setup:
-#. Open some new applications
-
-Actions:
-#. Press Alt+Tab
-
-Expected Result:
-  When you press Alt+Tab to switch window, the application title in the top left
-  of the panel should change inline with changes in alt-tab focus.
-  Also the menus shouldn't ever show. Even if the mouse has been left over
-  the panel when starting the Alt+Tab.
-
 Full app title in Chinese
 -------------------------
 This test ensures that the App Switcher (Alt+Tab) displays the full title

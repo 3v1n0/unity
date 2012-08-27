@@ -138,8 +138,10 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , highlighted_window_(0)
 {
   Timer timer;
+#ifndef USE_GLES
   gfloat version;
   gchar* extensions;
+#endif
   bool  failed = false;
   configure_logging();
   LOG_DEBUG(logger) << __PRETTY_FUNCTION__;
@@ -216,10 +218,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
      ScreenInterface::setHandler(screen);
      CompositeScreenInterface::setHandler(cScreen);
      GLScreenInterface::setHandler(gScreen);
-
-#ifdef USE_MODERN_COMPIZ_GL
-     gScreen->glPaintCompositedOutputSetEnabled (this, true);
-#endif
 
      PluginAdapter::Initialize(screen);
      WindowManager::SetDefault(PluginAdapter::Default());
@@ -349,13 +347,13 @@ UnityScreen::UnityScreen(CompScreen* screen)
      ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_NAV,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherStartKeyNav));
 
-     ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWTICHER,
+     ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWITCHER,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherStartKeyNav));
 
      ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_NAV,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherEndKeyNav));
 
-     ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWTICHER,
+     ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWITCHER,
                    sigc::mem_fun(this, &UnityScreen::OnLauncherEndKeyNav));
 
      ubus_manager_.RegisterInterest(UBUS_SWITCHER_START,
@@ -487,7 +485,7 @@ void UnityScreen::CreateSuperNewAction(char shortcut, impl::ActionModifiers flag
 
 void UnityScreen::nuxPrologue()
 {
-#ifndef USE_MODERN_COMPIZ_GL
+#ifndef USE_GLES
   /* Vertex lighting isn't used in Unity, we disable that state as it could have
    * been leaked by another plugin. That should theoretically be switched off
    * right after PushAttrib since ENABLE_BIT is meant to restore the LIGHTING
@@ -505,6 +503,7 @@ void UnityScreen::nuxPrologue()
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
 
+#ifndef USE_MODERN_COMPIZ_GL
   /* This is needed to Fix a crash in glDrawArrays with the NVIDIA driver
    * see bugs #1031554 and #982626.
    * The NVIDIA driver looks to see if the legacy GL_VERTEX_ARRAY,
@@ -514,14 +513,17 @@ void UnityScreen::nuxPrologue()
   glDisableClientState(GL_VERTEX_ARRAY);
   glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 #endif
+#endif
 
   glGetError();
 }
 
 void UnityScreen::nuxEpilogue()
 {
+#ifndef USE_GLES
 #ifndef USE_MODERN_COMPIZ_GL
   (*GL::bindFramebuffer)(GL_FRAMEBUFFER_EXT, _active_fbo);
+#endif
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -543,10 +545,12 @@ void UnityScreen::nuxEpilogue()
 
   glPopAttrib();
 
+#ifndef USE_MODERN_COMPIZ_GL
   /* Re-enable the client states that have been disabled in nuxPrologue, for
    * NVIDIA compatibility reasons */
   glEnableClientState(GL_VERTEX_ARRAY);
   glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
 #else
 #ifdef USE_GLES
   glDepthRangef(0, 1);
@@ -1319,36 +1323,15 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   if (doShellRepaint && !force && fullscreenRegion.contains(*output))
     doShellRepaint = false;
 
-#ifndef USE_MODERN_COMPIZ_GL
   if (doShellRepaint)
+#ifdef USE_MODERN_COMPIZ_GL
+    paintDisplay();
+#else
     paintDisplay(region, transform, mask);
 #endif
 
   return ret;
 }
-
-#ifdef USE_MODERN_COMPIZ_GL
-void UnityScreen::glPaintCompositedOutput (const CompRegion &region,
-                                           ::GLFramebufferObject *fbo,
-                                           unsigned int        mask)
-{
-  if (doShellRepaint)
-  {
-    bool useFbo = false;
-    oldFbo = fbo->bind ();
-    useFbo = fbo->checkStatus () && fbo->tex ();
-    if (!useFbo) {
-	printf ("bailing from UnityScreen::glPaintCompositedOutput");
-	::GLFramebufferObject::rebind (oldFbo);
-	return;
-    }
-    paintDisplay();
-    ::GLFramebufferObject::rebind (oldFbo);
-  }
-
-  gScreen->glPaintCompositedOutput(region, fbo, mask);
-}
-#endif
 
 /* called whenever a plugin needs to paint the entire scene
  * transformed */
@@ -2425,7 +2408,7 @@ bool isNuxWindow (CompWindow* value)
   auto id = value->id();
 
   // iterate loop by hand rather than use std::find as this is considerably faster
-  // we care about performance here becuase of the high frequency in which this function is
+  // we care about performance here because of the high frequency in which this function is
   // called (nearly every frame)
   unsigned int size = xwns.size();
   for (unsigned int i = 0; i < size; ++i)

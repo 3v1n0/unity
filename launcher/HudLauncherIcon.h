@@ -47,6 +47,7 @@ protected:
 
 private:
   void OnOverlayShown(GVariant *data, bool visible);
+  void OnHudIconChanged(GVariant *data);
 
   static unity::UBusManager ubus_manager_;
   nux::Color background_color_;

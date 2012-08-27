@@ -25,6 +25,8 @@
 #include <NuxCore/Logger.h>
 
 #include "unity-shared/DashStyle.h"
+#include "CoverflowResultView.h"
+
 #include "ResultRendererTile.h"
 #include "ResultRendererHorizontalTile.h"
 #include "unity-shared/UBusMessages.h"
@@ -306,19 +308,33 @@ void LensView::OnCategoryAdded(Category const& category)
   /* Reset result count */
   counts_[group] = 0;
 
-  ResultViewGrid* grid = new ResultViewGrid(NUX_TRACKER_LOCATION);
+  ResultView* grid;
+  
+  if (renderer_name == "tile-horizontal")
+  {
+    grid = new ResultViewGrid(NUX_TRACKER_LOCATION);
+    grid->SetModelRenderer(new ResultRendererHorizontalTile(NUX_TRACKER_LOCATION));
+    static_cast<ResultViewGrid*> (grid)->horizontal_spacing = CARD_VIEW_GAP_HORIZ;
+    static_cast<ResultViewGrid*> (grid)->vertical_spacing = CARD_VIEW_GAP_VERT;
+  }
+  else if (renderer_name == "flow")
+  {
+    grid = new CoverflowResultView(NUX_TRACKER_LOCATION);
+    grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
+    group->SetHeaderCountVisible(false);
+  } 
+  else
+  {
+    grid = new ResultViewGrid(NUX_TRACKER_LOCATION);
+    grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
+  }
+  group->SetChildView(grid);
+
   std::string unique_id = name + lens_->name();
   grid->unique_id = unique_id;
   grid->expanded = false;
-  if (renderer_name == "tile-horizontal")
-  {
-    grid->SetModelRenderer(new ResultRendererHorizontalTile(NUX_TRACKER_LOCATION));
-    grid->horizontal_spacing = CARD_VIEW_GAP_HORIZ;
-    grid->vertical_spacing = CARD_VIEW_GAP_VERT;
-  }    
-  else
-    grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
 
+  group->SetRendererName(renderer_name.c_str());
   grid->UriActivated.connect(sigc::bind([&] (std::string const& uri, ResultView::ActivateType type, std::string const& view_id) 
   {
     switch (type)
@@ -338,7 +354,6 @@ void LensView::OnCategoryAdded(Category const& category)
 
   }, unique_id));
   
-  group->SetChildView(grid);
 
   /* Set up filter model for this category */
   Results::Ptr results_model = lens_->results;
@@ -657,7 +672,6 @@ void LensView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
   gfx_context.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(gfx_context, geo);
   gfx_context.PopClippingRectangle();
-
 }
 
 void LensView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)

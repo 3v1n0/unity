@@ -14,38 +14,41 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Thomi Richards <thomi.richards@canonical.com>
+ * Authored by: Jason Smith <jason.smith@canonical.com>
  */
 
-#ifndef _INTROSPECTABLE_WRAPPERS_H
-#define _INTROSPECTABLE_WRAPPERS_H
+#ifndef UNITY_COVERFLOWRESULTVIEW_H
+#define UNITY_COVERFLOWRESULTVIEW_H
 
-#include <UnityCore/Result.h>
-#include <Nux/Nux.h>
-
-#include "Introspectable.h"
+#include "ResultView.h"
 
 namespace unity
 {
-namespace debug
+namespace dash
 {
 
-/** Wrap a result object from UnityCore and present it's properties
- * to the introspectable tree.
- */
-class ResultWrapper: public Introspectable
+class CoverflowResultView : public ResultView
 {
+  NUX_DECLARE_OBJECT_TYPE(CoverflowResultView, ResultView);
+
 public:
-  ResultWrapper(const dash::Result& result, nux::Geometry const& geo = nux::Geometry());
-  std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  CoverflowResultView(NUX_FILE_LINE_DECL);
+  ~CoverflowResultView();
+
+  virtual void SetModelRenderer(ResultRenderer* renderer);
+
+  virtual void AddResult(Result& result);
+  virtual void RemoveResult(Result& result);
+
+protected:
+  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual long ComputeContentSize();
+
 private:
-  std::string uri_;
-  std::string name_;
-  std::string icon_hint_;
-  std::string mime_type_;
-  nux::Geometry geo_;
-};
+  struct Impl;
+  Impl* pimpl;
+};  
 
 }
 }
