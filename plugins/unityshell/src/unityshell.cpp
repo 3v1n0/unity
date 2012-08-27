@@ -129,7 +129,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , panel_texture_has_changed_(true)
   , paint_panel_(false)
   , scale_just_activated_(false)
-  , minimize_speed_controller (nullptr)
+  , minimize_speed_controller(new WindowMinimizeSpeedController())
 {
   Timer timer;
 #ifndef USE_GLES
@@ -387,6 +387,10 @@ UnityScreen::UnityScreen(CompScreen* screen)
   }
 
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &UnityScreen::OnPanelStyleChanged));
+  
+  minimize_speed_controller->DurationChanged.connect(
+      sigc::mem_fun(this, &UnityScreen::OnMinimizeDurationChanged)
+  );
 }
 
 UnityScreen::~UnityScreen()
@@ -2543,6 +2547,40 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
 }
 
 void
+UnityScreen::OnMinimizeDurationChanged ()
+{
+  /* Update the compiz plugin setting with the new computed speed so that it
+   * will be used in the following minimizations */
+  CompPlugin *p = CompPlugin::find("animation");
+  if (p)
+  {
+    CompOption::Vector &opts = p->vTable->getOptions();
+
+    for (CompOption &o : opts)
+    {
+      if (o.name () == std::string ("minimize_durations"))
+      {
+        /* minimize_durations is a list value, but minimize applies only to
+         * normal windows, so there's always one value */
+        CompOption::Value& value = o.value();
+        CompOption::Value::Vector& list = value.list();
+        CompOption::Value::Vector::iterator i = list.begin();
+        if (i != list.end()) {
+          i->set(minimize_speed_controller->getDuration());
+        }
+        value.set(list);                
+        screen->setOptionForPlugin(p->vTable->name().c_str(),
+                                   o.name().c_str(), value);
+        break;
+      }
+    }
+  }
+  else {
+    LOG_WARN(logger) << "Animation plugin not found. Can't set minimize speed.";
+  }
+}
+
+void
 UnityWindow::minimize ()
 {
   if (!window->managed ())
@@ -2553,9 +2591,6 @@ UnityWindow::minimize ()
     /* Updating the count in dconf will trigger a "changed" signal to which
      * the method setting the new animation speed is attached */
     UnityScreen* unityScreen = UnityScreen::get(screen);
-    if (unityScreen->minimize_speed_controller == nullptr) {
-      unityScreen->minimize_speed_controller = new WindowMinimizeSpeedController(screen);
-    }
     unityScreen->minimize_speed_controller->UpdateCount();
 
     mMinimizeHandler.reset (new UnityMinimizedHandler (window, this));

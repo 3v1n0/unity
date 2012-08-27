@@ -25,6 +25,7 @@
 #include <core/core.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSignal.h>
+#include <sigc++/sigc++.h>
 
 typedef struct _GSettings GSettings;
 
@@ -33,13 +34,14 @@ using namespace unity;
 class WindowMinimizeSpeedController
 {
 public:
-  WindowMinimizeSpeedController(CompScreen* screen);
+  WindowMinimizeSpeedController();
   void UpdateCount();
+  int getDuration();
+  sigc::signal<void> DurationChanged;
   
 private:
-  void SetSpeed();
+  void SetDuration();
 
-  CompScreen* mScreen;
   glib::Object<GSettings> _settings;
   int _minimize_count;
   int _minimize_speed_threshold;
@@ -49,6 +51,7 @@ private:
   glib::Signal<void, GSettings*, gchar* > _minimize_speed_threshold_changed;
   glib::Signal<void, GSettings*, gchar* > _minimize_slow_duration_changed;
   glib::Signal<void, GSettings*, gchar* > _minimize_fast_duration_changed;
+  int mDuration;
 };
 
 #endif // WINDOWMINIMIZESPEEDCONTROLLER_H
