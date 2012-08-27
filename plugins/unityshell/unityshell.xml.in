@@ -46,7 +46,7 @@
                     <_long>Make the HUD appear with this key</_long>
                     <default>&lt;Alt&gt;</default>
                   </option>
-	              <option name="launcher_hide_mode" type="int">
+                <option name="launcher_hide_mode" type="int">
                     <_short>Hide Launcher</_short>
                     <_long>Make the launcher hide automatically after some time of inactivity: always or just when the focussed window is not over the launcher</_long>
                     <min>0</min>
