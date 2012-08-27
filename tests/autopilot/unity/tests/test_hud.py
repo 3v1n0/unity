@@ -335,7 +335,7 @@ class HudBehaviorTests(HudTestsBase):
         
         self.assertThat(file_contents, Equals('ABCD'))
 
-    def test_hud_key_navigation(self):
+    def test_hud_closes_on_item_activated(self):
         """This test ensures the hud key navigation is intact"""
         # starting on a clean desktop because this way we are sure that our search
         # string won't match any menu item from a focused application
