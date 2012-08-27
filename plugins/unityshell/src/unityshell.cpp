@@ -3369,7 +3369,29 @@ void UnityWindow::DrawWindowTitle (const GLWindowPaintAttrib& attrib,
   vertexBuffer->render (transform, attrib);
 #endif
 
-  //TODO: implement window title text draw
+  x += CLOSE_ICON_SPACE * 2 + CLOSE_ICON_SIZE;
+  CompText text;
+  CompText::Attrib textAttrib;
+
+  text.clear ();
+  textAttrib.maxWidth = x2 - x;
+  textAttrib.maxHeight = y2 - y;
+  textAttrib.flags = CompText::Ellipsized | CompText::StyleBold;
+  textAttrib.family = "Sans";
+  textAttrib.size = 10;
+
+  // compiz uses different number for colors (0.0 - 65535.0)
+  textAttrib.color[0] = 65535.0;
+  textAttrib.color[1] = 65535.0;
+  textAttrib.color[2] = 65535.0;
+  textAttrib.color[3] = 65535.0;
+  text.renderWindowTitle (window->id (),
+                          false,
+                          textAttrib);
+
+  // calcule Y center posistion
+  float yc = ((y2 - y) - text.getHeight ()) / 2.0f;
+  text.draw (transform, x, y2 - yc , 1.0f);
 }
 
 void UnityWindow::scalePaintDecoration (const GLWindowPaintAttrib& attrib,
