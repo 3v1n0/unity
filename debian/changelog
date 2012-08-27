@@ -1,3 +1,10 @@
+unity (6.2.0-0ubuntu4) UNRELEASED; urgency=low
+
+  * debian/control:
+    - Depends on compiz-plugins-default rather than on a transitional one
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Mon, 27 Aug 2012 20:49:21 +0200
+
 unity (6.2.0-0ubuntu3) quantal-proposed; urgency=low
 
   * debian/control:
