@@ -155,8 +155,8 @@ PanelMenuView::PanelMenuView()
 
   _ubus_manager.RegisterInterest(UBUS_LAUNCHER_START_KEY_NAV, sigc::mem_fun(this, &PanelMenuView::OnLauncherKeyNavStarted));
   _ubus_manager.RegisterInterest(UBUS_LAUNCHER_END_KEY_NAV, sigc::mem_fun(this, &PanelMenuView::OnLauncherKeyNavEnded));
-  _ubus_manager.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWTICHER, sigc::mem_fun(this, &PanelMenuView::OnLauncherKeyNavStarted));
-  _ubus_manager.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWTICHER, sigc::mem_fun(this, &PanelMenuView::OnLauncherKeyNavEnded));
+  _ubus_manager.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWITCHER, sigc::mem_fun(this, &PanelMenuView::OnLauncherKeyNavStarted));
+  _ubus_manager.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWITCHER, sigc::mem_fun(this, &PanelMenuView::OnLauncherKeyNavEnded));
   _ubus_manager.RegisterInterest(UBUS_LAUNCHER_SELECTION_CHANGED, sigc::mem_fun(this, &PanelMenuView::OnLauncherSelectionChanged));
 
   _fade_in_animator.animation_updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeInChanged));

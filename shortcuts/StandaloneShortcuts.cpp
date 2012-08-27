@@ -64,7 +64,7 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Switching"), "", "", _("Switch between applications."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "alt_tab_forward")));
   hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Switching"), "", "", _("Switch windows of current application."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "alt_tab_next_window")));
   hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Switching"), "", "", _("Close window switch, return to app switch."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "alt_tab_detail_stop")));
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Switching"), "", "", _("Moves the foucs."), shortcut::HARDCODED_OPTION, _("Cursor Left & Right"))));
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Switching"), "", "", _("Moves the focus."), shortcut::HARDCODED_OPTION, _("Cursor Left & Right"))));
 
   // Workspaces
   hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Workspaces"), "", "", _("Spread workspaces."), shortcut::COMPIZ_KEY_OPTION, "expo", "expo_key")));

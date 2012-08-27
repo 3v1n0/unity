@@ -23,7 +23,7 @@
  * @see_also: nux::Object
  *
  * #NuxObjectAccessible implements the required ATK interfaces of
- * nux::Object, exposing the common elements on each basic individual
+ * nux::Object, exposing the common elements of each basic individual
  * element (position, extents, etc)
  *
  */
@@ -129,11 +129,11 @@ nux_object_accessible_initialize(AtkObject* accessible,
 /**
  * nux_object_accessible_get_object:
  *
- * Returns the nux::Object this object is providing accessibility support.
+ * Returns the nux::Object this object is providing accessibility support for.
  *
  * Note that there isn't a _set method. This is because setting that
- * should only be done during initilization, and it doesn't make sense
- * to change that during the life of the object.
+ * should only be done during initialization, and it doesn't make sense
+ * to change that during the lifetime of the object.
  *
  */
 nux::Object*

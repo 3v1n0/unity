@@ -24,7 +24,7 @@
  *
  * #NuxLayoutAccessible implements the required ATK interfaces of
  * nux::Layout, implementing the container related methods on
- * AtkObject, in order to expose his objects
+ * AtkObject, in order to expose its objects
  *
  */
 
