@@ -40,10 +40,12 @@ public:
 
   void OnRemoved();
   bool CanEject();
+  bool CanStop();
   void Eject();
+  void StopDrive();
 
 protected:
-  std::list<DbusmenuMenuitem*> GetMenus();
+  MenuItemsVector GetMenus();
   std::string GetName() const;
 
 private:
@@ -52,24 +54,19 @@ private:
   void ActivateLauncherIcon(ActionArg arg);
   void ShowMount(GMount* mount);
   void Unmount();
-  void StopDrive();
-  static void OnTogglePin(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
-  static void OnOpen(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
-  static void OnEject(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
-  static void OnUnmount(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
+  void OnTogglePin(DbusmenuMenuitem* item, int time);
+  void OnSettingsChanged();
+  void ShowNotification(std::string const&, unsigned, glib::Object<GdkPixbuf> const&, std::string const&);
+  void OnVolumeChanged(GVolume* volume);
   static void OnChanged(GVolume* volume, DeviceLauncherIcon* self);
   static void OnMountReady(GObject* object, GAsyncResult* result, DeviceLauncherIcon* self);
   static void OnEjectReady(GObject* object, GAsyncResult* result, DeviceLauncherIcon* self);
   static void OnUnmountReady(GObject* object, GAsyncResult* result, DeviceLauncherIcon* self);
-  static void OnDriveStop(DbusmenuMenuitem* item, int time, DeviceLauncherIcon* self);
-  void OnVolumeChanged(GVolume* volume);
-  void OnSettingsChanged();
-  void ShowNotification(std::string const&, unsigned, glib::Object<GdkPixbuf> const&, std::string const&);
 
 private:
-  glib::Signal<void, GVolume*> signal_volume_changed_;
   glib::Source::UniquePtr changed_timeout_;
   glib::Object<GVolume> volume_;
+  glib::SignalManager gsignals_;
 
   std::string name_;
   bool keep_in_launcher_;

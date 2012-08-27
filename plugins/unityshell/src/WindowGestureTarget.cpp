@@ -85,7 +85,7 @@ GestureDeliveryRequest WindowGestureTarget::GestureEvent(const nux::GestureEvent
         }
       }
       break;
-    default: // EVENT_GESTURE_END
+    default: // EVENT_GESTURE_END | EVENT_GESTURE_LOST
       if (event.GetGestureClasses() & DRAG_GESTURE)
       {
         EndWindowMove(event);

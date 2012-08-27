@@ -25,11 +25,14 @@ link_directories (${CMAKE_BINARY_DIR}/UnityCore ${LIB_PATHS})
 
 include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 
+add_subdirectory(previews)
+
 #
 # Headers & Sources
 #
 set (DASH_SOURCES
      AbstractPlacesGroup.cpp
+     CoverflowResultView.cpp
      DashController.cpp
      DashView.cpp
      DashViewPrivate.cpp
@@ -49,7 +52,7 @@ set (DASH_SOURCES
      LensView.cpp
      LensViewPrivate.cpp
      PlacesGroup.cpp
-     PlacesVScrollBar.cpp
+     PreviewStateMachine.cpp
      ResultRenderer.cpp
      ResultRendererHorizontalTile.cpp
      ResultRendererTile.cpp
@@ -59,6 +62,7 @@ set (DASH_SOURCES
 
 add_library (dash-lib STATIC ${DASH_SOURCES})
 add_dependencies (dash-lib unity-core-${UNITY_API_VERSION} unity-shared)
+target_link_libraries (dash-lib previews-lib)
 # 
 # Standalone variant
 #

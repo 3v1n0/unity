@@ -165,7 +165,7 @@ nux_view_accessible_ref_state_set(AtkObject* obj)
   if (nux_object == NULL) /* defunct */
     return state_set;
 
-  /* HasKeyboardFocus is not a reliable here:
+  /* HasKeyboardFocus is not reliable here:
      see bug https://bugs.launchpad.net/nux/+bug/745049 */
   if (self->priv->key_focused)
     atk_state_set_add_state(state_set, ATK_STATE_FOCUSED);
@@ -262,7 +262,7 @@ on_change_keyboard_receiver_cb(AtkObject* accessible,
   {
     self->priv->key_focused = focus_in;
 
-    /* we always led the focus notification to
+    /* we always lead the focus notification to
        _check_pending_notification, in order to allow the proper
        window_activate -> focus_change order */
     self->priv->pending_notification = TRUE;
@@ -275,7 +275,7 @@ nux_view_accessible_check_pending_notification(NuxAreaAccessible* area_accessibl
   NuxViewAccessible* self = NULL;
   nux::Object* nux_object = NULL;
 
-  /* We also call parent implementation, as we are not totally
+  /* We also call the parent implementation, as we are not totally
      overriding check_pending_notification, just adding extra
      functionality*/
   NUX_AREA_ACCESSIBLE_CLASS(nux_view_accessible_parent_class)->check_pending_notification(area_accessible);

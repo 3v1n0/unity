@@ -36,54 +36,199 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   std::list<std::shared_ptr<shortcut::AbstractHint>> hints;
 
   // Launcher...
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Launcher"), "", _(" (Hold)"), _("Open Launcher, displays shortcuts."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher" )));
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Launcher"), "", "", _("Open Launcher keyboard navigation mode."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "keyboard_focus")));
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Launcher"), "", _(" (Hold)"),
+                                                                                 _("Opens the Launcher, displays shortcuts."),
+                                                                                 shortcut::COMPIZ_KEY_OPTION,
+                                                                                 "unityshell",
+                                                                                 "show_launcher" )));
+
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Launcher"), "", "",
+                                                                                 _("Opens Launcher keyboard navigation mode."),
+                                                                                 shortcut::COMPIZ_KEY_OPTION,
+                                                                                 "unityshell",
+                                                                                 "keyboard_focus")));
+
   // FIXME: Implemstd::shared_ptr<shortcut::AbstractHint>(ent it...
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Launcher"), "", "", _("Switch applications via the Launcher."), shortcut::HARDCODED_OPTION, "Super + Tab")));
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Launcher"), "", _(" + 1 to 9"), _("Same as clicking on a Launcher icon."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher")));
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Launcher"), "", _(" + Shift + 1 to 9"), _("Open a new window of the app."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher")));
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Launcher"), "", " + T", _("Open the Trash."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher")));
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Launcher"), "", "",
+                                                                                 _("Switches applications via the Launcher."),
+                                                                                 shortcut::HARDCODED_OPTION,
+                                                                                 "Super + Tab")));
+
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Launcher"), "", _(" + 1 to 9"),
+                                                                                 _("Same as clicking on a Launcher icon."),
+                                                                                 shortcut::COMPIZ_KEY_OPTION,
+                                                                                 "unityshell",
+                                                                                 "show_launcher")));
+
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Launcher"), "", _(" + Shift + 1 to 9"),
+                                                                                 _("Opens a new window in the app."),
+                                                                                 shortcut::COMPIZ_KEY_OPTION,
+                                                                                 "unityshell",
+                                                                                 "show_launcher")));
+
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Launcher"), "", " + T",
+                                                                                 _("Opens the Trash."),
+                                                                                 shortcut::COMPIZ_KEY_OPTION,
+                                                                                 "unityshell",
+                                                                                 "show_launcher")));
 
   // Dash...
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Dash"), "", _(" (Tap)"), _("Open the Dash Home."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher")));
-  // These are notstd::shared_ptr<shortcut::AbstractHint>( really hardcoded...
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Dash"), "", " + A", _("Open the Dash App Lens."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher")));
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Dash"), "", " + F", _("Open the Dash Files Lens."), shortcut::COMPIZ_KEY_OPTION,"unityshell", "show_launcher")));
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Dash"), "", " + M", _("Open the Dash Music Lens."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "show_launcher")));
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Dash"), "", "", _("Switch between Lenses."), shortcut::HARDCODED_OPTION, "Ctrl + Tab")));
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Dash"), "", "", _("Move the focus."), shortcut::HARDCODED_OPTION, _("Arrow Keys"))));
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Dash"), "", "", _("Open currently focused item."), shortcut::HARDCODED_OPTION, _("Enter"))));
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Dash"), "", "", _("'Run Command' mode."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "execute_command")));
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Dash"), "", _(" (Tap)"),
+                                                                                 _("Opens the Dash Home."),
+                                                                                 shortcut::COMPIZ_KEY_OPTION,
+                                                                                 "unityshell",
+                                                                                 "show_launcher")));
 
-  // Menu Bar
+  // These are notstd::shared_ptr<shortcut::AbstractHint>( really hardcoded...
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Dash"), "", " + A",
+                                                                                 _("Opens the Dash App Lens."),
+                                                                                 shortcut::COMPIZ_KEY_OPTION,
+                                                                                 "unityshell",
+                                                                                 "show_launcher")));
+
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Dash"), "", " + F",
+                                                                                 _("Opens the Dash Files Lens."),
+                                                                                 shortcut::COMPIZ_KEY_OPTION,
+                                                                                 "unityshell",
+                                                                                 "show_launcher")));
+
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Dash"), "", " + M",
+                                                                                 _("Opens the Dash Music Lens."),
+                                                                                 shortcut::COMPIZ_KEY_OPTION,
+                                                                                 "unityshell",
+                                                                                 "show_launcher")));
+
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Dash"), "", "",
+                                                                                 _("Switches between Lenses."),
+                                                                                 shortcut::HARDCODED_OPTION,
+                                                                                 "Ctrl + Tab")));
+
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Dash"), "", "",
+                                                                                 _("Moves the focus."),
+                                                                                 shortcut::HARDCODED_OPTION,
+                                                                                 _("Arrow Keys"))));
+
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Dash"), "", "",
+                                                                                 _("Opens the currently focused item."),
+                                                                                 shortcut::HARDCODED_OPTION,
+                                                                                 _("Enter"))));
+
+  // Hud Menu Bar
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("HUD & Menu Bar"), "", _(" (Tap)"),
+                                                                                  _("Opens the HUD."),
+                                                                                  shortcut::COMPIZ_KEY_OPTION,
+                                                                                  "unityshell",
+                                                                                  "show_hud")));
+
   // Is it really std::shared_ptr<shortcut::AbstractHint>(hard coded?
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Menu Bar"), "", "", _("Reveals application menu."), shortcut::HARDCODED_OPTION, "Alt")));
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Menu Bar"), "", "", _("Opens the indicator menu."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "panel_first_menu")));
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Menu Bar"), "", "", _("Moves focus between indicators."), shortcut::HARDCODED_OPTION, _("Left & Right"))));
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("HUD & Menu Bar"), "", _(" (Hold)"),
+                                                                                 _("Reveals the application menu."),
+                                                                                 shortcut::HARDCODED_OPTION,
+                                                                                 "Alt")));
+
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("HUD & Menu Bar"), "", "",
+                                                                                 _("Opens the indicator menu."),
+                                                                                 shortcut::COMPIZ_KEY_OPTION,
+                                                                                 "unityshell",
+                                                                                 "panel_first_menu")));
+
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("HUD & Menu Bar"), "", "",
+                                                                                 _("Moves focus between indicators."),
+                                                                                 shortcut::HARDCODED_OPTION,
+                                                                                 _("Cursor Left or Right"))));
 
   // Switching
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Switching"), "", "", _("Switch between applications."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "alt_tab_forward")));
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Switching"), "", "", _("Switch windows of current application."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "alt_tab_next_window")));
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Switching"), "", "", _("Close window switch, return to app switch."), shortcut::COMPIZ_KEY_OPTION, "unityshell", "alt_tab_detail_stop")));
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Switching"), "", "", _("Move the foucs."), shortcut::HARDCODED_OPTION, _("Left & Right"))));
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Switching"), "", "",
+                                                                                 _("Switches between applications."),
+                                                                                shortcut::COMPIZ_KEY_OPTION,
+                                                                                "unityshell",
+                                                                                "alt_tab_forward")));
+
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Switching"), "", "",
+                                                                                 _("Switches windows of current applications."),
+                                                                                 shortcut::COMPIZ_KEY_OPTION,
+                                                                                 "unityshell",
+                                                                                 "alt_tab_next_window")));
+
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Switching"), "", "",
+                                                                                 _("Moves the focus."),
+                                                                                 shortcut::HARDCODED_OPTION,
+                                                                                 _("Cursor Left or Right"))));
 
   // Workspaces
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Workspaces"), "", "", _("Spread workspaces."), shortcut::COMPIZ_KEY_OPTION, "expo", "expo_key")));
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Workspaces"), "", "", _("Switch workspaces."), shortcut::HARDCODED_OPTION, _("Arrow Keys"))));
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Workspaces"), "", "",
+                                                                                 _("Switches between workspaces."),
+                                                                                  shortcut::COMPIZ_KEY_OPTION,
+                                                                                 "expo",
+                                                                                 "expo_key")));
+
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Workspaces"), "", "",
+                                                                                 _("Switches workspaces."),
+                                                                                 shortcut::HARDCODED_OPTION,
+                                                                                 _("Arrow Keys"))));
+
   //hints.push_bacstd::shared_ptr<shortcut::AbstractHint>(k(new shortcut::MockHint(_("Workspaces"), "", "", _("Move focused window to other workspace."), ...)
 
   // Windows
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Windows"), "", "", _("Spreads all windows in current workspace."), shortcut::COMPIZ_KEY_OPTION, "scale", "initiate_output_key")));
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Windows"), "", "", _("Minimize all windows."), shortcut::COMPIZ_KEY_OPTION, "core", "show_desktop_key")));
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Windows"), "", "",
+                                                                                 _("Spreads all windows in the current workspace."),
+                                                                                 shortcut::COMPIZ_KEY_OPTION,
+                                                                                 "scale",
+                                                                                 "initiate_output_key")));
+
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Windows"), "", "",
+                                                                                 _("Minimises all windows."),
+                                                                                 shortcut::COMPIZ_KEY_OPTION,
+                                                                                 "core",
+                                                                                 "show_desktop_key")));
+
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Windows"), "", "",
+                                                                                 _("Maximises the current window."),
+                                                                                 shortcut::COMPIZ_KEY_OPTION,
+                                                                                 "core",
+                                                                                 "maximize_window_key")));
+
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Windows"), "", "",
+                                                                                 _("Restores or minimises the current window."),
+                                                                                 shortcut::COMPIZ_KEY_OPTION,
+                                                                                 "core",
+                                                                                 "unmaximize_window_key")));
+
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Windows"), "", _(" or Right"),
+                                                                                 _("Semi-maximises the current window."),
+                                                                                 shortcut::COMPIZ_KEY_OPTION,
+                                                                                 "grid",
+                                                                                 "put_left_key")));
+
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Windows"), "", "",
+                                                                                 _("Closes the current window."),
+                                                                                 shortcut::COMPIZ_KEY_OPTION,
+                                                                                 "core",
+                                                                                 "close_window_key")));
+
+
   // I don't know std::shared_ptr<shortcut::AbstractHint>(if it is really hardcoded, but I can't find where this option is stored.
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Windows"), "", "", _("Open the window accessibility menu."), shortcut::HARDCODED_OPTION, "Alt+Space")));
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Windows"), "", "", _("Maximize current window."), shortcut::COMPIZ_KEY_OPTION, "core", "maximize_window_key")));
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Windows"), "", "", _("Un-maximize current window."), shortcut::COMPIZ_KEY_OPTION, "core", "unmaximize_window_key")));
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Windows"), "", "", _("Minimize current window."), shortcut::COMPIZ_KEY_OPTION, "core", "minimize_window_key")));
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Windows"), "", "", _("Resize current window."), shortcut::COMPIZ_KEY_OPTION, "resize", "initiate_key")));
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Windows"), "", "", _("Close current window."), shortcut::COMPIZ_KEY_OPTION, "core", "close_window_key")));
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Windows"), "", "", _("Place window in corresponding position."), shortcut::HARDCODED_OPTION, "Ctrl + Alt + Num")));
-  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Windows"), "", "", _("Move window."), shortcut::COMPIZ_KEY_OPTION, "move", "initiate_key")));
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Windows"), "", "",
+                                                                                 _("Opens the window accessibility menu."),
+                                                                                 shortcut::HARDCODED_OPTION,
+                                                                                 "Alt+Space")));
+
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Windows"), "", "",
+                                                                                 _("Places the window in corresponding position."),
+                                                                                 shortcut::HARDCODED_OPTION,
+                                                                                 "Ctrl + Alt + Num")));
+
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Windows"), "", "",
+                                                                                 _("Moves the window."),
+                                                                                 shortcut::COMPIZ_KEY_OPTION,
+                                                                                 "move",
+                                                                                 "initiate_key")));
+
+  hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Windows"), "", "",
+                                                                                 _("Resizes the current window."),
+                                                                                 shortcut::COMPIZ_KEY_OPTION,
+                                                                                 "resize",
+                                                                                 "initiate_key")));
 
   controller.reset(new shortcut::Controller(hints));
   controller->Show();
