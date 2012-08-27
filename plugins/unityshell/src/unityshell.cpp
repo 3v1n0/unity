@@ -3120,7 +3120,6 @@ void UnityScreen::InitHints()
 {
   // TODO move category text into a vector...
 
-  // shortcut_controller_->InitLauncherHints();
   // Launcher...
   std::string const launcher(_("Launcher"));
 
