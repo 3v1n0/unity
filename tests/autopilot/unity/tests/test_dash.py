@@ -819,25 +819,9 @@ class PreviewNavigateTests(DashTestCase):
 
     def test_preview_refocus_close(self):
         """Clicking on a preview element must not lose keyboard focus."""
-        #lens = self.dash.reveal_application_lens()
-        # self.addCleanup(self.dash.ensure_hidden)
-
-        # category = lens.get_category_by_name("Installed")
-        # results = category.get_results()
-
-        # result = results[0]
-        # # result.preview handles finding xy co-ords and right mouse-click
-        # result.preview()
-        # # revealing a preview may be very slow, not sure if Eventually handles that nicely
-        # self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
-
-        # preview_container = self.dash.view.get_preview_container()
-        # # wait for settle.
-        # self.assertThat(preview_container.animating, Eventually(Equals(False)))
         cover_art = self.preview_container.current_preview.cover_art
-        #self.mouse.move_to_object(self.cover_art)
 
-        # # click the cover-art (this will set focus)
+        # click the cover-art (this will set focus)
         tx = cover_art.x + (cover_art.width / 2)
         ty = cover_art.y + (cover_art.height / 2)
         self.mouse.move(tx, ty)
