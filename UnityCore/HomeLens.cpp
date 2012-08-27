@@ -21,8 +21,8 @@
 #include <string>
 #include <stdexcept>
 #include <map>
-#include <set>
 #include <utility>
+#include <algorithm>
 
 #include "GLibSignal.h"
 #include "HomeLens.h"
@@ -240,6 +240,7 @@ public:
   void OnSourceRowRemoved(DeeModel *model, DeeModelIter *iter);
 
   std::vector<unsigned> GetDefaultOrder();
+  std::string GetLensIdForCategory(unsigned) const;
 
 protected:
   void RemoveSource(glib::Object<DeeModel> const& old_source);
@@ -248,6 +249,7 @@ private:
   HomeLens::CategoryRegistry* cat_registry_;
   MergeMode merge_mode_;
   std::multimap<unsigned, unsigned, std::greater<unsigned> > category_ordering_;
+  std::map<unsigned, Lens::Ptr> category_to_owner_;
 };
 
 /*
@@ -273,12 +275,23 @@ public:
   Impl(HomeLens* owner, MergeMode merge_mode);
   ~Impl();
 
+  struct ResultSorter
+  {
+    std::map<unsigned, unsigned> results_per_cat;
+    bool operator() (unsigned cat_a, unsigned cat_b)
+    {
+      return results_per_cat[cat_a] > results_per_cat[cat_b];
+    }
+  };
+  
   void OnLensAdded(Lens::Ptr& lens);
   gsize FindLensPriority (Lens::Ptr& lens);
   void EnsureCategoryAnnotation(Lens::Ptr& lens, DeeModel* results, DeeModel* categories);
   Lens::Ptr FindLensForUri(std::string const& uri);
   std::vector<unsigned> GetCategoriesOrder();
   void LensSearchFinished(Lens::Ptr& lens);
+
+  std::string const& last_search_string() const { return last_search_string_; }
 
   HomeLens* owner_;
   Lenses::LensList lenses_;
@@ -287,7 +300,9 @@ public:
   HomeLens::CategoryMerger categories_merger_;
   HomeLens::FiltersMerger filters_merger_;
   int running_searches_;
+  std::string last_search_string_;
   glib::Object<GSettings> settings_;
+  std::vector<unsigned> cached_categories_order_;
 };
 
 /*
@@ -443,15 +458,19 @@ void HomeLens::CategoryMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *i
   target_tag = FindSourceToTargetTag(model);
   unsigned source_cat_offset = dee_model_get_position(model, iter);
 
+  Lens::Ptr owner_lens;
+  for (auto it = sources_by_owner_.begin(); it != sources_by_owner_.end(); ++it)
+  {
+    if (it->second == model)
+    {
+      owner_lens = it->first;
+      break;
+    }
+  }
+
   if (merge_mode_ == MergeMode::OWNER_LENS)
   {
-    for (auto it = sources_by_owner_.begin(); it != sources_by_owner_.end(); ++it)
-    {
-      if (it->second == model)
-      {
-        lens_name = it->first->name();
-      }
-    }
+    if (owner_lens) lens_name = owner_lens->name();
     display_name = lens_name.c_str();
   }
   else
@@ -488,6 +507,9 @@ void HomeLens::CategoryMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *i
     cat_registry_->RegisterCategoryOffset(results_model, source_cat_offset,
                                           display_name);
 
+  if (owner_lens) category_to_owner_[target_cat_index] = owner_lens;
+
+  // ensure priorities are taken into account, so default order works
   gsize lens_priority = GPOINTER_TO_SIZE(g_object_get_data(
                                    G_OBJECT(model), HOMELENS_PRIORITY));
   unsigned lens_prio = static_cast<unsigned>(lens_priority);
@@ -658,6 +680,17 @@ std::vector<unsigned> HomeLens::CategoryMerger::GetDefaultOrder()
   }
 
   return result;
+}
+
+std::string HomeLens::CategoryMerger::GetLensIdForCategory(unsigned cat) const
+{
+  auto lens_it = category_to_owner_.find(cat);
+  if (lens_it != category_to_owner_.end())
+  {
+    if (lens_it->second) return lens_it->second->id();
+  }
+
+  return "";
 }
 
 HomeLens::Impl::Impl(HomeLens *owner, MergeMode merge_mode)
@@ -853,11 +886,79 @@ void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
 
 void HomeLens::Impl::LensSearchFinished(Lens::Ptr& lens)
 {
+  // FIXME: this can be done more efficiently with filter models
+  std::map<unsigned, unsigned> results_per_cat;
+
+  DeeModel* results = owner_->results()->model();
+  DeeModelIter* iter = dee_model_get_first_iter(results);
+  DeeModelIter* end = dee_model_get_last_iter(results);
+  const unsigned CATEGORY_COLUMN = 2;
+
+  while (iter != end)
+  {
+    unsigned cat = dee_model_get_uint32(results, iter, CATEGORY_COLUMN);
+    results_per_cat[cat]++;
+    iter = dee_model_next(results, iter);
+  }
+
+  auto order_vector = categories_merger_.GetDefaultOrder();
+  auto sorter = ResultSorter();
+  sorter.results_per_cat = results_per_cat;
+  // stable sort based on number of results in each cat
+  std::stable_sort(order_vector.begin(), order_vector.end(), sorter);
+
+  // ensure shopping is second, need map[cat] = lens
+  int shopping_index = -1;
+  int apps_index = -1;
+  for (unsigned i = 0; i < order_vector.size(); i++)
+  {
+    // get lens that owns this category
+    std::string lens_id(categories_merger_.GetLensIdForCategory(order_vector.at(i)));
+    if (lens_id == "shopping.lens")
+    {
+      LOG_WARN(logger) << "found shopping lens at " << i;
+      shopping_index = i;
+    }
+    else if (lens_id == "applications.lens")
+      apps_index = i;
+  }
+
+  // if there are no results in the apps category, we can't reorder,
+  // otherwise shopping won't end up being 2nd
+  if (apps_index > 0 && results_per_cat[order_vector[apps_index]] > 0)
+  {
+    // we want apps first
+    unsigned apps_cat_num = order_vector.at(apps_index);
+    order_vector.erase(order_vector.begin() + apps_index);
+    order_vector.insert(order_vector.begin(), apps_cat_num);
+
+    // we might shift the shopping index
+    if (shopping_index >= 0 && shopping_index < apps_index) shopping_index++;
+  }
+
+  if (shopping_index >= 0 && shopping_index != 2)
+  {
+    unsigned shopping_cat_num = order_vector.at(shopping_index);
+    order_vector.erase(order_vector.begin() + shopping_index);
+    order_vector.insert(order_vector.begin() + 2, shopping_cat_num);
+  }
+
+  // put the apps category on first place?
+
+  cached_categories_order_ = order_vector;
+
+  owner_->categories_reordered();
 }
 
 std::vector<unsigned> HomeLens::Impl::GetCategoriesOrder()
 {
-  return categories_merger_.GetDefaultOrder();
+  auto default_order = categories_merger_.GetDefaultOrder();
+  if (!last_search_string_.empty() &&
+      cached_categories_order_.size() == default_order.size())
+  {
+    return cached_categories_order_;
+  }
+  return default_order;
 }
 
 HomeLens::HomeLens(std::string const& name,
@@ -870,6 +971,9 @@ HomeLens::HomeLens(std::string const& name,
   , pimpl(new Impl(this, merge_mode))
 {
   count.SetGetterFunction(sigc::mem_fun(&pimpl->lenses_, &Lenses::LensList::size));
+  last_search_string.SetGetterFunction(sigc::mem_fun(pimpl, &HomeLens::Impl::last_search_string));
+  last_global_search_string.SetGetterFunction(sigc::mem_fun(pimpl, &HomeLens::Impl::last_search_string));
+
   search_in_global = false;
 }
 
@@ -932,6 +1036,7 @@ void HomeLens::Search(std::string const& search_string)
 
   /* Reset running search counter */
   pimpl->running_searches_ = 0;
+  pimpl->last_search_string_ = search_string;
 
   for (auto lens: pimpl->lenses_)
   {
