@@ -460,8 +460,10 @@ private:
 
   compiz::WindowInputRemoverLock::Ptr GetInputRemover ();
 
-  void drawWindowTitle (float x, float y, float x2, float y2);
-  void drawTexture (GLTexture *icon,
+  void DrawWindowTitle (const GLWindowPaintAttrib& attrib,
+                        const GLMatrix& transform,
+                        float x, float y, float x2, float y2);
+  void DrawTexture (GLTexture *icon,
                     const GLWindowPaintAttrib& attrib,
                     const GLMatrix& transform,
                     unsigned int mask,

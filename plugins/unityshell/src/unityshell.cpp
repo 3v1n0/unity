@@ -3296,7 +3296,7 @@ UnityWindow::UnityWindow(CompWindow* window)
   close_icon_ = GLTexture::readImageToTexture(name, pname, size);
 }
 
-void UnityWindow::drawTexture (GLTexture* icon,
+void UnityWindow::DrawTexture (GLTexture* icon,
                                const GLWindowPaintAttrib& attrib,
                                const GLMatrix& transform,
                                unsigned int mask,
@@ -3319,26 +3319,24 @@ void UnityWindow::drawTexture (GLTexture* icon,
     GLTexture::MatrixList ml (1);
 
     ml[0] = icon->matrix ();
-    gWindow->geometry ().reset ();
+    gWindow->vertexBuffer ()->begin ();
     if (width && height)
       gWindow->glAddGeometry (ml, iconReg, iconReg);
 
-    if (gWindow->geometry ().vCount)
+    if (gWindow->vertexBuffer ()->end ())
     {
-      GLFragment::Attrib fragment (attrib);
       GLMatrix wTransform (transform);
 
       wTransform.translate (x, y, 0.0f);
 
-      glPushMatrix ();
-      glLoadMatrixf (wTransform.getMatrix ());
-      gWindow->glDrawTexture (icon, fragment, mask);
-      glPopMatrix ();
+      gWindow->glDrawTexture (icon, wTransform, attrib, mask);
     }
   }
 }
 
-void UnityWindow::drawWindowTitle (float x, float y, float x2, float y2)
+void UnityWindow::DrawWindowTitle (const GLWindowPaintAttrib& attrib,
+                                   const GLMatrix& transform,
+                                   float x, float y, float x2, float y2)
 {
   // BG
 #ifndef USE_MODERN_COMPIZ_GL
@@ -3346,17 +3344,26 @@ void UnityWindow::drawWindowTitle (float x, float y, float x2, float y2)
   glRectf (x, y2, x2, y);
 #else
   GLVertexBuffer *vertexBuffer = GLVertexBuffer::streamingBuffer ();
+
   const GLfloat vertices[] =
   {
-    x, y2, 0.0f,
     x, y, 0.0f,
+    x, y2, 0.0f,
     x2, y, 0.0f,
     x2, y2, 0.0f
   };
 
-  vertexBuffer->begin (GL_TRIANGLE_STRIP)
+  const GLushort colorData[] =
+  {
+    0, 0, 0, 65535,
+    0, 0, 0, 65535,
+    0, 0, 0, 65535,
+    0, 0, 0, 65535
+  };
+
+  vertexBuffer->begin (GL_TRIANGLE_STRIP);
+  vertexBuffer->addColors (4, colorData);
   vertexBuffer->addVertices (4, vertices);
-  vertexBuffer->color4f (0.0f, 0.0f, 0.0f, 1.0f);
   vertexBuffer->end ();
 
   vertexBuffer->render (transform, attrib);
@@ -3390,12 +3397,15 @@ void UnityWindow::scalePaintDecoration (const GLWindowPaintAttrib& attrib,
 
   maxHeight = maxWidth = 0;
 
-  drawWindowTitle (x, y, x + width, y + SCALE_WINDOW_TITLE_SIZE);
+  DrawWindowTitle (attrib,
+                   transform,
+                   x, y,
+                   x + width, y + SCALE_WINDOW_TITLE_SIZE);
 
   mask |= PAINT_WINDOW_BLEND_MASK;
   foreach(GLTexture *icon, close_icon_)
   {
-    drawTexture (icon, attrib, transform, mask,
+    DrawTexture (icon, attrib, transform, mask,
                  iconX, iconY,
                  maxWidth , maxHeight);
   }
