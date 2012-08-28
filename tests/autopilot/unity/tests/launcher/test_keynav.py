@@ -220,3 +220,18 @@ class LauncherKeyNavTests(LauncherTestCase):
         self.launcher_instance.click_launcher_icon(calc_icon)
 
         self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
+
+    def test_launcher_keynav_cancel_on_quicklist_activate(self):
+        """this"""
+        self.start_keynav_with_cleanup_cancel()
+        self.addCleanup(self.dash.ensure_hidden)
+
+        self.keyboard.press_and_release("Right")
+
+        
+        self.mouse.move(self.launcher_instance.x + (self.launcher_instance.width + 50),
+                        self.launcher_instance.y + (self.launcher_instance.height / 30))
+        self.mouse.click()
+
+        self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
+

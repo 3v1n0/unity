@@ -85,21 +85,6 @@ Expected Result:
   closing the keynav mode.
 
 
-Test Alt+F1 NavMode Quicklist Click Exit
-----------------------------------------
-This Test shows that clicking on a quicklist option quits keynav mode.
-
-Setup:
-
-Actions:
-#. Press Alt+F1 to enter keynav mode
-#. Press Right arrow
-#. Click on any option
-
-Expected Result:
-  No matter what option you click will exit keynav mode.
-
-
 Drag Icons to Trash
 -------------------
 
