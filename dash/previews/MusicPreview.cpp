@@ -160,14 +160,14 @@ void MusicPreview::SetupViews()
       nux::VLayout* album_data_layout = new nux::VLayout();
       album_data_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
 
-      title_ = new nux::StaticCairoText(preview_model_->title);
+      title_ = new nux::StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
       title_->SetFont(style.title_font().c_str());
       title_->SetLines(-1);
       album_data_layout->AddView(title_.GetPointer(), 1);
 
       if (!preview_model_->subtitle.Get().empty())
       {
-        subtitle_ = new nux::StaticCairoText(preview_model_->subtitle);
+        subtitle_ = new nux::StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
         subtitle_->SetFont(style.subtitle_size_font().c_str());
         subtitle_->SetLines(-1);
         album_data_layout->AddView(subtitle_.GetPointer(), 1);
