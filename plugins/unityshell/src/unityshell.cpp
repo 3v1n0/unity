@@ -3315,8 +3315,9 @@ void UnityScreen::InitHints()
 
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", "",
                                                     _("Opens the window accessibility menu."),
-                                                    shortcut::HARDCODED_OPTION,
-                                                    _("Alt + Space")));
+                                                    shortcut::COMPIZ_KEY_OPTION,
+                                                    "core",
+                                                    "window_menu_key"));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", "",
                                                     _("Places the window in corresponding position."),
