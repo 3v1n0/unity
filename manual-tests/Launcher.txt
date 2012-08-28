@@ -63,23 +63,6 @@ Expected Result:
   Verify each icon gets highlighted from top to bottom.
 
 
-Test Alt+F1 KeyNavMode Mouse Works
--------------------------------
-This test shows that the mouse still works normally while keynav mode is active.
-
-Setup:
-
-Actions:
-#. Press Alt+F1 to enter keynav mode
-#. Using the mouse perform a normal action (such as dragging a window)
-
-Expected Result:
-  The keynav mode exits, along with the mouse performing the normal action
-  the user expects. Such as highlighting text, moving a window, clicking out
-  of keynav mode, or clicking on a launcher icon. All these actions should
-  also exit the keynav mode.
-
-
 Test Alt+F1 KeyNavMode Shortcuts
 -----------------------------
 This test shows that all the shortcuts work and also exits from keynav mode.
