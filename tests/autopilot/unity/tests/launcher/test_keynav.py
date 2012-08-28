@@ -204,7 +204,7 @@ class LauncherKeyNavTests(LauncherTestCase):
         self.start_keynav_with_cleanup_cancel()
 
         self.mouse.move(self.launcher_instance.x + (self.launcher_instance.width + 100),
-                        self.launcher_instance.y + (self.launcher_instance.height))
+                        self.launcher_instance.y + self.launcher_instance.height)
         self.mouse.click()
 
         self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
@@ -222,13 +222,13 @@ class LauncherKeyNavTests(LauncherTestCase):
         self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
 
     def test_launcher_keynav_cancel_on_quicklist_activate(self):
-        """this"""
+        """A single click on a quicklist item must cancel keynav."""
         self.start_keynav_with_cleanup_cancel()
         self.addCleanup(self.dash.ensure_hidden)
 
         self.keyboard.press_and_release("Right")
 
-        
+        # Move mouse to the position of 'dash home' quicklist item of BFB.
         self.mouse.move(self.launcher_instance.x + (self.launcher_instance.width + 50),
                         self.launcher_instance.y + (self.launcher_instance.height / 30))
         self.mouse.click()
