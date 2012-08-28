@@ -3217,7 +3217,7 @@ void UnityScreen::InitHints()
                                                     "unityshell",
                                                     "show_hud"));
 
-  hints_.push_back(std::make_shared<shortcut::Hint>(menubar, "", " (Hold)",
+  hints_.push_back(std::make_shared<shortcut::Hint>(menubar, "", _(" (Hold)"),
                                                     _("Reveals the application menu."),
                                                     shortcut::HARDCODED_OPTION,
                                                     "Alt"));
