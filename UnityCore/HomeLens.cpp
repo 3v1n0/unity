@@ -943,11 +943,11 @@ void HomeLens::Impl::LensSearchFinished(Lens::Ptr& lens)
     order_vector.insert(order_vector.begin() + 2, shopping_cat_num);
   }
 
-  // put the apps category on first place?
-
-  cached_categories_order_ = order_vector;
-
-  owner_->categories_reordered();
+  if (cached_categories_order_ != order_vector)
+  {
+    cached_categories_order_ = order_vector;
+    owner_->categories_reordered();
+  }
 }
 
 std::vector<unsigned> HomeLens::Impl::GetCategoriesOrder()
