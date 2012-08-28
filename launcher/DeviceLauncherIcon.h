@@ -40,7 +40,9 @@ public:
 
   void OnRemoved();
   bool CanEject();
+  bool CanStop();
   void Eject();
+  void StopDrive();
 
 protected:
   MenuItemsVector GetMenus();
@@ -52,7 +54,6 @@ private:
   void ActivateLauncherIcon(ActionArg arg);
   void ShowMount(GMount* mount);
   void Unmount();
-  void StopDrive();
   void OnTogglePin(DbusmenuMenuitem* item, int time);
   void OnSettingsChanged();
   void ShowNotification(std::string const&, unsigned, glib::Object<GdkPixbuf> const&, std::string const&);

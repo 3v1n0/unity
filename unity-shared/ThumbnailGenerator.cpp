@@ -457,6 +457,9 @@ ThumbnailGenerator& ThumbnailGenerator::Instance()
 
 ThumbnailNotifier::Ptr ThumbnailGenerator::GetThumbnail(std::string const& uri, int size)
 {
+  if (uri.empty())
+    return ThumbnailNotifier::Ptr();
+
   return pimpl->GetThumbnail(uri, size);
 }
 

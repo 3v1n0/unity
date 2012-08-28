@@ -109,6 +109,23 @@ TEST_F(TestLauncher, TestQuirksDuringDnd)
   EXPECT_TRUE(third->GetQuirk(launcher::AbstractLauncherIcon::Quirk::DESAT));
 }
 
+TEST_F(TestLauncher, TestMouseWheelScroll)
+{
+  int initial_scroll_delta;
+
+  launcher_->SetHover(true);
+  initial_scroll_delta = launcher_->GetDragDelta();
+
+  // scroll down
+  launcher_->RecvMouseWheel(0,0,20,0,0);
+  EXPECT_EQ((launcher_->GetDragDelta() - initial_scroll_delta), 25);
+
+  // scroll up
+  launcher_->RecvMouseWheel(0,0,-20,0,0);
+  EXPECT_EQ(launcher_->GetDragDelta(), initial_scroll_delta);
+
+  launcher_->SetHover(false);
+}
 
 TEST_F(TestLauncher, TestIconBackgroundIntensity)
 {
@@ -139,4 +156,3 @@ TEST_F(TestLauncher, TestIconBackgroundIntensity)
 
 }
 }
-
