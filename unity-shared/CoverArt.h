@@ -96,6 +96,9 @@ private:
   glib::Source::UniquePtr frame_timeout_;
   nux::Matrix4 rotate_matrix_;
   float rotation_;
+
+  typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
+  LayerPtr bg_layer_;
 };
 
 }
