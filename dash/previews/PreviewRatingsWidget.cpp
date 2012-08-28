@@ -28,6 +28,7 @@
 #include "unity-shared/RatingsButton.h"
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/PreviewStyle.h"
+#include <UnityCore/Variant.h>
 #include "PreviewRatingsWidget.h"
 
 namespace unity
@@ -51,7 +52,6 @@ PreviewRatingsWidget::PreviewRatingsWidget(NUX_FILE_LINE_DECL)
   ratings_->SetEditable(false);
   layout->AddView(ratings_);
   
-
   reviews_ = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
   reviews_->SetFont(style.user_rating_font());
   layout->AddView(reviews_);
@@ -82,8 +82,6 @@ void PreviewRatingsWidget::SetReviews(int count)
   reviews_->SetText(out.str());
 }
 
-
-
 void PreviewRatingsWidget::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
 {
 }
@@ -99,6 +97,16 @@ void PreviewRatingsWidget::DrawContent(nux::GraphicsEngine& gfx_engine, bool for
   gfx_engine.PopClippingRectangle();
 }
 
+std::string PreviewRatingsWidget::GetName() const
+{
+  return "PreviewRatingsWidget";
+}
+
+void PreviewRatingsWidget::AddProperties(GVariantBuilder* builder)
+{
+  variant::BuilderWrapper(builder)
+    .add(GetAbsoluteGeometry());
+}
 
 
 } // namespace previews

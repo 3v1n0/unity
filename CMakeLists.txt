@@ -99,6 +99,8 @@ configure_file (${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 #
 find_package (Gettext REQUIRED)
 
+set (COMPIZ_I18N_DIR ${CMAKE_SOURCE_DIR}/po)
+
 add_custom_command (OUTPUT ${CMAKE_SOURCE_DIR}/po/unity.pot
 		COMMAND xgettext -c --files-from ${CMAKE_SOURCE_DIR}/po/POTFILES.in --keyword=_ -o ${CMAKE_SOURCE_DIR}/po/unity.pot --copyright-holder="Canonical Ltd" --msgid-bugs-address="ayatana-dev@lists.launchpad.net" --no-wrap --no-location
 		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
@@ -129,7 +131,7 @@ endif (DISABLE_MAINTAINER_CFLAGS)
 # Compiz Plugins
 #
 
-set (UNITY_PLUGIN_DEPS "compiz;nux-3.0>=3.0.0;libbamf3;dee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator3-0.4>=0.4.90;atk;unity-misc>=0.4.0;gtk+-3.0>=3.1;sigc++-2.0;json-glib-1.0;libnotify;xfixes;unity-protocol-private>=5.95.1;libgeis")
+set (UNITY_PLUGIN_DEPS "compiz;nux-3.0>=3.0.0;libbamf3;dee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator3-0.4>=0.4.90;atk;unity-misc>=0.4.0;dbus-glib-1;gtk+-3.0>=3.1;sigc++-2.0;json-glib-1.0;libnotify;xfixes;unity-protocol-private>=5.95.1;libgeis")
 # FIXME: unity-protocol-private shouldn't be there, but building of unityshell is just broken
 set (UNITY_PROTOCOL_PRIVATE_DEPS "unity-protocol-private>=5.95.1")
 
@@ -174,6 +176,8 @@ add_subdirectory(tests)
 add_subdirectory(tools)
 add_subdirectory(UnityCore)
 add_subdirectory(guides)
+
+add_subdirectory(gnome)
 
 #
 # GSettings Schema

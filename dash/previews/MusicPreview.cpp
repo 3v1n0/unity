@@ -144,18 +144,9 @@ void MusicPreview::SetupViews()
 
   /////////////////////
   // Image
-  std::string image_hint;
-  if (preview_model_->image.Get())
-  {
-    glib::String tmp_icon(g_icon_to_string(preview_model_->image.Get()));
-    image_hint = tmp_icon.Str();
-  }
   image_ = new CoverArt();
-  if (image_hint.empty())
-    image_->GenerateImage(preview_model_->image_source_uri);
-  else
-    image_->SetImage(image_hint);
-  image_->SetFont(style.no_preview_image_font());
+  AddChild(image_.GetPointer());
+  UpdateCoverArtImage(image_.GetPointer());
   /////////////////////
 
     /////////////////////
@@ -190,6 +181,7 @@ void MusicPreview::SetupViews()
       if (tracks_model)
       {
         tracks_ = new previews::Tracks(tracks_model, NUX_TRACKER_LOCATION);
+        AddChild(tracks_.GetPointer());
         tracks_->play.connect(sigc::mem_fun(this, &MusicPreview::OnPlayTrack));
         tracks_->pause.connect(sigc::mem_fun(this, &MusicPreview::OnPauseTrack));
       }
@@ -207,6 +199,7 @@ void MusicPreview::SetupViews()
         hints_layout->SetSpaceBetweenChildren(0);
         hints_layout->AddSpace(0, 1);
         preview_info_hints_ = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth());
+        AddChild(preview_info_hints_.GetPointer());
         hints_layout->AddView(preview_info_hints_.GetPointer(), 0);
 
         // If there are actions, we use a vertical layout

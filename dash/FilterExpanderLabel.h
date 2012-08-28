@@ -63,6 +63,8 @@ public:
   virtual void SetFilter(Filter::Ptr const& filter) = 0;
   virtual std::string GetFilterType() = 0;
 
+  nux::View* expander_view() const { return expander_view_; }
+
   nux::Property<bool> expanded;
   nux::Property<bool> draw_separator;
 

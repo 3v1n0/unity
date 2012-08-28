@@ -428,6 +428,8 @@ void Controller::Impl::OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr icon)
 
       if (device_icon && device_icon->CanEject())
         device_icon->Eject();
+      else if (device_icon && device_icon->CanStop())
+        device_icon->StopDrive();
 
       break;
     }
@@ -1003,7 +1005,7 @@ void Controller::KeyNavActivate()
   }
   else
   {
-    pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_SWTICHER,
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_SWITCHER,
                             g_variant_new_int32(pimpl->keyboard_launcher_->monitor));
   }
 
@@ -1067,7 +1069,7 @@ void Controller::KeyNavTerminate(bool activate)
   }
   else
   {
-    pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_SWTICHER,
+    pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_SWITCHER,
                             g_variant_new_boolean(pimpl->keynav_restore_window_));
   }
 

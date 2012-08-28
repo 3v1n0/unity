@@ -25,6 +25,7 @@
 #include <Nux/HLayout.h>
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/StaticCairoText.h"
+#include <UnityCore/Variant.h>
 
 namespace
 {
@@ -41,8 +42,9 @@ namespace unity
 namespace dash
 {
 
-ActionButton::ActionButton(std::string const& label, std::string const& icon_hint, NUX_FILE_LINE_DECL)
+ActionButton::ActionButton(std::string const& action_hint, std::string const& label, std::string const& icon_hint, NUX_FILE_LINE_DECL)
   : nux::AbstractButton(NUX_FILE_LINE_PARAM)
+  , action_hint_(action_hint)
   , image_(nullptr)
 {
   SetAcceptKeyNavFocusOnMouseDown(false);
@@ -53,6 +55,22 @@ ActionButton::ActionButton(std::string const& label, std::string const& icon_hin
 
 ActionButton::~ActionButton()
 {
+}
+
+std::string ActionButton::GetName() const
+{
+  return "ActionButton";
+}
+
+void ActionButton::AddProperties(GVariantBuilder* builder)
+{
+  variant::BuilderWrapper(builder)
+    .add(GetAbsoluteGeometry())
+    .add("action", action_hint_)
+    .add("label", label_)
+    .add("icon-hint", icon_hint_)
+    .add("font-hint", font_hint_)
+    .add("active", active_);
 }
 
 void ActionButton::Init()
@@ -246,7 +264,7 @@ void ActionButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 void ActionButton::RecvClick(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  click.emit(this);
+  click.emit(this, action_hint_);
 }
 
 void ActionButton::SetFont(std::string const& font_hint)
