@@ -37,10 +37,16 @@ template <typename R, typename G, typename... Ts>
 void Signal<R, G, Ts...>::Connect(G object, std::string const& signal_name,
                                   SignalCallback const& callback)
 {
+  if (!callback || !G_IS_OBJECT(object) || signal_name.empty())
+    return;
+
+  Disconnect();
+
   object_ = reinterpret_cast<GObject*>(object);
   name_ = signal_name;
   callback_ = callback;
-  connection_id_ = g_signal_connect(object, signal_name.c_str(), G_CALLBACK(Callback), this);
+  connection_id_ = g_signal_connect(object_, signal_name.c_str(), G_CALLBACK(Callback), this);
+  g_object_add_weak_pointer(object_, reinterpret_cast<gpointer*>(&object_));
 }
 
 template <typename R, typename G, typename... Ts>

@@ -43,8 +43,6 @@ public:
   ResultViewGrid(NUX_FILE_LINE_DECL);
 
   void SetModelRenderer(ResultRenderer* renderer);
-  void AddResult(Result& result);
-  void RemoveResult(Result& result);
 
   nux::Property<int> horizontal_spacing;
   nux::Property<int> vertical_spacing;
@@ -53,7 +51,7 @@ public:
   sigc::signal<void> selection_change;
 
   int GetSelectedIndex();
-  virtual uint GetIndexAtPosition(int x, int y);
+  virtual unsigned GetIndexAtPosition(int x, int y);
 
 protected:
   void MouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
@@ -75,6 +73,12 @@ protected:
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual long ComputeContentSize();
 
+  void AddResult(Result& result);
+  void RemoveResult(Result& result);
+
+  // This is overridden so we can include position of results.
+  virtual debug::Introspectable* CreateResultWrapper(Result const& result, int index);
+
 private:
   typedef std::tuple <int, int> ResultListBounds;
   ResultListBounds GetVisableResults();
@@ -85,13 +89,17 @@ private:
 
   int GetItemsPerRow();
   void SizeReallocate();
+  std::tuple<int, int> GetResultPosition(const std::string& uri);
+  std::tuple<int, int> GetResultPosition(const unsigned int& index);
 
-  uint mouse_over_index_;
+  unsigned mouse_over_index_;
   int active_index_;
   nux::Property<int> selected_index_;
   std::string focused_uri_;
 
-  int last_lazy_loaded_result_;
+  std::string activated_uri_;
+
+  unsigned last_lazy_loaded_result_;
   int last_mouse_down_x_;
   int last_mouse_down_y_;
   std::string current_drag_uri_;

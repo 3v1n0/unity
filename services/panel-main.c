@@ -235,7 +235,7 @@ on_service_resync (PanelService *service, const gchar *indicator_id, GDBusConnec
 {
   GError *error = NULL;
   g_dbus_connection_emit_signal (connection,
-                                 S_NAME,
+                                 NULL,
                                  S_PATH,
                                  S_IFACE,
                                  "ReSync",
@@ -256,7 +256,7 @@ on_service_entry_activated (PanelService    *service,
 {
   GError *error = NULL;
   g_dbus_connection_emit_signal (connection,
-                                 S_NAME,
+                                 NULL,
                                  S_PATH,
                                  S_IFACE,
                                  "EntryActivated",
@@ -278,7 +278,7 @@ on_service_entry_activate_request (PanelService    *service,
   GError *error = NULL;
   g_warning ("%s, entry_id:%s", G_STRFUNC, entry_id);
   g_dbus_connection_emit_signal (connection,
-                                 S_NAME,
+                                 NULL,
                                  S_PATH,
                                  S_IFACE,
                                  "EntryActivateRequest",
@@ -300,7 +300,7 @@ on_service_entry_show_now_changed (PanelService    *service,
 {
   GError *error = NULL;
   g_dbus_connection_emit_signal (connection,
-                                 S_NAME,
+                                 NULL,
                                  S_PATH,
                                  S_IFACE,
                                  "EntryShowNowChanged",

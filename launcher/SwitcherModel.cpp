@@ -42,6 +42,8 @@ SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> icons)
   for (auto icon : _inner)
   {
     AddChild(icon.GetPointer());
+    if (icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
+      _last_active_icon = icon;
   }
 }
 
@@ -157,7 +159,7 @@ SwitcherModel::DetailXids()
   std::sort (results.begin (), results.end (), &CompareWindowsByActive);
 
   // swap so we focus the last focused window first
-  if (Selection()->GetQuirk (AbstractLauncherIcon::QUIRK_ACTIVE) && results.size () > 1)
+  if (Selection() == _last_active_icon && results.size () > 1)
     std::swap (results[0], results[1]);
 
   return results;

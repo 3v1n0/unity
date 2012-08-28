@@ -1,4 +1,5 @@
 #include <UnityCore/GLibSignal.h>
+#include <sigc++/sigc++.h>
 #include <gtest/gtest.h>
 
 #include "test_glib_signals_utils.h"
@@ -274,6 +275,22 @@ TEST_F(TestGLibSignals, TestCleanDestruction)
   signal.Connect(test_signals_, "signal0",
                  sigc::mem_fun(this, &TestGLibSignals::Signal0Callback));
   g_object_unref(test_signals_);
+  EXPECT_EQ(signal.object(), nullptr);
+}
+
+TEST_F(TestGLibSignals, TestConnectReplacePreviousConnection)
+{
+  Signal<void, TestSignals*> signal;
+  signal.Connect(test_signals_, "signal0",
+                 sigc::mem_fun(this, &TestGLibSignals::Signal0Callback));
+
+  unsigned signal0_num_cb = 0;
+  signal.Connect(test_signals_, "signal0", [&] (TestSignals*) {++signal0_num_cb;});
+
+  g_signal_emit_by_name(test_signals_, "signal0");
+
+  EXPECT_FALSE(signal0_received_);
+  EXPECT_EQ(signal0_num_cb, 1);
 }
 
 TEST_F(TestGLibSignals, TestManagerConstruction)
@@ -401,6 +418,28 @@ TEST_F(TestGLibSignals, TestManagerObjectDisconnection)
   EXPECT_FALSE(signal0_received_);
   g_signal_emit_by_name(test_signals_, "signal1", "test");
   EXPECT_FALSE(signal1_received_);
+}
+
+TEST_F(TestGLibSignals, TestManagerUnreffingObjectDeletesConnections)
+{
+  MockSignalManager manager;
+
+  manager.Add<void, TestSignals*>(test_signals_, "signal0",
+                                  sigc::mem_fun(this, &TestGLibSignals::Signal0Callback));
+  manager.Add<void, TestSignals*, const char*>(test_signals_, "signal1",
+                                               sigc::mem_fun(this, &TestGLibSignals::Signal1Callback));
+  manager.Add<void, TestSignals*, const char*, int>(test_signals_, "signal2",
+                                                    sigc::mem_fun(this, &TestGLibSignals::Signal2Callback));
+  manager.Add<void, TestSignals*, const char*, int, float>(test_signals_, "signal3",
+                                                           sigc::mem_fun(this, &TestGLibSignals::Signal3Callback));
+  manager.Add<void, TestSignals*, const char*, int, float, double>(test_signals_, "signal4",
+                                                                   sigc::mem_fun(this, &TestGLibSignals::Signal4Callback));
+  manager.Add<void, TestSignals*, const char*, int, float, double, gboolean>(test_signals_, "signal5",
+                                                                             sigc::mem_fun(this, &TestGLibSignals::Signal5Callback));
+  manager.Add<gboolean, TestSignals*, const char*, int, float, double, gboolean, char>(test_signals_, "signal6", sigc::mem_fun(this, &TestGLibSignals::Signal6Callback));
+
+  g_object_unref(test_signals_);
+  EXPECT_TRUE(manager.GetConnections().empty());
 }
 
 }

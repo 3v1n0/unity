@@ -256,10 +256,10 @@ void Controller::Impl::OnScreenChanged(unsigned int primary_monitor,
       window->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
       window->ShowWindow(true);
       window->EnableInputWindow(true, panel::window_title, false, false);
-      window->InputWindowEnableStruts(true);
       window->SetGeometry(geo);
       window->SetMinMaxSize(geo.width, geo.height);
       window->SetLayout(layout);
+      window->InputWindowEnableStruts(true);
 
       windows_.push_back(window);
 

@@ -66,53 +66,74 @@ class LauncherIconsTests(LauncherTestCase):
         of that application.
 
         """
-        mah_win1 = self.start_app_window("Mahjongg")
+        char_win1 = self.start_app_window("Character Map")
         calc_win = self.start_app_window("Calculator")
-        mah_win2 = self.start_app_window("Mahjongg")
+        char_win2 = self.start_app_window("Character Map")
 
-        self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
+        self.assertVisibleWindowStack([char_win2, calc_win, char_win1])
 
-        mahj_icon = self.launcher.model.get_icon(
-            desktop_id=mah_win2.application.desktop_file)
+        char_icon = self.launcher.model.get_icon(
+            desktop_id=char_win2.application.desktop_file)
         calc_icon = self.launcher.model.get_icon(
             desktop_id=calc_win.application.desktop_file)
 
         self.launcher_instance.click_launcher_icon(calc_icon)
         self.assertProperty(calc_win, is_focused=True)
-        self.assertVisibleWindowStack([calc_win, mah_win2, mah_win1])
+        self.assertVisibleWindowStack([calc_win, char_win2, char_win1])
 
-        self.launcher_instance.click_launcher_icon(mahj_icon)
-        self.assertProperty(mah_win2, is_focused=True)
-        self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
+        self.launcher_instance.click_launcher_icon(char_icon)
+        self.assertProperty(char_win2, is_focused=True)
+        self.assertVisibleWindowStack([char_win2, calc_win, char_win1])
 
         self.keybinding("window/minimize")
 
-        self.assertThat(lambda: mah_win2.is_hidden, Eventually(Equals(True)))
+        self.assertThat(lambda: char_win2.is_hidden, Eventually(Equals(True)))
         self.assertProperty(calc_win, is_focused=True)
-        self.assertVisibleWindowStack([calc_win, mah_win1])
+        self.assertVisibleWindowStack([calc_win, char_win1])
 
-        self.launcher_instance.click_launcher_icon(mahj_icon)
-        self.assertProperty(mah_win1, is_focused=True)
-        self.assertThat(lambda: mah_win2.is_hidden, Eventually(Equals(True)))
-        self.assertVisibleWindowStack([mah_win1, calc_win])
+        self.launcher_instance.click_launcher_icon(char_icon)
+        self.assertProperty(char_win1, is_focused=True)
+        self.assertThat(lambda: char_win2.is_hidden, Eventually(Equals(True)))
+        self.assertVisibleWindowStack([char_win1, calc_win])
 
     def test_clicking_icon_twice_initiates_spread(self):
         """This tests shows that when you click on a launcher icon twice,
         when an application window is focused, the spread is initiated.
         """
-        calc_win1 = self.start_app_window("Calculator")
-        calc_win2 = self.start_app_window("Calculator")
-        calc_app = calc_win1.application
+        char_win1 = self.start_app_window("Character Map")
+        char_win2 = self.start_app_window("Character Map")
+        char_app = char_win1.application
 
-        self.assertVisibleWindowStack([calc_win2, calc_win1])
-        self.assertProperty(calc_win2, is_focused=True)
+        self.assertVisibleWindowStack([char_win2, char_win1])
+        self.assertProperty(char_win2, is_focused=True)
 
-        calc_icon = self.launcher.model.get_icon(desktop_id=calc_app.desktop_file)
+        char_icon = self.launcher.model.get_icon(desktop_id=char_app.desktop_file)
         self.addCleanup(self.keybinding, "spread/cancel")
-        self.launcher_instance.click_launcher_icon(calc_icon)
+        self.launcher_instance.click_launcher_icon(char_icon)
 
         self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
         self.assertThat(self.window_manager.scale_active_for_group, Eventually(Equals(True)))
+
+    def test_while_in_scale_mode_the_dash_will_still_open(self):
+        """If scale is initiated through the laucher pressing super must close
+        scale and open the dash.
+        """
+        char_win1 = self.start_app_window("Character Map")
+        char_win2 = self.start_app_window("Character Map")
+        char_app = char_win1.application
+
+        self.assertVisibleWindowStack([char_win2, char_win1])
+        self.assertProperty(char_win2, is_focused=True)
+
+        char_icon = self.launcher.model.get_icon(desktop_id=char_app.desktop_file)
+        self.launcher_instance.click_launcher_icon(char_icon)
+        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
+
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
+
+        self.assertThat(self.dash.visible, Eventually(Equals(True)))
+        self.assertThat(self.window_manager.scale_active, Eventually(Equals(False)))
 
     def test_icon_shows_on_quick_application_reopen(self):
         """Icons must stay on launcher when an application is quickly closed/reopened."""
@@ -146,7 +167,7 @@ class LauncherDragIconsBehavior(LauncherTestCase):
         # the old fashioned way.
         refresh_fn = lambda: self.launcher.model.get_children_by_type(
             BamfLauncherIcon, desktop_id="gcalctool.desktop")
-        self.assertThat(refresh_fn, Eventually(Equals(None)))
+        self.assertThat(refresh_fn, Eventually(Equals([])))
 
     def test_can_drag_icon_below_bfb(self):
         """Application icons must be draggable to below the BFB."""

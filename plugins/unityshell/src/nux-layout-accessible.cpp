@@ -24,7 +24,7 @@
  *
  * #NuxLayoutAccessible implements the required ATK interfaces of
  * nux::Layout, implementing the container related methods on
- * AtkObject, in order to expose his objects
+ * AtkObject, in order to expose its objects
  *
  */
 
@@ -203,7 +203,7 @@ search_for_child(AtkObject* accessible,
 
   element_list = layout->GetChildren();
 
-  for (it = element_list.begin(); it != element_list.end(); it++, result++)
+  for (it = element_list.begin(); it != element_list.end(); ++it, result++)
   {
     current_area = *it;
     if (current_area == area)

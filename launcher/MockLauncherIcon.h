@@ -49,7 +49,12 @@ public:
   {
     tooltip_text = "Mock Icon";
     sort_priority_ = 0;
-    type_ = TYPE_APPLICATION;
+    type_ = IconType::APPLICATION;
+
+    for (unsigned i = 0; i < unsigned(Quirk::LAST); ++i)
+    {
+      quirks_[i] = false;
+    }
   }
 
   std::string GetName() const { return "MockLauncherIcon"; }
@@ -201,20 +206,23 @@ public:
 
   bool GetQuirk(Quirk quirk) const
   {
-    return false;
+    return quirks_[unsigned(quirk)];
   }
 
-  void SetQuirk(Quirk quirk, bool value) {}
+  void SetQuirk(Quirk quirk, bool value)
+  {
+    quirks_[unsigned(quirk)] = value;
+    clock_gettime(CLOCK_MONOTONIC, &(quirk_times_[unsigned(quirk)]));
+  }
 
   void ResetQuirkTime(Quirk quirk) {};
 
   struct timespec GetQuirkTime(Quirk quirk)
   {
-    timespec tv;
-    return tv;
+    return quirk_times_[unsigned(quirk)];
   }
 
-  IconType GetIconType()
+  IconType GetIconType() const
   {
     return type_;
   }
@@ -252,9 +260,9 @@ public:
     return 0;
   }
 
-  std::list<DbusmenuMenuitem*> Menus()
+  MenuItemsVector Menus()
   {
-    return std::list<DbusmenuMenuitem*> ();
+    return MenuItemsVector ();
   }
 
   nux::DndAction QueryAcceptDrop(DndData const& dnd_data)
@@ -336,9 +344,9 @@ private:
   nux::BaseTexture* icon_;
   int sort_priority_;
   IconType type_;
+  bool quirks_[unsigned(Quirk::LAST)];
+  timespec quirk_times_[unsigned(Quirk::LAST)];
 };
-
-NUX_IMPLEMENT_OBJECT_TYPE(MockLauncherIcon);
 
 }
 }

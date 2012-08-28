@@ -34,7 +34,6 @@
 #include "SwitcherController.h"
 #include "MockLauncherIcon.h"
 #include "unity-shared/BackgroundEffectHelper.h"
-#include <dbus/dbus-glib.h>
 
 using namespace unity::switcher;
 using namespace unity::ui;
@@ -288,9 +287,7 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
 int main(int argc, char** argv)
 {
   g_type_init();
-  
   gtk_init(&argc, &argv);
-
   nux::NuxInitialize(0);
 
   BackgroundEffectHelper::blur_type = unity::BLUR_ACTIVE;

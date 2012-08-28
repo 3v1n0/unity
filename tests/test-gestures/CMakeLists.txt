@@ -1,0 +1,94 @@
+if (GTEST_SRC_DIR)
+  set(UNITY_SRC ${CMAKE_SOURCE_DIR}/plugins/unityshell/src)
+
+  add_custom_command(OUTPUT CompoundGestureRecognizer.cpp
+                            CompoundGestureRecognizer.h
+                            GesturalWindowSwitcher.cpp
+                            GesturalWindowSwitcher.h
+                            UnityGestureBroker.cpp
+                            UnityGestureBroker.h
+                            UBusMessages.h
+                            WindowGestureTarget.h
+                            WindowGestureTarget.cpp
+
+                     COMMAND cp ${UNITY_SRC}/CompoundGestureRecognizer.cpp
+                                ${UNITY_SRC}/CompoundGestureRecognizer.h
+                                ${CMAKE_CURRENT_BINARY_DIR}
+
+                     COMMAND sed -f ${CMAKE_CURRENT_SOURCE_DIR}/sed_script_broker
+                             ${UNITY_SRC}/UnityGestureBroker.cpp >
+                             ${CMAKE_CURRENT_BINARY_DIR}/UnityGestureBroker.cpp
+
+                     COMMAND sed -f ${CMAKE_CURRENT_SOURCE_DIR}/sed_script_broker
+                             ${UNITY_SRC}/UnityGestureBroker.h >
+                             ${CMAKE_CURRENT_BINARY_DIR}/UnityGestureBroker.h
+
+                     COMMAND sed -f ${CMAKE_CURRENT_SOURCE_DIR}/sed_script_gesture
+                             ${UNITY_SRC}/WindowGestureTarget.h >
+                             ${CMAKE_CURRENT_BINARY_DIR}/WindowGestureTarget.h
+
+                     COMMAND sed -f ${CMAKE_CURRENT_SOURCE_DIR}/sed_script_gesture
+                             ${UNITY_SRC}/WindowGestureTarget.cpp >
+                             ${CMAKE_CURRENT_BINARY_DIR}/WindowGestureTarget.cpp
+
+                     COMMAND sed -f ${CMAKE_CURRENT_SOURCE_DIR}/sed_script_switcher
+                             ${UNITY_SRC}/GesturalWindowSwitcher.cpp >
+                             ${CMAKE_CURRENT_BINARY_DIR}/GesturalWindowSwitcher.cpp
+
+                     COMMAND sed -f ${CMAKE_CURRENT_SOURCE_DIR}/sed_script_switcher
+                             ${UNITY_SRC}/GesturalWindowSwitcher.h >
+                             ${CMAKE_CURRENT_BINARY_DIR}/GesturalWindowSwitcher.h
+
+                     DEPENDS ${UNITY_SRC}/CompoundGestureRecognizer.cpp
+                             ${UNITY_SRC}/CompoundGestureRecognizer.h
+                             ${UNITY_SRC}/GesturalWindowSwitcher.cpp
+                             ${UNITY_SRC}/GesturalWindowSwitcher.h
+                             ${UNITY_SRC}/UnityGestureBroker.cpp
+                             ${UNITY_SRC}/UnityGestureBroker.h
+                             ${CMAKE_SOURCE_DIR}/unity-shared/UBusMessages.h
+                             ${UNITY_SRC}/WindowGestureTarget.h
+                             ${UNITY_SRC}/WindowGestureTarget.cpp
+                             sed_script_broker
+                             sed_script_gesture
+
+                     COMMENT "Copying and modifying sources under test.")
+
+  # Clean-up includes and definitions made in ../CmakeLists.txt
+  remove_definitions(${CFLAGS})
+  set_directory_properties(PROPERTY INCLUDE_DIRECTORIES "")
+  # And make our own
+  pkg_check_modules (TEST_GESTURES_DEPS REQUIRED QUIET "${UNITY_PLUGIN_DEPS}")
+  set(TEST_GESTURES_CFLAGS
+      "-g"
+      "-I${CMAKE_CURRENT_SOURCE_DIR}"
+      "-I${CMAKE_CURRENT_BINARY_DIR}"
+      ${TEST_GESTURES_DEPS_CFLAGS}
+     )
+  add_definitions(${TEST_GESTURES_CFLAGS})
+
+  pkg_check_modules (COMPIZ REQUIRED QUIET compiz)
+  link_directories (${COMPIZ_LIBDIR})
+
+  add_executable(test-gestures
+                 CompoundGestureRecognizer.cpp
+                 CompoundGestureRecognizer.h
+                 GesturalWindowSwitcher.cpp
+                 GesturalWindowSwitcher.h
+                 test_compound_gesture_recognizer.cpp
+                 test_gestural_window_switcher.cpp
+                 test_gestures_main.cpp
+                 test_gesture_broker.cpp
+                 test_window_gesture_target.cpp
+                 X11_mock.cpp
+                 UnityGestureBroker.cpp
+                 WindowGestureTarget.cpp
+                 PluginAdapterMock.cpp
+                 ubus-server-mock.cpp
+                 UnityGestureTargetMock.h
+                )
+  target_link_libraries(test-gestures gtest ${TEST_GESTURES_DEPS_LIBRARIES} -lcompiz_core)
+  add_test(UnityGTestGestures test-gestures)
+  add_dependencies(test-gestures gtest unity-core-${UNITY_API_VERSION})
+
+  add_custom_target (check-gestures COMMAND ./test-gestures DEPENDS test-gestures)
+endif (GTEST_SRC_DIR)

@@ -249,8 +249,8 @@ void Hud::ExecuteQueryBySearch(std::string execute_string, unsigned int timestam
 
 void Hud::CloseQuery()
 {
-  //Send close hint to the hud
-  pimpl_->CloseQuery();
+  if (pimpl_->query_key_)
+    pimpl_->CloseQuery();
 }
 
 }

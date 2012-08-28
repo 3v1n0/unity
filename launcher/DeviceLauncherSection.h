@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
 #ifndef _DEVICE_LAUNCHER_SECTION_H_
@@ -21,17 +22,10 @@
 
 #include <map>
 
-#include <gio/gio.h>
-#include <sigc++/sigc++.h>
-#include <sigc++/signal.h>
-#include <UnityCore/GLibWrapper.h>
-#include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibSource.h>
 
 #include "DeviceLauncherIcon.h"
-
-class Launcher;
-class LauncherIcon;
+#include "AbstractVolumeMonitorWrapper.h"
 
 namespace unity
 {
@@ -41,21 +35,18 @@ namespace launcher
 class DeviceLauncherSection : public sigc::trackable
 {
 public:
-  DeviceLauncherSection();
+  DeviceLauncherSection(AbstractVolumeMonitorWrapper::Ptr volume_monitor);
 
   sigc::signal<void, AbstractLauncherIcon::Ptr> IconAdded;
 
 private:
   void PopulateEntries();
+  void OnVolumeAdded(glib::Object<GVolume> const& volume);
+  void OnVolumeRemoved(glib::Object<GVolume> const& volume);
 
-  void OnVolumeAdded(GVolumeMonitor* monitor, GVolume* volume);
-  void OnVolumeRemoved(GVolumeMonitor* monitor, GVolume* volume);
-
-private:
-  std::map<GVolume*, DeviceLauncherIcon*> map_;
-  glib::Object<GVolumeMonitor> monitor_;
+  std::map<GVolume*, DeviceLauncherIcon::Ptr> map_;
+  AbstractVolumeMonitorWrapper::Ptr monitor_;
   glib::Idle device_populate_idle_;
-  glib::SignalManager sig_manager_;
 };
 
 }

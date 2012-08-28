@@ -292,7 +292,7 @@ UnityMTGrabHandlesScreen::handleEvent(XEvent* event)
           CompWindowVector::const_iterator cit = clientListStacking.begin();
           CompWindowVector::const_iterator oit = mLastClientListStacking.begin();
 
-          for (; cit != clientListStacking.end(); cit++, oit++)
+          for (; cit != clientListStacking.end(); ++cit, oit++)
           {
             /* All clients from this point onwards in cit are invalidated
              * so splice the list to the end of the new client list
