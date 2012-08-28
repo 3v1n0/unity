@@ -136,6 +136,7 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   , lens_(lens)
   , initial_activation_(true)
   , no_results_active_(false)
+  , last_expanded_group_(nullptr)
   , last_good_filter_model_(-1)
 {
   SetupViews(show_filters);
@@ -500,6 +501,10 @@ void LensView::OnResultAdded(Result const& result)
     {
       CheckNoResults(Lens::Hints());
     }
+
+    // Check if all results so far are from one category
+    // If so, then expand that category.
+    CheckCategoryExpansion();
   } catch (std::out_of_range& oor) {
     LOG_WARN(logger) << "Result does not have a valid category index: "
                      << boost::lexical_cast<unsigned int>(result.category_index)
@@ -600,6 +605,33 @@ void LensView::CheckNoResults(Lens::Hints const& hints)
     no_results_->SetText("");
     no_results_->SetVisible(false);
   }
+}
+
+void LensView::CheckCategoryExpansion()
+{
+    int number_of_displayed_categories = 0;
+
+    // Check if we had expanded a group in last run
+    // If so, collapse it for now
+    if (last_expanded_group_ != nullptr)
+    {
+        last_expanded_group_->SetExpanded(false);
+        last_expanded_group_ = nullptr;
+    }
+
+    // Cycle through all categories
+    for (auto category : categories_)
+    {
+        if (counts_[category] > 0) {
+            number_of_displayed_categories++;
+            last_expanded_group_ = category;
+        }
+    }
+
+    if (number_of_displayed_categories == 1 && last_expanded_group_ != nullptr)
+        last_expanded_group_->SetExpanded(true);
+    else
+        last_expanded_group_ = nullptr;
 }
 
 void LensView::HideResultsMessage()
