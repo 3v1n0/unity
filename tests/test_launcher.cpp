@@ -24,14 +24,22 @@ using namespace testing;
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 
-#include "DNDCollectionWindow.h"
-#include "MockLauncherIcon.h"
-#include "Launcher.h"
+#include "launcher/DNDCollectionWindow.h"
+#include "launcher/MockLauncherIcon.h"
+#include "launcher/Launcher.h"
+#include "unity-shared/PanelStyle.h"
+#include "unity-shared/UnitySettings.h"
 #include "test_utils.h"
 using namespace unity;
 
+namespace unity
+{
+namespace launcher
+{
 namespace
 {
+
+const int STARTING_ANIMATION_DURATION = 150;
 
 class MockMockLauncherIcon : public launcher::MockLauncherIcon
 {
@@ -41,22 +49,34 @@ public:
   MOCK_METHOD1(ShouldHighlightOnDrag, bool(DndData const&));
 };
 
+}
+
 class TestLauncher : public Test
 {
 public:
   TestLauncher()
     : parent_window_(new nux::BaseWindow("TestLauncherWindow"))
     , dnd_collection_window_(new DNDCollectionWindow)
-    , model_(new launcher::LauncherModel)
-    , launcher_(new launcher::Launcher(parent_window_, dnd_collection_window_))
+    , model_(new LauncherModel)
+    , options_(new Options)
+    , launcher_(new Launcher(parent_window_, dnd_collection_window_))
   {
+    launcher_->options = options_;
     launcher_->SetModel(model_);
+  }
+
+  float IconBackgroundIntensity(AbstractLauncherIcon::Ptr icon, timespec const& current) const
+  {
+    return launcher_->IconBackgroundIntensity(icon, current);
   }
 
   nux::BaseWindow* parent_window_;
   nux::ObjectPtr<DNDCollectionWindow> dnd_collection_window_;
-  launcher::LauncherModel::Ptr model_;
-  nux::ObjectPtr<launcher::Launcher> launcher_;
+  Settings settings;
+  panel::Style panel_style;
+  LauncherModel::Ptr model_;
+  Options::Ptr options_;
+  nux::ObjectPtr<Launcher> launcher_;
 };
 
 TEST_F(TestLauncher, TestQuirksDuringDnd)
@@ -84,9 +104,55 @@ TEST_F(TestLauncher, TestQuirksDuringDnd)
 
   Utils::WaitForTimeout(1);
 
-  EXPECT_FALSE(first->GetQuirk(launcher::AbstractLauncherIcon::QUIRK_DESAT));
-  EXPECT_FALSE(second->GetQuirk(launcher::AbstractLauncherIcon::QUIRK_DESAT));
-  EXPECT_TRUE(third->GetQuirk(launcher::AbstractLauncherIcon::QUIRK_DESAT));
+  EXPECT_FALSE(first->GetQuirk(launcher::AbstractLauncherIcon::Quirk::DESAT));
+  EXPECT_FALSE(second->GetQuirk(launcher::AbstractLauncherIcon::Quirk::DESAT));
+  EXPECT_TRUE(third->GetQuirk(launcher::AbstractLauncherIcon::Quirk::DESAT));
 }
 
+TEST_F(TestLauncher, TestMouseWheelScroll)
+{
+  int initial_scroll_delta;
+
+  launcher_->SetHover(true);
+  initial_scroll_delta = launcher_->GetDragDelta();
+
+  // scroll down
+  launcher_->RecvMouseWheel(0,0,20,0,0);
+  EXPECT_EQ((launcher_->GetDragDelta() - initial_scroll_delta), 25);
+
+  // scroll up
+  launcher_->RecvMouseWheel(0,0,-20,0,0);
+  EXPECT_EQ(launcher_->GetDragDelta(), initial_scroll_delta);
+
+  launcher_->SetHover(false);
+}
+
+TEST_F(TestLauncher, TestIconBackgroundIntensity)
+{
+  MockMockLauncherIcon::Ptr first(new MockMockLauncherIcon);
+  model_->AddIcon(first);
+
+  MockMockLauncherIcon::Ptr second(new MockMockLauncherIcon);
+  model_->AddIcon(second);
+
+  MockMockLauncherIcon::Ptr third(new MockMockLauncherIcon);
+  model_->AddIcon(third);
+
+  options_->backlight_mode = BACKLIGHT_NORMAL;
+  options_->launch_animation = LAUNCH_ANIMATION_PULSE;
+
+  first->SetQuirk(AbstractLauncherIcon::Quirk::RUNNING, true);
+  second->SetQuirk(AbstractLauncherIcon::Quirk::RUNNING, true);
+  third->SetQuirk(AbstractLauncherIcon::Quirk::RUNNING, false);
+
+  Utils::WaitForTimeoutMSec(STARTING_ANIMATION_DURATION);
+  timespec current;
+  clock_gettime(CLOCK_MONOTONIC, &current);
+
+  EXPECT_THAT(IconBackgroundIntensity(first, current), Gt(0.0f));
+  EXPECT_THAT(IconBackgroundIntensity(second, current), Gt(0.0f));
+  EXPECT_EQ(IconBackgroundIntensity(third, current), 0.0f);
+}
+
+}
 }

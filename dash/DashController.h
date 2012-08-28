@@ -97,6 +97,7 @@ private:
   sigc::connection screen_ungrabbed_slot_;
   glib::SignalManager sig_manager_;
   glib::TimeoutSeconds ensure_timeout_;
+  glib::SourceManager sources_;
   Animator timeline_animator_;
   UBusManager ubus_manager_;
 };

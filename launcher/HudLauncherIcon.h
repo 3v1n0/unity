@@ -43,11 +43,11 @@ public:
   void SetHideMode(LauncherHideMode hide_mode);
 
 protected:
-  std::list<DbusmenuMenuitem*> GetMenus();
   std::string GetName() const;
 
 private:
   void OnOverlayShown(GVariant *data, bool visible);
+  void OnHudIconChanged(GVariant *data);
 
   static unity::UBusManager ubus_manager_;
   nux::Color background_color_;

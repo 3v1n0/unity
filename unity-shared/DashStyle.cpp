@@ -123,7 +123,7 @@ public:
   void Text(cairo_t* cr,
             nux::Color const& color,
             std::string const& label,
-            int font_size = -1,
+            int font_size,
             double horizMargin = 4.0,
             Alignment alignment = Alignment::CENTER);
 
@@ -1355,6 +1355,10 @@ void Style::Impl::Text(cairo_t*    cr,
   {
     pango_font_description_set_absolute_size(desc, text_size * PANGO_SCALE);
   }
+  else if (desc)
+  {
+    text_size = pango_font_description_get_size(desc) / PANGO_SCALE;
+  }
 
   PangoWeight weight;
   switch (regular_text_weight_)
@@ -1627,7 +1631,6 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
                          int font_size, Alignment alignment,
                          bool zeromargin)
 {
-  // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
     return false;
 

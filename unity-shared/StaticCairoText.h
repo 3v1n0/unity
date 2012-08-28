@@ -52,6 +52,7 @@ public:
   };
 
   StaticCairoText(std::string const& text, NUX_FILE_LINE_PROTO);
+  StaticCairoText(std::string const& text, bool escape_text, NUX_FILE_LINE_PROTO);
   ~StaticCairoText();
 
   void PreLayoutManagement();
@@ -68,13 +69,14 @@ public:
                 bool             forceDraw);
 
   // public API
-  void SetText(std::string const& text);
+  void SetText(std::string const& text, bool escape_text = false);
   void SetTextColor(Color const& textColor);
   void SetTextEllipsize(EllipsizeState state);
   void SetTextAlignment(AlignState state);
   void SetTextVerticalAlignment(AlignState state);
   void SetFont(std::string const& font);
   void SetLines(int maximum_lines);
+  void SetLineSpacing(float line_spacing);
 
   std::string GetText() const;
   Color GetTextColor() const;
@@ -90,6 +92,11 @@ public:
   sigc::signal<void, StaticCairoText*> sigFontChanged;
 
   void SetAcceptKeyNavFocus(bool accept);
+
+  void SetMaximumSize(int w, int h);
+  void SetMaximumWidth(int w);
+
+  static std::string GetEscapedText(std::string const& text);
 
 protected:
   // Key navigation
