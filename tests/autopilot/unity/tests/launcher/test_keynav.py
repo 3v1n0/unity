@@ -198,3 +198,13 @@ class LauncherKeyNavTests(LauncherTestCase):
 
         self.assertThat(self.hud.visible, Equals(False))
         self.assertThat(self.launcher.key_nav_is_active, Equals(True))
+
+    def test_launcher_keynav_cancel_on_click_outside(self):
+        """A single click must cancel keynav."""
+        self.start_keynav_with_cleanup_cancel()
+
+        self.mouse.move(self.launcher_instance.x + (self.launcher_instance.width + 100),
+                        self.launcher_instance.y + (self.launcher_instance.height))
+        self.mouse.click()
+
+        self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
