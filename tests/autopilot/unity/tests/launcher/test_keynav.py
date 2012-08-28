@@ -200,11 +200,23 @@ class LauncherKeyNavTests(LauncherTestCase):
         self.assertThat(self.launcher.key_nav_is_active, Equals(True))
 
     def test_launcher_keynav_cancel_on_click_outside(self):
-        """A single click must cancel keynav."""
+        """A single click outside of launcher must cancel keynav."""
         self.start_keynav_with_cleanup_cancel()
 
         self.mouse.move(self.launcher_instance.x + (self.launcher_instance.width + 100),
                         self.launcher_instance.y + (self.launcher_instance.height))
         self.mouse.click()
+
+        self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
+
+    def test_launcher_keynav_cancel_on_click_icon(self):
+        """A single click on a launcher icon must cancel keynav."""
+        calc_win = self.start_app_window('Calculator', locale = 'C')
+        calc_app = calc_win.application
+        calc_icon = self.launcher.model.get_icon(desktop_id=calc_app.desktop_file)
+
+        self.start_keynav_with_cleanup_cancel()
+
+        self.launcher_instance.click_launcher_icon(calc_icon)
 
         self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
