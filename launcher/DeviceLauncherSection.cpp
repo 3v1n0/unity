@@ -73,10 +73,7 @@ void DeviceLauncherSection::OnVolumeRemoved(glib::Object<GVolume> const& volume)
 
   // Sanity check
   if (volume_it != map_.end())
-  {
-    volume_it->second->OnRemoved();
     map_.erase(volume_it);
-  }
 }
 
 }

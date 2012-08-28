@@ -44,7 +44,6 @@ public:
   bool CanStop() const;
   void StopDrive();
   MenuItemsVector GetMenus();
-  void OnRemoved();
 
 protected:
   virtual void ActivateLauncherIcon(ActionArg arg);

@@ -149,4 +149,15 @@ TEST_F(TestVolumeImp, TestChangedSignal)
   Utils::WaitUntil(callback_called);
 }
 
+TEST_F(TestVolumeImp, TestRemovedSignal)
+{
+  bool callback_called = false;
+  volume_->removed.connect([&]() {
+    callback_called = true;
+  });
+
+  g_signal_emit_by_name(gvolume_, "removed", nullptr);
+  Utils::WaitUntil(callback_called);
+}
+
 }

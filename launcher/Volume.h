@@ -53,6 +53,7 @@ public:
   virtual void Unmount() = 0;
 
   sigc::signal<void> changed;
+  sigc::signal<void> removed;
 };
 
 }
