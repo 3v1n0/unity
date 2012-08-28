@@ -90,6 +90,13 @@ public:
   virtual void SignalPreview(std::string const& uri,
       glib::Variant const& preview_update,
       glib::DBusProxy::ReplyCallback reply_cb = nullptr);
+
+  /**
+   * Note that this model is only valid for as long as the results model
+   * doesn't change.
+   * (you should call this again after models_changed is emitted)
+   */
+  virtual glib::Object<DeeModel> GetFilterModelForCategory(unsigned category);
   virtual std::vector<unsigned> GetCategoriesOrder();
 
   nux::RWProperty<std::string> id;

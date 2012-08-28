@@ -95,8 +95,6 @@ private:
   bool FixRenderering();
   bool ReinitializeFilterModels();
 
-  static void GetFilterForCategoryIndex(unsigned index, DeeFilter* filter);
-
   void BuildPreview(std::string const& uri, Preview::Ptr model);
 
   virtual void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
