@@ -164,6 +164,13 @@ class LauncherIconsTests(LauncherTestCase):
 
         self.assertThat(self.launcher_instance.quicklist_open, Eventually(Equals(True)))
 
+        monitor = self.screen_geo.get_primary_monitor()
+        self.panel = self.panels.get_panel_for_monitor(monitor)
+        
+        # When workspace switcher is opened the panel title is "Ubuntu Desktop" so we check
+        # to make sure that workspace switcher end.
+        self.assertThat(self.panels.get_active_panel().title, Eventually(NotEquals("Ubuntu Desktop")))
+
 
 class LauncherDragIconsBehavior(LauncherTestCase):
     """Tests dragging icons around the Launcher."""
