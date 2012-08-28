@@ -2,8 +2,10 @@ unity (6.2.0-0ubuntu4) UNRELEASED; urgency=low
 
   * debian/control:
     - Depends on compiz-plugins-default rather than on a transitional one
+  * tools/convert-files/compiz-profile-(active)-unity.convert:
+    - updated to fix some key names typos in the list (lp: #1041631)
 
- -- Sebastien Bacher <seb128@ubuntu.com>  Mon, 27 Aug 2012 20:49:21 +0200
+ -- Sebastien Bacher <seb128@ubuntu.com>  Tue, 28 Aug 2012 22:03:02 +0200
 
 unity (6.2.0-0ubuntu3) quantal-proposed; urgency=low
 
