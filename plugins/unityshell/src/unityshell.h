@@ -69,6 +69,8 @@
 namespace unity
 {
 
+class WindowCairoContext;
+
 /* base screen class */
 class UnityScreen :
   public unity::debug::Introspectable,
@@ -462,6 +464,7 @@ private:
 
   void DrawWindowTitle (const GLWindowPaintAttrib& attrib,
                         const GLMatrix& transform,
+                        unsigned int mask,
                         float x, float y, float x2, float y2);
   void DrawTexture (GLTexture *icon,
                     const GLWindowPaintAttrib& attrib,
@@ -469,12 +472,17 @@ private:
                     unsigned int mask,
                     float x, float y,
                     int &maxWidth, int &maxHeight);
+  void RenderText (WindowCairoContext *context,
+                   float x, float y,
+                   float maxWidth, float maxHeight);
+  WindowCairoContext* CreateCairoContext (float width, float height);
 
   compiz::WindowInputRemoverLock::Weak input_remover_;
   glib::Source::UniquePtr focus_desktop_timeout_;
 
   GLTexture::List close_icon_;
   CompRect close_button_area_;
+  GtkStyleContext* window_header_style_;
 };
 
 
