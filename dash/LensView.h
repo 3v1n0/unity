@@ -95,6 +95,7 @@ private:
   void QueueFixRenderering();
   bool FixRenderering();
   bool ReinitializeFilterModels();
+  ResultViewGrid* GetGridForCategory(unsigned category_index);
 
   void BuildPreview(std::string const& uri, Preview::Ptr model);
 

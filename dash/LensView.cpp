@@ -246,8 +246,7 @@ void LensView::SetupResults()
   {
     for (unsigned int i = 0; i < categories_.size(); ++i)
     {
-      PlacesGroup* group = categories_[i];
-      ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
+      ResultViewGrid* grid = GetGridForCategory(i);
       glib::Object<DeeModel> filter_model(lens_->GetFilterModelForCategory(i));
       Results::Ptr results_model = lens_->results;
       grid->SetModel(filter_model, results_model->GetTag());
@@ -421,8 +420,7 @@ bool LensView::ReinitializeFilterModels()
   Results::Ptr results_model = lens_->results;
   for (unsigned i = last_good_filter_model_ + 1; i < categories_.size(); ++i)
   {
-    PlacesGroup* group = categories_[i];
-    ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
+    ResultViewGrid* grid = GetGridForCategory(i);
     glib::Object<DeeModel> filter_model(lens_->GetFilterModelForCategory(i));
     grid->SetModel(filter_model, results_model->GetTag());
   }
@@ -430,6 +428,13 @@ bool LensView::ReinitializeFilterModels()
   last_good_filter_model_ = -1;
   fix_filter_models_idle_.reset();
   return false;
+}
+
+ResultViewGrid* LensView::GetGridForCategory(unsigned category_index)
+{
+  if (category_index >= categories_.size()) return nullptr;
+  PlacesGroup* group = categories_.at(category_index);
+  return static_cast<ResultViewGrid*>(group->GetChildView());
 }
 
 void LensView::OnResultAdded(Result const& result)
@@ -701,18 +706,20 @@ void LensView::ActivateFirst()
   Results::Ptr results = lens_->results;
   if (results->count())
   {
-    // FIXME: Linear search in the result model, use category grid's model!
-    for (unsigned int c = 0; c < scroll_layout_->GetChildren().size(); ++c)
+    // the first displayed category might not be categories_[0]
+    auto category_order = lens_->GetCategoriesOrder();
+    for (unsigned int i = 0; i < category_order.size(); i++)
     {
-      for (unsigned int i = 0; i < results->count(); ++i)
+      unsigned cat_index = category_order.at(i);
+      ResultViewGrid* grid = GetGridForCategory(cat_index);
+      if (grid == nullptr) continue;
+      auto it = grid->GetIteratorAtRow(0);
+      if (!it.IsLast())
       {
-        Result result = results->RowAtIndex(i);
-        if (result.category_index == c && result.uri != "")
-        {
-          uri_activated(result.uri);
-          lens_->Activate(result.uri);
-          return;
-        }
+        Result result(*it);
+        uri_activated(result.uri);
+        lens_->Activate(result.uri);
+        return;
       }
     }
     // Fallback
