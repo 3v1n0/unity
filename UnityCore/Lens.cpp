@@ -36,6 +36,8 @@ namespace dash
 namespace
 {
 nux::logging::Logger logger("unity.dash.lens");
+
+const unsigned CATEGORY_COLUMN = 2;
 }
 
 using std::string;
@@ -91,6 +93,8 @@ public:
                      glib::Variant const& preview_update,
                      glib::DBusProxy::ReplyCallback reply_cb);
   std::vector<unsigned> GetCategoriesOrder();
+  glib::Object<DeeModel> GetFilterModelForCategory(unsigned category);
+  void GetFilterForCategoryIndex(unsigned category, DeeFilter* filter);
 
   string const& id() const;
   string const& dbus_name() const;
@@ -627,6 +631,61 @@ std::vector<unsigned> Lens::Impl::GetCategoriesOrder()
   return result;
 }
 
+glib::Object<DeeModel> Lens::Impl::GetFilterModelForCategory(unsigned category)
+{
+  DeeFilter filter;
+  GetFilterForCategoryIndex(category, &filter);
+  glib::Object<DeeModel> filter_model(dee_filter_model_new(results_->model(), &filter));
+
+  return filter_model;
+}
+
+static void category_filter_map_func (DeeModel* orig_model,
+                                      DeeFilterModel* filter_model,
+                                      gpointer user_data)
+{
+  DeeModelIter* iter;
+  DeeModelIter* end;
+  unsigned index = GPOINTER_TO_UINT(user_data);
+
+  iter = dee_model_get_first_iter(orig_model);
+  end = dee_model_get_last_iter(orig_model);
+  while (iter != end)
+  {
+    unsigned category_index = dee_model_get_uint32(orig_model, iter,
+                                                   CATEGORY_COLUMN);
+    if (index == category_index)
+    {
+      dee_filter_model_append_iter(filter_model, iter);
+    }
+    iter = dee_model_next(orig_model, iter);
+  }
+}
+
+static gboolean category_filter_notify_func (DeeModel* orig_model,
+                                             DeeModelIter* orig_iter,
+                                             DeeFilterModel* filter_model,
+                                             gpointer user_data)
+{
+  unsigned index = GPOINTER_TO_UINT(user_data);
+  unsigned category_index = dee_model_get_uint32(orig_model, orig_iter,
+                                                 CATEGORY_COLUMN);
+
+  if (index != category_index)
+    return FALSE;
+
+  dee_filter_model_insert_iter_with_original_order(filter_model, orig_iter);
+  return TRUE;
+}
+
+void Lens::Impl::GetFilterForCategoryIndex(unsigned category, DeeFilter* filter)
+{
+  filter->map_func = category_filter_map_func;
+  filter->map_notify = category_filter_notify_func;
+  filter->destroy = nullptr;
+  filter->userdata = GUINT_TO_POINTER(category);
+}
+
 string const& Lens::Impl::id() const
 {
   return id_;
@@ -801,6 +860,11 @@ void Lens::SignalPreview(std::string const& uri,
 std::vector<unsigned> Lens::GetCategoriesOrder()
 {
   return pimpl->GetCategoriesOrder();
+}
+
+glib::Object<DeeModel> Lens::GetFilterModelForCategory(unsigned category)
+{
+  return pimpl->GetFilterModelForCategory(category);
 }
 
 
