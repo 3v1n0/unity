@@ -150,6 +150,20 @@ class LauncherIconsTests(LauncherTestCase):
         self.assertThat(calc_icon, NotEquals(None))
         self.assertThat(calc_icon.visible, Eventually(Equals(True)))
 
+    def test_right_click_on_icon_ends_expo(self):
+        """Right click on a launcher icon in expo mode must end the expo
+        and show the quicklist.
+
+        """
+        self.keybinding("expo/start")
+        self.addCleanup(self.keybinding, "expo/cancel")
+
+        bfb = self.launcher.model.get_bfb_icon()
+        self.mouse.move(bfb.center_x, bfb.center_y)
+        self.mouse.click(button=3)
+
+        self.assertThat(self.launcher_instance.quicklist_open, Eventually(Equals(True)))
+
 
 class LauncherDragIconsBehavior(LauncherTestCase):
     """Tests dragging icons around the Launcher."""

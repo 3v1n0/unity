@@ -260,21 +260,6 @@ Expected Result:
   compiz process should be much lower than 50.
 
 
-Test Quicklist while on Expo
------------------------------
-This test shows how the launcher quicklists work when the expo plugin is activated.
-
-Setup:
-#. Start with a clear screen
-#. Press Super+S or select the workspace switcher on the launcher
-
-Actions:
-#. When the workspace switcher is running, right-click over a launcher icon
-
-Expected Result:
-  The expo should terminate, and the quicklist should be shown once the
-  workspace switcher has been closed.
-
 Test highlight BFB
 -------------------
 This test shows that the BFB launcher icon highlights during key navigation.
