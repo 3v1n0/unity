@@ -136,6 +136,20 @@ public:
     return target_cat_index;
   }
 
+  void UnregisterAllForModel(DeeModel *model)
+  {
+    auto it = reg_category_map_.begin();
+
+    // removal during iteration, careful here
+    while (it != reg_category_map_.end())
+    {
+      if (it->first.first == model)
+        reg_category_map_.erase(it++);
+      else
+        ++it;
+    }
+  }
+
   void NotifyOrderChanged ()
   {
     owner_->categories_reordered();
@@ -157,7 +171,8 @@ public:
   ModelMerger(glib::Object<DeeModel> target);
   virtual ~ModelMerger();
 
-  void AddSource(Lens::Ptr& owner_lens, glib::Object<DeeModel> source);
+  virtual void AddSource(Lens::Ptr& owner_lens, glib::Object<DeeModel> source);
+  virtual void RemoveSource(glib::Object<DeeModel> const& old_source);
 
 protected:
   virtual void OnSourceRowAdded(DeeModel *model, DeeModelIter *iter);
@@ -224,7 +239,10 @@ public:
   void OnSourceRowAdded(DeeModel *model, DeeModelIter *iter);
   void OnSourceRowRemoved(DeeModel *model, DeeModelIter *iter);
 
-  std::vector<unsigned> GetOrder();
+  std::vector<unsigned> GetDefaultOrder();
+
+protected:
+  void RemoveSource(glib::Object<DeeModel> const& old_source);
 
 private:
   HomeLens::CategoryRegistry* cat_registry_;
@@ -260,6 +278,7 @@ public:
   void EnsureCategoryAnnotation(Lens::Ptr& lens, DeeModel* results, DeeModel* categories);
   Lens::Ptr FindLensForUri(std::string const& uri);
   std::vector<unsigned> GetCategoriesOrder();
+  void LensSearchFinished(Lens::Ptr& lens);
 
   HomeLens* owner_;
   Lenses::LensList lenses_;
@@ -324,7 +343,7 @@ void HomeLens::ModelMerger::AddSource(Lens::Ptr& owner_lens,
   {
     if (it->second == source)
       return; // this model was already added
-    sig_manager_.Disconnect(it->second);
+    RemoveSource(it->second);
   }
   sources_by_owner_[owner_lens] = source;
 
@@ -342,6 +361,17 @@ void HomeLens::ModelMerger::AddSource(Lens::Ptr& owner_lens,
   sig_manager_.Add(new RowSignalType(source.RawPtr(),
                                        "row-changed",
                                        sigc::mem_fun(this, &HomeLens::ModelMerger::OnSourceRowChanged)));
+}
+
+void HomeLens::ModelMerger::RemoveSource(glib::Object<DeeModel> const& source)
+{
+  if (!source)
+  {
+    LOG_ERROR(logger) << "Trying to remove NULL source from ModelMerger";
+    return;
+  }
+
+  sig_manager_.Disconnect(source);
 }
 
 void HomeLens::ModelMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *iter)
@@ -611,7 +641,15 @@ DeeModelTag* HomeLens::ModelMerger::FindSourceToTargetTag(DeeModel *model)
   return source_to_target_tags_[model];
 }
 
-std::vector<unsigned> HomeLens::CategoryMerger::GetOrder()
+void HomeLens::CategoryMerger::RemoveSource(glib::Object<DeeModel> const& source)
+{
+  // call base()
+  HomeLens::ModelMerger::RemoveSource(source);
+
+  cat_registry_->UnregisterAllForModel(source);
+}
+
+std::vector<unsigned> HomeLens::CategoryMerger::GetDefaultOrder()
 {
   std::vector<unsigned> result;
   for (auto it = category_ordering_.begin(); it != category_ordering_.end(); ++it)
@@ -746,6 +784,7 @@ void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
   lens->global_search_finished.connect([&] (Hints const& hints) {
       running_searches_--;
 
+      LensSearchFinished(lens);
       if (running_searches_ <= 0)
       {
         owner_->search_finished.emit(Hints());
@@ -784,41 +823,15 @@ void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
       filters_merger_.AddSource(lens, filters_prop());
   }
 
-  /*
-   * We'll assume that the models' swarm names do not change during life cycle
-   * of a lens.
-   * Otherwise we might run into a race where we would associate category
-   * model to a results model that is about to be replaced by a new one.
-   */
-  lens->connected.changed.connect([&] (bool is_connected)
+  /* Make sure the models are properly annotated when they change */
+  lens->models_changed.connect([&] ()
   {
-    if (is_connected)
-    {
-      EnsureCategoryAnnotation(lens, lens->categories()->model(),
-                               lens->global_results()->model());
-      categories_merger_.AddSource(lens, lens->categories()->model());
-      results_merger_.AddSource(lens, lens->global_results()->model());
-      filters_merger_.AddSource(lens, lens->filters()->model());
-    }
+    EnsureCategoryAnnotation(lens, lens->categories()->model(),
+                             lens->global_results()->model());
+    categories_merger_.AddSource(lens, lens->categories()->model());
+    results_merger_.AddSource(lens, lens->global_results()->model());
+    filters_merger_.AddSource(lens, lens->filters()->model());
   });
-  /*
-  results_prop.changed.connect([&] (glib::Object<DeeModel> model)
-  {
-    EnsureCategoryAnnotation(lens, lens->categories()->model(), model);
-    results_merger_.AddSource(model);
-  });
-
-  categories_prop.changed.connect([&] (glib::Object<DeeModel> model)
-  {
-    EnsureCategoryAnnotation(lens, model, lens->global_results()->model());
-    categories_merger_.AddSource(model);
-  });
-
-  filters_prop.changed.connect([&] (glib::Object<DeeModel> model)
-  {
-    filters_merger_.AddSource(model);
-  });
-  */
 
   /*
    * Register pre-existing categories up front
@@ -838,9 +851,13 @@ void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
   }
 }
 
+void HomeLens::Impl::LensSearchFinished(Lens::Ptr& lens)
+{
+}
+
 std::vector<unsigned> HomeLens::Impl::GetCategoriesOrder()
 {
-  return categories_merger_.GetOrder();
+  return categories_merger_.GetDefaultOrder();
 }
 
 HomeLens::HomeLens(std::string const& name,
