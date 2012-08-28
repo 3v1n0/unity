@@ -1827,7 +1827,7 @@ bool UnityScreen::showPanelFirstMenuKeyInitiate(CompAction* action,
                                                 CompOption::Vector& options)
 {
   /* In order to avoid too many events when keeping the keybinding pressed,
-   * that would make the unity-panel-service to go crazy (see bug #948522)
+   * that would make the unity-panel-service go crazy (see bug #948522)
    * we need to filter them, just considering an event every 750 ms */
   int event_time = options[7].value().i();  // XEvent time in millisec
 
