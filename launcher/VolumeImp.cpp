@@ -214,7 +214,7 @@ public:
   DeviceNotificationDisplay::Ptr device_notification_display_;
 
   glib::Signal<void, GVolume*> signal_volume_changed_;
-  glib::Siganl<void, GVolume*> signal_volume_removed_;
+  glib::Signal<void, GVolume*> signal_volume_removed_;
 };
 
 //
