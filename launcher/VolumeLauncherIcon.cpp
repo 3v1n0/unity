@@ -247,7 +247,7 @@ public:
   glib::SignalManager gsignals_;
   sigc::connection settings_changed_conn_;
   sigc::connection volume_changed_conn_;
-  sigc::connection volume_remove_conn_;
+  sigc::connection volume_removed_conn_;
 };
 
 //
