@@ -3418,8 +3418,9 @@ void UnityWindow::RenderText (WindowCairoContext *context,
   pango_layout_set_height (layout, maxHeight);
 
   pango_layout_set_auto_dir (layout, false);
-  //TODO: get original window name
-  pango_layout_set_text (layout, "Window 1", -1);
+  pango_layout_set_text (layout,
+                         GetWindowName (window->id ()).c_str (),
+                         -1);
 
   /* update the size of the pango layout */
   pango_layout_set_width (layout, maxWidth * PANGO_SCALE);
@@ -3512,16 +3513,14 @@ void UnityWindow::scalePaintDecoration (const GLWindowPaintAttrib& attrib,
 
   sWindow->scalePaintDecoration (attrib, transform, region, mask);
 
-  if (!sWindow->hasSlot() ||    // animation not finished
-      uScreen->highlighted_window_ != window->id ()) // windows does not has focus
+  if (!sWindow->hasSlot()) // animation not finished
   {
-
     return;
   }
 
   ScalePosition pos = sWindow->getCurrentPosition ();
   int maxHeight, maxWidth;
-  const int width = window->width () * pos.scale;
+  const int width = window->width () * pos.scale + 1;
   const float x = pos.x () + window->x () - 1;
   const float y = pos.y () + window->y () - SCALE_WINDOW_TITLE_SIZE;
   const float iconX = x + CLOSE_ICON_SPACE;
@@ -3628,6 +3627,84 @@ bool UnityPluginVTable::init()
 
   return true;
 }
+
+CompString UnityWindow::GetUtf8Property (Window id,
+                                         Atom atom)
+{
+    Atom          type;
+    int           result, format;
+    unsigned long nItems, bytesAfter;
+    char          *val;
+    CompString    retval;
+    Atom          utf8StringAtom;
+
+    utf8StringAtom = XInternAtom (screen->dpy (), "UTF8_STRING", 0);
+    result = XGetWindowProperty (screen->dpy (), id, atom, 0L, 65536, False,
+                                 utf8StringAtom, &type, &format, &nItems,
+                                 &bytesAfter, (unsigned char **) &val);
+
+    if (result != Success)
+      return retval;
+
+    if (type == utf8StringAtom && format == 8 && val && nItems > 0)
+    {
+      char valueString[nItems + 1];
+      strncpy (valueString, val, nItems);
+      valueString[nItems] = 0;
+      retval = valueString;
+    }
+    if (val)
+      XFree (val);
+
+    return retval;
+}
+
+CompString UnityWindow::GetTextProperty (Window id,
+                                         Atom   atom)
+{
+  XTextProperty text;
+  CompString    retval;
+
+  text.nitems = 0;
+  if (XGetTextProperty (screen->dpy (), id, &text, atom))
+  {
+    if (text.value)
+    {
+      char valueString[text.nitems + 1];
+
+      strncpy (valueString, (char *) text.value, text.nitems);
+      valueString[text.nitems] = 0;
+
+      retval = valueString;
+
+      XFree (text.value);
+    }
+  }
+
+  return retval;
+}
+
+
+CompString UnityWindow::GetWindowName (Window id)
+{
+  CompString name;
+  Atom       visibleNameAtom;
+
+  visibleNameAtom = XInternAtom (screen->dpy (), "_NET_WM_VISIBLE_NAME", 0);
+  name = GetUtf8Property (id, visibleNameAtom);
+  if (name.empty ())
+  {
+    Atom wmNameAtom = XInternAtom (screen->dpy (), "_NET_WM_NAME", 0);
+    name = GetUtf8Property (id, wmNameAtom);
+  }
+
+
+  if (name.empty ())
+    name = GetTextProperty (id, XA_WM_NAME);
+
+  return name;
+}
+
 
 
 namespace
