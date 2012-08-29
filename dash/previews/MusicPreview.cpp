@@ -122,11 +122,7 @@ void MusicPreview::AddProperties(GVariantBuilder* builder)
 
 void MusicPreview::SetupBackground()
 {
-  nux::ROPConfig rop;
-  rop.Blend = true;
-  rop.SrcBlend = GL_ONE;
-  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  details_bg_layer_.reset(new nux::ColorLayer(nux::Color(0.03f, 0.03f, 0.03f, 0.0f), true, rop));
+  details_bg_layer_.reset(dash::previews::Style::Instance().GetBackgroundLayer());
 }
 
 void MusicPreview::SetupViews()
@@ -160,14 +156,14 @@ void MusicPreview::SetupViews()
       nux::VLayout* album_data_layout = new nux::VLayout();
       album_data_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
 
-      title_ = new nux::StaticCairoText(preview_model_->title);
+      title_ = new nux::StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
       title_->SetFont(style.title_font().c_str());
       title_->SetLines(-1);
       album_data_layout->AddView(title_.GetPointer(), 1);
 
       if (!preview_model_->subtitle.Get().empty())
       {
-        subtitle_ = new nux::StaticCairoText(preview_model_->subtitle);
+        subtitle_ = new nux::StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
         subtitle_->SetFont(style.subtitle_size_font().c_str());
         subtitle_->SetLines(-1);
         album_data_layout->AddView(subtitle_.GetPointer(), 1);

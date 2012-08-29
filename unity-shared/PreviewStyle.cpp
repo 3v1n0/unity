@@ -24,6 +24,8 @@
 #include <NuxCore/Logger.h>
 
 #include <NuxGraphics/GLTextureResourceManager.h>
+#include <Nux/PaintLayer.h>
+
 #include <UnityCore/GLibWrapper.h>
 #include "config.h"
 
@@ -136,6 +138,15 @@ Style& Style::Instance()
   }
 
   return *style_instance;
+}
+
+nux::AbstractPaintLayer* Style::GetBackgroundLayer() const
+{
+  nux::ROPConfig rop;
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+  return new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 0.1f), true, rop);
 }
 
 int Style::GetNavigatorWidth() const
