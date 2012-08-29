@@ -136,7 +136,7 @@ public:
     return target_cat_index;
   }
 
-  void UnregisterAllForModel(DeeModel *model)
+  void UnregisterAllForModel(DeeModel* model)
   {
     auto it = reg_category_map_.begin();
 
@@ -176,14 +176,14 @@ public:
   virtual void RemoveSource(glib::Object<DeeModel> const& old_source);
 
 protected:
-  virtual void OnSourceRowAdded(DeeModel *model, DeeModelIter *iter);
+  virtual void OnSourceRowAdded(DeeModel* model, DeeModelIter* iter);
   virtual void OnSourceRowRemoved(DeeModel* model, DeeModelIter* iter);
   virtual void OnSourceRowChanged(DeeModel* model, DeeModelIter* iter);
-  void EnsureRowBuf(DeeModel *source);
+  void EnsureRowBuf(DeeModel* source);
 
   /* The merge tag lives on the source models, pointing to the mapped
    * row in the target model */
-  DeeModelTag* FindSourceToTargetTag(DeeModel *model);
+  DeeModelTag* FindSourceToTargetTag(DeeModel* model);
 
 protected:
   std::map<Lens::Ptr, glib::Object<DeeModel> > sources_by_owner_;
@@ -213,9 +213,9 @@ public:
                 HomeLens::CategoryRegistry* cat_registry);
 
 protected:
-  void OnSourceRowAdded(DeeModel *model, DeeModelIter *iter);
-  void OnSourceRowRemoved(DeeModel *model, DeeModelIter *iter);
-  void OnSourceRowChanged(DeeModel *model, DeeModelIter *iter);
+  void OnSourceRowAdded(DeeModel* model, DeeModelIter* iter);
+  void OnSourceRowRemoved(DeeModel* model, DeeModelIter* iter);
+  void OnSourceRowChanged(DeeModel* model, DeeModelIter* iter);
 
 private:
   HomeLens::CategoryRegistry* cat_registry_;
@@ -237,8 +237,8 @@ public:
                  HomeLens::CategoryRegistry* cat_registry,
                  MergeMode merge_mode);
 
-  void OnSourceRowAdded(DeeModel *model, DeeModelIter *iter);
-  void OnSourceRowRemoved(DeeModel *model, DeeModelIter *iter);
+  void OnSourceRowAdded(DeeModel* model, DeeModelIter* iter);
+  void OnSourceRowRemoved(DeeModel* model, DeeModelIter* iter);
 
   std::vector<unsigned> GetDefaultOrder();
 
@@ -260,9 +260,9 @@ class HomeLens::FiltersMerger : public ModelMerger
 public:
   FiltersMerger(glib::Object<DeeModel> target);
 
-  void OnSourceRowAdded(DeeModel *model, DeeModelIter *iter);
-  void OnSourceRowRemoved(DeeModel *model, DeeModelIter *iter);
-  void OnSourceRowChanged(DeeModel *model, DeeModelIter *iter);
+  void OnSourceRowAdded(DeeModel* model, DeeModelIter* iter);
+  void OnSourceRowRemoved(DeeModel* model, DeeModelIter* iter);
+  void OnSourceRowChanged(DeeModel* model, DeeModelIter* iter);
 };
 
 /*
@@ -375,12 +375,12 @@ void HomeLens::ModelMerger::RemoveSource(glib::Object<DeeModel> const& source)
   sig_manager_.Disconnect(source);
 }
 
-void HomeLens::ModelMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *iter)
+void HomeLens::ModelMerger::OnSourceRowAdded(DeeModel* model, DeeModelIter* iter)
 {
   // Default impl. does nothing.
 }
 
-void HomeLens::ResultsMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *iter)
+void HomeLens::ResultsMerger::OnSourceRowAdded(DeeModel* model, DeeModelIter* iter)
 {
   DeeModelIter* target_iter;
   int target_cat_offset, source_cat_offset;
@@ -421,7 +421,7 @@ void HomeLens::ResultsMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *it
   for (unsigned int i = 0; i < n_cols_; i++) g_variant_unref(row_buf_[i]);
 }
 
-void HomeLens::CategoryMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *iter)
+void HomeLens::CategoryMerger::OnSourceRowAdded(DeeModel* model, DeeModelIter* iter)
 {
   DeeModel* results_model;
   DeeModelIter* target_iter;
@@ -501,14 +501,14 @@ void HomeLens::CategoryMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *i
   for (unsigned int i = 0; i < n_cols_; i++) g_variant_unref(row_buf_[i]);
 }
 
-void HomeLens::FiltersMerger::OnSourceRowAdded(DeeModel *model, DeeModelIter *iter)
+void HomeLens::FiltersMerger::OnSourceRowAdded(DeeModel* model, DeeModelIter* iter)
 {
   /* Supporting filters on the home screen is possible, but *quite* tricky.
    * So... Discard ALL the rows!
    */
 }
 
-void HomeLens::CategoryMerger::OnSourceRowRemoved(DeeModel *model, DeeModelIter *iter)
+void HomeLens::CategoryMerger::OnSourceRowRemoved(DeeModel* model, DeeModelIter* iter)
 {
   /* We don't support removals of categories.
    * You can check out any time you like, but you can never leave
@@ -519,7 +519,7 @@ void HomeLens::CategoryMerger::OnSourceRowRemoved(DeeModel *model, DeeModelIter 
   LOG_DEBUG(logger) << "Removal of categories not supported.";
 }
 
-void HomeLens::ModelMerger::OnSourceRowRemoved(DeeModel *model, DeeModelIter *iter)
+void HomeLens::ModelMerger::OnSourceRowRemoved(DeeModel* model, DeeModelIter* iter)
 {
   DeeModelIter* target_iter;
   DeeModelTag*  target_tag;
@@ -537,17 +537,17 @@ void HomeLens::ModelMerger::OnSourceRowRemoved(DeeModel *model, DeeModelIter *it
     dee_model_remove(target_, target_iter);
 }
 
-void HomeLens::ResultsMerger::OnSourceRowRemoved(DeeModel *model, DeeModelIter *iter)
+void HomeLens::ResultsMerger::OnSourceRowRemoved(DeeModel* model, DeeModelIter* iter)
 {
   ModelMerger::OnSourceRowRemoved(model, iter);
 }
 
-void HomeLens::FiltersMerger::OnSourceRowRemoved(DeeModel *model, DeeModelIter *iter)
+void HomeLens::FiltersMerger::OnSourceRowRemoved(DeeModel* model, DeeModelIter* iter)
 {
   /* We aren't adding any rows to the merged model, so nothing to do here */
 }
 
-void HomeLens::ModelMerger::OnSourceRowChanged(DeeModel *model, DeeModelIter *iter)
+void HomeLens::ModelMerger::OnSourceRowChanged(DeeModel* model, DeeModelIter* iter)
 {
   DeeModelIter* target_iter;
   DeeModelTag*  target_tag;
@@ -565,18 +565,18 @@ void HomeLens::ModelMerger::OnSourceRowChanged(DeeModel *model, DeeModelIter *it
   for (unsigned int i = 0; i < n_cols_; i++) g_variant_unref(row_buf_[i]);
 }
 
-void HomeLens::ResultsMerger::OnSourceRowChanged(DeeModel *model, DeeModelIter *iter)
+void HomeLens::ResultsMerger::OnSourceRowChanged(DeeModel* model, DeeModelIter* iter)
 {
   // FIXME: We can support this, but we need to re-calculate the category offset
   LOG_WARN(logger) << "In-line changing of results not supported in the home lens. Sorry.";
 }
 
-void HomeLens::FiltersMerger::OnSourceRowChanged(DeeModel *model, DeeModelIter *iter)
+void HomeLens::FiltersMerger::OnSourceRowChanged(DeeModel* model, DeeModelIter* iter)
 {
   /* We aren't adding any rows to the merged model, so nothing to do here */
 }
 
-void HomeLens::ModelMerger::EnsureRowBuf(DeeModel *model)
+void HomeLens::ModelMerger::EnsureRowBuf(DeeModel* model)
 {
   if (G_UNLIKELY (n_cols_ == 0))
   {
@@ -637,7 +637,7 @@ void HomeLens::ModelMerger::EnsureRowBuf(DeeModel *model)
   }
 }
 
-DeeModelTag* HomeLens::ModelMerger::FindSourceToTargetTag(DeeModel *model)
+DeeModelTag* HomeLens::ModelMerger::FindSourceToTargetTag(DeeModel* model)
 {
   return source_to_target_tags_[model];
 }
