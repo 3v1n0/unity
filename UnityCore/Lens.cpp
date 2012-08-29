@@ -800,6 +800,11 @@ bool Lens::Impl::connected() const
   return connected_;
 }
 
+bool Lens::Impl::provides_private_content() const
+{
+  return provides_private_content_;
+}
+
 Lens::Lens(string const& id_,
            string const& dbus_name_,
            string const& dbus_path_,
