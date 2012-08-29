@@ -114,6 +114,7 @@ public:
   nux::RWProperty<Categories::Ptr> categories;
   nux::RWProperty<Filters::Ptr> filters;
   nux::RWProperty<bool> connected;
+  nux::RWProperty<bool> provides_private_content;
   nux::ROProperty<std::string> last_search_string;
   nux::ROProperty<std::string> last_global_search_string;
 
