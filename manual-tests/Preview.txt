@@ -137,14 +137,14 @@ full screen dash.
 Setup:
 #. Open dash super
 #. Ensure dash is in windowed mode (not full screen)
-#. Open a lens which supports previewing (eg Application, Music, File)
+#. Open a lens which supports previewing (e.g. Application, Music, File)
 #. Enter arbitrary search string and ensure a result is available.
 
 Actions:
 #. Open preview for result.
-#. Resize dash to fullscreen.
+#. Resize dash to full screen.
 #. Resize dash back to windowed mode.
 
 Expected Result:
   A preview will open with the correct size initially (no size flicker).
-  When the dash is resized, the preview will resize to maximize the space available (796x390 apsect ratio).
+  When the dash is resized, the preview will resize to maximize the space available (796x390 aspect ratio).
