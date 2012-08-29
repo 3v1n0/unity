@@ -26,11 +26,11 @@
  *  * Expose the child of BaseWindow (the layout)
  *  * Window event notification (activate, deactivate, and so on)
  *
- * BTW: we consider that one window is active if it has directly the
- * keyboard focus, or if one of his child has the keyboard focus (ie:
+ * BTW: we consider that one window is active, if it directly has
+ * keyboard focus, or if one of its children has keyboard focus (ie:
  * the Launcher via GrabKeyboardFocus)
  *
- * HasKeyboardFocus is not a reliable to check that:
+ * HasKeyboardFocus is not reliable to check that:
  *  see bug https://bugs.launchpad.net/nux/+bug/745049
  *
  * So we need to update the state of the objects using the information
@@ -147,7 +147,7 @@ nux_base_window_accessible_ref_state_set(AtkObject* obj)
 
   atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
 
-  /* HasKeyboardFocus is not a reliable here:
+  /* HasKeyboardFocus is not reliable here:
      see bug https://bugs.launchpad.net/nux/+bug/745049 */
   if (self->priv->active)
   {
@@ -162,7 +162,7 @@ nux_base_window_accessible_ref_state_set(AtkObject* obj)
 static void
 atk_window_interface_init(AtkWindowIface* iface)
 {
-  /* AtkWindow just define signals at this moment */
+  /* AtkWindow just defines signals at this moment */
 }
 
 /* public */

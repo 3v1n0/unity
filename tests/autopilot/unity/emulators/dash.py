@@ -332,6 +332,26 @@ class FilterBar(UnityIntrospectionObject):
 class FilterExpanderLabel(UnityIntrospectionObject):
     """A label that expands into a filter within a filter bar."""
 
+    def ensure_expanded(self):
+        """Expand the filter expander label, if it's not already"""
+        if not self.expanded:
+            tx = x + width / 2
+            ty = y + height / 2
+            m = Mouse()
+            m.move(tx, ty)
+            m.click()
+            self.expanded.wait_for(True)
+
+    def ensure_collapsed(self):
+        """Collapse the filter expander label, if it's not already"""
+        if self.expanded:
+            tx = x + width / 2
+            ty = y + height / 2
+            m = Mouse()
+            m.move(tx, ty)
+            m.click()
+            self.expanded.wait_for(False)
+
 
 class CoverArt(UnityIntrospectionObject):
     """A view which can be used to show a texture, or generate one using a thumbnailer."""

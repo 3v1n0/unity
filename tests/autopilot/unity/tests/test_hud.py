@@ -247,6 +247,20 @@ class HudBehaviorTests(HudTestsBase):
         self.mouse.click()
 
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
+        
+    def test_hud_closes_click_after_text_removed(self):
+        """Clicking outside of the hud after a search text has been entered and
+        then removed from the searchbox will make it close."""
+        
+        self.hud.ensure_visible()
+        self.keyboard.type("Test")
+        self.keyboard.press_and_release("Escape")
+
+        (x,y,w,h) = self.hud.view.geometry
+        self.mouse.move(w/2, h+50)
+        self.mouse.click()
+        
+        self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
     def test_alt_f4_close_hud(self):
         """Hud must close on alt+F4."""
@@ -277,6 +291,23 @@ class HudBehaviorTests(HudTestsBase):
         self.addCleanup(self.close_all_app,  "System Settings")
         
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
+        
+    def test_hud_closes_on_escape(self):
+        """Hud must close on escape after searchbox is cleared"""
+        self.hud.ensure_visible()
+        
+        self.keyboard.type("ThisText")
+        self.keyboard.press_and_release("Escape")
+        self.keyboard.press_and_release("Escape")
+        
+        self.assertThat(self.hud.visible, Eventually(Equals(False)))
+    
+    def test_hud_closes_on_escape_shrunk(self):
+        """Hud must close when escape key is pressed"""
+        self.hud.ensure_visible()
+        self.keyboard.press_and_release("Escape")
+        
+        self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
     def test_alt_arrow_keys_not_eaten(self):
         """Tests that Alt+ArrowKey events are correctly passed to the
@@ -303,6 +334,29 @@ class HudBehaviorTests(HudTestsBase):
         file_contents = open('/tmp/ap_test_alt_keys', 'r').read().strip()
         
         self.assertThat(file_contents, Equals('ABCD'))
+
+    def test_hud_closes_on_item_activated(self):
+        """Activating a HUD item with the 'Enter' key MUST close the HUD."""
+        # starting on a clean desktop because this way we are sure that our search
+        # string won't match any menu item from a focused application
+        self.window_manager.enter_show_desktop()
+        self.addCleanup(self.window_manager.leave_show_desktop)
+
+        self.hud.ensure_visible()
+
+        self.keyboard.type("settings")
+        self.assertThat(self.hud.search_string, Eventually(Equals("settings")))
+
+        self.keyboard.press_and_release('Down')
+        self.assertThat(self.hud.selected_button, Eventually(Equals(2)))
+        self.keyboard.press_and_release('Down')
+        self.assertThat(self.hud.selected_button, Eventually(Equals(3)))
+        self.keyboard.press_and_release('Enter')
+
+        self.addCleanup(self.close_all_app,  "System Settings")
+
+        self.assertThat(self.hud.visible, Eventually(Equals(False)))
+
 
 class HudLauncherInteractionsTests(HudTestsBase):
 

@@ -49,9 +49,9 @@ struct _NuxAreaAccessibleClass
   NuxObjectAccessibleClass parent_class;
 
   /*
-   * Usually objects shouldn emit events like focus or selection
+   * Usually objects shouldn't emit events like focus or selection
    * changes until the toplevel window is active. This method is
-   * called when the toplevel window became active. Redefine it if you
+   * called when the toplevel window becomes active. Redefine it if you
    * need to check any pending state change notification.
    */
   gboolean(*check_pending_notification)(NuxAreaAccessible* self);

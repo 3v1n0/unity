@@ -29,6 +29,7 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/RadioOptionFilter.h>
 
+#include "FilterExpanderLabel.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/KeyboardUtil.h"
 #include "unity-shared/UnitySettings.h"
@@ -969,9 +970,11 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     if (active_lens_view_->filter_bar() && active_lens_view_->fscroll_view() &&
         active_lens_view_->fscroll_view()->IsVisible())
     {
-      for (auto filter : active_lens_view_->filter_bar()->GetLayout()->GetChildren())
+      for (auto child : active_lens_view_->filter_bar()->GetLayout()->GetChildren())
       {
-        tabs.push_back(filter);
+        FilterExpanderLabel* filter = dynamic_cast<FilterExpanderLabel*>(child);
+        if (filter)
+          tabs.push_back(filter->expander_view());
       }
     }
 
