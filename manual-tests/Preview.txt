@@ -137,12 +137,13 @@ full screen dash.
 Setup:
 #. Open dash super
 #. Ensure dash is in windowed mode (not full screen)
-#. Open a lens which supports previeing (eg Application, Music, File)
+#. Open a lens which supports previewing (eg Application, Music, File)
 #. Enter arbitrary search string and ensure a result is available.
 
 Actions:
 #. Open preview for result.
-#. Resize dash to fullscreen
+#. Resize dash to fullscreen.
+#. Resize dash back to windowed mode.
 
 Expected Result:
   A preview will open with the correct size initially (no size flicker).
