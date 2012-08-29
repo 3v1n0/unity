@@ -3548,11 +3548,14 @@ void UnityWindow::scalePaintDecoration (const GLWindowPaintAttrib& attrib,
     }
   }
 
+  // Make the windows header opaque to override the original
+  GLWindowPaintAttrib sAttrib (attrib);
+  sAttrib.opacity = OPAQUE;
 
   ScalePosition pos = sWindow->getCurrentPosition ();
   int maxHeight, maxWidth;
   // Use "2" as margin to make sure to cover all originial decoration
-  const int width = (window->width () + 4) * pos.scale;
+  const float width = (window->width () + 4) * pos.scale;
   const float x = pos.x () + window->x () - (2 * pos.scale);
   const float y = pos.y () + window->y () - SCALE_WINDOW_TITLE_SIZE;
   const float iconX = x + CLOSE_ICON_SPACE;
@@ -3560,7 +3563,7 @@ void UnityWindow::scalePaintDecoration (const GLWindowPaintAttrib& attrib,
 
   maxHeight = maxWidth = 0;
 
-  DrawWindowTitle (attrib,
+  DrawWindowTitle (sAttrib,
                    transform,
                    mask,
                    x, y,
@@ -3569,7 +3572,7 @@ void UnityWindow::scalePaintDecoration (const GLWindowPaintAttrib& attrib,
   mask |= PAINT_WINDOW_BLEND_MASK;
   foreach(GLTexture *icon, close_icon_)
   {
-    DrawTexture (icon, attrib, transform, mask,
+    DrawTexture (icon, sAttrib, transform, mask,
                  iconX, iconY,
                  maxWidth , maxHeight);
   }
