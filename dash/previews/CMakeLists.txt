@@ -64,7 +64,7 @@ target_link_libraries (music_previews previews-lib unity-shared)
 # 
 # Social Standalone variant
 #
-add_executable (social_previews SocialPreview.cpp)
+add_executable (social_previews StandaloneSocialPreview.cpp)
 add_dependencies (social_previews previews-lib)
 target_link_libraries (social_previews previews-lib unity-shared)
 

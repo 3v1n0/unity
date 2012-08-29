@@ -18,8 +18,8 @@
  *              Michal Hruby <michal.hruby@canonical.com>
  */
 
-#ifndef UNITY_APPLICATION_PREVIEW_H
-#define UNITY_APPLICATION_PREVIEW_H
+#ifndef UNITY_SOCIAL_PREVIEW_H
+#define UNITY_SOCIAL_PREVIEW_H
 
 #include <memory>
 

@@ -22,7 +22,6 @@
 
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/PreviewStyle.h"
-#include "unity-shared/CoverArt.h"
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/PlacesVScrollBar.h"
@@ -152,118 +151,84 @@ void SocialPreview::SetupViews()
 
   /////////////////////
   // Image
-  image_ = new CoverArt();
-  AddChild(image_.GetPointer());
-  UpdateCoverArtImage(image_.GetPointer());
+  //image_ = new CoverArt();
+  //AddChild(image_.GetPointer());
+  //UpdateCoverArtImage(image_.GetPointer());
+  nux::VLayout* social_content_layout = new nux::VLayout();
+  social_content_layout->SetSpaceBetweenChildren(16);
+  
+  content_ = new nux::StaticCairoText(social_preview_model->content, true, NUX_TRACKER_LOCATION);
+  content_->SetLines(-1);
+  social_content_layout->AddView(content_.GetPointer(), 1);
+
   /////////////////////
 
     /////////////////////
-    // App Data Panel
+    // Social Data Panel
     full_data_layout_ = new nux::VLayout();
     full_data_layout_->SetPadding(style.GetDetailsTopMargin(), 0, style.GetDetailsBottomMargin(), style.GetDetailsLeftMargin());
     full_data_layout_->SetSpaceBetweenChildren(16);
 
       /////////////////////
-      // Main App Info
-      nux::HLayout* main_app_info = new nux::HLayout();
-      main_app_info->SetSpaceBetweenChildren(style.GetSpaceBetweenIconAndDetails());
+      // Main Social Info
+      nux::HLayout* main_social_info = new nux::HLayout();
+      main_social_info->SetSpaceBetweenChildren(style.GetSpaceBetweenIconAndDetails());
 
         /////////////////////
         // Icon Layout
         nux::VLayout* icon_layout = new nux::VLayout();
         icon_layout->SetSpaceBetweenChildren(3);
-        app_icon_ = new IconTexture(social_preview_model->app_icon.Get().RawPtr() ? g_icon_to_string(social_preview_model->app_icon.Get().RawPtr()) : "", 72);
-        app_icon_->SetMinimumSize(style.GetAppIconAreaWidth(), style.GetAppIconAreaWidth());
-        app_icon_->SetMaximumSize(style.GetAppIconAreaWidth(), style.GetAppIconAreaWidth());
-        icon_layout->AddView(app_icon_.GetPointer(), 0);
+        avatar_ = new IconTexture(social_preview_model->avatar.Get().RawPtr() ? g_icon_to_string(social_preview_model->avatar.Get().RawPtr()) : "", 72);
+        avatar_->SetMinimumSize(style.GetAppIconAreaWidth(), style.GetAppIconAreaWidth());
+        avatar_->SetMaximumSize(style.GetAppIconAreaWidth(), style.GetAppIconAreaWidth());
+        icon_layout->AddView(avatar_.GetPointer(), 0);
 
         /////////////////////
 
         /////////////////////
         // Data
 
-        nux::VLayout* app_data_layout = new nux::VLayout();
-        app_data_layout->SetSpaceBetweenChildren(16);
+        nux::VLayout* social_data_layout = new nux::VLayout();
+        social_data_layout->SetSpaceBetweenChildren(16);
 
         title_subtitle_layout_ = new nux::VLayout();
         title_subtitle_layout_->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
 
-        title_ = new nux::StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
+        sender_ = new nux::StaticCairoText(social_preview_model->sender, true, NUX_TRACKER_LOCATION);
+        sender_->SetLines(-1);
+        // FIXME
+        //sender_->SetFont(style.title_size_font().c_str());
+        title_subtitle_layout_->AddView(sender_.GetPointer(), 1);
+
+        title_ = new nux::StaticCairoText(social_preview_model->title, true, NUX_TRACKER_LOCATION);
+        // FIXME
+        //title_->SetFont(style.title_font().c_str());
         title_->SetLines(-1);
-        title_->SetFont(style.title_font().c_str());
         title_subtitle_layout_->AddView(title_.GetPointer(), 1);
 
-        if (!preview_model_->subtitle.Get().empty())
-        {
-          subtitle_ = new nux::StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
-          subtitle_->SetFont(style.subtitle_size_font().c_str());
-          subtitle_->SetLines(-1);
-          title_subtitle_layout_->AddView(subtitle_.GetPointer(), 1);
-        }
-
-        nux::VLayout* app_updated_copywrite_layout = new nux::VLayout();
-        app_updated_copywrite_layout->SetSpaceBetweenChildren(8);
-
-        if (!social_preview_model->license.Get().empty())
-        {
-          license_ = new nux::StaticCairoText(social_preview_model->license, true, NUX_TRACKER_LOCATION);
-          license_->SetFont(style.app_license_font().c_str());
-          license_->SetLines(-1);
-          app_updated_copywrite_layout->AddView(license_.GetPointer(), 1);
-        }
-
-        if (!social_preview_model->last_update.Get().empty())
-        {
-          std::stringstream last_update;
-          last_update << _("Last Updated") << " " << social_preview_model->last_update.Get();
-
-          last_update_ = new nux::StaticCairoText(last_update.str(), true, NUX_TRACKER_LOCATION);
-          last_update_->SetFont(style.app_last_update_font().c_str());
-          app_updated_copywrite_layout->AddView(last_update_.GetPointer(), 1);
-        }
-
-        if (!social_preview_model->copyright.Get().empty())
-        {
-          copywrite_ = new nux::StaticCairoText(social_preview_model->copyright, true, NUX_TRACKER_LOCATION);
-          copywrite_->SetFont(style.app_copywrite_font().c_str());
-          copywrite_->SetLines(-1);
-          app_updated_copywrite_layout->AddView(copywrite_.GetPointer(), 1);
-        }
-
-        app_data_layout->AddLayout(title_subtitle_layout_);
-        app_data_layout->AddLayout(app_updated_copywrite_layout);
+        social_data_layout->AddLayout(title_subtitle_layout_);
 
         // buffer space
         /////////////////////
 
-      main_app_info->AddLayout(icon_layout, 0);
-      main_app_info->AddLayout(app_data_layout, 1);
+      main_social_info->AddLayout(icon_layout, 0);
+      main_social_info->AddLayout(social_data_layout, 1);
       /////////////////////
 
       /////////////////////
       // Description
-      nux::ScrollView* app_info = new DetailsScrollView(NUX_TRACKER_LOCATION);
-      app_info->EnableHorizontalScrollBar(false);
+      nux::ScrollView* social_info = new DetailsScrollView(NUX_TRACKER_LOCATION);
+      social_info->EnableHorizontalScrollBar(false);
 
-      nux::VLayout* app_info_layout = new nux::VLayout();
-      app_info_layout->SetSpaceBetweenChildren(12);
-      app_info->SetLayout(app_info_layout);
-
-      if (!preview_model_->description.Get().empty())
-      {
-        description_ = new nux::StaticCairoText(preview_model_->description, false, NUX_TRACKER_LOCATION); // not escaped!
-        description_->SetFont(style.description_font().c_str());
-        description_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_TOP);
-        description_->SetLines(-style.GetDescriptionLineCount());
-        description_->SetLineSpacing(style.GetDescriptionLineSpacing());
-        app_info_layout->AddView(description_.GetPointer());
-      }
+      nux::VLayout* social_info_layout = new nux::VLayout();
+      social_info_layout->SetSpaceBetweenChildren(12);
+      social_info->SetLayout(social_info_layout);
 
       if (!preview_model_->GetInfoHints().empty())
       {
         preview_info_hints_ = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth());
         AddChild(preview_info_hints_.GetPointer());
-        app_info_layout->AddView(preview_info_hints_.GetPointer());
+        social_info_layout->AddView(preview_info_hints_.GetPointer());
       }
       /////////////////////
 
@@ -274,12 +239,12 @@ void SocialPreview::SetupViews()
       actions_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
       ///////////////////
 
-    full_data_layout_->AddLayout(main_app_info, 0);
-    full_data_layout_->AddView(app_info, 1);
+    full_data_layout_->AddLayout(main_social_info, 0);
+    full_data_layout_->AddView(social_info, 1);
     full_data_layout_->AddLayout(actions_layout, 0);
     /////////////////////
   
-  image_data_layout->AddView(image_.GetPointer(), 0);
+  image_data_layout->AddView(social_content_layout, 0);
   image_data_layout->AddLayout(full_data_layout_, 1);
 
 
@@ -296,17 +261,12 @@ void SocialPreview::PreLayoutManagement()
 
   if (geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() < style.GetDetailsPanelMinimumWidth())
     geo_art.width = MAX(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() - style.GetDetailsPanelMinimumWidth());
-  image_->SetMinMaxSize(geo_art.width, geo_art.height);
 
   int details_width = MAX(0, geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
-  int top_app_info_max_width = details_width - style.GetAppIconAreaWidth() - style.GetSpaceBetweenIconAndDetails();
+  int top_social_info_max_width = details_width - style.GetAppIconAreaWidth() - style.GetSpaceBetweenIconAndDetails();
 
-  if (title_) { title_->SetMaximumWidth(top_app_info_max_width); }
-  if (subtitle_) { subtitle_->SetMaximumWidth(top_app_info_max_width); }
-  if (license_) { license_->SetMaximumWidth(top_app_info_max_width); }
-  if (last_update_) { last_update_->SetMaximumWidth(top_app_info_max_width); }
-  if (copywrite_) { copywrite_->SetMaximumWidth(top_app_info_max_width); }
-  if (description_) { description_->SetMaximumWidth(details_width); }
+  if (sender_) { sender_->SetMaximumWidth(top_social_info_max_width); }
+  if (title_) { title_->SetMaximumWidth(top_social_info_max_width); }
 
   for (nux::AbstractButton* button : action_buttons_)
   {
