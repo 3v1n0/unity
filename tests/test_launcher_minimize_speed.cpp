@@ -14,7 +14,7 @@
  * version 3 along with this program.  If not, see
  * <http://www.gnu.org/licenses/>
  *
- * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
+ * Authored by: Ugo Riboni <ugo.riboni@canonical.com>
  *
  */
 
@@ -50,7 +50,7 @@ public:
   /* override */ void TearDown()
   {
     g_setenv("GSETTINGS_SCHEMA_DIR", "", true);
-    g_setenv("GSETTINGS_BACKEND", "", TRUE);
+    g_unsetenv("GSETTINGS_BACKEND");
     delete mController;
   }
 };
