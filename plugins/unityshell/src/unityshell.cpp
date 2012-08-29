@@ -3450,9 +3450,6 @@ void UnityWindow::DrawWindowTitle (const GLWindowPaintAttrib& attrib,
 {
   const float width = x2 - x;
 
-  // Paint a fake window decoration
-  WindowCairoContext *context = CreateCairoContext (width, SCALE_WINDOW_TITLE_SIZE);
-
   if (!window_header_style_)
   {
     GtkWidgetPath* widget_path = gtk_widget_path_new ();
@@ -3463,19 +3460,30 @@ void UnityWindow::DrawWindowTitle (const GLWindowPaintAttrib& attrib,
     gtk_style_context_set_path (window_header_style_, widget_path);
     gtk_style_context_add_class (window_header_style_, "gnome-panel-menu-bar");
     gtk_style_context_add_class (window_header_style_, "unity-panel");
-
-    //TODO: make round border (this does not work)
-    gtk_style_context_set_junction_sides (window_header_style_, GTK_JUNCTION_BOTTOM);
-    g_object_set (window_header_style_,
-                  GTK_STYLE_PROPERTY_BORDER_WIDTH, 10,
-                  GTK_STYLE_PROPERTY_BORDER_RADIUS, 10,
-                  GTK_STYLE_PROPERTY_BORDER_STYLE, GTK_BORDER_STYLE_SOLID,
-                  NULL);
-
   }
+
+  // Paint a fake window decoration
+  WindowCairoContext *context = CreateCairoContext (width, SCALE_WINDOW_TITLE_SIZE);
+
+  double height = SCALE_WINDOW_TITLE_SIZE;
+  double aspect = 1.0;
+  double corner_radius = height / 10.0;
+  double radius = corner_radius / aspect;
+  double degrees = M_PI / 180.0;
 
   cairo_save (context->cr_);
   cairo_push_group (context->cr_);
+
+  // Round window title top border
+  cairo_new_sub_path (context->cr_);
+
+  cairo_arc (context->cr_, radius, radius, radius, 180 * degrees, 270 * degrees);
+  cairo_arc (context->cr_, width - radius, radius, radius, -90 * degrees, 0 * degrees);
+  cairo_line_to (context->cr_, width, height);
+  cairo_line_to (context->cr_, 0, height);
+
+  cairo_close_path (context->cr_);
+  cairo_clip (context->cr_);
 
   gtk_render_background (window_header_style_, context->cr_, 0, 0, width, SCALE_WINDOW_TITLE_SIZE);
   gtk_render_frame (window_header_style_, context->cr_, 0, 0, width, SCALE_WINDOW_TITLE_SIZE);
