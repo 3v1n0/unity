@@ -72,6 +72,7 @@ protected:
   virtual long PostLayoutManagement(long LayoutResult);
 
 private:
+  void OnMouseEnter(int x, int y, unsigned int button, unsigned int key);
   void OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key);
   void OnKeyDown (unsigned long event_type, unsigned long event_keysym,
                                 unsigned long event_state, const TCHAR* character,
@@ -84,6 +85,9 @@ private:
   nux::Geometry GetBestFitGeometry(nux::Geometry const& for_geo);
 
   void ProcessGrowShrink();
+
+  void SelectLastFocusedButton();
+  void ResetButtonFocus();
 
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
@@ -116,6 +120,7 @@ private:
   int selected_button_;
   bool show_embedded_icon_;
   bool activated_signal_sent_;
+  bool keyboard_moved_focus_;
 };
 
 

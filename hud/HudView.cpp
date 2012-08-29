@@ -32,6 +32,8 @@
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/DashStyle.h"
 
+#include <boost/range/adaptors.hpp>
+
 namespace unity
 {
 namespace hud
@@ -66,6 +68,7 @@ View::View()
   , timeline_need_more_draw_(false)
   , selected_button_(0)
   , show_embedded_icon_(true)
+  , keyboard_moved_focus_(false)
 {
   renderer_.SetOwner(this);
   renderer_.need_redraw.connect([this] () {
@@ -112,6 +115,10 @@ View::View()
   });
 
   mouse_down.connect(sigc::mem_fun(this, &View::OnMouseButtonDown));
+  mouse_enter.connect(sigc::mem_fun(this, &View::OnMouseEnter));
+  mouse_leave.connect([&](int x, int y, unsigned long mouse_button, unsigned long special_key) {
+    SelectLastFocusedButton();
+  });
 
   Relayout();
 }
@@ -251,6 +258,40 @@ void View::SetQueries(Hud::Queries queries)
       query_activated.emit(dynamic_cast<HudButton*>(view)->GetQuery());
     });
 
+    button->mouse_move.connect([&](int x, int y, int dx, int dy, unsigned long mouse_button, unsigned long special_key) {
+      if (keyboard_moved_focus_)
+      {
+        ResetButtonFocus();
+        keyboard_moved_focus_ = false;
+      }
+
+    });
+
+    button->mouse_enter.connect([&](int x, int y, unsigned long mouse_button, unsigned long special_key) {
+      int button_index = 1;
+      for (auto button : boost::adaptors::reverse(buttons_))
+      {
+        if (selected_button_ == button_index)
+          button->fake_focused = false;
+        ++button_index;
+      }
+
+      button_index = 1;
+      for (auto button : boost::adaptors::reverse(buttons_))
+      {
+        if (button->fake_focused)
+        {
+          selected_button_ = button_index;
+          break;
+        }
+        ++button_index;
+      }
+    });
+
+    button->mouse_leave.connect([&](int x, int y, unsigned long mouse_button, unsigned long special_key) {
+      SelectLastFocusedButton();
+    });
+
     button->key_nav_focus_activate.connect([&](nux::Area* area) {
       query_activated.emit(dynamic_cast<HudButton*>(area)->GetQuery());
     });
@@ -379,6 +420,8 @@ void View::SetupViews()
       AddChild(search_bar_.GetPointer());
       content_layout_->AddView(search_bar_.GetPointer(), 0, nux::MINOR_POSITION_LEFT);
 
+      search_bar_->mouse_enter.connect(sigc::mem_fun(this, &View::OnMouseEnter));
+
       button_views_ = new nux::VLayout();
       button_views_->SetMaximumWidth(content_width);
 
@@ -416,6 +459,12 @@ void View::OnKeyDown (unsigned long event_type, unsigned long keysym,
     LOG_DEBUG(logger) << "got escape key";
     ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
   }
+}
+
+// When the Mouse enters the HudView keep the last selected button highlighted
+void View::OnMouseEnter(int x, int y, unsigned int button, unsigned int key)
+{
+  SelectLastFocusedButton();
 }
 
 void View::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
@@ -482,6 +531,34 @@ void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
       return false;
     }));
   }
+}
+
+void View::SelectLastFocusedButton()
+{
+  bool focused_button = false;
+  for (auto button : buttons_)
+  {
+    if (button->fake_focused)
+      focused_button = true;
+  }
+
+  if (!focused_button)
+  {
+    int button_index = 1;
+    for (auto button : boost::adaptors::reverse(buttons_))
+    {
+      if (button_index == selected_button_)
+        button->fake_focused = true;
+      ++button_index;
+    }
+  }
+}
+
+void View::ResetButtonFocus()
+{
+  //selected_button_ = 0;
+  for (auto button : buttons_)
+    button->fake_focused = false;
 }
 
 // Keyboard navigation
@@ -650,6 +727,7 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
               ++next;
               if (next != buttons_.end())
               {
+                keyboard_moved_focus_ = true;
                 // The button with the current fake_focus looses it.
                 (*it)->fake_focused = false;
                 // The next button gets the fake_focus
@@ -661,7 +739,6 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
             }
           }
         }
-
         if (event_type == nux::NUX_KEYDOWN && direction == nux::KEY_NAV_DOWN)
         {
           std::list<HudButton::Ptr>::reverse_iterator rit;
@@ -673,6 +750,7 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
               ++next;
               if(next != buttons_.rend())
               {
+                keyboard_moved_focus_ = true;
                 // The button with the current fake_focus looses it.
                 (*rit)->fake_focused = false;
                 // The next button bellow gets the fake_focus.
