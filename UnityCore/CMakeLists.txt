@@ -46,6 +46,7 @@ set (CORE_HEADERS
      ResultIterator.h
      Results.h
      SeriesPreview.h
+     SocialPreview.h
      Track.h
      Tracks.h
      Variant.h
@@ -84,6 +85,7 @@ set (CORE_SOURCES
      ResultIterator.cpp
      Results.cpp
      SeriesPreview.cpp
+     SocialPreview.cpp
      Track.cpp
      Tracks.cpp
      Variant.cpp

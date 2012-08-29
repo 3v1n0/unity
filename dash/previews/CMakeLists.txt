@@ -38,6 +38,7 @@ set (PREVIEWS_SOURCES
      PreviewInfoHintWidget.cpp
      PreviewNavigator.cpp
      PreviewRatingsWidget.cpp
+     SocialPreview.cpp
      Track.cpp
      Tracks.cpp
      )
@@ -59,6 +60,13 @@ target_link_libraries (app_previews previews-lib unity-shared)
 add_executable (music_previews StandaloneMusicPreview.cpp)
 add_dependencies (music_previews previews-lib)
 target_link_libraries (music_previews previews-lib unity-shared)
+
+# 
+# Social Standalone variant
+#
+add_executable (social_previews SocialPreview.cpp)
+add_dependencies (social_previews previews-lib)
+target_link_libraries (social_previews previews-lib unity-shared)
 
 # 
 # Music Standalone variant
