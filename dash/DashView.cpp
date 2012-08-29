@@ -511,8 +511,6 @@ void DashView::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
       graphics_engine.GetRenderStates().SetBlend(false);
       graphics_engine.PopClippingRectangle();
     }
-
-    preview_container_->ProcessDraw(graphics_engine, true); 
   }
   else if (fade_in_value_ != 0.0f)
   {
@@ -577,33 +575,41 @@ void DashView::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
   }
 }
 
-void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
+void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
-  renderer_.DrawInner(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
+  renderer_.DrawInner(graphics_engine, content_geo_, GetAbsoluteGeometry(), GetGeometry());
 
   if (!preview_displaying_ && (fade_in_value_ == 0.0f))
   {
-    // nux::Geometry geo = GetGeometry();
-    // geo.width -= 340;
-    // geo.height -= 20;
-
-    gfx_context.PushClippingRectangle(layout_->GetGeometry());
-    nux::GetPainter().PaintBackground(gfx_context, layout_->GetGeometry());
-    gfx_context.PopClippingRectangle();
+    graphics_engine.PushClippingRectangle(layout_->GetGeometry());
+    nux::GetPainter().PaintBackground(graphics_engine, layout_->GetGeometry());
+    graphics_engine.PopClippingRectangle();
   }
 
   if (IsFullRedraw())
     nux::GetPainter().PushBackgroundStack();
   
   if (preview_displaying_)
-   preview_container_->ProcessDraw(gfx_context, (!force_draw) ? IsFullRedraw() : force_draw);
+  {
+    // Progressively reveal the preview.
+    nux::Geometry preview_clip_geo = preview_container_->GetGeometry();
+    preview_clip_geo.y = (preview_clip_geo.y + preview_clip_geo.height)/2.0f - 
+      (1.0f - fade_out_value_) * (preview_clip_geo.height)/2.0f;
+    preview_clip_geo.height = (1.0f - fade_out_value_) * (preview_clip_geo.height);
+
+    graphics_engine.PushClippingRectangle(preview_clip_geo);
+    preview_container_->ProcessDraw(graphics_engine, (!force_draw) ? IsFullRedraw() : force_draw);
+    graphics_engine.PopClippingRectangle();
+  }
   else if (fade_in_value_ == 0.0f)
-    layout_->ProcessDraw(gfx_context, force_draw);
+  {
+    layout_->ProcessDraw(graphics_engine, force_draw);
+  }
     
   if (IsFullRedraw())
     nux::GetPainter().PopBackgroundStack();
 
-  renderer_.DrawInnerCleanup(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
+  renderer_.DrawInnerCleanup(graphics_engine, content_geo_, GetAbsoluteGeometry(), GetGeometry());
 }
 
   void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
