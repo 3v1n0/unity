@@ -10,7 +10,6 @@
 from __future__ import absolute_import
 
 
-from autopilot.globals import global_context
 from autopilot.keybindings import KeybindingsHelper
 from autopilot.utilities import (
     get_compiz_option,
