@@ -3318,11 +3318,6 @@ UnityWindow::UnityWindow(CompWindow* window)
       }
     }
   }
-
-  CompString name (PKGDATADIR"/close_dash.png");
-  CompString pname ("unityshell");
-  CompSize size (CLOSE_ICON_SIZE, CLOSE_ICON_SIZE);
-  close_icon_ = GLTexture::readImageToTexture(name, pname, size);
 }
 
 void UnityWindow::DrawTexture (GLTexture* icon,
@@ -3450,31 +3445,19 @@ void UnityWindow::DrawWindowTitle (const GLWindowPaintAttrib& attrib,
 {
   const float width = x2 - x;
 
-  if (!window_header_style_)
-  {
-    GtkWidgetPath* widget_path = gtk_widget_path_new ();
-    gint pos = gtk_widget_path_append_type (widget_path, GTK_TYPE_WINDOW);
-    gtk_widget_path_iter_set_name (widget_path, pos, "UnityPanelWidget");
-
-    window_header_style_  = gtk_style_context_new ();
-    gtk_style_context_set_path (window_header_style_, widget_path);
-    gtk_style_context_add_class (window_header_style_, "gnome-panel-menu-bar");
-    gtk_style_context_add_class (window_header_style_, "unity-panel");
-  }
-
   // Paint a fake window decoration
   WindowCairoContext *context = CreateCairoContext (width, SCALE_WINDOW_TITLE_SIZE);
-
-  double height = SCALE_WINDOW_TITLE_SIZE;
-  double aspect = 1.0;
-  double corner_radius = height / 10.0;
-  double radius = corner_radius / aspect;
-  double degrees = M_PI / 180.0;
 
   cairo_save (context->cr_);
   cairo_push_group (context->cr_);
 
-  // Round window title top border
+  // Round window decoration top border
+  const double height = SCALE_WINDOW_TITLE_SIZE;
+  const double aspect = 1.0;
+  const double corner_radius = height / 10.0;
+  const double radius = corner_radius / aspect;
+  const double degrees = M_PI / 180.0;
+
   cairo_new_sub_path (context->cr_);
 
   cairo_arc (context->cr_, radius, radius, radius, 180 * degrees, 270 * degrees);
@@ -3485,6 +3468,7 @@ void UnityWindow::DrawWindowTitle (const GLWindowPaintAttrib& attrib,
   cairo_close_path (context->cr_);
   cairo_clip (context->cr_);
 
+  // Draw window decoration abased on gtk style
   gtk_render_background (window_header_style_, context->cr_, 0, 0, width, SCALE_WINDOW_TITLE_SIZE);
   gtk_render_frame (window_header_style_, context->cr_, 0, 0, width, SCALE_WINDOW_TITLE_SIZE);
 
@@ -3493,6 +3477,7 @@ void UnityWindow::DrawWindowTitle (const GLWindowPaintAttrib& attrib,
   cairo_paint_with_alpha (context->cr_, 1.0);
   cairo_restore (context->cr_);
 
+  // Draw windows title
   RenderText (context,
               CLOSE_ICON_SPACE * 2 + CLOSE_ICON_SIZE,
               0.0,
@@ -3522,14 +3507,53 @@ void UnityWindow::scalePaintDecoration (const GLWindowPaintAttrib& attrib,
   sWindow->scalePaintDecoration (attrib, transform, region, mask);
 
   if (!sWindow->hasSlot()) // animation not finished
-  {
     return;
+
+  if (!window_header_style_)
+  {
+    GtkWidgetPath* widget_path = gtk_widget_path_new ();
+    gint pos = gtk_widget_path_append_type (widget_path, GTK_TYPE_WINDOW);
+    gtk_widget_path_iter_set_name (widget_path, pos, "UnityPanelWidget");
+
+    window_header_style_  = gtk_style_context_new ();
+    gtk_style_context_set_path (window_header_style_, widget_path);
+    gtk_style_context_add_class (window_header_style_, "gnome-panel-menu-bar");
+    gtk_style_context_add_class (window_header_style_, "unity-panel");
+
+    // get close button
+    panel::Style& style = panel::Style::Instance();
+
+    std::vector<std::string> files = style.GetWindowButtonFileNames (panel::WindowButtonType::CLOSE,
+                                                                     panel::WindowState::NORMAL);
+
+    CompString pName ("unityshell");
+    foreach (std::string file, files)
+    {
+      CompString fileName (file.c_str ());
+      CompSize size (CLOSE_ICON_SIZE, CLOSE_ICON_SIZE);
+      close_icon_ = GLTexture::readImageToTexture (fileName,
+                                                   pName,
+                                                   size);
+      if (close_icon_.size () != 0)
+        break;
+    }
+
+    if (close_icon_.size () == 0)
+    {
+      CompString fileName (PKGDATADIR"/close_dash.png");
+      CompSize size (CLOSE_ICON_SIZE, CLOSE_ICON_SIZE);
+      close_icon_ = GLTexture::readImageToTexture (fileName,
+                                                   pName,
+                                                   size);
+    }
   }
+
 
   ScalePosition pos = sWindow->getCurrentPosition ();
   int maxHeight, maxWidth;
-  const int width = window->width () * pos.scale + 1;
-  const float x = pos.x () + window->x () - 1;
+  // Use "2" as margin to make sure to cover all originial decoration
+  const int width = (window->width () + 4) * pos.scale;
+  const float x = pos.x () + window->x () - (2 * pos.scale);
   const float y = pos.y () + window->y () - SCALE_WINDOW_TITLE_SIZE;
   const float iconX = x + CLOSE_ICON_SPACE;
   const float iconY = y + ((SCALE_WINDOW_TITLE_SIZE - CLOSE_ICON_SIZE)  / 2.0);
@@ -3566,7 +3590,7 @@ void UnityWindow::scaleSelectWindow ()
     cWindow = 0;
     CompWindow *old_window = screen->findWindow (us->highlighted_window_);
     if (old_window)
-        cWindow = CompositeWindow::get (old_window);
+      cWindow = CompositeWindow::get (old_window);
 
     if (cWindow)
       cWindow->addDamage ();
@@ -3596,6 +3620,9 @@ UnityWindow::~UnityWindow()
     if (wasMinimized)
       window->minimize ();
   }
+
+  if (window_header_style_)
+    g_object_unref (window_header_style_);
 
   ShowdesktopHandler::animating_windows.remove (static_cast <ShowdesktopHandlerWindowInterface *> (this));
 
