@@ -2588,11 +2588,6 @@ UnityWindow::minimize ()
 
   if (!mMinimizeHandler)
   {
-    /* Updating the count in dconf will trigger a "changed" signal to which
-     * the method setting the new animation speed is attached */
-    UnityScreen* unityScreen = UnityScreen::get(screen);
-    unityScreen->minimize_speed_controller->UpdateCount();
-
     mMinimizeHandler.reset (new UnityMinimizedHandler (window, this));
     mMinimizeHandler->minimize ();
   }
@@ -2700,6 +2695,11 @@ void UnityWindow::windowNotify(CompWindowNotify n)
         break;
       case CompWindowNotifyBeforeDestroy:
         being_destroyed.emit();
+        break;
+      case CompWindowNotifyMinimize:
+        /* Updating the count in dconf will trigger a "changed" signal to which
+         * the method setting the new animation speed is attached */
+        UnityScreen::get(screen)->minimize_speed_controller->UpdateCount();
         break;
       default:
         break;
