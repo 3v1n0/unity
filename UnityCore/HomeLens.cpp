@@ -242,6 +242,7 @@ public:
 
   std::vector<unsigned> GetDefaultOrder();
   std::string GetLensIdForCategory(unsigned) const;
+  std::map<unsigned, Lens::Ptr> const& GetCategoryToLensMap() const;
 
 protected:
   void RemoveSource(glib::Object<DeeModel> const& old_source);
@@ -276,15 +277,43 @@ public:
   Impl(HomeLens* owner, MergeMode merge_mode);
   ~Impl();
 
-  struct ResultSorter
+  struct CategorySorter
   {
-    std::map<unsigned, unsigned> results_per_cat;
+    CategorySorter(std::map<unsigned, unsigned>& results_per_category,
+                   std::map<unsigned, Lens::Ptr> const& category_owner_map)
+      : results_per_category_(results_per_category)
+      , category_to_owner_(category_owner_map)
+    {}
+
     bool operator() (unsigned cat_a, unsigned cat_b)
     {
-      return results_per_cat[cat_a] > results_per_cat[cat_b];
+      bool a_has_private_content = false;
+      bool b_has_private_content = false;
+
+      auto it = category_to_owner_.find(cat_a);
+      if (it != category_to_owner_.end() && it->second)
+      {
+        a_has_private_content = it->second->provides_private_content();
+      }
+      it = category_to_owner_.find(cat_b);
+      if (it != category_to_owner_.end() && it->second)
+      {
+        b_has_private_content = it->second->provides_private_content();
+      }
+
+      if (a_has_private_content != b_has_private_content)
+      {
+        return a_has_private_content ? true : false;
+      }
+
+      return results_per_category_[cat_a] > results_per_category_[cat_b];
     }
+
+    private:
+      std::map<unsigned, unsigned>& results_per_category_;
+      std::map<unsigned, Lens::Ptr> const& category_to_owner_;
   };
-  
+
   void OnLensAdded(Lens::Ptr& lens);
   gsize FindLensPriority (Lens::Ptr& lens);
   void EnsureCategoryAnnotation(Lens::Ptr& lens, DeeModel* results, DeeModel* categories);
@@ -694,6 +723,12 @@ std::string HomeLens::CategoryMerger::GetLensIdForCategory(unsigned cat) const
   return "";
 }
 
+std::map<unsigned, Lens::Ptr> const&
+HomeLens::CategoryMerger::GetCategoryToLensMap() const
+{
+  return category_to_owner_;
+}
+
 HomeLens::Impl::Impl(HomeLens *owner, MergeMode merge_mode)
   : owner_(owner)
   , cat_registry_(owner)
@@ -903,8 +938,8 @@ void HomeLens::Impl::LensSearchFinished(Lens::Ptr& lens)
   }
 
   auto order_vector = categories_merger_.GetDefaultOrder();
-  auto sorter = ResultSorter();
-  sorter.results_per_cat = results_per_cat;
+  auto sorter = CategorySorter(results_per_cat,
+                               categories_merger_.GetCategoryToLensMap());
   // stable sort based on number of results in each cat
   std::stable_sort(order_vector.begin(), order_vector.end(), sorter);
 
