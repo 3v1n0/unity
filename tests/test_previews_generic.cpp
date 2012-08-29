@@ -64,9 +64,9 @@ public:
     glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_generic_preview_new()));
 
     unity_protocol_preview_set_image_source_uri(proto_obj, "http://ia.media-imdb.com/images/M/MV5BMTM3NDM5MzY5Ml5BMl5BanBnXkFtZTcwNjExMDUwOA@@._V1._SY317_.jpg");
-    unity_protocol_preview_set_title(proto_obj, "Generic Title");
-    unity_protocol_preview_set_subtitle(proto_obj, "Generic Subtitle");
-    unity_protocol_preview_set_description(proto_obj, "Generic Desctiption");
+    unity_protocol_preview_set_title(proto_obj, "Generic Title & special char");
+    unity_protocol_preview_set_subtitle(proto_obj, "Generic Subtitle > special char");
+    unity_protocol_preview_set_description(proto_obj, "Generic Desctiption &lt; special char");
     unity_protocol_preview_add_action(proto_obj, "action1", "Action 1", NULL, 0);
     unity_protocol_preview_add_action(proto_obj, "action2", "Action 2", NULL, 0);
     unity_protocol_preview_add_info_hint(proto_obj, "hint1", "Hint 1", NULL, g_variant_new("s", "string hint 1"));
@@ -97,9 +97,9 @@ TEST_F(TestPreviewGeneric, TestUIValues)
 {
   MockGenericPreview::Ptr preview_view(new MockGenericPreview(preview_model_));
 
-  EXPECT_EQ(preview_view->title_->GetText(), "Generic Title");
-  EXPECT_EQ(preview_view->subtitle_->GetText(), "Generic Subtitle");
-  EXPECT_EQ(preview_view->description_->GetText(), "Generic Desctiption");
+  EXPECT_EQ(preview_view->title_->GetText(), "Generic Title &amp; special char");
+  EXPECT_EQ(preview_view->subtitle_->GetText(), "Generic Subtitle &gt; special char");
+  EXPECT_EQ(preview_view->description_->GetText(), "Generic Desctiption &lt; special char");
 
   EXPECT_EQ(preview_view->action_buttons_.size(), 2);
 }
