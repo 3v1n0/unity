@@ -227,6 +227,7 @@ if (GTEST_SRC_DIR AND
                  test_switcher_model.cpp
                  test_texture_cache.cpp
                  test_thumbnail_generator.cpp
+                 test_launcher_minimize_speed.cpp
                  gmockvolume.c
                  ${CMAKE_SOURCE_DIR}/dash/AbstractPlacesGroup.cpp
                  ${CMAKE_SOURCE_DIR}/dash/DashViewPrivate.cpp
@@ -332,6 +333,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/unity-shared/UserThumbnailProvider.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/WindowManager.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/ubus-server.cpp
+                 ${CMAKE_SOURCE_DIR}/plugins/unityshell/src/WindowMinimizeSpeedController.cpp
                 )
   target_link_libraries(test-gtest gtest gmock ${LIBS})
   add_test(UnityGTest test-gtest)
