@@ -161,11 +161,13 @@ private:
   nux::ObjectPtr<nux::IOpenGLBaseTexture> layout_copy_;
 
   float fade_out_value_;
+  float fade_in_value_;
   std::unique_ptr<nux::NuxTimerTickSource> tick_source_;
   std::unique_ptr<na::AnimationController> animation_controller_;
   na::AnimateValue<float> animation_;
 
   void FadeOutCallBack(float const& fade_out_value);
+  void FadeInCallBack(float const& fade_out_value);
 };
 
 
