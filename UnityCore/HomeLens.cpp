@@ -140,7 +140,8 @@ public:
   {
     auto it = reg_category_map_.begin();
 
-    // removal during iteration, careful here
+    // References and iterators to the erased elements are invalidated. 
+    // Other references and iterators are not affected.
     while (it != reg_category_map_.end())
     {
       if (it->first.first == model)
