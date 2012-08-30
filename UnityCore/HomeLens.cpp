@@ -943,8 +943,8 @@ void HomeLens::Impl::LensSearchFinished(Lens::Ptr& lens)
     results_per_cat[category] = model ? dee_model_get_n_rows(model) : 0;
   }
 
-  auto sorter = CategorySorter(results_per_cat,
-                               categories_merger_.GetCategoryToLensMap());
+  CategorySorter sorter(results_per_cat,
+                        categories_merger_.GetCategoryToLensMap());
   // stable sort based on number of results in each cat
   std::stable_sort(order_vector.begin(), order_vector.end(), sorter);
 
@@ -956,10 +956,7 @@ void HomeLens::Impl::LensSearchFinished(Lens::Ptr& lens)
     // get lens that owns this category
     std::string lens_id(categories_merger_.GetLensIdForCategory(order_vector.at(i)));
     if (lens_id == "shopping.lens")
-    {
-      LOG_WARN(logger) << "found shopping lens at " << i;
       shopping_index = i;
-    }
     else if (lens_id == "applications.lens")
       apps_index = i;
   }
