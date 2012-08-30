@@ -292,24 +292,24 @@ public:
 
     bool operator() (unsigned cat_a, unsigned cat_b)
     {
-      bool a_has_private_content = false;
-      bool b_has_private_content = false;
+      bool a_has_personal_content = false;
+      bool b_has_personal_content = false;
 
       auto it = category_to_owner_.find(cat_a);
       if (it != category_to_owner_.end() && it->second)
       {
-        a_has_private_content = it->second->provides_private_content();
+        a_has_personal_content = it->second->provides_personal_content();
       }
       it = category_to_owner_.find(cat_b);
       if (it != category_to_owner_.end() && it->second)
       {
-        b_has_private_content = it->second->provides_private_content();
+        b_has_personal_content = it->second->provides_personal_content();
       }
 
       // prioritize categories that have private content
-      if (a_has_private_content != b_has_private_content)
+      if (a_has_personal_content != b_has_personal_content)
       {
-        return a_has_private_content ? true : false;
+        return a_has_personal_content ? true : false;
       }
 
       return results_per_category_[cat_a] > results_per_category_[cat_b];

@@ -113,7 +113,7 @@ public:
   Categories::Ptr const& categories() const;
   Filters::Ptr const& filters() const;
   bool connected() const;
-  bool provides_private_content() const;
+  bool provides_personal_content() const;
 
   string const& last_search_string() const { return last_search_string_; }
   string const& last_global_search_string() const { return last_global_search_string_; }
@@ -135,7 +135,7 @@ public:
   Categories::Ptr categories_;
   Filters::Ptr filters_;
   bool connected_;
-  bool provides_private_content_;
+  bool provides_personal_content_;
 
   string private_connection_name_;
   string last_search_string_;
@@ -177,7 +177,7 @@ Lens::Impl::Impl(Lens* owner,
   , categories_(new Categories(model_type))
   , filters_(new Filters(model_type))
   , connected_(false)
-  , provides_private_content_(false)
+  , provides_personal_content_(false)
   , proxy_(NULL)
 {
   if (model_type == ModelType::REMOTE)
@@ -210,7 +210,7 @@ Lens::Impl::Impl(Lens* owner,
   owner_->categories.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::categories));
   owner_->filters.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::filters));
   owner_->connected.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::connected));
-  owner_->provides_private_content.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::provides_private_content));
+  owner_->provides_personal_content.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::provides_personal_content));
   owner_->last_search_string.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::last_search_string));
   owner_->last_global_search_string.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::last_global_search_string));
   owner_->view_type.changed.connect(sigc::mem_fun(this, &Lens::Impl::OnViewTypeChanged));
@@ -442,7 +442,7 @@ void Lens::Impl::UpdateProperties(bool search_in_global,
     owner_->visible.EmitChanged(visible_);
   }
 
-  bool provides_private_content = false;
+  bool provides_personal_content = false;
   gchar* key;
   GVariant* value;
 
@@ -451,16 +451,16 @@ void Lens::Impl::UpdateProperties(bool search_in_global,
   while (g_variant_iter_loop(hints_iter, "{sv}", &key, &value))
   {
     std::string key_name(key);
-    if (key_name == "provides-private-content")
+    if (key_name == "provides-personal-content")
     {
-      provides_private_content = g_variant_get_boolean(value) != FALSE;
+      provides_personal_content = g_variant_get_boolean(value) != FALSE;
     }
   }
 
-  if (provides_private_content_ != provides_private_content)
+  if (provides_personal_content_ != provides_personal_content)
   {
-    provides_private_content_ = provides_private_content;
-    owner_->provides_private_content.EmitChanged(provides_private_content_);
+    provides_personal_content_ = provides_personal_content;
+    owner_->provides_personal_content.EmitChanged(provides_personal_content_);
   }
 
   if (private_connection_name_ != private_connection_name)
@@ -800,9 +800,9 @@ bool Lens::Impl::connected() const
   return connected_;
 }
 
-bool Lens::Impl::provides_private_content() const
+bool Lens::Impl::provides_personal_content() const
 {
-  return provides_private_content_;
+  return provides_personal_content_;
 }
 
 Lens::Lens(string const& id_,
