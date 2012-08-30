@@ -24,14 +24,14 @@ class GcinTestCase(UnityTestCase):
 
         # Check that gcin is set as the active IM through im-switch
         if environ['XMODIFIERS'] != "@im=gcin":
-            raise EnvironmentError("Please make sure XMODIFIERS is set to @im=gcin. Set it using 'im-switch'.")
+            self.skip("Please make sure XMODIFIERS is set to @im=gcin. Set it using 'im-switch'.")
 
         running_process = subprocess.check_output('ps -e', shell=True)
         if 'gcin' not in running_process:
-            raise RuntimeError("gcin is not an active process, please start 'gcin' before running these tests.")
+            self.skip("gcin is not an active process, please start 'gcin' before running these tests.")
 
         if 'ibus' in running_process:
-            raise RuntimeError("IBus is currently running, please close 'ibus-daemon' before running these tests.")
+            self.skip("IBus is currently running, please close 'ibus-daemon' before running these tests.")
 
 
 class GcinTestHangul(GcinTestCase):
