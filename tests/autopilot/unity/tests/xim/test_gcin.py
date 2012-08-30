@@ -33,6 +33,7 @@ class GcinTestCase(UnityTestCase):
         if 'ibus' in running_process:
             raise RuntimeError("IBus is currently running, please close 'ibus-daemon' before running these tests.")
 
+
 class GcinTestHangul(GcinTestCase):
     """Tests the Dash and Hud with gcin in hangul mode."""
 
