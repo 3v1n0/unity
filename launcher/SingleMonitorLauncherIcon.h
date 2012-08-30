@@ -31,7 +31,7 @@ class SingleMonitorLauncherIcon : public SimpleLauncherIcon
 {
 
 public:
-  SingleMonitorLauncherIcon(int monitor);
+  SingleMonitorLauncherIcon(IconType type, int monitor);
 
 void SetMonitor(int monitor);
 int GetMonitor();

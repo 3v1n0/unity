@@ -20,22 +20,6 @@ Expected Result:
   Once all the maximized windows are closed, restored or not visible,
   the panel should go back to its defined opacity.
 
-Panel Double Clicks
--------------------
-This test shows how the double click over the top panel should work.
-
-Setup:
-
-Actions:
-#. Start with a clear screen
-#. Open a window and maximize it
-#. Double-click on the top-panel grab area (the empty area between the menus and
-   the indicators).
-
-Expected Result:
-  The maximized window should restore. If no maximized window is available on
-  the current workspace, nothing should happen.
-
 Menu Color
 ----------
 This test shows the color of the menus using the Ambiance theme:

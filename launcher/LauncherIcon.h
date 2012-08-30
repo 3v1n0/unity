@@ -54,7 +54,7 @@ class LauncherIcon : public AbstractLauncherIcon
 public:
   typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
-  LauncherIcon();
+  LauncherIcon(IconType type);
 
   virtual ~LauncherIcon();
 
@@ -139,7 +139,7 @@ public:
 
   struct timespec GetQuirkTime(Quirk quirk);
 
-  IconType GetIconType();
+  IconType GetIconType() const;
 
   virtual nux::Color BackgroundColor() const;
 
@@ -154,7 +154,7 @@ public:
 
   nux::BaseTexture* Emblem();
 
-  std::list<DbusmenuMenuitem*> Menus();
+  MenuItemsVector Menus();
 
   void InsertEntryRemote(LauncherEntryRemote::Ptr const& remote);
 
@@ -185,8 +185,6 @@ public:
   {
     OnDndLeave();
   }
-
-  void SetIconType(IconType type);
 
   virtual std::string DesktopFile() { return std::string(""); }
 
@@ -229,7 +227,7 @@ protected:
 
   void SetEmblem(BaseTexturePtr const& emblem);
 
-  virtual std::list<DbusmenuMenuitem*> GetMenus();
+  virtual MenuItemsVector GetMenus();
 
   virtual nux::BaseTexture* GetTextureForSize(int size) = 0;
 
@@ -298,6 +296,8 @@ protected:
   glib::Object<DbusmenuClient> _menuclient_dynamic_quicklist;
 
 private:
+  IconType _icon_type;
+
   nux::ObjectPtr<Tooltip> _tooltip;
   nux::ObjectPtr<QuicklistView> _quicklist;
 
@@ -323,8 +323,6 @@ private:
 
   gint64            _shortcut;
 
-  IconType                 _icon_type;
-
   std::vector<nux::Point3> _center;
   std::vector<bool> _has_visible_window;
   std::vector<bool> _is_visible_on_monitor;
@@ -336,8 +334,10 @@ private:
 
   BaseTexturePtr _emblem;
 
-  bool             _quirks[QUIRK_LAST];
-  struct timespec  _quirk_times[QUIRK_LAST];
+  bool             _quirks[unsigned(Quirk::LAST)];
+  struct timespec  _quirk_times[unsigned(Quirk::LAST)];
+
+  bool             _allow_quicklist_to_show;
 
   std::list<LauncherEntryRemote::Ptr> _entry_list;
 

@@ -17,7 +17,7 @@
  * Authored By: Sam Spilsbury <sam.spilsbury@canonical.com>
  */
 
-#ifndef USE_MODERN_COMPIZ_GL
+#ifndef USE_GLES
 #include "ScreenEffectFramebufferObject.h"
 #include "BackgroundEffectHelper.h"
 #include <NuxCore/Logger.h>
@@ -239,5 +239,5 @@ unity::ScreenEffectFramebufferObject::~ScreenEffectFramebufferObject ()
     glDeleteTextures (1, &mFBTexture);
 }
 
-#endif // USE_MODERN_COMPIZ_GL
+#endif // USE_GLES
 

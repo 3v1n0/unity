@@ -43,6 +43,7 @@ set (CORE_HEADERS
      RadioOptionFilter.h
      RatingsFilter.h
      Result.h
+     ResultIterator.h
      Results.h
      SeriesPreview.h
      Track.h
@@ -80,6 +81,7 @@ set (CORE_SOURCES
      RatingsFilter.cpp
      RadioOptionFilter.cpp
      Result.cpp
+     ResultIterator.cpp
      Results.cpp
      SeriesPreview.cpp
      Track.cpp
