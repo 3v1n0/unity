@@ -18,6 +18,7 @@
 #include "test_utils.h"
 
 using namespace std;
+using namespace unity;
 using namespace unity::dash;
 
 namespace
@@ -101,7 +102,6 @@ public:
 
     row_buf[1] = g_variant_new_string("");
     row_buf[3] = g_variant_new_string("");
-    row_buf[4] = g_variant_new_string("");
     row_buf[5] = g_variant_new_string("");
     row_buf[6] = g_variant_new_string("");
     row_buf[7] = NULL;
@@ -113,11 +113,15 @@ public:
       uri << "uri+" << search_string.at(i) << "+" << id();
       row_buf[0] = g_variant_new_string(uri.str().c_str());
       row_buf[2] = g_variant_new_uint32(i % 3);
+      glib::String name(g_strdup_printf("%s - %d", search_string.c_str(), i));
+      row_buf[4] = g_variant_new_string(name);
 
       dee_model_append_row(model, row_buf);
     }
 
     g_free(row_buf);
+
+    global_search_finished.emit(Hints());
   }
 
   void GlobalSearch(string const& search_string)
@@ -211,6 +215,25 @@ public:
 private:
   Lens::Ptr lens_1_;
   Lens::Ptr lens_2_;
+};
+
+class ThreeStaticTestLenses : public StaticTestLenses
+{
+public:
+  ThreeStaticTestLenses()
+  : lens_1_(new StaticTestLens("first.lens", "First Lens", "The very first lens", "First search hint"))
+  , lens_2_(new StaticTestLens("second.lens", "Second Lens", "The second lens", "Second search hint"))
+  , lens_3_(new StaticTestLens("applications.lens", "Applications", "The applications lens", "Search applications"))
+  {
+    list_.push_back(lens_1_);
+    list_.push_back(lens_2_);
+    list_.push_back(lens_3_);
+  }
+
+private:
+  Lens::Ptr lens_1_;
+  Lens::Ptr lens_2_;
+  Lens::Ptr lens_3_;
 };
 
 TEST(TestHomeLens, TestConstruction)
@@ -354,7 +377,15 @@ TEST(TestHomeLens, TestOneSearch)
 
   home_lens_.Search("ape");
 
-  Utils::WaitForTimeoutMSec();
+  bool finished = false;
+  home_lens_.search_finished.connect([&finished] (Lens::Hints const& hints)
+  {
+    finished = true;
+  });
+
+  if (!finished)
+    Utils::WaitUntil(finished);
+  //Utils::WaitForTimeoutMSec();
 
   /* Validate counts */
   EXPECT_EQ(dee_model_get_n_rows(results), 6); // 3 hits from each lens
@@ -386,6 +417,50 @@ TEST(TestHomeLens, TestOneSearch)
   iter = dee_model_get_iter_at_row(results, 5);
   EXPECT_EQ(string("uri+e+second.lens"), string(dee_model_get_string(results, iter, URI_COLUMN)));
   EXPECT_EQ(cat_shared, dee_model_get_uint32(results, iter, CAT_COLUMN));
+}
+
+TEST(TestHomeLens, TestOrderingAfterSearch)
+{
+  HomeLens home_lens_("name", "description", "searchhint",
+                      HomeLens::MergeMode::OWNER_LENS);
+  ThreeStaticTestLenses lenses_;
+  DeeModel* results = home_lens_.results()->model();
+  DeeModel* cats = home_lens_.categories()->model();
+  DeeModel* filters = home_lens_.filters()->model();
+  DeeModelIter* iter;
+  // the lens is added as third, so must have cat == 2
+  unsigned int apps_lens_cat = 2;
+  const unsigned int URI_COLUMN = 0;
+  const unsigned int CAT_COLUMN = 2;
+
+  home_lens_.AddLenses(lenses_);
+
+  home_lens_.Search("ape");
+
+  bool finished = false;
+  home_lens_.search_finished.connect([&finished] (Lens::Hints const& hints)
+  {
+    finished = true;
+  });
+  Utils::WaitUntil(finished);
+
+  /* Validate counts */
+  EXPECT_EQ(dee_model_get_n_rows(results), 9); // 3 hits from each lens
+  EXPECT_EQ(dee_model_get_n_rows(cats), 3); // 3 cats since we are merging categories by lens
+  EXPECT_EQ(dee_model_get_n_rows(filters), 0); // We ignore filters deliberately currently
+
+  /* Validate the category order */
+  auto order = home_lens_.GetCategoriesOrder();
+
+  /* The home lens includes applications lens which contains exact match, must
+   * be first category */
+  EXPECT_EQ(order.at(0), apps_lens_cat);
+
+  /* Validate results. In particular that we get the correct merged
+   * category offsets assigned */
+  iter = dee_model_get_iter_at_row(results, 0);
+  EXPECT_EQ(string("uri+a+first.lens"), string(dee_model_get_string(results, iter, URI_COLUMN)));
+  EXPECT_EQ( dee_model_get_uint32(results, iter, CAT_COLUMN), 0);
 }
 
 }

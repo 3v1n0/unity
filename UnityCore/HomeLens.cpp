@@ -248,6 +248,7 @@ public:
   std::vector<unsigned> GetDefaultOrder();
   std::string GetLensIdForCategory(unsigned) const;
   std::map<unsigned, Lens::Ptr> const& GetCategoryToLensMap() const;
+  MergeMode GetMergeMode() const { return merge_mode_; }
 
 protected:
   void RemoveSource(glib::Object<DeeModel> const& old_source);
@@ -325,7 +326,7 @@ public:
   void EnsureCategoryAnnotation(Lens::Ptr& lens, DeeModel* results, DeeModel* categories);
   Lens::Ptr FindLensForUri(std::string const& uri);
   std::vector<unsigned> GetCategoriesOrder();
-  void LensSearchFinished(Lens::Ptr& lens);
+  void LensSearchFinished(Lens::Ptr const& lens);
   bool ResultsContainVisibleMatch(unsigned category);
 
   std::string const& last_search_string() const { return last_search_string_; }
@@ -860,7 +861,7 @@ void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
 
   /* When we dispatch a search we inc the search count and when we finish
    * one we decrease it. When we reach 0 we'll emit search_finished. */
-  lens->global_search_finished.connect([&] (Hints const& hints) {
+  lens->global_search_finished.connect([this, lens] (Hints const& hints) {
       running_searches_--;
 
       LensSearchFinished(lens);
@@ -930,7 +931,7 @@ void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
   }
 }
 
-void HomeLens::Impl::LensSearchFinished(Lens::Ptr& lens)
+void HomeLens::Impl::LensSearchFinished(Lens::Ptr const& lens)
 {
   auto order_vector = categories_merger_.GetDefaultOrder();
 
