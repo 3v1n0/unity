@@ -28,6 +28,7 @@
 #include <Nux/VLayout.h>
 #include "DashStyle.h"
 #include "IconLoader.h"
+#include "PreviewStyle.h"
 
 namespace unity
 {
@@ -294,15 +295,33 @@ void CoverArt::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
   gfx_engine.PushClippingRectangle(base);
   nux::GetPainter().PaintBackground(gfx_engine, base);
 
+  if (bg_layer_)
+  {
+    unsigned int alpha, src, dest = 0;
+    gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
+    gfx_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+    bg_layer_->SetGeometry(base);
+    nux::GetPainter().RenderSinglePaintLayer(gfx_engine, bg_layer_->GetGeometry(), bg_layer_.get());
+
+    gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
+  }
+
+  gfx_engine.PopClippingRectangle();
+}
+
+
+void CoverArt::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
+{
+  nux::Geometry const& base = GetGeometry();
+  gfx_engine.PushClippingRectangle(base);
+
+  if (!IsFullRedraw())
+    nux::GetPainter().PushLayer(gfx_engine, bg_layer_->GetGeometry(), bg_layer_.get());
+
   unsigned int alpha, src, dest = 0;
   gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
   gfx_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-  gfx_engine.QRP_Color(base.x,
-                    base.y,
-                    base.GetWidth(),
-                    base.GetHeight(),
-                    nux::Color(0.03f, 0.03f, 0.03f, 0.0f));
 
   if (texture_screenshot_)
   {
@@ -393,16 +412,11 @@ void CoverArt::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
   
   gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
 
-  gfx_engine.PopClippingRectangle();
-}
-
-void CoverArt::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
-{
-  nux::Geometry const& base = GetGeometry();
-  gfx_engine.PushClippingRectangle(base);
-
   if (GetLayout())
     GetLayout()->ProcessDraw(gfx_engine, force_draw);
+
+  if (!IsFullRedraw())
+    nux::GetPainter().PopBackground();
 
   gfx_engine.PopClippingRectangle();
 }
@@ -427,6 +441,7 @@ void CoverArt::SetupViews()
   rotate_matrix_.Identity();
   rotate_matrix_.Rotate_z(0.0);
 
+  bg_layer_.reset(dash::previews::Style::Instance().GetBackgroundLayer());
 }
 
 void CoverArt::SetFont(std::string const& font)

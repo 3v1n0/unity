@@ -32,6 +32,7 @@
 namespace nux
 {
   class BaseTexture;
+  class AbstractPaintLayer;
 }
 
 namespace unity
@@ -87,6 +88,8 @@ public:
   std::string title_font() const;
   std::string subtitle_size_font() const;
   std::string description_font() const;
+
+  nux::AbstractPaintLayer* GetBackgroundLayer() const;
 
   ////////////////////////////////
   // Application Preview

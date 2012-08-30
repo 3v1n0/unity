@@ -63,6 +63,7 @@ public:
   ~Impl()
   {
     volume_changed_conn_.disconnect();
+    volume_removed_conn_.disconnect();
     settings_changed_conn_.disconnect();
   }
 
@@ -89,12 +90,21 @@ public:
   void ConnectSignals()
   {
     volume_changed_conn_ = volume_->changed.connect(sigc::mem_fun(this, &Impl::OnVolumeChanged));
+    volume_removed_conn_ = volume_->removed.connect(sigc::mem_fun(this, &Impl::OnVolumeRemoved));
     settings_changed_conn_ = devices_settings_->changed.connect(sigc::mem_fun(this, &Impl::OnSettingsChanged));
   }
 
   void OnVolumeChanged()
   {
     UpdateIcon();
+  }
+
+  void OnVolumeRemoved()
+  {
+    if (devices_settings_->IsABlacklistedDevice(volume_->GetIdentifier()))
+      devices_settings_->TryToUnblacklist(volume_->GetIdentifier());
+
+    parent_->Remove();
   }
 
   void OnSettingsChanged()
@@ -120,16 +130,6 @@ public:
   void StopDrive()
   {
     volume_->StopDrive();
-  }
-
-  void OnRemoved()
-  {
-    auto const& identifier = volume_->GetIdentifier();
-
-    if (devices_settings_->IsABlacklistedDevice(identifier))
-      devices_settings_->TryToUnblacklist(identifier);
-
-    parent_->Remove();
   }
 
   void ActivateLauncherIcon(ActionArg arg)
@@ -257,6 +257,7 @@ public:
   glib::SignalManager gsignals_;
   sigc::connection settings_changed_conn_;
   sigc::connection volume_changed_conn_;
+  sigc::connection volume_removed_conn_;
 };
 
 //
@@ -290,11 +291,6 @@ bool VolumeLauncherIcon::CanStop() const
 void VolumeLauncherIcon::StopDrive()
 {
   return pimpl_->StopDrive();
-}
-
-void VolumeLauncherIcon::OnRemoved()
-{
-  pimpl_->OnRemoved();
 }
 
 void VolumeLauncherIcon::ActivateLauncherIcon(ActionArg arg)

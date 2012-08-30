@@ -82,7 +82,7 @@ load_unity_atk_util(nux::WindowThread* wt)
   g_type_class_unref(g_type_class_ref(UNITY_TYPE_UTIL_ACCESSIBLE));
 }
 
-/* This method is required because g_setting_new abort if the schema
+/* This method is required because g_setting_new aborts if the schema
    is not present. */
 static gboolean
 has_gsettings_schema(const gchar* schema)
@@ -224,17 +224,17 @@ unity_a11y_init(nux::WindowThread* wt)
 
   g_free(bridge_path);
 
-// NOTE: we run manually the unit tests while developing by
-// uncommenting this. Take a look to the explanation on
+// NOTE: we run the unit tests manually while developing by
+// uncommenting this. Take a look at the explanation in the
 // unitya11ytests.h header for more information
 
 //  unity_run_a11y_unit_tests ();
 }
 
 /*
- * Finalize the related issues related with the accessibility.
+ * Finalize the issues related with accessibility.
  *
- * It mainly clean the resources related with the accessibility
+ * It mainly cleans the resources related with accessibility
  */
 void
 unity_a11y_finalize(void)
@@ -259,9 +259,9 @@ unity_a11y_finalize(void)
  * that would be add a ->get_accessible method on the nux::View
  * subclasses itself.
  *
- * WARNING: as a reason the previous comment it is true. Take into
- * account that you should be careful with the order you add those
- * defines. The order will be from more specific classes to more
+ * WARNING: as a reason the previous comment is true. Take into
+ * account that you should be careful with the order in which you add
+ * those defines. The order will be from more specific classes to more
  * abstracted classes.
  *
  */
@@ -327,7 +327,7 @@ on_object_destroy_cb(nux::Object* base_object,
                      AtkObject* accessible_object)
 {
   /* NOTE: the pair key:value (base_object:accessible_object) could be
-     already removed on on_accessible_destroy_cb. That just mean that
+     already removed on on_accessible_destroy_cb. That just means that
      g_hash_table_remove would return FALSE. We don't add a
      debug/warning message to avoid being too verbose */
 
@@ -339,7 +339,7 @@ on_accessible_destroy_cb(gpointer data,
                          GObject* where_the_object_was)
 {
   /* NOTE: the pair key:value (base_object:accessible_object) could be
-     already removed on on_object_destroy_cb. That just mean that
+     already removed on on_object_destroy_cb. That just means that
      g_hash_table_remove would return FALSE. We don't add a
      debug/warning message to avoid being too verbose */
 
@@ -350,9 +350,9 @@ on_accessible_destroy_cb(gpointer data,
  * Returns the accessible object of a nux::View object
  *
  * This method tries to:
- *   * Check if area has already a accessibility object
- *   * If this is the case, returns that
- *   * If not, creates it and return the object
+ *   * Check if area already has a accessibility object
+ *   * If this is the case, return that
+ *   * If not, create it and return the object
  *
  * FIXME: this should be a temporal method. The best way to implement
  * that would be add a ->get_accessible method on the nux::View
@@ -379,7 +379,7 @@ unity_a11y_get_accessible(nux::Object* object)
     g_hash_table_insert(accessible_table, object, accessible_object);
 
     /* there are two reasons the object should be removed from the
-     * table: base object destroyed, or accessible object
+     * table: base object destroyed or accessible object
      * destroyed
      */
     g_object_weak_ref(G_OBJECT(accessible_object),

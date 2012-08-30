@@ -122,7 +122,7 @@ void Controller::RegisterUBusInterests()
                                  sigc::mem_fun(this, &Controller::OnActivateRequest));
   ubus_manager_.RegisterInterest(UBUS_DASH_ABOUT_TO_SHOW,
                                  [&] (GVariant*) { EnsureDash(); });
-  ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [&] (GVariant *data) 
+  ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [&] (GVariant *data)
   {
     unity::glib::String overlay_identity;
     gboolean can_maximise = FALSE;
@@ -258,6 +258,16 @@ void Controller::ShowDash()
     need_show_ = true;
     return;
   }
+
+  // The launcher must receive UBUS_OVERLAY_SHOW before window_->EnableInputWindow().
+  // Other wise the Launcher gets focus for X, which causes XIM to fail.
+  sources_.AddIdle([this] {
+    monitor_ = GetIdealMonitor();
+    GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, monitor_);
+    ubus_manager_.SendMessage(UBUS_OVERLAY_SHOWN, info);
+    return false;
+  });
+
   view_->AboutToShow();
 
   window_->ShowWindow(true);
@@ -274,10 +284,6 @@ void Controller::ShowDash()
   visible_ = true;
 
   StartShowHideTimeline();
-
-  monitor_ = GetIdealMonitor();
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, monitor_);
-  ubus_manager_.SendMessage(UBUS_OVERLAY_SHOWN, info);
 }
 
 void Controller::HideDash(bool restore)

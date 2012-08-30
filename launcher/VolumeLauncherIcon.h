@@ -45,7 +45,6 @@ public:
   void StopDrive();
   MenuItemsVector GetMenus();
   std::string GetRemoteUri();
-  void OnRemoved();
 
 protected:
   virtual void ActivateLauncherIcon(ActionArg arg);

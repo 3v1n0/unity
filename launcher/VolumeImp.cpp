@@ -48,6 +48,10 @@ public:
     signal_volume_changed_.Connect(volume_, "changed", [this] (GVolume*) {
       parent_->changed.emit();
     });
+
+    signal_volume_removed_.Connect(volume_, "removed", [this] (GVolume*) {
+          parent_->removed.emit();
+    });
   }
 
   ~Impl()
@@ -210,6 +214,7 @@ public:
   DeviceNotificationDisplay::Ptr device_notification_display_;
 
   glib::Signal<void, GVolume*> signal_volume_changed_;
+  glib::Signal<void, GVolume*> signal_volume_removed_;
 };
 
 //

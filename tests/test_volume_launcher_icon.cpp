@@ -462,7 +462,7 @@ TEST_F(TestVolumeLauncherIcon, OnRemoved)
   EXPECT_CALL(*settings_, TryToUnblacklist(_))
     .Times(0);
 
-  icon_->OnRemoved();
+  volume_->removed.emit();
 }
 
 TEST_F(TestVolumeLauncherIcon, OnRemoved_RemovabledVolume)
@@ -476,7 +476,7 @@ TEST_F(TestVolumeLauncherIcon, OnRemoved_RemovabledVolume)
   EXPECT_CALL(*settings_, TryToUnblacklist(_))
     .Times(0);
 
-  icon_->OnRemoved();
+  volume_->removed.emit();
 }
 
 TEST_F(TestVolumeLauncherIcon, OnRemoved_RemovableAndBlacklistedVolume)
@@ -492,7 +492,7 @@ TEST_F(TestVolumeLauncherIcon, OnRemoved_RemovableAndBlacklistedVolume)
   EXPECT_CALL(*settings_, TryToUnblacklist(_))
     .Times(1);
 
-  icon_->OnRemoved();
+  volume_->removed.emit();
 }
 
 }
