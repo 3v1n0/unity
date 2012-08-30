@@ -18,9 +18,9 @@ set (CMAKE_CXX_FLAGS_DEBUG "-g3")
 set (CMAKE_CXX_FLAGS_RELEASE "")
 
 if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv7l")
-    set (UNITY_STANDALONE_LADD "-lunity-core-${UNITY_API_VERSION} -lm")
+    set (UNITY_STANDALONE_LADD "-lunity-core-${UNITY_API_VERSION} -lm -lpthread -ldl")
 else ()
-    set (UNITY_STANDALONE_LADD "-lunity-core-${UNITY_API_VERSION} -lm -lGL -lGLU")
+    set (UNITY_STANDALONE_LADD "-lunity-core-${UNITY_API_VERSION} -lm -lpthread -ldl -lGL -lGLU")
 endif ()
 
 if (BUILD_GLES)
