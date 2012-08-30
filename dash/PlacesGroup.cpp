@@ -131,6 +131,18 @@ PlacesGroup::PlacesGroup()
   _background = style.GetCategoryBackground();
   _background_nofilters = style.GetCategoryBackgroundNoFilters();
 
+  nux::ROPConfig rop;
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+  nux::TexCoordXForm texxform;
+  _background_layer.reset(new nux::TextureLayer(_background->GetDeviceTexture(), 
+                          texxform, 
+                          nux::color::White,
+                          false,
+                          rop));
+
   _group_layout = new nux::VLayout("", NUX_TRACKER_LOCATION);
 
   // -2 because the icons have an useless border.
@@ -440,6 +452,14 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
 
     _focus_layer->SetGeometry(geo);
     _focus_layer->Renderlayer(graphics_engine);
+  
+    nux::Geometry bg_geo = GetGeometry();
+    bg_geo.width = _background->GetWidth();
+    bg_geo.height = _background->GetHeight();
+    _background_layer->SetGeometry(bg_geo);
+    _background_layer->Renderlayer(graphics_engine);
+  
+    LOG_DEBUG(logger) << "geo: " << geo.GetHeight();
   }
 
   graphics_engine.PopClippingRectangle();
@@ -456,6 +476,12 @@ PlacesGroup::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
   {
     nux::GetPainter().PushLayer(graphics_engine, _focus_layer->GetGeometry(), _focus_layer.get());
   }
+
+  nux::Geometry bg_geo = GetGeometry();
+  bg_geo.width = _background->GetWidth();
+  bg_geo.height = _background->GetHeight();
+  
+  nux::GetPainter().PushLayer(graphics_engine, bg_geo, _background_layer.get());
 
   _group_layout->ProcessDraw(graphics_engine, force_draw);
 

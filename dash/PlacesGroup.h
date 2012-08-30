@@ -132,8 +132,10 @@ private:
   nux::StaticCairoText* _expand_label;
   IconTexture*          _expand_icon;
 
-  BaseTexture* _background;
-  BaseTexture* _background_nofilters;
+  nux::BaseTexture* _background;
+  nux::BaseTexture* _background_nofilters;
+
+  std::unique_ptr<nux::AbstractPaintLayer> _background_layer;
 
   bool  _is_expanded;
   unsigned _n_visible_items_in_unexpand_mode;
