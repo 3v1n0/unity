@@ -52,7 +52,7 @@ class GcinTestHangul(GcinTestCase):
         self.keyboard.press_and_release("Ctrl+Alt+/")
 
     def test_dash_input(self):
-        """Tests the Dash with hangul input from gcin."""
+        """Entering an input string through gcin will result in a Korean string result in the dash."""
 
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
@@ -62,7 +62,7 @@ class GcinTestHangul(GcinTestCase):
         self.assertThat(self.dash.search_string, Eventually(Equals(self.result)))
 
     def test_hud_input(self):
-        """Tests the hud with hangul input from gcin."""
+        """Entering an input string through gcin will result in a Korean string result in the hud."""
 
         self.hud.ensure_visible()
         self.addCleanup(self.hud.ensure_hidden)
