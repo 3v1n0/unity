@@ -138,7 +138,7 @@ class QuicklistActionTests(UnityTestCase):
         calc = self.start_app("Calculator")
 
         calc_icon = self.launcher.model.get_icon(desktop_id=calc.desktop_file)
-        calc_ql = self.open_quicklist_for_icon(calc_icon)
+        self.open_quicklist_for_icon(calc_icon)
 
         self.hud.ensure_visible()
         self.addCleanup(self.hud.ensure_hidden)
@@ -149,11 +149,49 @@ class QuicklistActionTests(UnityTestCase):
         calc = self.start_app("Calculator")
 
         calc_icon = self.launcher.model.get_icon(desktop_id=calc.desktop_file)
-        calc_ql = self.open_quicklist_for_icon(calc_icon)
+        self.open_quicklist_for_icon(calc_icon)
 
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
         self.assertThat(self.dash.visible, Eventually(Equals(True)))
+
+    def test_right_click_opens_quicklist_if_already_open(self):
+        """A right click to another icon in the launcher must
+        close the current open quicklist and open the other
+        icons quicklist.
+        lp:890991
+        """
+
+        calc_win = self.start_app_window("Calculator")
+        mahj_win = self.start_app_window("Mahjongg")
+
+        calc_icon = self.launcher.model.get_icon(
+            desktop_id=calc_win.application.desktop_file)
+        mahj_icon = self.launcher.model.get_icon(
+            desktop_id=mahj_win.application.desktop_file)
+
+        calc_ql = self.open_quicklist_for_icon(calc_icon)
+        self.assertThat(calc_ql.active, Eventually(Equals(True)))
+
+        mahj_ql = self.open_quicklist_for_icon(mahj_icon)
+        self.assertThat(mahj_ql.active, Eventually(Equals(True)))
+        self.assertThat(calc_ql.active, Eventually(Equals(False)))
+
+    def test_right_clicking_same_icon_doesnt_reopen_ql(self):
+        """A right click to the same icon in the launcher must
+        not re-open the quicklist if already open. It must hide.
+        """
+
+        calc_win = self.start_app_window("Calculator")
+
+        calc_icon = self.launcher.model.get_icon(
+            desktop_id=calc_win.application.desktop_file)
+
+        calc_ql = self.open_quicklist_for_icon(calc_icon)
+        self.assertThat(calc_ql.active, Eventually(Equals(True)))
+
+        calc_ql = self.open_quicklist_for_icon(calc_icon)
+        self.assertThat(calc_ql.active, Eventually(Equals(False)))
 
 
 class QuicklistKeyNavigationTests(UnityTestCase):
@@ -174,10 +212,12 @@ class QuicklistKeyNavigationTests(UnityTestCase):
         """Opens a quicklist with the mouse."""
         self.ql_launcher.click_launcher_icon(self.ql_launcher_icon, button=3)
         self.addCleanup(self.keyboard.press_and_release, "Escape")
+        self.assertThat(self.ql_launcher_icon.get_quicklist,
+                        Eventually(NotEquals(None)))
         self.quicklist = self.ql_launcher_icon.get_quicklist()
-        self.assertThat(self.quicklist, NotEquals(None))
         self.quicklist.move_mouse_to_right()
-        self.assertThat(self.quicklist.selected_item, Equals(None))
+        self.assertThat(lambda: self.quicklist.selected_item,
+                        Eventually(Equals(None)))
 
     def open_quicklist_with_keyboard(self):
         """Opens a quicklist using the keyboard."""
@@ -189,9 +229,16 @@ class QuicklistKeyNavigationTests(UnityTestCase):
         self.keybinding("launcher/keynav/open-quicklist")
         self.addCleanup(self.keybinding, "launcher/keynav/close-quicklist")
 
-        self.assertThat(self.ql_launcher_icon.get_quicklist, Eventually(NotEquals(None)))
+        self.assertThat(self.ql_launcher_icon.get_quicklist,
+                        Eventually(NotEquals(None)))
         self.quicklist = self.ql_launcher_icon.get_quicklist()
-        self.assertThat(lambda: self.quicklist.selected_item, Eventually(NotEquals(None)))
+        self.assertThat(lambda: self.quicklist.selected_item,
+                        Eventually(NotEquals(None)))
+
+    def assertCorrectItemSelected(self, item):
+        """Ensure the item considers itself selected and that quicklist agrees."""
+        self.assertThat(item.selected, Eventually(Equals(True)))
+        self.assertThat(self.quicklist.selected_item.id, Equals(item.id))
 
     def test_keynav_selects_first_item_when_unselected(self):
         """Home key MUST select the first selectable item in a quicklist."""
@@ -200,8 +247,7 @@ class QuicklistKeyNavigationTests(UnityTestCase):
         self.keybinding("quicklist/keynav/first")
 
         expected_item = self.quicklist.selectable_items[0]
-        self.assertThat(expected_item.selected, Eventually(Equals(True)))
-        self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
+        self.assertCorrectItemSelected(expected_item)
 
     def test_keynav_selects_first_item_when_selected(self):
         """Home key MUST select the first selectable item in a quicklist when
@@ -215,8 +261,7 @@ class QuicklistKeyNavigationTests(UnityTestCase):
         self.keybinding("quicklist/keynav/first")
 
         expected_item = self.quicklist.selectable_items[0]
-        self.assertThat(expected_item.selected, Eventually(Equals(True)))
-        self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
+        self.assertCorrectItemSelected(expected_item)
 
     def test_keynav_next_selects_first_item_when_unselected(self):
         """Down key MUST select the first valid item when nothing is selected."""
@@ -225,8 +270,7 @@ class QuicklistKeyNavigationTests(UnityTestCase):
         self.keybinding("quicklist/keynav/next")
 
         expected_item = self.quicklist.selectable_items[0]
-        self.assertThat(expected_item.selected, Eventually(Equals(True)))
-        self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
+        self.assertCorrectItemSelected(expected_item)
 
     def test_keynav_selects_last_item_when_unselected(self):
         """End key MUST select the last selectable item in a quicklist."""
@@ -235,8 +279,7 @@ class QuicklistKeyNavigationTests(UnityTestCase):
         self.keybinding("quicklist/keynav/last")
 
         expected_item = self.quicklist.selectable_items[-1]
-        self.assertThat(expected_item.selected, Eventually(Equals(True)))
-        self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
+        self.assertCorrectItemSelected(expected_item)
 
     def test_keynav_selects_last_item_when_selected(self):
         """End key MUST select the last selectable item in a quicklist when
@@ -250,8 +293,7 @@ class QuicklistKeyNavigationTests(UnityTestCase):
         self.keybinding("quicklist/keynav/last")
 
         expected_item = self.quicklist.selectable_items[-1]
-        self.assertThat(expected_item.selected, Eventually(Equals(True)))
-        self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
+        self.assertCorrectItemSelected(expected_item)
 
     def test_keynav_prev_selects_last_item_when_unselected(self):
         """Up key MUST select the last valid item when nothing is selected."""
@@ -260,8 +302,7 @@ class QuicklistKeyNavigationTests(UnityTestCase):
         self.keybinding("quicklist/keynav/prev")
 
         expected_item = self.quicklist.selectable_items[-1]
-        self.assertThat(expected_item.selected, Eventually(Equals(True)))
-        self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
+        self.assertCorrectItemSelected(expected_item)
 
     def test_launcher_keynav_selects_first_item(self):
         """The first selectable item of the quicklist must be selected when
@@ -270,8 +311,7 @@ class QuicklistKeyNavigationTests(UnityTestCase):
         self.open_quicklist_with_keyboard()
 
         expected_item = self.quicklist.selectable_items[0]
-        self.assertThat(expected_item.selected, Eventually(Equals(True)))
-        self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
+        self.assertCorrectItemSelected(expected_item)
 
     def test_keynav_next_selection_works(self):
         """Down key MUST select the next valid item."""
@@ -279,8 +319,7 @@ class QuicklistKeyNavigationTests(UnityTestCase):
 
         for item in self.quicklist.selectable_items:
             self.keybinding("quicklist/keynav/next")
-            self.assertThat(item.selected, Eventually(Equals(True)))
-            self.assertThat(self.quicklist.selected_item.id, Equals(item.id))
+            self.assertCorrectItemSelected(item)
 
     def test_keynav_prev_selection_works(self):
         """Up key MUST select the previous valid item."""
@@ -288,8 +327,7 @@ class QuicklistKeyNavigationTests(UnityTestCase):
 
         for item in reversed(self.quicklist.selectable_items):
             self.keybinding("quicklist/keynav/prev")
-            self.assertThat(item.selected, Eventually(Equals(True)))
-            self.assertThat(self.quicklist.selected_item.id, Equals(item.id))
+            self.assertCorrectItemSelected(item)
 
     def test_keynav_prev_is_cyclic(self):
         """Up key MUST select the last item, when the first one is selected."""
@@ -301,8 +339,7 @@ class QuicklistKeyNavigationTests(UnityTestCase):
 
         self.keybinding("quicklist/keynav/prev")
         expected_item = self.quicklist.selectable_items[-1]
-        self.assertThat(expected_item.selected, Eventually(Equals(True)))
-        self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
+        self.assertCorrectItemSelected(expected_item)
 
     def test_keynav_next_is_cyclic(self):
         """Down key MUST select the first item, when the last one is selected."""
@@ -314,8 +351,7 @@ class QuicklistKeyNavigationTests(UnityTestCase):
 
         self.keybinding("quicklist/keynav/next")
         expected_item = self.quicklist.selectable_items[0]
-        self.assertThat(expected_item.selected, Eventually(Equals(True)))
-        self.assertThat(self.quicklist.selected_item.id, Equals(expected_item.id))
+        self.assertCorrectItemSelected(expected_item)
 
     def test_keynav_mouse_interaction(self):
         """Tests that the interaction between key-navigation and mouse works as
@@ -331,8 +367,7 @@ class QuicklistKeyNavigationTests(UnityTestCase):
         self.keybinding("quicklist/keynav/prev")
 
         key_item = self.quicklist.selectable_items[-3]
-        self.assertThat(key_item.selected, Eventually(Equals(True)))
-        self.assertThat(self.quicklist.selected_item.id, Equals(key_item.id))
+        self.assertCorrectItemSelected(key_item)
 
         # Moving the mouse horizontally doesn't change the selection
         self.mouse.move(mouse_item.x + mouse_item.width - 10, mouse_item.y + mouse_item.height / 2)
@@ -345,8 +380,7 @@ class QuicklistKeyNavigationTests(UnityTestCase):
         # Moving the mouse to another entry, changes the selection
         mouse_item = self.quicklist.selectable_items[-2]
         mouse_item.mouse_move_to()
-        self.assertThat(mouse_item.selected, Eventually(Equals(True)))
-        self.assertThat(self.quicklist.selected_item.id, Equals(mouse_item.id))
+        self.assertCorrectItemSelected(mouse_item)
 
     def test_moving_mouse_during_grab_select_correct_menuitem(self):
         """Test that moving the mouse during grabbing selects the

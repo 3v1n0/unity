@@ -26,7 +26,7 @@ namespace glib
 {
 
 SignalBase::SignalBase()
-  : object_(0),
+  : object_(nullptr),
     connection_id_(0)
 {}
 
@@ -38,9 +38,12 @@ SignalBase::~SignalBase()
 void SignalBase::Disconnect()
 {
   if (connection_id_ && G_IS_OBJECT(object_))
+  {
     g_signal_handler_disconnect(object_, connection_id_);
+    g_object_remove_weak_pointer(object_, reinterpret_cast<gpointer*>(&object_));
+  }
 
-  object_ = 0;
+  object_ = nullptr;
   connection_id_ = 0;
 }
 
@@ -54,8 +57,18 @@ std::string const& SignalBase::name() const
   return name_;
 }
 
+
 SignalManager::SignalManager()
 {}
+
+SignalManager::~SignalManager()
+{
+  for (auto const& signal : connections_)
+  {
+    if (G_IS_OBJECT(signal->object()))
+      g_object_weak_unref(signal->object(), (GWeakNotify)&OnObjectDestroyed, this);
+  }
+}
 
 // Ideally this would be SignalBase& but there is a specific requirment to allow
 // only one instance of Signal to control a connection. With the templating, it
@@ -70,19 +83,47 @@ void SignalManager::Add(SignalBase* signal)
 void SignalManager::Add(SignalBase::Ptr const& signal)
 {
   connections_.push_back(signal);
+  g_object_weak_ref(signal->object(), (GWeakNotify)&OnObjectDestroyed, this);
+}
+
+void SignalManager::OnObjectDestroyed(SignalManager* self, GObject* old_obj)
+{
+  for (auto it = self->connections_.begin(); it != self->connections_.end();)
+  {
+    auto const& signal = *it;
+
+    // When an object has been destroyed, the signal member is nullified,
+    // so at this point we can be sure that removing signal with a null object,
+    // means removing invalid signals.
+    if (!signal->object())
+    {
+      it = self->connections_.erase(it);
+    }
+    else
+    {
+      ++it;
+    }
+  }
 }
 
 // This uses void* to keep in line with the g_signal* functions
 // (it allows you to pass in a GObject without casting up).
 void SignalManager::Disconnect(void* object, std::string const& signal_name)
 {
-  for (auto it = connections_.begin(); it != connections_.end(); ++it)
+  bool all_signals = signal_name.empty();
+
+  for (auto it = connections_.begin(); it != connections_.end();)
   {
-    if ((*it)->object() == object &&
-        (signal_name.empty() || (*it)->name() == signal_name))
+    auto const& signal = *it;
+
+    if (signal->object() == object && (all_signals || signal->name() == signal_name))
     {
-      (*it)->Disconnect();
-      connections_.erase(it, it);
+      g_object_weak_unref(signal->object(), (GWeakNotify)&OnObjectDestroyed, this);
+      it = connections_.erase(it);
+    }
+    else
+    {
+      ++it;
     }
   }
 }

@@ -23,22 +23,22 @@ static WindowManager* window_manager = NULL;
 
 class WindowManagerDummy : public WindowManager
 {
-  guint32 GetActiveWindow()
+  guint32 GetActiveWindow() const
   {
     return 0;
   }
 
-  unsigned long long GetWindowActiveNumber (guint32 xid)
+  unsigned long long GetWindowActiveNumber (guint32 xid) const
   {
     return 0;
   }
 
-  bool IsScreenGrabbed()
+  bool IsScreenGrabbed() const
   {
     return false;
   }
 
-  bool IsViewPortSwitchStarted()
+  bool IsViewPortSwitchStarted() const
   {
     return false;
   }
@@ -48,7 +48,7 @@ class WindowManagerDummy : public WindowManager
     g_debug("%s", G_STRFUNC);
   }
 
-  bool IsWindowMaximized(guint32 xid)
+  bool IsWindowMaximized(guint32 xid) const
   {
     return false;
   }
@@ -58,42 +58,42 @@ class WindowManagerDummy : public WindowManager
     return true;
   }
 
-  bool IsWindowOnCurrentDesktop(guint32 xid)
+  bool IsWindowOnCurrentDesktop(guint32 xid) const
   {
     return true;
   }
 
-  bool IsWindowObscured(guint32 xid)
+  bool IsWindowObscured(guint32 xid) const
   {
     return false;
   }
 
-  bool IsWindowMapped(guint32 xid)
+  bool IsWindowMapped(guint32 xid) const
   {
     return true;
   }
 
-  bool IsWindowVisible(guint32 xid)
+  bool IsWindowVisible(guint32 xid) const
   {
     return true;
   }
 
-  bool IsWindowOnTop(guint32 xid)
+  bool IsWindowOnTop(guint32 xid) const
   {
     return false;
   }
 
-  bool IsWindowClosable(guint32 xid)
+  bool IsWindowClosable(guint32 xid) const
   {
     return true;
   }
 
-  bool IsWindowMinimizable(guint32 xid)
+  bool IsWindowMinimizable(guint32 xid) const
   {
     return true;
   }
 
-  bool IsWindowMaximizable(guint32 xid)
+  bool IsWindowMaximizable(guint32 xid) const
   {
     return true;
   }
@@ -182,7 +182,7 @@ class WindowManagerDummy : public WindowManager
     any = false;
   }
 
-  int WorkspaceCount ()
+  int WorkspaceCount () const
   {
     return 1;
   }
@@ -192,13 +192,13 @@ class WindowManagerDummy : public WindowManager
     g_debug("%s", G_STRFUNC);
   }
 
-  bool IsScaleActive()
+  bool IsScaleActive() const
   {
     g_debug("%s", G_STRFUNC);
     return false;
   }
 
-  bool IsScaleActiveForGroup()
+  bool IsScaleActiveForGroup() const
   {
     g_debug("%s", G_STRFUNC);
     return false;
@@ -209,7 +209,13 @@ class WindowManagerDummy : public WindowManager
     g_debug("%s", G_STRFUNC);
   }
 
-  bool IsExpoActive()
+  bool IsExpoActive() const
+  {
+    g_debug("%s", G_STRFUNC);
+    return false;
+  }
+
+  bool IsWallActive() const
   {
     g_debug("%s", G_STRFUNC);
     return false;

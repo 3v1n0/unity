@@ -27,8 +27,8 @@ namespace unity
 namespace launcher
 {
 
-SingleMonitorLauncherIcon::SingleMonitorLauncherIcon(int monitor)
- : SimpleLauncherIcon()
+SingleMonitorLauncherIcon::SingleMonitorLauncherIcon(IconType type, int monitor)
+ : SimpleLauncherIcon(type)
  , monitor_(monitor)
 {
   UpdateMonitor();
