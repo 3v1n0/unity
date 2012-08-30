@@ -15,12 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Mikkel Kamstrup Erlandsen <mikkel.kamstrup@canonical.com>
+ *              Michal Hruby <michal.hruby@canonical.com>
  */
 
 #include <glib.h>
+#include <dee-icu.h>
 #include <string>
 #include <stdexcept>
 #include <map>
+#include <set>
 #include <utility>
 #include <algorithm>
 
@@ -44,6 +47,8 @@ nux::logging::Logger logger("unity.dash.homelens");
 const gchar* const HOMELENS_PRIORITY = "unity-homelens-priority";
 const gchar* const HOMELENS_RESULTS_MODEL = "unity-homelens-results-model";
 
+const unsigned RESULTS_NAME_COLUMN = 4;
+const unsigned RESULTS_COMMENT_COLUMN = 5;
 }
 
 /*
@@ -301,6 +306,7 @@ public:
         b_has_private_content = it->second->provides_private_content();
       }
 
+      // prioritize categories that have private content
       if (a_has_private_content != b_has_private_content)
       {
         return a_has_private_content ? true : false;
@@ -320,6 +326,7 @@ public:
   Lens::Ptr FindLensForUri(std::string const& uri);
   std::vector<unsigned> GetCategoriesOrder();
   void LensSearchFinished(Lens::Ptr& lens);
+  bool ResultsContainVisibleMatch(unsigned category);
 
   std::string const& last_search_string() const { return last_search_string_; }
 
@@ -333,6 +340,7 @@ public:
   std::string last_search_string_;
   glib::Object<GSettings> settings_;
   std::vector<unsigned> cached_categories_order_;
+  std::map<unsigned, glib::Object<DeeModel> > category_filter_models_;
 };
 
 /*
@@ -922,22 +930,17 @@ void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
 
 void HomeLens::Impl::LensSearchFinished(Lens::Ptr& lens)
 {
-  // FIXME: this can be done more efficiently with filter models
+  auto order_vector = categories_merger_.GetDefaultOrder();
+
+  // get number of results per category
   std::map<unsigned, unsigned> results_per_cat;
-
-  DeeModel* results = owner_->results()->model();
-  DeeModelIter* iter = dee_model_get_first_iter(results);
-  DeeModelIter* end = dee_model_get_last_iter(results);
-  const unsigned CATEGORY_COLUMN = 2;
-
-  while (iter != end)
+  for (unsigned i = 0; i < order_vector.size(); i++)
   {
-    unsigned cat = dee_model_get_uint32(results, iter, CATEGORY_COLUMN);
-    results_per_cat[cat]++;
-    iter = dee_model_next(results, iter);
+    unsigned category = order_vector.at(i);
+    auto model = owner_->GetFilterModelForCategory(category);
+    results_per_cat[category] = model ? dee_model_get_n_rows(model) : 0;
   }
 
-  auto order_vector = categories_merger_.GetDefaultOrder();
   auto sorter = CategorySorter(results_per_cat,
                                categories_merger_.GetCategoryToLensMap());
   // stable sort based on number of results in each cat
@@ -963,6 +966,7 @@ void HomeLens::Impl::LensSearchFinished(Lens::Ptr& lens)
   // otherwise shopping won't end up being 2nd
   if (apps_index > 0 && results_per_cat[order_vector[apps_index]] > 0)
   {
+    ResultsContainVisibleMatch(order_vector[apps_index]);
     // we want apps first
     unsigned apps_cat_num = order_vector.at(apps_index);
     order_vector.erase(order_vector.begin() + apps_index);
@@ -984,6 +988,101 @@ void HomeLens::Impl::LensSearchFinished(Lens::Ptr& lens)
     cached_categories_order_ = order_vector;
     owner_->categories_reordered();
   }
+}
+
+bool HomeLens::Impl::ResultsContainVisibleMatch(unsigned category)
+{
+  // this method searches for match of the search string in the display name
+  // or comment fields
+  auto filter_model = owner_->GetFilterModelForCategory(category);
+  if (!filter_model) return false;
+  if (last_search_string_.empty()) return true;
+
+  int checked_results = 5;
+
+  glib::Object<DeeModel> model(dee_sequence_model_new());
+  dee_model_set_schema(model, "s", "s", NULL);
+
+  DeeModelIter* iter = dee_model_get_first_iter(filter_model);
+  DeeModelIter* end_iter = dee_model_get_last_iter(filter_model);
+
+  // add first few results to the temporary model
+  while (iter != end_iter)
+  {
+    glib::Variant name(dee_model_get_value(filter_model, iter, RESULTS_NAME_COLUMN),
+                       glib::StealRef());
+    glib::Variant comment(dee_model_get_value(filter_model, iter, RESULTS_COMMENT_COLUMN),
+                          glib::StealRef());
+    GVariant* members[2] = { name, comment };
+    dee_model_append_row(model, members);
+
+    iter = dee_model_next(filter_model, iter);
+    if (--checked_results <= 0) break;
+  }
+
+  if (dee_model_get_n_rows(model) == 0) return false;
+
+  // setup model reader, analyzer and instantiate an index
+  DeeModelReader reader;
+  dee_model_reader_new([] (DeeModel* m, DeeModelIter* iter, gpointer data) -> gchar*
+    {
+      return g_strdup_printf("%s\n%s",
+        dee_model_get_string(m, iter, 0),
+        dee_model_get_string(m, iter, 1));
+    }, NULL, NULL, &reader);
+  glib::Object<DeeAnalyzer> analyzer(DEE_ANALYZER(dee_text_analyzer_new()));
+  dee_analyzer_add_term_filter(analyzer,
+                               [] (DeeTermList* terms_in, DeeTermList* terms_out, gpointer data) -> void
+                               {
+                                 auto filter = static_cast<DeeICUTermFilter*>(data);
+                                 for (unsigned i = 0; i < dee_term_list_num_terms(terms_in); i++)
+                                 {
+                                   dee_term_list_add_term(terms_out, dee_icu_term_filter_apply(filter, dee_term_list_get_term(terms_in, i)));
+                                 }
+                               },
+                               dee_icu_term_filter_new_ascii_folder(),
+                               (GDestroyNotify)dee_icu_term_filter_destroy);
+  // ready to instantiate the index
+  glib::Object<DeeIndex> index(DEE_INDEX(dee_tree_index_new(model, analyzer, &reader)));
+
+  // tokenize the search string, so this will work with multiple words
+  glib::Object<DeeTermList> search_terms(DEE_TERM_LIST(g_object_new(DEE_TYPE_TERM_LIST, NULL)));
+  dee_analyzer_tokenize(analyzer, last_search_string_.c_str(), search_terms);
+
+  std::set<DeeModelIter*> iters;
+  for (unsigned i = 0; i < dee_term_list_num_terms(search_terms); i++)
+  {
+    glib::Object<DeeResultSet> results(dee_index_lookup(index, dee_term_list_get_term(search_terms, i), DEE_TERM_MATCH_PREFIX));
+    if (i == 0)
+    {
+      while (dee_result_set_has_next(results))
+      {
+        iters.insert(dee_result_set_next(results));
+      }
+    }
+    else
+    {
+      std::set<DeeModelIter*> iters2;
+      while (dee_result_set_has_next(results))
+      {
+        iters2.insert(dee_result_set_next(results));
+      }
+      // intersect the sets, set iterators are stable, so we can do this
+      auto it = iters.begin();
+      while (it != iters.end())
+      {
+        if (iters2.find(*it) == iters2.end())
+          iters.erase(it++);
+        else
+          ++it;
+      }
+      // no need to check more terms if the base set is already empty
+      if (iters.empty()) break;
+    }
+  }
+
+  // there is a match if the iterator is isn't empty
+  return !iters.empty();
 }
 
 std::vector<unsigned> HomeLens::Impl::GetCategoriesOrder()
@@ -1123,6 +1222,16 @@ void HomeLens::Preview(std::string const& uri)
 std::vector<unsigned> HomeLens::GetCategoriesOrder()
 {
   return pimpl->GetCategoriesOrder();
+}
+
+glib::Object<DeeModel> HomeLens::GetFilterModelForCategory(unsigned category)
+{
+  auto it = pimpl->category_filter_models_.find(category);
+  if (it != pimpl->category_filter_models_.end()) return it->second;
+
+  auto model = Lens::GetFilterModelForCategory(category);
+  pimpl->category_filter_models_[category] = model;
+  return model;
 }
 
 }
