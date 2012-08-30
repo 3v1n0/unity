@@ -32,8 +32,6 @@
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/DashStyle.h"
 
-#include <boost/range/adaptors.hpp>
-
 namespace unity
 {
 namespace hud
@@ -115,10 +113,8 @@ View::View()
   });
 
   mouse_down.connect(sigc::mem_fun(this, &View::OnMouseButtonDown));
-  mouse_enter.connect(sigc::mem_fun(this, &View::OnMouseEnter));
-  mouse_leave.connect([&](int x, int y, unsigned long mouse_button, unsigned long special_key) {
-    SelectLastFocusedButton();
-  });
+  mouse_enter.connect(sigc::mem_fun(this, &View::OnMouseLeavingHudButton));
+  mouse_leave.connect(sigc::mem_fun(this, &View::OnMouseLeavingHudButton));
 
   Relayout();
 }
@@ -261,31 +257,13 @@ void View::SetQueries(Hud::Queries queries)
     button->mouse_move.connect([&](int x, int y, int dx, int dy, unsigned long mouse_button, unsigned long special_key) {
       if (keyboard_moved_focus_)
       {
-        ResetButtonFocus();
+        MouseStealsHudButtonFocus();
         keyboard_moved_focus_ = false;
       }
-
     });
 
     button->mouse_enter.connect([&](int x, int y, unsigned long mouse_button, unsigned long special_key) {
-      int button_index = 1;
-      for (auto button : boost::adaptors::reverse(buttons_))
-      {
-        if (selected_button_ == button_index)
-          button->fake_focused = false;
-        ++button_index;
-      }
-
-      button_index = 1;
-      for (auto button : boost::adaptors::reverse(buttons_))
-      {
-        if (button->fake_focused)
-        {
-          selected_button_ = button_index;
-          break;
-        }
-        ++button_index;
-      }
+      MouseStealsHudButtonFocus();
     });
 
     button->mouse_leave.connect([&](int x, int y, unsigned long mouse_button, unsigned long special_key) {
@@ -420,7 +398,7 @@ void View::SetupViews()
       AddChild(search_bar_.GetPointer());
       content_layout_->AddView(search_bar_.GetPointer(), 0, nux::MINOR_POSITION_LEFT);
 
-      search_bar_->mouse_enter.connect(sigc::mem_fun(this, &View::OnMouseEnter));
+      search_bar_->mouse_enter.connect(sigc::mem_fun(this, &View::OnMouseLeavingHudButton));
 
       button_views_ = new nux::VLayout();
       button_views_->SetMaximumWidth(content_width);
@@ -462,7 +440,7 @@ void View::OnKeyDown (unsigned long event_type, unsigned long keysym,
 }
 
 // When the Mouse enters the HudView keep the last selected button highlighted
-void View::OnMouseEnter(int x, int y, unsigned int button, unsigned int key)
+void View::OnMouseLeavingHudButton(int x, int y, unsigned int button, unsigned int key)
 {
   SelectLastFocusedButton();
 }
@@ -533,32 +511,46 @@ void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   }
 }
 
-void View::SelectLastFocusedButton()
+void View::MouseStealsHudButtonFocus()
 {
-  bool focused_button = false;
-  for (auto button : buttons_)
-  {
-    if (button->fake_focused)
-      focused_button = true;
-  }
+  LoseSelectedButtonFocus();
+  FindNewSelectedButton();
+}
 
-  if (!focused_button)
+void View::LoseSelectedButtonFocus()
+{
+  int button_index = 1;
+  for (auto it = buttons_.rbegin(); it != buttons_.rend(); ++it)
   {
-    int button_index = 1;
-    for (auto button : boost::adaptors::reverse(buttons_))
-    {
-      if (button_index == selected_button_)
-        button->fake_focused = true;
-      ++button_index;
-    }
+    if (selected_button_ == button_index)
+      (*it)->fake_focused = false;
+    ++button_index;
   }
 }
 
-void View::ResetButtonFocus()
+void View::FindNewSelectedButton()
 {
-  //selected_button_ = 0;
-  for (auto button : buttons_)
-    button->fake_focused = false;
+  int button_index = 1;
+  for (auto it = buttons_.rbegin(); it != buttons_.rend(); ++it)
+  {
+    if ((*it)->fake_focused)
+    {
+      selected_button_ = button_index;
+      return;
+    }
+    ++button_index;
+  }
+}
+
+void View::SelectLastFocusedButton()
+{
+  int button_index = 1;
+  for (auto it = buttons_.rbegin(); it != buttons_.rend(); ++it)
+  {
+    if (button_index == selected_button_)
+      (*it)->fake_focused = true;
+    ++button_index;
+  }
 }
 
 // Keyboard navigation
@@ -727,13 +719,13 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
               ++next;
               if (next != buttons_.end())
               {
-                keyboard_moved_focus_ = true;
                 // The button with the current fake_focus looses it.
                 (*it)->fake_focused = false;
                 // The next button gets the fake_focus
                 (*next)->fake_focused = true;
                 query_selected.emit((*next)->GetQuery());
                 --selected_button_;
+                keyboard_moved_focus_ = true;
               }
               break;
             }
@@ -750,13 +742,13 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
               ++next;
               if(next != buttons_.rend())
               {
-                keyboard_moved_focus_ = true;
                 // The button with the current fake_focus looses it.
                 (*rit)->fake_focused = false;
                 // The next button bellow gets the fake_focus.
                 (*next)->fake_focused = true;
                 query_selected.emit((*next)->GetQuery());
                 ++selected_button_;
+                keyboard_moved_focus_ = true;
               }
               break;
             }

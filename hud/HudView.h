@@ -72,7 +72,7 @@ protected:
   virtual long PostLayoutManagement(long LayoutResult);
 
 private:
-  void OnMouseEnter(int x, int y, unsigned int button, unsigned int key);
+  void OnMouseLeavingHudButton(int x, int y, unsigned int button, unsigned int key);
   void OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key);
   void OnKeyDown (unsigned long event_type, unsigned long event_keysym,
                                 unsigned long event_state, const TCHAR* character,
@@ -86,8 +86,10 @@ private:
 
   void ProcessGrowShrink();
 
+  void MouseStealsHudButtonFocus();
+  void LoseSelectedButtonFocus();
+  void FindNewSelectedButton();
   void SelectLastFocusedButton();
-  void ResetButtonFocus();
 
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
