@@ -122,12 +122,7 @@ set (CORE_LIB_LT_REV 0)
 set (CORE_LIB_LT_AGE 0)
 set (CORE_LIB_LT_VERSION "${CORE_LIB_LT_CURRENT}:${CORE_LIB_LT_REV}:${CORE_LIB_LT_AGE}")
 
-message (${UNITY_API_VERSION})
-
 set (CORE_LIB_NAME "unity-core-${UNITY_API_VERSION}")
-
-message (${CORE_LIB_NAME})
-message (${LIBS})
 
 add_library (${CORE_LIB_NAME} SHARED ${CORE_SOURCES})
 target_link_libraries (${CORE_LIB_NAME} ${LIBS})
