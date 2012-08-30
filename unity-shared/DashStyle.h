@@ -165,6 +165,8 @@ public:
 
   int GetTextLineHeight() const;
 
+  nux::BaseTexture* GetCategoryBackground();
+  nux::BaseTexture* GetCategoryBackgroundNoFilters();
   nux::BaseTexture* GetDashBottomTile();
   nux::BaseTexture* GetDashBottomTileMask();
   nux::BaseTexture* GetDashRightTile();

@@ -196,6 +196,8 @@ public:
   int text_height_;
   int number_of_columns_;
 
+  LazyLoadTexture category_texture_;
+  LazyLoadTexture category_texture_no_filters_;
   LazyLoadTexture dash_bottom_texture_;
   LazyLoadTexture dash_bottom_texture_mask_;
   LazyLoadTexture dash_right_texture_;
@@ -239,6 +241,8 @@ Style::Impl::Impl(Style* owner)
   , text_width_(0)
   , text_height_(0)
   , number_of_columns_(6)
+  , category_texture_("/category_gradient.png")
+  , category_texture_no_filters_("/category_gradient_no_refine.png")
   , dash_bottom_texture_("/dash_bottom_border_tile.png")
   , dash_bottom_texture_mask_("/dash_bottom_border_tile_mask.png")
   , dash_right_texture_("/dash_right_border_tile.png")
@@ -2080,6 +2084,16 @@ int Style::GetTextLineHeight() const
   return pimpl->text_height_;
 }
 
+
+nux::BaseTexture* Style::GetCategoryBackground()
+{
+  return pimpl->category_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetCategoryBackgroundNoFilters()
+{
+  return pimpl->category_texture_no_filters_.texture(); 
+}
 
 nux::BaseTexture* Style::GetDashBottomTile()
 {

@@ -127,6 +127,9 @@ PlacesGroup::PlacesGroup()
   SetAcceptKeyNavFocusOnMouseEnter(false);
 
   nux::BaseTexture* arrow = style.GetGroupUnexpandIcon();
+  
+  _background = style.GetCategoryBackground();
+  _background_nofilters = style.GetCategoryBackgroundNoFilters();
 
   _group_layout = new nux::VLayout("", NUX_TRACKER_LOCATION);
 

@@ -132,6 +132,9 @@ private:
   nux::StaticCairoText* _expand_label;
   IconTexture*          _expand_icon;
 
+  BaseTexture* _background;
+  BaseTexture* _background_nofilters;
+
   bool  _is_expanded;
   unsigned _n_visible_items_in_unexpand_mode;
   unsigned _n_total_items;
