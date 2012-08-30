@@ -9,6 +9,7 @@
 from __future__ import absolute_import
 
 from autopilot.matchers import Eventually
+from commands import getoutput
 from os import environ
 from testtools.matchers import Equals
 
@@ -19,6 +20,12 @@ class GcinTestCase(UnityTestCase):
         super(GcinTestCase, self).setUp()
         if environ['XMODIFIERS'] != "@im=gcin":
             raise EnvironmentError("Please make sure XMODIFIERS is set to @im=gcin. Set it using 'im-switch'.")
+
+        if 'gcin' not in getoutput('ps -e | grep gcin'):
+            raise RuntimeError("gcin is not an active process, please start 'gcin' before running these tests.")
+
+        if 'ibus' in getoutput('ps -e | grep ibus'):
+            raise RuntimeError("IBus is currently running, please close IBus before running these tests.")
 
 class GcinTestHangul(GcinTestCase):
     scenarios = [
