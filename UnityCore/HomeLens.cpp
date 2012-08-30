@@ -337,6 +337,7 @@ public:
   HomeLens::CategoryMerger categories_merger_;
   HomeLens::FiltersMerger filters_merger_;
   int running_searches_;
+  bool apps_lens_contains_visible_match;
   std::string last_search_string_;
   glib::Object<GSettings> settings_;
   std::vector<unsigned> cached_categories_order_;
@@ -744,6 +745,7 @@ HomeLens::Impl::Impl(HomeLens *owner, MergeMode merge_mode)
   , categories_merger_(owner->categories()->model(), &cat_registry_, merge_mode)
   , filters_merger_(owner->filters()->model())
   , running_searches_(0)
+  , apps_lens_contains_visible_match(false)
   , settings_(g_settings_new("com.canonical.Unity.Dash"))
 {
   DeeModel* results = owner->results()->model();
@@ -962,11 +964,17 @@ void HomeLens::Impl::LensSearchFinished(Lens::Ptr& lens)
       apps_index = i;
   }
 
+  if (lens->id() == "applications.lens")
+  {
+    // checking the results isn't extermely fast, so cache the result
+    apps_lens_contains_visible_match = ResultsContainVisibleMatch(order_vector[apps_index]);
+  }
+
   // if there are no results in the apps category, we can't reorder,
   // otherwise shopping won't end up being 2nd
-  if (apps_index > 0 && results_per_cat[order_vector[apps_index]] > 0)
+  if (apps_lens_contains_visible_match && apps_index > 0 && 
+      results_per_cat[order_vector[apps_index]] > 0)
   {
-    ResultsContainVisibleMatch(order_vector[apps_index]);
     // we want apps first
     unsigned apps_cat_num = order_vector.at(apps_index);
     order_vector.erase(order_vector.begin() + apps_index);
@@ -1172,6 +1180,7 @@ void HomeLens::Search(std::string const& search_string)
   /* Reset running search counter */
   pimpl->running_searches_ = 0;
   pimpl->last_search_string_ = search_string;
+  pimpl->apps_lens_contains_visible_match = false;
 
   for (auto lens: pimpl->lenses_)
   {
