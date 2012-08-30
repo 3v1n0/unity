@@ -9,25 +9,33 @@
 from __future__ import absolute_import
 
 from autopilot.matchers import Eventually
-from commands import getoutput
 from os import environ
+import subprocess
 from testtools.matchers import Equals
 
 from unity.tests import UnityTestCase
 
+
 class GcinTestCase(UnityTestCase):
+    """Tests the Input Method gcin."""
+
     def setUp(self):
         super(GcinTestCase, self).setUp()
+
+        # Check that gcin is set as the active IM through im-switch
         if environ['XMODIFIERS'] != "@im=gcin":
             raise EnvironmentError("Please make sure XMODIFIERS is set to @im=gcin. Set it using 'im-switch'.")
 
-        if 'gcin' not in getoutput('ps -e | grep gcin'):
+        running_process = subprocess.check_output('ps -e', shell=True)
+        if 'gcin' not in running_process:
             raise RuntimeError("gcin is not an active process, please start 'gcin' before running these tests.")
 
-        if 'ibus' in getoutput('ps -e | grep ibus'):
-            raise RuntimeError("IBus is currently running, please close IBus before running these tests.")
+        if 'ibus' in running_process:
+            raise RuntimeError("IBus is currently running, please close 'ibus-daemon' before running these tests.")
 
 class GcinTestHangul(GcinTestCase):
+    """Tests the Dash and Hud with gcin in hangul mode."""
+
     scenarios = [
             ('hangul', {'input': 'han geul ', 'result': u'\ud55c\uae00'}),
             ('morning letters', {'input': 'a chimgeul ', 'result': u'\uc544\uce68\uae00'}),
@@ -38,10 +46,13 @@ class GcinTestHangul(GcinTestCase):
         super(GcinTestHangul, self).setUp()
 
     def enter_hangul_mode(self):
+        """Ctrl+Space turns gcin on, Ctrl+Alt+/ turns hangul on."""
         self.keyboard.press_and_release("Ctrl+Space")
         self.keyboard.press_and_release("Ctrl+Alt+/")
 
     def test_dash_input(self):
+        """Tests the Dash with hangul input from gcin."""
+
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
         self.enter_hangul_mode()
@@ -50,6 +61,8 @@ class GcinTestHangul(GcinTestCase):
         self.assertThat(self.dash.search_string, Eventually(Equals(self.result)))
 
     def test_hud_input(self):
+        """Tests the hud with hangul input from gcin."""
+
         self.hud.ensure_visible()
         self.addCleanup(self.hud.ensure_hidden)
         self.enter_hangul_mode()
