@@ -119,9 +119,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , allowWindowPaint(false)
   , _key_nav_mode_requested(false)
   , _last_output(nullptr)
-#ifndef USE_MODERN_COMPIZ_GL
-  , _active_fbo (0)
-#endif
   , grab_index_ (0)
   , painting_tray_ (false)
   , last_scroll_event_(0)
@@ -242,25 +239,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
      wt->Run(NULL);
      uScreen = this;
      _in_paint = false;
-
-#ifndef USE_MODERN_COMPIZ_GL
-    void *dlhand = dlopen ("libunityshell.so", RTLD_LAZY);
-
-    if (dlhand)
-    {
-      dlerror ();
-      glXGetProcAddressP = (ScreenEffectFramebufferObject::GLXGetProcAddressProc) dlsym (dlhand, "glXGetProcAddress");
-      if (dlerror () != NULL)
-        glXGetProcAddressP = NULL;
-    }
-
-     if (GL::fbo)
-     {
-       nux::Geometry geometry (0, 0, screen->width (), screen->height ());
-       uScreen->_fbo = ScreenEffectFramebufferObject::Ptr (new ScreenEffectFramebufferObject (glXGetProcAddressP, geometry));
-       uScreen->_fbo->onScreenSizeChanged (geometry);
-     }
-#endif
 
      optionSetShowHudInitiate(boost::bind(&UnityScreen::ShowHudInitiate, this, _1, _2, _3));
      optionSetShowHudTerminate(boost::bind(&UnityScreen::ShowHudTerminate, this, _1, _2, _3));
@@ -495,17 +473,6 @@ void UnityScreen::nuxPrologue()
 
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
-
-#ifndef USE_MODERN_COMPIZ_GL
-  /* This is needed to Fix a crash in glDrawArrays with the NVIDIA driver
-   * see bugs #1031554 and #982626.
-   * The NVIDIA driver looks to see if the legacy GL_VERTEX_ARRAY,
-   * GL_TEXTURE_COORDINATES_ARRAY and other such client states are enabled
-   * first before checking if a vertex buffer is bound and will prefer the
-   * client buffers over the the vertex buffer object. */
-  glDisableClientState(GL_VERTEX_ARRAY);
-  glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-#endif
 #endif
 
   glGetError();
@@ -514,9 +481,6 @@ void UnityScreen::nuxPrologue()
 void UnityScreen::nuxEpilogue()
 {
 #ifndef USE_GLES
-#ifndef USE_MODERN_COMPIZ_GL
-  (*GL::bindFramebuffer)(GL_FRAMEBUFFER_EXT, _active_fbo);
-#endif
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -538,19 +502,9 @@ void UnityScreen::nuxEpilogue()
 
   glPopAttrib();
 
-#ifndef USE_MODERN_COMPIZ_GL
-  /* Re-enable the client states that have been disabled in nuxPrologue, for
-   * NVIDIA compatibility reasons */
-  glEnableClientState(GL_VERTEX_ARRAY);
-  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-#endif
-#else
-#ifdef USE_GLES
-  glDepthRangef(0, 1);
-#else
   glDepthRange(0, 1);
-#endif
-  //glViewport(-1, -1, 2, 2);
+#else
+  glDepthRangef(0, 1);
   gScreen->resetRasterPos();
 #endif
 
@@ -562,86 +516,9 @@ void UnityScreen::setPanelShadowMatrix(const GLMatrix& matrix)
   panel_shadow_matrix_ = matrix;
 }
 
+/* Currently unimplemented */
 void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
 {
-#ifndef USE_MODERN_COMPIZ_GL
-  if (sources_.GetSource(local::RELAYOUT_TIMEOUT))
-    return;
-
-  if (PluginAdapter::Default()->IsExpoActive())
-    return;
-
-  CompOutput* output = _last_output;
-  float vc[4];
-  float h = 20.0f;
-  float w = 1.0f;
-  float panel_h = panel_style_.panel_height;
-
-  float x1 = output->x();
-  float y1 = output->y() + panel_h;
-  float x2 = x1 + output->width();
-  float y2 = y1 + h;
-
-  glPushMatrix ();
-  glLoadMatrixf (panel_shadow_matrix_.getMatrix ());
-
-  vc[0] = x1;
-  vc[1] = x2;
-  vc[2] = y1;
-  vc[3] = y2;
-
-  // compiz doesn't use the same method of tracking monitors as our toolkit
-  // we need to make sure we properly associate with the right monitor
-  int current_monitor = -1;
-  auto monitors = UScreen::GetDefault()->GetMonitors();
-  int i = 0;
-  for (auto monitor : monitors)
-  {
-    if (monitor.x == output->x() && monitor.y == output->y())
-    {
-      current_monitor = i;
-      break;
-    }
-    i++;
-  }
-
-  if (!(launcher_controller_->IsOverlayOpen() && current_monitor == dash_monitor_)
-      && panel_controller_->opacity() > 0.0f)
-  {
-    foreach(GLTexture * tex, _shadow_texture)
-    {
-      glEnable(GL_BLEND);
-      glColor4f(1.0f, 1.0f, 1.0f, panel_controller_->opacity());
-      glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-
-      GL::activeTexture(GL_TEXTURE0_ARB);
-      tex->enable(GLTexture::Fast);
-
-      glTexParameteri(tex->target(), GL_TEXTURE_WRAP_S, GL_REPEAT);
-
-      glBegin(GL_QUADS);
-      {
-        glTexCoord2f(COMP_TEX_COORD_X(tex->matrix(), 0), COMP_TEX_COORD_Y(tex->matrix(), 0));
-        glVertex2f(vc[0], vc[2]);
-
-        glTexCoord2f(COMP_TEX_COORD_X(tex->matrix(), 0), COMP_TEX_COORD_Y(tex->matrix(), h));
-        glVertex2f(vc[0], vc[3]);
-
-        glTexCoord2f(COMP_TEX_COORD_X(tex->matrix(), w), COMP_TEX_COORD_Y(tex->matrix(), h));
-        glVertex2f(vc[1], vc[3]);
-
-        glTexCoord2f(COMP_TEX_COORD_X(tex->matrix(), w), COMP_TEX_COORD_Y(tex->matrix(), 0));
-        glVertex2f(vc[1], vc[2]);
-      }
-      glEnd();
-
-      tex->disable();
-      glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-      glDisable(GL_BLEND);
-    }
-  }
-  glPopMatrix();
-#else
   return;
 
   if (sources_.GetSource(local::RELAYOUT_TIMEOUT))
@@ -735,7 +612,6 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
     }
   }
   nuxEpilogue();
-#endif
 }
 
 void
@@ -756,73 +632,13 @@ UnityScreen::OnPanelStyleChanged()
   panel_texture_has_changed_ = true;
 }
 
-#ifdef USE_MODERN_COMPIZ_GL
 void UnityScreen::paintDisplay()
-#else
-void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transform, unsigned int mask)
-#endif
 {
   CompOutput *output = _last_output;
 
-#ifndef USE_MODERN_COMPIZ_GL
-  bool was_bound = _fbo->bound ();
-
-  if (nux::GetGraphicsDisplay()->GetGraphicsEngine()->UsingGLSLCodePath())
-  {
-    if (was_bound && launcher_controller_->IsOverlayOpen() && paint_panel_)
-    {
-      if (panel_texture_has_changed_ || !panel_texture_.IsValid())
-      {
-        panel_texture_.Release();
-
-        nux::NBitmapData* bitmap = panel::Style::Instance().GetBackground(screen->width (), screen->height(), 1.0f);
-        nux::BaseTexture* texture2D = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-        if (bitmap && texture2D)
-        {
-          texture2D->Update(bitmap);
-          panel_texture_ = texture2D->GetDeviceTexture();
-          texture2D->UnReference();
-          delete bitmap;
-        }
-        panel_texture_has_changed_ = false;
-      }
-
-      if (panel_texture_.IsValid())
-      {
-        nux::GetGraphicsDisplay()->GetGraphicsEngine()->ResetModelViewMatrixStack();
-        nux::GetGraphicsDisplay()->GetGraphicsEngine()->Push2DTranslationModelViewMatrix(0.0f, 0.0f, 0.0f);
-        nux::GetGraphicsDisplay()->GetGraphicsEngine()->ResetProjectionMatrix();
-        nux::GetGraphicsDisplay()->GetGraphicsEngine()->SetOrthographicProjectionMatrix(screen->width (), screen->height());
-
-        nux::TexCoordXForm texxform;
-        int panel_height = panel_style_.panel_height;
-        nux::GetGraphicsDisplay()->GetGraphicsEngine()->QRP_GLSL_1Tex(0, 0, screen->width (), panel_height, panel_texture_, texxform, nux::color::White);
-      }
-    }
-  }
-
-  _fbo->unbind ();
-
-  /* Draw the bit of the relevant framebuffer for each output */
-
-  if (was_bound)
-  {
-    GLMatrix sTransform;
-    sTransform.toScreenSpace (&screen->fullscreenOutput (), -DEFAULT_Z_CAMERA);
-    glPushMatrix ();
-    glLoadMatrixf (sTransform.getMatrix ());
-    _fbo->paint (nux::Geometry (output->x (), output->y (), output->width (), output->height ()));
-    glPopMatrix ();
-  }
-
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> device_texture =
-      nux::GetGraphicsDisplay()->GetGpuDevice()->CreateTexture2DFromID(_fbo->texture(),
-                                                                       screen->width (), screen->height(), 1, nux::BITFMT_R8G8B8A8);
-#else
   nux::ObjectPtr<nux::IOpenGLTexture2D> device_texture =
     nux::GetGraphicsDisplay()->GetGpuDevice()->CreateTexture2DFromID(gScreen->fbo ()->tex ()->name (),
       screen->width(), screen->height(), 1, nux::BITFMT_R8G8B8A8);
-#endif
 
   nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_ = device_texture;
 
@@ -830,12 +646,10 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
   nux::Geometry oGeo = nux::Geometry (output->x (), output->y (), output->width (), output->height ());
   BackgroundEffectHelper::monitor_rect_ = geo;
 
-#ifdef USE_MODERN_COMPIZ_GL
   GLint fboID;
   // Nux renders to the referenceFramebuffer when it's embedded.
   glGetIntegerv(GL_FRAMEBUFFER_BINDING, &fboID);
   wt->GetWindowCompositor().SetReferenceFramebuffer(fboID, oGeo);
-#endif
 
   nuxPrologue();
   _in_paint = true;
@@ -853,56 +667,28 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
       {
         GLMatrix oTransform;
         UnityWindow  *uTrayWindow = UnityWindow::get (tray);
-#ifndef USE_MODERN_COMPIZ_GL
-        GLFragment::Attrib attrib (uTrayWindow->gWindow->lastPaintAttrib());
-#else
         GLWindowPaintAttrib attrib (uTrayWindow->gWindow->lastPaintAttrib());
-#endif
         unsigned int oldGlAddGeometryIndex = uTrayWindow->gWindow->glAddGeometryGetCurrentIndex ();
         unsigned int oldGlDrawIndex = uTrayWindow->gWindow->glDrawGetCurrentIndex ();
-#ifndef USE_MODERN_COMPIZ_GL
-        unsigned int oldGlDrawGeometryIndex = uTrayWindow->gWindow->glDrawGeometryGetCurrentIndex ();
-#endif
 
-#ifndef USE_MODERN_COMPIZ_GL
-        attrib.setOpacity (OPAQUE);
-        attrib.setBrightness (BRIGHT);
-        attrib.setSaturation (COLOR);
-#else
         attrib.opacity = OPAQUE;
         attrib.brightness = BRIGHT;
         attrib.saturation = COLOR;
-#endif
 
         oTransform.toScreenSpace (output, -DEFAULT_Z_CAMERA);
-
-#ifndef USE_MODERN_COMPIZ_GL
-        glPushMatrix ();
-        glLoadMatrixf (oTransform.getMatrix ());
-#endif
 
         painting_tray_ = true;
 
         /* force the use of the core functions */
         uTrayWindow->gWindow->glDrawSetCurrentIndex (MAXSHORT);
         uTrayWindow->gWindow->glAddGeometrySetCurrentIndex ( MAXSHORT);
-#ifndef USE_MODERN_COMPIZ_GL
-        uTrayWindow->gWindow->glDrawGeometrySetCurrentIndex (MAXSHORT);
-#endif
         uTrayWindow->gWindow->glDraw (oTransform, attrib, infiniteRegion,
                PAINT_WINDOW_TRANSFORMED_MASK |
                PAINT_WINDOW_BLEND_MASK |
                PAINT_WINDOW_ON_TRANSFORMED_SCREEN_MASK);
-#ifndef USE_MODERN_COMPIZ_GL
-        uTrayWindow->gWindow->glDrawGeometrySetCurrentIndex (oldGlDrawGeometryIndex);
-#endif
         uTrayWindow->gWindow->glAddGeometrySetCurrentIndex (oldGlAddGeometryIndex);
         uTrayWindow->gWindow->glDrawSetCurrentIndex (oldGlDrawIndex);
         painting_tray_ = false;
-
-#ifndef USE_MODERN_COMPIZ_GL
-        glPopMatrix ();
-#endif
       }
     }
   }
@@ -1281,26 +1067,6 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   _last_output = output;
   paint_panel_ = false;
 
-#ifndef USE_MODERN_COMPIZ_GL
-  /* bind the framebuffer here
-   * - it will be unbound and flushed
-   *   to the backbuffer when some
-   *   plugin requests to draw a
-   *   a transformed screen or when
-   *   we have finished this draw cycle.
-   *   once an fbo is bound any further
-   *   attempts to bind it will only increment
-   *   its bind reference so make sure that
-   *   you always unbind as much as you bind
-   *
-   * But NOTE: It is only safe to bind the FBO if !shellCouldBeHidden.
-   *           Otherwise it's possible painting won't occur and that would
-   *           confuse the state of the FBO.
-   */
-  if (doShellRepaint && !shellCouldBeHidden(*output))
-    _fbo->bind (nux::Geometry (output->x (), output->y (), output->width (), output->height ()));
-#endif
-
   // CompRegion has no clear() method. So this is the fastest alternative.
   fullscreenRegion = CompRegion();
   nuxRegion = CompRegion();
@@ -1312,11 +1078,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
     doShellRepaint = false;
 
   if (doShellRepaint)
-#ifdef USE_MODERN_COMPIZ_GL
     paintDisplay();
-#else
-    paintDisplay(region, transform, mask);
-#endif
 
   return ret;
 }
@@ -1345,10 +1107,6 @@ void UnityScreen::preparePaint(int ms)
 
   for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
     wi->HandleAnimations (ms);
-
-#ifndef USE_MODERN_COMPIZ_GL
-  compizDamageNux(cScreen->currentDamage());
-#endif
 
   didShellRepaint = false;
   firstWindowAboveShell = NULL;
@@ -1476,7 +1234,6 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
 /* Grab changed nux regions and add damage rects for them */
 void UnityScreen::nuxDamageCompiz()
 {
-#ifdef USE_MODERN_COMPIZ_GL
   /*
    * If Nux is going to redraw anything then we have to tell Compiz to
    * redraw everything. This is because Nux has a bad habit (bug??) of drawing
@@ -1496,60 +1253,6 @@ void UnityScreen::nuxDamageCompiz()
     cScreen->damageScreen();
     cScreen->damageRegionSetEnabled(this, true);
   }
-
-#else
-
-  /*
-   * WARNING: Nux bug LP: #1014610 (unbounded DrawList growth) will cause
-   *          this code to be called far too often in some cases and
-   *          Unity will appear to freeze for a while. Please ensure you
-   *          have Nux 3.0+ with the fix for LP: #1014610.
-   */
-
-  if (!launcher_controller_ || !dash_controller_)
-    return;
-
-  CompRegion nux_damage;
-
-  std::vector<nux::Geometry> const& dirty = wt->GetDrawList();
-
-  for (auto const& geo : dirty)
-    nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
-
-  if (launcher_controller_->IsOverlayOpen())
-  {
-    nux::BaseWindow* dash_window = dash_controller_->window();
-    nux::Geometry const& geo = dash_window->GetAbsoluteGeometry();
-    nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
-  }
-
-  auto const& launchers = launcher_controller_->launchers();
-  for (auto const& launcher : launchers)
-  {
-    if (!launcher->Hidden())
-    {
-      nux::ObjectPtr<nux::View> tooltip = launcher->GetActiveTooltip();
-
-      if (tooltip)
-      {
-        nux::Geometry const& g = tooltip->GetAbsoluteGeometry();
-        nux_damage += CompRegion(g.x, g.y, g.width, g.height);
-      }
-
-      nux::ObjectPtr<LauncherDragWindow> const& dragged_icon = launcher->GetDraggedIcon();
-
-      if (dragged_icon)
-      {
-        nux::Geometry const& g = dragged_icon->GetAbsoluteGeometry();
-        nux_damage += CompRegion(g.x, g.y, g.width, g.height);
-      }
-    }
-  }
-
-  cScreen->damageRegionSetEnabled(this, false);
-  cScreen->damageRegion(nux_damage);
-  cScreen->damageRegionSetEnabled(this, true);
-#endif
 }
 
 /* handle X Events */
@@ -1564,9 +1267,6 @@ void UnityScreen::handleEvent(XEvent* event)
         PluginAdapter::Default()->OnScreenGrabbed();
       else if (event->xfocus.mode == NotifyUngrab)
         PluginAdapter::Default()->OnScreenUngrabbed();
-#ifndef USE_MODERN_COMPIZ_GL
-      cScreen->damageScreen();  // evil hack
-#endif
       if (_key_nav_mode_requested)
       {
         // Close any overlay that is open.
@@ -2513,11 +2213,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
       !uScreen->fullscreenRegion.contains(window->geometry())
      )
   {
-#ifdef USE_MODERN_COMPIZ_GL
     uScreen->paintDisplay();
-#else
-    uScreen->paintDisplay(region, matrix, mask);
-#endif
   }
 
   if (window->type() == CompWindowTypeDesktopMask)
@@ -2997,14 +2693,6 @@ void UnityScreen::Relayout()
 
   if (!needsRelayout)
     return;
-
-#ifndef USE_MODERN_COMPIZ_GL
-  if (GL::fbo)
-  {
-    uScreen->_fbo = ScreenEffectFramebufferObject::Ptr (new ScreenEffectFramebufferObject (glXGetProcAddressP, geometry));
-    uScreen->_fbo->onScreenSizeChanged (geometry);
-  }
-#endif
 
   UScreen *uscreen = UScreen::GetDefault();
   int primary_monitor = uscreen->GetPrimaryMonitor();
