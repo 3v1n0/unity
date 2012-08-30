@@ -309,7 +309,7 @@ public:
       }
     }
 
-    _queued_draw = false;
+    draw_cmd_queued_ = false;
   }
 
   sigc::signal<void> start_navigation;
