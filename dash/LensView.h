@@ -95,8 +95,7 @@ private:
   void QueueFixRenderering();
   bool FixRenderering();
   bool ReinitializeFilterModels();
-
-  static void GetFilterForCategoryIndex(unsigned index, DeeFilter* filter);
+  ResultViewGrid* GetGridForCategory(unsigned category_index);
 
   void BuildPreview(std::string const& uri, Preview::Ptr model);
 
