@@ -383,9 +383,7 @@ TEST(TestHomeLens, TestOneSearch)
     finished = true;
   });
 
-  if (!finished)
-    Utils::WaitUntil(finished);
-  //Utils::WaitForTimeoutMSec();
+  Utils::WaitUntil(finished);
 
   /* Validate counts */
   EXPECT_EQ(dee_model_get_n_rows(results), 6); // 3 hits from each lens
@@ -428,6 +426,7 @@ TEST(TestHomeLens, TestOrderingAfterSearch)
   DeeModel* cats = home_lens_.categories()->model();
   DeeModel* filters = home_lens_.filters()->model();
   DeeModelIter* iter;
+  unsigned int lens1_cat = 0;
   // the lens is added as third, so must have cat == 2
   unsigned int apps_lens_cat = 2;
   const unsigned int URI_COLUMN = 0;
@@ -460,7 +459,7 @@ TEST(TestHomeLens, TestOrderingAfterSearch)
    * category offsets assigned */
   iter = dee_model_get_iter_at_row(results, 0);
   EXPECT_EQ(string("uri+a+first.lens"), string(dee_model_get_string(results, iter, URI_COLUMN)));
-  EXPECT_EQ( dee_model_get_uint32(results, iter, CAT_COLUMN), 0);
+  EXPECT_EQ( dee_model_get_uint32(results, iter, CAT_COLUMN), lens1_cat);
 }
 
 }
