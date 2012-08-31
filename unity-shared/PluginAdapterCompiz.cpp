@@ -1376,10 +1376,7 @@ PluginAdapter::GetUtf8Property(guint32 xid, Atom atom) const
 
   if (type == utf8StringAtom && format == 8 && val && nItems > 0)
   {
-    char valueString[nItems + 1];
-    strncpy(valueString, val, nItems);
-    valueString[nItems] = 0;
-    retval = valueString;
+    retval = std::string(val, nItems);
   }
   if (val)
     XFree(val);
@@ -1398,13 +1395,7 @@ PluginAdapter::GetTextProperty(guint32 id, Atom atom) const
   {
     if (text.value)
     {
-      char valueString[text.nitems + 1];
-
-      strncpy(valueString, reinterpret_cast<char *>(text.value), text.nitems);
-      valueString[text.nitems] = 0;
-
-      retval = valueString;
-
+      retval = std::string(reinterpret_cast<char*>(text.value), text.nitems);
       XFree (text.value);
     }
   }
