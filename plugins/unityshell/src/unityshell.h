@@ -65,6 +65,8 @@
 
 #include "HudController.h"
 #include "ThumbnailGenerator.h"
+#include "WindowMinimizeSpeedController.h"
+
 namespace unity
 {
 
@@ -189,6 +191,8 @@ public:
 
   void SetUpAndShowSwitcher(switcher::ShowMode show_mode = switcher::ShowMode::CURRENT_VIEWPORT);
 
+  void OnMinimizeDurationChanged();
+
   switcher::Controller::Ptr switcher_controller();
   launcher::Controller::Ptr launcher_controller();
 
@@ -242,7 +246,7 @@ private:
   void OnPanelStyleChanged();
 
   void InitGesturesSupport();
-
+  
   nux::animation::TickSource tick_source_;
   nux::animation::AnimationController animation_controller_;
 
@@ -339,6 +343,8 @@ private:
   UBusManager ubus_manager_;
   glib::SourceManager sources_;
   unity::ThumbnailGenerator thumb_generator;
+
+  WindowMinimizeSpeedController* minimize_speed_controller;
   
   friend class UnityWindow;
 };
