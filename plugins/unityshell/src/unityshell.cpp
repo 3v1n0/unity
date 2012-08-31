@@ -1257,7 +1257,8 @@ void UnityWindow::handleEvent (XEvent *event)
   }
 }
 
-CompRect UnityWindow::closeButtonArea ()
+CompRect
+UnityWindow::CloseButtonArea()
 {
     return close_button_area_;
 }
@@ -1633,14 +1634,14 @@ void UnityScreen::handleEvent(XEvent* event)
           event->xbutton.button == Button1 &&
           highlighted_window_ != 0)
       {
-        CompWindow *w = screen->findWindow (highlighted_window_);
+        CompWindow *w = screen->findWindow(highlighted_window_);
         if (w)
         {
-          UnityWindow *uw = UnityWindow::get (w);
-          CompPoint pointer (pointerX, pointerY);
-          if (uw->closeButtonArea ().contains (pointer))
+          UnityWindow *uw = UnityWindow::get(w);
+          CompPoint pointer(pointerX, pointerY);
+          if (uw->CloseButtonArea().contains(pointer))
           {
-            w->close (0);
+            w->close(0);
             skip_other_plugins = true;
           }
         }
@@ -3517,18 +3518,19 @@ UnityWindow::UnityWindow(CompWindow* window)
   }
 }
 
-void UnityWindow::DrawTexture (GLTexture* icon,
-                               const GLWindowPaintAttrib& attrib,
-                               const GLMatrix& transform,
-                               unsigned int mask,
-                               float x, float y,
-                               int &maxWidth, int &maxHeight)
+void
+UnityWindow::DrawTexture(GLTexture* icon,
+                         const GLWindowPaintAttrib& attrib,
+                         const GLMatrix& transform,
+                         unsigned int mask,
+                         float x, float y,
+                         int &maxWidth, int &maxHeight)
 {
   if (icon)
   {
     int width, height;
-    width  = icon->width ();
-    height = icon->height ();
+    width  = icon->width();
+    height = icon->height();
 
     if (height > maxHeight)
       maxHeight = height;
@@ -3536,117 +3538,120 @@ void UnityWindow::DrawTexture (GLTexture* icon,
     if (width > maxWidth)
       maxWidth = width;
 
-    CompRegion  iconReg (0, 0, width, height);
-    GLTexture::MatrixList ml (1);
+    CompRegion  iconReg(0, 0, width, height);
+    GLTexture::MatrixList ml(1);
 
-    ml[0] = icon->matrix ();
-    gWindow->vertexBuffer ()->begin ();
+    ml[0] = icon->matrix();
+    gWindow->vertexBuffer()->begin();
     if (width && height)
-      gWindow->glAddGeometry (ml, iconReg, iconReg);
+      gWindow->glAddGeometry(ml, iconReg, iconReg);
 
-    if (gWindow->vertexBuffer ()->end ())
+    if (gWindow->vertexBuffer()->end())
     {
-      GLMatrix wTransform (transform);
+      GLMatrix wTransform(transform);
 
-      wTransform.translate (x, y, 0.0f);
+      wTransform.translate(x, y, 0.0f);
 
-      gWindow->glDrawTexture (icon, wTransform, attrib, mask);
+      gWindow->glDrawTexture(icon, wTransform, attrib, mask);
     }
   }
 }
 
-WindowCairoContext* UnityWindow::CreateCairoContext (float width, float height)
+WindowCairoContext*
+UnityWindow::CreateCairoContext(float width, float height)
 {
-    XRenderPictFormat *format;
-    Screen *xScreen;
-    WindowCairoContext *context = new WindowCairoContext();
+  XRenderPictFormat *format;
+  Screen *xScreen;
+  WindowCairoContext *context = new WindowCairoContext();
 
-    xScreen = ScreenOfDisplay (screen->dpy (), screen->screenNum ());
+  xScreen = ScreenOfDisplay(screen->dpy(), screen->screenNum());
 
-    format = XRenderFindStandardFormat (screen->dpy (), PictStandardARGB32);
-    context->pixmap_ = XCreatePixmap (screen->dpy (),
-                                      screen->root (),
-                                      width, height, 32);
+  format = XRenderFindStandardFormat(screen->dpy(), PictStandardARGB32);
+  context->pixmap_ = XCreatePixmap(screen->dpy(),
+                                   screen->root(),
+                                   width, height, 32);
 
-    context->texture_ = GLTexture::bindPixmapToTexture (context->pixmap_,
-                                                        width, height,
-                                                        32);
-    if (context->texture_.empty ())
-    {
-      delete context;
-      return 0;
-    }
+  context->texture_ = GLTexture::bindPixmapToTexture(context->pixmap_,
+                                                     width, height,
+                                                     32);
+  if (context->texture_.empty())
+  {
+    delete context;
+    return 0;
+  }
 
-    context->surface_ = cairo_xlib_surface_create_with_xrender_format (screen->dpy (),
-                                                                       context->pixmap_,
-                                                                       xScreen,
-                                                                       format,
-                                                                       width,
-                                                                       height);
-    context->cr_ = cairo_create (context->surface_);
+  context->surface_ = cairo_xlib_surface_create_with_xrender_format(screen->dpy(),
+                                                                    context->pixmap_,
+                                                                    xScreen,
+                                                                    format,
+                                                                    width,
+                                                                    height);
+  context->cr_ = cairo_create(context->surface_);
 
-    // clear
-    cairo_save (context->cr_);
-    cairo_set_operator (context->cr_, CAIRO_OPERATOR_CLEAR);
-    cairo_paint (context->cr_);
-    cairo_restore (context->cr_);
+  // clear
+  cairo_save(context->cr_);
+  cairo_set_operator(context->cr_, CAIRO_OPERATOR_CLEAR);
+  cairo_paint(context->cr_);
+  cairo_restore(context->cr_);
 
-    return context;
+  return context;
 }
 
-void UnityWindow::RenderText (WindowCairoContext *context,
-                              float x, float y,
-                              float maxWidth, float maxHeight)
+void
+UnityWindow::RenderText(WindowCairoContext *context,
+                        float x, float y,
+                        float maxWidth, float maxHeight)
 {
-  PangoFontDescription* font = pango_font_description_new ();
-  pango_font_description_set_family (font, "sans");
-  pango_font_description_set_absolute_size (font, 12 * PANGO_SCALE);
-  pango_font_description_set_style (font, PANGO_STYLE_NORMAL);
-  pango_font_description_set_weight (font, PANGO_WEIGHT_BOLD);
+  PangoFontDescription* font = pango_font_description_new();
+  pango_font_description_set_family(font, "sans");
+  pango_font_description_set_absolute_size(font, 12 * PANGO_SCALE);
+  pango_font_description_set_style(font, PANGO_STYLE_NORMAL);
+  pango_font_description_set_weight(font, PANGO_WEIGHT_BOLD);
 
-  PangoLayout* layout = pango_cairo_create_layout (context->cr_);
-  pango_layout_set_font_description (layout, font);
-  pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
-  pango_layout_set_height (layout, maxHeight);
+  PangoLayout* layout = pango_cairo_create_layout(context->cr_);
+  pango_layout_set_font_description(layout, font);
+  pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
+  pango_layout_set_height(layout, maxHeight);
 
-  pango_layout_set_auto_dir (layout, false);
-  pango_layout_set_text (layout,
-                         WindowManager::Default()->GetWindowName(window->id()).c_str(),
-                         -1);
+  pango_layout_set_auto_dir(layout, false);
+  pango_layout_set_text(layout,
+                        WindowManager::Default()->GetWindowName(window->id()).c_str(),
+                        -1);
 
   /* update the size of the pango layout */
-  pango_layout_set_width (layout, maxWidth * PANGO_SCALE);
-  pango_cairo_update_layout (context->cr_, layout);
+  pango_layout_set_width(layout, maxWidth * PANGO_SCALE);
+  pango_cairo_update_layout(context->cr_, layout);
 
-  cairo_set_operator (context->cr_, CAIRO_OPERATOR_OVER);
+  cairo_set_operator(context->cr_, CAIRO_OPERATOR_OVER);
 
-  cairo_set_source_rgba (context->cr_,
-                         1.0,
-                         1.0,
-                         1.0,
-                         1.0);
+  cairo_set_source_rgba(context->cr_,
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0);
 
   // alignment
   int lWidth, lHeight;
-  pango_layout_get_pixel_size (layout, &lWidth, &lHeight);
+  pango_layout_get_pixel_size(layout, &lWidth, &lHeight);
 
   y = ((maxHeight - lHeight) / 2.0) + y;
-  cairo_translate (context->cr_, x, y);
-  pango_cairo_show_layout (context->cr_, layout);
+  cairo_translate(context->cr_, x, y);
+  pango_cairo_show_layout(context->cr_, layout);
 }
 
-void UnityWindow::DrawWindowTitle (const GLWindowPaintAttrib& attrib,
-                                   const GLMatrix& transform,
-                                   unsigned int mask,
-                                   float x, float y, float x2, float y2)
+void
+UnityWindow::DrawWindowTitle(const GLWindowPaintAttrib& attrib,
+                             const GLMatrix& transform,
+                             unsigned int mask,
+                             float x, float y, float x2, float y2)
 {
   const float width = x2 - x;
 
   // Paint a fake window decoration
-  WindowCairoContext *context = CreateCairoContext (width, SCALE_WINDOW_TITLE_SIZE);
+  WindowCairoContext *context = CreateCairoContext(width, SCALE_WINDOW_TITLE_SIZE);
 
-  cairo_save (context->cr_);
-  cairo_push_group (context->cr_);
+  cairo_save(context->cr_);
+  cairo_push_group(context->cr_);
 
   // Round window decoration top border
   const double height = SCALE_WINDOW_TITLE_SIZE;
@@ -3655,152 +3660,154 @@ void UnityWindow::DrawWindowTitle (const GLWindowPaintAttrib& attrib,
   const double radius = corner_radius / aspect;
   const double degrees = M_PI / 180.0;
 
-  cairo_new_sub_path (context->cr_);
+  cairo_new_sub_path(context->cr_);
 
-  cairo_arc (context->cr_, radius, radius, radius, 180 * degrees, 270 * degrees);
-  cairo_arc (context->cr_, width - radius, radius, radius, -90 * degrees, 0 * degrees);
-  cairo_line_to (context->cr_, width, height);
-  cairo_line_to (context->cr_, 0, height);
+  cairo_arc(context->cr_, radius, radius, radius, 180 * degrees, 270 * degrees);
+  cairo_arc(context->cr_, width - radius, radius, radius, -90 * degrees, 0 * degrees);
+  cairo_line_to(context->cr_, width, height);
+  cairo_line_to(context->cr_, 0, height);
 
-  cairo_close_path (context->cr_);
-  cairo_clip (context->cr_);
+  cairo_close_path(context->cr_);
+  cairo_clip(context->cr_);
 
   // Draw window decoration abased on gtk style
-  gtk_render_background (window_header_style_, context->cr_, 0, 0, width, SCALE_WINDOW_TITLE_SIZE);
-  gtk_render_frame (window_header_style_, context->cr_, 0, 0, width, SCALE_WINDOW_TITLE_SIZE);
+  gtk_render_background(window_header_style_, context->cr_, 0, 0, width, SCALE_WINDOW_TITLE_SIZE);
+  gtk_render_frame(window_header_style_, context->cr_, 0, 0, width, SCALE_WINDOW_TITLE_SIZE);
 
-  cairo_pop_group_to_source (context->cr_);
+  cairo_pop_group_to_source(context->cr_);
 
-  cairo_paint_with_alpha (context->cr_, 1.0);
-  cairo_restore (context->cr_);
+  cairo_paint_with_alpha(context->cr_, 1.0);
+  cairo_restore(context->cr_);
 
   // Draw windows title
-  RenderText (context,
-              CLOSE_ICON_SPACE * 2 + CLOSE_ICON_SIZE,
-              0.0,
-              width, SCALE_WINDOW_TITLE_SIZE);
+  RenderText(context,
+             CLOSE_ICON_SPACE * 2 + CLOSE_ICON_SIZE,
+             0.0,
+             width, SCALE_WINDOW_TITLE_SIZE);
 
   mask |= PAINT_WINDOW_BLEND_MASK;
   int maxWidth, maxHeight;
   foreach(GLTexture *icon, context->texture_)
   {
-    DrawTexture (icon, attrib, transform, mask,
-                 x, y,
-                 maxWidth , maxHeight);
+    DrawTexture(icon, attrib, transform, mask,
+                x, y,
+                maxWidth , maxHeight);
   }
 
   delete context;
 }
 
-void UnityWindow::scalePaintDecoration (const GLWindowPaintAttrib& attrib,
-                                        const GLMatrix& transform,
-                                        const CompRegion& region,
-                                        unsigned int mask)
+void
+UnityWindow::scalePaintDecoration(const GLWindowPaintAttrib& attrib,
+                                  const GLMatrix& transform,
+                                  const CompRegion& region,
+                                  unsigned int mask)
 {
-  ScaleWindow *sWindow = ScaleWindow::get (window);
+  ScaleWindow *sWindow = ScaleWindow::get(window);
   if (!sWindow)
     return;
 
-  sWindow->scalePaintDecoration (attrib, transform, region, mask);
+  sWindow->scalePaintDecoration(attrib, transform, region, mask);
 
   if (!sWindow->hasSlot()) // animation not finished
     return;
 
   if (!window_header_style_)
   {
-    GtkWidgetPath* widget_path = gtk_widget_path_new ();
-    gint pos = gtk_widget_path_append_type (widget_path, GTK_TYPE_WINDOW);
-    gtk_widget_path_iter_set_name (widget_path, pos, "UnityPanelWidget");
+    GtkWidgetPath* widget_path = gtk_widget_path_new();
+    gint pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_WINDOW);
+    gtk_widget_path_iter_set_name(widget_path, pos, "UnityPanelWidget");
 
-    window_header_style_  = gtk_style_context_new ();
-    gtk_style_context_set_path (window_header_style_, widget_path);
-    gtk_style_context_add_class (window_header_style_, "gnome-panel-menu-bar");
-    gtk_style_context_add_class (window_header_style_, "unity-panel");
+    window_header_style_  = gtk_style_context_new();
+    gtk_style_context_set_path(window_header_style_, widget_path);
+    gtk_style_context_add_class(window_header_style_, "gnome-panel-menu-bar");
+    gtk_style_context_add_class(window_header_style_, "unity-panel");
 
     // get close button
     panel::Style& style = panel::Style::Instance();
 
-    std::vector<std::string> files = style.GetWindowButtonFileNames (panel::WindowButtonType::CLOSE,
-                                                                     panel::WindowState::NORMAL);
+    std::vector<std::string> files = style.GetWindowButtonFileNames(panel::WindowButtonType::CLOSE,
+                                                                    panel::WindowState::NORMAL);
 
-    CompString pName ("unityshell");
+    CompString pName("unityshell");
     foreach (std::string file, files)
     {
-      CompString fileName (file.c_str ());
-      CompSize size (CLOSE_ICON_SIZE, CLOSE_ICON_SIZE);
-      close_icon_ = GLTexture::readImageToTexture (fileName,
-                                                   pName,
-                                                   size);
-      if (close_icon_.size () != 0)
+      CompString fileName(file.c_str ());
+      CompSize size(CLOSE_ICON_SIZE, CLOSE_ICON_SIZE);
+      close_icon_ = GLTexture::readImageToTexture(fileName,
+                                                  pName,
+                                                  size);
+      if (close_icon_.size() != 0)
         break;
     }
 
-    if (close_icon_.size () == 0)
+    if (close_icon_.size() == 0)
     {
-      CompString fileName (PKGDATADIR"/close_dash.png");
-      CompSize size (CLOSE_ICON_SIZE, CLOSE_ICON_SIZE);
-      close_icon_ = GLTexture::readImageToTexture (fileName,
-                                                   pName,
-                                                   size);
+      CompString fileName(PKGDATADIR"/close_dash.png");
+      CompSize size(CLOSE_ICON_SIZE, CLOSE_ICON_SIZE);
+      close_icon_ = GLTexture::readImageToTexture(fileName,
+                                                  pName,
+                                                  size);
     }
   }
 
   // Make the windows header opaque to override the original
-  GLWindowPaintAttrib sAttrib (attrib);
+  GLWindowPaintAttrib sAttrib(attrib);
   sAttrib.opacity = OPAQUE;
 
-  ScalePosition pos = sWindow->getCurrentPosition ();
+  ScalePosition pos = sWindow->getCurrentPosition();
   int maxHeight, maxWidth;
   // Use "2" as margin to make sure to cover all originial decoration
-  const float width = (window->width () + 4) * pos.scale;
-  const float x = pos.x () + window->x () - (2 * pos.scale);
-  const float y = pos.y () + window->y () - SCALE_WINDOW_TITLE_SIZE;
+  const float width = (window->width() + 4) * pos.scale;
+  const float x = pos.x() + window->x() - (2 * pos.scale);
+  const float y = pos.y() + window->y() - SCALE_WINDOW_TITLE_SIZE;
   const float iconX = x + CLOSE_ICON_SPACE;
   const float iconY = y + ((SCALE_WINDOW_TITLE_SIZE - CLOSE_ICON_SIZE)  / 2.0);
 
   maxHeight = maxWidth = 0;
 
-  DrawWindowTitle (sAttrib,
-                   transform,
-                   mask,
-                   x, y,
-                   x + width, y + SCALE_WINDOW_TITLE_SIZE);
+  DrawWindowTitle(sAttrib,
+                  transform,
+                  mask,
+                  x, y,
+                  x + width, y + SCALE_WINDOW_TITLE_SIZE);
 
   mask |= PAINT_WINDOW_BLEND_MASK;
   foreach(GLTexture *icon, close_icon_)
   {
-    DrawTexture (icon, sAttrib, transform, mask,
-                 iconX, iconY,
-                 maxWidth , maxHeight);
+    DrawTexture(icon, sAttrib, transform, mask,
+                iconX, iconY,
+                maxWidth , maxHeight);
   }
 
-  close_button_area_ = CompRect (iconX, iconY, maxWidth, maxHeight);
+  close_button_area_ = CompRect(iconX, iconY, maxWidth, maxHeight);
 }
 
-void UnityWindow::scaleSelectWindow ()
+void
+UnityWindow::scaleSelectWindow ()
 {
   UnityScreen* us = UnityScreen::get(screen);
 
   if (us->highlighted_window_ != window->id ())
   {
-    CompositeWindow *cWindow = CompositeWindow::get (window);
+    CompositeWindow *cWindow = CompositeWindow::get(window);
     if (cWindow)
-      cWindow->addDamage ();
+      cWindow->addDamage();
 
     cWindow = 0;
-    CompWindow *old_window = screen->findWindow (us->highlighted_window_);
+    CompWindow *old_window = screen->findWindow(us->highlighted_window_);
     if (old_window)
-      cWindow = CompositeWindow::get (old_window);
+      cWindow = CompositeWindow::get(old_window);
 
     if (cWindow)
-      cWindow->addDamage ();
+      cWindow->addDamage();
 
-    us->highlighted_window_ = window->id ();
+    us->highlighted_window_ = window->id();
   }
 
-  ScaleWindow *sWindow = ScaleWindow::get (window);
+  ScaleWindow *sWindow = ScaleWindow::get(window);
   if (sWindow)
-    sWindow->scaleSelectWindow ();
+    sWindow->scaleSelectWindow();
 }
 
 UnityWindow::~UnityWindow()

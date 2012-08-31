@@ -419,7 +419,7 @@ public:
 
   void handleEvent (XEvent *event);
 
-  CompRect closeButtonArea ();
+  CompRect CloseButtonArea();
 
   typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>
           UnityMinimizedHandler;
@@ -430,11 +430,11 @@ public:
   //! Emited when CompWindowNotifyBeforeDestroy is received
   sigc::signal<void> being_destroyed;
 
-  void scaleSelectWindow ();
-  void scalePaintDecoration (const GLWindowPaintAttrib &,
-                             const GLMatrix &,
-                             const CompRegion &,
-                             unsigned int);
+  void scaleSelectWindow();
+  void scalePaintDecoration(const GLWindowPaintAttrib &,
+                            const GLMatrix &,
+                            const CompRegion &,
+                            unsigned int);
 
 private:
   void DoEnableFocus ();
@@ -467,20 +467,20 @@ private:
 
   compiz::WindowInputRemoverLock::Ptr GetInputRemover ();
 
-  void DrawWindowTitle (const GLWindowPaintAttrib& attrib,
+  void DrawWindowTitle(const GLWindowPaintAttrib& attrib,
                         const GLMatrix& transform,
                         unsigned int mask,
                         float x, float y, float x2, float y2);
-  void DrawTexture (GLTexture *icon,
-                    const GLWindowPaintAttrib& attrib,
-                    const GLMatrix& transform,
-                    unsigned int mask,
-                    float x, float y,
-                    int &maxWidth, int &maxHeight);
-  void RenderText (WindowCairoContext *context,
+  void DrawTexture(GLTexture *icon,
+                   const GLWindowPaintAttrib& attrib,
+                   const GLMatrix& transform,
+                   unsigned int mask,
                    float x, float y,
-                   float maxWidth, float maxHeight);
-  WindowCairoContext* CreateCairoContext (float width, float height);
+                   int &maxWidth, int &maxHeight);
+  void RenderText(WindowCairoContext *context,
+                  float x, float y,
+                  float maxWidth, float maxHeight);
+  WindowCairoContext* CreateCairoContext(float width, float height);
 
   compiz::WindowInputRemoverLock::Weak input_remover_;
   glib::Source::UniquePtr focus_desktop_timeout_;
