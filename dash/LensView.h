@@ -73,6 +73,7 @@ public:
 
   void PerformSearch(std::string const& search_query);
   void CheckNoResults(Lens::Hints const& hints);
+  void CheckCategoryExpansion();
   void HideResultsMessage();
 
 private:
@@ -94,8 +95,7 @@ private:
   void QueueFixRenderering();
   bool FixRenderering();
   bool ReinitializeFilterModels();
-
-  static void GetFilterForCategoryIndex(unsigned index, DeeFilter* filter);
+  ResultViewGrid* GetGridForCategory(unsigned category_index);
 
   void BuildPreview(std::string const& uri, Preview::Ptr model);
 
@@ -114,6 +114,7 @@ private:
   bool initial_activation_;
   bool no_results_active_;
   std::string search_string_;
+  PlacesGroup* last_expanded_group_;
 
   nux::HLayout* layout_;
   LensScrollView* scroll_view_;

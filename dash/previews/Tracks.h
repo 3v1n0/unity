@@ -60,9 +60,6 @@ public:
   sigc::signal<void, std::string const&> pause;
 
 protected:
-  virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
-  virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);
- 
   virtual bool AcceptKeyNavFocus() { return false; }
 
   void SetupViews();

@@ -160,14 +160,14 @@ void PreviewInfoHintWidget::SetupViews()
       std::string tmp_display_name = info_hint->display_name;
       tmp_display_name += ":";
 
-      info_name = new nux::StaticCairoText(tmp_display_name, NUX_TRACKER_LOCATION);
+      info_name = new nux::StaticCairoText(tmp_display_name, true, NUX_TRACKER_LOCATION);
       info_name->SetFont(style.info_hint_bold_font());
       info_name->SetLines(-1);
       info_name->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_RIGHT);
       hint_layout->AddView(info_name.GetPointer(), 0, nux::MINOR_POSITION_CENTER);
     }
 
-    StaticCairoTextPtr info_value(new nux::StaticCairoText(StringFromVariant(info_hint->value), NUX_TRACKER_LOCATION));
+    StaticCairoTextPtr info_value(new nux::StaticCairoText(StringFromVariant(info_hint->value), true, NUX_TRACKER_LOCATION));
     info_value->SetFont(style.info_hint_font());
     info_value->SetLines(-1);
     hint_layout->AddView(info_value.GetPointer(), 1, nux::MINOR_POSITION_CENTER);
@@ -210,6 +210,7 @@ void PreviewInfoHintWidget::PreLayoutManagement()
   int info_value_width = geo.width;
   info_value_width -= layout_spacing;
   info_value_width -= info_hint_width;
+  info_value_width = MAX(0, info_value_width);
 
   for (InfoHint const& info_hint : info_hints_)
   {
