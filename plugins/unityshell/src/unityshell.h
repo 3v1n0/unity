@@ -487,7 +487,7 @@ private:
 
   GLTexture::List close_icon_;
   CompRect close_button_area_;
-  GtkStyleContext* window_header_style_;
+  glib::Object<GtkStyleContext> window_header_style_;
 };
 
 

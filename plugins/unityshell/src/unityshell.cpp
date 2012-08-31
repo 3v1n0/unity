@@ -3718,7 +3718,7 @@ UnityWindow::scalePaintDecoration(const GLWindowPaintAttrib& attrib,
     gint pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_WINDOW);
     gtk_widget_path_iter_set_name(widget_path, pos, "UnityPanelWidget");
 
-    window_header_style_  = gtk_style_context_new();
+    window_header_style_  = glib::Object<GtkStyleContext>(gtk_style_context_new());
     gtk_style_context_set_path(window_header_style_, widget_path);
     gtk_style_context_add_class(window_header_style_, "gnome-panel-menu-bar");
     gtk_style_context_add_class(window_header_style_, "unity-panel");
@@ -3827,9 +3827,6 @@ UnityWindow::~UnityWindow()
     if (wasMinimized)
       window->minimize ();
   }
-
-  if (window_header_style_)
-    g_object_unref (window_header_style_);
 
   ShowdesktopHandler::animating_windows.remove (static_cast <ShowdesktopHandlerWindowInterface *> (this));
 
