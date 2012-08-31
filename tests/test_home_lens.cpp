@@ -495,9 +495,6 @@ TEST(TestHomeLens, TestOrderingWithExactAppsMatch)
   HomeLens home_lens_("name", "description", "searchhint",
                       HomeLens::MergeMode::OWNER_LENS);
   ThreeStaticTestLenses lenses_;
-  DeeModel* results = home_lens_.results()->model();
-  DeeModel* cats = home_lens_.categories()->model();
-  DeeModel* filters = home_lens_.filters()->model();
   // the lens is added as third, so must have cat == 2
   unsigned int apps_lens_cat = 2;
 
@@ -523,9 +520,9 @@ TEST(TestHomeLens, TestOrderingWithExactAppsMatch)
   Utils::WaitUntil(finished);
 
   /* Validate counts */
-  EXPECT_EQ(dee_model_get_n_rows(results), 7); // 3+3+1 hits
-  EXPECT_EQ(dee_model_get_n_rows(cats), 3); // 3 cats since we are merging categories by lens
-  EXPECT_EQ(dee_model_get_n_rows(filters), 0); // We ignore filters deliberately currently
+  EXPECT_EQ(home_lens_.results()->count(), 7); // 3+3+1 hits
+  EXPECT_EQ(home_lens_.categories()->count(), 3); // 3 cats since we are merging categories by lens
+  EXPECT_EQ(home_lens_.filters()->count(), 0); // We ignore filters deliberately currently
 
   /* Validate the category order */
   auto order = home_lens_.GetCategoriesOrder();
@@ -544,9 +541,6 @@ TEST(TestHomeLens, TestOrderingWithoutExactAppsMatch)
   HomeLens home_lens_("name", "description", "searchhint",
                       HomeLens::MergeMode::OWNER_LENS);
   ThreeStaticTestLenses lenses_;
-  DeeModel* results = home_lens_.results()->model();
-  DeeModel* cats = home_lens_.categories()->model();
-  DeeModel* filters = home_lens_.filters()->model();
   // the lens is added as third, so must have cat == 2
   unsigned int apps_lens_cat = 2;
 
@@ -573,9 +567,9 @@ TEST(TestHomeLens, TestOrderingWithoutExactAppsMatch)
   Utils::WaitUntil(finished);
 
   /* Validate counts */
-  EXPECT_EQ(dee_model_get_n_rows(results), 7); // 3+3+1 hits
-  EXPECT_EQ(dee_model_get_n_rows(cats), 3); // 3 cats since we are merging categories by lens
-  EXPECT_EQ(dee_model_get_n_rows(filters), 0); // We ignore filters deliberately currently
+  EXPECT_EQ(home_lens_.results()->count(), 7); // 3+3+1 hits
+  EXPECT_EQ(home_lens_.categories()->count(), 3); // 3 cats since we are merging categories by lens
+  EXPECT_EQ(home_lens_.filters()->count(), 0); // We ignore filters deliberately currently
 
   /* Validate the category order */
   auto order = home_lens_.GetCategoriesOrder();
@@ -593,9 +587,6 @@ TEST(TestHomeLens, TestOrderingByNumResults)
   HomeLens home_lens_("name", "description", "searchhint",
                       HomeLens::MergeMode::OWNER_LENS);
   ThreeStaticTestLenses lenses_;
-  DeeModel* results = home_lens_.results()->model();
-  DeeModel* cats = home_lens_.categories()->model();
-  DeeModel* filters = home_lens_.filters()->model();
   unsigned int lens1_cat = 0;
   unsigned int lens2_cat = 1;
   // the lens is added as third, so must have cat == 2
@@ -635,9 +626,9 @@ TEST(TestHomeLens, TestOrderingByNumResults)
    */
 
   /* Validate counts */
-  EXPECT_EQ(dee_model_get_n_rows(results), 6); // 1+3+2 hits
-  EXPECT_EQ(dee_model_get_n_rows(cats), 3); // 3 cats since we are merging categories by lens
-  EXPECT_EQ(dee_model_get_n_rows(filters), 0); // We ignore filters deliberately currently
+  EXPECT_EQ(home_lens_.results()->count(), 6); // 1+3+2 hits
+  EXPECT_EQ(home_lens_.categories()->count(), 3); // 3 cats since we are merging categories by lens
+  EXPECT_EQ(home_lens_.filters()->count(), 0); // We ignore filters deliberately currently
 
   /* Validate the category order */
   auto order = home_lens_.GetCategoriesOrder();
