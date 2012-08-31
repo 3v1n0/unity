@@ -151,13 +151,13 @@ void TestRunner::Init ()
   layout_->AddView(dummyView, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   nux::GetWindowThread()->SetLayout (layout_);
 
-  const char* title = "Nick Dedekind";
-  const char* subtitle = "@FunnyJokes, 10 Aug 2012 05:01";
-  const char* description = "Profile pictures are what people want them to think they look like. Tagged pictures are what they really look like.";
+  const char* title = "Candace Flynn";
+  const char* subtitle = "@candacejeremyxo, 10 Aug 2012 05:01";
+  const char* description = "Ugh. They made a chocolate factory!";
 
  // creates a generic preview object
-  glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/5/lens-nav-music.svg", NULL));
-  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/5/lens-nav-home.svg", NULL));
+  glib::Object<GIcon> iconHint1(g_icon_new_for_string("https://twimg0-a.akamaihd.net/profile_images/635808028/200px-JeremyHoldingCandace_reasonably_small.jpg", NULL));
+  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/6/lens-nav-home.svg", NULL));
 
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_social_preview_new()));
 
@@ -183,13 +183,13 @@ void TestRunner::Init ()
 
 void TestRunner::NavRight()
 {
-  const char* title = "Nick Dedekind";
-  const char* subtitle = "@FunnyJokes, 10 Aug 2012 05:01";
-  const char* description = "Profile pictures are what people want them to think they look like. Tagged pictures are what they really look like.";
+  const char* title = "Phineas Flynn";
+  const char* subtitle = "@phineasflynn12, 10 Aug 2012 05:01";
+  const char* description = "I know what we are going to do today!";
 
  // creates a generic preview object
-  glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/5/lens-nav-music.svg", NULL));
-  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/5/lens-nav-home.svg", NULL));
+  glib::Object<GIcon> iconHint1(g_icon_new_for_string("https://twimg0-a.akamaihd.net/profile_images/363231741/250px-Phineas2.jpg", NULL));
+  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/6/lens-nav-home.svg", NULL));
 
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_social_preview_new()));
 
@@ -214,13 +214,13 @@ void TestRunner::NavRight()
 
 void TestRunner::NavLeft()
 {
-  const char* title = "Nick Dedekind";
-  const char* subtitle = "@FunnyJokes, 10 Aug 2012 05:01";
+  const char* title = "Ferb Fletcher";
+  const char* subtitle = "@ferbfletcher123, 10 Aug 2012 05:01";
   const char* description = "Profile pictures are what people want them to think they look like. Tagged pictures are what they really look like.";
 
  // creates a generic preview object
-  glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/5/lens-nav-music.svg", NULL));
-  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/5/lens-nav-home.svg", NULL));
+  glib::Object<GIcon> iconHint1(g_icon_new_for_string("https://twimg0-a.akamaihd.net/profile_images/307005344/phineas-and-ferb-300a071708_reasonably_small.jpg", NULL));
+  glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/6/lens-nav-home.svg", NULL));
 
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_social_preview_new()));
 
