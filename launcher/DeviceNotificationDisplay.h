@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010-12 Canonical Ltd
+ * Copyright (C) 2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -17,33 +17,26 @@
  * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
-#ifndef UNITYSHELL_DEVICES_SETTINGS_H
-#define UNITYSHELL_DEVICES_SETTINGS_H
+#ifndef UNITYSHELL_DEVICE_NOTIFICATION_DISPLAY_H
+#define UNITYSHELL_DEVICE_NOTIFICATION_DISPLAY_H
 
 #include <boost/noncopyable.hpp>
 #include <memory>
 #include <string>
-
-#include <sigc++/signal.h>
-#include <sigc++/trackable.h>
 
 namespace unity
 {
 namespace launcher
 {
 
-class DevicesSettings : boost::noncopyable, public sigc::trackable
+class DeviceNotificationDisplay : private boost::noncopyable
 {
 public:
-  typedef std::shared_ptr<DevicesSettings> Ptr;
+  typedef std::shared_ptr<DeviceNotificationDisplay> Ptr;
 
-  virtual ~DevicesSettings() {};
+  virtual ~DeviceNotificationDisplay() {}
 
-  virtual bool IsABlacklistedDevice(std::string const& uuid) const = 0;
-  virtual void TryToBlacklist(std::string const& uuid) = 0;
-  virtual void TryToUnblacklist(std::string const& uuid) = 0;
-
-  sigc::signal<void> changed;
+  virtual void Display(std::string const& icon_name, std::string const& volume_name) = 0;
 };
 
 }
