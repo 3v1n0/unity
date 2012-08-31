@@ -110,6 +110,8 @@ const std::string RELAYOUT_TIMEOUT = "relayout-timeout";
 class WindowCairoContext
 {
   public:
+    typedef std::shared_ptr<WindowCairoContext> Ptr;
+
     Pixmap pixmap_;
     cairo_surface_t* surface_;
     GLTexture::List texture_;
@@ -3562,7 +3564,7 @@ UnityWindow::CreateCairoContext(float width, float height)
 {
   XRenderPictFormat *format;
   Screen *xScreen;
-  std::shared_ptr<WindowCairoContext> cContext(new WindowCairoContext());
+  auto cContext = std::make_shared<WindowCairoContext>();
 
   xScreen = ScreenOfDisplay(screen->dpy(), screen->screenNum());
 
@@ -3648,7 +3650,7 @@ UnityWindow::DrawWindowTitle(const GLWindowPaintAttrib& attrib,
   const float width = x2 - x;
 
   // Paint a fake window decoration
-  std::shared_ptr<WindowCairoContext> context(CreateCairoContext(width, SCALE_WINDOW_TITLE_SIZE));
+  WindowCairoContext::Ptr context(CreateCairoContext(width, SCALE_WINDOW_TITLE_SIZE));
 
   cairo_save(context->cr_);
   cairo_push_group(context->cr_);
