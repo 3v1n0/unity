@@ -304,6 +304,7 @@ private:
   void EndIconDrag();
   void ShowDragWindow();
   void UpdateDragWindowPosition(int x, int y);
+  void HideDragWindow();
 
   void ResetMouseDragState();
 

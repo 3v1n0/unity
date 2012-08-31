@@ -1968,13 +1968,7 @@ long Launcher::PostLayoutManagement(long LayoutResult)
 
 void Launcher::OnDragWindowAnimCompleted()
 {
-  if (_drag_window)
-  {
-    _drag_window->UnGrabKeyboard();
-    _drag_window->ShowWindow(false);
-    _drag_window = nullptr;
-  }
-
+  HideDragWindow();
   EnsureAnimation();
 }
 
@@ -2020,13 +2014,8 @@ void Launcher::StartIconDragRequest(int x, int y)
   }
   else
   {
-    _drag_icon = NULL;
-    if (_drag_window)
-    {
-      _drag_window->UnGrabKeyboard();
-      _drag_window->ShowWindow(false);
-      _drag_window = nullptr;
-    }
+    _drag_icon = nullptr;
+    HideDragWindow();
   }
 }
 
@@ -2038,12 +2027,7 @@ void Launcher::StartIconDrag(AbstractLauncherIcon::Ptr icon)
   _hide_machine.SetQuirk(LauncherHideMachine::INTERNAL_DND_ACTIVE, true);
   _drag_icon = icon;
 
-  if (_drag_window)
-  {
-    _drag_window->UnGrabKeyboard();
-    _drag_window->ShowWindow(false);
-  }
-
+  HideDragWindow();
   _offscreen_drag_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(_icon_size, _icon_size, 1, nux::BITFMT_R8G8B8A8);
   _drag_window = new LauncherDragWindow(_offscreen_drag_texture);
 
@@ -2067,9 +2051,7 @@ void Launcher::EndIconDrag()
 
       launcher_removerequest.emit(_drag_icon);
 
-      _drag_window->UnGrabKeyboard();
-      _drag_window->ShowWindow(false);
-      _drag_window = nullptr;
+      HideDragWindow();
       EnsureAnimation();
     }
     else
@@ -2115,6 +2097,16 @@ void Launcher::ShowDragWindow()
 
     ResetMouseDragState();
   });
+}
+
+void Launcher::HideDragWindow()
+{
+  if (!_drag_window)
+    return;
+
+  _drag_window->UnGrabKeyboard();
+  _drag_window->ShowWindow(false);
+  _drag_window = nullptr;
 }
 
 void Launcher::UpdateDragWindowPosition(int x, int y)
