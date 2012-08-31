@@ -270,6 +270,20 @@ void CoverflowResultView::DrawContent(nux::GraphicsEngine& GfxContext, bool forc
   nux::Geometry base = GetGeometry();
   GfxContext.PushClippingRectangle(base);
 
+  if (RedirectedAncestor())
+  {
+    // This is necessary when doing redirected rendering. Clean the area below this view.
+    unsigned int current_alpha_blend;
+    unsigned int current_src_blend_factor;
+    unsigned int current_dest_blend_factor;
+    GfxContext.GetRenderStates().GetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+
+    GfxContext.GetRenderStates().SetBlend(false);
+    GfxContext.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+
+    GfxContext.GetRenderStates().SetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+  }
+  
   if (GetCompositionLayout())
   {
     nux::Geometry geo = GetCompositionLayout()->GetGeometry();

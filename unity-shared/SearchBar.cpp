@@ -362,7 +362,6 @@ void SearchBar::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   UpdateBackground(false);
 
   GfxContext.PushClippingRectangle(base);
-  nux::GetPainter().PaintBackground(GfxContext, base);
 
   bg_layer_->SetGeometry(nux::Geometry(base.x, base.y, last_width_, last_height_));
   nux::GetPainter().RenderSinglePaintLayer(GfxContext,
@@ -399,9 +398,31 @@ void SearchBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     nux::GetPainter().PushLayer(GfxContext, highlight_layer_->GetGeometry(), highlight_layer_.get());
   }
 
-
   if (!IsFullRedraw())
   {
+    unsigned int current_alpha_blend;
+    unsigned int current_src_blend_factor;
+    unsigned int current_dest_blend_factor;
+    GfxContext.GetRenderStates().GetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+
+    GfxContext.GetRenderStates().SetBlend(false);
+    GfxContext.QRP_Color(
+      pango_entry_->GetX(),
+      pango_entry_->GetY(),
+      pango_entry_->GetWidth(),
+      pango_entry_->GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+
+    if (spinner_->IsRedrawNeeded())
+    {
+      GfxContext.QRP_Color(
+        spinner_->GetX(),
+        spinner_->GetY(),
+        spinner_->GetWidth(),
+        spinner_->GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+    }
+    
+    GfxContext.GetRenderStates().SetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+
     gPainter.PushLayer(GfxContext, bg_layer_->GetGeometry(), bg_layer_.get());
   }
   else
