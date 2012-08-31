@@ -101,8 +101,8 @@ bool LauncherDragWindow::OnAnimationTimeout()
 
   if (new_geo.x == target_x && new_geo.y == target_y)
   {
-    anim_completed.emit();
     animation_timer_.reset();
+    anim_completed.emit();
 
     return false;
   }

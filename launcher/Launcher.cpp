@@ -1102,7 +1102,6 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   {
     RenderArg arg;
     AbstractLauncherIcon::Ptr icon = *it;
-
     FillRenderArg(icon, arg, center, parent_abs_geo, folding_threshold, folded_size, folded_spacing,
                   autohide_offset, folded_z_distance, animation_neg_rads, current);
     arg.colorify = colorify;
@@ -1773,9 +1772,8 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   if (_drag_icon && _render_drag_window)
   {
     RenderIconToTexture(GfxContext, _drag_icon, _offscreen_drag_texture);
-    _drag_window->ShowWindow(true);
-
     _render_drag_window = false;
+    ShowDragWindow();
   }
 
   // clear region
@@ -1971,7 +1969,11 @@ long Launcher::PostLayoutManagement(long LayoutResult)
 void Launcher::OnDragWindowAnimCompleted()
 {
   if (_drag_window)
+  {
+    _drag_window->UnGrabKeyboard();
     _drag_window->ShowWindow(false);
+    _drag_window = nullptr;
+  }
 
   EnsureAnimation();
 }
@@ -2021,6 +2023,7 @@ void Launcher::StartIconDragRequest(int x, int y)
     _drag_icon = NULL;
     if (_drag_window)
     {
+      _drag_window->UnGrabKeyboard();
       _drag_window->ShowWindow(false);
       _drag_window = nullptr;
     }
@@ -2037,6 +2040,7 @@ void Launcher::StartIconDrag(AbstractLauncherIcon::Ptr icon)
 
   if (_drag_window)
   {
+    _drag_window->UnGrabKeyboard();
     _drag_window->ShowWindow(false);
   }
 
@@ -2052,7 +2056,10 @@ void Launcher::EndIconDrag()
 {
   if (_drag_window)
   {
-    AbstractLauncherIcon::Ptr hovered_icon = MouseIconIntersection(_mouse_position.x, _mouse_position.y);
+    AbstractLauncherIcon::Ptr hovered_icon;
+
+    if (!_drag_window->Cancelled())
+      hovered_icon = MouseIconIntersection(_mouse_position.x, _mouse_position.y);
 
     if (hovered_icon && hovered_icon->GetIconType() == AbstractLauncherIcon::IconType::TRASH)
     {
@@ -2060,20 +2067,23 @@ void Launcher::EndIconDrag()
 
       launcher_removerequest.emit(_drag_icon);
 
+      _drag_window->UnGrabKeyboard();
       _drag_window->ShowWindow(false);
+      _drag_window = nullptr;
       EnsureAnimation();
     }
     else
     {
-      _model->Save();
-
-      _drag_window->SetAnimationTarget((int)(_drag_icon->GetCenter(monitor).x),
-                                       (int)(_drag_icon->GetCenter(monitor).y));
-      _drag_window->StartAnimation();
+      if (!_drag_window->Cancelled())
+        _model->Save();
 
       if (_drag_window->on_anim_completed.connected())
         _drag_window->on_anim_completed.disconnect();
       _drag_window->on_anim_completed = _drag_window->anim_completed.connect(sigc::mem_fun(this, &Launcher::OnDragWindowAnimCompleted));
+
+      auto const& icon_center = _drag_icon->GetCenter(monitor);
+      _drag_window->SetAnimationTarget(icon_center.x, icon_center.y),
+      _drag_window->StartAnimation();
     }
   }
 
@@ -2084,6 +2094,27 @@ void Launcher::EndIconDrag()
 
   _hide_machine.SetQuirk(LauncherHideMachine::INTERNAL_DND_ACTIVE, false);
   ubus_.SendMessage(UBUS_LAUNCHER_ICON_END_DND);
+}
+
+void Launcher::ShowDragWindow()
+{
+  if (!_drag_window || _drag_window->IsVisible())
+    return;
+
+  _drag_window->GrabKeyboard();
+  _drag_window->ShowWindow(true);
+  _drag_window->PushToFront();
+
+  bool is_before;
+  AbstractLauncherIcon::Ptr const& closer = _model->GetCloserIcon(_drag_icon, is_before);
+  _drag_window->drag_cancel_request.connect([this, closer, is_before] {
+    if (is_before)
+      _model->ReorderAfter(_drag_icon, closer);
+    else
+      _model->ReorderBefore(_drag_icon, closer, true);
+
+    ResetMouseDragState();
+  });
 }
 
 void Launcher::UpdateDragWindowPosition(int x, int y)

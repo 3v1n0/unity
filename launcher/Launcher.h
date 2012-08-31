@@ -294,7 +294,7 @@ private:
 
   void OnActionDone(GVariant* data);
 
-  AbstractLauncherIcon::Ptr MouseIconIntersection(int x, int y);
+  virtual AbstractLauncherIcon::Ptr MouseIconIntersection(int x, int y);
   void EventLogic();
   void MouseDownLogic(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void MouseUpLogic(int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -302,6 +302,7 @@ private:
   void StartIconDragRequest(int x, int y);
   void StartIconDrag(AbstractLauncherIcon::Ptr icon);
   void EndIconDrag();
+  void ShowDragWindow();
   void UpdateDragWindowPosition(int x, int y);
 
   void ResetMouseDragState();
