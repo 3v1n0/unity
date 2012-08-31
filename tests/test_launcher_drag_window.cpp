@@ -52,4 +52,20 @@ TEST_F(TestLauncherDragWindow, Construction)
   EXPECT_FALSE(drag_window.Cancelled());
 }
 
+TEST_F(TestLauncherDragWindow, EscapeRequestsCancellation)
+{
+  nux::Event cancel;
+  cancel.type = nux::NUX_KEYDOWN;
+  cancel.x11_keysym = NUX_VK_ESCAPE;
+  bool got_signal;
+
+  drag_window.drag_cancel_request.connect([&got_signal] { got_signal = true; });
+  drag_window.GrabKeyboard();
+  nux::GetWindowCompositor().ProcessEvent(cancel);
+
+  EXPECT_TRUE(got_signal);
+  EXPECT_TRUE(drag_window.Cancelled());
+  drag_window.UnGrabKeyboard();
+}
+
 }
