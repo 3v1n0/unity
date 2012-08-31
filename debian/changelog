@@ -1,29 +1,5 @@
 unity (6.4.0-0ubuntu1) UNRELEASED; urgency=low
 
-  [ Didier Roche ]
-  * Backports:
-    - the remaining part of the gconf removal from upstream branch
-    - the .convert migration scripts
-  * debian/control:
-    - do not build-dep on gconf anymore
-    - build-dep on latest compiz for building gsettings keys
-      (part 2 of LP: #1035261)
-  * debian/unity-common.install, debian/control:
-    - don't ship gconf schemas as not built anymore (the gsettings schema ones
-      are already shipped)
-    - install the gnome-control-center unity keybinding integration
-    - install the .convert files handled by the compiz migration script and
-      make unity-common depending on the right version of compiz-gnome (with
-      the migration script)
-
-  [ Timo Jyrinki ]
-  * Add dbus-glib-1 to UNITY_PLUGIN_DEPS to fix FTBFS 
-  * Remove the remaining gconf files from installation
-  * Remove gconf-2.0 dependency from services
-  * Make sure USE_GSETTINGS is defined
-  * Backports:
-    - gnome-control-center integration
-
   [ Łukasz 'sil2100' Zemczak ]
   * New upstream release.
     - Software Center add to launcher icon animation is delayed when the 
@@ -112,6 +88,46 @@ unity (6.4.0-0ubuntu1) UNRELEASED; urgency=low
       [-Werror=uninitialized] (LP: #1036514)
 
  -- Łukasz 'sil2100' Zemczak <lukasz.zemczak@canonical.com>  Thu, 30 Aug 2012 15:07:23 +0200
+
+unity (6.2.0-0ubuntu4) quantal; urgency=low
+
+  * debian/control:
+    - Depends on compiz-plugins-default rather than on a transitional one
+  * tools/convert-files/compiz-profile-(active)-unity.convert:
+    - updated to fix some key names typos in the list (lp: #1041631)
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Tue, 28 Aug 2012 22:05:26 +0200
+
+unity (6.2.0-0ubuntu3) quantal-proposed; urgency=low
+
+  * debian/control:
+    - updated compiz gsettings version
+
+  [ Didier Roche ]
+  * Backports:
+    - the remaining part of the gconf removal from upstream branch
+    - the .convert migration scripts
+  * debian/control:
+    - do not build-dep on gconf anymore
+    - build-dep on latest compiz for building gsettings keys
+      (part 2 of LP: #1035261)
+  * debian/unity-common.install, debian/control:
+    - don't ship gconf schemas as not built anymore (the gsettings schema ones
+      are already shipped)
+    - install the gnome-control-center unity keybinding integration
+    - install the .convert files handled by the compiz migration script and
+      make unity-common depending on the right version of compiz-gnome (with
+      the migration script)
+
+  [ Timo Jyrinki ]
+  * Add dbus-glib-1 to UNITY_PLUGIN_DEPS to fix FTBFS 
+  * Remove the remaining gconf files from installation
+  * Remove gconf-2.0 dependency from services
+  * Make sure USE_GSETTINGS is defined
+  * Backports:
+    - gnome-control-center integration
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Thu, 23 Aug 2012 17:58:52 +0200
 
 unity (6.2.0-0ubuntu2) quantal; urgency=low
 
