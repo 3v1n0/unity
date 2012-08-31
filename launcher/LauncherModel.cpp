@@ -387,7 +387,7 @@ void LauncherModel::SelectPrevious()
   }
 }
 
-AbstractLauncherIcon::Ptr LauncherModel::GetCloserIcon(AbstractLauncherIcon::Ptr icon, bool& before) const
+AbstractLauncherIcon::Ptr LauncherModel::GetClosestIcon(AbstractLauncherIcon::Ptr icon, bool& is_before) const
 {
   AbstractLauncherIcon::Ptr prev, next;
   bool found_target = false;
@@ -418,9 +418,9 @@ AbstractLauncherIcon::Ptr LauncherModel::GetCloserIcon(AbstractLauncherIcon::Ptr
     }
   }
 
-  before = next.IsNull();
+  is_before = next.IsNull();
 
-  return before ? prev : next;
+  return is_before ? prev : next;
 }
 
 /* iterators */

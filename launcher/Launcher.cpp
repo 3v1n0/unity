@@ -2106,7 +2106,7 @@ void Launcher::ShowDragWindow()
   _drag_window->PushToFront();
 
   bool is_before;
-  AbstractLauncherIcon::Ptr const& closer = _model->GetCloserIcon(_drag_icon, is_before);
+  AbstractLauncherIcon::Ptr const& closer = _model->GetClosestIcon(_drag_icon, is_before);
   _drag_window->drag_cancel_request.connect([this, closer, is_before] {
     if (is_before)
       _model->ReorderAfter(_drag_icon, closer);

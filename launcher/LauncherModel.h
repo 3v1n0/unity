@@ -62,7 +62,7 @@ public:
   void SelectNext();
   void SelectPrevious();
 
-  AbstractLauncherIcon::Ptr GetCloserIcon(AbstractLauncherIcon::Ptr icon, bool& before) const;
+  AbstractLauncherIcon::Ptr GetClosestIcon(AbstractLauncherIcon::Ptr icon, bool& is_before) const;
 
   iterator begin();
   iterator end();

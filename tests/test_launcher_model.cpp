@@ -213,7 +213,7 @@ TEST(TestLauncherModel, TestReorderSmart)
   EXPECT_EQ(fourth, *it);
 }
 
-TEST(TestLauncherModel, TestGetCloserIcon)
+TEST(TestLauncherModel, TestGetClosestIcon)
 {
   LauncherModel::Ptr model(new LauncherModel());
   AbstractLauncherIcon::Ptr first(new MockLauncherIcon());
@@ -232,20 +232,20 @@ TEST(TestLauncherModel, TestGetCloserIcon)
   model->AddIcon(fourth);
 
   bool before;
-  EXPECT_EQ(model->GetCloserIcon(first, before), second);
+  EXPECT_EQ(model->GetClosestIcon(first, before), second);
   EXPECT_FALSE(before);
 
-  EXPECT_EQ(model->GetCloserIcon(second, before), first);
+  EXPECT_EQ(model->GetClosestIcon(second, before), first);
   EXPECT_TRUE(before);
 
-  EXPECT_EQ(model->GetCloserIcon(third, before), second);
+  EXPECT_EQ(model->GetClosestIcon(third, before), second);
   EXPECT_TRUE(before);
 
-  EXPECT_EQ(model->GetCloserIcon(fourth, before), third);
+  EXPECT_EQ(model->GetClosestIcon(fourth, before), third);
   EXPECT_TRUE(before);
 }
 
-TEST(TestLauncherModel, TestGetCloserIconWithOneIcon)
+TEST(TestLauncherModel, TestGetClosestIconWithOneIcon)
 {
   LauncherModel::Ptr model(new LauncherModel());
   AbstractLauncherIcon::Ptr first(new MockLauncherIcon());
@@ -253,7 +253,7 @@ TEST(TestLauncherModel, TestGetCloserIconWithOneIcon)
   model->AddIcon(first);
 
   bool before;
-  EXPECT_EQ(model->GetCloserIcon(first, before), nullptr);
+  EXPECT_EQ(model->GetClosestIcon(first, before), nullptr);
   EXPECT_TRUE(before);
 }
 
