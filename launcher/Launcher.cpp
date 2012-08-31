@@ -92,7 +92,6 @@ const int MOUSE_DEADZONE = 15;
 const float DRAG_OUT_PIXELS = 300.0f;
 
 const std::string DND_CHECK_TIMEOUT = "dnd-check-timeout";
-const std::string STRUT_HACK_TIMEOUT = "strut-hack-timeout";
 const std::string START_DRAGICON_TIMEOUT = "start-dragicon-timeout";
 const std::string SCROLL_TIMEOUT = "scroll-timeout";
 const std::string ANIMATION_IDLE = "animation-idle";
@@ -215,7 +214,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   launcher_sheen_ = cache.FindTexture("dash_sheen", 0, 0, cb);
   launcher_pressure_effect_ = cache.FindTexture("launcher_pressure_effect", 0, 0, cb);
 
-  options.changed.connect(sigc::mem_fun (this, &Launcher::OnOptionsChanged));
+  options.changed.connect(sigc::mem_fun(this, &Launcher::OnOptionsChanged));
 }
 
 /* Introspection */
@@ -1428,21 +1427,9 @@ LauncherHideMode Launcher::GetHideMode() const
 
 /* End Launcher Show/Hide logic */
 
-// Hacks around compiz failing to see the struts because the window was just mapped.
-bool Launcher::StrutHack()
-{
-  _parent->InputWindowEnableStruts(false);
-
-  if (options()->hide_mode == LAUNCHER_HIDE_NEVER)
-    _parent->InputWindowEnableStruts(true);
-
-  return false;
-}
-
 void Launcher::OnOptionsChanged(Options::Ptr options)
 {
    UpdateOptions(options);
-
    options->option_changed.connect(sigc::mem_fun(this, &Launcher::OnOptionChanged));
 }
 
@@ -1473,26 +1460,9 @@ void Launcher::ConfigureBarrier()
 
 void Launcher::SetHideMode(LauncherHideMode hidemode)
 {
-  if (hidemode != LAUNCHER_HIDE_NEVER)
-  {
-    _parent->InputWindowEnableStruts(false);
-  }
-  else
-  {
-    static bool first_time = true;
-
-    _parent->EnableInputWindow(true, launcher::window_title, false, false);
-
-    if (first_time && !sources_.GetSource(STRUT_HACK_TIMEOUT))
-    {
-      sources_.AddTimeout(1000, sigc::mem_fun(this, &Launcher::StrutHack), STRUT_HACK_TIMEOUT);
-      first_time = false;
-    }
-
-    _parent->InputWindowEnableStruts(true);
-  }
-
-  _hide_machine.SetMode((LauncherHideMachine::HideMode) hidemode);
+  bool fixed_launcher = (hidemode == LAUNCHER_HIDE_NEVER);
+  _parent->InputWindowEnableStruts(fixed_launcher);
+  _hide_machine.SetMode(static_cast<LauncherHideMachine::HideMode>(hidemode));
   EnsureAnimation();
 }
 

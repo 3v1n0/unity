@@ -278,7 +278,7 @@ Launcher* Controller::Impl::CreateLauncher(int monitor)
   launcher_window->SetBackgroundColor(nux::color::Transparent);
   launcher_window->ShowWindow(true);
   launcher_window->EnableInputWindow(true, launcher::window_title, false, false);
-  launcher_window->InputWindowEnableStruts(false);
+  launcher_window->InputWindowEnableStruts(parent_->options()->hide_mode == LAUNCHER_HIDE_NEVER);
   launcher_window->SetEnterFocusInputArea(launcher);
 
   launcher->launcher_addrequest.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequest));
