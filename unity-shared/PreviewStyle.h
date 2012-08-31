@@ -123,6 +123,13 @@ public:
   int GetStatusIconSize() const;
   ////////////////////////////////
 
+  ////////////////////////////////
+  // Music Preview
+  int GetAvatarAreaWidth() const;
+  int GetAvatarAreaHeight() const;
+
+  ////////////////////////////////
+
   nux::BaseTexture* GetNavLeftIcon();
   nux::BaseTexture* GetNavRightIcon();
   nux::BaseTexture* GetPlayIcon();

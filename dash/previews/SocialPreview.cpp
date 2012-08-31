@@ -150,10 +150,7 @@ void SocialPreview::SetupViews()
   image_data_layout->SetSpaceBetweenChildren(style.GetPanelSplitWidth());
 
   /////////////////////
-  // Image
-  //image_ = new CoverArt();
-  //AddChild(image_.GetPointer());
-  //UpdateCoverArtImage(image_.GetPointer());
+  // Avatar
   nux::VLayout* social_content_layout = new nux::VLayout();
   social_content_layout->SetSpaceBetweenChildren(16);
   
@@ -178,38 +175,28 @@ void SocialPreview::SetupViews()
         // Icon Layout
         nux::VLayout* icon_layout = new nux::VLayout();
         icon_layout->SetSpaceBetweenChildren(3);
-        avatar_ = new IconTexture(social_preview_model->avatar.Get().RawPtr() ? g_icon_to_string(social_preview_model->avatar.Get().RawPtr()) : "", 72);
-        avatar_->SetMinimumSize(style.GetAppIconAreaWidth(), style.GetAppIconAreaWidth());
-        avatar_->SetMaximumSize(style.GetAppIconAreaWidth(), style.GetAppIconAreaWidth());
+        avatar_ = new IconTexture(social_preview_model->avatar.Get().RawPtr() ? g_icon_to_string(social_preview_model->avatar.Get().RawPtr()) : "", MIN(style.GetAvatarAreaWidth(), style.GetAvatarAreaHeight()));
+        avatar_->SetMinMaxSize(style.GetAvatarAreaWidth(), style.GetAvatarAreaHeight());
         icon_layout->AddView(avatar_.GetPointer(), 0);
 
         /////////////////////
 
         /////////////////////
         // Data
-
         nux::VLayout* social_data_layout = new nux::VLayout();
-        social_data_layout->SetSpaceBetweenChildren(16);
+        social_data_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
 
-        sender_layout_ = new nux::VLayout();
-        sender_layout_->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
-
-        sender_ = new nux::StaticCairoText(social_preview_model->sender, true, NUX_TRACKER_LOCATION);
-        sender_->SetLines(-1);
-        sender_layout_->AddView(sender_.GetPointer(), 0);
-        // FIXME
-        //sender_->SetFont(style.title_size_font().c_str());
-        title_layout_ = new nux::VLayout();
-        //title_layout_->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
-
-        title_ = new nux::StaticCairoText(social_preview_model->title, true, NUX_TRACKER_LOCATION);
-        // FIXME
-        //title_->SetFont(style.title_font().c_str());
+        title_ = new nux::StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
         title_->SetLines(-1);
-        title_layout_->AddView(title_.GetPointer(), 1);
+        title_->SetFont(style.title_font().c_str());
 
-        social_data_layout->AddLayout(sender_layout_);
-        social_data_layout->AddLayout(title_layout_);
+        subtitle_ = new nux::StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
+        subtitle_->SetFont(style.subtitle_size_font().c_str());
+        subtitle_->SetLines(-1);
+
+        social_data_layout->AddView(title_.GetPointer(), 0);
+        social_data_layout->AddView(subtitle_.GetPointer(), 0);
+        social_data_layout->AddSpace(0, 1);
 
         // buffer space
         /////////////////////
@@ -260,17 +247,17 @@ void SocialPreview::PreLayoutManagement()
 
   previews::Style& style = dash::previews::Style::Instance();
 
-  nux::Geometry geo_art(geo.x, geo.y, style.GetAppImageAspectRatio() * geo.height, geo.height);
+  nux::Geometry geo_content(geo.x, geo.y, style.GetAppImageAspectRatio() * geo.height, geo.height);
 
-  if (geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() < style.GetDetailsPanelMinimumWidth())
-    geo_art.width = MAX(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() - style.GetDetailsPanelMinimumWidth());
+  if (geo.width - geo_content.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() < style.GetDetailsPanelMinimumWidth())
+    geo_content.width = MAX(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() - style.GetDetailsPanelMinimumWidth());
+  content_->SetMinMaxSize(geo_content.width, geo_content.height);
 
-  int details_width = MAX(0, geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
+  int details_width = MAX(0, geo.width - geo_content.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
   int top_social_info_max_width = details_width - style.GetAppIconAreaWidth() - style.GetSpaceBetweenIconAndDetails();
 
-  if (sender_) { sender_->SetMaximumWidth(top_social_info_max_width); }
   if (title_) { title_->SetMaximumWidth(top_social_info_max_width); }
-  if (content_) { content_->SetMaximumWidth(details_width); }
+  if (subtitle_) { subtitle_->SetMaximumWidth(top_social_info_max_width); }
 
   for (nux::AbstractButton* button : action_buttons_)
   {
