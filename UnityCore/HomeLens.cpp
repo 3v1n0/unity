@@ -955,7 +955,7 @@ void HomeLens::Impl::LensSearchFinished(Lens::Ptr const& lens)
   for (unsigned i = 0; i < order_vector.size(); i++)
   {
     // get lens that owns this category
-    std::string lens_id(categories_merger_.GetLensIdForCategory(order_vector.at(i)));
+    std::string const& lens_id(categories_merger_.GetLensIdForCategory(order_vector.at(i)));
     if (lens_id == "shopping.lens")
       shopping_index = i;
     else if (lens_id == "applications.lens")

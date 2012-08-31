@@ -450,8 +450,7 @@ void Lens::Impl::UpdateProperties(bool search_in_global,
   // as the iteration is not stopped in the middle
   while (g_variant_iter_loop(hints_iter, "{sv}", &key, &value))
   {
-    std::string key_name(key);
-    if (key_name == "provides-personal-content")
+    if (g_strcmp0(key, "provides-personal-content") == 0)
     {
       provides_personal_content = g_variant_get_boolean(value) != FALSE;
     }
