@@ -52,6 +52,8 @@ LauncherDragWindow::~LauncherDragWindow()
 {
   if (on_anim_completed.connected())
     on_anim_completed.disconnect();
+
+  UnGrabKeyboard();
 }
 
 bool LauncherDragWindow::Animating() const
