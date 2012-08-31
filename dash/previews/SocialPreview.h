@@ -68,7 +68,8 @@ protected:
 
 protected:
   nux::VLayout* full_data_layout_;
-  nux::VLayout* title_subtitle_layout_;
+  nux::VLayout* sender_layout_;
+  nux::VLayout* title_layout_;
 
   nux::ObjectPtr<IconTexture> avatar_;
   nux::ObjectPtr<nux::StaticCairoText> sender_;
