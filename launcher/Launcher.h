@@ -30,6 +30,7 @@
 #include "PointerBarrier.h"
 #include "unity-shared/AbstractIconRenderer.h"
 #include "unity-shared/BackgroundEffectHelper.h"
+#include "DevicesSettings.h"
 #include "DNDCollectionWindow.h"
 #include "DndData.h"
 #include "EdgeBarrierController.h"
@@ -81,6 +82,8 @@ public:
 
   void SetModel(LauncherModel::Ptr model);
   LauncherModel::Ptr GetModel() const;
+
+  void SetDevicesSettings(DevicesSettings::Ptr devices_settings);
 
   void StartKeyShowLauncher();
   void EndKeyShowLauncher();
@@ -291,7 +294,7 @@ private:
 
   void OnActionDone(GVariant* data);
 
-  AbstractLauncherIcon::Ptr MouseIconIntersection(int x, int y);
+  virtual AbstractLauncherIcon::Ptr MouseIconIntersection(int x, int y);
   void EventLogic();
   void MouseDownLogic(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void MouseUpLogic(int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -299,7 +302,9 @@ private:
   void StartIconDragRequest(int x, int y);
   void StartIconDrag(AbstractLauncherIcon::Ptr icon);
   void EndIconDrag();
+  void ShowDragWindow();
   void UpdateDragWindowPosition(int x, int y);
+  void HideDragWindow();
 
   void ResetMouseDragState();
 
@@ -392,6 +397,8 @@ private:
 
   ui::AbstractIconRenderer::Ptr icon_renderer;
   BackgroundEffectHelper bg_effect_helper_;
+
+  DevicesSettings::Ptr devices_settings_;
 
   UBusManager ubus_;
   glib::SourceManager sources_;

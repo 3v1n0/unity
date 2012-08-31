@@ -36,6 +36,8 @@ namespace dash
 namespace
 {
 nux::logging::Logger logger("unity.dash.lens");
+
+const unsigned CATEGORY_COLUMN = 2;
 }
 
 using std::string;
@@ -77,7 +79,8 @@ public:
                         string const& results_model_name,
                         string const& global_results_model_name,
                         string const& categories_model_name,
-                        string const& filters_model_name);
+                        string const& filters_model_name,
+                        GVariantIter* hints_iter);
   void OnViewTypeChanged(ViewType view_type);
 
   void GlobalSearch(std::string const& search_string);
@@ -91,6 +94,8 @@ public:
                      glib::Variant const& preview_update,
                      glib::DBusProxy::ReplyCallback reply_cb);
   std::vector<unsigned> GetCategoriesOrder();
+  glib::Object<DeeModel> GetFilterModelForCategory(unsigned category);
+  void GetFilterForCategoryIndex(unsigned category, DeeFilter* filter);
 
   string const& id() const;
   string const& dbus_name() const;
@@ -108,6 +113,10 @@ public:
   Categories::Ptr const& categories() const;
   Filters::Ptr const& filters() const;
   bool connected() const;
+  bool provides_personal_content() const;
+
+  string const& last_search_string() const { return last_search_string_; }
+  string const& last_global_search_string() const { return last_global_search_string_; }
 
   Lens* owner_;
 
@@ -126,16 +135,19 @@ public:
   Categories::Ptr categories_;
   Filters::Ptr filters_;
   bool connected_;
+  bool provides_personal_content_;
 
   string private_connection_name_;
+  string last_search_string_;
+  string last_global_search_string_;
 
   glib::DBusProxy* proxy_;
   glib::Object<GCancellable> search_cancellable_;
   glib::Object<GCancellable> global_search_cancellable_;
   glib::Object<GCancellable> preview_cancellable_;
 
-  GVariant *results_variant_;
-  GVariant *global_results_variant_;
+  glib::Variant results_variant_;
+  glib::Variant global_results_variant_;
 };
 
 Lens::Impl::Impl(Lens* owner,
@@ -165,9 +177,8 @@ Lens::Impl::Impl(Lens* owner,
   , categories_(new Categories(model_type))
   , filters_(new Filters(model_type))
   , connected_(false)
+  , provides_personal_content_(false)
   , proxy_(NULL)
-  , results_variant_(NULL)
-  , global_results_variant_(NULL)
 {
   if (model_type == ModelType::REMOTE)
   {
@@ -199,6 +210,9 @@ Lens::Impl::Impl(Lens* owner,
   owner_->categories.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::categories));
   owner_->filters.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::filters));
   owner_->connected.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::connected));
+  owner_->provides_personal_content.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::provides_personal_content));
+  owner_->last_search_string.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::last_search_string));
+  owner_->last_global_search_string.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::last_global_search_string));
   owner_->view_type.changed.connect(sigc::mem_fun(this, &Lens::Impl::OnViewTypeChanged));
 }
 
@@ -236,13 +250,11 @@ void Lens::Impl::OnProxyDisconnected()
 void Lens::Impl::ResultsModelUpdated(unsigned long long begin_seqnum,
                                      unsigned long long end_seqnum)
 {
-  if (results_variant_ != NULL &&
-      end_seqnum >= ExtractModelSeqnum (results_variant_))
+  if (results_variant_ && end_seqnum >= ExtractModelSeqnum (results_variant_))
   {
-    glib::Variant dict(results_variant_, glib::StealRef());
     Hints hints;
 
-    dict.ASVToHints(hints);
+    results_variant_.ASVToHints(hints);
 
     owner_->search_finished.emit(hints);
 
@@ -253,13 +265,12 @@ void Lens::Impl::ResultsModelUpdated(unsigned long long begin_seqnum,
 void Lens::Impl::GlobalResultsModelUpdated(unsigned long long begin_seqnum,
                                            unsigned long long end_seqnum)
 {
-  if (global_results_variant_ != NULL &&
+  if (global_results_variant_ &&
       end_seqnum >= ExtractModelSeqnum (global_results_variant_))
   {
-    glib::Variant dict(global_results_variant_, glib::StealRef());
     Hints hints;
 
-    dict.ASVToHints(hints);
+    global_results_variant_.ASVToHints(hints);
 
     owner_->global_search_finished.emit(hints);
 
@@ -296,8 +307,7 @@ void Lens::Impl::OnSearchFinished(GVariant* parameters)
   if (results_->seqnum < reply_seqnum)
   {
     // wait for the end-transaction signal
-    if (results_variant_) g_variant_unref (results_variant_);
-    results_variant_ = g_variant_ref (parameters);
+    results_variant_ = parameters;
 
     // ResultsModelUpdated will emit OnSearchFinished
     return;
@@ -318,8 +328,7 @@ void Lens::Impl::OnGlobalSearchFinished(GVariant* parameters)
   if (global_results_->seqnum < reply_seqnum)
   {
     // wait for the end-transaction signal
-    if (global_results_variant_) g_variant_unref (global_results_variant_);
-    global_results_variant_ = g_variant_ref (parameters);
+    global_results_variant_ = parameters;
 
     // GlobalResultsModelUpdated will emit OnGlobalSearchFinished
     return;
@@ -367,15 +376,28 @@ void Lens::Impl::OnChanged(GVariant* parameters)
                     << "  Filters: " << filters_model_name << "\n";
   if (dbus_path.Str() == dbus_path_)
   {
+    std::string categories_model_swarm_name(categories_model_name.Str());
+    std::string filters_model_swarm_name(filters_model_name.Str());
+    std::string results_model_swarm_name(results_model_name.Str());
+    std::string global_results_model_swarm_name(global_results_model_name.Str());
+    bool models_changed = 
+      categories_model_swarm_name != categories_->swarm_name ||
+      filters_model_swarm_name != filters_->swarm_name ||
+      results_model_swarm_name != results_->swarm_name ||
+      global_results_model_swarm_name != global_results_->swarm_name;
+
     /* FIXME: We ignore hints for now */
     UpdateProperties(search_in_global,
                      visible,
                      search_hint.Str(),
                      private_connection_name.Str(),
-                     results_model_name.Str(),
-                     global_results_model_name.Str(),
-                     categories_model_name.Str(),
-                     filters_model_name.Str());
+                     results_model_swarm_name,
+                     global_results_model_swarm_name,
+                     categories_model_swarm_name,
+                     filters_model_swarm_name,
+                     hints_iter);
+
+    if (models_changed) owner_->models_changed.emit();
   }
   else
   {
@@ -398,7 +420,8 @@ void Lens::Impl::UpdateProperties(bool search_in_global,
                                   string const& results_model_name,
                                   string const& global_results_model_name,
                                   string const& categories_model_name,
-                                  string const& filters_model_name)
+                                  string const& filters_model_name,
+                                  GVariantIter* hints_iter)
 {
   // Diff the properties received from those we have
   if (search_hint_ != search_hint)
@@ -417,6 +440,26 @@ void Lens::Impl::UpdateProperties(bool search_in_global,
   {
     visible_ = visible;
     owner_->visible.EmitChanged(visible_);
+  }
+
+  bool provides_personal_content = false;
+  gchar* key;
+  GVariant* value;
+
+  // g_variant_iter_loop manages the memory automatically, as long
+  // as the iteration is not stopped in the middle
+  while (g_variant_iter_loop(hints_iter, "{sv}", &key, &value))
+  {
+    if (g_strcmp0(key, "provides-personal-content") == 0)
+    {
+      provides_personal_content = g_variant_get_boolean(value) != FALSE;
+    }
+  }
+
+  if (provides_personal_content_ != provides_personal_content)
+  {
+    provides_personal_content_ = provides_personal_content;
+    owner_->provides_personal_content.EmitChanged(provides_personal_content_);
   }
 
   if (private_connection_name_ != private_connection_name)
@@ -447,11 +490,8 @@ void Lens::Impl::GlobalSearch(std::string const& search_string)
     g_cancellable_cancel (global_search_cancellable_);
   global_search_cancellable_ = g_cancellable_new ();
 
-  if (global_results_variant_)
-  {
-    g_variant_unref (global_results_variant_);
-    global_results_variant_ = NULL;
-  }
+  global_results_variant_ = NULL;
+  last_global_search_string_ = search_string;
 
   proxy_->Call("GlobalSearch",
               g_variant_new("(sa{sv})",
@@ -478,11 +518,8 @@ void Lens::Impl::Search(std::string const& search_string)
   if (search_cancellable_) g_cancellable_cancel (search_cancellable_);
   search_cancellable_ = g_cancellable_new ();
 
-  if (results_variant_)
-  {
-    g_variant_unref (results_variant_);
-    results_variant_ = NULL;
-  }
+  results_variant_ = NULL;
+  last_search_string_ = search_string;
 
   proxy_->Call("Search",
                g_variant_new("(sa{sv})",
@@ -621,6 +658,61 @@ std::vector<unsigned> Lens::Impl::GetCategoriesOrder()
   return result;
 }
 
+glib::Object<DeeModel> Lens::Impl::GetFilterModelForCategory(unsigned category)
+{
+  DeeFilter filter;
+  GetFilterForCategoryIndex(category, &filter);
+  glib::Object<DeeModel> filter_model(dee_filter_model_new(results_->model(), &filter));
+
+  return filter_model;
+}
+
+static void category_filter_map_func (DeeModel* orig_model,
+                                      DeeFilterModel* filter_model,
+                                      gpointer user_data)
+{
+  DeeModelIter* iter;
+  DeeModelIter* end;
+  unsigned index = GPOINTER_TO_UINT(user_data);
+
+  iter = dee_model_get_first_iter(orig_model);
+  end = dee_model_get_last_iter(orig_model);
+  while (iter != end)
+  {
+    unsigned category_index = dee_model_get_uint32(orig_model, iter,
+                                                   CATEGORY_COLUMN);
+    if (index == category_index)
+    {
+      dee_filter_model_append_iter(filter_model, iter);
+    }
+    iter = dee_model_next(orig_model, iter);
+  }
+}
+
+static gboolean category_filter_notify_func (DeeModel* orig_model,
+                                             DeeModelIter* orig_iter,
+                                             DeeFilterModel* filter_model,
+                                             gpointer user_data)
+{
+  unsigned index = GPOINTER_TO_UINT(user_data);
+  unsigned category_index = dee_model_get_uint32(orig_model, orig_iter,
+                                                 CATEGORY_COLUMN);
+
+  if (index != category_index)
+    return FALSE;
+
+  dee_filter_model_insert_iter_with_original_order(filter_model, orig_iter);
+  return TRUE;
+}
+
+void Lens::Impl::GetFilterForCategoryIndex(unsigned category, DeeFilter* filter)
+{
+  filter->map_func = category_filter_map_func;
+  filter->map_notify = category_filter_notify_func;
+  filter->destroy = nullptr;
+  filter->userdata = GUINT_TO_POINTER(category);
+}
+
 string const& Lens::Impl::id() const
 {
   return id_;
@@ -705,6 +797,11 @@ Filters::Ptr const& Lens::Impl::filters() const
 bool Lens::Impl::connected() const
 {
   return connected_;
+}
+
+bool Lens::Impl::provides_personal_content() const
+{
+  return provides_personal_content_;
 }
 
 Lens::Lens(string const& id_,
@@ -795,6 +892,11 @@ void Lens::SignalPreview(std::string const& uri,
 std::vector<unsigned> Lens::GetCategoriesOrder()
 {
   return pimpl->GetCategoriesOrder();
+}
+
+glib::Object<DeeModel> Lens::GetFilterModelForCategory(unsigned category)
+{
+  return pimpl->GetFilterModelForCategory(category);
 }
 
 

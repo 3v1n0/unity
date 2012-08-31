@@ -309,7 +309,7 @@ void ApplicationPreview::PreLayoutManagement()
   image_->SetMinMaxSize(geo_art.width, geo_art.height);
 
   int details_width = MAX(0, geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
-  int top_app_info_max_width = details_width - style.GetAppIconAreaWidth() - style.GetSpaceBetweenIconAndDetails();
+  int top_app_info_max_width = MAX(0, details_width - style.GetAppIconAreaWidth() - style.GetSpaceBetweenIconAndDetails());
 
   if (title_) { title_->SetMaximumWidth(top_app_info_max_width); }
   if (subtitle_) { subtitle_->SetMaximumWidth(top_app_info_max_width); }

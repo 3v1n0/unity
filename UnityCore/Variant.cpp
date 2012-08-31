@@ -97,8 +97,8 @@ bool Variant::ASVToHints(HintsMap& hints) const
 
 Variant& Variant::operator=(GVariant* val)
 {
-  if (variant_) g_variant_unref (variant_);
-  variant_ = g_variant_ref_sink (val);
+  if (variant_) g_variant_unref(variant_);
+  variant_ = val ? g_variant_ref_sink(val) : val;
 
   return *this;
 }
@@ -106,6 +106,11 @@ Variant& Variant::operator=(GVariant* val)
 Variant::operator GVariant* () const
 {
   return variant_;
+}
+
+Variant::operator bool() const
+{
+  return bool(variant_);
 }
 
 } // namespace glib
