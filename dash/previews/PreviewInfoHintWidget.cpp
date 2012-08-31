@@ -210,6 +210,7 @@ void PreviewInfoHintWidget::PreLayoutManagement()
   int info_value_width = geo.width;
   info_value_width -= layout_spacing;
   info_value_width -= info_hint_width;
+  info_value_width = MAX(0, info_value_width);
 
   for (InfoHint const& info_hint : info_hints_)
   {

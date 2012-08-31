@@ -32,6 +32,7 @@ namespace unity
 {
 namespace launcher
 {
+
 class AbstractLauncherIcon;
 class Launcher;
 class LauncherModel;

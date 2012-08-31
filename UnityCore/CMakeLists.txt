@@ -105,7 +105,6 @@ set (CFLAGS
 add_definitions (${CFLAGS})
 
 set (LIBS ${CORE_DEPS_LIBRARIES})
-link_libraries (${LIBS})
 
 set (LIB_PATHS ${CORE_DEPS_LIBRARY_DIRS})
 link_directories(${LIB_PATHS})
@@ -126,7 +125,9 @@ set (CORE_LIB_LT_AGE 0)
 set (CORE_LIB_LT_VERSION "${CORE_LIB_LT_CURRENT}:${CORE_LIB_LT_REV}:${CORE_LIB_LT_AGE}")
 
 set (CORE_LIB_NAME "unity-core-${UNITY_API_VERSION}")
+
 add_library (${CORE_LIB_NAME} SHARED ${CORE_SOURCES})
+target_link_libraries (${CORE_LIB_NAME} ${LIBS})
 set_target_properties(${CORE_LIB_NAME} PROPERTIES
                       VERSION ${CORE_LIB_LT_CURRENT}.${CORE_LIB_LT_REV}.${CORE_LIB_LT_AGE}
                       SOVERSION ${CORE_LIB_LT_CURRENT}

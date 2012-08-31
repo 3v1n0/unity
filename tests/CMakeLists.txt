@@ -227,6 +227,10 @@ if (GTEST_SRC_DIR AND
                  test_switcher_model.cpp
                  test_texture_cache.cpp
                  test_thumbnail_generator.cpp
+                 test_launcher_minimize_speed.cpp
+                 test_volume_imp.cpp
+                 test_volume_launcher_icon.cpp
+                 gmockmount.c
                  gmockvolume.c
                  ${CMAKE_SOURCE_DIR}/dash/AbstractPlacesGroup.cpp
                  ${CMAKE_SOURCE_DIR}/dash/DashViewPrivate.cpp
@@ -258,14 +262,15 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/launcher/DNDCollectionWindow.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/Decaymulator.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/DesktopLauncherIcon.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/DeviceLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/DeviceLauncherSection.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/DevicesSettings.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/DeviceNotificationDisplayImp.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/DevicesSettingsImp.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/DndData.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/EdgeBarrierController.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/FavoriteStore.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/FavoriteStoreGSettings.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/FavoriteStorePrivate.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/FileManagerOpenerImp.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/HudLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/Launcher.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/LauncherController.cpp
@@ -296,6 +301,8 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/launcher/SwitcherView.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/Tooltip.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/TrashLauncherIcon.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/VolumeImp.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/VolumeLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/VolumeMonitorWrapper.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/Animator.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/BackgroundEffectHelper.cpp
@@ -332,6 +339,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/unity-shared/UserThumbnailProvider.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/WindowManager.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/ubus-server.cpp
+                 ${CMAKE_SOURCE_DIR}/plugins/unityshell/src/WindowMinimizeSpeedController.cpp
                 )
   target_link_libraries(test-gtest gtest gmock ${LIBS})
   add_test(UnityGTest test-gtest)

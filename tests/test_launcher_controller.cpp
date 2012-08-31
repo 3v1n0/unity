@@ -52,7 +52,6 @@ private:
 class MockBamfLauncherIcon : public BamfLauncherIcon
 {
 public:
-  //typedef nux::ObjectPtr<MockMockLauncherIcon> Ptr;
   MockBamfLauncherIcon(BamfApplication* app)
     : BamfLauncherIcon(app) {}
 
@@ -71,7 +70,6 @@ public:
 
   virtual void SetUp()
   {
-    lc.options = std::make_shared<Options>();
     lc.multiple_launchers = true;
   }
 
@@ -98,6 +96,8 @@ TEST_F(TestLauncherController, Construction)
 {
   EXPECT_NE(lc.options(), nullptr);
   EXPECT_TRUE(lc.multiple_launchers());
+  ASSERT_EQ(lc.launchers().size(), 1);
+  EXPECT_EQ(lc.launcher().monitor(), 0);
 }
 
 TEST_F(TestLauncherController, MultimonitorMultipleLaunchers)
@@ -230,4 +230,65 @@ TEST_F(TestLauncherController, OnlyUnstickIconOnFavoriteRemoval)
   favorite_store.favorite_removed.emit(USC_DESKTOP);
 }
 
+TEST_F(TestLauncherController, EnabledStrutsByDefault)
+{
+  EXPECT_EQ(lc.launcher().options()->hide_mode, LAUNCHER_HIDE_NEVER);
+  EXPECT_TRUE(lc.launcher().GetParent()->InputWindowStrutsEnabled());
 }
+
+TEST_F(TestLauncherController, EnabledStrutsOnNeverHide)
+{
+  lc.multiple_launchers = true;
+  uscreen.SetupFakeMultiMonitor();
+  lc.options()->hide_mode = LAUNCHER_HIDE_NEVER;
+
+  for (int i = 0; i < max_num_monitors; ++i)
+    ASSERT_TRUE(lc.launchers()[i]->GetParent()->InputWindowStrutsEnabled());
+}
+
+TEST_F(TestLauncherController, DisabledStrutsOnAutoHide)
+{
+  lc.multiple_launchers = true;
+  uscreen.SetupFakeMultiMonitor();
+  lc.options()->hide_mode = LAUNCHER_HIDE_AUTOHIDE;
+
+  for (int i = 0; i < max_num_monitors; ++i)
+    ASSERT_FALSE(lc.launchers()[i]->GetParent()->InputWindowStrutsEnabled());
+}
+
+TEST_F(TestLauncherController, EnabledStrutsAddingNewLaunchersOnAutoHide)
+{
+  // This makes the controller to add multiple launchers
+  lc.multiple_launchers = true;
+  lc.options()->hide_mode = LAUNCHER_HIDE_NEVER;
+  uscreen.SetupFakeMultiMonitor();
+
+  // This makes the controller to remove unneeded launchers
+  lc.multiple_launchers = false;
+
+  // This makes the controller to add again new launchers
+  lc.multiple_launchers = true;
+
+  for (int i = 0; i < max_num_monitors; ++i)
+    ASSERT_TRUE(lc.launchers()[i]->GetParent()->InputWindowStrutsEnabled());
+}
+
+TEST_F(TestLauncherController, DisabledStrutsAddingNewLaunchersOnNeverHide)
+{
+  // This makes the controller to add multiple launchers
+  lc.multiple_launchers = true;
+  lc.options()->hide_mode = LAUNCHER_HIDE_AUTOHIDE;
+  uscreen.SetupFakeMultiMonitor();
+
+  // This makes the controller to remove unneeded launchers
+  lc.multiple_launchers = false;
+
+  // This makes the controller to add again new launchers
+  lc.multiple_launchers = true;
+
+  for (int i = 0; i < max_num_monitors; ++i)
+    ASSERT_FALSE(lc.launchers()[i]->GetParent()->InputWindowStrutsEnabled());
+}
+
+}
+
