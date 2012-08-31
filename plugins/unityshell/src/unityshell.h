@@ -480,7 +480,7 @@ private:
   void RenderText(WindowCairoContext *context,
                   float x, float y,
                   float maxWidth, float maxHeight);
-  WindowCairoContext* CreateCairoContext(float width, float height);
+  std::shared_ptr<WindowCairoContext> CreateCairoContext(float width, float height);
 
   compiz::WindowInputRemoverLock::Weak input_remover_;
   glib::Source::UniquePtr focus_desktop_timeout_;

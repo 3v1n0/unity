@@ -3557,44 +3557,43 @@ UnityWindow::DrawTexture(GLTexture* icon,
   }
 }
 
-WindowCairoContext*
+std::shared_ptr<WindowCairoContext>
 UnityWindow::CreateCairoContext(float width, float height)
 {
   XRenderPictFormat *format;
   Screen *xScreen;
-  WindowCairoContext *context = new WindowCairoContext();
+  std::shared_ptr<WindowCairoContext> cContext(new WindowCairoContext());
 
   xScreen = ScreenOfDisplay(screen->dpy(), screen->screenNum());
 
   format = XRenderFindStandardFormat(screen->dpy(), PictStandardARGB32);
-  context->pixmap_ = XCreatePixmap(screen->dpy(),
+  cContext->pixmap_ = XCreatePixmap(screen->dpy(),
                                    screen->root(),
                                    width, height, 32);
 
-  context->texture_ = GLTexture::bindPixmapToTexture(context->pixmap_,
-                                                     width, height,
-                                                     32);
-  if (context->texture_.empty())
+  cContext->texture_ = GLTexture::bindPixmapToTexture(cContext->pixmap_,
+                                                      width, height,
+                                                      32);
+  if (cContext->texture_.empty())
   {
-    delete context;
     return 0;
   }
 
-  context->surface_ = cairo_xlib_surface_create_with_xrender_format(screen->dpy(),
-                                                                    context->pixmap_,
-                                                                    xScreen,
-                                                                    format,
-                                                                    width,
-                                                                    height);
-  context->cr_ = cairo_create(context->surface_);
+  cContext->surface_ = cairo_xlib_surface_create_with_xrender_format(screen->dpy(),
+                                                                     cContext->pixmap_,
+                                                                     xScreen,
+                                                                     format,
+                                                                     width,
+                                                                     height);
+  cContext->cr_ = cairo_create(cContext->surface_);
 
   // clear
-  cairo_save(context->cr_);
-  cairo_set_operator(context->cr_, CAIRO_OPERATOR_CLEAR);
-  cairo_paint(context->cr_);
-  cairo_restore(context->cr_);
+  cairo_save(cContext->cr_);
+  cairo_set_operator(cContext->cr_, CAIRO_OPERATOR_CLEAR);
+  cairo_paint(cContext->cr_);
+  cairo_restore(cContext->cr_);
 
-  return context;
+  return cContext;
 }
 
 void
@@ -3602,14 +3601,15 @@ UnityWindow::RenderText(WindowCairoContext *context,
                         float x, float y,
                         float maxWidth, float maxHeight)
 {
-  PangoFontDescription* font = pango_font_description_new();
-  pango_font_description_set_family(font, "sans");
-  pango_font_description_set_absolute_size(font, 12 * PANGO_SCALE);
-  pango_font_description_set_style(font, PANGO_STYLE_NORMAL);
-  pango_font_description_set_weight(font, PANGO_WEIGHT_BOLD);
+  std::shared_ptr<PangoFontDescription> font(pango_font_description_new(),
+                                             pango_font_description_free);
+  pango_font_description_set_family(font.get(), "sans");
+  pango_font_description_set_absolute_size(font.get(), 12 * PANGO_SCALE);
+  pango_font_description_set_style(font.get(), PANGO_STYLE_NORMAL);
+  pango_font_description_set_weight(font.get(), PANGO_WEIGHT_BOLD);
 
-  PangoLayout* layout = pango_cairo_create_layout(context->cr_);
-  pango_layout_set_font_description(layout, font);
+  glib::Object<PangoLayout> layout(pango_cairo_create_layout(context->cr_));
+  pango_layout_set_font_description(layout, font.get());
   pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
   pango_layout_set_height(layout, maxHeight);
 
@@ -3648,7 +3648,7 @@ UnityWindow::DrawWindowTitle(const GLWindowPaintAttrib& attrib,
   const float width = x2 - x;
 
   // Paint a fake window decoration
-  WindowCairoContext *context = CreateCairoContext(width, SCALE_WINDOW_TITLE_SIZE);
+  std::shared_ptr<WindowCairoContext> context(CreateCairoContext(width, SCALE_WINDOW_TITLE_SIZE));
 
   cairo_save(context->cr_);
   cairo_push_group(context->cr_);
@@ -3680,7 +3680,7 @@ UnityWindow::DrawWindowTitle(const GLWindowPaintAttrib& attrib,
   cairo_restore(context->cr_);
 
   // Draw windows title
-  RenderText(context,
+  RenderText(context.get(),
              CLOSE_ICON_SPACE * 2 + CLOSE_ICON_SIZE,
              0.0,
              width, SCALE_WINDOW_TITLE_SIZE);
@@ -3693,8 +3693,6 @@ UnityWindow::DrawWindowTitle(const GLWindowPaintAttrib& attrib,
                 x, y,
                 maxWidth , maxHeight);
   }
-
-  delete context;
 }
 
 void
