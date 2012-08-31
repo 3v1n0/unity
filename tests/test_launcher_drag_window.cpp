@@ -65,7 +65,6 @@ TEST_F(TestLauncherDragWindow, EscapeRequestsCancellation)
 
   EXPECT_TRUE(got_signal);
   EXPECT_TRUE(drag_window.Cancelled());
-  drag_window.UnGrabKeyboard();
 }
 
 }

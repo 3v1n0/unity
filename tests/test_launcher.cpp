@@ -97,6 +97,11 @@ public:
       Launcher::UpdateDragWindowPosition(x, y);
     }
 
+    void HideDragWindow()
+    {
+      Launcher::HideDragWindow();
+    }
+
     void ResetMouseDragState()
     {
       Launcher::ResetMouseDragState();
@@ -228,18 +233,18 @@ TEST_F(TestLauncher, CancellingDragLauncherIcon)
   launcher_->UpdateDragWindowPosition(center3.x, center3.y);
 
   auto it = model_->begin();
-  EXPECT_EQ(*it, icon1); it++;
-  EXPECT_EQ(*it, icon3); it++;
-  EXPECT_EQ(*it, icon2);
+  ASSERT_EQ(*it, icon1); it++;
+  ASSERT_EQ(*it, icon3); it++;
+  ASSERT_EQ(*it, icon2);
 
   // Moving icon2 at the begin
   auto const& center1 = icon1->GetCenter(launcher_->monitor());
   launcher_->UpdateDragWindowPosition(center1.x, center1.y);
 
   it = model_->begin();
-  EXPECT_EQ(*it, icon2); it++;
-  EXPECT_EQ(*it, icon1); it++;
-  EXPECT_EQ(*it, icon3);
+  ASSERT_EQ(*it, icon2); it++;
+  ASSERT_EQ(*it, icon1); it++;
+  ASSERT_EQ(*it, icon3);
 
   bool model_saved = false;
   model_->saved.connect([&model_saved] { model_saved = true; });
@@ -249,11 +254,13 @@ TEST_F(TestLauncher, CancellingDragLauncherIcon)
 
   // The icon order should be reset
   it = model_->begin();
-  EXPECT_EQ(*it, icon1); it++;
-  EXPECT_EQ(*it, icon2); it++;
-  EXPECT_EQ(*it, icon3);
+  ASSERT_EQ(*it, icon1); it++;
+  ASSERT_EQ(*it, icon2); it++;
+  ASSERT_EQ(*it, icon3);
 
   EXPECT_FALSE(model_saved);
+
+  launcher_->HideDragWindow();
 }
 
 }
