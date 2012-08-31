@@ -387,6 +387,41 @@ void LauncherModel::SelectPrevious()
   }
 }
 
+AbstractLauncherIcon::Ptr LauncherModel::GetCloserIcon(AbstractLauncherIcon::Ptr icon, bool& before) const
+{
+  AbstractLauncherIcon::Ptr prev, next;
+  bool found_target = false;
+
+  for (auto const& current : _inner)
+  {
+    if (current->GetIconType() != icon->GetIconType())
+      continue;
+
+    if (!found_target)
+    {
+      if (current == icon)
+      {
+        found_target = true;
+
+        if (prev)
+          break;
+      }
+      else
+      {
+        prev = current;
+      }
+    }
+    else
+    {
+      next = current;
+      break;
+    }
+  }
+
+  before = next.IsNull();
+
+  return before ? prev : next;
+}
 
 /* iterators */
 

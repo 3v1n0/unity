@@ -213,4 +213,48 @@ TEST(TestLauncherModel, TestReorderSmart)
   EXPECT_EQ(fourth, *it);
 }
 
+TEST(TestLauncherModel, TestGetCloserIcon)
+{
+  LauncherModel::Ptr model(new LauncherModel());
+  AbstractLauncherIcon::Ptr first(new MockLauncherIcon());
+  AbstractLauncherIcon::Ptr second(new MockLauncherIcon());
+  AbstractLauncherIcon::Ptr third(new MockLauncherIcon());
+  AbstractLauncherIcon::Ptr fourth(new MockLauncherIcon());
+
+  first->SetSortPriority(0);
+  second->SetSortPriority(1);
+  third->SetSortPriority(2);
+  fourth->SetSortPriority(3);
+
+  model->AddIcon(first);
+  model->AddIcon(second);
+  model->AddIcon(third);
+  model->AddIcon(fourth);
+
+  bool before;
+  EXPECT_EQ(model->GetCloserIcon(first, before), second);
+  EXPECT_FALSE(before);
+
+  EXPECT_EQ(model->GetCloserIcon(second, before), first);
+  EXPECT_TRUE(before);
+
+  EXPECT_EQ(model->GetCloserIcon(third, before), second);
+  EXPECT_TRUE(before);
+
+  EXPECT_EQ(model->GetCloserIcon(fourth, before), third);
+  EXPECT_TRUE(before);
+}
+
+TEST(TestLauncherModel, TestGetCloserIconWithOneIcon)
+{
+  LauncherModel::Ptr model(new LauncherModel());
+  AbstractLauncherIcon::Ptr first(new MockLauncherIcon());
+
+  model->AddIcon(first);
+
+  bool before;
+  EXPECT_EQ(model->GetCloserIcon(first, before), nullptr);
+  EXPECT_TRUE(before);
+}
+
 }
