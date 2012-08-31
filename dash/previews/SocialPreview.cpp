@@ -158,7 +158,7 @@ void SocialPreview::SetupViews()
   social_content_layout->SetSpaceBetweenChildren(16);
   
   content_ = new nux::StaticCairoText(social_preview_model->content, true, NUX_TRACKER_LOCATION);
-  content_->SetLines(-1);
+  content_->SetLines(-10);
   social_content_layout->AddView(content_.GetPointer(), 1);
 
   /////////////////////
@@ -191,22 +191,25 @@ void SocialPreview::SetupViews()
         nux::VLayout* social_data_layout = new nux::VLayout();
         social_data_layout->SetSpaceBetweenChildren(16);
 
-        title_subtitle_layout_ = new nux::VLayout();
-        title_subtitle_layout_->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
+        sender_layout_ = new nux::VLayout();
+        sender_layout_->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
 
         sender_ = new nux::StaticCairoText(social_preview_model->sender, true, NUX_TRACKER_LOCATION);
         sender_->SetLines(-1);
+        sender_layout_->AddView(sender_.GetPointer(), 0);
         // FIXME
         //sender_->SetFont(style.title_size_font().c_str());
-        title_subtitle_layout_->AddView(sender_.GetPointer(), 1);
+        title_layout_ = new nux::VLayout();
+        //title_layout_->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
 
         title_ = new nux::StaticCairoText(social_preview_model->title, true, NUX_TRACKER_LOCATION);
         // FIXME
         //title_->SetFont(style.title_font().c_str());
         title_->SetLines(-1);
-        title_subtitle_layout_->AddView(title_.GetPointer(), 1);
+        title_layout_->AddView(title_.GetPointer(), 1);
 
-        social_data_layout->AddLayout(title_subtitle_layout_);
+        social_data_layout->AddLayout(sender_layout_);
+        social_data_layout->AddLayout(title_layout_);
 
         // buffer space
         /////////////////////
@@ -267,6 +270,7 @@ void SocialPreview::PreLayoutManagement()
 
   if (sender_) { sender_->SetMaximumWidth(top_social_info_max_width); }
   if (title_) { title_->SetMaximumWidth(top_social_info_max_width); }
+  if (content_) { content_->SetMaximumWidth(details_width); }
 
   for (nux::AbstractButton* button : action_buttons_)
   {
