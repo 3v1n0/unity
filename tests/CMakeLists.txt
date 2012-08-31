@@ -246,6 +246,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/dash/previews/Preview.cpp
                  ${CMAKE_SOURCE_DIR}/dash/previews/PreviewInfoHintWidget.cpp
                  ${CMAKE_SOURCE_DIR}/dash/previews/PreviewRatingsWidget.cpp
+                 ${CMAKE_SOURCE_DIR}/dash/previews/SocialPreview.cpp
                  ${CMAKE_SOURCE_DIR}/dash/previews/Tracks.cpp
                  ${CMAKE_SOURCE_DIR}/dash/previews/Track.cpp
                  ${CMAKE_SOURCE_DIR}/hud/HudAbstractView.cpp

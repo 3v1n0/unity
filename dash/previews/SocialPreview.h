@@ -72,9 +72,9 @@ protected:
   nux::VLayout* title_layout_;
 
   nux::ObjectPtr<IconTexture> avatar_;
-  nux::ObjectPtr<nux::StaticCairoText> sender_;
   nux::ObjectPtr<nux::StaticCairoText> content_;
   nux::ObjectPtr<nux::StaticCairoText> title_;
+  nux::ObjectPtr<nux::StaticCairoText> subtitle_;
   nux::ObjectPtr<PreviewInfoHintWidget> preview_info_hints_;
 
   typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;

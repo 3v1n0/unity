@@ -284,6 +284,16 @@ float Style::GetVideoImageAspectRatio() const
   return float(540)/380;
 }
 
+int Style::GetAvatarAreaWidth() const
+{
+  return 65;
+}
+
+int Style::GetAvatarAreaHeight() const
+{
+  return 65;  
+}
+
 std::string Style::title_font() const
 {
   return "Ubuntu 22";
