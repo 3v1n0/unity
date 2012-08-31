@@ -62,6 +62,7 @@ public:
     : Lens(id, "", "", name, "lens-icon.png",
            description, search_hint, true, "",
            ModelType::LOCAL)
+    , num_results_(-1)
   {
     search_in_global(true);
     connected.SetGetterFunction(sigc::mem_fun(this, &StaticTestLens::force_connected));
@@ -107,13 +108,19 @@ public:
     row_buf[7] = NULL;
 
     unsigned int i;
-    for (i = 0; i < search_string.size(); i++)
+    unsigned int results_count = search_string.size();
+    if (num_results_ >= 0) results_count = static_cast<unsigned>(num_results_);
+    for (i = 0; i < results_count; i++)
     {
       ostringstream uri;
-      uri << "uri+" << search_string.at(i) << "+" << id();
+      char res_id(i >= search_string.size() ? '-' : search_string.at(i));
+      uri << "uri+" << res_id << "+" << id();
       row_buf[0] = g_variant_new_string(uri.str().c_str());
       row_buf[2] = g_variant_new_uint32(i % 3);
-      glib::String name(g_strdup_printf("%s - %d", search_string.c_str(), i));
+      glib::String name(g_strdup_printf("%s - %d",
+            results_base_name_.empty() ?
+                search_string.c_str() : results_base_name_.c_str(),
+            i));
       row_buf[4] = g_variant_new_string(name);
 
       dee_model_append_row(model, row_buf);
@@ -126,7 +133,7 @@ public:
 
   void GlobalSearch(string const& search_string)
   {
-    /* Dispatch search async, because that's */
+    /* Dispatch search async, because that's what it'd normally do */
     LensSearchClosure* closure = g_new0(LensSearchClosure, 1);
     closure->lens = this;
     closure->search_string = g_strdup(search_string.c_str());
@@ -148,6 +155,19 @@ public:
 
   }
 
+  void SetResultsBaseName(string const& name)
+  {
+    results_base_name_ = name;
+  }
+
+  void SetNumResults(int count)
+  {
+    num_results_ = count;
+  }
+
+private:
+  string results_base_name_;
+  int num_results_;
 };
 
 static gboolean dispatch_global_search(gpointer userdata)
@@ -434,6 +454,12 @@ TEST(TestHomeLens, TestOrderingAfterSearch)
 
   home_lens_.AddLenses(lenses_);
 
+  bool order_changed = false;
+  home_lens_.categories_reordered.connect([&order_changed] ()
+  {
+    order_changed = true;
+  });
+
   home_lens_.Search("ape");
 
   bool finished = false;
@@ -455,11 +481,175 @@ TEST(TestHomeLens, TestOrderingAfterSearch)
    * be first category */
   EXPECT_EQ(order.at(0), apps_lens_cat);
 
-  /* Validate results. In particular that we get the correct merged
-   * category offsets assigned */
+  /* Plus the categories reordered should have been emitted */
+  EXPECT_EQ(order_changed, true);
+
+  /* The model will not be sorted acording to the categories though. */
   iter = dee_model_get_iter_at_row(results, 0);
   EXPECT_EQ(string("uri+a+first.lens"), string(dee_model_get_string(results, iter, URI_COLUMN)));
   EXPECT_EQ( dee_model_get_uint32(results, iter, CAT_COLUMN), lens1_cat);
+}
+
+TEST(TestHomeLens, TestOrderingWithExactAppsMatch)
+{
+  HomeLens home_lens_("name", "description", "searchhint",
+                      HomeLens::MergeMode::OWNER_LENS);
+  ThreeStaticTestLenses lenses_;
+  DeeModel* results = home_lens_.results()->model();
+  DeeModel* cats = home_lens_.categories()->model();
+  DeeModel* filters = home_lens_.filters()->model();
+  // the lens is added as third, so must have cat == 2
+  unsigned int apps_lens_cat = 2;
+
+  home_lens_.AddLenses(lenses_);
+  Lens::Ptr apps_lens = lenses_.GetLens("applications.lens");
+
+  auto static_lens = dynamic_pointer_cast<StaticTestLens>(apps_lens);
+  static_lens->SetNumResults(1);
+
+  bool order_changed = false;
+  home_lens_.categories_reordered.connect([&order_changed] ()
+  {
+    order_changed = true;
+  });
+
+  home_lens_.Search("ape");
+
+  bool finished = false;
+  home_lens_.search_finished.connect([&finished] (Lens::Hints const& hints)
+  {
+    finished = true;
+  });
+  Utils::WaitUntil(finished);
+
+  /* Validate counts */
+  EXPECT_EQ(dee_model_get_n_rows(results), 7); // 3+3+1 hits
+  EXPECT_EQ(dee_model_get_n_rows(cats), 3); // 3 cats since we are merging categories by lens
+  EXPECT_EQ(dee_model_get_n_rows(filters), 0); // We ignore filters deliberately currently
+
+  /* Validate the category order */
+  auto order = home_lens_.GetCategoriesOrder();
+
+  /* The home lens includes applications lens and it contains exact match,
+   * so must be the first category, even though there are fewer results than
+   * in the other categories */
+  EXPECT_EQ(order.at(0), apps_lens_cat);
+
+  /* Plus the categories reordered should have been emitted */
+  EXPECT_EQ(order_changed, true);
+}
+
+TEST(TestHomeLens, TestOrderingWithoutExactAppsMatch)
+{
+  HomeLens home_lens_("name", "description", "searchhint",
+                      HomeLens::MergeMode::OWNER_LENS);
+  ThreeStaticTestLenses lenses_;
+  DeeModel* results = home_lens_.results()->model();
+  DeeModel* cats = home_lens_.categories()->model();
+  DeeModel* filters = home_lens_.filters()->model();
+  // the lens is added as third, so must have cat == 2
+  unsigned int apps_lens_cat = 2;
+
+  home_lens_.AddLenses(lenses_);
+  Lens::Ptr apps_lens = lenses_.GetLens("applications.lens");
+
+  auto static_lens = dynamic_pointer_cast<StaticTestLens>(apps_lens);
+  static_lens->SetResultsBaseName("noapes");
+  static_lens->SetNumResults(1);
+
+  bool order_changed = false;
+  home_lens_.categories_reordered.connect([&order_changed] ()
+  {
+    order_changed = true;
+  });
+
+  home_lens_.Search("ape");
+
+  bool finished = false;
+  home_lens_.search_finished.connect([&finished] (Lens::Hints const& hints)
+  {
+    finished = true;
+  });
+  Utils::WaitUntil(finished);
+
+  /* Validate counts */
+  EXPECT_EQ(dee_model_get_n_rows(results), 7); // 3+3+1 hits
+  EXPECT_EQ(dee_model_get_n_rows(cats), 3); // 3 cats since we are merging categories by lens
+  EXPECT_EQ(dee_model_get_n_rows(filters), 0); // We ignore filters deliberately currently
+
+  /* Validate the category order */
+  auto order = home_lens_.GetCategoriesOrder();
+
+  /* The home lens includes applications lens but it doesn't contain exact
+   * match, so can't be the first category */
+  EXPECT_NE(order.at(0), apps_lens_cat);
+
+  /* Plus the categories reordered should have been emitted */
+  EXPECT_EQ(order_changed, true);
+}
+
+TEST(TestHomeLens, TestOrderingByNumResults)
+{
+  HomeLens home_lens_("name", "description", "searchhint",
+                      HomeLens::MergeMode::OWNER_LENS);
+  ThreeStaticTestLenses lenses_;
+  DeeModel* results = home_lens_.results()->model();
+  DeeModel* cats = home_lens_.categories()->model();
+  DeeModel* filters = home_lens_.filters()->model();
+  unsigned int lens1_cat = 0;
+  unsigned int lens2_cat = 1;
+  // the lens is added as third, so must have cat == 2
+  unsigned int apps_lens_cat = 2;
+
+  home_lens_.AddLenses(lenses_);
+
+  Lens::Ptr lens = lenses_.GetLensAtIndex(2);
+  auto static_lens = dynamic_pointer_cast<StaticTestLens>(lens);
+  static_lens->SetResultsBaseName("noapes"); // no exact match in apps lens
+  static_lens->SetNumResults(2);
+
+  static_lens = dynamic_pointer_cast<StaticTestLens>(lenses_.GetLensAtIndex(0));
+  static_lens->SetNumResults(1);
+  static_lens = dynamic_pointer_cast<StaticTestLens>(lenses_.GetLensAtIndex(1));
+  static_lens->SetNumResults(3);
+
+  bool order_changed = false;
+  home_lens_.categories_reordered.connect([&order_changed] ()
+  {
+    order_changed = true;
+  });
+
+  home_lens_.Search("ape");
+
+  bool finished = false;
+  home_lens_.search_finished.connect([&finished] (Lens::Hints const& hints)
+  {
+    finished = true;
+  });
+  Utils::WaitUntil(finished);
+
+  /*
+   * lens1 -> 1 result
+   * lens2 -> 3 results
+   * lens3 -> 2 results (apps.lens)
+   */
+
+  /* Validate counts */
+  EXPECT_EQ(dee_model_get_n_rows(results), 6); // 1+3+2 hits
+  EXPECT_EQ(dee_model_get_n_rows(cats), 3); // 3 cats since we are merging categories by lens
+  EXPECT_EQ(dee_model_get_n_rows(filters), 0); // We ignore filters deliberately currently
+
+  /* Validate the category order */
+  auto order = home_lens_.GetCategoriesOrder();
+
+  /* The home lens includes applications lens but it doesn't contain exact
+   * match, so can't be the first category */
+  EXPECT_EQ(order.at(0), lens2_cat);
+  EXPECT_EQ(order.at(1), apps_lens_cat);
+  EXPECT_EQ(order.at(2), lens1_cat);
+
+  /* Plus the categories reordered should have been emitted */
+  EXPECT_EQ(order_changed, true);
 }
 
 }
