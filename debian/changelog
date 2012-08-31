@@ -1,4 +1,4 @@
-unity (6.4.0-0ubuntu1~test2) quantal; urgency=low
+unity (6.4.0-0ubuntu1) UNRELEASED; urgency=low
 
   [ Łukasz 'sil2100' Zemczak ]
   * New upstream release.
@@ -97,7 +97,7 @@ unity (6.4.0-0ubuntu1~test2) quantal; urgency=low
     - LensView: fallback to normal renderer (instead of Coverflow) 
       if GLSL unavailable (LP: #1040628)
 
- -- Timo Jyrinki <timo-jyrinki@ubuntu.com>  Fri, 31 Aug 2012 16:25:59 +0300
+ -- Łukasz 'sil2100' Zemczak <lukasz.zemczak@canonical.com>  Thu, 30 Aug 2012 15:07:23 +0200
 
 unity (6.2.0-0ubuntu4) quantal; urgency=low
 
