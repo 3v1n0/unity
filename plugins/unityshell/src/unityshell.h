@@ -482,11 +482,6 @@ private:
                    float maxWidth, float maxHeight);
   WindowCairoContext* CreateCairoContext (float width, float height);
 
-  // based on compiz text plugin
-  CompString GetWindowName (Window id);
-  CompString GetUtf8Property (Window id, Atom atom);
-  CompString GetTextProperty (Window id, Atom atom);
-
   compiz::WindowInputRemoverLock::Weak input_remover_;
   glib::Source::UniquePtr focus_desktop_timeout_;
 
