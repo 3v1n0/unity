@@ -93,6 +93,7 @@ unity (6.4.0-0ubuntu1) UNRELEASED; urgency=low
       of its sublist (LP: #1043968)
     - LauncherController: make the controller enable the launcher struts, 
       based on hide-mode option. (LP: #1044005)
+    - Don't desat bfb/hud icon in DNDReset. (LP: #1043963)
 
  -- Łukasz 'sil2100' Zemczak <lukasz.zemczak@canonical.com>  Thu, 30 Aug 2012 15:07:23 +0200
 

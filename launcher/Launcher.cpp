@@ -2596,7 +2596,18 @@ void Launcher::DndReset()
 
   for (auto it : *_model)
   {
-    it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, is_overlay_open);
+    auto icon_type = it->GetIconType();
+
+    if (icon_type == AbstractLauncherIcon::IconType::HOME ||
+        icon_type == AbstractLauncherIcon::IconType::HUD)
+    {
+      it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, false);
+    }
+    else
+    {
+      it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, is_overlay_open && !_hovered);
+    }
+
     it->SetQuirk(AbstractLauncherIcon::Quirk::PRESENTED, false);
   }
 
