@@ -1,3 +1,104 @@
+unity (6.4.0-0ubuntu1) UNRELEASED; urgency=low
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * New upstream release.
+    - Software Center add to launcher icon animation is delayed when the 
+      launcher is in auto-hide mode (LP: #1012896)
+    - Home lens: Applications show up in Music category (LP: #1040101)
+    - WARN unity.hud.hud Hud.cpp:185 Attempted to close the hud connection 
+      without starting it (LP: #1039451)
+    - Text field textures do not update when maximum width changes. 
+      (LP: #1037187)
+    - An application is closed if manually removed from favorites on gsettings
+      (LP: #1032157)
+    - The switcher (Alt+Tab) is showing incorrect windows after using Deskop 
+      Wall (Ctrl+alt+<direction>) (LP: #1031959)
+    - Dragging icons to reorder -away from launcher causes the dragged icon 
+      image edges to fade away(cut off) (LP: #1026247)
+    - Screen flickers when changing launcher icon size. (LP: #1024113)
+    - Arrow for indicating lenses points empty space on alt+F2 (LP: #998752)
+    - [previews] Music album tracks do not have a scroll-bar when needed.
+      (LP: #1039462)
+    - [USE_MODERN_COMPIZ_GL] With unity scrollbar support enabled, hotplugging
+      monitors doesn't work (LP: #1039410)
+    - [previews] Track titles aren't escaped (LP: #1039020)
+    - Launcher - Edge of tiles (with backlight disabled) is too opaque 
+      (LP: #1038138)
+    - [USE_MODERN_COMPIZ_GL] Benchmark window appears behind the Unity shell 
+      now (LP: #1036609)
+    - [GLES] [USE_MODERN_COMPIZ_GL] Unity shell (Launcher and Panel) are 
+      missing if framebuffer_object is disabled (LP: #1036569)
+    - [USE_MODERN_COMPIZ_GL] Benchmark window is mostly invisible, shrunken 
+      and displaced (LP: #1036528)
+    - Unity quicklist menu items leak memory (LP: #1036338)
+    - Icon resized between 32 - 48 - 64 look jaggy (LP: #1036231)
+    - [Regression] Hideous low-res icon when using the HUD with autohide 
+      enabled. (LP: #1035951)
+    - [regression] Selecting an item of the BFB quicklist when the dash is 
+      open, causes it to hide (LP: #1035641)
+    - Launcher - Switch on "backlight toggles" mode by default (LP: #1033866)
+    - Unity spends 15% of time in PlacesGroup::ComputeContentSize when opening 
+      dash (LP: #1033306)
+    - Launcher dragged icon is not redrawn when the mouse pointer is not moved
+      (LP: #1032700)
+    - Bottom - Up key navigation is broken in dash filterbar (LP: #1028810)
+    - Launcher - SD card can not be ejected by drag-n-dropping to trash 
+      (LP: #960910)
+    - Alt-tab - The app name in the integrated menu should not change during 
+      Alt-tab switching (LP: #950782)
+    - Dash - If only one Category Header is displayed, it should be 
+      automatically expanded (LP: #950710)
+    - Launcher - Unity mouse wheel scroll too small (LP: #906072)
+    - boot moves desktop icons (LP: #886667)
+    - Alt-tab - Reduce the spread delay for all items other than the initial 
+      item the select lands on after alt-tab opens (LP: #838232)
+    - Launcher - Launcher should never autohide when the cursor is positioned 
+      over the Launcher (e.g. When a spread ends) (LP: #745707)
+    - Dash home opens files by default, should be applications? (LP: #1041583)
+    - [BUILD_GLES] Multiple build errors in unity-shared/IconRenderer.cpp
+      (LP: #1039453)
+    - [USE_MODERN_COMPIZ_GL] [multimonitor] If unityshell is loaded then both 
+      monitors are intermittently painted onto the second monitor (squeezed) 
+      (LP: #1037949)
+    - [USE_MODERN_COMPIZ_GL] [multimonitor] Launcher/Panel only draws on one 
+      monitor, not both (LP: #1037408)
+    - [GLES] [USE_MODERN_COMPIZ_GL] [regression] Launcher and Panel are drawn 
+      on top of fullscreen windows (LP: #1036587)
+    - [GLES] [USE_MODERN_COMPIZ_GL] Screen goes black if unityshell is loaded 
+      and vertex_buffer_object=OFF (LP: #1036568)
+    - [regression] [USE_MODERN_COMPIZ_GL] Launcher overdrawn; transparency lost
+      and white line appears. (LP: #1036519)
+    - lp:unity FTBFS - Launcher.h:138:11: error: ‘GestureDeliveryRequest’ in 
+      namespace ‘nux’ does not name a type (LP: #1036095)
+    - Results sorting in the lens model is not reflected in the Dash 
+      (LP: #1027811)
+    - Launcher - Quicklist menu does not respond to being opened on a new icon
+      if already open (LP: #890991)
+    - compiz crashed with SIGSEGV in SimpleLauncherIcon::SetIconName() 
+      (LP: #763560)
+    - Unity crashes on startup with nvidia (LP: #1041123)
+    - [staging ppa] unity crashes when running dash autopilot tests 
+      (LP: #1040875)
+    - lp:unity does not build (missing dash/PreviewMusic.cpp) (regression of
+      bug 1038886) (LP: #1040431)
+    - Coverflow can crash unity (LP: #1039959)
+    - lp:unity does not build (missing dash/PreviewMusic.cpp) (LP: #1038886)
+    - lp:unity (USE_MODERN_COMPIZ_GL) FTBFS IconRenderer.cpp:845:5: error: 
+      ‘TextureCoord0Location’ may be used uninitialised in this function 
+      [-Werror=uninitialized] (LP: #1036514)
+
+  [ Timo Jyrinki ]
+  * Cherry-pick fixes from upstream:
+    - Launcher: make always possible to drag an icon to the bottom or top 
+      of its sublist (LP: #1043968)
+    - LauncherController: make the controller enable the launcher struts, 
+      based on hide-mode option. (LP: #1044005)
+    - Don't desat bfb/hud icon in DNDReset. (LP: #1043963)
+    - LensView: fallback to normal renderer (instead of Coverflow) 
+      if GLSL unavailable (LP: #1040628)
+
+ -- Łukasz 'sil2100' Zemczak <lukasz.zemczak@canonical.com>  Thu, 30 Aug 2012 15:07:23 +0200
+
 unity (6.2.0-0ubuntu4) quantal; urgency=low
 
   * debian/control:

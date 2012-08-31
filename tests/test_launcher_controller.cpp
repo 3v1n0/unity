@@ -49,6 +49,16 @@ private:
   FavoriteList fav_list_;
 };
 
+class MockBamfLauncherIcon : public BamfLauncherIcon
+{
+public:
+  MockBamfLauncherIcon(BamfApplication* app)
+    : BamfLauncherIcon(app) {}
+
+  MOCK_METHOD0(UnStick, void());
+  MOCK_METHOD0(Quit, void());
+};
+
 namespace launcher
 {
 class TestLauncherController : public testing::Test
@@ -60,7 +70,6 @@ public:
 
   virtual void SetUp()
   {
-    lc.options = std::make_shared<Options>();
     lc.multiple_launchers = true;
   }
 
@@ -68,6 +77,11 @@ protected:
   ui::EdgeBarrierController &GetBarrierController()
   {
     return lc.pimpl->edge_barriers_;
+  }
+
+  LauncherModel::Ptr GetLauncherModel()
+  {
+    return lc.pimpl->model_;
   }
 
   MockUScreen uscreen;
@@ -82,6 +96,8 @@ TEST_F(TestLauncherController, Construction)
 {
   EXPECT_NE(lc.options(), nullptr);
   EXPECT_TRUE(lc.multiple_launchers());
+  ASSERT_EQ(lc.launchers().size(), 1);
+  EXPECT_EQ(lc.launcher().monitor(), 0);
 }
 
 TEST_F(TestLauncherController, MultimonitorMultipleLaunchers)
@@ -198,4 +214,81 @@ TEST_F(TestLauncherController, SingleMonitorEdgeBarrierSubscriptionsUpdates)
   }
 }
 
+TEST_F(TestLauncherController, OnlyUnstickIconOnFavoriteRemoval)
+{
+  const std::string USC_DESKTOP = BUILDDIR"/tests/data/ubuntu-software-center.desktop";
+
+  glib::Object<BamfMatcher> matcher(bamf_matcher_get_default());
+
+  auto bamf_app = bamf_matcher_get_application_for_desktop_file(matcher, USC_DESKTOP.c_str(), TRUE);
+  MockBamfLauncherIcon *bamf_icon = new MockBamfLauncherIcon(bamf_app);
+  GetLauncherModel()->AddIcon(AbstractLauncherIcon::Ptr(bamf_icon));
+
+  EXPECT_CALL(*bamf_icon, UnStick());
+  EXPECT_CALL(*bamf_icon, Quit()).Times(0);
+
+  favorite_store.favorite_removed.emit(USC_DESKTOP);
 }
+
+TEST_F(TestLauncherController, EnabledStrutsByDefault)
+{
+  EXPECT_EQ(lc.launcher().options()->hide_mode, LAUNCHER_HIDE_NEVER);
+  EXPECT_TRUE(lc.launcher().GetParent()->InputWindowStrutsEnabled());
+}
+
+TEST_F(TestLauncherController, EnabledStrutsOnNeverHide)
+{
+  lc.multiple_launchers = true;
+  uscreen.SetupFakeMultiMonitor();
+  lc.options()->hide_mode = LAUNCHER_HIDE_NEVER;
+
+  for (int i = 0; i < max_num_monitors; ++i)
+    ASSERT_TRUE(lc.launchers()[i]->GetParent()->InputWindowStrutsEnabled());
+}
+
+TEST_F(TestLauncherController, DisabledStrutsOnAutoHide)
+{
+  lc.multiple_launchers = true;
+  uscreen.SetupFakeMultiMonitor();
+  lc.options()->hide_mode = LAUNCHER_HIDE_AUTOHIDE;
+
+  for (int i = 0; i < max_num_monitors; ++i)
+    ASSERT_FALSE(lc.launchers()[i]->GetParent()->InputWindowStrutsEnabled());
+}
+
+TEST_F(TestLauncherController, EnabledStrutsAddingNewLaunchersOnAutoHide)
+{
+  // This makes the controller to add multiple launchers
+  lc.multiple_launchers = true;
+  lc.options()->hide_mode = LAUNCHER_HIDE_NEVER;
+  uscreen.SetupFakeMultiMonitor();
+
+  // This makes the controller to remove unneeded launchers
+  lc.multiple_launchers = false;
+
+  // This makes the controller to add again new launchers
+  lc.multiple_launchers = true;
+
+  for (int i = 0; i < max_num_monitors; ++i)
+    ASSERT_TRUE(lc.launchers()[i]->GetParent()->InputWindowStrutsEnabled());
+}
+
+TEST_F(TestLauncherController, DisabledStrutsAddingNewLaunchersOnNeverHide)
+{
+  // This makes the controller to add multiple launchers
+  lc.multiple_launchers = true;
+  lc.options()->hide_mode = LAUNCHER_HIDE_AUTOHIDE;
+  uscreen.SetupFakeMultiMonitor();
+
+  // This makes the controller to remove unneeded launchers
+  lc.multiple_launchers = false;
+
+  // This makes the controller to add again new launchers
+  lc.multiple_launchers = true;
+
+  for (int i = 0; i < max_num_monitors; ++i)
+    ASSERT_FALSE(lc.launchers()[i]->GetParent()->InputWindowStrutsEnabled());
+}
+
+}
+

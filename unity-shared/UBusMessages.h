@@ -46,8 +46,8 @@
 // get rid of keyboard-input-focus
 #define UBUS_LAUNCHER_START_KEY_NAV  "LAUNCHER_START_KEY_NAV"
 #define UBUS_LAUNCHER_END_KEY_NAV    "LAUNCHER_END_KEY_NAV"
-#define UBUS_LAUNCHER_START_KEY_SWTICHER "LAUNCHER_START_KEY_SWITCHER"
-#define UBUS_LAUNCHER_END_KEY_SWTICHER   "LAUNCHER_END_KEY_SWITCHER"
+#define UBUS_LAUNCHER_START_KEY_SWITCHER "LAUNCHER_START_KEY_SWITCHER"
+#define UBUS_LAUNCHER_END_KEY_SWITCHER   "LAUNCHER_END_KEY_SWITCHER"
 #define UBUS_LAUNCHER_SELECTION_CHANGED  "LAUNCHER_ICON_SELECTION_CHANGED"
 #define UBUS_LAUNCHER_ICON_URGENT_CHANGED "LAUNCHER_ICON_URGENT_CHANGED"
 #define UBUS_QUICKLIST_START_KEY_NAV "QUICKLIST_START_KEY_NAV"
@@ -58,9 +58,6 @@
 #define UBUS_LAUNCHER_END_DND        "LAUNCHER_END_DRAG"
 #define UBUS_LAUNCHER_ICON_START_DND "LAUNCHER_ICON_START_DND"
 #define UBUS_LAUNCHER_ICON_END_DND   "LAUNCHER_ICON_END_DND"
-
-// Signal to send on icon action and that you want to request hiding the launcher
-#define UBUS_LAUNCHER_ACTION_DONE "LAUNCHER_ACTION_DONE"
 
 // Signal to force the launcher into locked mode, (b)
 #define UBUS_LAUNCHER_LOCK_HIDE "LAUNCHER_LOCK_HIDE"
@@ -81,6 +78,15 @@
 #define UBUS_DASH_SIZE_CHANGED "DASH_SIZE_CHANGED"
 // FIXME - fix the nux focus api so we don't need this
 #define UBUS_RESULT_VIEW_KEYNAV_CHANGED "RESULT_VIEW_KEYNAV_CHANGED"
+
+// for communicating positions to the preview state machine (iii)
+// (split y coord in absolute geometry, results to the left, results to the right)
+#define UBUS_DASH_PREVIEW_INFO_PAYLOAD "DASH_PREVIEW_INFO_PAYLOAD"
+
+// called when previews wish to navigate left/right or close (is)
+// -1 = left, 0 = close, 1 = right, 
+// string is the uri string that last result activated was
+#define UBUS_DASH_PREVIEW_NAVIGATION_REQUEST "DASH_PREVIEW_NAVIGATION_REQUEST"
 
 // Sends a string datatype containing the new icon name
 #define UBUS_HUD_ICON_CHANGED "HUD_ICON_CHANGED"

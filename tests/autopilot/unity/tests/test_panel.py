@@ -206,6 +206,19 @@ class PanelTitleTests(PanelTestsBase):
         self.assertThat(lambda: text_win.title, Eventually(NotEquals(old_title)))
         self.assertThat(self.panel.title, Eventually(Equals(text_win.title)))
 
+    def test_panel_title_doesnt_change_with_switcher(self):
+        """Switching between apps must not change the Panels title."""
+        calc_win = self.open_new_application_window("Calculator")
+        text_win = self.open_new_application_window("Text Editor")
+        current_title = self.panel.title
+
+        self.switcher.initiate()
+        self.addCleanup(self.switcher.terminate)
+        self.switcher.next_icon()
+
+        self.assertThat(self.panel.title,
+                        Eventually(Equals(current_title)))
+
 
 class PanelWindowButtonsTests(PanelTestsBase):
 
@@ -615,6 +628,16 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.keyboard.type("World")
 
         self.assertThat(self.hud.search_string, Eventually(Equals("HelloWorld")))
+        
+    def test_double_click_unmaximize_window(self):
+		"""Double clicking the grab area must unmaximize a maximized window."""
+		gedit_win = self.open_new_application_window("Text Editor", maximized=True)
+		
+		self.panel.move_mouse_over_grab_area()
+		self.mouse.click()
+		self.mouse.click()
+		
+		self.assertThat(self.panel.title, Eventually(Equals(gedit_win.application.name)))
 
 
 class PanelHoverTests(PanelTestsBase):

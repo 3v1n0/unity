@@ -49,7 +49,6 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
   aptdaemon_trans_.Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
   aptdaemon_trans_.Connect("Finished", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnFinished));
 
-  SetIconType(TYPE_APPLICATION);
   icon_name = icon_path;
   if (!aptdaemon_trans_id_.empty()) // Application is being installed, or hasn't been installed yet
     tooltip_text = _("Waiting to install");
@@ -114,13 +113,13 @@ void SoftwareCenterLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   {
       if (needs_urgent_)
       {
-          SetQuirk(QUIRK_URGENT, false);
+          SetQuirk(Quirk::URGENT, false);
           needs_urgent_ = false;
       }
       BamfLauncherIcon::ActivateLauncherIcon(arg);
   }
   else
-      SetQuirk(QUIRK_STARTING, false);
+      SetQuirk(Quirk::STARTING, false);
 }
 
 void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
@@ -131,8 +130,8 @@ void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
    if (exit_state.Str() == "exit-success")
    {
       tooltip_text = BamfName();
-      SetQuirk(QUIRK_PROGRESS, false);
-      SetQuirk(QUIRK_URGENT, true);
+      SetQuirk(Quirk::PROGRESS, false);
+      SetQuirk(Quirk::URGENT, true);
       SetProgress(0.0f);
       finished_ = true;
       needs_urgent_ = true;
@@ -157,7 +156,7 @@ void SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
 
     if (progress < 100)
     {
-      SetQuirk(QUIRK_PROGRESS, true);
+      SetQuirk(Quirk::PROGRESS, true);
       finished_ = false;
     }
 

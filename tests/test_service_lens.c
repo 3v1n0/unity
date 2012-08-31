@@ -190,39 +190,15 @@ preview_action_activated(UnityPreviewAction* action, const char* uri)
 }
 
 static UnityPreview*
-generate_child_preview(UnitySeriesPreview* parent, const char* uri)
-{
-  UnityPreview* preview;
-  UnityPreviewAction *action;
-
-  gchar* desc = g_strdup_printf("Description for an item with uri %s", uri);
-  preview = (UnityPreview*) unity_generic_preview_new("A preview", desc, NULL);
-  action = unity_preview_action_new("child_action_X", "An action", NULL);
-  unity_preview_add_action(preview, action);
-  g_signal_connect(action, "activated",
-                   G_CALLBACK(preview_action_activated), NULL);
-
-  g_free(desc);
-  return preview;
-}
-
-static UnityPreview*
 on_preview_uri(UnityScope* scope, const char* uri, ServiceLens *self)
 {
   UnityPreviewAction* action;
-  UnitySeriesPreview* preview;
-  UnitySeriesItem* series_items[4];
+  UnityMoviePreview* preview;
 
-  series_items[0] = unity_series_item_new("scheme://item/1", "Item #1", NULL);
-  series_items[1] = unity_series_item_new("scheme://item/2", "Item #2", NULL);
-  series_items[2] = unity_series_item_new("scheme://item/3", "Item #3", NULL);
-  series_items[3] = unity_series_item_new("scheme://item/4", "Item #4", NULL);
+  preview = unity_movie_preview_new("A movie", "With subtitle",
+                                    "And description", NULL);
 
-  preview = unity_series_preview_new(series_items, 4, "scheme://item/3");
-  g_signal_connect(preview, "request-item-preview",
-                   G_CALLBACK(generate_child_preview), NULL);
-
-  action = unity_preview_action_new("series_action_A", "An action", NULL);
+  action = unity_preview_action_new("action_A", "An action", NULL);
   unity_preview_add_action(UNITY_PREVIEW(preview), action);
   g_signal_connect(action, "activated",
                    G_CALLBACK(preview_action_activated), NULL);

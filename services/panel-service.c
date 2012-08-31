@@ -109,6 +109,7 @@ static const gchar * indicator_order[][2] = {
   {"libappmenu.so", NULL},                    /* indicator-appmenu" */
   {"libapplication.so", NULL},                /* indicator-application" */
   {"libprintersmenu.so", NULL},               /* indicator-printers */
+  {"libsyncindicator.so", NULL},              /* indicator-sync */
   {"libapplication.so", "gsd-keyboard-xkb"},  /* keyboard layout selector */
   {"libmessaging.so", NULL},                  /* indicator-messages */
   {"libpower.so", NULL},                      /* indicator-power */
@@ -190,8 +191,12 @@ panel_service_class_dispose (GObject *self)
         }
     }
 
-  g_signal_handlers_disconnect_by_func (priv->gsettings, on_keybinding_changed, self);
-  g_object_unref (priv->gsettings);
+  if (G_IS_OBJECT (priv->gsettings))
+    {
+      g_signal_handlers_disconnect_by_func (priv->gsettings, on_keybinding_changed, self);
+      g_object_unref (priv->gsettings);
+      priv->gsettings = NULL;
+    }
 
   G_OBJECT_CLASS (panel_service_parent_class)->dispose (self);
 }
@@ -536,12 +541,10 @@ panel_service_update_menu_keybinding (PanelService *self)
 }
 
 static void
-on_keybinding_changed (GSettings *settings,
-                       gchar     *key,
-                       gpointer   data)
+on_keybinding_changed (GSettings *settings, gchar *key, gpointer data)
 {
-  PanelService *self = data;
   g_return_if_fail (PANEL_IS_SERVICE (data));
+  PanelService *self = data;
 
   panel_service_update_menu_keybinding (self);
 }
@@ -569,7 +572,8 @@ panel_service_init (PanelService *self)
   suppress_signals = FALSE;
 
   priv->gsettings = g_settings_new_with_path (COMPIZ_OPTION_SCHEMA, COMPIZ_OPTION_PATH);
-  g_signal_connect (priv->gsettings, "changed::"MENU_TOGGLE_KEYBINDING_KEY, G_CALLBACK(on_keybinding_changed), self);
+  g_signal_connect (priv->gsettings, "changed::"MENU_TOGGLE_KEYBINDING_KEY,
+                    G_CALLBACK(on_keybinding_changed), self);
 
   panel_service_update_menu_keybinding (self);
 

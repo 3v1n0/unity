@@ -124,6 +124,7 @@ This test verifies that dragging icons to the trash removes them from the
 launcher, and that the animation is smooth.
 
 Setup:
+#. Ensure that you have multiple applications running or pinned to the launcher
 
 Actions:
 #. Move mouse pointer over an application or device icon (not BFB, Workspace switcher or trash)
@@ -142,6 +143,7 @@ Dragging icons to reorder - initial position
 This test is all position of the dragged image in relation to the mouse pointer.
 
 Setup:
+#. Ensure that you have multiple applications running or pinned to the launcher
 
 Actions:
 #. Move the mouse so it is over a launcher icon for an application
@@ -160,6 +162,7 @@ This test is all about the smoothness of the animation around the reordering
 of icons in the launcher.
 
 Setup:
+#. Ensure that you have multiple applications running or pinned to the launcher
 
 Actions:
 #. Move the mouse so it is over a launcher icon for an application
@@ -167,20 +170,23 @@ Actions:
 #. Drag the icon up and down over the icons in the launcher
 
 Expected Result:
-  * As the centre of the dragged icon passes the mid-point of the next item
-  above or below it, the icon being dragged over moves and is replaced by the
-  blank "space".
+  * As the center of the dragged icon passes the mid-point of the next item
+    above or below it, the icon being dragged over moves and is replaced by the
+    blank "space".
   * The animation should be smooth
   * If the dragged icon is moved rapidly, multiple icons can be moving either
-  upwards or downwards as the space is moved into place under the dragged icon
-  * The BFB and the switcher icons do not move
+    upwards or downwards as the space is moved into place under the dragged icon
+  * Dragging the second application icon (the third icon of the launcher) below
+    the BFB or above the workspace switcher should be possible.
+  * The BFB and the workspace switcher icons do not move
 
 
 Dragging icons to reorder - away from launcher
------------------------------------------
+----------------------------------------------
 This test is about reordering the icons without the animation showing.
 
 Setup:
+#. Ensure that you have multiple applications running or pinned to the launcher
 
 Actions:
 #. Move the mouse so it is over a launcher icon for an application
@@ -193,9 +199,26 @@ Expected Result:
   * As the icon is dragged away from the launcher, the "space" is closed up
   and replaced with a grey line.
   * As the icon is dragged up and down, the line moves between other launcher
-  icons.
+  icons of the same type.
   * When released, the icon "flies" back into the launcher, a spaces opens for
   it, and the any pips for running apps show again.
+
+
+Dragged launcher icons out of the launcher are properly drawn
+-------------------------------------------------------------
+This test ensures that the launcher icons out of the launcher are properly drawn
+
+Setup:
+#. Ensure that you have multiple applications running or pinned to the launcher
+
+Actions:
+#. Move the mouse so it is over a launcher icon for an application
+#. Press and hold the mouse button
+#. Drag the icon away from the launcher, in the middle of the display
+#. Don't move the mouse pointer for some (4-5) seconds, keeping the button pressed
+
+Expected Result:
+  * The icon is always drawn, even when the mouse pointer does not move.
 
 
 Dragging icon while program is starting
@@ -679,3 +702,32 @@ Expected Result:
  * No icon flickers near the top panel.
  * See https://bugs.launchpad.net/unity/+bug/980942/+attachment/3059914/+files/launcher-accordion-effect-tooltip-bug.ogv.
 
+
+Stop SD card by dragging it's icon to trash
+---------------------------------------------------
+
+Setup:
+ * Have an SD Card reader and an SD Card
+
+Actions:
+ * Insert the SD card into the SD card reader.
+ * Wait for the SD card to mount.
+ * Drag and drop the SD card icon into the trash.
+
+Expected result:
+ * The SD card launcher icon appears in the launcher after the SD card is mounted
+ * After the icon is dragged into the trash, the SD card is "stopped"
+ * A notification appears, stating that the SD card has been stopped.
+
+
+No flickering when resizing the launcher
+-----------------------------------------
+
+Actions:
+* Open gedit.
+* Maximize it. Make sure it remains maximized during the test.
+* Open Appearance panel in System Settings.
+* Change Launcher Icon Size.
+
+Expected Results:
+* The gedit window must not flicker behind the launcher.

@@ -53,9 +53,9 @@ public:
   bool IsRunning() const;
   bool IsUrgent() const;
 
-  void Quit();
-  void Stick(bool save = true);
-  void UnStick();
+  virtual void Quit();
+  virtual void Stick(bool save = true);
+  virtual void UnStick();
 
   virtual bool ShowInSwitcher(bool current);
   virtual unsigned long long SwitcherPriority();
@@ -82,7 +82,7 @@ protected:
   bool OnShouldHighlightOnDrag(DndData const& dnd_data);
   nux::DndAction OnQueryAcceptDrop(DndData const& dnd_data);
 
-  std::list<DbusmenuMenuitem*> GetMenus();
+  MenuItemsVector GetMenus();
   std::set<std::string> ValidateUrisForLaunch(DndData const& dnd_data);
 
   std::string GetRemoteUri();
@@ -111,6 +111,7 @@ private:
 
   void OpenInstanceWithUris(std::set<std::string> uris);
   void Focus(ActionArg arg);
+  std::vector<Window> GetFocusableWindows(ActionArg arg, bool &any_visible, bool &any_urgent);
   bool Spread(bool current_desktop, int state, bool force);
 
   void OnWindowMinimized(guint32 xid);

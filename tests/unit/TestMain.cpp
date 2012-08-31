@@ -27,7 +27,6 @@
 
 void TestPanelServiceCreateSuite();
 void TestUBusCreateSuite();
-void TestQuicklistMenuitemsCreateSuite();
 void TestStaticCairoTextCreateSuite();
 
 nux::WindowThread*
@@ -71,7 +70,6 @@ main(int argc, char** argv)
 
   //Keep alphabetical please
   TestPanelServiceCreateSuite();
-  TestQuicklistMenuitemsCreateSuite();
   TestStaticCairoTextCreateSuite();
   TestUBusCreateSuite();
 

@@ -51,13 +51,14 @@ FilterRatingsButton::FilterRatingsButton(NUX_FILE_LINE_DECL)
 
   key_nav_focus_change.connect([&](nux::Area* area, bool has_focus, nux::KeyNavDirection direction)
   {
-    if (has_focus && direction != nux::KEY_NAV_NONE)
+    if (has_focus)
       focused_star_ = 0;
     else if (!has_focus)
       focused_star_ = -1;
 
     QueueDraw();
   });
+
   key_nav_focus_activate.connect([&](nux::Area*) { filter_->rating = static_cast<float>(focused_star_+1)/num_stars; });
   key_down.connect(sigc::mem_fun(this, &FilterRatingsButton::OnKeyDown));
 }
