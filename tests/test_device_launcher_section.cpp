@@ -24,6 +24,7 @@
 using namespace testing;
 
 #include "DeviceLauncherSection.h"
+#include "DevicesSettings.h"
 #include "AbstractVolumeMonitorWrapper.h"
 using namespace unity;
 using namespace unity::launcher;
@@ -74,12 +75,20 @@ public:
   glib::Object<GVolume> volume2;
 };
 
+class MockDevicesSettings : public DevicesSettings
+{
+  MOCK_CONST_METHOD1(IsABlacklistedDevice, bool(std::string const& uuid));
+  MOCK_METHOD1(TryToBlacklist, void(std::string const& uuid));
+  MOCK_METHOD1(TryToUnblacklist, void(std::string const& uuid));
+};
+
 class TestDeviceLauncherSection : public Test
 {
 public:
   TestDeviceLauncherSection()
     : monitor_(new MockVolumeMonitorWrapper)
-    , section_(monitor_)
+    , devices_settings_(new MockDevicesSettings)
+    , section_(monitor_, devices_settings_)
   {}
 
   void SetUp()
@@ -89,6 +98,7 @@ public:
   }
 
   MockVolumeMonitorWrapper::Ptr monitor_;
+  DevicesSettings::Ptr devices_settings_;
   DeviceLauncherSection section_;
 };
 

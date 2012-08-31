@@ -92,7 +92,6 @@ const int MOUSE_DEADZONE = 15;
 const float DRAG_OUT_PIXELS = 300.0f;
 
 const std::string DND_CHECK_TIMEOUT = "dnd-check-timeout";
-const std::string STRUT_HACK_TIMEOUT = "strut-hack-timeout";
 const std::string START_DRAGICON_TIMEOUT = "start-dragicon-timeout";
 const std::string SCROLL_TIMEOUT = "scroll-timeout";
 const std::string ANIMATION_IDLE = "animation-idle";
@@ -215,7 +214,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   launcher_sheen_ = cache.FindTexture("dash_sheen", 0, 0, cb);
   launcher_pressure_effect_ = cache.FindTexture("launcher_pressure_effect", 0, 0, cb);
 
-  options.changed.connect(sigc::mem_fun (this, &Launcher::OnOptionsChanged));
+  options.changed.connect(sigc::mem_fun(this, &Launcher::OnOptionsChanged));
 }
 
 /* Introspection */
@@ -1428,21 +1427,9 @@ LauncherHideMode Launcher::GetHideMode() const
 
 /* End Launcher Show/Hide logic */
 
-// Hacks around compiz failing to see the struts because the window was just mapped.
-bool Launcher::StrutHack()
-{
-  _parent->InputWindowEnableStruts(false);
-
-  if (options()->hide_mode == LAUNCHER_HIDE_NEVER)
-    _parent->InputWindowEnableStruts(true);
-
-  return false;
-}
-
 void Launcher::OnOptionsChanged(Options::Ptr options)
 {
    UpdateOptions(options);
-
    options->option_changed.connect(sigc::mem_fun(this, &Launcher::OnOptionChanged));
 }
 
@@ -1473,26 +1460,9 @@ void Launcher::ConfigureBarrier()
 
 void Launcher::SetHideMode(LauncherHideMode hidemode)
 {
-  if (hidemode != LAUNCHER_HIDE_NEVER)
-  {
-    _parent->InputWindowEnableStruts(false);
-  }
-  else
-  {
-    static bool first_time = true;
-
-    _parent->EnableInputWindow(true, launcher::window_title, false, false);
-
-    if (first_time && !sources_.GetSource(STRUT_HACK_TIMEOUT))
-    {
-      sources_.AddTimeout(1000, sigc::mem_fun(this, &Launcher::StrutHack), STRUT_HACK_TIMEOUT);
-      first_time = false;
-    }
-
-    _parent->InputWindowEnableStruts(true);
-  }
-
-  _hide_machine.SetMode((LauncherHideMachine::HideMode) hidemode);
+  bool fixed_launcher = (hidemode == LAUNCHER_HIDE_NEVER);
+  _parent->InputWindowEnableStruts(fixed_launcher);
+  _hide_machine.SetMode(static_cast<LauncherHideMachine::HideMode>(hidemode));
   EnsureAnimation();
 }
 
@@ -1717,6 +1687,11 @@ void Launcher::SetModel(LauncherModel::Ptr model)
 LauncherModel::Ptr Launcher::GetModel() const
 {
   return _model;
+}
+
+void Launcher::SetDevicesSettings(DevicesSettings::Ptr devices_settings)
+{
+  devices_settings_ = devices_settings;
 }
 
 void Launcher::EnsureIconOnScreen(AbstractLauncherIcon::Ptr selection)
@@ -2113,59 +2088,54 @@ void Launcher::EndIconDrag()
 
 void Launcher::UpdateDragWindowPosition(int x, int y)
 {
-  if (_drag_window)
+  if (!_drag_window)
+    return;
+
+  auto const& icon_geo = _drag_window->GetGeometry();
+  _drag_window->SetBaseXY(x - icon_geo.width / 2, y - icon_geo.height / 2);
+
+  if (!_drag_icon)
+    return;
+
+  auto const& launcher_geo = GetGeometry();
+  auto hovered_icon = MouseIconIntersection((launcher_geo.x + launcher_geo.width) / 2.0, y - GetAbsoluteY());
+  struct timespec current;
+  clock_gettime(CLOCK_MONOTONIC, &current);
+  float progress = DragThresholdProgress(current);
+
+  // Icons of different types can't be mixed, so let's avoid this.
+  if (hovered_icon && hovered_icon->GetIconType() != _drag_icon->GetIconType())
+    hovered_icon = nullptr;
+
+  if (hovered_icon && _drag_icon != hovered_icon)
   {
-    nux::Geometry const& geo = _drag_window->GetGeometry();
-    _drag_window->SetBaseXY(x - geo.width / 2, y - geo.height / 2);
-
-    AbstractLauncherIcon::Ptr hovered_icon = MouseIconIntersection((int)((GetGeometry().x + GetGeometry().width) / 2.0f), y - GetAbsoluteGeometry().y);
-
-    struct timespec current;
-    clock_gettime(CLOCK_MONOTONIC, &current);
-    if (_drag_icon && hovered_icon && _drag_icon != hovered_icon)
+    if (progress >= 1.0f)
     {
-      float progress = DragThresholdProgress(current);
+      _model->ReorderSmart(_drag_icon, hovered_icon, true);
+    }
+    else if (progress == 0.0f)
+    {
+      _model->ReorderBefore(_drag_icon, hovered_icon, false);
+    }
+  }
+  else if (!hovered_icon && progress == 0.0f)
+  {
+    // If no icon is hovered, then we can add our icon to the bottom
+    for (auto it = _model->main_rbegin(); it != _model->main_rend(); ++it)
+    {
+      auto const& icon = *it;
 
-      if (progress >= 1.0f)
-        _model->ReorderSmart(_drag_icon, hovered_icon, true);
-      else if (progress == 0.0f) {
-        if (_drag_icon->GetIconType() == hovered_icon->GetIconType()) {
-          _model->ReorderBefore(_drag_icon, hovered_icon, false);
-        } else {
-          // LauncherModel::ReorderBefore does not work on different icon types
-          // so if hovered_icon is of a different type than _drag_icon
-          // try to use LauncherModel::ReorderAfter with the icon that is before hovered_icon
-          AbstractLauncherIcon::Ptr iconBeforeHover;
-          LauncherModel::iterator it;
-          LauncherModel::iterator prevIt = _model->end();
-          for (it = _model->begin(); it != _model->end(); ++it)
-          {
-            if (!(*it)->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE) || !(*it)->IsVisibleOnMonitor(monitor))
-              continue;
-
-            if ((*it) == hovered_icon) {
-              if (prevIt != _model->end()) {
-                iconBeforeHover = *prevIt;
-              }
-              break;
-            }
-
-            prevIt = it;
-          }
-
-          if (iconBeforeHover && _drag_icon != iconBeforeHover) {
-            _model->ReorderAfter(_drag_icon, iconBeforeHover);
-          }
-        }
+      if (!icon->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE) ||
+          !icon->IsVisibleOnMonitor(monitor) ||
+          icon->GetIconType() != _drag_icon->GetIconType())
+      {
+        continue;
       }
 
-      if (progress >= 1.0f)
+      if (y >= icon->GetCenter(monitor).y)
       {
-        _model->ReorderSmart(_drag_icon, hovered_icon, true);
-      }
-      else if (progress == 0.0f)
-      {
-        _model->ReorderBefore(_drag_icon, hovered_icon, false);
+        _model->ReorderAfter(_drag_icon, icon);
+        break;
       }
     }
   }
@@ -2581,7 +2551,7 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
 
   for (auto it : _dnd_data.Uris())
   {
-    if (g_str_has_suffix(it.c_str(), ".desktop"))
+    if (g_str_has_suffix(it.c_str(), ".desktop") || g_str_has_prefix(it.c_str(), "device://"))
     {
       _steal_drag = true;
       break;
@@ -2686,7 +2656,7 @@ void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
     // see if the launcher wants this one
     for (auto it : _dnd_data.Uris())
     {
-      if (g_str_has_suffix(it.c_str(), ".desktop"))
+      if (g_str_has_suffix(it.c_str(), ".desktop") || g_str_has_prefix(it.c_str(), "device://"))
       {
         _steal_drag = true;
         break;
@@ -2823,6 +2793,11 @@ void Launcher::ProcessDndDrop(int x, int y)
           launcher_addrequest.emit(path, _dnd_hovered_icon);
           g_free(path);
         }
+      }
+      else if (devices_settings_ && g_str_has_prefix(it.c_str(), "device://"))
+      {
+        const gchar* uuid = it.c_str() + 9;
+        devices_settings_->TryToUnblacklist(uuid);
       }
     }
   }

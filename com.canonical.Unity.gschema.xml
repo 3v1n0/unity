@@ -62,10 +62,10 @@
     </key>
   </schema>
   <schema path="/com/canonical/unity/devices/" id="com.canonical.Unity.Devices" gettext-domain="unity">
-    <key type="as" name="favorites">
+    <key type="as" name="blacklist">
         <default>[]</default>
-        <summary>List of device uuid for favorites on the launcher.</summary>
-        <description>These devices are shown in the Launcher by default.</description>
+        <summary>List of device uuid blacklist from the launcher.</summary>
+        <description>These devices are not shown in the launcher by default.</description>
     </key>
   </schema>
   <schema path="/com/canonical/unity/dash/" id="com.canonical.Unity.Dash" gettext-domain="unity">
