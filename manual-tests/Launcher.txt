@@ -124,6 +124,7 @@ This test verifies that dragging icons to the trash removes them from the
 launcher, and that the animation is smooth.
 
 Setup:
+#. Ensure that you have multiple applications running or pinned to the launcher
 
 Actions:
 #. Move mouse pointer over an application or device icon (not BFB, Workspace switcher or trash)
@@ -142,6 +143,7 @@ Dragging icons to reorder - initial position
 This test is all position of the dragged image in relation to the mouse pointer.
 
 Setup:
+#. Ensure that you have multiple applications running or pinned to the launcher
 
 Actions:
 #. Move the mouse so it is over a launcher icon for an application
@@ -160,6 +162,7 @@ This test is all about the smoothness of the animation around the reordering
 of icons in the launcher.
 
 Setup:
+#. Ensure that you have multiple applications running or pinned to the launcher
 
 Actions:
 #. Move the mouse so it is over a launcher icon for an application
@@ -167,13 +170,15 @@ Actions:
 #. Drag the icon up and down over the icons in the launcher
 
 Expected Result:
-  * As the centre of the dragged icon passes the mid-point of the next item
-  above or below it, the icon being dragged over moves and is replaced by the
-  blank "space".
+  * As the center of the dragged icon passes the mid-point of the next item
+    above or below it, the icon being dragged over moves and is replaced by the
+    blank "space".
   * The animation should be smooth
   * If the dragged icon is moved rapidly, multiple icons can be moving either
-  upwards or downwards as the space is moved into place under the dragged icon
-  * The BFB and the switcher icons do not move
+    upwards or downwards as the space is moved into place under the dragged icon
+  * Dragging the second application icon (the third icon of the launcher) below
+    the BFB or above the workspace switcher should be possible.
+  * The BFB and the workspace switcher icons do not move
 
 
 Dragging icons to reorder - away from launcher
@@ -181,6 +186,7 @@ Dragging icons to reorder - away from launcher
 This test is about reordering the icons without the animation showing.
 
 Setup:
+#. Ensure that you have multiple applications running or pinned to the launcher
 
 Actions:
 #. Move the mouse so it is over a launcher icon for an application
@@ -193,7 +199,7 @@ Expected Result:
   * As the icon is dragged away from the launcher, the "space" is closed up
   and replaced with a grey line.
   * As the icon is dragged up and down, the line moves between other launcher
-  icons.
+  icons of the same type.
   * When released, the icon "flies" back into the launcher, a spaces opens for
   it, and the any pips for running apps show again.
 
@@ -203,6 +209,7 @@ Dragged launcher icons out of the launcher are properly drawn
 This test ensures that the launcher icons out of the launcher are properly drawn
 
 Setup:
+#. Ensure that you have multiple applications running or pinned to the launcher
 
 Actions:
 #. Move the mouse so it is over a launcher icon for an application
