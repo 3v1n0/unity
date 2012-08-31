@@ -2601,17 +2601,19 @@ void Launcher::DndReset()
 
   for (auto it : *_model)
   {
-    if (it->GetIconType () == AbstractLauncherIcon::IconType::HOME ||
-        it->GetIconType () == AbstractLauncherIcon::IconType::HUD)
+    auto icon_type = it->GetIconType();
+
+    if (icon_type == AbstractLauncherIcon::IconType::HOME ||
+        icon_type == AbstractLauncherIcon::IconType::HUD)
     {
       it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, false);
-      it->SetQuirk(AbstractLauncherIcon::Quirk::PRESENTED, false);
     }
     else
     {
       it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, is_overlay_open && !_hovered);
-      it->SetQuirk(AbstractLauncherIcon::Quirk::PRESENTED, false);
     }
+
+    it->SetQuirk(AbstractLauncherIcon::Quirk::PRESENTED, false);
   }
 
   DndHoveredIconReset();
