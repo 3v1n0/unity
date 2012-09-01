@@ -34,14 +34,12 @@ public:
 
   void SetupGetters();
   std::string get_sender() { return sender_; };
-  std::string get_title() { return title_; };
   std::string get_content() { return content_; };
   glib::Object<GIcon> get_avatar() { return avatar_; };
 
   SocialPreview* owner_;
 
   std::string sender_;
-  std::string title_;
   std::string content_;
   glib::Object<GIcon> avatar_;
 };
@@ -54,8 +52,6 @@ SocialPreview::Impl::Impl(SocialPreview* owner, glib::Object<GObject> const& pro
 
   s = unity_protocol_social_preview_get_sender(preview);
   if (s) sender_ = s;
-  s = unity_protocol_social_preview_get_title(preview);
-  if (s) title_ = s;
   s = unity_protocol_social_preview_get_content(preview);
   if (s) content_ = s;
 
@@ -70,8 +66,6 @@ void SocialPreview::Impl::SetupGetters()
 {
   owner_->sender.SetGetterFunction(
             sigc::mem_fun(this, &SocialPreview::Impl::get_sender));
-  owner_->title.SetGetterFunction(
-            sigc::mem_fun(this, &SocialPreview::Impl::get_title));
   owner_->content.SetGetterFunction(
             sigc::mem_fun(this, &SocialPreview::Impl::get_content));
   owner_->avatar.SetGetterFunction(
