@@ -66,7 +66,7 @@ View::View()
   , timeline_need_more_draw_(false)
   , selected_button_(0)
   , show_embedded_icon_(true)
-  , keyboard_moved_focus_(false)
+  , keyboard_stole_focus_(false)
 {
   renderer_.SetOwner(this);
   renderer_.need_redraw.connect([this] () {
@@ -255,10 +255,10 @@ void View::SetQueries(Hud::Queries queries)
     });
 
     button->mouse_move.connect([&](int x, int y, int dx, int dy, unsigned long mouse_button, unsigned long special_key) {
-      if (keyboard_moved_focus_)
+      if (keyboard_stole_focus_)
       {
         MouseStealsHudButtonFocus();
-        keyboard_moved_focus_ = false;
+        keyboard_stole_focus_ = false;
       }
     });
 
@@ -725,7 +725,7 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
                 (*next)->fake_focused = true;
                 query_selected.emit((*next)->GetQuery());
                 --selected_button_;
-                keyboard_moved_focus_ = true;
+                keyboard_stole_focus_ = true;
               }
               break;
             }
@@ -748,7 +748,7 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
                 (*next)->fake_focused = true;
                 query_selected.emit((*next)->GetQuery());
                 ++selected_button_;
-                keyboard_moved_focus_ = true;
+                keyboard_stole_focus_ = true;
               }
               break;
             }
