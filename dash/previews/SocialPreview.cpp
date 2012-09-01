@@ -154,9 +154,9 @@ void SocialPreview::SetupViews()
   nux::VLayout* social_content_layout = new nux::VLayout();
   social_content_layout->SetSpaceBetweenChildren(16);
   
-  content_ = new nux::StaticCairoText(social_preview_model->content, true, NUX_TRACKER_LOCATION);
-  content_->SetLines(-10);
-  social_content_layout->AddView(content_.GetPointer(), 1);
+  description_ = new nux::StaticCairoText(social_preview_model->description, true, NUX_TRACKER_LOCATION);
+  description_->SetLines(-10);
+  social_content_layout->AddView(description_.GetPointer(), 1);
 
   /////////////////////
 
@@ -251,7 +251,7 @@ void SocialPreview::PreLayoutManagement()
 
   if (geo.width - geo_content.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() < style.GetDetailsPanelMinimumWidth())
     geo_content.width = MAX(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() - style.GetDetailsPanelMinimumWidth());
-  content_->SetMinMaxSize(geo_content.width, geo_content.height);
+  description_->SetMinMaxSize(geo_content.width, geo_content.height);
 
   int details_width = MAX(0, geo.width - geo_content.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
   int top_social_info_max_width = details_width - style.GetAppIconAreaWidth() - style.GetSpaceBetweenIconAndDetails();

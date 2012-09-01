@@ -204,6 +204,8 @@ void TestRunner::NavRight()
   unity_protocol_preview_set_description(proto_obj, description);
   unity_protocol_preview_add_action(proto_obj, "view", "View", iconHint2, 0);
   unity_protocol_preview_add_action(proto_obj, "retweet", "Retweet", nullptr, 0);
+  unity_protocol_preview_add_info_hint(proto_obj, "likes",  "Favorites", nullptr, g_variant_new("i", 1210));
+  unity_protocol_preview_add_info_hint(proto_obj, "retweets",  "Retweets", nullptr, g_variant_new("i", 21));
 
   glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
               glib::StealRef());
@@ -235,6 +237,9 @@ void TestRunner::NavLeft()
   unity_protocol_preview_set_description(proto_obj, description);
   unity_protocol_preview_add_action(proto_obj, "view", "View", iconHint2, 0);
   unity_protocol_preview_add_action(proto_obj, "retweet", "Retweet", nullptr, 0);
+  unity_protocol_preview_add_info_hint(proto_obj, "likes",  "Favorites", nullptr, g_variant_new("i", 123));
+  unity_protocol_preview_add_info_hint(proto_obj, "retweets",  "Retweets", nullptr, g_variant_new("i", 12));
+
 
   glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
               glib::StealRef());
