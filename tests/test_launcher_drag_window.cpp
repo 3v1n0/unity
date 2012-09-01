@@ -20,6 +20,7 @@
 #include <gmock/gmock.h>
 
 #include "LauncherDragWindow.h"
+#include "WindowManager.h"
 
 using namespace unity::launcher;
 using namespace testing;
@@ -62,6 +63,26 @@ TEST_F(TestLauncherDragWindow, EscapeRequestsCancellation)
   drag_window.drag_cancel_request.connect([&got_signal] { got_signal = true; });
   drag_window.GrabKeyboard();
   nux::GetWindowCompositor().ProcessEvent(cancel);
+
+  EXPECT_TRUE(got_signal);
+  EXPECT_TRUE(drag_window.Cancelled());
+}
+
+TEST_F(TestLauncherDragWindow, CancelsOnWindowMapped)
+{
+  bool got_signal;
+  drag_window.drag_cancel_request.connect([&got_signal] { got_signal = true; });
+  WindowManager::Default()->window_mapped.emit(0);
+
+  EXPECT_TRUE(got_signal);
+  EXPECT_TRUE(drag_window.Cancelled());
+}
+
+TEST_F(TestLauncherDragWindow, CancelsOnWindowUnmapped)
+{
+  bool got_signal;
+  drag_window.drag_cancel_request.connect([&got_signal] { got_signal = true; });
+  WindowManager::Default()->window_unmapped.emit(0);
 
   EXPECT_TRUE(got_signal);
   EXPECT_TRUE(drag_window.Cancelled());
