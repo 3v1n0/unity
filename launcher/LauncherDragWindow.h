@@ -57,6 +57,7 @@ protected:
 
 private:
   bool OnAnimationTimeout();
+  void CancelDrag();
 
   bool _cancelled;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> _icon;

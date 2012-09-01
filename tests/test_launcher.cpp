@@ -204,7 +204,7 @@ TEST_F(TestLauncher, TestIconBackgroundIntensity)
   EXPECT_EQ(launcher_->IconBackgroundIntensity(third, current), 0.0f);
 }
 
-TEST_F(TestLauncher, CancellingDragLauncherIcon)
+TEST_F(TestLauncher, DragLauncherIconCancelRestoresIconOrder)
 {
   MockMockLauncherIcon::Ptr icon1(new MockMockLauncherIcon);
   MockMockLauncherIcon::Ptr icon2(new MockMockLauncherIcon);

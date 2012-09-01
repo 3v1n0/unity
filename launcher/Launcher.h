@@ -188,9 +188,6 @@ private:
   void OnOptionChanged();
   void UpdateOptions(Options::Ptr options);
 
-  void OnWindowMapped(guint32 xid);
-  void OnWindowUnmapped(guint32 xid);
-
   void OnDragStart(const nux::GestureEvent &event);
   void OnDragUpdate(const nux::GestureEvent &event);
   void OnDragFinish(const nux::GestureEvent &event);
