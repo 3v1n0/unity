@@ -62,6 +62,8 @@ public:
   void SelectNext();
   void SelectPrevious();
 
+  AbstractLauncherIcon::Ptr GetClosestIcon(AbstractLauncherIcon::Ptr icon, bool& is_before) const;
+
   iterator begin();
   iterator end();
   iterator at(int index);
