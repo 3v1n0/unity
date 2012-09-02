@@ -75,6 +75,7 @@ public:
   void Preview(std::string const& uri);
 
   std::vector<unsigned> GetCategoriesOrder();
+  glib::Object<DeeModel> GetFilterModelForCategory(unsigned category);
 
 private:
   class Impl;
