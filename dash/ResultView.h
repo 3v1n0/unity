@@ -91,6 +91,8 @@ protected:
 private:
   void OnRowAdded(DeeModel* model, DeeModelIter* iter);
   void OnRowRemoved(DeeModel* model, DeeModelIter* iter);
+
+  Result cached_result_;
 };
 
 }
