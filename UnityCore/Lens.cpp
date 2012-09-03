@@ -499,6 +499,7 @@ void Lens::Impl::GlobalSearch(std::string const& search_string)
                             &b),
               sigc::mem_fun(this, &Lens::Impl::OnGlobalSearchFinished),
               global_search_cancellable_);
+
   g_variant_builder_clear(&b);
 }
 
@@ -541,10 +542,16 @@ void Lens::Impl::Activate(std::string const& uri)
       return;
     }
 
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
+
   proxy_->Call("Activate",
-               g_variant_new("(su)", uri.c_str(),
-                             UNITY_PROTOCOL_ACTION_TYPE_ACTIVATE_RESULT),
+               g_variant_new("(sua{sv})", uri.c_str(),
+                             UNITY_PROTOCOL_ACTION_TYPE_ACTIVATE_RESULT,
+                             &b),
                sigc::mem_fun(this, &Lens::Impl::ActivationReply));
+
+  g_variant_builder_clear(&b);
 }
 
 void Lens::Impl::ActivationReply(GVariant* parameters)
@@ -600,11 +607,17 @@ void Lens::Impl::Preview(std::string const& uri)
   }
   preview_cancellable_ = g_cancellable_new ();
 
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
+
   proxy_->Call("Activate",
-               g_variant_new("(su)", uri.c_str(),
-                             UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_RESULT),
+               g_variant_new("(sua{sv})", uri.c_str(),
+                             UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_RESULT,
+                             &b),
                sigc::mem_fun(this, &Lens::Impl::ActivationReply),
                preview_cancellable_);
+
+  g_variant_builder_clear(&b);
 }
 
 void Lens::Impl::ActivatePreviewAction(std::string const& action_id,
@@ -622,10 +635,16 @@ void Lens::Impl::ActivatePreviewAction(std::string const& action_id,
   activation_uri += ":";
   activation_uri += uri;
 
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
+
   proxy_->Call("Activate",
-               g_variant_new("(su)", activation_uri.c_str(),
-                             UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_ACTION),
+               g_variant_new("(sua{sv})", activation_uri.c_str(),
+                             UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_ACTION,
+                             &b),
                sigc::mem_fun(this, &Lens::Impl::ActivationReply));
+
+  g_variant_builder_clear(&b);
 }
 
 void Lens::Impl::SignalPreview(std::string const& preview_uri,
