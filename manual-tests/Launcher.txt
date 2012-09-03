@@ -743,7 +743,7 @@ Setup:
 Actions:  
 #. Open ccsm
 #. Click on Ubuntu Unity Plugin
-#. Choose Expiremental tab, click on Background Color, set Color name to #000000 and Opacity to 180
+#. Choose Experimental tab, click on Background Color, set Color name to #000000 and Opacity to 180
 
 Expected Result:
  The background color of the Launcher is black, and the icons are still visible.
