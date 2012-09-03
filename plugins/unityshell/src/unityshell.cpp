@@ -3603,29 +3603,33 @@ UnityWindow::RenderText(WindowCairoContext *context,
                         float x, float y,
                         float maxWidth, float maxHeight)
 {
-  std::shared_ptr<PangoFontDescription> font(pango_font_description_new(),
-                                             pango_font_description_free);
-  pango_font_description_set_family(font.get(), "sans");
-  pango_font_description_set_absolute_size(font.get(), 12 * PANGO_SCALE);
-  pango_font_description_set_style(font.get(), PANGO_STYLE_NORMAL);
-  pango_font_description_set_weight(font.get(), PANGO_WEIGHT_BOLD);
+  panel::Style& style = panel::Style::Instance();
+  std::string fontDescription(style.GetFontDescription(panel::PanelItem::TITLE));
 
   glib::Object<PangoLayout> layout(pango_cairo_create_layout(context->cr_));
-  pango_layout_set_font_description(layout, font.get());
-  pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
-  pango_layout_set_height(layout, maxHeight);
+  std::shared_ptr<PangoFontDescription> font(pango_font_description_from_string(fontDescription.c_str()),
+                                             pango_font_description_free);
 
+  pango_layout_set_font_description(layout, font.get());
+
+  GdkScreen* gdkScreen = gdk_screen_get_default();
+  PangoContext* pCxt = pango_layout_get_context(layout);
+  int dpi = style.GetTextDPI();
+
+  pango_cairo_context_set_font_options(pCxt, gdk_screen_get_font_options(gdkScreen));
+  pango_cairo_context_set_resolution(pCxt, dpi / static_cast<float>(PANGO_SCALE));
+  pango_layout_context_changed(layout);
+
+  pango_layout_set_height(layout, maxHeight);
+  pango_layout_set_width(layout, -1); //avoid wrap lines
   pango_layout_set_auto_dir(layout, false);
   pango_layout_set_text(layout,
                         WindowManager::Default()->GetWindowName(window->id()).c_str(),
                         -1);
 
   /* update the size of the pango layout */
-  pango_layout_set_width(layout, maxWidth * PANGO_SCALE);
   pango_cairo_update_layout(context->cr_, layout);
-
   cairo_set_operator(context->cr_, CAIRO_OPERATOR_OVER);
-
   cairo_set_source_rgba(context->cr_,
                         1.0,
                         1.0,
@@ -3633,12 +3637,37 @@ UnityWindow::RenderText(WindowCairoContext *context,
                         1.0);
 
   // alignment
-  int lWidth, lHeight;
-  pango_layout_get_pixel_size(layout, &lWidth, &lHeight);
+  PangoRectangle lRect;
+  int textWidth, textHeight;
 
-  y = ((maxHeight - lHeight) / 2.0) + y;
+  pango_layout_get_extents(layout, NULL, &lRect);
+  textWidth = lRect.width / PANGO_SCALE;
+  textHeight = lRect.height / PANGO_SCALE;
+
+  y = ((maxHeight - textHeight) / 2.0) + y;
   cairo_translate(context->cr_, x, y);
-  pango_cairo_show_layout(context->cr_, layout);
+
+  if (textWidth > (maxWidth - y))
+  {
+    // apply a fade effect in the right corner
+    int outPixels = textWidth - (maxWidth - y);
+    const int fadingPixels = 35;
+    int fadingWidth = outPixels < fadingPixels ? outPixels : fadingPixels;
+
+    cairo_push_group(context->cr_);
+    pango_cairo_show_layout(context->cr_, layout);
+    cairo_pop_group_to_source(context->cr_);
+
+    std::shared_ptr<cairo_pattern_t> linpat(cairo_pattern_create_linear(fadingWidth, y, maxWidth, y),
+                                            cairo_pattern_destroy);
+    cairo_pattern_add_color_stop_rgba(linpat.get(), 0, 0, 0, 0, 1);
+    cairo_pattern_add_color_stop_rgba(linpat.get(), 1, 0, 0, 0, 0);
+    cairo_mask(context->cr_, linpat.get());
+  }
+  else
+  {
+    pango_cairo_show_layout(context->cr_, layout);
+  }
 }
 
 void
