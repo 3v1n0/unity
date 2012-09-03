@@ -1,3 +1,9 @@
+unity (6.4.0-0ubuntu3) quantal-proposed; urgency=low
+
+  * no-change rebuild to pick up nux-dev gles bits on armel/armhf 
+
+ -- Iain Lane <iain.lane@canonical.com>  Sun, 02 Sep 2012 18:17:45 +0100
+
 unity (6.4.0-0ubuntu2) quantal-proposed; urgency=low
 
   * debian/rules: "foo" really isnt a valid architecture, set 
