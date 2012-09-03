@@ -1,3 +1,12 @@
+unity (6.4.0-0ubuntu2) quantal-proposed; urgency=low
+
+  * debian/rules: "foo" really isnt a valid architecture, set 
+    gles2_architectures to "armel armhf" so that GLES support gets actually
+    enabled on arm builds (...from the stories of the "Doh! Department")
+    (LP: #1044709)
+
+ -- Oliver Grawert <ogra@ubuntu.com>  Sat, 01 Sep 2012 20:28:01 +0000
+
 unity (6.4.0-0ubuntu1) quantal-proposed; urgency=low
 
   [ Łukasz 'sil2100' Zemczak ]
