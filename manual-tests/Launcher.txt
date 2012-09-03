@@ -731,3 +731,21 @@ Actions:
 
 Expected Results:
 * The gedit window must not flicker behind the launcher.
+
+
+Custom background color works
+-----------------------------
+This test ensures that the custom background color (set via ccsm) works correctly.
+
+Setup: 
+#. Ensure that ccsm is installed (package compizconfig-settings-manager)
+
+Actions:  
+#. Open ccsm
+#. Click on Ubuntu Unity Plugin
+#. Choose Experimental tab, click on Background Color, set Color name to #000000 and Opacity to 180
+
+Expected Result:
+ The background color of the Launcher is black, and the icons are still visible.
+ The Launcher must stay black when Dash or HUD are opened, and the color must
+ be persistent between sessions (logout/login).

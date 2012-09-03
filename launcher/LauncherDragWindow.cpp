@@ -24,6 +24,7 @@
 #include <Nux/TextureArea.h>
 
 #include "LauncherDragWindow.h"
+#include "unity-shared/WindowManager.h"
 
 namespace unity
 {
@@ -41,11 +42,12 @@ LauncherDragWindow::LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> i
 
   key_down.connect([this] (unsigned long, unsigned long keysym, unsigned long, const char*, unsigned short) {
     if (keysym == NUX_VK_ESCAPE)
-    {
-      _cancelled = true;
-      drag_cancel_request.emit();
-    }
+      CancelDrag();
   });
+
+  auto wm = WindowManager::Default();
+  wm->window_mapped.connect(sigc::hide(sigc::mem_fun(this, &LauncherDragWindow::CancelDrag)));
+  wm->window_unmapped.connect(sigc::hide(sigc::mem_fun(this, &LauncherDragWindow::CancelDrag)));
 }
 
 LauncherDragWindow::~LauncherDragWindow()
@@ -64,6 +66,12 @@ bool LauncherDragWindow::Animating() const
 bool LauncherDragWindow::Cancelled() const
 {
   return _cancelled;
+}
+
+void LauncherDragWindow::CancelDrag()
+{
+  _cancelled = true;
+  drag_cancel_request.emit();
 }
 
 void LauncherDragWindow::SetAnimationTarget(int x, int y)

@@ -177,9 +177,8 @@ Launcher::Launcher(nux::BaseWindow* parent,
   ql_manager.quicklist_closed.connect(sigc::mem_fun(this, &Launcher::RecvQuicklistClosed));
 
   WindowManager& plugin_adapter = *(WindowManager::Default());
-  plugin_adapter.window_mapped.connect(sigc::mem_fun(this, &Launcher::OnWindowMapped));
-  plugin_adapter.window_unmapped.connect(sigc::mem_fun(this, &Launcher::OnWindowUnmapped));
-
+  plugin_adapter.window_mapped.connect(sigc::hide(sigc::mem_fun(this, &Launcher::DndTimeoutSetup)));
+  plugin_adapter.window_unmapped.connect(sigc::hide(sigc::mem_fun(this, &Launcher::DndTimeoutSetup)));
   plugin_adapter.initiate_spread.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   plugin_adapter.initiate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   plugin_adapter.terminate_spread.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
@@ -954,7 +953,10 @@ float Launcher::DragLimiter(float x)
 nux::Color FullySaturateColor (nux::Color color)
 {
   float max = std::max<float>(color.red, std::max<float>(color.green, color.blue));
-  color = color * (1.0f / max);
+  if (max > 0.0f)
+  {
+    color = color * (1.0f / max);
+  }
   return color;
 }
 
@@ -1390,27 +1392,6 @@ void Launcher::DndTimeoutSetup()
 
   auto cb_func = sigc::mem_fun(this, &Launcher::OnUpdateDragManagerTimeout);
   sources_.AddTimeout(200, cb_func, DND_CHECK_TIMEOUT);
-}
-
-void Launcher::OnWindowMapped(guint32 xid)
-{
-  //CompWindow* window = _screen->findWindow(xid);
-  //if (window && window->type() | CompWindowTypeDndMask)
-  //{
-    DndTimeoutSetup();
-  //}
-
-  if (GetActionState() != ACTION_NONE)
-    ResetMouseDragState();
-}
-
-void Launcher::OnWindowUnmapped(guint32 xid)
-{
-  //CompWindow* window = _screen->findWindow(xid);
-  //if (window && window->type() | CompWindowTypeDndMask)
-  //{
-    DndTimeoutSetup();
-  //}
 }
 
 void Launcher::OnPluginStateChanged()
