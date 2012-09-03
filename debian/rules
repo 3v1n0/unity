@@ -18,25 +18,6 @@ NUX_ABIVERSION := $(shell sed -rn 's/^\#define[[:space:]]+NUX_ABIVERSION[[:space
 
 LIBUNITY_PRIVATE := $(shell pkg-config --libs-only-L unity-protocol-private | sed -e 's/-L\(.*\)/\1/' )
 
-override_dh_quilt_patch:
-	dh_quilt_patch
-	if test -r debian/patches/series.$(DEB_HOST_ARCH); then \
-	  pc=".pc.$(DEB_HOST_ARCH)"; \
-	  test -d "$(CURDIR)/$$pc" || mkdir "$(CURDIR)/$$pc"; \
-	  cp debian/patches/series.$(DEB_HOST_ARCH) $(CURDIR)/$$pc/series; \
-	  cd $(CURDIR); \
-	  QUILT_PC="$$pc" quilt upgrade || true; \
-	  QUILT_PC="$$pc" QUILT_PATCHES="debian/patches/" quilt push -a || true; \
-	fi; \
-
-override_dh_quilt_unpatch:
-	if test -r debian/patches/series.$(DEB_HOST_ARCH); then \
-	  pc=".pc.$(DEB_HOST_ARCH)"; \
-	  cd $(CURDIR); \
-	  QUILT_PC="$$pc" QUILT_PATCHES="debian/patches/" quilt pop -a || true; \
-	fi; \
-	dh_quilt_unpatch
-
 override_dh_auto_configure:
 ifeq ($(DEB_HOST_ARCH),$(findstring $(DEB_HOST_ARCH), $(gles2_architectures)))
 	dh_auto_configure -- -DUSE_GSETTINGS=TRUE -DCOMPIZ_BUILD_WITH_RPATH=FALSE -DCOMPIZ_PACKAGING_ENABLED=TRUE -DCOMPIZ_PLUGIN_INSTALL_TYPE=package -DBUILD_GLES=TRUE -DDISABLE_MAINTAINER_CFLAGS=ON

@@ -1,3 +1,13 @@
+unity (6.4.0-0ubuntu4) quantal-proposed; urgency=low
+
+  * CMakeLists.txt: Make the GL/GLU linking conditional on BUILD_GLES,
+    rather than based on uname, so it actually matches GLES settings.
+  * dash/previews/CMakeLists.txt: Cargo-cult linking options from other
+    modules for both -fPIC and UNITY_STANDALONE_LADD, fixing ARM/GLES.
+  * debian/rules: Remove crazy per-arch quilt madness and drop patches.
+
+ -- Adam Conrad <adconrad@ubuntu.com>  Sun, 02 Sep 2012 18:34:29 -0600
+
 unity (6.4.0-0ubuntu3) quantal-proposed; urgency=low
 
   * no-change rebuild to pick up nux-dev gles bits on armel/armhf 
