@@ -89,7 +89,8 @@ public:
   void ActivationReply(GVariant* parameters);
   void Preview(std::string const& uri);
   void ActivatePreviewAction(std::string const& action_id,
-                             std::string const& uri);
+                             std::string const& uri,
+                             Hints const& hints);
   void SignalPreview(std::string const& preview_uri,
                      glib::Variant const& preview_update,
                      glib::DBusProxy::ReplyCallback reply_cb);
@@ -621,7 +622,8 @@ void Lens::Impl::Preview(std::string const& uri)
 }
 
 void Lens::Impl::ActivatePreviewAction(std::string const& action_id,
-                                       std::string const& uri)
+                                       std::string const& uri,
+                                       Hints const& hints)
 {
   LOG_DEBUG(logger) << "Activating action '" << action_id << "' on  '" << id_ << "'";
 
@@ -637,6 +639,12 @@ void Lens::Impl::ActivatePreviewAction(std::string const& action_id,
 
   GVariantBuilder b;
   g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
+
+  for (auto it = hints.begin(); it != hints.end(); ++it)
+  {
+    GVariant* variant = it->second;
+    g_variant_builder_add(&b, "{sv}", it->first.c_str(), variant);
+  }
 
   proxy_->Call("Activate",
                g_variant_new("(sua{sv})", activation_uri.c_str(),
@@ -896,9 +904,10 @@ void Lens::Preview(std::string const& uri)
 }
 
 void Lens::ActivatePreviewAction(std::string const& action_id,
-                                 std::string const& uri)
+                                 std::string const& uri,
+                                 Hints const& hints)
 {
-  pimpl->ActivatePreviewAction(action_id, uri);
+  pimpl->ActivatePreviewAction(action_id, uri, hints);
 }
 
 void Lens::SignalPreview(std::string const& uri,
