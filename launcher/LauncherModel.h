@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Jason Smith <jason.smith@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 #ifndef LAUNCHERMODEL_H
@@ -47,14 +48,12 @@ public:
   void Sort();
   int  Size() const;
 
-  void OnIconRemove(AbstractLauncherIcon::Ptr icon);
-
   bool IconHasSister(AbstractLauncherIcon::Ptr icon) const;
+  int IconIndex(AbstractLauncherIcon::Ptr icon) const;
 
   void ReorderAfter(AbstractLauncherIcon::Ptr icon, AbstractLauncherIcon::Ptr other);
-  void ReorderBefore(AbstractLauncherIcon::Ptr icon, AbstractLauncherIcon::Ptr other, bool save);
-
-  void ReorderSmart(AbstractLauncherIcon::Ptr icon, AbstractLauncherIcon::Ptr other, bool save);
+  void ReorderBefore(AbstractLauncherIcon::Ptr icon, AbstractLauncherIcon::Ptr other, bool animate);
+  void ReorderSmart(AbstractLauncherIcon::Ptr icon, AbstractLauncherIcon::Ptr other, bool animate);
 
   AbstractLauncherIcon::Ptr Selection() const;
   int SelectionIndex() const;
@@ -82,15 +81,15 @@ public:
 
   sigc::signal<void, AbstractLauncherIcon::Ptr> icon_added;
   sigc::signal<void, AbstractLauncherIcon::Ptr> icon_removed;
+  sigc::signal<void, AbstractLauncherIcon::Ptr> selection_changed;
   sigc::signal<void> order_changed;
   sigc::signal<void> saved;
-  sigc::signal<void, AbstractLauncherIcon::Ptr> selection_changed;
 
-  IntrospectableList GetIntrospectableChildren();
 protected:
   // Introspectable methods
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
+  IntrospectableList GetIntrospectableChildren();
 
 private:
   Base             _inner;
@@ -101,9 +100,9 @@ private:
   glib::SourceManager timeouts_;
 
   bool Populate();
-
+  void PopulatePart(iterator begin, iterator end);
+  void OnIconRemove(AbstractLauncherIcon::Ptr icon);
   bool IconShouldShelf(AbstractLauncherIcon::Ptr icon) const;
-
   static bool CompareIcons(AbstractLauncherIcon::Ptr first, AbstractLauncherIcon::Ptr second);
 
   /* Template Methods */
