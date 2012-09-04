@@ -40,13 +40,6 @@ Source::~Source()
 
 void Source::Remove()
 {
-  // Dont remove if in a callback.
-  if (callback_data_ && callback_data_->callingback_ == true)
-  {
-    callback_data_->removed_during_callback_ = true;
-    return;
-  }
-
   if (source_)
   {
     if (!g_source_is_destroyed(source_))
@@ -109,13 +102,9 @@ gboolean Source::SourceCallback(gpointer data)
 
   auto cb_data = static_cast<CallBackData*>(data);
 
-  if (cb_data && cb_data->callback_fn_)
+  if (cb_data && cb_data->callback_fn_ && cb_data->callback_fn_())
   {
-    cb_data->callingback_ = true;
-    bool ret = cb_data->callback_fn_();
-    cb_data->callingback_ = false;
-
-    return ret && !cb_data->removed_during_callback_? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
+    return G_SOURCE_CONTINUE;
   }
 
   return G_SOURCE_REMOVE;

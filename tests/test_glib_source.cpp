@@ -245,29 +245,27 @@ TEST(TestGLibTimeout, RemovePtrOnCallback)
 {
   bool local_callback_called = false;
   unsigned int local_callback_call_count = 0;
-  volatile unsigned int id = 0;
 
   Source::UniquePtr timeout(new Timeout(10, [&] {
+    unsigned int id = timeout->Id();
     local_callback_called = true;
+    local_callback_call_count++;
+
     timeout.reset();
-    // resetting the ptr should destroy trhe source.
-    EXPECT_TRUE(g_main_context_find_source_by_id(NULL, id) != nullptr);
-    return false;
+    // resetting the ptr should destroy the source.
+    EXPECT_TRUE(g_main_context_find_source_by_id(NULL, id) == nullptr);
+    // this function would be called more than once (local_callback_call_count > 1) if we had not removed the source.
+    return true;
   }));
-  id = timeout->Id();
-  local_callback_call_count++;
 
   Utils::WaitForTimeoutMSec(100);
 
   ASSERT_EQ(timeout, nullptr);
   EXPECT_EQ(local_callback_called, true);
   EXPECT_EQ(local_callback_call_count, 1);
-
-  // source should be removed by now.
-  EXPECT_TRUE(g_main_context_find_source_by_id(NULL, id) == nullptr);
 }
 
-TEST(TestGLibTimeout, RemoveSourceOnCallback)
+TEST(TestGLibTimeout, AutoRemoveSourceOnCallback)
 {
   bool local_callback_called = false;
   unsigned int local_callback_call_count = 0;
