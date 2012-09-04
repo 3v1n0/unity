@@ -269,11 +269,9 @@ void LauncherModel::ReorderSmart(AbstractLauncherIcon::Ptr icon, AbstractLaunche
   if (icon->GetIconType() != other->GetIconType())
     return;
 
-  bool target_found = false;
-  bool found_myself = false;
-
-  int i = 0;
-  int j = 0;
+  bool found_icon = false;
+  bool found_target = false;
+  bool center = false;
 
   for (auto it = begin(); it != end(); ++it)
   {
@@ -281,48 +279,34 @@ void LauncherModel::ReorderSmart(AbstractLauncherIcon::Ptr icon, AbstractLaunche
 
     if (icon_it == icon)
     {
-      found_myself = true;
-      j++;
+      found_icon = true;
+      center = !center;
       continue;
     }
 
-    if (icon_it != icon)
+    int new_prio = icon_it->SortPriority() + (found_target ? 1 : -1);
+    icon_it->SetSortPriority(new_prio);
+
+    if (icon_it == other)
     {
-      int new_prio = icon_it->SortPriority();
+      if (save && center)
+        icon_it->SaveCenter();
 
-      if (icon_it != other && !target_found)
-      {
-        new_prio -= 1;
-      }
-      else if (icon_it == other || target_found)
-      {
-        target_found = true;
-        new_prio += 1;
-      }
+      center = !center;
+      new_prio = new_prio + (found_icon ? 1 : -1);
+      icon->SetSortPriority(new_prio);
 
-      icon_it->SetSortPriority(new_prio);
-      i++;
+      if (save && center)
+        icon_it->SaveCenter();
 
-      if (icon_it == other)
-      {
-        if (found_myself)
-        {
-          icon->SetSortPriority(other->SortPriority()+1);
-        }
-        else
-        {
-          icon->SetSortPriority(other->SortPriority()-1);
-        }
-
-        i++;
-      }
+      found_target = true;
     }
-
-    if (save && i!=j)
-      icon_it->SaveCenter();
-
-    j++;
-   }
+    else
+    {
+      if (save && center)
+        icon_it->SaveCenter();
+    }
+  }
 
   Sort();
 }
