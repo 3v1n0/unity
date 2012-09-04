@@ -535,6 +535,7 @@ void View::FindNewSelectedButton()
   {
     if ((*it)->fake_focused)
     {
+      query_selected.emit((*it)->GetQuery());
       selected_button_ = button_index;
       return;
     }
