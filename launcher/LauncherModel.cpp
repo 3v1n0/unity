@@ -261,7 +261,7 @@ void LauncherModel::ReorderBefore(AbstractLauncherIcon::Ptr icon, AbstractLaunch
   Sort();
 }
 
-void LauncherModel::ReorderSmart(AbstractLauncherIcon::Ptr icon, AbstractLauncherIcon::Ptr other, bool save)
+void LauncherModel::ReorderSmart(AbstractLauncherIcon::Ptr icon, AbstractLauncherIcon::Ptr other, bool animate)
 {
   if (icon == other || icon.IsNull() || other.IsNull())
     return;
@@ -289,21 +289,21 @@ void LauncherModel::ReorderSmart(AbstractLauncherIcon::Ptr icon, AbstractLaunche
 
     if (icon_it == other)
     {
-      if (save && center)
+      if (animate && center)
         icon_it->SaveCenter();
 
       center = !center;
       new_prio = new_prio + (found_icon ? 1 : -1);
       icon->SetSortPriority(new_prio);
 
-      if (save && center)
+      if (animate && center)
         icon_it->SaveCenter();
 
       found_target = true;
     }
     else
     {
-      if (save && center)
+      if (animate && center)
         icon_it->SaveCenter();
     }
   }
