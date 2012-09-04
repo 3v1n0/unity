@@ -3647,18 +3647,19 @@ UnityWindow::RenderText(WindowCairoContext *context,
   y = ((maxHeight - textHeight) / 2.0) + y;
   cairo_translate(context->cr_, x, y);
 
-  if (textWidth > (maxWidth - y))
+  if (textWidth > maxWidth)
   {
     // apply a fade effect in the right corner
-    int outPixels = textWidth - (maxWidth - y);
+    const int outPixels = textWidth - maxWidth;
     const int fadingPixels = 35;
-    int fadingWidth = outPixels < fadingPixels ? outPixels : fadingPixels;
+    const int fadingWidth = outPixels < fadingPixels ? outPixels : fadingPixels;
 
     cairo_push_group(context->cr_);
     pango_cairo_show_layout(context->cr_, layout);
     cairo_pop_group_to_source(context->cr_);
 
-    std::shared_ptr<cairo_pattern_t> linpat(cairo_pattern_create_linear(fadingWidth, y, maxWidth, y),
+    std::shared_ptr<cairo_pattern_t> linpat(cairo_pattern_create_linear(maxWidth - fadingWidth,
+                                                                        y, maxWidth, y),
                                             cairo_pattern_destroy);
     cairo_pattern_add_color_stop_rgba(linpat.get(), 0, 0, 0, 0, 1);
     cairo_pattern_add_color_stop_rgba(linpat.get(), 1, 0, 0, 0, 0);
@@ -3711,10 +3712,10 @@ UnityWindow::DrawWindowTitle(const GLWindowPaintAttrib& attrib,
   cairo_restore(context->cr_);
 
   // Draw windows title
+  const float xText = CLOSE_ICON_SPACE * 2 + CLOSE_ICON_SIZE;
   RenderText(context.get(),
-             CLOSE_ICON_SPACE * 2 + CLOSE_ICON_SIZE,
-             0.0,
-             width, SCALE_WINDOW_TITLE_SIZE);
+             xText, 0.0,
+             width - xText, SCALE_WINDOW_TITLE_SIZE);
 
   mask |= PAINT_WINDOW_BLEND_MASK;
   int maxWidth, maxHeight;
@@ -3786,9 +3787,9 @@ UnityWindow::scalePaintDecoration(const GLWindowPaintAttrib& attrib,
 
   ScalePosition pos = sWindow->getCurrentPosition();
   int maxHeight, maxWidth;
-  // Use "2" as margin to make sure to cover all originial decoration
-  const float width = (window->width() + 4) * pos.scale;
-  const float x = pos.x() + window->x() - (2 * pos.scale);
+  // Use "1" as margin to make sure to cover all originial decoration
+  const float width = (window->width() * pos.scale) + 2;
+  const float x = pos.x() + window->x() - 1;
   const float y = pos.y() + window->y() - SCALE_WINDOW_TITLE_SIZE;
   const float iconX = x + CLOSE_ICON_SPACE;
   const float iconY = y + ((SCALE_WINDOW_TITLE_SIZE - CLOSE_ICON_SIZE)  / 2.0);
