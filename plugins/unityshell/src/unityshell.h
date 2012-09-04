@@ -29,6 +29,7 @@
 #include <sigc++/sigc++.h>
 #include <boost/shared_ptr.hpp>
 
+#include <scale/scale.h>
 #include <core/core.h>
 #include <core/pluginclasshandler.h>
 #include <composite/composite.h>
@@ -69,6 +70,8 @@
 
 namespace unity
 {
+
+class WindowCairoContext;
 
 /* base screen class */
 class UnityScreen :
@@ -344,8 +347,9 @@ private:
   glib::SourceManager sources_;
   unity::ThumbnailGenerator thumb_generator;
 
+  Window highlighted_window_;
+
   WindowMinimizeSpeedController* minimize_speed_controller;
-  
   friend class UnityWindow;
 };
 
@@ -354,6 +358,7 @@ class UnityWindow :
   public GLWindowInterface,
   public ShowdesktopHandlerWindowInterface,
   public compiz::WindowInputRemoverLockAcquireInterface,
+  public WrapableHandler<ScaleWindowInterface, 4>,
   public BaseSwitchWindow,
   public PluginClassHandler <UnityWindow, CompWindow>
 {
@@ -414,6 +419,8 @@ public:
 
   void handleEvent (XEvent *event);
 
+  CompRect closeButtonArea ();
+
   typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>
           UnityMinimizedHandler;
   std::unique_ptr <UnityMinimizedHandler> mMinimizeHandler;
@@ -422,6 +429,13 @@ public:
 
   //! Emited when CompWindowNotifyBeforeDestroy is received
   sigc::signal<void> being_destroyed;
+
+  void scaleSelectWindow ();
+  void scalePaintDecoration (const GLWindowPaintAttrib &,
+                             const GLMatrix &,
+                             const CompRegion &,
+                             unsigned int);
+
 private:
   void DoEnableFocus ();
   void DoDisableFocus ();
@@ -453,8 +467,32 @@ private:
 
   compiz::WindowInputRemoverLock::Ptr GetInputRemover ();
 
+  void DrawWindowTitle (const GLWindowPaintAttrib& attrib,
+                        const GLMatrix& transform,
+                        unsigned int mask,
+                        float x, float y, float x2, float y2);
+  void DrawTexture (GLTexture *icon,
+                    const GLWindowPaintAttrib& attrib,
+                    const GLMatrix& transform,
+                    unsigned int mask,
+                    float x, float y,
+                    int &maxWidth, int &maxHeight);
+  void RenderText (WindowCairoContext *context,
+                   float x, float y,
+                   float maxWidth, float maxHeight);
+  WindowCairoContext* CreateCairoContext (float width, float height);
+
+  // based on compiz text plugin
+  CompString GetWindowName (Window id);
+  CompString GetUtf8Property (Window id, Atom atom);
+  CompString GetTextProperty (Window id, Atom atom);
+
   compiz::WindowInputRemoverLock::Weak input_remover_;
   glib::Source::UniquePtr focus_desktop_timeout_;
+
+  GLTexture::List close_icon_;
+  CompRect close_button_area_;
+  GtkStyleContext* window_header_style_;
 };
 
 
