@@ -44,6 +44,7 @@ namespace previews
 class CoverArt;
 class PreviewLikesWidget;
 class PreviewInfoHintWidget;
+class SocialPreviewContent;
 
 class SocialPreview : public Preview
 {
@@ -72,7 +73,7 @@ protected:
   nux::VLayout* title_layout_;
 
   nux::ObjectPtr<IconTexture> avatar_;
-  nux::ObjectPtr<nux::StaticCairoText> content_;
+  nux::ObjectPtr<SocialPreviewContent> content_;
   nux::ObjectPtr<nux::StaticCairoText> title_;
   nux::ObjectPtr<nux::StaticCairoText> subtitle_;
   nux::ObjectPtr<PreviewInfoHintWidget> preview_info_hints_;

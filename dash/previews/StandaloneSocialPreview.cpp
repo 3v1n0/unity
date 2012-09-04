@@ -39,8 +39,8 @@
 #include "PreviewContainer.h"
 
 
-#define WIDTH 972
-#define HEIGHT 452
+#define WIDTH 910 
+#define HEIGHT 400
 
 using namespace unity;
 using namespace unity::dash;
@@ -153,7 +153,7 @@ void TestRunner::Init ()
 
   const char* title = "Nick Dedekind";
   const char* subtitle = "@FunnyJokes, 10 Aug 2012 05:01";
-  const char* description = "Profile pictures are what people want them to think they look like. Tagged pictures are what they really look like.";
+  const char* description = "Profile pictures are what people want them to think they look like. Tagged pictures are what they really look like. Profile pictures are what people want them to think they look like. Tagged pictures are what they really look like.";
 
  // creates a generic preview object
   glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/5/lens-nav-music.svg", NULL));
@@ -165,7 +165,7 @@ void TestRunner::Init ()
 
   // DONT NEED THESE
   //unity_protocol_social_preview_set_sender(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), title);
-  //unity_protocol_social_preview_set_content(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), description);
+  unity_protocol_social_preview_set_content(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), description);
 
   unity_protocol_preview_set_title(proto_obj, title);
   unity_protocol_preview_set_subtitle(proto_obj, subtitle);
@@ -185,7 +185,7 @@ void TestRunner::NavRight()
 {
   const char* title = "Nick Dedekind";
   const char* subtitle = "@FunnyJokes, 10 Aug 2012 05:01";
-  const char* description = "Profile pictures are what people want them to think they look like. Tagged pictures are what they really look like.";
+  const char* description = "Testing small comment.";
 
  // creates a generic preview object
   glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/5/lens-nav-music.svg", NULL));
@@ -194,10 +194,6 @@ void TestRunner::NavRight()
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_social_preview_new()));
 
   unity_protocol_social_preview_set_avatar(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), iconHint1);
-
-  // DONT NEED THESE
-  //unity_protocol_social_preview_set_sender(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), title);
-  //unity_protocol_social_preview_set_content(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), description);
 
   unity_protocol_preview_set_title(proto_obj, title);
   unity_protocol_preview_set_subtitle(proto_obj, subtitle);
@@ -216,7 +212,7 @@ void TestRunner::NavLeft()
 {
   const char* title = "Nick Dedekind";
   const char* subtitle = "@FunnyJokes, 10 Aug 2012 05:01";
-  const char* description = "Profile pictures are what people want them to think they look like. Tagged pictures are what they really look like.";
+  const char* description = "Profile pictures are what people want them to think they look like. Tagged pictures are what they really look like. Profile pictures are what people want them to think they look like. Tagged pictures are what they really look like.";
 
  // creates a generic preview object
   glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/5/lens-nav-music.svg", NULL));
@@ -225,10 +221,6 @@ void TestRunner::NavLeft()
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_social_preview_new()));
 
   unity_protocol_social_preview_set_avatar(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), iconHint1);
-
-  // DONT NEED THESE
-  //unity_protocol_social_preview_set_sender(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), title);
-  //unity_protocol_social_preview_set_content(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), description);
 
   unity_protocol_preview_set_title(proto_obj, title);
   unity_protocol_preview_set_subtitle(proto_obj, subtitle);

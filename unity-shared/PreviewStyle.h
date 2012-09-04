@@ -128,6 +128,8 @@ public:
   int GetAvatarAreaWidth() const;
   int GetAvatarAreaHeight() const;
 
+  std::string content_font() const;
+
   ////////////////////////////////
 
   nux::BaseTexture* GetNavLeftIcon();
