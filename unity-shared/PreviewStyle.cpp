@@ -159,9 +159,14 @@ int Style::GetNavigatorIconSize() const
   return 24;  
 }
 
-float Style::GetPreviewAspectRatio() const
+int Style::GetPreviewWidth() const
 {
-  return static_cast<float>(796)/390;
+  return 770;
+}
+
+int Style::GetPreviewHeight() const
+{
+  return 380;
 }
 
 int Style::GetDetailsTopMargin() const
@@ -186,7 +191,7 @@ int Style::GetDetailsLeftMargin() const
 
 int Style::GetPanelSplitWidth() const
 {
-  return 16;
+  return 10;
 }
 
 int Style::GetAppIconAreaWidth() const
