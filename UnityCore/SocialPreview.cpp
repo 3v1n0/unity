@@ -32,16 +32,19 @@ class SocialPreview::Impl
 public:
   Impl(SocialPreview* owner, glib::Object<GObject> const& proto_obj);
 
+
   void SetupGetters();
   std::string get_sender() { return sender_; };
   std::string get_content() { return content_; };
   glib::Object<GIcon> get_avatar() { return avatar_; };
+  ReplyPtrList get_replies() const { return replies_list_; };
 
   SocialPreview* owner_;
 
   std::string sender_;
   std::string content_;
   glib::Object<GIcon> avatar_;
+  ReplyPtrList replies_list_;
 };
 
 SocialPreview::Impl::Impl(SocialPreview* owner, glib::Object<GObject> const& proto_obj)
@@ -77,6 +80,12 @@ SocialPreview::SocialPreview(unity::glib::Object<GObject> const& proto_obj)
   , pimpl(new Impl(this, proto_obj))
 {
 }
+
+SocialPreview::ReplyPtrList SocialPreview::GetReplies() const
+{
+  return pimpl->get_replies();
+}
+
 
 SocialPreview::~SocialPreview()
 {

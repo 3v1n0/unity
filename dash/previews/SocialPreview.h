@@ -44,6 +44,7 @@ namespace previews
 class CoverArt;
 class PreviewLikesWidget;
 class PreviewInfoHintWidget;
+class RepliesWidget;
 
 class SocialPreview : public Preview
 {
@@ -76,6 +77,7 @@ protected:
   nux::ObjectPtr<nux::StaticCairoText> title_;
   nux::ObjectPtr<nux::StaticCairoText> subtitle_;
   nux::ObjectPtr<PreviewInfoHintWidget> preview_info_hints_;
+  nux::ObjectPtr<RepliesWidget> replies;
 
   typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
   LayerPtr details_bg_layer_;

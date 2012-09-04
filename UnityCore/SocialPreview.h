@@ -35,7 +35,25 @@ namespace dash
 class SocialPreview : public Preview
 {
 public:
+  struct Reply
+  {
+    std::string id;
+    std::string display_name;
+    std::string content;
+    std::string time;
+
+    Reply() {};
+    Reply(const gchar* id_, const gchar* display_name_,
+             const gchar* content_, const gchar* time_)
+      : id(id_ != NULL ? id_ : "")
+      , display_name(display_name_ != NULL ? display_name_ : "")
+      , content(content_ != NULL ? content_ : "")
+      , time(time_ != NULL ? time_ : "") {};
+  };
+
   typedef std::shared_ptr<SocialPreview> Ptr;
+  typedef std::shared_ptr<Reply> ReplyPtr;
+  typedef std::vector<ReplyPtr> ReplyPtrList;
   
   SocialPreview(unity::glib::Object<GObject> const& proto_obj);
   ~SocialPreview();
@@ -44,6 +62,9 @@ public:
   nux::RWProperty<std::string> title;
   nux::RWProperty<std::string> content;
   nux::RWProperty<glib::Object<GIcon>> avatar;
+
+  ReplyPtrList GetReplies() const;
+
 
 private:
   class Impl;

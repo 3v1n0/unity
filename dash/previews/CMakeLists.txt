@@ -10,13 +10,13 @@ set (CFLAGS
      "-I${CMAKE_CURRENT_BINARY_DIR}"
      )
 
-if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv7l")
   set (CFLAGS ${CFLAGS} "-fPIC")
-endif (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+endif (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv7l")
 
 add_definitions (${CFLAGS})
 
-set (LIBS ${CACHED_UNITY_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION} -lm -lGL -lGLU")
+set (LIBS ${CACHED_UNITY_DEPS_LIBRARIES} ${UNITY_STANDALONE_LADD})
 link_libraries (${LIBS})
 
 set (LIB_PATHS ${CACHED_UNITY_DEPS_LIBRARY_DIRS})
@@ -55,18 +55,18 @@ add_dependencies (app_previews previews-lib)
 target_link_libraries (app_previews previews-lib unity-shared)
 
 # 
-# Music Standalone variant
-#
-add_executable (music_previews StandaloneMusicPreview.cpp)
-add_dependencies (music_previews previews-lib)
-target_link_libraries (music_previews previews-lib unity-shared)
-
-# 
 # Social Standalone variant
 #
 add_executable (social_previews StandaloneSocialPreview.cpp)
 add_dependencies (social_previews previews-lib)
 target_link_libraries (social_previews previews-lib unity-shared)
+
+# 
+# Music Standalone variant
+#
+add_executable (music_previews StandaloneMusicPreview.cpp)
+add_dependencies (music_previews previews-lib)
+target_link_libraries (music_previews previews-lib unity-shared)
 
 # 
 # Music Standalone variant
