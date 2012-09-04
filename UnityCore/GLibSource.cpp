@@ -125,7 +125,7 @@ void Source::DestroyCallback(gpointer data)
     if (self->Id())
       self->removed.emit(self->Id());
   }
-  
+
   delete cb_data;
 }
 
