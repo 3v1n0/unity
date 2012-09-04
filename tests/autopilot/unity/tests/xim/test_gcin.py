@@ -22,11 +22,8 @@ class GcinTestCase(UnityTestCase):
     def setUp(self):
         super(GcinTestCase, self).setUp()
 
-        if 'XMODIFIERS' not in environ:
-            self.skip("Please make sure XMODIFIERS is set to @im=gcin. Set it using 'im-switch'.")
-
         # Check that gcin is set as the active IM through im-switch
-        if environ['XMODIFIERS'] != "@im=gcin":
+        if environ.get('XMODIFIERS', '') != "@im=gcin":
             self.skip("Please make sure XMODIFIERS is set to @im=gcin. Set it using 'im-switch'.")
 
         running_process = subprocess.check_output('ps -e', shell=True)
