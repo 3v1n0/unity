@@ -262,11 +262,6 @@ TEST_F(TestLauncherModel, OrderByType)
 
 TEST_F(TestLauncherModel, GetClosestIcon)
 {
-  icon1->SetSortPriority(0);
-  icon2->SetSortPriority(1);
-  icon3->SetSortPriority(2);
-  icon4->SetSortPriority(3);
-
   model.AddIcon(icon1);
   model.AddIcon(icon2);
   model.AddIcon(icon3);
@@ -309,6 +304,21 @@ TEST_F(TestLauncherModel, IconIndex)
 
   AbstractLauncherIcon::Ptr icon5(new MockLauncherIcon());
   EXPECT_EQ(model.IconIndex(icon5), -1);
+}
+
+TEST_F(TestLauncherModel, IconHasSister)
+{
+  model.AddIcon(icon1);
+  EXPECT_FALSE(model.IconHasSister(icon1));
+
+  model.AddIcon(icon2);
+  model.AddIcon(icon3);
+  model.AddIcon(icon4);
+
+  EXPECT_TRUE(model.IconHasSister(icon1));
+  EXPECT_TRUE(model.IconHasSister(icon2));
+  EXPECT_TRUE(model.IconHasSister(icon3));
+  EXPECT_TRUE(model.IconHasSister(icon4));
 }
 
 }
