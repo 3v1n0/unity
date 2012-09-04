@@ -39,8 +39,8 @@
 #include "PreviewContainer.h"
 
 
-#define WIDTH 972
-#define HEIGHT 452
+#define WIDTH 910 
+#define HEIGHT 400
 
 using namespace unity;
 using namespace unity::dash;
@@ -165,7 +165,7 @@ void TestRunner::Init ()
 
   // DONT NEED THESE
   //unity_protocol_social_preview_set_sender(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), title);
-  //unity_protocol_social_preview_set_content(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), description);
+  unity_protocol_social_preview_set_content(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), description);
 
   unity_protocol_preview_set_title(proto_obj, title);
   unity_protocol_preview_set_subtitle(proto_obj, subtitle);
@@ -195,10 +195,6 @@ void TestRunner::NavRight()
 
   unity_protocol_social_preview_set_avatar(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), iconHint1);
 
-  // DONT NEED THESE
-  //unity_protocol_social_preview_set_sender(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), title);
-  //unity_protocol_social_preview_set_content(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), description);
-
   unity_protocol_preview_set_title(proto_obj, title);
   unity_protocol_preview_set_subtitle(proto_obj, subtitle);
   unity_protocol_preview_set_description(proto_obj, description);
@@ -227,10 +223,6 @@ void TestRunner::NavLeft()
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_social_preview_new()));
 
   unity_protocol_social_preview_set_avatar(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), iconHint1);
-
-  // DONT NEED THESE
-  //unity_protocol_social_preview_set_sender(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), title);
-  //unity_protocol_social_preview_set_content(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), description);
 
   unity_protocol_preview_set_title(proto_obj, title);
   unity_protocol_preview_set_subtitle(proto_obj, subtitle);

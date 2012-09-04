@@ -294,6 +294,11 @@ int Style::GetAvatarAreaHeight() const
   return 65;  
 }
 
+std::string Style::content_font() const
+{
+  return "Ubuntu 12.5";  
+}
+
 std::string Style::title_font() const
 {
   return "Ubuntu 22";

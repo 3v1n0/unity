@@ -34,6 +34,7 @@
 #include <glib/gi18n-lib.h>
  
 #include "SocialPreview.h"
+#include "SocialPreviewContent.h"
 #include "ActionButton.h"
 #include "PreviewInfoHintWidget.h"
 
@@ -154,8 +155,7 @@ void SocialPreview::SetupViews()
   nux::VLayout* social_content_layout = new nux::VLayout();
   social_content_layout->SetSpaceBetweenChildren(16);
   
-  description_ = new nux::StaticCairoText(social_preview_model->description, true, NUX_TRACKER_LOCATION);
-  description_->SetLines(-10);
+  description_ = new SocialPreviewContent(social_preview_model->description, NUX_TRACKER_LOCATION);
   social_content_layout->AddView(description_.GetPointer(), 1);
 
   /////////////////////
@@ -206,7 +206,7 @@ void SocialPreview::SetupViews()
       /////////////////////
 
       /////////////////////
-      // Description
+      // Details
       nux::ScrollView* social_info = new DetailsScrollView(NUX_TRACKER_LOCATION);
       social_info->EnableHorizontalScrollBar(false);
 
