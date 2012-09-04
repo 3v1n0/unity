@@ -221,25 +221,36 @@ void LauncherModel::ReorderBefore(AbstractLauncherIcon::Ptr icon, AbstractLaunch
   if (icon->GetIconType() != other->GetIconType())
     return;
 
-  icon->SetSortPriority(other->SortPriority() - 1);
+  bool center = false;
 
   for (auto it = begin(); it != end(); ++it)
   {
     auto const& icon_it = *it;
 
     if (icon_it == icon)
+    {
+      center = !center;
       continue;
+    }
+
+    int new_prio = icon_it->SortPriority() - 1;
+    icon_it->SetSortPriority(new_prio);
 
     if (icon_it == other)
     {
-      break;
-    }
-    else if (icon_it != other)
-    {
-      int new_prio = icon_it->SortPriority() - 1;
-      icon_it->SetSortPriority(new_prio);
+      if (animate && center)
+        icon_it->SaveCenter();
 
-      if (animate)
+      center = !center;
+      new_prio = new_prio - 1;
+      icon->SetSortPriority(new_prio);
+
+      if (animate && center)
+        icon_it->SaveCenter();
+    }
+    else
+    {
+      if (animate && center)
         icon_it->SaveCenter();
     }
   }
