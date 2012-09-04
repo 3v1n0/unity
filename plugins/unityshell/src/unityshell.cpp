@@ -3672,10 +3672,10 @@ UnityWindow::RenderText(WindowCairoContext *context,
 }
 
 void
-UnityWindow::DrawWindowTitle(const GLWindowPaintAttrib& attrib,
-                             const GLMatrix& transform,
-                             unsigned int mask,
-                             float x, float y, float x2, float y2)
+UnityWindow::DrawWindowDecoration(const GLWindowPaintAttrib& attrib,
+                                  const GLMatrix& transform,
+                                  unsigned int mask,
+                                  float x, float y, float x2, float y2)
 {
   const float width = x2 - x;
 
@@ -3794,15 +3794,12 @@ UnityWindow::scalePaintDecoration(const GLWindowPaintAttrib& attrib,
   const float iconX = x + CLOSE_ICON_SPACE;
   const float iconY = y + ((SCALE_WINDOW_TITLE_SIZE - CLOSE_ICON_SIZE)  / 2.0);
 
-  maxHeight = maxWidth = 0;
-
-  DrawWindowTitle(sAttrib,
-                  transform,
-                  mask,
-                  x, y,
-                  x + width, y + SCALE_WINDOW_TITLE_SIZE);
+  DrawWindowDecoration(sAttrib, transform, mask,
+                       x, y,
+                       x + width, y + SCALE_WINDOW_TITLE_SIZE);
 
   mask |= PAINT_WINDOW_BLEND_MASK;
+  maxHeight = maxWidth = 0;
   foreach(GLTexture *icon, close_icon_)
   {
     DrawTexture(icon, sAttrib, transform, mask,
