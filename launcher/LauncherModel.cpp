@@ -54,12 +54,12 @@ unity::debug::Introspectable::IntrospectableList LauncherModel::GetIntrospectabl
   return introspection_results_;
 }
 
-bool LauncherModel::IconShouldShelf(AbstractLauncherIcon::Ptr icon) const
+bool LauncherModel::IconShouldShelf(AbstractLauncherIcon::Ptr const& icon) const
 {
   return icon->GetIconType() == AbstractLauncherIcon::IconType::TRASH;
 }
 
-bool LauncherModel::CompareIcons(AbstractLauncherIcon::Ptr first, AbstractLauncherIcon::Ptr second)
+bool LauncherModel::CompareIcons(AbstractLauncherIcon::Ptr const& first, AbstractLauncherIcon::Ptr const& second)
 {
   if (first->GetIconType() < second->GetIconType())
     return true;
@@ -101,7 +101,7 @@ bool LauncherModel::Populate()
   return copy.size() == _inner.size() && !std::equal(begin(), end(), copy.begin());
 }
 
-void LauncherModel::AddIcon(AbstractLauncherIcon::Ptr icon)
+void LauncherModel::AddIcon(AbstractLauncherIcon::Ptr const& icon)
 {
   if (!icon || std::find(begin(), end(), icon) != end())
     return;
@@ -120,7 +120,7 @@ void LauncherModel::AddIcon(AbstractLauncherIcon::Ptr icon)
   icon->on_icon_removed_connection = icon->remove.connect(sigc::mem_fun(this, &LauncherModel::OnIconRemove));
 }
 
-void LauncherModel::RemoveIcon(AbstractLauncherIcon::Ptr icon)
+void LauncherModel::RemoveIcon(AbstractLauncherIcon::Ptr const& icon)
 {
   size_t size;
 
@@ -136,7 +136,7 @@ void LauncherModel::RemoveIcon(AbstractLauncherIcon::Ptr icon)
   }
 }
 
-void LauncherModel::OnIconRemove(AbstractLauncherIcon::Ptr icon)
+void LauncherModel::OnIconRemove(AbstractLauncherIcon::Ptr const& icon)
 {
   timeouts_.AddTimeout(1000, [this, icon] {
     RemoveIcon(icon);
@@ -158,7 +158,7 @@ void LauncherModel::Sort()
     order_changed.emit();
 }
 
-bool LauncherModel::IconHasSister(AbstractLauncherIcon::Ptr icon) const
+bool LauncherModel::IconHasSister(AbstractLauncherIcon::Ptr const& icon) const
 {
   if (!icon)
     return false;
@@ -188,7 +188,7 @@ bool LauncherModel::IconHasSister(AbstractLauncherIcon::Ptr icon) const
   return false;
 }
 
-void LauncherModel::ReorderAfter(AbstractLauncherIcon::Ptr icon, AbstractLauncherIcon::Ptr other)
+void LauncherModel::ReorderAfter(AbstractLauncherIcon::Ptr const& icon, AbstractLauncherIcon::Ptr const& other)
 {
   if (icon == other || icon.IsNull() || other.IsNull())
     return;
@@ -209,7 +209,7 @@ void LauncherModel::ReorderAfter(AbstractLauncherIcon::Ptr icon, AbstractLaunche
   Sort();
 }
 
-void LauncherModel::ReorderBefore(AbstractLauncherIcon::Ptr icon, AbstractLauncherIcon::Ptr other, bool animate)
+void LauncherModel::ReorderBefore(AbstractLauncherIcon::Ptr const& icon, AbstractLauncherIcon::Ptr const& other, bool animate)
 {
   if (icon == other || icon.IsNull() || other.IsNull())
     return;
@@ -255,7 +255,7 @@ void LauncherModel::ReorderBefore(AbstractLauncherIcon::Ptr icon, AbstractLaunch
   Sort();
 }
 
-void LauncherModel::ReorderSmart(AbstractLauncherIcon::Ptr icon, AbstractLauncherIcon::Ptr other, bool animate)
+void LauncherModel::ReorderSmart(AbstractLauncherIcon::Ptr const& icon, AbstractLauncherIcon::Ptr const& other, bool animate)
 {
   if (icon == other || icon.IsNull() || other.IsNull())
     return;
@@ -370,7 +370,7 @@ void LauncherModel::SelectPrevious()
   }
 }
 
-AbstractLauncherIcon::Ptr LauncherModel::GetClosestIcon(AbstractLauncherIcon::Ptr icon, bool& is_before) const
+AbstractLauncherIcon::Ptr LauncherModel::GetClosestIcon(AbstractLauncherIcon::Ptr const& icon, bool& is_before) const
 {
   AbstractLauncherIcon::Ptr prev, next;
   bool found_target = false;
@@ -406,7 +406,7 @@ AbstractLauncherIcon::Ptr LauncherModel::GetClosestIcon(AbstractLauncherIcon::Pt
   return is_before ? prev : next;
 }
 
-int LauncherModel::IconIndex(AbstractLauncherIcon::Ptr target) const
+int LauncherModel::IconIndex(AbstractLauncherIcon::Ptr const& target) const
 {
   int pos = 0;
   bool found = false;

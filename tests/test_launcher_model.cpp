@@ -57,16 +57,21 @@ TEST_F(TestLauncherModel, Constructor)
 
 TEST_F(TestLauncherModel, Add)
 {
-  EXPECT_EQ(model.Size(), 0);
   model.AddIcon(icon1);
+  EXPECT_EQ(model.Size(), 1);
+
+  model.AddIcon(icon1);
+  EXPECT_EQ(model.Size(), 1);
+
+  model.AddIcon(AbstractLauncherIcon::Ptr());
   EXPECT_EQ(model.Size(), 1);
 }
 
 TEST_F(TestLauncherModel, Remove)
 {
-  EXPECT_EQ(model.Size(), 0);
   model.AddIcon(icon1);
   EXPECT_EQ(model.Size(), 1);
+
   model.RemoveIcon(icon1);
   EXPECT_EQ(model.Size(), 0);
 }
@@ -77,7 +82,15 @@ TEST_F(TestLauncherModel, AddSignal)
   model.icon_added.connect([&icon_added] (AbstractLauncherIcon::Ptr) { icon_added = true; });
 
   model.AddIcon(icon1);
-  EXPECT_EQ(icon_added, true);
+  EXPECT_TRUE(icon_added);
+
+  icon_added = false;
+  model.AddIcon(icon1);
+  EXPECT_FALSE(icon_added);
+
+  icon_added = false;
+  model.AddIcon(AbstractLauncherIcon::Ptr());
+  EXPECT_FALSE(icon_added);
 }
 
 TEST_F(TestLauncherModel, RemoveSignal)
@@ -86,9 +99,9 @@ TEST_F(TestLauncherModel, RemoveSignal)
   model.icon_removed.connect([&icon_removed] (AbstractLauncherIcon::Ptr) { icon_removed = true; });
 
   model.AddIcon(icon1);
-  EXPECT_EQ(icon_removed, false);
+  EXPECT_FALSE(icon_removed);
   model.RemoveIcon(icon1);
-  EXPECT_EQ(icon_removed, true);
+  EXPECT_TRUE(icon_removed);
 }
 
 TEST_F(TestLauncherModel, Sort)

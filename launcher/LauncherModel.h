@@ -42,18 +42,18 @@ public:
 
   LauncherModel();
 
-  void AddIcon(AbstractLauncherIcon::Ptr icon);
-  void RemoveIcon(AbstractLauncherIcon::Ptr icon);
+  void AddIcon(AbstractLauncherIcon::Ptr const& icon);
+  void RemoveIcon(AbstractLauncherIcon::Ptr const& icon);
   void Save();
   void Sort();
   int  Size() const;
 
-  bool IconHasSister(AbstractLauncherIcon::Ptr icon) const;
-  int IconIndex(AbstractLauncherIcon::Ptr icon) const;
+  bool IconHasSister(AbstractLauncherIcon::Ptr const& icon) const;
+  int IconIndex(AbstractLauncherIcon::Ptr const& icon) const;
 
-  void ReorderAfter(AbstractLauncherIcon::Ptr icon, AbstractLauncherIcon::Ptr other);
-  void ReorderBefore(AbstractLauncherIcon::Ptr icon, AbstractLauncherIcon::Ptr other, bool animate);
-  void ReorderSmart(AbstractLauncherIcon::Ptr icon, AbstractLauncherIcon::Ptr other, bool animate);
+  void ReorderAfter(AbstractLauncherIcon::Ptr const& icon, AbstractLauncherIcon::Ptr const& other);
+  void ReorderBefore(AbstractLauncherIcon::Ptr const& icon, AbstractLauncherIcon::Ptr const& other, bool animate);
+  void ReorderSmart(AbstractLauncherIcon::Ptr const& icon, AbstractLauncherIcon::Ptr const& other, bool animate);
 
   AbstractLauncherIcon::Ptr Selection() const;
   int SelectionIndex() const;
@@ -61,7 +61,7 @@ public:
   void SelectNext();
   void SelectPrevious();
 
-  AbstractLauncherIcon::Ptr GetClosestIcon(AbstractLauncherIcon::Ptr icon, bool& is_before) const;
+  AbstractLauncherIcon::Ptr GetClosestIcon(AbstractLauncherIcon::Ptr const& icon, bool& is_before) const;
 
   iterator begin();
   iterator end();
@@ -101,9 +101,9 @@ private:
 
   bool Populate();
   void PopulatePart(iterator begin, iterator end);
-  void OnIconRemove(AbstractLauncherIcon::Ptr icon);
-  bool IconShouldShelf(AbstractLauncherIcon::Ptr icon) const;
-  static bool CompareIcons(AbstractLauncherIcon::Ptr first, AbstractLauncherIcon::Ptr second);
+  void OnIconRemove(AbstractLauncherIcon::Ptr const& icon);
+  bool IconShouldShelf(AbstractLauncherIcon::Ptr const& icon) const;
+  static bool CompareIcons(AbstractLauncherIcon::Ptr const& first, AbstractLauncherIcon::Ptr const& second);
 
   /* Template Methods */
 public:
