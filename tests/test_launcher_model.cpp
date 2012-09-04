@@ -319,6 +319,8 @@ TEST_F(TestLauncherModel, IconHasSister)
   EXPECT_TRUE(model.IconHasSister(icon2));
   EXPECT_TRUE(model.IconHasSister(icon3));
   EXPECT_TRUE(model.IconHasSister(icon4));
+
+  EXPECT_FALSE(AbstractLauncherIcon::Ptr());
 }
 
 }

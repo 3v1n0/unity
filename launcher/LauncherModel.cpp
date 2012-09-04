@@ -157,6 +157,9 @@ void LauncherModel::Sort()
 
 bool LauncherModel::IconHasSister(AbstractLauncherIcon::Ptr icon) const
 {
+  if (!icon)
+    return false;
+
   const_iterator it;
   const_iterator end;
 
