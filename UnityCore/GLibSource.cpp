@@ -40,6 +40,13 @@ Source::~Source()
 
 void Source::Remove()
 {
+  // Dont remove if in a callback.
+  if (callback_data_ && callback_data_->callingback_ == true)
+  {
+    callback_data_->removed_during_callback_ = true;
+    return;
+  }
+
   if (source_)
   {
     if (!g_source_is_destroyed(source_))
@@ -74,8 +81,7 @@ bool Source::Run(Callback callback)
   if (!source_ || source_id_ || IsRunning())
     return false;
 
-  callback_ = callback;
-  callback_data_ = new CallBackData(this);
+  callback_data_ = new CallBackData(this, callback);
 
   g_source_set_callback(source_, SourceCallback, callback_data_, DestroyCallback);
   source_id_ = g_source_attach(source_, nullptr);
@@ -101,16 +107,18 @@ gboolean Source::SourceCallback(gpointer data)
   if (!data)
     return G_SOURCE_REMOVE;
 
-  auto self = static_cast<CallBackData*>(data)->self;
+  auto cb_data = static_cast<CallBackData*>(data);
 
-  if (self && self->callback_ && self->callback_())
+  if (cb_data && cb_data->callback_fn_)
   {
-    return G_SOURCE_CONTINUE;
+    cb_data->callingback_ = true;
+    bool ret = cb_data->callback_fn_();
+    cb_data->callingback_ = false;
+
+    return ret && !cb_data->removed_during_callback_? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
   }
-  else
-  {
-    return G_SOURCE_REMOVE;
-  }
+
+  return G_SOURCE_REMOVE;
 }
 
 void Source::DestroyCallback(gpointer data)
@@ -128,7 +136,7 @@ void Source::DestroyCallback(gpointer data)
     if (self->Id())
       self->removed.emit(self->Id());
   }
-
+  
   delete cb_data;
 }
 

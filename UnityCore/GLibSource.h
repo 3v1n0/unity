@@ -104,11 +104,17 @@ protected:
 private:
   struct CallBackData
   {
-    CallBackData(Source* src)
+    CallBackData(Source* src, Callback callback)
       : self(src)
+      , callback_fn_(callback)
+      , callingback_(false)
+      , removed_during_callback_(false)
     {}
 
     Source* self;
+    Callback callback_fn_;
+    bool callingback_;
+    bool removed_during_callback_;
   };
 
   static gboolean SourceCallback(gpointer data);
@@ -116,7 +122,6 @@ private:
 
   unsigned int source_id_;
   CallBackData* callback_data_;
-  Callback callback_;
 };
 
 
