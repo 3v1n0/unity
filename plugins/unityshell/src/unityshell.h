@@ -249,7 +249,10 @@ private:
   void OnPanelStyleChanged();
 
   void InitGesturesSupport();
-  
+
+  void OnInitiateSpreed();
+  void OnTerminateSpreed();
+
   nux::animation::TickSource tick_source_;
   nux::animation::AnimationController animation_controller_;
 
@@ -436,6 +439,9 @@ public:
                             const CompRegion &,
                             unsigned int);
 
+  void InitiateSpreed();
+  void TerminateSpreed();
+
 private:
   void DoEnableFocus ();
   void DoDisableFocus ();
@@ -470,6 +476,7 @@ private:
   void DrawWindowDecoration(const GLWindowPaintAttrib& attrib,
                             const GLMatrix& transform,
                             unsigned int mask,
+                            bool highlighted,
                             float x, float y, float x2, float y2);
   void DrawTexture(GLTexture *icon,
                    const GLWindowPaintAttrib& attrib,
@@ -480,6 +487,7 @@ private:
   void RenderText(WindowCairoContext *context,
                   float x, float y,
                   float maxWidth, float maxHeight);
+  void PrepareHeaderStyle();
   std::shared_ptr<WindowCairoContext> CreateCairoContext(float width, float height);
 
   compiz::WindowInputRemoverLock::Weak input_remover_;
@@ -488,6 +496,7 @@ private:
   GLTexture::List close_icon_;
   CompRect close_button_area_;
   glib::Object<GtkStyleContext> window_header_style_;
+  bool has_original_decoration_;
 };
 
 

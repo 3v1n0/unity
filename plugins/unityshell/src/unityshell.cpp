@@ -423,7 +423,10 @@ UnityScreen::UnityScreen(CompScreen* screen)
   }
 
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &UnityScreen::OnPanelStyleChanged));
-  
+
+  WindowManager::Default()->initiate_spread.connect(sigc::mem_fun(this, &UnityScreen::OnInitiateSpreed));
+  WindowManager::Default()->terminate_spread.connect(sigc::mem_fun(this, &UnityScreen::OnTerminateSpreed));
+
   minimize_speed_controller->DurationChanged.connect(
       sigc::mem_fun(this, &UnityScreen::OnMinimizeDurationChanged)
   );
@@ -439,6 +442,25 @@ UnityScreen::~UnityScreen()
 
   reset_glib_logging();
 }
+
+void UnityScreen::OnInitiateSpreed()
+{
+  for (CompWindow *w : screen->windows())
+  {
+    UnityWindow *uw = UnityWindow::get(w);
+    uw->InitiateSpreed();
+  }
+}
+
+void UnityScreen::OnTerminateSpreed()
+{
+  for (CompWindow *w : screen->windows())
+  {
+    UnityWindow *uw = UnityWindow::get(w);
+    uw->TerminateSpreed();
+  }
+}
+
 
 void UnityScreen::initAltTabNextWindow()
 {
@@ -3675,18 +3697,19 @@ void
 UnityWindow::DrawWindowDecoration(const GLWindowPaintAttrib& attrib,
                                   const GLMatrix& transform,
                                   unsigned int mask,
+                                  bool highlighted,
                                   float x, float y, float x2, float y2)
 {
   const float width = x2 - x;
+  const float height = y2 - y;
 
   // Paint a fake window decoration
-  WindowCairoContext::Ptr context(CreateCairoContext(width, SCALE_WINDOW_TITLE_SIZE));
+  WindowCairoContext::Ptr context(CreateCairoContext(width, height));
 
   cairo_save(context->cr_);
   cairo_push_group(context->cr_);
 
   // Round window decoration top border
-  const double height = SCALE_WINDOW_TITLE_SIZE;
   const double aspect = 1.0;
   const double corner_radius = height / 10.0;
   const double radius = corner_radius / aspect;
@@ -3703,19 +3726,22 @@ UnityWindow::DrawWindowDecoration(const GLWindowPaintAttrib& attrib,
   cairo_clip(context->cr_);
 
   // Draw window decoration abased on gtk style
-  gtk_render_background(window_header_style_, context->cr_, 0, 0, width, SCALE_WINDOW_TITLE_SIZE);
-  gtk_render_frame(window_header_style_, context->cr_, 0, 0, width, SCALE_WINDOW_TITLE_SIZE);
+  gtk_render_background(window_header_style_, context->cr_, 0, 0, width, height);
+  gtk_render_frame(window_header_style_, context->cr_, 0, 0, width, height);
 
   cairo_pop_group_to_source(context->cr_);
 
   cairo_paint_with_alpha(context->cr_, 1.0);
   cairo_restore(context->cr_);
 
-  // Draw windows title
-  const float xText = CLOSE_ICON_SPACE * 2 + CLOSE_ICON_SIZE;
-  RenderText(context.get(),
-             xText, 0.0,
-             width - xText, SCALE_WINDOW_TITLE_SIZE);
+  if (highlighted)
+  {
+    // Draw windows title
+    const float xText = CLOSE_ICON_SPACE * 2 + CLOSE_ICON_SIZE;
+    RenderText(context.get(),
+               xText, 0.0,
+               width - xText, height);
+  }
 
   mask |= PAINT_WINDOW_BLEND_MASK;
   int maxWidth, maxHeight;
@@ -3728,20 +3754,8 @@ UnityWindow::DrawWindowDecoration(const GLWindowPaintAttrib& attrib,
 }
 
 void
-UnityWindow::scalePaintDecoration(const GLWindowPaintAttrib& attrib,
-                                  const GLMatrix& transform,
-                                  const CompRegion& region,
-                                  unsigned int mask)
+UnityWindow::PrepareHeaderStyle()
 {
-  ScaleWindow *sWindow = ScaleWindow::get(window);
-  if (!sWindow)
-    return;
-
-  sWindow->scalePaintDecoration(attrib, transform, region, mask);
-
-  if (!sWindow->hasSlot()) // animation not finished
-    return;
-
   if (!window_header_style_)
   {
     GtkWidgetPath* widget_path = gtk_widget_path_new();
@@ -3780,10 +3794,30 @@ UnityWindow::scalePaintDecoration(const GLWindowPaintAttrib& attrib,
                                                   size);
     }
   }
+}
 
-  // Make the windows header opaque to override the original
+void
+UnityWindow::scalePaintDecoration(const GLWindowPaintAttrib& attrib,
+                                  const GLMatrix& transform,
+                                  const CompRegion& region,
+                                  unsigned int mask)
+{
+  ScaleWindow *sWindow = ScaleWindow::get(window);
+  if (!sWindow)
+    return;
+
+  sWindow->scalePaintDecoration(attrib, transform, region, mask);
+
+  if (!sWindow->hasSlot()) // animation not finished
+    return;
+
+  UnityScreen* us = UnityScreen::get(screen);
+  const guint32 xid = window->id();
+  const bool highlighted = (us->highlighted_window_ == xid);
   GLWindowPaintAttrib sAttrib(attrib);
   sAttrib.opacity = OPAQUE;
+
+  PrepareHeaderStyle();
 
   ScalePosition pos = sWindow->getCurrentPosition();
   int maxHeight, maxWidth;
@@ -3791,30 +3825,37 @@ UnityWindow::scalePaintDecoration(const GLWindowPaintAttrib& attrib,
   const float width = (window->width() * pos.scale) + 2;
   const float x = pos.x() + window->x() - 1;
   float y = pos.y() + window->y();
+  float decorationHeight = SCALE_WINDOW_TITLE_SIZE;
 
   // If window is decorated draw the decoration over the original
-  // otherwise draw inside the window
-  WindowManager *wm = WindowManager::Default();
-  if (wm->IsWindowDecorated(window->id()) && !wm->IsWindowMaximized(window->id()))
-      y -= SCALE_WINDOW_TITLE_SIZE;
+  // otherwise draw a small bar over the window
+  if (!highlighted)
+    decorationHeight = SCALE_WINDOW_TITLE_SIZE * 0.30;
 
-  const float iconX = x + CLOSE_ICON_SPACE;
-  const float iconY = y + ((SCALE_WINDOW_TITLE_SIZE - CLOSE_ICON_SIZE)  / 2.0);
-
-  DrawWindowDecoration(sAttrib, transform, mask,
+  DrawWindowDecoration(sAttrib, transform, mask, highlighted,
                        x, y,
-                       x + width, y + SCALE_WINDOW_TITLE_SIZE);
+                       x + width, y + decorationHeight);
 
-  mask |= PAINT_WINDOW_BLEND_MASK;
-  maxHeight = maxWidth = 0;
-  foreach(GLTexture *icon, close_icon_)
+  if (highlighted)
   {
-    DrawTexture(icon, sAttrib, transform, mask,
-                iconX, iconY,
-                maxWidth , maxHeight);
-  }
+    const float iconX = x + CLOSE_ICON_SPACE;
+    const float iconY = y + ((SCALE_WINDOW_TITLE_SIZE - CLOSE_ICON_SIZE)  / 2.0);
+    maxHeight = maxWidth = 0;
+    mask |= PAINT_WINDOW_BLEND_MASK;
 
-  close_button_area_ = CompRect(iconX, iconY, maxWidth, maxHeight);
+    foreach(GLTexture *icon, close_icon_)
+    {
+      DrawTexture(icon, sAttrib, transform, mask,
+                  iconX, iconY,
+                  maxWidth , maxHeight);
+    }
+
+    close_button_area_ = CompRect(iconX, iconY, maxWidth, maxHeight);
+  }
+  else
+  {
+    close_button_area_ = CompRect();
+  }
 }
 
 void
@@ -3842,6 +3883,23 @@ UnityWindow::scaleSelectWindow ()
   ScaleWindow *sWindow = ScaleWindow::get(window);
   if (sWindow)
     sWindow->scaleSelectWindow();
+}
+
+void UnityWindow::InitiateSpreed()
+{
+  WindowManager *wm = WindowManager::Default();
+  const guint32 xid = window->id();
+  has_original_decoration_ = wm->IsWindowDecorated(xid) &&
+                             !wm->IsWindowMaximized(xid);
+  wm->Undecorate(xid);
+}
+
+void UnityWindow::TerminateSpreed()
+{
+  if (has_original_decoration_)
+    WindowManager::Default()->Decorate(window->id());
+  else
+    WindowManager::Default()->Undecorate(window->id());
 }
 
 UnityWindow::~UnityWindow()
