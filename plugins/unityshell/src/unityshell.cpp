@@ -3827,7 +3827,7 @@ UnityWindow::scalePaintDecoration(const GLWindowPaintAttrib& attrib,
   float y = pos.y() + window->y();
   float decorationHeight = SCALE_WINDOW_TITLE_SIZE;
 
-  // If window is decorated draw the decoration over the original
+  // If window is decorated draw the decoration
   // otherwise draw a small bar over the window
   if (!highlighted)
     decorationHeight = SCALE_WINDOW_TITLE_SIZE * 0.30;
@@ -3839,7 +3839,7 @@ UnityWindow::scalePaintDecoration(const GLWindowPaintAttrib& attrib,
   if (highlighted)
   {
     const float iconX = x + CLOSE_ICON_SPACE;
-    const float iconY = y + ((SCALE_WINDOW_TITLE_SIZE - CLOSE_ICON_SIZE)  / 2.0);
+    const float iconY = y + ((decorationHeight - CLOSE_ICON_SIZE)  / 2.0);
     maxHeight = maxWidth = 0;
     mask |= PAINT_WINDOW_BLEND_MASK;
 
@@ -3891,15 +3891,14 @@ void UnityWindow::InitiateSpreed()
   const guint32 xid = window->id();
   has_original_decoration_ = wm->IsWindowDecorated(xid) &&
                              !wm->IsWindowMaximized(xid);
-  wm->Undecorate(xid);
+  if (has_original_decoration_)
+    wm->Undecorate(xid);
 }
 
 void UnityWindow::TerminateSpreed()
 {
   if (has_original_decoration_)
     WindowManager::Default()->Decorate(window->id());
-  else
-    WindowManager::Default()->Undecorate(window->id());
 }
 
 UnityWindow::~UnityWindow()
