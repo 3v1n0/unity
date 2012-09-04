@@ -221,6 +221,7 @@ void LauncherModel::ReorderBefore(AbstractLauncherIcon::Ptr icon, AbstractLaunch
   if (icon->GetIconType() != other->GetIconType())
     return;
 
+  bool found_target = false;
   bool center = false;
 
   for (auto it = begin(); it != end(); ++it)
@@ -233,7 +234,7 @@ void LauncherModel::ReorderBefore(AbstractLauncherIcon::Ptr icon, AbstractLaunch
       continue;
     }
 
-    int new_prio = icon_it->SortPriority() - 1;
+    int new_prio = icon_it->SortPriority() + (found_target ? 1 : -1);
     icon_it->SetSortPriority(new_prio);
 
     if (icon_it == other)
@@ -247,6 +248,8 @@ void LauncherModel::ReorderBefore(AbstractLauncherIcon::Ptr icon, AbstractLaunch
 
       if (animate && center)
         icon_it->SaveCenter();
+
+      found_target = true;
     }
     else
     {
