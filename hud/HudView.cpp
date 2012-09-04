@@ -435,12 +435,6 @@ void View::OnKeyDown (unsigned long event_type, unsigned long keysym,
   }
 }
 
-// When the Mouse enters the HudView keep the last selected button highlighted
-void View::OnMouseLeavingHudButton(int x, int y, unsigned int button, unsigned int key)
-{
-  SelectLastFocusedButton();
-}
-
 void View::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
 {
   nux::Geometry current_geo(content_geo_);

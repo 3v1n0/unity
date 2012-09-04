@@ -72,7 +72,6 @@ protected:
   virtual long PostLayoutManagement(long LayoutResult);
 
 private:
-  void OnMouseLeavingHudButton(int x, int y, unsigned int button, unsigned int key);
   void OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key);
   void OnKeyDown (unsigned long event_type, unsigned long event_keysym,
                                 unsigned long event_state, const TCHAR* character,
