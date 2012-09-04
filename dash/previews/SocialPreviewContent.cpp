@@ -96,7 +96,7 @@ void SocialPreviewContent::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw
                       tex->GetHeight(),
                       tex,
                       texxform,
-                      nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
+                      nux::Color(0.2f, 0.2f, 0.2f, 0.2f));
 
   gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
 
