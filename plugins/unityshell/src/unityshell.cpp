@@ -3790,7 +3790,14 @@ UnityWindow::scalePaintDecoration(const GLWindowPaintAttrib& attrib,
   // Use "1" as margin to make sure to cover all originial decoration
   const float width = (window->width() * pos.scale) + 2;
   const float x = pos.x() + window->x() - 1;
-  const float y = pos.y() + window->y() - SCALE_WINDOW_TITLE_SIZE;
+  float y = pos.y() + window->y();
+
+  // If window is decorated draw the decoration over the original
+  // otherwise draw inside the window
+  WindowManager *wm = WindowManager::Default();
+  if (wm->IsWindowDecorated(window->id()) && !wm->IsWindowMaximized(window->id()))
+      y -= SCALE_WINDOW_TITLE_SIZE;
+
   const float iconX = x + CLOSE_ICON_SPACE;
   const float iconY = y + ((SCALE_WINDOW_TITLE_SIZE - CLOSE_ICON_SIZE)  / 2.0);
 
