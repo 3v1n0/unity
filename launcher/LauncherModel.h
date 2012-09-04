@@ -79,9 +79,9 @@ public:
   reverse_iterator shelf_rbegin();
   reverse_iterator shelf_rend();
 
-  sigc::signal<void, AbstractLauncherIcon::Ptr> icon_added;
-  sigc::signal<void, AbstractLauncherIcon::Ptr> icon_removed;
-  sigc::signal<void, AbstractLauncherIcon::Ptr> selection_changed;
+  sigc::signal<void, AbstractLauncherIcon::Ptr const&> icon_added;
+  sigc::signal<void, AbstractLauncherIcon::Ptr const&> icon_removed;
+  sigc::signal<void, AbstractLauncherIcon::Ptr const&> selection_changed;
   sigc::signal<void> order_changed;
   sigc::signal<void> saved;
 
