@@ -113,8 +113,6 @@ View::View()
   });
 
   mouse_down.connect(sigc::mem_fun(this, &View::OnMouseButtonDown));
-  mouse_enter.connect(sigc::mem_fun(this, &View::OnMouseLeavingHudButton));
-  mouse_leave.connect(sigc::mem_fun(this, &View::OnMouseLeavingHudButton));
 
   Relayout();
 }
@@ -397,8 +395,6 @@ void View::SetupViews()
       search_bar_->live_search_reached.connect(sigc::mem_fun(this, &View::OnSearchChanged));
       AddChild(search_bar_.GetPointer());
       content_layout_->AddView(search_bar_.GetPointer(), 0, nux::MINOR_POSITION_LEFT);
-
-      search_bar_->mouse_enter.connect(sigc::mem_fun(this, &View::OnMouseLeavingHudButton));
 
       button_views_ = new nux::VLayout();
       button_views_->SetMaximumWidth(content_width);
