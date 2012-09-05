@@ -3833,7 +3833,7 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
   if (highlighted)
   {
     x += SCALE_CLOSE_ICON_SPACE;
-    y += (decoration_height - SCALE_CLOSE_ICON_SIZE) / 2.0f;
+    y += (height - SCALE_CLOSE_ICON_SIZE) / 2.0f;
     int max_height = 0;
     int max_width = 0;
     mask |= PAINT_WINDOW_BLEND_MASK;
