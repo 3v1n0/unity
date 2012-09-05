@@ -80,6 +80,9 @@ public:
   int GetInfoHintNameMinimumWidth() const;
   int GetInfoHintNameMaximumWidth() const;
 
+  int GetCommentNameMinimumWidth() const;
+  int GetCommentNameMaximumWidth() const;
+
   float GetDescriptionLineSpacing() const;
   int GetDescriptionLineCount() const;
 

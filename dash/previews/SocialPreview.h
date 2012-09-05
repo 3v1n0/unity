@@ -53,7 +53,7 @@ public:
   typedef nux::ObjectPtr<SocialPreview> Ptr;
   NUX_DECLARE_OBJECT_TYPE(SocialPreview, Preview);
 
-  SocialPreview(dash::Preview::Ptr preview_model);
+  SocialPreview(dash::Preview::Ptr social_preview_model);
   ~SocialPreview();
 
   // From debug::Introspectable

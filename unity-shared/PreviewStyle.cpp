@@ -259,6 +259,16 @@ int Style::GetInfoHintNameMaximumWidth() const
   return 160;
 }
 
+int Style::GetCommentNameMinimumWidth() const
+{
+  return 100;
+}
+
+int Style::GetCommentNameMaximumWidth() const
+{
+  return 160;
+}
+
 float Style::GetDescriptionLineSpacing() const
 {
   return 2.0;

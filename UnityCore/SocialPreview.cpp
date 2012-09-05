@@ -37,14 +37,14 @@ public:
   std::string get_sender() { return sender_; };
   std::string get_content() { return content_; };
   glib::Object<GIcon> get_avatar() { return avatar_; };
-  ReplyPtrList get_replies() const { return replies_list_; };
+  CommentPtrList get_comments() const { return comments_list_; };
 
   SocialPreview* owner_;
 
   std::string sender_;
   std::string content_;
   glib::Object<GIcon> avatar_;
-  ReplyPtrList replies_list_;
+  CommentPtrList comments_list_;
 };
 
 SocialPreview::Impl::Impl(SocialPreview* owner, glib::Object<GObject> const& proto_obj)
@@ -81,9 +81,9 @@ SocialPreview::SocialPreview(unity::glib::Object<GObject> const& proto_obj)
 {
 }
 
-SocialPreview::ReplyPtrList SocialPreview::GetReplies() const
+SocialPreview::CommentPtrList SocialPreview::GetComments() const
 {
-  return pimpl->get_replies();
+  return pimpl->get_comments();
 }
 
 

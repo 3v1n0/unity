@@ -231,7 +231,7 @@ void SocialPreview::SetupViews()
       //  thread_ = new previews::Tracks(tracks_model, NUX_TRACKER_LOCATION);
       //  AddChild(thread_.GetPointer());
       //}
-      comments_ = new SocialPreviewComments("This is a test", NUX_TRACKER_LOCATION);
+      comments_ = new SocialPreviewComments(preview_model_, NUX_TRACKER_LOCATION);
 
       
       /////////////////////

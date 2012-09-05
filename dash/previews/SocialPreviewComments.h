@@ -29,6 +29,7 @@
 #include <NuxCore/ObjectPtr.h>
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/Introspectable.h"
+#include <UnityCore/SocialPreview.h>
 
 namespace unity
 {
@@ -43,10 +44,18 @@ public:
   typedef nux::ObjectPtr<SocialPreviewComments> Ptr;
   NUX_DECLARE_OBJECT_TYPE(SocialPreviewComments, nux::View);
 
-  SocialPreviewComments(std::string const& text, NUX_FILE_LINE_PROTO);
+  SocialPreviewComments(dash::Preview::Ptr preview_model, NUX_FILE_LINE_PROTO);
+
   virtual ~SocialPreviewComments();
 
 protected:
+
+  typedef nux::ObjectPtr<nux::StaticCairoText> StaticCairoTextPtr;
+  typedef std::pair<StaticCairoTextPtr, StaticCairoTextPtr> Comment;
+  std::list<Comment> comments_;
+
+  dash::Preview::Ptr preview_model_;
+
   virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);
   virtual void PreLayoutManagement();
@@ -59,7 +68,6 @@ protected:
   virtual void AddProperties(GVariantBuilder* builder);
 
 private:
-  nux::ObjectPtr<nux::StaticCairoText> text_;
 
   typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
 };
