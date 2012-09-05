@@ -1216,21 +1216,60 @@ UnityWindow::GetNoCoreInstanceMask ()
   return PAINT_WINDOW_NO_CORE_INSTANCE_MASK;
 }
 
-void UnityWindow::handleEvent (XEvent *event)
+bool UnityWindow::handleEvent(XEvent *event)
 {
-  if (screen->XShape () &&
+  bool handled = false;
+
+  if (event->type == MotionNotify)
+  {
+    if (close_button_area_.contains(CompPoint(event->xbutton.x_root, event->xbutton.y_root)))
+    {
+      close_icon_state_ = panel::WindowState::PRELIGHT;
+    }
+    else
+    {
+      close_icon_state_ = panel::WindowState::NORMAL;
+    }
+
+    if (CompositeWindow *cWindow = CompositeWindow::get(window))
+      cWindow->addDamage();
+  }
+  else if (event->type == ButtonPress)
+  {
+    if (close_button_area_.contains(CompPoint(event->xbutton.x_root, event->xbutton.y_root)))
+    {
+      close_icon_state_ = panel::WindowState::PRESSED;
+      handled = true;
+
+      if (CompositeWindow *cWindow = CompositeWindow::get(window))
+        cWindow->addDamage();
+    }
+  }
+  else if (event->type == ButtonRelease)
+  {
+    close_icon_state_ = panel::WindowState::NORMAL;
+
+    if (CompositeWindow *cWindow = CompositeWindow::get(window))
+        cWindow->addDamage();
+
+    if (close_button_area_.contains(CompPoint(pointerX, pointerY)))
+    {
+      window->close(0);
+      handled = true;
+    }
+  }
+  else if (screen->XShape () &&
       event->type == screen->shapeEvent () + ShapeNotify &&
       !event->xany.send_event)
   {
     if (mShowdesktopHandler)
-      mShowdesktopHandler->HandleShapeEvent ();
+    {
+      mShowdesktopHandler->HandleShapeEvent();
+      handled = true;
+    }
   }
-}
 
-CompRect
-UnityWindow::CloseButtonArea()
-{
-  return close_button_area_;
+  return handled;
 }
 
 bool UnityScreen::shellCouldBeHidden(CompOutput const& output)
@@ -1594,28 +1633,23 @@ void UnityScreen::handleEvent(XEvent* event)
       }
       _key_nav_mode_requested = false;
       break;
+    case MotionNotify:
+      if (highlighted_window_ && PluginAdapter::Default()->IsScaleActive())
+      {
+        if (CompWindow *w = screen->findWindow(highlighted_window_))
+          skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
+      }
+      break;
     case ButtonPress:
       if (super_keypressed_)
       {
         launcher_controller_->KeyNavTerminate(false);
         EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
       }
-      if (PluginAdapter::Default()->IsScaleActive() &&
-          event->xbutton.button == Button1 &&
-          highlighted_window_ != 0)
+      if (highlighted_window_ && PluginAdapter::Default()->IsScaleActive())
       {
-        CompWindow *w = screen->findWindow(highlighted_window_);
-        if (w)
-        {
-          UnityWindow *uw = UnityWindow::get(w);
-          CompPoint pointer(pointerX, pointerY);
-          if (uw->CloseButtonArea().contains(pointer))
-          {
-            w->close(0);
-            skip_other_plugins = true;
-          }
-        }
-
+        if (CompWindow *w = screen->findWindow(highlighted_window_))
+          skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
       }
 
       break;
@@ -1636,6 +1670,11 @@ void UnityScreen::handleEvent(XEvent* event)
             last_scroll_event_ = bev->time;
           }
         }
+      }
+      else if (highlighted_window_ && PluginAdapter::Default()->IsScaleActive())
+      {
+        if (CompWindow *w = screen->findWindow(highlighted_window_))
+          UnityWindow::get(w)->handleEvent(event);
       }
       break;
     case KeyPress:
@@ -3432,7 +3471,9 @@ void UnityScreen::InitGesturesSupport()
 }
 
 /* Window init */
-GLTexture::List UnityWindow::close_icon_;
+GLTexture::List UnityWindow::close_normal_tex_;
+GLTexture::List UnityWindow::close_prelight_tex_;
+GLTexture::List UnityWindow::close_pressed_tex_;
 
 struct UnityWindow::CairoContext
 {
@@ -3703,30 +3744,43 @@ UnityWindow::DrawWindowDecoration(GLWindowPaintAttrib const& attrib,
   }
 }
 
+void UnityWindow::LoadCloseIcon(panel::WindowState state, GLTexture::List& texture)
+{
+  if (!texture.empty())
+    return;
+
+  auto& style = panel::Style::Instance();
+  auto const& files = style.GetWindowButtonFileNames(panel::WindowButtonType::CLOSE, state);
+
+  CompString pName("unityshell");
+  for (std::string const& file : files)
+  {
+    CompString fileName(file.c_str());
+    CompSize size(SCALE_CLOSE_ICON_SIZE, SCALE_CLOSE_ICON_SIZE);
+    texture = GLTexture::readImageToTexture(fileName, pName, size);
+    if (!texture.empty())
+      break;
+  }
+
+  if (texture.empty())
+  {
+    std::string suffix;
+    if (state == panel::WindowState::PRELIGHT)
+      suffix = "_prelight";
+    else if (state == panel::WindowState::PRESSED)
+      suffix = "_pressed";
+
+    CompString fileName((PKGDATADIR"/close_dash" + suffix + ".png").c_str());
+    CompSize size(SCALE_CLOSE_ICON_SIZE, SCALE_CLOSE_ICON_SIZE);
+    texture = GLTexture::readImageToTexture(fileName, pName, size);
+  }
+}
+
 void UnityWindow::SetupScaleHeaderStyle()
 {
-  if (close_icon_.empty())
-  {
-    auto& style = panel::Style::Instance();
-    auto const& files = style.GetWindowButtonFileNames(panel::WindowButtonType::CLOSE, panel::WindowState::NORMAL);
-
-    CompString pName("unityshell");
-    for (std::string const& file : files)
-    {
-      CompString fileName(file.c_str());
-      CompSize size(SCALE_CLOSE_ICON_SIZE, SCALE_CLOSE_ICON_SIZE);
-      close_icon_ = GLTexture::readImageToTexture(fileName, pName, size);
-      if (!close_icon_.empty())
-        break;
-    }
-
-    if (close_icon_.empty())
-    {
-      CompString fileName(PKGDATADIR"/close_dash.png");
-      CompSize size(SCALE_CLOSE_ICON_SIZE, SCALE_CLOSE_ICON_SIZE);
-      close_icon_ = GLTexture::readImageToTexture(fileName, pName, size);
-    }
-  }
+  LoadCloseIcon(panel::WindowState::NORMAL, close_normal_tex_);
+  LoadCloseIcon(panel::WindowState::PRELIGHT, close_prelight_tex_);
+  LoadCloseIcon(panel::WindowState::PRESSED, close_pressed_tex_);
 }
 
 void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
@@ -3773,8 +3827,21 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
     int max_width = 0;
     mask |= PAINT_WINDOW_BLEND_MASK;
 
-    for (GLTexture *icon : close_icon_)
-      DrawTexture(icon, sAttrib, transform, mask, x, y, max_width , max_height);
+    if (close_icon_state_ == panel::WindowState::NORMAL)
+    {
+      for (GLTexture *icon : close_normal_tex_)
+        DrawTexture(icon, sAttrib, transform, mask, x, y, max_width , max_height);
+    }
+    else if (close_icon_state_ == panel::WindowState::PRELIGHT)
+    {
+      for (GLTexture *icon : close_prelight_tex_)
+        DrawTexture(icon, sAttrib, transform, mask, x, y, max_width , max_height);
+    }
+    else if (close_icon_state_ == panel::WindowState::PRESSED)
+    {
+      for (GLTexture *icon : close_pressed_tex_)
+        DrawTexture(icon, sAttrib, transform, mask, x, y, max_width , max_height);
+    }
 
     close_button_area_ = CompRect(x, y, max_height, max_width);
   }
@@ -3817,6 +3884,7 @@ void UnityWindow::OnInitiateSpreed()
   if (std::find(windows.begin(), windows.end(), window) == windows.end())
     return;
 
+  close_icon_state_ = panel::WindowState::NORMAL;
   SetupScaleHeaderStyle();
 
   WindowManager *wm = WindowManager::Default();

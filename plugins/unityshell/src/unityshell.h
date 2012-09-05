@@ -415,9 +415,7 @@ public:
   void leaveShowDesktop ();
   bool HandleAnimations (unsigned int ms);
 
-  void handleEvent (XEvent *event);
-
-  CompRect CloseButtonArea();
+  bool handleEvent(XEvent *event);
 
   typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>
           UnityMinimizedHandler;
@@ -485,8 +483,12 @@ private:
                   float maxWidth, float maxHeight);
 
   void SetupScaleHeaderStyle();
+  void LoadCloseIcon(panel::WindowState state, GLTexture::List& texture);
 
-  static GLTexture::List close_icon_;
+  static GLTexture::List close_normal_tex_;
+  static GLTexture::List close_prelight_tex_;
+  static GLTexture::List close_pressed_tex_;
+  panel::WindowState close_icon_state_;
   compiz::WindowInputRemoverLock::Weak input_remover_;
   CompRect close_button_area_;
   glib::Source::UniquePtr focus_desktop_timeout_;
