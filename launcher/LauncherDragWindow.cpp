@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
-* Copyright (C) 2010 Canonical Ltd
+* Copyright (C) 2010-2012 Canonical Ltd
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License version 3 as
@@ -15,6 +15,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
 * Authored by: Jason Smith <jason.smith@canonical.com>
+*              Marco Trevisan <marco.trevisan@canonical.com>
 */
 
 #include <Nux/Nux.h>
@@ -23,6 +24,7 @@
 #include <Nux/TextureArea.h>
 
 #include "LauncherDragWindow.h"
+#include "unity-shared/WindowManager.h"
 
 namespace unity
 {
@@ -33,20 +35,43 @@ NUX_IMPLEMENT_OBJECT_TYPE(LauncherDragWindow);
 
 LauncherDragWindow::LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> icon)
   : nux::BaseWindow("")
+  , _cancelled(false)
   , _icon(icon)
 {
   SetBaseSize(_icon->GetWidth(), _icon->GetHeight());
+
+  key_down.connect([this] (unsigned long, unsigned long keysym, unsigned long, const char*, unsigned short) {
+    if (keysym == NUX_VK_ESCAPE)
+      CancelDrag();
+  });
+
+  auto wm = WindowManager::Default();
+  wm->window_mapped.connect(sigc::hide(sigc::mem_fun(this, &LauncherDragWindow::CancelDrag)));
+  wm->window_unmapped.connect(sigc::hide(sigc::mem_fun(this, &LauncherDragWindow::CancelDrag)));
 }
 
 LauncherDragWindow::~LauncherDragWindow()
 {
   if (on_anim_completed.connected())
     on_anim_completed.disconnect();
+
+  UnGrabKeyboard();
 }
 
-bool LauncherDragWindow::Animating()
+bool LauncherDragWindow::Animating() const
 {
   return bool(animation_timer_);
+}
+
+bool LauncherDragWindow::Cancelled() const
+{
+  return _cancelled;
+}
+
+void LauncherDragWindow::CancelDrag()
+{
+  _cancelled = true;
+  drag_cancel_request.emit();
 }
 
 void LauncherDragWindow::SetAnimationTarget(int x, int y)
@@ -86,8 +111,8 @@ bool LauncherDragWindow::OnAnimationTimeout()
 
   if (new_geo.x == target_x && new_geo.y == target_y)
   {
-    anim_completed.emit();
     animation_timer_.reset();
+    anim_completed.emit();
 
     return false;
   }
@@ -116,6 +141,16 @@ LauncherDragWindow::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw
                       nux::color::White);
 
   GfxContext.PopClippingRectangle();
+}
+
+bool LauncherDragWindow::InspectKeyEvent(unsigned int event_type, unsigned int keysym, const char* character)
+{
+  return (event_type == nux::NUX_KEYDOWN);
+}
+
+bool LauncherDragWindow::AcceptKeyNavFocus()
+{
+  return true;
 }
 
 } // namespace launcher

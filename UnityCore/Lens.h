@@ -90,6 +90,13 @@ public:
   virtual void SignalPreview(std::string const& uri,
       glib::Variant const& preview_update,
       glib::DBusProxy::ReplyCallback reply_cb = nullptr);
+
+  /**
+   * Note that this model is only valid for as long as the results model
+   * doesn't change.
+   * (you should call this again after models_changed is emitted)
+   */
+  virtual glib::Object<DeeModel> GetFilterModelForCategory(unsigned category);
   virtual std::vector<unsigned> GetCategoriesOrder();
 
   nux::RWProperty<std::string> id;
@@ -107,10 +114,16 @@ public:
   nux::RWProperty<Categories::Ptr> categories;
   nux::RWProperty<Filters::Ptr> filters;
   nux::RWProperty<bool> connected;
+  nux::RWProperty<bool> provides_personal_content;
+  nux::ROProperty<std::string> last_search_string;
+  nux::ROProperty<std::string> last_global_search_string;
 
   nux::Property<ViewType> view_type;
 
   sigc::signal<void> categories_reordered;
+  /* Emitted when any of the models' swarm name changes, but collates the name
+   * changes into a single signal emission (when all are changed) */
+  sigc::signal<void> models_changed;
   sigc::signal<void, Hints const&> search_finished;
   sigc::signal<void, Hints const&> global_search_finished;
   sigc::signal<void, std::string const&, HandledType, Hints const&> activated;
