@@ -46,8 +46,6 @@ public:
   SocialPreviewComments(std::string const& text, NUX_FILE_LINE_PROTO);
   virtual ~SocialPreviewComments();
 
-  void SetText(std::string const& text);
-
 protected:
   virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);

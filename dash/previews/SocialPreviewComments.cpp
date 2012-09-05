@@ -45,20 +45,11 @@ SocialPreviewComments::SocialPreviewComments(std::string const& text, NUX_FILE_L
 : View(NUX_FILE_LINE_PARAM)
 {
   SetupViews();
-  SetText(text);
+  text_->SetText(text);
 }
 
 SocialPreviewComments::~SocialPreviewComments()
 {
-}
-
-void SocialPreviewComments::SetText(std::string const& text)
-{
-  std::stringstream ss;
-  ss << "<b>&#x201C;</b> ";
-  ss << text;
-  ss << " <b>&#x201E;</b>";
-  text_->SetText(ss.str());
 }
 
 void SocialPreviewComments::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
