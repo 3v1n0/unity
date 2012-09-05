@@ -160,7 +160,10 @@ void SocialPreviewContent::UpdateBaloonTexture()
   text_->SetBaseX(geo.x + geo.width/2 - geo_text.width/2);
   text_->SetBaseY(geo.y + geo.height/2 - geo_text.height/2 - tail_width/2);
 
-  cr_bubble_->Invalidate(geo_cr);
+  if (geo_cr.width > 0 && geo_cr.height > 0)
+  {
+    cr_bubble_->Invalidate(geo_cr);
+  }
 }
 
 void SocialPreviewContent::RedrawBubble(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
@@ -176,9 +179,11 @@ void SocialPreviewContent::RedrawBubble(nux::Geometry const& geom, cairo_t* cr, 
   double width = cairo_image_surface_get_width(cairo_get_target(cr)) - 2*blur;
   double height = cairo_image_surface_get_height(cairo_get_target(cr)) - 2*blur;
 
-  DrawBubble(cr, line_width, radius, x, y, width, height, tailPositionPercentage, tailWidthPercentage);
-
-  dash::Style::Instance().Blur(cr, blur);
+  if (width > 0 && height > 0)
+  {
+    DrawBubble(cr, line_width, radius, x, y, width, height, tailPositionPercentage, tailWidthPercentage);
+    dash::Style::Instance().Blur(cr, blur);
+  }
 }
 
 inline double _align(double val, bool odd=true)
