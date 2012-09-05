@@ -84,7 +84,7 @@ nux::logging::Logger logger("unity.shell");
 UnityScreen* uScreen = 0;
 
 const unsigned int SCALE_CLOSE_ICON_SIZE = 19;
-const unsigned int SCALE_CLOSE_ICON_SPACE = 5;
+const unsigned int SCALE_ITEMS_PADDING = 5;
 
 void reset_glib_logging();
 void configure_logging();
@@ -3747,8 +3747,8 @@ UnityWindow::DrawWindowDecoration(GLWindowPaintAttrib const& attrib,
   if (highlighted)
   {
     // Draw windows title
-    const float xText = SCALE_CLOSE_ICON_SPACE * 2 + SCALE_CLOSE_ICON_SIZE;
-    RenderText(context, xText, 0.0, width - xText, height);
+    const float xText = SCALE_ITEMS_PADDING * 2 + SCALE_CLOSE_ICON_SIZE;
+    RenderText(context, xText, 0.0, width - xText - SCALE_ITEMS_PADDING, height);
   }
 
   mask |= PAINT_WINDOW_BLEND_MASK;
@@ -3837,7 +3837,7 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
 
   if (highlighted)
   {
-    x += SCALE_CLOSE_ICON_SPACE;
+    x += SCALE_ITEMS_PADDING;
     y += (height - SCALE_CLOSE_ICON_SIZE) / 2.0f;
     int max_height = 0;
     int max_width = 0;
