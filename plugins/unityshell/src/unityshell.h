@@ -242,7 +242,11 @@ private:
   void OnPanelStyleChanged();
 
   void InitGesturesSupport();
-  
+
+  void DrawTopPanelBackground();
+  bool TopPanelBackgroundTextureNeedsUpdate() const;
+  void UpdateTopPanelBackgroundTexture();
+
   nux::animation::TickSource tick_source_;
   nux::animation::AnimationController animation_controller_;
 
