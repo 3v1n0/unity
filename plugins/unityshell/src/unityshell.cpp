@@ -1266,9 +1266,11 @@ bool UnityWindow::handleEvent(XEvent *event)
         cWindow->addDamage();
     }
 
-    if (was_pressed && close_button_area_.contains(CompPoint(pointerX, pointerY)))
+    if (was_pressed)
     {
-      window->close(0);
+      if (close_button_area_.contains(CompPoint(event->xbutton.x_root, event->xbutton.y_root)))
+        window->close(0);
+
       handled = true;
     }
   }
