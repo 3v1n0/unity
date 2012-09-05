@@ -1244,7 +1244,8 @@ bool UnityWindow::handleEvent(XEvent *event)
   }
   else if (event->type == ButtonPress)
   {
-    if (close_button_area_.contains(CompPoint(event->xbutton.x_root, event->xbutton.y_root)))
+    if (event->xbutton.button == Button1 &&
+        close_button_area_.contains(CompPoint(event->xbutton.x_root, event->xbutton.y_root)))
     {
       close_icon_state_ = panel::WindowState::PRESSED;
       handled = true;
@@ -1255,6 +1256,8 @@ bool UnityWindow::handleEvent(XEvent *event)
   }
   else if (event->type == ButtonRelease)
   {
+    bool was_pressed = (close_icon_state_ == panel::WindowState::PRESSED);
+
     if (close_icon_state_ != panel::WindowState::NORMAL)
     {
       close_icon_state_ = panel::WindowState::NORMAL;
@@ -1263,7 +1266,7 @@ bool UnityWindow::handleEvent(XEvent *event)
         cWindow->addDamage();
     }
 
-    if (close_button_area_.contains(CompPoint(pointerX, pointerY)))
+    if (was_pressed && close_button_area_.contains(CompPoint(pointerX, pointerY)))
     {
       window->close(0);
       handled = true;
