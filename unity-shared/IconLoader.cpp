@@ -18,6 +18,7 @@
 */
 
 #include "IconLoader.h"
+#include "config.h"
 
 #include <queue>
 #include <sstream>
@@ -276,7 +277,8 @@ private:
                             glib::Object<UnityProtocolAnnotatedIcon> const& anno_icon)
     {
       helper_handle = 0;
-      if (category_pixbuf)
+      bool has_emblem = category_pixbuf;
+      if (has_emblem)
       {
         // assuming the category pixbuf is smaller than result
         gdk_pixbuf_composite(category_pixbuf, result, // src, dest
@@ -298,13 +300,13 @@ private:
         int max_font_height;
         CalculateTextHeight(nullptr, &max_font_height);
 
-        max_font_height = max_font_height * 9 / 8; // let's have some padding on the stripe
-        int pixbuf_size = static_cast<int>(
-            sqrt(max_font_height*max_font_height*8));
-        if (pixbuf_size > icon_w) pixbuf_size = icon_w;
+        // FIXME: design wants the tags 2px wider than the original icon
+        int pixbuf_width = icon_w;
+        int pixbuf_height = max_font_height * 2;
+        if (pixbuf_height > icon_h) pixbuf_height = icon_h;
 
         nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32,
-                                          pixbuf_size, pixbuf_size);
+                                          pixbuf_width, pixbuf_height);
         std::shared_ptr<cairo_t> cr(cairo_graphics.GetContext(), cairo_destroy);
 
         glib::Object<PangoLayout> layout;
@@ -325,10 +327,10 @@ private:
         pango_layout_set_font_description(layout, desc.get());
         pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);
 
-        double size_dbl = static_cast<double>(pixbuf_size);
         // we'll allow tiny bit of overflow since the text is rotated and there
         // is some space left... FIXME: 10/9? / 11/10?
-        double max_text_width = sqrt(size_dbl*size_dbl / 2) * 9/8;
+        double max_text_width = has_emblem ?
+          pixbuf_width * 0.73 : pixbuf_width;
 
         pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
         pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
@@ -337,9 +339,8 @@ private:
         pango_layout_set_markup(layout, escaped_text, -1);
 
         pango_context = pango_layout_get_context(layout);  // is not ref'ed
-        // FIXME: for reasons unknown, it looks better without this
-        //pango_cairo_context_set_font_options(pango_context,
-        //                                     gdk_screen_get_font_options(screen));
+        pango_cairo_context_set_font_options(pango_context,
+                                             gdk_screen_get_font_options(screen));
         pango_cairo_context_set_resolution(pango_context,
                                            dpi == -1 ? 96.0f : dpi/(float) PANGO_SCALE);
         pango_layout_context_changed(layout);
@@ -361,31 +362,74 @@ private:
 
         cairo_set_operator(cr.get(), CAIRO_OPERATOR_OVER);
 
-        // draw the trapezoid
-        cairo_move_to(cr.get(), 0.0, size_dbl);
-        cairo_line_to(cr.get(), size_dbl, 0.0);
-        cairo_line_to(cr.get(), size_dbl, size_dbl / 2.0);
-        cairo_line_to(cr.get(), size_dbl / 2.0, size_dbl);
-        cairo_close_path(cr.get());
-
         // this should be #dd4814
-        cairo_set_source_rgba(cr.get(), 0.86666f, 0.28235f, 0.07843f, 1.0f);
+        const double ORANGE_R = 0.86666;
+        const double ORANGE_G = 0.28235;
+        const double ORANGE_B = 0.07843;
+
+        double w_dbl = static_cast<double>(pixbuf_width);
+        double h_dbl = static_cast<double>(pixbuf_height);
+
+        cairo_set_source_rgba(cr.get(), ORANGE_R, ORANGE_G, ORANGE_B, 1.0);
+
+        cairo_rectangle(cr.get(), 0.0, 0.0, w_dbl, h_dbl);
+        cairo_fill_preserve(cr.get());
+
+        std::shared_ptr<cairo_pattern_t> pattern(
+            cairo_pattern_create_linear(0.0, 0.0, w_dbl, 0.0),
+            cairo_pattern_destroy);
+        cairo_pattern_add_color_stop_rgba(pattern.get(), 0.0, 1.0, 1.0, 1.0, 0.235294);
+        cairo_pattern_add_color_stop_rgba(pattern.get(), 0.02, 1.0, 1.0, 1.0, 0.0);
+        if (!has_emblem)
+        {
+          cairo_pattern_add_color_stop_rgba(pattern.get(), 0.98, 1.0, 1.0, 1.0, 0.0);
+          cairo_pattern_add_color_stop_rgba(pattern.get(), 1.0, 1.0, 1.0, 1.0, 0.235294);
+        }
+        cairo_pattern_add_color_stop_rgba(pattern.get(), 1.0, 1.0, 1.0, 1.0, 0.0);
+
+        cairo_set_source(cr.get(), pattern.get());
         cairo_fill(cr.get());
 
-        // draw the text (rotated!)
-        cairo_set_source_rgba(cr.get(), 1.0f, 1.0f, 1.0f, 1.0f);
-        cairo_move_to(cr.get(), size_dbl * 0.25, size_dbl);
-        cairo_rotate(cr.get(), -G_PI_4); // rotate by -45 degrees
+        if (has_emblem)
+        {
+          // paint the curve
+          const double CURVE_START_X = 0.651163 * w_dbl;
 
-        pango_cairo_update_layout(cr.get(), layout);
+          cairo_set_source_rgba(cr.get(), 1.0, 1.0, 1.0, 1.0);
+
+          cairo_move_to(cr.get(), CURVE_START_X, h_dbl);
+          cairo_curve_to(cr.get(), 0.719186 * w_dbl, h_dbl,
+                                   0.721163 * w_dbl, 0.9825 * h_dbl,
+                                   0.754128 * w_dbl, 0.72725 * h_dbl);
+          cairo_line_to(cr.get(), 0.812674 * w_dbl, 0.27275 * h_dbl);
+          cairo_curve_to(cr.get(), 0.848256 * w_dbl, 0.0,
+                                   0.848256 * w_dbl, 0.0,
+                                   0.916942 * w_dbl, 0.0);
+          cairo_line_to(cr.get(), w_dbl, 0.0);
+          cairo_line_to(cr.get(), w_dbl, h_dbl);
+          cairo_close_path(cr.get());
+          cairo_fill(cr.get());
+
+          // and the highlight
+          pattern.reset(cairo_pattern_create_linear(CURVE_START_X, 0.0, w_dbl, 0.0),
+                        cairo_pattern_destroy);
+          cairo_pattern_add_color_stop_rgba(pattern.get(), 0.0, 1.0, 1.0, 1.0, 0.0);
+          cairo_pattern_add_color_stop_rgba(pattern.get(), 0.95, 1.0, 1.0, 1.0, 0.0);
+          cairo_pattern_add_color_stop_rgba(pattern.get(), 1.0, 1.0, 1.0, 1.0, 0.235294);
+          cairo_set_source(cr.get(), pattern.get());
+          cairo_rectangle(cr.get(), CURVE_START_X, 0.0, w_dbl - CURVE_START_X, h_dbl);
+          cairo_fill(cr.get());
+        }
+
+        cairo_set_source_rgba(cr.get(), 1.0, 1.0, 1.0, 1.0);
+        cairo_move_to(cr.get(), 0.0, h_dbl / 2);
         pango_layout_get_pixel_size(layout, nullptr, &text_height);
         // current point is now in the middle of the stripe, need to translate
         // it, so that the text is centered
         cairo_rel_move_to(cr.get(), 0.0, text_height / -2.0);
-        double diagonal = sqrt(size_dbl*size_dbl*2);
-        // x coordinate also needs to be shifted
-        cairo_rel_move_to(cr.get(), (diagonal - max_text_width) / 4, 0.0);
         pango_cairo_show_layout(cr.get(), layout);
+
+        // FIXME: paint the emblem into this surface!
 
         // FIXME: going from image_surface to pixbuf, and then to texture :(
         glib::Object<GdkPixbuf> detail_pb(
@@ -394,13 +438,14 @@ private:
                                         cairo_graphics.GetWidth(),
                                         cairo_graphics.GetHeight()));
 
+        // FIXME: add padding
         gdk_pixbuf_composite(detail_pb, result, // src, dest
-                             icon_w - pixbuf_size, // dest_x
-                             icon_h - pixbuf_size, // dest_y
-                             pixbuf_size, // dest_w
-                             pixbuf_size, // dest_h
-                             icon_w - pixbuf_size, // offset_x
-                             icon_h - pixbuf_size, // offset_y
+                             0, // dest_x
+                             icon_h - pixbuf_height, // dest_y
+                             pixbuf_width, // dest_w
+                             pixbuf_height, // dest_h
+                             0, // offset_x
+                             icon_h - pixbuf_height, // offset_y
                              1.0, 1.0, // scale_x, scale_y
                              GDK_INTERP_NEAREST, // interpolation
                              255); // src_alpha
@@ -420,14 +465,45 @@ private:
         // FIXME: can we composite the pixbuf in helper thread?
         UnityProtocolCategoryType category = unity_protocol_annotated_icon_get_category(anno_icon);
         auto helper_slot = sigc::bind(sigc::mem_fun(this, &IconLoaderTask::CategoryIconLoaded), anno_icon);
-        unsigned cat_size = size / 4;
-        // FIXME: we still don't have the category assets
+        unsigned cat_size = size / 4; // FIXME: proper size
         switch (category)
         {
+          case UNITY_PROTOCOL_CATEGORY_TYPE_BOOK:
+            helper_handle =
+              impl->LoadFromFilename(PKGDATADIR"/emblem_books.svg", cat_size, helper_slot);
+            break;
           case UNITY_PROTOCOL_CATEGORY_TYPE_MUSIC:
             helper_handle =
-              impl->LoadFromIconName("emblem-favorite", cat_size, helper_slot);
+              impl->LoadFromFilename(PKGDATADIR"/emblem_music.svg", cat_size, helper_slot);
             break;
+          case UNITY_PROTOCOL_CATEGORY_TYPE_MOVIE:
+            helper_handle =
+              impl->LoadFromFilename(PKGDATADIR"/emblem_video.svg", cat_size, helper_slot);
+            break;
+          case UNITY_PROTOCOL_CATEGORY_TYPE_CLOTHES:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_SHOES:
+            helper_handle =
+              impl->LoadFromFilename(PKGDATADIR"/emblem_clothes.svg", cat_size, helper_slot);
+            break;
+          case UNITY_PROTOCOL_CATEGORY_TYPE_GAMES:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_ELECTRONICS:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_COMPUTERS:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_OFFICE:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_HOME:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_GARDEN:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_PETS:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_TOYS:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_CHILDREN:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_BABY:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_WATCHES:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_SPORTS:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_OUTDOORS:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_GROCERY:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_HEALTH:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_BEAUTY:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_DIY:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_TOOLS:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_CAR:
           default:
             // rest of the processing is the CategoryIconLoaded, lets invoke it
             glib::Object<GdkPixbuf> null_pixbuf;
