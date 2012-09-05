@@ -40,6 +40,7 @@ set (PREVIEWS_SOURCES
      PreviewRatingsWidget.cpp
      SocialPreview.cpp
      SocialPreviewContent.cpp
+     SocialPreviewComments.cpp
      Track.cpp
      Tracks.cpp
      )

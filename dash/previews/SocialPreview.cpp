@@ -35,6 +35,7 @@
  
 #include "SocialPreview.h"
 #include "SocialPreviewContent.h"
+#include "SocialPreviewComments.h"
 #include "ActionButton.h"
 #include "PreviewInfoHintWidget.h"
 
@@ -230,26 +231,7 @@ void SocialPreview::SetupViews()
       //  thread_ = new previews::Tracks(tracks_model, NUX_TRACKER_LOCATION);
       //  AddChild(thread_.GetPointer());
       //}
-      nux::ScrollView* social_thread = new DetailsScrollView(NUX_TRACKER_LOCATION);
-      social_thread->EnableHorizontalScrollBar(false);
-
-      nux::VLayout* social_thread_layout = new nux::VLayout();
-      social_thread_layout->SetSpaceBetweenChildren(12);
-      social_thread->SetLayout(social_thread_layout);
-      nux::StaticCairoText* thread_sender_ = new nux::StaticCairoText(preview_model_->title, false, NUX_TRACKER_LOCATION);
-      nux::StaticCairoText* thread_text_ = new nux::StaticCairoText(preview_model_->description, true, NUX_TRACKER_LOCATION);
-      thread_text_->SetLines(-10);
-      social_thread_layout->SetMaximumWidth(500);
-      //social_thread->SetMaximumWidth(subtitle_->GetMaximumWidth());
-      thread_sender_->SetFont(style.subtitle_size_font().c_str());
-      thread_text_->SetFont(style.description_font().c_str());
-      thread_text_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_TOP);
-
-
-      social_thread_layout->AddView(thread_sender_, 0);
-      social_thread_layout->AddView(thread_text_, 0);
-
-      //AddChild(thread_.GetPointer());
+      comments_ = new SocialPreviewComments("This is a test", NUX_TRACKER_LOCATION);
 
       
       /////////////////////
@@ -263,10 +245,7 @@ void SocialPreview::SetupViews()
 
     full_data_layout_->AddLayout(main_social_info, 0);
     full_data_layout_->AddView(social_info, 1);
-    if (thread_text_)
-    {
-      full_data_layout_->AddView(social_thread, 2);
-    }
+    full_data_layout_->AddView(comments_.GetPointer(), 2);
     full_data_layout_->AddLayout(actions_layout, 0);
     /////////////////////
   

@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef SOCIAL_PREVIEW_CONTENT_H
-#define SOCIAL_PREVIEW_CONTENT_H
+#ifndef SOCIAL_PREVIEW_COMMENTS_H
+#define SOCIAL_PREVIEW_COMMENTS_H
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
@@ -37,14 +37,14 @@ namespace dash
 namespace previews
 {
 
-class SocialPreviewContent : public nux::View, public unity::debug::Introspectable
+class SocialPreviewComments : public nux::View, public unity::debug::Introspectable
 {
 public:
-  typedef nux::ObjectPtr<SocialPreviewContent> Ptr;
-  NUX_DECLARE_OBJECT_TYPE(SocialPreviewContent, nux::View);
+  typedef nux::ObjectPtr<SocialPreviewComments> Ptr;
+  NUX_DECLARE_OBJECT_TYPE(SocialPreviewComments, nux::View);
 
-  SocialPreviewContent(std::string const& text, NUX_FILE_LINE_PROTO);
-  virtual ~SocialPreviewContent();
+  SocialPreviewComments(std::string const& text, NUX_FILE_LINE_PROTO);
+  virtual ~SocialPreviewComments();
 
   void SetText(std::string const& text);
 
@@ -82,4 +82,4 @@ private:
 }
 }
 
-#endif // SOCIAL_PREVIEW_CONTENT_H
+#endif // SOCIAL_PREVIEW_COMMENTS_H
