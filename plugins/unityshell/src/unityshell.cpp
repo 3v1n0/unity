@@ -1260,7 +1260,7 @@ bool UnityWindow::handleEvent(XEvent *event)
       close_icon_state_ = panel::WindowState::NORMAL;
 
       if (CompositeWindow *cWindow = CompositeWindow::get(window))
-          cWindow->addDamage();
+        cWindow->addDamage();
     }
 
     if (close_button_area_.contains(CompPoint(pointerX, pointerY)))
