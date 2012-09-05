@@ -52,21 +52,10 @@ protected:
   virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);
   virtual void PreLayoutManagement();
-  
+
   virtual bool AcceptKeyNavFocus() { return false; }
 
   void SetupViews();
-  void UpdateBaloonTexture();
-  void RedrawBubble(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state);
-  void DrawBubble(cairo_t* cr,
-                   double line_width,
-                   double   radius,
-                   double   x,
-                   double   y,
-                   double   width,
-                   double   height,
-                   double   tailPositionPercentage,
-                   double   tailWidthPercentage);
 
   virtual std::string GetName() const;
   virtual void AddProperties(GVariantBuilder* builder);
@@ -75,7 +64,6 @@ private:
   nux::ObjectPtr<nux::StaticCairoText> text_;
 
   typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
-  NuxCairoPtr cr_bubble_;
 };
 
 }
