@@ -1222,17 +1222,25 @@ bool UnityWindow::handleEvent(XEvent *event)
 
   if (event->type == MotionNotify)
   {
-    if (close_button_area_.contains(CompPoint(event->xbutton.x_root, event->xbutton.y_root)))
+    if (close_icon_state_ != panel::WindowState::PRESSED)
     {
-      close_icon_state_ = panel::WindowState::PRELIGHT;
-    }
-    else
-    {
-      close_icon_state_ = panel::WindowState::NORMAL;
-    }
+      panel::WindowState old_state = close_icon_state_;
 
-    if (CompositeWindow *cWindow = CompositeWindow::get(window))
-      cWindow->addDamage();
+      if (close_button_area_.contains(CompPoint(event->xbutton.x_root, event->xbutton.y_root)))
+      {
+        close_icon_state_ = panel::WindowState::PRELIGHT;
+      }
+      else
+      {
+        close_icon_state_ = panel::WindowState::NORMAL;
+      }
+
+      if (old_state != close_icon_state_)
+      {
+        if (CompositeWindow *cWindow = CompositeWindow::get(window))
+          cWindow->addDamage();
+      }
+    }
   }
   else if (event->type == ButtonPress)
   {
@@ -1247,10 +1255,13 @@ bool UnityWindow::handleEvent(XEvent *event)
   }
   else if (event->type == ButtonRelease)
   {
-    close_icon_state_ = panel::WindowState::NORMAL;
+    if (close_icon_state_ != panel::WindowState::NORMAL)
+    {
+      close_icon_state_ = panel::WindowState::NORMAL;
 
-    if (CompositeWindow *cWindow = CompositeWindow::get(window))
-        cWindow->addDamage();
+      if (CompositeWindow *cWindow = CompositeWindow::get(window))
+          cWindow->addDamage();
+    }
 
     if (close_button_area_.contains(CompPoint(pointerX, pointerY)))
     {
