@@ -85,7 +85,6 @@ UnityScreen* uScreen = 0;
 
 static unsigned int CLOSE_ICON_SIZE = 19;
 static unsigned int CLOSE_ICON_SPACE = 5;
-static unsigned int SCALE_WINDOW_TITLE_SIZE = 28;
 
 void reset_glib_logging();
 void configure_logging();
@@ -3811,48 +3810,43 @@ UnityWindow::scalePaintDecoration(const GLWindowPaintAttrib& attrib,
   if (!sWindow->hasSlot()) // animation not finished
     return;
 
+  PrepareHeaderStyle();
   UnityScreen* us = UnityScreen::get(screen);
   const guint32 xid = window->id();
   const bool highlighted = (us->highlighted_window_ == xid);
   GLWindowPaintAttrib sAttrib(attrib);
   sAttrib.opacity = OPAQUE;
 
-  PrepareHeaderStyle();
+  ScalePosition const& pos = sWindow->getCurrentPosition();
+  auto const& border_rect = window->borderRect();
+  auto const& deco_ext = window->border();
 
-  ScalePosition pos = sWindow->getCurrentPosition();
-  int maxHeight, maxWidth;
-  // Use "1" as margin to make sure to cover all originial decoration
-  const float width = (window->width() * pos.scale) + 2;
-  const float x = pos.x() + window->x() - 1;
-  float y = pos.y() + window->y();
-  float decorationHeight = SCALE_WINDOW_TITLE_SIZE;
+  const unsigned decoration_height = deco_ext.top;
+  unsigned width = (border_rect.width() + deco_ext.left + deco_ext.right)  * pos.scale;
+  unsigned height = decoration_height * pos.scale;
+  int x = pos.x() + border_rect.x();
+  int y = pos.y() + border_rect.y() + decoration_height - height - 1;
 
-  // If window is decorated draw the decoration
-  // otherwise draw a small bar over the window
-  if (!highlighted)
-    decorationHeight = SCALE_WINDOW_TITLE_SIZE * 0.30;
+  // If window is highlighted, we draw the decoration at full size
+  if (highlighted)
+    height = decoration_height;
 
-  DrawWindowDecoration(sAttrib, transform, mask, highlighted,
-                       x, y,
-                       x + width, y + decorationHeight);
+  DrawWindowDecoration(sAttrib, transform, mask, highlighted, x, y, width, height);
 
   if (highlighted)
   {
-    const float iconX = x + CLOSE_ICON_SPACE;
-    const float iconY = y + ((decorationHeight - CLOSE_ICON_SIZE)  / 2.0);
-    maxHeight = maxWidth = 0;
+    x += CLOSE_ICON_SPACE;
+    y += (decoration_height - CLOSE_ICON_SIZE) / 2.0f;
+    int max_height = 0;
+    int max_width = 0;
     mask |= PAINT_WINDOW_BLEND_MASK;
 
-    foreach(GLTexture *icon, close_icon_)
-    {
-      DrawTexture(icon, sAttrib, transform, mask,
-                  iconX, iconY,
-                  maxWidth , maxHeight);
-    }
+    for (GLTexture *icon : close_icon_)
+      DrawTexture(icon, sAttrib, transform, mask, x, y, max_width , max_height);
 
-    close_button_area_ = CompRect(iconX, iconY, maxWidth, maxHeight);
+    close_button_area_ = CompRect(x, y, max_height, max_width);
   }
-  else
+  else if (!close_button_area_.isEmpty())
   {
     close_button_area_ = CompRect();
   }
@@ -3890,15 +3884,15 @@ void UnityWindow::InitiateSpreed()
   WindowManager *wm = WindowManager::Default();
   const guint32 xid = window->id();
   has_original_decoration_ = wm->IsWindowDecorated(xid) &&
-                             !wm->IsWindowMaximized(xid);
+                             wm->IsWindowMaximized(xid);
   if (has_original_decoration_)
-    wm->Undecorate(xid);
+    wm->Decorate(xid);
 }
 
 void UnityWindow::TerminateSpreed()
 {
   if (has_original_decoration_)
-    WindowManager::Default()->Decorate(window->id());
+    WindowManager::Default()->Undecorate(window->id());
 }
 
 UnityWindow::~UnityWindow()
