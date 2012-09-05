@@ -71,8 +71,6 @@
 namespace unity
 {
 
-class WindowCairoContext;
-
 /* base screen class */
 class UnityScreen :
   public unity::debug::Introspectable,
@@ -436,6 +434,8 @@ public:
                             unsigned int);
 
 private:
+  struct CairoContext;
+
   void DoEnableFocus ();
   void DoDisableFocus ();
 
@@ -480,12 +480,11 @@ private:
                    unsigned int mask,
                    float x, float y,
                    int &maxWidth, int &maxHeight);
-  void RenderText(std::shared_ptr<WindowCairoContext> const& context,
+  void RenderText(CairoContext const& context,
                   float x, float y,
                   float maxWidth, float maxHeight);
 
   void SetupScaleHeaderStyle();
-  std::shared_ptr<WindowCairoContext> CreateCairoContext(float width, float height);
 
   static GLTexture::List close_icon_;
   compiz::WindowInputRemoverLock::Weak input_remover_;
