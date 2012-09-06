@@ -247,6 +247,12 @@ void DashView::AboutToHide()
   home_lens_->view_type = ViewType::HIDDEN;
   LOG_DEBUG(logger) << "Setting ViewType " << ViewType::HIDDEN
                             << " on '" << home_lens_->id() << "'";
+
+  // if a preview is open, close it
+  if (preview_displaying_) 
+  {
+    ClosePreview();
+  }
 }
 
 void DashView::SetupViews()
