@@ -41,6 +41,7 @@ namespace
 {
 nux::logging::Logger logger("unity.iconloader");
 const unsigned MIN_ICON_SIZE = 2;
+const int RIBBON_PADDING = 2;
 }
 
 class IconLoader::Impl
@@ -207,7 +208,8 @@ private:
         no_cache = true;
         auto helper_slot = sigc::bind(sigc::mem_fun(this, &IconLoaderTask::BaseIconLoaded), glib::object_cast<UnityProtocolAnnotatedIcon>(icon));
         helper_handle = impl->LoadFromGIconString(gicon_string.Str(),
-                                                  size, helper_slot);
+                                                  size - RIBBON_PADDING * 2,
+                                                  helper_slot);
 
         return false;
       }
@@ -282,6 +284,8 @@ private:
       const gchar* detail_text = unity_protocol_annotated_icon_get_ribbon(anno_icon);
       if (detail_text)
       {
+        const int SHADOW_BOTTOM_PADDING = 2;
+        const int SHADOW_SIDE_PADDING = 1;
         int icon_w = gdk_pixbuf_get_width(result);
         int icon_h = gdk_pixbuf_get_height(result);
 
@@ -290,7 +294,7 @@ private:
 
         // FIXME: design wants the tags 2px wider than the original icon
         int pixbuf_width = icon_w;
-        int pixbuf_height = max_font_height * 5 / 4;
+        int pixbuf_height = max_font_height * 5 / 4 + SHADOW_BOTTOM_PADDING;
         if (pixbuf_height > icon_h) pixbuf_height = icon_h;
 
         nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32,
@@ -355,16 +359,20 @@ private:
         const double ORANGE_G = 0.28235;
         const double ORANGE_B = 0.07843;
 
-        double w_dbl = static_cast<double>(pixbuf_width);
-        double h_dbl = static_cast<double>(pixbuf_height);
+        double belt_w = static_cast<double>(pixbuf_width - SHADOW_SIDE_PADDING * 2);
+        double belt_h = static_cast<double>(pixbuf_height - SHADOW_BOTTOM_PADDING);
+
+        // translate to make space for the shadow
+        cairo_save(cr.get());
+        cairo_translate(cr.get(), 1.0, 1.0);
 
         cairo_set_source_rgba(cr.get(), ORANGE_R, ORANGE_G, ORANGE_B, 1.0);
 
-        cairo_rectangle(cr.get(), 0.0, 0.0, w_dbl, h_dbl);
+        cairo_rectangle(cr.get(), 0.0, 0.0, belt_w, belt_h);
         cairo_fill_preserve(cr.get());
 
         std::shared_ptr<cairo_pattern_t> pattern(
-            cairo_pattern_create_linear(0.0, 0.0, w_dbl, 0.0),
+            cairo_pattern_create_linear(0.0, 0.0, belt_w, 0.0),
             cairo_pattern_destroy);
         cairo_pattern_add_color_stop_rgba(pattern.get(), 0.0, 1.0, 1.0, 1.0, 0.235294);
         cairo_pattern_add_color_stop_rgba(pattern.get(), 0.02, 1.0, 1.0, 1.0, 0.0);
@@ -381,47 +389,69 @@ private:
         if (has_emblem)
         {
           // paint the curve
-          const double CURVE_START_X = 0.651163 * w_dbl;
+          const double CURVE_START_X = 0.651163 * belt_w;
 
           cairo_set_source_rgba(cr.get(), 1.0, 1.0, 1.0, 1.0);
 
-          cairo_move_to(cr.get(), CURVE_START_X, h_dbl);
-          cairo_curve_to(cr.get(), 0.719186 * w_dbl, h_dbl,
-                                   0.721163 * w_dbl, 0.9825 * h_dbl,
-                                   0.754128 * w_dbl, 0.72725 * h_dbl);
-          cairo_line_to(cr.get(), 0.812674 * w_dbl, 0.27275 * h_dbl);
-          cairo_curve_to(cr.get(), 0.848256 * w_dbl, 0.0,
-                                   0.848256 * w_dbl, 0.0,
-                                   0.916942 * w_dbl, 0.0);
-          cairo_line_to(cr.get(), w_dbl, 0.0);
-          cairo_line_to(cr.get(), w_dbl, h_dbl);
+          cairo_move_to(cr.get(), CURVE_START_X, belt_h);
+          cairo_curve_to(cr.get(), 0.719186 * belt_w, belt_h,
+                                   0.721163 * belt_w, 0.9825 * belt_h,
+                                   0.754128 * belt_w, 0.72725 * belt_h);
+          cairo_line_to(cr.get(), 0.812674 * belt_w, 0.27275 * belt_h);
+          cairo_curve_to(cr.get(), 0.848256 * belt_w, 0.0,
+                                   0.848256 * belt_w, 0.0,
+                                   0.916942 * belt_w, 0.0);
+          cairo_line_to(cr.get(), belt_w, 0.0);
+          cairo_line_to(cr.get(), belt_w, belt_h);
           cairo_close_path(cr.get());
           cairo_fill(cr.get());
 
           // and the highlight
-          pattern.reset(cairo_pattern_create_linear(CURVE_START_X, 0.0, w_dbl, 0.0),
+          pattern.reset(cairo_pattern_create_linear(CURVE_START_X, 0.0, belt_w, 0.0),
                         cairo_pattern_destroy);
           cairo_pattern_add_color_stop_rgba(pattern.get(), 0.0, 1.0, 1.0, 1.0, 0.0);
           cairo_pattern_add_color_stop_rgba(pattern.get(), 0.95, 1.0, 1.0, 1.0, 0.0);
           cairo_pattern_add_color_stop_rgba(pattern.get(), 1.0, 0.0, 0.0, 0.0, 0.235294);
           cairo_set_source(cr.get(), pattern.get());
-          cairo_rectangle(cr.get(), CURVE_START_X, 0.0, w_dbl - CURVE_START_X, h_dbl);
+          cairo_rectangle(cr.get(), CURVE_START_X, 0.0, belt_w - CURVE_START_X, belt_h);
           cairo_fill(cr.get());
 
           // paint the emblem
           int category_pb_h = gdk_pixbuf_get_height(category_pixbuf);
           gdk_cairo_set_source_pixbuf(cr.get(), category_pixbuf,
-                                      w_dbl * 0.812674, (h_dbl - category_pb_h) / 2);
+                                      belt_w * 0.812674, (belt_h - category_pb_h) / 2);
           cairo_paint(cr.get());
         }
 
         cairo_set_source_rgba(cr.get(), 1.0, 1.0, 1.0, 1.0);
-        cairo_move_to(cr.get(), 0.0, h_dbl / 2);
+        cairo_move_to(cr.get(), 0.0, belt_h / 2);
         pango_layout_get_pixel_size(layout, nullptr, &text_height);
         // current point is now in the middle of the stripe, need to translate
         // it, so that the text is centered
         cairo_rel_move_to(cr.get(), 0.0, text_height / -2.0);
         pango_cairo_show_layout(cr.get(), layout);
+
+        // paint the shadow
+        cairo_restore(cr.get());
+
+        pattern.reset(cairo_pattern_create_linear(0.0, belt_h, 0.0, belt_h + SHADOW_BOTTOM_PADDING),
+                      cairo_pattern_destroy);
+        cairo_pattern_add_color_stop_rgba(pattern.get(), 0.0, 0.0, 0.0, 0.0, 0.2);
+        cairo_pattern_add_color_stop_rgba(pattern.get(), 1.0, 0.0, 0.0, 0.0, 0.0);
+
+        cairo_set_source(cr.get(), pattern.get());
+
+        cairo_rectangle(cr.get(), 0.0, belt_h, belt_w, SHADOW_BOTTOM_PADDING);
+        cairo_fill(cr.get());
+
+        cairo_set_source_rgba(cr.get(), 0.0, 0.0, 0.0, 0.1);
+        cairo_move_to(cr.get(), 0.0, 1.0);
+        cairo_line_to(cr.get(), 0.0, belt_h);
+        cairo_stroke(cr.get());
+
+        cairo_move_to(cr.get(), belt_w, 1.0);
+        cairo_line_to(cr.get(), belt_w, belt_h);
+        cairo_stroke(cr.get());
 
         // FIXME: going from image_surface to pixbuf, and then to texture :(
         glib::Object<GdkPixbuf> detail_pb(
@@ -430,7 +460,7 @@ private:
                                         cairo_graphics.GetWidth(),
                                         cairo_graphics.GetHeight()));
 
-        int y_pos = icon_h - pixbuf_height - max_font_height;
+        int y_pos = icon_h - pixbuf_height - max_font_height / 2;
         gdk_pixbuf_composite(detail_pb, result, // src, dest
                              0, // dest_x
                              y_pos, // dest_y
@@ -457,7 +487,16 @@ private:
           "' size: " << gdk_pixbuf_get_width(base_pixbuf) << 'x' <<
                         gdk_pixbuf_get_height(base_pixbuf);
 
-        result = gdk_pixbuf_copy(base_pixbuf);
+        // we need extra space for the ribbon
+        result = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, 
+                                gdk_pixbuf_get_width(base_pixbuf) + RIBBON_PADDING * 2,
+                                gdk_pixbuf_get_height(base_pixbuf));
+        gdk_pixbuf_fill(result, 0x0);
+        gdk_pixbuf_copy_area(base_pixbuf, 0, 0,
+                             gdk_pixbuf_get_width(base_pixbuf),
+                             gdk_pixbuf_get_height(base_pixbuf),
+                             result,
+                             RIBBON_PADDING, 0);
         // FIXME: can we composite the pixbuf in helper thread?
         UnityProtocolCategoryType category = unity_protocol_annotated_icon_get_category(anno_icon);
         auto helper_slot = sigc::bind(sigc::mem_fun(this, &IconLoaderTask::CategoryIconLoaded), anno_icon);
