@@ -266,7 +266,7 @@ void SocialPreview::PreLayoutManagement()
 
   if (title_) { title_->SetMaximumWidth(top_social_info_max_width); }
   if (subtitle_) { subtitle_->SetMaximumWidth(top_social_info_max_width); }
-  if (comments_) { comments_->SetMaximumWidth(top_social_info_max_width); }
+  if (comments_) { comments_->SetMaximumWidth(details_width); }
 
   for (nux::AbstractButton* button : action_buttons_)
   {
