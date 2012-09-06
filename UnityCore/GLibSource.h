@@ -77,7 +77,7 @@ public:
    * This Run a source using the @callback function as Source's callback.
    * The method will return false if the source is already running, true otherwise.
    */
-  bool Run(Callback callback);
+  bool Run(Callback const& callback);
   bool IsRunning() const;
 
   /**
@@ -104,11 +104,13 @@ protected:
 private:
   struct CallBackData
   {
-    CallBackData(Source* src)
+    CallBackData(Source* src, Callback const& callback)
       : self(src)
+      , callback_fn_(callback)
     {}
 
     Source* self;
+    Callback callback_fn_;
   };
 
   static gboolean SourceCallback(gpointer data);
@@ -116,7 +118,6 @@ private:
 
   unsigned int source_id_;
   CallBackData* callback_data_;
-  Callback callback_;
 };
 
 
@@ -133,7 +134,7 @@ class Timeout : public Source
 {
 public:
   Timeout(unsigned int milliseconds, Priority prio = Priority::DEFAULT);
-  Timeout(unsigned int milliseconds, Callback cb, Priority prio = Priority::DEFAULT);
+  Timeout(unsigned int milliseconds, Callback const& cb, Priority prio = Priority::DEFAULT);
 
 private:
   void Init(unsigned int milliseconds, Priority prio);
@@ -153,7 +154,7 @@ class TimeoutSeconds : public Source
 {
 public:
   TimeoutSeconds(unsigned int seconds, Priority prio = Priority::DEFAULT);
-  TimeoutSeconds(unsigned int seconds, Callback cb, Priority prio = Priority::DEFAULT);
+  TimeoutSeconds(unsigned int seconds, Callback const& cb, Priority prio = Priority::DEFAULT);
 
 private:
   void Init(unsigned int seconds, Priority prio);
@@ -173,7 +174,7 @@ class Idle : public Source
 {
 public:
   Idle(Priority prio = Priority::DEFAULT_IDLE);
-  Idle(Callback cb, Priority prio = Priority::DEFAULT_IDLE);
+  Idle(Callback const& cb, Priority prio = Priority::DEFAULT_IDLE);
 
 private:
   void Init(Priority prio);
@@ -206,13 +207,13 @@ public:
   bool Add(Source::Ptr const& source, std::string const& nick = "");
 
   Source::Ptr AddTimeout(unsigned int milliseconds, std::string const& nick = "");
-  Source::Ptr AddTimeout(unsigned int milliseconds, Source::Callback cb, std::string const& nick = "");
+  Source::Ptr AddTimeout(unsigned int milliseconds, Source::Callback const& cb, std::string const& nick = "");
 
   Source::Ptr AddTimeoutSeconds(unsigned int seconds, std::string const& nick = "");
-  Source::Ptr AddTimeoutSeconds(unsigned int seconds, Source::Callback cb, std::string const& nick = "");
+  Source::Ptr AddTimeoutSeconds(unsigned int seconds, Source::Callback const& cb, std::string const& nick = "");
 
   Source::Ptr AddIdle(std::string const& nick = "");
-  Source::Ptr AddIdle(Source::Callback cb, std::string const& nick = "");
+  Source::Ptr AddIdle(Source::Callback const& cb, std::string const& nick = "");
 
   bool Remove(std::string const& nick);
   bool Remove(unsigned int id);

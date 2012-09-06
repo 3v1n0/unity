@@ -89,7 +89,8 @@ public:
   void ActivationReply(GVariant* parameters);
   void Preview(std::string const& uri);
   void ActivatePreviewAction(std::string const& action_id,
-                             std::string const& uri);
+                             std::string const& uri,
+                             Hints const& hints);
   void SignalPreview(std::string const& preview_uri,
                      glib::Variant const& preview_update,
                      glib::DBusProxy::ReplyCallback reply_cb);
@@ -499,6 +500,7 @@ void Lens::Impl::GlobalSearch(std::string const& search_string)
                             &b),
               sigc::mem_fun(this, &Lens::Impl::OnGlobalSearchFinished),
               global_search_cancellable_);
+
   g_variant_builder_clear(&b);
 }
 
@@ -608,7 +610,8 @@ void Lens::Impl::Preview(std::string const& uri)
 }
 
 void Lens::Impl::ActivatePreviewAction(std::string const& action_id,
-                                       std::string const& uri)
+                                       std::string const& uri,
+                                       Hints const& hints)
 {
   LOG_DEBUG(logger) << "Activating action '" << action_id << "' on  '" << id_ << "'";
 
@@ -622,10 +625,35 @@ void Lens::Impl::ActivatePreviewAction(std::string const& action_id,
   activation_uri += ":";
   activation_uri += uri;
 
-  proxy_->Call("Activate",
-               g_variant_new("(su)", activation_uri.c_str(),
-                             UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_ACTION),
-               sigc::mem_fun(this, &Lens::Impl::ActivationReply));
+  if (hints.empty())
+  {
+    // FIXME: we should really be using the (sua{sv}) method all the time,
+    // but we're past freezes and having to logout and back in is
+    // too big of a deal after beta freeze
+    proxy_->Call("Activate",
+                 g_variant_new("(su)", activation_uri.c_str(),
+                               UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_ACTION),
+                 sigc::mem_fun(this, &Lens::Impl::ActivationReply));
+  }
+  else
+  {
+    GVariantBuilder b;
+    g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
+
+    for (auto it = hints.begin(); it != hints.end(); ++it)
+    {
+      GVariant* variant = it->second;
+      g_variant_builder_add(&b, "{sv}", it->first.c_str(), variant);
+    }
+
+    proxy_->Call("ActivateWithHints",
+                 g_variant_new("(sua{sv})", activation_uri.c_str(),
+                               UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_ACTION,
+                               &b),
+                 sigc::mem_fun(this, &Lens::Impl::ActivationReply));
+
+    g_variant_builder_clear(&b);
+  }
 }
 
 void Lens::Impl::SignalPreview(std::string const& preview_uri,
@@ -877,9 +905,10 @@ void Lens::Preview(std::string const& uri)
 }
 
 void Lens::ActivatePreviewAction(std::string const& action_id,
-                                 std::string const& uri)
+                                 std::string const& uri,
+                                 Hints const& hints)
 {
-  pimpl->ActivatePreviewAction(action_id, uri);
+  pimpl->ActivatePreviewAction(action_id, uri, hints);
 }
 
 void Lens::SignalPreview(std::string const& uri,

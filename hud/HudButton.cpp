@@ -75,6 +75,22 @@ HudButton::HudButton(NUX_FILE_LINE_DECL)
   {
     QueueDraw();
   });
+
+  mouse_move.connect([&](int x, int y, int dx, int dy, unsigned int button, unsigned int key)
+  {
+    if (!fake_focused)
+      fake_focused = true;
+  });
+
+  mouse_enter.connect([&](int x, int y, unsigned int button, unsigned int key)
+  {
+    fake_focused = true;
+  });
+
+  mouse_leave.connect([&](int x, int y, unsigned int button, unsigned int key)
+  {
+    fake_focused = false;
+  });
 }
 
 void HudButton::InitTheme()
@@ -112,7 +128,6 @@ bool HudButton::AcceptKeyNavFocus()
   // text entry in the hud.
   return false;
 }
-
 
 long HudButton::ComputeContentSize()
 {
@@ -207,6 +222,7 @@ void HudButton::SetQuery(Query::Ptr query)
     nux::StaticCairoText* text = new nux::StaticCairoText(item.first);
     text->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, item.second ? 1.0f : 0.5f));
     text->SetFont(button_font);
+    text->SetInputEventSensitivity(false);
     hlayout_->AddView(text, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   }
 }

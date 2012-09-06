@@ -210,10 +210,6 @@ TEST_F(TestLauncher, DragLauncherIconCancelRestoresIconOrder)
   MockMockLauncherIcon::Ptr icon2(new MockMockLauncherIcon);
   MockMockLauncherIcon::Ptr icon3(new MockMockLauncherIcon);
 
-  icon1->SetSortPriority(0);
-  icon2->SetSortPriority(1);
-  icon3->SetSortPriority(2);
-
   model_->AddIcon(icon1);
   model_->AddIcon(icon2);
   model_->AddIcon(icon3);
