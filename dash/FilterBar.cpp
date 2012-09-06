@@ -103,21 +103,16 @@ void FilterBar::RemoveFilter(Filter::Ptr const& filter)
   UpdateDrawSeparators();
 }
 
-void FilterBar::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
+void FilterBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
-  nux::Geometry const& geo = GetGeometry();
 
-  GfxContext.PushClippingRectangle(geo);
-  nux::GetPainter().PaintBackground(GfxContext, geo);
-  GfxContext.PopClippingRectangle();
 }
 
-void FilterBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
+void FilterBar::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
-  GfxContext.PushClippingRectangle(GetGeometry());
-  GetLayout()->ProcessDraw(GfxContext, force_draw);
-
-  GfxContext.PopClippingRectangle();
+  graphics_engine.PushClippingRectangle(GetGeometry());
+  GetLayout()->ProcessDraw(graphics_engine, force_draw);
+  graphics_engine.PopClippingRectangle();
 }
 
 void FilterBar::UpdateDrawSeparators()

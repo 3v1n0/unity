@@ -323,6 +323,7 @@ void DashView::SetupViews()
   layout_->SetTopAndBottomPadding(style.GetHSeparatorSize(), 0);
   SetLayout(layout_);
   layout_->SetRedirectRenderingToTexture(true);
+  //layout_->SetCopyPreviousFboTexture(false);
 
   content_layout_ = new DashLayout(NUX_TRACKER_LOCATION);
   content_layout_->SetTopAndBottomPadding(style.GetDashViewTopPadding(), 0);
@@ -592,8 +593,9 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
 
   if (!preview_displaying_ && layout_->RedirectRenderingToTexture() && (fade_in_value_ == 0.0f))
   {
-    graphics_engine.PushClippingRectangle(layout_->GetGeometry());
-    nux::GetPainter().PaintBackground(graphics_engine, layout_->GetGeometry());
+    nux::Geometry layout_geo = layout_->GetGeometry();
+    graphics_engine.PushClippingRectangle(layout_geo);
+    nux::GetPainter().PaintBackground(graphics_engine, layout_geo);
     graphics_engine.PopClippingRectangle();
   }
 
