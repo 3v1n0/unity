@@ -124,12 +124,12 @@ void Controller::SetupHudView()
 
 int Controller::GetIdealMonitor()
 {
-  int target_monitor;
+  int ideal_monitor;
   if (visible_)
-    target_monitor = monitor_index_;
+    ideal_monitor = monitor_index_;
   else
-    target_monitor = UScreen::GetDefault()->GetMonitorWithMouse();
-  return target_monitor;
+    ideal_monitor = UScreen::GetDefault()->GetMonitorWithMouse();
+  return ideal_monitor;
 }
 
 bool Controller::IsLockedToLauncher(int monitor)
@@ -186,8 +186,8 @@ void Controller::OnWindowConfigure(int window_width, int window_height,
 
 nux::Geometry Controller::GetIdealWindowGeometry()
 {
-  int target_monitor = GetIdealMonitor();
-  auto monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(target_monitor);
+  int ideal_monitor = GetIdealMonitor();
+  auto monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(ideal_monitor);
 
   // We want to cover as much of the screen as possible to grab any mouse events
   // outside of our window
@@ -197,7 +197,7 @@ nux::Geometry Controller::GetIdealWindowGeometry()
                     monitor_geo.width,
                     monitor_geo.height - panel_style.panel_height);
 
-  if (IsLockedToLauncher(target_monitor))
+  if (IsLockedToLauncher(ideal_monitor))
   {
     geo.x += launcher_width;
     geo.width -= launcher_width;
@@ -278,12 +278,12 @@ void Controller::ShowHud()
     return;
   }
 
-  unsigned int target_monitor = GetIdealMonitor();
+  unsigned int ideal_monitor = GetIdealMonitor();
 
-  if (target_monitor != monitor_index_)
+  if (ideal_monitor != monitor_index_)
   {
     Relayout();
-    monitor_index_ = target_monitor;
+    monitor_index_ = ideal_monitor;
   }
 
   view_->ShowEmbeddedIcon(!IsLockedToLauncher(monitor_index_));
