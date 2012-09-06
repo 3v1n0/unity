@@ -124,7 +124,11 @@ void Controller::SetupHudView()
 
 int Controller::GetTargetMonitor()
 {
-  return UScreen::GetDefault()->GetMonitorWithMouse();
+  int target_monitor;
+  if (visible_)
+    target_monitor = monitor_index_;
+  else
+    target_monitor = UScreen::GetDefault()->GetMonitorWithMouse();
 }
 
 bool Controller::IsLockedToLauncher(int monitor)
@@ -487,6 +491,7 @@ void Controller::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
     .add(window_ ? window_->GetGeometry() : nux::Geometry())
+    .add("target_monitor", GetTargetMonitor())
     .add("visible", visible_)
     .add("hud_monitor", monitor_index_)
     .add("locked_to_launcher", IsLockedToLauncher(monitor_index_));

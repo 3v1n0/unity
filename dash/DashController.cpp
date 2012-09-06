@@ -171,7 +171,9 @@ int Controller::GetIdealMonitor()
 {
   UScreen *uscreen = UScreen::GetDefault();
   int primary_monitor;
-  if (use_primary)
+  if (visible_)
+    primary_monitor = monitor_;
+  else if (use_primary)
     primary_monitor = uscreen->GetPrimaryMonitor();
   else
     primary_monitor = uscreen->GetMonitorWithMouse();
@@ -259,10 +261,12 @@ void Controller::ShowDash()
     return;
   }
 
+  /* GetIdealMonitor must get called before visible_ is set */
+  monitor_ = GetIdealMonitor();
+
   // The launcher must receive UBUS_OVERLAY_SHOW before window_->EnableInputWindow().
   // Other wise the Launcher gets focus for X, which causes XIM to fail.
   sources_.AddIdle([this] {
-    monitor_ = GetIdealMonitor();
     GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, monitor_);
     ubus_manager_.SendMessage(UBUS_OVERLAY_SHOWN, info);
     return false;
@@ -369,6 +373,7 @@ std::string Controller::GetName() const
 void Controller::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder).add("visible", visible_)
+                                  .add("ideal_monitor", GetIdealMonitor())
                                   .add("monitor", monitor_);
 }
 

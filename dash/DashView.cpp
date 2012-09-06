@@ -392,31 +392,35 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 
 void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
-  renderer_.DrawFull(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
+  if (visible_)
+    renderer_.DrawFull(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
 }
 
 void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
-  renderer_.DrawInner(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
+  if (visible_)
+  {
+    renderer_.DrawInner(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
 
-  if (IsFullRedraw())
-    nux::GetPainter().PushBackgroundStack();
-  
-  if (preview_displaying_)
-   preview_container_->ProcessDraw(gfx_context, (!force_draw) ? IsFullRedraw() : force_draw);
-  else
-    layout_->ProcessDraw(gfx_context, force_draw);
-    
-  if (IsFullRedraw())
-    nux::GetPainter().PopBackgroundStack();
+    if (IsFullRedraw())
+      nux::GetPainter().PushBackgroundStack();
 
-  renderer_.DrawInnerCleanup(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
+    if (preview_displaying_)
+     preview_container_->ProcessDraw(gfx_context, (!force_draw) ? IsFullRedraw() : force_draw);
+    else
+      layout_->ProcessDraw(gfx_context, force_draw);
+
+    if (IsFullRedraw())
+      nux::GetPainter().PopBackgroundStack();
+
+    renderer_.DrawInnerCleanup(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
+  }
 }
 
-  void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
-  {
-    dash::Style& style = dash::Style::Instance();
-    nux::Geometry geo(content_geo_);
+void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
+{
+  dash::Style& style = dash::Style::Instance();
+  nux::Geometry geo(content_geo_);
 
   if (Settings::Instance().GetFormFactor() == FormFactor::DESKTOP)
   {
