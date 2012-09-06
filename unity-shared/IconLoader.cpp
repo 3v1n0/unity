@@ -278,18 +278,6 @@ private:
     {
       helper_handle = 0;
       bool has_emblem = category_pixbuf;
-      if (has_emblem)
-      {
-        // assuming the category pixbuf is smaller than result
-        gdk_pixbuf_composite(category_pixbuf, result, // src, dest
-                             0, 0, // dest_x, dest_y
-                             gdk_pixbuf_get_width(category_pixbuf), // dest_w
-                             gdk_pixbuf_get_height(category_pixbuf), // dest_h
-                             0.0, 0.0, // offset_x, offset_y
-                             1.0, 1.0, // scale_x, scale_y
-                             GDK_INTERP_NEAREST, // interpolation
-                             255); // src_alpha
-      }
 
       const gchar* detail_text = unity_protocol_annotated_icon_get_ribbon(anno_icon);
       if (detail_text)
@@ -302,7 +290,7 @@ private:
 
         // FIXME: design wants the tags 2px wider than the original icon
         int pixbuf_width = icon_w;
-        int pixbuf_height = max_font_height * 2;
+        int pixbuf_height = max_font_height * 5 / 4;
         if (pixbuf_height > icon_h) pixbuf_height = icon_h;
 
         nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32,
@@ -415,10 +403,16 @@ private:
                         cairo_pattern_destroy);
           cairo_pattern_add_color_stop_rgba(pattern.get(), 0.0, 1.0, 1.0, 1.0, 0.0);
           cairo_pattern_add_color_stop_rgba(pattern.get(), 0.95, 1.0, 1.0, 1.0, 0.0);
-          cairo_pattern_add_color_stop_rgba(pattern.get(), 1.0, 1.0, 1.0, 1.0, 0.235294);
+          cairo_pattern_add_color_stop_rgba(pattern.get(), 1.0, 0.0, 0.0, 0.0, 0.235294);
           cairo_set_source(cr.get(), pattern.get());
           cairo_rectangle(cr.get(), CURVE_START_X, 0.0, w_dbl - CURVE_START_X, h_dbl);
           cairo_fill(cr.get());
+
+          // paint the emblem
+          int category_pb_h = gdk_pixbuf_get_height(category_pixbuf);
+          gdk_cairo_set_source_pixbuf(cr.get(), category_pixbuf,
+                                      w_dbl * 0.812674, (h_dbl - category_pb_h) / 2);
+          cairo_paint(cr.get());
         }
 
         cairo_set_source_rgba(cr.get(), 1.0, 1.0, 1.0, 1.0);
@@ -429,8 +423,6 @@ private:
         cairo_rel_move_to(cr.get(), 0.0, text_height / -2.0);
         pango_cairo_show_layout(cr.get(), layout);
 
-        // FIXME: paint the emblem into this surface!
-
         // FIXME: going from image_surface to pixbuf, and then to texture :(
         glib::Object<GdkPixbuf> detail_pb(
             gdk_pixbuf_get_from_surface(cairo_graphics.GetSurface(),
@@ -438,14 +430,14 @@ private:
                                         cairo_graphics.GetWidth(),
                                         cairo_graphics.GetHeight()));
 
-        // FIXME: add padding
+        int y_pos = icon_h - pixbuf_height - max_font_height;
         gdk_pixbuf_composite(detail_pb, result, // src, dest
                              0, // dest_x
-                             icon_h - pixbuf_height, // dest_y
+                             y_pos, // dest_y
                              pixbuf_width, // dest_w
                              pixbuf_height, // dest_h
                              0, // offset_x
-                             icon_h - pixbuf_height, // offset_y
+                             y_pos, // offset_y
                              1.0, 1.0, // scale_x, scale_y
                              GDK_INTERP_NEAREST, // interpolation
                              255); // src_alpha
@@ -461,11 +453,17 @@ private:
       helper_handle = 0;
       if (base_pixbuf)
       {
+        LOG_DEBUG(logger) << "Base icon loaded: '" << base_icon_string << 
+          "' size: " << gdk_pixbuf_get_width(base_pixbuf) << 'x' <<
+                        gdk_pixbuf_get_height(base_pixbuf);
+
         result = gdk_pixbuf_copy(base_pixbuf);
         // FIXME: can we composite the pixbuf in helper thread?
         UnityProtocolCategoryType category = unity_protocol_annotated_icon_get_category(anno_icon);
         auto helper_slot = sigc::bind(sigc::mem_fun(this, &IconLoaderTask::CategoryIconLoaded), anno_icon);
-        unsigned cat_size = size / 4; // FIXME: proper size
+        int max_font_height;
+        CalculateTextHeight(nullptr, &max_font_height);
+        unsigned cat_size = max_font_height * 8 / 9;
         switch (category)
         {
           case UNITY_PROTOCOL_CATEGORY_TYPE_BOOK:
