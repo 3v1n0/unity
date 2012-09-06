@@ -134,7 +134,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , panel_texture_has_changed_(true)
   , paint_panel_(false)
   , scale_just_activated_(false)
-  , highlighted_window_(0)
+  , scale_highlighted_window_(0)
   , minimize_speed_controller(new WindowMinimizeSpeedController())
 {
   Timer timer;
@@ -392,6 +392,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   }
 
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &UnityScreen::OnPanelStyleChanged));
+  WindowManager::Default()->terminate_spread.connect([this] { scale_highlighted_window_ = 0; });
 
   minimize_speed_controller->DurationChanged.connect(
       sigc::mem_fun(this, &UnityScreen::OnMinimizeDurationChanged)
@@ -1187,9 +1188,9 @@ ShowdesktopHandlerWindowInterface::PostPaintAction UnityWindow::DoHandleAnimatio
   return action;
 }
 
-void UnityWindow::DoAddDamage ()
+void UnityWindow::DoAddDamage()
 {
-  cWindow->addDamage ();
+  cWindow->addDamage();
 }
 
 void UnityWindow::DoDeleteHandler ()
@@ -1220,69 +1221,67 @@ bool UnityWindow::handleEvent(XEvent *event)
 {
   bool handled = false;
 
-  if (event->type == MotionNotify)
+  switch(event->type)
   {
-    if (close_icon_state_ != panel::WindowState::PRESSED)
-    {
-      panel::WindowState old_state = close_icon_state_;
-
-      if (close_button_area_.contains(CompPoint(event->xbutton.x_root, event->xbutton.y_root)))
+    case MotionNotify:
+      if (close_icon_state_ != panel::WindowState::PRESSED)
       {
-        close_icon_state_ = panel::WindowState::PRELIGHT;
+        panel::WindowState old_state = close_icon_state_;
+
+        if (close_button_geo_.IsPointInside(event->xmotion.x_root, event->xmotion.y_root))
+        {
+          close_icon_state_ = panel::WindowState::PRELIGHT;
+        }
+        else
+        {
+          close_icon_state_ = panel::WindowState::NORMAL;
+        }
+
+        if (old_state != close_icon_state_)
+          DoAddDamage();
       }
-      else
+      break;
+
+    case ButtonPress:
+      if (event->xbutton.button == Button1 &&
+          close_button_geo_.IsPointInside(event->xbutton.x_root, event->xbutton.y_root))
       {
-        close_icon_state_ = panel::WindowState::NORMAL;
+        close_icon_state_ = panel::WindowState::PRESSED;
+        DoAddDamage();
+        handled = true;
       }
+      break;
 
-      if (old_state != close_icon_state_)
+    case ButtonRelease:
       {
-        if (CompositeWindow *cWindow = CompositeWindow::get(window))
-          cWindow->addDamage();
+        bool was_pressed = (close_icon_state_ == panel::WindowState::PRESSED);
+
+        if (close_icon_state_ != panel::WindowState::NORMAL)
+        {
+          close_icon_state_ = panel::WindowState::NORMAL;
+          DoAddDamage();
+        }
+
+        if (was_pressed)
+        {
+          if (close_button_geo_.IsPointInside(event->xbutton.x_root, event->xbutton.y_root))
+            window->close(0);
+
+          handled = true;
+        }
       }
-    }
-  }
-  else if (event->type == ButtonPress)
-  {
-    if (event->xbutton.button == Button1 &&
-        close_button_area_.contains(CompPoint(event->xbutton.x_root, event->xbutton.y_root)))
-    {
-      close_icon_state_ = panel::WindowState::PRESSED;
-      handled = true;
+      break;
 
-      if (CompositeWindow *cWindow = CompositeWindow::get(window))
-        cWindow->addDamage();
-    }
-  }
-  else if (event->type == ButtonRelease)
-  {
-    bool was_pressed = (close_icon_state_ == panel::WindowState::PRESSED);
-
-    if (close_icon_state_ != panel::WindowState::NORMAL)
-    {
-      close_icon_state_ = panel::WindowState::NORMAL;
-
-      if (CompositeWindow *cWindow = CompositeWindow::get(window))
-        cWindow->addDamage();
-    }
-
-    if (was_pressed)
-    {
-      if (close_button_area_.contains(CompPoint(event->xbutton.x_root, event->xbutton.y_root)))
-        window->close(0);
-
-      handled = true;
-    }
-  }
-  else if (screen->XShape () &&
-      event->type == screen->shapeEvent () + ShapeNotify &&
-      !event->xany.send_event)
-  {
-    if (mShowdesktopHandler)
-    {
-      mShowdesktopHandler->HandleShapeEvent();
-      handled = true;
-    }
+    default:
+      if (!event->xany.send_event && screen->XShape() &&
+          event->type == screen->shapeEvent() + ShapeNotify)
+      {
+        if (mShowdesktopHandler)
+        {
+          mShowdesktopHandler->HandleShapeEvent();
+          handled = true;
+        }
+      }
   }
 
   return handled;
@@ -1650,9 +1649,9 @@ void UnityScreen::handleEvent(XEvent* event)
       _key_nav_mode_requested = false;
       break;
     case MotionNotify:
-      if (highlighted_window_ && PluginAdapter::Default()->IsScaleActive())
+      if (scale_highlighted_window_ && PluginAdapter::Default()->IsScaleActive())
       {
-        if (CompWindow *w = screen->findWindow(highlighted_window_))
+        if (CompWindow *w = screen->findWindow(scale_highlighted_window_))
           skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
       }
       break;
@@ -1662,9 +1661,9 @@ void UnityScreen::handleEvent(XEvent* event)
         launcher_controller_->KeyNavTerminate(false);
         EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
       }
-      if (highlighted_window_ && PluginAdapter::Default()->IsScaleActive())
+      if (scale_highlighted_window_ && PluginAdapter::Default()->IsScaleActive())
       {
-        if (CompWindow *w = screen->findWindow(highlighted_window_))
+        if (CompWindow *w = screen->findWindow(scale_highlighted_window_))
           skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
       }
 
@@ -1687,9 +1686,9 @@ void UnityScreen::handleEvent(XEvent* event)
           }
         }
       }
-      else if (highlighted_window_ && PluginAdapter::Default()->IsScaleActive())
+      else if (scale_highlighted_window_ && PluginAdapter::Default()->IsScaleActive())
       {
-        if (CompWindow *w = screen->findWindow(highlighted_window_))
+        if (CompWindow *w = screen->findWindow(scale_highlighted_window_))
           UnityWindow::get(w)->handleEvent(event);
       }
       break;
@@ -1819,8 +1818,8 @@ void UnityScreen::handleCompizEvent(const char* plugin,
     ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
   }
 
-  if (PluginAdapter::Default()->IsScaleActive() &&
-      g_strcmp0(plugin, "scale") == 0 && super_keypressed_)
+  if (PluginAdapter::Default()->IsScaleActive() && g_strcmp0(plugin, "scale") == 0 &&
+      super_keypressed_)
   {
     scale_just_activated_ = true;
   }
@@ -3754,10 +3753,8 @@ UnityWindow::DrawWindowDecoration(GLWindowPaintAttrib const& attrib,
   mask |= PAINT_WINDOW_BLEND_MASK;
   int maxWidth, maxHeight;
 
-  foreach(GLTexture *icon, context.texture_)
-  {
+  for (GLTexture *icon : context.texture_)
     DrawTexture(icon, attrib, transform, mask, x, y, maxWidth , maxHeight);
-  }
 }
 
 void UnityWindow::LoadCloseIcon(panel::WindowState state, GLTexture::List& texture)
@@ -3804,22 +3801,19 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
                                        CompRegion const& region,
                                        unsigned int mask)
 {
-  ScaleWindow *sWindow = ScaleWindow::get(window);
-  if (!sWindow)
+  ScaleWindow *scale_win = ScaleWindow::get(window);
+  if (!scale_win)
     return;
 
-  sWindow->scalePaintDecoration(attrib, transform, region, mask);
+  scale_win->scalePaintDecoration(attrib, transform, region, mask);
 
-  if (!sWindow->hasSlot()) // animation not finished
+  if (!scale_win->hasSlot()) // animation not finished
     return;
 
   UnityScreen* us = UnityScreen::get(screen);
-  const guint32 xid = window->id();
-  const bool highlighted = (us->highlighted_window_ == xid);
-  GLWindowPaintAttrib sAttrib(attrib);
-  sAttrib.opacity = OPAQUE;
+  const bool highlighted = (us->scale_highlighted_window_ == window->id());
 
-  ScalePosition const& pos = sWindow->getCurrentPosition();
+  ScalePosition const& pos = scale_win->getCurrentPosition();
   auto const& border_rect = window->borderRect();
   auto const& deco_ext = window->border();
 
@@ -3833,7 +3827,7 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
   if (highlighted)
     height = decoration_height;
 
-  DrawWindowDecoration(sAttrib, transform, mask, highlighted, x, y, width, height);
+  DrawWindowDecoration(attrib, transform, mask, highlighted, x, y, width, height);
 
   if (highlighted)
   {
@@ -3843,55 +3837,41 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
     int max_width = 0;
     mask |= PAINT_WINDOW_BLEND_MASK;
 
-    if (close_icon_state_ == panel::WindowState::NORMAL)
+    switch(close_icon_state_)
     {
-      for (GLTexture *icon : close_normal_tex_)
-        DrawTexture(icon, sAttrib, transform, mask, x, y, max_width , max_height);
-    }
-    else if (close_icon_state_ == panel::WindowState::PRELIGHT)
-    {
-      for (GLTexture *icon : close_prelight_tex_)
-        DrawTexture(icon, sAttrib, transform, mask, x, y, max_width , max_height);
-    }
-    else if (close_icon_state_ == panel::WindowState::PRESSED)
-    {
-      for (GLTexture *icon : close_pressed_tex_)
-        DrawTexture(icon, sAttrib, transform, mask, x, y, max_width , max_height);
+      case panel::WindowState::NORMAL:
+      default:
+        for (GLTexture *icon : close_normal_tex_)
+          DrawTexture(icon, attrib, transform, mask, x, y, max_width , max_height);
+        break;
+
+      case panel::WindowState::PRELIGHT:
+        for (GLTexture *icon : close_prelight_tex_)
+          DrawTexture(icon, attrib, transform, mask, x, y, max_width , max_height);
+        break;
+
+      case panel::WindowState::PRESSED:
+        for (GLTexture *icon : close_pressed_tex_)
+          DrawTexture(icon, attrib, transform, mask, x, y, max_width , max_height);
+        break;
     }
 
-    close_button_area_ = CompRect(x, y, max_height, max_width);
+    close_button_geo_.Set(x, y, max_height, max_width);
   }
-  else if (!close_button_area_.isEmpty())
+  else if (!close_button_geo_.IsNull())
   {
-    close_button_area_ = CompRect();
+    close_button_geo_.Set(0, 0, 0, 0);
   }
 }
 
-void
-UnityWindow::scaleSelectWindow ()
+void UnityWindow::scaleSelectWindow()
 {
+  ScaleWindow::get(window)->scaleSelectWindow();
+
   UnityScreen* us = UnityScreen::get(screen);
 
-  if (us->highlighted_window_ != window->id ())
-  {
-    CompositeWindow *cWindow = CompositeWindow::get(window);
-    if (cWindow)
-      cWindow->addDamage();
-
-    cWindow = 0;
-    CompWindow *old_window = screen->findWindow(us->highlighted_window_);
-    if (old_window)
-      cWindow = CompositeWindow::get(old_window);
-
-    if (cWindow)
-      cWindow->addDamage();
-
-    us->highlighted_window_ = window->id();
-  }
-
-  ScaleWindow *sWindow = ScaleWindow::get(window);
-  if (sWindow)
-    sWindow->scaleSelectWindow();
+  if (us->scale_highlighted_window_ != window->id())
+    us->scale_highlighted_window_ = window->id();
 }
 
 void UnityWindow::OnInitiateSpreed()

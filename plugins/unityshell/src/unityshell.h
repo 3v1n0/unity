@@ -345,7 +345,7 @@ private:
   glib::SourceManager sources_;
   unity::ThumbnailGenerator thumb_generator;
 
-  Window highlighted_window_;
+  Window scale_highlighted_window_;
 
   WindowMinimizeSpeedController* minimize_speed_controller;
   friend class UnityWindow;
@@ -488,9 +488,9 @@ private:
   static GLTexture::List close_normal_tex_;
   static GLTexture::List close_prelight_tex_;
   static GLTexture::List close_pressed_tex_;
-  panel::WindowState close_icon_state_;
   compiz::WindowInputRemoverLock::Weak input_remover_;
-  CompRect close_button_area_;
+  panel::WindowState close_icon_state_;
+  nux::Geometry close_button_geo_;
   glib::Source::UniquePtr focus_desktop_timeout_;
 };
 
