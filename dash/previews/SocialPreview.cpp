@@ -225,14 +225,7 @@ void SocialPreview::SetupViews()
 
       /////////////////////
       // Comments/Replies
-      //dash::SocialThread::Ptr thread_model = preview_model->GetThreadModel();
-      //if (thread_model)
-      //{
-      //  thread_ = new previews::Tracks(tracks_model, NUX_TRACKER_LOCATION);
-      //  AddChild(thread_.GetPointer());
-      //}
       comments_ = new SocialPreviewComments(preview_model_, NUX_TRACKER_LOCATION);
-
       
       /////////////////////
 
@@ -245,7 +238,7 @@ void SocialPreview::SetupViews()
 
     full_data_layout_->AddLayout(main_social_info, 0);
     full_data_layout_->AddView(social_info, 1);
-    full_data_layout_->AddView(comments_.GetPointer(), 2);
+    full_data_layout_->AddView(comments_.GetPointer(), 1);
     full_data_layout_->AddLayout(actions_layout, 0);
     /////////////////////
   

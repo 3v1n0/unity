@@ -127,7 +127,7 @@ void SocialPreviewComments::SetupViews()
   printf ("HERE\n");
   for (dash::SocialPreview::CommentPtr comment : social_preview_model->GetComments())
   {
-    printf ("COMMENT\n");
+    printf ("COMMENT: %s\n", comment->content.c_str());
 
     nux::HLayout* hint_layout = new nux::HLayout();
     hint_layout->SetSpaceBetweenChildren(layout_spacing);
@@ -153,7 +153,7 @@ void SocialPreviewComments::SetupViews()
     Comment comment_views(comment_name, comment_value);
     comments_.push_back(comment_views);
 
-    layout->AddLayout(hint_layout, 0);
+    layout->AddLayout(hint_layout, 1);
   }
 
   SetLayout(layout);
