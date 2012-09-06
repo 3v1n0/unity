@@ -122,7 +122,7 @@ void Controller::SetupHudView()
   AddChild(view_);
 }
 
-int Controller::GetTargetMonitor()
+int Controller::GetIdealMonitor()
 {
   int target_monitor;
   if (visible_)
@@ -186,7 +186,7 @@ void Controller::OnWindowConfigure(int window_width, int window_height,
 
 nux::Geometry Controller::GetIdealWindowGeometry()
 {
-  int target_monitor = GetTargetMonitor();
+  int target_monitor = GetIdealMonitor();
   auto monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(target_monitor);
 
   // We want to cover as much of the screen as possible to grab any mouse events
@@ -278,7 +278,7 @@ void Controller::ShowHud()
     return;
   }
 
-  unsigned int target_monitor = GetTargetMonitor();
+  unsigned int target_monitor = GetIdealMonitor();
 
   if (target_monitor != monitor_index_)
   {
@@ -492,7 +492,7 @@ void Controller::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
     .add(window_ ? window_->GetGeometry() : nux::Geometry())
-    .add("target_monitor", GetTargetMonitor())
+    .add("ideal_monitor", GetIdealMonitor())
     .add("visible", visible_)
     .add("hud_monitor", monitor_index_)
     .add("locked_to_launcher", IsLockedToLauncher(monitor_index_));

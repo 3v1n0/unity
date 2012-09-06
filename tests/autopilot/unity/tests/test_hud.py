@@ -371,7 +371,7 @@ class HudBehaviorTests(HudTestsBase):
         self.screen_geo.move_mouse_to_monitor(1)
         self.keyboard.type("abc")
 
-        self.assertThat(self.hud.target_monitor, Eventually(Equals(0)))
+        self.assertThat(self.hud.ideal_monitor, Eventually(Equals(0)))
 
 
 class HudLauncherInteractionsTests(HudTestsBase):

@@ -103,9 +103,9 @@ class Hud(KeybindingsHelper):
         return self.controller.hud_monitor
 
     @property
-    def target_monitor(self):
+    def ideal_monitor(self):
         """The target monitor for the Hud to appear on."""
-        return self.controller.target_monitor
+        return self.controller.ideal_monitor
 
     @property
     def geometry(self):
