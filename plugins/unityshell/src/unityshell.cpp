@@ -1623,14 +1623,16 @@ void UnityScreen::nuxDamageCompiz()
 void UnityScreen::handleEvent(XEvent* event)
 {
   bool skip_other_plugins = false;
+  auto wm = PluginAdapter::Default();
+
   switch (event->type)
   {
     case FocusIn:
     case FocusOut:
       if (event->xfocus.mode == NotifyGrab)
-        PluginAdapter::Default()->OnScreenGrabbed();
+        wm->OnScreenGrabbed();
       else if (event->xfocus.mode == NotifyUngrab)
-        PluginAdapter::Default()->OnScreenUngrabbed();
+        wm->OnScreenUngrabbed();
 #ifndef USE_MODERN_COMPIZ_GL
       cScreen->damageScreen();  // evil hack
 #endif
@@ -1647,7 +1649,7 @@ void UnityScreen::handleEvent(XEvent* event)
       _key_nav_mode_requested = false;
       break;
     case MotionNotify:
-      if (PluginAdapter::Default()->IsScaleActive())
+      if (wm->IsScaleActive())
       {
         ScaleScreen* ss = ScaleScreen::get(screen);
         if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
@@ -1660,7 +1662,7 @@ void UnityScreen::handleEvent(XEvent* event)
         launcher_controller_->KeyNavTerminate(false);
         EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
       }
-      if (PluginAdapter::Default()->IsScaleActive())
+      if (wm->IsScaleActive())
       {
         ScaleScreen* ss = ScaleScreen::get(screen);
         if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
@@ -1686,7 +1688,7 @@ void UnityScreen::handleEvent(XEvent* event)
           }
         }
       }
-      else if (PluginAdapter::Default()->IsScaleActive())
+      else if (wm->IsScaleActive())
       {
         ScaleScreen* ss = ScaleScreen::get(screen);
         if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
