@@ -18,8 +18,6 @@ add_definitions (${CFLAGS})
 
 set (LIBS ${CACHED_UNITY_DEPS_LIBRARIES} ${UNITY_STANDALONE_LADD})
 
-link_libraries (${LIBS})
-
 set (LIB_PATHS ${CACHED_UNITY_DEPS_LIBRARY_DIRS})
 link_directories (${CMAKE_BINARY_DIR}/UnityCore ${LIB_PATHS})
 
@@ -32,8 +30,10 @@ set (UNITY_SHARED_SOURCES
      AbstractSeparator.cpp
      Animator.cpp
      BGHash.cpp
+     CoverArt.cpp
      BackgroundEffectHelper.cpp
      DashStyle.cpp
+     DefaultThumbnailProvider.cpp
      FontSettings.cpp
      KeyboardUtil.cpp
      IMTextEntry.cpp
@@ -47,21 +47,28 @@ set (UNITY_SHARED_SOURCES
      LineSeparator.cpp
      OverlayRenderer.cpp
      PanelStyle.cpp
+     PlacesVScrollBar.cpp
+     PreviewStyle.cpp
+     RatingsButton.cpp
      SearchBar.cpp
      SearchBarSpinner.cpp
      StaticCairoText.cpp
      TextureCache.cpp
+     TextureThumbnailProvider.cpp
+     ThumbnailGenerator.cpp
      Timer.cpp
      UBusWrapper.cpp
      UScreen.cpp
      UnitySettings.cpp
      UnityWindowStyle.cpp
      UnityWindowView.cpp
+     UserThumbnailProvider.cpp
      WindowManager.cpp
      ubus-server.cpp
 )
 
 add_library (unity-shared STATIC ${UNITY_SHARED_SOURCES})
+target_link_libraries (unity-shared ${LIBS})
 add_dependencies (unity-shared unity-core-${UNITY_API_VERSION})
 
 #
@@ -73,6 +80,8 @@ set (UNITY_SHARED_COMPIZ_SOURCES
      PluginAdapterCompiz.cpp
      )
 add_library (unity-shared-compiz STATIC ${UNITY_SHARED_COMPIZ_SOURCES})
+target_link_libraries (unity-shared-compiz ${LIBS})
+
 add_dependencies (unity-shared-compiz unity-shared)
 
 # standalone
@@ -80,6 +89,7 @@ set (UNITY_SHARED_STANDALONE_SOURCES
      PluginAdapterStandalone.cpp
      )
 add_library (unity-shared-standalone STATIC ${UNITY_SHARED_STANDALONE_SOURCES})
+target_link_libraries (unity-shared-standalone ${LIBS})
 add_dependencies (unity-shared-standalone unity-shared)
 
 

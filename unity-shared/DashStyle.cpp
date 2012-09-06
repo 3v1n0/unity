@@ -123,7 +123,7 @@ public:
   void Text(cairo_t* cr,
             nux::Color const& color,
             std::string const& label,
-            int font_size = -1,
+            int font_size,
             double horizMargin = 4.0,
             Alignment alignment = Alignment::CENTER);
 
@@ -1355,14 +1355,14 @@ void Style::Impl::Text(cairo_t*    cr,
   {
     pango_font_description_set_absolute_size(desc, text_size * PANGO_SCALE);
   }
+  else if (desc)
+  {
+    text_size = pango_font_description_get_size(desc) / PANGO_SCALE;
+  }
 
   PangoWeight weight;
   switch (regular_text_weight_)
   {
-  case FontWeight::REGULAR:
-    weight = PANGO_WEIGHT_NORMAL;
-    break;
-
   case FontWeight::LIGHT:
     weight = PANGO_WEIGHT_LIGHT;
     break;
@@ -1370,6 +1370,10 @@ void Style::Impl::Text(cairo_t*    cr,
   case FontWeight::BOLD:
     weight = PANGO_WEIGHT_BOLD;
     break;
+
+  case FontWeight::REGULAR:
+  default:
+    weight = PANGO_WEIGHT_NORMAL;
   }
   pango_font_description_set_weight(desc, weight);
 
@@ -1627,7 +1631,6 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
                          int font_size, Alignment alignment,
                          bool zeromargin)
 {
-  // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
     return false;
 
@@ -1648,7 +1651,6 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
   double height = h - (2.0 * garnish) - 1.0;
 
   bool odd = true;
-  double radius = 7.0;
 
   // draw the grid background
   {
@@ -1656,6 +1658,7 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
     cairo_move_to(cr, _align(x + width, odd), y);
     if (curve_bottom)
     {
+      double radius = 7.0;
       LOG_DEBUG(logger) << "curve: " << _align(x + width, odd) << " - " << _align(y + height - radius, odd);
       // line to bottom-right corner
       cairo_line_to(cr, _align(x + width, odd), _align(y + height - radius, odd));

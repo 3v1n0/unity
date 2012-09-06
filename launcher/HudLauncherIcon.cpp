@@ -20,6 +20,7 @@
 #include "HudLauncherIcon.h"
 #include "Launcher.h"
 #include "UnityCore/GLibWrapper.h"
+#include "UnityCore/Variant.h"
 #include <NuxCore/Logger.h>
 
 #include "unity-shared/UBusMessages.h"
@@ -39,40 +40,42 @@ nux::logging::Logger logger("unity.launcher.hudlaunchericon");
 UBusManager HudLauncherIcon::ubus_manager_;
 
 HudLauncherIcon::HudLauncherIcon(LauncherHideMode hide_mode)
- : SingleMonitorLauncherIcon(0)
+ : SingleMonitorLauncherIcon(IconType::HUD, 0)
  , launcher_hide_mode_(hide_mode)
 {
   tooltip_text = _("HUD");
   icon_name = PKGDATADIR"/launcher_bfb.png";
-  SetQuirk(QUIRK_VISIBLE, false);
-  SetQuirk(QUIRK_RUNNING, false);
-  SetQuirk(QUIRK_ACTIVE, true);
-  SetIconType(TYPE_HUD);
+  SetQuirk(Quirk::VISIBLE, false);
+  SetQuirk(Quirk::RUNNING, false);
+  SetQuirk(Quirk::ACTIVE, true);
 
   background_color_ = nux::color::White;
 
-  ubus_manager_.RegisterInterest(UBUS_HUD_ICON_CHANGED, [&](GVariant *data)
-  {
-    std::string hud_icon_name;
-    const gchar* data_string = g_variant_get_string(data, NULL);
-    if (data_string)
-      hud_icon_name = data_string;
-    LOG_DEBUG(logger) << "Hud icon change: " << hud_icon_name;
-    if (hud_icon_name != icon_name)
-    {
-      if (hud_icon_name.empty())
-        icon_name = PKGDATADIR"/launcher_bfb.png";
-      else
-        icon_name = hud_icon_name;
-
-      EmitNeedsRedraw();
-    }
-  });
-
-  ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::bind(sigc::mem_fun(this, &HudLauncherIcon::OnOverlayShown), true));
-  ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::bind(sigc::mem_fun(this, &HudLauncherIcon::OnOverlayShown), false));
+  ubus_manager_.RegisterInterest(UBUS_HUD_ICON_CHANGED,
+                                 sigc::mem_fun(this, &HudLauncherIcon::OnHudIconChanged));
+  ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN,
+                                 sigc::bind(sigc::mem_fun(this, &HudLauncherIcon::OnOverlayShown),
+                                            true));
+  ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN,
+                                 sigc::bind(sigc::mem_fun(this, &HudLauncherIcon::OnOverlayShown),
+                                            false));
 
   mouse_enter.connect([&](int m) { ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW); });
+}
+
+void HudLauncherIcon::OnHudIconChanged(GVariant *data)
+{
+  std::string hud_icon_name = glib::Variant(data).GetString();
+  LOG_DEBUG(logger) << "Hud icon change: " << hud_icon_name;
+  if (hud_icon_name != icon_name)
+  {
+    if (hud_icon_name.empty())
+      icon_name = PKGDATADIR"/launcher_bfb.png";
+    else
+      icon_name = hud_icon_name;
+
+    EmitNeedsRedraw();
+  }
 }
 
 void HudLauncherIcon::SetHideMode(LauncherHideMode hide_mode)
@@ -82,7 +85,7 @@ void HudLauncherIcon::SetHideMode(LauncherHideMode hide_mode)
     launcher_hide_mode_ = hide_mode;
 
     if (launcher_hide_mode_ == LAUNCHER_HIDE_AUTOHIDE)
-      SetQuirk(QUIRK_VISIBLE, false);
+      SetQuirk(Quirk::VISIBLE, false);
   }
 }
 
@@ -99,8 +102,8 @@ void HudLauncherIcon::OnOverlayShown(GVariant* data, bool visible)
       launcher_hide_mode_ == LAUNCHER_HIDE_NEVER)
   {
     SetMonitor(overlay_monitor);
-    SetQuirk(QUIRK_VISIBLE, visible);
-    SetQuirk(QUIRK_ACTIVE, visible);
+    SetQuirk(Quirk::VISIBLE, visible);
+    SetQuirk(Quirk::ACTIVE, visible);
     tooltip_enabled = !visible;
     EmitNeedsRedraw();
   }
@@ -118,16 +121,10 @@ nux::Color HudLauncherIcon::GlowColor()
 
 void HudLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
-  if (GetQuirk(QUIRK_VISIBLE))
+  if (GetQuirk(Quirk::VISIBLE))
   {
     ubus_manager_.SendMessage(UBUS_HUD_CLOSE_REQUEST);
   }
-}
-
-std::list<DbusmenuMenuitem*> HudLauncherIcon::GetMenus()
-{
-  std::list<DbusmenuMenuitem*> result;
-  return result;
 }
 
 std::string HudLauncherIcon::GetName() const

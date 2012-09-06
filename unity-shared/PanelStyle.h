@@ -71,6 +71,7 @@ public:
   GtkStyleContext* GetStyleContext();
   nux::NBitmapData* GetBackground(int width, int height, float opacity);
   nux::BaseTexture* GetWindowButton(WindowButtonType type, WindowState state);
+  std::vector<std::string> GetWindowButtonFileNames(WindowButtonType type, WindowState state);
   nux::BaseTexture* GetFallbackWindowButton(WindowButtonType type, WindowState state);
   glib::Object<GdkPixbuf> GetHomeButton();
   std::string GetFontDescription(PanelItem item);
@@ -84,12 +85,14 @@ private:
   void Refresh();
 
   glib::Object<GtkStyleContext> _style_context;
+  glib::Object<GSettings> _gsettings;
+  std::string _theme_name;
+  nux::Color _text_color;
+
   glib::Signal<void, GtkSettings*, GParamSpec*> _style_changed_signal;
   glib::Signal<void, GtkSettings*, GParamSpec*> _font_changed_signal;
   glib::Signal<void, GtkSettings*, GParamSpec*> _dpi_changed_signal;
-  guint _gconf_notify_id;
-  std::string _theme_name;
-  nux::Color _text_color;
+  glib::Signal<void, GSettings*, gchar*> _settings_changed_signal;
 };
 
 }

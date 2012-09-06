@@ -9,6 +9,7 @@
 from __future__ import absolute_import
 
 from autopilot.matchers import Eventually
+from autopilot.testcase import multiply_scenarios
 import logging
 from testtools.matchers import Equals, Contains, Not
 from time import sleep
@@ -19,6 +20,22 @@ from unity.tests import UnityTestCase
 logger = logging.getLogger(__name__)
 
 class SwitcherTestCase(UnityTestCase):
+
+    scenarios = [
+        ('show_desktop_icon_true', {'show_desktop_option': True}),
+        ('show_desktop_icon_false', {'show_desktop_option': False}),
+    ]
+
+    def setUp(self):
+        super(SwitcherTestCase, self).setUp()
+        self.set_show_desktop(self.show_desktop_option)
+
+    def set_show_desktop(self, state):
+        if type(state) is not bool:
+            raise TypeError("'state' must be boolean, not %r" % type(state))
+        self.set_unity_option("disable_show_desktop", state)
+        self.assertThat(self.switcher.controller.show_desktop_disabled, Eventually(Equals(state)))
+
     def set_timeout_setting(self, state):
         if type(state) is not bool:
             raise TypeError("'state' must be boolean, not %r" % type(state))
@@ -29,9 +46,9 @@ class SwitcherTestCase(UnityTestCase):
         """Start some applications, returning their windows.
 
         If no applications are specified, the following will be started:
+         * Calculator
          * Character Map
-         * Calculator
-         * Calculator
+         * Character Map
 
          Windows are always started in the order that they are specified (which
         means the last specified application will *probably* be at the top of the
@@ -40,7 +57,7 @@ class SwitcherTestCase(UnityTestCase):
 
         """
         if len(args) == 0:
-            args = ('Character Map', 'Calculator', 'Calculator')
+            args = ('Calculator', 'Character Map', 'Character Map')
         windows = []
         for app in args:
             windows.append(self.start_app_window(app))
@@ -134,6 +151,8 @@ class SwitcherTests(SwitcherTestCase):
         open the switcher.
 
         """
+        self.start_app("Character Map")
+
         self.keybinding_hold("switcher/reveal_normal")
         self.addCleanup(self.keybinding_release, "switcher/reveal_normal")
         self.assertThat(self.switcher.visible, Eventually(Equals(False)))
@@ -144,6 +163,8 @@ class SwitcherTests(SwitcherTestCase):
 
     def test_switcher_cancel(self):
         """Pressing the switcher cancel keystroke must cancel the switcher."""
+        self.start_app("Character Map")
+
         self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
 
@@ -153,6 +174,8 @@ class SwitcherTests(SwitcherTestCase):
 
     def test_lazy_switcher_cancel(self):
         """Must be able to cancel the switcher after a 'lazy' initiation."""
+        self.start_app("Character Map")
+
         self.keybinding_hold("switcher/reveal_normal")
         self.addCleanup(self.keybinding_release, "switcher/reveal_normal")
         self.assertThat(self.switcher.visible, Eventually(Equals(False)))
@@ -208,24 +231,25 @@ class SwitcherWindowsManagementTests(SwitcherTestCase):
         Then we close the currently focused window.
 
         """
-        mah_win1, calc_win, mah_win2 = self.start_applications("Mahjongg", "Calculator", "Mahjongg")
-        self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
+        char_win1, calc_win, char_win2 = self.start_applications("Character Map", "Calculator", "Character Map")
+        self.assertVisibleWindowStack([char_win2, calc_win, char_win1])
 
         self.keybinding("switcher/reveal_normal")
         self.assertProperty(calc_win, is_focused=True)
-        self.assertVisibleWindowStack([calc_win, mah_win2, mah_win1])
+        self.assertVisibleWindowStack([calc_win, char_win2, char_win1])
 
         self.keybinding("switcher/reveal_normal")
-        self.assertProperty(mah_win2, is_focused=True)
-        self.assertVisibleWindowStack([mah_win2, calc_win, mah_win1])
+        self.assertProperty(char_win2, is_focused=True)
+        self.assertVisibleWindowStack([char_win2, calc_win, char_win1])
 
         self.keybinding("window/close")
         self.assertProperty(calc_win, is_focused=True)
-        self.assertVisibleWindowStack([calc_win, mah_win1])
+        self.assertVisibleWindowStack([calc_win, char_win1])
 
 
 class SwitcherDetailsTests(SwitcherTestCase):
     """Test the details mode for the switcher."""
+
     def setUp(self):
         super(SwitcherDetailsTests, self).setUp()
         self.set_timeout_setting(True)
@@ -271,10 +295,12 @@ class SwitcherDetailsModeTests(SwitcherTestCase):
 
     """
 
-    scenarios = [
-        ('initiate_with_grave', {'initiate_keycode': '`'}),
-        ('initiate_with_down', {'initiate_keycode': 'Down'}),
-    ]
+    scenarios = multiply_scenarios(SwitcherTestCase.scenarios,
+      [
+          ('initiate_with_grave', {'initiate_keycode': '`'}),
+          ('initiate_with_down', {'initiate_keycode': 'Down'}),
+      ]
+      )
 
     def test_can_start_details_mode(self):
         """Must be able to switch to details mode using selected scenario keycode.
@@ -308,6 +334,22 @@ class SwitcherDetailsModeTests(SwitcherTestCase):
         self.switcher.next_icon()
         self.assertThat(self.switcher.selection_index, Eventually(Equals(0)))
 
+    def test_detail_mode_selects_last_active_window(self):
+        """The active selection in detail mode must be the last focused window.
+        If it was the currently active application type.
+        """
+        char_win1, char_win2 = self.start_applications("Character Map", "Character Map")
+        self.assertVisibleWindowStack([char_win2, char_win1])
+
+        self.switcher.initiate()
+        while self.switcher.current_icon.tooltip_text != char_win2.application.name:
+            self.switcher.next_icon()
+        self.keyboard.press_and_release(self.initiate_keycode)
+        sleep(0.5)
+        self.switcher.select()
+
+        self.assertProperty(char_win1, is_focused=True)
+
 
 class SwitcherWorkspaceTests(SwitcherTestCase):
     """Test Switcher behavior with respect to multiple workspaces."""
@@ -339,7 +381,6 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
         self.workspace.switch_to(2)
         char_map = self.start_app("Character Map")
 
-
         self.switcher.initiate(SwitcherMode.ALL)
         self.addCleanup(self.switcher.terminate)
 
@@ -361,18 +402,34 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
         self.set_unity_option("alt_tab_timeout", False)
 
         self.workspace.switch_to(1)
-        self.start_app("Mahjongg")
+        self.start_app("Character Map")
 
         self.workspace.switch_to(3)
-        mah_win2 = self.start_app_window("Mahjongg")
+        char_win2 = self.start_app_window("Character Map")
         self.keybinding("window/minimize")
-        self.assertProperty(mah_win2, is_hidden=True)
+        self.assertProperty(char_win2, is_hidden=True)
 
         self.start_app("Calculator")
 
         self.switcher.initiate()
-        while self.switcher.current_icon.tooltip_text != mah_win2.application.name:
+        while self.switcher.current_icon.tooltip_text != char_win2.application.name:
             self.switcher.next_icon()
         self.switcher.select()
 
-        self.assertProperty(mah_win2, is_hidden=False)
+        self.assertProperty(char_win2, is_hidden=False)
+
+    def test_switcher_is_disabled_when_wall_plugin_active(self):
+        """The switcher must not open when the wall plugin is active using ctrl+alt+<direction>."""
+
+        initial_workspace = self.workspace.current_workspace
+        self.addCleanup(self.workspace.switch_to, initial_workspace)
+
+        self.workspace.switch_to(0)
+        sleep(1)
+        self.keyboard.press("Ctrl+Alt+Right")
+        self.addCleanup(self.keyboard.release, "Ctrl+Alt+Right")
+        sleep(1)
+        self.keybinding_hold_part_then_tap("switcher/reveal_normal")
+        self.addCleanup(self.switcher.terminate)
+
+        self.assertThat(self.switcher.visible, Eventually(Equals(False)))

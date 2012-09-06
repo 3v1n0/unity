@@ -429,7 +429,6 @@ void PanelIndicatorEntryView::Refresh()
   unsigned int width = 0;
   unsigned int icon_width = 0;
   unsigned int height = panel::Style::Instance().panel_height;
-  unsigned int text_width = 0;
 
   // First lets figure out our size
   if (pixbuf && IsIconVisible())
@@ -484,7 +483,7 @@ void PanelIndicatorEntryView::Refresh()
     pango_layout_context_changed(layout);
 
     pango_layout_get_extents(layout, nullptr, &log_rect);
-    text_width = log_rect.width / PANGO_SCALE;
+    unsigned int text_width = log_rect.width / PANGO_SCALE;
 
     if (icon_width)
       width += spacing_;

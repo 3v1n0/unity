@@ -206,6 +206,19 @@ class PanelTitleTests(PanelTestsBase):
         self.assertThat(lambda: text_win.title, Eventually(NotEquals(old_title)))
         self.assertThat(self.panel.title, Eventually(Equals(text_win.title)))
 
+    def test_panel_title_doesnt_change_with_switcher(self):
+        """Switching between apps must not change the Panels title."""
+        calc_win = self.open_new_application_window("Calculator")
+        text_win = self.open_new_application_window("Text Editor")
+        current_title = self.panel.title
+
+        self.switcher.initiate()
+        self.addCleanup(self.switcher.terminate)
+        self.switcher.next_icon()
+
+        self.assertThat(self.panel.title,
+                        Eventually(Equals(current_title)))
+
 
 class PanelWindowButtonsTests(PanelTestsBase):
 
@@ -615,6 +628,16 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.keyboard.type("World")
 
         self.assertThat(self.hud.search_string, Eventually(Equals("HelloWorld")))
+        
+    def test_double_click_unmaximize_window(self):
+		"""Double clicking the grab area must unmaximize a maximized window."""
+		gedit_win = self.open_new_application_window("Text Editor", maximized=True)
+		
+		self.panel.move_mouse_over_grab_area()
+		self.mouse.click()
+		self.mouse.click()
+		
+		self.assertThat(self.panel.title, Eventually(Equals(gedit_win.application.name)))
 
 
 class PanelHoverTests(PanelTestsBase):
@@ -807,10 +830,10 @@ class PanelMenuTests(PanelTestsBase):
 
     def test_menus_dont_show_if_a_new_application_window_is_opened(self):
         """This tests the menu discovery feature on new window for a know application."""
-        self.open_new_application_window("Calculator")
+        self.open_new_application_window("Character Map")
         self.sleep_menu_settle_period()
 
-        self.start_app("Calculator")
+        self.start_app("Character Map")
         sleep(self.panel.menus.fadein_duration / 1000.0)
         # Not using Eventually here since this is time-critical. Need to work
         # out a better way to do this.

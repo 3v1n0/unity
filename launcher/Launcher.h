@@ -24,15 +24,16 @@
 #include <Nux/View.h>
 #include <Nux/BaseWindow.h>
 #include <Nux/TimerProc.h>
+#include <NuxGraphics/GestureEvent.h>
 #include <NuxGraphics/IOpenGLAsmShader.h>
 
 #include "PointerBarrier.h"
 #include "unity-shared/AbstractIconRenderer.h"
 #include "unity-shared/BackgroundEffectHelper.h"
+#include "DevicesSettings.h"
 #include "DNDCollectionWindow.h"
 #include "DndData.h"
 #include "EdgeBarrierController.h"
-#include "GeisAdapter.h"
 #include "unity-shared/Introspectable.h"
 #include "LauncherModel.h"
 #include "LauncherOptions.h"
@@ -82,6 +83,8 @@ public:
   void SetModel(LauncherModel::Ptr model);
   LauncherModel::Ptr GetModel() const;
 
+  void SetDevicesSettings(DevicesSettings::Ptr devices_settings);
+
   void StartKeyShowLauncher();
   void EndKeyShowLauncher();
 
@@ -96,7 +99,8 @@ public:
     return _parent;
   };
 
-  nux::ObjectPtr<nux::View> GetActiveTooltip() const;  // nullptr = no tooltip
+  nux::ObjectPtr<nux::View> const& GetActiveTooltip() const;
+  nux::ObjectPtr<LauncherDragWindow> const& GetDraggedIcon() const;
 
   virtual void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -113,6 +117,9 @@ public:
   int GetMouseY() const;
 
   void Resize();
+
+  int GetDragDelta() const;
+  void SetHover(bool hovered);
 
   sigc::signal<void, char*, AbstractLauncherIcon::Ptr> launcher_addrequest;
   sigc::signal<void, AbstractLauncherIcon::Ptr> launcher_removerequest;
@@ -136,6 +143,7 @@ public:
 
   void RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherIcon::Ptr icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
 
+  virtual nux::GestureDeliveryRequest GestureEvent(const nux::GestureEvent &event);
 protected:
   // Introspectable methods
   std::string GetName() const;
@@ -180,12 +188,9 @@ private:
   void OnOptionChanged();
   void UpdateOptions(Options::Ptr options);
 
-  void OnWindowMapped(guint32 xid);
-  void OnWindowUnmapped(guint32 xid);
-
-  void OnDragStart(GeisAdapter::GeisDragData* data);
-  void OnDragUpdate(GeisAdapter::GeisDragData* data);
-  void OnDragFinish(GeisAdapter::GeisDragData* data);
+  void OnDragStart(const nux::GestureEvent &event);
+  void OnDragUpdate(const nux::GestureEvent &event);
+  void OnDragFinish(const nux::GestureEvent &event);
 
   bool HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event);
 
@@ -244,8 +249,9 @@ private:
   float IconCenterTransitionProgress(AbstractLauncherIcon::Ptr icon, struct timespec const& current) const;
   float IconVisibleProgress(AbstractLauncherIcon::Ptr icon, struct timespec const& current) const;
 
-  void SetHover(bool hovered);
   void SetHidden(bool hidden);
+
+  void UpdateChangeInMousePosition(int delta_x, int delta_y);
 
   void  SetDndDelta(float x, float y, nux::Geometry const& geo, timespec const& current);
   float DragLimiter(float x);
@@ -285,7 +291,7 @@ private:
 
   void OnActionDone(GVariant* data);
 
-  AbstractLauncherIcon::Ptr MouseIconIntersection(int x, int y);
+  virtual AbstractLauncherIcon::Ptr MouseIconIntersection(int x, int y);
   void EventLogic();
   void MouseDownLogic(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void MouseUpLogic(int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -293,7 +299,9 @@ private:
   void StartIconDragRequest(int x, int y);
   void StartIconDrag(AbstractLauncherIcon::Ptr icon);
   void EndIconDrag();
+  void ShowDragWindow();
   void UpdateDragWindowPosition(int x, int y);
+  void HideDragWindow();
 
   void ResetMouseDragState();
 
@@ -363,8 +371,8 @@ private:
   int _launcher_drag_delta_min;
   int _enter_y;
   int _last_button_press;
-  int _drag_out_id;
   float _drag_out_delta_x;
+  bool _drag_gesture_ongoing;
   float _last_reveal_progress;
 
   nux::Point2 _mouse_position;
@@ -387,8 +395,12 @@ private:
   ui::AbstractIconRenderer::Ptr icon_renderer;
   BackgroundEffectHelper bg_effect_helper_;
 
+  DevicesSettings::Ptr devices_settings_;
+
   UBusManager ubus_;
   glib::SourceManager sources_;
+
+  friend class TestLauncher;
 };
 
 }

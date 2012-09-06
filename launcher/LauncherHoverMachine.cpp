@@ -16,7 +16,6 @@
  *
  * Authored by: Didier Roche <didrocks@ubuntu.com>
  */
-#include <boost/lexical_cast.hpp>
 
 #include "LauncherHoverMachine.h"
 
@@ -110,7 +109,7 @@ LauncherHoverMachine::DebugHoverQuirks()
 {
   // Although I do wonder why we are returning a string representation
   // of the enum value as an integer anyway.
-  return boost::lexical_cast<std::string>(_quirks);
+  return std::to_string(_quirks);
 }
 
 } //unity namespace

@@ -37,7 +37,6 @@ class LauncherDragWindow : public nux::BaseWindow
   NUX_DECLARE_OBJECT_TYPE(LauncherDragWindow, nux::BaseWindow);
 public:
   LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> icon);
-
   ~LauncherDragWindow();
 
   void DrawContent(nux::GraphicsEngine& gfxContext, bool forceDraw);
@@ -45,14 +44,22 @@ public:
   void SetAnimationTarget(int x, int y);
   void StartAnimation();
 
-  bool Animating();
+  bool Animating() const;
+  bool Cancelled() const;
 
   sigc::signal<void> anim_completed;
+  sigc::signal<void> drag_cancel_request;
   sigc::connection on_anim_completed;
+
+protected:
+  bool InspectKeyEvent(unsigned int event_type, unsigned int keysym, const char* character);
+  bool AcceptKeyNavFocus();
 
 private:
   bool OnAnimationTimeout();
+  void CancelDrag();
 
+  bool _cancelled;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> _icon;
   nux::Point2 _animation_target;
   glib::Source::UniquePtr animation_timer_;

@@ -14,23 +14,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
 #include "DeviceLauncherSection.h"
+#include "DeviceNotificationDisplayImp.h"
+#include "DevicesSettings.h"
+#include "FileManagerOpenerImp.h"
+#include "VolumeImp.h"
 
 namespace unity
 {
 namespace launcher
 {
 
-DeviceLauncherSection::DeviceLauncherSection()
-  : monitor_(g_volume_monitor_get())
+DeviceLauncherSection::DeviceLauncherSection(AbstractVolumeMonitorWrapper::Ptr volume_monitor,
+                                             DevicesSettings::Ptr devices_settings)
+  : monitor_(volume_monitor)
+  , devices_settings_(devices_settings)
+  , file_manager_opener_(new FileManagerOpenerImp)
+  , device_notification_display_(new DeviceNotificationDisplayImp)
 {
-  typedef glib::Signal<void, GVolumeMonitor*, GVolume*> VolumeSignal;
-  sig_manager_.Add(new VolumeSignal(monitor_, "volume-added", sigc::mem_fun(this, &DeviceLauncherSection::OnVolumeAdded)));
-  sig_manager_.Add(new VolumeSignal(monitor_, "volume-removed", sigc::mem_fun(this, &DeviceLauncherSection::OnVolumeRemoved)));
+  monitor_->volume_added.connect(sigc::mem_fun(this, &DeviceLauncherSection::OnVolumeAdded));
+  monitor_->volume_removed.connect(sigc::mem_fun(this, &DeviceLauncherSection::OnVolumeRemoved));
 
-  device_populate_idle_.Run([&] () {
+  device_populate_idle_.Run([this] () {
     PopulateEntries();
     return false;
   });
@@ -38,51 +46,35 @@ DeviceLauncherSection::DeviceLauncherSection()
 
 void DeviceLauncherSection::PopulateEntries()
 {
-  GList* volumes = g_volume_monitor_get_volumes(monitor_);
-
-  for (GList* v = volumes; v; v = v->next)
-  {
-    if (!G_IS_VOLUME(v->data))
-      continue;
-
-    // This will unref the volume, since the list entries needs that.
-    // We'll keep a reference in the icon.
-    glib::Object<GVolume> volume(G_VOLUME(v->data));
-    DeviceLauncherIcon* icon = new DeviceLauncherIcon(volume);
-
-    map_[volume] = icon;
-    IconAdded.emit(AbstractLauncherIcon::Ptr(icon));
-  }
-
-  g_list_free(volumes);
+  for (auto volume : monitor_->GetVolumes())
+    TryToCreateAndAddIcon(volume);
 }
 
-/* Uses a std::map to track all the volume icons shown and not shown.
- * Keep in mind: when "volume-removed" is recevied we should erase
- * the pair (GVolume - DeviceLauncherIcon) from the std::map to avoid leaks
- */
-void DeviceLauncherSection::OnVolumeAdded(GVolumeMonitor* monitor, GVolume* volume)
+void DeviceLauncherSection::OnVolumeAdded(glib::Object<GVolume> const& volume)
 {
-  // This just wraps the volume in a glib::Object, global ref_count is only
-  // temporary changed.
-  glib::Object<GVolume> gvolume(volume, glib::AddRef());
-  DeviceLauncherIcon* icon = new DeviceLauncherIcon(gvolume);
-
-  map_[gvolume] = icon;
-  IconAdded.emit(AbstractLauncherIcon::Ptr(icon));
+  TryToCreateAndAddIcon(volume);
 }
 
-void DeviceLauncherSection::OnVolumeRemoved(GVolumeMonitor* monitor, GVolume* volume)
+void DeviceLauncherSection::TryToCreateAndAddIcon(glib::Object<GVolume> volume)
+{
+  if (map_.find(volume) != map_.end())
+    return;
+
+  VolumeLauncherIcon::Ptr icon(new VolumeLauncherIcon(std::make_shared<VolumeImp>(volume, file_manager_opener_, device_notification_display_),
+                                                        devices_settings_));
+
+  map_[volume] = icon;
+  IconAdded.emit(icon);
+}
+
+void DeviceLauncherSection::OnVolumeRemoved(glib::Object<GVolume> const& volume)
 {
   auto volume_it = map_.find(volume);
 
-  // It should not happen! Let me do the check anyway.
+  // Sanity check
   if (volume_it != map_.end())
-  {
-    volume_it->second->OnRemoved();
     map_.erase(volume_it);
-  }
 }
 
-} // namespace launcher
-} // namespace unity
+}
+}

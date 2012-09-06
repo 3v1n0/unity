@@ -58,7 +58,7 @@ struct StaticCairoText::Impl
   std::string GetEffectiveFont() const;
   Size GetTextExtents() const;
 
-  void DrawText(cairo_t* cr, int width, int height, Color const& color);
+  void DrawText(cairo_t* cr, int width, int height, int line_spacing, Color const& color);
 
   void UpdateTexture();
   void OnFontChanged();
@@ -67,7 +67,7 @@ struct StaticCairoText::Impl
 
   StaticCairoText* parent_;
   bool accept_key_nav_focus_;
-  bool need_new_extent_cache_;
+  mutable bool need_new_extent_cache_;
   // The three following are all set in get text extents.
   mutable Size cached_extent_;
   mutable Size cached_base_;
@@ -88,6 +88,7 @@ struct StaticCairoText::Impl
 
   int lines_;
   int actual_lines_;
+  float line_spacing_;
 };
 
 StaticCairoText::Impl::Impl(StaticCairoText* parent, std::string const& text)
@@ -104,6 +105,7 @@ StaticCairoText::Impl::Impl(StaticCairoText* parent, std::string const& text)
     // the desired height of the layout in Pango units if positive, or desired
     // number of lines if negative.
   , actual_lines_(0)
+  , line_spacing_(0.5)
 {
   GtkSettings* settings = gtk_settings_get_default();  // not ref'ed
   g_signal_connect(settings, "notify::gtk-font-name",
@@ -160,6 +162,16 @@ StaticCairoText::StaticCairoText(std::string const& text,
   SetAcceptKeyNavFocusOnMouseDown(false);
 }
 
+StaticCairoText::StaticCairoText(std::string const& text, bool escape_text,
+                                 NUX_FILE_LINE_DECL)
+  : View(NUX_FILE_LINE_PARAM)
+  , pimpl(new Impl(this, escape_text ? GetEscapedText(text) : text))
+{
+  SetMinimumSize(1, 1);
+  SetAcceptKeyNavFocusOnMouseDown(false);
+}
+
+
 StaticCairoText::~StaticCairoText()
 {
   delete pimpl;
@@ -186,6 +198,13 @@ void StaticCairoText::SetTextVerticalAlignment(AlignState state)
 void StaticCairoText::SetLines(int lines)
 {
   pimpl->lines_ = lines;
+  pimpl->UpdateTexture();
+  QueueDraw();
+}
+
+void StaticCairoText::SetLineSpacing(float line_spacing)
+{
+  pimpl->line_spacing_ = line_spacing;
   pimpl->UpdateTexture();
   QueueDraw();
 }
@@ -289,20 +308,50 @@ void StaticCairoText::PostDraw(GraphicsEngine& gfxContext, bool forceDraw)
   // intentionally left empty
 }
 
-void StaticCairoText::SetText(std::string const& text)
+void StaticCairoText::SetText(std::string const& text, bool escape_text)
 {
-  if (pimpl->text_ != text)
+  std::string tmp_text = escape_text ? GetEscapedText(text) : text;
+
+  if (pimpl->text_ != tmp_text)
   {
-    pimpl->text_ = text;
+    pimpl->text_ = tmp_text;
     pimpl->need_new_extent_cache_ = true;
     pimpl->UpdateTexture();
     sigTextChanged.emit(this);
   }
 }
 
+void StaticCairoText::SetMaximumSize(int w, int h)
+{
+  if (w != GetMaximumWidth())
+  {
+    pimpl->need_new_extent_cache_ = true;
+    View::SetMaximumSize(w, h);
+    pimpl->UpdateTexture();
+    return;
+  } 
+
+  View::SetMaximumSize(w, h);
+}
+
+void StaticCairoText::SetMaximumWidth(int w)
+{
+  if (w != GetMaximumWidth())
+  {
+    pimpl->need_new_extent_cache_ = true;
+    View::SetMaximumWidth(w);
+    pimpl->UpdateTexture();
+  }
+}
+
 std::string StaticCairoText::GetText() const
 {
   return pimpl->text_;
+}
+
+std::string StaticCairoText::GetEscapedText(std::string const& text)
+{
+  return glib::String(g_markup_escape_text(text.c_str(), -1)).Str();
 }
 
 Color StaticCairoText::GetTextColor() const
@@ -324,12 +373,15 @@ void StaticCairoText::SetTextColor(Color const& textColor)
 
 void StaticCairoText::SetFont(std::string const& font)
 {
-  pimpl->font_ = font;
-  pimpl->need_new_extent_cache_ = true;
-  Size s = GetTextExtents();
-  SetMinimumHeight(s.height);
-  NeedRedraw();
-  sigFontChanged.emit(this);
+  if (pimpl->font_ != font)
+  {  
+    pimpl->font_ = font;
+    pimpl->need_new_extent_cache_ = true;
+    Size s = GetTextExtents();
+    SetMinimumHeight(s.height);
+    NeedRedraw();
+    sigFontChanged.emit(this);
+  }
 }
 
 int StaticCairoText::GetLineCount() const
@@ -400,9 +452,10 @@ Size StaticCairoText::Impl::GetTextExtents() const
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, GetPangoEllipsizeMode());
   pango_layout_set_alignment(layout, GetPangoAlignment());
-  pango_layout_set_markup(layout, text_.c_str(), -1);
   pango_layout_set_height(layout, lines_);
   pango_layout_set_width(layout, maxwidth * PANGO_SCALE);
+  pango_layout_set_markup(layout, text_.c_str(), -1);
+  pango_layout_set_spacing(layout, line_spacing_ * PANGO_SCALE);
 
   pangoCtx = pango_layout_get_context(layout);  // is not ref'ed
   pango_cairo_context_set_font_options(pangoCtx,
@@ -430,6 +483,7 @@ Size StaticCairoText::Impl::GetTextExtents() const
   result.height = std::ceil(static_cast<float>(logRect.height) / PANGO_SCALE);
   cached_extent_ = result;
   baseline_ = pango_layout_get_baseline(layout) / PANGO_SCALE;
+  need_new_extent_cache_ = false;
 
   // clean up
   pango_font_description_free(desc);
@@ -442,6 +496,7 @@ Size StaticCairoText::Impl::GetTextExtents() const
 void StaticCairoText::Impl::DrawText(cairo_t* cr,
                                      int width,
                                      int height,
+                                     int line_spacing,
                                      Color const& color)
 {
   PangoLayout*          layout     = NULL;
@@ -464,6 +519,7 @@ void StaticCairoText::Impl::DrawText(cairo_t* cr,
   pango_layout_set_markup(layout, text_.c_str(), -1);
   pango_layout_set_width(layout, width * PANGO_SCALE);
   pango_layout_set_height(layout, height * PANGO_SCALE);
+  pango_layout_set_spacing(layout, line_spacing * PANGO_SCALE);
 
   pango_layout_set_height(layout, lines_);
   pangoCtx = pango_layout_get_context(layout);  // is not ref'ed
@@ -510,7 +566,7 @@ void StaticCairoText::Impl::UpdateTexture()
                                geo.width, geo.height);
 
   DrawText(cairo_graphics.GetInternalContext(),
-           geo.width, geo.height, text_color_);
+           geo.width, geo.height, line_spacing_, text_color_);
 
   texture2D_ = texture_ptr_from_cairo_graphics(cairo_graphics);
 }

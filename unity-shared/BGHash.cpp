@@ -31,14 +31,12 @@ namespace unity
 {
 
 BGHash::BGHash()
-  : transition_animator_(500)
-  , current_color_(unity::colors::Aubergine)
-  , new_color_(unity::colors::Aubergine)
-  , old_color_(unity::colors::Aubergine)
+  : current_color_(unity::colors::Aubergine)
 {
+  transition_animator_.SetDuration(500);
   override_color_.alpha = 0.0f;
 
-  transition_animator_.animation_updated.connect(sigc::mem_fun(this, &BGHash::OnTransitionUpdated));
+  transition_animator_.updated.connect(sigc::mem_fun(this, &BGHash::OnTransitionUpdated));
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, [&](GVariant *) { DoUbusColorEmit(); } );
 
   RefreshColor();
@@ -48,17 +46,17 @@ void BGHash::OverrideColor(nux::Color const& color)
 {
   override_color_ = color;
 
-  if (override_color_.alpha)
-  {
-    TransitionToNewColor(override_color_);
-    return;
-  }
-
   RefreshColor();
 }
 
 void BGHash::RefreshColor()
 {
+  if (override_color_.alpha > 0.0f)
+  {
+    TransitionToNewColor(override_color_);
+    return;
+  }
+
   Atom         real_type;
   gint         result;
   gint         real_format;
@@ -100,14 +98,6 @@ void BGHash::RefreshColor()
   }
 }
 
-nux::Color BGHash::InterpolateColor(nux::Color const& colora, nux::Color const& colorb, float value) const
-{
-  // takes two colours, transitions between them, we can do it linearly or whatever
-  // i don't think it will matter that much
-  // it doesn't happen too often
-  return colora + ((colorb - colora) * value);
-}
-
 void BGHash::TransitionToNewColor(nux::color::Color const& new_color)
 {
   if (new_color == current_color_)
@@ -115,16 +105,15 @@ void BGHash::TransitionToNewColor(nux::color::Color const& new_color)
 
   LOG_DEBUG(logger) << "transitioning from: " << current_color_.red << " to " << new_color.red;
 
-  old_color_ = current_color_;
-  new_color_ = new_color;
-
+  transition_animator_.SetStartValue(current_color_);
+  transition_animator_.SetFinishValue(new_color);
   transition_animator_.Stop();
   transition_animator_.Start();
 }
 
-void BGHash::OnTransitionUpdated(double progress)
+void BGHash::OnTransitionUpdated(nux::Color const& new_color)
 {
-  current_color_ = InterpolateColor(old_color_, new_color_, progress);
+  current_color_ = new_color;
   DoUbusColorEmit();
 }
 
@@ -155,7 +144,6 @@ nux::Color BGHash::MatchColor(nux::Color const& base_color) const
   colors[10] = nux::Color (0x1b134c);
   colors[11] = nux::Color (0x2c0d46);
 
-  float closest_diff = 200.0f;
   nux::Color chosen_color;
   nux::color::HueSaturationValue base_hsv (base_color);
 
@@ -168,6 +156,7 @@ nux::Color BGHash::MatchColor(nux::Color const& base_color) const
   }
   else
   {
+    float closest_diff = 200.0f;
     LOG_DEBUG (logger) << "got a colour image";
     // full colour image
     for (int i = 0; i < 11; i++)

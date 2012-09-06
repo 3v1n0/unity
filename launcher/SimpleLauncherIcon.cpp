@@ -43,8 +43,9 @@ namespace
 
 NUX_IMPLEMENT_OBJECT_TYPE(SimpleLauncherIcon);
 
-SimpleLauncherIcon::SimpleLauncherIcon()
-  : icon_name("", sigc::mem_fun(this, &SimpleLauncherIcon::SetIconName))
+SimpleLauncherIcon::SimpleLauncherIcon(IconType type)
+  : LauncherIcon(type)
+  , icon_name("", sigc::mem_fun(this, &SimpleLauncherIcon::SetIconName))
   , theme_changed_id_(0)
 {
   LauncherIcon::mouse_down.connect(sigc::mem_fun(this, &SimpleLauncherIcon::OnMouseDown));

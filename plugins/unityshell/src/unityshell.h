@@ -22,11 +22,14 @@
 #ifndef UNITYSHELL_H
 #define UNITYSHELL_H
 
+#include <NuxCore/AnimationController.h>
+#include <Nux/GesturesSubscription.h>
 #include <Nux/WindowThread.h>
 #include <NuxCore/Property.h>
 #include <sigc++/sigc++.h>
 #include <boost/shared_ptr.hpp>
 
+#include <scale/scale.h>
 #include <core/core.h>
 #include <core/pluginclasshandler.h>
 #include <composite/composite.h>
@@ -46,12 +49,12 @@
 #include "PanelController.h"
 #include "PanelStyle.h"
 #include "UScreen.h"
-#include "GestureEngine.h"
 #include "DebugDBusInterface.h"
 #include "SwitcherController.h"
 #include "UBusWrapper.h"
 #include "UnityshellPrivate.h"
 #include "UnityShowdesktopHandler.h"
+#include "ThumbnailGenerator.h"
 #ifndef USE_MODERN_COMPIZ_GL
 #include "ScreenEffectFramebufferObject.h"
 #endif
@@ -62,9 +65,13 @@
 #include <dlfcn.h>
 
 #include "HudController.h"
+#include "ThumbnailGenerator.h"
+#include "WindowMinimizeSpeedController.h"
 
 namespace unity
 {
+
+class WindowCairoContext;
 
 /* base screen class */
 class UnityScreen :
@@ -122,11 +129,6 @@ public:
                      const CompRegion&,
                      CompOutput*,
                      unsigned int);
-#ifdef USE_MODERN_COMPIZ_GL
-  void glPaintCompositedOutput (const CompRegion    &region,
-                                ::GLFramebufferObject *fbo,
-                                unsigned int         mask);
-#endif
 
   /* paint in the special case that the output is transformed */
   void glPaintTransformedOutput(const GLScreenPaintAttrib&,
@@ -190,6 +192,13 @@ public:
 
   bool forcePaintOnTop ();
 
+  void SetUpAndShowSwitcher(switcher::ShowMode show_mode = switcher::ShowMode::CURRENT_VIEWPORT);
+
+  void OnMinimizeDurationChanged();
+
+  switcher::Controller::Ptr switcher_controller();
+  launcher::Controller::Ptr launcher_controller();
+
 protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
@@ -239,12 +248,17 @@ private:
 
   void OnPanelStyleChanged();
 
+  void InitGesturesSupport();
+  
+  nux::animation::TickSource tick_source_;
+  nux::animation::AnimationController animation_controller_;
+
   Settings dash_settings_;
   dash::Style    dash_style_;
   panel::Style   panel_style_;
   FontSettings   font_settings_;
-  GeisAdapter    geis_adapter_;
   internal::FavoriteStoreGSettings favorite_store_;
+  ThumbnailGenerator thumbnail_generator_;
 
   /* The window thread should be the last thing removed, as c++ does it in reverse order */
   std::unique_ptr<nux::WindowThread> wt;
@@ -261,7 +275,15 @@ private:
   std::list<shortcut::AbstractHint::Ptr> hints_;
   bool enable_shortcut_overlay_;
 
-  GestureEngine                         gesture_engine_;
+  /* Subscription for gestures that manipulate Unity launcher */
+  std::unique_ptr<nux::GesturesSubscription> gestures_sub_launcher_;
+
+  /* Subscription for gestures that manipulate Unity dash */
+  std::unique_ptr<nux::GesturesSubscription> gestures_sub_dash_;
+
+  /* Subscription for gestures that manipulate windows. */
+  std::unique_ptr<nux::GesturesSubscription> gestures_sub_windows_;
+
   bool                                  needsRelayout;
   bool                                  _in_paint;
   bool                                  super_keypressed_;
@@ -323,7 +345,11 @@ private:
 
   UBusManager ubus_manager_;
   glib::SourceManager sources_;
+  unity::ThumbnailGenerator thumb_generator;
 
+  Window highlighted_window_;
+
+  WindowMinimizeSpeedController* minimize_speed_controller;
   friend class UnityWindow;
 };
 
@@ -332,6 +358,7 @@ class UnityWindow :
   public GLWindowInterface,
   public ShowdesktopHandlerWindowInterface,
   public compiz::WindowInputRemoverLockAcquireInterface,
+  public WrapableHandler<ScaleWindowInterface, 4>,
   public BaseSwitchWindow,
   public PluginClassHandler <UnityWindow, CompWindow>
 {
@@ -392,11 +419,22 @@ public:
 
   void handleEvent (XEvent *event);
 
+  CompRect closeButtonArea ();
+
   typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>
           UnityMinimizedHandler;
   std::unique_ptr <UnityMinimizedHandler> mMinimizeHandler;
 
   ShowdesktopHandler             *mShowdesktopHandler;
+
+  //! Emited when CompWindowNotifyBeforeDestroy is received
+  sigc::signal<void> being_destroyed;
+
+  void scaleSelectWindow ();
+  void scalePaintDecoration (const GLWindowPaintAttrib &,
+                             const GLMatrix &,
+                             const CompRegion &,
+                             unsigned int);
 
 private:
   void DoEnableFocus ();
@@ -429,8 +467,32 @@ private:
 
   compiz::WindowInputRemoverLock::Ptr GetInputRemover ();
 
+  void DrawWindowTitle (const GLWindowPaintAttrib& attrib,
+                        const GLMatrix& transform,
+                        unsigned int mask,
+                        float x, float y, float x2, float y2);
+  void DrawTexture (GLTexture *icon,
+                    const GLWindowPaintAttrib& attrib,
+                    const GLMatrix& transform,
+                    unsigned int mask,
+                    float x, float y,
+                    int &maxWidth, int &maxHeight);
+  void RenderText (WindowCairoContext *context,
+                   float x, float y,
+                   float maxWidth, float maxHeight);
+  WindowCairoContext* CreateCairoContext (float width, float height);
+
+  // based on compiz text plugin
+  CompString GetWindowName (Window id);
+  CompString GetUtf8Property (Window id, Atom atom);
+  CompString GetTextProperty (Window id, Atom atom);
+
   compiz::WindowInputRemoverLock::Weak input_remover_;
   glib::Source::UniquePtr focus_desktop_timeout_;
+
+  GLTexture::List close_icon_;
+  CompRect close_button_area_;
+  GtkStyleContext* window_header_style_;
 };
 
 

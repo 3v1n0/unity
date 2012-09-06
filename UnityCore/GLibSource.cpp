@@ -18,7 +18,6 @@
 */
 
 #include "GLibSource.h"
-#include <boost/lexical_cast.hpp>
 
 namespace unity
 {
@@ -70,13 +69,12 @@ Source::Priority Source::GetPriority() const
   return static_cast<Priority>(prio);
 }
 
-bool Source::Run(Callback callback)
+bool Source::Run(Callback const& callback)
 {
   if (!source_ || source_id_ || IsRunning())
     return false;
 
-  callback_ = callback;
-  callback_data_ = new CallBackData(this);
+  callback_data_ = new CallBackData(this, callback);
 
   g_source_set_callback(source_, SourceCallback, callback_data_, DestroyCallback);
   source_id_ = g_source_attach(source_, nullptr);
@@ -102,16 +100,14 @@ gboolean Source::SourceCallback(gpointer data)
   if (!data)
     return G_SOURCE_REMOVE;
 
-  auto self = static_cast<CallBackData*>(data)->self;
+  auto cb_data = static_cast<CallBackData*>(data);
 
-  if (self && self->callback_ && self->callback_())
+  if (cb_data && cb_data->callback_fn_ && cb_data->callback_fn_())
   {
     return G_SOURCE_CONTINUE;
   }
-  else
-  {
-    return G_SOURCE_REMOVE;
-  }
+
+  return G_SOURCE_REMOVE;
 }
 
 void Source::DestroyCallback(gpointer data)
@@ -134,7 +130,7 @@ void Source::DestroyCallback(gpointer data)
 }
 
 
-Timeout::Timeout(unsigned int milliseconds, Callback cb, Priority prio)
+Timeout::Timeout(unsigned int milliseconds, Callback const& cb, Priority prio)
 {
   Init(milliseconds, prio);
   Run(cb);
@@ -152,7 +148,7 @@ void Timeout::Init(unsigned int milliseconds, Priority prio)
 }
 
 
-TimeoutSeconds::TimeoutSeconds(unsigned int seconds, Callback cb, Priority prio)
+TimeoutSeconds::TimeoutSeconds(unsigned int seconds, Callback const& cb, Priority prio)
 {
   Init(seconds, prio);
   Run(cb);
@@ -170,7 +166,7 @@ void TimeoutSeconds::Init(unsigned int seconds, Priority prio)
 }
 
 
-Idle::Idle(Callback cb, Priority prio)
+Idle::Idle(Callback const& cb, Priority prio)
 {
   Init(prio);
   Run(cb);
@@ -225,7 +221,7 @@ bool SourceManager::Add(Source::Ptr const& source, std::string const& nick)
   if (source_nick.empty())
   {
     /* If we don't have a nick, we use the source pointer string as nick. */
-    source_nick = boost::lexical_cast<std::string>(source.get());
+    source_nick = std::to_string(reinterpret_cast<uintptr_t>(source.get()));
   }
 
   auto old_source_it = sources_.find(source_nick);
@@ -256,7 +252,7 @@ Source::Ptr SourceManager::AddTimeout(unsigned int milliseconds, std::string con
   return nullptr;
 }
 
-Source::Ptr SourceManager::AddTimeout(unsigned int milliseconds, Source::Callback cb, std::string const& nick)
+Source::Ptr SourceManager::AddTimeout(unsigned int milliseconds, Source::Callback const& cb, std::string const& nick)
 {
   auto timeout = std::make_shared<Timeout>(milliseconds);
 
@@ -281,7 +277,7 @@ Source::Ptr SourceManager::AddTimeoutSeconds(unsigned int seconds, std::string c
   return nullptr;
 }
 
-Source::Ptr SourceManager::AddTimeoutSeconds(unsigned int seconds, Source::Callback cb, std::string const& nick)
+Source::Ptr SourceManager::AddTimeoutSeconds(unsigned int seconds, Source::Callback const& cb, std::string const& nick)
 {
   auto timeout = std::make_shared<TimeoutSeconds>(seconds);
 
@@ -306,7 +302,7 @@ Source::Ptr SourceManager::AddIdle(std::string const& nick)
   return nullptr;
 }
 
-Source::Ptr SourceManager::AddIdle(Source::Callback cb, std::string const& nick)
+Source::Ptr SourceManager::AddIdle(Source::Callback const& cb, std::string const& nick)
 {
   auto idle = std::make_shared<Idle>();
 

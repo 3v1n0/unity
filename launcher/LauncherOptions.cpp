@@ -26,42 +26,42 @@ namespace launcher
 {
 
 Options::Options()
+    // defaults from XML file
+  : hide_mode(LAUNCHER_HIDE_NEVER)
+  , launch_animation(LAUNCH_ANIMATION_PULSE)
+  , urgent_animation(URGENT_ANIMATION_WIGGLE)
+  , auto_hide_animation(FADE_AND_SLIDE)
+  , backlight_mode(BACKLIGHT_NORMAL)
+  , reveal_trigger(RevealTrigger::EDGE)
+  , icon_size(48)
+  , tile_size(54)
+  , background_alpha(0.6667)
+  , edge_decay_rate(1500)
+  , edge_overcome_pressure(2000)
+  , edge_stop_velocity(6500)
+  , edge_reveal_pressure(2000)
+  , edge_responsiveness(2.0f)
+  , edge_passed_disabled_ms(1000)
+  , edge_resist(true)
+  , show_for_all(false)
 {
-  // defaults from XML file
-  auto_hide_animation = FADE_AND_SLIDE;
-  background_alpha = 0.6667;
-  backlight_mode = BACKLIGHT_ALWAYS_ON;
-  edge_decay_rate = 1500;
-  edge_overcome_pressure = 2000;
-  edge_responsiveness = 2.0f;
-  edge_reveal_pressure = 2000;
-  edge_stop_velocity = 6500;
-  hide_mode = LAUNCHER_HIDE_NEVER;
-  icon_size = 48;
-  launch_animation = LAUNCH_ANIMATION_PULSE;
-  reveal_trigger = RevealTrigger::EDGE;
-  tile_size = 54;
-  urgent_animation = URGENT_ANIMATION_WIGGLE;
-  edge_resist = true;
-  show_for_all = false;
-
-  auto_hide_animation.changed.connect   ([&] (AutoHideAnimation value)-> void { option_changed.emit(); });
-  background_alpha.changed.connect      ([&] (float value)            -> void { option_changed.emit(); });
-  backlight_mode.changed.connect        ([&] (BacklightMode value)    -> void { option_changed.emit(); });
-  edge_decay_rate.changed.connect       ([&] (int value)              -> void { option_changed.emit(); });
-  edge_overcome_pressure.changed.connect([&] (int value)              -> void { option_changed.emit(); });
-  edge_responsiveness.changed.connect   ([&] (float value)            -> void { option_changed.emit(); });
-  edge_reveal_pressure.changed.connect  ([&] (int value)              -> void { option_changed.emit(); });
-  edge_stop_velocity.changed.connect    ([&] (int value)              -> void { option_changed.emit(); });
-  hide_mode.changed.connect             ([&] (LauncherHideMode value) -> void { option_changed.emit(); });
-  icon_size.changed.connect             ([&] (int value)              -> void { option_changed.emit(); });
-  launch_animation.changed.connect      ([&] (LaunchAnimation value)  -> void { option_changed.emit(); });
-  reveal_trigger.changed.connect        ([&] (RevealTrigger vallue)   -> void { option_changed.emit(); });
-  tile_size.changed.connect             ([&] (int value)              -> void { option_changed.emit(); });
-  urgent_animation.changed.connect      ([&] (UrgentAnimation value)  -> void { option_changed.emit(); });
-  edge_resist.changed.connect           ([&] (bool value)             -> void { option_changed.emit(); });
+  auto_hide_animation.changed.connect    ([this] (AutoHideAnimation value) { option_changed.emit(); });
+  background_alpha.changed.connect       ([this] (float value)             { option_changed.emit(); });
+  backlight_mode.changed.connect         ([this] (BacklightMode value)     { option_changed.emit(); });
+  edge_decay_rate.changed.connect        ([this] (int value)               { option_changed.emit(); });
+  edge_overcome_pressure.changed.connect ([this] (int value)               { option_changed.emit(); });
+  edge_responsiveness.changed.connect    ([this] (float value)             { option_changed.emit(); });
+  edge_reveal_pressure.changed.connect   ([this] (int value)               { option_changed.emit(); });
+  edge_stop_velocity.changed.connect     ([this] (int value)               { option_changed.emit(); });
+  edge_passed_disabled_ms.changed.connect([this] (unsigned value)          { option_changed.emit(); });
+  hide_mode.changed.connect              ([this] (LauncherHideMode value)  { option_changed.emit(); });
+  icon_size.changed.connect              ([this] (int value)               { option_changed.emit(); });
+  launch_animation.changed.connect       ([this] (LaunchAnimation value)   { option_changed.emit(); });
+  reveal_trigger.changed.connect         ([this] (RevealTrigger vallue)    { option_changed.emit(); });
+  tile_size.changed.connect              ([this] (int value)               { option_changed.emit(); });
+  urgent_animation.changed.connect       ([this] (UrgentAnimation value)   { option_changed.emit(); });
+  edge_resist.changed.connect            ([this] (bool value)              { option_changed.emit(); });
 }
-
 
 }
 }

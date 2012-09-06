@@ -174,7 +174,7 @@ on_search_changed(UnityScope* scope, UnityLensSearch *search,
     g_free(name);
   }
 
-  g_signal_emit_by_name (search, "finished");
+  unity_lens_search_finished (search);
 }
 
 static UnityActivationResponse*
@@ -183,15 +183,27 @@ on_activate_uri(UnityScope* scope, const char* uri, ServiceLens* self)
   return unity_activation_response_new(UNITY_HANDLED_TYPE_HIDE_DASH, "");
 }
 
+static UnityActivationResponse*
+preview_action_activated(UnityPreviewAction* action, const char* uri)
+{
+  return unity_activation_response_new(UNITY_HANDLED_TYPE_SHOW_DASH, "");
+}
+
 static UnityPreview*
 on_preview_uri(UnityScope* scope, const char* uri, ServiceLens *self)
 {
-  return NULL;
-  // FIXME: update when the new preview types are well defined
-  /*
-  return (UnityPreview*)unity_generic_preview_new(
-      "Animus Vox", "The Glitch Mob - Drink The Sea", NULL);
-  */
+  UnityPreviewAction* action;
+  UnityMoviePreview* preview;
+
+  preview = unity_movie_preview_new("A movie", "With subtitle",
+                                    "And description", NULL);
+
+  action = unity_preview_action_new("action_A", "An action", NULL);
+  unity_preview_add_action(UNITY_PREVIEW(preview), action);
+  g_signal_connect(action, "activated",
+                   G_CALLBACK(preview_action_activated), NULL);
+
+  return (UnityPreview*) preview;
 }
 
 ServiceLens*

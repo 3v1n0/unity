@@ -56,7 +56,7 @@ unity::debug::Introspectable::IntrospectableList LauncherModel::GetIntrospectabl
 
 bool LauncherModel::IconShouldShelf(AbstractLauncherIcon::Ptr icon) const
 {
-  return icon->GetIconType() == AbstractLauncherIcon::TYPE_TRASH;
+  return icon->GetIconType() == AbstractLauncherIcon::IconType::TRASH;
 }
 
 bool LauncherModel::CompareIcons(AbstractLauncherIcon::Ptr first, AbstractLauncherIcon::Ptr second)
@@ -79,14 +79,14 @@ LauncherModel::Populate()
   iterator it, it2;
 
   int i = 0;
-  for (it = main_begin(); it != main_end(); it++)
+  for (it = main_begin(); it != main_end(); ++it)
   {
     _inner.push_back(*it);
     (*it)->SetSortPriority(i);
     ++i;
   }
 
-  for (it = shelf_begin(); it != shelf_end(); it++)
+  for (it = shelf_begin(); it != shelf_end(); ++it)
   {
     _inner.push_back(*it);
     (*it)->SetSortPriority(i);
@@ -161,7 +161,7 @@ LauncherModel::IconHasSister(AbstractLauncherIcon::Ptr icon) const
   const_iterator it;
   const_iterator end;
 
-  if (icon && icon->GetIconType() == AbstractLauncherIcon::TYPE_DEVICE)
+  if (icon && icon->GetIconType() == AbstractLauncherIcon::IconType::DEVICE)
     return true;
 
   if (IconShouldShelf(icon))
@@ -357,7 +357,7 @@ void LauncherModel::SelectNext()
     if (temp >= Size())
       temp = 0;
 
-    if (_inner[temp]->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE))
+    if (_inner[temp]->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE))
     {
       selection_ = temp;
       selection_changed.emit(Selection());
@@ -377,7 +377,7 @@ void LauncherModel::SelectPrevious()
     if (temp < 0)
       temp = Size() - 1;
 
-    if (_inner[temp]->GetQuirk(AbstractLauncherIcon::QUIRK_VISIBLE))
+    if (_inner[temp]->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE))
     {
       selection_ = temp;
       selection_changed.emit(Selection());
@@ -387,6 +387,41 @@ void LauncherModel::SelectPrevious()
   }
 }
 
+AbstractLauncherIcon::Ptr LauncherModel::GetClosestIcon(AbstractLauncherIcon::Ptr icon, bool& is_before) const
+{
+  AbstractLauncherIcon::Ptr prev, next;
+  bool found_target = false;
+
+  for (auto const& current : _inner)
+  {
+    if (current->GetIconType() != icon->GetIconType())
+      continue;
+
+    if (!found_target)
+    {
+      if (current == icon)
+      {
+        found_target = true;
+
+        if (prev)
+          break;
+      }
+      else
+      {
+        prev = current;
+      }
+    }
+    else
+    {
+      next = current;
+      break;
+    }
+  }
+
+  is_before = next.IsNull();
+
+  return is_before ? prev : next;
+}
 
 /* iterators */
 
@@ -409,7 +444,7 @@ LauncherModel::at(int index)
   int i;
 
   // start currently selected icon
-  for (it = _inner.begin(), i = 0; it != _inner.end(); it++, i++)
+  for (it = _inner.begin(), i = 0; it != _inner.end(); ++it, i++)
   {
     if (i == index)
       return it;

@@ -14,24 +14,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
-#ifndef _DEVICE_LAUNCHER_SECTION_H_
-#define _DEVICE_LAUNCHER_SECTION_H_
+#ifndef UNITYSHELL_DEVICE_LAUNCHER_SECTION_H
+#define UNITYSHELL_DEVICE_LAUNCHER_SECTION_H
 
 #include <map>
+#include <memory>
 
-#include <gio/gio.h>
-#include <sigc++/sigc++.h>
-#include <sigc++/signal.h>
-#include <UnityCore/GLibWrapper.h>
-#include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibSource.h>
 
-#include "DeviceLauncherIcon.h"
-
-class Launcher;
-class LauncherIcon;
+#include "AbstractVolumeMonitorWrapper.h"
+#include "DevicesSettings.h"
+#include "DeviceNotificationDisplay.h"
+#include "FileManagerOpener.h"
+#include "VolumeLauncherIcon.h"
 
 namespace unity
 {
@@ -41,24 +39,27 @@ namespace launcher
 class DeviceLauncherSection : public sigc::trackable
 {
 public:
-  DeviceLauncherSection();
+  DeviceLauncherSection(AbstractVolumeMonitorWrapper::Ptr volume_monitor,
+                        DevicesSettings::Ptr devices_settings);
 
   sigc::signal<void, AbstractLauncherIcon::Ptr> IconAdded;
 
 private:
   void PopulateEntries();
+  void OnVolumeAdded(glib::Object<GVolume> const& volume);
+  void OnVolumeRemoved(glib::Object<GVolume> const& volume);
+  void TryToCreateAndAddIcon(glib::Object<GVolume> volume);
 
-  void OnVolumeAdded(GVolumeMonitor* monitor, GVolume* volume);
-  void OnVolumeRemoved(GVolumeMonitor* monitor, GVolume* volume);
+  std::map<GVolume*, VolumeLauncherIcon::Ptr> map_;
+  AbstractVolumeMonitorWrapper::Ptr monitor_;
+  DevicesSettings::Ptr devices_settings_;
+  FileManagerOpener::Ptr file_manager_opener_;
+  DeviceNotificationDisplay::Ptr device_notification_display_;
 
-private:
-  std::map<GVolume*, DeviceLauncherIcon*> map_;
-  glib::Object<GVolumeMonitor> monitor_;
   glib::Idle device_populate_idle_;
-  glib::SignalManager sig_manager_;
 };
 
 }
-} // namespace unity
+}
 
-#endif // _DEVICE_LAUNCHER_SECTION_H_
+#endif

@@ -37,15 +37,15 @@ set (LAUNCHER_SOURCES
      DNDCollectionWindow.cpp
      Decaymulator.cpp
      DesktopLauncherIcon.cpp
-     DeviceLauncherIcon.cpp
      DeviceLauncherSection.cpp
-     DevicesSettings.cpp
+     DeviceNotificationDisplayImp.cpp
+     DevicesSettingsImp.cpp
      DndData.cpp
      EdgeBarrierController.cpp
      FavoriteStore.cpp
      FavoriteStoreGSettings.cpp
      FavoriteStorePrivate.cpp
-     GeisAdapter.cpp
+     FileManagerOpenerImp.cpp
      HudLauncherIcon.cpp
      Launcher.cpp
      LauncherController.cpp
@@ -72,6 +72,9 @@ set (LAUNCHER_SOURCES
      SpacerLauncherIcon.cpp
      Tooltip.cpp
      TrashLauncherIcon.cpp
+     VolumeImp.cpp
+     VolumeLauncherIcon.cpp
+     VolumeMonitorWrapper.cpp
      )
 
 add_library (launcher-lib STATIC ${LAUNCHER_SOURCES})
@@ -87,7 +90,7 @@ set (SWITCHER_SOURCES
 add_library (switcher-lib STATIC ${SWITCHER_SOURCES})
 add_dependencies (switcher-lib unity-core-${UNITY_API_VERSION} unity-shared)
 
-# 
+#
 # Standalone variant
 #
 add_executable (launcher StandaloneLauncher.cpp)

@@ -49,9 +49,9 @@ public:
   {
     tooltip_text = "Mock Icon";
     sort_priority_ = 0;
-    type_ = TYPE_APPLICATION;
+    type_ = IconType::APPLICATION;
 
-    for (int i = 0; i < QUIRK_LAST; ++i)
+    for (unsigned i = 0; i < unsigned(Quirk::LAST); ++i)
     {
       quirks_[i] = false;
     }
@@ -130,11 +130,16 @@ public:
     return false;
   }
 
-  void        SetCenter(nux::Point3 center, int monitor, nux::Geometry geo) {}
+  void SetCenter(nux::Point3 center, int monitor, nux::Geometry geo)
+  {
+    center.x += geo.x;
+    center.y += geo.y;
+    center_[monitor] = center;
+  }
 
   nux::Point3 GetCenter(int monitor)
   {
-    return nux::Point3();
+    return center_[monitor];
   }
 
   nux::Point3 GetSavedCenter(int monitor)
@@ -206,23 +211,23 @@ public:
 
   bool GetQuirk(Quirk quirk) const
   {
-    return quirks_[quirk];
+    return quirks_[unsigned(quirk)];
   }
 
   void SetQuirk(Quirk quirk, bool value)
   {
-    quirks_[quirk] = value;
+    quirks_[unsigned(quirk)] = value;
+    clock_gettime(CLOCK_MONOTONIC, &(quirk_times_[unsigned(quirk)]));
   }
 
   void ResetQuirkTime(Quirk quirk) {};
 
   struct timespec GetQuirkTime(Quirk quirk)
   {
-    timespec tv;
-    return tv;
+    return quirk_times_[unsigned(quirk)];
   }
 
-  IconType GetIconType()
+  IconType GetIconType() const
   {
     return type_;
   }
@@ -260,9 +265,9 @@ public:
     return 0;
   }
 
-  std::list<DbusmenuMenuitem*> Menus()
+  MenuItemsVector Menus()
   {
-    return std::list<DbusmenuMenuitem*> ();
+    return MenuItemsVector ();
   }
 
   nux::DndAction QueryAcceptDrop(DndData const& dnd_data)
@@ -344,7 +349,9 @@ private:
   nux::BaseTexture* icon_;
   int sort_priority_;
   IconType type_;
-  bool quirks_[QUIRK_LAST];
+  bool quirks_[unsigned(Quirk::LAST)];
+  timespec quirk_times_[unsigned(Quirk::LAST)];
+  std::map<int, nux::Point3> center_;
 };
 
 }
