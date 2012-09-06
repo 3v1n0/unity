@@ -223,9 +223,9 @@ UnityMTGrabHandlesScreen::raiseHandle (const boost::shared_ptr <const unity::MT:
 void
 UnityMTGrabHandlesScreen::handleEvent(XEvent* event)
 {
-  CompWindow* w, *oldPrev, *oldNext;
+  CompWindow* w;
 
-  w = oldPrev = oldNext = NULL;
+  w = NULL;
 
   switch (event->type)
   {
