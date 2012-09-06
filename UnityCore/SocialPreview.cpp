@@ -61,6 +61,18 @@ SocialPreview::Impl::Impl(SocialPreview* owner, glib::Object<GObject> const& pro
   glib::Object<GIcon> icon(unity_protocol_social_preview_get_avatar(preview),
                            glib::AddRef());
   avatar_ = icon;
+
+  int comments_len;
+  auto comments = unity_protocol_social_preview_get_comments(preview, &comments_len);
+  printf ("before comments loop: %d\n", comments_len);
+  for (int i = 0; i < comments_len; i++)
+  {
+    printf ("in comments loop\n");
+    UnityProtocolCommentRaw *raw_comment = &comments[i];
+    comments_list_.push_back(std::make_shared<Comment>(
+          raw_comment->id, raw_comment->display_name, raw_comment->content,
+          raw_comment->time));
+  }
       
   SetupGetters();
 }

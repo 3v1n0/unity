@@ -189,7 +189,7 @@ void TestRunner::NavRight()
   const char* description = "I know what we are going to do today!";
 
  // creates a generic preview object
-  glib::Object<GIcon> iconHint1(g_icon_new_for_string("https://twimg0-a.akamaihd.net/profile_images/363231741/250px-Phineas2.jpg", NULL));
+  glib::Object<GIcon> iconHint1(g_icon_new_for_string("https://twimg0-a.akamaihd.net/profile_images/363231741/250px-Phineas2_reasonably_small.jpg", NULL));
   glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/6/lens-nav-home.svg", NULL));
 
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_social_preview_new()));
