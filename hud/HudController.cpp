@@ -129,6 +129,7 @@ int Controller::GetTargetMonitor()
     target_monitor = monitor_index_;
   else
     target_monitor = UScreen::GetDefault()->GetMonitorWithMouse();
+  return target_monitor;
 }
 
 bool Controller::IsLockedToLauncher(int monitor)
