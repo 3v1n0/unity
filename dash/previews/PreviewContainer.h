@@ -81,7 +81,6 @@ public:
 protected:
   void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
   void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);
-  void PreLayoutManagement();
 
   bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
   void OnKeyDown(unsigned long event_type, unsigned long event_keysym, unsigned long event_state, const TCHAR* character, unsigned short key_repeat_count);
@@ -101,7 +100,6 @@ private:
   PreviewNavigator* nav_right_;
   PreviewContent* content_layout_;
   Navigation nav_disabled_;
-  int last_calc_height_;
 
   // Animation
   struct timespec  last_progress_time_;
