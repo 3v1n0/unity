@@ -394,7 +394,7 @@ void SearchBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
     highlight_layer_->SetGeometry(geo);
     highlight_layer_->Renderlayer(graphics_engine);
   }
-  else
+  else if (expander_view_ && expander_view_->IsVisible())
   {
     nux::Geometry geo(expander_view_->GetGeometry());
 
