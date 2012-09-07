@@ -460,3 +460,9 @@ PluginAdapter::AddProperties(GVariantBuilder* builder)
          .add("viewport_switch_running", IsViewPortSwitchStarted())
          .add("showdesktop_active", _in_show_desktop);
 }
+
+std::string
+PluginAdapter::GetWindowName(guint32 xid) const
+{
+  return "";
+}
