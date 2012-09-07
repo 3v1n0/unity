@@ -102,19 +102,15 @@ void SocialPreviewComments::PreLayoutManagement()
         width = style.GetDetailsPanelMinimumWidth();
     }
 
-    printf ("width: %d\n", width);
     if (comment_width < width)
     {
       comment_width = width;
     }
-    printf ("comment_width: %d\n", comment_width);
   }
 
   int comment_value_width = geo.width;
   comment_value_width -= layout_spacing;
-  printf ("comment_value_width 1: %d\n", comment_value_width);
   comment_value_width = MAX(0, comment_value_width);
-  printf ("comment_value_width 2: %d\n", comment_value_width);
 
   for (Comment const& comment : comments_)
   {
@@ -145,10 +141,8 @@ void SocialPreviewComments::SetupViews()
   nux::VLayout* layout = new nux::VLayout();
   layout->SetSpaceBetweenChildren(6);
 
-  printf ("HERE\n");
   for (dash::SocialPreview::CommentPtr comment : social_preview_model->GetComments())
   {
-    printf ("COMMENT: %s\n", comment->content.c_str());
 
     nux::HLayout* name_layout = new nux::HLayout();
     name_layout->SetSpaceBetweenChildren(layout_spacing);
