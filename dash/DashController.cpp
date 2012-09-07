@@ -38,7 +38,22 @@ namespace
 {
 nux::logging::Logger logger("unity.dash.controller");
 const unsigned int PRELOAD_TIMEOUT_LENGTH = 40;
+
+const std::string DBUS_NAME = "com.canonical.Unity.Dash";
+const std::string DBUS_PATH = "/com/canonical/Unity/Dash";
+const std::string DBUS_INTROSPECTION =
+  "<node>"
+  "  <interface name='com.canonical.Unity.Dash'>"
+  ""
+  "    <method name='HideDash'>"
+  "    </method>"
+  ""
+  "  </interface>"
+  "</node>";
 }
+
+GDBusInterfaceVTable Controller::interface_vtable =
+  { Controller::OnDBusMethodCall, NULL, NULL};
 
 Controller::Controller()
   : launcher_width(64)
@@ -70,6 +85,14 @@ Controller::Controller()
 
   auto spread_cb = sigc::bind(sigc::mem_fun(this, &Controller::HideDash), true);
   PluginAdapter::Default()->initiate_spread.connect(spread_cb);
+
+  dbus_owner_ = g_bus_own_name(G_BUS_TYPE_SESSION, DBUS_NAME.c_str(), G_BUS_NAME_OWNER_FLAGS_NONE,
+                               OnBusAcquired, nullptr, nullptr, this, nullptr);
+}
+
+Controller::~Controller()
+{
+  g_bus_unown_name(dbus_owner_);
 }
 
 void Controller::SetupWindow()
@@ -371,6 +394,43 @@ void Controller::AddProperties(GVariantBuilder* builder)
   variant::BuilderWrapper(builder).add("visible", visible_)
                                   .add("monitor", monitor_);
 }
+
+void Controller::OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer user_data)
+{
+  GDBusNodeInfo* introspection_data = g_dbus_node_info_new_for_xml(DBUS_INTROSPECTION.c_str(), nullptr);
+  unsigned int reg_id;
+
+  if (!introspection_data)
+  {
+    LOG_WARNING(logger) << "No introspection data loaded.";
+    return;
+  }
+
+  reg_id = g_dbus_connection_register_object(connection, DBUS_PATH.c_str(),
+                                             introspection_data->interfaces[0],
+                                             &interface_vtable, user_data,
+                                             nullptr, nullptr);
+  if (!reg_id)
+  {
+    LOG_WARNING(logger) << "Object registration failed. Dash DBus interface not available.";
+  }
+
+  g_dbus_node_info_unref(introspection_data);
+}
+
+void Controller::OnDBusMethodCall(GDBusConnection* connection, const gchar* sender,
+                                        const gchar* object_path, const gchar* interface_name,
+                                        const gchar* method_name, GVariant* parameters,
+                                        GDBusMethodInvocation* invocation, gpointer user_data)
+{
+  if (g_strcmp0(method_name, "HideDash") == 0)
+  {
+    auto self = static_cast<Controller*>(user_data);
+    self->HideDash();
+    g_dbus_method_invocation_return_value(invocation, nullptr);
+  }
+}
+
 
 
 }
