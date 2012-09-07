@@ -51,6 +51,7 @@ SocialPreviewComments::SocialPreviewComments(dash::Preview::Ptr preview_model, N
 : ScrollView(NUX_FILE_LINE_PARAM)
 , preview_model_(preview_model)
 {
+  SetVScrollBar(new dash::PlacesVScrollBar(NUX_TRACKER_LOCATION));
   SetupViews();
 }
 
@@ -94,10 +95,12 @@ void SocialPreviewComments::PreLayoutManagement()
     {
       width = comment.first->GetTextExtents().width;
 
-      if (width < style.GetCommentNameMinimumWidth())
-        width = style.GetCommentNameMinimumWidth();
+/*
+      if (width < style.GetDetailsPanelMinimumWidth())
+        width = style.GetDetailsPanelMinimumWidth();
       else if (width > style.GetCommentNameMaximumWidth())
         width = style.GetCommentNameMaximumWidth();
+*/
     }
 
     if (comment_width < width)
@@ -135,8 +138,6 @@ void SocialPreviewComments::SetupViews()
   RemoveLayout();
   comments_.clear();
 
-  SetVScrollBar(new dash::PlacesVScrollBar(NUX_TRACKER_LOCATION));
-
   previews::Style& style = previews::Style::Instance();
 
   nux::VLayout* layout = new nux::VLayout();
@@ -147,31 +148,42 @@ void SocialPreviewComments::SetupViews()
   {
     printf ("COMMENT: %s\n", comment->content.c_str());
 
-    nux::HLayout* hint_layout = new nux::HLayout();
-    hint_layout->SetSpaceBetweenChildren(layout_spacing);
+    nux::HLayout* name_layout = new nux::HLayout();
+    name_layout->SetSpaceBetweenChildren(layout_spacing);
 
     StaticCairoTextPtr comment_name;
     if (!comment->display_name.empty())
     {
-      std::string tmp_display_name = comment->display_name;
-      tmp_display_name += ":";
-
-      comment_name = new nux::StaticCairoText(tmp_display_name, true, NUX_TRACKER_LOCATION);
+      comment_name = new nux::StaticCairoText(comment->display_name, true, NUX_TRACKER_LOCATION);
       comment_name->SetFont(style.info_hint_bold_font());
       comment_name->SetLines(-1);
-      comment_name->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_RIGHT);
-      hint_layout->AddView(comment_name.GetPointer(), 0, nux::MINOR_POSITION_TOP);
+      comment_name->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
+      name_layout->AddView(comment_name.GetPointer(), 0, nux::MINOR_POSITION_TOP);
     }
 
+    StaticCairoTextPtr comment_time;
+    if (!comment->time.empty())
+    {
+      comment_time = new nux::StaticCairoText(comment->time, true, NUX_TRACKER_LOCATION);
+      comment_time->SetFont(style.info_hint_font());
+      comment_time->SetLines(-1);
+      comment_time->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_RIGHT);
+      name_layout->AddView(comment_time.GetPointer(), 0, nux::MINOR_POSITION_TOP);
+    }
+
+
+    nux::HLayout* comment_layout = new nux::HLayout();
+    comment_layout->SetSpaceBetweenChildren(layout_spacing);
     StaticCairoTextPtr comment_value(new nux::StaticCairoText(comment->content, true, NUX_TRACKER_LOCATION));
     comment_value->SetFont(style.info_hint_font());
     comment_value->SetLines(-7);
-    hint_layout->AddView(comment_value.GetPointer(), 1, nux::MINOR_POSITION_TOP);
+    comment_layout->AddView(comment_value.GetPointer(), 1, nux::MINOR_POSITION_TOP);
 
     Comment comment_views(comment_name, comment_value);
     comments_.push_back(comment_views);
 
-    layout->AddLayout(hint_layout, 1);
+    layout->AddLayout(name_layout, 0);
+    layout->AddLayout(comment_layout, 0);
   }
 
   SetLayout(layout);
