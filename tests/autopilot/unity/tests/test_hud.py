@@ -373,6 +373,41 @@ class HudBehaviorTests(HudTestsBase):
 
         self.assertThat(self.hud.ideal_monitor, Eventually(Equals(0)))
 
+    def test_mouse_changes_selected_hud_button(self):
+        """This tests moves the mouse from the top of the screen to the bottom, this must
+        change the selected button from 1 to 5.
+        """
+
+        self.hud.ensure_visible()
+
+        self.keyboard.type("a")
+        (x,y,w,h) = self.hud.view.geometry
+
+        self.mouse.move(w/2, 0)
+        self.assertThat(self.hud.view.selected_button, Eventually(Equals(1)))
+
+        self.mouse.move(w/2, h)
+        self.assertThat(self.hud.view.selected_button, Eventually(Equals(5)))
+
+    def test_keyboard_steals_focus_from_mouse(self):
+        """This tests moves the mouse from the top of the screen to the bottom,
+        then it presses the keyboard up 5 times, this must change the selected button from 5 to 1.
+        """
+
+        self.hud.ensure_visible()
+
+        self.keyboard.type("a")
+        (x,y,w,h) = self.hud.view.geometry
+
+        self.mouse.move(w/2, 0)
+        self.mouse.move(w/2, h)
+        self.assertThat(self.hud.view.selected_button, Eventually(Equals(5)))
+
+        for i in range(5):
+          self.keyboard.press_and_release('Up')
+
+        self.assertThat(self.hud.view.selected_button, Eventually(Equals(1)))
+
 
 class HudLauncherInteractionsTests(HudTestsBase):
 

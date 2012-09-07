@@ -1981,7 +1981,8 @@ void Launcher::StartIconDragRequest(int x, int y)
 
   // FIXME: nux doesn't give nux::GetEventButton (button_flags) there, relying
   // on an internal Launcher property then
-  if (drag_icon && _last_button_press == 1 && _model->IconHasSister(drag_icon))
+  bool can_drag = (_model->IconHasSister(drag_icon) || drag_icon->GetIconType() == AbstractLauncherIcon::IconType::DEVICE);
+  if (drag_icon && _last_button_press == 1 && can_drag)
   {
     SetActionState(ACTION_DRAG_ICON);
     StartIconDrag(drag_icon);
