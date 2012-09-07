@@ -91,19 +91,13 @@ public:
     , section_(monitor_, devices_settings_)
   {}
 
-  void SetUp()
-  {
-    // Make sure PopulateEntries is called.
-    Utils::WaitForTimeoutMSec(1500);
-  }
-
   MockVolumeMonitorWrapper::Ptr monitor_;
   DevicesSettings::Ptr devices_settings_;
   DeviceLauncherSection section_;
 };
 
 
-TEST_F(TestDeviceLauncherSection, TestNoDuplicates)
+TEST_F(TestDeviceLauncherSection, NoDuplicates)
 {
   std::shared_ptr<EventListener> listener(new EventListener);
   section_.IconAdded.connect(sigc::mem_fun(*listener, &EventListener::OnIconAdded));
@@ -115,6 +109,11 @@ TEST_F(TestDeviceLauncherSection, TestNoDuplicates)
   Utils::WaitForTimeoutMSec(500);
 
   EXPECT_EQ(listener->icon_added, false);
+}
+
+TEST_F(TestDeviceLauncherSection, GetIcons)
+{
+  EXPECT_EQ(section_.GetIcons().size(), 2);
 }
 
 }

@@ -42,6 +42,8 @@ public:
   DeviceLauncherSection(AbstractVolumeMonitorWrapper::Ptr volume_monitor,
                         DevicesSettings::Ptr devices_settings);
 
+  std::vector<VolumeLauncherIcon::Ptr> GetIcons() const;
+
   sigc::signal<void, AbstractLauncherIcon::Ptr> IconAdded;
 
 private:
@@ -55,8 +57,6 @@ private:
   DevicesSettings::Ptr devices_settings_;
   FileManagerOpener::Ptr file_manager_opener_;
   DeviceNotificationDisplay::Ptr device_notification_display_;
-
-  glib::Idle device_populate_idle_;
 };
 
 }

@@ -38,10 +38,7 @@ DeviceLauncherSection::DeviceLauncherSection(AbstractVolumeMonitorWrapper::Ptr v
   monitor_->volume_added.connect(sigc::mem_fun(this, &DeviceLauncherSection::OnVolumeAdded));
   monitor_->volume_removed.connect(sigc::mem_fun(this, &DeviceLauncherSection::OnVolumeRemoved));
 
-  device_populate_idle_.Run([this] () {
-    PopulateEntries();
-    return false;
-  });
+  PopulateEntries();
 }
 
 void DeviceLauncherSection::PopulateEntries()
@@ -60,8 +57,8 @@ void DeviceLauncherSection::TryToCreateAndAddIcon(glib::Object<GVolume> volume)
   if (map_.find(volume) != map_.end())
     return;
 
-  VolumeLauncherIcon::Ptr icon(new VolumeLauncherIcon(std::make_shared<VolumeImp>(volume, file_manager_opener_, device_notification_display_),
-                                                        devices_settings_));
+  auto vol = std::make_shared<VolumeImp>(volume, file_manager_opener_, device_notification_display_);
+  VolumeLauncherIcon::Ptr icon(new VolumeLauncherIcon(vol, devices_settings_));
 
   map_[volume] = icon;
   IconAdded.emit(icon);
@@ -74,6 +71,16 @@ void DeviceLauncherSection::OnVolumeRemoved(glib::Object<GVolume> const& volume)
   // Sanity check
   if (volume_it != map_.end())
     map_.erase(volume_it);
+}
+
+std::vector<VolumeLauncherIcon::Ptr> DeviceLauncherSection::GetIcons() const
+{
+  std::vector<VolumeLauncherIcon::Ptr> icons;
+
+  for (auto const& it : map_)
+    icons.push_back(it.second);
+
+  return icons;
 }
 
 }
