@@ -46,13 +46,15 @@ const gchar* SETTINGS_KEY = "favorites";
 const gchar* SCHEMA_DIRECTORY = BUILDDIR"/settings";
 
 const char* base_store_favs[] = { BUILDDIR"/tests/data/ubuntuone-installer.desktop",
-                                  BUILDDIR"/tests/data/ubuntu-software-center.desktop",
-                                  BUILDDIR"/tests/data/update-manager.desktop",
+                                  "file://" BUILDDIR "/tests/data/ubuntu-software-center.desktop",
+                                  "application://" BUILDDIR "/tests/data/update-manager.desktop",
+                                  "unity://test-icon",
+                                  "device://uuid",
                                   NULL
                                 };
 const int n_base_store_favs = G_N_ELEMENTS(base_store_favs) - 1; /* NULL */
 
-const std::string other_desktop = BUILDDIR"/tests/data/bzr-handle-patch.desktop";
+const std::string other_desktop = "application://" BUILDDIR "/tests/data/bzr-handle-patch.desktop";
 
 // Utilities
 std::string const& at(FavoriteList const& favs, int index)
@@ -110,9 +112,9 @@ TEST_F(TestFavoriteStoreGSettings, TestGetFavorites)
   FavoriteList const& favs = settings.GetFavorites();
 
   ASSERT_EQ(favs.size(), n_base_store_favs);
-  EXPECT_TRUE(ends_with(at(favs, 0), base_store_favs[0]));
+  EXPECT_TRUE(ends_with(at(favs, 0), FavoriteStore::URI_PREFIX_APP+base_store_favs[0]));
   EXPECT_TRUE(ends_with(at(favs, 1), base_store_favs[1]));
-  EXPECT_TRUE(at(favs, 2) == base_store_favs[2]);
+  EXPECT_EQ(at(favs, 2), base_store_favs[2]);
 }
 
 TEST_F(TestFavoriteStoreGSettings, TestAddFavorite)
@@ -122,7 +124,7 @@ TEST_F(TestFavoriteStoreGSettings, TestAddFavorite)
   settings.AddFavorite(other_desktop, 0);
   FavoriteList const& favs = settings.GetFavorites();
   ASSERT_EQ(favs.size(), n_base_store_favs + 1);
-  EXPECT_TRUE(other_desktop == at(favs, 0));
+  EXPECT_EQ(other_desktop, at(favs, 0));
 }
 
 TEST_F(TestFavoriteStoreGSettings, TestAddFavoritePosition)
@@ -132,7 +134,7 @@ TEST_F(TestFavoriteStoreGSettings, TestAddFavoritePosition)
   settings.AddFavorite(other_desktop, 2);
   FavoriteList const& favs = settings.GetFavorites();
   ASSERT_EQ(favs.size(), n_base_store_favs + 1);
-  EXPECT_TRUE(other_desktop == at(favs, 2));
+  EXPECT_EQ(other_desktop, at(favs, 2));
 }
 
 TEST_F(TestFavoriteStoreGSettings,TestAddFavoriteLast)
@@ -142,7 +144,7 @@ TEST_F(TestFavoriteStoreGSettings,TestAddFavoriteLast)
   settings.AddFavorite(other_desktop, -1);
   FavoriteList const& favs = settings.GetFavorites();
   ASSERT_EQ(favs.size(), n_base_store_favs + 1);
-  EXPECT_TRUE(other_desktop == favs.back());
+  EXPECT_EQ(other_desktop, favs.back());
 }
 
 TEST_F(TestFavoriteStoreGSettings,TestAddFavoriteOutOfRange)
@@ -178,13 +180,13 @@ TEST_F(TestFavoriteStoreGSettings, TestRemoveFavoriteBad)
   FavoriteStore &settings = FavoriteStore::Instance();
 
   FavoriteList const& favs = settings.GetFavorites();
-  settings.RemoveFavorite("");
+  settings.RemoveFavorite(" ");
   EXPECT_EQ(favs.size(), n_base_store_favs);
 
-  settings.RemoveFavorite("foo.desktop");
+  settings.RemoveFavorite("application://foo.desktop");
   EXPECT_EQ(favs.size(), n_base_store_favs);
 
-  settings.RemoveFavorite("/this/desktop/doesnt/exist/hopefully.desktop");
+  settings.RemoveFavorite("application:///this/desktop/doesnt/exist/hopefully.desktop");
   EXPECT_EQ(favs.size(), n_base_store_favs);
 }
 
@@ -198,7 +200,7 @@ TEST_F(TestFavoriteStoreGSettings, TestMoveFavorite)
 
   ASSERT_EQ(favs.size(), n_base_store_favs);
   EXPECT_EQ(at(favs, 0), base_store_favs[2]);
-  EXPECT_TRUE(ends_with(at(favs, 1), base_store_favs[0]));
+  EXPECT_TRUE(ends_with(at(favs, 1), FavoriteStore::URI_PREFIX_APP+base_store_favs[0]));
   EXPECT_TRUE(ends_with(at(favs, 2), base_store_favs[1]));
 }
 
@@ -212,7 +214,7 @@ TEST_F(TestFavoriteStoreGSettings, TestMoveFavoriteBad)
   settings.MoveFavorite(at(favs, 0), 100);
 
   ASSERT_EQ(favs.size(), n_base_store_favs);
-  EXPECT_TRUE(ends_with(at(favs, 0), base_store_favs[0]));
+  EXPECT_TRUE(ends_with(at(favs, 0), FavoriteStore::URI_PREFIX_APP+base_store_favs[0]));
   EXPECT_TRUE(ends_with(at(favs, 1), base_store_favs[1]));
   EXPECT_EQ(at(favs, 2), base_store_favs[2]);
 }
@@ -239,7 +241,7 @@ TEST_F(TestFavoriteStoreGSettings, TestFavoriteAddedSignalFirst)
   favorite_store->SaveFavorites(favs, false);
 
   ASSERT_TRUE(signal_received);
-  EXPECT_EQ(position, base_store_favs[0]);
+  EXPECT_EQ(position, FavoriteStore::URI_PREFIX_APP+base_store_favs[0]);
   EXPECT_TRUE(before);
 }
 
@@ -322,12 +324,12 @@ TEST_F(TestFavoriteStoreGSettings, TestFavoriteRemoved)
 {
   FavoriteStore &settings = FavoriteStore::Instance();
   bool signal_received = false;
-  std::string path_removed;
+  std::vector<std::string> paths_removed;
 
   settings.favorite_removed.connect([&](std::string const& path)
   {
     signal_received = true;
-    path_removed = path;
+    paths_removed.push_back(path);
   });
 
   FavoriteList favs;
@@ -336,7 +338,10 @@ TEST_F(TestFavoriteStoreGSettings, TestFavoriteRemoved)
   favorite_store->SaveFavorites(favs, false);
 
   ASSERT_TRUE(signal_received);
-  EXPECT_EQ(path_removed, base_store_favs[1]);
+  ASSERT_EQ(paths_removed.size(), 3);
+  EXPECT_EQ(paths_removed[0], base_store_favs[4]);
+  EXPECT_EQ(paths_removed[1], base_store_favs[1]);
+  EXPECT_EQ(paths_removed[2], base_store_favs[3]);
 }
 
 TEST_F(TestFavoriteStoreGSettings, TestFavoriteReordered)
@@ -462,6 +467,30 @@ TEST_F(TestFavoriteStoreGSettings, TestFavoriteSignalsMixed3)
   EXPECT_FALSE(added_received);
   EXPECT_TRUE(removed_received);
   EXPECT_TRUE(reordered_received);
+}
+
+TEST_F(TestFavoriteStoreGSettings, TestIsFavorite)
+{
+  EXPECT_TRUE(favorite_store->IsFavorite(FavoriteStore::URI_PREFIX_APP+base_store_favs[0]));
+
+  for (int i = 1; i < n_base_store_favs; i++)
+  {
+    ASSERT_TRUE(favorite_store->IsFavorite(base_store_favs[i]));
+  }
+
+  EXPECT_FALSE(favorite_store->IsFavorite("unity://invalid-favorite"));
+}
+
+TEST_F(TestFavoriteStoreGSettings, TestFavoritePosition)
+{
+  EXPECT_EQ(favorite_store->FavoritePosition(FavoriteStore::URI_PREFIX_APP+base_store_favs[0]), 0);
+
+  for (int i = 1; i < n_base_store_favs; i++)
+  {
+    ASSERT_EQ(favorite_store->FavoritePosition(base_store_favs[i]), i);
+  }
+
+  EXPECT_EQ(favorite_store->FavoritePosition("unity://invalid-favorite"), -1);
 }
 
 } // anonymous namespace
