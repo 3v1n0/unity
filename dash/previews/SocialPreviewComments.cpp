@@ -87,32 +87,34 @@ void SocialPreviewComments::PreLayoutManagement()
   previews::Style& style = previews::Style::Instance();
   nux::Geometry const& geo = GetGeometry();
 
+  //int details_width = MAX(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
+
+
   int comment_width = 0;
   for (Comment const& comment : comments_)
   {
-    int width = style.GetCommentNameMinimumWidth();
+    int width = style.GetDetailsPanelMinimumWidth();
     if (comment.first)
     {
       width = comment.first->GetTextExtents().width;
 
-/*
       if (width < style.GetDetailsPanelMinimumWidth())
         width = style.GetDetailsPanelMinimumWidth();
-      else if (width > style.GetCommentNameMaximumWidth())
-        width = style.GetCommentNameMaximumWidth();
-*/
     }
 
+    printf ("width: %d\n", width);
     if (comment_width < width)
     {
       comment_width = width;
     }
+    printf ("comment_width: %d\n", comment_width);
   }
 
   int comment_value_width = geo.width;
   comment_value_width -= layout_spacing;
-  comment_value_width -= comment_width;
+  printf ("comment_value_width 1: %d\n", comment_value_width);
   comment_value_width = MAX(0, comment_value_width);
+  printf ("comment_value_width 2: %d\n", comment_value_width);
 
   for (Comment const& comment : comments_)
   {
@@ -174,18 +176,20 @@ void SocialPreviewComments::SetupViews()
 
     nux::HLayout* comment_layout = new nux::HLayout();
     comment_layout->SetSpaceBetweenChildren(layout_spacing);
+
     StaticCairoTextPtr comment_value(new nux::StaticCairoText(comment->content, true, NUX_TRACKER_LOCATION));
+
     comment_value->SetFont(style.info_hint_font());
     comment_value->SetLines(-7);
+    comment_value->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
     comment_layout->AddView(comment_value.GetPointer(), 1, nux::MINOR_POSITION_TOP);
 
     Comment comment_views(comment_name, comment_value);
     comments_.push_back(comment_views);
 
     layout->AddLayout(name_layout, 0);
-    layout->AddLayout(comment_layout, 0);
+    layout->AddLayout(comment_layout, 1);
   }
-
   SetLayout(layout);
 
 }
