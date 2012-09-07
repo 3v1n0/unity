@@ -286,6 +286,7 @@ void CoverArt::TextureLoaded(std::string const& texid, unsigned size, glib::Obje
     return;
   }
   texture_screenshot_.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
+  QueueDraw();
 }
 
 void CoverArt::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
