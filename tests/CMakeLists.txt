@@ -224,7 +224,7 @@ if (GTEST_SRC_DIR AND
                  test_quicklist_view.cpp
                  test_resultviewgrid.cpp
                  test_single_monitor_launcher_icon.cpp
-                 test_spread_launcher_icon.cpp
+                 test_expo_launcher_icon.cpp
                  test_switcher_controller.cpp
                  test_switcher_model.cpp
                  test_texture_cache.cpp
@@ -269,6 +269,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/launcher/DevicesSettingsImp.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/DndData.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/EdgeBarrierController.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/ExpoLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/FavoriteStore.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/FavoriteStoreGSettings.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/FavoriteStorePrivate.cpp
@@ -298,7 +299,6 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/launcher/SingleMonitorLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/SoftwareCenterLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/SpacerLauncherIcon.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/SpreadLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/SwitcherController.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/SwitcherModel.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/SwitcherView.cpp

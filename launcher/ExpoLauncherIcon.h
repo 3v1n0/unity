@@ -17,8 +17,8 @@
  * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
  */
 
-#ifndef SPREAD_LAUNCHER_ICON_H
-#define SPREAD_LAUNCHER_ICON_H
+#ifndef EXPO_LAUNCHER_ICON_H
+#define EXPO_LAUNCHER_ICON_H
 
 #include "SimpleLauncherIcon.h"
 
@@ -27,10 +27,11 @@ namespace unity
 namespace launcher
 {
 
-class SpreadLauncherIcon : public SimpleLauncherIcon
+class ExpoLauncherIcon : public SimpleLauncherIcon
 {
 public:
-  SpreadLauncherIcon();
+  ExpoLauncherIcon();
+  void Stick(bool save);
 
 protected:
   void ActivateLauncherIcon(ActionArg arg);
@@ -41,4 +42,4 @@ protected:
 }
 }
 
-#endif // SPREAD_LAUNCHER_ICON_H
+#endif // EXPO_LAUNCHER_ICON_H

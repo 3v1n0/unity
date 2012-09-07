@@ -17,7 +17,7 @@
  * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
  */
 
-#include "SpreadLauncherIcon.h"
+#include "ExpoLauncherIcon.h"
 #include "unity-shared/WindowManager.h"
 
 #include <glib/gi18n-lib.h>
@@ -27,30 +27,36 @@ namespace unity
 namespace launcher
 {
 
-SpreadLauncherIcon::SpreadLauncherIcon()
+ExpoLauncherIcon::ExpoLauncherIcon()
   : SimpleLauncherIcon(IconType::EXPO)
 {
   tooltip_text = _("Workspace Switcher");
   icon_name = "workspace-switcher";
-  SetQuirk(Quirk::VISIBLE, true);
+  SetQuirk(Quirk::VISIBLE, false);
   SetQuirk(Quirk::RUNNING, false);
   SetShortcut('s');
 }
 
-void SpreadLauncherIcon::ActivateLauncherIcon(ActionArg arg)
+void ExpoLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   SimpleLauncherIcon::ActivateLauncherIcon(arg);
   WindowManager::Default()->InitiateExpo();
 }
 
-std::string SpreadLauncherIcon::GetName() const
+void ExpoLauncherIcon::Stick(bool save)
 {
-  return "SpreadLauncherIcon";
+  SimpleLauncherIcon::Stick(save);
+  SetQuirk(Quirk::VISIBLE, (WindowManager::Default()->WorkspaceCount() > 1));
 }
 
-std::string SpreadLauncherIcon::GetRemoteUri()
+std::string ExpoLauncherIcon::GetName() const
 {
-  return "unity://spread";
+  return "ExpoLauncherIcon";
+}
+
+std::string ExpoLauncherIcon::GetRemoteUri()
+{
+  return "unity://expo-icon";
 }
 
 } // namespace launcher

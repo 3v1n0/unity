@@ -42,6 +42,7 @@ set (LAUNCHER_SOURCES
      DevicesSettingsImp.cpp
      DndData.cpp
      EdgeBarrierController.cpp
+     ExpoLauncherIcon.cpp
      FavoriteStore.cpp
      FavoriteStoreGSettings.cpp
      FavoriteStorePrivate.cpp
@@ -70,7 +71,6 @@ set (LAUNCHER_SOURCES
      SingleMonitorLauncherIcon.cpp
      SoftwareCenterLauncherIcon.cpp
      SpacerLauncherIcon.cpp
-     SpreadLauncherIcon.cpp
      Tooltip.cpp
      TrashLauncherIcon.cpp
      VolumeImp.cpp

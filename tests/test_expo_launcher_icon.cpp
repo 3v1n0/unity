@@ -19,7 +19,7 @@
 
 #include <gmock/gmock.h>
 
-#include "SpreadLauncherIcon.h"
+#include "ExpoLauncherIcon.h"
 #include "PluginAdapter.h"
 
 using namespace unity;
@@ -28,9 +28,9 @@ using namespace unity::launcher;
 namespace
 {
 
-TEST(TestSpreadLauncherIcon, ActivateToggleExpo)
+TEST(TestExpoLauncherIcon, ActivateToggleExpo)
 {
-  SpreadLauncherIcon icon;
+  ExpoLauncherIcon icon;
   auto plugin_adapter = PluginAdapter::Default();
 
   ASSERT_FALSE(plugin_adapter->IsExpoActive());
