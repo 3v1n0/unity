@@ -1373,32 +1373,25 @@ void BamfLauncherIcon::FillSupportedTypes()
     if (desktop_file.empty())
       return;
 
-    GKeyFile* key_file = g_key_file_new();
+    std::shared_ptr<GKeyFile> key_file(g_key_file_new(), g_key_file_free);
     glib::Error error;
 
-    g_key_file_load_from_file(key_file, desktop_file.c_str(), (GKeyFileFlags) 0, &error);
+    g_key_file_load_from_file(key_file.get(), desktop_file.c_str(), (GKeyFileFlags) 0, &error);
 
     if (error)
-    {
-      g_key_file_free(key_file);
       return;
-    }
 
-    char** mimes = g_key_file_get_string_list(key_file, "Desktop Entry", "MimeType", nullptr, nullptr);
+    std::shared_ptr<char*> mimes(g_key_file_get_string_list(key_file.get(), "Desktop Entry", "MimeType", nullptr, nullptr),
+                                 g_strfreev);
+
     if (!mimes)
-    {
-      g_key_file_free(key_file);
       return;
-    }
 
-    for (int i = 0; mimes[i]; i++)
+    for (int i = 0; mimes.get()[i]; i++)
     {
-      unity::glib::String super_type(g_content_type_from_mime_type(mimes[i]));
+      unity::glib::String super_type(g_content_type_from_mime_type(mimes.get()[i]));
       _supported_types.insert(super_type.Str());
     }
-
-    g_key_file_free(key_file);
-    g_strfreev(mimes);
   }
 }
 
