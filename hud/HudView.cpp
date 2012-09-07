@@ -438,58 +438,52 @@ void View::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
     ProcessGrowShrink();
   }
 
-  if (visible_)
-  {
-    nux::Geometry draw_content_geo(layout_->GetGeometry());
-    draw_content_geo.height = current_height_;
-    renderer_.DrawFull(gfx_context, draw_content_geo, absolute_window_geometry_, window_geometry_, true);
-  }
+  nux::Geometry draw_content_geo(layout_->GetGeometry());
+  draw_content_geo.height = current_height_;
+  renderer_.DrawFull(gfx_context, draw_content_geo, absolute_window_geometry_, window_geometry_, true);
 }
 
 void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
-  if (visible_)
+  nux::Geometry draw_content_geo(layout_->GetGeometry());
+  draw_content_geo.height = current_height_;
+
+  renderer_.DrawInner(gfx_context, draw_content_geo, absolute_window_geometry_, window_geometry_);
+
+  gfx_context.PushClippingRectangle(draw_content_geo);
+
+  if (IsFullRedraw())
   {
-    nux::Geometry draw_content_geo(layout_->GetGeometry());
-    draw_content_geo.height = current_height_;
+    nux::GetPainter().PushBackgroundStack();
 
-    renderer_.DrawInner(gfx_context, draw_content_geo, absolute_window_geometry_, window_geometry_);
-
-    gfx_context.PushClippingRectangle(draw_content_geo);
-
-    if (IsFullRedraw())
+    if (!buttons_.empty()) // See bug #1008603.
     {
-      nux::GetPainter().PushBackgroundStack();
-
-      if (!buttons_.empty()) // See bug #1008603.
-      {
-        int height = 3;
-        int x = search_bar_->GetBaseX() + 1;
-        int y = search_bar_->GetBaseY() + search_bar_->GetBaseHeight() - height;
-        nux::GetPainter().Draw2DLine(gfx_context, x, y, x, y + height, nux::color::White * 0.13);
-        x += content_width - 1;
-        nux::GetPainter().Draw2DLine(gfx_context, x, y, x, y + height, nux::color::White * 0.13);
-      }
-
-      GetLayout()->ProcessDraw(gfx_context, force_draw);
-      nux::GetPainter().PopBackgroundStack();
+      int height = 3;
+      int x = search_bar_->GetBaseX() + 1;
+      int y = search_bar_->GetBaseY() + search_bar_->GetBaseHeight() - height;
+      nux::GetPainter().Draw2DLine(gfx_context, x, y, x, y + height, nux::color::White * 0.13);
+      x += content_width - 1;
+      nux::GetPainter().Draw2DLine(gfx_context, x, y, x, y + height, nux::color::White * 0.13);
     }
-    else
-    {
-      GetLayout()->ProcessDraw(gfx_context, force_draw);
-    }
-    gfx_context.PopClippingRectangle();
 
-    renderer_.DrawInnerCleanup(gfx_context, draw_content_geo, absolute_window_geometry_, window_geometry_);
+    GetLayout()->ProcessDraw(gfx_context, force_draw);
+    nux::GetPainter().PopBackgroundStack();
+  }
+  else
+  {
+    GetLayout()->ProcessDraw(gfx_context, force_draw);
+  }
+  gfx_context.PopClippingRectangle();
 
-    if (timeline_need_more_draw_ && !timeline_idle_)
-    {
-      timeline_idle_.reset(new glib::Idle([&] () {
-        QueueDraw();
-        timeline_idle_.reset();
-        return false;
-      }));
-    }
+  renderer_.DrawInnerCleanup(gfx_context, draw_content_geo, absolute_window_geometry_, window_geometry_);
+
+  if (timeline_need_more_draw_ && !timeline_idle_)
+  {
+    timeline_idle_.reset(new glib::Idle([&] () {
+      QueueDraw();
+      timeline_idle_.reset();
+      return false;
+    }));
   }
 }
 
