@@ -236,9 +236,10 @@ void SocialPreview::SetupViews()
       actions_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
       ///////////////////
 
-    full_data_layout_->AddLayout(main_social_info, 0);
-    full_data_layout_->AddView(social_info, 1);
-    full_data_layout_->AddView(comments_.GetPointer(), 1);
+    full_data_layout_->AddLayout(main_social_info, 0, nux::MINOR_POSITION_TOP);
+    full_data_layout_->AddView(social_info, 0, nux::MINOR_POSITION_TOP);
+    full_data_layout_->AddView(comments_.GetPointer(), 1, nux::MINOR_POSITION_TOP);
+
     full_data_layout_->AddLayout(actions_layout, 0);
     /////////////////////
   

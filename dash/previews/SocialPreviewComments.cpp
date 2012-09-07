@@ -22,6 +22,7 @@
 
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/PreviewStyle.h"
+#include "unity-shared/PlacesVScrollBar.h"
 #include <UnityCore/SocialPreview.h>
 #include <NuxCore/Logger.h>
 #include <Nux/Layout.h>
@@ -47,7 +48,7 @@ const int layout_spacing = 12;
 NUX_IMPLEMENT_OBJECT_TYPE(SocialPreviewComments);
 
 SocialPreviewComments::SocialPreviewComments(dash::Preview::Ptr preview_model, NUX_FILE_LINE_DECL)
-: View(NUX_FILE_LINE_PARAM)
+: ScrollView(NUX_FILE_LINE_PARAM)
 , preview_model_(preview_model)
 {
   SetupViews();
@@ -63,6 +64,21 @@ void SocialPreviewComments::Draw(nux::GraphicsEngine& gfx_engine, bool force_dra
 
 void SocialPreviewComments::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
 {
+  nux::Geometry base = GetGeometry();
+  gfx_engine.PushClippingRectangle(base);
+
+  if (GetCompositionLayout())
+  {
+    unsigned int alpha, src, dest = 0;
+    gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
+    gfx_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+    GetCompositionLayout()->ProcessDraw(gfx_engine, force_draw);
+
+    gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
+  }
+
+  gfx_engine.PopClippingRectangle();
 }
 
 void SocialPreviewComments::PreLayoutManagement()
@@ -108,16 +124,18 @@ void SocialPreviewComments::PreLayoutManagement()
       comment.second->SetMaximumWidth(comment_value_width);
     }
   }
-
-  View::PreLayoutManagement();
+  ScrollView::PreLayoutManagement();
 }
 
 void SocialPreviewComments::SetupViews()
 {
   dash::SocialPreview* social_preview_model = dynamic_cast<dash::SocialPreview*>(preview_model_.get());
 
+
   RemoveLayout();
   comments_.clear();
+
+  SetVScrollBar(new dash::PlacesVScrollBar(NUX_TRACKER_LOCATION));
 
   previews::Style& style = previews::Style::Instance();
 
@@ -142,13 +160,13 @@ void SocialPreviewComments::SetupViews()
       comment_name->SetFont(style.info_hint_bold_font());
       comment_name->SetLines(-1);
       comment_name->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_RIGHT);
-      hint_layout->AddView(comment_name.GetPointer(), 0, nux::MINOR_POSITION_CENTER);
+      hint_layout->AddView(comment_name.GetPointer(), 0, nux::MINOR_POSITION_TOP);
     }
 
     StaticCairoTextPtr comment_value(new nux::StaticCairoText(comment->content, true, NUX_TRACKER_LOCATION));
     comment_value->SetFont(style.info_hint_font());
-    comment_value->SetLines(-1);
-    hint_layout->AddView(comment_value.GetPointer(), 1, nux::MINOR_POSITION_CENTER);
+    comment_value->SetLines(-7);
+    hint_layout->AddView(comment_value.GetPointer(), 1, nux::MINOR_POSITION_TOP);
 
     Comment comment_views(comment_name, comment_value);
     comments_.push_back(comment_views);
