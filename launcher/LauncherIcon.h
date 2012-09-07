@@ -188,9 +188,9 @@ public:
 
   virtual std::string DesktopFile() { return std::string(""); }
 
-  virtual bool IsSticky() const { return false; }
+  virtual bool IsSticky() const { return _sticky; }
 
-  virtual bool IsVisible() const { return false; }
+  virtual bool IsVisible() const { return GetQuirk(Quirk::VISIBLE); }
 
   virtual bool IsVisibleOnMonitor(int monitor) const;
 
@@ -198,9 +198,9 @@ public:
 
   virtual void AboutToRemove() {}
 
-  virtual void Stick(bool save = true) {}
+  virtual void Stick(bool save = true);
 
-  virtual void UnStick() {}
+  virtual void UnStick();
 
 protected:
   std::vector<nux::Point3> GetCenters();
@@ -313,6 +313,7 @@ private:
 
   void OnTooltipEnabledChanged(bool value);
 
+  bool              _sticky;
   bool              _remote_urgent;
   float             _present_urgency;
   float             _progress;
