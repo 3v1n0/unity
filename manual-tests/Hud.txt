@@ -1,6 +1,6 @@
 Alt+Enter Crash
 ---------------
-Tests that Alt+Enter does not cause unity to crash (LP: #960957)
+Test that Alt+Enter does not cause Compiz/Unity to crash (LP: #960957)
 
 Setup:
 
@@ -11,4 +11,4 @@ Expected Result:
   Nothing happens
  
 Wrong Result:
-  Unity/compiz crashes
+  Unity/Compiz crashes

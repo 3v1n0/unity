@@ -240,6 +240,11 @@ class WindowManagerDummy : public WindowManager
   void AddProperties(GVariantBuilder* builder)
   {
   }
+
+  std::string GetWindowName(guint32 xid) const
+  {
+      return "unknown";
+  }
 };
 
 WindowManager*
