@@ -122,7 +122,7 @@ nux::Color HudLauncherIcon::GlowColor()
 
 void HudLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
-  if (GetQuirk(Quirk::VISIBLE))
+  if (IsVisible())
   {
     ubus_manager_.SendMessage(UBUS_HUD_CLOSE_REQUEST);
   }
