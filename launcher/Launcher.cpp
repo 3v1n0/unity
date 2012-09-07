@@ -54,6 +54,7 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
 
+#include <boost/algorithm/string.hpp>
 #include <sigc++/sigc++.h>
 
 namespace unity
@@ -106,6 +107,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
                    nux::ObjectPtr<DNDCollectionWindow> const& collection_window,
                    NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
+  , display(nux::GetGraphicsDisplay()->GetX11Display())
   , monitor(0)
   , _parent(parent)
   , _active_quicklist(nullptr)
@@ -463,9 +465,8 @@ bool Launcher::AnimationInProgress() const
     return true;
 
   // animations happening on specific icons
-  LauncherModel::iterator it;
-  for (it = _model->begin(); it != _model->end(); ++it)
-    if (IconNeedsAnimation(*it, current))
+  for (auto const &icon : *_model)
+    if (IconNeedsAnimation(icon, current))
       return true;
 
   return false;
@@ -496,10 +497,10 @@ float Launcher::IconVisibleProgress(AbstractLauncherIcon::Ptr icon, struct times
 
   if (icon->GetIconType() == AbstractLauncherIcon::IconType::HUD)
   {
-    return (icon->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE)) ? 1.0f : 0.0f;
+    return icon->IsVisible() ? 1.0f : 0.0f;
   }
 
-  if (icon->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE))
+  if (icon->IsVisible())
   {
     struct timespec icon_visible_time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::VISIBLE);
     int enter_ms = unity::TimeUtil::TimeDelta(&current, &icon_visible_time);
@@ -1395,8 +1396,8 @@ void Launcher::DndTimeoutSetup()
 
 void Launcher::OnPluginStateChanged()
 {
-  _hide_machine.SetQuirk (LauncherHideMachine::EXPO_ACTIVE, WindowManager::Default ()->IsExpoActive ());
-  _hide_machine.SetQuirk (LauncherHideMachine::SCALE_ACTIVE, WindowManager::Default ()->IsScaleActive ());
+  _hide_machine.SetQuirk(LauncherHideMachine::EXPO_ACTIVE, WindowManager::Default()->IsExpoActive());
+  _hide_machine.SetQuirk(LauncherHideMachine::SCALE_ACTIVE, WindowManager::Default()->IsScaleActive());
 }
 
 LauncherHideMode Launcher::GetHideMode() const
@@ -1668,11 +1669,6 @@ LauncherModel::Ptr Launcher::GetModel() const
   return _model;
 }
 
-void Launcher::SetDevicesSettings(DevicesSettings::Ptr devices_settings)
-{
-  devices_settings_ = devices_settings;
-}
-
 void Launcher::EnsureIconOnScreen(AbstractLauncherIcon::Ptr selection)
 {
   nux::Geometry const& geo = GetGeometry();
@@ -1680,7 +1676,7 @@ void Launcher::EnsureIconOnScreen(AbstractLauncherIcon::Ptr selection)
   int natural_y = 0;
   for (auto icon : *_model)
   {
-    if (!icon->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE) || !icon->IsVisibleOnMonitor(monitor))
+    if (!icon->IsVisible() || !icon->IsVisibleOnMonitor(monitor))
       continue;
 
     if (icon == selection)
@@ -2008,6 +2004,7 @@ void Launcher::StartIconDrag(AbstractLauncherIcon::Ptr icon)
 
   _hide_machine.SetQuirk(LauncherHideMachine::INTERNAL_DND_ACTIVE, true);
   _drag_icon = icon;
+  _drag_icon_position = _model->IconIndex(icon);
 
   HideDragWindow();
   _offscreen_drag_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(_icon_size, _icon_size, 1, nux::BITFMT_R8G8B8A8);
@@ -2031,15 +2028,20 @@ void Launcher::EndIconDrag()
     {
       hovered_icon->SetQuirk(AbstractLauncherIcon::Quirk::PULSE_ONCE, true);
 
-      launcher_removerequest.emit(_drag_icon);
+      remove_request.emit(_drag_icon);
 
       HideDragWindow();
       EnsureAnimation();
     }
     else
     {
-      if (!_drag_window->Cancelled())
+      if (!_drag_window->Cancelled() && _model->IconIndex(_drag_icon) != _drag_icon_position)
+      {
+        //  FIXMEE   Enable me laaater    
+        if (_drag_icon->GetIconType() == AbstractLauncherIcon::IconType::DEVICE)
+          _drag_icon->Stick(false);
         _model->Save();
+      }
 
       if (_drag_window->on_anim_completed.connected())
         _drag_window->on_anim_completed.disconnect();
@@ -2126,7 +2128,7 @@ void Launcher::UpdateDragWindowPosition(int x, int y)
     {
       auto const& icon = *it;
 
-      if (!icon->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE) || !icon->IsVisibleOnMonitor(monitor))
+      if (!icon->IsVisible() || !icon->IsVisibleOnMonitor(monitor))
         continue;
 
       if (y >= icon->GetCenter(monitor).y)
@@ -2208,7 +2210,7 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
     }
     else
     {
-      // We we can safely start the icon drag, from the original down position
+      // We we can safely start the icon drag, from the original mouse-down position
       sources_.Remove(START_DRAGICON_DURATION);
       StartIconDragRequest(x - _dnd_delta_x, y - _dnd_delta_y);
     }
@@ -2446,7 +2448,7 @@ AbstractLauncherIcon::Ptr Launcher::MouseIconIntersection(int x, int y)
 
   for (it = _model->begin(); it != _model->end(); ++it)
   {
-    if (!(*it)->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE) || !(*it)->IsVisibleOnMonitor(monitor))
+    if (!(*it)->IsVisible() || !(*it)->IsVisibleOnMonitor(monitor))
       continue;
 
     nux::Point2 screen_coord [4];
@@ -2531,35 +2533,41 @@ void Launcher::RestoreSystemRenderTarget()
   nux::GetWindowCompositor().RestoreRenderingSurface();
 }
 
+bool Launcher::DndIsSpecialRequest(std::string const& uri) const
+{
+  return (boost::algorithm::ends_with(uri, ".desktop") || uri.find("device://") == 0);
+}
+
 void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
 {
   _dnd_data.Reset();
 
-  unity::glib::String uri_list_const(g_strdup("text/uri-list"));
+  const std::string uri_list = "text/uri-list";
+  auto& display = nux::GetWindowThread()->GetGraphicsDisplay();
 
-  for (auto it : mimes)
+  for (auto const& mime : mimes)
   {
-    if (!g_str_equal(it, uri_list_const.Value()))
+    if (mime != uri_list)
       continue;
 
-    _dnd_data.Fill(nux::GetWindowThread()->GetGraphicsDisplay().GetDndData(uri_list_const.Value()));
+    _dnd_data.Fill(display.GetDndData(const_cast<char*>(uri_list.c_str())));
     break;
   }
 
   _hide_machine.SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, true);
 
-  for (auto it : _dnd_data.Uris())
+  auto const& uris = _dnd_data.Uris();
+  if (std::find_if(uris.begin(), uris.end(), [this] (std::string const& uri)
+                   {return DndIsSpecialRequest(uri);}) != uris.end())
   {
-    if (g_str_has_suffix(it.c_str(), ".desktop") || g_str_has_prefix(it.c_str(), "device://"))
-    {
-      _steal_drag = true;
-      break;
-    }
-  }
+    _steal_drag = true;
 
-  if (!_steal_drag)
+    if (IsOverlayOpen())
+      SaturateIcons();
+  }
+  else
   {
-    for (auto it : *_model)
+    for (auto const& it : *_model)
     {
       if (it->ShouldHighlightOnDrag(_dnd_data))
       {
@@ -2572,11 +2580,6 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
         it->SetQuirk(AbstractLauncherIcon::Quirk::PRESENTED, false);
       }
     }
-  }
-  else
-  {
-    if (IsOverlayOpen())
-      SaturateIcons();
   }
 }
 
@@ -2646,31 +2649,30 @@ void Launcher::ProcessDndLeave()
 void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
 {
   nux::Area* parent = GetToplevel();
-  unity::glib::String uri_list_const(g_strdup("text/uri-list"));
 
   if (!_data_checked)
   {
+    const std::string uri_list = "text/uri-list";
     _data_checked = true;
     _dnd_data.Reset();
+    auto& display = nux::GetWindowThread()->GetGraphicsDisplay();
 
     // get the data
-    for (auto it : mimes)
+    for (auto const& mime : mimes)
     {
-      if (!g_str_equal(it, uri_list_const.Value()))
+      if (mime != uri_list)
         continue;
 
-      _dnd_data.Fill(nux::GetWindowThread()->GetGraphicsDisplay().GetDndData(uri_list_const.Value()));
+      _dnd_data.Fill(display.GetDndData(const_cast<char*>(uri_list.c_str())));
       break;
     }
 
     // see if the launcher wants this one
-    for (auto it : _dnd_data.Uris())
+    auto const& uris = _dnd_data.Uris();
+    if (std::find_if(uris.begin(), uris.end(), [this] (std::string const& uri)
+                     {return DndIsSpecialRequest(uri);}) != uris.end())
     {
-      if (g_str_has_suffix(it.c_str(), ".desktop") || g_str_has_prefix(it.c_str(), "device://"))
-      {
-        _steal_drag = true;
-        break;
-      }
+      _steal_drag = true;
     }
 
     // only set hover once we know our first x/y
@@ -2679,7 +2681,7 @@ void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
 
     if (!_steal_drag)
     {
-      for (auto it : *_model)
+      for (auto const& it : *_model)
       {
         if (it->ShouldHighlightOnDrag(_dnd_data))
           it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, false);
@@ -2781,34 +2783,10 @@ void Launcher::ProcessDndDrop(int x, int y)
 {
   if (_steal_drag)
   {
-    for (auto it : _dnd_data.Uris())
+    for (auto const& uri : _dnd_data.Uris())
     {
-      if (g_str_has_suffix(it.c_str(), ".desktop"))
-      {
-        char* path = nullptr;
-
-        if (g_str_has_prefix(it.c_str(), "application://"))
-        {
-          const char* tmp = it.c_str() + strlen("application://");
-          unity::glib::String tmp2(g_strdup_printf("file:///usr/share/applications/%s", tmp));
-          path = g_filename_from_uri(tmp2.Value(), NULL, NULL);
-        }
-        else if (g_str_has_prefix(it.c_str(), "file://"))
-        {
-          path = g_filename_from_uri(it.c_str(), NULL, NULL);
-        }
-
-        if (path)
-        {
-          launcher_addrequest.emit(path, _dnd_hovered_icon);
-          g_free(path);
-        }
-      }
-      else if (devices_settings_ && g_str_has_prefix(it.c_str(), "device://"))
-      {
-        const gchar* uuid = it.c_str() + 9;
-        devices_settings_->TryToUnblacklist(uuid);
-      }
+      if (DndIsSpecialRequest(uri))
+        add_request.emit(uri, _dnd_hovered_icon);
     }
   }
   else if (_dnd_hovered_icon && _drag_action != nux::DNDACTION_NONE)
