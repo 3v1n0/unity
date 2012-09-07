@@ -85,6 +85,11 @@ private:
 
   void ProcessGrowShrink();
 
+  void MouseStealsHudButtonFocus();
+  void LoseSelectedButtonFocus();
+  void FindNewSelectedButton();
+  void SelectLastFocusedButton();
+
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
   IntrospectableList GetIntrospectableChildren();
@@ -116,6 +121,7 @@ private:
   int selected_button_;
   bool show_embedded_icon_;
   bool activated_signal_sent_;
+  bool keyboard_stole_focus_;
 };
 
 
