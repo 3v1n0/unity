@@ -101,9 +101,8 @@ public:
 
   void OnVolumeRemoved()
   {
-    if (devices_settings_->IsABlacklistedDevice(volume_->GetIdentifier()))
-      devices_settings_->TryToUnblacklist(volume_->GetIdentifier());
-
+    devices_settings_->TryToUnblacklist(volume_->GetIdentifier());
+    parent_->UnStick();
     parent_->Remove();
   }
 
@@ -164,6 +163,7 @@ public:
 
     gsignals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
         auto const& identifier = volume_->GetIdentifier();
+        parent_->UnStick();
         devices_settings_->TryToBlacklist(identifier);
     }));
 
@@ -306,6 +306,18 @@ AbstractLauncherIcon::MenuItemsVector VolumeLauncherIcon::GetMenus()
 std::string VolumeLauncherIcon::GetRemoteUri()
 {
   return pimpl_->GetRemoteUri();
+}
+
+void VolumeLauncherIcon::Stick(bool save)
+{
+  SimpleLauncherIcon::Stick(save);
+  pimpl_->devices_settings_->TryToUnblacklist(pimpl_->volume_->GetIdentifier());
+}
+
+void VolumeLauncherIcon::UnStick()
+{
+  SimpleLauncherIcon::UnStick();
+  SetQuirk(Quirk::VISIBLE, true);
 }
 
 //
