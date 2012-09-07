@@ -83,9 +83,8 @@ nux::logging::Logger logger("unity.shell");
 
 UnityScreen* uScreen = 0;
 
-static unsigned int CLOSE_ICON_SIZE = 19;
-static unsigned int CLOSE_ICON_SPACE = 5;
-static unsigned int SCALE_WINDOW_TITLE_SIZE = 28;
+const unsigned int SCALE_CLOSE_ICON_SIZE = 19;
+const unsigned int SCALE_ITEMS_PADDING = 5;
 
 void reset_glib_logging();
 void configure_logging();
@@ -106,36 +105,6 @@ const unsigned int SCROLL_UP_BUTTON = 7;
 const std::string RELAYOUT_TIMEOUT = "relayout-timeout";
 } // namespace local
 } // anon namespace
-
-class WindowCairoContext
-{
-  public:
-    typedef std::shared_ptr<WindowCairoContext> Ptr;
-
-    Pixmap pixmap_;
-    cairo_surface_t* surface_;
-    GLTexture::List texture_;
-    cairo_t *cr_;
-
-    WindowCairoContext ()
-      : pixmap_ (0), surface_ (0), cr_ (0)
-    {
-    }
-
-    ~WindowCairoContext ()
-    {
-      if (cr_)
-        cairo_destroy (cr_);
-
-      if (surface_)
-        cairo_surface_destroy (surface_);
-
-      texture_.clear ();
-
-      if (pixmap_)
-        XFreePixmap (screen->dpy (), pixmap_);
-    }
-};
 
 UnityScreen::UnityScreen(CompScreen* screen)
   : BaseSwitchScreen (screen)
@@ -165,7 +134,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , panel_texture_has_changed_(true)
   , paint_panel_(false)
   , scale_just_activated_(false)
-  , highlighted_window_(0)
+  , scale_highlighted_window_(0)
   , minimize_speed_controller(new WindowMinimizeSpeedController())
 {
   Timer timer;
@@ -423,9 +392,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   }
 
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &UnityScreen::OnPanelStyleChanged));
-
-  WindowManager::Default()->initiate_spread.connect(sigc::mem_fun(this, &UnityScreen::OnInitiateSpreed));
-  WindowManager::Default()->terminate_spread.connect(sigc::mem_fun(this, &UnityScreen::OnTerminateSpreed));
+  WindowManager::Default()->terminate_spread.connect([this] { scale_highlighted_window_ = 0; });
 
   minimize_speed_controller->DurationChanged.connect(
       sigc::mem_fun(this, &UnityScreen::OnMinimizeDurationChanged)
@@ -442,25 +409,6 @@ UnityScreen::~UnityScreen()
 
   reset_glib_logging();
 }
-
-void UnityScreen::OnInitiateSpreed()
-{
-  for (CompWindow *w : screen->windows())
-  {
-    UnityWindow *uw = UnityWindow::get(w);
-    uw->InitiateSpreed();
-  }
-}
-
-void UnityScreen::OnTerminateSpreed()
-{
-  for (CompWindow *w : screen->windows())
-  {
-    UnityWindow *uw = UnityWindow::get(w);
-    uw->TerminateSpreed();
-  }
-}
-
 
 void UnityScreen::initAltTabNextWindow()
 {
@@ -1118,8 +1066,8 @@ void UnityScreen::leaveShowDesktopMode (CompWindow *w)
 void UnityWindow::enterShowDesktop ()
 {
   if (!mShowdesktopHandler)
-    mShowdesktopHandler = new ShowdesktopHandler (static_cast <ShowdesktopHandlerWindowInterface *> (this),
-                                                  static_cast <compiz::WindowInputRemoverLockAcquireInterface *> (this));
+    mShowdesktopHandler.reset(new ShowdesktopHandler(static_cast <ShowdesktopHandlerWindowInterface *>(this),
+                                                     static_cast <compiz::WindowInputRemoverLockAcquireInterface *>(this)));
 
   window->setShowDesktopMode (true);
   mShowdesktopHandler->FadeOut ();
@@ -1240,15 +1188,14 @@ ShowdesktopHandlerWindowInterface::PostPaintAction UnityWindow::DoHandleAnimatio
   return action;
 }
 
-void UnityWindow::DoAddDamage ()
+void UnityWindow::DoAddDamage()
 {
-  cWindow->addDamage ();
+  cWindow->addDamage();
 }
 
 void UnityWindow::DoDeleteHandler ()
 {
-  delete mShowdesktopHandler;
-  mShowdesktopHandler = NULL;
+  mShowdesktopHandler.reset();
 
   window->updateFrameRegion ();
 }
@@ -1270,21 +1217,74 @@ UnityWindow::GetNoCoreInstanceMask ()
   return PAINT_WINDOW_NO_CORE_INSTANCE_MASK;
 }
 
-void UnityWindow::handleEvent (XEvent *event)
+bool UnityWindow::handleEvent(XEvent *event)
 {
-  if (screen->XShape () &&
-      event->type == screen->shapeEvent () + ShapeNotify &&
-      !event->xany.send_event)
-  {
-    if (mShowdesktopHandler)
-      mShowdesktopHandler->HandleShapeEvent ();
-  }
-}
+  bool handled = false;
 
-CompRect
-UnityWindow::CloseButtonArea()
-{
-    return close_button_area_;
+  switch(event->type)
+  {
+    case MotionNotify:
+      if (close_icon_state_ != panel::WindowState::PRESSED)
+      {
+        panel::WindowState old_state = close_icon_state_;
+
+        if (close_button_geo_.IsPointInside(event->xmotion.x_root, event->xmotion.y_root))
+        {
+          close_icon_state_ = panel::WindowState::PRELIGHT;
+        }
+        else
+        {
+          close_icon_state_ = panel::WindowState::NORMAL;
+        }
+
+        if (old_state != close_icon_state_)
+          DoAddDamage();
+      }
+      break;
+
+    case ButtonPress:
+      if (event->xbutton.button == Button1 &&
+          close_button_geo_.IsPointInside(event->xbutton.x_root, event->xbutton.y_root))
+      {
+        close_icon_state_ = panel::WindowState::PRESSED;
+        DoAddDamage();
+        handled = true;
+      }
+      break;
+
+    case ButtonRelease:
+      {
+        bool was_pressed = (close_icon_state_ == panel::WindowState::PRESSED);
+
+        if (close_icon_state_ != panel::WindowState::NORMAL)
+        {
+          close_icon_state_ = panel::WindowState::NORMAL;
+          DoAddDamage();
+        }
+
+        if (was_pressed)
+        {
+          if (close_button_geo_.IsPointInside(event->xbutton.x_root, event->xbutton.y_root))
+            window->close(0);
+
+          handled = true;
+        }
+      }
+      break;
+
+    default:
+      if (!event->xany.send_event && screen->XShape() &&
+          event->type == screen->shapeEvent() + ShapeNotify)
+      {
+        if (mShowdesktopHandler)
+        {
+          mShowdesktopHandler->HandleShapeEvent();
+          handled = true;
+        }
+      }
+  }
+
+  return handled;
 }
 
 bool UnityScreen::shellCouldBeHidden(CompOutput const& output)
@@ -1648,28 +1648,23 @@ void UnityScreen::handleEvent(XEvent* event)
       }
       _key_nav_mode_requested = false;
       break;
+    case MotionNotify:
+      if (scale_highlighted_window_ && PluginAdapter::Default()->IsScaleActive())
+      {
+        if (CompWindow *w = screen->findWindow(scale_highlighted_window_))
+          skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
+      }
+      break;
     case ButtonPress:
       if (super_keypressed_)
       {
         launcher_controller_->KeyNavTerminate(false);
         EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
       }
-      if (PluginAdapter::Default()->IsScaleActive() &&
-          event->xbutton.button == Button1 &&
-          highlighted_window_ != 0)
+      if (scale_highlighted_window_ && PluginAdapter::Default()->IsScaleActive())
       {
-        CompWindow *w = screen->findWindow(highlighted_window_);
-        if (w)
-        {
-          UnityWindow *uw = UnityWindow::get(w);
-          CompPoint pointer(pointerX, pointerY);
-          if (uw->CloseButtonArea().contains(pointer))
-          {
-            w->close(0);
-            skip_other_plugins = true;
-          }
-        }
-
+        if (CompWindow *w = screen->findWindow(scale_highlighted_window_))
+          skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
       }
 
       break;
@@ -1690,6 +1685,11 @@ void UnityScreen::handleEvent(XEvent* event)
             last_scroll_event_ = bev->time;
           }
         }
+      }
+      else if (scale_highlighted_window_ && PluginAdapter::Default()->IsScaleActive())
+      {
+        if (CompWindow *w = screen->findWindow(scale_highlighted_window_))
+          UnityWindow::get(w)->handleEvent(event);
       }
       break;
     case KeyPress:
@@ -1818,8 +1818,8 @@ void UnityScreen::handleCompizEvent(const char* plugin,
     ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
   }
 
-  if (PluginAdapter::Default()->IsScaleActive() &&
-      g_strcmp0(plugin, "scale") == 0 && super_keypressed_)
+  if (PluginAdapter::Default()->IsScaleActive() && g_strcmp0(plugin, "scale") == 0 &&
+      super_keypressed_)
   {
     scale_just_activated_ = true;
   }
@@ -1914,7 +1914,7 @@ bool UnityScreen::showPanelFirstMenuKeyInitiate(CompAction* action,
                                                 CompOption::Vector& options)
 {
   /* In order to avoid too many events when keeping the keybinding pressed,
-   * that would make the unity-panel-service go crazy (see bug #948522)
+   * that would make the unity-panel-service to go crazy (see bug #948522)
    * we need to filter them, just considering an event every 750 ms */
   int event_time = options[7].value().i();  // XEvent time in millisec
 
@@ -3295,38 +3295,38 @@ void UnityScreen::InitHints()
   hints_.push_back(std::make_shared<shortcut::Hint>(launcher, "", _(" (Hold)"),
                                                    _("Opens the Launcher, displays shortcuts."),
                                                    shortcut::COMPIZ_KEY_OPTION,
-						   COMPIZ_UNITYSHELL_PLUGIN_NAME,
-						   COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
+                                                   COMPIZ_UNITYSHELL_PLUGIN_NAME,
+                                                   COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(launcher, "", "",
                                                     _("Opens Launcher keyboard navigation mode."),
                                                     shortcut::COMPIZ_KEY_OPTION,
-						    COMPIZ_UNITYSHELL_PLUGIN_NAME,
-						    COMPIZ_UNITYSHELL_OPTION_KEYBOARD_FOCUS));
+                                                    COMPIZ_UNITYSHELL_PLUGIN_NAME,
+                                                    COMPIZ_UNITYSHELL_OPTION_KEYBOARD_FOCUS));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(launcher, "", "",
                                                     _("Switches applications via the Launcher."),
                                                     shortcut::COMPIZ_KEY_OPTION,
-						    COMPIZ_UNITYSHELL_PLUGIN_NAME,
-						    COMPIZ_UNITYSHELL_OPTION_LAUNCHER_SWITCHER_FORWARD));
+                                                    COMPIZ_UNITYSHELL_PLUGIN_NAME,
+                                                    COMPIZ_UNITYSHELL_OPTION_LAUNCHER_SWITCHER_FORWARD));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(launcher, "", _(" + 1 to 9"),
                                                     _("Same as clicking on a Launcher icon."),
                                                     shortcut::COMPIZ_KEY_OPTION,
-						    COMPIZ_UNITYSHELL_PLUGIN_NAME,
-						    COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
+                                                    COMPIZ_UNITYSHELL_PLUGIN_NAME,
+                                                    COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(launcher, "", _(" + Shift + 1 to 9"),
                                                     _("Opens a new window in the app."),
                                                     shortcut::COMPIZ_KEY_OPTION,
-						    COMPIZ_UNITYSHELL_PLUGIN_NAME,
-						    COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
+                                                    COMPIZ_UNITYSHELL_PLUGIN_NAME,
+                                                    COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(launcher, "", " + T",
                                                     _("Opens the Trash."),
                                                     shortcut::COMPIZ_KEY_OPTION,
-						    COMPIZ_UNITYSHELL_PLUGIN_NAME,
-						    COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
+                                                    COMPIZ_UNITYSHELL_PLUGIN_NAME,
+                                                    COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
 
 
   // Dash...
@@ -3335,32 +3335,32 @@ void UnityScreen::InitHints()
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", _(" (Tap)"),
                                                     _("Opens the Dash Home."),
                                                     shortcut::COMPIZ_KEY_OPTION,
-						    COMPIZ_UNITYSHELL_PLUGIN_NAME,
-						    COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
+                                                    COMPIZ_UNITYSHELL_PLUGIN_NAME,
+                                                    COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", " + A",
                                                     _("Opens the Dash App Lens."),
                                                     shortcut::COMPIZ_KEY_OPTION,
-						    COMPIZ_UNITYSHELL_PLUGIN_NAME,
-						    COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
+                                                    COMPIZ_UNITYSHELL_PLUGIN_NAME,
+                                                    COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", " + F",
                                                     _("Opens the Dash Files Lens."),
                                                     shortcut::COMPIZ_KEY_OPTION,
-						    COMPIZ_UNITYSHELL_PLUGIN_NAME,
-						    COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
+                                                    COMPIZ_UNITYSHELL_PLUGIN_NAME,
+                                                    COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", " + M",
                                                     _("Opens the Dash Music Lens."),
                                                     shortcut::COMPIZ_KEY_OPTION,
-						    COMPIZ_UNITYSHELL_PLUGIN_NAME,
-						    COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
+                                                    COMPIZ_UNITYSHELL_PLUGIN_NAME,
+                                                    COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", " + V",
                                                     _("Opens the Dash Video Lens."),
                                                     shortcut::COMPIZ_KEY_OPTION,
-						    COMPIZ_UNITYSHELL_PLUGIN_NAME,
-						    COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
+                                                    COMPIZ_UNITYSHELL_PLUGIN_NAME,
+                                                    COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", "",
                                                     _("Switches between Lenses."),
@@ -3383,8 +3383,8 @@ void UnityScreen::InitHints()
   hints_.push_back(std::make_shared<shortcut::Hint>(menubar, "", _(" (Tap)"),
                                                     _("Opens the HUD."),
                                                     shortcut::COMPIZ_KEY_OPTION,
-						    COMPIZ_UNITYSHELL_PLUGIN_NAME,
-						    COMPIZ_UNITYSHELL_OPTION_SHOW_HUD));
+                                                    COMPIZ_UNITYSHELL_PLUGIN_NAME,
+                                                    COMPIZ_UNITYSHELL_OPTION_SHOW_HUD));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(menubar, "", _(" (Hold)"),
                                                     _("Reveals the application menu."),
@@ -3394,8 +3394,8 @@ void UnityScreen::InitHints()
   hints_.push_back(std::make_shared<shortcut::Hint>(menubar, "", "",
                                                     _("Opens the indicator menu."),
                                                     shortcut::COMPIZ_KEY_OPTION,
-						    COMPIZ_UNITYSHELL_PLUGIN_NAME,
-						    COMPIZ_UNITYSHELL_OPTION_PANEL_FIRST_MENU));
+                                                    COMPIZ_UNITYSHELL_PLUGIN_NAME,
+                                                    COMPIZ_UNITYSHELL_OPTION_PANEL_FIRST_MENU));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(menubar, "", "",
                                                     _("Moves focus between indicators."),
@@ -3408,14 +3408,14 @@ void UnityScreen::InitHints()
   hints_.push_back(std::make_shared<shortcut::Hint>(switching, "", "",
                                                     _("Switches between applications."),
                                                     shortcut::COMPIZ_KEY_OPTION,
-						    COMPIZ_UNITYSHELL_PLUGIN_NAME,
-						    COMPIZ_UNITYSHELL_OPTION_ALT_TAB_FORWARD));
+                                                    COMPIZ_UNITYSHELL_PLUGIN_NAME,
+                                                    COMPIZ_UNITYSHELL_OPTION_ALT_TAB_FORWARD));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(switching, "", "",
                                                     _("Switches windows of current applications."),
                                                     shortcut::COMPIZ_KEY_OPTION,
-						    COMPIZ_UNITYSHELL_PLUGIN_NAME,
-						    COMPIZ_UNITYSHELL_OPTION_ALT_TAB_NEXT_WINDOW));
+                                                    COMPIZ_UNITYSHELL_PLUGIN_NAME,
+                                                    COMPIZ_UNITYSHELL_OPTION_ALT_TAB_NEXT_WINDOW));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(switching, "", "",
                                                     _("Moves the focus."),
@@ -3428,20 +3428,20 @@ void UnityScreen::InitHints()
   hints_.push_back(std::make_shared<shortcut::Hint>(workspaces, "", "",
                                                     _("Switches between workspaces."),
                                                     shortcut::COMPIZ_KEY_OPTION,
-						    COMPIZ_EXPO_PLUGIN_NAME,
-						    COMPIZ_EXPO_OPTION_EXPO_KEY));
+                                                    COMPIZ_EXPO_PLUGIN_NAME,
+                                                    COMPIZ_EXPO_OPTION_EXPO_KEY));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(workspaces, "", _(" + Arrow Keys"),
                                                     _("Switches workspaces."),
                                                     shortcut::COMPIZ_METAKEY_OPTION,
-						    COMPIZ_WALL_PLUGIN_NAME,
-						    COMPIZ_WALL_OPTION_LEFT_KEY));
+                                                    COMPIZ_WALL_PLUGIN_NAME,
+                                                    COMPIZ_WALL_OPTION_LEFT_KEY));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(workspaces, "", _(" + Arrow Keys"),
                                                     _("Moves focused window to another workspace."),
                                                     shortcut::COMPIZ_METAKEY_OPTION,
-						    COMPIZ_WALL_PLUGIN_NAME,
-						    COMPIZ_WALL_OPTION_LEFT_WINDOW_KEY));
+                                                    COMPIZ_WALL_PLUGIN_NAME,
+                                                    COMPIZ_WALL_OPTION_LEFT_WINDOW_KEY));
 
 
   // Windows
@@ -3450,44 +3450,44 @@ void UnityScreen::InitHints()
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", "",
                                                     _("Spreads all windows in the current workspace."),
                                                     shortcut::COMPIZ_KEY_OPTION,
-						    COMPIZ_SCALE_PLUGIN_NAME,
-						    COMPIZ_SCALE_OPTION_INITIATE_ALL_KEY));
+                                                    COMPIZ_SCALE_PLUGIN_NAME,
+                                                    COMPIZ_SCALE_OPTION_INITIATE_ALL_KEY));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", "",
                                                     _("Minimises all windows."),
                                                     shortcut::COMPIZ_KEY_OPTION,
-						    COMPIZ_CORE_PLUGIN_NAME,
-						    COMPIZ_CORE_OPTION_SHOW_DESKTOP_KEY));
+                                                    COMPIZ_CORE_PLUGIN_NAME,
+                                                    COMPIZ_CORE_OPTION_SHOW_DESKTOP_KEY));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", "",
                                                     _("Maximises the current window."),
                                                     shortcut::COMPIZ_KEY_OPTION,
-						    COMPIZ_CORE_PLUGIN_NAME,
-						    COMPIZ_CORE_OPTION_MAXIMIZE_WINDOW_KEY));
+                                                    COMPIZ_CORE_PLUGIN_NAME,
+                                                    COMPIZ_CORE_OPTION_MAXIMIZE_WINDOW_KEY));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", "",
                                                     _("Restores or minimises the current window."),
                                                     shortcut::COMPIZ_KEY_OPTION,
-						    COMPIZ_CORE_PLUGIN_NAME,
-						    COMPIZ_CORE_OPTION_UNMAXIMIZE_WINDOW_KEY));
+                                                    COMPIZ_CORE_PLUGIN_NAME,
+                                                    COMPIZ_CORE_OPTION_UNMAXIMIZE_WINDOW_KEY));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", _(" or Right"),
                                                     _("Semi-maximise the current window."),
                                                     shortcut::COMPIZ_KEY_OPTION,
-						    COMPIZ_GRID_PLUGIN_NAME,
-						    COMPIZ_GRID_OPTION_PUT_LEFT_KEY));
+                                                    COMPIZ_GRID_PLUGIN_NAME,
+                                                    COMPIZ_GRID_OPTION_PUT_LEFT_KEY));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", "",
                                                     _("Closes the current window."),
                                                     shortcut::COMPIZ_KEY_OPTION,
-						    COMPIZ_CORE_PLUGIN_NAME,
-						    COMPIZ_CORE_OPTION_CLOSE_WINDOW_KEY));
+                                                    COMPIZ_CORE_PLUGIN_NAME,
+                                                    COMPIZ_CORE_OPTION_CLOSE_WINDOW_KEY));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", "",
                                                     _("Opens the window accessibility menu."),
                                                     shortcut::COMPIZ_KEY_OPTION,
-						    COMPIZ_CORE_PLUGIN_NAME,
-						    COMPIZ_CORE_OPTION_WINDOW_MENU_KEY));
+                                                    COMPIZ_CORE_PLUGIN_NAME,
+                                                    COMPIZ_CORE_OPTION_WINDOW_MENU_KEY));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", "",
                                                     _("Places the window in corresponding position."),
@@ -3497,14 +3497,14 @@ void UnityScreen::InitHints()
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", _(" Drag"),
                                                     _("Moves the window."),
                                                     shortcut::COMPIZ_MOUSE_OPTION,
-						    COMPIZ_MOVE_PLUGIN_NAME,
-						    COMPIZ_MOVE_OPTION_INITIATE_BUTTON));
+                                                    COMPIZ_MOVE_PLUGIN_NAME,
+                                                    COMPIZ_MOVE_OPTION_INITIATE_BUTTON));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", _(" Drag"),
                                                     _("Resizes the window."),
                                                     shortcut::COMPIZ_MOUSE_OPTION,
-						    COMPIZ_RESIZE_PLUGIN_NAME,
-						    COMPIZ_RESIZE_OPTION_INITIATE_BUTTON));
+                                                    COMPIZ_RESIZE_PLUGIN_NAME,
+                                                    COMPIZ_RESIZE_OPTION_INITIATE_BUTTON));
 }
 
 void UnityScreen::InitGesturesSupport()
@@ -3534,14 +3534,61 @@ void UnityScreen::InitGesturesSupport()
 }
 
 /* Window init */
+GLTexture::List UnityWindow::close_normal_tex_;
+GLTexture::List UnityWindow::close_prelight_tex_;
+GLTexture::List UnityWindow::close_pressed_tex_;
+
+struct UnityWindow::CairoContext
+{
+  CairoContext(int width, int height)
+    : pixmap_(XCreatePixmap(screen->dpy(), screen->root(), width, height, 32))
+    , texture_(GLTexture::bindPixmapToTexture(pixmap_, width, height, 32))
+    , surface_(nullptr)
+    , cr_(nullptr)
+  {
+      Screen *xscreen = ScreenOfDisplay(screen->dpy(), screen->screenNum());
+      XRenderPictFormat* format = XRenderFindStandardFormat(screen->dpy(), PictStandardARGB32);
+
+      if (texture_.empty())
+        return;
+
+      surface_ = cairo_xlib_surface_create_with_xrender_format(screen->dpy(), pixmap_,
+                                                               xscreen, format,
+                                                               width, height);
+      cr_ = cairo_create(surface_);
+
+      // clear
+      cairo_save(cr_);
+      cairo_set_operator(cr_, CAIRO_OPERATOR_CLEAR);
+      cairo_paint(cr_);
+      cairo_restore(cr_);
+  }
+
+  ~CairoContext ()
+  {
+    if (cr_)
+      cairo_destroy(cr_);
+
+    if (surface_)
+      cairo_surface_destroy(surface_);
+
+    texture_.clear();
+
+    if (pixmap_)
+      XFreePixmap(screen->dpy (), pixmap_);
+  }
+
+  Pixmap pixmap_;
+  GLTexture::List texture_;
+  cairo_surface_t* surface_;
+  cairo_t *cr_;
+};
+
 UnityWindow::UnityWindow(CompWindow* window)
   : BaseSwitchWindow (dynamic_cast<BaseSwitchScreen *> (UnityScreen::get (screen)), window)
   , PluginClassHandler<UnityWindow, CompWindow>(window)
   , window(window)
   , gWindow(GLWindow::get(window))
-  , mMinimizeHandler()
-  , mShowdesktopHandler(nullptr)
-  , window_header_style_(0)
 {
   WindowInterface::setHandler(window);
   GLWindowInterface::setHandler(gWindow);
@@ -3588,6 +3635,9 @@ UnityWindow::UnityWindow(CompWindow* window)
       }
     }
   }
+
+  WindowManager::Default()->initiate_spread.connect(sigc::mem_fun(this, &UnityWindow::OnInitiateSpreed));
+  WindowManager::Default()->terminate_spread.connect(sigc::mem_fun(this, &UnityWindow::OnTerminateSpreed));
 }
 
 void
@@ -3629,54 +3679,15 @@ UnityWindow::DrawTexture(GLTexture* icon,
   }
 }
 
-std::shared_ptr<WindowCairoContext>
-UnityWindow::CreateCairoContext(float width, float height)
-{
-  XRenderPictFormat *format;
-  Screen *xScreen;
-  auto cContext = std::make_shared<WindowCairoContext>();
-
-  xScreen = ScreenOfDisplay(screen->dpy(), screen->screenNum());
-
-  format = XRenderFindStandardFormat(screen->dpy(), PictStandardARGB32);
-  cContext->pixmap_ = XCreatePixmap(screen->dpy(),
-                                   screen->root(),
-                                   width, height, 32);
-
-  cContext->texture_ = GLTexture::bindPixmapToTexture(cContext->pixmap_,
-                                                      width, height,
-                                                      32);
-  if (cContext->texture_.empty())
-  {
-    return 0;
-  }
-
-  cContext->surface_ = cairo_xlib_surface_create_with_xrender_format(screen->dpy(),
-                                                                     cContext->pixmap_,
-                                                                     xScreen,
-                                                                     format,
-                                                                     width,
-                                                                     height);
-  cContext->cr_ = cairo_create(cContext->surface_);
-
-  // clear
-  cairo_save(cContext->cr_);
-  cairo_set_operator(cContext->cr_, CAIRO_OPERATOR_CLEAR);
-  cairo_paint(cContext->cr_);
-  cairo_restore(cContext->cr_);
-
-  return cContext;
-}
-
 void
-UnityWindow::RenderText(WindowCairoContext *context,
+UnityWindow::RenderText(UnityWindow::CairoContext const& context,
                         float x, float y,
                         float maxWidth, float maxHeight)
 {
   panel::Style& style = panel::Style::Instance();
   std::string fontDescription(style.GetFontDescription(panel::PanelItem::TITLE));
 
-  glib::Object<PangoLayout> layout(pango_cairo_create_layout(context->cr_));
+  glib::Object<PangoLayout> layout(pango_cairo_create_layout(context.cr_));
   std::shared_ptr<PangoFontDescription> font(pango_font_description_from_string(fontDescription.c_str()),
                                              pango_font_description_free);
 
@@ -3698,9 +3709,9 @@ UnityWindow::RenderText(WindowCairoContext *context,
                         -1);
 
   /* update the size of the pango layout */
-  pango_cairo_update_layout(context->cr_, layout);
-  cairo_set_operator(context->cr_, CAIRO_OPERATOR_OVER);
-  cairo_set_source_rgba(context->cr_,
+  pango_cairo_update_layout(context.cr_, layout);
+  cairo_set_operator(context.cr_, CAIRO_OPERATOR_OVER);
+  cairo_set_source_rgba(context.cr_,
                         1.0,
                         1.0,
                         1.0,
@@ -3715,7 +3726,7 @@ UnityWindow::RenderText(WindowCairoContext *context,
   textHeight = lRect.height / PANGO_SCALE;
 
   y = ((maxHeight - textHeight) / 2.0) + y;
-  cairo_translate(context->cr_, x, y);
+  cairo_translate(context.cr_, x, y);
 
   if (textWidth > maxWidth)
   {
@@ -3724,38 +3735,35 @@ UnityWindow::RenderText(WindowCairoContext *context,
     const int fadingPixels = 35;
     const int fadingWidth = outPixels < fadingPixels ? outPixels : fadingPixels;
 
-    cairo_push_group(context->cr_);
-    pango_cairo_show_layout(context->cr_, layout);
-    cairo_pop_group_to_source(context->cr_);
+    cairo_push_group(context.cr_);
+    pango_cairo_show_layout(context.cr_, layout);
+    cairo_pop_group_to_source(context.cr_);
 
     std::shared_ptr<cairo_pattern_t> linpat(cairo_pattern_create_linear(maxWidth - fadingWidth,
                                                                         y, maxWidth, y),
                                             cairo_pattern_destroy);
     cairo_pattern_add_color_stop_rgba(linpat.get(), 0, 0, 0, 0, 1);
     cairo_pattern_add_color_stop_rgba(linpat.get(), 1, 0, 0, 0, 0);
-    cairo_mask(context->cr_, linpat.get());
+    cairo_mask(context.cr_, linpat.get());
   }
   else
   {
-    pango_cairo_show_layout(context->cr_, layout);
+    pango_cairo_show_layout(context.cr_, layout);
   }
 }
 
 void
-UnityWindow::DrawWindowDecoration(const GLWindowPaintAttrib& attrib,
-                                  const GLMatrix& transform,
+UnityWindow::DrawWindowDecoration(GLWindowPaintAttrib const& attrib,
+                                  GLMatrix const& transform,
                                   unsigned int mask,
                                   bool highlighted,
-                                  float x, float y, float x2, float y2)
+                                  int x, int y, unsigned width, unsigned height)
 {
-  const float width = x2 - x;
-  const float height = y2 - y;
-
   // Paint a fake window decoration
-  WindowCairoContext::Ptr context(CreateCairoContext(width, height));
+  CairoContext context(width, height);
 
-  cairo_save(context->cr_);
-  cairo_push_group(context->cr_);
+  cairo_save(context.cr_);
+  cairo_push_group(context.cr_);
 
   // Round window decoration top border
   const double aspect = 1.0;
@@ -3763,190 +3771,184 @@ UnityWindow::DrawWindowDecoration(const GLWindowPaintAttrib& attrib,
   const double radius = corner_radius / aspect;
   const double degrees = M_PI / 180.0;
 
-  cairo_new_sub_path(context->cr_);
+  cairo_new_sub_path(context.cr_);
 
-  cairo_arc(context->cr_, radius, radius, radius, 180 * degrees, 270 * degrees);
-  cairo_arc(context->cr_, width - radius, radius, radius, -90 * degrees, 0 * degrees);
-  cairo_line_to(context->cr_, width, height);
-  cairo_line_to(context->cr_, 0, height);
+  cairo_arc(context.cr_, radius, radius, radius, 180 * degrees, 270 * degrees);
+  cairo_arc(context.cr_, width - radius, radius, radius, -90 * degrees, 0 * degrees);
+  cairo_line_to(context.cr_, width, height);
+  cairo_line_to(context.cr_, 0, height);
 
-  cairo_close_path(context->cr_);
-  cairo_clip(context->cr_);
+  cairo_close_path(context.cr_);
+  cairo_clip(context.cr_);
 
-  // Draw window decoration abased on gtk style
-  gtk_render_background(window_header_style_, context->cr_, 0, 0, width, height);
-  gtk_render_frame(window_header_style_, context->cr_, 0, 0, width, height);
+  // Draw window decoration based on gtk style
+  auto& style = panel::Style::Instance();
+  gtk_render_background(style.GetStyleContext(), context.cr_, 0, 0, width, height);
+  gtk_render_frame(style.GetStyleContext(), context.cr_, 0, 0, width, height);
 
-  cairo_pop_group_to_source(context->cr_);
+  cairo_pop_group_to_source(context.cr_);
 
-  cairo_paint_with_alpha(context->cr_, 1.0);
-  cairo_restore(context->cr_);
+  cairo_paint_with_alpha(context.cr_, 1.0);
+  cairo_restore(context.cr_);
 
   if (highlighted)
   {
     // Draw windows title
-    const float xText = CLOSE_ICON_SPACE * 2 + CLOSE_ICON_SIZE;
-    RenderText(context.get(),
-               xText, 0.0,
-               width - xText, height);
+    const float xText = SCALE_ITEMS_PADDING * 2 + SCALE_CLOSE_ICON_SIZE;
+    RenderText(context, xText, 0.0, width - xText - SCALE_ITEMS_PADDING, height);
   }
 
   mask |= PAINT_WINDOW_BLEND_MASK;
   int maxWidth, maxHeight;
-  foreach(GLTexture *icon, context->texture_)
-  {
-    DrawTexture(icon, attrib, transform, mask,
-                x, y,
-                maxWidth , maxHeight);
-  }
+
+  for (GLTexture *icon : context.texture_)
+    DrawTexture(icon, attrib, transform, mask, x, y, maxWidth , maxHeight);
 }
 
-void
-UnityWindow::PrepareHeaderStyle()
+void UnityWindow::LoadCloseIcon(panel::WindowState state, GLTexture::List& texture)
 {
-  if (!window_header_style_)
-  {
-    GtkWidgetPath* widget_path = gtk_widget_path_new();
-    gint pos = gtk_widget_path_append_type(widget_path, GTK_TYPE_WINDOW);
-    gtk_widget_path_iter_set_name(widget_path, pos, "UnityPanelWidget");
-
-    window_header_style_  = glib::Object<GtkStyleContext>(gtk_style_context_new());
-    gtk_style_context_set_path(window_header_style_, widget_path);
-    gtk_style_context_add_class(window_header_style_, "gnome-panel-menu-bar");
-    gtk_style_context_add_class(window_header_style_, "unity-panel");
-
-    // get close button
-    panel::Style& style = panel::Style::Instance();
-
-    std::vector<std::string> files = style.GetWindowButtonFileNames(panel::WindowButtonType::CLOSE,
-                                                                    panel::WindowState::NORMAL);
-
-    CompString pName("unityshell");
-    foreach (std::string file, files)
-    {
-      CompString fileName(file.c_str ());
-      CompSize size(CLOSE_ICON_SIZE, CLOSE_ICON_SIZE);
-      close_icon_ = GLTexture::readImageToTexture(fileName,
-                                                  pName,
-                                                  size);
-      if (close_icon_.size() != 0)
-        break;
-    }
-
-    if (close_icon_.size() == 0)
-    {
-      CompString fileName(PKGDATADIR"/close_dash.png");
-      CompSize size(CLOSE_ICON_SIZE, CLOSE_ICON_SIZE);
-      close_icon_ = GLTexture::readImageToTexture(fileName,
-                                                  pName,
-                                                  size);
-    }
-  }
-}
-
-void
-UnityWindow::scalePaintDecoration(const GLWindowPaintAttrib& attrib,
-                                  const GLMatrix& transform,
-                                  const CompRegion& region,
-                                  unsigned int mask)
-{
-  ScaleWindow *sWindow = ScaleWindow::get(window);
-  if (!sWindow)
+  if (!texture.empty())
     return;
 
-  sWindow->scalePaintDecoration(attrib, transform, region, mask);
+  auto& style = panel::Style::Instance();
+  auto const& files = style.GetWindowButtonFileNames(panel::WindowButtonType::CLOSE, state);
 
-  if (!sWindow->hasSlot()) // animation not finished
+  CompString pName("unityshell");
+  for (std::string const& file : files)
+  {
+    CompString fileName(file.c_str());
+    CompSize size(SCALE_CLOSE_ICON_SIZE, SCALE_CLOSE_ICON_SIZE);
+    texture = GLTexture::readImageToTexture(fileName, pName, size);
+    if (!texture.empty())
+      break;
+  }
+
+  if (texture.empty())
+  {
+    std::string suffix;
+    if (state == panel::WindowState::PRELIGHT)
+      suffix = "_prelight";
+    else if (state == panel::WindowState::PRESSED)
+      suffix = "_pressed";
+
+    CompString fileName((PKGDATADIR"/close_dash" + suffix + ".png").c_str());
+    CompSize size(SCALE_CLOSE_ICON_SIZE, SCALE_CLOSE_ICON_SIZE);
+    texture = GLTexture::readImageToTexture(fileName, pName, size);
+  }
+}
+
+void UnityWindow::SetupScaleHeaderStyle()
+{
+  LoadCloseIcon(panel::WindowState::NORMAL, close_normal_tex_);
+  LoadCloseIcon(panel::WindowState::PRELIGHT, close_prelight_tex_);
+  LoadCloseIcon(panel::WindowState::PRESSED, close_pressed_tex_);
+}
+
+void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
+                                       GLMatrix const& transform,
+                                       CompRegion const& region,
+                                       unsigned int mask)
+{
+  ScaleWindow *scale_win = ScaleWindow::get(window);
+  if (!scale_win)
+    return;
+
+  scale_win->scalePaintDecoration(attrib, transform, region, mask);
+
+  if (!scale_win->hasSlot()) // animation not finished
     return;
 
   UnityScreen* us = UnityScreen::get(screen);
-  const guint32 xid = window->id();
-  const bool highlighted = (us->highlighted_window_ == xid);
-  GLWindowPaintAttrib sAttrib(attrib);
-  sAttrib.opacity = OPAQUE;
+  const bool highlighted = (us->scale_highlighted_window_ == window->id());
 
-  PrepareHeaderStyle();
+  ScalePosition const& pos = scale_win->getCurrentPosition();
+  auto const& border_rect = window->borderRect();
+  auto const& deco_ext = window->border();
 
-  ScalePosition pos = sWindow->getCurrentPosition();
-  int maxHeight, maxWidth;
-  // Use "1" as margin to make sure to cover all originial decoration
-  const float width = (window->width() * pos.scale) + 2;
-  const float x = pos.x() + window->x() - 1;
-  float y = pos.y() + window->y();
-  float decorationHeight = SCALE_WINDOW_TITLE_SIZE;
+  const unsigned decoration_height = deco_ext.top;
+  unsigned width = (border_rect.width() + deco_ext.left + deco_ext.right)  * pos.scale;
+  unsigned height = decoration_height * pos.scale;
+  int x = pos.x() + border_rect.x();
+  int y = pos.y() + border_rect.y() + decoration_height - height - 1;
 
-  // If window is decorated draw the decoration
-  // otherwise draw a small bar over the window
-  if (!highlighted)
-    decorationHeight = SCALE_WINDOW_TITLE_SIZE * 0.30;
+  // If window is highlighted, we draw the decoration at full size
+  if (highlighted)
+    height = decoration_height;
 
-  DrawWindowDecoration(sAttrib, transform, mask, highlighted,
-                       x, y,
-                       x + width, y + decorationHeight);
+  DrawWindowDecoration(attrib, transform, mask, highlighted, x, y, width, height);
 
   if (highlighted)
   {
-    const float iconX = x + CLOSE_ICON_SPACE;
-    const float iconY = y + ((decorationHeight - CLOSE_ICON_SIZE)  / 2.0);
-    maxHeight = maxWidth = 0;
+    x += SCALE_ITEMS_PADDING;
+    y += (height - SCALE_CLOSE_ICON_SIZE) / 2.0f;
+    int max_height = 0;
+    int max_width = 0;
     mask |= PAINT_WINDOW_BLEND_MASK;
 
-    foreach(GLTexture *icon, close_icon_)
+    switch(close_icon_state_)
     {
-      DrawTexture(icon, sAttrib, transform, mask,
-                  iconX, iconY,
-                  maxWidth , maxHeight);
+      case panel::WindowState::NORMAL:
+      default:
+        for (GLTexture *icon : close_normal_tex_)
+          DrawTexture(icon, attrib, transform, mask, x, y, max_width , max_height);
+        break;
+
+      case panel::WindowState::PRELIGHT:
+        for (GLTexture *icon : close_prelight_tex_)
+          DrawTexture(icon, attrib, transform, mask, x, y, max_width , max_height);
+        break;
+
+      case panel::WindowState::PRESSED:
+        for (GLTexture *icon : close_pressed_tex_)
+          DrawTexture(icon, attrib, transform, mask, x, y, max_width , max_height);
+        break;
     }
 
-    close_button_area_ = CompRect(iconX, iconY, maxWidth, maxHeight);
+    close_button_geo_.Set(x, y, max_height, max_width);
   }
-  else
+  else if (!close_button_geo_.IsNull())
   {
-    close_button_area_ = CompRect();
+    close_button_geo_.Set(0, 0, 0, 0);
   }
 }
 
-void
-UnityWindow::scaleSelectWindow ()
+void UnityWindow::scaleSelectWindow()
 {
+  ScaleWindow::get(window)->scaleSelectWindow();
+
   UnityScreen* us = UnityScreen::get(screen);
 
-  if (us->highlighted_window_ != window->id ())
-  {
-    CompositeWindow *cWindow = CompositeWindow::get(window);
-    if (cWindow)
-      cWindow->addDamage();
-
-    cWindow = 0;
-    CompWindow *old_window = screen->findWindow(us->highlighted_window_);
-    if (old_window)
-      cWindow = CompositeWindow::get(old_window);
-
-    if (cWindow)
-      cWindow->addDamage();
-
-    us->highlighted_window_ = window->id();
-  }
-
-  ScaleWindow *sWindow = ScaleWindow::get(window);
-  if (sWindow)
-    sWindow->scaleSelectWindow();
+  if (us->scale_highlighted_window_ != window->id())
+    us->scale_highlighted_window_ = window->id();
 }
 
-void UnityWindow::InitiateSpreed()
+void UnityWindow::OnInitiateSpreed()
 {
+  auto const windows = screen->windows();
+  if (std::find(windows.begin(), windows.end(), window) == windows.end())
+    return;
+
+  close_icon_state_ = panel::WindowState::NORMAL;
+  SetupScaleHeaderStyle();
+
   WindowManager *wm = WindowManager::Default();
-  const guint32 xid = window->id();
-  has_original_decoration_ = wm->IsWindowDecorated(xid) &&
-                             !wm->IsWindowMaximized(xid);
-  if (has_original_decoration_)
-    wm->Undecorate(xid);
+  Window xid = window->id();
+
+  if (wm->IsWindowDecorated(xid))
+    wm->Decorate(xid);
 }
 
-void UnityWindow::TerminateSpreed()
+void UnityWindow::OnTerminateSpreed()
 {
-  if (has_original_decoration_)
-    WindowManager::Default()->Decorate(window->id());
+  auto const windows = screen->windows();
+  if (std::find(windows.begin(), windows.end(), window) == windows.end())
+    return;
+
+  WindowManager *wm = WindowManager::Default();
+  Window xid = window->id();
+
+  if (wm->IsWindowDecorated(xid) && wm->IsWindowMaximized(xid))
+    wm->Undecorate(xid);
 }
 
 UnityWindow::~UnityWindow()
@@ -3969,13 +3971,10 @@ UnityWindow::~UnityWindow()
 
   ShowdesktopHandler::animating_windows.remove (static_cast <ShowdesktopHandlerWindowInterface *> (this));
 
-  if (mShowdesktopHandler)
-    delete mShowdesktopHandler;
-
   if (window->state () & CompWindowStateFullscreenMask)
     UnityScreen::get (screen)->fullscreen_windows_.remove(window);
 
-  PluginAdapter::Default ()->OnWindowClosed (window);
+  PluginAdapter::Default ()->OnWindowClosed(window);
 }
 
 /* vtable init */

@@ -71,8 +71,6 @@
 namespace unity
 {
 
-class WindowCairoContext;
-
 /* base screen class */
 class UnityScreen :
   public unity::debug::Introspectable,
@@ -250,9 +248,6 @@ private:
 
   void InitGesturesSupport();
 
-  void OnInitiateSpreed();
-  void OnTerminateSpreed();
-
   nux::animation::TickSource tick_source_;
   nux::animation::AnimationController animation_controller_;
 
@@ -350,7 +345,7 @@ private:
   glib::SourceManager sources_;
   unity::ThumbnailGenerator thumb_generator;
 
-  Window highlighted_window_;
+  Window scale_highlighted_window_;
 
   WindowMinimizeSpeedController* minimize_speed_controller;
   friend class UnityWindow;
@@ -420,15 +415,12 @@ public:
   void leaveShowDesktop ();
   bool HandleAnimations (unsigned int ms);
 
-  void handleEvent (XEvent *event);
-
-  CompRect CloseButtonArea();
+  bool handleEvent(XEvent *event);
 
   typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>
           UnityMinimizedHandler;
   std::unique_ptr <UnityMinimizedHandler> mMinimizeHandler;
-
-  ShowdesktopHandler             *mShowdesktopHandler;
+  std::unique_ptr <ShowdesktopHandler> mShowdesktopHandler;
 
   //! Emited when CompWindowNotifyBeforeDestroy is received
   sigc::signal<void> being_destroyed;
@@ -439,10 +431,9 @@ public:
                             const CompRegion &,
                             unsigned int);
 
-  void InitiateSpreed();
-  void TerminateSpreed();
-
 private:
+  struct CairoContext;
+
   void DoEnableFocus ();
   void DoDisableFocus ();
 
@@ -462,6 +453,9 @@ private:
   void DoShow ();
   void DoNotifyShown ();
 
+  void OnInitiateSpreed();
+  void OnTerminateSpreed();
+
   void DoAddDamage ();
   ShowdesktopHandlerWindowInterface::PostPaintAction DoHandleAnimations (unsigned int ms);
 
@@ -473,30 +467,31 @@ private:
 
   compiz::WindowInputRemoverLock::Ptr GetInputRemover ();
 
-  void DrawWindowDecoration(const GLWindowPaintAttrib& attrib,
-                            const GLMatrix& transform,
+  void DrawWindowDecoration(GLWindowPaintAttrib const& attrib,
+                            GLMatrix const& transform,
                             unsigned int mask,
                             bool highlighted,
-                            float x, float y, float x2, float y2);
+                            int x, int y, unsigned width, unsigned height);
   void DrawTexture(GLTexture *icon,
                    const GLWindowPaintAttrib& attrib,
                    const GLMatrix& transform,
                    unsigned int mask,
                    float x, float y,
                    int &maxWidth, int &maxHeight);
-  void RenderText(WindowCairoContext *context,
+  void RenderText(CairoContext const& context,
                   float x, float y,
                   float maxWidth, float maxHeight);
-  void PrepareHeaderStyle();
-  std::shared_ptr<WindowCairoContext> CreateCairoContext(float width, float height);
 
+  void SetupScaleHeaderStyle();
+  void LoadCloseIcon(panel::WindowState state, GLTexture::List& texture);
+
+  static GLTexture::List close_normal_tex_;
+  static GLTexture::List close_prelight_tex_;
+  static GLTexture::List close_pressed_tex_;
   compiz::WindowInputRemoverLock::Weak input_remover_;
+  panel::WindowState close_icon_state_;
+  nux::Geometry close_button_geo_;
   glib::Source::UniquePtr focus_desktop_timeout_;
-
-  GLTexture::List close_icon_;
-  CompRect close_button_area_;
-  glib::Object<GtkStyleContext> window_header_style_;
-  bool has_original_decoration_;
 };
 
 
