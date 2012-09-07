@@ -30,7 +30,7 @@ using namespace unity;
 using testing::Eq;
 
 namespace {
-  
+
 TEST(TestDesktopUtilitiesDesktopID, TestEmptyValues)
 {
   std::vector<std::string> empty_list;
@@ -88,6 +88,8 @@ TEST(TestDesktopUtilitiesDesktopID, TestSubdirectory)
               Eq("subdir-to.desktop"));
   EXPECT_THAT(DesktopUtilities::GetDesktopID(dirs, "/this/path/applications/subdir1/subdir2/to.desktop"),
               Eq("subdir1-subdir2-to.desktop"));
+  EXPECT_THAT(DesktopUtilities::GetDesktopID(dirs, "/this/path/applications/subdir1/subdir2-to.desktop"),
+              Eq("subdir1-subdir2-to.desktop"));
 }
 
 TEST(TestDesktopUtilitiesDataDirectories, TestGetUserDataDirectory)
@@ -138,21 +140,38 @@ TEST(TestDesktopUtilitiesDataDirectories, TestGetDataDirectory)
   EXPECT_THAT(data_dirs[4], Eq("UnityUserConfig"));
 }
 
-TEST(TestDesktopUtilitiesDataDirectories, TestGetBackgroundColor)
+TEST(TestDesktopUtilities, DISABLED_TestGetDesktopPathById)
+// This has been disabled since glib doesn't seem to reload the env variables
+// correctly.
+{
+  const gchar* old_dirs = g_getenv("XDG_DATA_DIRS");
+  g_setenv("XDG_DATA_DIRS", "/usr/share", TRUE);
+  const gchar* old_home = g_getenv("XDG_DATA_HOME");
+  g_setenv("XDG_DATA_HOME", "UnityUserConfig", TRUE);
+
+  std::string const& file = DesktopUtilities::GetDesktopPathById("ubuntu-software-center.desktop");
+
+  g_setenv("XDG_DATA_DIRS", old_dirs, TRUE);
+  g_setenv("XDG_DATA_HOME", old_home, TRUE);
+
+  EXPECT_EQ(file, "/usr/share/applications/ubuntu-software-center.desktop");
+}
+
+TEST(TestDesktopUtilities, TestGetBackgroundColor)
 {
   std::string const& color = DesktopUtilities::GetBackgroundColor(BUILDDIR"/tests/data/ubuntu-software-center.desktop");
 
   EXPECT_EQ(color, "#aabbcc");
 }
 
-TEST(TestDesktopUtilitiesDataDirectories, TestGetBackgroundColorNoKey)
+TEST(TestDesktopUtilities, TestGetBackgroundColorNoKey)
 {
   std::string const& color = DesktopUtilities::GetBackgroundColor(BUILDDIR"/tests/data/update-manager.desktop");
 
   EXPECT_TRUE(color.empty());
 }
 
-TEST(TestDesktopUtilitiesDataDirectories, TestGetBackgroundColorNoFile)
+TEST(TestDesktopUtilities, TestGetBackgroundColorNoFile)
 {
   std::string const& color = DesktopUtilities::GetBackgroundColor("hello-world.desktop");
 
