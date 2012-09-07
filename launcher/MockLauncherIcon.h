@@ -44,19 +44,16 @@ class MockLauncherIcon : public AbstractLauncherIcon
 {
   NUX_DECLARE_OBJECT_TYPE(MockLauncherIcon, AbstractLauncherIcon);
 public:
-  MockLauncherIcon()
+  MockLauncherIcon(IconType type = IconType::APPLICATION)
     : icon_(0)
+    , type_(type)
+    , sort_priority_(DefaultPriority(type))
   {
     tooltip_text = "Mock Icon";
-    sort_priority_ = 0;
-    type_ = IconType::APPLICATION;
     position = Position::FLOATING;
-    icon_weight = 0;
 
     for (unsigned i = 0; i < unsigned(Quirk::LAST); ++i)
-    {
       quirks_[i] = false;
-    }
   }
 
   std::string GetName() const { return "MockLauncherIcon"; }
@@ -349,8 +346,8 @@ private:
   }
 
   nux::BaseTexture* icon_;
-  int sort_priority_;
   IconType type_;
+  int sort_priority_;
   bool quirks_[unsigned(Quirk::LAST)];
   timespec quirk_times_[unsigned(Quirk::LAST)];
   std::map<int, nux::Point3> center_;
