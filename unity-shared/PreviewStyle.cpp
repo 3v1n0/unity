@@ -39,6 +39,9 @@ namespace
 {
 Style* style_instance = nullptr;
 
+const int preview_width = 770;
+const int preview_height = 380;
+
 nux::logging::Logger logger("unity.dash.previews.style");
 
 typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
@@ -159,9 +162,14 @@ int Style::GetNavigatorIconSize() const
   return 24;  
 }
 
-float Style::GetPreviewAspectRatio() const
+int Style::GetPreviewWidth() const
 {
-  return static_cast<float>(796)/390;
+  return preview_width;
+}
+
+int Style::GetPreviewHeight() const
+{
+  return preview_height;
 }
 
 int Style::GetDetailsTopMargin() const
@@ -186,7 +194,7 @@ int Style::GetDetailsLeftMargin() const
 
 int Style::GetPanelSplitWidth() const
 {
-  return 16;
+  return 10;
 }
 
 int Style::GetAppIconAreaWidth() const

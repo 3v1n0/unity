@@ -112,7 +112,9 @@ public:
   ActionPtrList GetActions() const;
   InfoHintPtrList GetInfoHints() const;
 
-  void PerformAction(std::string const& id) const;
+  void PerformAction(std::string const& id,
+                     std::map<std::string, glib::Variant> const& hints =
+                     std::map<std::string, glib::Variant>()) const;
   void EmitClosed() const;
 
 protected:

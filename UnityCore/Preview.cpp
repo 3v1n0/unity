@@ -267,11 +267,11 @@ void Preview::Update(glib::Variant const& properties,
   }
 }
 
-void Preview::PerformAction(std::string const& id) const
+void Preview::PerformAction(std::string const& id, Lens::Hints const& hints) const
 {
   if (pimpl->parent_lens_)
   {
-    pimpl->parent_lens_->ActivatePreviewAction(id, preview_uri);
+    pimpl->parent_lens_->ActivatePreviewAction(id, preview_uri, hints);
   }
   else
   {

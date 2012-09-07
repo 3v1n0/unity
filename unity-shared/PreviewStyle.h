@@ -60,7 +60,8 @@ public:
   int GetNavigatorWidth() const;
   int GetNavigatorIconSize() const;
   
-  float GetPreviewAspectRatio() const;
+  int GetPreviewWidth() const;
+  int GetPreviewHeight() const;
 
   int GetDetailsTopMargin() const;
   int GetDetailsBottomMargin() const;
