@@ -74,11 +74,7 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   tooltip_text = BamfName();
   icon_name = (icon ? icon.Str() : DEFAULT_ICON);
 
-  if (IsSticky())
-    SetQuirk(Quirk::VISIBLE, true);
-  else
-    SetQuirk(Quirk::VISIBLE, bamf_view_user_visible(bamf_view));
-
+  SetQuirk(Quirk::VISIBLE, bamf_view_user_visible(bamf_view));
   SetQuirk(Quirk::ACTIVE, bamf_view_is_active(bamf_view));
   SetQuirk(Quirk::RUNNING, bamf_view_is_running(bamf_view));
 
@@ -199,11 +195,6 @@ bool BamfLauncherIcon::IsSticky() const
     return false;
   else
     return bamf_view_is_sticky(BAMF_VIEW(_bamf_app.RawPtr()));
-}
-
-bool BamfLauncherIcon::IsVisible() const
-{
-  return GetQuirk(Quirk::VISIBLE);
 }
 
 bool BamfLauncherIcon::IsActive() const
@@ -939,30 +930,28 @@ void BamfLauncherIcon::Quit()
 
 void BamfLauncherIcon::Stick(bool save)
 {
+  SimpleLauncherIcon::Stick(save);
+
   if (IsSticky())
     return;
 
-  std::string const& desktop_file = DesktopFile();
   bamf_view_set_sticky(BAMF_VIEW(_bamf_app.RawPtr()), true);
-
-  if (save && !desktop_file.empty())
-    FavoriteStore::Instance().AddFavorite(desktop_file, -1);
 }
 
 void BamfLauncherIcon::UnStick()
 {
+  SimpleLauncherIcon::UnStick();
+
   if (!IsSticky())
     return;
 
-  std::string const& desktop_file = DesktopFile();
   BamfView* view = BAMF_VIEW(_bamf_app.RawPtr());
   bamf_view_set_sticky(view, false);
 
-  if (bamf_view_is_closed(view) || !bamf_view_user_visible(view))
-    Remove();
+  SetQuirk(Quirk::VISIBLE, bamf_view_user_visible(view));
 
-  if (!desktop_file.empty())
-    FavoriteStore::Instance().RemoveFavorite(desktop_file);
+  if (bamf_view_is_closed(view))
+    Remove();
 }
 
 void BamfLauncherIcon::ToggleSticky()
