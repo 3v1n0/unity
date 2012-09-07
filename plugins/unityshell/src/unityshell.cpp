@@ -647,24 +647,28 @@ void UnityScreen::paintDisplay()
 {
   CompOutput *output = _last_output;
 
+  DrawTopPanelBackground();
+
+  auto gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
+
   nux::ObjectPtr<nux::IOpenGLTexture2D> device_texture =
-    nux::GetGraphicsDisplay()->GetGpuDevice()->CreateTexture2DFromID(gScreen->fbo ()->tex ()->name (),
-      screen->width(), screen->height(), 1, nux::BITFMT_R8G8B8A8);
+    gpu_device->CreateTexture2DFromID(gScreen->fbo ()->tex ()->name (),
+                                      screen->width(), screen->height(), 1, nux::BITFMT_R8G8B8A8);
 
-  nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_ = device_texture;
+  gpu_device->backup_texture0_ = device_texture;
 
-  nux::Geometry geo = nux::Geometry (0, 0, screen->width (), screen->height ());
-  nux::Geometry oGeo = nux::Geometry (output->x (), output->y (), output->width (), output->height ());
+  nux::Geometry geo(0, 0, screen->width (), screen->height ());
+  nux::Geometry outputGeo(output->x (), output->y (), output->width (), output->height ());
   BackgroundEffectHelper::monitor_rect_ = geo;
 
   GLint fboID;
   // Nux renders to the referenceFramebuffer when it's embedded.
   glGetIntegerv(GL_FRAMEBUFFER_BINDING, &fboID);
-  wt->GetWindowCompositor().SetReferenceFramebuffer(fboID, oGeo);
+  wt->GetWindowCompositor().SetReferenceFramebuffer(fboID, outputGeo);
 
   nuxPrologue();
   _in_paint = true;
-  wt->RenderInterfaceFromForeignCmd (&oGeo);
+  wt->RenderInterfaceFromForeignCmd (&outputGeo);
   _in_paint = false;
   nuxEpilogue();
 
@@ -722,6 +726,53 @@ void UnityScreen::paintDisplay()
 
   doShellRepaint = false;
   didShellRepaint = true;
+}
+
+void UnityScreen::DrawTopPanelBackground()
+{
+  auto graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
+
+  if (!graphics_engine->UsingGLSLCodePath() || !launcher_controller_->IsOverlayOpen() || !paint_panel_)
+   return;
+
+  if (TopPanelBackgroundTextureNeedsUpdate())
+    UpdateTopPanelBackgroundTexture();
+
+  if (panel_texture_.IsValid())
+  {
+    graphics_engine->ResetModelViewMatrixStack();
+    graphics_engine->Push2DTranslationModelViewMatrix(0.0f, 0.0f, 0.0f);
+    graphics_engine->ResetProjectionMatrix();
+    graphics_engine->SetOrthographicProjectionMatrix(screen->width (), screen->height());
+
+    nux::TexCoordXForm texxform;
+    int panel_height = panel_style_.panel_height;
+    graphics_engine->QRP_GLSL_1Tex(0, 0, screen->width (), panel_height, panel_texture_, texxform, nux::color::White);
+  }
+}
+
+bool UnityScreen::TopPanelBackgroundTextureNeedsUpdate() const
+{
+  return panel_texture_has_changed_ || !panel_texture_.IsValid();
+}
+
+void UnityScreen::UpdateTopPanelBackgroundTexture()
+{
+  auto gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
+  auto &panel_style = panel::Style::Instance();
+
+  panel_texture_.Release();
+
+  std::unique_ptr<nux::NBitmapData> bitmap(panel_style.GetBackground(screen->width(), screen->height(), 1.0f));
+  nux::ObjectPtr<nux::BaseTexture> texture2D(gpu_device->CreateSystemCapableTexture());
+
+  if (bitmap && texture2D)
+  {
+    texture2D->Update(bitmap.get());
+    panel_texture_ = texture2D->GetDeviceTexture();
+  }
+
+  panel_texture_has_changed_ = false;
 }
 
 bool UnityScreen::forcePaintOnTop ()
