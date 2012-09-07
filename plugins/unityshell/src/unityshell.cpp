@@ -318,7 +318,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetAutohideAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDashBlurExperimentalNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetShortcutOverlayNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
-     optionSetShowDesktopIconNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetShowLauncherInitiate(boost::bind(&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
      optionSetShowLauncherTerminate(boost::bind(&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
      optionSetKeyboardFocusInitiate(boost::bind(&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
@@ -3043,9 +3042,6 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       enable_shortcut_overlay_ = optionGetShortcutOverlay();
       shortcut_controller_->SetEnabled(enable_shortcut_overlay_);
       break;
-    case UnityshellOptions::ShowDesktopIcon:
-      launcher_controller_->SetShowDesktopIcon(optionGetShowDesktopIcon());
-      break;
     case UnityshellOptions::DecayRate:
       launcher_options->edge_decay_rate = optionGetDecayRate() * 100;
       break;
@@ -3126,11 +3122,13 @@ bool UnityScreen::setOptionForPlugin(const char* plugin, const char* name,
                                      CompOption::Value& v)
 {
   bool status = screen->setOptionForPlugin(plugin, name, v);
+
   if (status)
   {
-    if (strcmp(plugin, "core") == 0 && strcmp(name, "hsize") == 0)
+    if (strcmp(plugin, "core") == 0)
     {
-      launcher_controller_->UpdateNumWorkspaces(screen->vpSize().width() * screen->vpSize().height());
+      if (strcmp(name, "hsize") == 0 || strcmp(name, "vsize") == 0)
+        launcher_controller_->UpdateNumWorkspaces(screen->vpSize().width() * screen->vpSize().height());
     }
   }
   return status;
@@ -3161,7 +3159,7 @@ void UnityScreen::OnDashRealized ()
 void UnityScreen::initLauncher()
 {
   Timer timer;
-  launcher_controller_ = std::make_shared<launcher::Controller>(screen->dpy());
+  launcher_controller_ = std::make_shared<launcher::Controller>();
   AddChild(launcher_controller_.get());
 
   switcher_controller_ = std::make_shared<switcher::Controller>();
