@@ -66,6 +66,7 @@ Provides: indicator-renderer
 Recommends: unity-lens-applications,
             unity-lens-files,
             unity-lens-music,
+            unity-lens-photos,
             unity-lens-video,
             indicator-appmenu,
             indicator-application,

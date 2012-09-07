@@ -1,8 +1,12 @@
-unity (6.4.0-0ubuntu5) UNRELEASED; urgency=low
+unity (6.4.0-0ubuntu5) quantal; urgency=low
 
+  [ Sebastien Bacher ]
   * debian/control: updated some build-depends
 
- -- Sebastien Bacher <seb128@ubuntu.com>  Mon, 03 Sep 2012 12:30:09 +0200
+  [ Michael Terry ]
+  * debian/control: Recommend unity-lens-photos (FFe LP: #1044447)
+
+ -- Michael Terry <mterry@ubuntu.com>  Fri, 07 Sep 2012 11:59:14 -0400
 
 unity (6.4.0-0ubuntu4) quantal-proposed; urgency=low
 
