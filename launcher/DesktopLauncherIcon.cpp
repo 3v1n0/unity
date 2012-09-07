@@ -52,7 +52,7 @@ std::string DesktopLauncherIcon::GetName() const
 
 std::string DesktopLauncherIcon::GetRemoteUri()
 {
-  return "unity://show-desktop";
+  return "unity://desktop-icon";
 }
 
 void DesktopLauncherIcon::SetShowInSwitcher(bool show_in_switcher)
