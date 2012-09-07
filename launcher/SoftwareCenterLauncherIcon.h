@@ -42,7 +42,7 @@ public:
                              std::string const& aptdaemon_trans_id,
                              std::string const& icon_path);
 
-  void Animate(nux::ObjectPtr<Launcher> launcher, int icon_x, int icon_y, int icon_size);
+  void Animate(nux::ObjectPtr<Launcher> launcher, int start_x, int start_y);
 
   std::string GetName() const;
 
