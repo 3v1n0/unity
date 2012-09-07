@@ -56,14 +56,14 @@ unity::debug::Introspectable::IntrospectableList LauncherModel::GetIntrospectabl
 
 bool LauncherModel::IconShouldShelf(AbstractLauncherIcon::Ptr const& icon) const
 {
-  return icon->GetIconType() == AbstractLauncherIcon::IconType::TRASH;
+  return icon->position() == AbstractLauncherIcon::Position::END;
 }
 
 bool LauncherModel::CompareIcons(AbstractLauncherIcon::Ptr const& first, AbstractLauncherIcon::Ptr const& second)
 {
-  if (first->GetIconType() < second->GetIconType())
+  if (first->position() < second->position())
     return true;
-  else if (first->GetIconType() > second->GetIconType())
+  else if (first->position() > second->position())
     return false;
 
   return first->SortPriority() < second->SortPriority();
@@ -163,25 +163,11 @@ bool LauncherModel::IconHasSister(AbstractLauncherIcon::Ptr const& icon) const
   if (!icon)
     return false;
 
-  const_iterator it;
-  const_iterator end;
+  auto const& container = IconShouldShelf(icon) ? _inner_shelf : _inner_main;
 
-  if (IconShouldShelf(icon))
+  for (auto const& icon_it : container)
   {
-    it = _inner_shelf.begin();
-    end = _inner_shelf.end();
-  }
-  else
-  {
-    it = _inner_main.begin();
-    end = _inner_main.end();
-  }
-
-  for (; it != end; ++it)
-  {
-    AbstractLauncherIcon::Ptr const& iter_icon = *it;
-
-    if (iter_icon != icon && iter_icon->GetIconType() == icon->GetIconType())
+    if (icon_it != icon && icon_it->GetIconType() == icon->GetIconType())
       return true;
   }
 
@@ -193,7 +179,7 @@ void LauncherModel::ReorderAfter(AbstractLauncherIcon::Ptr const& icon, Abstract
   if (icon == other || icon.IsNull() || other.IsNull())
     return;
 
-  if (icon->GetIconType() != other->GetIconType())
+  if (icon->position() != other->position())
     return;
 
   icon->SetSortPriority(other->SortPriority() + 1);
@@ -214,7 +200,7 @@ void LauncherModel::ReorderBefore(AbstractLauncherIcon::Ptr const& icon, Abstrac
   if (icon == other || icon.IsNull() || other.IsNull())
     return;
 
-  if (icon->GetIconType() != other->GetIconType())
+  if (icon->position() != other->position())
     return;
 
   bool found_target = false;
@@ -260,7 +246,7 @@ void LauncherModel::ReorderSmart(AbstractLauncherIcon::Ptr const& icon, Abstract
   if (icon == other || icon.IsNull() || other.IsNull())
     return;
 
-  if (icon->GetIconType() != other->GetIconType())
+  if (icon->position() != other->position())
     return;
 
   bool found_icon = false;
@@ -377,7 +363,7 @@ AbstractLauncherIcon::Ptr LauncherModel::GetClosestIcon(AbstractLauncherIcon::Pt
 
   for (auto const& current : _inner)
   {
-    if (current->GetIconType() != icon->GetIconType())
+    if (current->position() != icon->position())
       continue;
 
     if (!found_target)

@@ -229,6 +229,44 @@ TEST_F(TestLauncherModel, ReorderSmart)
   EXPECT_EQ(icon4, *it);
 }
 
+TEST_F(TestLauncherModel, OrderByPosition)
+{
+  icon1->position = AbstractLauncherIcon::Position::BEGIN;
+  icon2->position = AbstractLauncherIcon::Position::FLOATING;
+  icon3->position = AbstractLauncherIcon::Position::FLOATING;
+  icon4->position = AbstractLauncherIcon::Position::END;
+
+  model.AddIcon(icon3);
+  model.AddIcon(icon4);
+  model.AddIcon(icon2);
+  model.AddIcon(icon1);
+
+  auto it = model.begin();
+  EXPECT_EQ(icon1, *it);
+  it++;
+  EXPECT_EQ(icon3, *it);
+  it++;
+  EXPECT_EQ(icon2, *it);
+  it++;
+  EXPECT_EQ(icon4, *it);
+  it++;
+  EXPECT_EQ(it, model.end());
+
+  auto it_main = model.main_begin();
+  EXPECT_EQ(icon1, *it_main);
+  it_main++;
+  EXPECT_EQ(icon3, *it_main);
+  it_main++;
+  EXPECT_EQ(icon2, *it_main);
+  it_main++;
+  EXPECT_EQ(it_main, model.main_end());
+
+  auto it_shelf = model.shelf_begin();
+  EXPECT_EQ(icon4, *it_shelf);
+  it_shelf++;
+  EXPECT_EQ(it_shelf, model.shelf_end());
+}
+
 TEST_F(TestLauncherModel, OrderByType)
 {
   AbstractLauncherIcon::Ptr icon1(new MockLauncherIcon(AbstractLauncherIcon::IconType::HOME));
@@ -255,22 +293,6 @@ TEST_F(TestLauncherModel, OrderByType)
   EXPECT_EQ(icon5, *it);
   it++;
   EXPECT_EQ(it, model.end());
-
-  auto it_main = model.main_begin();
-  EXPECT_EQ(icon1, *it_main);
-  it_main++;
-  EXPECT_EQ(icon2, *it_main);
-  it_main++;
-  EXPECT_EQ(icon3, *it_main);
-  it_main++;
-  EXPECT_EQ(icon4, *it_main);
-  it_main++;
-  EXPECT_EQ(it_main, model.main_end());
-
-  auto it_shelf = model.shelf_begin();
-  EXPECT_EQ(icon5, *it_shelf);
-  it_shelf++;
-  EXPECT_EQ(it_shelf, model.shelf_end());
 }
 
 TEST_F(TestLauncherModel, GetClosestIcon)
