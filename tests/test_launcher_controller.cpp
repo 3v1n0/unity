@@ -40,10 +40,12 @@ public:
     return fav_list_;
   };
 
-  void AddFavorite(std::string const& desktop_path, int position) {};
-  void RemoveFavorite(std::string const& desktop_path) {};
-  void MoveFavorite(std::string const& desktop_path, int position) {};
-  void SetFavorites(FavoriteList const& desktop_paths) {};
+  void AddFavorite(std::string const& icon_uri, int position) {}
+  void RemoveFavorite(std::string const& icon_uri) {}
+  void MoveFavorite(std::string const& icon_uri, int position) {}
+  bool IsFavorite(std::string const& icon_uri) { return false; }
+  int FavoritePosition(std::string const& icon_uri) { return -1; }
+  void SetFavorites(FavoriteList const& icon_uris) {}
 
 private:
   FavoriteList fav_list_;
@@ -64,10 +66,6 @@ namespace launcher
 class TestLauncherController : public testing::Test
 {
 public:
-  TestLauncherController()
-    : lc(nux::GetGraphicsDisplay()->GetX11Display())
-  {}
-
   virtual void SetUp()
   {
     lc.multiple_launchers = true;
@@ -227,7 +225,7 @@ TEST_F(TestLauncherController, OnlyUnstickIconOnFavoriteRemoval)
   EXPECT_CALL(*bamf_icon, UnStick());
   EXPECT_CALL(*bamf_icon, Quit()).Times(0);
 
-  favorite_store.favorite_removed.emit(USC_DESKTOP);
+  favorite_store.favorite_removed.emit(FavoriteStore::URI_PREFIX_APP + USC_DESKTOP);
 }
 
 TEST_F(TestLauncherController, EnabledStrutsByDefault)
