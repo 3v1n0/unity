@@ -154,6 +154,9 @@ void TrashLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
   for (auto it : dnd_data.Uris())
   {
     glib::Object<GFile> file(g_file_new_for_uri(it.c_str()));
+
+    /* Log ZG event when moving file to trash; this is requred by File Lens.
+       See https://bugs.launchpad.net/unity/+bug/870150  */
     if (g_file_trash(file, NULL, NULL))
     {
       // based on nautilus zg event logging code
