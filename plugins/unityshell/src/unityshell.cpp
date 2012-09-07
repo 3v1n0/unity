@@ -573,7 +573,7 @@ void UnityScreen::setPanelShadowMatrix(const GLMatrix& matrix)
   panel_shadow_matrix_ = matrix;
 }
 
-void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
+void UnityScreen::paintPanelShadow(const GLMatrix& matrix, const CompRegion &clip)
 {
 #ifndef USE_MODERN_COMPIZ_GL
   if (sources_.GetSource(local::RELAYOUT_TIMEOUT))
@@ -653,7 +653,6 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   }
   glPopMatrix();
 #else
-  return;
 
   if (sources_.GetSource(local::RELAYOUT_TIMEOUT))
     return;
@@ -661,23 +660,36 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   if (PluginAdapter::Default()->IsExpoActive())
     return;
 
-  nuxPrologue();
-
   CompOutput* output = _last_output;
-  float vc[4];
-  float h = 20.0f;
-  float w = 1.0f;
   float panel_h = static_cast<float>(panel_style_.panel_height);
 
-  float x1 = output->x();
-  float y1 = output->y() + panel_h;
-  float x2 = x1 + output->width();
-  float y2 = y1 + h;
+  float shadowX = output->x();
+  float shadowY = output->y() + panel_h;
+  float shadowWidth = output->width();
+  float shadowHeight = _shadow_texture[0]->height();
+  CompRect shadowRect(shadowX, shadowY, shadowWidth, shadowHeight);
 
-  vc[0] = x1;
-  vc[1] = x2;
-  vc[2] = y1;
-  vc[3] = y2;
+  CompRegion redraw(clip);
+  redraw &= shadowRect;
+
+  if (redraw.isEmpty())
+    return;
+
+  CompRect bounds(redraw.boundingRect());
+
+  // Sub-rectangle of the shadow needing redrawing:
+  float x1 = bounds.x1();
+  float y1 = bounds.y1();
+  float x2 = bounds.x2();
+  float y2 = bounds.y2();
+
+  // Texture coordinates of the above rectangle:
+  float tx1 = (x1 - shadowX) / shadowWidth;
+  float ty1 = (y1 - shadowY) / shadowHeight;
+  float tx2 = (x2 - shadowX) / shadowWidth;
+  float ty2 = (y2 - shadowY) / shadowHeight;
+
+  nuxPrologue();
 
   // compiz doesn't use the same method of tracking monitors as our toolkit
   // we need to make sure we properly associate with the right monitor
@@ -718,17 +730,17 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
                   };
 
       vertexData = {
-        vc[0], vc[2], 0,
-        vc[0], vc[3], 0,
-        vc[1], vc[2], 0,
-        vc[1], vc[3], 0,
+        x1, y1, 0,
+        x1, y2, 0,
+        x2, y1, 0,
+        x2, y2, 0,
       };
 
       textureData = {
-        COMP_TEX_COORD_X(tex->matrix(), 0), COMP_TEX_COORD_Y(tex->matrix(), 0),
-        COMP_TEX_COORD_X(tex->matrix(), 0), COMP_TEX_COORD_Y(tex->matrix(), h),
-        COMP_TEX_COORD_X(tex->matrix(), w), COMP_TEX_COORD_Y(tex->matrix(), 0),
-        COMP_TEX_COORD_X(tex->matrix(), w), COMP_TEX_COORD_Y(tex->matrix(), h),
+        tx1, ty1,
+        tx1, ty2,
+        tx2, ty1,
+        tx2, ty2,
       };
 
       streamingBuffer->begin(GL_TRIANGLE_STRIP);
@@ -2610,20 +2622,10 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
   if (window->type() == CompWindowTypeDesktopMask)
     uScreen->setPanelShadowMatrix(matrix);
 
-  Window active_window = screen->activeWindow();
-  if (window->id() == active_window && window->type() != CompWindowTypeDesktopMask)
-  {
-    uScreen->paintPanelShadow(matrix);
-  }
-
   bool ret = gWindow->glDraw(matrix, attrib, region, mask);
 
-  if ((active_window == 0 || active_window == window->id()) &&
-      (window->type() == CompWindowTypeDesktopMask))
-  {
-    uScreen->paintPanelShadow(matrix);
-  }
-
+  if (window->type() == CompWindowTypeDesktopMask)
+    uScreen->paintPanelShadow(matrix, region);
 
   return ret;
 }

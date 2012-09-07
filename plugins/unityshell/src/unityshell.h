@@ -102,7 +102,7 @@ public:
 #else
   void paintDisplay(const CompRegion& region, const GLMatrix& transform, unsigned int mask);
 #endif
-  void paintPanelShadow(const GLMatrix& matrix);
+  void paintPanelShadow(const GLMatrix& matrix, const CompRegion &clip);
   void setPanelShadowMatrix(const GLMatrix& matrix);
 
   void preparePaint (int ms);
