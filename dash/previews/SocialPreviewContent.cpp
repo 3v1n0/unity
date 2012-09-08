@@ -125,7 +125,7 @@ void SocialPreviewContent::SetupViews()
   dash::previews::Style const& style = dash::previews::Style::Instance();
 
   text_ = new nux::StaticCairoText("", false, NUX_TRACKER_LOCATION);
-  text_->SetLines(-7);
+  text_->SetLines(-20);
   text_->SetFont(style.content_font());
   text_->SetLineSpacing(5);
   text_->SetTextEllipsize(nux::StaticCairoText::NUX_ELLIPSIZE_MIDDLE);

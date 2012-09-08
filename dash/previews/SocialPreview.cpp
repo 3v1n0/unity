@@ -192,7 +192,7 @@ void SocialPreview::SetupViews()
         title_->SetFont(style.title_font().c_str());
 
         subtitle_ = new nux::StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
-        subtitle_->SetFont(style.subtitle_size_font().c_str());
+        subtitle_->SetFont(style.content_font().c_str());
         subtitle_->SetLines(-1);
 
         social_data_layout->AddView(title_.GetPointer(), 0);

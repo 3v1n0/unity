@@ -156,15 +156,13 @@ void TestRunner::Init ()
   const char* description = "Ugh. They made a chocolate factory!";
 
  // creates a generic preview object
-  glib::Object<GIcon> iconHint1(g_icon_new_for_string("https://twimg0-a.akamaihd.net/profile_images/635808028/200px-JeremyHoldingCandace_reasonably_small.jpg", NULL));
+  glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/pixmaps/faces/sunflower.jpg", NULL));
   glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/6/lens-nav-home.svg", NULL));
 
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_social_preview_new()));
 
   unity_protocol_social_preview_set_avatar(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), iconHint1);
 
-  // DONT NEED THESE
-  //unity_protocol_social_preview_set_sender(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), title);
   unity_protocol_social_preview_set_content(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), description);
 
   unity_protocol_preview_set_title(proto_obj, title);
@@ -172,7 +170,10 @@ void TestRunner::Init ()
   unity_protocol_preview_set_description(proto_obj, description);
   unity_protocol_preview_add_action(proto_obj, "view", "View", iconHint2, 0);
   unity_protocol_preview_add_action(proto_obj, "retweet", "Retweet", nullptr, 0);
-  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Comment", "This is a comment", "4 hours ago");
+  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Stacy", "Lorem ipsum dolor sit amet, id eruditi referrentur cum, et est enim persequeris. Munere docendi intellegebat pro id, nam no delenit facilisis similique, ut usu eros aliquando. Electram postulant accusamus ut ius, cum ad impedit facilis mediocrem. At cum tamquam.", "13 minutes ago");
+  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Jeremy", "This is a comment", "4 hours ago");
+  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Stacy", "This is a comment", "4 hours ago");
+  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Isabella", "This is a comment", "4 hours ago");
 
   glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
               glib::StealRef());
@@ -189,7 +190,7 @@ void TestRunner::NavRight()
   const char* description = "I know what we are going to do today!";
 
  // creates a generic preview object
-  glib::Object<GIcon> iconHint1(g_icon_new_for_string("https://twimg0-a.akamaihd.net/profile_images/363231741/250px-Phineas2_reasonably_small.jpg", NULL));
+  glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/pixmaps/faces/astronaut.jpg", NULL));
   glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/6/lens-nav-home.svg", NULL));
 
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_social_preview_new()));
@@ -201,15 +202,13 @@ void TestRunner::NavRight()
   unity_protocol_preview_set_description(proto_obj, description);
   unity_protocol_preview_add_action(proto_obj, "view", "View", iconHint2, 0);
   unity_protocol_preview_add_action(proto_obj, "retweet", "Retweet", nullptr, 0);
-  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Joe", "This is a comment, yes it really is, i think so anyway... maybe it isn't?  hard to really tell. This is a comment, yes it really is, i think so anyway... maybe it isn't?  hard to really tell.  This is a comment, yes it really is, i think so anyway... maybe it isn't?  hard to really tell.", "4 hours ago...");
-  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "John", "This is a comment", "4 hours ago");
-  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Jane", "This is a comment", "4 hours ago");
-  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Joe", "This is a comment", "4 hours ago");
-  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "John", "This is a comment", "4 hours ago");
-  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Jane", "This is a comment", "4 hours ago");
-  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Joe", "This is a comment", "4 hours ago");
-  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "John", "This is a comment", "4 hours ago");
-  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Jane", "This is a comment", "4 hours ago");
+  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Isabella", "This is a comment", "4 hours ago");
+  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Ferb", "This is a comment, yes it really is, i think so anyway... maybe it isn't?  hard to really tell. This is a comment, yes it really is, i think so anyway... maybe it isn't?  hard to really tell.  This is a comment, yes it really is, i think so anyway... maybe it isn't?  hard to really tell.", "4 hours ago...");
+  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Baljeet", "This is a comment", "4 hours ago");
+  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Buford", "This is a comment", "4 hours ago");
+  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Isabella", "Where's Perry?", "4 hours ago");
+  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Pery the Platypus", "Over here", "4 hours ago");
+  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Buford", "This is a comment", "4 hours ago");
   unity_protocol_preview_add_info_hint(proto_obj, "likes",  "Favorites", nullptr, g_variant_new("i", 1210));
   unity_protocol_preview_add_info_hint(proto_obj, "retweets",  "Retweets", nullptr, g_variant_new("i", 21));
 
@@ -227,7 +226,7 @@ void TestRunner::NavLeft()
   const char* description = "Profile pictures are what people want them to think they look like. Tagged pictures are what they really look like.";
 
  // creates a generic preview object
-  glib::Object<GIcon> iconHint1(g_icon_new_for_string("https://twimg0-a.akamaihd.net/profile_images/307005344/phineas-and-ferb-300a071708_reasonably_small.jpg", NULL));
+  glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/pixmaps/faces/soccerball.png", NULL));
   glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/6/lens-nav-home.svg", NULL));
 
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_social_preview_new()));
@@ -239,7 +238,11 @@ void TestRunner::NavLeft()
   unity_protocol_preview_set_description(proto_obj, description);
   unity_protocol_preview_add_action(proto_obj, "view", "View", iconHint2, 0);
   unity_protocol_preview_add_action(proto_obj, "retweet", "Retweet", nullptr, 0);
-  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Comment", "This is a comment", "4 hours ago");
+  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Baljeet", "This is a comment", "4 hours ago");
+  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Isabella", "This is a comment", "4 hours ago");
+  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Candace", "This is a comment", "4 hours ago");
+  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Vanessa", "This is a comment", "4 hours ago");
+  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Major Monogram", "This is a comment", "4 hours ago");
   unity_protocol_preview_add_info_hint(proto_obj, "likes",  "Favorites", nullptr, g_variant_new("i", 123));
   unity_protocol_preview_add_info_hint(proto_obj, "retweets",  "Retweets", nullptr, g_variant_new("i", 12));
 

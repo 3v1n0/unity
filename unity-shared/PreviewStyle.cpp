@@ -304,7 +304,7 @@ int Style::GetAvatarAreaHeight() const
 
 std::string Style::content_font() const
 {
-  return "Ubuntu 12.5";  
+  return "Ubuntu Light 11";  
 }
 
 std::string Style::title_font() const

@@ -108,7 +108,7 @@ void SocialPreviewComments::PreLayoutManagement()
     }
   }
 
-  int comment_value_width = geo.width;
+  int comment_value_width = geo.width - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin();
   comment_value_width -= layout_spacing;
   comment_value_width = MAX(0, comment_value_width);
 
