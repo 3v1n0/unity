@@ -30,6 +30,7 @@ namespace
 {
 nux::logging::Logger logger("unity.favorite.store");
 FavoriteStore* favoritestore_instance = nullptr;
+const std::string PREFIX_SEPARATOR = "://";
 }
 
 const std::string FavoriteStore::URI_PREFIX_APP = "application://";
@@ -93,8 +94,7 @@ std::string FavoriteStore::ParseFavoriteFromUri(std::string const& uri) const
     return "";
 
   std::string fav = uri;
-  const std::string prefix_separator = "://";
-  auto prefix_pos = fav.find(prefix_separator);
+  auto prefix_pos = fav.find(PREFIX_SEPARATOR);
 
   if (prefix_pos == std::string::npos)
   {
@@ -107,7 +107,7 @@ std::string FavoriteStore::ParseFavoriteFromUri(std::string const& uri) const
   }
   else
   {
-    prefix_pos += prefix_separator.length();
+    prefix_pos += PREFIX_SEPARATOR.length();
   }
 
   // Matches application://desktop-id.desktop or application:///path/to/file.desktop

@@ -53,8 +53,8 @@ public:
   virtual void AddFavorite(std::string const& icon_uri, int position) = 0;
   virtual void RemoveFavorite(std::string const& icon_uri) = 0;
   virtual void MoveFavorite(std::string const& icon_uri, int position) = 0;
-  virtual bool IsFavorite(std::string const& icon_uri) = 0;
-  virtual int FavoritePosition(std::string const& icon_uri) = 0;
+  virtual bool IsFavorite(std::string const& icon_uri) const = 0;
+  virtual int FavoritePosition(std::string const& icon_uri) const = 0;
   virtual void SetFavorites(FavoriteList const& icon_uris) = 0;
 
   // Signals

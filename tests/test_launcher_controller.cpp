@@ -43,8 +43,8 @@ public:
   void AddFavorite(std::string const& icon_uri, int position) {}
   void RemoveFavorite(std::string const& icon_uri) {}
   void MoveFavorite(std::string const& icon_uri, int position) {}
-  bool IsFavorite(std::string const& icon_uri) { return false; }
-  int FavoritePosition(std::string const& icon_uri) { return -1; }
+  bool IsFavorite(std::string const& icon_uri) const { return false; }
+  int FavoritePosition(std::string const& icon_uri) const { return -1; }
   void SetFavorites(FavoriteList const& icon_uris) {}
 
 private:

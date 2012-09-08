@@ -162,11 +162,11 @@ void FavoriteStoreGSettings::SaveFavorites(FavoriteList const& favorites, bool i
   const int size = favorites.size();
   const char* favs[size + 1];
 
-  int index = 0;
   // Since we don't always save the full path, we store the values we are
   // actually going to save in a different list.
-  //auto const& system_dirs = DesktopUtilities::GetDataDirectories();
   FavoriteList values;
+  int index = 0;
+
   for (auto const& fav_uri : favorites)
   {
     std::string const& fav = ParseFavoriteFromUri(fav_uri);
@@ -228,12 +228,12 @@ void FavoriteStoreGSettings::Changed()
     reordered.emit();
 }
 
-bool FavoriteStoreGSettings::IsFavorite(std::string const& icon_uri)
+bool FavoriteStoreGSettings::IsFavorite(std::string const& icon_uri) const
 {
   return std::find(favorites_.begin(), favorites_.end(), icon_uri) != favorites_.end();
 }
 
-int FavoriteStoreGSettings::FavoritePosition(std::string const& icon_uri)
+int FavoriteStoreGSettings::FavoritePosition(std::string const& icon_uri) const
 {
   int index = 0;
 

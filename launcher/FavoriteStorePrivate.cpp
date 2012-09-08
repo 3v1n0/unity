@@ -126,7 +126,7 @@ bool NeedToBeReordered(std::list<std::string> const& old, std::list<std::string>
 
 bool IsDesktopFilePath(std::string const& path)
 {
-  const std::string desktop_ext = ".desktop";
+  static const std::string desktop_ext = ".desktop";
   auto path_len = path.length();
   auto desktop_length = desktop_ext.length();
 
