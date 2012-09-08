@@ -29,7 +29,7 @@
 #include "LauncherOptions.h"
 #include "BamfLauncherIcon.h"
 #include "DesktopLauncherIcon.h"
-#include "DeviceLauncherIcon.h"
+#include "VolumeLauncherIcon.h"
 #include "FavoriteStore.h"
 #include "HudLauncherIcon.h"
 #include "LauncherController.h"
@@ -95,7 +95,8 @@ Controller::Impl::Impl(Display* display, Controller* parent)
   , model_(new LauncherModel())
   , sort_priority_(0)
   , volume_monitor_(new VolumeMonitorWrapper)
-  , device_section_(volume_monitor_)
+  , devices_settings_(new DevicesSettingsImp)
+  , device_section_(volume_monitor_, devices_settings_)
   , show_desktop_icon_(false)
   , display_(display)
   , matcher_(bamf_matcher_get_default())
@@ -267,6 +268,7 @@ Launcher* Controller::Impl::CreateLauncher(int monitor)
   launcher->monitor = monitor;
   launcher->options = parent_->options();
   launcher->SetModel(model_);
+  launcher->SetDevicesSettings(devices_settings_);
 
   nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout->AddView(launcher, 1);
@@ -278,7 +280,7 @@ Launcher* Controller::Impl::CreateLauncher(int monitor)
   launcher_window->SetBackgroundColor(nux::color::Transparent);
   launcher_window->ShowWindow(true);
   launcher_window->EnableInputWindow(true, launcher::window_title, false, false);
-  launcher_window->InputWindowEnableStruts(false);
+  launcher_window->InputWindowEnableStruts(parent_->options()->hide_mode == LAUNCHER_HIDE_NEVER);
   launcher_window->SetEnterFocusInputArea(launcher);
 
   launcher->launcher_addrequest.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequest));
@@ -424,10 +426,10 @@ void Controller::Impl::OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr icon)
     }
     case AbstractLauncherIcon::IconType::DEVICE:
     {
-      DeviceLauncherIcon* device_icon = dynamic_cast<DeviceLauncherIcon*>(icon.GetPointer());
+      auto device_icon = dynamic_cast<VolumeLauncherIcon*>(icon.GetPointer());
 
       if (device_icon && device_icon->CanEject())
-        device_icon->Eject();
+        device_icon->EjectAndShowNotification();
       else if (device_icon && device_icon->CanStop())
         device_icon->StopDrive();
 
@@ -686,10 +688,6 @@ void Controller::Impl::SetupBamf()
   GList* apps, *l;
   BamfApplication* app;
 
-  // Sufficiently large number such that we ensure proper sorting
-  // (avoids case where first item gets tacked onto end rather than start)
-  int priority = 100;
-
   FavoriteList const& favs = FavoriteStore::Instance().GetFavorites();
 
   for (FavoriteList::const_iterator i = favs.begin(), end = favs.end();
@@ -699,9 +697,8 @@ void Controller::Impl::SetupBamf()
 
     if (fav)
     {
-      fav->SetSortPriority(priority);
+      fav->SetSortPriority(sort_priority_++);
       RegisterIcon(fav);
-      priority++;
     }
   }
 

@@ -44,12 +44,12 @@ class MockLauncherIcon : public AbstractLauncherIcon
 {
   NUX_DECLARE_OBJECT_TYPE(MockLauncherIcon, AbstractLauncherIcon);
 public:
-  MockLauncherIcon()
-    : icon_(0)
+  MockLauncherIcon(IconType type = IconType::APPLICATION)
+    : type_(type)
+    , sort_priority_(0)
+    , icon_(0)
   {
     tooltip_text = "Mock Icon";
-    sort_priority_ = 0;
-    type_ = IconType::APPLICATION;
 
     for (unsigned i = 0; i < unsigned(Quirk::LAST); ++i)
     {
@@ -58,7 +58,7 @@ public:
   }
 
   std::string GetName() const { return "MockLauncherIcon"; }
-  
+
   void AddProperties(GVariantBuilder* builder) {}
 
   void HideTooltip() {}
@@ -130,11 +130,16 @@ public:
     return false;
   }
 
-  void        SetCenter(nux::Point3 center, int monitor, nux::Geometry geo) {}
+  void SetCenter(nux::Point3 center, int monitor, nux::Geometry geo)
+  {
+    center.x += geo.x;
+    center.y += geo.y;
+    center_[monitor] = center;
+  }
 
   nux::Point3 GetCenter(int monitor)
   {
-    return nux::Point3();
+    return center_[monitor];
   }
 
   nux::Point3 GetSavedCenter(int monitor)
@@ -288,9 +293,9 @@ public:
   bool IsVisible() const { return false; }
 
   void AboutToRemove() {}
-  
+
   void Stick(bool save = true) {}
-  
+
   void UnStick() {}
 
 private:
@@ -341,11 +346,12 @@ private:
     return result;
   }
 
-  nux::BaseTexture* icon_;
-  int sort_priority_;
   IconType type_;
+  int sort_priority_;
+  nux::BaseTexture* icon_;
   bool quirks_[unsigned(Quirk::LAST)];
   timespec quirk_times_[unsigned(Quirk::LAST)];
+  std::map<int, nux::Point3> center_;
 };
 
 }

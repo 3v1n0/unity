@@ -247,11 +247,11 @@ class HudBehaviorTests(HudTestsBase):
         self.mouse.click()
 
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
-        
+
     def test_hud_closes_click_after_text_removed(self):
         """Clicking outside of the hud after a search text has been entered and
         then removed from the searchbox will make it close."""
-        
+
         self.hud.ensure_visible()
         self.keyboard.type("Test")
         self.keyboard.press_and_release("Escape")
@@ -259,7 +259,7 @@ class HudBehaviorTests(HudTestsBase):
         (x,y,w,h) = self.hud.view.geometry
         self.mouse.move(w/2, h+50)
         self.mouse.click()
-        
+
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
     def test_alt_f4_close_hud(self):
@@ -276,49 +276,49 @@ class HudBehaviorTests(HudTestsBase):
         self.hud.ensure_visible()
         self.keyboard.press_and_release("Alt+F4")
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
-        
+
     def test_app_activate_on_enter(self):
         """Hud must close after activating a search item with Enter."""
-        self.hud.ensure_visible()   
-        
+        self.hud.ensure_visible()
+
         self.keyboard.type("Device > System Settings")
         self.assertThat(self.hud.search_string, Eventually(Equals("Device > System Settings")))
-        
+
         self.keyboard.press_and_release("Enter")
-        
+
         app_found = self.bamf.wait_until_application_is_running("gnome-control-center.desktop", 5)
         self.assertTrue(app_found)
         self.addCleanup(self.close_all_app,  "System Settings")
-        
+
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
-        
+
     def test_hud_closes_on_escape(self):
         """Hud must close on escape after searchbox is cleared"""
         self.hud.ensure_visible()
-        
+
         self.keyboard.type("ThisText")
         self.keyboard.press_and_release("Escape")
         self.keyboard.press_and_release("Escape")
-        
+
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
-    
+
     def test_hud_closes_on_escape_shrunk(self):
         """Hud must close when escape key is pressed"""
         self.hud.ensure_visible()
         self.keyboard.press_and_release("Escape")
-        
+
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
     def test_alt_arrow_keys_not_eaten(self):
         """Tests that Alt+ArrowKey events are correctly passed to the
         active window when Unity is not responding to them."""
-        
+
         self.start_app_window("Terminal")
-        
+
         #There's no easy way to read text from terminal, writing input
         #to a text file and then reading from there works.
         self.keyboard.type('echo "')
-        
+
         #Terminal is receiving input with Alt+Arrowkeys
         self.keyboard.press("Alt")
         self.keyboard.press_and_release("Up")
@@ -326,13 +326,13 @@ class HudBehaviorTests(HudTestsBase):
         self.keyboard.press_and_release("Right")
         self.keyboard.press_and_release("Left")
         self.keyboard.release("Alt")
-        
+
         self.keyboard.type('" > /tmp/ap_test_alt_keys')
         self.addCleanup(remove, '/tmp/ap_test_alt_keys')
         self.keyboard.press_and_release("Enter")
-        
+
         file_contents = open('/tmp/ap_test_alt_keys', 'r').read().strip()
-        
+
         self.assertThat(file_contents, Equals('ABCD'))
 
     def test_hud_closes_on_item_activated(self):
@@ -356,6 +356,41 @@ class HudBehaviorTests(HudTestsBase):
         self.addCleanup(self.close_all_app,  "System Settings")
 
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
+
+    def test_mouse_changes_selected_hud_button(self):
+        """This tests moves the mouse from the top of the screen to the bottom, this must
+           change the selected button from 1 to 5.
+        """
+
+        self.hud.ensure_visible()
+
+        self.keyboard.type("a")
+        (x,y,w,h) = self.hud.view.geometry
+
+        self.mouse.move(w/2, 0)
+        self.assertThat(self.hud.view.selected_button, Eventually(Equals(1)))
+
+        self.mouse.move(w/2, h)
+        self.assertThat(self.hud.view.selected_button, Eventually(Equals(5)))
+
+    def test_keyboard_steals_focus_from_mouse(self):
+        """This tests moves the mouse from the top of the screen to the bottom,
+           then it presses the keyboard up 5 times, this must change the selected button from 5 to 1.
+        """
+
+        self.hud.ensure_visible()
+
+        self.keyboard.type("a")
+        (x,y,w,h) = self.hud.view.geometry
+
+        self.mouse.move(w/2, 0)
+        self.mouse.move(w/2, h)
+        self.assertThat(self.hud.view.selected_button, Eventually(Equals(5)))
+
+        for i in range(5):
+          self.keyboard.press_and_release('Up')
+
+        self.assertThat(self.hud.view.selected_button, Eventually(Equals(1)))
 
 
 class HudLauncherInteractionsTests(HudTestsBase):

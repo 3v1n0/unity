@@ -66,6 +66,7 @@ View::View()
   , timeline_need_more_draw_(false)
   , selected_button_(0)
   , show_embedded_icon_(true)
+  , keyboard_stole_focus_(false)
 {
   renderer_.SetOwner(this);
   renderer_.need_redraw.connect([this] () {
@@ -249,6 +250,22 @@ void View::SetQueries(Hud::Queries queries)
 
     button->click.connect([&](nux::View* view) {
       query_activated.emit(dynamic_cast<HudButton*>(view)->GetQuery());
+    });
+
+    button->mouse_move.connect([&](int x, int y, int dx, int dy, unsigned long mouse_button, unsigned long special_key) {
+      if (keyboard_stole_focus_)
+      {
+        MouseStealsHudButtonFocus();
+        keyboard_stole_focus_ = false;
+      }
+    });
+
+    button->mouse_enter.connect([&](int x, int y, unsigned long mouse_button, unsigned long special_key) {
+      MouseStealsHudButtonFocus();
+    });
+
+    button->mouse_leave.connect([&](int x, int y, unsigned long mouse_button, unsigned long special_key) {
+      SelectLastFocusedButton();
     });
 
     button->key_nav_focus_activate.connect([&](nux::Area* area) {
@@ -484,6 +501,49 @@ void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   }
 }
 
+void View::MouseStealsHudButtonFocus()
+{
+  LoseSelectedButtonFocus();
+  FindNewSelectedButton();
+}
+
+void View::LoseSelectedButtonFocus()
+{
+  int button_index = 1;
+  for (auto it = buttons_.rbegin(); it != buttons_.rend(); ++it)
+  {
+    if (selected_button_ == button_index)
+      (*it)->fake_focused = false;
+    ++button_index;
+  }
+}
+
+void View::FindNewSelectedButton()
+{
+  int button_index = 1;
+  for (auto it = buttons_.rbegin(); it != buttons_.rend(); ++it)
+  {
+    if ((*it)->fake_focused)
+    {
+      query_selected.emit((*it)->GetQuery());
+      selected_button_ = button_index;
+      return;
+    }
+    ++button_index;
+  }
+}
+
+void View::SelectLastFocusedButton()
+{
+  int button_index = 1;
+  for (auto it = buttons_.rbegin(); it != buttons_.rend(); ++it)
+  {
+    if (button_index == selected_button_)
+      (*it)->fake_focused = true;
+    ++button_index;
+  }
+}
+
 // Keyboard navigation
 bool View::AcceptKeyNavFocus()
 {
@@ -656,12 +716,12 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
                 (*next)->fake_focused = true;
                 query_selected.emit((*next)->GetQuery());
                 --selected_button_;
+                keyboard_stole_focus_ = true;
               }
               break;
             }
           }
         }
-
         if (event_type == nux::NUX_KEYDOWN && direction == nux::KEY_NAV_DOWN)
         {
           std::list<HudButton::Ptr>::reverse_iterator rit;
@@ -679,6 +739,7 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
                 (*next)->fake_focused = true;
                 query_selected.emit((*next)->GetQuery());
                 ++selected_button_;
+                keyboard_stole_focus_ = true;
               }
               break;
             }

@@ -29,6 +29,7 @@
 #include <sigc++/sigc++.h>
 #include <boost/shared_ptr.hpp>
 
+#include <scale/scale.h>
 #include <core/core.h>
 #include <core/pluginclasshandler.h>
 #include <composite/composite.h>
@@ -54,9 +55,6 @@
 #include "UnityshellPrivate.h"
 #include "UnityShowdesktopHandler.h"
 #include "ThumbnailGenerator.h"
-#ifndef USE_MODERN_COMPIZ_GL
-#include "ScreenEffectFramebufferObject.h"
-#endif
 
 #include "compizminimizedwindowhandler.h"
 #include "BGHash.h"
@@ -65,6 +63,8 @@
 
 #include "HudController.h"
 #include "ThumbnailGenerator.h"
+#include "WindowMinimizeSpeedController.h"
+
 namespace unity
 {
 
@@ -94,11 +94,7 @@ public:
   void nuxEpilogue();
 
   /* nux draw wrapper */
-#ifdef USE_MODERN_COMPIZ_GL
   void paintDisplay();
-#else
-  void paintDisplay(const CompRegion& region, const GLMatrix& transform, unsigned int mask);
-#endif
   void paintPanelShadow(const GLMatrix& matrix);
   void setPanelShadowMatrix(const GLMatrix& matrix);
 
@@ -189,6 +185,8 @@ public:
 
   void SetUpAndShowSwitcher(switcher::ShowMode show_mode = switcher::ShowMode::CURRENT_VIEWPORT);
 
+  void OnMinimizeDurationChanged();
+
   switcher::Controller::Ptr switcher_controller();
   launcher::Controller::Ptr launcher_controller();
 
@@ -242,6 +240,10 @@ private:
   void OnPanelStyleChanged();
 
   void InitGesturesSupport();
+
+  void DrawTopPanelBackground();
+  bool TopPanelBackgroundTextureNeedsUpdate() const;
+  void UpdateTopPanelBackgroundTexture();
 
   nux::animation::TickSource tick_source_;
   nux::animation::AnimationController animation_controller_;
@@ -306,12 +308,7 @@ private:
 
   BGHash _bghash;
 
-#ifdef USE_MODERN_COMPIZ_GL
   ::GLFramebufferObject *oldFbo;
-#else
-  ScreenEffectFramebufferObject::Ptr _fbo;
-  GLuint                             _active_fbo;
-#endif
 
   bool   queryForShader ();
 
@@ -332,14 +329,13 @@ private:
 
   bool scale_just_activated_;
 
-#ifndef USE_MODERN_COMPIZ_GL
-  ScreenEffectFramebufferObject::GLXGetProcAddressProc glXGetProcAddressP;
-#endif
-
   UBusManager ubus_manager_;
   glib::SourceManager sources_;
   unity::ThumbnailGenerator thumb_generator;
-  
+
+  Window scale_highlighted_window_;
+
+  WindowMinimizeSpeedController* minimize_speed_controller;
   friend class UnityWindow;
 };
 
@@ -348,6 +344,7 @@ class UnityWindow :
   public GLWindowInterface,
   public ShowdesktopHandlerWindowInterface,
   public compiz::WindowInputRemoverLockAcquireInterface,
+  public WrapableHandler<ScaleWindowInterface, 4>,
   public BaseSwitchWindow,
   public PluginClassHandler <UnityWindow, CompWindow>
 {
@@ -377,11 +374,7 @@ public:
 
   /* basic window draw function */
   bool glDraw(const GLMatrix& matrix,
-#ifndef USE_MODERN_COMPIZ_GL
-              GLFragment::Attrib& attrib,
-#else
               const GLWindowPaintAttrib& attrib,
-#endif
               const CompRegion& region,
               unsigned intmask);
 
@@ -406,17 +399,25 @@ public:
   void leaveShowDesktop ();
   bool HandleAnimations (unsigned int ms);
 
-  void handleEvent (XEvent *event);
+  bool handleEvent(XEvent *event);
 
   typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>
           UnityMinimizedHandler;
   std::unique_ptr <UnityMinimizedHandler> mMinimizeHandler;
-
-  ShowdesktopHandler             *mShowdesktopHandler;
+  std::unique_ptr <ShowdesktopHandler> mShowdesktopHandler;
 
   //! Emited when CompWindowNotifyBeforeDestroy is received
   sigc::signal<void> being_destroyed;
+
+  void scaleSelectWindow();
+  void scalePaintDecoration(const GLWindowPaintAttrib &,
+                            const GLMatrix &,
+                            const CompRegion &,
+                            unsigned int);
+
 private:
+  struct CairoContext;
+
   void DoEnableFocus ();
   void DoDisableFocus ();
 
@@ -436,6 +437,9 @@ private:
   void DoShow ();
   void DoNotifyShown ();
 
+  void OnInitiateSpreed();
+  void OnTerminateSpreed();
+
   void DoAddDamage ();
   ShowdesktopHandlerWindowInterface::PostPaintAction DoHandleAnimations (unsigned int ms);
 
@@ -447,7 +451,30 @@ private:
 
   compiz::WindowInputRemoverLock::Ptr GetInputRemover ();
 
+  void DrawWindowDecoration(GLWindowPaintAttrib const& attrib,
+                            GLMatrix const& transform,
+                            unsigned int mask,
+                            bool highlighted,
+                            int x, int y, unsigned width, unsigned height);
+  void DrawTexture(GLTexture *icon,
+                   const GLWindowPaintAttrib& attrib,
+                   const GLMatrix& transform,
+                   unsigned int mask,
+                   float x, float y,
+                   int &maxWidth, int &maxHeight);
+  void RenderText(CairoContext const& context,
+                  float x, float y,
+                  float maxWidth, float maxHeight);
+
+  void SetupScaleHeaderStyle();
+  void LoadCloseIcon(panel::WindowState state, GLTexture::List& texture);
+
+  static GLTexture::List close_normal_tex_;
+  static GLTexture::List close_prelight_tex_;
+  static GLTexture::List close_pressed_tex_;
   compiz::WindowInputRemoverLock::Weak input_remover_;
+  panel::WindowState close_icon_state_;
+  nux::Geometry close_button_geo_;
   glib::Source::UniquePtr focus_desktop_timeout_;
 };
 

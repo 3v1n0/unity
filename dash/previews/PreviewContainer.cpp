@@ -149,9 +149,9 @@ public:
 
         nux::Geometry swipeOut = geometry;
         if (swipe_.direction == Navigation::RIGHT)
-          swipeOut.OffsetPosition(-(curve_progress * (geometry.GetWidth() + parent_->nav_left_->GetGeometry().GetWidth())), 0);
+          swipeOut.OffsetPosition(-(curve_progress * (parent_->GetGeometry().width - geometry.x)), 0);
         else if (swipe_.direction == Navigation::LEFT)
-          swipeOut.OffsetPosition(curve_progress* (geometry.GetWidth() + parent_->nav_right_->GetGeometry().GetWidth()), 0);
+          swipeOut.OffsetPosition(curve_progress* (parent_->GetGeometry().width - geometry.x), 0);
         current_preview_->SetGeometry(swipeOut);
       }
  
@@ -162,9 +162,9 @@ public:
 
         nux::Geometry swipeIn = geometry;
         if (swipe_.direction == Navigation::RIGHT)
-          swipeIn.OffsetPosition(float(geometry.GetWidth() + parent_->nav_right_->GetGeometry().GetWidth()) - (curve_progress * (geometry.GetWidth() + parent_->nav_right_->GetGeometry().GetWidth())), 0);
+          swipeIn.OffsetPosition(float(parent_->GetGeometry().width - geometry.x) - (curve_progress * (parent_->GetGeometry().width - geometry.x)), 0);
         else if (swipe_.direction == Navigation::LEFT)
-          swipeIn.OffsetPosition(-((1.0-curve_progress)*(geometry.GetWidth() + parent_->nav_left_->GetGeometry().GetWidth())), 0);
+          swipeIn.OffsetPosition(-((1.0-curve_progress)*(parent_->GetGeometry().width - geometry.x)), 0);
         swipe_.preview->SetGeometry(swipeIn);
       }
     }
@@ -355,7 +355,6 @@ PreviewContainer::PreviewContainer(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , content_layout_(nullptr)
   , nav_disabled_(Navigation::NONE)
-  , last_calc_height_(0)
   , navigation_progress_speed_(0.0)
   , navigation_count_(0)
 {
@@ -411,7 +410,7 @@ void PreviewContainer::SetupViews()
 
   layout_ = new nux::HLayout();
   SetLayout(layout_);
-  layout_->AddSpace(0, 0);
+  layout_->AddSpace(0, 1);
 
   nav_left_ = new PreviewNavigator(Orientation::LEFT, NUX_TRACKER_LOCATION);
   AddChild(nav_left_);
@@ -421,8 +420,9 @@ void PreviewContainer::SetupViews()
   layout_->AddView(nav_left_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   content_layout_ = new PreviewContent(this);
+  content_layout_->SetMinMaxSize(style.GetPreviewWidth(), style.GetPreviewHeight());
   AddChild(content_layout_);
-  layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  layout_->AddLayout(content_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   nav_right_ = new PreviewNavigator(Orientation::RIGHT, NUX_TRACKER_LOCATION);
   AddChild(nav_right_);
@@ -431,7 +431,7 @@ void PreviewContainer::SetupViews()
   nav_right_->activated.connect([&]() { navigate_right.emit(); });
   layout_->AddView(nav_right_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
-  layout_->AddSpace(0, 0);
+  layout_->AddSpace(0, 1);
 
   content_layout_->start_navigation.connect([&]()
   {
@@ -497,32 +497,6 @@ void PreviewContainer::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_d
   gfx_engine.PopClippingRectangle();
 }
 
-void PreviewContainer::PreLayoutManagement()
-{
-  previews::Style& style = previews::Style::Instance();
-  nux::Geometry const& geo = GetGeometry();
-
-  int available_preview_width = MAX(1, geo.width - nav_left_->GetGeometry().width - nav_right_->GetGeometry().width);
-  int aspect_altered_height = available_preview_width / style.GetPreviewAspectRatio();
-
-  aspect_altered_height = CLAMP(aspect_altered_height, 1, geo.height);
-  if (last_calc_height_ != aspect_altered_height)
-  {
-    last_calc_height_ = aspect_altered_height;
-
-    content_layout_->SetMinimumHeight(aspect_altered_height);
-    content_layout_->SetMaximumHeight(aspect_altered_height);
-
-    nav_left_->SetMinimumHeight(aspect_altered_height);
-    nav_left_->SetMaximumHeight(aspect_altered_height);
-
-    nav_right_->SetMinimumHeight(aspect_altered_height);
-    nav_right_->SetMaximumHeight(aspect_altered_height);
-  }
-
-  View::PreLayoutManagement();
-}
-
 bool PreviewContainer::AnimationInProgress()
 {
    // short circuit to avoid unneeded calculations
@@ -569,7 +543,7 @@ bool PreviewContainer::QueueAnimation()
   last_progress_time_ = current;
 
   QueueDraw();
-  return true;
+  return false;
 }
 
 bool PreviewContainer::AcceptKeyNavFocus()
