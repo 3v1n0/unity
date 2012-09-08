@@ -203,8 +203,7 @@ class LauncherKeyNavTests(LauncherTestCase):
         """A single click outside of launcher must cancel keynav."""
         self.start_keynav_with_cleanup_cancel()
 
-        self.mouse.move(self.launcher_instance.x + (self.launcher_instance.width + 100),
-                        self.launcher_instance.y + self.launcher_instance.height)
+        self.launcher_instance.move_mouse_to_right_of_launcher()
         self.mouse.click()
 
         self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
@@ -232,6 +231,8 @@ class LauncherKeyNavTests(LauncherTestCase):
         self.mouse.move(self.launcher_instance.x + (self.launcher_instance.width + 50),
                         self.launcher_instance.y + (self.launcher_instance.height / 30))
         self.mouse.click()
+
+        self.assertThat(self.dash.visible, Eventually(Equals(True)))
 
         self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
 
