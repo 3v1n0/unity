@@ -37,12 +37,17 @@ public:
 
 struct TestHudLauncherIcon : testing::Test
 {
-  MockHudLauncherIcon bfb;
+  MockHudLauncherIcon hud;
 };
+
+TEST_F(TestHudLauncherIcon, Type)
+{
+  EXPECT_EQ(hud.GetIconType(), AbstractLauncherIcon::IconType::HUD);
+}
 
 TEST_F(TestHudLauncherIcon, Position)
 {
-  EXPECT_EQ(bfb.position(), AbstractLauncherIcon::Position::BEGIN);
+  EXPECT_EQ(hud.position(), AbstractLauncherIcon::Position::BEGIN);
 }
 
 }
