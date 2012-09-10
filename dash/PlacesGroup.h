@@ -134,7 +134,7 @@ private:
 
   nux::BaseTexture* _background;
   nux::BaseTexture* _background_nofilters;
-
+  bool              _using_nofilters_background;
   std::unique_ptr<nux::AbstractPaintLayer> _background_layer;
 
   bool  _is_expanded;

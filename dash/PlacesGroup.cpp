@@ -417,21 +417,23 @@ PlacesGroup::OnIdleRelayout()
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
     nux::TexCoordXForm texxform;
-    if (_n_visible_items_in_unexpand_mode < 6)
+    if (_n_visible_items_in_unexpand_mode < 6 && _using_nofilters_background)
     {
       _background_layer.reset(new nux::TextureLayer(_background->GetDeviceTexture(), 
                               texxform, 
                               nux::color::White,
                               false,
                               rop));
+      _using_nofilters_background = false;
     }
-    else
+    else if (_n_visible_items_in_unexpand_mode >= 6 && !_using_nofilters_background)
     {
       _background_layer.reset(new nux::TextureLayer(_background_nofilters->GetDeviceTexture(), 
                               texxform, 
                               nux::color::White,
                               false,
                               rop));
+      _using_nofilters_background = true;
     }
 
     Refresh();
