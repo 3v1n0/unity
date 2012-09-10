@@ -21,18 +21,12 @@
 
 #include <config.h>
 
-#include <algorithm>
-#include <memory>
-#include <string>
-
-#define G_SETTINGS_ENABLE_BACKEND
-#include <gio/gsettingsbackend.h>
 #include <gmock/gmock.h>
 #include <glib.h>
 
 #include "FavoriteStore.h"
 #include "FavoriteStoreGSettings.h"
-#include "FavoriteStorePrivate.h"
+
 #include <UnityCore/GLibWrapper.h>
 
 using namespace unity;

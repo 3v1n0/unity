@@ -19,6 +19,7 @@
 
 #include <gmock/gmock.h>
 
+#include "PluginAdapter.h"
 #include "DesktopLauncherIcon.h"
 
 using namespace unity;
@@ -45,6 +46,19 @@ TEST_F(TestDesktopLauncherIcon, Shortcut)
 TEST_F(TestDesktopLauncherIcon, Position)
 {
   EXPECT_EQ(icon.position(), AbstractLauncherIcon::Position::FLOATING);
+}
+
+TEST_F(TestDesktopLauncherIcon, ActivateToggleShowDesktop)
+{
+  auto plugin_adapter = PluginAdapter::Default();
+
+  ASSERT_FALSE(plugin_adapter->InShowDesktop());
+
+  icon.Activate(ActionArg());
+  ASSERT_TRUE(plugin_adapter->InShowDesktop());
+
+  icon.Activate(ActionArg());
+  EXPECT_FALSE(plugin_adapter->InShowDesktop());
 }
 
 TEST_F(TestDesktopLauncherIcon, ShowInSwitcher)
