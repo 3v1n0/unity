@@ -116,6 +116,11 @@ public:
       Launcher::ResetMouseDragState();
     }
 
+    bool DndIsSpecialRequest(std::string const& uri) const
+    {
+      return Launcher::DndIsSpecialRequest(uri);
+    }
+
     int GetDragIconPosition() const
     {
       return _drag_icon_position;
@@ -389,6 +394,20 @@ TEST_F(TestLauncher, DragLauncherIconSticksDeviceIcon)
 
   EXPECT_CALL(*device, Stick(false));
   launcher_->EndIconDrag();
+}
+
+TEST_F(TestLauncher, DndIsSpecialRequest)
+{
+  EXPECT_TRUE(launcher_->DndIsSpecialRequest("MyFile.desktop"));
+  EXPECT_TRUE(launcher_->DndIsSpecialRequest("/full/path/to/MyFile.desktop"));
+  EXPECT_TRUE(launcher_->DndIsSpecialRequest("application://MyFile.desktop"));
+  EXPECT_TRUE(launcher_->DndIsSpecialRequest("file://MyFile.desktop"));
+  EXPECT_TRUE(launcher_->DndIsSpecialRequest("file://full/path/to/MyFile.desktop"));
+  EXPECT_TRUE(launcher_->DndIsSpecialRequest("device://uuuid"));
+
+  EXPECT_FALSE(launcher_->DndIsSpecialRequest("MyFile.txt"));
+  EXPECT_FALSE(launcher_->DndIsSpecialRequest("/full/path/to/MyFile.txt"));
+  EXPECT_FALSE(launcher_->DndIsSpecialRequest("file://full/path/to/MyFile.txt"));
 }
 
 }
