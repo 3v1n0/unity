@@ -32,7 +32,7 @@ public:
   /**
    * Fills the object given a list of uris.
    **/
-  void Fill(char* uris);
+  void Fill(const char* uris);
   
   /**
    * Resets the object. Call this function when no longer need data
