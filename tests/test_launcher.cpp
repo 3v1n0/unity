@@ -125,6 +125,45 @@ public:
     {
       return _drag_icon_position;
     }
+
+    void ProcessDndEnter()
+    {
+      Launcher::ProcessDndEnter();
+    }
+
+    void ProcessDndLeave()
+    {
+      Launcher::ProcessDndLeave();
+    }
+
+    void ProcessDndMove(int x, int y, std::list<char*> mimes)
+    {
+      Launcher::ProcessDndMove(x, y, mimes);
+    }
+
+    void FakeProcessDndMove(int x, int y, std::list<std::string> uris)
+    {
+      _dnd_data.Reset();
+
+      std::string data_uri;
+      for (std::string const& uri : uris)
+        data_uri += uri+"\r\n";
+
+      _dnd_data.Fill(data_uri.c_str());
+
+      if (std::find_if(_dnd_data.Uris().begin(), _dnd_data.Uris().end(), [this] (std::string const& uri)
+                       {return DndIsSpecialRequest(uri);}) != _dnd_data.Uris().end())
+      {
+        _steal_drag = true;
+      }
+
+      _dnd_hovered_icon = MouseIconIntersection(x, y);
+    }
+
+    void ProcessDndDrop(int x, int y)
+    {
+      Launcher::ProcessDndDrop(x, y);
+    }
   };
 
   TestLauncher()
@@ -379,7 +418,7 @@ TEST_F(TestLauncher, DragLauncherIconSavesIconOrderIfPositionHasNotChanged)
 
 TEST_F(TestLauncher, DragLauncherIconSticksDeviceIcon)
 {
-  auto const& icons = AddMockIcons(3);
+  auto const& icons = AddMockIcons(1);
 
   MockMockLauncherIcon::Ptr device(new MockMockLauncherIcon(AbstractLauncherIcon::IconType::DEVICE));
   model_->AddIcon(device);
@@ -409,6 +448,27 @@ TEST_F(TestLauncher, DndIsSpecialRequest)
   EXPECT_FALSE(launcher_->DndIsSpecialRequest("/full/path/to/MyFile.txt"));
   EXPECT_FALSE(launcher_->DndIsSpecialRequest("file://full/path/to/MyFile.txt"));
 }
+
+TEST_F(TestLauncher, AddRequestSignal)
+{
+  auto const& icons = AddMockIcons(1);
+  auto const& center = icons[0]->GetCenter(launcher_->monitor());
+  launcher_->ProcessDndEnter();
+  launcher_->FakeProcessDndMove(center.x, center.y, {"application://MyFile.desktop"});
+
+  bool add_request = false;
+  launcher_->add_request.connect([&] (std::string const& uri, AbstractLauncherIcon::Ptr const& drop_icon) {
+    EXPECT_EQ(drop_icon, icons[0]);
+    EXPECT_EQ(uri, "application://MyFile.desktop");
+    add_request = true;
+  });
+
+  launcher_->ProcessDndDrop(center.x, center.y);
+  launcher_->ProcessDndLeave();
+
+  EXPECT_TRUE(add_request);
+}
+
 
 }
 }
