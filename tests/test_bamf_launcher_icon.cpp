@@ -23,8 +23,10 @@
 #include <gmock/gmock.h>
 
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/DesktopUtilities.h>
 
 #include "BamfLauncherIcon.h"
+#include "FavoriteStore.h"
 
 using namespace unity;
 using namespace unity::launcher;
@@ -133,6 +135,11 @@ TEST_F(TestBamfLauncherIcon, Unstick)
   EXPECT_FALSE(bamf_view_is_sticky(bamf_app));
   EXPECT_FALSE(usc_icon->IsSticky());
   EXPECT_TRUE(forgot);
+}
+
+TEST_F(TestBamfLauncherIcon, RemoteUri)
+{
+  EXPECT_EQ(usc_icon->RemoteUri(), FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(USC_DESKTOP));
 }
 
 }

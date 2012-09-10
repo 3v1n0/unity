@@ -27,10 +27,13 @@ using namespace unity::launcher;
 
 namespace
 {
-
-TEST(TestExpoLauncherIcon, ActivateToggleExpo)
+struct TestExpoLauncherIcon : testing::Test
 {
   ExpoLauncherIcon icon;
+};
+
+TEST_F(TestExpoLauncherIcon, ActivateToggleExpo)
+{
   auto plugin_adapter = PluginAdapter::Default();
 
   ASSERT_FALSE(plugin_adapter->IsExpoActive());
@@ -40,6 +43,16 @@ TEST(TestExpoLauncherIcon, ActivateToggleExpo)
 
   icon.Activate(ActionArg());
   EXPECT_FALSE(plugin_adapter->IsExpoActive());
+}
+
+TEST_F(TestExpoLauncherIcon, Position)
+{
+  EXPECT_EQ(icon.position(), AbstractLauncherIcon::Position::FLOATING);
+}
+
+TEST_F(TestExpoLauncherIcon, RemoteUri)
+{
+  EXPECT_EQ(icon.RemoteUri(), "unity://expo-icon");
 }
 
 }

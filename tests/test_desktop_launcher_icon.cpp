@@ -58,4 +58,9 @@ TEST_F(TestDesktopLauncherIcon, ShowInSwitcher)
   EXPECT_FALSE(icon.ShowInSwitcher(true));
 }
 
+TEST_F(TestDesktopLauncherIcon, RemoteUri)
+{
+  EXPECT_EQ(icon.RemoteUri(), "unity://desktop-icon");
+}
+
 }

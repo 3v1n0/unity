@@ -20,9 +20,10 @@
 #include <gmock/gmock.h>
 using namespace testing;
 
-#include "launcher/DevicesSettings.h"
-#include "launcher/Volume.h"
-#include "launcher/VolumeLauncherIcon.h"
+#include "DevicesSettings.h"
+#include "Volume.h"
+#include "VolumeLauncherIcon.h"
+#include "FavoriteStore.h"
 #include "test_utils.h"
 using namespace unity;
 using namespace unity::launcher;
@@ -164,6 +165,12 @@ TEST_F(TestVolumeLauncherIcon, TestVisibility_InitiallyMountedVolume)
   CreateIcon();
 
   EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
+}
+
+TEST_F(TestVolumeLauncherIcon, RemoteUri)
+{
+  CreateIcon();
+  EXPECT_EQ(icon_->GetRemoteUri(), FavoriteStore::URI_PREFIX_DEVICE + volume_->GetIdentifier());
 }
 
 TEST_F(TestVolumeLauncherIcon, TestVisibility_InitiallyMountedBlacklistedVolume)
