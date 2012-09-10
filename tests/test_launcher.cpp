@@ -106,6 +106,11 @@ public:
     {
       Launcher::ResetMouseDragState();
     }
+
+    int GetDragIconPosition() const
+    {
+      return _drag_icon_position;
+    }
   };
 
   TestLauncher()
@@ -117,6 +122,26 @@ public:
   {
     launcher_->options = options_;
     launcher_->SetModel(model_);
+  }
+
+  std::vector<MockMockLauncherIcon::Ptr> AddMockIcons(unsigned number)
+  {
+    std::vector<MockMockLauncherIcon::Ptr> icons;
+    int icon_size = launcher_->GetIconSize();
+    int monitor = launcher_->monitor();
+    auto const& launcher_geo = launcher_->GetGeometry();
+
+    for (unsigned i = 0; i < number; ++i)
+    {
+      MockMockLauncherIcon::Ptr icon(new MockMockLauncherIcon);
+      model_->AddIcon(icon);
+      // Set the icon centers
+      icon->SetCenter(nux::Point3(icon_size/2.0f, icon_size/2.0f * (i+1) + 1, 0), monitor, launcher_geo);
+
+      icons.push_back(icon);
+    }
+
+    return icons;
   }
 
   MockUScreen uscreen;
@@ -206,19 +231,12 @@ TEST_F(TestLauncher, TestIconBackgroundIntensity)
 
 TEST_F(TestLauncher, DragLauncherIconCancelRestoresIconOrder)
 {
-  MockMockLauncherIcon::Ptr icon1(new MockMockLauncherIcon);
-  MockMockLauncherIcon::Ptr icon2(new MockMockLauncherIcon);
-  MockMockLauncherIcon::Ptr icon3(new MockMockLauncherIcon);
+  auto const& icons = AddMockIcons(3);
+  ASSERT_EQ(icons.size(), 3);
 
-  model_->AddIcon(icon1);
-  model_->AddIcon(icon2);
-  model_->AddIcon(icon3);
-
-  // Set the icon centers
-  int icon_size = launcher_->GetIconSize();
-  icon1->SetCenter(nux::Point3(icon_size/2.0f, icon_size/2.0f * 1 + 1, 0), launcher_->monitor(), launcher_->GetGeometry());
-  icon2->SetCenter(nux::Point3(icon_size/2.0f, icon_size/2.0f * 2 + 1, 0), launcher_->monitor(), launcher_->GetGeometry());
-  icon3->SetCenter(nux::Point3(icon_size/2.0f, icon_size/2.0f * 3 + 1, 0), launcher_->monitor(), launcher_->GetGeometry());
+  auto const& icon1 = icons[0];
+  auto const& icon2 = icons[1];
+  auto const& icon3 = icons[2];
 
   // Start dragging icon2
   launcher_->StartIconDrag(icon2);
