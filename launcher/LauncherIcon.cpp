@@ -1202,8 +1202,9 @@ void LauncherIcon::UnStick()
 
   _sticky = false;
 
+  position_forgot.emit();
+
   SetQuirk(Quirk::VISIBLE, false);
-  FavoriteStore::Instance().RemoveFavorite(RemoteUri());
 }
 
 

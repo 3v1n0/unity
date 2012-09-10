@@ -235,6 +235,7 @@ public:
   sigc::signal<void, nux::ObjectPtr<nux::View>> tooltip_visible;
   sigc::signal<void> visibility_changed;
   sigc::signal<void> position_saved;
+  sigc::signal<void> position_forgot;
 
   sigc::connection needs_redraw_connection;
   sigc::connection on_icon_added_connection;

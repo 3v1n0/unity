@@ -614,6 +614,10 @@ void Controller::Impl::RegisterIcon(AbstractLauncherIcon::Ptr icon)
     ResetIconPriorities();
   });
 
+  icon->position_forgot.connect([this, icon] {
+    FavoriteStore::Instance().RemoveFavorite(icon->RemoteUri());
+  });
+
   std::string const& path = icon->DesktopFile();
 
   if (!path.empty())
