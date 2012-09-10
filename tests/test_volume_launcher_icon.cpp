@@ -61,9 +61,8 @@ public:
 };
 
 
-class TestVolumeLauncherIcon : public Test
+struct TestVolumeLauncherIcon : public Test
 {
-public:
   virtual void SetUp()
   {
     volume_.reset(new MockVolume);
@@ -118,11 +117,12 @@ public:
     std::advance(menuitem, index);
 
     return *menuitem;
-  } 
+  }
 
   MockVolume::Ptr volume_;
   MockDevicesSettings::Ptr settings_;
   VolumeLauncherIcon::Ptr icon_;
+  std::string old_lang_;
 };
 
 TEST_F(TestVolumeLauncherIcon, TestIconType)
@@ -136,6 +136,13 @@ TEST_F(TestVolumeLauncherIcon, TestQuirks)
   CreateIcon();
 
   EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
+}
+
+TEST_F(TestVolumeLauncherIcon, TestPosition)
+{
+  CreateIcon();
+
+  EXPECT_EQ(icon_->position(), AbstractLauncherIcon::Position::FLOATING);
 }
 
 TEST_F(TestVolumeLauncherIcon, TestTooltipText)

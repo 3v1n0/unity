@@ -101,7 +101,9 @@ public:
 
   void OnVolumeRemoved()
   {
-    devices_settings_->TryToUnblacklist(volume_->GetIdentifier());
+    if (devices_settings_->IsABlacklistedDevice(volume_->GetIdentifier()))
+      devices_settings_->TryToUnblacklist(volume_->GetIdentifier());
+
     parent_->UnStick();
     parent_->Remove();
   }
