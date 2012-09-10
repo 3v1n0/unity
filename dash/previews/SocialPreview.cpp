@@ -222,12 +222,13 @@ void SocialPreview::SetupViews()
         social_info_layout->AddView(preview_info_hints_.GetPointer());
       }
       /////////////////////
-
-      /////////////////////
       // Comments/Replies
-      comments_ = new SocialPreviewComments(preview_model_, NUX_TRACKER_LOCATION);
-      
-      /////////////////////
+      if (!social_preview_model->GetComments().empty())
+      {
+        comments_ = new SocialPreviewComments(preview_model_, NUX_TRACKER_LOCATION);
+        AddChild(comments_.GetPointer());
+        social_info_layout->AddView(comments_.GetPointer());
+      }
 
       /////////////////////
       // Actions
@@ -237,8 +238,8 @@ void SocialPreview::SetupViews()
       ///////////////////
 
     full_data_layout_->AddLayout(main_social_info, 0, nux::MINOR_POSITION_TOP);
-    full_data_layout_->AddView(social_info, 0, nux::MINOR_POSITION_TOP);
-    full_data_layout_->AddView(comments_.GetPointer(), 1, nux::MINOR_POSITION_TOP);
+    full_data_layout_->AddView(social_info, 1, nux::MINOR_POSITION_TOP);
+    //full_data_layout_->AddView(comments_.GetPointer(), 1, nux::MINOR_POSITION_TOP);
 
     full_data_layout_->AddLayout(actions_layout, 0);
     /////////////////////
@@ -267,7 +268,7 @@ void SocialPreview::PreLayoutManagement()
 
   if (title_) { title_->SetMaximumWidth(top_social_info_max_width); }
   if (subtitle_) { subtitle_->SetMaximumWidth(top_social_info_max_width); }
-  //if (comments_) { comments_->SetMaximumWidth(geo.width); }
+  if (comments_) { comments_->SetMaximumWidth(details_width); }
 
   for (nux::AbstractButton* button : action_buttons_)
   {

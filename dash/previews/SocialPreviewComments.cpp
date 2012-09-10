@@ -22,7 +22,6 @@
 
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/PreviewStyle.h"
-#include "unity-shared/PlacesVScrollBar.h"
 #include <UnityCore/SocialPreview.h>
 #include <NuxCore/Logger.h>
 #include <Nux/Layout.h>
@@ -48,10 +47,9 @@ const int layout_spacing = 12;
 NUX_IMPLEMENT_OBJECT_TYPE(SocialPreviewComments);
 
 SocialPreviewComments::SocialPreviewComments(dash::Preview::Ptr preview_model, NUX_FILE_LINE_DECL)
-: ScrollView(NUX_FILE_LINE_PARAM)
+: View(NUX_FILE_LINE_PARAM)
 , preview_model_(preview_model)
 {
-  SetVScrollBar(new dash::PlacesVScrollBar(NUX_TRACKER_LOCATION));
   SetupViews();
 }
 
@@ -87,9 +85,6 @@ void SocialPreviewComments::PreLayoutManagement()
   previews::Style& style = previews::Style::Instance();
   nux::Geometry const& geo = GetGeometry();
 
-  //int details_width = MAX(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
-
-
   int comment_width = 0;
   for (Comment const& comment : comments_)
   {
@@ -108,24 +103,22 @@ void SocialPreviewComments::PreLayoutManagement()
     }
   }
 
-  int comment_value_width = geo.width - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin();
-  comment_value_width -= layout_spacing;
-  comment_value_width = MAX(0, comment_value_width);
+  int comment_value_width = MAX(0, geo.width - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
 
   for (Comment const& comment : comments_)
   {
     if (comment.first)
     {
-      comment.first->SetMinimumWidth(comment_width);
-      comment.first->SetMaximumWidth(comment_width);
+      //FIXME: I would rather fill the line
+      //comment.first->SetMinimumWidth(comment_width);
+      comment.first->SetMaximumWidth(comment_value_width);
     }
     if (comment.second)
     {
-      comment.second->SetMinimumWidth(comment_value_width);
       comment.second->SetMaximumWidth(comment_value_width);
     }
   }
-  ScrollView::PreLayoutManagement();
+  View::PreLayoutManagement();
 }
 
 void SocialPreviewComments::SetupViews()

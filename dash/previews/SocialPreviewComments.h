@@ -24,7 +24,6 @@
 #define SOCIAL_PREVIEW_COMMENTS_H
 
 #include <Nux/Nux.h>
-#include <Nux/ScrollView.h>
 #include <Nux/CairoWrapper.h>
 #include <NuxCore/ObjectPtr.h>
 #include "unity-shared/StaticCairoText.h"
@@ -38,11 +37,11 @@ namespace dash
 namespace previews
 {
 
-class SocialPreviewComments : public nux::ScrollView, public unity::debug::Introspectable
+class SocialPreviewComments : public nux::View, public unity::debug::Introspectable
 {
 public:
   typedef nux::ObjectPtr<SocialPreviewComments> Ptr;
-  NUX_DECLARE_OBJECT_TYPE(SocialPreviewComments, nux::ScrollView);
+  NUX_DECLARE_OBJECT_TYPE(SocialPreviewComments, nux::View);
 
   SocialPreviewComments(dash::Preview::Ptr preview_model, NUX_FILE_LINE_PROTO);
 
