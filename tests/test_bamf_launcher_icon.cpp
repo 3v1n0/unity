@@ -78,4 +78,55 @@ TEST_F(TestBamfLauncherIcon, TestDefaultIcon)
   EXPECT_EQ(empty_app->icon_name.Get(), "application-default-icon");
 }
 
+TEST_F(TestBamfLauncherIcon, Stick)
+{
+  BamfView* bamf_app = BAMF_VIEW(bamf_matcher_get_application_for_desktop_file(bamf_matcher, USC_DESKTOP.c_str(), FALSE));
+  ASSERT_FALSE(bamf_view_is_sticky(bamf_app));
+
+  bool saved = false;
+  usc_icon->position_saved.connect([&saved] {saved = true;});
+
+  usc_icon->Stick(false);
+  EXPECT_TRUE(bamf_view_is_sticky(bamf_app));
+  EXPECT_TRUE(usc_icon->IsSticky());
+  EXPECT_FALSE(saved);
+
+  usc_icon->Stick(true);
+  EXPECT_FALSE(saved);
+  bamf_view_set_sticky(bamf_app, FALSE);
+}
+
+TEST_F(TestBamfLauncherIcon, StickAndSave)
+{
+  BamfView* bamf_app = BAMF_VIEW(bamf_matcher_get_application_for_desktop_file(bamf_matcher, USC_DESKTOP.c_str(), FALSE));
+  ASSERT_FALSE(bamf_view_is_sticky(bamf_app));
+
+  bool saved = false;
+  usc_icon->position_saved.connect([&saved] {saved = true;});
+
+  usc_icon->Stick(true);
+  EXPECT_TRUE(bamf_view_is_sticky(bamf_app));
+  EXPECT_TRUE(usc_icon->IsSticky());
+  EXPECT_TRUE(saved);
+  bamf_view_set_sticky(bamf_app, FALSE);
+}
+
+TEST_F(TestBamfLauncherIcon, Unstick)
+{
+  BamfView* bamf_app = BAMF_VIEW(bamf_matcher_get_application_for_desktop_file(bamf_matcher, USC_DESKTOP.c_str(), FALSE));
+  ASSERT_FALSE(bamf_view_is_sticky(bamf_app));
+
+  bool forgot = false;
+  usc_icon->position_forgot.connect([&forgot] {forgot = true;});
+
+  usc_icon->Stick(false);
+  ASSERT_TRUE(bamf_view_is_sticky(bamf_app));
+  ASSERT_TRUE(usc_icon->IsSticky());
+
+  usc_icon->UnStick();
+  EXPECT_FALSE(bamf_view_is_sticky(bamf_app));
+  EXPECT_FALSE(usc_icon->IsSticky());
+  EXPECT_TRUE(forgot);
+}
+
 }
