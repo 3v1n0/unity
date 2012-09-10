@@ -2040,7 +2040,6 @@ void Launcher::EndIconDrag()
     {
       if (!_drag_window->Cancelled() && _model->IconIndex(_drag_icon) != _drag_icon_position)
       {
-        //  FIXMEE   Enable me laaater    
         if (_drag_icon->GetIconType() == AbstractLauncherIcon::IconType::DEVICE)
           _drag_icon->Stick(false);
 
