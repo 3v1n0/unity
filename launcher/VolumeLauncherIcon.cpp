@@ -36,7 +36,7 @@ namespace
 
 nux::logging::Logger logger("unity.launcher");
 
-const unsigned int volume_changed_timeout =  500;
+const unsigned int volume_changed_timeout = 500;
 
 }
 

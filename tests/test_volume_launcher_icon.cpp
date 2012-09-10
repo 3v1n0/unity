@@ -223,7 +223,6 @@ TEST_F(TestVolumeLauncherIcon, TestVisibilityAfterUnmount)
     .Times(0);
 
   volume_->changed.emit();
-  Utils::WaitForTimeout(1);
 
   EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
 }
@@ -242,7 +241,6 @@ TEST_F(TestVolumeLauncherIcon, TestVisibilityAfterUnmount_BlacklistedVolume)
     .Times(0);
 
   volume_->changed.emit();
-  Utils::WaitForTimeout(1);
 
   EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
 }
@@ -276,7 +274,6 @@ TEST_F(TestVolumeLauncherIcon, TestUnlockFromLauncherMenuItem_Success)
 
   dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
   settings_->changed.emit(); // TryToBlacklist() works if DevicesSettings emits a changed signal.
-  Utils::WaitForTimeout(1);
 
   ASSERT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
 }
@@ -295,7 +292,6 @@ TEST_F(TestVolumeLauncherIcon, TestUnlockFromLauncherMenuItem_Failure)
     .Times(1);
 
   dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
-  Utils::WaitForTimeout(1);
 
   ASSERT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
 }
@@ -314,7 +310,6 @@ TEST_F(TestVolumeLauncherIcon, TestOpenMenuItem)
     .Times(1);
 
   dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
-  Utils::WaitForTimeout(1);
 }
 
 TEST_F(TestVolumeLauncherIcon, TestEjectMenuItem_NotEjectableVolume)
@@ -342,7 +337,6 @@ TEST_F(TestVolumeLauncherIcon, TestEjectMenuItem)
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
 
   dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
-  Utils::WaitForTimeout(1);
 }
 
 TEST_F(TestVolumeLauncherIcon, TestEjectMenuItem_NotStoppableVolume)
@@ -370,7 +364,6 @@ TEST_F(TestVolumeLauncherIcon, TestSafelyRemoveMenuItem)
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
 
   dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
-  Utils::WaitForTimeout(1);
 }
 
 TEST_F(TestVolumeLauncherIcon, TestUnmountMenuItem_UnmountedVolume)
@@ -430,7 +423,6 @@ TEST_F(TestVolumeLauncherIcon, TestUnmountMenuItem)
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
 
   dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
-  Utils::WaitForTimeout(1);
 }
 
 TEST_F(TestVolumeLauncherIcon, TestCanBeEject)

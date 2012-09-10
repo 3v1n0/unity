@@ -42,7 +42,7 @@ struct TestHudLauncherIcon : testing::Test
 
 TEST_F(TestHudLauncherIcon, Position)
 {
-  EXPECT_EQ(bfb.position, AbstractLauncherIcon::Position::BEGIN);
+  EXPECT_EQ(bfb.position(), AbstractLauncherIcon::Position::BEGIN);
 }
 
 }
