@@ -433,6 +433,7 @@ PlacesGroup::OnIdleRelayout()
                               nux::color::White,
                               false,
                               rop));
+      
       _using_nofilters_background = true;
     }
 
