@@ -54,9 +54,8 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
     tooltip_text = _("Waiting to install");
 }
 
-void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher, int start_x, int start_y)
+void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> const& launcher, int start_x, int start_y)
 {
-  auto const& icon_center = GetCenter(launcher->monitor());
   launcher_ = launcher;
 
   icon_texture_ = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(
@@ -72,6 +71,7 @@ void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher, int 
                                 AbstractLauncherIcon::Ptr(this),
                                 icon_texture_);
 
+  auto const& icon_center = GetCenter(launcher->monitor());
   drag_window_->SetBaseXY(start_x, start_y);
   drag_window_->ShowWindow(true);
   drag_window_->SetAnimationTarget(icon_center.x, icon_center.y + (launcher->GetIconSize() / 2));
@@ -93,15 +93,18 @@ void SoftwareCenterLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   if (finished_)
   {
-      if (needs_urgent_)
-      {
-          SetQuirk(Quirk::URGENT, false);
-          needs_urgent_ = false;
-      }
-      BamfLauncherIcon::ActivateLauncherIcon(arg);
+    if (needs_urgent_)
+    {
+      SetQuirk(Quirk::URGENT, false);
+      needs_urgent_ = false;
+    }
+
+    BamfLauncherIcon::ActivateLauncherIcon(arg);
   }
   else
-      SetQuirk(Quirk::STARTING, false);
+  {
+    SetQuirk(Quirk::STARTING, false);
+  }
 }
 
 void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
@@ -117,7 +120,9 @@ void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
       SetProgress(0.0f);
       finished_ = true;
       needs_urgent_ = true;
-   } else {
+   }
+   else
+   {
       // failure condition, remove icon again
       UnStick();
    }
