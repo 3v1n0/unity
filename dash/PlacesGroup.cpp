@@ -267,7 +267,7 @@ PlacesGroup::SetRendererName(const char *renderer_name)
 
   if (g_strcmp0(renderer_name, "tile-horizontal") == 0)
     (static_cast<dash::ResultView*>(_child_view))->SetModelRenderer(new dash::ResultRendererHorizontalTile(NUX_TRACKER_LOCATION));
-  else
+  else if (g_strcmp0(renderer_name, "tile-vertical"))
     (static_cast<dash::ResultView*>(_child_view))->SetModelRenderer(new dash::ResultRendererTile(NUX_TRACKER_LOCATION));
 }
 
@@ -410,6 +410,30 @@ PlacesGroup::OnIdleRelayout()
 {
   if (GetChildView())
   {
+    
+    nux::ROPConfig rop;
+    rop.Blend = true;
+    rop.SrcBlend = GL_ONE;
+    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+    nux::TexCoordXForm texxform;
+    if (_n_visible_items_in_unexpand_mode < 6)
+    {
+      _background_layer.reset(new nux::TextureLayer(_background->GetDeviceTexture(), 
+                              texxform, 
+                              nux::color::White,
+                              false,
+                              rop));
+    }
+    else
+    {
+      _background_layer.reset(new nux::TextureLayer(_background_nofilters->GetDeviceTexture(), 
+                              texxform, 
+                              nux::color::White,
+                              false,
+                              rop));
+    }
+
     Refresh();
     QueueDraw();
     _group_layout->QueueDraw();
@@ -458,8 +482,6 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
   bg_geo.height = _background->GetHeight();
   _background_layer->SetGeometry(bg_geo);
   _background_layer->Renderlayer(graphics_engine);
-
-
   graphics_engine.PopClippingRectangle();
 }
 
@@ -473,10 +495,11 @@ PlacesGroup::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
   nux::Geometry bg_geo = GetGeometry();
   //bg_geo.width = _background->GetWidth();
   bg_geo.height = _background->GetHeight();
-  
-  if (!IsFullRedraw() && _focus_layer)
+
+  if (!IsFullRedraw())
+  {
     nux::GetPainter().PushLayer(graphics_engine, bg_geo, _background_layer.get());
-  
+  }
   if (ShouldBeHighlighted() && !IsFullRedraw() && _focus_layer)
   {
     nux::GetPainter().PushLayer(graphics_engine, _focus_layer->GetGeometry(), _focus_layer.get());
