@@ -452,15 +452,13 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
 
     _focus_layer->SetGeometry(geo);
     _focus_layer->Renderlayer(graphics_engine);
-  
-    nux::Geometry bg_geo = GetGeometry();
-    bg_geo.width = _background->GetWidth();
-    bg_geo.height = _background->GetHeight();
-    _background_layer->SetGeometry(bg_geo);
-    _background_layer->Renderlayer(graphics_engine);
-  
-    LOG_DEBUG(logger) << "geo: " << geo.GetHeight();
   }
+  nux::Geometry bg_geo = GetGeometry();
+  //bg_geo.width = _background->GetWidth();
+  bg_geo.height = _background->GetHeight();
+  _background_layer->SetGeometry(bg_geo);
+  _background_layer->Renderlayer(graphics_engine);
+
 
   graphics_engine.PopClippingRectangle();
 }
@@ -471,17 +469,18 @@ PlacesGroup::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
   nux::Geometry const& base = GetGeometry();
 
   graphics_engine.PushClippingRectangle(base);
-
+  LOG_DEBUG(logger) << "base height: " << base.height;
+  nux::Geometry bg_geo = GetGeometry();
+  //bg_geo.width = _background->GetWidth();
+  bg_geo.height = _background->GetHeight();
+  
+  if (!IsFullRedraw() && _focus_layer)
+    nux::GetPainter().PushLayer(graphics_engine, bg_geo, _background_layer.get());
+  
   if (ShouldBeHighlighted() && !IsFullRedraw() && _focus_layer)
   {
     nux::GetPainter().PushLayer(graphics_engine, _focus_layer->GetGeometry(), _focus_layer.get());
   }
-
-  nux::Geometry bg_geo = GetGeometry();
-  bg_geo.width = _background->GetWidth();
-  bg_geo.height = _background->GetHeight();
-  
-  nux::GetPainter().PushLayer(graphics_engine, bg_geo, _background_layer.get());
 
   _group_layout->ProcessDraw(graphics_engine, force_draw);
 

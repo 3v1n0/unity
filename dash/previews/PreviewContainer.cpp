@@ -569,7 +569,7 @@ bool PreviewContainer::QueueAnimation()
   last_progress_time_ = current;
 
   QueueDraw();
-  return true;
+  return false;
 }
 
 bool PreviewContainer::AcceptKeyNavFocus()

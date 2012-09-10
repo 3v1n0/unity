@@ -29,7 +29,6 @@
 #include "Launcher.h"
 #include "LauncherIcon.h"
 #include "LauncherController.h"
-#include "DevicesSettings.h"
 #include "PluginAdapter.h"
 #include "QuicklistManager.h"
 #include "StartupNotifyService.h"
@@ -44,6 +43,9 @@
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #include <libnotify/notify.h>
+#include <cairo-xlib-xrender.h>
+
+#include <text/text.h>
 
 #include <sstream>
 #include <memory>
@@ -81,6 +83,10 @@ nux::logging::Logger logger("unity.shell");
 
 UnityScreen* uScreen = 0;
 
+static unsigned int CLOSE_ICON_SIZE = 19;
+static unsigned int CLOSE_ICON_SPACE = 5;
+static unsigned int SCALE_WINDOW_TITLE_SIZE = 28;
+
 void reset_glib_logging();
 void configure_logging();
 void capture_g_log_calls(const gchar* log_domain,
@@ -100,6 +106,34 @@ const unsigned int SCROLL_UP_BUTTON = 7;
 const std::string RELAYOUT_TIMEOUT = "relayout-timeout";
 } // namespace local
 } // anon namespace
+
+class WindowCairoContext
+{
+  public:
+    Pixmap pixmap_;
+    cairo_surface_t* surface_;
+    GLTexture::List texture_;
+    cairo_t *cr_;
+
+    WindowCairoContext ()
+      : pixmap_ (0), surface_ (0), cr_ (0)
+    {
+    }
+
+    ~WindowCairoContext ()
+    {
+      if (cr_)
+        cairo_destroy (cr_);
+
+      if (surface_)
+        cairo_surface_destroy (surface_);
+
+      texture_.clear ();
+
+      if (pixmap_)
+        XFreePixmap (screen->dpy (), pixmap_);
+    }
+};
 
 UnityScreen::UnityScreen(CompScreen* screen)
   : BaseSwitchScreen (screen)
@@ -129,6 +163,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , panel_texture_has_changed_(true)
   , paint_panel_(false)
   , scale_just_activated_(false)
+  , highlighted_window_(0)
+  , minimize_speed_controller(new WindowMinimizeSpeedController())
 {
   Timer timer;
 #ifndef USE_GLES
@@ -281,7 +317,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetIconSizeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAutohideAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDashBlurExperimentalNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
-     optionSetDevicesOptionNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetShortcutOverlayNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetShowDesktopIconNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetShowLauncherInitiate(boost::bind(&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
@@ -386,6 +421,10 @@ UnityScreen::UnityScreen(CompScreen* screen)
   }
 
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &UnityScreen::OnPanelStyleChanged));
+  
+  minimize_speed_controller->DurationChanged.connect(
+      sigc::mem_fun(this, &UnityScreen::OnMinimizeDurationChanged)
+  );
 }
 
 UnityScreen::~UnityScreen()
@@ -1218,6 +1257,11 @@ void UnityWindow::handleEvent (XEvent *event)
   }
 }
 
+CompRect UnityWindow::closeButtonArea ()
+{
+    return close_button_area_;
+}
+
 bool UnityScreen::shellCouldBeHidden(CompOutput const& output)
 {
   std::vector<Window> const& nuxwins(nux::XInputWindow::NativeHandleList());
@@ -1585,6 +1629,24 @@ void UnityScreen::handleEvent(XEvent* event)
         launcher_controller_->KeyNavTerminate(false);
         EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
       }
+      if (PluginAdapter::Default()->IsScaleActive() &&
+          event->xbutton.button == Button1 &&
+          highlighted_window_ != 0)
+      {
+        CompWindow *w = screen->findWindow (highlighted_window_);
+        if (w)
+        {
+          UnityWindow *uw = UnityWindow::get (w);
+          CompPoint pointer (pointerX, pointerY);
+          if (uw->closeButtonArea ().contains (pointer))
+          {
+            w->close (0);
+            skip_other_plugins = true;
+          }
+        }
+
+      }
+
       break;
     case ButtonRelease:
       if (switcher_controller_ && switcher_controller_->Visible())
@@ -2542,6 +2604,40 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
 }
 
 void
+UnityScreen::OnMinimizeDurationChanged ()
+{
+  /* Update the compiz plugin setting with the new computed speed so that it
+   * will be used in the following minimizations */
+  CompPlugin *p = CompPlugin::find("animation");
+  if (p)
+  {
+    CompOption::Vector &opts = p->vTable->getOptions();
+
+    for (CompOption &o : opts)
+    {
+      if (o.name () == std::string ("minimize_durations"))
+      {
+        /* minimize_durations is a list value, but minimize applies only to
+         * normal windows, so there's always one value */
+        CompOption::Value& value = o.value();
+        CompOption::Value::Vector& list = value.list();
+        CompOption::Value::Vector::iterator i = list.begin();
+        if (i != list.end()) {
+          i->set(minimize_speed_controller->getDuration());
+        }
+        value.set(list);                
+        screen->setOptionForPlugin(p->vTable->name().c_str(),
+                                   o.name().c_str(), value);
+        break;
+      }
+    }
+  }
+  else {
+    LOG_WARN(logger) << "Animation plugin not found. Can't set minimize speed.";
+  }
+}
+
+void
 UnityWindow::minimize ()
 {
   if (!window->managed ())
@@ -2656,6 +2752,11 @@ void UnityWindow::windowNotify(CompWindowNotify n)
         break;
       case CompWindowNotifyBeforeDestroy:
         being_destroyed.emit();
+        break;
+      case CompWindowNotifyMinimize:
+        /* Updating the count in dconf will trigger a "changed" signal to which
+         * the method setting the new animation speed is attached */
+        UnityScreen::get(screen)->minimize_speed_controller->UpdateCount();
         break;
       default:
         break;
@@ -2924,9 +3025,6 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::AutomaximizeValue:
       PluginAdapter::Default()->SetCoverageAreaBeforeAutomaximize(optionGetAutomaximizeValue() / 100.0f);
-      break;
-    case UnityshellOptions::DevicesOption:
-      unity::DevicesSettings::GetDefault().SetDevicesOption((unity::DevicesSettings::DevicesOption) optionGetDevicesOption());
       break;
     case UnityshellOptions::AltTabTimeout:
       switcher_controller_->detail_on_timeout = optionGetAltTabTimeout();
@@ -3370,9 +3468,11 @@ UnityWindow::UnityWindow(CompWindow* window)
   , gWindow(GLWindow::get(window))
   , mMinimizeHandler()
   , mShowdesktopHandler(nullptr)
+  , window_header_style_(0)
 {
   WindowInterface::setHandler(window);
   GLWindowInterface::setHandler(gWindow);
+  ScaleWindowInterface::setHandler (ScaleWindow::get (window));
 
   if (UnityScreen::get (screen)->optionGetShowMinimizedWindows () &&
       window->mapNum ())
@@ -3417,6 +3517,292 @@ UnityWindow::UnityWindow(CompWindow* window)
   }
 }
 
+void UnityWindow::DrawTexture (GLTexture* icon,
+                               const GLWindowPaintAttrib& attrib,
+                               const GLMatrix& transform,
+                               unsigned int mask,
+                               float x, float y,
+                               int &maxWidth, int &maxHeight)
+{
+  if (icon)
+  {
+    int width, height;
+    width  = icon->width ();
+    height = icon->height ();
+
+    if (height > maxHeight)
+      maxHeight = height;
+
+    if (width > maxWidth)
+      maxWidth = width;
+
+    CompRegion  iconReg (0, 0, width, height);
+    GLTexture::MatrixList ml (1);
+
+    ml[0] = icon->matrix ();
+    gWindow->vertexBuffer ()->begin ();
+    if (width && height)
+      gWindow->glAddGeometry (ml, iconReg, iconReg);
+
+    if (gWindow->vertexBuffer ()->end ())
+    {
+      GLMatrix wTransform (transform);
+
+      wTransform.translate (x, y, 0.0f);
+
+      gWindow->glDrawTexture (icon, wTransform, attrib, mask);
+    }
+  }
+}
+
+WindowCairoContext* UnityWindow::CreateCairoContext (float width, float height)
+{
+    XRenderPictFormat *format;
+    Screen *xScreen;
+    WindowCairoContext *context = new WindowCairoContext();
+
+    xScreen = ScreenOfDisplay (screen->dpy (), screen->screenNum ());
+
+    format = XRenderFindStandardFormat (screen->dpy (), PictStandardARGB32);
+    context->pixmap_ = XCreatePixmap (screen->dpy (),
+                                      screen->root (),
+                                      width, height, 32);
+
+    context->texture_ = GLTexture::bindPixmapToTexture (context->pixmap_,
+                                                        width, height,
+                                                        32);
+    if (context->texture_.empty ())
+    {
+      delete context;
+      return 0;
+    }
+
+    context->surface_ = cairo_xlib_surface_create_with_xrender_format (screen->dpy (),
+                                                                       context->pixmap_,
+                                                                       xScreen,
+                                                                       format,
+                                                                       width,
+                                                                       height);
+    context->cr_ = cairo_create (context->surface_);
+
+    // clear
+    cairo_save (context->cr_);
+    cairo_set_operator (context->cr_, CAIRO_OPERATOR_CLEAR);
+    cairo_paint (context->cr_);
+    cairo_restore (context->cr_);
+
+    return context;
+}
+
+void UnityWindow::RenderText (WindowCairoContext *context,
+                              float x, float y,
+                              float maxWidth, float maxHeight)
+{
+  PangoFontDescription* font = pango_font_description_new ();
+  pango_font_description_set_family (font, "sans");
+  pango_font_description_set_absolute_size (font, 12 * PANGO_SCALE);
+  pango_font_description_set_style (font, PANGO_STYLE_NORMAL);
+  pango_font_description_set_weight (font, PANGO_WEIGHT_BOLD);
+
+  PangoLayout* layout = pango_cairo_create_layout (context->cr_);
+  pango_layout_set_font_description (layout, font);
+  pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
+  pango_layout_set_height (layout, maxHeight);
+
+  pango_layout_set_auto_dir (layout, false);
+  pango_layout_set_text (layout,
+                         GetWindowName (window->id ()).c_str (),
+                         -1);
+
+  /* update the size of the pango layout */
+  pango_layout_set_width (layout, maxWidth * PANGO_SCALE);
+  pango_cairo_update_layout (context->cr_, layout);
+
+  cairo_set_operator (context->cr_, CAIRO_OPERATOR_OVER);
+
+  cairo_set_source_rgba (context->cr_,
+                         1.0,
+                         1.0,
+                         1.0,
+                         1.0);
+
+  // alignment
+  int lWidth, lHeight;
+  pango_layout_get_pixel_size (layout, &lWidth, &lHeight);
+
+  y = ((maxHeight - lHeight) / 2.0) + y;
+  cairo_translate (context->cr_, x, y);
+  pango_cairo_show_layout (context->cr_, layout);
+}
+
+void UnityWindow::DrawWindowTitle (const GLWindowPaintAttrib& attrib,
+                                   const GLMatrix& transform,
+                                   unsigned int mask,
+                                   float x, float y, float x2, float y2)
+{
+  const float width = x2 - x;
+
+  // Paint a fake window decoration
+  WindowCairoContext *context = CreateCairoContext (width, SCALE_WINDOW_TITLE_SIZE);
+
+  cairo_save (context->cr_);
+  cairo_push_group (context->cr_);
+
+  // Round window decoration top border
+  const double height = SCALE_WINDOW_TITLE_SIZE;
+  const double aspect = 1.0;
+  const double corner_radius = height / 10.0;
+  const double radius = corner_radius / aspect;
+  const double degrees = M_PI / 180.0;
+
+  cairo_new_sub_path (context->cr_);
+
+  cairo_arc (context->cr_, radius, radius, radius, 180 * degrees, 270 * degrees);
+  cairo_arc (context->cr_, width - radius, radius, radius, -90 * degrees, 0 * degrees);
+  cairo_line_to (context->cr_, width, height);
+  cairo_line_to (context->cr_, 0, height);
+
+  cairo_close_path (context->cr_);
+  cairo_clip (context->cr_);
+
+  // Draw window decoration abased on gtk style
+  gtk_render_background (window_header_style_, context->cr_, 0, 0, width, SCALE_WINDOW_TITLE_SIZE);
+  gtk_render_frame (window_header_style_, context->cr_, 0, 0, width, SCALE_WINDOW_TITLE_SIZE);
+
+  cairo_pop_group_to_source (context->cr_);
+
+  cairo_paint_with_alpha (context->cr_, 1.0);
+  cairo_restore (context->cr_);
+
+  // Draw windows title
+  RenderText (context,
+              CLOSE_ICON_SPACE * 2 + CLOSE_ICON_SIZE,
+              0.0,
+              width, SCALE_WINDOW_TITLE_SIZE);
+
+  mask |= PAINT_WINDOW_BLEND_MASK;
+  int maxWidth, maxHeight;
+  foreach(GLTexture *icon, context->texture_)
+  {
+    DrawTexture (icon, attrib, transform, mask,
+                 x, y,
+                 maxWidth , maxHeight);
+  }
+
+  delete context;
+}
+
+void UnityWindow::scalePaintDecoration (const GLWindowPaintAttrib& attrib,
+                                        const GLMatrix& transform,
+                                        const CompRegion& region,
+                                        unsigned int mask)
+{
+  ScaleWindow *sWindow = ScaleWindow::get (window);
+  if (!sWindow)
+    return;
+
+  sWindow->scalePaintDecoration (attrib, transform, region, mask);
+
+  if (!sWindow->hasSlot()) // animation not finished
+    return;
+
+  if (!window_header_style_)
+  {
+    GtkWidgetPath* widget_path = gtk_widget_path_new ();
+    gint pos = gtk_widget_path_append_type (widget_path, GTK_TYPE_WINDOW);
+    gtk_widget_path_iter_set_name (widget_path, pos, "UnityPanelWidget");
+
+    window_header_style_  = gtk_style_context_new ();
+    gtk_style_context_set_path (window_header_style_, widget_path);
+    gtk_style_context_add_class (window_header_style_, "gnome-panel-menu-bar");
+    gtk_style_context_add_class (window_header_style_, "unity-panel");
+
+    // get close button
+    panel::Style& style = panel::Style::Instance();
+
+    std::vector<std::string> files = style.GetWindowButtonFileNames (panel::WindowButtonType::CLOSE,
+                                                                     panel::WindowState::NORMAL);
+
+    CompString pName ("unityshell");
+    foreach (std::string file, files)
+    {
+      CompString fileName (file.c_str ());
+      CompSize size (CLOSE_ICON_SIZE, CLOSE_ICON_SIZE);
+      close_icon_ = GLTexture::readImageToTexture (fileName,
+                                                   pName,
+                                                   size);
+      if (close_icon_.size () != 0)
+        break;
+    }
+
+    if (close_icon_.size () == 0)
+    {
+      CompString fileName (PKGDATADIR"/close_dash.png");
+      CompSize size (CLOSE_ICON_SIZE, CLOSE_ICON_SIZE);
+      close_icon_ = GLTexture::readImageToTexture (fileName,
+                                                   pName,
+                                                   size);
+    }
+  }
+
+  // Make the windows header opaque to override the original
+  GLWindowPaintAttrib sAttrib (attrib);
+  sAttrib.opacity = OPAQUE;
+
+  ScalePosition pos = sWindow->getCurrentPosition ();
+  int maxHeight, maxWidth;
+  // Use "2" as margin to make sure to cover all originial decoration
+  const float width = (window->width () + 4) * pos.scale;
+  const float x = pos.x () + window->x () - (2 * pos.scale);
+  const float y = pos.y () + window->y () - SCALE_WINDOW_TITLE_SIZE;
+  const float iconX = x + CLOSE_ICON_SPACE;
+  const float iconY = y + ((SCALE_WINDOW_TITLE_SIZE - CLOSE_ICON_SIZE)  / 2.0);
+
+  maxHeight = maxWidth = 0;
+
+  DrawWindowTitle (sAttrib,
+                   transform,
+                   mask,
+                   x, y,
+                   x + width, y + SCALE_WINDOW_TITLE_SIZE);
+
+  mask |= PAINT_WINDOW_BLEND_MASK;
+  foreach(GLTexture *icon, close_icon_)
+  {
+    DrawTexture (icon, sAttrib, transform, mask,
+                 iconX, iconY,
+                 maxWidth , maxHeight);
+  }
+
+  close_button_area_ = CompRect (iconX, iconY, maxWidth, maxHeight);
+}
+
+void UnityWindow::scaleSelectWindow ()
+{
+  UnityScreen* us = UnityScreen::get(screen);
+
+  if (us->highlighted_window_ != window->id ())
+  {
+    CompositeWindow *cWindow = CompositeWindow::get (window);
+    if (cWindow)
+      cWindow->addDamage ();
+
+    cWindow = 0;
+    CompWindow *old_window = screen->findWindow (us->highlighted_window_);
+    if (old_window)
+      cWindow = CompositeWindow::get (old_window);
+
+    if (cWindow)
+      cWindow->addDamage ();
+
+    us->highlighted_window_ = window->id ();
+  }
+
+  ScaleWindow *sWindow = ScaleWindow::get (window);
+  if (sWindow)
+    sWindow->scaleSelectWindow ();
+}
+
 UnityWindow::~UnityWindow()
 {
   UnityScreen* us = UnityScreen::get(screen);
@@ -3434,6 +3820,9 @@ UnityWindow::~UnityWindow()
     if (wasMinimized)
       window->minimize ();
   }
+
+  if (window_header_style_)
+    g_object_unref (window_header_style_);
 
   ShowdesktopHandler::animating_windows.remove (static_cast <ShowdesktopHandlerWindowInterface *> (this));
 
@@ -3473,6 +3862,84 @@ bool UnityPluginVTable::init()
 
   return true;
 }
+
+CompString UnityWindow::GetUtf8Property (Window id,
+                                         Atom atom)
+{
+    Atom          type;
+    int           result, format;
+    unsigned long nItems, bytesAfter;
+    char          *val;
+    CompString    retval;
+    Atom          utf8StringAtom;
+
+    utf8StringAtom = XInternAtom (screen->dpy (), "UTF8_STRING", 0);
+    result = XGetWindowProperty (screen->dpy (), id, atom, 0L, 65536, False,
+                                 utf8StringAtom, &type, &format, &nItems,
+                                 &bytesAfter, (unsigned char **) &val);
+
+    if (result != Success)
+      return retval;
+
+    if (type == utf8StringAtom && format == 8 && val && nItems > 0)
+    {
+      char valueString[nItems + 1];
+      strncpy (valueString, val, nItems);
+      valueString[nItems] = 0;
+      retval = valueString;
+    }
+    if (val)
+      XFree (val);
+
+    return retval;
+}
+
+CompString UnityWindow::GetTextProperty (Window id,
+                                         Atom   atom)
+{
+  XTextProperty text;
+  CompString    retval;
+
+  text.nitems = 0;
+  if (XGetTextProperty (screen->dpy (), id, &text, atom))
+  {
+    if (text.value)
+    {
+      char valueString[text.nitems + 1];
+
+      strncpy (valueString, (char *) text.value, text.nitems);
+      valueString[text.nitems] = 0;
+
+      retval = valueString;
+
+      XFree (text.value);
+    }
+  }
+
+  return retval;
+}
+
+
+CompString UnityWindow::GetWindowName (Window id)
+{
+  CompString name;
+  Atom       visibleNameAtom;
+
+  visibleNameAtom = XInternAtom (screen->dpy (), "_NET_WM_VISIBLE_NAME", 0);
+  name = GetUtf8Property (id, visibleNameAtom);
+  if (name.empty ())
+  {
+    Atom wmNameAtom = XInternAtom (screen->dpy (), "_NET_WM_NAME", 0);
+    name = GetUtf8Property (id, wmNameAtom);
+  }
+
+
+  if (name.empty ())
+    name = GetTextProperty (id, XA_WM_NAME);
+
+  return name;
+}
+
 
 
 namespace
