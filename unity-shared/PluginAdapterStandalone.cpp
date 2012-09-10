@@ -308,6 +308,12 @@ PluginAdapter::SetWindowIconGeometry(Window window, nux::Geometry const& geo)
 void
 PluginAdapter::ShowDesktop()
 {
+  _in_show_desktop = !_in_show_desktop;
+}
+
+bool PluginAdapter::InShowDesktop() const
+{
+  return _in_show_desktop;
 }
 
 void
