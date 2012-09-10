@@ -1,3 +1,10 @@
+unity (6.4.0-0ubuntu6) UNRELEASED; urgency=low
+
+  * Backport a fix for [regression] Dash - Hitting enter after opening
+    Lens or searching no longer opens first item (LP: #1041583)
+
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 10 Sep 2012 10:52:32 +0200
+
 unity (6.4.0-0ubuntu5) quantal; urgency=low
 
   [ Sebastien Bacher ]
