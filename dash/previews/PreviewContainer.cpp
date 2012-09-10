@@ -409,6 +409,7 @@ void PreviewContainer::SetupViews()
   previews::Style& style = previews::Style::Instance();
 
   layout_ = new nux::HLayout();
+  layout_->SetSpaceBetweenChildren(6);
   SetLayout(layout_);
   layout_->AddSpace(0, 1);
 

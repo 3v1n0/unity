@@ -226,7 +226,7 @@ void IconTexture::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                           imageDest.height - (border_width * 2),
                           _texture_cached.GetPointer()->GetDeviceTexture(),
                           texxform,
-                          nux::color::White);
+                          col);
     }
     else
     {
