@@ -14,11 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Andrea Azzarone <azzaronea@gmail.com>
+ * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
-#ifndef UNITYSHELL_SHORTCUSMODEL_H
-#define UNITYSHELL_SHORTCUSMODEL_H
+#ifndef UNITYSHELL_SHORTCUS_MODEL_H
+#define UNITYSHELL_SHORTCUS_MODEL_H
 
 #include <boost/noncopyable.hpp>
 #include <map>
@@ -39,26 +39,21 @@ class Model : boost::noncopyable
 public:
   typedef std::shared_ptr<Model> Ptr;
 
-  // Ctor and dtor
-  Model(std::list<AbstractHint::Ptr>& hints);
-  ~Model();
+  Model(std::list<AbstractHint::Ptr> const& hints);
 
-  // Accessors
   std::vector<std::string>& categories() { return categories_; }
   std::map<std::string, std::list<AbstractHint::Ptr>>& hints() { return hints_; }
 
   void Fill();
 
 private:
-  // Private functions
-  void AddHint(AbstractHint::Ptr hint);
+  void AddHint(AbstractHint::Ptr const& hint);
 
-  // Private members
   std::vector<std::string> categories_;
   std::map<std::string, std::list<AbstractHint::Ptr>> hints_;
 };
 
-} // shortcut
-} // unity
+}
+}
 
-#endif // UNITYSHELL_SHORTCUTS_H
+#endif

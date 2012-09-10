@@ -29,36 +29,34 @@ namespace
 {
 const unsigned int SUPER_TAP_DURATION = 650;
 const unsigned int FADE_DURATION = 100;
-} // anonymouse namespace;
+}
 
-Controller::Controller(std::list<AbstractHint::Ptr>& hints)
-  : visible_(false)
+Controller::Controller(std::list<AbstractHint::Ptr> const& hints)
+  : model_(std::make_shared<Model>(hints))
+  , visible_(false)
   , enabled_(true)
+  , bg_color_(0.0, 0.0, 0.0, 0.5)
   , fade_in_animator_(FADE_DURATION)
   , fade_out_animator_(FADE_DURATION)
 {
-  bg_color_ = nux::Color(0.0, 0.0, 0.0, 0.5);
+  model_->Fill();
 
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED,
                                  sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
 
-  ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWITCHER, [&] (GVariant*) {
+  ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWITCHER, [this] (GVariant*) {
                                    enabled_ = false;
                                  });
 
-  ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWITCHER, [&] (GVariant*) {
+  ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWITCHER, [this] (GVariant*) {
                                    enabled_ = true;
                                  });
 
-  ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [&] (GVariant*) {
+  ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [this] (GVariant*) {
                                    Hide();
                                  });
 
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
-
-  model_.reset(new Model(hints));
-
-  model_->Fill();
 
   fade_in_animator_.animation_updated.connect(sigc::mem_fun(this, &Controller::OnFadeInUpdated));
   fade_in_animator_.animation_ended.connect(sigc::mem_fun(this, &Controller::OnFadeInEnded));
@@ -86,7 +84,6 @@ void Controller::OnFadeOutEnded()
 {
   view_window_->SetOpacity(0.0);
 }
-
 
 void Controller::OnBackgroundUpdate(GVariant* data)
 {
@@ -118,6 +115,7 @@ bool Controller::OnShowTimer()
     return false;
 
   EnsureView();
+  view_window_->PushToFront();
 
   nux::Geometry geo;
   if (!view_->GetBaseGeometry(geo))
@@ -190,12 +188,12 @@ void Controller::Hide()
   }
 }
 
-bool Controller::Visible()
+bool Controller::Visible() const
 {
   return visible_;
 }
 
-bool Controller::IsEnabled()
+bool Controller::IsEnabled() const
 {
   return enabled_;
 }

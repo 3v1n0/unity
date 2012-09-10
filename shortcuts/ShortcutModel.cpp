@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Andrea Azzarone <azzaronea@gmail.com>
+ * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
 #include "ShortcutModel.h"
@@ -24,20 +24,13 @@ namespace unity
 namespace shortcut
 {
 
-// Ctor
-Model::Model(std::list<AbstractHint::Ptr>& hints)
+Model::Model(std::list<AbstractHint::Ptr> const& hints)
 {
   for (auto hint : hints)
     AddHint(hint);
 }
 
-// Dtor
-Model::~Model()
-{
-}
-
-
-void Model::AddHint(AbstractHint::Ptr hint)
+void Model::AddHint(AbstractHint::Ptr const& hint)
 {
   if (!hint)
     return;
@@ -56,5 +49,5 @@ void Model::Fill()
       item->Fill();
 }
 
-} // namespace shortcut
-} // namespace unity
+}
+}
