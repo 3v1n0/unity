@@ -158,6 +158,27 @@ TEST_F(TestLauncherModel, ModelKeepsPriorityDeltas)
 
 TEST_F(TestLauncherModel, ReorderBefore)
 {
+  model.AddIcon(icon1);
+  model.AddIcon(icon2);
+  model.AddIcon(icon3);
+  model.AddIcon(icon4);
+
+  model.ReorderBefore(icon3, icon2, false);
+
+  LauncherModel::iterator it;
+  it = model.begin();
+
+  EXPECT_EQ(icon1, *it);
+  it++;
+  EXPECT_EQ(icon3, *it);
+  it++;
+  EXPECT_EQ(icon2, *it);
+  it++;
+  EXPECT_EQ(icon4, *it);
+}
+
+TEST_F(TestLauncherModel, ReorderBeforeWithPriority)
+{
   icon1->SetSortPriority(0);
   icon2->SetSortPriority(1);
   icon3->SetSortPriority(2);
@@ -205,6 +226,27 @@ TEST_F(TestLauncherModel, ReorderAfter)
 
 TEST_F(TestLauncherModel, ReorderSmart)
 {
+  model.AddIcon(icon1);
+  model.AddIcon(icon2);
+  model.AddIcon(icon3);
+  model.AddIcon(icon4);
+
+  model.ReorderSmart(icon3, icon2, false);
+
+  LauncherModel::iterator it;
+  it = model.begin();
+
+  EXPECT_EQ(icon1, *it);
+  it++;
+  EXPECT_EQ(icon3, *it);
+  it++;
+  EXPECT_EQ(icon2, *it);
+  it++;
+  EXPECT_EQ(icon4, *it);
+}
+
+TEST_F(TestLauncherModel, ReorderSmartWithDifferentPriority)
+{
   icon1->SetSortPriority(0);
   icon2->SetSortPriority(1);
   icon3->SetSortPriority(2);
@@ -228,6 +270,33 @@ TEST_F(TestLauncherModel, ReorderSmart)
   it++;
   EXPECT_EQ(icon4, *it);
 }
+
+TEST_F(TestLauncherModel, ReorderSmartWithSimilarPriority)
+{
+  icon1->SetSortPriority(0);
+  icon2->SetSortPriority(0);
+  icon3->SetSortPriority(1);
+  icon4->SetSortPriority(1);
+
+  model.AddIcon(icon1);
+  model.AddIcon(icon2);
+  model.AddIcon(icon3);
+  model.AddIcon(icon4);
+
+  model.ReorderSmart(icon4, icon3, false);
+
+  LauncherModel::iterator it;
+  it = model.begin();
+
+  EXPECT_EQ(icon1, *it);
+  it++;
+  EXPECT_EQ(icon2, *it);
+  it++;
+  EXPECT_EQ(icon4, *it);
+  it++;
+  EXPECT_EQ(icon3, *it);
+}
+
 
 TEST_F(TestLauncherModel, OrderByPosition)
 {
