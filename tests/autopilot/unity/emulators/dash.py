@@ -75,6 +75,11 @@ class Dash(KeybindingsHelper):
         return self.controller.monitor
 
     @property
+    def ideal_monitor(self):
+        """The ideal monitor for the dash to appear on"""
+        return self.controller.ideal_monitor
+
+    @property
     def search_string(self):
         return self.searchbar.search_string
 
@@ -436,7 +441,7 @@ class PreviewContainer(UnityIntrospectionObject):
             if nav.direction == 2:
                 return nav
         return None
-    
+
     def get_right_navigator(self):
         """Return the right navigator object"""
         navigators = self.get_children_by_type(PreviewNavigator)
@@ -499,7 +504,7 @@ class PreviewContainer(UnityIntrospectionObject):
         """Return the current preview object."""
         return self.content.get_current_preview()
         preview_initiate_count_
-    
+
     @property
     def preview_initiate_count(self):
         """Return the number of initiated previews since opened."""
