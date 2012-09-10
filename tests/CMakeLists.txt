@@ -209,6 +209,7 @@ if (GTEST_SRC_DIR AND
                  test_lensview_impl.cpp
                  test_hud_button.cpp
                  test_hud_controller.cpp
+                 test_hud_launcher_icon.cpp
                  test_hud_view.cpp
                  test_icon_loader.cpp
                  test_im_text_entry.cpp
