@@ -124,10 +124,12 @@ nux::ObjectPtr<nux::BaseTexture> CoverflowResultItem::GetTexture() const
 
 void CoverflowResultItem::Activate(int button)
 {
-  if (button == 1)
-    parent_->UriActivated.emit(result_.uri, ResultView::ActivateType::DIRECT);
-  else if (button == 3)
+  //Left and right click take you to previews.
+  if (button == 1 || button == 3)
     parent_->UriActivated.emit(result_.uri, ResultView::ActivateType::PREVIEW);
+  //Scroll click opens up music player.
+  else if (button == 2)
+    parent_->UriActivated.emit(result_.uri, ResultView::ActivateType::DIRECT);
 
   int index = Index();
   int size = model_->Items().size();
