@@ -27,6 +27,7 @@
 #include "BamfLauncherIcon.h"
 
 using namespace unity;
+using namespace unity::launcher;
 
 namespace
 {
@@ -60,6 +61,11 @@ public:
   nux::ObjectPtr<launcher::BamfLauncherIcon> empty_icon;
   nux::ObjectPtr<launcher::BamfLauncherIcon> empty_app;
 };
+
+TEST_F(TestBamfLauncherIcon, Position)
+{
+  EXPECT_EQ(usc_icon->position(), AbstractLauncherIcon::Position::FLOATING);
+}
 
 TEST_F(TestBamfLauncherIcon, TestCustomBackgroundColor)
 {
