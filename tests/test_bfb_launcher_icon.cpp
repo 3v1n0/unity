@@ -35,10 +35,18 @@ public:
   {}
 };
 
-TEST(TestBFBLauncherIcon, OverlayMenus)
+struct TestBFBLauncherIcon : testing::Test
 {
   MockBFBLauncherIcon bfb;
+};
 
+TEST_F(TestBFBLauncherIcon, Position)
+{
+  EXPECT_EQ(bfb.position, AbstractLauncherIcon::Position::BEGIN);
+}
+
+TEST_F(TestBFBLauncherIcon, OverlayMenus)
+{
   for (auto menu_item : bfb.Menus())
   {
     bool overlay_item = dbusmenu_menuitem_property_get_bool(menu_item, QuicklistMenuItem::OVERLAY_MENU_ITEM_PROPERTY);
