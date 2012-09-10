@@ -77,11 +77,11 @@ bool FavoriteStore::IsValidFavoriteUri(std::string const& uri)
   }
   else if (uri.find(URI_PREFIX_DEVICE) == 0)
   {
-    return true;
+    return uri.length() > URI_PREFIX_DEVICE.length();
   }
   else if (uri.find(URI_PREFIX_UNITY) == 0)
   {
-    return true;
+    return uri.length() > URI_PREFIX_UNITY.length();
   }
 
   return false;
