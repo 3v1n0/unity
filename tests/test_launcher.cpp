@@ -48,8 +48,12 @@ class MockMockLauncherIcon : public launcher::MockLauncherIcon
 {
 public:
   typedef nux::ObjectPtr<MockMockLauncherIcon> Ptr;
+  MockMockLauncherIcon(IconType type = IconType::APPLICATION)
+    : MockLauncherIcon(type)
+  {}
 
   MOCK_METHOD1(ShouldHighlightOnDrag, bool(DndData const&));
+  MOCK_METHOD1(Stick, void(bool));
 };
 
 }
@@ -135,6 +139,7 @@ public:
     int icon_size = launcher_->GetIconSize();
     int monitor = launcher_->monitor();
     auto const& launcher_geo = launcher_->GetGeometry();
+    int model_pre_size = model_->Size();
 
     for (unsigned i = 0; i < number; ++i)
     {
@@ -144,6 +149,9 @@ public:
       icons.push_back(icon);
       model_->AddIcon(icon);
     }
+
+    EXPECT_EQ(icons.size(), number);
+    EXPECT_EQ(model_pre_size + number, number);
 
     return icons;
   }
@@ -236,7 +244,6 @@ TEST_F(TestLauncher, TestIconBackgroundIntensity)
 TEST_F(TestLauncher, DragLauncherIconCancelRestoresIconOrder)
 {
   auto const& icons = AddMockIcons(3);
-  ASSERT_EQ(icons.size(), 3);
 
   auto const& icon1 = icons[0];
   auto const& icon2 = icons[1];
@@ -288,7 +295,6 @@ TEST_F(TestLauncher, DragLauncherIconCancelRestoresIconOrder)
 TEST_F(TestLauncher, DragLauncherIconSavesIconOrderIfPositionHasChanged)
 {
   auto const& icons = AddMockIcons(3);
-  ASSERT_EQ(icons.size(), 3);
 
   auto const& icon1 = icons[0];
   auto const& icon2 = icons[1];
@@ -325,7 +331,6 @@ TEST_F(TestLauncher, DragLauncherIconSavesIconOrderIfPositionHasChanged)
 TEST_F(TestLauncher, DragLauncherIconSavesIconOrderIfPositionHasNotChanged)
 {
   auto const& icons = AddMockIcons(3);
-  ASSERT_EQ(icons.size(), 3);
 
   auto const& icon1 = icons[0];
   auto const& icon2 = icons[1];
@@ -365,6 +370,25 @@ TEST_F(TestLauncher, DragLauncherIconSavesIconOrderIfPositionHasNotChanged)
   // Let's wait the drag icon animation to be completed
   Utils::WaitForTimeout(1);
   EXPECT_EQ(launcher_->GetDraggedIcon(), nullptr);
+}
+
+TEST_F(TestLauncher, DragLauncherIconSticksDeviceIcon)
+{
+  auto const& icons = AddMockIcons(3);
+
+  MockMockLauncherIcon::Ptr device(new MockMockLauncherIcon(AbstractLauncherIcon::IconType::DEVICE));
+  model_->AddIcon(device);
+
+  // Start dragging device icon
+  launcher_->StartIconDrag(device);
+  launcher_->ShowDragWindow();
+
+  // Moving device icon to the beginning
+  auto const& center = icons[0]->GetCenter(launcher_->monitor());
+  launcher_->UpdateDragWindowPosition(center.x, center.y);
+
+  EXPECT_CALL(*device, Stick(false));
+  launcher_->EndIconDrag();
 }
 
 }
