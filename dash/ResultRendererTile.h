@@ -96,9 +96,6 @@ private:
   nux::BaseTexture* CreateTextureCallback(std::string const& texid,
                                           int width, int height,
                                           glib::Object<GdkPixbuf> const& pixbuf);
-  nux::BaseTexture* CreateBlurredTextureCallback(std::string const& texid,
-                                                 int width, int height,
-                                                 glib::Object<GdkPixbuf> const& pixbuf);
   nux::BaseTexture* DrawHighlight(std::string const& texid,
                                   int width, int height);
 };
