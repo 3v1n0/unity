@@ -73,7 +73,7 @@ Expected Result:
   The Track information will contain a title and duration.
 
 
-Preview Music Play
+Preview Music Track Play
 note: Should be automated.
 ------------
 This tests the dash music preview track play
@@ -84,14 +84,16 @@ Setup:
 #. Open a preview for a result which contains tracks.
 
 Actions:
-#. Play first track.
+#. Hover over track number for the track you wish to play.
+#. Click play icon.
 
 Expected Result:
+  When hovering on track number, it will change to a play icon.
   Music Player daemon will start playing track and update status of the track
   in the preview to playing as well as update it's progress.
 
 
-Preview Music Pause
+Preview Music Track Pause
 note: Should be automated.
 ------------
 This tests the dash preview preview navigate right animation
@@ -100,12 +102,14 @@ Setup:
 #. Open music lens (Super+M)
 #. Enter arbitrary search string and ensure a result is available.
 #. Open a preview for a result which contains tracks.
-#. Play first track.
+#. Play first track. (by hovering+click on track number.)
 
 Actions:
-#. Pause playing track.
+#. Hover over pause icon for the track which is playing.
+#. Click pause icon.
 
 Expected Result:
+  When hovering on play icon, it will change to a pause icon.
   Music Player daemon will pause the playing track and update it's status
   to paused. Progress will stop incresing.
 
