@@ -35,6 +35,7 @@
 #include "FavoriteStoreGSettings.h"
 #include "LauncherController.h"
 #include "Launcher.h"
+#include "unity-shared/IconRenderer.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UnitySettings.h"
 
