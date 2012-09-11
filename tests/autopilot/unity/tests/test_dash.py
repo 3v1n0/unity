@@ -847,3 +847,12 @@ class PreviewNavigateTests(DashTestCase):
 
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
 
+class DashDBusIfaceTests(DashTestCase):
+    """Test the Unity dash DBus interface."""
+
+    def test_dash_hide(self):
+        """Ensure we can hide the dash via HideDash() dbus method."""
+        self.dash.ensure_visible()
+        self.dash.controller.hide_dash_via_dbus()
+        self.assertThat(self.dash.visible, Eventually(Equals(False)))
+        self.dash.ensure_hidden()
