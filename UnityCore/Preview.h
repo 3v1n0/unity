@@ -59,16 +59,31 @@ public:
     std::string id;
     std::string display_name;
     std::string icon_hint;
+    std::string extra_text;
     LayoutHint layout_hint;
     // TODO: there's also a HashTable here (although unused atm)
 
     Action() {};
     Action(const gchar* id_, const gchar* display_name_,
-           const gchar* icon_hint_, LayoutHint layout_hint_)
+           const gchar* icon_hint_, LayoutHint layout_hint_,
+           GHashTable* hints)
       : id(id_ != NULL ? id_ : "")
       , display_name(display_name_ != NULL ? display_name_ : "")
       , icon_hint(icon_hint_ != NULL ? icon_hint_ : "")
-      , layout_hint(layout_hint_) {};
+      , layout_hint(layout_hint_)
+    {
+      GHashTableIter iter;
+      gpointer key, value;
+      g_hash_table_iter_init(&iter, hints);
+      while (g_hash_table_iter_next(&iter, &key, &value))
+      {
+        if (g_strcmp0((gchar*)key, "extra-text") == 0)
+        {
+          glib::Variant val(static_cast<GVariant*>(value));
+          extra_text = val.GetString();
+        }
+      }
+    };
   };
 
   struct InfoHint
