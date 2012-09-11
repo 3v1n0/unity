@@ -220,6 +220,10 @@ public:
   LazyLoadTexture search_close_texture_;
   LazyLoadTexture search_spin_texture_;
 
+
+  LazyLoadTexture refine_gradient_corner_;
+  LazyLoadTexture refine_gradient_dash_;
+
   LazyLoadTexture group_unexpand_texture_;
   LazyLoadTexture group_expand_texture_;
 
@@ -262,6 +266,8 @@ Style::Impl::Impl(Style* owner)
   , search_circle_texture_("/search_circle.svg", 32)
   , search_close_texture_("/search_close.svg", 32)
   , search_spin_texture_("/search_spin.svg", 32)
+  , refine_gradient_corner_("/refine_gradient_corner.png")
+  , refine_gradient_dash_("/refine_gradient_dash.png")
   , group_unexpand_texture_("/dash_group_unexpand.png")
   , group_expand_texture_("/dash_group_expand.png")
   , star_deselected_texture_("/star_deselected.png")
@@ -2183,6 +2189,16 @@ nux::BaseTexture* Style::GetSearchCloseIcon()
 nux::BaseTexture* Style::GetSearchSpinIcon()
 {
   return pimpl->search_spin_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetRefineTextureCorner()
+{
+  return pimpl->refine_gradient_corner_.texture();
+}
+
+nux::BaseTexture* Style::GetRefineTextureDash()
+{
+  return pimpl->refine_gradient_dash_.texture(); 
 }
 
 nux::BaseTexture* Style::GetGroupUnexpandIcon()

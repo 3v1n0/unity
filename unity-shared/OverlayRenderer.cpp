@@ -64,6 +64,12 @@ public:
   nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
   nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_shine_texture_;
 
+
+  nux::ObjectPtr<nux::BaseTexture> bg_refine_tex_;
+  nux::ObjectPtr<nux::BaseTexture> bg_refine_corner_tex_;
+  std::unique_ptr<nux::AbstractPaintLayer> bg_refine_gradient_;
+  std::unique_ptr<nux::AbstractPaintLayer> bg_refine_gradient_corner_;
+
   // temporary variable that stores the number of backgrounds we have rendered
   int bgs;
   bool visible;
@@ -107,14 +113,30 @@ void OverlayRendererImpl::Init()
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
   bg_layer_ = new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 0.9), true, rop);
 
+  nux::TexCoordXForm texxform;
+  bg_refine_tex_ = unity::dash::Style::Instance().GetRefineTextureDash();
+  bg_refine_gradient_.reset(new nux::TextureLayer(bg_refine_tex_->GetDeviceTexture(), 
+                            texxform, 
+                            nux::color::White,
+                            false,
+                            rop));
+
+  bg_refine_corner_tex_ = unity::dash::Style::Instance().GetRefineTextureCorner();
+
+  bg_refine_gradient_corner_.reset(new nux::TextureLayer(bg_refine_corner_tex_->GetDeviceTexture(), 
+                                  texxform, 
+                                  nux::color::White,
+                                  false,
+                                  rop));
+ 
+ ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED,
+                                 sigc::mem_fun(this, &OverlayRendererImpl::OnBackgroundColorChanged));
+
   rop.Blend = true;
   rop.SrcBlend = GL_ZERO;
   rop.DstBlend = GL_SRC_COLOR;
   bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.9f, 0.9f, 0.9f, 1.0f), false, rop);
   bg_shine_texture_ = unity::dash::Style::Instance().GetDashShine()->GetDeviceTexture();
-
-  ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED,
-                                 sigc::mem_fun(this, &OverlayRendererImpl::OnBackgroundColorChanged));
 
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 }
@@ -510,6 +532,14 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
                         larger_content_geo.width, larger_content_geo.height,
                         bg_shine_texture_, texxform_absolute_bg, nux::color::White);
 
+  nux::TexCoordXForm refine_texxform;
+  gfx_context.QRP_1Tex(larger_content_geo.x, larger_content_geo.y,
+                       larger_content_geo.width, larger_content_geo.height,
+                       bg_refine_tex_->GetDeviceTexture(),
+                       refine_texxform,
+                       nux::color::White
+                       );
+
   if (Settings::Instance().GetFormFactor() != FormFactor::NETBOOK || force_edges)
   {
     // Paint the edges
@@ -849,6 +879,16 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
                                      nux::color::White,
                                      false,
                                      rop);
+  bgs++;
+
+  nux::Geometry refine_geo = larger_content_geo;
+  
+  refine_geo.x = larger_content_geo.width - bg_refine_tex_->GetWidth();
+  refine_geo.width = bg_refine_tex_->GetWidth();
+  refine_geo.height = bg_refine_tex_->GetHeight();
+
+  nux::GetPainter().PushLayer(gfx_context, refine_geo, bg_refine_gradient_.get());
+
   bgs++;
 }
 

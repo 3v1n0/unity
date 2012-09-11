@@ -480,9 +480,12 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
     _focus_layer->SetGeometry(geo);
     _focus_layer->Renderlayer(graphics_engine);
   }
+
   nux::Geometry bg_geo = GetGeometry();
-  //bg_geo.width = _background->GetWidth();
+  bg_geo.x = bg_geo.width - _background->GetWidth();
+  bg_geo.width = _background->GetWidth();
   bg_geo.height = _background->GetHeight();
+  
   _background_layer->SetGeometry(bg_geo);
   _background_layer->Renderlayer(graphics_engine);
   graphics_engine.PopClippingRectangle();
@@ -496,7 +499,8 @@ PlacesGroup::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
   graphics_engine.PushClippingRectangle(base);
   LOG_DEBUG(logger) << "base height: " << base.height;
   nux::Geometry bg_geo = GetGeometry();
-  //bg_geo.width = _background->GetWidth();
+  bg_geo.x = bg_geo.width - _background->GetWidth();
+  bg_geo.width = _background->GetWidth();
   bg_geo.height = _background->GetHeight();
 
   if (!IsFullRedraw())
