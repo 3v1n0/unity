@@ -20,6 +20,7 @@
 
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
+#include <UnityCore/GLibWrapper.h>
 
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/PanelStyle.h"
@@ -38,7 +39,21 @@ namespace
 {
 nux::logging::Logger logger("unity.dash.controller");
 const unsigned int PRELOAD_TIMEOUT_LENGTH = 40;
+
+const std::string DBUS_PATH = "/com/canonical/Unity/Dash";
+const std::string DBUS_INTROSPECTION =\
+  "<node>"
+  "  <interface name='com.canonical.Unity.Dash'>"
+  ""
+  "    <method name='HideDash'>"
+  "    </method>"
+  ""
+  "  </interface>"
+  "</node>";
 }
+
+GDBusInterfaceVTable Controller::interface_vtable =
+  { Controller::OnDBusMethodCall, NULL, NULL};
 
 Controller::Controller()
   : launcher_width(64)
@@ -49,6 +64,7 @@ Controller::Controller()
   , view_(nullptr)
   , ensure_timeout_(PRELOAD_TIMEOUT_LENGTH)
   , timeline_animator_(90)
+  , dbus_connect_cancellable_(g_cancellable_new())
 {
   SetupRelayoutCallbacks();
   RegisterUBusInterests();
@@ -70,6 +86,13 @@ Controller::Controller()
 
   auto spread_cb = sigc::bind(sigc::mem_fun(this, &Controller::HideDash), true);
   PluginAdapter::Default()->initiate_spread.connect(spread_cb);
+
+  g_bus_get (G_BUS_TYPE_SESSION, dbus_connect_cancellable_, OnBusAcquired, this);
+}
+
+Controller::~Controller()
+{
+  g_cancellable_cancel(dbus_connect_cancellable_);
 }
 
 void Controller::SetupWindow()
@@ -171,7 +194,9 @@ int Controller::GetIdealMonitor()
 {
   UScreen *uscreen = UScreen::GetDefault();
   int primary_monitor;
-  if (use_primary)
+  if (window_->IsVisible())
+    primary_monitor = monitor_;
+  else if (use_primary)
     primary_monitor = uscreen->GetPrimaryMonitor();
   else
     primary_monitor = uscreen->GetMonitorWithMouse();
@@ -259,10 +284,12 @@ void Controller::ShowDash()
     return;
   }
 
+  /* GetIdealMonitor must get called before visible_ is set */
+  monitor_ = GetIdealMonitor();
+
   // The launcher must receive UBUS_OVERLAY_SHOW before window_->EnableInputWindow().
   // Other wise the Launcher gets focus for X, which causes XIM to fail.
   sources_.AddIdle([this] {
-    monitor_ = GetIdealMonitor();
     GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, monitor_);
     ubus_manager_.SendMessage(UBUS_OVERLAY_SHOWN, info);
     return false;
@@ -369,8 +396,56 @@ std::string Controller::GetName() const
 void Controller::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder).add("visible", visible_)
+                                  .add("ideal_monitor", GetIdealMonitor())
                                   .add("monitor", monitor_);
 }
+
+void Controller::OnBusAcquired(GObject *obj, GAsyncResult *result, gpointer user_data)
+{
+  glib::Error error;
+  glib::Object<GDBusConnection> connection(g_bus_get_finish (result, &error));
+
+  if (!connection || error)
+  {
+    LOG_WARNING(logger) << "Failed to connect to DBus:" << error;
+  }
+  else
+  {
+    GDBusNodeInfo* introspection_data = g_dbus_node_info_new_for_xml(DBUS_INTROSPECTION.c_str(), nullptr);
+    unsigned int reg_id;
+
+    if (!introspection_data)
+    {
+      LOG_WARNING(logger) << "No introspection data loaded.";
+      return;
+    }
+
+    reg_id = g_dbus_connection_register_object(connection, DBUS_PATH.c_str(),
+                                               introspection_data->interfaces[0],
+                                               &interface_vtable, user_data,
+                                               nullptr, nullptr);
+    if (!reg_id)
+    {
+      LOG_WARNING(logger) << "Object registration failed. Dash DBus interface not available.";
+    }
+    
+    g_dbus_node_info_unref(introspection_data);
+  }
+}
+
+void Controller::OnDBusMethodCall(GDBusConnection* connection, const gchar* sender,
+                                        const gchar* object_path, const gchar* interface_name,
+                                        const gchar* method_name, GVariant* parameters,
+                                        GDBusMethodInvocation* invocation, gpointer user_data)
+{
+  if (g_strcmp0(method_name, "HideDash") == 0)
+  {
+    auto self = static_cast<Controller*>(user_data);
+    self->HideDash();
+    g_dbus_method_invocation_return_value(invocation, nullptr);
+  }
+}
+
 
 
 }

@@ -71,7 +71,7 @@ private:
   void RegisterUBusInterests();
   void SetIcon(std::string const& icon_name);
 
-  int GetTargetMonitor();
+  int GetIdealMonitor();
   bool IsLockedToLauncher(int monitor);
 
   nux::Geometry GetIdealWindowGeometry();

@@ -60,6 +60,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(View);
 View::View()
   : AbstractView()
   , button_views_(nullptr)
+  , visible_(false)
   , start_time_(0)
   , last_known_height_(0)
   , current_height_(0)
@@ -350,11 +351,13 @@ nux::Geometry View::GetBestFitGeometry(nux::Geometry const& for_geo)
 
 void View::AboutToShow()
 {
+  visible_ = true;
   renderer_.AboutToShow();
 }
 
 void View::AboutToHide()
 {
+  visible_ = false;
   renderer_.AboutToHide();
 }
 
