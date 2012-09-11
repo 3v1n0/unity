@@ -106,14 +106,11 @@ Test the Panel does not lose track of when the Dash is opened then closed.
 This tests shows the panel will not think the Dash is opened when it is closed.
 (see lp:1044086)
 
-Setup:
-#. ress Super twice (Quickly)
+Actions:
+#. Press Super twice (Quickly)
 
 Expected Result:
-  The panel should look the same as if you had never opened the dash.
-
-Wrong Result:
-  The panel still thinks the dash is open and is blured to match your background.
+  The screen should look the same as if you had never opened the dash.
 
 
 Filter Results Tests
