@@ -164,7 +164,7 @@ void SocialPreviewComments::SetupViews()
     nux::HLayout* comment_layout = new nux::HLayout();
     comment_layout->SetSpaceBetweenChildren(layout_spacing);
 
-    StaticCairoTextPtr comment_value(new nux::StaticCairoText(comment->content, true, NUX_TRACKER_LOCATION));
+    StaticCairoTextPtr comment_value(new nux::StaticCairoText(comment->content, false, NUX_TRACKER_LOCATION));
 
     comment_value->SetFont(style.info_hint_font());
     comment_value->SetLines(-7);
