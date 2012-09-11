@@ -359,7 +359,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
        g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                     &overlay_identity, &can_maximise, &overlay_monitor);
 
-       dash_monitor_ = overlay_monitor;
+       overlay_monitor_ = overlay_monitor;
 
        RaiseInputWindows();
      });
@@ -571,7 +571,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
     i++;
   }
 
-  if (!(launcher_controller_->IsOverlayOpen() && current_monitor == dash_monitor_)
+  if (!(launcher_controller_->IsOverlayOpen() && current_monitor == overlay_monitor_)
       && panel_controller_->opacity() > 0.0f)
   {
     foreach(GLTexture * tex, _shadow_texture)
@@ -1417,7 +1417,15 @@ void UnityScreen::handleEvent(XEvent* event)
         if (CompWindow *w = screen->findWindow(scale_highlighted_window_))
           skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
       }
-
+      if (launcher_controller_->IsOverlayOpen())
+      {
+        int monitor_with_mouse = UScreen::GetDefault()->GetMonitorWithMouse();
+        if (overlay_monitor_ != monitor_with_mouse)
+        {
+          dash_controller_->HideDash(false);
+          hud_controller_->HideHud(false);
+        }
+      }
       break;
     case ButtonRelease:
       if (switcher_controller_ && switcher_controller_->Visible())
@@ -2556,7 +2564,8 @@ void UnityWindow::windowNotify(CompWindowNotify n)
     UnityScreen* us = UnityScreen::get(screen);
     CompWindow *lw;
 
-    if (us->launcher_controller_->IsOverlayOpen())
+    // can't rely on launcher->IsOverlayVisible on focus change (because ubus is async close on focus change.)
+    if (us && (us->dash_controller_->IsVisible() || us->hud_controller_->IsVisible()))
     {
       lw = screen->findWindow(us->launcher_controller_->LauncherWindowId(0));
       lw->moveInputFocusTo();

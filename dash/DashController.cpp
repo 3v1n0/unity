@@ -261,16 +261,7 @@ void Controller::ShowDash()
     return;
   }
 
-  /* GetIdealMonitor must get called before visible_ is set */
   monitor_ = GetIdealMonitor();
-
-  // The launcher must receive UBUS_OVERLAY_SHOW before window_->EnableInputWindow().
-  // Other wise the Launcher gets focus for X, which causes XIM to fail.
-  sources_.AddIdle([this] {
-    GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, monitor_);
-    ubus_manager_.SendMessage(UBUS_OVERLAY_SHOWN, info);
-    return false;
-  });
 
   view_->AboutToShow();
 
@@ -288,6 +279,9 @@ void Controller::ShowDash()
   visible_ = true;
 
   StartShowHideTimeline();
+
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, monitor_);
+  ubus_manager_.SendMessage(UBUS_OVERLAY_SHOWN, info);
 }
 
 void Controller::HideDash(bool restore)
@@ -375,6 +369,11 @@ void Controller::AddProperties(GVariantBuilder* builder)
   variant::BuilderWrapper(builder).add("visible", visible_)
                                   .add("ideal_monitor", GetIdealMonitor())
                                   .add("monitor", monitor_);
+}
+
+bool Controller::IsVisible() const
+{
+  return visible_;
 }
 
 

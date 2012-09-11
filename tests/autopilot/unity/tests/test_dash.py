@@ -847,3 +847,25 @@ class PreviewNavigateTests(DashTestCase):
 
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
 
+class DashCrossMonitorsTests(DashTestCase):
+    """Multimonitor dash tests."""
+
+    def setUp(self):
+        super(DashCrossMonitorsTests, self).setUp()
+        if self.screen_geo.get_num_monitors() < 2:
+            self.skipTest("This test requires a multimonitor setup")
+
+    def test_dash_close_on_cross_monitor_click(self):
+        """Dash must close when clicking on a window in a different screen."""
+
+        prev_monitor = None
+        for monitor in range(0, self.screen_geo.get_num_monitors()-1):
+
+            self.screen_geo.move_mouse_to_monitor(monitor)
+            self.dash.ensure_visible()
+
+            self.screen_geo.move_mouse_to_monitor(monitor+1)
+            sleep(.5)
+            self.mouse.click()
+            
+            self.assertThat(self.dash.visible, Eventually(Equals(False)))

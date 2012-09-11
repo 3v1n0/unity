@@ -312,7 +312,7 @@ private:
 
   bool   queryForShader ();
 
-  int dash_monitor_;
+  int overlay_monitor_;
   CompScreen::GrabHandle grab_index_;
   CompWindowList         fullscreen_windows_;
   bool                   painting_tray_;

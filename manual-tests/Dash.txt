@@ -100,6 +100,22 @@ Expected result:
  * When a single row of results isn't enough to contain all returned search results, and there are no other category headers, the displayed category
    header expands automatically
 
+
+Test the Panel does not lose track of when the Dash is opened then closed.
+--------------------------------------------------------------------------
+This tests shows the panel will not think the Dash is opened when it is closed.
+(see lp:1044086)
+
+Setup:
+#. ress Super twice (Quickly)
+
+Expected Result:
+  The panel should look the same as if you had never opened the dash.
+
+Wrong Result:
+  The panel still thinks the dash is open and is blured to match your background.
+
+
 Filter Results Tests
 ========================
 These tests show that the dash "All" button works well.
