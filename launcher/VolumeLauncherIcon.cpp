@@ -26,6 +26,7 @@
 #include "DevicesSettings.h"
 #include "Volume.h"
 #include "VolumeLauncherIcon.h"
+#include "FavoriteStore.h"
 
 namespace unity
 {
@@ -248,7 +249,7 @@ public:
     if (identifier.empty())
       return "";
 
-    return "device://" + identifier;
+    return FavoriteStore::URI_PREFIX_DEVICE + identifier;
   }
 
   VolumeLauncherIcon* parent_;

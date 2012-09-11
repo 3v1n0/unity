@@ -19,6 +19,7 @@
 
 #include "DesktopLauncherIcon.h"
 #include "unity-shared/WindowManager.h"
+#include "FavoriteStore.h"
 
 #include <glib/gi18n-lib.h>
 
@@ -52,7 +53,7 @@ std::string DesktopLauncherIcon::GetName() const
 
 std::string DesktopLauncherIcon::GetRemoteUri()
 {
-  return "unity://desktop-icon";
+  return FavoriteStore::URI_PREFIX_UNITY + "desktop-icon";
 }
 
 void DesktopLauncherIcon::SetShowInSwitcher(bool show_in_switcher)

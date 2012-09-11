@@ -33,7 +33,6 @@
 #include "unity-shared/CairoTexture.h"
 #include "LauncherIcon.h"
 #include "Launcher.h"
-#include "FavoriteStore.h"
 #include "unity-shared/TimeUtil.h"
 
 #include "QuicklistManager.h"
@@ -519,7 +518,7 @@ LauncherIcon::ShowTooltip()
 
   if (!_tooltip)
     LoadTooltip();
-
+  _tooltip->SetText(tooltip_text() +" "+ std::to_string(_sort_priority));
   _tooltip->ShowTooltipWithTipAt(tip_x, tip_y);
   _tooltip->ShowWindow(!tooltip_text().empty());
   tooltip_visible.emit(_tooltip);

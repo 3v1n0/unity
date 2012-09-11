@@ -19,6 +19,7 @@
 
 #include "ExpoLauncherIcon.h"
 #include "unity-shared/WindowManager.h"
+#include "FavoriteStore.h"
 
 #include <glib/gi18n-lib.h>
 
@@ -56,7 +57,7 @@ std::string ExpoLauncherIcon::GetName() const
 
 std::string ExpoLauncherIcon::GetRemoteUri()
 {
-  return "unity://expo-icon";
+  return FavoriteStore::URI_PREFIX_UNITY + "expo-icon";
 }
 
 } // namespace launcher

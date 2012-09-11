@@ -91,7 +91,7 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   sig = new glib::Signal<void, BamfView*, BamfView*>(bamf_view, "child-removed",
                           [&] (BamfView*, BamfView*) { EnsureWindowState(); });
   _gsignals.Add(sig);
-  
+
   sig = new glib::Signal<void, BamfView*, BamfView*>(bamf_view, "child-moved",
                                                      [&] (BamfView *, BamfView *) {
                                                        EnsureWindowState();
@@ -226,7 +226,6 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     wm->Activate(arg.target);
     return;
   }
-  
 
   /* We should check each child to see if there is
    * an unmapped (!= minimized) window around and
@@ -629,22 +628,22 @@ std::vector<Window> BamfLauncherIcon::GetFocusableWindows(ActionArg arg, bool &a
   GList* children;
 
   BamfView *focusable_child = BAMF_VIEW (bamf_application_get_focusable_child (_bamf_app.RawPtr()));
-  
+
   if (focusable_child != NULL)
     {
       Window xid;
-      
+
       if (BAMF_IS_WINDOW (focusable_child))
         xid = bamf_window_get_xid (BAMF_WINDOW(focusable_child));
       else if (BAMF_IS_TAB (focusable_child))
         {
           BamfTab *focusable_tab = BAMF_TAB (focusable_child);
-          
+
           xid = bamf_tab_get_xid (focusable_tab);
-          
+
           bamf_tab_raise (focusable_tab);
         }
-      
+
       windows.push_back(xid);
       return windows;
     }
@@ -653,7 +652,7 @@ std::vector<Window> BamfLauncherIcon::GetFocusableWindows(ActionArg arg, bool &a
       if (g_strcmp0 (bamf_application_get_application_type (_bamf_app.RawPtr()), "webapp") == 0)
         {
           OpenInstanceLauncherIcon(arg);
-          
+
           return windows;
         }
     }
@@ -753,13 +752,13 @@ void BamfLauncherIcon::EnsureWindowState()
       {
         /* BamfTab does not support the monitor interface...so a bit of a nasty hack here. */
         xid = bamf_tab_get_xid (static_cast<BamfTab*>(l->data));
-        
+
         if (WindowManager::Default()->IsWindowOnCurrentDesktop(xid) == false)
           continue;
-        
+
         for (int j = 0; j < max_num_monitors; j++)
           monitors[j] = true;
-        
+
         continue;
       }
 
@@ -1216,12 +1215,11 @@ std::string BamfLauncherIcon::GetRemoteUri()
 {
   if (_remote_uri.empty())
   {
-    const std::string prefix = "application://";
     std::string const& desktop_id = GetDesktopID();
 
     if (!desktop_id.empty())
     {
-      _remote_uri = prefix + desktop_id;
+      _remote_uri = FavoriteStore::URI_PREFIX_APP + desktop_id;
     }
   }
 
