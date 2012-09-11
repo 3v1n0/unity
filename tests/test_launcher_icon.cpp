@@ -55,4 +55,14 @@ TEST_F(TestLauncherIcon, Construction)
     ASSERT_FALSE(icon.GetQuirk(static_cast<AbstractLauncherIcon::Quirk>(i)));
 }
 
+TEST_F(TestLauncherIcon, Visibility)
+{
+  ASSERT_FALSE(icon.GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
+  EXPECT_FALSE(icon.IsVisible());
+
+  icon.SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, true);
+  ASSERT_TRUE(icon.GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
+  EXPECT_TRUE(icon.IsVisible());
+}
+
 }
