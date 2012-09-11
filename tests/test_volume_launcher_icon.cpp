@@ -501,4 +501,50 @@ TEST_F(TestVolumeLauncherIcon, OnRemoved_RemovableAndBlacklistedVolume)
   volume_->removed.emit();
 }
 
+TEST_F(TestVolumeLauncherIcon, Stick)
+{
+  CreateIcon();
+
+  bool saved = false;
+  icon_->position_saved.connect([&saved] {saved = true;});
+
+  EXPECT_CALL(*settings_, TryToUnblacklist(volume_->GetIdentifier()));
+  icon_->Stick(false);
+  EXPECT_TRUE(icon_->IsSticky());
+  EXPECT_TRUE(icon_->IsVisible());
+  EXPECT_FALSE(saved);
+}
+
+TEST_F(TestVolumeLauncherIcon, StickAndSave)
+{
+  CreateIcon();
+
+  bool saved = false;
+  icon_->position_saved.connect([&saved] {saved = true;});
+
+  EXPECT_CALL(*settings_, TryToUnblacklist(volume_->GetIdentifier()));
+  icon_->Stick(true);
+  EXPECT_TRUE(icon_->IsSticky());
+  EXPECT_TRUE(icon_->IsVisible());
+  EXPECT_TRUE(saved);
+}
+
+TEST_F(TestVolumeLauncherIcon, Unstick)
+{
+  CreateIcon();
+
+  bool forgot = false;
+  icon_->position_forgot.connect([&forgot] {forgot = true;});
+
+  EXPECT_CALL(*settings_, TryToUnblacklist(_));
+  icon_->Stick(false);
+  ASSERT_TRUE(icon_->IsSticky());
+  ASSERT_TRUE(icon_->IsVisible());
+
+  icon_->UnStick();
+  EXPECT_FALSE(icon_->IsSticky());
+  EXPECT_TRUE(icon_->IsVisible());
+  EXPECT_TRUE(forgot);
+}
+
 }

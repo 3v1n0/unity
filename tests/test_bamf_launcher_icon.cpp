@@ -97,6 +97,7 @@ TEST_F(TestBamfLauncherIcon, Stick)
   usc_icon->Stick(false);
   EXPECT_TRUE(bamf_view_is_sticky(bamf_app));
   EXPECT_TRUE(usc_icon->IsSticky());
+  EXPECT_TRUE(usc_icon->IsVisible());
   EXPECT_FALSE(saved);
 
   usc_icon->Stick(true);
@@ -115,6 +116,7 @@ TEST_F(TestBamfLauncherIcon, StickAndSave)
   usc_icon->Stick(true);
   EXPECT_TRUE(bamf_view_is_sticky(bamf_app));
   EXPECT_TRUE(usc_icon->IsSticky());
+  EXPECT_TRUE(usc_icon->IsVisible());
   EXPECT_TRUE(saved);
   bamf_view_set_sticky(bamf_app, FALSE);
 }
@@ -134,6 +136,7 @@ TEST_F(TestBamfLauncherIcon, Unstick)
   usc_icon->UnStick();
   EXPECT_FALSE(bamf_view_is_sticky(bamf_app));
   EXPECT_FALSE(usc_icon->IsSticky());
+  EXPECT_FALSE(usc_icon->IsVisible());
   EXPECT_TRUE(forgot);
 }
 
