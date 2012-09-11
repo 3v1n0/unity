@@ -366,6 +366,7 @@ PreviewContainer::PreviewContainer(NUX_FILE_LINE_DECL)
   last_progress_time_.tv_nsec = 0;
 
   key_down.connect(sigc::mem_fun(this, &PreviewContainer::OnKeyDown));
+  mouse_click.connect(sigc::mem_fun(this, &PreviewContainer::OnMouseDown));
 }
 
 PreviewContainer::~PreviewContainer()
@@ -375,6 +376,12 @@ PreviewContainer::~PreviewContainer()
 void PreviewContainer::Preview(dash::Preview::Ptr preview_model, Navigation direction)
 {
   previews::Preview::Ptr preview_view = previews::Preview::PreviewForModel(preview_model);
+  
+  if (preview_view)
+  {
+    preview_view->request_close.connect([this]() { request_close.emit(); });
+  }
+  
   content_layout_->PushPreview(preview_view, direction);
 }
 
@@ -628,6 +635,14 @@ void PreviewContainer::OnKeyDown(unsigned long event_type, unsigned long event_k
       default:
         return;
     }
+  }
+}
+
+void PreviewContainer::OnMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  if (nux::GetEventButton(button_flags) == nux::MOUSE_BUTTON1 || nux::GetEventButton(button_flags) == nux::MOUSE_BUTTON3)
+  {
+    request_close.emit();
   }
 }
 

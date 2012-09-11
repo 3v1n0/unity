@@ -141,6 +141,15 @@ void MusicPreview::SetupViews()
   /////////////////////
   // Image
   image_ = new CoverArt();
+  
+  image_->mouse_click.connect([this] (int x, int y, unsigned long button_flags, unsigned long key_flags) 
+  {
+    if (nux::GetEventButton(button_flags) == nux::MOUSE_BUTTON3)
+    {
+      request_close.emit();
+    }
+  });
+  
   AddChild(image_.GetPointer());
   UpdateCoverArtImage(image_.GetPointer());
   /////////////////////
