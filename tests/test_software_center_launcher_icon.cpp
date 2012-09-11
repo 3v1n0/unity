@@ -22,6 +22,9 @@
 
 #include "SoftwareCenterLauncherIcon.h"
 #include "Launcher.h"
+#include "PanelStyle.h"
+#include "UnitySettings.h"
+#include "test_utils.h"
 
 using namespace unity;
 using namespace unity::launcher;
@@ -48,6 +51,24 @@ TEST_F(TestSoftwareCenterLauncherIcon, Construction)
   EXPECT_FALSE(icon.IsVisible());
   EXPECT_EQ(icon.position(), AbstractLauncherIcon::Position::FLOATING);
   EXPECT_EQ(icon.tooltip_text(), bamf_view_get_name(glib::object_cast<BamfView>(usc)));
+}
+
+TEST_F(TestSoftwareCenterLauncherIcon, Animate)
+{
+  ASSERT_FALSE(icon.IsVisible());
+
+  Settings settings;
+  panel::Style panel;
+  nux::ObjectPtr<nux::BaseWindow> win(new nux::BaseWindow(""));
+  nux::ObjectPtr<DNDCollectionWindow> cwin(new DNDCollectionWindow);
+  nux::ObjectPtr<Launcher> launcher(new Launcher(win.GetPointer(), cwin));
+  launcher->options = Options::Ptr(new Options);
+  launcher->SetModel(LauncherModel::Ptr(new LauncherModel));
+
+  icon.Animate(launcher, 1, 2);
+  Utils::WaitForTimeoutMSec(500);
+
+  EXPECT_TRUE(icon.IsVisible());
 }
 
 }

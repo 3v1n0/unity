@@ -61,7 +61,7 @@ public:
 class TestLauncher : public Test
 {
 public:
-  class MockLauncher : public launcher::Launcher
+  class MockLauncher : public Launcher
   {
   public:
     MockLauncher(nux::BaseWindow* parent, nux::ObjectPtr<DNDCollectionWindow> const& collection_window)
