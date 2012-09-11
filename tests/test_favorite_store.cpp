@@ -18,6 +18,7 @@
  */
 
 #include <gmock/gmock.h>
+#include <config.h>
 
 #include "FavoriteStore.h"
 
@@ -84,5 +85,27 @@ TEST_F(TestFavoriteStore, IsValidFavoriteUri)
   EXPECT_TRUE(FavoriteStore::IsValidFavoriteUri("application://c.desktop"));
 }
 
+TEST_F(TestFavoriteStore, ParseFavoriteFromUri)
+{
+  const std::string VALID_DESKTOP_PATH = BUILDDIR"/tests/data/ubuntu-software-center.desktop";
+  EXPECT_EQ(favorite_store.ParseFavoriteFromUri("file.desktop"), "application://file.desktop");
+  EXPECT_EQ(favorite_store.ParseFavoriteFromUri(VALID_DESKTOP_PATH), "application://"+VALID_DESKTOP_PATH);
+
+  EXPECT_EQ(favorite_store.ParseFavoriteFromUri("application://file.desktop"), "application://file.desktop");
+  EXPECT_EQ(favorite_store.ParseFavoriteFromUri("application://"+VALID_DESKTOP_PATH), "application://"+VALID_DESKTOP_PATH);
+  EXPECT_EQ(favorite_store.ParseFavoriteFromUri("file://"+VALID_DESKTOP_PATH), "file://"+VALID_DESKTOP_PATH);
+
+  EXPECT_EQ(favorite_store.ParseFavoriteFromUri("unity://uri"), "unity://uri");
+  EXPECT_EQ(favorite_store.ParseFavoriteFromUri("device://uuid"), "device://uuid");
+
+  EXPECT_TRUE(favorite_store.ParseFavoriteFromUri("file").empty());
+  EXPECT_TRUE(favorite_store.ParseFavoriteFromUri("/path/to/file").empty());
+  EXPECT_TRUE(favorite_store.ParseFavoriteFromUri("/path/to/file.desktop").empty());
+  EXPECT_TRUE(favorite_store.ParseFavoriteFromUri("application:///path/to/file.desktop").empty());
+  EXPECT_TRUE(favorite_store.ParseFavoriteFromUri("file:///path/to/file.desktop").empty());
+  EXPECT_TRUE(favorite_store.ParseFavoriteFromUri("file://file.desktop").empty());
+  EXPECT_TRUE(favorite_store.ParseFavoriteFromUri("unity://").empty());
+  EXPECT_TRUE(favorite_store.ParseFavoriteFromUri("device://").empty());
+}
 
 }
