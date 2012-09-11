@@ -80,7 +80,6 @@ public:
   // unload any previous grabbed images
   virtual void Unload(Result& row);
 
-  int highlight_padding;
   int spacing;
   int padding;
 

@@ -155,9 +155,12 @@ public:
   void SetDefaultNColumns(int n_cols);
   sigc::signal<void> columns_changed;
 
-  int GetTileIconSize() const;
+  int GetTileGIconSize() const;
+  int GetTileImageSize() const;
   int GetTileWidth() const;
   int GetTileHeight() const;
+  int GetTileIconHightlightHeight() const;
+  int GetTileIconHightlightWidth() const;
 
   int GetHomeTileIconSize() const;
   int GetHomeTileWidth() const;
