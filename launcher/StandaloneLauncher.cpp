@@ -64,6 +64,8 @@ int main(int argc, char** argv)
   wt->Run(NULL);
   // Make sure the controller is destroyed before the window thread.
   controller.reset();
+  ::unity::ui::IconRenderer::DestroyTextures();
+
   delete wt;
   return 0;
 }
