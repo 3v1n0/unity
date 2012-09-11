@@ -32,20 +32,67 @@ using namespace testing;
 namespace unity
 {
 
-class MockFavoriteStore : public FavoriteStore
+struct MockFavoriteStore : FavoriteStore
 {
-public:
+  MockFavoriteStore()
+  {
+    fav_list_ = { "application://" BUILDDIR "/tests/data/bzr-handle-patch.desktop",
+                  "application://" BUILDDIR "/tests/data/no-icon.desktop",
+                  "application://" BUILDDIR "/tests/data/ubuntuone-installer.desktop",
+                  "application://" BUILDDIR "/tests/data/ubuntu-software-center.desktop",
+                  "application://" BUILDDIR "/tests/data/update-manager.desktop" };
+  }
+
   FavoriteList const& GetFavorites()
   {
     return fav_list_;
-  };
+  }
 
-  void AddFavorite(std::string const& icon_uri, int position) {}
-  void RemoveFavorite(std::string const& icon_uri) {}
-  void MoveFavorite(std::string const& icon_uri, int position) {}
-  bool IsFavorite(std::string const& icon_uri) const { return false; }
-  int FavoritePosition(std::string const& icon_uri) const { return -1; }
-  void SetFavorites(FavoriteList const& icon_uris) {}
+  void AddFavorite(std::string const& icon_uri, int position)
+  {
+    if (!IsValidFavoriteUri(icon_uri))
+      return;
+
+    if (position < 0)
+      fav_list_.push_back(icon_uri);
+    else
+    {
+      auto it = fav_list_.begin();
+      std::advance(it, position);
+      fav_list_.insert(it, icon_uri);
+    }
+  }
+
+  void RemoveFavorite(std::string const& icon_uri)
+  {
+    fav_list_.remove(icon_uri);
+  }
+
+  void MoveFavorite(std::string const& icon_uri, int position)
+  {
+    RemoveFavorite(icon_uri);
+    AddFavorite(icon_uri, position);
+  }
+
+  bool IsFavorite(std::string const& icon_uri) const
+  {
+    return std::find(fav_list_.begin(), fav_list_.end(), icon_uri) != fav_list_.end();
+  }
+
+  int FavoritePosition(std::string const& icon_uri) const
+  {
+    auto it = std::find(fav_list_.begin(), fav_list_.end(), icon_uri);
+
+    if (it != fav_list_.end())
+      return std::distance(fav_list_.begin(), it);
+
+    return -1;
+  }
+
+  void SetFavorites(FavoriteList const& icon_uris)
+  {
+    fav_list_ = icon_uris;
+  }
 
 private:
   FavoriteList fav_list_;
