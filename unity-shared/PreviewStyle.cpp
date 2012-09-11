@@ -224,7 +224,7 @@ int Style::GetMusicDurationWidth() const
 
 int Style::GetActionButtonHeight() const
 {
-  return 36;
+  return 34;
 }
 
 int Style::GetActionButtonMaximumWidth() const
