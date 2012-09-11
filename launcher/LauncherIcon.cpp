@@ -90,7 +90,7 @@ LauncherIcon::LauncherIcon(IconType type)
   , _saved_center(max_num_monitors)
   , _allow_quicklist_to_show(true)
 {
-  for (unsigned i = 0; i < unsigned(Quirk::LAST); i++)
+  for (unsigned i = 0; i < unsigned(Quirk::LAST); ++i)
   {
     _quirks[i] = false;
     _quirk_times[i].tv_sec = 0;
