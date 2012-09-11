@@ -63,30 +63,24 @@ public:
 
 namespace launcher
 {
-class TestLauncherController : public testing::Test
+struct TestLauncherController : public testing::Test
 {
-public:
   virtual void SetUp()
   {
     lc.multiple_launchers = true;
   }
 
 protected:
-  ui::EdgeBarrierController &GetBarrierController()
+  struct MockLauncherController : Controller
   {
-    return lc.pimpl->edge_barriers_;
-  }
-
-  LauncherModel::Ptr GetLauncherModel()
-  {
-    return lc.pimpl->model_;
-  }
+    Controller::Impl* Impl() const { return pimpl.get(); }
+  };
 
   MockUScreen uscreen;
   Settings settings;
   panel::Style panel_style;
   MockFavoriteStore favorite_store;
-  Controller lc;
+  MockLauncherController lc;
 };
 }
 
@@ -186,7 +180,7 @@ TEST_F(TestLauncherController, MultiMonitorEdgeBarrierSubscriptions)
   uscreen.SetupFakeMultiMonitor();
 
   for (int i = 0; i < max_num_monitors; ++i)
-    ASSERT_EQ(GetBarrierController().GetSubscriber(i), lc.launchers()[i].GetPointer());
+    ASSERT_EQ(lc.Impl()->edge_barriers_.GetSubscriber(i), lc.launchers()[i].GetPointer());
 }
 
 TEST_F(TestLauncherController, SingleMonitorEdgeBarrierSubscriptionsUpdates)
@@ -202,11 +196,11 @@ TEST_F(TestLauncherController, SingleMonitorEdgeBarrierSubscriptionsUpdates)
     {
       if (j == i)
       {
-        ASSERT_EQ(GetBarrierController().GetSubscriber(j), &lc.launcher());
+        ASSERT_EQ(lc.Impl()->edge_barriers_.GetSubscriber(j), &lc.launcher());
       }
       else
       {
-        ASSERT_EQ(GetBarrierController().GetSubscriber(j), nullptr);
+        ASSERT_EQ(lc.Impl()->edge_barriers_.GetSubscriber(j), nullptr);
       }
     }
   }
@@ -220,7 +214,7 @@ TEST_F(TestLauncherController, OnlyUnstickIconOnFavoriteRemoval)
 
   auto bamf_app = bamf_matcher_get_application_for_desktop_file(matcher, USC_DESKTOP.c_str(), TRUE);
   MockBamfLauncherIcon *bamf_icon = new MockBamfLauncherIcon(bamf_app);
-  GetLauncherModel()->AddIcon(AbstractLauncherIcon::Ptr(bamf_icon));
+  lc.Impl()->model_->AddIcon(AbstractLauncherIcon::Ptr(bamf_icon));
 
   EXPECT_CALL(*bamf_icon, UnStick());
   EXPECT_CALL(*bamf_icon, Quit()).Times(0);
