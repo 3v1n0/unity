@@ -125,7 +125,7 @@ void Controller::SetupHudView()
 int Controller::GetIdealMonitor()
 {
   int ideal_monitor;
-  if (visible_)
+  if (window_->IsVisible())
     ideal_monitor = monitor_index_;
   else
     ideal_monitor = UScreen::GetDefault()->GetMonitorWithMouse();
