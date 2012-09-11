@@ -36,6 +36,11 @@ public:
   int FavoritePosition(std::string const& icon_uri) const { return -1; }
   void SetFavorites(FavoriteList const& icon_uris) {}
 
+  std::string ParseFavoriteFromUri(std::string const& uri) const
+  {
+    return FavoriteStore::ParseFavoriteFromUri(uri);
+  }
+
 private:
   FavoriteList fav_list_;
 };
@@ -74,6 +79,10 @@ TEST_F(TestFavoriteStore, IsValidFavoriteUri)
   EXPECT_TRUE(FavoriteStore::IsValidFavoriteUri("device://uuid"));
   EXPECT_TRUE(FavoriteStore::IsValidFavoriteUri("file:///path/to/desktop_file.desktop"));
   EXPECT_TRUE(FavoriteStore::IsValidFavoriteUri("application://desktop_file.desktop"));
+  EXPECT_TRUE(FavoriteStore::IsValidFavoriteUri("device://a"));
+  EXPECT_TRUE(FavoriteStore::IsValidFavoriteUri("unity://b"));
+  EXPECT_TRUE(FavoriteStore::IsValidFavoriteUri("application://c.desktop"));
 }
+
 
 }

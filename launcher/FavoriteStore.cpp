@@ -89,7 +89,6 @@ bool FavoriteStore::IsValidFavoriteUri(std::string const& uri)
 
 std::string FavoriteStore::ParseFavoriteFromUri(std::string const& uri) const
 {
-
   if (uri.empty())
     return "";
 
