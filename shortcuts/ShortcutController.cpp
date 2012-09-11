@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Andrea Azzarone <azzaronea@gmail.com>
+ * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
 #include "ShortcutController.h"
@@ -31,8 +31,10 @@ const unsigned int SUPER_TAP_DURATION = 650;
 const unsigned int FADE_DURATION = 100;
 }
 
-Controller::Controller(std::list<AbstractHint::Ptr> const& hints)
+Controller::Controller(std::list<AbstractHint::Ptr> const& hints,
+                       BaseWindowRaiser::Ptr const& base_window_raiser)
   : model_(std::make_shared<Model>(hints))
+  , base_window_raiser_(base_window_raiser)
   , visible_(false)
   , enabled_(true)
   , bg_color_(0.0, 0.0, 0.0, 0.5)
@@ -115,7 +117,7 @@ bool Controller::OnShowTimer()
     return false;
 
   EnsureView();
-  view_window_->PushToFront();
+  base_window_raiser_->Raise(view_window_);
 
   nux::Geometry geo;
   if (!view_->GetBaseGeometry(geo))

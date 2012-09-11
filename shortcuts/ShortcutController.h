@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Andrea Azzarone <azzaronea@gmail.com>
+ * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
 #ifndef UNITYSHELL_SHORTCUT_CONTROLLER_H
@@ -28,10 +28,11 @@
 #include <UnityCore/Variant.h>
 #include <UnityCore/GLibSource.h>
 
-#include "unity-shared/Animator.h"
-#include "unity-shared/Introspectable.h"
+#include "BaseWindowRaiser.h"
 #include "ShortcutModel.h"
 #include "ShortcutView.h"
+#include "unity-shared/Animator.h"
+#include "unity-shared/Introspectable.h"
 #include "unity-shared/UBusWrapper.h"
 
 namespace unity
@@ -44,7 +45,8 @@ class Controller : public debug::Introspectable
 public:
   typedef std::shared_ptr<Controller> Ptr;
 
-  Controller(std::list<AbstractHint::Ptr> const& hints);
+  Controller(std::list<AbstractHint::Ptr> const& hints,
+             BaseWindowRaiser::Ptr const& raiser);
 
   bool Show();
   void Hide();
@@ -72,6 +74,7 @@ private:
 
   View::Ptr view_;
   Model::Ptr model_;
+  BaseWindowRaiser::Ptr base_window_raiser_;
 
   nux::Geometry workarea_;
   nux::ObjectPtr<nux::BaseWindow> view_window_;

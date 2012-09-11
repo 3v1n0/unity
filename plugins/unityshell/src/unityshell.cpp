@@ -25,6 +25,7 @@
 #include <Nux/BaseWindow.h>
 #include <Nux/WindowCompositor.h>
 
+#include "BaseWindowRaiserImp.h"
 #include "IconRenderer.h"
 #include "Launcher.h"
 #include "LauncherIcon.h"
@@ -2960,7 +2961,8 @@ void UnityScreen::initLauncher()
 
   // Setup Shortcut Hint
   InitHints();
-  shortcut_controller_ = std::make_shared<shortcut::Controller>(hints_);
+  auto base_window_raiser_ = std::make_shared<shortcut::BaseWindowRaiserImp>();
+  shortcut_controller_ = std::make_shared<shortcut::Controller>(hints_, base_window_raiser_);
   AddChild(shortcut_controller_.get());
 
   AddChild(dash_controller_.get());
