@@ -41,7 +41,7 @@ nux::logging::Logger logger("unity.dash.controller");
 const unsigned int PRELOAD_TIMEOUT_LENGTH = 40;
 
 const std::string DBUS_PATH = "/com/canonical/Unity/Dash";
-const std::string DBUS_INTROSPECTION =
+const std::string DBUS_INTROSPECTION =\
   "<node>"
   "  <interface name='com.canonical.Unity.Dash'>"
   ""
@@ -64,6 +64,7 @@ Controller::Controller()
   , view_(nullptr)
   , ensure_timeout_(PRELOAD_TIMEOUT_LENGTH)
   , timeline_animator_(90)
+  , dbus_connect_cancellable_(g_cancellable_new())
 {
   SetupRelayoutCallbacks();
   RegisterUBusInterests();
@@ -86,7 +87,12 @@ Controller::Controller()
   auto spread_cb = sigc::bind(sigc::mem_fun(this, &Controller::HideDash), true);
   PluginAdapter::Default()->initiate_spread.connect(spread_cb);
 
-  g_bus_get (G_BUS_TYPE_SESSION, nullptr, OnBusAcquired, this);
+  g_bus_get (G_BUS_TYPE_SESSION, dbus_connect_cancellable_, OnBusAcquired, this);
+}
+
+Controller::~Controller()
+{
+  g_cancellable_cancel(dbus_connect_cancellable_);
 }
 
 void Controller::SetupWindow()

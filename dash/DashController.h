@@ -45,6 +45,7 @@ public:
   typedef std::shared_ptr<Controller> Ptr;
 
   Controller();
+  ~Controller();
 
   nux::BaseWindow* window() const;
 
@@ -107,6 +108,7 @@ private:
   Animator timeline_animator_;
   UBusManager ubus_manager_;
   unsigned int dbus_owner_;
+  glib::Object<GCancellable> dbus_connect_cancellable_;
   static GDBusInterfaceVTable interface_vtable;
 };
 
