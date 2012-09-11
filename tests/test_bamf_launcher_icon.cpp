@@ -140,6 +140,7 @@ TEST_F(TestBamfLauncherIcon, Unstick)
 TEST_F(TestBamfLauncherIcon, RemoteUri)
 {
   EXPECT_EQ(usc_icon->RemoteUri(), FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(USC_DESKTOP));
+  EXPECT_TRUE(empty_app->RemoteUri().empty());
 }
 
 }
