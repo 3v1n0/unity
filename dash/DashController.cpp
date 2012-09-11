@@ -20,6 +20,7 @@
 
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
+#include <UnityCore/GLibWrapper.h>
 
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/PanelStyle.h"
@@ -39,7 +40,6 @@ namespace
 nux::logging::Logger logger("unity.dash.controller");
 const unsigned int PRELOAD_TIMEOUT_LENGTH = 40;
 
-const std::string DBUS_NAME = "com.canonical.Unity.Dash";
 const std::string DBUS_PATH = "/com/canonical/Unity/Dash";
 const std::string DBUS_INTROSPECTION =
   "<node>"
@@ -86,13 +86,7 @@ Controller::Controller()
   auto spread_cb = sigc::bind(sigc::mem_fun(this, &Controller::HideDash), true);
   PluginAdapter::Default()->initiate_spread.connect(spread_cb);
 
-  dbus_owner_ = g_bus_own_name(G_BUS_TYPE_SESSION, DBUS_NAME.c_str(), G_BUS_NAME_OWNER_FLAGS_NONE,
-                               OnBusAcquired, nullptr, nullptr, this, nullptr);
-}
-
-Controller::~Controller()
-{
-  g_bus_unown_name(dbus_owner_);
+  g_bus_get (G_BUS_TYPE_SESSION, nullptr, OnBusAcquired, this);
 }
 
 void Controller::SetupWindow()
@@ -395,27 +389,37 @@ void Controller::AddProperties(GVariantBuilder* builder)
                                   .add("monitor", monitor_);
 }
 
-void Controller::OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer user_data)
+void Controller::OnBusAcquired(GObject *obj, GAsyncResult *result, gpointer user_data)
 {
-  GDBusNodeInfo* introspection_data = g_dbus_node_info_new_for_xml(DBUS_INTROSPECTION.c_str(), nullptr);
-  unsigned int reg_id;
+  glib::Error error;
+  glib::Object<GDBusConnection> connection(g_bus_get_finish (result, &error));
 
-  if (!introspection_data)
+  if (!connection || error)
   {
-    LOG_WARNING(logger) << "No introspection data loaded.";
-    return;
+    LOG_WARNING(logger) << "Failed to connect to DBus:" << error;
   }
-
-  reg_id = g_dbus_connection_register_object(connection, DBUS_PATH.c_str(),
-                                             introspection_data->interfaces[0],
-                                             &interface_vtable, user_data,
-                                             nullptr, nullptr);
-  if (!reg_id)
+  else
   {
-    LOG_WARNING(logger) << "Object registration failed. Dash DBus interface not available.";
-  }
+    GDBusNodeInfo* introspection_data = g_dbus_node_info_new_for_xml(DBUS_INTROSPECTION.c_str(), nullptr);
+    unsigned int reg_id;
 
-  g_dbus_node_info_unref(introspection_data);
+    if (!introspection_data)
+    {
+      LOG_WARNING(logger) << "No introspection data loaded.";
+      return;
+    }
+
+    reg_id = g_dbus_connection_register_object(connection, DBUS_PATH.c_str(),
+                                               introspection_data->interfaces[0],
+                                               &interface_vtable, user_data,
+                                               nullptr, nullptr);
+    if (!reg_id)
+    {
+      LOG_WARNING(logger) << "Object registration failed. Dash DBus interface not available.";
+    }
+    
+    g_dbus_node_info_unref(introspection_data);
+  }
 }
 
 void Controller::OnDBusMethodCall(GDBusConnection* connection, const gchar* sender,

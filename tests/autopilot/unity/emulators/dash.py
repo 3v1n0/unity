@@ -160,7 +160,7 @@ class DashController(UnityIntrospectionObject):
 
     def hide_dash_via_dbus(self):
         """ Emulate a DBus call for dash hiding  """
-        dash_object = session_bus.get_object('com.canonical.Unity.Dash',
+        dash_object = session_bus.get_object('com.canonical.Unity',
                                              '/com/canonical/Unity/Dash')
         dash_iface = dbus.Interface(dash_object, 'com.canonical.Unity.Dash')
         dash_iface.HideDash()

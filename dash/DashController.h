@@ -45,7 +45,6 @@ public:
   typedef std::shared_ptr<Controller> Ptr;
 
   Controller();
-  ~Controller();
 
   nux::BaseWindow* window() const;
 
@@ -85,7 +84,7 @@ private:
   void StartShowHideTimeline();
   void OnViewShowHideFrame(double progress);
 
-  static void OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer user_data);
+  static void OnBusAcquired(GObject *obj, GAsyncResult *result, gpointer user_data);
   static void OnDBusMethodCall(GDBusConnection* connection, const gchar* sender,
                                const gchar* object_path, const gchar* interface_name,
                                const gchar* method_name, GVariant* parameters,
