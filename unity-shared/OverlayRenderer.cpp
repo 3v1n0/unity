@@ -532,9 +532,12 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
                         larger_content_geo.width, larger_content_geo.height,
                         bg_shine_texture_, texxform_absolute_bg, nux::color::White);
 
+  gfx_context.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
   nux::TexCoordXForm refine_texxform;
-  gfx_context.QRP_1Tex(larger_content_geo.x, larger_content_geo.y,
-                       larger_content_geo.width, larger_content_geo.height,
+  gfx_context.QRP_1Tex(larger_content_geo.x + larger_content_geo.width - bg_refine_tex_->GetWidth(), 
+                       larger_content_geo.y,
+                       bg_refine_tex_->GetWidth(), 
+                       bg_refine_tex_->GetHeight(),
                        bg_refine_tex_->GetDeviceTexture(),
                        refine_texxform,
                        nux::color::White
@@ -883,7 +886,7 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
 
   nux::Geometry refine_geo = larger_content_geo;
   
-  refine_geo.x = larger_content_geo.width - bg_refine_tex_->GetWidth();
+  refine_geo.x += larger_content_geo.width - bg_refine_tex_->GetWidth();
   refine_geo.width = bg_refine_tex_->GetWidth();
   refine_geo.height = bg_refine_tex_->GetHeight();
 
