@@ -48,8 +48,9 @@ TEST_F(TestLauncherIcon, Construction)
 {
   EXPECT_EQ(icon.GetIconType(), AbstractLauncherIcon::IconType::APPLICATION);
   EXPECT_EQ(icon.position(), AbstractLauncherIcon::Position::FLOATING);
-  EXPECT_FALSE(icon.IsSticky());
   EXPECT_EQ(icon.SortPriority(), AbstractLauncherIcon::DefaultPriority(AbstractLauncherIcon::IconType::APPLICATION));
+  EXPECT_FALSE(icon.IsSticky());
+  EXPECT_FALSE(icon.IsVisible());
 
   for (unsigned i = 0; i < unsigned(AbstractLauncherIcon::Quirk::LAST); ++i)
     ASSERT_FALSE(icon.GetQuirk(static_cast<AbstractLauncherIcon::Quirk>(i)));
@@ -58,11 +59,55 @@ TEST_F(TestLauncherIcon, Construction)
 TEST_F(TestLauncherIcon, Visibility)
 {
   ASSERT_FALSE(icon.GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
-  EXPECT_FALSE(icon.IsVisible());
+  ASSERT_FALSE(icon.IsVisible());
 
   icon.SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, true);
   ASSERT_TRUE(icon.GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
   EXPECT_TRUE(icon.IsVisible());
+
+  icon.SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, false);
+  ASSERT_FALSE(icon.GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
+  EXPECT_FALSE(icon.IsVisible());
+}
+
+TEST_F(TestLauncherIcon, Stick)
+{
+  bool saved = false;
+  icon.position_saved.connect([&saved] {saved = true;});
+
+  icon.Stick(false);
+  EXPECT_TRUE(icon.IsSticky());
+  EXPECT_TRUE(icon.IsVisible());
+  EXPECT_FALSE(saved);
+
+  icon.Stick(true);
+  EXPECT_FALSE(saved);
+}
+
+TEST_F(TestLauncherIcon, StickAndSave)
+{
+  bool saved = false;
+  icon.position_saved.connect([&saved] {saved = true;});
+
+  icon.Stick(true);
+  EXPECT_TRUE(icon.IsSticky());
+  EXPECT_TRUE(icon.IsVisible());
+  EXPECT_TRUE(saved);
+}
+
+TEST_F(TestLauncherIcon, Unstick)
+{
+  bool forgot = false;
+  icon.position_forgot.connect([&forgot] {forgot = true;});
+
+  icon.Stick(false);
+  ASSERT_TRUE(icon.IsSticky());
+  ASSERT_TRUE(icon.IsVisible());
+
+  icon.UnStick();
+  EXPECT_FALSE(icon.IsSticky());
+  EXPECT_FALSE(icon.IsVisible());
+  EXPECT_TRUE(forgot);
 }
 
 }
