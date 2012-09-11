@@ -171,7 +171,7 @@ int Controller::GetIdealMonitor()
 {
   UScreen *uscreen = UScreen::GetDefault();
   int primary_monitor;
-  if (visible_)
+  if (window_->IsVisible())
     primary_monitor = monitor_;
   else if (use_primary)
     primary_monitor = uscreen->GetPrimaryMonitor();
