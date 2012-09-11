@@ -232,6 +232,7 @@ if (GTEST_SRC_DIR AND
                  test_switcher_model.cpp
                  test_texture_cache.cpp
                  test_thumbnail_generator.cpp
+                 test_trash_launcher_icon.cpp
                  test_launcher_minimize_speed.cpp
                  test_volume_imp.cpp
                  test_volume_launcher_icon.cpp
