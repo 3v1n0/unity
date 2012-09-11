@@ -62,6 +62,8 @@ int main(int argc, char** argv)
   nux::WindowThread* wt = nux::CreateGUIThread(TEXT("Unity Switcher"), 300, 800, 0, &ThreadWidgetInit, 0);
 
   wt->Run(NULL);
+  // Make sure the controller is destroyed before the window thread.
+  controller.reset();
   delete wt;
   return 0;
 }
