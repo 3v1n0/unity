@@ -65,10 +65,7 @@ void FavoriteStoreGSettings::Refresh()
 void FavoriteStoreGSettings::FillList()
 {
   favorites_.clear();
-
   std::shared_ptr<gchar*> favs(g_settings_get_strv(settings_, SETTINGS_KEY.c_str()));
-  const std::string proto_separator = "://";
-  const std::string desktop_ext = ".desktop";
 
   for (int i = 0; favs.get()[i]; ++i)
   {
