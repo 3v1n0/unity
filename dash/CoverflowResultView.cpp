@@ -133,7 +133,7 @@ void CoverflowResultItem::Activate(int button)
   int size = model_->Items().size();
 
   ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 
-                    g_variant_new("(iii)", 0, index, size - index));
+                    g_variant_new("(iiii)", 0, 0, index, size - index));
 }
 
 CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
@@ -190,7 +190,7 @@ CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
       int right_results = num_results ? (num_results - current_index) - 1 : 0;
       parent_->UriActivated.emit(GetUriForIndex(current_index), ActivateType::PREVIEW);
       ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 
-                              g_variant_new("(iii)", 0, left_results, right_results));
+                              g_variant_new("(iiii)", 0, 0, left_results, right_results));
     }
 
     g_free(uri);

@@ -79,7 +79,7 @@
 // FIXME - fix the nux focus api so we don't need this
 #define UBUS_RESULT_VIEW_KEYNAV_CHANGED "RESULT_VIEW_KEYNAV_CHANGED"
 
-// for communicating positions to the preview state machine (iii)
+// for communicating positions to the preview state machine (iiii)
 // (split y coord in absolute geometry, results to the left, results to the right)
 #define UBUS_DASH_PREVIEW_INFO_PAYLOAD "DASH_PREVIEW_INFO_PAYLOAD"
 

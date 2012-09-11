@@ -168,6 +168,9 @@ private:
 
   void FadeOutCallBack(float const& fade_out_value);
   void FadeInCallBack(float const& fade_out_value);
+
+  int opening_row_y_;
+  int opening_row_height_;
 };
 
 
