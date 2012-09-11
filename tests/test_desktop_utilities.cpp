@@ -94,65 +94,74 @@ TEST(TestDesktopUtilitiesDesktopID, TestSubdirectory)
 
 TEST(TestDesktopUtilitiesDataDirectories, TestGetUserDataDirectory)
 {
-  const gchar* old_home = g_getenv("XDG_DATA_HOME");
+  const gchar* env = g_getenv("XDG_DATA_HOME");
+  std::string old_home = env ? env : "";
+
   g_setenv("XDG_DATA_HOME", "UnityUserConfig", TRUE);
 
   std::string const& user_data_dir = DesktopUtilities::GetUserDataDirectory();
 
-  g_setenv("XDG_DATA_HOME", old_home, TRUE);
+  g_setenv("XDG_DATA_HOME", old_home.c_str(), TRUE);
 
   EXPECT_THAT(user_data_dir, Eq("UnityUserConfig"));
 }
 
 TEST(TestDesktopUtilitiesDataDirectories, TestGetSystemDataDirectory)
 {
-  const gchar* old_dirs = g_getenv("XDG_DATA_DIRS");
-  g_setenv("XDG_DATA_DIRS", "dir1:dir2::dir3:dir4", TRUE);
+  const gchar* env = g_getenv("XDG_DATA_DIRS");
+  std::string old_dirs = env ? env : "";
+  g_setenv("XDG_DATA_DIRS", "dir1:dir2::dir3:dir4:/usr/share", TRUE);
 
   std::vector<std::string> const& system_dirs = DesktopUtilities::GetSystemDataDirectories();
 
-  g_setenv("XDG_DATA_DIRS", old_dirs, TRUE);
+  g_setenv("XDG_DATA_DIRS", old_dirs.c_str(), TRUE);
 
-  ASSERT_THAT(system_dirs.size(), Eq(4));
+  ASSERT_THAT(system_dirs.size(), Eq(5));
   EXPECT_THAT(system_dirs[0], Eq("dir1"));
   EXPECT_THAT(system_dirs[1], Eq("dir2"));
   EXPECT_THAT(system_dirs[2], Eq("dir3"));
   EXPECT_THAT(system_dirs[3], Eq("dir4"));
+  EXPECT_THAT(system_dirs[4], Eq("/usr/share"));
 }
 
 TEST(TestDesktopUtilitiesDataDirectories, TestGetDataDirectory)
 {
-  const gchar* old_dirs = g_getenv("XDG_DATA_DIRS");
-  g_setenv("XDG_DATA_DIRS", "dir1:dir2::dir3:dir4", TRUE);
-  const gchar* old_home = g_getenv("XDG_DATA_HOME");
+  const gchar* env = g_getenv("XDG_DATA_DIRS");
+  std::string old_dirs = env ? env : "";
+  env = g_getenv("XDG_DATA_HOME");
+  std::string old_home = env ? env : "";
+
+  g_setenv("XDG_DATA_DIRS", "dir1:dir2::dir3:dir4:/usr/share", TRUE);
   g_setenv("XDG_DATA_HOME", "UnityUserConfig", TRUE);
 
   std::vector<std::string> const& data_dirs = DesktopUtilities::GetDataDirectories();
 
-  g_setenv("XDG_DATA_DIRS", old_dirs, TRUE);
-  g_setenv("XDG_DATA_HOME", old_home, TRUE);
+  g_setenv("XDG_DATA_DIRS", old_dirs.c_str(), TRUE);
+  g_setenv("XDG_DATA_HOME", old_home.c_str(), TRUE);
 
-  ASSERT_THAT(data_dirs.size(), Eq(5));
+  ASSERT_THAT(data_dirs.size(), Eq(6));
   EXPECT_THAT(data_dirs[0], Eq("dir1"));
   EXPECT_THAT(data_dirs[1], Eq("dir2"));
   EXPECT_THAT(data_dirs[2], Eq("dir3"));
   EXPECT_THAT(data_dirs[3], Eq("dir4"));
-  EXPECT_THAT(data_dirs[4], Eq("UnityUserConfig"));
+  EXPECT_THAT(data_dirs[4], Eq("/usr/share"));
+  EXPECT_THAT(data_dirs[5], Eq("UnityUserConfig"));
 }
 
-TEST(TestDesktopUtilities, DISABLED_TestGetDesktopPathById)
-// This has been disabled since glib doesn't seem to reload the env variables
-// correctly.
+TEST(TestDesktopUtilities, TestGetDesktopPathById)
 {
-  const gchar* old_dirs = g_getenv("XDG_DATA_DIRS");
+  const gchar* env = g_getenv("XDG_DATA_DIRS");
+  std::string old_dirs = env ? env : "";
+  env = g_getenv("XDG_DATA_HOME");
+  std::string old_home = env ? env : "";
+
   g_setenv("XDG_DATA_DIRS", "/usr/share", TRUE);
-  const gchar* old_home = g_getenv("XDG_DATA_HOME");
   g_setenv("XDG_DATA_HOME", "UnityUserConfig", TRUE);
 
   std::string const& file = DesktopUtilities::GetDesktopPathById("ubuntu-software-center.desktop");
 
-  g_setenv("XDG_DATA_DIRS", old_dirs, TRUE);
-  g_setenv("XDG_DATA_HOME", old_home, TRUE);
+  g_setenv("XDG_DATA_DIRS", old_dirs.c_str(), TRUE);
+  g_setenv("XDG_DATA_HOME", old_dirs.c_str(), TRUE);
 
   EXPECT_EQ(file, "/usr/share/applications/ubuntu-software-center.desktop");
 }
