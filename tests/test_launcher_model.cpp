@@ -297,6 +297,36 @@ TEST_F(TestLauncherModel, ReorderSmartWithSimilarPriority)
   EXPECT_EQ(icon3, *it);
 }
 
+TEST_F(TestLauncherModel, ReorderSmartManyIconsWithSimilarPriority)
+{
+  AbstractLauncherIcon::Ptr icon5(new MockLauncherIcon);
+  AbstractLauncherIcon::Ptr icon6(new MockLauncherIcon);
+  icon1->SetSortPriority(0);
+  icon2->SetSortPriority(0);
+  icon3->SetSortPriority(1);
+  icon4->SetSortPriority(1);
+  icon5->SetSortPriority(1);
+  icon6->SetSortPriority(2);
+
+  model.AddIcon(icon1);
+  model.AddIcon(icon2);
+  model.AddIcon(icon3);
+  model.AddIcon(icon4);
+  model.AddIcon(icon5);
+  model.AddIcon(icon6);
+
+  model.ReorderSmart(icon6, icon4, false);
+
+  LauncherModel::iterator it;
+  it = model.begin();
+
+  EXPECT_EQ(icon1, *it); it++;
+  EXPECT_EQ(icon2, *it); it++;
+  EXPECT_EQ(icon3, *it); it++;
+  EXPECT_EQ(icon6, *it); it++;
+  EXPECT_EQ(icon4, *it); it++;
+  EXPECT_EQ(icon5, *it);
+}
 
 TEST_F(TestLauncherModel, OrderByPosition)
 {
