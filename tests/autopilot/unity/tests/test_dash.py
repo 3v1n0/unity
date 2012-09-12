@@ -107,22 +107,6 @@ class DashRevealTests(DashTestCase):
         self.dash.reveal_application_lens()
         self.assertThat(self.dash.active_lens, Eventually(Equals('applications.lens')))
 
-    def test_dash_stays_on_same_monitor(self):
-        """If the dash is opened, then the mouse is moved to another monitor and
-        the keyboard is used. The Dash must not move to that monitor.
-        """
-
-        if self.screen_geo.get_num_monitors() < 2:
-          self.skip ("This test must be ran with more then 1 monitor.")
-
-        self.dash.ensure_visible()
-        self.addCleanup(self.dash.ensure_hidden)
-
-        self.screen_geo.move_mouse_to_monitor(1)
-        self.keyboard.type("abc")
-
-        self.assertThat(self.dash.ideal_monitor, Eventually(Equals(0)))
-
 
 class DashSearchInputTests(DashTestCase):
     """Test features involving input to the dash search"""
@@ -435,8 +419,11 @@ class DashClipboardTests(DashTestCase):
 class DashKeyboardFocusTests(DashTestCase):
     """Tests that keyboard focus works."""
 
+    def assertSearchText(self, text):
+        self.assertThat(self.dash.search_string, Eventually(Equals(text)))
+
     def test_filterbar_expansion_leaves_kb_focus(self):
-        """Expanding or collapsing the filterbar must keave keyboard focus in the
+        """Expanding or collapsinstart_app_windowstart_app_windowg the filterbar must keave keyboard focus in the
         search bar.
         """
         self.dash.reveal_application_lens()
@@ -447,7 +434,19 @@ class DashKeyboardFocusTests(DashTestCase):
         filter_bar.ensure_expanded()
         self.addCleanup(filter_bar.ensure_collapsed)
         self.keyboard.type(" world")
-        self.assertThat(self.dash.search_string, Eventually(Equals("hello world")))
+        self.assertSearchText("hello world")
+
+    def test_keep_focus_on_application_opens(self):
+        """The Dash must keep key focus as well as stay open if an app gets opened from an external source. """
+        
+        self.dash.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
+
+        self.start_app_window("Calculator")
+        sleep(1)
+
+        self.keyboard.type("HasFocus")
+        self.assertSearchText("HasFocus")
 
 
 class DashLensResultsTests(DashTestCase):
@@ -848,19 +847,33 @@ class PreviewNavigateTests(DashTestCase):
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
 
 class DashCrossMonitorsTests(DashTestCase):
-    """Multimonitor dash tests."""
+    """Multi-monitor dash tests."""
 
     def setUp(self):
         super(DashCrossMonitorsTests, self).setUp()
         if self.screen_geo.get_num_monitors() < 2:
-            self.skipTest("This test requires a multimonitor setup")
+            self.skipTest("This test requires more than 1 monitor.")
+
+    def test_dash_stays_on_same_monitor(self):
+        """If the dash is opened, then the mouse is moved to another monitor and
+        the keyboard is used. The Dash must not move to that monitor.
+        """
+        current_monitor = self.dash.ideal_monitor
+
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
+
+        self.screen_geo.move_mouse_to_monitor((current_monitor + 1) % self.screen_geo.get_num_monitors())
+        self.keyboard.type("abc")
+
+        self.assertThat(self.dash.ideal_monitor, Eventually(Equals(current_monitor)))
 
     def test_dash_close_on_cross_monitor_click(self):
-        """Dash must close when clicking on a window in a different screen."""
+        """Dash must close when clicking on a window in a different screen."""  
 
-        prev_monitor = None
-        for monitor in range(0, self.screen_geo.get_num_monitors()-1):
+        self.addCleanup(self.dash.ensure_hidden)
 
+        for monitor in range(self.screen_geo.get_num_monitors()-1):
             self.screen_geo.move_mouse_to_monitor(monitor)
             self.dash.ensure_visible()
 

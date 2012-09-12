@@ -357,22 +357,6 @@ class HudBehaviorTests(HudTestsBase):
 
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
-    def test_hud_stays_on_same_monitor(self):
-        """If the hud is opened, then the mouse is moved to another monitor and
-        the keyboard is used. The hud must not move to that monitor.
-        """
-
-        if self.screen_geo.get_num_monitors() < 2:
-            self.skip ("This test must be ran with more then 1 monitor.")
-
-        self.hud.ensure_visible()
-        self.addCleanup(self.hud.ensure_hidden)
-
-        self.screen_geo.move_mouse_to_monitor(1)
-        self.keyboard.type("abc")
-
-        self.assertThat(self.hud.ideal_monitor, Eventually(Equals(0)))
-
     def test_mouse_changes_selected_hud_button(self):
         """This tests moves the mouse from the top of the screen to the bottom, this must
         change the selected button from 1 to 5.
@@ -407,6 +391,18 @@ class HudBehaviorTests(HudTestsBase):
           self.keyboard.press_and_release('Up')
 
         self.assertThat(self.hud.view.selected_button, Eventually(Equals(1)))
+
+    def test_keep_focus_on_application_opens(self):
+        """The Hud must keep key focus as well as stay open if an app gets opened from an external source. """
+
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
+
+        self.start_app_window("Calculator")
+        sleep(1)
+
+        self.keyboard.type("HasFocus")
+        self.assertSearchText("HasFocus")
 
 
 class HudLauncherInteractionsTests(HudTestsBase):
@@ -661,3 +657,42 @@ class HudAlternativeKeybindingTests(HudTestsBase):
         # Don't use reveal_hud, but be explicit in the keybindings.
         self.keyboard.press_and_release("Ctrl+Alt+h")
         self.assertThat(self.hud.visible, Eventually(Equals(True)))
+
+
+class HudCrossMonitorsTests(HudTestsBase):
+    """Multi-monitor hud tests."""
+
+    def setUp(self):
+        super(HudCrossMonitorsTests, self).setUp()
+        if self.screen_geo.get_num_monitors() < 2:
+            self.skipTest("This test requires more than 1 monitor.")
+
+    def test_hud_stays_on_same_monitor(self):
+        """If the hud is opened, then the mouse is moved to another monitor and
+        the keyboard is used. The hud must not move to that monitor.
+        """
+
+        current_monitor = self.hud.ideal_monitor
+
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
+
+        self.screen_geo.move_mouse_to_monitor((current_monitor + 1) % self.screen_geo.get_num_monitors())
+        self.keyboard.type("abc")
+
+        self.assertThat(self.hud.ideal_monitor, Eventually(Equals(current_monitor)))
+
+    def test_hud_close_on_cross_monitor_click(self):
+        """Hud must close when clicking on a window in a different screen."""
+
+        self.addCleanup(self.hud.ensure_hidden)
+
+        for monitor in range(self.screen_geo.get_num_monitors()-1):
+            self.screen_geo.move_mouse_to_monitor(monitor)
+            self.hud.ensure_visible()
+
+            self.screen_geo.move_mouse_to_monitor(monitor+1)
+            sleep(.5)
+            self.mouse.click()
+            
+            self.assertThat(self.hud.visible, Eventually(Equals(False)))
