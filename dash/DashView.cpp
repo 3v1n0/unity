@@ -1026,18 +1026,14 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
         for (auto tab : tabs)
         {
           if (use_the_next)
-          {
             return tab;
-          }
 
           if (focus_area)
             use_the_next = focus_area->IsChildOf(tab);
         }
 
         for (auto tab : tabs)
-        {
           return tab;
-        }
       }
     }
   }
