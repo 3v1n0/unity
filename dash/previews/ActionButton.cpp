@@ -29,7 +29,7 @@
 
 namespace
 {
-const int kMinButtonHeight = 36;
+const int kMinButtonHeight = 34;
 const int kMinButtonWidth  = 48;
 
 const int icon_size  = 24;
