@@ -79,7 +79,7 @@ public:
 
   int MonitorWithMouse();
 
-  void RegisterIcon(AbstractLauncherIcon::Ptr icon);
+  void RegisterIcon(AbstractLauncherIcon::Ptr icon, int priority = std::numeric_limits<int>::min());
 
   AbstractLauncherIcon::Ptr CreateFavoriteIcon(std::string const& icon_uri);
   AbstractLauncherIcon::Ptr GetFavoriteIcon(std::string const& icon_uri);

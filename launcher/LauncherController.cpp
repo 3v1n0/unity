@@ -272,7 +272,16 @@ Launcher* Controller::Impl::CreateLauncher(int monitor)
 
 void Controller::Impl::OnLauncherAddRequest(std::string const& icon_uri, AbstractLauncherIcon::Ptr icon_before)
 {
-  AbstractLauncherIcon::Ptr const& icon = GetFavoriteIcon(icon_uri);
+  std::string app_uri;
+
+  if (icon_uri.find(FavoriteStore::URI_PREFIX_FILE) == 0)
+  {
+    auto const& desktop_path = icon_uri.substr(FavoriteStore::URI_PREFIX_FILE.length());
+    app_uri = FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(desktop_path);
+  }
+
+  auto const& icon = GetFavoriteIcon(app_uri.empty() ? icon_uri : app_uri);
+
   if (icon)
   {
     icon->Stick(false);
@@ -280,12 +289,7 @@ void Controller::Impl::OnLauncherAddRequest(std::string const& icon_uri, Abstrac
   }
   else
   {
-    AbstractLauncherIcon::Ptr const& result = CreateFavoriteIcon(icon_uri);
-    if (result)
-    {
-      RegisterIcon(result);
-      model_->ReorderAfter(result, icon_before);
-    }
+    RegisterIcon(CreateFavoriteIcon(icon_uri), icon_before->SortPriority());
   }
 
   SaveIconsOrder();
@@ -301,7 +305,7 @@ void Controller::Impl::SaveIconsOrder()
   {
     if (!icon->IsSticky())
     {
-      if (!icon->IsVisible())
+      if (!icon->IsVisible() || icon->IsSpacer())
         continue;
 
       if (!found_first_running_app && icon->GetIconType() == AbstractLauncherIcon::IconType::APPLICATION)
@@ -359,12 +363,7 @@ Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
   {
     // Setting the icon position and adding it to the model, makes the launcher
     // to compute its center
-    int icon_prio = GetLastIconPriority<BamfLauncherIcon>("", true);
-    if (icon_prio) result->SetSortPriority(icon_prio);
-    result->visibility_changed.connect(sigc::mem_fun(this, &Impl::SortAndUpdate));
-    RegisterIcon(result);
-    SortAndUpdate();
-    SaveIconsOrder();
+    RegisterIcon(result, GetLastIconPriority<BamfLauncherIcon>("", true));
 
     // This will ensure that the center of the new icon is set, so that
     // the animation could be done properly.
@@ -599,12 +598,13 @@ void Controller::Impl::UpdateNumWorkspaces(int workspaces)
   }
 }
 
-void Controller::Impl::RegisterIcon(AbstractLauncherIcon::Ptr icon)
+void Controller::Impl::RegisterIcon(AbstractLauncherIcon::Ptr icon, int priority)
 {
-  if (!icon)
+  if (!icon || model_->IconIndex(icon) >= 0)
     return;
 
-  model_->AddIcon(icon);
+  if (priority != std::numeric_limits<int>::min())
+    icon->SetSortPriority(priority);
 
   icon->position_saved.connect([this] {
     // These calls must be done in order: first we save the new sticky icons
@@ -617,6 +617,14 @@ void Controller::Impl::RegisterIcon(AbstractLauncherIcon::Ptr icon)
   icon->position_forgot.connect([this, icon] {
     FavoriteStore::Instance().RemoveFavorite(icon->RemoteUri());
   });
+
+  if (icon->GetIconType() == AbstractLauncherIcon::IconType::APPLICATION)
+  {
+    icon->visibility_changed.connect(sigc::mem_fun(this, &Impl::SortAndUpdate));
+    SortAndUpdate();
+  }
+
+  model_->AddIcon(icon);
 
   std::string const& path = icon->DesktopFile();
 
@@ -633,6 +641,7 @@ template<typename IconType>
 int Controller::Impl::GetLastIconPriority(std::string const& favorite_uri, bool sticky)
 {
   auto const& icons = model_->GetSublist<IconType>();
+  int icon_prio = std::numeric_limits<int>::min();
 
   AbstractLauncherIcon::Ptr last_icon;
 
@@ -653,7 +662,6 @@ int Controller::Impl::GetLastIconPriority(std::string const& favorite_uri, bool 
   //FIXME for sticky apps we should find the last non-sticky, if not found
   // we should use the first non_sticky app value-1
 
-  int icon_prio = 0;
 
   if (last_icon)
   {
@@ -691,18 +699,12 @@ void Controller::Impl::OnViewOpened(BamfMatcher* matcher, BamfView* view)
   }
 
   AbstractLauncherIcon::Ptr icon(new BamfLauncherIcon(app));
-  icon->visibility_changed.connect(sigc::mem_fun(this, &Impl::SortAndUpdate));
-  int app_prio = GetLastIconPriority<BamfLauncherIcon>(local::RUNNING_APPS_URI);
-  if (app_prio) icon->SetSortPriority(app_prio);
-  RegisterIcon(icon);
-  SortAndUpdate();
+  RegisterIcon(icon, GetLastIconPriority<BamfLauncherIcon>(local::RUNNING_APPS_URI));
 }
 
 void Controller::Impl::OnDeviceIconAdded(AbstractLauncherIcon::Ptr icon)
 {
-  int volume_prio = GetLastIconPriority<VolumeLauncherIcon>(local::DEVICES_URI);
-  if (volume_prio) icon->SetSortPriority(volume_prio);
-  RegisterIcon(icon);
+  RegisterIcon(icon, GetLastIconPriority<VolumeLauncherIcon>(local::DEVICES_URI));
 }
 
 AbstractLauncherIcon::Ptr Controller::Impl::CreateFavoriteIcon(std::string const& icon_uri)
@@ -840,8 +842,7 @@ void Controller::Impl::AddRunningApps()
       continue;
 
     AbstractLauncherIcon::Ptr icon(new BamfLauncherIcon(app));
-    icon->SetSortPriority(++sort_priority_);
-    RegisterIcon(icon);
+    RegisterIcon(icon, ++sort_priority_);
   }
 }
 
@@ -851,10 +852,7 @@ void Controller::Impl::AddDevices()
   for (auto const& icon : device_section_.GetIcons())
   {
     if (!icon->IsSticky() && !fav_store.IsFavorite(icon->RemoteUri()))
-    {
-      icon->SetSortPriority(++sort_priority_);
-      RegisterIcon(icon);
-    }
+      RegisterIcon(icon, ++sort_priority_);
   }
 }
 
@@ -880,13 +878,7 @@ void Controller::Impl::SetupIcons()
       continue;
     }
 
-    AbstractLauncherIcon::Ptr const& fav = CreateFavoriteIcon(fav_uri);
-
-    if (fav)
-    {
-      fav->SetSortPriority(++sort_priority_);
-      RegisterIcon(fav);
-    }
+    RegisterIcon(CreateFavoriteIcon(fav_uri), ++sort_priority_);
   }
 
   if (!running_apps_added)
@@ -904,8 +896,6 @@ void Controller::Impl::SetupIcons()
   model_->order_changed.connect(sigc::mem_fun(this, &Impl::SortAndUpdate));
   model_->icon_removed.connect(sigc::mem_fun(this, &Impl::OnIconRemoved));
   model_->saved.connect(sigc::mem_fun(this, &Impl::SaveIconsOrder));
-
-  SortAndUpdate();
 }
 
 void Controller::Impl::SendHomeActivationRequest()
