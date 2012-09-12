@@ -161,11 +161,12 @@ CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
 
   ubus_.RegisterInterest(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, [&] (GVariant* data) {
     int nav_mode = 0;
-    gchar* uri = NULL;
-    gchar* proposed_unique_id = NULL;
+    glib::String uri;
+    glib::String proposed_unique_id;
+
     g_variant_get(data, "(iss)", &nav_mode, &uri, &proposed_unique_id);
    
-    if (std::string(proposed_unique_id) != parent_->unique_id())
+    if (proposed_unique_id.Str() != parent_->unique_id())
       return;
 
     unsigned num_results = coverflow_->model()->Items().size();
@@ -192,10 +193,6 @@ CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
       ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 
                               g_variant_new("(iii)", 0, left_results, right_results));
     }
-
-    g_free(uri);
-    g_free(proposed_unique_id);
-
   });
 }
 
