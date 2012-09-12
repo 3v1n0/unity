@@ -459,6 +459,16 @@ TEST_F(TestLauncherController, RegisterIconApplicationWithDefaultPriority)
   EXPECT_EQ(icon->SortPriority(), pre_priority);
 }
 
+TEST_F(TestLauncherController, RegisterIconTwoTimesDoesNotWork)
+{
+  AbstractLauncherIcon::Ptr icon(new MockLauncherIcon());
+  lc.Impl()->RegisterIcon(icon, std::numeric_limits<int>::min());
+  int pre_registrations = icon->visibility_changed.size();
+
+  lc.Impl()->RegisterIcon(icon, std::numeric_limits<int>::min());
+  EXPECT_EQ(icon->visibility_changed.size(), pre_registrations);
+}
+
 TEST_F(TestLauncherController, RegisterIconDevice)
 {
   AbstractLauncherIcon::Ptr icon(new MockLauncherIcon(AbstractLauncherIcon::IconType::DEVICE));
@@ -469,12 +479,13 @@ TEST_F(TestLauncherController, RegisterIconDevice)
   EXPECT_EQ(pre_priority, icon->SortPriority());
   EXPECT_FALSE(icon->position_saved.empty());
   EXPECT_FALSE(icon->position_forgot.empty());
-  EXPECT_TRUE (icon->visibility_changed.empty());
+  EXPECT_TRUE(icon->visibility_changed.empty());
   EXPECT_NE(lc.Impl()->model_->IconIndex(icon), -1);
 }
 
 TEST_F(TestLauncherController, GetIconByUriDesktop)
 {
+  lc.Impl()->RegisterIcon(lc.Impl()->desktop_icon_);
   std::string icon_uri = FavoriteStore::URI_PREFIX_UNITY + "desktop-icon";
   auto const& fav = lc.Impl()->GetIconByUri(icon_uri);
 
@@ -483,6 +494,7 @@ TEST_F(TestLauncherController, GetIconByUriDesktop)
 
 TEST_F(TestLauncherController, GetIconByUriExpo)
 {
+  lc.Impl()->RegisterIcon(lc.Impl()->expo_icon_);
   std::string icon_uri = FavoriteStore::URI_PREFIX_UNITY + "expo-icon";
   auto const& fav = lc.Impl()->GetIconByUri(icon_uri);
 
