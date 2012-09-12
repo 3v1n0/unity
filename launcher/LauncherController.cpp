@@ -280,7 +280,7 @@ void Controller::Impl::OnLauncherAddRequest(std::string const& icon_uri, Abstrac
     app_uri = FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(desktop_path);
   }
 
-  auto const& icon = GetFavoriteIcon(app_uri.empty() ? icon_uri : app_uri);
+  auto const& icon = GetIconByUri(app_uri.empty() ? icon_uri : app_uri);
 
   if (icon)
   {
@@ -289,7 +289,10 @@ void Controller::Impl::OnLauncherAddRequest(std::string const& icon_uri, Abstrac
   }
   else
   {
-    RegisterIcon(CreateFavoriteIcon(icon_uri), icon_before->SortPriority());
+    if (icon_before)
+      RegisterIcon(CreateFavoriteIcon(icon_uri), icon_before->SortPriority());
+    else
+      RegisterIcon(CreateFavoriteIcon(icon_uri));
   }
 
   SaveIconsOrder();
@@ -305,7 +308,7 @@ void Controller::Impl::SaveIconsOrder()
   {
     if (!icon->IsSticky())
     {
-      if (!icon->IsVisible() || icon->IsSpacer())
+      if (!icon->IsVisible())
         continue;
 
       if (!found_first_running_app && icon->GetIconType() == AbstractLauncherIcon::IconType::APPLICATION)
@@ -473,7 +476,7 @@ void Controller::Impl::OnFavoriteStoreFavoriteAdded(std::string const& entry, st
     }
   }
 
-  AbstractLauncherIcon::Ptr const& fav = GetFavoriteIcon(entry);
+  AbstractLauncherIcon::Ptr const& fav = GetIconByUri(entry);
   if (fav)
   {
     fav->Stick(false);
@@ -509,7 +512,7 @@ void Controller::Impl::OnFavoriteStoreFavoriteRemoved(std::string const& entry)
     return;
   }
 
-  auto const& icon = GetFavoriteIcon(entry);
+  auto const& icon = GetIconByUri(entry);
   if (icon)
   {
     icon->UnStick();
@@ -553,7 +556,7 @@ void Controller::Impl::ResetIconPriorities()
       continue;
     }
 
-    auto const& icon = GetFavoriteIcon(fav);
+    auto const& icon = GetIconByUri(fav);
 
     if (icon)
       icon->SetSortPriority(++sort_priority_);
@@ -675,7 +678,7 @@ int Controller::Impl::GetLastIconPriority(std::string const& favorite_uri, bool 
       if (fav == favorite_uri)
         break;
 
-      auto const& icon = GetFavoriteIcon(fav);
+      auto const& icon = GetIconByUri(fav);
 
       if (icon)
         icon_prio = icon->SortPriority();
@@ -788,7 +791,7 @@ AbstractLauncherIcon::Ptr Controller::Impl::CreateFavoriteIcon(std::string const
   return result;
 }
 
-AbstractLauncherIcon::Ptr Controller::Impl::GetFavoriteIcon(std::string const& icon_uri)
+AbstractLauncherIcon::Ptr Controller::Impl::GetIconByUri(std::string const& icon_uri)
 {
   if (icon_uri.empty())
     return AbstractLauncherIcon::Ptr();
