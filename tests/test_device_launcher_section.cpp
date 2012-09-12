@@ -20,18 +20,20 @@
  *
  */
 
+#ifndef TEST_MOCK_DEVICES_H
+#define TEST_MOCK_DEVICES_H
+
 #include <gmock/gmock.h>
-using namespace testing;
 
-#include "DeviceLauncherSection.h"
 #include "DevicesSettings.h"
-#include "AbstractVolumeMonitorWrapper.h"
-using namespace unity;
-using namespace unity::launcher;
-
-#include "gmockvolume.h"
+#include "test_mock_devices.h"
 #include "test_utils.h"
 
+using namespace testing;
+using namespace unity::launcher;
+
+namespace unity
+{
 namespace
 {
 
@@ -50,41 +52,8 @@ public:
   bool icon_added;
 };
 
-class MockVolumeMonitorWrapper : public AbstractVolumeMonitorWrapper
+struct TestDeviceLauncherSection : Test
 {
-public:
-  typedef std::shared_ptr<MockVolumeMonitorWrapper> Ptr;
-
-  MockVolumeMonitorWrapper()
-    : volume1(G_VOLUME(g_mock_volume_new()))
-    , volume2(G_VOLUME(g_mock_volume_new()))
-  {
-  }
-
-  VolumeList GetVolumes()
-  {
-    VolumeList ret;
-
-    ret.push_back(volume1);
-    ret.push_back(volume2);
-
-    return ret;
-  }
-
-  glib::Object<GVolume> volume1;
-  glib::Object<GVolume> volume2;
-};
-
-class MockDevicesSettings : public DevicesSettings
-{
-  MOCK_CONST_METHOD1(IsABlacklistedDevice, bool(std::string const& uuid));
-  MOCK_METHOD1(TryToBlacklist, void(std::string const& uuid));
-  MOCK_METHOD1(TryToUnblacklist, void(std::string const& uuid));
-};
-
-class TestDeviceLauncherSection : public Test
-{
-public:
   TestDeviceLauncherSection()
     : monitor_(new MockVolumeMonitorWrapper)
     , devices_settings_(new MockDevicesSettings)
@@ -95,7 +64,6 @@ public:
   DevicesSettings::Ptr devices_settings_;
   DeviceLauncherSection section_;
 };
-
 
 TEST_F(TestDeviceLauncherSection, NoDuplicates)
 {
@@ -117,4 +85,6 @@ TEST_F(TestDeviceLauncherSection, GetIcons)
 }
 
 }
+}
 
+#endif

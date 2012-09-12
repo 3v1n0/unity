@@ -23,8 +23,6 @@
 #include <map>
 #include <memory>
 
-#include <UnityCore/GLibSource.h>
-
 #include "AbstractVolumeMonitorWrapper.h"
 #include "DevicesSettings.h"
 #include "DeviceNotificationDisplay.h"
