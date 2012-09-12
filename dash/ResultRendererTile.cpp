@@ -328,7 +328,7 @@ void ResultRendererTile::IconLoaded(std::string const& texid,
   if (pixbuf && container)
   {
     TextureCache& cache = TextureCache::GetDefault();
-    BaseTexturePtr texture(cache.FindTexture(icon_name, size, size,
+    BaseTexturePtr texture(cache.FindTexture(icon_name, max_width, max_height,
                            sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateTextureCallback), pixbuf)));
 
     BaseTexturePtr texture_prelight(cache.FindTexture("resultview_prelight", style.GetTileIconHightlightWidth(), style.GetTileIconHightlightHeight(),  sigc::mem_fun(this, &ResultRendererTile::DrawHighlight)));
