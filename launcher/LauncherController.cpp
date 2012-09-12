@@ -163,9 +163,9 @@ Controller::Impl::~Impl()
   // Since the launchers are in a window which adds a reference to the
   // launcher, we need to make sure the base windows are unreferenced
   // otherwise the launchers never die.
-  for (auto launcher_ptr : launchers)
+  for (auto const& launcher_ptr : launchers)
   {
-    if (launcher_ptr.IsValid())
+    if (launcher_ptr)
       launcher_ptr->GetParent()->UnReference();
   }
 

@@ -25,6 +25,8 @@
 #include "LauncherControllerPrivate.h"
 #include "PanelStyle.h"
 #include "UnitySettings.h"
+#include "test_utils.h"
+#include "test_mock_devices.h"
 
 using namespace unity::launcher;
 using namespace testing;
@@ -36,9 +38,7 @@ struct MockFavoriteStore : FavoriteStore
 {
   MockFavoriteStore()
   {
-    fav_list_ = { "application://" BUILDDIR "/tests/data/bzr-handle-patch.desktop",
-                  "application://" BUILDDIR "/tests/data/no-icon.desktop",
-                  "application://" BUILDDIR "/tests/data/ubuntuone-installer.desktop",
+    fav_list_ = { "application://" BUILDDIR "/tests/data/ubuntuone-installer.desktop",
                   "application://" BUILDDIR "/tests/data/ubuntu-software-center.desktop",
                   "application://" BUILDDIR "/tests/data/update-manager.desktop" };
   }
@@ -327,6 +327,63 @@ TEST_F(TestLauncherController, DisabledStrutsAddingNewLaunchersOnNeverHide)
 
   for (int i = 0; i < max_num_monitors; ++i)
     ASSERT_FALSE(lc.launchers()[i]->GetParent()->InputWindowStrutsEnabled());
+}
+
+TEST_F(TestLauncherController, CreateFavoriteInvalid)
+{
+  auto const& fav = lc.Impl()->CreateFavoriteIcon("InvalidUri");
+
+  EXPECT_FALSE(fav.IsValid());
+}
+
+TEST_F(TestLauncherController, CreateFavoriteDesktopFile)
+{
+  std::string desktop_file = BUILDDIR "/tests/data/bzr-handle-patch.desktop";
+  std::string icon_uri = FavoriteStore::URI_PREFIX_APP + desktop_file;
+  auto const& fav = lc.Impl()->CreateFavoriteIcon(icon_uri);
+
+  ASSERT_TRUE(fav.IsValid());
+  EXPECT_EQ(fav->GetIconType(), AbstractLauncherIcon::IconType::APPLICATION);
+  EXPECT_EQ(fav->DesktopFile(), desktop_file);
+  EXPECT_EQ(fav->RemoteUri(), icon_uri);
+  EXPECT_TRUE(fav->IsSticky());
+  EXPECT_NE(dynamic_cast<BamfLauncherIcon*>(fav.GetPointer()), nullptr);
+}
+
+TEST_F(TestLauncherController, CreateFavoriteInvalidDesktopFile)
+{
+  // This desktop file has already been added as favorite, so it is invalid
+  std::string desktop_file = *(favorite_store.GetFavorites().begin());
+  std::string icon_uri = FavoriteStore::URI_PREFIX_APP + desktop_file;
+  auto const& fav = lc.Impl()->CreateFavoriteIcon(icon_uri);
+
+  EXPECT_FALSE(fav.IsValid());
+}
+
+TEST_F(TestLauncherController, CreateFavoriteDevice)
+{
+  lc.Impl()->device_section_ = MockDeviceLauncherSection();
+  auto const& icons = lc.Impl()->device_section_.GetIcons();
+  auto const& device_icon = *(icons.begin());
+
+  ASSERT_TRUE(device_icon.IsValid());
+  ASSERT_FALSE(device_icon->IsSticky());
+
+  auto const& fav = lc.Impl()->CreateFavoriteIcon(device_icon->RemoteUri());
+
+  ASSERT_TRUE(fav.IsValid());
+  EXPECT_EQ(fav, device_icon);
+  EXPECT_EQ(fav->GetIconType(), AbstractLauncherIcon::IconType::DEVICE);
+  EXPECT_EQ(fav->RemoteUri(), device_icon->RemoteUri());
+  EXPECT_TRUE(fav->IsSticky());
+  EXPECT_NE(dynamic_cast<VolumeLauncherIcon*>(fav.GetPointer()), nullptr);
+}
+
+TEST_F(TestLauncherController, CreateFavoriteInvalidDevice)
+{
+  auto const& fav = lc.Impl()->CreateFavoriteIcon(FavoriteStore::URI_PREFIX_APP + "invalid-uuid");
+
+  EXPECT_FALSE(fav.IsValid());
 }
 
 }
