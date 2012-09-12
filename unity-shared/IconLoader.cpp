@@ -219,9 +219,11 @@ private:
 
         no_cache = true;
         auto helper_slot = sigc::bind(sigc::mem_fun(this, &IconLoaderTask::BaseIconLoaded), glib::object_cast<UnityProtocolAnnotatedIcon>(icon));
+        int base_icon_width = max_width > 0 ? max_width - RIBBON_PADDING * 2 : -1;
+        int base_icon_height = base_icon_width < 0 ? max_height - RIBBON_PADDING *2 : max_height;
         helper_handle = impl->LoadFromGIconString(gicon_string.Str(),
-                                                  -1,
-                                                  size - RIBBON_PADDING * 2,
+                                                  base_icon_width,
+                                                  base_icon_height,
                                                   helper_slot);
 
         return false;
