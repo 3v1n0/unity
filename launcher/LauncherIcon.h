@@ -108,11 +108,6 @@ public:
 
   const bool WindowVisibleOnViewport();
 
-  virtual bool IsSpacer()
-  {
-    return false;
-  };
-
   float PresentUrgency();
 
   float GetProgress();

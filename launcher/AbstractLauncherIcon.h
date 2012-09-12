@@ -93,6 +93,7 @@ public:
     DESKTOP,
     PLACE,
     DEVICE,
+    SPACER,
     TRASH,
     END
   };
@@ -165,8 +166,6 @@ public:
   virtual const bool WindowVisibleOnMonitor(int monitor) = 0;
 
   virtual const bool WindowVisibleOnViewport() = 0;
-
-  virtual bool IsSpacer() = 0;
 
   virtual float PresentUrgency() = 0;
 

@@ -179,11 +179,6 @@ public:
     return true;
   }
 
-  bool IsSpacer()
-  {
-    return false;
-  }
-
   float PresentUrgency()
   {
     return 0.0f;

@@ -893,8 +893,11 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr icon,
 
     if (GetActionState() == ACTION_DRAG_ICON ||
         (_drag_window && _drag_window->Animating()) ||
-        icon->IsSpacer())
+        icon->GetIconType() == AbstractLauncherIcon::IconType::SPACER)
+    {
       arg.skip = true;
+    }
+
     size_modifier *= DragThresholdProgress(current);
   }
 
@@ -2651,8 +2654,6 @@ void Launcher::ProcessDndLeave()
 
 void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
 {
-  nux::Area* parent = GetToplevel();
-
   if (!_data_checked)
   {
     const std::string uri_list = "text/uri-list";
@@ -2694,7 +2695,7 @@ void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
     }
   }
 
-  SetMousePosition(x - parent->GetGeometry().x, y - parent->GetGeometry().y);
+  SetMousePosition(x - _parent->GetGeometry().x, y - _parent->GetGeometry().y);
 
   if (!IsOverlayOpen() && _mouse_position.x == 0 && _mouse_position.y <= (_parent->GetGeometry().height - _icon_size - 2 * _space_between_icons) && !_drag_edge_touching)
   {
@@ -2731,7 +2732,6 @@ void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
     if (!_dnd_hovered_icon && hovered_icon_is_appropriate)
     {
       _dnd_hovered_icon = new SpacerLauncherIcon(monitor());
-      _dnd_hovered_icon->SetSortPriority(G_MAXINT);
       _model->AddIcon(_dnd_hovered_icon);
       _model->ReorderBefore(_dnd_hovered_icon, hovered_icon, true);
     }
