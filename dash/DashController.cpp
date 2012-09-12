@@ -67,7 +67,7 @@ public:
   void UpdateInputWindowGeometry()
   {
     if (m_input_window)
-      m_input_window->SetGeometry(geo_func_(GetGeometry()));    
+      m_input_window->SetGeometry(geo_func_(GetGeometry()));
   }
 
   void SetGeometry(const nux::Geometry &geo)
@@ -125,7 +125,7 @@ void Controller::SetupWindow()
   window_ = new DashBaseWindow(dash::window_title, [this](nux::Geometry const& geo)
   {
     if (view_)
-      return nux::Geometry(geo.x, geo.y, view_->GetContentGeometry().width, view_->GetContentGeometry().height);
+      return GetInputGeometry();
     return geo;
   });
   window_->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
@@ -481,6 +481,13 @@ void Controller::OnDBusMethodCall(GDBusConnection* connection, const gchar* send
   }
 }
 
+nux::Geometry Controller::GetInputGeometry()
+{
+  EnsureDash();
+  nux::Geometry const& window_geo(window_->GetGeometry());
+  nux::Geometry const& view__content_geo(view_->GetContentGeometry());
+  return nux::Geometry(window_geo.x, window_geo.y, view__content_geo.width, view__content_geo.height);
+}
 
 }
 }

@@ -61,6 +61,7 @@ public:
   void HideDash(bool restore_focus = true);
 
   bool IsVisible() const;
+  nux::Geometry GetInputGeometry();
 
 protected:
   std::string GetName() const;

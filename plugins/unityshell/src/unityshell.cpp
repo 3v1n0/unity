@@ -1423,10 +1423,24 @@ void UnityScreen::handleEvent(XEvent* event)
       if (launcher_controller_->IsOverlayOpen())
       {
         int monitor_with_mouse = UScreen::GetDefault()->GetMonitorWithMouse();
-        if (overlay_monitor_ != monitor_with_mouse)
+        if (dash_controller_->IsVisible())
         {
-          dash_controller_->HideDash(false);
-          hud_controller_->HideHud(false);
+          nux::Geometry geo_dash = dash_controller_->GetInputGeometry();
+
+          if (overlay_monitor_ != monitor_with_mouse ||
+              event->xbutton.x_root > geo_dash.x + geo_dash.width ||
+              event->xbutton.y_root > geo_dash.y + geo_dash.height)
+          {
+            dash_controller_->HideDash(false);
+          }
+        }
+
+        if (hud_controller_->IsVisible())
+        {
+          if (overlay_monitor_ != monitor_with_mouse)
+          {
+             hud_controller_->HideHud(false);
+          }
         }
       }
       break;
