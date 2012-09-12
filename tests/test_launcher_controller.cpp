@@ -23,6 +23,8 @@
 #include "FavoriteStore.h"
 #include "LauncherController.h"
 #include "LauncherControllerPrivate.h"
+#include "ExpoLauncherIcon.h"
+#include "DesktopLauncherIcon.h"
 #include "PanelStyle.h"
 #include "UnitySettings.h"
 #include "test_utils.h"
@@ -42,6 +44,7 @@ struct MockFavoriteStore : FavoriteStore
                   "application://" BUILDDIR "/tests/data/ubuntu-software-center.desktop",
                   "application://" BUILDDIR "/tests/data/update-manager.desktop" };
   }
+
 
   FavoriteList const& GetFavorites()
   {
@@ -384,6 +387,34 @@ TEST_F(TestLauncherController, CreateFavoriteInvalidDevice)
   auto const& fav = lc.Impl()->CreateFavoriteIcon(FavoriteStore::URI_PREFIX_APP + "invalid-uuid");
 
   EXPECT_FALSE(fav.IsValid());
+}
+
+TEST_F(TestLauncherController, CreateFavoriteExpoIcon)
+{
+  lc.Impl()->expo_icon_->UnStick();
+  std::string icon_uri = FavoriteStore::URI_PREFIX_UNITY + "expo-icon";
+  auto const& fav = lc.Impl()->CreateFavoriteIcon(icon_uri);
+
+  ASSERT_TRUE(fav.IsValid());
+  EXPECT_EQ(fav, lc.Impl()->expo_icon_);
+  EXPECT_EQ(fav->GetIconType(), AbstractLauncherIcon::IconType::EXPO);
+  EXPECT_EQ(fav->RemoteUri(), icon_uri);
+  EXPECT_TRUE(fav->IsSticky());
+  EXPECT_NE(dynamic_cast<ExpoLauncherIcon*>(fav.GetPointer()), nullptr);
+}
+
+TEST_F(TestLauncherController, CreateFavoriteDesktopIcon)
+{
+  lc.Impl()->desktop_icon_->UnStick();
+  std::string icon_uri = FavoriteStore::URI_PREFIX_UNITY + "desktop-icon";
+  auto const& fav = lc.Impl()->CreateFavoriteIcon(icon_uri);
+
+  ASSERT_TRUE(fav.IsValid());
+  EXPECT_EQ(fav, lc.Impl()->desktop_icon_);
+  EXPECT_EQ(fav->GetIconType(), AbstractLauncherIcon::IconType::DESKTOP);
+  EXPECT_EQ(fav->RemoteUri(), icon_uri);
+  EXPECT_TRUE(fav->IsSticky());
+  EXPECT_NE(dynamic_cast<DesktopLauncherIcon*>(fav.GetPointer()), nullptr);
 }
 
 }
