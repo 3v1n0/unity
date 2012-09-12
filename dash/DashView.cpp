@@ -145,9 +145,9 @@ void DashView::BuildPreview(Preview::Ptr model)
   {
     preview_container_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
     AddChild(preview_container_.GetPointer());
+    preview_container_->SetParentObject(this);
     preview_container_->Preview(model, previews::Navigation::NONE); // no swipe left or right
     
-    preview_container_->SetParentObject(this);
     preview_container_->SetGeometry(layout_->GetGeometry());
     preview_displaying_ = true;
  
@@ -171,8 +171,6 @@ void DashView::BuildPreview(Preview::Ptr model)
     });
 
     preview_container_->request_close.connect([&] () { ClosePreview(); });
-
-    nux::GetWindowCompositor().SetKeyFocusArea(preview_container_.GetPointer());
   }
   else
   {
@@ -953,6 +951,11 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     direction = KEY_NAV_NONE;
   }
 
+  if (preview_displaying_)
+  {
+    return preview_container_->FindKeyFocusArea(key_symbol, x11_key_code, special_keys_state);
+  }
+
   // We should not do it here, but I really don't want to make DashView
   // focusable and I'm not able to know if ctrl is pressed in
   // DashView::KeyNavIteration.
@@ -1023,14 +1026,18 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
         for (auto tab : tabs)
         {
           if (use_the_next)
+          {
             return tab;
+          }
 
           if (focus_area)
             use_the_next = focus_area->IsChildOf(tab);
         }
 
         for (auto tab : tabs)
+        {
           return tab;
+        }
       }
     }
   }

@@ -44,6 +44,7 @@ class ActionButton;
 namespace previews
 {
 class CoverArt;
+class TabIterator;
 
 class Preview : public nux::View, public debug::Introspectable
 {
@@ -60,13 +61,18 @@ public:
 
   static previews::Preview::Ptr PreviewForModel(dash::Preview::Ptr model);  
 
+  virtual nux::Area* FindKeyFocusArea(unsigned int key_symbol,
+                                      unsigned long x11_key_code,
+                                      unsigned long special_keys_state);
+  virtual nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
+
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {}
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {}
   
   virtual void OnActionActivated(ActionButton* button, std::string const& id);
 
-  virtual void OnNavigateIn() {}
+  virtual void OnNavigateIn();
   virtual void OnNavigateInComplete() {}
   virtual void OnNavigateOut() {}
 
@@ -80,6 +86,7 @@ protected:
 protected:
   dash::Preview::Ptr preview_model_;
   std::list<nux::AbstractButton*> action_buttons_;
+  TabIterator* tab_iterator_;
 
   friend class PreviewContent;
 };

@@ -46,12 +46,14 @@ public:
   ActionButton(std::string const& action_hint, std::string const& label, std::string const& icon_hint, NUX_FILE_LINE_PROTO);
   ~ActionButton();
 
-  sigc::signal<void, ActionButton*, std::string const&> click;
+  sigc::signal<void, ActionButton*, std::string const&> activate;
 
   void SetFont(std::string const& font_hint);
 
-  void Activate();
-  void Deactivate();
+  void Activate() {}
+  void Deactivate() {}
+
+  virtual bool AcceptKeyNavFocus() { return true; }
 
 protected:
   virtual long ComputeContentSize();
