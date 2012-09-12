@@ -55,6 +55,31 @@ const std::string DBUS_INTROSPECTION =\
 GDBusInterfaceVTable Controller::interface_vtable =
   { Controller::OnDBusMethodCall, NULL, NULL};
 
+class DashBaseWindow : public nux::BaseWindow
+{
+public:
+  DashBaseWindow(const char *WindowName, std::function<nux::Geometry (nux::Geometry const&)> geo_func)
+  : BaseWindow(WindowName, NUX_TRACKER_LOCATION)
+  {
+    geo_func_ = geo_func;
+  }
+
+  void UpdateInputWindowGeometry()
+  {
+    if (m_input_window)
+      m_input_window->SetGeometry(geo_func_(GetGeometry()));    
+  }
+
+  void SetGeometry(const nux::Geometry &geo)
+  {
+     Area::SetGeometry(geo);
+     UpdateInputWindowGeometry();
+  }
+
+private:
+  std::function<nux::Geometry (nux::Geometry const&)> geo_func_;
+};
+
 Controller::Controller()
   : launcher_width(64)
   , use_primary(false)
@@ -97,7 +122,12 @@ Controller::~Controller()
 
 void Controller::SetupWindow()
 {
-  window_ = new nux::BaseWindow(dash::window_title);
+  window_ = new DashBaseWindow(dash::window_title, [this](nux::Geometry const& geo)
+  {
+    if (view_)
+      return nux::Geometry(geo.x, geo.y, view_->GetContentGeometry().width, view_->GetContentGeometry().height);
+    return geo;
+  });
   window_->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
   window_->SetConfigureNotifyCallback(&Controller::OnWindowConfigure, this);
   window_->ShowWindow(false);
@@ -122,8 +152,10 @@ void Controller::SetupDashView()
   layout->SetContentDistribution(nux::eStackLeft);
   layout->SetVerticalExternalMargin(0);
   layout->SetHorizontalExternalMargin(0);
-
   window_->SetLayout(layout);
+
+  window_->UpdateInputWindowGeometry();
+
   ubus_manager_.UnregisterInterest(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST);
 }
 
@@ -223,8 +255,8 @@ void Controller::Relayout(GdkScreen*screen)
   EnsureDash();
 
   nux::Geometry geo = GetIdealWindowGeometry();
-  window_->SetGeometry(geo);
   view_->Relayout();
+  window_->SetGeometry(geo);
   panel::Style &panel_style = panel::Style::Instance();
   view_->SetMonitorOffset(launcher_width, panel_style.panel_height);
 }
@@ -291,7 +323,11 @@ void Controller::ShowDash()
   window_->ShowWindow(true);
   window_->PushToFront();
   if (!Settings::Instance().is_standalone) // in standalone mode, we do not need an input window. we are one.
+  {
     window_->EnableInputWindow(true, dash::window_title, true, false);
+    // update the input window geometry. This causes the input window to match the actual size of the dash.
+    window_->UpdateInputWindowGeometry();
+  }
   window_->SetInputFocus();
   window_->CaptureMouseDownAnyWhereElse(true);
   window_->QueueDraw();

@@ -1075,5 +1075,10 @@ nux::Area* DashView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::N
   return (view == nullptr) ? this : view;
 }
 
+nux::Geometry const& DashView::GetContentGeometry() const
+{
+  return content_geo_;  
+}
+
 }
 }

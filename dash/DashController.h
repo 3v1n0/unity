@@ -38,6 +38,7 @@ namespace unity
 {
 namespace dash
 {
+class DashBaseWindow;
 
 class Controller : public unity::debug::Introspectable
 {
@@ -96,7 +97,7 @@ private:
   static void OnWindowConfigure(int width, int height, nux::Geometry& geo, void* data);
 
 private:
-  nux::ObjectPtr<nux::BaseWindow> window_;
+  nux::ObjectPtr<DashBaseWindow> window_;
   int monitor_;
 
   bool visible_;

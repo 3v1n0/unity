@@ -69,6 +69,8 @@ public:
 
   nux::View* default_focus() const;
 
+  nux::Geometry const& GetContentGeometry() const;
+
 protected:
   void ProcessDndEnter();
 
