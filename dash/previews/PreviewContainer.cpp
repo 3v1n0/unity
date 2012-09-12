@@ -62,6 +62,7 @@ public:
   PreviewContent(PreviewContainer*const parent)
   : parent_(parent)
   , progress_(0.0)
+  , curve_progress_(0.0)
   , animating_(false)
   , waiting_preview_(false)
   , rotation_(0.0)
@@ -69,6 +70,11 @@ public:
   , nav_complete_(0)
   , relative_nav_index_(0)
   {
+    OnGeometryChanged.connect([&](nux::Area*, nux::Geometry& geo)
+    {
+      // Need to update the preview geometries when updating the container geo.
+      UpdateAnimationProgress(progress_, curve_progress_);
+    });
     Style& style = previews::Style::Instance();
 
     spin_= style.GetSearchSpinIcon(256);
@@ -98,6 +104,9 @@ public:
 
     if (preview)
     {
+      // the parents layout will not change based on the previews.
+      preview->SetReconfigureParentLayoutOnGeometryChange(false);
+      
       AddChild(preview.GetPointer());
       AddView(preview.GetPointer());
       preview->SetVisible(false);
@@ -123,6 +132,7 @@ public:
   void UpdateAnimationProgress(float progress, float curve_progress)
   {
     progress_ = progress;
+    curve_progress_ = curve_progress;
 
     if (!animating_)
     {
@@ -171,39 +181,43 @@ public:
 
     if (progress >= 1.0)
     {
-      animating_ = false;
-      if (current_preview_)
+      // if we were animating, we need to remove the old preview, and replace it with the new.
+      if (animating_)
       {
-        RemoveChild(current_preview_.GetPointer());
-        RemoveChildObject(current_preview_.GetPointer());
-        current_preview_.Release();
-      }
-      if (swipe_.preview)
-      {
-        if (swipe_.direction == Navigation::RIGHT)
-          relative_nav_index_++;
-        else if (swipe_.direction == Navigation::LEFT)
-          relative_nav_index_--;
-
-        current_preview_ = swipe_.preview;
-        swipe_.preview.Release();
+        animating_ = false;
         if (current_preview_)
-          current_preview_->OnNavigateInComplete();
-      }
+        {
+          RemoveChild(current_preview_.GetPointer());
+          RemoveChildObject(current_preview_.GetPointer());
+          current_preview_.Release();
+        }
+        if (swipe_.preview)
+        {
+          if (swipe_.direction == Navigation::RIGHT)
+            relative_nav_index_++;
+          else if (swipe_.direction == Navigation::LEFT)
+            relative_nav_index_--;
 
-      // another swipe?
-      if (!push_preview_.empty())
-      {
-        progress_ = 0;
-        continue_navigation.emit();
-      }
-      else
-      {
-        end_navigation.emit();
+          current_preview_ = swipe_.preview;
+          swipe_.preview.Release();
+          if (current_preview_)
+            current_preview_->OnNavigateInComplete();
+        } 
+
+        // another swipe?
+        if (!push_preview_.empty())
+        {
+          progress_ = 0;
+          continue_navigation.emit();
+        }
+        else
+        {
+          end_navigation.emit();
+        }
       }
 
       // set the geometry to the whole layout.
-      if (current_preview_ && current_preview_->GetGeometry() != geometry)
+      if (current_preview_)
       {
         current_preview_->SetGeometry(geometry);
       }
@@ -332,6 +346,7 @@ private:
   PreviewSwipe swipe_;
 
   float progress_;
+  float curve_progress_;
   bool animating_;
   // wait animation
   glib::Source::UniquePtr preview_wait_timer_;

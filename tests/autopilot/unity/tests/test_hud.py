@@ -357,9 +357,25 @@ class HudBehaviorTests(HudTestsBase):
 
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
+    def test_hud_stays_on_same_monitor(self):
+        """If the hud is opened, then the mouse is moved to another monitor and
+        the keyboard is used. The hud must not move to that monitor.
+        """
+
+        if self.screen_geo.get_num_monitors() < 2:
+            self.skip ("This test must be ran with more then 1 monitor.")
+
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
+
+        self.screen_geo.move_mouse_to_monitor(1)
+        self.keyboard.type("abc")
+
+        self.assertThat(self.hud.ideal_monitor, Eventually(Equals(0)))
+
     def test_mouse_changes_selected_hud_button(self):
         """This tests moves the mouse from the top of the screen to the bottom, this must
-           change the selected button from 1 to 5.
+        change the selected button from 1 to 5.
         """
 
         self.hud.ensure_visible()
@@ -375,7 +391,7 @@ class HudBehaviorTests(HudTestsBase):
 
     def test_keyboard_steals_focus_from_mouse(self):
         """This tests moves the mouse from the top of the screen to the bottom,
-           then it presses the keyboard up 5 times, this must change the selected button from 5 to 1.
+        then it presses the keyboard up 5 times, this must change the selected button from 5 to 1.
         """
 
         self.hud.ensure_visible()

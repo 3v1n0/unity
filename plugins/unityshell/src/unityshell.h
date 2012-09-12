@@ -55,9 +55,6 @@
 #include "UnityshellPrivate.h"
 #include "UnityShowdesktopHandler.h"
 #include "ThumbnailGenerator.h"
-#ifndef USE_MODERN_COMPIZ_GL
-#include "ScreenEffectFramebufferObject.h"
-#endif
 
 #include "compizminimizedwindowhandler.h"
 #include "BGHash.h"
@@ -97,11 +94,7 @@ public:
   void nuxEpilogue();
 
   /* nux draw wrapper */
-#ifdef USE_MODERN_COMPIZ_GL
   void paintDisplay();
-#else
-  void paintDisplay(const CompRegion& region, const GLMatrix& transform, unsigned int mask);
-#endif
   void paintPanelShadow(const GLMatrix& matrix);
   void setPanelShadowMatrix(const GLMatrix& matrix);
 
@@ -248,6 +241,10 @@ private:
 
   void InitGesturesSupport();
 
+  void DrawTopPanelBackground();
+  bool TopPanelBackgroundTextureNeedsUpdate() const;
+  void UpdateTopPanelBackgroundTexture();
+
   nux::animation::TickSource tick_source_;
   nux::animation::AnimationController animation_controller_;
 
@@ -311,12 +308,7 @@ private:
 
   BGHash _bghash;
 
-#ifdef USE_MODERN_COMPIZ_GL
   ::GLFramebufferObject *oldFbo;
-#else
-  ScreenEffectFramebufferObject::Ptr _fbo;
-  GLuint                             _active_fbo;
-#endif
 
   bool   queryForShader ();
 
@@ -336,10 +328,6 @@ private:
   nux::ObjectPtr<nux::IOpenGLBaseTexture> panel_texture_;
 
   bool scale_just_activated_;
-
-#ifndef USE_MODERN_COMPIZ_GL
-  ScreenEffectFramebufferObject::GLXGetProcAddressProc glXGetProcAddressP;
-#endif
 
   UBusManager ubus_manager_;
   glib::SourceManager sources_;
@@ -384,11 +372,7 @@ public:
 
   /* basic window draw function */
   bool glDraw(const GLMatrix& matrix,
-#ifndef USE_MODERN_COMPIZ_GL
-              GLFragment::Attrib& attrib,
-#else
               const GLWindowPaintAttrib& attrib,
-#endif
               const CompRegion& region,
               unsigned intmask);
 

@@ -107,6 +107,22 @@ class DashRevealTests(DashTestCase):
         self.dash.reveal_application_lens()
         self.assertThat(self.dash.active_lens, Eventually(Equals('applications.lens')))
 
+    def test_dash_stays_on_same_monitor(self):
+        """If the dash is opened, then the mouse is moved to another monitor and
+        the keyboard is used. The Dash must not move to that monitor.
+        """
+
+        if self.screen_geo.get_num_monitors() < 2:
+          self.skip ("This test must be ran with more then 1 monitor.")
+
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
+
+        self.screen_geo.move_mouse_to_monitor(1)
+        self.keyboard.type("abc")
+
+        self.assertThat(self.dash.ideal_monitor, Eventually(Equals(0)))
+
 
 class DashSearchInputTests(DashTestCase):
     """Test features involving input to the dash search"""
@@ -205,25 +221,25 @@ class DashKeyNavTests(DashTestCase):
 
         # lensbar should lose focus after activation.
         self.assertThat(lensbar.focused_lens_icon, Eventually(Equals("")))
-        
+
     def test_focus_returns_to_searchbar(self):
         """This test makes sure that the focus is returned to the searchbar of the newly
         activated lens."""
         self.dash.ensure_visible()
-        
+
         for i in range(self.dash.get_num_rows()):
             self.keyboard.press_and_release("Down")
         self.keyboard.press_and_release("Right")
         lensbar = self.dash.view.get_lensbar()
         focused_icon = lensbar.focused_lens_icon
         self.keyboard.press_and_release("Enter")
-        
+
         self.assertThat(lensbar.active_lens, Eventually(Equals(focused_icon)))
         self.assertThat(lensbar.focused_lens_icon, Eventually(Equals("")))
-        
+
         # Now we make sure if the newly activated lens searchbar have the focus.
         self.keyboard.type("HasFocus")
-        
+
         self.assertThat(self.dash.search_string, Eventually(Equals("HasFocus")))
 
     def test_category_header_keynav(self):
@@ -397,7 +413,7 @@ class DashClipboardTests(DashTestCase):
         self.keyboard.press_and_release("Ctrl+v")
 
         self.assertThat(self.dash.search_string, Eventually(Equals('CutPasteCutPaste')))
-        
+
     def test_middle_click_paste(self):
         """Tests if Middle mouse button pastes into searchbar"""
 
@@ -610,13 +626,13 @@ class CategoryHeaderTests(DashTestCase):
 
 
 class PreviewInvocationTests(DashTestCase):
-    """Tests that dash previews can be opened and closed in different 
+    """Tests that dash previews can be opened and closed in different
     lenses.
 
     """
-    
+
     def test_app_lens_preview_open_close(self):
-        """Right-clicking on an application lens result must show 
+        """Right-clicking on an application lens result must show
         its preview.
 
         """
@@ -666,7 +682,7 @@ class PreviewInvocationTests(DashTestCase):
         # of failing.
         if category is None:
             self.skipTest("This lens is probably empty")
-        
+
         results = category.get_results()
 
         result = results[0]
@@ -694,7 +710,7 @@ class PreviewInvocationTests(DashTestCase):
             category = lens.get_category_by_name("Online")
             if category is None:
                 self.skipTest("This lens is probably empty")
-        
+
         results = category.get_results()
 
         result = results[0]
@@ -831,3 +847,12 @@ class PreviewNavigateTests(DashTestCase):
 
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
 
+class DashDBusIfaceTests(DashTestCase):
+    """Test the Unity dash DBus interface."""
+
+    def test_dash_hide(self):
+        """Ensure we can hide the dash via HideDash() dbus method."""
+        self.dash.ensure_visible()
+        self.dash.controller.hide_dash_via_dbus()
+        self.assertThat(self.dash.visible, Eventually(Equals(False)))
+        self.dash.ensure_hidden()
