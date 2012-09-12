@@ -40,12 +40,13 @@ public:
   void Show(std::string const& icon_name, std::string const& volume_name)
   {
     int icon_size = 48;
-    IconLoader::GetDefault().LoadFromGIconString(icon_name, icon_size,
+    IconLoader::GetDefault().LoadFromGIconString(icon_name, -1, icon_size,
                                                  sigc::bind(sigc::mem_fun(this, &Impl::ShowNotificationWhenIconIsReady), volume_name));
   }
 
   void ShowNotificationWhenIconIsReady(std::string const& icon_name,
-                                       unsigned size,
+                                       int max_width,
+                                       int max_height,
                                        glib::Object<GdkPixbuf> const& pixbuf,
                                        std::string const& volume_name)
   {
@@ -55,7 +56,7 @@ public:
 
     notify_notification_set_hint(notification, "x-canonical-private-synchronous", g_variant_new_boolean(TRUE));
 
-    if (GDK_IS_PIXBUF(pixbuf.RawPtr()))
+    if (pixbuf)
       notify_notification_set_image_from_pixbuf(notification, pixbuf);
 
     notify_notification_show(notification, nullptr);

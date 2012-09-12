@@ -248,7 +248,7 @@ void ResultRendererTile::Unload(Result& row)
 void ResultRendererTile::LoadIcon(Result& row)
 {
   Style& style = Style::Instance();
-  std::string const& icon_hint = row.icon_hint;
+  std::string icon_hint(row.icon_hint);
 #define DEFAULT_GICON ". GThemedIcon text-x-preview"
   std::string icon_name;
   if (G_UNLIKELY(neko))
@@ -266,26 +266,19 @@ void ResultRendererTile::LoadIcon(Result& row)
     icon_name = !icon_hint.empty() ? icon_hint : DEFAULT_GICON;
   }
 
-  GIcon*  icon = g_icon_new_for_string(icon_name.c_str(), NULL);
+  glib::Object<GIcon> icon(g_icon_new_for_string(icon_name.c_str(), NULL));
   TextureContainer* container = row.renderer<TextureContainer*>();
 
   IconLoader::IconLoaderCallback slot = sigc::bind(sigc::mem_fun(this, &ResultRendererTile::IconLoaded), icon_hint, row);
 
-  if (g_strrstr(icon_name.c_str(), "://"))
+  if (icon.IsType(G_TYPE_ICON))
   {
-    container->slot_handle = IconLoader::GetDefault().LoadFromURI(icon_name, style.GetTileIconSize(), slot);
-  }
-  else if (G_IS_ICON(icon))
-  {
-    container->slot_handle = IconLoader::GetDefault().LoadFromGIconString(icon_name, style.GetTileIconSize(), slot);
+    container->slot_handle = IconLoader::GetDefault().LoadFromGIconString(icon_name, -1, style.GetTileIconSize(), slot);
   }
   else
   {
-    container->slot_handle = IconLoader::GetDefault().LoadFromIconName(icon_name, style.GetTileIconSize(), slot);
+    container->slot_handle = IconLoader::GetDefault().LoadFromIconName(icon_name, -1, style.GetTileIconSize(), slot);
   }
-
-  if (icon != NULL)
-    g_object_unref(icon);
 }
 
 nux::BaseTexture* ResultRendererTile::CreateTextureCallback(std::string const& texid,
@@ -403,7 +396,8 @@ nux::BaseTexture* ResultRendererTile::CreateBlurredTextureCallback(std::string c
 
 
 void ResultRendererTile::IconLoaded(std::string const& texid,
-                                    unsigned size,
+                                    int max_width,
+                                    int max_height,
                                     glib::Object<GdkPixbuf> const& pixbuf,
                                     std::string icon_name,
                                     Result& row)
@@ -436,7 +430,7 @@ void ResultRendererTile::IconLoaded(std::string const& texid,
   {
     // we need to load a missing icon
     IconLoader::IconLoaderCallback slot = sigc::bind(sigc::mem_fun(this, &ResultRendererTile::IconLoaded), icon_name, row);
-    container->slot_handle = IconLoader::GetDefault().LoadFromGIconString(". GThemedIcon text-x-preview", style.GetTileIconSize(), slot);
+    container->slot_handle = IconLoader::GetDefault().LoadFromGIconString(". GThemedIcon text-x-preview", -1, style.GetTileIconSize(), slot);
   }
 
 }
