@@ -25,6 +25,7 @@ using namespace testing;
 #include "VolumeLauncherIcon.h"
 #include "FavoriteStore.h"
 #include "test_utils.h"
+#include "test_mock_devices.h"
 using namespace unity;
 using namespace unity::launcher;
 
@@ -49,16 +50,6 @@ public:
   MOCK_METHOD0(MountAndOpenInFileManager, void(void));
   MOCK_METHOD0(StopDrive, void(void));
   MOCK_METHOD0(Unmount, void(void));
-};
-
-class MockDevicesSettings : public DevicesSettings
-{
-public:
-  typedef std::shared_ptr<MockDevicesSettings> Ptr;
-
-  MOCK_CONST_METHOD1(IsABlacklistedDevice, bool(std::string const& uuid));
-  MOCK_METHOD1(TryToBlacklist, void(std::string const& uuid));
-  MOCK_METHOD1(TryToUnblacklist, void(std::string const& uuid));
 };
 
 
