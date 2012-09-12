@@ -894,4 +894,3 @@ class DashCrossMonitorsTests(DashTestCase):
             self.mouse.click()
             
             self.assertThat(self.dash.visible, Eventually(Equals(False)))
-
