@@ -294,12 +294,12 @@ float Style::GetVideoImageAspectRatio() const
 
 int Style::GetAvatarAreaWidth() const
 {
-  return 65;
+  return 100;
 }
 
 int Style::GetAvatarAreaHeight() const
 {
-  return 65;  
+  return 100;  
 }
 
 std::string Style::content_font() const
