@@ -289,7 +289,7 @@ void Controller::ShowDash()
 
   // The launcher must receive UBUS_OVERLAY_SHOW before window_->EnableInputWindow().
   // Other wise the Launcher gets focus for X, which causes XIM to fail.
-  sources_.AddIdle([this] {
+  sources_.AddTimeout(0, [this] {
     GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, monitor_);
     ubus_manager_.SendMessage(UBUS_OVERLAY_SHOWN, info);
     return false;
