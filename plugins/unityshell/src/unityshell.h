@@ -333,8 +333,6 @@ private:
   glib::SourceManager sources_;
   unity::ThumbnailGenerator thumb_generator;
 
-  Window scale_highlighted_window_;
-
   WindowMinimizeSpeedController* minimize_speed_controller;
   friend class UnityWindow;
 };
@@ -409,7 +407,6 @@ public:
   //! Emited when CompWindowNotifyBeforeDestroy is received
   sigc::signal<void> being_destroyed;
 
-  void scaleSelectWindow();
   void scalePaintDecoration(const GLWindowPaintAttrib &,
                             const GLMatrix &,
                             const CompRegion &,
