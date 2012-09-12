@@ -423,7 +423,7 @@ class DashKeyboardFocusTests(DashTestCase):
         self.assertThat(self.dash.search_string, Eventually(Equals(text)))
 
     def test_filterbar_expansion_leaves_kb_focus(self):
-        """Expanding or collapsinstart_app_windowstart_app_windowg the filterbar must keave keyboard focus in the
+        """Expanding or collapsing the filterbar must keave keyboard focus in the
         search bar.
         """
         self.dash.reveal_application_lens()
@@ -846,6 +846,18 @@ class PreviewNavigateTests(DashTestCase):
 
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
 
+
+class DashDBusIfaceTests(DashTestCase):
+    """Test the Unity dash DBus interface."""
+
+    def test_dash_hide(self):
+        """Ensure we can hide the dash via HideDash() dbus method."""
+        self.dash.ensure_visible()
+        self.dash.controller.hide_dash_via_dbus()
+        self.assertThat(self.dash.visible, Eventually(Equals(False)))
+        self.dash.ensure_hidden()
+
+
 class DashCrossMonitorsTests(DashTestCase):
     """Multi-monitor dash tests."""
 
@@ -882,3 +894,4 @@ class DashCrossMonitorsTests(DashTestCase):
             self.mouse.click()
             
             self.assertThat(self.dash.visible, Eventually(Equals(False)))
+
