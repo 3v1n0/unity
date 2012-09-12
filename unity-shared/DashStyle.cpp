@@ -2044,9 +2044,14 @@ void Style::SetDefaultNColumns(int n_cols)
   columns_changed.emit();
 }
 
-int Style::GetTileIconSize() const
+int Style::GetTileGIconSize() const
 {
   return 64;
+}
+
+int Style::GetTileImageSize() const
+{
+  return 96;
 }
 
 int Style::GetTileWidth() const
@@ -2056,8 +2061,18 @@ int Style::GetTileWidth() const
 
 int Style::GetTileHeight() const
 {
-  return std::max(GetTileIconSize() + (pimpl->text_height_ * 2) + 10,
-                  GetTileIconSize() + 50 + 18); // magic design numbers.
+  return std::max(GetTileImageSize() + (pimpl->text_height_ * 2) + 10,
+                  GetTileImageSize() + 50 + 18); // magic design numbers.
+}
+
+int Style::GetTileIconHightlightHeight() const
+{
+  return 106;
+}
+
+int Style::GetTileIconHightlightWidth() const
+{
+  return 106;
 }
 
 int Style::GetHomeTileIconSize() const
