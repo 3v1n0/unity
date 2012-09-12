@@ -25,6 +25,7 @@
 #include "LauncherControllerPrivate.h"
 #include "ExpoLauncherIcon.h"
 #include "DesktopLauncherIcon.h"
+#include "MockLauncherIcon.h"
 #include "PanelStyle.h"
 #include "UnitySettings.h"
 #include "test_utils.h"
@@ -422,6 +423,54 @@ TEST_F(TestLauncherController, CreateFavoriteInvalidUnity)
   auto const& fav = lc.Impl()->CreateFavoriteIcon(icon_uri);
 
   EXPECT_FALSE(fav.IsValid());
+}
+
+TEST_F(TestLauncherController, RegisterIconApplication)
+{
+  AbstractLauncherIcon::Ptr icon(new MockLauncherIcon());
+  int pre_priority = icon->SortPriority();
+
+  ASSERT_TRUE(icon->position_saved.empty());
+  ASSERT_TRUE(icon->position_forgot.empty());
+  ASSERT_TRUE(icon->visibility_changed.empty());
+  ASSERT_EQ(lc.Impl()->model_->IconIndex(icon), -1);
+
+  lc.Impl()->RegisterIcon(icon);
+
+  EXPECT_EQ(pre_priority, icon->SortPriority());
+  EXPECT_FALSE(icon->position_saved.empty());
+  EXPECT_FALSE(icon->position_forgot.empty());
+  EXPECT_FALSE(icon->visibility_changed.empty());
+  EXPECT_NE(lc.Impl()->model_->IconIndex(icon), -1);
+}
+
+TEST_F(TestLauncherController, RegisterIconApplicationWithPriority)
+{
+  AbstractLauncherIcon::Ptr icon(new MockLauncherIcon());
+  lc.Impl()->RegisterIcon(icon, std::numeric_limits<int>::max());
+  EXPECT_EQ(icon->SortPriority(), std::numeric_limits<int>::max());
+}
+
+TEST_F(TestLauncherController, RegisterIconApplicationWithDefaultPriority)
+{
+  AbstractLauncherIcon::Ptr icon(new MockLauncherIcon());
+  int pre_priority = icon->SortPriority();
+  lc.Impl()->RegisterIcon(icon, std::numeric_limits<int>::min());
+  EXPECT_EQ(icon->SortPriority(), pre_priority);
+}
+
+TEST_F(TestLauncherController, RegisterIconDevice)
+{
+  AbstractLauncherIcon::Ptr icon(new MockLauncherIcon(AbstractLauncherIcon::IconType::DEVICE));
+  int pre_priority = icon->SortPriority();
+
+  lc.Impl()->RegisterIcon(icon);
+
+  EXPECT_EQ(pre_priority, icon->SortPriority());
+  EXPECT_FALSE(icon->position_saved.empty());
+  EXPECT_FALSE(icon->position_forgot.empty());
+  EXPECT_TRUE (icon->visibility_changed.empty());
+  EXPECT_NE(lc.Impl()->model_->IconIndex(icon), -1);
 }
 
 TEST_F(TestLauncherController, GetIconByUriDesktop)
