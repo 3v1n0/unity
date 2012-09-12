@@ -45,7 +45,6 @@ struct MockFavoriteStore : FavoriteStore
                   "application://" BUILDDIR "/tests/data/update-manager.desktop" };
   }
 
-
   FavoriteList const& GetFavorites()
   {
     return fav_list_;
@@ -415,6 +414,43 @@ TEST_F(TestLauncherController, CreateFavoriteDesktopIcon)
   EXPECT_EQ(fav->RemoteUri(), icon_uri);
   EXPECT_TRUE(fav->IsSticky());
   EXPECT_NE(dynamic_cast<DesktopLauncherIcon*>(fav.GetPointer()), nullptr);
+}
+
+TEST_F(TestLauncherController, CreateFavoriteInvalidUnity)
+{
+  std::string icon_uri = FavoriteStore::URI_PREFIX_UNITY + "foooooo";
+  auto const& fav = lc.Impl()->CreateFavoriteIcon(icon_uri);
+
+  EXPECT_FALSE(fav.IsValid());
+}
+
+TEST_F(TestLauncherController, GetIconByUriDesktop)
+{
+  std::string icon_uri = FavoriteStore::URI_PREFIX_UNITY + "desktop-icon";
+  auto const& fav = lc.Impl()->GetIconByUri(icon_uri);
+
+  EXPECT_EQ(fav, lc.Impl()->desktop_icon_);
+}
+
+TEST_F(TestLauncherController, GetIconByUriExpo)
+{
+  std::string icon_uri = FavoriteStore::URI_PREFIX_UNITY + "expo-icon";
+  auto const& fav = lc.Impl()->GetIconByUri(icon_uri);
+
+  EXPECT_EQ(fav, lc.Impl()->expo_icon_);
+}
+
+TEST_F(TestLauncherController, GetIconByUriApplications)
+{
+  for (auto const& fav_uri : favorite_store.GetFavorites())
+  {
+    auto const& model_icon_it = std::find_if(lc.Impl()->model_->begin(), lc.Impl()->model_->end(),
+    [&fav_uri](AbstractLauncherIcon::Ptr const& i) { return (i->RemoteUri() == fav_uri); });
+
+    auto const& fav = lc.Impl()->GetIconByUri(fav_uri);
+
+    ASSERT_EQ(fav, *model_icon_it);
+  }
 }
 
 }
