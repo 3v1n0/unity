@@ -452,12 +452,13 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       refine_geo.height = _bg_refine_tex->GetHeight();
 
       nux::GetPainter().PushLayer(GfxContext, refine_geo, _bg_refine_layer.get());
+      bgs++;
 
       refine_geo.x += refine_geo.width;
       refine_geo.width = geo.width;
       refine_geo.height = geo.height;
       nux::GetPainter().PushLayer(GfxContext, refine_geo, _bg_refine_single_column_layer.get());
-
+      bgs++;
     }
   }
 
