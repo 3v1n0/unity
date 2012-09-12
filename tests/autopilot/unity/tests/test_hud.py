@@ -402,7 +402,7 @@ class HudBehaviorTests(HudTestsBase):
         sleep(1)
 
         self.keyboard.type("HasFocus")
-        self.assertSearchText("HasFocus")
+        self.assertThat(self.hud.search_string, Eventually(Equals("HasFocus")))
 
 
 class HudLauncherInteractionsTests(HudTestsBase):
