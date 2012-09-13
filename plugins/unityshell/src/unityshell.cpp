@@ -573,7 +573,7 @@ void UnityScreen::setPanelShadowMatrix(const GLMatrix& matrix)
   panel_shadow_matrix_ = matrix;
 }
 
-void UnityScreen::paintPanelShadow(const GLMatrix& matrix, const CompRegion &clip)
+void UnityScreen::paintPanelShadow(const CompRegion &clip)
 {
 #ifndef USE_MODERN_COMPIZ_GL
   if (sources_.GetSource(local::RELAYOUT_TIMEOUT))
@@ -750,7 +750,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix, const CompRegion &cli
       streamingBuffer->addTexCoords(0, 4, &textureData[0]);
 
       streamingBuffer->end();
-      streamingBuffer->render(matrix);
+      streamingBuffer->render(panel_shadow_matrix_);
 
       tex->disable();
       if (!wasBlend)
@@ -2622,10 +2622,20 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
   if (window->type() == CompWindowTypeDesktopMask)
     uScreen->setPanelShadowMatrix(matrix);
 
+  Window active_window = screen->activeWindow();
+  if (window->id() == active_window && window->type() != CompWindowTypeDesktopMask)
+  {
+    uScreen->paintPanelShadow(region);
+  }
+
   bool ret = gWindow->glDraw(matrix, attrib, region, mask);
 
-  if (window->type() == CompWindowTypeDesktopMask)
-    uScreen->paintPanelShadow(matrix, region);
+  if ((active_window == 0 || active_window == window->id()) &&
+      (window->type() == CompWindowTypeDesktopMask))
+  {
+    uScreen->paintPanelShadow(region);
+  }
+
 
   return ret;
 }
