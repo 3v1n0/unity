@@ -61,6 +61,7 @@ View::View()
   : AbstractView()
   , button_views_(nullptr)
   , visible_(false)
+  , timeline_animating_(false)
   , start_time_(0)
   , last_known_height_(0)
   , current_height_(0)
@@ -127,31 +128,32 @@ void View::SetMonitorOffset(int x, int y)
   renderer_.y_offset = y;
 }
 
-bool View::ProcessGrowShrink()
+void View::ProcessGrowShrink()
 {
   float diff = g_get_monotonic_time() - start_time_;
   int target_height = content_layout_->GetGeometry().height;
   // only animate if we are after our defined pause time
   if (diff > pause_before_grow_length)
   {
-   float progress = (diff - pause_before_grow_length) / grow_anim_length;
-   int last_height = last_known_height_;
-   int new_height = 0;
+    float progress = (diff - pause_before_grow_length) / grow_anim_length;
+    int last_height = last_known_height_;
+    int new_height = 0;
 
-   if (last_height < target_height)
-   {
-     // grow
-     new_height = last_height + ((target_height - last_height) * progress);
-   }
-   else
-   {
-     //shrink
-     new_height = last_height - ((last_height - target_height) * progress);
-   }
+    if (last_height < target_height)
+    {
+      // grow
+      new_height = last_height + ((target_height - last_height) * progress);
+    }
+    else
+    {
+      //shrink
+      new_height = last_height - ((last_height - target_height) * progress);
+    }
+    
 
-   LOG_DEBUG(logger) << "resizing to " << target_height << " (" << new_height << ")"
+    LOG_DEBUG(logger) << "resizing to " << target_height << " (" << new_height << ")"
                      << "View height: " << GetGeometry().height;
-   current_height_ = new_height;
+    current_height_ = new_height;
   }
 
   for (auto button : buttons_)
@@ -166,12 +168,18 @@ bool View::ProcessGrowShrink()
     last_known_height_ = target_height;
 
     layout_changed.emit();
-    QueueDraw();
-    return false;
+    timeline_idle_.reset();
+    timeline_animating_ = false;
+    return;
   }
-  
-  QueueDraw();
-  return true;
+  else
+  {
+    timeline_idle_.reset(new glib::Timeout(0, [this]
+    {
+      QueueDraw();
+      return false;
+    }));
+  }
 }
 
 
@@ -387,19 +395,12 @@ void View::SetupViews()
 
     content_layout_->OnGeometryChanged.connect([&](nux::Area*, nux::Geometry& geo)
     {
-      if (!timeline_idle_)
+      if (!timeline_animating_)
       {
-        timeline_idle_.reset(new glib::Timeout(0, [this]
-        {
-          if (ProcessGrowShrink())
-            return true;
-          timeline_idle_.reset();
-          return false;
-        }));
+        timeline_animating_ = true;
+        start_time_ = g_get_monotonic_time();
+        QueueDraw();
       }
-      
-      start_time_ = g_get_monotonic_time();
-      QueueDraw();
     });
 
 
@@ -448,6 +449,9 @@ void View::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long k
 
 void View::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
+  if (timeline_animating_)
+    ProcessGrowShrink();
+
   nux::Geometry draw_content_geo(layout_->GetGeometry());
   draw_content_geo.height = current_height_;
   renderer_.DrawFull(gfx_context, draw_content_geo, GetAbsoluteGeometry(), GetGeometry(), true);

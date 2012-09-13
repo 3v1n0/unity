@@ -84,7 +84,7 @@ private:
   bool AcceptKeyNavFocus();
   nux::Geometry GetBestFitGeometry(nux::Geometry const& for_geo);
 
-  bool ProcessGrowShrink();
+  void ProcessGrowShrink();
 
   void MouseStealsHudButtonFocus();
   void LoseSelectedButtonFocus();
@@ -112,6 +112,7 @@ private:
   nux::Geometry content_geo_;
   OverlayRenderer renderer_;
   glib::Source::UniquePtr timeline_idle_;
+  bool timeline_animating_;
 
   guint64 start_time_;
   int last_known_height_;
