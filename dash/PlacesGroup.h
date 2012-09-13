@@ -123,8 +123,6 @@ private:
   nux::HLayout* _expand_label_layout;
   nux::HLayout* _expand_layout;
   nux::View*  _child_view;
-  nux::ObjectPtr<nux::HLayout> separator_layout_;
-  HSeparator* separator_;
   std::unique_ptr<nux::AbstractPaintLayer> _focus_layer;
 
   IconTexture*          _icon;
@@ -142,7 +140,6 @@ private:
   unsigned _n_total_items;
   unsigned _category_index;
   std::string _cached_name;
-  bool  _draw_sep;
   nux::Geometry _cached_geometry;
   
   std::string _renderer_name;

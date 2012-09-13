@@ -40,6 +40,9 @@
 #define UBUS_OVERLAY_HIDDEN "OVERLAY_HIDDEN"
 #define UBUS_OVERLAY_SHOWN "OVERLAY_SHOWN"
 
+#define UBUS_REFINE_STATUS_FORMAT_STRING "(b)"
+#define UBUS_REFINE_STATUS "REFINE_STATUS"
+
 #define UBUS_PLACE_VIEW_QUEUE_DRAW "PLACE_VIEW_QUEUE_DRAW"
 
 // Signal send by Launcher/Quicklist when it wants to exit key-nav and wants to

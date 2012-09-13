@@ -66,6 +66,7 @@ public:
 
 
   nux::ObjectPtr<nux::BaseTexture> bg_refine_tex_;
+  nux::ObjectPtr<nux::BaseTexture> bg_refine_no_refine_tex_;
   nux::ObjectPtr<nux::BaseTexture> bg_refine_corner_tex_;
   std::unique_ptr<nux::AbstractPaintLayer> bg_refine_gradient_;
   std::unique_ptr<nux::AbstractPaintLayer> bg_refine_gradient_corner_;
@@ -73,6 +74,8 @@ public:
   // temporary variable that stores the number of backgrounds we have rendered
   int bgs;
   bool visible;
+
+  bool refine_is_open_;
 
   UBusManager ubus_manager_;
 
@@ -115,6 +118,8 @@ void OverlayRendererImpl::Init()
 
   nux::TexCoordXForm texxform;
   bg_refine_tex_ = unity::dash::Style::Instance().GetRefineTextureDash();
+  bg_refine_no_refine_tex_ = unity::dash::Style::Instance().GetRefineNoRefineTextureDash();
+  
   bg_refine_gradient_.reset(new nux::TextureLayer(bg_refine_tex_->GetDeviceTexture(), 
                             texxform, 
                             nux::color::White,
@@ -139,6 +144,39 @@ void OverlayRendererImpl::Init()
   bg_shine_texture_ = unity::dash::Style::Instance().GetDashShine()->GetDeviceTexture();
 
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
+
+  ubus_manager_.RegisterInterest(UBUS_REFINE_STATUS, [this] (GVariant *data) 
+  {
+    gboolean status;
+    g_variant_get(data, UBUS_REFINE_STATUS_FORMAT_STRING, &status);
+
+    refine_is_open_ = status;
+    nux::ROPConfig rop;
+    rop.Blend = true;
+    rop.SrcBlend = GL_ONE;
+    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+    nux::TexCoordXForm texxform;
+
+    if (refine_is_open_)
+    {
+      bg_refine_gradient_.reset(new nux::TextureLayer(bg_refine_tex_->GetDeviceTexture(), 
+                                texxform, 
+                                nux::color::White,
+                                false,
+                                rop));
+    }
+    else
+    {
+      bg_refine_gradient_.reset(new nux::TextureLayer(bg_refine_no_refine_tex_->GetDeviceTexture(),
+                                texxform,
+                                nux::color::White,
+                                false,
+                                rop));
+    }
+
+    parent->need_redraw.emit();
+  });
 }
 
 void OverlayRendererImpl::OnBackgroundColorChanged(GVariant* args)
@@ -534,7 +572,10 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
 
   gfx_context.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
   nux::TexCoordXForm refine_texxform;
-  gfx_context.QRP_1Tex(larger_content_geo.x + larger_content_geo.width - bg_refine_tex_->GetWidth(), 
+
+  if (refine_is_open_)
+  { 
+    gfx_context.QRP_1Tex(larger_content_geo.x + larger_content_geo.width - bg_refine_tex_->GetWidth(), 
                        larger_content_geo.y,
                        bg_refine_tex_->GetWidth(), 
                        bg_refine_tex_->GetHeight(),
@@ -542,6 +583,19 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
                        refine_texxform,
                        nux::color::White
                        );
+  }
+  else
+  {
+    gfx_context.QRP_1Tex(larger_content_geo.x + larger_content_geo.width - bg_refine_no_refine_tex_->GetWidth(), 
+                       larger_content_geo.y,
+                       bg_refine_no_refine_tex_->GetWidth(), 
+                       bg_refine_no_refine_tex_->GetHeight(),
+                       bg_refine_no_refine_tex_->GetDeviceTexture(),
+                       refine_texxform,
+                       nux::color::White
+                       );
+  }
+
 
   if (Settings::Instance().GetFormFactor() != FormFactor::NETBOOK || force_edges)
   {
@@ -886,12 +940,20 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
 
   nux::Geometry refine_geo = larger_content_geo;
   
-  refine_geo.x += larger_content_geo.width - bg_refine_tex_->GetWidth();
-  refine_geo.width = bg_refine_tex_->GetWidth();
-  refine_geo.height = bg_refine_tex_->GetHeight();
-
+  if (refine_is_open_)
+  {
+    refine_geo.x += larger_content_geo.width - bg_refine_tex_->GetWidth();
+    refine_geo.width = bg_refine_tex_->GetWidth();
+    refine_geo.height = bg_refine_tex_->GetHeight();
+  }
+  else
+  {
+    refine_geo.x += larger_content_geo.width - bg_refine_no_refine_tex_->GetWidth();
+    refine_geo.width = bg_refine_no_refine_tex_->GetWidth();
+    refine_geo.height = bg_refine_no_refine_tex_->GetHeight();
+  }
+    
   nux::GetPainter().PushLayer(gfx_context, refine_geo, bg_refine_gradient_.get());
-
   bgs++;
 }
 

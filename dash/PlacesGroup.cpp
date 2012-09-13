@@ -191,15 +191,6 @@ PlacesGroup::PlacesGroup()
   _expand_icon->SetVisible(false);
   _expand_layout->AddView(_expand_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
-  separator_layout_ = new nux::HLayout();
-  separator_layout_->SetLeftAndRightPadding(style.GetCategorySeparatorLeftPadding(),
-                                            style.GetCategorySeparatorRightPadding() - style.GetScrollbarWidth());
-
-  separator_ = new HSeparator;
-  separator_layout_->AddView(separator_, 1);
-
-  draw_separator.changed.connect(sigc::mem_fun(this, &PlacesGroup::DrawSeparatorChanged));
-
   SetLayout(_group_layout);
 
   // don't need to disconnect these signals as they are disconnected when this object destroys the contents
@@ -221,15 +212,8 @@ PlacesGroup::PlacesGroup()
     else
       nux::GetWindowCompositor().SetKeyFocusArea(GetHeaderFocusableView(), direction);
   });
-}
 
-void PlacesGroup::DrawSeparatorChanged(bool draw)
-{
-  if (draw and !separator_layout_->IsChildOf(_group_layout))
-    _group_layout->AddView(separator_layout_.GetPointer(), 0);
-  else if (!draw and separator_layout_->IsChildOf(_group_layout))
-    _group_layout->RemoveChildObject(separator_layout_.GetPointer());
-  QueueDraw();
+  SetMinimumWidth(2000);
 }
 
 void
@@ -419,6 +403,7 @@ PlacesGroup::OnIdleRelayout()
     nux::TexCoordXForm texxform;
     if (_n_visible_items_in_unexpand_mode < 6 && _using_nofilters_background)
     {
+      LOG_DEBUG(logger) << "drawing unexpanded texture";
       _background_layer.reset(new nux::TextureLayer(_background->GetDeviceTexture(), 
                               texxform, 
                               nux::color::White,
@@ -428,6 +413,7 @@ PlacesGroup::OnIdleRelayout()
     }
     else if (_n_visible_items_in_unexpand_mode >= 6 && !_using_nofilters_background)
     {
+      LOG_DEBUG(logger) << "drawing expanded texture";
       _background_layer.reset(new nux::TextureLayer(_background_nofilters->GetDeviceTexture(), 
                               texxform, 
                               nux::color::White,
@@ -458,10 +444,8 @@ long PlacesGroup::ComputeContentSize()
   if (_cached_geometry.GetWidth() != geo.GetWidth())
   {
     _focus_layer.reset(dash::Style::Instance().FocusOverlay(geo.width - kHighlightLeftPadding - kHighlightRightPadding, kHighlightHeight));
-
     _cached_geometry = geo;
   }
-
   return ret;
 }
 
@@ -470,6 +454,8 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
 {
   nux::Geometry const& base = GetGeometry();
   graphics_engine.PushClippingRectangle(base);
+
+  LOG_DEBUG(logger) << "places group geo: " << base.width;
 
   if (ShouldBeHighlighted())
   {
@@ -482,8 +468,15 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
   }
 
   nux::Geometry bg_geo = GetGeometry();
-  bg_geo.x = bg_geo.width - _background->GetWidth();
-  bg_geo.width = _background->GetWidth();
+  int bg_width = 0;
+  if (_using_nofilters_background)
+    bg_width = _background_nofilters->GetWidth();
+  else
+    bg_width = _background->GetWidth();
+
+  bg_geo.x = std::max(bg_geo.width - bg_width,0);
+  
+  bg_geo.width = std::min(bg_width, bg_geo.GetWidth()) + 10;
   bg_geo.height = _background->GetHeight();
   
   _background_layer->SetGeometry(bg_geo);
@@ -497,10 +490,18 @@ PlacesGroup::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
   nux::Geometry const& base = GetGeometry();
 
   graphics_engine.PushClippingRectangle(base);
-  LOG_DEBUG(logger) << "base height: " << base.height;
   nux::Geometry bg_geo = GetGeometry();
-  bg_geo.x = bg_geo.width - _background->GetWidth();
-  bg_geo.width = _background->GetWidth();
+  
+  int bg_width = 0;
+  if (_using_nofilters_background)
+    bg_width = _background_nofilters->GetWidth();
+  else
+    bg_width = _background->GetWidth();
+  
+  // if the dash is smaller, resize to fit, otherwise move to the right edge
+  bg_geo.x = std::max(bg_geo.width - bg_width, 0);
+  bg_geo.width = std::min(bg_width, bg_geo.GetWidth()) + 10;
+  
   bg_geo.height = _background->GetHeight();
 
   if (!IsFullRedraw())

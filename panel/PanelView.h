@@ -108,6 +108,8 @@ private:
   nux::HLayout* _layout;
 
   nux::ObjectPtr <nux::BaseTexture> _bg_refine_tex;
+  nux::ObjectPtr <nux::BaseTexture> _bg_refine_no_refine_tex;
+  
   std::unique_ptr<nux::AbstractPaintLayer> _bg_refine_layer;
   nux::ObjectPtr <nux::BaseTexture> _bg_refine_single_column_tex;
   std::unique_ptr<nux::AbstractPaintLayer> _bg_refine_single_column_layer;
@@ -123,6 +125,7 @@ private:
   int         _monitor;
   int         _stored_dash_width;
   int         _launcher_width;
+  bool        _refine_is_open;
 
   std::string _active_overlay;
 
