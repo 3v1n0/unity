@@ -50,8 +50,8 @@ public:
   // The Handle typedef is used to explicitly indicate which integers are
   // infact our opaque handles.
   typedef int Handle;
-  static const int FONT_SIZE = 10;
-  static const int MIN_FONT_SIZE = 6;
+  static const int FONT_SIZE = 8;
+  static const int MIN_FONT_SIZE = 5;
 
   Impl();
 
@@ -335,10 +335,9 @@ private:
         pango_layout_set_font_description(layout, desc.get());
         pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);
 
-        // we'll allow tiny bit of overflow since the text is rotated and there
-        // is some space left... FIXME: 10/9? / 11/10?
+        // magic constant for the text width based on the white curve
         double max_text_width = has_emblem ?
-          pixbuf_width * 0.73 : pixbuf_width;
+          pixbuf_width * 0.72 : pixbuf_width;
 
         pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
         pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
@@ -405,18 +404,26 @@ private:
         if (has_emblem)
         {
           // paint the curve
-          const double CURVE_START_X = 0.651163 * belt_w;
+          const double CURVE_START_XPOS = 0.631163; // 0.651163
+          const double CURVE_CP1_XPOS = CURVE_START_XPOS + 0.068023;
+          const double CURVE_CP2_XPOS = CURVE_START_XPOS + 0.07;
+          const double CURVE_CP3_XPOS = CURVE_START_XPOS + 0.102965;
+          const double CURVE_CP4_XPOS = CURVE_START_XPOS + 0.161511;
+          const double CURVE_CP5_XPOS = CURVE_START_XPOS + 0.197093;
+          const double CURVE_END_XPOS = CURVE_START_XPOS + 0.265779;
+
+          const double CURVE_START_X = CURVE_START_XPOS * belt_w;
 
           cairo_set_source_rgba(cr.get(), 1.0, 1.0, 1.0, 1.0);
 
-          cairo_move_to(cr.get(), CURVE_START_X, belt_h);
-          cairo_curve_to(cr.get(), 0.719186 * belt_w, belt_h,
-                                   0.721163 * belt_w, 0.9825 * belt_h,
-                                   0.754128 * belt_w, 0.72725 * belt_h);
-          cairo_line_to(cr.get(), 0.812674 * belt_w, 0.27275 * belt_h);
-          cairo_curve_to(cr.get(), 0.848256 * belt_w, 0.0,
-                                   0.848256 * belt_w, 0.0,
-                                   0.916942 * belt_w, 0.0);
+          cairo_move_to(cr.get(), CURVE_START_XPOS * belt_w, belt_h);
+          cairo_curve_to(cr.get(), CURVE_CP1_XPOS * belt_w, belt_h,
+                                   CURVE_CP2_XPOS * belt_w, 0.9825 * belt_h,
+                                   CURVE_CP3_XPOS * belt_w, 0.72725 * belt_h);
+          cairo_line_to(cr.get(), CURVE_CP4_XPOS * belt_w, 0.27275 * belt_h);
+          cairo_curve_to(cr.get(), CURVE_CP5_XPOS * belt_w, 0.0,
+                                   CURVE_CP5_XPOS * belt_w, 0.0,
+                                   CURVE_END_XPOS * belt_w, 0.0);
           cairo_line_to(cr.get(), belt_w, 0.0);
           cairo_line_to(cr.get(), belt_w, belt_h);
           cairo_close_path(cr.get());
@@ -433,9 +440,13 @@ private:
           cairo_fill(cr.get());
 
           // paint the emblem
+          int category_pb_w = gdk_pixbuf_get_width(category_pixbuf);
           int category_pb_h = gdk_pixbuf_get_height(category_pixbuf);
+          double category_pb_x = 
+            belt_w - category_pb_w > CURVE_CP4_XPOS * belt_w ?
+              CURVE_CP4_XPOS * belt_w + ((1 - CURVE_CP4_XPOS) * belt_w - category_pb_w) / 2 : CURVE_CP4_XPOS * belt_w;
           gdk_cairo_set_source_pixbuf(cr.get(), category_pixbuf,
-                                      belt_w * 0.812674, (belt_h - category_pb_h) / 2);
+                                      category_pb_x, (belt_h - category_pb_h) / 2);
           cairo_paint(cr.get());
         }
 
@@ -519,7 +530,7 @@ private:
         auto helper_slot = sigc::bind(sigc::mem_fun(this, &IconLoaderTask::CategoryIconLoaded), anno_icon);
         int max_font_height;
         CalculateTextHeight(nullptr, &max_font_height);
-        unsigned cat_size = max_font_height * 8 / 9;
+        unsigned cat_size = max_font_height * 9 / 8;
         switch (category)
         {
           case UNITY_PROTOCOL_CATEGORY_TYPE_BOOK:
