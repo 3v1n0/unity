@@ -235,7 +235,12 @@ void LensView::SetupViews(nux::Area* show_filters)
 
   scroll_layout_->OnGeometryChanged.connect([this] (nux::Area* area, nux::Geometry&geo)
   {
-    CheckScrollBarState();
+    if (cached_scroll_layout_size_.height != geo.height)
+    {
+      cached_scroll_layout_size_ = geo;
+      LOG_DEBUG(logger) << "geo changed";
+      //CheckScrollBarState();
+    }
   });
 }
 
@@ -634,11 +639,11 @@ void LensView::CheckScrollBarState()
 {
   if (scroll_layout_->GetGeometry().height > scroll_view_->GetGeometry().height)
   {
-    scroll_view_->EnableVerticalScrollBar(true); 
+    scroll_view_->EnableVerticalScrollBar(false); 
   }
   else
   {
-    scroll_view_->EnableVerticalScrollBar(false); 
+    scroll_view_->EnableVerticalScrollBar(true); 
   }
 }
 

@@ -129,6 +129,8 @@ private:
   glib::Source::UniquePtr fix_rendering_idle_;
   int last_good_filter_model_;
   glib::Source::UniquePtr fix_filter_models_idle_;
+
+  nux::Geometry cached_scroll_layout_size_;
 };
 
 
