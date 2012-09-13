@@ -97,7 +97,6 @@ void LauncherDragWindow::StartAnimation()
   if (animation_timer_)
     return;
 
-
   animation_timer_.reset(new glib::Timeout(15));
   animation_timer_->Run(sigc::mem_fun(this, &LauncherDragWindow::OnAnimationTimeout));
 }
