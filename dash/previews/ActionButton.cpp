@@ -335,5 +335,15 @@ void ActionButton::Deactivate()
   QueueDraw();
 }
 
+std::string ActionButton::GetLabel() const
+{
+  return label_;
+}
+
+std::string ActionButton::GetExtraText() const
+{
+  return extra_hint_;
+}
+
 } // namespace dash
 } // namespace unity

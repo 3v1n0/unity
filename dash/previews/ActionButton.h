@@ -54,6 +54,9 @@ public:
   void Activate();
   void Deactivate();
 
+  std::string GetLabel() const;
+  std::string GetExtraText() const;
+
 protected:
   virtual long ComputeContentSize();
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
