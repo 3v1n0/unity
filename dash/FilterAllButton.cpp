@@ -32,7 +32,7 @@ namespace dash
 {
 
 FilterAllButton::FilterAllButton(NUX_FILE_LINE_DECL)
- : FilterBasicButton(_("All"), NUX_FILE_LINE_PARAM)
+ : FilterBasicButton(_("XXXXX"), NUX_FILE_LINE_PARAM)
 {
   SetActive(true);
   SetInputEventSensitivity(false);
