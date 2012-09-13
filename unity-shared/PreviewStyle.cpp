@@ -305,6 +305,15 @@ std::string Style::subtitle_size_font() const
 std::string Style::description_font() const
 {
   return "Ubuntu Light 10";
+
+}
+std::string Style::action_font() const
+{
+  return "Ubuntu 11";
+}
+std::string Style::action_extra_font() const
+{
+  return "Ubuntu Bold 11";  
 }
 
 std::string Style::app_license_font() const

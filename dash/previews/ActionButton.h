@@ -49,6 +49,7 @@ public:
   sigc::signal<void, ActionButton*, std::string const&> click;
 
   void SetFont(std::string const& font_hint);
+  void SetExtraHint(std::string const& extra_hint, std::string const& font_hint);
 
   void Activate();
   void Deactivate();
@@ -64,7 +65,7 @@ protected:
   void RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state);
   void RedrawFocusOverlay(nux::Geometry const& geom, cairo_t* cr);
 
-  void BuildLayout(std::string const& label, std::string const& icon_hint);
+  void BuildLayout(std::string const& label, std::string const& icon_hint, std::string const& extra_hint);
  
   // From debug::Introspectable
   std::string GetName() const;
@@ -83,9 +84,12 @@ private:
   std::string action_hint_;
   std::string icon_hint_;
   std::string font_hint_;
+  std::string extra_hint_;
+  std::string extra_font_hint_;
 
   nux::ObjectPtr<IconTexture> image_;
   nux::ObjectPtr<nux::StaticCairoText> static_text_;
+  nux::ObjectPtr<nux::StaticCairoText> extra_text_;
 };
 
 } // namespace dash
