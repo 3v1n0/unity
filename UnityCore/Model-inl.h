@@ -124,6 +124,9 @@ Model<RowAdaptor>::~Model()
 template<class RowAdaptor>
 void Model<RowAdaptor>::OnRowAdded(DeeModel* model, DeeModelIter* iter)
 {
+  // careful here - adding rows to the model inside the callback
+  // will invalidate the cached_adaptor!
+  // This needs to be used as a listener only!
   cached_adaptor1_.SetTarget(model, iter, renderer_tag_);
   row_added.emit(cached_adaptor1_);
 }
@@ -131,6 +134,9 @@ void Model<RowAdaptor>::OnRowAdded(DeeModel* model, DeeModelIter* iter)
 template<class RowAdaptor>
 void Model<RowAdaptor>::OnRowChanged(DeeModel* model, DeeModelIter* iter)
 {
+  // careful here - changing rows inside the callback will invalidate
+  // the cached_adaptor!
+  // This needs to be used as a listener only!
   cached_adaptor2_.SetTarget(model, iter, renderer_tag_);
   row_changed.emit(cached_adaptor2_);
 }
@@ -138,6 +144,9 @@ void Model<RowAdaptor>::OnRowChanged(DeeModel* model, DeeModelIter* iter)
 template<class RowAdaptor>
 void Model<RowAdaptor>::OnRowRemoved(DeeModel* model, DeeModelIter* iter)
 {
+  // careful here - removing rows from the model inside the callback
+  // will invalidate the cached_adaptor!
+  // This needs to be used as a listener only!
   cached_adaptor3_.SetTarget(model, iter, renderer_tag_);
   row_removed.emit(cached_adaptor3_);
 }
