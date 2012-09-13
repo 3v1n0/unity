@@ -24,14 +24,15 @@
 
 #include <gdk/gdk.h>
 #include <UnityCore/Hud.h>
+#include <UnityCore/GLibSignal.h>
 
 #include <NuxCore/Property.h>
 #include <NuxGraphics/GraphicsEngine.h>
 #include <Nux/Nux.h>
-#include <Nux/BaseWindow.h>
 
 #include "unity-shared/Animator.h"
 #include "unity-shared/UBusWrapper.h"
+#include "unity-shared/ResizedInputWindowBaseWindow.h"
 #include "HudView.h"
 
 namespace unity
@@ -59,6 +60,8 @@ public:
   void HideHud(bool restore_focus = true);
   bool IsVisible();
 
+  nux::Geometry GetInputWindowGeometry();
+
 protected:
   // Introspectable
   std::string GetName() const;
@@ -68,6 +71,7 @@ private:
   void EnsureHud();
   void SetupWindow();
   void SetupHudView();
+  void SetupRelayoutCallbacks();
   void RegisterUBusInterests();
   void SetIcon(std::string const& icon_name);
 
@@ -96,8 +100,9 @@ private:
   void OnQueriesFinished(Hud::Queries queries);
 
 private:
-  nux::ObjectPtr<nux::BaseWindow> window_;
+  nux::ObjectPtr<ResizedInputWindowBaseWindow> window_;
   UBusManager ubus;
+  glib::SignalManager sig_manager_;
   Hud hud_service_;
   bool visible_;
   bool need_show_;

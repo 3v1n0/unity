@@ -27,6 +27,7 @@
 #include "unity-shared/PluginAdapter.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UScreen.h"
+#include "unity-shared/ResizedInputWindowBaseWindow.h"
 
 namespace unity
 {
@@ -54,31 +55,6 @@ const std::string DBUS_INTROSPECTION =\
 
 GDBusInterfaceVTable Controller::interface_vtable =
   { Controller::OnDBusMethodCall, NULL, NULL};
-
-class DashBaseWindow : public nux::BaseWindow
-{
-public:
-  DashBaseWindow(const char *WindowName, std::function<nux::Geometry (nux::Geometry const&)> geo_func)
-  : BaseWindow(WindowName, NUX_TRACKER_LOCATION)
-  {
-    geo_func_ = geo_func;
-  }
-
-  void UpdateInputWindowGeometry()
-  {
-    if (m_input_window)
-      m_input_window->SetGeometry(geo_func_(GetGeometry()));
-  }
-
-  void SetGeometry(const nux::Geometry &geo)
-  {
-     Area::SetGeometry(geo);
-     UpdateInputWindowGeometry();
-  }
-
-private:
-  std::function<nux::Geometry (nux::Geometry const&)> geo_func_;
-};
 
 Controller::Controller()
   : launcher_width(64)
@@ -122,10 +98,10 @@ Controller::~Controller()
 
 void Controller::SetupWindow()
 {
-  window_ = new DashBaseWindow(dash::window_title, [this](nux::Geometry const& geo)
+  window_ = new ResizedInputWindowBaseWindow(dash::window_title, [this](nux::Geometry const& geo)
   {
     if (view_)
-      return GetInputGeometry();
+      return GetInputWindowGeometry();
     return geo;
   });
   window_->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
@@ -481,13 +457,14 @@ void Controller::OnDBusMethodCall(GDBusConnection* connection, const gchar* send
   }
 }
 
-nux::Geometry Controller::GetInputGeometry()
+nux::Geometry Controller::GetInputWindowGeometry()
 {
   EnsureDash();
   nux::Geometry const& window_geo(window_->GetGeometry());
-  nux::Geometry const& view__content_geo(view_->GetContentGeometry());
-  return nux::Geometry(window_geo.x, window_geo.y, view__content_geo.width, view__content_geo.height);
+  nux::Geometry const& view_content_geo(view_->GetContentGeometry());
+  return nux::Geometry(window_geo.x, window_geo.y, view_content_geo.width, view_content_geo.height);
 }
+
 
 }
 }

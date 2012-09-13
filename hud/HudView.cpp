@@ -64,7 +64,6 @@ View::View()
   , start_time_(0)
   , last_known_height_(0)
   , current_height_(0)
-  , timeline_need_more_draw_(false)
   , selected_button_(0)
   , show_embedded_icon_(true)
   , keyboard_stole_focus_(false)
@@ -122,7 +121,13 @@ View::~View()
 {
 }
 
-void View::ProcessGrowShrink()
+void View::SetMonitorOffset(int x, int y)
+{
+  renderer_.x_offset = x;
+  renderer_.y_offset = y;
+}
+
+bool View::ProcessGrowShrink()
 {
   float diff = g_get_monotonic_time() - start_time_;
   int target_height = content_layout_->GetGeometry().height;
@@ -154,15 +159,19 @@ void View::ProcessGrowShrink()
     button->SetSkipDraw((button->GetAbsoluteY() + button->GetBaseHeight()) > (GetAbsoluteY() + current_height_));
   }
 
-  QueueDraw();
-
   if (diff > grow_anim_length + pause_before_grow_length)
   {
     // ensure we are at our final location and update last known height
     current_height_ = target_height;
     last_known_height_ = target_height;
-    timeline_need_more_draw_ = false;
+
+    layout_changed.emit();
+    QueueDraw();
+    return false;
   }
+  
+  QueueDraw();
+  return true;
 }
 
 
@@ -186,27 +195,6 @@ void View::Relayout()
 
   QueueDraw();
 }
-
-long View::PostLayoutManagement(long LayoutResult)
-{
-  Relayout();
-  if (GetGeometry().height != last_known_height_)
-  {
-    // Start the timeline of drawing the dash resize
-    if (timeline_need_more_draw_)
-    {
-      // already started, just reset the last known height
-      last_known_height_ = current_height_;
-    }
-
-    timeline_need_more_draw_ = true;
-    start_time_ = g_get_monotonic_time();
-    QueueDraw();
-  }
-
-  return LayoutResult;
-}
-
 
 nux::View* View::default_focus() const
 {
@@ -361,14 +349,6 @@ void View::AboutToHide()
   renderer_.AboutToHide();
 }
 
-void View::SetWindowGeometry(nux::Geometry const& absolute_geo, nux::Geometry const& geo)
-{
-  window_geometry_ = geo;
-  window_geometry_.x = 0;
-  window_geometry_.y = 0;
-  absolute_window_geometry_ = absolute_geo;
-}
-
 void View::SetupViews()
 {
   dash::Style& style = dash::Style::Instance();
@@ -404,6 +384,24 @@ void View::SetupViews()
 
       content_layout_->AddLayout(button_views_.GetPointer(), 1, nux::MINOR_POSITION_LEFT);
     }
+
+    content_layout_->OnGeometryChanged.connect([&](nux::Area*, nux::Geometry& geo)
+    {
+      if (!timeline_idle_)
+      {
+        timeline_idle_.reset(new glib::Timeout(0, [this]
+        {
+          if (ProcessGrowShrink())
+            return true;
+          timeline_idle_.reset();
+          return false;
+        }));
+      }
+      
+      start_time_ = g_get_monotonic_time();
+      QueueDraw();
+    });
+
 
     layout_->AddLayout(content_layout_.GetPointer(), 1, nux::MINOR_POSITION_TOP);
   }
@@ -450,14 +448,9 @@ void View::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long k
 
 void View::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
-  if (timeline_need_more_draw_)
-  {
-    ProcessGrowShrink();
-  }
-
   nux::Geometry draw_content_geo(layout_->GetGeometry());
   draw_content_geo.height = current_height_;
-  renderer_.DrawFull(gfx_context, draw_content_geo, absolute_window_geometry_, window_geometry_, true);
+  renderer_.DrawFull(gfx_context, draw_content_geo, GetAbsoluteGeometry(), GetGeometry(), true);
 }
 
 void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
@@ -465,7 +458,7 @@ void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   nux::Geometry draw_content_geo(layout_->GetGeometry());
   draw_content_geo.height = current_height_;
 
-  renderer_.DrawInner(gfx_context, draw_content_geo, absolute_window_geometry_, window_geometry_);
+  renderer_.DrawInner(gfx_context, draw_content_geo, GetAbsoluteGeometry(), GetGeometry());
 
   gfx_context.PushClippingRectangle(draw_content_geo);
 
@@ -492,16 +485,7 @@ void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   }
   gfx_context.PopClippingRectangle();
 
-  renderer_.DrawInnerCleanup(gfx_context, draw_content_geo, absolute_window_geometry_, window_geometry_);
-
-  if (timeline_need_more_draw_ && !timeline_idle_)
-  {
-    timeline_idle_.reset(new glib::Idle([&] () {
-      QueueDraw();
-      timeline_idle_.reset();
-      return false;
-    }));
-  }
+  renderer_.DrawInnerCleanup(gfx_context, draw_content_geo, GetAbsoluteGeometry(), GetGeometry());
 }
 
 void View::MouseStealsHudButtonFocus()
@@ -768,6 +752,14 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
   }
   return search_bar_->text_entry();
 }
+
+nux::Geometry View::GetContentGeometry()
+{
+  nux::Geometry geo(content_geo_);
+  geo.height = current_height_;
+  return geo;
+}
+
 
 }
 }

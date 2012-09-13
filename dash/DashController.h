@@ -27,18 +27,17 @@
 #include <NuxCore/Property.h>
 #include <NuxGraphics/GraphicsEngine.h>
 #include <Nux/Nux.h>
-#include <Nux/BaseWindow.h>
 
 #include "DashView.h"
 #include "unity-shared/Animator.h"
 #include "unity-shared/Introspectable.h"
 #include "unity-shared/UBusWrapper.h"
+#include "unity-shared/ResizedInputWindowBaseWindow.h"
 
 namespace unity
 {
 namespace dash
 {
-class DashBaseWindow;
 
 class Controller : public unity::debug::Introspectable
 {
@@ -61,7 +60,7 @@ public:
   void HideDash(bool restore_focus = true);
 
   bool IsVisible() const;
-  nux::Geometry GetInputGeometry();
+  nux::Geometry GetInputWindowGeometry();
 
 protected:
   std::string GetName() const;
@@ -98,7 +97,7 @@ private:
   static void OnWindowConfigure(int width, int height, nux::Geometry& geo, void* data);
 
 private:
-  nux::ObjectPtr<DashBaseWindow> window_;
+  nux::ObjectPtr<ResizedInputWindowBaseWindow> window_;
   int monitor_;
 
   bool visible_;

@@ -1420,27 +1420,31 @@ void UnityScreen::handleEvent(XEvent* event)
         if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
           skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
       }
-      if (launcher_controller_->IsOverlayOpen())
+
+
+      if (dash_controller_->IsVisible())
       {
         int monitor_with_mouse = UScreen::GetDefault()->GetMonitorWithMouse();
-        if (dash_controller_->IsVisible())
-        {
-          nux::Geometry geo_dash = dash_controller_->GetInputGeometry();
+        nux::Point pt(event->xbutton.x_root, event->xbutton.y_root);
+        nux::Geometry geo_dash = dash_controller_->GetInputWindowGeometry();
 
-          if (overlay_monitor_ != monitor_with_mouse ||
-              event->xbutton.x_root > geo_dash.x + geo_dash.width ||
-              event->xbutton.y_root > geo_dash.y + geo_dash.height)
-          {
-            dash_controller_->HideDash(false);
-          }
+        if (overlay_monitor_ != monitor_with_mouse ||
+            !geo_dash.IsInside(pt))
+        {
+          ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST, g_variant_new_boolean(FALSE));
         }
+      }
 
-        if (hud_controller_->IsVisible())
+      if (hud_controller_->IsVisible())
+      {
+        int monitor_with_mouse = UScreen::GetDefault()->GetMonitorWithMouse();
+        nux::Point pt(event->xbutton.x_root, event->xbutton.y_root);
+        nux::Geometry geo_hud = hud_controller_->GetInputWindowGeometry();
+
+        if (overlay_monitor_ != monitor_with_mouse ||
+            !geo_hud.IsInside(pt))
         {
-          if (overlay_monitor_ != monitor_with_mouse)
-          {
-             hud_controller_->HideHud(false);
-          }
+          ubus_manager_.SendMessage(UBUS_HUD_CLOSE_REQUEST, g_variant_new_boolean(FALSE));
         }
       }
       break;
