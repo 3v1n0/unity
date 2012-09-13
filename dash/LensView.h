@@ -126,6 +126,7 @@ private:
 
   UBusManager ubus_manager_;
   glib::Source::UniquePtr fix_rendering_idle_;
+  glib::Source::UniquePtr model_updated_timeout_;
   int last_good_filter_model_;
   glib::Source::UniquePtr fix_filter_models_idle_;
 };

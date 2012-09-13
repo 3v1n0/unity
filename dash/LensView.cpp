@@ -440,6 +440,8 @@ ResultViewGrid* LensView::GetGridForCategory(unsigned category_index)
 void LensView::OnResultAdded(Result const& result)
 {
   try {
+    // Anything done in this method needs to be super fast, if in doubt, add
+    // it to the model_updated_timeout_ callback!
     PlacesGroup* group = categories_.at(result.category_index);
 
     std::string uri = result.uri;
@@ -453,9 +455,16 @@ void LensView::OnResultAdded(Result const& result)
       CheckNoResults(Lens::Hints());
     }
 
-    // Check if all results so far are from one category
-    // If so, then expand that category.
-    CheckCategoryExpansion();
+    if (!model_updated_timeout_)
+    {
+      model_updated_timeout_.reset(new glib::Idle([&] () {
+        // Check if all results so far are from one category
+        // If so, then expand that category.
+        CheckCategoryExpansion();
+        model_updated_timeout_.reset();
+        return false;
+      }, glib::Source::Priority::HIGH));
+    }
   } catch (std::out_of_range& oor) {
     LOG_WARN(logger) << "Result does not have a valid category index: "
                      << boost::lexical_cast<unsigned int>(result.category_index)
