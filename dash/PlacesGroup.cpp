@@ -404,7 +404,6 @@ PlacesGroup::OnIdleRelayout()
     nux::TexCoordXForm texxform;
     if (_n_visible_items_in_unexpand_mode < 6 && _using_nofilters_background)
     {
-      LOG_DEBUG(logger) << "drawing unexpanded texture";
       _background_layer.reset(new nux::TextureLayer(_background->GetDeviceTexture(), 
                               texxform, 
                               nux::color::White,
@@ -414,7 +413,6 @@ PlacesGroup::OnIdleRelayout()
     }
     else if (_n_visible_items_in_unexpand_mode >= 6 && !_using_nofilters_background)
     {
-      LOG_DEBUG(logger) << "drawing expanded texture";
       _background_layer.reset(new nux::TextureLayer(_background_nofilters->GetDeviceTexture(), 
                               texxform, 
                               nux::color::White,
@@ -456,7 +454,6 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
   nux::Geometry const& base = GetGeometry();
   graphics_engine.PushClippingRectangle(base);
 
-  LOG_DEBUG(logger) << "places group geo: " << base.width;
 
   if (ShouldBeHighlighted())
   {

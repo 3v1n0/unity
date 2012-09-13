@@ -323,7 +323,6 @@ void PanelView::AddProperties(GVariantBuilder* builder)
 void
 PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  LOG_DEBUG(logger) << "test";
   nux::Geometry const& geo = GetGeometry();
   UpdateBackground();
 
