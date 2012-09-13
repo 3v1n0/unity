@@ -158,8 +158,8 @@ void SocialPreview::SetupViews()
 
   if (social_preview_model->description.Get().length() > 0)
   {
-    description_ = new SocialPreviewContent(social_preview_model->description, NUX_TRACKER_LOCATION);
-    social_content_layout->AddView(description_.GetPointer(), 1);
+    content_ = new SocialPreviewContent(social_preview_model->description, NUX_TRACKER_LOCATION);
+    social_content_layout->AddView(content_.GetPointer(), 1);
   } else {
     image_ = new CoverArt();
     AddChild(image_.GetPointer());
@@ -281,7 +281,7 @@ void SocialPreview::PreLayoutManagement()
 
   if (geo.width - geo_content.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() < style.GetDetailsPanelMinimumWidth())
     geo_content.width = MAX(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() - style.GetDetailsPanelMinimumWidth());
-  if (description_) { description_->SetMinMaxSize(geo_content.width, geo_content.height); }
+  if (content_) { content_->SetMinMaxSize(geo_content.width, geo_content.height); }
   if (image_) { image_->SetMinMaxSize(geo_content.width, geo_content.height); }
 
   int details_width = MAX(0, geo.width - geo_content.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());

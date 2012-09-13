@@ -75,7 +75,7 @@ protected:
 
   nux::ObjectPtr<IconTexture> avatar_;
   nux::ObjectPtr<CoverArt> image_;
-  nux::ObjectPtr<SocialPreviewContent> description_;
+  nux::ObjectPtr<SocialPreviewContent> content_;
   nux::ObjectPtr<SocialPreviewComments> comments_;
   nux::ObjectPtr<nux::StaticCairoText> title_;
   nux::ObjectPtr<nux::StaticCairoText> subtitle_;
