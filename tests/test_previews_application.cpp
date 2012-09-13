@@ -34,6 +34,7 @@ using namespace testing;
 #include "dash/previews/ApplicationPreview.h"
 #include "dash/previews/PreviewInfoHintWidget.h"
 #include "dash/previews/PreviewRatingsWidget.h"
+#include "dash/previews/ActionButton.h"
 #include "test_utils.h"
 using namespace unity;
 using namespace unity::dash;
@@ -69,6 +70,9 @@ public:
   {
     glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_application_preview_new()));
 
+    GHashTable* action_hints1(g_hash_table_new(g_direct_hash, g_direct_equal));
+    g_hash_table_insert (action_hints1, g_strdup ("extra-text"), g_variant_new_string("£30.99"));
+
     unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string("/home/nick/SkypeIcon.png", NULL));
     unity_protocol_application_preview_set_license(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "License & special char");
     unity_protocol_application_preview_set_copyright(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "Copywrite & special char");
@@ -81,13 +85,15 @@ public:
     unity_protocol_preview_set_subtitle(proto_obj, "Application Subtitle > special char");
     unity_protocol_preview_set_description(proto_obj, "Application Desctiption &lt; special char");
     unity_protocol_preview_add_action(proto_obj, "action1", "Action 1", NULL, 0);
-    unity_protocol_preview_add_action(proto_obj, "action2", "Action 2", NULL, 0);
+    unity_protocol_preview_add_action_with_hints(proto_obj, "action2", "Action 2", NULL, 0, action_hints1);
     unity_protocol_preview_add_info_hint(proto_obj, "hint1", "Hint 1", NULL, g_variant_new("s", "string hint 1"));
     unity_protocol_preview_add_info_hint(proto_obj, "hint2", "Hint 2", NULL, g_variant_new("s", "string hint 2"));
     unity_protocol_preview_add_info_hint(proto_obj, "hint3", "Hint 3", NULL, g_variant_new("i", 12));
 
     glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())), glib::StealRef());
     preview_model_ = dash::Preview::PreviewForVariant(v);
+
+    g_hash_table_unref(action_hints1);
   }
 
   nux::BaseWindow* parent_window_;
@@ -119,6 +125,24 @@ TEST_F(TestPreviewApplication, TestUIValues)
 
   EXPECT_EQ(preview_view->app_rating_->GetRating(), 0.8f);
   EXPECT_EQ(preview_view->action_buttons_.size(), 2);
+
+  if (preview_view->action_buttons_.size() >= 2)
+  {
+    auto iter = preview_view->action_buttons_.begin();
+    if ((*iter)->Type().IsDerivedFromType(ActionButton::StaticObjectType))
+    {
+      ActionButton *action = static_cast<ActionButton*>(*iter);
+      EXPECT_EQ(action->GetLabel(), "Action 1");
+      EXPECT_EQ(action->GetExtraText(), "");
+    }
+    iter++;
+    if ((*iter)->Type().IsDerivedFromType(ActionButton::StaticObjectType))
+    {
+      ActionButton *action = static_cast<ActionButton*>(*iter);
+      EXPECT_EQ(action->GetLabel(), "Action 2");
+      EXPECT_EQ(action->GetExtraText(), "£30.99");
+    }
+  }
 }
 
 }
