@@ -97,7 +97,7 @@ void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
   drag_window_->SetAnimationTarget(target_x, target_y);
 
   drag_window_->on_anim_completed = drag_window_->anim_completed.connect(sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnDragAnimationFinished));
-  drag_window_->StartAnimation();
+  drag_window_->StartSlowAnimation();
 }
 
 void SoftwareCenterLauncherIcon::OnDragAnimationFinished()
