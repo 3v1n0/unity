@@ -63,23 +63,6 @@ Expected Result:
   Verify each icon gets highlighted from top to bottom.
 
 
-Test Alt+F1 KeyNavMode Mouse Works
--------------------------------
-This test shows that the mouse still works normally while keynav mode is active.
-
-Setup:
-
-Actions:
-#. Press Alt+F1 to enter keynav mode
-#. Using the mouse perform a normal action (such as dragging a window)
-
-Expected Result:
-  The keynav mode exits, along with the mouse performing the normal action
-  the user expects. Such as highlighting text, moving a window, clicking out
-  of keynav mode, or clicking on a launcher icon. All these actions should
-  also exit the keynav mode.
-
-
 Test Alt+F1 KeyNavMode Shortcuts
 -----------------------------
 This test shows that all the shortcuts work and also exits from keynav mode.
@@ -100,21 +83,6 @@ Expected Result:
   nav mode. The second shortcut switches between applications. The last one will open
   a new terminal. This is to show all SUPER, ALT, and CTRL shortcuts work; while
   closing the keynav mode.
-
-
-Test Alt+F1 NavMode Quicklist Click Exit
-----------------------------------------
-This Test shows that clicking on a quicklist option quits keynav mode.
-
-Setup:
-
-Actions:
-#. Press Alt+F1 to enter keynav mode
-#. Press Right arrow
-#. Click on any option
-
-Expected Result:
-  No matter what option you click will exit keynav mode.
 
 
 Drag Icons to Trash
@@ -317,21 +285,6 @@ Expected Result:
   The number of wakeups per second (events per second) reported for the
   compiz process should be much lower than 50.
 
-
-Test Quicklist while on Expo
------------------------------
-This test shows how the launcher quicklists work when the expo plugin is activated.
-
-Setup:
-#. Start with a clear screen
-#. Press Super+S or select the workspace switcher on the launcher
-
-Actions:
-#. When the workspace switcher is running, right-click over a launcher icon
-
-Expected Result:
-  The expo should terminate, and the quicklist should be shown once the
-  workspace switcher has been closed.
 
 Test highlight BFB
 -------------------

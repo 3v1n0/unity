@@ -62,6 +62,7 @@ public:
   PreviewContent(PreviewContainer*const parent)
   : parent_(parent)
   , progress_(0.0)
+  , curve_progress_(0.0)
   , animating_(false)
   , waiting_preview_(false)
   , rotation_(0.0)
@@ -69,6 +70,11 @@ public:
   , nav_complete_(0)
   , relative_nav_index_(0)
   {
+    OnGeometryChanged.connect([&](nux::Area*, nux::Geometry& geo)
+    {
+      // Need to update the preview geometries when updating the container geo.
+      UpdateAnimationProgress(progress_, curve_progress_);
+    });
     Style& style = previews::Style::Instance();
 
     spin_= style.GetSearchSpinIcon(256);
@@ -98,6 +104,9 @@ public:
 
     if (preview)
     {
+      // the parents layout will not change based on the previews.
+      preview->SetReconfigureParentLayoutOnGeometryChange(false);
+      
       AddChild(preview.GetPointer());
       AddView(preview.GetPointer());
       preview->SetVisible(false);
@@ -123,6 +132,7 @@ public:
   void UpdateAnimationProgress(float progress, float curve_progress)
   {
     progress_ = progress;
+    curve_progress_ = curve_progress;
 
     if (!animating_)
     {
@@ -149,9 +159,9 @@ public:
 
         nux::Geometry swipeOut = geometry;
         if (swipe_.direction == Navigation::RIGHT)
-          swipeOut.OffsetPosition(-(curve_progress * (geometry.GetWidth() + parent_->nav_left_->GetGeometry().GetWidth())), 0);
+          swipeOut.OffsetPosition(-(curve_progress * (parent_->GetGeometry().width - geometry.x)), 0);
         else if (swipe_.direction == Navigation::LEFT)
-          swipeOut.OffsetPosition(curve_progress* (geometry.GetWidth() + parent_->nav_right_->GetGeometry().GetWidth()), 0);
+          swipeOut.OffsetPosition(curve_progress* (parent_->GetGeometry().width - geometry.x), 0);
         current_preview_->SetGeometry(swipeOut);
       }
  
@@ -162,48 +172,52 @@ public:
 
         nux::Geometry swipeIn = geometry;
         if (swipe_.direction == Navigation::RIGHT)
-          swipeIn.OffsetPosition(float(geometry.GetWidth() + parent_->nav_right_->GetGeometry().GetWidth()) - (curve_progress * (geometry.GetWidth() + parent_->nav_right_->GetGeometry().GetWidth())), 0);
+          swipeIn.OffsetPosition(float(parent_->GetGeometry().width - geometry.x) - (curve_progress * (parent_->GetGeometry().width - geometry.x)), 0);
         else if (swipe_.direction == Navigation::LEFT)
-          swipeIn.OffsetPosition(-((1.0-curve_progress)*(geometry.GetWidth() + parent_->nav_left_->GetGeometry().GetWidth())), 0);
+          swipeIn.OffsetPosition(-((1.0-curve_progress)*(parent_->GetGeometry().width - geometry.x)), 0);
         swipe_.preview->SetGeometry(swipeIn);
       }
     }
 
     if (progress >= 1.0)
     {
-      animating_ = false;
-      if (current_preview_)
+      // if we were animating, we need to remove the old preview, and replace it with the new.
+      if (animating_)
       {
-        RemoveChild(current_preview_.GetPointer());
-        RemoveChildObject(current_preview_.GetPointer());
-        current_preview_.Release();
-      }
-      if (swipe_.preview)
-      {
-        if (swipe_.direction == Navigation::RIGHT)
-          relative_nav_index_++;
-        else if (swipe_.direction == Navigation::LEFT)
-          relative_nav_index_--;
-
-        current_preview_ = swipe_.preview;
-        swipe_.preview.Release();
+        animating_ = false;
         if (current_preview_)
-          current_preview_->OnNavigateInComplete();
-      }
+        {
+          RemoveChild(current_preview_.GetPointer());
+          RemoveChildObject(current_preview_.GetPointer());
+          current_preview_.Release();
+        }
+        if (swipe_.preview)
+        {
+          if (swipe_.direction == Navigation::RIGHT)
+            relative_nav_index_++;
+          else if (swipe_.direction == Navigation::LEFT)
+            relative_nav_index_--;
 
-      // another swipe?
-      if (!push_preview_.empty())
-      {
-        progress_ = 0;
-        continue_navigation.emit();
-      }
-      else
-      {
-        end_navigation.emit();
+          current_preview_ = swipe_.preview;
+          swipe_.preview.Release();
+          if (current_preview_)
+            current_preview_->OnNavigateInComplete();
+        } 
+
+        // another swipe?
+        if (!push_preview_.empty())
+        {
+          progress_ = 0;
+          continue_navigation.emit();
+        }
+        else
+        {
+          end_navigation.emit();
+        }
       }
 
       // set the geometry to the whole layout.
-      if (current_preview_ && current_preview_->GetGeometry() != geometry)
+      if (current_preview_)
       {
         current_preview_->SetGeometry(geometry);
       }
@@ -332,6 +346,7 @@ private:
   PreviewSwipe swipe_;
 
   float progress_;
+  float curve_progress_;
   bool animating_;
   // wait animation
   glib::Source::UniquePtr preview_wait_timer_;
@@ -355,7 +370,6 @@ PreviewContainer::PreviewContainer(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , content_layout_(nullptr)
   , nav_disabled_(Navigation::NONE)
-  , last_calc_height_(0)
   , navigation_progress_speed_(0.0)
   , navigation_count_(0)
 {
@@ -411,7 +425,7 @@ void PreviewContainer::SetupViews()
 
   layout_ = new nux::HLayout();
   SetLayout(layout_);
-  layout_->AddSpace(0, 0);
+  layout_->AddSpace(0, 1);
 
   nav_left_ = new PreviewNavigator(Orientation::LEFT, NUX_TRACKER_LOCATION);
   AddChild(nav_left_);
@@ -421,8 +435,9 @@ void PreviewContainer::SetupViews()
   layout_->AddView(nav_left_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   content_layout_ = new PreviewContent(this);
+  content_layout_->SetMinMaxSize(style.GetPreviewWidth(), style.GetPreviewHeight());
   AddChild(content_layout_);
-  layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  layout_->AddLayout(content_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   nav_right_ = new PreviewNavigator(Orientation::RIGHT, NUX_TRACKER_LOCATION);
   AddChild(nav_right_);
@@ -431,7 +446,7 @@ void PreviewContainer::SetupViews()
   nav_right_->activated.connect([&]() { navigate_right.emit(); });
   layout_->AddView(nav_right_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
-  layout_->AddSpace(0, 0);
+  layout_->AddSpace(0, 1);
 
   content_layout_->start_navigation.connect([&]()
   {
@@ -495,32 +510,6 @@ void PreviewContainer::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_d
     GetCompositionLayout()->ProcessDraw(gfx_engine, force_draw);
 
   gfx_engine.PopClippingRectangle();
-}
-
-void PreviewContainer::PreLayoutManagement()
-{
-  previews::Style& style = previews::Style::Instance();
-  nux::Geometry const& geo = GetGeometry();
-
-  int available_preview_width = MAX(1, geo.width - nav_left_->GetGeometry().width - nav_right_->GetGeometry().width);
-  int aspect_altered_height = available_preview_width / style.GetPreviewAspectRatio();
-
-  aspect_altered_height = CLAMP(aspect_altered_height, 1, geo.height);
-  if (last_calc_height_ != aspect_altered_height)
-  {
-    last_calc_height_ = aspect_altered_height;
-
-    content_layout_->SetMinimumHeight(aspect_altered_height);
-    content_layout_->SetMaximumHeight(aspect_altered_height);
-
-    nav_left_->SetMinimumHeight(aspect_altered_height);
-    nav_left_->SetMaximumHeight(aspect_altered_height);
-
-    nav_right_->SetMinimumHeight(aspect_altered_height);
-    nav_right_->SetMaximumHeight(aspect_altered_height);
-  }
-
-  View::PreLayoutManagement();
 }
 
 bool PreviewContainer::AnimationInProgress()

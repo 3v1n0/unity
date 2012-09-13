@@ -111,6 +111,8 @@ public:
   virtual bool saveInputFocus() = 0;
   virtual bool restoreInputFocus() = 0;
 
+  virtual std::string GetWindowName(guint32 xid) const = 0;
+
   // Signals
   sigc::signal<void, guint32> window_mapped;
   sigc::signal<void, guint32> window_unmapped;

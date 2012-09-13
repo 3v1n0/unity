@@ -5,7 +5,7 @@ This tests the dash preview open animation
 
 Setup:
 #. Open dash super
-#. Open a lens which supports previeing (eg Application, Music, File)
+#. Open a lens which supports previewing (e.g. Application, Music, File)
 #. Enter arbitrary search string and ensure a result is available.
 
 Actions:
@@ -23,7 +23,7 @@ This tests the dash preview navigate left animation
 
 Setup:
 #. Open dash super
-#. Open a lens which supports previeing (eg Application, Music, File)
+#. Open a lens which supports previewing (e.g. Application, Music, File)
 #. Enter arbitrary search string and ensure at least 2 results are available.
 #. Right-click the mouse on at least the second result.
 #. Wait for the preview window to open and finish animating.
@@ -32,7 +32,7 @@ Actions:
 #. Click the 'navigate left' icon.
 
 Expected Result:
-  The current preview will swipe out and the new prevew result will swipe from right
+  The current preview will swipe out and the new preview result will swipe from right
   to left using an ease in-out curve progression.
 
 
@@ -43,7 +43,7 @@ This tests the dash preview navigate right animation
 
 Setup:
 #. Open dash super
-#. Open a lens which supports previeing (eg Application, Music, File)
+#. Open a lens which supports previewing (e.g. Application, Music, File)
 #. Enter arbitrary search string and ensure at least 2 results are available.
 #. Right-click the mouse on at most the second last result.
 #. Wait for the preview window to open and finish animating.
@@ -52,7 +52,7 @@ Actions:
 #. Click the navigate right icon.
 
 Expected Result:
-  The current preview will swipe out and the new prevew result will swipe from right
+  The current preview will swipe out and the new preview result will swipe from right
   to left using an ease in-out curve progression.
 
 
@@ -73,7 +73,7 @@ Expected Result:
   The Track information will contain a title and duration.
 
 
-Preview Music Play
+Preview Music Track Play
 note: Should be automated.
 ------------
 This tests the dash music preview track play
@@ -84,14 +84,16 @@ Setup:
 #. Open a preview for a result which contains tracks.
 
 Actions:
-#. Play first track.
+#. Hover over track number for the track you wish to play.
+#. Click play icon.
 
 Expected Result:
+  When hovering on track number, it will change to a play icon.
   Music Player daemon will start playing track and update status of the track
   in the preview to playing as well as update it's progress.
 
 
-Preview Music Pause
+Preview Music Track Pause
 note: Should be automated.
 ------------
 This tests the dash preview preview navigate right animation
@@ -100,14 +102,16 @@ Setup:
 #. Open music lens (Super+M)
 #. Enter arbitrary search string and ensure a result is available.
 #. Open a preview for a result which contains tracks.
-#. Play first track.
+#. Play first track. (by hovering+click on track number.)
 
 Actions:
-#. Pause playing track.
+#. Hover over pause icon for the track which is playing.
+#. Click pause icon.
 
 Expected Result:
+  When hovering on play icon, it will change to a pause icon.
   Music Player daemon will pause the playing track and update it's status
-  to paused. Progress will stop incresing.
+  to paused. Progress will stop increasing.
 
 
 Preview Application Launch
@@ -126,3 +130,24 @@ Actions:
 
 Expected Result:
   Preview should close and launch the gedit application.
+
+
+Preview Open Geometry
+------------
+This tests the dash preview opens with the correct size and
+its geometry is updated when changing between form factor (desktop & netbook)
+
+Setup:
+#. Open dash super
+#. Ensure dash is in windowed mode (not full screen)
+#. Open a lens which supports previewing (e.g. Application, Music, File)
+#. Enter arbitrary search string and ensure a result is available.
+
+Actions:
+#. Open preview for result.
+#. Resize dash to full screen.
+#. Resize dash back to windowed mode.
+
+Expected Result:
+  A preview will open with the correct size initially (no size flicker).
+  When the dash is resized, the preview will center its geometry and stay the correct size.
