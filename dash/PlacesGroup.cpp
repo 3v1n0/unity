@@ -58,6 +58,7 @@ namespace
 const nux::Color kExpandDefaultTextColor(1.0f, 1.0f, 1.0f, 0.5f);
 const float kExpandDefaultIconOpacity = 0.5f;
 
+const int kCategoryIconSize = 22;
 // Category  highlight
 const int kHighlightHeight = 24;
 const int kHighlightRightPadding = 10 - 3; // -3 because the scrollbar is not a real overlay scrollbar!
@@ -157,8 +158,8 @@ PlacesGroup::PlacesGroup()
   _header_layout->SetSpaceBetweenChildren(10);
   _header_view->SetLayout(_header_layout);
 
-  _icon = new IconTexture("", 24);
-  _icon->SetMinMaxSize(24, 24);
+  _icon = new IconTexture("", kCategoryIconSize);
+  _icon->SetMinMaxSize(kCategoryIconSize, kCategoryIconSize);
   _header_layout->AddView(_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _text_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
@@ -276,7 +277,7 @@ PlacesGroup::GetExpandLabel()
 void
 PlacesGroup::SetIcon(std::string const& path_to_emblem)
 {
-  _icon->SetByIconName(path_to_emblem, 24);
+  _icon->SetByIconName(path_to_emblem, kCategoryIconSize);
 }
 
 void

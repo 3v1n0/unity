@@ -131,7 +131,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , panel_texture_has_changed_(true)
   , paint_panel_(false)
   , scale_just_activated_(false)
-  , scale_highlighted_window_(0)
   , minimize_speed_controller(new WindowMinimizeSpeedController())
 {
   Timer timer;
@@ -359,7 +358,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
        g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                     &overlay_identity, &can_maximise, &overlay_monitor);
 
-       dash_monitor_ = overlay_monitor;
+       overlay_monitor_ = overlay_monitor;
 
        RaiseInputWindows();
      });
@@ -370,7 +369,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   }
 
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &UnityScreen::OnPanelStyleChanged));
-  WindowManager::Default()->terminate_spread.connect([this] { scale_highlighted_window_ = 0; });
 
   minimize_speed_controller->DurationChanged.connect(
       sigc::mem_fun(this, &UnityScreen::OnMinimizeDurationChanged)
@@ -571,7 +569,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
     i++;
   }
 
-  if (!(launcher_controller_->IsOverlayOpen() && current_monitor == dash_monitor_)
+  if (!(launcher_controller_->IsOverlayOpen() && current_monitor == overlay_monitor_)
       && panel_controller_->opacity() > 0.0f)
   {
     foreach(GLTexture * tex, _shadow_texture)
@@ -1379,14 +1377,17 @@ void UnityScreen::nuxDamageCompiz()
 void UnityScreen::handleEvent(XEvent* event)
 {
   bool skip_other_plugins = false;
+  auto wm = PluginAdapter::Default();
+
   switch (event->type)
   {
     case FocusIn:
     case FocusOut:
       if (event->xfocus.mode == NotifyGrab)
-        PluginAdapter::Default()->OnScreenGrabbed();
+        wm->OnScreenGrabbed();
       else if (event->xfocus.mode == NotifyUngrab)
-        PluginAdapter::Default()->OnScreenUngrabbed();
+        wm->OnScreenUngrabbed();
+
       if (_key_nav_mode_requested)
       {
         // Close any overlay that is open.
@@ -1400,9 +1401,10 @@ void UnityScreen::handleEvent(XEvent* event)
       _key_nav_mode_requested = false;
       break;
     case MotionNotify:
-      if (scale_highlighted_window_ && PluginAdapter::Default()->IsScaleActive())
+      if (wm->IsScaleActive())
       {
-        if (CompWindow *w = screen->findWindow(scale_highlighted_window_))
+        ScaleScreen* ss = ScaleScreen::get(screen);
+        if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
           skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
       }
       break;
@@ -1412,12 +1414,21 @@ void UnityScreen::handleEvent(XEvent* event)
         launcher_controller_->KeyNavTerminate(false);
         EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
       }
-      if (scale_highlighted_window_ && PluginAdapter::Default()->IsScaleActive())
+      if (wm->IsScaleActive())
       {
-        if (CompWindow *w = screen->findWindow(scale_highlighted_window_))
+        ScaleScreen* ss = ScaleScreen::get(screen);
+        if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
           skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
       }
-
+      if (launcher_controller_->IsOverlayOpen())
+      {
+        int monitor_with_mouse = UScreen::GetDefault()->GetMonitorWithMouse();
+        if (overlay_monitor_ != monitor_with_mouse)
+        {
+          dash_controller_->HideDash(false);
+          hud_controller_->HideHud(false);
+        }
+      }
       break;
     case ButtonRelease:
       if (switcher_controller_ && switcher_controller_->Visible())
@@ -1437,10 +1448,11 @@ void UnityScreen::handleEvent(XEvent* event)
           }
         }
       }
-      else if (scale_highlighted_window_ && PluginAdapter::Default()->IsScaleActive())
+      else if (wm->IsScaleActive())
       {
-        if (CompWindow *w = screen->findWindow(scale_highlighted_window_))
-          UnityWindow::get(w)->handleEvent(event);
+        ScaleScreen* ss = ScaleScreen::get(screen);
+        if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
+          skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
       }
       break;
     case KeyPress:
@@ -2556,7 +2568,8 @@ void UnityWindow::windowNotify(CompWindowNotify n)
     UnityScreen* us = UnityScreen::get(screen);
     CompWindow *lw;
 
-    if (us->launcher_controller_->IsOverlayOpen())
+    // can't rely on launcher->IsOverlayVisible on focus change (because ubus is async close on focus change.)
+    if (us && (us->dash_controller_->IsVisible() || us->hud_controller_->IsVisible()))
     {
       lw = screen->findWindow(us->launcher_controller_->LauncherWindowId(0));
       lw->moveInputFocusTo();
@@ -3598,8 +3611,8 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
   if (!scale_win->hasSlot()) // animation not finished
     return;
 
-  UnityScreen* us = UnityScreen::get(screen);
-  const bool highlighted = (us->scale_highlighted_window_ == window->id());
+  ScaleScreen* ss = ScaleScreen::get(screen);
+  const bool highlighted = (ss->getSelectedWindow() == window->id());
 
   ScalePosition const& pos = scale_win->getCurrentPosition();
   auto const& border_rect = window->borderRect();
@@ -3650,16 +3663,6 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
   {
     close_button_geo_.Set(0, 0, 0, 0);
   }
-}
-
-void UnityWindow::scaleSelectWindow()
-{
-  ScaleWindow::get(window)->scaleSelectWindow();
-
-  UnityScreen* us = UnityScreen::get(screen);
-
-  if (us->scale_highlighted_window_ != window->id())
-    us->scale_highlighted_window_ = window->id();
 }
 
 void UnityWindow::OnInitiateSpreed()
