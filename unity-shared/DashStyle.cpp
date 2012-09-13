@@ -58,6 +58,7 @@ namespace
 nux::logging::Logger logger("unity.dash");
 
 Style* style_instance = nullptr;
+
 const int STATES = 5;
 
 // These cairo overrides may also be reused somewhere...
@@ -1585,11 +1586,13 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
                      pimpl->button_label_overlay_mode_[state],
                      pimpl->button_label_blur_size_[state] * 0.75);
 
+  static double internal_padding = 5.0f;
+
   pimpl->Text(cr,
               pimpl->button_label_text_color_[state],
               label,
               font_size,
-              5.0, // padding
+              internal_padding,
               alignment);
 
   return true;
