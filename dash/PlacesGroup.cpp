@@ -115,7 +115,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(PlacesGroup);
 PlacesGroup::PlacesGroup()
   : AbstractPlacesGroup(),
     _child_view(nullptr),
-    _is_expanded(true),
+    _is_expanded(false),
     _n_visible_items_in_unexpand_mode(0),
     _n_total_items(0),
     _category_index(0),

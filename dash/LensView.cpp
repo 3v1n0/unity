@@ -196,9 +196,14 @@ void LensView::SetupViews(nux::Area* show_filters)
 
   scroll_view_ = new LensScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION),
                                     NUX_TRACKER_LOCATION);
-  scroll_view_->EnableVerticalScrollBar(true);
+  scroll_view_->EnableVerticalScrollBar(false);
   scroll_view_->EnableHorizontalScrollBar(false);
   layout_->AddView(scroll_view_);
+
+  scroll_view_->OnGeometryChanged.connect([this] (nux::Area *area, nux::Geometry& geo)
+  {
+    CheckScrollBarState();
+  });
 
   scroll_layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
   scroll_view_->SetLayout(scroll_layout_);
@@ -637,13 +642,15 @@ void LensView::OnGroupExpanded(PlacesGroup* group)
 
 void LensView::CheckScrollBarState()
 {
+
+  LOG_DEBUG(logger) << "foo: " << scroll_layout_->GetGeometry().height << " vs " << scroll_view_->GetGeometry().height;
   if (scroll_layout_->GetGeometry().height > scroll_view_->GetGeometry().height)
   {
-    scroll_view_->EnableVerticalScrollBar(false); 
+    scroll_view_->EnableVerticalScrollBar(true); 
   }
   else
   {
-    scroll_view_->EnableVerticalScrollBar(true); 
+    scroll_view_->EnableVerticalScrollBar(false); 
   }
 }
 
