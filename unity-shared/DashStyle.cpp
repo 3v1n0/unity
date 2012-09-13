@@ -1589,7 +1589,7 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
               pimpl->button_label_text_color_[state],
               label,
               font_size,
-              11.0, // 15px = 11pt
+              5.0, // padding
               alignment);
 
   return true;
