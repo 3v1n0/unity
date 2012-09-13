@@ -122,9 +122,14 @@ void Controller::SetupHudView()
   AddChild(view_);
 }
 
-int Controller::GetTargetMonitor()
+int Controller::GetIdealMonitor()
 {
-  return UScreen::GetDefault()->GetMonitorWithMouse();
+  int ideal_monitor;
+  if (window_->IsVisible())
+    ideal_monitor = monitor_index_;
+  else
+    ideal_monitor = UScreen::GetDefault()->GetMonitorWithMouse();
+  return ideal_monitor;
 }
 
 bool Controller::IsLockedToLauncher(int monitor)
@@ -181,8 +186,8 @@ void Controller::OnWindowConfigure(int window_width, int window_height,
 
 nux::Geometry Controller::GetIdealWindowGeometry()
 {
-  int target_monitor = GetTargetMonitor();
-  auto monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(target_monitor);
+  int ideal_monitor = GetIdealMonitor();
+  auto monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(ideal_monitor);
 
   // We want to cover as much of the screen as possible to grab any mouse events
   // outside of our window
@@ -192,7 +197,7 @@ nux::Geometry Controller::GetIdealWindowGeometry()
                     monitor_geo.width,
                     monitor_geo.height - panel_style.panel_height);
 
-  if (IsLockedToLauncher(target_monitor))
+  if (IsLockedToLauncher(ideal_monitor))
   {
     geo.x += launcher_width;
     geo.width -= launcher_width;
@@ -273,12 +278,12 @@ void Controller::ShowHud()
     return;
   }
 
-  unsigned int target_monitor = GetTargetMonitor();
+  unsigned int ideal_monitor = GetIdealMonitor();
 
-  if (target_monitor != monitor_index_)
+  if (ideal_monitor != monitor_index_)
   {
     Relayout();
-    monitor_index_ = target_monitor;
+    monitor_index_ = ideal_monitor;
   }
 
   view_->ShowEmbeddedIcon(!IsLockedToLauncher(monitor_index_));
@@ -487,6 +492,7 @@ void Controller::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
     .add(window_ ? window_->GetGeometry() : nux::Geometry())
+    .add("ideal_monitor", GetIdealMonitor())
     .add("visible", visible_)
     .add("hud_monitor", monitor_index_)
     .add("locked_to_launcher", IsLockedToLauncher(monitor_index_));

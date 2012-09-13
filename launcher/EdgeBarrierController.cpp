@@ -155,6 +155,12 @@ void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const
 
 void EdgeBarrierController::Impl::OnPointerBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event)
 {
+  if (owner->released)
+  {
+    BarrierRelease(owner, event->event_id);
+    return;
+  }
+
   unsigned int monitor = owner->index;
   bool process = true;
 
@@ -166,11 +172,7 @@ void EdgeBarrierController::Impl::OnPointerBarrierEvent(PointerBarrierWrapper* o
       process = false;
   }
 
-  if (process && owner->released)
-  {
-    BarrierRelease(owner, event->event_id);
-  }
-  else if (process && owner->x1 > 0)
+  if (process && owner->x1 > 0)
   {
     decaymulator_.value = decaymulator_.value + event->velocity;
 

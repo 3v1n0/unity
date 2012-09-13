@@ -31,7 +31,9 @@ namespace
 
 nux::logging::Logger logger("unity.dash.lensbar");
 
-const int LENSBAR_HEIGHT = 44;
+// according to Q design the inner area of the lensbar should be 40px
+// (without any borders)
+const int LENSBAR_HEIGHT = 41;
 
 }
 
