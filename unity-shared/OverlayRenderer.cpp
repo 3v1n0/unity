@@ -502,9 +502,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
   gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
   const double line_opacity = 0.1f;
-  //const int gradient_width = 130;
   const int gradient_height = 50;
-  //const int horizontal_padding = 40;
   const int vertical_padding = 20;
 
   // Now that we mask the corners of the dash,
@@ -530,23 +528,6 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
                                geometry.y + content_geo.height + INNER_CORNER_RADIUS + corner_overlap,
                                line_color * 0.7f); // less opacity
 
-  // Horizontal panel/dash separator
-  /*nux::GetPainter().Paint2DQuadColor(gfx_context,
-                                     nux::Geometry(geometry.x + horizontal_padding,
-                                                   geometry.y,
-                                                   gradient_width,
-                                                   style.GetHSeparatorSize()),
-                                     nux::color::Transparent,
-                                     nux::color::Transparent,
-                                     line_color,
-                                     line_color);
-  nux::GetPainter().Draw2DLine(gfx_context,
-                               geometry.x + horizontal_padding + gradient_width,
-                               geometry.y,
-                               geometry.x + content_geo.width + INNER_CORNER_RADIUS + corner_overlap,
-                               style.GetHSeparatorSize(),
-                               line_color);
-*/
   // Draw the background
   bg_darken_layer_->SetGeometry(larger_content_geo);
   nux::GetPainter().RenderSinglePaintLayer(gfx_context, larger_content_geo, bg_darken_layer_);
