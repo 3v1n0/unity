@@ -182,7 +182,7 @@ private:
 
     bool ProcessIconNameTask()
     {
-      int size = max_height < 0 ? max_width : max_height;
+      int size = max_height < 0 ? max_width : (max_width < 0 ? max_height : MIN(max_height, max_width));
       GtkIconInfo* info = ::gtk_icon_theme_lookup_icon(impl->theme_, data.c_str(),
                                                        size, static_cast<GtkIconLookupFlags>(0));
       if (info)
@@ -208,7 +208,7 @@ private:
     {
       glib::Error error;
       glib::Object<GIcon> icon(::g_icon_new_for_string(data.c_str(), &error));
-      int size = max_height < 0 ? max_width : max_height;
+      int size = max_height < 0 ? max_width : (max_width < 0 ? max_height : MIN(max_height, max_width));
 
       if (icon.IsType(UNITY_PROTOCOL_TYPE_ANNOTATED_ICON))
       {
