@@ -247,6 +247,12 @@ void DashView::AboutToHide()
   home_lens_->view_type = ViewType::HIDDEN;
   LOG_DEBUG(logger) << "Setting ViewType " << ViewType::HIDDEN
                             << " on '" << home_lens_->id() << "'";
+
+  // if a preview is open, close it
+  if (preview_displaying_) 
+  {
+    ClosePreview();
+  }
 }
 
 void DashView::SetupViews()
@@ -401,22 +407,22 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 
   if (IsFullRedraw())
     nux::GetPainter().PushBackgroundStack();
-  
+
   if (preview_displaying_)
    preview_container_->ProcessDraw(gfx_context, (!force_draw) ? IsFullRedraw() : force_draw);
   else
     layout_->ProcessDraw(gfx_context, force_draw);
-    
+
   if (IsFullRedraw())
     nux::GetPainter().PopBackgroundStack();
 
   renderer_.DrawInnerCleanup(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
 }
 
-  void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
-  {
-    dash::Style& style = dash::Style::Instance();
-    nux::Geometry geo(content_geo_);
+void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
+{
+  dash::Style& style = dash::Style::Instance();
+  nux::Geometry geo(content_geo_);
 
   if (Settings::Instance().GetFormFactor() == FormFactor::DESKTOP)
   {
