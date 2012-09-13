@@ -22,6 +22,7 @@
 
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/PreviewStyle.h"
+#include "unity-shared/CoverArt.h"
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/PlacesVScrollBar.h"
@@ -151,13 +152,20 @@ void SocialPreview::SetupViews()
   nux::HLayout* image_data_layout = new nux::HLayout();
   image_data_layout->SetSpaceBetweenChildren(style.GetPanelSplitWidth());
 
-  /////////////////////
-  // Avatar
   nux::VLayout* social_content_layout = new nux::VLayout();
   social_content_layout->SetSpaceBetweenChildren(16);
   
-  description_ = new SocialPreviewContent(social_preview_model->description, NUX_TRACKER_LOCATION);
-  social_content_layout->AddView(description_.GetPointer(), 1);
+
+  if (social_preview_model->description.Get().length() > 0)
+  {
+    description_ = new SocialPreviewContent(social_preview_model->description, NUX_TRACKER_LOCATION);
+    social_content_layout->AddView(description_.GetPointer(), 1);
+  } else {
+    image_ = new CoverArt();
+    AddChild(image_.GetPointer());
+    UpdateCoverArtImage(image_.GetPointer());
+    social_content_layout->AddView(image_.GetPointer(), 1);
+  }
 
   /////////////////////
 
@@ -273,7 +281,8 @@ void SocialPreview::PreLayoutManagement()
 
   if (geo.width - geo_content.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() < style.GetDetailsPanelMinimumWidth())
     geo_content.width = MAX(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() - style.GetDetailsPanelMinimumWidth());
-  description_->SetMinMaxSize(geo_content.width, geo_content.height);
+  if (description_) { description_->SetMinMaxSize(geo_content.width, geo_content.height); }
+  if (image_) { image_->SetMinMaxSize(geo_content.width, geo_content.height); }
 
   int details_width = MAX(0, geo.width - geo_content.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
   int top_social_info_max_width = details_width - style.GetAppIconAreaWidth() - style.GetSpaceBetweenIconAndDetails();
