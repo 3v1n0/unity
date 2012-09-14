@@ -20,6 +20,9 @@
  *
  */
 
+#ifndef TEST_MOCK_DEVICES_H
+#define TEST_MOCK_DEVICES_H
+
 #include "DeviceLauncherSection.h"
 #include "AbstractVolumeMonitorWrapper.h"
 #include "gmockvolume.h"
@@ -71,3 +74,5 @@ struct MockDeviceLauncherSection : DeviceLauncherSection
 };
 
 }
+
+#endif

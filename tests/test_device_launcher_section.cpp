@@ -20,9 +20,6 @@
  *
  */
 
-#ifndef TEST_MOCK_DEVICES_H
-#define TEST_MOCK_DEVICES_H
-
 #include <gmock/gmock.h>
 
 #include "DevicesSettings.h"
@@ -87,4 +84,3 @@ TEST_F(TestDeviceLauncherSection, GetIcons)
 }
 }
 
-#endif
