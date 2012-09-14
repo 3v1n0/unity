@@ -30,7 +30,7 @@ namespace
 nux::logging::Logger logger("unity.panel");
 
 const int PADDING = 3;
-const std::array<std::string, 2> WHITELIST = { "JavaEmbeddedFrame", "Wine" };
+const std::array<std::string, 2> WHITELIST {{ "JavaEmbeddedFrame", "Wine" }};
 }
 
 namespace unity
