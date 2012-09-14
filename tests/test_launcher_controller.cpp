@@ -104,12 +104,14 @@ private:
   FavoriteList fav_list_;
 };
 
-class MockBamfLauncherIcon : public BamfLauncherIcon
+struct MockBamfLauncherIcon : public BamfLauncherIcon
 {
-public:
+  typedef nux::ObjectPtr<MockBamfLauncherIcon> Ptr;
+
   MockBamfLauncherIcon(BamfApplication* app)
     : BamfLauncherIcon(app) {}
 
+  MOCK_METHOD1(Stick, void(bool));
   MOCK_METHOD0(UnStick, void());
   MOCK_METHOD0(Quit, void());
 };
@@ -129,6 +131,12 @@ protected:
     Controller::Impl* Impl() const { return pimpl.get(); }
   };
 
+  MockBamfLauncherIcon::Ptr BuildMockBamfLauncherIcon(std::string const& desktop_file)
+  {
+    auto bamf_app = bamf_matcher_get_application_for_desktop_file(lc.Impl()->matcher_, desktop_file.c_str(), TRUE);
+    return MockBamfLauncherIcon::Ptr(new MockBamfLauncherIcon(bamf_app));
+  }
+
   MockUScreen uscreen;
   Settings settings;
   panel::Style panel_style;
@@ -143,19 +151,28 @@ TEST_F(TestLauncherController, Construction)
   EXPECT_TRUE(lc.multiple_launchers());
   ASSERT_EQ(lc.launchers().size(), 1);
   EXPECT_EQ(lc.launcher().monitor(), 0);
+  ASSERT_EQ(lc.Impl()->parent_, &lc);
+  ASSERT_TRUE(lc.Impl()->matcher_.IsType(BAMF_TYPE_MATCHER));
+  ASSERT_NE(lc.Impl()->model_, nullptr);
   EXPECT_EQ(lc.Impl()->expo_icon_->GetIconType(), AbstractLauncherIcon::IconType::EXPO);
   EXPECT_EQ(lc.Impl()->desktop_icon_->GetIconType(), AbstractLauncherIcon::IconType::DESKTOP);
   EXPECT_GE(lc.Impl()->sort_priority_, AbstractLauncherIcon::DefaultPriority(AbstractLauncherIcon::IconType::APPLICATION));
   EXPECT_EQ(lc.Impl()->model_->GetSublist<BFBLauncherIcon>().size(), 1);
   EXPECT_EQ(lc.Impl()->model_->GetSublist<HudLauncherIcon>().size(), 1);
   EXPECT_EQ(lc.Impl()->model_->GetSublist<TrashLauncherIcon>().size(), 1);
+  EXPECT_FALSE(lc.Impl()->launcher_open);
+  EXPECT_FALSE(lc.Impl()->launcher_keynav);
+  EXPECT_FALSE(lc.Impl()->launcher_grabbed);
+  EXPECT_FALSE(lc.Impl()->reactivate_keynav);
+  EXPECT_TRUE(lc.Impl()->keynav_restore_window_);
+  EXPECT_EQ(lc.Impl()->launcher_key_press_time_, 0);
 
   for (auto const& fav_uri : favorite_store.GetFavorites())
   {
     auto const& model_icon_it = std::find_if(lc.Impl()->model_->begin(), lc.Impl()->model_->end(),
     [&fav_uri](AbstractLauncherIcon::Ptr const& i) { return (i->RemoteUri() == fav_uri); });
 
-    ASSERT_NE(*model_icon_it, nullptr);
+    ASSERT_TRUE((*model_icon_it).IsValid());
   }
 }
 
@@ -276,12 +293,8 @@ TEST_F(TestLauncherController, SingleMonitorEdgeBarrierSubscriptionsUpdates)
 TEST_F(TestLauncherController, OnlyUnstickIconOnFavoriteRemoval)
 {
   const std::string USC_DESKTOP = BUILDDIR"/tests/data/ubuntu-software-center.desktop";
-
-  glib::Object<BamfMatcher> matcher(bamf_matcher_get_default());
-
-  auto bamf_app = bamf_matcher_get_application_for_desktop_file(matcher, USC_DESKTOP.c_str(), TRUE);
-  MockBamfLauncherIcon *bamf_icon = new MockBamfLauncherIcon(bamf_app);
-  lc.Impl()->model_->AddIcon(AbstractLauncherIcon::Ptr(bamf_icon));
+  auto const& bamf_icon = BuildMockBamfLauncherIcon(USC_DESKTOP);
+  lc.Impl()->model_->AddIcon(bamf_icon);
 
   EXPECT_CALL(*bamf_icon, UnStick());
   EXPECT_CALL(*bamf_icon, Quit()).Times(0);
