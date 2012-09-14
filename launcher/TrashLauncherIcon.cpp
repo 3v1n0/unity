@@ -34,10 +34,9 @@ namespace unity
 namespace launcher
 {
 
-const std::string ZEITGEIST_UNITY_ACTOR = "application://compiz.desktop";
-
 namespace
 {
+  const std::string ZEITGEIST_UNITY_ACTOR = "application://compiz.desktop";
   nux::logging::Logger logger("unity.launcher.TrashLauncherIcon");
 }
 
@@ -160,9 +159,9 @@ void TrashLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
     if (g_file_trash(file, NULL, NULL))
     {
       // based on nautilus zg event logging code
-      glib::String origin(g_path_get_dirname (it.c_str()));
-      glib::String parse_name(g_file_get_parse_name (file));
-      glib::String display_name(g_path_get_basename (parse_name));
+      glib::String origin(g_path_get_dirname(it.c_str()));
+      glib::String parse_name(g_file_get_parse_name(file));
+      glib::String display_name(g_path_get_basename(parse_name));
 
       ZeitgeistSubject *subject = zeitgeist_subject_new_full(it.c_str(),
                                                              NULL, // subject interpretation
