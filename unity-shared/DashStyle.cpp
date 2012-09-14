@@ -2073,8 +2073,8 @@ int Style::GetTileWidth() const
 
 int Style::GetTileHeight() const
 {
-  return std::max(GetTileImageSize() + (pimpl->text_height_ * 2) + 10,
-                  GetTileImageSize() + 50 + 18); // magic design numbers.
+  return std::max(GetTileImageSize() + (pimpl->text_height_ * 2) + 15,
+                  GetTileImageSize() + 32); // magic design numbers.
 }
 
 int Style::GetTileIconHightlightHeight() const
@@ -2367,7 +2367,7 @@ int Style::GetCategoryHighlightHeight() const
 
 int Style::GetPlacesGroupTopSpace() const
 {
-  return 15;
+  return 7;
 }
 
 int Style::GetCategoryHeaderLeftPadding() const
