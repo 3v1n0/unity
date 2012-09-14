@@ -136,6 +136,8 @@ nux::Layout* Preview::BuildGridActionsLayout(dash::Preview::ActionPtrList action
         dash::Preview::ActionPtr action = actions[action_iter];
 
         ActionButton* button = new ActionButton(action->id, action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
+        button->SetFont(style.action_font());
+        button->SetExtraHint(action->extra_text, style.action_extra_font());
         AddChild(button);
         button->click.connect(sigc::mem_fun(this, &Preview::OnActionActivated));
         buttons.push_back(button);
@@ -165,9 +167,11 @@ nux::Layout* Preview::BuildVerticalActionsLayout(dash::Preview::ActionPtrList ac
   uint action_iter = 0;
   for (uint i = 0; i < actions.size(); i++)
   {
-      dash::Preview::ActionPtr action = actions[action_iter];
+      dash::Preview::ActionPtr action = actions[action_iter++];
 
       ActionButton* button = new ActionButton(action->id, action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
+      button->SetFont(style.action_font());
+      button->SetExtraHint(action->extra_text, style.action_extra_font());
       AddChild(button);
       button->click.connect(sigc::mem_fun(this, &Preview::OnActionActivated));
       buttons.push_back(button);

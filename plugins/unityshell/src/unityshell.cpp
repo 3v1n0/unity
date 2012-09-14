@@ -2783,6 +2783,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
        * that must not be considered when drawing an overlay */
       hud_controller_->launcher_width = launcher_controller_->launcher().GetAbsoluteWidth() - 1;
       dash_controller_->launcher_width = launcher_controller_->launcher().GetAbsoluteWidth() - 1;
+      panel_controller_->launcher_width = launcher_controller_->launcher().GetAbsoluteWidth() - 1;
 
       if (p)
       {

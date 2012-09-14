@@ -111,21 +111,21 @@ void IconTexture::LoadIcon()
 
   glib::Object<GIcon> icon(g_icon_new_for_string(_icon_name.empty() ?  DEFAULT_GICON : _icon_name.c_str(), NULL));
 
-  if (G_IS_ICON(icon.RawPtr()))
+  if (icon.IsType(G_TYPE_ICON))
   {
     _handle = IconLoader::GetDefault().LoadFromGIconString(_icon_name.empty() ? DEFAULT_GICON : _icon_name.c_str(),
-                                                           _size,
+                                                           -1, _size,
                                                            sigc::mem_fun(this, &IconTexture::IconLoaded));
   }
   else if (_icon_name.find("http://") == 0)
   {
     _handle = IconLoader::GetDefault().LoadFromURI(_icon_name,
-                                                   _size, sigc::mem_fun(this, &IconTexture::IconLoaded));
+                                                   -1, _size, sigc::mem_fun(this, &IconTexture::IconLoaded));
   }
   else
   {
     _handle = IconLoader::GetDefault().LoadFromIconName(_icon_name,
-                                                        _size,
+                                                        -1, _size,
                                                         sigc::mem_fun(this, &IconTexture::IconLoaded));
   }
 }
@@ -153,7 +153,9 @@ void IconTexture::Refresh(glib::Object<GdkPixbuf> const& pixbuf)
   _loading = false;
 }
 
-void IconTexture::IconLoaded(std::string const& icon_name, unsigned size,
+void IconTexture::IconLoaded(std::string const& icon_name,
+                             int max_width,
+                             int max_height,
                              glib::Object<GdkPixbuf> const& pixbuf)
 {
   _handle = 0;
@@ -226,7 +228,7 @@ void IconTexture::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                           imageDest.height - (border_width * 2),
                           _texture_cached.GetPointer()->GetDeviceTexture(),
                           texxform,
-                          nux::color::White);
+                          col);
     }
     else
     {

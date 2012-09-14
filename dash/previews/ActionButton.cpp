@@ -50,7 +50,7 @@ ActionButton::ActionButton(std::string const& action_hint, std::string const& la
   SetAcceptKeyNavFocusOnMouseDown(false);
   SetAcceptKeyNavFocusOnMouseEnter(false);
   Init();
-  BuildLayout(label, icon_hint);
+  BuildLayout(label, icon_hint, "");
 }
 
 ActionButton::~ActionButton()
@@ -105,7 +105,19 @@ void ActionButton::InitTheme()
   SetMinimumWidth(kMinButtonWidth);
 }
 
-void ActionButton::BuildLayout(std::string const& label, std::string const& icon_hint)
+void ActionButton::SetExtraHint(std::string const& extra_hint, std::string const& font_hint)
+{  
+  extra_font_hint_= font_hint;
+  if (extra_text_)
+  {
+    extra_text_->SetFont(extra_font_hint_);
+    ComputeContentSize();
+    QueueDraw();
+  }
+  BuildLayout(label_, icon_hint_, extra_hint);
+}
+
+void ActionButton::BuildLayout(std::string const& label, std::string const& icon_hint, std::string const& extra_hint)
 {
   if (icon_hint != icon_hint_)
   {
@@ -121,7 +133,7 @@ void ActionButton::BuildLayout(std::string const& label, std::string const& icon
       image_ = new IconTexture(icon_hint, icon_size);
       image_->texture_updated.connect([&](nux::BaseTexture*)
       {
-        BuildLayout(label_, icon_hint_);
+        BuildLayout(label_, icon_hint_, extra_hint_);
       });
       image_->SetInputEventSensitivity(false);
       image_->SetMinMaxSize(icon_size, icon_size);
@@ -147,16 +159,37 @@ void ActionButton::BuildLayout(std::string const& label, std::string const& icon
     }
   }
 
+  if (extra_hint != extra_hint_)
+  {
+    extra_hint_ = extra_hint;
+    if (extra_text_)
+    {
+      extra_text_.Release();
+      extra_text_ = NULL;
+    }
+
+    if (!extra_hint_.empty())
+    {
+      extra_text_ = new nux::StaticCairoText(extra_hint_, true, NUX_TRACKER_LOCATION);
+      if (!extra_font_hint_.empty())
+        extra_text_->SetFont(extra_font_hint_);
+      extra_text_->SetInputEventSensitivity(false);
+      extra_text_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
+    }
+  }
+
   RemoveLayout();
 
   nux::HLayout* layout = new nux::HLayout();
   layout->SetHorizontalInternalMargin(6);
-  layout->SetPadding(2, 11, 2, 11);
+  layout->SetPadding(2, 0, 2, 0);
   layout->AddSpace(0,1);
   if (image_)
     layout->AddView(image_.GetPointer(), 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
   if (static_text_)
     layout->AddView(static_text_.GetPointer(), 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
+  if (extra_text_)
+    layout->AddView(extra_text_.GetPointer(), 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
   layout->AddSpace(0,1);
   SetLayout(layout);
 
@@ -300,6 +333,16 @@ void ActionButton::Deactivate()
 
   active_ = false;
   QueueDraw();
+}
+
+std::string ActionButton::GetLabel() const
+{
+  return label_;
+}
+
+std::string ActionButton::GetExtraText() const
+{
+  return extra_hint_;
 }
 
 } // namespace dash

@@ -90,6 +90,9 @@ public:
   std::string subtitle_size_font() const;
   std::string description_font() const;
 
+  std::string action_font() const;
+  std::string action_extra_font() const;
+
   nux::AbstractPaintLayer* GetBackgroundLayer() const;
 
   ////////////////////////////////
