@@ -196,6 +196,8 @@ public:
   int text_height_;
   int number_of_columns_;
 
+  LazyLoadTexture category_texture_;
+  LazyLoadTexture category_texture_no_filters_;
   LazyLoadTexture dash_bottom_texture_;
   LazyLoadTexture dash_bottom_texture_mask_;
   LazyLoadTexture dash_right_texture_;
@@ -218,6 +220,11 @@ public:
   LazyLoadTexture search_close_texture_;
   LazyLoadTexture search_spin_texture_;
 
+
+  LazyLoadTexture refine_gradient_corner_;
+  LazyLoadTexture refine_gradient_dash_;
+  LazyLoadTexture refine_gradient_no_refine_dash_;
+
   LazyLoadTexture group_unexpand_texture_;
   LazyLoadTexture group_expand_texture_;
 
@@ -239,6 +246,8 @@ Style::Impl::Impl(Style* owner)
   , text_width_(0)
   , text_height_(0)
   , number_of_columns_(6)
+  , category_texture_("/category_gradient.png")
+  , category_texture_no_filters_("/category_gradient_no_refine.png")
   , dash_bottom_texture_("/dash_bottom_border_tile.png")
   , dash_bottom_texture_mask_("/dash_bottom_border_tile_mask.png")
   , dash_right_texture_("/dash_right_border_tile.png")
@@ -258,6 +267,9 @@ Style::Impl::Impl(Style* owner)
   , search_circle_texture_("/search_circle.svg", 32)
   , search_close_texture_("/search_close.svg", 32)
   , search_spin_texture_("/search_spin.svg", 32)
+  , refine_gradient_corner_("/refine_gradient_corner.png")
+  , refine_gradient_dash_("/refine_gradient_dash.png")
+  , refine_gradient_no_refine_dash_("/refine_gradient_dash_no_refine.png")
   , group_unexpand_texture_("/dash_group_unexpand.png")
   , group_expand_texture_("/dash_group_expand.png")
   , star_deselected_texture_("/star_deselected.png")
@@ -2096,6 +2108,16 @@ int Style::GetTextLineHeight() const
 }
 
 
+nux::BaseTexture* Style::GetCategoryBackground()
+{
+  return pimpl->category_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetCategoryBackgroundNoFilters()
+{
+  return pimpl->category_texture_no_filters_.texture(); 
+}
+
 nux::BaseTexture* Style::GetDashBottomTile()
 {
   return pimpl->dash_bottom_texture_.texture();
@@ -2184,6 +2206,21 @@ nux::BaseTexture* Style::GetSearchCloseIcon()
 nux::BaseTexture* Style::GetSearchSpinIcon()
 {
   return pimpl->search_spin_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetRefineTextureCorner()
+{
+  return pimpl->refine_gradient_corner_.texture();
+}
+
+nux::BaseTexture* Style::GetRefineNoRefineTextureDash()
+{
+  return pimpl->refine_gradient_no_refine_dash_.texture(); 
+}
+
+nux::BaseTexture* Style::GetRefineTextureDash()
+{
+  return pimpl->refine_gradient_dash_.texture(); 
 }
 
 nux::BaseTexture* Style::GetGroupUnexpandIcon()

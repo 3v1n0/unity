@@ -147,7 +147,14 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   lens_->connected.changed.connect([&](bool is_connected) { if (is_connected) initial_activation_ = true; });
   lens_->categories_reordered.connect(sigc::mem_fun(this, &LensView::OnCategoryOrderChanged));
   search_string.SetGetterFunction(sigc::mem_fun(this, &LensView::get_search_string));
-  filters_expanded.changed.connect([&](bool expanded) { fscroll_view_->SetVisible(expanded); QueueRelayout(); OnColumnsChanged(); });
+  filters_expanded.changed.connect([&](bool expanded) 
+  { 
+    fscroll_view_->SetVisible(expanded); 
+    QueueRelayout(); 
+    OnColumnsChanged();
+    ubus_manager_.SendMessage(UBUS_REFINE_STATUS, 
+                              g_variant_new(UBUS_REFINE_STATUS_FORMAT_STRING, expanded ? TRUE : FALSE));
+  });
   view_type.changed.connect(sigc::mem_fun(this, &LensView::OnViewTypeChanged));
 
   ubus_manager_.RegisterInterest(UBUS_RESULT_VIEW_KEYNAV_CHANGED, [&] (GVariant* data) {
@@ -189,9 +196,14 @@ void LensView::SetupViews(nux::Area* show_filters)
 
   scroll_view_ = new LensScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION),
                                     NUX_TRACKER_LOCATION);
-  scroll_view_->EnableVerticalScrollBar(true);
+  scroll_view_->EnableVerticalScrollBar(false);
   scroll_view_->EnableHorizontalScrollBar(false);
   layout_->AddView(scroll_view_);
+
+  scroll_view_->OnGeometryChanged.connect([this] (nux::Area *area, nux::Geometry& geo)
+  {
+    CheckScrollBarState();
+  });
 
   scroll_layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
   scroll_view_->SetLayout(scroll_layout_);
@@ -388,6 +400,8 @@ void LensView::OnCategoryAdded(Category const& category)
   scroll_layout_->AddView(group, 0, nux::MinorDimensionPosition::eAbove,
                           nux::MinorDimensionSize::eFull, 100.0f,
                           (nux::LayoutPosition)index);
+  
+  group->SetMinimumWidth(GetGeometry().width);
 }
 
 void LensView::OnCategoryOrderChanged()
@@ -624,6 +638,20 @@ void LensView::OnGroupExpanded(PlacesGroup* group)
   ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
   grid->expanded = group->GetExpanded();
   ubus_manager_.SendMessage(UBUS_PLACE_VIEW_QUEUE_DRAW);
+
+  CheckScrollBarState();
+}
+
+void LensView::CheckScrollBarState()
+{
+  if (scroll_layout_->GetGeometry().height > scroll_view_->GetGeometry().height)
+  {
+    scroll_view_->EnableVerticalScrollBar(true); 
+  }
+  else
+  {
+    scroll_view_->EnableVerticalScrollBar(false); 
+  }
 }
 
 void LensView::OnColumnsChanged()

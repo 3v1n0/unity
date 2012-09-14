@@ -88,6 +88,7 @@ private:
   void OnResultRemoved(Result const& result);
   void UpdateCounts(PlacesGroup* group);
   void OnGroupExpanded(PlacesGroup* group);
+  void CheckScrollBarState();
   void OnColumnsChanged();
   void OnFilterAdded(Filter::Ptr filter);
   void OnFilterRemoved(Filter::Ptr filter);
