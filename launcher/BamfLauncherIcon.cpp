@@ -169,9 +169,12 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
 
 BamfLauncherIcon::~BamfLauncherIcon()
 {
-  if (_bamf_app)
+  if (_bamf_app.IsType(BAMF_TYPE_APPLICATION))
+  {
+    bamf_view_set_sticky(BAMF_VIEW(_bamf_app.RawPtr()), FALSE);
     g_object_set_qdata(G_OBJECT(_bamf_app.RawPtr()),
                        g_quark_from_static_string("unity-seen"), nullptr);
+  }
 }
 
 void BamfLauncherIcon::Remove()
