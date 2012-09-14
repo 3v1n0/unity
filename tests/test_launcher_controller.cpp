@@ -40,13 +40,25 @@ using namespace testing;
 namespace unity
 {
 
+namespace
+{
+namespace app
+{
+ const std::string UBUNTU_ONE = BUILDDIR "/tests/data/ubuntuone-installer.desktop";
+ const std::string SW_CENTER = BUILDDIR "/tests/data/ubuntu-software-center.desktop";
+ const std::string UPDATE_MANAGER = BUILDDIR "/tests/data/update-manager.desktop";
+ const std::string BZR_HANDLE_PATCH = BUILDDIR "/tests/data/bzr-handle-patch.desktop";
+ const std::string NO_ICON = BUILDDIR "/tests/data/no-icon.desktop";
+}
+}
+
 struct MockFavoriteStore : FavoriteStore
 {
   MockFavoriteStore()
   {
-    fav_list_ = { "application://" BUILDDIR "/tests/data/ubuntuone-installer.desktop",
-                  "application://" BUILDDIR "/tests/data/ubuntu-software-center.desktop",
-                  "application://" BUILDDIR "/tests/data/update-manager.desktop" };
+    fav_list_ = { FavoriteStore::URI_PREFIX_APP + app::UBUNTU_ONE,
+                  FavoriteStore::URI_PREFIX_APP + app::SW_CENTER,
+                  FavoriteStore::URI_PREFIX_APP + app::UPDATE_MANAGER };
   }
 
   FavoriteList const& GetFavorites() const
@@ -292,14 +304,14 @@ TEST_F(TestLauncherController, SingleMonitorEdgeBarrierSubscriptionsUpdates)
 
 TEST_F(TestLauncherController, OnlyUnstickIconOnFavoriteRemoval)
 {
-  const std::string USC_DESKTOP = BUILDDIR"/tests/data/ubuntu-software-center.desktop";
-  auto const& bamf_icon = BuildMockBamfLauncherIcon(USC_DESKTOP);
+  const std::string desktop = app::BZR_HANDLE_PATCH;
+  auto const& bamf_icon = BuildMockBamfLauncherIcon(desktop);
   lc.Impl()->model_->AddIcon(bamf_icon);
 
   EXPECT_CALL(*bamf_icon, UnStick());
   EXPECT_CALL(*bamf_icon, Quit()).Times(0);
 
-  favorite_store.favorite_removed.emit(FavoriteStore::URI_PREFIX_APP + USC_DESKTOP);
+  favorite_store.favorite_removed.emit(FavoriteStore::URI_PREFIX_APP + desktop);
 }
 
 TEST_F(TestLauncherController, EnabledStrutsByDefault)
@@ -371,7 +383,7 @@ TEST_F(TestLauncherController, CreateFavoriteInvalid)
 
 TEST_F(TestLauncherController, CreateFavoriteDesktopFile)
 {
-  std::string desktop_file = BUILDDIR "/tests/data/bzr-handle-patch.desktop";
+  std::string desktop_file = app::BZR_HANDLE_PATCH;
   std::string icon_uri = FavoriteStore::URI_PREFIX_APP + desktop_file;
   auto const& fav = lc.Impl()->CreateFavoriteIcon(icon_uri);
 
@@ -537,12 +549,55 @@ TEST_F(TestLauncherController, GetIconByUriApplications)
   {
     auto const& model_icon_it = std::find_if(lc.Impl()->model_->begin(), lc.Impl()->model_->end(),
     [&fav_uri](AbstractLauncherIcon::Ptr const& i) { return (i->RemoteUri() == fav_uri); });
+    ASSERT_NE(model_icon_it, lc.Impl()->model_->end());
 
     auto const& fav = lc.Impl()->GetIconByUri(fav_uri);
-
     ASSERT_EQ(fav, *model_icon_it);
   }
+
+  std::string desktop = app::BZR_HANDLE_PATCH;
+  std::string icon_uri = FavoriteStore::URI_PREFIX_APP + desktop;
+  auto const& fav = lc.Impl()->CreateFavoriteIcon(icon_uri);
+  lc.Impl()->RegisterIcon(fav);
+  EXPECT_EQ(fav, lc.Impl()->GetIconByUri(icon_uri));
 }
+
+TEST_F(TestLauncherController, LauncherAddRequestApplicationAdd)
+{
+  auto const& model = lc.Impl()->model_;
+  std::string desktop = app::BZR_HANDLE_PATCH;
+  std::string icon_uri = FavoriteStore::URI_PREFIX_APP + desktop;
+  ASSERT_FALSE(lc.Impl()->GetIconByUri(icon_uri).IsValid());
+
+  auto app_icons = model->GetSublist<BamfLauncherIcon>();
+  auto const& second_app = *(std::next(app_icons.begin()));
+
+  lc.launcher().add_request.emit(icon_uri, second_app);
+
+  auto const& new_icon = lc.Impl()->GetIconByUri(icon_uri);
+  ASSERT_TRUE(new_icon.IsValid());
+  EXPECT_EQ(model->IconIndex(new_icon), model->IconIndex(second_app) + 1);
+}
+
+TEST_F(TestLauncherController, LauncherAddRequestApplicationStick)
+{
+  auto const& model = lc.Impl()->model_;
+  std::string desktop = app::BZR_HANDLE_PATCH;
+  std::string icon_uri = FavoriteStore::URI_PREFIX_FILE + desktop;
+
+  auto const& bamf_icon = BuildMockBamfLauncherIcon(desktop);
+  lc.Impl()->RegisterIcon(bamf_icon, std::numeric_limits<int>::max());
+
+  auto app_icons = model->GetSublist<BamfLauncherIcon>();
+  auto const& first_app = *(app_icons.begin());
+  ASSERT_LT(model->IconIndex(first_app), model->IconIndex(bamf_icon));
+
+  EXPECT_CALL(*bamf_icon, Stick(false));
+  lc.launcher().add_request.emit(icon_uri, first_app);
+
+  EXPECT_EQ(model->IconIndex(bamf_icon), model->IconIndex(first_app) + 1);
+}
+
 
 }
 
