@@ -214,7 +214,39 @@ PlacesGroup::PlacesGroup()
       nux::GetWindowCompositor().SetKeyFocusArea(GetHeaderFocusableView(), direction);
   });
 
-  SetMinimumWidth(2000);
+  _ubus.RegisterInterest(UBUS_REFINE_STATUS, [this] (GVariant *data) 
+  {
+    gboolean status;
+    g_variant_get(data, UBUS_REFINE_STATUS_FORMAT_STRING, &status);
+
+    nux::ROPConfig rop;
+    rop.Blend = true;
+    rop.SrcBlend = GL_ONE;
+    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+    nux::TexCoordXForm texxform;
+    if (!status && _using_nofilters_background)
+    {
+      _background_layer.reset(new nux::TextureLayer(_background->GetDeviceTexture(), 
+                              texxform, 
+                              nux::color::White,
+                              false,
+                              rop));
+      _using_nofilters_background = false;
+    }
+    else if (status && !_using_nofilters_background)
+    {
+      _background_layer.reset(new nux::TextureLayer(_background_nofilters->GetDeviceTexture(), 
+                              texxform, 
+                              nux::color::White,
+                              false,
+                              rop));
+      
+      _using_nofilters_background = true;
+    }
+    QueueDraw();
+  });
+
 }
 
 void
@@ -252,7 +284,7 @@ PlacesGroup::SetRendererName(const char *renderer_name)
 
   if (g_strcmp0(renderer_name, "tile-horizontal") == 0)
     (static_cast<dash::ResultView*>(_child_view))->SetModelRenderer(new dash::ResultRendererHorizontalTile(NUX_TRACKER_LOCATION));
-  else if (g_strcmp0(renderer_name, "tile-vertical"))
+  else if (g_strcmp0(renderer_name, "tile-vertical") == 0)
     (static_cast<dash::ResultView*>(_child_view))->SetModelRenderer(new dash::ResultRendererTile(NUX_TRACKER_LOCATION));
 }
 
@@ -396,31 +428,6 @@ PlacesGroup::OnIdleRelayout()
   if (GetChildView())
   {
     
-    nux::ROPConfig rop;
-    rop.Blend = true;
-    rop.SrcBlend = GL_ONE;
-    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-
-    nux::TexCoordXForm texxform;
-    if (_n_visible_items_in_unexpand_mode < 6 && _using_nofilters_background)
-    {
-      _background_layer.reset(new nux::TextureLayer(_background->GetDeviceTexture(), 
-                              texxform, 
-                              nux::color::White,
-                              false,
-                              rop));
-      _using_nofilters_background = false;
-    }
-    else if (_n_visible_items_in_unexpand_mode >= 6 && !_using_nofilters_background)
-    {
-      _background_layer.reset(new nux::TextureLayer(_background_nofilters->GetDeviceTexture(), 
-                              texxform, 
-                              nux::color::White,
-                              false,
-                              rop));
-      
-      _using_nofilters_background = true;
-    }
 
     Refresh();
     QueueDraw();

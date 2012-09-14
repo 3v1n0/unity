@@ -398,7 +398,7 @@ void LensView::OnCategoryAdded(Category const& category)
                           nux::MinorDimensionSize::eFull, 100.0f,
                           (nux::LayoutPosition)index);
   
-  group->SetMinimumWidth(GetGeometry().width+20);
+  group->SetMinimumWidth(GetGeometry().width);
 }
 
 void LensView::OnCategoryOrderChanged()
