@@ -481,7 +481,7 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
 
   bg_geo.x = std::max(bg_geo.width - bg_width,0);
   
-  bg_geo.width = std::min(bg_width, bg_geo.GetWidth()) + 10;
+  bg_geo.width = std::min(bg_width, bg_geo.GetWidth());
   bg_geo.height = _background->GetHeight();
   
   _background_layer->SetGeometry(bg_geo);
@@ -505,7 +505,7 @@ PlacesGroup::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
   
   // if the dash is smaller, resize to fit, otherwise move to the right edge
   bg_geo.x = std::max(bg_geo.width - bg_width, 0);
-  bg_geo.width = std::min(bg_width, bg_geo.GetWidth()) + 10;
+  bg_geo.width = std::min(bg_width, bg_geo.GetWidth());
   
   bg_geo.height = _background->GetHeight();
 
