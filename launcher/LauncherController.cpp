@@ -614,8 +614,9 @@ void Controller::Impl::RegisterIcon(AbstractLauncherIcon::Ptr icon, int priority
     ResetIconPriorities();
   });
 
-  icon->position_forgot.connect([this, icon] {
-    FavoriteStore::Instance().RemoveFavorite(icon->RemoteUri());
+  std::string const& icon_uri = icon->RemoteUri();
+  icon->position_forgot.connect([this, icon_uri] {
+    FavoriteStore::Instance().RemoveFavorite(icon_uri);
   });
 
   if (icon->GetIconType() == AbstractLauncherIcon::IconType::APPLICATION)
