@@ -128,7 +128,7 @@ public:
   ////////////////////////////////
 
   ////////////////////////////////
-  // Music Preview
+  // Social Preview
   int GetAvatarAreaWidth() const;
   int GetAvatarAreaHeight() const;
 
