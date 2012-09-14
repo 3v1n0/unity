@@ -41,7 +41,7 @@ namespace
 {
 nux::logging::Logger logger("unity.dash.previews.coverart");
 
-const int icon_width = 256;
+const int ICON_SIZE = 256;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(CoverArt);
@@ -109,9 +109,9 @@ void CoverArt::SetImage(std::string const& image_hint)
 
   // texture from file.
   if (bLoadTexture)
-  {    
+  {
     StartWaiting();
-    slot_handle_ = IconLoader::GetDefault().LoadFromGIconString(image_hint, ~0, sigc::mem_fun(this, &CoverArt::TextureLoaded));
+    slot_handle_ = IconLoader::GetDefault().LoadFromGIconString(image_hint, -1, -1, sigc::mem_fun(this, &CoverArt::TextureLoaded));
   }
   else if (!image_hint.empty())
   {
@@ -121,12 +121,12 @@ void CoverArt::SetImage(std::string const& image_hint)
     if (G_IS_ICON(icon))
     {
       StartWaiting();
-      slot_handle_ = IconLoader::GetDefault().LoadFromGIconString(image_hint, icon_width, sigc::mem_fun(this, &CoverArt::IconLoaded));
+      slot_handle_ = IconLoader::GetDefault().LoadFromGIconString(image_hint, ICON_SIZE, ICON_SIZE, sigc::mem_fun(this, &CoverArt::IconLoaded));
     }
     else
     {
       StartWaiting();
-      slot_handle_ = IconLoader::GetDefault().LoadFromIconName(image_hint, icon_width, sigc::mem_fun(this, &CoverArt::IconLoaded));
+      slot_handle_ = IconLoader::GetDefault().LoadFromIconName(image_hint, ICON_SIZE, ICON_SIZE, sigc::mem_fun(this, &CoverArt::IconLoaded));
     }
   }
   else
@@ -195,7 +195,10 @@ void CoverArt::SetNoImageAvailable()
   }
 }
 
-void CoverArt::IconLoaded(std::string const& texid, unsigned size, glib::Object<GdkPixbuf> const& pixbuf)
+void CoverArt::IconLoaded(std::string const& texid,
+                          int max_width,
+                          int max_height,
+                          glib::Object<GdkPixbuf> const& pixbuf)
 {
   // Finished waiting
   StopWaiting();
@@ -207,7 +210,7 @@ void CoverArt::IconLoaded(std::string const& texid, unsigned size, glib::Object<
     return;
   }
 
-  int height = size;
+  int height = max_height;
 
   int pixbuf_width, pixbuf_height;
   pixbuf_width = gdk_pixbuf_get_width(pixbuf);
@@ -232,7 +235,7 @@ void CoverArt::IconLoaded(std::string const& texid, unsigned size, glib::Object<
     float aspect = static_cast<float>(pixbuf_height) / pixbuf_width; // already sanitized width/height so can not be 0.0
     if (aspect < 1.0f)
     {
-      pixbuf_width = icon_width;
+      pixbuf_width = ICON_SIZE;
       pixbuf_height = pixbuf_width * aspect;
 
       if (pixbuf_height > height)
@@ -274,7 +277,10 @@ void CoverArt::IconLoaded(std::string const& texid, unsigned size, glib::Object<
   }
 }
 
-void CoverArt::TextureLoaded(std::string const& texid, unsigned size, glib::Object<GdkPixbuf> const& pixbuf)
+void CoverArt::TextureLoaded(std::string const& texid,
+                             int max_width,
+                             int max_height,
+                             glib::Object<GdkPixbuf> const& pixbuf)
 {
   // Finished waiting
   StopWaiting();
