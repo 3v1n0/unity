@@ -109,8 +109,6 @@ void SocialPreviewComments::PreLayoutManagement()
   {
     if (comment.first)
     {
-      //FIXME: I would rather fill the line
-      //comment.first->SetMinimumWidth(comment_width);
       comment.first->SetMaximumWidth(comment_value_width);
     }
     if (comment.second)

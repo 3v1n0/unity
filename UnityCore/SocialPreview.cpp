@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/contents/>.
  *
- * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
- *              Michal Hruby <michal.hruby@canonical.com>
+ * Authored by: Ken VanDine <ken.vandine@canonical.com>
+ *
  */
 
 #include <unity-protocol.h>

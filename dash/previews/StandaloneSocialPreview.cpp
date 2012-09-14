@@ -154,9 +154,7 @@ void TestRunner::Init ()
   const char* title = "Candace Flynn";
   const char* subtitle = "@candacejeremyxo, 10 Aug 2012 05:01";
   const char* description = "Lorem ipsum dolor sit amet, id eruditi referrentur cum, et est enim persequeris. Munere docendi intellegebat pro id, nam no delenit facilisis similique, ut usu eros aliquando. Electram postulant accusamus ut ius, cum ad impedit facilis mediocrem. At cum tamquam.";
-  //const char* description = "Ugh. They made a chocolate factory!";
 
- // creates a generic preview object
   glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/pixmaps/faces/sunflower.jpg", NULL));
   glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/6/lens-nav-home.svg", NULL));
 
@@ -224,10 +222,8 @@ void TestRunner::NavLeft()
 {
   const char* title = "Ferb Fletcher";
   const char* subtitle = "@ferbfletcher123, 10 Aug 2012 05:01";
-  const char* description = "";
-  //const char* description = "Profile pictures are what people want them to think they look like. Tagged pictures are what they really look like.";
+  const char* description = "Profile pictures are what people want them to think they look like. Tagged pictures are what they really look like.";
 
- // creates a generic preview object
   glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/pixmaps/faces/soccerball.png", NULL));
   glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/6/lens-nav-home.svg", NULL));
 

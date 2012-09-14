@@ -290,7 +290,7 @@ void SocialPreview::PreLayoutManagement()
   if (title_) { title_->SetMaximumWidth(top_social_info_max_width); }
   if (subtitle_) { subtitle_->SetMaximumWidth(top_social_info_max_width); }
   if (comments_) { comments_->SetMaximumWidth(top_social_info_max_width); }
-  if (comments_hint_) { comments_hint_->SetMinimumWidth(style.GetAvatarAreaWidth()); }
+  if (comments_hint_) { comments_hint_->SetMinimumWidth(style.GetInfoHintNameMinimumWidth()); }
 
   for (nux::AbstractButton* button : action_buttons_)
   {

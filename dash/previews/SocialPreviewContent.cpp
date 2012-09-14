@@ -155,9 +155,6 @@ void SocialPreviewContent::UpdateBaloonTexture()
   text_->SetMaximumWidth(max_width);
   nux::Geometry const& geo_text = text_->GetGeometry();
 
-  //printf ("bubble_geo %d, %d\n", geo_cr.width, geo_cr.width);
-  //printf ("text_geo %d, %d\n", geo_text.width, geo_text.height);
-
   // center text
   text_->SetBaseX(geo.x + geo.width/2 - geo_text.width/2);
   text_->SetBaseY(geo.y + geo.height/2 - geo_text.height/2 - tail_width/2);

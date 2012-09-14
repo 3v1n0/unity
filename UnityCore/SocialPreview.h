@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
- *              Michal Hruby <michal.hruby@canonical.com>
+ * Authored by: Ken VanDine <ken.vandine@canonical.com>
+ *
  */
 
 #ifndef UNITY_SOCIAL_PREVIEW_H

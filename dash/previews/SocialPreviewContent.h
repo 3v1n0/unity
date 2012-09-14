@@ -17,6 +17,7 @@
  * <http://www.gnu.org/licenses/>
  *
  * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
+ *              Ken VanDine <ken.vandine@canonical.com>
  *
  */
 
