@@ -220,6 +220,7 @@ if (GTEST_SRC_DIR AND
                  test_previews_generic.cpp
                  test_previews_movie.cpp
                  test_previews_music.cpp
+                 test_previews_social.cpp
                  test_quicklist_menu_item.cpp
                  test_quicklist_view.cpp
                  test_resultviewgrid.cpp
@@ -247,6 +248,9 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/dash/previews/Preview.cpp
                  ${CMAKE_SOURCE_DIR}/dash/previews/PreviewInfoHintWidget.cpp
                  ${CMAKE_SOURCE_DIR}/dash/previews/PreviewRatingsWidget.cpp
+                 ${CMAKE_SOURCE_DIR}/dash/previews/SocialPreview.cpp
+                 ${CMAKE_SOURCE_DIR}/dash/previews/SocialPreviewContent.cpp
+                 ${CMAKE_SOURCE_DIR}/dash/previews/SocialPreviewComments.cpp
                  ${CMAKE_SOURCE_DIR}/dash/previews/Tracks.cpp
                  ${CMAKE_SOURCE_DIR}/dash/previews/Track.cpp
                  ${CMAKE_SOURCE_DIR}/hud/HudAbstractView.cpp
