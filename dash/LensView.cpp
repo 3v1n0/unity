@@ -313,12 +313,15 @@ void LensView::OnCategoryAdded(Category const& category)
     static_cast<ResultViewGrid*> (grid)->horizontal_spacing = CARD_VIEW_GAP_HORIZ;
     static_cast<ResultViewGrid*> (grid)->vertical_spacing = CARD_VIEW_GAP_VERT;
   }
+  /*
+   * The flow renderer is disabled for now, expecting return later
   else if (renderer_name == "flow" && nux::GetWindowThread()->GetGraphicsEngine().UsingGLSLCodePath())
   {
     grid = new CoverflowResultView(NUX_TRACKER_LOCATION);
     grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
     group->SetHeaderCountVisible(false);
   }
+  */
   else
   {
     grid = new ResultViewGrid(NUX_TRACKER_LOCATION);
