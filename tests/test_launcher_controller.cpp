@@ -26,6 +26,9 @@
 #include "ExpoLauncherIcon.h"
 #include "DesktopLauncherIcon.h"
 #include "MockLauncherIcon.h"
+#include "BFBLauncherIcon.h"
+#include "HudLauncherIcon.h"
+#include "TrashLauncherIcon.h"
 #include "PanelStyle.h"
 #include "UnitySettings.h"
 #include "test_utils.h"
@@ -140,6 +143,20 @@ TEST_F(TestLauncherController, Construction)
   EXPECT_TRUE(lc.multiple_launchers());
   ASSERT_EQ(lc.launchers().size(), 1);
   EXPECT_EQ(lc.launcher().monitor(), 0);
+  EXPECT_EQ(lc.Impl()->expo_icon_->GetIconType(), AbstractLauncherIcon::IconType::EXPO);
+  EXPECT_EQ(lc.Impl()->desktop_icon_->GetIconType(), AbstractLauncherIcon::IconType::DESKTOP);
+  EXPECT_GE(lc.Impl()->sort_priority_, AbstractLauncherIcon::DefaultPriority(AbstractLauncherIcon::IconType::APPLICATION));
+  EXPECT_EQ(lc.Impl()->model_->GetSublist<BFBLauncherIcon>().size(), 1);
+  EXPECT_EQ(lc.Impl()->model_->GetSublist<HudLauncherIcon>().size(), 1);
+  EXPECT_EQ(lc.Impl()->model_->GetSublist<TrashLauncherIcon>().size(), 1);
+
+  for (auto const& fav_uri : favorite_store.GetFavorites())
+  {
+    auto const& model_icon_it = std::find_if(lc.Impl()->model_->begin(), lc.Impl()->model_->end(),
+    [&fav_uri](AbstractLauncherIcon::Ptr const& i) { return (i->RemoteUri() == fav_uri); });
+
+    ASSERT_NE(*model_icon_it, nullptr);
+  }
 }
 
 TEST_F(TestLauncherController, MultimonitorMultipleLaunchers)
