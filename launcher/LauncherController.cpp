@@ -117,11 +117,7 @@ Controller::Impl::Impl(Controller* parent)
   edge_barriers_.options = parent_->options();
 
   UScreen* uscreen = UScreen::GetDefault();
-  auto monitors = uscreen->GetMonitors();
-  int primary = uscreen->GetPrimaryMonitor();
-
-  EnsureLaunchers(primary, monitors);
-  launcher_ = launchers[0];
+  EnsureLaunchers(uscreen->GetPrimaryMonitor(), uscreen->GetMonitors());
 
   SetupIcons();
 
@@ -179,7 +175,7 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
   unsigned int launchers_size = launchers.size();
   unsigned int last_launcher = 0;
 
-  for (unsigned int i = 0; i < num_launchers; i++, last_launcher++)
+  for (unsigned int i = 0; i < num_launchers; ++i, ++last_launcher)
   {
     if (i >= launchers_size)
     {
@@ -213,6 +209,7 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
     }
   }
 
+  launcher_ = launchers[0];
   launchers.resize(num_launchers);
 }
 
