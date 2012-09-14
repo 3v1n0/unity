@@ -33,7 +33,6 @@ namespace unity
 {
 namespace launcher
 {
-
 namespace
 {
   const std::string ZEITGEIST_UNITY_ACTOR = "application://compiz.desktop";
