@@ -150,7 +150,7 @@ void Controller::Impl::SetOpacity(float opacity)
 
 void Controller::Impl::SetLauncherWidth(int width)
 {
-  for (auto window: windows_)
+  for (auto const& window: windows_)
   {
     ViewForWindow(window)->SetLauncherWidth(width);
   }
