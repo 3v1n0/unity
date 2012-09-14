@@ -186,9 +186,13 @@ void LauncherModel::ReorderAfter(AbstractLauncherIcon::Ptr const& icon, Abstract
 
   for (auto it = std::next(std::find(begin(), end(), other)); it != end(); ++it)
   {
-    // Increasing the priority of the icons next to the other one
     auto const& icon_it = *it;
-    int new_priority = icon_it->SortPriority() + 1;
+
+    if (icon_it == icon)
+      continue;
+
+    // Increasing the priority of the icons next to the other one
+    int new_priority = icon_it->SortPriority() + 2;
     icon_it->SetSortPriority(new_priority);
   }
 
