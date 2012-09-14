@@ -80,7 +80,6 @@ public:
   // unload any previous grabbed images
   virtual void Unload(Result& row);
 
-  int highlight_padding;
   int spacing;
   int padding;
 
@@ -97,9 +96,6 @@ private:
   nux::BaseTexture* CreateTextureCallback(std::string const& texid,
                                           int width, int height,
                                           glib::Object<GdkPixbuf> const& pixbuf);
-  nux::BaseTexture* CreateBlurredTextureCallback(std::string const& texid,
-                                                 int width, int height,
-                                                 glib::Object<GdkPixbuf> const& pixbuf);
   nux::BaseTexture* DrawHighlight(std::string const& texid,
                                   int width, int height);
 };
