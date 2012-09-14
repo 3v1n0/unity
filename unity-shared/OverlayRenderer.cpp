@@ -559,7 +559,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
     gfx_context.QRP_1Tex(larger_content_geo.x + larger_content_geo.width - bg_refine_tex_->GetWidth(), 
                        larger_content_geo.y,
                        bg_refine_tex_->GetWidth(), 
-                       bg_refine_tex_->GetHeight(),
+                       std::min(bg_refine_tex_->GetHeight(), larger_content_geo.height),
                        bg_refine_tex_->GetDeviceTexture(),
                        refine_texxform,
                        nux::color::White
@@ -570,7 +570,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
     gfx_context.QRP_1Tex(larger_content_geo.x + larger_content_geo.width - bg_refine_no_refine_tex_->GetWidth(), 
                        larger_content_geo.y,
                        bg_refine_no_refine_tex_->GetWidth(), 
-                       bg_refine_no_refine_tex_->GetHeight(),
+                       std::min(bg_refine_no_refine_tex_->GetHeight(), larger_content_geo.height),
                        bg_refine_no_refine_tex_->GetDeviceTexture(),
                        refine_texxform,
                        nux::color::White
