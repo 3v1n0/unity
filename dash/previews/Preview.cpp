@@ -32,6 +32,7 @@
 #include "ApplicationPreview.h"
 #include "MusicPreview.h"
 #include "MoviePreview.h"
+#include "SocialPreview.h"
 
 namespace unity
 {
@@ -68,6 +69,10 @@ previews::Preview::Ptr Preview::PreviewForModel(dash::Preview::Ptr model)
   else if (model->renderer_name == "preview-movie")
   {
     return Preview::Ptr(new MoviePreview(model));
+  }
+  else if (model->renderer_name == "preview-social")
+  {
+    return Preview::Ptr(new SocialPreview(model));
   }
   // else if (renderer_name == "preview-series")
   // {
