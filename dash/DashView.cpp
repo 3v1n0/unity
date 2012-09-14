@@ -782,6 +782,8 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
     float saturation_ref = 0.4f;
     nux::Color bg_color = bghash_.CurrentColor();
 
+    int position_offset = 40;
+
     if (preview_displaying_ && layout_ && layout_->RedirectRenderingToTexture())
     {
       if (layout_copy_.IsValid())
@@ -822,7 +824,7 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
         // Ghost row of items above the preview
         {
           int final_x = layout_->GetX();
-          int final_y = layout_->GetY() - (opening_row_y_);
+          int final_y = layout_->GetY() - (opening_row_y_) - position_offset ;
 
           texxform.uoffset = 0.0f;
           texxform.voffset = 0.0f;
@@ -842,7 +844,7 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
         // Ghost row of items below the preview
         {
           int final_x = layout_->GetX();
-          int final_y = layout_->GetY() + layout_->GetHeight() - opening_row_height_ - 20;
+          int final_y = layout_->GetY() + layout_->GetHeight() - position_offset;
 
           texxform.uoffset = (layout_->GetX() - layout_->GetX())/(float)layout_->GetWidth();
           texxform.voffset = (opening_row_y_ + opening_row_height_ - layout_->GetY())/(float)layout_->GetHeight();
@@ -905,7 +907,7 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
         // Ghost row of items above the preview
         {
           int final_x = layout_->GetX();
-          int final_y = layout_->GetY() - (opening_row_y_);
+          int final_y = layout_->GetY() - (opening_row_y_) - position_offset;
 
           texxform.uoffset = 0.0f;
           texxform.voffset = 0.0f; //(opening_row_y_ - layout_->GetY())/(float)layout_->GetHeight();
@@ -925,7 +927,7 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
         // Ghost row of items below the preview
         {
           int final_x = layout_->GetX();
-          int final_y = layout_->GetY() + layout_->GetHeight() - opening_row_height_ - 20;
+          int final_y = layout_->GetY() + layout_->GetHeight() - position_offset;
 
           texxform.uoffset = (layout_->GetX() - layout_->GetX())/(float)layout_->GetWidth();
           texxform.voffset = (opening_row_y_ + opening_row_height_ - layout_->GetY())/(float)layout_->GetHeight();
