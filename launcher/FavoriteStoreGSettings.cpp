@@ -76,7 +76,7 @@ void FavoriteStoreGSettings::FillList()
   }
 }
 
-FavoriteList const& FavoriteStoreGSettings::GetFavorites()
+FavoriteList const& FavoriteStoreGSettings::GetFavorites() const
 {
   return favorites_;
 }

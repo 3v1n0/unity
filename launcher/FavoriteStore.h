@@ -43,7 +43,7 @@ public:
 
   static FavoriteStore& Instance();
 
-  virtual FavoriteList const& GetFavorites() = 0;
+  virtual FavoriteList const& GetFavorites() const = 0;
 
   // These will NOT emit the relevant signals, so bare that in mind
   // i.e. don't hope that you can add stuff and hook the view up to

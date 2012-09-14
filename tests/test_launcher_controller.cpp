@@ -49,7 +49,7 @@ struct MockFavoriteStore : FavoriteStore
                   "application://" BUILDDIR "/tests/data/update-manager.desktop" };
   }
 
-  FavoriteList const& GetFavorites()
+  FavoriteList const& GetFavorites() const
   {
     return fav_list_;
   }

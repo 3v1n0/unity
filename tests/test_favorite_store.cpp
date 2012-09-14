@@ -29,7 +29,7 @@ namespace
 class MockFavoriteStore : public FavoriteStore
 {
 public:
-  FavoriteList const& GetFavorites()  { return fav_list_; }
+  FavoriteList const& GetFavorites() const  { return fav_list_; }
   void AddFavorite(std::string const& icon_uri, int position) {}
   void RemoveFavorite(std::string const& icon_uri) {}
   void MoveFavorite(std::string const& icon_uri, int position) {}

@@ -39,7 +39,7 @@ class FavoriteStoreGSettings : public FavoriteStore
 public:
   FavoriteStoreGSettings();
 
-  virtual FavoriteList const& GetFavorites();
+  virtual FavoriteList const& GetFavorites() const;
   virtual void AddFavorite(std::string const& desktop_path, int position);
   virtual void RemoveFavorite(std::string const& desktop_path);
   virtual void MoveFavorite(std::string const& desktop_path, int position);
