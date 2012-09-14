@@ -178,6 +178,8 @@ private:
   bool CheckWindowIntersection(nux::Geometry const& region, CompWindow* window) const;
   void SetMwmWindowHints(Window xid, MotifWmHints* new_hints);
 
+  Window GetTopMostValidWindowInViewport() const;
+
   std::string GetTextProperty(guint32 xid, Atom atom) const;
   std::string GetUtf8Property(guint32 xid, Atom atom) const;
 
