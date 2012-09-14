@@ -160,12 +160,27 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
 
           row_y += row_index * row_size;
         }
+        
+        // {
+        //   std::tuple<int, int> focused_coord = GetResultPosition(selected_index_);
 
+        //   int focused_x = std::get<0>(focused_coord);
+        //   int focused_y = std::get<1>(focused_coord);
+        //   ubus_.SendMessage(UBUS_RESULT_VIEW_KEYNAV_CHANGED,
+        //                     g_variant_new("(iiii)", focused_x, focused_y, renderer_->width(), renderer_->height()));
+        // }
+        
         ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 
                                 g_variant_new("(iiii)", row_y, row_height, left_results, right_results));
         UriActivated.emit(activated_uri_, ActivateType::PREVIEW);
       }
       hightlighted_index_ = current_index;
+
+      if (current_index >= GetItemsPerRow())
+      {
+        expanded = true;
+        QueueDraw();
+      }
     }
 
     g_free(uri);

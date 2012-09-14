@@ -116,6 +116,8 @@ DashView::DashView()
   home_lens_->AddLenses(lenses_);
   home_lens_->search_finished.connect(sigc::mem_fun(this, &DashView::OnGlobalSearchFinished));
   lens_bar_->Activate("home.lens");
+
+  bghash_.RefreshColor();
 }
 
 DashView::~DashView()
@@ -137,10 +139,12 @@ void DashView::ClosePreview()
   {
     layout_->SetPresentRedirectedView(true);
     animation_.Stop();
+    fade_out_connection_.disconnect();
+    fade_in_connection_.disconnect();
     // Set fade animation
-    animation_.SetDuration(600);
-    animation_.SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::Linear));
-    animation_.updated.connect(sigc::mem_fun(this, &DashView::FadeInCallBack));
+    animation_.SetDuration(250);
+    animation_.SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::ExpoEaseIn));
+    fade_in_connection_ = animation_.updated.connect(sigc::mem_fun(this, &DashView::FadeInCallBack));
 
     fade_in_value_ = 1.0f;
     animation_.SetStartValue(fade_in_value_);
@@ -150,13 +154,13 @@ void DashView::ClosePreview()
 
   preview_displaying_ = false;
 
-  // sanity check
-  if (!preview_container_)
-    return;
-  RemoveChild(preview_container_.GetPointer());
-  preview_container_->UnParentObject();
-  preview_container_.Release(); // free resources
-  preview_state_machine_.ClosePreview();
+  // // sanity check
+  // if (!preview_container_)
+  //   return;
+  // RemoveChild(preview_container_.GetPointer());
+  // preview_container_->UnParentObject();
+  // preview_container_.Release(); // free resources
+  // preview_state_machine_.ClosePreview();
 
   // re-focus dash view component.
   nux::GetWindowCompositor().SetKeyFocusArea(default_focus());
@@ -173,6 +177,19 @@ void DashView::FadeInCallBack(float const& fade_in_value)
 {
   fade_in_value_ = fade_in_value;
   QueueDraw();
+
+  if (fade_in_value_ == 0.0f)
+  {
+    // sanity check
+    if (!preview_container_)
+    {
+      return;
+    }
+    RemoveChild(preview_container_.GetPointer());
+    preview_container_->UnParentObject();
+    preview_container_.Release(); // free resources
+    preview_state_machine_.ClosePreview();
+  }
 }
 
 void DashView::BuildPreview(Preview::Ptr model)
@@ -191,10 +208,13 @@ void DashView::BuildPreview(Preview::Ptr model)
       //   layout_copy_, src_texture,
       //   texxform, nux::color::White);
 
+      animation_.Stop();
+      fade_out_connection_.disconnect();
+      fade_in_connection_.disconnect();
       // Set fade animation
-      animation_.SetDuration(600);
-      animation_.SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::Linear));
-      animation_.updated.connect(sigc::mem_fun(this, &DashView::FadeOutCallBack));
+      animation_.SetDuration(250);
+      animation_.SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::ExpoEaseIn));
+      fade_out_connection_ = animation_.updated.connect(sigc::mem_fun(this, &DashView::FadeOutCallBack));
 
       fade_out_value_ = 1.0f;
       animation_.SetStartValue(fade_out_value_);
@@ -234,6 +254,9 @@ void DashView::BuildPreview(Preview::Ptr model)
     preview_container_->request_close.connect([&] () { ClosePreview(); });
 
     nux::GetWindowCompositor().SetKeyFocusArea(preview_container_.GetPointer());
+
+    // preview_container_->SetRedirectRenderingToTexture(true);
+    // preview_container_->SetPresentRedirectedView(false);
   }
   else
   {
@@ -680,8 +703,8 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
 {
   renderer_.DrawInner(graphics_engine, content_geo_, GetAbsoluteGeometry(), GetGeometry());
 
-  bool preview_redraw = false;
   bool display_ghost = false;
+  bool preview_redraw = false;
   if (preview_container_)
   {
     preview_redraw = preview_container_->IsRedrawNeeded();
@@ -719,9 +742,27 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
       (1.0f - fade_out_value_) * (preview_clip_geo.height)/2.0f;
     preview_clip_geo.height = (1.0f - fade_out_value_) * (preview_clip_geo.height);
 
-    graphics_engine.PushClippingRectangle(preview_clip_geo);
+    graphics_engine.PushModelViewMatrix(nux::Matrix4::TRANSLATE(-preview_container_->GetWidth()/2.0f, -preview_container_->GetHeight()/2.0f, 0));
+    graphics_engine.PushModelViewMatrix(nux::Matrix4::SCALE(1.0f - fade_out_value_, 1.0f - fade_out_value_, 1.0f));
+    graphics_engine.PushModelViewMatrix(nux::Matrix4::TRANSLATE(preview_container_->GetWidth()/2.0f, preview_container_->GetHeight()/2.0f, 0));
+
     preview_container_->ProcessDraw(graphics_engine, (!force_draw) ? IsFullRedraw() : force_draw);
-    graphics_engine.PopClippingRectangle();
+
+    graphics_engine.PopModelViewMatrix();
+    graphics_engine.PopModelViewMatrix();
+    graphics_engine.PopModelViewMatrix();
+  }
+  else if (fade_in_value_ > 0.0f && preview_container_ && preview_container_.IsValid())
+  {
+    graphics_engine.PushModelViewMatrix(nux::Matrix4::TRANSLATE(-preview_container_->GetWidth()/2.0f, -preview_container_->GetHeight()/2.0f, 0));
+    graphics_engine.PushModelViewMatrix(nux::Matrix4::SCALE(fade_in_value_, fade_in_value_, 1.0f));
+    graphics_engine.PushModelViewMatrix(nux::Matrix4::TRANSLATE(preview_container_->GetWidth()/2.0f, preview_container_->GetHeight()/2.0f, 0));
+
+    preview_container_->ProcessDraw(graphics_engine, (!force_draw) ? IsFullRedraw() : force_draw);
+
+    graphics_engine.PopModelViewMatrix();
+    graphics_engine.PopModelViewMatrix();
+    graphics_engine.PopModelViewMatrix();
   }
   else if (fade_in_value_ == 0.0f)
   {
@@ -736,8 +777,11 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
     unsigned int current_dest_blend_factor;
     graphics_engine.GetRenderStates().GetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
 
+    float ghost_opacity = 0.25f;    
+    float tint_factor = 1.2f;
+    float saturation_ref = 0.4f;
+    nux::Color bg_color = bghash_.CurrentColor();
 
-    float ghost_opacity = 0.25f;
     if (preview_displaying_ && layout_ && layout_->RedirectRenderingToTexture())
     {
       if (layout_copy_.IsValid())
@@ -767,6 +811,14 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
           filter_width += active_lens_view_->filter_bar()->GetWidth();
         }  
 
+        float saturation = fade_out_value_ + (1.0f - fade_out_value_) * saturation_ref;
+        float opacity = fade_out_value_ < ghost_opacity ? ghost_opacity : fade_out_value_;
+        nux::Color tint = nux::Color(
+          fade_out_value_ + (1.0f - fade_out_value_) * tint_factor*bg_color.red,
+          fade_out_value_ + (1.0f - fade_out_value_) * tint_factor*bg_color.green,
+          fade_out_value_ + (1.0f - fade_out_value_) * tint_factor*bg_color.blue,
+          1.0f);
+
         // Ghost row of items above the preview
         {
           int final_x = layout_->GetX();
@@ -776,15 +828,14 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
           texxform.voffset = 0.0f;
           texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
 
-          float opacity = fade_out_value_ < ghost_opacity ? ghost_opacity : fade_out_value_;
-
-          graphics_engine.QRP_1Tex(
+          graphics_engine.QRP_TexDesaturate(
             fade_out_value_ * layout_->GetX() + (1.0f - fade_out_value_) * final_x,
             fade_out_value_ * layout_->GetY() + (1.0f - fade_out_value_) * final_y,
             layout_->GetWidth() - filter_width,
             opening_row_y_ + opening_row_height_,
             layout_copy_, texxform,
-            nux::Color(opacity, opacity, opacity, opacity)
+            nux::Color(tint.red, tint.green, tint.blue, opacity),
+            saturation
             );
         }
 
@@ -797,21 +848,22 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
           texxform.voffset = (opening_row_y_ + opening_row_height_ - layout_->GetY())/(float)layout_->GetHeight();
           texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
 
-          float opacity = fade_out_value_ < ghost_opacity ? ghost_opacity : fade_out_value_;
-
-          graphics_engine.QRP_1Tex(
+          graphics_engine.QRP_TexDesaturate(
             fade_out_value_ * layout_->GetX() + (1 - fade_out_value_) * final_x,
             fade_out_value_ * (opening_row_y_ + opening_row_height_) + (1 - fade_out_value_) * final_y,
             layout_->GetWidth() - filter_width,
             layout_->GetHeight() - opening_row_y_ - opening_row_height_,
             layout_copy_, texxform,
-            nux::Color(opacity, opacity, opacity, opacity)
+            nux::Color(tint.red, tint.green, tint.blue, opacity),
+            saturation
             );
         }
 
         graphics_engine.GetRenderStates().SetBlend(false);
         graphics_engine.PopClippingRectangle();
       }
+
+
     }
     else if (layout_ && layout_->RedirectRenderingToTexture() && fade_in_value_ != 0.0f)
     {
@@ -840,7 +892,15 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
             nux::Color(1.0f - fade_in_value_, 1.0f - fade_in_value_, 1.0f - fade_in_value_, 1.0f - fade_in_value_)
             );
           filter_width += active_lens_view_->filter_bar()->GetWidth();
-        }  
+        }
+
+        float saturation = fade_in_value_ * saturation_ref + (1.0f - fade_in_value_);
+        float opacity = (1.0f - fade_in_value_) < ghost_opacity ? ghost_opacity : (1.0f - fade_in_value_);
+        nux::Color tint = nux::Color(
+          fade_in_value_ * tint_factor*bg_color.red + (1.0f - fade_in_value_),
+          fade_in_value_ * tint_factor*bg_color.green + (1.0f - fade_in_value_),
+          fade_in_value_ * tint_factor*bg_color.blue + (1.0f - fade_in_value_),
+          1.0f);
 
         // Ghost row of items above the preview
         {
@@ -851,15 +911,14 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
           texxform.voffset = 0.0f; //(opening_row_y_ - layout_->GetY())/(float)layout_->GetHeight();
           texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
 
-          float opacity = (1.0f - fade_in_value_) < ghost_opacity ? ghost_opacity : (1.0f - fade_in_value_);
-          
-          graphics_engine.QRP_1Tex(
+          graphics_engine.QRP_TexDesaturate(
             (1.0f - fade_in_value_) * layout_->GetX() + (fade_in_value_) * final_x,
             (1.0f - fade_in_value_) * layout_->GetY() + (fade_in_value_) * final_y,
             layout_->GetWidth() - filter_width,
             opening_row_y_ + opening_row_height_,
             layout_copy_, texxform,
-            nux::Color(opacity, opacity, opacity, opacity)
+            nux::Color(tint.red, tint.green, tint.blue, opacity),
+            saturation
             );
         }
 
@@ -872,15 +931,14 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
           texxform.voffset = (opening_row_y_ + opening_row_height_ - layout_->GetY())/(float)layout_->GetHeight();
           texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
 
-          float opacity = (1.0f - fade_in_value_) < ghost_opacity ? ghost_opacity : (1.0f - fade_in_value_);
-          
-          graphics_engine.QRP_1Tex(
+          graphics_engine.QRP_TexDesaturate(
             (1.0f - fade_in_value_) * layout_->GetX() + (fade_in_value_) * final_x,
             (1.0f - fade_in_value_) * (opening_row_y_ + opening_row_height_) + (fade_in_value_) * final_y,
             layout_->GetWidth() - filter_width,
             layout_->GetHeight() - opening_row_y_ - opening_row_height_,
             layout_copy_, texxform,
-            nux::Color(opacity, opacity, opacity, opacity)
+            nux::Color(tint.red, tint.green, tint.blue, opacity),
+            saturation
             );
         }
         graphics_engine.GetRenderStates().SetBlend(false);

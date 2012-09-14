@@ -32,6 +32,7 @@
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/SearchBar.h"
 #include "unity-shared/Introspectable.h"
+#include "unity-shared/BGHash.h"
 #include "LensBar.h"
 #include "LensView.h"
 #include "unity-shared/UBusWrapper.h"
@@ -171,6 +172,11 @@ private:
 
   int opening_row_y_;
   int opening_row_height_;
+
+  sigc::connection fade_in_connection_;
+  sigc::connection fade_out_connection_;
+
+  unity::BGHash bghash_;
 };
 
 
