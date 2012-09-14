@@ -17,6 +17,8 @@
  *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
+#include <array>
+
 #include "PanelTray.h"
 #include "unity-shared/PanelStyle.h"
 
@@ -131,7 +133,7 @@ gboolean PanelTray::FilterTrayCallback(NaTray* tray, NaTrayChild* icon, PanelTra
   glib::String res_name;
   na_tray_child_get_wm_class(icon, &res_name, &res_class);
 
-  for (auto name : WHITELIST)
+  for (auto const& name : WHITELIST)
   {
     if (name.find(title.Str()) == 0 ||
         name.find(res_name.Str()) == 0 ||
