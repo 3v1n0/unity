@@ -29,6 +29,7 @@
 #include "BFBLauncherIcon.h"
 #include "HudLauncherIcon.h"
 #include "TrashLauncherIcon.h"
+#include "VolumeLauncherIcon.h"
 #include "PanelStyle.h"
 #include "UnitySettings.h"
 #include "test_utils.h"
@@ -120,12 +121,36 @@ struct MockBamfLauncherIcon : public BamfLauncherIcon
 {
   typedef nux::ObjectPtr<MockBamfLauncherIcon> Ptr;
 
-  MockBamfLauncherIcon(BamfApplication* app)
-    : BamfLauncherIcon(app) {}
+  explicit MockBamfLauncherIcon(BamfApplication* app)
+    : BamfLauncherIcon(app)
+  {}
+
+  MockBamfLauncherIcon(std::string const& desktop_file)
+    : BamfLauncherIcon(bamf_matcher_get_application_for_desktop_file(bamf_matcher_get_default(), desktop_file.c_str(), TRUE))
+  {}
 
   MOCK_METHOD1(Stick, void(bool));
   MOCK_METHOD0(UnStick, void());
   MOCK_METHOD0(Quit, void());
+};
+
+struct MockVolumeLauncherIcon : public VolumeLauncherIcon
+{
+  typedef nux::ObjectPtr<MockVolumeLauncherIcon> Ptr;
+
+  MockVolumeLauncherIcon()
+    : VolumeLauncherIcon(Volume::Ptr(volume_ = new MockVolume()),
+                         std::make_shared<MockDevicesSettings>())
+  {
+    EXPECT_CALL(*volume_, GetIdentifier())
+      .WillRepeatedly(Return(std::to_string(g_random_int())));
+  }
+
+  MOCK_METHOD1(Stick, void(bool));
+  MOCK_METHOD0(UnStick, void());
+  MOCK_METHOD0(Quit, void());
+
+  MockVolume* volume_;
 };
 
 namespace launcher
@@ -142,12 +167,6 @@ protected:
   {
     Controller::Impl* Impl() const { return pimpl.get(); }
   };
-
-  MockBamfLauncherIcon::Ptr BuildMockBamfLauncherIcon(std::string const& desktop_file)
-  {
-    auto bamf_app = bamf_matcher_get_application_for_desktop_file(lc.Impl()->matcher_, desktop_file.c_str(), TRUE);
-    return MockBamfLauncherIcon::Ptr(new MockBamfLauncherIcon(bamf_app));
-  }
 
   MockUScreen uscreen;
   Settings settings;
@@ -305,7 +324,7 @@ TEST_F(TestLauncherController, SingleMonitorEdgeBarrierSubscriptionsUpdates)
 TEST_F(TestLauncherController, OnlyUnstickIconOnFavoriteRemoval)
 {
   const std::string desktop = app::BZR_HANDLE_PATCH;
-  auto const& bamf_icon = BuildMockBamfLauncherIcon(desktop);
+  MockBamfLauncherIcon::Ptr bamf_icon(new MockBamfLauncherIcon(desktop));
   lc.Impl()->model_->AddIcon(bamf_icon);
 
   EXPECT_CALL(*bamf_icon, UnStick());
@@ -585,7 +604,7 @@ TEST_F(TestLauncherController, LauncherAddRequestApplicationStick)
   std::string desktop = app::BZR_HANDLE_PATCH;
   std::string icon_uri = FavoriteStore::URI_PREFIX_FILE + desktop;
 
-  auto const& bamf_icon = BuildMockBamfLauncherIcon(desktop);
+  MockBamfLauncherIcon::Ptr bamf_icon(new MockBamfLauncherIcon(desktop));
   lc.Impl()->RegisterIcon(bamf_icon, std::numeric_limits<int>::max());
 
   auto app_icons = model->GetSublist<BamfLauncherIcon>();
@@ -596,6 +615,43 @@ TEST_F(TestLauncherController, LauncherAddRequestApplicationStick)
   lc.launcher().add_request.emit(icon_uri, first_app);
 
   EXPECT_EQ(model->IconIndex(bamf_icon), model->IconIndex(first_app) + 1);
+}
+
+TEST_F(TestLauncherController, LauncherAddRequestDeviceAdd)
+{
+  auto const& model = lc.Impl()->model_;
+  lc.Impl()->device_section_ = MockDeviceLauncherSection();
+  auto const& icons = lc.Impl()->device_section_.GetIcons();
+  auto const& device_icon = *(icons.begin());
+  auto const& icon_uri = device_icon->RemoteUri();
+
+  ASSERT_FALSE(lc.Impl()->GetIconByUri(icon_uri).IsValid());
+
+  auto app_icons = model->GetSublist<BamfLauncherIcon>();
+  auto const& first_app = *(app_icons.begin());
+
+  lc.launcher().add_request.emit(icon_uri, first_app);
+
+  auto const& new_icon = lc.Impl()->GetIconByUri(icon_uri);
+  ASSERT_TRUE(new_icon.IsValid());
+  EXPECT_EQ(new_icon, device_icon);
+  EXPECT_EQ(model->IconIndex(new_icon), model->IconIndex(first_app) + 1);
+}
+
+TEST_F(TestLauncherController, LauncherAddRequestDeviceStick)
+{
+  auto const& model = lc.Impl()->model_;
+  MockVolumeLauncherIcon::Ptr device_icon(new MockVolumeLauncherIcon());
+  lc.Impl()->RegisterIcon(device_icon, std::numeric_limits<int>::max());
+
+  auto app_icons = model->GetSublist<BamfLauncherIcon>();
+  auto const& second_app = *(std::next(app_icons.begin()));
+  ASSERT_LT(model->IconIndex(second_app), model->IconIndex(device_icon));
+
+  EXPECT_CALL(*device_icon, Stick(false));
+  lc.launcher().add_request.emit(device_icon->RemoteUri(), second_app);
+
+  EXPECT_EQ(model->IconIndex(device_icon), model->IconIndex(second_app) + 1);
 }
 
 
