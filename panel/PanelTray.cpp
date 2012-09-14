@@ -123,7 +123,6 @@ void PanelTray::Sync()
 
 gboolean PanelTray::FilterTrayCallback(NaTray* tray, NaTrayChild* icon, PanelTray* self)
 {
-  int i = 0;
   bool accept = false;
 
   glib::String title(na_tray_child_get_title(icon));
@@ -132,7 +131,7 @@ gboolean PanelTray::FilterTrayCallback(NaTray* tray, NaTrayChild* icon, PanelTra
   glib::String res_name;
   na_tray_child_get_wm_class(icon, &res_name, &res_class);
 
-  for (auto const& name : WHITELIST)
+  for (auto name : WHITELIST)
   {
     if (name.find(title.Str()) == 0 ||
         name.find(res_name.Str()) == 0 ||
