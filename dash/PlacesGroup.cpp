@@ -330,7 +330,7 @@ PlacesGroup::SetChildView(dash::ResultView* view)
   layout->AddView(_child_view, 0);
 
   layout->SetLeftAndRightPadding(25, 0);
-  _group_layout->AddLayout(new nux::SpaceLayout(8,8,8,8), 0); // top padding
+  _group_layout->AddLayout(new nux::SpaceLayout(2,2,2,2), 0); // top padding
   _group_layout->AddLayout(layout, 1);
 
   view->results_per_row.changed.connect([&] (int results_per_row) 
