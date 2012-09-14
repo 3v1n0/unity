@@ -25,6 +25,7 @@
 
 #include "DeviceLauncherSection.h"
 #include "AbstractVolumeMonitorWrapper.h"
+#include "Volume.h"
 #include "gmockvolume.h"
 
 using namespace unity::launcher;
@@ -71,6 +72,26 @@ struct MockDeviceLauncherSection : DeviceLauncherSection
     : DeviceLauncherSection(MockVolumeMonitorWrapper::Ptr(new MockVolumeMonitorWrapper),
                             DevicesSettings::Ptr(new MockDevicesSettings))
   {}
+};
+
+class MockVolume : public Volume
+{
+public:
+  typedef std::shared_ptr<MockVolume> Ptr;
+
+  MOCK_CONST_METHOD0(CanBeRemoved, bool(void));
+  MOCK_CONST_METHOD0(CanBeStopped, bool(void));
+  MOCK_CONST_METHOD0(GetName, std::string(void));
+  MOCK_CONST_METHOD0(GetIconName, std::string(void));
+  MOCK_CONST_METHOD0(GetIdentifier, std::string(void));
+  MOCK_CONST_METHOD0(HasSiblings, bool(void));
+  MOCK_CONST_METHOD0(CanBeEjected, bool(void));
+  MOCK_CONST_METHOD0(IsMounted, bool(void));
+
+  MOCK_METHOD0(EjectAndShowNotification, void(void));
+  MOCK_METHOD0(MountAndOpenInFileManager, void(void));
+  MOCK_METHOD0(StopDrive, void(void));
+  MOCK_METHOD0(Unmount, void(void));
 };
 
 }
