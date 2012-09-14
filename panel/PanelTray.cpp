@@ -26,8 +26,9 @@
 namespace
 {
 nux::logging::Logger logger("unity.panel");
-const std::string SETTINGS_NAME = "com.canonical.Unity.Panel";
+
 const int PADDING = 3;
+const std::array<std::string> WHITELIST = { "JavaEmbeddedFrame", "Wine" };
 }
 
 namespace unity
@@ -35,16 +36,9 @@ namespace unity
 
 PanelTray::PanelTray()
   : View(NUX_TRACKER_LOCATION)
-  , settings_(g_settings_new(SETTINGS_NAME.c_str()))
   , window_(gtk_window_new(GTK_WINDOW_TOPLEVEL))
-  , whitelist_(g_settings_get_strv(settings_, "systray-whitelist"))
 {
   int panel_height = panel::Style::Instance().panel_height;
-
-  whitelist_changed_.Connect(settings_, "changed::systray-whitelist", [&] (GSettings*, gchar*) {
-    g_strfreev(whitelist_);
-    whitelist_ = g_settings_get_strv(settings_, "systray-whitelist");
-  });
 
   auto gtkwindow = glib::object_cast<GtkWindow>(window_);
   gtk_window_set_type_hint(gtkwindow, GDK_WINDOW_TYPE_HINT_DOCK);
@@ -81,8 +75,6 @@ PanelTray::PanelTray()
 
 PanelTray::~PanelTray()
 {
-  g_strfreev(whitelist_);
-
   if (gtk_widget_get_realized(window_))
   {
     // We call Release since we're deleting the window here manually,
@@ -133,7 +125,6 @@ gboolean PanelTray::FilterTrayCallback(NaTray* tray, NaTrayChild* icon, PanelTra
 {
   int i = 0;
   bool accept = false;
-  const char *name = nullptr;
 
   glib::String title(na_tray_child_get_title(icon));
 
@@ -141,27 +132,15 @@ gboolean PanelTray::FilterTrayCallback(NaTray* tray, NaTrayChild* icon, PanelTra
   glib::String res_name;
   na_tray_child_get_wm_class(icon, &res_name, &res_class);
 
-  while ((name = self->whitelist_[i]))
+  for (auto const& name : WHITELIST)
   {
-    if (g_strcmp0(name, "all") == 0)
+    if (name.find(title.Str()) == 0 ||
+        name.find(res_name.Str()) == 0 ||
+        name.find(res_class.Str()) == 0)
     {
       accept = true;
       break;
     }
-    else if (!name || name[0] == '\0')
-    {
-      accept = false;
-      break;
-    }
-    else if ((title && g_str_has_prefix(title, name))
-             || (res_name && g_str_has_prefix(res_name, name))
-             || (res_class && g_str_has_prefix(res_class, name)))
-    {
-      accept = true;
-      break;
-    }
-
-    i++;
   }
 
   if (accept)
