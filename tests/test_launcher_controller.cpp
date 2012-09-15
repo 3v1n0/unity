@@ -120,6 +120,12 @@ private:
 struct MockBamfLauncherIcon : public BamfLauncherIcon
 {
   typedef nux::ObjectPtr<MockBamfLauncherIcon> Ptr;
+  typedef bool Fake;
+
+  MockBamfLauncherIcon(Fake = true, std::string const& remote_uri = "")
+    : BamfLauncherIcon(static_cast<BamfApplication*>(g_object_new(BAMF_TYPE_APPLICATION, nullptr)))
+    , remote_uri_(remote_uri)
+  {}
 
   explicit MockBamfLauncherIcon(BamfApplication* app)
     : BamfLauncherIcon(app)
@@ -129,9 +135,19 @@ struct MockBamfLauncherIcon : public BamfLauncherIcon
     : BamfLauncherIcon(bamf_matcher_get_application_for_desktop_file(bamf_matcher_get_default(), desktop_file.c_str(), TRUE))
   {}
 
+  std::string GetRemoteUri()
+  {
+    if (remote_uri_.empty())
+      return BamfLauncherIcon::GetRemoteUri();
+    else
+      return FavoriteStore::URI_PREFIX_APP + remote_uri_;
+  }
+
   MOCK_METHOD1(Stick, void(bool));
   MOCK_METHOD0(UnStick, void());
   MOCK_METHOD0(Quit, void());
+
+  std::string remote_uri_;
 };
 
 struct MockVolumeLauncherIcon : public VolumeLauncherIcon
@@ -148,7 +164,6 @@ struct MockVolumeLauncherIcon : public VolumeLauncherIcon
 
   MOCK_METHOD1(Stick, void(bool));
   MOCK_METHOD0(UnStick, void());
-  MOCK_METHOD0(Quit, void());
 
   MockVolume* volume_;
 };
@@ -654,6 +669,44 @@ TEST_F(TestLauncherController, LauncherAddRequestDeviceStick)
   EXPECT_EQ(model->IconIndex(device_icon), model->IconIndex(second_app) + 1);
 }
 
+TEST_F(TestLauncherController, LauncherRemoveRequestApplicationUnStickAndQuit)
+{
+  MockBamfLauncherIcon::Ptr bamf_icon(new MockBamfLauncherIcon());
+
+  EXPECT_CALL(*bamf_icon, UnStick());
+  EXPECT_CALL(*bamf_icon, Quit());
+  lc.launcher().remove_request.emit(bamf_icon);
+}
+
+TEST_F(TestLauncherController, LauncherRemoveRequestDeviceEjects)
+{
+  MockVolumeLauncherIcon::Ptr device_icon(new MockVolumeLauncherIcon());
+
+  EXPECT_CALL(*(device_icon->volume_), CanBeEjected())
+      .WillRepeatedly(Return(true));
+  EXPECT_CALL(*(device_icon->volume_), CanBeStopped())
+      .WillRepeatedly(Return(true));
+
+  EXPECT_CALL(*(device_icon->volume_), EjectAndShowNotification());
+  EXPECT_CALL(*(device_icon->volume_), StopDrive()).Times(0);
+
+  lc.launcher().remove_request.emit(device_icon);
+}
+
+TEST_F(TestLauncherController, LauncherRemoveRequestDeviceStops)
+{
+  MockVolumeLauncherIcon::Ptr device_icon(new MockVolumeLauncherIcon());
+
+  EXPECT_CALL(*(device_icon->volume_), CanBeEjected())
+      .WillRepeatedly(Return(false));
+  EXPECT_CALL(*(device_icon->volume_), CanBeStopped())
+      .WillRepeatedly(Return(true));
+
+  EXPECT_CALL(*(device_icon->volume_), StopDrive());
+  EXPECT_CALL(*(device_icon->volume_), EjectAndShowNotification()).Times(0);
+
+  lc.launcher().remove_request.emit(device_icon);
+}
 
 }
 
