@@ -24,6 +24,7 @@
 #include <Nux/HLayout.h>
 #include <Nux/BaseWindow.h>
 #include <Nux/WindowCompositor.h>
+#include <Nux/NuxTimerTickSource.h>
 
 #include "BaseWindowRaiserImp.h"
 #include "IconRenderer.h"
@@ -113,7 +114,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , screen(screen)
   , cScreen(CompositeScreen::get(screen))
   , gScreen(GLScreen::get(screen))
-  , animation_controller_(tick_source_)
+  //, animation_controller_(tick_source_)
   , debugger_(this)
   , enable_shortcut_overlay_(true)
   , needsRelayout(false)
@@ -234,6 +235,9 @@ UnityScreen::UnityScreen(CompScreen* screen)
                                            &UnityScreen::initUnity,
                                            this));
 #endif
+
+    tick_source_.reset(new nux::NuxTimerTickSource);
+    animation_controller_.reset(new na::AnimationController(*tick_source_));
 
      wt->RedrawRequested.connect(sigc::mem_fun(this, &UnityScreen::onRedrawRequested));
 
@@ -1222,7 +1226,7 @@ void UnityScreen::preparePaint(int ms)
 
   // Emit the current time throught the tick_source.  This moves any running
   // animations along their path.
-  tick_source_.tick(g_get_monotonic_time());
+  //tick_source_.tick(g_get_monotonic_time());
 
   for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
     wi->HandleAnimations (ms);

@@ -133,7 +133,7 @@ void CoverflowResultItem::Activate(int button)
   int size = model_->Items().size();
 
   ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 
-                    g_variant_new("(iii)", 0, index, size - index));
+                    g_variant_new("(iiii)", 0, 0, index, size - index));
 }
 
 CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
@@ -191,7 +191,7 @@ CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
       int right_results = num_results ? (num_results - current_index) - 1 : 0;
       parent_->UriActivated.emit(GetUriForIndex(current_index), ActivateType::PREVIEW);
       ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 
-                              g_variant_new("(iii)", 0, left_results, right_results));
+                              g_variant_new("(iiii)", 0, 0, left_results, right_results));
     }
   });
 }
@@ -267,6 +267,20 @@ void CoverflowResultView::DrawContent(nux::GraphicsEngine& GfxContext, bool forc
   nux::Geometry base = GetGeometry();
   GfxContext.PushClippingRectangle(base);
 
+  if (RedirectedAncestor())
+  {
+    // This is necessary when doing redirected rendering. Clean the area below this view.
+    unsigned int current_alpha_blend;
+    unsigned int current_src_blend_factor;
+    unsigned int current_dest_blend_factor;
+    GfxContext.GetRenderStates().GetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+
+    GfxContext.GetRenderStates().SetBlend(false);
+    GfxContext.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+
+    GfxContext.GetRenderStates().SetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+  }
+  
   if (GetCompositionLayout())
   {
     nux::Geometry geo = GetCompositionLayout()->GetGeometry();

@@ -245,8 +245,10 @@ private:
   bool TopPanelBackgroundTextureNeedsUpdate() const;
   void UpdateTopPanelBackgroundTexture();
 
-  nux::animation::TickSource tick_source_;
-  nux::animation::AnimationController animation_controller_;
+  // nux::animation::TickSource tick_source_;
+  // nux::animation::AnimationController animation_controller_;
+  std::unique_ptr<nux::NuxTimerTickSource> tick_source_;
+  std::unique_ptr<na::AnimationController> animation_controller_;
 
   Settings dash_settings_;
   dash::Style    dash_style_;

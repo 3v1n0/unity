@@ -70,7 +70,7 @@ public:
   , nav_complete_(0)
   , relative_nav_index_(0)
   {
-    OnGeometryChanged.connect([&](nux::Area*, nux::Geometry& geo)
+    geometry_changed.connect([&](nux::Area*, nux::Geometry& geo)
     {
       // Need to update the preview geometries when updating the container geo.
       UpdateAnimationProgress(progress_, curve_progress_);
@@ -323,7 +323,7 @@ public:
       }
     }
 
-    _queued_draw = false;
+    draw_cmd_queued_ = false;
   }
 
   sigc::signal<void> start_navigation;

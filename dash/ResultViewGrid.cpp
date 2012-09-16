@@ -62,6 +62,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   , mouse_last_x_(-1)
   , mouse_last_y_(-1)
   , extra_horizontal_spacing_(0)
+  , hightlighted_index_(0)
 {
   SetAcceptKeyNavFocusOnMouseDown(false);
 
@@ -143,9 +144,42 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
                           << " " << activated_uri_;
         int left_results = current_index;
         int right_results = num_results ? (num_results - current_index) - 1 : 0;
+
+        int row_y = padding + GetRootGeometry().y;
+        int row_size = renderer_->height + vertical_spacing;
+        int row_height = row_size;
+
+        if (GetItemsPerRow())
+        {
+          int num_row = GetNumResults() / GetItemsPerRow();
+          if (GetNumResults() % GetItemsPerRow())
+          {
+            ++num_row;
+          }
+          int row_index = current_index / GetItemsPerRow();
+
+          row_y += row_index * row_size;
+        }
+        
+        // {
+        //   std::tuple<int, int> focused_coord = GetResultPosition(selected_index_);
+
+        //   int focused_x = std::get<0>(focused_coord);
+        //   int focused_y = std::get<1>(focused_coord);
+        //   ubus_.SendMessage(UBUS_RESULT_VIEW_KEYNAV_CHANGED,
+        //                     g_variant_new("(iiii)", focused_x, focused_y, renderer_->width(), renderer_->height()));
+        // }
+        
         ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 
-                                g_variant_new("(iii)", 0, left_results, right_results));
+                                g_variant_new("(iiii)", row_y, row_height, left_results, right_results));
         UriActivated.emit(activated_uri_, ActivateType::PREVIEW);
+      }
+      hightlighted_index_ = current_index;
+
+      if (current_index >= GetItemsPerRow())
+      {
+        expanded = true;
+        QueueDraw();
       }
     }
 
@@ -573,6 +607,19 @@ ResultListBounds ResultViewGrid::GetVisableResults()
 
 void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
+  if (RedirectedAncestor())
+  {
+    // This is necessary when doing redirected rendering. Clean the area below this view.
+    unsigned int current_alpha_blend;
+    unsigned int current_src_blend_factor;
+    unsigned int current_dest_blend_factor;
+    GfxContext.GetRenderStates().GetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+
+    GfxContext.GetRenderStates().SetBlend(false);
+    GfxContext.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+
+    GfxContext.GetRenderStates().SetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+  }
   int items_per_row = GetItemsPerRow();
   unsigned num_results = GetNumResults();
   int total_rows = (!expanded) ? 0 : (num_results / items_per_row) + 1;
@@ -599,7 +646,7 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
           break;
 
         ResultRenderer::ResultRendererState state = ResultRenderer::RESULT_RENDERER_NORMAL;
-        if ((int)(index) == selected_index_)
+        if ((int)(index) == selected_index_ || (int)(index) == hightlighted_index_)
         {
           state = ResultRenderer::RESULT_RENDERER_SELECTED;
         }
@@ -691,8 +738,24 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
       int left_results = index;
       int right_results = (num_results - index) - 1;
       //FIXME - just uses y right now, needs to use the absolute position of the bottom of the result 
+      // (jay) Here is the fix: Compute the y position of the row where the item is located.
+      int row_y = padding + GetRootGeometry().y;
+      int row_size = renderer_->height + vertical_spacing;
+      int row_height = row_size;
+
+      if (GetItemsPerRow())
+      {
+        int num_row = GetNumResults() / GetItemsPerRow();
+        if (GetNumResults() % GetItemsPerRow())
+        {
+          ++num_row;
+        }
+        int row_index = index / GetItemsPerRow();
+
+        row_y += row_index * row_size;
+      }
       ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 
-                                g_variant_new("(iii)", y, left_results, right_results));
+                                g_variant_new("(iiii)", row_y, row_height, left_results, right_results));
     }
     else
     {

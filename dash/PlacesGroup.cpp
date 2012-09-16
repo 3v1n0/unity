@@ -461,7 +461,20 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
   nux::Geometry const& base = GetGeometry();
   graphics_engine.PushClippingRectangle(base);
 
+  if (RedirectedAncestor())
+  {
+    // This is necessary when doing redirected rendering. Clean the area below this view.
+    unsigned int current_alpha_blend;
+    unsigned int current_src_blend_factor;
+    unsigned int current_dest_blend_factor;
+    graphics_engine.GetRenderStates().GetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
 
+    graphics_engine.GetRenderStates().SetBlend(false);
+    graphics_engine.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+
+    graphics_engine.GetRenderStates().SetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+  }
+  
   if (ShouldBeHighlighted())
   {
     nux::Geometry geo(_header_layout->GetGeometry());
