@@ -39,36 +39,33 @@ class Settings::Impl
 {
 public:
   Impl(Settings* owner);
-  ~Impl();
 
   FormFactor GetFormFactor() const;
   void SetFormFactor(FormFactor factor);
 
 private:
   void Refresh();
-  static void Changed(GSettings* settings, gchar* key, Impl* self);
 
 private:
   Settings* owner_;
-  GSettings* settings_;
+  glib::Object<GSettings> settings_;
   FormFactor form_factor_;
+
+  glib::Signal<void, GSettings*, gchar* > form_factor_changed_;
+
 };
 
 
 Settings::Impl::Impl(Settings* owner)
   : owner_(owner)
-  , settings_(nullptr)
+  , settings_(g_settings_new("com.canonical.Unity"))
   , form_factor_(FormFactor::DESKTOP)
 {
-  settings_ = g_settings_new("com.canonical.Unity");
-  g_signal_connect(settings_, "changed::form-factor",
-                   (GCallback)(Impl::Changed), this);
-  Refresh();
-}
+  form_factor_changed_.Connect(settings_, "changed::minimize-count", [this] (GSettings*, gchar*) {
+    Refresh();
+  });
 
-Settings::Impl::~Impl()
-{
-  g_object_unref(settings_);
+  Refresh();
 }
 
 void Settings::Impl::Refresh()
@@ -89,11 +86,6 @@ void Settings::Impl::Refresh()
   }
 
   owner_->changed.emit();
-}
-
-void Settings::Impl::Changed(GSettings* settings, char* key, Impl* self)
-{
-  self->Refresh();
 }
 
 FormFactor Settings::Impl::GetFormFactor() const
