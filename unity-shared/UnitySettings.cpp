@@ -61,7 +61,7 @@ Settings::Impl::Impl(Settings* owner)
   , form_factor_(FormFactor::DESKTOP)
 {
   settings_ = g_settings_new("com.canonical.Unity");
-  g_signal_connect(settings_, "changed",
+  g_signal_connect(settings_, "changed::form-factor",
                    (GCallback)(Impl::Changed), this);
   Refresh();
 }
