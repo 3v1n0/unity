@@ -20,6 +20,7 @@
 #ifndef UNITY_SETTINGS_H
 #define UNITY_SETTINGS_H
 
+#include <memory>
 #include <sigc++/signal.h>
 #include <Nux/Nux.h>
 
@@ -50,9 +51,9 @@ public:
 
 private:
   class Impl;
-  Impl* pimpl;
+  std::unique_ptr<Impl> pimpl;
 };
 
 }
 
-#endif // UNITY_SETTINGS_H
+#endif

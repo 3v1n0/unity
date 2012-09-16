@@ -116,7 +116,6 @@ Settings::Settings()
 
 Settings::~Settings()
 {
-  delete pimpl;
   if (settings_instance == this)
     settings_instance = nullptr;
 }
