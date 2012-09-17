@@ -1061,5 +1061,50 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteRemoved)
   lc.Impl()->OnFavoriteStoreFavoriteRemoved(app_icon->RemoteUri());
 }
 
+TEST_F(TestLauncherController, AddRunningApps)
+{
+  lc.ClearModel();
+  lc.Impl()->AddRunningApps();
+
+  std::shared_ptr<GList> apps(bamf_matcher_get_applications(lc.Impl()->matcher_), g_list_free);
+
+  for (GList *l = apps.get(); l; l = l->next)
+  {
+    if (!BAMF_IS_APPLICATION(l->data))
+      continue;
+
+    BamfApplication* app = BAMF_APPLICATION(l->data);
+
+    ASSERT_NE(g_object_get_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen")), nullptr);
+
+    auto desktop = bamf_application_get_desktop_file(app);
+    std::string path(desktop ? desktop : "");
+
+    if (path.empty())
+      continue;
+
+    auto const& icon = std::find_if(lc.Impl()->model_->begin(), lc.Impl()->model_->end(),
+      [&path](AbstractLauncherIcon::Ptr const& i) { return ( i->DesktopFile() == path); });
+
+    ASSERT_NE(icon, lc.Impl()->model_->end());
+  }
+}
+
+TEST_F(TestLauncherController, AddDevices)
+{
+  lc.ClearModel();
+  lc.Impl()->device_section_ = MockDeviceLauncherSection();
+  auto const& icons = lc.Impl()->device_section_.GetIcons();
+  auto const& device_icon1 = *(icons.begin());
+  auto const& device_icon2 = *(std::next(icons.begin()));
+
+  device_icon1->Stick(false);
+
+  lc.Impl()->AddDevices();
+
+  EXPECT_FALSE(lc.Impl()->GetIconByUri(device_icon1->RemoteUri()).IsValid());
+  EXPECT_TRUE(lc.Impl()->GetIconByUri(device_icon2->RemoteUri()).IsValid());
+}
+
 }
 
