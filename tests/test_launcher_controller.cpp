@@ -740,6 +740,7 @@ TEST_F(TestLauncherController, SetupIcons)
                                 FavoriteStore::URI_PREFIX_APP + app::SW_CENTER,
                                 places::DEVICES_URI,
                                 FavoriteStore::URI_PREFIX_APP + app::UPDATE_MANAGER });
+  std::shared_ptr<GList> apps(bamf_matcher_get_applications(lc.Impl()->matcher_), g_list_free);
   lc.Impl()->SetupIcons();
   lc.DisconnectSignals();
 
@@ -755,7 +756,6 @@ TEST_F(TestLauncherController, SetupIcons)
   fav = lc.Impl()->GetIconByUri(FavoriteStore::URI_PREFIX_APP + app::UPDATE_MANAGER);
   EXPECT_EQ(model->IconIndex(fav), ++icon_index);
 
-  std::shared_ptr<GList> apps(bamf_matcher_get_applications(lc.Impl()->matcher_), g_list_free);
 
   for (GList *l = apps.get(); l; l = l->next)
   {
@@ -774,6 +774,58 @@ TEST_F(TestLauncherController, SetupIcons)
     ASSERT_TRUE(icon.IsValid());
     ASSERT_EQ(model->IconIndex(icon), icon_index);
   }
+}
+
+TEST_F(TestLauncherController, ResetIconPriorities)
+{
+  lc.ClearModel();
+  lc.Impl()->device_section_ = MockDeviceLauncherSection();
+  auto const& model = lc.Impl()->model_;
+
+  favorite_store.AddFavorite(places::APPS_URI, -1);
+  favorite_store.AddFavorite(places::DEVICES_URI, -1);
+  std::shared_ptr<GList> apps(bamf_matcher_get_applications(lc.Impl()->matcher_), g_list_free);
+  lc.Impl()->SetupIcons();
+  lc.DisconnectSignals();
+
+  favorite_store.SetFavorites({ places::DEVICES_URI,
+                                FavoriteStore::URI_PREFIX_APP + app::SW_CENTER,
+                                places::APPS_URI,
+                                FavoriteStore::URI_PREFIX_APP + app::UBUNTU_ONE,
+                                FavoriteStore::URI_PREFIX_APP + app::UPDATE_MANAGER });
+  lc.Impl()->ResetIconPriorities();
+
+  int icon_index = -1;
+
+  for (auto const& device : lc.Impl()->device_section_.GetIcons())
+    ASSERT_EQ(model->IconIndex(device), ++icon_index);
+
+  auto fav = lc.Impl()->GetIconByUri(FavoriteStore::URI_PREFIX_APP + app::SW_CENTER);
+  EXPECT_EQ(model->IconIndex(fav), ++icon_index);
+
+  for (GList *l = apps.get(); l; l = l->next)
+  {
+    if (!BAMF_IS_APPLICATION(l->data))
+      continue;
+
+    auto desktop = bamf_application_get_desktop_file(BAMF_APPLICATION(l->data));
+    std::string path(desktop ? desktop : "");
+    ++icon_index;
+
+    if (path.empty())
+      continue;
+
+    auto const& icon = lc.GetIconByDesktop(path);
+
+    ASSERT_TRUE(icon.IsValid());
+    ASSERT_EQ(model->IconIndex(icon), icon_index);
+  }
+
+  fav = lc.Impl()->GetIconByUri(FavoriteStore::URI_PREFIX_APP + app::UBUNTU_ONE);
+  EXPECT_EQ(model->IconIndex(fav), ++icon_index);
+
+  fav = lc.Impl()->GetIconByUri(FavoriteStore::URI_PREFIX_APP + app::UPDATE_MANAGER);
+  EXPECT_EQ(model->IconIndex(fav), ++icon_index);
 }
 
 TEST_F(TestLauncherController, LauncherAddRequestApplicationAdd)
