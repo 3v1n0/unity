@@ -1106,5 +1106,52 @@ TEST_F(TestLauncherController, AddDevices)
   EXPECT_TRUE(lc.Impl()->GetIconByUri(device_icon2->RemoteUri()).IsValid());
 }
 
+TEST_F(TestLauncherController, SetupIcons)
+{
+  lc.ClearModel();
+  lc.Impl()->device_section_ = MockDeviceLauncherSection();
+  auto const& model = lc.Impl()->model_;
+  int icon_index = -1;
+
+  favorite_store.SetFavorites({ FavoriteStore::URI_PREFIX_APP + app::UBUNTU_ONE,
+                                FavoriteStore::URI_PREFIX_APP + app::SW_CENTER,
+                                places::DEVICES_URI,
+                                FavoriteStore::URI_PREFIX_APP + app::UPDATE_MANAGER });
+  lc.Impl()->SetupIcons();
+
+  auto fav = lc.Impl()->GetIconByUri(FavoriteStore::URI_PREFIX_APP + app::UBUNTU_ONE);
+  EXPECT_EQ(model->IconIndex(fav), ++icon_index);
+
+  fav = lc.Impl()->GetIconByUri(FavoriteStore::URI_PREFIX_APP + app::SW_CENTER);
+  EXPECT_EQ(model->IconIndex(fav), ++icon_index);
+
+  for (auto const& device : lc.Impl()->device_section_.GetIcons())
+    ASSERT_EQ(model->IconIndex(device), ++icon_index);
+
+  fav = lc.Impl()->GetIconByUri(FavoriteStore::URI_PREFIX_APP + app::UPDATE_MANAGER);
+  EXPECT_EQ(model->IconIndex(fav), ++icon_index);
+
+  std::shared_ptr<GList> apps(bamf_matcher_get_applications(lc.Impl()->matcher_), g_list_free);
+
+  for (GList *l = apps.get(); l; l = l->next)
+  {
+    if (!BAMF_IS_APPLICATION(l->data))
+      continue;
+
+    auto desktop = bamf_application_get_desktop_file(BAMF_APPLICATION(l->data));
+    std::string path(desktop ? desktop : "");
+    ++icon_index;
+
+    if (path.empty())
+      continue;
+
+    auto const& icon = std::find_if(model->begin(), model->end(),
+      [&path](AbstractLauncherIcon::Ptr const& i) { return ( i->DesktopFile() == path); });
+
+    ASSERT_NE(icon, model->end());
+    ASSERT_EQ(model->IconIndex(*icon), icon_index);
+  }
+}
+
 }
 
