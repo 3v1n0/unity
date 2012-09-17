@@ -37,24 +37,18 @@ struct MockVolumeMonitorWrapper : public AbstractVolumeMonitorWrapper
 {
   typedef std::shared_ptr<MockVolumeMonitorWrapper> Ptr;
 
-  MockVolumeMonitorWrapper()
-    : volume1(G_VOLUME(g_mock_volume_new()))
-    , volume2(G_VOLUME(g_mock_volume_new()))
+  MockVolumeMonitorWrapper(unsigned size = 2)
   {
+    for (unsigned i = 0; i < size; ++i)
+    {
+      glib::Object<GVolume> volume(G_VOLUME(g_mock_volume_new()));
+      volumes_.push_back(volume);
+    }
   }
 
-  VolumeList GetVolumes()
-  {
-    VolumeList ret;
+  VolumeList GetVolumes() { return volumes_; }
 
-    ret.push_back(volume1);
-    ret.push_back(volume2);
-
-    return ret;
-  }
-
-  glib::Object<GVolume> volume1;
-  glib::Object<GVolume> volume2;
+  VolumeList volumes_;
 };
 
 struct MockDevicesSettings : DevicesSettings
@@ -68,8 +62,8 @@ struct MockDevicesSettings : DevicesSettings
 
 struct MockDeviceLauncherSection : DeviceLauncherSection
 {
-  MockDeviceLauncherSection()
-    : DeviceLauncherSection(MockVolumeMonitorWrapper::Ptr(new MockVolumeMonitorWrapper),
+  MockDeviceLauncherSection(unsigned size = 2)
+    : DeviceLauncherSection(MockVolumeMonitorWrapper::Ptr(new MockVolumeMonitorWrapper(size)),
                             DevicesSettings::Ptr(new MockDevicesSettings))
   {}
 };

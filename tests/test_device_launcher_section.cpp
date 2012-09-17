@@ -68,8 +68,8 @@ TEST_F(TestDeviceLauncherSection, NoDuplicates)
   section_.icon_added.connect(sigc::mem_fun(*listener, &EventListener::OnIconAdded));
 
   // Emit the signal volume_added for each volume.
-  monitor_->volume_added.emit(monitor_->volume1);
-  monitor_->volume_added.emit(monitor_->volume2);
+  monitor_->volume_added.emit(*(std::next(monitor_->volumes_.begin(), 0)));
+  monitor_->volume_added.emit(*(std::next(monitor_->volumes_.begin(), 1)));
 
   Utils::WaitForTimeoutMSec(500);
 
