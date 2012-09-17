@@ -244,7 +244,7 @@ void Controller::Impl::OnWindowFocusChanged (guint32 xid)
 {
   static bool keynav_first_focus = false;
 
-  if (parent_->IsOverlayOpen())
+  if (parent_->IsOverlayOpen() || launcher_->GetParent()->GetInputWindowId() == xid)
     keynav_first_focus = false;
 
   if (keynav_first_focus)
@@ -688,10 +688,6 @@ void Controller::Impl::SetupBamf()
   GList* apps, *l;
   BamfApplication* app;
 
-  // Sufficiently large number such that we ensure proper sorting
-  // (avoids case where first item gets tacked onto end rather than start)
-  int priority = 100;
-
   FavoriteList const& favs = FavoriteStore::Instance().GetFavorites();
 
   for (FavoriteList::const_iterator i = favs.begin(), end = favs.end();
@@ -701,9 +697,8 @@ void Controller::Impl::SetupBamf()
 
     if (fav)
     {
-      fav->SetSortPriority(priority);
+      fav->SetSortPriority(sort_priority_++);
       RegisterIcon(fav);
-      priority++;
     }
   }
 

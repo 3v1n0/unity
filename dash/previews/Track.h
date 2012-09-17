@@ -61,6 +61,7 @@ protected:
   virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);
   virtual void PreLayoutManagement();
+  virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
  
   // From debug::Introspectable
   std::string GetName() const;
