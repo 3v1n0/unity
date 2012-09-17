@@ -1096,7 +1096,7 @@ TEST_F(TestLauncherController, SortAndUpdate)
   for (int i = 0; i < 15; ++i)
   {
     MockBamfLauncherIcon::Ptr app(new MockBamfLauncherIcon());
-    app->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, (i % 5) == 0);
+    app->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, (i % 5) != 0);
     lc.Impl()->RegisterIcon(app, 0);
   }
 
@@ -1104,7 +1104,7 @@ TEST_F(TestLauncherController, SortAndUpdate)
 
   for (auto const& icon : *(lc.Impl()->model_))
   {
-    if (icon->IsVisible() && icon->GetIconType() == AbstractLauncherIcon::IconType::APPLICATION)
+    if (icon->IsVisible() && icon->GetIconType() == AbstractLauncherIcon::IconType::APPLICATION && expected_shortcut <= 10)
     {
       ASSERT_EQ(icon->GetShortcut(), std::to_string(expected_shortcut % 10)[0]);
       ++expected_shortcut;
