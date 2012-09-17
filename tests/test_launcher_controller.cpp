@@ -1064,7 +1064,7 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedNew)
 {
   std::string icon_uri = FavoriteStore::URI_PREFIX_APP + app::BZR_HANDLE_PATCH;
 
-  lc.Impl()->OnFavoriteStoreFavoriteAdded(icon_uri, "", true);
+  favorite_store.favorite_added.emit(icon_uri, "", true);
 
   auto const& new_icon = lc.Impl()->GetIconByUri(icon_uri);
   ASSERT_TRUE(new_icon.IsValid());
@@ -1078,7 +1078,7 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedNewBeforeIcon)
 
   auto app_icons = model->GetSublist<BamfLauncherIcon>();
   auto const& first_app = *(app_icons.begin());
-  lc.Impl()->OnFavoriteStoreFavoriteAdded(icon_uri, first_app->RemoteUri(), true);
+  favorite_store.favorite_added.emit(icon_uri, first_app->RemoteUri(), true);
 
   auto const& new_icon = lc.Impl()->GetIconByUri(icon_uri);
 
@@ -1094,7 +1094,7 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedNewAfterIcon)
 
   auto app_icons = model->GetSublist<BamfLauncherIcon>();
   auto const& first_app = *(app_icons.begin());
-  lc.Impl()->OnFavoriteStoreFavoriteAdded(icon_uri, first_app->RemoteUri(), false);
+  favorite_store.favorite_added.emit(icon_uri, first_app->RemoteUri(), false);
 
   auto const& new_icon = lc.Impl()->GetIconByUri(icon_uri);
 
@@ -1112,7 +1112,7 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedStick)
   lc.Impl()->RegisterIcon(app_icon, std::numeric_limits<int>::max());
 
   EXPECT_CALL(*app_icon, Stick(false));
-  lc.Impl()->OnFavoriteStoreFavoriteAdded(icon_uri, "", false);
+  favorite_store.favorite_added.emit(icon_uri, "", false);
   EXPECT_TRUE(app_icon->IsSticky());
 }
 
@@ -1131,7 +1131,7 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedStickBefore)
 
   EXPECT_CALL(*app_icon, Stick(false));
 
-  lc.Impl()->OnFavoriteStoreFavoriteAdded(icon_uri, first_app->RemoteUri(), false);
+  favorite_store.favorite_added.emit(icon_uri, first_app->RemoteUri(), false);
   EXPECT_TRUE(app_icon->IsSticky());
   EXPECT_EQ(model->IconIndex(app_icon), model->IconIndex(first_app) + 1);
 }
@@ -1151,7 +1151,7 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedStickAfter)
 
   EXPECT_CALL(*app_icon, Stick(false));
 
-  lc.Impl()->OnFavoriteStoreFavoriteAdded(icon_uri, first_app->RemoteUri(), true);
+  favorite_store.favorite_added.emit(icon_uri, first_app->RemoteUri(), true);
   EXPECT_TRUE(app_icon->IsSticky());
   EXPECT_EQ(model->IconIndex(app_icon), model->IconIndex(first_app) - 1);
 }
@@ -1163,8 +1163,7 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteRemoved)
   app_icon->Stick(false);
 
   EXPECT_CALL(*app_icon, UnStick());
-  lc.Impl()->OnFavoriteStoreFavoriteRemoved(app_icon->RemoteUri());
+  favorite_store.favorite_removed.emit(app_icon->RemoteUri());
 }
 
 }
-
