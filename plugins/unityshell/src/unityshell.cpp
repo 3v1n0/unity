@@ -536,6 +536,10 @@ void UnityScreen::paintPanelShadow(const CompRegion &clip)
   CompOutput* output = _last_output;
   float panel_h = static_cast<float>(panel_style_.panel_height);
 
+  // You have no shadow texture. But how?
+  if (_shadow_texture.empty() || !_shadow_texture[0])
+    return;
+
   float shadowX = output->x();
   float shadowY = output->y() + panel_h;
   float shadowWidth = output->width();
