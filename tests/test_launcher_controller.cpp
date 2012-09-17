@@ -233,6 +233,15 @@ protected:
 
       ASSERT_EQ(model->Size(), 0);
     }
+
+    void DisconnectSignals()
+    {
+      Impl()->view_opened_signal_.Disconnect();
+      Impl()->device_section_.IconAdded.clear();
+      Impl()->model_->icon_removed.clear();
+      Impl()->model_->saved.clear();
+      Impl()->model_->order_changed.clear();
+    }
   };
 
   MockUScreen uscreen;
@@ -671,6 +680,7 @@ TEST_F(TestLauncherController, GetIconByUriApplications)
 TEST_F(TestLauncherController, AddRunningApps)
 {
   lc.ClearModel();
+  lc.DisconnectSignals();
   lc.Impl()->AddRunningApps();
 
   std::shared_ptr<GList> apps(bamf_matcher_get_applications(lc.Impl()->matcher_), g_list_free);
@@ -700,6 +710,7 @@ TEST_F(TestLauncherController, AddRunningApps)
 TEST_F(TestLauncherController, AddDevices)
 {
   lc.ClearModel();
+  lc.DisconnectSignals();
   lc.Impl()->device_section_ = MockDeviceLauncherSection();
   auto const& icons = lc.Impl()->device_section_.GetIcons();
   auto const& device_icon1 = *(icons.begin());
@@ -725,6 +736,7 @@ TEST_F(TestLauncherController, SetupIcons)
                                 places::DEVICES_URI,
                                 FavoriteStore::URI_PREFIX_APP + app::UPDATE_MANAGER });
   lc.Impl()->SetupIcons();
+  lc.DisconnectSignals();
 
   auto fav = lc.Impl()->GetIconByUri(FavoriteStore::URI_PREFIX_APP + app::UBUNTU_ONE);
   EXPECT_EQ(model->IconIndex(fav), icon_index);
@@ -906,6 +918,7 @@ TEST_F(TestLauncherController, SaveIconsOrder)
 {
   favorite_store.ClearFavorites();
   lc.ClearModel();
+  lc.DisconnectSignals();
   int priority = 0;
 
   MockBamfLauncherIcon::Ptr sticky_app(new MockBamfLauncherIcon(true, "sticky-app"));
