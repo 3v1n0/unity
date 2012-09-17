@@ -506,14 +506,12 @@ void Controller::Impl::OnFavoriteStoreFavoriteAdded(std::string const& entry, st
   else
   {
     AbstractLauncherIcon::Ptr const& result = CreateFavoriteIcon(entry);
-    if (result)
-    {
-      RegisterIcon(result);
-      if (!before)
-        model_->ReorderAfter(result, other);
-      else
-        model_->ReorderBefore(result, other, false);
-    }
+    RegisterIcon(result);
+
+    if (before)
+      model_->ReorderBefore(result, other, false);
+    else
+      model_->ReorderAfter(result, other);
   }
 
   SortAndUpdate();

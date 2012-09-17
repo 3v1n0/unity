@@ -906,7 +906,7 @@ TEST_F(TestLauncherController, SortAndUpdate)
 
   for (int i = 0; i < 15; ++i)
   {
-    MockBamfLauncherIcon::Ptr app(new MockBamfLauncherIcon(true, std::to_string(i)));
+    MockBamfLauncherIcon::Ptr app(new MockBamfLauncherIcon());
     app->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, (i % 5) == 0);
     lc.Impl()->RegisterIcon(app, 0);
   }
@@ -925,6 +925,102 @@ TEST_F(TestLauncherController, SortAndUpdate)
       ASSERT_EQ(icon->GetShortcut(), 0);
     }
   }
+}
+
+TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedNew)
+{
+  std::string icon_uri = FavoriteStore::URI_PREFIX_APP + app::BZR_HANDLE_PATCH;
+
+  lc.Impl()->OnFavoriteStoreFavoriteAdded(icon_uri, "", true);
+
+  auto const& new_icon = lc.Impl()->GetIconByUri(icon_uri);
+  ASSERT_TRUE(new_icon.IsValid());
+  EXPECT_TRUE(new_icon->IsSticky());
+}
+
+TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedNewBeforeIcon)
+{
+  std::string icon_uri = FavoriteStore::URI_PREFIX_APP + app::BZR_HANDLE_PATCH;
+  auto const& model = lc.Impl()->model_;
+
+  auto app_icons = model->GetSublist<BamfLauncherIcon>();
+  auto const& first_app = *(app_icons.begin());
+  lc.Impl()->OnFavoriteStoreFavoriteAdded(icon_uri, first_app->RemoteUri(), true);
+
+  auto const& new_icon = lc.Impl()->GetIconByUri(icon_uri);
+
+  ASSERT_TRUE(new_icon.IsValid());
+  EXPECT_TRUE(new_icon->IsSticky());
+  EXPECT_EQ(model->IconIndex(new_icon), model->IconIndex(first_app) - 1);
+}
+
+TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedNewAfterIcon)
+{
+  std::string icon_uri = FavoriteStore::URI_PREFIX_APP + app::BZR_HANDLE_PATCH;
+  auto const& model = lc.Impl()->model_;
+
+  auto app_icons = model->GetSublist<BamfLauncherIcon>();
+  auto const& first_app = *(app_icons.begin());
+  lc.Impl()->OnFavoriteStoreFavoriteAdded(icon_uri, first_app->RemoteUri(), false);
+
+  auto const& new_icon = lc.Impl()->GetIconByUri(icon_uri);
+
+  ASSERT_TRUE(new_icon.IsValid());
+  EXPECT_TRUE(new_icon->IsSticky());
+  EXPECT_EQ(model->IconIndex(new_icon), model->IconIndex(first_app) + 1);
+}
+
+TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedStick)
+{
+  std::string desktop = app::BZR_HANDLE_PATCH;
+  std::string icon_uri = FavoriteStore::URI_PREFIX_APP + desktop;
+
+  MockBamfLauncherIcon::Ptr app_icon(new MockBamfLauncherIcon(desktop));
+  lc.Impl()->RegisterIcon(app_icon, std::numeric_limits<int>::max());
+
+  EXPECT_CALL(*app_icon, Stick(false));
+  lc.Impl()->OnFavoriteStoreFavoriteAdded(icon_uri, "", false);
+  EXPECT_TRUE(app_icon->IsSticky());
+}
+
+TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedStickBefore)
+{
+  auto const& model = lc.Impl()->model_;
+  std::string desktop = app::BZR_HANDLE_PATCH;
+  std::string icon_uri = FavoriteStore::URI_PREFIX_APP + desktop;
+
+  MockBamfLauncherIcon::Ptr app_icon(new MockBamfLauncherIcon(desktop));
+  lc.Impl()->RegisterIcon(app_icon, std::numeric_limits<int>::max());
+
+  auto app_icons = model->GetSublist<BamfLauncherIcon>();
+  auto const& first_app = *(app_icons.begin());
+  ASSERT_LT(model->IconIndex(first_app), model->IconIndex(app_icon));
+
+  EXPECT_CALL(*app_icon, Stick(false));
+
+  lc.Impl()->OnFavoriteStoreFavoriteAdded(icon_uri, first_app->RemoteUri(), false);
+  EXPECT_TRUE(app_icon->IsSticky());
+  EXPECT_EQ(model->IconIndex(app_icon), model->IconIndex(first_app) + 1);
+}
+
+TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedStickAfter)
+{
+  auto const& model = lc.Impl()->model_;
+  std::string desktop = app::BZR_HANDLE_PATCH;
+  std::string icon_uri = FavoriteStore::URI_PREFIX_APP + desktop;
+
+  MockBamfLauncherIcon::Ptr app_icon(new MockBamfLauncherIcon(desktop));
+  lc.Impl()->RegisterIcon(app_icon, std::numeric_limits<int>::max());
+
+  auto app_icons = model->GetSublist<BamfLauncherIcon>();
+  auto const& first_app = *(app_icons.begin());
+  ASSERT_LT(model->IconIndex(first_app), model->IconIndex(app_icon));
+
+  EXPECT_CALL(*app_icon, Stick(false));
+
+  lc.Impl()->OnFavoriteStoreFavoriteAdded(icon_uri, first_app->RemoteUri(), true);
+  EXPECT_TRUE(app_icon->IsSticky());
+  EXPECT_EQ(model->IconIndex(app_icon), model->IconIndex(first_app) - 1);
 }
 
 }
