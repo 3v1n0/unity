@@ -93,7 +93,7 @@ DashView::DashView()
   , visible_(false)
   , fade_out_value_(0.0f)
   , fade_in_value_(0.0f)
-  , opening_row_y_(0)
+  , opening_row_y_(-1)
   , opening_row_height_(0)
 {
   //tick_source_.reset(new nux::NuxTimerTickSource);
@@ -154,14 +154,6 @@ void DashView::ClosePreview()
 
   preview_displaying_ = false;
 
-  // // sanity check
-  // if (!preview_container_)
-  //   return;
-  // RemoveChild(preview_container_.GetPointer());
-  // preview_container_->UnParentObject();
-  // preview_container_.Release(); // free resources
-  // preview_state_machine_.ClosePreview();
-
   // re-focus dash view component.
   nux::GetWindowCompositor().SetKeyFocusArea(default_focus());
   QueueDraw();
@@ -189,6 +181,10 @@ void DashView::FadeInCallBack(float const& fade_in_value)
     preview_container_->UnParentObject();
     preview_container_.Release(); // free resources
     preview_state_machine_.ClosePreview();
+
+    // Closing the preview. Set  opening_row_y_ to -1;
+    // opening_row_y_ is updated once when the preview
+    opening_row_y_ = -1;
   }
 }
 
@@ -406,8 +402,13 @@ void DashView::SetupUBusConnections()
     preview_state_machine_.left_results = results_to_the_left;
     preview_state_machine_.right_results = results_to_the_right;
 
-    opening_row_y_ = position;
+    if (opening_row_y_ == -1)
+    {
+      // Update only when opening the previews
+      opening_row_y_ = position;
+    }
     opening_row_height_ = row_height;
+
   });
 }
 
@@ -489,220 +490,6 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 void DashView::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
   renderer_.DrawFull(graphics_engine, content_geo_, GetAbsoluteGeometry(), GetGeometry());
-  
-  // we only do this because the previews don't redraw correctly right now, so we have to force
-  // a full redraw every frame. performance sucks but we'll fix it post FF
-
-  // float ghost_opacity = 0.25f;
-  // if (preview_displaying_ && layout_ && layout_->RedirectRenderingToTexture())
-  // {
-  //   if (layout_copy_.IsValid())
-  //   {
-  //     graphics_engine.PushClippingRectangle(layout_->GetGeometry());
-  //     graphics_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-  //     nux::TexCoordXForm texxform;
-
-  //     texxform.FlipVCoord(true);
-
-  //     // texxform.uoffset = (search_bar_layout_->GetX() -layout_->GetX())/(float)layout_->GetWidth();
-  //     // texxform.voffset = (search_bar_layout_->GetY() -layout_->GetY())/(float)layout_->GetHeight();
-
-  //     // texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-  //     // graphics_engine.QRP_1Tex(
-  //     //   search_bar_layout_->GetX(),
-  //     //   search_bar_layout_->GetY() - (1-fade_out_value_)*(search_bar_layout_->GetHeight() + 10),
-  //     //   search_bar_layout_->GetWidth(),
-  //     //   search_bar_layout_->GetHeight(),
-  //     //   layout_copy_, texxform,
-  //     //   nux::Color(fade_out_value_, fade_out_value_, fade_out_value_, fade_out_value_)
-  //     //   );
-
-  //     int filter_width = 10;
-  //     if (active_lens_view_ && active_lens_view_->filters_expanded)
-  //     {
-  //       texxform.uoffset = (active_lens_view_->filter_bar()->GetX() -layout_->GetX())/(float)layout_->GetWidth();
-  //       texxform.voffset = (active_lens_view_->filter_bar()->GetY() -layout_->GetY())/(float)layout_->GetHeight();
-
-  //       texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-  //       graphics_engine.QRP_1Tex(
-  //         active_lens_view_->filter_bar()->GetX() + (1.0f - fade_out_value_)*(active_lens_view_->filter_bar()->GetWidth() + 10),
-  //         active_lens_view_->filter_bar()->GetY(),
-  //         active_lens_view_->filter_bar()->GetWidth(),
-  //         active_lens_view_->filter_bar()->GetHeight(),
-  //         layout_copy_, texxform,
-  //         nux::Color(fade_out_value_, fade_out_value_, fade_out_value_, fade_out_value_)
-  //         );
-  //       filter_width += active_lens_view_->filter_bar()->GetWidth();
-  //     }  
-
-  //     // Ghost row of items above the preview
-  //     {
-  //       int final_x = layout_->GetX();
-  //       int final_y = layout_->GetY() - (opening_row_y_);
-
-  //       texxform.uoffset = 0.0f;
-  //       texxform.voffset = 0.0f;
-  //       texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-  //       float opacity = fade_out_value_ < ghost_opacity ? ghost_opacity : fade_out_value_;
-
-  //       graphics_engine.QRP_1Tex(
-  //         fade_out_value_ * layout_->GetX() + (1.0f - fade_out_value_) * final_x,
-  //         fade_out_value_ * layout_->GetY() + (1.0f - fade_out_value_) * final_y,
-  //         layout_->GetWidth() - filter_width,
-  //         opening_row_y_ + opening_row_height_,
-  //         layout_copy_, texxform,
-  //         nux::Color(opacity, opacity, opacity, opacity)
-  //         );
-  //     }
-
-  //     // Ghost row of items below the preview
-  //     {
-  //       int final_x = layout_->GetX();
-  //       int final_y = layout_->GetY() + layout_->GetHeight() - opening_row_height_ - 20;
-
-  //       texxform.uoffset = (layout_->GetX() - layout_->GetX())/(float)layout_->GetWidth();
-  //       texxform.voffset = (opening_row_y_ + opening_row_height_ - layout_->GetY())/(float)layout_->GetHeight();
-  //       texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-  //       float opacity = fade_out_value_ < ghost_opacity ? ghost_opacity : fade_out_value_;
-
-  //       graphics_engine.QRP_1Tex(
-  //         fade_out_value_ * layout_->GetX() + (1 - fade_out_value_) * final_x,
-  //         fade_out_value_ * (opening_row_y_ + opening_row_height_) + (1 - fade_out_value_) * final_y,
-  //         layout_->GetWidth() - filter_width,
-  //         layout_->GetHeight() - opening_row_y_ - opening_row_height_,
-  //         layout_copy_, texxform,
-  //         nux::Color(opacity, opacity, opacity, opacity)
-  //         );
-  //     }
-
-  //     // // Center part 
-  //     // texxform.uoffset = (home_view_->GetX() -layout_->GetX())/(float)layout_->GetWidth();
-  //     // texxform.voffset = (home_view_->GetY() -layout_->GetY())/(float)layout_->GetHeight();
-
-  //     // texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-  //     // graphics_engine.QRP_1Tex(
-  //     //   home_view_->GetX(),
-  //     //   home_view_->GetY(),
-  //     //   home_view_->GetWidth() - filter_width,
-  //     //   home_view_->GetHeight(),
-  //     //   layout_copy_, texxform,
-  //     //   nux::Color(fade_out_value_, fade_out_value_, fade_out_value_, fade_out_value_)
-  //     //   //nux::Color(1.0f, 1.0f, 1.0f, 1.0f)
-  //     //   );
-
-  //     graphics_engine.GetRenderStates().SetBlend(false);
-  //     graphics_engine.PopClippingRectangle();
-  //   }
-  // }
-  // else if (layout_ && layout_->RedirectRenderingToTexture() && fade_in_value_ != 0.0f)
-  // {
-  //   if (layout_copy_.IsValid())
-  //   {
-  //     graphics_engine.PushClippingRectangle(layout_->GetGeometry());
-  //     graphics_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-  //     nux::TexCoordXForm texxform;
-
-  //     texxform.FlipVCoord(true);
-
-  //     // texxform.uoffset = (search_bar_layout_->GetX() -layout_->GetX())/(float)layout_->GetWidth();
-  //     // texxform.voffset = (search_bar_layout_->GetY() -layout_->GetY())/(float)layout_->GetHeight();
-
-  //     // texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-  //     // graphics_engine.QRP_1Tex(
-  //     //   search_bar_layout_->GetX(),
-  //     //   search_bar_layout_->GetY() - (fade_in_value_)*(search_bar_layout_->GetHeight() + 10),
-  //     //   search_bar_layout_->GetWidth(),
-  //     //   search_bar_layout_->GetHeight(),
-  //     //   layout_copy_, texxform,
-  //     //   nux::Color(1.0f - fade_in_value_, 1.0f - fade_in_value_, 1.0f - fade_in_value_, 1.0f - fade_in_value_)
-  //     //   );
-
-  //     int filter_width = 10;
-  //     if (active_lens_view_ && active_lens_view_->filters_expanded)
-  //     {
-  //       texxform.uoffset = (active_lens_view_->filter_bar()->GetX() -layout_->GetX())/(float)layout_->GetWidth();
-  //       texxform.voffset = (active_lens_view_->filter_bar()->GetY() -layout_->GetY())/(float)layout_->GetHeight();
-
-  //       texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-  //       graphics_engine.QRP_1Tex(
-  //         active_lens_view_->filter_bar()->GetX() + (fade_in_value_)*(active_lens_view_->filter_bar()->GetWidth() + 10),
-  //         active_lens_view_->filter_bar()->GetY(),
-  //         active_lens_view_->filter_bar()->GetWidth(),
-  //         active_lens_view_->filter_bar()->GetHeight(),
-  //         layout_copy_, texxform,
-  //         nux::Color(1.0f - fade_in_value_, 1.0f - fade_in_value_, 1.0f - fade_in_value_, 1.0f - fade_in_value_)
-  //         );
-  //       filter_width += active_lens_view_->filter_bar()->GetWidth();
-  //     }  
-
-  //     // Ghost row of items above the preview
-  //     {
-  //       int final_x = layout_->GetX();
-  //       int final_y = layout_->GetY() - (opening_row_y_);
-
-  //       texxform.uoffset = 0.0f;
-  //       texxform.voffset = 0.0f; //(opening_row_y_ - layout_->GetY())/(float)layout_->GetHeight();
-  //       texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-  //       float opacity = (1.0f - fade_in_value_) < ghost_opacity ? ghost_opacity : (1.0f - fade_in_value_);
-        
-  //       graphics_engine.QRP_1Tex(
-  //         (1.0f - fade_in_value_) * layout_->GetX() + (fade_in_value_) * final_x,
-  //         (1.0f - fade_in_value_) * layout_->GetY() + (fade_in_value_) * final_y,
-  //         layout_->GetWidth() - filter_width,
-  //         opening_row_y_ + opening_row_height_,
-  //         layout_copy_, texxform,
-  //         nux::Color(opacity, opacity, opacity, opacity)
-  //         );
-  //     }
-
-  //     // Ghost row of items below the preview
-  //     {
-  //       int final_x = layout_->GetX();
-  //       int final_y = layout_->GetY() + layout_->GetHeight() - opening_row_height_ - 20;
-
-  //       texxform.uoffset = (layout_->GetX() - layout_->GetX())/(float)layout_->GetWidth();
-  //       texxform.voffset = (opening_row_y_ + opening_row_height_ - layout_->GetY())/(float)layout_->GetHeight();
-  //       texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-  //       float opacity = (1.0f - fade_in_value_) < ghost_opacity ? ghost_opacity : (1.0f - fade_in_value_);
-        
-  //       graphics_engine.QRP_1Tex(
-  //         (1.0f - fade_in_value_) * layout_->GetX() + (fade_in_value_) * final_x,
-  //         (1.0f - fade_in_value_) * (opening_row_y_ + opening_row_height_) + (fade_in_value_) * final_y,
-  //         layout_->GetWidth() - filter_width,
-  //         layout_->GetHeight() - opening_row_y_ - opening_row_height_,
-  //         layout_copy_, texxform,
-  //         nux::Color(opacity, opacity, opacity, opacity)
-  //         );
-  //     }
-  //     // // Center part 
-  //     // texxform.uoffset = (home_view_->GetX() -layout_->GetX())/(float)layout_->GetWidth();
-  //     // texxform.voffset = (home_view_->GetY() -layout_->GetY())/(float)layout_->GetHeight();
-
-  //     // texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-
-  //     // graphics_engine.QRP_1Tex(
-  //     //   home_view_->GetX(),
-  //     //   home_view_->GetY(),
-  //     //   home_view_->GetWidth() - filter_width,
-  //     //   home_view_->GetHeight(),
-  //     //   layout_copy_, texxform,
-  //     //   nux::Color(1.0f - fade_in_value_, 1.0f - fade_in_value_, 1.0f - fade_in_value_, 1.0f - fade_in_value_)
-  //     //   );
-
-  //     graphics_engine.GetRenderStates().SetBlend(false);
-  //     graphics_engine.PopClippingRectangle();
-  //   }    
-  // }
 }
 
 void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)

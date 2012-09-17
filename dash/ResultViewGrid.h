@@ -116,8 +116,6 @@ private:
   UBusManager ubus_;
   glib::Source::UniquePtr lazy_load_source_;
   glib::Source::UniquePtr view_changed_idle_;
-
-  int hightlighted_index_;
 };
 
 } // namespace dash
