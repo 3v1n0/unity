@@ -532,7 +532,7 @@ void Controller::Impl::OnFavoriteStoreFavoriteRemoved(std::string const& entry)
   {
     icon->UnStick();
 
-    // When devices are unsticked, they should be re-ordered (not removed)
+    // When devices are removed from favorites, they should be re-ordered (not removed)
     if (icon->GetIconType() == AbstractLauncherIcon::IconType::DEVICE)
       ResetIconPriorities();
   }
@@ -907,7 +907,7 @@ void Controller::Impl::SetupIcons()
     AddDevices();
 
   view_opened_signal_.Connect(matcher_, "view-opened", sigc::mem_fun(this, &Impl::OnViewOpened));
-  device_section_.IconAdded.connect(sigc::mem_fun(this, &Impl::OnDeviceIconAdded));
+  device_section_.icon_added.connect(sigc::mem_fun(this, &Impl::OnDeviceIconAdded));
   favorite_store.favorite_added.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteAdded));
   favorite_store.favorite_removed.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteRemoved));
   favorite_store.reordered.connect(sigc::mem_fun(this, &Impl::ResetIconPriorities));

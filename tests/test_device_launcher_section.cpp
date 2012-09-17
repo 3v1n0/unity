@@ -65,7 +65,7 @@ struct TestDeviceLauncherSection : Test
 TEST_F(TestDeviceLauncherSection, NoDuplicates)
 {
   std::shared_ptr<EventListener> listener(new EventListener);
-  section_.IconAdded.connect(sigc::mem_fun(*listener, &EventListener::OnIconAdded));
+  section_.icon_added.connect(sigc::mem_fun(*listener, &EventListener::OnIconAdded));
 
   // Emit the signal volume_added for each volume.
   monitor_->volume_added.emit(monitor_->volume1);

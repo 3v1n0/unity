@@ -42,7 +42,7 @@ public:
 
   std::vector<VolumeLauncherIcon::Ptr> GetIcons() const;
 
-  sigc::signal<void, AbstractLauncherIcon::Ptr> IconAdded;
+  sigc::signal<void, AbstractLauncherIcon::Ptr> icon_added;
 
 private:
   void PopulateEntries();

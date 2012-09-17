@@ -61,7 +61,7 @@ void DeviceLauncherSection::TryToCreateAndAddIcon(glib::Object<GVolume> volume)
   VolumeLauncherIcon::Ptr icon(new VolumeLauncherIcon(vol, devices_settings_));
 
   map_[volume] = icon;
-  IconAdded.emit(icon);
+  icon_added.emit(icon);
 }
 
 void DeviceLauncherSection::OnVolumeRemoved(glib::Object<GVolume> const& volume)
