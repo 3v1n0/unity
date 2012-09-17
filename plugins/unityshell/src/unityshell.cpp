@@ -552,7 +552,7 @@ void UnityScreen::paintPanelShadow(const CompRegion &clip)
   if (redraw.isEmpty())
     return;
 
-  CompRect bounds(redraw.boundingRect());
+  const CompRect& bounds(redraw.boundingRect());
 
   // Sub-rectangle of the shadow needing redrawing:
   float x1 = bounds.x1();
