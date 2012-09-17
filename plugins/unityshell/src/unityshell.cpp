@@ -1777,9 +1777,10 @@ void UnityScreen::SetUpAndShowSwitcher(switcher::ShowMode show_mode)
 {
   // maybe check launcher position/hide state?
 
-  WindowManager *wm = WindowManager::Default();
-  int monitor = wm->GetWindowMonitor(wm->GetActiveWindow());
-  nux::Geometry monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(monitor);
+  auto uscreen = UScreen::GetDefault();
+  int monitor = uscreen->GetMonitorWithMouse();
+  auto monitor_geo = uscreen->GetMonitorGeometry(monitor);
+
   monitor_geo.x += 100;
   monitor_geo.y += 100;
   monitor_geo.width -= 200;
