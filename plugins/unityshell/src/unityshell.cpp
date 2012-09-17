@@ -126,6 +126,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , allowWindowPaint(false)
   , _key_nav_mode_requested(false)
   , _last_output(nullptr)
+  , _bghash(NULL)
   , grab_index_ (0)
   , painting_tray_ (false)
   , last_scroll_event_(0)
@@ -240,6 +241,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
     animation_controller_.reset(new na::AnimationController(*tick_source_));
 
      wt->RedrawRequested.connect(sigc::mem_fun(this, &UnityScreen::onRedrawRequested));
+
+     _bghash = new BGHash();
 
      unity_a11y_init(wt.get());
 
@@ -387,6 +390,7 @@ UnityScreen::~UnityScreen()
   unity_a11y_finalize();
   ::unity::ui::IconRenderer::DestroyTextures();
   QuicklistManager::Destroy();
+  delete _bghash;
 
   reset_glib_logging();
 }
@@ -1226,7 +1230,7 @@ void UnityScreen::preparePaint(int ms)
 
   // Emit the current time throught the tick_source.  This moves any running
   // animations along their path.
-  //tick_source_.tick(g_get_monotonic_time());
+  // tick_source_.tick(g_get_monotonic_time());
 
   for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
     wi->HandleAnimations (ms);
@@ -1522,7 +1526,8 @@ void UnityScreen::handleEvent(XEvent* event)
       if (event->xproperty.window == GDK_ROOT_WINDOW() &&
           event->xproperty.atom == gdk_x11_get_xatom_by_name("_GNOME_BACKGROUND_REPRESENTATIVE_COLORS"))
       {
-        _bghash.RefreshColor();
+        if (_bghash)
+          _bghash->RefreshColor();
       }
       break;
     default:
@@ -2733,7 +2738,8 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       override_color.red = override_color.red / override_color.alpha;
       override_color.green = override_color.green / override_color.alpha;
       override_color.blue = override_color.blue / override_color.alpha;
-      _bghash.OverrideColor(override_color);
+      if (_bghash)
+        _bghash->OverrideColor(override_color);
       break;
     }
     case UnityshellOptions::LauncherHideMode:
