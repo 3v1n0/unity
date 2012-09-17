@@ -60,6 +60,8 @@ public:
 
   template<typename IconType>
   int GetLastIconPriority(std::string const& favorite_uri = "", bool sticky = false);
+  void AddFavoriteKeepingOldPosition(FavoriteList& icons, std::string const& icon_uri) const;
+
   void OnIconRemoved(AbstractLauncherIcon::Ptr icon);
   void OnDeviceIconAdded(AbstractLauncherIcon::Ptr icon);
 
@@ -83,7 +85,6 @@ public:
 
   AbstractLauncherIcon::Ptr CreateFavoriteIcon(std::string const& icon_uri);
   AbstractLauncherIcon::Ptr GetIconByUri(std::string const& icon_uri);
-
   SoftwareCenterLauncherIcon::Ptr CreateSCLauncherIcon(std::string const& file_path, std::string const& aptdaemon_trans_id, std::string const& icon_path);
 
   void SetupIcons();

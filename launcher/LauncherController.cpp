@@ -295,6 +295,26 @@ void Controller::Impl::OnLauncherAddRequest(std::string const& icon_uri, Abstrac
   SaveIconsOrder();
 }
 
+void Controller::Impl::AddFavoriteKeepingOldPosition(FavoriteList& icons, std::string const& icon_uri) const
+{
+  auto const& favorites = FavoriteStore::Instance().GetFavorites();
+  auto it = std::find(favorites.rbegin(), favorites.rend(), icon_uri);
+
+  FavoriteList::reverse_iterator icons_it = icons.rbegin();
+
+  while (it != favorites.rend())
+  {
+    icons_it = std::find(icons.rbegin(), icons.rend(), *it);
+
+    if (icons_it != icons.rend())
+      break;
+
+    ++it;
+  }
+
+  icons.insert(icons_it.base(), icon_uri);
+}
+
 void Controller::Impl::SaveIconsOrder()
 {
   FavoriteList icons;
@@ -329,29 +349,13 @@ void Controller::Impl::SaveIconsOrder()
       icons.push_back(remote_uri);
   }
 
-  FavoriteStore& store = FavoriteStore::Instance();
-
   if (!found_first_running_app)
-  {
-    int pos = store.FavoritePosition(local::RUNNING_APPS_URI);
-
-    if (pos < 0)
-      icons.push_back(local::RUNNING_APPS_URI);
-    else
-      icons.insert(std::next(icons.begin(), pos), local::RUNNING_APPS_URI);
-  }
+    AddFavoriteKeepingOldPosition(icons, local::RUNNING_APPS_URI);
 
   if (!found_first_device)
-  {
-    int pos = store.FavoritePosition(local::DEVICES_URI);
+    AddFavoriteKeepingOldPosition(icons, local::DEVICES_URI);
 
-    if (pos < 0)
-      icons.push_back(local::DEVICES_URI);
-    else
-      icons.insert(std::next(icons.begin(), pos), local::DEVICES_URI);
-  }
-
-  store.SetFavorites(icons);
+  FavoriteStore::Instance().SetFavorites(icons);
 }
 
 void
