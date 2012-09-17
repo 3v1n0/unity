@@ -200,11 +200,15 @@ class QuicklistKeyNavigationTests(UnityTestCase):
     def setUp(self):
         super(QuicklistKeyNavigationTests, self).setUp()
 
+        desktop_file = self.KNOWN_APPS["Text Editor"]["desktop-file"]
+        icon_refresh_fn = lambda : self.launcher.model.get_icon(
+            desktop_id=desktop_file)
+
+        self.assertThat(icon_refresh_fn, Eventually(Equals(None)))
         self.ql_app = self.start_app("Text Editor")
 
-        self.ql_launcher_icon = self.launcher.model.get_icon(
-            desktop_id=self.ql_app.desktop_file)
-        self.assertThat(self.ql_launcher_icon, NotEquals(None))
+        self.assertThat(icon_refresh_fn, Eventually(NotEquals(None)))
+        self.ql_launcher_icon = icon_refresh_fn()
 
         self.ql_launcher = self.launcher.get_launcher_for_monitor(0)
 
