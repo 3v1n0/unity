@@ -533,6 +533,10 @@ private:
         unsigned cat_size = max_font_height * 9 / 8;
         switch (category)
         {
+          case UNITY_PROTOCOL_CATEGORY_TYPE_APPLICATION:
+            helper_handle =
+              impl->LoadFromFilename(PKGDATADIR"/emblem_apps.svg", -1, cat_size, helper_slot);
+            break;
           case UNITY_PROTOCOL_CATEGORY_TYPE_BOOK:
             helper_handle =
               impl->LoadFromFilename(PKGDATADIR"/emblem_books.svg", -1, cat_size, helper_slot);
