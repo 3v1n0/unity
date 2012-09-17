@@ -897,5 +897,35 @@ TEST_F(TestLauncherController, SaveIconsOrderTriesToKeepIconProvidersOrder2)
   ASSERT_EQ(it, favorite_store.GetFavorites().end());
 }
 
+TEST_F(TestLauncherController, SortAndUpdate)
+{
+  lc.ClearModel();
+
+  MockVolumeLauncherIcon::Ptr device(new MockVolumeLauncherIcon());
+  lc.Impl()->RegisterIcon(device, 0);
+
+  for (int i = 0; i < 15; ++i)
+  {
+    MockBamfLauncherIcon::Ptr app(new MockBamfLauncherIcon(true, std::to_string(i)));
+    app->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, (i % 5) == 0);
+    lc.Impl()->RegisterIcon(app, 0);
+  }
+
+  int expected_shortcut = 1;
+
+  for (auto const& icon : *(lc.Impl()->model_))
+  {
+    if (icon->IsVisible() && icon->GetIconType() == AbstractLauncherIcon::IconType::APPLICATION)
+    {
+      ASSERT_EQ(icon->GetShortcut(), std::to_string(expected_shortcut % 10)[0]);
+      ++expected_shortcut;
+    }
+    else
+    {
+      ASSERT_EQ(icon->GetShortcut(), 0);
+    }
+  }
+}
+
 }
 
