@@ -749,8 +749,8 @@ TEST_F(TestLauncherController, SaveIconsOrder)
 {
   favorite_store.ClearFavorites();
   lc.ClearModel();
-
   int priority = 0;
+
   MockBamfLauncherIcon::Ptr sticky_app(new MockBamfLauncherIcon(true, "sticky-app"));
   sticky_app->Stick(false);
   lc.Impl()->RegisterIcon(sticky_app, ++priority);
@@ -763,22 +763,46 @@ TEST_F(TestLauncherController, SaveIconsOrder)
   sticky_device->Stick(false);
   lc.Impl()->RegisterIcon(sticky_device, ++priority);
 
-  MockBamfLauncherIcon::Ptr running_app(new MockBamfLauncherIcon(true, "running-app"));
-  lc.Impl()->RegisterIcon(running_app, ++priority);
-
   MockVolumeLauncherIcon::Ptr device(new MockVolumeLauncherIcon());
   lc.Impl()->RegisterIcon(device, ++priority);
 
+  MockBamfLauncherIcon::Ptr running_app(new MockBamfLauncherIcon(true, "running-app"));
+  lc.Impl()->RegisterIcon(running_app, ++priority);
+
   lc.Impl()->SaveIconsOrder();
 
-  auto const& favorites = favorite_store.GetFavorites();
-  auto it = favorites.begin();
+  auto it = favorite_store.GetFavorites().begin();
+
+  ASSERT_EQ(*it, sticky_app->RemoteUri()); ++it;
+  ASSERT_EQ(*it, sticky_device->RemoteUri()); ++it;
+  ASSERT_EQ(*it, FavoriteStore::URI_PREFIX_UNITY + "devices"); ++it;
+  ASSERT_EQ(*it, FavoriteStore::URI_PREFIX_UNITY + "running-apps"); ++it;
+  ASSERT_EQ(it, favorite_store.GetFavorites().end());
+}
+
+TEST_F(TestLauncherController, SaveIconsOrderWithOnlyStickyIcons)
+{
+  favorite_store.ClearFavorites();
+  lc.ClearModel();
+  int priority = 0;
+
+  MockBamfLauncherIcon::Ptr sticky_app(new MockBamfLauncherIcon(true, "sticky-app"));
+  sticky_app->Stick(false);
+  lc.Impl()->RegisterIcon(sticky_app, ++priority);
+
+  MockVolumeLauncherIcon::Ptr sticky_device(new MockVolumeLauncherIcon());
+  sticky_device->Stick(false);
+  lc.Impl()->RegisterIcon(sticky_device, ++priority);
+
+  lc.Impl()->SaveIconsOrder();
+
+  auto it = favorite_store.GetFavorites().begin();
 
   ASSERT_EQ(*it, sticky_app->RemoteUri()); ++it;
   ASSERT_EQ(*it, sticky_device->RemoteUri()); ++it;
   ASSERT_EQ(*it, FavoriteStore::URI_PREFIX_UNITY + "running-apps"); ++it;
   ASSERT_EQ(*it, FavoriteStore::URI_PREFIX_UNITY + "devices"); ++it;
-  ASSERT_EQ(it, favorites.end());
+  ASSERT_EQ(it, favorite_store.GetFavorites().end());
 }
 
 }
