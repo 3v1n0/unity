@@ -846,6 +846,28 @@ class PreviewNavigateTests(DashTestCase):
 
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
 
+    def test_left_click_on_preview_image_cancel_preview(self):
+        """Left click on preview image must cancel the preview."""
+        cover_art = self.preview_container.current_preview.cover_art
+
+        tx = cover_art.x + (cover_art.width / 2)
+        ty = cover_art.y + (cover_art.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=1)
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_right_click_on_preview_image_cancel_preview(self):
+        """Right click on preview image must cancel preview."""
+        cover_art = self.preview_container.current_preview.cover_art
+
+        tx = cover_art.x + (cover_art.width / 2)
+        ty = cover_art.y + (cover_art.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=3)
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
 
 class DashDBusIfaceTests(DashTestCase):
     """Test the Unity dash DBus interface."""
