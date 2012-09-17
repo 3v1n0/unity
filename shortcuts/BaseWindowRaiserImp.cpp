@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -17,36 +17,16 @@
  * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
-#include "ShortcutModel.h"
+#include "BaseWindowRaiserImp.h"
 
 namespace unity
 {
 namespace shortcut
 {
 
-Model::Model(std::list<AbstractHint::Ptr> const& hints)
+void BaseWindowRaiserImp::Raise(nux::ObjectPtr<nux::BaseWindow> window)
 {
-  for (auto hint : hints)
-    AddHint(hint);
-}
-
-void Model::AddHint(AbstractHint::Ptr const& hint)
-{
-  if (!hint)
-    return;
-
-  if (hints_.find(hint->category()) == hints_.end())
-    categories_.push_back(hint->category());
-
-  hints_[hint->category()].push_back(hint);
-}
-
-
-void Model::Fill()
-{
-  for (auto category : categories_)
-    for (auto item : hints_[category])
-      item->Fill();
+  window->PushToFront();
 }
 
 }

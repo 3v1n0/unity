@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -17,37 +17,31 @@
  * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
-#include "ShortcutModel.h"
+#ifndef UNITYSHELL_BASE_WINDOW_RAISER_H
+#define UNITYSHELL_BASE_WINDOW_RAISER_H
+
+#include <boost/noncopyable.hpp>
+#include <memory>
+
+#include <Nux/Nux.h>
+#include <Nux/BaseWindow.h>
 
 namespace unity
 {
 namespace shortcut
 {
 
-Model::Model(std::list<AbstractHint::Ptr> const& hints)
+class BaseWindowRaiser : boost::noncopyable
 {
-  for (auto hint : hints)
-    AddHint(hint);
-}
+public:
+  typedef std::shared_ptr<BaseWindowRaiser> Ptr;
 
-void Model::AddHint(AbstractHint::Ptr const& hint)
-{
-  if (!hint)
-    return;
+  virtual ~BaseWindowRaiser() {};
 
-  if (hints_.find(hint->category()) == hints_.end())
-    categories_.push_back(hint->category());
-
-  hints_[hint->category()].push_back(hint);
-}
-
-
-void Model::Fill()
-{
-  for (auto category : categories_)
-    for (auto item : hints_[category])
-      item->Fill();
-}
+  virtual void Raise(nux::ObjectPtr<nux::BaseWindow> window) = 0;
+};
 
 }
 }
+
+#endif

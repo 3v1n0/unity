@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Andrea Azzarone <azzaronea@gmail.com>
+ * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
 #ifndef UNITYSHELL_MOCK_SHORTCUT_HINT_H
@@ -30,7 +30,8 @@ namespace shortcut
 class MockHint : public AbstractHint
 {
 public:
-   // Ctor and dtor
+  typedef std::shared_ptr<MockHint> Ptr;
+
   MockHint(std::string const& category,
            std::string const& prefix,
            std::string const& postfix,
@@ -40,10 +41,7 @@ public:
            std::string const& arg2 = "",
            std::string const& arg3 = "")
     : AbstractHint(category, prefix, postfix, description, type, arg1, arg2, arg3)
-  {
-  }
-  
-  ~MockHint() {};
+  {}
   
   // Methods...
   bool Fill()
@@ -67,7 +65,7 @@ public:
   }
 };
   
-} // shortcut hint
-} // namespace unity
+}
+}
 
-#endif // UNITYSHELL_MOCK_SHORTCUT_HINT_H
+#endif

@@ -371,7 +371,10 @@ std::string Style::track_font() const
   return "Ubuntu Light 10";
 }
 
-
+bool Style::GetShadowBackgroundEnabled() const
+{
+  return false;
+}
 
 nux::BaseTexture* Style::GetNavLeftIcon()
 {
