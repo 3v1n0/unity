@@ -237,7 +237,7 @@ protected:
     void DisconnectSignals()
     {
       Impl()->view_opened_signal_.Disconnect();
-      Impl()->device_section_.IconAdded.clear();
+      Impl()->device_section_.icon_added.clear();
       Impl()->model_->icon_removed.clear();
       Impl()->model_->saved.clear();
       Impl()->model_->order_changed.clear();
@@ -1156,7 +1156,7 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedStickAfter)
   EXPECT_EQ(model->IconIndex(app_icon), model->IconIndex(first_app) - 1);
 }
 
-TEST_F(TestLauncherController, OnFavoriteStoreFavoriteRemoved)
+TEST_F(TestLauncherController, OnFavoriteStoreFavoriteRemovedApplication)
 {
   MockBamfLauncherIcon::Ptr app_icon(new MockBamfLauncherIcon(true, "sticky-icon"));
   lc.Impl()->RegisterIcon(app_icon);
@@ -1164,6 +1164,29 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteRemoved)
 
   EXPECT_CALL(*app_icon, UnStick());
   favorite_store.favorite_removed.emit(app_icon->RemoteUri());
+}
+
+TEST_F(TestLauncherController, OnFavoriteStoreFavoriteRemovedDevice)
+{
+  lc.ClearModel();
+  lc.Impl()->device_section_ = MockDeviceLauncherSection();
+  auto const& model = lc.Impl()->model_;
+
+  auto const& icons = lc.Impl()->device_section_.GetIcons();
+  auto const& device_icon(*(icons.begin()));
+
+  favorite_store.SetFavorites({ FavoriteStore::URI_PREFIX_APP + app::UBUNTU_ONE,
+                                device_icon->RemoteUri(),
+                                FavoriteStore::URI_PREFIX_APP + app::UPDATE_MANAGER });
+  lc.Impl()->SetupIcons();
+  lc.DisconnectSignals();
+
+  ASSERT_EQ(model->IconIndex(device_icon), 1);
+
+  favorite_store.RemoveFavorite(device_icon->RemoteUri());
+  favorite_store.favorite_removed.emit(device_icon->RemoteUri());
+
+  EXPECT_GT(model->IconIndex(device_icon), 1);
 }
 
 }
