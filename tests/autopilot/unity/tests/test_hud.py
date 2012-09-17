@@ -179,6 +179,7 @@ class HudBehaviorTests(HudTestsBase):
         self.keyboard.type("0")
         self.keyboard.type(" ")
         self.keyboard.type("1")
+        sleep(5)
 
         self.hud.ensure_visible()
 
