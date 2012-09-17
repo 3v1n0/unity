@@ -12,8 +12,8 @@ from __future__ import absolute_import
 from autopilot.matchers import Eventually
 import os.path
 from testtools.matchers import Contains, Equals, NotEquals
-from xdg.DesktopEntry import DesktopEntry
 from time import sleep
+from xdg.DesktopEntry import DesktopEntry
 
 from unity.emulators.quicklist import QuicklistMenuItemLabel
 from unity.tests import UnityTestCase
