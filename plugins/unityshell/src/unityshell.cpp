@@ -525,7 +525,7 @@ void UnityScreen::setPanelShadowMatrix(const GLMatrix& matrix)
   panel_shadow_matrix_ = matrix;
 }
 
-void UnityScreen::paintPanelShadow(const CompRegion &clip)
+void UnityScreen::paintPanelShadow(const CompRegion& clip)
 {
   if (sources_.GetSource(local::RELAYOUT_TIMEOUT))
     return;
