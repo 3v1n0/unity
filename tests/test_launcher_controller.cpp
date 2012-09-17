@@ -30,6 +30,7 @@
 #include "HudLauncherIcon.h"
 #include "TrashLauncherIcon.h"
 #include "VolumeLauncherIcon.h"
+#include "SoftwareCenterLauncherIcon.h"
 #include "PanelStyle.h"
 #include "UnitySettings.h"
 #include "test_utils.h"
@@ -749,6 +750,36 @@ TEST_F(TestLauncherController, LauncherRemoveRequestDeviceStops)
   EXPECT_CALL(*(device_icon->volume_), EjectAndShowNotification()).Times(0);
 
   lc.launcher().remove_request.emit(device_icon);
+}
+
+TEST_F(TestLauncherController, LauncherAddRequestSpecial)
+{
+  std::string desktop = app::BZR_HANDLE_PATCH;
+  std::string icon_uri = FavoriteStore::URI_PREFIX_APP + desktop;
+  ASSERT_FALSE(lc.Impl()->GetIconByUri(icon_uri).IsValid());
+
+  lc.Impl()->OnLauncherAddRequestSpecial(desktop, "", "", 0, 0, 32);
+
+  auto const& sw_center_icon = lc.Impl()->GetIconByUri(icon_uri);
+  ASSERT_TRUE(sw_center_icon.IsValid());
+  EXPECT_NE(dynamic_cast<SoftwareCenterLauncherIcon*>(sw_center_icon.GetPointer()), nullptr);
+}
+
+TEST_F(TestLauncherController, LauncherAddRequestSpecialIgnored)
+{
+  std::string desktop = app::BZR_HANDLE_PATCH;
+  std::string icon_uri = FavoriteStore::URI_PREFIX_APP + desktop;
+
+  MockBamfLauncherIcon::Ptr bamf_icon(new MockBamfLauncherIcon(desktop));
+  lc.Impl()->RegisterIcon(bamf_icon, std::numeric_limits<int>::max());
+  ASSERT_TRUE(lc.Impl()->GetIconByUri(icon_uri).IsValid());
+
+  EXPECT_CALL(*bamf_icon, Stick(false)).Times(0);
+
+  int previous_model_size = lc.Impl()->model_->Size();
+  lc.Impl()->OnLauncherAddRequestSpecial(desktop, "", "", 0, 0, 32);
+
+  EXPECT_EQ(previous_model_size, lc.Impl()->model_->Size());
 }
 
 TEST_F(TestLauncherController, SaveIconsOrder)
