@@ -82,10 +82,12 @@ void SocialPreview::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
 {
   nux::Geometry const& base = GetGeometry();
 
+  bool enable_bg_shadows = dash::previews::Style::Instance().GetShadowBackgroundEnabled();
+
   gfx_engine.PushClippingRectangle(base);
   nux::GetPainter().PaintBackground(gfx_engine, base);
 
-  if (full_data_layout_)
+  if (enable_bg_shadows && full_data_layout_)
   {
     unsigned int alpha, src, dest = 0;
     gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
@@ -105,7 +107,9 @@ void SocialPreview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw
   nux::Geometry const& base = GetGeometry();
   gfx_engine.PushClippingRectangle(base);
 
-  if (!IsFullRedraw())
+  bool enable_bg_shadows = dash::previews::Style::Instance().GetShadowBackgroundEnabled();
+
+  if (enable_bg_shadows && !IsFullRedraw())
     nux::GetPainter().PushLayer(gfx_engine, details_bg_layer_->GetGeometry(), details_bg_layer_.get());
 
   unsigned int alpha, src, dest = 0;
@@ -117,7 +121,7 @@ void SocialPreview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw
 
   gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
 
-  if (!IsFullRedraw())
+  if (enable_bg_shadows && !IsFullRedraw())
     nux::GetPainter().PopBackground();
 
   gfx_engine.PopClippingRectangle();
