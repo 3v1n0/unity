@@ -204,6 +204,14 @@ void Preview::UpdateCoverArtImage(CoverArt* cover_art)
   else
     cover_art->SetNoImageAvailable();
   cover_art->SetFont(style.no_preview_image_font());
+  
+  cover_art->mouse_click.connect([this] (int x, int y, unsigned long button_flags, unsigned long key_flags) 
+  {
+    if (nux::GetEventButton(button_flags) == nux::MOUSE_BUTTON1 || nux::GetEventButton(button_flags) == nux::MOUSE_BUTTON3)
+    {
+      request_close.emit();
+    }
+  });
 }
 
 }
