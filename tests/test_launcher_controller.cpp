@@ -113,6 +113,11 @@ struct MockFavoriteStore : FavoriteStore
     fav_list_ = icon_uris;
   }
 
+  void ClearFavorites()
+  {
+    fav_list_.clear();
+  }
+
 private:
   FavoriteList fav_list_;
 };
@@ -125,15 +130,27 @@ struct MockBamfLauncherIcon : public BamfLauncherIcon
   MockBamfLauncherIcon(Fake = true, std::string const& remote_uri = "")
     : BamfLauncherIcon(static_cast<BamfApplication*>(g_object_new(BAMF_TYPE_APPLICATION, nullptr)))
     , remote_uri_(remote_uri)
-  {}
+  {
+    InitMock();
+    SetQuirk(Quirk::VISIBLE, true);
+  }
 
   explicit MockBamfLauncherIcon(BamfApplication* app)
     : BamfLauncherIcon(app)
-  {}
+  {
+    InitMock();
+  }
 
   MockBamfLauncherIcon(std::string const& desktop_file)
     : BamfLauncherIcon(bamf_matcher_get_application_for_desktop_file(bamf_matcher_get_default(), desktop_file.c_str(), TRUE))
-  {}
+  {
+    InitMock();
+  }
+
+  void InitMock()
+  {
+    ON_CALL(*this, Stick(_)).WillByDefault(Invoke(this, &MockBamfLauncherIcon::ReallyStick));
+  }
 
   std::string GetRemoteUri()
   {
@@ -142,6 +159,8 @@ struct MockBamfLauncherIcon : public BamfLauncherIcon
     else
       return FavoriteStore::URI_PREFIX_APP + remote_uri_;
   }
+
+  void ReallyStick(bool save) { BamfLauncherIcon::Stick(save); }
 
   MOCK_METHOD1(Stick, void(bool));
   MOCK_METHOD0(UnStick, void());
@@ -157,15 +176,19 @@ struct MockVolumeLauncherIcon : public VolumeLauncherIcon
   MockVolumeLauncherIcon()
     : VolumeLauncherIcon(Volume::Ptr(volume_ = new MockVolume()),
                          std::make_shared<MockDevicesSettings>())
+    , uuid_(std::to_string(g_random_int()))
   {
-    EXPECT_CALL(*volume_, GetIdentifier())
-      .WillRepeatedly(Return(std::to_string(g_random_int())));
+    ON_CALL(*volume_, GetIdentifier()).WillByDefault(Return(uuid_));
+    ON_CALL(*this, Stick(_)).WillByDefault(Invoke(this, &MockVolumeLauncherIcon::ReallyStick));
   }
+
+  void ReallyStick(bool save) { VolumeLauncherIcon::Stick(save); }
 
   MOCK_METHOD1(Stick, void(bool));
   MOCK_METHOD0(UnStick, void());
 
   MockVolume* volume_;
+  std::string uuid_;
 };
 
 namespace launcher
@@ -181,6 +204,20 @@ protected:
   struct MockLauncherController : Controller
   {
     Controller::Impl* Impl() const { return pimpl.get(); }
+
+    void ClearModel()
+    {
+      auto const& model = Impl()->model_;
+      std::vector<AbstractLauncherIcon::Ptr> icons;
+
+      for (auto const& icon : *model)
+        icons.push_back(icon);
+
+      for (auto const& icon : icons)
+        model->RemoveIcon(icon);
+
+      ASSERT_EQ(model->Size(), 0);
+    }
   };
 
   MockUScreen uscreen;
@@ -706,6 +743,42 @@ TEST_F(TestLauncherController, LauncherRemoveRequestDeviceStops)
   EXPECT_CALL(*(device_icon->volume_), EjectAndShowNotification()).Times(0);
 
   lc.launcher().remove_request.emit(device_icon);
+}
+
+TEST_F(TestLauncherController, SaveIconsOrder)
+{
+  favorite_store.ClearFavorites();
+  lc.ClearModel();
+
+  int priority = 0;
+  MockBamfLauncherIcon::Ptr sticky_app(new MockBamfLauncherIcon(true, "sticky-app"));
+  sticky_app->Stick(false);
+  lc.Impl()->RegisterIcon(sticky_app, ++priority);
+
+  MockBamfLauncherIcon::Ptr invisible_app(new MockBamfLauncherIcon(true, "invisible-app"));
+  invisible_app->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, false);
+  lc.Impl()->RegisterIcon(invisible_app, ++priority);
+
+  MockVolumeLauncherIcon::Ptr sticky_device(new MockVolumeLauncherIcon());
+  sticky_device->Stick(false);
+  lc.Impl()->RegisterIcon(sticky_device, ++priority);
+
+  MockBamfLauncherIcon::Ptr running_app(new MockBamfLauncherIcon(true, "running-app"));
+  lc.Impl()->RegisterIcon(running_app, ++priority);
+
+  MockVolumeLauncherIcon::Ptr device(new MockVolumeLauncherIcon());
+  lc.Impl()->RegisterIcon(device, ++priority);
+
+  lc.Impl()->SaveIconsOrder();
+
+  auto const& favorites = favorite_store.GetFavorites();
+  auto it = favorites.begin();
+
+  ASSERT_EQ(*it, sticky_app->RemoteUri()); ++it;
+  ASSERT_EQ(*it, sticky_device->RemoteUri()); ++it;
+  ASSERT_EQ(*it, FavoriteStore::URI_PREFIX_UNITY + "running-apps"); ++it;
+  ASSERT_EQ(*it, FavoriteStore::URI_PREFIX_UNITY + "devices"); ++it;
+  ASSERT_EQ(it, favorites.end());
 }
 
 }
