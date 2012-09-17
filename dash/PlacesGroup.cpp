@@ -458,6 +458,12 @@ long PlacesGroup::ComputeContentSize()
 void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
                        bool                 forceDraw)
 {
+
+}
+
+void
+PlacesGroup::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
+{
   nux::Geometry const& base = GetGeometry();
   graphics_engine.PushClippingRectangle(base);
 
@@ -499,41 +505,11 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
   
   _background_layer->SetGeometry(bg_geo);
   _background_layer->Renderlayer(graphics_engine);
-  graphics_engine.PopClippingRectangle();
-}
 
-void
-PlacesGroup::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
-{
-  nux::Geometry const& base = GetGeometry();
-
-  graphics_engine.PushClippingRectangle(base);
-  nux::Geometry bg_geo = GetGeometry();
-  
-  int bg_width = 0;
-  if (_using_nofilters_background)
-    bg_width = _background_nofilters->GetWidth();
-  else
-    bg_width = _background->GetWidth();
-  
-  // if the dash is smaller, resize to fit, otherwise move to the right edge
-  bg_geo.x = std::max(bg_geo.width - bg_width, 0);
-  bg_geo.width = std::min(bg_width, bg_geo.GetWidth()) + 1; // to render into a space left over by the scrollview
-  
-  bg_geo.height = _background->GetHeight();
-
-  if (!IsFullRedraw())
-  {
-    nux::GetPainter().PushLayer(graphics_engine, bg_geo, _background_layer.get());
-  }
-  if (ShouldBeHighlighted() && !IsFullRedraw() && _focus_layer)
-  {
-    nux::GetPainter().PushLayer(graphics_engine, _focus_layer->GetGeometry(), _focus_layer.get());
-  }
-
-  _group_layout->ProcessDraw(graphics_engine, force_draw);
+  _group_layout->ProcessDraw(graphics_engine, true);
 
   graphics_engine.PopClippingRectangle();
+
 }
 
 void PlacesGroup::PostDraw(nux::GraphicsEngine& graphics_engine,
