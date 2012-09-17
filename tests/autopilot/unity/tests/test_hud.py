@@ -13,6 +13,8 @@ from autopilot.matchers import Eventually
 from autopilot.emulators.X11 import ScreenGeometry
 from autopilot.testcase import multiply_scenarios
 from os import remove
+from os.path import exists
+from tempfile import mktemp
 from testtools.matchers import (
     Equals,
     EndsWith,
@@ -170,8 +172,9 @@ class HudBehaviorTests(HudTestsBase):
     def test_gedit_undo(self):
         """Test that the 'undo' action in the Hud works with GEdit."""
 
-        self.addCleanup(remove, '/tmp/autopilot_gedit_undo_test_temp_file.txt')
-        self.start_app('Text Editor', files=['/tmp/autopilot_gedit_undo_test_temp_file.txt'], locale='C')
+        file_path = mktemp()
+        self.addCleanup(remove, file_path)
+        self.start_app('Text Editor', files=[file_path], locale='C')
 
         self.keyboard.type("0")
         self.keyboard.type(" ")
@@ -186,9 +189,9 @@ class HudBehaviorTests(HudTestsBase):
         self.keyboard.press_and_release('Return')
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
         self.keyboard.press_and_release("Ctrl+s")
-        sleep(1)
+        self.assertThat(lambda: exists(file_path), Eventually(Equals(True)))
 
-        contents = open("/tmp/autopilot_gedit_undo_test_temp_file.txt").read().strip('\n')
+        contents = open(file_path).read().strip('\n')
         self.assertEqual("0 ", contents)
 
     def test_hud_to_dash_has_key_focus(self):
@@ -694,5 +697,5 @@ class HudCrossMonitorsTests(HudTestsBase):
             self.screen_geo.move_mouse_to_monitor(monitor+1)
             sleep(.5)
             self.mouse.click()
-            
+
             self.assertThat(self.hud.visible, Eventually(Equals(False)))
