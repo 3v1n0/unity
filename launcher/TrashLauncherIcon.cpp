@@ -23,6 +23,7 @@
 #include <glib/gi18n-lib.h>
 #include <Nux/WindowCompositor.h>
 #include <NuxCore/Logger.h>
+#include <zeitgeist.h>
 
 #include "Launcher.h"
 #include "QuicklistManager.h"
@@ -32,6 +33,9 @@ namespace unity
 {
 namespace launcher
 {
+
+const std::string ZEITGEIST_UNITY_ACTOR = "application://compiz.desktop";
+
 namespace
 {
   nux::logging::Logger logger("unity.launcher.TrashLauncherIcon");
@@ -150,7 +154,32 @@ void TrashLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
   for (auto it : dnd_data.Uris())
   {
     glib::Object<GFile> file(g_file_new_for_uri(it.c_str()));
-    g_file_trash(file, NULL, NULL);
+
+    /* Log ZG event when moving file to trash; this is requred by File Lens.
+       See https://bugs.launchpad.net/unity/+bug/870150  */
+    if (g_file_trash(file, NULL, NULL))
+    {
+      // based on nautilus zg event logging code
+      glib::String origin(g_path_get_dirname (it.c_str()));
+      glib::String parse_name(g_file_get_parse_name (file));
+      glib::String display_name(g_path_get_basename (parse_name));
+
+      ZeitgeistSubject *subject = zeitgeist_subject_new_full(it.c_str(),
+                                                             NULL, // subject interpretation
+                                                             NULL, // suject manifestation
+                                                             NULL, // mime-type
+                                                             origin,
+                                                             display_name,
+                                                             NULL /* storage */);
+      ZeitgeistEvent *event = zeitgeist_event_new_full(ZEITGEIST_ZG_DELETE_EVENT,
+                                                       ZEITGEIST_ZG_USER_ACTIVITY,
+                                                       ZEITGEIST_UNITY_ACTOR.c_str(),
+                                                       subject, NULL);
+      ZeitgeistLog *log = zeitgeist_log_get_default();
+
+      // zeitgeist takes ownership of subject, event and log
+      zeitgeist_log_insert_events_no_reply(log, event, NULL);
+    }
   }
 
   SetQuirk(LauncherIcon::Quirk::PULSE_ONCE, true);
