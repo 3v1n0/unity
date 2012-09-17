@@ -74,7 +74,7 @@ Controller::Controller()
 
   SetupWindow();
 
-  Settings::Instance().changed.connect([&]()
+  Settings::Instance().form_factor.changed.connect([this](FormFactor)
   {
     if (window_ && view_  && visible_)
     {

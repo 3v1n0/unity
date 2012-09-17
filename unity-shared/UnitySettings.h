@@ -17,8 +17,8 @@
 * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
 */
 
-#ifndef UNITY_SETTINGS_H
-#define UNITY_SETTINGS_H
+#ifndef UNITYSHELL_SETTINGS_H
+#define UNITYSHELL_SETTINGS_H
 
 #include <memory>
 #include <sigc++/signal.h>
@@ -30,7 +30,7 @@ namespace unity
 enum class FormFactor
 {
   DESKTOP = 1,
-  NETBOOK = 2,
+  NETBOOK,
   TV
 };
 
@@ -42,12 +42,8 @@ public:
 
   static Settings& Instance();
 
-  // NOTE: could potentially refactor this into a nux::Property
-  FormFactor GetFormFactor() const;
-  void SetFormFactor(FormFactor factor);
-
+  nux::RWProperty<FormFactor> form_factor;
   nux::Property<bool> is_standalone;
-  sigc::signal<void> changed;
 
 private:
   class Impl;

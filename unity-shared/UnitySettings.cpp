@@ -32,73 +32,70 @@ namespace
 nux::logging::Logger logger("unity");
 
 Settings* settings_instance = nullptr;
-const char* const FORM_FACTOR = "form-factor";
+
+const std::string SETTINGS_NAME = "com.canonical.Unity";
+const std::string FORM_FACTOR = "form-factor";
 }
 
+//
+// Start private implementation
+//
 class Settings::Impl
 {
+
 public:
-  Impl(Settings* owner);
+  Impl(Settings* owner)
+    : parent_(owner)
+    , gsettings_(g_settings_new(SETTINGS_NAME.c_str()))
+    , cached_form_factor_(FormFactor::DESKTOP)
+  {
+    CacheFormFactor();
 
-  FormFactor GetFormFactor() const;
-  void SetFormFactor(FormFactor factor);
+    form_factor_changed_.Connect(gsettings_, "changed::" + FORM_FACTOR, [this] (GSettings*, gchar*) {
+      CacheFormFactor();
+      parent_->form_factor.changed.emit(cached_form_factor_);
+    });
+  }
 
-private:
-  void Refresh();
+  void CacheFormFactor()
+  {
+    int raw_from_factor = g_settings_get_enum(gsettings_, FORM_FACTOR.c_str());
 
-private:
-  Settings* owner_;
-  glib::Object<GSettings> settings_;
-  FormFactor form_factor_;
+    if (raw_from_factor == 0) //Automatic
+    {
+      auto uscreen = UScreen::GetDefault();
+      int primary_monitor = uscreen->GetMonitorWithMouse();
+      auto const& geo = uscreen->GetMonitorGeometry(primary_monitor);
+
+      cached_form_factor_ = geo.height > 799 ? FormFactor::DESKTOP : FormFactor::NETBOOK;
+    }
+    else
+    {
+      cached_form_factor_ = static_cast<FormFactor>(raw_from_factor);
+    }
+  }
+
+  FormFactor GetFormFactor() const
+  {
+    return cached_form_factor_;
+  }
+
+  bool SetFormFactor(FormFactor factor)
+  {
+    g_settings_set_enum(gsettings_, FORM_FACTOR.c_str(), static_cast<int>(factor));
+    return true;
+  }
+
+  Settings* parent_;
+  glib::Object<GSettings> gsettings_;
+  FormFactor cached_form_factor_;
 
   glib::Signal<void, GSettings*, gchar* > form_factor_changed_;
-
 };
 
-
-Settings::Impl::Impl(Settings* owner)
-  : owner_(owner)
-  , settings_(g_settings_new("com.canonical.Unity"))
-  , form_factor_(FormFactor::DESKTOP)
-{
-  form_factor_changed_.Connect(settings_, "changed::minimize-count", [this] (GSettings*, gchar*) {
-    Refresh();
-  });
-
-  Refresh();
-}
-
-void Settings::Impl::Refresh()
-{
-  int raw_from_factor = g_settings_get_enum(settings_, FORM_FACTOR);
-
-  if (raw_from_factor == 0) //Automatic
-  {
-    UScreen *uscreen = UScreen::GetDefault();
-    int primary_monitor = uscreen->GetMonitorWithMouse();
-    auto geo = uscreen->GetMonitorGeometry(primary_monitor);
-
-    form_factor_ = geo.height > 799 ? FormFactor::DESKTOP : FormFactor::NETBOOK;
-  }
-  else
-  {
-    form_factor_ = static_cast<FormFactor>(raw_from_factor);
-  }
-
-  owner_->changed.emit();
-}
-
-FormFactor Settings::Impl::GetFormFactor() const
-{
-  return form_factor_;
-}
-
-void Settings::Impl::SetFormFactor(FormFactor factor)
-{
-  form_factor_ = factor;
-  g_settings_set_enum(settings_, FORM_FACTOR, static_cast<int>(factor));
-  owner_->changed.emit();
-}
+//
+// End private implementation
+//
 
 Settings::Settings()
   : is_standalone(false)
@@ -110,6 +107,9 @@ Settings::Settings()
   }
   else
   {
+    form_factor.SetGetterFunction(sigc::mem_fun(*pimpl, &Impl::GetFormFactor));
+    form_factor.SetSetterFunction(sigc::mem_fun(*pimpl, &Impl::SetFormFactor));
+
     settings_instance = this;
   }
 }
@@ -128,16 +128,6 @@ Settings& Settings::Instance()
   }
 
   return *settings_instance;
-}
-
-FormFactor Settings::GetFormFactor() const
-{
-  return pimpl->GetFormFactor();
-}
-
-void Settings::SetFormFactor(FormFactor factor)
-{
-  pimpl->SetFormFactor(factor);
 }
 
 

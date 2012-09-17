@@ -160,7 +160,7 @@ int main(int argc, char **argv)
   // The instances for the pseudo-singletons.
   Settings settings;
   settings.is_standalone = true;
-  if (force_tv) Settings::Instance().SetFormFactor(FormFactor::TV);
+  if (force_tv) Settings::Instance().form_factor(FormFactor::TV);
   
   PluginAdapter::Initialize(NULL);
   dash::Style dash_style;
