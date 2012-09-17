@@ -2043,6 +2043,7 @@ void Launcher::EndIconDrag()
     {
       if (!_drag_window->Cancelled() && _model->IconIndex(_drag_icon) != _drag_icon_position)
       {
+        //  FIXMEE   Enable me laaater    
         if (_drag_icon->GetIconType() == AbstractLauncherIcon::IconType::DEVICE)
           _drag_icon->Stick(false);
 
@@ -2078,8 +2079,10 @@ void Launcher::ShowDragWindow()
   _drag_window->PushToFront();
 
   bool is_before;
-  AbstractLauncherIcon::Ptr const& closer = _model->GetClosestIcon(_drag_icon, is_before);
-  _drag_window->drag_cancel_request.connect([this, closer, is_before] {
+  auto const& closer = _model->GetClosestIcon(_drag_icon, is_before);
+  nux::ObjectWeakPtr<AbstractLauncherIcon> weak_closer(closer);
+  _drag_window->drag_cancel_request.connect([this, weak_closer, is_before] {
+    AbstractLauncherIcon::Ptr closer(weak_closer.GetPointer());
     if (is_before)
       _model->ReorderAfter(_drag_icon, closer);
     else

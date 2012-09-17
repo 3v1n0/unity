@@ -1315,4 +1315,26 @@ TEST_F(TestLauncherController, OnViewOpened)
   ASSERT_EQ(lc.Impl()->model_->IconIndex(icon), lc.Impl()->model_->IconIndex(last_app) + 1);
 }
 
+TEST_F(TestLauncherController, UpdateNumWorkspacesDisable)
+{
+  favorite_store.AddFavorite(lc.Impl()->expo_icon_->RemoteUri(), -1);
+  auto const& fav = lc.Impl()->CreateFavoriteIcon(lc.Impl()->expo_icon_->RemoteUri());
+  lc.Impl()->RegisterIcon(fav);
+  ASSERT_TRUE(lc.Impl()->expo_icon_->IsVisible());
+
+  lc.UpdateNumWorkspaces(1);
+  EXPECT_FALSE(lc.Impl()->expo_icon_->IsVisible());
+}
+
+TEST_F(TestLauncherController, UpdateNumWorkspacesEnable)
+{
+  favorite_store.AddFavorite(lc.Impl()->expo_icon_->RemoteUri(), -1);
+  auto const& fav = lc.Impl()->CreateFavoriteIcon(lc.Impl()->expo_icon_->RemoteUri());
+  lc.Impl()->RegisterIcon(fav);
+  lc.Impl()->expo_icon_->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, false);
+
+  lc.UpdateNumWorkspaces(2);
+  EXPECT_TRUE(lc.Impl()->expo_icon_->IsVisible());
+}
+
 }
