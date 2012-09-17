@@ -43,6 +43,12 @@ namespace unity
 
 namespace
 {
+namespace places
+{
+const std::string APPS = "unity://running-apps";
+const std::string DEVICES = "unity://devices";
+}
+
 namespace app
 {
  const std::string UBUNTU_ONE = BUILDDIR "/tests/data/ubuntuone-installer.desktop";
@@ -775,8 +781,8 @@ TEST_F(TestLauncherController, SaveIconsOrder)
 
   ASSERT_EQ(*it, sticky_app->RemoteUri()); ++it;
   ASSERT_EQ(*it, sticky_device->RemoteUri()); ++it;
-  ASSERT_EQ(*it, FavoriteStore::URI_PREFIX_UNITY + "devices"); ++it;
-  ASSERT_EQ(*it, FavoriteStore::URI_PREFIX_UNITY + "running-apps"); ++it;
+  ASSERT_EQ(*it, places::DEVICES); ++it;
+  ASSERT_EQ(*it, places::APPS); ++it;
   ASSERT_EQ(it, favorite_store.GetFavorites().end());
 }
 
@@ -800,8 +806,35 @@ TEST_F(TestLauncherController, SaveIconsOrderWithOnlyStickyIcons)
 
   ASSERT_EQ(*it, sticky_app->RemoteUri()); ++it;
   ASSERT_EQ(*it, sticky_device->RemoteUri()); ++it;
-  ASSERT_EQ(*it, FavoriteStore::URI_PREFIX_UNITY + "running-apps"); ++it;
-  ASSERT_EQ(*it, FavoriteStore::URI_PREFIX_UNITY + "devices"); ++it;
+  ASSERT_EQ(*it, places::APPS); ++it;
+  ASSERT_EQ(*it, places::DEVICES); ++it;
+  ASSERT_EQ(it, favorite_store.GetFavorites().end());
+}
+
+TEST_F(TestLauncherController, SaveIconsOrderTriesToKeepIconProvidersOrder)
+{
+  favorite_store.ClearFavorites();
+  lc.ClearModel();
+  int priority = 0;
+
+  favorite_store.SetFavorites({places::DEVICES, "application://fooapp.desktop", places::APPS});
+
+  MockBamfLauncherIcon::Ptr sticky_app(new MockBamfLauncherIcon(true, "sticky-app"));
+  sticky_app->Stick(false);
+  lc.Impl()->RegisterIcon(sticky_app, ++priority);
+
+  MockVolumeLauncherIcon::Ptr sticky_device(new MockVolumeLauncherIcon());
+  sticky_device->Stick(false);
+  lc.Impl()->RegisterIcon(sticky_device, ++priority);
+
+  lc.Impl()->SaveIconsOrder();
+
+  auto it = favorite_store.GetFavorites().begin();
+
+  ASSERT_EQ(*it, places::DEVICES); ++it;
+  ASSERT_EQ(*it, sticky_app->RemoteUri()); ++it;
+  ASSERT_EQ(*it, sticky_device->RemoteUri()); ++it;
+  ASSERT_EQ(*it, places::APPS); ++it;
   ASSERT_EQ(it, favorite_store.GetFavorites().end());
 }
 

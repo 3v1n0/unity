@@ -297,7 +297,7 @@ void Controller::Impl::OnLauncherAddRequest(std::string const& icon_uri, Abstrac
 
 void Controller::Impl::SaveIconsOrder()
 {
-  unity::FavoriteList icons;
+  FavoriteList icons;
   bool found_first_running_app = false;
   bool found_first_device = false;
 
@@ -329,13 +329,29 @@ void Controller::Impl::SaveIconsOrder()
       icons.push_back(remote_uri);
   }
 
+  FavoriteStore& store = FavoriteStore::Instance();
+
   if (!found_first_running_app)
-    icons.push_back(local::RUNNING_APPS_URI);
+  {
+    int pos = store.FavoritePosition(local::RUNNING_APPS_URI);
+
+    if (pos < 0)
+      icons.push_back(local::RUNNING_APPS_URI);
+    else
+      icons.insert(std::next(icons.begin(), pos), local::RUNNING_APPS_URI);
+  }
 
   if (!found_first_device)
-    icons.push_back(local::DEVICES_URI);
+  {
+    int pos = store.FavoritePosition(local::DEVICES_URI);
 
-  FavoriteStore::Instance().SetFavorites(icons);
+    if (pos < 0)
+      icons.push_back(local::DEVICES_URI);
+    else
+      icons.insert(std::next(icons.begin(), pos), local::DEVICES_URI);
+  }
+
+  store.SetFavorites(icons);
 }
 
 void
@@ -1272,7 +1288,7 @@ Controller::AddProperties(GVariantBuilder* builder)
   timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
 
-  unity::variant::BuilderWrapper(builder)
+  variant::BuilderWrapper(builder)
   .add("key_nav_is_active", KeyNavIsActive())
   .add("key_nav_launcher_monitor", pimpl->keyboard_launcher_.IsValid() ?  pimpl->keyboard_launcher_->monitor : -1)
   .add("key_nav_selection", pimpl->model_->SelectionIndex())
