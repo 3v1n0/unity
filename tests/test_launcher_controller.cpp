@@ -1153,7 +1153,7 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedStickAfter)
   MockBamfLauncherIcon::Ptr app_icon(new MockBamfLauncherIcon(desktop));
   lc.Impl()->RegisterIcon(app_icon, std::numeric_limits<int>::max());
 
-  auto app_icons = model->GetSublist<BamfLauncherIcon>();
+  auto const& app_icons = model->GetSublist<BamfLauncherIcon>();
   auto const& first_app = *(app_icons.begin());
   ASSERT_LT(model->IconIndex(first_app), model->IconIndex(app_icon));
 
@@ -1194,7 +1194,9 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteRemovedDevice)
   favorite_store.RemoveFavorite(device_icon->RemoteUri());
   favorite_store.favorite_removed.emit(device_icon->RemoteUri());
 
-  EXPECT_GT(model->IconIndex(device_icon), 1);
+  auto const& app_icons = lc.Impl()->model_->GetSublist<BamfLauncherIcon>();
+  auto const& last_app = *(app_icons.rbegin());
+  EXPECT_EQ(model->IconIndex(device_icon), model->IconIndex(last_app) + 1);
 }
 
 TEST_F(TestLauncherController, OnFavoriteStoreFavoriteRemovedDeviceSection)
@@ -1218,13 +1220,15 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteRemovedDeviceSection)
   favorite_store.RemoveFavorite(places::DEVICES_URI);
   favorite_store.favorite_removed.emit(places::DEVICES_URI);
 
-  EXPECT_GE(model->IconIndex(device_icon1), 1);
-  EXPECT_GE(model->IconIndex(device_icon2), 2);
+  auto const& app_icons = lc.Impl()->model_->GetSublist<BamfLauncherIcon>();
+  auto const& last_app = *(app_icons.rbegin());
+  EXPECT_EQ(model->IconIndex(device_icon1), model->IconIndex(last_app) + 1);
+  EXPECT_EQ(model->IconIndex(device_icon2), model->IconIndex(last_app) + 2);
 }
 
 TEST_F(TestLauncherController, OnViewOpened)
 {
-  auto app_icons = lc.Impl()->model_->GetSublist<BamfLauncherIcon>();
+  auto const& app_icons = lc.Impl()->model_->GetSublist<BamfLauncherIcon>();
   auto const& last_app = *(app_icons.rbegin());
 
   auto app = bamf_matcher_get_application_for_desktop_file(lc.Impl()->matcher_, app::BZR_HANDLE_PATCH.c_str(), TRUE);
