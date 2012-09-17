@@ -82,11 +82,7 @@ struct MockFavoriteStore : FavoriteStore
     if (position < 0)
       fav_list_.push_back(icon_uri);
     else
-    {
-      auto it = fav_list_.begin();
-      std::advance(it, position);
-      fav_list_.insert(it, icon_uri);
-    }
+      fav_list_.insert(std::next(fav_list_.begin(), position), icon_uri);
   }
 
   void RemoveFavorite(std::string const& icon_uri)
@@ -1162,6 +1158,32 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedStickAfter)
   favorite_store.favorite_added.emit(icon_uri, first_app->RemoteUri(), true);
   EXPECT_TRUE(app_icon->IsSticky());
   EXPECT_EQ(model->IconIndex(app_icon), model->IconIndex(first_app) - 1);
+}
+
+TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedDeviceSection)
+{
+  lc.ClearModel();
+  lc.Impl()->device_section_ = MockDeviceLauncherSection();
+  auto const& model = lc.Impl()->model_;
+  auto const& icons = lc.Impl()->device_section_.GetIcons();
+  auto const& device_icon1(*(icons.begin()));
+  auto const& device_icon2(*(std::next(icons.begin())));
+
+  favorite_store.SetFavorites({ FavoriteStore::URI_PREFIX_APP + app::UBUNTU_ONE });
+  lc.Impl()->SetupIcons();
+  lc.DisconnectSignals();
+
+  auto const& app_icons = lc.Impl()->model_->GetSublist<BamfLauncherIcon>();
+  auto const& last_app = *(app_icons.rbegin());
+
+  ASSERT_EQ(model->IconIndex(device_icon1), model->IconIndex(last_app) + 1);
+  ASSERT_EQ(model->IconIndex(device_icon2), model->IconIndex(last_app) + 2);
+
+  favorite_store.AddFavorite(places::DEVICES_URI, 0);
+  favorite_store.favorite_added.emit(places::DEVICES_URI, "", false);
+
+  EXPECT_EQ(model->IconIndex(device_icon1), 0);
+  EXPECT_EQ(model->IconIndex(device_icon2), 1);
 }
 
 TEST_F(TestLauncherController, OnFavoriteStoreFavoriteRemovedApplication)
