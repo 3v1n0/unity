@@ -342,7 +342,6 @@ void DashView::Relayout()
       content_geo_ = geo;
   }
 
-
   // kinda hacky, but it makes sure the content isn't so big that it throws
   // the bottom of the dash off the screen
   // not hugely happy with this, so FIXME

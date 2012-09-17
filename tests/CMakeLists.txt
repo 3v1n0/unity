@@ -230,6 +230,7 @@ if (GTEST_SRC_DIR AND
                  test_texture_cache.cpp
                  test_thumbnail_generator.cpp
                  test_launcher_minimize_speed.cpp
+                 test_unity_settings.cpp
                  test_volume_imp.cpp
                  test_volume_launcher_icon.cpp
                  gmockmount.c
