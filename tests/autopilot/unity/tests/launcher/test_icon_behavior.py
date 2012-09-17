@@ -166,7 +166,7 @@ class LauncherIconsTests(LauncherTestCase):
 
         monitor = self.screen_geo.get_primary_monitor()
         self.panel = self.panels.get_panel_for_monitor(monitor)
-        
+
         # When workspace switcher is opened the panel title is "Ubuntu Desktop" so we check
         # to make sure that workspace switcher end.
         self.assertThat(self.panels.get_active_panel().title, Eventually(NotEquals("Ubuntu Desktop")))
@@ -224,6 +224,6 @@ class LauncherDragIconsBehavior(LauncherTestCase):
                                                      switcher_pos,
                                                      self.drag_type)
 
-        moved_icon = self.launcher.model.\
-                     get_launcher_icons_for_monitor(self.launcher_monitor)[-3]
-        self.assertThat(moved_icon.id, Equals(calc_icon.id))
+        # Must be the last bamf icon - not necessarily the third-from-end icon.
+        bamf_icons = self.launcher.model.get_bamf_launcher_icons()
+        self.assertThat(bamf_icons[-1].id, Equals(calc_icon.id))
