@@ -98,7 +98,10 @@ DashView::DashView()
   SetupViews();
   SetupUBusConnections();
 
-  Settings::Instance().changed.connect(sigc::mem_fun(this, &DashView::Relayout));
+  Settings::Instance().form_factor.changed.connect([this](FormFactor) {
+    Relayout();
+  });
+
   lenses_.lens_added.connect(sigc::mem_fun(this, &DashView::OnLensAdded));
   mouse_down.connect(sigc::mem_fun(this, &DashView::OnMouseButtonDown));
   preview_state_machine_.PreviewActivated.connect(sigc::mem_fun(this, &DashView::BuildPreview));
@@ -337,7 +340,6 @@ void DashView::Relayout()
       content_geo_ = geo;
   }
 
-
   // kinda hacky, but it makes sure the content isn't so big that it throws
   // the bottom of the dash off the screen
   // not hugely happy with this, so FIXME
@@ -422,7 +424,7 @@ void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned lo
   dash::Style& style = dash::Style::Instance();
   nux::Geometry geo(content_geo_);
 
-  if (Settings::Instance().GetFormFactor() == FormFactor::DESKTOP)
+  if (Settings::Instance().form_factor() == FormFactor::DESKTOP)
   {
     geo.width += style.GetDashRightTileWidth();
     geo.height += style.GetDashBottomTileHeight();
@@ -854,11 +856,11 @@ void DashView::AddProperties(GVariantBuilder* builder)
 
   std::string form_factor("unknown");
 
-  if (Settings::Instance().GetFormFactor() == FormFactor::NETBOOK)
+  if (Settings::Instance().form_factor() == FormFactor::NETBOOK)
     form_factor = "netbook";
-  else if (Settings::Instance().GetFormFactor() == FormFactor::DESKTOP)
+  else if (Settings::Instance().form_factor() == FormFactor::DESKTOP)
     form_factor = "desktop";
-  else if (Settings::Instance().GetFormFactor() == FormFactor::TV)
+  else if (Settings::Instance().form_factor() == FormFactor::TV)
     form_factor = "tv";
 
   unity::variant::BuilderWrapper wrapper(builder);

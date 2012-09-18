@@ -73,12 +73,12 @@ Style::Style()
     style_instance = this;
   }
 
-  if (Settings::Instance().GetFormFactor() == FormFactor::TV)
+  if (Settings::Instance().form_factor() == FormFactor::TV)
     panel_height = 0;
   
-  Settings::Instance().changed.connect([this]() 
+  Settings::Instance().form_factor.changed.connect([this](FormFactor form_factor)
   {
-    if (Settings::Instance().GetFormFactor() == FormFactor::TV)
+    if (form_factor == FormFactor::TV)
       panel_height = 0;
   });
 
