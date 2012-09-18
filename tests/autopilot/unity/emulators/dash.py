@@ -155,6 +155,10 @@ class Dash(KeybindingsHelper):
         active_lens_name = self.view.get_lensbar().active_lens
         return self.view.get_lensview_by_name(active_lens_name)
 
+    @property
+    def geometry(self):
+        return (self.view.x, self.view.y, self.view.width, self.view.height)
+
 
 class DashController(UnityIntrospectionObject):
     """The main dash controller object."""
