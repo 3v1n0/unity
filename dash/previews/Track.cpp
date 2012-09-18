@@ -349,9 +349,9 @@ void Track::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
 
 nux::Area* Track::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
 {
-    bool mouse_inside = TestMousePointerInclusionFilterMouseWheel(mouse_position, event_type);
-    if (mouse_inside == false)
-      return NULL;
+  bool mouse_inside = TestMousePointerInclusion(mouse_position, event_type);
+  if (mouse_inside == false)
+    return NULL;
 
   return this;
 }
