@@ -224,9 +224,11 @@ if (GTEST_SRC_DIR AND
                  test_previews_generic.cpp
                  test_previews_movie.cpp
                  test_previews_music.cpp
+                 test_previews_social.cpp
                  test_quicklist_menu_item.cpp
                  test_quicklist_view.cpp
                  test_resultviewgrid.cpp
+                 test_shortcut_controller.cpp
                  test_single_monitor_launcher_icon.cpp
                  test_software_center_launcher_icon.cpp
                  test_expo_launcher_icon.cpp
@@ -254,6 +256,9 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/dash/previews/Preview.cpp
                  ${CMAKE_SOURCE_DIR}/dash/previews/PreviewInfoHintWidget.cpp
                  ${CMAKE_SOURCE_DIR}/dash/previews/PreviewRatingsWidget.cpp
+                 ${CMAKE_SOURCE_DIR}/dash/previews/SocialPreview.cpp
+                 ${CMAKE_SOURCE_DIR}/dash/previews/SocialPreviewContent.cpp
+                 ${CMAKE_SOURCE_DIR}/dash/previews/SocialPreviewComments.cpp
                  ${CMAKE_SOURCE_DIR}/dash/previews/Tracks.cpp
                  ${CMAKE_SOURCE_DIR}/dash/previews/Track.cpp
                  ${CMAKE_SOURCE_DIR}/hud/HudAbstractView.cpp
@@ -313,6 +318,11 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/launcher/VolumeImp.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/VolumeLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/VolumeMonitorWrapper.cpp
+                 ${CMAKE_SOURCE_DIR}/shortcuts/ShortcutController.cpp
+                 ${CMAKE_SOURCE_DIR}/shortcuts/ShortcutModel.cpp
+                 #${CMAKE_SOURCE_DIR}/shortcuts/ShortcutHintPrivate.cpp
+                 ${CMAKE_SOURCE_DIR}/shortcuts/ShortcutView.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/AbstractSeparator.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/Animator.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/BackgroundEffectHelper.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/CoverArt.cpp
@@ -325,6 +335,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/unity-shared/IMTextEntry.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/Introspectable.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/IntrospectableWrappers.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/LineSeparator.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/JSONParser.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/KeyboardUtil.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/OverlayRenderer.cpp

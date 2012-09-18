@@ -58,6 +58,7 @@ namespace
 const nux::Color kExpandDefaultTextColor(1.0f, 1.0f, 1.0f, 0.5f);
 const float kExpandDefaultIconOpacity = 0.5f;
 
+const int kCategoryIconSize = 22;
 // Category  highlight
 const int kHighlightHeight = 24;
 const int kHighlightRightPadding = 10 - 3; // -3 because the scrollbar is not a real overlay scrollbar!
@@ -114,7 +115,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(PlacesGroup);
 PlacesGroup::PlacesGroup()
   : AbstractPlacesGroup(),
     _child_view(nullptr),
-    _is_expanded(true),
+    _is_expanded(false),
     _n_visible_items_in_unexpand_mode(0),
     _n_total_items(0),
     _category_index(0),
@@ -127,6 +128,21 @@ PlacesGroup::PlacesGroup()
   SetAcceptKeyNavFocusOnMouseEnter(false);
 
   nux::BaseTexture* arrow = style.GetGroupUnexpandIcon();
+  
+  _background = style.GetCategoryBackground();
+  _background_nofilters = style.GetCategoryBackgroundNoFilters();
+
+  nux::ROPConfig rop;
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+  nux::TexCoordXForm texxform;
+  _background_layer.reset(new nux::TextureLayer(_background_nofilters->GetDeviceTexture(), 
+                          texxform, 
+                          nux::color::White,
+                          false,
+                          rop));
 
   _group_layout = new nux::VLayout("", NUX_TRACKER_LOCATION);
 
@@ -142,8 +158,8 @@ PlacesGroup::PlacesGroup()
   _header_layout->SetSpaceBetweenChildren(10);
   _header_view->SetLayout(_header_layout);
 
-  _icon = new IconTexture("", 24);
-  _icon->SetMinMaxSize(24, 24);
+  _icon = new IconTexture("", kCategoryIconSize);
+  _icon->SetMinMaxSize(kCategoryIconSize, kCategoryIconSize);
   _header_layout->AddView(_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _text_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
@@ -176,15 +192,6 @@ PlacesGroup::PlacesGroup()
   _expand_icon->SetVisible(false);
   _expand_layout->AddView(_expand_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
-  separator_layout_ = new nux::HLayout();
-  separator_layout_->SetLeftAndRightPadding(style.GetCategorySeparatorLeftPadding(),
-                                            style.GetCategorySeparatorRightPadding() - style.GetScrollbarWidth());
-
-  separator_ = new HSeparator;
-  separator_layout_->AddView(separator_, 1);
-
-  draw_separator.changed.connect(sigc::mem_fun(this, &PlacesGroup::DrawSeparatorChanged));
-
   SetLayout(_group_layout);
 
   // don't need to disconnect these signals as they are disconnected when this object destroys the contents
@@ -206,15 +213,40 @@ PlacesGroup::PlacesGroup()
     else
       nux::GetWindowCompositor().SetKeyFocusArea(GetHeaderFocusableView(), direction);
   });
-}
 
-void PlacesGroup::DrawSeparatorChanged(bool draw)
-{
-  if (draw and !separator_layout_->IsChildOf(_group_layout))
-    _group_layout->AddView(separator_layout_.GetPointer(), 0);
-  else if (!draw and separator_layout_->IsChildOf(_group_layout))
-    _group_layout->RemoveChildObject(separator_layout_.GetPointer());
-  QueueDraw();
+  _ubus.RegisterInterest(UBUS_REFINE_STATUS, [this] (GVariant *data) 
+  {
+    gboolean status;
+    g_variant_get(data, UBUS_REFINE_STATUS_FORMAT_STRING, &status);
+
+    nux::ROPConfig rop;
+    rop.Blend = true;
+    rop.SrcBlend = GL_ONE;
+    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+    nux::TexCoordXForm texxform;
+    if (status && _using_nofilters_background)
+    {
+      _background_layer.reset(new nux::TextureLayer(_background->GetDeviceTexture(), 
+                              texxform, 
+                              nux::color::White,
+                              false,
+                              rop));
+      _using_nofilters_background = false;
+    }
+    else if (!status && !_using_nofilters_background)
+    {
+      _background_layer.reset(new nux::TextureLayer(_background_nofilters->GetDeviceTexture(), 
+                              texxform, 
+                              nux::color::White,
+                              false,
+                              rop));
+      
+      _using_nofilters_background = true;
+    }
+    QueueDraw();
+  });
+
 }
 
 void
@@ -252,7 +284,7 @@ PlacesGroup::SetRendererName(const char *renderer_name)
 
   if (g_strcmp0(renderer_name, "tile-horizontal") == 0)
     (static_cast<dash::ResultView*>(_child_view))->SetModelRenderer(new dash::ResultRendererHorizontalTile(NUX_TRACKER_LOCATION));
-  else
+  else if (g_strcmp0(renderer_name, "tile-vertical") == 0)
     (static_cast<dash::ResultView*>(_child_view))->SetModelRenderer(new dash::ResultRendererTile(NUX_TRACKER_LOCATION));
 }
 
@@ -277,7 +309,7 @@ PlacesGroup::GetExpandLabel()
 void
 PlacesGroup::SetIcon(std::string const& path_to_emblem)
 {
-  _icon->SetByIconName(path_to_emblem, 24);
+  _icon->SetByIconName(path_to_emblem, kCategoryIconSize);
 }
 
 void
@@ -298,7 +330,7 @@ PlacesGroup::SetChildView(dash::ResultView* view)
   layout->AddView(_child_view, 0);
 
   layout->SetLeftAndRightPadding(25, 0);
-  _group_layout->AddLayout(new nux::SpaceLayout(8,8,8,8), 0); // top padding
+  _group_layout->AddLayout(new nux::SpaceLayout(2,2,2,2), 0); // top padding
   _group_layout->AddLayout(layout, 1);
 
   view->results_per_row.changed.connect([&] (int results_per_row) 
@@ -395,6 +427,8 @@ PlacesGroup::OnIdleRelayout()
 {
   if (GetChildView())
   {
+    
+
     Refresh();
     QueueDraw();
     _group_layout->QueueDraw();
@@ -416,10 +450,8 @@ long PlacesGroup::ComputeContentSize()
   if (_cached_geometry.GetWidth() != geo.GetWidth())
   {
     _focus_layer.reset(dash::Style::Instance().FocusOverlay(geo.width - kHighlightLeftPadding - kHighlightRightPadding, kHighlightHeight));
-
     _cached_geometry = geo;
   }
-
   return ret;
 }
 
@@ -428,6 +460,7 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
 {
   nux::Geometry const& base = GetGeometry();
   graphics_engine.PushClippingRectangle(base);
+
 
   if (ShouldBeHighlighted())
   {
@@ -439,6 +472,20 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
     _focus_layer->Renderlayer(graphics_engine);
   }
 
+  nux::Geometry bg_geo = GetGeometry();
+  int bg_width = 0;
+  if (_using_nofilters_background)
+    bg_width = _background_nofilters->GetWidth();
+  else
+    bg_width = _background->GetWidth();
+
+  bg_geo.x = std::max(bg_geo.width - bg_width,0);
+  
+  bg_geo.width = std::min(bg_width, bg_geo.GetWidth()) + 1; // to render into a space left over by the scrollview
+  bg_geo.height = _background->GetHeight();
+  
+  _background_layer->SetGeometry(bg_geo);
+  _background_layer->Renderlayer(graphics_engine);
   graphics_engine.PopClippingRectangle();
 }
 
@@ -448,7 +495,24 @@ PlacesGroup::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
   nux::Geometry const& base = GetGeometry();
 
   graphics_engine.PushClippingRectangle(base);
+  nux::Geometry bg_geo = GetGeometry();
+  
+  int bg_width = 0;
+  if (_using_nofilters_background)
+    bg_width = _background_nofilters->GetWidth();
+  else
+    bg_width = _background->GetWidth();
+  
+  // if the dash is smaller, resize to fit, otherwise move to the right edge
+  bg_geo.x = std::max(bg_geo.width - bg_width, 0);
+  bg_geo.width = std::min(bg_width, bg_geo.GetWidth()) + 1; // to render into a space left over by the scrollview
+  
+  bg_geo.height = _background->GetHeight();
 
+  if (!IsFullRedraw())
+  {
+    nux::GetPainter().PushLayer(graphics_engine, bg_geo, _background_layer.get());
+  }
   if (ShouldBeHighlighted() && !IsFullRedraw() && _focus_layer)
   {
     nux::GetPainter().PushLayer(graphics_engine, _focus_layer->GetGeometry(), _focus_layer.get());

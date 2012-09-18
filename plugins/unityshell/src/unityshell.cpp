@@ -25,6 +25,7 @@
 #include <Nux/BaseWindow.h>
 #include <Nux/WindowCompositor.h>
 
+#include "BaseWindowRaiserImp.h"
 #include "IconRenderer.h"
 #include "Launcher.h"
 #include "LauncherIcon.h"
@@ -131,7 +132,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , panel_texture_has_changed_(true)
   , paint_panel_(false)
   , scale_just_activated_(false)
-  , scale_highlighted_window_(0)
   , minimize_speed_controller(new WindowMinimizeSpeedController())
 {
   Timer timer;
@@ -358,7 +358,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
        g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                     &overlay_identity, &can_maximise, &overlay_monitor);
 
-       dash_monitor_ = overlay_monitor;
+       overlay_monitor_ = overlay_monitor;
 
        RaiseInputWindows();
      });
@@ -369,7 +369,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   }
 
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &UnityScreen::OnPanelStyleChanged));
-  WindowManager::Default()->terminate_spread.connect([this] { scale_highlighted_window_ = 0; });
 
   minimize_speed_controller->DurationChanged.connect(
       sigc::mem_fun(this, &UnityScreen::OnMinimizeDurationChanged)
@@ -526,34 +525,48 @@ void UnityScreen::setPanelShadowMatrix(const GLMatrix& matrix)
   panel_shadow_matrix_ = matrix;
 }
 
-/* Currently unimplemented */
-void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
+void UnityScreen::paintPanelShadow(const CompRegion& clip)
 {
-  return;
-
   if (sources_.GetSource(local::RELAYOUT_TIMEOUT))
     return;
 
   if (PluginAdapter::Default()->IsExpoActive())
     return;
 
-  nuxPrologue();
-
   CompOutput* output = _last_output;
-  float vc[4];
-  float h = 20.0f;
-  float w = 1.0f;
   float panel_h = static_cast<float>(panel_style_.panel_height);
 
-  float x1 = output->x();
-  float y1 = output->y() + panel_h;
-  float x2 = x1 + output->width();
-  float y2 = y1 + h;
+  // You have no shadow texture. But how?
+  if (_shadow_texture.empty() || !_shadow_texture[0])
+    return;
 
-  vc[0] = x1;
-  vc[1] = x2;
-  vc[2] = y1;
-  vc[3] = y2;
+  float shadowX = output->x();
+  float shadowY = output->y() + panel_h;
+  float shadowWidth = output->width();
+  float shadowHeight = _shadow_texture[0]->height();
+  CompRect shadowRect(shadowX, shadowY, shadowWidth, shadowHeight);
+
+  CompRegion redraw(clip);
+  redraw &= shadowRect;
+
+  if (redraw.isEmpty())
+    return;
+
+  const CompRect& bounds(redraw.boundingRect());
+
+  // Sub-rectangle of the shadow needing redrawing:
+  float x1 = bounds.x1();
+  float y1 = bounds.y1();
+  float x2 = bounds.x2();
+  float y2 = bounds.y2();
+
+  // Texture coordinates of the above rectangle:
+  float tx1 = (x1 - shadowX) / shadowWidth;
+  float ty1 = (y1 - shadowY) / shadowHeight;
+  float tx2 = (x2 - shadowX) / shadowWidth;
+  float ty2 = (y2 - shadowY) / shadowHeight;
+
+  nuxPrologue();
 
   // compiz doesn't use the same method of tracking monitors as our toolkit
   // we need to make sure we properly associate with the right monitor
@@ -570,7 +583,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
     i++;
   }
 
-  if (!(launcher_controller_->IsOverlayOpen() && current_monitor == dash_monitor_)
+  if (!(launcher_controller_->IsOverlayOpen() && current_monitor == overlay_monitor_)
       && panel_controller_->opacity() > 0.0f)
   {
     foreach(GLTexture * tex, _shadow_texture)
@@ -594,17 +607,17 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
                   };
 
       vertexData = {
-        vc[0], vc[2], 0,
-        vc[0], vc[3], 0,
-        vc[1], vc[2], 0,
-        vc[1], vc[3], 0,
+        x1, y1, 0,
+        x1, y2, 0,
+        x2, y1, 0,
+        x2, y2, 0,
       };
 
       textureData = {
-        COMP_TEX_COORD_X(tex->matrix(), 0), COMP_TEX_COORD_Y(tex->matrix(), 0),
-        COMP_TEX_COORD_X(tex->matrix(), 0), COMP_TEX_COORD_Y(tex->matrix(), h),
-        COMP_TEX_COORD_X(tex->matrix(), w), COMP_TEX_COORD_Y(tex->matrix(), 0),
-        COMP_TEX_COORD_X(tex->matrix(), w), COMP_TEX_COORD_Y(tex->matrix(), h),
+        tx1, ty1,
+        tx1, ty2,
+        tx2, ty1,
+        tx2, ty2,
       };
 
       streamingBuffer->begin(GL_TRIANGLE_STRIP);
@@ -614,7 +627,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
       streamingBuffer->addTexCoords(0, 4, &textureData[0]);
 
       streamingBuffer->end();
-      streamingBuffer->render(matrix);
+      streamingBuffer->render(panel_shadow_matrix_);
 
       tex->disable();
       if (!wasBlend)
@@ -1378,14 +1391,17 @@ void UnityScreen::nuxDamageCompiz()
 void UnityScreen::handleEvent(XEvent* event)
 {
   bool skip_other_plugins = false;
+  auto wm = PluginAdapter::Default();
+
   switch (event->type)
   {
     case FocusIn:
     case FocusOut:
       if (event->xfocus.mode == NotifyGrab)
-        PluginAdapter::Default()->OnScreenGrabbed();
+        wm->OnScreenGrabbed();
       else if (event->xfocus.mode == NotifyUngrab)
-        PluginAdapter::Default()->OnScreenUngrabbed();
+        wm->OnScreenUngrabbed();
+
       if (_key_nav_mode_requested)
       {
         // Close any overlay that is open.
@@ -1399,9 +1415,10 @@ void UnityScreen::handleEvent(XEvent* event)
       _key_nav_mode_requested = false;
       break;
     case MotionNotify:
-      if (scale_highlighted_window_ && PluginAdapter::Default()->IsScaleActive())
+      if (wm->IsScaleActive())
       {
-        if (CompWindow *w = screen->findWindow(scale_highlighted_window_))
+        ScaleScreen* ss = ScaleScreen::get(screen);
+        if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
           skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
       }
       break;
@@ -1411,12 +1428,21 @@ void UnityScreen::handleEvent(XEvent* event)
         launcher_controller_->KeyNavTerminate(false);
         EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
       }
-      if (scale_highlighted_window_ && PluginAdapter::Default()->IsScaleActive())
+      if (wm->IsScaleActive())
       {
-        if (CompWindow *w = screen->findWindow(scale_highlighted_window_))
+        ScaleScreen* ss = ScaleScreen::get(screen);
+        if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
           skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
       }
-
+      if (launcher_controller_->IsOverlayOpen())
+      {
+        int monitor_with_mouse = UScreen::GetDefault()->GetMonitorWithMouse();
+        if (overlay_monitor_ != monitor_with_mouse)
+        {
+          dash_controller_->HideDash(false);
+          hud_controller_->HideHud(false);
+        }
+      }
       break;
     case ButtonRelease:
       if (switcher_controller_ && switcher_controller_->Visible())
@@ -1436,10 +1462,11 @@ void UnityScreen::handleEvent(XEvent* event)
           }
         }
       }
-      else if (scale_highlighted_window_ && PluginAdapter::Default()->IsScaleActive())
+      else if (wm->IsScaleActive())
       {
-        if (CompWindow *w = screen->findWindow(scale_highlighted_window_))
-          UnityWindow::get(w)->handleEvent(event);
+        ScaleScreen* ss = ScaleScreen::get(screen);
+        if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
+          skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
       }
       break;
     case KeyPress:
@@ -1763,9 +1790,10 @@ void UnityScreen::SetUpAndShowSwitcher(switcher::ShowMode show_mode)
 {
   // maybe check launcher position/hide state?
 
-  WindowManager *wm = WindowManager::Default();
-  int monitor = wm->GetWindowMonitor(wm->GetActiveWindow());
-  nux::Geometry monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(monitor);
+  auto uscreen = UScreen::GetDefault();
+  int monitor = uscreen->GetMonitorWithMouse();
+  auto monitor_geo = uscreen->GetMonitorGeometry(monitor);
+
   monitor_geo.x += 100;
   monitor_geo.y += 100;
   monitor_geo.width -= 200;
@@ -2359,7 +2387,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
   Window active_window = screen->activeWindow();
   if (window->id() == active_window && window->type() != CompWindowTypeDesktopMask)
   {
-    uScreen->paintPanelShadow(matrix);
+    uScreen->paintPanelShadow(region);
   }
 
   bool ret = gWindow->glDraw(matrix, attrib, region, mask);
@@ -2367,7 +2395,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
   if ((active_window == 0 || active_window == window->id()) &&
       (window->type() == CompWindowTypeDesktopMask))
   {
-    uScreen->paintPanelShadow(matrix);
+    uScreen->paintPanelShadow(region);
   }
 
 
@@ -2555,7 +2583,8 @@ void UnityWindow::windowNotify(CompWindowNotify n)
     UnityScreen* us = UnityScreen::get(screen);
     CompWindow *lw;
 
-    if (us->launcher_controller_->IsOverlayOpen())
+    // can't rely on launcher->IsOverlayVisible on focus change (because ubus is async close on focus change.)
+    if (us && (us->dash_controller_->IsVisible() || us->hud_controller_->IsVisible()))
     {
       lw = screen->findWindow(us->launcher_controller_->LauncherWindowId(0));
       lw->moveInputFocusTo();
@@ -2769,6 +2798,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
        * that must not be considered when drawing an overlay */
       hud_controller_->launcher_width = launcher_controller_->launcher().GetAbsoluteWidth() - 1;
       dash_controller_->launcher_width = launcher_controller_->launcher().GetAbsoluteWidth() - 1;
+      panel_controller_->launcher_width = launcher_controller_->launcher().GetAbsoluteWidth() - 1;
 
       if (p)
       {
@@ -2958,7 +2988,8 @@ void UnityScreen::initLauncher()
 
   // Setup Shortcut Hint
   InitHints();
-  shortcut_controller_ = std::make_shared<shortcut::Controller>(hints_);
+  auto base_window_raiser_ = std::make_shared<shortcut::BaseWindowRaiserImp>();
+  shortcut_controller_ = std::make_shared<shortcut::Controller>(hints_, base_window_raiser_);
   AddChild(shortcut_controller_.get());
 
   AddChild(dash_controller_.get());
@@ -3595,8 +3626,8 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
   if (!scale_win->hasSlot()) // animation not finished
     return;
 
-  UnityScreen* us = UnityScreen::get(screen);
-  const bool highlighted = (us->scale_highlighted_window_ == window->id());
+  ScaleScreen* ss = ScaleScreen::get(screen);
+  const bool highlighted = (ss->getSelectedWindow() == window->id());
 
   ScalePosition const& pos = scale_win->getCurrentPosition();
   auto const& border_rect = window->borderRect();
@@ -3647,16 +3678,6 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
   {
     close_button_geo_.Set(0, 0, 0, 0);
   }
-}
-
-void UnityWindow::scaleSelectWindow()
-{
-  ScaleWindow::get(window)->scaleSelectWindow();
-
-  UnityScreen* us = UnityScreen::get(screen);
-
-  if (us->scale_highlighted_window_ != window->id())
-    us->scale_highlighted_window_ = window->id();
 }
 
 void UnityWindow::OnInitiateSpreed()

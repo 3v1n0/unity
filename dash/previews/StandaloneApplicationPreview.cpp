@@ -164,6 +164,9 @@ The service allows users to communicate with peers by voice, video, and instant 
   glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/5/lens-nav-home.svg", NULL));
   glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/5/lens-nav-people.svg", NULL));
 
+  GHashTable* action_hints1(g_hash_table_new(g_direct_hash, g_direct_equal));
+  g_hash_table_insert (action_hints1, g_strdup ("extra-text"), g_variant_new_string("£30.99"));
+
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_application_preview_new()));
 
   unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string("/home/nick/SkypeIcon.png", NULL));
@@ -173,13 +176,12 @@ The service allows users to communicate with peers by voice, video, and instant 
   unity_protocol_application_preview_set_rating(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 0.5);
   unity_protocol_application_preview_set_num_ratings(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 17);
 
-
   unity_protocol_preview_set_image_source_uri(proto_obj, "file:///home/nick/Skype.png");
   unity_protocol_preview_set_title(proto_obj, app_name.str().c_str());
   unity_protocol_preview_set_subtitle(proto_obj, subtitle);
   unity_protocol_preview_set_description(proto_obj, description);
   unity_protocol_preview_add_action(proto_obj, "uninstall", "Uninstall", iconHint1, 0);
-  unity_protocol_preview_add_action(proto_obj, "launch", "Launch", iconHint2, 0);
+  unity_protocol_preview_add_action_with_hints(proto_obj, "launch", "Download", iconHint2, 0, action_hints1);
   unity_protocol_preview_add_info_hint(proto_obj, "time", "Total time", iconHint1, g_variant_new("s", "16 h 34miin 45sec"));
   unity_protocol_preview_add_info_hint(proto_obj, "energy",  "Energy", iconHint2, g_variant_new("s", "58.07 mWh"));
   unity_protocol_preview_add_info_hint(proto_obj, "load",  "CPU Load", iconHint3, g_variant_new("i", 12));
@@ -190,6 +192,7 @@ The service allows users to communicate with peers by voice, video, and instant 
   dash::Preview::Ptr preview_model(dash::Preview::PreviewForVariant(v));
   container_->Preview(preview_model, previews::Navigation::RIGHT);
 
+  g_hash_table_unref(action_hints1);
 }
 
 void TestRunner::NavRight()
@@ -206,9 +209,10 @@ The service allows users to communicate with peers by voice, video, and instant 
   glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/5/lens-nav-home.svg", NULL));
   glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/5/lens-nav-people.svg", NULL));
 
-  glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_application_preview_new()));
+  GHashTable* action_hints1(g_hash_table_new(g_direct_hash, g_direct_equal));
+  g_hash_table_insert (action_hints1, g_strdup ("extra-text"), g_variant_new_string("£30.99"));
 
-  
+  glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_application_preview_new()));
 
   unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string("/home/nick/SkypeIcon.png", NULL));
   unity_protocol_application_preview_set_license(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "Proprietary");
@@ -222,7 +226,7 @@ The service allows users to communicate with peers by voice, video, and instant 
   unity_protocol_preview_set_subtitle(proto_obj, subtitle);
   unity_protocol_preview_set_description(proto_obj, description);
   unity_protocol_preview_add_action(proto_obj, "uninstall", "Uninstall", iconHint1, 0);
-  unity_protocol_preview_add_action(proto_obj, "launch", "Launch", iconHint2, 0);
+  unity_protocol_preview_add_action_with_hints(proto_obj, "launch", "Download", iconHint2, 0, action_hints1);
   unity_protocol_preview_add_info_hint(proto_obj, "time", "Total time", iconHint1, g_variant_new("s", "16 h 34miin 45sec"));
   unity_protocol_preview_add_info_hint(proto_obj, "energy",  "Energy", iconHint2, g_variant_new("s", "58.07 mWh"));
   unity_protocol_preview_add_info_hint(proto_obj, "load",  "CPU Load", iconHint3, g_variant_new("d", 12.1));
@@ -232,6 +236,8 @@ The service allows users to communicate with peers by voice, video, and instant 
 
   dash::Preview::Ptr preview_model(dash::Preview::PreviewForVariant(v));
   container_->Preview(preview_model, previews::Navigation::RIGHT);
+
+  g_hash_table_unref(action_hints1);
 }
 
 void TestRunner::NavLeft()
@@ -251,7 +257,10 @@ void TestRunner::NavLeft()
     glib::Object<GIcon> iconHint2(g_icon_new_for_string("/usr/share/unity/5/lens-nav-home.svg", NULL));
     glib::Object<GIcon> iconHint3(g_icon_new_for_string("/usr/share/unity/5/lens-nav-people.svg", NULL));
 
-    glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_application_preview_new()));
+    GHashTable* action_hints1(g_hash_table_new(g_direct_hash, g_direct_equal));
+  g_hash_table_insert (action_hints1, g_strdup ("extra-text"), g_variant_new_string("£30.99"));
+
+  glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_application_preview_new()));
 
 
     unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string("/home/nick/SkypeIcon.png", NULL));
@@ -266,7 +275,7 @@ void TestRunner::NavLeft()
     unity_protocol_preview_set_subtitle(proto_obj, subtitle);
     unity_protocol_preview_set_description(proto_obj, description);
     unity_protocol_preview_add_action(proto_obj, "uninstall", "Uninstall", iconHint1, 0);
-    unity_protocol_preview_add_action(proto_obj, "launch", "Launch", iconHint2, 0);
+    unity_protocol_preview_add_action_with_hints(proto_obj, "launch", "Download", iconHint2, 0, action_hints1);
     unity_protocol_preview_add_info_hint(proto_obj, "time", "Total time", iconHint1, g_variant_new("s", "16 h 34miin 45sec"));
     unity_protocol_preview_add_info_hint(proto_obj, "energy",  "Energy", iconHint2, g_variant_new("s", "58.07 mWh"));
     unity_protocol_preview_add_info_hint(proto_obj, "load",  "CPU Load", iconHint3, g_variant_new("i", 22));
@@ -276,6 +285,8 @@ void TestRunner::NavLeft()
 
     dash::Preview::Ptr preview_model(dash::Preview::PreviewForVariant(v));
     container_->Preview(preview_model, previews::Navigation::LEFT);
+
+    g_hash_table_unref(action_hints1);
 
     return false;
   }));

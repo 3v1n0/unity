@@ -59,6 +59,8 @@ public:
   void AddProperties(GVariantBuilder* builder);
 
   static previews::Preview::Ptr PreviewForModel(dash::Preview::Ptr model);  
+  
+  sigc::signal<void> request_close;
 
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {}

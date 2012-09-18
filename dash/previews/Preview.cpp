@@ -32,6 +32,7 @@
 #include "ApplicationPreview.h"
 #include "MusicPreview.h"
 #include "MoviePreview.h"
+#include "SocialPreview.h"
 
 namespace unity
 {
@@ -68,6 +69,10 @@ previews::Preview::Ptr Preview::PreviewForModel(dash::Preview::Ptr model)
   else if (model->renderer_name == "preview-movie")
   {
     return Preview::Ptr(new MoviePreview(model));
+  }
+  else if (model->renderer_name == "preview-social")
+  {
+    return Preview::Ptr(new SocialPreview(model));
   }
   // else if (renderer_name == "preview-series")
   // {
@@ -136,6 +141,8 @@ nux::Layout* Preview::BuildGridActionsLayout(dash::Preview::ActionPtrList action
         dash::Preview::ActionPtr action = actions[action_iter];
 
         ActionButton* button = new ActionButton(action->id, action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
+        button->SetFont(style.action_font());
+        button->SetExtraHint(action->extra_text, style.action_extra_font());
         AddChild(button);
         button->click.connect(sigc::mem_fun(this, &Preview::OnActionActivated));
         buttons.push_back(button);
@@ -165,9 +172,11 @@ nux::Layout* Preview::BuildVerticalActionsLayout(dash::Preview::ActionPtrList ac
   uint action_iter = 0;
   for (uint i = 0; i < actions.size(); i++)
   {
-      dash::Preview::ActionPtr action = actions[action_iter];
+      dash::Preview::ActionPtr action = actions[action_iter++];
 
       ActionButton* button = new ActionButton(action->id, action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
+      button->SetFont(style.action_font());
+      button->SetExtraHint(action->extra_text, style.action_extra_font());
       AddChild(button);
       button->click.connect(sigc::mem_fun(this, &Preview::OnActionActivated));
       buttons.push_back(button);
@@ -200,6 +209,14 @@ void Preview::UpdateCoverArtImage(CoverArt* cover_art)
   else
     cover_art->SetNoImageAvailable();
   cover_art->SetFont(style.no_preview_image_font());
+  
+  cover_art->mouse_click.connect([this] (int x, int y, unsigned long button_flags, unsigned long key_flags) 
+  {
+    if (nux::GetEventButton(button_flags) == nux::MOUSE_BUTTON1 || nux::GetEventButton(button_flags) == nux::MOUSE_BUTTON3)
+    {
+      request_close.emit();
+    }
+  });
 }
 
 }

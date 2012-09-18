@@ -84,7 +84,8 @@ protected:
 
   bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
   void OnKeyDown(unsigned long event_type, unsigned long event_keysym, unsigned long event_state, const TCHAR* character, unsigned short key_repeat_count);
-
+  void OnMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  
 private:
   void SetupViews();
 

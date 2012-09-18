@@ -222,7 +222,7 @@ void Controller::Impl::OnWindowFocusChanged(guint32 xid)
 {
   static bool keynav_first_focus = false;
 
-  if (parent_->IsOverlayOpen())
+  if (parent_->IsOverlayOpen() || launcher_->GetParent()->GetInputWindowId() == xid)
     keynav_first_focus = false;
 
   if (keynav_first_focus)

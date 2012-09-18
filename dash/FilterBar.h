@@ -60,7 +60,6 @@ protected:
 
 private:
   void Init();
-  void UpdateDrawSeparators();
 
   FilterFactory factory_;
   Filters::Ptr filters_;

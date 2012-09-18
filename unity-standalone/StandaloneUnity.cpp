@@ -45,7 +45,7 @@
 
 namespace
 {
-  static int display_width = 1280;
+  static int display_width = 1200;
   static int display_height = 720;
   static gboolean no_window_decorations = FALSE;
   static gboolean force_tv = FALSE;
@@ -89,7 +89,9 @@ void UnityStandalone::Init ()
   launcher_controller.reset(new launcher::Controller());
   panel_controller.reset(new panel::Controller());
   dash_controller.reset(new dash::Controller());
+
   dash_controller->launcher_width = launcher_controller->launcher().GetAbsoluteWidth() - 1;
+  panel_controller->launcher_width = launcher_controller->launcher().GetAbsoluteWidth() - 1;
 }
 
 void UnityStandalone::InitWindowThread(nux::NThread* thread, void* InitData)

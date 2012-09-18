@@ -205,25 +205,25 @@ class DashKeyNavTests(DashTestCase):
 
         # lensbar should lose focus after activation.
         self.assertThat(lensbar.focused_lens_icon, Eventually(Equals("")))
-        
+
     def test_focus_returns_to_searchbar(self):
         """This test makes sure that the focus is returned to the searchbar of the newly
         activated lens."""
         self.dash.ensure_visible()
-        
+
         for i in range(self.dash.get_num_rows()):
             self.keyboard.press_and_release("Down")
         self.keyboard.press_and_release("Right")
         lensbar = self.dash.view.get_lensbar()
         focused_icon = lensbar.focused_lens_icon
         self.keyboard.press_and_release("Enter")
-        
+
         self.assertThat(lensbar.active_lens, Eventually(Equals(focused_icon)))
         self.assertThat(lensbar.focused_lens_icon, Eventually(Equals("")))
-        
+
         # Now we make sure if the newly activated lens searchbar have the focus.
         self.keyboard.type("HasFocus")
-        
+
         self.assertThat(self.dash.search_string, Eventually(Equals("HasFocus")))
 
     def test_category_header_keynav(self):
@@ -397,7 +397,7 @@ class DashClipboardTests(DashTestCase):
         self.keyboard.press_and_release("Ctrl+v")
 
         self.assertThat(self.dash.search_string, Eventually(Equals('CutPasteCutPaste')))
-        
+
     def test_middle_click_paste(self):
         """Tests if Middle mouse button pastes into searchbar"""
 
@@ -419,6 +419,9 @@ class DashClipboardTests(DashTestCase):
 class DashKeyboardFocusTests(DashTestCase):
     """Tests that keyboard focus works."""
 
+    def assertSearchText(self, text):
+        self.assertThat(self.dash.search_string, Eventually(Equals(text)))
+
     def test_filterbar_expansion_leaves_kb_focus(self):
         """Expanding or collapsing the filterbar must keave keyboard focus in the
         search bar.
@@ -431,7 +434,19 @@ class DashKeyboardFocusTests(DashTestCase):
         filter_bar.ensure_expanded()
         self.addCleanup(filter_bar.ensure_collapsed)
         self.keyboard.type(" world")
-        self.assertThat(self.dash.search_string, Eventually(Equals("hello world")))
+        self.assertSearchText("hello world")
+
+    def test_keep_focus_on_application_opens(self):
+        """The Dash must keep key focus as well as stay open if an app gets opened from an external source. """
+        
+        self.dash.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
+
+        self.start_app_window("Calculator")
+        sleep(1)
+
+        self.keyboard.type("HasFocus")
+        self.assertSearchText("HasFocus")
 
 
 class DashLensResultsTests(DashTestCase):
@@ -610,13 +625,13 @@ class CategoryHeaderTests(DashTestCase):
 
 
 class PreviewInvocationTests(DashTestCase):
-    """Tests that dash previews can be opened and closed in different 
+    """Tests that dash previews can be opened and closed in different
     lenses.
 
     """
-    
+
     def test_app_lens_preview_open_close(self):
-        """Right-clicking on an application lens result must show 
+        """Right-clicking on an application lens result must show
         its preview.
 
         """
@@ -666,7 +681,7 @@ class PreviewInvocationTests(DashTestCase):
         # of failing.
         if category is None:
             self.skipTest("This lens is probably empty")
-        
+
         results = category.get_results()
 
         result = results[0]
@@ -694,7 +709,7 @@ class PreviewInvocationTests(DashTestCase):
             category = lens.get_category_by_name("Online")
             if category is None:
                 self.skipTest("This lens is probably empty")
-        
+
         results = category.get_results()
 
         result = results[0]
@@ -831,3 +846,73 @@ class PreviewNavigateTests(DashTestCase):
 
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
 
+    def test_left_click_on_preview_image_cancel_preview(self):
+        """Left click on preview image must cancel the preview."""
+        cover_art = self.preview_container.current_preview.cover_art
+
+        tx = cover_art.x + (cover_art.width / 2)
+        ty = cover_art.y + (cover_art.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=1)
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_right_click_on_preview_image_cancel_preview(self):
+        """Right click on preview image must cancel preview."""
+        cover_art = self.preview_container.current_preview.cover_art
+
+        tx = cover_art.x + (cover_art.width / 2)
+        ty = cover_art.y + (cover_art.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=3)
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
+
+class DashDBusIfaceTests(DashTestCase):
+    """Test the Unity dash DBus interface."""
+
+    def test_dash_hide(self):
+        """Ensure we can hide the dash via HideDash() dbus method."""
+        self.dash.ensure_visible()
+        self.dash.controller.hide_dash_via_dbus()
+        self.assertThat(self.dash.visible, Eventually(Equals(False)))
+        self.dash.ensure_hidden()
+
+
+class DashCrossMonitorsTests(DashTestCase):
+    """Multi-monitor dash tests."""
+
+    def setUp(self):
+        super(DashCrossMonitorsTests, self).setUp()
+        if self.screen_geo.get_num_monitors() < 2:
+            self.skipTest("This test requires more than 1 monitor.")
+
+    def test_dash_stays_on_same_monitor(self):
+        """If the dash is opened, then the mouse is moved to another monitor and
+        the keyboard is used. The Dash must not move to that monitor.
+        """
+        current_monitor = self.dash.ideal_monitor
+
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
+
+        self.screen_geo.move_mouse_to_monitor((current_monitor + 1) % self.screen_geo.get_num_monitors())
+        self.keyboard.type("abc")
+
+        self.assertThat(self.dash.ideal_monitor, Eventually(Equals(current_monitor)))
+
+    def test_dash_close_on_cross_monitor_click(self):
+        """Dash must close when clicking on a window in a different screen."""  
+
+        self.addCleanup(self.dash.ensure_hidden)
+
+        for monitor in range(self.screen_geo.get_num_monitors()-1):
+            self.screen_geo.move_mouse_to_monitor(monitor)
+            self.dash.ensure_visible()
+
+            self.screen_geo.move_mouse_to_monitor(monitor+1)
+            sleep(.5)
+            self.mouse.click()
+            
+            self.assertThat(self.dash.visible, Eventually(Equals(False)))

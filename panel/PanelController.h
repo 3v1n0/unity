@@ -44,6 +44,8 @@ public:
   std::vector<nux::View*> GetPanelViews() const;
   std::vector<nux::Geometry> GetGeometries() const;
 
+  nux::Property<int> launcher_width;
+
   // NOTE: nux::Property maybe?
   void SetOpacity(float opacity);
   void SetOpacityMaximizedToggle(bool enabled);

@@ -44,6 +44,7 @@ ResultView::ResultView(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , expanded(true)
   , renderer_(NULL)
+  , cached_result_(nullptr, nullptr, nullptr)
 {
   expanded.changed.connect([&](bool value)
   {
@@ -99,14 +100,14 @@ void ResultView::RemoveResult(Result& result)
 
 void ResultView::OnRowAdded(DeeModel* model, DeeModelIter* iter)
 {
-  Result result(model, iter, renderer_tag_);
-  AddResult(result);
+  cached_result_.SetTarget(model, iter, renderer_tag_);
+  AddResult(cached_result_);
 }
 
 void ResultView::OnRowRemoved(DeeModel* model, DeeModelIter* iter)
 {
-  Result result(model, iter, renderer_tag_);
-  RemoveResult(result);
+  cached_result_.SetTarget(model, iter, renderer_tag_);
+  RemoveResult(cached_result_);
 }
 
 void ResultView::SetModel(glib::Object<DeeModel> const& model, DeeModelTag* tag)

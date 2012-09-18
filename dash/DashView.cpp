@@ -382,7 +382,7 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 
   height = search_bar_->GetGeometry().height;
   height += tile_height * 3;
-  height += (style.GetPlacesGroupTopSpace() - 2 + 24 + 8) * 3; // adding three group headers
+  height += (style.GetPlacesGroupTopSpace() - 2 + 24 + 2) * 3; // adding three group headers
   height += 1*2; // hseparator height
   height += style.GetDashViewTopPadding();
   height += lens_bar_->GetGeometry().height;
@@ -407,22 +407,22 @@ void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 
   if (IsFullRedraw())
     nux::GetPainter().PushBackgroundStack();
-  
+
   if (preview_displaying_)
    preview_container_->ProcessDraw(gfx_context, (!force_draw) ? IsFullRedraw() : force_draw);
   else
     layout_->ProcessDraw(gfx_context, force_draw);
-    
+
   if (IsFullRedraw())
     nux::GetPainter().PopBackgroundStack();
 
   renderer_.DrawInnerCleanup(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
 }
 
-  void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
-  {
-    dash::Style& style = dash::Style::Instance();
-    nux::Geometry geo(content_geo_);
+void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
+{
+  dash::Style& style = dash::Style::Instance();
+  nux::Geometry geo(content_geo_);
 
   if (Settings::Instance().GetFormFactor() == FormFactor::DESKTOP)
   {
