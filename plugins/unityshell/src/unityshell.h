@@ -344,7 +344,8 @@ class UnityWindow :
   public compiz::WindowInputRemoverLockAcquireInterface,
   public WrapableHandler<ScaleWindowInterface, 4>,
   public BaseSwitchWindow,
-  public PluginClassHandler <UnityWindow, CompWindow>
+  public PluginClassHandler <UnityWindow, CompWindow>,
+  public sigc::trackable
 {
 public:
   UnityWindow(CompWindow*);
