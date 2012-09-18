@@ -3682,8 +3682,8 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
 
 void UnityWindow::OnInitiateSpreed()
 {
-  auto const& windows = ScaleScreen::get(screen)->getWindows();
-  if (std::find(windows.begin(), windows.end(), ScaleWindow::get(window)) == windows.end())
+  auto const& windows = screen->windows();
+  if (std::find(windows.begin(), windows.end(), window) == windows.end())
     return;
 
   close_icon_state_ = panel::WindowState::NORMAL;
@@ -3698,8 +3698,8 @@ void UnityWindow::OnInitiateSpreed()
 
 void UnityWindow::OnTerminateSpreed()
 {
-  auto const& windows = ScaleScreen::get(screen)->getWindows();
-  if (std::find(windows.begin(), windows.end(), ScaleWindow::get(window)) == windows.end())
+  auto const& windows = screen->windows();
+  if (std::find(windows.begin(), windows.end(), window) == windows.end())
     return;
 
   WindowManager *wm = WindowManager::Default();
