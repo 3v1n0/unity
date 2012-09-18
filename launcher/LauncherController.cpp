@@ -668,8 +668,9 @@ int Controller::Impl::GetLastIconPriority(std::string const& favorite_uri, bool 
   for (auto it = icons.rbegin(); it != icons.rend(); ++it)
   {
     auto const& icon = *it;
+    bool update_last_icon = ((!last_icon && !sticky) || sticky);
 
-    if (!last_icon || icon->IsSticky() == sticky)
+    if (update_last_icon || icon->IsSticky() == sticky)
     {
       last_icon = icon;
 
@@ -678,13 +679,12 @@ int Controller::Impl::GetLastIconPriority(std::string const& favorite_uri, bool 
     }
   }
 
-  //FIXME for sticky apps we should find the last non-sticky, if not found
-  // we should use the first non_sticky app value-1
-
-
   if (last_icon)
   {
     icon_prio = last_icon->SortPriority();
+
+    if (sticky && last_icon->IsSticky() != sticky)
+      icon_prio -= 1;
   }
   else if (!favorite_uri.empty())
   {
@@ -692,7 +692,12 @@ int Controller::Impl::GetLastIconPriority(std::string const& favorite_uri, bool 
     for (auto const& fav : FavoriteStore::Instance().GetFavorites())
     {
       if (fav == favorite_uri)
+      {
+        if (icon_prio == std::numeric_limits<int>::min())
+          icon_prio = (*model_->begin())->SortPriority() - 1;
+
         break;
+      }
 
       auto const& icon = GetIconByUri(fav);
 
