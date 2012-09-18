@@ -158,12 +158,12 @@ TEST(TestDesktopUtilities, TestGetDesktopPathById)
   g_setenv("XDG_DATA_DIRS", "/usr/share", TRUE);
   g_setenv("XDG_DATA_HOME", "UnityUserConfig", TRUE);
 
-  std::string const& file = DesktopUtilities::GetDesktopPathById("ubuntu-software-center.desktop");
+  std::string const& file = DesktopUtilities::GetDesktopPathById("gnome-terminal.desktop");
 
   g_setenv("XDG_DATA_DIRS", old_dirs.c_str(), TRUE);
   g_setenv("XDG_DATA_HOME", old_dirs.c_str(), TRUE);
 
-  EXPECT_EQ(file, "/usr/share/applications/ubuntu-software-center.desktop");
+  EXPECT_EQ(file, "/usr/share/applications/gnome-terminal.desktop");
 }
 
 TEST(TestDesktopUtilities, TestGetBackgroundColor)
