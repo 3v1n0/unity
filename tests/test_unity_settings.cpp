@@ -35,7 +35,7 @@ public:
   unity::glib::Object<GSettings> gsettings;
   std::unique_ptr<unity::Settings> unity_settings;
 
-  void SetUp() override
+  void SetUp()
   {
     g_setenv("GSETTINGS_BACKEND", "memory", TRUE);
 
