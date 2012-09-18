@@ -87,7 +87,7 @@ TEST_F(TestFavoriteStore, IsValidFavoriteUri)
 
 TEST_F(TestFavoriteStore, ParseFavoriteFromUri)
 {
-  const std::string VALID_DESKTOP_PATH = BUILDDIR"/tests/data/ubuntu-software-center.desktop";
+  const std::string VALID_DESKTOP_PATH = BUILDDIR"/tests/data/applications/ubuntu-software-center.desktop";
   EXPECT_EQ(favorite_store.ParseFavoriteFromUri("file.desktop"), "application://file.desktop");
   EXPECT_EQ(favorite_store.ParseFavoriteFromUri(VALID_DESKTOP_PATH), "application://"+VALID_DESKTOP_PATH);
 

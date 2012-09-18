@@ -31,7 +31,7 @@ using namespace unity::launcher;
 
 namespace
 {
-const std::string USC_DESKTOP = BUILDDIR"/tests/data/ubuntu-software-center.desktop";
+const std::string USC_DESKTOP = BUILDDIR"/tests/data/applications/ubuntu-software-center.desktop";
 
 struct TestSoftwareCenterLauncherIcon : testing::Test
 {

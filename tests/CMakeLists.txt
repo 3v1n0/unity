@@ -3,16 +3,16 @@ set(UNITY_SRC ../plugins/unityshell/src)
 #
 # Data
 #
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/ubuntuone-installer.desktop
-                ${CMAKE_BINARY_DIR}/tests/data/ubuntuone-installer.desktop)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/ubuntu-software-center.desktop
-                ${CMAKE_BINARY_DIR}/tests/data/ubuntu-software-center.desktop)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/update-manager.desktop
-                ${CMAKE_BINARY_DIR}/tests/data/update-manager.desktop)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/bzr-handle-patch.desktop
-                ${CMAKE_BINARY_DIR}/tests/data/bzr-handle-patch.desktop)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/no-icon.desktop
-                ${CMAKE_BINARY_DIR}/tests/data/no-icon.desktop)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/ubuntuone-installer.desktop
+                ${CMAKE_BINARY_DIR}/tests/data/applications/ubuntuone-installer.desktop)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/ubuntu-software-center.desktop
+                ${CMAKE_BINARY_DIR}/tests/data/applications/ubuntu-software-center.desktop)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/update-manager.desktop
+                ${CMAKE_BINARY_DIR}/tests/data/applications/update-manager.desktop)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/bzr-handle-patch.desktop
+                ${CMAKE_BINARY_DIR}/tests/data/applications/bzr-handle-patch.desktop)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/no-icon.desktop
+                ${CMAKE_BINARY_DIR}/tests/data/applications/no-icon.desktop)
 #
 # Unit tests
 #

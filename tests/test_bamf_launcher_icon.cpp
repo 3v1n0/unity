@@ -34,8 +34,8 @@ using namespace unity::launcher;
 namespace
 {
 
-const std::string USC_DESKTOP = BUILDDIR"/tests/data/ubuntu-software-center.desktop";
-const std::string NO_ICON_DESKTOP = BUILDDIR"/tests/data/no-icon.desktop";
+const std::string USC_DESKTOP = BUILDDIR"/tests/data/applications/ubuntu-software-center.desktop";
+const std::string NO_ICON_DESKTOP = BUILDDIR"/tests/data/applications/no-icon.desktop";
 
 class TestBamfLauncherIcon : public testing::Test
 {

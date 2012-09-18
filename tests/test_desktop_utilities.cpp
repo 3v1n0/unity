@@ -31,6 +31,8 @@ using testing::Eq;
 
 namespace {
 
+const std::string LOCAL_DATA_DIR = BUILDDIR"/tests/data";
+
 TEST(TestDesktopUtilitiesDesktopID, TestEmptyValues)
 {
   std::vector<std::string> empty_list;
@@ -110,7 +112,7 @@ TEST(TestDesktopUtilitiesDataDirectories, TestGetSystemDataDirectory)
 {
   const gchar* env = g_getenv("XDG_DATA_DIRS");
   std::string old_dirs = env ? env : "";
-  g_setenv("XDG_DATA_DIRS", "dir1:dir2::dir3:dir4:/usr/share", TRUE);
+  g_setenv("XDG_DATA_DIRS", ("dir1:dir2::dir3:dir4:"+LOCAL_DATA_DIR).c_str(), TRUE);
 
   std::vector<std::string> const& system_dirs = DesktopUtilities::GetSystemDataDirectories();
 
@@ -121,7 +123,7 @@ TEST(TestDesktopUtilitiesDataDirectories, TestGetSystemDataDirectory)
   EXPECT_THAT(system_dirs[1], Eq("dir2"));
   EXPECT_THAT(system_dirs[2], Eq("dir3"));
   EXPECT_THAT(system_dirs[3], Eq("dir4"));
-  EXPECT_THAT(system_dirs[4], Eq("/usr/share"));
+  EXPECT_THAT(system_dirs[4], Eq(LOCAL_DATA_DIR));
 }
 
 TEST(TestDesktopUtilitiesDataDirectories, TestGetDataDirectory)
@@ -131,7 +133,7 @@ TEST(TestDesktopUtilitiesDataDirectories, TestGetDataDirectory)
   env = g_getenv("XDG_DATA_HOME");
   std::string old_home = env ? env : "";
 
-  g_setenv("XDG_DATA_DIRS", "dir1:dir2::dir3:dir4:/usr/share", TRUE);
+  g_setenv("XDG_DATA_DIRS", ("dir1:dir2::dir3:dir4:"+LOCAL_DATA_DIR).c_str(), TRUE);
   g_setenv("XDG_DATA_HOME", "UnityUserConfig", TRUE);
 
   std::vector<std::string> const& data_dirs = DesktopUtilities::GetDataDirectories();
@@ -144,7 +146,7 @@ TEST(TestDesktopUtilitiesDataDirectories, TestGetDataDirectory)
   EXPECT_THAT(data_dirs[1], Eq("dir2"));
   EXPECT_THAT(data_dirs[2], Eq("dir3"));
   EXPECT_THAT(data_dirs[3], Eq("dir4"));
-  EXPECT_THAT(data_dirs[4], Eq("/usr/share"));
+  EXPECT_THAT(data_dirs[4], Eq(LOCAL_DATA_DIR));
   EXPECT_THAT(data_dirs[5], Eq("UnityUserConfig"));
 }
 
@@ -155,27 +157,27 @@ TEST(TestDesktopUtilities, TestGetDesktopPathById)
   env = g_getenv("XDG_DATA_HOME");
   std::string old_home = env ? env : "";
 
-  g_setenv("XDG_DATA_DIRS", "/usr/share", TRUE);
+  g_setenv("XDG_DATA_DIRS", LOCAL_DATA_DIR.c_str(), TRUE);
   g_setenv("XDG_DATA_HOME", "UnityUserConfig", TRUE);
 
-  std::string const& file = DesktopUtilities::GetDesktopPathById("gnome-terminal.desktop");
+  std::string const& file = DesktopUtilities::GetDesktopPathById("ubuntu-software-center.desktop");
 
   g_setenv("XDG_DATA_DIRS", old_dirs.c_str(), TRUE);
   g_setenv("XDG_DATA_HOME", old_dirs.c_str(), TRUE);
 
-  EXPECT_EQ(file, "/usr/share/applications/gnome-terminal.desktop");
+  EXPECT_EQ(file, LOCAL_DATA_DIR + "/applications/ubuntu-software-center.desktop");
 }
 
 TEST(TestDesktopUtilities, TestGetBackgroundColor)
 {
-  std::string const& color = DesktopUtilities::GetBackgroundColor(BUILDDIR"/tests/data/ubuntu-software-center.desktop");
+  std::string const& color = DesktopUtilities::GetBackgroundColor(LOCAL_DATA_DIR+"/applications/ubuntu-software-center.desktop");
 
   EXPECT_EQ(color, "#aabbcc");
 }
 
 TEST(TestDesktopUtilities, TestGetBackgroundColorNoKey)
 {
-  std::string const& color = DesktopUtilities::GetBackgroundColor(BUILDDIR"/tests/data/update-manager.desktop");
+  std::string const& color = DesktopUtilities::GetBackgroundColor(LOCAL_DATA_DIR+"/applications/update-manager.desktop");
 
   EXPECT_TRUE(color.empty());
 }

@@ -39,16 +39,16 @@ const gchar* SETTINGS_NAME = "com.canonical.Unity.Launcher";
 const gchar* SETTINGS_KEY = "favorites";
 const gchar* SCHEMA_DIRECTORY = BUILDDIR"/settings";
 
-const char* base_store_favs[] = { BUILDDIR"/tests/data/ubuntuone-installer.desktop",
-                                  "file://" BUILDDIR "/tests/data/ubuntu-software-center.desktop",
-                                  "application://" BUILDDIR "/tests/data/update-manager.desktop",
+const char* base_store_favs[] = { BUILDDIR"/tests/data/applications/ubuntuone-installer.desktop",
+                                  "file://" BUILDDIR "/tests/data/applications/ubuntu-software-center.desktop",
+                                  "application://" BUILDDIR "/tests/data/applications/update-manager.desktop",
                                   "unity://test-icon",
                                   "device://uuid",
                                   NULL
                                 };
 const int n_base_store_favs = G_N_ELEMENTS(base_store_favs) - 1; /* NULL */
 
-const std::string other_desktop = "application://" BUILDDIR "/tests/data/bzr-handle-patch.desktop";
+const std::string other_desktop = "application://" BUILDDIR "/tests/data/applications/bzr-handle-patch.desktop";
 
 // Utilities
 std::string const& at(FavoriteList const& favs, int index)
