@@ -647,7 +647,7 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
         // Ghost row of items below the preview
         {
           int final_x = layout_->GetX();
-          int final_y = layout_->GetY() + layout_->GetHeight() - (position_offset*1.5);
+          int final_y = layout_->GetY() + layout_->GetHeight() - (position_offset*1.9);
 
           texxform.uoffset = (layout_->GetX() - layout_->GetX())/(float)layout_->GetWidth();
           texxform.voffset = (opening_row_y_ + opening_row_height_ - layout_->GetY())/(float)layout_->GetHeight();
@@ -730,7 +730,7 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
         // Ghost row of items below the preview
         {
           int final_x = layout_->GetX();
-          int final_y = layout_->GetY() + layout_->GetHeight() - position_offset*1.5;
+          int final_y = layout_->GetY() + layout_->GetHeight() -(position_offset*1.9);
 
           texxform.uoffset = (layout_->GetX() - layout_->GetX())/(float)layout_->GetWidth();
           texxform.voffset = (opening_row_y_ + opening_row_height_ - layout_->GetY())/(float)layout_->GetHeight();
