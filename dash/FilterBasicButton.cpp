@@ -71,6 +71,10 @@ void FilterBasicButton::Init()
   SetAcceptKeyNavFocusOnMouseDown(false);
   SetAcceptKeyNavFocusOnMouseEnter(true);
 
+  //SetRedirectRenderingToTexture(true);
+  //SetCopyPreviousFboTexture(false);
+  clear_before_draw_ = true;
+
   key_nav_focus_change.connect([&] (nux::Area*, bool, nux::KeyNavDirection)
   {
     QueueDraw();
@@ -128,11 +132,15 @@ long FilterBasicButton::ComputeContentSize()
   return ret;
 }
 
-void FilterBasicButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
+void FilterBasicButton::SetClearBeforeDraw(bool clear_before_draw)
+{
+  clear_before_draw_ = clear_before_draw;
+}
+
+void FilterBasicButton::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
   nux::Geometry const& geo = GetGeometry();
 
-  gPainter.PaintBackground(GfxContext, geo);
   // set up our texture mode
   nux::TexCoordXForm texxform;
   texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
@@ -140,12 +148,19 @@ void FilterBasicButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   // clear what is behind us
   unsigned int alpha = 0, src = 0, dest = 0;
-  GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
-  GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+  graphics_engine.GetRenderStates().GetBlend(alpha, src, dest);
+  if (RedirectedAncestor() && clear_before_draw_)
+  {
+    // This is necessary when doing redirected rendering.
+    // Clean the area below this view before drawing anything.
+    graphics_engine.GetRenderStates().SetBlend(false);
+    graphics_engine.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+  }
+  graphics_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
   nux::Color col = nux::color::Black;
   col.alpha = 0;
-  GfxContext.QRP_Color(geo.x,
+  graphics_engine.QRP_Color(geo.x,
                        geo.y,
                        geo.width,
                        geo.height,
@@ -159,7 +174,7 @@ void FilterBasicButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
     texture = active_->GetTexture();
 
-  GfxContext.QRP_1Tex(geo.x,
+  graphics_engine.QRP_1Tex(geo.x,
                       geo.y,
                       geo.width,
                       geo.height,
@@ -169,7 +184,7 @@ void FilterBasicButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (HasKeyboardFocus())
   {
-    GfxContext.QRP_1Tex(geo.x,
+    graphics_engine.QRP_1Tex(geo.x,
                         geo.y,
                         geo.width,
                         geo.height,
@@ -178,7 +193,7 @@ void FilterBasicButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
   }
 
-  GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
+  graphics_engine.GetRenderStates().SetBlend(alpha, src, dest);
 }
 
 } // namespace dash

@@ -58,21 +58,21 @@ LensBarIcon::LensBarIcon(std::string id_, std::string icon_hint)
 
   active.changed.connect(sigc::mem_fun(this, &LensBarIcon::OnActiveChanged));
   key_nav_focus_change.connect([&](nux::Area*, bool, nux::KeyNavDirection){ QueueDraw(); });
+  SetRedirectRenderingToTexture(true);
 }
 
 LensBarIcon::~LensBarIcon()
 {}
 
-void LensBarIcon::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
+void LensBarIcon::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
   nux::Geometry const& geo = GetGeometry();
 
-  gfx_context.PushClippingRectangle(geo);
-  nux::GetPainter().PaintBackground(gfx_context, geo);
+  graphics_engine.PushClippingRectangle(geo);
 
   if (!texture())
   {
-    gfx_context.PopClippingRectangle();
+    graphics_engine.PopClippingRectangle();
     return;
   }
 
@@ -82,7 +82,7 @@ void LensBarIcon::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
     nux::AbstractPaintLayer* layer = focus_layer_.get();
 
     layer->SetGeometry(geo);
-    layer->Renderlayer(gfx_context);
+    layer->Renderlayer(graphics_engine);
   }
 
   float opacity = active ? 1.0f : inactive_opacity_;
@@ -94,7 +94,7 @@ void LensBarIcon::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
   texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
   texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
 
-  gfx_context.QRP_1Tex(geo.x + ((geo.width - width) / 2),
+  graphics_engine.QRP_1Tex(geo.x + ((geo.width - width) / 2),
                        geo.y + ((geo.height - height) / 2),
                        width,
                        height,
@@ -102,7 +102,7 @@ void LensBarIcon::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
                        texxform,
                        col);
 
-  gfx_context.PopClippingRectangle();
+  graphics_engine.PopClippingRectangle();
 }
 
 void LensBarIcon::OnActiveChanged(bool is_active)
