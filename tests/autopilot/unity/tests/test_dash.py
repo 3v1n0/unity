@@ -698,17 +698,22 @@ class PreviewInvocationTests(DashTestCase):
         preview.
 
         """
+        def get_category(lens):
+            category = lens.get_category_by_name("Recently Viewed")
+            # If there was no video played on this system this category is expected
+            # to be empty, if its empty we check if the 'Online' category have any
+            # contents, if not then we skip the test.
+            if category is None or not category.is_visible:
+                category = lens.get_category_by_name("Online")
+                if category is None or not category.is_visible:
+                    return None
+            return category
+
         lens = self.dash.reveal_video_lens()
         self.addCleanup(self.dash.ensure_hidden)
 
-        category = lens.get_category_by_name("Recently Viewed")
-        # If there was no video played on this system this category is expected
-        # to be empty, if its empty we check if the 'Online' category have any
-        # contents, if not then we skip the test.
-        if category is None:
-            category = lens.get_category_by_name("Online")
-            if category is None:
-                self.skipTest("This lens is probably empty")
+        self.assertThat(lambda: get_category(lens), Eventually(NotEquals(None)))
+        category = get_category(lens)
 
         results = category.get_results()
 
