@@ -63,6 +63,7 @@ public:
   virtual bool IsWindowMaximizable(guint32 xid) const = 0;
 
   virtual void ShowDesktop() = 0;
+  virtual bool InShowDesktop() const = 0;
 
   virtual void Restore(guint32 xid) = 0;
   virtual void RestoreAt(guint32 xid, int x, int y) = 0;

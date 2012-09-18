@@ -83,9 +83,10 @@ g_mock_volume_class_init (GMockVolumeClass *klass)
 static void
 g_mock_volume_init (GMockVolume *mock_volume)
 {
-  mock_volume->name = g_strdup("");
+  guint32 uuid = g_random_int();
+  mock_volume->name = g_strdup_printf("MockVolume %u", uuid);
   mock_volume->icon = g_icon_new_for_string("", NULL);
-  mock_volume->uuid = g_strdup("");
+  mock_volume->uuid = g_strdup_printf("%u", uuid);
   mock_volume->mount = NULL;
 }
 

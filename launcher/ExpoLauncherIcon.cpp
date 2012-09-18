@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,10 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Jason Smith <jason.smith@canonical.com>
+ * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
  */
 
-#include "DesktopLauncherIcon.h"
+#include "ExpoLauncherIcon.h"
 #include "unity-shared/WindowManager.h"
 #include "FavoriteStore.h"
 
@@ -28,42 +28,36 @@ namespace unity
 namespace launcher
 {
 
-DesktopLauncherIcon::DesktopLauncherIcon()
-  : SimpleLauncherIcon(IconType::DESKTOP)
-  , show_in_switcher_(true)
+ExpoLauncherIcon::ExpoLauncherIcon()
+  : SimpleLauncherIcon(IconType::EXPO)
 {
-  tooltip_text = _("Show Desktop");
-  icon_name = "desktop";
-  SetQuirk(Quirk::VISIBLE, true);
+  tooltip_text = _("Workspace Switcher");
+  icon_name = "workspace-switcher";
+  SetQuirk(Quirk::VISIBLE, false);
   SetQuirk(Quirk::RUNNING, false);
-  SetShortcut('d');
+  SetShortcut('s');
 }
 
-void
-DesktopLauncherIcon::ActivateLauncherIcon(ActionArg arg)
+void ExpoLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   SimpleLauncherIcon::ActivateLauncherIcon(arg);
-  WindowManager::Default()->ShowDesktop();
+  WindowManager::Default()->InitiateExpo();
 }
 
-std::string DesktopLauncherIcon::GetName() const
+void ExpoLauncherIcon::Stick(bool save)
 {
-  return "DesktopLauncherIcon";
+  SimpleLauncherIcon::Stick(save);
+  SetQuirk(Quirk::VISIBLE, (WindowManager::Default()->WorkspaceCount() > 1));
 }
 
-std::string DesktopLauncherIcon::GetRemoteUri()
+std::string ExpoLauncherIcon::GetName() const
 {
-  return FavoriteStore::URI_PREFIX_UNITY + "desktop-icon";
+  return "ExpoLauncherIcon";
 }
 
-void DesktopLauncherIcon::SetShowInSwitcher(bool show_in_switcher)
+std::string ExpoLauncherIcon::GetRemoteUri()
 {
-  show_in_switcher_ = show_in_switcher;
-}
-
-bool DesktopLauncherIcon::ShowInSwitcher(bool current)
-{
-  return show_in_switcher_;
+  return FavoriteStore::URI_PREFIX_UNITY + "expo-icon";
 }
 
 } // namespace launcher

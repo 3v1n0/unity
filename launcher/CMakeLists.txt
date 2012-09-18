@@ -42,6 +42,7 @@ set (LAUNCHER_SOURCES
      DevicesSettingsImp.cpp
      DndData.cpp
      EdgeBarrierController.cpp
+     ExpoLauncherIcon.cpp
      FavoriteStore.cpp
      FavoriteStoreGSettings.cpp
      FavoriteStorePrivate.cpp

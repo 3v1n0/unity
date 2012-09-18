@@ -19,39 +19,21 @@
 
 #include <gmock/gmock.h>
 
-#include "BFBLauncherIcon.h"
+#include "TrashLauncherIcon.h"
 
 using namespace unity;
 using namespace unity::launcher;
 
 namespace
 {
-
-class MockBFBLauncherIcon : public BFBLauncherIcon
+struct TestTrashLauncherIcon : testing::Test
 {
-public:
-  MockBFBLauncherIcon()
-    : BFBLauncherIcon(LauncherHideMode::LAUNCHER_HIDE_NEVER)
-  {}
+  TrashLauncherIcon icon;
 };
 
-struct TestBFBLauncherIcon : testing::Test
+TEST_F(TestTrashLauncherIcon, Position)
 {
-  MockBFBLauncherIcon bfb;
-};
-
-TEST_F(TestBFBLauncherIcon, Position)
-{
-  EXPECT_EQ(bfb.position, AbstractLauncherIcon::Position::BEGIN);
-}
-
-TEST_F(TestBFBLauncherIcon, OverlayMenus)
-{
-  for (auto menu_item : bfb.Menus())
-  {
-    bool overlay_item = dbusmenu_menuitem_property_get_bool(menu_item, QuicklistMenuItem::OVERLAY_MENU_ITEM_PROPERTY);
-    ASSERT_TRUE(overlay_item);
-  }
+  EXPECT_EQ(icon.position(), AbstractLauncherIcon::Position::END);
 }
 
 }

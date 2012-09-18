@@ -191,6 +191,21 @@ Expected Result:
   it, and the any pips for running apps show again.
 
 
+Dragging fixed icons does not reorder an icon above or below
+------------------------------------------------------------
+This test is about not reordering when dragging fixed icons.
+
+#. Move the mouse so it is over the BFB launcher icon
+#. Press and hold the mouse button
+#. Try to drag the icon to the right of the launcher.
+#. Move the mouse down at least to the height of the second launcher icon
+   keeping the mouse pressed.
+#. Release
+
+Outcome:
+  * No icon should be dragged.
+
+
 Dragged launcher icons out of the launcher are properly drawn
 -------------------------------------------------------------
 This test ensures that the launcher icons out of the launcher are properly drawn

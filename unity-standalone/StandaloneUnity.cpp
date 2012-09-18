@@ -86,7 +86,7 @@ UnityStandalone::~UnityStandalone ()
 
 void UnityStandalone::Init ()
 {
-  launcher_controller.reset(new launcher::Controller(0));
+  launcher_controller.reset(new launcher::Controller());
   panel_controller.reset(new panel::Controller());
   dash_controller.reset(new dash::Controller());
 
@@ -119,7 +119,7 @@ UnityStandaloneTV::~UnityStandaloneTV() {};
 
 void UnityStandaloneTV::Init()
 {
-  launcher_controller.reset(new launcher::Controller(0));
+  launcher_controller.reset(new launcher::Controller());
   dash_controller.reset(new dash::Controller());
   dash_controller->launcher_width = launcher_controller->launcher().GetAbsoluteWidth() - 1;
 

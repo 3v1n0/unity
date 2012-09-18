@@ -32,10 +32,6 @@ class SpacerLauncherIcon : public SingleMonitorLauncherIcon
 public:
   SpacerLauncherIcon(int monitor);
 
-  bool IsSpacer()
-  {
-    return true;
-  }
 protected:
     std::string GetName() const;
 };

@@ -19,7 +19,7 @@
 
 #include <gmock/gmock.h>
 
-#include "BFBLauncherIcon.h"
+#include "HudLauncherIcon.h"
 
 using namespace unity;
 using namespace unity::launcher;
@@ -27,31 +27,27 @@ using namespace unity::launcher;
 namespace
 {
 
-class MockBFBLauncherIcon : public BFBLauncherIcon
+class MockHudLauncherIcon : public HudLauncherIcon
 {
 public:
-  MockBFBLauncherIcon()
-    : BFBLauncherIcon(LauncherHideMode::LAUNCHER_HIDE_NEVER)
+  MockHudLauncherIcon()
+    : HudLauncherIcon(LauncherHideMode::LAUNCHER_HIDE_NEVER)
   {}
 };
 
-struct TestBFBLauncherIcon : testing::Test
+struct TestHudLauncherIcon : testing::Test
 {
-  MockBFBLauncherIcon bfb;
+  MockHudLauncherIcon hud;
 };
 
-TEST_F(TestBFBLauncherIcon, Position)
+TEST_F(TestHudLauncherIcon, Type)
 {
-  EXPECT_EQ(bfb.position, AbstractLauncherIcon::Position::BEGIN);
+  EXPECT_EQ(hud.GetIconType(), AbstractLauncherIcon::IconType::HUD);
 }
 
-TEST_F(TestBFBLauncherIcon, OverlayMenus)
+TEST_F(TestHudLauncherIcon, Position)
 {
-  for (auto menu_item : bfb.Menus())
-  {
-    bool overlay_item = dbusmenu_menuitem_property_get_bool(menu_item, QuicklistMenuItem::OVERLAY_MENU_ITEM_PROPERTY);
-    ASSERT_TRUE(overlay_item);
-  }
+  EXPECT_EQ(hud.position(), AbstractLauncherIcon::Position::BEGIN);
 }
 
 }

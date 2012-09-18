@@ -29,24 +29,16 @@ namespace launcher
 
 class DesktopLauncherIcon : public SimpleLauncherIcon
 {
-
 public:
   DesktopLauncherIcon();
-  ~DesktopLauncherIcon();
 
-  void SetShowInSwitcher(bool show_in_switcher)
-  {
-    show_in_switcher_ = show_in_switcher;
-  }
-
-  bool ShowInSwitcher(bool current)
-  {
-    return show_in_switcher_;
-  }
+  void SetShowInSwitcher(bool show_in_switcher);
+  bool ShowInSwitcher(bool current);
 
 protected:
   void ActivateLauncherIcon(ActionArg arg);
   std::string GetName() const;
+  std::string GetRemoteUri();
 
 private:
   bool show_in_switcher_;

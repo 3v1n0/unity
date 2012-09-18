@@ -19,39 +19,40 @@
 
 #include <gmock/gmock.h>
 
-#include "BFBLauncherIcon.h"
+#include "ExpoLauncherIcon.h"
+#include "PluginAdapter.h"
 
 using namespace unity;
 using namespace unity::launcher;
 
 namespace
 {
-
-class MockBFBLauncherIcon : public BFBLauncherIcon
+struct TestExpoLauncherIcon : testing::Test
 {
-public:
-  MockBFBLauncherIcon()
-    : BFBLauncherIcon(LauncherHideMode::LAUNCHER_HIDE_NEVER)
-  {}
+  ExpoLauncherIcon icon;
 };
 
-struct TestBFBLauncherIcon : testing::Test
+TEST_F(TestExpoLauncherIcon, ActivateToggleExpo)
 {
-  MockBFBLauncherIcon bfb;
-};
+  auto plugin_adapter = PluginAdapter::Default();
 
-TEST_F(TestBFBLauncherIcon, Position)
-{
-  EXPECT_EQ(bfb.position, AbstractLauncherIcon::Position::BEGIN);
+  ASSERT_FALSE(plugin_adapter->IsExpoActive());
+
+  icon.Activate(ActionArg());
+  ASSERT_TRUE(plugin_adapter->IsExpoActive());
+
+  icon.Activate(ActionArg());
+  EXPECT_FALSE(plugin_adapter->IsExpoActive());
 }
 
-TEST_F(TestBFBLauncherIcon, OverlayMenus)
+TEST_F(TestExpoLauncherIcon, Position)
 {
-  for (auto menu_item : bfb.Menus())
-  {
-    bool overlay_item = dbusmenu_menuitem_property_get_bool(menu_item, QuicklistMenuItem::OVERLAY_MENU_ITEM_PROPERTY);
-    ASSERT_TRUE(overlay_item);
-  }
+  EXPECT_EQ(icon.position(), AbstractLauncherIcon::Position::FLOATING);
+}
+
+TEST_F(TestExpoLauncherIcon, RemoteUri)
+{
+  EXPECT_EQ(icon.RemoteUri(), "unity://expo-icon");
 }
 
 }

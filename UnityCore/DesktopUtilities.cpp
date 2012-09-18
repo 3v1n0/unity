@@ -19,8 +19,10 @@
 */
 
 #include <algorithm>
+#include <memory>
 
 #include <glib.h>
+#include <gio/gdesktopappinfo.h>
 
 #include "DesktopUtilities.h"
 #include "GLibWrapper.h"
@@ -119,23 +121,41 @@ std::string DesktopUtilities::GetDesktopID(std::string const& desktop_path)
   return GetDesktopID(data_dirs, desktop_path);
 }
 
+std::string DesktopUtilities::GetDesktopPathById(std::string const& desktop_id)
+{
+  if (desktop_id.empty())
+    return "";
+
+  glib::Object<GDesktopAppInfo> info;
+
+  if (desktop_id.find(G_DIR_SEPARATOR_S) != std::string::npos)
+    info = g_desktop_app_info_new_from_filename(desktop_id.c_str());
+  else
+    info = g_desktop_app_info_new(desktop_id.c_str());
+
+  if (info)
+  {
+    const char* filename = g_desktop_app_info_get_filename(info);
+
+    if (filename)
+      return filename;
+  }
+
+  return "";
+}
 
 std::string DesktopUtilities::GetBackgroundColor(std::string const& desktop_path)
 {
-  GKeyFile* key_file = g_key_file_new();
+  std::shared_ptr<GKeyFile> key_file(g_key_file_new(), g_key_file_free);
 
   glib::Error error;
-  g_key_file_load_from_file(key_file, desktop_path.c_str(), static_cast<GKeyFileFlags>(0), &error);
+  g_key_file_load_from_file(key_file.get(), desktop_path.c_str(), static_cast<GKeyFileFlags>(0), &error);
 
   if (error)
-  {
-    g_key_file_free(key_file);
     return "";
-  }
 
-  glib::String value(g_key_file_get_string(key_file, "Desktop Entry", "X-Unity-IconBackgroundColor", &error));
+  glib::String value(g_key_file_get_string(key_file.get(), "Desktop Entry", "X-Unity-IconBackgroundColor", &error));
 
-  g_key_file_free(key_file);
   return value.Str();
 }
 

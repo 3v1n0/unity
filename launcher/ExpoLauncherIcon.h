@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,32 +14,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Jason Smith <jason.smith@canonical.com>
+ * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
  */
 
-#include "SpacerLauncherIcon.h"
-#include "Launcher.h"
+#ifndef EXPO_LAUNCHER_ICON_H
+#define EXPO_LAUNCHER_ICON_H
 
-#include <glib/gi18n-lib.h>
+#include "SimpleLauncherIcon.h"
 
 namespace unity
 {
 namespace launcher
 {
 
-SpacerLauncherIcon::SpacerLauncherIcon(int monitor)
-  : SingleMonitorLauncherIcon(IconType::SPACER, monitor)
+class ExpoLauncherIcon : public SimpleLauncherIcon
 {
-  SetQuirk(Quirk::VISIBLE, true);
-  SetQuirk(Quirk::RUNNING, false);
+public:
+  ExpoLauncherIcon();
+  void Stick(bool save);
 
-  tooltip_text = _("Drop To Add Application");
+protected:
+  void ActivateLauncherIcon(ActionArg arg);
+  std::string GetName() const;
+  std::string GetRemoteUri();
+};
+
+}
 }
 
-std::string SpacerLauncherIcon::GetName() const
-{
-    return "SpacerLauncherIcon";
-}
-
-} // namespace launcher
-} // namespace unity
+#endif // EXPO_LAUNCHER_ICON_H
