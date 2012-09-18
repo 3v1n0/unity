@@ -155,7 +155,6 @@ void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const
 
 void EdgeBarrierController::Impl::OnPointerBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event)
 {
-  g_print("Pointer barrier event %d\n",event->event_id);
   if (owner->released)
   {
     BarrierRelease(owner, event->event_id);
@@ -190,15 +189,15 @@ void EdgeBarrierController::Impl::OnPointerBarrierEvent(PointerBarrierWrapper* o
 
 void EdgeBarrierController::Impl::BarrierRelease(PointerBarrierWrapper* owner, int event)
 {
+  owner->ReleaseBarrier(event);
+  owner->released = true;
+  decaymulator_.value = 0;
+
   unsigned duration = parent_->options()->edge_passed_disabled_ms;
   release_timeout_.reset(new glib::Timeout(duration, [owner] {
     owner->released = false;
     return false;
   }));
-g_print("Releasing barrier\n");
-  owner->ReleaseBarrier(event);
-  owner->released = true;
-  decaymulator_.value = 0;
 }
 
 EdgeBarrierController::EdgeBarrierController()

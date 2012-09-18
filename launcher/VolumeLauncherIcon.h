@@ -39,8 +39,8 @@ public:
                      DevicesSettings::Ptr const& devices_settings);
   virtual ~VolumeLauncherIcon();
 
-  bool CanEject() const; // TODO: rename to public virtual bool IsTrashable();     
-  void EjectAndShowNotification(); // TODO: rename to private virtual void DoDropToTrash();       
+  bool CanEject() const; // TODO: rename to public virtual bool IsTrashable();
+  void EjectAndShowNotification(); // TODO: rename to private virtual void DoDropToTrash();
   bool CanStop() const;
   void StopDrive();
   void Stick(bool save = true);
