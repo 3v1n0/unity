@@ -88,9 +88,140 @@ previews::Preview::Ptr Preview::PreviewForModel(dash::Preview::Ptr model)
 
 NUX_IMPLEMENT_OBJECT_TYPE(Preview);
 
+class TabIterator
+{
+public:
+  TabIterator() {}
+
+  void AddArea(nux::InputArea* area)
+  {
+    areas_.push_back(area);
+  }
+
+  std::list<nux::InputArea*> const& GetTabAreas() const { return areas_; }
+
+  nux::InputArea* DefaultFocus() const
+  {
+    if (areas_.size() == 0)
+      return NULL;
+    return *areas_.begin();
+  }
+
+  nux::InputArea* FindKeyFocusArea(unsigned int key_symbol,
+                                      unsigned long x11_key_code,
+                                      unsigned long special_keys_state)
+  {
+    if (areas_.size() == 0)
+      return nullptr;
+
+    nux::InputArea* current_focus_area = nux::GetWindowCompositor().GetKeyFocusArea();  
+    auto it = std::find(areas_.begin(), areas_.end(), current_focus_area);
+    if (it != areas_.end())
+      return current_focus_area;
+
+    return *areas_.begin();
+  }
+
+  nux::Area* KeyNavIteration(nux::KeyNavDirection direction)
+  {
+    if (areas_.size() == 0)
+      return nullptr;
+
+    if (direction != nux::KEY_NAV_TAB_PREVIOUS && direction != nux::KEY_NAV_TAB_NEXT)
+    {
+      return nullptr;
+    }
+
+    nux::InputArea* current_focus_area = nux::GetWindowCompositor().GetKeyFocusArea();
+
+    if (current_focus_area)
+    {
+      auto it = std::find(areas_.begin(), areas_.end(), current_focus_area);
+      if (direction == nux::KEY_NAV_TAB_PREVIOUS)
+      {
+        if (it == areas_.begin())
+            return *areas_.end();
+        else
+        {
+          it--; 
+          if (it == areas_.begin())
+            return *areas_.end();
+          return *it;
+        }
+      }
+      else if (direction == nux::KEY_NAV_TAB_NEXT)
+      {
+        if (it == areas_.end())
+        {
+          return *areas_.begin();
+        }
+        else
+        {
+          it++; 
+          if (it == areas_.end())
+          {
+            return *areas_.begin();
+          }
+          return *it;
+        }
+      }
+    }
+    else
+    {
+      if (direction == nux::KEY_NAV_TAB_PREVIOUS)
+      {
+        return *areas_.end();
+      }
+      else if (direction == nux::KEY_NAV_TAB_NEXT)
+      {
+        return *areas_.begin();
+      }
+    }
+
+    return nullptr;
+  }
+
+  std::list<nux::InputArea*> areas_;
+};
+
+class TabIteratorHLayout  : public nux::HLayout
+{
+public:
+  TabIteratorHLayout(TabIterator* iterator)
+  :tab_iterator_(iterator)
+  {
+  }
+
+  nux::Area* KeyNavIteration(nux::KeyNavDirection direction)
+  {
+    return tab_iterator_->KeyNavIteration(direction);
+  }
+
+private:
+  TabIterator* tab_iterator_;
+};
+
+class TabIteratorVLayout  : public nux::VLayout
+{
+public:
+  TabIteratorVLayout(TabIterator* iterator)
+  :tab_iterator_(iterator)
+  {
+  }
+
+  nux::Area* KeyNavIteration(nux::KeyNavDirection direction)
+  {
+    return tab_iterator_->KeyNavIteration(direction);
+  }
+
+private:
+  TabIterator* tab_iterator_;
+};
+
 Preview::Preview(dash::Preview::Ptr preview_model)
   : View(NUX_TRACKER_LOCATION)
   , preview_model_(preview_model)
+  , tab_iterator_(new TabIterator())
 {
 }
 
@@ -98,6 +229,8 @@ Preview::~Preview()
 {
   if (preview_model_)
     preview_model_->EmitClosed();
+
+  delete tab_iterator_;
 }
 
 std::string Preview::GetName() const
@@ -133,7 +266,7 @@ nux::Layout* Preview::BuildGridActionsLayout(dash::Preview::ActionPtrList action
   {
     nux::HLayout* actions_buffer_h = new nux::HLayout();
     actions_buffer_h->AddSpace(0, 1);
-    nux::HLayout* actions_layout_h = new nux::HLayout();
+    nux::HLayout* actions_layout_h = new TabIteratorHLayout(tab_iterator_);
     actions_layout_h->SetSpaceBetweenChildren(style.GetSpaceBetweenActions());
  
     for (uint j = 0; j < 2 && action_iter < actions.size(); j++, action_iter++)
@@ -141,10 +274,11 @@ nux::Layout* Preview::BuildGridActionsLayout(dash::Preview::ActionPtrList action
         dash::Preview::ActionPtr action = actions[action_iter];
 
         ActionButton* button = new ActionButton(action->id, action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
+        tab_iterator_->AddArea(button);
+        AddChild(button);
         button->SetFont(style.action_font());
         button->SetExtraHint(action->extra_text, style.action_extra_font());
-        AddChild(button);
-        button->click.connect(sigc::mem_fun(this, &Preview::OnActionActivated));
+        button->activate.connect(sigc::mem_fun(this, &Preview::OnActionActivated));
         buttons.push_back(button);
 
         actions_layout_h->AddView(button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
@@ -166,7 +300,7 @@ nux::Layout* Preview::BuildVerticalActionsLayout(dash::Preview::ActionPtrList ac
 
   nux::VLayout* actions_buffer_v = new nux::VLayout();
   actions_buffer_v->AddSpace(0, 1);
-  nux::VLayout* actions_layout_v = new nux::VLayout();
+  nux::VLayout* actions_layout_v = new TabIteratorVLayout(tab_iterator_);
   actions_layout_v->SetSpaceBetweenChildren(style.GetSpaceBetweenActions());
 
   uint action_iter = 0;
@@ -175,10 +309,11 @@ nux::Layout* Preview::BuildVerticalActionsLayout(dash::Preview::ActionPtrList ac
       dash::Preview::ActionPtr action = actions[action_iter++];
 
       ActionButton* button = new ActionButton(action->id, action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
+      tab_iterator_->AddArea(button);
+      AddChild(button);
       button->SetFont(style.action_font());
       button->SetExtraHint(action->extra_text, style.action_extra_font());
-      AddChild(button);
-      button->click.connect(sigc::mem_fun(this, &Preview::OnActionActivated));
+      button->activate.connect(sigc::mem_fun(this, &Preview::OnActionActivated));
       buttons.push_back(button);
 
       actions_layout_v->AddView(button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
@@ -217,6 +352,31 @@ void Preview::UpdateCoverArtImage(CoverArt* cover_art)
       request_close.emit();
     }
   });
+}
+
+nux::Area* Preview::FindKeyFocusArea(unsigned int key_symbol,
+                                      unsigned long x11_key_code,
+                                      unsigned long special_keys_state)
+{
+  nux::Area* tab_area = tab_iterator_->FindKeyFocusArea(key_symbol, x11_key_code, special_keys_state);
+  if (tab_area)
+  {
+    return tab_area;
+  }
+
+  return nullptr;
+}
+
+nux::Area* Preview::KeyNavIteration(nux::KeyNavDirection direction)
+{
+  return tab_iterator_->KeyNavIteration(direction);
+}
+
+void Preview::OnNavigateIn()
+{
+  nux::InputArea* default_focus = tab_iterator_->DefaultFocus();
+  if (default_focus)
+    nux::GetWindowCompositor().SetKeyFocusArea(default_focus);
 }
 
 }

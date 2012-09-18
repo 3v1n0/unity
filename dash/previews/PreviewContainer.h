@@ -77,6 +77,9 @@ public:
   bool AcceptKeyNavFocus();
 
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
+  nux::Area* FindKeyFocusArea(unsigned int key_symbol,
+                                      unsigned long x11_key_code,
+                                      unsigned long special_keys_state);
 
 protected:
   void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
