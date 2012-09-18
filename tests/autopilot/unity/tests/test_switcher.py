@@ -185,10 +185,10 @@ class SwitcherTests(SwitcherTestCase):
         self.switcher.cancel()
         self.assertThat(self.switcher.visible, Eventually(Equals(False)))
 
-    def test_switcher_appears_on_monitor_with_focused_window(self):
+    def test_switcher_appears_on_monitor_with_mouse(self):
         """Tests that the switches appears on the correct monitor.
 
-        This is defined as the monitor with a focused window.
+        This is defined as the monitor with the mouse.
 
         """
         # TODO - this test fails in multi-monitor setups. You can't use addCleanup
@@ -201,7 +201,7 @@ class SwitcherTests(SwitcherTestCase):
         charmap, calc, mahjongg = self.start_applications()
 
         for monitor in range(num_monitors):
-            self.screen_geo.drag_window_to_monitor(calc, monitor)
+            self.screen_geo.move_mouse_to_monitor(monitor)
             self.switcher.initiate()
             self.addCleanup(self.switcher.terminate)
             self.assertThat(self.switcher.controller.monitor, Eventually(Equals(monitor)))

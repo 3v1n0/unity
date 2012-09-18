@@ -95,7 +95,7 @@ public:
 
   /* nux draw wrapper */
   void paintDisplay();
-  void paintPanelShadow(const GLMatrix& matrix);
+  void paintPanelShadow(const CompRegion& clip);
   void setPanelShadowMatrix(const GLMatrix& matrix);
 
   void preparePaint (int ms);
@@ -312,7 +312,7 @@ private:
 
   bool   queryForShader ();
 
-  int dash_monitor_;
+  int overlay_monitor_;
   CompScreen::GrabHandle grab_index_;
   CompWindowList         fullscreen_windows_;
   bool                   painting_tray_;

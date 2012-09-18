@@ -60,6 +60,8 @@ public:
   void AddProperties(GVariantBuilder* builder);
 
   static previews::Preview::Ptr PreviewForModel(dash::Preview::Ptr model);  
+  
+  sigc::signal<void> request_close;
 
   virtual nux::Area* FindKeyFocusArea(unsigned int key_symbol,
                                       unsigned long x11_key_code,

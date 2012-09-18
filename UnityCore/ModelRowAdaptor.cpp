@@ -45,7 +45,14 @@ RowAdaptorBase& RowAdaptorBase::operator=(RowAdaptorBase const& other)
   return *this;
 }
 
-std::string RowAdaptorBase::GetStringAt(int position)
+void RowAdaptorBase::SetTarget(DeeModel* model, DeeModelIter* iter, DeeModelTag* tag)
+{
+  model_ = model;
+  iter_ = iter;
+  tag_ = tag;
+}
+
+std::string RowAdaptorBase::GetStringAt(int position) const
 {
   if (!model_ || !iter_)
     return "";
@@ -56,28 +63,28 @@ std::string RowAdaptorBase::GetStringAt(int position)
     return ""; // std::strings don't like null.
 }
 
-bool RowAdaptorBase::GetBoolAt(int position)
+bool RowAdaptorBase::GetBoolAt(int position) const
 {
   if (!model_ || !iter_)
     return 0;
   return dee_model_get_bool(model_, iter_, position);
 }
 
-int RowAdaptorBase::GetIntAt(int position)
+int RowAdaptorBase::GetIntAt(int position) const
 {
   if (!model_ || !iter_)
     return 0;
   return dee_model_get_int32(model_, iter_, position);
 }
 
-unsigned int RowAdaptorBase::GetUIntAt(int position)
+unsigned int RowAdaptorBase::GetUIntAt(int position) const
 {
   if (!model_ || !iter_)
     return 0;
   return dee_model_get_uint32(model_, iter_, position);
 }
 
-float RowAdaptorBase::GetFloatAt(int position)
+float RowAdaptorBase::GetFloatAt(int position) const
 {
   if (!model_ || !iter_)
     return 0.0;

@@ -32,7 +32,7 @@ namespace unity
 class IconLoader : public boost::noncopyable
 {
 public:
-  typedef std::function<void(std::string const&, unsigned, glib::Object<GdkPixbuf> const&)> IconLoaderCallback;
+  typedef std::function<void(std::string const&, int, int, glib::Object<GdkPixbuf> const&)> IconLoaderCallback;
 
   IconLoader();
   ~IconLoader();
@@ -45,19 +45,23 @@ public:
    */
 
   int LoadFromIconName(std::string const& icon_name,
-                       unsigned size,
+                       int max_width,
+                       int max_height,
                        IconLoaderCallback slot);
 
   int LoadFromGIconString(std::string const& gicon_string,
-                          unsigned size,
+                          int max_width,
+                          int max_height,
                           IconLoaderCallback slot);
 
   int LoadFromFilename(std::string const& filename,
-                       unsigned size,
+                       int max_width,
+                       int max_height,
                        IconLoaderCallback slot);
 
   int LoadFromURI(std::string const& uri,
-                  unsigned size,
+                  int max_width,
+                  int max_height,
                   IconLoaderCallback slot);
 
   void DisconnectHandle(int handle);

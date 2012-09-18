@@ -52,11 +52,13 @@ public:
   RowAdaptorBase(RowAdaptorBase const& other);
   RowAdaptorBase& operator=(RowAdaptorBase const& other);
 
-  std::string GetStringAt(int position);
-  bool GetBoolAt(int position);
-  int GetIntAt(int position);
-  unsigned int GetUIntAt(int position);
-  float GetFloatAt(int position);
+  std::string GetStringAt(int position) const;
+  bool GetBoolAt(int position) const;
+  int GetIntAt(int position) const;
+  unsigned int GetUIntAt(int position) const;
+  float GetFloatAt(int position) const;
+
+  void SetTarget(DeeModel* model, DeeModelIter* iter, DeeModelTag* tag);
 
   template<typename T>
   void set_renderer(T renderer);

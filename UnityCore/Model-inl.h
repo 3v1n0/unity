@@ -35,6 +35,9 @@ nux::logging::Logger _model_inl_logger("unity.dash.model");
 template<class RowAdaptor>
 Model<RowAdaptor>::Model()
   : model_type_(ModelType::REMOTE)
+  , cached_adaptor1_(nullptr, nullptr, nullptr)
+  , cached_adaptor2_(nullptr, nullptr, nullptr)
+  , cached_adaptor3_(nullptr, nullptr, nullptr)
 {
   Init();
 }
@@ -42,6 +45,9 @@ Model<RowAdaptor>::Model()
 template<class RowAdaptor>
 Model<RowAdaptor>::Model (ModelType model_type)
   : model_type_(model_type)
+  , cached_adaptor1_(nullptr, nullptr, nullptr)
+  , cached_adaptor2_(nullptr, nullptr, nullptr)
+  , cached_adaptor3_(nullptr, nullptr, nullptr)
 {
   Init();
 
@@ -118,22 +124,31 @@ Model<RowAdaptor>::~Model()
 template<class RowAdaptor>
 void Model<RowAdaptor>::OnRowAdded(DeeModel* model, DeeModelIter* iter)
 {
-  RowAdaptor it(model, iter, renderer_tag_);
-  row_added.emit(it);
+  // careful here - adding rows to the model inside the callback
+  // will invalidate the cached_adaptor!
+  // This needs to be used as a listener only!
+  cached_adaptor1_.SetTarget(model, iter, renderer_tag_);
+  row_added.emit(cached_adaptor1_);
 }
 
 template<class RowAdaptor>
 void Model<RowAdaptor>::OnRowChanged(DeeModel* model, DeeModelIter* iter)
 {
-  RowAdaptor it(model, iter, renderer_tag_);
-  row_changed.emit(it);
+  // careful here - changing rows inside the callback will invalidate
+  // the cached_adaptor!
+  // This needs to be used as a listener only!
+  cached_adaptor2_.SetTarget(model, iter, renderer_tag_);
+  row_changed.emit(cached_adaptor2_);
 }
 
 template<class RowAdaptor>
 void Model<RowAdaptor>::OnRowRemoved(DeeModel* model, DeeModelIter* iter)
 {
-  RowAdaptor it(model, iter, renderer_tag_);
-  row_removed.emit(it);
+  // careful here - removing rows from the model inside the callback
+  // will invalidate the cached_adaptor!
+  // This needs to be used as a listener only!
+  cached_adaptor3_.SetTarget(model, iter, renderer_tag_);
+  row_removed.emit(cached_adaptor3_);
 }
 
 template<class RowAdaptor>

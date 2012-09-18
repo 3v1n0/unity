@@ -59,6 +59,8 @@ public:
 
   void HideDash(bool restore_focus = true);
 
+  bool IsVisible() const;
+
 protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
@@ -104,7 +106,6 @@ private:
   sigc::connection screen_ungrabbed_slot_;
   glib::SignalManager sig_manager_;
   glib::TimeoutSeconds ensure_timeout_;
-  glib::SourceManager sources_;
   Animator timeline_animator_;
   UBusManager ubus_manager_;
   unsigned int dbus_owner_;
