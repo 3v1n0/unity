@@ -27,7 +27,6 @@
 #include "unity-shared/PluginAdapter.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UScreen.h"
-#include "unity-shared/ResizedInputWindowBaseWindow.h"
 
 namespace unity
 {
@@ -98,7 +97,7 @@ Controller::~Controller()
 
 void Controller::SetupWindow()
 {
-  window_ = new ResizedInputWindowBaseWindow(dash::window_title, [this](nux::Geometry const& geo)
+  window_ = new ResizingBaseWindow(dash::window_title, [this](nux::Geometry const& geo)
   {
     if (view_)
       return GetInputWindowGeometry();

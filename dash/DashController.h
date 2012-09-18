@@ -32,7 +32,7 @@
 #include "unity-shared/Animator.h"
 #include "unity-shared/Introspectable.h"
 #include "unity-shared/UBusWrapper.h"
-#include "unity-shared/ResizedInputWindowBaseWindow.h"
+#include "unity-shared/ResizingBaseWindow.h"
 
 namespace unity
 {
@@ -97,7 +97,7 @@ private:
   static void OnWindowConfigure(int width, int height, nux::Geometry& geo, void* data);
 
 private:
-  nux::ObjectPtr<ResizedInputWindowBaseWindow> window_;
+  nux::ObjectPtr<ResizingBaseWindow> window_;
   int monitor_;
 
   bool visible_;
