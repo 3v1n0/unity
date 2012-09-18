@@ -1431,7 +1431,7 @@ void UnityScreen::handleEvent(XEvent* event)
         if (overlay_monitor_ != monitor_with_mouse ||
             !geo_dash.IsInside(pt))
         {
-          ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST, g_variant_new_boolean(FALSE));
+          dash_controller_->HideDash(false);
         }
       }
 
@@ -1444,7 +1444,7 @@ void UnityScreen::handleEvent(XEvent* event)
         if (overlay_monitor_ != monitor_with_mouse ||
             !geo_hud.IsInside(pt))
         {
-          ubus_manager_.SendMessage(UBUS_HUD_CLOSE_REQUEST, g_variant_new_boolean(FALSE));
+          hud_controller_->HideHud(false);
         }
       }
       break;

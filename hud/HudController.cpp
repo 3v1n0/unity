@@ -26,7 +26,6 @@
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UScreen.h"
-#include "unity-shared/ResizedInputWindowBaseWindow.h"
 
 #include "config.h"
 #include <libbamf/libbamf.h>
@@ -89,7 +88,7 @@ Controller::Controller(std::function<AbstractView*(void)> const& function)
 
 void Controller::SetupWindow()
 {
-  window_.Adopt(new ResizedInputWindowBaseWindow("Hud", [this](nux::Geometry const& geo)
+  window_.Adopt(new ResizingBaseWindow("Hud", [this](nux::Geometry const& geo)
   {
     if (view_)
       return GetInputWindowGeometry();

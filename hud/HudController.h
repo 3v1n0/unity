@@ -32,7 +32,7 @@
 
 #include "unity-shared/Animator.h"
 #include "unity-shared/UBusWrapper.h"
-#include "unity-shared/ResizedInputWindowBaseWindow.h"
+#include "unity-shared/ResizingBaseWindow.h"
 #include "HudView.h"
 
 namespace unity
@@ -100,7 +100,7 @@ private:
   void OnQueriesFinished(Hud::Queries queries);
 
 private:
-  nux::ObjectPtr<ResizedInputWindowBaseWindow> window_;
+  nux::ObjectPtr<ResizingBaseWindow> window_;
   UBusManager ubus;
   glib::SignalManager sig_manager_;
   Hud hud_service_;
