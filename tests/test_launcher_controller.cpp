@@ -828,6 +828,162 @@ TEST_F(TestLauncherController, ResetIconPriorities)
   EXPECT_EQ(model->IconIndex(fav), ++icon_index);
 }
 
+TEST_F(TestLauncherController, GetLastIconPriorityUnSticky)
+{
+  lc.ClearModel();
+  lc.Impl()->device_section_ = MockDeviceLauncherSection(3);
+  auto const& device_icons = lc.Impl()->device_section_.GetIcons();
+  auto const& last_device = *(device_icons.rbegin());
+
+  favorite_store.SetFavorites({ places::DEVICES_URI,
+                                FavoriteStore::URI_PREFIX_APP + app::SW_CENTER });
+
+  lc.Impl()->SetupIcons();
+  lc.DisconnectSignals();
+
+  int last_priority = lc.Impl()->GetLastIconPriority<VolumeLauncherIcon>();
+  EXPECT_EQ(last_priority, last_device->SortPriority());
+}
+
+TEST_F(TestLauncherController, GetLastIconPriorityUnStickyWithAllStickyIcons)
+{
+  lc.ClearModel();
+  lc.Impl()->device_section_ = MockDeviceLauncherSection(3);
+  auto const& device_icons = lc.Impl()->device_section_.GetIcons();
+  auto const& last_device = *(device_icons.rbegin());
+
+  favorite_store.SetFavorites({ places::DEVICES_URI,
+                                FavoriteStore::URI_PREFIX_APP + app::SW_CENTER });
+
+  lc.Impl()->SetupIcons();
+  lc.DisconnectSignals();
+
+  for (auto const& device : device_icons)
+    device->Stick(false);
+
+  int last_priority = lc.Impl()->GetLastIconPriority<VolumeLauncherIcon>();
+  EXPECT_EQ(last_priority, last_device->SortPriority());
+}
+
+TEST_F(TestLauncherController, GetLastIconPriorityUnStickyWithSomeStickyIcons)
+{
+  lc.ClearModel();
+  lc.Impl()->device_section_ = MockDeviceLauncherSection(3);
+  auto const& device_icons = lc.Impl()->device_section_.GetIcons();
+  auto const& first_device = *(std::next(device_icons.rbegin()));
+  auto const& last_device = *(device_icons.rbegin());
+
+  favorite_store.SetFavorites({ places::DEVICES_URI,
+                                FavoriteStore::URI_PREFIX_APP + app::SW_CENTER });
+
+  lc.Impl()->SetupIcons();
+  lc.DisconnectSignals();
+
+  last_device->Stick(false);
+
+  int last_priority = lc.Impl()->GetLastIconPriority<VolumeLauncherIcon>();
+  EXPECT_EQ(last_priority, first_device->SortPriority());
+}
+
+TEST_F(TestLauncherController, GetLastIconPriorityUnStickyWithNoIcons)
+{
+  lc.ClearModel();
+  lc.Impl()->device_section_ = MockDeviceLauncherSection(0);
+  lc.Impl()->SetupIcons();
+  lc.DisconnectSignals();
+
+  int last_priority = lc.Impl()->GetLastIconPriority<VolumeLauncherIcon>();
+  EXPECT_EQ(last_priority, std::numeric_limits<int>::min());
+}
+
+TEST_F(TestLauncherController, GetLastIconPriorityUnStickyWithNoIconsAndUri)
+{
+  lc.ClearModel();
+  lc.Impl()->device_section_ = MockDeviceLauncherSection(0);
+
+  favorite_store.SetFavorites({ places::DEVICES_URI,
+                                FavoriteStore::URI_PREFIX_APP + app::SW_CENTER });
+  lc.Impl()->SetupIcons();
+
+  auto first_icon = lc.Impl()->GetIconByUri(FavoriteStore::URI_PREFIX_APP + app::SW_CENTER);
+
+  int last_priority = lc.Impl()->GetLastIconPriority<VolumeLauncherIcon>(places::DEVICES_URI);
+  EXPECT_EQ(last_priority, first_icon->SortPriority() - 1);
+
+  favorite_store.SetFavorites({ FavoriteStore::URI_PREFIX_APP + app::SW_CENTER,
+                                places::DEVICES_URI });
+  favorite_store.reordered.emit();
+
+  first_icon = lc.Impl()->GetIconByUri(FavoriteStore::URI_PREFIX_APP + app::SW_CENTER);
+
+  last_priority = lc.Impl()->GetLastIconPriority<VolumeLauncherIcon>(places::DEVICES_URI);
+  EXPECT_EQ(last_priority, first_icon->SortPriority());
+}
+
+TEST_F(TestLauncherController, GetLastIconPrioritySticky)
+{
+  lc.ClearModel();
+  lc.Impl()->device_section_ = MockDeviceLauncherSection(3);
+  lc.Impl()->SetupIcons();
+  lc.DisconnectSignals();
+
+  auto const& device_icons = lc.Impl()->device_section_.GetIcons();
+  auto const& first_device = *(device_icons.begin());
+
+  int last_priority = lc.Impl()->GetLastIconPriority<VolumeLauncherIcon>("", true);
+  EXPECT_EQ(last_priority, first_device->SortPriority() - 1);
+}
+
+TEST_F(TestLauncherController, GetLastIconPriorityStickyWithAllStickyIcons)
+{
+  lc.ClearModel();
+  lc.Impl()->device_section_ = MockDeviceLauncherSection(3);
+  auto const& device_icons = lc.Impl()->device_section_.GetIcons();
+  auto const& last_device = *(device_icons.rbegin());
+
+  favorite_store.SetFavorites({ places::DEVICES_URI,
+                                FavoriteStore::URI_PREFIX_APP + app::SW_CENTER });
+
+  lc.Impl()->SetupIcons();
+  lc.DisconnectSignals();
+
+  for (auto const& device : device_icons)
+    device->Stick(false);
+
+  int last_priority = lc.Impl()->GetLastIconPriority<VolumeLauncherIcon>("", true);
+  EXPECT_EQ(last_priority, last_device->SortPriority());
+}
+
+TEST_F(TestLauncherController, GetLastIconPriorityStickyWithSomeStickyIcons)
+{
+  lc.ClearModel();
+  lc.Impl()->device_section_ = MockDeviceLauncherSection(3);
+  auto const& device_icons = lc.Impl()->device_section_.GetIcons();
+  auto const& first_device = *(std::next(device_icons.rbegin()));
+
+  favorite_store.SetFavorites({ places::DEVICES_URI,
+                                FavoriteStore::URI_PREFIX_APP + app::SW_CENTER });
+
+  lc.Impl()->SetupIcons();
+  lc.DisconnectSignals();
+
+  first_device->Stick(false);
+
+  int last_priority = lc.Impl()->GetLastIconPriority<VolumeLauncherIcon>("", true);
+  EXPECT_EQ(last_priority, first_device->SortPriority());
+}
+
+TEST_F(TestLauncherController, GetLastIconPriorityStickyWithNoIcons)
+{
+  lc.ClearModel();
+  lc.Impl()->device_section_ = MockDeviceLauncherSection(0);
+  lc.Impl()->SetupIcons();
+  lc.DisconnectSignals();
+
+  int last_priority = lc.Impl()->GetLastIconPriority<VolumeLauncherIcon>();
+  EXPECT_EQ(last_priority, std::numeric_limits<int>::min());
+}
+
 TEST_F(TestLauncherController, LauncherAddRequestApplicationAdd)
 {
   auto const& model = lc.Impl()->model_;
