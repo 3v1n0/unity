@@ -43,6 +43,7 @@ struct _GMockVolume {
   char *name;
   GIcon *icon;
   char *uuid;
+  char *label;
   GMount *mount;
 };
 
@@ -56,6 +57,7 @@ GMockVolume * g_mock_volume_new       ();
 void          g_mock_volume_set_can_eject (GMockVolume* volume, gboolean can_eject);
 void          g_mock_volume_set_name  (GMockVolume *volume, const char *name);
 void          g_mock_volume_set_icon  (GMockVolume *volume, GIcon *icon);
+void          g_mock_volume_set_label  (GMockVolume *volume, const char *label);
 void          g_mock_volume_set_uuid  (GMockVolume *volume, const char *uuid);
 void          g_mock_volume_set_mount (GMockVolume *volume, GMount *mount);
 
