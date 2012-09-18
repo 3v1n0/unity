@@ -48,8 +48,10 @@ PreviewNavigator::PreviewNavigator(Orientation direction, NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , direction_(direction)
   , texture_(nullptr)
+  , visual_state_(VisualState::NORMAL)
 {
   SetupViews();
+  UpdateTexture();
 }
 
 void PreviewNavigator::SetEnabled(bool enabled)
@@ -138,11 +140,45 @@ void PreviewNavigator::SetupViews()
   if (texture_)
   {
     AddChild(texture_);
-    texture_->mouse_click.connect([&](int, int, unsigned long, unsigned long) { activated.emit(); });
     layout_->AddView(texture_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);    
+
+    texture_->mouse_click.connect([&](int, int, unsigned long, unsigned long) { activated.emit(); });
+    texture_->mouse_enter.connect(sigc::mem_fun(this, &PreviewNavigator::TexRecvMouseEnter));
+    texture_->mouse_leave.connect(sigc::mem_fun(this, &PreviewNavigator::TexRecvMouseLeave));
   }
 
   layout_->AddSpace(0, 1);
+}
+
+void PreviewNavigator::TexRecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  visual_state_ = VisualState::ACTIVE;
+  UpdateTexture();
+  QueueDraw();
+}
+
+void PreviewNavigator::TexRecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  visual_state_ = VisualState::NORMAL;
+  UpdateTexture();
+  QueueDraw();
+}
+
+void PreviewNavigator::UpdateTexture()
+{
+  if (!texture_)
+    return;
+
+  switch (visual_state_)
+  {
+    case VisualState::ACTIVE:
+      texture_->SetOpacity(1.0);
+      break;
+    case VisualState::NORMAL:
+    default:
+      texture_->SetOpacity(0.2);
+      break;
+  }
 }
 
 

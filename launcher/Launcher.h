@@ -335,7 +335,6 @@ private:
 
   bool _hovered;
   bool _hidden;
-  bool _scroll_limit_reached;
   bool _render_drag_window;
   bool _shortcuts_shown;
   bool _data_checked;
@@ -345,17 +344,12 @@ private:
   bool _dash_is_open;
   bool _hud_is_open;
 
-  BacklightMode _backlight_mode;
-
   float _folded_angle;
   float _neg_folded_angle;
   float _folded_z_distance;
-  float _last_delta_y;
   float _edge_overcome_pressure;
 
   LauncherActionState _launcher_action_state;
-  LaunchAnimation _launch_animation;
-  UrgentAnimation _urgent_animation;
 
   int _space_between_icons;
   int _icon_image_size;

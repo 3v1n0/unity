@@ -88,19 +88,25 @@ Controller::Controller(std::function<AbstractView*(void)> const& function)
 
 void Controller::SetupWindow()
 {
-  window_.Adopt(new ResizingBaseWindow("Hud", [this](nux::Geometry const& geo)
+  // Since BaseWindow is a View it is initially unowned.  This means that the first
+  // reference that is taken grabs ownership of the pointer.  Since the smart pointer
+  // references it, it becomes the owner, so no need to adopt the pointer here.
+  window_ = new ResizingBaseWindow("Hud", [this](nux::Geometry const& geo)
   {
     if (view_)
       return GetInputWindowGeometry();
     return geo;
-  }));
+  });
   window_->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
   window_->SetConfigureNotifyCallback(&Controller::OnWindowConfigure, this);
   window_->ShowWindow(false);
   window_->SetOpacity(0.0f);
-  window_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &Controller::OnMouseDownOutsideWindow));
-  
-  /* FIXME - first time we load our windows there is a race that causes the input window not to actually get input, this side steps that by causing an input window show and hide before we really need it. */
+  window_->mouse_down_outside_pointer_grab_area.connect(
+    sigc::mem_fun(this, &Controller::OnMouseDownOutsideWindow));
+
+  /* FIXME - first time we load our windows there is a race that causes the
+   * input window not to actually get input, this side steps that by causing
+   * an input window show and hide before we really need it. */
   auto wm = WindowManager::Default();
   wm->saveInputFocus ();
   window_->EnableInputWindow(true, "Hud", true, false);

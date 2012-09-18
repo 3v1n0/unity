@@ -77,6 +77,9 @@ public:
   bool AcceptKeyNavFocus();
 
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
+  nux::Area* FindKeyFocusArea(unsigned int key_symbol,
+                                      unsigned long x11_key_code,
+                                      unsigned long special_keys_state);
 
 protected:
   void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
@@ -84,7 +87,8 @@ protected:
 
   bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
   void OnKeyDown(unsigned long event_type, unsigned long event_keysym, unsigned long event_state, const TCHAR* character, unsigned short key_repeat_count);
-
+  void OnMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  
 private:
   void SetupViews();
 

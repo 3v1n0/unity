@@ -53,10 +53,17 @@ public:
   void AddProperties(GVariantBuilder*);
 
   sigc::signal<void> activated;
+  
+  virtual bool AcceptKeyNavFocus() { return false; }
 
 private:
   virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);
+
+  virtual void TexRecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  virtual void TexRecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags);
+
+  void UpdateTexture();
 
   void SetupViews();
 
@@ -64,6 +71,13 @@ private:
   const Orientation direction_;
   nux::Layout* layout_;
   IconTexture* texture_;
+
+  enum class VisualState
+  {
+    NORMAL,
+    ACTIVE
+  };
+  VisualState visual_state_; 
 };
 
 } // namespace previews

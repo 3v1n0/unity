@@ -33,7 +33,7 @@ const float EXPAND_DEFAULT_ICON_OPACITY = 1.0f;
 const int EXPANDER_LAYOUT_SPACE_BETWEEN_CHILDREN = 8;
 
 // font
-const char* const FONT_EXPANDER_LABEL = "Ubuntu Bold 13"; // 17px = 13
+const char* const FONT_EXPANDER_LABEL = "Ubuntu 13"; // 17px = 13
 
 class ExpanderView : public nux::View
 {
