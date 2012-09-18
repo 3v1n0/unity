@@ -200,7 +200,7 @@ void LensView::SetupViews(nux::Area* show_filters)
   scroll_view_->EnableHorizontalScrollBar(false);
   layout_->AddView(scroll_view_);
 
-  scroll_view_->OnGeometryChanged.connect([this] (nux::Area *area, nux::Geometry& geo)
+  scroll_view_->geometry_changed.connect([this] (nux::Area *area, nux::Geometry& geo)
   {
     CheckScrollBarState();
   });
