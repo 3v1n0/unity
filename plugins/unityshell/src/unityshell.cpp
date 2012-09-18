@@ -114,7 +114,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , screen(screen)
   , cScreen(CompositeScreen::get(screen))
   , gScreen(GLScreen::get(screen))
-  //, animation_controller_(tick_source_)
   , debugger_(this)
   , enable_shortcut_overlay_(true)
   , needsRelayout(false)
@@ -1244,10 +1243,6 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
 void UnityScreen::preparePaint(int ms)
 {
   cScreen->preparePaint(ms);
-
-  // Emit the current time throught the tick_source.  This moves any running
-  // animations along their path.
-  // tick_source_.tick(g_get_monotonic_time());
 
   for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
     wi->HandleAnimations (ms);

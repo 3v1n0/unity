@@ -136,7 +136,6 @@ void LensBar::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
     }
 
     nux::GetPainter().RenderSinglePaintLayer(graphics_engine, bg_layer_->GetGeometry(), bg_layer_.get());
-    //nux::GetPainter().PushDrawLayer(graphics_engine, bg_layer_->GetGeometry(), bg_layer_.get());
   }
   else if (!IsFullRedraw())
   {

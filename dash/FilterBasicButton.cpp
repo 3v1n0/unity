@@ -71,8 +71,6 @@ void FilterBasicButton::Init()
   SetAcceptKeyNavFocusOnMouseDown(false);
   SetAcceptKeyNavFocusOnMouseEnter(true);
 
-  //SetRedirectRenderingToTexture(true);
-  //SetCopyPreviousFboTexture(false);
   clear_before_draw_ = true;
 
   key_nav_focus_change.connect([&] (nux::Area*, bool, nux::KeyNavDirection)

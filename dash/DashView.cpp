@@ -213,10 +213,6 @@ void DashView::BuildPreview(Preview::Ptr model)
       nux::ObjectPtr<nux::IOpenGLBaseTexture> src_texture;
 
       layout_copy_ = src_texture = layout_->BackupTexture();
-      // nux::GetGraphicsDisplay()->GetGraphicsEngine()->QRP_GetCopyTexture(
-      //   src_texture->GetWidth(), src_texture->GetHeight(),
-      //   layout_copy_, src_texture,
-      //   texxform, nux::color::White);
 
       animation_.Stop();
       fade_out_connection_.disconnect();
@@ -353,7 +349,6 @@ void DashView::SetupViews()
   layout_->SetTopAndBottomPadding(style.GetHSeparatorSize(), 0);
   SetLayout(layout_);
   layout_->SetRedirectRenderingToTexture(true);
-  //layout_->SetCopyPreviousFboTexture(false);
 
   content_layout_ = new DashLayout(NUX_TRACKER_LOCATION);
   content_layout_->SetTopAndBottomPadding(style.GetDashViewTopPadding(), 0);
@@ -537,8 +532,6 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
 
   if (preview_displaying_)
   {
-    //layout_->ProcessDraw(graphics_engine, force_draw);
-
     // Progressively reveal the preview.
     nux::Geometry preview_clip_geo = preview_container_->GetGeometry();
     preview_clip_geo.y = (preview_clip_geo.y + preview_clip_geo.height)/2.0f - 
@@ -713,7 +706,7 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
           int final_y = layout_->GetY() - (opening_row_y_) - position_offset;
 
           texxform.uoffset = 0.0f;
-          texxform.voffset = 0.0f; //(opening_row_y_ - layout_->GetY())/(float)layout_->GetHeight();
+          texxform.voffset = 0.0f;
           texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
 
           graphics_engine.QRP_TexDesaturate(

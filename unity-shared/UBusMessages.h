@@ -83,7 +83,7 @@
 #define UBUS_RESULT_VIEW_KEYNAV_CHANGED "RESULT_VIEW_KEYNAV_CHANGED"
 
 // for communicating positions to the preview state machine (iiii)
-// (split y coord in absolute geometry, results to the left, results to the right)
+// (split y coord in absolute geometry, height of row where icon resides, results to the left, results to the right)
 #define UBUS_DASH_PREVIEW_INFO_PAYLOAD "DASH_PREVIEW_INFO_PAYLOAD"
 
 // called when previews wish to navigate left/right or close (is)
