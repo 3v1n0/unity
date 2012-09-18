@@ -38,7 +38,7 @@ public:
   void UpdateCount();
   int getDuration();
   sigc::signal<void> DurationChanged;
-  
+
 private:
   void SetDuration();
 
@@ -51,7 +51,7 @@ private:
   glib::Signal<void, GSettings*, gchar* > _minimize_speed_threshold_changed;
   glib::Signal<void, GSettings*, gchar* > _minimize_slow_duration_changed;
   glib::Signal<void, GSettings*, gchar* > _minimize_fast_duration_changed;
-  int mDuration;
+  int _duration;
 };
 
 #endif // WINDOWMINIMIZESPEEDCONTROLLER_H

@@ -116,6 +116,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   , _data_checked(false)
   , _steal_drag(false)
   , _drag_edge_touching(false)
+  , _initial_drag_animation(false)
   , _dash_is_open(false)
   , _hud_is_open(false)
   , _folded_angle(1.0f)
