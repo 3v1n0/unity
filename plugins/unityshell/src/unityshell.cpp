@@ -898,6 +898,33 @@ void UnityScreen::leaveShowDesktopMode (CompWindow *w)
   }
 }
 
+bool UnityScreen::DoesPointIntersectUnityGeos(nux::Point const& pt)
+{
+  auto launchers = launcher_controller_->launchers();
+  for (auto launcher : launchers)
+  {
+    nux::Geometry hud_geo = launcher->GetAbsoluteGeometry();
+
+    if (launcher->Hidden())
+      continue;
+
+    if (hud_geo.IsInside(pt))
+    {
+      return true;
+    }
+  }
+
+  for (nux::Geometry &panel_geo : panel_controller_->GetGeometries ())
+  {
+    if (panel_geo.IsInside(pt))
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void UnityWindow::enterShowDesktop ()
 {
   if (!mShowdesktopHandler)
@@ -1424,12 +1451,10 @@ void UnityScreen::handleEvent(XEvent* event)
 
       if (dash_controller_->IsVisible())
       {
-        int monitor_with_mouse = UScreen::GetDefault()->GetMonitorWithMouse();
         nux::Point pt(event->xbutton.x_root, event->xbutton.y_root);
-        nux::Geometry geo_dash = dash_controller_->GetInputWindowGeometry();
+        nux::Geometry dash_geo = dash_controller_->GetInputWindowGeometry();
 
-        if (overlay_monitor_ != monitor_with_mouse ||
-            !geo_dash.IsInside(pt))
+        if (!dash_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt))
         {
           dash_controller_->HideDash(false);
         }
@@ -1437,12 +1462,10 @@ void UnityScreen::handleEvent(XEvent* event)
 
       if (hud_controller_->IsVisible())
       {
-        int monitor_with_mouse = UScreen::GetDefault()->GetMonitorWithMouse();
         nux::Point pt(event->xbutton.x_root, event->xbutton.y_root);
-        nux::Geometry geo_hud = hud_controller_->GetInputWindowGeometry();
+        nux::Geometry hud_geo = hud_controller_->GetInputWindowGeometry();
 
-        if (overlay_monitor_ != monitor_with_mouse ||
-            !geo_hud.IsInside(pt))
+        if (!hud_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt))
         {
           hud_controller_->HideHud(false);
         }
@@ -2684,6 +2707,7 @@ CompPoint UnityWindow::tryNotIntersectUI(CompPoint& pos)
   pos.setY(result.y);
   return pos;
 }
+
 
 bool UnityWindow::place(CompPoint& pos)
 {
