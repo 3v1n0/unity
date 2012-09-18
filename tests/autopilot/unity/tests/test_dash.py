@@ -438,7 +438,7 @@ class DashKeyboardFocusTests(DashTestCase):
 
     def test_keep_focus_on_application_opens(self):
         """The Dash must keep key focus as well as stay open if an app gets opened from an external source. """
-        
+
         self.dash.ensure_visible()
         self.addCleanup(self.hud.ensure_hidden)
 
@@ -679,7 +679,7 @@ class PreviewInvocationTests(DashTestCase):
         category = lens.get_category_by_name("Songs")
         # Incase there was no music ever played we skip the test instead
         # of failing.
-        if category is None:
+        if category is None or not category.is_visible:
             self.skipTest("This lens is probably empty")
 
         results = category.get_results()
@@ -881,7 +881,7 @@ class DashCrossMonitorsTests(DashTestCase):
         self.assertThat(self.dash.ideal_monitor, Eventually(Equals(current_monitor)))
 
     def test_dash_close_on_cross_monitor_click(self):
-        """Dash must close when clicking on a window in a different screen."""  
+        """Dash must close when clicking on a window in a different screen."""
 
         self.addCleanup(self.dash.ensure_hidden)
 
@@ -892,5 +892,5 @@ class DashCrossMonitorsTests(DashTestCase):
             self.screen_geo.move_mouse_to_monitor(monitor+1)
             sleep(.5)
             self.mouse.click()
-            
+
             self.assertThat(self.dash.visible, Eventually(Equals(False)))
