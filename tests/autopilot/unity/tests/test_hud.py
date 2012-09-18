@@ -12,7 +12,7 @@ from __future__ import absolute_import
 from autopilot.matchers import Eventually
 from autopilot.emulators.X11 import ScreenGeometry
 from autopilot.testcase import multiply_scenarios
-from os import remove
+from os import remove, environ
 from os.path import exists
 from tempfile import mktemp
 from testtools.matchers import (
@@ -63,6 +63,8 @@ class HudBehaviorTests(HudTestsBase):
     def setUp(self):
         super(HudBehaviorTests, self).setUp()
 
+        if not environ.get('UBUNTU_MENUPROXY', ''):
+            self.patch_environment('UBUNTU_MENUPROXY', 'libappmenu.so')
         self.hud_monitor = self.screen_geo.get_primary_monitor()
         self.screen_geo.move_mouse_to_monitor(self.hud_monitor)
 
@@ -179,7 +181,6 @@ class HudBehaviorTests(HudTestsBase):
         self.keyboard.type("0")
         self.keyboard.type(" ")
         self.keyboard.type("1")
-        sleep(5)
 
         self.hud.ensure_visible()
 
