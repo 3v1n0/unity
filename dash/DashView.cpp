@@ -117,7 +117,12 @@ DashView::DashView()
   home_lens_->search_finished.connect(sigc::mem_fun(this, &DashView::OnGlobalSearchFinished));
   lens_bar_->Activate("home.lens");
 
-  bghash_.RefreshColor();
+  // We are interested in the color of the desktop background.
+  ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &DashView::OnBGColorChanged));
+
+  // request the latest colour from bghash
+  ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
+
 }
 
 DashView::~DashView()
@@ -125,6 +130,15 @@ DashView::~DashView()
   // Do this explicitely, otherwise dee will complain about invalid access
   // to the lens models
   RemoveLayout();
+}
+
+void DashView::OnBGColorChanged(GVariant *data)
+{
+  double red = 0.0f, green = 0.0f, blue = 0.0f, alpha = 0.0f;
+
+  g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
+  background_color_ = nux::Color(red, green, blue, alpha);
+  QueueDraw();
 }
 
 void DashView::SetMonitorOffset(int x, int y)
@@ -574,7 +588,7 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
     float ghost_opacity = 0.25f;    
     float tint_factor = 1.2f;
     float saturation_ref = 0.4f;
-    nux::Color bg_color = bghash_.CurrentColor();
+    nux::Color bg_color = background_color_;
 
     int position_offset = 40;
 

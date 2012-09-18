@@ -84,7 +84,7 @@ protected:
 private:
   void SetupViews();
   void SetupUBusConnections();
-
+  void OnBGColorChanged(GVariant *data);
   nux::Geometry GetBestFitGeometry(nux::Geometry const& for_geo);
 
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
@@ -176,7 +176,7 @@ private:
   sigc::connection fade_in_connection_;
   sigc::connection fade_out_connection_;
 
-  unity::BGHash bghash_;
+  nux::Color background_color_;
 };
 
 

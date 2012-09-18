@@ -242,7 +242,10 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      wt->RedrawRequested.connect(sigc::mem_fun(this, &UnityScreen::onRedrawRequested));
 
-     _bghash = new BGHash();
+    // _bghash is a pointer. We don't want it to be created before Nux system has had a chance
+    // to start. BGHash relies on animations. Nux animation system starts after the WindowThread
+    // has been created.
+    _bghash = new BGHash();
 
      unity_a11y_init(wt.get());
 
