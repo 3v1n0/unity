@@ -52,10 +52,9 @@ Controller::Controller(std::function<AbstractView*(void)> const& function)
   , monitor_index_(0)
   , view_function_(function)
 {
-  SetupRelayoutCallbacks();
   LOG_DEBUG(logger) << "hud startup";
   SetupWindow();
-  UScreen::GetDefault()->changed.connect([&] (int, std::vector<nux::Geometry>&) { Relayout(); });
+  UScreen::GetDefault()->changed.connect([&] (int, std::vector<nux::Geometry>&) { Relayout(true); });
 
   ubus.RegisterInterest(UBUS_HUD_CLOSE_REQUEST, sigc::mem_fun(this, &Controller::OnExternalHideHud));
 
@@ -132,17 +131,9 @@ void Controller::SetupHudView()
   view_->search_activated.connect(sigc::mem_fun(this, &Controller::OnSearchActivated));
   view_->query_activated.connect(sigc::mem_fun(this, &Controller::OnQueryActivated));
   view_->query_selected.connect(sigc::mem_fun(this, &Controller::OnQuerySelected));
-  view_->layout_changed.connect(sigc::mem_fun(this, &Controller::Relayout));
+  view_->layout_changed.connect(sigc::bind(sigc::mem_fun(this, &Controller::Relayout), nullptr));
   // Add to the debug introspection.
   AddChild(view_);
-}
-
-void Controller::SetupRelayoutCallbacks()
-{
-  // GdkScreen* screen = gdk_screen_get_default();
-  // auto relayout_cb = sigc::mem_fun(this, &Controller::Relayout);
-  // sig_manager_.Add<void, GdkScreen*>(screen, "monitors-changed", relayout_cb);
-  // sig_manager_.Add<void, GdkScreen*>(screen, "size-changed", relayout_cb);
 }
 
 int Controller::GetIdealMonitor()
@@ -231,10 +222,15 @@ nux::Geometry Controller::GetIdealWindowGeometry()
   return geo;
 }
 
-void Controller::Relayout()
+void Controller::Relayout(bool check_monitor)
 {
   EnsureHud();
-  nux::Geometry const& geo = GetInputWindowGeometry();
+
+  if (check_monitor)
+  {
+    monitor_index_ = CLAMP(GetIdealMonitor(), 0, static_cast<int>(UScreen::GetDefault()->GetMonitors().size()-1));
+  }
+  nux::Geometry const& geo = GetIdealWindowGeometry();
 
   view_->Relayout();
   window_->SetGeometry(geo);

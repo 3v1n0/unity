@@ -70,12 +70,11 @@ private:
   void EnsureDash();
   void SetupWindow();
   void SetupDashView();
-  void SetupRelayoutCallbacks();
   void RegisterUBusInterests();
 
   nux::Geometry GetIdealWindowGeometry();
   int GetIdealMonitor();
-  void Relayout(GdkScreen*screen=NULL);
+  void Relayout(bool check_monitor =false);
 
   void OnMouseDownOutsideWindow(int x, int y, unsigned long bflags, unsigned long kflags);
   void OnScreenUngrabbed();
@@ -105,7 +104,6 @@ private:
   DashView* view_;
 
   sigc::connection screen_ungrabbed_slot_;
-  glib::SignalManager sig_manager_;
   glib::TimeoutSeconds ensure_timeout_;
   Animator timeline_animator_;
   UBusManager ubus_manager_;

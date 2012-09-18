@@ -71,7 +71,6 @@ private:
   void EnsureHud();
   void SetupWindow();
   void SetupHudView();
-  void SetupRelayoutCallbacks();
   void RegisterUBusInterests();
   void SetIcon(std::string const& icon_name);
 
@@ -79,7 +78,7 @@ private:
   bool IsLockedToLauncher(int monitor);
 
   nux::Geometry GetIdealWindowGeometry();
-  void Relayout();
+  void Relayout(bool check_monitor =false);
 
   void OnMouseDownOutsideWindow(int x, int y, unsigned long bflags, unsigned long kflags);
   void OnScreenUngrabbed();

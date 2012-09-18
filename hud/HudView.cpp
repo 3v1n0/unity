@@ -170,7 +170,6 @@ void View::ProcessGrowShrink()
     layout_changed.emit();
     timeline_idle_.reset();
     timeline_animating_ = false;
-    return;
   }
   else
   {

@@ -66,13 +66,13 @@ Controller::Controller()
   , timeline_animator_(90)
   , dbus_connect_cancellable_(g_cancellable_new())
 {
-  SetupRelayoutCallbacks();
   RegisterUBusInterests();
 
   ensure_timeout_.Run([&]() { EnsureDash(); return false; });
   timeline_animator_.animation_updated.connect(sigc::mem_fun(this, &Controller::OnViewShowHideFrame));
 
   SetupWindow();
+  UScreen::GetDefault()->changed.connect([&] (int, std::vector<nux::Geometry>&) { Relayout(true); });
 
   Settings::Instance().changed.connect([&]()
   {
@@ -132,14 +132,6 @@ void Controller::SetupDashView()
   window_->UpdateInputWindowGeometry();
 
   ubus_manager_.UnregisterInterest(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST);
-}
-
-void Controller::SetupRelayoutCallbacks()
-{
-  GdkScreen* screen = gdk_screen_get_default();
-  auto relayout_cb = sigc::mem_fun(this, &Controller::Relayout);
-  sig_manager_.Add<void, GdkScreen*>(screen, "monitors-changed", relayout_cb);
-  sig_manager_.Add<void, GdkScreen*>(screen, "size-changed", relayout_cb);
 }
 
 void Controller::RegisterUBusInterests()
@@ -225,9 +217,15 @@ nux::Geometry Controller::GetIdealWindowGeometry()
                         monitor_geo.height - panel_style.panel_height);
 }
 
-void Controller::Relayout(GdkScreen*screen)
+void Controller::Relayout(bool check_monitor)
 {
   EnsureDash();
+
+  if (check_monitor)
+  {
+    monitor_ = CLAMP(GetIdealMonitor(), 0, static_cast<int>(UScreen::GetDefault()->GetMonitors().size()-1));
+    printf("relayout on monitor:%d, monitor count:%d\n", monitor_, static_cast<int>(UScreen::GetDefault()->GetMonitors().size()));
+  }
 
   nux::Geometry geo = GetIdealWindowGeometry();
   view_->Relayout();
