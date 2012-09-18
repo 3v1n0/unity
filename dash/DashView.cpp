@@ -542,7 +542,7 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
 
   if (preview_displaying_)
   {
-    layout_->ProcessDraw(graphics_engine, force_draw);
+    //layout_->ProcessDraw(graphics_engine, force_draw);
 
     // Progressively reveal the preview.
     nux::Geometry preview_clip_geo = preview_container_->GetGeometry();

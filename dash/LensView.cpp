@@ -164,8 +164,6 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
     nux::Geometry focused_pos;
     g_variant_get (data, "(iiii)", &focused_pos.x, &focused_pos.y, &focused_pos.width, &focused_pos.height);
 
-    //printf("item to jump to:%d %d\n", focused_pos.x, focused_pos.y);
-
     for (auto category : categories_)
     {
       if (category->GetLayout() != nullptr)
@@ -180,7 +178,6 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
           focused_pos.y += child->GetGeometry().y - 30;
           focused_pos.height += 30;
           scroll_view_->ScrollToPosition(focused_pos);
-          //printf("jump to:%d %d\n", focused_pos.x, focused_pos.y);
           break;
         }
       }
