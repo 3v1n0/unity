@@ -27,12 +27,12 @@
 #include <NuxCore/Property.h>
 #include <NuxGraphics/GraphicsEngine.h>
 #include <Nux/Nux.h>
-#include <Nux/BaseWindow.h>
 
 #include "DashView.h"
 #include "unity-shared/Animator.h"
 #include "unity-shared/Introspectable.h"
 #include "unity-shared/UBusWrapper.h"
+#include "unity-shared/ResizingBaseWindow.h"
 
 namespace unity
 {
@@ -60,6 +60,7 @@ public:
   void HideDash(bool restore_focus = true);
 
   bool IsVisible() const;
+  nux::Geometry GetInputWindowGeometry();
 
 protected:
   std::string GetName() const;
@@ -69,12 +70,11 @@ private:
   void EnsureDash();
   void SetupWindow();
   void SetupDashView();
-  void SetupRelayoutCallbacks();
   void RegisterUBusInterests();
 
   nux::Geometry GetIdealWindowGeometry();
   int GetIdealMonitor();
-  void Relayout(GdkScreen*screen=NULL);
+  void Relayout(bool check_monitor =false);
 
   void OnMouseDownOutsideWindow(int x, int y, unsigned long bflags, unsigned long kflags);
   void OnScreenUngrabbed();
@@ -96,7 +96,7 @@ private:
   static void OnWindowConfigure(int width, int height, nux::Geometry& geo, void* data);
 
 private:
-  nux::ObjectPtr<nux::BaseWindow> window_;
+  nux::ObjectPtr<ResizingBaseWindow> window_;
   int monitor_;
 
   bool visible_;
@@ -104,7 +104,6 @@ private:
   DashView* view_;
 
   sigc::connection screen_ungrabbed_slot_;
-  glib::SignalManager sig_manager_;
   glib::TimeoutSeconds ensure_timeout_;
   Animator timeline_animator_;
   UBusManager ubus_manager_;

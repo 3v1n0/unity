@@ -190,6 +190,8 @@ public:
   switcher::Controller::Ptr switcher_controller();
   launcher::Controller::Ptr launcher_controller();
 
+  bool DoesPointIntersectUnityGeos(nux::Point const& pt);
+
 protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);

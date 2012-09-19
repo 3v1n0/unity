@@ -409,6 +409,38 @@ class HudBehaviorTests(HudTestsBase):
         self.keyboard.type("HasFocus")
         self.assertThat(self.hud.search_string, Eventually(Equals("HasFocus")))
 
+    def test_closes_mouse_down_outside(self):
+        """Test that a mouse down outside of the hud closes the hud."""
+
+        self.hud.ensure_visible()
+        current_monitor = self.hud.monitor
+
+        (x,y,w,h) = self.hud.geometry
+        (screen_x,screen_y,screen_w,screen_h) = self.screen_geo.get_monitor_geometry(current_monitor)
+        
+        self.mouse.move(x + w + (screen_w-((screen_x-x)+w))/2, y + h + (screen_h-((screen_y-y)+h))/2)
+        self.mouse.click()
+        
+        self.assertThat(self.hud.visible, Eventually(Equals(False)))
+
+    def test_closes_then_focuses_window_on_mouse_down(self):
+        """If 2 windows are open with 1 maximized and the non-maxmized
+        focused. Then from the Hud clicking on the maximized window
+        must focus that window and close the hud.
+        """
+        char_win = self.start_app("Character Map")
+        self.keybinding("window/maximize")
+        self.start_app("Calculator")
+
+        self.hud.ensure_visible()
+
+        #Click bottom right of the screen
+        w = self.screen_geo.get_screen_width()
+        h = self.screen_geo.get_screen_height()
+        self.mouse.move(w,h)
+        self.mouse.click()
+
+        self.assertProperty(char_win, is_active=True)
 
 class HudLauncherInteractionsTests(HudTestsBase):
 

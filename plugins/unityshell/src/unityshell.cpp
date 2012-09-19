@@ -912,6 +912,33 @@ void UnityScreen::leaveShowDesktopMode (CompWindow *w)
   }
 }
 
+bool UnityScreen::DoesPointIntersectUnityGeos(nux::Point const& pt)
+{
+  auto launchers = launcher_controller_->launchers();
+  for (auto launcher : launchers)
+  {
+    nux::Geometry hud_geo = launcher->GetAbsoluteGeometry();
+
+    if (launcher->Hidden())
+      continue;
+
+    if (hud_geo.IsInside(pt))
+    {
+      return true;
+    }
+  }
+
+  for (nux::Geometry &panel_geo : panel_controller_->GetGeometries ())
+  {
+    if (panel_geo.IsInside(pt))
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void UnityWindow::enterShowDesktop ()
 {
   if (!mShowdesktopHandler)
@@ -1434,12 +1461,26 @@ void UnityScreen::handleEvent(XEvent* event)
         if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
           skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
       }
-      if (launcher_controller_->IsOverlayOpen())
+
+
+      if (dash_controller_->IsVisible())
       {
-        int monitor_with_mouse = UScreen::GetDefault()->GetMonitorWithMouse();
-        if (overlay_monitor_ != monitor_with_mouse)
+        nux::Point pt(event->xbutton.x_root, event->xbutton.y_root);
+        nux::Geometry dash_geo = dash_controller_->GetInputWindowGeometry();
+
+        if (!dash_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt))
         {
           dash_controller_->HideDash(false);
+        }
+      }
+
+      if (hud_controller_->IsVisible())
+      {
+        nux::Point pt(event->xbutton.x_root, event->xbutton.y_root);
+        nux::Geometry hud_geo = hud_controller_->GetInputWindowGeometry();
+
+        if (!hud_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt))
+        {
           hud_controller_->HideHud(false);
         }
       }
@@ -2681,6 +2722,7 @@ CompPoint UnityWindow::tryNotIntersectUI(CompPoint& pos)
   pos.setY(result.y);
   return pos;
 }
+
 
 bool UnityWindow::place(CompPoint& pos)
 {

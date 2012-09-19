@@ -48,8 +48,9 @@ public:
   virtual void SearchFinished() = 0;
   virtual void SetIcon(std::string const& icon_name, unsigned int tile_size, unsigned int size, unsigned int padding) = 0;
   virtual void SetQueries(Hud::Queries queries) = 0;
-  virtual void SetWindowGeometry(nux::Geometry const& absolute_geo, nux::Geometry const& geo) = 0;
+  virtual void SetMonitorOffset(int x, int y) = 0;
   virtual void ShowEmbeddedIcon(bool show) = 0;
+  virtual nux::Geometry GetContentGeometry() = 0;
 
   virtual nux::View* default_focus() const = 0;
 
@@ -58,6 +59,7 @@ public:
   sigc::signal<void, std::string> search_activated;
   sigc::signal<void, Query::Ptr> query_activated;
   sigc::signal<void, Query::Ptr> query_selected;
+  sigc::signal<void> layout_changed;
 };
 
 } // namespace hud
