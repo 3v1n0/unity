@@ -31,7 +31,6 @@ add_subdirectory(previews)
 # Headers & Sources
 #
 set (DASH_SOURCES
-     AbstractPlacesGroup.cpp
      CoverflowResultView.cpp
      DashController.cpp
      DashView.cpp
@@ -50,7 +49,6 @@ set (DASH_SOURCES
      LensBar.cpp
      LensBarIcon.cpp
      LensView.cpp
-     LensViewPrivate.cpp
      PlacesGroup.cpp
      PreviewStateMachine.cpp
      ResultRenderer.cpp

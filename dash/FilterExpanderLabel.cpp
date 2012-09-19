@@ -22,7 +22,6 @@
 
 #include "unity-shared/DashStyle.h"
 #include "FilterExpanderLabel.h"
-#include "unity-shared/LineSeparator.h"
 
 namespace
 {
@@ -83,7 +82,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterExpanderLabel);
 FilterExpanderLabel::FilterExpanderLabel(std::string const& label, NUX_FILE_LINE_DECL)
   : nux::View(NUX_FILE_LINE_PARAM)
   , expanded(true)
-  , draw_separator(false)
   , layout_(nullptr)
   , top_bar_layout_(nullptr)
   , expander_view_(nullptr)
@@ -92,43 +90,9 @@ FilterExpanderLabel::FilterExpanderLabel(std::string const& label, NUX_FILE_LINE
   , cairo_label_(nullptr)
   , raw_label_(label)
   , label_("label")
-  , separator_(nullptr)
 {
   expanded.changed.connect(sigc::mem_fun(this, &FilterExpanderLabel::DoExpandChange));
   BuildLayout();
-
-  separator_ = new HSeparator;
-  separator_->SinkReference();
-
-  dash::Style& style = dash::Style::Instance();
-  int space_height = style.GetSpaceBetweenFilterWidgets() - style.GetFilterHighlightPadding();
-
-  space_ = new nux::SpaceLayout(space_height, space_height, space_height, space_height);
-  space_->SinkReference();
-
-  draw_separator.changed.connect([&](bool value)
-  {
-    if (value and !separator_->IsChildOf(layout_))
-    {
-      layout_->AddLayout(space_, 0);
-      layout_->AddView(separator_, 0);
-    }
-    else if (!value and separator_->IsChildOf(layout_))
-    {
-      layout_->RemoveChildObject(space_);
-      layout_->RemoveChildObject(separator_);
-    }
-    QueueDraw();
-  });
-}
-
-FilterExpanderLabel::~FilterExpanderLabel()
-{
-  if (space_)
-    space_->UnReference();
-
-  if (separator_)
-    separator_->UnReference();
 }
 
 void FilterExpanderLabel::SetLabel(std::string const& label)

@@ -18,7 +18,6 @@
  */
 
 #include "LensView.h"
-#include "LensViewPrivate.h"
 
 #include <boost/lexical_cast.hpp>
 
@@ -512,35 +511,6 @@ void LensView::UpdateCounts(PlacesGroup* group)
 
   group->SetCounts(columns, counts_[group]);
   group->SetVisible(counts_[group]);
-
-  QueueFixRenderering();
-}
-
-void LensView::QueueFixRenderering()
-{
-  if (fix_rendering_idle_)
-    return;
-
-  fix_rendering_idle_.reset(new glib::Idle(sigc::mem_fun(this, &LensView::FixRenderering),
-                                           glib::Source::Priority::DEFAULT));
-}
-
-bool LensView::FixRenderering()
-{
-  std::list<AbstractPlacesGroup*> groups;
-
-  for (auto child : scroll_layout_->GetChildren())
-  {
-    if (child == no_results_)
-      continue;
-
-    groups.push_back(static_cast<AbstractPlacesGroup*>(child));
-  }
-
-  dash::impl::UpdateDrawSeparators(groups);
-
-  fix_rendering_idle_.reset();
-  return false;
 }
 
 void LensView::CheckNoResults(Lens::Hints const& hints)
