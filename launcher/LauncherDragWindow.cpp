@@ -31,11 +31,17 @@ namespace unity
 namespace launcher
 {
 
+namespace
+{
+  const float QUICK_ANIMATION_SPEED = 0.3f;
+  const float SLOW_ANIMATION_SPEED  = 0.05f;
+}
+
 NUX_IMPLEMENT_OBJECT_TYPE(LauncherDragWindow);
 
 LauncherDragWindow::LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> icon)
   : nux::BaseWindow("")
-  , animation_speed_(0.3f)
+  , animation_speed_(QUICK_ANIMATION_SPEED)
   , _cancelled(false)
   , _icon(icon)
 {
@@ -82,13 +88,13 @@ void LauncherDragWindow::SetAnimationTarget(int x, int y)
 
 void LauncherDragWindow::StartQuickAnimation()
 {
-  animation_speed_ = 0.3f;
+  animation_speed_ = QUICK_ANIMATION_SPEED;
   StartAnimation();
 }
 
 void LauncherDragWindow::StartSlowAnimation()
 {
-  animation_speed_ = 0.05f;
+  animation_speed_ = SLOW_ANIMATION_SPEED;
   StartAnimation();
 }
 
