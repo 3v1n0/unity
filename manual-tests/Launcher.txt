@@ -106,6 +106,25 @@ Expected Result:
   * The operation should NOT LOOK LIKE THIS: https://bugs.launchpad.net/unity/+bug/932365/+attachment/2739868/+files/out-2.ogv
 
 
+Drag file to Trash
+------------------
+
+This test verifies that dragging file icons from File Lens to trash moves
+the file to ~/Trash folder and removes it from File Lens results.
+
+Setup:
+#. Create a file via Nautilus > File > Create New Document.
+
+Actions:
+#. Open the Dash - File Lens
+#. Find the new file in File Lens results and drag it to the Trash icon on the launcher.
+#. Open the Dash - File Lens again.
+
+Expected Result:
+  * The file is no longer listed by File Lens.
+  * The file has been moved to ~/Trash folder.
+
+
 Dragging icons to reorder - initial position
 --------------------------------------------
 This test is all position of the dragged image in relation to the mouse pointer.
@@ -170,6 +189,21 @@ Expected Result:
   icons of the same type.
   * When released, the icon "flies" back into the launcher, a spaces opens for
   it, and the any pips for running apps show again.
+
+
+Dragging fixed icons does not reorder an icon above or below
+------------------------------------------------------------
+This test is about not reordering when dragging fixed icons.
+
+#. Move the mouse so it is over the BFB launcher icon
+#. Press and hold the mouse button
+#. Try to drag the icon to the right of the launcher.
+#. Move the mouse down at least to the height of the second launcher icon
+   keeping the mouse pressed.
+#. Release
+
+Outcome:
+  * No icon should be dragged.
 
 
 Dragged launcher icons out of the launcher are properly drawn

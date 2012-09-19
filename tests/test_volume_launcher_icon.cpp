@@ -20,50 +20,19 @@
 #include <gmock/gmock.h>
 using namespace testing;
 
-#include "launcher/DevicesSettings.h"
-#include "launcher/Volume.h"
-#include "launcher/VolumeLauncherIcon.h"
+#include "DevicesSettings.h"
+#include "VolumeLauncherIcon.h"
+#include "FavoriteStore.h"
 #include "test_utils.h"
+#include "test_mock_devices.h"
 using namespace unity;
 using namespace unity::launcher;
 
 namespace
 {
 
-class MockVolume : public Volume
+struct TestVolumeLauncherIcon : public Test
 {
-public:
-  typedef std::shared_ptr<MockVolume> Ptr;
-
-  MOCK_CONST_METHOD0(CanBeRemoved, bool(void));
-  MOCK_CONST_METHOD0(CanBeStopped, bool(void));
-  MOCK_CONST_METHOD0(GetName, std::string(void));
-  MOCK_CONST_METHOD0(GetIconName, std::string(void));
-  MOCK_CONST_METHOD0(GetIdentifier, std::string(void));
-  MOCK_CONST_METHOD0(HasSiblings, bool(void));
-  MOCK_CONST_METHOD0(CanBeEjected, bool(void));
-  MOCK_CONST_METHOD0(IsMounted, bool(void));
-
-  MOCK_METHOD0(EjectAndShowNotification, void(void));
-  MOCK_METHOD0(MountAndOpenInFileManager, void(void));
-  MOCK_METHOD0(StopDrive, void(void));
-  MOCK_METHOD0(Unmount, void(void));
-};
-
-class MockDevicesSettings : public DevicesSettings
-{
-public:
-  typedef std::shared_ptr<MockDevicesSettings> Ptr;
-
-  MOCK_CONST_METHOD1(IsABlacklistedDevice, bool(std::string const& uuid));
-  MOCK_METHOD1(TryToBlacklist, void(std::string const& uuid));
-  MOCK_METHOD1(TryToUnblacklist, void(std::string const& uuid));
-};
-
-
-class TestVolumeLauncherIcon : public Test
-{
-public:
   virtual void SetUp()
   {
     volume_.reset(new MockVolume);
@@ -118,11 +87,12 @@ public:
     std::advance(menuitem, index);
 
     return *menuitem;
-  } 
+  }
 
   MockVolume::Ptr volume_;
   MockDevicesSettings::Ptr settings_;
   VolumeLauncherIcon::Ptr icon_;
+  std::string old_lang_;
 };
 
 TEST_F(TestVolumeLauncherIcon, TestIconType)
@@ -136,6 +106,13 @@ TEST_F(TestVolumeLauncherIcon, TestQuirks)
   CreateIcon();
 
   EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
+}
+
+TEST_F(TestVolumeLauncherIcon, TestPosition)
+{
+  CreateIcon();
+
+  EXPECT_EQ(icon_->position(), AbstractLauncherIcon::Position::FLOATING);
 }
 
 TEST_F(TestVolumeLauncherIcon, TestTooltipText)
@@ -157,6 +134,12 @@ TEST_F(TestVolumeLauncherIcon, TestVisibility_InitiallyMountedVolume)
   CreateIcon();
 
   EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
+}
+
+TEST_F(TestVolumeLauncherIcon, RemoteUri)
+{
+  CreateIcon();
+  EXPECT_EQ(icon_->GetRemoteUri(), FavoriteStore::URI_PREFIX_DEVICE + volume_->GetIdentifier());
 }
 
 TEST_F(TestVolumeLauncherIcon, TestVisibility_InitiallyMountedBlacklistedVolume)
@@ -216,7 +199,6 @@ TEST_F(TestVolumeLauncherIcon, TestVisibilityAfterUnmount)
     .Times(0);
 
   volume_->changed.emit();
-  Utils::WaitForTimeout(1);
 
   EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
 }
@@ -235,7 +217,6 @@ TEST_F(TestVolumeLauncherIcon, TestVisibilityAfterUnmount_BlacklistedVolume)
     .Times(0);
 
   volume_->changed.emit();
-  Utils::WaitForTimeout(1);
 
   EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
 }
@@ -269,7 +250,6 @@ TEST_F(TestVolumeLauncherIcon, TestUnlockFromLauncherMenuItem_Success)
 
   dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
   settings_->changed.emit(); // TryToBlacklist() works if DevicesSettings emits a changed signal.
-  Utils::WaitForTimeout(1);
 
   ASSERT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
 }
@@ -288,7 +268,6 @@ TEST_F(TestVolumeLauncherIcon, TestUnlockFromLauncherMenuItem_Failure)
     .Times(1);
 
   dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
-  Utils::WaitForTimeout(1);
 
   ASSERT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
 }
@@ -307,7 +286,6 @@ TEST_F(TestVolumeLauncherIcon, TestOpenMenuItem)
     .Times(1);
 
   dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
-  Utils::WaitForTimeout(1);
 }
 
 TEST_F(TestVolumeLauncherIcon, TestEjectMenuItem_NotEjectableVolume)
@@ -335,7 +313,6 @@ TEST_F(TestVolumeLauncherIcon, TestEjectMenuItem)
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
 
   dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
-  Utils::WaitForTimeout(1);
 }
 
 TEST_F(TestVolumeLauncherIcon, TestEjectMenuItem_NotStoppableVolume)
@@ -363,7 +340,6 @@ TEST_F(TestVolumeLauncherIcon, TestSafelyRemoveMenuItem)
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
 
   dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
-  Utils::WaitForTimeout(1);
 }
 
 TEST_F(TestVolumeLauncherIcon, TestUnmountMenuItem_UnmountedVolume)
@@ -423,7 +399,6 @@ TEST_F(TestVolumeLauncherIcon, TestUnmountMenuItem)
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
 
   dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
-  Utils::WaitForTimeout(1);
 }
 
 TEST_F(TestVolumeLauncherIcon, TestCanBeEject)
@@ -493,6 +468,52 @@ TEST_F(TestVolumeLauncherIcon, OnRemoved_RemovableAndBlacklistedVolume)
     .Times(1);
 
   volume_->removed.emit();
+}
+
+TEST_F(TestVolumeLauncherIcon, Stick)
+{
+  CreateIcon();
+
+  bool saved = false;
+  icon_->position_saved.connect([&saved] {saved = true;});
+
+  EXPECT_CALL(*settings_, TryToUnblacklist(volume_->GetIdentifier()));
+  icon_->Stick(false);
+  EXPECT_TRUE(icon_->IsSticky());
+  EXPECT_TRUE(icon_->IsVisible());
+  EXPECT_FALSE(saved);
+}
+
+TEST_F(TestVolumeLauncherIcon, StickAndSave)
+{
+  CreateIcon();
+
+  bool saved = false;
+  icon_->position_saved.connect([&saved] {saved = true;});
+
+  EXPECT_CALL(*settings_, TryToUnblacklist(volume_->GetIdentifier()));
+  icon_->Stick(true);
+  EXPECT_TRUE(icon_->IsSticky());
+  EXPECT_TRUE(icon_->IsVisible());
+  EXPECT_TRUE(saved);
+}
+
+TEST_F(TestVolumeLauncherIcon, Unstick)
+{
+  CreateIcon();
+
+  bool forgot = false;
+  icon_->position_forgot.connect([&forgot] {forgot = true;});
+
+  EXPECT_CALL(*settings_, TryToUnblacklist(_));
+  icon_->Stick(false);
+  ASSERT_TRUE(icon_->IsSticky());
+  ASSERT_TRUE(icon_->IsVisible());
+
+  icon_->UnStick();
+  EXPECT_FALSE(icon_->IsSticky());
+  EXPECT_TRUE(icon_->IsVisible());
+  EXPECT_TRUE(forgot);
 }
 
 }

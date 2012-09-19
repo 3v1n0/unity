@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
-* Copyright (C) 2010, 2011 Canonical Ltd
+* Copyright (C) 2010, 2011, 2012 Canonical Ltd
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License version 3 as
@@ -15,11 +15,13 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
 * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+*              Andrea Azzarone <andrea.azzarone@canonical.com>
 */
 
-#ifndef UNITY_SETTINGS_H
-#define UNITY_SETTINGS_H
+#ifndef UNITYSHELL_SETTINGS_H
+#define UNITYSHELL_SETTINGS_H
 
+#include <memory>
 #include <sigc++/signal.h>
 #include <Nux/Nux.h>
 
@@ -29,7 +31,7 @@ namespace unity
 enum class FormFactor
 {
   DESKTOP = 1,
-  NETBOOK = 2,
+  NETBOOK,
   TV
 };
 
@@ -41,18 +43,14 @@ public:
 
   static Settings& Instance();
 
-  // NOTE: could potentially refactor this into a nux::Property
-  FormFactor GetFormFactor() const;
-  void SetFormFactor(FormFactor factor);
-
+  nux::RWProperty<FormFactor> form_factor;
   nux::Property<bool> is_standalone;
-  sigc::signal<void> changed;
 
 private:
   class Impl;
-  Impl* pimpl;
+  std::unique_ptr<Impl> pimpl;
 };
 
 }
 
-#endif // UNITY_SETTINGS_H
+#endif

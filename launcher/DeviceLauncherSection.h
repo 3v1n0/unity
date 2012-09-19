@@ -23,8 +23,6 @@
 #include <map>
 #include <memory>
 
-#include <UnityCore/GLibSource.h>
-
 #include "AbstractVolumeMonitorWrapper.h"
 #include "DevicesSettings.h"
 #include "DeviceNotificationDisplay.h"
@@ -42,7 +40,9 @@ public:
   DeviceLauncherSection(AbstractVolumeMonitorWrapper::Ptr volume_monitor,
                         DevicesSettings::Ptr devices_settings);
 
-  sigc::signal<void, AbstractLauncherIcon::Ptr> IconAdded;
+  std::vector<VolumeLauncherIcon::Ptr> GetIcons() const;
+
+  sigc::signal<void, AbstractLauncherIcon::Ptr> icon_added;
 
 private:
   void PopulateEntries();
@@ -55,8 +55,6 @@ private:
   DevicesSettings::Ptr devices_settings_;
   FileManagerOpener::Ptr file_manager_opener_;
   DeviceNotificationDisplay::Ptr device_notification_display_;
-
-  glib::Idle device_populate_idle_;
 };
 
 }

@@ -98,7 +98,10 @@ DashView::DashView()
   SetupViews();
   SetupUBusConnections();
 
-  Settings::Instance().changed.connect(sigc::mem_fun(this, &DashView::Relayout));
+  Settings::Instance().form_factor.changed.connect([this](FormFactor) {
+    Relayout();
+  });
+
   lenses_.lens_added.connect(sigc::mem_fun(this, &DashView::OnLensAdded));
   mouse_down.connect(sigc::mem_fun(this, &DashView::OnMouseButtonDown));
   preview_state_machine_.PreviewActivated.connect(sigc::mem_fun(this, &DashView::BuildPreview));
@@ -145,9 +148,9 @@ void DashView::BuildPreview(Preview::Ptr model)
   {
     preview_container_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
     AddChild(preview_container_.GetPointer());
+    preview_container_->SetParentObject(this);
     preview_container_->Preview(model, previews::Navigation::NONE); // no swipe left or right
     
-    preview_container_->SetParentObject(this);
     preview_container_->SetGeometry(layout_->GetGeometry());
     preview_displaying_ = true;
  
@@ -171,8 +174,6 @@ void DashView::BuildPreview(Preview::Ptr model)
     });
 
     preview_container_->request_close.connect([&] () { ClosePreview(); });
-
-    nux::GetWindowCompositor().SetKeyFocusArea(preview_container_.GetPointer());
   }
   else
   {
@@ -339,7 +340,6 @@ void DashView::Relayout()
       content_geo_ = geo;
   }
 
-
   // kinda hacky, but it makes sure the content isn't so big that it throws
   // the bottom of the dash off the screen
   // not hugely happy with this, so FIXME
@@ -382,7 +382,7 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 
   height = search_bar_->GetGeometry().height;
   height += tile_height * 3;
-  height += (style.GetPlacesGroupTopSpace() - 2 + 24 + 8) * 3; // adding three group headers
+  height += (style.GetPlacesGroupTopSpace() - 2 + 24 + 2) * 3; // adding three group headers
   height += 1*2; // hseparator height
   height += style.GetDashViewTopPadding();
   height += lens_bar_->GetGeometry().height;
@@ -424,7 +424,7 @@ void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned lo
   dash::Style& style = dash::Style::Instance();
   nux::Geometry geo(content_geo_);
 
-  if (Settings::Instance().GetFormFactor() == FormFactor::DESKTOP)
+  if (Settings::Instance().form_factor() == FormFactor::DESKTOP)
   {
     geo.width += style.GetDashRightTileWidth();
     geo.height += style.GetDashBottomTileHeight();
@@ -721,7 +721,7 @@ bool DashView::DoFallbackActivation(std::string const& fake_uri)
     return LaunchApp(appname);
   }
   else
-    return gtk_show_uri(NULL, uri.c_str(), time(NULL), NULL);
+    return gtk_show_uri(NULL, uri.c_str(), CurrentTime, NULL);
 
   return false;
 }
@@ -856,11 +856,11 @@ void DashView::AddProperties(GVariantBuilder* builder)
 
   std::string form_factor("unknown");
 
-  if (Settings::Instance().GetFormFactor() == FormFactor::NETBOOK)
+  if (Settings::Instance().form_factor() == FormFactor::NETBOOK)
     form_factor = "netbook";
-  else if (Settings::Instance().GetFormFactor() == FormFactor::DESKTOP)
+  else if (Settings::Instance().form_factor() == FormFactor::DESKTOP)
     form_factor = "desktop";
-  else if (Settings::Instance().GetFormFactor() == FormFactor::TV)
+  else if (Settings::Instance().form_factor() == FormFactor::TV)
     form_factor = "tv";
 
   unity::variant::BuilderWrapper wrapper(builder);
@@ -951,6 +951,11 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     break;
   default:
     direction = KEY_NAV_NONE;
+  }
+
+  if (preview_displaying_)
+  {
+    return preview_container_->FindKeyFocusArea(key_symbol, x11_key_code, special_keys_state);
   }
 
   // We should not do it here, but I really don't want to make DashView

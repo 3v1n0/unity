@@ -14,12 +14,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Andrea Azzarone <azzaronea@gmail.com>
+ * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
 #ifndef UNITYSHELL_ABSTRACT_SHORTCUT_ICON_H
 #define UNITYSHELL_ABSTRACT_SHORTCUT_ICON_H
 
+#include <memory>
 #include <string>
 
 #include <Nux/Nux.h>
@@ -44,7 +45,7 @@ class AbstractHint
 {
 public:
   typedef std::shared_ptr<AbstractHint> Ptr;
-  // Ctor
+
   AbstractHint(std::string const& category,
                std::string const& prefix,
                std::string const& postfix,
@@ -61,10 +62,8 @@ public:
     , arg1(arg1)
     , arg2(arg2)
     , arg3(arg3)
-  {
-  }
+  {}
 
-  // Copy ctor
   AbstractHint(unity::shortcut::AbstractHint const& obj)
     : category(obj.category())
     , prefix(obj.prefix())
@@ -76,13 +75,10 @@ public:
     , arg3(obj.arg3())
     , value(obj.value())
     , shortkey(obj.shortkey())
-  {
-  }
+  {}
 
-  // Dtor
   virtual ~AbstractHint(){};
 
-  // Public Methods
   virtual bool Fill() = 0;
 
   // Properties
@@ -98,7 +94,7 @@ public:
   nux::Property<std::string> shortkey;
 };
 
-} // namespace shortcut
-} // namespace unity
+}
+}
 
-#endif // UNITYSHELL_ABSTRACT_SHORTCUT_ICON_H
+#endif

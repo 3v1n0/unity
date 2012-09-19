@@ -54,7 +54,7 @@ const std::string PANGO_ENTRY_DEFAULT_FONT_FAMILY = "Ubuntu";
 const int PANGO_ENTRY_FONT_SIZE = 22;
 
 const std::string SHOW_FILTERS_LABEL_FONT_SIZE = "13";
-const std::string SHOW_FILTERS_LABEL_FONT_STYLE = "Bold";
+const std::string SHOW_FILTERS_LABEL_FONT_STYLE = "";
 const std::string SHOW_FILTERS_LABEL_DEFAULT_FONT = "Ubuntu " + SHOW_FILTERS_LABEL_FONT_STYLE + " " + SHOW_FILTERS_LABEL_FONT_SIZE;
 
 }

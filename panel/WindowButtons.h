@@ -26,6 +26,7 @@
 
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/Introspectable.h"
+#include "unity-shared/UnitySettings.h"
 
 namespace unity
 {
@@ -70,7 +71,7 @@ private:
   void OnMaximizeClicked(nux::Button *button);
   void OnOverlayShown(GVariant* data);
   void OnOverlayHidden(GVariant* data);
-  void OnDashSettingsUpdated();
+  void OnDashSettingsUpdated(FormFactor form_factor);
 
   int monitor_;
   double opacity_;

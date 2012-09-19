@@ -23,6 +23,7 @@
 #include <Nux/WindowThread.h>
 
 #include "unity-shared/BackgroundEffectHelper.h"
+#include "BaseWindowRaiserImp.h"
 #include "MockShortcutHint.h"
 #include "ShortcutController.h"
 
@@ -228,7 +229,8 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
                                                                                  "resize",
                                                                                  "initiate_key")));
 
-  controller.reset(new shortcut::Controller(hints));
+  auto base_window_raiser_ = std::make_shared<shortcut::BaseWindowRaiserImp>();
+  controller.reset(new shortcut::Controller(hints, base_window_raiser_));
   controller->Show();
 }
 

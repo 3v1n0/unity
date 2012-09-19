@@ -32,12 +32,14 @@ namespace impl
 
 std::vector<std::string> GetNewbies(std::list<std::string> const& old, std::list<std::string> const& fresh);
 
-void GetSignalAddedInfo(std::list<std::string> const& favs, std::vector<std::string> const& newbies, 
+void GetSignalAddedInfo(std::list<std::string> const& favs, std::vector<std::string> const& newbies,
                         std::string const& path, std::string& position, bool& before);
 
 std::vector<std::string> GetRemoved(std::list<std::string> const& old, std::list<std::string> const& fresh);
 
 bool NeedToBeReordered(std::list<std::string> const& old, std::list<std::string> const& fresh);
+
+bool IsDesktopFilePath(std::string const& path);
 
 
 } // namespace impl

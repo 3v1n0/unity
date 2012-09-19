@@ -7,7 +7,7 @@ int main(int argc, char** argv)
 {
   ::testing::InitGoogleTest(&argc, argv);
   g_type_init();
-  
+  setlocale(LC_ALL, "C");
 
   // Slightly higher as we're more likely to test things we know will fail
   nux::logging::configure_logging("<root>=error");

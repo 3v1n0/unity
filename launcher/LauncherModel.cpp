@@ -56,14 +56,14 @@ unity::debug::Introspectable::IntrospectableList LauncherModel::GetIntrospectabl
 
 bool LauncherModel::IconShouldShelf(AbstractLauncherIcon::Ptr const& icon) const
 {
-  return icon->GetIconType() == AbstractLauncherIcon::IconType::TRASH;
+  return icon->position() == AbstractLauncherIcon::Position::END;
 }
 
 bool LauncherModel::CompareIcons(AbstractLauncherIcon::Ptr const& first, AbstractLauncherIcon::Ptr const& second)
 {
-  if (first->GetIconType() < second->GetIconType())
+  if (first->position() < second->position())
     return true;
-  else if (first->GetIconType() > second->GetIconType())
+  else if (first->position() > second->position())
     return false;
 
   return first->SortPriority() < second->SortPriority();
@@ -163,25 +163,11 @@ bool LauncherModel::IconHasSister(AbstractLauncherIcon::Ptr const& icon) const
   if (!icon)
     return false;
 
-  const_iterator it;
-  const_iterator end;
+  auto const& container = IconShouldShelf(icon) ? _inner_shelf : _inner_main;
 
-  if (IconShouldShelf(icon))
+  for (auto const& icon_it : container)
   {
-    it = _inner_shelf.begin();
-    end = _inner_shelf.end();
-  }
-  else
-  {
-    it = _inner_main.begin();
-    end = _inner_main.end();
-  }
-
-  for (; it != end; ++it)
-  {
-    AbstractLauncherIcon::Ptr const& iter_icon = *it;
-
-    if (iter_icon != icon && iter_icon->GetIconType() == icon->GetIconType())
+    if (icon_it != icon && icon_it->GetIconType() == icon->GetIconType())
       return true;
   }
 
@@ -193,16 +179,20 @@ void LauncherModel::ReorderAfter(AbstractLauncherIcon::Ptr const& icon, Abstract
   if (icon == other || icon.IsNull() || other.IsNull())
     return;
 
-  if (icon->GetIconType() != other->GetIconType())
+  if (icon->position() != other->position())
     return;
 
   icon->SetSortPriority(other->SortPriority() + 1);
 
   for (auto it = std::next(std::find(begin(), end(), other)); it != end(); ++it)
   {
-    // Increasing the priority of the icons next to the other one
     auto const& icon_it = *it;
-    int new_priority = icon_it->SortPriority() + 1;
+
+    if (icon_it == icon)
+      continue;
+
+    // Increasing the priority of the icons next to the other one
+    int new_priority = icon_it->SortPriority() + 2;
     icon_it->SetSortPriority(new_priority);
   }
 
@@ -214,7 +204,7 @@ void LauncherModel::ReorderBefore(AbstractLauncherIcon::Ptr const& icon, Abstrac
   if (icon == other || icon.IsNull() || other.IsNull())
     return;
 
-  if (icon->GetIconType() != other->GetIconType())
+  if (icon->position() != other->position())
     return;
 
   bool found_target = false;
@@ -228,7 +218,13 @@ void LauncherModel::ReorderBefore(AbstractLauncherIcon::Ptr const& icon, Abstrac
       continue;
     }
 
-    int new_priority = icon_it->SortPriority() + (found_target ? 1 : -1);
+    int old_priority = icon_it->SortPriority();
+    int new_priority = old_priority + (found_target ? 1 : -1);
+
+    // We need to reduce the priority of all the icons previous to 'other'
+    if (icon_it != other && !found_target && other->SortPriority() == old_priority)
+      new_priority -= 1;
+
     icon_it->SetSortPriority(new_priority);
 
     if (icon_it == other)
@@ -237,7 +233,7 @@ void LauncherModel::ReorderBefore(AbstractLauncherIcon::Ptr const& icon, Abstrac
         icon_it->SaveCenter();
 
       center = !center;
-      new_priority = new_priority - 1;
+      new_priority += -1;
       icon->SetSortPriority(new_priority);
 
       if (animate && center)
@@ -260,7 +256,7 @@ void LauncherModel::ReorderSmart(AbstractLauncherIcon::Ptr const& icon, Abstract
   if (icon == other || icon.IsNull() || other.IsNull())
     return;
 
-  if (icon->GetIconType() != other->GetIconType())
+  if (icon->position() != other->position())
     return;
 
   bool found_icon = false;
@@ -276,7 +272,13 @@ void LauncherModel::ReorderSmart(AbstractLauncherIcon::Ptr const& icon, Abstract
       continue;
     }
 
-    int new_priority = icon_it->SortPriority() + (found_target ? 1 : -1);
+    int old_priority = icon_it->SortPriority();
+    int new_priority = old_priority + (found_target ? 1 : -1);
+
+    // We need to reduce the priority of all the icons previous to 'other'
+    if (icon_it != other && !found_target && other->SortPriority() == old_priority)
+      new_priority -= 1;
+
     icon_it->SetSortPriority(new_priority);
 
     if (icon_it == other)
@@ -285,7 +287,7 @@ void LauncherModel::ReorderSmart(AbstractLauncherIcon::Ptr const& icon, Abstract
         icon_it->SaveCenter();
 
       center = !center;
-      new_priority = new_priority + (found_icon ? 1 : -1);
+      new_priority += found_icon ? 1 : -1;
       icon->SetSortPriority(new_priority);
 
       if (animate && center)
@@ -377,7 +379,7 @@ AbstractLauncherIcon::Ptr LauncherModel::GetClosestIcon(AbstractLauncherIcon::Pt
 
   for (auto const& current : _inner)
   {
-    if (current->GetIconType() != icon->GetIconType())
+    if (current->position() != icon->position())
       continue;
 
     if (!found_target)
