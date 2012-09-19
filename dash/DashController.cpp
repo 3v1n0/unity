@@ -459,7 +459,11 @@ nux::Geometry Controller::GetInputWindowGeometry()
   EnsureDash();
   nux::Geometry const& window_geo(window_->GetGeometry());
   nux::Geometry const& view_content_geo(view_->GetContentGeometry());
-  return nux::Geometry(window_geo.x, window_geo.y, view_content_geo.width, view_content_geo.height);
+
+  nux::Geometry geo(window_geo.x, window_geo.y, view_content_geo.width, view_content_geo.height);
+  geo.width += style.GetDashRightTileWidth();
+  geo.height += style.GetDashBottomTileHeight();
+  return geo;
 }
 
 
