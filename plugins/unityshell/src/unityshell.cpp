@@ -3682,7 +3682,7 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
 
 void UnityWindow::OnInitiateSpreed()
 {
-  auto const windows = screen->windows();
+  auto const& windows = screen->windows();
   if (std::find(windows.begin(), windows.end(), window) == windows.end())
     return;
 
@@ -3698,7 +3698,7 @@ void UnityWindow::OnInitiateSpreed()
 
 void UnityWindow::OnTerminateSpreed()
 {
-  auto const windows = screen->windows();
+  auto const& windows = screen->windows();
   if (std::find(windows.begin(), windows.end(), window) == windows.end())
     return;
 
