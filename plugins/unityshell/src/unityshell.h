@@ -391,6 +391,7 @@ public:
 
   bool place(CompPoint& pos);
   CompPoint tryNotIntersectUI(CompPoint& pos);
+  nux::Geometry GetScaledGeometry();
 
   void paintThumbnail (nux::Geometry const& bounding, float alpha);
 
@@ -473,6 +474,7 @@ private:
   compiz::WindowInputRemoverLock::Weak input_remover_;
   panel::WindowState close_icon_state_;
   nux::Geometry close_button_geo_;
+  bool middle_clicked_;
   glib::Source::UniquePtr focus_desktop_timeout_;
 };
 

@@ -1099,6 +1099,12 @@ bool UnityWindow::handleEvent(XEvent *event)
         DoAddDamage();
         handled = true;
       }
+      else if (event->xbutton.button == Button2 &&
+               GetScaledGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root))
+      {
+        middle_clicked_ = true;
+        handled = true;
+      }
       break;
 
     case ButtonRelease:
@@ -1116,6 +1122,18 @@ bool UnityWindow::handleEvent(XEvent *event)
           if (close_button_geo_.IsPointInside(event->xbutton.x_root, event->xbutton.y_root))
             window->close(0);
 
+          handled = true;
+        }
+
+        if (middle_clicked_)
+        {
+          if (event->xbutton.button == Button2 &&
+              GetScaledGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root))
+          {
+            window->close(0);
+          }
+
+          middle_clicked_ = false;
           handled = true;
         }
       }
@@ -3428,7 +3446,7 @@ UnityWindow::DrawTexture(GLTexture* icon,
     if (width > maxWidth)
       maxWidth = width;
 
-    CompRegion  iconReg(0, 0, width, height);
+    CompRegion iconReg(0, 0, width, height);
     GLTexture::MatrixList ml(1);
 
     ml[0] = icon->matrix();
@@ -3520,12 +3538,11 @@ UnityWindow::RenderText(UnityWindow::CairoContext const& context,
   }
 }
 
-void
-UnityWindow::DrawWindowDecoration(GLWindowPaintAttrib const& attrib,
-                                  GLMatrix const& transform,
-                                  unsigned int mask,
-                                  bool highlighted,
-                                  int x, int y, unsigned width, unsigned height)
+void UnityWindow::DrawWindowDecoration(GLWindowPaintAttrib const& attrib,
+                                       GLMatrix const& transform,
+                                       unsigned int mask,
+                                       bool highlighted,
+                                       int x, int y, unsigned width, unsigned height)
 {
   // Paint a fake window decoration
   CairoContext context(width, height);
@@ -3627,21 +3644,19 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
     return;
 
   ScaleScreen* ss = ScaleScreen::get(screen);
+  auto const& scaled_geo = GetScaledGeometry();
+  auto const& decoration_extents = window->border();
+  auto const& pos = scale_win->getCurrentPosition();
+
   const bool highlighted = (ss->getSelectedWindow() == window->id());
+  int width = scaled_geo.width;
+  int height = decoration_extents.top;
+  int x = scaled_geo.x;
+  int y = scaled_geo.y;
 
-  ScalePosition const& pos = scale_win->getCurrentPosition();
-  auto const& border_rect = window->borderRect();
-  auto const& deco_ext = window->border();
-
-  const unsigned decoration_height = deco_ext.top;
-  unsigned width = (border_rect.width() + deco_ext.left + deco_ext.right)  * pos.scale;
-  unsigned height = decoration_height * pos.scale;
-  int x = pos.x() + border_rect.x();
-  int y = pos.y() + border_rect.y() + decoration_height - height - 1;
-
-  // If window is highlighted, we draw the decoration at full size
-  if (highlighted)
-    height = decoration_height;
+  // If window is not highlighted, we draw the decoration at scaled size
+  if (!highlighted)
+    height *= pos.scale;
 
   DrawWindowDecoration(attrib, transform, mask, highlighted, x, y, width, height);
 
@@ -3653,7 +3668,7 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
     int max_width = 0;
     mask |= PAINT_WINDOW_BLEND_MASK;
 
-    switch(close_icon_state_)
+    switch (close_icon_state_)
     {
       case panel::WindowState::NORMAL:
       default:
@@ -3680,6 +3695,22 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
   }
 }
 
+nux::Geometry UnityWindow::GetScaledGeometry()
+{
+  ScaleWindow *scale_win = ScaleWindow::get(window);
+
+  ScalePosition const& pos = scale_win->getCurrentPosition();
+  auto const& border_rect = window->borderRect();
+  auto const& deco_ext = window->border();
+
+  const unsigned width = std::floor(border_rect.width() * pos.scale);
+  const unsigned height = std::floor(border_rect.height() * pos.scale);
+  int x = pos.x() + border_rect.x();
+  const int y = pos.y() + border_rect.y() + deco_ext.top - std::floor(deco_ext.top * pos.scale) - 1;
+
+  return nux::Geometry(x, y, width, height);
+}
+
 void UnityWindow::OnInitiateSpreed()
 {
   auto const& windows = screen->windows();
@@ -3687,6 +3718,7 @@ void UnityWindow::OnInitiateSpreed()
     return;
 
   close_icon_state_ = panel::WindowState::NORMAL;
+  middle_clicked_ = false;
   SetupScaleHeaderStyle();
 
   WindowManager *wm = WindowManager::Default();
