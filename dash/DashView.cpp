@@ -16,6 +16,7 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
+
 #include "DashView.h"
 #include "DashViewPrivate.h"
 
@@ -36,6 +37,7 @@
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/PreviewStyle.h"
 
+#include "Nux/NuxTimerTickSource.h"
 
 namespace unity
 {
@@ -89,7 +91,14 @@ DashView::DashView()
   , search_in_progress_(false)
   , activate_on_finish_(false)
   , visible_(false)
+  , fade_out_value_(0.0f)
+  , fade_in_value_(0.0f)
+  , opening_row_y_(-1)
+  , opening_row_height_(0)
 {
+  //tick_source_.reset(new nux::NuxTimerTickSource);
+  //animation_controller_.reset(new na::AnimationController(*tick_source_));
+
   renderer_.SetOwner(this);
   renderer_.need_redraw.connect([this] () {
     QueueDraw();
@@ -110,6 +119,13 @@ DashView::DashView()
   home_lens_->AddLenses(lenses_);
   home_lens_->search_finished.connect(sigc::mem_fun(this, &DashView::OnGlobalSearchFinished));
   lens_bar_->Activate("home.lens");
+
+  // We are interested in the color of the desktop background.
+  ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &DashView::OnBGColorChanged));
+
+  // request the latest colour from bghash
+  ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
+
 }
 
 DashView::~DashView()
@@ -117,6 +133,15 @@ DashView::~DashView()
   // Do this explicitely, otherwise dee will complain about invalid access
   // to the lens models
   RemoveLayout();
+}
+
+void DashView::OnBGColorChanged(GVariant *data)
+{
+  double red = 0.0f, green = 0.0f, blue = 0.0f, alpha = 0.0f;
+
+  g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
+  background_color_ = nux::Color(red, green, blue, alpha);
+  QueueDraw();
 }
 
 void DashView::SetMonitorOffset(int x, int y)
@@ -127,25 +152,87 @@ void DashView::SetMonitorOffset(int x, int y)
 
 void DashView::ClosePreview()
 {
-  preview_displaying_ = false;
+  if (preview_displaying_)
+  {
+    layout_->SetPresentRedirectedView(true);
+    animation_.Stop();
+    fade_out_connection_.disconnect();
+    fade_in_connection_.disconnect();
+    // Set fade animation
+    animation_.SetDuration(250);
+    animation_.SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::ExpoEaseIn));
+    fade_in_connection_ = animation_.updated.connect(sigc::mem_fun(this, &DashView::FadeInCallBack));
 
-  // sanity check
-  if (!preview_container_)
-    return;
-  RemoveChild(preview_container_.GetPointer());
-  preview_container_->UnParentObject();
-  preview_container_.Release(); // free resources
-  preview_state_machine_.ClosePreview();
+    fade_in_value_ = 1.0f;
+    animation_.SetStartValue(fade_in_value_);
+    animation_.SetFinishValue(0.0f);
+    animation_.Start();
+  }
+
+  preview_displaying_ = false;
 
   // re-focus dash view component.
   nux::GetWindowCompositor().SetKeyFocusArea(default_focus());
   QueueDraw();
 }
 
+void DashView::FadeOutCallBack(float const& fade_out_value)
+{
+  fade_out_value_ = fade_out_value;
+  QueueDraw();
+}
+
+void DashView::FadeInCallBack(float const& fade_in_value)
+{
+  fade_in_value_ = fade_in_value;
+  QueueDraw();
+
+  if (fade_in_value_ == 0.0f)
+  {
+    // sanity check
+    if (!preview_container_)
+    {
+      return;
+    }
+    RemoveChild(preview_container_.GetPointer());
+    preview_container_->UnParentObject();
+    preview_container_.Release(); // free resources
+    preview_state_machine_.ClosePreview();
+
+    // Closing the preview. Set  opening_row_y_ to -1;
+    // opening_row_y_ is updated once when the preview
+    opening_row_y_ = -1;
+  }
+}
+
 void DashView::BuildPreview(Preview::Ptr model)
 {
   if (!preview_displaying_)
   {
+    // Make a copy of this DashView backup texture.
+    if (layout_->RedirectRenderingToTexture())
+    {
+      nux::TexCoordXForm texxform;
+      nux::ObjectPtr<nux::IOpenGLBaseTexture> src_texture;
+
+      layout_copy_ = src_texture = layout_->BackupTexture();
+
+      animation_.Stop();
+      fade_out_connection_.disconnect();
+      fade_in_connection_.disconnect();
+      // Set fade animation
+      animation_.SetDuration(250);
+      animation_.SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::ExpoEaseIn));
+      fade_out_connection_ = animation_.updated.connect(sigc::mem_fun(this, &DashView::FadeOutCallBack));
+
+      fade_out_value_ = 1.0f;
+      animation_.SetStartValue(fade_out_value_);
+      animation_.SetFinishValue(0.0f);
+      animation_.Start();
+
+      layout_->SetPresentRedirectedView(false);
+    }
+
     preview_container_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
     AddChild(preview_container_.GetPointer());
     preview_container_->SetParentObject(this);
@@ -264,6 +351,7 @@ void DashView::SetupViews()
   layout_->SetLeftAndRightPadding(style.GetVSeparatorSize(), 0);
   layout_->SetTopAndBottomPadding(style.GetHSeparatorSize(), 0);
   SetLayout(layout_);
+  layout_->SetRedirectRenderingToTexture(true);
 
   content_layout_ = new DashLayout(NUX_TRACKER_LOCATION);
   content_layout_->SetTopAndBottomPadding(style.GetDashViewTopPadding(), 0);
@@ -313,12 +401,21 @@ void DashView::SetupUBusConnections()
   ubus_manager_.RegisterInterest(UBUS_DASH_PREVIEW_INFO_PAYLOAD, [&] (GVariant *data) 
   {
     int position = -1;
+    int row_height = 0;
     int results_to_the_left = 0;
     int results_to_the_right = 0;
-    g_variant_get(data, "(iii)", &position, &results_to_the_left, &results_to_the_right);
+    g_variant_get(data, "(iiii)", &position, &row_height, &results_to_the_left, &results_to_the_right);
     preview_state_machine_.SetSplitPosition(SplitPosition::CONTENT_AREA, position);
     preview_state_machine_.left_results = results_to_the_left;
     preview_state_machine_.right_results = results_to_the_right;
+
+    if (opening_row_y_ == -1)
+    {
+      // Update only when opening the previews
+      opening_row_y_ = position;
+    }
+    opening_row_height_ = row_height;
+
   });
 }
 
@@ -396,27 +493,268 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
   return nux::Geometry(0, 0, width, height);
 }
 
-void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
+void DashView::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
-  renderer_.DrawFull(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
+  renderer_.DrawFull(graphics_engine, content_geo_, GetAbsoluteGeometry(), GetGeometry());
 }
 
-void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
+void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
-  renderer_.DrawInner(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
+  renderer_.DrawInner(graphics_engine, content_geo_, GetAbsoluteGeometry(), GetGeometry());
+
+  bool display_ghost = false;
+  bool preview_redraw = false;
+  if (preview_container_)
+  {
+    preview_redraw = preview_container_->IsRedrawNeeded();
+  }
+
+  if (!preview_displaying_ && layout_->RedirectRenderingToTexture() && (fade_in_value_ == 0.0f))
+  {
+    nux::Geometry layout_geo = layout_->GetGeometry();
+    graphics_engine.PushClippingRectangle(layout_geo);
+    nux::GetPainter().PaintBackground(graphics_engine, layout_geo);
+    graphics_engine.PopClippingRectangle();
+  }
+
+  if (preview_displaying_ && (IsFullRedraw() || force_draw || preview_redraw) && layout_->RedirectRenderingToTexture())
+  {
+    display_ghost = true;
+    nux::Geometry layout_geo = layout_->GetGeometry();
+    graphics_engine.PushClippingRectangle(layout_geo);
+    nux::GetPainter().PaintBackground(graphics_engine, layout_geo);
+    graphics_engine.PopClippingRectangle();
+  }
 
   if (IsFullRedraw())
+  {
     nux::GetPainter().PushBackgroundStack();
+  }
+
 
   if (preview_displaying_)
-   preview_container_->ProcessDraw(gfx_context, (!force_draw) ? IsFullRedraw() : force_draw);
-  else
-    layout_->ProcessDraw(gfx_context, force_draw);
+  {
+    // Progressively reveal the preview.
+    nux::Geometry preview_clip_geo = preview_container_->GetGeometry();
+    preview_clip_geo.y = (preview_clip_geo.y + preview_clip_geo.height)/2.0f - 
+      (1.0f - fade_out_value_) * (preview_clip_geo.height)/2.0f;
+    preview_clip_geo.height = (1.0f - fade_out_value_) * (preview_clip_geo.height);
+
+    graphics_engine.PushModelViewMatrix(nux::Matrix4::TRANSLATE(-preview_container_->GetWidth()/2.0f, -preview_container_->GetHeight()/2.0f, 0));
+    graphics_engine.PushModelViewMatrix(nux::Matrix4::SCALE(1.0f - fade_out_value_, 1.0f - fade_out_value_, 1.0f));
+    graphics_engine.PushModelViewMatrix(nux::Matrix4::TRANSLATE(preview_container_->GetWidth()/2.0f, preview_container_->GetHeight()/2.0f, 0));
+
+    preview_container_->ProcessDraw(graphics_engine, (!force_draw) ? IsFullRedraw() : force_draw);
+
+    graphics_engine.PopModelViewMatrix();
+    graphics_engine.PopModelViewMatrix();
+    graphics_engine.PopModelViewMatrix();
+  }
+  else if (fade_in_value_ > 0.0f && preview_container_ && preview_container_.IsValid())
+  {
+    graphics_engine.PushModelViewMatrix(nux::Matrix4::TRANSLATE(-preview_container_->GetWidth()/2.0f, -preview_container_->GetHeight()/2.0f, 0));
+    graphics_engine.PushModelViewMatrix(nux::Matrix4::SCALE(fade_in_value_, fade_in_value_, 1.0f));
+    graphics_engine.PushModelViewMatrix(nux::Matrix4::TRANSLATE(preview_container_->GetWidth()/2.0f, preview_container_->GetHeight()/2.0f, 0));
+
+    preview_container_->ProcessDraw(graphics_engine, (!force_draw) ? IsFullRedraw() : force_draw);
+
+    graphics_engine.PopModelViewMatrix();
+    graphics_engine.PopModelViewMatrix();
+    graphics_engine.PopModelViewMatrix();
+  }
+  else if (fade_in_value_ == 0.0f)
+  {
+    layout_->ProcessDraw(graphics_engine, force_draw);
+  }
+  
+  // Animation effect rendering
+  if (display_ghost || IsFullRedraw())
+  {
+    unsigned int current_alpha_blend;
+    unsigned int current_src_blend_factor;
+    unsigned int current_dest_blend_factor;
+    graphics_engine.GetRenderStates().GetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+
+    float ghost_opacity = 0.25f;    
+    float tint_factor = 1.2f;
+    float saturation_ref = 0.4f;
+    nux::Color bg_color = background_color_;
+
+    int position_offset = 40;
+
+    if (preview_displaying_ && layout_ && layout_->RedirectRenderingToTexture())
+    {
+      if (layout_copy_.IsValid())
+      {
+        graphics_engine.PushClippingRectangle(layout_->GetGeometry());
+        graphics_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        nux::TexCoordXForm texxform;
+
+        texxform.FlipVCoord(true);
+
+        int filter_width = 10;
+        if (active_lens_view_ && active_lens_view_->filters_expanded)
+        {
+          texxform.uoffset = (active_lens_view_->filter_bar()->GetX() -layout_->GetX())/(float)layout_->GetWidth();
+          texxform.voffset = (active_lens_view_->filter_bar()->GetY() -layout_->GetY())/(float)layout_->GetHeight();
+
+          texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+
+          graphics_engine.QRP_1Tex(
+            active_lens_view_->filter_bar()->GetX() + (1.0f - fade_out_value_)*(active_lens_view_->filter_bar()->GetWidth() + 10),
+            active_lens_view_->filter_bar()->GetY(),
+            active_lens_view_->filter_bar()->GetWidth(),
+            active_lens_view_->filter_bar()->GetHeight(),
+            layout_copy_, texxform,
+            nux::Color(fade_out_value_, fade_out_value_, fade_out_value_, fade_out_value_)
+            );
+          filter_width += active_lens_view_->filter_bar()->GetWidth();
+        }  
+
+        float saturation = fade_out_value_ + (1.0f - fade_out_value_) * saturation_ref;
+        float opacity = fade_out_value_ < ghost_opacity ? ghost_opacity : fade_out_value_;
+        nux::Color tint = nux::Color(
+          fade_out_value_ + (1.0f - fade_out_value_) * tint_factor*bg_color.red,
+          fade_out_value_ + (1.0f - fade_out_value_) * tint_factor*bg_color.green,
+          fade_out_value_ + (1.0f - fade_out_value_) * tint_factor*bg_color.blue,
+          1.0f);
+
+        // Ghost row of items above the preview
+        {
+          int final_x = layout_->GetX();
+          int final_y = layout_->GetY() - (opening_row_y_) - position_offset ;
+
+          texxform.uoffset = 0.0f;
+          texxform.voffset = 0.0f;
+          texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+
+          graphics_engine.QRP_TexDesaturate(
+            fade_out_value_ * layout_->GetX() + (1.0f - fade_out_value_) * final_x,
+            fade_out_value_ * layout_->GetY() + (1.0f - fade_out_value_) * final_y,
+            layout_->GetWidth() - filter_width,
+            opening_row_y_ + opening_row_height_,
+            layout_copy_, texxform,
+            nux::Color(tint.red, tint.green, tint.blue, opacity),
+            saturation
+            );
+        }
+
+        // Ghost row of items below the preview
+        {
+          int final_x = layout_->GetX();
+          int final_y = layout_->GetY() + layout_->GetHeight() - (position_offset*1.9);
+
+          texxform.uoffset = (layout_->GetX() - layout_->GetX())/(float)layout_->GetWidth();
+          texxform.voffset = (opening_row_y_ + opening_row_height_ - layout_->GetY())/(float)layout_->GetHeight();
+          texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+
+          graphics_engine.QRP_TexDesaturate(
+            fade_out_value_ * layout_->GetX() + (1 - fade_out_value_) * final_x,
+            fade_out_value_ * (opening_row_y_ + opening_row_height_) + (1 - fade_out_value_) * final_y,
+            layout_->GetWidth() - filter_width,
+            layout_->GetHeight() - opening_row_y_ - opening_row_height_,
+            layout_copy_, texxform,
+            nux::Color(tint.red, tint.green, tint.blue, opacity),
+            saturation
+            );
+        }
+
+        graphics_engine.GetRenderStates().SetBlend(false);
+        graphics_engine.PopClippingRectangle();
+      }
+
+
+    }
+    else if (layout_ && layout_->RedirectRenderingToTexture() && fade_in_value_ != 0.0f)
+    {
+      if (layout_copy_.IsValid())
+      {
+        graphics_engine.PushClippingRectangle(layout_->GetGeometry());
+        graphics_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        nux::TexCoordXForm texxform;
+
+        texxform.FlipVCoord(true);
+
+        int filter_width = 10;
+        if (active_lens_view_ && active_lens_view_->filters_expanded)
+        {
+          texxform.uoffset = (active_lens_view_->filter_bar()->GetX() -layout_->GetX())/(float)layout_->GetWidth();
+          texxform.voffset = (active_lens_view_->filter_bar()->GetY() -layout_->GetY())/(float)layout_->GetHeight();
+
+          texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+
+          graphics_engine.QRP_1Tex(
+            active_lens_view_->filter_bar()->GetX() + (fade_in_value_)*(active_lens_view_->filter_bar()->GetWidth() + 10),
+            active_lens_view_->filter_bar()->GetY(),
+            active_lens_view_->filter_bar()->GetWidth(),
+            active_lens_view_->filter_bar()->GetHeight(),
+            layout_copy_, texxform,
+            nux::Color(1.0f - fade_in_value_, 1.0f - fade_in_value_, 1.0f - fade_in_value_, 1.0f - fade_in_value_)
+            );
+          filter_width += active_lens_view_->filter_bar()->GetWidth();
+        }
+
+        float saturation = fade_in_value_ * saturation_ref + (1.0f - fade_in_value_);
+        float opacity = (1.0f - fade_in_value_) < ghost_opacity ? ghost_opacity : (1.0f - fade_in_value_);
+        nux::Color tint = nux::Color(
+          fade_in_value_ * tint_factor*bg_color.red + (1.0f - fade_in_value_),
+          fade_in_value_ * tint_factor*bg_color.green + (1.0f - fade_in_value_),
+          fade_in_value_ * tint_factor*bg_color.blue + (1.0f - fade_in_value_),
+          1.0f);
+
+        // Ghost row of items above the preview
+        {
+          int final_x = layout_->GetX();
+          int final_y = layout_->GetY() - (opening_row_y_) - position_offset;
+
+          texxform.uoffset = 0.0f;
+          texxform.voffset = 0.0f;
+          texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+
+          graphics_engine.QRP_TexDesaturate(
+            (1.0f - fade_in_value_) * layout_->GetX() + (fade_in_value_) * final_x,
+            (1.0f - fade_in_value_) * layout_->GetY() + (fade_in_value_) * final_y,
+            layout_->GetWidth() - filter_width,
+            opening_row_y_ + opening_row_height_,
+            layout_copy_, texxform,
+            nux::Color(tint.red, tint.green, tint.blue, opacity),
+            saturation
+            );
+        }
+
+        // Ghost row of items below the preview
+        {
+          int final_x = layout_->GetX();
+          int final_y = layout_->GetY() + layout_->GetHeight() -(position_offset*1.9);
+
+          texxform.uoffset = (layout_->GetX() - layout_->GetX())/(float)layout_->GetWidth();
+          texxform.voffset = (opening_row_y_ + opening_row_height_ - layout_->GetY())/(float)layout_->GetHeight();
+          texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+
+          graphics_engine.QRP_TexDesaturate(
+            (1.0f - fade_in_value_) * layout_->GetX() + (fade_in_value_) * final_x,
+            (1.0f - fade_in_value_) * (opening_row_y_ + opening_row_height_) + (fade_in_value_) * final_y,
+            layout_->GetWidth() - filter_width,
+            layout_->GetHeight() - opening_row_y_ - opening_row_height_,
+            layout_copy_, texxform,
+            nux::Color(tint.red, tint.green, tint.blue, opacity),
+            saturation
+            );
+        }
+        graphics_engine.GetRenderStates().SetBlend(false);
+        graphics_engine.PopClippingRectangle();
+      }
+    }
+
+    graphics_engine.GetRenderStates().SetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+  }
 
   if (IsFullRedraw())
+  {
     nux::GetPainter().PopBackgroundStack();
+  }
 
-  renderer_.DrawInnerCleanup(gfx_context, content_geo_, GetAbsoluteGeometry(), GetGeometry());
+  renderer_.DrawInnerCleanup(graphics_engine, content_geo_, GetAbsoluteGeometry(), GetGeometry());
 }
 
 void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
@@ -1078,6 +1416,11 @@ nux::Area* DashView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::N
   }
 
   return (view == nullptr) ? this : view;
+}
+
+nux::Geometry const& DashView::GetContentGeometry() const
+{
+  return content_geo_;  
 }
 
 }

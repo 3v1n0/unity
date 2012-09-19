@@ -31,10 +31,17 @@ namespace unity
 namespace launcher
 {
 
+namespace
+{
+  const float QUICK_ANIMATION_SPEED = 0.3f;
+  const float SLOW_ANIMATION_SPEED  = 0.05f;
+}
+
 NUX_IMPLEMENT_OBJECT_TYPE(LauncherDragWindow);
 
 LauncherDragWindow::LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> icon)
   : nux::BaseWindow("")
+  , animation_speed_(QUICK_ANIMATION_SPEED)
   , _cancelled(false)
   , _icon(icon)
 {
@@ -79,6 +86,18 @@ void LauncherDragWindow::SetAnimationTarget(int x, int y)
   _animation_target = nux::Point2(x, y);
 }
 
+void LauncherDragWindow::StartQuickAnimation()
+{
+  animation_speed_ = QUICK_ANIMATION_SPEED;
+  StartAnimation();
+}
+
+void LauncherDragWindow::StartSlowAnimation()
+{
+  animation_speed_ = SLOW_ANIMATION_SPEED;
+  StartAnimation();
+}
+
 void LauncherDragWindow::StartAnimation()
 {
   if (animation_timer_)
@@ -89,7 +108,7 @@ void LauncherDragWindow::StartAnimation()
 }
 
 bool LauncherDragWindow::OnAnimationTimeout()
-{
+{ 
   nux::Geometry const& geo = GetGeometry();
 
   int half_size = geo.width / 2;
@@ -97,11 +116,11 @@ bool LauncherDragWindow::OnAnimationTimeout()
   int target_x = static_cast<int>(_animation_target.x) - half_size;
   int target_y = static_cast<int>(_animation_target.y) - half_size;
 
-  int x_delta = static_cast<int>(static_cast<float>(target_x - geo.x) * .3f);
+  int x_delta = static_cast<int>(static_cast<float>(target_x - geo.x) * animation_speed_);
   if (std::abs(x_delta) < 5)
     x_delta = (x_delta >= 0) ? std::min(5, target_x - geo.x) : std::max(-5, target_x - geo.x);
 
-  int y_delta = static_cast<int>(static_cast<float>(target_y - geo.y) * .3f);
+  int y_delta = static_cast<int>(static_cast<float>(target_y - geo.y) * animation_speed_);
   if (std::abs(y_delta) < 5)
     y_delta = (y_delta >= 0) ? std::min(5, target_y - geo.y) : std::max(-5, target_y - geo.y);
 

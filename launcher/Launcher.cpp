@@ -1991,7 +1991,7 @@ void Launcher::StartIconDragRequest(int x, int y)
     if (_initial_drag_animation)
     {
       _drag_window->SetAnimationTarget(x, y);
-      _drag_window->StartAnimation();
+      _drag_window->StartQuickAnimation();
     }
 
     EnsureAnimation();
@@ -2055,7 +2055,7 @@ void Launcher::EndIconDrag()
 
       auto const& icon_center = _drag_icon->GetCenter(monitor);
       _drag_window->SetAnimationTarget(icon_center.x, icon_center.y),
-      _drag_window->StartAnimation();
+      _drag_window->StartQuickAnimation();
     }
   }
 

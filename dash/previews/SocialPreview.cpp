@@ -231,7 +231,7 @@ void SocialPreview::SetupViews()
       {
         preview_info_hints_ = new PreviewInfoHintWidget(preview_model_, style.GetAvatarAreaWidth());
         AddChild(preview_info_hints_.GetPointer());
-        social_info_layout->AddView(preview_info_hints_.GetPointer());
+        social_info_layout->AddView(preview_info_hints_.GetPointer(), 0);
       }
       /////////////////////
       // Comments/Replies
