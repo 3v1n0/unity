@@ -392,7 +392,7 @@ void View::SetupViews()
       content_layout_->AddLayout(button_views_.GetPointer(), 1, nux::MINOR_POSITION_LEFT);
     }
 
-    content_layout_->OnGeometryChanged.connect([&](nux::Area*, nux::Geometry& geo)
+    content_layout_->geometry_changed.connect([&](nux::Area*, nux::Geometry& geo)
     {
       if (!timeline_animating_)
       {
