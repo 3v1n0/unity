@@ -862,6 +862,11 @@ PluginAdapter::ShowDesktop()
   }
 }
 
+bool PluginAdapter::InShowDesktop() const
+{
+  return _in_show_desktop;
+}
+
 void
 PluginAdapter::OnShowDesktop()
 {

@@ -11,6 +11,7 @@ int main(int argc, char** argv)
 {
   ::testing::InitGoogleTest(&argc, argv);
   gtk_init(&argc, &argv);
+  setlocale(LC_ALL, "C");
 
   nux::NuxInitialize(0);
   std::unique_ptr<nux::WindowThread> win_thread(nux::CreateNuxWindow("Tests",

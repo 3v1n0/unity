@@ -145,6 +145,7 @@ void MusicPreview::SetupViews()
   /////////////////////
   // Image
   image_ = new CoverArt();
+  
   AddChild(image_.GetPointer());
   UpdateCoverArtImage(image_.GetPointer());
   /////////////////////

@@ -46,6 +46,7 @@ TrashLauncherIcon::TrashLauncherIcon()
 {
   tooltip_text = _("Trash");
   icon_name = "user-trash";
+  position = Position::END;
   SetQuirk(Quirk::VISIBLE, true);
   SetQuirk(Quirk::RUNNING, false);
   SetShortcut('t');

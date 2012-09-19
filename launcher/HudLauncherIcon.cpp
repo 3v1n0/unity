@@ -45,6 +45,7 @@ HudLauncherIcon::HudLauncherIcon(LauncherHideMode hide_mode)
 {
   tooltip_text = _("HUD");
   icon_name = PKGDATADIR"/launcher_bfb.png";
+  position = Position::BEGIN;
   SetQuirk(Quirk::VISIBLE, false);
   SetQuirk(Quirk::RUNNING, false);
   SetQuirk(Quirk::ACTIVE, true);
@@ -121,7 +122,7 @@ nux::Color HudLauncherIcon::GlowColor()
 
 void HudLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
-  if (GetQuirk(Quirk::VISIBLE))
+  if (IsVisible())
   {
     ubus_manager_.SendMessage(UBUS_HUD_CLOSE_REQUEST);
   }

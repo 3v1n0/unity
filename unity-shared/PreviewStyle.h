@@ -81,6 +81,9 @@ public:
   int GetInfoHintNameMinimumWidth() const;
   int GetInfoHintNameMaximumWidth() const;
 
+  int GetCommentNameMinimumWidth() const;
+  int GetCommentNameMaximumWidth() const;
+
   float GetDescriptionLineSpacing() const;
   int GetDescriptionLineCount() const;
 
@@ -127,6 +130,15 @@ public:
   int GetTrackBarHeight() const;
   int GetMusicDurationWidth() const;
   int GetStatusIconSize() const;
+  ////////////////////////////////
+
+  ////////////////////////////////
+  // Social Preview
+  int GetAvatarAreaWidth() const;
+  int GetAvatarAreaHeight() const;
+
+  std::string content_font() const;
+
   ////////////////////////////////
 
   nux::BaseTexture* GetNavLeftIcon();

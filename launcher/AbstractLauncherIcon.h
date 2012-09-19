@@ -93,6 +93,7 @@ public:
     DESKTOP,
     PLACE,
     DEVICE,
+    SPACER,
     TRASH,
     END
   };
@@ -117,10 +118,18 @@ public:
     LAST
   };
 
+  enum class Position
+  {
+    BEGIN,
+    FLOATING,
+    END
+  };
+
   virtual ~AbstractLauncherIcon() {}
 
   nux::Property<std::string> tooltip_text;
   nux::Property<bool> tooltip_enabled;
+  nux::Property<Position> position;
 
   virtual void HideTooltip() = 0;
 
@@ -157,8 +166,6 @@ public:
   virtual const bool WindowVisibleOnMonitor(int monitor) = 0;
 
   virtual const bool WindowVisibleOnViewport() = 0;
-
-  virtual bool IsSpacer() = 0;
 
   virtual float PresentUrgency() = 0;
 
@@ -211,6 +218,11 @@ public:
 
   virtual void UnStick() = 0;
 
+  static int DefaultPriority(IconType type)
+  {
+    return static_cast<int>(type) * 1000;
+  }
+
   sigc::signal<void, int, int, unsigned long> mouse_down;
   sigc::signal<void, int, int, unsigned long> mouse_up;
   sigc::signal<void, int, int, unsigned long> mouse_click;
@@ -221,6 +233,8 @@ public:
   sigc::signal<void, AbstractLauncherIcon::Ptr> remove;
   sigc::signal<void, nux::ObjectPtr<nux::View>> tooltip_visible;
   sigc::signal<void> visibility_changed;
+  sigc::signal<void> position_saved;
+  sigc::signal<void> position_forgot;
 
   sigc::connection needs_redraw_connection;
   sigc::connection on_icon_added_connection;

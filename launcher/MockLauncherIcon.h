@@ -45,20 +45,20 @@ class MockLauncherIcon : public AbstractLauncherIcon
   NUX_DECLARE_OBJECT_TYPE(MockLauncherIcon, AbstractLauncherIcon);
 public:
   MockLauncherIcon(IconType type = IconType::APPLICATION)
-    : type_(type)
-    , sort_priority_(0)
-    , icon_(0)
+    : icon_(0)
+    , type_(type)
+    , sort_priority_(DefaultPriority(type))
+    , remote_uri_("fake")
   {
     tooltip_text = "Mock Icon";
+    position = Position::FLOATING;
 
     for (unsigned i = 0; i < unsigned(Quirk::LAST); ++i)
-    {
       quirks_[i] = false;
-    }
   }
 
   std::string GetName() const { return "MockLauncherIcon"; }
-
+  
   void AddProperties(GVariantBuilder* builder) {}
 
   void HideTooltip() {}
@@ -180,11 +180,6 @@ public:
     return true;
   }
 
-  bool IsSpacer()
-  {
-    return false;
-  }
-
   float PresentUrgency()
   {
     return 0.0f;
@@ -244,7 +239,7 @@ public:
 
   std::string RemoteUri()
   {
-    return "fake";
+    return remote_uri_;
   }
 
   nux::BaseTexture* TextureForSize(int size)
@@ -293,9 +288,9 @@ public:
   bool IsVisible() const { return false; }
 
   void AboutToRemove() {}
-
+  
   void Stick(bool save = true) {}
-
+  
   void UnStick() {}
 
 private:
@@ -346,12 +341,13 @@ private:
     return result;
   }
 
+  nux::BaseTexture* icon_;
   IconType type_;
   int sort_priority_;
-  nux::BaseTexture* icon_;
   bool quirks_[unsigned(Quirk::LAST)];
   timespec quirk_times_[unsigned(Quirk::LAST)];
   std::map<int, nux::Point3> center_;
+  std::string remote_uri_;
 };
 
 }

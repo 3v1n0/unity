@@ -267,7 +267,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetAutohideAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDashBlurExperimentalNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetShortcutOverlayNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
-     optionSetShowDesktopIconNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetShowLauncherInitiate(boost::bind(&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
      optionSetShowLauncherTerminate(boost::bind(&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
      optionSetKeyboardFocusInitiate(boost::bind(&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
@@ -1791,9 +1790,10 @@ void UnityScreen::SetUpAndShowSwitcher(switcher::ShowMode show_mode)
 {
   // maybe check launcher position/hide state?
 
-  WindowManager *wm = WindowManager::Default();
-  int monitor = wm->GetWindowMonitor(wm->GetActiveWindow());
-  nux::Geometry monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(monitor);
+  auto uscreen = UScreen::GetDefault();
+  int monitor = uscreen->GetMonitorWithMouse();
+  auto monitor_geo = uscreen->GetMonitorGeometry(monitor);
+
   monitor_geo.x += 100;
   monitor_geo.y += 100;
   monitor_geo.width -= 200;
@@ -2844,9 +2844,6 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       enable_shortcut_overlay_ = optionGetShortcutOverlay();
       shortcut_controller_->SetEnabled(enable_shortcut_overlay_);
       break;
-    case UnityshellOptions::ShowDesktopIcon:
-      launcher_controller_->SetShowDesktopIcon(optionGetShowDesktopIcon());
-      break;
     case UnityshellOptions::DecayRate:
       launcher_options->edge_decay_rate = optionGetDecayRate() * 100;
       break;
@@ -2919,11 +2916,13 @@ bool UnityScreen::setOptionForPlugin(const char* plugin, const char* name,
                                      CompOption::Value& v)
 {
   bool status = screen->setOptionForPlugin(plugin, name, v);
+
   if (status)
   {
-    if (strcmp(plugin, "core") == 0 && strcmp(name, "hsize") == 0)
+    if (strcmp(plugin, "core") == 0)
     {
-      launcher_controller_->UpdateNumWorkspaces(screen->vpSize().width() * screen->vpSize().height());
+      if (strcmp(name, "hsize") == 0 || strcmp(name, "vsize") == 0)
+        launcher_controller_->UpdateNumWorkspaces(screen->vpSize().width() * screen->vpSize().height());
     }
   }
   return status;
@@ -2954,7 +2953,7 @@ void UnityScreen::OnDashRealized ()
 void UnityScreen::initLauncher()
 {
   Timer timer;
-  launcher_controller_ = std::make_shared<launcher::Controller>(screen->dpy());
+  launcher_controller_ = std::make_shared<launcher::Controller>();
   AddChild(launcher_controller_.get());
 
   switcher_controller_ = std::make_shared<switcher::Controller>();
@@ -3683,7 +3682,7 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
 
 void UnityWindow::OnInitiateSpreed()
 {
-  auto const windows = screen->windows();
+  auto const& windows = screen->windows();
   if (std::find(windows.begin(), windows.end(), window) == windows.end())
     return;
 
@@ -3699,7 +3698,7 @@ void UnityWindow::OnInitiateSpreed()
 
 void UnityWindow::OnTerminateSpreed()
 {
-  auto const windows = screen->windows();
+  auto const& windows = screen->windows();
   if (std::find(windows.begin(), windows.end(), window) == windows.end())
     return;
 

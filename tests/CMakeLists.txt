@@ -3,16 +3,16 @@ set(UNITY_SRC ../plugins/unityshell/src)
 #
 # Data
 #
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/ubuntuone-installer.desktop
-                ${CMAKE_BINARY_DIR}/tests/data/ubuntuone-installer.desktop)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/ubuntu-software-center.desktop
-                ${CMAKE_BINARY_DIR}/tests/data/ubuntu-software-center.desktop)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/update-manager.desktop
-                ${CMAKE_BINARY_DIR}/tests/data/update-manager.desktop)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/bzr-handle-patch.desktop
-                ${CMAKE_BINARY_DIR}/tests/data/bzr-handle-patch.desktop)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/no-icon.desktop
-                ${CMAKE_BINARY_DIR}/tests/data/no-icon.desktop)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/ubuntuone-installer.desktop
+                ${CMAKE_BINARY_DIR}/tests/data/applications/ubuntuone-installer.desktop)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/ubuntu-software-center.desktop
+                ${CMAKE_BINARY_DIR}/tests/data/applications/ubuntu-software-center.desktop)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/update-manager.desktop
+                ${CMAKE_BINARY_DIR}/tests/data/applications/update-manager.desktop)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/bzr-handle-patch.desktop
+                ${CMAKE_BINARY_DIR}/tests/data/applications/bzr-handle-patch.desktop)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/no-icon.desktop
+                ${CMAKE_BINARY_DIR}/tests/data/applications/no-icon.desktop)
 #
 # Unit tests
 #
@@ -136,6 +136,7 @@ if (GTEST_SRC_DIR AND
                  test_indicator_entry.cpp
                  test_indicators.cpp
                  test_introspection.cpp
+                 test_favorite_store.cpp
                  test_favorite_store_gsettings.cpp
                  test_favorite_store_private.cpp
                  test_home_lens.cpp
@@ -200,36 +201,44 @@ if (GTEST_SRC_DIR AND
 # Tests that require X
   add_executable(test-gtest
                  test_main.cpp
-                 test_bamflaunchericon.cpp
+                 test_bamf_launcher_icon.cpp
                  test_bfb_launcher_icon.cpp
                  test_dashview_impl.cpp
+                 test_desktop_launcher_icon.cpp
                  test_edge_barrier_controller.cpp
                  test_launcher.cpp
                  test_device_launcher_section.cpp
                  test_lensview_impl.cpp
                  test_hud_button.cpp
                  test_hud_controller.cpp
+                 test_hud_launcher_icon.cpp
                  test_hud_view.cpp
                  test_icon_loader.cpp
                  test_im_text_entry.cpp
                  test_launcher_controller.cpp
                  test_launcher_drag_window.cpp
+                 test_launcher_icon.cpp
                  test_keyboard_util.cpp
                  test_panel_style.cpp
                  test_previews_application.cpp
                  test_previews_generic.cpp
                  test_previews_movie.cpp
                  test_previews_music.cpp
+                 test_previews_social.cpp
                  test_quicklist_menu_item.cpp
                  test_quicklist_view.cpp
                  test_resultviewgrid.cpp
                  test_shortcut_controller.cpp
                  test_single_monitor_launcher_icon.cpp
+                 test_software_center_launcher_icon.cpp
+                 test_expo_launcher_icon.cpp
                  test_switcher_controller.cpp
                  test_switcher_model.cpp
                  test_texture_cache.cpp
                  test_thumbnail_generator.cpp
+                 test_trash_launcher_icon.cpp
                  test_launcher_minimize_speed.cpp
+                 test_unity_settings.cpp
                  test_volume_imp.cpp
                  test_volume_launcher_icon.cpp
                  gmockmount.c
@@ -248,6 +257,9 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/dash/previews/Preview.cpp
                  ${CMAKE_SOURCE_DIR}/dash/previews/PreviewInfoHintWidget.cpp
                  ${CMAKE_SOURCE_DIR}/dash/previews/PreviewRatingsWidget.cpp
+                 ${CMAKE_SOURCE_DIR}/dash/previews/SocialPreview.cpp
+                 ${CMAKE_SOURCE_DIR}/dash/previews/SocialPreviewContent.cpp
+                 ${CMAKE_SOURCE_DIR}/dash/previews/SocialPreviewComments.cpp
                  ${CMAKE_SOURCE_DIR}/dash/previews/Tracks.cpp
                  ${CMAKE_SOURCE_DIR}/dash/previews/Track.cpp
                  ${CMAKE_SOURCE_DIR}/hud/HudAbstractView.cpp
@@ -269,6 +281,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/launcher/DevicesSettingsImp.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/DndData.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/EdgeBarrierController.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/ExpoLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/FavoriteStore.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/FavoriteStoreGSettings.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/FavoriteStorePrivate.cpp

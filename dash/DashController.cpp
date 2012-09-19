@@ -74,9 +74,9 @@ Controller::Controller()
 
   SetupWindow();
 
-  Settings::Instance().changed.connect([&]()
+  Settings::Instance().form_factor.changed.connect([this](FormFactor)
   {
-    if (window_ && view_)
+    if (window_ && view_  && visible_)
     {
       window_->PushToFront();
       window_->SetInputFocus();

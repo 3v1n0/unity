@@ -74,10 +74,11 @@ glib::Object<GtkIconTheme> LauncherIcon::_unity_theme;
 
 LauncherIcon::LauncherIcon(IconType type)
   : _icon_type(type)
+  , _sticky(false)
   , _remote_urgent(false)
   , _present_urgency(0)
   , _progress(0)
-  , _sort_priority(0)
+  , _sort_priority(DefaultPriority(type))
   , _last_monitor(0)
   , _background_color(nux::color::White)
   , _glow_color(nux::color::White)
@@ -89,7 +90,7 @@ LauncherIcon::LauncherIcon(IconType type)
   , _saved_center(max_num_monitors)
   , _allow_quicklist_to_show(true)
 {
-  for (unsigned i = 0; i < unsigned(Quirk::LAST); i++)
+  for (unsigned i = 0; i < unsigned(Quirk::LAST); ++i)
   {
     _quirks[i] = false;
     _quirk_times[i].tv_sec = 0;
@@ -107,10 +108,10 @@ LauncherIcon::LauncherIcon(IconType type)
   tooltip_text.SetSetterFunction(sigc::mem_fun(this, &LauncherIcon::SetTooltipText));
   tooltip_text = "blank";
 
+  position = Position::FLOATING;
+
   // FIXME: the abstraction is already broken, should be fixed for O
   // right now, hooking the dynamic quicklist the less ugly possible way
-
-
   mouse_enter.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseEnter));
   mouse_leave.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
   mouse_down.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));
@@ -517,6 +518,7 @@ LauncherIcon::ShowTooltip()
 
   if (!_tooltip)
     LoadTooltip();
+  _tooltip->SetText(tooltip_text());
   _tooltip->ShowTooltipWithTipAt(tip_x, tip_y);
   _tooltip->ShowWindow(!tooltip_text().empty());
   tooltip_visible.emit(_tooltip);
@@ -1177,6 +1179,31 @@ void LauncherIcon::EmitRemove()
 {
   if (OwnsTheReference() && GetReferenceCount() > 0)
     remove.emit(AbstractLauncherIcon::Ptr(this));
+}
+
+void LauncherIcon::Stick(bool save)
+{
+  if (_sticky)
+    return;
+
+  _sticky = true;
+
+  if (save)
+    position_saved.emit();
+
+  SetQuirk(Quirk::VISIBLE, true);
+}
+
+void LauncherIcon::UnStick()
+{
+  if (!_sticky)
+    return;
+
+  _sticky = false;
+
+  position_forgot.emit();
+
+  SetQuirk(Quirk::VISIBLE, false);
 }
 
 

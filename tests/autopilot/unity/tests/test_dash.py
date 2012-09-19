@@ -438,7 +438,7 @@ class DashKeyboardFocusTests(DashTestCase):
 
     def test_keep_focus_on_application_opens(self):
         """The Dash must keep key focus as well as stay open if an app gets opened from an external source. """
-        
+
         self.dash.ensure_visible()
         self.addCleanup(self.hud.ensure_hidden)
 
@@ -679,7 +679,7 @@ class PreviewInvocationTests(DashTestCase):
         category = lens.get_category_by_name("Songs")
         # Incase there was no music ever played we skip the test instead
         # of failing.
-        if category is None:
+        if category is None or not category.is_visible:
             self.skipTest("This lens is probably empty")
 
         results = category.get_results()
@@ -698,17 +698,22 @@ class PreviewInvocationTests(DashTestCase):
         preview.
 
         """
+        def get_category(lens):
+            category = lens.get_category_by_name("Recently Viewed")
+            # If there was no video played on this system this category is expected
+            # to be empty, if its empty we check if the 'Online' category have any
+            # contents, if not then we skip the test.
+            if category is None or not category.is_visible:
+                category = lens.get_category_by_name("Online")
+                if category is None or not category.is_visible:
+                    return None
+            return category
+
         lens = self.dash.reveal_video_lens()
         self.addCleanup(self.dash.ensure_hidden)
 
-        category = lens.get_category_by_name("Recently Viewed")
-        # If there was no video played on this system this category is expected
-        # to be empty, if its empty we check if the 'Online' category have any
-        # contents, if not then we skip the test.
-        if category is None:
-            category = lens.get_category_by_name("Online")
-            if category is None:
-                self.skipTest("This lens is probably empty")
+        self.assertThat(lambda: get_category(lens), Eventually(NotEquals(None)))
+        category = get_category(lens)
 
         results = category.get_results()
 
@@ -846,6 +851,28 @@ class PreviewNavigateTests(DashTestCase):
 
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
 
+    def test_left_click_on_preview_image_cancel_preview(self):
+        """Left click on preview image must cancel the preview."""
+        cover_art = self.preview_container.current_preview.cover_art
+
+        tx = cover_art.x + (cover_art.width / 2)
+        ty = cover_art.y + (cover_art.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=1)
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_right_click_on_preview_image_cancel_preview(self):
+        """Right click on preview image must cancel preview."""
+        cover_art = self.preview_container.current_preview.cover_art
+
+        tx = cover_art.x + (cover_art.width / 2)
+        ty = cover_art.y + (cover_art.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=3)
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
 
 class DashDBusIfaceTests(DashTestCase):
     """Test the Unity dash DBus interface."""
@@ -881,7 +908,7 @@ class DashCrossMonitorsTests(DashTestCase):
         self.assertThat(self.dash.ideal_monitor, Eventually(Equals(current_monitor)))
 
     def test_dash_close_on_cross_monitor_click(self):
-        """Dash must close when clicking on a window in a different screen."""  
+        """Dash must close when clicking on a window in a different screen."""
 
         self.addCleanup(self.dash.ensure_hidden)
 
@@ -892,5 +919,5 @@ class DashCrossMonitorsTests(DashTestCase):
             self.screen_geo.move_mouse_to_monitor(monitor+1)
             sleep(.5)
             self.mouse.click()
-            
+
             self.assertThat(self.dash.visible, Eventually(Equals(False)))

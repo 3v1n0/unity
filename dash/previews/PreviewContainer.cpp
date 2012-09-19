@@ -326,6 +326,28 @@ public:
     _queued_draw = false;
   }
 
+  nux::Area* KeyNavIteration(nux::KeyNavDirection direction)
+  {
+    if (swipe_.preview)
+      return swipe_.preview->KeyNavIteration(direction);
+    else if (current_preview_)
+      return current_preview_->KeyNavIteration(direction);
+
+    return NULL;
+  }
+
+  nux::Area* FindKeyFocusArea(unsigned int key_symbol,
+                                        unsigned long x11_key_code,
+                                        unsigned long special_keys_state)
+  {
+    if (swipe_.preview)
+      return swipe_.preview->FindKeyFocusArea(key_symbol, x11_key_code, special_keys_state);
+    else if (current_preview_)
+      return current_preview_->FindKeyFocusArea(key_symbol, x11_key_code, special_keys_state);
+
+    return nullptr;
+  }
+
   sigc::signal<void> start_navigation;
   sigc::signal<void> continue_navigation;
   sigc::signal<void> end_navigation;
@@ -374,13 +396,14 @@ PreviewContainer::PreviewContainer(NUX_FILE_LINE_DECL)
   , navigation_count_(0)
 {
   SetAcceptKeyNavFocusOnMouseDown(false);
-  SetAcceptKeyNavFocusOnMouseEnter(true);
+  SetAcceptKeyNavFocusOnMouseEnter(false);
 
   SetupViews();
   last_progress_time_.tv_sec = 0;
   last_progress_time_.tv_nsec = 0;
 
   key_down.connect(sigc::mem_fun(this, &PreviewContainer::OnKeyDown));
+  mouse_click.connect(sigc::mem_fun(this, &PreviewContainer::OnMouseDown));
 }
 
 PreviewContainer::~PreviewContainer()
@@ -390,6 +413,12 @@ PreviewContainer::~PreviewContainer()
 void PreviewContainer::Preview(dash::Preview::Ptr preview_model, Navigation direction)
 {
   previews::Preview::Ptr preview_view = previews::Preview::PreviewForModel(preview_model);
+  
+  if (preview_view)
+  {
+    preview_view->request_close.connect([this]() { request_close.emit(); });
+  }
+  
   content_layout_->PushPreview(preview_view, direction);
 }
 
@@ -569,56 +598,15 @@ bool PreviewContainer::AcceptKeyNavFocus()
 
 bool PreviewContainer::InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character)
 {
-  nux::KeyNavDirection direction = nux::KEY_NAV_NONE;
   switch (keysym)
   {
-    case NUX_VK_UP:
-      direction = nux::KeyNavDirection::KEY_NAV_UP;
-      break;
-    case NUX_VK_DOWN:
-      direction = nux::KeyNavDirection::KEY_NAV_DOWN;
-      break;
-    case NUX_VK_LEFT:
-      direction = nux::KeyNavDirection::KEY_NAV_LEFT;
-      break;
-    case NUX_VK_RIGHT:
-      direction = nux::KeyNavDirection::KEY_NAV_RIGHT;
-      break;
-    case NUX_VK_LEFT_TAB:
-      direction = nux::KeyNavDirection::KEY_NAV_TAB_PREVIOUS;
-      break;
-    case NUX_VK_TAB:
-      direction = nux::KeyNavDirection::KEY_NAV_TAB_NEXT;
-      break;
-    case NUX_VK_ENTER:
-    case NUX_KP_ENTER:
-      direction = nux::KeyNavDirection::KEY_NAV_ENTER;
-      break;
     case NUX_VK_ESCAPE:
       return true;
     default:
-      direction = nux::KeyNavDirection::KEY_NAV_NONE;
       break;
   }
 
-  if (direction == nux::KeyNavDirection::KEY_NAV_NONE
-      || direction == nux::KeyNavDirection::KEY_NAV_UP
-      || direction == nux::KeyNavDirection::KEY_NAV_DOWN
-      || direction == nux::KeyNavDirection::KEY_NAV_TAB_NEXT
-      || direction == nux::KeyNavDirection::KEY_NAV_TAB_PREVIOUS
-      || direction == nux::KeyNavDirection::KEY_NAV_ENTER)
-  {
-    // we don't handle these cases
-    return false;
-  }
-
-   // check for edge cases where we want the keynav to bubble up
-  if (direction == nux::KEY_NAV_LEFT && IsNavigationDisabled(Navigation::LEFT))
-    return false; // pressed left on the first item, no diiice
-  else if (direction == nux::KEY_NAV_RIGHT && IsNavigationDisabled(Navigation::RIGHT))
-    return false; // pressed right on the last item, nope. nothing for you
-
-  return true;
+  return false;
 }
 
 void PreviewContainer::OnKeyDown(unsigned long event_type, unsigned long event_keysym,
@@ -629,14 +617,6 @@ void PreviewContainer::OnKeyDown(unsigned long event_type, unsigned long event_k
   {
     switch (event_keysym)
     {
-      case NUX_VK_LEFT:
-        navigate_left.emit();
-        break;
-
-      case NUX_VK_RIGHT:
-        navigate_right.emit();
-        break;
-
       case NUX_VK_ESCAPE:
         request_close.emit();
         break;
@@ -647,10 +627,51 @@ void PreviewContainer::OnKeyDown(unsigned long event_type, unsigned long event_k
   }
 }
 
-nux::Area* PreviewContainer::KeyNavIteration(nux::KeyNavDirection direction)
+nux::Area* PreviewContainer::FindKeyFocusArea(unsigned int key_symbol,
+                                      unsigned long x11_key_code,
+                                      unsigned long special_keys_state)
 {
+  nux::Area* area = content_layout_->FindKeyFocusArea(key_symbol, x11_key_code, special_keys_state);
+  if (area)
+    return area;
+
   return this;
 }
+
+nux::Area* PreviewContainer::KeyNavIteration(nux::KeyNavDirection direction)
+{
+  using namespace nux;
+  nux::Area* area = content_layout_->KeyNavIteration(direction);
+  if (area)
+    return area;
+
+  switch(direction)
+  {
+    case KEY_NAV_LEFT:
+      if (!IsNavigationDisabled(Navigation::LEFT))
+        navigate_left.emit();
+      break;
+
+    case KEY_NAV_RIGHT:
+      if (!IsNavigationDisabled(Navigation::RIGHT))
+        navigate_right.emit();
+      break;
+
+    default:
+      break;
+  }
+
+  return this;
+}
+
+void PreviewContainer::OnMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  if (nux::GetEventButton(button_flags) == nux::MOUSE_BUTTON1 || nux::GetEventButton(button_flags) == nux::MOUSE_BUTTON3)
+  {
+    request_close.emit();
+  }
+}
+
 
 } // namespace previews
 } // namespace dash

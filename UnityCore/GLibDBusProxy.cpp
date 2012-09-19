@@ -90,7 +90,6 @@ public:
 
   glib::Object<GDBusProxy> proxy_;
   glib::Object<GCancellable> cancellable_;
-  guint watcher_id_;
   bool connected_;
 
   glib::Signal<void, GDBusProxy*, char*, char*, GVariant*> g_signal_connection_;
@@ -113,7 +112,6 @@ DBusProxy::Impl::Impl(DBusProxy* owner,
   , bus_type_(bus_type)
   , flags_(flags)
   , cancellable_(g_cancellable_new())
-  , watcher_id_(0)
   , connected_(false)
 {
   StartReconnectionTimeout();
@@ -122,8 +120,6 @@ DBusProxy::Impl::Impl(DBusProxy* owner,
 DBusProxy::Impl::~Impl()
 {
   g_cancellable_cancel(cancellable_);
-  if (watcher_id_)
-    g_bus_unwatch_name(watcher_id_);
 }
 
 void DBusProxy::Impl::StartReconnectionTimeout()
