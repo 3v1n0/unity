@@ -155,10 +155,10 @@ Expected Result:
 
 Two highlighted action buttons
 ------------------------------
-This tests that it's not possible to have two highlighted preview action button.
+This tests that it's not possible to have two highlighted preview action buttons.
 
 Setup:
-#. Open dash
+#. Open dash.
 #. Open Files Lens.
 #. Right-click the mouse on an icon (don't use folder icons because they have just one action button).
 #. Wait for the preview window to open and finish animating.
