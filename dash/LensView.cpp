@@ -174,7 +174,6 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
         if ((child && child->HasKeyFocus()) ||
             (expand_label && expand_label->HasKeyFocus()))
         {
-
           focused_pos.x += child->GetGeometry().x;
           focused_pos.y += child->GetGeometry().y - 30;
           focused_pos.height += 30;

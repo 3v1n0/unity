@@ -104,32 +104,49 @@ void LensBar::Activate(std::string id)
   }
 }
 
-void LensBar::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
+void LensBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
   nux::Geometry const& base = GetGeometry();
 
-  gfx_context.PushClippingRectangle(base);
-  nux::GetPainter().PaintBackground(gfx_context, base);
+  graphics_engine.PushClippingRectangle(base);
 
   bg_layer_->SetGeometry(base);
-  nux::GetPainter().RenderSinglePaintLayer(gfx_context, base, bg_layer_.get());
+  nux::GetPainter().RenderSinglePaintLayer(graphics_engine, base, bg_layer_.get());
 
-  gfx_context.PopClippingRectangle();
+  graphics_engine.PopClippingRectangle();
 }
 
-void LensBar::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
+void LensBar::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
   nux::Geometry const& base = GetGeometry();
 
-  gfx_context.PushClippingRectangle(base);
+  graphics_engine.PushClippingRectangle(base);
 
-  if (!IsFullRedraw())
-    nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_.get());
+  int pushed_paint_layers = 0;
+  if(RedirectedAncestor())
+  {
+    {
+      unsigned int alpha = 0, src = 0, dest = 0;
+      graphics_engine.GetRenderStates().GetBlend(alpha, src, dest);
+      // This is necessary when doing redirected rendering.
+      // Clean the area below this view before drawing anything.
+      graphics_engine.GetRenderStates().SetBlend(false);
+      graphics_engine.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+      graphics_engine.GetRenderStates().SetBlend(alpha, src, dest);
+    }
 
-  layout_->ProcessDraw(gfx_context, force_draw);
+    nux::GetPainter().RenderSinglePaintLayer(graphics_engine, bg_layer_->GetGeometry(), bg_layer_.get());
+  }
+  else if (!IsFullRedraw())
+  {
+    ++pushed_paint_layers;
+    nux::GetPainter().PushLayer(graphics_engine, bg_layer_->GetGeometry(), bg_layer_.get());
+  }
 
-  if (!IsFullRedraw())
-    nux::GetPainter().PopBackground();
+  layout_->ProcessDraw(graphics_engine, true);
+
+  if (pushed_paint_layers)
+    nux::GetPainter().PopBackground(pushed_paint_layers);
 
   for (auto icon: icons_)
   {
@@ -142,7 +159,7 @@ void LensBar::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
       // bigger one and clip part of them using the "-1".
       int y = base.y - 1;
 
-      nux::GetPainter().Draw2DTriangleColor(gfx_context,
+      nux::GetPainter().Draw2DTriangleColor(graphics_engine,
                                             middle - size, y,
                                             middle, y + size,
                                             middle + size, y,
@@ -152,7 +169,7 @@ void LensBar::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
     }
   }
 
-  gfx_context.PopClippingRectangle();
+  graphics_engine.PopClippingRectangle();
 }
 
 void LensBar::SetActive(LensBarIcon* activated)
