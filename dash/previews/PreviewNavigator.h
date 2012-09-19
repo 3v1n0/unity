@@ -53,6 +53,8 @@ public:
   void AddProperties(GVariantBuilder*);
 
   sigc::signal<void> activated;
+  
+  virtual bool AcceptKeyNavFocus() { return false; }
 
 private:
   virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);

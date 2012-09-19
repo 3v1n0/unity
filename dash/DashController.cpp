@@ -66,17 +66,17 @@ Controller::Controller()
   , timeline_animator_(90)
   , dbus_connect_cancellable_(g_cancellable_new())
 {
-  SetupRelayoutCallbacks();
   RegisterUBusInterests();
 
   ensure_timeout_.Run([&]() { EnsureDash(); return false; });
   timeline_animator_.animation_updated.connect(sigc::mem_fun(this, &Controller::OnViewShowHideFrame));
 
   SetupWindow();
+  UScreen::GetDefault()->changed.connect([&] (int, std::vector<nux::Geometry>&) { Relayout(true); });
 
-  Settings::Instance().changed.connect([&]()
+  Settings::Instance().form_factor.changed.connect([this](FormFactor)
   {
-    if (window_ && view_)
+    if (window_ && view_  && visible_)
     {
       window_->PushToFront();
       window_->SetInputFocus();
@@ -97,7 +97,12 @@ Controller::~Controller()
 
 void Controller::SetupWindow()
 {
-  window_ = new nux::BaseWindow(dash::window_title);
+  window_ = new ResizingBaseWindow(dash::window_title, [this](nux::Geometry const& geo)
+  {
+    if (view_)
+      return GetInputWindowGeometry();
+    return geo;
+  });
   window_->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
   window_->SetConfigureNotifyCallback(&Controller::OnWindowConfigure, this);
   window_->ShowWindow(false);
@@ -122,17 +127,11 @@ void Controller::SetupDashView()
   layout->SetContentDistribution(nux::eStackLeft);
   layout->SetVerticalExternalMargin(0);
   layout->SetHorizontalExternalMargin(0);
-
   window_->SetLayout(layout);
-  ubus_manager_.UnregisterInterest(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST);
-}
 
-void Controller::SetupRelayoutCallbacks()
-{
-  GdkScreen* screen = gdk_screen_get_default();
-  auto relayout_cb = sigc::mem_fun(this, &Controller::Relayout);
-  sig_manager_.Add<void, GdkScreen*>(screen, "monitors-changed", relayout_cb);
-  sig_manager_.Add<void, GdkScreen*>(screen, "size-changed", relayout_cb);
+  window_->UpdateInputWindowGeometry();
+
+  ubus_manager_.UnregisterInterest(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST);
 }
 
 void Controller::RegisterUBusInterests()
@@ -218,13 +217,19 @@ nux::Geometry Controller::GetIdealWindowGeometry()
                         monitor_geo.height - panel_style.panel_height);
 }
 
-void Controller::Relayout(GdkScreen*screen)
+void Controller::Relayout(bool check_monitor)
 {
   EnsureDash();
 
+  if (check_monitor)
+  {
+    monitor_ = CLAMP(GetIdealMonitor(), 0, static_cast<int>(UScreen::GetDefault()->GetMonitors().size()-1));
+    printf("relayout on monitor:%d, monitor count:%d\n", monitor_, static_cast<int>(UScreen::GetDefault()->GetMonitors().size()));
+  }
+
   nux::Geometry geo = GetIdealWindowGeometry();
-  window_->SetGeometry(geo);
   view_->Relayout();
+  window_->SetGeometry(geo);
   panel::Style &panel_style = panel::Style::Instance();
   view_->SetMonitorOffset(launcher_width, panel_style.panel_height);
 }
@@ -291,7 +296,11 @@ void Controller::ShowDash()
   window_->ShowWindow(true);
   window_->PushToFront();
   if (!Settings::Instance().is_standalone) // in standalone mode, we do not need an input window. we are one.
+  {
     window_->EnableInputWindow(true, dash::window_title, true, false);
+    // update the input window geometry. This causes the input window to match the actual size of the dash.
+    window_->UpdateInputWindowGeometry();
+  }
   window_->SetInputFocus();
   window_->CaptureMouseDownAnyWhereElse(true);
   window_->QueueDraw();
@@ -443,6 +452,14 @@ void Controller::OnDBusMethodCall(GDBusConnection* connection, const gchar* send
     self->HideDash();
     g_dbus_method_invocation_return_value(invocation, nullptr);
   }
+}
+
+nux::Geometry Controller::GetInputWindowGeometry()
+{
+  EnsureDash();
+  nux::Geometry const& window_geo(window_->GetGeometry());
+  nux::Geometry const& view_content_geo(view_->GetContentGeometry());
+  return nux::Geometry(window_geo.x, window_geo.y, view_content_geo.width, view_content_geo.height);
 }
 
 

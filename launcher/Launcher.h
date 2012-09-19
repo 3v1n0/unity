@@ -83,8 +83,6 @@ public:
   void SetModel(LauncherModel::Ptr model);
   LauncherModel::Ptr GetModel() const;
 
-  void SetDevicesSettings(DevicesSettings::Ptr devices_settings);
-
   void StartKeyShowLauncher();
   void EndKeyShowLauncher();
 
@@ -121,9 +119,8 @@ public:
   int GetDragDelta() const;
   void SetHover(bool hovered);
 
-  sigc::signal<void, char*, AbstractLauncherIcon::Ptr> launcher_addrequest;
-  sigc::signal<void, AbstractLauncherIcon::Ptr> launcher_removerequest;
-  sigc::signal<void, AbstractLauncherIcon::Ptr> icon_animation_complete;
+  sigc::signal<void, std::string const&, AbstractLauncherIcon::Ptr> add_request;
+  sigc::signal<void, AbstractLauncherIcon::Ptr> remove_request;
   sigc::signal<void> selection_change;
   sigc::signal<void> hidden_changed;
   sigc::signal<void> sc_launcher_icon_animation;
@@ -199,7 +196,7 @@ private:
   void OnSelectionChanged(AbstractLauncherIcon::Ptr selection);
 
   bool StrutHack();
-  bool StartIconDragTimeout();
+  bool StartIconDragTimeout(int x, int y);
   bool OnScrollTimeout();
   bool OnUpdateDragManagerTimeout();
 
@@ -319,6 +316,7 @@ private:
   void DndReset();
   void DndHoveredIconReset();
   void DndTimeoutSetup();
+  bool DndIsSpecialRequest(std::string const& uri) const;
 
   LauncherModel::Ptr _model;
   nux::BaseWindow* _parent;
@@ -335,7 +333,6 @@ private:
 
   bool _hovered;
   bool _hidden;
-  bool _scroll_limit_reached;
   bool _render_drag_window;
   bool _shortcuts_shown;
   bool _data_checked;
@@ -345,17 +342,12 @@ private:
   bool _dash_is_open;
   bool _hud_is_open;
 
-  BacklightMode _backlight_mode;
-
   float _folded_angle;
   float _neg_folded_angle;
   float _folded_z_distance;
-  float _last_delta_y;
   float _edge_overcome_pressure;
 
   LauncherActionState _launcher_action_state;
-  LaunchAnimation _launch_animation;
-  UrgentAnimation _urgent_animation;
 
   int _space_between_icons;
   int _icon_image_size;
@@ -371,6 +363,7 @@ private:
   int _launcher_drag_delta_min;
   int _enter_y;
   int _last_button_press;
+  int _drag_icon_position;
   float _drag_out_delta_x;
   bool _drag_gesture_ongoing;
   float _last_reveal_progress;
@@ -394,8 +387,6 @@ private:
 
   ui::AbstractIconRenderer::Ptr icon_renderer;
   BackgroundEffectHelper bg_effect_helper_;
-
-  DevicesSettings::Ptr devices_settings_;
 
   UBusManager ubus_;
   glib::SourceManager sources_;

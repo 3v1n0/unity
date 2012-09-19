@@ -427,14 +427,14 @@ Style::Style()
     style_instance = this;
   }
 
-  auto formfactor_lambda = [this] () 
+  auto formfactor_lambda = [this] (FormFactor)
   {
-    FormFactor formfactor = Settings::Instance().GetFormFactor();
+    FormFactor formfactor = Settings::Instance().form_factor();
     always_maximised = (formfactor == FormFactor::NETBOOK || formfactor == FormFactor::TV); 
   };
 
-  Settings::Instance().changed.connect(formfactor_lambda);
-  formfactor_lambda();
+  Settings::Instance().form_factor.changed.connect(formfactor_lambda);
+  formfactor_lambda(FormFactor());
 }
 
 Style::~Style ()

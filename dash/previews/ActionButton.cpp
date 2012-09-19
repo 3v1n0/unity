@@ -85,7 +85,7 @@ void ActionButton::Init()
   key_nav_focus_activate.connect([&](nux::Area*)
   {
     if (GetInputEventSensitivity())
-      Active() ? Deactivate() : Activate();
+      activate.emit(this, action_hint_);
   });
 }
 
@@ -250,9 +250,7 @@ void ActionButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                        col);
 
   nux::BaseTexture* texture = cr_normal_->GetTexture();
-  if (Active())
-    texture = cr_active_->GetTexture();
-  else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
+  if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
     texture = cr_prelight_->GetTexture();
   else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
     texture = cr_active_->GetTexture();
@@ -297,7 +295,7 @@ void ActionButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 void ActionButton::RecvClick(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  click.emit(this, action_hint_);
+  activate.emit(this, action_hint_);
 }
 
 void ActionButton::SetFont(std::string const& font_hint)
@@ -308,31 +306,6 @@ void ActionButton::SetFont(std::string const& font_hint)
     ComputeContentSize();
     QueueDraw();
   }
-}
-
-
-void ActionButton::Activate()
-{
-  if (active_ == true)
-  {
-    // already active
-    return;
-  }
-
-  active_ = true;
-  QueueDraw();
-}
-
-void ActionButton::Deactivate()
-{
-  if (active_ == false)
-  {
-    // already deactivated
-    return;
-  }
-
-  active_ = false;
-  QueueDraw();
 }
 
 std::string ActionButton::GetLabel() const

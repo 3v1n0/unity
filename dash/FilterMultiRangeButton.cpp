@@ -226,6 +226,13 @@ void FilterMultiRangeButton::Draw(nux::GraphicsEngine& GfxContext, bool force_dr
   // clear what is behind us
   unsigned int alpha = 0, src = 0, dest = 0;
   GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
+  if (RedirectedAncestor())
+  {
+    // This is necessary when doing redirected rendering.
+    // Clean the area below this view before drawing anything.
+    GfxContext.GetRenderStates().SetBlend(false);
+    GfxContext.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+  }
   GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
   nux::Color col = nux::color::Black;

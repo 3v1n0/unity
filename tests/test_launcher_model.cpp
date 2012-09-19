@@ -158,6 +158,27 @@ TEST_F(TestLauncherModel, ModelKeepsPriorityDeltas)
 
 TEST_F(TestLauncherModel, ReorderBefore)
 {
+  model.AddIcon(icon1);
+  model.AddIcon(icon2);
+  model.AddIcon(icon3);
+  model.AddIcon(icon4);
+
+  model.ReorderBefore(icon3, icon2, false);
+
+  LauncherModel::iterator it;
+  it = model.begin();
+
+  EXPECT_EQ(icon1, *it);
+  it++;
+  EXPECT_EQ(icon3, *it);
+  it++;
+  EXPECT_EQ(icon2, *it);
+  it++;
+  EXPECT_EQ(icon4, *it);
+}
+
+TEST_F(TestLauncherModel, ReorderBeforeWithPriority)
+{
   icon1->SetSortPriority(0);
   icon2->SetSortPriority(1);
   icon3->SetSortPriority(2);
@@ -182,28 +203,70 @@ TEST_F(TestLauncherModel, ReorderBefore)
   EXPECT_EQ(icon4, *it);
 }
 
-TEST_F(TestLauncherModel, ReorderAfter)
+TEST_F(TestLauncherModel, ReorderAfterNext)
 {
   model.AddIcon(icon1);
-  model.AddIcon(icon3);
   model.AddIcon(icon2);
+  model.AddIcon(icon3);
   model.AddIcon(icon4);
 
-  model.ReorderAfter(icon3, icon2);
+  model.ReorderAfter(icon2, icon3);
 
   LauncherModel::iterator it;
   it = model.begin();
 
   EXPECT_EQ(icon1, *it);
   it++;
-  EXPECT_EQ(icon2, *it);
-  it++;
   EXPECT_EQ(icon3, *it);
+  it++;
+  EXPECT_EQ(icon2, *it);
   it++;
   EXPECT_EQ(icon4, *it);
 }
 
+TEST_F(TestLauncherModel, ReorderAfterPrevious)
+{
+  model.AddIcon(icon1);
+  model.AddIcon(icon2);
+  model.AddIcon(icon3);
+  model.AddIcon(icon4);
+
+  model.ReorderAfter(icon4, icon1);
+
+  LauncherModel::iterator it;
+  it = model.begin();
+
+  EXPECT_EQ(icon1, *it);
+  it++;
+  EXPECT_EQ(icon4, *it);
+  it++;
+  EXPECT_EQ(icon2, *it);
+  it++;
+  EXPECT_EQ(icon3, *it);
+}
+
 TEST_F(TestLauncherModel, ReorderSmart)
+{
+  model.AddIcon(icon1);
+  model.AddIcon(icon2);
+  model.AddIcon(icon3);
+  model.AddIcon(icon4);
+
+  model.ReorderSmart(icon3, icon2, false);
+
+  LauncherModel::iterator it;
+  it = model.begin();
+
+  EXPECT_EQ(icon1, *it);
+  it++;
+  EXPECT_EQ(icon3, *it);
+  it++;
+  EXPECT_EQ(icon2, *it);
+  it++;
+  EXPECT_EQ(icon4, *it);
+}
+
+TEST_F(TestLauncherModel, ReorderSmartWithDifferentPriority)
 {
   icon1->SetSortPriority(0);
   icon2->SetSortPriority(1);
@@ -227,6 +290,101 @@ TEST_F(TestLauncherModel, ReorderSmart)
   EXPECT_EQ(icon2, *it);
   it++;
   EXPECT_EQ(icon4, *it);
+}
+
+TEST_F(TestLauncherModel, ReorderSmartWithSimilarPriority)
+{
+  icon1->SetSortPriority(0);
+  icon2->SetSortPriority(0);
+  icon3->SetSortPriority(1);
+  icon4->SetSortPriority(1);
+
+  model.AddIcon(icon1);
+  model.AddIcon(icon2);
+  model.AddIcon(icon3);
+  model.AddIcon(icon4);
+
+  model.ReorderSmart(icon4, icon3, false);
+
+  LauncherModel::iterator it;
+  it = model.begin();
+
+  EXPECT_EQ(icon1, *it);
+  it++;
+  EXPECT_EQ(icon2, *it);
+  it++;
+  EXPECT_EQ(icon4, *it);
+  it++;
+  EXPECT_EQ(icon3, *it);
+}
+
+TEST_F(TestLauncherModel, ReorderSmartManyIconsWithSimilarPriority)
+{
+  AbstractLauncherIcon::Ptr icon5(new MockLauncherIcon);
+  AbstractLauncherIcon::Ptr icon6(new MockLauncherIcon);
+  icon1->SetSortPriority(0);
+  icon2->SetSortPriority(0);
+  icon3->SetSortPriority(1);
+  icon4->SetSortPriority(1);
+  icon5->SetSortPriority(1);
+  icon6->SetSortPriority(2);
+
+  model.AddIcon(icon1);
+  model.AddIcon(icon2);
+  model.AddIcon(icon3);
+  model.AddIcon(icon4);
+  model.AddIcon(icon5);
+  model.AddIcon(icon6);
+
+  model.ReorderSmart(icon6, icon4, false);
+
+  LauncherModel::iterator it;
+  it = model.begin();
+
+  EXPECT_EQ(icon1, *it); it++;
+  EXPECT_EQ(icon2, *it); it++;
+  EXPECT_EQ(icon3, *it); it++;
+  EXPECT_EQ(icon6, *it); it++;
+  EXPECT_EQ(icon4, *it); it++;
+  EXPECT_EQ(icon5, *it);
+}
+
+TEST_F(TestLauncherModel, OrderByPosition)
+{
+  icon1->position = AbstractLauncherIcon::Position::BEGIN;
+  icon2->position = AbstractLauncherIcon::Position::FLOATING;
+  icon3->position = AbstractLauncherIcon::Position::FLOATING;
+  icon4->position = AbstractLauncherIcon::Position::END;
+
+  model.AddIcon(icon3);
+  model.AddIcon(icon4);
+  model.AddIcon(icon2);
+  model.AddIcon(icon1);
+
+  auto it = model.begin();
+  EXPECT_EQ(icon1, *it);
+  it++;
+  EXPECT_EQ(icon3, *it);
+  it++;
+  EXPECT_EQ(icon2, *it);
+  it++;
+  EXPECT_EQ(icon4, *it);
+  it++;
+  EXPECT_EQ(it, model.end());
+
+  auto it_main = model.main_begin();
+  EXPECT_EQ(icon1, *it_main);
+  it_main++;
+  EXPECT_EQ(icon3, *it_main);
+  it_main++;
+  EXPECT_EQ(icon2, *it_main);
+  it_main++;
+  EXPECT_EQ(it_main, model.main_end());
+
+  auto it_shelf = model.shelf_begin();
+  EXPECT_EQ(icon4, *it_shelf);
+  it_shelf++;
+  EXPECT_EQ(it_shelf, model.shelf_end());
 }
 
 TEST_F(TestLauncherModel, OrderByType)
@@ -255,22 +413,6 @@ TEST_F(TestLauncherModel, OrderByType)
   EXPECT_EQ(icon5, *it);
   it++;
   EXPECT_EQ(it, model.end());
-
-  auto it_main = model.main_begin();
-  EXPECT_EQ(icon1, *it_main);
-  it_main++;
-  EXPECT_EQ(icon2, *it_main);
-  it_main++;
-  EXPECT_EQ(icon3, *it_main);
-  it_main++;
-  EXPECT_EQ(icon4, *it_main);
-  it_main++;
-  EXPECT_EQ(it_main, model.main_end());
-
-  auto it_shelf = model.shelf_begin();
-  EXPECT_EQ(icon5, *it_shelf);
-  it_shelf++;
-  EXPECT_EQ(it_shelf, model.shelf_end());
 }
 
 TEST_F(TestLauncherModel, GetClosestIcon)

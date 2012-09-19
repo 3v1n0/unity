@@ -28,7 +28,7 @@ namespace launcher
 {
 
 SpacerLauncherIcon::SpacerLauncherIcon(int monitor)
-  : SingleMonitorLauncherIcon(IconType::APPLICATION, monitor)
+  : SingleMonitorLauncherIcon(IconType::SPACER, monitor)
 {
   SetQuirk(Quirk::VISIBLE, true);
   SetQuirk(Quirk::RUNNING, false);

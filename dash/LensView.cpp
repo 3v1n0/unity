@@ -174,7 +174,6 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
         if ((child && child->HasKeyFocus()) ||
             (expand_label && expand_label->HasKeyFocus()))
         {
-
           focused_pos.x += child->GetGeometry().x;
           focused_pos.y += child->GetGeometry().y - 30;
           focused_pos.height += 30;
@@ -200,7 +199,7 @@ void LensView::SetupViews(nux::Area* show_filters)
   scroll_view_->EnableHorizontalScrollBar(false);
   layout_->AddView(scroll_view_);
 
-  scroll_view_->OnGeometryChanged.connect([this] (nux::Area *area, nux::Geometry& geo)
+  scroll_view_->geometry_changed.connect([this] (nux::Area *area, nux::Geometry& geo)
   {
     CheckScrollBarState();
   });

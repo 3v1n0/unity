@@ -36,6 +36,7 @@ public:
   static std::string GetDesktopID(std::string const& desktop_path);
   static std::string GetDesktopID(std::vector<std::string> const& default_paths,
                                   std::string const& desktop_path);
+  static std::string GetDesktopPathById(std::string const& desktop_id);
 
   static std::string GetBackgroundColor(std::string const& desktop_path);
 };

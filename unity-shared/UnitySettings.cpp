@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
-* Copyright (C) 2010, 2011 Canonical Ltd
+* Copyright (C) 2010, 2011, 2012 Canonical Ltd
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License version 3 as
@@ -15,6 +15,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
 * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+*              Andrea Azzarone <andrea.azzarone@canonical.com>
 */
 
 #include <gdk/gdk.h>
@@ -32,81 +33,69 @@ namespace
 nux::logging::Logger logger("unity");
 
 Settings* settings_instance = nullptr;
-const char* const FORM_FACTOR = "form-factor";
+
+const std::string SETTINGS_NAME = "com.canonical.Unity";
+const std::string FORM_FACTOR = "form-factor";
 }
 
+//
+// Start private implementation
+//
 class Settings::Impl
 {
 public:
-  Impl(Settings* owner);
-  ~Impl();
+  Impl(Settings* owner)
+    : parent_(owner)
+    , gsettings_(g_settings_new(SETTINGS_NAME.c_str()))
+    , cached_form_factor_(FormFactor::DESKTOP)
+  {
+    CacheFormFactor();
 
-  FormFactor GetFormFactor() const;
-  void SetFormFactor(FormFactor factor);
+    form_factor_changed_.Connect(gsettings_, "changed::" + FORM_FACTOR, [this] (GSettings*, gchar*) {
+      CacheFormFactor();
+      parent_->form_factor.changed.emit(cached_form_factor_);
+    });
+  }
 
-private:
-  void Refresh();
-  static void Changed(GSettings* settings, gchar* key, Impl* self);
+  void CacheFormFactor()
+  {
+    int raw_from_factor = g_settings_get_enum(gsettings_, FORM_FACTOR.c_str());
 
-private:
-  Settings* owner_;
-  GSettings* settings_;
-  FormFactor form_factor_;
+    if (raw_from_factor == 0) //Automatic
+    {
+      auto uscreen = UScreen::GetDefault();
+      int primary_monitor = uscreen->GetMonitorWithMouse();
+      auto const& geo = uscreen->GetMonitorGeometry(primary_monitor);
+
+      cached_form_factor_ = geo.height > 799 ? FormFactor::DESKTOP : FormFactor::NETBOOK;
+    }
+    else
+    {
+      cached_form_factor_ = static_cast<FormFactor>(raw_from_factor);
+    }
+  }
+
+  FormFactor GetFormFactor() const
+  {
+    return cached_form_factor_;
+  }
+
+  bool SetFormFactor(FormFactor factor)
+  {
+    g_settings_set_enum(gsettings_, FORM_FACTOR.c_str(), static_cast<int>(factor));
+    return true;
+  }
+
+  Settings* parent_;
+  glib::Object<GSettings> gsettings_;
+  FormFactor cached_form_factor_;
+
+  glib::Signal<void, GSettings*, gchar* > form_factor_changed_;
 };
 
-
-Settings::Impl::Impl(Settings* owner)
-  : owner_(owner)
-  , settings_(nullptr)
-  , form_factor_(FormFactor::DESKTOP)
-{
-  settings_ = g_settings_new("com.canonical.Unity");
-  g_signal_connect(settings_, "changed",
-                   (GCallback)(Impl::Changed), this);
-  Refresh();
-}
-
-Settings::Impl::~Impl()
-{
-  g_object_unref(settings_);
-}
-
-void Settings::Impl::Refresh()
-{
-  int raw_from_factor = g_settings_get_enum(settings_, FORM_FACTOR);
-
-  if (raw_from_factor == 0) //Automatic
-  {
-    UScreen *uscreen = UScreen::GetDefault();
-    int primary_monitor = uscreen->GetMonitorWithMouse();
-    auto geo = uscreen->GetMonitorGeometry(primary_monitor);
-
-    form_factor_ = geo.height > 799 ? FormFactor::DESKTOP : FormFactor::NETBOOK;
-  }
-  else
-  {
-    form_factor_ = static_cast<FormFactor>(raw_from_factor);
-  }
-
-  owner_->changed.emit();
-}
-
-void Settings::Impl::Changed(GSettings* settings, char* key, Impl* self)
-{
-  self->Refresh();
-}
-
-FormFactor Settings::Impl::GetFormFactor() const
-{
-  return form_factor_;
-}
-
-void Settings::Impl::SetFormFactor(FormFactor factor)
-{
-  form_factor_ = factor;
-  g_settings_set_enum(settings_, FORM_FACTOR, static_cast<int>(factor));
-  owner_->changed.emit();
-}
+//
+// End private implementation
+//
 
 Settings::Settings()
   : is_standalone(false)
@@ -118,13 +107,15 @@ Settings::Settings()
   }
   else
   {
+    form_factor.SetGetterFunction(sigc::mem_fun(*pimpl, &Impl::GetFormFactor));
+    form_factor.SetSetterFunction(sigc::mem_fun(*pimpl, &Impl::SetFormFactor));
+
     settings_instance = this;
   }
 }
 
 Settings::~Settings()
 {
-  delete pimpl;
   if (settings_instance == this)
     settings_instance = nullptr;
 }
@@ -137,16 +128,6 @@ Settings& Settings::Instance()
   }
 
   return *settings_instance;
-}
-
-FormFactor Settings::GetFormFactor() const
-{
-  return pimpl->GetFormFactor();
-}
-
-void Settings::SetFormFactor(FormFactor factor)
-{
-  pimpl->SetFormFactor(factor);
 }
 
 

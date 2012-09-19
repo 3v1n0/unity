@@ -50,12 +50,13 @@ PluginAdapter::Initialize(CompScreen* screen)
   _default = new PluginAdapter(screen);
 }
 
-PluginAdapter::PluginAdapter(CompScreen* screen) :
-  m_Screen(screen),
-  m_ExpoActionList(0),
-  m_ScaleActionList(0),
-  _in_show_desktop (false),
-  _last_focused_window(nullptr)
+PluginAdapter::PluginAdapter(CompScreen* screen)
+  : m_Screen(screen)
+  , m_ExpoActionList(0)
+  , m_ScaleActionList(0)
+  , _expo_state(false)
+  , _in_show_desktop(false)
+  , _last_focused_window(nullptr)
 {
 }
 
@@ -171,12 +172,13 @@ PluginAdapter::IsScaleActiveForGroup() const
 bool
 PluginAdapter::IsExpoActive() const
 {
-  return false;
+  return _expo_state;
 }
 
 void
 PluginAdapter::InitiateExpo()
 {
+  _expo_state = !_expo_state;
 }
 
 bool
@@ -306,6 +308,12 @@ PluginAdapter::SetWindowIconGeometry(Window window, nux::Geometry const& geo)
 void
 PluginAdapter::ShowDesktop()
 {
+  _in_show_desktop = !_in_show_desktop;
+}
+
+bool PluginAdapter::InShowDesktop() const
+{
+  return _in_show_desktop;
 }
 
 void

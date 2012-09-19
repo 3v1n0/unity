@@ -48,7 +48,6 @@ public:
   std::string DesktopFile();
 
   bool IsSticky() const;
-  bool IsVisible() const;
   bool IsActive() const;
   bool IsRunning() const;
   bool IsUrgent() const;

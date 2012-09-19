@@ -12,7 +12,9 @@ from __future__ import absolute_import
 from autopilot.matchers import Eventually
 from autopilot.emulators.X11 import ScreenGeometry
 from autopilot.testcase import multiply_scenarios
-from os import remove
+from os import remove, environ
+from os.path import exists
+from tempfile import mktemp
 from testtools.matchers import (
     Equals,
     EndsWith,
@@ -61,6 +63,8 @@ class HudBehaviorTests(HudTestsBase):
     def setUp(self):
         super(HudBehaviorTests, self).setUp()
 
+        if not environ.get('UBUNTU_MENUPROXY', ''):
+            self.patch_environment('UBUNTU_MENUPROXY', 'libappmenu.so')
         self.hud_monitor = self.screen_geo.get_primary_monitor()
         self.screen_geo.move_mouse_to_monitor(self.hud_monitor)
 
@@ -170,8 +174,9 @@ class HudBehaviorTests(HudTestsBase):
     def test_gedit_undo(self):
         """Test that the 'undo' action in the Hud works with GEdit."""
 
-        self.addCleanup(remove, '/tmp/autopilot_gedit_undo_test_temp_file.txt')
-        self.start_app('Text Editor', files=['/tmp/autopilot_gedit_undo_test_temp_file.txt'], locale='C')
+        file_path = mktemp()
+        self.addCleanup(remove, file_path)
+        self.start_app('Text Editor', files=[file_path], locale='C')
 
         self.keyboard.type("0")
         self.keyboard.type(" ")
@@ -186,9 +191,9 @@ class HudBehaviorTests(HudTestsBase):
         self.keyboard.press_and_release('Return')
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
         self.keyboard.press_and_release("Ctrl+s")
-        sleep(1)
+        self.assertThat(lambda: exists(file_path), Eventually(Equals(True)))
 
-        contents = open("/tmp/autopilot_gedit_undo_test_temp_file.txt").read().strip('\n')
+        contents = open(file_path).read().strip('\n')
         self.assertEqual("0 ", contents)
 
     def test_hud_to_dash_has_key_focus(self):
@@ -404,6 +409,38 @@ class HudBehaviorTests(HudTestsBase):
         self.keyboard.type("HasFocus")
         self.assertThat(self.hud.search_string, Eventually(Equals("HasFocus")))
 
+    def test_closes_mouse_down_outside(self):
+        """Test that a mouse down outside of the hud closes the hud."""
+
+        self.hud.ensure_visible()
+        current_monitor = self.hud.monitor
+
+        (x,y,w,h) = self.hud.geometry
+        (screen_x,screen_y,screen_w,screen_h) = self.screen_geo.get_monitor_geometry(current_monitor)
+        
+        self.mouse.move(x + w + (screen_w-((screen_x-x)+w))/2, y + h + (screen_h-((screen_y-y)+h))/2)
+        self.mouse.click()
+        
+        self.assertThat(self.hud.visible, Eventually(Equals(False)))
+
+    def test_closes_then_focuses_window_on_mouse_down(self):
+        """If 2 windows are open with 1 maximized and the non-maxmized
+        focused. Then from the Hud clicking on the maximized window
+        must focus that window and close the hud.
+        """
+        char_win = self.start_app("Character Map")
+        self.keybinding("window/maximize")
+        self.start_app("Calculator")
+
+        self.hud.ensure_visible()
+
+        #Click bottom right of the screen
+        w = self.screen_geo.get_screen_width()
+        h = self.screen_geo.get_screen_height()
+        self.mouse.move(w,h)
+        self.mouse.click()
+
+        self.assertProperty(char_win, is_active=True)
 
 class HudLauncherInteractionsTests(HudTestsBase):
 
@@ -694,5 +731,5 @@ class HudCrossMonitorsTests(HudTestsBase):
             self.screen_geo.move_mouse_to_monitor(monitor+1)
             sleep(.5)
             self.mouse.click()
-            
+
             self.assertThat(self.hud.visible, Eventually(Equals(False)))

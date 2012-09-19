@@ -438,7 +438,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
   bool paint_blur = BackgroundEffectHelper::blur_type != BLUR_NONE;
   nux::Geometry geo(content_geo);
 
-  int excess_border = (Settings::Instance().GetFormFactor() != FormFactor::NETBOOK || force_edges) ? EXCESS_BORDER : 0;
+  int excess_border = (Settings::Instance().form_factor() != FormFactor::NETBOOK || force_edges) ? EXCESS_BORDER : 0;
 
   nux::Geometry larger_content_geo = content_geo;
   larger_content_geo.OffsetSize(excess_border, excess_border);
@@ -578,7 +578,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
   }
 
 
-  if (Settings::Instance().GetFormFactor() != FormFactor::NETBOOK || force_edges)
+  if (Settings::Instance().form_factor() != FormFactor::NETBOOK || force_edges)
   {
     // Paint the edges
     {
@@ -835,7 +835,7 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
   nux::Geometry geo = geometry;
   bgs = 0;
 
-  int excess_border = (Settings::Instance().GetFormFactor() != FormFactor::NETBOOK) ? EXCESS_BORDER : 0;
+  int excess_border = (Settings::Instance().form_factor() != FormFactor::NETBOOK) ? EXCESS_BORDER : 0;
 
   nux::Geometry larger_content_geo = content_geo;
   larger_content_geo.OffsetSize(excess_border, excess_border);

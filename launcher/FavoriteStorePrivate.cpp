@@ -124,6 +124,20 @@ bool NeedToBeReordered(std::list<std::string> const& old, std::list<std::string>
   return false;
 }
 
+bool IsDesktopFilePath(std::string const& path)
+{
+  static const std::string desktop_ext = ".desktop";
+  auto path_len = path.length();
+  auto desktop_length = desktop_ext.length();
+
+  if (path_len > desktop_length)
+  {
+    return path.compare(path_len - desktop_length, desktop_length, desktop_ext) == 0;
+  }
+
+  return false;
+}
+
 
 } // namespace impl
 } // namespace internal

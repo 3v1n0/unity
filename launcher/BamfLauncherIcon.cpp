@@ -74,11 +74,7 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   tooltip_text = BamfName();
   icon_name = (icon ? icon.Str() : DEFAULT_ICON);
 
-  if (IsSticky())
-    SetQuirk(Quirk::VISIBLE, true);
-  else
-    SetQuirk(Quirk::VISIBLE, bamf_view_user_visible(bamf_view));
-
+  SetQuirk(Quirk::VISIBLE, bamf_view_user_visible(bamf_view));
   SetQuirk(Quirk::ACTIVE, bamf_view_is_active(bamf_view));
   SetQuirk(Quirk::RUNNING, bamf_view_is_running(bamf_view));
 
@@ -95,7 +91,7 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   sig = new glib::Signal<void, BamfView*, BamfView*>(bamf_view, "child-removed",
                           [&] (BamfView*, BamfView*) { EnsureWindowState(); });
   _gsignals.Add(sig);
-  
+
   sig = new glib::Signal<void, BamfView*, BamfView*>(bamf_view, "child-moved",
                                                      [&] (BamfView *, BamfView *) {
                                                        EnsureWindowState();
@@ -173,9 +169,12 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
 
 BamfLauncherIcon::~BamfLauncherIcon()
 {
-  if (_bamf_app)
+  if (_bamf_app.IsType(BAMF_TYPE_APPLICATION))
+  {
+    bamf_view_set_sticky(BAMF_VIEW(_bamf_app.RawPtr()), FALSE);
     g_object_set_qdata(G_OBJECT(_bamf_app.RawPtr()),
                        g_quark_from_static_string("unity-seen"), nullptr);
+  }
 }
 
 void BamfLauncherIcon::Remove()
@@ -199,11 +198,6 @@ bool BamfLauncherIcon::IsSticky() const
     return false;
   else
     return bamf_view_is_sticky(BAMF_VIEW(_bamf_app.RawPtr()));
-}
-
-bool BamfLauncherIcon::IsVisible() const
-{
-  return GetQuirk(Quirk::VISIBLE);
 }
 
 bool BamfLauncherIcon::IsActive() const
@@ -235,7 +229,6 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     wm->Activate(arg.target);
     return;
   }
-  
 
   /* We should check each child to see if there is
    * an unmapped (!= minimized) window around and
@@ -638,22 +631,22 @@ std::vector<Window> BamfLauncherIcon::GetFocusableWindows(ActionArg arg, bool &a
   GList* children;
 
   BamfView *focusable_child = BAMF_VIEW (bamf_application_get_focusable_child (_bamf_app.RawPtr()));
-  
+
   if (focusable_child != NULL)
     {
       Window xid;
-      
+
       if (BAMF_IS_WINDOW (focusable_child))
         xid = bamf_window_get_xid (BAMF_WINDOW(focusable_child));
       else if (BAMF_IS_TAB (focusable_child))
         {
           BamfTab *focusable_tab = BAMF_TAB (focusable_child);
-          
+
           xid = bamf_tab_get_xid (focusable_tab);
-          
+
           bamf_tab_raise (focusable_tab);
         }
-      
+
       windows.push_back(xid);
       return windows;
     }
@@ -662,7 +655,7 @@ std::vector<Window> BamfLauncherIcon::GetFocusableWindows(ActionArg arg, bool &a
       if (g_strcmp0 (bamf_application_get_application_type (_bamf_app.RawPtr()), "webapp") == 0)
         {
           OpenInstanceLauncherIcon(arg);
-          
+
           return windows;
         }
     }
@@ -762,13 +755,13 @@ void BamfLauncherIcon::EnsureWindowState()
       {
         /* BamfTab does not support the monitor interface...so a bit of a nasty hack here. */
         xid = bamf_tab_get_xid (static_cast<BamfTab*>(l->data));
-        
+
         if (WindowManager::Default()->IsWindowOnCurrentDesktop(xid) == false)
           continue;
-        
+
         for (int j = 0; j < max_num_monitors; j++)
           monitors[j] = true;
-        
+
         continue;
       }
 
@@ -939,30 +932,28 @@ void BamfLauncherIcon::Quit()
 
 void BamfLauncherIcon::Stick(bool save)
 {
+  SimpleLauncherIcon::Stick(save);
+
   if (IsSticky())
     return;
 
-  std::string const& desktop_file = DesktopFile();
   bamf_view_set_sticky(BAMF_VIEW(_bamf_app.RawPtr()), true);
-
-  if (save && !desktop_file.empty())
-    FavoriteStore::Instance().AddFavorite(desktop_file, -1);
 }
 
 void BamfLauncherIcon::UnStick()
 {
+  SimpleLauncherIcon::UnStick();
+
   if (!IsSticky())
     return;
 
-  std::string const& desktop_file = DesktopFile();
   BamfView* view = BAMF_VIEW(_bamf_app.RawPtr());
   bamf_view_set_sticky(view, false);
 
-  if (bamf_view_is_closed(view) || !bamf_view_user_visible(view))
-    Remove();
+  SetQuirk(Quirk::VISIBLE, bamf_view_user_visible(view));
 
-  if (!desktop_file.empty())
-    FavoriteStore::Instance().RemoveFavorite(desktop_file);
+  if (bamf_view_is_closed(view))
+    Remove();
 }
 
 void BamfLauncherIcon::ToggleSticky()
@@ -1227,12 +1218,11 @@ std::string BamfLauncherIcon::GetRemoteUri()
 {
   if (_remote_uri.empty())
   {
-    const std::string prefix = "application://";
     std::string const& desktop_id = GetDesktopID();
 
     if (!desktop_id.empty())
     {
-      _remote_uri = prefix + desktop_id;
+      _remote_uri = FavoriteStore::URI_PREFIX_APP + desktop_id;
     }
   }
 
@@ -1384,32 +1374,25 @@ void BamfLauncherIcon::FillSupportedTypes()
     if (desktop_file.empty())
       return;
 
-    GKeyFile* key_file = g_key_file_new();
+    std::shared_ptr<GKeyFile> key_file(g_key_file_new(), g_key_file_free);
     glib::Error error;
 
-    g_key_file_load_from_file(key_file, desktop_file.c_str(), (GKeyFileFlags) 0, &error);
+    g_key_file_load_from_file(key_file.get(), desktop_file.c_str(), (GKeyFileFlags) 0, &error);
 
     if (error)
-    {
-      g_key_file_free(key_file);
       return;
-    }
 
-    char** mimes = g_key_file_get_string_list(key_file, "Desktop Entry", "MimeType", nullptr, nullptr);
+    std::shared_ptr<char*> mimes(g_key_file_get_string_list(key_file.get(), "Desktop Entry", "MimeType", nullptr, nullptr),
+                                 g_strfreev);
+
     if (!mimes)
-    {
-      g_key_file_free(key_file);
       return;
-    }
 
-    for (int i = 0; mimes[i]; i++)
+    for (int i = 0; mimes.get()[i]; i++)
     {
-      unity::glib::String super_type(g_content_type_from_mime_type(mimes[i]));
+      unity::glib::String super_type(g_content_type_from_mime_type(mimes.get()[i]));
       _supported_types.insert(super_type.Str());
     }
-
-    g_key_file_free(key_file);
-    g_strfreev(mimes);
   }
 }
 

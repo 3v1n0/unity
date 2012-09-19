@@ -26,6 +26,7 @@
 #include "DevicesSettings.h"
 #include "Volume.h"
 #include "VolumeLauncherIcon.h"
+#include "FavoriteStore.h"
 
 namespace unity
 {
@@ -36,7 +37,7 @@ namespace
 
 nux::logging::Logger logger("unity.launcher");
 
-const unsigned int volume_changed_timeout =  500;
+const unsigned int volume_changed_timeout = 500;
 
 }
 
@@ -61,7 +62,7 @@ public:
   }
 
   ~Impl()
-  { 
+  {
     volume_changed_conn_.disconnect();
     volume_removed_conn_.disconnect();
     settings_changed_conn_.disconnect();
@@ -83,7 +84,7 @@ public:
 
   void UpdateKeepInLauncher()
   {
-    auto identifier = volume_->GetIdentifier();
+    auto const& identifier = volume_->GetIdentifier();
     keep_in_launcher_ = !devices_settings_->IsABlacklistedDevice(identifier);
   }
 
@@ -104,6 +105,7 @@ public:
     if (devices_settings_->IsABlacklistedDevice(volume_->GetIdentifier()))
       devices_settings_->TryToUnblacklist(volume_->GetIdentifier());
 
+    parent_->UnStick();
     parent_->Remove();
   }
 
@@ -163,7 +165,8 @@ public:
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
     gsignals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
-        auto identifier = volume_->GetIdentifier();
+        auto const& identifier = volume_->GetIdentifier();
+        parent_->UnStick();
         devices_settings_->TryToBlacklist(identifier);
     }));
 
@@ -239,6 +242,16 @@ public:
     menu.push_back(menu_item);
   }
 
+  std::string GetRemoteUri()
+  {
+    auto const& identifier = volume_->GetIdentifier();
+
+    if (identifier.empty())
+      return "";
+
+    return FavoriteStore::URI_PREFIX_DEVICE + identifier;
+  }
+
   VolumeLauncherIcon* parent_;
   bool keep_in_launcher_;
   Volume::Ptr volume_;
@@ -291,6 +304,23 @@ void VolumeLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 AbstractLauncherIcon::MenuItemsVector VolumeLauncherIcon::GetMenus()
 {
   return pimpl_->GetMenus();
+}
+
+std::string VolumeLauncherIcon::GetRemoteUri()
+{
+  return pimpl_->GetRemoteUri();
+}
+
+void VolumeLauncherIcon::Stick(bool save)
+{
+  SimpleLauncherIcon::Stick(save);
+  pimpl_->devices_settings_->TryToUnblacklist(pimpl_->volume_->GetIdentifier());
+}
+
+void VolumeLauncherIcon::UnStick()
+{
+  SimpleLauncherIcon::UnStick();
+  SetQuirk(Quirk::VISIBLE, true);
 }
 
 //

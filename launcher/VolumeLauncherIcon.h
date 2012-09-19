@@ -43,7 +43,10 @@ public:
   void EjectAndShowNotification(); // TODO: rename to private virtual void DoDropToTrash();
   bool CanStop() const;
   void StopDrive();
+  void Stick(bool save = true);
+  void UnStick();
   MenuItemsVector GetMenus();
+  std::string GetRemoteUri();
 
 protected:
   virtual void ActivateLauncherIcon(ActionArg arg);

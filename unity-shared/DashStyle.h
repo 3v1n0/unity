@@ -246,9 +246,11 @@ public:
   int GetCategorySeparatorLeftPadding() const;
   int GetCategorySeparatorRightPadding() const;
 
+
   sigc::signal<void> changed;
 
   nux::Property<bool> always_maximised;
+  nux::Property<bool> preview_mode;
 
 private:
   class Impl;
