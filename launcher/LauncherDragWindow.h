@@ -42,7 +42,8 @@ public:
   void DrawContent(nux::GraphicsEngine& gfxContext, bool forceDraw);
 
   void SetAnimationTarget(int x, int y);
-  void StartAnimation();
+  void StartQuickAnimation();
+  void StartSlowAnimation();
 
   bool Animating() const;
   bool Cancelled() const;
@@ -56,9 +57,11 @@ protected:
   bool AcceptKeyNavFocus();
 
 private:
+  void StartAnimation();
   bool OnAnimationTimeout();
   void CancelDrag();
-
+  
+  float animation_speed_;
   bool _cancelled;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> _icon;
   nux::Point2 _animation_target;
