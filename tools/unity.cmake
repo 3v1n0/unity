@@ -161,7 +161,7 @@ if __name__ == '__main__':
                       help="Store log under filename.")
     parser.add_option("--replace", action="store_true",
                       help="Run unity /!\ This is for compatibility with other desktop interfaces and acts the same as running unity without --replace")
-    parser.add_option("--reset-icons", action="store_true",
+    parser.add_option("--reseticons", action="store_true",
                       help="Reset the default launcher icon.")  
     parser.add_option("-v", "--verbose", action="store_true",
                       help="Get additional debug output from unity.")
