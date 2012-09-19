@@ -663,13 +663,15 @@ void UnityScreen::paintDisplay()
 
   auto gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
 
-  auto graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
-  nux::ObjectPtr<nux::IOpenGLTexture2D> bg_texture =
-    graphics_engine->CreateTextureFromBackBuffer(0, 0,
-                                                 screen->width(),
-                                                 screen->height());
-
-  gpu_device->backup_texture0_ = bg_texture;
+  if (BackgroundEffectHelper::HasDirtyHelpers())
+  {
+    auto graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
+    nux::ObjectPtr<nux::IOpenGLTexture2D> bg_texture =
+      graphics_engine->CreateTextureFromBackBuffer(0, 0,
+                                                   screen->width(),
+                                                   screen->height());
+    gpu_device->backup_texture0_ = bg_texture;
+  }
 
   nux::Geometry geo(0, 0, screen->width (), screen->height ());
   nux::Geometry outputGeo(output->x (), output->y (), output->width (), output->height ());
