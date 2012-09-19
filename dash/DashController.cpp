@@ -24,6 +24,7 @@
 
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/PanelStyle.h"
+#include "unity-shared/DashStyle.h"
 #include "unity-shared/PluginAdapter.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UScreen.h"
@@ -457,6 +458,7 @@ void Controller::OnDBusMethodCall(GDBusConnection* connection, const gchar* send
 nux::Geometry Controller::GetInputWindowGeometry()
 {
   EnsureDash();
+  dash::Style& style = dash::Style::Instance();
   nux::Geometry const& window_geo(window_->GetGeometry());
   nux::Geometry const& view_content_geo(view_->GetContentGeometry());
 
