@@ -346,6 +346,8 @@ bool ResultViewGrid::InspectKeyEvent(unsigned int eventType, unsigned int keysym
     case NUX_KP_ENTER:
       direction = nux::KeyNavDirection::KEY_NAV_ENTER;
       break;
+    case XK_Menu:
+      return true;
     default:
       direction = nux::KeyNavDirection::KEY_NAV_NONE;
       break;
@@ -477,6 +479,16 @@ void ResultViewGrid::OnKeyDown (unsigned long event_type, unsigned long event_ke
   ubus_.SendMessage(UBUS_RESULT_VIEW_KEYNAV_CHANGED,
                     g_variant_new("(iiii)", focused_x, focused_y, renderer_->width(), renderer_->height()));
   selection_change.emit();
+
+  if (event_type == nux::NUX_KEYDOWN && event_keysym == XK_Menu)
+  {
+    UriActivated.emit (focused_uri_, ResultView::ActivateType::PREVIEW);
+    int left_results = selected_index_;
+    int right_results = (num_results - selected_index_) - 1;
+    //FIXME - just uses y right now, needs to use the absolute position of the bottom of the result 
+    ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 
+                              g_variant_new("(iii)", mouse_last_y_, left_results, right_results)); 
+  }
 }
 
 nux::Area* ResultViewGrid::KeyNavIteration(nux::KeyNavDirection direction)
