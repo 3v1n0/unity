@@ -1,4 +1,4 @@
-unity (6.6.0-0ubuntu1) UNRELEASED; urgency=low
+unity (6.6.0-0ubuntu1) quantal-proposed; urgency=low
 
   * New upstream release.
     - Fixes non-escaped character sequences in dash previews (LP: #1039020)
