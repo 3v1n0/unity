@@ -66,7 +66,8 @@ struct MockFavoriteStore : FavoriteStore
   {
     fav_list_ = { FavoriteStore::URI_PREFIX_APP + app::UBUNTU_ONE,
                   FavoriteStore::URI_PREFIX_APP + app::SW_CENTER,
-                  FavoriteStore::URI_PREFIX_APP + app::UPDATE_MANAGER };
+                  FavoriteStore::URI_PREFIX_APP + app::UPDATE_MANAGER,
+                  places::APPS_URI, places::DEVICES_URI };
   }
 
   FavoriteList const& GetFavorites() const
@@ -287,7 +288,10 @@ TEST_F(TestLauncherController, Construction)
     auto const& model_icon_it = std::find_if(lc.Impl()->model_->begin(), lc.Impl()->model_->end(),
     [&fav_uri](AbstractLauncherIcon::Ptr const& i) { return (i->RemoteUri() == fav_uri); });
 
-    ASSERT_TRUE((*model_icon_it).IsValid());
+    if (fav_uri == places::APPS_URI || fav_uri == places::DEVICES_URI)
+      ASSERT_FALSE((*model_icon_it).IsValid());
+    else
+      ASSERT_TRUE((*model_icon_it).IsValid());
   }
 }
 
@@ -672,6 +676,13 @@ TEST_F(TestLauncherController, GetIconByUriApplications)
   {
     auto const& model_icon_it = std::find_if(lc.Impl()->model_->begin(), lc.Impl()->model_->end(),
     [&fav_uri](AbstractLauncherIcon::Ptr const& i) { return (i->RemoteUri() == fav_uri); });
+
+    if (fav_uri == places::APPS_URI || fav_uri == places::DEVICES_URI)
+    {
+      ASSERT_EQ(model_icon_it, lc.Impl()->model_->end());
+      continue;
+    }
+
     ASSERT_NE(model_icon_it, lc.Impl()->model_->end());
 
     auto const& fav = lc.Impl()->GetIconByUri(fav_uri);
@@ -727,6 +738,36 @@ TEST_F(TestLauncherController, AddDevices)
 
   EXPECT_FALSE(lc.Impl()->GetIconByUri(device_icon1->RemoteUri()).IsValid());
   EXPECT_TRUE(lc.Impl()->GetIconByUri(device_icon2->RemoteUri()).IsValid());
+}
+
+TEST_F(TestLauncherController, MigrateFavorites)
+{
+  favorite_store.SetFavorites({"old_file.desktop"});
+
+  lc.Impl()->MigrateFavorites();
+
+  auto new_favs = favorite_store.GetFavorites();
+
+  EXPECT_EQ(*std::next(new_favs.begin(), 0), "old_file.desktop");
+  EXPECT_EQ(*std::next(new_favs.begin(), 1), places::APPS_URI);
+  EXPECT_EQ(*std::next(new_favs.begin(), 2), lc.Impl()->expo_icon_->RemoteUri());
+  EXPECT_EQ(*std::next(new_favs.begin(), 3), places::DEVICES_URI);
+
+  lc.Impl()->MigrateFavorites();
+
+  auto new_new_favs = favorite_store.GetFavorites();
+
+  EXPECT_EQ(new_favs, new_new_favs);
+}
+
+TEST_F(TestLauncherController, MigrateFavoritesUnneeded)
+{
+  favorite_store.SetFavorites({places::APPS_URI});
+  auto old_favs = favorite_store.GetFavorites();
+  lc.Impl()->MigrateFavorites();
+  auto new_favs = favorite_store.GetFavorites();
+
+  EXPECT_EQ(old_favs, new_favs);
 }
 
 TEST_F(TestLauncherController, SetupIcons)
@@ -1377,7 +1418,8 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedDeviceSection)
   auto const& device_icon1(*(icons.begin()));
   auto const& device_icon2(*(std::next(icons.begin())));
 
-  favorite_store.SetFavorites({ FavoriteStore::URI_PREFIX_APP + app::UBUNTU_ONE });
+  favorite_store.SetFavorites({ lc.Impl()->expo_icon_->RemoteUri(),
+                                FavoriteStore::URI_PREFIX_APP + app::UBUNTU_ONE });
   lc.Impl()->SetupIcons();
   lc.DisconnectSignals();
 
@@ -1413,13 +1455,14 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteRemovedDevice)
   auto const& icons = lc.Impl()->device_section_.GetIcons();
   auto const& device_icon(*(icons.begin()));
 
-  favorite_store.SetFavorites({ FavoriteStore::URI_PREFIX_APP + app::UBUNTU_ONE,
+  favorite_store.SetFavorites({ lc.Impl()->expo_icon_->RemoteUri(),
+                                FavoriteStore::URI_PREFIX_APP + app::UBUNTU_ONE,
                                 device_icon->RemoteUri(),
                                 FavoriteStore::URI_PREFIX_APP + app::UPDATE_MANAGER });
   lc.Impl()->SetupIcons();
   lc.DisconnectSignals();
 
-  ASSERT_EQ(model->IconIndex(device_icon), 1);
+  ASSERT_EQ(model->IconIndex(device_icon), 2);
 
   favorite_store.RemoveFavorite(device_icon->RemoteUri());
   favorite_store.favorite_removed.emit(device_icon->RemoteUri());
