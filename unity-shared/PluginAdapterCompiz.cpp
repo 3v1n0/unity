@@ -538,16 +538,9 @@ PluginAdapter::IsWindowVisible(guint32 xid) const
 bool
 PluginAdapter::IsWindowOnTop(guint32 xid) const
 {
-  CompWindow* window = m_Screen->findWindow(xid);
-
-  if (!window)
-    return false;
-
-  if (window->inShowDesktopMode() || !window->isMapped() || !window->isViewable() || window->minimized())
-    return false;
-
   if (xid == GetTopMostValidWindowInViewport())
     return true;
+
   return false;
 }
 
@@ -566,7 +559,9 @@ Window PluginAdapter::GetTopMostValidWindowInViewport() const
         !(window->type() & CompWindowTypeSplashMask) &&
         !(window->type() & CompWindowTypeDockMask) &&
         !window->overrideRedirect())
+    {
       return window->id();
+    }
   }
   return 0;
 }
