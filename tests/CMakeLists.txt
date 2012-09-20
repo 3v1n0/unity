@@ -230,7 +230,6 @@ if (GTEST_SRC_DIR AND
                  test_resultviewgrid.cpp
                  test_shortcut_controller.cpp
                  test_single_monitor_launcher_icon.cpp
-                 test_software_center_launcher_icon.cpp
                  test_expo_launcher_icon.cpp
                  test_switcher_controller.cpp
                  test_switcher_model.cpp
