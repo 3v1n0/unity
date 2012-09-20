@@ -888,17 +888,16 @@ void Controller::Impl::MigrateFavorites()
 {
   // This migrates favorites to new format, it can safely be removed after Q
   auto& favorites = FavoriteStore::Instance();
-  auto favs = favorites.GetFavorites();
+  auto const& favs = favorites.GetFavorites();
 
   auto fav_it = std::find_if(begin(favs), end(favs),
     [](std::string const& fav) { return (fav.find(FavoriteStore::URI_PREFIX_UNITY) != std::string::npos); });
 
   if (fav_it == end(favs))
   {
-    favs.push_back(local::RUNNING_APPS_URI);
-    favs.push_back(expo_icon_->RemoteUri());
-    favs.push_back(local::DEVICES_URI);
-    favorites.SetFavorites(favs);
+    favorites.AddFavorite(local::RUNNING_APPS_URI, -1);
+    favorites.AddFavorite(expo_icon_->RemoteUri(), -1);
+    favorites.AddFavorite(local::DEVICES_URI, -1);
   }
 }
 
