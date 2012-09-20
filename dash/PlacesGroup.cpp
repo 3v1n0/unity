@@ -127,7 +127,7 @@ PlacesGroup::PlacesGroup()
   SetAcceptKeyNavFocusOnMouseDown(false);
   SetAcceptKeyNavFocusOnMouseEnter(false);
 
-  nux::BaseTexture* arrow = style.GetGroupUnexpandIcon();
+  nux::BaseTexture* arrow = style.GetGroupExpandIcon();
   
   _background = style.GetCategoryBackground();
   _background_nofilters = style.GetCategoryBackgroundNoFilters();
