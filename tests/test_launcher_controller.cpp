@@ -1424,13 +1424,14 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteRemovedDevice)
   auto const& icons = lc.Impl()->device_section_.GetIcons();
   auto const& device_icon(*(icons.begin()));
 
-  favorite_store.SetFavorites({ FavoriteStore::URI_PREFIX_APP + app::UBUNTU_ONE,
+  favorite_store.SetFavorites({ lc.Impl()->expo_icon_->RemoteUri(),
+                                FavoriteStore::URI_PREFIX_APP + app::UBUNTU_ONE,
                                 device_icon->RemoteUri(),
                                 FavoriteStore::URI_PREFIX_APP + app::UPDATE_MANAGER });
   lc.Impl()->SetupIcons();
   lc.DisconnectSignals();
 
-  ASSERT_EQ(model->IconIndex(device_icon), 1);
+  ASSERT_EQ(model->IconIndex(device_icon), 2);
 
   favorite_store.RemoveFavorite(device_icon->RemoteUri());
   favorite_store.favorite_removed.emit(device_icon->RemoteUri());
@@ -1450,13 +1451,13 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteRemovedDeviceSection)
   auto const& device_icon1(*(icons.begin()));
   auto const& device_icon2(*(std::next(icons.begin())));
 
-  favorite_store.SetFavorites({ places::DEVICES_URI,
+  favorite_store.SetFavorites({ lc.Impl()->expo_icon_->RemoteUri(), places::DEVICES_URI,
                                 FavoriteStore::URI_PREFIX_APP + app::UBUNTU_ONE });
   lc.Impl()->SetupIcons();
   lc.DisconnectSignals();
 
-  ASSERT_EQ(model->IconIndex(device_icon1), 0);
-  ASSERT_EQ(model->IconIndex(device_icon2), 1);
+  ASSERT_EQ(model->IconIndex(device_icon1), 1);
+  ASSERT_EQ(model->IconIndex(device_icon2), 2);
 
   favorite_store.RemoveFavorite(places::DEVICES_URI);
   favorite_store.favorite_removed.emit(places::DEVICES_URI);
