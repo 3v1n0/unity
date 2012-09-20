@@ -40,6 +40,9 @@
 #define UBUS_OVERLAY_HIDDEN "OVERLAY_HIDDEN"
 #define UBUS_OVERLAY_SHOWN "OVERLAY_SHOWN"
 
+#define UBUS_REFINE_STATUS_FORMAT_STRING "(b)"
+#define UBUS_REFINE_STATUS "REFINE_STATUS"
+
 #define UBUS_PLACE_VIEW_QUEUE_DRAW "PLACE_VIEW_QUEUE_DRAW"
 
 // Signal send by Launcher/Quicklist when it wants to exit key-nav and wants to
@@ -79,8 +82,8 @@
 // FIXME - fix the nux focus api so we don't need this
 #define UBUS_RESULT_VIEW_KEYNAV_CHANGED "RESULT_VIEW_KEYNAV_CHANGED"
 
-// for communicating positions to the preview state machine (iii)
-// (split y coord in absolute geometry, results to the left, results to the right)
+// for communicating positions to the preview state machine (iiii)
+// (split y coord in absolute geometry, height of row where icon resides, results to the left, results to the right)
 #define UBUS_DASH_PREVIEW_INFO_PAYLOAD "DASH_PREVIEW_INFO_PAYLOAD"
 
 // called when previews wish to navigate left/right or close (is)

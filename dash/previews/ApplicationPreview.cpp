@@ -50,7 +50,6 @@ namespace previews
 namespace
 {
 nux::logging::Logger logger("unity.dash.previews.applicationpreview");
-
 }
 
 class DetailsScrollView : public nux::ScrollView
@@ -82,10 +81,12 @@ void ApplicationPreview::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
 {
   nux::Geometry const& base = GetGeometry();
 
+  bool enable_bg_shadows = dash::previews::Style::Instance().GetShadowBackgroundEnabled();
+
   gfx_engine.PushClippingRectangle(base);
   nux::GetPainter().PaintBackground(gfx_engine, base);
 
-  if (full_data_layout_)
+  if (enable_bg_shadows && full_data_layout_)
   {
     unsigned int alpha, src, dest = 0;
     gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
@@ -105,7 +106,9 @@ void ApplicationPreview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force
   nux::Geometry const& base = GetGeometry();
   gfx_engine.PushClippingRectangle(base);
 
-  if (!IsFullRedraw())
+  bool enable_bg_shadows = dash::previews::Style::Instance().GetShadowBackgroundEnabled();
+
+  if (enable_bg_shadows && !IsFullRedraw())
     nux::GetPainter().PushLayer(gfx_engine, details_bg_layer_->GetGeometry(), details_bg_layer_.get());
 
   unsigned int alpha, src, dest = 0;
@@ -117,7 +120,7 @@ void ApplicationPreview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force
 
   gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
 
-  if (!IsFullRedraw())
+  if (enable_bg_shadows && !IsFullRedraw())
     nux::GetPainter().PopBackground();
 
   gfx_engine.PopClippingRectangle();
@@ -135,11 +138,7 @@ void ApplicationPreview::AddProperties(GVariantBuilder* builder)
 
 void ApplicationPreview::SetupBackground()
 {
-  nux::ROPConfig rop;
-  rop.Blend = true;
-  rop.SrcBlend = GL_ONE;
-  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  details_bg_layer_.reset(new nux::ColorLayer(nux::Color(0.03f, 0.03f, 0.03f, 0.0f), true, rop));
+  details_bg_layer_.reset(dash::previews::Style::Instance().GetBackgroundLayer());
 }
 
 void ApplicationPreview::SetupViews()
@@ -202,14 +201,14 @@ void ApplicationPreview::SetupViews()
         title_subtitle_layout_ = new nux::VLayout();
         title_subtitle_layout_->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
 
-        title_ = new nux::StaticCairoText(app_preview_model->title);
+        title_ = new nux::StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
         title_->SetLines(-1);
         title_->SetFont(style.title_font().c_str());
         title_subtitle_layout_->AddView(title_.GetPointer(), 1);
 
-        if (!app_preview_model->subtitle.Get().empty())
+        if (!preview_model_->subtitle.Get().empty())
         {
-          subtitle_ = new nux::StaticCairoText(app_preview_model->subtitle);
+          subtitle_ = new nux::StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
           subtitle_->SetFont(style.subtitle_size_font().c_str());
           subtitle_->SetLines(-1);
           title_subtitle_layout_->AddView(subtitle_.GetPointer(), 1);
@@ -220,7 +219,7 @@ void ApplicationPreview::SetupViews()
 
         if (!app_preview_model->license.Get().empty())
         {
-          license_ = new nux::StaticCairoText(app_preview_model->license);
+          license_ = new nux::StaticCairoText(app_preview_model->license, true, NUX_TRACKER_LOCATION);
           license_->SetFont(style.app_license_font().c_str());
           license_->SetLines(-1);
           app_updated_copywrite_layout->AddView(license_.GetPointer(), 1);
@@ -231,14 +230,14 @@ void ApplicationPreview::SetupViews()
           std::stringstream last_update;
           last_update << _("Last Updated") << " " << app_preview_model->last_update.Get();
 
-          last_update_ = new nux::StaticCairoText(last_update.str());
+          last_update_ = new nux::StaticCairoText(last_update.str(), true, NUX_TRACKER_LOCATION);
           last_update_->SetFont(style.app_last_update_font().c_str());
           app_updated_copywrite_layout->AddView(last_update_.GetPointer(), 1);
         }
 
         if (!app_preview_model->copyright.Get().empty())
         {
-          copywrite_ = new nux::StaticCairoText(app_preview_model->copyright);
+          copywrite_ = new nux::StaticCairoText(app_preview_model->copyright, true, NUX_TRACKER_LOCATION);
           copywrite_->SetFont(style.app_copywrite_font().c_str());
           copywrite_->SetLines(-1);
           app_updated_copywrite_layout->AddView(copywrite_.GetPointer(), 1);
@@ -265,12 +264,11 @@ void ApplicationPreview::SetupViews()
 
       if (!preview_model_->description.Get().empty())
       {
-        description_ = new nux::StaticCairoText("");
+        description_ = new nux::StaticCairoText(preview_model_->description, false, NUX_TRACKER_LOCATION); // not escaped!
         description_->SetFont(style.description_font().c_str());
         description_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_TOP);
         description_->SetLines(-style.GetDescriptionLineCount());
         description_->SetLineSpacing(style.GetDescriptionLineSpacing());
-        description_->SetText(app_preview_model->description);
         app_info_layout->AddView(description_.GetPointer());
       }
 
@@ -314,7 +312,7 @@ void ApplicationPreview::PreLayoutManagement()
   image_->SetMinMaxSize(geo_art.width, geo_art.height);
 
   int details_width = MAX(0, geo.width - geo_art.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
-  int top_app_info_max_width = details_width - style.GetAppIconAreaWidth() - style.GetSpaceBetweenIconAndDetails();
+  int top_app_info_max_width = MAX(0, details_width - style.GetAppIconAreaWidth() - style.GetSpaceBetweenIconAndDetails());
 
   if (title_) { title_->SetMaximumWidth(top_app_info_max_width); }
   if (subtitle_) { subtitle_->SetMaximumWidth(top_app_info_max_width); }

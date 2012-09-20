@@ -28,6 +28,7 @@
 #include "GenericPreview.h"
 #include "MusicPreview.h"
 #include "MoviePreview.h"
+#include "SocialPreview.h"
 #include "SeriesPreview.h"
 
 namespace unity
@@ -67,6 +68,10 @@ Preview::Ptr Preview::PreviewForProtocolObject(glib::Object<GObject> const& prot
   else if (renderer_name == "preview-movie")
   {
     return Preview::Ptr(new MoviePreview(proto_obj));
+  }
+  else if (renderer_name == "preview-social")
+  {
+    return Preview::Ptr(new SocialPreview(proto_obj));
   }
   else if (renderer_name == "preview-series")
   {
@@ -177,7 +182,8 @@ Preview::Impl::Impl(Preview* owner, glib::Object<GObject> const& proto_obj)
       actions_list_.push_back(std::make_shared<Action>(
             raw_action->id, raw_action->display_name,
             raw_action->icon_hint,
-            static_cast<LayoutHint>(raw_action->layout_hint)));
+            static_cast<LayoutHint>(raw_action->layout_hint),
+            raw_action->hints));
     }
     
     int info_hints_len;
@@ -262,11 +268,11 @@ void Preview::Update(glib::Variant const& properties,
   }
 }
 
-void Preview::PerformAction(std::string const& id) const
+void Preview::PerformAction(std::string const& id, Lens::Hints const& hints) const
 {
   if (pimpl->parent_lens_)
   {
-    pimpl->parent_lens_->ActivatePreviewAction(id, preview_uri);
+    pimpl->parent_lens_->ActivatePreviewAction(id, preview_uri, hints);
   }
   else
   {

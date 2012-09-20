@@ -35,6 +35,7 @@
 #include "FavoriteStoreGSettings.h"
 #include "LauncherController.h"
 #include "Launcher.h"
+#include "unity-shared/IconRenderer.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UnitySettings.h"
 
@@ -45,7 +46,7 @@ static launcher::Controller::Ptr controller;
 void ThreadWidgetInit(nux::NThread* thread, void* InitData)
 {
 //  launcherWindow->SetGeometry (nux::Geometry(0, 0, 300, 800));
-  controller.reset(new launcher::Controller(0));
+  controller.reset(new launcher::Controller());
 }
 
 int main(int argc, char** argv)
@@ -62,6 +63,10 @@ int main(int argc, char** argv)
   nux::WindowThread* wt = nux::CreateGUIThread(TEXT("Unity Switcher"), 300, 800, 0, &ThreadWidgetInit, 0);
 
   wt->Run(NULL);
+  // Make sure the controller is destroyed before the window thread.
+  controller.reset();
+  ::unity::ui::IconRenderer::DestroyTextures();
+
   delete wt;
   return 0;
 }

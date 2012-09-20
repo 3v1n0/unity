@@ -37,7 +37,7 @@ class ResultIterator : public std::iterator<std::random_access_iterator_tag, Res
 public:
   ResultIterator(glib::Object<DeeModel> model);
   ResultIterator(glib::Object<DeeModel> model, DeeModelIter* iter_, DeeModelTag* tag);
-  ResultIterator(ResultIterator const& copy) : model_(copy.model_), iter_(copy.iter_), tag_(copy.tag_), iter_result_(copy.iter_result_), cache_invalidated_(false){};
+  ResultIterator(ResultIterator const& copy) : model_(copy.model_), iter_(copy.iter_), tag_(copy.tag_), iter_result_(copy.iter_result_){};
 
   ResultIterator& operator=(ResultIterator const& rhs);
 
@@ -93,7 +93,6 @@ private:
   DeeModelIter* iter_;
   DeeModelTag* tag_;
   Result iter_result_;  
-  bool cache_invalidated_;
 };
 
 }

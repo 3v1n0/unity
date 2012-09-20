@@ -82,8 +82,6 @@ void FilterBar::AddFilter(Filter::Ptr const& filter)
   AddChild(filter_view);
   filter_map_[filter] = filter_view;
   GetLayout()->AddView(filter_view, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
-
-  UpdateDrawSeparators();
 }
 
 void FilterBar::RemoveFilter(Filter::Ptr const& filter)
@@ -99,43 +97,18 @@ void FilterBar::RemoveFilter(Filter::Ptr const& filter)
       break;
     }
   }
-
-  UpdateDrawSeparators();
 }
 
-void FilterBar::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
+void FilterBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
-  nux::Geometry const& geo = GetGeometry();
 
-  GfxContext.PushClippingRectangle(geo);
-  nux::GetPainter().PaintBackground(GfxContext, geo);
-  GfxContext.PopClippingRectangle();
 }
 
-void FilterBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
+void FilterBar::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
-  GfxContext.PushClippingRectangle(GetGeometry());
-  GetLayout()->ProcessDraw(GfxContext, force_draw);
-
-  GfxContext.PopClippingRectangle();
-}
-
-void FilterBar::UpdateDrawSeparators()
-{
-  std::list<Area*> children = GetLayout()->GetChildren();
-  std::list<Area*>::reverse_iterator rit;
-  bool found_one = false;
-
-  for (rit = children.rbegin(); rit != children.rend(); ++rit)
-  {
-    FilterExpanderLabel* widget = dynamic_cast<FilterExpanderLabel*>(*rit);
-
-    if (!widget)
-      continue;
-
-    widget->draw_separator = found_one;
-    found_one = true;
-  }
+  graphics_engine.PushClippingRectangle(GetGeometry());
+  GetLayout()->ProcessDraw(graphics_engine, force_draw);
+  graphics_engine.PopClippingRectangle();
 }
 
 //

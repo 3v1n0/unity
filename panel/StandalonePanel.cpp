@@ -18,11 +18,12 @@
  *
  */
 
-#include "Nux/Nux.h"
-#include "Nux/VLayout.h"
-#include "Nux/HLayout.h"
-#include "Nux/WindowThread.h"
-#include "NuxGraphics/GraphicsEngine.h"
+#include <Nux/Nux.h>
+#include <Nux/VLayout.h>
+#include <Nux/HLayout.h>
+#include <Nux/WindowThread.h>
+#include <NuxGraphics/GraphicsEngine.h>
+#include <NuxCore/Logger.h>
 #include <gtk/gtk.h>
 
 #include "unity-shared/UnitySettings.h"
@@ -47,7 +48,8 @@ int main(int argc, char** argv)
   g_type_init();
   gtk_init(&argc, &argv);
   nux::NuxInitialize(0);
-
+  nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
+  
   // The instances for the pseudo-singletons.
   unity::Settings settings;
   unity::panel::Style panel_style;

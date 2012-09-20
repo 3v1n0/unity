@@ -19,6 +19,7 @@
 
 
 #include <Nux/Nux.h>
+#include <Nux/WindowCompositor.h>
 
 #include "unity-shared/CairoTexture.h"
 #include "CairoBaseWindow.h"
@@ -58,7 +59,7 @@ void CairoBaseWindow::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
   if (_use_blurred_background && _compute_blur_bkg)
   {
     auto current_fbo = nux::GetGraphicsDisplay()->GetGpuDevice()->GetCurrentFrameBufferObject();
-    nux::GetGraphicsDisplay()->GetGpuDevice()->DeactivateFrameBuffer();
+    nux::GetWindowCompositor ().RestoreMainFramebuffer();
 
     gfxContext.SetViewport(0, 0, gfxContext.GetWindowWidth(), gfxContext.GetWindowHeight());
     gfxContext.SetScissor(0, 0, gfxContext.GetWindowWidth(), gfxContext.GetWindowHeight());

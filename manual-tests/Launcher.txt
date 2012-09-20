@@ -63,23 +63,6 @@ Expected Result:
   Verify each icon gets highlighted from top to bottom.
 
 
-Test Alt+F1 KeyNavMode Mouse Works
--------------------------------
-This test shows that the mouse still works normally while keynav mode is active.
-
-Setup:
-
-Actions:
-#. Press Alt+F1 to enter keynav mode
-#. Using the mouse perform a normal action (such as dragging a window)
-
-Expected Result:
-  The keynav mode exits, along with the mouse performing the normal action
-  the user expects. Such as highlighting text, moving a window, clicking out
-  of keynav mode, or clicking on a launcher icon. All these actions should
-  also exit the keynav mode.
-
-
 Test Alt+F1 KeyNavMode Shortcuts
 -----------------------------
 This test shows that all the shortcuts work and also exits from keynav mode.
@@ -102,21 +85,6 @@ Expected Result:
   closing the keynav mode.
 
 
-Test Alt+F1 NavMode Quicklist Click Exit
-----------------------------------------
-This Test shows that clicking on a quicklist option quits keynav mode.
-
-Setup:
-
-Actions:
-#. Press Alt+F1 to enter keynav mode
-#. Press Right arrow
-#. Click on any option
-
-Expected Result:
-  No matter what option you click will exit keynav mode.
-
-
 Drag Icons to Trash
 -------------------
 
@@ -124,6 +92,7 @@ This test verifies that dragging icons to the trash removes them from the
 launcher, and that the animation is smooth.
 
 Setup:
+#. Ensure that you have multiple applications running or pinned to the launcher
 
 Actions:
 #. Move mouse pointer over an application or device icon (not BFB, Workspace switcher or trash)
@@ -137,11 +106,31 @@ Expected Result:
   * The operation should NOT LOOK LIKE THIS: https://bugs.launchpad.net/unity/+bug/932365/+attachment/2739868/+files/out-2.ogv
 
 
+Drag file to Trash
+------------------
+
+This test verifies that dragging file icons from File Lens to trash moves
+the file to ~/Trash folder and removes it from File Lens results.
+
+Setup:
+#. Create a file via Nautilus > File > Create New Document.
+
+Actions:
+#. Open the Dash - File Lens
+#. Find the new file in File Lens results and drag it to the Trash icon on the launcher.
+#. Open the Dash - File Lens again.
+
+Expected Result:
+  * The file is no longer listed by File Lens.
+  * The file has been moved to ~/Trash folder.
+
+
 Dragging icons to reorder - initial position
 --------------------------------------------
 This test is all position of the dragged image in relation to the mouse pointer.
 
 Setup:
+#. Ensure that you have multiple applications running or pinned to the launcher
 
 Actions:
 #. Move the mouse so it is over a launcher icon for an application
@@ -160,6 +149,7 @@ This test is all about the smoothness of the animation around the reordering
 of icons in the launcher.
 
 Setup:
+#. Ensure that you have multiple applications running or pinned to the launcher
 
 Actions:
 #. Move the mouse so it is over a launcher icon for an application
@@ -167,13 +157,15 @@ Actions:
 #. Drag the icon up and down over the icons in the launcher
 
 Expected Result:
-  * As the centre of the dragged icon passes the mid-point of the next item
-  above or below it, the icon being dragged over moves and is replaced by the
-  blank "space".
+  * As the center of the dragged icon passes the mid-point of the next item
+    above or below it, the icon being dragged over moves and is replaced by the
+    blank "space".
   * The animation should be smooth
   * If the dragged icon is moved rapidly, multiple icons can be moving either
-  upwards or downwards as the space is moved into place under the dragged icon
-  * The BFB and the switcher icons do not move
+    upwards or downwards as the space is moved into place under the dragged icon
+  * Dragging the second application icon (the third icon of the launcher) below
+    the BFB or above the workspace switcher should be possible.
+  * The BFB and the workspace switcher icons do not move
 
 
 Dragging icons to reorder - away from launcher
@@ -181,6 +173,7 @@ Dragging icons to reorder - away from launcher
 This test is about reordering the icons without the animation showing.
 
 Setup:
+#. Ensure that you have multiple applications running or pinned to the launcher
 
 Actions:
 #. Move the mouse so it is over a launcher icon for an application
@@ -193,9 +186,24 @@ Expected Result:
   * As the icon is dragged away from the launcher, the "space" is closed up
   and replaced with a grey line.
   * As the icon is dragged up and down, the line moves between other launcher
-  icons.
+  icons of the same type.
   * When released, the icon "flies" back into the launcher, a spaces opens for
   it, and the any pips for running apps show again.
+
+
+Dragging fixed icons does not reorder an icon above or below
+------------------------------------------------------------
+This test is about not reordering when dragging fixed icons.
+
+#. Move the mouse so it is over the BFB launcher icon
+#. Press and hold the mouse button
+#. Try to drag the icon to the right of the launcher.
+#. Move the mouse down at least to the height of the second launcher icon
+   keeping the mouse pressed.
+#. Release
+
+Outcome:
+  * No icon should be dragged.
 
 
 Dragged launcher icons out of the launcher are properly drawn
@@ -203,6 +211,7 @@ Dragged launcher icons out of the launcher are properly drawn
 This test ensures that the launcher icons out of the launcher are properly drawn
 
 Setup:
+#. Ensure that you have multiple applications running or pinned to the launcher
 
 Actions:
 #. Move the mouse so it is over a launcher icon for an application
@@ -291,21 +300,6 @@ Expected Result:
   The number of wakeups per second (events per second) reported for the
   compiz process should be much lower than 50.
 
-
-Test Quicklist while on Expo
------------------------------
-This test shows how the launcher quicklists work when the expo plugin is activated.
-
-Setup:
-#. Start with a clear screen
-#. Press Super+S or select the workspace switcher on the launcher
-
-Actions:
-#. When the workspace switcher is running, right-click over a launcher icon
-
-Expected Result:
-  The expo should terminate, and the quicklist should be shown once the
-  workspace switcher has been closed.
 
 Test highlight BFB
 -------------------
@@ -619,23 +613,6 @@ Expected Result:
  * All icons are present in the Launcher
 
 
-Test launcher removes device icons
-------------------------------------------------------------
-This test makes sure that Unity doesn't shows internal partitions after
-they have been unmounted.
-
-Setup:
-
-Actions:
- * Open Nautilus
- * Mount an internal partition using the sidebar
- * Make sure the launcher has the launcher icon for the partition
- * Unmount that partition using Nautilus
-
-Expected Result:
- * The device launcher icon has been removed.
-
-
 Drag and Drop doesn't freeze Unity
 ----------------------------------
 Setup:
@@ -724,3 +701,21 @@ Actions:
 
 Expected Results:
 * The gedit window must not flicker behind the launcher.
+
+
+Custom background color works
+-----------------------------
+This test ensures that the custom background color (set via ccsm) works correctly.
+
+Setup: 
+#. Ensure that ccsm is installed (package compizconfig-settings-manager)
+
+Actions:  
+#. Open ccsm
+#. Click on Ubuntu Unity Plugin
+#. Choose Experimental tab, click on Background Color, set Color name to #000000 and Opacity to 180
+
+Expected Result:
+ The background color of the Launcher is black, and the icons are still visible.
+ The Launcher must stay black when Dash or HUD are opened, and the color must
+ be persistent between sessions (logout/login).

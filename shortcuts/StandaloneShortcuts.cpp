@@ -23,6 +23,7 @@
 #include <Nux/WindowThread.h>
 
 #include "unity-shared/BackgroundEffectHelper.h"
+#include "BaseWindowRaiserImp.h"
 #include "MockShortcutHint.h"
 #include "ShortcutController.h"
 
@@ -205,12 +206,11 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
                                                                                  "core",
                                                                                  "close_window_key")));
 
-
-  // I don't know std::shared_ptr<shortcut::AbstractHint>(if it is really hardcoded, but I can't find where this option is stored.
   hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Windows"), "", "",
                                                                                  _("Opens the window accessibility menu."),
-                                                                                 shortcut::HARDCODED_OPTION,
-                                                                                 "Alt+Space")));
+                                                                                 shortcut::COMPIZ_KEY_OPTION,
+                                                                                 "core",
+                                                                                 "window_menu_key")));
 
   hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Windows"), "", "",
                                                                                  _("Places the window in corresponding position."),
@@ -229,7 +229,8 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
                                                                                  "resize",
                                                                                  "initiate_key")));
 
-  controller.reset(new shortcut::Controller(hints));
+  auto base_window_raiser_ = std::make_shared<shortcut::BaseWindowRaiserImp>();
+  controller.reset(new shortcut::Controller(hints, base_window_raiser_));
   controller->Show();
 }
 

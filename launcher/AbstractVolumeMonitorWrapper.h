@@ -27,7 +27,6 @@
 #include <sigc++/trackable.h>
 
 #include <UnityCore/GLibWrapper.h>
-#include <UnityCore/GLibSignal.h>
 
 namespace unity
 {
@@ -54,8 +53,8 @@ public:
   sigc::signal<void, glib::Object<GVolume> const&> volume_removed;
 };
 
-} // namespace launcher
-} // namespace unity
+}
+}
 
-#endif // UNITYSHELL_ABSTRACT_VOLUME_MONITOR_WRAPPER_H
+#endif
 

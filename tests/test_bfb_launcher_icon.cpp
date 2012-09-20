@@ -33,18 +33,21 @@ public:
   MockBFBLauncherIcon()
     : BFBLauncherIcon(LauncherHideMode::LAUNCHER_HIDE_NEVER)
   {}
-
-  AbstractLauncherIcon::MenuItemsVector GetMenus()
-  {
-    return BFBLauncherIcon::GetMenus();
-  }
 };
 
-TEST(TestBFBLauncherIcon, OverlayMenus)
+struct TestBFBLauncherIcon : testing::Test
 {
   MockBFBLauncherIcon bfb;
+};
 
-  for (auto menu_item : bfb.GetMenus())
+TEST_F(TestBFBLauncherIcon, Position)
+{
+  EXPECT_EQ(bfb.position, AbstractLauncherIcon::Position::BEGIN);
+}
+
+TEST_F(TestBFBLauncherIcon, OverlayMenus)
+{
+  for (auto menu_item : bfb.Menus())
   {
     bool overlay_item = dbusmenu_menuitem_property_get_bool(menu_item, QuicklistMenuItem::OVERLAY_MENU_ITEM_PROPERTY);
     ASSERT_TRUE(overlay_item);

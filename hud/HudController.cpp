@@ -54,7 +54,7 @@ Controller::Controller(std::function<AbstractView*(void)> const& function)
 {
   LOG_DEBUG(logger) << "hud startup";
   SetupWindow();
-  UScreen::GetDefault()->changed.connect([&] (int, std::vector<nux::Geometry>&) { Relayout(); });
+  UScreen::GetDefault()->changed.connect([&] (int, std::vector<nux::Geometry>&) { Relayout(true); });
 
   ubus.RegisterInterest(UBUS_HUD_CLOSE_REQUEST, sigc::mem_fun(this, &Controller::OnExternalHideHud));
 
@@ -87,14 +87,25 @@ Controller::Controller(std::function<AbstractView*(void)> const& function)
 
 void Controller::SetupWindow()
 {
-  window_.Adopt(new nux::BaseWindow("Hud"));
+  // Since BaseWindow is a View it is initially unowned.  This means that the first
+  // reference that is taken grabs ownership of the pointer.  Since the smart pointer
+  // references it, it becomes the owner, so no need to adopt the pointer here.
+  window_ = new ResizingBaseWindow("Hud", [this](nux::Geometry const& geo)
+  {
+    if (view_)
+      return GetInputWindowGeometry();
+    return geo;
+  });
   window_->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
   window_->SetConfigureNotifyCallback(&Controller::OnWindowConfigure, this);
   window_->ShowWindow(false);
   window_->SetOpacity(0.0f);
-  window_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &Controller::OnMouseDownOutsideWindow));
-  
-  /* FIXME - first time we load our windows there is a race that causes the input window not to actually get input, this side steps that by causing an input window show and hide before we really need it. */
+  window_->mouse_down_outside_pointer_grab_area.connect(
+    sigc::mem_fun(this, &Controller::OnMouseDownOutsideWindow));
+
+  /* FIXME - first time we load our windows there is a race that causes the
+   * input window not to actually get input, this side steps that by causing
+   * an input window show and hide before we really need it. */
   auto wm = WindowManager::Default();
   wm->saveInputFocus ();
   window_->EnableInputWindow(true, "Hud", true, false);
@@ -111,6 +122,8 @@ void Controller::SetupHudView()
   layout_->AddView(view_, 1, nux::MINOR_POSITION_TOP);
   window_->SetLayout(layout_);
 
+  window_->UpdateInputWindowGeometry();
+
   view_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &Controller::OnMouseDownOutsideWindow));
 
   LOG_DEBUG(logger) << "connecting to signals";
@@ -118,13 +131,19 @@ void Controller::SetupHudView()
   view_->search_activated.connect(sigc::mem_fun(this, &Controller::OnSearchActivated));
   view_->query_activated.connect(sigc::mem_fun(this, &Controller::OnQueryActivated));
   view_->query_selected.connect(sigc::mem_fun(this, &Controller::OnQuerySelected));
+  view_->layout_changed.connect(sigc::bind(sigc::mem_fun(this, &Controller::Relayout), nullptr));
   // Add to the debug introspection.
   AddChild(view_);
 }
 
-int Controller::GetTargetMonitor()
+int Controller::GetIdealMonitor()
 {
-  return UScreen::GetDefault()->GetMonitorWithMouse();
+  int ideal_monitor;
+  if (window_->IsVisible())
+    ideal_monitor = monitor_index_;
+  else
+    ideal_monitor = UScreen::GetDefault()->GetMonitorWithMouse();
+  return ideal_monitor;
 }
 
 bool Controller::IsLockedToLauncher(int monitor)
@@ -144,13 +163,15 @@ bool Controller::IsLockedToLauncher(int monitor)
 
 void Controller::EnsureHud()
 {
-  LOG_DEBUG(logger) << "Initializing Hud";
-
   if (!window_)
+  {
+    LOG_DEBUG(logger) << "Initializing Hud Window";
     SetupWindow();
+  }
 
   if (!view_)
   {
+    LOG_DEBUG(logger) << "Initializing Hud View";
     SetupHudView();
     Relayout();
   }
@@ -181,8 +202,8 @@ void Controller::OnWindowConfigure(int window_width, int window_height,
 
 nux::Geometry Controller::GetIdealWindowGeometry()
 {
-  int target_monitor = GetTargetMonitor();
-  auto monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(target_monitor);
+  int ideal_monitor = GetIdealMonitor();
+  auto monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(ideal_monitor);
 
   // We want to cover as much of the screen as possible to grab any mouse events
   // outside of our window
@@ -192,7 +213,7 @@ nux::Geometry Controller::GetIdealWindowGeometry()
                     monitor_geo.width,
                     monitor_geo.height - panel_style.panel_height);
 
-  if (IsLockedToLauncher(target_monitor))
+  if (IsLockedToLauncher(ideal_monitor))
   {
     geo.x += launcher_width;
     geo.width -= launcher_width;
@@ -201,16 +222,20 @@ nux::Geometry Controller::GetIdealWindowGeometry()
   return geo;
 }
 
-void Controller::Relayout()
+void Controller::Relayout(bool check_monitor)
 {
   EnsureHud();
-  nux::Geometry const& content_geo = view_->GetGeometry();
+
+  if (check_monitor)
+  {
+    monitor_index_ = CLAMP(GetIdealMonitor(), 0, static_cast<int>(UScreen::GetDefault()->GetMonitors().size()-1));
+  }
   nux::Geometry const& geo = GetIdealWindowGeometry();
 
-  window_->SetGeometry(geo);
-  layout_->SetMinMaxSize(content_geo.width, content_geo.height);
-  view_->SetWindowGeometry(window_->GetAbsoluteGeometry(), window_->GetGeometry());
   view_->Relayout();
+  window_->SetGeometry(geo);
+  panel::Style &panel_style = panel::Style::Instance();
+  view_->SetMonitorOffset(launcher_width, panel_style.panel_height);
 }
 
 void Controller::OnMouseDownOutsideWindow(int x, int y,
@@ -244,7 +269,15 @@ void Controller::OnExternalHideHud(GVariant* variant)
 {
   LOG_DEBUG(logger) << "External Hiding the hud";
   EnsureHud();
-  HideHud();
+
+  if (variant)
+  {
+    HideHud(g_variant_get_boolean(variant));
+  }
+  else
+  {
+    HideHud();
+  }
 }
 
 void Controller::ShowHideHud()
@@ -273,12 +306,12 @@ void Controller::ShowHud()
     return;
   }
 
-  unsigned int target_monitor = GetTargetMonitor();
+  unsigned int ideal_monitor = GetIdealMonitor();
 
-  if (target_monitor != monitor_index_)
+  if (ideal_monitor != monitor_index_)
   {
     Relayout();
-    monitor_index_ = target_monitor;
+    monitor_index_ = ideal_monitor;
   }
 
   view_->ShowEmbeddedIcon(!IsLockedToLauncher(monitor_index_));
@@ -342,6 +375,7 @@ void Controller::ShowHud()
   window_->ShowWindow(true);
   window_->PushToFront();
   window_->EnableInputWindow(true, "Hud", true, false);
+  window_->UpdateInputWindowGeometry();
   window_->SetInputFocus();
   window_->CaptureMouseDownAnyWhereElse(true);
   view_->CaptureMouseDownAnyWhereElse(true);
@@ -352,7 +386,6 @@ void Controller::ShowHud()
   visible_ = true;
 
   StartShowHideTimeline();
-  view_->SetWindowGeometry(window_->GetAbsoluteGeometry(), window_->GetGeometry());
 
   // hide the launcher
   GVariant* message_data = g_variant_new("(b)", TRUE);
@@ -487,10 +520,20 @@ void Controller::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
     .add(window_ ? window_->GetGeometry() : nux::Geometry())
+    .add("ideal_monitor", GetIdealMonitor())
     .add("visible", visible_)
     .add("hud_monitor", monitor_index_)
     .add("locked_to_launcher", IsLockedToLauncher(monitor_index_));
 }
+
+nux::Geometry Controller::GetInputWindowGeometry()
+{
+  EnsureHud();
+  nux::Geometry const& window_geo(window_->GetGeometry());
+  nux::Geometry const& view_content_geo(view_->GetContentGeometry());
+  return nux::Geometry(window_geo.x, window_geo.y, view_content_geo.width, view_content_geo.height);
+}
+
 
 
 }

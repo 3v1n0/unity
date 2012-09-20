@@ -30,6 +30,7 @@ include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_D
 #
 set (SHORTCUTS_SOURCES
      AbstractShortcutHint.h
+     BaseWindowRaiserImp.cpp
      MockShortcutHint.h
      ShortcutController.cpp
      ShortcutController.h

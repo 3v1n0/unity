@@ -44,17 +44,17 @@ class MockLauncherIcon : public AbstractLauncherIcon
 {
   NUX_DECLARE_OBJECT_TYPE(MockLauncherIcon, AbstractLauncherIcon);
 public:
-  MockLauncherIcon()
+  MockLauncherIcon(IconType type = IconType::APPLICATION)
     : icon_(0)
+    , type_(type)
+    , sort_priority_(DefaultPriority(type))
+    , remote_uri_("fake")
   {
     tooltip_text = "Mock Icon";
-    sort_priority_ = 0;
-    type_ = IconType::APPLICATION;
+    position = Position::FLOATING;
 
     for (unsigned i = 0; i < unsigned(Quirk::LAST); ++i)
-    {
       quirks_[i] = false;
-    }
   }
 
   std::string GetName() const { return "MockLauncherIcon"; }
@@ -130,11 +130,16 @@ public:
     return false;
   }
 
-  void        SetCenter(nux::Point3 center, int monitor, nux::Geometry geo) {}
+  void SetCenter(nux::Point3 center, int monitor, nux::Geometry geo)
+  {
+    center.x += geo.x;
+    center.y += geo.y;
+    center_[monitor] = center;
+  }
 
   nux::Point3 GetCenter(int monitor)
   {
-    return nux::Point3();
+    return center_[monitor];
   }
 
   nux::Point3 GetSavedCenter(int monitor)
@@ -173,11 +178,6 @@ public:
   bool IsVisibleOnMonitor(int monitor) const
   {
     return true;
-  }
-
-  bool IsSpacer()
-  {
-    return false;
   }
 
   float PresentUrgency()
@@ -239,7 +239,7 @@ public:
 
   std::string RemoteUri()
   {
-    return "fake";
+    return remote_uri_;
   }
 
   nux::BaseTexture* TextureForSize(int size)
@@ -342,10 +342,12 @@ private:
   }
 
   nux::BaseTexture* icon_;
-  int sort_priority_;
   IconType type_;
+  int sort_priority_;
   bool quirks_[unsigned(Quirk::LAST)];
   timespec quirk_times_[unsigned(Quirk::LAST)];
+  std::map<int, nux::Point3> center_;
+  std::string remote_uri_;
 };
 
 }

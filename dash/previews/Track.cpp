@@ -159,7 +159,7 @@ void Track::Update(dash::Track const& track)
   uri_ = track.uri;
   progress_ = track.progress;
 
-  title_->SetText(track.title);
+  title_->SetText(track.title, true);
 
   std::stringstream ss_track_number;
   ss_track_number << track.track_number;
@@ -194,19 +194,16 @@ void Track::SetupViews()
   nux::BaseTexture* tex_play = style.GetPlayIcon();
   IconTexture* status_play = new IconTexture(tex_play, style.GetStatusIconSize(), style.GetStatusIconSize());
   status_play->SetDrawMode(IconTexture::DrawMode::STRETCH_WITH_ASPECT);
-  status_play->SetInputEventSensitivity(false);  
 
   nux::BaseTexture* tex_pause = style.GetPauseIcon();
   IconTexture* status_pause = new IconTexture(tex_pause, style.GetStatusIconSize(), style.GetStatusIconSize());
   status_pause->SetDrawMode(IconTexture::DrawMode::STRETCH_WITH_ASPECT);
-  status_pause->SetInputEventSensitivity(false);  
 
   track_number_ = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
   track_number_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
   track_number_->SetTextVerticalAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
   track_number_->SetLines(-1);
   track_number_->SetFont(style.track_font());
-  track_number_->SetInputEventSensitivity(false);  
 
   title_ = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
   title_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
@@ -229,26 +226,18 @@ void Track::SetupViews()
   status_play_layout_->GetLayout()->AddSpace(0, 1);
   status_play_layout_->GetLayout()->AddView(status_play, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   status_play_layout_->GetLayout()->AddSpace(0, 1);
-  status_play_layout_->mouse_click.connect([&](int, int, unsigned long, unsigned long) { play.emit(uri_); });
-  status_play_layout_->mouse_enter.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseEnter));
-  status_play_layout_->mouse_leave.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseLeave));
 
   status_pause_layout_ = new TmpView();
   status_pause_layout_->SetLayout(new nux::HLayout());
   status_pause_layout_->GetLayout()->AddSpace(0, 1);
   status_pause_layout_->GetLayout()->AddView(status_pause, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   status_pause_layout_->GetLayout()->AddSpace(0, 1);
-  status_pause_layout_->mouse_click.connect([&](int, int, unsigned long, unsigned long) { pause.emit(uri_); });
-  status_pause_layout_->mouse_enter.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseEnter));
-  status_pause_layout_->mouse_leave.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseLeave));
 
   track_number_layout_ = new TmpView();
   track_number_layout_->SetLayout(new nux::HLayout());
   track_number_layout_->GetLayout()->AddSpace(0, 1);
   track_number_layout_->GetLayout()->AddView(track_number_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   track_number_layout_->GetLayout()->AddSpace(0, 1);
-  track_number_layout_->mouse_enter.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseEnter));
-  track_number_layout_->mouse_leave.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseLeave));
 
   track_status_layout_ = new nux::LayeredLayout();
   track_status_layout_->AddLayer(status_play_layout_, true);
@@ -265,11 +254,27 @@ void Track::SetupViews()
   duration_layout_->AddSpace(0, 1);
   duration_layout_->AddView(duration_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
-  layout->SetSpaceBetweenChildren(6);
   layout->AddLayout(track_status_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   layout->AddLayout(title_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   layout->AddLayout(duration_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   SetLayout(layout);
+
+  mouse_enter.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseEnter));
+  mouse_leave.connect(sigc::mem_fun(this, &Track::OnTrackControlMouseLeave));
+  mouse_click.connect([&](int, int, unsigned long, unsigned long)
+  {
+    switch (play_state_)
+    {
+      case dash::PLAYING:
+        pause.emit(uri_);
+        break;
+      case dash::PAUSED:
+      case dash::STOPPED:
+      default:
+        play.emit(uri_);
+        break;
+    }
+  });
 }
 
 void Track::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
@@ -342,9 +347,18 @@ void Track::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
   gfx_engine.PopClippingRectangle();
 }
 
+nux::Area* Track::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
+{
+  bool mouse_inside = TestMousePointerInclusion(mouse_position, event_type);
+  if (mouse_inside == false)
+    return NULL;
+
+  return this;
+}
+
 bool Track::HasStatusFocus() const
 {
-  return play_state_ == dash::PLAYING || play_state_ == dash::PAUSED;
+  return mouse_over_ || play_state_ == dash::PLAYING || play_state_ == dash::PAUSED;
 }
 
 void Track::OnTrackControlMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags)

@@ -150,6 +150,27 @@ class LauncherIconsTests(LauncherTestCase):
         self.assertThat(calc_icon, NotEquals(None))
         self.assertThat(calc_icon.visible, Eventually(Equals(True)))
 
+    def test_right_click_on_icon_ends_expo(self):
+        """Right click on a launcher icon in expo mode must end the expo
+        and show the quicklist.
+
+        """
+        self.keybinding("expo/start")
+        self.addCleanup(self.keybinding, "expo/cancel")
+
+        bfb = self.launcher.model.get_bfb_icon()
+        self.mouse.move(bfb.center_x, bfb.center_y)
+        self.mouse.click(button=3)
+
+        self.assertThat(self.launcher_instance.quicklist_open, Eventually(Equals(True)))
+
+        monitor = self.screen_geo.get_primary_monitor()
+        self.panel = self.panels.get_panel_for_monitor(monitor)
+
+        # When workspace switcher is opened the panel title is "Ubuntu Desktop" so we check
+        # to make sure that workspace switcher end.
+        self.assertThat(self.panels.get_active_panel().title, Eventually(NotEquals("Ubuntu Desktop")))
+
 
 class LauncherDragIconsBehavior(LauncherTestCase):
     """Tests dragging icons around the Launcher."""
@@ -203,6 +224,6 @@ class LauncherDragIconsBehavior(LauncherTestCase):
                                                      switcher_pos,
                                                      self.drag_type)
 
-        moved_icon = self.launcher.model.\
-                     get_launcher_icons_for_monitor(self.launcher_monitor)[-3]
-        self.assertThat(moved_icon.id, Equals(calc_icon.id))
+        # Must be the last bamf icon - not necessarily the third-from-end icon.
+        bamf_icons = self.launcher.model.get_bamf_launcher_icons()
+        self.assertThat(bamf_icons[-1].id, Equals(calc_icon.id))

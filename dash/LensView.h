@@ -73,6 +73,7 @@ public:
 
   void PerformSearch(std::string const& search_query);
   void CheckNoResults(Lens::Hints const& hints);
+  void CheckCategoryExpansion();
   void HideResultsMessage();
 
 private:
@@ -87,6 +88,7 @@ private:
   void OnResultRemoved(Result const& result);
   void UpdateCounts(PlacesGroup* group);
   void OnGroupExpanded(PlacesGroup* group);
+  void CheckScrollBarState();
   void OnColumnsChanged();
   void OnFilterAdded(Filter::Ptr filter);
   void OnFilterRemoved(Filter::Ptr filter);
@@ -94,8 +96,7 @@ private:
   void QueueFixRenderering();
   bool FixRenderering();
   bool ReinitializeFilterModels();
-
-  static void GetFilterForCategoryIndex(unsigned index, DeeFilter* filter);
+  ResultViewGrid* GetGridForCategory(unsigned category_index);
 
   void BuildPreview(std::string const& uri, Preview::Ptr model);
 
@@ -114,6 +115,7 @@ private:
   bool initial_activation_;
   bool no_results_active_;
   std::string search_string_;
+  PlacesGroup* last_expanded_group_;
 
   nux::HLayout* layout_;
   LensScrollView* scroll_view_;
@@ -125,6 +127,7 @@ private:
 
   UBusManager ubus_manager_;
   glib::Source::UniquePtr fix_rendering_idle_;
+  glib::Source::UniquePtr model_updated_timeout_;
   int last_good_filter_model_;
   glib::Source::UniquePtr fix_filter_models_idle_;
 };

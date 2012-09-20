@@ -29,7 +29,7 @@
 
 namespace
 {
-const int kMinButtonHeight = 36;
+const int kMinButtonHeight = 34;
 const int kMinButtonWidth  = 48;
 
 const int icon_size  = 24;
@@ -48,9 +48,9 @@ ActionButton::ActionButton(std::string const& action_hint, std::string const& la
   , image_(nullptr)
 {
   SetAcceptKeyNavFocusOnMouseDown(false);
-  SetAcceptKeyNavFocusOnMouseEnter(false);
+  SetAcceptKeyNavFocusOnMouseEnter(true);
   Init();
-  BuildLayout(label, icon_hint);
+  BuildLayout(label, icon_hint, "");
 }
 
 ActionButton::~ActionButton()
@@ -85,7 +85,7 @@ void ActionButton::Init()
   key_nav_focus_activate.connect([&](nux::Area*)
   {
     if (GetInputEventSensitivity())
-      Active() ? Deactivate() : Activate();
+      activate.emit(this, action_hint_);
   });
 }
 
@@ -105,7 +105,19 @@ void ActionButton::InitTheme()
   SetMinimumWidth(kMinButtonWidth);
 }
 
-void ActionButton::BuildLayout(std::string const& label, std::string const& icon_hint)
+void ActionButton::SetExtraHint(std::string const& extra_hint, std::string const& font_hint)
+{  
+  extra_font_hint_= font_hint;
+  if (extra_text_)
+  {
+    extra_text_->SetFont(extra_font_hint_);
+    ComputeContentSize();
+    QueueDraw();
+  }
+  BuildLayout(label_, icon_hint_, extra_hint);
+}
+
+void ActionButton::BuildLayout(std::string const& label, std::string const& icon_hint, std::string const& extra_hint)
 {
   if (icon_hint != icon_hint_)
   {
@@ -121,7 +133,7 @@ void ActionButton::BuildLayout(std::string const& label, std::string const& icon
       image_ = new IconTexture(icon_hint, icon_size);
       image_->texture_updated.connect([&](nux::BaseTexture*)
       {
-        BuildLayout(label_, icon_hint_);
+        BuildLayout(label_, icon_hint_, extra_hint_);
       });
       image_->SetInputEventSensitivity(false);
       image_->SetMinMaxSize(icon_size, icon_size);
@@ -139,7 +151,7 @@ void ActionButton::BuildLayout(std::string const& label, std::string const& icon
 
     if (!label_.empty())
     {
-      static_text_ = new nux::StaticCairoText(label_, NUX_TRACKER_LOCATION);
+      static_text_ = new nux::StaticCairoText(label_, true, NUX_TRACKER_LOCATION);
       if (!font_hint_.empty())
         static_text_->SetFont(font_hint_);
       static_text_->SetInputEventSensitivity(false);
@@ -147,16 +159,37 @@ void ActionButton::BuildLayout(std::string const& label, std::string const& icon
     }
   }
 
+  if (extra_hint != extra_hint_)
+  {
+    extra_hint_ = extra_hint;
+    if (extra_text_)
+    {
+      extra_text_.Release();
+      extra_text_ = NULL;
+    }
+
+    if (!extra_hint_.empty())
+    {
+      extra_text_ = new nux::StaticCairoText(extra_hint_, true, NUX_TRACKER_LOCATION);
+      if (!extra_font_hint_.empty())
+        extra_text_->SetFont(extra_font_hint_);
+      extra_text_->SetInputEventSensitivity(false);
+      extra_text_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
+    }
+  }
+
   RemoveLayout();
 
   nux::HLayout* layout = new nux::HLayout();
   layout->SetHorizontalInternalMargin(6);
-  layout->SetPadding(2, 11, 2, 11);
+  layout->SetPadding(2, 0, 2, 0);
   layout->AddSpace(0,1);
   if (image_)
     layout->AddView(image_.GetPointer(), 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
   if (static_text_)
     layout->AddView(static_text_.GetPointer(), 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
+  if (extra_text_)
+    layout->AddView(extra_text_.GetPointer(), 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
   layout->AddSpace(0,1);
   SetLayout(layout);
 
@@ -217,9 +250,7 @@ void ActionButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                        col);
 
   nux::BaseTexture* texture = cr_normal_->GetTexture();
-  if (Active())
-    texture = cr_active_->GetTexture();
-  else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
+  if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
     texture = cr_prelight_->GetTexture();
   else if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRESSED)
     texture = cr_active_->GetTexture();
@@ -232,7 +263,7 @@ void ActionButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                       texxform,
                       nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
 
-  if (IsMouseInside() || HasKeyboardFocus())
+  if (HasKeyboardFocus())
   {
     GfxContext.QRP_1Tex(geo.x,
                         geo.y,
@@ -264,7 +295,7 @@ void ActionButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 void ActionButton::RecvClick(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  click.emit(this, action_hint_);
+  activate.emit(this, action_hint_);
 }
 
 void ActionButton::SetFont(std::string const& font_hint)
@@ -277,29 +308,14 @@ void ActionButton::SetFont(std::string const& font_hint)
   }
 }
 
-
-void ActionButton::Activate()
+std::string ActionButton::GetLabel() const
 {
-  if (active_ == true)
-  {
-    // already active
-    return;
-  }
-
-  active_ = true;
-  QueueDraw();
+  return label_;
 }
 
-void ActionButton::Deactivate()
+std::string ActionButton::GetExtraText() const
 {
-  if (active_ == false)
-  {
-    // already deactivated
-    return;
-  }
-
-  active_ = false;
-  QueueDraw();
+  return extra_hint_;
 }
 
 } // namespace dash

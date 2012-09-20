@@ -135,7 +135,9 @@ public:
   void Activate(guint32 xid);
   void Raise(guint32 xid);
   void Lower(guint32 xid);
+
   void ShowDesktop();
+  bool InShowDesktop() const;
 
   void SetWindowIconGeometry(Window window, nux::Geometry const& geo);
 
@@ -154,6 +156,7 @@ public:
   nux::Geometry GetWindowSavedGeometry(guint32 xid) const;
   nux::Geometry GetScreenGeometry() const;
   nux::Geometry GetWorkAreaGeometry(guint32 xid = 0) const;
+  std::string GetWindowName(guint32 xid) const;
 
   void CheckWindowIntersections(nux::Geometry const& region, bool &active, bool &any);
 
@@ -176,6 +179,9 @@ private:
 
   bool CheckWindowIntersection(nux::Geometry const& region, CompWindow* window) const;
   void SetMwmWindowHints(Window xid, MotifWmHints* new_hints);
+
+  std::string GetTextProperty(guint32 xid, Atom atom) const;
+  std::string GetUtf8Property(guint32 xid, Atom atom) const;
 
   CompScreen* m_Screen;
   MultiActionList m_ExpoActionList;

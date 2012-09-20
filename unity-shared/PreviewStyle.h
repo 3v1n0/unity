@@ -32,6 +32,7 @@
 namespace nux
 {
   class BaseTexture;
+  class AbstractPaintLayer;
 }
 
 namespace unity
@@ -59,7 +60,8 @@ public:
   int GetNavigatorWidth() const;
   int GetNavigatorIconSize() const;
   
-  float GetPreviewAspectRatio() const;
+  int GetPreviewWidth() const;
+  int GetPreviewHeight() const;
 
   int GetDetailsTopMargin() const;
   int GetDetailsBottomMargin() const;
@@ -79,14 +81,24 @@ public:
   int GetInfoHintNameMinimumWidth() const;
   int GetInfoHintNameMaximumWidth() const;
 
+  int GetCommentNameMinimumWidth() const;
+  int GetCommentNameMaximumWidth() const;
+
   float GetDescriptionLineSpacing() const;
   int GetDescriptionLineCount() const;
 
   int GetRatingWidgetHeight() const;
 
+  bool GetShadowBackgroundEnabled() const;
+
   std::string title_font() const;
   std::string subtitle_size_font() const;
   std::string description_font() const;
+
+  std::string action_font() const;
+  std::string action_extra_font() const;
+
+  nux::AbstractPaintLayer* GetBackgroundLayer() const;
 
   ////////////////////////////////
   // Application Preview
@@ -118,6 +130,15 @@ public:
   int GetTrackBarHeight() const;
   int GetMusicDurationWidth() const;
   int GetStatusIconSize() const;
+  ////////////////////////////////
+
+  ////////////////////////////////
+  // Social Preview
+  int GetAvatarAreaWidth() const;
+  int GetAvatarAreaHeight() const;
+
+  std::string content_font() const;
+
   ////////////////////////////////
 
   nux::BaseTexture* GetNavLeftIcon();

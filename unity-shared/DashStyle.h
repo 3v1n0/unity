@@ -92,13 +92,13 @@ public:
   static Style& Instance();
 
   virtual bool Button(cairo_t* cr, nux::ButtonVisualState state,
-                      std::string const& label, int font_size=-1,
+                      std::string const& label, int font_px_size=-1,
                       Alignment alignment = Alignment::CENTER,
                       bool zeromargin=false);
 
   virtual bool SquareButton(cairo_t* cr, nux::ButtonVisualState state,
                             std::string const& label, bool curve_bottom,
-                            int font_size=-1,
+                            int font_px_size=-1,
                             Alignment alignment = Alignment::CENTER,
                             bool zeromargin=false);
 
@@ -155,9 +155,12 @@ public:
   void SetDefaultNColumns(int n_cols);
   sigc::signal<void> columns_changed;
 
-  int GetTileIconSize() const;
+  int GetTileGIconSize() const;
+  int GetTileImageSize() const;
   int GetTileWidth() const;
   int GetTileHeight() const;
+  int GetTileIconHightlightHeight() const;
+  int GetTileIconHightlightWidth() const;
 
   int GetHomeTileIconSize() const;
   int GetHomeTileWidth() const;
@@ -165,6 +168,8 @@ public:
 
   int GetTextLineHeight() const;
 
+  nux::BaseTexture* GetCategoryBackground();
+  nux::BaseTexture* GetCategoryBackgroundNoFilters();
   nux::BaseTexture* GetDashBottomTile();
   nux::BaseTexture* GetDashBottomTileMask();
   nux::BaseTexture* GetDashRightTile();
@@ -196,7 +201,11 @@ public:
   nux::BaseTexture* GetStarDeselectedIcon();
   nux::BaseTexture* GetStarSelectedIcon();
   nux::BaseTexture* GetStarHighlightIcon();
-
+  
+  nux::BaseTexture* GetRefineTextureCorner();
+  nux::BaseTexture* GetRefineTextureDash();
+  nux::BaseTexture* GetRefineNoRefineTextureDash();
+  
   // Returns the width of the separator between the dash and the launcher.
   int GetVSeparatorSize() const;
 
@@ -206,6 +215,7 @@ public:
   // Practically it is the space between the top border of the dash and the searchbar.
   int GetDashViewTopPadding() const;
 
+  
   // Search bar
   int GetSearchBarLeftPadding() const;
   int GetSearchBarRightPadding() const;
@@ -236,9 +246,11 @@ public:
   int GetCategorySeparatorLeftPadding() const;
   int GetCategorySeparatorRightPadding() const;
 
+
   sigc::signal<void> changed;
 
   nux::Property<bool> always_maximised;
+  nux::Property<bool> preview_mode;
 
 private:
   class Impl;

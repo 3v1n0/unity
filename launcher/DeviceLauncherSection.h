@@ -17,15 +17,17 @@
  *              Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
-#ifndef _DEVICE_LAUNCHER_SECTION_H_
-#define _DEVICE_LAUNCHER_SECTION_H_
+#ifndef UNITYSHELL_DEVICE_LAUNCHER_SECTION_H
+#define UNITYSHELL_DEVICE_LAUNCHER_SECTION_H
 
 #include <map>
+#include <memory>
 
-#include <UnityCore/GLibSource.h>
-
-#include "DeviceLauncherIcon.h"
 #include "AbstractVolumeMonitorWrapper.h"
+#include "DevicesSettings.h"
+#include "DeviceNotificationDisplay.h"
+#include "FileManagerOpener.h"
+#include "VolumeLauncherIcon.h"
 
 namespace unity
 {
@@ -35,21 +37,27 @@ namespace launcher
 class DeviceLauncherSection : public sigc::trackable
 {
 public:
-  DeviceLauncherSection(AbstractVolumeMonitorWrapper::Ptr volume_monitor);
+  DeviceLauncherSection(AbstractVolumeMonitorWrapper::Ptr volume_monitor,
+                        DevicesSettings::Ptr devices_settings);
 
-  sigc::signal<void, AbstractLauncherIcon::Ptr> IconAdded;
+  std::vector<VolumeLauncherIcon::Ptr> GetIcons() const;
+
+  sigc::signal<void, AbstractLauncherIcon::Ptr> icon_added;
 
 private:
   void PopulateEntries();
   void OnVolumeAdded(glib::Object<GVolume> const& volume);
   void OnVolumeRemoved(glib::Object<GVolume> const& volume);
+  void TryToCreateAndAddIcon(glib::Object<GVolume> volume);
 
-  std::map<GVolume*, DeviceLauncherIcon::Ptr> map_;
+  std::map<GVolume*, VolumeLauncherIcon::Ptr> map_;
   AbstractVolumeMonitorWrapper::Ptr monitor_;
-  glib::Idle device_populate_idle_;
+  DevicesSettings::Ptr devices_settings_;
+  FileManagerOpener::Ptr file_manager_opener_;
+  DeviceNotificationDisplay::Ptr device_notification_display_;
 };
 
 }
-} // namespace unity
+}
 
-#endif // _DEVICE_LAUNCHER_SECTION_H_
+#endif

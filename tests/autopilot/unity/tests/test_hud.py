@@ -12,7 +12,9 @@ from __future__ import absolute_import
 from autopilot.matchers import Eventually
 from autopilot.emulators.X11 import ScreenGeometry
 from autopilot.testcase import multiply_scenarios
-from os import remove
+from os import remove, environ
+from os.path import exists
+from tempfile import mktemp
 from testtools.matchers import (
     Equals,
     EndsWith,
@@ -61,6 +63,8 @@ class HudBehaviorTests(HudTestsBase):
     def setUp(self):
         super(HudBehaviorTests, self).setUp()
 
+        if not environ.get('UBUNTU_MENUPROXY', ''):
+            self.patch_environment('UBUNTU_MENUPROXY', 'libappmenu.so')
         self.hud_monitor = self.screen_geo.get_primary_monitor()
         self.screen_geo.move_mouse_to_monitor(self.hud_monitor)
 
@@ -170,8 +174,9 @@ class HudBehaviorTests(HudTestsBase):
     def test_gedit_undo(self):
         """Test that the 'undo' action in the Hud works with GEdit."""
 
-        self.addCleanup(remove, '/tmp/autopilot_gedit_undo_test_temp_file.txt')
-        self.start_app('Text Editor', files=['/tmp/autopilot_gedit_undo_test_temp_file.txt'], locale='C')
+        file_path = mktemp()
+        self.addCleanup(remove, file_path)
+        self.start_app('Text Editor', files=[file_path], locale='C')
 
         self.keyboard.type("0")
         self.keyboard.type(" ")
@@ -186,9 +191,9 @@ class HudBehaviorTests(HudTestsBase):
         self.keyboard.press_and_release('Return')
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
         self.keyboard.press_and_release("Ctrl+s")
-        sleep(1)
+        self.assertThat(lambda: exists(file_path), Eventually(Equals(True)))
 
-        contents = open("/tmp/autopilot_gedit_undo_test_temp_file.txt").read().strip('\n')
+        contents = open(file_path).read().strip('\n')
         self.assertEqual("0 ", contents)
 
     def test_hud_to_dash_has_key_focus(self):
@@ -247,11 +252,11 @@ class HudBehaviorTests(HudTestsBase):
         self.mouse.click()
 
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
-        
+
     def test_hud_closes_click_after_text_removed(self):
         """Clicking outside of the hud after a search text has been entered and
         then removed from the searchbox will make it close."""
-        
+
         self.hud.ensure_visible()
         self.keyboard.type("Test")
         self.keyboard.press_and_release("Escape")
@@ -259,7 +264,7 @@ class HudBehaviorTests(HudTestsBase):
         (x,y,w,h) = self.hud.view.geometry
         self.mouse.move(w/2, h+50)
         self.mouse.click()
-        
+
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
     def test_alt_f4_close_hud(self):
@@ -276,49 +281,49 @@ class HudBehaviorTests(HudTestsBase):
         self.hud.ensure_visible()
         self.keyboard.press_and_release("Alt+F4")
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
-        
+
     def test_app_activate_on_enter(self):
         """Hud must close after activating a search item with Enter."""
-        self.hud.ensure_visible()   
-        
+        self.hud.ensure_visible()
+
         self.keyboard.type("Device > System Settings")
         self.assertThat(self.hud.search_string, Eventually(Equals("Device > System Settings")))
-        
+
         self.keyboard.press_and_release("Enter")
-        
+
         app_found = self.bamf.wait_until_application_is_running("gnome-control-center.desktop", 5)
         self.assertTrue(app_found)
         self.addCleanup(self.close_all_app,  "System Settings")
-        
+
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
-        
+
     def test_hud_closes_on_escape(self):
         """Hud must close on escape after searchbox is cleared"""
         self.hud.ensure_visible()
-        
+
         self.keyboard.type("ThisText")
         self.keyboard.press_and_release("Escape")
         self.keyboard.press_and_release("Escape")
-        
+
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
-    
+
     def test_hud_closes_on_escape_shrunk(self):
         """Hud must close when escape key is pressed"""
         self.hud.ensure_visible()
         self.keyboard.press_and_release("Escape")
-        
+
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
     def test_alt_arrow_keys_not_eaten(self):
         """Tests that Alt+ArrowKey events are correctly passed to the
         active window when Unity is not responding to them."""
-        
+
         self.start_app_window("Terminal")
-        
+
         #There's no easy way to read text from terminal, writing input
         #to a text file and then reading from there works.
         self.keyboard.type('echo "')
-        
+
         #Terminal is receiving input with Alt+Arrowkeys
         self.keyboard.press("Alt")
         self.keyboard.press_and_release("Up")
@@ -326,13 +331,13 @@ class HudBehaviorTests(HudTestsBase):
         self.keyboard.press_and_release("Right")
         self.keyboard.press_and_release("Left")
         self.keyboard.release("Alt")
-        
+
         self.keyboard.type('" > /tmp/ap_test_alt_keys')
         self.addCleanup(remove, '/tmp/ap_test_alt_keys')
         self.keyboard.press_and_release("Enter")
-        
+
         file_contents = open('/tmp/ap_test_alt_keys', 'r').read().strip()
-        
+
         self.assertThat(file_contents, Equals('ABCD'))
 
     def test_hud_closes_on_item_activated(self):
@@ -357,6 +362,85 @@ class HudBehaviorTests(HudTestsBase):
 
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
+    def test_mouse_changes_selected_hud_button(self):
+        """This tests moves the mouse from the top of the screen to the bottom, this must
+        change the selected button from 1 to 5.
+        """
+
+        self.hud.ensure_visible()
+
+        self.keyboard.type("a")
+        (x,y,w,h) = self.hud.view.geometry
+
+        self.mouse.move(w/2, 0)
+        self.assertThat(self.hud.view.selected_button, Eventually(Equals(1)))
+
+        self.mouse.move(w/2, h)
+        self.assertThat(self.hud.view.selected_button, Eventually(Equals(5)))
+
+    def test_keyboard_steals_focus_from_mouse(self):
+        """This tests moves the mouse from the top of the screen to the bottom,
+        then it presses the keyboard up 5 times, this must change the selected button from 5 to 1.
+        """
+
+        self.hud.ensure_visible()
+
+        self.keyboard.type("a")
+        (x,y,w,h) = self.hud.view.geometry
+
+        self.mouse.move(w/2, 0)
+        self.mouse.move(w/2, h)
+        self.assertThat(self.hud.view.selected_button, Eventually(Equals(5)))
+
+        for i in range(5):
+          self.keyboard.press_and_release('Up')
+
+        self.assertThat(self.hud.view.selected_button, Eventually(Equals(1)))
+
+    def test_keep_focus_on_application_opens(self):
+        """The Hud must keep key focus as well as stay open if an app gets opened from an external source. """
+
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
+
+        self.start_app_window("Calculator")
+        sleep(1)
+
+        self.keyboard.type("HasFocus")
+        self.assertThat(self.hud.search_string, Eventually(Equals("HasFocus")))
+
+    def test_closes_mouse_down_outside(self):
+        """Test that a mouse down outside of the hud closes the hud."""
+
+        self.hud.ensure_visible()
+        current_monitor = self.hud.monitor
+
+        (x,y,w,h) = self.hud.geometry
+        (screen_x,screen_y,screen_w,screen_h) = self.screen_geo.get_monitor_geometry(current_monitor)
+        
+        self.mouse.move(x + w + (screen_w-((screen_x-x)+w))/2, y + h + (screen_h-((screen_y-y)+h))/2)
+        self.mouse.click()
+        
+        self.assertThat(self.hud.visible, Eventually(Equals(False)))
+
+    def test_closes_then_focuses_window_on_mouse_down(self):
+        """If 2 windows are open with 1 maximized and the non-maxmized
+        focused. Then from the Hud clicking on the maximized window
+        must focus that window and close the hud.
+        """
+        char_win = self.start_app("Character Map")
+        self.keybinding("window/maximize")
+        self.start_app("Calculator")
+
+        self.hud.ensure_visible()
+
+        #Click bottom right of the screen
+        w = self.screen_geo.get_screen_width()
+        h = self.screen_geo.get_screen_height()
+        self.mouse.move(w,h)
+        self.mouse.click()
+
+        self.assertProperty(char_win, is_active=True)
 
 class HudLauncherInteractionsTests(HudTestsBase):
 
@@ -610,3 +694,42 @@ class HudAlternativeKeybindingTests(HudTestsBase):
         # Don't use reveal_hud, but be explicit in the keybindings.
         self.keyboard.press_and_release("Ctrl+Alt+h")
         self.assertThat(self.hud.visible, Eventually(Equals(True)))
+
+
+class HudCrossMonitorsTests(HudTestsBase):
+    """Multi-monitor hud tests."""
+
+    def setUp(self):
+        super(HudCrossMonitorsTests, self).setUp()
+        if self.screen_geo.get_num_monitors() < 2:
+            self.skipTest("This test requires more than 1 monitor.")
+
+    def test_hud_stays_on_same_monitor(self):
+        """If the hud is opened, then the mouse is moved to another monitor and
+        the keyboard is used. The hud must not move to that monitor.
+        """
+
+        current_monitor = self.hud.ideal_monitor
+
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
+
+        self.screen_geo.move_mouse_to_monitor((current_monitor + 1) % self.screen_geo.get_num_monitors())
+        self.keyboard.type("abc")
+
+        self.assertThat(self.hud.ideal_monitor, Eventually(Equals(current_monitor)))
+
+    def test_hud_close_on_cross_monitor_click(self):
+        """Hud must close when clicking on a window in a different screen."""
+
+        self.addCleanup(self.hud.ensure_hidden)
+
+        for monitor in range(self.screen_geo.get_num_monitors()-1):
+            self.screen_geo.move_mouse_to_monitor(monitor)
+            self.hud.ensure_visible()
+
+            self.screen_geo.move_mouse_to_monitor(monitor+1)
+            sleep(.5)
+            self.mouse.click()
+
+            self.assertThat(self.hud.visible, Eventually(Equals(False)))

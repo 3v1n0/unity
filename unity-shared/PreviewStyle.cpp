@@ -24,6 +24,8 @@
 #include <NuxCore/Logger.h>
 
 #include <NuxGraphics/GLTextureResourceManager.h>
+#include <Nux/PaintLayer.h>
+
 #include <UnityCore/GLibWrapper.h>
 #include "config.h"
 
@@ -36,6 +38,9 @@ namespace previews
 namespace
 {
 Style* style_instance = nullptr;
+
+const int preview_width = 770;
+const int preview_height = 380;
 
 nux::logging::Logger logger("unity.dash.previews.style");
 
@@ -138,6 +143,15 @@ Style& Style::Instance()
   return *style_instance;
 }
 
+nux::AbstractPaintLayer* Style::GetBackgroundLayer() const
+{
+  nux::ROPConfig rop;
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+  return new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 0.1f), true, rop);
+}
+
 int Style::GetNavigatorWidth() const
 {
   return 42;
@@ -148,9 +162,14 @@ int Style::GetNavigatorIconSize() const
   return 24;  
 }
 
-float Style::GetPreviewAspectRatio() const
+int Style::GetPreviewWidth() const
 {
-  return static_cast<float>(796)/390;
+  return preview_width;
+}
+
+int Style::GetPreviewHeight() const
+{
+  return preview_height;
 }
 
 int Style::GetDetailsTopMargin() const
@@ -175,7 +194,7 @@ int Style::GetDetailsLeftMargin() const
 
 int Style::GetPanelSplitWidth() const
 {
-  return 16;
+  return 10;
 }
 
 int Style::GetAppIconAreaWidth() const
@@ -205,7 +224,7 @@ int Style::GetMusicDurationWidth() const
 
 int Style::GetActionButtonHeight() const
 {
-  return 36;
+  return 34;
 }
 
 int Style::GetActionButtonMaximumWidth() const
@@ -273,6 +292,21 @@ float Style::GetVideoImageAspectRatio() const
   return float(540)/380;
 }
 
+int Style::GetAvatarAreaWidth() const
+{
+  return 100;
+}
+
+int Style::GetAvatarAreaHeight() const
+{
+  return 100;  
+}
+
+std::string Style::content_font() const
+{
+  return "Ubuntu Light 12";  
+}
+
 std::string Style::title_font() const
 {
   return "Ubuntu 22";
@@ -286,6 +320,15 @@ std::string Style::subtitle_size_font() const
 std::string Style::description_font() const
 {
   return "Ubuntu Light 10";
+
+}
+std::string Style::action_font() const
+{
+  return "Ubuntu 11";
+}
+std::string Style::action_extra_font() const
+{
+  return "Ubuntu Bold 11";  
 }
 
 std::string Style::app_license_font() const
@@ -328,7 +371,10 @@ std::string Style::track_font() const
   return "Ubuntu Light 10";
 }
 
-
+bool Style::GetShadowBackgroundEnabled() const
+{
+  return false;
+}
 
 nux::BaseTexture* Style::GetNavLeftIcon()
 {

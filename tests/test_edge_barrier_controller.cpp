@@ -156,9 +156,9 @@ TEST_F(TestEdgeBarrierController, ProcessHandledEventOnReleasedBarrier)
   bc.Subscribe(&handling_subscriber, monitor);
 
   MockPointerBarrier owner(monitor, true);
-  auto breaking_barrier_event = MakeBarrierEvent(0, true);
+  auto breaking_barrier_event = MakeBarrierEvent(5, true);
 
-  EXPECT_CALL(owner, ReleaseBarrier(_)).Times(0);
+  EXPECT_CALL(owner, ReleaseBarrier(5)).Times(1);
   bc.ProcessBarrierEvent(&owner, breaking_barrier_event);
 }
 
@@ -239,7 +239,7 @@ TEST_F(TestEdgeBarrierController, BreakingEdgeTemporaryReleasesBarrierForNotHand
   bc.ProcessBarrierEvent(&owner, MakeBarrierEvent(6, false));
 }
 
-TEST_F(TestEdgeBarrierController, BreakingEdgeDontReleasesBarrierForHandledEvents)
+TEST_F(TestEdgeBarrierController, BreakingEdgeTemporaryReleasesBarrierForHandledEvents)
 {
   MockPointerBarrier owner;
   int monitor = 0;
@@ -250,7 +250,7 @@ TEST_F(TestEdgeBarrierController, BreakingEdgeDontReleasesBarrierForHandledEvent
   ASSERT_TRUE(owner.released());
 
   subscribers_[monitor].handles_ = true;
-  EXPECT_CALL(owner, ReleaseBarrier(_)).Times(0);
+  EXPECT_CALL(owner, ReleaseBarrier(6)).Times(1);
   bc.ProcessBarrierEvent(&owner, MakeBarrierEvent(6, true));
 }
 

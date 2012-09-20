@@ -21,16 +21,16 @@
  */
 
 #include <gmock/gmock.h>
-using namespace testing;
 
-#include "DeviceLauncherSection.h"
-#include "AbstractVolumeMonitorWrapper.h"
-using namespace unity;
-using namespace unity::launcher;
-
-#include "gmockvolume.h"
+#include "DevicesSettings.h"
+#include "test_mock_devices.h"
 #include "test_utils.h"
 
+using namespace testing;
+using namespace unity::launcher;
+
+namespace unity
+{
 namespace
 {
 
@@ -49,63 +49,38 @@ public:
   bool icon_added;
 };
 
-class MockVolumeMonitorWrapper : public AbstractVolumeMonitorWrapper
+struct TestDeviceLauncherSection : Test
 {
-public:
-  typedef std::shared_ptr<MockVolumeMonitorWrapper> Ptr;
-
-  MockVolumeMonitorWrapper()
-    : volume1(G_VOLUME(g_mock_volume_new()))
-    , volume2(G_VOLUME(g_mock_volume_new()))
-  {
-  }
-
-  VolumeList GetVolumes()
-  {
-    VolumeList ret;
-
-    ret.push_back(volume1);
-    ret.push_back(volume2);
-
-    return ret;
-  }
-
-  glib::Object<GVolume> volume1;
-  glib::Object<GVolume> volume2;
-};
-
-class TestDeviceLauncherSection : public Test
-{
-public:
   TestDeviceLauncherSection()
     : monitor_(new MockVolumeMonitorWrapper)
-    , section_(monitor_)
+    , devices_settings_(new MockDevicesSettings)
+    , section_(monitor_, devices_settings_)
   {}
 
-  void SetUp()
-  {
-    // Make sure PopulateEntries is called.
-    Utils::WaitForTimeoutMSec(1500);
-  }
-
   MockVolumeMonitorWrapper::Ptr monitor_;
+  DevicesSettings::Ptr devices_settings_;
   DeviceLauncherSection section_;
 };
 
-
-TEST_F(TestDeviceLauncherSection, TestNoDuplicates)
+TEST_F(TestDeviceLauncherSection, NoDuplicates)
 {
   std::shared_ptr<EventListener> listener(new EventListener);
-  section_.IconAdded.connect(sigc::mem_fun(*listener, &EventListener::OnIconAdded));
+  section_.icon_added.connect(sigc::mem_fun(*listener, &EventListener::OnIconAdded));
 
   // Emit the signal volume_added for each volume.
-  monitor_->volume_added.emit(monitor_->volume1);
-  monitor_->volume_added.emit(monitor_->volume2);
+  monitor_->volume_added.emit(*(std::next(monitor_->volumes_.begin(), 0)));
+  monitor_->volume_added.emit(*(std::next(monitor_->volumes_.begin(), 1)));
 
   Utils::WaitForTimeoutMSec(500);
 
   EXPECT_EQ(listener->icon_added, false);
 }
 
+TEST_F(TestDeviceLauncherSection, GetIcons)
+{
+  EXPECT_EQ(section_.GetIcons().size(), 2);
+}
+
+}
 }
 

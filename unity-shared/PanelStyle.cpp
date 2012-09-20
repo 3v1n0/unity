@@ -73,12 +73,12 @@ Style::Style()
     style_instance = this;
   }
 
-  if (Settings::Instance().GetFormFactor() == FormFactor::TV)
+  if (Settings::Instance().form_factor() == FormFactor::TV)
     panel_height = 0;
   
-  Settings::Instance().changed.connect([this]() 
+  Settings::Instance().form_factor.changed.connect([this](FormFactor form_factor)
   {
-    if (Settings::Instance().GetFormFactor() == FormFactor::TV)
+    if (form_factor == FormFactor::TV)
       panel_height = 0;
   });
 
@@ -182,9 +182,17 @@ nux::NBitmapData* Style::GetBackground(int width, int height, float opacity)
   return context.GetBitmap();
 }
 
-nux::BaseTexture* Style::GetWindowButton(WindowButtonType type, WindowState state)
+/*!
+  Return a vector with the possible file names sorted by priority
+
+  @param type The type of the button.
+  @param state The button state.
+
+  @return A vector of strings with the possible file names sorted by priority.
+*/
+std::vector<std::string> Style::GetWindowButtonFileNames(WindowButtonType type, WindowState state)
 {
-  nux::BaseTexture* texture = NULL;
+  std::vector<std::string> files;
   std::string names[] = { "close", "minimize", "unmaximize", "maximize" };
   std::string states[] = { "", "_focused_prelight", "_focused_pressed", "_unfocused",
                            "_unfocused", "_unfocused_prelight", "_unfocused_pressed"};
@@ -200,38 +208,40 @@ nux::BaseTexture* Style::GetWindowButton(WindowButtonType type, WindowState stat
     glib::String filename(g_build_filename(home_dir, ".themes", _theme_name.c_str(), subpath.str().c_str(), NULL));
 
     if (g_file_test(filename.Value(), G_FILE_TEST_EXISTS))
-    {
-      glib::Error error;
-
-      // Found a file, try loading the pixbuf
-      glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file(filename.Value(), &error));
-      if (error)
-        LOG_WARNING(logger) << "Unable to load window button " << filename.Value() << ": " << error.Message();
-      else
-        texture = nux::CreateTexture2DFromPixbuf(pixbuf, true);
-    }
+      files.push_back (filename.Value());
   }
 
-  // texture is NULL if the pixbuf is not loaded
-  if (!texture)
+  const char* var = g_getenv("GTK_DATA_PREFIX");
+  if (!var)
+    var = "/usr";
+
+  glib::String filename(g_build_filename(var, "share", "themes", _theme_name.c_str(), subpath.str().c_str(), NULL));
+  if (g_file_test(filename.Value(), G_FILE_TEST_EXISTS))
+    files.push_back (filename.Value());
+
+  return files;
+}
+
+nux::BaseTexture* Style::GetWindowButton(WindowButtonType type, WindowState state)
+{
+  nux::BaseTexture* texture = NULL;
+
+  std::vector<std::string> files = GetWindowButtonFileNames (type, state);
+  for (unsigned int i=0; i < files.size(); i++)
   {
-    const char* var = g_getenv("GTK_DATA_PREFIX");
-    if (!var)
-      var = "/usr";
-
-    glib::String filename(g_build_filename(var, "share", "themes", _theme_name.c_str(), subpath.str().c_str(), NULL));
-
-    if (g_file_test(filename.Value(), G_FILE_TEST_EXISTS))
-    {
       glib::Error error;
-
-      // Found a file, try loading the pixbuf
-      glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file(filename.Value(), &error));
+      // Try loading the pixbuf
+      glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file(files[i].c_str (), &error));
       if (error)
-        LOG_WARNING(logger) << "Unable to load window button " << filename.Value() << ": " << error.Message();
+      {
+        LOG_WARNING(logger) << "Unable to load window button " << files[i] << ": " << error.Message();
+      }
       else
+      {
         texture = nux::CreateTexture2DFromPixbuf(pixbuf, true);
-    }
+        if (texture)
+          break;
+      }
   }
 
   if (!texture)

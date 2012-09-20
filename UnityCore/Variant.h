@@ -55,6 +55,8 @@ public:
 
   Variant& operator=(GVariant*);
   operator GVariant*() const;
+  operator bool() const;
+
 private:
   GVariant* variant_;
 };
