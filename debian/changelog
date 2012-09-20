@@ -162,7 +162,7 @@ unity (6.6.0-0ubuntu1) UNRELEASED; urgency=low
   * debian/control:
     - build-dep on libzeitgeist-dev and libunity-dev
     - bump because of ABI breakage build-dep on compiz and nux
-    - now recommends unity-lens-shopping (LP: #1052374)
+    - now recommends unity-lens-shopping (LP: #1053470)
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 20 Sep 2012 16:56:38 +0200
 
