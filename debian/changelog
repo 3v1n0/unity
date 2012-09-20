@@ -1,9 +1,168 @@
 unity (6.6.0-0ubuntu1) UNRELEASED; urgency=low
 
+  * New upstream release.
+    - Fixes non-escaped character sequences in dash previews (LP: #1039020)
+    - Updated background layer for preview cover-art and details panels
+      to be 10% low-light
+    - Expand a PlacesGroup if it is the only category that contains results
+      (LP: #950710)
+    - Update unity autopilot tests to match autopilot API
+    - Updated the convert files to fix some typos in the key names
+    - Add gmodule dependency
+    - Activate proper result if the categories aren't displayed in-order
+      (LP: #1040101)
+    - Refactor device launcher icons (LP: #713423)
+    - LauncherController: make the controller enable the launcher struts,
+      based on hide-mode option (LP: #1044005)
+    - Launcher: make always possible to drag an icon to the bottom or top
+      of its sub list (LP: #1043968)
+    - Don't desat bfb/hud icon in DNDReset (LP: #1043963)
+    - Progressively adjust the speed of the minimize animation. First
+      time it is used is slower, then speeds up the more it is used.
+      (LP: #1017510)
+    - Implement new ordering of categories for home lens. (LP: #1043915)
+    - UnityWindow now implements ScaleWindowInterface (LP: #876017)
+    - Launcher: restore an icon position after that the dragging has been
+      cancelled (LP: #955561)
+    - LauncherDragWindow: cancel drag on window mapped/unmapped
+      (LP: #1044723)
+    - Now there is a check of an override color in RefreshColor (which is
+      called when a PropertyNotify event happens). Also added a check in
+      FullySaturateColor to a void division by zero. (LP: #975350)
+    - Queue redraw after cover-art texture is updated from a url/file source.
+      (LP: #1043947)
+    - Fixed ability to delete glib::Source wrapper during its callback
+      (LP: #1044823)
+    - Close preview when dash is hidden. (LP: #1045298)
+    - LauncherModel: rewrite the Reordering functions to keep the icon
+      priority deltas (LP: #761155)
+    - Make sure we can pass extra hints when activating preview actions.
+      (LP: #1046352)
+    - UnityWindow: scale window code improved (LP: #1033935)
+    - The mouse will now cause the HUD buttons to change selection
+      (LP: #1042692)
+    - "Alt+Space" shortcut to reveal the window menu is not hardcoded, but a
+       Compiz key option. " (Hold)" should also be translated. Made all
+       Compiz plug-in names and all Compiz plug-in option names in
+       unityshell.cpp static constants.
+    - remove unity --reset, it's not anymore really needed now that we are
+      in stable days of unity and we moved to gsettings
+    - Removed the variables 'oldPrev' and 'oldNext' which got assigned the
+      value NULL, but then were never used
+    - Fixed the size of the previews to 770x380 pixels. (LP: #1045243)
+    - UnityWindow: use smart pointers, use static close_icon (with dynamic
+      state) and PanelStyle context (LP: #1033935) (LP: #1045127)
+      (LP: #1046124) (LP: #1046126)
+    - Remove everything in the #ifndef USE_MODERN_COMPIZ_GL ifdefs and remove
+      the ifdefs alltogether. unity now requires compiz 0.9.8.0.
+    - Re-add code to draw panel background texture when the dash is open and
+      there is a maximized window (LP: #1044460)
+    - EdgeBarrierController: Temporary disable the edge barriers also when
+      autohide is set (LP: #1020058)
+    - a11y: Port unity3d and panel service accessibility init to atk-bridge
+      (LP: #1023542) (LP: #1046582)
+    - Dash and Hud get drawn correctly no matter which monitor the mouse is in
+      (LP: #1002260)
+    - Fix minor problem with the Hud/Dash being drawn while closing on a
+      different monitor.
+    - Extended track play/pause mouse discovery for entire track row.
+      (LP: #1043997)
+    - Implemented DBus interface for DashController and made HideDash()
+      method available via DBus. This is needed by music-preview-player
+      codec installation functionality for hiding the dash when codec
+      installation starts. (LP: #1043825)
+    - Adds the extra_text property to preview Action (LP: #1049008)
+    - Fixed a layout flicker when first opening previews (LP: #1038944)
+      (LP: #1043277)
+    - Update sizing of elements to match designs, update assets (LP: #1049096)
+    - Fix crash in unity::dash::CoverflowResultView::Impl::Impl()
+      (LP: #1047420)
+    - UnityShell: remove scale_highlighted_window_ variable, using scale's
+      getSelectedWindow instead (LP: #1046795)
+    - Fixed dash dismissal when changing focus to a window on monitor external
+      to that of the dash. (LP: #923657) Improved panel update speed when
+      opening dash. (LP: #1044086)
+    - Added two new special icons for missing album cover; to be used by
+      music lens. They don't really fit into unity-asset-pool as they don't
+      have regular sizes. (LP: #1049217)
+    - Register file delete events in zeitgeist when file is dropped onto Trash
+      launcher icon. Added zeitgeist dependency. (LP: #870150)
+    - Restore the panel shadow, which has been missing since Unity 6.4.
+      (LP: #1045705)
+    - Added SocialPreview. (LP: #1049127)
+    - Disable the flow renderer (LP: #1049593)
+    - Added two new special icons for missing album cover; to be used by
+      music lens (LP: #1049217)
+    - Updated dash result highlight focus to 106x106 pixels with 20% white
+      opacity. Increased dash result file image size to 96x96. (LP: #1049128)
+    - Avoid construction of row wrappers. (LP: #1050342)
+    - Added extra-text to preview actions (for price tags) (LP: #1049593)
+    - Change the IconLoader methods to allow specifying both
+      maximum width and height. Updated rendering of the icon
+      ribbons. (LP: #1049593)
+    - Preview navigation buttons opacity changes on mouse-over.
+      (LP: #1049593)
+    - Adds a new background gradient to the dash and panel, as well as
+      removes some separator lines (LP: #1049593)
+    - Fixed a warning emitted by unreferencing an object owned by a smart
+      pointer in HudController.cpp. Caused by adopting a new nux::BaseWindow.
+    - Removed dash preview background shadow. (LP: #1049593)
+    - Raise shortcut overlay on show (LP: #985883)
+    - Reduce internal-padding inside filter buttons (LP: #856277)
+    - Added left and right click exit to cover art for all previews
+      (LP: #1045230) (LP: #1045752) (LP: #1049593)
+    - Show the alt-tab on the monitor with the mouse (LP: #1044293)
+    - Fix several failing autopilot tests
+    - Fix the standalone launcher crash on exit
+    - Fix uninitialized and invalid reads as reported by valgrind
+    - Enabled focus navigation for dash preview buttons
+      (LP: #1045416) (LP: #1049593)
+    - Fixed scrolling in music preview
+    - Send the current XLib timestamp to applications when we're opening
+      them to not confuse them and cause issues like what we have seen
+      with Firefox (LP: #1050687)
+    - Implemented the loading of the category icon for the application
+      category (required for the apps lens) (LP: #1049593)
+    - Refactor unity::Settings to use nux::RWPropert (LP: #1044681)
+    - LauncherController, FavoriteStore, Launcher, Icons: always use sort
+      priority based on favorites to get positioned on launcher
+      (LP: #761155) (LP: #858540) (LP: #868423) (LP: #1028927)
+      (LP: #1042845) (LP: #1045146)
+    - UnityWindow: implements sigc::trackable to fix crash (LP: #1052683)
+    - Dash/Hud no longer steal mouse events outside their content area.
+      Better draw handling of hud animation (LP: #1049593)
+    - add a deprecated --reset option as it seems otherwise to match
+      to --reset-icons
+    - Slows the animation down when installing applications in the Dash
+      Preview and the Software Center (LP: #1045746)
+    - Updates the API to match nux trunk and nux/3.0
+    - Introduced dash to preview transitions, relying on nux (LP: #1049593)
+    - Don't call GraphicsContext::DeactivateFramebuffer which will
+      immediately restore the backbuffer. Instead call WindowCompositor::
+      RestoreMainFramebuffer to bind either the backbuffer or reference
+      framebuffer for reading as that is the one we're drawing to as is the
+      most-up-to-date
+    - SocialPreview: Don't expand preview_info_hints, it was pushing down
+      the comments when there wasn't enough comments to fill the space
+    - Show workspace switcher icon always
+    - Fix rendering of Dash in maximised mode with redirected textures
+      by using the same code-patches as the restored Dash mode for the
+      overlay. (LP: #1053092)
+    - Fix more unit tests
+    - Fix ERROR ... unity.thumbnailgenerator ThumbnailGenerator.cpp:429
+      More than one thumbnail generator created.
+    - Implement "focus on hover" behavior for preview action buttons
+      (LP: #1053014)
+    - Clicking on Dash border should not close the dash
+    - Remove two manual-tests, that are now obsolete
+    - Adds changes to the LauncherController to better handle favourites
+      and the expo icon
+    - [UIFE][FFE] Install Amazon and Ubuntu One Music Store webapp items
+      in the launcher by default (LP: #1046840)
   * debian/control:
     - build-dep on libzeitgeist-dev and libunity-dev
     - bump because of ABI breakage build-dep on compiz and nux
-  * New upstream release.
+    - now recommends unity-lens-shopping (LP: #1052374)
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 20 Sep 2012 16:56:38 +0200
 
