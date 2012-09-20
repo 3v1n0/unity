@@ -62,7 +62,6 @@
 #include <dlfcn.h>
 
 #include "HudController.h"
-#include "ThumbnailGenerator.h"
 #include "WindowMinimizeSpeedController.h"
 
 namespace unity
@@ -333,7 +332,6 @@ private:
 
   UBusManager ubus_manager_;
   glib::SourceManager sources_;
-  unity::ThumbnailGenerator thumb_generator;
 
   WindowMinimizeSpeedController* minimize_speed_controller;
   friend class UnityWindow;

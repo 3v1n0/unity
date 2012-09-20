@@ -237,9 +237,6 @@ void TestRunner::NavLeft()
   unity_protocol_preview_add_action(proto_obj, "view", "View", iconHint2, 0);
   unity_protocol_preview_add_action(proto_obj, "retweet", "Retweet", nullptr, 0);
   unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Baljeet", "This is a comment", "4 hours ago");
-  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Isabella", "This is a comment", "4 hours ago");
-  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Candace", "This is a comment", "4 hours ago");
-  unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Vanessa", "This is a comment", "4 hours ago");
   unity_protocol_social_preview_add_comment(UNITY_PROTOCOL_SOCIAL_PREVIEW(proto_obj.RawPtr()), "comment",  "Major Monogram", "I'm a comment", "4 hours ago");
   unity_protocol_preview_add_info_hint(proto_obj, "likes",  "Favorites", nullptr, g_variant_new("i", 123));
   unity_protocol_preview_add_info_hint(proto_obj, "retweets",  "Retweets", nullptr, g_variant_new("i", 12));

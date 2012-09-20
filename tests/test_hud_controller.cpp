@@ -50,7 +50,11 @@ public:
   MOCK_CONST_METHOD0(GetName, std::string());
   MOCK_METHOD1(AddProperties, void(GVariantBuilder*));
   MOCK_METHOD2(Draw, void(nux::GraphicsEngine&, bool));
-  MOCK_METHOD0(GetContentGeometry, nux::Geometry());
+  nux::Geometry GetContentGeometry()
+  {
+    return nux::Geometry();
+  }
+
 
 };
 
