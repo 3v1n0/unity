@@ -613,23 +613,6 @@ Expected Result:
  * All icons are present in the Launcher
 
 
-Test launcher removes device icons
-------------------------------------------------------------
-This test makes sure that Unity doesn't shows internal partitions after
-they have been unmounted.
-
-Setup:
-
-Actions:
- * Open Nautilus
- * Mount an internal partition using the sidebar
- * Make sure the launcher has the launcher icon for the partition
- * Unmount that partition using Nautilus
-
-Expected Result:
- * The device launcher icon has been removed.
-
-
 Drag and Drop doesn't freeze Unity
 ----------------------------------
 Setup:
