@@ -574,7 +574,6 @@ void Controller::Impl::ResetIconPriorities()
     else if (fav == expo_icon_->RemoteUri())
     {
       expo_icon_found = true;
-      continue;
     }
 
     auto const& icon = GetIconByUri(fav);
@@ -921,7 +920,7 @@ void Controller::Impl::SetupIcons()
   if (!running_apps_added)
     AddRunningApps();
 
-  if (!GetIconByUri(expo_icon_->RemoteUri()))
+  if (model_->IconIndex(expo_icon_) < 0)
     RegisterIcon(CreateFavoriteIcon(expo_icon_->RemoteUri()), ++sort_priority_);
 
   if (!devices_added)
