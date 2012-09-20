@@ -645,7 +645,6 @@ void Controller::Impl::RegisterIcon(AbstractLauncherIcon::Ptr icon, int priority
     ResetIconPriorities();
   });
 
-  std::string const& icon_uri = icon->RemoteUri();
   icon->position_forgot.connect([this, icon_uri] {
     FavoriteStore::Instance().RemoveFavorite(icon_uri);
   });
@@ -885,8 +884,28 @@ void Controller::Impl::AddDevices()
   }
 }
 
+void Controller::Impl::MigrateFavorites()
+{
+  // This migrates favorites to new format, it can safely be removed after Q
+  auto& favorites = FavoriteStore::Instance();
+  auto favs = favorites.GetFavorites();
+
+  auto fav_it = std::find_if(begin(favs), end(favs),
+    [](std::string const& fav) { return (fav.find(FavoriteStore::URI_PREFIX_UNITY) != std::string::npos); });
+
+  if (fav_it == end(favs))
+  {
+    favs.push_back(local::RUNNING_APPS_URI);
+    favs.push_back(expo_icon_->RemoteUri());
+    favs.push_back(local::DEVICES_URI);
+    favorites.SetFavorites(favs);
+  }
+}
+
 void Controller::Impl::SetupIcons()
 {
+  MigrateFavorites();
+
   auto& favorite_store = FavoriteStore::Instance();
   FavoriteList const& favs = favorite_store.GetFavorites();
   bool running_apps_added = false;

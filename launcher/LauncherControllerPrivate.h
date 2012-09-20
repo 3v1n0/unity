@@ -88,6 +88,7 @@ public:
   SoftwareCenterLauncherIcon::Ptr CreateSCLauncherIcon(std::string const& file_path, std::string const& aptdaemon_trans_id, std::string const& icon_path);
 
   void SetupIcons();
+  void MigrateFavorites();
   void AddRunningApps();
   void AddDevices();
 
