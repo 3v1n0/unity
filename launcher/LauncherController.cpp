@@ -604,6 +604,9 @@ void Controller::Impl::ResetIconPriorities()
   }
 
   model_->Sort();
+
+  if (!expo_icon_found)
+    SaveIconsOrder();
 }
 
 void Controller::Impl::UpdateNumWorkspaces(int workspaces)
