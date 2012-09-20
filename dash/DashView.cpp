@@ -107,10 +107,6 @@ DashView::DashView()
   SetupViews();
   SetupUBusConnections();
 
-  Settings::Instance().form_factor.changed.connect([this](FormFactor) {
-    Relayout();
-  });
-
   lenses_.lens_added.connect(sigc::mem_fun(this, &DashView::OnLensAdded));
   mouse_down.connect(sigc::mem_fun(this, &DashView::OnMouseButtonDown));
   preview_state_machine_.PreviewActivated.connect(sigc::mem_fun(this, &DashView::BuildPreview));

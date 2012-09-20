@@ -79,6 +79,9 @@ Controller::Controller()
   {
     if (window_ && view_  && visible_)
     {
+      // Relayout here so the input window size updates.
+      Relayout();
+      
       window_->PushToFront();
       window_->SetInputFocus();
       nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
