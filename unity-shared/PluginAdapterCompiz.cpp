@@ -549,7 +549,8 @@ Window PluginAdapter::GetTopMostValidWindowInViewport() const
   CompWindow* window;
   CompPoint screen_vp = m_Screen->vp();
 
-  for (auto it = m_Screen->windows().rbegin(); it != m_Screen->windows().rend(); ++it)
+  auto const& windows = m_Screen->windows();
+  for (auto it = windows.rbegin(); it != windows.rend(); ++it)
   {
     window = *it;
     if (window->defaultViewport() == screen_vp &&
