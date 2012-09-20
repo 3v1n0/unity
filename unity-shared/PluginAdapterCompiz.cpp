@@ -548,6 +548,7 @@ Window PluginAdapter::GetTopMostValidWindowInViewport() const
 {
   CompWindow* window;
   CompPoint screen_vp = m_Screen->vp();
+  std::vector<Window> const& our_xids = nux::XInputWindow::NativeHandleList();
 
   auto const& windows = m_Screen->windows();
   for (auto it = windows.rbegin(); it != windows.rend(); ++it)
@@ -559,7 +560,8 @@ Window PluginAdapter::GetTopMostValidWindowInViewport() const
         !(window->state() & CompWindowStateAboveMask) &&
         !(window->type() & CompWindowTypeSplashMask) &&
         !(window->type() & CompWindowTypeDockMask) &&
-        !window->overrideRedirect())
+        !window->overrideRedirect() &&
+        std::find(our_xids.begin(), our_xids.end(), window) == our_xids.end())
     {
       return window->id();
     }
