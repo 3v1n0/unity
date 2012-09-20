@@ -1,7 +1,8 @@
 unity (6.4.0-0ubuntu7) UNRELEASED; urgency=low
 
   * debian/control:
-    - build-dep on libzeitgeist-dev
+    - build-dep on libzeitgeist-dev and libunity-dev
+    - bump because of ABI breakage build-dep on compiz and nux
 
  -- Didier Roche <didrocks@ubuntu.com>  Mon, 17 Sep 2012 14:27:03 +0200
 
