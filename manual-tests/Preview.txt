@@ -151,3 +151,22 @@ Actions:
 Expected Result:
   A preview will open with the correct size initially (no size flicker).
   When the dash is resized, the preview will center its geometry and stay the correct size.
+
+
+Two highlighted action buttons
+------------------------------
+This tests that it's not possible to have two highlighted preview action buttons.
+
+Setup:
+#. Open dash.
+#. Open Files Lens.
+#. Right-click the mouse on an icon (don't use folder icons because they have just one action button).
+#. Wait for the preview window to open and finish animating.
+#. Make sure that an action button is already highlighted (henceforth referred to as the button A)
+
+Actions:
+#. Move the mouse to another action button (henceforth referred to as the button B)
+
+Expected Result:
+  The button A must not be highlighted.
+  The button B must be highlighted.
