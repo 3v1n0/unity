@@ -22,6 +22,7 @@
 #include <Nux/WindowCompositor.h>
 
 #include "unity-shared/CairoTexture.h"
+#include "unity-shared/UnitySettings.h"
 #include "CairoBaseWindow.h"
 
 namespace unity
@@ -44,6 +45,11 @@ CairoBaseWindow::CairoBaseWindow() :
   _compute_blur_bkg(false)
 {
   SetWindowSizeMatchLayout(true);
+  
+  bool disableBlur = Settings::Instance().GetLowGfxMode();
+  
+  _use_blurred_background = disableBlur;
+  _compute_blur_bkg = disableBlur;
 }
 
 CairoBaseWindow::~CairoBaseWindow()

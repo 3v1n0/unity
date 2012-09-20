@@ -48,6 +48,7 @@ public:
     : parent_(owner)
     , gsettings_(g_settings_new(SETTINGS_NAME.c_str()))
     , cached_form_factor_(FormFactor::DESKTOP)
+    , lowGfx(false)
   {
     CacheFormFactor();
 
@@ -55,6 +56,11 @@ public:
       CacheFormFactor();
       parent_->form_factor.changed.emit(cached_form_factor_);
     });
+    
+     if (atoi(getenv("LOW_GFX")) == 1 || nux::GetGraphicsDisplay()->GetGraphicsEngine()->IsSoftwareRendered())
+58   {
+59     lowGfx_ = true;
+60   }
   }
 
   void CacheFormFactor()
@@ -85,10 +91,16 @@ public:
     g_settings_set_enum(gsettings_, FORM_FACTOR.c_str(), static_cast<int>(factor));
     return true;
   }
+  
+  bool GetLowGfxMode() const
+  {
+    return lowGfx_;
+  }
 
   Settings* parent_;
   glib::Object<GSettings> gsettings_;
   FormFactor cached_form_factor_;
+  bool lowGfx_;
 
   glib::Signal<void, GSettings*, gchar* > form_factor_changed_;
 };
@@ -130,5 +142,9 @@ Settings& Settings::Instance()
   return *settings_instance;
 }
 
+bool Settings::GetLowGfxMode() const
+{
+  pimpl->GetLowGfxMode();
+}
 
 } // namespace unity
