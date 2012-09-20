@@ -21,6 +21,7 @@
 #define UNITYSHELL_PLACES_GROUP_H
 
 #include <Nux/Nux.h>
+#include <Nux/View.h>
 #include <Nux/VLayout.h>
 #include <Nux/HLayout.h>
 #include <Nux/TextureArea.h>
@@ -33,8 +34,6 @@
 #include "unity-shared/UBusWrapper.h"
 
 #include <UnityCore/GLibSource.h>
-
-#include "AbstractPlacesGroup.h"
 
 #include "ResultView.h"
 
@@ -49,9 +48,9 @@ namespace unity
 
 class HSeparator;
 
-class PlacesGroup : public dash::AbstractPlacesGroup, public debug::Introspectable
+class PlacesGroup : public nux::View, public debug::Introspectable
 {
-  NUX_DECLARE_OBJECT_TYPE(PlacesGroup, dash::AbstractPlacesGroup);
+  NUX_DECLARE_OBJECT_TYPE(PlacesGroup, nux::View);
 public:
 
   PlacesGroup();

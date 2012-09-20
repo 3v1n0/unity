@@ -208,7 +208,6 @@ if (GTEST_SRC_DIR AND
                  test_edge_barrier_controller.cpp
                  test_launcher.cpp
                  test_device_launcher_section.cpp
-                 test_lensview_impl.cpp
                  test_hud_button.cpp
                  test_hud_controller.cpp
                  test_hud_launcher_icon.cpp
@@ -242,9 +241,7 @@ if (GTEST_SRC_DIR AND
                  test_volume_launcher_icon.cpp
                  gmockmount.c
                  gmockvolume.c
-                 ${CMAKE_SOURCE_DIR}/dash/AbstractPlacesGroup.cpp
                  ${CMAKE_SOURCE_DIR}/dash/DashViewPrivate.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/LensViewPrivate.cpp
                  ${CMAKE_SOURCE_DIR}/dash/ResultRenderer.cpp
                  ${CMAKE_SOURCE_DIR}/dash/ResultView.cpp
                  ${CMAKE_SOURCE_DIR}/dash/ResultViewGrid.cpp

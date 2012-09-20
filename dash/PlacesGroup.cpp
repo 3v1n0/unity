@@ -113,7 +113,7 @@ protected:
 NUX_IMPLEMENT_OBJECT_TYPE(PlacesGroup);
 
 PlacesGroup::PlacesGroup()
-  : AbstractPlacesGroup(),
+  : nux::View(NUX_TRACKER_LOCATION),
     _child_view(nullptr),
     _is_expanded(false),
     _n_visible_items_in_unexpand_mode(0),
