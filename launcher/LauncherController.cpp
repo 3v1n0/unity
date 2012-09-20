@@ -524,6 +524,7 @@ void Controller::Impl::OnFavoriteStoreFavoriteRemoved(std::string const& entry)
     // Since the running apps and the devices are always shown, when added to
     // the model, we only have to re-order them
     ResetIconPriorities();
+    SaveIconsOrder();
     return;
   }
 

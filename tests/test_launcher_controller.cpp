@@ -1497,6 +1497,7 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteRemovedDeviceSection)
   auto const& last_app = *(app_icons.rbegin());
   EXPECT_EQ(model->IconIndex(device_icon1), model->IconIndex(last_app) + 1);
   EXPECT_EQ(model->IconIndex(device_icon2), model->IconIndex(last_app) + 2);
+  EXPECT_TRUE(favorite_store.IsFavorite(places::DEVICES_URI));
 }
 
 TEST_F(TestLauncherController, OnViewOpened)
