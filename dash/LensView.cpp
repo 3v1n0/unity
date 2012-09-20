@@ -134,6 +134,7 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   , lens_(lens)
   , initial_activation_(true)
   , no_results_active_(false)
+  , last_expanded_group_(nullptr)
   , last_good_filter_model_(-1)
 {
   SetupViews(show_filters);
@@ -146,7 +147,14 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   lens_->connected.changed.connect([&](bool is_connected) { if (is_connected) initial_activation_ = true; });
   lens_->categories_reordered.connect(sigc::mem_fun(this, &LensView::OnCategoryOrderChanged));
   search_string.SetGetterFunction(sigc::mem_fun(this, &LensView::get_search_string));
-  filters_expanded.changed.connect([&](bool expanded) { fscroll_view_->SetVisible(expanded); QueueRelayout(); OnColumnsChanged(); });
+  filters_expanded.changed.connect([&](bool expanded) 
+  { 
+    fscroll_view_->SetVisible(expanded); 
+    QueueRelayout(); 
+    OnColumnsChanged();
+    ubus_manager_.SendMessage(UBUS_REFINE_STATUS, 
+                              g_variant_new(UBUS_REFINE_STATUS_FORMAT_STRING, expanded ? TRUE : FALSE));
+  });
   view_type.changed.connect(sigc::mem_fun(this, &LensView::OnViewTypeChanged));
 
   ubus_manager_.RegisterInterest(UBUS_RESULT_VIEW_KEYNAV_CHANGED, [&] (GVariant* data) {
@@ -166,7 +174,6 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
         if ((child && child->HasKeyFocus()) ||
             (expand_label && expand_label->HasKeyFocus()))
         {
-
           focused_pos.x += child->GetGeometry().x;
           focused_pos.y += child->GetGeometry().y - 30;
           focused_pos.height += 30;
@@ -188,9 +195,14 @@ void LensView::SetupViews(nux::Area* show_filters)
 
   scroll_view_ = new LensScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION),
                                     NUX_TRACKER_LOCATION);
-  scroll_view_->EnableVerticalScrollBar(true);
+  scroll_view_->EnableVerticalScrollBar(false);
   scroll_view_->EnableHorizontalScrollBar(false);
   layout_->AddView(scroll_view_);
+
+  scroll_view_->geometry_changed.connect([this] (nux::Area *area, nux::Geometry& geo)
+  {
+    CheckScrollBarState();
+  });
 
   scroll_layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
   scroll_view_->SetLayout(scroll_layout_);
@@ -312,12 +324,15 @@ void LensView::OnCategoryAdded(Category const& category)
     static_cast<ResultViewGrid*> (grid)->horizontal_spacing = CARD_VIEW_GAP_HORIZ;
     static_cast<ResultViewGrid*> (grid)->vertical_spacing = CARD_VIEW_GAP_VERT;
   }
+  /*
+   * The flow renderer is disabled for now, expecting return later
   else if (renderer_name == "flow" && nux::GetWindowThread()->GetGraphicsEngine().UsingGLSLCodePath())
   {
     grid = new CoverflowResultView(NUX_TRACKER_LOCATION);
     grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
     group->SetHeaderCountVisible(false);
   }
+  */
   else
   {
     grid = new ResultViewGrid(NUX_TRACKER_LOCATION);
@@ -384,6 +399,8 @@ void LensView::OnCategoryAdded(Category const& category)
   scroll_layout_->AddView(group, 0, nux::MinorDimensionPosition::eAbove,
                           nux::MinorDimensionSize::eFull, 100.0f,
                           (nux::LayoutPosition)index);
+  
+  group->SetMinimumWidth(GetGeometry().width);
 }
 
 void LensView::OnCategoryOrderChanged()
@@ -439,6 +456,8 @@ ResultViewGrid* LensView::GetGridForCategory(unsigned category_index)
 void LensView::OnResultAdded(Result const& result)
 {
   try {
+    // Anything done in this method needs to be super fast, if in doubt, add
+    // it to the model_updated_timeout_ callback!
     PlacesGroup* group = categories_.at(result.category_index);
 
     std::string uri = result.uri;
@@ -450,6 +469,17 @@ void LensView::OnResultAdded(Result const& result)
     if (G_UNLIKELY (no_results_active_))
     {
       CheckNoResults(Lens::Hints());
+    }
+
+    if (!model_updated_timeout_)
+    {
+      model_updated_timeout_.reset(new glib::Idle([&] () {
+        // Check if all results so far are from one category
+        // If so, then expand that category.
+        CheckCategoryExpansion();
+        model_updated_timeout_.reset();
+        return false;
+      }, glib::Source::Priority::HIGH));
     }
   } catch (std::out_of_range& oor) {
     LOG_WARN(logger) << "Result does not have a valid category index: "
@@ -553,6 +583,33 @@ void LensView::CheckNoResults(Lens::Hints const& hints)
   }
 }
 
+void LensView::CheckCategoryExpansion()
+{
+    int number_of_displayed_categories = 0;
+
+    // Check if we had expanded a group in last run
+    // If so, collapse it for now
+    if (last_expanded_group_ != nullptr)
+    {
+        last_expanded_group_->SetExpanded(false);
+        last_expanded_group_ = nullptr;
+    }
+
+    // Cycle through all categories
+    for (auto category : categories_)
+    {
+        if (counts_[category] > 0) {
+            number_of_displayed_categories++;
+            last_expanded_group_ = category;
+        }
+    }
+
+    if (number_of_displayed_categories == 1 && last_expanded_group_ != nullptr)
+        last_expanded_group_->SetExpanded(true);
+    else
+        last_expanded_group_ = nullptr;
+}
+
 void LensView::HideResultsMessage()
 {
   if (no_results_active_)
@@ -580,6 +637,20 @@ void LensView::OnGroupExpanded(PlacesGroup* group)
   ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
   grid->expanded = group->GetExpanded();
   ubus_manager_.SendMessage(UBUS_PLACE_VIEW_QUEUE_DRAW);
+
+  CheckScrollBarState();
+}
+
+void LensView::CheckScrollBarState()
+{
+  if (scroll_layout_->GetGeometry().height > scroll_view_->GetGeometry().height)
+  {
+    scroll_view_->EnableVerticalScrollBar(true); 
+  }
+  else
+  {
+    scroll_view_->EnableVerticalScrollBar(false); 
+  }
 }
 
 void LensView::OnColumnsChanged()

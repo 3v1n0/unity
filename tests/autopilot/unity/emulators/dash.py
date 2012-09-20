@@ -9,6 +9,7 @@
 
 from __future__ import absolute_import
 
+from autopilot.emulators.dbus_handler import session_bus
 from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.keybindings import KeybindingsHelper
 from testtools.matchers import GreaterThan
@@ -16,7 +17,7 @@ from testtools.matchers import GreaterThan
 from unity.emulators import UnityIntrospectionObject
 import logging
 from time import sleep
-
+import dbus
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +74,11 @@ class Dash(KeybindingsHelper):
     def monitor(self):
         """The monitor where the dash is"""
         return self.controller.monitor
+
+    @property
+    def ideal_monitor(self):
+        """The ideal monitor for the dash to appear on"""
+        return self.controller.ideal_monitor
 
     @property
     def search_string(self):
@@ -149,6 +155,10 @@ class Dash(KeybindingsHelper):
         active_lens_name = self.view.get_lensbar().active_lens
         return self.view.get_lensview_by_name(active_lens_name)
 
+    @property
+    def geometry(self):
+        return (self.view.x, self.view.y, self.view.width, self.view.height)
+
 
 class DashController(UnityIntrospectionObject):
     """The main dash controller object."""
@@ -156,6 +166,13 @@ class DashController(UnityIntrospectionObject):
     def get_dash_view(self):
         """Get the dash view that's attached to this controller."""
         return self.get_children_by_type(DashView)[0]
+
+    def hide_dash_via_dbus(self):
+        """ Emulate a DBus call for dash hiding  """
+        dash_object = session_bus.get_object('com.canonical.Unity',
+                                             '/com/canonical/Unity/Dash')
+        dash_iface = dbus.Interface(dash_object, 'com.canonical.Unity.Dash')
+        dash_iface.HideDash()
 
 
 class DashView(UnityIntrospectionObject):
@@ -436,7 +453,7 @@ class PreviewContainer(UnityIntrospectionObject):
             if nav.direction == 2:
                 return nav
         return None
-    
+
     def get_right_navigator(self):
         """Return the right navigator object"""
         navigators = self.get_children_by_type(PreviewNavigator)
@@ -499,7 +516,7 @@ class PreviewContainer(UnityIntrospectionObject):
         """Return the current preview object."""
         return self.content.get_current_preview()
         preview_initiate_count_
-    
+
     @property
     def preview_initiate_count(self):
         """Return the number of initiated previews since opened."""

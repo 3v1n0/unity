@@ -60,7 +60,9 @@ public:
   void AboutToShow();
   void AboutToHide();
 
-  void SetWindowGeometry(nux::Geometry const& absolute_geo, nux::Geometry const& geo);
+  void SetMonitorOffset(int x, int y);
+  
+  nux::Geometry GetContentGeometry();
 
 protected:
   virtual Area* FindKeyFocusArea(unsigned int event_type,
@@ -69,7 +71,6 @@ protected:
 
   void SetupViews();
   void OnSearchChanged(std::string const& search_string);
-  virtual long PostLayoutManagement(long LayoutResult);
 
 private:
   void OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key);
@@ -84,6 +85,11 @@ private:
   nux::Geometry GetBestFitGeometry(nux::Geometry const& for_geo);
 
   void ProcessGrowShrink();
+
+  void MouseStealsHudButtonFocus();
+  void LoseSelectedButtonFocus();
+  void FindNewSelectedButton();
+  void SelectLastFocusedButton();
 
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
@@ -105,17 +111,16 @@ private:
   Hud::Queries queries_;
   nux::Geometry content_geo_;
   OverlayRenderer renderer_;
-  nux::Geometry window_geometry_;
-  nux::Geometry absolute_window_geometry_;
   glib::Source::UniquePtr timeline_idle_;
+  bool timeline_animating_;
 
   guint64 start_time_;
   int last_known_height_;
   int current_height_;
-  bool timeline_need_more_draw_;
   int selected_button_;
   bool show_embedded_icon_;
   bool activated_signal_sent_;
+  bool keyboard_stole_focus_;
 };
 
 

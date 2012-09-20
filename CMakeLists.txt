@@ -8,7 +8,7 @@ include (cmake/Documentation.cmake)
 #
 set (PROJECT_NAME "unity")
 set (UNITY_MAJOR 6)
-set (UNITY_MINOR 4)
+set (UNITY_MINOR 6)
 set (UNITY_MICRO 0)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "6.0")
@@ -19,9 +19,9 @@ set (CMAKE_CXX_FLAGS_RELEASE "")
 
 if (BUILD_GLES)
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNUX_OPENGLES_20 -DUSE_GLES")
-    set (UNITY_STANDALONE_LADD "-lunity-core-${UNITY_API_VERSION} -lm")
+    set (UNITY_STANDALONE_LADD "-lunity-core-${UNITY_API_VERSION} -lm -lpthread -ldl")
 else ()
-    set (UNITY_STANDALONE_LADD "-lunity-core-${UNITY_API_VERSION} -lm -lGL -lGLU")
+    set (UNITY_STANDALONE_LADD "-lunity-core-${UNITY_API_VERSION} -lm -lpthread -ldl -lGL -lGLU")
 endif ()
 
 #
@@ -127,9 +127,7 @@ endif (DISABLE_MAINTAINER_CFLAGS)
 #
 # Compiz Plugins
 #
-
-set (UNITY_PLUGIN_DEPS "compiz;nux-3.0>=3.0.0;libbamf3;dee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator3-0.4>=0.4.90;atk;unity-misc>=0.4.0;dbus-glib-1;gtk+-3.0>=3.1;sigc++-2.0;json-glib-1.0;libnotify;xfixes;unity-protocol-private>=5.95.1;libgeis")
-# FIXME: unity-protocol-private shouldn't be there, but building of unityshell is just broken
+set (UNITY_PLUGIN_DEPS "compiz>=0.9.8.0;nux-3.0>=3.0.0;libbamf3;dee-1.0;gio-2.0;gio-unix-2.0;gmodule-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator3-0.4>=0.4.90;atk;atk-bridge-2.0;unity-misc>=0.4.0;dbus-glib-1;gtk+-3.0>=3.1;sigc++-2.0;json-glib-1.0;libnotify;xfixes;unity-protocol-private>=5.95.1;libgeis;xrender>=0.9;zeitgeist-1.0>=0.3.18")
 set (UNITY_PROTOCOL_PRIVATE_DEPS "unity-protocol-private>=5.95.1")
 
 find_package (PkgConfig)

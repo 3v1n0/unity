@@ -27,6 +27,7 @@
 
 #include "AbstractLauncherIcon.h"
 #include "DeviceLauncherSection.h"
+#include "DevicesSettingsImp.h"
 #include "EdgeBarrierController.h"
 #include "LauncherController.h"
 #include "Launcher.h"
@@ -45,58 +46,52 @@ namespace launcher
 class Controller::Impl
 {
 public:
-  Impl(Display* display, Controller* parent);
+  Impl(Controller* parent);
   ~Impl();
 
   void UpdateNumWorkspaces(int workspaces);
 
   Launcher* CreateLauncher(int monitor);
 
-  void Save();
+  void SaveIconsOrder();
   void SortAndUpdate();
 
   nux::ObjectPtr<Launcher> CurrentLauncher();
 
-  void OnIconAdded(AbstractLauncherIcon::Ptr icon);
-  void OnIconRemoved(AbstractLauncherIcon::Ptr icon);
+  template<typename IconType>
+  int GetLastIconPriority(std::string const& favorite_uri = "", bool sticky = false);
+  void AddFavoriteKeepingOldPosition(FavoriteList& icons, std::string const& icon_uri) const;
 
-  void OnLauncherAddRequest(char* path, AbstractLauncherIcon::Ptr before);
+  void OnIconRemoved(AbstractLauncherIcon::Ptr icon);
+  void OnDeviceIconAdded(AbstractLauncherIcon::Ptr icon);
+
+  void OnLauncherAddRequest(std::string const& icon_uri, AbstractLauncherIcon::Ptr before);
   void OnLauncherAddRequestSpecial(std::string const& path, std::string const& aptdaemon_trans_id,
                                    std::string const& icon_path, int icon_x, int icon_y, int icon_size);
   void OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr icon);
-  void OnSCIconAnimationComplete(AbstractLauncherIcon::Ptr icon);
 
   void OnLauncherEntryRemoteAdded(LauncherEntryRemote::Ptr const& entry);
   void OnLauncherEntryRemoteRemoved(LauncherEntryRemote::Ptr const& entry);
 
   void OnFavoriteStoreFavoriteAdded(std::string const& entry, std::string const& pos, bool before);
   void OnFavoriteStoreFavoriteRemoved(std::string const& entry);
-  void OnFavoriteStoreReordered();
-
-
-  void InsertExpoAction();
-  void RemoveExpoAction();
-
-  void InsertDesktopIcon();
-  void RemoveDesktopIcon();
+  void ResetIconPriorities();
 
   void SendHomeActivationRequest();
 
   int MonitorWithMouse();
 
-  void InsertTrash();
+  void RegisterIcon(AbstractLauncherIcon::Ptr icon, int priority = std::numeric_limits<int>::min());
 
-  void RegisterIcon(AbstractLauncherIcon::Ptr icon);
-
-  AbstractLauncherIcon::Ptr CreateFavorite(const char* file_path);
-
+  AbstractLauncherIcon::Ptr CreateFavoriteIcon(std::string const& icon_uri);
+  AbstractLauncherIcon::Ptr GetIconByUri(std::string const& icon_uri);
   SoftwareCenterLauncherIcon::Ptr CreateSCLauncherIcon(std::string const& file_path, std::string const& aptdaemon_trans_id, std::string const& icon_path);
 
-  void SetupBamf();
+  void SetupIcons();
+  void AddRunningApps();
+  void AddDevices();
 
   void EnsureLaunchers(int primary, std::vector<nux::Geometry> const& monitors);
-
-  void OnExpoActivated();
 
   void OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors);
 
@@ -122,37 +117,31 @@ public:
 
   Controller* parent_;
   LauncherModel::Ptr model_;
+  glib::Object<BamfMatcher> matcher_;
   nux::ObjectPtr<Launcher> launcher_;
   nux::ObjectPtr<Launcher> keyboard_launcher_;
-  int                    sort_priority_;
-  AbstractVolumeMonitorWrapper::Ptr volume_monitor_;
   DeviceLauncherSection  device_section_;
   LauncherEntryRemoteModel remote_model_;
   AbstractLauncherIcon::Ptr expo_icon_;
   AbstractLauncherIcon::Ptr desktop_icon_;
-  int                    num_workspaces_;
-  bool                   show_desktop_icon_;
-  Display*               display_;
-
-  bool                   launcher_open;
-  bool                   launcher_keynav;
-  bool                   launcher_grabbed;
-  bool                   reactivate_keynav;
-  int                    reactivate_index;
-  bool                   keynav_restore_window_;
-  int                    launcher_key_press_time_;
-  unsigned int           dbus_owner_;
-
   ui::EdgeBarrierController edge_barriers_;
-
   LauncherList launchers;
 
-  glib::Object<BamfMatcher> matcher_;
+  unsigned sort_priority_;
+  bool launcher_open;
+  bool launcher_keynav;
+  bool launcher_grabbed;
+  bool reactivate_keynav;
+  int reactivate_index;
+  bool keynav_restore_window_;
+  int launcher_key_press_time_;
+  unsigned dbus_owner_;
+
+
   glib::Signal<void, BamfMatcher*, BamfView*> view_opened_signal_;
   glib::SourceManager sources_;
   UBusManager ubus;
 
-  sigc::connection on_expoicon_activate_connection_;
   sigc::connection launcher_key_press_connection_;
   sigc::connection launcher_event_outside_connection_;
 };

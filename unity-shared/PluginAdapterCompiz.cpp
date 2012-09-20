@@ -862,6 +862,11 @@ PluginAdapter::ShowDesktop()
   }
 }
 
+bool PluginAdapter::InShowDesktop() const
+{
+  return _in_show_desktop;
+}
+
 void
 PluginAdapter::OnShowDesktop()
 {
@@ -1334,4 +1339,71 @@ PluginAdapter::AddProperties(GVariantBuilder* builder)
          .add("expo_active", IsExpoActive())
          .add("viewport_switch_running", IsViewPortSwitchStarted())
          .add("showdesktop_active", _in_show_desktop);
+}
+
+std::string
+PluginAdapter::GetWindowName(guint32 xid) const
+{
+  std::string name;
+  Atom visibleNameAtom;
+
+  visibleNameAtom = XInternAtom(m_Screen->dpy(), "_NET_WM_VISIBLE_NAME", 0);
+  name = GetUtf8Property(xid, visibleNameAtom);
+  if (name.empty())
+  {
+    Atom wmNameAtom = XInternAtom(m_Screen->dpy(), "_NET_WM_NAME", 0);
+    name = GetUtf8Property(xid, wmNameAtom);
+  }
+
+  if (name.empty())
+    name = GetTextProperty(xid, XA_WM_NAME);
+
+  return name;
+}
+
+std::string
+PluginAdapter::GetUtf8Property(guint32 xid, Atom atom) const
+{
+  Atom          type;
+  int           result, format;
+  unsigned long nItems, bytesAfter;
+  char          *val;
+  std::string   retval;
+  Atom          utf8StringAtom;
+
+  utf8StringAtom = XInternAtom(m_Screen->dpy(), "UTF8_STRING", 0);
+  result = XGetWindowProperty(m_Screen->dpy(), xid, atom, 0L, 65536, False,
+                              utf8StringAtom, &type, &format, &nItems,
+                              &bytesAfter, reinterpret_cast<unsigned char **>(&val));
+
+  if (result != Success)
+    return retval;
+
+  if (type == utf8StringAtom && format == 8 && val && nItems > 0)
+  {
+    retval = std::string(val, nItems);
+  }
+  if (val)
+    XFree(val);
+
+  return retval;
+}
+
+std::string
+PluginAdapter::GetTextProperty(guint32 id, Atom atom) const
+{
+  XTextProperty text;
+  std::string retval;
+
+  text.nitems = 0;
+  if (XGetTextProperty(m_Screen->dpy(), id, &text, atom))
+  {
+    if (text.value)
+    {
+      retval = std::string(reinterpret_cast<char*>(text.value), text.nitems);
+      XFree (text.value);
+    }
+  }
+
+  return retval;
 }

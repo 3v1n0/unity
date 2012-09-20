@@ -45,23 +45,19 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
 , needs_urgent_(false)
 , aptdaemon_trans_id_(aptdaemon_trans_id)
 {
-
+  SetQuirk(Quirk::VISIBLE, false);
   aptdaemon_trans_.Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
   aptdaemon_trans_.Connect("Finished", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnFinished));
 
-  icon_name = icon_path;
+  if (!icon_path.empty())
+    icon_name = icon_path;
+
   if (!aptdaemon_trans_id_.empty()) // Application is being installed, or hasn't been installed yet
     tooltip_text = _("Waiting to install");
 }
 
-void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
-                                        int icon_x,
-                                        int icon_y,
-                                        int icon_size)
+void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> const& launcher, int start_x, int start_y)
 {
-  int target_x = 0;
-  int target_y = 0;
-
   launcher_ = launcher;
 
   icon_texture_ = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(
@@ -72,54 +68,45 @@ void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> launcher,
 
   drag_window_ = new LauncherDragWindow(icon_texture_);
 
+  launcher->ForceReveal(true);
   launcher->RenderIconToTexture(nux::GetWindowThread()->GetGraphicsEngine(),
                                 AbstractLauncherIcon::Ptr(this),
                                 icon_texture_);
 
-  drag_window_->SetBaseXY(icon_x, icon_y);
+  auto const& icon_center = GetCenter(launcher->monitor());
+  drag_window_->SetBaseXY(start_x, start_y);
   drag_window_->ShowWindow(true);
-
-  // Find out the center of last BamfLauncherIcon with non-zero co-ordinates
-  auto bamf_icons = launcher->GetModel()->GetSublist<BamfLauncherIcon>();
-  //TODO: don't iterate through them and pick the last one, just use back() to get the last one.
-  for (auto current_bamf_icon : bamf_icons)
-  {
-    auto icon_center = current_bamf_icon->GetCenter(launcher->monitor);
-
-    if (icon_center.x != 0 && icon_center.y != 0)
-    {
-       target_x = icon_center.x;
-       target_y = icon_center.y;
-    }
-  }
-
-  target_y = target_y + (launcher->GetIconSize() / 2);
-  drag_window_->SetAnimationTarget(target_x, target_y);
-
+  drag_window_->SetAnimationTarget(icon_center.x, icon_center.y + (launcher->GetIconSize() / 2));
   drag_window_->on_anim_completed = drag_window_->anim_completed.connect(sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnDragAnimationFinished));
-  drag_window_->StartAnimation();
+  drag_window_->StartSlowAnimation();
 }
 
 void SoftwareCenterLauncherIcon::OnDragAnimationFinished()
 {
   drag_window_->ShowWindow(false);
-  launcher_->icon_animation_complete.emit(AbstractLauncherIcon::Ptr(this));
   drag_window_ = nullptr;
+  launcher_->ForceReveal(false);
+  launcher_ = nullptr;
+  icon_texture_ = nullptr;
+  SetQuirk(Quirk::VISIBLE, true);
 }
 
 void SoftwareCenterLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   if (finished_)
   {
-      if (needs_urgent_)
-      {
-          SetQuirk(Quirk::URGENT, false);
-          needs_urgent_ = false;
-      }
-      BamfLauncherIcon::ActivateLauncherIcon(arg);
+    if (needs_urgent_)
+    {
+      SetQuirk(Quirk::URGENT, false);
+      needs_urgent_ = false;
+    }
+
+    BamfLauncherIcon::ActivateLauncherIcon(arg);
   }
   else
-      SetQuirk(Quirk::STARTING, false);
+  {
+    SetQuirk(Quirk::STARTING, false);
+  }
 }
 
 void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
@@ -135,7 +122,9 @@ void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
       SetProgress(0.0f);
       finished_ = true;
       needs_urgent_ = true;
-   } else {
+   }
+   else
+   {
       // failure condition, remove icon again
       UnStick();
    }
@@ -167,7 +156,7 @@ void SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
 
 std::string SoftwareCenterLauncherIcon::GetName() const
 {
-    return "SoftwareCenterLauncherIcon";
+  return "SoftwareCenterLauncherIcon";
 }
 
 }

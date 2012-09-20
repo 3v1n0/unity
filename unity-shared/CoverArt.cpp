@@ -28,6 +28,7 @@
 #include <Nux/VLayout.h>
 #include "DashStyle.h"
 #include "IconLoader.h"
+#include "PreviewStyle.h"
 
 namespace unity
 {
@@ -40,7 +41,7 @@ namespace
 {
 nux::logging::Logger logger("unity.dash.previews.coverart");
 
-const int icon_width = 256;
+const int ICON_SIZE = 256;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(CoverArt);
@@ -108,9 +109,9 @@ void CoverArt::SetImage(std::string const& image_hint)
 
   // texture from file.
   if (bLoadTexture)
-  {    
+  {
     StartWaiting();
-    slot_handle_ = IconLoader::GetDefault().LoadFromGIconString(image_hint, ~0, sigc::mem_fun(this, &CoverArt::TextureLoaded));
+    slot_handle_ = IconLoader::GetDefault().LoadFromGIconString(image_hint, -1, -1, sigc::mem_fun(this, &CoverArt::TextureLoaded));
   }
   else if (!image_hint.empty())
   {
@@ -120,12 +121,12 @@ void CoverArt::SetImage(std::string const& image_hint)
     if (G_IS_ICON(icon))
     {
       StartWaiting();
-      slot_handle_ = IconLoader::GetDefault().LoadFromGIconString(image_hint, icon_width, sigc::mem_fun(this, &CoverArt::IconLoaded));
+      slot_handle_ = IconLoader::GetDefault().LoadFromGIconString(image_hint, ICON_SIZE, ICON_SIZE, sigc::mem_fun(this, &CoverArt::IconLoaded));
     }
     else
     {
       StartWaiting();
-      slot_handle_ = IconLoader::GetDefault().LoadFromIconName(image_hint, icon_width, sigc::mem_fun(this, &CoverArt::IconLoaded));
+      slot_handle_ = IconLoader::GetDefault().LoadFromIconName(image_hint, ICON_SIZE, ICON_SIZE, sigc::mem_fun(this, &CoverArt::IconLoaded));
     }
   }
   else
@@ -194,7 +195,10 @@ void CoverArt::SetNoImageAvailable()
   }
 }
 
-void CoverArt::IconLoaded(std::string const& texid, unsigned size, glib::Object<GdkPixbuf> const& pixbuf)
+void CoverArt::IconLoaded(std::string const& texid,
+                          int max_width,
+                          int max_height,
+                          glib::Object<GdkPixbuf> const& pixbuf)
 {
   // Finished waiting
   StopWaiting();
@@ -206,7 +210,7 @@ void CoverArt::IconLoaded(std::string const& texid, unsigned size, glib::Object<
     return;
   }
 
-  int height = size;
+  int height = max_height;
 
   int pixbuf_width, pixbuf_height;
   pixbuf_width = gdk_pixbuf_get_width(pixbuf);
@@ -231,7 +235,7 @@ void CoverArt::IconLoaded(std::string const& texid, unsigned size, glib::Object<
     float aspect = static_cast<float>(pixbuf_height) / pixbuf_width; // already sanitized width/height so can not be 0.0
     if (aspect < 1.0f)
     {
-      pixbuf_width = icon_width;
+      pixbuf_width = ICON_SIZE;
       pixbuf_height = pixbuf_width * aspect;
 
       if (pixbuf_height > height)
@@ -273,7 +277,10 @@ void CoverArt::IconLoaded(std::string const& texid, unsigned size, glib::Object<
   }
 }
 
-void CoverArt::TextureLoaded(std::string const& texid, unsigned size, glib::Object<GdkPixbuf> const& pixbuf)
+void CoverArt::TextureLoaded(std::string const& texid,
+                             int max_width,
+                             int max_height,
+                             glib::Object<GdkPixbuf> const& pixbuf)
 {
   // Finished waiting
   StopWaiting();
@@ -285,24 +292,47 @@ void CoverArt::TextureLoaded(std::string const& texid, unsigned size, glib::Obje
     return;
   }
   texture_screenshot_.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
+  QueueDraw();
 }
 
 void CoverArt::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
 {
   nux::Geometry const& base = GetGeometry();
 
+  bool enable_bg_shadows = dash::previews::Style::Instance().GetShadowBackgroundEnabled();
+
   gfx_engine.PushClippingRectangle(base);
   nux::GetPainter().PaintBackground(gfx_engine, base);
+
+  if (enable_bg_shadows && bg_layer_)
+  {
+    unsigned int alpha, src, dest = 0;
+    gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
+    gfx_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+    bg_layer_->SetGeometry(base);
+    nux::GetPainter().RenderSinglePaintLayer(gfx_engine, bg_layer_->GetGeometry(), bg_layer_.get());
+
+    gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
+  }
+
+  gfx_engine.PopClippingRectangle();
+}
+
+
+void CoverArt::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
+{
+  nux::Geometry const& base = GetGeometry();
+  gfx_engine.PushClippingRectangle(base);
+
+  bool enable_bg_shadows = dash::previews::Style::Instance().GetShadowBackgroundEnabled();
+
+  if (enable_bg_shadows && !IsFullRedraw())
+    nux::GetPainter().PushLayer(gfx_engine, bg_layer_->GetGeometry(), bg_layer_.get());
 
   unsigned int alpha, src, dest = 0;
   gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
   gfx_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-  gfx_engine.QRP_Color(base.x,
-                    base.y,
-                    base.GetWidth(),
-                    base.GetHeight(),
-                    nux::Color(0.03f, 0.03f, 0.03f, 0.0f));
 
   if (texture_screenshot_)
   {
@@ -393,16 +423,11 @@ void CoverArt::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
   
   gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
 
-  gfx_engine.PopClippingRectangle();
-}
-
-void CoverArt::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
-{
-  nux::Geometry const& base = GetGeometry();
-  gfx_engine.PushClippingRectangle(base);
-
   if (GetLayout())
     GetLayout()->ProcessDraw(gfx_engine, force_draw);
+
+  if (enable_bg_shadows && !IsFullRedraw())
+    nux::GetPainter().PopBackground();
 
   gfx_engine.PopClippingRectangle();
 }
@@ -427,6 +452,7 @@ void CoverArt::SetupViews()
   rotate_matrix_.Identity();
   rotate_matrix_.Rotate_z(0.0);
 
+  bg_layer_.reset(dash::previews::Style::Instance().GetBackgroundLayer());
 }
 
 void CoverArt::SetFont(std::string const& font)

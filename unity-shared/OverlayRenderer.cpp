@@ -64,9 +64,18 @@ public:
   nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
   nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_shine_texture_;
 
+
+  nux::ObjectPtr<nux::BaseTexture> bg_refine_tex_;
+  nux::ObjectPtr<nux::BaseTexture> bg_refine_no_refine_tex_;
+  nux::ObjectPtr<nux::BaseTexture> bg_refine_corner_tex_;
+  std::unique_ptr<nux::AbstractPaintLayer> bg_refine_gradient_;
+  std::unique_ptr<nux::AbstractPaintLayer> bg_refine_gradient_corner_;
+
   // temporary variable that stores the number of backgrounds we have rendered
   int bgs;
   bool visible;
+
+  bool refine_is_open_;
 
   UBusManager ubus_manager_;
 
@@ -107,16 +116,67 @@ void OverlayRendererImpl::Init()
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
   bg_layer_ = new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 0.9), true, rop);
 
+  nux::TexCoordXForm texxform;
+  bg_refine_tex_ = unity::dash::Style::Instance().GetRefineTextureDash();
+  bg_refine_no_refine_tex_ = unity::dash::Style::Instance().GetRefineNoRefineTextureDash();
+  
+  bg_refine_gradient_.reset(new nux::TextureLayer(bg_refine_tex_->GetDeviceTexture(), 
+                            texxform, 
+                            nux::color::White,
+                            false,
+                            rop));
+
+  bg_refine_corner_tex_ = unity::dash::Style::Instance().GetRefineTextureCorner();
+
+  bg_refine_gradient_corner_.reset(new nux::TextureLayer(bg_refine_corner_tex_->GetDeviceTexture(), 
+                                  texxform, 
+                                  nux::color::White,
+                                  false,
+                                  rop));
+ 
+ ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED,
+                                 sigc::mem_fun(this, &OverlayRendererImpl::OnBackgroundColorChanged));
+
   rop.Blend = true;
   rop.SrcBlend = GL_ZERO;
   rop.DstBlend = GL_SRC_COLOR;
   bg_darken_layer_ = new nux::ColorLayer(nux::Color(0.9f, 0.9f, 0.9f, 1.0f), false, rop);
   bg_shine_texture_ = unity::dash::Style::Instance().GetDashShine()->GetDeviceTexture();
 
-  ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED,
-                                 sigc::mem_fun(this, &OverlayRendererImpl::OnBackgroundColorChanged));
-
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
+
+  ubus_manager_.RegisterInterest(UBUS_REFINE_STATUS, [this] (GVariant *data) 
+  {
+    gboolean status;
+    g_variant_get(data, UBUS_REFINE_STATUS_FORMAT_STRING, &status);
+
+    refine_is_open_ = status;
+    nux::ROPConfig rop;
+    rop.Blend = true;
+    rop.SrcBlend = GL_ONE;
+    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+    nux::TexCoordXForm texxform;
+
+    if (refine_is_open_)
+    {
+      bg_refine_gradient_.reset(new nux::TextureLayer(bg_refine_tex_->GetDeviceTexture(), 
+                                texxform, 
+                                nux::color::White,
+                                false,
+                                rop));
+    }
+    else
+    {
+      bg_refine_gradient_.reset(new nux::TextureLayer(bg_refine_no_refine_tex_->GetDeviceTexture(),
+                                texxform,
+                                nux::color::White,
+                                false,
+                                rop));
+    }
+
+    parent->need_redraw.emit();
+  });
 }
 
 void OverlayRendererImpl::OnBackgroundColorChanged(GVariant* args)
@@ -378,7 +438,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
   bool paint_blur = BackgroundEffectHelper::blur_type != BLUR_NONE;
   nux::Geometry geo(content_geo);
 
-  int excess_border = (Settings::Instance().GetFormFactor() != FormFactor::NETBOOK || force_edges) ? EXCESS_BORDER : 0;
+  int excess_border = (Settings::Instance().form_factor() != FormFactor::NETBOOK || force_edges) ? EXCESS_BORDER : 0;
 
   nux::Geometry larger_content_geo = content_geo;
   larger_content_geo.OffsetSize(excess_border, excess_border);
@@ -442,9 +502,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
   gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
   const double line_opacity = 0.1f;
-  const int gradient_width = 130;
   const int gradient_height = 50;
-  const int horizontal_padding = 40;
   const int vertical_padding = 20;
 
   // Now that we mask the corners of the dash,
@@ -470,23 +528,6 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
                                geometry.y + content_geo.height + INNER_CORNER_RADIUS + corner_overlap,
                                line_color * 0.7f); // less opacity
 
-  // Horizontal panel/dash separator
-  nux::GetPainter().Paint2DQuadColor(gfx_context,
-                                     nux::Geometry(geometry.x + horizontal_padding,
-                                                   geometry.y,
-                                                   gradient_width,
-                                                   style.GetHSeparatorSize()),
-                                     nux::color::Transparent,
-                                     nux::color::Transparent,
-                                     line_color,
-                                     line_color);
-  nux::GetPainter().Draw2DLine(gfx_context,
-                               geometry.x + horizontal_padding + gradient_width,
-                               geometry.y,
-                               geometry.x + content_geo.width + INNER_CORNER_RADIUS + corner_overlap,
-                               style.GetHSeparatorSize(),
-                               line_color);
-
   // Draw the background
   bg_darken_layer_->SetGeometry(larger_content_geo);
   nux::GetPainter().RenderSinglePaintLayer(gfx_context, larger_content_geo, bg_darken_layer_);
@@ -510,7 +551,34 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
                         larger_content_geo.width, larger_content_geo.height,
                         bg_shine_texture_, texxform_absolute_bg, nux::color::White);
 
-  if (Settings::Instance().GetFormFactor() != FormFactor::NETBOOK || force_edges)
+  gfx_context.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+  nux::TexCoordXForm refine_texxform;
+
+  if (refine_is_open_)
+  { 
+    gfx_context.QRP_1Tex(larger_content_geo.x + larger_content_geo.width - bg_refine_tex_->GetWidth(), 
+                       larger_content_geo.y,
+                       bg_refine_tex_->GetWidth(), 
+                       std::min(bg_refine_tex_->GetHeight(), larger_content_geo.height),
+                       bg_refine_tex_->GetDeviceTexture(),
+                       refine_texxform,
+                       nux::color::White
+                       );
+  }
+  else
+  {
+    gfx_context.QRP_1Tex(larger_content_geo.x + larger_content_geo.width - bg_refine_no_refine_tex_->GetWidth(), 
+                       larger_content_geo.y,
+                       bg_refine_no_refine_tex_->GetWidth(), 
+                       std::min(bg_refine_no_refine_tex_->GetHeight(), larger_content_geo.height),
+                       bg_refine_no_refine_tex_->GetDeviceTexture(),
+                       refine_texxform,
+                       nux::color::White
+                       );
+  }
+
+
+  if (Settings::Instance().form_factor() != FormFactor::NETBOOK || force_edges)
   {
     // Paint the edges
     {
@@ -767,7 +835,7 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
   nux::Geometry geo = geometry;
   bgs = 0;
 
-  int excess_border = (Settings::Instance().GetFormFactor() != FormFactor::NETBOOK) ? EXCESS_BORDER : 0;
+  int excess_border = (Settings::Instance().form_factor() != FormFactor::NETBOOK) ? EXCESS_BORDER : 0;
 
   nux::Geometry larger_content_geo = content_geo;
   larger_content_geo.OffsetSize(excess_border, excess_border);
@@ -849,6 +917,24 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
                                      nux::color::White,
                                      false,
                                      rop);
+  bgs++;
+
+  nux::Geometry refine_geo = larger_content_geo;
+  
+  if (refine_is_open_)
+  {
+    refine_geo.x += larger_content_geo.width - bg_refine_tex_->GetWidth();
+    refine_geo.width = bg_refine_tex_->GetWidth();
+    refine_geo.height = bg_refine_tex_->GetHeight();
+  }
+  else
+  {
+    refine_geo.x += larger_content_geo.width - bg_refine_no_refine_tex_->GetWidth();
+    refine_geo.width = bg_refine_no_refine_tex_->GetWidth();
+    refine_geo.height = bg_refine_no_refine_tex_->GetHeight();
+  }
+    
+  nux::GetPainter().PushLayer(gfx_context, refine_geo, bg_refine_gradient_.get());
   bgs++;
 }
 

@@ -124,16 +124,18 @@ nux::ObjectPtr<nux::BaseTexture> CoverflowResultItem::GetTexture() const
 
 void CoverflowResultItem::Activate(int button)
 {
-  if (button == 1)
-    parent_->UriActivated.emit(result_.uri, ResultView::ActivateType::DIRECT);
-  else if (button == 3)
+  //Left and right click take you to previews.
+  if (button == 1 || button == 3)
     parent_->UriActivated.emit(result_.uri, ResultView::ActivateType::PREVIEW);
+  //Scroll click opens up music player.
+  else if (button == 2)
+    parent_->UriActivated.emit(result_.uri, ResultView::ActivateType::DIRECT);
 
   int index = Index();
   int size = model_->Items().size();
 
   ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 
-                    g_variant_new("(iii)", 0, index, size - index));
+                    g_variant_new("(iiii)", 0, 0, index, size - index));
 }
 
 CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
@@ -161,11 +163,12 @@ CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
 
   ubus_.RegisterInterest(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, [&] (GVariant* data) {
     int nav_mode = 0;
-    gchar* uri = NULL;
-    gchar* proposed_unique_id = NULL;
+    glib::String uri;
+    glib::String proposed_unique_id;
+
     g_variant_get(data, "(iss)", &nav_mode, &uri, &proposed_unique_id);
    
-    if (std::string(proposed_unique_id) != parent_->unique_id())
+    if (proposed_unique_id.Str() != parent_->unique_id())
       return;
 
     unsigned num_results = coverflow_->model()->Items().size();
@@ -190,12 +193,8 @@ CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
       int right_results = num_results ? (num_results - current_index) - 1 : 0;
       parent_->UriActivated.emit(GetUriForIndex(current_index), ActivateType::PREVIEW);
       ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 
-                              g_variant_new("(iii)", 0, left_results, right_results));
+                              g_variant_new("(iiii)", 0, 0, left_results, right_results));
     }
-
-    g_free(uri);
-    g_free(proposed_unique_id);
-
   });
 }
 
@@ -270,6 +269,20 @@ void CoverflowResultView::DrawContent(nux::GraphicsEngine& GfxContext, bool forc
   nux::Geometry base = GetGeometry();
   GfxContext.PushClippingRectangle(base);
 
+  if (RedirectedAncestor())
+  {
+    // This is necessary when doing redirected rendering. Clean the area below this view.
+    unsigned int current_alpha_blend;
+    unsigned int current_src_blend_factor;
+    unsigned int current_dest_blend_factor;
+    GfxContext.GetRenderStates().GetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+
+    GfxContext.GetRenderStates().SetBlend(false);
+    GfxContext.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+
+    GfxContext.GetRenderStates().SetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+  }
+  
   if (GetCompositionLayout())
   {
     nux::Geometry geo = GetCompositionLayout()->GetGeometry();

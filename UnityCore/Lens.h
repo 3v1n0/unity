@@ -86,7 +86,8 @@ public:
   virtual void Activate(std::string const& uri);
   virtual void Preview(std::string const& uri);
   virtual void ActivatePreviewAction(std::string const& action_id,
-                                     std::string const& uri);
+                                     std::string const& uri,
+                                     Hints const& hints);
   virtual void SignalPreview(std::string const& uri,
       glib::Variant const& preview_update,
       glib::DBusProxy::ReplyCallback reply_cb = nullptr);
@@ -114,6 +115,7 @@ public:
   nux::RWProperty<Categories::Ptr> categories;
   nux::RWProperty<Filters::Ptr> filters;
   nux::RWProperty<bool> connected;
+  nux::RWProperty<bool> provides_personal_content;
   nux::ROProperty<std::string> last_search_string;
   nux::ROProperty<std::string> last_global_search_string;
 

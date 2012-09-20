@@ -58,6 +58,7 @@ namespace
 nux::logging::Logger logger("unity.dash");
 
 Style* style_instance = nullptr;
+
 const int STATES = 5;
 
 // These cairo overrides may also be reused somewhere...
@@ -196,6 +197,8 @@ public:
   int text_height_;
   int number_of_columns_;
 
+  LazyLoadTexture category_texture_;
+  LazyLoadTexture category_texture_no_filters_;
   LazyLoadTexture dash_bottom_texture_;
   LazyLoadTexture dash_bottom_texture_mask_;
   LazyLoadTexture dash_right_texture_;
@@ -218,6 +221,11 @@ public:
   LazyLoadTexture search_close_texture_;
   LazyLoadTexture search_spin_texture_;
 
+
+  LazyLoadTexture refine_gradient_corner_;
+  LazyLoadTexture refine_gradient_dash_;
+  LazyLoadTexture refine_gradient_no_refine_dash_;
+
   LazyLoadTexture group_unexpand_texture_;
   LazyLoadTexture group_expand_texture_;
 
@@ -239,6 +247,8 @@ Style::Impl::Impl(Style* owner)
   , text_width_(0)
   , text_height_(0)
   , number_of_columns_(6)
+  , category_texture_("/category_gradient.png")
+  , category_texture_no_filters_("/category_gradient_no_refine.png")
   , dash_bottom_texture_("/dash_bottom_border_tile.png")
   , dash_bottom_texture_mask_("/dash_bottom_border_tile_mask.png")
   , dash_right_texture_("/dash_right_border_tile.png")
@@ -258,6 +268,9 @@ Style::Impl::Impl(Style* owner)
   , search_circle_texture_("/search_circle.svg", 32)
   , search_close_texture_("/search_close.svg", 32)
   , search_spin_texture_("/search_spin.svg", 32)
+  , refine_gradient_corner_("/refine_gradient_corner.png")
+  , refine_gradient_dash_("/refine_gradient_dash.png")
+  , refine_gradient_no_refine_dash_("/refine_gradient_dash_no_refine.png")
   , group_unexpand_texture_("/dash_group_unexpand.png")
   , group_expand_texture_("/dash_group_expand.png")
   , star_deselected_texture_("/star_deselected.png")
@@ -414,14 +427,14 @@ Style::Style()
     style_instance = this;
   }
 
-  auto formfactor_lambda = [this] () 
+  auto formfactor_lambda = [this] (FormFactor)
   {
-    FormFactor formfactor = Settings::Instance().GetFormFactor();
+    FormFactor formfactor = Settings::Instance().form_factor();
     always_maximised = (formfactor == FormFactor::NETBOOK || formfactor == FormFactor::TV); 
   };
 
-  Settings::Instance().changed.connect(formfactor_lambda);
-  formfactor_lambda();
+  Settings::Instance().form_factor.changed.connect(formfactor_lambda);
+  formfactor_lambda(FormFactor());
 }
 
 Style::~Style ()
@@ -1534,7 +1547,7 @@ void Style::Impl::DrawOverlay(cairo_t*  cr,
 }
 
 bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
-                   std::string const& label, int font_size,
+                   std::string const& label, int font_px_size,
                    Alignment alignment, bool zeromargin)
 {
   // sanity checks
@@ -1585,11 +1598,13 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
                      pimpl->button_label_overlay_mode_[state],
                      pimpl->button_label_blur_size_[state] * 0.75);
 
+  static double internal_padding = 5.0f;
+
   pimpl->Text(cr,
               pimpl->button_label_text_color_[state],
               label,
-              font_size,
-              11.0, // 15px = 11pt
+              font_px_size,
+              internal_padding,
               alignment);
 
   return true;
@@ -1628,7 +1643,7 @@ nux::AbstractPaintLayer* Style::FocusOverlay(int width, int height)
 
 bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
                          std::string const& label, bool curve_bottom,
-                         int font_size, Alignment alignment,
+                         int font_px_size, Alignment alignment,
                          bool zeromargin)
 {
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1736,7 +1751,7 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
   pimpl->Text(cr,
               pimpl->button_label_text_color_[state],
               label,
-              font_size,
+              font_px_size,
               42.0 + 10.0,
               alignment);
 
@@ -2044,9 +2059,14 @@ void Style::SetDefaultNColumns(int n_cols)
   columns_changed.emit();
 }
 
-int Style::GetTileIconSize() const
+int Style::GetTileGIconSize() const
 {
   return 64;
+}
+
+int Style::GetTileImageSize() const
+{
+  return 96;
 }
 
 int Style::GetTileWidth() const
@@ -2056,8 +2076,18 @@ int Style::GetTileWidth() const
 
 int Style::GetTileHeight() const
 {
-  return std::max(GetTileIconSize() + (pimpl->text_height_ * 2) + 10,
-                  GetTileIconSize() + 50 + 18); // magic design numbers.
+  return std::max(GetTileImageSize() + (pimpl->text_height_ * 2) + 15,
+                  GetTileImageSize() + 32); // magic design numbers.
+}
+
+int Style::GetTileIconHightlightHeight() const
+{
+  return 106;
+}
+
+int Style::GetTileIconHightlightWidth() const
+{
+  return 106;
 }
 
 int Style::GetHomeTileIconSize() const
@@ -2080,6 +2110,16 @@ int Style::GetTextLineHeight() const
   return pimpl->text_height_;
 }
 
+
+nux::BaseTexture* Style::GetCategoryBackground()
+{
+  return pimpl->category_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetCategoryBackgroundNoFilters()
+{
+  return pimpl->category_texture_no_filters_.texture(); 
+}
 
 nux::BaseTexture* Style::GetDashBottomTile()
 {
@@ -2169,6 +2209,21 @@ nux::BaseTexture* Style::GetSearchCloseIcon()
 nux::BaseTexture* Style::GetSearchSpinIcon()
 {
   return pimpl->search_spin_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetRefineTextureCorner()
+{
+  return pimpl->refine_gradient_corner_.texture();
+}
+
+nux::BaseTexture* Style::GetRefineNoRefineTextureDash()
+{
+  return pimpl->refine_gradient_no_refine_dash_.texture(); 
+}
+
+nux::BaseTexture* Style::GetRefineTextureDash()
+{
+  return pimpl->refine_gradient_dash_.texture(); 
 }
 
 nux::BaseTexture* Style::GetGroupUnexpandIcon()
@@ -2315,7 +2370,7 @@ int Style::GetCategoryHighlightHeight() const
 
 int Style::GetPlacesGroupTopSpace() const
 {
-  return 15;
+  return 7;
 }
 
 int Style::GetCategoryHeaderLeftPadding() const

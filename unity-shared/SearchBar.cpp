@@ -54,7 +54,7 @@ const std::string PANGO_ENTRY_DEFAULT_FONT_FAMILY = "Ubuntu";
 const int PANGO_ENTRY_FONT_SIZE = 22;
 
 const std::string SHOW_FILTERS_LABEL_FONT_SIZE = "13";
-const std::string SHOW_FILTERS_LABEL_FONT_STYLE = "Bold";
+const std::string SHOW_FILTERS_LABEL_FONT_STYLE = "";
 const std::string SHOW_FILTERS_LABEL_DEFAULT_FONT = "Ubuntu " + SHOW_FILTERS_LABEL_FONT_STYLE + " " + SHOW_FILTERS_LABEL_FONT_SIZE;
 
 }
@@ -355,17 +355,16 @@ void SearchBar::OnShowingFiltersChanged(bool is_showing)
   }
 }
 
-void SearchBar::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
+void SearchBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
   nux::Geometry const& base = GetGeometry();
 
   UpdateBackground(false);
 
-  GfxContext.PushClippingRectangle(base);
-  nux::GetPainter().PaintBackground(GfxContext, base);
+  graphics_engine.PushClippingRectangle(base);
 
   bg_layer_->SetGeometry(nux::Geometry(base.x, base.y, last_width_, last_height_));
-  nux::GetPainter().RenderSinglePaintLayer(GfxContext,
+  nux::GetPainter().RenderSinglePaintLayer(graphics_engine,
                                            bg_layer_->GetGeometry(),
                                            bg_layer_.get());
 
@@ -381,35 +380,85 @@ void SearchBar::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     if (!highlight_layer_)
       highlight_layer_.reset(style.FocusOverlay(geo.width, geo.height));
 
-    highlight_layer_->SetGeometry(geo);
-    highlight_layer_->Renderlayer(GfxContext);
-  }
+    if (RedirectedAncestor())
+    {
+      unsigned int alpha = 0, src = 0, dest = 0;
+      graphics_engine.GetRenderStates().GetBlend(alpha, src, dest);
+      // This is necessary when doing redirected rendering.
+      // Clean the area below this view before drawing anything.
+      graphics_engine.GetRenderStates().SetBlend(false);
+      graphics_engine.QRP_Color(geo.x, geo.y, geo.width, geo.height, nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+      graphics_engine.GetRenderStates().SetBlend(alpha, src, dest);
+    }
 
-  GfxContext.PopClippingRectangle();
+    highlight_layer_->SetGeometry(geo);
+    highlight_layer_->Renderlayer(graphics_engine);
+  }
+  else if (expander_view_ && expander_view_->IsVisible())
+  {
+    nux::Geometry geo(expander_view_->GetGeometry());
+
+    geo.y -= (HIGHLIGHT_HEIGHT- geo.height) / 2;
+    geo.height = HIGHLIGHT_HEIGHT;
+
+    if (RedirectedAncestor())
+    {
+      unsigned int alpha = 0, src = 0, dest = 0;
+      graphics_engine.GetRenderStates().GetBlend(alpha, src, dest);
+      // This is necessary when doing redirected rendering.
+      // Clean the area below this view before drawing anything.
+      graphics_engine.GetRenderStates().SetBlend(false);
+      graphics_engine.QRP_Color(geo.x, geo.y, geo.width, geo.height, nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+      graphics_engine.GetRenderStates().SetBlend(alpha, src, dest);
+    }
+  }
+  graphics_engine.PopClippingRectangle();
 }
 
-void SearchBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
+void SearchBar::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
   nux::Geometry const& geo = GetGeometry();
 
-  GfxContext.PushClippingRectangle(geo);
+  graphics_engine.PushClippingRectangle(geo);
 
   if (highlight_layer_ && ShouldBeHighlighted() && !IsFullRedraw())
   {
-    nux::GetPainter().PushLayer(GfxContext, highlight_layer_->GetGeometry(), highlight_layer_.get());
+    nux::GetPainter().PushLayer(graphics_engine, highlight_layer_->GetGeometry(), highlight_layer_.get());
   }
-
 
   if (!IsFullRedraw())
   {
-    gPainter.PushLayer(GfxContext, bg_layer_->GetGeometry(), bg_layer_.get());
+    unsigned int current_alpha_blend;
+    unsigned int current_src_blend_factor;
+    unsigned int current_dest_blend_factor;
+    graphics_engine.GetRenderStates().GetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+
+    graphics_engine.GetRenderStates().SetBlend(false);
+    graphics_engine.QRP_Color(
+      pango_entry_->GetX(),
+      pango_entry_->GetY(),
+      pango_entry_->GetWidth(),
+      pango_entry_->GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+
+    if (spinner_->IsRedrawNeeded())
+    {
+      graphics_engine.QRP_Color(
+        spinner_->GetX(),
+        spinner_->GetY(),
+        spinner_->GetWidth(),
+        spinner_->GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+    }
+    
+    graphics_engine.GetRenderStates().SetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+
+    gPainter.PushLayer(graphics_engine, bg_layer_->GetGeometry(), bg_layer_.get());
   }
   else
   {
     nux::GetPainter().PushPaintLayerStack();
   }
 
-  layout_->ProcessDraw(GfxContext, force_draw);
+  layout_->ProcessDraw(graphics_engine, force_draw);
 
   if (!IsFullRedraw())
   {
@@ -420,7 +469,7 @@ void SearchBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     nux::GetPainter().PopPaintLayerStack();
   }
 
-  GfxContext.PopClippingRectangle();
+  graphics_engine.PopClippingRectangle();
 }
 
 void SearchBar::OnClearClicked(int x, int y, unsigned long button_fags,

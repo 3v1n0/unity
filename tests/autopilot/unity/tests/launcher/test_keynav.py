@@ -198,3 +198,39 @@ class LauncherKeyNavTests(LauncherTestCase):
 
         self.assertThat(self.hud.visible, Equals(False))
         self.assertThat(self.launcher.key_nav_is_active, Equals(True))
+
+    def test_launcher_keynav_cancel_on_click_outside(self):
+        """A single click outside of launcher must cancel keynav."""
+        self.start_keynav_with_cleanup_cancel()
+
+        self.launcher_instance.move_mouse_to_right_of_launcher()
+        self.mouse.click()
+
+        self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
+
+    def test_launcher_keynav_cancel_on_click_icon(self):
+        """A single click on a launcher icon must cancel keynav."""
+        calc_win = self.start_app_window('Calculator', locale = 'C')
+        calc_app = calc_win.application
+        calc_icon = self.launcher.model.get_icon(desktop_id=calc_app.desktop_file)
+
+        self.start_keynav_with_cleanup_cancel()
+
+        self.launcher_instance.click_launcher_icon(calc_icon)
+
+        self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
+
+    def test_launcher_keynav_cancel_on_quicklist_activate(self):
+        """A single click on a quicklist item must cancel keynav."""
+        self.start_keynav_with_cleanup_cancel()
+        self.launcher_instance.key_nav_enter_quicklist()
+
+        bfb_icon = self.launcher.model.get_bfb_icon()
+        bfb_ql = bfb_icon.get_quicklist()
+
+        bfb_ql.click_item(bfb_ql.selected_item)
+        self.addCleanup(self.dash.ensure_hidden)
+
+        self.assertThat(self.dash.visible, Eventually(Equals(True)))
+        self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
+

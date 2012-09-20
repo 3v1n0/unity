@@ -46,7 +46,7 @@
                     <_long>Make the HUD appear with this key</_long>
                     <default>&lt;Alt&gt;</default>
                   </option>
-                <option name="launcher_hide_mode" type="int">
+	              <option name="launcher_hide_mode" type="int">
                     <_short>Hide Launcher</_short>
                     <_long>Make the launcher hide automatically after some time of inactivity: always or just when the focussed window is not over the launcher</_long>
                     <min>0</min>
@@ -394,36 +394,10 @@
                     <default>75</default>
                 </option>
 
-                <option name="devices_option" type="int">
-                    <_short>Show Devices</_short>
-                    <_long>Show devices in the launcher</_long>
-                    <min>0</min>
-                    <max>2</max>
-                    <default>1</default>
-                    <desc>
-                        <value>0</value>
-                        <_name>Never</_name>
-                    </desc>
-                    <desc>
-                        <value>1</value>
-                        <_name>Only Mounted</_name>
-                    </desc>
-                    <desc>
-                        <value>2</value>
-                        <_name>Always</_name>
-                    </desc>
-                </option>
-
                 <option name="shortcut_overlay" type="bool">
                   <_short>Enable Shortcut Hints Overlay</_short>
                   <_long>Enable Shortcut Hints Overlay</_long>
                   <default>true</default>
-                </option>
-
-                <option name="show_desktop_icon" type="bool">
-                    <_short>Show "Desktop Icon" in the launcher</_short>
-                    <_long>Enable/Disable "Show Desktop Icon" in the launcher.</_long>
-                    <default>false</default>
                 </option>
 
                 <option name="menus_fadein" type="int">

@@ -34,6 +34,7 @@ using namespace testing;
 #include "dash/previews/MusicPreview.h"
 #include "dash/previews/PreviewInfoHintWidget.h"
 #include "dash/previews/PreviewRatingsWidget.h"
+#include "dash/previews/ActionButton.h"
 #include "test_utils.h"
 using namespace unity;
 using namespace unity::dash;
@@ -64,12 +65,15 @@ public:
   {
     glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_music_preview_new()));
 
+    GHashTable* action_hints1(g_hash_table_new(g_direct_hash, g_direct_equal));
+    g_hash_table_insert (action_hints1, g_strdup ("extra-text"), g_variant_new_string("£3.99"));
+
     unity_protocol_preview_set_image_source_uri(proto_obj, "http://ia.media-imdb.com/images/M/MV5BMTM3NDM5MzY5Ml5BMl5BanBnXkFtZTcwNjExMDUwOA@@._V1._SY317_.jpg");
-    unity_protocol_preview_set_title(proto_obj, "Music Title");
-    unity_protocol_preview_set_subtitle(proto_obj, "Music Subtitle");
-    unity_protocol_preview_set_description(proto_obj, "Music Desctiption");
+    unity_protocol_preview_set_title(proto_obj, "Music Title & special char");
+    unity_protocol_preview_set_subtitle(proto_obj, "Music Subtitle > special char");
+    unity_protocol_preview_set_description(proto_obj, "Music Desctiption &lt; special char");
     unity_protocol_preview_add_action(proto_obj, "action1", "Action 1", NULL, 0);
-    unity_protocol_preview_add_action(proto_obj, "action2", "Action 2", NULL, 0);
+    unity_protocol_preview_add_action_with_hints(proto_obj, "action2", "Action 2", NULL, 0, action_hints1);
     unity_protocol_preview_add_action(proto_obj, "action3", "Action 3", NULL, 0);
     unity_protocol_preview_add_action(proto_obj, "action4", "Action 4", NULL, 0);
     unity_protocol_preview_add_info_hint(proto_obj, "hint1", "Hint 1", NULL, g_variant_new("s", "string hint 1"));
@@ -78,6 +82,8 @@ public:
 
     glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())), glib::StealRef());
     preview_model_ = dash::Preview::PreviewForVariant(v);
+
+    g_hash_table_unref(action_hints1);
   }
 
   nux::BaseWindow* parent_window_;
@@ -100,10 +106,28 @@ TEST_F(TestPreviewMusic, TestUIValues)
 {
   MockMusicPreview::Ptr preview_view(new MockMusicPreview(preview_model_));
 
-  EXPECT_EQ(preview_view->title_->GetText(), "Music Title");
-  EXPECT_EQ(preview_view->subtitle_->GetText(), "Music Subtitle");
+  EXPECT_EQ(preview_view->title_->GetText(), "Music Title &amp; special char");
+  EXPECT_EQ(preview_view->subtitle_->GetText(), "Music Subtitle &gt; special char");
 
   EXPECT_EQ(preview_view->action_buttons_.size(), 4);
+
+  if (preview_view->action_buttons_.size() >= 2)
+  {
+    auto iter = preview_view->action_buttons_.begin();
+    if ((*iter)->Type().IsDerivedFromType(ActionButton::StaticObjectType))
+    {
+      ActionButton *action = static_cast<ActionButton*>(*iter);
+      EXPECT_EQ(action->GetLabel(), "Action 1");
+      EXPECT_EQ(action->GetExtraText(), "");
+    }
+    iter++;
+    if ((*iter)->Type().IsDerivedFromType(ActionButton::StaticObjectType))
+    {
+      ActionButton *action = static_cast<ActionButton*>(*iter);
+      EXPECT_EQ(action->GetLabel(), "Action 2");
+      EXPECT_EQ(action->GetExtraText(), "£3.99");
+    }
+  }
 }
 
 }

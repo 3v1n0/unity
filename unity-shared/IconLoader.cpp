@@ -18,6 +18,7 @@
 */
 
 #include "IconLoader.h"
+#include "config.h"
 
 #include <queue>
 #include <sstream>
@@ -39,7 +40,8 @@ namespace unity
 namespace
 {
 nux::logging::Logger logger("unity.iconloader");
-const unsigned MIN_ICON_SIZE = 2;
+const int MIN_ICON_SIZE = 2;
+const int RIBBON_PADDING = 2;
 }
 
 class IconLoader::Impl
@@ -48,25 +50,29 @@ public:
   // The Handle typedef is used to explicitly indicate which integers are
   // infact our opaque handles.
   typedef int Handle;
-  static const int FONT_SIZE = 10;
-  static const int MIN_FONT_SIZE = 6;
+  static const int FONT_SIZE = 8;
+  static const int MIN_FONT_SIZE = 5;
 
   Impl();
 
   Handle LoadFromIconName(std::string const& icon_name,
-                          unsigned size,
+                          int max_width,
+                          int max_height,
                           IconLoaderCallback slot);
 
   Handle LoadFromGIconString(std::string const& gicon_string,
-                             unsigned size,
+                             int max_width,
+                             int max_height,
                              IconLoaderCallback slot);
 
   Handle LoadFromFilename(std::string const& filename,
-                          unsigned size,
+                          int max_width,
+                          int max_height,
                           IconLoaderCallback slot);
 
   Handle LoadFromURI(std::string const& uri,
-                     unsigned size,
+                     int max_width,
+                     int max_height,
                      IconLoaderCallback slot);
 
   void DisconnectHandle(Handle handle);
@@ -88,7 +94,8 @@ private:
 
     IconLoaderRequestType type;
     std::string data;
-    unsigned int size;
+    int max_width;
+    int max_height;
     std::string key;
     IconLoaderCallback slot;
     Handle handle;
@@ -103,12 +110,14 @@ private:
 
     IconLoaderTask(IconLoaderRequestType type_,
                    std::string const& data_,
-                   unsigned size_,
+                   int max_width_,
+                   int max_height_,
                    std::string const& key_,
                    IconLoaderCallback slot_,
                    Handle handle_,
                    Impl* self_)
-      : type(type_), data(data_), size(size_), key(key_)
+      : type(type_), data(data_), max_width(max_width_)
+      , max_height(max_height_), key(key_)
       , slot(slot_), handle(handle_), impl(self_)
       , icon_info(nullptr), no_cache(false), helper_handle(0), idle_id(0)
       {}
@@ -126,13 +135,16 @@ private:
     void InvokeSlot()
     {
       if (slot)
-        slot(data, size, result);
+        slot(data, max_width, max_height, result);
 
       // notify shadow tasks
       for (auto shadow_task : shadow_tasks)
       {
         if (shadow_task->slot)
-          shadow_task->slot(shadow_task->data, shadow_task->size, result);
+          shadow_task->slot(shadow_task->data,
+                            shadow_task->max_width,
+                            shadow_task->max_height,
+                            result);
 
         impl->task_map_.erase(shadow_task->handle);
       }
@@ -143,10 +155,10 @@ private:
     bool Process()
     {
       // Check the cache again, as previous tasks might have wanted the same
-      if (impl->CacheLookup(key, data, size, slot))
+      if (impl->CacheLookup(key, data, max_width, max_height, slot))
         return true;
 
-      LOG_DEBUG(logger) << "Processing  " << data << " at size " << size;
+      LOG_DEBUG(logger) << "Processing  " << data << " at size " << max_height;
 
       // Rely on the compiler to tell us if we miss a new type
       switch (type)
@@ -161,7 +173,7 @@ private:
 
       LOG_WARNING(logger) << "Request type " << type
                           << " is not supported (" << data
-                          << " " << size << ")";
+                          << " " << max_width << "x" << max_height << ")";
       result = nullptr;
       InvokeSlot();
 
@@ -170,6 +182,7 @@ private:
 
     bool ProcessIconNameTask()
     {
+      int size = max_height < 0 ? max_width : (max_width < 0 ? max_height : MIN(max_height, max_width));
       GtkIconInfo* info = ::gtk_icon_theme_lookup_icon(impl->theme_, data.c_str(),
                                                        size, static_cast<GtkIconLookupFlags>(0));
       if (info)
@@ -195,6 +208,7 @@ private:
     {
       glib::Error error;
       glib::Object<GIcon> icon(::g_icon_new_for_string(data.c_str(), &error));
+      int size = max_height < 0 ? max_width : (max_width < 0 ? max_height : MIN(max_height, max_width));
 
       if (icon.IsType(UNITY_PROTOCOL_TYPE_ANNOTATED_ICON))
       {
@@ -205,8 +219,12 @@ private:
 
         no_cache = true;
         auto helper_slot = sigc::bind(sigc::mem_fun(this, &IconLoaderTask::BaseIconLoaded), glib::object_cast<UnityProtocolAnnotatedIcon>(icon));
+        int base_icon_width = max_width > 0 ? max_width - RIBBON_PADDING * 2 : -1;
+        int base_icon_height = base_icon_width < 0 ? max_height - RIBBON_PADDING *2 : max_height;
         helper_handle = impl->LoadFromGIconString(gicon_string.Str(),
-                                                  size, helper_slot);
+                                                  base_icon_width,
+                                                  base_icon_height,
+                                                  helper_slot);
 
         return false;
       }
@@ -271,40 +289,32 @@ private:
       return false;
     }
 
-    void CategoryIconLoaded(std::string const& base_icon_string, unsigned size,
+    void CategoryIconLoaded(std::string const& base_icon_string,
+                            int max_width, int max_height,
                             glib::Object<GdkPixbuf> const& category_pixbuf,
                             glib::Object<UnityProtocolAnnotatedIcon> const& anno_icon)
     {
       helper_handle = 0;
-      if (category_pixbuf)
-      {
-        // assuming the category pixbuf is smaller than result
-        gdk_pixbuf_composite(category_pixbuf, result, // src, dest
-                             0, 0, // dest_x, dest_y
-                             gdk_pixbuf_get_width(category_pixbuf), // dest_w
-                             gdk_pixbuf_get_height(category_pixbuf), // dest_h
-                             0.0, 0.0, // offset_x, offset_y
-                             1.0, 1.0, // scale_x, scale_y
-                             GDK_INTERP_NEAREST, // interpolation
-                             255); // src_alpha
-      }
+      bool has_emblem = category_pixbuf;
 
       const gchar* detail_text = unity_protocol_annotated_icon_get_ribbon(anno_icon);
       if (detail_text)
       {
+        const int SHADOW_BOTTOM_PADDING = 2;
+        const int SHADOW_SIDE_PADDING = 1;
         int icon_w = gdk_pixbuf_get_width(result);
         int icon_h = gdk_pixbuf_get_height(result);
 
         int max_font_height;
         CalculateTextHeight(nullptr, &max_font_height);
 
-        max_font_height = max_font_height * 9 / 8; // let's have some padding on the stripe
-        int pixbuf_size = static_cast<int>(
-            sqrt(max_font_height*max_font_height*8));
-        if (pixbuf_size > icon_w) pixbuf_size = icon_w;
+        // FIXME: design wants the tags 2px wider than the original icon
+        int pixbuf_width = icon_w;
+        int pixbuf_height = max_font_height * 5 / 4 + SHADOW_BOTTOM_PADDING;
+        if (pixbuf_height > icon_h) pixbuf_height = icon_h;
 
         nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32,
-                                          pixbuf_size, pixbuf_size);
+                                          pixbuf_width, pixbuf_height);
         std::shared_ptr<cairo_t> cr(cairo_graphics.GetContext(), cairo_destroy);
 
         glib::Object<PangoLayout> layout;
@@ -325,10 +335,9 @@ private:
         pango_layout_set_font_description(layout, desc.get());
         pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);
 
-        double size_dbl = static_cast<double>(pixbuf_size);
-        // we'll allow tiny bit of overflow since the text is rotated and there
-        // is some space left... FIXME: 10/9? / 11/10?
-        double max_text_width = sqrt(size_dbl*size_dbl / 2) * 9/8;
+        // magic constant for the text width based on the white curve
+        double max_text_width = has_emblem ?
+          pixbuf_width * 0.72 : pixbuf_width;
 
         pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
         pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
@@ -337,9 +346,8 @@ private:
         pango_layout_set_markup(layout, escaped_text, -1);
 
         pango_context = pango_layout_get_context(layout);  // is not ref'ed
-        // FIXME: for reasons unknown, it looks better without this
-        //pango_cairo_context_set_font_options(pango_context,
-        //                                     gdk_screen_get_font_options(screen));
+        pango_cairo_context_set_font_options(pango_context,
+                                             gdk_screen_get_font_options(screen));
         pango_cairo_context_set_resolution(pango_context,
                                            dpi == -1 ? 96.0f : dpi/(float) PANGO_SCALE);
         pango_layout_context_changed(layout);
@@ -361,31 +369,116 @@ private:
 
         cairo_set_operator(cr.get(), CAIRO_OPERATOR_OVER);
 
-        // draw the trapezoid
-        cairo_move_to(cr.get(), 0.0, size_dbl);
-        cairo_line_to(cr.get(), size_dbl, 0.0);
-        cairo_line_to(cr.get(), size_dbl, size_dbl / 2.0);
-        cairo_line_to(cr.get(), size_dbl / 2.0, size_dbl);
-        cairo_close_path(cr.get());
-
         // this should be #dd4814
-        cairo_set_source_rgba(cr.get(), 0.86666f, 0.28235f, 0.07843f, 1.0f);
+        const double ORANGE_R = 0.86666;
+        const double ORANGE_G = 0.28235;
+        const double ORANGE_B = 0.07843;
+
+        double belt_w = static_cast<double>(pixbuf_width - SHADOW_SIDE_PADDING * 2);
+        double belt_h = static_cast<double>(pixbuf_height - SHADOW_BOTTOM_PADDING);
+
+        // translate to make space for the shadow
+        cairo_save(cr.get());
+        cairo_translate(cr.get(), 1.0, 1.0);
+
+        cairo_set_source_rgba(cr.get(), ORANGE_R, ORANGE_G, ORANGE_B, 1.0);
+
+        cairo_rectangle(cr.get(), 0.0, 0.0, belt_w, belt_h);
+        cairo_fill_preserve(cr.get());
+
+        std::shared_ptr<cairo_pattern_t> pattern(
+            cairo_pattern_create_linear(0.0, 0.0, belt_w, 0.0),
+            cairo_pattern_destroy);
+        cairo_pattern_add_color_stop_rgba(pattern.get(), 0.0, 1.0, 1.0, 1.0, 0.235294);
+        cairo_pattern_add_color_stop_rgba(pattern.get(), 0.02, 1.0, 1.0, 1.0, 0.0);
+        if (!has_emblem)
+        {
+          cairo_pattern_add_color_stop_rgba(pattern.get(), 0.98, 1.0, 1.0, 1.0, 0.0);
+          cairo_pattern_add_color_stop_rgba(pattern.get(), 1.0, 1.0, 1.0, 1.0, 0.235294);
+        }
+        cairo_pattern_add_color_stop_rgba(pattern.get(), 1.0, 1.0, 1.0, 1.0, 0.0);
+
+        cairo_set_source(cr.get(), pattern.get());
         cairo_fill(cr.get());
 
-        // draw the text (rotated!)
-        cairo_set_source_rgba(cr.get(), 1.0f, 1.0f, 1.0f, 1.0f);
-        cairo_move_to(cr.get(), size_dbl * 0.25, size_dbl);
-        cairo_rotate(cr.get(), -G_PI_4); // rotate by -45 degrees
+        if (has_emblem)
+        {
+          // paint the curve
+          const double CURVE_START_XPOS = 0.631163; // 0.651163
+          const double CURVE_CP1_XPOS = CURVE_START_XPOS + 0.068023;
+          const double CURVE_CP2_XPOS = CURVE_START_XPOS + 0.07;
+          const double CURVE_CP3_XPOS = CURVE_START_XPOS + 0.102965;
+          const double CURVE_CP4_XPOS = CURVE_START_XPOS + 0.161511;
+          const double CURVE_CP5_XPOS = CURVE_START_XPOS + 0.197093;
+          const double CURVE_END_XPOS = CURVE_START_XPOS + 0.265779;
 
-        pango_cairo_update_layout(cr.get(), layout);
+          const double CURVE_START_X = CURVE_START_XPOS * belt_w;
+
+          cairo_set_source_rgba(cr.get(), 1.0, 1.0, 1.0, 1.0);
+
+          cairo_move_to(cr.get(), CURVE_START_XPOS * belt_w, belt_h);
+          cairo_curve_to(cr.get(), CURVE_CP1_XPOS * belt_w, belt_h,
+                                   CURVE_CP2_XPOS * belt_w, 0.9825 * belt_h,
+                                   CURVE_CP3_XPOS * belt_w, 0.72725 * belt_h);
+          cairo_line_to(cr.get(), CURVE_CP4_XPOS * belt_w, 0.27275 * belt_h);
+          cairo_curve_to(cr.get(), CURVE_CP5_XPOS * belt_w, 0.0,
+                                   CURVE_CP5_XPOS * belt_w, 0.0,
+                                   CURVE_END_XPOS * belt_w, 0.0);
+          cairo_line_to(cr.get(), belt_w, 0.0);
+          cairo_line_to(cr.get(), belt_w, belt_h);
+          cairo_close_path(cr.get());
+          cairo_fill(cr.get());
+
+          // and the highlight
+          pattern.reset(cairo_pattern_create_linear(CURVE_START_X, 0.0, belt_w, 0.0),
+                        cairo_pattern_destroy);
+          cairo_pattern_add_color_stop_rgba(pattern.get(), 0.0, 1.0, 1.0, 1.0, 0.0);
+          cairo_pattern_add_color_stop_rgba(pattern.get(), 0.95, 1.0, 1.0, 1.0, 0.0);
+          cairo_pattern_add_color_stop_rgba(pattern.get(), 1.0, 0.0, 0.0, 0.0, 0.235294);
+          cairo_set_source(cr.get(), pattern.get());
+          cairo_rectangle(cr.get(), CURVE_START_X, 0.0, belt_w - CURVE_START_X, belt_h);
+          cairo_fill(cr.get());
+
+          // paint the emblem
+          int category_pb_w = gdk_pixbuf_get_width(category_pixbuf);
+          int category_pb_h = gdk_pixbuf_get_height(category_pixbuf);
+          double category_pb_x = 
+            belt_w - category_pb_w > CURVE_CP4_XPOS * belt_w ?
+              CURVE_CP4_XPOS * belt_w + ((1 - CURVE_CP4_XPOS) * belt_w - category_pb_w) / 2 : CURVE_CP4_XPOS * belt_w;
+          gdk_cairo_set_source_pixbuf(cr.get(), category_pixbuf,
+                                      category_pb_x, (belt_h - category_pb_h) / 2);
+          cairo_paint(cr.get());
+        }
+
+        cairo_set_source_rgba(cr.get(), 1.0, 1.0, 1.0, 1.0);
+        cairo_move_to(cr.get(), 0.0, belt_h / 2);
         pango_layout_get_pixel_size(layout, nullptr, &text_height);
         // current point is now in the middle of the stripe, need to translate
         // it, so that the text is centered
         cairo_rel_move_to(cr.get(), 0.0, text_height / -2.0);
-        double diagonal = sqrt(size_dbl*size_dbl*2);
-        // x coordinate also needs to be shifted
-        cairo_rel_move_to(cr.get(), (diagonal - max_text_width) / 4, 0.0);
         pango_cairo_show_layout(cr.get(), layout);
+
+        // paint the shadow
+        cairo_restore(cr.get());
+
+        pattern.reset(cairo_pattern_create_linear(0.0, belt_h, 0.0, belt_h + SHADOW_BOTTOM_PADDING),
+                      cairo_pattern_destroy);
+        cairo_pattern_add_color_stop_rgba(pattern.get(), 0.0, 0.0, 0.0, 0.0, 0.2);
+        cairo_pattern_add_color_stop_rgba(pattern.get(), 1.0, 0.0, 0.0, 0.0, 0.0);
+
+        cairo_set_source(cr.get(), pattern.get());
+
+        cairo_rectangle(cr.get(), 0.0, belt_h, belt_w, SHADOW_BOTTOM_PADDING);
+        cairo_fill(cr.get());
+
+        cairo_set_source_rgba(cr.get(), 0.0, 0.0, 0.0, 0.1);
+        cairo_move_to(cr.get(), 0.0, 1.0);
+        cairo_line_to(cr.get(), 0.0, belt_h);
+        cairo_stroke(cr.get());
+
+        cairo_move_to(cr.get(), belt_w, 1.0);
+        cairo_line_to(cr.get(), belt_w, belt_h);
+        cairo_stroke(cr.get());
 
         // FIXME: going from image_surface to pixbuf, and then to texture :(
         glib::Object<GdkPixbuf> detail_pb(
@@ -394,13 +487,14 @@ private:
                                         cairo_graphics.GetWidth(),
                                         cairo_graphics.GetHeight()));
 
+        int y_pos = icon_h - pixbuf_height - max_font_height / 2;
         gdk_pixbuf_composite(detail_pb, result, // src, dest
-                             icon_w - pixbuf_size, // dest_x
-                             icon_h - pixbuf_size, // dest_y
-                             pixbuf_size, // dest_w
-                             pixbuf_size, // dest_h
-                             icon_w - pixbuf_size, // offset_x
-                             icon_h - pixbuf_size, // offset_y
+                             0, // dest_x
+                             y_pos, // dest_y
+                             pixbuf_width, // dest_w
+                             pixbuf_height, // dest_h
+                             0, // offset_x
+                             y_pos, // offset_y
                              1.0, 1.0, // scale_x, scale_y
                              GDK_INTERP_NEAREST, // interpolation
                              255); // src_alpha
@@ -409,29 +503,80 @@ private:
       idle_id = g_idle_add(LoadIconComplete, this);
     }
 
-    void BaseIconLoaded(std::string const& base_icon_string, unsigned size,
+    void BaseIconLoaded(std::string const& base_icon_string,
+                        int max_width, int max_height,
                         glib::Object<GdkPixbuf> const& base_pixbuf,
                         glib::Object<UnityProtocolAnnotatedIcon> const& anno_icon)
     {
       helper_handle = 0;
       if (base_pixbuf)
       {
-        result = gdk_pixbuf_copy(base_pixbuf);
+        LOG_DEBUG(logger) << "Base icon loaded: '" << base_icon_string << 
+          "' size: " << gdk_pixbuf_get_width(base_pixbuf) << 'x' <<
+                        gdk_pixbuf_get_height(base_pixbuf);
+
+        // we need extra space for the ribbon
+        result = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, 
+                                gdk_pixbuf_get_width(base_pixbuf) + RIBBON_PADDING * 2,
+                                gdk_pixbuf_get_height(base_pixbuf));
+        gdk_pixbuf_fill(result, 0x0);
+        gdk_pixbuf_copy_area(base_pixbuf, 0, 0,
+                             gdk_pixbuf_get_width(base_pixbuf),
+                             gdk_pixbuf_get_height(base_pixbuf),
+                             result,
+                             RIBBON_PADDING, 0);
         // FIXME: can we composite the pixbuf in helper thread?
         UnityProtocolCategoryType category = unity_protocol_annotated_icon_get_category(anno_icon);
         auto helper_slot = sigc::bind(sigc::mem_fun(this, &IconLoaderTask::CategoryIconLoaded), anno_icon);
-        unsigned cat_size = size / 4;
-        // FIXME: we still don't have the category assets
+        int max_font_height;
+        CalculateTextHeight(nullptr, &max_font_height);
+        unsigned cat_size = max_font_height * 9 / 8;
         switch (category)
         {
+          case UNITY_PROTOCOL_CATEGORY_TYPE_APPLICATION:
+            helper_handle =
+              impl->LoadFromFilename(PKGDATADIR"/emblem_apps.svg", -1, cat_size, helper_slot);
+            break;
+          case UNITY_PROTOCOL_CATEGORY_TYPE_BOOK:
+            helper_handle =
+              impl->LoadFromFilename(PKGDATADIR"/emblem_books.svg", -1, cat_size, helper_slot);
+            break;
           case UNITY_PROTOCOL_CATEGORY_TYPE_MUSIC:
             helper_handle =
-              impl->LoadFromIconName("emblem-favorite", cat_size, helper_slot);
+              impl->LoadFromFilename(PKGDATADIR"/emblem_music.svg", -1, cat_size, helper_slot);
             break;
+          case UNITY_PROTOCOL_CATEGORY_TYPE_MOVIE:
+            helper_handle =
+              impl->LoadFromFilename(PKGDATADIR"/emblem_video.svg", -1, cat_size, helper_slot);
+            break;
+          case UNITY_PROTOCOL_CATEGORY_TYPE_CLOTHES:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_SHOES:
+            helper_handle =
+              impl->LoadFromFilename(PKGDATADIR"/emblem_clothes.svg", -1, cat_size, helper_slot);
+            break;
+          case UNITY_PROTOCOL_CATEGORY_TYPE_GAMES:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_ELECTRONICS:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_COMPUTERS:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_OFFICE:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_HOME:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_GARDEN:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_PETS:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_TOYS:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_CHILDREN:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_BABY:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_WATCHES:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_SPORTS:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_OUTDOORS:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_GROCERY:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_HEALTH:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_BEAUTY:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_DIY:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_TOOLS:
+          case UNITY_PROTOCOL_CATEGORY_TYPE_CAR:
           default:
             // rest of the processing is the CategoryIconLoaded, lets invoke it
             glib::Object<GdkPixbuf> null_pixbuf;
-            helper_slot("", cat_size, null_pixbuf);
+            helper_slot("", -1, cat_size, null_pixbuf);
             break;
         }
       }
@@ -463,32 +608,23 @@ private:
         glib::String contents;
         gsize length = 0;
 
-        if (::g_file_load_contents(file, canc, &contents, &length,
+        if (g_file_load_contents(file, canc, &contents, &length,
                                  nullptr, &task->error))
         {
           glib::Object<GInputStream> stream(
-              ::g_memory_input_stream_new_from_data(contents.Value(), length, nullptr));
+              g_memory_input_stream_new_from_data(contents.Value(), length, nullptr));
 
-          if (task->size != static_cast<unsigned int>(~0))
-          {
-            task->result = ::gdk_pixbuf_new_from_stream_at_scale(stream,
-                                                                 -1,
-                                                                 task->size,
-                                                                 TRUE,
-                                                                 canc,
-                                                                 &task->error);
-          }
-          else
-          {
-            task->result = ::gdk_pixbuf_new_from_stream(stream,
-                                                        canc,
-                                                        &task->error);
-          }          
-          ::g_input_stream_close(stream, canc, nullptr);
+          task->result = gdk_pixbuf_new_from_stream_at_scale(stream,
+                                                             task->max_width,
+                                                             task->max_height,
+                                                             TRUE,
+                                                             canc,
+                                                             &task->error);
+          g_input_stream_close(stream, canc, nullptr);
         }
       }
 
-      ::g_io_scheduler_job_send_to_mainloop_async (job, LoadIconComplete, task, nullptr);
+      g_io_scheduler_job_send_to_mainloop_async (job, LoadIconComplete, task, nullptr);
 
       return FALSE;
     }
@@ -509,7 +645,9 @@ private:
           task->result = nullptr;
 
         LOG_WARNING(logger) << "Unable to load icon " << task->data
-                            << " at size " << task->size << ": " << task->error;
+                            << " at size "
+                            << task->max_width << "x" << task->max_height
+                            << ": " << task->error;
       }
 
       impl->finished_tasks_.push_back(task);
@@ -528,21 +666,24 @@ private:
   };
 
   Handle ReturnCachedOrQueue(std::string const& data,
-                             unsigned size,
+                             int max_width,
+                             int max_height,
                              IconLoaderCallback slot,
                              IconLoaderRequestType type);
 
   Handle QueueTask(std::string const& key,
                    std::string const& data,
-                   unsigned size,
+                   int max_width,
+                   int max_height,
                    IconLoaderCallback slot,
                    IconLoaderRequestType type);
 
-  std::string Hash(std::string const& data, unsigned size);
+  std::string Hash(std::string const& data, int max_width, int max_height);
 
   bool CacheLookup(std::string const& key,
                    std::string const& data,
-                   unsigned size,
+                   int max_width,
+                   int max_height,
                    IconLoaderCallback slot);
 
   // Looping idle callback function
@@ -600,52 +741,67 @@ IconLoader::Impl::Impl()
 }
 
 int IconLoader::Impl::LoadFromIconName(std::string const& icon_name,
-                                       unsigned size,
+                                       int max_width,
+                                       int max_height,
                                        IconLoaderCallback slot)
 {
-  if (no_load_ || icon_name.empty() || size < MIN_ICON_SIZE || !slot)
+  if (no_load_ || icon_name.empty() || !slot ||
+      ((max_width >= 0 && max_width < MIN_ICON_SIZE) ||
+       (max_height >= 0 && max_height < MIN_ICON_SIZE)))
     return 0;
 
   // We need to check this because of legacy desktop files
   if (icon_name[0] == '/')
   {
-    return LoadFromFilename(icon_name, size, slot);
+    return LoadFromFilename(icon_name, max_width, max_height, slot);
   }
 
-  return ReturnCachedOrQueue(icon_name, size, slot, REQUEST_TYPE_ICON_NAME);
+  return ReturnCachedOrQueue(icon_name, max_width, max_height, slot,
+                             REQUEST_TYPE_ICON_NAME);
 }
 
 int IconLoader::Impl::LoadFromGIconString(std::string const& gicon_string,
-                                          unsigned size,
+                                          int max_width,
+                                          int max_height,
                                           IconLoaderCallback slot)
 {
-  if (no_load_ || gicon_string.empty() || size < MIN_ICON_SIZE || !slot)
+  if (no_load_ || gicon_string.empty() || !slot ||
+      ((max_width >= 0 && max_width < MIN_ICON_SIZE) ||
+       (max_height >= 0 && max_height < MIN_ICON_SIZE)))
     return 0;
 
-  return ReturnCachedOrQueue(gicon_string, size, slot, REQUEST_TYPE_GICON_STRING);
+  return ReturnCachedOrQueue(gicon_string, max_width, max_height, slot,
+                             REQUEST_TYPE_GICON_STRING);
 }
 
 int IconLoader::Impl::LoadFromFilename(std::string const& filename,
-                                       unsigned size,
+                                       int max_width,
+                                       int max_height,
                                        IconLoaderCallback slot)
 {
-  if (no_load_ || filename.empty() || size < MIN_ICON_SIZE || !slot)
+  if (no_load_ || filename.empty() || !slot ||
+      ((max_width >= 0 && max_width < MIN_ICON_SIZE) ||
+       (max_height >= 0 && max_height < MIN_ICON_SIZE)))
     return 0;
 
   glib::Object<GFile> file(::g_file_new_for_path(filename.c_str()));
   glib::String uri(::g_file_get_uri(file));
 
-  return LoadFromURI(uri.Str(), size, slot);
+  return LoadFromURI(uri.Str(), max_width, max_height, slot);
 }
 
 int IconLoader::Impl::LoadFromURI(std::string const& uri,
-                                  unsigned size,
+                                  int max_width,
+                                  int max_height,
                                   IconLoaderCallback slot)
 {
-  if (no_load_ || uri.empty() || size < MIN_ICON_SIZE || !slot)
+  if (no_load_ || uri.empty() || !slot ||
+      ((max_width >= 0 && max_width < MIN_ICON_SIZE) ||
+       (max_height >= 0 && max_height < MIN_ICON_SIZE)))
     return 0;
 
-  return ReturnCachedOrQueue(uri, size, slot, REQUEST_TYPE_URI);
+  return ReturnCachedOrQueue(uri, max_width, max_height, slot,
+                             REQUEST_TYPE_URI);
 }
 
 void IconLoader::Impl::DisconnectHandle(Handle handle)
@@ -699,16 +855,17 @@ void IconLoader::Impl::CalculateTextHeight(int* width, int* height)
 //
 
 int IconLoader::Impl::ReturnCachedOrQueue(std::string const& data,
-                                          unsigned size,
+                                          int max_width,
+                                          int max_height,
                                           IconLoaderCallback slot,
                                           IconLoaderRequestType type)
 {
   Handle result = 0;
-  std::string key(Hash(data, size));
+  std::string key(Hash(data, max_width, max_height));
 
-  if (!CacheLookup(key, data, size, slot))
+  if (!CacheLookup(key, data, max_width, max_height, slot))
   {
-    result = QueueTask(key, data, size, slot, type);
+    result = QueueTask(key, data, max_width, max_height, slot, type);
   }
   return result;
 }
@@ -716,11 +873,15 @@ int IconLoader::Impl::ReturnCachedOrQueue(std::string const& data,
 
 int IconLoader::Impl::QueueTask(std::string const& key,
                                 std::string const& data,
-                                unsigned size,
+                                int max_width,
+                                int max_height,
                                 IconLoaderCallback slot,
                                 IconLoaderRequestType type)
 {
-  auto task = std::make_shared<IconLoaderTask>(type, data, size, key, slot, ++handle_counter_, this);
+  auto task = std::make_shared<IconLoaderTask>(type, data,
+                                               max_width, max_height,
+                                               key, slot,
+                                               ++handle_counter_, this);
   auto iter = queued_tasks_.find(key);
 
   if (iter != queued_tasks_.end())
@@ -744,7 +905,8 @@ int IconLoader::Impl::QueueTask(std::string const& key,
   tasks_.push(task);
   task_map_[task->handle] = task;
 
-  LOG_DEBUG(logger) << "Pushing task  " << data << " at size " << size
+  LOG_DEBUG(logger) << "Pushing task  " << data << " at size " 
+                    << max_width << "x" << max_height
                     << ", queue size now at " << tasks_.size();
 
   if (!idle_)
@@ -754,16 +916,17 @@ int IconLoader::Impl::QueueTask(std::string const& key,
   return task->handle;
 }
 
-std::string IconLoader::Impl::Hash(std::string const& data, unsigned size)
+std::string IconLoader::Impl::Hash(std::string const& data, int max_width, int max_height)
 {
   std::ostringstream sout;
-  sout << data << ":" << size;
+  sout << data << ":" << max_width << "x" << max_height;
   return sout.str();
 }
 
 bool IconLoader::Impl::CacheLookup(std::string const& key,
                                    std::string const& data,
-                                   unsigned size,
+                                   int max_width,
+                                   int max_height,
                                    IconLoaderCallback slot)
 {
   auto iter = cache_.find(key);
@@ -772,7 +935,7 @@ bool IconLoader::Impl::CacheLookup(std::string const& key,
   if (found && slot)
   {
     glib::Object<GdkPixbuf> const& pixbuf = iter->second;
-    slot(data, size, pixbuf);
+    slot(data, max_width, max_height, pixbuf);
   }
 
   return found;
@@ -848,31 +1011,35 @@ IconLoader& IconLoader::GetDefault()
 }
 
 int IconLoader::LoadFromIconName(std::string const& icon_name,
-                                 unsigned size,
+                                 int max_width,
+                                 int max_height,
                                  IconLoaderCallback slot)
 {
-  return pimpl->LoadFromIconName(icon_name, size, slot);
+  return pimpl->LoadFromIconName(icon_name, max_width, max_height, slot);
 }
 
 int IconLoader::LoadFromGIconString(std::string const& gicon_string,
-                                    unsigned size,
+                                    int max_width,
+                                    int max_height,
                                     IconLoaderCallback slot)
 {
-  return pimpl->LoadFromGIconString(gicon_string, size, slot);
+  return pimpl->LoadFromGIconString(gicon_string, max_width, max_height, slot);
 }
 
 int IconLoader::LoadFromFilename(std::string const& filename,
-                                 unsigned size,
+                                 int max_width,
+                                 int max_height,
                                  IconLoaderCallback slot)
 {
-  return pimpl->LoadFromFilename(filename, size, slot);
+  return pimpl->LoadFromFilename(filename, max_width, max_height, slot);
 }
 
 int IconLoader::LoadFromURI(std::string const& uri,
-                            unsigned size,
+                            int max_width,
+                            int max_height,
                             IconLoaderCallback slot)
 {
-  return pimpl->LoadFromURI(uri, size, slot);
+  return pimpl->LoadFromURI(uri, max_width, max_height, slot);
 }
 
 void IconLoader::DisconnectHandle(int handle)

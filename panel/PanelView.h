@@ -64,6 +64,8 @@ public:
 
   Window GetTrayXid() const;
 
+  void SetLauncherWidth(int width);
+
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -105,6 +107,12 @@ private:
   nux::ObjectPtr<nux::BaseTexture> _panel_sheen;
   nux::HLayout* _layout;
 
+  nux::ObjectPtr <nux::BaseTexture> _bg_refine_tex;
+  nux::ObjectPtr <nux::BaseTexture> _bg_refine_no_refine_tex;
+  
+  std::unique_ptr<nux::AbstractPaintLayer> _bg_refine_layer;
+  nux::ObjectPtr <nux::BaseTexture> _bg_refine_single_column_tex;
+  std::unique_ptr<nux::AbstractPaintLayer> _bg_refine_single_column_layer;
   nux::Geometry _last_geo;
 
   nux::Color  _bg_color;
@@ -115,6 +123,9 @@ private:
   bool        _overlay_is_open;
   float       _opacity;
   int         _monitor;
+  int         _stored_dash_width;
+  int         _launcher_width;
+  bool        _refine_is_open;
 
   std::string _active_overlay;
 

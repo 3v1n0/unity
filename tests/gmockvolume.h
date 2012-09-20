@@ -38,14 +38,26 @@ typedef struct _GMockVolumeClass GMockVolumeClass;
 
 struct _GMockVolume {
   GObject parent;
+
+  gboolean can_eject;
+  char *name;
+  GIcon *icon;
+  char *uuid;
+  GMount *mount;
 };
 
 struct _GMockVolumeClass {
   GObjectClass parent_class;
 };
 
-GType         g_mock_volume_get_type (void) G_GNUC_CONST;
-GMockVolume * g_mock_volume_new      ();
+GType         g_mock_volume_get_type  (void) G_GNUC_CONST;
+GMockVolume * g_mock_volume_new       ();
+
+void          g_mock_volume_set_can_eject (GMockVolume* volume, gboolean can_eject);
+void          g_mock_volume_set_name  (GMockVolume *volume, const char *name);
+void          g_mock_volume_set_icon  (GMockVolume *volume, GIcon *icon);
+void          g_mock_volume_set_uuid  (GMockVolume *volume, const char *uuid);
+void          g_mock_volume_set_mount (GMockVolume *volume, GMount *mount);
 
 G_END_DECLS
 

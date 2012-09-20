@@ -88,10 +88,12 @@ void MoviePreview::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
 {
   nux::Geometry const& base = GetGeometry();
 
+  bool enable_bg_shadows = dash::previews::Style::Instance().GetShadowBackgroundEnabled();
+
   gfx_engine.PushClippingRectangle(base);
   nux::GetPainter().PaintBackground(gfx_engine, base);
 
-  if (full_data_layout_)
+  if (enable_bg_shadows && full_data_layout_)
   {
     unsigned int alpha, src, dest = 0;
     gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
@@ -111,7 +113,9 @@ void MoviePreview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
   nux::Geometry const& base = GetGeometry();
   gfx_engine.PushClippingRectangle(base);
 
-  if (!IsFullRedraw())
+  bool enable_bg_shadows = dash::previews::Style::Instance().GetShadowBackgroundEnabled();
+  
+  if (enable_bg_shadows && !IsFullRedraw())
     nux::GetPainter().PushLayer(gfx_engine, details_bg_layer_->GetGeometry(), details_bg_layer_.get());
 
   unsigned int alpha, src, dest = 0;
@@ -123,7 +127,7 @@ void MoviePreview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
 
   gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
 
-  if (!IsFullRedraw())
+  if (enable_bg_shadows && !IsFullRedraw())
     nux::GetPainter().PopBackground();
 
   gfx_engine.PopClippingRectangle();
@@ -139,11 +143,7 @@ void MoviePreview::OnNavigateOut()
 
 void MoviePreview::SetupBackground()
 {
-  nux::ROPConfig rop;
-  rop.Blend = true;
-  rop.SrcBlend = GL_ONE;
-  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  details_bg_layer_.reset(new nux::ColorLayer(nux::Color(0.03f, 0.03f, 0.03f, 0.0f), true, rop));
+  details_bg_layer_.reset(dash::previews::Style::Instance().GetBackgroundLayer());
 }
 
 void MoviePreview::SetupView()
@@ -178,14 +178,14 @@ void MoviePreview::SetupView()
       nux::VLayout* app_data_layout = new nux::VLayout();
       app_data_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
 
-      title_ = new nux::StaticCairoText(preview_model_->title);
+      title_ = new nux::StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
       title_->SetLines(-1);
       title_->SetFont(style.title_font().c_str());
       app_data_layout->AddView(title_.GetPointer(), 1);
 
       if (!preview_model_->subtitle.Get().empty())
       {
-        subtitle_ = new nux::StaticCairoText(preview_model_->subtitle);
+        subtitle_ = new nux::StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
         subtitle_->SetLines(-1);
         subtitle_->SetFont(style.subtitle_size_font().c_str());
         app_data_layout->AddView(subtitle_.GetPointer(), 1);
@@ -217,12 +217,11 @@ void MoviePreview::SetupView()
 
       if (!preview_model_->description.Get().empty())
       {
-        description_ = new nux::StaticCairoText("");
+        description_ = new nux::StaticCairoText(preview_model_->description, false, NUX_TRACKER_LOCATION); // not escaped!
         description_->SetFont(style.description_font().c_str());
         description_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_TOP);
         description_->SetLines(-style.GetDescriptionLineCount());
         description_->SetLineSpacing(style.GetDescriptionLineSpacing());
-        description_->SetText(preview_model_->description);
         preview_info_layout->AddView(description_.GetPointer());
       }
       /////////////////////

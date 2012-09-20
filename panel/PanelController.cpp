@@ -53,6 +53,7 @@ public:
   std::vector<nux::Geometry> GetGeometries() const;
 
   // NOTE: nux::Property maybe?
+  void SetLauncherWidth(int width);
   void SetOpacity(float opacity);
   void SetOpacityMaximizedToggle(bool enabled);
 
@@ -144,6 +145,14 @@ void Controller::Impl::SetOpacity(float opacity)
   for (auto window: windows_)
   {
     ViewForWindow(window)->SetOpacity(opacity_);
+  }
+}
+
+void Controller::Impl::SetLauncherWidth(int width)
+{
+  for (auto const& window: windows_)
+  {
+    ViewForWindow(window)->SetLauncherWidth(width);
   }
 }
 
@@ -297,6 +306,11 @@ Controller::Controller()
   UScreen* screen = UScreen::GetDefault();
   screen->changed.connect(sigc::mem_fun(this, &Controller::OnScreenChanged));
   OnScreenChanged(screen->GetPrimaryMonitor(), screen->GetMonitors());
+
+  launcher_width.changed.connect([&] (int width)
+  {
+    pimpl->SetLauncherWidth(width);
+  });
 }
 
 Controller::~Controller()

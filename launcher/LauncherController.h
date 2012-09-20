@@ -32,6 +32,7 @@ namespace unity
 {
 namespace launcher
 {
+
 class AbstractLauncherIcon;
 class Launcher;
 class LauncherModel;
@@ -46,7 +47,7 @@ public:
   nux::Property<Options::Ptr> options;
   nux::Property<bool> multiple_launchers;
 
-  Controller(Display* display);
+  Controller();
   ~Controller();
 
   Launcher& launcher() const;
@@ -59,8 +60,6 @@ public:
   std::vector<AbstractLauncherIcon::Ptr> GetAltTabIcons(bool current, bool show_deskop_disabled) const;
 
   void PushToFront();
-
-  void SetShowDesktopIcon(bool show_desktop_icon);
 
   bool AboutToShowDash(int was_tap, int when) const;
 

@@ -1,10 +1,11 @@
-unity (6.4.0-0ubuntu7) UNRELEASED; urgency=low
+unity (6.6.0-0ubuntu1) UNRELEASED; urgency=low
 
   * debian/control:
     - build-dep on libzeitgeist-dev and libunity-dev
     - bump because of ABI breakage build-dep on compiz and nux
+  * New upstream release.
 
- -- Didier Roche <didrocks@ubuntu.com>  Mon, 17 Sep 2012 14:27:03 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 20 Sep 2012 16:56:38 +0200
 
 unity (6.4.0-0ubuntu6) quantal; urgency=low
 

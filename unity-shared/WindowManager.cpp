@@ -48,6 +48,11 @@ class WindowManagerDummy : public WindowManager
     g_debug("%s", G_STRFUNC);
   }
 
+  bool InShowDesktop() const
+  {
+    return false;
+  }
+
   bool IsWindowMaximized(guint32 xid) const
   {
     return false;
@@ -239,6 +244,11 @@ class WindowManagerDummy : public WindowManager
 
   void AddProperties(GVariantBuilder* builder)
   {
+  }
+
+  std::string GetWindowName(guint32 xid) const
+  {
+      return "unknown";
   }
 };
 

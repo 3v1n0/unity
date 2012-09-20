@@ -77,8 +77,11 @@ TEST(TestPreviews, DeserializeGenericWithMeta)
   unity_protocol_preview_set_description(proto_obj, "Description");
   unity_protocol_preview_set_image(proto_obj, icon);
   unity_protocol_preview_set_image_source_uri(proto_obj, "Source");
+
+  GHashTable* hints = g_hash_table_new(g_str_hash, g_str_equal);
+  g_hash_table_insert(hints, g_strdup("extra-text"), g_variant_new_string("Foo"));
   unity_protocol_preview_add_action(proto_obj, "action1", "Action #1", NULL, 0);
-  unity_protocol_preview_add_action(proto_obj, "action2", "Action #2", NULL, 0);
+  unity_protocol_preview_add_action_with_hints(proto_obj, "action2", "Action #2", NULL, 0, hints);
   unity_protocol_preview_add_info_hint(proto_obj, "hint1", "Hint 1", NULL, g_variant_new("i", 34));
   unity_protocol_preview_add_info_hint(proto_obj, "hint2", "Hint 2", NULL, g_variant_new("s", "string hint"));
 
@@ -106,11 +109,13 @@ TEST(TestPreviews, DeserializeGenericWithMeta)
   EXPECT_EQ(action1->display_name, "Action #1");
   EXPECT_EQ(action1->icon_hint, "");
   EXPECT_EQ(action1->layout_hint, 0);
+  EXPECT_EQ(action1->extra_text, "");
 
   auto action2 = actions[1];
   EXPECT_EQ(action2->id, "action2");
   EXPECT_EQ(action2->display_name, "Action #2");
   EXPECT_EQ(action2->icon_hint, "");
+  EXPECT_EQ(action2->extra_text, "Foo");
 
   EXPECT_EQ(info_hints.size(), 2);
   auto hint1 = info_hints[0];

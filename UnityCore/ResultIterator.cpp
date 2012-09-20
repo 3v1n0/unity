@@ -34,7 +34,6 @@ ResultIterator::ResultIterator(glib::Object<DeeModel> model)
   , iter_(model ? dee_model_get_first_iter(model) : NULL)
   , tag_(NULL)
   , iter_result_(model_, iter_, tag_)
-  , cache_invalidated_(false)
 {
 }
 
@@ -43,7 +42,6 @@ ResultIterator::ResultIterator(glib::Object<DeeModel> model, DeeModelIter* iter,
   , iter_(iter)
   , tag_(tag)
   , iter_result_(model_, iter_, tag_)
-  , cache_invalidated_(false)
 {
 }
 
@@ -57,8 +55,7 @@ ResultIterator& ResultIterator::operator=(ResultIterator const& rhs)
   model_ = rhs.model_;
   iter_ = rhs.iter_;
   tag_ = rhs.tag_;
-  iter_result_ = Result(model_, iter_, tag_);
-  cache_invalidated_ = false;
+  iter_result_.SetTarget(model_, iter_, tag_);
 
   return *this;
 }
@@ -66,7 +63,6 @@ ResultIterator& ResultIterator::operator=(ResultIterator const& rhs)
 ResultIterator& ResultIterator::operator++()
 {
   iter_ = dee_model_next(model_, iter_);
-  cache_invalidated_ = true;
   return *this;
 }
 
@@ -78,7 +74,6 @@ ResultIterator& ResultIterator::operator+=(int count)
   for (int index = 0; index < count; index++)
     iter_ = dee_model_next(model_, iter_);
   
-  cache_invalidated_ = true;
   return *this;
 }
 
@@ -99,7 +94,6 @@ ResultIterator ResultIterator::operator+(int count) const
 ResultIterator& ResultIterator::operator--()
 {
   iter_ = dee_model_prev(model_, iter_);
-  cache_invalidated_ = true;
   return *this;
 }
 
@@ -111,7 +105,6 @@ ResultIterator& ResultIterator::operator-=(int count)
   for (int index = 0; index < count; index++)
     iter_ = dee_model_prev(model_, iter_);
 
-  cache_invalidated_ = true;
   return *this;
 }
 
@@ -131,8 +124,7 @@ ResultIterator ResultIterator::operator-(int count) const
 
 Result& ResultIterator::operator*()
 {
-  if (cache_invalidated_)
-    iter_result_ = Result(model_, iter_, tag_);
+  iter_result_.SetTarget(model_, iter_, tag_);
   return iter_result_;
 }
 

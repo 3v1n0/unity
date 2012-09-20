@@ -162,6 +162,16 @@ StaticCairoText::StaticCairoText(std::string const& text,
   SetAcceptKeyNavFocusOnMouseDown(false);
 }
 
+StaticCairoText::StaticCairoText(std::string const& text, bool escape_text,
+                                 NUX_FILE_LINE_DECL)
+  : View(NUX_FILE_LINE_PARAM)
+  , pimpl(new Impl(this, escape_text ? GetEscapedText(text) : text))
+{
+  SetMinimumSize(1, 1);
+  SetAcceptKeyNavFocusOnMouseDown(false);
+}
+
+
 StaticCairoText::~StaticCairoText()
 {
   delete pimpl;
@@ -298,11 +308,13 @@ void StaticCairoText::PostDraw(GraphicsEngine& gfxContext, bool forceDraw)
   // intentionally left empty
 }
 
-void StaticCairoText::SetText(std::string const& text)
+void StaticCairoText::SetText(std::string const& text, bool escape_text)
 {
-  if (pimpl->text_ != text)
+  std::string tmp_text = escape_text ? GetEscapedText(text) : text;
+
+  if (pimpl->text_ != tmp_text)
   {
-    pimpl->text_ = text;
+    pimpl->text_ = tmp_text;
     pimpl->need_new_extent_cache_ = true;
     pimpl->UpdateTexture();
     sigTextChanged.emit(this);
@@ -335,6 +347,11 @@ void StaticCairoText::SetMaximumWidth(int w)
 std::string StaticCairoText::GetText() const
 {
   return pimpl->text_;
+}
+
+std::string StaticCairoText::GetEscapedText(std::string const& text)
+{
+  return glib::String(g_markup_escape_text(text.c_str(), -1)).Str();
 }
 
 Color StaticCairoText::GetTextColor() const

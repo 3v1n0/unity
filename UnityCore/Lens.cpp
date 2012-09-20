@@ -79,7 +79,8 @@ public:
                         string const& results_model_name,
                         string const& global_results_model_name,
                         string const& categories_model_name,
-                        string const& filters_model_name);
+                        string const& filters_model_name,
+                        GVariantIter* hints_iter);
   void OnViewTypeChanged(ViewType view_type);
 
   void GlobalSearch(std::string const& search_string);
@@ -88,7 +89,8 @@ public:
   void ActivationReply(GVariant* parameters);
   void Preview(std::string const& uri);
   void ActivatePreviewAction(std::string const& action_id,
-                             std::string const& uri);
+                             std::string const& uri,
+                             Hints const& hints);
   void SignalPreview(std::string const& preview_uri,
                      glib::Variant const& preview_update,
                      glib::DBusProxy::ReplyCallback reply_cb);
@@ -112,6 +114,7 @@ public:
   Categories::Ptr const& categories() const;
   Filters::Ptr const& filters() const;
   bool connected() const;
+  bool provides_personal_content() const;
 
   string const& last_search_string() const { return last_search_string_; }
   string const& last_global_search_string() const { return last_global_search_string_; }
@@ -133,6 +136,7 @@ public:
   Categories::Ptr categories_;
   Filters::Ptr filters_;
   bool connected_;
+  bool provides_personal_content_;
 
   string private_connection_name_;
   string last_search_string_;
@@ -174,6 +178,7 @@ Lens::Impl::Impl(Lens* owner,
   , categories_(new Categories(model_type))
   , filters_(new Filters(model_type))
   , connected_(false)
+  , provides_personal_content_(false)
   , proxy_(NULL)
 {
   if (model_type == ModelType::REMOTE)
@@ -206,6 +211,7 @@ Lens::Impl::Impl(Lens* owner,
   owner_->categories.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::categories));
   owner_->filters.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::filters));
   owner_->connected.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::connected));
+  owner_->provides_personal_content.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::provides_personal_content));
   owner_->last_search_string.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::last_search_string));
   owner_->last_global_search_string.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::last_global_search_string));
   owner_->view_type.changed.connect(sigc::mem_fun(this, &Lens::Impl::OnViewTypeChanged));
@@ -389,7 +395,8 @@ void Lens::Impl::OnChanged(GVariant* parameters)
                      results_model_swarm_name,
                      global_results_model_swarm_name,
                      categories_model_swarm_name,
-                     filters_model_swarm_name);
+                     filters_model_swarm_name,
+                     hints_iter);
 
     if (models_changed) owner_->models_changed.emit();
   }
@@ -414,7 +421,8 @@ void Lens::Impl::UpdateProperties(bool search_in_global,
                                   string const& results_model_name,
                                   string const& global_results_model_name,
                                   string const& categories_model_name,
-                                  string const& filters_model_name)
+                                  string const& filters_model_name,
+                                  GVariantIter* hints_iter)
 {
   // Diff the properties received from those we have
   if (search_hint_ != search_hint)
@@ -433,6 +441,26 @@ void Lens::Impl::UpdateProperties(bool search_in_global,
   {
     visible_ = visible;
     owner_->visible.EmitChanged(visible_);
+  }
+
+  bool provides_personal_content = false;
+  gchar* key;
+  GVariant* value;
+
+  // g_variant_iter_loop manages the memory automatically, as long
+  // as the iteration is not stopped in the middle
+  while (g_variant_iter_loop(hints_iter, "{sv}", &key, &value))
+  {
+    if (g_strcmp0(key, "provides-personal-content") == 0)
+    {
+      provides_personal_content = g_variant_get_boolean(value) != FALSE;
+    }
+  }
+
+  if (provides_personal_content_ != provides_personal_content)
+  {
+    provides_personal_content_ = provides_personal_content;
+    owner_->provides_personal_content.EmitChanged(provides_personal_content_);
   }
 
   if (private_connection_name_ != private_connection_name)
@@ -472,6 +500,7 @@ void Lens::Impl::GlobalSearch(std::string const& search_string)
                             &b),
               sigc::mem_fun(this, &Lens::Impl::OnGlobalSearchFinished),
               global_search_cancellable_);
+
   g_variant_builder_clear(&b);
 }
 
@@ -581,7 +610,8 @@ void Lens::Impl::Preview(std::string const& uri)
 }
 
 void Lens::Impl::ActivatePreviewAction(std::string const& action_id,
-                                       std::string const& uri)
+                                       std::string const& uri,
+                                       Hints const& hints)
 {
   LOG_DEBUG(logger) << "Activating action '" << action_id << "' on  '" << id_ << "'";
 
@@ -595,10 +625,35 @@ void Lens::Impl::ActivatePreviewAction(std::string const& action_id,
   activation_uri += ":";
   activation_uri += uri;
 
-  proxy_->Call("Activate",
-               g_variant_new("(su)", activation_uri.c_str(),
-                             UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_ACTION),
-               sigc::mem_fun(this, &Lens::Impl::ActivationReply));
+  if (hints.empty())
+  {
+    // FIXME: we should really be using the (sua{sv}) method all the time,
+    // but we're past freezes and having to logout and back in is
+    // too big of a deal after beta freeze
+    proxy_->Call("Activate",
+                 g_variant_new("(su)", activation_uri.c_str(),
+                               UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_ACTION),
+                 sigc::mem_fun(this, &Lens::Impl::ActivationReply));
+  }
+  else
+  {
+    GVariantBuilder b;
+    g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
+
+    for (auto it = hints.begin(); it != hints.end(); ++it)
+    {
+      GVariant* variant = it->second;
+      g_variant_builder_add(&b, "{sv}", it->first.c_str(), variant);
+    }
+
+    proxy_->Call("ActivateWithHints",
+                 g_variant_new("(sua{sv})", activation_uri.c_str(),
+                               UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_ACTION,
+                               &b),
+                 sigc::mem_fun(this, &Lens::Impl::ActivationReply));
+
+    g_variant_builder_clear(&b);
+  }
 }
 
 void Lens::Impl::SignalPreview(std::string const& preview_uri,
@@ -772,6 +827,11 @@ bool Lens::Impl::connected() const
   return connected_;
 }
 
+bool Lens::Impl::provides_personal_content() const
+{
+  return provides_personal_content_;
+}
+
 Lens::Lens(string const& id_,
            string const& dbus_name_,
            string const& dbus_path_,
@@ -845,9 +905,10 @@ void Lens::Preview(std::string const& uri)
 }
 
 void Lens::ActivatePreviewAction(std::string const& action_id,
-                                 std::string const& uri)
+                                 std::string const& uri,
+                                 Hints const& hints)
 {
-  pimpl->ActivatePreviewAction(action_id, uri);
+  pimpl->ActivatePreviewAction(action_id, uri, hints);
 }
 
 void Lens::SignalPreview(std::string const& uri,

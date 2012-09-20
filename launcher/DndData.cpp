@@ -27,12 +27,12 @@
 #include <UnityCore/GLibWrapper.h>
 
 namespace unity {
-  
-void DndData::Fill(char* uris)
-{ 
+
+void DndData::Fill(const char* uris)
+{
   Reset();
-  
-  char* pch = strtok (uris, "\r\n");
+
+  const char* pch = strtok (const_cast<char*>(uris), "\r\n");
   while (pch)
   {
     glib::String content_type(g_content_type_guess(pch,

@@ -70,8 +70,8 @@ protected:
   void OnThumbnailError(std::string const& error_hint);
   bool OnFrameTimeout();
 
-  void IconLoaded(std::string const& texid, unsigned size, glib::Object<GdkPixbuf> const& pixbuf);
-  void TextureLoaded(std::string const& texid, unsigned size, glib::Object<GdkPixbuf> const& pixbuf);
+  void IconLoaded(std::string const& texid, int max_width, int max_height, glib::Object<GdkPixbuf> const& pixbuf);
+  void TextureLoaded(std::string const& texid, int max_width, int max_height, glib::Object<GdkPixbuf> const& pixbuf);
 
   void StartWaiting();
   void StopWaiting();
@@ -96,6 +96,9 @@ private:
   glib::Source::UniquePtr frame_timeout_;
   nux::Matrix4 rotate_matrix_;
   float rotation_;
+
+  typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
+  LayerPtr bg_layer_;
 };
 
 }

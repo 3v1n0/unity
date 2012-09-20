@@ -18,53 +18,50 @@
  */
 
 #include "DeviceLauncherSection.h"
+#include "DeviceNotificationDisplayImp.h"
+#include "DevicesSettings.h"
+#include "FileManagerOpenerImp.h"
+#include "VolumeImp.h"
 
 namespace unity
 {
 namespace launcher
 {
 
-DeviceLauncherSection::DeviceLauncherSection(AbstractVolumeMonitorWrapper::Ptr volume_monitor)
+DeviceLauncherSection::DeviceLauncherSection(AbstractVolumeMonitorWrapper::Ptr volume_monitor,
+                                             DevicesSettings::Ptr devices_settings)
   : monitor_(volume_monitor)
+  , devices_settings_(devices_settings)
+  , file_manager_opener_(new FileManagerOpenerImp)
+  , device_notification_display_(new DeviceNotificationDisplayImp)
 {
   monitor_->volume_added.connect(sigc::mem_fun(this, &DeviceLauncherSection::OnVolumeAdded));
   monitor_->volume_removed.connect(sigc::mem_fun(this, &DeviceLauncherSection::OnVolumeRemoved));
-  
-  device_populate_idle_.Run([&] () {
-    PopulateEntries();
-    return false;
-  });
+
+  PopulateEntries();
 }
 
 void DeviceLauncherSection::PopulateEntries()
 {
   for (auto volume : monitor_->GetVolumes())
-  {
-    // Sanity check. Avoid duplicates.
-    if (map_.find(volume) != map_.end())
-      continue;
-
-    DeviceLauncherIcon::Ptr icon(new DeviceLauncherIcon(volume));
-
-    map_[volume] = icon;
-    IconAdded.emit(icon);
-  }
+    TryToCreateAndAddIcon(volume);
 }
 
-/* Uses a std::map to track all the volume icons shown and not shown.
- * Keep in mind: when "volume-removed" is recevied we should erase
- * the pair (GVolume - DeviceLauncherIcon) from the std::map to avoid leaks
- */
 void DeviceLauncherSection::OnVolumeAdded(glib::Object<GVolume> const& volume)
 {
-  // Sanity check. Avoid duplicates.
+  TryToCreateAndAddIcon(volume);
+}
+
+void DeviceLauncherSection::TryToCreateAndAddIcon(glib::Object<GVolume> volume)
+{
   if (map_.find(volume) != map_.end())
     return;
 
-  DeviceLauncherIcon::Ptr icon(new DeviceLauncherIcon(volume));
+  auto vol = std::make_shared<VolumeImp>(volume, file_manager_opener_, device_notification_display_);
+  VolumeLauncherIcon::Ptr icon(new VolumeLauncherIcon(vol, devices_settings_));
 
   map_[volume] = icon;
-  IconAdded.emit(icon);
+  icon_added.emit(icon);
 }
 
 void DeviceLauncherSection::OnVolumeRemoved(glib::Object<GVolume> const& volume)
@@ -73,12 +70,18 @@ void DeviceLauncherSection::OnVolumeRemoved(glib::Object<GVolume> const& volume)
 
   // Sanity check
   if (volume_it != map_.end())
-  {
-    volume_it->second->OnRemoved();
     map_.erase(volume_it);
-  }
 }
 
-} // namespace launcher
-} // namespace unity
+std::vector<VolumeLauncherIcon::Ptr> DeviceLauncherSection::GetIcons() const
+{
+  std::vector<VolumeLauncherIcon::Ptr> icons;
 
+  for (auto const& it : map_)
+    icons.push_back(it.second);
+
+  return icons;
+}
+
+}
+}
