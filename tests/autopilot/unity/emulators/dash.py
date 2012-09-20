@@ -288,6 +288,14 @@ class Result(UnityIntrospectionObject):
         m.move(tx, ty)
         m.click(3)
 
+    def preview_key(self):
+        tx = self.x + (self.width / 2)
+        ty = self.y + (self.height / 2)
+        m = Mouse()
+        m.move(tx, ty)
+
+        k = Keyboard()
+        k.press_and_release('Menu')
 
 class FilterBar(UnityIntrospectionObject):
     """A filterbar, as shown inside a lens."""

@@ -759,6 +759,21 @@ class PreviewInvocationTests(DashTestCase):
 
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
 
+    def test_preview_key(self):
+        """Right-clicking on an application lens result must show
+        its preview.
+
+        """
+        lens = self.dash.reveal_application_lens()
+        self.addCleanup(self.dash.ensure_hidden)
+
+        category = lens.get_category_by_name("Installed")
+        results = category.get_results()
+        result = results[0]
+        # result.preview_key() handles finding xy co-ords and key press
+        result.preview_key()
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
+
 
 class PreviewNavigateTests(DashTestCase):
     """Tests that mouse navigation works with previews."""
