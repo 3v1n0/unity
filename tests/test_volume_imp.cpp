@@ -98,10 +98,13 @@ TEST_F(TestVolumeImp, TestGetIconName)
 
 TEST_F(TestVolumeImp, TestGetIdentifier)
 {
-  std::string const uuid("0123456789abc");
+  std::string const uuid = "uuid";
+  std::string const label = "label";
 
   g_mock_volume_set_uuid(gvolume_, uuid.c_str());
-  EXPECT_EQ(volume_->GetIdentifier(), uuid);
+  g_mock_volume_set_label(gvolume_, label.c_str());
+
+  EXPECT_EQ(volume_->GetIdentifier(), uuid + "-" + label);
 }
 
 TEST_F(TestVolumeImp, TestIsMounted)

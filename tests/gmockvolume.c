@@ -61,6 +61,12 @@ g_mock_volume_dispose (GObject *object)
     self->uuid = NULL;
   }
 
+  if (self->label)
+  {
+    g_free(self->label);
+    self->label = NULL;
+  }
+
   if (self->mount)
   {
     g_object_unref(self->mount);
@@ -86,6 +92,7 @@ g_mock_volume_init (GMockVolume *mock_volume)
   guint32 uuid = g_random_int();
   mock_volume->name = g_strdup_printf("MockVolume %u", uuid);
   mock_volume->icon = g_icon_new_for_string("", NULL);
+  mock_volume->label = g_strdup("");
   mock_volume->uuid = g_strdup_printf("%u", uuid);
   mock_volume->mount = NULL;
 }
@@ -151,6 +158,15 @@ g_mock_volume_get_uuid (GVolume *volume)
 {
   GMockVolume *self = G_MOCK_VOLUME (volume);
   return g_strdup (self->uuid);
+}
+
+void
+g_mock_volume_set_label (GMockVolume *volume, const char* label)
+{
+  if (volume->label)
+    g_free(volume->label);
+
+  volume->label = g_strdup (label);
 }
 
 static GDrive *
@@ -254,6 +270,8 @@ g_mock_volume_get_identifier (GVolume     *volume,
 
   if (!g_strcmp0 (kind, G_VOLUME_IDENTIFIER_KIND_UUID))
     return g_strdup (self->uuid);
+  else if (!g_strcmp0 (kind, G_VOLUME_IDENTIFIER_KIND_LABEL))
+    return g_strdup (self->label);
 
   return NULL;
 }
