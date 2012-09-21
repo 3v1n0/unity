@@ -56,7 +56,7 @@ BackgroundEffectHelper::BackgroundEffectHelper()
   
   if (Settings::Instance().GetLowGfxMode())
   {
-    nux::Property<BlurType> BackgroundEffectHelper::blur_type(BLUR_NONE);
+    blur_type(BLUR_NONE);
   }
 
   Register(this);
