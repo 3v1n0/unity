@@ -63,6 +63,10 @@ class BFBLauncherIcon(SimpleLauncherIcon):
     """Represents the BFB button in the launcher."""
 
 
+class ExpoLauncherIcon(SimpleLauncherIcon):
+    """Represents the Expo button in the launcher."""
+
+
 class HudLauncherIcon(SimpleLauncherIcon):
     """Represents the HUD button in the launcher."""
 
