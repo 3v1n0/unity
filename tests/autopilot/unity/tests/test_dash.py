@@ -760,7 +760,7 @@ class PreviewInvocationTests(DashTestCase):
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
 
     def test_preview_key(self):
-        """Right-clicking on an application lens result must show
+        """Pressing menu key on a selected dash result must show
         its preview.
 
         """
