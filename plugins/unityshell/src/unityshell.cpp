@@ -3502,13 +3502,14 @@ void UnityWindow::RenderText(CairoContext const& context, int x, int y, int widt
   int text_width = lRect.width / PANGO_SCALE;
   int text_height = lRect.height / PANGO_SCALE;
   y += (height - text_height) / 2.0f;
+  int text_space = width - x;
 
-  if (text_width > width)
+  if (text_width > text_space)
   {
     // Cut the text with fade
-    int out_pixels = text_width - width;
+    int out_pixels = text_width - text_space;
     const int fading_pixels = 35;
-    int fading_width = out_pixels < fading_pixels ? out_pixels : fading_pixels;
+    int fading_width = (out_pixels < fading_pixels) ? out_pixels : fading_pixels;
 
     cairo_push_group(context.cr_);
     gtk_render_layout(style_context, context.cr_, x, y, layout);
@@ -3567,7 +3568,7 @@ void UnityWindow::DrawWindowDecoration(GLWindowPaintAttrib const& attrib,
   {
     // Draw windows title
     const float xText = SCALE_ITEMS_PADDING * 2 + SCALE_CLOSE_ICON_SIZE;
-    RenderText(context, xText, 0.0, width - xText - SCALE_ITEMS_PADDING, height);
+    RenderText(context, xText, 0.0, width - SCALE_ITEMS_PADDING, height);
   }
 
   mask |= PAINT_WINDOW_BLEND_MASK;
