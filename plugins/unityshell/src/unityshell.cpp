@@ -3481,8 +3481,6 @@ void UnityWindow::RenderText(CairoContext const& context, int x, int y, int widt
 
   /* update the size of the pango layout */
   pango_cairo_update_layout(context.cr_, layout);
-  cairo_set_operator(context.cr_, CAIRO_OPERATOR_OVER);
-  cairo_set_source_rgba(context.cr_, 1.0, 1.0, 1.0, 1.0);
 
   GtkStyleContext* style_context = style.GetStyleContext();
   gtk_style_context_save(style_context);
