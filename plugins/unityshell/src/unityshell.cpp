@@ -3548,12 +3548,17 @@ void UnityWindow::DrawWindowDecoration(GLWindowPaintAttrib const& attrib,
   CairoContext context(width, height);
 
   cairo_save(context.cr_);
+
+  // Draw window decoration based on gtk style
   cairo_push_group(context.cr_);
+  auto& style = panel::Style::Instance();
+  gtk_render_background(style.GetStyleContext(), context.cr_, 0, 0, width, height);
+  gtk_render_frame(style.GetStyleContext(), context.cr_, 0, 0, width, height);
+  cairo_pop_group_to_source(context.cr_);
 
   // Round window decoration top border
-  const double aspect = 1.0;
-  const double corner_radius = height / 10.0;
-  const double radius = corner_radius / aspect;
+  const double aspect = highlighted ? 1.0f : ScaleWindow::get(window)->getCurrentPosition().scale;
+  const double radius = 5.0 * aspect;
   const double degrees = M_PI / 180.0;
 
   cairo_new_sub_path(context.cr_);
@@ -3564,16 +3569,8 @@ void UnityWindow::DrawWindowDecoration(GLWindowPaintAttrib const& attrib,
   cairo_line_to(context.cr_, 0, height);
 
   cairo_close_path(context.cr_);
-  cairo_clip(context.cr_);
+  cairo_fill(context.cr_);
 
-  // Draw window decoration based on gtk style
-  auto& style = panel::Style::Instance();
-  gtk_render_background(style.GetStyleContext(), context.cr_, 0, 0, width, height);
-  gtk_render_frame(style.GetStyleContext(), context.cr_, 0, 0, width, height);
-
-  cairo_pop_group_to_source(context.cr_);
-
-  cairo_paint_with_alpha(context.cr_, 1.0);
   cairo_restore(context.cr_);
 
   if (highlighted)
