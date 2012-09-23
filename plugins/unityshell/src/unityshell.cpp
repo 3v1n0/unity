@@ -3426,49 +3426,35 @@ UnityWindow::UnityWindow(CompWindow* window)
   WindowManager::Default()->terminate_spread.connect(sigc::mem_fun(this, &UnityWindow::OnTerminateSpreed));
 }
 
-void
-UnityWindow::DrawTexture(GLTexture* icon,
-                         const GLWindowPaintAttrib& attrib,
-                         const GLMatrix& transform,
-                         unsigned int mask,
-                         float x, float y,
-                         int &maxWidth, int &maxHeight)
+void UnityWindow::DrawTexture(GLTexture::List const& textures, GLWindowPaintAttrib const& attrib,
+                              GLMatrix const& transform, unsigned int mask, int x, int y)
 {
-  if (icon)
+  for (auto const& texture : textures)
   {
-    int width, height;
-    width  = icon->width();
-    height = icon->height();
+    if (!texture)
+      continue;
 
-    if (height > maxHeight)
-      maxHeight = height;
-
-    if (width > maxWidth)
-      maxWidth = width;
-
-    CompRegion iconReg(0, 0, width, height);
-    GLTexture::MatrixList ml(1);
-
-    ml[0] = icon->matrix();
     gWindow->vertexBuffer()->begin();
-    if (width && height)
-      gWindow->glAddGeometry(ml, iconReg, iconReg);
+
+    if (texture->width() && texture->height())
+    {
+      GLTexture::MatrixList ml(1);
+      ml[0] = texture->matrix();
+      CompRegion texture_region(0, 0, texture->width(), texture->height());
+      gWindow->glAddGeometry(ml, texture_region, texture_region);
+    }
 
     if (gWindow->vertexBuffer()->end())
     {
       GLMatrix wTransform(transform);
-
       wTransform.translate(x, y, 0.0f);
 
-      gWindow->glDrawTexture(icon, wTransform, attrib, mask);
+      gWindow->glDrawTexture(texture, wTransform, attrib, mask);
     }
   }
 }
 
-void
-UnityWindow::RenderText(UnityWindow::CairoContext const& context,
-                        float x, float y,
-                        float maxWidth, float maxHeight)
+void UnityWindow::RenderText(CairoContext const& context, int x, int y, int width, int height)
 {
   panel::Style& style = panel::Style::Instance();
   std::string fontDescription(style.GetFontDescription(panel::PanelItem::TITLE));
@@ -3480,53 +3466,46 @@ UnityWindow::RenderText(UnityWindow::CairoContext const& context,
   pango_layout_set_font_description(layout, font.get());
 
   GdkScreen* gdkScreen = gdk_screen_get_default();
-  PangoContext* pCxt = pango_layout_get_context(layout);
+  PangoContext* pango_ctx = pango_layout_get_context(layout);
   int dpi = style.GetTextDPI();
 
-  pango_cairo_context_set_font_options(pCxt, gdk_screen_get_font_options(gdkScreen));
-  pango_cairo_context_set_resolution(pCxt, dpi / static_cast<float>(PANGO_SCALE));
+  pango_cairo_context_set_font_options(pango_ctx, gdk_screen_get_font_options(gdkScreen));
+  pango_cairo_context_set_resolution(pango_ctx, dpi / static_cast<float>(PANGO_SCALE));
   pango_layout_context_changed(layout);
 
-  pango_layout_set_height(layout, maxHeight);
+  std::string const& win_title = WindowManager::Default()->GetWindowName(window->id());
+  pango_layout_set_height(layout, height);
   pango_layout_set_width(layout, -1); //avoid wrap lines
   pango_layout_set_auto_dir(layout, false);
-  pango_layout_set_text(layout,
-                        WindowManager::Default()->GetWindowName(window->id()).c_str(),
-                        -1);
+  pango_layout_set_text(layout, win_title.c_str(), -1);
 
   /* update the size of the pango layout */
   pango_cairo_update_layout(context.cr_, layout);
   cairo_set_operator(context.cr_, CAIRO_OPERATOR_OVER);
-  cairo_set_source_rgba(context.cr_,
-                        1.0,
-                        1.0,
-                        1.0,
-                        1.0);
+  cairo_set_source_rgba(context.cr_, 1.0, 1.0, 1.0, 1.0);
 
   // alignment
   PangoRectangle lRect;
-  int textWidth, textHeight;
+  pango_layout_get_extents(layout, nullptr, &lRect);
+  int text_width = lRect.width / PANGO_SCALE;
+  int text_height = lRect.height / PANGO_SCALE;
 
-  pango_layout_get_extents(layout, NULL, &lRect);
-  textWidth = lRect.width / PANGO_SCALE;
-  textHeight = lRect.height / PANGO_SCALE;
-
-  y = ((maxHeight - textHeight) / 2.0) + y;
+  y = ((height - text_height) / 2.0) + y;
   cairo_translate(context.cr_, x, y);
 
-  if (textWidth > maxWidth)
+  if (text_width > width)
   {
-    // apply a fade effect in the right corner
-    const int outPixels = textWidth - maxWidth;
-    const int fadingPixels = 35;
-    const int fadingWidth = outPixels < fadingPixels ? outPixels : fadingPixels;
+    // Cut the text with fade
+    int out_pixels = text_width - width;
+    const int fading_pixels = 35;
+    int fading_width = out_pixels < fading_pixels ? out_pixels : fading_pixels;
 
     cairo_push_group(context.cr_);
     pango_cairo_show_layout(context.cr_, layout);
     cairo_pop_group_to_source(context.cr_);
 
-    std::shared_ptr<cairo_pattern_t> linpat(cairo_pattern_create_linear(maxWidth - fadingWidth,
-                                                                        y, maxWidth, y),
+    std::shared_ptr<cairo_pattern_t> linpat(cairo_pattern_create_linear(width - fading_width,
+                                                                        y, width, y),
                                             cairo_pattern_destroy);
     cairo_pattern_add_color_stop_rgba(linpat.get(), 0, 0, 0, 0, 1);
     cairo_pattern_add_color_stop_rgba(linpat.get(), 1, 0, 0, 0, 0);
@@ -3581,10 +3560,7 @@ void UnityWindow::DrawWindowDecoration(GLWindowPaintAttrib const& attrib,
   }
 
   mask |= PAINT_WINDOW_BLEND_MASK;
-  int maxWidth, maxHeight;
-
-  for (GLTexture *icon : context.texture_)
-    DrawTexture(icon, attrib, transform, mask, x, y, maxWidth , maxHeight);
+  DrawTexture(context.texture_, attrib, transform, mask, x, y);
 }
 
 void UnityWindow::LoadCloseIcon(panel::WindowState state, GLTexture::List& texture)
@@ -3595,12 +3571,12 @@ void UnityWindow::LoadCloseIcon(panel::WindowState state, GLTexture::List& textu
   auto& style = panel::Style::Instance();
   auto const& files = style.GetWindowButtonFileNames(panel::WindowButtonType::CLOSE, state);
 
-  CompString pName("unityshell");
+  CompString plugin("unityshell");
   for (std::string const& file : files)
   {
-    CompString fileName(file.c_str());
+    CompString file_name = file;
     CompSize size(SCALE_CLOSE_ICON_SIZE, SCALE_CLOSE_ICON_SIZE);
-    texture = GLTexture::readImageToTexture(fileName, pName, size);
+    texture = GLTexture::readImageToTexture(file_name, plugin, size);
     if (!texture.empty())
       break;
   }
@@ -3613,9 +3589,9 @@ void UnityWindow::LoadCloseIcon(panel::WindowState state, GLTexture::List& textu
     else if (state == panel::WindowState::PRESSED)
       suffix = "_pressed";
 
-    CompString fileName((PKGDATADIR"/close_dash" + suffix + ".png").c_str());
+    CompString file_name(PKGDATADIR"/close_dash" + suffix + ".png");
     CompSize size(SCALE_CLOSE_ICON_SIZE, SCALE_CLOSE_ICON_SIZE);
-    texture = GLTexture::readImageToTexture(fileName, pName, size);
+    texture = GLTexture::readImageToTexture(file_name, plugin, size);
   }
 }
 
@@ -3632,15 +3608,17 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
                                        unsigned int mask)
 {
   ScaleWindow *scale_win = ScaleWindow::get(window);
-  if (!scale_win)
-    return;
-
   scale_win->scalePaintDecoration(attrib, transform, region, mask);
 
   if (!scale_win->hasSlot()) // animation not finished
     return;
 
   ScaleScreen* ss = ScaleScreen::get(screen);
+  auto state = ss->getState();
+
+  if (state != ScaleScreen::Wait && state != ScaleScreen::Out)
+    return;
+
   auto const& scaled_geo = GetScaledGeometry();
   auto const& decoration_extents = window->border();
   auto const& pos = scale_win->getCurrentPosition();
@@ -3650,6 +3628,7 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
   int height = decoration_extents.top;
   int x = scaled_geo.x;
   int y = scaled_geo.y;
+
 
   // If window is not highlighted, we draw the decoration at scaled size
   if (!highlighted)
@@ -3661,30 +3640,25 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
   {
     x += SCALE_ITEMS_PADDING;
     y += (height - SCALE_CLOSE_ICON_SIZE) / 2.0f;
-    int max_height = 0;
-    int max_width = 0;
     mask |= PAINT_WINDOW_BLEND_MASK;
 
     switch (close_icon_state_)
     {
       case panel::WindowState::NORMAL:
       default:
-        for (GLTexture *icon : close_normal_tex_)
-          DrawTexture(icon, attrib, transform, mask, x, y, max_width , max_height);
+        DrawTexture(close_normal_tex_, attrib, transform, mask, x, y);
         break;
 
       case panel::WindowState::PRELIGHT:
-        for (GLTexture *icon : close_prelight_tex_)
-          DrawTexture(icon, attrib, transform, mask, x, y, max_width , max_height);
+        DrawTexture(close_prelight_tex_, attrib, transform, mask, x, y);
         break;
 
       case panel::WindowState::PRESSED:
-        for (GLTexture *icon : close_pressed_tex_)
-          DrawTexture(icon, attrib, transform, mask, x, y, max_width , max_height);
+        DrawTexture(close_pressed_tex_, attrib, transform, mask, x, y);
         break;
     }
 
-    close_button_geo_.Set(x, y, max_height, max_width);
+    close_button_geo_.Set(x, y, SCALE_CLOSE_ICON_SIZE, SCALE_CLOSE_ICON_SIZE);
   }
   else if (!close_button_geo_.IsNull())
   {
