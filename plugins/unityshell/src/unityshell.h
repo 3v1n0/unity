@@ -450,20 +450,12 @@ private:
 
   compiz::WindowInputRemoverLock::Ptr GetInputRemover ();
 
-  void DrawWindowDecoration(GLWindowPaintAttrib const& attrib,
-                            GLMatrix const& transform,
-                            unsigned int mask,
-                            bool highlighted,
+  void DrawWindowDecoration(GLWindowPaintAttrib const& attrib, GLMatrix const& transform,
+                            unsigned int mask, bool highlighted,
                             int x, int y, unsigned width, unsigned height);
-  void DrawTexture(GLTexture *icon,
-                   const GLWindowPaintAttrib& attrib,
-                   const GLMatrix& transform,
-                   unsigned int mask,
-                   float x, float y,
-                   int &maxWidth, int &maxHeight);
-  void RenderText(CairoContext const& context,
-                  float x, float y,
-                  float maxWidth, float maxHeight);
+  void DrawTexture(GLTexture::List const& textures, GLWindowPaintAttrib const& attrib,
+                   GLMatrix const& transform, unsigned int mask, int x, int y);
+  void RenderText(CairoContext const& context, int x, int y, int width, int height);
 
   void SetupScaleHeaderStyle();
   void LoadCloseIcon(panel::WindowState state, GLTexture::List& texture);
