@@ -3705,8 +3705,8 @@ nux::Geometry UnityWindow::GetScaledGeometry()
 
   const unsigned width = std::floor(border_rect.width() * pos.scale);
   const unsigned height = std::floor(border_rect.height() * pos.scale);
-  int x = pos.x() + border_rect.x();
-  const int y = pos.y() + border_rect.y() + deco_ext.top - std::floor(deco_ext.top * pos.scale) - 1;
+  const int x = pos.x() + window->x() - std::floor(deco_ext.left * pos.scale);
+  const int y = pos.y() + window->y() - std::floor(deco_ext.top * pos.scale);
 
   return nux::Geometry(x, y, width, height);
 }
