@@ -3537,7 +3537,7 @@ void UnityWindow::DrawWindowDecoration(GLWindowPaintAttrib const& attrib,
 
   // Round window decoration top border
   const double aspect = highlighted ? 1.0f : ScaleWindow::get(window)->getCurrentPosition().scale;
-  const double radius = 5.0 * aspect;
+  const double radius = 8.0 * aspect;
   const double degrees = M_PI / 180.0;
 
   cairo_new_sub_path(context.cr_);
