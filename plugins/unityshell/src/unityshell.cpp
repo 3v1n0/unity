@@ -3457,19 +3457,19 @@ void UnityWindow::DrawTexture(GLTexture::List const& textures, GLWindowPaintAttr
 void UnityWindow::RenderText(CairoContext const& context, int x, int y, int width, int height)
 {
   panel::Style& style = panel::Style::Instance();
-  std::string fontDescription(style.GetFontDescription(panel::PanelItem::TITLE));
+  std::string const& font_desc = style.GetFontDescription(panel::PanelItem::TITLE);
 
   glib::Object<PangoLayout> layout(pango_cairo_create_layout(context.cr_));
-  std::shared_ptr<PangoFontDescription> font(pango_font_description_from_string(fontDescription.c_str()),
+  std::shared_ptr<PangoFontDescription> font(pango_font_description_from_string(font_desc.c_str()),
                                              pango_font_description_free);
 
   pango_layout_set_font_description(layout, font.get());
 
-  GdkScreen* gdkScreen = gdk_screen_get_default();
+  GdkScreen* gdk_screen = gdk_screen_get_default();
   PangoContext* pango_ctx = pango_layout_get_context(layout);
   int dpi = style.GetTextDPI();
 
-  pango_cairo_context_set_font_options(pango_ctx, gdk_screen_get_font_options(gdkScreen));
+  pango_cairo_context_set_font_options(pango_ctx, gdk_screen_get_font_options(gdk_screen));
   pango_cairo_context_set_resolution(pango_ctx, dpi / static_cast<float>(PANGO_SCALE));
   pango_layout_context_changed(layout);
 
@@ -3484,14 +3484,24 @@ void UnityWindow::RenderText(CairoContext const& context, int x, int y, int widt
   cairo_set_operator(context.cr_, CAIRO_OPERATOR_OVER);
   cairo_set_source_rgba(context.cr_, 1.0, 1.0, 1.0, 1.0);
 
+  GtkStyleContext* style_context = style.GetStyleContext();
+  gtk_style_context_save(style_context);
+
+  std::shared_ptr<GtkWidgetPath> widget_path(gtk_widget_path_new(), gtk_widget_path_free);
+  gtk_widget_path_append_type(widget_path.get(), GTK_TYPE_MENU_BAR);
+  gtk_widget_path_append_type(widget_path.get(), GTK_TYPE_MENU_ITEM);
+  gtk_widget_path_iter_set_name(widget_path.get(), -1 , "UnityPanelWidget");
+
+  gtk_style_context_set_path(style_context, widget_path.get());
+  gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUBAR);
+  gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUITEM);
+
   // alignment
   PangoRectangle lRect;
   pango_layout_get_extents(layout, nullptr, &lRect);
   int text_width = lRect.width / PANGO_SCALE;
   int text_height = lRect.height / PANGO_SCALE;
-
-  y = ((height - text_height) / 2.0) + y;
-  cairo_translate(context.cr_, x, y);
+  y += (height - text_height) / 2.0f;
 
   if (text_width > width)
   {
@@ -3501,11 +3511,10 @@ void UnityWindow::RenderText(CairoContext const& context, int x, int y, int widt
     int fading_width = out_pixels < fading_pixels ? out_pixels : fading_pixels;
 
     cairo_push_group(context.cr_);
-    pango_cairo_show_layout(context.cr_, layout);
+    gtk_render_layout(style_context, context.cr_, x, y, layout);
     cairo_pop_group_to_source(context.cr_);
 
-    std::shared_ptr<cairo_pattern_t> linpat(cairo_pattern_create_linear(width - fading_width,
-                                                                        y, width, y),
+    std::shared_ptr<cairo_pattern_t> linpat(cairo_pattern_create_linear(width - fading_width, y, width, y),
                                             cairo_pattern_destroy);
     cairo_pattern_add_color_stop_rgba(linpat.get(), 0, 0, 0, 0, 1);
     cairo_pattern_add_color_stop_rgba(linpat.get(), 1, 0, 0, 0, 0);
@@ -3513,8 +3522,10 @@ void UnityWindow::RenderText(CairoContext const& context, int x, int y, int widt
   }
   else
   {
-    pango_cairo_show_layout(context.cr_, layout);
+    gtk_render_layout(style_context, context.cr_, x, y, layout);
   }
+
+  gtk_style_context_restore(style_context);
 }
 
 void UnityWindow::DrawWindowDecoration(GLWindowPaintAttrib const& attrib,
