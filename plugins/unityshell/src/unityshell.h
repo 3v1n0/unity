@@ -457,8 +457,9 @@ private:
                    GLMatrix const& transform, unsigned int mask, int x, int y);
   void RenderText(CairoContext const& context, int x, int y, int width, int height);
 
-  void SetupScaleHeaderStyle();
-  void LoadCloseIcon(panel::WindowState state, GLTexture::List& texture);
+  static void SetupSharedTextures();
+  static void CleanupSharedTextures();
+  static void LoadCloseIcon(panel::WindowState state, GLTexture::List& texture);
 
   static GLTexture::List close_normal_tex_;
   static GLTexture::List close_prelight_tex_;
@@ -468,6 +469,8 @@ private:
   nux::Geometry close_button_geo_;
   bool middle_clicked_;
   glib::Source::UniquePtr focus_desktop_timeout_;
+
+  friend class UnityScreen;
 };
 
 

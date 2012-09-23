@@ -649,10 +649,20 @@ UnityWindow::updateIconPos (int   &wx,
   wy = y + (last_bound.height - height) / 2;
 }
 
-void
-UnityScreen::OnPanelStyleChanged()
+void UnityScreen::OnPanelStyleChanged()
 {
   panel_texture_has_changed_ = true;
+
+  // Reload the windows themed textures
+  UnityWindow::CleanupSharedTextures();
+
+  if (WindowManager::Default()->IsScaleActive())
+  {
+    UnityWindow::SetupSharedTextures();
+
+    for (auto const& swin : ScaleScreen::get(screen)->getWindows())
+      UnityWindow::get(swin->window)->decoration_tex_.clear();
+  }
 }
 
 void UnityScreen::paintDisplay()
@@ -3605,11 +3615,18 @@ void UnityWindow::LoadCloseIcon(panel::WindowState state, GLTexture::List& textu
   }
 }
 
-void UnityWindow::SetupScaleHeaderStyle()
+void UnityWindow::SetupSharedTextures()
 {
   LoadCloseIcon(panel::WindowState::NORMAL, close_normal_tex_);
   LoadCloseIcon(panel::WindowState::PRELIGHT, close_prelight_tex_);
   LoadCloseIcon(panel::WindowState::PRESSED, close_pressed_tex_);
+}
+
+void UnityWindow::CleanupSharedTextures()
+{
+  close_normal_tex_.clear();
+  close_prelight_tex_.clear();
+  close_pressed_tex_.clear();
 }
 
 void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
