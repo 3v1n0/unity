@@ -3553,13 +3553,13 @@ void UnityWindow::DrawWindowDecoration(GLWindowPaintAttrib const& attrib,
   const double degrees = M_PI / 180.0;
 
   cairo_new_sub_path(context.cr_);
-
-  cairo_arc(context.cr_, radius, radius, radius, 180 * degrees, 270 * degrees);
-  cairo_arc(context.cr_, width - radius, radius, radius, -90 * degrees, 0 * degrees);
-  cairo_line_to(context.cr_, width, height);
-  cairo_line_to(context.cr_, 0, height);
-
+  cairo_line_to(context.cr_, 0, context.h_);
+  cairo_arc(context.cr_, radius, radius, radius, M_PI, -M_PI * 0.5f);
+  cairo_line_to(context.cr_, context.w_ - radius, 0);
+  cairo_arc(context.cr_, context.w_ - radius, radius, radius, M_PI * 0.5f, 0);
+  cairo_line_to(context.cr_, context.w_, context.h_);
   cairo_close_path(context.cr_);
+
   cairo_fill(context.cr_);
 
   cairo_restore(context.cr_);
