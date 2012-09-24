@@ -670,7 +670,7 @@ void UnityScreen::OnPanelStyleChanged()
     UnityWindow::SetupSharedTextures();
 
     for (auto const& swin : ScaleScreen::get(screen)->getWindows())
-      UnityWindow::get(swin->window)->decoration_tex_.clear();
+      UnityWindow::get(swin->window)->CleanupCachedTextures();
   }
 }
 
@@ -3595,11 +3595,11 @@ void UnityWindow::RenderText(CairoContext const& context, int x, int y, int widt
   pango_cairo_context_set_resolution(pango_ctx, dpi / static_cast<float>(PANGO_SCALE));
   pango_layout_context_changed(layout);
 
-  std::string const& win_title = WindowManager::Default()->GetWindowName(window->id());
+  decoration_title_ = WindowManager::Default()->GetWindowName(window->id());
   pango_layout_set_height(layout, height);
   pango_layout_set_width(layout, -1); //avoid wrap lines
   pango_layout_set_auto_dir(layout, false);
-  pango_layout_set_text(layout, win_title.c_str(), -1);
+  pango_layout_set_text(layout, decoration_title_.c_str(), -1);
 
   /* update the size of the pango layout */
   pango_cairo_update_layout(context.cr_, layout);
@@ -3710,6 +3710,13 @@ void UnityWindow::CleanupSharedTextures()
   close_pressed_tex_.clear();
 }
 
+void UnityWindow::CleanupCachedTextures()
+{
+  decoration_tex_.clear();
+  decoration_selected_tex_.clear();
+  decoration_title_.clear();
+}
+
 void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
                                        GLMatrix const& transform,
                                        CompRegion const& region,
@@ -3745,17 +3752,33 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
   else
   {
     auto const& decoration_extents = window->border();
-    unsigned width = scaled_geo.width;
-    unsigned height = decoration_extents.top;
+    int width = scaled_geo.width;
+    int height = decoration_extents.top;
+    bool redraw_decoration = true;
 
-    CairoContext context(width, height);
-    RenderDecoration(context, pos.scale);
+    if (!decoration_selected_tex_.empty())
+    {
+      GLTexture* texture = decoration_selected_tex_.front();
 
-    // Draw windows title
-    int text_x = scale::decoration::ITEMS_PADDING * 2 + scale::decoration::CLOSE_SIZE;
-    RenderText(context, text_x, 0.0, width - scale::decoration::ITEMS_PADDING, height);
+      if (texture->width() == width && texture->height() == height)
+      {
+        if (decoration_title_ == WindowManager::Default()->GetWindowName(window->id()))
+          redraw_decoration = false;
+      }
+    }
 
-    DrawTexture(context.texture_, attrib, transform, mask, x, y);
+    if (redraw_decoration)
+    {
+      CairoContext context(width, height);
+      RenderDecoration(context, pos.scale);
+
+      // Draw window title
+      int text_x = scale::decoration::ITEMS_PADDING * 2 + scale::decoration::CLOSE_SIZE;
+      RenderText(context, text_x, 0.0, width - scale::decoration::ITEMS_PADDING, height);
+      decoration_selected_tex_ = context.texture_;
+    }
+
+    DrawTexture(decoration_selected_tex_, attrib, transform, mask, x, y);
 
     x += scale::decoration::ITEMS_PADDING;
     y += (height - scale::decoration::CLOSE_SIZE) / 2.0f;
@@ -3817,7 +3840,7 @@ void UnityWindow::OnTerminateSpread()
   if (wm->IsWindowDecorated(xid) && wm->IsWindowMaximized(xid))
     wm->Undecorate(xid);
 
-  decoration_tex_.clear();
+  CleanupCachedTextures();
 }
 
 UnityWindow::~UnityWindow()

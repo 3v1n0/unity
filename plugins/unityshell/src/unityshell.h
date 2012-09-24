@@ -445,6 +445,7 @@ private:
                    GLMatrix const&, unsigned mask, int x, int y, double scale = 1.0f);
 
   void BuildDecorationTexture();
+  void CleanupCachedTextures();
   static void SetupSharedTextures();
   static void CleanupSharedTextures();
   static void LoadCloseIcon(panel::WindowState state, GLTexture::List& texture);
@@ -458,6 +459,8 @@ private:
   static GLTexture::List close_prelight_tex_;
   static GLTexture::List close_pressed_tex_;
   GLTexture::List decoration_tex_;
+  GLTexture::List decoration_selected_tex_;
+  std::string decoration_title_;
   compiz::WindowInputRemoverLock::Weak input_remover_;
   panel::WindowState close_icon_state_;
   nux::Geometry close_button_geo_;
