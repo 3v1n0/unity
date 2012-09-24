@@ -17,7 +17,7 @@ class SimpleLauncherIcon(UnityIntrospectionObject):
     """Holds information about a simple launcher icon.
 
     Do not instantiate an instance of this class yourself. Instead, use the
-    appearopriate methods in the Launcher class instead.
+    appropriate methods in the Launcher class instead.
 
     """
 
