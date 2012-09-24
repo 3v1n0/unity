@@ -33,7 +33,6 @@ using namespace testing;
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/IconRenderer.h"
 #include "test_utils.h"
-using namespace unity;
 
 namespace unity
 {
@@ -208,6 +207,14 @@ public:
   LauncherModel::Ptr model_;
   Options::Ptr options_;
   nux::ObjectPtr<MockLauncher> launcher_;
+};
+
+struct TestWindowCompositor
+{
+  static void SetMousePosition(int x, int y)
+  {
+    nux::GetWindowCompositor()._mouse_position = nux::Point(x, y);
+  }
 };
 
 TEST_F(TestLauncher, TestQuirksDuringDnd)
@@ -433,6 +440,34 @@ TEST_F(TestLauncher, DragLauncherIconSticksDeviceIcon)
 
   EXPECT_CALL(*device, Stick(false));
   launcher_->EndIconDrag();
+}
+
+TEST_F(TestLauncher, DragLauncherIconHidesOverLauncherEmitsMouseEnter)
+{
+  bool mouse_entered = false;
+
+  launcher_->mouse_enter.connect([&mouse_entered] (int x, int y, unsigned long, unsigned long) {
+    mouse_entered = true;
+    EXPECT_EQ(x, 1);
+    EXPECT_EQ(y, 2);
+  });
+
+  auto const& abs_geo = launcher_->GetAbsoluteGeometry();
+  TestWindowCompositor::SetMousePosition(abs_geo.x + 1, abs_geo.y + 2);
+  launcher_->HideDragWindow();
+  EXPECT_TRUE(mouse_entered);
+}
+
+TEST_F(TestLauncher, DragLauncherIconHidesOutsideLauncherEmitsMouseEnter)
+{
+  bool mouse_entered = false;
+  launcher_->mouse_enter.connect([&mouse_entered] (int, int, unsigned long, unsigned long)
+                                 { mouse_entered = true; });
+
+  auto const& abs_geo = launcher_->GetAbsoluteGeometry();
+  TestWindowCompositor::SetMousePosition(abs_geo.x - 1, abs_geo.y - 2);
+  launcher_->HideDragWindow();
+  EXPECT_FALSE(mouse_entered);
 }
 
 TEST_F(TestLauncher, DndIsSpecialRequest)

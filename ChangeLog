@@ -1,3 +1,5640 @@
+2012-09-20  Didier Roche  <didier.roche@canonical.com>
+
+	Install Amazon and Ubuntu One Music Store webapp items in the launcher by default
+
+2012-09-20  Didier Roche  <didier.roche@canonical.com>
+
+	Install Amazon and Ubuntu One Music Store webapp items in the launcher by default
+
+2012-09-20  Nick Dedekind  <nick.dedekind@canonical.com>
+
+	Fixed pixel size of font (15px = 11pt) in Dash filter buttons.
+
+2012-09-20  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed pixel sized fonts in Filter buttons.
+
+2012-09-20  Nick Dedekind  <nick.dedekind@canonical.com>
+
+	Relayout Dash input window on form factor changes
+
+2012-09-20  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Relayout dash input window on form factor changes.
+
+2012-09-20  Marco Trevisan  <marco.trevisan@canonical.com>
+
+	Adds changes to the LauncherController to better handle favourites and the
+	expo icon.
+
+2012-09-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: fix new icon orders tests
+
+2012-09-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: update tests against to support the new expo icon behavior
+
+2012-09-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: save icons order again if the expo icon has been removed
+
+2012-09-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: reorder the expo icon to the proper position
+
+2012-09-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: ensure that we save favorites when the expo icon was not in the favorites
+	
+	this ensures us that in future we can safely disable workspaces, without creating
+	issues for upgraders
+
+2012-09-20  Omer Akram  <omer.akram@canonical.com>
+
+	remove two manual-tests, they are now obsolete
+
+2012-09-20  Omer Akram  <om26er@ubuntu.com>
+
+	remove two obsolete manual-tests
+
+2012-09-20  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	Clicking on Dash border should not close the dash
+
+2012-09-19  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Include missing header
+
+2012-09-19  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Clicking on the Dash boarder should not close it...fixes a failing AP test
+
+2012-09-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Implement "focus on hover" behavior for preview action buttons
+
+2012-09-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix typo.
+
+2012-09-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add manual test.
+
+2012-09-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Don't allow to have two highlighted action buttons.
+
+2012-09-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	ERROR ... unity.thumbnailgenerator ThumbnailGenerator.cpp:429 More than one
+	thumbnail generator created."
+
+2012-09-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix  "ERROR: More than one thumbnail generator created".
+
+2012-09-20  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	Fixes some unit tests
+
+2012-09-19  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Fix unit test crash
+	* Reduce the amount of warnings, due to the SoftwareCenter tests
+
+2012-09-20  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fixes renderering of Dash in maximised mode with redirected textures by using
+	the same code-patches as the restored Dash mode for the overlay.
+
+2012-09-19  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix Dash renderering on fullscreen
+
+2012-09-19  Marco Trevisan  <marco.trevisan@canonical.com>
+
+	Show workspace switcher icon always
+
+2012-09-19  Ken VanDine  <ken.vandine@canonical.com>
+
+	SocialPreview: Don't expand preview_info_hints, it was pushing down the
+	comments when there wasn't enough comments to fill the space
+
+2012-09-18  Ken VanDine  <ken.vandine@canonical.com>
+
+	SocialPreview: Don't expand preview_info_hints, it was pushing down the 
+	comments when there wasn't enough comments to fill the space
+
+2012-09-19  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Don't call GraphicsContext::DeactivateFramebuffer which will immediately
+	restore the backbuffer. Instead call WindowCompositor::RestoreMainFramebuffer
+	to bind either the backbuffer or reference framebuffer for reading as that is
+	the one we're drawing to as is the most-up-to-date
+
+2012-09-19  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Use WindowCompositor::RestoreMainFramebuffer to restore the main buffer
+	(either back or reference) to read and write from
+
+2012-09-19  Neil Jagdish Patel  <njpatel@gmail.com>
+
+	This branch introduces dash to preview transitions. I relies on this nux branch: https://code.launchpad.net/~unity-team/nux/nux.redirected-views/+merge/124661
+	
+	Animation from Dash to Preview slides out elements of the dash to make room for the previews. The process happens in 250ms. 
+	
+	Many changes were necessary to create this effects. It has to be said that the changes have an impact on the rendering engine and the way elements are drawn in the dash. Efforts are being made to reduce this impact.. Fixes: https://bugs.launchpad.net/bugs/1049593. Approved by Neil J. Patel.
+
+2012-09-18  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Cleanup "
+	* Added manual test.
+
+2012-09-18  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	tweak spacing
+
+2012-09-18  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Small fix at the bottom the preview in the ghost icons.
+
+2012-09-18  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	make icons show a bit more at the bottom
+
+2012-09-18  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Merged with Unity trunk.
+
+2012-09-18  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Minor fix
+
+2012-09-18  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fixed background color tint.
+
+2012-09-17  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fixing background color tint. W.I.P.
+
+2012-09-17  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fixed ResultViewGrid gradient
+
+2012-09-17  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fixes to stabilize dash to preview animation
+
+2012-09-16  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Merge with Unity trunk
+
+2012-09-14  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Adjustments
+
+2012-09-14  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Dash to Preview animation"
+	* Desaturation
+
+2012-09-11  Jay Taoko  <jay.taoko@canonical.com>
+
+	Improved Dash transition to Preview
+
+2012-09-06  Jay Taoko  <jay.taoko@canonical.com>
+
+	Another Fix
+
+2012-09-06  Jay Taoko  <jay.taoko@canonical.com>
+
+	Fixes
+
+2012-08-31  Jay Taoko  <jay.taoko@canonical.com>
+
+	Work in progress
+
+2012-08-28  Jay Taoko  <jay.taoko@canonical.com>
+
+	Progressively reveal the preview
+
+2012-08-28  Jay Taoko  <jay.taoko@canonical.com>
+
+	Dash to Preview transition
+
+2012-08-24  Jay Taoko  <jay.taoko@canonical.com>
+
+	Success
+
+2012-08-20  Neil Jagdish Patel  <njpatel@gmail.com>
+
+	[merge] trunk
+
+2012-08-17  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Work in progress: Dash transition to Previews. Minor fix
+
+2012-08-17  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Work in progress: Dash transition to Previews
+
+2012-08-15  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Added fade out of DashView when opening the previews
+
+2012-08-30  Jay Taoko  <jay.taoko@canonical.com>
+
+	dednick fix
+
+2012-09-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Updates the API to match nux trunk and nux/3.0. Fixes: . Approved by .
+
+2012-09-19  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Update for new Nux API
+
+2012-09-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Update to new nux api.
+
+2012-09-19  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	Slows the animation down when installing applications in the Dash Preview and the Software Center.. Fixes: https://bugs.launchpad.net/bugs/1045746. Approved by John Lea, Nick Dedekind.
+
+2012-09-19  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* merged trunk
+
+2012-09-18  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Moved slow/quick speeds into variables
+
+2012-09-12  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Removed extra new line
+
+2012-09-12  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Adds a Slow animation to the launcher drag window
+
+2012-09-19  Didier Roche  <didier.roche@canonical.com>
+
+	add a depreacated --reset option as it seems otherwise to match to --reset-icons.. Fixes: . Approved by Brandon Schaefer.
+
+2012-09-19  Didier Roche  <didier.roche@canonical.com>
+
+	add deprecated --reset option
+
+2012-09-19  Didier Roche  <didier.roche@canonical.com>
+
+	rename reset-icons to reseticons so that the removed --reset option doesn't magically match --reset-icons
+
+2012-09-19  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Dash/Hud no longer steal mouse events outside their content area. Better draw handling of hud animation.. Fixes: https://bugs.launchpad.net/bugs/857422, https://bugs.launchpad.net/bugs/1049593. Approved by Brandon Schaefer.
+
+2012-09-18  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed relayout on monitor changes.
+
+2012-09-18  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Changed author
+
+2012-09-18  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Merge with trunk.
+
+2012-09-18  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added autopilot tests for dash/hud closure.
+
+2012-09-18  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added check for launcher/panel mouse click areas in dash hide logic.
+
+2012-09-18  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	HideDash/Hud directly from external button press.
+
+2012-09-18  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Renamed ResizingBaseWindow.
+
+2012-09-13  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed jerkyness in animation.
+
+2012-09-13  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Hud support for focus changing outside calculated hud geometry in same monitor.
+
+2012-09-12  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed dash dismiss on same sceen with reduced input window.
+
+2012-09-12  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed dash event theft.
+
+2012-09-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: implements sigc::trackable. Fixes: https://bugs.launchpad.net/bugs/1052683. Approved by Brandon Schaefer.
+
+2012-09-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: go back to use all the screen windows on spread events, to avoid unwanted behaviors
+	
+	Such undecorated or maximized decorated windows
+
+2012-09-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: use ScaleScreen windows list (hopefully smaller) to check if decorate/undecorate a window
+
+2012-09-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: implements sigc::trackable
+
+2012-09-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController, FavoriteStore, Launcher, Icons: always use sort priority based on favorites to get positioned on launcher. Fixes: https://bugs.launchpad.net/bugs/761155, https://bugs.launchpad.net/bugs/858540, https://bugs.launchpad.net/bugs/868423, https://bugs.launchpad.net/bugs/1028927, https://bugs.launchpad.net/bugs/1042845, https://bugs.launchpad.net/bugs/1045146. Approved by Andrea Azzarone, Brandon Schaefer.
+
+2012-09-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Tests: move the .desktop applications in a data dir so that it's more XDG compliant
+	
+	Fix the TestDesktopUtilities tests so that it won't depend on system changes
+
+2012-09-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestDesktopUtilities: use gnome-terminal instead of ubuntu-software-center .desktop file
+
+2012-09-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: remove the debugging text
+
+2012-09-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-09-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: added tests for GetLastIconPriority
+
+2012-09-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: fix some corner cases in GetLastIconPriority
+	
+	Like looking for the last sticky priority when we have no sticky icons and, a first favorite_uri
+
+2012-09-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Revert wrong commit
+
+2012-09-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	MockVolumeMonitorWrapper, MockDeviceLauncherSection: add optional parameter to define the number of mocked volumes
+
+2012-09-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: fix SortAndUpdate test
+
+2012-09-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: add tests for UpdateNumWorkspaces
+
+2012-09-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: add ResetIconPriorities test
+
+2012-09-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: added FavoriteAdd test for DeviceSection
+
+2012-09-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: be more precise on checking the new devices position
+
+2012-09-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: add tests for view opened and special favorite removed
+
+2012-09-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: add Favorite removal signal test for devices
+
+2012-09-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DeviceLauncherSection: rename IconAdded signal to icon_added
+
+2012-09-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: emit signals instead of directly calling the favorite event callbacks
+
+2012-09-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: add DisconnectSignals utility function, so that we can avoid mistakes by newly opened views
+
+2012-09-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: move some tests so that they're in a better order
+
+2012-09-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: add SetupIcons tests
+
+2012-09-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: AddRunningApps and AddDevices tests
+
+2012-09-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: add OnFavoriteStoreFavoriteRemoved and Registered Icons stick/unstick
+
+2012-09-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: add various OnFavoriteStoreAdded tests
+
+2012-09-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: added SortandUpdate test
+
+2012-09-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: added Launcher Special request tests
+
+2012-09-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SoftwareCenterLauncherIcon: use fallback icons if the provided name is empty
+
+2012-09-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: add more SaveIconsOrder tests
+
+2012-09-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: added utility function AddFavoriteKeepingOldPosition to avoid code duplication
+	
+	This function allows to add an icon to the current icons list guessing the previous icon positioning
+
+2012-09-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: try to keep the unity devices positions when saving the icons order
+	
+	Tests added
+
+2012-09-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: add other SaveIconsOrder tests
+
+2012-09-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: add SaveIconsOrder test
+
+2012-09-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: add launcher remove_request tests for app and devices
+
+2012-09-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: implement MockVolumeLauncherIcon and use for Launcher add_request tests
+
+2012-09-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_mock_devices: added MockVolume
+
+2012-09-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: add launcher's add_request application tests
+	
+	Also define some app:: desktop files
+
+2012-09-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: pass the icon_uri by value on position_forgot
+	
+	This avoids unwanted extra-references
+
+2012-09-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: unstick the Bamf view when deleting the BamfLauncherIcon
+
+2012-09-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherModel: added tests for ReorderAfterNext and changed ReorderAfter to ReorderAfterPrevious
+
+2012-09-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherModel: avoid to set again the priority for the moved icon in ReorderAfter
+
+2012-09-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: add more construction tests and the utility BuildMockBamfLauncherIcon
+
+2012-09-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: improve ensurelaunchers 
+
+2012-09-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_mock_devices: add #ifndef guard (added by mistake to TestDeviceLauncherSection)
+
+2012-09-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FavoriteStore: make GetFavorites const
+
+2012-09-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: more initialization checks
+
+2012-09-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: add more registration tests, fix not-working tests
+
+2012-09-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: add RegisterIcon tests
+
+2012-09-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SpacerLauncherIcon: using IconType::SPACER everywhere
+
+2012-09-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: s/GetFavoriteIcon/GetIconByUri/g
+
+2012-09-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: s/GetFavoriteIcon/GetIconByUri/g, add tests to TestLauncherController
+
+2012-09-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: add better RegisterIcon so that we can remove some duplicated code
+	
+	Also correctly reoreder icons on OnLauncherAddRequest
+
+2012-09-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: add createfavorites test for desktop and expo icons
+
+2012-09-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestVolumeLauncherIcon: use test_mock_devices
+
+2012-09-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: added devices favorites test
+
+2012-09-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests: Added test_mock_devices.h to avoid device intialization duplication code
+
+2012-09-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GMockVolume: setup default name and uuid
+
+2012-09-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: add first CreateFavorite tests
+
+2012-09-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: implement in a better way MockFavoriteStore
+
+2012-09-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherController: add just an Impl getter on friend class
+
+2012-09-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestSoftwareCenterLauncherIcon: added animation test
+
+2012-09-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestSoftwareCenterLauncherIcon: added first test
+
+2012-09-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherIcon: add Stick/Unstick tests
+
+2012-09-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherIcon: add Visibility test
+
+2012-09-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherIcon: basic LauncherIcon test
+
+2012-09-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestVolumeLauncherIcon: add stick/unstick tests
+
+2012-09-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestTrashLauncherIcon: add first basic test
+
+2012-09-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon's: use FavoriteStore::URI_PREFIX_* values for remote uri
+
+2012-09-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FavoriteStoreGSettings: removing unneeded variables
+
+2012-09-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestBamfLauncherIcon: add test for RemoteUri without .desktop file
+
+2012-09-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestFavoriteStore: testing ParseFavoriteFromUri
+
+2012-09-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestFavoriteStore: add more URI cases
+
+2012-09-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestDesktopUtilities: re-enabling disabled tests.
+
+2012-09-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherModel: One more test
+
+2012-09-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SoftwareCenterLauncherIcon: indentation fixes (and use const&)
+
+2012-09-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: remove the duplicated set-tooltip text
+
+2012-09-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests: add TestFavoriteStore class for testing static members
+
+2012-09-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestDesktopLauncherIcon: add activation test
+
+2012-09-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	WindowManager: add InShowDesktop (and implement it in PluginAdapter's).
+
+2012-09-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests, *LauncherIcons: add RemoteUri tests
+
+2012-09-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestDesktopLauncherIcon: add basic tests
+
+2012-09-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestHudLauncherIcon: check for icon type
+
+2012-09-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Tests: remove timeouts on VolumeLauncherIcon, fix HudLauncherIcon test
+
+2012-09-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestVolumeLauncherIcon: add position test, fix failing tests
+
+2012-09-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestMain, TestMainXless: set the default locale to C (to fix volume failing tests)
+
+2012-09-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestBamfLauncherIcon: check position
+
+2012-09-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestBamfLauncherIcon: add sticky tests
+
+2012-09-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AbstractLauncherIcon: add position_forgot signal, use it in LauncherController and LauncherIcon
+
+2012-09-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncher: addtest for add_request signal
+
+2012-09-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DndData: use const char*
+
+2012-09-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncher: add test for DndIsSpecialRequest
+
+2012-09-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncher: check if a device icon is sticked when dragged.
+
+2012-09-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncher: add test to check drag icon when setting an icon back to its position
+
+2012-09-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherModel: avoid priority clashes, when icons share the priority with 'other'
+	
+	Tests updated and added.
+
+2012-09-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging trunk
+
+2012-09-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: removing fixme statement
+
+2012-09-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncher: add AddMockIcons utility function
+
+2012-09-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests: added TestHudLauncherIcon
+
+2012-09-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: put back the saturation check bits
+
+2012-09-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestBFBLauncherIcon: use testing::Test and check for icon position
+
+2012-09-08  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FavoriteStore: more const methods and static values
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: use smart pointers for GKeyFile
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unityshell: remove the ShowDesktopIcon option, correctly set the workspaces size even when vsize changes
+	
+	And, of course, change the launcher::Controller initialization.
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: refactor the internals to use the new LauncherModel and FavoriteStore
+	
+	Semplified the constructor, we really don't need to have a Display parameter here; use
+	initialization list more, remove timeout on icons initialization (also use a new main function to
+	initialize all the non-fixed launcher icons).
+	
+	The icons ordering has changed a lot: now the favorites control everything (except BFB and trash)
+	and we add the icons based on their defined position. Added two special places: local::RUNNING_APPS_URI
+	and local::DEVICES_URI that optionally defines where these kind of icons should be placed.
+	This is not strict by the way, because if these uris are not defined we add them by default at
+	the bottom of the launcher main model.
+	
+	So to get that, I refactored CreateFavorite so that it's like an icon factory that returns
+	us an icon based on its icon-uri. It does this job only if the icon is not already available.
+	Also, added GetFavoriteIcon that returns us the icon in the model with the requested uri.
+	SetupIcons does the work of reading the favorite store and add the icons in order; it also
+	set up the signals.
+	
+	When a new Device or Application icon is added to the launcher, we append it to the list of the
+	non-sticky devices or applications.
+	
+	Favorites reordering, removal or additions have been refactored to fit to our new system;
+	when we save the favorites, the position of the "running-apps" or "attached-devices" is
+	computed based on where the first icon of this type is placed.
+	
+	The expo icon is handled differently, since it is not added if we have no workspaces available.
+	
+	SoftwareCenterLauncher icons are now handled differently: we consider them as sticky application
+	icons, so we firstly add them to the model (setting their priority based on the last sticky icon
+	we have), then we animate them. They already know where they should go, based on model computions
+	(also fixed a bug that caused them not to get the overlay shourtcut when added).
+	
+	OnLauncherAddRequest: always stick the favorite icon
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SoftwareCenterLauncherIcon: remove the icon size parameter from the animation. Change logic.
+	
+	We assume now that when a SoftwareCenterLauncher icon has been added to the launcher, is already
+	on the model, but it is not visible. So at this point we have only to animate ourself to 
+	the position that was designed (and saved on the icon Center).
+	
+	When the animation is over, remove any extra reference to icon textures and launcher.
+	Also make sure we're visible.
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	manual-tests, Launcher: backport the BFB icon drag test from 5.0
+	
+	(fixed here as well).
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: rename signals add DndIsSpecialRequest, remember the position of the dragged icon
+	
+	After a drag action, save the model only if the icon has really changed its position,
+	implement DndIsSpecialRequest to check if a DND request is really special (a device icon or
+	a .desktop file). When a Dnd special reqeuest happens, we only have to emit a signal.
+	The controller will handle them all (hopefully sticking the application)
+	
+	Plus, some code cleanup, use LauncherIcon::IsVisible when possible.
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	MockLauncherIcon: adapt to the new AbstractLauncherIcon interface
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	VolumeLauncherIcon: implement Stick and Unstick.
+	
+	When Sticked we should unblacklist the icon, when Unsticked we should keep it visibile anyway.
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	HudLauncherIcon: use IsVisible()
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	com.canonical.Unity.gschema: updated with new default values, added description.
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	SpreadLauncherIcon: renamed to ExpoLauncherIcon
+	
+	Also implement the Stick function so that the icon is visible only if we have
+	workspaces, and set it invisible by default.
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DeviceLauncherSection: remove the populate idle, add GetIcons() method
+	
+	Tests included
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: use the parent implmenentation of Stick and Unstick
+	
+	Also don't set the icon visibility based on the stickyness, the Stick() method
+	will handle that at LauncherIcon level.
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherModel: use the icon position to order the icons
+	
+	tests updated.
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: implement IsVisible, Stick and Unstick. Set default sort priority.
+	
+	Now a launcher icon sets its sort priority by default on initialization, so that
+	it changes based on the icon type.
+	Also, implement the Stick method setting the icon visible by default and emitting
+	the position_saved signal for its customers.
+	
+	Implement also the Unstick method, it also removes the icon from favorites.
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AbstractLauncherIcon: remove icon_weight property, add DefaultPriority getter and position_saved signal
+	
+	The default priority is set to a value relative to the icon type by deafult.
+	The priority_saved signal is meant to be used when an icon wants to save is position (i.e.
+	add itself to favorites).
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FavoriteStoreGSettings: implement missing methods, always store icon uris instead of destkop paths/id
+	
+	Add/update tests. The favorites are now meant as source for the icon ordering, they're not only
+	related to desktop files but to any unity kind of icon
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FavoriteStore: add more utility methods, plus some static ones to get the favorite uri
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	FavoriteStorePrivate: add IsDesktopFilePath utility function
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DesktopLauncherIcon: switch icon uri to "unity://desktop-icon"
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DesktopUtilities: add GetDesktopPathById method to get the desktop path from an id or file.
+	
+	Tests included.
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelMenuView: remove unneede variable
+
+2012-09-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibDBusProxy: cleanup unneeded variable
+
+2012-09-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/keep-priority-launcher-model to have a real priority model
+
+2012-09-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-08-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging again with lp:~andyrock/unity/devices-cleanup-and-test (and trunk)
+
+2012-08-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk trough lp:~andyrock/unity/devices-cleanup-and-test
+
+2012-08-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	VolumeLauncherIcon: add remote Uri support
+
+2012-08-25  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~andyrock/unity/devices-cleanup-and-test
+
+2012-08-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherModel: also use the icon_weight parameter to define the icon sorting
+
+2012-08-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AbstractLauncherIcon: add icon_weight property that defines the default icon position
+
+2012-08-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	launcher, CMakeLists: compile also SpreadLauncherIcon
+
+2012-08-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: add SpreadLauncherIcon to perform the Expo action
+	
+	Added unit-tests, 
+
+2012-08-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DesktopLauncherIcon: add Super+D shortcut and remoteUri
+
+2012-08-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DeviceLauncherIcon: fix compilation
+
+2012-08-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-08-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DeviceLauncherIcon: implement GetRemoteUri (returning the device UUID)
+
+2012-08-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: fix the Sorting priority to avoid that opened icons are added after the sticky ones
+
+2012-08-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/quicklist-menu-items-leak-fix (future trunk :))
+
+2012-08-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-08-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:~3v1n0/unity/launcher-icon-construction-type (and trunk)
+
+2012-08-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: set the initial animation back to work
+
+2012-08-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: put the _initial_drag_animation back
+
+2012-08-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: always start the drag launcher window from the original click position
+	
+	This fixes bug #858540
+
+2012-08-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: allow to reorder any floating icon, fix the dragging under the last icon
+
+2012-08-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherModel: added TestOrderByPosition
+
+2012-08-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherModel: refactored to use testing::Test function
+
+2012-08-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherModel: first compare icons by their position, not by type
+
+2012-08-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: set the default icon position to FLOATING; HUD, BFB to BEGIN; Trash to END
+
+2012-08-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AbstractLauncherIcon: add position Enum and icon property
+
+2012-09-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Refactor unity::Settings to use nux::RWProperty.. Fixes: https://bugs.launchpad.net/bugs/1044681. Approved by Omer Akram.
+
+2012-09-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Don't use override keyword.
+
+2012-09-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Update copyright headers.
+
+2012-09-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Delete .project file.
+
+2012-09-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add unit test for unity::Settings.
+
+2012-09-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use a nux::RWProperty for the form factor.
+
+2012-09-16  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use std::unique_ptr for the pimpl pointer.
+
+2012-09-16  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use unity::glib facilities in unity::Settings::Impl
+
+2012-09-16  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug 1044681.
+
+2012-09-18  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Implemented the loading of the category icon for the application category (required for the apps lens).. Fixes: https://bugs.launchpad.net/bugs/1049593. Approved by Marco Trevisan (Treviño).
+
+2012-09-17  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Check for the application emblem category type
+
+2012-09-18  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Send the current XLib timestamp to applications when we're opening them to not confuse them and cause issues like what we have seen with Firefox (bug linked).. Fixes: https://bugs.launchpad.net/bugs/1050687. Approved by Marco Trevisan (Treviño).
+
+2012-09-18  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Send the current time to applications when we open them
+
+2012-09-18  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed scrolling in music preview.. Fixes: . Approved by Neil J. Patel.
+
+2012-09-18  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed mouse scrolling in music preview.
+
+2012-09-18  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Enabled focus navigation for dash preview buttons.. Fixes: https://bugs.launchpad.net/bugs/1045416. Approved by Michal Hruby, John Lea.
+
+2012-09-18  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	merge with trunk
+
+2012-09-12  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	removed unnecessary brackets
+
+2012-09-12  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Merge with trunk
+
+2012-09-12  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added focus navigation to preview buttons.
+
+2012-09-18  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	This branch fixes several failing autopilot tests.. Fixes: . Approved by Omer Akram, Christopher Lee.
+
+2012-09-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged code to fix several AP tests.
+
+2012-09-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Make video preview test more robust.
+
+2012-09-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Skip music lens preview test if the music lens is empty.
+
+2012-09-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Hud tests will now work even when run from inside an SSH session.
+
+2012-09-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Sleep after open gedit perhaps?
+
+2012-09-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed hud test.
+
+2012-09-17  Ken VanDine  <ken.vandine@canonical.com>
+
+	Adds SocialPreview. Fixes: https://bugs.launchpad.net/bugs/1049127. Approved by Neil J. Patel.
+
+2012-09-14  Ken VanDine  <ken.vandine@canonical.com>
+
+	Added SocialPreview
+
+2012-09-17  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Restore the panel shadow, which has been missing since Unity 6.4.
+	(LP: #1045705)
+	
+	REQUIRES Compiz fix LP: #1050704. Without that fix, the active window will
+	always have the panel shadow on top of it.. Fixes: https://bugs.launchpad.net/bugs/1045705. Approved by Brandon Schaefer.
+
+2012-09-17  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Restore the panel shadow, which has been missing since Unity 6.4.
+	(LP: #1045705)
+	
+	REQUIRES Compiz fix LP: #1050704. Without that fix, the active window will
+	always have the panel shadow on top of it.
+
+2012-09-17  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Register file delete events in zeitgeist when file is dropped onto Trash launcher icon.
+	Added zeitgeist dependency.. Fixes: https://bugs.launchpad.net/bugs/870150. Approved by Marco Trevisan (Treviño).
+
+2012-09-17  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Merged 6.0 branch.
+
+2012-09-17  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Added two new special icons for missing album cover; to be used by music lens. They don't really fit into unity-asset-pool as they don't have regular sizes.. Fixes: https://bugs.launchpad.net/bugs/1049217. Approved by .
+
+2012-09-17  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fix uninitialized and invalid reads as reported by valgrind.. Fixes: . Approved by Brandon Schaefer.
+
+2012-09-13  Tim Penhey  <tim.penhey@canonical.com>
+
+	Release the tray too.
+
+2012-09-12  Tim Penhey  <tim.penhey@canonical.com>
+
+	Initialise the initial duration for the window minimisation.
+
+2012-09-12  Tim Penhey  <tim.penhey@canonical.com>
+
+	Initialise indial_drag_animation, and remove some private variables that are never used.
+
+2012-09-17  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fix the standalone launcher crash on exit.. Fixes: . Approved by Brandon Schaefer.
+
+2012-09-12  Tim Penhey  <tim.penhey@canonical.com>
+
+	And include the header.
+
+2012-09-12  Tim Penhey  <tim.penhey@canonical.com>
+
+	Destroy the icon textures.
+
+2012-09-11  Tim Penhey  <tim.penhey@canonical.com>
+
+	Make sure the controller is destroyed before the window thread so the process exits nicely.
+
+2012-09-17  Ken VanDine  <ken.vandine@canonical.com>
+
+	Added SocialPreview. Fixes: https://bugs.launchpad.net/bugs/1049127. Approved by Neil J. Patel.
+
+2012-09-17  Ken VanDine  <ken.vandine@canonical.com>
+
+	Removed dash preview background shadow
+
+2012-09-17  Ken VanDine  <ken.vandine@canonical.com>
+
+	merged latest trunk
+
+2012-09-14  Ken VanDine  <ken.vandine@canonical.com>
+
+	Added SocialPreview
+
+2012-09-14  Ken VanDine  <ken.vandine@canonical.com>
+
+	fixed a comment
+
+2012-09-14  Ken VanDine  <ken.vandine@canonical.com>
+
+	cleaned up some comments
+
+2012-09-13  Ken VanDine  <ken.vandine@canonical.com>
+
+	added test for SocialPreview
+
+2012-09-12  Ken VanDine  <ken.vandine@canonical.com>
+
+	use a larger font
+
+2012-09-12  Ken VanDine  <ken.vandine@canonical.com>
+
+	limit lines to 8
+
+2012-09-12  Ken VanDine  <ken.vandine@canonical.com>
+
+	if description is empty and there is an image set, display it
+
+2012-09-11  Ken VanDine  <ken.vandine@canonical.com>
+
+	Fixed alignment so comments line up with the info hints
+
+2012-09-11  Ken VanDine  <ken.vandine@canonical.com>
+
+	don't escape 
+
+2012-09-10  Ken VanDine  <ken.vandine@canonical.com>
+
+	Formating fixes, including less ScrollViews
+
+2012-09-07  Ken VanDine  <ken.vandine@canonical.com>
+
+	formating tweaks and updated more data in the standonly preview
+
+2012-09-07  Ken VanDine  <ken.vandine@canonical.com>
+
+	removed some print statements
+
+2012-09-07  Ken VanDine  <ken.vandine@canonical.com>
+
+	merged from trunk
+
+2012-09-07  Ken VanDine  <ken.vandine@canonical.com>
+
+	more SocialPreviewComments layout tweaks
+
+2012-09-07  Ken VanDine  <ken.vandine@canonical.com>
+
+	layout tweaking for Comments
+
+2012-09-07  Ken VanDine  <ken.vandine@canonical.com>
+
+	layout tweaks
+
+2012-09-07  Ken VanDine  <ken.vandine@canonical.com>
+
+	Fixed drawing of SocialPreviewComments and make it inherit from ScrollView
+
+2012-09-06  Ken VanDine  <ken.vandine@canonical.com>
+
+	merged from trunk
+
+2012-09-06  Ken VanDine  <ken.vandine@canonical.com>
+
+	set comments_ width based on the details width
+
+2012-09-06  Ken VanDine  <ken.vandine@canonical.com>
+
+	updated for protocol changes 
+
+2012-09-06  Ken VanDine  <ken.vandine@canonical.com>
+
+	serialize comments
+
+2012-09-05  Ken VanDine  <ken.vandine@canonical.com>
+
+	merged from trunk
+
+2012-09-05  Ken VanDine  <ken.vandine@canonical.com>
+
+	merged from trunk
+
+2012-09-05  Ken VanDine  <ken.vandine@canonical.com>
+
+	merged fixes for invalid geometry
+
+2012-09-05  Ken VanDine  <ken.vandine@canonical.com>
+
+	Don't draw if cr is invalid
+
+2012-09-05  Ken VanDine  <ken.vandine@canonical.com>
+
+	Added Comments stuff
+
+2012-09-04  Ken VanDine  <ken.vandine@canonical.com>
+
+	dropped SetText
+
+2012-09-04  Ken VanDine  <ken.vandine@canonical.com>
+
+	strip out cruft
+
+2012-09-04  Ken VanDine  <ken.vandine@canonical.com>
+
+	first pass at SocialPreviewComments widget
+
+2012-09-04  Ken VanDine  <ken.vandine@canonical.com>
+
+	merged speech bubble
+
+2012-09-04  Ken VanDine  <ken.vandine@canonical.com>
+
+	tweaked the color of the bubble
+
+2012-09-04  Ken VanDine  <ken.vandine@canonical.com>
+
+	merged in my branch
+
+2012-09-04  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added content bubble for social preview.
+
+2012-09-04  Ken VanDine  <ken.vandine@canonical.com>
+
+	added some of RepliesWidget
+
+2012-09-03  Ken VanDine  <ken.vandine@canonical.com>
+
+	merged trunk
+
+2012-09-01  Ken VanDine  <ken.vandine@canonical.com>
+
+	merged from trunk
+
+2012-08-31  Ken VanDine  <ken.vandine@canonical.com>
+
+	removed set_title
+
+2012-08-31  Ken VanDine  <ken.vandine@canonical.com>
+
+	use description
+
+2012-08-31  Ken VanDine  <ken.vandine@canonical.com>
+
+	give the standalone preview different data
+
+2012-08-31  Ken VanDine  <ken.vandine@canonical.com>
+
+	merged changes from dednick
+
+2012-08-31  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Standardised preview field usage for socual preview
+
+2012-08-31  Ken VanDine  <ken.vandine@canonical.com>
+
+	merged from trunk
+
+2012-08-31  Ken VanDine  <ken.vandine@canonical.com>
+
+	playing with layouts
+
+2012-08-31  Ken VanDine  <ken.vandine@canonical.com>
+
+	Merged
+
+2012-08-31  Ken VanDine  <ken.vandine@canonical.com>
+
+	limit the content to 10 lines
+
+2012-08-29  Ken VanDine  <ken.vandine@canonical.com>
+
+	added missing SocialPreview
+
+2012-08-29  Ken VanDine  <ken.vandine@canonical.com>
+
+	Updated SocialPreview
+
+2012-08-28  Ken VanDine  <ken.vandine@canonical.com>
+
+	dded SocialPreview
+
+2012-09-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix several failing autopilot tests.. Fixes: . Approved by Brandon Schaefer.
+
+2012-09-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed a launcher test that failed if you had any devices mounted.
+
+2012-09-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Ordered imports.
+
+2012-09-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Added code to ensure that text editor icon is not in the launcher model before the test starts.
+
+2012-09-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Show the alt-tab on the monitor with the mouse.. Fixes: https://bugs.launchpad.net/bugs/1044293. Approved by Marco Trevisan (Treviño).
+
+2012-09-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Update AP test.
+
+2012-09-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Show alt+tab in the monitor with mouse.
+
+2012-09-17  Nic d'Offay  <nicolas.doffay@canonical.com>
+
+	Added left and right click exit to cover art for all previews.. Fixes: https://bugs.launchpad.net/bugs/1045230, https://bugs.launchpad.net/bugs/1045752. Approved by .
+
+2012-09-17  Nic d'Offay  <nicolas.doffay@canonical.com>
+
+	Moved mouse click exit functionality to base class to effect all previews. Left click now also exits.
+
+2012-09-11  Nic d'Offay  <nicolas.doffay@canonical.com>
+
+	Added click exit functionality to MusicPreviews.
+
+2012-09-10  Nic d'Offay  <nicolas.doffay@canonical.com>
+
+	Fixed mouse selection with Coverflow.
+
+2012-09-17  Omer Akram  <om26er@ubuntu.com>
+
+	write AP test for bug 1045752. Fixes: . Approved by Neil J. Patel.
+
+2012-09-17  Omer Akram  <om26er@ubuntu.com>
+
+	add AP tests for lp:1045752
+
+2012-09-17  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Register file delete events in zeitgeist when file is dropped onto Trash launcher icon.
+	Added zeitgeist dependency.. Fixes: https://bugs.launchpad.net/bugs/870150. Approved by Marco Trevisan (Treviño), Michal Hruby.
+
+2012-09-14  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Removed extra newline.
+
+2012-09-14  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Moved ZEITGEIST_UNITY_ACTOR to unnamed namspace; formatting fixes.
+
+2012-09-14  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Merged trunk.
+
+2012-09-13  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Merged trunk.
+
+2012-09-07  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Added manual test for dragging files from File Lens to Trash.
+
+2012-09-06  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Merged trunk.
+
+2012-09-04  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Register file delete events in zeitgeist when file is dropped onto Trash launcher icon.
+	Added zeitgeist dependency.
+
+2012-09-17  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Restore the panel shadow, which has been missing since Unity 6.4.
+	(LP: #1045705). Fixes: https://bugs.launchpad.net/bugs/1045705. Approved by Omer Akram, Marco Trevisan (Treviño).
+
+2012-09-17  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Use unity coding style.
+
+2012-09-17  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Use references instead of copying, where possible.
+
+2012-09-17  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Check the shadow texture exists before using it. Otherwise we'd dereference
+	NULL.
+
+2012-09-13  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Merge latest lp:unity and fix conflicts
+
+2012-09-13  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Restored support for panel shadow drawing over unfocussed windows.
+	
+	Note: This REQUIRES a corresponding fix to compiz in the decor plugin. Make
+	sure you have that first.
+
+2012-09-07  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Restore the panel shadow, which has been missing since Unity 6.4.
+	(LP: #1045705)
+	
+	Unfortunately (or fortunately IMHO) this only draws the panel shadow on the
+	desktop. So far I have only been able to make the shadow draw on all windows
+	(including active) or just the desktop. This may be a restriction we have to
+	accept until/unless panel shadow rendering is moved into compiz itself, or
+	some nice person can find a way to make it work... ?
+
+2012-09-16  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Reduce internal-padding inside filter buttons.. Fixes: https://bugs.launchpad.net/bugs/856277. Approved by Brandon Schaefer.
+
+2012-09-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove magic number.
+
+2012-09-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove magic number.
+
+2012-09-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Revemove debug label.
+
+2012-09-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix typo in DashStyle.
+
+2012-09-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Change label string to reproduce the bug.
+
+2012-09-14  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Raise shortcut overlay on show.. Fixes: https://bugs.launchpad.net/bugs/985883. Approved by Brandon Schaefer.
+
+2012-09-11  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add unit-tests.
+
+2012-09-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Minor changes.
+
+2012-09-14  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Removed dash preview background shadow.. Fixes: . Approved by Brandon Schaefer.
+
+2012-09-10  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added programatic ability to disable/enable preview content background shadows.
+
+2012-09-14  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fixed a warning emitted by unreferencing an object owned by a smart pointer in HudController.cpp. Caused by adopting a new nux::BaseWindow.. Fixes: . Approved by Brandon Schaefer.
+
+2012-09-12  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fix the adoption warning, and some layout tweaks.
+
+2012-09-14  Gord Allott  <gord.allott@canonical.com>
+
+	some changes in spacing from new designs. Fixes: . Approved by Gord Allott.
+
+2012-09-14  Gord Allott  <gord.allott@canonical.com>
+
+	changed font weight for filter results and filter category headers
+
+2012-09-14  Gord Allott  <gord.allott@canonical.com>
+
+	design spacing changes, guessed edition
+
+2012-09-14  Gord Allott  <gord.allott@canonical.com>
+
+	Adds a new background gradient to the dash and panel, as well as removes some separator lines. Fixes: https://bugs.launchpad.net/bugs/1049593. Approved by Omer Akram, Andrea Azzarone, John Lea.
+
+2012-09-14  Gord Allott  <gord.allott@canonical.com>
+
+	added tex
+
+2012-09-14  Gord Allott  <gord.allott@canonical.com>
+
+	fixed small issue with sizing
+
+2012-09-14  Gord Allott  <gord.allott@canonical.com>
+
+	remove awesome numbers
+
+2012-09-14  Gord Allott  <gord.allott@canonical.com>
+
+	nicer way of handling filters being open from places group
+
+2012-09-14  Gord Allott  <gord.allott@canonical.com>
+
+	fixes hud drawing
+
+2012-09-13  Gord Allott  <gord.allott@canonical.com>
+
+	removed commented lines
+
+2012-09-13  Gord Allott  <gord.allott@canonical.com>
+
+	removed a few more debugs
+
+2012-09-13  Gord Allott  <gord.allott@canonical.com>
+
+	removed some debugs
+
+2012-09-13  Gord Allott  <gord.allott@canonical.com>
+
+	fixes small issue with home view and scrollbar enabling
+
+2012-09-13  Gord Allott  <gord.allott@canonical.com>
+
+	remove filter bar expanders
+
+2012-09-13  Gord Allott  <gord.allott@canonical.com>
+
+	latest trunk
+
+2012-09-13  Gord Allott  <gord.allott@canonical.com>
+
+	remove separator at the top of the dash
+
+2012-09-13  Gord Allott  <gord.allott@canonical.com>
+
+	hide scrollbar in dash when there are not enough items to scroll
+
+2012-09-13  Gord Allott  <gord.allott@canonical.com>
+
+	lots of stuff
+
+2012-09-12  Gord Allott  <gord.allott@canonical.com>
+
+	merge in lp:~gordallott/unity/fix-overlay-race-condition
+
+2012-09-12  Gord Allott  <gord.allott@canonical.com>
+
+	don't use an idle for a call that needs to be immediate
+
+2012-09-12  Gord Allott  <gord.allott@canonical.com>
+
+	make sure to increase the bgs number
+
+2012-09-11  Gord Allott  <gord.allott@canonical.com>
+
+	latest unity
+
+2012-09-11  Gord Allott  <gord.allott@canonical.com>
+
+	panel gradient
+
+2012-09-11  Gord Allott  <gord.allott@canonical.com>
+
+	dash gradient background added
+
+2012-09-11  Gord Allott  <gord.allott@canonical.com>
+
+	properly placed category bgs
+
+2012-09-10  Gord Allott  <gord.allott@canonical.com>
+
+	undup line
+
+2012-09-10  Gord Allott  <gord.allott@canonical.com>
+
+	performance fix
+
+2012-09-10  Gord Allott  <gord.allott@canonical.com>
+
+	two highlight textures working
+
+2012-09-10  Gord Allott  <gord.allott@canonical.com>
+
+	merge with trunk, fix draw order issues@
+
+2012-08-30  Gord Allott  <gord.allott@canonical.com>
+
+	Buggy but ubuntu is crashing so i want a saved spot
+
+2012-08-30  Gord Allott  <gord.allott@canonical.com>
+
+	quick save
+
+2012-08-29  Gord Allott  <gord.allott@canonical.com>
+
+	new resources
+
+2012-09-14  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Preview navigation buttons opacity changes on mouse-over.. Fixes: . Approved by Michal Hruby, John Lea.
+
+2012-09-10  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Preview navigation buttons opacity changes on mouse-over.
+
+2012-09-14  Michal Hruby  <michal.mhr@gmail.com>
+
+	Change the IconLoader methods to allow specifying both maximum width and height. Updated rendering of the icon ribbons.. Fixes: . Approved by Omer Akram, John Lea, Nick Dedekind.
+
+2012-09-13  Michal Hruby  <michal.mhr@gmail.com>
+
+	Decrease the strip size according to design request
+
+2012-09-13  Michal Hruby  <michal.mhr@gmail.com>
+
+	Determine size more rigorously
+
+2012-09-12  Michal Hruby  <michal.mhr@gmail.com>
+
+	It's better when it compiles
+
+2012-09-12  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge with Nick's results size branch
+
+2012-09-12  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix ribbon compositing
+
+2012-09-12  Michal Hruby  <michal.mhr@gmail.com>
+
+	Allow specifying both max width and height when calling IconLoader
+
+2012-09-12  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge updated-ribbon-rendering branch
+
+2012-09-06  Michal Hruby  <michal.mhr@gmail.com>
+
+	Add shadow and overflow the ribbon by 1px
+
+2012-09-06  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix rendering of emblems
+
+2012-09-05  Michal Hruby  <michal.mhr@gmail.com>
+
+	Change ribbons visuals according to latest designs
+
+2012-09-05  Michal Hruby  <michal.mhr@gmail.com>
+
+	Add new category emblems
+
+2012-09-14  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added extra-text to preview actions (for price tags).. Fixes: . Approved by Michal Hruby.
+
+2012-09-13  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added preview action button accessors for label and extra text.
+
+2012-09-13  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added unity test cases for preview extra-text
+
+2012-09-13  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added extra-text to preview actions (for price tags).
+
+2012-09-14  Michal Hruby  <michal.mhr@gmail.com>
+
+	Avoid construction of row wrappers. Fixes: https://bugs.launchpad.net/bugs/1050342. Approved by Gord Allott.
+
+2012-09-13  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix delays when adding results
+
+2012-09-13  Michal Hruby  <michal.mhr@gmail.com>
+
+	Add comments to not forget about the model limitation
+
+2012-09-13  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge trunk
+
+2012-09-02  Michal Hruby  <michal.mhr@gmail.com>
+
+	Avoid construction of row wrappers
+
+2012-09-14  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Updated dash result highlight focus to 106x106 pixels with 20% white opacity. Increased dash result file image size to 96x96.. Fixes: https://bugs.launchpad.net/bugs/1049128. Approved by John Lea, Michal Hruby.
+
+2012-09-11  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Removed non-implemented function from header.
+
+2012-09-11  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Updated dash result highlight focus to 106x106 pixels with 20% white opacity. Increased dash result file image size to 96x96.
+
+2012-09-14  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Added two new special icons for missing album cover; to be used by music lens. They don't really fit into unity-asset-pool as they don't have regular sizes.. Fixes: https://bugs.launchpad.net/bugs/1049217. Approved by Michal Hruby.
+
+2012-09-12  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Added album_missing_preview icon the be displayed by music previews.
+
+2012-09-11  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Added icons for missing album and video. They will be referenced by music & video lenses.
+
+2012-09-14  Michal Hruby  <michal.mhr@gmail.com>
+
+	Disable the flow renderer. Fixes: https://bugs.launchpad.net/bugs/1049593. Approved by Andrea Azzarone, John Lea.
+
+2012-09-13  Michal Hruby  <michal.mhr@gmail.com>
+
+	Disable flow renderer
+
+2012-09-12  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed dash dismissal when changing focus to a window on monitor external to that of the dash. (LP#923657)
+	Improved panel update speed when opening dash. (LP#1044086). Fixes: https://bugs.launchpad.net/bugs/923657, https://bugs.launchpad.net/bugs/1044086. Approved by Brandon Schaefer.
+
+2012-09-12  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	removed extra white space
+
+2012-09-12  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed hud focus test.
+
+2012-09-12  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Merge with trunk.
+
+2012-09-12  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added key focus AP tests to Dash/Hud. Fixed up Cross monitor AP tests for Dash/Hud.
+
+2012-09-11  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed dash manual-test format.
+
+2012-09-11  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Merged with lp:~brandontschaefer/unity/dash-hud-is-dismissed-when-clicking-other-monitor. + a few fixes for focus changes.
+
+2012-09-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityShell: remove scale_highlighted_window_ variable, using scale's getSelectedWindow instead.. Fixes: https://bugs.launchpad.net/bugs/1046795. Approved by Andrea Azzarone.
+
+2012-09-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk (via lp:~3v1n0/unity/spread-title-improved)
+
+2012-09-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityShell: avoid to compute PluginAdapter() address multiple times in handleEvent
+
+2012-09-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityShell: remove scale_highlighted_window_ variable, using scale's getSelectedWindow instead.
+
+2012-09-12  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix crash in unity::dash::CoverflowResultView::Impl::Impl(). Fixes: https://bugs.launchpad.net/bugs/1047420. Approved by Marco Trevisan (Treviño).
+
+2012-09-11  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug 1048420
+
+2012-09-12  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Update sizing of elements to match designs, update assets. Fixes: https://bugs.launchpad.net/bugs/1049096. Approved by Andrea Azzarone, Xi Zhu.
+
+2012-09-12  Michal Hruby  <michal.mhr@gmail.com>
+
+	Update also lens nav bar height
+
+2012-09-11  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge Nick's preview-buttons-height branch
+
+2012-09-10  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Preview action buttons height shortened by 2px to 34px.
+
+2012-09-11  Michal Hruby  <michal.mhr@gmail.com>
+
+	Update lens icons
+
+2012-09-11  Michal Hruby  <michal.mhr@gmail.com>
+
+	Update category icon sizes
+
+2012-09-11  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed a layout flicker when first opening previews (LP#1038944).. Fixes: https://bugs.launchpad.net/bugs/1038944, https://bugs.launchpad.net/bugs/1043277. Approved by Michal Hruby, Brandon Schaefer.
+
+2012-09-04  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Updated manual test for change in requirements.
+
+2012-08-29  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed typo in preview manual test.
+
+2012-08-29  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed typo in preview manual test.
+
+2012-08-29  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Altered preview manual test.
+
+2012-08-28  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added manual test for preview flicker/resize.
+
+2012-08-28  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Merged with trunk
+
+2012-08-21  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed preview flicker on first open.
+
+2012-09-11  Michal Hruby  <michal.mhr@gmail.com>
+
+	Adds the extra_text property to preview Action. Fixes: https://bugs.launchpad.net/bugs/1049008. Approved by Pawel Stolowski, Nick Dedekind.
+
+2012-09-11  Michal Hruby  <michal.mhr@gmail.com>
+
+	Expose the extra_text property of PreviewAction
+
+2012-09-11  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Implemented DBus interface for DashController and made HideDash() method available via DBus. Added autopilot test for it.
+	This is needed by music-preview-player codec installation functionality for hiding the dash when codec installation starts.. Fixes: https://bugs.launchpad.net/bugs/1043825. Approved by Michal Hruby.
+
+2012-09-11  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Provide cancellable when connection to DBus.
+
+2012-09-11  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Register /com/canonical/Unity/Dash object under existing com.canonical.Unity dbus name.
+
+2012-09-07  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Added autopilot test for com.canonical.Unity.Dash.HideDash method call.
+
+2012-09-07  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Implemented DBus interface for DashController and made HideDash() method available via DBus.
+
+2012-09-11  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Extended track play/pause mouse discovery for entire track row.
+	Re-worded manual test for play/pause music track.. Fixes: https://bugs.launchpad.net/bugs/1043997. Approved by Michal Hruby.
+
+2012-08-31  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Track action mouse discovery enabled for whole track row.
+
+2012-08-31  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added clarification in preview music track manual tests.
+
+2012-09-10  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	Fix minor problem with the Hud/Dash being drawn while closing on a different monitor.. Fixes: . Approved by Tim Penhey.
+
+2012-09-10  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Fixes dash/hud flashing when closing on a different monitor
+
+2012-09-10  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	Dash and Hud get drawn correctly no matter which monitor the mouse is in.. Fixes: https://bugs.launchpad.net/bugs/1002260. Approved by Tim Penhey.
+
+2012-09-07  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Fixed confliced
+
+2012-09-07  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Removed check in Draw if visible. This is fixed in a better way in another branch.
+
+2012-09-06  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* change var names as well
+
+2012-09-06  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Change target to ideal
+
+2012-09-05  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* AP tests
+
+2012-09-05  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Fixes multi monitor drawing of the Dash and Hud
+
+2012-09-10  Omer Akram  <om26er@ubuntu.com>
+
+	manual-test to AP; automate different scenarios to check successful launcher keynav. Fixes: . Approved by Christopher Lee.
+
+2012-09-09  Omer Akram  <om26er@ubuntu.com>
+
+	fix per veebers comment
+
+2012-09-09  Omer Akram  <om26er@ubuntu.com>
+
+	merge
+
+2012-09-04  Omer Akram  <om26er@ubuntu.com>
+
+	use move_mouse_to_right_of_launcher helper, also make the other test more obvious about what its doing
+
+2012-09-04  Omer Akram  <om26er@ubuntu.com>
+
+	merge trunk
+
+2012-09-09  Omer Akram  <om26er@ubuntu.com>
+
+	Merge trunk
+
+2012-08-29  Omer Akram  <om26er@ubuntu.com>
+
+	improve on last commit
+
+2012-08-29  Omer Akram  <om26er@ubuntu.com>
+
+	makes sure right click on a launcher icon while in expo exits it, remove equivalent manual-test
+
+2012-08-29  Omer Akram  <om26er@ubuntu.com>
+
+	fix docstring and some
+
+2012-08-29  Omer Akram  <om26er@ubuntu.com>
+
+	click on quicklist item must cancel keynav, removed equivalent manual-test
+
+2012-08-29  Omer Akram  <om26er@ubuntu.com>
+
+	remove manual-test
+
+2012-08-29  Omer Akram  <om26er@ubuntu.com>
+
+	add another case from the manual test
+
+2012-08-29  Omer Akram  <om26er@ubuntu.com>
+
+	add new AP test
+
+2012-08-28  Omer Akram  <om26er@ubuntu.com>
+
+	merge trunk
+
+2012-08-27  Omer Akram  <om26er@ubuntu.com>
+
+	merge trunk
+
+2012-09-07  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	a11y: Port unity3d and panel service accessibility init to atk-bridge. Fixes: https://bugs.launchpad.net/bugs/1023542, https://bugs.launchpad.net/bugs/1046582. Approved by Andrea Azzarone, Marco Trevisan (Treviño).
+
+2012-09-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-09-06  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-07-17  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	a11y: Port unity3d and panel service accessibility init to atk-bridge
+	
+	https://code.launchpad.net/bugs/1023542
+
+2012-07-03  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	Reflect on HACKING the new dependency to libatk-adaptor
+
+2012-07-03  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	a11y: Port the panel service accessibility support to atk-bridge
+	
+	As Unity plugin itself, moving to atk-bridge library.
+	
+	Also solving minor issues
+
+2012-07-02  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	a11y: Don't check 'toolkit-accessibility' gsettings variable
+	
+	So accessibility is always on, like in gtk3 and gnome-shell
+
+2012-07-02  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	a11y: Port to atk-bridge
+	
+	gtk3 and gnome-shell already did that. Now the prefered way
+	to initialize the bridge is using atk-bridge library, 
+	instead of load a module
+
+2012-09-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Revert rev 2558.. Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-09-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Revert rev 2558.
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	EdgeBarrierController: Temporary disable the edge barriers also when autohide is set. Fixes: https://bugs.launchpad.net/bugs/1020058. Approved by Andrea Azzarone.
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestEdgeBarrierController: update tests
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	EdgeBarrierController: always release the barrier when requested (even if we have an handler)
+	
+	I.e. release it also with autohide
+
+2012-09-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Re-add code to draw panel background texture when the dash is open and there is a maximized window.. Fixes: https://bugs.launchpad.net/bugs/1044460. Approved by Brandon Schaefer.
+
+2012-09-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-09-05  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Split code in different functions.
+
+2012-09-05  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Re-add code to draw panel background texture when the dash is open and there is a maximized window.
+
+2012-09-07  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Remove everything in the #ifndef USE_MODERN_COMPIZ_GL ifdefs and remove the ifdefs alltogether. lp:unity now requires compiz 0.9.8.0 . Also removed ScreenEffectFramebufferObject.. Fixes: . Approved by Omer Akram, Sam Spilsbury, Andrea Azzarone.
+
+2012-09-05  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:unity
+
+2012-09-05  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~smspillaz/unity/unity.remove_modern_compiz_gl
+
+2012-08-30  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Remove ScreenEffectFramebufferObject
+
+2012-08-30  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Remove usage of USE_MODERN_COMPIZ_GL bump the compiz dep
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: use smart pointers, use static close_icon (with dynamic state) and PanelStyle context. Fixes: https://bugs.launchpad.net/bugs/1033935, https://bugs.launchpad.net/bugs/1045127, https://bugs.launchpad.net/bugs/1046124, https://bugs.launchpad.net/bugs/1046126. Approved by Renato Araujo Oliveira Filho.
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityShell: put back the string optimizations, fix indentation
+
+2012-09-07  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-09-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: even more code optimizations
+
+2012-09-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: use some padding also at the end of the decoration
+	
+	Not to make long titles to fade to the end of the decoration
+
+2012-09-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: handle any release event, if it was previously pressed
+
+2012-09-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: don't allow to close a scaled window by any mouse button
+
+2012-09-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: use height as scale decoration height
+
+2012-09-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: Indentation fix
+
+2012-09-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: avoid unneeded damages on motion event, and keep pressed also on mouse-out
+
+2012-09-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: make the spread close button to react to mouse in/out and button press events
+	
+	Also close on button release.
+
+2012-09-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: WindowCairoContext moved to struct UnityWindow::CairoContext
+	
+	Using it as stack allocated.
+
+2012-09-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: use smart pointers, use static close_icon and panelStyle context
+	
+	This should save a lot of computation per each scale window.
+
+2012-09-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unityshell: on spread decorate all windows, draw the new decoration above them
+
+2012-09-05  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with renato's branch
+
+2012-09-06  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed the size of the previews to 770x380 pixels. (LP#1045243). Fixes: https://bugs.launchpad.net/bugs/1045243. Approved by Brandon Schaefer.
+
+2012-09-06  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Defined preview height/width values using global consts.
+
+2012-09-04  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed preview size to 770x380.
+
+2012-09-06  MC Return  <mc.return@gmx.net>
+
+	Removed the variables 'oldPrev' and 'oldNext' which got assigned the value NULL, but then were never used.. Approved by Brandon Schaefer.
+
+2012-09-05  MC Return  <mc.return@gmx.net>
+
+	Removed the variables 'oldPrev' and 'oldNext' which got assigned the value NULL, but then were never used
+
+2012-09-06  Didier Roche  <didier.roche@canonical.com>
+
+	remove unity --reset, it's not anymore really needed now that we are in
+	stable days of unity and we moved to gsettings. Approved by Michal Hruby.
+
+2012-09-06  Didier Roche  <didier.roche@canonical.com>
+
+	remove unity --reset, it's not anymore really needed now that we are in stable days of unity and we moved to gsettings
+
+2012-09-06  MC Return  <mc.return@gmx.net>
+
+	"Alt+Space" shortcut to reveal the window menu is not hardcoded, but a Compiz key option
+	" (Hold)" should also be translated
+	Made all Compiz plug-in names and all Compiz plug-in option names in unityshell.cpp static constants. Approved by Sam Spilsbury.
+
+2012-09-02  MC Return  <mc.return@gmx.net>
+
+	Made all Compiz plug-in names and all Compiz plug-in option names in unityshell.cpp static constants
+
+2012-08-28  MC Return  <mc.return@gmx.net>
+
+	Also fixed "Alt+Space" not hardcoded in StandaloneShortcuts.cpp
+
+2012-08-28  MC Return  <mc.return@gmx.net>
+
+	Fixed "Alt+Space" to open the window menu is not hardcoded, but a shortcut::COMPIZ_KEY_OPTION
+
+2012-08-28  MC Return  <mc.return@gmx.net>
+
+	" (Hold)" should also be translated
+
+2012-08-28  MC Return  <mc.return@gmx.net>
+
+	Fixed a typo
+
+2012-09-06  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	The mouse will now cause the HUD buttons to change selection.. Fixes: https://bugs.launchpad.net/bugs/1042692. Approved by Tim Penhey, Gord Allott.
+
+2012-09-04  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* More unneeded code...
+
+2012-09-04  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Removed un needed code, this gets handled on button->mouse_leave...
+
+2012-09-04  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* If the mouse is the new focused button emit query_selected to change the icon
+
+2012-09-04  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Adds AP Test
+
+2012-08-31  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Fixed last small problem, now works very well :)
+
+2012-08-30  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* More fixes, still one issues with the StaticCarioText
+
+2012-08-29  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* The Hud Buttons will now change focus with the mouse
+
+2012-09-06  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	UnityWindow: scale window code improved
+	
+	* Fixed code style.
+	* Moved function "GetWindowName" from UnityWindow to WindowManager.
+	* Used glib::Object auto pointer instead of "c" pointer;. Fixes: https://bugs.launchpad.net/bugs/1033935, https://bugs.launchpad.net/bugs/1046125. Approved by Marco Trevisan (Treviño).
+
+2012-09-04  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	Code optimizations.
+
+2012-09-04  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	Removed all originial decoration when window is in scale mode;
+	Draw window decoration inside of window following the designer docs;
+
+2012-09-04  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	Fixed windows decoration for maximized windows.
+
+2012-09-03  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	Renamed DrawTitle function.
+
+2012-09-03  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	Fixed fade effect on title bar;
+	Fixed window title alignment;
+
+2012-09-03  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	Used panel style font on windows title decoration;
+	Implemented fade effect on windows title decoration;
+
+2012-08-31  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	Optimized GetWindowName code.
+
+2012-08-31  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	Created "WindowCairoContext::Ptr" typedef to make the code more readable.
+
+2012-08-31  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	Used smart pointers.
+
+2012-08-31  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	Used glib::Object auto pointer instead of "c" pointer.
+
+2012-08-31  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	Fixed code style.
+
+2012-08-31  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	Moved function "GetWindowName" from UnityWindow to WindowManager.
+
+2012-09-06  Michal Hruby  <michal.mhr@gmail.com>
+
+	Make sure we can pass extra hints when activating preview actions. Fixes: https://bugs.launchpad.net/bugs/1046352. Approved by Pawel Stolowski, Nick Dedekind.
+
+2012-09-04  Michal Hruby  <michal.mhr@gmail.com>
+
+	Revert the required libunity version bump
+
+2012-09-04  Michal Hruby  <michal.mhr@gmail.com>
+
+	Use backwards-compatible proto
+
+2012-09-03  Michal Hruby  <michal.mhr@gmail.com>
+
+	Add a test
+
+2012-09-03  Michal Hruby  <michal.mhr@gmail.com>
+
+	Add hints parameter to PerformAction method
+
+2012-09-03  Michal Hruby  <michal.mhr@gmail.com>
+
+	Add the hints parameter to Activate calls, bump libunity requirement
+
+2012-09-06  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherModel: rewrite the Reordering functions to keep the icon priority deltas
+	
+	The priority of the icons added to the model was reset every time the model
+	was reordered; we should otherwise keep the priority deltas between icons
+	so that we can safely set them without be worried that a reorder would completely
+	reset them.
+	Also add IconIndex method to get the positio of a given icon.. Fixes: https://bugs.launchpad.net/bugs/761155. Approved by Andrea Azzarone.
+
+2012-09-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: set sort priority for favorites too, so that they won't be confused
+
+2012-09-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherModel: use const& icon even for signals
+
+2012-09-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: fix compilation
+
+2012-09-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Move members to AbstractLauncherIcon::Ptr const& first
+
+2012-09-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherModel: don't allow to add null icons or the ones already there
+	
+	Updated code of ReorderAfter to use std:: algorithms
+
+2012-09-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: allow to drag an icon if has sisters or it's an only device
+
+2012-09-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherModel: invalid icons don't have sisters
+
+2012-09-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherModel: moving to C++11 foreach, and add few comments
+
+2012-09-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncher/Model: update tests removing the bits no more needed with new model
+
+2012-09-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests, TestLauncherModel: use testing::Test class added new tests
+
+2012-09-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	MockLauncherIcon: make possible to define an icon type or MockLauncherIcon
+
+2012-09-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ReorderSmart: rename save with animate
+
+2012-09-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherModel: ReorderSmart fix icon priority based on target and be more smart on save centers
+
+2012-09-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherModel: ReorderBefore correctly set the new icon priority based on target position
+
+2012-09-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherModel: rewrite ReorderBefore so that we save centers more
+
+2012-09-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherModel: rewrite the Reordering functions to keep the icon priority deltas
+	
+	The priority of the icons added to the model was reset every time the model
+	was reordered; we should otherwise keep the priority deltas between icons
+	so that we can safely set them without be worried that a reorder would completely
+	reset them.
+	Also add IconIndex method to get the positio of a given icon.
+
+2012-09-06  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	The xim tests will now skip if no XMODIFIERS env var is set.. Approved by Christopher Lee, Thomi Richards.
+
+2012-09-04  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Code is now more readable
+
+2012-09-04  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Check if the XMODIFIER is a current env var
+
+2012-09-06  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Close preview when dash is hidden. (LP#1045298). Fixes: https://bugs.launchpad.net/bugs/1045298. Approved by Nick Dedekind, Omer Akram, Gord Allott.
+
+2012-09-05  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Close preview when dash is hidden.
+
+2012-09-05  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed ability to delete glib::Source wrapper during its callback.. Fixes: https://bugs.launchpad.net/bugs/1044823, https://bugs.launchpad.net/bugs/1045187. Approved by Marco Trevisan (Treviño), Michal Hruby.
+
+2012-09-05  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Merge with trunk
+
+2012-09-04  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	glib::Source Callback function args passed by const ref.
+
+2012-09-04  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	removed whitespace.
+
+2012-09-04  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Let glib handle source removal management during callback.
+
+2012-09-04  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed ability to destroy glib::Source in callback.
+
+2012-09-05  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Queue redraw after cover-art texture is updated from a url/file source. (LP#1043947). Fixes: https://bugs.launchpad.net/bugs/1043947. Approved by Omer Akram, Marco Trevisan (Treviño).
+
+2012-09-05  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Merge with trunk
+
+2012-09-03  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Preview cover-art: Queue redraw after url texture load.
+
+2012-09-04  Adam Conrad  <adconrad@0c3.net>
+
+	Bring the upstream unity in line with the Ubuntu package for GLES/linking fixes.. Fixes: https://bugs.launchpad.net/bugs/1044709. Approved by Timo Jyrinki.
+
+2012-09-03  Adam Conrad  <adconrad@0c3.net>
+
+	* CMakeLists.txt: Make the GL/GLU linking conditional on BUILD_GLES,
+	rather than based on uname, so it actually matches GLES settings.
+	* dash/previews/CMakeLists.txt: Cargo-cult linking options from other
+	modules for both -fPIC and UNITY_STANDALONE_LADD, fixing ARM/GLES.
+
+2012-09-03  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Removed space between music track number/status and title.
+	Fixed bug in preview animation timer source.. Fixes: . Approved by Michal Hruby.
+
+2012-08-31  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Removed spacing between music track number/status and name.
+
+2012-08-31  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed animation timeout source.
+
+2012-09-03  Marco Biscaro  <marcobiscaro2112@gmail.com>
+
+	Fixing bug #924586 and bug #975350, both about custom background color.
+	
+	Now there is a check of an override color in RefreshColor (which is called when a PropertyNotify event happens). Also added a check in FullySaturateColor to avoid division by zero.. Fixes: https://bugs.launchpad.net/bugs/924586, https://bugs.launchpad.net/bugs/975350. Approved by MC Return, Andrea Azzarone, Nick Dedekind.
+
+2012-09-02  Marco Biscaro  <marcobiscaro2112@gmail.com>
+
+	Fixing a typo
+
+2012-09-01  Marco Biscaro  <marcobiscaro2112@gmail.com>
+
+	Removing duplicated code
+
+2012-09-01  Marco Biscaro  <marcobiscaro2112@gmail.com>
+
+	Improving manual tests
+
+2012-08-31  Marco Biscaro  <marcobiscaro2112@gmail.com>
+
+	Adding manual test for custom background
+
+2012-08-31  Marco Biscaro  <marcobiscaro2112@gmail.com>
+
+	Merge with trunk
+
+2012-08-28  Marco Biscaro  <marcobiscaro2112@gmail.com>
+
+	Merge with trunk
+
+2012-07-12  Marco Biscaro  <marcobiscaro2112@gmail.com>
+
+	Fixing float comparison
+
+2012-07-12  Marco Biscaro  <marcobiscaro2112@gmail.com>
+
+	Merge with trunk
+
+2012-07-01  Marco Biscaro  <marcobiscaro2112@gmail.com>
+
+	Merge with trunk
+
+2012-06-15  Marco Biscaro  <marcobiscaro2112@gmail.com>
+
+	Merge with trunk
+
+2012-06-14  Marco Biscaro  <marcobiscaro2112@gmail.com>
+
+	Merge with trunk
+
+2012-05-10  Marco Biscaro  <marcobiscaro2112@gmail.com>
+
+	Fixing custom BG color issues
+
+2012-09-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherDragWindow: cancel drag on window mapped/unmapped. Fixes: https://bugs.launchpad.net/bugs/1044723. Approved by Andrea Azzarone.
+
+2012-09-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncher: rename test
+
+2012-09-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherDragWindow: add umapped, mapped signals
+
+2012-09-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: use sigc::hide instead of defining the dummy OnWindowMapped
+
+2012-09-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherDragWindow: cancel drag on window mapped/unmapped
+
+2012-08-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherDragWindow: emit cancelled signal when the Escape key has been pressed during drag
+	
+	Launcher: restore an icon position after that the dragging has been cancelled
+	. Fixes: https://bugs.launchpad.net/bugs/955561. Approved by Brandon Schaefer.
+
+2012-08-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests: updated to add HideDragWindow()
+
+2012-08-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestLauncherDragWindow: ungrab on destroy (to avoid Compositor crashes)
+
+2012-08-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: add HideDragWindow utility function
+
+2012-08-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherModel: s/GetCloserIcon/GetClosestIcon/
+
+2012-08-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests, TestLauncher: add a tests to verify that the icon order is restored when cancelling an icon drag
+
+2012-08-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: restore an icon position after that the dragging has been cancelled
+
+2012-08-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests, TestLauncherDragWindow: add cancellation test
+
+2012-08-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests, TestLauncherDragWindow: added skeleton test class
+
+2012-08-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherDragWindow: emit cancelled signal when the Escape key has been pressed during drag
+
+2012-08-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherModel: added GetCloserIcon to fetch the icon closer to the requested one
+	
+	Tests included.
+
+2012-08-31  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	UnityWindow now implements ScaleWindowInterface.
+	Implemented support to close window during the scale plugin.
+	Fake windows decoration rendering using panel code as base.. Fixes: https://bugs.launchpad.net/bugs/876017. Approved by Sam Spilsbury.
+
+2012-08-31  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	Merged mainline.
+
+2012-08-31  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	Added "xrender" missing dependency.
+
+2012-08-29  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	Make the windows header opaque to override the originial one.
+
+2012-08-29  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	Used PanelStyle to retrieve the themed close button.
+
+2012-08-29  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	Painted rounded window title.
+
+2012-08-29  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	Draw the correct window title.
+
+2012-08-28  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	Drawed window header using the gtk style color (based on panel code).
+	Removed compiz text plugin dependency.
+
+2012-08-27  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	Implemented windows title render.
+
+2012-08-27  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	Updated code to work with new compiz.
+
+2012-08-27  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	Merged mainline.
+
+2012-08-21  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	Overrided "scaleSelectWindow" to find the active window instead of function "checkForWindowAt";
+
+2012-08-21  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	Used OPAQUE const instead of real value.
+
+2012-08-21  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	Used const variables
+
+2012-08-21  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	Used client side buffer API.
+
+2012-08-20  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	Mainline merged.
+
+2012-08-20  Renato Araujo Oliveira Filho  <renato.filho@canonical.com>
+
+	UnityWindow now implements ScaleWindowInterface;
+	Implemented support to close window during the scale plugin;
+
+2012-08-31  Michal Hruby  <michal.mhr@gmail.com>
+
+	Implement new ordering of categories for home lens. Fixes: https://bugs.launchpad.net/bugs/1043915. Approved by Pawel Stolowski.
+
+2012-08-31  Michal Hruby  <michal.mhr@gmail.com>
+
+	Act on review comments
+
+2012-08-31  Michal Hruby  <michal.mhr@gmail.com>
+
+	Simplify a bit
+
+2012-08-31  Michal Hruby  <michal.mhr@gmail.com>
+
+	Add more tests
+
+2012-08-31  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge trunk
+
+2012-08-30  Michal Hruby  <michal.mhr@gmail.com>
+
+	Tiny cleanup
+
+2012-08-30  Michal Hruby  <michal.mhr@gmail.com>
+
+	Add test for ordering apps lens results as first
+
+2012-08-30  Michal Hruby  <michal.mhr@gmail.com>
+
+	Rename provides_private_content to provides_personal_content
+
+2012-08-30  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge trunk
+
+2012-08-30  Michal Hruby  <michal.mhr@gmail.com>
+
+	Remove debug msg
+
+2012-08-30  Michal Hruby  <michal.mhr@gmail.com>
+
+	Hook up the check properly
+
+2012-08-30  Michal Hruby  <michal.mhr@gmail.com>
+
+	Finish method that compares current search string with the apps lens results
+
+2012-08-29  Michal Hruby  <michal.mhr@gmail.com>
+
+	HomeLens: Prioritize categories from lenses with private content
+
+2012-08-29  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix build
+
+2012-08-29  Michal Hruby  <michal.mhr@gmail.com>
+
+	Add the newly introduced provides-private-content Lens property
+
+2012-08-29  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge trunk
+
+2012-08-29  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge home-lens-fixes branch
+
+2012-08-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix ActivateFirst
+
+2012-08-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Limit number of reorderings
+
+2012-08-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Move FilterModels methods into Lens class
+
+2012-08-27  Michal Hruby  <michal.mhr@gmail.com>
+
+	Implement design-requested reordering
+
+2012-08-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LensView: fallback to normal renderer (instead of Coverflow) if GLSL is not supported. Fixes: https://bugs.launchpad.net/bugs/1040628. Approved by Gord Allott.
+
+2012-08-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LensView: fallback to normal renderer (instead of Coverflow) if GLSL is enabled
+
+2012-08-31  Ugo Riboni  <ugo.riboni@canonical.com>
+
+	Progressively adjust the speed of the minimize animation. First time it is used is slower, then speeds up the more it is used.. Fixes: https://bugs.launchpad.net/bugs/1017510. Approved by Sam Spilsbury.
+
+2012-08-31  Ugo Riboni  <ugo.riboni@canonical.com>
+
+	Merge changes from trunk
+
+2012-08-29  Ugo Riboni  <ugo.riboni@canonical.com>
+
+	merge changes from trunk
+
+2012-08-29  Ugo Riboni  <ugo.riboni@canonical.com>
+
+	Move the trigger for the speed change to a more proper location
+
+2012-08-29  Ugo Riboni  <ugo.riboni@canonical.com>
+
+	Update author in copyright header and test tear down to use simpler functions.
+
+2012-08-29  Ugo Riboni  <ugo.riboni@canonical.com>
+
+	Add unit tests for the WindowMinimizeSpeedController
+
+2012-08-27  Ugo Riboni  <ugo.riboni@canonical.com>
+
+	Refactor WindowMinimizeSpeedController to not depend on UnityScreen for making it more testable
+
+2012-08-27  Ugo Riboni  <ugo.riboni@canonical.com>
+
+	Merge changes from trunk
+
+2012-08-24  Ugo Riboni  <ugo.riboni@canonical.com>
+
+	Temporarily add patch from Sam to fix NVIDIA crash on startup, so work can be done
+
+2012-08-24  Ugo Riboni  <ugo.riboni@canonical.com>
+
+	Merge changes from trunk
+
+2012-08-22  Ugo Riboni  <ugo.riboni@canonical.com>
+
+	merge changes from trunk
+
+2012-08-22  Ugo Riboni  <ugo.riboni@canonical.com>
+
+	Fix various errors
+
+2012-08-22  Ugo Riboni  <ugo.riboni@canonical.com>
+
+	Split off the minimize speed logic in a separate class
+
+2012-08-21  Ugo Riboni  <ugo.riboni@canonical.com>
+
+	Use references to avoid copying values unnecessarily
+
+2012-08-21  Ugo Riboni  <ugo.riboni@canonical.com>
+
+	Merge changes from trunk
+
+2012-08-20  Ugo Riboni  <ugo.riboni@canonical.com>
+
+	Merge changes from trunk
+
+2012-08-16  Ugo Riboni  <ugo.riboni@canonical.com>
+
+	Correctly refer to durations instead of speeds
+
+2012-08-14  Ugo Riboni  <ugo.riboni@canonical.com>
+
+	Adjust the default speeds per John's suggestion
+
+2012-08-14  Ugo Riboni  <ugo.riboni@canonical.com>
+
+	Progressively increase the minimize animation speed with use
+
+2012-08-31  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Don't desat bfb/hud icon in DNDReset.. Fixes: https://bugs.launchpad.net/bugs/1043963. Approved by Sam Spilsbury.
+
+2012-08-31  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Clean up.
+
+2012-08-31  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug 1043963.
+
+2012-08-31  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed POTFILE include.
+
+2012-08-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: make always possible to drag an icon to the bottom or top of its sublist
+	
+	It was not possible before to reorder application icons below the BFB or above the workspace switcher. Fixes: https://bugs.launchpad.net/bugs/1043968. Approved by Brandon Schaefer.
+
+2012-08-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	manual-tests, Launcher: icons dragging manual tests improved
+
+2012-08-31  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: make always possible to drag an icon to the bottom or top of its sublist
+	
+	It was not possible before to reorder application icons below the BFB or above the workspace switcher
+
+2012-08-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: make the controller enable the launcher struts, based on hide-mode option. Fixes: https://bugs.launchpad.net/bugs/1044005. Approved by Brandon Schaefer.
+
+2012-08-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	tests, TestLauncherController: added tests to check the launcher struts
+
+2012-08-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: remove the struts Hack, no really more needed
+
+2012-08-30  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: make the controller enable the launcher struts, based on hide-mode option
+
+2012-08-30  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	Tests gcin using XIM in unity.. Fixes: https://bugs.launchpad.net/bugs/1043627. Approved by Thomi Richards, Christopher Lee.
+
+2012-08-30  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Skip the tests if no able to run
+
+2012-08-29  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Made better doc strings, thanks Chris
+
+2012-08-29  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* missed new line before class
+
+2012-08-29  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* PEP8
+
+2012-08-29  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Added a couple more checks before running the tests
+
+2012-08-29  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Adds XIM tests for gcin
+
+2012-08-30  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Refactor device launcher icons.. Fixes: https://bugs.launchpad.net/bugs/713423. Approved by Marco Trevisan (Treviño).
+
+2012-08-29  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-08-29  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-08-28  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix typo.
+
+2012-08-28  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix typo.
+
+2012-08-28  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove OnRemoved fun.
+
+2012-08-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-08-22  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove magic string.
+
+2012-08-22  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Rename DeviceNotificationShower to DeviceNotificationDisplay.
+
+2012-08-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Update device uri.
+
+2012-08-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Revert po/*.
+
+2012-08-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Clean up.
+
+2012-08-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Clean up. Add tests for VolumeImp.
+
+2012-08-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-08-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Replace shared_ptr<Class> with Class::Ptr.
+
+2012-08-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	sed -i s/AddBlacklisted/TryToBlacklist/g
+	sed -i s/RemoveBlacklisted/TryToUnblacklist/g
+	Add dnd support from dash to launcher to un-blacklist devices.
+
+2012-08-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Make unity::launcher::DevicesSettings trackable. Dont' show Unmount menuitem for unmounted volumes.
+
+2012-08-16  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add missing file.
+
+2012-08-15  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add unit test for VolumeLauncherIcon.cpp
+
+2012-08-15  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use DeviceNotificationShower.
+
+2012-08-15  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add DeviceNotificationShower/Imp.
+
+2012-08-15  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Move device settings from a favorite list to a blacklist.
+	Abstract device settings and file manager opener for DI.
+
+2012-08-12  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Rename unity::launcher::DeviceLauncherIcon to unity::launcher::VolumeLauncherIcon.
+
+2012-08-12  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add TestMountAndOpenInFileManager method and test it.
+
+2012-08-11  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-08-11  Andrea Azzarone  <azzaronea@gmail.com>
+
+	DevicesSettings is no longer a Singleton \o/.
+
+2012-08-08  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove device options in ccsm. Refactor DeviceSettings. Will add a unit test later.
+
+2012-08-08  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add unity::launcher::Volume interface class with its implementation.
+
+2012-08-30  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added check for width < 0 in preview layouts.. Fixes: . Approved by Brandon Schaefer.
+
+2012-08-30  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added check for width < 0 in preview layouts.
+
+2012-08-30  Michal Hruby  <michal.mhr@gmail.com>
+
+	Activate proper result if the categories aren't displayed in-order. Fixes: https://bugs.launchpad.net/bugs/1040101, https://bugs.launchpad.net/bugs/1041583. Approved by Pawel Stolowski, Tim Penhey.
+
+2012-08-29  Michal Hruby  <michal.mhr@gmail.com>
+
+	Move stars to types, not vars
+
+2012-08-29  Michal Hruby  <michal.mhr@gmail.com>
+
+	Improve comment
+
+2012-08-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix ActivateFirst
+
+2012-08-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Move FilterModels methods into Lens class
+
+2012-08-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Small API changes
+
+2012-08-22  Michal Hruby  <michal.mhr@gmail.com>
+
+	Properly clean up CategoryRegistry
+
+2012-08-22  Michal Hruby  <michal.mhr@gmail.com>
+
+	Tiny API changes
+
+2012-08-30  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Add gmodule dependency. Fixes: . Approved by Sam Spilsbury, Andrea Azzarone.
+
+2012-08-30  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Also set the soversion
+
+2012-08-30  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Remove debug message
+
+2012-08-30  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:~unity-team/unity/add-gmodule-dep
+
+2012-08-29  Michal Hruby  <michal.mhr@gmail.com>
+
+	Add dependancy on gmodule
+
+2012-08-30  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Use target_link_libraries, link in pthread by default
+
+2012-08-29  Sebastien Bacher  <seb128@ubuntu.com>
+
+	updated the convert files to fix some typos in the key names
+	. Fixes: https://bugs.launchpad.net/bugs/1041631. Approved by Timo Jyrinki.
+
+2012-08-28  Sebastien Bacher  <seb128@ubuntu.com>
+
+	updated convert files to fix some typos in the key names
+
+2012-08-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Update unity autopilot tests to match autopilot API.. Fixes: . Approved by Christopher Lee.
+
+2012-08-29  Thomi Richards  <thomi.richards@canonical.com>
+
+	Don't import global_context, as it's moved.
+
+2012-08-28  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Fixes bug #950710 by expanding a PlacesGroup if it is the only category that contains results.. Fixes: https://bugs.launchpad.net/bugs/950710. Approved by Tim Penhey.
+
+2012-08-28  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Merge from trunk and fix conflicts
+
+2012-08-08  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Add manual test, since this is the most straightforward method to test this.
+
+2012-08-08  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Delete the unit tests written in last two commits, they won't work and they weren't taking us anywhere.
+
+2012-08-08  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Get tests to build, make tons of CMakeFile changes
+
+2012-08-08  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Add unit test
+
+2012-08-08  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Merge from trunk
+
+2012-08-08  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	fix variable names and members of LensView, thanks Tim
+
+2012-08-02  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Fix expand/collapse logic so it doesn't collapse every group it comes across
+
+2012-08-02  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Expand results when only one category is displayed (LP: #950710)
+
+2012-08-28  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Updated background layer for preview cover-art and details panels to be 10% low-light.. Fixes: . Approved by Andrea Azzarone.
+
+2012-08-20  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Reversed dash previews background layer to low-light.
+
+2012-08-28  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixes non-escaped character sequences in dash previews. (LP #1039020). Fixes: https://bugs.launchpad.net/bugs/1039020. Approved by Andrea Azzarone, Sam Spilsbury.
+
+2012-08-28  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Merged with trunk.
+
+2012-08-21  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Removed character escaping from preview description fields.
+
+2012-08-21  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added a escape sequence argument to StaticCairoText. Escape all text strings passed from UnityCore previews before display.
+
+2012-08-27  Omer Akram  <om26er@ubuntu.com>
+
+	Removed manual-tests that were already automated by Nick, added two tests to ensure Music and Video lens previews are tested.
+	
+	Also made a single class for all the Invocation tests previously they were in separate classes.. Fixes: . Approved by Thomi Richards.
+
+2012-08-28  Omer Akram  <om26er@ubuntu.com>
+
+	reuse code
+
+2012-08-28  Omer Akram  <om26er@ubuntu.com>
+
+	fix docstrings + reuse code instead of writing new
+
+2012-08-28  Omer Akram  <om26er@ubuntu.com>
+
+	merge trunk
+
+2012-08-25  Omer Akram  <om26er@ubuntu.com>
+
+	remove few manual test cases which are already automated
+
+2012-08-24  Omer Akram  <om26er@ubuntu.com>
+
+	merge trunk
+
+2012-08-27  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	Better wording for the keyboard shortcut. Updated from Jeremy Bichas' branch.. Fixes: https://bugs.launchpad.net/bugs/964673. Approved by Thomi Richards, Matt Price, Marco Trevisan (Treviño), MC Return.
+
+2012-08-27  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* minor fixes
+
+2012-08-27  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Merged trunk.
+	* Fixed shortcuts.
+
+2012-08-09  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Taking over this branch:
+	https://code.launchpad.net/~jbicha/unity/lp964673-improve-keyboard-shortcut-overlay-wording/+merge/99214
+	
+	* Fixed conflicts
+
+2012-08-27  Omer Akram  <om26er@ubuntu.com>
+
+	manual-test to AP; makes sure HUD key navigation is intact. Fixes: . Approved by Thomi Richards, Nick Dedekind.
+
+2012-08-27  Omer Akram  <om26er@ubuntu.com>
+
+	damn
+
+2012-08-27  Omer Akram  <om26er@ubuntu.com>
+
+	fix method name and docstring per instructions
+
+2012-08-24  Omer Akram  <om26er@ubuntu.com>
+
+	fix
+
+2012-08-24  Omer Akram  <om26er@ubuntu.com>
+
+	fix conflicts
+
+2012-08-24  Omer Akram  <om26er@ubuntu.com>
+
+	manual-test to AP; makes sure HUD keynav is intact
+
+2012-08-27  Christopher Lee  <chris.lee@canonical.com>
+
+	Minor cleanup of the quiclist tests, simplifying asserts used.. Fixes: . Approved by Omer Akram, Tim Penhey, jenkins.
+
+2012-08-27  Christopher Lee  <chris.lee@canonical.com>
+
+	Merged trunk and resolved conflict
+
+2012-07-12  Christopher Lee  <chris.lee@canonical.com>
+
+	Oops, was a little hasty in removing the 'dead' code' replaced.
+
+2012-07-12  Christopher Lee  <chris.lee@canonical.com>
+
+	Changed use of lambda, added docstring, removed dead code
+
+2012-07-12  Christopher Lee  <chris.lee@canonical.com>
+
+	Merge trunk
+
+2012-07-12  Christopher Lee  <chris.lee@canonical.com>
+
+	Cleanup/simplify asserts used
+
+2012-07-11  Christopher Lee  <chris.lee@canonical.com>
+
+	Minor update to use Eventually
+
+2012-07-11  Christopher Lee  <chris.lee@canonical.com>
+
+	Updated test to use new get_icon (not the deleted get_icon_by_desktop_id)
+
+2012-07-11  Christopher Lee  <chris.lee@canonical.com>
+
+	Merging pre-req branch
+
+2012-07-11  Christopher Lee  <chris.lee@canonical.com>
+
+	Merge prereq branch
+
+2012-08-27  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed no vertical scrollbar in music preview tracks view. (LP#1039462). Fixes: https://bugs.launchpad.net/bugs/1039462. Approved by Brandon Schaefer.
+
+2012-08-22  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Merge with trunk
+
+2012-08-21  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Removed preview Tracks drawing override to fix scroll-bar drawing.
+
+2012-08-27  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	Dash now gets correct focus in X when opening.. Fixes: . Approved by Andrea Azzarone, Tim Penhey.
+
+2012-08-24  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* The Launcher was stealing X focus from the Dash when it opened.
+	* Now the dash has the correct focus, so XIM works.
+
+2012-08-26  MC Return  <mc.return@gmx.net>
+
+	Fixed many minor typos.. Fixes: . Approved by Tim Penhey, Brandon Schaefer.
+
+2012-08-17  MC Return  <mc.return@gmx.net>
+
+	Merged lp:unity
+
+2012-08-15  MC Return  <mc.return@gmx.net>
+
+	Merged latest lp:unity
+
+2012-08-14  MC Return  <mc.return@gmx.net>
+
+	Hopefully fixed remaining UBUS_LAUNCHER_END_KEY_SWTICHER -> UBUS_LAUNCHER_END_KEY_SWITCHER typos
+
+2012-07-24  MC Return  <mc.return@gmx.net>
+
+	Rebased on latest lp:unity
+
+2012-07-24  MC Return  <mc.return@gmx.net>
+
+	Fixed typo in all instances of UBUS_LAUNCHER_START_KEY_SWTICHER
+
+2012-07-23  MC Return  <mc.return@gmx.net>
+
+	Fixed 'the objects destruction' -> 'the object's destruction' typo
+
+2012-07-23  MC Return  <mc.return@gmx.net>
+
+	Rebased on latest lp:unity
+
+2012-07-12  MC Return  <mc.return@gmx.net>
+
+	Rebased to latest lp:unity
+
+2012-07-09  MC Return  <mc.return@gmx.net>
+
+	Fixed more typos
+
+2012-07-09  MC Return  <mc.return@gmx.net>
+
+	Fixed wording and typos
+
+2012-07-09  MC Return  <mc.return@gmx.net>
+
+	Fixed accidentially copy-pasted line in previous commit
+
+2012-07-09  MC Return  <mc.return@gmx.net>
+
+	Fixed some typos
+	
+	modified:
+	plugins/unityshell/src/unityshell.cpp
+	shortcuts/StandaloneShortcuts.cpp
+
+2012-08-25  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Don't enable client states if BUILD_MODERN_COMPIZ_GL. Fixes: https://bugs.launchpad.net/bugs/1041123. Approved by Daniel van Vugt, Olivier Tilloy.
+
+2012-08-24  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Don't enable client states again if running with USE_MODERN_COMPIZ_GL
+
+2012-08-24  Robert Carr  <racarr@canonical.com>
+
+	Webapps support for unity. Fixes: . Approved by Timo Jyrinki, Marco Trevisan (Treviño).
+
+2012-08-21  Robert Carr  <racarr@canonical.com>
+
+	bamf_application_get_focus_child->bamf_application_get_focusable_child
+
+2012-08-20  Robert Carr  <racarr@canonical.com>
+
+	Merge webapps
+
+2012-08-19  Robert Carr  <racarr@canonical.com>
+
+	Merge trunk
+
+2012-08-19  Robert Carr  <racarr@canonical.com>
+
+	Some webapps cleanup
+
+2012-08-10  Ken VanDine  <ken.vandine@canonical.com>
+
+	manual rebase for webapps integration
+
+2012-08-24  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed introspection bug in dash result view. (LP#1040875). Fixes: https://bugs.launchpad.net/bugs/1040875. Approved by Marco Trevisan (Treviño).
+
+2012-08-24  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed result view introspection.
+
+2012-08-23  Omer Akram  <om26er@ubuntu.com>
+
+	makes sure if the hud closes when the mouse is clicked outside of the HUD region after a search has been entered and then cleared from the searchbox. Removed the equivalent manual-test.
+	
+	Now we also make sure the Hud closes with the press of escape key in both shrunk and expanded forms. Fixes: . Approved by Thomi Richards.
+
+2012-08-24  Omer Akram  <om26er@ubuntu.com>
+
+	fix
+
+2012-08-24  Omer Akram  <om26er@ubuntu.com>
+
+	merge
+
+2012-08-22  Omer Akram  <om26er@ubuntu.com>
+
+	add a few tests, remove one manual
+
+2012-08-23  Omer Akram  <om26er@ubuntu.com>
+
+	manual-test to AP; makes sure double clicking the grab area of a maximized app restores(unmaximize) it.. Fixes: . Approved by Thomi Richards.
+
+2012-08-23  Omer Akram  <om26er@ubuntu.com>
+
+	fix indentation
+
+2012-08-23  Omer Akram  <om26er@ubuntu.com>
+
+	fix
+
+2012-08-23  Omer Akram  <om26er@ubuntu.com>
+
+	manual-test to AP; double clicking unmaximize
+
+2012-08-23  Omer Akram  <om26er@ubuntu.com>
+
+	fix TODO; test newly activated lens' searchbar have the focus. Also removed un-needed semicolons. Fixes: . Approved by Thomi Richards.
+
+2012-08-23  Omer Akram  <om26er@ubuntu.com>
+
+	fix indent
+
+2012-08-23  Omer Akram  <om26er@ubuntu.com>
+
+	fix TODO; test newly activated lens' searchbar have the focus
+
+2012-08-23  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bottom-up key navigation in dash filterbar.. Fixes: https://bugs.launchpad.net/bugs/1028810. Approved by Brandon Schaefer.
+
+2012-08-22  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-08-22  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Clean up test.
+
+2012-08-08  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix typo.
+
+2012-08-08  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-07-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add AP test.
+
+2012-07-25  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug 1028810.
+
+2012-08-23  Charles Kerr  <charles.kerr@canonical.com>
+
+	Adds the new Sync Indicator into panel-service's indicator_order list.. Fixes: . Approved by Omer Akram.
+
+2012-08-22  Charles Kerr  <charles.kerr@canonical.com>
+
+	in panel-service, add the sync indicator to the indicator_order list
+
+2012-08-23  Jason Smith  <jason.smith@canonical.com>
+
+	Fix bug #1039959. Fixes: https://bugs.launchpad.net/bugs/1039959. Approved by .
+
+2012-08-23  Jason Smith  <jason.smith@canonical.com>
+
+	Fix crash
+
+2012-08-23  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Increases launcher scroll speed using mouse wheel by 2.5 times the original.. Fixes: https://bugs.launchpad.net/bugs/906072. Approved by Andrea Azzarone.
+
+2012-08-21  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Merge from trunk and fix conflicts
+
+2012-08-08  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Fix tests
+
+2012-08-08  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Add unit test, doesn't seem to work as of now
+
+2012-08-06  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Increase launcher wheel scroll speed by 2.5x (LP: #906072)
+
+2012-08-23  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Dragging and dropping a SD card to the trash should 'safely remove' the card. Fixes: https://bugs.launchpad.net/bugs/960910. Approved by Andrea Azzarone.
+
+2012-08-21  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Conflict mishap, fixed completely now
+
+2012-08-21  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Fix unnecessary delta with trunk that popped up upon merge
+
+2012-08-21  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Merge from trunk and resolve conflicts
+
+2012-08-08  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Add manual test for change
+
+2012-08-03  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Stop a DeviceLauncherIcon if it can be stopped but not ejected (LP: #960910)
+
+2012-08-23  Tim Penhey  <tim.penhey@canonical.com>
+
+	Changed code to get a better, readable stack trace for bug 964897. Fixes: https://bugs.launchpad.net/bugs/964897. Approved by Andrea Azzarone.
+
+2012-08-22  Tim Penhey  <tim.penhey@canonical.com>
+
+	Extract the problematic lambda.
+
+2012-08-23  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Fix bug 1038138 by applying some tweaks for tiles with backlight 0.0f. Fixes: https://bugs.launchpad.net/bugs/1038138. Approved by Andrea Azzarone.
+
+2012-08-21  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Don't use custom float alpha, not needed
+
+2012-08-21  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Removed lancher icon backlight intensity on colorify backgound.
+
+2012-08-21  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Fixes colorization of tiles edges
+
+2012-08-23  Omer Akram  <om26er@ubuntu.com>
+
+	removed a manual test case which no longer applies after bzr2605. Fixes: . Approved by Sam Spilsbury.
+
+2012-08-22  Omer Akram  <om26er@ubuntu.com>
+
+	remove the manual case, we changed the behavior
+
+2012-08-23  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Fix build failure. Don't refer to files that don't exist:
+	dash/PreviewMusic.cpp
+	dash/PreviewMusicTrack.cpp
+	(LP: #1040431) (regression of LP: #1038886). Fixes: https://bugs.launchpad.net/bugs/1040431. Approved by Andrea Azzarone.
+
+2012-08-23  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Fix build failure. Don't refer to files that don't exist:
+	dash/PreviewMusic.cpp
+	dash/PreviewMusicTrack.cpp
+	(LP: #1040431) (regression of LP: #1038886)
+
+2012-08-23  Christopher Lee  <chris.lee@canonical.com>
+
+	A typo (keyword argument wasn't properly removed) in an autopilot emulator was causing tests to error. Fixes: . Approved by Thomi Richards.
+
+2012-08-23  Christopher Lee  <chris.lee@canonical.com>
+
+	Oops, fixed the wrong typo
+
+2012-08-23  Christopher Lee  <chris.lee@canonical.com>
+
+	Typo fix in emulator
+
+2012-08-22  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Provides integration into gnome-control-center for unity.. Fixes: . Approved by Timo Jyrinki, Tim Penhey.
+
+2012-08-22  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge
+
+2012-08-22  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Also dep on dbus-glib-1
+
+2012-08-22  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Remove explicit dep on gconf
+
+2012-08-22  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Integrated
+
+2012-08-21  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Apparantly just show-hud works
+
+2012-08-21  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	UScreen.cpp was removed
+
+2012-08-21  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge lp:unity
+
+2012-08-17  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Added missing file
+
+2012-08-17  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Generate unity g-c-c integration files
+
+2012-08-15  Didier Roche  <didier.roche@canonical.com>
+
+	first part of g-c-c integration
+
+2012-08-22  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fix keyboard navigation in dash previews. Fixes: . Approved by Gord Allott.
+
+2012-08-22  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Refocus dash on preview close.
+
+2012-08-22  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Merge with trunk
+
+2012-08-21  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Release preview container cleanly when closing preview. Fixes preview container leak.
+
+2012-08-20  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed keyboard navigation in dash previews.
+
+2012-08-20  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed keypress eating by child views in dash previews.
+
+2012-08-22  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use linear filtering to draw icons (when needed).. Fixes: https://bugs.launchpad.net/bugs/1036231. Approved by Tim Penhey.
+
+2012-08-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use linear filtering to draw icons (when needed).
+
+2012-08-22  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added Autopilot tests for Dash Previews.
+	Fixed introspection of Lens Results for use in preview autopilot tests. Lens result introspection includes proposed position of the result in the result grid view.. Fixes: . Approved by Gord Allott.
+
+2012-08-22  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Merge with trunk
+
+2012-08-21  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed duplicate definition.
+
+2012-08-20  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Removed Video/Music AP tests until sample results are added.
+
+2012-08-20  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Removed automation instruction note from some manual preview tests.
+
+2012-08-20  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Removed superfluous code from result grid. Fixed preview PA test comment.
+
+2012-08-20  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed errors in preview test hints.
+
+2012-08-20  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Merge with trunk
+
+2012-08-20  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Merge with trunk
+
+2012-08-20  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added more AP tests for previews.
+
+2012-08-17  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Preview left/right navigation autopilot tests.
+
+2012-08-17  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Merge with trunk
+
+2012-08-17  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	More work on preview introspection and AP tests.
+
+2012-08-16  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	untested autopilot tests + manual tests.
+
+2012-08-16  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Preview object introspecion.
+
+2012-08-22  Nick Dedekind  <nick.dedekind@canonical.com>
+
+	Adding test for fix-950782, Application switching (Alt+tab) no longer updates panel menu titles.. Fixes: . Approved by Andrea Azzarone, Thomi Richards.
+
+2012-08-22  Christopher Lee  <chris.lee@canonical.com>
+
+	Updated tests docstring
+
+2012-08-22  Christopher Lee  <chris.lee@canonical.com>
+
+	Added test for fix-950782 (panel title not updated while switching apps)
+
+2012-08-22  Christopher Lee  <chris.lee@canonical.com>
+
+	Merged Trunk
+
+2012-06-07  Nick Dedekind  <nick.dedekind@canonical.com>
+
+	Application switching (Alt+tab) no longer updates panel menu titles.
+
+2012-08-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix annoying warning in UnityCore/Hud.cpp. Fixes: https://bugs.launchpad.net/bugs/1039451. Approved by Tim Penhey.
+
+2012-08-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix annoying warning.
+
+2012-08-21  Omer Akram  <om26er@ubuntu.com>
+
+	Tests that Alt+ArrowKey events are correctly passed to the active window when not interacting with Unity.. Fixes: . Approved by Brandon Schaefer.
+
+2012-08-22  Omer Akram  <om26er@ubuntu.com>
+
+	merge
+
+2012-08-21  Omer Akram  <om26er@ubuntu.com>
+
+	remove the un-needed / 
+
+2012-08-18  Omer Akram  <om26er@ubuntu.com>
+
+	fix
+
+2012-08-18  Omer Akram  <om26er@ubuntu.com>
+
+	test unity don't eat alt+arrowkey events
+
+2012-08-21  Omer Akram  <om26er@ubuntu.com>
+
+	merge
+
+2012-08-22  Omer Akram  <om26er@ubuntu.com>
+
+	merge
+
+2012-08-21  Omer Akram  <om26er@ubuntu.com>
+
+	Tests if Middle click pastes into dash searchbar.. Fixes: . Approved by Thomi Richards.
+
+2012-08-22  Omer Akram  <om26er@ubuntu.com>
+
+	merge trunk + fix siliness
+
+2012-08-18  Omer Akram  <om26er@ubuntu.com>
+
+	fix indentation
+
+2012-08-18  Omer Akram  <om26er@ubuntu.com>
+
+	removed manual case added AP test case for MiddleClickPaste
+
+2012-08-21  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Stopped previews with no image or image source uri logging warning messages from the thumbnail generator.. Fixes: . Approved by Michal Hruby.
+
+2012-08-21  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Merge with trunk
+
+2012-08-21  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Moved cover-art image setting to common preview code.
+
+2012-08-17  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Check validity of source_image_uri in preview artwork.
+
+2012-08-17  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Check return from thumbnail generator.
+
+2012-08-21  Omer Akram  <om26er@ubuntu.com>
+
+	HUD should activate search item and close itself on enter.. Fixes: . Approved by Andrea Azzarone.
+
+2012-08-21  Omer Akram  <om26er@ubuntu.com>
+
+	fix docstring
+
+2012-08-18  Omer Akram  <om26er@ubuntu.com>
+
+	fix damn indentation
+
+2012-08-18  Omer Akram  <om26er@ubuntu.com>
+
+	fix damn indentation
+
+2012-08-18  Omer Akram  <om26er@ubuntu.com>
+
+	test
+
+2012-08-21  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Fix multiple build failures due to incorrect #ifdefs when configured with
+	-DBUILD_GLES=ON (which then defines USE_GLES).
+	(LP: #1039453). Fixes: https://bugs.launchpad.net/bugs/1039453. Approved by Sam Spilsbury.
+
+2012-08-21  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Fix multiple build failures due to incorrect #ifdefs when configured with
+	-DBUILD_GLES=ON (which then defines USE_GLES).
+	(LP: #1039453)
+
+2012-08-21  Michal Hruby  <michal.mhr@gmail.com>
+
+	Implement rendering of UnityProtocolAnnotatedIcon. Fixes: . Approved by Gord Allott, Marco Trevisan (Treviño).
+
+2012-08-20  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix tests
+
+2012-08-20  Michal Hruby  <michal.mhr@gmail.com>
+
+	Add test for AnnotatedIcon
+
+2012-08-20  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix compilation
+
+2012-08-20  Michal Hruby  <michal.mhr@gmail.com>
+
+	Use shared pointers with custom deleters
+
+2012-08-20  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge trunk
+
+2012-07-27  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge trunk
+
+2012-07-17  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:~mhr3/unity/update-core-preview-api
+
+2012-07-11  Michal Hruby  <michal.mhr@gmail.com>
+
+	Implement support for AnnotatedIcon into IconLoader
+
+2012-07-09  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:~mhr3/unity/update-core-preview-api
+
+2012-07-09  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:~mhr3/unity/core-object-safer-typechecks
+
+2012-08-21  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Fixes monitor hotplug corruption (LP #1039410). Fixes: https://bugs.launchpad.net/bugs/1039410. Approved by Daniel van Vugt.
+
+2012-08-21  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Call outputChangeNotify
+
+2012-08-21  Omer Akram  <om26er@ubuntu.com>
+
+	Removed duplicate manual test which is already present in Launcher.txt file. . Fixes: . Approved by Thomi Richards.
+
+2012-08-18  Omer Akram  <om26er@ubuntu.com>
+
+	Removed a duplicate manual testcase. Its already present in the Launcher.txt file
+
+2012-08-21  Omer Akram  <om26er@ubuntu.com>
+
+	get panel height from the panel instead of hardcoding, also removed unneeded semicolons.. Fixes: . Approved by Thomi Richards.
+
+2012-08-19  Omer Akram  <om26er@ubuntu.com>
+
+	fix TODO
+
+2012-08-18  Omer Akram  <om26er@ubuntu.com>
+
+	merge
+
+2012-08-17  Omer Akram  <om26er@ubuntu.com>
+
+	merge trunk
+
+2012-08-17  Omer Akram  <om26er@ubuntu.com>
+
+	trunk
+
+2012-08-17  Omer Akram  <om26er@ubuntu.com>
+
+	merge
+
+2012-08-21  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Always paint the shell separately per output. Otherwise the logic for
+	deciding whether the shell should be painted on a given monitor makes no
+	sense and the shell is often not painted at all. (LP: #1037408)
+	
+	This also appears to resolve VBO and FBO rendering bugs:
+	(LP: #1036568) (LP: #1036569)
+	and Benchmark painting:
+	(LP: #1036609). Fixes: https://bugs.launchpad.net/bugs/1036568, https://bugs.launchpad.net/bugs/1036569, https://bugs.launchpad.net/bugs/1036609, https://bugs.launchpad.net/bugs/1037408. Approved by Sam Spilsbury.
+
+2012-08-20  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Always paint the shell separately per output. Otherwise the logic for
+	deciding whether the shell should be painted on a given monitor makes no
+	sense and the shell is often not painted at all. (LP: #1037408)
+
+2012-08-21  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Don't comment out the nuxPrologue/Epilogue functions if building
+	USE_MODERN_COMPIZ_GL. They are critical functions and commenting them out
+	causes serious rendering bugs: (LP: #1036528) (LP: #1037949). Fixes: https://bugs.launchpad.net/bugs/1036528, https://bugs.launchpad.net/bugs/1037949. Approved by Sam Spilsbury.
+
+2012-08-17  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Don't comment out the nuxPrologue/Epilogue functions if building
+	USE_MODERN_COMPIZ_GL. They are critical functions and commenting them out
+	causes serious rendering bugs: (LP: #1036528) (LP: #1037949)
+
+2012-08-20  Jason Smith  <jason.smith@canonical.com>
+
+	Implements coverflow in the dash based on the work done in Nux to create a coverflow widget. Fixes: . Approved by Gord Allott.
+
+2012-08-20  Jason Smith  <jason.smith@canonical.com>
+
+	remove unneeded changes for this subset
+
+2012-08-20  Jason Smith  <jason.smith@canonical.com>
+
+	make preview move left/right
+
+2012-08-20  Jason Smith  <jason.smith@canonical.com>
+
+	make browser previews work
+
+2012-08-20  Jason Smith  <jason.smith@canonical.com>
+
+	make previews pop up
+
+2012-08-20  Jason Smith  <jason.smith@canonical.com>
+
+	make work with previews
+
+2012-08-20  Jason Smith  <jason.smith@canonical.com>
+
+	remove hack to force coverflow
+
+2012-08-20  Jason Smith  <jason.smith@canonical.com>
+
+	merge work to disable places group text
+
+2012-08-20  Gord Allott  <gord.allott@canonical.com>
+
+	latest flowview
+
+2012-08-20  Gord Allott  <gord.allott@canonical.com>
+
+	disables the places group text on flow
+
+2012-08-20  Jason Smith  <jason.smith@canonical.com>
+
+	change sizing to make fit
+
+2012-08-20  Jason Smith  <jason.smith@canonical.com>
+
+	minor fixes
+
+2012-08-20  Jason Smith  <jason.smith@canonical.com>
+
+	fix crash
+
+2012-08-20  Jason Smith  <jason.smith@canonical.com>
+
+	merge trunk
+
+2012-08-20  Jason Smith  <jason.smith@canonical.com>
+
+	add missing files
+
+2012-08-09  Jason Smith  <jason.smith@canonical.com>
+
+	Recreate coverflow branch without background and alignment tweaks.
+
+2012-08-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Added AP tests for ibus activation on keydown and on keyup.. Fixes: . Approved by Tim Penhey, jenkins.
+
+2012-07-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Moved code into the correct place.
+
+2012-07-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Several changes, mostly around making sure that the scenarios are applied to classes correctly.
+
+2012-07-18  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed class setup method.
+
+2012-07-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_ibus: remove debug data
+
+2012-07-18  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_ibus: add activation tests based on scenarios
+
+2012-07-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	autopilot, test_ibus: updated doc strings
+
+2012-07-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merge with trunk
+
+2012-06-27  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Tests ibus: added tests for ibus activation on press and release
+
+2012-08-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use the same padding for the minimum width and height of hud::Icon.. Fixes: https://bugs.launchpad.net/bugs/1035951. Approved by Brandon Schaefer.
+
+2012-08-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use the same padding for the minimum width and height of hud::Icon.
+
+2012-08-20  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove un-needed private memebers.
+
+2012-08-20  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	Multi-touch gestures for switching between windows (a.k.a. "alt-tab with gestures").
+	
+	Approved by Tim Penhey.
+	
+	The following gestural interactions with the window switcher have been implemented:
+	
+	1. 3-fingers double tap -> switches to previous window
+	
+	2. 3-fingers tap followed by 3-fingers hold -> shows window switcher
+	- drag those 3-fingers -> change selected window icon
+	- release fingers -> selects window and closes switcher
+	
+	3. 3-fingers tap followed by 3-fingers hold -> shows window switcher
+	- release fingers -> switcher will kept being shown for some seconds still
+	- drag with one or three fingers -> change selected window
+	- release finger(s) -> selects window and closes switcher
+	
+	4. 3-fingers tap followed by 3-fingers hold -> shows window switcher
+	- release fingers -> switcher will kept being shown for some seconds still
+	- tap on some window icon -> selects that icon and closes the switcher
+	
+	Unit tests included.. Fixes: . Approved by Tim Penhey.
+
+2012-08-14  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	Replacing assertions with error logging
+
+2012-08-14  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	Implementing pimpl idiom in GesturalWindowSwitcher
+
+2012-08-14  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	Implementing pimpl idiom in CompoundGestureRecognizer
+
+2012-08-14  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	Removing unused LauncherControllerMock
+
+2012-08-14  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	Removing unnecessary line.
+	
+	It seems 10 entries are already allocated in most implementations.
+
+2012-08-14  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	Removing some leftovers from previous implementations
+
+2012-08-14  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	put some gesture classes into unity name space.
+
+2012-08-14  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	Log an error instead of asserting
+
+2012-08-14  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	Change coding style in CompoundGestureRecognizer
+
+2012-08-14  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	Update code comment on launcher icon selection
+
+2012-08-14  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	add some white spaces to inline comment
+
+2012-08-03  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	Multitouch gestures for switching between windows (a.k.a. "alt-tab with gestures")
+	
+	The following gestural interactions with the window switcher have been implemented:
+	
+	1. 3-fingers double tap -> switches to previous window
+	
+	2. 3-fingers tap followed by 3-fingers hold -> shows window switcher
+	- drag those 3-fingers -> change selected window icon
+	- release fingers -> selects window and closes switcher
+	
+	3. 3-fingers tap followed by 3-fingers hold -> shows window switcher
+	- release fingers -> switcher will kept being shown for some seconds still
+	- drag with one or three fingers -> change selected window
+	- release finger(s) -> selects window and cloeses switcher
+	
+	4. 3-fingers tap followed by 3-fingers hold -> shows window switcher
+	- release fingers -> switcher will kept being shown for some seconds still
+	- tap on some window icon -> selects that icon and closes the switcher
+
+2012-07-27  Daniel d'Andrada  <daniel.dandrada@canonical.com>
+
+	Multitouch gestures for switching between windows (a.k.a. "alt-tab with gestures")
+
+2012-08-20  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Implemented Preview::EmitClosed method. Fixes: . Approved by Michal Hruby.
+
+2012-08-20  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Preview - EmitClosed() should actually be called from dash::previews::Preview.
+
+2012-08-20  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Preview - call EmitClosed in Preview dtor.
+
+2012-08-20  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Preview - renamed PreviewClosed to EmitClosed.
+
+2012-08-17  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Merged trunk.
+
+2012-08-17  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Added simple test for PreviewClosed signal.
+
+2012-08-17  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Previews - implemented PreviewClosed() signal.
+
+2012-08-16  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Merged trunk.
+
+2012-08-16  Pawel Stolowski  <pawel.stolowski@canonical.com>
+
+	Merged trunk.
+
+2012-08-20  Tim Penhey  <tim.penhey@canonical.com>
+
+	Enable the new nux animation framework. Update BGHash to use the new animations.. Fixes: . Approved by Andrea Azzarone.
+
+2012-08-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Different method name.
+
+2012-08-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Update the BGHash to use a color animation.
+
+2012-08-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Hook up the nux animations to the shell.
+
+2012-08-20  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Stop the launcher from overdrawing itself, hence losing transparency. It seems
+	to happen whenever the panel redraws but the launcher region is not damaged.
+	I have no idea why redrawing the panel unconditionally redraws the launcher
+	too, but this works around the problem for now. (LP: #1036519). Fixes: https://bugs.launchpad.net/bugs/1036519. Approved by Sam Spilsbury.
+
+2012-08-17  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Merge latest lp:unity
+
+2012-08-16  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Stop the launcher from overdrawing itself, hence losing transparency. It seems
+	to happen whenever the panel redraws but the launcher region is not damaged.
+	I have no idea why redrawing the panel unconditionally redraws the launcher
+	too, but this works around the problem for now. (LP: #1036519)
+
+2012-08-20  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Fix build failure. Don't refer to files that don't exist:
+	dash/PreviewMusic.cpp
+	dash/PreviewMusicTrack.cpp
+	(LP: #1038886)
+	. Fixes: https://bugs.launchpad.net/bugs/1038886. Approved by Andrea Azzarone.
+
+2012-08-20  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Fix build failure. Don't refer to files that don't exist:
+	dash/PreviewMusic.cpp
+	dash/PreviewMusicTrack.cpp
+	(LP: #1038886)
+
+2012-08-20  MC Return  <mc.return@gmx.net>
+
+	Minor speed improvements.. Fixes: . Approved by Brandon Schaefer.
+
+2012-08-18  MC Return  <mc.return@gmx.net>
+
+	Checking for emptiness instead of checking if size == 0 to optimize performance
+
+2012-08-18  MC Return  <mc.return@gmx.net>
+
+	Prefix operators to optimize performance
+
+2012-08-18  MC Return  <mc.return@gmx.net>
+
+	Replaced the check push_preview_.size() with !push_preview_.empty() to optimize performance (2x)
+
+2012-08-17  Michal Hruby  <michal.mhr@gmail.com>
+
+	Use single category per lens in home lens. Fixes: . Approved by Neil J. Patel.
+
+2012-08-16  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge categories in home lens to one per lens
+
+2012-08-16  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge filter-models branch
+
+2012-08-17  Gord Allott  <gord.allott@canonical.com>
+
+	fixes dash drawing when preview is open. Fixes: . Approved by Neil J. Patel.
+
+2012-08-17  Gord Allott  <gord.allott@canonical.com>
+
+	latest unity
+
+2012-08-17  Gord Allott  <gord.allott@canonical.com>
+
+	correct drawing of previews
+
+2012-08-16  Gord Allott  <gord.allott@canonical.com>
+
+	fixes scrolling
+
+2012-08-16  Gord Allott  <gord.allott@canonical.com>
+
+	didrocks revert of 2566
+
+2012-08-16  Gord Allott  <gord.allott@canonical.com>
+
+	latest unity pull
+
+2012-08-17  Michal Hruby  <michal.mhr@gmail.com>
+
+	Use FilterModels inside each ResultView.. Fixes: https://bugs.launchpad.net/bugs/1027811. Approved by Marco Trevisan (Treviño).
+
+2012-08-17  Michal Hruby  <michal.mhr@gmail.com>
+
+	Get rid of few more RawPtr
+
+2012-08-17  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge trunk and fix conflicts yet again
+
+2012-08-17  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge trunk, fix conflicts
+
+2012-08-16  Michal Hruby  <michal.mhr@gmail.com>
+
+	Act on review comments
+
+2012-08-16  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix tests
+
+2012-08-16  Michal Hruby  <michal.mhr@gmail.com>
+
+	Tiny optimization for FilterModels
+
+2012-08-15  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge trunk
+
+2012-08-15  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge trunk up to r2567
+
+2012-08-15  Michal Hruby  <michal.mhr@gmail.com>
+
+	Reorder categories in LensView when needed
+
+2012-08-15  Michal Hruby  <michal.mhr@gmail.com>
+
+	Add tests as requested in review of result-iterator branch
+
+2012-08-15  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix signed vs unsigned comparison
+
+2012-08-15  Michal Hruby  <michal.mhr@gmail.com>
+
+	Ground work for dynamic reordering of categories
+
+2012-08-14  Michal Hruby  <michal.mhr@gmail.com>
+
+	Emit Lens' connected notification only when the property really changes
+
+2012-08-14  Michal Hruby  <michal.mhr@gmail.com>
+
+	Make sure we disconnect from model signals when swarm name changes
+
+2012-08-13  Michal Hruby  <michal.mhr@gmail.com>
+
+	Make ResultIterator operator* return non-const Result, this lowers the number of copies we need considerably
+
+2012-08-13  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix criticals coming from ResultView's destructor
+
+2012-08-12  Michal Hruby  <michal.mhr@gmail.com>
+
+	This should work
+
+2012-08-12  Michal Hruby  <michal.mhr@gmail.com>
+
+	Initial cut at ResultIterator usage
+
+2012-08-11  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge Gord's result-iterator branch
+
+2012-08-17  MC Return  <mc.return@gmx.net>
+
+	Minor optimizations:
+	
+	Used 'if (entries_.empty())' instead of 'if (entries_.size() == 0) because it can be faster. xxxx.size() can take linear time while xxxx.empty() is guaranteed to take constant time.
+	
+	Replaced 'windows.size() > 0' with '!windows.empty()' and '!m_ActionList.size()' with 'm_ActionList.empty()' (x2) in PluginAdapterCompiz.cpp to optimize performance.
+	
+	Simplified void Indicator::Sync(Indicator::Entries const& new_entries) by removing the assignment of an empty list into an empty list and just using if (!entries_.empty()) instead of the else condition.
+	
+	Removed redundant parentheses.
+	
+	Introduced std::size_t num_windows = windows.size(); and changed the if statement in PluginAdapter::ScaleWindowGroup to check num_windows.
+	
+	Removed declaration of the unused variable 'next_focused_uri'.. Fixes: . Approved by Tim Penhey.
+
+2012-08-17  MC Return  <mc.return@gmx.net>
+
+	Fixed compilation by reverting r2543
+
+2012-08-17  MC Return  <mc.return@gmx.net>
+
+	Merged lp:unity
+
+2012-08-08  MC Return  <mc.return@gmx.net>
+
+	Introduced std::size_t num_windows = windows.size(); and changed the if statement in PluginAdapter::ScaleWindowGroup to check num_windows
+
+2012-08-08  MC Return  <mc.return@gmx.net>
+
+	Removed redundant parentheses
+
+2012-08-08  MC Return  <mc.return@gmx.net>
+
+	Simplified void Indicator::Sync(Indicator::Entries const& new_entries) by removing the assignment of an empty list into an empty list and just using if (!entries_.empty()) instead of the else condition.
+
+2012-08-05  MC Return  <mc.return@gmx.net>
+
+	Removed declaration of the unused variable 'next_focused_uri'
+
+2012-08-04  MC Return  <mc.return@gmx.net>
+
+	Do not create a unnecessary string copy (x2)
+
+2012-08-04  MC Return  <mc.return@gmx.net>
+
+	Replaced 'windows.size() > 0' with '!windows.empty()' and '!m_ActionList.size()' with 'm_ActionList.empty()' (x2) in PluginAdapterCompiz.cpp to optimize performance
+
+2012-08-04  MC Return  <mc.return@gmx.net>
+
+	Used 'if (entries_.empty())' instead of 'if (entries_.size() == 0) because it can be faster. xxxx.size() can take linear time while xxxx.empty() is guaranteed to take constant time.
+
+2012-08-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Always set _launcher_drag_delta_max/_launcher_drag_delta_min.. Fixes: . Approved by Tim Penhey.
+
+2012-08-03  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Always set _launcher_drag_delta_max/_launcher_drag_delta_min.
+
+2012-08-17  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	The launcher will only autohide when the mouse leaves the launcher now.. Fixes: https://bugs.launchpad.net/bugs/745707. Approved by Thomi Richards.
+
+2012-08-16  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Merged trunk (No conflict?? Yay!)
+
+2012-08-16  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* AP test fixes
+
+2012-08-16  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* remove printf statement
+
+2012-08-10  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* merged trunk
+
+2012-08-10  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Clicking was to slow. Sometimes it would press down long enough to activate dragging of the icon
+
+2012-08-10  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixed enum
+
+2012-08-08  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Added AP test
+
+2012-08-08  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* removed printf statments
+
+2012-08-08  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* removed more stuff
+
+2012-08-08  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Remove LAST_ACTION quirk in the hide machine as that is no longer used.
+
+2012-08-07  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Do not autohide when mouse is over the launcher.
+
+2012-08-16  Omer Akram  <om26er@ubuntu.com>
+
+	test if video lens reveals with super+v. Fixes: . Approved by Tim Penhey.
+
+2012-08-16  Omer Akram  <om26er@ubuntu.com>
+
+	added Video lens reveal test
+
+2012-08-16  Thomi Richards  <thomi.richards@canonical.com>
+
+	Update dash emulator to use new autopilot API.. Fixes: . Approved by Omer Akram.
+
+2012-08-17  Thomi Richards  <thomi.richards@canonical.com>
+
+	Updated to reflect new autopilot API.
+
+2012-08-16  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Added some .convert files (for gsettings-data-convert) for converting some gconf settings to gsettings. The compiz upstream tree should have the migration tool that makes migration easier.. Fixes: . Approved by Sam Spilsbury, jenkins.
+
+2012-07-20  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Added some .convert files (for gsettings-data-convert) for converting some gconf settings to gsettings. The compiz upstream tree should have the migration tool that makes migration easier.
+
+2012-08-16  Gord Allott  <gord.allott@canonical.com>
+
+	plumbing to enable the previews to activate on right click in the dash. . Fixes: . Approved by Neil J. Patel.
+
+2012-08-15  Gord Allott  <gord.allott@canonical.com>
+
+	latest previews ui
+
+2012-08-15  Gord Allott  <gord.allott@canonical.com>
+
+	remove comments, use ClosePreview and free pointers, spent too long in c++..
+
+2012-08-14  Gord Allott  <gord.allott@canonical.com>
+
+	reverted po changes
+
+2012-08-14  Gord Allott  <gord.allott@canonical.com>
+
+	merges in latest unity
+
+2012-08-14  Gord Allott  <gord.allott@canonical.com>
+
+	ap fixes
+
+2012-08-14  Gord Allott  <gord.allott@canonical.com>
+
+	quickly hooking up the keynav
+
+2012-08-14  Gord Allott  <gord.allott@canonical.com>
+
+	ap tests
+
+2012-08-14  Gord Allott  <gord.allott@canonical.com>
+
+	merge in latest previews-ui
+
+2012-08-14  Gord Allott  <gord.allott@canonical.com>
+
+	comments
+
+2012-08-14  Gord Allott  <gord.allott@canonical.com>
+
+	fix flickering
+
+2012-08-14  Gord Allott  <gord.allott@canonical.com>
+
+	enables preview introspection
+
+2012-08-10  Gord Allott  <gord.allott@canonical.com>
+
+	relayout preview on layout size change
+
+2012-08-10  Gord Allott  <gord.allott@canonical.com>
+
+	remove hight limitation on previews
+
+2012-08-10  Gord Allott  <gord.allott@canonical.com>
+
+	latest preview ui code
+
+2012-08-10  Gord Allott  <gord.allott@canonical.com>
+
+	resolved lots of issues
+
+2012-08-09  Gord Allott  <gord.allott@canonical.com>
+
+	merged in ui branch
+
+2012-08-09  Gord Allott  <gord.allott@canonical.com>
+
+	fixes for new preview ui branch 
+
+2012-08-09  Gord Allott  <gord.allott@canonical.com>
+
+	merged in latest preview work
+
+2012-08-09  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Merged lp:~borabora/avani/preview-ui-standalone
+
+2012-08-09  Gord Allott  <gord.allott@canonical.com>
+
+	merge latest unity
+
+2012-08-09  Gord Allott  <gord.allott@canonical.com>
+
+	lots - o - fixes
+
+2012-08-08  Gord Allott  <gord.allott@canonical.com>
+
+	revert po changes
+
+2012-08-08  Gord Allott  <gord.allott@canonical.com>
+
+	fixed bunch of small bugs woo
+
+2012-08-07  Gord Allott  <gord.allott@canonical.com>
+
+	removed a lot of the old code for handling background animations we aren't doing anymore
+
+2012-07-31  Gord Allott  <gord.allott@canonical.com>
+
+	gets around the neil problem again
+
+2012-07-30  Gord Allott  <gord.allott@canonical.com>
+
+	maybe fix some neil issues
+
+2012-07-27  Gord Allott  <gord.allott@canonical.com>
+
+	merged latest preview ui standalone
+
+2012-07-27  Gord Allott  <gord.allott@canonical.com>
+
+	hacky fix for the no mouse input on previews problem
+
+2012-07-27  Gord Allott  <gord.allott@canonical.com>
+
+	previews on right click not left
+
+2012-07-27  Gord Allott  <gord.allott@canonical.com>
+
+	closes previews on dash exit or lens change
+
+2012-07-26  Gord Allott  <gord.allott@canonical.com>
+
+	latest preview-ui-standalone
+
+2012-07-26  Gord Allott  <gord.allott@canonical.com>
+
+	result view methods for finding the next uri
+
+2012-07-25  Gord Allott  <gord.allott@canonical.com>
+
+	previews showing and working
+
+2012-07-25  Gord Allott  <gord.allott@canonical.com>
+
+	save pointbefore merging in new branch
+
+2012-07-24  Gord Allott  <gord.allott@canonical.com>
+
+	makes space for previews, hides filter bar, buggy hide search bar behaviour
+
+2012-08-16  Didier Roche  <didier.roche@canonical.com>
+
+	revert revision 2566. mhr3 and gord are seeing important corruptions on nvidia with blob driver and opengl 3.. Fixes: . Approved by .
+
+2012-08-16  Didier Roche  <didier.roche@canonical.com>
+
+	revert revision 2566. mhr3 and gord are seeing important corruptions on nvidia with blob driver and opengl 3.
+
+2012-08-16  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fixes broken tests because of changes in libunity API. Fixes: . Approved by Didier Roche.
+
+2012-08-16  Michal Hruby  <michal.mhr@gmail.com>
+
+	Fix broken tests because of changes in libunity
+
+2012-08-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	glib::Signal: add weak referencies to objects and cleanup them when the GObjects get invalid. Fixes: . Approved by Brandon Schaefer.
+
+2012-08-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DeviceLauncherIcon: remove the uneeded self->
+
+2012-08-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: indentantion fixes
+
+2012-08-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Use SignalManager::Add<template> when possible...
+
+2012-08-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSignal: SignalManager, remove an object when unreffed from signal manager
+
+2012-08-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSignal: add weak pointer to reset the object_ value when the wrapped gobject has been destroyed
+
+2012-08-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	GLibSignal: disconnect from previous signal when replacing the connection
+
+2012-08-15  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added handlers for StaticCairoText::SetMaximumSize/SetMaximumWidth which cause cached texture to be updated if width has changed.
+	StaticCairoText::GetTextExtents now updates need_new_extent_cache_ to false once the texture has updated so that it is not re-cached every time called.. Fixes: https://bugs.launchpad.net/bugs/1037187. Approved by Neil J. Patel.
+
+2012-08-15  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Update text cached texture when maximum size changes.
+
+2012-08-15  Gord Allott  <gord.allott@canonical.com>
+
+	Add an iterator to unity core that iterates through DeeModels. Fixes: . Approved by Michal Hruby, Francis Ginther, jenkins, Alex Launi.
+
+2012-04-23  Gord Allott  <gord.allott@canonical.com>
+
+	fix issues with not setting the tag
+
+2012-04-23  Gord Allott  <gord.allott@canonical.com>
+
+	Merged latest trunk
+
+2012-03-23  Gord Allott  <gord.allott@canonical.com>
+
+	scoped iter in TestFilterValid
+
+2012-03-23  Gord Allott  <gord.allott@canonical.com>
+
+	added test to ensure that filtered models work as expected
+
+2012-03-05  Gord Allott  <gord.allott@canonical.com>
+
+	added a few more tests to flesh out the result iterator
+
+2012-02-23  Gord Allott  <gord.allott@canonical.com>
+
+	convert to random access itteratore
+
+2012-02-23  Gord Allott  <gord.allott@canonical.com>
+
+	moved to using const +/- ops and renamed to be a bidirectional iterator
+
+2012-02-23  Gord Allott  <gord.allott@canonical.com>
+
+	update to trunk
+
+2012-02-21  Gord Allott  <gord.allott@canonical.com>
+
+	use friend inlines
+
+2012-02-20  Gord Allott  <gord.allott@canonical.com>
+
+	Make work with C++ foreach, impliment alan suggestions
+
+2012-02-20  Gord Allott  <gord.allott@canonical.com>
+
+	ResultIterator object added and tested
+
+2012-08-15  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added Music, App, Movie (basic) & Generic dash preview UIs and preview standalones.. Fixes: . Approved by Neil J. Patel.
+
+2012-08-15  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added string cat space for gcc fail.
+
+2012-08-15  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	removed printf from thumbnail generator test.
+
+2012-08-15  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Merged with trunk.
+
+2012-08-15  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added preview and thumbnail generator unit tests.
+
+2012-08-14  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	removed comment line from standalone movie preview
+
+2012-08-14  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Removed standalone thumbnailer (no longer relevant.
+
+2012-08-10  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Music track preview displays state while playing/paused
+
+2012-08-10  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Maximum aspect ratio sourced height for previews.
+
+2012-08-10  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	New design of preview info hints.
+
+2012-08-10  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added preview wait spinner.
+
+2012-08-10  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Stretch full texture
+
+2012-08-10  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Use IconLoader for loading image from file; sorts out file io blocking.
+
+2012-08-10  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Switched thumbnail generation idle sources to timers
+
+2012-08-10  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Actionbutton uses nux::ObjectPtr for IconTexture to fix memory leak and dangling slot crash
+
+2012-08-10  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed indentation
+
+2012-08-09  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Preview animation uses glib timer to throttle draw queueing.
+
+2012-08-09  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed layout loop in music preview
+
+2012-08-09  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added check for null pixbuffers in CoverArt iconloader.
+
+2012-08-09  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed preview music standalone navigation enabling
+
+2012-08-09  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed typo in thumbnail generator log string
+
+2012-08-09  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Updated previews to use PreLayoutManagement to set max sizes instead of ComputeContentSize
+
+2012-08-08  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed nux::ObjectPtr assignment
+
+2012-08-08  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Increased thumbnail age limit.
+
+2012-08-08  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Improved movie previews.
+
+2012-08-07  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed icon cover-art timeout bug
+
+2012-08-07  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed preview info hint cropping
+
+2012-08-07  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed preview svg thumbnail rendering
+
+2012-08-07  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added new preview assets and IconTexture for their correct display.
+
+2012-08-07  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Merger Proposal fixes.
+
+2012-08-07  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed preview info hint name width
+
+2012-08-07  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	reverted po files.
+
+2012-08-07  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Merge with avani/unity
+
+2012-08-07  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed preview standalone navigation logic
+
+2012-08-07  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	removed dependence ofpreview  animation on idle source.
+
+2012-08-06  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added ThumbnailGenerator header
+
+2012-08-06  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	reverted transaltion file changes
+
+2012-08-06  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Squeeze layout with empty fields
+
+2012-08-06  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added thumbnail management
+
+2012-08-03  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed crashes due to invalid geomotrys in action buttons.
+
+2012-08-03  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Moved user thumbnailers into separate provider.
+
+2012-08-03  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Merged in lp:~borabora/avani/preview-ui-standalone.ThumbGenerator
+
+2012-08-02  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Merge with trunk
+
+2012-08-02  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Thumbnail Generation for previews.
+
+2012-07-31  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Base+Derived DBusTestRunner. Added stub thumbnail generator standalone.
+
+2012-07-27  Gord Allott  <gord.allott@canonical.com>
+
+	merged latest avani unity
+
+2012-07-27  Gord Allott  <gord.allott@canonical.com>
+
+	channeling a libunity change from mhr3 fthrough me
+
+2012-07-26  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Dynamic resizing of previews. Added escape key handler.
+
+2012-07-25  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Removed factory creation of previews to keep unity-protocol-private hidden from non-UnityCore areas.
+
+2012-07-23  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Removed old include causing build to break.
+
+2012-07-20  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	More style updates. Better action button stacking.
+
+2012-07-20  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Accion button icons. Style fixes.
+
+2012-07-18  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Merged with trunk
+
+2012-07-17  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added music preview.
+
+2012-07-13  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	fixed build
+
+2012-07-13  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added keyboard navigation (not perfect)
+
+2012-07-13  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Show 'No image available' when no screenshot found
+
+2012-07-12  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Merged with lp:~mhr3/unity/update-core-preview-api
+
+2012-07-12  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Merged with trunk
+
+2012-07-10  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	fixed redraw issue
+
+2012-07-09  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	More UI/Layout work.
+
+2012-07-06  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added swiping navigation
+
+2012-07-06  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed action button sizing issues and multi-line description text.
+
+2012-07-05  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Draft Application Layout
+
+2012-07-05  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	PreviewContainer now hosts Previews
+
+2012-07-04  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed compile issue
+
+2012-07-04  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Factory creation of previews. Created derived previews for Application/Movies/Music/Generic.
+
+2012-06-22  Gord Allott  <gord.allott@canonical.com>
+
+	full preview baseclass
+
+2012-06-22  Gord Allott  <gord.allott@canonical.com>
+
+	theoretically add previews to lens view
+
+2012-06-21  Gord Allott  <gord.allott@canonical.com>
+
+	merged in the preview api branch
+
+2012-06-21  Gord Allott  <gord.allott@canonical.com>
+
+	changed the namespacing for previews, because mh3r hates me and stole that namespace first
+
+2012-06-20  Gord Allott  <gord.allott@canonical.com>
+
+	stopped pot getting removed
+
+2012-06-20  Gord Allott  <gord.allott@canonical.com>
+
+	add preview baseclass and build system
+
+2012-06-20  Gord Allott  <gord.allott@canonical.com>
+
+	makes ResultViewGrid handle the concept of a preview space
+
+2012-08-15  Michal Hruby  <michal.mhr@gmail.com>
+
+	Don't compare entire geometry when re-rendering focus overlay in PlacesGroup. Fixes: https://bugs.launchpad.net/bugs/1033306. Approved by Marco Trevisan (Treviño).
+
+2012-08-06  Michal Hruby  <michal.mhr@gmail.com>
+
+	Compare only width when re-rendering focus overlay
+
+2012-08-15  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Fixed: Benchmark window was being rendered shrunken, misplaced and frequently
+	invisible if unity was built with USE_MODERN_COMPIZ_GL. (LP: #1036528)
+	
+	This was caused by some rather important code being #ifdef'd out incorrectly.. Fixes: https://bugs.launchpad.net/bugs/1036528. Approved by Sam Spilsbury.
+
+2012-08-15  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Correction: We may need to call GL::bindFramebuffer even if USE_GLES is
+	defined.
+
+2012-08-15  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Merge latest lp:unity
+
+2012-08-14  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Fixed: Benchmark window was being rendered shrunken, misplaced and frequently
+	invisible if unity was built with USE_MODERN_COMPIZ_GL. (LP: #1036528)
+	
+	This was caused by some rather important code being #ifdef'd out incorrectly.
+
+2012-08-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AbstractLauncherIcon: Use a vector of glib::Object<DbusmenuMenuitem> to get the Menus. Fixes: https://bugs.launchpad.net/bugs/1036338. Approved by Marco Trevisan (Treviño).
+
+2012-08-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	sed s/MenuItemsList/MenuItemsVector/g
+
+2012-08-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-08-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	QuicklistMenuItem: remove the wrong "public:" statement
+
+2012-08-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	QuicklistMenuItem: always use glib::Object<DbusmenuMenuitem>
+
+2012-08-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TrashLauncherIcon: use glib::Signal for entry-activated action
+
+2012-08-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AbstractLauncherIcon: add typedef for MenuItemsList
+
+2012-08-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: Use a vector of glib::Object<DbusmenuMenuitem> to get the Menus
+
+2012-08-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BFBLauncherIcon: use glib::SignalManager
+
+2012-08-14  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Fix uninitialized variable warnings, causing build failure (LP: #1036514)
+	
+	You'd only see these errors if you build lp:unity with:
+	-DUSE_MODERN_COMPIZ_GL=ON. Fixes: https://bugs.launchpad.net/bugs/1036514. Approved by Sam Spilsbury.
+
+2012-08-14  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Fix uninitialized variable warnings, causing build failure (LP: #1036514)
+	
+	You'd only see these errors if you build lp:unity with:
+	-DUSE_MODERN_COMPIZ_GL=ON
+
+2012-08-14  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	USE_MODERN_COMPIZ_GL does not need to be a CMake option any more.
+	The macro is instead detected automatically from:
+	include/compiz/opengl/opengl.h. Fixes: . Approved by .
+
+2012-08-14  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	USE_MODERN_COMPIZ_GL does not need to be a CMake option any more.
+	The macro is instead detected automatically from:
+	include/compiz/opengl/opengl.h
+
+2012-08-14  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	When building with USE_MODERN_COMPIZ_GL, we still need the same fullscreen
+	windowing logic. Otherwise the unity shell will appear on top of fullscreen
+	windows. (LP: #1036587). Fixes: https://bugs.launchpad.net/bugs/1036587. Approved by Sam Spilsbury.
+
+2012-08-14  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	When building with USE_MODERN_COMPIZ_GL, we still need the same fullscreen
+	windowing logic. Otherwise the unity shell will appear on top of fullscreen
+	windows. (LP: #1036587)
+
+2012-08-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	QuicklistMenuitem, BFBLauncherIcon: don't close the Dash when clicking on BFB quicklist items. Fixes: https://bugs.launchpad.net/bugs/1035641. Approved by Tim Penhey.
+
+2012-08-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_bfb_launcher_icon: add BFB tests to check if the menu items are overlay items
+
+2012-08-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BFBLauncherIcon: don't close the Dash when clicking on BFB quicklist items
+
+2012-08-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_quicklist_menu_item: added tests for quicklist activation
+
+2012-08-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	QuicklistMenuItem: use static property strings for unity props
+
+2012-08-14  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	QuicklistMenuItem: remove debug bits, factorize duplicated code, remove friendship, use smart pointers
+	
+	Removed a lot of duplicated code between implementations, use top-level factorized code, use enum class,
+	c++ types and better pointer deletions
+	Tests updated. Fixes: . Approved by Tim Penhey.
+
+2012-08-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	QuicklistMenuItem, QuicklistView: switch to GTest based tests
+
+2012-08-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	QuicklistMenuItem: remove debug bits, factorize duplicated code, remove friendship, use smart pointers
+	
+	Removed a lot of duplicated code between implementations, use top-level factorized code, use enum class,
+	c++ types and better pointer deletions
+	Tests updated
+
+2012-08-14  Nic d'Offay  <nicolas.doffay@canonical.com>
+
+	Fixed lens indicator bug appearing when no lens was currently selected. Prior to the fix it was checking whether a lens was active, all lenses were active. It actually needed to check whether a lens currently was both active and visible and only then render the indicator.. Fixes: https://bugs.launchpad.net/bugs/998752. Approved by Tim Penhey.
+
+2012-08-09  Nic d'Offay  <nicolas.doffay@canonical.com>
+
+	Fixed Bug #998752
+
+2012-08-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Reduce the spread delay in alt-tab.. Fixes: https://bugs.launchpad.net/bugs/838232. Approved by John Lea, Tim Penhey, jenkins.
+
+2012-07-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug 838232.
+
+2012-08-13  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fix a race condition that caused occasional compression of the desktop icon work area in height.. Fixes: . Approved by jenkins, Andrea Azzarone.
+
+2012-07-24  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk and resolve conflicts.
+
+2012-04-16  Bowmore  <bowmores@telia.com>
+
+	Both the panel and the launcher window struts are wrongly initialized with the BaseWindow default geomentry (100,100,320,200) 
+	causing sporadic compression of desktop icons in the lower part of the screen. This is due to that the panel/launcher geometries 
+	for their BaseWindows have not been set when corresponding struts are enabled. Those geometries are availble in the code sequences 
+	so this patch just rearrange the order to see to that the geometry is set before struts is enabled.
+	
+	The bug appears to be sporadic but seems to be more frequent on old (slow) computers.
+
+2012-08-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Unity: remove the dbus-glib dependency
+	
+	We don't really need it anymore at this level.. Fixes: . Approved by Andrea Azzarone.
+
+2012-08-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PanelService: correctly dispose the gsettings object
+
+2012-08-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Unity: remove the dbus-glib dependency
+	
+	We don't really need it anymore.
+
+2012-08-13  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Right clicking a launcher icon will open its quicklist even if a quicklist is already open.. Fixes: https://bugs.launchpad.net/bugs/890991. Approved by Thomi Richards, Marco Trevisan (Treviño).
+
+2012-08-13  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Merged trunk..
+
+2012-08-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unityshell: correctly damage the LauncherDragWindow region. Fixes: https://bugs.launchpad.net/bugs/1026247, https://bugs.launchpad.net/bugs/1032700. Approved by Brandon Schaefer, Andrea Azzarone.
+
+2012-08-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	manual-tests, Launcher: added manual test
+
+2012-08-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unityshell: correctly damage the LauncherDragWindow region
+
+2012-08-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: expose the Dragged icon on the public API
+
+2012-08-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	unityshell: use more const& variables
+
+2012-08-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: make an icon type to be set on construction, so that it can't be changed. Fixes: https://bugs.launchpad.net/bugs/763560. Approved by Marco Trevisan (Treviño).
+
+2012-08-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged with lp:~3v1n0/unity/icon-classs-enum+quit-fix (and trunk)
+
+2012-08-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TrashLauncherIcon: use glib::Signal, and a GCancellable to avoid crashes
+
+2012-08-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Fix tests compilation with IconType
+
+2012-08-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherIcon: make an icon type to be set on construction, so that it can't be changed
+
+2012-08-13  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Right clicking a launcher icon will open its quicklist even if a quicklist is already open.. Fixes: https://bugs.launchpad.net/bugs/890991. Approved by Marco Trevisan (Treviño).
+
+2012-08-10  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Merged trunk.
+
+2012-08-03  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixed MM support and some tweaks
+
+2012-08-01  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* The correct fix, with tests
+
+2012-08-01  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixes right clicking ql
+
+2012-08-01  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* revert commit
+
+2012-07-31  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* revet last commit
+	* added AP test for the current problem
+
+2012-07-31  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Added a timer, where you can't re open a quick list within 100ms
+
+2012-07-31  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fix multimonitor support (Thanks Marco)
+	* other minor fixes
+
+2012-07-30  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* extra space
+
+2012-07-30  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Ap test added
+
+2012-07-30  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* AP test added
+
+2012-07-30  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Right clicking another launcher icon while a ql is open will close the current ql and open the other one.
+
+2012-08-13  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	Switcher is now disabled when the Wall plugin is Active.. Fixes: https://bugs.launchpad.net/bugs/1031959. Approved by Marco Trevisan (Treviño), Thomi Richards.
+
+2012-08-10  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Merged trunk, fixed conflicts
+
+2012-08-03  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixed ap test
+
+2012-08-03  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Removed extra line
+
+2012-08-03  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Fixed up logic check, and ap test
+
+2012-08-02  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* fixed conflict
+
+2012-08-02  Brandon Schaefer  <brandontschaefer@gmail.com>
+
+	* Switcher is disabled now when the Wall plugin is active.
+
+2012-08-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove gconf dep in u-p-s.. Fixes: . Approved by Didier Roche.
+
+2012-08-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-08-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Rename 'object' to 'self'.
+
+2012-08-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove debug code.
+
+2012-08-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use g_settings_new_with_path.
+
+2012-08-09  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Remove gconf dep fro ups.
+
+2012-08-13  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Detect required package "libgeis", rather than waiting for cryptic build
+	failures. (LP: #1036095). Fixes: https://bugs.launchpad.net/bugs/1036095. Approved by Sam Spilsbury, Andrea Azzarone.
+
+2012-08-13  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Detect required package "libgeis", rather than waiting for cryptic build
+	failures. (LP: #1036095)
+
+2012-08-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Switch on "backlight toggles" mode by default. Fixes: https://bugs.launchpad.net/bugs/1033866. Approved by Brandon Schaefer.
+
+2012-08-13  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge trunk.
+
+2012-08-08  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Add a test for IconBackgroundItensity with the default option value for backlight mode and start animation.
+
+2012-08-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Don't change enum name.
+
+2012-08-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use "backlight toggles" by default.
+
+2012-08-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix flickers when changing launcher icon size.. Fixes: https://bugs.launchpad.net/bugs/1024113. Approved by Tim Penhey.
+
+2012-08-06  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix bug 1024113.
+
+2012-08-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AbstractLauncherIcon: use enum class for IconType and Quirk.
+	
+	Plus don't close an application when its desktop is removed from favorite store, just unstick it.. Fixes: https://bugs.launchpad.net/bugs/1032157. Approved by .
+
+2012-08-10  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with trunk
+
+2012-08-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: remove commented code
+
+2012-08-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherModel: put back the CompareIcons code
+
+2012-08-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	test_launcher_controller: added test for only-unstick on favorite removal
+
+2012-08-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	AbstractLauncherIcon: use enum class for Quirk and IconType
+
+2012-08-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	LauncherController: only unstick an icon when removed from the favorite store, don't close it.
+
+2012-08-10  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Release\ 6.2.0
+
 2012-08-09  Brandon Schaefer  <brandontschaefer@gmail.com>
 
 	Calculator and Mahjongg can only have 1 instances now; this breaks AP tests. Character map is now used when you need more then 1 instance.. Fixes: . Approved by Łukasz Zemczak.

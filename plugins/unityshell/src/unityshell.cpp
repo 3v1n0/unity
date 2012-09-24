@@ -24,6 +24,7 @@
 #include <Nux/HLayout.h>
 #include <Nux/BaseWindow.h>
 #include <Nux/WindowCompositor.h>
+#include <Nux/NuxTimerTickSource.h>
 
 #include "BaseWindowRaiserImp.h"
 #include "IconRenderer.h"
@@ -113,7 +114,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , screen(screen)
   , cScreen(CompositeScreen::get(screen))
   , gScreen(GLScreen::get(screen))
-  , animation_controller_(tick_source_)
   , debugger_(this)
   , enable_shortcut_overlay_(true)
   , needsRelayout(false)
@@ -125,6 +125,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , allowWindowPaint(false)
   , _key_nav_mode_requested(false)
   , _last_output(nullptr)
+  , _bghash(NULL)
   , grab_index_ (0)
   , painting_tray_ (false)
   , last_scroll_event_(0)
@@ -235,7 +236,15 @@ UnityScreen::UnityScreen(CompScreen* screen)
                                            this));
 #endif
 
+    tick_source_.reset(new nux::NuxTimerTickSource);
+    animation_controller_.reset(new na::AnimationController(*tick_source_));
+
      wt->RedrawRequested.connect(sigc::mem_fun(this, &UnityScreen::onRedrawRequested));
+
+    // _bghash is a pointer. We don't want it to be created before Nux system has had a chance
+    // to start. BGHash relies on animations. Nux animation system starts after the WindowThread
+    // has been created.
+    _bghash = new BGHash();
 
      unity_a11y_init(wt.get());
 
@@ -382,6 +391,7 @@ UnityScreen::~UnityScreen()
   unity_a11y_finalize();
   ::unity::ui::IconRenderer::DestroyTextures();
   QuicklistManager::Destroy();
+  delete _bghash;
 
   reset_glib_logging();
 }
@@ -922,6 +932,33 @@ void UnityScreen::leaveShowDesktopMode (CompWindow *w)
   }
 }
 
+bool UnityScreen::DoesPointIntersectUnityGeos(nux::Point const& pt)
+{
+  auto launchers = launcher_controller_->launchers();
+  for (auto launcher : launchers)
+  {
+    nux::Geometry hud_geo = launcher->GetAbsoluteGeometry();
+
+    if (launcher->Hidden())
+      continue;
+
+    if (hud_geo.IsInside(pt))
+    {
+      return true;
+    }
+  }
+
+  for (nux::Geometry &panel_geo : panel_controller_->GetGeometries ())
+  {
+    if (panel_geo.IsInside(pt))
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void UnityWindow::enterShowDesktop ()
 {
   if (!mShowdesktopHandler)
@@ -1261,10 +1298,6 @@ void UnityScreen::preparePaint(int ms)
 {
   cScreen->preparePaint(ms);
 
-  // Emit the current time throught the tick_source.  This moves any running
-  // animations along their path.
-  tick_source_.tick(g_get_monotonic_time());
-
   for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
     wi->HandleAnimations (ms);
 
@@ -1462,12 +1495,26 @@ void UnityScreen::handleEvent(XEvent* event)
         if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
           skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
       }
-      if (launcher_controller_->IsOverlayOpen())
+
+
+      if (dash_controller_->IsVisible())
       {
-        int monitor_with_mouse = UScreen::GetDefault()->GetMonitorWithMouse();
-        if (overlay_monitor_ != monitor_with_mouse)
+        nux::Point pt(event->xbutton.x_root, event->xbutton.y_root);
+        nux::Geometry dash_geo = dash_controller_->GetInputWindowGeometry();
+
+        if (!dash_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt))
         {
           dash_controller_->HideDash(false);
+        }
+      }
+
+      if (hud_controller_->IsVisible())
+      {
+        nux::Point pt(event->xbutton.x_root, event->xbutton.y_root);
+        nux::Geometry hud_geo = hud_controller_->GetInputWindowGeometry();
+
+        if (!hud_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt))
+        {
           hud_controller_->HideHud(false);
         }
       }
@@ -1559,7 +1606,8 @@ void UnityScreen::handleEvent(XEvent* event)
       if (event->xproperty.window == GDK_ROOT_WINDOW() &&
           event->xproperty.atom == gdk_x11_get_xatom_by_name("_GNOME_BACKGROUND_REPRESENTATIVE_COLORS"))
       {
-        _bghash.RefreshColor();
+        if (_bghash)
+          _bghash->RefreshColor();
       }
       break;
     default:
@@ -1834,7 +1882,7 @@ void UnityScreen::SetUpAndShowSwitcher(switcher::ShowMode show_mode)
                                                       switcher_controller_->IsShowDesktopDisabled());
 
   if (switcher_controller_->CanShowSwitcher(results))
-    switcher_controller_->Show(show_mode, switcher::SortMode::FOCUS_ORDER, false, results);
+    switcher_controller_->Show(show_mode, switcher::SortMode::FOCUS_ORDER, results);
 }
 
 bool UnityScreen::altTabTerminateCommon(CompAction* action,
@@ -2710,6 +2758,7 @@ CompPoint UnityWindow::tryNotIntersectUI(CompPoint& pos)
   return pos;
 }
 
+
 bool UnityWindow::place(CompPoint& pos)
 {
   bool was_maximized = PluginAdapter::Default ()->MaximizeIfBigEnough(window);
@@ -2771,7 +2820,8 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       override_color.red = override_color.red / override_color.alpha;
       override_color.green = override_color.green / override_color.alpha;
       override_color.blue = override_color.blue / override_color.alpha;
-      _bghash.OverrideColor(override_color);
+      if (_bghash)
+        _bghash->OverrideColor(override_color);
       break;
     }
     case UnityshellOptions::LauncherHideMode:

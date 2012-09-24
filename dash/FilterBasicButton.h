@@ -40,6 +40,7 @@ public:
   FilterBasicButton(NUX_FILE_LINE_PROTO);
   virtual ~FilterBasicButton();
 
+  void SetClearBeforeDraw(bool clear_before_draw);
 protected:
   virtual long ComputeContentSize();
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -60,6 +61,7 @@ protected:
 
 private:
   std::string label_;
+  bool clear_before_draw_;
 };
 
 } // namespace dash

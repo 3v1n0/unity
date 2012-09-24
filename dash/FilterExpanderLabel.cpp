@@ -22,7 +22,6 @@
 
 #include "unity-shared/DashStyle.h"
 #include "FilterExpanderLabel.h"
-#include "unity-shared/LineSeparator.h"
 
 namespace
 {
@@ -83,7 +82,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterExpanderLabel);
 FilterExpanderLabel::FilterExpanderLabel(std::string const& label, NUX_FILE_LINE_DECL)
   : nux::View(NUX_FILE_LINE_PARAM)
   , expanded(true)
-  , draw_separator(false)
   , layout_(nullptr)
   , top_bar_layout_(nullptr)
   , expander_view_(nullptr)
@@ -92,43 +90,9 @@ FilterExpanderLabel::FilterExpanderLabel(std::string const& label, NUX_FILE_LINE
   , cairo_label_(nullptr)
   , raw_label_(label)
   , label_("label")
-  , separator_(nullptr)
 {
   expanded.changed.connect(sigc::mem_fun(this, &FilterExpanderLabel::DoExpandChange));
   BuildLayout();
-
-  separator_ = new HSeparator;
-  separator_->SinkReference();
-
-  dash::Style& style = dash::Style::Instance();
-  int space_height = style.GetSpaceBetweenFilterWidgets() - style.GetFilterHighlightPadding();
-
-  space_ = new nux::SpaceLayout(space_height, space_height, space_height, space_height);
-  space_->SinkReference();
-
-  draw_separator.changed.connect([&](bool value)
-  {
-    if (value and !separator_->IsChildOf(layout_))
-    {
-      layout_->AddLayout(space_, 0);
-      layout_->AddView(separator_, 0);
-    }
-    else if (!value and separator_->IsChildOf(layout_))
-    {
-      layout_->RemoveChildObject(space_);
-      layout_->RemoveChildObject(separator_);
-    }
-    QueueDraw();
-  });
-}
-
-FilterExpanderLabel::~FilterExpanderLabel()
-{
-  if (space_)
-    space_->UnReference();
-
-  if (separator_)
-    separator_->UnReference();
 }
 
 void FilterExpanderLabel::SetLabel(std::string const& label)
@@ -257,12 +221,22 @@ bool FilterExpanderLabel::ShouldBeHighlighted()
   return ((expander_view_ && expander_view_->HasKeyFocus()));
 }
 
-void FilterExpanderLabel::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
+void FilterExpanderLabel::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
   nux::Geometry const& base = GetGeometry();
 
-  GfxContext.PushClippingRectangle(base);
-  nux::GetPainter().PaintBackground(GfxContext, base);
+  graphics_engine.PushClippingRectangle(base);
+
+  if (RedirectedAncestor())
+  {
+    unsigned int alpha = 0, src = 0, dest = 0;
+    graphics_engine.GetRenderStates().GetBlend(alpha, src, dest);
+    // This is necessary when doing redirected rendering.
+    // Clean the area below this view before drawing anything.
+    graphics_engine.GetRenderStates().SetBlend(false);
+    graphics_engine.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+    graphics_engine.GetRenderStates().SetBlend(alpha, src, dest);
+  }
 
   if (ShouldBeHighlighted())
   {
@@ -274,23 +248,46 @@ void FilterExpanderLabel::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       highlight_layer_.reset(dash::Style::Instance().FocusOverlay(geo.width, geo.height));
 
     highlight_layer_->SetGeometry(geo);
-    highlight_layer_->Renderlayer(GfxContext);
+    highlight_layer_->Renderlayer(graphics_engine);
   }
 
-  GfxContext.PopClippingRectangle();
+  graphics_engine.PopClippingRectangle();
 }
 
-void FilterExpanderLabel::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
+void FilterExpanderLabel::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
-  GfxContext.PushClippingRectangle(GetGeometry());
+  graphics_engine.PushClippingRectangle(GetGeometry());
 
-  if (ShouldBeHighlighted() && highlight_layer_ && !IsFullRedraw())
+  if (RedirectedAncestor() && !IsFullRedraw())
   {
-    nux::GetPainter().PushLayer(GfxContext, highlight_layer_->GetGeometry(), highlight_layer_.get());
+    unsigned int alpha = 0, src = 0, dest = 0;
+    graphics_engine.GetRenderStates().GetBlend(alpha, src, dest);
+    // This is necessary when doing redirected rendering.
+    // Clean the area below this view before drawing anything.
+    graphics_engine.GetRenderStates().SetBlend(false);
+    graphics_engine.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+    graphics_engine.GetRenderStates().SetBlend(alpha, src, dest);
   }
 
-  GetLayout()->ProcessDraw(GfxContext, force_draw);
-  GfxContext.PopClippingRectangle();
+  int pushed_paint_layers = 0;
+  if (RedirectedAncestor())
+  {
+    if (ShouldBeHighlighted() && highlight_layer_ && !IsFullRedraw())
+      nux::GetPainter().RenderSinglePaintLayer(graphics_engine, highlight_layer_->GetGeometry(), highlight_layer_.get());
+  }
+  else if (ShouldBeHighlighted() && highlight_layer_ && !IsFullRedraw())
+  {
+    ++pushed_paint_layers;
+    nux::GetPainter().PushLayer(graphics_engine, highlight_layer_->GetGeometry(), highlight_layer_.get());
+  }
+
+  GetLayout()->ProcessDraw(graphics_engine, true);
+  graphics_engine.PopClippingRectangle();
+
+  if (pushed_paint_layers)
+  {
+    nux::GetPainter().PopBackground(pushed_paint_layers);
+  }
 }
 
 //

@@ -161,6 +161,8 @@ if __name__ == '__main__':
                       help="Store log under filename.")
     parser.add_option("--replace", action="store_true",
                       help="Run unity /!\ This is for compatibility with other desktop interfaces and acts the same as running unity without --replace")
+    parser.add_option("--reset", action="store_true",
+                      help="Reset is not supported anymore. Deprecated option")
     parser.add_option("--reset-icons", action="store_true",
                       help="Reset the default launcher icon.")  
     parser.add_option("-v", "--verbose", action="store_true",
@@ -171,7 +173,11 @@ if __name__ == '__main__':
 
     if options.distro:
 		sys.exit(reset_to_distro())
-    
+
+    if options.reset:
+        print ("ERROR: the reset option is now deprecated")
+        sys.exit(1)
+ 
     if options.reset_icons:
         reset_launcher_icons ()
 	

@@ -48,7 +48,7 @@ ActionButton::ActionButton(std::string const& action_hint, std::string const& la
   , image_(nullptr)
 {
   SetAcceptKeyNavFocusOnMouseDown(false);
-  SetAcceptKeyNavFocusOnMouseEnter(false);
+  SetAcceptKeyNavFocusOnMouseEnter(true);
   Init();
   BuildLayout(label, icon_hint, "");
 }
@@ -263,7 +263,7 @@ void ActionButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                       texxform,
                       nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
 
-  if (IsMouseInside() || HasKeyboardFocus())
+  if (HasKeyboardFocus())
   {
     GfxContext.QRP_1Tex(geo.x,
                         geo.y,

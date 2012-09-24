@@ -62,7 +62,6 @@
 #include <dlfcn.h>
 
 #include "HudController.h"
-#include "ThumbnailGenerator.h"
 #include "WindowMinimizeSpeedController.h"
 
 namespace unity
@@ -190,6 +189,8 @@ public:
   switcher::Controller::Ptr switcher_controller();
   launcher::Controller::Ptr launcher_controller();
 
+  bool DoesPointIntersectUnityGeos(nux::Point const& pt);
+
 protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
@@ -245,8 +246,8 @@ private:
   bool TopPanelBackgroundTextureNeedsUpdate() const;
   void UpdateTopPanelBackgroundTexture();
 
-  nux::animation::TickSource tick_source_;
-  nux::animation::AnimationController animation_controller_;
+  std::unique_ptr<nux::NuxTimerTickSource> tick_source_;
+  std::unique_ptr<na::AnimationController> animation_controller_;
 
   Settings dash_settings_;
   dash::Style    dash_style_;
@@ -306,7 +307,7 @@ private:
 
   nux::Property<nux::Geometry> primary_monitor_;
 
-  BGHash _bghash;
+  BGHash* _bghash;
 
   ::GLFramebufferObject *oldFbo;
 
@@ -331,7 +332,6 @@ private:
 
   UBusManager ubus_manager_;
   glib::SourceManager sources_;
-  unity::ThumbnailGenerator thumb_generator;
 
   WindowMinimizeSpeedController* minimize_speed_controller;
   friend class UnityWindow;

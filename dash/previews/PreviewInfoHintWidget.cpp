@@ -221,7 +221,6 @@ void PreviewInfoHintWidget::PreLayoutManagement()
     }
     if (info_hint.second)
     {
-      info_hint.second->SetMinimumWidth(info_value_width);
       info_hint.second->SetMaximumWidth(info_value_width);
     }
   }

@@ -474,7 +474,7 @@ void Controller::Impl::OnLauncherEntryRemoteRemoved(LauncherEntryRemote::Ptr con
 
 void Controller::Impl::OnFavoriteStoreFavoriteAdded(std::string const& entry, std::string const& pos, bool before)
 {
-  if (entry == local::RUNNING_APPS_URI || entry == local::DEVICES_URI)
+  if (entry == local::RUNNING_APPS_URI || entry == local::DEVICES_URI || entry == expo_icon_->RemoteUri())
   {
     // Since the running apps and the devices are always shown, when added to
     // the model, we only have to re-order them
@@ -519,7 +519,7 @@ void Controller::Impl::OnFavoriteStoreFavoriteAdded(std::string const& entry, st
 
 void Controller::Impl::OnFavoriteStoreFavoriteRemoved(std::string const& entry)
 {
-  if (entry == local::RUNNING_APPS_URI || entry == local::DEVICES_URI)
+  if (entry == local::RUNNING_APPS_URI || entry == local::DEVICES_URI || entry == expo_icon_->RemoteUri())
   {
     // Since the running apps and the devices are always shown, when added to
     // the model, we only have to re-order them
@@ -544,6 +544,7 @@ void Controller::Impl::ResetIconPriorities()
   auto const& apps_icons = model_->GetSublist<BamfLauncherIcon>();
   auto const& volumes_icons = model_->GetSublist<VolumeLauncherIcon>();
   bool running_apps_found = false;
+  bool expo_icon_found = false;
   bool volumes_found = false;
 
   for (auto const& fav : favs)
@@ -570,6 +571,10 @@ void Controller::Impl::ResetIconPriorities()
       volumes_found = true;
       continue;
     }
+    else if (fav == expo_icon_->RemoteUri())
+    {
+      expo_icon_found = true;
+    }
 
     auto const& icon = GetIconByUri(fav);
 
@@ -586,6 +591,9 @@ void Controller::Impl::ResetIconPriorities()
     }
   }
 
+  if (!expo_icon_found)
+    expo_icon_->SetSortPriority(++sort_priority_);
+
   if (!volumes_found)
   {
     for (auto const& ico : volumes_icons)
@@ -596,6 +604,9 @@ void Controller::Impl::ResetIconPriorities()
   }
 
   model_->Sort();
+
+  if (!expo_icon_found)
+    SaveIconsOrder();
 }
 
 void Controller::Impl::UpdateNumWorkspaces(int workspaces)
@@ -618,8 +629,21 @@ void Controller::Impl::UpdateNumWorkspaces(int workspaces)
 
 void Controller::Impl::RegisterIcon(AbstractLauncherIcon::Ptr icon, int priority)
 {
-  if (!icon || model_->IconIndex(icon) >= 0)
+  if (!icon)
     return;
+
+  std::string const& icon_uri = icon->RemoteUri();
+
+  if (model_->IconIndex(icon) >= 0)
+  {
+    if (!icon_uri.empty())
+    {
+      LOG_ERROR(logger) << "Impossible to add icon '" << icon_uri
+                        << "': it's already on the launcher!";
+    }
+
+    return;
+  }
 
   if (priority != std::numeric_limits<int>::min())
     icon->SetSortPriority(priority);
@@ -632,7 +656,6 @@ void Controller::Impl::RegisterIcon(AbstractLauncherIcon::Ptr icon, int priority
     ResetIconPriorities();
   });
 
-  std::string const& icon_uri = icon->RemoteUri();
   icon->position_forgot.connect([this, icon_uri] {
     FavoriteStore::Instance().RemoveFavorite(icon_uri);
   });
@@ -799,15 +822,7 @@ AbstractLauncherIcon::Ptr Controller::Impl::CreateFavoriteIcon(std::string const
   }
 
   if (result)
-  {
-    if (!result->IsSticky())
-      result->Stick(false);
-    else
-    {
-      LOG_ERROR(logger) << "Ignoring favorite '" << icon_uri << "': it's already on the launcher!";
-      result = nullptr;
-    }
-  }
+    result->Stick(false);
 
   return result;
 }
@@ -908,8 +923,14 @@ void Controller::Impl::SetupIcons()
   if (!running_apps_added)
     AddRunningApps();
 
+  if (model_->IconIndex(expo_icon_) < 0)
+    RegisterIcon(CreateFavoriteIcon(expo_icon_->RemoteUri()), ++sort_priority_);
+
   if (!devices_added)
     AddDevices();
+
+  if (std::find(favs.begin(), favs.end(), expo_icon_->RemoteUri()) == favs.end())
+    SaveIconsOrder();
 
   view_opened_signal_.Connect(matcher_, "view-opened", sigc::mem_fun(this, &Impl::OnViewOpened));
   device_section_.icon_added.connect(sigc::mem_fun(this, &Impl::OnDeviceIconAdded));

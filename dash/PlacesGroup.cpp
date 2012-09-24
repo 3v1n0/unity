@@ -113,7 +113,7 @@ protected:
 NUX_IMPLEMENT_OBJECT_TYPE(PlacesGroup);
 
 PlacesGroup::PlacesGroup()
-  : AbstractPlacesGroup(),
+  : nux::View(NUX_TRACKER_LOCATION),
     _child_view(nullptr),
     _is_expanded(false),
     _n_visible_items_in_unexpand_mode(0),
@@ -458,10 +458,29 @@ long PlacesGroup::ComputeContentSize()
 void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
                        bool                 forceDraw)
 {
+
+}
+
+void
+PlacesGroup::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
+{
   nux::Geometry const& base = GetGeometry();
   graphics_engine.PushClippingRectangle(base);
 
+  if (RedirectedAncestor())
+  {
+    // This is necessary when doing redirected rendering. Clean the area below this view.
+    unsigned int current_alpha_blend;
+    unsigned int current_src_blend_factor;
+    unsigned int current_dest_blend_factor;
+    graphics_engine.GetRenderStates().GetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
 
+    graphics_engine.GetRenderStates().SetBlend(false);
+    graphics_engine.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+
+    graphics_engine.GetRenderStates().SetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+  }
+  
   if (ShouldBeHighlighted())
   {
     nux::Geometry geo(_header_layout->GetGeometry());
@@ -486,41 +505,11 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
   
   _background_layer->SetGeometry(bg_geo);
   _background_layer->Renderlayer(graphics_engine);
-  graphics_engine.PopClippingRectangle();
-}
 
-void
-PlacesGroup::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
-{
-  nux::Geometry const& base = GetGeometry();
-
-  graphics_engine.PushClippingRectangle(base);
-  nux::Geometry bg_geo = GetGeometry();
-  
-  int bg_width = 0;
-  if (_using_nofilters_background)
-    bg_width = _background_nofilters->GetWidth();
-  else
-    bg_width = _background->GetWidth();
-  
-  // if the dash is smaller, resize to fit, otherwise move to the right edge
-  bg_geo.x = std::max(bg_geo.width - bg_width, 0);
-  bg_geo.width = std::min(bg_width, bg_geo.GetWidth()) + 1; // to render into a space left over by the scrollview
-  
-  bg_geo.height = _background->GetHeight();
-
-  if (!IsFullRedraw())
-  {
-    nux::GetPainter().PushLayer(graphics_engine, bg_geo, _background_layer.get());
-  }
-  if (ShouldBeHighlighted() && !IsFullRedraw() && _focus_layer)
-  {
-    nux::GetPainter().PushLayer(graphics_engine, _focus_layer->GetGeometry(), _focus_layer.get());
-  }
-
-  _group_layout->ProcessDraw(graphics_engine, force_draw);
+  _group_layout->ProcessDraw(graphics_engine, true);
 
   graphics_engine.PopClippingRectangle();
+
 }
 
 void PlacesGroup::PostDraw(nux::GraphicsEngine& graphics_engine,

@@ -67,15 +67,23 @@ PlacesVScrollBar::PostLayoutManagement(long LayoutResult)
 }
 
 void
-PlacesVScrollBar::Draw(nux::GraphicsEngine& gfxContext, bool force_draw)
+PlacesVScrollBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
   nux::Color color = nux::color::White;
   nux::Geometry const& base  = GetGeometry();
   nux::TexCoordXForm texxform;
 
-  gfxContext.PushClippingRectangle(base);
+  graphics_engine.PushClippingRectangle(base);
+  unsigned int alpha = 0, src = 0, dest = 0;
+  graphics_engine.GetRenderStates().GetBlend(alpha, src, dest);
 
-  nux::GetPainter().PaintBackground(gfxContext, base);
+  if(RedirectedAncestor())
+  {
+    // This is necessary when doing redirected rendering.
+    // Clean the area below this view before drawing anything.
+    graphics_engine.GetRenderStates().SetBlend(false);
+    graphics_engine.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+  }
 
   // check if textures have been computed... if they haven't, exit function
   if (!_slider_texture)
@@ -83,14 +91,14 @@ PlacesVScrollBar::Draw(nux::GraphicsEngine& gfxContext, bool force_draw)
 
   texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_SCALE_COORD);
 
-  gfxContext.GetRenderStates().SetBlend(true);
-  gfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+  graphics_engine.GetRenderStates().SetBlend(true);
+  graphics_engine.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
   if (content_height_ > container_height_)
   {
     nux::Geometry const& slider_geo = _slider->GetGeometry();
 
-    gfxContext.QRP_1Tex(slider_geo.x,
+    graphics_engine.QRP_1Tex(slider_geo.x,
                         slider_geo.y,
                         slider_geo.width,
                         slider_geo.height,
@@ -99,9 +107,8 @@ PlacesVScrollBar::Draw(nux::GraphicsEngine& gfxContext, bool force_draw)
                         color);
   }
 
-  gfxContext.GetRenderStates().SetBlend(false);
-  gfxContext.PopClippingRectangle();
-  gfxContext.GetRenderStates().SetBlend(true);
+  graphics_engine.PopClippingRectangle();
+  graphics_engine.GetRenderStates().SetBlend(alpha, src, dest);
 }
 
 void PlacesVScrollBar::UpdateTexture()

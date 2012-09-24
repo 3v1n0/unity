@@ -26,6 +26,7 @@
 #include <NuxGraphics/GdkGraphics.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
+#include <unity-protocol.h>
 
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/Timer.h"
@@ -143,10 +144,28 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
                           << " " << activated_uri_;
         int left_results = current_index;
         int right_results = num_results ? (num_results - current_index) - 1 : 0;
+
+        int row_y = padding + GetRootGeometry().y;
+        int row_size = renderer_->height + vertical_spacing;
+        int row_height = row_size;
+
+        if (GetItemsPerRow())
+        {
+          int num_row = GetNumResults() / GetItemsPerRow();
+          if (GetNumResults() % GetItemsPerRow())
+          {
+            ++num_row;
+          }
+          int row_index = current_index / GetItemsPerRow();
+
+          row_y += row_index * row_size;
+        }
+        
         ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 
-                                g_variant_new("(iii)", 0, left_results, right_results));
+                                g_variant_new("(iiii)", row_y, row_height, left_results, right_results));
         UriActivated.emit(activated_uri_, ActivateType::PREVIEW);
       }
+
     }
 
     g_free(uri);
@@ -691,8 +710,24 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
       int left_results = index;
       int right_results = (num_results - index) - 1;
       //FIXME - just uses y right now, needs to use the absolute position of the bottom of the result 
+      // (jay) Here is the fix: Compute the y position of the row where the item is located.
+      int row_y = padding + GetRootGeometry().y;
+      int row_size = renderer_->height + vertical_spacing;
+      int row_height = row_size;
+
+      if (GetItemsPerRow())
+      {
+        int num_row = GetNumResults() / GetItemsPerRow();
+        if (GetNumResults() % GetItemsPerRow())
+        {
+          ++num_row;
+        }
+        int row_index = index / GetItemsPerRow();
+
+        row_y += row_index * row_size;
+      }
       ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 
-                                g_variant_new("(iii)", y, left_results, right_results));
+                                g_variant_new("(iiii)", row_y, row_height, left_results, right_results));
     }
     else
     {
@@ -810,8 +845,19 @@ _icon_hint_get_drag_pixbuf (std::string icon_hint)
 
   if (G_IS_ICON(icon))
   {
-     info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, (GtkIconLookupFlags)0);
-      g_object_unref(icon);
+     if (UNITY_PROTOCOL_IS_ANNOTATED_ICON(icon))
+     {
+        UnityProtocolAnnotatedIcon *anno;
+        anno = UNITY_PROTOCOL_ANNOTATED_ICON(icon);
+
+        GIcon *base_icon = unity_protocol_annotated_icon_get_icon(anno);
+        info = gtk_icon_theme_lookup_by_gicon(theme, base_icon, size, (GtkIconLookupFlags)0);
+     }
+     else
+     {
+       info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, (GtkIconLookupFlags)0);
+     }
+     g_object_unref(icon);
   }
   else
   {

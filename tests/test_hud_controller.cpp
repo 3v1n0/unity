@@ -44,12 +44,17 @@ public:
   MOCK_METHOD0(SearchFinished, void());
   MOCK_METHOD4(SetIcon, void(std::string const&, unsigned int tile_size, unsigned int size, unsigned int padding));
   MOCK_METHOD1(SetQueries, void(hud::Hud::Queries queries));
-  MOCK_METHOD2(SetWindowGeometry, void(nux::Geometry const& absolute_geo, nux::Geometry const& geo));
+  MOCK_METHOD2(SetMonitorOffset, void(int x, int y));
   MOCK_METHOD1(ShowEmbeddedIcon, void(bool show));
   MOCK_CONST_METHOD0(default_focus, nux::View*());
   MOCK_CONST_METHOD0(GetName, std::string());
   MOCK_METHOD1(AddProperties, void(GVariantBuilder*));
   MOCK_METHOD2(Draw, void(nux::GraphicsEngine&, bool));
+  nux::Geometry GetContentGeometry()
+  {
+    return nux::Geometry();
+  }
+
 
 };
 
