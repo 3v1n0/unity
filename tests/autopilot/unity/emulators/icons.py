@@ -58,6 +58,9 @@ class SimpleLauncherIcon(UnityIntrospectionObject):
 
         return self.xids.contains(xid)
 
+    def __repr__(self):
+        return "<%s id=%d>" % (self.__class__.__name__, self.id)
+
 
 class BFBLauncherIcon(SimpleLauncherIcon):
     """Represents the BFB button in the launcher."""
@@ -74,6 +77,11 @@ class HudLauncherIcon(SimpleLauncherIcon):
 class BamfLauncherIcon(SimpleLauncherIcon):
     """Represents a launcher icon with BAMF integration."""
 
+    def __repr__(self):
+        return "<%s %s id=%d>" % (
+            self.__class__.__name__,
+            self.desktop_id,
+            self.id)
 
 class TrashLauncherIcon(SimpleLauncherIcon):
     """Represents the trash launcher icon."""

@@ -205,3 +205,27 @@ class LauncherDragIconsBehavior(LauncherTestCase):
                      get_launcher_icons_for_monitor(self.launcher_monitor)[1]
         self.assertThat(moved_icon.id, Equals(calc_icon.id))
 
+    def test_can_drag_icon_above_window_switcher(self):
+        """Application icons must be dragable to above the workspace switcher icon."""
+
+        self.ensure_calc_icon_not_in_launcher()
+        calc = self.start_app("Calculator")
+        calc_icon = self.launcher.model.get_icon(desktop_id=calc.desktop_file)
+
+        # Move a known icon to the top as it needs to be more than 2 icon
+        # spaces away for this test to actually do anything
+        bfb_icon_position = 0
+        self.launcher_instance.drag_icon_to_position(calc_icon,
+                                                     bfb_icon_position,
+                                                     self.drag_type)
+        sleep(1)
+        target_pos = -2
+        self.launcher_instance.drag_icon_to_position(calc_icon,
+                                                     target_pos,
+                                                     self.drag_type)
+
+        # Must be the last bamf icon - not necessarily the third-from-end icon.
+        refresh_fn = lambda: self.launcher.model.get_launcher_icons()[-2].id
+        self.assertThat(refresh_fn,
+            Eventually(Equals(calc_icon.id)),
+            "Launcher icons are: %r" % self.launcher.model.get_launcher_icons())
