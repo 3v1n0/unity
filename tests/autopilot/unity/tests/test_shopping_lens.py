@@ -12,6 +12,8 @@ from autopilot.matchers import Eventually
 from testtools.matchers import Equals, GreaterThan
 from time import sleep
 
+import urllib2
+
 from unity.tests import UnityTestCase
 
 
@@ -20,6 +22,10 @@ class ShoppingLensTests(UnityTestCase):
 
     def setUp(self):
         super(ShoppingLensTests, self).setUp()
+        try:
+            urllib2.urlopen("http://www.google.com", timeout=2)
+        except urllib2.URLError, e:
+            self.skip("Skipping test, no internet connection")
 
     def tearDown(self):
         self.dash.ensure_hidden()
