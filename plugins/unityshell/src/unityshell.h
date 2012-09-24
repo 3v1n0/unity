@@ -27,7 +27,6 @@
 #include <Nux/WindowThread.h>
 #include <NuxCore/Property.h>
 #include <sigc++/sigc++.h>
-#include <boost/shared_ptr.hpp>
 
 #include <scale/scale.h>
 #include <core/core.h>
@@ -50,6 +49,7 @@
 #include "PanelStyle.h"
 #include "UScreen.h"
 #include "DebugDBusInterface.h"
+#include "ScreenIntrospection.h"
 #include "SwitcherController.h"
 #include "UBusWrapper.h"
 #include "UnityshellPrivate.h"
@@ -69,7 +69,7 @@ namespace unity
 
 /* base screen class */
 class UnityScreen :
-  public unity::debug::Introspectable,
+  public debug::Introspectable,
   public sigc::trackable,
   public ScreenInterface,
   public CompositeScreenInterface,
@@ -329,11 +329,13 @@ private:
   nux::ObjectPtr<nux::IOpenGLBaseTexture> panel_texture_;
 
   bool scale_just_activated_;
+  WindowMinimizeSpeedController minimize_speed_controller_;
+
+  debug::ScreenIntrospection screen_introspection_;
 
   UBusManager ubus_manager_;
   glib::SourceManager sources_;
 
-  WindowMinimizeSpeedController* minimize_speed_controller;
   friend class UnityWindow;
 };
 
@@ -345,6 +347,7 @@ class UnityWindow :
   public WrapableHandler<ScaleWindowInterface, 4>,
   public BaseSwitchWindow,
   public PluginClassHandler <UnityWindow, CompWindow>,
+  public debug::Introspectable,
   public sigc::trackable
 {
 public:
@@ -413,6 +416,10 @@ public:
                             const GLMatrix &,
                             const CompRegion &,
                             unsigned int);
+
+protected:
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
 
 private:
   struct CairoContext;

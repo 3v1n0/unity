@@ -26,6 +26,8 @@
 #include <Nux/WindowCompositor.h>
 #include <Nux/NuxTimerTickSource.h>
 
+#include <UnityCore/Variant.h>
+
 #include "BaseWindowRaiserImp.h"
 #include "IconRenderer.h"
 #include "Launcher.h"
@@ -132,7 +134,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , panel_texture_has_changed_(true)
   , paint_panel_(false)
   , scale_just_activated_(false)
-  , minimize_speed_controller(new WindowMinimizeSpeedController())
+  , screen_introspection_(screen)
 {
   Timer timer;
 #ifndef USE_GLES
@@ -374,13 +376,15 @@ UnityScreen::UnityScreen(CompScreen* screen)
     Display* display = gdk_x11_display_get_xdisplay(gdk_display_get_default());;
     XSelectInput(display, GDK_ROOT_WINDOW(), PropertyChangeMask);
     LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";
+
+    panel::Style::Instance().changed.connect(sigc::mem_fun(this, &UnityScreen::OnPanelStyleChanged));
+
+    minimize_speed_controller_.DurationChanged.connect(
+        sigc::mem_fun(this, &UnityScreen::OnMinimizeDurationChanged)
+    );
+
+    AddChild(&screen_introspection_);
   }
-
-  panel::Style::Instance().changed.connect(sigc::mem_fun(this, &UnityScreen::OnPanelStyleChanged));
-
-  minimize_speed_controller->DurationChanged.connect(
-      sigc::mem_fun(this, &UnityScreen::OnMinimizeDurationChanged)
-  );
 }
 
 UnityScreen::~UnityScreen()
@@ -2298,8 +2302,7 @@ bool UnityScreen::initPluginForScreen(CompPlugin* p)
 }
 
 void UnityScreen::AddProperties(GVariantBuilder* builder)
-{
-}
+{}
 
 std::string UnityScreen::GetName() const
 {
@@ -2490,10 +2493,10 @@ UnityScreen::OnMinimizeDurationChanged ()
         CompOption::Value& value = o.value();
         CompOption::Value::Vector& list = value.list();
         CompOption::Value::Vector::iterator i = list.begin();
-        if (i != list.end()) {
-          i->set(minimize_speed_controller->getDuration());
-        }
-        value.set(list);                
+        if (i != list.end())
+          i->set(minimize_speed_controller_.getDuration());
+
+        value.set(list);
         screen->setOptionForPlugin(p->vTable->name().c_str(),
                                    o.name().c_str(), value);
         break;
@@ -2624,7 +2627,7 @@ void UnityWindow::windowNotify(CompWindowNotify n)
       case CompWindowNotifyMinimize:
         /* Updating the count in dconf will trigger a "changed" signal to which
          * the method setting the new animation speed is attached */
-        UnityScreen::get(screen)->minimize_speed_controller->UpdateCount();
+        UnityScreen::get(screen)->minimize_speed_controller_.UpdateCount();
         break;
       default:
         break;
@@ -3479,6 +3482,29 @@ UnityWindow::UnityWindow(CompWindow* window)
   WindowManager::Default()->terminate_spread.connect(sigc::mem_fun(this, &UnityWindow::OnTerminateSpreed));
 }
 
+void UnityWindow::AddProperties(GVariantBuilder* builder)
+{
+  Window xid = window->id();
+  auto const& swins = ScaleScreen::get(screen)->getWindows();
+  bool scaled = std::find(swins.begin(), swins.end(), ScaleWindow::get(window)) != swins.end();
+  auto wm = WindowManager::Default();
+
+  variant::BuilderWrapper(builder)
+    .add(scaled ? GetScaledGeometry() : wm->GetWindowGeometry(xid))
+    .add("xid", xid)
+    .add("title", wm->GetWindowName(xid))
+    .add("scaled", scaled)
+    .add("scaled_close_x", close_button_geo_.x)
+    .add("scaled_close_y", close_button_geo_.y)
+    .add("scaled_close_width", close_button_geo_.width)
+    .add("scaled_close_height", close_button_geo_.height);
+}
+
+std::string UnityWindow::GetName() const
+{
+  return "Window";
+}
+
 void UnityWindow::DrawTexture(GLTexture::List const& textures, GLWindowPaintAttrib const& attrib,
                               GLMatrix const& transform, unsigned int mask, int x, int y)
 {
@@ -3826,6 +3852,33 @@ bool UnityPluginVTable::init()
 
   return true;
 }
+
+namespace debug
+{
+
+ScreenIntrospection::ScreenIntrospection(CompScreen* screen)
+  : screen_(screen)
+{}
+
+std::string ScreenIntrospection::GetName() const
+{
+  return "Screen";
+}
+
+void ScreenIntrospection::AddProperties(GVariantBuilder* builder)
+{}
+
+Introspectable::IntrospectableList ScreenIntrospection::GetIntrospectableChildren()
+{
+  IntrospectableList children;
+
+  for (auto const& win : screen_->windows())
+    children.push_back(UnityWindow::get(win));
+
+  return children;
+}
+
+} // debug namespace
 
 namespace
 {
