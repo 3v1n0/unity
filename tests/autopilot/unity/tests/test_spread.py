@@ -18,14 +18,10 @@ from unity.emulators.screen import Screen
 
 
 class SpreadTests(UnityTestCase):
-
-    def initiate_spread_for_screen(self):
-        self.addCleanup(self.keybinding, "spread/cancel")
-        self.keybinding("spread/start")
-        sleep(1)
-        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
+    """Spread tests"""
 
     def start_test_application_windows(self, app_name, num_windows=2):
+        """Start a given number of windows of the requested application"""
         self.close_all_app(app_name)
         windows = []
 
@@ -40,16 +36,16 @@ class SpreadTests(UnityTestCase):
 
         return windows
 
-    def assertWindowIsNotScaled(self, xid):
-        refresh_fn = lambda: xid in [w.xid for w in self.screen.scaled_windows]
-        self.assertThat(refresh_fn, Eventually(Equals(False)))
-
-    def assertWindowIsClosed(self, xid):
-        refresh_fn = lambda: xid in [w.x_id for w in self.bamf.get_open_windows()]
-        self.assertThat(refresh_fn, Eventually(Equals(False)))
+    def initiate_spread_for_screen(self):
+        """Initiate the Spread for all windows"""
+        self.addCleanup(self.keybinding, "spread/cancel")
+        self.keybinding("spread/start")
+        sleep(1)
+        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
 
 
     def initiate_spread_for_application(self, desktop_id):
+        """Initiate the Spread for windows of the given app"""
         icon = self.launcher.model.get_icon(desktop_id=desktop_id)
         self.assertThat(lambda: icon, Eventually(NotEquals(None)))
         launcher = self.launcher.get_launcher_for_monitor(self.screen_geo.get_primary_monitor())
@@ -58,7 +54,19 @@ class SpreadTests(UnityTestCase):
         launcher.click_launcher_icon(icon)
         self.assertThat(self.window_manager.scale_active_for_group, Eventually(Equals(True)))
 
+    def assertWindowIsNotScaled(self, xid):
+        """Assert that a window is not scaled"""
+        refresh_fn = lambda: xid in [w.xid for w in self.screen.scaled_windows]
+        self.assertThat(refresh_fn, Eventually(Equals(False)))
+
+    def assertWindowIsClosed(self, xid):
+        """Assert that a window is not in the list of the open windows"""
+        refresh_fn = lambda: xid in [w.x_id for w in self.bamf.get_open_windows()]
+        self.assertThat(refresh_fn, Eventually(Equals(False)))
+
+
     def test_scale_application_windows(self):
+        """Test if all the windows of an application are scaled when application spread is initiated"""
         [win1, win2] = self.start_test_application_windows("Calculator")
         self.initiate_spread_for_application(win1.application.desktop_file)
 
@@ -67,6 +75,7 @@ class SpreadTests(UnityTestCase):
                         Eventually(Equals(True)))
 
     def test_scaled_window_is_focused_on_click(self):
+        """Test that a window is focused when clicked in spread"""
         windows = self.start_test_application_windows("Calculator", 3)
         self.initiate_spread_for_application(windows[0].application.desktop_file)
 
@@ -83,6 +92,7 @@ class SpreadTests(UnityTestCase):
         self.assertThat(lambda: not_focused.is_focused, Eventually(Equals(True)))
 
     def test_scaled_window_closes_on_middle_click(self):
+        """Test that a window is closed when middle-clicked in spread"""
         win = self.start_test_application_windows("Calculator", 2)[0]
         self.initiate_spread_for_application(win.application.desktop_file)
 
@@ -98,6 +108,7 @@ class SpreadTests(UnityTestCase):
         self.assertWindowIsClosed(target_xid)
 
     def test_scaled_window_closes_on_close_button_click(self):
+        """Test that a window is closed when its close button is clicked in spread"""
         win = self.start_test_application_windows("Calculator", 1)[0]
         self.initiate_spread_for_screen()
 
