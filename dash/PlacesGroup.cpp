@@ -31,8 +31,6 @@
 #include <UnityCore/GLibWrapper.h>
 
 #include "unity-shared/StaticCairoText.h"
-#include "unity-shared/DashStyle.h"
-#include "unity-shared/LineSeparator.h"
 #include "unity-shared/ubus-server.h"
 #include "unity-shared/UBusMessages.h"
 
@@ -112,8 +110,9 @@ protected:
 
 NUX_IMPLEMENT_OBJECT_TYPE(PlacesGroup);
 
-PlacesGroup::PlacesGroup()
+PlacesGroup::PlacesGroup(dash::StyleInterface& style)
   : nux::View(NUX_TRACKER_LOCATION),
+    _style(style),
     _child_view(nullptr),
     _is_expanded(false),
     _n_visible_items_in_unexpand_mode(0),
@@ -122,15 +121,13 @@ PlacesGroup::PlacesGroup()
     _coverflow_enabled(false),
     disabled_header_count_(false)
 {
-  dash::Style& style = dash::Style::Instance();
-
   SetAcceptKeyNavFocusOnMouseDown(false);
   SetAcceptKeyNavFocusOnMouseEnter(false);
 
-  nux::BaseTexture* arrow = style.GetGroupExpandIcon();
+  nux::BaseTexture* arrow = _style.GetGroupExpandIcon();
   
-  _background = style.GetCategoryBackground();
-  _background_nofilters = style.GetCategoryBackgroundNoFilters();
+  _background = _style.GetCategoryBackground();
+  _background_nofilters = _style.GetCategoryBackgroundNoFilters();
 
   nux::ROPConfig rop;
   rop.Blend = true;
@@ -154,7 +151,7 @@ PlacesGroup::PlacesGroup()
   _group_layout->AddView(_header_view, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
 
   _header_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
-  _header_layout->SetLeftAndRightPadding(style.GetCategoryHeaderLeftPadding(), 0);
+  _header_layout->SetLeftAndRightPadding(_style.GetCategoryHeaderLeftPadding(), 0);
   _header_layout->SetSpaceBetweenChildren(10);
   _header_view->SetLayout(_header_layout);
 
@@ -449,7 +446,7 @@ long PlacesGroup::ComputeContentSize()
   // only the width matters
   if (_cached_geometry.GetWidth() != geo.GetWidth())
   {
-    _focus_layer.reset(dash::Style::Instance().FocusOverlay(geo.width - kHighlightLeftPadding - kHighlightRightPadding, kHighlightHeight));
+    _focus_layer.reset(_style.FocusOverlay(geo.width - kHighlightLeftPadding - kHighlightRightPadding, kHighlightHeight));
     _cached_geometry = geo;
   }
   return ret;
@@ -557,11 +554,10 @@ PlacesGroup::SetExpanded(bool is_expanded)
 
   Refresh();
 
-  dash::Style& style = dash::Style::Instance();
   if (_is_expanded)
-    _expand_icon->SetTexture(style.GetGroupUnexpandIcon());
+    _expand_icon->SetTexture(_style.GetGroupUnexpandIcon());
   else
-    _expand_icon->SetTexture(style.GetGroupExpandIcon());
+    _expand_icon->SetTexture(_style.GetGroupExpandIcon());
 
   expanded.emit(this);
 }

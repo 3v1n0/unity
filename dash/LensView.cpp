@@ -298,7 +298,7 @@ void LensView::OnCategoryAdded(Category const& category)
     if (existing_group->GetCategoryIndex() == index) return;
   }
 
-  PlacesGroup* group = new PlacesGroup();
+  PlacesGroup* group = new PlacesGroup(dash::Style::Instance());
   AddChild(group);
   group->SetName(name);
   group->SetIcon(icon_hint);
