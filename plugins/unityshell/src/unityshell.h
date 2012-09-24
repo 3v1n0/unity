@@ -307,7 +307,7 @@ private:
 
   nux::Property<nux::Geometry> primary_monitor_;
 
-  BGHash* _bghash;
+  std::unique_ptr<BGHash> _bghash;
 
   ::GLFramebufferObject *oldFbo;
 

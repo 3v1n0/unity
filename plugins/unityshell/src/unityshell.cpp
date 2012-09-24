@@ -125,7 +125,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , allowWindowPaint(false)
   , _key_nav_mode_requested(false)
   , _last_output(nullptr)
-  , _bghash(NULL)
   , grab_index_ (0)
   , painting_tray_ (false)
   , last_scroll_event_(0)
@@ -244,7 +243,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
     // _bghash is a pointer. We don't want it to be created before Nux system has had a chance
     // to start. BGHash relies on animations. Nux animation system starts after the WindowThread
     // has been created.
-    _bghash = new BGHash();
+    _bghash.reset(new BGHash());
 
      unity_a11y_init(wt.get());
 
@@ -391,7 +390,6 @@ UnityScreen::~UnityScreen()
   unity_a11y_finalize();
   ::unity::ui::IconRenderer::DestroyTextures();
   QuicklistManager::Destroy();
-  delete _bghash;
 
   reset_glib_logging();
 }
@@ -667,12 +665,7 @@ void UnityScreen::OnPanelStyleChanged()
   UnityWindow::CleanupSharedTextures();
 
   if (WindowManager::Default()->IsScaleActive())
-  {
     UnityWindow::SetupSharedTextures();
-
-    for (auto const& swin : ScaleScreen::get(screen)->getWindows())
-      UnityWindow::get(swin->window)->decoration_tex_.clear();
-  }
 }
 
 void UnityScreen::paintDisplay()
@@ -3606,16 +3599,15 @@ void UnityWindow::DrawWindowDecoration(GLWindowPaintAttrib const& attrib,
   cairo_pop_group_to_source(context.cr_);
 
   // Round window decoration top border
-  const double aspect = highlighted ? 1.0f : ScaleWindow::get(window)->getCurrentPosition().scale;
+  const double aspect = ScaleWindow::get(window)->getCurrentPosition().scale;
   const double radius = 8.0 * aspect;
-  const double degrees = M_PI / 180.0;
 
   cairo_new_sub_path(context.cr_);
-  cairo_line_to(context.cr_, 0, context.h_);
+  cairo_line_to(context.cr_, 0, height);
   cairo_arc(context.cr_, radius, radius, radius, M_PI, -M_PI * 0.5f);
-  cairo_line_to(context.cr_, context.w_ - radius, 0);
-  cairo_arc(context.cr_, context.w_ - radius, radius, radius, M_PI * 0.5f, 0);
-  cairo_line_to(context.cr_, context.w_, context.h_);
+  cairo_line_to(context.cr_, width - radius, 0);
+  cairo_arc(context.cr_, width - radius, radius, radius, M_PI * 0.5f, 0);
+  cairo_line_to(context.cr_, width, height);
   cairo_close_path(context.cr_);
 
   cairo_fill(context.cr_);
@@ -3763,7 +3755,7 @@ void UnityWindow::OnInitiateSpreed()
 {
   close_icon_state_ = panel::WindowState::NORMAL;
   middle_clicked_ = false;
-  SetupScaleHeaderStyle();
+  SetupSharedTextures();
 
   WindowManager *wm = WindowManager::Default();
   Window xid = window->id();
