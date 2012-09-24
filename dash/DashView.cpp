@@ -165,6 +165,7 @@ void DashView::ClosePreview()
     animation_.Start();
   }
 
+  preview_navigation_mode_ = previews::Navigation::NONE;
   preview_displaying_ = false;
 
   // re-focus dash view component.
@@ -200,6 +201,40 @@ void DashView::FadeInCallBack(float const& fade_in_value)
     opening_row_y_ = -1;
   }
 }
+
+void DashView::OnPreviewUriActivated(std::string const& uri, glib::Variant const& data, std::string const& unique_id) 
+{
+  if (data)
+  {
+    // Update positioning information.
+    int position = -1;
+    int row_height = 0;
+    int results_to_the_left = 0;
+    int results_to_the_right = 0;
+    g_variant_get(data, "(iiii)", &position, &row_height, &results_to_the_left, &results_to_the_right);
+    preview_state_machine_.SetSplitPosition(SplitPosition::CONTENT_AREA, position);
+    preview_state_machine_.left_results = results_to_the_left;
+    preview_state_machine_.right_results = results_to_the_right;
+
+    if (opening_row_y_ == -1)
+    {
+      // Update only when opening the previews
+      opening_row_y_ = position;
+    }
+    opening_row_height_ = row_height;
+  }
+
+  LOG_DEBUG(logger) << "got unique id from preview activation: " << unique_id;
+  stored_preview_unique_id_ = unique_id;
+  stored_preview_uri_identifier_ = uri;
+
+  // we want immediate preview reaction on first opening.
+  if (!preview_displaying_)
+  {
+    BuildPreview(Preview::Ptr(nullptr));
+  }
+}
+
 
 void DashView::BuildPreview(Preview::Ptr model)
 {
@@ -239,7 +274,6 @@ void DashView::BuildPreview(Preview::Ptr model)
  
     // connect to nav left/right signals to request nav left/right movement.
     preview_container_->navigate_left.connect([&] () {
-      preview_state_machine_.Reset();
       preview_navigation_mode_ = previews::Navigation::LEFT;
 
       // sends a message to all result views, sending the the uri of the current preview result
@@ -248,7 +282,6 @@ void DashView::BuildPreview(Preview::Ptr model)
     });
 
     preview_container_->navigate_right.connect([&] () {
-      preview_state_machine_.Reset();
       preview_navigation_mode_ = previews::Navigation::RIGHT;
       
       // sends a message to all result views, sending the the uri of the current preview result
@@ -372,11 +405,7 @@ void DashView::SetupViews()
   content_layout_->AddView(lenses_layout_, 1, nux::MINOR_POSITION_LEFT);
 
   home_view_ = new LensView(home_lens_, nullptr);
-  home_view_->uri_preview_activated.connect([&] (std::string const& uri, std::string const& unique_id) 
-  {
-    stored_preview_unique_id_ = unique_id;
-    stored_preview_uri_identifier_ = uri;
-  });
+  home_view_->uri_preview_activated.connect(sigc::mem_fun(this, &DashView::OnPreviewUriActivated));
 
   AddChild(home_view_);
   active_lens_view_ = home_view_;
@@ -393,26 +422,6 @@ void DashView::SetupUBusConnections()
 {
   ubus_manager_.RegisterInterest(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
       sigc::mem_fun(this, &DashView::OnActivateRequest));
-
-  ubus_manager_.RegisterInterest(UBUS_DASH_PREVIEW_INFO_PAYLOAD, [&] (GVariant *data) 
-  {
-    int position = -1;
-    int row_height = 0;
-    int results_to_the_left = 0;
-    int results_to_the_right = 0;
-    g_variant_get(data, "(iiii)", &position, &row_height, &results_to_the_left, &results_to_the_right);
-    preview_state_machine_.SetSplitPosition(SplitPosition::CONTENT_AREA, position);
-    preview_state_machine_.left_results = results_to_the_left;
-    preview_state_machine_.right_results = results_to_the_right;
-
-    if (opening_row_y_ == -1)
-    {
-      // Update only when opening the previews
-      opening_row_y_ = position;
-    }
-    opening_row_height_ = row_height;
-
-  });
 }
 
 long DashView::PostLayoutManagement (long LayoutResult)
@@ -891,12 +900,7 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
   AddChild(view);
   view->SetVisible(false);
   view->uri_activated.connect(sigc::mem_fun(this, &DashView::OnUriActivated));
-  view->uri_preview_activated.connect([&] (std::string const& uri, std::string const& unique_id) 
-  {
-    LOG_DEBUG(logger) << "got unique id from preview activation: " << unique_id;
-    stored_preview_unique_id_ = unique_id;
-    stored_preview_uri_identifier_ = uri;
-  });
+  view->uri_preview_activated.connect(sigc::mem_fun(this, &DashView::OnPreviewUriActivated));
 
   lenses_layout_->AddView(view, 1);
   lens_views_[lens->id] = view;

@@ -124,18 +124,15 @@ nux::ObjectPtr<nux::BaseTexture> CoverflowResultItem::GetTexture() const
 
 void CoverflowResultItem::Activate(int button)
 {
-  //Left and right click take you to previews.
-  if (button == 1 || button == 3)
-    parent_->UriActivated.emit(result_.uri, ResultView::ActivateType::PREVIEW);
-  //Scroll click opens up music player.
-  else if (button == 2)
-    parent_->UriActivated.emit(result_.uri, ResultView::ActivateType::DIRECT);
-
   int index = Index();
   int size = model_->Items().size();
 
-  ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 
-                    g_variant_new("(iiii)", 0, 0, index, size - index));
+  //Left and right click take you to previews.
+  if (button == 1 || button == 3)
+    parent_->UriActivated.emit(result_.uri, ResultView::ActivateType::PREVIEW, g_variant_new("(iiii)", 0, 0, index, size - index));
+  //Scroll click opens up music player.
+  else if (button == 2)
+    parent_->UriActivated.emit(result_.uri, ResultView::ActivateType::DIRECT, nullptr);
 }
 
 CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
@@ -191,9 +188,7 @@ CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
     {
       int left_results = current_index;
       int right_results = num_results ? (num_results - current_index) - 1 : 0;
-      parent_->UriActivated.emit(GetUriForIndex(current_index), ActivateType::PREVIEW);
-      ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 
-                              g_variant_new("(iiii)", 0, 0, left_results, right_results));
+      parent_->UriActivated.emit(GetUriForIndex(current_index), ActivateType::PREVIEW, g_variant_new("(iiii)", 0, 0, left_results, right_results));
     }
   });
 }

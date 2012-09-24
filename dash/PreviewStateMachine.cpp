@@ -51,8 +51,6 @@ void PreviewStateMachine::ActivatePreview(Preview::Ptr preview)
 {
   stored_preview_ = preview;
   CheckPreviewRequirementsFulfilled();
-  left_results = -1;
-  right_results = -1;
   requires_activation_ = true;
 }
 
@@ -66,8 +64,7 @@ void PreviewStateMachine::Reset()
 
 void PreviewStateMachine::ClosePreview()
 {
-  stored_preview_ = nullptr;
-  preview_active = true;
+  Reset();
   SetSplitPosition(SplitPosition::CONTENT_AREA, -1); 
 }
 

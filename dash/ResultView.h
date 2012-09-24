@@ -30,6 +30,7 @@
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/Results.h>
 #include <UnityCore/ResultIterator.h>
+#include <UnityCore/Variant.h>
 
 #include "unity-shared/Introspectable.h"
 #include "ResultRenderer.h"
@@ -61,7 +62,7 @@ public:
   nux::Property<bool> expanded;
   nux::Property<int> results_per_row;
   nux::Property<std::string> unique_id;  
-  sigc::signal<void, std::string const&, ActivateType> UriActivated;
+  sigc::signal<void, std::string const&, ActivateType, glib::Variant const&> UriActivated;
 
   std::string GetName() const;
   ResultIterator GetIteratorAtRow(unsigned row);

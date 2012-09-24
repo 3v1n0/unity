@@ -344,7 +344,7 @@ void LensView::OnCategoryAdded(Category const& category)
   grid->expanded = false;
 
   group->SetRendererName(renderer_name.c_str());
-  grid->UriActivated.connect(sigc::bind([&] (std::string const& uri, ResultView::ActivateType type, std::string const& view_id) 
+  grid->UriActivated.connect(sigc::bind([&] (std::string const& uri, ResultView::ActivateType type, glib::Variant const& data, std::string const& view_id) 
   {
     switch (type)
     {
@@ -355,7 +355,7 @@ void LensView::OnCategoryAdded(Category const& category)
       } break;
       case ResultView::ActivateType::PREVIEW:
       {
-        uri_preview_activated.emit(uri, view_id);
+        uri_preview_activated.emit(uri, data, view_id);
         lens_->Preview(uri);
       } break;
       default: break;

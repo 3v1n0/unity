@@ -75,7 +75,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   key_nav_focus_change.connect(sigc::mem_fun(this, &ResultViewGrid::OnKeyNavFocusChange));
   key_nav_focus_activate.connect([&] (nux::Area *area) 
   { 
-    UriActivated.emit (focused_uri_, ResultView::ActivateType::DIRECT); 
+    UriActivated.emit (focused_uri_, ResultView::ActivateType::DIRECT, nullptr); 
   });
   key_down.connect(sigc::mem_fun(this, &ResultViewGrid::OnKeyDown));
   mouse_move.connect(sigc::mem_fun(this, &ResultViewGrid::MouseMove));
@@ -160,10 +160,8 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
 
           row_y += row_index * row_size;
         }
-        
-        ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 
-                                g_variant_new("(iiii)", row_y, row_height, left_results, right_results));
-        UriActivated.emit(activated_uri_, ActivateType::PREVIEW);
+
+        UriActivated.emit(activated_uri_, ActivateType::PREVIEW, g_variant_new("(iiii)", row_y, row_height, left_results, right_results));
       }
 
     }
@@ -706,7 +704,7 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
     if (nux::GetEventButton(button_flags) == nux::MouseButton::MOUSE_BUTTON3)
     {
       activated_uri_ = result.uri();
-      UriActivated.emit(result.uri, ResultView::ActivateType::PREVIEW);
+
       int left_results = index;
       int right_results = (num_results - index) - 1;
       //FIXME - just uses y right now, needs to use the absolute position of the bottom of the result 
@@ -726,12 +724,12 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
 
         row_y += row_index * row_size;
       }
-      ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 
-                                g_variant_new("(iiii)", row_y, row_height, left_results, right_results));
+
+      UriActivated.emit(result.uri, ResultView::ActivateType::PREVIEW, g_variant_new("(iiii)", row_y, row_height, left_results, right_results));
     }
     else
     {
-      UriActivated.emit(result.uri, ResultView::ActivateType::DIRECT);
+      UriActivated.emit(result.uri, ResultView::ActivateType::DIRECT, nullptr);
     }
   }
 }
