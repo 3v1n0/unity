@@ -334,7 +334,7 @@ void CoverArt::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
   gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
   gfx_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-  if (texture_screenshot_)
+  if (IsFullRedraw() && texture_screenshot_)
   {
     nux::Geometry imageDest = base;
     nux::TexCoordXForm texxform;
@@ -376,7 +376,7 @@ void CoverArt::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
                         texxform,
                         nux::color::White);
   }
-  else
+  else if (IsFullRedraw())
   {
     if (waiting_)
     {  
