@@ -37,10 +37,8 @@ class ShoppingLensTests(UnityTestCase):
         lens = self.dash.get_current_lens()
 
         results_category = lens.get_category_by_name("More suggestions")
-        results = results_category.get_results()
-
-        size = len(results)
-        self.assertThat(size, Equals(0))
+        refresh_results_fn = lambda: len(results_category.get_results())
+        self.assertThat(refresh_results_fn, Eventually(Equals(0)))
 
     def test_home_lens_has_shopping_results(self):
         """Test that the home lens contains results."""
@@ -48,15 +46,10 @@ class ShoppingLensTests(UnityTestCase):
         lens = self.dash.get_current_lens()
 
         self.keyboard.type("playstation")
-
-        # It takes sometime to load results from the shopping lens
-        sleep(5)
-
         results_category = lens.get_category_by_name("More suggestions")
-        results = results_category.get_results()
 
-        refresh_results = lambda: len(results)
-        self.assertThat(refresh_results, Eventually(GreaterThan(1)))
+        refresh_results_fn = lambda: len(results_category.get_results())
+        self.assertThat(refresh_results_fn, Eventually(GreaterThan(1)))
 
     def test_application_lens_has_shopping_results(self):
         """Test that the application lens contains results."""
@@ -64,14 +57,10 @@ class ShoppingLensTests(UnityTestCase):
         lens = self.dash.get_current_lens()
 
         self.keyboard.type("Text Editor")
-        # It takes sometime to load results from the shopping lens
-        sleep(5)
-
         results_category = lens.get_category_by_name("More suggestions")
-        results = results_category.get_results()
 
-        refresh_results = lambda: len(results)
-        self.assertThat(refresh_results, Eventually(GreaterThan(1)))
+        refresh_results_fn = lambda: len(results_category.get_results())
+        self.assertThat(refresh_results_fn, Eventually(GreaterThan(1)))
 
     def test_music_lens_has_shopping_results(self):
         """Test that the music lens contains results."""
@@ -79,14 +68,10 @@ class ShoppingLensTests(UnityTestCase):
         lens = self.dash.get_current_lens()
 
         self.keyboard.type("megadeth")
-        # It takes sometime to load results from the shopping lens
-        sleep(5)
-
         results_category = lens.get_category_by_name("More suggestions")
-        results = results_category.get_results()
 
-        refresh_results = lambda: len(results)
-        self.assertThat(refresh_results, Eventually(GreaterThan(1)))
+        refresh_results_fn = lambda: len(results_category.get_results())
+        self.assertThat(refresh_results_fn, Eventually(GreaterThan(1)))
 
     def test_preview_works_with_shopping_lens(self):
         """This test shows the dash preview works with shopping lens results."""
@@ -94,16 +79,14 @@ class ShoppingLensTests(UnityTestCase):
         lens = self.dash.get_current_lens()
 
         self.keyboard.type("a")
-        # It takes sometime to load results from the shopping lens
-        sleep(5)
-
         results_category = lens.get_category_by_name("More suggestions")
+
+        refresh_results_fn = lambda: len(results_category.get_results())
+        self.assertThat(refresh_results_fn, Eventually(GreaterThan(1)))
+
         results = results_category.get_results()
-
-        refresh_results = lambda: len(results)
-        self.assertThat(refresh_results, Eventually(GreaterThan(4)))
-
         results[0].preview()
+
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
 
     def test_shopping_lens_preview_navigate_right(self):
@@ -114,19 +97,16 @@ class ShoppingLensTests(UnityTestCase):
         lens = self.dash.get_current_lens()
 
         self.keyboard.type("a")
-        # It takes sometime to load results from the shopping lens
-        sleep(5)
-
         results_category = lens.get_category_by_name("More suggestions")
+
+        refresh_results_fn = lambda: len(results_category.get_results())
+        self.assertThat(refresh_results_fn, Eventually(GreaterThan(1)))
+
         results = results_category.get_results()
-
-        refresh_results = lambda: len(results)
-        self.assertThat(refresh_results, Eventually(GreaterThan(4)))
-
         results[2].preview()
+
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
         self.preview_container = self.dash.view.get_preview_container()
-
         start_index = self.preview_container.relative_nav_index
         self.preview_container.navigate_right()
 
