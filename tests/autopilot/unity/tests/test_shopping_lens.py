@@ -100,10 +100,10 @@ class ShoppingLensTests(UnityTestCase):
         results_category = lens.get_category_by_name("More suggestions")
 
         refresh_results_fn = lambda: len(results_category.get_results())
-        self.assertThat(refresh_results_fn, Eventually(GreaterThan(1)))
+        self.assertThat(refresh_results_fn, Eventually(GreaterThan(2)))
 
         results = results_category.get_results()
-        results[2].preview()
+        results[0].preview()
 
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
         self.preview_container = self.dash.view.get_preview_container()
