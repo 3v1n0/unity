@@ -10,7 +10,6 @@
 
 from __future__ import absolute_import
 
-from autopilot.emulators.bamf import BamfWindow
 from autopilot.matchers import Eventually
 from autopilot.testcase import AutopilotTestCase
 from dbus import DBusException
@@ -20,6 +19,7 @@ from tempfile import mktemp
 from testtools.content import text_content
 from testtools.matchers import Equals
 
+from unity.emulators import ensure_unity_is_running
 from unity.emulators.dash import Dash
 from unity.emulators.hud import Hud
 from unity.emulators.launcher import LauncherController
@@ -45,6 +45,8 @@ class UnityTestCase(AutopilotTestCase):
 
     def setUp(self):
         super(UnityTestCase, self).setUp()
+        ensure_unity_is_running()
+
         self._setUpUnityLogging()
         self._initial_workspace_num = self.workspace.current_workspace
         self.addCleanup(self.check_test_behavior)
