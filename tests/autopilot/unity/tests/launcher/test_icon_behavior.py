@@ -219,11 +219,13 @@ class LauncherDragIconsBehavior(LauncherTestCase):
                                                      bfb_icon_position,
                                                      self.drag_type)
         sleep(1)
-        switcher_pos = -2
+        target_pos = -2
         self.launcher_instance.drag_icon_to_position(calc_icon,
-                                                     switcher_pos,
+                                                     target_pos,
                                                      self.drag_type)
 
         # Must be the last bamf icon - not necessarily the third-from-end icon.
-        bamf_icons = self.launcher.model.get_bamf_launcher_icons()
-        self.assertThat(bamf_icons[-1].id, Equals(calc_icon.id))
+        refresh_fn = lambda: self.launcher.model.get_launcher_icons()[-2].id
+        self.assertThat(refresh_fn,
+            Eventually(Equals(calc_icon.id)),
+            "Launcher icons are: %r" % self.launcher.model.get_launcher_icons())
