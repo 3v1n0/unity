@@ -359,34 +359,22 @@ public:
 
   nux::Geometry last_bound;
 
-  void minimize ();
-  void unminimize ();
-  bool minimized ();
-  bool focus ();
-  void activate ();
+  void minimize();
+  void unminimize();
+  bool minimized();
+  bool focus();
+  void activate();
 
-  void updateFrameRegion (CompRegion &region);
+  void updateFrameRegion(CompRegion &region);
 
   /* occlusion detection
    * and window hiding */
-  bool glPaint(const GLWindowPaintAttrib& attrib,
-               const GLMatrix&            matrix,
-               const CompRegion&          region,
-               unsigned int              mask);
+  bool glPaint(GLWindowPaintAttrib const&, GLMatrix const&, CompRegion const&, unsigned mask);
 
   /* basic window draw function */
-  bool glDraw(const GLMatrix& matrix,
-              const GLWindowPaintAttrib& attrib,
-              const CompRegion& region,
-              unsigned intmask);
+  bool glDraw(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
 
-  void updateIconPos (int   &wx,
-                      int   &wy,
-                      int   x,
-                      int   y,
-                      float width,
-                      float height);
-
+  void updateIconPos (int &wx, int &wy, int x, int y, float width, float height);
   void windowNotify(CompWindowNotify n);
   void moveNotify(int x, int y, bool immediate);
   void resizeNotify(int x, int y, int w, int h);
@@ -396,32 +384,26 @@ public:
   CompPoint tryNotIntersectUI(CompPoint& pos);
   nux::Geometry GetScaledGeometry();
 
-  void paintThumbnail (nux::Geometry const& bounding, float alpha);
+  void paintThumbnail(nux::Geometry const& bounding, float alpha);
 
-  void enterShowDesktop ();
-  void leaveShowDesktop ();
-  bool HandleAnimations (unsigned int ms);
+  void enterShowDesktop();
+  void leaveShowDesktop();
+  bool HandleAnimations(unsigned int ms);
 
   bool handleEvent(XEvent *event);
-
-  typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>
-          UnityMinimizedHandler;
-  std::unique_ptr <UnityMinimizedHandler> mMinimizeHandler;
-  std::unique_ptr <ShowdesktopHandler> mShowdesktopHandler;
+  void scalePaintDecoration(GLWindowPaintAttrib const&, GLMatrix const&, CompRegion const&, unsigned mask);
 
   //! Emited when CompWindowNotifyBeforeDestroy is received
   sigc::signal<void> being_destroyed;
 
-  void scalePaintDecoration(const GLWindowPaintAttrib &,
-                            const GLMatrix &,
-                            const CompRegion &,
-                            unsigned int);
 
 protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
 private:
+  typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>
+          UnityMinimizedHandler;
   struct CairoContext;
 
   void DoEnableFocus ();
@@ -443,8 +425,8 @@ private:
   void DoShow ();
   void DoNotifyShown ();
 
-  void OnInitiateSpreed();
-  void OnTerminateSpreed();
+  void OnInitiateSpread();
+  void OnTerminateSpread();
 
   void DoAddDamage ();
   ShowdesktopHandlerWindowInterface::PostPaintAction DoHandleAnimations (unsigned int ms);
@@ -457,20 +439,25 @@ private:
 
   compiz::WindowInputRemoverLock::Ptr GetInputRemover ();
 
-  void DrawWindowDecoration(GLWindowPaintAttrib const& attrib, GLMatrix const& transform,
-                            unsigned int mask, bool highlighted,
-                            int x, int y, unsigned width, unsigned height);
-  void DrawTexture(GLTexture::List const& textures, GLWindowPaintAttrib const& attrib,
-                   GLMatrix const& transform, unsigned int mask, int x, int y);
-  void RenderText(CairoContext const& context, int x, int y, int width, int height);
+  void RenderDecoration(CairoContext const&, double aspect = 1.0f);
+  void RenderText(CairoContext const&, int x, int y, int width, int height);
+  void DrawTexture(GLTexture::List const& textures, GLWindowPaintAttrib const&,
+                   GLMatrix const&, unsigned mask, int x, int y, double scale = 1.0f);
 
+  void BuildDecorationTexture();
   static void SetupSharedTextures();
   static void CleanupSharedTextures();
   static void LoadCloseIcon(panel::WindowState state, GLTexture::List& texture);
 
+public:
+  std::unique_ptr <UnityMinimizedHandler> mMinimizeHandler;
+
+private:
+  std::unique_ptr <ShowdesktopHandler> mShowdesktopHandler;
   static GLTexture::List close_normal_tex_;
   static GLTexture::List close_prelight_tex_;
   static GLTexture::List close_pressed_tex_;
+  GLTexture::List decoration_tex_;
   compiz::WindowInputRemoverLock::Weak input_remover_;
   panel::WindowState close_icon_state_;
   nux::Geometry close_button_geo_;

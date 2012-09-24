@@ -87,9 +87,6 @@ nux::logging::Logger logger("unity.shell");
 
 UnityScreen* uScreen = 0;
 
-const unsigned int SCALE_CLOSE_ICON_SIZE = 19;
-const unsigned int SCALE_ITEMS_PADDING = 5;
-
 void reset_glib_logging();
 void configure_logging();
 void capture_g_log_calls(const gchar* log_domain,
@@ -111,8 +108,8 @@ const std::string RELAYOUT_TIMEOUT = "relayout-timeout";
 } // anon namespace
 
 UnityScreen::UnityScreen(CompScreen* screen)
-  : BaseSwitchScreen (screen)
-  , PluginClassHandler <UnityScreen, CompScreen> (screen)
+  : BaseSwitchScreen(screen)
+  , PluginClassHandler <UnityScreen, CompScreen>(screen)
   , screen(screen)
   , cScreen(CompositeScreen::get(screen))
   , gScreen(GLScreen::get(screen))
@@ -669,7 +666,12 @@ void UnityScreen::OnPanelStyleChanged()
   UnityWindow::CleanupSharedTextures();
 
   if (WindowManager::Default()->IsScaleActive())
+  {
     UnityWindow::SetupSharedTextures();
+
+    for (auto const& swin : ScaleScreen::get(screen)->getWindows())
+      UnityWindow::get(swin->window)->decoration_tex_.clear();
+  }
 }
 
 void UnityScreen::paintDisplay()
@@ -3380,11 +3382,23 @@ GLTexture::List UnityWindow::close_normal_tex_;
 GLTexture::List UnityWindow::close_prelight_tex_;
 GLTexture::List UnityWindow::close_pressed_tex_;
 
+namespace scale
+{
+namespace decoration
+{
+const unsigned CLOSE_SIZE = 19;
+const unsigned ITEMS_PADDING = 5;
+const unsigned RADIUS = 8;
+}
+}
+
 struct UnityWindow::CairoContext
 {
-  CairoContext(int width, int height)
-    : pixmap_(XCreatePixmap(screen->dpy(), screen->root(), width, height, 32))
-    , texture_(GLTexture::bindPixmapToTexture(pixmap_, width, height, 32))
+  CairoContext(unsigned width, unsigned height)
+    : w_(width)
+    , h_(height)
+    , pixmap_(XCreatePixmap(screen->dpy(), screen->root(), w_, h_, 32))
+    , texture_(GLTexture::bindPixmapToTexture(pixmap_, w_, h_, 32))
     , surface_(nullptr)
     , cr_(nullptr)
   {
@@ -3406,7 +3420,7 @@ struct UnityWindow::CairoContext
       cairo_restore(cr_);
   }
 
-  ~CairoContext ()
+  ~CairoContext()
   {
     if (cr_)
       cairo_destroy(cr_);
@@ -3414,12 +3428,12 @@ struct UnityWindow::CairoContext
     if (surface_)
       cairo_surface_destroy(surface_);
 
-    texture_.clear();
-
     if (pixmap_)
-      XFreePixmap(screen->dpy (), pixmap_);
+      XFreePixmap(screen->dpy(), pixmap_);
   }
 
+  unsigned w_;
+  unsigned h_;
   Pixmap pixmap_;
   GLTexture::List texture_;
   cairo_surface_t* surface_;
@@ -3478,8 +3492,8 @@ UnityWindow::UnityWindow(CompWindow* window)
     }
   }
 
-  WindowManager::Default()->initiate_spread.connect(sigc::mem_fun(this, &UnityWindow::OnInitiateSpreed));
-  WindowManager::Default()->terminate_spread.connect(sigc::mem_fun(this, &UnityWindow::OnTerminateSpreed));
+  WindowManager::Default()->initiate_spread.connect(sigc::mem_fun(this, &UnityWindow::OnInitiateSpread));
+  WindowManager::Default()->terminate_spread.connect(sigc::mem_fun(this, &UnityWindow::OnTerminateSpread));
 }
 
 void UnityWindow::AddProperties(GVariantBuilder* builder)
@@ -3505,8 +3519,9 @@ std::string UnityWindow::GetName() const
   return "Window";
 }
 
+
 void UnityWindow::DrawTexture(GLTexture::List const& textures, GLWindowPaintAttrib const& attrib,
-                              GLMatrix const& transform, unsigned int mask, int x, int y)
+                              GLMatrix const& transform, unsigned int mask, int x, int y, double scale)
 {
   for (auto const& texture : textures)
   {
@@ -3527,10 +3542,38 @@ void UnityWindow::DrawTexture(GLTexture::List const& textures, GLWindowPaintAttr
     {
       GLMatrix wTransform(transform);
       wTransform.translate(x, y, 0.0f);
+      wTransform.scale(scale, scale, 1.0f);
 
       gWindow->glDrawTexture(texture, wTransform, attrib, mask);
     }
   }
+}
+
+void UnityWindow::RenderDecoration(CairoContext const& context, double aspect)
+{
+  cairo_save(context.cr_);
+
+  // Draw window decoration based on gtk style
+  cairo_push_group(context.cr_);
+  auto& style = panel::Style::Instance();
+  gtk_render_background(style.GetStyleContext(), context.cr_, 0, 0, context.w_, context.h_);
+  gtk_render_frame(style.GetStyleContext(), context.cr_, 0, 0, context.w_, context.h_);
+  cairo_pop_group_to_source(context.cr_);
+
+  // Round window decoration top border
+  const double radius = scale::decoration::RADIUS * aspect;
+
+  cairo_new_sub_path(context.cr_);
+  cairo_line_to(context.cr_, 0, context.h_);
+  cairo_arc(context.cr_, radius, radius, radius, M_PI, -M_PI * 0.5f);
+  cairo_line_to(context.cr_, context.w_ - radius, 0);
+  cairo_arc(context.cr_, context.w_ - radius, radius, radius, M_PI * 0.5f, 0);
+  cairo_line_to(context.cr_, context.w_, context.h_);
+  cairo_close_path(context.cr_);
+
+  cairo_fill(context.cr_);
+
+  cairo_restore(context.cr_);
 }
 
 void UnityWindow::RenderText(CairoContext const& context, int x, int y, int width, int height)
@@ -3578,8 +3621,8 @@ void UnityWindow::RenderText(CairoContext const& context, int x, int y, int widt
   pango_layout_get_extents(layout, nullptr, &lRect);
   int text_width = lRect.width / PANGO_SCALE;
   int text_height = lRect.height / PANGO_SCALE;
-  y += (height - text_height) / 2.0f;
   int text_space = width - x;
+  y += (height - text_height) / 2.0f;
 
   if (text_width > text_space)
   {
@@ -3606,49 +3649,19 @@ void UnityWindow::RenderText(CairoContext const& context, int x, int y, int widt
   gtk_style_context_restore(style_context);
 }
 
-void UnityWindow::DrawWindowDecoration(GLWindowPaintAttrib const& attrib,
-                                       GLMatrix const& transform,
-                                       unsigned int mask,
-                                       bool highlighted,
-                                       int x, int y, unsigned width, unsigned height)
+void UnityWindow::BuildDecorationTexture()
 {
-  // Paint a fake window decoration
-  CairoContext context(width, height);
+  if (!decoration_tex_.empty())
+    return;
 
-  cairo_save(context.cr_);
+  auto const& border_extents = window->border();
 
-  // Draw window decoration based on gtk style
-  cairo_push_group(context.cr_);
-  auto& style = panel::Style::Instance();
-  gtk_render_background(style.GetStyleContext(), context.cr_, 0, 0, width, height);
-  gtk_render_frame(style.GetStyleContext(), context.cr_, 0, 0, width, height);
-  cairo_pop_group_to_source(context.cr_);
-
-  // Round window decoration top border
-  const double aspect = ScaleWindow::get(window)->getCurrentPosition().scale;
-  const double radius = 8.0 * aspect;
-
-  cairo_new_sub_path(context.cr_);
-  cairo_line_to(context.cr_, 0, height);
-  cairo_arc(context.cr_, radius, radius, radius, M_PI, -M_PI * 0.5f);
-  cairo_line_to(context.cr_, width - radius, 0);
-  cairo_arc(context.cr_, width - radius, radius, radius, M_PI * 0.5f, 0);
-  cairo_line_to(context.cr_, width, height);
-  cairo_close_path(context.cr_);
-
-  cairo_fill(context.cr_);
-
-  cairo_restore(context.cr_);
-
-  if (highlighted)
+  if (WindowManager::Default()->IsWindowDecorated(window->id()) && border_extents.top > 0)
   {
-    // Draw windows title
-    const float xText = SCALE_ITEMS_PADDING * 2 + SCALE_CLOSE_ICON_SIZE;
-    RenderText(context, xText, 0.0, width - SCALE_ITEMS_PADDING, height);
+    CairoContext context(window->borderRect().width(), border_extents.top);
+    RenderDecoration(context);
+    decoration_tex_ = context.texture_;
   }
-
-  mask |= PAINT_WINDOW_BLEND_MASK;
-  DrawTexture(context.texture_, attrib, transform, mask, x, y);
 }
 
 void UnityWindow::LoadCloseIcon(panel::WindowState state, GLTexture::List& texture)
@@ -3663,7 +3676,7 @@ void UnityWindow::LoadCloseIcon(panel::WindowState state, GLTexture::List& textu
   for (std::string const& file : files)
   {
     CompString file_name = file;
-    CompSize size(SCALE_CLOSE_ICON_SIZE, SCALE_CLOSE_ICON_SIZE);
+    CompSize size(scale::decoration::CLOSE_SIZE, scale::decoration::CLOSE_SIZE);
     texture = GLTexture::readImageToTexture(file_name, plugin, size);
     if (!texture.empty())
       break;
@@ -3678,7 +3691,7 @@ void UnityWindow::LoadCloseIcon(panel::WindowState state, GLTexture::List& textu
       suffix = "_pressed";
 
     CompString file_name(PKGDATADIR"/close_dash" + suffix + ".png");
-    CompSize size(SCALE_CLOSE_ICON_SIZE, SCALE_CLOSE_ICON_SIZE);
+    CompSize size(scale::decoration::CLOSE_SIZE, scale::decoration::CLOSE_SIZE);
     texture = GLTexture::readImageToTexture(file_name, plugin, size);
   }
 }
@@ -3715,27 +3728,37 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
     return;
 
   auto const& scaled_geo = GetScaledGeometry();
-  auto const& decoration_extents = window->border();
   auto const& pos = scale_win->getCurrentPosition();
 
   const bool highlighted = (ss->getSelectedWindow() == window->id());
-  int width = scaled_geo.width;
-  int height = decoration_extents.top;
   int x = scaled_geo.x;
   int y = scaled_geo.y;
 
+  mask |= PAINT_WINDOW_BLEND_MASK;
 
-  // If window is not highlighted, we draw the decoration at scaled size
   if (!highlighted)
-    height *= pos.scale;
-
-  DrawWindowDecoration(attrib, transform, mask, highlighted, x, y, width, height);
-
-  if (highlighted)
   {
-    x += SCALE_ITEMS_PADDING;
-    y += (height - SCALE_CLOSE_ICON_SIZE) / 2.0f;
-    mask |= PAINT_WINDOW_BLEND_MASK;
+    BuildDecorationTexture();
+    DrawTexture(decoration_tex_, attrib, transform, mask, x, y, pos.scale);
+    close_button_geo_.Set(0, 0, 0, 0);
+  }
+  else
+  {
+    auto const& decoration_extents = window->border();
+    unsigned width = scaled_geo.width;
+    unsigned height = decoration_extents.top;
+
+    CairoContext context(width, height);
+    RenderDecoration(context, pos.scale);
+
+    // Draw windows title
+    int text_x = scale::decoration::ITEMS_PADDING * 2 + scale::decoration::CLOSE_SIZE;
+    RenderText(context, text_x, 0.0, width - scale::decoration::ITEMS_PADDING, height);
+
+    DrawTexture(context.texture_, attrib, transform, mask, x, y);
+
+    x += scale::decoration::ITEMS_PADDING;
+    y += (height - scale::decoration::CLOSE_SIZE) / 2.0f;
 
     switch (close_icon_state_)
     {
@@ -3753,11 +3776,7 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
         break;
     }
 
-    close_button_geo_.Set(x, y, SCALE_CLOSE_ICON_SIZE, SCALE_CLOSE_ICON_SIZE);
-  }
-  else if (!close_button_geo_.IsNull())
-  {
-    close_button_geo_.Set(0, 0, 0, 0);
+    close_button_geo_.Set(x, y, scale::decoration::CLOSE_SIZE, scale::decoration::CLOSE_SIZE);
   }
 }
 
@@ -3777,7 +3796,7 @@ nux::Geometry UnityWindow::GetScaledGeometry()
   return nux::Geometry(x, y, width, height);
 }
 
-void UnityWindow::OnInitiateSpreed()
+void UnityWindow::OnInitiateSpread()
 {
   close_icon_state_ = panel::WindowState::NORMAL;
   middle_clicked_ = false;
@@ -3790,13 +3809,15 @@ void UnityWindow::OnInitiateSpreed()
     wm->Decorate(xid);
 }
 
-void UnityWindow::OnTerminateSpreed()
+void UnityWindow::OnTerminateSpread()
 {
   WindowManager *wm = WindowManager::Default();
   Window xid = window->id();
 
   if (wm->IsWindowDecorated(xid) && wm->IsWindowMaximized(xid))
     wm->Undecorate(xid);
+
+  decoration_tex_.clear();
 }
 
 UnityWindow::~UnityWindow()
