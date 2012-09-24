@@ -66,6 +66,22 @@ class SpreadTests(UnityTestCase):
         self.assertThat(lambda: (win1.x_id and win2.x_id) in [w.xid for w in self.screen.scaled_windows],
                         Eventually(Equals(True)))
 
+    def test_scaled_window_is_focused_on_click(self):
+        windows = self.start_test_application_windows("Calculator", 3)
+        self.initiate_spread_for_application(windows[0].application.desktop_file)
+
+        not_focused = [w for w in windows if not w.is_focused][0]
+
+        target_xid = not_focused.x_id
+        [target_win] = [w for w in self.screen.scaled_windows if w.xid == target_xid]
+
+        (x, y, w, h) = target_win.geometry
+        self.mouse.move(x + w / 2, y + h / 2)
+        sleep(.5)
+        self.mouse.click()
+
+        self.assertThat(lambda: not_focused.is_focused, Eventually(Equals(True)))
+
     def test_scaled_window_closes_on_middle_click(self):
         win = self.start_test_application_windows("Calculator", 2)[0]
         self.initiate_spread_for_application(win.application.desktop_file)
