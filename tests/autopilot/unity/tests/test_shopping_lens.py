@@ -11,7 +11,6 @@ from __future__ import absolute_import
 from autopilot.matchers import Eventually
 from testtools.matchers import Equals, GreaterThan
 from time import sleep
-
 import urllib2
 
 from unity.tests import UnityTestCase
