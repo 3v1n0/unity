@@ -164,8 +164,8 @@ Expected Result:
   * If the dragged icon is moved rapidly, multiple icons can be moving either
     upwards or downwards as the space is moved into place under the dragged icon
   * Dragging the second application icon (the third icon of the launcher) below
-    the BFB or above the workspace switcher should be possible.
-  * The BFB and the workspace switcher icons do not move
+    the BFB or above the trash icon should be possible.
+  * All the icons other than the BFB and trash icons can be reordered
 
 
 Dragging icons to reorder - away from launcher
