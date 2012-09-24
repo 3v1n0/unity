@@ -9,6 +9,7 @@
 
 """A collection of Unity-specific emulators."""
 
+from time import sleep
 
 from autopilot.introspection.dbus import DBusIntrospectionObject
 
@@ -17,3 +18,24 @@ class UnityIntrospectionObject(DBusIntrospectionObject):
 
     DBUS_SERVICE = "com.canonical.Unity"
     DBUS_OBJECT = "/com/canonical/Unity/Debug"
+
+
+def ensure_unity_is_running(timeout=300):
+    """Poll the unity debug interface, and return when it's ready for use.
+
+    The default timeout is 300 seconds (5 minutes) to account for the case where
+    Unity has crashed and is taking a while to get restarted (on a slow VM for
+    example).
+
+    If, after the timeout period, unity is still not up, this function raises a
+    RuntimeError exception.
+
+    """
+    sleep_period=10
+    for i in range(0, timeout, sleep_period):
+        try:
+            UnityIntrospectionObject.get_state_by_path("/")
+            return True
+        except:
+            sleep(sleep_period)
+    raise RuntimeError("Unity debug interface is down after %d seconds of polling." % (timeout))
