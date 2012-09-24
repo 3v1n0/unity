@@ -102,8 +102,9 @@ public:
 
   nux::InputArea* DefaultFocus() const
   {
-    if (areas_.size() == 0)
-      return NULL;
+    if (areas_.empty())
+      return nullptr;
+
     return *areas_.begin();
   }
 
@@ -111,10 +112,10 @@ public:
                                       unsigned long x11_key_code,
                                       unsigned long special_keys_state)
   {
-    if (areas_.size() == 0)
+    if (areas_.empty())
       return nullptr;
 
-    nux::InputArea* current_focus_area = nux::GetWindowCompositor().GetKeyFocusArea();  
+    nux::InputArea* current_focus_area = nux::GetWindowCompositor().GetKeyFocusArea();
     auto it = std::find(areas_.begin(), areas_.end(), current_focus_area);
     if (it != areas_.end())
       return current_focus_area;
@@ -124,7 +125,7 @@ public:
 
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction)
   {
-    if (areas_.size() == 0)
+    if (areas_.empty())
       return nullptr;
 
     if (direction != nux::KEY_NAV_TAB_PREVIOUS && direction != nux::KEY_NAV_TAB_NEXT)
