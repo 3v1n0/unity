@@ -29,12 +29,10 @@
 #include "group_glow.h"
 #include "glow.h"
 
-#define WIN_REAL_X(w) (w->x () - w->border ().left)
-#define WIN_REAL_Y(w) (w->y () - w->border ().top)
-#define WIN_REAL_WIDTH(w) (w->width () + 2 * w->geometry ().border () + \
-         w->border ().left + w->border ().right)
-#define WIN_REAL_HEIGHT(w) (w->height () + 2 * w->geometry ().border () + \
-          w->border ().top + w->border ().bottom)
+#define WIN_REAL_X(w) (w->borderRect().x())
+#define WIN_REAL_Y(w) (w->borderRect().y())
+#define WIN_REAL_WIDTH(w) (w->borderRect().width())
+#define WIN_REAL_HEIGHT(w) (w->borderRect().height())
 
 const GlowTextureProperties glowTextureProperties = {
   /* GlowTextureRectangular */
@@ -99,14 +97,13 @@ UnityWindow::paintGlow (const GLMatrix      &transform,
 
   if (gWindow->vertexBuffer ()->end ())
   {
-    //GLScreen::get (screen)->setTexEnvMode (GL_MODULATE);
     glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     /* we use PAINT_WINDOW_TRANSFORMED_MASK here to force
     the usage of a good texture filter */
     for (GLTexture *tex : outline_texture)
     {
-      gWindow->glDrawTexture (tex, transform, attrib, mask | 
+      gWindow->glDrawTexture (tex, transform, attrib, mask |
                   PAINT_WINDOW_BLEND_MASK     |
                   PAINT_WINDOW_TRANSLUCENT_MASK |
                   PAINT_WINDOW_TRANSFORMED_MASK);
@@ -155,12 +152,12 @@ UnityWindow::paintGlow (const GLMatrix      &transform,
  *
  */
 void
-UnityWindow::computeGlowQuads (GLTexture::Matrix *matrix)
+UnityWindow::computeGlowQuads (GLTexture::Matrix *matrix, double aspect)
 {
   CompRect      *box;
   int         x1, x2, y1, y2;
   GLTexture::Matrix *quadMatrix;
-  int         glowSize, glowOffset;
+  float         glowSize, glowOffset;
   CompWindow    *w = window;
 
   /* Passing NULL to this function frees the glow quads
@@ -183,7 +180,7 @@ UnityWindow::computeGlowQuads (GLTexture::Matrix *matrix)
     return;
   }
 
-  glowSize = 60;
+  glowSize = 30 / aspect;
   glowOffset = (glowSize * glowTextureProperties.glowOffset /
                            glowTextureProperties.textureSize) + 1;
 

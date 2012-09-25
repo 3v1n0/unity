@@ -444,11 +444,11 @@ private:
   void RenderDecoration(CairoContext const&, double aspect = 1.0f);
   void RenderText(CairoContext const&, int x, int y, int width, int height);
   void DrawTexture(GLTexture::List const& textures, GLWindowPaintAttrib const&,
-                   GLMatrix const&, unsigned mask, int x, int y, double scale = 1.0f);
+                   GLMatrix const&, unsigned mask, int x, int y, double aspect = 1.0f);
 
   void paintGlow(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&,
                  GLTexture::List const&, const GLushort *color, unsigned mask);
-  void computeGlowQuads(GLTexture::Matrix*);
+  void computeGlowQuads(GLTexture::Matrix*, double aspect = 1.0f);
 
   void BuildDecorationTexture();
   void CleanupCachedTextures();
