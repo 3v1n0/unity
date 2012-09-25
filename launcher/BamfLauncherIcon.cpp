@@ -630,21 +630,21 @@ std::vector<Window> BamfLauncherIcon::GetFocusableWindows(ActionArg arg, bool &a
   std::vector<Window> windows;
   GList* children;
 
-  BamfView *focusable_child = BAMF_VIEW (bamf_application_get_focusable_child (_bamf_app.RawPtr()));
+  BamfView *focusable_child = BAMF_VIEW(bamf_application_get_focusable_child(_bamf_app.RawPtr()));
 
   if (focusable_child != NULL)
   {
     Window xid = 0;
 
-    if (BAMF_IS_WINDOW (focusable_child))
+    if (BAMF_IS_WINDOW(focusable_child))
     {
-      xid = bamf_window_get_xid (BAMF_WINDOW(focusable_child));
+      xid = bamf_window_get_xid(BAMF_WINDOW(focusable_child));
     }
-    else if (BAMF_IS_TAB (focusable_child))
+    else if (BAMF_IS_TAB(focusable_child))
     {
-      BamfTab *focusable_tab = BAMF_TAB (focusable_child);
-      xid = bamf_tab_get_xid (focusable_tab);
-      bamf_tab_raise (focusable_tab);
+      BamfTab *focusable_tab = BAMF_TAB(focusable_child);
+      xid = bamf_tab_get_xid(focusable_tab);
+      bamf_tab_raise(focusable_tab);
     }
 
     if (xid)
@@ -655,7 +655,7 @@ std::vector<Window> BamfLauncherIcon::GetFocusableWindows(ActionArg arg, bool &a
   }
   else
   {
-    if (g_strcmp0 (bamf_application_get_application_type (_bamf_app.RawPtr()), "webapp") == 0)
+    if (g_strcmp0(bamf_application_get_application_type(_bamf_app.RawPtr()), "webapp") == 0)
     {
       OpenInstanceLauncherIcon(arg);
 
