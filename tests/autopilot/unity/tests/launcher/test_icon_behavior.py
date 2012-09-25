@@ -19,9 +19,6 @@ from unity.emulators.icons import BamfLauncherIcon
 from unity.emulators.launcher import IconDragType
 from unity.tests.launcher import LauncherTestCase, _make_scenarios
 
-import pygtk
-import gtk
-
 logger = logging.getLogger(__name__)
 
 
@@ -103,30 +100,6 @@ class LauncherIconsTests(LauncherTestCase):
         """This tests shows that when you click on a launcher icon twice,
         when an application window is focused, the spread is initiated.
         """
-        char_win1 = self.start_app_window("Character Map")
-        char_win2 = self.start_app_window("Character Map")
-        char_app = char_win1.application
-
-        self.assertVisibleWindowStack([char_win2, char_win1])
-        self.assertProperty(char_win2, is_focused=True)
-
-        char_icon = self.launcher.model.get_icon(desktop_id=char_app.desktop_file)
-        self.addCleanup(self.keybinding, "spread/cancel")
-        self.launcher_instance.click_launcher_icon(char_icon)
-
-        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
-        self.assertThat(self.window_manager.scale_active_for_group, Eventually(Equals(True)))
-
-    def test_clicking_icon_twice_with_override_redirect_window_opens_spread(self):
-        """This tests shows that when you click on a launcher icon twice and a
-        window exist that has override direct set then it must ignore that window
-        and initate spread.
-        """
-        # Opens an override redirect window
-        popup = gtk.Window(gtk.WINDOW_POPUP)
-        popup.show_all()
-        self.addCleanup(popup.destroy)
-
         char_win1 = self.start_app_window("Character Map")
         char_win2 = self.start_app_window("Character Map")
         char_app = char_win1.application
