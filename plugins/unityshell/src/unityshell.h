@@ -64,6 +64,8 @@
 #include "HudController.h"
 #include "WindowMinimizeSpeedController.h"
 
+#include "glow.h"
+
 namespace unity
 {
 
@@ -444,6 +446,10 @@ private:
   void DrawTexture(GLTexture::List const& textures, GLWindowPaintAttrib const&,
                    GLMatrix const&, unsigned mask, int x, int y, double scale = 1.0f);
 
+  void paintGlow(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&,
+                 GLTexture::List const&, const GLushort *color, unsigned mask);
+  void computeGlowQuads(GLTexture::Matrix*);
+
   void BuildDecorationTexture();
   void CleanupCachedTextures();
   static void SetupSharedTextures();
@@ -458,12 +464,14 @@ private:
   static GLTexture::List close_normal_tex_;
   static GLTexture::List close_prelight_tex_;
   static GLTexture::List close_pressed_tex_;
+  static GLTexture::List glow_texture_;
   GLTexture::List decoration_tex_;
   GLTexture::List decoration_selected_tex_;
   std::string decoration_title_;
   compiz::WindowInputRemoverLock::Weak input_remover_;
   panel::WindowState close_icon_state_;
   nux::Geometry close_button_geo_;
+  GlowQuad *mGlowQuads;
   bool middle_clicked_;
   glib::Source::UniquePtr focus_desktop_timeout_;
 
