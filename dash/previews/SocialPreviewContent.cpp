@@ -298,7 +298,7 @@ void SocialPreviewContent::DrawBubble(cairo_t* cr,
 
   nux::Color color_fill(1.0, 1.0, 1.0, 0.2);
   cairo_set_source_rgba(cr, color_fill.red, color_fill.green, color_fill.blue, color_fill.alpha);
-  cairo_fill(cr);
+  cairo_fill_preserve(cr);
 
   nux::Color color_stroke(1.0, 1.0, 1.0, 0.1);
   cairo_set_source_rgba(cr, color_stroke.red, color_stroke.green, color_stroke.blue, color_stroke.alpha);
