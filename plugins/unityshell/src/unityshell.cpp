@@ -2086,7 +2086,8 @@ void UnityScreen::OnLauncherEndKeyNav(GVariant* data)
 
 void UnityScreen::OnSwitcherStart(GVariant* data)
 {
-  SaveInputThenFocus(switcher_controller_->GetSwitcherInputWindowId());
+  if (switcher_controller_->Visible())
+    SaveInputThenFocus(switcher_controller_->GetSwitcherInputWindowId());
 }
 
 void UnityScreen::OnSwitcherEnd(GVariant* data)
