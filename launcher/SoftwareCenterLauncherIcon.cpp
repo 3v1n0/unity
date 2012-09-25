@@ -30,6 +30,13 @@ namespace unity
 namespace launcher
 {
 
+namespace
+{
+#define SOURCE_SHOW_TOOLTIP "ShowTooltip"
+#define SOURCE_HIDE_TOOLTIP "HideTooltip"
+const int INSTALL_TIP_DURATION = 1500;
+}
+
 NUX_IMPLEMENT_OBJECT_TYPE(SoftwareCenterLauncherIcon);
 
 SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
@@ -122,6 +129,17 @@ void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
       SetProgress(0.0f);
       finished_ = true;
       needs_urgent_ = true;
+
+      sources_.AddIdle([this]()
+      {
+        ShowTooltip();
+        sources_.AddTimeout(INSTALL_TIP_DURATION, [this]()
+        {
+          HideTooltip();
+          return false;
+        }, SOURCE_HIDE_TOOLTIP);
+        return false;
+      }, SOURCE_SHOW_TOOLTIP);
    }
    else
    {
