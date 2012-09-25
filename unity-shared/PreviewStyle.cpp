@@ -219,7 +219,7 @@ int Style::GetTrackHeight() const
 
 int Style::GetMusicDurationWidth() const
 {
-  return 40;
+  return 55;
 }
 
 int Style::GetActionButtonHeight() const
