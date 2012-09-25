@@ -91,7 +91,7 @@ UnityWindow::paintGlow (const GLMatrix      &transform,
       /* Add color data for all 6 vertices of the quad */
       for (int n = 0; n < 6; n++)
         gWindow->vertexBuffer ()->addColors (1, colorData);
-      gWindow->glAddGeometry (matl, reg, paintRegion);
+      gWindow->glAddGeometry (matl, reg, reg);
     }
   }
 
