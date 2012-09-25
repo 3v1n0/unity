@@ -50,6 +50,7 @@
 #include "unity-shared/WindowManager.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/UBusMessages.h"
+#include <unity-shared/DashStyle.h>
 
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
@@ -1232,6 +1233,7 @@ void Launcher::OnOverlayShown(GVariant* data)
     {
       _hud_is_open = true;
     }
+    if (dash::Style::Instance().GetUseBlur())
     bg_effect_helper_.enabled = true;
     // Don't desaturate icons if the mouse is over the launcher:
     if (!_hovered)

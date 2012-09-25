@@ -72,7 +72,7 @@ add_executable (test-unit
                 ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
                 ${CMAKE_SOURCE_DIR}/unity-shared/ubus-server.cpp
                 )
-target_link_libraries (test-unit ${LIBS})
+target_link_libraries (test-unit unity-shared ${LIBS})
 add_dependencies (test-unit unity-core-${UNITY_API_VERSION})
 add_subdirectory (test-input-remover)
 add_subdirectory (test-minimize-window-handler)

@@ -31,6 +31,7 @@
 
 #include <X11/Xregion.h>
 #include <boost/utility.hpp>
+#include "UnitySettings.h"
 
 
 using namespace unity;
@@ -52,6 +53,11 @@ BackgroundEffectHelper::BackgroundEffectHelper()
   cache_dirty = true;
   enabled.changed.connect (sigc::mem_fun(this, &BackgroundEffectHelper::OnEnabledChanged));
   noise_texture_ = nux::CreateTextureFromFile(PKGDATADIR"/dash_noise.png");
+  
+  if (Settings::Instance().GetLowGfxMode())
+  {
+    blur_type(BLUR_NONE);
+  }
 
   Register(this);
 }
@@ -151,7 +157,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
     return nux::ObjectPtr<nux::IOpenGLBaseTexture>();
   }
 
-  int opengl_version = gpu_device->GetOpenGLMajorVersion();
+  int opengl_version = gpu_device->GetGpuInfo().GetOpenGLMajorVersion();
   int sigma = opengl_version >= 3 ? sigma_high : sigma_med;
   int radius = 3 * sigma;
 

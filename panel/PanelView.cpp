@@ -39,6 +39,7 @@
 #include <UnityCore/Variant.h>
 
 #include "unity-shared/UBusMessages.h"
+#include <unity-shared/DashStyle.h>
 
 #include "PanelView.h"
 
@@ -71,10 +72,22 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
 
   nux::ROPConfig rop;
   rop.Blend = true;
-  rop.SrcBlend = GL_ZERO;
-  rop.DstBlend = GL_SRC_COLOR;
+  nux::Color darken_colour = nux::Color(0.9f, 0.9f, 0.9f, 1.0f);
+  
+  if (dash::Style::Instance().GetUseBlur())
+  {
+    rop.SrcBlend = GL_ZERO;
+    rop.DstBlend = GL_SRC_COLOR;
+  }
+  //If our dash isn't being blured then we use our darken layer as our background.
+  else
+  {
+    rop.SrcBlend = GL_ONE;
+    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+    darken_colour = _bg_color;
+  }
 
-  _bg_darken_layer.reset(new nux::ColorLayer(nux::Color(0.9f, 0.9f, 0.9f, 1.0f), false, rop));
+  _bg_darken_layer.reset(new nux::ColorLayer(darken_colour, false, rop));
 
   _layout = new nux::HLayout("", NUX_TRACKER_LOCATION);
   _layout->SetContentDistribution(nux::eStackLeft);
@@ -386,31 +399,34 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       GfxContext.PopClippingRectangle();
     }
 
-    if (_overlay_is_open)
+    if (dash::Style::Instance().GetUseBlur())
     {
-      nux::GetPainter().RenderSinglePaintLayer(GfxContext, geo, _bg_darken_layer.get());
-    
-      GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-      nux::TexCoordXForm refine_texxform;
+      if (_overlay_is_open)
+      {
+        nux::GetPainter().RenderSinglePaintLayer(GfxContext, geo, _bg_darken_layer.get());
       
-      int refine_x_pos = geo.x + (_stored_dash_width - refine_gradient_midpoint);
+        GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        nux::TexCoordXForm refine_texxform;
+        
+        int refine_x_pos = geo.x + (_stored_dash_width - refine_gradient_midpoint);
 
-      refine_x_pos += _launcher_width;
-      GfxContext.QRP_1Tex(refine_x_pos, 
-                          geo.y,
-                          _bg_refine_tex->GetWidth(), 
-                          _bg_refine_tex->GetHeight(),
-                          _bg_refine_tex->GetDeviceTexture(),
-                          refine_texxform,
-                          nux::color::White);
-      
-      GfxContext.QRP_1Tex(refine_x_pos + _bg_refine_tex->GetWidth(),
-                          geo.y,
-                          geo.width,
-                          geo.height,
-                          _bg_refine_single_column_tex->GetDeviceTexture(),
-                          refine_texxform,
-                          nux::color::White);
+        refine_x_pos += _launcher_width;
+        GfxContext.QRP_1Tex(refine_x_pos, 
+                            geo.y,
+                            _bg_refine_tex->GetWidth(), 
+                            _bg_refine_tex->GetHeight(),
+                            _bg_refine_tex->GetDeviceTexture(),
+                            refine_texxform,
+                            nux::color::White);
+        
+        GfxContext.QRP_1Tex(refine_x_pos + _bg_refine_tex->GetWidth(),
+                            geo.y,
+                            geo.width,
+                            geo.height,
+                            _bg_refine_single_column_tex->GetDeviceTexture(),
+                            refine_texxform,
+                            nux::color::White);
+      }
     }
   }
 

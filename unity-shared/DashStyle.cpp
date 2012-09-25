@@ -196,6 +196,8 @@ public:
   int text_width_;
   int text_height_;
   int number_of_columns_;
+  
+  bool use_blur_;
 
   LazyLoadTexture category_texture_;
   LazyLoadTexture category_texture_no_filters_;
@@ -247,6 +249,7 @@ Style::Impl::Impl(Style* owner)
   , text_width_(0)
   , text_height_(0)
   , number_of_columns_(6)
+  , use_blur_(!Settings::Instance().GetLowGfxMode())
   , category_texture_("/category_gradient.png")
   , category_texture_no_filters_("/category_gradient_no_refine.png")
   , dash_bottom_texture_("/dash_bottom_border_tile.png")
@@ -2108,6 +2111,11 @@ int Style::GetHomeTileHeight() const
 int Style::GetTextLineHeight() const
 {
   return pimpl->text_height_;
+}
+
+bool Style::GetUseBlur() const
+{
+  return pimpl->use_blur_;
 }
 
 
