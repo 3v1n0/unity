@@ -3,6 +3,8 @@ unity (6.6.0-0ubuntu2) UNRELEASED; urgency=low
   * debian/unity-common.maintscript:
     - Added routines for removing the unused
       /etc/compizconfig/upgrades/com.canonical.unity.unity.03.upgrade file
+  * debian/control, debian/compat:
+    - Bumped the debhelper version to the 9 series
 
  -- Łukasz 'sil2100' Zemczak <lukasz.zemczak@canonical.com>  Wed, 26 Sep 2012 11:10:12 +0200
 

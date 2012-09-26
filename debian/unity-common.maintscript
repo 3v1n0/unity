@@ -1,1 +1,1 @@
-rm_conffile /etc/compizconfig/upgrades/com.canonical.unity.unity.03.upgrade
+rm_conffile /etc/compizconfig/upgrades/com.canonical.unity.unity.03.upgrade 6.2.0-0ubuntu1~ unity-common
