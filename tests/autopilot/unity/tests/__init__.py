@@ -20,6 +20,8 @@ from tempfile import mktemp
 from testtools.content import text_content
 from testtools.matchers import Equals
 
+from unity.emulators import ensure_unity_is_running
+from unity.emulators.screen import Screen
 from unity.emulators.dash import Dash
 from unity.emulators.hud import Hud
 from unity.emulators.launcher import LauncherController
@@ -45,6 +47,8 @@ class UnityTestCase(AutopilotTestCase):
 
     def setUp(self):
         super(UnityTestCase, self).setUp()
+        ensure_unity_is_running()
+
         self._setUpUnityLogging()
         self._initial_workspace_num = self.workspace.current_workspace
         self.addCleanup(self.check_test_behavior)
@@ -114,6 +118,12 @@ class UnityTestCase(AutopilotTestCase):
         return True
 
     @property
+    def screen(self):
+        if not getattr(self, '__screen', None):
+            self.__screen = self._get_screen()
+        return self.__screen
+
+    @property
     def dash(self):
         if not getattr(self, '__dash', None):
             self.__dash = Dash()
@@ -154,6 +164,11 @@ class UnityTestCase(AutopilotTestCase):
         if not getattr(self, '__workspace', None):
             self.__workspace = WorkspaceManager()
         return self.__workspace
+
+    def _get_screen(self):
+        screens = Screen.get_all_instances()
+        self.assertThat(len(screens), Equals(1))
+        return screens[0]
 
     def _get_launcher_controller(self):
         controllers = LauncherController.get_all_instances()
