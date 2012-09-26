@@ -113,7 +113,8 @@ Setup:
 #. Have 2 windows of different types open. (gedit, nautilus)
 
 Actions:
-  #. Press quicky Alt+Tab 10 times.
+  #. Press quicky Alt+Tab. (so that the switcher window is not shown)
+  #. Repeat 10 times.
 
 Expected Results:
   No window loses focuses at all. The panel should alway show the title of the
