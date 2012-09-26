@@ -202,7 +202,7 @@ void DashView::FadeInCallBack(float const& fade_in_value)
   }
 }
 
-void DashView::OnPreviewUriActivated(std::string const& uri, glib::Variant const& data, std::string const& unique_id) 
+void DashView::OnPreviewUriActivated(std::string const& uri, GVariant* data, std::string const& unique_id) 
 {
   if (data)
   {

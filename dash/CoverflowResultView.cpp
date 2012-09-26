@@ -18,6 +18,7 @@
  */
 
 #include "CoverflowResultView.h"
+#include <UnityCore/Variant.h>
 #include "unity-shared/IconLoader.h"
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/DashStyle.h"
@@ -127,12 +128,15 @@ void CoverflowResultItem::Activate(int button)
   int index = Index();
   int size = model_->Items().size();
 
+  glib::Variant data(g_variant_new("(iiii)", 0, 0, index, size - index));
+
   //Left and right click take you to previews.
   if (button == 1 || button == 3)
-    parent_->UriActivated.emit(result_.uri, ResultView::ActivateType::PREVIEW, g_variant_new("(iiii)", 0, 0, index, size - index));
+    parent_->Activate(result_.uri, index, ResultView::ActivateType::PREVIEW);
   //Scroll click opens up music player.
   else if (button == 2)
-    parent_->UriActivated.emit(result_.uri, ResultView::ActivateType::DIRECT, nullptr);
+    parent_->Activate(result_.uri, index, ResultView::ActivateType::DIRECT);
+
 }
 
 CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
@@ -186,9 +190,8 @@ CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
     
     if (nav_mode)
     {
-      int left_results = current_index;
-      int right_results = num_results ? (num_results - current_index) - 1 : 0;
-      parent_->UriActivated.emit(GetUriForIndex(current_index), ActivateType::PREVIEW, g_variant_new("(iiii)", 0, 0, left_results, right_results));
+      std::string uri = GetUriForIndex(current_index);
+      parent_->Activate(uri, current_index, ActivateType::PREVIEW);
     }
   });
 }
@@ -301,6 +304,20 @@ long CoverflowResultView::ComputeContentSize()
   pimpl->ComputeFlatIcons();
   long ret = ResultView::ComputeContentSize();
   return ret;
+}
+
+
+void CoverflowResultView::Activate(std::string const& uri, int index, ResultView::ActivateType type)
+{
+  unsigned num_results = pimpl->coverflow_->model()->Items().size();
+
+  int left_results = index;
+  int right_results = num_results ? (num_results - index) - 1 : 0;
+  int row_y = GetRootGeometry().y;
+  int row_height = renderer_->height;
+
+  glib::Variant data(g_variant_new("(iiii)", row_y, row_height, left_results, right_results), glib::StealRef());
+  UriActivated.emit(uri, type, data);
 }
 
 

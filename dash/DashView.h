@@ -94,7 +94,7 @@ private:
   virtual long PostLayoutManagement (long LayoutResult);
   nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
 
-  void OnPreviewUriActivated(std::string const& uri, glib::Variant const& data, std::string const& unique_id);
+  void OnPreviewUriActivated(std::string const& uri, GVariant* data, std::string const& unique_id);
   void BuildPreview(Preview::Ptr model);
   void OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key);
   void OnBackgroundColorChanged(GVariant* args);
