@@ -3,7 +3,7 @@ Section: gnome
 Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: cmake,
-               debhelper (>= 7.0.50~),
+               debhelper (>= 9.0.0~),
                dh-translations (>= 94),
                dh-migrations,
                pkg-config,
@@ -106,6 +106,7 @@ Description: Services for the Unity interface
 
 Package: unity-common
 Architecture: all
+Pre-Depends: ${misc:Pre-Depends},
 Depends: ${misc:Depends},
          ${python:Depends},
          compiz-gnome (>> 1:0.9.8+bzr3319),
