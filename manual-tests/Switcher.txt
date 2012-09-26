@@ -107,13 +107,13 @@ Expected Result:
 
 Alt+Tab doesn't lose window focus
 ---------------------------------
-This tests ensures that a racing condition is no possible anymore when alt+tabing.
+This tests ensures that a racing condition is not possible anymore when alt+tabing.
 
 Setup:
 #. Have 2 windows of different types open. (gedit, nautilus)
 
 Actions:
-  * Press Alt+Tab 5-10 times.
+  #. Press quicky Alt+Tab 10 times.
 
 Expected Results:
   No window loses focuses at all. The panel should alway show the title of the
