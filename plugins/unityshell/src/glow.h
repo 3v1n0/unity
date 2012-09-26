@@ -40,17 +40,6 @@
 #define GLOWQUAD_RIGHT		 7
 #define NUM_GLOWQUADS		 8
 
-/* Represents a particular glow texture, so here
- * we have hardcoded in the texture data, the offset
- * and the size of the texture
- */
-
-struct GlowTextureProperties {
-    char *textureData;
-    int  textureSize;
-    int  glowOffset;
-};
-
 /* Each glow quad contains a 2x2 scale + positional matrix
  * (the 3rd column is not used since that is for matrix skew
  *  operations which we do not care about)
@@ -62,7 +51,5 @@ struct GlowQuad {
 	CompRect	  mBox;
 	GLTexture::Matrix mMatrix;
 };
-
-extern const GlowTextureProperties glowTextureProperties;
 
 #endif

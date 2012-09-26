@@ -1,11 +1,5 @@
-#ifndef _GROUP_GLOWTEX_H
-#define _GROUP_GLOWTEX_H
-
 /**
  *
- * Compiz group plugin
- *
- * group_glow.h
  *
  * Copyright : (C) 2006-2010 by Patrick Niklaus, Roi Cohen,
  * 				Danny Baumann, Sam Spilsbury
@@ -27,11 +21,21 @@
  *
  **/
 
+#ifndef UNITY_TEXTURE_GLOW_H
+#define UNITY_TEXTURE_GLOW_H
+
+namespace unity
+{
+namespace texture
+{
+
 /*
  * glowTex
  */
 
-static char glowTexRect[4097] = {
+const unsigned GLOW_SIZE = 32;
+const int GLOW_OFFSET = 21;
+const char GLOW[4097] = {
   "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
   "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
   "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\377\377\377\6\377"
@@ -193,5 +197,8 @@ static char glowTexRect[4097] = {
   "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
   "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0",
 };
+
+} // Namespace texture
+} // Namespace unity
 
 #endif

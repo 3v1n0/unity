@@ -26,16 +26,14 @@
 
 #include <Nux/Nux.h>
 #include "unityshell.h"
-#include "group_glow.h"
+#include "glow_texture.h"
 #include "glow.h"
 
-const GlowTextureProperties glowTextureProperties = {
-  /* GlowTextureRectangular */
-  glowTexRect, 32, 21
-};
+namespace unity
+{
 
 /*
- * GroupWindow::paintGlow
+ * UnityWindow::paintGlow
  *
  * Takes our glow texture, stretches the appropriate positions in the glow texture,
  * adds those geometries (so plugins like wobby and deform this texture correctly)
@@ -174,8 +172,7 @@ UnityWindow::computeGlowQuads (GLTexture::Matrix *matrix, double aspect)
   CompRect const& border_rect = w->borderRect();
 
   glowSize = 30 / aspect;
-  glowOffset = (glowSize * glowTextureProperties.glowOffset /
-                           glowTextureProperties.textureSize) + 1;
+  glowOffset = (glowSize * texture::GLOW_OFFSET / texture::GLOW_SIZE) + 1;
 
   /* Top left corner */
   box = &mGlowQuads[GLOWQUAD_TOPLEFT].mBox;
@@ -429,3 +426,5 @@ UnityWindow::computeGlowQuads (GLTexture::Matrix *matrix, double aspect)
 
   *box = CompRect (x1, y1, x2 - x1, y2 - y1);
 }
+
+} // Unity namespace
