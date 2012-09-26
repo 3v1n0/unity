@@ -29,11 +29,6 @@
 #include "group_glow.h"
 #include "glow.h"
 
-#define WIN_REAL_X(w) (w->borderRect().x())
-#define WIN_REAL_Y(w) (w->borderRect().y())
-#define WIN_REAL_WIDTH(w) (w->borderRect().width())
-#define WIN_REAL_HEIGHT(w) (w->borderRect().height())
-
 const GlowTextureProperties glowTextureProperties = {
   /* GlowTextureRectangular */
   glowTexRect, 32, 21
@@ -49,18 +44,12 @@ const GlowTextureProperties glowTextureProperties = {
  */
 
 void
-UnityWindow::paintGlow (const GLMatrix      &transform,
-             const GLWindowPaintAttrib &attrib,
-             const CompRegion      &paintRegion,
-             GLTexture::List const& outline_texture,
-             const GLushort *selColorData,
-             unsigned int         mask)
+UnityWindow::paintGlow(GLMatrix const& transform, GLWindowPaintAttrib const& attrib,
+                       CompRegion const& paintRegion, GLTexture::List const& outline_texture,
+                       const GLushort *selColorData, unsigned mask)
 {
-
-  CompRegion    reg;
-  int       i;
-  GLushort    colorData[4];
-  float       alpha = (float) selColorData[3] / 65535.0f;
+  GLushort colorData[4];
+  float alpha = (float) selColorData[3] / 65535.0f;
 
   /* Premultiply color */
   colorData[0] = selColorData[0] * alpha;
@@ -73,24 +62,26 @@ UnityWindow::paintGlow (const GLMatrix      &transform,
   /* There are 8 glow parts of the glow texture which we wish to paint
    * separately with different transformations
    */
-  for (i = 0; i < NUM_GLOWQUADS; i++)
+  for (int i = 0; i < NUM_GLOWQUADS; i++)
   {
     /* Using precalculated quads here */
-    reg = CompRegion (mGlowQuads[i].mBox);
+    CompRegion reg(mGlowQuads[i].mBox);
 
     if (reg.boundingRect ().x1 () < reg.boundingRect ().x2 () &&
-      reg.boundingRect ().y1 () < reg.boundingRect ().y2 ())
+        reg.boundingRect ().y1 () < reg.boundingRect ().y2 ())
     {
       GLTexture::MatrixList matl;
       reg = CompRegion (reg.boundingRect ().x1 (),
-                reg.boundingRect ().y1 (),
-                reg.boundingRect ().width (),
-                reg.boundingRect ().height ());
+                        reg.boundingRect ().y1 (),
+                        reg.boundingRect ().width (),
+                        reg.boundingRect ().height ());
 
       matl.push_back (mGlowQuads[i].mMatrix);
+
       /* Add color data for all 6 vertices of the quad */
       for (int n = 0; n < 6; n++)
         gWindow->vertexBuffer ()->addColors (1, colorData);
+
       gWindow->glAddGeometry (matl, reg, reg);
     }
   }
@@ -180,6 +171,8 @@ UnityWindow::computeGlowQuads (GLTexture::Matrix *matrix, double aspect)
     return;
   }
 
+  CompRect const& border_rect = w->borderRect();
+
   glowSize = 30 / aspect;
   glowOffset = (glowSize * glowTextureProperties.glowOffset /
                            glowTextureProperties.textureSize) + 1;
@@ -192,8 +185,8 @@ UnityWindow::computeGlowQuads (GLTexture::Matrix *matrix, double aspect)
   /* Set the desired rect dimentions
    * for the part of the glow we are painting */
 
-  x1 = WIN_REAL_X (w) - glowSize + glowOffset;
-  y1 = WIN_REAL_Y (w) - glowSize + glowOffset;
+  x1 = border_rect.x() - glowSize + glowOffset;
+  y1 = border_rect.y() - glowSize + glowOffset;
 
   /* 2x2 Matrix here, adjust both x and y scale factors
    * and the x and y position
@@ -211,10 +204,10 @@ UnityWindow::computeGlowQuads (GLTexture::Matrix *matrix, double aspect)
   quadMatrix->x0 = -(x1 * quadMatrix->xx);
   quadMatrix->y0 = -(y1 * quadMatrix->yy);
 
-  x2 = MIN (WIN_REAL_X (w) + glowOffset,
-        WIN_REAL_X (w) + (WIN_REAL_WIDTH (w) / 2));
-  y2 = MIN (WIN_REAL_Y (w) + glowOffset,
-        WIN_REAL_Y (w) + (WIN_REAL_HEIGHT (w) / 2));
+  x2 = MIN (border_rect.x() + glowOffset,
+        border_rect.x() + (border_rect.width() / 2));
+  y2 = MIN (border_rect.y() + glowOffset,
+        border_rect.y() + (border_rect.height() / 2));
 
   *box = CompRect (x1, y1, x2 - x1, y2 - y1);
 
@@ -226,9 +219,9 @@ UnityWindow::computeGlowQuads (GLTexture::Matrix *matrix, double aspect)
   /* Set the desired rect dimentions
    * for the part of the glow we are painting */
 
-  x1 = WIN_REAL_X (w) + WIN_REAL_WIDTH (w) - glowOffset;
-  y1 = WIN_REAL_Y (w) - glowSize + glowOffset;
-  x2 = WIN_REAL_X (w) + WIN_REAL_WIDTH (w) + glowSize - glowOffset;
+  x1 = border_rect.x() + border_rect.width() - glowOffset;
+  y1 = border_rect.y() - glowSize + glowOffset;
+  x2 = border_rect.x() + border_rect.width() + glowSize - glowOffset;
 
   /*
    * 2x2 Matrix here, adjust both x and y scale factors
@@ -249,10 +242,10 @@ UnityWindow::computeGlowQuads (GLTexture::Matrix *matrix, double aspect)
   quadMatrix->x0 = 1.0 - (x1 * quadMatrix->xx);
   quadMatrix->y0 = -(y1 * quadMatrix->yy);
 
-  x1 = MAX (WIN_REAL_X (w) + WIN_REAL_WIDTH (w) - glowOffset,
-        WIN_REAL_X (w) + (WIN_REAL_WIDTH (w) / 2));
-  y2 = MIN (WIN_REAL_Y (w) + glowOffset,
-        WIN_REAL_Y (w) + (WIN_REAL_HEIGHT (w) / 2));
+  x1 = MAX (border_rect.x() + border_rect.width() - glowOffset,
+        border_rect.x() + (border_rect.width() / 2));
+  y2 = MIN (border_rect.y() + glowOffset,
+        border_rect.y() + (border_rect.height() / 2));
 
   *box = CompRect (x1, y1, x2 - x1, y2 - y1);
 
@@ -261,10 +254,10 @@ UnityWindow::computeGlowQuads (GLTexture::Matrix *matrix, double aspect)
   mGlowQuads[GLOWQUAD_BOTTOMLEFT].mMatrix = *matrix;
   quadMatrix = &mGlowQuads[GLOWQUAD_BOTTOMLEFT].mMatrix;
 
-  x1 = WIN_REAL_X (w) - glowSize + glowOffset;
-  y1 = WIN_REAL_Y (w) + WIN_REAL_HEIGHT (w) - glowOffset;
-  x2 = WIN_REAL_X (w) + glowOffset;
-  y2 = WIN_REAL_Y (w) + WIN_REAL_HEIGHT (w) + glowSize - glowOffset;
+  x1 = border_rect.x() - glowSize + glowOffset;
+  y1 = border_rect.y() + border_rect.height() - glowOffset;
+  x2 = border_rect.x() + glowOffset;
+  y2 = border_rect.y() + border_rect.height() + glowSize - glowOffset;
 
   /* 2x2 Matrix here, adjust both x and y scale factors
    * and the x and y position
@@ -284,10 +277,10 @@ UnityWindow::computeGlowQuads (GLTexture::Matrix *matrix, double aspect)
   quadMatrix->x0 = -(x1 * quadMatrix->xx);
   quadMatrix->y0 = 1.0f - (y1 * quadMatrix->yy);
 
-  y1 = MAX (WIN_REAL_Y (w) + WIN_REAL_HEIGHT (w) - glowOffset,
-        WIN_REAL_Y (w) + (WIN_REAL_HEIGHT (w) / 2));
-  x2 = MIN (WIN_REAL_X (w) + glowOffset,
-        WIN_REAL_X (w) + (WIN_REAL_WIDTH (w) / 2));
+  y1 = MAX (border_rect.y() + border_rect.height() - glowOffset,
+        border_rect.y() + (border_rect.height() / 2));
+  x2 = MIN (border_rect.x() + glowOffset,
+        border_rect.x() + (border_rect.width() / 2));
 
   *box = CompRect (x1, y1, x2 - x1, y2 - y1);
 
@@ -296,10 +289,10 @@ UnityWindow::computeGlowQuads (GLTexture::Matrix *matrix, double aspect)
   mGlowQuads[GLOWQUAD_BOTTOMRIGHT].mMatrix = *matrix;
   quadMatrix = &mGlowQuads[GLOWQUAD_BOTTOMRIGHT].mMatrix;
 
-  x1 = WIN_REAL_X (w) + WIN_REAL_WIDTH (w) - glowOffset;
-  y1 = WIN_REAL_Y (w) + WIN_REAL_HEIGHT (w) - glowOffset;
-  x2 = WIN_REAL_X (w) + WIN_REAL_WIDTH (w) + glowSize - glowOffset;
-  y2 = WIN_REAL_Y (w) + WIN_REAL_HEIGHT (w) + glowSize - glowOffset;
+  x1 = border_rect.x() + border_rect.width() - glowOffset;
+  y1 = border_rect.y() + border_rect.height() - glowOffset;
+  x2 = border_rect.x() + border_rect.width() + glowSize - glowOffset;
+  y2 = border_rect.y() + border_rect.height() + glowSize - glowOffset;
 
   /* 2x2 Matrix here, adjust both x and y scale factors
    * and the x and y position
@@ -317,10 +310,10 @@ UnityWindow::computeGlowQuads (GLTexture::Matrix *matrix, double aspect)
   quadMatrix->x0 = 1.0 - (x1 * quadMatrix->xx);
   quadMatrix->y0 = 1.0 - (y1 * quadMatrix->yy);
 
-  x1 = MAX (WIN_REAL_X (w) + WIN_REAL_WIDTH (w) - glowOffset,
-        WIN_REAL_X (w) + (WIN_REAL_WIDTH (w) / 2));
-  y1 = MAX (WIN_REAL_Y (w) + WIN_REAL_HEIGHT (w) - glowOffset,
-        WIN_REAL_Y (w) + (WIN_REAL_HEIGHT (w) / 2));
+  x1 = MAX (border_rect.x() + border_rect.width() - glowOffset,
+        border_rect.x() + (border_rect.width() / 2));
+  y1 = MAX (border_rect.y() + border_rect.height() - glowOffset,
+        border_rect.y() + (border_rect.height() / 2));
 
   *box = CompRect (x1, y1, x2 - x1, y2 - y1);
 
@@ -329,10 +322,10 @@ UnityWindow::computeGlowQuads (GLTexture::Matrix *matrix, double aspect)
   mGlowQuads[GLOWQUAD_TOP].mMatrix = *matrix;
   quadMatrix = &mGlowQuads[GLOWQUAD_TOP].mMatrix;
 
-  x1 = WIN_REAL_X (w) + glowOffset;
-  y1 = WIN_REAL_Y (w) - glowSize + glowOffset;
-  x2 = WIN_REAL_X (w) + WIN_REAL_WIDTH (w) - glowOffset;
-  y2 = WIN_REAL_Y (w) + glowOffset;
+  x1 = border_rect.x() + glowOffset;
+  y1 = border_rect.y() - glowSize + glowOffset;
+  x2 = border_rect.x() + border_rect.width() - glowOffset;
+  y2 = border_rect.y() + glowOffset;
 
   /* 2x2 Matrix here, adjust both x and y scale factors
    * and the x and y position
@@ -357,10 +350,10 @@ UnityWindow::computeGlowQuads (GLTexture::Matrix *matrix, double aspect)
   mGlowQuads[GLOWQUAD_BOTTOM].mMatrix = *matrix;
   quadMatrix = &mGlowQuads[GLOWQUAD_BOTTOM].mMatrix;
 
-  x1 = WIN_REAL_X (w) + glowOffset;
-  y1 = WIN_REAL_Y (w) + WIN_REAL_HEIGHT (w) - glowOffset;
-  x2 = WIN_REAL_X (w) + WIN_REAL_WIDTH (w) - glowOffset;
-  y2 = WIN_REAL_Y (w) + WIN_REAL_HEIGHT (w) + glowSize - glowOffset;
+  x1 = border_rect.x() + glowOffset;
+  y1 = border_rect.y() + border_rect.height() - glowOffset;
+  x2 = border_rect.x() + border_rect.width() - glowOffset;
+  y2 = border_rect.y() + border_rect.height() + glowSize - glowOffset;
 
   /* 2x2 Matrix here, adjust both x and y scale factors
    * and the x and y position
@@ -385,10 +378,10 @@ UnityWindow::computeGlowQuads (GLTexture::Matrix *matrix, double aspect)
   mGlowQuads[GLOWQUAD_LEFT].mMatrix = *matrix;
   quadMatrix = &mGlowQuads[GLOWQUAD_LEFT].mMatrix;
 
-  x1 = WIN_REAL_X (w) - glowSize + glowOffset;
-  y1 = WIN_REAL_Y (w) + glowOffset;
-  x2 = WIN_REAL_X (w) + glowOffset;
-  y2 = WIN_REAL_Y (w) + WIN_REAL_HEIGHT (w) - glowOffset;
+  x1 = border_rect.x() - glowSize + glowOffset;
+  y1 = border_rect.y() + glowOffset;
+  x2 = border_rect.x() + glowOffset;
+  y2 = border_rect.y() + border_rect.height() - glowOffset;
 
   /* 2x2 Matrix here, adjust both x and y scale factors
    * and the x and y position
@@ -413,10 +406,10 @@ UnityWindow::computeGlowQuads (GLTexture::Matrix *matrix, double aspect)
   mGlowQuads[GLOWQUAD_RIGHT].mMatrix = *matrix;
   quadMatrix = &mGlowQuads[GLOWQUAD_RIGHT].mMatrix;
 
-  x1 = WIN_REAL_X (w) + WIN_REAL_WIDTH (w) - glowOffset;
-  y1 = WIN_REAL_Y (w) + glowOffset;
-  x2 = WIN_REAL_X (w) + WIN_REAL_WIDTH (w) + glowSize - glowOffset;
-  y2 = WIN_REAL_Y (w) + WIN_REAL_HEIGHT (w) - glowOffset;
+  x1 = border_rect.x() + border_rect.width() - glowOffset;
+  y1 = border_rect.y() + glowOffset;
+  x2 = border_rect.x() + border_rect.width() + glowSize - glowOffset;
+  y2 = border_rect.y() + border_rect.height() - glowOffset;
 
   /* 2x2 Matrix here, adjust both x and y scale factors
    * and the x and y position
