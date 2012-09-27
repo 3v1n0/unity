@@ -40,17 +40,14 @@ namespace unity
 void
 UnityWindow::paintGlow(GLMatrix const& transform, GLWindowPaintAttrib const& attrib,
                        CompRegion const& paintRegion, glow::Quads const& glow_quads,
-                       GLTexture::List const& outline_texture,
-                       const GLushort *selColorData, unsigned mask)
+                       GLTexture::List const& outline_texture, nux::Color const& color,
+                       unsigned mask)
 {
   GLushort colorData[4];
-  float alpha = (float) selColorData[3] / 65535.0f;
-
-  /* Premultiply color */
-  colorData[0] = selColorData[0] * alpha;
-  colorData[1] = selColorData[1] * alpha;
-  colorData[2] = selColorData[2] * alpha;
-  colorData[3] = selColorData[3];
+  colorData[0] = color.red * 0xffff;
+  colorData[1] = color.green * 0xffff;
+  colorData[2] = color.blue * 0xffff;
+  colorData[3] = color.alpha * 0xffff;
 
   gWindow->vertexBuffer()->begin ();
 
