@@ -39,7 +39,6 @@
 #include <UnityCore/Variant.h>
 
 #include "unity-shared/UBusMessages.h"
-#include <unity-shared/DashStyle.h>
 
 #include "PanelView.h"
 
@@ -74,12 +73,12 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   rop.Blend = true;
   nux::Color darken_colour = nux::Color(0.9f, 0.9f, 0.9f, 1.0f);
   
-  if (dash::Style::Instance().GetUseBlur())
+  if (Settings::Instance().GetLowGfxMode() == false)
   {
     rop.SrcBlend = GL_ZERO;
     rop.DstBlend = GL_SRC_COLOR;
   }
-  //If our dash isn't being blured then we use our darken layer as our background.
+  //If we are in low gfx mode then change our darken_colour to our background colour.
   else
   {
     rop.SrcBlend = GL_ONE;
@@ -399,7 +398,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       GfxContext.PopClippingRectangle();
     }
 
-    if (dash::Style::Instance().GetUseBlur())
+    if (Settings::Instance().GetLowGfxMode() == false)
     {
       if (_overlay_is_open)
       {

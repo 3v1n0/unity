@@ -40,10 +40,11 @@
 #include "QuicklistMenuItemRadio.h"
 
 #include "unity-shared/Introspectable.h"
+#include "unity-shared/UnitySettings.h"
 
 #include "unity-shared/ubus-server.h"
 #include "unity-shared/UBusMessages.h"
-#include <unity-shared/DashStyle.h>
+#include "unity-shared/DashStyle.h"
 
 namespace unity
 {
@@ -1221,7 +1222,7 @@ void QuicklistView::UpdateTexture()
   float   outline_color[4] = {1.0f, 1.0f, 1.0f, 0.40f};
   float   mask_color[4]    = {1.0f, 1.0f, 1.0f, 1.00f};
   
-  if (dash::Style::Instance().GetUseBlur() == false)
+  if (Settings::Instance().GetLowGfxMode())
   {
     float alpha_value = 1.0f;
     
