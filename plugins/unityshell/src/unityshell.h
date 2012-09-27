@@ -448,7 +448,7 @@ private:
 
   void paintGlow(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&,
                  glow::Quads const&, GLTexture::List const&, const GLushort *color, unsigned mask);
-  glow::Quads computeGlowQuads(GLTexture::List const& texture, double aspect = 1.0f);
+  glow::Quads computeGlowQuads(GLTexture::List const& texture, int glow_size, double window_aspect = 1.0f);
 
   void BuildDecorationTexture();
   void CleanupCachedTextures();
