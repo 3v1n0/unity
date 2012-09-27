@@ -93,8 +93,6 @@ private:
   void OnFilterAdded(Filter::Ptr filter);
   void OnFilterRemoved(Filter::Ptr filter);
   void OnViewTypeChanged(ViewType view_type);
-  void QueueFixRenderering();
-  bool FixRenderering();
   bool ReinitializeFilterModels();
   ResultViewGrid* GetGridForCategory(unsigned category_index);
 
@@ -126,7 +124,6 @@ private:
   nux::StaticCairoText* no_results_;
 
   UBusManager ubus_manager_;
-  glib::Source::UniquePtr fix_rendering_idle_;
   glib::Source::UniquePtr model_updated_timeout_;
   int last_good_filter_model_;
   glib::Source::UniquePtr fix_filter_models_idle_;

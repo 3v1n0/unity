@@ -533,6 +533,10 @@ private:
         unsigned cat_size = max_font_height * 9 / 8;
         switch (category)
         {
+          case UNITY_PROTOCOL_CATEGORY_TYPE_NONE:
+            // rest of the processing is the CategoryIconLoaded, lets invoke it
+            helper_slot("", -1, cat_size, glib::Object<GdkPixbuf>());
+            break;
           case UNITY_PROTOCOL_CATEGORY_TYPE_APPLICATION:
             helper_handle =
               impl->LoadFromFilename(PKGDATADIR"/emblem_apps.svg", -1, cat_size, helper_slot);
@@ -574,9 +578,8 @@ private:
           case UNITY_PROTOCOL_CATEGORY_TYPE_TOOLS:
           case UNITY_PROTOCOL_CATEGORY_TYPE_CAR:
           default:
-            // rest of the processing is the CategoryIconLoaded, lets invoke it
-            glib::Object<GdkPixbuf> null_pixbuf;
-            helper_slot("", -1, cat_size, null_pixbuf);
+            helper_handle =
+              impl->LoadFromFilename(PKGDATADIR"/emblem_others.svg", -1, cat_size, helper_slot);
             break;
         }
       }

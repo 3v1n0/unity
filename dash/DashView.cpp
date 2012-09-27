@@ -107,10 +107,6 @@ DashView::DashView()
   SetupViews();
   SetupUBusConnections();
 
-  Settings::Instance().form_factor.changed.connect([this](FormFactor) {
-    Relayout();
-  });
-
   lenses_.lens_added.connect(sigc::mem_fun(this, &DashView::OnLensAdded));
   mouse_down.connect(sigc::mem_fun(this, &DashView::OnMouseButtonDown));
   preview_state_machine_.PreviewActivated.connect(sigc::mem_fun(this, &DashView::BuildPreview));
@@ -495,7 +491,7 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 
 void DashView::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
-  renderer_.DrawFull(graphics_engine, content_geo_, GetAbsoluteGeometry(), GetGeometry());
+  renderer_.DrawFull(graphics_engine, content_geo_, GetAbsoluteGeometry(), GetGeometry(), true);
 }
 
 void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)

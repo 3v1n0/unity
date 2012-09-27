@@ -1547,7 +1547,7 @@ void Style::Impl::DrawOverlay(cairo_t*  cr,
 }
 
 bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
-                   std::string const& label, int font_size,
+                   std::string const& label, int font_px_size,
                    Alignment alignment, bool zeromargin)
 {
   // sanity checks
@@ -1603,7 +1603,7 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
   pimpl->Text(cr,
               pimpl->button_label_text_color_[state],
               label,
-              font_size,
+              font_px_size,
               internal_padding,
               alignment);
 
@@ -1643,7 +1643,7 @@ nux::AbstractPaintLayer* Style::FocusOverlay(int width, int height)
 
 bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
                          std::string const& label, bool curve_bottom,
-                         int font_size, Alignment alignment,
+                         int font_px_size, Alignment alignment,
                          bool zeromargin)
 {
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1751,7 +1751,7 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
   pimpl->Text(cr,
               pimpl->button_label_text_color_[state],
               label,
-              font_size,
+              font_px_size,
               42.0 + 10.0,
               alignment);
 
@@ -2375,7 +2375,7 @@ int Style::GetPlacesGroupTopSpace() const
 
 int Style::GetCategoryHeaderLeftPadding() const
 {
-  return 20;
+  return 19;
 }
 
 int Style::GetCategorySeparatorLeftPadding() const

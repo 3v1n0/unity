@@ -24,6 +24,7 @@
 
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/PanelStyle.h"
+#include "unity-shared/DashStyle.h"
 #include "unity-shared/PluginAdapter.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UScreen.h"
@@ -78,6 +79,9 @@ Controller::Controller()
   {
     if (window_ && view_  && visible_)
     {
+      // Relayout here so the input window size updates.
+      Relayout();
+      
       window_->PushToFront();
       window_->SetInputFocus();
       nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
@@ -457,9 +461,14 @@ void Controller::OnDBusMethodCall(GDBusConnection* connection, const gchar* send
 nux::Geometry Controller::GetInputWindowGeometry()
 {
   EnsureDash();
+  dash::Style& style = dash::Style::Instance();
   nux::Geometry const& window_geo(window_->GetGeometry());
   nux::Geometry const& view_content_geo(view_->GetContentGeometry());
-  return nux::Geometry(window_geo.x, window_geo.y, view_content_geo.width, view_content_geo.height);
+
+  nux::Geometry geo(window_geo.x, window_geo.y, view_content_geo.width, view_content_geo.height);
+  geo.width += style.GetDashRightTileWidth();
+  geo.height += style.GetDashBottomTileHeight();
+  return geo;
 }
 
 

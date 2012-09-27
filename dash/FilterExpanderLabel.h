@@ -54,7 +54,6 @@ class FilterExpanderLabel : public nux::View,  public debug::Introspectable
   NUX_DECLARE_OBJECT_TYPE(FilterExpanderLabel, nux::View);
 public:
   FilterExpanderLabel(std::string const& label, NUX_FILE_LINE_PROTO);
-  virtual ~FilterExpanderLabel();
 
   void SetRightHandView(nux::View* view);
   void SetLabel(std::string const& label);
@@ -66,7 +65,6 @@ public:
   nux::View* expander_view() const { return expander_view_; }
 
   nux::Property<bool> expanded;
-  nux::Property<bool> draw_separator;
 
 protected:
   virtual bool AcceptKeyNavFocus();
@@ -94,8 +92,6 @@ private:
   nux::SpaceLayout* arrow_top_space_;
   nux::SpaceLayout* arrow_bottom_space_;
   IconTexture* expand_icon_;
-  HSeparator* separator_;
-  nux::SpaceLayout* space_;
 
   nux::ObjectPtr<nux::Layout> contents_;
   std::unique_ptr<nux::AbstractPaintLayer> highlight_layer_;

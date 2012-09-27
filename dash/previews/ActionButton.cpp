@@ -48,7 +48,7 @@ ActionButton::ActionButton(std::string const& action_hint, std::string const& la
   , image_(nullptr)
 {
   SetAcceptKeyNavFocusOnMouseDown(false);
-  SetAcceptKeyNavFocusOnMouseEnter(false);
+  SetAcceptKeyNavFocusOnMouseEnter(true);
   Init();
   BuildLayout(label, icon_hint, "");
 }
@@ -76,11 +76,6 @@ void ActionButton::AddProperties(GVariantBuilder* builder)
 void ActionButton::Init()
 {
   InitTheme();
-
-  key_nav_focus_change.connect([&] (nux::Area*, bool, nux::KeyNavDirection)
-  {
-    QueueDraw();
-  });
 
   key_nav_focus_activate.connect([&](nux::Area*)
   {
@@ -263,7 +258,7 @@ void ActionButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                       texxform,
                       nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
 
-  if (IsMouseInside() || HasKeyboardFocus())
+  if (HasKeyboardFocus())
   {
     GfxContext.QRP_1Tex(geo.x,
                         geo.y,

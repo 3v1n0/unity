@@ -89,7 +89,10 @@ public:
 
   std::string GetIdentifier() const
   {
-    return glib::String(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_UUID)).Str();
+    glib::String label(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_LABEL));
+    glib::String uuid(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_UUID));
+
+    return uuid.Str() + "-" + label.Str();
   }
 
   bool HasSiblings() const
