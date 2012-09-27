@@ -202,8 +202,11 @@ void DashView::FadeInCallBack(float const& fade_in_value)
   }
 }
 
-void DashView::OnPreviewUriActivated(std::string const& uri, GVariant* data, std::string const& unique_id) 
+void DashView::OnUriActivated(ResultView::ActivateType type, std::string const& uri, GVariant* data, std::string const& unique_id) 
 {
+  last_activated_uri_ = uri;
+  stored_activated_unique_id_ = unique_id;
+
   if (data)
   {
     // Update positioning information.
@@ -224,12 +227,8 @@ void DashView::OnPreviewUriActivated(std::string const& uri, GVariant* data, std
     opening_row_height_ = row_height;
   }
 
-  LOG_DEBUG(logger) << "got unique id from preview activation: " << unique_id;
-  stored_preview_unique_id_ = unique_id;
-  stored_preview_uri_identifier_ = uri;
-
   // we want immediate preview reaction on first opening.
-  if (!preview_displaying_)
+  if (type == ResultView::ActivateType::DIRECT && !preview_displaying_)
   {
     BuildPreview(Preview::Ptr(nullptr));
   }
@@ -278,7 +277,7 @@ void DashView::BuildPreview(Preview::Ptr model)
 
       // sends a message to all result views, sending the the uri of the current preview result
       // and the unique id of the result view that should be handling the results
-      ubus_manager_.SendMessage(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, g_variant_new("(iss)", -1, stored_preview_uri_identifier_.c_str(), stored_preview_unique_id_.c_str()));
+      ubus_manager_.SendMessage(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, g_variant_new("(iss)", -1, last_activated_uri_.c_str(), stored_activated_unique_id_.c_str()));
     });
 
     preview_container_->navigate_right.connect([&] () {
@@ -286,7 +285,7 @@ void DashView::BuildPreview(Preview::Ptr model)
       
       // sends a message to all result views, sending the the uri of the current preview result
       // and the unique id of the result view that should be handling the results
-      ubus_manager_.SendMessage(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, g_variant_new("(iss)", 1, stored_preview_uri_identifier_.c_str(), stored_preview_unique_id_.c_str()));
+      ubus_manager_.SendMessage(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, g_variant_new("(iss)", 1, last_activated_uri_.c_str(), stored_activated_unique_id_.c_str()));
     });
 
     preview_container_->request_close.connect([&] () { ClosePreview(); });
@@ -405,7 +404,7 @@ void DashView::SetupViews()
   content_layout_->AddView(lenses_layout_, 1, nux::MINOR_POSITION_LEFT);
 
   home_view_ = new LensView(home_lens_, nullptr);
-  home_view_->uri_preview_activated.connect(sigc::mem_fun(this, &DashView::OnPreviewUriActivated));
+  home_view_->uri_activated.connect(sigc::mem_fun(this, &DashView::OnUriActivated));
 
   AddChild(home_view_);
   active_lens_view_ = home_view_;
@@ -900,7 +899,6 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
   AddChild(view);
   view->SetVisible(false);
   view->uri_activated.connect(sigc::mem_fun(this, &DashView::OnUriActivated));
-  view->uri_preview_activated.connect(sigc::mem_fun(this, &DashView::OnPreviewUriActivated));
 
   lenses_layout_->AddView(view, 1);
   lens_views_[lens->id] = view;
@@ -1018,11 +1016,6 @@ void DashView::OnAppsGlobalSearchFinished(Lens::Hints const& hints)
     if (activate_on_finish_)
       this->OnEntryActivated();
   }
-}
-
-void DashView::OnUriActivated(std::string const& uri)
-{
-  last_activated_uri_ = uri;
 }
 
 void DashView::OnUriActivatedReply(std::string const& uri, HandledType type, Lens::Hints const&)

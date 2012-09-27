@@ -68,6 +68,8 @@ public:
   void AddProperties(GVariantBuilder* builder);
   IntrospectableList GetIntrospectableChildren();
 
+  virtual void Activate(std::string const& uri, int index, ActivateType type) = 0;
+
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);

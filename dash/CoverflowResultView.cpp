@@ -316,7 +316,7 @@ void CoverflowResultView::Activate(std::string const& uri, int index, ResultView
   int row_y = GetRootGeometry().y;
   int row_height = renderer_->height;
 
-  glib::Variant data(g_variant_new("(iiii)", row_y, row_height, left_results, right_results), glib::StealRef());
+  glib::Variant data(g_variant_new("(iiii)", row_y, row_height, left_results, right_results));
   UriActivated.emit(uri, type, data);
 }
 

@@ -346,16 +346,15 @@ void LensView::OnCategoryAdded(Category const& category)
   group->SetRendererName(renderer_name.c_str());
   grid->UriActivated.connect(sigc::bind([&] (std::string const& uri, ResultView::ActivateType type, GVariant* data, std::string const& view_id) 
   {
+    uri_activated.emit(type, uri, data, view_id); 
     switch (type)
     {
       case ResultView::ActivateType::DIRECT:
       {
-        uri_activated.emit(uri); 
         lens_->Activate(uri);  
       } break;
       case ResultView::ActivateType::PREVIEW:
       {
-        uri_preview_activated.emit(uri, data, view_id);
         lens_->Preview(uri);
       } break;
       default: break;
@@ -450,6 +449,13 @@ ResultViewGrid* LensView::GetGridForCategory(unsigned category_index)
   if (category_index >= categories_.size()) return nullptr;
   PlacesGroup* group = categories_.at(category_index);
   return static_cast<ResultViewGrid*>(group->GetChildView());
+}
+
+ResultView* LensView::GetResultViewForCategory(unsigned category_index)
+{
+  if (category_index >= categories_.size()) return nullptr;
+  PlacesGroup* group = categories_.at(category_index);
+  return static_cast<ResultView*>(group->GetChildView());
 }
 
 void LensView::OnResultAdded(Result const& result)
@@ -720,22 +726,22 @@ void LensView::ActivateFirst()
     for (unsigned int i = 0; i < category_order.size(); i++)
     {
       unsigned cat_index = category_order.at(i);
-      ResultViewGrid* grid = GetGridForCategory(cat_index);
-      if (grid == nullptr) continue;
-      auto it = grid->GetIteratorAtRow(0);
+      ResultView* result_view = GetResultViewForCategory(cat_index);
+      if (result_view == nullptr) continue;
+      auto it = result_view->GetIteratorAtRow(0);
       if (!it.IsLast())
       {
         Result result(*it);
-        uri_activated(result.uri);
-        lens_->Activate(result.uri);
+        result_view->Activate(result.uri, result_view->GetIndexForUri(result.uri), ResultView::ActivateType::DIRECT);
         return;
       }
     }
+
     // Fallback
     Result result = results->RowAtIndex(0);
     if (result.uri != "")
     {
-      uri_activated(result.uri);
+      uri_activated.emit(ResultView::ActivateType::DIRECT, result.uri, nullptr, "");
       lens_->Activate(result.uri);
     }
   }
