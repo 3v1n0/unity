@@ -1,15 +1,11 @@
 /**
- *
- * Compiz group plugin
- *
- * glow.h
- *
- * Copyright : (C) 2006-2010 by Patrick Niklaus, Roi Cohen,
- * 				Danny Baumann, Sam Spilsbury
+ * Copyright : (C) 2006-2012 by Patrick Niklaus, Roi Cohen,
+ *              Danny Baumann, Sam Spilsbury
  * Authors: Patrick Niklaus <patrick.niklaus@googlemail.com>
  *          Roi Cohen       <roico.beryl@gmail.com>
  *          Danny Baumann   <maniac@opencompositing.org>
- * 	    Sam Spilsbury   <smspillaz@gmail.com>
+ *          Sam Spilsbury   <smspillaz@gmail.com>
+ *          Marco Trevisan <marco.trevisan@canonical.com>
  *
  *
  * This program is free software; you can redistribute it and/or
@@ -30,26 +26,46 @@
 #include <core/core.h>
 #include <opengl/opengl.h>
 
-#define GLOWQUAD_TOPLEFT	 0
-#define GLOWQUAD_TOPRIGHT	 1
-#define GLOWQUAD_BOTTOMLEFT	 2
-#define GLOWQUAD_BOTTOMRIGHT     3
-#define GLOWQUAD_TOP		 4
-#define GLOWQUAD_BOTTOM		 5
-#define GLOWQUAD_LEFT		 6
-#define GLOWQUAD_RIGHT		 7
-#define NUM_GLOWQUADS		 8
+namespace unity
+{
+namespace glow
+{
 
+enum class QuadPos
+{
+  TOPLEFT = 0,
+  TOPRIGHT,
+  BOTTOMLEFT,
+  BOTTOMRIGHT,
+  TOP,
+  BOTTOM,
+  LEFT,
+  RIGHT,
+  LAST
+};
+
+struct Quads
+{
 /* Each glow quad contains a 2x2 scale + positional matrix
  * (the 3rd column is not used since that is for matrix skew
  *  operations which we do not care about)
  * and also a CompRect which describes the size and position of
  * the quad on the glow
  */
+  struct Quad
+  {
+    CompRect box;
+    GLTexture::Matrix matrix;
+  };
 
-struct GlowQuad {
-	CompRect	  mBox;
-	GLTexture::Matrix mMatrix;
+  Quad& operator[](QuadPos position) { return inner_vector_[unsigned(position)]; }
+  Quad const& operator[](QuadPos position) const { return inner_vector_[unsigned(position)]; }
+
+private:
+  Quad inner_vector_[unsigned(QuadPos::LAST)];
 };
+
+} // namespace glow
+} // namepsace unity
 
 #endif

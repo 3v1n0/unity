@@ -1,15 +1,11 @@
 /**
- *
- * Compiz group plugin
- *
- * glow.cpp
- *
- * Copyright : (C) 2006-2010 by Patrick Niklaus, Roi Cohen,
+ * Copyright : (C) 2006-2012 by Patrick Niklaus, Roi Cohen,
  *                Danny Baumann, Sam Spilsbury
  * Authors: Patrick Niklaus <patrick.niklaus@googlemail.com>
  *      Roi Cohen     <roico.beryl@gmail.com>
  *      Danny Baumann   <maniac@opencompositing.org>
  *      Sam Spilsbury   <smspillaz@gmail.com>
+ *      Marco Trevisan <marco.trevisan@canonical.com>
  *
  *
  * This program is free software; you can redistribute it and/or
@@ -27,7 +23,7 @@
 #include <Nux/Nux.h>
 #include "unityshell.h"
 #include "glow_texture.h"
-#include "glow.h"
+#include "unityshell_glow.h"
 
 namespace unity
 {
@@ -43,7 +39,8 @@ namespace unity
 
 void
 UnityWindow::paintGlow(GLMatrix const& transform, GLWindowPaintAttrib const& attrib,
-                       CompRegion const& paintRegion, GLTexture::List const& outline_texture,
+                       CompRegion const& paintRegion, glow::Quads const& glow_quads,
+                       GLTexture::List const& outline_texture,
                        const GLushort *selColorData, unsigned mask)
 {
   GLushort colorData[4];
@@ -55,51 +52,48 @@ UnityWindow::paintGlow(GLMatrix const& transform, GLWindowPaintAttrib const& att
   colorData[2] = selColorData[2] * alpha;
   colorData[3] = selColorData[3];
 
-  gWindow->vertexBuffer ()->begin ();
+  gWindow->vertexBuffer()->begin ();
 
   /* There are 8 glow parts of the glow texture which we wish to paint
    * separately with different transformations
    */
-  for (int i = 0; i < NUM_GLOWQUADS; i++)
+  for (unsigned i = 0; i < unsigned(glow::QuadPos::LAST); ++i)
   {
     /* Using precalculated quads here */
-    CompRegion reg(mGlowQuads[i].mBox);
+    glow::Quads::Quad const& quad = glow_quads[static_cast<glow::QuadPos>(i)];
+    CompRegion reg(quad.box);
 
-    if (reg.boundingRect ().x1 () < reg.boundingRect ().x2 () &&
-        reg.boundingRect ().y1 () < reg.boundingRect ().y2 ())
+    if (reg.boundingRect().x1() < reg.boundingRect().x2() &&
+        reg.boundingRect().y1() < reg.boundingRect().y2())
     {
       GLTexture::MatrixList matl;
-      reg = CompRegion (reg.boundingRect ().x1 (),
-                        reg.boundingRect ().y1 (),
-                        reg.boundingRect ().width (),
-                        reg.boundingRect ().height ());
+      reg = CompRegion(reg.boundingRect().x1(), reg.boundingRect().y1(),
+                       reg.boundingRect().width(), reg.boundingRect().height());
 
-      matl.push_back (mGlowQuads[i].mMatrix);
+      matl.push_back(quad.matrix);
 
       /* Add color data for all 6 vertices of the quad */
       for (int n = 0; n < 6; n++)
-        gWindow->vertexBuffer ()->addColors (1, colorData);
+        gWindow->vertexBuffer()->addColors(1, colorData);
 
-      gWindow->glAddGeometry (matl, reg, reg);
+      gWindow->glAddGeometry(matl, reg, reg);
     }
   }
 
-  if (gWindow->vertexBuffer ()->end ())
+  if (gWindow->vertexBuffer()->end())
   {
-    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     /* we use PAINT_WINDOW_TRANSFORMED_MASK here to force
     the usage of a good texture filter */
     for (GLTexture *tex : outline_texture)
     {
-      gWindow->glDrawTexture (tex, transform, attrib, mask |
-                  PAINT_WINDOW_BLEND_MASK     |
-                  PAINT_WINDOW_TRANSLUCENT_MASK |
-                  PAINT_WINDOW_TRANSFORMED_MASK);
+      mask |= PAINT_WINDOW_BLEND_MASK | PAINT_WINDOW_TRANSLUCENT_MASK | PAINT_WINDOW_TRANSFORMED_MASK;
+      gWindow->glDrawTexture(tex, transform, attrib, mask);
     }
 
-    glBlendFunc (GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    GLScreen::get (screen)->setTexEnvMode (GL_REPLACE);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    GLScreen::get(screen)->setTexEnvMode (GL_REPLACE);
   }
 }
 
@@ -131,7 +125,6 @@ UnityWindow::paintGlow(GLMatrix const& transform, GLWindowPaintAttrib const& att
  *
  * When we are adjusting the matrices here, the initial size of each corner has
  * a size of of "1.0f", so according to 2x2 matrix rules,
- * the scale factor is the inverse of the size of the glow (which explains
  * while you will see here that matrix->xx is (1 / glowSize)
  * where glowSize is the size the user specifies they want their glow to extend.
  * (likewise, matrix->yy is adjusted similarly for corners and for top/bottom)
@@ -140,44 +133,28 @@ UnityWindow::paintGlow(GLMatrix const& transform, GLWindowPaintAttrib const& att
  * adjusted by the matrix scale factor (matrix->xx and matrix->yy)
  *
  */
-void
-UnityWindow::computeGlowQuads (GLTexture::Matrix *matrix, double aspect)
+glow::Quads UnityWindow::computeGlowQuads(GLTexture::List const& texture, double aspect)
 {
-  CompRect      *box;
-  int         x1, x2, y1, y2;
+  glow::Quads glow_quads;
+
+  if (texture.empty())
+    return glow_quads;
+
+  int x1, x2, y1, y2;
+  int glowSize, glowOffset;
+  CompRect const& border_rect = window->borderRect();
+  GLTexture::Matrix const& matrix = texture.front()->matrix();
+
+  CompRect *box;
   GLTexture::Matrix *quadMatrix;
-  float         glowSize, glowOffset;
-  CompWindow    *w = window;
-
-  /* Passing NULL to this function frees the glow quads
-   * (so the window is not painted with glow) */
-
-  if (matrix)
-  {
-    if (!mGlowQuads)
-      mGlowQuads = new GlowQuad[NUM_GLOWQUADS];
-    if (!mGlowQuads)
-      return;
-  }
-  else
-  {
-    if (mGlowQuads)
-    {
-      delete[] mGlowQuads;
-      mGlowQuads = NULL;
-    }
-    return;
-  }
-
-  CompRect const& border_rect = w->borderRect();
 
   glowSize = 30 / aspect;
   glowOffset = (glowSize * texture::GLOW_OFFSET / texture::GLOW_SIZE) + 1;
 
   /* Top left corner */
-  box = &mGlowQuads[GLOWQUAD_TOPLEFT].mBox;
-  mGlowQuads[GLOWQUAD_TOPLEFT].mMatrix = *matrix;
-  quadMatrix = &mGlowQuads[GLOWQUAD_TOPLEFT].mMatrix;
+  box = &glow_quads[glow::QuadPos::TOPLEFT].box;
+  glow_quads[glow::QuadPos::TOPLEFT].matrix = matrix;
+  quadMatrix = &glow_quads[glow::QuadPos::TOPLEFT].matrix;
 
   /* Set the desired rect dimentions
    * for the part of the glow we are painting */
@@ -201,17 +178,17 @@ UnityWindow::computeGlowQuads (GLTexture::Matrix *matrix, double aspect)
   quadMatrix->x0 = -(x1 * quadMatrix->xx);
   quadMatrix->y0 = -(y1 * quadMatrix->yy);
 
-  x2 = MIN (border_rect.x() + glowOffset,
+  x2 = std::min<int>(border_rect.x() + glowOffset,
         border_rect.x() + (border_rect.width() / 2));
-  y2 = MIN (border_rect.y() + glowOffset,
+  y2 = std::min<int>(border_rect.y() + glowOffset,
         border_rect.y() + (border_rect.height() / 2));
 
-  *box = CompRect (x1, y1, x2 - x1, y2 - y1);
+  box->setGeometry(x1, y1, x2 - x1, y2 - y1);
 
   /* Top right corner */
-  box = &mGlowQuads[GLOWQUAD_TOPRIGHT].mBox;
-  mGlowQuads[GLOWQUAD_TOPRIGHT].mMatrix = *matrix;
-  quadMatrix = &mGlowQuads[GLOWQUAD_TOPRIGHT].mMatrix;
+  box = &glow_quads[glow::QuadPos::TOPRIGHT].box;
+  glow_quads[glow::QuadPos::TOPRIGHT].matrix = matrix;
+  quadMatrix = &glow_quads[glow::QuadPos::TOPRIGHT].matrix;
 
   /* Set the desired rect dimentions
    * for the part of the glow we are painting */
@@ -239,17 +216,17 @@ UnityWindow::computeGlowQuads (GLTexture::Matrix *matrix, double aspect)
   quadMatrix->x0 = 1.0 - (x1 * quadMatrix->xx);
   quadMatrix->y0 = -(y1 * quadMatrix->yy);
 
-  x1 = MAX (border_rect.x() + border_rect.width() - glowOffset,
+  x1 = std::max<int>(border_rect.x() + border_rect.width() - glowOffset,
         border_rect.x() + (border_rect.width() / 2));
-  y2 = MIN (border_rect.y() + glowOffset,
+  y2 = std::min<int>(border_rect.y() + glowOffset,
         border_rect.y() + (border_rect.height() / 2));
 
-  *box = CompRect (x1, y1, x2 - x1, y2 - y1);
+  box->setGeometry(x1, y1, x2 - x1, y2 - y1);
 
   /* Bottom left corner */
-  box = &mGlowQuads[GLOWQUAD_BOTTOMLEFT].mBox;
-  mGlowQuads[GLOWQUAD_BOTTOMLEFT].mMatrix = *matrix;
-  quadMatrix = &mGlowQuads[GLOWQUAD_BOTTOMLEFT].mMatrix;
+  box = &glow_quads[glow::QuadPos::BOTTOMLEFT].box;
+  glow_quads[glow::QuadPos::BOTTOMLEFT].matrix = matrix;
+  quadMatrix = &glow_quads[glow::QuadPos::BOTTOMLEFT].matrix;
 
   x1 = border_rect.x() - glowSize + glowOffset;
   y1 = border_rect.y() + border_rect.height() - glowOffset;
@@ -274,17 +251,17 @@ UnityWindow::computeGlowQuads (GLTexture::Matrix *matrix, double aspect)
   quadMatrix->x0 = -(x1 * quadMatrix->xx);
   quadMatrix->y0 = 1.0f - (y1 * quadMatrix->yy);
 
-  y1 = MAX (border_rect.y() + border_rect.height() - glowOffset,
+  y1 = std::max<int>(border_rect.y() + border_rect.height() - glowOffset,
         border_rect.y() + (border_rect.height() / 2));
-  x2 = MIN (border_rect.x() + glowOffset,
+  x2 = std::min<int>(border_rect.x() + glowOffset,
         border_rect.x() + (border_rect.width() / 2));
 
-  *box = CompRect (x1, y1, x2 - x1, y2 - y1);
+  box->setGeometry(x1, y1, x2 - x1, y2 - y1);
 
   /* Bottom right corner */
-  box = &mGlowQuads[GLOWQUAD_BOTTOMRIGHT].mBox;
-  mGlowQuads[GLOWQUAD_BOTTOMRIGHT].mMatrix = *matrix;
-  quadMatrix = &mGlowQuads[GLOWQUAD_BOTTOMRIGHT].mMatrix;
+  box = &glow_quads[glow::QuadPos::BOTTOMRIGHT].box;
+  glow_quads[glow::QuadPos::BOTTOMRIGHT].matrix = matrix;
+  quadMatrix = &glow_quads[glow::QuadPos::BOTTOMRIGHT].matrix;
 
   x1 = border_rect.x() + border_rect.width() - glowOffset;
   y1 = border_rect.y() + border_rect.height() - glowOffset;
@@ -307,17 +284,17 @@ UnityWindow::computeGlowQuads (GLTexture::Matrix *matrix, double aspect)
   quadMatrix->x0 = 1.0 - (x1 * quadMatrix->xx);
   quadMatrix->y0 = 1.0 - (y1 * quadMatrix->yy);
 
-  x1 = MAX (border_rect.x() + border_rect.width() - glowOffset,
+  x1 = std::max<int>(border_rect.x() + border_rect.width() - glowOffset,
         border_rect.x() + (border_rect.width() / 2));
-  y1 = MAX (border_rect.y() + border_rect.height() - glowOffset,
+  y1 = std::max<int>(border_rect.y() + border_rect.height() - glowOffset,
         border_rect.y() + (border_rect.height() / 2));
 
-  *box = CompRect (x1, y1, x2 - x1, y2 - y1);
+  box->setGeometry(x1, y1, x2 - x1, y2 - y1);
 
   /* Top edge */
-  box = &mGlowQuads[GLOWQUAD_TOP].mBox;
-  mGlowQuads[GLOWQUAD_TOP].mMatrix = *matrix;
-  quadMatrix = &mGlowQuads[GLOWQUAD_TOP].mMatrix;
+  box = &glow_quads[glow::QuadPos::TOP].box;
+  glow_quads[glow::QuadPos::TOP].matrix = matrix;
+  quadMatrix = &glow_quads[glow::QuadPos::TOP].matrix;
 
   x1 = border_rect.x() + glowOffset;
   y1 = border_rect.y() - glowSize + glowOffset;
@@ -340,12 +317,12 @@ UnityWindow::computeGlowQuads (GLTexture::Matrix *matrix, double aspect)
   quadMatrix->x0 = 1.0;
   quadMatrix->y0 = -(y1 * quadMatrix->yy);
 
-  *box = CompRect (x1, y1, x2 - x1, y2 - y1);
+  box->setGeometry(x1, y1, x2 - x1, y2 - y1);
 
   /* Bottom edge */
-  box = &mGlowQuads[GLOWQUAD_BOTTOM].mBox;
-  mGlowQuads[GLOWQUAD_BOTTOM].mMatrix = *matrix;
-  quadMatrix = &mGlowQuads[GLOWQUAD_BOTTOM].mMatrix;
+  box = &glow_quads[glow::QuadPos::BOTTOM].box;
+  glow_quads[glow::QuadPos::BOTTOM].matrix = matrix;
+  quadMatrix = &glow_quads[glow::QuadPos::BOTTOM].matrix;
 
   x1 = border_rect.x() + glowOffset;
   y1 = border_rect.y() + border_rect.height() - glowOffset;
@@ -368,12 +345,12 @@ UnityWindow::computeGlowQuads (GLTexture::Matrix *matrix, double aspect)
   quadMatrix->x0 = 1.0;
   quadMatrix->y0 = 1.0 - (y1 * quadMatrix->yy);
 
-  *box = CompRect (x1, y1, x2 - x1, y2 - y1);
+  box->setGeometry(x1, y1, x2 - x1, y2 - y1);
 
   /* Left edge */
-  box = &mGlowQuads[GLOWQUAD_LEFT].mBox;
-  mGlowQuads[GLOWQUAD_LEFT].mMatrix = *matrix;
-  quadMatrix = &mGlowQuads[GLOWQUAD_LEFT].mMatrix;
+  box = &glow_quads[glow::QuadPos::LEFT].box;
+  glow_quads[glow::QuadPos::LEFT].matrix = matrix;
+  quadMatrix = &glow_quads[glow::QuadPos::LEFT].matrix;
 
   x1 = border_rect.x() - glowSize + glowOffset;
   y1 = border_rect.y() + glowOffset;
@@ -396,12 +373,12 @@ UnityWindow::computeGlowQuads (GLTexture::Matrix *matrix, double aspect)
   quadMatrix->x0 = -(x1 * quadMatrix->xx);
   quadMatrix->y0 = 1.0;
 
-  *box = CompRect (x1, y1, x2 - x1, y2 - y1);
+  box->setGeometry(x1, y1, x2 - x1, y2 - y1);
 
   /* Right edge */
-  box = &mGlowQuads[GLOWQUAD_RIGHT].mBox;
-  mGlowQuads[GLOWQUAD_RIGHT].mMatrix = *matrix;
-  quadMatrix = &mGlowQuads[GLOWQUAD_RIGHT].mMatrix;
+  box = &glow_quads[glow::QuadPos::RIGHT].box;
+  glow_quads[glow::QuadPos::RIGHT].matrix = matrix;
+  quadMatrix = &glow_quads[glow::QuadPos::RIGHT].matrix;
 
   x1 = border_rect.x() + border_rect.width() - glowOffset;
   y1 = border_rect.y() + glowOffset;
@@ -424,7 +401,9 @@ UnityWindow::computeGlowQuads (GLTexture::Matrix *matrix, double aspect)
   quadMatrix->x0 = 1.0 - (x1 * quadMatrix->xx);
   quadMatrix->y0 = 1.0;
 
-  *box = CompRect (x1, y1, x2 - x1, y2 - y1);
+  box->setGeometry(x1, y1, x2 - x1, y2 - y1);
+
+  return glow_quads;
 }
 
 } // Unity namespace
