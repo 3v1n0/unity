@@ -115,10 +115,10 @@ class DashRevealTests(DashTestCase):
 
         (x,y,w,h) = self.dash.geometry
         (screen_x,screen_y,screen_w,screen_h) = self.screen_geo.get_monitor_geometry(current_monitor)
-        
+
         self.mouse.move(x + w + (screen_w-((screen_x-x)+w))/2, y + h + (screen_h-((screen_y-y)+h))/2)
         self.mouse.click()
-        
+
         self.assertThat(self.dash.visible, Eventually(Equals(False)))
 
     def test_closes_then_focuses_window_on_mouse_down(self):
@@ -660,9 +660,7 @@ class CategoryHeaderTests(DashTestCase):
 class PreviewInvocationTests(DashTestCase):
     """Tests that dash previews can be opened and closed in different
     lenses.
-
     """
-
     def test_app_lens_preview_open_close(self):
         """Right-clicking on an application lens result must show
         its preview.
@@ -685,7 +683,6 @@ class PreviewInvocationTests(DashTestCase):
     def test_files_lens_preview_open_close(self):
         """Right-clicking on a files lens result must show its
         preview.
-
         """
         lens = self.dash.reveal_file_lens()
         self.addCleanup(self.dash.ensure_hidden)
@@ -704,7 +701,6 @@ class PreviewInvocationTests(DashTestCase):
     def test_music_lens_preview_open_close(self):
         """Right-clicking on a music lens result must show its
         preview.
-
         """
         lens = self.dash.reveal_music_lens()
         self.addCleanup(self.dash.ensure_hidden)
@@ -729,8 +725,8 @@ class PreviewInvocationTests(DashTestCase):
     def test_video_lens_preview_open_close(self):
         """Right-clicking on a video lens result must show its
         preview.
-
         """
+
         def get_category(lens):
             category = lens.get_category_by_name("Recently Viewed")
             # If there was no video played on this system this category is expected
@@ -758,6 +754,20 @@ class PreviewInvocationTests(DashTestCase):
         self.keyboard.press_and_release("Escape")
 
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_preview_key(self):
+        """Pressing menu key on a selected dash result must show
+        its preview.
+        """
+        lens = self.dash.reveal_application_lens()
+        self.addCleanup(self.dash.ensure_hidden)
+
+        category = lens.get_category_by_name("Installed")
+        results = category.get_results()
+        result = results[0]
+        # result.preview_key() handles finding xy co-ords and key press
+        result.preview_key()
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
 
 
 class PreviewNavigateTests(DashTestCase):

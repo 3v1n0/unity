@@ -574,7 +574,6 @@ void Controller::Impl::ResetIconPriorities()
     else if (fav == expo_icon_->RemoteUri())
     {
       expo_icon_found = true;
-      continue;
     }
 
     auto const& icon = GetIconByUri(fav);
@@ -605,6 +604,9 @@ void Controller::Impl::ResetIconPriorities()
   }
 
   model_->Sort();
+
+  if (!expo_icon_found)
+    SaveIconsOrder();
 }
 
 void Controller::Impl::UpdateNumWorkspaces(int workspaces)
@@ -627,8 +629,21 @@ void Controller::Impl::UpdateNumWorkspaces(int workspaces)
 
 void Controller::Impl::RegisterIcon(AbstractLauncherIcon::Ptr icon, int priority)
 {
-  if (!icon || model_->IconIndex(icon) >= 0)
+  if (!icon)
     return;
+
+  std::string const& icon_uri = icon->RemoteUri();
+
+  if (model_->IconIndex(icon) >= 0)
+  {
+    if (!icon_uri.empty())
+    {
+      LOG_ERROR(logger) << "Impossible to add icon '" << icon_uri
+                        << "': it's already on the launcher!";
+    }
+
+    return;
+  }
 
   if (priority != std::numeric_limits<int>::min())
     icon->SetSortPriority(priority);
@@ -641,7 +656,6 @@ void Controller::Impl::RegisterIcon(AbstractLauncherIcon::Ptr icon, int priority
     ResetIconPriorities();
   });
 
-  std::string const& icon_uri = icon->RemoteUri();
   icon->position_forgot.connect([this, icon_uri] {
     FavoriteStore::Instance().RemoveFavorite(icon_uri);
   });
@@ -808,15 +822,7 @@ AbstractLauncherIcon::Ptr Controller::Impl::CreateFavoriteIcon(std::string const
   }
 
   if (result)
-  {
-    if (!result->IsSticky())
-      result->Stick(false);
-    else
-    {
-      LOG_ERROR(logger) << "Ignoring favorite '" << icon_uri << "': it's already on the launcher!";
-      result = nullptr;
-    }
-  }
+    result->Stick(false);
 
   return result;
 }
@@ -917,11 +923,14 @@ void Controller::Impl::SetupIcons()
   if (!running_apps_added)
     AddRunningApps();
 
-  if (!GetIconByUri(expo_icon_->RemoteUri()))
+  if (model_->IconIndex(expo_icon_) < 0)
     RegisterIcon(CreateFavoriteIcon(expo_icon_->RemoteUri()), ++sort_priority_);
 
   if (!devices_added)
     AddDevices();
+
+  if (std::find(favs.begin(), favs.end(), expo_icon_->RemoteUri()) == favs.end())
+    SaveIconsOrder();
 
   view_opened_signal_.Connect(matcher_, "view-opened", sigc::mem_fun(this, &Impl::OnViewOpened));
   device_section_.icon_added.connect(sigc::mem_fun(this, &Impl::OnDeviceIconAdded));

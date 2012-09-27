@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2012 Canonical Ltd
  *
@@ -13,36 +14,35 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Andrea Azzarone <azzaronea@gmail.com>
+ * Authored by: Marco Trevisan (Treviño) <marco.trevisan@canonical.com>
  */
 
-#include "LensViewPrivate.h"
-#include "AbstractPlacesGroup.h"
+#ifndef SCREEN_INTROSPECTION_H
+#define SCREEN_INTROSPECTION_H
+
+#include "Introspectable.h"
+#include <core/core.h>
 
 namespace unity
 {
-namespace dash
-{
-namespace impl
+namespace debug
 {
 
-void UpdateDrawSeparators(std::list<AbstractPlacesGroup*> groups)
+class ScreenIntrospection : public Introspectable
 {
-  std::list<AbstractPlacesGroup*>::reverse_iterator rit;
-  bool found_one = false;
+public:
+  ScreenIntrospection(CompScreen* screen);
 
-  for (rit = groups.rbegin(); rit != groups.rend(); ++rit)
-  {
-    if ((*rit)->IsVisible())
-    {
-      (*rit)->draw_separator = found_one;
-      found_one = true;
-    }
-  }
-}
-  
-}
+protected:
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
+  IntrospectableList GetIntrospectableChildren();
+
+private:
+  CompScreen* screen_;
+};
+
 }
 }
 
-
+#endif
