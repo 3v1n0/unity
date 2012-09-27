@@ -820,8 +820,6 @@ TEST_F(TestLauncherController, SetupIcons)
     ASSERT_TRUE(icon.IsValid());
     ASSERT_EQ(model->IconIndex(icon), icon_index);
   }
-
-  ASSERT_EQ(model->IconIndex(lc.Impl()->expo_icon_), ++icon_index);
 }
 
 TEST_F(TestLauncherController, ResetIconPriorities)
