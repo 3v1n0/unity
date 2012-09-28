@@ -1301,8 +1301,8 @@ void UnityScreen::preparePaint(int ms)
 {
   cScreen->preparePaint(ms);
 
-  big_tick += ms*1000;
-  tick_source_->tick(big_tick);
+  big_tick_ += ms*1000;
+  tick_source_->tick(big_tick_);
 
   for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
     wi->HandleAnimations (ms);
