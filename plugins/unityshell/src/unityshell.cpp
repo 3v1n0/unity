@@ -1885,7 +1885,7 @@ void UnityScreen::SetUpAndShowSwitcher(switcher::ShowMode show_mode)
                                                       switcher_controller_->IsShowDesktopDisabled());
 
   if (switcher_controller_->CanShowSwitcher(results))
-    switcher_controller_->Show(show_mode, switcher::SortMode::FOCUS_ORDER, false, results);
+    switcher_controller_->Show(show_mode, switcher::SortMode::FOCUS_ORDER, results);
 }
 
 bool UnityScreen::altTabTerminateCommon(CompAction* action,
