@@ -3891,7 +3891,6 @@ UnityWindow::~UnityWindow()
 }
 
 
-
 /* vtable init */
 bool UnityPluginVTable::init()
 {
