@@ -24,7 +24,6 @@
 #include <Nux/HLayout.h>
 #include <Nux/BaseWindow.h>
 #include <Nux/WindowCompositor.h>
-#include <Nux/NuxTimerTickSource.h>
 
 #include <UnityCore/Variant.h>
 
@@ -131,6 +130,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , panel_texture_has_changed_(true)
   , paint_panel_(false)
   , scale_just_activated_(false)
+  , big_tick_(0)
   , screen_introspection_(screen)
 {
   Timer timer;
@@ -234,7 +234,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
                                            this));
 #endif
 
-    tick_source_.reset(new nux::NuxTimerTickSource);
+    tick_source_.reset(new na::TickSource);
     animation_controller_.reset(new na::AnimationController(*tick_source_));
 
      wt->RedrawRequested.connect(sigc::mem_fun(this, &UnityScreen::onRedrawRequested));
@@ -1283,6 +1283,9 @@ void UnityScreen::preparePaint(int ms)
 {
   cScreen->preparePaint(ms);
 
+  big_tick_ += ms*1000;
+  tick_source_->tick(big_tick_);
+
   for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
     wi->HandleAnimations (ms);
 
@@ -1303,6 +1306,9 @@ void UnityScreen::donePaint()
    */
   if (didShellRepaint)
     wt->ClearDrawList();
+
+  if (animation_controller_->HasRunningAnimations())
+    nuxDamageCompiz();
 
   std::list <ShowdesktopHandlerWindowInterface *> remove_windows;
 
@@ -1425,7 +1431,7 @@ void UnityScreen::nuxDamageCompiz()
    *       stop it. Then maybe we can revert back to the old code below #else.
    */
   std::vector<nux::Geometry> const& dirty = wt->GetDrawList();
-  if (!dirty.empty())
+  if (!dirty.empty() || animation_controller_->HasRunningAnimations())
   {
     cScreen->damageRegionSetEnabled(this, false);
     cScreen->damageScreen();
@@ -1867,7 +1873,7 @@ void UnityScreen::SetUpAndShowSwitcher(switcher::ShowMode show_mode)
                                                       switcher_controller_->IsShowDesktopDisabled());
 
   if (switcher_controller_->CanShowSwitcher(results))
-    switcher_controller_->Show(show_mode, switcher::SortMode::FOCUS_ORDER, false, results);
+    switcher_controller_->Show(show_mode, switcher::SortMode::FOCUS_ORDER, results);
 }
 
 bool UnityScreen::altTabTerminateCommon(CompAction* action,

@@ -104,6 +104,7 @@ Actions:
 Expected Result:
   The assertions from above hold.
 
+
 Alt+Tab doesn't lose window focus
 ---------------------------------
 This tests ensures that a racing condition is not possible anymore when alt+tabing.
