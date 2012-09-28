@@ -83,7 +83,7 @@ public:
 
   void FakeSelectionChange()
   {
-    unity::launcher::AbstractLauncherIcon::Ptr icon(nullptr);
+    unity::launcher::AbstractLauncherIcon::Ptr icon;
     OnModelSelectionChanged(icon);
   }
 

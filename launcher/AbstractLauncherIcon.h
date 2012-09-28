@@ -229,8 +229,8 @@ public:
   sigc::signal<void, int>      mouse_enter;
   sigc::signal<void, int>      mouse_leave;
 
-  sigc::signal<void, AbstractLauncherIcon::Ptr> needs_redraw;
-  sigc::signal<void, AbstractLauncherIcon::Ptr> remove;
+  sigc::signal<void, AbstractLauncherIcon::Ptr const&> needs_redraw;
+  sigc::signal<void, AbstractLauncherIcon::Ptr const&> remove;
   sigc::signal<void, nux::ObjectPtr<nux::View>> tooltip_visible;
   sigc::signal<void> visibility_changed;
   sigc::signal<void> position_saved;

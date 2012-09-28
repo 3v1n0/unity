@@ -284,13 +284,14 @@ TEST_F(TestLauncherController, Construction)
 
   for (auto const& fav_uri : favorite_store.GetFavorites())
   {
-    auto const& model_icon_it = std::find_if(lc.Impl()->model_->begin(), lc.Impl()->model_->end(),
+    auto model_icon_it = std::find_if(lc.Impl()->model_->begin(), lc.Impl()->model_->end(),
     [&fav_uri](AbstractLauncherIcon::Ptr const& i) { return (i->RemoteUri() == fav_uri); });
+    auto const& icon_it = *model_icon_it;
 
     if (fav_uri == places::APPS_URI || fav_uri == places::DEVICES_URI)
-      ASSERT_FALSE((*model_icon_it).IsValid());
+      ASSERT_FALSE(icon_it.IsValid());
     else
-      ASSERT_TRUE((*model_icon_it).IsValid());
+      ASSERT_TRUE(icon_it.IsValid());
   }
 }
 

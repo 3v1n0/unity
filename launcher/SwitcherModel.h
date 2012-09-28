@@ -80,10 +80,10 @@ public:
   void NextDetail();
   void PrevDetail();
 
-  void Select(launcher::AbstractLauncherIcon::Ptr selection);
+  void Select(launcher::AbstractLauncherIcon::Ptr const& selection);
   void Select(unsigned int index);
 
-  sigc::signal<void, launcher::AbstractLauncherIcon::Ptr> selection_changed;
+  sigc::signal<void, launcher::AbstractLauncherIcon::Ptr const&> selection_changed;
 
 protected:
   // Introspectable methods

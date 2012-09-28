@@ -267,7 +267,7 @@ Launcher* Controller::Impl::CreateLauncher(int monitor)
   return launcher;
 }
 
-void Controller::Impl::OnLauncherAddRequest(std::string const& icon_uri, AbstractLauncherIcon::Ptr icon_before)
+void Controller::Impl::OnLauncherAddRequest(std::string const& icon_uri, AbstractLauncherIcon::Ptr const& icon_before)
 {
   std::string app_uri;
 
@@ -413,12 +413,12 @@ void Controller::Impl::SortAndUpdate()
   }
 }
 
-void Controller::Impl::OnIconRemoved(AbstractLauncherIcon::Ptr icon)
+void Controller::Impl::OnIconRemoved(AbstractLauncherIcon::Ptr const& icon)
 {
   SortAndUpdate();
 }
 
-void Controller::Impl::OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr icon)
+void Controller::Impl::OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr const& icon)
 {
   switch (icon->GetIconType())
   {
@@ -627,7 +627,7 @@ void Controller::Impl::UpdateNumWorkspaces(int workspaces)
   }
 }
 
-void Controller::Impl::RegisterIcon(AbstractLauncherIcon::Ptr icon, int priority)
+void Controller::Impl::RegisterIcon(AbstractLauncherIcon::Ptr const& icon, int priority)
 {
   if (!icon)
     return;
@@ -749,7 +749,7 @@ void Controller::Impl::OnViewOpened(BamfMatcher* matcher, BamfView* view)
   RegisterIcon(icon, GetLastIconPriority<BamfLauncherIcon>(local::RUNNING_APPS_URI));
 }
 
-void Controller::Impl::OnDeviceIconAdded(AbstractLauncherIcon::Ptr icon)
+void Controller::Impl::OnDeviceIconAdded(AbstractLauncherIcon::Ptr const& icon)
 {
   RegisterIcon(icon, GetLastIconPriority<VolumeLauncherIcon>(local::DEVICES_URI));
 }
