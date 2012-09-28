@@ -163,14 +163,6 @@ struct MockBamfLauncherIcon : public BamfLauncherIcon
       return FavoriteStore::URI_PREFIX_APP + remote_uri_;
   }
 
-  bool IsSticky() const
-  {
-    if (remote_uri_.empty())
-      return BamfLauncherIcon::IsSticky();
-    else
-      return SimpleLauncherIcon::IsSticky();
-  }
-
   void ReallyStick(bool save) { BamfLauncherIcon::Stick(save); }
 
   MOCK_METHOD1(Stick, void(bool));
@@ -634,17 +626,6 @@ TEST_F(TestLauncherController, RegisterIconDevice)
 TEST_F(TestLauncherController, RegisteredIconSavesPosition)
 {
   MockBamfLauncherIcon::Ptr app_icon(new MockBamfLauncherIcon(true, "normal-icon.desktop"));
-  lc.Impl()->RegisterIcon(app_icon);
-  ASSERT_FALSE(favorite_store.IsFavorite(app_icon->RemoteUri()));
-
-  app_icon->Stick(true);
-  ASSERT_TRUE(app_icon->IsSticky());
-  EXPECT_TRUE(favorite_store.IsFavorite(app_icon->RemoteUri()));
-}
-
-TEST_F(TestLauncherController, RegisteredBamfIconSavesPosition)
-{
-  MockBamfLauncherIcon::Ptr app_icon(new MockBamfLauncherIcon(app::BZR_HANDLE_PATCH));
   lc.Impl()->RegisterIcon(app_icon);
   ASSERT_FALSE(favorite_store.IsFavorite(app_icon->RemoteUri()));
 
