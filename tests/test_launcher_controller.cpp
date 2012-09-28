@@ -163,14 +163,6 @@ struct MockBamfLauncherIcon : public BamfLauncherIcon
       return FavoriteStore::URI_PREFIX_APP + remote_uri_;
   }
 
-  bool IsSticky() const
-  {
-    if (remote_uri_.empty())
-      return BamfLauncherIcon::IsSticky();
-    else
-      return SimpleLauncherIcon::IsSticky();
-  }
-
   void ReallyStick(bool save) { BamfLauncherIcon::Stick(save); }
 
   MOCK_METHOD1(Stick, void(bool));
