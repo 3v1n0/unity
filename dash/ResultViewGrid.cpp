@@ -26,6 +26,7 @@
 #include <NuxGraphics/GdkGraphics.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
+#include <unity-protocol.h>
 
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/Timer.h"
@@ -844,8 +845,19 @@ _icon_hint_get_drag_pixbuf (std::string icon_hint)
 
   if (G_IS_ICON(icon))
   {
-     info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, (GtkIconLookupFlags)0);
-      g_object_unref(icon);
+     if (UNITY_PROTOCOL_IS_ANNOTATED_ICON(icon))
+     {
+        UnityProtocolAnnotatedIcon *anno;
+        anno = UNITY_PROTOCOL_ANNOTATED_ICON(icon);
+
+        GIcon *base_icon = unity_protocol_annotated_icon_get_icon(anno);
+        info = gtk_icon_theme_lookup_by_gicon(theme, base_icon, size, (GtkIconLookupFlags)0);
+     }
+     else
+     {
+       info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, (GtkIconLookupFlags)0);
+     }
+     g_object_unref(icon);
   }
   else
   {
