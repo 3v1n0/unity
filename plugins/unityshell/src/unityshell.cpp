@@ -130,6 +130,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , panel_texture_has_changed_(true)
   , paint_panel_(false)
   , scale_just_activated_(false)
+  , big_tick_(0)
   , screen_introspection_(screen)
 {
   Timer timer;
@@ -1300,7 +1301,6 @@ void UnityScreen::preparePaint(int ms)
 {
   cScreen->preparePaint(ms);
 
-  static long long big_tick = 0;
   big_tick += ms*1000;
   tick_source_->tick(big_tick);
 
