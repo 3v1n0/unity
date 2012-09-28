@@ -142,9 +142,10 @@ void OverlayRendererImpl::Init()
   rop.DstBlend = GL_SRC_COLOR;
   nux::Color darken_colour = nux::Color(0.9f, 0.9f, 0.9f, 1.0f);
   
-  //When we are in low gfx mode then our darken layer will act as a black background.
+  //When we are in low gfx mode then our darken layer will act as a background.
   if (Settings::Instance().GetLowGfxMode())
   {
+    rop.Blend = false;
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_SRC_COLOR;
     darken_colour = bg_color_;
@@ -538,6 +539,10 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
                                geometry.y + content_geo.height + INNER_CORNER_RADIUS + corner_overlap,
                                line_color * 0.7f); // less opacity
 
+  if (Settings::Instance().GetLowGfxMode())
+  {
+    bg_darken_layer_->SetColor(bg_color_);
+  }
   //Draw the background
   bg_darken_layer_->SetGeometry(larger_content_geo);
   nux::GetPainter().RenderSinglePaintLayer(gfx_context, larger_content_geo, bg_darken_layer_);

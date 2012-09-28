@@ -50,7 +50,7 @@
 #include "unity-shared/WindowManager.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/UBusMessages.h"
-#include <unity-shared/UnitySettings.h>
+#include "unity-shared/UnitySettings.h"
 
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
@@ -1744,7 +1744,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   }
 
   nux::ROPConfig ROP;
-  ROP.Blend = Settings::Instance().GetLowGfxMode();
+  ROP.Blend = false;
   ROP.SrcBlend = GL_ONE;
   ROP.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
@@ -1762,7 +1762,10 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::Color clear_colour = nux::Color(0x00000000);
   
   if (Settings::Instance().GetLowGfxMode())
+  {
     clear_colour = _background_color;
+    clear_colour.alpha = 1.0f;
+  }
 
   // clear region
   GfxContext.PushClippingRectangle(base);

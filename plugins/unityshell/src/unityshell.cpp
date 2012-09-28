@@ -202,6 +202,18 @@ UnityScreen::UnityScreen(CompScreen* screen)
       failed = true;
     }
   }
+  
+    //In case of software rendering then enable lowgfx mode.
+  std::string renderer = ANSI_TO_TCHAR(NUX_REINTERPRET_CAST(const char *, glGetString(GL_RENDERER)));
+  
+  if ((strcmp(renderer.c_str(), "Software Rasterizer") == 0) ||
+      (strcmp(renderer.c_str(), "Mesa X11") == 0) ||
+      (strcmp(renderer.c_str(), "LLVM") == 0) ||
+      (strcmp(renderer.c_str(), "on softpipe") == 0) ||
+      (getenv("LOW_GFX_MODE") != NULL && atoi(getenv("LOW_GFX_MODE")) == 1))
+      {
+        Settings::Instance().SetLowGfxMode(true);
+      }
 #endif
 
   if (!failed)

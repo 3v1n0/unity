@@ -48,7 +48,7 @@ public:
     : parent_(owner)
     , gsettings_(g_settings_new(SETTINGS_NAME.c_str()))
     , cached_form_factor_(FormFactor::DESKTOP)
-    , lowGfx_(true)
+    , lowGfx_(false)
   {
     CacheFormFactor();
 
@@ -109,12 +109,7 @@ Settings::Settings()
   }
   
   else
-  {
-    /*if (atoi(getenv("LOW_GFX_MODE")) == 1 || nux::GetGraphicsDisplay()->GetGraphicsEngine()->IsSoftwareRendered())
-    {
-      pimpl->lowGfx_ = true;
-    }*/
-    
+  { 
     form_factor.SetGetterFunction(sigc::mem_fun(*pimpl, &Impl::GetFormFactor));
     form_factor.SetSetterFunction(sigc::mem_fun(*pimpl, &Impl::SetFormFactor));
 
@@ -141,6 +136,11 @@ Settings& Settings::Instance()
 bool Settings::GetLowGfxMode() const
 {
   return pimpl->lowGfx_;
+}
+
+void Settings::SetLowGfxMode(const bool low_gfx)
+{
+  pimpl->lowGfx_ = low_gfx;
 }
 
 } // namespace unity
