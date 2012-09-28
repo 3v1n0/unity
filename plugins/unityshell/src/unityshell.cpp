@@ -1326,11 +1326,7 @@ void UnityScreen::donePaint()
     wt->ClearDrawList();
 
   if (animation_controller_->HasRunningAnimations())
-  {
-    cScreen->damageRegionSetEnabled(this, false);
-    cScreen->damageScreen();
-    cScreen->damageRegionSetEnabled(this, true);
-  }
+    nuxDamageCompiz();
 
   std::list <ShowdesktopHandlerWindowInterface *> remove_windows;
 
