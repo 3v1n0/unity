@@ -561,7 +561,7 @@ Window PluginAdapter::GetTopMostValidWindowInViewport() const
         !(window->type() & CompWindowTypeSplashMask) &&
         !(window->type() & CompWindowTypeDockMask) &&
         !window->overrideRedirect() &&
-        std::find(our_xids.begin(), our_xids.end(), window) == our_xids.end())
+        std::find(our_xids.begin(), our_xids.end(), window->id()) == our_xids.end())
     {
       return window->id();
     }
