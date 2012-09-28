@@ -464,7 +464,6 @@ private:
   compiz::WindowInputRemoverLock::Weak input_remover_;
   panel::WindowState close_icon_state_;
   nux::Geometry close_button_geo_;
-  bool middle_clicked_;
   glib::Source::UniquePtr focus_desktop_timeout_;
 
   friend class UnityScreen;
