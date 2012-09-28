@@ -932,12 +932,12 @@ void BamfLauncherIcon::Quit()
 
 void BamfLauncherIcon::Stick(bool save)
 {
-  SimpleLauncherIcon::Stick(save);
-
   if (IsSticky())
     return;
 
   bamf_view_set_sticky(BAMF_VIEW(_bamf_app.RawPtr()), true);
+
+  SimpleLauncherIcon::Stick(save);
 }
 
 void BamfLauncherIcon::UnStick()
