@@ -642,6 +642,17 @@ TEST_F(TestLauncherController, RegisteredIconSavesPosition)
   EXPECT_TRUE(favorite_store.IsFavorite(app_icon->RemoteUri()));
 }
 
+TEST_F(TestLauncherController, RegisteredBamfIconSavesPosition)
+{
+  MockBamfLauncherIcon::Ptr app_icon(new MockBamfLauncherIcon(app::BZR_HANDLE_PATCH));
+  lc.Impl()->RegisterIcon(app_icon);
+  ASSERT_FALSE(favorite_store.IsFavorite(app_icon->RemoteUri()));
+
+  app_icon->Stick(true);
+  ASSERT_TRUE(app_icon->IsSticky());
+  EXPECT_TRUE(favorite_store.IsFavorite(app_icon->RemoteUri()));
+}
+
 TEST_F(TestLauncherController, RegisteredIconForgetsPosition)
 {
   auto const& fav = lc.Impl()->GetIconByUri(*(favorite_store.GetFavorites().begin()));
