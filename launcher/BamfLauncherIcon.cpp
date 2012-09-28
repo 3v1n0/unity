@@ -61,7 +61,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(BamfLauncherIcon);
 BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   : SimpleLauncherIcon(IconType::APPLICATION)
   , _bamf_app(app, glib::AddRef())
-  , _supported_types_filled(false)
   , use_custom_bg_color_(false)
   , bg_color_(nux::color::White)
 {
@@ -162,9 +161,6 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
 
   // hack
   SetProgress(0.0f);
-
-  // Calls when there are no higher priority events pending to the default main loop.
-  _source_manager.AddIdle([&] { FillSupportedTypes(); return false; });
 }
 
 BamfLauncherIcon::~BamfLauncherIcon()
@@ -1357,46 +1353,22 @@ nux::Color BamfLauncherIcon::BackgroundColor() const
   return SimpleLauncherIcon::BackgroundColor();
 }
 
-const std::set<std::string>& BamfLauncherIcon::GetSupportedTypes()
+const std::set<std::string> BamfLauncherIcon::GetSupportedTypes()
 {
-  if (!_supported_types_filled)
-    FillSupportedTypes();
+  std::set<std::string> _supported_types;
+  char** mimes = bamf_application_get_supported_mime_types(BAMF_APPLICATION(_bamf_app.RawPtr()));
 
-  return _supported_types;
-}
-
-void BamfLauncherIcon::FillSupportedTypes()
-{
-  if (!_supported_types_filled)
+  if (mimes)
   {
-    _supported_types_filled = true;
-    _supported_types.clear();
-
-    std::string const& desktop_file = DesktopFile();
-
-    if (desktop_file.empty())
-      return;
-
-    std::shared_ptr<GKeyFile> key_file(g_key_file_new(), g_key_file_free);
-    glib::Error error;
-
-    g_key_file_load_from_file(key_file.get(), desktop_file.c_str(), (GKeyFileFlags) 0, &error);
-
-    if (error)
-      return;
-
-    std::shared_ptr<char*> mimes(g_key_file_get_string_list(key_file.get(), "Desktop Entry", "MimeType", nullptr, nullptr),
-                                 g_strfreev);
-
-    if (!mimes)
-      return;
-
-    for (int i = 0; mimes.get()[i]; i++)
+    for (int i = 0; mimes[i]; i++)
     {
-      unity::glib::String super_type(g_content_type_from_mime_type(mimes.get()[i]));
+      unity::glib::String super_type(g_content_type_from_mime_type(mimes[i]));
       _supported_types.insert(super_type.Str());
     }
   }
+  g_strfreev(mimes);
+
+  return _supported_types;
 }
 
 std::string BamfLauncherIcon::GetName() const
