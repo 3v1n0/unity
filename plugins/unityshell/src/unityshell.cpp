@@ -1149,12 +1149,6 @@ bool UnityWindow::handleEvent(XEvent *event)
         DoAddDamage();
         handled = true;
       }
-      else if (event->xbutton.button == Button2 &&
-               GetScaledGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root))
-      {
-        middle_clicked_ = true;
-        handled = true;
-      }
       break;
 
     case ButtonRelease:
@@ -1172,18 +1166,6 @@ bool UnityWindow::handleEvent(XEvent *event)
           if (close_button_geo_.IsPointInside(event->xbutton.x_root, event->xbutton.y_root))
             window->close(0);
 
-          handled = true;
-        }
-
-        if (middle_clicked_)
-        {
-          if (event->xbutton.button == Button2 &&
-              GetScaledGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root))
-          {
-            window->close(0);
-          }
-
-          middle_clicked_ = false;
           handled = true;
         }
       }
@@ -3827,7 +3809,6 @@ nux::Geometry UnityWindow::GetScaledGeometry()
 void UnityWindow::OnInitiateSpread()
 {
   close_icon_state_ = panel::WindowState::NORMAL;
-  middle_clicked_ = false;
   SetupSharedTextures();
 
   WindowManager *wm = WindowManager::Default();

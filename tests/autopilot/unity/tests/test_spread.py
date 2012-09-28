@@ -91,22 +91,6 @@ class SpreadTests(UnityTestCase):
 
         self.assertThat(lambda: not_focused.is_focused, Eventually(Equals(True)))
 
-    def test_scaled_window_closes_on_middle_click(self):
-        """Test that a window is closed when middle-clicked in spread"""
-        win = self.start_test_application_windows("Calculator", 2)[0]
-        self.initiate_spread_for_application(win.application.desktop_file)
-
-        target_xid = win.x_id
-        [target_win] = [w for w in self.screen.scaled_windows if w.xid == target_xid]
-
-        (x, y, w, h) = target_win.geometry
-        self.mouse.move(x + w / 2, y + h / 2)
-        sleep(.5)
-        self.mouse.click(button=2)
-
-        self.assertWindowIsNotScaled(target_xid)
-        self.assertWindowIsClosed(target_xid)
-
     def test_scaled_window_closes_on_close_button_click(self):
         """Test that a window is closed when its close button is clicked in spread"""
         win = self.start_test_application_windows("Calculator", 1)[0]
