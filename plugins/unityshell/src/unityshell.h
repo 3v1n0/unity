@@ -246,7 +246,7 @@ private:
   bool TopPanelBackgroundTextureNeedsUpdate() const;
   void UpdateTopPanelBackgroundTexture();
 
-  std::unique_ptr<nux::NuxTimerTickSource> tick_source_;
+  std::unique_ptr<na::TickSource> tick_source_;
   std::unique_ptr<na::AnimationController> animation_controller_;
 
   Settings dash_settings_;

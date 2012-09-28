@@ -24,7 +24,6 @@
 #include <Nux/HLayout.h>
 #include <Nux/BaseWindow.h>
 #include <Nux/WindowCompositor.h>
-#include <Nux/NuxTimerTickSource.h>
 
 #include <UnityCore/Variant.h>
 
@@ -234,7 +233,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
                                            this));
 #endif
 
-    tick_source_.reset(new nux::NuxTimerTickSource);
+    tick_source_.reset(new na::TickSource);
     animation_controller_.reset(new na::AnimationController(*tick_source_));
 
      wt->RedrawRequested.connect(sigc::mem_fun(this, &UnityScreen::onRedrawRequested));
@@ -1301,6 +1300,10 @@ void UnityScreen::preparePaint(int ms)
 {
   cScreen->preparePaint(ms);
 
+  static long long big_tick = 0;
+  big_tick += ms*1000;
+  tick_source_->tick(big_tick);
+
   for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
     wi->HandleAnimations (ms);
 
@@ -1321,6 +1324,13 @@ void UnityScreen::donePaint()
    */
   if (didShellRepaint)
     wt->ClearDrawList();
+
+  if (animation_controller_->HasRunningAnimations())
+  {
+    cScreen->damageRegionSetEnabled(this, false);
+    cScreen->damageScreen();
+    cScreen->damageRegionSetEnabled(this, true);
+  }
 
   std::list <ShowdesktopHandlerWindowInterface *> remove_windows;
 

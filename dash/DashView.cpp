@@ -37,8 +37,6 @@
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/PreviewStyle.h"
 
-#include "Nux/NuxTimerTickSource.h"
-
 namespace unity
 {
 namespace dash
@@ -96,9 +94,6 @@ DashView::DashView()
   , opening_row_y_(-1)
   , opening_row_height_(0)
 {
-  //tick_source_.reset(new nux::NuxTimerTickSource);
-  //animation_controller_.reset(new na::AnimationController(*tick_source_));
-
   renderer_.SetOwner(this);
   renderer_.need_redraw.connect([this] () {
     QueueDraw();
