@@ -1449,7 +1449,7 @@ void UnityScreen::nuxDamageCompiz()
    *       stop it. Then maybe we can revert back to the old code below #else.
    */
   std::vector<nux::Geometry> const& dirty = wt->GetDrawList();
-  if (!dirty.empty())
+  if (!dirty.empty() || animation_controller_->HasRunningAnimations())
   {
     cScreen->damageRegionSetEnabled(this, false);
     cScreen->damageScreen();
