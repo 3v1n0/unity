@@ -301,6 +301,7 @@ private:
   bool    _key_nav_mode_requested;
   CompOutput* _last_output;
 
+  CompRegion panelShadowPainted;
   CompRegion nuxRegion;
   CompRegion fullscreenRegion;
   CompWindow* firstWindowAboveShell;
