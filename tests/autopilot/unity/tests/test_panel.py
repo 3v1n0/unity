@@ -806,11 +806,8 @@ class PanelMenuTests(PanelTestsBase):
         """Tests that if an application has no menus, then they are not
         shown or added.
         """
-        # TODO: This doesn't test what it says on the tin. Setting MENUPROXY to ''
-        # just makes the menu appear inside the app. That's fine, but it's not
-        # what is described in the docstring or test id.
-        self.patch_environment("UBUNTU_MENUPROXY", "")
-        calc_win = self.open_new_application_window("Calculator")
+
+        test_win = self.launch_test_window()
 
         self.assertThat(
             lambda: len(self.panel.menus.get_entries()),
@@ -818,7 +815,7 @@ class PanelMenuTests(PanelTestsBase):
             "Current panel entries are: %r" % self.panel.menus.get_entries())
 
         self.panel.move_mouse_over_grab_area()
-        self.assertThat(self.panel.title, Eventually(Equals(calc_win.application.name)))
+        self.assertThat(self.panel.title, Eventually(Equals(test_win.application.name)))
 
     def test_menus_shows_when_new_application_is_opened(self):
         """This tests the menu discovery feature on new application."""
