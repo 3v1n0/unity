@@ -1355,20 +1355,20 @@ nux::Color BamfLauncherIcon::BackgroundColor() const
 
 const std::set<std::string> BamfLauncherIcon::GetSupportedTypes()
 {
-  std::set<std::string> _supported_types;
-  char** mimes = bamf_application_get_supported_mime_types(BAMF_APPLICATION(_bamf_app.RawPtr()));
+  std::set<std::string> supported_types;
+  std::unique_ptr<gchar*[], void(*)(gchar**)> mimes(bamf_application_get_supported_mime_types(_bamf_app),
+                                                   g_strfreev);
 
-  if (mimes)
+  if (!mimes)
+    return supported_types;
+
+  for (int i = 0; mimes[i]; i++)
   {
-    for (int i = 0; mimes[i]; i++)
-    {
-      unity::glib::String super_type(g_content_type_from_mime_type(mimes[i]));
-      _supported_types.insert(super_type.Str());
-    }
+    unity::glib::String super_type(g_content_type_from_mime_type(mimes[i]));
+    supported_types.insert(super_type.Str());
   }
-  g_strfreev(mimes);
 
-  return _supported_types;
+  return supported_types;
 }
 
 std::string BamfLauncherIcon::GetName() const
