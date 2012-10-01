@@ -214,6 +214,11 @@ class WindowManagerDummy : public WindowManager
     g_debug("%s", G_STRFUNC);
   }
 
+  void TerminateExpo()
+  {
+    g_debug("%s", G_STRFUNC);
+  }
+
   bool IsExpoActive() const
   {
     g_debug("%s", G_STRFUNC);

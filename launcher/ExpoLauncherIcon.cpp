@@ -41,7 +41,17 @@ ExpoLauncherIcon::ExpoLauncherIcon()
 void ExpoLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   SimpleLauncherIcon::ActivateLauncherIcon(arg);
-  WindowManager::Default()->InitiateExpo();
+
+  auto wm = WindowManager::Default();
+
+  if (!wm->IsExpoActive())
+  {
+    wm->InitiateExpo();
+  }
+  else
+  {
+    wm->TerminateExpo();
+  }
 }
 
 void ExpoLauncherIcon::Stick(bool save)

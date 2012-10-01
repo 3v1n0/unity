@@ -2256,17 +2256,24 @@ bool UnityScreen::initPluginActions()
 
   if (p)
   {
-    MultiActionList expoActions(0);
+    MultiActionList expoActions;
 
-    foreach(CompOption & option, p->vTable->getOptions())
+    for (CompOption& option : p->vTable->getOptions())
     {
-      if (option.name() == "expo_key" ||
-          option.name() == "expo_button" ||
-          option.name() == "expo_edge")
+      std::string const& option_name = option.name();
+
+      if (!expoActions.HasPrimary() &&
+          (option_name == "expo_key" ||
+           option_name == "expo_button" ||
+           option_name == "expo_edge"))
       {
         CompAction* action = &option.value().action();
-        expoActions.AddNewAction(action, false);
-        break;
+        expoActions.AddNewAction(option_name, action, true);
+      }
+      else if (option_name == "exit_button")
+      {
+        CompAction* action = &option.value().action();
+        expoActions.AddNewAction(option_name, action, false);
       }
     }
 
@@ -2277,29 +2284,31 @@ bool UnityScreen::initPluginActions()
 
   if (p)
   {
-    MultiActionList scaleActions(0);
+    MultiActionList scaleActions;
 
-    foreach(CompOption & option, p->vTable->getOptions())
+    for (CompOption& option : p->vTable->getOptions())
     {
-      if (option.name() == "initiate_all_key" ||
-          option.name() == "initiate_all_edge" ||
-          option.name() == "initiate_key" ||
-          option.name() == "initiate_button" ||
-          option.name() == "initiate_edge" ||
-          option.name() == "initiate_group_key" ||
-          option.name() == "initiate_group_button" ||
-          option.name() == "initiate_group_edge" ||
-          option.name() == "initiate_output_key" ||
-          option.name() == "initiate_output_button" ||
-          option.name() == "initiate_output_edge")
+      std::string const& option_name = option.name();
+
+      if (option_name == "initiate_all_key" ||
+          option_name == "initiate_all_edge" ||
+          option_name == "initiate_key" ||
+          option_name == "initiate_button" ||
+          option_name == "initiate_edge" ||
+          option_name == "initiate_group_key" ||
+          option_name == "initiate_group_button" ||
+          option_name == "initiate_group_edge" ||
+          option_name == "initiate_output_key" ||
+          option_name == "initiate_output_button" ||
+          option_name == "initiate_output_edge")
       {
         CompAction* action = &option.value().action();
-        scaleActions.AddNewAction(action, false);
+        scaleActions.AddNewAction(option_name, action, false);
       }
-      else if (option.name() == "initiate_all_button")
+      else if (option_name == "initiate_all_button")
       {
         CompAction* action = &option.value().action();
-        scaleActions.AddNewAction(action, true);
+        scaleActions.AddNewAction(option_name, action, true);
       }
     }
 
