@@ -50,6 +50,7 @@
 #include "unity-shared/WindowManager.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/UBusMessages.h"
+#include "unity-shared/UnitySettings.h"
 
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
@@ -371,7 +372,7 @@ void Launcher::EnsureAnimation()
   QueueDraw();
 }
 
-bool Launcher::IconNeedsAnimation(AbstractLauncherIcon::Ptr icon, struct timespec const& current) const
+bool Launcher::IconNeedsAnimation(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const
 {
   struct timespec time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::VISIBLE);
   if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION_SHORT)
@@ -490,7 +491,7 @@ float Launcher::GetAutohidePositionMax() const
 }
 
 
-float Launcher::IconVisibleProgress(AbstractLauncherIcon::Ptr icon, struct timespec const& current) const
+float Launcher::IconVisibleProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const
 {
   if (!icon->IsVisibleOnMonitor(monitor))
     return 0.0f;
@@ -516,13 +517,12 @@ float Launcher::IconVisibleProgress(AbstractLauncherIcon::Ptr icon, struct times
 
 void Launcher::SetDndDelta(float x, float y, nux::Geometry const& geo, timespec const& current)
 {
-  AbstractLauncherIcon::Ptr anchor;
-  anchor = MouseIconIntersection(x, _enter_y);
+  AbstractLauncherIcon::Ptr const& anchor = MouseIconIntersection(x, _enter_y);
 
   if (anchor)
   {
     float position = y;
-    for (AbstractLauncherIcon::Ptr model_icon : *_model)
+    for (AbstractLauncherIcon::Ptr const& model_icon : *_model)
     {
       if (model_icon == anchor)
       {
@@ -539,7 +539,7 @@ void Launcher::SetDndDelta(float x, float y, nux::Geometry const& geo, timespec 
   }
 }
 
-float Launcher::IconPresentProgress(AbstractLauncherIcon::Ptr icon, struct timespec const& current) const
+float Launcher::IconPresentProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const
 {
   struct timespec icon_present_time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::PRESENTED);
   int ms = unity::TimeUtil::TimeDelta(&current, &icon_present_time);
@@ -551,7 +551,7 @@ float Launcher::IconPresentProgress(AbstractLauncherIcon::Ptr icon, struct times
     return 1.0f - result;
 }
 
-float Launcher::IconUrgentProgress(AbstractLauncherIcon::Ptr icon, struct timespec const& current) const
+float Launcher::IconUrgentProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const
 {
   struct timespec urgent_time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::URGENT);
   int urgent_ms = unity::TimeUtil::TimeDelta(&current, &urgent_time);
@@ -568,7 +568,7 @@ float Launcher::IconUrgentProgress(AbstractLauncherIcon::Ptr icon, struct timesp
     return 1.0f - result;
 }
 
-float Launcher::IconDropDimValue(AbstractLauncherIcon::Ptr icon, struct timespec const& current) const
+float Launcher::IconDropDimValue(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const
 {
   struct timespec dim_time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::DROP_DIM);
   int dim_ms = unity::TimeUtil::TimeDelta(&current, &dim_time);
@@ -580,7 +580,7 @@ float Launcher::IconDropDimValue(AbstractLauncherIcon::Ptr icon, struct timespec
     return result;
 }
 
-float Launcher::IconDesatValue(AbstractLauncherIcon::Ptr icon, struct timespec const& current) const
+float Launcher::IconDesatValue(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const
 {
   struct timespec dim_time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::DESAT);
   int ms = unity::TimeUtil::TimeDelta(&current, &dim_time);
@@ -592,21 +592,21 @@ float Launcher::IconDesatValue(AbstractLauncherIcon::Ptr icon, struct timespec c
     return result;
 }
 
-float Launcher::IconShimmerProgress(AbstractLauncherIcon::Ptr icon, struct timespec const& current) const
+float Launcher::IconShimmerProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const
 {
   struct timespec shimmer_time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::SHIMMER);
   int shimmer_ms = unity::TimeUtil::TimeDelta(&current, &shimmer_time);
   return CLAMP((float) shimmer_ms / (float) ANIM_DURATION_LONG, 0.0f, 1.0f);
 }
 
-float Launcher::IconCenterTransitionProgress(AbstractLauncherIcon::Ptr icon, struct timespec const& current) const
+float Launcher::IconCenterTransitionProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const
 {
   struct timespec save_time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::CENTER_SAVED);
   int save_ms = unity::TimeUtil::TimeDelta(&current, &save_time);
   return CLAMP((float) save_ms / (float) ANIM_DURATION, 0.0f, 1.0f);
 }
 
-float Launcher::IconUrgentPulseValue(AbstractLauncherIcon::Ptr icon, struct timespec const& current) const
+float Launcher::IconUrgentPulseValue(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const
 {
   if (!icon->GetQuirk(AbstractLauncherIcon::Quirk::URGENT))
     return 1.0f; // we are full on in a normal condition
@@ -615,7 +615,7 @@ float Launcher::IconUrgentPulseValue(AbstractLauncherIcon::Ptr icon, struct time
   return 0.5f + (float)(std::cos(M_PI * (float)(URGENT_BLINKS * 2) * urgent_progress)) * 0.5f;
 }
 
-float Launcher::IconPulseOnceValue(AbstractLauncherIcon::Ptr icon, struct timespec const &current) const
+float Launcher::IconPulseOnceValue(AbstractLauncherIcon::Ptr const& icon, struct timespec const &current) const
 {
   struct timespec pulse_time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::PULSE_ONCE);
   int pulse_ms = unity::TimeUtil::TimeDelta(&current, &pulse_time);
@@ -627,7 +627,7 @@ float Launcher::IconPulseOnceValue(AbstractLauncherIcon::Ptr icon, struct timesp
   return 0.5f + (float) (std::cos(M_PI * 2.0 * pulse_progress)) * 0.5f;
 }
 
-float Launcher::IconUrgentWiggleValue(AbstractLauncherIcon::Ptr icon, struct timespec const& current) const
+float Launcher::IconUrgentWiggleValue(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const
 {
   if (!icon->GetQuirk(AbstractLauncherIcon::Quirk::URGENT))
     return 0.0f; // we are full on in a normal condition
@@ -636,7 +636,7 @@ float Launcher::IconUrgentWiggleValue(AbstractLauncherIcon::Ptr icon, struct tim
   return 0.3f * (float)(std::sin(M_PI * (float)(WIGGLE_CYCLES * 2) * urgent_progress)) * 0.5f;
 }
 
-float Launcher::IconStartingBlinkValue(AbstractLauncherIcon::Ptr icon, struct timespec const& current) const
+float Launcher::IconStartingBlinkValue(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const
 {
   struct timespec starting_time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::STARTING);
   int starting_ms = unity::TimeUtil::TimeDelta(&current, &starting_time);
@@ -645,7 +645,7 @@ float Launcher::IconStartingBlinkValue(AbstractLauncherIcon::Ptr icon, struct ti
   return 0.5f + (float)(std::cos(M_PI * val * starting_progress)) * 0.5f;
 }
 
-float Launcher::IconStartingPulseValue(AbstractLauncherIcon::Ptr icon, struct timespec const& current) const
+float Launcher::IconStartingPulseValue(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const
 {
   struct timespec starting_time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::STARTING);
   int starting_ms = unity::TimeUtil::TimeDelta(&current, &starting_time);
@@ -660,7 +660,7 @@ float Launcher::IconStartingPulseValue(AbstractLauncherIcon::Ptr icon, struct ti
   return 0.5f + (float)(std::cos(M_PI * (float)(MAX_STARTING_BLINKS * 2) * starting_progress)) * 0.5f;
 }
 
-float Launcher::IconBackgroundIntensity(AbstractLauncherIcon::Ptr icon, struct timespec const& current) const
+float Launcher::IconBackgroundIntensity(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const
 {
   float result = 0.0f;
 
@@ -727,7 +727,7 @@ float Launcher::IconBackgroundIntensity(AbstractLauncherIcon::Ptr icon, struct t
   return result;
 }
 
-float Launcher::IconProgressBias(AbstractLauncherIcon::Ptr icon, struct timespec const& current) const
+float Launcher::IconProgressBias(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const
 {
   struct timespec icon_progress_time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::PROGRESS);
   int ms = unity::TimeUtil::TimeDelta(&current, &icon_progress_time);
@@ -739,7 +739,7 @@ float Launcher::IconProgressBias(AbstractLauncherIcon::Ptr icon, struct timespec
     return result;
 }
 
-bool Launcher::IconDrawEdgeOnly(AbstractLauncherIcon::Ptr icon) const
+bool Launcher::IconDrawEdgeOnly(AbstractLauncherIcon::Ptr const& icon) const
 {
   if (options()->backlight_mode() == BACKLIGHT_EDGE_TOGGLE)
     return true;
@@ -750,7 +750,7 @@ bool Launcher::IconDrawEdgeOnly(AbstractLauncherIcon::Ptr icon) const
   return false;
 }
 
-void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec const& current, RenderArg& arg)
+void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current, RenderArg& arg)
 {
   float desat_value = IconDesatValue(icon, current);
   arg.icon                = icon.GetPointer();
@@ -850,7 +850,7 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr icon, struct timespec co
   }
 }
 
-void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr icon,
+void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr const& icon,
                              RenderArg& arg,
                              nux::Point3& center,
                              nux::Geometry const& parent_abs_geo,
@@ -1109,7 +1109,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   for (it = _model->main_begin(); it != _model->main_end(); ++it)
   {
     RenderArg arg;
-    AbstractLauncherIcon::Ptr icon = *it;
+    AbstractLauncherIcon::Ptr const& icon = *it;
     FillRenderArg(icon, arg, center, parent_abs_geo, folding_threshold, folded_size, folded_spacing,
                   autohide_offset, folded_z_distance, animation_neg_rads, current);
     arg.colorify = colorify;
@@ -1136,7 +1136,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   for (it = _model->shelf_begin(); it != _model->shelf_end(); ++it)
   {
     RenderArg arg;
-    AbstractLauncherIcon::Ptr icon = *it;
+    AbstractLauncherIcon::Ptr const& icon = *it;
 
     FillRenderArg(icon, arg, center, parent_abs_geo, folding_threshold, folded_size, folded_spacing,
                   autohide_offset, folded_z_distance, animation_neg_rads, current);
@@ -1630,7 +1630,7 @@ void Launcher::Resize()
   ConfigureBarrier();
 }
 
-void Launcher::OnIconAdded(AbstractLauncherIcon::Ptr icon)
+void Launcher::OnIconAdded(AbstractLauncherIcon::Ptr const& icon)
 {
   EnsureAnimation();
 
@@ -1638,7 +1638,7 @@ void Launcher::OnIconAdded(AbstractLauncherIcon::Ptr icon)
   icon->tooltip_visible.connect(sigc::mem_fun(this, &Launcher::OnTooltipVisible));
 }
 
-void Launcher::OnIconRemoved(AbstractLauncherIcon::Ptr icon)
+void Launcher::OnIconRemoved(AbstractLauncherIcon::Ptr const& icon)
 {
   if (icon->needs_redraw_connection.connected())
     icon->needs_redraw_connection.disconnect();
@@ -1676,7 +1676,7 @@ LauncherModel::Ptr Launcher::GetModel() const
   return _model;
 }
 
-void Launcher::EnsureIconOnScreen(AbstractLauncherIcon::Ptr selection)
+void Launcher::EnsureIconOnScreen(AbstractLauncherIcon::Ptr const& selection)
 {
   nux::Geometry const& geo = GetGeometry();
 
@@ -1698,7 +1698,7 @@ void Launcher::EnsureIconOnScreen(AbstractLauncherIcon::Ptr selection)
   _launcher_drag_delta = std::max<int>(min_drag_delta, std::min<int>(max_drag_delta, _launcher_drag_delta));
 }
 
-void Launcher::OnSelectionChanged(AbstractLauncherIcon::Ptr selection)
+void Launcher::OnSelectionChanged(AbstractLauncherIcon::Ptr const& selection)
 {
   if (IsInKeyNavMode())
   {
@@ -1707,7 +1707,7 @@ void Launcher::OnSelectionChanged(AbstractLauncherIcon::Ptr selection)
   }
 }
 
-void Launcher::OnIconNeedsRedraw(AbstractLauncherIcon::Ptr icon)
+void Launcher::OnIconNeedsRedraw(AbstractLauncherIcon::Ptr const& icon)
 {
   EnsureAnimation();
 }
@@ -1758,14 +1758,25 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     _render_drag_window = false;
     ShowDragWindow();
   }
+  
+  nux::Color clear_colour = nux::Color(0x00000000);
+  
+  if (Settings::Instance().GetLowGfxMode())
+  {
+    clear_colour = _background_color;
+    clear_colour.alpha = 1.0f;
+  }
 
   // clear region
   GfxContext.PushClippingRectangle(base);
-  gPainter.PushDrawColorLayer(GfxContext, base, nux::Color(0x00000000), true, ROP);
+  gPainter.PushDrawColorLayer(GfxContext, base, clear_colour, true, ROP);
 
-  GfxContext.GetRenderStates().SetBlend(true);
-  GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-  GfxContext.GetRenderStates().SetColorMask(true, true, true, true);
+  if (Settings::Instance().GetLowGfxMode() == false)
+  {
+    GfxContext.GetRenderStates().SetBlend(true);
+    GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+    GfxContext.GetRenderStates().SetColorMask(true, true, true, true);
+  }
 
   int push_count = 1;
 
@@ -1794,92 +1805,95 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                         pressure_color);
   }
 
-  if (IsOverlayOpen())
+  if (Settings::Instance().GetLowGfxMode() == false)
   {
-    nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
-    nux::ObjectPtr<nux::IOpenGLBaseTexture> blur_texture;
-
-    if (BackgroundEffectHelper::blur_type != unity::BLUR_NONE && (bkg_box.x + bkg_box.width > 0))
+    if (IsOverlayOpen())
     {
-      blur_texture = bg_effect_helper_.GetBlurRegion(blur_geo);
+      nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
+      nux::ObjectPtr<nux::IOpenGLBaseTexture> blur_texture;
+
+      if (BackgroundEffectHelper::blur_type != unity::BLUR_NONE && (bkg_box.x + bkg_box.width > 0))
+      {
+	blur_texture = bg_effect_helper_.GetBlurRegion(blur_geo);
+      }
+      else
+      {
+	blur_texture = bg_effect_helper_.GetRegion(blur_geo);
+      }
+
+      if (blur_texture.IsValid())
+      {
+	nux::TexCoordXForm texxform_blur_bg;
+	texxform_blur_bg.flip_v_coord = true;
+	texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+	texxform_blur_bg.uoffset = ((float) base.x) / geo_absolute.width;
+	texxform_blur_bg.voffset = ((float) base.y) / geo_absolute.height;
+
+	GfxContext.PushClippingRectangle(bkg_box);
+
+#ifndef NUX_OPENGLES_20
+	if (GfxContext.UsingGLSLCodePath())
+	  gPainter.PushDrawCompositionLayer(GfxContext, base,
+					    blur_texture,
+					    texxform_blur_bg,
+					    nux::color::White,
+					    _background_color, nux::LAYER_BLEND_MODE_OVERLAY,
+					    true, ROP);
+	else
+	  gPainter.PushDrawTextureLayer(GfxContext, base,
+					blur_texture,
+					texxform_blur_bg,
+					nux::color::White,
+					true,
+					ROP);
+#else
+	  gPainter.PushDrawCompositionLayer(GfxContext, base,
+					    blur_texture,
+					    texxform_blur_bg,
+					    nux::color::White,
+					    _background_color, nux::LAYER_BLEND_MODE_OVERLAY,
+					    true, ROP);
+#endif
+	GfxContext.PopClippingRectangle();
+
+	push_count++;
+      }
+
+      unsigned int alpha = 0, src = 0, dest = 0;
+      GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
+
+      // apply the darkening
+      GfxContext.GetRenderStates().SetBlend(true, GL_ZERO, GL_SRC_COLOR);
+      gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0.9f, 0.9f, 0.9f, 1.0f));
+      GfxContext.GetRenderStates().SetBlend (alpha, src, dest);
+
+      // apply the bg colour
+#ifndef NUX_OPENGLES_20
+      if (GfxContext.UsingGLSLCodePath() == false)
+	gPainter.Paint2DQuadColor(GfxContext, bkg_box, _background_color);
+#endif
+
+      // apply the shine
+      GfxContext.GetRenderStates().SetBlend(true, GL_DST_COLOR, GL_ONE);
+      nux::TexCoordXForm texxform;
+      texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+      texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
+      texxform.uoffset = (1.0f / launcher_sheen_->GetWidth()); // TODO (gord) don't use absolute values here
+      texxform.voffset = (1.0f / launcher_sheen_->GetHeight()) * panel::Style::Instance().panel_height;
+      GfxContext.QRP_1Tex(base.x, base.y, base.width, base.height,
+			  launcher_sheen_->GetDeviceTexture(),
+			  texxform,
+			  nux::color::White);
+
+      //reset the blend state
+      GfxContext.GetRenderStates().SetBlend (alpha, src, dest);
     }
     else
     {
-      blur_texture = bg_effect_helper_.GetRegion(blur_geo);
+      nux::Color color = _background_color;
+      color.alpha = options()->background_alpha;
+      gPainter.Paint2DQuadColor(GfxContext, bkg_box, color);
     }
-
-    if (blur_texture.IsValid())
-    {
-      nux::TexCoordXForm texxform_blur_bg;
-      texxform_blur_bg.flip_v_coord = true;
-      texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-      texxform_blur_bg.uoffset = ((float) base.x) / geo_absolute.width;
-      texxform_blur_bg.voffset = ((float) base.y) / geo_absolute.height;
-
-      GfxContext.PushClippingRectangle(bkg_box);
-
-#ifndef NUX_OPENGLES_20
-      if (GfxContext.UsingGLSLCodePath())
-        gPainter.PushDrawCompositionLayer(GfxContext, base,
-                                          blur_texture,
-                                          texxform_blur_bg,
-                                          nux::color::White,
-                                          _background_color, nux::LAYER_BLEND_MODE_OVERLAY,
-                                          true, ROP);
-      else
-        gPainter.PushDrawTextureLayer(GfxContext, base,
-                                      blur_texture,
-                                      texxform_blur_bg,
-                                      nux::color::White,
-                                      true,
-                                      ROP);
-#else
-        gPainter.PushDrawCompositionLayer(GfxContext, base,
-                                          blur_texture,
-                                          texxform_blur_bg,
-                                          nux::color::White,
-                                          _background_color, nux::LAYER_BLEND_MODE_OVERLAY,
-                                          true, ROP);
-#endif
-      GfxContext.PopClippingRectangle();
-
-      push_count++;
-    }
-
-    unsigned int alpha = 0, src = 0, dest = 0;
-    GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
-
-    // apply the darkening
-    GfxContext.GetRenderStates().SetBlend(true, GL_ZERO, GL_SRC_COLOR);
-    gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0.9f, 0.9f, 0.9f, 1.0f));
-    GfxContext.GetRenderStates().SetBlend (alpha, src, dest);
-
-    // apply the bg colour
-#ifndef NUX_OPENGLES_20
-    if (GfxContext.UsingGLSLCodePath() == false)
-      gPainter.Paint2DQuadColor(GfxContext, bkg_box, _background_color);
-#endif
-
-    // apply the shine
-    GfxContext.GetRenderStates().SetBlend(true, GL_DST_COLOR, GL_ONE);
-    nux::TexCoordXForm texxform;
-    texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-    texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
-    texxform.uoffset = (1.0f / launcher_sheen_->GetWidth()); // TODO (gord) don't use absolute values here
-    texxform.voffset = (1.0f / launcher_sheen_->GetHeight()) * panel::Style::Instance().panel_height;
-    GfxContext.QRP_1Tex(base.x, base.y, base.width, base.height,
-                        launcher_sheen_->GetDeviceTexture(),
-                        texxform,
-                        nux::color::White);
-
-    //reset the blend state
-    GfxContext.GetRenderStates().SetBlend (alpha, src, dest);
-  }
-  else
-  {
-    nux::Color color = _background_color;
-    color.alpha = options()->background_alpha;
-    gPainter.Paint2DQuadColor(GfxContext, bkg_box, color);
   }
 
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
@@ -1975,7 +1989,7 @@ bool Launcher::StartIconDragTimeout(int x, int y)
 void Launcher::StartIconDragRequest(int x, int y)
 {
   nux::Geometry const& abs_geo = GetAbsoluteGeometry();
-  AbstractLauncherIcon::Ptr drag_icon = MouseIconIntersection(abs_geo.width / 2.0f, y);
+  AbstractLauncherIcon::Ptr const& drag_icon = MouseIconIntersection(abs_geo.width / 2.0f, y);
 
   // FIXME: nux doesn't give nux::GetEventButton (button_flags) there, relying
   // on an internal Launcher property then
@@ -2004,7 +2018,7 @@ void Launcher::StartIconDragRequest(int x, int y)
   }
 }
 
-void Launcher::StartIconDrag(AbstractLauncherIcon::Ptr icon)
+void Launcher::StartIconDrag(AbstractLauncherIcon::Ptr const& icon)
 {
   if (!icon)
     return;
@@ -2407,8 +2421,7 @@ void Launcher::EventLogic()
 
 void Launcher::MouseDownLogic(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  AbstractLauncherIcon::Ptr launcher_icon;
-  launcher_icon = MouseIconIntersection(_mouse_position.x, _mouse_position.y);
+  AbstractLauncherIcon::Ptr const& launcher_icon = MouseIconIntersection(_mouse_position.x, _mouse_position.y);
 
   if (launcher_icon)
   {
@@ -2423,9 +2436,7 @@ void Launcher::MouseDownLogic(int x, int y, unsigned long button_flags, unsigned
 
 void Launcher::MouseUpLogic(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  AbstractLauncherIcon::Ptr launcher_icon;
-
-  launcher_icon = MouseIconIntersection(_mouse_position.x, _mouse_position.y);
+  AbstractLauncherIcon::Ptr const& launcher_icon = MouseIconIntersection(_mouse_position.x, _mouse_position.y);
 
   sources_.Remove(START_DRAGICON_TIMEOUT);
 
@@ -2452,7 +2463,7 @@ void Launcher::MouseUpLogic(int x, int y, unsigned long button_flags, unsigned l
   _icon_mouse_down = nullptr;
 }
 
-AbstractLauncherIcon::Ptr Launcher::MouseIconIntersection(int x, int y)
+AbstractLauncherIcon::Ptr Launcher::MouseIconIntersection(int x, int y) const
 {
   LauncherModel::iterator it;
   // We are looking for the icon at screen coordinates x, y;
@@ -2479,7 +2490,7 @@ AbstractLauncherIcon::Ptr Launcher::MouseIconIntersection(int x, int y)
   return AbstractLauncherIcon::Ptr();
 }
 
-void Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherIcon::Ptr icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
+void Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherIcon::Ptr const& icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
 {
   RenderArg arg;
   struct timespec current;
@@ -2721,7 +2732,7 @@ void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
   }
 
   EventLogic();
-  AbstractLauncherIcon::Ptr hovered_icon = MouseIconIntersection(_mouse_position.x, _mouse_position.y);
+  AbstractLauncherIcon::Ptr const& hovered_icon = MouseIconIntersection(_mouse_position.x, _mouse_position.y);
 
   bool hovered_icon_is_appropriate = false;
   if (hovered_icon)
@@ -2824,6 +2835,7 @@ AbstractLauncherIcon::Ptr Launcher::GetSelectedMenuIcon() const
 {
   if (!IsInKeyNavMode())
     return AbstractLauncherIcon::Ptr();
+
   return _model->Selection();
 }
 

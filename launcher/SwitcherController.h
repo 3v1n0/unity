@@ -110,7 +110,7 @@ protected:
   virtual void ShowView();
 
   virtual bool OnDetailTimer();
-  void OnModelSelectionChanged(launcher::AbstractLauncherIcon::Ptr icon);
+  void OnModelSelectionChanged(launcher::AbstractLauncherIcon::Ptr const& icon);
 
   unsigned int construct_timeout_;
 
@@ -123,7 +123,7 @@ private:
   };
 
   void OnBackgroundUpdate(GVariant* data);
-  static bool CompareSwitcherItemsPriority(launcher::AbstractLauncherIcon::Ptr first, launcher::AbstractLauncherIcon::Ptr second);
+  static bool CompareSwitcherItemsPriority(launcher::AbstractLauncherIcon::Ptr const& first, launcher::AbstractLauncherIcon::Ptr const& second);
 
   SwitcherModel::Ptr model_;
   SwitcherView::Ptr view_;

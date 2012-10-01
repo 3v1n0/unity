@@ -790,27 +790,36 @@ class PanelMenuTests(PanelTestsBase):
 
     scenarios = _make_monitor_scenarios()
 
+    def start_test_app_with_menus(self):
+        window_spec = {
+            "Title": "Test Application with Menus",
+            "Menu": [
+                {
+                    "Title": "&File",
+                    "Menu": ["Open", "Save", "Save As", "Quit"]
+                },
+                {"Title": "&Edit"},
+                {"Title": "&Quit"}
+                ]
+        }
+        self.launch_test_window(window_spec)
+
     def test_menus_are_added_on_new_application(self):
         """Tests that menus are added when a new application is opened."""
-        self.open_new_application_window("Calculator")
+        self.start_test_app_with_menus()
 
         refresh_fn = lambda: len(self.panel.menus.get_entries())
         self.assertThat(refresh_fn, Eventually(Equals(3)))
 
         menu_view = self.panel.menus
-        self.assertThat(lambda: menu_view.get_menu_by_label("_Calculator"), Eventually(NotEquals(None)))
-        self.assertThat(lambda: menu_view.get_menu_by_label("_Mode"), Eventually(NotEquals(None)))
-        self.assertThat(lambda: menu_view.get_menu_by_label("_Help"), Eventually(NotEquals(None)))
+        self.assertThat(lambda: menu_view.get_menu_by_label("_File"), Eventually(NotEquals(None)))
+        self.assertThat(lambda: menu_view.get_menu_by_label("_Edit"), Eventually(NotEquals(None)))
+        self.assertThat(lambda: menu_view.get_menu_by_label("_Quit"), Eventually(NotEquals(None)))
 
     def test_menus_are_not_shown_if_the_application_has_no_menus(self):
-        """Tests that if an application has no menus, then they are not
-        shown or added.
-        """
-        # TODO: This doesn't test what it says on the tin. Setting MENUPROXY to ''
-        # just makes the menu appear inside the app. That's fine, but it's not
-        # what is described in the docstring or test id.
-        self.patch_environment("UBUNTU_MENUPROXY", "")
-        calc_win = self.open_new_application_window("Calculator")
+        """Applications with no menus must not show menus in the panel."""
+
+        test_win = self.launch_test_window()
 
         self.assertThat(
             lambda: len(self.panel.menus.get_entries()),
@@ -818,12 +827,13 @@ class PanelMenuTests(PanelTestsBase):
             "Current panel entries are: %r" % self.panel.menus.get_entries())
 
         self.panel.move_mouse_over_grab_area()
-        self.assertThat(self.panel.title, Eventually(Equals(calc_win.application.name)))
+        self.assertThat(self.panel.title, Eventually(Equals(test_win.application.name)))
 
     def test_menus_shows_when_new_application_is_opened(self):
-        """This tests the menu discovery feature on new application."""
+        """When starting a new application, menus must first show, then hide."""
 
-        self.open_new_application_window("Calculator")
+        self.start_test_app_with_menus()
+
         self.assertThat(self.panel.menus_shown, Eventually(Equals(True)))
         self.sleep_menu_settle_period()
         self.assertThat(self.panel.menus_shown, Eventually(Equals(False)))

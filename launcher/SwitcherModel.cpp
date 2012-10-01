@@ -230,7 +230,7 @@ void SwitcherModel::PrevDetail ()
 }
 
 void
-SwitcherModel::Select(AbstractLauncherIcon::Ptr selection)
+SwitcherModel::Select(AbstractLauncherIcon::Ptr const& selection)
 {
   int i = 0;
   for (iterator it = begin(), e = end(); it != e; ++it)

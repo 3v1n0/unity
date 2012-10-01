@@ -10,15 +10,23 @@
 
 from __future__ import absolute_import
 
-from autopilot.emulators.bamf import BamfWindow
+
 from autopilot.matchers import Eventually
 from autopilot.testcase import AutopilotTestCase
 from dbus import DBusException
 from logging import getLogger
 import os
 from tempfile import mktemp
+try:
+    import testapp
+    import json
+    HAVE_TESTAPP=True
+except ImportError:
+    HAVE_TESTAPP=False
+import tempfile
 from testtools.content import text_content
 from testtools.matchers import Equals
+from unittest.case import SkipTest
 
 from unity.emulators import ensure_unity_is_running
 from unity.emulators.screen import Screen
@@ -219,3 +227,33 @@ class UnityTestCase(AutopilotTestCase):
         """Asserts that 'app' eventually has 'num' wins. Waits up to 10 seconds."""
 
         self.assertThat(lambda: len(app.get_windows()), Eventually(Equals(num)))
+
+    def launch_test_window(self, window_spec={}):
+        """Launch a test window, for the duration of this test only.
+
+        This uses the 'testapp' application, which is not part of the
+        python-autopilot or unity-autopilot packages. To use this method, you
+        must have python-testapp installed. If the python-testapp packge is not
+        installed, this method will raise a SkipTest exception, causing the
+        calling test to be silently skipped.
+
+        window_spec is a list or dictionary that conforms to the testapp
+        specification.
+
+        """
+        if not HAVE_TESTAPP:
+            raise SkipTest("The python-testapp package is required to run this test.")
+
+        if 'Test App' not in self.KNOWN_APPS:
+            self.register_known_application(
+                'Test App',
+                'testapp.desktop',
+                'testapp'
+                )
+        if window_spec:
+            file_path = tempfile.mktemp()
+            json.dump(window_spec, open(file_path, 'w'))
+            self.addCleanup(os.remove, file_path)
+            return self.start_app_window('Test App', [file_path])
+        else:
+            return self.start_app_window('Test App')

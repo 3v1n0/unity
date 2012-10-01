@@ -72,7 +72,7 @@ add_executable (test-unit
                 ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
                 ${CMAKE_SOURCE_DIR}/unity-shared/ubus-server.cpp
                 )
-target_link_libraries (test-unit ${LIBS})
+target_link_libraries (test-unit unity-shared ${LIBS})
 add_dependencies (test-unit unity-core-${UNITY_API_VERSION})
 add_subdirectory (test-input-remover)
 add_subdirectory (test-minimize-window-handler)
@@ -111,7 +111,7 @@ if (GTEST_SRC_DIR AND
                  test_service_main.c
                  test_service_model.c
                  test_service_model.h)
-  target_link_libraries(test-gtest-service ${LIBS})
+  target_link_libraries(test-gtest-service unity-shared ${LIBS})
   add_dependencies (test-gtest-service unity-core-${UNITY_API_VERSION} gtest)
 
 
@@ -176,7 +176,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-texture.cpp
                  ${CMAKE_SOURCE_DIR}/hud/HudPrivate.cpp
                  )
-  target_link_libraries(test-gtest-xless gtest ${GMOCK_LIB} ${GMOCK_MAIN_LIB} ${LIBS})
+  target_link_libraries(test-gtest-xless gtest unity-shared ${GMOCK_LIB} ${GMOCK_MAIN_LIB} ${LIBS})
   add_test(UnityGTestXless test-gtest-xless)
   add_dependencies(test-gtest-xless unity-core-${UNITY_API_VERSION} gtest)
 
@@ -194,7 +194,7 @@ if (GTEST_SRC_DIR AND
                  test_ratings_filter.cpp
                  test_results.cpp
                 )
-  target_link_libraries(test-gtest-dbus gtest ${LIBS})
+  target_link_libraries(test-gtest-dbus gtest unity-shared ${LIBS})
   add_test(UnityGTestDBus test-gtest-dbus)
   add_dependencies(test-gtest-dbus unity-core-${UNITY_API_VERSION} test-gtest-service gtest)
 
@@ -358,7 +358,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/unity-shared/ubus-server.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unityshell/src/WindowMinimizeSpeedController.cpp
                 )
-  target_link_libraries(test-gtest gtest gmock ${LIBS})
+  target_link_libraries(test-gtest gtest gmock unity-shared ${LIBS})
   add_test(UnityGTest test-gtest)
   add_dependencies(test-gtest unity-core-${UNITY_API_VERSION} gtest gmock)
 

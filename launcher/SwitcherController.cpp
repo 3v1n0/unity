@@ -133,7 +133,7 @@ bool Controller::OnDetailTimer()
   return false;
 }
 
-void Controller::OnModelSelectionChanged(AbstractLauncherIcon::Ptr icon)
+void Controller::OnModelSelectionChanged(AbstractLauncherIcon::Ptr const& icon)
 {
   if (detail_on_timeout)
   {
@@ -230,7 +230,7 @@ void Controller::Hide(bool accept_state)
 
   if (accept_state)
   {
-    AbstractLauncherIcon::Ptr selection = model_->Selection();
+    AbstractLauncherIcon::Ptr const& selection = model_->Selection();
     if (selection)
     {
       if (model_->detail_selection)
@@ -421,8 +421,8 @@ int Controller::StartIndex() const
   return (show_desktop_disabled_ ? 0 : 1);
 }
 
-bool Controller::CompareSwitcherItemsPriority(AbstractLauncherIcon::Ptr first,
-                                              AbstractLauncherIcon::Ptr second)
+bool Controller::CompareSwitcherItemsPriority(AbstractLauncherIcon::Ptr const& first,
+                                              AbstractLauncherIcon::Ptr const& second)
 {
   if (first->GetIconType() == second->GetIconType())
     return first->SwitcherPriority() > second->SwitcherPriority();
@@ -444,8 +444,8 @@ void Controller::SelectFirstItem()
   int first_icon_index = StartIndex();
   int second_icon_index = first_icon_index + 1;
 
-  AbstractLauncherIcon::Ptr first  = model_->at(first_icon_index);
-  AbstractLauncherIcon::Ptr second = model_->at(second_icon_index);
+  AbstractLauncherIcon::Ptr const& first  = model_->at(first_icon_index);
+  AbstractLauncherIcon::Ptr const& second = model_->at(second_icon_index);
 
   if (!first)
   {
