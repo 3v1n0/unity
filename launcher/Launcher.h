@@ -43,7 +43,6 @@
 #include "unity-shared/UBusWrapper.h"
 #include "SoftwareCenterLauncherIcon.h"
 
-
 namespace unity
 {
 namespace launcher
