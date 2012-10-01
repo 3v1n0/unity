@@ -1,3 +1,10 @@
+unity (6.6.0-0ubuntu3) quantal; urgency=low
+
+  * debian/unity-crashdb.conf:
+    - Update dictionary option for follow latest apport spec 
+
+ -- Ángel Guzmán Maeso <angel@quijost.com>  Mon, 01 Oct 2012 15:04:00 +0200
+
 unity (6.6.0-0ubuntu2) quantal; urgency=low
 
   [ Łukasz 'sil2100' Zemczak ]
