@@ -48,6 +48,7 @@ public:
     : parent_(owner)
     , gsettings_(g_settings_new(SETTINGS_NAME.c_str()))
     , cached_form_factor_(FormFactor::DESKTOP)
+    , lowGfx_(false)
   {
     CacheFormFactor();
 
@@ -89,6 +90,7 @@ public:
   Settings* parent_;
   glib::Object<GSettings> gsettings_;
   FormFactor cached_form_factor_;
+  bool lowGfx_;
 
   glib::Signal<void, GSettings*, gchar* > form_factor_changed_;
 };
@@ -105,8 +107,9 @@ Settings::Settings()
   {
     LOG_ERROR(logger) << "More than one unity::Settings created.";
   }
+  
   else
-  {
+  { 
     form_factor.SetGetterFunction(sigc::mem_fun(*pimpl, &Impl::GetFormFactor));
     form_factor.SetSetterFunction(sigc::mem_fun(*pimpl, &Impl::SetFormFactor));
 
@@ -130,5 +133,14 @@ Settings& Settings::Instance()
   return *settings_instance;
 }
 
+bool Settings::GetLowGfxMode() const
+{
+  return pimpl->lowGfx_;
+}
+
+void Settings::SetLowGfxMode(const bool low_gfx)
+{
+  pimpl->lowGfx_ = low_gfx;
+}
 
 } // namespace unity

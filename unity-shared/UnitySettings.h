@@ -42,6 +42,8 @@ public:
   ~Settings();
 
   static Settings& Instance();
+  bool GetLowGfxMode() const;
+  void SetLowGfxMode(const bool low_gfx);
 
   nux::RWProperty<FormFactor> form_factor;
   nux::Property<bool> is_standalone;
