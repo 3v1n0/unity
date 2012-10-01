@@ -33,7 +33,7 @@
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/LineSeparator.h"
-#include "unity-shared/ubus-server.h"
+#include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
 
 

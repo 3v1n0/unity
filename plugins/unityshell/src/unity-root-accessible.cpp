@@ -30,6 +30,8 @@
 #include "nux-base-window-accessible.h"
 #include "unitya11y.h"
 
+#include <UnityCore/Variant.h>
+
 #include "UBusWrapper.h"
 #include "UBusMessages.h"
 
@@ -352,7 +354,7 @@ search_for_launcher_window(UnityRootAccessible* self)
 }
 
 static void
-ubus_launcher_register_interest_cb(GVariant* variant,
+ubus_launcher_register_interest_cb(unity::glib::Variant const& variant,
                                    UnityRootAccessible* self)
 {
   //launcher window is the same during all the life of Unity

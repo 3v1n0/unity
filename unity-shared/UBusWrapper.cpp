@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -13,65 +13,59 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ * Authored by: Michal Hruby <michal.hruby@canonical.com>
  */
+
+#include <boost/lexical_cast.hpp>
+#include <NuxCore/Logger.h>
 
 #include "UBusWrapper.h"
 
 namespace unity
 {
 
+// initialize the global static ptr
+std::unique_ptr<UBusServer> UBusManager::server(new UBusServer());
+
 UBusManager::UBusManager()
-  : server_(ubus_server_get_default())
-{}
+{
+}
 
 UBusManager::~UBusManager()
 {
-  for (auto connection: connections_)
+  // we don't want to modify a container while iterating it
+  std::set<unsigned> ids_copy(connection_ids_);
+  for (auto it = ids_copy.begin(); it != ids_copy.end(); ++it)
   {
-    ubus_server_unregister_interest(server_, connection->id);
+    UnregisterInterest(*it);
   }
 }
 
-void UBusManager::RegisterInterest(std::string const& interest_name,
-                                   UBusManagerCallback slot)
+unsigned UBusManager::RegisterInterest(std::string const& interest_name,
+                                       UBusCallback const& slot)
 {
-  if (!slot || interest_name.empty())
-    return;
+  unsigned c_id = server->RegisterInterest(interest_name, slot);
 
-  auto connection = std::make_shared<UBusConnection>();
-  connection->name = interest_name;
-  connection->slot = slot;
-  connection->id = ubus_server_register_interest(server_,
-                                                 interest_name.c_str(),
-                                                 UBusManager::OnCallback,
-                                                 connection.get());
-  connections_.push_back(connection);
+  if (c_id != 0) connection_ids_.insert(c_id);
+
+  return c_id;
 }
 
-void UBusManager::UnregisterInterest(std::string const& interest_name)
+void UBusManager::UnregisterInterest(unsigned connection_id)
 {
-  for (auto it = connections_.begin(); it != connections_.end(); ++it)
+  auto it = connection_ids_.find(connection_id);
+  if (it != connection_ids_.end())
   {
-    if ((*it)->name == interest_name)
-    {
-      ubus_server_unregister_interest(server_, (*it)->id);
-      connections_.erase(it);
-      break;
-    }
+    server->UnregisterInterest(connection_id);
+    connection_ids_.erase(it);
   }
 }
 
-void UBusManager::OnCallback(GVariant* args, gpointer user_data)
+void UBusManager::SendMessage(std::string const& message_name,
+                              glib::Variant const& args,
+                              glib::Source::Priority prio)
 {
-  UBusConnection* connection = static_cast<UBusConnection*>(user_data);
-
-  connection->slot(args);
-}
-
-void UBusManager::SendMessage(std::string const& message_name, GVariant* args)
-{
-  ubus_server_send_message(server_, message_name.c_str(), args);
+  server->SendMessageFull(message_name, args, prio);
 }
 
 }

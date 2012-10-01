@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2012 Canonical Ltd
+ * Copyright (C) 2010 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,40 +16,56 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_UBUS_WRAPPER_H
-#define UNITY_UBUS_WRAPPER_H
+#ifndef UNITY_UBUS_SERVER_H
+#define UNITY_UBUS_SERVER_H
 
 #include <memory>
 #include <string>
 #include <vector>
 #include <boost/utility.hpp>
 #include <map>
-#include <set>
 
 #include <UnityCore/Variant.h>
 #include <UnityCore/GLibSource.h>
 
-#include "UBusServer.h"
-
 namespace unity
 {
 
-class UBusManager : public boost::noncopyable
+typedef std::function<void(glib::Variant const&)> UBusCallback;
+
+class UBusServer : public boost::noncopyable
 {
 public:
-  UBusManager();
-  ~UBusManager();
+  UBusServer();
+  ~UBusServer();
 
   unsigned RegisterInterest(std::string const& interest_name,
                             UBusCallback const& slot);
   void UnregisterInterest(unsigned connection_id);
-  static void SendMessage(std::string const& message_name,
-                          glib::Variant const& args = glib::Variant(),
-                          glib::Source::Priority prio = glib::Source::Priority::DEFAULT);
+  void SendMessage(std::string const& message_name,
+                   glib::Variant const& args = glib::Variant());
+  void SendMessageFull(std::string const& message_name,
+                       glib::Variant const& args,
+                       glib::Source::Priority prio);
 
 private:
-  static std::unique_ptr<UBusServer> server;
-  std::set<unsigned> connection_ids_;
+  struct UBusConnection
+  {
+    typedef std::shared_ptr<UBusConnection> Ptr;
+
+    UBusCallback slot;
+    unsigned id;
+
+    UBusConnection(UBusCallback const& cb, unsigned connection_id)
+      : slot(cb), id(connection_id) {}
+  };
+
+  bool DispatchMessages(glib::Source::Priority);
+
+  unsigned last_id_;
+  std::multimap<std::string, UBusConnection::Ptr> interests_;
+  std::multimap<int, std::pair<std::string, glib::Variant> > msg_queue_;
+  glib::SourceManager source_manager_;
 };
 
 }

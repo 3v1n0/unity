@@ -58,6 +58,7 @@
 #include "unitya11y.h"
 
 #include "UBusMessages.h"
+#include "UBusWrapper.h"
 #include "UScreen.h"
 
 #include "config.h"

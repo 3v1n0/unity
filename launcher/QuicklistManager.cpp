@@ -25,7 +25,7 @@
 #include "QuicklistView.h"
 #include "QuicklistManager.h"
 
-#include "unity-shared/ubus-server.h"
+#include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
 
 namespace unity
@@ -109,8 +109,7 @@ void QuicklistManager::RecvShowQuicklist(nux::BaseWindow* window)
   _current_quicklist = quicklist;
 
   quicklist_opened.emit(quicklist);
-  UBusServer* ubus = ubus_server_get_default();
-  ubus_server_send_message(ubus, UBUS_QUICKLIST_SHOWN, NULL);
+  UBusManager::SendMessage(UBUS_QUICKLIST_SHOWN);
 }
 
 void QuicklistManager::RecvHideQuicklist(nux::BaseWindow* window)

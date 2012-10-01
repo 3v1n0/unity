@@ -24,7 +24,7 @@
 #include <UnityCore/Variant.h>
 
 #include "unity-shared/CairoTexture.h"
-#include "unity-shared/ubus-server.h"
+#include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
 
 #include "Tooltip.h"
@@ -105,8 +105,7 @@ void Tooltip::ShowTooltipWithTipAt(int anchor_tip_x, int anchor_tip_y)
   PushToFront();
 
   ShowWindow(true);
-  UBusServer* ubus = ubus_server_get_default();
-  ubus_server_send_message(ubus, UBUS_TOOLTIP_SHOWN, NULL);
+  UBusManager::SendMessage(UBUS_TOOLTIP_SHOWN);
 }
 
 void Tooltip::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)

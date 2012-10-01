@@ -147,6 +147,7 @@ if (GTEST_SRC_DIR AND
                  test_shortcut_model.cpp
                  test_shortcut_private.cpp
                  test_showdesktop_handler.cpp
+                 test_ubus.cpp
                  test_unityshell_private.cpp
                  ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/AbstractLauncherIcon.cpp
@@ -166,6 +167,8 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/unity-shared/Introspectable.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/TextureCache.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/Timer.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/UBusServer.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/UBusWrapper.cpp
                  ${UNITY_SRC}/UnityshellPrivate.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/WindowManager.cpp
                  ${UNITY_SRC}/UnityShowdesktopHandler.cpp
@@ -348,6 +351,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/unity-shared/Timer.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/TextureThumbnailProvider.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/ThumbnailGenerator.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/UBusServer.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/UBusWrapper.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/UScreen.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/UnitySettings.cpp
@@ -355,7 +359,6 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/unity-shared/UnityWindowView.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/UserThumbnailProvider.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/WindowManager.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/ubus-server.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unityshell/src/WindowMinimizeSpeedController.cpp
                 )
   target_link_libraries(test-gtest gtest gmock ${LIBS})

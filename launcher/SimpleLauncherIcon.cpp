@@ -28,7 +28,7 @@
 #include "SimpleLauncherIcon.h"
 #include "unity-shared/PluginAdapter.h"
 
-#include "unity-shared/ubus-server.h"
+#include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
 
 namespace unity
@@ -93,8 +93,7 @@ void SimpleLauncherIcon::OnMouseLeave(int monitor)
 void SimpleLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   activate.emit();
-  ubus_server_send_message(ubus_server_get_default(),
-                           UBUS_PLACE_VIEW_CLOSE_REQUEST,
+  UBusManager::SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST,
                            g_variant_new_boolean(FALSE));
 }
 

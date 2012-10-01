@@ -945,7 +945,8 @@ void Controller::Impl::SetupIcons()
 
 void Controller::Impl::SendHomeActivationRequest()
 {
-  ubus.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", "home.lens", dash::NOT_HANDLED, ""));
+  ubus.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                   g_variant_new("(sus)", "home.lens", dash::NOT_HANDLED, ""));
 }
 
 Controller::Controller()

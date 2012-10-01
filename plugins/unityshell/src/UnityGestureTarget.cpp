@@ -27,7 +27,7 @@
 #include "Launcher.h"
 
 #include "UBusMessages.h"
-#include "ubus-server.h"
+#include "UBusWrapper.h"
 
 using namespace nux;
 
@@ -46,9 +46,7 @@ GestureDeliveryRequest UnityGestureTarget::GestureEvent(const nux::GestureEvent 
   else if (event.GetGestureClasses() == TAP_GESTURE
       && event.type == EVENT_GESTURE_END)
   {
-    ubus_server_send_message(ubus_server_get_default(),
-                             UBUS_DASH_EXTERNAL_ACTIVATION,
-                             NULL);
+    UBusManager::SendMessage(UBUS_DASH_EXTERNAL_ACTIVATION);
   }
 
   return GestureDeliveryRequest::NONE;
