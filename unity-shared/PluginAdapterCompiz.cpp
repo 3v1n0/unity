@@ -538,40 +538,35 @@ PluginAdapter::IsWindowVisible(guint32 xid) const
 bool
 PluginAdapter::IsWindowOnTop(guint32 xid) const
 {
-  Window win = xid;
-  CompWindow* window = m_Screen->findWindow(win);
-
-  if (window)
-  {
-    if (window->inShowDesktopMode() || !window->isMapped() || !window->isViewable() || window->minimized())
-      return false;
-
-    CompPoint window_vp = window->defaultViewport();
-    nux::Geometry const& window_vp_geo = GetWorkAreaGeometry(window->id());
-    std::vector<Window> const& our_xids = nux::XInputWindow::NativeHandleList();
-
-    for (CompWindow* sibling = window->next; sibling; sibling = sibling->next)
-    {
-      if (sibling->defaultViewport() == window_vp && !sibling->minimized() &&
-          sibling->isMapped() && sibling->isViewable() && !sibling->inShowDesktopMode() &&
-          !(sibling->state() & CompWindowStateAboveMask) &&
-          !(sibling->type() & CompWindowTypeSplashMask) &&
-          !(sibling->type() & CompWindowTypeDockMask) &&
-          /* FIXME: This should be included by the above defaultViewport() check,
-           * but it doesn't seem to work correctly when there's only one workspace
-           * enabled, so please drop the line above when bug #996604 is fixed in
-           * Compiz. */
-          !window_vp_geo.Intersect(GetWindowGeometry(sibling->id())).IsNull() &&
-          std::find(our_xids.begin(), our_xids.end(), sibling->id()) == our_xids.end())
-      {
-        return false;
-      }
-    }
-
+  if (xid == GetTopMostValidWindowInViewport())
     return true;
-  }
 
   return false;
+}
+
+Window PluginAdapter::GetTopMostValidWindowInViewport() const
+{
+  CompWindow* window;
+  CompPoint screen_vp = m_Screen->vp();
+  std::vector<Window> const& our_xids = nux::XInputWindow::NativeHandleList();
+
+  auto const& windows = m_Screen->windows();
+  for (auto it = windows.rbegin(); it != windows.rend(); ++it)
+  {
+    window = *it;
+    if (window->defaultViewport() == screen_vp &&
+        window->isViewable() && window->isMapped() &&
+        !window->minimized() && !window->inShowDesktopMode() &&
+        !(window->state() & CompWindowStateAboveMask) &&
+        !(window->type() & CompWindowTypeSplashMask) &&
+        !(window->type() & CompWindowTypeDockMask) &&
+        !window->overrideRedirect() &&
+        std::find(our_xids.begin(), our_xids.end(), window->id()) == our_xids.end())
+    {
+      return window->id();
+    }
+  }
+  return 0;
 }
 
 bool

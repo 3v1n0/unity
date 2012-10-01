@@ -1335,11 +1335,12 @@ void Launcher::UpdateChangeInMousePosition(int delta_x, int delta_y)
 
   // check the state before changing it to avoid uneeded hide calls
   if (!_hide_machine.GetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL) &&
-     (nux::Abs(_postreveal_mousemove_delta_x) > MOUSE_DEADZONE ||
-     nux::Abs(_postreveal_mousemove_delta_y) > MOUSE_DEADZONE))
-       _hide_machine.SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, true);
+     (std::abs(_postreveal_mousemove_delta_x) > MOUSE_DEADZONE ||
+      std::abs(_postreveal_mousemove_delta_y) > MOUSE_DEADZONE))
+  {
+    _hide_machine.SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, true);
+  }
 }
-
 
 int Launcher::GetMouseX() const
 {
@@ -2106,6 +2107,12 @@ void Launcher::ShowDragWindow()
 
 void Launcher::HideDragWindow()
 {
+  nux::Geometry const& abs_geo = GetAbsoluteGeometry();
+  nux::Point const& mouse = nux::GetWindowCompositor().GetMousePosition();
+
+  if (abs_geo.IsInside(mouse))
+    mouse_enter.emit(mouse.x - abs_geo.x, mouse.y - abs_geo.y, 0, 0);
+
   if (!_drag_window)
     return;
 
