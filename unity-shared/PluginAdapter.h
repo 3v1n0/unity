@@ -40,20 +40,23 @@ typedef struct
 class MultiActionList
 {
 public:
+  MultiActionList() :
+    primary_action_(nullptr)
+  {}
 
-  MultiActionList(int n) :
-    m_ActionList(n),
-    _primary_action(NULL) {};
+  void Initiate(std::string const& name, CompOption::Vector const& extra_args = CompOption::Vector(), int state = 0) const;
+  void InitiateAll(CompOption::Vector const& extra_args = CompOption::Vector(), int state = 0) const;
+  void TerminateAll(CompOption::Vector const& extra_args = CompOption::Vector()) const;
 
-  void InitiateAll(CompOption::Vector& extraArgs, int state);
-  void TerminateAll(CompOption::Vector& extraArgs);
+  void AddNewAction(std::string const& name, CompAction*, bool primary);
+  void RemoveAction(std::string const& name);
+  bool HasPrimary() const;
 
-  void AddNewAction(CompAction*, bool primary);
-  void RemoveAction(CompAction*);
 private:
+  CompAction* GetAction(std::string const& name) const;
 
-  std::list <CompAction*> m_ActionList;
-  CompAction*              _primary_action;
+  CompAction* primary_action_;
+  std::map<std::string, CompAction*> actions_;
 };
 
 
@@ -174,7 +177,7 @@ protected:
   void AddProperties(GVariantBuilder* builder);
 
 private:
-  std::string MatchStringForXids(std::vector<Window> *windows);
+  std::string MatchStringForXids(std::vector<Window> const& windows);
   void InitiateScale(std::string const& match, int state = 0);
 
   bool CheckWindowIntersection(nux::Geometry const& region, CompWindow* window) const;
