@@ -99,6 +99,7 @@ public:
   bool IsScaleActiveForGroup() const;
 
   void InitiateExpo();
+  void TerminateExpo();
   bool IsExpoActive() const;
 
   bool IsWallActive() const;

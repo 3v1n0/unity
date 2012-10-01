@@ -2236,12 +2236,18 @@ bool UnityScreen::initPluginActions()
     {
       std::string const& option_name = option.name();
 
-      if (option_name == "expo_key" ||
-          option_name == "expo_button" ||
-          option_name == "expo_edge")
+      if (!expoActions.HasPrimary() &&
+          (option_name == "expo_key" ||
+           option_name == "expo_button" ||
+           option_name == "expo_edge"))
       {
         CompAction* action = &option.value().action();
         expoActions.AddNewAction(option_name, action, true);
+      }
+      else if (option_name == "exit_button")
+      {
+        CompAction* action = &option.value().action();
+        expoActions.AddNewAction(option_name, action, false);
       }
     }
 

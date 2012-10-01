@@ -419,6 +419,11 @@ void PluginAdapter::InitiateExpo()
   m_ExpoActionList.InitiateAll();
 }
 
+void PluginAdapter::TerminateExpo()
+{
+  m_ExpoActionList.Initiate("exit_button");
+}
+
 // WindowManager implementation
 guint32
 PluginAdapter::GetActiveWindow() const
