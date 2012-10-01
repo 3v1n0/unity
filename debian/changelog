@@ -1,4 +1,4 @@
-unity (6.6.0-0ubuntu3) UNRELEASED; urgency=low
+unity (6.6.0-0ubuntu3) quantal-proposed; urgency=low
 
   * Upload to quantal-proposed for the compiz abi transition
 
