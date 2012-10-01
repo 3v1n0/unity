@@ -204,10 +204,10 @@ UnityScreen::UnityScreen(CompScreen* screen)
     //In case of software rendering then enable lowgfx mode.
   std::string renderer = ANSI_TO_TCHAR(NUX_REINTERPRET_CAST(const char *, glGetString(GL_RENDERER)));
   
-  if ((strcmp(renderer.c_str(), "Software Rasterizer") == 0) ||
-      (strcmp(renderer.c_str(), "Mesa X11") == 0) ||
-      (strcmp(renderer.c_str(), "LLVM") == 0) ||
-      (strcmp(renderer.c_str(), "on softpipe") == 0) ||
+  if ((strstr(renderer.c_str(), "Software Rasterizer")) ||
+      (strstr(renderer.c_str(), "Mesa X11")) ||
+      (strstr(renderer.c_str(), "LLVM")) ||
+      (strstr(renderer.c_str(), "on softpipe")) ||
       (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 1))
       {
         Settings::Instance().SetLowGfxMode(true);
