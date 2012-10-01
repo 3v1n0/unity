@@ -986,7 +986,7 @@ void HomeLens::Impl::LensSearchFinished(Lens::Ptr const& lens)
   {
     unsigned shopping_cat_num = order_vector.at(shopping_index);
     order_vector.erase(order_vector.begin() + shopping_index);
-    order_vector.insert(order_vector.begin() + 2, shopping_cat_num);
+    order_vector.insert(order_vector.size() > 2 ? order_vector.begin() + 2 : order_vector.end(), shopping_cat_num);
   }
 
   if (cached_categories_order_ != order_vector)
