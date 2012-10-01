@@ -210,7 +210,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
       (strcmp(renderer.c_str(), "Mesa X11") == 0) ||
       (strcmp(renderer.c_str(), "LLVM") == 0) ||
       (strcmp(renderer.c_str(), "on softpipe") == 0) ||
-      (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("LOW_GFX_MODE")) == 1))
+      (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 1))
       {
         Settings::Instance().SetLowGfxMode(true);
       }
