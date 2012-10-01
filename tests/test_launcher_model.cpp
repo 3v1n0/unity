@@ -79,7 +79,7 @@ TEST_F(TestLauncherModel, Remove)
 TEST_F(TestLauncherModel, AddSignal)
 {
   bool icon_added = false;
-  model.icon_added.connect([&icon_added] (AbstractLauncherIcon::Ptr) { icon_added = true; });
+  model.icon_added.connect([&icon_added] (AbstractLauncherIcon::Ptr const&) { icon_added = true; });
 
   model.AddIcon(icon1);
   EXPECT_TRUE(icon_added);
@@ -96,7 +96,7 @@ TEST_F(TestLauncherModel, AddSignal)
 TEST_F(TestLauncherModel, RemoveSignal)
 {
   bool icon_removed = false;
-  model.icon_removed.connect([&icon_removed] (AbstractLauncherIcon::Ptr) { icon_removed = true; });
+  model.icon_removed.connect([&icon_removed] (AbstractLauncherIcon::Ptr const&) { icon_removed = true; });
 
   model.AddIcon(icon1);
   EXPECT_FALSE(icon_removed);
