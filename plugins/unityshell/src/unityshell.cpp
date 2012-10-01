@@ -37,6 +37,7 @@
 #include "StartupNotifyService.h"
 #include "Timer.h"
 #include "KeyboardUtil.h"
+#include "glow_texture.h"
 #include "unityshell.h"
 #include "BackgroundEffectHelper.h"
 #include "UnityGestureBroker.h"
@@ -104,6 +105,19 @@ const unsigned int SCROLL_UP_BUTTON = 7;
 
 const std::string RELAYOUT_TIMEOUT = "relayout-timeout";
 } // namespace local
+
+namespace scale
+{
+namespace decoration
+{
+const unsigned CLOSE_SIZE = 19;
+const unsigned ITEMS_PADDING = 5;
+const unsigned RADIUS = 8;
+const unsigned GLOW = 20;
+const nux::Color GLOW_COLOR(221, 72, 20);
+} // decoration namespace
+} // scale namespace
+
 } // anon namespace
 
 UnityScreen::UnityScreen(CompScreen* screen)
@@ -2495,6 +2509,15 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     uScreen->paintPanelShadow(region);
   }
 
+  if (WindowManager::Default()->IsScaleActive() && ScaleScreen::get(screen)->getSelectedWindow() == window->id())
+  {
+    if (!region.isEmpty())
+    {
+      double scale = ScaleWindow::get(window)->getCurrentPosition().scale;
+      glow::Quads const& quads = computeGlowQuads(glow_texture_, scale::decoration::GLOW, scale);
+      paintGlow(matrix, attrib, region, quads, glow_texture_, scale::decoration::GLOW_COLOR, mask);
+    }
+  }
 
   return ret;
 }
@@ -3404,16 +3427,7 @@ void UnityScreen::InitGesturesSupport()
 GLTexture::List UnityWindow::close_normal_tex_;
 GLTexture::List UnityWindow::close_prelight_tex_;
 GLTexture::List UnityWindow::close_pressed_tex_;
-
-namespace scale
-{
-namespace decoration
-{
-const unsigned CLOSE_SIZE = 19;
-const unsigned ITEMS_PADDING = 5;
-const unsigned RADIUS = 8;
-}
-}
+GLTexture::List UnityWindow::glow_texture_;
 
 struct UnityWindow::CairoContext
 {
@@ -3692,10 +3706,10 @@ void UnityWindow::LoadCloseIcon(panel::WindowState state, GLTexture::List& textu
   if (!texture.empty())
     return;
 
+  CompString plugin("unityshell");
   auto& style = panel::Style::Instance();
   auto const& files = style.GetWindowButtonFileNames(panel::WindowButtonType::CLOSE, state);
 
-  CompString plugin("unityshell");
   for (std::string const& file : files)
   {
     CompString file_name = file;
@@ -3724,6 +3738,12 @@ void UnityWindow::SetupSharedTextures()
   LoadCloseIcon(panel::WindowState::NORMAL, close_normal_tex_);
   LoadCloseIcon(panel::WindowState::PRELIGHT, close_prelight_tex_);
   LoadCloseIcon(panel::WindowState::PRESSED, close_pressed_tex_);
+
+  if (glow_texture_.empty())
+  {
+    CompSize size(texture::GLOW_SIZE, texture::GLOW_SIZE);
+    glow_texture_ = GLTexture::imageDataToTexture(texture::GLOW, size, GL_RGBA, GL_UNSIGNED_BYTE);
+  }
 }
 
 void UnityWindow::CleanupSharedTextures()
@@ -3731,6 +3751,7 @@ void UnityWindow::CleanupSharedTextures()
   close_normal_tex_.clear();
   close_prelight_tex_.clear();
   close_pressed_tex_.clear();
+  glow_texture_.clear();
 }
 
 void UnityWindow::CleanupCachedTextures()
@@ -3891,6 +3912,7 @@ UnityWindow::~UnityWindow()
 
   PluginAdapter::Default ()->OnWindowClosed(window);
 }
+
 
 /* vtable init */
 bool UnityPluginVTable::init()
