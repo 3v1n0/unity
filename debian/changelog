@@ -1,3 +1,9 @@
+unity (6.6.0-0ubuntu3) UNRELEASED; urgency=low
+
+  * Upload to quantal-proposed for the compiz abi transition
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Mon, 01 Oct 2012 19:38:57 +0200
+
 unity (6.6.0-0ubuntu2) quantal; urgency=low
 
   [ Łukasz 'sil2100' Zemczak ]
