@@ -157,7 +157,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
     return nux::ObjectPtr<nux::IOpenGLBaseTexture>();
   }
 
-  int opengl_version = gpu_device->GetGpuInfo().GetOpenGLMajorVersion();
+  int opengl_version = gpu_device->GetOpenGLMajorVersion();
   int sigma = opengl_version >= 3 ? sigma_high : sigma_med;
   int radius = 3 * sigma;
 
