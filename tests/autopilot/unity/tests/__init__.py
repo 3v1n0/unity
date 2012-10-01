@@ -254,6 +254,6 @@ class UnityTestCase(AutopilotTestCase):
             file_path = tempfile.mktemp()
             json.dump(window_spec, open(file_path, 'w'))
             self.addCleanup(os.remove, file_path)
-            return self.start_app_window('Test App', file_path)
+            return self.start_app_window('Test App', [file_path])
         else:
             return self.start_app_window('Test App')
