@@ -23,7 +23,6 @@
 #include <Nux/PaintLayer.h>
 #include <Nux/View.h>
 #include <Nux/VLayout.h>
-#include <Nux/NuxTimerTickSource.h>
 
 #include <UnityCore/FilesystemLenses.h>
 #include <UnityCore/HomeLens.h>
@@ -165,8 +164,6 @@ private:
 
   float fade_out_value_;
   float fade_in_value_;
-  std::unique_ptr<nux::NuxTimerTickSource> tick_source_;
-  std::unique_ptr<na::AnimationController> animation_controller_;
   na::AnimateValue<float> animation_;
 
   void FadeOutCallBack(float const& fade_out_value);

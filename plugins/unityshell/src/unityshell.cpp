@@ -24,7 +24,6 @@
 #include <Nux/HLayout.h>
 #include <Nux/BaseWindow.h>
 #include <Nux/WindowCompositor.h>
-#include <Nux/NuxTimerTickSource.h>
 
 #include <UnityCore/Variant.h>
 
@@ -131,6 +130,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , panel_texture_has_changed_(true)
   , paint_panel_(false)
   , scale_just_activated_(false)
+  , big_tick_(0)
   , screen_introspection_(screen)
 {
   Timer timer;
@@ -234,7 +234,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
                                            this));
 #endif
 
-    tick_source_.reset(new nux::NuxTimerTickSource);
+    tick_source_.reset(new na::TickSource);
     animation_controller_.reset(new na::AnimationController(*tick_source_));
 
      wt->RedrawRequested.connect(sigc::mem_fun(this, &UnityScreen::onRedrawRequested));
@@ -682,11 +682,15 @@ void UnityScreen::paintDisplay()
 
   auto gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
 
-  nux::ObjectPtr<nux::IOpenGLTexture2D> device_texture =
-    gpu_device->CreateTexture2DFromID(gScreen->fbo ()->tex ()->name (),
-                                      screen->width(), screen->height(), 1, nux::BITFMT_R8G8B8A8);
-
-  gpu_device->backup_texture0_ = device_texture;
+  if (BackgroundEffectHelper::HasDirtyHelpers())
+  {
+    auto graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
+    nux::ObjectPtr<nux::IOpenGLTexture2D> bg_texture =
+      graphics_engine->CreateTextureFromBackBuffer(0, 0,
+                                                   screen->width(),
+                                                   screen->height());
+    gpu_device->backup_texture0_ = bg_texture;
+  }
 
   nux::Geometry geo(0, 0, screen->width (), screen->height ());
   nux::Geometry outputGeo(output->x (), output->y (), output->width (), output->height ());
@@ -1297,6 +1301,9 @@ void UnityScreen::preparePaint(int ms)
 {
   cScreen->preparePaint(ms);
 
+  big_tick_ += ms*1000;
+  tick_source_->tick(big_tick_);
+
   for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
     wi->HandleAnimations (ms);
 
@@ -1317,6 +1324,9 @@ void UnityScreen::donePaint()
    */
   if (didShellRepaint)
     wt->ClearDrawList();
+
+  if (animation_controller_->HasRunningAnimations())
+    nuxDamageCompiz();
 
   std::list <ShowdesktopHandlerWindowInterface *> remove_windows;
 
@@ -1439,7 +1449,7 @@ void UnityScreen::nuxDamageCompiz()
    *       stop it. Then maybe we can revert back to the old code below #else.
    */
   std::vector<nux::Geometry> const& dirty = wt->GetDrawList();
-  if (!dirty.empty())
+  if (!dirty.empty() || animation_controller_->HasRunningAnimations())
   {
     cScreen->damageRegionSetEnabled(this, false);
     cScreen->damageScreen();
@@ -2086,7 +2096,8 @@ void UnityScreen::OnLauncherEndKeyNav(GVariant* data)
 
 void UnityScreen::OnSwitcherStart(GVariant* data)
 {
-  SaveInputThenFocus(switcher_controller_->GetSwitcherInputWindowId());
+  if (switcher_controller_->Visible())
+    SaveInputThenFocus(switcher_controller_->GetSwitcherInputWindowId());
 }
 
 void UnityScreen::OnSwitcherEnd(GVariant* data)
