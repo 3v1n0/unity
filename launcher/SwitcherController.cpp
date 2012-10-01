@@ -77,8 +77,7 @@ bool Controller::CanShowSwitcher(const std::vector<AbstractLauncherIcon::Ptr>& r
   return (!empty && !WindowManager::Default()->IsWallActive());
 }
 
-void Controller::Show(ShowMode show, SortMode sort, bool reverse,
-                      std::vector<AbstractLauncherIcon::Ptr> results)
+void Controller::Show(ShowMode show, SortMode sort, std::vector<AbstractLauncherIcon::Ptr> results)
 {
   if (results.empty())
     return;

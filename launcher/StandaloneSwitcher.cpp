@@ -104,7 +104,7 @@ void OnNumIconsChanged (nux::SpinBox *self)
   for (int i = 0; i < self->GetValue (); i++)
     icons.push_back(nux::ObjectPtr<AbstractLauncherIcon>(new MockLauncherIcon()));
 
-  view->Show(ShowMode::ALL, SortMode::FOCUS_ORDER, false, icons);
+  view->Show(ShowMode::ALL, SortMode::FOCUS_ORDER, icons);
 }
 
 void OnNextClicked (nux::View *sender)
@@ -138,7 +138,7 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   for (int i = 0; i < 9; i++)
     icons.push_back(nux::ObjectPtr<AbstractLauncherIcon>(new MockLauncherIcon()));
 
-  view->Show(ShowMode::ALL, SortMode::FOCUS_ORDER, false, icons);
+  view->Show(ShowMode::ALL, SortMode::FOCUS_ORDER, icons);
 
   view->GetView ()->render_boxes = true;
 

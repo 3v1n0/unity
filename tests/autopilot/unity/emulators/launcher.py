@@ -345,11 +345,11 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
         [launcher_model] = LauncherModel.get_all_instances()
         all_icons = launcher_model.get_launcher_icons()
-        all_icon_len = len(all_icons)
-        if pos >= all_icon_len:
-            raise ValueError("pos is outside valid range (0-%d)" % all_icon_len)
 
-        logger.debug("Dragging launcher icon %r on monitor %d to position %s"
+        if pos >= len(all_icons):
+            raise ValueError("pos is outside valid range (0-%d)" % len(all_icons))
+
+        logger.debug("Dragging launcher icon %r on monitor %d to position %d"
                      % (icon, self.monitor, pos))
         self.mouse_reveal_launcher()
 
@@ -364,26 +364,25 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         self._mouse.press()
         sleep(2)
 
-        if drag_type == IconDragType.OUTSIDE:
-            shift_over = self._mouse.x + (icon_height * 2)
-            self._mouse.move(shift_over, self._mouse.y)
-            sleep(0.5)
 
         # find the target drop position, between the center & top of the target icon
         target_y = target_icon.center_y - floor(icon_height / 4)
 
         # Need to move the icons top (if moving up) or bottom (if moving
         # downward) to the target position
-        moving_up = True if icon.center_y > target_icon.center_y else False
+        moving_up = icon.center_y > target_icon.center_y
         icon_half_height = floor(icon_height / 2)
         fudge_factor = 5
-        if moving_up or drag_type == IconDragType.OUTSIDE:
+        if moving_up:
             target_y += icon_half_height + fudge_factor
-        else:
-            target_y -= icon_half_height - fudge_factor
 
-        self._mouse.move(self._mouse.x, target_y, rate=20,
-                         time_between_events=0.05)
+        # This has to happen after the target position is calculated (above)
+        if drag_type == IconDragType.OUTSIDE:
+            shift_over = self._mouse.x + (icon_height * 2)
+            self._mouse.move(shift_over, self._mouse.y)
+            sleep(0.5)
+
+        self._mouse.move(self._mouse.x, target_y)
         sleep(1)
 
         self._mouse.release()

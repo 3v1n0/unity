@@ -26,7 +26,10 @@ class HomeLensSearchTests(UnityTestCase):
         super(HomeLensSearchTests, self).tearDown()
 
     def test_quick_run_app(self):
-        """Hitting enter runs an application even though a search might not have fully finished yet."""
+        """Hitting enter runs an application even though a search might not have fully
+        finished yet.
+       
+        """
         if self.app_is_running("Text Editor"):
             self.close_all_app("Text Editor")
             sleep(1)

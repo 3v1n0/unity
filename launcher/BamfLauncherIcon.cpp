@@ -630,35 +630,38 @@ std::vector<Window> BamfLauncherIcon::GetFocusableWindows(ActionArg arg, bool &a
   std::vector<Window> windows;
   GList* children;
 
-  BamfView *focusable_child = BAMF_VIEW (bamf_application_get_focusable_child (_bamf_app.RawPtr()));
+  BamfView *focusable_child = BAMF_VIEW(bamf_application_get_focusable_child(_bamf_app.RawPtr()));
 
   if (focusable_child != NULL)
+  {
+    Window xid = 0;
+
+    if (BAMF_IS_WINDOW(focusable_child))
     {
-      Window xid;
+      xid = bamf_window_get_xid(BAMF_WINDOW(focusable_child));
+    }
+    else if (BAMF_IS_TAB(focusable_child))
+    {
+      BamfTab *focusable_tab = BAMF_TAB(focusable_child);
+      xid = bamf_tab_get_xid(focusable_tab);
+      bamf_tab_raise(focusable_tab);
+    }
 
-      if (BAMF_IS_WINDOW (focusable_child))
-        xid = bamf_window_get_xid (BAMF_WINDOW(focusable_child));
-      else if (BAMF_IS_TAB (focusable_child))
-        {
-          BamfTab *focusable_tab = BAMF_TAB (focusable_child);
-
-          xid = bamf_tab_get_xid (focusable_tab);
-
-          bamf_tab_raise (focusable_tab);
-        }
-
+    if (xid)
+    {
       windows.push_back(xid);
       return windows;
     }
+  }
   else
+  {
+    if (g_strcmp0(bamf_application_get_application_type(_bamf_app.RawPtr()), "webapp") == 0)
     {
-      if (g_strcmp0 (bamf_application_get_application_type (_bamf_app.RawPtr()), "webapp") == 0)
-        {
-          OpenInstanceLauncherIcon(arg);
+      OpenInstanceLauncherIcon(arg);
 
-          return windows;
-        }
+      return windows;
     }
+  }
 
   children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
 
@@ -704,7 +707,7 @@ std::vector<Window> BamfLauncherIcon::GetFocusableWindows(ActionArg arg, bool &a
   }
 
   g_list_free(children);
-  
+
   return windows;
 
 }
@@ -932,12 +935,12 @@ void BamfLauncherIcon::Quit()
 
 void BamfLauncherIcon::Stick(bool save)
 {
-  SimpleLauncherIcon::Stick(save);
-
   if (IsSticky())
     return;
 
   bamf_view_set_sticky(BAMF_VIEW(_bamf_app.RawPtr()), true);
+
+  SimpleLauncherIcon::Stick(save);
 }
 
 void BamfLauncherIcon::UnStick()
