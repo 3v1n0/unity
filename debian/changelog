@@ -1,4 +1,4 @@
-unity (6.6.0-0ubuntu2) UNRELEASED; urgency=low
+unity (6.6.0-0ubuntu2) quantal; urgency=low
 
   [ Łukasz 'sil2100' Zemczak ]
   * debian/unity-common.maintscript:
@@ -11,7 +11,7 @@ unity (6.6.0-0ubuntu2) UNRELEASED; urgency=low
   * Fix the above versionning for removing the conffile
   * build-dep on compiz as getting an ABI break.
 
- -- Didier Roche <didrocks@ubuntu.com>  Mon, 01 Oct 2012 11:37:14 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 01 Oct 2012 14:25:09 +0200
 
 unity (6.6.0-0ubuntu1) quantal-proposed; urgency=low
 
