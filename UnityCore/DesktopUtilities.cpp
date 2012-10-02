@@ -87,7 +87,13 @@ std::string DesktopUtilities::GetDesktopID(std::vector<std::string> const& defau
   if (desktop_path.empty())
     return "";
 
-  for (auto dir : default_paths)
+  glib::String unescaped(g_uri_unescape_string(desktop_path.c_str(), NULL));
+  std::string const& desktop_file = unescaped.Str();
+
+  if (desktop_file.empty())
+    return "";
+
+  for (auto const& dir : default_paths)
   {
     if (!dir.empty())
     {
@@ -100,11 +106,11 @@ std::string DesktopUtilities::GetDesktopID(std::vector<std::string> const& defau
         dir.append(G_DIR_SEPARATOR_S "applications" G_DIR_SEPARATOR_S);
       }
 
-      if (desktop_path.find(dir) == 0)
+      if (desktop_file.find(dir) == 0)
       {
         // if we are in a subdirectory of system path, the store name should
         // be subdir-filename.desktop
-        std::string desktop_suffix = desktop_path.substr(dir.size());
+        std::string desktop_suffix = desktop_file.substr(dir.size());
         std::replace(desktop_suffix.begin(), desktop_suffix.end(), G_DIR_SEPARATOR, '-');
 
         return desktop_suffix;
@@ -112,7 +118,7 @@ std::string DesktopUtilities::GetDesktopID(std::vector<std::string> const& defau
     }
   }
 
-  return desktop_path;
+  return desktop_file;
 }
 
 std::string DesktopUtilities::GetDesktopID(std::string const& desktop_path)
@@ -126,12 +132,18 @@ std::string DesktopUtilities::GetDesktopPathById(std::string const& desktop_id)
   if (desktop_id.empty())
     return "";
 
+  glib::String unescaped_id(g_uri_unescape_string(desktop_id.c_str(), NULL));
+  std::string const& id = unescaped_id.Str();
+
+  if (id.empty())
+    return "";
+
   glib::Object<GDesktopAppInfo> info;
 
-  if (desktop_id.find(G_DIR_SEPARATOR_S) != std::string::npos)
-    info = g_desktop_app_info_new_from_filename(desktop_id.c_str());
+  if (id.find(G_DIR_SEPARATOR_S) != std::string::npos)
+    info = g_desktop_app_info_new_from_filename(id.c_str());
   else
-    info = g_desktop_app_info_new(desktop_id.c_str());
+    info = g_desktop_app_info_new(id.c_str());
 
   if (info)
   {
