@@ -228,7 +228,6 @@ void Controller::Relayout(bool check_monitor)
   if (check_monitor)
   {
     monitor_ = CLAMP(GetIdealMonitor(), 0, static_cast<int>(UScreen::GetDefault()->GetMonitors().size()-1));
-    printf("relayout on monitor:%d, monitor count:%d\n", monitor_, static_cast<int>(UScreen::GetDefault()->GetMonitors().size()));
   }
 
   nux::Geometry geo = GetIdealWindowGeometry();

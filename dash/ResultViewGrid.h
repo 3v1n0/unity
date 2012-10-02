@@ -52,6 +52,8 @@ public:
 
   int GetSelectedIndex();
   virtual unsigned GetIndexAtPosition(int x, int y);
+  
+  virtual void Activate(std::string const& uri, int index, ActivateType type);
 
 protected:
   void MouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);

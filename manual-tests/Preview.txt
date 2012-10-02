@@ -170,3 +170,20 @@ Actions:
 Expected Result:
   The button A must not be highlighted.
   The button B must be highlighted.
+
+
+Preview Open Wait
+------------------------------
+This tests that if a preview takes time to open, the preview will open with a spinner
+while it waits for the preview info to return to unity.
+
+Setup:
+#. Open dash.
+#. Open Application Lens.
+
+Actions:
+#. Right-click an arbitrary result
+
+Expected Result:
+  The preview window will immediately display, and if the preview takes longer 
+  than 300ms to open, it will display a spinner while waiting.
