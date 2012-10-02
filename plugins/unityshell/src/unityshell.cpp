@@ -3412,7 +3412,7 @@ struct UnityWindow::CairoContext
     : w_(width)
     , h_(height)
     , pixmap_(XCreatePixmap(screen->dpy(), screen->root(), w_, h_, 32))
-    , texture_(GLTexture::bindPixmapToTexture(pixmap_, w_, h_, 32))
+    , texture_(GLTexture::bindPixmapToTexture(pixmap_, w_, h_, 32, compiz::opengl::ExternallyManaged)) //FIXME: This is a workaround, should create a new wrapper class which owns the texture and the cairo context.
     , surface_(nullptr)
     , cr_(nullptr)
   {
