@@ -539,6 +539,9 @@ void UnityScreen::paintPanelShadow(const CompRegion& clip)
   if (sources_.GetSource(local::RELAYOUT_TIMEOUT))
     return;
 
+  if (PluginAdapter::Default()->IsExpoActive())
+    return;
+
   CompOutput* output = _last_output;
   float panel_h = static_cast<float>(panel_style_.panel_height);
 
