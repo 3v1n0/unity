@@ -93,7 +93,7 @@ std::string DesktopUtilities::GetDesktopID(std::vector<std::string> const& defau
   if (desktop_file.empty())
     return "";
 
-  for (auto const& dir : default_paths)
+  for (auto dir : default_paths)
   {
     if (!dir.empty())
     {
