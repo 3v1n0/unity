@@ -64,7 +64,6 @@ public:
 
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
   AbstractLauncherIcon::Ptr GetSelectedMenuIcon() const;
 

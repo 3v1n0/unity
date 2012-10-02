@@ -148,8 +148,6 @@ void UnityWindowView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_dr
   GfxContext.PopClippingRectangle();
 
   DrawBackground(GfxContext, background_geo);
-
-  PostDraw(GfxContext, force_draw);
 }
 
 void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& geo)
