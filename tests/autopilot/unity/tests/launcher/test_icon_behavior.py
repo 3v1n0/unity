@@ -223,6 +223,10 @@ class LauncherDragIconsBehavior(LauncherTestCase):
                                        ('outside', {'drag_type': IconDragType.OUTSIDE}),
                                    ])
 
+    def setUp(self):
+        super(LauncherDragIconsBehavior, self).setUp()
+        self.set_unity_option('launcher_hide_mode', 0)
+
     def ensure_calc_icon_not_in_launcher(self):
         """Wait until the launcher model updates and removes the calc icon."""
         # Normally we'd use get_icon(desktop_id="...") but we're expecting it to
@@ -238,33 +242,40 @@ class LauncherDragIconsBehavior(LauncherTestCase):
         self.ensure_calc_icon_not_in_launcher()
         calc = self.start_app("Calculator")
         calc_icon = self.launcher.model.get_icon(desktop_id=calc.desktop_file)
+        bfb_icon = self.launcher.model.get_bfb_icon()
 
-        bfb_icon_position = 0
-        self.launcher_instance.drag_icon_to_position(calc_icon,
-                                                     bfb_icon_position,
-                                                     self.drag_type)
+        self.launcher_instance.drag_icon_to_position(
+            calc_icon,
+            IconDragType.AFTER,
+            bfb_icon,
+            self.drag_type)
         moved_icon = self.launcher.model.\
                      get_launcher_icons_for_monitor(self.launcher_monitor)[1]
         self.assertThat(moved_icon.id, Equals(calc_icon.id))
 
-    def test_can_drag_icon_above_window_switcher(self):
-        """Application icons must be dragable to above the workspace switcher icon."""
+    def test_can_drag_icon_below_window_switcher(self):
+        """Application icons must be dragable to below the workspace switcher icon."""
 
         self.ensure_calc_icon_not_in_launcher()
         calc = self.start_app("Calculator")
         calc_icon = self.launcher.model.get_icon(desktop_id=calc.desktop_file)
+        bfb_icon = self.launcher.model.get_bfb_icon()
+        trash_icon = self.launcher.model.get_trash_icon()
 
         # Move a known icon to the top as it needs to be more than 2 icon
         # spaces away for this test to actually do anything
-        bfb_icon_position = 0
-        self.launcher_instance.drag_icon_to_position(calc_icon,
-                                                     bfb_icon_position,
-                                                     self.drag_type)
+        self.launcher_instance.drag_icon_to_position(
+            calc_icon,
+            IconDragType.AFTER,
+            bfb_icon,
+            self.drag_type)
+
         sleep(1)
-        target_pos = -2
-        self.launcher_instance.drag_icon_to_position(calc_icon,
-                                                     target_pos,
-                                                     self.drag_type)
+        self.launcher_instance.drag_icon_to_position(
+            calc_icon,
+            IconDragType.BEFORE,
+            trash_icon,
+            self.drag_type)
 
         # Must be the last bamf icon - not necessarily the third-from-end icon.
         refresh_fn = lambda: self.launcher.model.get_launcher_icons()[-2].id
