@@ -15,7 +15,6 @@ from autopilot.keybindings import KeybindingsHelper
 from autopilot.utilities import get_compiz_option
 import dbus
 import logging
-from math import floor
 from testtools.matchers import NotEquals
 from time import sleep
 
@@ -25,6 +24,7 @@ from unity.emulators.icons import (
     BFBLauncherIcon,
     ExpoLauncherIcon,
     SimpleLauncherIcon,
+    TrashLauncherIcon,
     )
 
 logger = logging.getLogger(__name__)
@@ -383,6 +383,8 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         target_y = target.center_y
         if target_y < icon.center_y:
             target_y += icon_height / 2
+        if pos == IconDragType.BEFORE:
+            target_y -= icon_height
 
         self.move_mouse_to_icon(icon)
         self._mouse.press()
@@ -448,6 +450,11 @@ class LauncherModel(UnityIntrospectionObject):
 
     def get_expo_icon(self):
         icons = self.get_children_by_type(ExpoLauncherIcon)
+        assert(len(icons) == 1)
+        return icons[0]
+
+    def get_trash_icon(self):
+        icons = self.get_children_by_type(TrashLauncherIcon)
         assert(len(icons) == 1)
         return icons[0]
 

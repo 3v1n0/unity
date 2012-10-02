@@ -214,7 +214,7 @@ class LauncherDragIconsBehavior(LauncherTestCase):
         calc = self.start_app("Calculator")
         calc_icon = self.launcher.model.get_icon(desktop_id=calc.desktop_file)
         bfb_icon = self.launcher.model.get_bfb_icon()
-        expo_icon = self.launcher.model.get_expo_icon()
+        trash_icon = self.launcher.model.get_trash_icon()
 
         # Move a known icon to the top as it needs to be more than 2 icon
         # spaces away for this test to actually do anything
@@ -227,8 +227,8 @@ class LauncherDragIconsBehavior(LauncherTestCase):
         sleep(1)
         self.launcher_instance.drag_icon_to_position(
             calc_icon,
-            IconDragType.AFTER,
-            expo_icon,
+            IconDragType.BEFORE,
+            trash_icon,
             self.drag_type)
 
         # Must be the last bamf icon - not necessarily the third-from-end icon.
