@@ -404,7 +404,7 @@ TEST(TestGLibIdle, OneShotRun)
   EXPECT_FALSE(idle.IsRunning());
   EXPECT_TRUE(callback_called);
   EXPECT_EQ(callback_call_count, 1);
-  EXPECT_LT(pre, post);
+  EXPECT_LE(pre, post);
 }
 
 TEST(TestGLibIdle, MultipleShotsRun)
