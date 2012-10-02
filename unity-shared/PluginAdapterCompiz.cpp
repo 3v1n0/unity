@@ -62,8 +62,6 @@ PluginAdapter::Initialize(CompScreen* screen)
 
 PluginAdapter::PluginAdapter(CompScreen* screen) :
   m_Screen(screen),
-  m_ExpoActionList(0),
-  m_ScaleActionList(0),
   _in_show_desktop (false),
   _last_focused_window(nullptr)
 {
@@ -223,70 +221,103 @@ PluginAdapter::NotifyCompizEvent(const char* plugin, const char* event, CompOpti
 }
 
 void
-MultiActionList::AddNewAction(CompAction* a, bool primary)
+MultiActionList::AddNewAction(std::string const& name, CompAction* a, bool primary)
 {
-  if (std::find(m_ActionList.begin(), m_ActionList.end(), a)  == m_ActionList.end())
-    m_ActionList.push_back(a);
+  actions_[name] = a;
 
   if (primary)
-    _primary_action = a;
+    primary_action_ = a;
 }
 
-void
-MultiActionList::RemoveAction(CompAction* a)
+void MultiActionList::RemoveAction(std::string const& name)
 {
-  m_ActionList.remove(a);
+  actions_.erase(name);
 }
 
-void
-MultiActionList::InitiateAll(CompOption::Vector& extraArgs, int state)
+CompAction* MultiActionList::GetAction(std::string const& name) const
 {
-  CompOption::Vector argument;
-  if (m_ActionList.empty())
+  auto it = actions_.find(name);
+
+  if (it == actions_.end())
+    return nullptr;
+
+  return it->second;
+}
+
+bool MultiActionList::HasPrimary() const
+{
+  return bool(primary_action_);
+}
+
+void MultiActionList::Initiate(std::string const& name, CompOption::Vector const& extra_args, int state) const
+{
+  if (name.empty())
     return;
 
-  argument.resize(1);
+  CompAction* action = GetAction(name);
+
+  if (!action)
+    return;
+
+  CompOption::Vector argument(1);
   argument[0].setName("root", CompOption::TypeInt);
   argument[0].value().set((int) screen->root());
-  foreach(CompOption & arg, extraArgs)
-  {
+
+  for (CompOption const& arg : extra_args)
     argument.push_back(arg);
-  }
 
-  CompAction* a;
-
-  if (_primary_action)
-    a = _primary_action;
-  else
-    a = m_ActionList.front();
-
-  /* Initiate the first available action with the arguments */
-  a->initiate()(a, state, argument);
+  /* Initiate the selected action with the arguments */
+  action->initiate()(action, state, argument);
 }
 
-void
-MultiActionList::TerminateAll(CompOption::Vector& extraArgs)
+void MultiActionList::InitiateAll(CompOption::Vector const& extra_args, int state) const
 {
-  CompOption::Vector argument;
-  CompOption::Value  value;
-  if (m_ActionList.empty())
+  if (actions_.empty())
     return;
 
-  argument.resize(1);
+  std::string action_name;
+
+  if (primary_action_)
+  {
+    for (auto const& it : actions_)
+    {
+      if (it.second == primary_action_)
+      {
+        action_name = it.first;
+        break;
+      }
+    }
+  }
+  else
+  {
+    action_name = actions_.begin()->first;
+  }
+
+  Initiate(action_name, extra_args, state);
+}
+
+void MultiActionList::TerminateAll(CompOption::Vector const& extra_args) const
+{
+  if (actions_.empty())
+    return;
+
+  CompOption::Vector argument(1);
   argument[0].setName("root", CompOption::TypeInt);
   argument[0].value().set((int) screen->root());
 
-  foreach(CompOption & a, extraArgs)
-  argument.push_back(a);
+  for (CompOption const& a : extra_args)
+    argument.push_back(a);
 
-  if (_primary_action)
+  if (primary_action_)
   {
-    _primary_action->terminate()(_primary_action, 0, argument);
+    primary_action_->terminate()(primary_action_, 0, argument);
     return;
   }
 
-  foreach(CompAction * action, m_ActionList)
+  for (auto const& it : actions_)
   {
+    CompAction* action = it.second;
+
     if (action->state() & (CompAction::StateTermKey |
                            CompAction::StateTermButton |
                            CompAction::StateTermEdge |
@@ -331,31 +362,24 @@ PluginAdapter::SetScaleAction(MultiActionList& scale)
 }
 
 std::string
-PluginAdapter::MatchStringForXids(std::vector<Window> *windows)
+PluginAdapter::MatchStringForXids(std::vector<Window> const& windows)
 {
-  std::ostringstream sout;
+  std::string out_string = "any & (";
 
-  sout << "any & (";
+  for (auto const& xid : windows)
+    out_string += "| xid=" + std::to_string(xid) + " ";
 
-  std::vector<Window>::iterator it;
-  for (it = windows->begin(); it != windows->end(); ++it)
-  {
-    sout << "| xid=" << static_cast<int>(*it) << " ";
-  }
-  sout << ")";
+  out_string += ")";
 
-  return sout.str();
+  return out_string;
 }
 
 void
 PluginAdapter::InitiateScale(std::string const& match, int state)
 {
-  CompOption::Vector argument;
-  CompMatch      m(match);
-
-  argument.resize(1);
+  CompOption::Vector argument(1);
   argument[0].setName("match", CompOption::TypeMatch);
-  argument[0].value().set(m);
+  argument[0].value().set(CompMatch(match));
 
   m_ScaleActionList.InitiateAll(argument, state);
 }
@@ -363,8 +387,7 @@ PluginAdapter::InitiateScale(std::string const& match, int state)
 void
 PluginAdapter::TerminateScale()
 {
-  CompOption::Vector argument(0);
-  m_ScaleActionList.TerminateAll(argument);
+  m_ScaleActionList.TerminateAll();
 }
 
 bool
@@ -391,12 +414,14 @@ PluginAdapter::IsWallActive() const
   return m_Screen->grabExist("wall");
 }
 
-void
-PluginAdapter::InitiateExpo()
+void PluginAdapter::InitiateExpo()
 {
-  CompOption::Vector argument(0);
+  m_ExpoActionList.InitiateAll();
+}
 
-  m_ExpoActionList.InitiateAll(argument, 0);
+void PluginAdapter::TerminateExpo()
+{
+  m_ExpoActionList.Initiate("exit_button");
 }
 
 // WindowManager implementation
@@ -819,7 +844,7 @@ PluginAdapter::ScaleWindowGroup(std::vector<Window> windows, int state, bool for
   std::size_t num_windows = windows.size();
   if (num_windows > 1 || (force && num_windows))
   {
-    std::string match = MatchStringForXids(&windows);
+    std::string const& match = MatchStringForXids(windows);
     InitiateScale(match, state);
     _spread_windows_state = true;
     return true;
@@ -1189,9 +1214,7 @@ PluginAdapter::ShowGrabHandles(CompWindow* window, bool use_timer)
   if (!_grab_show_action || !window)
     return;
 
-  CompOption::Vector argument;
-
-  argument.resize(3);
+  CompOption::Vector argument(3);
   argument[0].setName("root", CompOption::TypeInt);
   argument[0].value().set((int) screen->root());
   argument[1].setName("window", CompOption::TypeInt);
@@ -1209,9 +1232,7 @@ PluginAdapter::HideGrabHandles(CompWindow* window)
   if (!_grab_hide_action || !window)
     return;
 
-  CompOption::Vector argument;
-
-  argument.resize(2);
+  CompOption::Vector argument(2);
   argument[0].setName("root", CompOption::TypeInt);
   argument[0].value().set((int) screen->root());
   argument[1].setName("window", CompOption::TypeInt);
@@ -1227,9 +1248,7 @@ PluginAdapter::ToggleGrabHandles(CompWindow* window)
   if (!_grab_toggle_action || !window)
     return;
 
-  CompOption::Vector argument;
-
-  argument.resize(2);
+  CompOption::Vector argument(2);
   argument[0].setName("root", CompOption::TypeInt);
   argument[0].value().set((int) screen->root());
   argument[1].setName("window", CompOption::TypeInt);
