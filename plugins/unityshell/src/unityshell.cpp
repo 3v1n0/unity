@@ -605,15 +605,14 @@ void UnityScreen::paintPanelShadow(const CompRegion& clip)
     i++;
   }
 
-  if (launcher_controller_->IsOverlayOpen() &&
-      current_monitor == overlay_monitor_)
+  if (launcher_controller_->IsOverlayOpen() && current_monitor == overlay_monitor_)
     return;
 
   nuxPrologue();
 
   const CompRect::vector& rects = redraw.rects();
 
-  for (auto r : rects)
+  for (auto const& r : rects)
   {
     foreach(GLTexture * tex, _shadow_texture)
     {
