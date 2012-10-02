@@ -181,6 +181,10 @@ class LauncherDragIconsBehavior(LauncherTestCase):
                                        ('outside', {'drag_type': IconDragType.OUTSIDE}),
                                    ])
 
+    def setUp(self):
+        super(LauncherDragIconsBehavior, self).setUp()
+        self.set_unity_option('launcher_hide_mode', 0)
+
     def ensure_calc_icon_not_in_launcher(self):
         """Wait until the launcher model updates and removes the calc icon."""
         # Normally we'd use get_icon(desktop_id="...") but we're expecting it to
