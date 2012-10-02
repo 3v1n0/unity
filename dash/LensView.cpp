@@ -694,6 +694,7 @@ void LensView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   // Clean the area below this view before drawing anything.
   if (RedirectedAncestor() && !IsFullRedraw())
   {
+    // scrollbars are drawn in Draw, not DrawContent, so we need to flag them to redraw.
     scroll_view_->RedrawScrollbars();
     fscroll_view_->RedrawScrollbars();
 
@@ -703,7 +704,7 @@ void LensView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
     gfx_context.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
     gfx_context.GetRenderStates().SetBlend(alpha, src, dest);
   }
-  
+
   layout_->ProcessDraw(gfx_context, force_draw);
   gfx_context.PopClippingRectangle();
 }
