@@ -223,7 +223,7 @@ void DashView::OnUriActivated(ResultView::ActivateType type, std::string const& 
   }
 
   // we want immediate preview reaction on first opening.
-  if (type == ResultView::ActivateType::DIRECT && !preview_displaying_)
+  if (type == ResultView::ActivateType::PREVIEW && !preview_displaying_)
   {
     BuildPreview(Preview::Ptr(nullptr));
   }
