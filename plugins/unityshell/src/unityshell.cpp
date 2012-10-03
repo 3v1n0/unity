@@ -1535,13 +1535,8 @@ void UnityScreen::handleEvent(XEvent* event)
       {
         nux::Point pt(event->xbutton.x_root, event->xbutton.y_root);
         nux::Geometry dash_geo = dash_controller_->GetInputWindowGeometry();
-
-        Window xid = wm->GetTopWindowAbove(dash_controller_->window()->GetInputWindowId());
-        CompWindow *c_win = screen->findWindow(xid);
-        nux::Geometry on_top_geo;
-
-        if (c_win)
-          on_top_geo = nux::Geometry(c_win->x(), c_win->y(), c_win->width(), c_win->height());
+        Window dash_xid = dash_controller_->window()->GetInputWindowId();
+        nux::Geometry on_top_geo = GetGeometryOfTopWindowAbove(dash_xid);
 
         if (!dash_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt) && !on_top_geo.IsInside(pt))
         {
@@ -1553,13 +1548,8 @@ void UnityScreen::handleEvent(XEvent* event)
       {
         nux::Point pt(event->xbutton.x_root, event->xbutton.y_root);
         nux::Geometry hud_geo = hud_controller_->GetInputWindowGeometry();
-
-        Window xid = wm->GetTopWindowAbove(hud_controller_->window()->GetInputWindowId());
-        CompWindow *c_win = screen->findWindow(xid);
-        nux::Geometry on_top_geo;
-
-        if (c_win)
-          on_top_geo = nux::Geometry(c_win->x(), c_win->y(), c_win->width(), c_win->height());
+        Window hud_xid = hud_controller_->window()->GetInputWindowId();
+        nux::Geometry on_top_geo = GetGeometryOfTopWindowAbove(hud_xid);
 
         if (!hud_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt) && !on_top_geo.IsInside(pt))
         {
@@ -1699,6 +1689,17 @@ void UnityScreen::handleEvent(XEvent* event)
   {
     wt->ProcessForeignEvent(event, NULL);
   }
+}
+
+nux::Geometry UnityScreen::GetGeometryOfTopWindowAbove(Window win) const
+{
+  auto wm = PluginAdapter::Default();
+  Window xid = wm->GetTopWindowAbove(win);
+  CompWindow *c_win = screen->findWindow(xid);
+
+  if (c_win)
+    return nux::Geometry(c_win->x(), c_win->y(), c_win->width(), c_win->height());
+  return nux::Geometry();
 }
 
 void UnityScreen::damageRegion(const CompRegion &region)
