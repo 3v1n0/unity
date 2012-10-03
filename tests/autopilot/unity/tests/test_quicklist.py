@@ -40,7 +40,7 @@ class QuicklistActionTests(UnityTestCase):
 
     def test_quicklist_actions(self):
         """Test that all actions present in the destop file are shown in the quicklist."""
-        self.start_app(self.app_name)
+        self.start_app(self.app_name, locale='C')
 
         # load the desktop file from disk:
         desktop_id = self.KNOWN_APPS[self.app_name]['desktop-file']
