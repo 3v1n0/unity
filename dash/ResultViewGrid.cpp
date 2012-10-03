@@ -958,7 +958,7 @@ ResultViewGrid::GetSelectedIndex()
   return selected_index_;
 }
 
-debug::Introspectable* ResultViewGrid::CreateResultWrapper(Result const& result, int index)
+debug::ResultWrapper* ResultViewGrid::CreateResultWrapper(Result const& result, int index)
 {
   int x_offset = GetAbsoluteX();
   int y_offset = GetAbsoluteY();
@@ -970,6 +970,24 @@ debug::Introspectable* ResultViewGrid::CreateResultWrapper(Result const& result,
     renderer_->width,
     renderer_->height);
   return new debug::ResultWrapper(result, geo);
+}
+
+void ResultViewGrid::UpdateResultWrapper(debug::ResultWrapper* wrapper, Result const& result, int index)
+{
+  if (!wrapper)
+    return;
+
+  int x_offset = GetAbsoluteX();
+  int y_offset = GetAbsoluteY();
+
+  std::tuple<int, int> result_coord = GetResultPosition(index);
+
+  nux::Geometry geo(std::get<0>(result_coord) + x_offset,
+    std::get<1>(result_coord) + y_offset,
+    renderer_->width,
+    renderer_->height);
+
+  wrapper->UpdateGeometry(geo);
 }
 
 
