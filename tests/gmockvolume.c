@@ -95,6 +95,7 @@ g_mock_volume_init (GMockVolume *mock_volume)
   mock_volume->label = g_strdup("");
   mock_volume->uuid = g_strdup_printf("%u", uuid);
   mock_volume->mount = NULL;
+  mock_volume->last_mount_had_mount_op = FALSE;
 }
 
 GMockVolume *
@@ -227,7 +228,10 @@ g_mock_volume_mount (GVolume            *volume,
                      GAsyncReadyCallback  callback,
                      gpointer             user_data)
 {
-  g_mock_volume_set_mount(G_MOCK_VOLUME(volume), G_MOUNT(g_mock_mount_new()));
+  GMockVolume *mock_volume = G_MOCK_VOLUME(volume);
+
+  mock_volume->last_mount_had_mount_op = (mount_operation != NULL);
+  g_mock_volume_set_mount(mock_volume, G_MOUNT(g_mock_mount_new()));
 
   callback(NULL,
            G_ASYNC_RESULT (g_simple_async_result_new (NULL, NULL, NULL, NULL)),
@@ -280,6 +284,12 @@ static gchar **
 g_mock_volume_enumerate_identifiers (GVolume *volume)
 {
   return NULL;
+}
+
+gboolean
+g_mock_volume_last_mount_had_mount_operation (GMockVolume* volume)
+{
+  return volume->last_mount_had_mount_op;
 }
 
 static void

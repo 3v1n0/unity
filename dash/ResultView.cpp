@@ -28,6 +28,7 @@
 #include <Nux/VLayout.h>
 #include <Nux/Button.h>
 #include <NuxCore/Logger.h>
+#include <UnityCore/Variant.h>
 
 namespace unity
 {

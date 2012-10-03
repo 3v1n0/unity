@@ -61,12 +61,14 @@ public:
   nux::Property<bool> expanded;
   nux::Property<int> results_per_row;
   nux::Property<std::string> unique_id;  
-  sigc::signal<void, std::string const&, ActivateType> UriActivated;
+  sigc::signal<void, std::string const&, ActivateType, GVariant*> UriActivated;
 
   std::string GetName() const;
   ResultIterator GetIteratorAtRow(unsigned row);
   void AddProperties(GVariantBuilder* builder);
   IntrospectableList GetIntrospectableChildren();
+
+  virtual void Activate(std::string const& uri, int index, ActivateType type) = 0;
 
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);

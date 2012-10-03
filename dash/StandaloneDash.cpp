@@ -21,9 +21,11 @@
 #include <gtk/gtk.h>
 
 #include "Nux/Nux.h"
+#include "Nux/NuxTimerTickSource.h"
 #include "Nux/VLayout.h"
 #include "Nux/WindowThread.h"
 #include "NuxGraphics/GraphicsEngine.h"
+#include <NuxCore/AnimationController.h>
 #include <NuxCore/Logger.h>
 
 #include "unity-shared/BGHash.h"
@@ -100,6 +102,9 @@ int main(int argc, char **argv)
                             0,
                             &TestRunner::InitWindowThread,
                             test_runner);
+
+  nux::NuxTimerTickSource tick_source;
+  nux::animation::AnimationController animation_controller(tick_source);
 
   wt->Run (NULL);
   delete wt;

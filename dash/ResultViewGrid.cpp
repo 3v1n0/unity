@@ -28,6 +28,7 @@
 #include <gdk/gdk.h>
 #include <unity-protocol.h>
 
+#include <UnityCore/Variant.h>
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/Timer.h"
 #include "unity-shared/ubus-server.h"
@@ -75,7 +76,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   key_nav_focus_change.connect(sigc::mem_fun(this, &ResultViewGrid::OnKeyNavFocusChange));
   key_nav_focus_activate.connect([&] (nux::Area *area) 
   { 
-    UriActivated.emit (focused_uri_, ResultView::ActivateType::DIRECT); 
+    Activate(focused_uri_, selected_index_, ResultView::ActivateType::DIRECT);
   });
   key_down.connect(sigc::mem_fun(this, &ResultViewGrid::OnKeyDown));
   mouse_move.connect(sigc::mem_fun(this, &ResultViewGrid::MouseMove));
@@ -140,30 +141,9 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
       {
         activated_uri_ = GetUriForIndex(current_index);
         LOG_DEBUG(logger) << "activating preview for index: " 
-                          << "(" << current_index << ")"
-                          << " " << activated_uri_;
-        int left_results = current_index;
-        int right_results = num_results ? (num_results - current_index) - 1 : 0;
-
-        int row_y = padding + GetRootGeometry().y;
-        int row_size = renderer_->height + vertical_spacing;
-        int row_height = row_size;
-
-        if (GetItemsPerRow())
-        {
-          int num_row = GetNumResults() / GetItemsPerRow();
-          if (GetNumResults() % GetItemsPerRow())
-          {
-            ++num_row;
-          }
-          int row_index = current_index / GetItemsPerRow();
-
-          row_y += row_index * row_size;
-        }
-        
-        ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 
-                                g_variant_new("(iiii)", row_y, row_height, left_results, right_results));
-        UriActivated.emit(activated_uri_, ActivateType::PREVIEW);
+                  << "(" << current_index << ")"
+                  << " " << activated_uri_;
+        Activate(activated_uri_, current_index, ActivateType::PREVIEW);
       }
 
     }
@@ -174,6 +154,33 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   });
 
   SetDndEnabled(true, false);
+}
+
+void ResultViewGrid::Activate(std::string const& uri, int index, ResultView::ActivateType type)
+{
+  unsigned num_results = GetNumResults();
+
+  int left_results = index;
+  int right_results = num_results ? (num_results - index) - 1 : 0;
+  //FIXME - just uses y right now, needs to use the absolute position of the bottom of the result 
+  // (jay) Here is the fix: Compute the y position of the row where the item is located.
+  int row_y = padding + GetRootGeometry().y;
+  int row_height = renderer_->height + vertical_spacing;
+
+  if (GetItemsPerRow())
+  {
+    int num_row = GetNumResults() / GetItemsPerRow();
+    if (GetNumResults() % GetItemsPerRow())
+    {
+      ++num_row;
+    }
+    int row_index = index / GetItemsPerRow();
+
+    row_y += row_index * row_height;
+  }
+
+  glib::Variant data(g_variant_new("(iiii)", row_y, row_height, left_results, right_results));
+  UriActivated.emit(uri, type, data);
 }
 
 void ResultViewGrid::QueueLazyLoad()
@@ -483,12 +490,7 @@ void ResultViewGrid::OnKeyDown (unsigned long event_type, unsigned long event_ke
 
   if (event_type == nux::NUX_KEYDOWN && event_keysym == XK_Menu)
   {
-    UriActivated.emit (focused_uri_, ResultView::ActivateType::PREVIEW);
-    int left_results = selected_index_;
-    int right_results = (num_results - selected_index_) - 1;
-    //FIXME - just uses y right now, needs to use the absolute position of the bottom of the result 
-    ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 
-                              g_variant_new("(iii)", mouse_last_y_, left_results, right_results)); 
+    Activate(focused_uri_, selected_index_, ActivateType::PREVIEW);
   }
 }
 
@@ -715,36 +717,12 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
     Result result = *it;
     selected_index_ = index;
     focused_uri_ = result.uri;
-    if (nux::GetEventButton(button_flags) == nux::MouseButton::MOUSE_BUTTON3)
-    {
-      activated_uri_ = result.uri();
-      UriActivated.emit(result.uri, ResultView::ActivateType::PREVIEW);
-      int left_results = index;
-      int right_results = (num_results - index) - 1;
-      //FIXME - just uses y right now, needs to use the absolute position of the bottom of the result 
-      // (jay) Here is the fix: Compute the y position of the row where the item is located.
-      int row_y = padding + GetRootGeometry().y;
-      int row_size = renderer_->height + vertical_spacing;
-      int row_height = row_size;
 
-      if (GetItemsPerRow())
-      {
-        int num_row = GetNumResults() / GetItemsPerRow();
-        if (GetNumResults() % GetItemsPerRow())
-        {
-          ++num_row;
-        }
-        int row_index = index / GetItemsPerRow();
+    ActivateType type = nux::GetEventButton(button_flags) == nux::MouseButton::MOUSE_BUTTON3 ?  ResultView::ActivateType::PREVIEW :
+                                                                                                ResultView::ActivateType::DIRECT;
 
-        row_y += row_index * row_size;
-      }
-      ubus_.SendMessage(UBUS_DASH_PREVIEW_INFO_PAYLOAD, 
-                                g_variant_new("(iiii)", row_y, row_height, left_results, right_results));
-    }
-    else
-    {
-      UriActivated.emit(result.uri, ResultView::ActivateType::DIRECT);
-    }
+    activated_uri_ = result.uri();
+    Activate(activated_uri_, index, type);
   }
 }
 
