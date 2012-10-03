@@ -1531,13 +1531,19 @@ void UnityScreen::handleEvent(XEvent* event)
           skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
       }
 
-
       if (dash_controller_->IsVisible())
       {
         nux::Point pt(event->xbutton.x_root, event->xbutton.y_root);
         nux::Geometry dash_geo = dash_controller_->GetInputWindowGeometry();
 
-        if (!dash_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt))
+        Window xid = wm->GetTopWindowAbove(dash_controller_->window()->GetInputWindowId());
+        CompWindow *c_win = screen->findWindow(xid);
+        nux::Geometry on_top_geo;
+
+        if (c_win)
+          on_top_geo = nux::Geometry(c_win->x(), c_win->y(), c_win->width(), c_win->height());
+
+        if (!dash_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt) && !on_top_geo.IsInside(pt))
         {
           dash_controller_->HideDash(false);
         }
@@ -1548,7 +1554,14 @@ void UnityScreen::handleEvent(XEvent* event)
         nux::Point pt(event->xbutton.x_root, event->xbutton.y_root);
         nux::Geometry hud_geo = hud_controller_->GetInputWindowGeometry();
 
-        if (!hud_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt))
+        Window xid = wm->GetTopWindowAbove(hud_controller_->window()->GetInputWindowId());
+        CompWindow *c_win = screen->findWindow(xid);
+        nux::Geometry on_top_geo;
+
+        if (c_win)
+          on_top_geo = nux::Geometry(c_win->x(), c_win->y(), c_win->width(), c_win->height());
+
+        if (!hud_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt) && !on_top_geo.IsInside(pt))
         {
           hud_controller_->HideHud(false);
         }

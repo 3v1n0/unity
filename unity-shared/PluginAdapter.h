@@ -173,6 +173,8 @@ public:
 
   void MoveResizeWindow(guint32 xid, nux::Geometry geometry);
 
+  Window GetTopWindowAbove(Window xid) const;
+
 protected:
   PluginAdapter(CompScreen* screen);
   void AddProperties(GVariantBuilder* builder);
