@@ -187,3 +187,20 @@ Actions:
 Expected Result:
   The preview window will immediately display, and if the preview takes longer 
   than 300ms to open, it will display a spinner while waiting.
+
+
+Preview Open and the Dash Navbar
+--------------------------------
+This tests that the Dash navigation bar does not show when a preview is
+open (https://bugs.launchpad.net/unity/+bug/1053313).
+
+Setup:
+#. Open dash.
+#. Open Files and Folders Lens (or any lens with 3 rows).
+
+Actions:
+#. Right-click a result on the third (bottommost) row.
+
+Expected result:
+  The Dash navigation bar should not be seen through the preview.
+
