@@ -500,6 +500,31 @@ void DashView::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
   renderer_.DrawFull(graphics_engine, content_geo_, GetAbsoluteGeometry(), GetGeometry(), true);
 }
 
+/**
+ * Parametrically interpolates a value in one of two consecutive closed intervals.
+ *
+ * @param[in] p
+ * @param[in] start The left (least) value of the closed interval.
+ * @param[in] end1  The right (greatest) value of the closed interval,
+ *                  if start <= end1
+ * @param[in] end2  The right (greatest) value of the closed interval,
+ *                  if start > end1
+ *
+ * @returns the linear interpolation at @p p of the interval [start, end] where end
+ * is @p end1 if start <= @p end1, otherwise end is @end2.
+ */
+static float Interpolate2(float p, int start, int end1, int end2)
+{
+  float result = end2;
+  if (start < end2)
+  {
+    int end = start > end1 ? end2 : end1;
+    result = start + p * (end - start);
+  }
+
+  return result;
+}
+
 void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
   renderer_.DrawInner(graphics_engine, content_geo_, GetAbsoluteGeometry(), GetGeometry());
@@ -652,7 +677,7 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
 
           graphics_engine.QRP_TexDesaturate(
             fade_out_value_ * layout_->GetX() + (1 - fade_out_value_) * final_x,
-            fade_out_value_ * (opening_row_y_ + opening_row_height_) + (1 - fade_out_value_) * final_y,
+            Interpolate2(1.0f - fade_out_value_, opening_row_y_ + opening_row_height_, final_y, layout_->GetHeight()),
             layout_->GetWidth() - filter_width,
             layout_->GetHeight() - opening_row_y_ - opening_row_height_,
             layout_copy_, texxform,
@@ -735,7 +760,7 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
 
           graphics_engine.QRP_TexDesaturate(
             (1.0f - fade_in_value_) * layout_->GetX() + (fade_in_value_) * final_x,
-            (1.0f - fade_in_value_) * (opening_row_y_ + opening_row_height_) + (fade_in_value_) * final_y,
+            Interpolate2(fade_in_value_, opening_row_y_ + opening_row_height_, final_y, layout_->GetHeight()),
             layout_->GetWidth() - filter_width,
             layout_->GetHeight() - opening_row_y_ - opening_row_height_,
             layout_copy_, texxform,
