@@ -3612,9 +3612,6 @@ void UnityWindow::DrawTexture(GLTexture::List const& textures, GLWindowPaintAttr
 
 void UnityWindow::RenderDecoration(CairoContext const& context, double aspect)
 {
-  if (context.h_ == 0 || context.h_ == 0)
-    return;
-
   cairo_save(context.cr_);
 
   // Draw window decoration based on gtk style
@@ -3642,9 +3639,6 @@ void UnityWindow::RenderDecoration(CairoContext const& context, double aspect)
 
 void UnityWindow::RenderText(CairoContext const& context, int x, int y, int width, int height)
 {
-  if (width == 0 || height == 0)
-    return;
-
   panel::Style& style = panel::Style::Instance();
   std::string const& font_desc = style.GetFontDescription(panel::PanelItem::TITLE);
 
@@ -3844,16 +3838,24 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
 
     if (redraw_decoration)
     {
-      CairoContext context(width, height);
-      RenderDecoration(context, pos.scale);
+      if (width != 0 && height != 0)
+      {
+        CairoContext context(width, height);
+        RenderDecoration(context, pos.scale);
 
-      // Draw window title
-      int text_x = scale::decoration::ITEMS_PADDING * 2 + scale::decoration::CLOSE_SIZE;
-      RenderText(context, text_x, 0.0, width - scale::decoration::ITEMS_PADDING, height);
-      decoration_selected_tex_ = context.pixmap_texture_;
+        // Draw window title
+        int text_x = scale::decoration::ITEMS_PADDING * 2 + scale::decoration::CLOSE_SIZE;
+        RenderText(context, text_x, 0.0, width - scale::decoration::ITEMS_PADDING, height);
+        decoration_selected_tex_ = context.pixmap_texture_;
+      }
+      else
+      {
+        decoration_selected_tex_.reset();
+      }
     }
 
-    DrawTexture(decoration_selected_tex_->texture_, attrib, transform, mask, x, y);
+    if (decoration_selected_tex_)
+      DrawTexture(decoration_selected_tex_->texture_, attrib, transform, mask, x, y);
 
     x += scale::decoration::ITEMS_PADDING;
     y += (height - scale::decoration::CLOSE_SIZE) / 2.0f;
