@@ -3580,6 +3580,9 @@ void UnityWindow::DrawTexture(GLTexture::List const& textures, GLWindowPaintAttr
 
 void UnityWindow::RenderDecoration(CairoContext const& context, double aspect)
 {
+  if (context.h_ == 0 || context.h_ == 0)
+    return;
+
   cairo_save(context.cr_);
 
   // Draw window decoration based on gtk style
@@ -3607,6 +3610,9 @@ void UnityWindow::RenderDecoration(CairoContext const& context, double aspect)
 
 void UnityWindow::RenderText(CairoContext const& context, int x, int y, int width, int height)
 {
+  if (width == 0 || height == 0)
+    return;
+
   panel::Style& style = panel::Style::Instance();
   std::string const& font_desc = style.GetFontDescription(panel::PanelItem::TITLE);
 
@@ -3687,7 +3693,7 @@ void UnityWindow::BuildDecorationTexture()
 
   if (WindowManager::Default()->IsWindowDecorated(window->id()) && border_extents.top > 0)
   {
-    CairoContext context(window->borderRect().width(), border_extents.top);
+    CairoContext context(window->borderRect().width(), window->border().top);
     RenderDecoration(context);
     decoration_tex_ = context.pixmap_texture_;
   }
@@ -3751,7 +3757,7 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
                                        CompRegion const& region,
                                        unsigned int mask)
 {
-  ScaleWindow *scale_win = ScaleWindow::get(window);
+  ScaleWindow* scale_win = ScaleWindow::get(window);
   scale_win->scalePaintDecoration(attrib, transform, region, mask);
 
   if (!scale_win->hasSlot()) // animation not finished
@@ -3775,7 +3781,10 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
   if (!highlighted)
   {
     BuildDecorationTexture();
-    DrawTexture(decoration_tex_->texture_, attrib, transform, mask, x, y, pos.scale);
+
+    if (decoration_tex_)
+      DrawTexture(decoration_tex_->texture_, attrib, transform, mask, x, y, pos.scale);
+
     close_button_geo_.Set(0, 0, 0, 0);
   }
   else
@@ -3832,7 +3841,7 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
 
 nux::Geometry UnityWindow::GetScaledGeometry()
 {
-  ScaleWindow *scale_win = ScaleWindow::get(window);
+  ScaleWindow* scale_win = ScaleWindow::get(window);
 
   ScalePosition const& pos = scale_win->getCurrentPosition();
   auto const& border_rect = window->borderRect();
