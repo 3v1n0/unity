@@ -36,6 +36,7 @@ namespace glib
 
 namespace
 {
+const unsigned MAX_RECONNECTION_ATTEMPTS = 5;
 nux::logging::Logger logger("unity.glib.dbusproxy");
 }
 
@@ -55,7 +56,7 @@ public:
        GDBusProxyFlags flags);
   ~Impl();
 
-  void StartReconnectionTimeout();
+  void StartReconnectionTimeout(unsigned timeout);
   void Connect();
 
   void Call(string const& method_name,
@@ -91,6 +92,7 @@ public:
   glib::Object<GDBusProxy> proxy_;
   glib::Object<GCancellable> cancellable_;
   bool connected_;
+  unsigned reconnection_attempts_;
 
   glib::Signal<void, GDBusProxy*, char*, char*, GVariant*> g_signal_connection_;
   glib::Signal<void, GDBusProxy*, GParamSpec*> name_owner_signal_;
@@ -113,8 +115,9 @@ DBusProxy::Impl::Impl(DBusProxy* owner,
   , flags_(flags)
   , cancellable_(g_cancellable_new())
   , connected_(false)
+  , reconnection_attempts_(0)
 {
-  StartReconnectionTimeout();
+  StartReconnectionTimeout(1);
 }
 
 DBusProxy::Impl::~Impl()
@@ -122,7 +125,7 @@ DBusProxy::Impl::~Impl()
   g_cancellable_cancel(cancellable_);
 }
 
-void DBusProxy::Impl::StartReconnectionTimeout()
+void DBusProxy::Impl::StartReconnectionTimeout(unsigned timeout)
 {
   LOG_DEBUG(logger) << "Starting reconnection timeout for " << name_;
 
@@ -134,7 +137,7 @@ void DBusProxy::Impl::StartReconnectionTimeout()
     return false;
   };
 
-  reconnect_timeout_.reset(new glib::TimeoutSeconds(1, callback));
+  reconnect_timeout_.reset(new glib::TimeoutSeconds(timeout, callback));
 }
 
 void DBusProxy::Impl::Connect()
@@ -169,12 +172,27 @@ void DBusProxy::Impl::OnProxyConnectCallback(GObject* source,
   // therefore we should deal with the error before touching the impl pointer
   if (!proxy || error)
   {
-    LOG_WARNING(logger) << "Unable to connect to proxy: " << error;
+    // if the cancellable was cancelled, "self" points to destroyed object
+    if (error && !g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+    {
+      if (self->reconnection_attempts_++ < MAX_RECONNECTION_ATTEMPTS)
+      {
+        LOG_WARNING(logger) << "Unable to connect to proxy: \"" << error
+          << "\"... Trying to reconnect (attempt "
+          << self->reconnection_attempts_ << ")";
+        self->StartReconnectionTimeout(3);
+      }
+      else
+      {
+        LOG_ERROR(logger) << "Unable to connect to proxy: " << error;
+      }
+    }
     return;
   }
 
   LOG_DEBUG(logger) << "Sucessfully created proxy: " << self->object_path_;
 
+  self->reconnection_attempts_ = 0;
   self->proxy_ = proxy;
   self->g_signal_connection_.Connect(self->proxy_, "g-signal",
                                      sigc::mem_fun(self, &Impl::OnProxySignal));
