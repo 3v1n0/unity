@@ -14,6 +14,8 @@ from autopilot.emulators.ibus import (
     get_active_input_engines,
     set_active_engines,
     get_available_input_engines,
+    get_gconf_option,
+    set_gconf_option,
     )
 from autopilot.matchers import Eventually
 from autopilot.testcase import multiply_scenarios
@@ -42,15 +44,15 @@ class IBusTests(UnityTestCase):
         """
         # get the existing keys:
         trigger_hotkey_path = '/desktop/ibus/general/hotkey/trigger'
-        old_keys = self.get_gconf_option(trigger_hotkey_path)
+        old_keys = get_gconf_option(trigger_hotkey_path)
 
         self.activate_binding = 'Control+space'
         activate_release_binding_option = 'Alt+Release+Control_L'
         new_keys = [self.activate_binding, activate_release_binding_option]
 
         if new_keys != old_keys:
-            self.set_gconf_option(trigger_hotkey_path, new_keys)
-            self.addCleanup(self.set_gconf_option, trigger_hotkey_path, old_keys)
+            set_gconf_option(trigger_hotkey_path, new_keys)
+            self.addCleanup(set_gconf_option, trigger_hotkey_path, old_keys)
         self.activate_release_binding = 'Alt+Control_L'
 
     @classmethod
@@ -118,10 +120,10 @@ class IBusTestsPinyin(IBusWidgetScenariodTests):
         IBusWidgetScenariodTests.scenarios,
         [
             ('basic', {'input': 'abc1', 'result': u'\u963f\u5e03\u4ece'}),
-            ('photo', {'input': 'zhaopian ', 'result': u'\u7167\u7247'}),
-            ('internet', {'input': 'hulianwang ', 'result': u'\u4e92\u8054\u7f51'}),
-            ('disk', {'input': 'cipan ', 'result': u'\u78c1\u76d8'}),
-            ('disk_management', {'input': 'cipan guanli ', 'result': u'\u78c1\u76d8\u7ba1\u7406'}),
+            #('photo', {'input': 'zhaopian ', 'result': u'\u7167\u7247'}),
+            #('internet', {'input': 'hulianwang ', 'result': u'\u4e92\u8054\u7f51'}),
+            #('disk', {'input': 'cipan ', 'result': u'\u78c1\u76d8'}),
+            #('disk_management', {'input': 'cipan guanli ', 'result': u'\u78c1\u76d8\u7ba1\u7406'}),
         ]
     )
 
