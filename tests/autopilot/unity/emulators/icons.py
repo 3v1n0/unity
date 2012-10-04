@@ -97,6 +97,10 @@ class DesktopLauncherIcon(SimpleLauncherIcon):
     """Represents an icon that may appear in the switcher."""
 
 
+class VolumeLauncherIcon(SimpleLauncherIcon):
+    """Represents a volume icon in the launcher."""
+
+
 class SoftwareCenterLauncherIcon(BamfLauncherIcon):
     """Represents a launcher icon of a Software Center app."""
 
