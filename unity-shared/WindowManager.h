@@ -105,8 +105,8 @@ public:
   virtual bool ScaleWindowGroup(std::vector<Window> const& windows,
                                 int state, bool force) = 0;
 
-  virtual void Decorate(Window window_id) {};
-  virtual void Undecorate(Window window_id) {};
+  virtual void Decorate(Window window_id) const {};
+  virtual void Undecorate(Window window_id) const {};
 
   virtual bool IsScreenGrabbed() const = 0;
   virtual bool IsViewPortSwitchStarted() const = 0;
