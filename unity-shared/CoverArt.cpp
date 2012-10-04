@@ -150,6 +150,8 @@ void CoverArt::StartWaiting()
   if (waiting_)
     return;
 
+  if (GetLayout())
+    GetLayout()->RemoveChildObject(overlay_text_);
   waiting_ = true;
 
   rotate_matrix_.Rotate_z(0.0f);
