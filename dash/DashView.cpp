@@ -338,14 +338,11 @@ void DashView::SetupViews()
 {
   dash::Style& style = dash::Style::Instance();
 
-  auto main_layout = new nux::HLayout;
-  main_layout->SetLeftAndRightPadding(style.GetVSeparatorSize(), 0);
-  main_layout->SetTopAndBottomPadding(style.GetHSeparatorSize(), 0);
-  SetLayout(main_layout);
-
   layout_ = new nux::VLayout();
+  layout_->SetLeftAndRightPadding(style.GetVSeparatorSize(), 0);
+  layout_->SetTopAndBottomPadding(style.GetHSeparatorSize(), 0);
+  SetLayout(layout_);
   layout_->SetRedirectRenderingToTexture(true);
-  main_layout->AddLayout(layout_);
 
   content_layout_ = new DashLayout(NUX_TRACKER_LOCATION);
   content_layout_->SetTopAndBottomPadding(style.GetDashViewTopPadding(), 0);
