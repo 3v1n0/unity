@@ -112,7 +112,7 @@ void CoverArt::SetImage(std::string const& image_hint)
   else if (!image_hint.empty())
   {
     glib::Object<GIcon> icon(g_icon_new_for_string(image_hint.c_str(), NULL));
-    if (G_IS_ICON(icon.RawPtr()))
+    if (icon.IsType(G_TYPE_ICON))
     {
       StartWaiting();
       slot_handle_ = IconLoader::GetDefault().LoadFromGIconString(image_hint, ICON_SIZE, ICON_SIZE, sigc::mem_fun(this, &CoverArt::IconLoaded));
