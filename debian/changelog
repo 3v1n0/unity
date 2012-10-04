@@ -1,4 +1,4 @@
-unity (6.8.0-0ubuntu1) UNRELEASED; urgency=low
+unity (6.8.0-0ubuntu1) quantal-proposed; urgency=low
 
   [ Ángel Guzmán Maeso ]
   * debian/unity-crashdb.conf:
