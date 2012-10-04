@@ -36,7 +36,7 @@
 #include "QuicklistManager.h"
 #include "StartupNotifyService.h"
 #include "Timer.h"
-#include "KeyboardUtil.h"
+#include "XKeyboardUtil.h"
 #include "glow_texture.h"
 #include "unityshell.h"
 #include "BackgroundEffectHelper.h"
@@ -75,7 +75,6 @@ namespace unity
 using namespace launcher;
 using launcher::AbstractLauncherIcon;
 using launcher::Launcher;
-using ui::KeyboardUtil;
 using ui::LayoutWindow;
 using ui::LayoutWindowList;
 using util::Timer;
@@ -422,9 +421,9 @@ UnityScreen::~UnityScreen()
 
 void UnityScreen::initAltTabNextWindow()
 {
-  KeyboardUtil key_util(screen->dpy());
-  guint above_tab_keycode = key_util.GetKeycodeAboveKeySymbol (XStringToKeysym("Tab"));
-  KeySym above_tab_keysym = XkbKeycodeToKeysym (screen->dpy(), above_tab_keycode, 0, 0);
+  Display* display = screen->dpy();
+  KeySym tab_keysym = XStringToKeysym("Tab");
+  KeySym above_tab_keysym = keyboard::get_key_above_key_symbol(display, tab_keysym);
 
   if (above_tab_keysym != NoSymbol)
   {
@@ -460,7 +459,7 @@ void UnityScreen::initAltTabNextWindow()
   }
   else
   {
-    printf ("Could not find key above tab!\n");
+    LOG_WARN(logger) << "Could not find key above tab!";
   }
 
 }

@@ -35,7 +35,6 @@ set (UNITY_SHARED_SOURCES
      DashStyle.cpp
      DefaultThumbnailProvider.cpp
      FontSettings.cpp
-     KeyboardUtil.cpp
      IMTextEntry.cpp
      IconLoader.cpp
      IconRenderer.cpp
@@ -64,6 +63,7 @@ set (UNITY_SHARED_SOURCES
      UnityWindowView.cpp
      UserThumbnailProvider.cpp
      WindowManager.cpp
+     XKeyboardUtil.cpp
      XWindowManager.cpp
      ubus-server.cpp
 )
