@@ -52,9 +52,9 @@ LauncherDragWindow::LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> i
       CancelDrag();
   });
 
-  auto wm = WindowManager::Default();
-  wm->window_mapped.connect(sigc::hide(sigc::mem_fun(this, &LauncherDragWindow::CancelDrag)));
-  wm->window_unmapped.connect(sigc::hide(sigc::mem_fun(this, &LauncherDragWindow::CancelDrag)));
+  WindowManager& wm = WindowManager::Default();
+  wm.window_mapped.connect(sigc::hide(sigc::mem_fun(this, &LauncherDragWindow::CancelDrag)));
+  wm.window_unmapped.connect(sigc::hide(sigc::mem_fun(this, &LauncherDragWindow::CancelDrag)));
 }
 
 LauncherDragWindow::~LauncherDragWindow()

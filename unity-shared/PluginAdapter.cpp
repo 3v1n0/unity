@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -25,6 +25,8 @@
 #include <NuxCore/Logger.h>
 #include <UnityCore/Variant.h>
 
+namespace unity
+{
 namespace
 {
 
@@ -33,9 +35,8 @@ nux::logging::Logger logger("unity.plugin");
 const int THRESHOLD_HEIGHT = 600;
 const int THRESHOLD_WIDTH = 1024;
 
+std::shared_ptr<PluginAdapter> global_instance;
 }
-
-PluginAdapter* PluginAdapter::_default = 0;
 
 #define MAXIMIZABLE (CompWindowActionMaximizeHorzMask & CompWindowActionMaximizeVertMask & CompWindowActionResizeMask)
 
@@ -44,20 +45,23 @@ PluginAdapter* PluginAdapter::_default = 0;
 #define MWM_HINTS_UNDECORATED_UNITY 0x80
 #define _XA_MOTIF_WM_HINTS    "_MOTIF_WM_HINTS"
 
-/* static */
-PluginAdapter*
-PluginAdapter::Default()
+
+WindowManagerPtr create_window_manager()
 {
-  if (!_default)
-    return 0;
-  return _default;
+  return global_instance;
 }
 
 /* static */
-void
-PluginAdapter::Initialize(CompScreen* screen)
+PluginAdapter& PluginAdapter::Default()
 {
-  _default = new PluginAdapter(screen);
+  // Better hope that initialize has been called first.
+  return *global_instance;
+}
+
+/* static */
+void PluginAdapter::Initialize(CompScreen* screen)
+{
+  global_instance.reset(new PluginAdapter(screen));
 }
 
 PluginAdapter::PluginAdapter(CompScreen* screen) :
@@ -82,10 +86,9 @@ PluginAdapter::~PluginAdapter()
 }
 
 /* A No-op for now, but could be useful later */
-void
-PluginAdapter::OnScreenGrabbed()
+void PluginAdapter::OnScreenGrabbed()
 {
-  compiz_screen_grabbed.emit();
+  screen_grabbed.emit();
 
   if (!_spread_state && screen->grabExist("scale"))
   {
@@ -100,8 +103,7 @@ PluginAdapter::OnScreenGrabbed()
   }
 }
 
-void
-PluginAdapter::OnScreenUngrabbed()
+void PluginAdapter::OnScreenUngrabbed()
 {
   if (_spread_state && !screen->grabExist("scale"))
   {
@@ -116,58 +118,53 @@ PluginAdapter::OnScreenUngrabbed()
     terminate_expo.emit();
   }
 
-  compiz_screen_ungrabbed.emit();
+  screen_ungrabbed.emit();
 }
 
-void
-PluginAdapter::NotifyResized(CompWindow* window, int x, int y, int w, int h)
+void PluginAdapter::NotifyResized(CompWindow* window, int x, int y, int w, int h)
 {
   window_resized.emit(window->id());
 }
 
-void
-PluginAdapter::NotifyMoved(CompWindow* window, int x, int y)
+void PluginAdapter::NotifyMoved(CompWindow* window, int x, int y)
 {
   window_moved.emit(window->id());
 }
 
-void
-PluginAdapter::NotifyStateChange(CompWindow* window, unsigned int state, unsigned int last_state)
+void PluginAdapter::NotifyStateChange(CompWindow* window, unsigned int state, unsigned int last_state)
 {
   if (!((last_state & MAXIMIZE_STATE) == MAXIMIZE_STATE)
       && ((state & MAXIMIZE_STATE) == MAXIMIZE_STATE))
   {
-    WindowManager::window_maximized.emit(window->id());
+    window_maximized.emit(window->id());
   }
   else if (((last_state & MAXIMIZE_STATE) == MAXIMIZE_STATE)
            && !((state & MAXIMIZE_STATE) == MAXIMIZE_STATE))
   {
-    WindowManager::window_restored.emit(window->id());
+    window_restored.emit(window->id());
   }
 }
 
-void
-PluginAdapter::NotifyNewDecorationState(guint32 xid)
+void PluginAdapter::NotifyNewDecorationState(Window xid)
 {
-  bool wasTracked = (_window_decoration_state.find (xid) != _window_decoration_state.end ());
+  bool wasTracked = (_window_decoration_state.find(xid) != _window_decoration_state.end());
   bool wasDecorated = false;
 
   if (wasTracked)
     wasDecorated = _window_decoration_state[xid];
 
-  bool decorated = IsWindowDecorated (xid);
+  bool decorated = IsWindowDecorated(xid);
 
   if (decorated == wasDecorated)
     return;
 
   if (decorated && (!wasDecorated || !wasTracked))
-    WindowManager::window_decorated.emit(xid);
+    window_decorated.emit(xid);
   else if (wasDecorated || !wasTracked)
-    WindowManager::window_undecorated.emit(xid);
+    window_undecorated.emit(xid);
 }
 
-void
-PluginAdapter::Notify(CompWindow* window, CompWindowNotify notify)
+void PluginAdapter::Notify(CompWindow* window, CompWindowNotify notify)
 {
   switch (notify)
   {
@@ -190,38 +187,36 @@ PluginAdapter::Notify(CompWindow* window, CompWindowNotify notify)
       window_shown.emit(window->id());
       break;
     case CompWindowNotifyMap:
-      WindowManager::window_mapped.emit(window->id());
+      window_mapped.emit(window->id());
       break;
     case CompWindowNotifyUnmap:
-      WindowManager::window_unmapped.emit(window->id());
+      window_unmapped.emit(window->id());
       break;
     case CompWindowNotifyFocusChange:
-      WindowManager::window_focus_changed.emit(window->id());
+      window_focus_changed.emit(window->id());
       break;
     default:
       break;
   }
 }
 
-void
-PluginAdapter::NotifyCompizEvent(const char* plugin, const char* event, CompOption::Vector& option)
+void PluginAdapter::NotifyCompizEvent(const char* plugin,
+                                      const char* event,
+                                      CompOption::Vector& option)
 {
   if (g_strcmp0(event, "start_viewport_switch") == 0)
   {
     _vp_switch_started = true;
-    compiz_screen_viewport_switch_started.emit();
+    screen_viewport_switch_started.emit();
   }
   else if (g_strcmp0(event, "end_viewport_switch") == 0)
   {
     _vp_switch_started = false;
-    compiz_screen_viewport_switch_ended.emit();
+    screen_viewport_switch_ended.emit();
   }
-
-  compiz_event.emit(plugin, event, option);
 }
 
-void
-MultiActionList::AddNewAction(std::string const& name, CompAction* a, bool primary)
+void MultiActionList::AddNewAction(std::string const& name, CompAction* a, bool primary)
 {
   actions_[name] = a;
 
@@ -328,13 +323,9 @@ void MultiActionList::TerminateAll(CompOption::Vector const& extra_args) const
   }
 }
 
-unsigned long long
-PluginAdapter::GetWindowActiveNumber (guint32 xid) const
+unsigned long long PluginAdapter::GetWindowActiveNumber(Window window_id) const
 {
-  Window win = xid;
-  CompWindow* window;
-
-  window = m_Screen->findWindow(win);
+  CompWindow* window = m_Screen->findWindow(window_id);
 
   if (window)
   {
@@ -349,33 +340,32 @@ PluginAdapter::GetWindowActiveNumber (guint32 xid) const
   return 0;
 }
 
-void
-PluginAdapter::SetExpoAction(MultiActionList& expo)
+void PluginAdapter::SetExpoAction(MultiActionList& expo)
 {
   m_ExpoActionList = expo;
 }
 
-void
-PluginAdapter::SetScaleAction(MultiActionList& scale)
+void PluginAdapter::SetScaleAction(MultiActionList& scale)
 {
   m_ScaleActionList = scale;
 }
 
-std::string
-PluginAdapter::MatchStringForXids(std::vector<Window> const& windows)
+std::string PluginAdapter::MatchStringForXids(std::vector<Window> const& windows)
 {
-  std::string out_string = "any & (";
+  std::ostringstream sout;
 
-  for (auto const& xid : windows)
-    out_string += "| xid=" + std::to_string(xid) + " ";
+  sout << "any & (";
 
-  out_string += ")";
+  for (auto const& window : windows)
+  {
+    sout << "| xid=" << window << " ";
+  }
+  sout << ")";
 
-  return out_string;
+  return sout.str();
 }
 
-void
-PluginAdapter::InitiateScale(std::string const& match, int state)
+void PluginAdapter::InitiateScale(std::string const& match, int state)
 {
   CompOption::Vector argument(1);
   argument[0].setName("match", CompOption::TypeMatch);
@@ -384,32 +374,27 @@ PluginAdapter::InitiateScale(std::string const& match, int state)
   m_ScaleActionList.InitiateAll(argument, state);
 }
 
-void
-PluginAdapter::TerminateScale()
+void PluginAdapter::TerminateScale()
 {
   m_ScaleActionList.TerminateAll();
 }
 
-bool
-PluginAdapter::IsScaleActive() const
+bool PluginAdapter::IsScaleActive() const
 {
   return m_Screen->grabExist("scale");
 }
 
-bool
-PluginAdapter::IsScaleActiveForGroup() const
+bool PluginAdapter::IsScaleActiveForGroup() const
 {
   return _spread_windows_state && m_Screen->grabExist("scale");
 }
 
-bool
-PluginAdapter::IsExpoActive() const
+bool PluginAdapter::IsExpoActive() const
 {
   return m_Screen->grabExist("expo");
 }
 
-bool
-PluginAdapter::IsWallActive() const
+bool PluginAdapter::IsWallActive() const
 {
   return m_Screen->grabExist("wall");
 }
@@ -425,19 +410,14 @@ void PluginAdapter::TerminateExpo()
 }
 
 // WindowManager implementation
-guint32
-PluginAdapter::GetActiveWindow() const
+Window PluginAdapter::GetActiveWindow() const
 {
   return m_Screen->activeWindow();
 }
 
-bool
-PluginAdapter::IsWindowMaximized(guint xid) const
+bool PluginAdapter::IsWindowMaximized(Window window_id) const
 {
-  Window win = xid;
-  CompWindow* window;
-
-  window = m_Screen->findWindow(win);
+  CompWindow* window = m_Screen->findWindow(window_id);
   if (window)
   {
     return ((window->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE);
@@ -446,12 +426,9 @@ PluginAdapter::IsWindowMaximized(guint xid) const
   return false;
 }
 
-bool
-PluginAdapter::IsWindowDecorated(guint32 xid)
+bool PluginAdapter::IsWindowDecorated(Window window_id) const
 {
   Display* display = m_Screen->dpy();
-  Window win = xid;
-  Atom hints_atom = None;
   MotifWmHints* hints = NULL;
   Atom type = None;
   gint format;
@@ -459,9 +436,9 @@ PluginAdapter::IsWindowDecorated(guint32 xid)
   gulong bytes_after;
   bool ret = true;
 
-  hints_atom = XInternAtom(display, _XA_MOTIF_WM_HINTS, false);
+  Atom hints_atom = XInternAtom(display, _XA_MOTIF_WM_HINTS, false);
 
-  if (XGetWindowProperty(display, win, hints_atom, 0,
+  if (XGetWindowProperty(display, window_id, hints_atom, 0,
                          sizeof(MotifWmHints) / sizeof(long), False,
                          hints_atom, &type, &format, &nitems, &bytes_after,
                          (guchar**)&hints) != Success)
@@ -477,22 +454,20 @@ PluginAdapter::IsWindowDecorated(guint32 xid)
       hints->flags & MWM_HINTS_DECORATIONS)
   {
     /* Must have both bits set */
-    _window_decoration_state[xid] = ret =
-          (hints->decorations & (MwmDecorAll | MwmDecorTitle))  ||
+    ret = (hints->decorations & (MwmDecorAll | MwmDecorTitle))  ||
           (hints->decorations & MWM_HINTS_UNDECORATED_UNITY);
+    // This is mildly evil and we should look for another solution.
+    PluginAdapter* non_const_this = const_cast<PluginAdapter*>(this);
+    non_const_this->_window_decoration_state[window_id] = ret;
   }
 
   XFree(hints);
   return ret;
 }
 
-bool
-PluginAdapter::IsWindowOnCurrentDesktop(guint32 xid) const
+bool PluginAdapter::IsWindowOnCurrentDesktop(Window window_id) const
 {
-  Window win = xid;
-  CompWindow* window;
-
-  window = m_Screen->findWindow(win);
+  CompWindow* window = m_Screen->findWindow(window_id);
   if (window)
   {
     // we aren't checking window->onCurrentDesktop (), as the name implies, because that is broken
@@ -502,13 +477,9 @@ PluginAdapter::IsWindowOnCurrentDesktop(guint32 xid) const
   return false;
 }
 
-bool
-PluginAdapter::IsWindowObscured(guint32 xid) const
+bool PluginAdapter::IsWindowObscured(Window window_id) const
 {
-  Window win = xid;
-  CompWindow* window;
-
-  window = m_Screen->findWindow(win);
+  CompWindow* window = m_Screen->findWindow(window_id);
 
   if (window)
   {
@@ -535,35 +506,26 @@ PluginAdapter::IsWindowObscured(guint32 xid) const
   return false;
 }
 
-bool
-PluginAdapter::IsWindowMapped(guint32 xid) const
+bool PluginAdapter::IsWindowMapped(Window window_id) const
 {
-  Window win = xid;
-  CompWindow* window;
-
-  window = m_Screen->findWindow(win);
+  CompWindow* window = m_Screen->findWindow(window_id);
   if (window)
     return window->mapNum () > 0;
   return true;
 }
 
-bool
-PluginAdapter::IsWindowVisible(guint32 xid) const
+bool PluginAdapter::IsWindowVisible(Window window_id) const
 {
-  Window win = xid;
-  CompWindow* window;
-
-  window = m_Screen->findWindow(win);
+  CompWindow* window = m_Screen->findWindow(window_id);
   if (window)
     return !(window->state() & CompWindowStateHiddenMask) && !window->inShowDesktopMode();
 
   return false;
 }
 
-bool
-PluginAdapter::IsWindowOnTop(guint32 xid) const
+bool PluginAdapter::IsWindowOnTop(Window window_id) const
 {
-  if (xid == GetTopMostValidWindowInViewport())
+  if (window_id == GetTopMostValidWindowInViewport())
     return true;
 
   return false;
@@ -594,130 +556,91 @@ Window PluginAdapter::GetTopMostValidWindowInViewport() const
   return 0;
 }
 
-bool
-PluginAdapter::IsWindowClosable(guint32 xid) const
+bool PluginAdapter::IsWindowClosable(Window window_id) const
 {
-  Window win = xid;
-  CompWindow* window;
-
-  window = m_Screen->findWindow(win);
+  CompWindow* window = m_Screen->findWindow(window_id);
   if (window)
     return (window->actions() & CompWindowActionCloseMask);
 
   return false;
 }
 
-bool
-PluginAdapter::IsWindowMinimizable(guint32 xid) const
+bool PluginAdapter::IsWindowMinimizable(Window window_id) const
 {
-  Window win = xid;
-  CompWindow* window;
-
-  window = m_Screen->findWindow(win);
+  CompWindow* window = m_Screen->findWindow(window_id);
   if (window)
     return (window->actions() & CompWindowActionMinimizeMask);
 
   return false;
 }
 
-bool
-PluginAdapter::IsWindowMaximizable(guint32 xid) const
+bool PluginAdapter::IsWindowMaximizable(Window window_id) const
 {
-  Window win = xid;
-  CompWindow* window;
-
-  window = m_Screen->findWindow(win);
+  CompWindow* window = m_Screen->findWindow(window_id);
   if (window)
     return (window->actions() & MAXIMIZABLE);
 
   return false;
 }
 
-void
-PluginAdapter::Restore(guint32 xid)
+void PluginAdapter::Restore(Window window_id)
 {
-  Window win = xid;
-  CompWindow* window;
-
-  window = m_Screen->findWindow(win);
+  CompWindow* window = m_Screen->findWindow(window_id);
   if (window)
     window->maximize(0);
 }
 
-void
-PluginAdapter::RestoreAt(guint32 xid, int x, int y)
+void PluginAdapter::RestoreAt(Window window_id, int x, int y)
 {
-  Window win = xid;
-  CompWindow* window;
-
-  window = m_Screen->findWindow(win);
+  CompWindow* window = m_Screen->findWindow(window_id);
   if (window && (window->state() & MAXIMIZE_STATE))
   {
-    nux::Geometry new_geo(GetWindowSavedGeometry(xid));
+    nux::Geometry new_geo(GetWindowSavedGeometry(window_id));
     new_geo.x = x;
     new_geo.y = y;
     window->maximize(0);
-    MoveResizeWindow(xid, new_geo);
+    MoveResizeWindow(window_id, new_geo);
   }
 }
 
-void
-PluginAdapter::Minimize(guint32 xid)
+void PluginAdapter::Minimize(Window window_id)
 {
-  Window win = xid;
-  CompWindow* window;
-
-  window = m_Screen->findWindow(win);
+  CompWindow* window = m_Screen->findWindow(window_id);
   if (window && (window->actions() & CompWindowActionMinimizeMask))
     window->minimize();
 }
 
-void
-PluginAdapter::Close(guint32 xid)
+void PluginAdapter::Close(Window window_id)
 {
-  Window win = xid;
-  CompWindow* window;
-
-  window = m_Screen->findWindow(win);
+  CompWindow* window = m_Screen->findWindow(window_id);
   if (window)
     window->close(CurrentTime);
 }
 
-void
-PluginAdapter::Activate(guint32 xid)
+void PluginAdapter::Activate(Window window_id)
 {
-  Window win = xid;
-  CompWindow* window;
-
-  window = m_Screen->findWindow(win);
+  CompWindow* window = m_Screen->findWindow(window_id);
   if (window)
     window->activate();
 }
 
-void
-PluginAdapter::Raise(guint32 xid)
+void PluginAdapter::Raise(Window window_id)
 {
-  Window win = xid;
-  CompWindow* window;
-
-  window = m_Screen->findWindow(win);
+  CompWindow* window = m_Screen->findWindow(window_id);
   if (window)
     window->raise();
 }
 
-void
-PluginAdapter::Lower(guint32 xid)
+void PluginAdapter::Lower(Window window_id)
 {
-  Window win = xid;
-  CompWindow* window;
-
-  window = m_Screen->findWindow(win);
+  CompWindow* window = m_Screen->findWindow(window_id);
   if (window)
     window->lower();
 }
 
-void
-PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility focus_visibility, int monitor, bool only_top_win)
+void PluginAdapter::FocusWindowGroup(std::vector<Window> const& window_ids,
+                                     FocusVisibility focus_visibility,
+                                     int monitor, bool only_top_win)
 {
   CompPoint target_vp = m_Screen->vp();
   CompWindow* top_window = nullptr;
@@ -838,8 +761,7 @@ PluginAdapter::FocusWindowGroup(std::vector<Window> window_ids, FocusVisibility 
   }
 }
 
-bool
-PluginAdapter::ScaleWindowGroup(std::vector<Window> windows, int state, bool force)
+bool PluginAdapter::ScaleWindowGroup(std::vector<Window> const& windows, int state, bool force)
 {
   std::size_t num_windows = windows.size();
   if (num_windows > 1 || (force && num_windows))
@@ -852,8 +774,7 @@ PluginAdapter::ScaleWindowGroup(std::vector<Window> windows, int state, bool for
   return false;
 }
 
-void
-PluginAdapter::SetWindowIconGeometry(Window window, nux::Geometry const& geo)
+void PluginAdapter::SetWindowIconGeometry(Window window, nux::Geometry const& geo)
 {
   long data[4];
 
@@ -867,8 +788,7 @@ PluginAdapter::SetWindowIconGeometry(Window window, nux::Geometry const& geo)
                   (unsigned char*) data, 4);
 }
 
-void
-PluginAdapter::ShowDesktop()
+void PluginAdapter::ShowDesktop()
 {
   if (_in_show_desktop)
   {
@@ -887,25 +807,22 @@ bool PluginAdapter::InShowDesktop() const
   return _in_show_desktop;
 }
 
-void
-PluginAdapter::OnShowDesktop()
+void PluginAdapter::OnShowDesktop()
 {
   LOG_DEBUG(logger) << "Now in show desktop mode.";
   _in_show_desktop = true;
 }
 
-void
-PluginAdapter::OnLeaveDesktop()
+void PluginAdapter::OnLeaveDesktop()
 {
   LOG_DEBUG(logger) << "No longer in show desktop mode.";
   _in_show_desktop = false;
 }
 
-int
-PluginAdapter::GetWindowMonitor(guint32 xid) const
+int PluginAdapter::GetWindowMonitor(Window window_id) const
 {
   // FIXME, we should use window->outputDevice() but this is not UScreen friendly
-  nux::Geometry const& geo = GetWindowGeometry(xid);
+  nux::Geometry const& geo = GetWindowGeometry(window_id);
 
   if (!geo.IsNull())
   {
@@ -918,14 +835,10 @@ PluginAdapter::GetWindowMonitor(guint32 xid) const
   return -1;
 }
 
-nux::Geometry
-PluginAdapter::GetWindowGeometry(guint32 xid) const
+nux::Geometry PluginAdapter::GetWindowGeometry(Window window_id) const
 {
-  Window win = xid;
-  CompWindow* window;
   nux::Geometry geo;
-
-  window = m_Screen->findWindow(win);
+  CompWindow* window = m_Screen->findWindow(window_id);
   if (window)
   {
     geo.x = window->borderRect().x();
@@ -936,14 +849,10 @@ PluginAdapter::GetWindowGeometry(guint32 xid) const
   return geo;
 }
 
-nux::Geometry
-PluginAdapter::GetWindowSavedGeometry(guint32 xid) const
+nux::Geometry PluginAdapter::GetWindowSavedGeometry(Window window_id) const
 {
-  Window win = xid;
   nux::Geometry geo(0, 0, 1, 1);
-  CompWindow* window;
-
-  window = m_Screen->findWindow(win);
+  CompWindow* window = m_Screen->findWindow(window_id);
   if (window)
   {
     XWindowChanges &wc = window->saveWc();
@@ -956,37 +865,27 @@ PluginAdapter::GetWindowSavedGeometry(guint32 xid) const
   return geo;
 }
 
-nux::Geometry
-PluginAdapter::GetScreenGeometry() const
+nux::Geometry PluginAdapter::GetScreenGeometry() const
 {
-  nux::Geometry geo;
-
-  geo.x = 0;
-  geo.y = 0;
-  geo.width = m_Screen->width();
-  geo.height = m_Screen->height();
-
+  nux::Geometry geo(0, 0, m_Screen->width(), m_Screen->height());
   return geo;
 }
 
-nux::Geometry
-PluginAdapter::GetWorkAreaGeometry(guint32 xid) const
+nux::Geometry PluginAdapter::GetWorkAreaGeometry(Window window_id) const
 {
   CompWindow* window = nullptr;
   unsigned int output = 0;
 
-  if (xid != 0)
+  if (window_id)
   {
-    Window win = xid;
-
-    window = m_Screen->findWindow(win);
+    window = m_Screen->findWindow(window_id);
     if (window)
     {
       output = window->outputDevice();
     }
   }
 
-  if (xid == 0 || !window)
+  if (window_id == 0 || !window)
   {
     output = m_Screen->currentOutputDev().id();
   }
@@ -996,8 +895,7 @@ PluginAdapter::GetWorkAreaGeometry(guint32 xid) const
   return nux::Geometry(workarea.x(), workarea.y(), workarea.width(), workarea.height());
 }
 
-bool
-PluginAdapter::CheckWindowIntersection(nux::Geometry const& region, CompWindow* window) const
+bool PluginAdapter::CheckWindowIntersection(nux::Geometry const& region, CompWindow* window) const
 {
   int intersect_types = CompWindowTypeNormalMask | CompWindowTypeDialogMask |
                         CompWindowTypeModalDialogMask | CompWindowTypeUtilMask;
@@ -1015,8 +913,7 @@ PluginAdapter::CheckWindowIntersection(nux::Geometry const& region, CompWindow* 
   return false;
 }
 
-void
-PluginAdapter::CheckWindowIntersections (nux::Geometry const& region, bool &active, bool &any)
+void PluginAdapter::CheckWindowIntersections(nux::Geometry const& region, bool &active, bool &any)
 {
   // prime to false so we can assume values later one
   active = false;
@@ -1053,14 +950,12 @@ PluginAdapter::CheckWindowIntersections (nux::Geometry const& region, bool &acti
   }
 }
 
-int
-PluginAdapter::WorkspaceCount() const
+int PluginAdapter::WorkspaceCount() const
 {
   return m_Screen->vpSize().width() * m_Screen->vpSize().height();
 }
 
-void
-PluginAdapter::SetMwmWindowHints(Window xid, MotifWmHints* new_hints)
+void PluginAdapter::SetMwmWindowHints(Window xid, MotifWmHints* new_hints)
 {
   Display* display = m_Screen->dpy();
   Atom hints_atom = None;
@@ -1111,19 +1006,17 @@ PluginAdapter::SetMwmWindowHints(Window xid, MotifWmHints* new_hints)
     XFree(data);
 }
 
-void
-PluginAdapter::Decorate(guint32 xid)
+void PluginAdapter::Decorate(Window window_id)
 {
   MotifWmHints hints = { 0 };
 
   hints.flags = MWM_HINTS_DECORATIONS;
   hints.decorations = GDK_DECOR_ALL & ~(MWM_HINTS_UNDECORATED_UNITY);
 
-  SetMwmWindowHints(xid, &hints);
+  SetMwmWindowHints(window_id, &hints);
 }
 
-void
-PluginAdapter::Undecorate(guint32 xid)
+void PluginAdapter::Undecorate(Window window_id)
 {
   MotifWmHints hints = { 0 };
 
@@ -1133,17 +1026,15 @@ PluginAdapter::Undecorate(guint32 xid)
   hints.flags = MWM_HINTS_DECORATIONS;
   hints.decorations = MWM_HINTS_UNDECORATED_UNITY;
 
-  SetMwmWindowHints(xid, &hints);
+  SetMwmWindowHints(window_id, &hints);
 }
 
-bool
-PluginAdapter::IsScreenGrabbed() const
+bool PluginAdapter::IsScreenGrabbed() const
 {
   return m_Screen->grabbed();
 }
 
-bool
-PluginAdapter::IsViewPortSwitchStarted() const
+bool PluginAdapter::IsViewPortSwitchStarted() const
 {
   return _vp_switch_started;
 }
@@ -1208,8 +1099,7 @@ bool PluginAdapter::MaximizeIfBigEnough(CompWindow* window) const
   return true;
 }
 
-void
-PluginAdapter::ShowGrabHandles(CompWindow* window, bool use_timer)
+void PluginAdapter::ShowGrabHandles(CompWindow* window, bool use_timer)
 {
   if (!_grab_show_action || !window)
     return;
@@ -1226,8 +1116,7 @@ PluginAdapter::ShowGrabHandles(CompWindow* window, bool use_timer)
   _grab_show_action->initiate()(_grab_show_action, 0, argument);
 }
 
-void
-PluginAdapter::HideGrabHandles(CompWindow* window)
+void PluginAdapter::HideGrabHandles(CompWindow* window)
 {
   if (!_grab_hide_action || !window)
     return;
@@ -1242,8 +1131,7 @@ PluginAdapter::HideGrabHandles(CompWindow* window)
   _grab_hide_action->initiate()(_grab_hide_action, 0, argument);
 }
 
-void
-PluginAdapter::ToggleGrabHandles(CompWindow* window)
+void PluginAdapter::ToggleGrabHandles(CompWindow* window)
 {
   if (!_grab_toggle_action || !window)
     return;
@@ -1258,14 +1146,12 @@ PluginAdapter::ToggleGrabHandles(CompWindow* window)
   _grab_toggle_action->initiate()(_grab_toggle_action, 0, argument);
 }
 
-void
-PluginAdapter::SetCoverageAreaBeforeAutomaximize(float area)
+void PluginAdapter::SetCoverageAreaBeforeAutomaximize(float area)
 {
   _coverage_area_before_automaximize = area;
 }
 
-bool
-PluginAdapter::saveInputFocus()
+bool PluginAdapter::SaveInputFocus()
 {
   Window      active = m_Screen->activeWindow ();
   CompWindow* cw = m_Screen->findWindow (active);
@@ -1279,8 +1165,7 @@ PluginAdapter::saveInputFocus()
   return false;
 }
 
-bool
-PluginAdapter::restoreInputFocus()
+bool PluginAdapter::RestoreInputFocus()
 {
   if (_last_focused_window)
   {
@@ -1297,11 +1182,10 @@ PluginAdapter::restoreInputFocus()
   return false;
 }
 
-void
-PluginAdapter::MoveResizeWindow(guint32 xid, nux::Geometry geometry)
+void PluginAdapter::MoveResizeWindow(Window window_id, nux::Geometry geometry)
 {
   int w, h;
-  CompWindow* window = m_Screen->findWindow(xid);
+  CompWindow* window = m_Screen->findWindow(window_id);
 
   if (!window)
     return;
@@ -1333,15 +1217,13 @@ PluginAdapter::MoveResizeWindow(guint32 xid, nux::Geometry geometry)
   window->configureXWindow(CWX | CWY | CWWidth | CWHeight, &xwc);
 }
 
-void
-PluginAdapter::OnWindowClosed(CompWindow *w)
+void PluginAdapter::OnWindowClosed(CompWindow *w)
 {
   if (_last_focused_window == w)
     _last_focused_window = NULL;
 }
 
-void
-PluginAdapter::AddProperties(GVariantBuilder* builder)
+void PluginAdapter::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper wrapper(builder);
   wrapper.add(GetScreenGeometry())
@@ -1355,28 +1237,26 @@ PluginAdapter::AddProperties(GVariantBuilder* builder)
          .add("showdesktop_active", _in_show_desktop);
 }
 
-std::string
-PluginAdapter::GetWindowName(guint32 xid) const
+std::string PluginAdapter::GetWindowName(Window window_id) const
 {
   std::string name;
   Atom visibleNameAtom;
 
   visibleNameAtom = XInternAtom(m_Screen->dpy(), "_NET_WM_VISIBLE_NAME", 0);
-  name = GetUtf8Property(xid, visibleNameAtom);
+  name = GetUtf8Property(window_id, visibleNameAtom);
   if (name.empty())
   {
     Atom wmNameAtom = XInternAtom(m_Screen->dpy(), "_NET_WM_NAME", 0);
-    name = GetUtf8Property(xid, wmNameAtom);
+    name = GetUtf8Property(window_id, wmNameAtom);
   }
 
   if (name.empty())
-    name = GetTextProperty(xid, XA_WM_NAME);
+    name = GetTextProperty(window_id, XA_WM_NAME);
 
   return name;
 }
 
-std::string
-PluginAdapter::GetUtf8Property(guint32 xid, Atom atom) const
+std::string PluginAdapter::GetUtf8Property(Window window_id, Atom atom) const
 {
   Atom          type;
   int           result, format;
@@ -1386,7 +1266,7 @@ PluginAdapter::GetUtf8Property(guint32 xid, Atom atom) const
   Atom          utf8StringAtom;
 
   utf8StringAtom = XInternAtom(m_Screen->dpy(), "UTF8_STRING", 0);
-  result = XGetWindowProperty(m_Screen->dpy(), xid, atom, 0L, 65536, False,
+  result = XGetWindowProperty(m_Screen->dpy(), window_id, atom, 0L, 65536, False,
                               utf8StringAtom, &type, &format, &nItems,
                               &bytesAfter, reinterpret_cast<unsigned char **>(&val));
 
@@ -1403,21 +1283,22 @@ PluginAdapter::GetUtf8Property(guint32 xid, Atom atom) const
   return retval;
 }
 
-std::string
-PluginAdapter::GetTextProperty(guint32 id, Atom atom) const
+std::string PluginAdapter::GetTextProperty(Window window_id, Atom atom) const
 {
   XTextProperty text;
   std::string retval;
 
   text.nitems = 0;
-  if (XGetTextProperty(m_Screen->dpy(), id, &text, atom))
+  if (XGetTextProperty(m_Screen->dpy(), window_id, &text, atom))
   {
     if (text.value)
     {
       retval = std::string(reinterpret_cast<char*>(text.value), text.nitems);
-      XFree (text.value);
+      XFree(text.value);
     }
   }
 
   return retval;
+}
+
 }

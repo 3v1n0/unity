@@ -74,7 +74,7 @@ bool Controller::CanShowSwitcher(const std::vector<AbstractLauncherIcon::Ptr>& r
 {
   bool empty = (show_desktop_disabled_ ? results.empty() : results.size() == 1);
 
-  return (!empty && !WindowManager::Default()->IsWallActive());
+  return (!empty && !WindowManager::Default().IsWallActive());
 }
 
 void Controller::Show(ShowMode show, SortMode sort, std::vector<AbstractLauncherIcon::Ptr> results)
@@ -462,9 +462,10 @@ void Controller::SelectFirstItem()
   unsigned int first_second = 0; // first icons second highest active
   unsigned int second_first = 0; // second icons first highest active
 
+  WindowManager& wm = WindowManager::Default();
   for (guint32 xid : first->Windows())
   {
-    unsigned int num = WindowManager::Default()->GetWindowActiveNumber(xid);
+    unsigned int num = wm.GetWindowActiveNumber(xid);
 
     if (num > first_highest)
     {
@@ -479,13 +480,13 @@ void Controller::SelectFirstItem()
 
   for (guint32 xid : second->Windows())
   {
-    second_first = MAX (WindowManager::Default()->GetWindowActiveNumber(xid), second_first);
+    second_first = std::max<unsigned long long>(wm.GetWindowActiveNumber(xid), second_first);
   }
 
   if (first_second > second_first)
-    model_->Select (first);
+    model_->Select(first);
   else
-    model_->Select (second);
+    model_->Select(second);
 }
 
 /* Introspection */

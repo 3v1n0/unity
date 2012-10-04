@@ -242,8 +242,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      GLScreenInterface::setHandler(gScreen);
 
      PluginAdapter::Initialize(screen);
-     WindowManager::SetDefault(PluginAdapter::Default());
-     AddChild(PluginAdapter::Default());
+     AddChild(&WindowManager::Default());
 
      StartupNotifyService::Default()->SetSnDisplay(screen->snDisplay(), screen->screenNum());
 
@@ -565,7 +564,7 @@ void UnityScreen::paintPanelShadow(const CompRegion& clip)
   if (sources_.GetSource(local::RELAYOUT_TIMEOUT))
     return;
 
-  if (PluginAdapter::Default()->IsExpoActive())
+  if (WindowManager::Default().IsExpoActive())
     return;
 
   CompOutput* output = _last_output;
@@ -691,7 +690,7 @@ void UnityScreen::OnPanelStyleChanged()
   // Reload the windows themed textures
   UnityWindow::CleanupSharedTextures();
 
-  if (WindowManager::Default()->IsScaleActive())
+  if (WindowManager::Default().IsScaleActive())
   {
     UnityWindow::SetupSharedTextures();
 
@@ -840,7 +839,7 @@ bool UnityScreen::forcePaintOnTop ()
 {
     return !allowWindowPaint ||
       ((switcher_controller_->Visible() ||
-        PluginAdapter::Default()->IsExpoActive())
+        WindowManager::Default().IsExpoActive())
        && !fullscreen_windows_.empty () && (!(screen->grabbed () && !screen->otherGrabExist (NULL))));
 }
 
@@ -905,7 +904,7 @@ void UnityScreen::enterShowDesktopMode ()
       w->moveInputFocusTo();
   }
 
-  PluginAdapter::Default()->OnShowDesktop();
+  PluginAdapter::Default().OnShowDesktop();
 
   /* Disable the focus handler as we will report that
    * minimized windows can be focused which will
@@ -944,7 +943,7 @@ void UnityScreen::leaveShowDesktopMode (CompWindow *w)
       }
     }
 
-    PluginAdapter::Default()->OnLeaveDesktop();
+    PluginAdapter::Default().OnLeaveDesktop();
 
     screen->leaveShowDesktopMode (w);
   }
@@ -1487,16 +1486,16 @@ void UnityScreen::nuxDamageCompiz()
 void UnityScreen::handleEvent(XEvent* event)
 {
   bool skip_other_plugins = false;
-  auto wm = PluginAdapter::Default();
+  PluginAdapter& wm = PluginAdapter::Default();
 
   switch (event->type)
   {
     case FocusIn:
     case FocusOut:
       if (event->xfocus.mode == NotifyGrab)
-        wm->OnScreenGrabbed();
+        wm.OnScreenGrabbed();
       else if (event->xfocus.mode == NotifyUngrab)
-        wm->OnScreenUngrabbed();
+        wm.OnScreenUngrabbed();
 
       if (_key_nav_mode_requested)
       {
@@ -1511,7 +1510,7 @@ void UnityScreen::handleEvent(XEvent* event)
       _key_nav_mode_requested = false;
       break;
     case MotionNotify:
-      if (wm->IsScaleActive())
+      if (wm.IsScaleActive())
       {
         ScaleScreen* ss = ScaleScreen::get(screen);
         if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
@@ -1524,7 +1523,7 @@ void UnityScreen::handleEvent(XEvent* event)
         launcher_controller_->KeyNavTerminate(false);
         EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
       }
-      if (wm->IsScaleActive())
+      if (wm.IsScaleActive())
       {
         ScaleScreen* ss = ScaleScreen::get(screen);
         if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
@@ -1572,7 +1571,7 @@ void UnityScreen::handleEvent(XEvent* event)
           }
         }
       }
-      else if (wm->IsScaleActive())
+      else if (wm.IsScaleActive())
       {
         ScaleScreen* ss = ScaleScreen::get(screen);
         if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
@@ -1672,11 +1671,11 @@ void UnityScreen::handleEvent(XEvent* event)
     case PropertyNotify:
       if (event->xproperty.atom == Atoms::mwmHints)
       {
-        PluginAdapter::Default ()->NotifyNewDecorationState(event->xproperty.window);
+        PluginAdapter::Default().NotifyNewDecorationState(event->xproperty.window);
       }
       break;
     case MapRequest:
-      ShowdesktopHandler::AllowLeaveShowdesktopMode (event->xmaprequest.window);
+      ShowdesktopHandler::AllowLeaveShowdesktopMode(event->xmaprequest.window);
       break;
   }
 
@@ -1698,7 +1697,8 @@ void UnityScreen::handleCompizEvent(const char* plugin,
                                     const char* event,
                                     CompOption::Vector& option)
 {
-  PluginAdapter::Default()->NotifyCompizEvent(plugin, event, option);
+  PluginAdapter& adapter = PluginAdapter::Default();
+  adapter.NotifyCompizEvent(plugin, event, option);
   compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::handleCompizEvent (plugin, event, option);
 
   if (launcher_controller_->IsOverlayOpen() && g_strcmp0(event, "start_viewport_switch") == 0)
@@ -1706,7 +1706,7 @@ void UnityScreen::handleCompizEvent(const char* plugin,
     ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
   }
 
-  if (PluginAdapter::Default()->IsScaleActive() && g_strcmp0(plugin, "scale") == 0 &&
+  if (adapter.IsScaleActive() && g_strcmp0(plugin, "scale") == 0 &&
       super_keypressed_)
   {
     scale_just_activated_ = true;
@@ -1761,9 +1761,11 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
 
   // hack...if the scale just wasn't activated AND the 'when' time is within time to start the
   // dash then assume was_tap is also true, since the ScalePlugin doesn't accept that state...
-  if (PluginAdapter::Default()->IsScaleActive() && !scale_just_activated_ && launcher_controller_->AboutToShowDash(true, when))
+  PluginAdapter& adapter = PluginAdapter::Default();
+  if (adapter.IsScaleActive() && !scale_just_activated_ &&
+      launcher_controller_->AboutToShowDash(true, when))
   {
-    PluginAdapter::Default()->TerminateScale();
+    adapter.TerminateScale();
     was_tap = true;
   }
   else if (scale_just_activated_)
@@ -1838,9 +1840,10 @@ void UnityScreen::SendExecuteCommand()
     hud_controller_->HideHud();
   }
 
-  if (PluginAdapter::Default()->IsScaleActive())
+  PluginAdapter& adapter = PluginAdapter::Default();
+  if (adapter.IsScaleActive())
   {
-    PluginAdapter::Default()->TerminateScale();
+    adapter.TerminateScale();
   }
 
   ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
@@ -1968,7 +1971,7 @@ bool UnityScreen::altTabForwardAllInitiate(CompAction* action,
                                         CompAction::State state,
                                         CompOption::Vector& options)
 {
-  if (WindowManager::Default()->IsWallActive())
+  if (WindowManager::Default().IsWallActive())
     return false;
   else if (switcher_controller_->Visible())
     switcher_controller_->Next();
@@ -2143,7 +2146,7 @@ void UnityScreen::RestoreWindow(GVariant* data)
   // Return input-focus to previously focused window (before key-nav-mode was
   // entered)
   if (preserve_focus)
-    PluginAdapter::Default ()->restoreInputFocus ();
+    PluginAdapter::Default().RestoreInputFocus ();
 }
 
 bool UnityScreen::SaveInputThenFocus(const guint xid)
@@ -2153,7 +2156,7 @@ bool UnityScreen::SaveInputThenFocus(const guint xid)
 
   // check if currently focused window isn't it self
   if (xid != screen->activeWindow())
-    PluginAdapter::Default()->saveInputFocus();
+    PluginAdapter::Default().SaveInputFocus();
 
   // set input-focus on window
   if (newFocusedWindow)
@@ -2253,7 +2256,7 @@ bool UnityScreen::ShowHudTerminate(CompAction* action,
 bool UnityScreen::initPluginActions()
 {
   CompPlugin* p = CompPlugin::find("expo");
-
+  PluginAdapter& adapter = PluginAdapter::Default();
   if (p)
   {
     MultiActionList expoActions;
@@ -2277,7 +2280,7 @@ bool UnityScreen::initPluginActions()
       }
     }
 
-    PluginAdapter::Default()->SetExpoAction(expoActions);
+    adapter.SetExpoAction(expoActions);
   }
 
   p = CompPlugin::find("scale");
@@ -2312,7 +2315,7 @@ bool UnityScreen::initPluginActions()
       }
     }
 
-    PluginAdapter::Default()->SetScaleAction(scaleActions);
+    adapter.SetScaleAction(scaleActions);
   }
 
   p = CompPlugin::find("unitymtgrabhandles");
@@ -2322,11 +2325,11 @@ bool UnityScreen::initPluginActions()
     foreach(CompOption & option, p->vTable->getOptions())
     {
       if (option.name() == "show_handles_key")
-        PluginAdapter::Default()->SetShowHandlesAction(&option.value().action());
+        adapter.SetShowHandlesAction(&option.value().action());
       else if (option.name() == "hide_handles_key")
-        PluginAdapter::Default()->SetHideHandlesAction(&option.value().action());
+        adapter.SetHideHandlesAction(&option.value().action());
       else if (option.name() == "toggle_handles_key")
-        PluginAdapter::Default()->SetToggleHandlesAction(&option.value().action());
+        adapter.SetToggleHandlesAction(&option.value().action());
     }
   }
 
@@ -2479,7 +2482,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
   if (uScreen->doShellRepaint && !uScreen->paint_panel_ && window->type() == CompWindowTypeNormalMask)
   {
     guint32 id = window->id();
-    bool maximized = WindowManager::Default()->IsWindowMaximized(id);
+    bool maximized = WindowManager::Default().IsWindowMaximized(id);
     bool on_current = window->onCurrentDesktop();
     bool override_redirect = window->overrideRedirect();
     bool managed = window->managed();
@@ -2518,7 +2521,8 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     uScreen->paintPanelShadow(region);
   }
 
-  if (WindowManager::Default()->IsScaleActive() && ScaleScreen::get(screen)->getSelectedWindow() == window->id())
+  if (WindowManager::Default().IsScaleActive() &&
+      ScaleScreen::get(screen)->getSelectedWindow() == window->id())
   {
     if (!region.isEmpty())
     {
@@ -2629,7 +2633,7 @@ UnityWindow::minimized ()
 /* Called whenever a window is mapped, unmapped, minimized etc */
 void UnityWindow::windowNotify(CompWindowNotify n)
 {
-  PluginAdapter::Default()->Notify(window, n);
+  PluginAdapter::Default().Notify(window, n);
 
   switch (n)
   {
@@ -2730,7 +2734,7 @@ void UnityWindow::stateChangeNotify(unsigned int lastState)
      !(window->state () & CompWindowStateFullscreenMask))
     UnityScreen::get (screen)->fullscreen_windows_.remove(window);
 
-  PluginAdapter::Default()->NotifyStateChange(window, window->state(), lastState);
+  PluginAdapter::Default().NotifyStateChange(window, window->state(), lastState);
   window->stateChangeNotify(lastState);
 }
 
@@ -2750,13 +2754,13 @@ void UnityWindow::updateFrameRegion(CompRegion &region)
 
 void UnityWindow::moveNotify(int x, int y, bool immediate)
 {
-  PluginAdapter::Default()->NotifyMoved(window, x, y);
+  PluginAdapter::Default().NotifyMoved(window, x, y);
   window->moveNotify(x, y, immediate);
 }
 
 void UnityWindow::resizeNotify(int x, int y, int w, int h)
 {
-  PluginAdapter::Default()->NotifyResized(window, x, y, w, h);
+  PluginAdapter::Default().NotifyResized(window, x, y, w, h);
   window->resizeNotify(x, y, w, h);
 }
 
@@ -2814,7 +2818,7 @@ CompPoint UnityWindow::tryNotIntersectUI(CompPoint& pos)
 
 bool UnityWindow::place(CompPoint& pos)
 {
-  bool was_maximized = PluginAdapter::Default ()->MaximizeIfBigEnough(window);
+  bool was_maximized = PluginAdapter::Default().MaximizeIfBigEnough(window);
 
   if (!was_maximized)
   {
@@ -2956,12 +2960,12 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       BackgroundEffectHelper::blur_type = (unity::BlurType)optionGetDashBlurExperimental();
       break;
     case UnityshellOptions::AutomaximizeValue:
-      PluginAdapter::Default()->SetCoverageAreaBeforeAutomaximize(optionGetAutomaximizeValue() / 100.0f);
+      PluginAdapter::Default().SetCoverageAreaBeforeAutomaximize(optionGetAutomaximizeValue() / 100.0f);
       break;
     case UnityshellOptions::AltTabTimeout:
       switcher_controller_->detail_on_timeout = optionGetAltTabTimeout();
     case UnityshellOptions::AltTabBiasViewport:
-      PluginAdapter::Default()->bias_active_to_viewport = optionGetAltTabBiasViewport();
+      PluginAdapter::Default().bias_active_to_viewport = optionGetAltTabBiasViewport();
       break;
     case UnityshellOptions::DisableShowDesktop:
       switcher_controller_->SetShowDesktopDisabled(optionGetDisableShowDesktop());
@@ -3537,22 +3541,23 @@ UnityWindow::UnityWindow(CompWindow* window)
       }
     }
   }
-
-  WindowManager::Default()->initiate_spread.connect(sigc::mem_fun(this, &UnityWindow::OnInitiateSpread));
-  WindowManager::Default()->terminate_spread.connect(sigc::mem_fun(this, &UnityWindow::OnTerminateSpread));
+  WindowManager& wm = WindowManager::Default();
+  wm.initiate_spread.connect(sigc::mem_fun(this, &UnityWindow::OnInitiateSpread));
+  wm.terminate_spread.connect(sigc::mem_fun(this, &UnityWindow::OnTerminateSpread));
 }
+
 
 void UnityWindow::AddProperties(GVariantBuilder* builder)
 {
   Window xid = window->id();
   auto const& swins = ScaleScreen::get(screen)->getWindows();
   bool scaled = std::find(swins.begin(), swins.end(), ScaleWindow::get(window)) != swins.end();
-  auto wm = WindowManager::Default();
+  WindowManager& wm = WindowManager::Default();
 
   variant::BuilderWrapper(builder)
-    .add(scaled ? GetScaledGeometry() : wm->GetWindowGeometry(xid))
+    .add(scaled ? GetScaledGeometry() : wm.GetWindowGeometry(xid))
     .add("xid", xid)
-    .add("title", wm->GetWindowName(xid))
+    .add("title", wm.GetWindowName(xid))
     .add("scaled", scaled)
     .add("scaled_close_x", close_button_geo_.x)
     .add("scaled_close_y", close_button_geo_.y)
@@ -3566,8 +3571,12 @@ std::string UnityWindow::GetName() const
 }
 
 
-void UnityWindow::DrawTexture(GLTexture::List const& textures, GLWindowPaintAttrib const& attrib,
-                              GLMatrix const& transform, unsigned int mask, int x, int y, double scale)
+void UnityWindow::DrawTexture(GLTexture::List const& textures,
+                              GLWindowPaintAttrib const& attrib,
+                              GLMatrix const& transform,
+                              unsigned int mask,
+                              int x, int y,
+                              double scale)
 {
   for (auto const& texture : textures)
   {
@@ -3641,7 +3650,7 @@ void UnityWindow::RenderText(CairoContext const& context, int x, int y, int widt
   pango_cairo_context_set_resolution(pango_ctx, dpi / static_cast<float>(PANGO_SCALE));
   pango_layout_context_changed(layout);
 
-  decoration_title_ = WindowManager::Default()->GetWindowName(window->id());
+  decoration_title_ = WindowManager::Default().GetWindowName(window->id());
   pango_layout_set_height(layout, height);
   pango_layout_set_width(layout, -1); //avoid wrap lines
   pango_layout_set_auto_dir(layout, false);
@@ -3702,7 +3711,7 @@ void UnityWindow::BuildDecorationTexture()
 
   auto const& border_extents = window->border();
 
-  if (WindowManager::Default()->IsWindowDecorated(window->id()) && border_extents.top > 0)
+  if (WindowManager::Default().IsWindowDecorated(window->id()) && border_extents.top > 0)
   {
     CairoContext context(window->borderRect().width(), border_extents.top);
     RenderDecoration(context);
@@ -3815,7 +3824,7 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
 
       if (texture->width() == width && texture->height() == height)
       {
-        if (decoration_title_ == WindowManager::Default()->GetWindowName(window->id()))
+        if (decoration_title_ == WindowManager::Default().GetWindowName(window->id()))
           redraw_decoration = false;
       }
     }
@@ -3878,20 +3887,20 @@ void UnityWindow::OnInitiateSpread()
   middle_clicked_ = false;
   SetupSharedTextures();
 
-  WindowManager *wm = WindowManager::Default();
+  WindowManager& wm = WindowManager::Default();
   Window xid = window->id();
 
-  if (wm->IsWindowDecorated(xid))
-    wm->Decorate(xid);
+  if (wm.IsWindowDecorated(xid))
+    wm.Decorate(xid);
 }
 
 void UnityWindow::OnTerminateSpread()
 {
-  WindowManager *wm = WindowManager::Default();
+  WindowManager& wm = WindowManager::Default();
   Window xid = window->id();
 
-  if (wm->IsWindowDecorated(xid) && wm->IsWindowMaximized(xid))
-    wm->Undecorate(xid);
+  if (wm.IsWindowDecorated(xid) && wm.IsWindowMaximized(xid))
+    wm.Undecorate(xid);
 
   CleanupCachedTextures();
 }
@@ -3919,7 +3928,7 @@ UnityWindow::~UnityWindow()
   if (window->state () & CompWindowStateFullscreenMask)
     UnityScreen::get (screen)->fullscreen_windows_.remove(window);
 
-  PluginAdapter::Default ()->OnWindowClosed(window);
+  PluginAdapter::Default().OnWindowClosed(window);
 }
 
 
