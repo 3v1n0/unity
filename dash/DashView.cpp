@@ -491,7 +491,13 @@ void DashView::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 
 void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
+  auto& style = dash::Style::Instance();
+
   renderer_.DrawInner(graphics_engine, content_geo_, GetAbsoluteGeometry(), GetGeometry());
+  
+  nux::Geometry clip_geo = layout_->GetGeometry();
+  clip_geo.x += style.GetVSeparatorSize();
+  graphics_engine.PushClippingRectangle(clip_geo);
 
   bool display_ghost = false;
   bool preview_redraw = false;
@@ -744,6 +750,8 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
   {
     nux::GetPainter().PopBackgroundStack();
   }
+
+  graphics_engine.PopClippingRectangle();
 
   renderer_.DrawInnerCleanup(graphics_engine, content_geo_, GetAbsoluteGeometry(), GetGeometry());
 }
