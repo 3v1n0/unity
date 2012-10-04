@@ -42,6 +42,7 @@ namespace
 nux::logging::Logger logger("unity.dash.previews.coverart");
 
 const int ICON_SIZE = 256;
+const int IMAGE_TIMEOUT = 30;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(CoverArt);
@@ -157,7 +158,7 @@ void CoverArt::StartWaiting()
   rotate_matrix_.Rotate_z(0.0f);
   rotation_ = 0.0f;
 
-  spinner_timeout_.reset(new glib::TimeoutSeconds(5, [&]
+  spinner_timeout_.reset(new glib::TimeoutSeconds(IMAGE_TIMEOUT, [&]
   {
     StopWaiting();
 
