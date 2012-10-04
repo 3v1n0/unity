@@ -1,9 +1,82 @@
-unity (6.6.0-0ubuntu4) UNRELEASED; urgency=low
+unity (6.8.0-0ubuntu1) UNRELEASED; urgency=low
 
+  [ Ángel Guzmán Maeso ]
   * debian/unity-crashdb.conf:
     - Update dictionary option for follow latest apport spec 
 
- -- Ángel Guzmán Maeso <angel@quijost.com>  Mon, 01 Oct 2012 15:04:00 +0200
+  [ Łukasz 'sil2100' Zemczak ]
+  * New upstream release.
+    - unity 6.8 candidate segfaults on "app expose" with low gfx mode 
+      (LP: #1060148)
+    - [regression] Dash - Left separator is missing (LP: #1057798)
+    - unity-panel-service crashed with SIGSEGV in 
+      panel_indicator_entry_accessible_get_n_children() from 
+      atk_object_get_n_accessible_children() (LP: #913324)
+    - [regression] If unity is started with maximized dash, unmaximizing the 
+      dash does not wrap rows (LP: #1053116)
+    - Dash lens buttons don't work after changing form factor to maximize on 
+      desktop (LP: #1053316)
+    - Clicking on Workspace Switcher icon when the expo is showing, not always
+      closes it 1059759 convert files list deprecated keys (LP: #1059594)
+    - Unity through llvmpipe is slow (LP: #1046497)
+    - compiz crashed with SIGSEGV in unity::QuicklistView::Show() from 
+      unity::QuicklistManager::ShowQuicklist() (LP: #1055995)
+    - compiz crashed with SIGSEGV from 
+      unity::dash::HomeLens::Impl::LensSearchFinished() (LP: #1054219)
+    - [regression] Starting an app & then locking to launcher is not persistent
+      across sessions (LP: #1054645)
+    - [regression] Dash, Launcher, Menu Bar - Unintended shadows are rendered 
+      for the Unity Launcher and Panel, when the dash is open (LP: #1043260)
+    - [Unity 6.x] Active blur doesn't update if you disable CCSM > OpenGL > 
+      Framebuffer object (LP: #1039999)
+    - Alt+Tab/Alt+grave brings other window to the front but loses focus 
+      entirely. (LP: #1035628)
+    - Spread - Scaling all the windows is too slow (LP: #1055643)
+    - Window management - Middle clicking on a window inside the spread should
+      close that window (equivalent action to clicking on the close button) 
+      (LP: #1052821)
+    - Scale window decorations don't have properly rounded corners 
+      (LP: #1055610)
+    - Scale window decorations text does not match theme style (Radiance) 
+      (LP: #1055609)
+    - Spread window decorations does not match the theme when changed 
+      (LP: #1055605)
+    - scaled window decorations are sometimes wider than the window 
+      (LP: #1053225)
+    - Launcher should not auto-hide after dragging an icon, if mouse is still
+      over it (LP: #1053978)
+    - unity spread window on second click not working when ibus language panel
+      is shown. (LP: #1035895)
+    - windows.push_back(<uninitialized value>) in 
+      BamfLauncherIcon::GetFocusableWindows (LP: #1053220)
+    - Category emblems are blurry (LP: #1056874)
+    - Rendering flaws of the dash previews (LP: #1055455)
+    - [UIFe] Social Lens doesn't have authorised and meaningful icon 
+      (LP: #1056191)
+    - [dash] Preview fade out animation hangs occasionally (LP: #1058145)
+    - Dash - rendering of ribbons shouldn't be relative (LP: #1057971)
+    - Horizontal alignment search box and views below (LP: #1055544)
+    - Compiz crashed in cairo_save() from 
+      unity::UnityWindow::RenderDecoration() from 
+      unity::UnityWindow::scalePaintDecoration() from 
+      ScaleWindow::scalePaintDecoration() (LP: #1061396)
+    - [regression] Spinner doesn't spin around its center (LP: #1061081)
+    - [regression] Graphical glitches in HUD/Dash bottom left and top right 
+      corner (LP: #1060532)
+    - [Quantal] unity-lens-application does not start on some slow machines 
+      (LP: #1058619)
+    - [Dash] Rendering flaw of the dash search entry (LP: #1059562)
+    - [dash] Rendering flaw of filterbar after scrolling down/scrolling up. 
+      (LP: #1059607)
+    - Unity launcher doesn't prompt for password to unlock the device when 
+      clicking on a encrypted volume icon (LP: #713432)
+    - [regression] Unable to add desktop files with spaces in their name from 
+      Nautilus into the Launcher (LP: #1055552 )
+    - Missing context menus for Qt apps after minimizing the window 
+      (LP: #929712)
+    - Music preview note image is blurry (LP: #1060195)
+
+ -- Łukasz 'sil2100' Zemczak <lukasz.zemczak@canonical.com>  Thu, 04 Oct 2012 18:17:41 +0200
 
 unity (6.6.0-0ubuntu3) quantal-proposed; urgency=low
 

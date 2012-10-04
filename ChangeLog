@@ -1,3 +1,524 @@
+2012-10-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: add PixmapTexture struct: never separate a binded texture to its pixmap
+	
+	Or it will lead to crashes. Now we cache both the GLTexture and the binded XPixmap, so
+	that we delete both together and there won't be crashes.
+	
+	Texutures binded to Pixmaps should not be alive when the binded pixmap has been
+	destroyed. So, now we have a new PixmapTexture struct that keeps both the data
+	structures alive.
+	We now use a smart pointer of PixmapTexture to cache both the temporary decorations,
+	inside a CairoContext, and the ones at class level.. Fixes: https://bugs.launchpad.net/bugs/1061396. Approved by Neil J. Patel.
+
+2012-10-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: don't draw decorations when we have empty sizes
+	
+	It also fixes a crash on LLVMPIPE
+
+2012-10-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: no need to use externally managed textures anymore
+
+2012-10-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: don't draw a decoration if the texture has not been saved
+
+2012-10-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	PixmapTexture: add compiz::opengl::ExternallyManaged when pinding pixmap
+
+2012-10-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: add PixmapTexture struct: never separate a binded texture to its pixmap
+	
+	Or it will lead to crashes. Now we cache both the GLTexture and the binded XPixmap, so
+	that we delete both together and there won't be crashes.
+
+2012-10-04  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Revert rev 2753.
+	Use clip region to fix dash/launcher separator drawing bug.. Fixes: https://bugs.launchpad.net/bugs/1061081. Approved by Łukasz Zemczak.
+
+2012-10-04  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use clip region to fix bug dash/launcher separator drawing.
+
+2012-10-04  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Revert rev 2753.
+
+2012-10-04  Nicolas d'Offay  <nicolas.doffay@canonical.com>
+
+	Fixed flickering bug.. Fixes: https://bugs.launchpad.net/bugs/1060532. Approved by Łukasz Zemczak, Nick Dedekind.
+
+2012-10-03  Nicolas d'Offay  <nicolas.doffay@canonical.com>
+
+	Fixed blend mode bug in 6.0.
+
+2012-10-04  Michal Hruby  <michal.mhr@gmail.com>
+
+	Attempt to reconnect to DBus proxies if the initial connection fails. Fixes: https://bugs.launchpad.net/bugs/1058619. Approved by Łukasz Zemczak, Gord Allott.
+
+2012-10-04  Michal Hruby  <michal.mhr@gmail.com>
+
+	Backport DBus proxy reconnection fix from trunk
+
+2012-10-03  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix rendering flaw in search entry. (LP: #1059562). Fixes: https://bugs.launchpad.net/bugs/1059562. Approved by Neil J. Patel.
+
+2012-10-01  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix rendering flaw of dash search entry.
+
+2012-10-03  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed dash filter redraw issue (LP: #1059607). Fixes: https://bugs.launchpad.net/bugs/1059607. Approved by Neil J. Patel.
+
+2012-10-02  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed dash filter scroll redrawing.
+
+2012-10-03  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use GMountOperation in g_volume_mount. GMountOperation provides a mechanism for interacting with the use.. Fixes: https://bugs.launchpad.net/bugs/713432. Approved by Łukasz Zemczak.
+
+2012-10-02  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use GMountOperation to enable user interaction when mounting file systems.
+
+2012-10-03  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DesktopUtilities: unescape the desktop paths and ids before processing them. Fixes: https://bugs.launchpad.net/bugs/1055552. Approved by Neil J. Patel.
+
+2012-10-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	DesktopUtilities: unescape the desktop paths and ids before processing them
+
+2012-10-03  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Cherry-picked 2786: Ignore transient unmmaped windows on minimize/unminimize
+	Doesn't make much sense since they are not shown and it confuses Qt code.. Fixes: https://bugs.launchpad.net/bugs/929712. Approved by Marco Trevisan (Treviño), Albert Astals Cid.
+
+2012-10-03  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Cherry-picked 2786: Ignore transient unmmaped windows on minimize/unminimize
+	
+	Doesn't make much sense since they are not shown and it confuses Qt code.
+
+2012-10-03  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Cherry-picked 2784 from trunk: Uploaded correct (hires) icon for missing album artwork when displaying music preview.. Fixes: https://bugs.launchpad.net/bugs/1060195. Approved by Didier Roche.
+
+2012-10-03  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Cherry-picked 2784 from trunk: Uploaded correct (hires) icon for missing album artwork when displaying music preview.
+
+2012-10-02  Nicolas d'Offay  <nicolas.doffay@canonical.com>
+
+	Workaround a crash when using mesa's software rendering. Fixes: https://bugs.launchpad.net/bugs/1060148. Approved by Łukasz Zemczak, Marco Trevisan (Treviño).
+
+2012-10-02  Nicolas d'Offay  <nicolas.doffay@canonical.com>
+
+	Added commentary.
+
+2012-10-02  Nicolas d'Offay  <nicolas.doffay@canonical.com>
+
+	Set texture to be externally managed.
+
+2012-10-02  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix rendering of the dash/launcher separator.. Fixes: https://bugs.launchpad.net/bugs/1057798. Approved by Łukasz Zemczak.
+
+2012-10-01  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix rendering of dash/launcher separator.
+
+2012-10-02  Timo Jyrinki  <timo.jyrinki@canonical.com>
+
+	Reference the menu in the accessible object. (LP: #913324). Fixes: https://bugs.launchpad.net/bugs/913324. Approved by Michal Hruby.
+
+2012-10-02  Timo Jyrinki  <timo.jyrinki@canonical.com>
+
+	Cherry-pick lp:unity 2775
+
+2012-10-02  Timo Jyrinki  <timo.jyrinki@canonical.com>
+
+	Removed minimum width from result group causing home lens not to wrap. (LP: #1053116). Fixes: https://bugs.launchpad.net/bugs/1053116, https://bugs.launchpad.net/bugs/1053316. Approved by Łukasz Zemczak.
+
+2012-10-02  Timo Jyrinki  <timo.jyrinki@canonical.com>
+
+	Removed minimum width from result group causing home lens not to wrap. (LP#1053116)
+
+2012-10-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ExpoLauncherIcon: Correctly toggle the expo on activation
+	
+	PluginAdapter: change the internals of MultiActionList to use a map to reference actions by name
+	WindowManager: add TerminateExpo function to hide the expo plugin. Fixes: https://bugs.launchpad.net/bugs/1059759. Approved by Brandon Schaefer.
+
+2012-10-01  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ExpoLauncherIcon: Correctly toggle the expo on activation
+	
+	PluginAdapter: change the internals of MultiActionList to use a map to reference actions by name
+	WindowManager: add TerminateExpo function to hide the expo plugin
+
+2012-10-01  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Don't convert "devices-option", it's a deprecated key. Fixes: https://bugs.launchpad.net/bugs/1059594. Approved by Didier Roche.
+
+2012-10-01  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Cherry-picked seb128's branch: Don't convert devices-option, it's a deprecated key
+
+2012-10-01  Nicolas d'Offay  <nicolas.doffay@canonical.com>
+
+	Low Graphics Mode. Fixes: https://bugs.launchpad.net/bugs/1046497. Approved by Nicolas d'Offay.
+
+2012-10-01  Nicolas d'Offay  <nicolas.doffay@canonical.com>
+
+	Low Graphics Mode
+
+2012-10-01  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added launcher icon destructor disconnect from expo termination signal.. Fixes: https://bugs.launchpad.net/bugs/1055995. Approved by Andrea Azzarone.
+
+2012-10-01  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	removed whitespace.
+
+2012-10-01  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Added launcher icon destructor disconnect from expo termination signal.
+
+2012-10-01  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed re-ordering of shopping lens category in home lens. (LP#1054219). Fixes: https://bugs.launchpad.net/bugs/1054219. Approved by Michal Hruby.
+
+2012-10-01  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed re-ordering of shopping lens category in home lens.
+
+2012-09-28  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Cherrypicks from unity's trunk for 6.8.0. Fixes: . Approved by Brandon Schaefer, Didier Roche.
+
+2012-09-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:unity r2769
+
+2012-09-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:unity r2768
+
+2012-09-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:unity r2766
+
+2012-09-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:unity r2765
+
+2012-09-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:unity r2764
+
+2012-09-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:unity r2763
+
+2012-09-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:unity r2762
+
+2012-09-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:unity r2761
+
+2012-09-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:unity r2759
+
+2012-09-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:unity r2758
+
+2012-09-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:unity r2757
+
+2012-09-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:unity r2756
+
+2012-09-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:unity r2755
+
+2012-09-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:unity r2754
+
+2012-09-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:unity r2753
+
+2012-09-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:unity r2746
+
+2012-09-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:unity r2745
+
+2012-09-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:unity r2743
+
+2012-09-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:unity r2742
+
+2012-09-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:unity r2741
+
+2012-09-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:unity r2740
+
+2012-09-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:unity r2738
+
+2012-09-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:unity r2736
+
+2012-09-20  Omer Akram  <om26er@ubuntu.com>
+
+	remove FlowView manual-test as the feature have been disabled.. Fixes: https://bugs.launchpad.net/bugs/1053056. Approved by Marco Trevisan (Treviño).
+
+2012-09-20  Omer Akram  <om26er@ubuntu.com>
+
+	Flow view has been disabled in Unity, this manual test case makes no sense
+
+2012-09-20  Omer Akram  <om26er@ubuntu.com>
+
+	Merge trunk
+
+2012-09-19  Omer Akram  <om26er@ubuntu.com>
+
+	Merge
+
+2012-09-28  Michal Hruby  <michal.mhr@gmail.com>
+
+	Merge lp:unity r2735
+
+2012-09-20  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Makes sure we choose a sane icon for GIcon's that our own UnityProtocolIcons too.. Fixes: . Approved by Marco Trevisan (Treviño).
+
+2012-09-20  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Support for UnityProtocolAnnotatedIcon for DND
+
+2012-09-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: call Stick after that the icon is set sticky, so that the signal emission will work
+	
+	And so the favorites will be correctly saved.. Fixes: https://bugs.launchpad.net/bugs/1054645. Approved by Andrea Azzarone.
+
+2012-09-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: call Stick after that the icon is set sticky, so that the signal emission will work
+	
+	And so the favorites will be correctly saved.
+
+2012-09-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: don't close a window on middle-click when in scale. Fixes: . Approved by Andrea Azzarone.
+
+2012-09-28  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityShell, autopilot: remove the middle-click on spread bits
+
+2012-09-27  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Don't keep re-blurring parts of the shell we've already painted, because
+	that will creep in and look like a shadow on the edge of the blur region.
+	(LP: #1043260)
+	
+	This happens when the same texture (the FBO texture) is both the source and
+	the destination for the three blur operations (launcher, panel, then dash).
+	My quick fix is to take a copy of the FBO texture at the start of the frame
+	(before any shell is painted), rather than reading from the same texture
+	(FBO) that we're writing to.
+	
+	This also fixes LP: #1039999, because we are no longer assuming the backbuffer
+	is an FBO. Instead we let Nux decide and take the right steps to read the
+	real backbuffer, whatever that is.. Fixes: https://bugs.launchpad.net/bugs/1039999, https://bugs.launchpad.net/bugs/1043260. Approved by Andrea Azzarone.
+
+2012-09-27  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Don't keep re-blurring parts of the shell we've already painted, because
+	that will creep in and look like a shadow on the edge of the blur region.
+	(LP: #1043260)
+	
+	This happens when the same texture (the FBO texture) is both the source and
+	the destination for the three blur operations (launcher, panel, then dash).
+	My quick fix is to take a copy of the FBO texture at the start of the frame
+	(before any shell is painted), rather than reading from the same texture
+	(FBO) that we're writing to.
+	
+	This also fixes LP: #1039999, because we are no longer assuming the backbuffer
+	is an FBO. Instead we let Nux decide and take the right steps to read the
+	real backbuffer, whatever that is.
+
+2012-09-27  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	Fixes alt+tab losing focus when alt+tabing to quickly due to ubus being to slow to send a message.. Fixes: https://bugs.launchpad.net/bugs/1035628. Approved by Marco Trevisan (Treviño).
+
+2012-09-26  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* added manual test
+
+2012-09-25  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Fixes alt+tab focus issues
+
+2012-09-25  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	Adds ap tests for the shopping lens.. Fixes: . Approved by Thomi Richards.
+
+2012-09-24  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* fixed problems
+
+2012-09-24  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Adds shopping lens AP test
+
+2012-09-24  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix several issues in the autopilot test suite.. Fixes: . Approved by Christopher Lee.
+
+2012-09-25  Thomi Richards  <thomi.richards@canonical.com>
+
+	Merged mainline, fixed conflicts.
+
+2012-09-24  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix spelling error.
+
+2012-09-24  Thomi Richards  <thomi.richards@canonical.com>
+
+	Ensure Unity is running before beginning a test. Also fix a race condition where failing tests that log some introspectable object with a customised __repr__ method would trigger a StateNotFound error.
+
+2012-09-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: when spreading, render once an empty decoration texture at full size and scale it via OpenGL
+	
+	This saves a lot of drawing and improves the performances of the unity Spread. Also, don't redraw the decoration texture for selected windows if not needed.
+	Finally, cleanup the header file. Fixes: https://bugs.launchpad.net/bugs/1055643. Approved by Brandon Schaefer.
+
+2012-09-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: when spreading, render once an empty decoration texture at full size and scale it via OpenGL
+	
+	This saves a lot of drawing and improves the performances of the unity Spread. Also, don't redraw the decoration texture for selected windows if not needed.
+	Finally, cleanup the header f
+
+2012-09-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityShell: enable closing on middle-click, fix scaled decoration sizes, fix theming issues, added scale autopilot tests. Fixes: https://bugs.launchpad.net/bugs/1052821, https://bugs.launchpad.net/bugs/1053225, https://bugs.launchpad.net/bugs/1055605, https://bugs.launchpad.net/bugs/1055609, https://bugs.launchpad.net/bugs/1055610. Approved by Brandon Schaefer.
+
+2012-09-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityShell: enable closing on middle-click, fix scaled decoration sizes, fix theming issues, added scale autopilot tests
+
+2012-09-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: use another strategy to draw a rounded top border
+
+2012-09-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: correctly fade out the decoration text
+
+2012-09-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: use the gtk style context to render the scaled window text
+
+2012-09-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: set the decoration radius to match system default values
+
+2012-09-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: even more cleanup the scale decoration code
+	
+	Also reduce some unwanted paints...
+
+2012-09-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: correctly draw a fake rounded decoration using default values
+
+2012-09-23  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: GetScaledGeometry, fix the x/y positioning, so that the decoration won't look wider
+
+2012-09-19  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	UnityWindow: add close on middle-click support
+
+2012-09-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: check the mouse position after relasing a drag window, and in case hide it
+	
+	Tests included. Fixes: https://bugs.launchpad.net/bugs/1053978. Approved by Andrea Azzarone.
+
+2012-09-24  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Launcher: check the mouse position after relasing a drag window, and in case hide it
+	
+	Tests included
+
+2012-09-24  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	Merging brandontschaefer's fix into unity/6.0:
+	Fix broken AP test due to gcalc not having menu accelerators anymore.. Fixes: . Approved by Thomi Richards.
+
+2012-09-24  Christopher Lee  <chris.lee@canonical.com>
+
+	Merging brandontschaefer's fix for Unity/6.0
+
+2012-09-20  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Fix menu accelerator AP test
+
+2012-09-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	manual-tests: Launcher fix dragging manual test, updating it to the current behavior. Fixes: https://bugs.launchpad.net/bugs/1053129. Approved by Omer Akram.
+
+2012-09-20  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	manual-tests: Launcher fix dragging manual test
+
+2012-09-24  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fix autopilot test for dragging launcher icons around.. Fixes: . Approved by Christopher Lee.
+
+2012-09-24  Thomi Richards  <thomi.richards@canonical.com>
+
+	Fixed test that drags launcher icons around.
+
+2012-09-20  Didier Roche  <didier.roche@canonical.com>
+
+	Release\ 6.6.0
+
 2012-09-20  Didier Roche  <didier.roche@canonical.com>
 
 	Install Amazon and Ubuntu One Music Store webapp items in the launcher by default

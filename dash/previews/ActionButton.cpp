@@ -77,11 +77,6 @@ void ActionButton::Init()
 {
   InitTheme();
 
-  key_nav_focus_change.connect([&] (nux::Area*, bool, nux::KeyNavDirection)
-  {
-    QueueDraw();
-  });
-
   key_nav_focus_activate.connect([&](nux::Area*)
   {
     if (GetInputEventSensitivity())

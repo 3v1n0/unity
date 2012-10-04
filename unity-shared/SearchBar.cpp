@@ -40,7 +40,7 @@ const int SPINNER_TIMEOUT = 100;
 
 const int SPACE_BETWEEN_SPINNER_AND_TEXT = 5;
 const int SPACE_BETWEEN_ENTRY_AND_HIGHLIGHT = 10;
-const int LEFT_INTERNAL_PADDING = 6;
+const int LEFT_INTERNAL_PADDING = 4;
 const int SEARCH_ENTRY_RIGHT_BORDER = 10;
 
 const int HIGHLIGHT_HEIGHT = 24;
@@ -362,6 +362,17 @@ void SearchBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
   UpdateBackground(false);
 
   graphics_engine.PushClippingRectangle(base);
+
+  if (RedirectedAncestor())
+  {
+    unsigned int alpha = 0, src = 0, dest = 0;
+    graphics_engine.GetRenderStates().GetBlend(alpha, src, dest);
+    // This is necessary when doing redirected rendering.
+    // Clean the area below this view before drawing anything.
+    graphics_engine.GetRenderStates().SetBlend(false);
+    graphics_engine.QRP_Color(base.x, base.y, last_width_, last_height_, nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+    graphics_engine.GetRenderStates().SetBlend(alpha, src, dest);
+  }
 
   bg_layer_->SetGeometry(nux::Geometry(base.x, base.y, last_width_, last_height_));
   nux::GetPainter().RenderSinglePaintLayer(graphics_engine,

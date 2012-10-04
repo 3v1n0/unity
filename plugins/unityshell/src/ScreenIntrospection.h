@@ -14,39 +14,35 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Marco Trevisan <3v1n0@ubuntu.com>
+ * Authored by: Marco Trevisan (Treviño) <marco.trevisan@canonical.com>
  */
 
-#ifndef CAIRO_BASEWINDOW_H
-#define CAIRO_BASEWINDOW_H
+#ifndef SCREEN_INTROSPECTION_H
+#define SCREEN_INTROSPECTION_H
 
-#include <Nux/Nux.h>
-#include <Nux/BaseWindow.h>
+#include "Introspectable.h"
+#include <core/core.h>
 
 namespace unity
 {
-class CairoBaseWindow : public nux::BaseWindow
+namespace debug
 {
-  NUX_DECLARE_OBJECT_TYPE(CairoBaseWindow, nux::BaseWindow);
+
+class ScreenIntrospection : public Introspectable
+{
 public:
-  CairoBaseWindow();
-  virtual ~CairoBaseWindow();
+  ScreenIntrospection(CompScreen* screen);
 
 protected:
-  void Draw(nux::GraphicsEngine& gfxContext, bool forceDraw);
-
-  nux::ObjectPtr<nux::BaseTexture> texture_bg_;
-  nux::ObjectPtr<nux::BaseTexture> texture_mask_;
-  nux::ObjectPtr<nux::BaseTexture> texture_outline_;
-
-  bool use_blur_;
-  bool _use_blurred_background;
-  bool _compute_blur_bkg;
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
+  IntrospectableList GetIntrospectableChildren();
 
 private:
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> bg_blur_texture_;
+  CompScreen* screen_;
 };
+
+}
 }
 
-#endif // CAIRO_BASEWINDOW_H
-
+#endif

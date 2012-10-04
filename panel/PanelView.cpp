@@ -71,10 +71,22 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
 
   nux::ROPConfig rop;
   rop.Blend = true;
-  rop.SrcBlend = GL_ZERO;
-  rop.DstBlend = GL_SRC_COLOR;
+  nux::Color darken_colour = nux::Color(0.9f, 0.9f, 0.9f, 1.0f);
+  
+  if (Settings::Instance().GetLowGfxMode() == false)
+  {
+    rop.SrcBlend = GL_ZERO;
+    rop.DstBlend = GL_SRC_COLOR;
+  }
+  //If we are in low gfx mode then change our darken_colour to our background colour.
+  else
+  {
+    rop.SrcBlend = GL_ONE;
+    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+    darken_colour = _bg_color;
+  }
 
-  _bg_darken_layer.reset(new nux::ColorLayer(nux::Color(0.9f, 0.9f, 0.9f, 1.0f), false, rop));
+  _bg_darken_layer.reset(new nux::ColorLayer(darken_colour, false, rop));
 
   _layout = new nux::HLayout("", NUX_TRACKER_LOCATION);
   _layout->SetContentDistribution(nux::eStackLeft);
@@ -386,13 +398,13 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       GfxContext.PopClippingRectangle();
     }
 
-    if (_overlay_is_open)
+    if (_overlay_is_open && Settings::Instance().GetLowGfxMode() == false)
     {
       nux::GetPainter().RenderSinglePaintLayer(GfxContext, geo, _bg_darken_layer.get());
-    
+      
       GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
       nux::TexCoordXForm refine_texxform;
-      
+  
       int refine_x_pos = geo.x + (_stored_dash_width - refine_gradient_midpoint);
 
       refine_x_pos += _launcher_width;
@@ -411,8 +423,8 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                           _bg_refine_single_column_tex->GetDeviceTexture(),
                           refine_texxform,
                           nux::color::White);
+      }
     }
-  }
 
   if (!_overlay_is_open || GfxContext.UsingGLSLCodePath() == false)
     nux::GetPainter().RenderSinglePaintLayer(GfxContext, geo, _bg_layer.get());
@@ -484,6 +496,12 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     if (_overlay_is_open)
     {
+      if (Settings::Instance().GetLowGfxMode())
+      {
+	rop.Blend = false;
+	_bg_darken_layer.reset(new nux::ColorLayer(_bg_color, false, rop));
+      }
+      
       nux::GetPainter().PushLayer(GfxContext, geo, _bg_darken_layer.get());
       bgs++;
       
@@ -495,22 +513,25 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       refine_geo.x = refine_x_pos;
       refine_geo.width = _bg_refine_tex->GetWidth();
       refine_geo.height = _bg_refine_tex->GetHeight();
+      
+      if (Settings::Instance().GetLowGfxMode() == false)
+      {
+	nux::GetPainter().PushLayer(GfxContext, refine_geo, _bg_refine_layer.get());
+	bgs++;
 
-      nux::GetPainter().PushLayer(GfxContext, refine_geo, _bg_refine_layer.get());
-      bgs++;
-
-      refine_geo.x += refine_geo.width;
-      refine_geo.width = geo.width;
-      refine_geo.height = geo.height;
-      nux::GetPainter().PushLayer(GfxContext, refine_geo, _bg_refine_single_column_layer.get());
-      bgs++;
+	refine_geo.x += refine_geo.width;
+	refine_geo.width = geo.width;
+	refine_geo.height = geo.height;
+	nux::GetPainter().PushLayer(GfxContext, refine_geo, _bg_refine_single_column_layer.get());
+	bgs++;
+      }
     }
   }
 
   if (!_overlay_is_open || GfxContext.UsingGLSLCodePath() == false)
     gPainter.PushLayer(GfxContext, geo, _bg_layer.get());
 
-  if (_overlay_is_open)
+  if (_overlay_is_open && Settings::Instance().GetLowGfxMode() == false)
   {
     // apply the shine
     nux::TexCoordXForm texxform;

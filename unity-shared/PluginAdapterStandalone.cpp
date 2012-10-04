@@ -52,8 +52,6 @@ PluginAdapter::Initialize(CompScreen* screen)
 
 PluginAdapter::PluginAdapter(CompScreen* screen)
   : m_Screen(screen)
-  , m_ExpoActionList(0)
-  , m_ScaleActionList(0)
   , _expo_state(false)
   , _in_show_desktop(false)
   , _last_focused_window(nullptr)
@@ -106,24 +104,37 @@ PluginAdapter::NotifyCompizEvent(const char* plugin, const char* event, CompOpti
 }
 
 void
-MultiActionList::AddNewAction(CompAction* a, bool primary)
+MultiActionList::AddNewAction(std::string const& n, CompAction* a, bool primary)
 {
 }
 
 void
-MultiActionList::RemoveAction(CompAction* a)
+MultiActionList::RemoveAction(std::string const& n)
 {
 }
 
 void
-MultiActionList::InitiateAll(CompOption::Vector& extraArgs, int state)
+MultiActionList::InitiateAll(CompOption::Vector const& extraArgs, int state) const
 {
 }
 
 void
-MultiActionList::TerminateAll(CompOption::Vector& extraArgs)
+MultiActionList::TerminateAll(CompOption::Vector const& extraArgs) const
 {
 }
+
+bool
+MultiActionList::HasPrimary() const
+{
+  return false;
+}
+
+CompAction*
+MultiActionList::GetAction(std::string const& name) const
+{
+  return nullptr;
+}
+
 
 unsigned long long
 PluginAdapter::GetWindowActiveNumber (guint32 xid) const
@@ -142,7 +153,7 @@ PluginAdapter::SetScaleAction(MultiActionList& scale)
 }
 
 std::string
-PluginAdapter::MatchStringForXids(std::vector<Window> *windows)
+PluginAdapter::MatchStringForXids(std::vector<Window> const& windows)
 {
   return "";
 }
@@ -178,7 +189,13 @@ PluginAdapter::IsExpoActive() const
 void
 PluginAdapter::InitiateExpo()
 {
-  _expo_state = !_expo_state;
+  _expo_state = true;
+}
+
+void
+PluginAdapter::TerminateExpo()
+{
+  _expo_state = false;
 }
 
 bool

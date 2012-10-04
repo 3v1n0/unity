@@ -154,7 +154,7 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::minimize ()
   {
     CompWindow *win = screen->findWindow (w);
 
-    if (win)
+    if (win && win->isMapped())
     {
       Window *w = Window::get (win);
       if (!w->mMinimizeHandler)
@@ -235,7 +235,7 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::unminimize()
   {
     CompWindow *win = screen->findWindow (w);
 
-    if (win)
+    if (win && win->isMapped())
     {
       Window *w = Window::get (win);
       if (w && w->mMinimizeHandler)

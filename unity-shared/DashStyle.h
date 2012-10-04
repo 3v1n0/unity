@@ -245,6 +245,8 @@ public:
   int GetCategoryHeaderLeftPadding() const;
   int GetCategorySeparatorLeftPadding() const;
   int GetCategorySeparatorRightPadding() const;
+  
+  bool GetUseBlur() const;
 
 
   sigc::signal<void> changed;
