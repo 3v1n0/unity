@@ -135,7 +135,7 @@ TEST(TestSwitcherController, InitialDetailTimeout)
   controller.detail_timeout_length = 20000;
   clock_gettime(CLOCK_MONOTONIC, &current);
 
-  controller.Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, false, results);
+  controller.Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, results);
 
   Utils::WaitUntil(controller.detail_timeout_reached_, 3);
   ASSERT_TRUE(controller.detail_timeout_reached_);
@@ -164,7 +164,7 @@ TEST(TestSwitcherController, ShowSwitcher)
   std::vector<unity::launcher::AbstractLauncherIcon::Ptr> results;
   results.push_back(unity::launcher::AbstractLauncherIcon::Ptr(new unity::launcher::DesktopLauncherIcon()));
 
-  controller.Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, false, results);
+  controller.Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, results);
 
   Utils::WaitUntil(controller.view_shown_, 2);
   ASSERT_TRUE(controller.view_shown_);
@@ -185,7 +185,7 @@ TEST(TestSwitcherController, ShowSwitcherNoResults)
   controller.SetShowDesktopDisabled(true);
   std::vector<unity::launcher::AbstractLauncherIcon::Ptr> results;
 
-  controller.Show(ShowMode::CURRENT_VIEWPORT, SortMode::FOCUS_ORDER, false, results);
+  controller.Show(ShowMode::CURRENT_VIEWPORT, SortMode::FOCUS_ORDER, results);
 
   ASSERT_FALSE(controller.Visible());
 }

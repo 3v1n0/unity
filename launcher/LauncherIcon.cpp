@@ -136,6 +136,9 @@ LauncherIcon::~LauncherIcon()
   if (on_order_changed_connection.connected())
     on_order_changed_connection.disconnect();
 
+  if (on_expo_terminated_connection.connected())
+    on_expo_terminated_connection.disconnect();
+
   if (_unity_theme)
   {
     _unity_theme = NULL;

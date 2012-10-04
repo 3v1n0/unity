@@ -79,6 +79,7 @@ public:
   virtual bool IsScaleActiveForGroup() const = 0;
 
   virtual void InitiateExpo() = 0;
+  virtual void TerminateExpo() = 0;
   virtual bool IsExpoActive() const = 0;
 
   virtual bool IsWallActive() const = 0;

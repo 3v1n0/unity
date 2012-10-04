@@ -23,6 +23,8 @@
 #include <boost/lexical_cast.hpp>
 
 #include <NuxCore/Logger.h>
+#include <Nux/HScrollBar.h>
+#include <Nux/VScrollBar.h>
 
 #include "unity-shared/DashStyle.h"
 #include "CoverflowResultView.h"
@@ -95,6 +97,14 @@ public:
   void SetUpArea(nux::Area* area)
   {
     up_area_ = area;
+  }
+
+  void RedrawScrollbars()
+  {
+    if (m_horizontal_scrollbar_enable)
+     _hscrollbar->QueueDraw();
+    if (m_vertical_scrollbar_enable)
+      _vscrollbar->QueueDraw();
   }
 
 protected:
@@ -399,8 +409,6 @@ void LensView::OnCategoryAdded(Category const& category)
   scroll_layout_->AddView(group, 0, nux::MinorDimensionPosition::eAbove,
                           nux::MinorDimensionSize::eFull, 100.0f,
                           (nux::LayoutPosition)index);
-  
-  group->SetMinimumWidth(GetGeometry().width);
 }
 
 void LensView::OnCategoryOrderChanged()
@@ -692,6 +700,16 @@ void LensView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
   nux::Geometry const& geo = GetGeometry();
 
   gfx_context.PushClippingRectangle(geo);
+
+  if (RedirectedAncestor())
+  {
+    unsigned int alpha = 0, src = 0, dest = 0;
+    gfx_context.GetRenderStates().GetBlend(alpha, src, dest);
+    gfx_context.GetRenderStates().SetBlend(false);
+    gfx_context.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+    gfx_context.GetRenderStates().SetBlend(alpha, src, dest);
+  }
+
   nux::GetPainter().PaintBackground(gfx_context, geo);
   gfx_context.PopClippingRectangle();
 }
@@ -699,6 +717,22 @@ void LensView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 void LensView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   gfx_context.PushClippingRectangle(GetGeometry());
+
+  // This is necessary when doing redirected rendering.
+  // Clean the area below this view before drawing anything.
+  if (RedirectedAncestor() && !IsFullRedraw())
+  {
+    // scrollbars are drawn in Draw, not DrawContent, so we need to flag them to redraw.
+    scroll_view_->RedrawScrollbars();
+    fscroll_view_->RedrawScrollbars();
+
+    unsigned int alpha = 0, src = 0, dest = 0;
+    gfx_context.GetRenderStates().GetBlend(alpha, src, dest);
+    gfx_context.GetRenderStates().SetBlend(false);
+    gfx_context.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+    gfx_context.GetRenderStates().SetBlend(alpha, src, dest);
+  }
+  
   layout_->ProcessDraw(gfx_context, force_draw);
   gfx_context.PopClippingRectangle();
 }

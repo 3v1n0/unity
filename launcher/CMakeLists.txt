@@ -80,6 +80,7 @@ set (LAUNCHER_SOURCES
 
 add_library (launcher-lib STATIC ${LAUNCHER_SOURCES})
 add_dependencies (launcher-lib unity-core-${UNITY_API_VERSION} unity-shared)
+target_link_libraries (launcher-lib unity-shared)
 
 set (SWITCHER_SOURCES
       SwitcherController.cpp

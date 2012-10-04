@@ -50,6 +50,7 @@
 #include "unity-shared/WindowManager.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/UBusMessages.h"
+#include "unity-shared/UnitySettings.h"
 
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
@@ -1334,11 +1335,12 @@ void Launcher::UpdateChangeInMousePosition(int delta_x, int delta_y)
 
   // check the state before changing it to avoid uneeded hide calls
   if (!_hide_machine.GetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL) &&
-     (nux::Abs(_postreveal_mousemove_delta_x) > MOUSE_DEADZONE ||
-     nux::Abs(_postreveal_mousemove_delta_y) > MOUSE_DEADZONE))
-       _hide_machine.SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, true);
+     (std::abs(_postreveal_mousemove_delta_x) > MOUSE_DEADZONE ||
+      std::abs(_postreveal_mousemove_delta_y) > MOUSE_DEADZONE))
+  {
+    _hide_machine.SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, true);
+  }
 }
-
 
 int Launcher::GetMouseX() const
 {
@@ -1757,14 +1759,25 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     _render_drag_window = false;
     ShowDragWindow();
   }
+  
+  nux::Color clear_colour = nux::Color(0x00000000);
+  
+  if (Settings::Instance().GetLowGfxMode())
+  {
+    clear_colour = _background_color;
+    clear_colour.alpha = 1.0f;
+  }
 
   // clear region
   GfxContext.PushClippingRectangle(base);
-  gPainter.PushDrawColorLayer(GfxContext, base, nux::Color(0x00000000), true, ROP);
+  gPainter.PushDrawColorLayer(GfxContext, base, clear_colour, true, ROP);
 
-  GfxContext.GetRenderStates().SetBlend(true);
-  GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-  GfxContext.GetRenderStates().SetColorMask(true, true, true, true);
+  if (Settings::Instance().GetLowGfxMode() == false)
+  {
+    GfxContext.GetRenderStates().SetBlend(true);
+    GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+    GfxContext.GetRenderStates().SetColorMask(true, true, true, true);
+  }
 
   int push_count = 1;
 
@@ -1793,92 +1806,95 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                         pressure_color);
   }
 
-  if (IsOverlayOpen())
+  if (Settings::Instance().GetLowGfxMode() == false)
   {
-    nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
-    nux::ObjectPtr<nux::IOpenGLBaseTexture> blur_texture;
-
-    if (BackgroundEffectHelper::blur_type != unity::BLUR_NONE && (bkg_box.x + bkg_box.width > 0))
+    if (IsOverlayOpen())
     {
-      blur_texture = bg_effect_helper_.GetBlurRegion(blur_geo);
+      nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
+      nux::ObjectPtr<nux::IOpenGLBaseTexture> blur_texture;
+
+      if (BackgroundEffectHelper::blur_type != unity::BLUR_NONE && (bkg_box.x + bkg_box.width > 0))
+      {
+	blur_texture = bg_effect_helper_.GetBlurRegion(blur_geo);
+      }
+      else
+      {
+	blur_texture = bg_effect_helper_.GetRegion(blur_geo);
+      }
+
+      if (blur_texture.IsValid())
+      {
+	nux::TexCoordXForm texxform_blur_bg;
+	texxform_blur_bg.flip_v_coord = true;
+	texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+	texxform_blur_bg.uoffset = ((float) base.x) / geo_absolute.width;
+	texxform_blur_bg.voffset = ((float) base.y) / geo_absolute.height;
+
+	GfxContext.PushClippingRectangle(bkg_box);
+
+#ifndef NUX_OPENGLES_20
+	if (GfxContext.UsingGLSLCodePath())
+	  gPainter.PushDrawCompositionLayer(GfxContext, base,
+					    blur_texture,
+					    texxform_blur_bg,
+					    nux::color::White,
+					    _background_color, nux::LAYER_BLEND_MODE_OVERLAY,
+					    true, ROP);
+	else
+	  gPainter.PushDrawTextureLayer(GfxContext, base,
+					blur_texture,
+					texxform_blur_bg,
+					nux::color::White,
+					true,
+					ROP);
+#else
+	  gPainter.PushDrawCompositionLayer(GfxContext, base,
+					    blur_texture,
+					    texxform_blur_bg,
+					    nux::color::White,
+					    _background_color, nux::LAYER_BLEND_MODE_OVERLAY,
+					    true, ROP);
+#endif
+	GfxContext.PopClippingRectangle();
+
+	push_count++;
+      }
+
+      unsigned int alpha = 0, src = 0, dest = 0;
+      GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
+
+      // apply the darkening
+      GfxContext.GetRenderStates().SetBlend(true, GL_ZERO, GL_SRC_COLOR);
+      gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0.9f, 0.9f, 0.9f, 1.0f));
+      GfxContext.GetRenderStates().SetBlend (alpha, src, dest);
+
+      // apply the bg colour
+#ifndef NUX_OPENGLES_20
+      if (GfxContext.UsingGLSLCodePath() == false)
+	gPainter.Paint2DQuadColor(GfxContext, bkg_box, _background_color);
+#endif
+
+      // apply the shine
+      GfxContext.GetRenderStates().SetBlend(true, GL_DST_COLOR, GL_ONE);
+      nux::TexCoordXForm texxform;
+      texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+      texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
+      texxform.uoffset = (1.0f / launcher_sheen_->GetWidth()); // TODO (gord) don't use absolute values here
+      texxform.voffset = (1.0f / launcher_sheen_->GetHeight()) * panel::Style::Instance().panel_height;
+      GfxContext.QRP_1Tex(base.x, base.y, base.width, base.height,
+			  launcher_sheen_->GetDeviceTexture(),
+			  texxform,
+			  nux::color::White);
+
+      //reset the blend state
+      GfxContext.GetRenderStates().SetBlend (alpha, src, dest);
     }
     else
     {
-      blur_texture = bg_effect_helper_.GetRegion(blur_geo);
+      nux::Color color = _background_color;
+      color.alpha = options()->background_alpha;
+      gPainter.Paint2DQuadColor(GfxContext, bkg_box, color);
     }
-
-    if (blur_texture.IsValid())
-    {
-      nux::TexCoordXForm texxform_blur_bg;
-      texxform_blur_bg.flip_v_coord = true;
-      texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-      texxform_blur_bg.uoffset = ((float) base.x) / geo_absolute.width;
-      texxform_blur_bg.voffset = ((float) base.y) / geo_absolute.height;
-
-      GfxContext.PushClippingRectangle(bkg_box);
-
-#ifndef NUX_OPENGLES_20
-      if (GfxContext.UsingGLSLCodePath())
-        gPainter.PushDrawCompositionLayer(GfxContext, base,
-                                          blur_texture,
-                                          texxform_blur_bg,
-                                          nux::color::White,
-                                          _background_color, nux::LAYER_BLEND_MODE_OVERLAY,
-                                          true, ROP);
-      else
-        gPainter.PushDrawTextureLayer(GfxContext, base,
-                                      blur_texture,
-                                      texxform_blur_bg,
-                                      nux::color::White,
-                                      true,
-                                      ROP);
-#else
-        gPainter.PushDrawCompositionLayer(GfxContext, base,
-                                          blur_texture,
-                                          texxform_blur_bg,
-                                          nux::color::White,
-                                          _background_color, nux::LAYER_BLEND_MODE_OVERLAY,
-                                          true, ROP);
-#endif
-      GfxContext.PopClippingRectangle();
-
-      push_count++;
-    }
-
-    unsigned int alpha = 0, src = 0, dest = 0;
-    GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
-
-    // apply the darkening
-    GfxContext.GetRenderStates().SetBlend(true, GL_ZERO, GL_SRC_COLOR);
-    gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0.9f, 0.9f, 0.9f, 1.0f));
-    GfxContext.GetRenderStates().SetBlend (alpha, src, dest);
-
-    // apply the bg colour
-#ifndef NUX_OPENGLES_20
-    if (GfxContext.UsingGLSLCodePath() == false)
-      gPainter.Paint2DQuadColor(GfxContext, bkg_box, _background_color);
-#endif
-
-    // apply the shine
-    GfxContext.GetRenderStates().SetBlend(true, GL_DST_COLOR, GL_ONE);
-    nux::TexCoordXForm texxform;
-    texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-    texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
-    texxform.uoffset = (1.0f / launcher_sheen_->GetWidth()); // TODO (gord) don't use absolute values here
-    texxform.voffset = (1.0f / launcher_sheen_->GetHeight()) * panel::Style::Instance().panel_height;
-    GfxContext.QRP_1Tex(base.x, base.y, base.width, base.height,
-                        launcher_sheen_->GetDeviceTexture(),
-                        texxform,
-                        nux::color::White);
-
-    //reset the blend state
-    GfxContext.GetRenderStates().SetBlend (alpha, src, dest);
-  }
-  else
-  {
-    nux::Color color = _background_color;
-    color.alpha = options()->background_alpha;
-    gPainter.Paint2DQuadColor(GfxContext, bkg_box, color);
   }
 
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
@@ -2091,6 +2107,12 @@ void Launcher::ShowDragWindow()
 
 void Launcher::HideDragWindow()
 {
+  nux::Geometry const& abs_geo = GetAbsoluteGeometry();
+  nux::Point const& mouse = nux::GetWindowCompositor().GetMousePosition();
+
+  if (abs_geo.IsInside(mouse))
+    mouse_enter.emit(mouse.x - abs_geo.x, mouse.y - abs_geo.y, 0, 0);
+
   if (!_drag_window)
     return;
 

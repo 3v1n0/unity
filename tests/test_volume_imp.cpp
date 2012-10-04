@@ -98,10 +98,13 @@ TEST_F(TestVolumeImp, TestGetIconName)
 
 TEST_F(TestVolumeImp, TestGetIdentifier)
 {
-  std::string const uuid("0123456789abc");
+  std::string const uuid = "uuid";
+  std::string const label = "label";
 
   g_mock_volume_set_uuid(gvolume_, uuid.c_str());
-  EXPECT_EQ(volume_->GetIdentifier(), uuid);
+  g_mock_volume_set_label(gvolume_, label.c_str());
+
+  EXPECT_EQ(volume_->GetIdentifier(), uuid + "-" + label);
 }
 
 TEST_F(TestVolumeImp, TestIsMounted)
@@ -129,12 +132,14 @@ TEST_F(TestVolumeImp, TestMountAndOpenInFileManager)
       .Times(1);
 
   volume_->MountAndOpenInFileManager();
+  EXPECT_EQ(g_mock_volume_last_mount_had_mount_operation(gvolume_), TRUE);
   EXPECT_TRUE(volume_->IsMounted());
 
   EXPECT_CALL(*file_manager_opener_, Open(ROOT_FILE_URI))
       .Times(1);
 
   volume_->MountAndOpenInFileManager();
+  EXPECT_EQ(g_mock_volume_last_mount_had_mount_operation(gvolume_), TRUE);
   EXPECT_TRUE(volume_->IsMounted());
 }
 
