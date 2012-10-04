@@ -75,6 +75,8 @@ unity (6.8.0-0ubuntu1) UNRELEASED; urgency=low
     - Missing context menus for Qt apps after minimizing the window 
       (LP: #929712)
     - Music preview note image is blurry (LP: #1060195)
+  * debian/control:
+    - Bumped libnux dependency to 3.8.0
 
  -- Łukasz 'sil2100' Zemczak <lukasz.zemczak@canonical.com>  Thu, 04 Oct 2012 18:17:41 +0200
 
