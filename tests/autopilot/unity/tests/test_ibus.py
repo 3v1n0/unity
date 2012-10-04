@@ -120,10 +120,10 @@ class IBusTestsPinyin(IBusWidgetScenariodTests):
         IBusWidgetScenariodTests.scenarios,
         [
             ('basic', {'input': 'abc1', 'result': u'\u963f\u5e03\u4ece'}),
-            #('photo', {'input': 'zhaopian ', 'result': u'\u7167\u7247'}),
-            #('internet', {'input': 'hulianwang ', 'result': u'\u4e92\u8054\u7f51'}),
-            #('disk', {'input': 'cipan ', 'result': u'\u78c1\u76d8'}),
-            #('disk_management', {'input': 'cipan guanli ', 'result': u'\u78c1\u76d8\u7ba1\u7406'}),
+            ('photo', {'input': 'zhaopian ', 'result': u'\u7167\u7247'}),
+            ('internet', {'input': 'hulianwang ', 'result': u'\u4e92\u8054\u7f51'}),
+            ('disk', {'input': 'cipan ', 'result': u'\u78c1\u76d8'}),
+            ('disk_management', {'input': 'cipan guanli ', 'result': u'\u78c1\u76d8\u7ba1\u7406'}),
         ]
     )
 
