@@ -88,17 +88,13 @@ void CoverArt::AddProperties(GVariantBuilder* builder)
 
 void CoverArt::SetImage(std::string const& image_hint)
 { 
-  spinner_timeout_.reset();
-  frame_timeout_.reset();
-  waiting_ = false;
+  StopWaiting();
 
   if (slot_handle_ > 0)
   {
     IconLoader::GetDefault().DisconnectHandle(slot_handle_);
     slot_handle_ = 0;
   }
-
-  GIcon* icon = g_icon_new_for_string(image_hint.c_str(), NULL);
 
   bool bLoadTexture = false;
   bLoadTexture |= g_strrstr(image_hint.c_str(), "://") != NULL;
@@ -115,10 +111,8 @@ void CoverArt::SetImage(std::string const& image_hint)
   }
   else if (!image_hint.empty())
   {
-    if (GetLayout())
-      GetLayout()->RemoveChildObject(overlay_text_);
-    
-    if (G_IS_ICON(icon))
+    glib::Object<GIcon> icon(g_icon_new_for_string(image_hint.c_str(), NULL));
+    if (G_IS_ICON(icon.RawPtr()))
     {
       StartWaiting();
       slot_handle_ = IconLoader::GetDefault().LoadFromGIconString(image_hint, ICON_SIZE, ICON_SIZE, sigc::mem_fun(this, &CoverArt::IconLoaded));
@@ -133,9 +127,6 @@ void CoverArt::SetImage(std::string const& image_hint)
   {
     SetNoImageAvailable();
   }
-
-  if (icon != NULL)
-    g_object_unref(icon);
 }
 
 void CoverArt::GenerateImage(std::string const& uri)
@@ -221,11 +212,13 @@ void CoverArt::IconLoaded(std::string const& texid,
     pixbuf_height = (pixbuf_height) ? pixbuf_height: 1; // no zeros please
   }
 
+  if (GetLayout())
+    GetLayout()->RemoveChildObject(overlay_text_);
+
   if (pixbuf_width == pixbuf_height)
-  {
+  {    
     // quick path for square icons
     texture_screenshot_.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
-    QueueDraw();
   }
   else
   {
@@ -273,8 +266,8 @@ void CoverArt::IconLoaded(std::string const& texid,
     cairo_paint(cr);
 
     texture_screenshot_.Adopt(texture_from_cairo_graphics(cairo_graphics));
-    QueueDraw();
   }
+  QueueDraw();
 }
 
 void CoverArt::TextureLoaded(std::string const& texid,
@@ -291,6 +284,10 @@ void CoverArt::TextureLoaded(std::string const& texid,
     SetNoImageAvailable();
     return;
   }
+
+  if (GetLayout())
+    GetLayout()->RemoveChildObject(overlay_text_);
+
   texture_screenshot_.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
   QueueDraw();
 }
@@ -472,13 +469,7 @@ void CoverArt::OnThumbnailError(std::string const& error_hint)
   StopWaiting();
 
   texture_screenshot_.Release();
-  if (GetLayout())
-  {
-    GetLayout()->RemoveChildObject(overlay_text_);
-    GetLayout()->AddView(overlay_text_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0, nux::LayoutPosition(1));   
-    ComputeContentSize();
-  }
-  QueueDraw();
+  SetNoImageAvailable();
   notifier_.Release();
 }
 
