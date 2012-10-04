@@ -54,6 +54,7 @@ set (UNITY_SHARED_SOURCES
      SearchBarSpinner.cpp
      StaticCairoText.cpp
      TextureCache.cpp
+     TextInput.cpp
      TextureThumbnailProvider.cpp
      ThumbnailGenerator.cpp
      Timer.cpp
