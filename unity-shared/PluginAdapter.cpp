@@ -1006,7 +1006,7 @@ void PluginAdapter::SetMwmWindowHints(Window xid, MotifWmHints* new_hints)
     XFree(data);
 }
 
-void PluginAdapter::Decorate(Window window_id)
+void PluginAdapter::Decorate(Window window_id) const
 {
   MotifWmHints hints = { 0 };
 
@@ -1016,7 +1016,7 @@ void PluginAdapter::Decorate(Window window_id)
   SetMwmWindowHints(window_id, &hints);
 }
 
-void PluginAdapter::Undecorate(Window window_id)
+void PluginAdapter::Undecorate(Window window_id) const
 {
   MotifWmHints hints = { 0 };
 
@@ -1301,4 +1301,4 @@ std::string PluginAdapter::GetTextProperty(Window window_id, Atom atom) const
   return retval;
 }
 
-}
+} // namespace unity

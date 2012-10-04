@@ -121,8 +121,8 @@ public:
 
   Window GetActiveWindow() const;
 
-  void Decorate(Window xid);
-  void Undecorate(Window xid);
+  void Decorate(Window xid) const;
+  void Undecorate(Window xid) const;
 
   // WindowManager implementation
   bool IsWindowMaximized(Window window_id) const;
