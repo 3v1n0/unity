@@ -200,18 +200,18 @@ UnityScreen::UnityScreen(CompScreen* screen)
       failed = true;
     }
   }
-  
+
     //In case of software rendering then enable lowgfx mode.
   std::string renderer = ANSI_TO_TCHAR(NUX_REINTERPRET_CAST(const char *, glGetString(GL_RENDERER)));
-  
-  if (strstr(renderer.c_str(), "Software Rasterizer") ||
-      strstr(renderer.c_str(), "Mesa X11") ||
-      strstr(renderer.c_str(), "LLVM") ||
-      strstr(renderer.c_str(), "on softpipe") ||
+
+  if (renderer.find("Software Rasterizer") != std::string::npos ||
+      renderer.find("Mesa X11") != std::string::npos ||
+      renderer.find("LLVM") != std::string::npos ||
+      renderer.find("on softpipe") != std::string::npos ||
       (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 1))
-      {
-        Settings::Instance().SetLowGfxMode(true);
-      }
+    {
+      Settings::Instance().SetLowGfxMode(true);
+    }
 #endif
 
   if (!failed)
@@ -3406,41 +3406,18 @@ const unsigned RADIUS = 8;
 }
 }
 
-struct UnityWindow::CairoContext
+struct UnityWindow::PixmapTexture
 {
-  CairoContext(unsigned width, unsigned height)
+  PixmapTexture(unsigned width, unsigned height)
     : w_(width)
     , h_(height)
     , pixmap_(XCreatePixmap(screen->dpy(), screen->root(), w_, h_, 32))
-    , texture_(GLTexture::bindPixmapToTexture(pixmap_, w_, h_, 32, compiz::opengl::ExternallyManaged)) //FIXME: This is a workaround, should create a new wrapper class which owns the texture and the cairo context.
-    , surface_(nullptr)
-    , cr_(nullptr)
+    , texture_(GLTexture::bindPixmapToTexture(pixmap_, w_, h_, 32))
+  {}
+
+  ~PixmapTexture()
   {
-      Screen *xscreen = ScreenOfDisplay(screen->dpy(), screen->screenNum());
-      XRenderPictFormat* format = XRenderFindStandardFormat(screen->dpy(), PictStandardARGB32);
-
-      if (texture_.empty())
-        return;
-
-      surface_ = cairo_xlib_surface_create_with_xrender_format(screen->dpy(), pixmap_,
-                                                               xscreen, format,
-                                                               width, height);
-      cr_ = cairo_create(surface_);
-
-      // clear
-      cairo_save(cr_);
-      cairo_set_operator(cr_, CAIRO_OPERATOR_CLEAR);
-      cairo_paint(cr_);
-      cairo_restore(cr_);
-  }
-
-  ~CairoContext()
-  {
-    if (cr_)
-      cairo_destroy(cr_);
-
-    if (surface_)
-      cairo_surface_destroy(surface_);
+    texture_.clear();
 
     if (pixmap_)
       XFreePixmap(screen->dpy(), pixmap_);
@@ -3450,6 +3427,44 @@ struct UnityWindow::CairoContext
   unsigned h_;
   Pixmap pixmap_;
   GLTexture::List texture_;
+};
+
+struct UnityWindow::CairoContext
+{
+  CairoContext(unsigned width, unsigned height)
+    : w_(width)
+    , h_(height)
+    , pixmap_texture_(std::make_shared<PixmapTexture>(w_, h_))
+    , surface_(nullptr)
+    , cr_(nullptr)
+  {
+    Screen *xscreen = ScreenOfDisplay(screen->dpy(), screen->screenNum());
+    XRenderPictFormat* format = XRenderFindStandardFormat(screen->dpy(), PictStandardARGB32);
+    surface_ = cairo_xlib_surface_create_with_xrender_format(screen->dpy(),
+                                                             pixmap_texture_->pixmap_,
+                                                             xscreen, format,
+                                                             w_, h_);
+    cr_ = cairo_create(surface_);
+
+    // clear
+    cairo_save(cr_);
+    cairo_set_operator(cr_, CAIRO_OPERATOR_CLEAR);
+    cairo_paint(cr_);
+    cairo_restore(cr_);
+  }
+
+  ~CairoContext()
+  {
+    if (cr_)
+      cairo_destroy(cr_);
+
+    if (surface_)
+      cairo_surface_destroy(surface_);
+  }
+
+  unsigned w_;
+  unsigned h_;
+  PixmapTexturePtr pixmap_texture_;
   cairo_surface_t* surface_;
   cairo_t *cr_;
 };
@@ -3665,7 +3680,7 @@ void UnityWindow::RenderText(CairoContext const& context, int x, int y, int widt
 
 void UnityWindow::BuildDecorationTexture()
 {
-  if (!decoration_tex_.empty())
+  if (decoration_tex_)
     return;
 
   auto const& border_extents = window->border();
@@ -3674,7 +3689,7 @@ void UnityWindow::BuildDecorationTexture()
   {
     CairoContext context(window->borderRect().width(), border_extents.top);
     RenderDecoration(context);
-    decoration_tex_ = context.texture_;
+    decoration_tex_ = context.pixmap_texture_;
   }
 }
 
@@ -3726,8 +3741,8 @@ void UnityWindow::CleanupSharedTextures()
 
 void UnityWindow::CleanupCachedTextures()
 {
-  decoration_tex_.clear();
-  decoration_selected_tex_.clear();
+  decoration_tex_.reset();
+  decoration_selected_tex_.reset();
   decoration_title_.clear();
 }
 
@@ -3760,21 +3775,19 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
   if (!highlighted)
   {
     BuildDecorationTexture();
-    DrawTexture(decoration_tex_, attrib, transform, mask, x, y, pos.scale);
+    DrawTexture(decoration_tex_->texture_, attrib, transform, mask, x, y, pos.scale);
     close_button_geo_.Set(0, 0, 0, 0);
   }
   else
   {
     auto const& decoration_extents = window->border();
-    int width = scaled_geo.width;
-    int height = decoration_extents.top;
+    unsigned width = scaled_geo.width;
+    unsigned height = decoration_extents.top;
     bool redraw_decoration = true;
 
-    if (!decoration_selected_tex_.empty())
+    if (decoration_selected_tex_)
     {
-      GLTexture* texture = decoration_selected_tex_.front();
-
-      if (texture->width() == width && texture->height() == height)
+      if (decoration_selected_tex_->w_ == width && decoration_selected_tex_->h_ == height)
       {
         if (decoration_title_ == WindowManager::Default()->GetWindowName(window->id()))
           redraw_decoration = false;
@@ -3789,10 +3802,10 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
       // Draw window title
       int text_x = scale::decoration::ITEMS_PADDING * 2 + scale::decoration::CLOSE_SIZE;
       RenderText(context, text_x, 0.0, width - scale::decoration::ITEMS_PADDING, height);
-      decoration_selected_tex_ = context.texture_;
+      decoration_selected_tex_ = context.pixmap_texture_;
     }
 
-    DrawTexture(decoration_selected_tex_, attrib, transform, mask, x, y);
+    DrawTexture(decoration_selected_tex_->texture_, attrib, transform, mask, x, y);
 
     x += scale::decoration::ITEMS_PADDING;
     y += (height - scale::decoration::CLOSE_SIZE) / 2.0f;
