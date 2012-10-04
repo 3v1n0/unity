@@ -98,7 +98,7 @@ class DesktopLauncherIcon(SimpleLauncherIcon):
 
 
 class VolumeLauncherIcon(SimpleLauncherIcon):
-    """Represents a volume icon in the launcher."""
+    """Represents a mounted disk icon in the launcher."""
 
 
 class SoftwareCenterLauncherIcon(BamfLauncherIcon):
