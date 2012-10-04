@@ -184,7 +184,7 @@ void DBusProxy::Impl::OnProxyConnectCallback(GObject* source,
       }
       else
       {
-        LOG_WARNING(logger) << "Unable to connect to proxy: " << error;
+        LOG_ERROR(logger) << "Unable to connect to proxy: " << error;
       }
     }
     return;
