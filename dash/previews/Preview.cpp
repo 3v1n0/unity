@@ -26,9 +26,11 @@
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
+#include <UnityCore/U1PaymentPreview.h>
 #include "ActionButton.h"
 
 #include "GenericPreview.h"
+#include "U1PaymentPreview.h"
 #include "ApplicationPreview.h"
 #include "MusicPreview.h"
 #include "MoviePreview.h"
@@ -56,6 +58,14 @@ previews::Preview::Ptr Preview::PreviewForModel(dash::Preview::Ptr model)
  
   if (model->renderer_name == "preview-generic")
   {
+    // HACK: Because we do not want to add a FFE by chaging libunity we are going
+    // do the following, create a generic preview, check its id and decide id we
+    // are delaing with a payment preview or a real generic preview
+    const char* preview_title = model->title.Get().c_str();
+    if (strcmp(U1_PAYMENT_TITLE, preview_title) == 0)
+    {
+        return Preview::Ptr(new U1PaymentPreview(model));
+    }
     return Preview::Ptr(new GenericPreview(model));
   }
   else if (model->renderer_name == "preview-application")

@@ -287,6 +287,91 @@ int Style::GetStatusIconSize() const
   return 12;
 }
 
+std::string Style::payment_title_font() const
+{
+  return "Ubuntu 22";
+}
+
+std::string Style::payment_subtitle_font() const
+{
+  return "Ubuntu 12.5";
+}
+
+std::string Style::payment_prize_title_font() const
+{
+  return "Ubuntu Bold 12.5";
+}
+
+std::string Style::payment_prize_subtitle_font() const
+{
+  return "Ubuntu 10";
+}
+
+std::string Style::payment_intro_font() const
+{
+  return "Ubuntu 11.5";
+}
+
+std::string Style::payment_form_labels_font() const
+{
+  return "Ubuntu 10";
+}
+
+std::string Style::payment_form_data_font() const
+{
+  return "Ubuntu Bold 10";
+}
+
+std::string Style::payment_form_actions_font() const
+{
+  return "Ubuntu 10";
+}
+
+std::string Style::payment_text_input_font() const
+{
+  return "Ubuntu 14";
+}
+
+int Style::GetPaymentIconAreaWidth() const
+{
+  return 64;
+}
+
+int Style::GetPaymentTextInputHeight() const
+{
+  return 40;
+}
+
+int Style::GetPaymentLockWidth() const
+{
+  return 22;
+}
+
+int Style::GetPaymentLockHeight() const
+{
+  return 22;
+}
+
+int Style::GetPaymentHeaderWidth() const
+{
+  return 850;
+}
+
+int Style::GetPaymentHeaderSpace() const
+{
+  return 9;
+}
+
+int Style::GetPaymentFormSpace() const
+{
+  return 5;
+}
+
+int Style::GetPaymentFooterSpace() const
+{
+  return 32;
+}
+
 float Style::GetVideoImageAspectRatio() const
 {
   return float(540)/380;
@@ -394,6 +479,12 @@ nux::BaseTexture* Style::GetPlayIcon()
 nux::BaseTexture* Style::GetPauseIcon()
 {
   return pimpl->preview_pause_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetLockIcon()
+{
+  return nux::CreateTexture2DFromFile(
+              PKGDATADIR"/lock_icon.png", -1, true);
 }
 
 nux::BaseTexture* Style::GetSearchSpinIcon(int size)

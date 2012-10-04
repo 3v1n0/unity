@@ -44,6 +44,7 @@ set (PREVIEWS_SOURCES
      SocialPreviewComments.cpp
      Track.cpp
      Tracks.cpp
+     U1PaymentPreview.cpp
      )
 
 add_library (previews-lib STATIC ${PREVIEWS_SOURCES})

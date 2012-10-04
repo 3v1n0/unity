@@ -30,6 +30,8 @@
 #include "MoviePreview.h"
 #include "SocialPreview.h"
 #include "SeriesPreview.h"
+#include "U1PaymentPreview.h"
+
 
 namespace unity
 {
@@ -55,7 +57,20 @@ Preview::Ptr Preview::PreviewForProtocolObject(glib::Object<GObject> const& prot
 
   if (renderer_name == "preview-generic")
   {
-    return Preview::Ptr(new GenericPreview(proto_obj));
+    // HACK: Because we do not want to add a FFE by chaging libunity we are going
+    // do the following, create a generic preview, check its id and decide id we
+    // are delaing with a payment preview or a real generic preview
+    GenericPreview *preview = new GenericPreview(proto_obj);
+    const char* preview_title = preview->title.Get().c_str();
+
+    if (strcmp(U1_PAYMENT_TITLE, preview_title) == 0)
+    {
+	return Preview::Ptr(new U1PaymentPreview(proto_obj));
+    }
+    else
+    {
+        return Preview::Ptr(preview);
+    }
   }
   else if (renderer_name == "preview-application")
   {

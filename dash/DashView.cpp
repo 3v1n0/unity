@@ -29,6 +29,7 @@
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/RadioOptionFilter.h>
+#include <UnityCore/U1PaymentPreview.h>
 
 #include "FilterExpanderLabel.h"
 #include "unity-shared/DashStyle.h"
@@ -943,6 +944,14 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
   lens->preview_ready.connect([&] (std::string const& uri, Preview::Ptr model)
   {
     LOG_DEBUG(logger) << "Got preview for: " << uri;
+    // HACK: Atm we don't support well the fact that a preview can be sent from
+    // an ActionResponse and therefore transition does not work, this hack allows
+    // to set the navigation mode to ensure that we have a nice transition
+    const char *title = model->title.Get().c_str();
+    if (strcmp(U1_PAYMENT_TITLE, title) == 0)
+    {
+      preview_navigation_mode_ = previews::Navigation::RIGHT;
+    }
     preview_state_machine_.ActivatePreview(model); // this does not immediately display a preview - we now wait.
   });
 
@@ -1405,7 +1414,7 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     }
   }
 
-  if (search_key || search_bar_->im_preedit)
+  if (!preview_displaying_ && (search_key || search_bar_->im_preedit))
   {
     // then send the event to the search entry
     return search_bar_->text_entry();
