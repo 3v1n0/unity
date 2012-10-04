@@ -3444,7 +3444,7 @@ struct UnityWindow::PixmapTexture
     : w_(width)
     , h_(height)
     , pixmap_(XCreatePixmap(screen->dpy(), screen->root(), w_, h_, 32))
-    , texture_(GLTexture::bindPixmapToTexture(pixmap_, w_, h_, 32))
+    , texture_(GLTexture::bindPixmapToTexture(pixmap_, w_, h_, 32, compiz::opengl::ExternallyManaged))
   {}
 
   ~PixmapTexture()
