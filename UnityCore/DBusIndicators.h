@@ -22,6 +22,7 @@
 
 #include "Indicators.h"
 
+#include <NuxCore/Property.h>
 
 namespace unity
 {
@@ -35,8 +36,10 @@ class DBusIndicators : public Indicators
 public:
   typedef std::shared_ptr<DBusIndicators> Ptr;
 
-  DBusIndicators();
+  DBusIndicators(const std::string &dbus_name = "com.canonical.Unity.Panel.Service");
   ~DBusIndicators();
+
+  nux::Property<bool> connected;
 
   void SyncGeometries(std::string const& name,
                       EntryLocationMap const& locations);

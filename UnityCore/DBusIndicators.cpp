@@ -37,7 +37,6 @@ namespace
 {
 nux::logging::Logger logger("unity.indicator.DBusIndicators");
 
-const std::string SERVICE_NAME("com.canonical.Unity.Panel.Service");
 const std::string SERVICE_PATH("/com/canonical/Unity/Panel/Service");
 const std::string SERVICE_IFACE("com.canonical.Unity.Panel.Service");
 } // anonymous namespace
@@ -48,7 +47,7 @@ const std::string SERVICE_IFACE("com.canonical.Unity.Panel.Service");
 class DBusIndicators::Impl
 {
 public:
-  Impl(DBusIndicators* owner);
+  Impl(const std::string &dbus_name, DBusIndicators* owner);
 
   void CheckLocalService();
   void RequestSyncAll();
@@ -84,9 +83,9 @@ public:
 
 
 // Public Methods
-DBusIndicators::Impl::Impl(DBusIndicators* owner)
+DBusIndicators::Impl::Impl(const std::string &dbus_name, DBusIndicators* owner)
   : owner_(owner)
-  , gproxy_(SERVICE_NAME, SERVICE_PATH, SERVICE_IFACE,
+  , gproxy_(dbus_name, SERVICE_PATH, SERVICE_IFACE,
             G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES)
 {
   gproxy_.Connect("ReSync", sigc::mem_fun(this, &DBusIndicators::Impl::OnReSync));
@@ -127,11 +126,13 @@ void DBusIndicators::Impl::CheckLocalService()
 
 void DBusIndicators::Impl::OnConnected()
 {
+  owner_->connected = true;
   RequestSyncAll();
 }
 
 void DBusIndicators::Impl::OnDisconnected()
 {
+  owner_->connected = false;
   for (auto indicator : owner_->GetIndicators())
   {
     owner_->RemoveIndicator(indicator->name());
@@ -406,8 +407,8 @@ void DBusIndicators::Impl::SyncGeometries(std::string const& name,
   cached_loc = locations;
 }
 
-DBusIndicators::DBusIndicators()
-  : pimpl(new Impl(this))
+DBusIndicators::DBusIndicators(const std::string &dbus_name)
+  : connected(false), pimpl(new Impl(dbus_name, this))
 {}
 
 DBusIndicators::~DBusIndicators()

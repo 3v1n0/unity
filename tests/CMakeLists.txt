@@ -110,7 +110,9 @@ if (GTEST_SRC_DIR AND
                  test_service_lens.h
                  test_service_main.c
                  test_service_model.c
-                 test_service_model.h)
+                 test_service_model.h
+                 test_service_panel.c
+                 test_service_panel.c)
   target_link_libraries(test-gtest-service unity-shared ${LIBS})
   add_dependencies (test-gtest-service unity-core-${UNITY_API_VERSION} gtest)
 
@@ -194,6 +196,7 @@ if (GTEST_SRC_DIR AND
                  test_utils.h
                  test_ratings_filter.cpp
                  test_results.cpp
+                 test_dbusindicators.cpp
                 )
   target_link_libraries(test-gtest-dbus gtest unity-shared ${LIBS})
   add_test(UnityGTestDBus test-gtest-dbus)
