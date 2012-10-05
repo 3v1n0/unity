@@ -106,12 +106,22 @@ void Indicator::Sync(Indicator::Entries const& new_entries)
   }
 }
 
-Entry::Ptr Indicator::GetEntry(std::string const& entry_id) const
+Entry::Ptr Indicator::GetEntry(std::string const& entry_id, int *index) const
 {
+  int i = 0;
   for (auto entry : entries_)
+  {
     if (entry->id() == entry_id)
+    {
+      if (index != nullptr)
+        *index = i;
       return entry;
+    }
+    ++i;
+  }
 
+  if (index != nullptr)
+    *index = -1;
   return Entry::Ptr();
 }
 
