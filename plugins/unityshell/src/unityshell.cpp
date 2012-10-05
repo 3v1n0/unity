@@ -112,7 +112,7 @@ namespace decoration
 const unsigned CLOSE_SIZE = 19;
 const unsigned ITEMS_PADDING = 5;
 const unsigned RADIUS = 8;
-const unsigned GLOW = 20;
+const unsigned GLOW = 30;
 const nux::Color GLOW_COLOR(221, 72, 20);
 } // decoration namespace
 } // scale namespace
@@ -2459,6 +2459,15 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
     }
   }
 
+  if (WindowManager::Default()->IsScaleActive() && ScaleScreen::get(screen)->getSelectedWindow() == window->id())
+  {
+    nux::Geometry scaled_geo = GetScaledGeometry();
+    int inside_glow = scale::decoration::RADIUS/4;
+    scaled_geo.Expand(-inside_glow, -inside_glow);
+    glow::Quads const& quads = computeGlowQuads(scaled_geo, glow_texture_, scale::decoration::GLOW);
+    paintGlow(matrix, attrib, region, quads, glow_texture_, scale::decoration::GLOW_COLOR, mask);
+  }
+
   return gWindow->glPaint(wAttrib, matrix, region, mask);
 }
 
@@ -2518,17 +2527,6 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
       (window->type() == CompWindowTypeDesktopMask))
   {
     uScreen->paintPanelShadow(region);
-  }
-
-  if (WindowManager::Default().IsScaleActive() &&
-      ScaleScreen::get(screen)->getSelectedWindow() == window->id())
-  {
-    if (!region.isEmpty())
-    {
-      double scale = ScaleWindow::get(window)->getCurrentPosition().scale;
-      glow::Quads const& quads = computeGlowQuads(glow_texture_, scale::decoration::GLOW, scale);
-      paintGlow(matrix, attrib, region, quads, glow_texture_, scale::decoration::GLOW_COLOR, mask);
-    }
   }
 
   return ret;
