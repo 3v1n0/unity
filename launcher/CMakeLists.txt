@@ -31,8 +31,8 @@ include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_D
 #
 set (LAUNCHER_SOURCES
      AbstractLauncherIcon.cpp
+     ApplicationLauncherIcon.cpp
      BFBLauncherIcon.cpp
-     BamfLauncherIcon.cpp
      CairoBaseWindow.cpp
      DNDCollectionWindow.cpp
      Decaymulator.cpp

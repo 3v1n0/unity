@@ -75,7 +75,7 @@ class HudLauncherIcon(SimpleLauncherIcon):
     """Represents the HUD button in the launcher."""
 
 
-class BamfLauncherIcon(SimpleLauncherIcon):
+class ApplicationLauncherIcon(SimpleLauncherIcon):
     """Represents a launcher icon with BAMF integration."""
 
     def __repr__(self):
@@ -101,7 +101,7 @@ class VolumeLauncherIcon(SimpleLauncherIcon):
     """Represents a mounted disk icon in the launcher."""
 
 
-class SoftwareCenterLauncherIcon(BamfLauncherIcon):
+class SoftwareCenterLauncherIcon(ApplicationLauncherIcon):
     """Represents a launcher icon of a Software Center app."""
 
 

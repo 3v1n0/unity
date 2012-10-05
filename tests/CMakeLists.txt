@@ -202,7 +202,7 @@ if (GTEST_SRC_DIR AND
 # Tests that require X
   add_executable(test-gtest
                  test_main.cpp
-                 test_bamf_launcher_icon.cpp
+                 test_application_launcher_icon.cpp
                  test_bfb_launcher_icon.cpp
                  test_dashview_impl.cpp
                  test_desktop_launcher_icon.cpp
@@ -267,7 +267,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/hud/HudPrivate.cpp
                  ${CMAKE_SOURCE_DIR}/hud/HudView.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/AbstractLauncherIcon.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/BamfLauncherIcon.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/ApplicationLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/BFBLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/CairoBaseWindow.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/DNDCollectionWindow.cpp

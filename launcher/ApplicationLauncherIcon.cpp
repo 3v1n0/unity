@@ -28,7 +28,7 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/DesktopUtilities.h>
 
-#include "BamfLauncherIcon.h"
+#include "ApplicationLauncherIcon.h"
 #include "FavoriteStore.h"
 #include "Launcher.h"
 #include "MultiMonitor.h"
@@ -55,9 +55,9 @@ nux::logging::Logger logger("unity.launcher");
   const std::string DEFAULT_ICON = "application-default-icon";
 }
 
-NUX_IMPLEMENT_OBJECT_TYPE(BamfLauncherIcon);
+NUX_IMPLEMENT_OBJECT_TYPE(ApplicationLauncherIcon);
 
-BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
+ApplicationLauncherIcon::ApplicationLauncherIcon(BamfApplication* app)
   : SimpleLauncherIcon(IconType::APPLICATION)
   , _bamf_app(app, glib::AddRef())
   , use_custom_bg_color_(false)
@@ -149,10 +149,10 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   _gsignals.Add(sig);
 
   WindowManager& wm = WindowManager::Default();
-  wm.window_minimized.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnWindowMinimized));
-  wm.window_moved.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnWindowMoved));
-  wm.screen_viewport_switch_ended.connect(sigc::mem_fun(this, &BamfLauncherIcon::EnsureWindowState));
-  wm.terminate_expo.connect(sigc::mem_fun(this, &BamfLauncherIcon::EnsureWindowState));
+  wm.window_minimized.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::OnWindowMinimized));
+  wm.window_moved.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::OnWindowMoved));
+  wm.screen_viewport_switch_ended.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState));
+  wm.terminate_expo.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState));
 
   EnsureWindowState();
   UpdateMenus();
@@ -163,7 +163,7 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
   SetProgress(0.0f);
 }
 
-BamfLauncherIcon::~BamfLauncherIcon()
+ApplicationLauncherIcon::~ApplicationLauncherIcon()
 {
   if (_bamf_app.IsType(BAMF_TYPE_APPLICATION))
   {
@@ -173,7 +173,7 @@ BamfLauncherIcon::~BamfLauncherIcon()
   }
 }
 
-void BamfLauncherIcon::Remove()
+void ApplicationLauncherIcon::Remove()
 {
   /* Removing the unity-seen flag to the wrapped bamf application, on remove
    * request we make sure that if the bamf application is re-opened while
@@ -188,7 +188,7 @@ void BamfLauncherIcon::Remove()
   SimpleLauncherIcon::Remove();
 }
 
-bool BamfLauncherIcon::IsSticky() const
+bool ApplicationLauncherIcon::IsSticky() const
 {
   if (!BAMF_IS_VIEW(_bamf_app.RawPtr()))
     return false;
@@ -196,22 +196,22 @@ bool BamfLauncherIcon::IsSticky() const
     return bamf_view_is_sticky(BAMF_VIEW(_bamf_app.RawPtr()));
 }
 
-bool BamfLauncherIcon::IsActive() const
+bool ApplicationLauncherIcon::IsActive() const
 {
   return GetQuirk(Quirk::ACTIVE);
 }
 
-bool BamfLauncherIcon::IsRunning() const
+bool ApplicationLauncherIcon::IsRunning() const
 {
   return GetQuirk(Quirk::RUNNING);
 }
 
-bool BamfLauncherIcon::IsUrgent() const
+bool ApplicationLauncherIcon::IsUrgent() const
 {
   return GetQuirk(Quirk::URGENT);
 }
 
-void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
+void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   SimpleLauncherIcon::ActivateLauncherIcon(arg);
   WindowManager& wm = WindowManager::Default();
@@ -350,7 +350,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   }
 }
 
-std::vector<Window> BamfLauncherIcon::GetWindows(WindowFilterMask filter, int monitor)
+std::vector<Window> ApplicationLauncherIcon::GetWindows(WindowFilterMask filter, int monitor)
 {
   WindowManager& wm = WindowManager::Default();
   std::vector<Window> results;
@@ -399,12 +399,12 @@ std::vector<Window> BamfLauncherIcon::GetWindows(WindowFilterMask filter, int mo
   return results;
 }
 
-std::vector<Window> BamfLauncherIcon::Windows()
+std::vector<Window> ApplicationLauncherIcon::Windows()
 {
   return GetWindows(WindowFilter::MAPPED|WindowFilter::ON_ALL_MONITORS);
 }
 
-std::vector<Window> BamfLauncherIcon::WindowsOnViewport()
+std::vector<Window> ApplicationLauncherIcon::WindowsOnViewport()
 {
   WindowFilterMask filter = 0;
   filter |= WindowFilter::MAPPED;
@@ -415,7 +415,7 @@ std::vector<Window> BamfLauncherIcon::WindowsOnViewport()
   return GetWindows(filter);
 }
 
-std::vector<Window> BamfLauncherIcon::WindowsForMonitor(int monitor)
+std::vector<Window> ApplicationLauncherIcon::WindowsForMonitor(int monitor)
 {
   WindowFilterMask filter = 0;
   filter |= WindowFilter::MAPPED;
@@ -425,7 +425,7 @@ std::vector<Window> BamfLauncherIcon::WindowsForMonitor(int monitor)
   return GetWindows(filter, monitor);
 }
 
-std::string BamfLauncherIcon::NameForWindow(Window window)
+std::string ApplicationLauncherIcon::NameForWindow(Window window)
 {
   std::string result;
   GList* children, *l;
@@ -448,7 +448,7 @@ std::string BamfLauncherIcon::NameForWindow(Window window)
   return result;
 }
 
-void BamfLauncherIcon::OnWindowMinimized(guint32 xid)
+void ApplicationLauncherIcon::OnWindowMinimized(guint32 xid)
 {
   if (!OwnsWindow(xid))
     return;
@@ -457,7 +457,7 @@ void BamfLauncherIcon::OnWindowMinimized(guint32 xid)
   UpdateQuirkTimeDelayed(300, Quirk::SHIMMER);
 }
 
-void BamfLauncherIcon::OnWindowMoved(guint32 moved_win)
+void ApplicationLauncherIcon::OnWindowMoved(guint32 moved_win)
 {
   if (!OwnsWindow(moved_win))
     return;
@@ -470,7 +470,7 @@ void BamfLauncherIcon::OnWindowMoved(guint32 moved_win)
   }, WINDOW_MOVE_TIMEOUT);
 }
 
-void BamfLauncherIcon::UpdateDesktopFile()
+void ApplicationLauncherIcon::UpdateDesktopFile()
 {
   if (!BAMF_IS_APPLICATION(_bamf_app.RawPtr()))
   {
@@ -516,19 +516,19 @@ void BamfLauncherIcon::UpdateDesktopFile()
   }
 }
 
-std::string BamfLauncherIcon::DesktopFile()
+std::string ApplicationLauncherIcon::DesktopFile()
 {
   UpdateDesktopFile();
   return _desktop_file;
 }
 
-std::string BamfLauncherIcon::BamfName() const
+std::string ApplicationLauncherIcon::BamfName() const
 {
   glib::String name(bamf_view_get_name(BAMF_VIEW(_bamf_app.RawPtr())));
   return name.Str();
 }
 
-void BamfLauncherIcon::AddProperties(GVariantBuilder* builder)
+void ApplicationLauncherIcon::AddProperties(GVariantBuilder* builder)
 {
   SimpleLauncherIcon::AddProperties(builder);
 
@@ -546,7 +546,7 @@ void BamfLauncherIcon::AddProperties(GVariantBuilder* builder)
     .add("sticky", IsSticky());
 }
 
-bool BamfLauncherIcon::OwnsWindow(Window xid) const
+bool ApplicationLauncherIcon::OwnsWindow(Window xid) const
 {
   GList* children, *l;
   bool owns = false;
@@ -572,7 +572,7 @@ bool BamfLauncherIcon::OwnsWindow(Window xid) const
   return owns;
 }
 
-void BamfLauncherIcon::OpenInstanceWithUris(std::set<std::string> uris)
+void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> uris)
 {
   glib::Error error;
   glib::Object<GDesktopAppInfo> desktopInfo(g_desktop_app_info_new_from_filename(DesktopFile().c_str()));
@@ -612,13 +612,13 @@ void BamfLauncherIcon::OpenInstanceWithUris(std::set<std::string> uris)
   UpdateQuirkTime(Quirk::STARTING);
 }
 
-void BamfLauncherIcon::OpenInstanceLauncherIcon(ActionArg arg)
+void ApplicationLauncherIcon::OpenInstanceLauncherIcon(ActionArg arg)
 {
   std::set<std::string> empty;
   OpenInstanceWithUris(empty);
 }
 
-std::vector<Window> BamfLauncherIcon::GetFocusableWindows(ActionArg arg, bool &any_visible, bool &any_urgent)
+std::vector<Window> ApplicationLauncherIcon::GetFocusableWindows(ActionArg arg, bool &any_visible, bool &any_urgent)
 {
   bool any_user_visible = false;
   WindowManager& wm = WindowManager::Default();
@@ -708,7 +708,7 @@ std::vector<Window> BamfLauncherIcon::GetFocusableWindows(ActionArg arg, bool &a
 
 }
 
-void BamfLauncherIcon::Focus(ActionArg arg)
+void ApplicationLauncherIcon::Focus(ActionArg arg)
 {
   bool any_visible = false, any_urgent = false;
   std::vector<Window> windows = GetFocusableWindows(arg, any_visible, any_urgent);
@@ -731,13 +731,13 @@ void BamfLauncherIcon::Focus(ActionArg arg)
   WindowManager::Default().FocusWindowGroup(windows, visibility, arg.monitor, only_top_win);
 }
 
-bool BamfLauncherIcon::Spread(bool current_desktop, int state, bool force)
+bool ApplicationLauncherIcon::Spread(bool current_desktop, int state, bool force)
 {
   auto windows = GetWindows(current_desktop ? WindowFilter::ON_CURRENT_DESKTOP : 0);
   return WindowManager::Default().ScaleWindowGroup(windows, state, force);
 }
 
-void BamfLauncherIcon::EnsureWindowState()
+void ApplicationLauncherIcon::EnsureWindowState()
 {
   std::vector<bool> monitors;
   monitors.resize(max_num_monitors);
@@ -789,7 +789,7 @@ void BamfLauncherIcon::EnsureWindowState()
   EmitNeedsRedraw();
 }
 
-void BamfLauncherIcon::UpdateDesktopQuickList()
+void ApplicationLauncherIcon::UpdateDesktopQuickList()
 {
   std::string const& desktop_file = DesktopFile();
 
@@ -842,7 +842,7 @@ void BamfLauncherIcon::UpdateDesktopQuickList()
   }
 }
 
-void BamfLauncherIcon::UpdateBackgroundColor()
+void ApplicationLauncherIcon::UpdateBackgroundColor()
 {
   bool last_use_custom_bg_color = use_custom_bg_color_;
   nux::Color last_bg_color(bg_color_);
@@ -859,7 +859,7 @@ void BamfLauncherIcon::UpdateBackgroundColor()
     EmitNeedsRedraw();
 }
 
-void BamfLauncherIcon::UpdateMenus()
+void ApplicationLauncherIcon::UpdateMenus()
 {
   GList* children, *l;
 
@@ -904,7 +904,7 @@ void BamfLauncherIcon::UpdateMenus()
   }
 }
 
-void BamfLauncherIcon::Quit()
+void ApplicationLauncherIcon::Quit()
 {
   GList* children, *l;
 
@@ -928,7 +928,7 @@ void BamfLauncherIcon::Quit()
   g_list_free(children);
 }
 
-void BamfLauncherIcon::Stick(bool save)
+void ApplicationLauncherIcon::Stick(bool save)
 {
   if (IsSticky())
     return;
@@ -938,7 +938,7 @@ void BamfLauncherIcon::Stick(bool save)
   SimpleLauncherIcon::Stick(save);
 }
 
-void BamfLauncherIcon::UnStick()
+void ApplicationLauncherIcon::UnStick()
 {
   SimpleLauncherIcon::UnStick();
 
@@ -954,7 +954,7 @@ void BamfLauncherIcon::UnStick()
     Remove();
 }
 
-void BamfLauncherIcon::ToggleSticky()
+void ApplicationLauncherIcon::ToggleSticky()
 {
   if (IsSticky())
   {
@@ -966,7 +966,7 @@ void BamfLauncherIcon::ToggleSticky()
   }
 }
 
-void BamfLauncherIcon::EnsureMenuItemsReady()
+void ApplicationLauncherIcon::EnsureMenuItemsReady()
 {
   glib::Object<DbusmenuMenuitem> menu_item;
 
@@ -1007,7 +1007,7 @@ void BamfLauncherIcon::EnsureMenuItemsReady()
   }
 }
 
-AbstractLauncherIcon::MenuItemsVector BamfLauncherIcon::GetMenus()
+AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
 {
   MenuItemsVector result;
   bool first_separator_needed = false;
@@ -1166,7 +1166,7 @@ AbstractLauncherIcon::MenuItemsVector BamfLauncherIcon::GetMenus()
   return result;
 }
 
-void BamfLauncherIcon::UpdateIconGeometries(std::vector<nux::Point3> center)
+void ApplicationLauncherIcon::UpdateIconGeometries(std::vector<nux::Point3> center)
 {
   if (!BAMF_IS_VIEW(_bamf_app.RawPtr()))
   {
@@ -1200,19 +1200,19 @@ void BamfLauncherIcon::UpdateIconGeometries(std::vector<nux::Point3> center)
   g_list_free(children);
 }
 
-void BamfLauncherIcon::OnCenterStabilized(std::vector<nux::Point3> center)
+void ApplicationLauncherIcon::OnCenterStabilized(std::vector<nux::Point3> center)
 {
   UpdateIconGeometries(center);
 }
 
-std::string BamfLauncherIcon::GetDesktopID()
+std::string ApplicationLauncherIcon::GetDesktopID()
 {
   std::string const& desktop_file = DesktopFile();
 
   return DesktopUtilities::GetDesktopID(desktop_file);
 }
 
-std::string BamfLauncherIcon::GetRemoteUri()
+std::string ApplicationLauncherIcon::GetRemoteUri()
 {
   if (_remote_uri.empty())
   {
@@ -1227,7 +1227,7 @@ std::string BamfLauncherIcon::GetRemoteUri()
   return _remote_uri;
 }
 
-std::set<std::string> BamfLauncherIcon::ValidateUrisForLaunch(DndData const& uris)
+std::set<std::string> ApplicationLauncherIcon::ValidateUrisForLaunch(DndData const& uris)
 {
   std::set<std::string> result;
 
@@ -1237,14 +1237,14 @@ std::set<std::string> BamfLauncherIcon::ValidateUrisForLaunch(DndData const& uri
   return result;
 }
 
-void BamfLauncherIcon::OnDndHovered()
+void ApplicationLauncherIcon::OnDndHovered()
 {
   // for now, let's not do this, it turns out to be quite buggy
   //if (IsRunning())
   //  Spread(CompAction::StateInitEdgeDnd, true);
 }
 
-void BamfLauncherIcon::OnDndEnter()
+void ApplicationLauncherIcon::OnDndEnter()
 {
   /* Disabled, since the DND code is currently disabled as well.
   _source_manager.AddTimeout(1000, [&] {
@@ -1254,14 +1254,14 @@ void BamfLauncherIcon::OnDndEnter()
   */
 }
 
-void BamfLauncherIcon::OnDndLeave()
+void ApplicationLauncherIcon::OnDndLeave()
 {
   /* Disabled, since the DND code is currently disabled as well.
   _source_manager.Remove(ICON_DND_OVER_TIMEOUT);
   */
 }
 
-bool BamfLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
+bool ApplicationLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
 {
   bool is_home_launcher = boost::algorithm::ends_with(DesktopFile(), "nautilus-home.desktop") ||
                           boost::algorithm::ends_with(DesktopFile(), "nautilus.desktop");
@@ -1286,17 +1286,17 @@ bool BamfLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
   return false;
 }
 
-nux::DndAction BamfLauncherIcon::OnQueryAcceptDrop(DndData const& dnd_data)
+nux::DndAction ApplicationLauncherIcon::OnQueryAcceptDrop(DndData const& dnd_data)
 {
   return ValidateUrisForLaunch(dnd_data).empty() ? nux::DNDACTION_NONE : nux::DNDACTION_COPY;
 }
 
-void BamfLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
+void ApplicationLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
 {
   OpenInstanceWithUris(ValidateUrisForLaunch(dnd_data));
 }
 
-bool BamfLauncherIcon::ShowInSwitcher(bool current)
+bool ApplicationLauncherIcon::ShowInSwitcher(bool current)
 {
   bool result = false;
 
@@ -1323,7 +1323,7 @@ bool BamfLauncherIcon::ShowInSwitcher(bool current)
   return result;
 }
 
-unsigned long long BamfLauncherIcon::SwitcherPriority()
+unsigned long long ApplicationLauncherIcon::SwitcherPriority()
 {
   GList* children, *l;
   unsigned long long result = 0;
@@ -1344,7 +1344,7 @@ unsigned long long BamfLauncherIcon::SwitcherPriority()
   return result;
 }
 
-nux::Color BamfLauncherIcon::BackgroundColor() const
+nux::Color ApplicationLauncherIcon::BackgroundColor() const
 {
   if (use_custom_bg_color_)
     return bg_color_;
@@ -1352,7 +1352,7 @@ nux::Color BamfLauncherIcon::BackgroundColor() const
   return SimpleLauncherIcon::BackgroundColor();
 }
 
-const std::set<std::string> BamfLauncherIcon::GetSupportedTypes()
+const std::set<std::string> ApplicationLauncherIcon::GetSupportedTypes()
 {
   std::set<std::string> supported_types;
   std::unique_ptr<gchar*[], void(*)(gchar**)> mimes(bamf_application_get_supported_mime_types(_bamf_app),
@@ -1370,9 +1370,9 @@ const std::set<std::string> BamfLauncherIcon::GetSupportedTypes()
   return supported_types;
 }
 
-std::string BamfLauncherIcon::GetName() const
+std::string ApplicationLauncherIcon::GetName() const
 {
-  return "BamfLauncherIcon";
+  return "ApplicationLauncherIcon";
 }
 
 } // namespace launcher
