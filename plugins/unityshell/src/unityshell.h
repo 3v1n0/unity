@@ -408,6 +408,8 @@ protected:
 private:
   typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>
           UnityMinimizedHandler;
+  struct PixmapTexture;
+  typedef std::shared_ptr<PixmapTexture> PixmapTexturePtr;
   struct CairoContext;
 
   void DoEnableFocus ();
@@ -467,8 +469,8 @@ private:
   static GLTexture::List close_prelight_tex_;
   static GLTexture::List close_pressed_tex_;
   static GLTexture::List glow_texture_;
-  GLTexture::List decoration_tex_;
-  GLTexture::List decoration_selected_tex_;
+  PixmapTexturePtr decoration_tex_;
+  PixmapTexturePtr decoration_selected_tex_;
   std::string decoration_title_;
   compiz::WindowInputRemoverLock::Weak input_remover_;
   panel::WindowState close_icon_state_;

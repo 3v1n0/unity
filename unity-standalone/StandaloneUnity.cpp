@@ -38,6 +38,7 @@
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/FontSettings.h"
 #include "unity-shared/PanelStyle.h"
+#include "unity-shared/ThumbnailGenerator.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UnitySettings.h"
@@ -163,6 +164,7 @@ int main(int argc, char **argv)
 
   dash::Style dash_style;
   panel::Style panel_style;
+  unity::ThumbnailGenerator thumbnail_generator;
 
   internal::FavoriteStoreGSettings favorite_store;
   BackgroundEffectHelper::blur_type = BLUR_NONE;
