@@ -113,6 +113,25 @@ Expected Result:
   The screen should look the same as if you had never opened the dash.
 
 
+Test that when an on screen keyboard is used it will not close the Dash.
+------------------------------------------------------------------------
+This tests shows that an on screen keyboards will not close the dash when clicking on it.
+see lp:1058705)
+
+Setup:
+Open the on screen keyboard Onboard.
+#. Move Onboard to the bottom right of the screen.
+#. Open the Dash
+#. Ensure the Dash is not in fullscreen mode.
+#. Ensure that Onboard is outside of the Dash.
+
+Actions:
+#. Use Onboard to type "Hello" in the Dash.
+
+Expected Results:
+  The Dash should stay open, and allow use of the on screen keyboard.
+
+
 Filter Results Tests
 ========================
 These tests show that the dash "All" button works well.
