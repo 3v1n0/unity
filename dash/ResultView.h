@@ -36,6 +36,11 @@
 
 namespace unity
 {
+namespace debug
+{
+class ResultWrapper;
+}
+
 namespace dash
 {
 class ResultView : public nux::View, public debug::Introspectable
@@ -81,14 +86,15 @@ protected:
   unsigned GetNumResults();
 
   static void ChildResultDestructor(debug::Introspectable* child);
-  virtual debug::Introspectable* CreateResultWrapper(Result const& result, int index);
+  virtual debug::ResultWrapper* CreateResultWrapper(Result const& result, int index);
+  virtual void UpdateResultWrapper(debug::ResultWrapper* wrapper, Result const& result, int index);
 
   // properties
   ResultRenderer* renderer_;
   glib::Object<DeeModel> result_model_;
   DeeModelTag* renderer_tag_;
   glib::SignalManager sig_manager_;
-  std::map<std::string, debug::Introspectable*> introspectable_children_;
+  std::map<std::string, debug::ResultWrapper*> introspectable_children_;
 
 private:
   void OnRowAdded(DeeModel* model, DeeModelIter* iter);

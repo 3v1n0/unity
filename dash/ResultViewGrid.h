@@ -79,7 +79,8 @@ protected:
   void RemoveResult(Result& result);
 
   // This is overridden so we can include position of results.
-  virtual debug::Introspectable* CreateResultWrapper(Result const& result, int index);
+  virtual debug::ResultWrapper* CreateResultWrapper(Result const& result, int index);
+  virtual void UpdateResultWrapper(debug::ResultWrapper* wrapper, Result const& result, int index);
 
 private:
   typedef std::tuple <int, int> ResultListBounds;
