@@ -1398,8 +1398,8 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
 
   if (direction == KEY_NAV_NONE)
   {
-    if (ui::KeyboardUtil::IsPrintableKeySymbol(x11_key_code) ||
-        ui::KeyboardUtil::IsMoveKeySymbol(x11_key_code))
+    if (keyboard::is_printable_key_symbol(x11_key_code) ||
+        keyboard::is_move_key_symbol(x11_key_code))
     {
       search_key = true;
     }

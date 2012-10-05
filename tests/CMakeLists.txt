@@ -335,7 +335,6 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/unity-shared/IntrospectableWrappers.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/LineSeparator.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/JSONParser.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/KeyboardUtil.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/OverlayRenderer.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/PanelStyle.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/PlacesVScrollBar.cpp
@@ -356,6 +355,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/unity-shared/UnityWindowView.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/UserThumbnailProvider.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/WindowManager.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/XKeyboardUtil.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/ubus-server.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unityshell/src/WindowMinimizeSpeedController.cpp
                 )

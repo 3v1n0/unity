@@ -14,22 +14,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Tim Penhey <tim.penhey@canonical.com>
+ * Authored by: Jason Smith <jason.smith@canonical.com>
  */
 
-#ifndef UNITYSHARED_KEYBOARDUTIL_H
-#define UNITYSHARED_KEYBOARDUTIL_H
+#ifndef UNITYSHARED_XKEYBOARDUTIL_H
+#define UNITYSHARED_XKEYBOARDUTIL_H
+
+#include <X11/Xlib.h>
 
 namespace unity
 {
 namespace keyboard
 {
 
-bool is_printable_key_symbol(unsigned long key_symbol);
-bool is_move_key_symbol(unsigned long key_symbol);
+KeySym get_key_above_key_symbol(Display* display, KeySym key_symbol);
+
 
 }
 }
 
-#endif // UNITYSHARED_KEYBOARDUTIL_H
+#endif // UNITYSHARED_XKEYBOARDUTIL_H
 

@@ -20,17 +20,20 @@
 #include <gtest/gtest.h>
 #include <algorithm>
 
-#include "KeyboardUtil.h"
+#include <X11/keysym.h>
 
-using namespace unity::ui;
+#include "KeyboardUtil.h"
+#include "XKeyboardUtil.h"
+
+using namespace unity;
 
 namespace
 {
 
-void test_key(KeyboardUtil const& key_util, Display* x_display, const char* key)
+void test_key(Display* x_display, const char* key)
 {
-  unsigned int above_keycode = key_util.GetKeycodeAboveKeySymbol(XStringToKeysym(key));
-  KeySym above_keysym = XkbKeycodeToKeysym(x_display, above_keycode, 0, 1);
+  KeySym keysym = XStringToKeysym(key);
+  KeySym above_keysym = keyboard::get_key_above_key_symbol(x_display, keysym);
   EXPECT_NE(above_keysym, NoSymbol);
 }
 
@@ -38,63 +41,62 @@ TEST(TestKeyboardUtil, AboveKeySymbol)
 {
   Display* x_display = XOpenDisplay(NULL);
 
-  KeyboardUtil key_util(x_display);
-  test_key(key_util, x_display, "Tab");
-  test_key(key_util, x_display, "Shift_R");
-  test_key(key_util, x_display, "Control_L");
-  test_key(key_util, x_display, "space");
-  test_key(key_util, x_display, "comma");
-  test_key(key_util, x_display, "a");
-  test_key(key_util, x_display, "b");
-  test_key(key_util, x_display, "c");
-  test_key(key_util, x_display, "d");
-  test_key(key_util, x_display, "e");
-  test_key(key_util, x_display, "f");
-  test_key(key_util, x_display, "g");
-  test_key(key_util, x_display, "h");
-  test_key(key_util, x_display, "i");
-  test_key(key_util, x_display, "j");
-  test_key(key_util, x_display, "k");
-  test_key(key_util, x_display, "l");
-  test_key(key_util, x_display, "m");
-  test_key(key_util, x_display, "n");
-  test_key(key_util, x_display, "o");
-  test_key(key_util, x_display, "p");
-  test_key(key_util, x_display, "k");
-  test_key(key_util, x_display, "r");
-  test_key(key_util, x_display, "s");
-  test_key(key_util, x_display, "t");
-  test_key(key_util, x_display, "u");
-  test_key(key_util, x_display, "v");
-  test_key(key_util, x_display, "w");
-  test_key(key_util, x_display, "x");
-  test_key(key_util, x_display, "y");
-  test_key(key_util, x_display, "z");
+  test_key(x_display, "Tab");
+  test_key(x_display, "Shift_R");
+  test_key(x_display, "Control_L");
+  test_key(x_display, "space");
+  test_key(x_display, "comma");
+  test_key(x_display, "a");
+  test_key(x_display, "b");
+  test_key(x_display, "c");
+  test_key(x_display, "d");
+  test_key(x_display, "e");
+  test_key(x_display, "f");
+  test_key(x_display, "g");
+  test_key(x_display, "h");
+  test_key(x_display, "i");
+  test_key(x_display, "j");
+  test_key(x_display, "k");
+  test_key(x_display, "l");
+  test_key(x_display, "m");
+  test_key(x_display, "n");
+  test_key(x_display, "o");
+  test_key(x_display, "p");
+  test_key(x_display, "k");
+  test_key(x_display, "r");
+  test_key(x_display, "s");
+  test_key(x_display, "t");
+  test_key(x_display, "u");
+  test_key(x_display, "v");
+  test_key(x_display, "w");
+  test_key(x_display, "x");
+  test_key(x_display, "y");
+  test_key(x_display, "z");
 }
 
 TEST(TestKeyboardUtil, PrintableKeySymbols)
 {
-  EXPECT_TRUE(KeyboardUtil::IsPrintableKeySymbol(XK_Delete));
-  EXPECT_TRUE(KeyboardUtil::IsPrintableKeySymbol(XK_BackSpace));
-  EXPECT_TRUE(KeyboardUtil::IsPrintableKeySymbol(XK_space));
-  EXPECT_TRUE(KeyboardUtil::IsPrintableKeySymbol(XK_3));
-  EXPECT_TRUE(KeyboardUtil::IsPrintableKeySymbol(XK_v));
-  EXPECT_TRUE(KeyboardUtil::IsPrintableKeySymbol(XK_1));
-  EXPECT_TRUE(KeyboardUtil::IsPrintableKeySymbol(XK_ntilde));
-  EXPECT_TRUE(KeyboardUtil::IsPrintableKeySymbol(XK_0));
-  EXPECT_TRUE(KeyboardUtil::IsPrintableKeySymbol(XK_exclam));
+  EXPECT_TRUE(keyboard::is_printable_key_symbol(XK_Delete));
+  EXPECT_TRUE(keyboard::is_printable_key_symbol(XK_BackSpace));
+  EXPECT_TRUE(keyboard::is_printable_key_symbol(XK_space));
+  EXPECT_TRUE(keyboard::is_printable_key_symbol(XK_3));
+  EXPECT_TRUE(keyboard::is_printable_key_symbol(XK_v));
+  EXPECT_TRUE(keyboard::is_printable_key_symbol(XK_1));
+  EXPECT_TRUE(keyboard::is_printable_key_symbol(XK_ntilde));
+  EXPECT_TRUE(keyboard::is_printable_key_symbol(XK_0));
+  EXPECT_TRUE(keyboard::is_printable_key_symbol(XK_exclam));
 
-  EXPECT_FALSE(KeyboardUtil::IsPrintableKeySymbol(XK_F1));
-  EXPECT_FALSE(KeyboardUtil::IsPrintableKeySymbol(XK_Select));
-  EXPECT_FALSE(KeyboardUtil::IsPrintableKeySymbol(XK_Hyper_R));
-  EXPECT_FALSE(KeyboardUtil::IsPrintableKeySymbol(XK_Control_L));
-  EXPECT_FALSE(KeyboardUtil::IsPrintableKeySymbol(XK_Shift_L));
-  EXPECT_FALSE(KeyboardUtil::IsPrintableKeySymbol(XK_Super_L));
-  EXPECT_FALSE(KeyboardUtil::IsPrintableKeySymbol(XK_Print));
-  EXPECT_FALSE(KeyboardUtil::IsPrintableKeySymbol(XK_Insert));
-  EXPECT_FALSE(KeyboardUtil::IsPrintableKeySymbol(XK_Num_Lock));
-  EXPECT_FALSE(KeyboardUtil::IsPrintableKeySymbol(XK_Caps_Lock));
-  EXPECT_FALSE(KeyboardUtil::IsPrintableKeySymbol(XK_ISO_Level3_Shift));
+  EXPECT_FALSE(keyboard::is_printable_key_symbol(XK_F1));
+  EXPECT_FALSE(keyboard::is_printable_key_symbol(XK_Select));
+  EXPECT_FALSE(keyboard::is_printable_key_symbol(XK_Hyper_R));
+  EXPECT_FALSE(keyboard::is_printable_key_symbol(XK_Control_L));
+  EXPECT_FALSE(keyboard::is_printable_key_symbol(XK_Shift_L));
+  EXPECT_FALSE(keyboard::is_printable_key_symbol(XK_Super_L));
+  EXPECT_FALSE(keyboard::is_printable_key_symbol(XK_Print));
+  EXPECT_FALSE(keyboard::is_printable_key_symbol(XK_Insert));
+  EXPECT_FALSE(keyboard::is_printable_key_symbol(XK_Num_Lock));
+  EXPECT_FALSE(keyboard::is_printable_key_symbol(XK_Caps_Lock));
+  EXPECT_FALSE(keyboard::is_printable_key_symbol(XK_ISO_Level3_Shift));
 }
 
 TEST(TestKeyboardUtil, MoveKeySymbols)
@@ -106,9 +108,9 @@ TEST(TestKeyboardUtil, MoveKeySymbols)
   for (KeySym sym = 0; sym < XK_VoidSymbol; ++sym)
   {
     if (std::find(move_symbols.begin(), move_symbols.end(), sym) != move_symbols.end())
-      EXPECT_TRUE(KeyboardUtil::IsMoveKeySymbol(sym));
+      EXPECT_TRUE(keyboard::is_move_key_symbol(sym));
     else
-      EXPECT_FALSE(KeyboardUtil::IsMoveKeySymbol(sym));
+      EXPECT_FALSE(keyboard::is_move_key_symbol(sym));
   }
 }
 

@@ -21,15 +21,46 @@
 #include <string.h>
 #include <cmath>
 
+#include <X11/keysym.h>
+#include <X11/XKBlib.h>
+#include <X11/extensions/XKBgeom.h>
+
 #include "KeyboardUtil.h"
+#include "XKeyboardUtil.h"
 
-namespace unity {
-namespace ui {
-namespace {
-  const unsigned int FETCH_MASK = XkbGBN_KeyNamesMask | XkbGBN_ClientSymbolsMask | XkbGBN_GeometryMask;
-}
+namespace unity
+{
+namespace keyboard
+{
+namespace
+{
+const unsigned int FETCH_MASK = (XkbGBN_KeyNamesMask |
+                                 XkbGBN_ClientSymbolsMask |
+                                 XkbGBN_GeometryMask);
 
-KeyboardUtil::KeyboardUtil(Display *display)
+class KeyboardUtil
+{
+public:
+  KeyboardUtil(Display* display);
+  ~KeyboardUtil();
+
+  guint GetKeycodeAboveKeySymbol(KeySym key_symbol) const;
+
+private:
+  bool CompareOffsets (int current_x, int current_y, int best_x, int best_y) const;
+  guint ConvertKeyToKeycode (XkbKeyPtr key) const;
+
+  bool FindKeyInGeometry(XkbGeometryPtr geo, char *key_name, int& res_section, XkbBoundsRec& res_bounds) const;
+  bool FindKeyInSectionAboveBounds (XkbGeometryPtr geo, int section, XkbBoundsRec const& target_bounds, guint &keycode) const;
+
+  XkbBoundsRec GetAbsoluteKeyBounds (XkbKeyPtr key, XkbRowPtr row, XkbSectionPtr section, XkbGeometryPtr geo) const;
+
+  Display *display_;
+  XkbDescPtr keyboard_;
+};
+
+
+KeyboardUtil::KeyboardUtil(Display* display)
   : display_(display)
   , keyboard_(XkbGetKeyboard(display_, FETCH_MASK, XkbUseCoreKbd))
 {}
@@ -216,34 +247,42 @@ guint KeyboardUtil::GetKeycodeAboveKeySymbol(KeySym key_symbol) const
   return result;
 }
 
-bool KeyboardUtil::IsPrintableKeySymbol(KeySym sym)
+
+} // anon namespace
+
+
+bool is_printable_key_symbol(unsigned long key_symbol)
 {
   bool printable_key = false;
 
-  if (sym == XK_Delete || sym == XK_BackSpace || sym == XK_Return)
+  if (key_symbol == XK_Delete ||
+      key_symbol == XK_BackSpace ||
+      key_symbol == XK_Return)
   {
     printable_key = true;
   }
   else
   {
-    unsigned int unicode = gdk_keyval_to_unicode(sym);
+    unsigned int unicode = gdk_keyval_to_unicode(key_symbol);
     printable_key = g_unichar_isprint(unicode);
   }
 
   return printable_key;
 }
 
-bool KeyboardUtil::IsMoveKeySymbol(KeySym sym)
+bool is_move_key_symbol(unsigned long key_symbol)
 {
-  bool move_key = false;
-
-  if (sym >= XK_Home && sym <= XK_Begin)
-  {
-    move_key = true;
-  }
-
-  return move_key;
+  return (key_symbol >= XK_Home && key_symbol <= XK_Begin);
 }
 
+KeySym get_key_above_key_symbol(Display* display, KeySym key_symbol)
+{
+  KeyboardUtil util(display);
+  guint above_keycode = util.GetKeycodeAboveKeySymbol(key_symbol);
+  const unsigned int group_interest = 0;
+  const unsigned int shift_interest = 0;
+  return XkbKeycodeToKeysym(display, above_keycode, group_interest, shift_interest);
 }
-}
+
+} // namespace keyboard
+} // namespace unity
