@@ -38,7 +38,6 @@
 #include "LauncherControllerPrivate.h"
 #include "SoftwareCenterLauncherIcon.h"
 #include "ExpoLauncherIcon.h"
-#include "unity-shared/WindowManager.h"
 #include "TrashLauncherIcon.h"
 #include "BFBLauncherIcon.h"
 #include "unity-shared/UScreen.h"
@@ -141,8 +140,8 @@ Controller::Impl::Impl(Controller* parent)
 
   uscreen->changed.connect(sigc::mem_fun(this, &Controller::Impl::OnScreenChanged));
 
-  WindowManager& plugin_adapter = *(WindowManager::Default());
-  plugin_adapter.window_focus_changed.connect(sigc::mem_fun(this, &Controller::Impl::OnWindowFocusChanged));
+  WindowManager& wm = WindowManager::Default();
+  wm.window_focus_changed.connect(sigc::mem_fun(this, &Controller::Impl::OnWindowFocusChanged));
 
   ubus.RegisterInterest(UBUS_QUICKLIST_END_KEY_NAV, [&](GVariant * args) {
     if (reactivate_keynav)

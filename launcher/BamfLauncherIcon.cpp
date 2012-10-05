@@ -32,7 +32,6 @@
 #include "FavoriteStore.h"
 #include "Launcher.h"
 #include "MultiMonitor.h"
-#include "unity-shared/WindowManager.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/ubus-server.h"
 
@@ -149,10 +148,11 @@ BamfLauncherIcon::BamfLauncherIcon(BamfApplication* app)
                           });
   _gsignals.Add(sig);
 
-  WindowManager::Default()->window_minimized.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnWindowMinimized));
-  WindowManager::Default()->window_moved.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnWindowMoved));
-  WindowManager::Default()->compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &BamfLauncherIcon::EnsureWindowState));
-  WindowManager::Default()->terminate_expo.connect(sigc::mem_fun(this, &BamfLauncherIcon::EnsureWindowState));
+  WindowManager& wm = WindowManager::Default();
+  wm.window_minimized.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnWindowMinimized));
+  wm.window_moved.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnWindowMoved));
+  wm.screen_viewport_switch_ended.connect(sigc::mem_fun(this, &BamfLauncherIcon::EnsureWindowState));
+  wm.terminate_expo.connect(sigc::mem_fun(this, &BamfLauncherIcon::EnsureWindowState));
 
   EnsureWindowState();
   UpdateMenus();
@@ -214,15 +214,15 @@ bool BamfLauncherIcon::IsUrgent() const
 void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   SimpleLauncherIcon::ActivateLauncherIcon(arg);
-  WindowManager* wm = WindowManager::Default();
-  bool scaleWasActive = wm->IsScaleActive();
+  WindowManager& wm = WindowManager::Default();
+  bool scaleWasActive = wm.IsScaleActive();
 
   bool active = IsActive();
   bool user_visible = IsRunning();
 
   if (arg.target && OwnsWindow(arg.target))
   {
-    wm->Activate(arg.target);
+    wm.Activate(arg.target);
     return;
   }
 
@@ -258,23 +258,23 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
           continue;
 
 
-        if (!any_visible && wm->IsWindowOnCurrentDesktop(xid))
+        if (!any_visible && wm.IsWindowOnCurrentDesktop(xid))
         {
           any_visible = true;
         }
 
-        if (!any_mapped && wm->IsWindowMapped(xid))
+        if (!any_mapped && wm.IsWindowMapped(xid))
         {
           any_mapped = true;
         }
 
-        if (!any_on_top && wm->IsWindowOnTop(xid))
+        if (!any_on_top && wm.IsWindowOnTop(xid))
         {
           any_on_top = true;
         }
 
         if (!any_on_monitor && bamf_window_get_monitor(win) == arg.monitor &&
-            wm->IsWindowMapped(xid) && wm->IsWindowVisible(xid))
+            wm.IsWindowMapped(xid) && wm.IsWindowVisible(xid))
         {
           any_on_monitor = true;
         }
@@ -310,7 +310,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 
     if (scaleWasActive)
     {
-      wm->TerminateScale();
+      wm.TerminateScale();
     }
 
     SetQuirk(Quirk::STARTING, true);
@@ -322,7 +322,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     {
       if (scaleWasActive) // #5 above
       {
-        wm->TerminateScale();
+        wm.TerminateScale();
         Focus(arg);
       }
       else // #2 above
@@ -337,7 +337,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     {
       if (scaleWasActive) // #4 above
       {
-        wm->TerminateScale();
+        wm.TerminateScale();
         Focus(arg);
         if (arg.source != ActionArg::SWITCHER)
           Spread(true, 0, false);
@@ -352,7 +352,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 
 std::vector<Window> BamfLauncherIcon::GetWindows(WindowFilterMask filter, int monitor)
 {
-  WindowManager* wm = WindowManager::Default();
+  WindowManager& wm = WindowManager::Default();
   std::vector<Window> results;
 
   if (!BAMF_IS_VIEW(_bamf_app.RawPtr()))
@@ -384,9 +384,9 @@ std::vector<Window> BamfLauncherIcon::GetWindows(WindowFilterMask filter, int mo
       {
         guint32 xid = bamf_window_get_xid(window);
 
-        if ((mapped && wm->IsWindowMapped(xid)) || !mapped)
+        if ((mapped && wm.IsWindowMapped(xid)) || !mapped)
         {
-          if ((current_desktop && wm->IsWindowOnCurrentDesktop(xid)) || !current_desktop)
+          if ((current_desktop && wm.IsWindowOnCurrentDesktop(xid)) || !current_desktop)
           {
             results.push_back(xid);
           }
@@ -621,7 +621,7 @@ void BamfLauncherIcon::OpenInstanceLauncherIcon(ActionArg arg)
 std::vector<Window> BamfLauncherIcon::GetFocusableWindows(ActionArg arg, bool &any_visible, bool &any_urgent)
 {
   bool any_user_visible = false;
-  WindowManager* wm = WindowManager::Default();
+  WindowManager& wm = WindowManager::Default();
 
   std::vector<Window> windows;
   GList* children;
@@ -696,7 +696,7 @@ std::vector<Window> BamfLauncherIcon::GetFocusableWindows(ActionArg arg, bool &a
       windows.push_back(xid);
     }
 
-    if (wm->IsWindowOnCurrentDesktop(xid) && wm->IsWindowVisible(xid))
+    if (wm.IsWindowOnCurrentDesktop(xid) && wm.IsWindowVisible(xid))
     {
       any_visible = true;
     }
@@ -711,7 +711,6 @@ std::vector<Window> BamfLauncherIcon::GetFocusableWindows(ActionArg arg, bool &a
 void BamfLauncherIcon::Focus(ActionArg arg)
 {
   bool any_visible = false, any_urgent = false;
-  WindowManager* wm = WindowManager::Default();
   std::vector<Window> windows = GetFocusableWindows(arg, any_visible, any_urgent);
 
   auto visibility = WindowManager::FocusVisibility::OnlyVisible;
@@ -729,13 +728,13 @@ void BamfLauncherIcon::Focus(ActionArg arg)
   }
 
   bool only_top_win = !any_urgent;
-  wm->FocusWindowGroup(windows, visibility, arg.monitor, only_top_win);
+  WindowManager::Default().FocusWindowGroup(windows, visibility, arg.monitor, only_top_win);
 }
 
 bool BamfLauncherIcon::Spread(bool current_desktop, int state, bool force)
 {
   auto windows = GetWindows(current_desktop ? WindowFilter::ON_CURRENT_DESKTOP : 0);
-  return WindowManager::Default()->ScaleWindowGroup(windows, state, force);
+  return WindowManager::Default().ScaleWindowGroup(windows, state, force);
 }
 
 void BamfLauncherIcon::EnsureWindowState()
@@ -755,7 +754,7 @@ void BamfLauncherIcon::EnsureWindowState()
         /* BamfTab does not support the monitor interface...so a bit of a nasty hack here. */
         xid = bamf_tab_get_xid (static_cast<BamfTab*>(l->data));
 
-        if (WindowManager::Default()->IsWindowOnCurrentDesktop(xid) == false)
+        if (WindowManager::Default().IsWindowOnCurrentDesktop(xid) == false)
           continue;
 
         for (int j = 0; j < max_num_monitors; j++)
@@ -771,7 +770,7 @@ void BamfLauncherIcon::EnsureWindowState()
       xid = bamf_window_get_xid(window);
       int monitor = bamf_window_get_monitor(window);
 
-      if (monitor >= 0 && WindowManager::Default()->IsWindowOnCurrentDesktop(xid))
+      if (monitor >= 0 && WindowManager::Default().IsWindowOnCurrentDesktop(xid))
         monitors[monitor] = true;
     }
 
@@ -923,7 +922,7 @@ void BamfLauncherIcon::Quit()
       continue;
 
     Window xid = bamf_window_get_xid(static_cast<BamfWindow*>(l->data));
-    WindowManager::Default()->Close(xid);
+    WindowManager::Default().Close(xid);
   }
 
   g_list_free(children);
@@ -1195,7 +1194,7 @@ void BamfLauncherIcon::UpdateIconGeometries(std::vector<nux::Point3> center)
 
     geo.x = center[monitor].x - 24;
     geo.y = center[monitor].y - 24;
-    WindowManager::Default()->SetWindowIconGeometry(xid, geo);
+    WindowManager::Default().SetWindowIconGeometry(xid, geo);
   }
 
   g_list_free(children);
@@ -1338,7 +1337,7 @@ unsigned long long BamfLauncherIcon::SwitcherPriority()
       continue;
 
     Window xid = bamf_window_get_xid(static_cast<BamfWindow*>(l->data));
-    result = std::max(result, WindowManager::Default()->GetWindowActiveNumber(xid));
+    result = std::max(result, WindowManager::Default().GetWindowActiveNumber(xid));
   }
 
   g_list_free(children);

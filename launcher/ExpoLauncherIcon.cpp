@@ -18,7 +18,6 @@
  */
 
 #include "ExpoLauncherIcon.h"
-#include "unity-shared/WindowManager.h"
 #include "FavoriteStore.h"
 
 #include <glib/gi18n-lib.h>
@@ -41,23 +40,22 @@ ExpoLauncherIcon::ExpoLauncherIcon()
 void ExpoLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   SimpleLauncherIcon::ActivateLauncherIcon(arg);
+  WindowManager& wm = WindowManager::Default();
 
-  auto wm = WindowManager::Default();
-
-  if (!wm->IsExpoActive())
+  if (!wm.IsExpoActive())
   {
-    wm->InitiateExpo();
+    wm.InitiateExpo();
   }
   else
   {
-    wm->TerminateExpo();
+    wm.TerminateExpo();
   }
 }
 
 void ExpoLauncherIcon::Stick(bool save)
 {
   SimpleLauncherIcon::Stick(save);
-  SetQuirk(Quirk::VISIBLE, (WindowManager::Default()->WorkspaceCount() > 1));
+  SetQuirk(Quirk::VISIBLE, (WindowManager::Default().WorkspaceCount() > 1));
 }
 
 std::string ExpoLauncherIcon::GetName() const

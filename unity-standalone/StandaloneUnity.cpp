@@ -38,7 +38,6 @@
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/FontSettings.h"
 #include "unity-shared/PanelStyle.h"
-#include "unity-shared/PluginAdapter.h"
 #include "unity-shared/ThumbnailGenerator.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UBusWrapper.h"
@@ -162,8 +161,7 @@ int main(int argc, char **argv)
   Settings settings;
   settings.is_standalone = true;
   if (force_tv) Settings::Instance().form_factor(FormFactor::TV);
-  
-  PluginAdapter::Initialize(NULL);
+
   dash::Style dash_style;
   panel::Style panel_style;
   unity::ThumbnailGenerator thumbnail_generator;
