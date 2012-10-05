@@ -173,10 +173,8 @@ glow::Quads UnityWindow::computeGlowQuads(nux::Geometry const& geo, GLTexture::L
   quadMatrix->x0 = -(x1 * quadMatrix->xx);
   quadMatrix->y0 = -(y1 * quadMatrix->yy);
 
-  x2 = std::min<int>(geo.x + glow_offset,
-        geo.x + (geo.width / 2));
-  y2 = std::min<int>(geo.y + glow_offset,
-        geo.y + (geo.height / 2));
+  x2 = std::min<int>(geo.x + glow_offset, geo.x + (geo.width / 2));
+  y2 = std::min<int>(geo.y + glow_offset, geo.y + (geo.height / 2));
 
   box->setGeometry(x1, y1, x2 - x1, y2 - y1);
 
@@ -211,10 +209,8 @@ glow::Quads UnityWindow::computeGlowQuads(nux::Geometry const& geo, GLTexture::L
   quadMatrix->x0 = 1.0 - (x1 * quadMatrix->xx);
   quadMatrix->y0 = -(y1 * quadMatrix->yy);
 
-  x1 = std::max<int>(geo.x + geo.width - glow_offset,
-        geo.x + (geo.width / 2));
-  y2 = std::min<int>(geo.y + glow_offset,
-        geo.y + (geo.height / 2));
+  x1 = std::max<int>(geo.x + geo.width - glow_offset, geo.x + (geo.width / 2));
+  y2 = std::min<int>(geo.y + glow_offset, geo.y + (geo.height / 2));
 
   box->setGeometry(x1, y1, x2 - x1, y2 - y1);
 
@@ -246,10 +242,8 @@ glow::Quads UnityWindow::computeGlowQuads(nux::Geometry const& geo, GLTexture::L
   quadMatrix->x0 = -(x1 * quadMatrix->xx);
   quadMatrix->y0 = 1.0f - (y1 * quadMatrix->yy);
 
-  y1 = std::max<int>(geo.y + geo.height - glow_offset,
-        geo.y + (geo.height / 2));
-  x2 = std::min<int>(geo.x + glow_offset,
-        geo.x + (geo.width / 2));
+  y1 = std::max<int>(geo.y + geo.height - glow_offset, geo.y + (geo.height / 2));
+  x2 = std::min<int>(geo.x + glow_offset, geo.x + (geo.width / 2));
 
   box->setGeometry(x1, y1, x2 - x1, y2 - y1);
 
@@ -279,10 +273,8 @@ glow::Quads UnityWindow::computeGlowQuads(nux::Geometry const& geo, GLTexture::L
   quadMatrix->x0 = 1.0 - (x1 * quadMatrix->xx);
   quadMatrix->y0 = 1.0 - (y1 * quadMatrix->yy);
 
-  x1 = std::max<int>(geo.x + geo.width - glow_offset,
-        geo.x + (geo.width / 2));
-  y1 = std::max<int>(geo.y + geo.height - glow_offset,
-        geo.y + (geo.height / 2));
+  x1 = std::max<int>(geo.x + geo.width - glow_offset, geo.x + (geo.width / 2));
+  y1 = std::max<int>(geo.y + geo.height - glow_offset, geo.y + (geo.height / 2));
 
   box->setGeometry(x1, y1, x2 - x1, y2 - y1);
 
