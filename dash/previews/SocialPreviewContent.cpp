@@ -178,7 +178,7 @@ void SocialPreviewContent::RedrawBubble(nux::Geometry const& geom, cairo_t* cr, 
   double width = MAX(0, cairo_image_surface_get_width(cairo_get_target(cr)));
   double height = MAX(0, cairo_image_surface_get_height(cairo_get_target(cr)));
 
-  double tailPosition = x + width - TAIL_POS_FROM_RIGHT - TAIL_HEIGHT;
+  double tailPosition = x + width - TAIL_POS_FROM_RIGHT - TAIL_HEIGHT - line_width/2;
 
   if (width > 0 && height > 0)
   {
