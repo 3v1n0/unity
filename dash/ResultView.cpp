@@ -239,7 +239,7 @@ debug::Introspectable::IntrospectableList ResultView::GetIntrospectableChildren(
     {
       Result const& result = *iter;
 
-      debug::Introspectable* result_wrapper = NULL;
+      debug::ResultWrapper* result_wrapper = NULL;
       auto map_iter = introspectable_children_.find(result.uri);
       // Create new result.
       if (map_iter == introspectable_children_.end())
@@ -248,7 +248,10 @@ debug::Introspectable::IntrospectableList ResultView::GetIntrospectableChildren(
         introspectable_children_[result.uri] = result_wrapper;
       }
       else
+      {
         result_wrapper = map_iter->second;
+        UpdateResultWrapper(result_wrapper, result, index);
+      }
 
       AddChild(result_wrapper);
 
@@ -276,9 +279,13 @@ debug::Introspectable::IntrospectableList ResultView::GetIntrospectableChildren(
   return debug::Introspectable::GetIntrospectableChildren();
 }
 
-debug::Introspectable* ResultView::CreateResultWrapper(Result const& result, int index)
+debug::ResultWrapper* ResultView::CreateResultWrapper(Result const& result, int index)
 {
   return new debug::ResultWrapper(result);
+}
+
+void ResultView::UpdateResultWrapper(debug::ResultWrapper* wrapper, Result const& result, int index)
+{  
 }
 
 }
