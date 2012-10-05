@@ -277,7 +277,6 @@ void DBusIndicators::Impl::Sync(GVariant* args)
 
   std::map<Indicator::Ptr, Indicator::Entries> indicators;
   int wantedIndex = 0;
-  int existingEntryIndex = -1;
   bool anyIndexDifferent = false;
 
   g_variant_get(args, "(a(ssssbbusbbi))", &iter);
@@ -314,8 +313,11 @@ void DBusIndicators::Impl::Sync(GVariant* args)
         // Indicators can only add or remove entries, so if
         // there is a index change we can't reuse the existing ones
         // after that index
-        e = indicator->GetEntry(entry_id, &existingEntryIndex);
-        anyIndexDifferent = wantedIndex != existingEntryIndex;
+        int existingEntryIndex = indicator->EntryIndex(entry_id);
+        if (wantedIndex == existingEntryIndex)
+          e = indicator->GetEntry(entry_id);
+        else
+          anyIndexDifferent = true;
       }
 
       if (!e)

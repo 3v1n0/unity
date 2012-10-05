@@ -106,23 +106,28 @@ void Indicator::Sync(Indicator::Entries const& new_entries)
   }
 }
 
-Entry::Ptr Indicator::GetEntry(std::string const& entry_id, int *index) const
+Entry::Ptr Indicator::GetEntry(std::string const& entry_id) const
+{
+  for (auto entry : entries_)
+    if (entry->id() == entry_id)
+      return entry;
+
+  return Entry::Ptr();
+}
+
+int Indicator::EntryIndex(std::string const& entry_id) const
 {
   int i = 0;
   for (auto entry : entries_)
   {
     if (entry->id() == entry_id)
     {
-      if (index != nullptr)
-        *index = i;
-      return entry;
+      return i;
     }
     ++i;
   }
 
-  if (index != nullptr)
-    *index = -1;
-  return Entry::Ptr();
+  return -1;
 }
 
 void Indicator::OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
