@@ -1950,10 +1950,6 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PopClippingRectangle();
 }
 
-void Launcher::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-}
-
 long Launcher::PostLayoutManagement(long LayoutResult)
 {
   View::PostLayoutManagement(LayoutResult);

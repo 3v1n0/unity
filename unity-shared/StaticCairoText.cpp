@@ -299,11 +299,6 @@ void StaticCairoText::DrawContent(GraphicsEngine& gfxContext, bool forceDraw)
   // intentionally left empty
 }
 
-void StaticCairoText::PostDraw(GraphicsEngine& gfxContext, bool forceDraw)
-{
-  // intentionally left empty
-}
-
 void StaticCairoText::SetText(std::string const& text, bool escape_text)
 {
   std::string tmp_text = escape_text ? GetEscapedText(text) : text;

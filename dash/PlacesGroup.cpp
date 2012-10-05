@@ -512,11 +512,6 @@ PlacesGroup::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 
 }
 
-void PlacesGroup::PostDraw(nux::GraphicsEngine& graphics_engine,
-                           bool                 forceDraw)
-{
-}
-
 void
 PlacesGroup::SetCategoryIndex(unsigned index)
 {
