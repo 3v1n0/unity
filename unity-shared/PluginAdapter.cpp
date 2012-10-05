@@ -955,7 +955,7 @@ int PluginAdapter::WorkspaceCount() const
   return m_Screen->vpSize().width() * m_Screen->vpSize().height();
 }
 
-void PluginAdapter::SetMwmWindowHints(Window xid, MotifWmHints* new_hints)
+void PluginAdapter::SetMwmWindowHints(Window xid, MotifWmHints* new_hints) const
 {
   Display* display = m_Screen->dpy();
   Atom hints_atom = None;
