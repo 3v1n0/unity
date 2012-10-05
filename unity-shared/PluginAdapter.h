@@ -188,7 +188,7 @@ private:
   void InitiateScale(std::string const& match, int state = 0);
 
   bool CheckWindowIntersection(nux::Geometry const& region, CompWindow* window) const;
-  void SetMwmWindowHints(Window xid, MotifWmHints* new_hints);
+  void SetMwmWindowHints(Window xid, MotifWmHints* new_hints) const;
 
   Window GetTopMostValidWindowInViewport() const;
 
