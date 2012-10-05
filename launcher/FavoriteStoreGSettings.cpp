@@ -65,11 +65,11 @@ void FavoriteStoreGSettings::Refresh()
 void FavoriteStoreGSettings::FillList()
 {
   favorites_.clear();
-  std::shared_ptr<gchar*> favs(g_settings_get_strv(settings_, SETTINGS_KEY.c_str()));
+  std::unique_ptr<gchar*[], void(*)(gchar**)> favs(g_settings_get_strv(settings_, SETTINGS_KEY.c_str()), g_strfreev);
 
-  for (int i = 0; favs.get()[i]; ++i)
+  for (int i = 0; favs[i]; ++i)
   {
-    std::string const& fav = ParseFavoriteFromUri(favs.get()[i]);
+    std::string const& fav = ParseFavoriteFromUri(favs[i]);
 
     if (!fav.empty())
       favorites_.push_back(fav);

@@ -31,8 +31,8 @@ include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_D
 #
 set (LAUNCHER_SOURCES
      AbstractLauncherIcon.cpp
+     ApplicationLauncherIcon.cpp
      BFBLauncherIcon.cpp
-     BamfLauncherIcon.cpp
      CairoBaseWindow.cpp
      DNDCollectionWindow.cpp
      Decaymulator.cpp
@@ -80,6 +80,7 @@ set (LAUNCHER_SOURCES
 
 add_library (launcher-lib STATIC ${LAUNCHER_SOURCES})
 add_dependencies (launcher-lib unity-core-${UNITY_API_VERSION} unity-shared)
+target_link_libraries (launcher-lib unity-shared)
 
 set (SWITCHER_SOURCES
       SwitcherController.cpp
@@ -96,8 +97,8 @@ add_dependencies (switcher-lib unity-core-${UNITY_API_VERSION} unity-shared)
 #
 add_executable (launcher StandaloneLauncher.cpp)
 add_dependencies (launcher launcher-lib)
-target_link_libraries (launcher launcher-lib unity-shared)
+target_link_libraries (launcher launcher-lib unity-shared unity-shared-standalone)
 
 add_executable (switcher StandaloneSwitcher.cpp)
 add_dependencies (switcher switcher-lib launcher-lib)
-target_link_libraries (switcher switcher-lib launcher-lib unity-shared)
+target_link_libraries (switcher switcher-lib launcher-lib unity-shared unity-shared-standalone)

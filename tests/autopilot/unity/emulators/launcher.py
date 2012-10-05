@@ -15,12 +15,17 @@ from autopilot.keybindings import KeybindingsHelper
 from autopilot.utilities import get_compiz_option
 import dbus
 import logging
-from math import floor
 from testtools.matchers import NotEquals
 from time import sleep
 
 from unity.emulators import UnityIntrospectionObject
-from unity.emulators.icons import BFBLauncherIcon, BamfLauncherIcon, SimpleLauncherIcon
+from unity.emulators.icons import (
+    ApplicationLauncherIcon,
+    BFBLauncherIcon,
+    ExpoLauncherIcon,
+    SimpleLauncherIcon,
+    TrashLauncherIcon,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +34,8 @@ class IconDragType:
     """Define possible positions to drag an icon onto another"""
     INSIDE = 0
     OUTSIDE = 1
+    BEFORE = 3
+    AFTER = 4
 
 
 class LauncherController(UnityIntrospectionObject):
@@ -329,71 +336,76 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         if (move_mouse_after):
           self.move_mouse_to_right_of_launcher()
 
-    def drag_icon_to_position(self, icon, pos, drag_type=IconDragType.INSIDE):
-        """Place the supplied icon above the icon in the position pos.
+    def drag_icon_to_position(self, icon, pos, target, drag_type=IconDragType.INSIDE):
+        """Drag a launcher icon to a new position.
 
-        The icon is dragged inside or outside the launcher.
+        'icon' is the icon to move. It must be either a ApplicationLauncherIcon or an
+        ExpoLauncherIcon instance. Other values will result in a TypeError being
+        raised.
 
-        >>> drag_icon_to_position(calc_icon, 0, IconDragType.INSIDE)
+        'pos' must be one of IconDragType.BEFORE or IconDragType.AFTER. If it is
+        not one of these, a ValueError will be raised.
 
-        This will drag the calculator icon above the bfb (but as you can't go
-        above the bfb it will move below it (to position 1))
+        'target' is the target icon.
+
+        'drag_type' must be one of IconDragType.INSIDE or IconDragType.OUTSIDE.
+        This specifies whether the icon is gragged inside the launcher, or to the
+        right of it. The default is to drag inside the launcher. If it is
+        specified, and not one of the allowed values, a ValueError will be raised.
+
+        For example:
+
+        >>> drag_icon_to_position(calc_icon, IconDragType.BEFORE, switcher_icon)
+
+        This will drag the calculator icon to just before the switcher icon.
+
+        Note: This method makes no attempt to sanity-check the requested move.
+        For example, it will happily try and move an icon to before the BFB icon,
+        if asked.
 
         """
-        if not isinstance(icon, BamfLauncherIcon):
-            raise TypeError("icon must be a LauncherIcon")
+        if not isinstance(icon, ApplicationLauncherIcon) \
+            and not isinstance(icon, ExpoLauncherIcon):
+            raise TypeError("Icon to move must be a ApplicationLauncherIcon or ExpoLauncherIcon, not %s"
+                % type(icon).__name__)
 
-        [launcher_model] = LauncherModel.get_all_instances()
-        all_icons = launcher_model.get_launcher_icons()
+        if pos not in (IconDragType.BEFORE, IconDragType.AFTER):
+            raise ValueError("'pos' parameter must be one of IconDragType.BEFORE, IconDragType.AFTER")
 
-        if pos >= len(all_icons):
-            raise ValueError("pos is outside valid range (0-%d)" % len(all_icons))
+        if not isinstance(target, SimpleLauncherIcon):
+            raise TypeError("'target' must be a valid launcher icon, not %s"
+                % type(target).__name__)
 
-        logger.debug("Dragging launcher icon %r on monitor %d to position %d"
-                     % (icon, self.monitor, pos))
-        self.mouse_reveal_launcher()
+        if drag_type not in (IconDragType.INSIDE, IconDragType.OUTSIDE):
+            raise ValueError("'drag_type' parameter must be one of IconDragType.INSIDE, IconDragType.OUTSIDE")
 
         icon_height = get_compiz_option("unityshell", "icon_size")
-
-        target_icon = all_icons[pos]
-        if target_icon.id == icon.id:
-            logger.warning("%s is already the icon in position %d. Nothing to do." % (icon, pos))
-            return
+        target_y = target.center_y
+        if target_y < icon.center_y:
+            target_y += icon_height / 2
+        if pos == IconDragType.BEFORE:
+            target_y -= icon_height
 
         self.move_mouse_to_icon(icon)
         self._mouse.press()
         sleep(2)
 
-
-        # find the target drop position, between the center & top of the target icon
-        target_y = target_icon.center_y - floor(icon_height / 4)
-
-        # Need to move the icons top (if moving up) or bottom (if moving
-        # downward) to the target position
-        moving_up = icon.center_y > target_icon.center_y
-        icon_half_height = floor(icon_height / 2)
-        fudge_factor = 5
-        if moving_up:
-            target_y += icon_half_height + fudge_factor
-
-        # This has to happen after the target position is calculated (above)
         if drag_type == IconDragType.OUTSIDE:
             shift_over = self._mouse.x + (icon_height * 2)
             self._mouse.move(shift_over, self._mouse.y)
             sleep(0.5)
 
         self._mouse.move(self._mouse.x, target_y)
-        sleep(1)
-
+        sleep(0.5)
         self._mouse.release()
         self.move_mouse_to_right_of_launcher()
 
     def lock_to_launcher(self, icon):
         """lock 'icon' to the launcher, if it's not already.
-        `icon` must be an instance of BamfLauncherIcon.
+        `icon` must be an instance of ApplicationLauncherIcon.
         """
-        if not isinstance(icon, BamfLauncherIcon):
-            raise TypeError("Can only lock instances of BamfLauncherIcon")
+        if not isinstance(icon, ApplicationLauncherIcon):
+            raise TypeError("Can only lock instances of ApplicationLauncherIcon")
         if icon.sticky:
             # Nothing to do.
             return
@@ -407,11 +419,11 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
     def unlock_from_launcher(self, icon):
         """lock 'icon' to the launcher, if it's not already.
 
-        `icon` must be an instance of BamfLauncherIcon.
+        `icon` must be an instance of ApplicationLauncherIcon.
 
         """
-        if not isinstance(icon, BamfLauncherIcon):
-            raise TypeError("Can only unlock instances of BamfLauncherIcon")
+        if not isinstance(icon, ApplicationLauncherIcon):
+            raise TypeError("Can only unlock instances of ApplicationLauncherIcon")
         if not icon.sticky:
             # nothing to do.
             return
@@ -436,6 +448,16 @@ class LauncherModel(UnityIntrospectionObject):
         assert(len(icons) == 1)
         return icons[0]
 
+    def get_expo_icon(self):
+        icons = self.get_children_by_type(ExpoLauncherIcon)
+        assert(len(icons) == 1)
+        return icons[0]
+
+    def get_trash_icon(self):
+        icons = self.get_children_by_type(TrashLauncherIcon)
+        assert(len(icons) == 1)
+        return icons[0]
+
     def get_launcher_icons(self, visible_only=True):
         """Get a list of launcher icons in this launcher."""
         if visible_only:
@@ -446,9 +468,9 @@ class LauncherModel(UnityIntrospectionObject):
     def get_bamf_launcher_icons(self, visible_only=True):
         """Get a list of bamf launcher icons in this launcher."""
         if visible_only:
-            return self.get_children_by_type(BamfLauncherIcon, visible=True)
+            return self.get_children_by_type(ApplicationLauncherIcon, visible=True)
         else:
-            return self.get_children_by_type(BamfLauncherIcon)
+            return self.get_children_by_type(ApplicationLauncherIcon)
 
     def get_launcher_icons_for_monitor(self, monitor, visible_only=True):
         """Get a list of launcher icons for provided monitor."""

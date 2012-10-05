@@ -67,7 +67,7 @@ public:
       : Launcher(parent, collection_window)
     {}
 
-    AbstractLauncherIcon::Ptr MouseIconIntersection(int x, int y)
+    AbstractLauncherIcon::Ptr MouseIconIntersection(int x, int y) const
     {
       for (auto const& icon : *_model)
       {
@@ -80,12 +80,12 @@ public:
       return AbstractLauncherIcon::Ptr();
     }
 
-    float IconBackgroundIntensity(AbstractLauncherIcon::Ptr icon, timespec const& current) const
+    float IconBackgroundIntensity(AbstractLauncherIcon::Ptr const& icon, timespec const& current) const
     {
       return Launcher::IconBackgroundIntensity(icon, current);
     }
 
-    void StartIconDrag(AbstractLauncherIcon::Ptr icon)
+    void StartIconDrag(AbstractLauncherIcon::Ptr const& icon)
     {
       Launcher::StartIconDrag(icon);
     }

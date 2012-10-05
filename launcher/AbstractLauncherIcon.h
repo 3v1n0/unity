@@ -26,15 +26,13 @@
 #include <NuxCore/Math/MathInc.h>
 
 #include <sigc++/sigc++.h>
-
-#include <X11/Xlib.h>
-
 #include <libdbusmenu-glib/menuitem.h>
 
 #include "DndData.h"
 #include "unity-shared/Introspectable.h"
 #include "LauncherEntryRemote.h"
 #include "unity-shared/IconTextureSource.h"
+#include "unity-shared/WindowManager.h"
 
 namespace unity
 {
@@ -229,8 +227,8 @@ public:
   sigc::signal<void, int>      mouse_enter;
   sigc::signal<void, int>      mouse_leave;
 
-  sigc::signal<void, AbstractLauncherIcon::Ptr> needs_redraw;
-  sigc::signal<void, AbstractLauncherIcon::Ptr> remove;
+  sigc::signal<void, AbstractLauncherIcon::Ptr const&> needs_redraw;
+  sigc::signal<void, AbstractLauncherIcon::Ptr const&> remove;
   sigc::signal<void, nux::ObjectPtr<nux::View>> tooltip_visible;
   sigc::signal<void> visibility_changed;
   sigc::signal<void> position_saved;
