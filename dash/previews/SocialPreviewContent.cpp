@@ -170,22 +170,19 @@ void SocialPreviewContent::UpdateBaloonTexture()
 
 void SocialPreviewContent::RedrawBubble(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
 {
-  double blur = 2.0;
-
-  double line_width = 1.0;
+  double line_width = 6.0;
   double radius = 28.0;
-  double x = 0.0 + blur;
-  double y = 0.0 + blur;
+  double x = 0.0;
+  double y = 0.0;
 
-  double width = MAX(0, cairo_image_surface_get_width(cairo_get_target(cr)) - 2*blur);
-  double height = MAX(0, cairo_image_surface_get_height(cairo_get_target(cr)) - 2*blur);
+  double width = MAX(0, cairo_image_surface_get_width(cairo_get_target(cr)));
+  double height = MAX(0, cairo_image_surface_get_height(cairo_get_target(cr)));
 
   double tailPosition = x + width - TAIL_POS_FROM_RIGHT - TAIL_HEIGHT;
 
   if (width > 0 && height > 0)
   {
     DrawBubble(cr, line_width, radius, x, y, width, height, tailPosition, TAIL_HEIGHT);
-    dash::Style::Instance().Blur(cr, blur);
   }
 }
 
@@ -295,14 +292,14 @@ void SocialPreviewContent::DrawBubble(cairo_t* cr,
             180.0f * G_PI / 180.0f,
             270.0f * G_PI / 180.0f);
 
-
-  nux::Color color_fill(1.0, 1.0, 1.0, 0.2);
-  cairo_set_source_rgba(cr, color_fill.red, color_fill.green, color_fill.blue, color_fill.alpha);
-  cairo_fill_preserve(cr);
-
   nux::Color color_stroke(1.0, 1.0, 1.0, 0.1);
   cairo_set_source_rgba(cr, color_stroke.red, color_stroke.green, color_stroke.blue, color_stroke.alpha);
-  cairo_stroke(cr);
+  cairo_stroke_preserve(cr);
+
+  cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+  nux::Color color_fill(1.0, 1.0, 1.0, 0.2);
+  cairo_set_source_rgba(cr, color_fill.red, color_fill.green, color_fill.blue, color_fill.alpha);
+  cairo_fill(cr);
 }
 
 void SocialPreviewContent::PreLayoutManagement()
