@@ -301,7 +301,8 @@ float Controller::Impl::opacity() const
 }
 
 Controller::Controller()
-  : pimpl(new Impl())
+  : launcher_width(64)
+  , pimpl(new Impl())
 {
   UScreen* screen = UScreen::GetDefault();
   screen->changed.connect(sigc::mem_fun(this, &Controller::OnScreenChanged));
